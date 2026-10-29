@@ -46,6 +46,15 @@ BENCH = [
     ("Mach aus meinem Lied eine Reggae-Version", "musik"),
     ("Verlängere das Lied hinten um eine halbe Minute", "musik"),
     ("Kannst du den Song etwas schneller machen?", "musik"),
+    # Finden (fund.py, plan such-index): a thing of one's own to find, beside „dokument“ or „mail“; never the internet
+    ("Such mir die Rechnung von Thomann vom OP", "dokument+finden"),
+    ("Wo ist die Mail vom Vermieter mit der Nebenkostenabrechnung", "finden+mail"),
+    ("Finde das Foto vom Strand", "finden"),
+    ("Zeig mir den Vertrag mit der Telekom", "dokument+finden"),
+    ("Such meine Bestellung bei Thomann", "finden+paket"),
+    ("Such im Internet nach Thomann", "websuche"),
+    ("Wann ist mein OP-Termin", "kalender"),
+    ("Lies meine neuen Mails", "mail"),
     # the own Kiwix archive (V01.0.264): mein, dein, im Archiv, never the uploaded documents
     ("Schaue in deinem Archiv nach, was du über Albert Einstein", "archiv"),
     ("Schau in meinem Archiv nach Sauerteig", "archiv"),
@@ -130,7 +139,8 @@ BENCH = [
     ("Weißt du noch, was ich dir über den Urlaub erzählt habe?", "gedaechtnis"),
     ("Haben wir schon mal darüber gesprochen?", "gedaechtnis"),
     ("Was steht in meinem Mietvertrag?", "dokument"),
-    ("Such in meinen Unterlagen nach der Versicherung", "dokument"),
+    # since Finden (fund.py): a search in the own things keeps both groups (document_search stays anyway)
+    ("Such in meinen Unterlagen nach der Versicherung", "dokument+finden"),
     ("Wie hoch war die Stromrechnung?", "dokument"),
     ("Wann läuft meine Kfz-Versicherung ab?", "dokument"),
     ("Wo ist die Anleitung für die Waschmaschine?", "dokument"),

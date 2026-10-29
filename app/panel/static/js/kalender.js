@@ -15,6 +15,7 @@ const OWN_PAGES={calbox:['cal',t('Kalender','Calendar'),t('Termine','Appointment
   taskbox:['listen',t('Listen','Lists'),t('Listen','Lists')],vgbox:['offen',t('Offen','Open'),t('Offen','Open')],
   conbox:['kontakte',t('Kontakte','Contacts'),t('Kontakte','Contacts')],
   wbbox:['wbuch',t('Wissensbuch','Knowledge book'),t('Seiten','Pages'),[['karte',t('Karte','Map'),()=>typeof WK_ON!=='undefined'&&WK_ON]]],
+  fundbox:['finden',t('Finden','Find'),t('Suche','Search'),[['worte',t('Schlagworte','Tags'),()=>true]]],
   dmbox:['dungeon',t('Dungeon-Master','Dungeon Master'),t('Runden','Rounds'),[['helden',t('Helden','Heroes'),()=>true]]]};
 // [section, name, first tab, [more tabs: key, name, shown?]]; every page ends with the tab „Einstellungen“
 function ownPage(id){const p=OWN_PAGES[id];if(!p)return false;

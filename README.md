@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.245** Find in all data stage A: one search index over the own documents, NAS, reMarkable and knowledge book (fields and categories by fixed rules, own tags first, marks per profile), a page Find of its own, the tool fund_suche in the assistant with the card "Show in Find", Ctrl K
 - **V01.1.244** RED FIX: the Spontanhilfe page test sets the panel's clock first at expiry, then the page's (otherwise the reload every 3 s brought the number back)
 - **V01.1.243** https without TLS session tickets (`panel.tls_context`): about one https connection in a hundred to Python 3.11's asyncio loop hung after the handshake (a Fernzugang terminal never opened); test servers with the panel's TLS plus a guard, Fernzugang tests with a 60 s handshake and deadlines instead of loops
 - **V01.1.242** Knowledge store faster (step 1 of 4, no new feature): document search vectors as float16 in memory (half the size, same ranking), the knowledge book finds pages through an FTS5 index (kept by triggers, built once, without FTS5 as before), the knowledge map picks its part with WITH RECURSIVE in SQLite, plus fixed queries rund_um and weg and the read function wissensbuch.liste (page ids with rank)
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.238** AI Dungeon Master: unique spell names, everyday words marked
 - **V01.1.237** Quick test: `tools/vorpush.py` installs missing system packages of GitHub "Tests" (guacd, x11vnc, Xvfb for test_fernbild) itself or stops before the first test with the exact command; a cloud container without x11vnc went red mid-run
 - **V01.1.236** AI Dungeon Master: faults of the round in the Old Library: the dice bar names the same difficulty as the card, a damage spell claims no hit, sentences about the panel leave the story, "enter" is walking, a merchant only when the story shows one
-- **V01.1.235** AI Dungeon Master: a word for "no name" such as "keine", "nobody" or "unknown" never becomes a person, such a card of a running round goes away
 
 
 

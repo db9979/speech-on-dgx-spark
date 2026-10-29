@@ -34,6 +34,7 @@ import guard
 import homeassistant
 import llm
 import zustand_wz
+import fund
 from common import load_config
 from core import auth
 
@@ -166,6 +167,8 @@ HINTS = {
     "agent": re.compile(r"(?i)\b(automatisch\w*|regelmäßig\w*|immer wenn)\b"),
     "dokument": re.compile(r"(?i)\b(versichert|bezahlt|kosten|frist)\b"),
     "bahn": re.compile(r"(?i)\b(los|fahren|fahrt|ankomm\w*|umsteig\w*)\b"),
+    # „von Thomann“, „vom OP“: a sender or an event of the own data (Finden); a hint only, it never narrows
+    "finden": re.compile(r"(?i)\b(vo[nm] (der |dem )?[A-ZÄÖÜ]\w+|beim [A-ZÄÖÜ]\w+|abgelegt|eingescannt|gespeichert)\b"),
 }
 
 GROUPS = {
@@ -208,6 +211,9 @@ GROUPS = {
     "musik": ({"musik_machen", "musik_bearbeiten"}, musik.GROUP_WORDS),
     # the Spark's own state (zustand_wz.py): services, backup, version, Notaus, Mein Zustand
     "zustand": ({"spark_zustand"}, zustand_wz.WORDS),
+    # Finden (fund.py, plan such-index): a search verb and a thing of one's own („Such mir die Rechnung von Thomann“,
+    # „Wo ist der Vertrag mit der Telekom?“), never the internet or the archive; beside „dokument“ or „mail“ both stay
+    "finden": ({"fund_suche"}, fund.FIND_WORDS),
     # the own offline archive (Kiwix, V01.0.258): only when the person names it
     "archiv": ({"archive_search", "article_more", "wikipedia"}, dict(chat.NEED_TOOLS)["archive_search"]),
 }
@@ -406,6 +412,10 @@ def classify(text, extra_words="", group_words="", not_words=""):
                 why.pop("dokument")
     except ImportError:
         pass
+    # Finden: beside „dokument“ and „mail“ both groups stay (document_search stays anyway, NARROW_KEEP); a third group
+    # would make it unclear, so then „dokument“ goes („Wo ist die Mail vom Vermieter mit der Nebenkostenabrechnung?“)
+    if "finden" in why and len(why) > MAX_MIXED:
+        why.pop("dokument", None)
     # the admin's „Nicht bei“ words (only taking out: never a group, a tool or a right more)
     for name, rx in own_route_words(not_words).items():
         if name in why and rx.search(text):
@@ -823,7 +833,7 @@ LABELS = {"smarthome": "Smart Home", "kalender": "Kalender und Briefing", "mail"
           "dokument": "Dokumente", "nachricht": "Nachrichten an andere (Chats)", "agent": "Agenten", "iphone": "iPhone",
           "spark": "Fragen zum Spark", "wikipedia": "Wikipedia", "erstellen": "Dokumente erstellen",
           "bild": "Bilder malen", "musik": "Musik machen", "archiv": "Eigenes Archiv",
-          "feeds": "Reddit und Feeds"}
+          "feeds": "Reddit und Feeds", "finden": "Finden in allen Daten"}
 MAX_TEST = 500
 # "Erklären statt Schweigen" (plan „Bedienung gesamt“ B4, V01.0.286): the function behind each group (features.py)
 FEATURE = {"smarthome": "ha", "kalender": "calendar", "mail": "mail", "websuche": "search", "erinnerung": "reminders",

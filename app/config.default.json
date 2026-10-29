@@ -278,6 +278,7 @@
     "knowledge_book_day": 40,
     "knowledge_book_sample": 50,
     "knowledge_map": false,
+    "fund": false,
     "knowledge_map_day": 200,
     "rerank": false,
     "rerank_model": "klein",

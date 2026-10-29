@@ -129,6 +129,14 @@ PHRASES = {
                     ("Gut, ich kümmere mich drum.", "Right, I'll see to it."),
                     ("Ich kram mal in meinem Gedächtnis.", "Rummaging through my memory."),
                     ("Besser als jeder Notizzettel, Moment.", "Better than any sticky note, one moment.")),
+    # Finden (fund.py): the own index over documents, NAS, reMarkable and the Wissensbuch
+    "finden": (("Ich schau in all deinen Sachen nach.", "Let me look through all your things."),
+               ("Moment, ich such das bei dir raus.", "One moment, finding it in your things."),
+               ("Ich durchsuche deine Ablage.", "Searching your files."),
+               ("Einen Augenblick, ich schau im Suchindex.", "Just a second, checking the index."),
+               ("Mal sehen, wo das bei dir liegt.", "Let's see where that is."),
+               ("Okay, ich such es dir heraus.", "Okay, digging it out for you."),
+               ("Gleich, ich stöbere in deinen Unterlagen.", "Hang on, rummaging through your papers.")),
     "dokument": (("Ich schau in deinen Dokumenten nach.", "Let me check your documents."),
                  ("Moment, ich schau in die Dokumente.", "One moment, looking at your documents."),
                  ("Ich blätter kurz durch deine Unterlagen.", "Let me leaf through your papers."),
@@ -338,6 +346,8 @@ def group_of(route_names, direct=None, local=False):
         return "spark"
     if len(names) == 1 and names[0] in PHRASES and not set(route_names or []) & set(NO_ACK):
         return names[0]
+    if len(names) == 2 and "finden" in names and not set(route_names or []) & set(NO_ACK):
+        return "finden"   # „Such mir die Rechnung …“: Finden beside dokument, mail or paket
     if local and not route_names:
         return "lokal"
     return None

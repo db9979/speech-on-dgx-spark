@@ -1837,7 +1837,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Weiche",
 "title": "Weiche",
-"text": "Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und so weiter, heute 23 Gruppen) und grenzt damit die Werkzeuge ein, die das Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen."
+"text": "Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und so weiter, heute 24 Gruppen) und grenzt damit die Werkzeuge ein, die das Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen."
 },
 {
 "lang": "de",
@@ -1861,7 +1861,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ang zwischen Gruppen: Treffen mehrere Gruppen, räumen feste Regeln auf: Wetter, Liste, Nachricht, Dokument und „Dokument erstellen“ gehen vor Smart Home, wenn kein Schaltbefehl dabei ist; Pakete vor Mail; „Habe ich neue Nachrichten?“ ist eine Nachricht, „Was gibt es in den Nachrichten?“ die Websuche; ein Auftrag, der regelmäßig wiederkommt oder etwas beobachtet, ist ein Agent; eine Frage zu Sprache oder Natur oder nach einem Unterschied ist nie ein Gerät; ein Preis oder Streik ist die Websuche, nicht iPhone oder Bahn; „Ruf mich an“ ist der Rückruf des Spark, nicht das iPhone; „Liste der …“ in einer Datei ist nicht die eigene Liste. Zuletzt nehmen die „Nicht bei“-Wörter des Admins Gruppen wieder heraus. 6. Gruppe erkannt?: Eine Gruppe oder höchstens 2 gelten als klar und grenzen ein. Mehr Gruppen auf einmal sind nicht klar genug: dann bleiben alle Werkzeuge. 7. Hinweiswörter merken: Erkennt keine Regel eine Gruppe sicher, sucht die Weiche schwächere Hinweiswörter: „gießen“ deutet aufs Wetter, „Freitag“ auf den Kalender. Ein Hinweis grenzt nie ein; er sorgt nur dafür, dass die Werkzeuge seiner Gruppe bleiben, wenn später eingegrenzt wird. 8. Folgefrage?: Ist die Nachricht kurz (höchs"
+"text": "ang zwischen Gruppen: Treffen mehrere Gruppen, räumen feste Regeln auf: Wetter, Liste, Nachricht, Dokument und „Dokument erstellen“ gehen vor Smart Home, wenn kein Schaltbefehl dabei ist; Pakete vor Mail; „Habe ich neue Nachrichten?“ ist eine Nachricht, „Was gibt es in den Nachrichten?“ die Websuche; ein Auftrag, der regelmäßig wiederkommt oder etwas beobachtet, ist ein Agent; eine Frage zu Sprache oder Natur oder nach einem Unterschied ist nie ein Gerät; ein Preis oder Streik ist die Websuche, nicht iPhone oder Bahn; „Ruf mich an“ ist der Rückruf des Spark, nicht das iPhone; „Liste der …“ in einer Datei ist nicht die eigene Liste. Zuletzt nehmen die „Nicht bei“-Wörter des Admins Gruppen wieder heraus. 6. Gruppe erkannt?: Eine Gruppe oder höchstens 2 gelten als klar und grenzen ein. Mehr Gruppen auf einmal sind nicht klar genug: dann bleiben alle Werkzeuge. Kommt „finden“ (eigene Daten suchen) mit zu vielen Gruppen, fällt zuerst „dokument“ weg, denn Finden sucht auch in den Dokumenten. 7. Hinweiswörter merken: Erkennt keine Regel eine Gruppe sicher, sucht die Weiche schwächere Hinweiswörter: „gießen“ deutet aufs Wetter, „Freitag“ auf den Kalender. Ein Hinweis grenzt nie ein; er sor"
 },
 {
 "lang": "de",
@@ -1869,7 +1869,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "tens 80 Zeichen), zeigt zurück („und“, „das“, „es“) und hatte die eigene Frage direkt davor eine klare Gruppe, gilt diese Gruppe wieder. Es zählt nur die eigene Frage, nie die Antwort. Im Journal steht „weiche: Folgefrage“. Ebenso ein schlichtes „Ja“/„Nein“ oder ein Knopf der Rückfrage-Karte auf die Frage der Antwort davor (ablauf.was_asked, zehn Minuten, dasselbe Gespräch): „weiche: Antwort auf Rückfrage“. 9. Gezielte Werkzeugwahl an?: Nur mit diesem Schalter grenzt die Weiche ein, und nicht bei einem Bild oder einem direkten Smart-Home-Befehl. Ohne ihn bleibt die Gruppe nur für Journal und Statistik; das Modell sieht alle Werkzeuge, die die Rechte erlauben. 10. Modell ordnet ein?: Hat keine Regel eine Gruppe gefunden und steht „Fragen, die keine Regel erkennt“ auf „Modell“, wählt das Sprachmodell einmal eine Gruppe aus der festen Liste (nur JSON, nur die eigene Nachricht). Die Frage läuft schon ab dem Beginn der Vorbereitung nebenher; gewartet wird höchstens 4 Sekunden, mit „Schneller Antwortbeginn“ nur 300 ms nach der Vorbereitung. Mit der Einordnung mit Wahrscheinlichkeit zählt die Wahl erst ab der Schwelle (Standard 80 %); mit Funktionen → Hilfsmodell → Für die Weiche fragt si"
+"text": "gt nur dafür, dass die Werkzeuge seiner Gruppe bleiben, wenn später eingegrenzt wird. 8. Folgefrage?: Ist die Nachricht kurz (höchstens 80 Zeichen), zeigt zurück („und“, „das“, „es“) und hatte die eigene Frage direkt davor eine klare Gruppe, gilt diese Gruppe wieder. Es zählt nur die eigene Frage, nie die Antwort. Im Journal steht „weiche: Folgefrage“. Ebenso ein schlichtes „Ja“/„Nein“ oder ein Knopf der Rückfrage-Karte auf die Frage der Antwort davor (ablauf.was_asked, zehn Minuten, dasselbe Gespräch): „weiche: Antwort auf Rückfrage“. 9. Gezielte Werkzeugwahl an?: Nur mit diesem Schalter grenzt die Weiche ein, und nicht bei einem Bild oder einem direkten Smart-Home-Befehl. Ohne ihn bleibt die Gruppe nur für Journal und Statistik; das Modell sieht alle Werkzeuge, die die Rechte erlauben. 10. Modell ordnet ein?: Hat keine Regel eine Gruppe gefunden und steht „Fragen, die keine Regel erkennt“ auf „Modell“, wählt das Sprachmodell einmal eine Gruppe aus der festen Liste (nur JSON, nur die eigene Nachricht). Die Frage läuft schon ab dem Beginn der Vorbereitung nebenher; gewartet wird höchstens 4 Sekunden, mit „Schneller Antwortbeginn“ nur 300 ms nach der Vorbereitung. Mit der Einordnung"
 },
 {
 "lang": "de",
@@ -1877,7 +1877,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "e erst das kleine Hilfsmodell, lädt es noch oder ist es unsicher, sofort das große, die Schwelle bleibt dieselbe. Die Hinweis-Gruppen bleiben neben der Wahl. In einer Wartungspause des Sprachmodells wird es nicht gefragt. 11. Eingrenzen: Bei einer klaren Gruppe bleiben ihre Werkzeuge, dazu immer 5 feste (sich etwas merken, eigene Dokumente, PC), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des Admins für diese Gruppe (höchstens 6) und was die eigenen Worte ausdrücklich nennen („aufs reMarkable“). Alles nur, soweit schon angeboten. Ist von der Gruppe nichts angeboten oder steht die Gruppe auf „nicht eingrenzen“, bleiben alle. 12. Knapp?: Bleibt die Frage ohne Gruppe, steht die Einstellung auf „Knapp“ und verlangt kein Pflicht-Wort ein Werkzeug, bekommt das Modell nur die kurze Liste: Websuche, Wikipedia, Archiv, frühere Gespräche, die festen Werkzeuge und die Werkzeuge der Hinweis-Gruppen. Es liest weniger und beginnt früher. 13. Erstes Werkzeug festlegen: Eine einzige klare Gruppe, ein Pflicht-Werkzeug und nur dieses aus der Gruppe angeboten: die erste Runde muss genau dieses rufen („Wie wird das Wetter?“). Ein kurzer, eindeutiger Lesesatz („Wie ist das Wetter heute?“) wi"
+"text": " mit Wahrscheinlichkeit zählt die Wahl erst ab der Schwelle (Standard 80 %); mit Funktionen → Hilfsmodell → Für die Weiche fragt sie erst das kleine Hilfsmodell, lädt es noch oder ist es unsicher, sofort das große, die Schwelle bleibt dieselbe. Die Hinweis-Gruppen bleiben neben der Wahl. In einer Wartungspause des Sprachmodells wird es nicht gefragt. 11. Eingrenzen: Bei einer klaren Gruppe bleiben ihre Werkzeuge, dazu immer 5 feste (sich etwas merken, eigene Dokumente, PC), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des Admins für diese Gruppe (höchstens 6) und was die eigenen Worte ausdrücklich nennen („aufs reMarkable“). Alles nur, soweit schon angeboten. Ist von der Gruppe nichts angeboten oder steht die Gruppe auf „nicht eingrenzen“, bleiben alle. 12. Knapp?: Bleibt die Frage ohne Gruppe, steht die Einstellung auf „Knapp“ und verlangt kein Pflicht-Wort ein Werkzeug, bekommt das Modell nur die kurze Liste: Websuche, Wikipedia, Archiv, frühere Gespräche, die festen Werkzeuge und die Werkzeuge der Hinweis-Gruppen. Es liest weniger und beginnt früher. 13. Erstes Werkzeug festlegen: Eine einzige klare Gruppe, ein Pflicht-Werkzeug und nur dieses aus der Gruppe angeboten: "
 },
 {
 "lang": "de",
@@ -1885,7 +1885,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "rd mit „Eindeutiges direkt abrufen“ vom Panel selbst abgerufen, für morgen und übermorgen mit dem Datum, das das Panel ausrechnet. 14. Journal und Zählung: Jeder Zug schreibt eine Zeile „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; ein Grundwort steht nur da, wenn es noch in der Nachricht steht. Gezählt werden je Tag und Gruppe nur Anzahlen (8 Tage), nie ein Wort der Frage. Mit „Unklare Fragen anonym merken“ kommt eine unklare Frage eines Profils (nie eines Gastes, nie mit dem Codewort) zusätzlich geschwärzt auf die Weiche-Seite: feste Regeln wie bei „Probleme melden“, Kontaktnamen und jede Zahl werden Platzhalter, eine zweite Prüfung verwirft, was noch persönlich wirkt (weiche_unklar.anon); ohne Profil, Gerät und Uhrzeit, versiegelt, höchstens 100 Sätze, 7 Tage. Dann geht die Liste an die Antwort."
+"text": "die erste Runde muss genau dieses rufen („Wie wird das Wetter?“). Ein kurzer, eindeutiger Lesesatz („Wie ist das Wetter heute?“) wird mit „Eindeutiges direkt abrufen“ vom Panel selbst abgerufen, für morgen und übermorgen mit dem Datum, das das Panel ausrechnet. 14. Journal und Zählung: Jeder Zug schreibt eine Zeile „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; ein Grundwort steht nur da, wenn es noch in der Nachricht steht. Gezählt werden je Tag und Gruppe nur Anzahlen (8 Tage), nie ein Wort der Frage. Mit „Unklare Fragen anonym merken“ kommt eine unklare Frage eines Profils (nie eines Gastes, nie mit dem Codewort) zusätzlich geschwärzt auf die Weiche-Seite: feste Regeln wie bei „Probleme melden“, Kontaktnamen und jede Zahl werden Platzhalter, eine zweite Prüfung verwirft, was noch persönlich wirkt (weiche_unklar.anon); ohne Profil, Gerät und Uhrzeit, versiegelt, höchstens 100 Sätze, 7 Tage. Dann geht die Liste an die Antwort."
 },
 {
 "lang": "de",
@@ -1901,7 +1901,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Alltagsquote",
 "title": "Alltagsquote",
-"text": "- Die Testsätze (172) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
+"text": "- Die Testsätze (180) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
 },
 {
 "lang": "de",
@@ -1909,7 +1909,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Werkzeugnamen",
 "title": "Werkzeugnamen",
-"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (92 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
+"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (93 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
 },
 {
 "lang": "de",
@@ -1917,7 +1917,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 23 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 172 eingebaute Testsätze (Schritt 4, Schritt 5) - 216 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
+"text": "- 24 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 180 eingebaute Testsätze (Schritt 4, Schritt 5) - 216 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
 },
 {
 "lang": "de",
@@ -2125,7 +2125,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 4 Aufrufe pro Runde (Schritt 1) - 3 Gedächtnis-Notizen pro Antwort (Schritt 1) - 13 Werkzeuge gesperrt nach fremdem Text (Schritt 4) - 7 Werkzeuge ohne Internet bei Notaus (Schritt 3) - 92 Werkzeuge mit verständlichem Namen (Schritt 11)"
+"text": "- 4 Aufrufe pro Runde (Schritt 1) - 3 Gedächtnis-Notizen pro Antwort (Schritt 1) - 13 Werkzeuge gesperrt nach fremdem Text (Schritt 4) - 7 Werkzeuge ohne Internet bei Notaus (Schritt 3) - 93 Werkzeuge mit verständlichem Namen (Schritt 11)"
 },
 {
 "lang": "de",
@@ -2165,7 +2165,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Wissen",
 "title": "Wissen",
-"text": "Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene Kiwix-Archiv und erstellte Dokumente. Die Seite zeigt den Weg, auf dem eine Frage passende Stellen in den Dokumenten findet."
+"text": "Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene Kiwix-Archiv und erstellte Dokumente. Die Seite zeigt den Weg, auf dem eine Frage passende Stellen in den Dokumenten findet. Finden (fund.py, eigene Datei fund.db pro Profil) legt darüber einen Index aus Titeln, Feldern und Schlagworten nach festen Regeln und nutzt für den Text dieselbe Suche."
 },
 {
 "lang": "de",
@@ -2453,7 +2453,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "innt mit einem Wort aus logfilter.AREAS (35 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides. 6. Ende und Bewertung: Am Ende bekommt der Datensatz seinen Zustand: Fehler, wenn ein Fehlerwort gesetzt ist, langsam, wenn der erste Ton später als 5.0 s kam, sonst gut. 7. Anfragen verfolgen an?: Ist nur Live oder der Einstellungs-Assistent an, endet der Datensatz hier. Er wird nirgends geschrieben. 8. Zeile „anfrage:“ ins Journal: Eine Zeile pro Anfrage: Kennung, Kanal, Einordnung, Werkzeuge mit ok oder nicht ok, Zeit bis zur Rückmeldung, bis zum ersten Ton und bis zum Ende. Ohne Namen. 9. Anfrage-Verlauf auf der Platte: Der Datensatz wird angehängt. Wird die Datei zu groß, bleiben nur die letzten 500 Anfragen der letzten 2880 Minuten. Die Datei ist in keiner Sicherung. 10. Admin liest Logs → Anfragen: Nur Admin und Mit-Admins lesen den Verlauf, mit Rate-Limit. Name und Gerät eines Profils stehen nur da, wenn das Profil es erlaubt; sonst heißt es „Profil“. Zu einer Anfrage zeigt das Panel die Journal-Zeilen aus ihrer Zeit. 11. Journal lesen und einordnen: logfilter liest höchstens 20000 Zeilen; an journalctl gehen nur Zahlen aus festen Listen. Jede Zeile bekomm"
+"text": "innt mit einem Wort aus logfilter.AREAS (36 Bereiche), Profile nur über profiles.log_name. Ein Selbsttest prüft beides. 6. Ende und Bewertung: Am Ende bekommt der Datensatz seinen Zustand: Fehler, wenn ein Fehlerwort gesetzt ist, langsam, wenn der erste Ton später als 5.0 s kam, sonst gut. 7. Anfragen verfolgen an?: Ist nur Live oder der Einstellungs-Assistent an, endet der Datensatz hier. Er wird nirgends geschrieben. 8. Zeile „anfrage:“ ins Journal: Eine Zeile pro Anfrage: Kennung, Kanal, Einordnung, Werkzeuge mit ok oder nicht ok, Zeit bis zur Rückmeldung, bis zum ersten Ton und bis zum Ende. Ohne Namen. 9. Anfrage-Verlauf auf der Platte: Der Datensatz wird angehängt. Wird die Datei zu groß, bleiben nur die letzten 500 Anfragen der letzten 2880 Minuten. Die Datei ist in keiner Sicherung. 10. Admin liest Logs → Anfragen: Nur Admin und Mit-Admins lesen den Verlauf, mit Rate-Limit. Name und Gerät eines Profils stehen nur da, wenn das Profil es erlaubt; sonst heißt es „Profil“. Zu einer Anfrage zeigt das Panel die Journal-Zeilen aus ihrer Zeit. 11. Journal lesen und einordnen: logfilter liest höchstens 20000 Zeilen; an journalctl gehen nur Zahlen aus festen Listen. Jede Zeile bekomm"
 },
 {
 "lang": "de",
@@ -3781,7 +3781,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Ein Dienst schreibt eine Zeile: Panel, ASR, TTS, Engines und Wächter schreiben mit print. systemd gibt die Zeile an das Journal; jede Einheit hat LogNamespace=speech-spark. 2. Feste Wörter und Zahlen: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (35 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis. 3. Ausführlich an?: Für einige Bereiche kann der Admin zusätzliche Zeilen einschalten, höchstens 240 Minuten. Auch sie tragen nur Zahlen und Entscheidungen; ein Neustart schaltet sie aus. 4. Abfragen still: Erfolgreiche Statusabfragen, die das Panel alle paar Sekunden stellt, schreiben keine Zeile. 5. Eigener Bereich mit Grenze: install.sh schreibt die Grenze für Platz und Alter aus logs.max_mb und logs.keep_days. Ältere Zeilen löscht journald selbst. Eine Änderung wirkt nach dem nächsten Update oder install.sh. 6. Admin öffnet die Diagnose: Nur der Admin, höchstens 60 Abrufe pro Minute. 7. Filter aus der festen Liste?: Bereiche, Zeitfenster (bis 24 Stunden) und Zeilenzahl (bis 10"
+"text": "1. Ein Dienst schreibt eine Zeile: Panel, ASR, TTS, Engines und Wächter schreiben mit print. systemd gibt die Zeile an das Journal; jede Einheit hat LogNamespace=speech-spark. 2. Feste Wörter und Zahlen: Jede Zeile des Panels beginnt mit einem Wort aus logfilter.AREAS (36 Bereiche) und trägt nur feste Wörter und Zahlen. Ein Profil steht dort nur über profiles.log_name: sein Name nur mit seiner Zustimmung, sonst „Profil“ und das Ende der ID. test_log_luecken verlangt für jede Aktion eine Zeile je Ergebnis. 3. Ausführlich an?: Für einige Bereiche kann der Admin zusätzliche Zeilen einschalten, höchstens 240 Minuten. Auch sie tragen nur Zahlen und Entscheidungen; ein Neustart schaltet sie aus. 4. Abfragen still: Erfolgreiche Statusabfragen, die das Panel alle paar Sekunden stellt, schreiben keine Zeile. 5. Eigener Bereich mit Grenze: install.sh schreibt die Grenze für Platz und Alter aus logs.max_mb und logs.keep_days. Ältere Zeilen löscht journald selbst. Eine Änderung wirkt nach dem nächsten Update oder install.sh. 6. Admin öffnet die Diagnose: Nur der Admin, höchstens 60 Abrufe pro Minute. 7. Filter aus der festen Liste?: Bereiche, Zeitfenster (bis 24 Stunden) und Zeilenzahl (bis 10"
 },
 {
 "lang": "de",
@@ -3805,7 +3805,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 35 Bereiche der Diagnose (Schritt 2) - 20000 Zeilen pro Abruf höchstens gelesen (Schritt 8) - 2 MB Journal-Text pro Abruf höchstens (Schritt 8) - 1000 Zeilen höchstens angezeigt (Schritt 7) - 240 Minuten „Ausführlich“ höchstens (Schritt 3)"
+"text": "- 36 Bereiche der Diagnose (Schritt 2) - 20000 Zeilen pro Abruf höchstens gelesen (Schritt 8) - 2 MB Journal-Text pro Abruf höchstens (Schritt 8) - 1000 Zeilen höchstens angezeigt (Schritt 7) - 240 Minuten „Ausführlich“ höchstens (Schritt 3)"
 },
 {
 "lang": "de",
@@ -5014,6 +5014,30 @@
 "head": "Sprach-Chat",
 "title": "Wissenskarte schneller (V01.0.907, Dominik 2026-10-21 „1“)",
 "text": "Wissenskarte schneller (V01.0.907, Dominik 2026-10-21 „1“): Die Wissenskarte hat eine eigene Tagesgrenze *Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte → Karte: Dokumente pro Tag und Profil* (chat.knowledge_map_day, 5 bis 500, Standard 200; vorher galt chat.knowledge_book_day mit 40). Ein Kartenschritt nennt nur Verbindungen und ist kurz, so ist der Rückstand eines vollen Wissensbuchs (etwa 150 Dokumente) in rund einem Tag eingearbeitet. Weiterhin nur in ruhigen Minuten, erst wenn das Wissensbuch nichts zu tun hat, ein Dokument je Schritt hinter der Sprache."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Finden in allen Daten, Stufe A (V01.1.245, Plan *such-index*, Dominik 2026-10-29 „1a 2a 3a 4a 5a“): Admin-Schalter *Funktionen → Finden in allen Daten* (chat.fund, ab Werk aus; kein Profilschalter, der Admin sperrt einzelne Profile, Gäste und fremde Stimmen nie). Eigener Menüpunkt *Finden* neben dem Wissensbuch mit den Reitern *Suche*, *Schlagworte* und *Einstellungen* (Ich-Seite fundbox). Je Profil eine eigene Datei users/<id>/fund.db (SQLite, FTS5): fund_item (Quelle, Verweis, Datum, Titel, Auszug, Felder), fund_fts (Wörter aus Titel, Feldern und Schlagworten, nie der Textkörper eines Dokuments), fund_blind (für die versiegelten Quellen ab Stufe B), fund_tag (Schlagworte mit HMAC-Marke je Profil, vorrat.marke, Schlüssel per HKDF aus dem Tresor-Schlüssel und der Profil-ID), fund_hand (eigene Schlagworte), fund_stand. Einsammel-Vertrag fund.QUELLEN (Name, Funktion, Schutz, Art, neues_seit, noch_da, oeffnen): in Stufe A Dokumente, NAS-Wissensordner, reMarkable und Wissensbuch, alle als Verweis; deren Text sucht Finden über die eigene Dokumentsuche (documents.search, Rangmischung RRF k = 60). Alle fünf Minuten je Profil eine Runde im Hintergrund (vorrang.in_thread(\"Suchindex\"), höchs"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "tens 200 Einträge je Quelle und Runde), nur wenn sich die Dokumente geändert haben. Felder und Kategorien nur nach festen Regeln: Betrag hinter „Gesamt/Summe/Rechnungsbetrag“, Nummer hinter ihrem festen Wort, Art aus festen Wörtern oder dem Steckbrief, Firma nur, wenn der Absender wörtlich im Text steht; Kategorien nur aus der festen Liste (fund.KATEGORIEN = Arten des Steckbriefs ohne „Sonstiges“, jetzt mit „Bestellung“ und „Buchung“, dazu 13 Bereiche). Personen-, Firmen- und Ortsseiten des Wissensbuchs werden Schlagworte (Ersatz, bis die Knoten der Wissenskarte da sind). Eigene Schlagworte gehen vor: ✓ behält, × nimmt eines für immer weg, + fügt eines hinzu; sie überleben „Neu aufbauen“, freie Schlagworte eines Dokuments landen in seinem Steckbrief. Im Assistenten: Werkzeug fund_suche (Weiche-Gruppe „finden“: ein Suchwort und etwas Eigenes wie Rechnung, Vertrag, Mail oder „meine …“, nie mit Internet oder Archiv), höchstens fünf Treffer zu je 400 Zeichen als Text von außen; Filter (Kategorie, Firma, Person, Quelle, ein Jahr) nimmt das Panel nur, wenn die eigenen Worte der Nachricht sie enthalten. Unter der Antwort die Karte „In Finden ansehen“ (Browser, Apps über die Panel-Ansicht,"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " Begleiter). Strg K bietet „In meinen Daten finden: …“. Endpunkte POST /api/profile/fund/suche, GET /api/profile/fund/eintrag/{id}, PUT …/schlagworte, GET /api/profile/fund/stand, POST /api/profile/fund/neu, DELETE /api/profile/fund (Anmeldung, eigenes Profil, CSRF, Größen- und Rate-Limit), GET /api/admin/fund (nur Zahlen). Log-Bereich *Finden* (fund: suche | 3 treffer | 41 ms | P1, fund: runde dokument | 12 neu | 0 weg), Live-Zeile *Finden* nur mit Zahlen. Selbsttests tests/test_fund.py."
 },
 {
 "lang": "de",
@@ -12973,6 +12997,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Meine Daten",
 "title": "Meine Daten",
+"text": "- Finden in allen Daten (Funktionen → Meine Daten → „Finden in allen Daten“; Finden → Einstellungen): Ein Suchindex über deine eigenen Sachen: Dokumente, Wissensordner auf dem NAS, reMarkable und Wissensbuch (Mails, Termine, Kontakte, Listen und mehr folgen)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
 "text": "- Prüffragen vom Spark (Funktionen → Meine Daten → „Prüffragen vom Spark“; baut auf „Suchprüfung“; Ich → Dokumente): Damit die Suchprüfung genug Fragen hat, schreibt das Sprachmodell in ruhigen Minuten zu einer zufälligen Stelle deiner Dokumente eine Frage, die nur diese Stelle beantwortet, mit eigenen Worten."
 },
 {
@@ -14581,7 +14613,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Meine Sachen",
 "title": "Meine Sachen",
-"text": "e Punkte selbst (die Seite in der Mitte, ihre Nachbarn im Ring, der Rest außen, Ursachen rot gestrichelt); ein Tippen zeigt die Verbindungen des Punktes mit Quelle, „In die Mitte“ nimmt ihn als Mitte, nach links wischen „Stimmt nicht“. „Alles“ zeigt wieder die am besten verbundenen Punkte. Der Spark prüft jede Änderung (iphone.THINGS „wissenskarte“); der Export bleibt im Browser. - Vom Spark erstellt: die Dokumente, die der Spark gemacht hat, wie bisher. - Bilder: alle gemalten Bilder als Raster, ein Tippen zeigt eines groß mit Wunsch und Zeit, Teilen und Löschen. Oben ein Feld „Was soll ich malen?“; solange gemalt wird, schaut die App alle 4 Sekunden nach. Ändern, Schnellknöpfe und eigene Fotos gehen weiter im Panel unter Ich → Bilder. - Musik: alle Lieder nach Tag gruppiert wie im Panel (Heute, Gestern, Letzte 7 Tage, Älter), mit Abspielen direkt in der App, Länge, mit oder ohne Gesang, Uhrzeit oder Tag, wischen zum Löschen. Oben „Was für Musik?“ mit der Länge zur Wahl (dieselben Längen wie die Chips im Panel, bis zur Grenze des Admins) macht ein Stück ohne Gesang; Gesang und eigener Liedtext gehen im Panel unter Ich → Musik. - Gedächtnis: alle gemerkten Fakten mit Suche, „aus ei"
+"text": "e Punkte selbst (die Seite in der Mitte, ihre Nachbarn im Ring, der Rest außen, Ursachen rot gestrichelt); ein Tippen zeigt die Verbindungen des Punktes mit Quelle, „In die Mitte“ nimmt ihn als Mitte, nach links wischen „Stimmt nicht“. „Alles“ zeigt wieder die am besten verbundenen Punkte. Der Spark prüft jede Änderung (iphone.THINGS „wissenskarte“); der Export bleibt im Browser. - Finden (seit V01.1.245, Plan *such-index* Stufe A, nur wenn der Admin „Finden in allen Daten“ freigegeben hat): die Seite Finden kommt über /api/features (pages) in die Ich-Liste und öffnet die Panel-Ansicht mit Suche, Schlagworten und Einstellungen; die Karte „In Finden ansehen“ unter einer Antwort führt dorthin. - Vom Spark erstellt: die Dokumente, die der Spark gemacht hat, wie bisher. - Bilder: alle gemalten Bilder als Raster, ein Tippen zeigt eines groß mit Wunsch und Zeit, Teilen und Löschen. Oben ein Feld „Was soll ich malen?“; solange gemalt wird, schaut die App alle 4 Sekunden nach. Ändern, Schnellknöpfe und eigene Fotos gehen weiter im Panel unter Ich → Bilder. - Musik: alle Lieder nach Tag gruppiert wie im Panel (Heute, Gestern, Letzte 7 Tage, Älter), mit Abspielen direkt in der App, Länge, mi"
 },
 {
 "lang": "de",
@@ -14589,7 +14621,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Meine Sachen",
 "title": "Meine Sachen",
-"text": "nem Gespräch gelernt“ oder „selbst gesagt“ mit Datum. Wischen zum Ändern oder Löschen, „Auswählen“ löscht mehrere, „Aufräumen vorschlagen“ fragt das Sprachmodell nach doppelten Einträgen, erst nach deinem „Übernehmen“ ändert sich etwas. Alles auf einmal vergessen geht weiter nur im Browser."
+"text": "t oder ohne Gesang, Uhrzeit oder Tag, wischen zum Löschen. Oben „Was für Musik?“ mit der Länge zur Wahl (dieselben Längen wie die Chips im Panel, bis zur Grenze des Admins) macht ein Stück ohne Gesang; Gesang und eigener Liedtext gehen im Panel unter Ich → Musik. - Gedächtnis: alle gemerkten Fakten mit Suche, „aus einem Gespräch gelernt“ oder „selbst gesagt“ mit Datum. Wischen zum Ändern oder Löschen, „Auswählen“ löscht mehrere, „Aufräumen vorschlagen“ fragt das Sprachmodell nach doppelten Einträgen, erst nach deinem „Übernehmen“ ändert sich etwas. Alles auf einmal vergessen geht weiter nur im Browser."
 },
 {
 "lang": "de",
@@ -15165,7 +15197,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Daten auf der Platte und neue Schreibwege",
 "title": "Daten auf der Platte und neue Schreibwege",
-"text": "- Vorräte versiegelt (seit V01.0.872/879): Was ein Dienst für ein Profil gelesen hat, liegt als Vorrat versiegelt (vault) im Profil, damit Antworten bei einem Ausfall mit „Stand …“ kommen: Mail-Vorrat (mail-vorrat.bin, Kopfzeilen und bis zu 40 Mailtexte ohne Anhänge), Wetter-, Paket- und Für-dich-Vorrat. Nicht in der Sicherung, „Daten löschen“ entfernt sie. Liste aller Dateien: Architektur → Datenablage. - Unklare Fragen anonym (seit V01.0.927, Schalter „Unklare Fragen anonym merken“ unter Funktionen → Gezielte Werkzeugwahl, aus; Vorliebe je Profil unter Ich → Gespräch → Datenschutz): Fragen, die keine Regel der Weiche erkennt, liegen nur geschwärzt (feste Regeln wie bei „Probleme melden“, dazu Adressbuch-Namen und jede Zahl, zweite Leck-Prüfung verwirft) und versiegelt in state/weiche-unklar.json: ohne Profil, Gerät und Uhrzeit, höchstens 100, nach 7 Tagen weg, nicht in der Sicherung. Nie ein Satz mit dem Codewort, nie Gäste. Sehen und löschen nur Admin und Mit-Admin auf Funktionen → Weiche. - Kontakte ändern (seit V01.0.888, Schalter „Kontakte ändern“, aus): Geändert wird nur im eigenen Adressbuch des Profils und nur mit If-Match (ETag); hat sich die Karte inzwischen geändert, üb"
+"text": "- Finden: Suchindex (seit V01.1.245, Schalter „Finden in allen Daten“, aus): users/<id>/fund.db je Profil (Datei 0600, Ordner 0700) hält nur Titel, Felder, Auszüge des Steckbriefs und Schlagworte, nie den Textkörper eines Dokuments. Schlagworte tragen eine HMAC-Marke mit einem Schlüssel je Profil (HKDF aus dem Tresor-Schlüssel und der Profil-ID, vorrat.marke); ein Profil sucht nur in seiner Datei mit seinen Marken. Felder und Kategorien setzt das Panel nach festen Regeln, nie das Modell; die Filter des Werkzeugs gelten nur, wenn die eigenen Worte sie enthalten. „Index löschen“ (Finden → Einstellungen) und „Daten löschen“ leeren die Datei auch bei gesperrtem Finden. - Vorräte versiegelt (seit V01.0.872/879): Was ein Dienst für ein Profil gelesen hat, liegt als Vorrat versiegelt (vault) im Profil, damit Antworten bei einem Ausfall mit „Stand …“ kommen: Mail-Vorrat (mail-vorrat.bin, Kopfzeilen und bis zu 40 Mailtexte ohne Anhänge), Wetter-, Paket- und Für-dich-Vorrat. Nicht in der Sicherung, „Daten löschen“ entfernt sie. Liste aller Dateien: Architektur → Datenablage. - Unklare Fragen anonym (seit V01.0.927, Schalter „Unklare Fragen anonym merken“ unter Funktionen → Gezielte Werkzeugw"
 },
 {
 "lang": "de",
@@ -15173,7 +15205,15 @@
 "file": "Sicherheit und Betrieb",
 "head": "Daten auf der Platte und neue Schreibwege",
 "title": "Daten auf der Platte und neue Schreibwege",
-"text": "erschreibt der Spark nichts. Neue Karten gehen in das gewählte Buch oder „Auf dem Spark“. - Suche beim Mailserver (seit V01.0.887): Was man ins Suchfeld tippt, wird zu IMAP-SEARCH-Wörtern; nur Buchstaben, Ziffern, @, . und - kommen hinein, nie ein Anführungszeichen, ein Wort außerhalb von ASCII als UTF-8-Literal. Gesucht wird nur in den eigenen Postfächern. - Heldenbuch aufs reMarkable (seit V01.1.143, Schalter unter Funktionen → KI-Dungeon-Master, aus): Das Buch eines Helden verlässt den Spark nur auf dem Weg des reMarkable (dessen Cloud, remarkable.place, Tageslimits). Es enthält nur Daten des Panels: Katalog, Heldenwerte, die eigene Chronik aus festen Arten und Zahlen, von Personen nur das Freigeschaltete, von Mitspielern nur Name, Volk und Klasse; nie Text des Modells. Bilder werden mit Pillow unter einer Pixel- und Bytegrenze neu geöffnet. Zustand users/<id>/dungeon-buch.json, „Daten löschen“ entfernt ihn."
+"text": "ahl, aus; Vorliebe je Profil unter Ich → Gespräch → Datenschutz): Fragen, die keine Regel der Weiche erkennt, liegen nur geschwärzt (feste Regeln wie bei „Probleme melden“, dazu Adressbuch-Namen und jede Zahl, zweite Leck-Prüfung verwirft) und versiegelt in state/weiche-unklar.json: ohne Profil, Gerät und Uhrzeit, höchstens 100, nach 7 Tagen weg, nicht in der Sicherung. Nie ein Satz mit dem Codewort, nie Gäste. Sehen und löschen nur Admin und Mit-Admin auf Funktionen → Weiche. - Kontakte ändern (seit V01.0.888, Schalter „Kontakte ändern“, aus): Geändert wird nur im eigenen Adressbuch des Profils und nur mit If-Match (ETag); hat sich die Karte inzwischen geändert, überschreibt der Spark nichts. Neue Karten gehen in das gewählte Buch oder „Auf dem Spark“. - Suche beim Mailserver (seit V01.0.887): Was man ins Suchfeld tippt, wird zu IMAP-SEARCH-Wörtern; nur Buchstaben, Ziffern, @, . und - kommen hinein, nie ein Anführungszeichen, ein Wort außerhalb von ASCII als UTF-8-Literal. Gesucht wird nur in den eigenen Postfächern. - Heldenbuch aufs reMarkable (seit V01.1.143, Schalter unter Funktionen → KI-Dungeon-Master, aus): Das Buch eines Helden verlässt den Spark nur auf dem Weg des reMark"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Daten auf der Platte und neue Schreibwege",
+"title": "Daten auf der Platte und neue Schreibwege",
+"text": "able (dessen Cloud, remarkable.place, Tageslimits). Es enthält nur Daten des Panels: Katalog, Heldenwerte, die eigene Chronik aus festen Arten und Zahlen, von Personen nur das Freigeschaltete, von Mitspielern nur Name, Volk und Klasse; nie Text des Modells. Bilder werden mit Pillow unter einer Pixel- und Bytegrenze neu geöffnet. Zustand users/<id>/dungeon-buch.json, „Daten löschen“ entfernt ihn."
 },
 {
 "lang": "de",
@@ -18253,7 +18293,7 @@
 "file": "Architecture and data flow",
 "head": "Switch",
 "title": "Switch",
-"text": "The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 23 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow."
+"text": "The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 24 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow."
 },
 {
 "lang": "en",
@@ -18277,7 +18317,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "st, message, document and „create document“ come before smart home when there is no switching command; parcels before mail; „Do I have new messages?“ is a message, „What is in the news?“ the web search; a job that comes back regularly or watches something is an agent; a question about language, nature or a difference is never a device; a price or a strike is the web search, not the iPhone or the train; „Call me“ is the Spark calling back, not the iPhone; „a list of …“ in a file is not the own list. Last, the admin's „Not with“ words take groups out again. 6. Group recognized?: One group or at most 2 count as clear and narrow. More groups at once are not clear enough: then every tool stays. 7. Note hint words: If no rule recognizes a group for sure, the switch looks for weaker hint words: „water the plants“ points to the weather, „Friday“ to the calendar. A hint never narrows; it only makes sure its group's tools stay when something narrows later. 8. Follow-up?: If the message is short (at most 80 characters), points back („and“, „that“, „it“) and the own question just before had a clear group, that group holds again. Only the own question counts, never the answer. The journal says "
+"text": "st, message, document and „create document“ come before smart home when there is no switching command; parcels before mail; „Do I have new messages?“ is a message, „What is in the news?“ the web search; a job that comes back regularly or watches something is an agent; a question about language, nature or a difference is never a device; a price or a strike is the web search, not the iPhone or the train; „Call me“ is the Spark calling back, not the iPhone; „a list of …“ in a file is not the own list. Last, the admin's „Not with“ words take groups out again. 6. Group recognized?: One group or at most 2 count as clear and narrow. More groups at once are not clear enough: then every tool stays. When „finden“ (searching the own data) comes with too many groups, „dokument“ goes first, since Find searches the documents too. 7. Note hint words: If no rule recognizes a group for sure, the switch looks for weaker hint words: „water the plants“ points to the weather, „Friday“ to the calendar. A hint never narrows; it only makes sure its group's tools stay when something narrows later. 8. Follow-up?: If the message is short (at most 80 characters), points back („and“, „that“, „it“) and the own "
 },
 {
 "lang": "en",
@@ -18285,7 +18325,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "„weiche: Folgefrage“. So does a plain „yes“/„no“ or a button of the question card to the question of the answer before (ablauf.was_asked, ten minutes, same conversation): „weiche: Antwort auf Rückfrage“. 9. Targeted tool choice on?: Only with this switch does the switch narrow, and not with a picture or a direct smart home command. Without it the group only goes to the journal and statistics; the model sees every tool the rights allow. 10. Model sorts?: If no rule found a group and „Questions no rule recognizes“ is set to the model, the language model picks one group from the fixed list once (JSON only, only the own message). The question already runs beside the preparation from its start; the wait is at most 4 seconds, with „Fast answer start“ only 300 ms after the preparation. With classification with probabilities the pick only counts from the threshold (default 80 %); with Features → Helper model → For routing it asks the small helper model first, and while that is loading or unsure the big one at once, with the same threshold. The hint groups stay beside the pick. During a maintenance pause of the language model it is not asked. 11. Narrow: With a clear group its tools stay, p"
+"text": "question just before had a clear group, that group holds again. Only the own question counts, never the answer. The journal says „weiche: Folgefrage“. So does a plain „yes“/„no“ or a button of the question card to the question of the answer before (ablauf.was_asked, ten minutes, same conversation): „weiche: Antwort auf Rückfrage“. 9. Targeted tool choice on?: Only with this switch does the switch narrow, and not with a picture or a direct smart home command. Without it the group only goes to the journal and statistics; the model sees every tool the rights allow. 10. Model sorts?: If no rule found a group and „Questions no rule recognizes“ is set to the model, the language model picks one group from the fixed list once (JSON only, only the own message). The question already runs beside the preparation from its start; the wait is at most 4 seconds, with „Fast answer start“ only 300 ms after the preparation. With classification with probabilities the pick only counts from the threshold (default 80 %); with Features → Helper model → For routing it asks the small helper model first, and while that is loading or unsure the big one at once, with the same threshold. The hint groups stay be"
 },
 {
 "lang": "en",
@@ -18293,7 +18333,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "lus always 5 fixed ones (remembering something, own documents, PC), the hints' tools, the admin's extra tools for this group (at most 6) and what the own words name explicitly („onto the reMarkable“). All only as far as already offered. If nothing of the group is offered or the group is set to „do not narrow“, all stay. 12. Lean?: If the question stays without a group, the setting is „Lean“ and no must word requires a tool, the model only gets the short list: web search, Wikipedia, archive, earlier conversations, the fixed tools and the tools of the hint groups. It reads less and starts sooner. 13. Fix the first tool: One single clear group, one required tool and only that one of the group offered: the first round must call exactly that one („What will the weather be?“). A short, clear reading sentence („What is the weather today?“) is fetched by the panel itself with „Fetch clear questions directly“, for tomorrow and the day after with the date the panel works out. 14. Journal and count: Every turn writes a line „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; a reason word only shows when it is still in the message. Per d"
+"text": "side the pick. During a maintenance pause of the language model it is not asked. 11. Narrow: With a clear group its tools stay, plus always 5 fixed ones (remembering something, own documents, PC), the hints' tools, the admin's extra tools for this group (at most 6) and what the own words name explicitly („onto the reMarkable“). All only as far as already offered. If nothing of the group is offered or the group is set to „do not narrow“, all stay. 12. Lean?: If the question stays without a group, the setting is „Lean“ and no must word requires a tool, the model only gets the short list: web search, Wikipedia, archive, earlier conversations, the fixed tools and the tools of the hint groups. It reads less and starts sooner. 13. Fix the first tool: One single clear group, one required tool and only that one of the group offered: the first round must call exactly that one („What will the weather be?“). A short, clear reading sentence („What is the weather today?“) is fetched by the panel itself with „Fetch clear questions directly“, for tomorrow and the day after with the date the panel works out. 14. Journal and count: Every turn writes a line „weiche: Absicht … | Grund … | Hinweis … |"
 },
 {
 "lang": "en",
@@ -18301,7 +18341,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ay and group only counts are kept (8 days), never a word of the question. With „Keep unclear questions anonymously“ an unclear question of a profile (never a guest, never with the code word) also goes redacted onto the switch page: fixed rules as in „Report a problem“, contact names and every number become placeholders, a second check drops what still looks personal (weiche_unklar.anon); without profile, device and time, sealed, at most 100 sentences, 7 days. Then the list goes to the answer."
+"text": " Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; a reason word only shows when it is still in the message. Per day and group only counts are kept (8 days), never a word of the question. With „Keep unclear questions anonymously“ an unclear question of a profile (never a guest, never with the code word) also goes redacted onto the switch page: fixed rules as in „Report a problem“, contact names and every number become placeholders, a second check drops what still looks personal (weiche_unklar.anon); without profile, device and time, sealed, at most 100 sentences, 7 days. Then the list goes to the answer."
 },
 {
 "lang": "en",
@@ -18317,7 +18357,7 @@
 "file": "Architecture and data flow",
 "head": "Everyday score",
 "title": "Everyday score",
-"text": "- The test sentences (172) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
+"text": "- The test sentences (180) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
 },
 {
 "lang": "en",
@@ -18325,7 +18365,7 @@
 "file": "Architecture and data flow",
 "head": "Tool names",
 "title": "Tool names",
-"text": "- Wherever a tool shows, a readable name comes from one table (92 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
+"text": "- Wherever a tool shows, a readable name comes from one table (93 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
 },
 {
 "lang": "en",
@@ -18333,7 +18373,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 23 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 172 built-in test sentences (step 4, step 5) - 216 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
+"text": "- 24 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 180 built-in test sentences (step 4, step 5) - 216 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
 },
 {
 "lang": "en",
@@ -18541,7 +18581,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 4 calls per round (step 1) - 3 memory notes per answer (step 1) - 13 tools locked after outside text (step 4) - 7 tools without internet with the kill switch (step 3) - 92 tools with a readable name (step 11)"
+"text": "- 4 calls per round (step 1) - 3 memory notes per answer (step 1) - 13 tools locked after outside text (step 4) - 7 tools without internet with the kill switch (step 3) - 93 tools with a readable name (step 11)"
 },
 {
 "lang": "en",
@@ -18581,7 +18621,7 @@
 "file": "Architecture and data flow",
 "head": "Knowledge",
 "title": "Knowledge",
-"text": "Knowledge is everything the Spark knows without going to the internet: the uploaded documents of each profile (one SQLite file wissen.db per profile), the memory, earlier conversations, the own Kiwix archive and created documents. This page shows the way a question finds fitting passages in the documents."
+"text": "Knowledge is everything the Spark knows without going to the internet: the uploaded documents of each profile (one SQLite file wissen.db per profile), the memory, earlier conversations, the own Kiwix archive and created documents. This page shows the way a question finds fitting passages in the documents. Find (fund.py, its own file fund.db per profile) adds an index of titles, fields and tags by fixed rules on top and uses the same search for the text."
 },
 {
 "lang": "en",
@@ -18845,7 +18885,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A request comes in: Chat, writing help, creating documents and what the Spark does by itself create a record at the start: channel, kind (profile, guest, admin, Spark) and device. Before any switch aktiv.py counts the request for „Aktiv 10 min“ (OLED, Monitoring, Live): a profile once, a guest per device as a shortened hash, nothing of the Spark itself, in memory only. 2. Anything switched on?: If neither „Trace requests“ nor the live page nor the settings assistant is on, there is no record. Only the modules' journal lines remain. 3. Steps with fixed words: Each step (switch, model round, tool, check, speech output) is added with kind, name and time. A value goes in only if it is a number or a short fixed word; anything else is dropped. Question, answer, arguments and results never go in. 4. Live page on?: With the live page on, live.py sees each step at once: which service is asked, what the guard decides, what comes back. Everything stays in memory and is gone after a restart. 5. Journal lines of the modules: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (35 areas), profiles only through profiles.log_na"
+"text": "1. A request comes in: Chat, writing help, creating documents and what the Spark does by itself create a record at the start: channel, kind (profile, guest, admin, Spark) and device. Before any switch aktiv.py counts the request for „Aktiv 10 min“ (OLED, Monitoring, Live): a profile once, a guest per device as a shortened hash, nothing of the Spark itself, in memory only. 2. Anything switched on?: If neither „Trace requests“ nor the live page nor the settings assistant is on, there is no record. Only the modules' journal lines remain. 3. Steps with fixed words: Each step (switch, model round, tool, check, speech output) is added with kind, name and time. A value goes in only if it is a number or a short fixed word; anything else is dropped. Question, answer, arguments and results never go in. 4. Live page on?: With the live page on, live.py sees each step at once: which service is asked, what the guard decides, what comes back. Everything stays in memory and is gone after a restart. 5. Journal lines of the modules: Independently each module writes its lines into the Spark's journal. Every line starts with a word from logfilter.AREAS (36 areas), profiles only through profiles.log_na"
 },
 {
 "lang": "en",
@@ -20141,7 +20181,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A service writes a line: Panel, ASR, TTS, engines and watchers write with print. systemd hands the line to the journal; every unit has LogNamespace=speech-spark. 2. Fixed words and numbers: Every line of the panel starts with a word from logfilter.AREAS (35 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action. 3. Detail on?: For some areas the admin can switch on extra lines, at most 240 minutes. They too carry only numbers and decisions; a restart switches them off. 4. Polls quiet: Successful status polls the panel makes every few seconds write no line. 5. Own part with a limit: install.sh writes the limit for space and age from logs.max_mb and logs.keep_days. journald deletes older lines itself. A change applies after the next update or install.sh. 6. The admin opens the diagnosis: Admin only, at most 60 calls per minute. 7. Filter from the fixed list?: Areas, time window (up to 24 hours) and number of lines (up to 1000) come only from fixed lists. Nothing the browser sends reaches a shell. 8. R"
+"text": "1. A service writes a line: Panel, ASR, TTS, engines and watchers write with print. systemd hands the line to the journal; every unit has LogNamespace=speech-spark. 2. Fixed words and numbers: Every line of the panel starts with a word from logfilter.AREAS (36 areas) and carries only fixed words and numbers. A profile appears there only through profiles.log_name: its name only with its consent, else „Profil“ and the end of its ID. test_log_luecken wants a line for every outcome of every action. 3. Detail on?: For some areas the admin can switch on extra lines, at most 240 minutes. They too carry only numbers and decisions; a restart switches them off. 4. Polls quiet: Successful status polls the panel makes every few seconds write no line. 5. Own part with a limit: install.sh writes the limit for space and age from logs.max_mb and logs.keep_days. journald deletes older lines itself. A change applies after the next update or install.sh. 6. The admin opens the diagnosis: Admin only, at most 60 calls per minute. 7. Filter from the fixed list?: Areas, time window (up to 24 hours) and number of lines (up to 1000) come only from fixed lists. Nothing the browser sends reaches a shell. 8. R"
 },
 {
 "lang": "en",
@@ -20165,7 +20205,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 35 areas of the diagnosis (step 2) - 20000 lines read per call at most (step 8) - 2 MB journal text per call at most (step 8) - 1000 lines shown at most (step 7) - 240 minutes of „detail“ at most (step 3)"
+"text": "- 36 areas of the diagnosis (step 2) - 20000 lines read per call at most (step 8) - 2 MB journal text per call at most (step 8) - 1000 lines shown at most (step 7) - 240 minutes of „detail“ at most (step 3)"
 },
 {
 "lang": "en",
@@ -21342,6 +21382,30 @@
 "head": "Voice chat",
 "title": "Knowledge map faster (V01.0.907, Dominik 2026-10-21 \"1\")",
 "text": "Knowledge map faster (V01.0.907, Dominik 2026-10-21 \"1\"): the knowledge map has its own daily limit *Features → Own documents → Knowledge book → Knowledge map → Map: documents per day and profile* (chat.knowledge_map_day, 5 to 500, default 200; before, chat.knowledge_book_day with 40 applied). A map step only names connections and is short, so the backlog of a full knowledge book (about 150 documents) is worked in within about a day. Still only in quiet minutes, only when the knowledge book has nothing to do, one document per step behind speech."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Find in all data, stage A (V01.1.245, plan *such-index*, Dominik 2026-10-29 \"1a 2a 3a 4a 5a\"): admin switch *Features → Find in all data* (chat.fund, off by default; no profile switch, the admin blocks single profiles, never guests or foreign voices). A menu entry *Find* of its own next to the knowledge book with the tabs *Search*, *Tags* and *Settings* (Me page fundbox). Per profile a file of its own users/<id>/fund.db (SQLite, FTS5): fund_item (source, reference, date, title, excerpt, fields), fund_fts (words of title, fields and tags, never a document's body), fund_blind (for the sealed sources from stage B), fund_tag (tags with an HMAC mark per profile, vorrat.marke, key by HKDF from the vault key and the profile id), fund_hand (own tags), fund_stand. Collecting contract fund.QUELLEN (name, feature, protection, kind, neues_seit, noch_da, oeffnen): in stage A documents, NAS knowledge folders, reMarkable and knowledge book, all as references; their text is searched through the own document search (documents.search, rank fusion RRF k = 60). Every five minutes per profile a round in the background (vorrang.in_thread(\"Suchindex\"), at most 200 entries per source and round), only when"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " the documents changed. Fields and categories only by fixed rules: amount after \"Gesamt/Summe/Rechnungsbetrag\", number after its fixed word, kind from fixed words or the document card, company only when the sender stands word for word in the text; categories only from the fixed list (fund.KATEGORIEN = kinds of the document card without \"Sonstiges\", now with \"Bestellung\" and \"Buchung\", plus 13 areas). Person, company and place pages of the knowledge book become tags (a stand-in until the knowledge map's nodes are there). Own tags come first: ✓ keeps, × removes one for good, + adds one; they survive \"Rebuild\", free tags of a document go to its document card. In the assistant: tool fund_suche (Weiche group \"finden\": a search word and something of one's own like an invoice, a contract, a mail or \"my …\", never with internet or archive), at most five hits of 400 characters each as outside text; the panel keeps filters (category, company, person, source, one year) only when the person's own words of the message hold them. Below the answer the card \"Show in Find\" (browser, apps through the panel view, companion). Ctrl K offers \"Find in my data: …\". Endpoints POST /api/profile/fund/suche, G"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ET /api/profile/fund/eintrag/{id}, PUT …/schlagworte, GET /api/profile/fund/stand, POST /api/profile/fund/neu, DELETE /api/profile/fund (login, own profile, CSRF, size and rate limit), GET /api/admin/fund (numbers only). Log area *Find* (fund: suche | 3 treffer | 41 ms | P1, fund: runde dokument | 12 neu | 0 weg), live line *Find* with numbers only. Self-tests tests/test_fund.py."
 },
 {
 "lang": "en",
@@ -29021,6 +29085,14 @@
 "file": "Assistant and panel",
 "head": "My data",
 "title": "My data",
+"text": "- Find in all data (Features → My data → \"Find in all data\"; Find → Settings): A search index over your own things: documents, knowledge folders on the NAS, reMarkable and the knowledge book (mail, appointments, contacts, lists and more follow)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
 "text": "- Test questions by the Spark (Features → My data → \"Test questions by the Spark\"; builds on \"Search check\"; Me → Documents): So the search check has enough questions, the language model writes, in quiet minutes, a question about a random place in your documents that only this place answers, in its own words."
 },
 {
@@ -30589,7 +30661,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "My things",
 "title": "My things",
-"text": "n the middle, its neighbours in a ring, the rest outside, causes as dashed red lines); a tap shows the point's connections with their source, \"To the middle\" takes it as the middle, swipe left for \"Wrong\". \"All\" shows the best connected points again. The Spark checks every change (iphone.THINGS \"wissenskarte\"); the export stays in the browser. - Made by the Spark: the documents the Spark made, as before. - Pictures: all painted pictures as a grid; a tap shows one large with wish and time, share and delete. At the top a field \"What shall I paint?\"; while painting, the app looks again every 4 seconds. Changing, quick buttons and own photos stay in the panel under Me → Pictures. - Music: all songs grouped by day like in the panel (Today, Yesterday, Last 7 days, Older), played right in the app, with length, with or without singing, the time or day, swipe to delete. At the top \"What kind of music?\" with the length to pick (the same lengths as the chips in the panel, up to the admin's limit) makes a piece without singing; singing and own lyrics work in the panel under Me → Music. - Memory: all remembered facts with search, \"learned from a conversation\" or \"said yourself\" with the date. S"
+"text": "n the middle, its neighbours in a ring, the rest outside, causes as dashed red lines); a tap shows the point's connections with their source, \"To the middle\" takes it as the middle, swipe left for \"Wrong\". \"All\" shows the best connected points again. The Spark checks every change (iphone.THINGS \"wissenskarte\"); the export stays in the browser. - Find (since V01.1.245, plan *such-index* stage A, only when the admin released \"Find in all data\"): the page Find comes into the Me list through /api/features (pages) and opens the panel view with search, tags and settings; the card \"Show in Find\" below an answer leads there. - Made by the Spark: the documents the Spark made, as before. - Pictures: all painted pictures as a grid; a tap shows one large with wish and time, share and delete. At the top a field \"What shall I paint?\"; while painting, the app looks again every 4 seconds. Changing, quick buttons and own photos stay in the panel under Me → Pictures. - Music: all songs grouped by day like in the panel (Today, Yesterday, Last 7 days, Older), played right in the app, with length, with or without singing, the time or day, swipe to delete. At the top \"What kind of music?\" with the lengt"
 },
 {
 "lang": "en",
@@ -30597,7 +30669,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "My things",
 "title": "My things",
-"text": "wipe to change or delete, \"Select\" deletes several, \"Suggest tidying up\" asks the language model about double entries, and only your \"Accept\" changes anything. Forgetting everything at once stays in the browser."
+"text": "h to pick (the same lengths as the chips in the panel, up to the admin's limit) makes a piece without singing; singing and own lyrics work in the panel under Me → Music. - Memory: all remembered facts with search, \"learned from a conversation\" or \"said yourself\" with the date. Swipe to change or delete, \"Select\" deletes several, \"Suggest tidying up\" asks the language model about double entries, and only your \"Accept\" changes anything. Forgetting everything at once stays in the browser."
 },
 {
 "lang": "en",
@@ -31141,7 +31213,7 @@
 "file": "Security and operation",
 "head": "Data on the disk and new ways to write",
 "title": "Data on the disk and new ways to write",
-"text": "- Supplies sealed (since V01.0.872/879): what a service read for a profile lies sealed (vault) in the profile as a supply, so answers come with \"as of …\" during an outage: mail supply (mail-vorrat.bin, headers and up to 40 mail texts without attachments), weather, parcel and for-you supply. Not in the backup, \"Delete data\" removes them. All files: Architecture → data storage. - Unclear questions, anonymous (since V01.0.927, switch \"Keep unclear questions anonymously\" under Features → Targeted tool choice, off; preference per profile under Me → Conversation → Privacy): questions no rule of the switch recognizes are kept only redacted (fixed rules as in \"Report a problem\", plus address book names and every number, a second leak check drops) and sealed in state/weiche-unklar.json: without profile, device and time of day, at most 100, gone after 7 days, not in the backup. Never a sentence with the code word, never guests. Only admin and co-admin see and delete them on Features → Routing. - Edit contacts (since V01.0.888, switch \"Edit contacts\", off): changes go only into the profile's own address book and only with If-Match (ETag); when the card changed meanwhile, the Spark overwrites "
+"text": "- Find: search index (since V01.1.245, switch \"Find in all data\", off): users/<id>/fund.db per profile (file 0600, folder 0700) holds only titles, fields, excerpts of the document card and tags, never a document's body. Tags carry an HMAC mark with a key per profile (HKDF from the vault key and the profile id, vorrat.marke); a profile searches only its own file with its own marks. The panel sets fields and categories by fixed rules, never the model; the tool's filters count only when the person's own words hold them. \"Delete the index\" (Find → Settings) and \"Delete data\" empty the file even while Find is blocked. - Supplies sealed (since V01.0.872/879): what a service read for a profile lies sealed (vault) in the profile as a supply, so answers come with \"as of …\" during an outage: mail supply (mail-vorrat.bin, headers and up to 40 mail texts without attachments), weather, parcel and for-you supply. Not in the backup, \"Delete data\" removes them. All files: Architecture → data storage. - Unclear questions, anonymous (since V01.0.927, switch \"Keep unclear questions anonymously\" under Features → Targeted tool choice, off; preference per profile under Me → Conversation → Privacy): ques"
 },
 {
 "lang": "en",
@@ -31149,7 +31221,15 @@
 "file": "Security and operation",
 "head": "Data on the disk and new ways to write",
 "title": "Data on the disk and new ways to write",
-"text": "nothing. New cards go into the chosen book or \"On the Spark\". - Search at the mail server (since V01.0.887): what you type into the search field becomes IMAP SEARCH words; only letters, digits, @, . and - get in, never a quote, a word beyond ASCII as a UTF-8 literal. Only the own mailboxes are searched. - Hero book to the reMarkable (since V01.1.143, switch under Features → AI Dungeon Master, off): A hero's book leaves the Spark only on the reMarkable's way (its cloud, remarkable.place, daily limits). It holds only the panel's data: catalog, hero values, the own chronicle of fixed kinds and numbers, of people only what was unlocked, of fellow heroes only name, people and class; never a text of the model. Pictures are opened again with Pillow under a pixel and byte bound. State users/<id>/dungeon-buch.json, \"Delete data\" removes it."
+"text": "tions no rule of the switch recognizes are kept only redacted (fixed rules as in \"Report a problem\", plus address book names and every number, a second leak check drops) and sealed in state/weiche-unklar.json: without profile, device and time of day, at most 100, gone after 7 days, not in the backup. Never a sentence with the code word, never guests. Only admin and co-admin see and delete them on Features → Routing. - Edit contacts (since V01.0.888, switch \"Edit contacts\", off): changes go only into the profile's own address book and only with If-Match (ETag); when the card changed meanwhile, the Spark overwrites nothing. New cards go into the chosen book or \"On the Spark\". - Search at the mail server (since V01.0.887): what you type into the search field becomes IMAP SEARCH words; only letters, digits, @, . and - get in, never a quote, a word beyond ASCII as a UTF-8 literal. Only the own mailboxes are searched. - Hero book to the reMarkable (since V01.1.143, switch under Features → AI Dungeon Master, off): A hero's book leaves the Spark only on the reMarkable's way (its cloud, remarkable.place, daily limits). It holds only the panel's data: catalog, hero values, the own chronicle "
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Data on the disk and new ways to write",
+"title": "Data on the disk and new ways to write",
+"text": "of fixed kinds and numbers, of people only what was unlocked, of fellow heroes only name, people and class; never a text of the model. Pictures are opened again with Pillow under a pixel and byte bound. State users/<id>/dungeon-buch.json, \"Delete data\" removes it."
 },
 {
 "lang": "en",

@@ -369,7 +369,7 @@ function stepsFold(steps){const d=document.createElement('details');d.className=
     li.textContent=(x.ok?'✓ ':'⚠ ')+(L==='en'?x.en:x.de)+' · '+sec(x.ms||0);ul.appendChild(li)}
   d.appendChild(ul);return d}
 // Freigabe-Karte (ablauf.py): Ja and Nein send the words like a typed answer; the module that proposed decides by its rules
-// „Im Kalender ansehen“ / „Mail öffnen“ under an answer that read appointments or a mail (chat_tools.py, event "goto"):
+// „Im Kalender ansehen“ / „Mail öffnen“ / „In Finden ansehen“ (fund.py) under an answer that read appointments or a mail (chat_tools.py, event "goto"):
 // only a way to the own page, which shows what the server allows; nothing happens without the click
 function gotoCard(list){const row=document.createElement('div');row.className='choice gotoc';
   const btn=(label,go)=>{const b=document.createElement('button');b.type='button';b.className='b chb';b.textContent=label;b.onclick=go;row.appendChild(b)};
@@ -377,7 +377,9 @@ function gotoCard(list){const row=document.createElement('div');row.className='c
     if(c.to==='cal'&&typeof KAL!=='undefined'&&PROFILE&&CAL_ON&&/^\d{4}-\d{2}-\d{2}$/.test(c.day||'')){const [y,m,d]=c.day.split('-').map(Number);
       btn(t('Im Kalender ansehen','Show in calendar'),()=>{KAL.day=new Date(y,m-1,d);icTabSet('cal','show');goSec('cal')})}
     else if(c.to==='post'&&typeof postRead==='function'&&PROFILE&&MAIL_ON&&/^m[0-9a-f]{8}:\d{1,10}$/.test(c.id||''))
-      btn(t('Mail öffnen','Open mail'),()=>{icTabSet('post','show');goSec('post');postRead(c.id)})}
+      btn(t('Mail öffnen','Open mail'),()=>{icTabSet('post','show');goSec('post');postRead(c.id)})
+    else if(c.to==='fund'&&typeof fundSuche==='function'&&PROFILE&&window.FUND_ON&&typeof c.q==='string'&&!row.querySelector('[data-fund]')){
+      btn(t('In Finden ansehen','Show in Find'),()=>fundSuche(c.q.slice(0,200)));row.lastChild.dataset.fund='1'}}
   return row.children.length?row:null}
 function confirmCard(c){const d=document.createElement('div');d.className='confirmc';const h=document.createElement('b');
   h.textContent=t('Wartet auf dein Ja: ','Waiting for your yes: ')+(L==='en'?c.en:c.de);d.appendChild(h);const row=document.createElement('div');row.className='choice';

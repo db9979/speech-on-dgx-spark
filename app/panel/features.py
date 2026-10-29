@@ -63,7 +63,7 @@ ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My
 OWN_PAGES = (("calbox", "cal", "Kalender", "Calendar"), ("mailbox", "post", "E-Mail", "E-mail"),
              ("taskbox", "listen", "Listen", "Lists"), ("vgbox", "offen", "Offen", "Open"),
              ("conbox", "kontakte", "Kontakte", "Contacts"),
-             ("wbbox", "wbuch", "Wissensbuch", "Knowledge book"),
+             ("wbbox", "wbuch", "Wissensbuch", "Knowledge book"), ("fundbox", "finden", "Finden", "Find"),
              ("dmbox", "dungeon", "Dungeon-Master", "Dungeon Master"))
 # Ich pages every profile has, whatever is switched on (me.js meAll shows them for every profile too)
 ME_ALWAYS = frozenset(("setbox", "factbox", "logbox", "secbox"))
@@ -430,6 +430,9 @@ FEATURES = (
     # Wissenskarte (wissenskarte.py, plan wissensgraph): the pages of the Wissensbuch as a map with checked connections
     F("wissenskarte", "Wissenskarte", "Knowledge map", "data", ("knowledge_map",), parent="wissensbuch", me="wbbox",
       guide="wissenskarte"),
+    # Finden (fund.py, plan such-index, Stufe A): one index over the own data with fields and tags, the page Finden,
+    # Strg K and the tool fund_suche; each source follows its own function (documents, NAS, reMarkable, Wissensbuch)
+    F("fund", "Finden in allen Daten", "Find in all data", "data", ("fund",), me="fundbox", guide="fund"),
     F("suchfragen", "Prüffragen vom Spark", "Test questions by the Spark", "data", ("search_check_auto",),
       parent="suchpruefung", me="docbox", guide="suchfragen"),
     # everyday

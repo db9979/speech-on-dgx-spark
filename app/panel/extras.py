@@ -40,8 +40,9 @@ import senden
 import fuerdich
 import ichweiss
 import vorgaenge
+import fund
 
-SERVICES = [roomfar, weather, contacts, parcels, fuerdich, tasks, transit, feeds, wiki, agent, senden, messages, remarkable, hamelden, hilfe, begleiter, meinmcp, docmake, bilder, musik, tagebuch, zustand_wz, rechnen, rmliste, aendern, nasablage, naszustand, telefon_anruf, rufen, vorgaenge]
+SERVICES = [roomfar, weather, contacts, parcels, fuerdich, tasks, transit, feeds, wiki, agent, senden, messages, remarkable, hamelden, hilfe, begleiter, meinmcp, docmake, bilder, musik, tagebuch, zustand_wz, rechnen, rmliste, aendern, nasablage, naszustand, telefon_anruf, rufen, vorgaenge, fund]
 
 
 def offer(ctx):
@@ -106,3 +107,4 @@ async def due_once():
     await contacts.due_once()
     await feeds.due_once()
     await ichweiss.due_once()
+    await fund.due_once()   # Finden: a collecting round per profile at most every five minutes (fund.py)

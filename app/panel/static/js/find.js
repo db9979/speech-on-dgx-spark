@@ -39,7 +39,11 @@ function palRun(q){const w=norm(q).split(' ').filter(Boolean);if(!w.length)retur
   const all=palItems().map(x=>{const k=norm(x.label+' '+x.where+' '+x.grp);
     return w.every(p=>has(k,p))?x:w.every(p=>has(k+' '+norm(x.more),p))?{...x,deep:1}:null}).filter(Boolean);
   const nq=norm(q),score=x=>(x.deep?4:norm(x.label)===nq?0:norm(x.label).startsWith(nq)?1:norm(x.label).includes(nq)?2:3);
-  return all.sort((a,b)=>score(a)-score(b)).slice(0,30)}
+  const got=all.sort((a,b)=>score(a)-score(b)).slice(0,30);
+  // Finden (fund.py): the own data, not only the pages; the last row, it opens the page Finden with these words
+  if(PROFILE&&window.FUND_ON&&typeof fundSuche==='function'&&q.trim().length>=2)
+    got.push({grp:t('In meinen Daten','In my data'),label:t('In meinen Daten finden: ','Find in my data: ')+q.trim().slice(0,80),where:t('Finden','Find'),go:()=>fundSuche(q.trim())});
+  return got}
 function palDraw(){const box=$('palres'),q=$('palq').value;box.textContent='';PAL.hits=palRun(q);PAL.sel=Math.min(PAL.sel,Math.max(PAL.hits.length-1,0));
   if(!q.trim()){const p=document.createElement('div');p.className='fnone';p.textContent=t('Seite, Schalter, Einstellung, Prüfung oder Anleitung eingeben.','Type a page, switch, setting, check or guide.');box.appendChild(p);return}
   if(!PAL.hits.length){const p=document.createElement('div');p.className='fnone';p.textContent=t('Nichts gefunden. ','Nothing found. ');

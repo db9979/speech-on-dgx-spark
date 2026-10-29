@@ -24,6 +24,18 @@ import features  # noqa: E402  (panel/ is on the path through helpers)
 # and the admin's own menu entry Fernzugang (V01.1.213)
 DE_ROOTS = ("Personen und Geräte", "Einstellungen", "Funktionen", "Zustand", "Ich", "Fernzugang") + tuple(x[2] for x in features.OWN_PAGES)
 EN_ROOTS = ("People and devices", "Settings", "Features", "Status", "Me", "Remote access") + tuple(x[3] for x in features.OWN_PAGES)
+# the root a way starts with, a whole word („Finden →“ is not „Find“), the longest name first
+WAY_ROOT = re.compile(r"(" + "|".join(sorted(map(re.escape, DE_ROOTS + EN_ROOTS), key=len, reverse=True)) + r")\s*→")
+
+
+def in_locale(way, roots):
+    """A way belongs to the German pass when its root is German only, to the English one when its root is English."""
+    m = WAY_ROOT.match(way)
+    if not m:
+        return False
+    return m.group(1) in roots and not (roots is DE_ROOTS and m.group(1) in EN_ROOTS)
+
+
 HINT = re.compile(r"(?<![\w-])(?<!Mein )(?<!My )(?<!AI )(?<!→ )(" + "|".join(DE_ROOTS + EN_ROOTS) + r")\s*→")
 # a way that starts like ours but means another program (the iPhone's or Open WebUI's settings, …): text that
 # names it right before the way. Everything else that starts with one of the names above must be found.
@@ -390,7 +402,7 @@ class Browser(unittest.TestCase):
                     for s in ("mon", "logs", "test", "prof", "apps", "int", "cfg"):   # pages draw their parts on opening
                         await pg.evaluate(f"goSec('{s}')")
                         await pg.wait_for_timeout(400)
-                    ways = [s for s in found if s.startswith(roots) and not (locale == "de-DE" and s.startswith(EN_ROOTS))]
+                    ways = [s for s in found if in_locale(s, roots)]
                     res = await pg.evaluate("ws=>ws.map(w=>{const r=wayParse(w,0,true);return r?[r.steps,r.want,r.quoted]:null})", ways)
                     for w, r in zip(ways, res):
                         if w in KNOWN:
@@ -422,7 +434,7 @@ class Browser(unittest.TestCase):
                     for s in ("mon", "logs", "test", "prof", "apps", "int", "cfg"):
                         await pg.evaluate(f"goSec('{s}')")
                         await pg.wait_for_timeout(400)
-                    ways = [s for s in found if s.startswith(roots) and not (locale == "de-DE" and s.startswith(EN_ROOTS))]
+                    ways = [s for s in found if in_locale(s, roots)]
                     res = await pg.evaluate("ws=>ws.map(w=>!!wayParse(w,0,true))", ways)
                     for w, ok in zip(ways, res):
                         first = HINT.sub("", w, count=1).lstrip().lstrip('„“"')

@@ -294,6 +294,7 @@
       "remarkable_page": "tasks_show",
       "transit": "tasks_show",
       "archive_search": "tasks_show",
+      "fund_suche": "tasks_show",
       "wikipedia": "tasks_show",
       "article_more": "tasks_show"
     },

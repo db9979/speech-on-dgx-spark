@@ -127,6 +127,10 @@ THINGS = {
                     (("DELETE",), r"/api/profile/wissensbuch/satz/[0-9]{1,12}"),
                     (("POST",), r"/api/profile/wissensbuch/satz/[0-9]{1,12}/(?:stimmt|noch)"),
                     (("POST",), r"/api/profile/wissensbuch/ablegen")),
+    # Finden (fund.py): search, one entry, own tags, the state, build anew and delete the index (with or without the
+    # own tags); every path checks the release of Finden again
+    "fund": ((("POST",), r"/api/profile/fund/(?:suche|neu)"), (("GET",), r"/api/profile/fund/(?:stand|eintrag/[0-9]{1,12})"),
+             (("PUT",), r"/api/profile/fund/eintrag/[0-9]{1,12}/schlagworte"), (("DELETE",), r"/api/profile/fund")),
     # Wissenskarte (wissenskarte.py): see the part of the map around a page or of a document, "Stimmt nicht" for one
     # connection; the export as text stays in the browser
     "wissenskarte": ((("GET",), r"/api/profile/wissenskarte"), (("DELETE",), r"/api/profile/wissenskarte/kante/[0-9]{1,12}")),

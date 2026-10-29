@@ -91,7 +91,7 @@ TABLE = 2400                   # a table stays one piece up to this many charact
 FRESH = 1 / 60 - 1 / 62      # the most a fresh piece gains in the search: about two places in the ranking
 FRESH_HALF = 14 * 86400      # ... halved every two weeks
 ARTS = ("Vertrag", "Rechnung", "Brief", "Anleitung", "Bescheid", "Versicherung", "Kontoauszug", "Beleg", "Befund",
-        "Zeugnis", "Buch", "Artikel", "Notiz", "Foto", "Formular", "Sonstiges")
+        "Zeugnis", "Buch", "Artikel", "Notiz", "Foto", "Formular", "Bestellung", "Buchung", "Sonstiges")
 MAX_TAGS = 10
 
 SCHEMA = """

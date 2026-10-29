@@ -32,6 +32,8 @@ import asyncio
 import base64
 import concurrent.futures
 import contextvars
+import hashlib
+import hmac
 import json
 import os
 import re
@@ -44,24 +46,58 @@ import vault
 
 
 _vkey = None      # the AES-GCM key (backup._forget_cached drops it after a restore)
+_mkeys = (None, {})   # (the _vkey they belong to, {uid: HMAC key of the Blind-Index}): a restore makes them anew
+
+
+def _secret():
+    """The Spark's secret key (vault.KEY_FILE), made when there is none yet; None without cryptography."""
+    if not vault.available():
+        return None
+    vault._key()
+    try:
+        with open(vault.KEY_FILE, "rb") as f:
+            return f.read().strip()
+    except OSError:
+        return None
+
+
+def _derive(base, info):
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+    return HKDF(algorithm=hashes.SHA256(), length=32, salt=None, info=info).derive(base)
 
 
 def _key():
     global _vkey
     if _vkey:
         return _vkey
-    if not vault.available():
+    base = _secret()
+    if not base:
         return None
-    vault._key()   # makes the Spark's secret key when there is none yet
-    try:
-        with open(vault.KEY_FILE, "rb") as f:
-            base = f.read().strip()
-    except OSError:
-        return None
-    from cryptography.hazmat.primitives import hashes
-    from cryptography.hazmat.primitives.kdf.hkdf import HKDF
-    _vkey = HKDF(algorithm=hashes.SHA256(), length=32, salt=None, info=b"speech-spark vorrat v1").derive(base)
+    _vkey = _derive(base, b"speech-spark vorrat v1")
     return _vkey
+
+
+def marke(uid, wort):
+    """Blind-Index of Finden (fund.py, plan such-index): a word stem or a normed tag as a mark, base32 of
+    HMAC-SHA256 with a key of its own per profile (HKDF from the Spark's secret key, info "speech-spark fund marken v1"
+    plus the profile id), cut to 10 characters (50 bits). The same word gives another mark in another profile; None
+    without a key (then Finden writes nothing that needs one)."""
+    global _mkeys
+    v = _key()
+    if not v or not uid:
+        return None
+    if _mkeys[0] is not v:
+        _mkeys = (v, {})
+    k = _mkeys[1].get(uid)
+    if k is None:
+        base = _secret()
+        if not base:
+            return None
+        if len(_mkeys[1]) > 500:
+            _mkeys[1].clear()
+        k = _mkeys[1][uid] = _derive(base, b"speech-spark fund marken v1:" + str(uid).encode())
+    return base64.b32encode(hmac.new(k, str(wort).encode(), hashlib.sha256).digest()).decode()[:10].lower()
 
 
 def seal(data, ad):

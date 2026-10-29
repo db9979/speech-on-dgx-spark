@@ -896,7 +896,7 @@ class Deeper(unittest.TestCase):
             if not os.path.exists(full):   # a copy with only app/
                 continue
             src = open(full, encoding="utf-8").read()
-            for page in ("#me=calbox", "#me=mailbox"):
+            for page in ("#me=calbox", "#me=mailbox", "#me=fundbox"):
                 self.assertIn(f'"{page}"', src, path)
             self.assertEqual(len(re.findall(r'"#me=', src)), len(chat.DESK_GOTO), path)
 

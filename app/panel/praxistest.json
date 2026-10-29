@@ -4454,6 +4454,27 @@
 "titel": "Wissensspeicher schneller: Vektoren, Suchindex, Karte",
 "text": "Mit Funktionen → Eigene Dokumente → Wissensbuch und Wissenskarte an: eine Frage zu einem eigenen Dokument stellen, die Antwort nennt wie bisher die passende Seite des Wissensbuchs mit Quelle. In Zustand → Logs → Diagnose, Bereich Wissen, steht nach dem ersten Öffnen einmal „wissen: wissensbuch suchindex aufgebaut | n seiten“ und keine Zeile „suchindex fehlt“. Auf der Seite Wissensbuch im Reiter Karte eine Seite in die Mitte nehmen: dieselben Nachbarn wie vorher, höchstens 150 Punkte. Mit Bedeutungssuche: eine Frage dauert nicht spürbar länger als vorher, und das Panel braucht bei vielen Dokumenten weniger Speicher.",
 "thread": "Wissenskarte Stufe 2 statt Neo4j"
+},
+{
+"id": "P661",
+"v": 1245,
+"titel": "Finden: Rechnung im Dokument suchen, Treffer mit Betrag",
+"text": "Funktionen → Finden in allen Daten an. Als Profil eine PDF-Rechnung mit „Gesamtbetrag … €“ und Rechnungsnummer hochladen und warten, bis der Steckbrief da ist; nach höchstens fünf Minuten steht unter Finden → Einstellungen die Zahl der Dokumente. Im Menü Finden den Firmennamen eingeben: der Treffer zeigt Quelle, Datum und Schlagworte, im Detail Betrag und Nummer. „Öffnen“ führt zum Dokument. Im Assistenten „Such meine Rechnung von <Firma>“ fragen: die Antwort nennt Quelle und Datum, darunter „In Finden ansehen“. Strg K mit dem Firmennamen zeigt unten „In meinen Daten finden: …“. Zustand → Logs, Bereich Finden: nur feste Wörter und Zahlen, nie der Firmenname.",
+"thread": "Alles schnell finden über einen Index"
+},
+{
+"id": "P662",
+"v": 1245,
+"titel": "Finden: Schlagwort von Hand setzen und entfernen, Neu aufbauen, es bleibt",
+"text": "Unter Finden einen Treffer öffnen. Ein Schlagwort mit × entfernen, eine Kategorie (z. B. Freizeit) und eine Person mit + hinzufügen. Finden → Schlagworte: die Kategorie zählt einen Eintrag mehr, Antippen zeigt ihn. Finden → Einstellungen → Neu aufbauen: danach ist das entfernte Schlagwort weiter weg, die eigenen sind noch da. Index löschen und bei der zweiten Frage Abbrechen: die eigenen Schlagworte bleiben; mit OK sind sie weg. Ein zweites Profil findet dasselbe Wort nie.",
+"thread": "Alles schnell finden über einen Index"
+},
+{
+"id": "P663",
+"v": 1245,
+"titel": "Finden für ein Profil sperren: Werkzeug und Seite fehlen",
+"text": "Als Admin unter Personen und Geräte für ein Profil „Finden in allen Daten“ sperren. Als dieses Profil: der Menüpunkt Finden fehlt, „Such meine Rechnung“ im Assistenten nutzt kein Finden (Werkzeugschritte unter der Antwort), Strg K bietet „In meinen Daten finden“ nicht an. Ich → Daten löschen zeigt Finden und löscht den Index. Ein Gast und eine fremde Stimme am Lautsprecher bekommen das Werkzeug nie. Zustand → Live zeigt bei Finden nur Zahlen.",
+"thread": "Alles schnell finden über einen Index"
 }
 ]
 }

@@ -928,7 +928,7 @@ LOCKED_OUTSIDE = {"home_assistant", "home_assistant_action", "memory_save", "mem
 MAX_CALLS = 4          # tool calls the model may make in one round (more are not run)
 # look-up tools: each at most max_searches times per question like the web search (trace 68bf48: archive_search
 # four times with ever new words, first sound after 20.7 s); then the model answers from what it found
-LOOKUPS = ("archive_search", "wikipedia", "document_search", "history_search", "contacts_search", "mail_search", "nas_zustand")
+LOOKUPS = ("archive_search", "wikipedia", "document_search", "fund_suche", "history_search", "contacts_search", "mail_search", "nas_zustand")
 LAST_NOTE = "(Keine weiteren Werkzeuge mehr möglich. Sag jetzt kurz, was erledigt ist und was nicht.)"
 MAX_SAVES = 3          # memory notes per answer
 OUTSIDE_NOTE = ("The following text comes from outside (web pages, calendar, documents, contacts, the smart home, "
@@ -2630,7 +2630,8 @@ async def text_ask(request, prof, body, who="siri"):
 
 
 # the pages a card under an answer opens in the panel (#me=, start.js): the Begleiter only opens these
-DESK_GOTO = {"cal": ("Im Kalender ansehen", "#me=calbox"), "post": ("Mail öffnen", "#me=mailbox")}
+DESK_GOTO = {"cal": ("Im Kalender ansehen", "#me=calbox"), "post": ("Mail öffnen", "#me=mailbox"),
+             "fund": ("In Finden ansehen", "#me=fundbox")}
 
 
 def desk_cards(steps, cards):

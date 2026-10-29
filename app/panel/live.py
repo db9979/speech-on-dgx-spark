@@ -62,7 +62,7 @@ TOOLS = {
     "mail_read": "mail", "mail_search": "mail", "mail_tidy_overview": "mail", "mail_tidy_propose": "mail",
     "fuer_dich": "mail", "fuer_dich_tun": "mail", "offen_zeigen": "cal",   # Offen lives on the Kalender node
     "contacts_search": "contacts", "remarkable_note": "rm", "remarkable_page": "rm", "remarkable_attachment": "rm", "remarkable_sent": "rm", "remarkable_sheet": "rm", "remarkable_library": "rm", "iphone_action": "push", "weather": "weather",
-    "parcels": "parcels", "transit": "transit", "feeds_news": "feeds", "document_search": "mem", "document_list": "mem", "history_search": "mem", "local_search": "mem",
+    "parcels": "parcels", "transit": "transit", "feeds_news": "feeds", "document_search": "mem", "document_list": "mem", "fund_suche": "mem", "history_search": "mem", "local_search": "mem",
     "memory_forget": "mem", "memory_save": "mem", "reminder_cancel": "mem", "reminder_list": "mem", "reminder_set": "mem",
     "message_announce": "mem", "message_read": "mem", "message_send": "mem", "agent_list": "mem",
     "agent_schedule": "mem", "agent_task": "mem", "routine_save": "mem", "agent_watch": "mem",
@@ -182,6 +182,8 @@ TARGETS = {
     "wbuch": ("Wissensbuch", "Seiten aus den eigenen Dokumenten · auf dem Spark", "spark", False),
     # Wissenskarte (wissenskarte.py): shown while it is on, checked connections, discarded ones and documents waiting (numbers only)
     "wkarte": ("Wissenskarte", "Verbindungen zwischen Wissensbuch-Seiten · auf dem Spark", "spark", False),
+    # Finden (fund.py): shown while it is on, entries of the search index, profiles, searches today and the median time (numbers only)
+    "fund": ("Finden", "Suchindex über die eigenen Daten · auf dem Spark", "spark", False),
     # KI-Dungeon-Master (dungeon.py): shown while it is on, rounds, players, guests, turns, loot and levels today (numbers only)
     "dungeon": ("Dungeon-Master", "Rollenspiel-Runden mit dem eigenen Sprachmodell · auf dem Spark", "spark", False),
     # Teilen mit Profilen (geteilt.py): shown while it is on, single shares and today's changes (numbers only)
@@ -1390,6 +1392,13 @@ def snapshot(view="admin", now=None):
     if wkk.get("on"):
         used.add("wkarte")
     try:
+        import fund
+        fnd = fund.for_live()
+    except Exception:
+        fnd = {"on": False}
+    if fnd.get("on"):
+        used.add("fund")
+    try:
         import dungeon
         dgn = dungeon.for_live()
     except Exception:
@@ -2003,6 +2012,12 @@ def snapshot(view="admin", now=None):
                         + (f" · {wbk['widerspruch']} Widersprüche" if wbk.get("widerspruch") else "")
                         + (f" · {wbk['veraltet']} veraltet?" if wbk.get("veraltet") else "")
                         + (" · arbeitet" if wbk.get("running") else ""))
+        if x["id"] == "fund":      # Finden: entries, profiles, own tags, searches today, median time (numbers only, never a word)
+            x["sub"] = (f"{fnd.get('eintraege', 0)} Einträge in {fnd.get('profile', 0)} Profilen · {fnd.get('hand', 0)} eigene Schlagworte"
+                        + f" · heute {fnd.get('suchen', 0)} Suchen"
+                        + (f", Median {fnd['ms']} ms" if fnd.get("ms") is not None else "")
+                        + (f" · {fnd['verworfen']} Filter verworfen" if fnd.get("verworfen") else "")
+                        + (" · liest ein" if fnd.get("running") else ""))
         if x["id"] == "dungeon":   # Dungeon-Master: rounds, players and guests, turns, loot, levels, campaigns, read aloud and spoken today, stories with acts moved on and proposals, markets, purchases and sales, pictures painted, discarded and on their way, game dates and notes sent, music pieces made ahead, world truths, summaries, rewrites and thumbs, rounds waiting and table talk lines (numbers only, never a name or a text)
             x["sub"] = (f"{dgn.get('runden', 0)} Runden · {dgn.get('spieler', 0)} Spieler, {dgn.get('online', 0)} da, {dgn.get('gaeste', 0)} Gäste"
                         + (f" · {dgn['pausiert']} pausiert" if dgn.get("pausiert") else "")

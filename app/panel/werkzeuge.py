@@ -43,6 +43,7 @@ NAMES = {
     "agent_schedule": ("Agent planen", "Schedule agent"), "agent_watch": ("Beobachten anlegen", "Set up watching"), "routine_save": ("Ablauf speichern", "Save routine"),
     "iphone_action": ("iPhone-Aktion", "iPhone action"), "spark_hilfe": ("Spark-Hilfe", "Spark help"),
     "spark_tagebuch": ("Spark-Tagebuch", "Spark diary"), "spark_zustand": ("Spark-Zustand", "Spark status"),
+    "fund_suche": ("In allen Daten finden", "Find in all data"),
     "rechnen": ("Rechnen", "Calculate"),
     "spark_vorschlag": ("Spark-Vorschlag", "Spark suggestion"), "wikipedia": ("Wikipedia", "Wikipedia"),
     "article_more": ("Artikel weiterlesen", "Read on"), "archive_search": ("Eigenes Archiv", "Own archive"),

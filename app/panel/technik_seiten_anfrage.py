@@ -233,7 +233,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)
     "weiche": {
-        "stand": "edb333d614",
+        "stand": "545ec32b49",
         "bezug": {
             "intent.GROUPS": ["s4", "s6"], "intent_bench.BENCH": ["s4", "s5"], "intent_alltag.ALLTAG": ["s14"],
             "weiche.KEEP_VERSIONS": ["s4"], "intent.Route": ["s6"], "intent.follow_up": ["s8"],
@@ -314,9 +314,11 @@ SEITEN = {
             S("s6", "frage", ("Gruppe erkannt?", "Group recognized?"),
               ("eine, zwei oder mehr", "one, two or more"),
               ("Eine Gruppe oder höchstens {intent.MAX_MIXED} gelten als klar und grenzen ein. Mehr Gruppen auf "
-               "einmal sind nicht klar genug: dann bleiben alle Werkzeuge.",
+               "einmal sind nicht klar genug: dann bleiben alle Werkzeuge. Kommt „finden“ (eigene Daten suchen) "
+               "mit zu vielen Gruppen, fällt zuerst „dokument“ weg, denn Finden sucht auch in den Dokumenten.",
                "One group or at most {intent.MAX_MIXED} count as clear and narrow. More groups at once are not "
-               "clear enough: then every tool stays."),
+               "clear enough: then every tool stays. When „finden“ (searching the own data) comes with too many "
+               "groups, „dokument“ goes first, since Find searches the documents too."),
               ("ok", "ja", "s9")),
             S("s7", "schritt", ("Hinweiswörter merken", "Note hint words"),
               ("intent.hints_of · grenzen nie ein", "intent.hints_of · never narrow"),
