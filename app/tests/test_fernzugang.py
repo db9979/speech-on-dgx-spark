@@ -1767,13 +1767,14 @@ class EndToEnd(_EndToEndBase):
             win = wsc.connect(f"wss://localhost:{self.port}/api/fernzugang/terminal?t={t}", ssl=ctx,
                               additional_headers={"Origin": self.base}, max_size=2 ** 20, open_timeout=40)
             tab_states = []
+            end = time.monotonic() + 90                                   # no timing assumed (a slow Pi): until closed
             with contextlib.suppress(Exception):                          # the tab hears „weg“, then it is closed
-                for _ in range(50):
-                    m = tab.recv(timeout=30)
+                while time.monotonic() < end:
+                    m = tab.recv(timeout=60)
                     if isinstance(m, str):
                         tab_states.append(json.loads(m))
             self.assertIn({"typ": "weg", "fenster": True}, tab_states)
-            first = json.loads(win.recv(timeout=30))
+            first = json.loads(win.recv(timeout=60))
             self.assertEqual((first["stand"], first["id"]), ("offen", sid))
             win.send(b"uptime")
             got, _ = self.read_until(win, b"echo:uptime")
@@ -1781,11 +1782,10 @@ class EndToEnd(_EndToEndBase):
             self.assertEqual(len(fernzugang.SITZUNG), 1)                  # still one session
             with self.assertRaises(Exception):                            # the ticket works once
                 wsc.connect(f"wss://localhost:{self.port}/api/fernzugang/terminal?t={t}", ssl=ctx,
-                            additional_headers={"Origin": self.base}, open_timeout=10).recv(timeout=10)
+                            additional_headers={"Origin": self.base}, open_timeout=40).recv(timeout=40)
             win.close()
-            for _ in range(200):
-                if "sitzung_zu" in j.getvalue():
-                    break
+            end = time.monotonic() + 60
+            while "sitzung_zu" not in j.getvalue() and time.monotonic() < end:
                 time.sleep(0.05)
         out = j.getvalue()
         self.assertEqual(fernzugang.SITZUNG, {})
@@ -2434,23 +2434,26 @@ class ShellForReal(Base):
         """Dominik 2026-10-28 19:56 on his Pi: „Herauslösen“ opened the normal assistant page instead of the terminal.
         The new window must show the terminal over the whole window and get output; the tab before says where it is."""
         async def body(ctx, pg):
-            async with ctx.expect_page() as pop_info:
+            async with ctx.expect_page(timeout=90000) as pop_info:      # no timing assumed (Werkstatt on a slow Pi)
                 await pg.click("#fzheraus")
             pop = await pop_info.value
-            await pop.wait_for_load_state()
-            await pop.wait_for_function("typeof FZ!=='undefined'&&FZ.ws&&FZ.ws.readyState===1&&FZ.sid", timeout=30000)
-            look = await pop.evaluate("""(()=>{const v=$('fzview'),t=$('fzterm').getBoundingClientRect();
+            await pop.wait_for_load_state(timeout=90000)
+            await pop.wait_for_function("typeof FZ!=='undefined'&&FZ.ws&&FZ.ws.readyState===1&&FZ.sid", timeout=90000)
+            geo = """(()=>{const t=$('fzterm').getBoundingClientRect();
                 const e=document.elementFromPoint(t.left+t.width/2,t.top+t.height/2);
-                return {tw:t.width,th:t.height,inside:!!e&&$('fzterm').contains(e),title:document.title}})()""")
+                return {tw:t.width,th:t.height,inside:!!e&&$('fzterm').contains(e),title:document.title}})()"""
+            with contextlib.suppress(Exception):                         # until the layout settled, then checked
+                await pop.wait_for_function(f"(()=>{{const g={geo};return g.tw>600&&g.th>300&&g.inside}})()", timeout=60000)
+            look = await pop.evaluate(geo)
             self.assertGreater(look["tw"], 600, look)                    # the terminal fills the window
             self.assertGreater(look["th"], 300, look)
             self.assertTrue(look["inside"], look)                        # nothing of the assistant page over it
             self.assertIn("vps-1", look["title"])
             await pop.click("#fzterm")
             await pop.keyboard.type("u")                                 # typed in the own window, echoed by the server
-            await pop.wait_for_function(self.TEXT + ".includes('echo:u')", timeout=30000)
+            await pop.wait_for_function(self.TEXT + ".includes('echo:u')", timeout=60000)
             # the tab before: „läuft im eigenen Fenster“ with the system's name, the session still one
-            await pg.wait_for_function("!$('fzweg').hidden", timeout=15000)
+            await pg.wait_for_function("!$('fzweg').hidden", timeout=60000)
             self.assertEqual(await pg.evaluate("$('fzwegname').textContent"), "vps-1")
             self.assertTrue(await pg.evaluate("$('fzview').hidden"))
             self.assertEqual(len(fernzugang.SITZUNG), 1)

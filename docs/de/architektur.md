@@ -36,6 +36,7 @@ flowchart TB
       betrieb["Logs und Live<br/>tracelog · live"]
       werkstatt["Werkstatt<br/>werkstatt.py"]
       post["Post und Kontakte<br/>/caldav · /carddav"]
+      fernzugang["Fernzugang<br/>SSH · SFTP · guacd"]
     end
     subgraph z_modelle["Modelle · auf dem DGX"]
       llm["Sprachmodell<br/>:31006 → :31016"]
@@ -56,6 +57,7 @@ flowchart TB
   end
   subgraph z_internet["Internet · geht raus"]
     internet["Dienste im Internet<br/>IMAP, CalDAV, Web"]
+    fernserver["Fern-Server<br/>spark-anker"]
   end
   geraet --> middleware
   apps --> middleware
@@ -87,6 +89,8 @@ flowchart TB
   werkzeuge --> post
   post --> waechter
   post --> users
+  zugang --> fernzugang
+  fernserver --> fernzugang
 ```
 <!-- /technik:bild -->
 
@@ -163,9 +167,6 @@ Jede Anfrage geht zuerst hier durch: Größe, Herkunft, Notaus, Anmeldung, Profi
 | `app/panel/coadmin.py` | Profile als Admins: Admin und Verwalter, ohne zweite Stufe |
 | `app/panel/core.py` | Admin-Passwort, Sitzungen, gemeinsame Pfade und Helfer |
 | `app/panel/features.py` | Alle Funktionen mit Namen und Freigaben an einer Stelle |
-| `app/panel/fernbild.py` | Fernzugang, Bildschirm: guacd auf 127.0.0.1, VNC oder RDP durch den Anker, erst nur ansehen, höchstens 15 Bilder/s |
-| `app/panel/ferndateien.py` | Fernzugang, Dateien: SFTP in derselben SSH-Verbindung, Liste, Einmal-Link zum Laden, Hochladen mit Größengrenze |
-| `app/panel/fernzugang.py` | Fernzugang (Menüpunkt): Seite per Code entsperrt, Anker, Einmal-Code, Web-Terminal mit Ticket, fester Host-Schlüssel |
 | `app/panel/guard.py` | Rate-Limits, Sperren nach falschen Versuchen, fremde Seiten, audit.log mit Prüfkette |
 | `app/panel/join.py` | Neue Personen per Einladung |
 | `app/panel/mfa.py` | Zweiter Anmeldeschritt mit Code (TOTP) und Wiederherstellungscodes |
@@ -176,7 +177,6 @@ Jede Anfrage geht zuerst hier durch: Größe, Herkunft, Notaus, Anmeldung, Profi
 | `app/panel/passkey.py` | Passkeys statt Code (Face ID, Touch ID, Windows Hello) |
 | `app/panel/profiles.py` | Profile, Geräte, Sitzungen, Gespräche und Gedächtnis pro Profil |
 | `app/panel/signatur.py` | Prüft signierte Update-Manifeste (Ed25519) |
-| `app/panel/spontanhilfe.py` | Spontanhilfe: Nummer und Link, Seite /hilfe mit eigener CSP, WebRTC zwischen zwei Browsern, Shell über den Anker |
 | `app/panel/stufen.py` | Liste, welche Änderung den Code verlangt |
 | `app/panel/vault.py` | Versiegelt Passwörter und Tokens mit state/secret.key |
 | `app/panel/wachposten.py` | Wachposten: feste Regeln auf dem Änderungsprotokoll melden den Admins Sperren, neue Zugänge, geänderten Schutz |
@@ -533,6 +533,17 @@ Spracherkennung und Sprachausgabe als eigene Dienste, mit Vorrang vor allem ande
 | `app/tts_proxy.py` | Sprachausgabe: nimmt an und reicht an die Engine durch |
 | `app/tts_server.py` | Sprachausgabe als eigener kleiner Dienst |
 | `app/panel/vorrang.py` | Sprache zuerst: Hintergrundarbeit wartet |
+
+### Fernzugang
+
+Shell, Dateien und Bildschirm eigener Server über ihren Anker, dazu die Spontanhilfe; nur für Admins.
+
+| Modul | Aufgabe |
+|---|---|
+| `app/panel/fernbild.py` | Fernzugang, Bildschirm: guacd auf 127.0.0.1, VNC oder RDP durch den Anker, erst nur ansehen, höchstens 15 Bilder/s |
+| `app/panel/ferndateien.py` | Fernzugang, Dateien: SFTP in derselben SSH-Verbindung, Liste, Einmal-Link zum Laden, Hochladen mit Größengrenze |
+| `app/panel/fernzugang.py` | Fernzugang: Seite per Code entsperrt, Anker, Einmal-Code, Terminal mit Ticket, Host-Schlüssel fest, Shell gehalten |
+| `app/panel/spontanhilfe.py` | Spontanhilfe: Nummer und Link, Seite /hilfe mit eigener CSP, WebRTC zwischen zwei Browsern, Shell über den Anker |
 
 ### Spark teilen
 
@@ -3855,6 +3866,136 @@ flowchart TD
 - `app/panel/kontaktserver.py` `_write`: Karte einer Kontakte-App ([Schritt 10](#kn-post-s10))
 
 Selbsttests: `test_mailvorrat`, `test_vorrat`, `test_mails_senden`, `test_kalenderserver`, `test_kontaktserver`, `test_kontakte_seite`, `test_kalenderspiegel`, `test_mailcode`, `test_einordnen`
+
+### Fernzugang
+
+Der Fernzugang öffnet Shell, Dateien und Bildschirm eines eigenen Servers im Browser, ohne offenen Port dort: der Anker auf dem Server verbindet sich selbst zum Panel, das Panel spricht SSH durch diese Leitung. Dazu die Spontanhilfe: eine Person teilt ihren Bildschirm mit einer Nummer. Nur für Admins, nie für Gäste, kein Werkzeug des Sprachmodells.
+
+**Warum:** Eine Shell auf einem Server ist das Mächtigste, was das Panel öffnen kann. Deshalb eine eigene Schranke vor der Seite (entsperren mit Code oder Passkey), ein Einmal-Ticket je Fenster, ein beim Koppeln angehefteter Host-Schlüssel und Logs nur mit festen Wörtern: was auf dem Server getippt wird und was er zeigt, speichert das Panel nie.
+
+#### Ablauf
+
+```mermaid
+flowchart TD
+  s1(["1. Admin öffnet den Fernzugang"])
+  s2{{"2. Seite entsperrt?"}}
+  s3["3. Koppeln"]
+  s4["4. Ticket für das Fenster"]
+  s5{{"5. Anderer Host-Schlüssel?"}}
+  s6["6. Shell, Dateien, Bildschirm"]
+  s7["7. Spontanhilfe"]
+  s8(["8. Logs und Verlauf"])
+  s1 --> s2
+  s2 -->|ja| s3
+  s3 --> s4
+  s4 --> s5
+  s5 -->|nein| s6
+  s6 --> s7
+  s7 --> s8
+  s2x(["Gesperrt, nichts zu sehen"])
+  s2 -->|nein| s2x
+  s5x(["Keine Verbindung"])
+  s5 -->|ja| s5x
+```
+
+1. <a id="kn-fernzugang-s1"></a>**Admin öffnet den Fernzugang**: Funktionen → Fernzugang zu Servern ist standardmäßig aus (fernzugang.admin_on) und nur für Admins mit zweitem Schritt; Gäste und das Sprachmodell erreichen ihn nie.
+2. <a id="kn-fernzugang-s2"></a>**Seite entsperrt?**: Ein Code oder Passkey entsperrt die Seite für 5 bis 120 Minuten, nur für diese Anmeldung und vom selben Ort (fernzugang.entsperrt_bis); Sperren, Abmelden und Notaus sperren sofort, ein Neustart auch.
+3. <a id="kn-fernzugang-s3"></a>**Koppeln**: „Koppeln“ fragt den Code jedes Mal neu (fernzugang.admin_pair) und zeigt eine Zeile für den Server mit einem Einmal-Code, 10 Minuten gültig. Höchstens 10 Systeme; jedes bekommt einen eigenen SSH-Schlüssel des Panels, sein Host-Schlüssel wird angeheftet.
+4. <a id="kn-fernzugang-s4"></a>**Ticket für das Fenster**: „Shell“ gibt ein Einmal-Ticket (fernzugang.admin_session), das 30 Sekunden lang genau ein Web-Terminal öffnet (fernzugang.terminal_ws); höchstens 4 Sitzungen zugleich.
+5. <a id="kn-fernzugang-s5"></a>**Anderer Host-Schlüssel?**: Zeigt der Server einen anderen Host-Schlüssel als beim Koppeln, gibt es keine Verbindung (fernzugang.hostkey_wrong); nach einer Neuinstallation entfernen und neu koppeln.
+6. <a id="kn-fernzugang-s6"></a>**Shell, Dateien, Bildschirm**: SSH läuft durch den Kanal des Ankers; reißt das Fenster ab, wartet die Shell 120 Sekunden. Dateien über SFTP in derselben Verbindung (ferndateien.listing), Laden mit Einmal-Link für 60 Sekunden. Der Bildschirm geht über guacd nur auf 127.0.0.1 (fernbild.GUACD), höchstens 15 Bilder je Sekunde. Der Assistent (fernzugang.admin_help) fragt nur das eigene Modell und schlägt vor, getippt wird nie von selbst.
+7. <a id="kn-fernzugang-s7"></a>**Spontanhilfe**: Eine Hilfe (spontanhilfe.admin_new) gibt eine Nummer für 10 Minuten, nach 5 falschen ist sie tot. Der Bildschirm geht per WebRTC direkt zwischen den zwei Browsern, von unterwegs über TURN auf tars; das Panel vermittelt nur.
+8. <a id="kn-fernzugang-s8"></a>**Logs und Verlauf**: Logs nur mit festen Wörtern und Zahlen (fernzugang.log), der Verlauf nur Zeit, System, Admin, Art und Dauer (fernzugang.verlauf_add). Der Notaus schließt jede Leitung (fernzugang.notaus_close).
+
+**Beispiele:** Shell öffnen: Entsperrt, Ticket, Host-Schlüssel passt: die Shell läuft. · Server neu installiert: Anderer Host-Schlüssel: keine Verbindung. · Seite gesperrt: Erst mit Code oder Passkey entsperren.
+
+#### Zahlen (aus dem Code)
+
+- **10 min** gilt ein Einmal-Code zum Koppeln ([Schritt 3](#kn-fernzugang-s3))
+- **30 s** gilt ein Ticket für ein Fenster ([Schritt 4](#kn-fernzugang-s4))
+- **120 s** wartet eine abgerissene Shell ([Schritt 6](#kn-fernzugang-s6))
+- **10** gekoppelte Systeme höchstens ([Schritt 3](#kn-fernzugang-s3))
+- **15** Bilder je Sekunde höchstens ([Schritt 6](#kn-fernzugang-s6))
+- **10 min** gilt eine Nummer der Spontanhilfe ([Schritt 7](#kn-fernzugang-s7))
+
+#### Einstellen
+
+- Funktionen → Fernzugang zu Servern: einschalten, Systeme koppeln, Bildschirm und Spontanhilfe.
+
+#### Was du siehst
+
+- Zustand → Live: offene Sitzungen und Anker nach Art und Anzahl, nie ein Inhalt.
+
+#### Im Code
+
+- `app/panel/fernzugang.py` `entsperrt_bis`: wie lange die Seite entsperrt ist ([Schritt 2](#kn-fernzugang-s2))
+- `app/panel/fernzugang.py` `admin_pair`: Koppeln mit Einmal-Code ([Schritt 3](#kn-fernzugang-s3))
+- `app/panel/fernzugang.py` `terminal_ws`: das Web-Terminal mit Ticket ([Schritt 4](#kn-fernzugang-s4))
+- `app/panel/fernzugang.py` `hostkey_wrong`: angehefteter Host-Schlüssel ([Schritt 5](#kn-fernzugang-s5))
+- `app/panel/ferndateien.py` `listing`: Dateien über SFTP ([Schritt 6](#kn-fernzugang-s6))
+- `app/panel/fernbild.py` `GUACD`: guacd nur auf 127.0.0.1 ([Schritt 6](#kn-fernzugang-s6))
+- `app/panel/spontanhilfe.py` `admin_new`: eine neue Spontanhilfe ([Schritt 7](#kn-fernzugang-s7))
+- `app/panel/fernzugang.py` `notaus_close`: Notaus schließt jede Leitung ([Schritt 8](#kn-fernzugang-s8))
+
+Selbsttests: `test_fernzugang`, `test_fernbild`, `test_spontanhilfe`
+
+### Fern-Server
+
+Ein Fern-Server ist ein eigener Rechner (Linux oder Mac) im Heimnetz oder im Internet, auf dem der Anker läuft: ein kleines Programm, das sich selbst zum Panel verbindet und dort den Weg zu seinem SSH öffnet.
+
+**Warum:** So braucht der Server keinen offenen Port und keine Weiterleitung im Router: die Leitung geht von ihm hinaus, wie ein Browser von unterwegs. Das Panel kennt jeden Anker an seinem eigenen Schlüssel.
+
+#### Ablauf
+
+```mermaid
+flowchart TD
+  s1(["1. Eine Zeile auf dem Server"])
+  s2["2. Koppeln mit dem Einmal-Code"]
+  s3{{"3. Schlüssel bekannt?"}}
+  s4["4. Leitung nach draußen"]
+  s5["5. Kanal zum eigenen SSH"]
+  s6(["6. Entfernen"])
+  s1 --> s2
+  s2 --> s3
+  s3 -->|ja| s4
+  s4 --> s5
+  s5 --> s6
+  s3x(["Abgewiesen"])
+  s3 -->|nein| s3x
+```
+
+1. <a id="kn-fernserver-s1"></a>**Eine Zeile auf dem Server**: Die Seite zeigt eine Zeile aus der Adresse, auf der der Browser ist (fernzugang.command); sie lädt den Anker vom eigenen Panel und richtet ihn als eigenen Systemdienst ein.
+2. <a id="kn-fernserver-s2"></a>**Koppeln mit dem Einmal-Code**: Der Anker meldet sich einmal mit dem Code (fernzugang.anker_pair) und bekommt seinen Geräteschlüssel; das Panel behält davon nur den SHA-256, dazu Host-Schlüssel und Name.
+3. <a id="kn-fernserver-s3"></a>**Schlüssel bekannt?**: Jede Verbindung des Ankers (fernzugang.anker_ws) zeigt den Geräteschlüssel; unbekannt oder entfernt heißt abgewiesen (fernzugang.by_key), mit Rate-Limit.
+4. <a id="kn-fernserver-s4"></a>**Leitung nach draußen**: Der Anker hält eine WebSocket-Leitung mit TLS zum Panel, direkt im Heimnetz oder über den Reverse-Proxy, mit Lebenszeichen alle 20 Sekunden; jede Nachricht höchstens 65536 Bytes.
+5. <a id="kn-fernserver-s5"></a>**Kanal zum eigenen SSH**: Nur auf Bitte des Panels öffnet der Anker einen Kanal zu seinem sshd auf 127.0.0.1 (binnen 15 Sekunden); angemeldet wird als Benutzer spark nur mit dem Schlüssel des Panels, sudo nur, wenn der Admin es dort einträgt.
+6. <a id="kn-fernserver-s6"></a>**Entfernen**: „Entfernen“ lässt den Anker sich selbst abbauen und meldet es (fernzugang.anker_removed); ein entfernter, der nie wiederkommt, ist nach 90 Tagen vergessen.
+
+**Beispiele:** Server einrichten: Gekoppelt und online. · Alter Schlüssel nach dem Entfernen: Abgewiesen.
+
+#### Zahlen (aus dem Code)
+
+- **20 s** Lebenszeichen auf der Leitung ([Schritt 4](#kn-fernserver-s4))
+- **65536 Bytes** eine Nachricht höchstens ([Schritt 4](#kn-fernserver-s4))
+- **90** Tage, bis ein entfernter vergessen ist ([Schritt 6](#kn-fernserver-s6))
+
+#### Einstellen
+
+- Funktionen → Fernzugang zu Servern: Koppeln, Entfernen, Bildschirm einrichten.
+
+#### Was du siehst
+
+- Funktionen → Dienst-Wächter: ein Anker, der zu lange offline ist.
+
+#### Im Code
+
+- `app/panel/fernzugang.py` `command`: die eine Zeile ([Schritt 1](#kn-fernserver-s1))
+- `app/panel/fernzugang.py` `anker_pair`: Koppeln des Ankers ([Schritt 2](#kn-fernserver-s2))
+- `app/panel/fernzugang.py` `anker_ws`: die Leitung des Ankers ([Schritt 3](#kn-fernserver-s3))
+- `app/panel/fernzugang.py` `by_key`: Anker am Schlüssel erkennen ([Schritt 3](#kn-fernserver-s3))
+- `app/panel/fernzugang.py` `anker_removed`: Abbau gemeldet ([Schritt 6](#kn-fernserver-s6))
+
+Selbsttests: `test_fernzugang`
 
 ### journald
 

@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "aussen": {
-        "stand": "bed7d95210",
+        "stand": "0cf6718759",
         "bezug": {
             "dienstwacht.TIMEOUT": ["s5"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
             "netguard.client": ["s8", "s9", "s10"], "netguard.IMAP4_SSL": ["s9"],
@@ -188,7 +188,7 @@ SEITEN = {
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
     },
     "internet": {
-        "stand": "678bd47717",
+        "stand": "e06726b06e",
         "bezug": {
             "regeln": ["s3", "s4"], "regel:Seiten aus der Suche": ["s4", "s5"], "regel:Mail, Kalender, Kontakte": ["s4", "s5"],
             "regel:reMarkable": ["s4", "s5"], "regel:Wetter, Fahrplan, Wikipedia": ["s3"], "regel:Telegram": ["s7"],
@@ -798,4 +798,210 @@ SEITEN = {
         "heute": [],
     },
     # ------------------------------------------------------------------ Browser und Handy
+    # ------------------------------------------------------------------ Fernzugang (Dominik 2026-10-29 „in Technik → Überblick fehlt die Fernwartung“)
+    "fernzugang": {
+        "stand": "7854fa1ede",
+        "bezug": {
+            "fernzugang.entsperrt_bis": ["s2"], "fernzugang.admin_pair": ["s3"], "fernzugang.CODE_S": ["s3"], "fernzugang.TICKET_S": ["s4"], "fernzugang.terminal_ws": ["s4"], "fernzugang.hostkey_wrong": ["s5"], "fernzugang.HALTEN_S": ["s6"], "ferndateien.listing": ["s6"], "fernbild.GUACD": ["s6"], "fernbild.FPS": ["s6"], "spontanhilfe.admin_new": ["s7"], "spontanhilfe.NUMMER_S": ["s7"], "fernzugang.notaus_close": ["s8"], "fernzugang.MAX_ANKER": ["s3"],
+        },
+        "kurz": ("Der Fernzugang öffnet Shell, Dateien und Bildschirm eines eigenen Servers im Browser, ohne offenen Port "
+                 "dort: der Anker auf dem Server verbindet sich selbst zum Panel, das Panel spricht SSH durch diese "
+                 "Leitung. Dazu die Spontanhilfe: eine Person teilt ihren Bildschirm mit einer Nummer. Nur für Admins, "
+                 "nie für Gäste, kein Werkzeug des Sprachmodells.",
+                 "Remote access opens the shell, files and screen of an own server in the browser, without an open port "
+                 "there: the anchor on the server connects to the panel by itself, the panel speaks SSH through that "
+                 "line. Plus spontaneous help: a person shares their screen with a number. Admins only, never guests, "
+                 "no tool of the language model."),
+        "warum": ("Eine Shell auf einem Server ist das Mächtigste, was das Panel öffnen kann. Deshalb eine eigene Schranke "
+                  "vor der Seite (entsperren mit Code oder Passkey), ein Einmal-Ticket je Fenster, ein beim Koppeln "
+                  "angehefteter Host-Schlüssel und Logs nur mit festen Wörtern: was auf dem Server getippt wird und was "
+                  "er zeigt, speichert das Panel nie.",
+                  "A shell on a server is the most powerful thing the panel can open. So a barrier of its own in front "
+                  "of the page (unlock with a code or passkey), a one-time ticket per window, a host key pinned at "
+                  "pairing and logs with fixed words only: what is typed on the server and what it shows is never "
+                  "stored by the panel."),
+        "ablauf": [
+            S("s1", "start", ("Admin öffnet den Fernzugang", "Admin opens remote access"),
+              ("fernzugang.admin_on", "fernzugang.admin_on"),
+              ("Funktionen → Fernzugang zu Servern ist standardmäßig aus (fernzugang.admin_on) und nur für Admins mit "
+               "zweitem Schritt; Gäste und das Sprachmodell erreichen ihn nie.",
+               "Features → Remote access to servers is off by default (fernzugang.admin_on) and only for admins with "
+               "the second step; guests and the language model never reach it.")),
+            S("s2", "frage", ("Seite entsperrt?", "Page unlocked?"),
+              ("{fernzugang.ENTSPERRT_MIN.0} bis {fernzugang.ENTSPERRT_MIN.1} Minuten", "{fernzugang.ENTSPERRT_MIN.0} to {fernzugang.ENTSPERRT_MIN.1} minutes"),
+              ("Ein Code oder Passkey entsperrt die Seite für {fernzugang.ENTSPERRT_MIN.0} bis {fernzugang.ENTSPERRT_MIN.1} "
+               "Minuten, nur für diese Anmeldung und vom selben Ort (fernzugang.entsperrt_bis); Sperren, Abmelden und "
+               "Notaus sperren sofort, ein Neustart auch.",
+               "A code or passkey unlocks the page for {fernzugang.ENTSPERRT_MIN.0} to {fernzugang.ENTSPERRT_MIN.1} "
+               "minutes, only for this login and from the same place (fernzugang.entsperrt_bis); locking, logging out "
+               "and the kill switch lock at once, a restart too."),
+              ("stop", "nein", ("Gesperrt, nichts zu sehen", "Locked, nothing to see"))),
+            S("s3", "schritt", ("Koppeln", "Pairing"),
+              ("Einmal-Code {fernzugang.CODE_S|min} min", "one-time code {fernzugang.CODE_S|min} min"),
+              ("„Koppeln“ fragt den Code jedes Mal neu (fernzugang.admin_pair) und zeigt eine Zeile für den Server mit "
+               "einem Einmal-Code, {fernzugang.CODE_S|min} Minuten gültig. Höchstens {fernzugang.MAX_ANKER} Systeme; "
+               "jedes bekommt einen eigenen SSH-Schlüssel des Panels, sein Host-Schlüssel wird angeheftet.",
+               "„Pair“ asks for the code every time (fernzugang.admin_pair) and shows one line for the server with a "
+               "one-time code, valid {fernzugang.CODE_S|min} minutes. At most {fernzugang.MAX_ANKER} systems; each gets "
+               "an SSH key of the panel of its own, its host key is pinned.")),
+            S("s4", "schritt", ("Ticket für das Fenster", "Ticket for the window"),
+              ("{fernzugang.TICKET_S} s, einmal", "{fernzugang.TICKET_S} s, once"),
+              ("„Shell“ gibt ein Einmal-Ticket (fernzugang.admin_session), das {fernzugang.TICKET_S} Sekunden lang genau "
+               "ein Web-Terminal öffnet (fernzugang.terminal_ws); höchstens {fernzugang.SITZUNGEN.1} Sitzungen zugleich.",
+               "„Shell“ hands out a one-time ticket (fernzugang.admin_session) that opens exactly one web terminal for "
+               "{fernzugang.TICKET_S} seconds (fernzugang.terminal_ws); at most {fernzugang.SITZUNGEN.1} sessions at once.")),
+            S("s5", "frage", ("Anderer Host-Schlüssel?", "Another host key?"),
+              ("fernzugang.hostkey_wrong", "fernzugang.hostkey_wrong"),
+              ("Zeigt der Server einen anderen Host-Schlüssel als beim Koppeln, gibt es keine Verbindung "
+               "(fernzugang.hostkey_wrong); nach einer Neuinstallation entfernen und neu koppeln.",
+               "If the server shows another host key than at pairing, there is no connection "
+               "(fernzugang.hostkey_wrong); after a reinstall remove and pair again."),
+              ("stop", "ja", ("Keine Verbindung", "No connection"))),
+            S("s6", "schritt", ("Shell, Dateien, Bildschirm", "Shell, files, screen"),
+              ("SSH · SFTP · guacd", "SSH · SFTP · guacd"),
+              ("SSH läuft durch den Kanal des Ankers; reißt das Fenster ab, wartet die Shell {fernzugang.HALTEN_S} Sekunden. "
+               "Dateien über SFTP in derselben Verbindung (ferndateien.listing), Laden mit Einmal-Link für "
+               "{ferndateien.LINK_S} Sekunden. Der Bildschirm geht über guacd nur auf 127.0.0.1 (fernbild.GUACD), höchstens "
+               "{fernbild.FPS} Bilder je Sekunde. Der Assistent (fernzugang.admin_help) fragt nur das eigene Modell und "
+               "schlägt vor, getippt wird nie von selbst.",
+               "SSH runs through the anchor's channel; if the window drops, the shell waits {fernzugang.HALTEN_S} seconds. "
+               "Files through SFTP in the same connection (ferndateien.listing), downloads with a one-time link for "
+               "{ferndateien.LINK_S} seconds. The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most "
+               "{fernbild.FPS} pictures a second. The assistant (fernzugang.admin_help) asks only the own model and "
+               "suggests, nothing is typed by itself.")),
+            S("s7", "schritt", ("Spontanhilfe", "Spontaneous help"),
+              ("Nummer {spontanhilfe.NUMMER_S|min} min", "number {spontanhilfe.NUMMER_S|min} min"),
+              ("Eine Hilfe (spontanhilfe.admin_new) gibt eine Nummer für {spontanhilfe.NUMMER_S|min} Minuten, nach "
+               "{spontanhilfe.FEHL} falschen ist sie tot. Der Bildschirm geht per WebRTC direkt zwischen den zwei Browsern, "
+               "von unterwegs über TURN auf tars; das Panel vermittelt nur.",
+               "A help (spontanhilfe.admin_new) gives a number for {spontanhilfe.NUMMER_S|min} minutes, after "
+               "{spontanhilfe.FEHL} wrong ones it is dead. The screen goes by WebRTC directly between the two browsers, "
+               "on the way through TURN on tars; the panel only connects them.")),
+            S("s8", "ende", ("Logs und Verlauf", "Logs and history"),
+              ("fernzugang.log", "fernzugang.log"),
+              ("Logs nur mit festen Wörtern und Zahlen (fernzugang.log), der Verlauf nur Zeit, System, Admin, Art und "
+               "Dauer (fernzugang.verlauf_add). Der Notaus schließt jede Leitung (fernzugang.notaus_close).",
+               "Logs with fixed words and numbers only (fernzugang.log), the history only time, system, admin, kind and "
+               "duration (fernzugang.verlauf_add). The kill switch closes every line (fernzugang.notaus_close).")),
+        ],
+        "beispiele": [
+            (("Shell öffnen", "Open a shell"), ["s1", "s2", "s4", "s5", "s6", "s8"],
+             ("Entsperrt, Ticket, Host-Schlüssel passt: die Shell läuft.", "Unlocked, ticket, host key fits: the shell runs.")),
+            (("Server neu installiert", "Server reinstalled"), ["s1", "s2", "s4", "s5", "s5!"],
+             ("Anderer Host-Schlüssel: keine Verbindung.", "Another host key: no connection.")),
+            (("Seite gesperrt", "Page locked"), ["s1", "s2", "s2!"],
+             ("Erst mit Code oder Passkey entsperren.", "Unlock with a code or passkey first.")),
+        ],
+        "zahlen": [
+            ("{fernzugang.CODE_S|min} min", ("gilt ein Einmal-Code zum Koppeln", "a one-time pairing code is valid"), "fernzugang.CODE_S"),
+            ("{fernzugang.TICKET_S} s", ("gilt ein Ticket für ein Fenster", "a ticket for one window is valid"), "fernzugang.TICKET_S"),
+            ("{fernzugang.HALTEN_S} s", ("wartet eine abgerissene Shell", "a dropped shell waits"), "fernzugang.HALTEN_S"),
+            ("{fernzugang.MAX_ANKER}", ("gekoppelte Systeme höchstens", "paired systems at most"), "fernzugang.MAX_ANKER"),
+            ("{fernbild.FPS}", ("Bilder je Sekunde höchstens", "pictures a second at most"), "fernbild.FPS"),
+            ("{spontanhilfe.NUMMER_S|min} min", ("gilt eine Nummer der Spontanhilfe", "a number of spontaneous help is valid"), "spontanhilfe.NUMMER_S"),
+        ],
+        "einstellen": [
+            ("Funktionen → Fernzugang zu Servern: einschalten, Systeme koppeln, Bildschirm und Spontanhilfe.",
+             "Features → Remote access to servers: switch on, pair systems, screen and spontaneous help."),
+        ],
+        "sehen": [
+            ("Zustand → Live: offene Sitzungen und Anker nach Art und Anzahl, nie ein Inhalt.",
+             "Status → Live: open sessions and anchors by kind and count, never a content."),
+        ],
+        "code": [
+            ("fernzugang.entsperrt_bis", ("wie lange die Seite entsperrt ist", "how long the page is unlocked")),
+            ("fernzugang.admin_pair", ("Koppeln mit Einmal-Code", "pairing with a one-time code")),
+            ("fernzugang.terminal_ws", ("das Web-Terminal mit Ticket", "the web terminal with a ticket")),
+            ("fernzugang.hostkey_wrong", ("angehefteter Host-Schlüssel", "pinned host key")),
+            ("ferndateien.listing", ("Dateien über SFTP", "files through SFTP")),
+            ("fernbild.GUACD", ("guacd nur auf 127.0.0.1", "guacd on 127.0.0.1 only")),
+            ("spontanhilfe.admin_new", ("eine neue Spontanhilfe", "a new spontaneous help")),
+            ("fernzugang.notaus_close", ("Notaus schließt jede Leitung", "kill switch closes every line")),
+        ],
+        "tests": ["test_fernzugang", "test_fernbild", "test_spontanhilfe"],
+        "heute": [],
+    },
+    "fernserver": {
+        "stand": "a492d6ff65",
+        "bezug": {
+            "fernzugang.command": ["s1"], "fernzugang.anker_pair": ["s2"], "fernzugang.by_key": ["s3"], "fernzugang.anker_ws": ["s3"], "fernzugang.PULS_S": ["s4"], "fernzugang.MAX_MSG": ["s4"], "fernzugang.anker_removed": ["s6"], "fernzugang.ABBAU_TAGE": ["s6"],
+        },
+        "kurz": ("Ein Fern-Server ist ein eigener Rechner (Linux oder Mac) im Heimnetz oder im Internet, auf dem der Anker "
+                 "läuft: ein kleines Programm, das sich selbst zum Panel verbindet und dort den Weg zu seinem SSH öffnet.",
+                 "A remote server is an own computer (Linux or Mac) at home or on the internet that runs the anchor: a "
+                 "small program that connects to the panel by itself and opens the way to its SSH there."),
+        "warum": ("So braucht der Server keinen offenen Port und keine Weiterleitung im Router: die Leitung geht von ihm "
+                  "hinaus, wie ein Browser von unterwegs. Das Panel kennt jeden Anker an seinem eigenen Schlüssel.",
+                  "So the server needs no open port and no forwarding in the router: the line goes out from it, like a "
+                  "browser on the way. The panel knows every anchor by its own key."),
+        "ablauf": [
+            S("s1", "start", ("Eine Zeile auf dem Server", "One line on the server"),
+              ("curl … | sudo python3 -", "curl … | sudo python3 -"),
+              ("Die Seite zeigt eine Zeile aus der Adresse, auf der der Browser ist (fernzugang.command); sie lädt den "
+               "Anker vom eigenen Panel und richtet ihn als eigenen Systemdienst ein.",
+               "The page shows one line from the address the browser is on (fernzugang.command); it loads the anchor "
+               "from the own panel and sets it up as a system service of its own.")),
+            S("s2", "schritt", ("Koppeln mit dem Einmal-Code", "Pairing with the one-time code"),
+              ("fernzugang.anker_pair", "fernzugang.anker_pair"),
+              ("Der Anker meldet sich einmal mit dem Code (fernzugang.anker_pair) und bekommt seinen Geräteschlüssel; das "
+               "Panel behält davon nur den SHA-256, dazu Host-Schlüssel und Name.",
+               "The anchor signs in once with the code (fernzugang.anker_pair) and gets its device key; the panel keeps "
+               "only its SHA-256, plus host key and name.")),
+            S("s3", "frage", ("Schlüssel bekannt?", "Key known?"),
+              ("fernzugang.by_key", "fernzugang.by_key"),
+              ("Jede Verbindung des Ankers (fernzugang.anker_ws) zeigt den Geräteschlüssel; unbekannt oder entfernt heißt "
+               "abgewiesen (fernzugang.by_key), mit Rate-Limit.",
+               "Every connection of the anchor (fernzugang.anker_ws) shows the device key; unknown or removed means "
+               "refused (fernzugang.by_key), with a rate limit."),
+              ("stop", "nein", ("Abgewiesen", "Refused"))),
+            S("s4", "schritt", ("Leitung nach draußen", "Line going out"),
+              ("WSS · {fernzugang.PULS_S} s", "WSS · {fernzugang.PULS_S} s"),
+              ("Der Anker hält eine WebSocket-Leitung mit TLS zum Panel, direkt im Heimnetz oder über den Reverse-Proxy, "
+               "mit Lebenszeichen alle {fernzugang.PULS_S} Sekunden; jede Nachricht höchstens {fernzugang.MAX_MSG} Bytes.",
+               "The anchor keeps a WebSocket line with TLS to the panel, directly at home or through the reverse proxy, "
+               "with a heartbeat every {fernzugang.PULS_S} seconds; every message at most {fernzugang.MAX_MSG} bytes.")),
+            S("s5", "schritt", ("Kanal zum eigenen SSH", "Channel to its own SSH"),
+              ("127.0.0.1:22 · {fernzugang.USER}", "127.0.0.1:22 · {fernzugang.USER}"),
+              ("Nur auf Bitte des Panels öffnet der Anker einen Kanal zu seinem sshd auf 127.0.0.1 (binnen "
+               "{fernzugang.OPEN_S} Sekunden); angemeldet wird als Benutzer {fernzugang.USER} nur mit dem Schlüssel des "
+               "Panels, sudo nur, wenn der Admin es dort einträgt.",
+               "Only when the panel asks does the anchor open a channel to its sshd on 127.0.0.1 (within "
+               "{fernzugang.OPEN_S} seconds); the login is user {fernzugang.USER} with the panel's key only, sudo only "
+               "when the admin adds it there.")),
+            S("s6", "ende", ("Entfernen", "Remove"),
+              ("fernzugang.anker_removed", "fernzugang.anker_removed"),
+              ("„Entfernen“ lässt den Anker sich selbst abbauen und meldet es (fernzugang.anker_removed); ein entfernter, "
+               "der nie wiederkommt, ist nach {fernzugang.ABBAU_TAGE} Tagen vergessen.",
+               "„Remove“ lets the anchor take itself down and report it (fernzugang.anker_removed); a removed one that "
+               "never comes back is forgotten after {fernzugang.ABBAU_TAGE} days.")),
+        ],
+        "beispiele": [
+            (("Server einrichten", "Set up a server"), ["s1", "s2", "s3", "s4"],
+             ("Gekoppelt und online.", "Paired and online.")),
+            (("Alter Schlüssel nach dem Entfernen", "Old key after removal"), ["s3", "s3!"],
+             ("Abgewiesen.", "Refused.")),
+        ],
+        "zahlen": [
+            ("{fernzugang.PULS_S} s", ("Lebenszeichen auf der Leitung", "heartbeat on the line"), "fernzugang.PULS_S"),
+            ("{fernzugang.MAX_MSG} Bytes", ("eine Nachricht höchstens", "one message at most"), "fernzugang.MAX_MSG"),
+            ("{fernzugang.ABBAU_TAGE}", ("Tage, bis ein entfernter vergessen ist", "days until a removed one is forgotten"), "fernzugang.ABBAU_TAGE"),
+        ],
+        "einstellen": [
+            ("Funktionen → Fernzugang zu Servern: Koppeln, Entfernen, Bildschirm einrichten.",
+             "Features → Remote access to servers: pair, remove, set up the screen."),
+        ],
+        "sehen": [
+            ("Funktionen → Dienst-Wächter: ein Anker, der zu lange offline ist.",
+             "Features → Service watch: an anchor that is offline too long."),
+        ],
+        "code": [
+            ("fernzugang.command", ("die eine Zeile", "the one line")),
+            ("fernzugang.anker_pair", ("Koppeln des Ankers", "pairing of the anchor")),
+            ("fernzugang.anker_ws", ("die Leitung des Ankers", "the anchor's line")),
+            ("fernzugang.by_key", ("Anker am Schlüssel erkennen", "know an anchor by its key")),
+            ("fernzugang.anker_removed", ("Abbau gemeldet", "removal reported")),
+        ],
+        "tests": ["test_fernzugang"],
+        "heute": [],
+    },
 }

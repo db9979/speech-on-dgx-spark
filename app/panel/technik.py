@@ -63,6 +63,9 @@ GRUPPEN = {
     "sprache": ("Sprachdienste", "Speech services",
                 "Spracherkennung und Sprachausgabe als eigene Dienste, mit Vorrang vor allem anderen.",
                 "Speech recognition and speech output as their own services, ahead of everything else."),
+    "fern": ("Fernzugang", "Remote access",
+             "Shell, Dateien und Bildschirm eigener Server über ihren Anker, dazu die Spontanhilfe; nur für Admins.",
+             "Shell, files and screen of own servers through their anchor, plus spontaneous help; admins only."),
     "teilen": ("Spark teilen", "Spark split",
                "Panel auf einem eigenen Rechner, Modelle auf dem DGX: Kopplung, TLS-Tor, Wärter und Umzug.",
                "Panel on its own computer, models on the DGX: pairing, TLS-Tor, Wärter and the move."),
@@ -389,10 +392,10 @@ MODULE = {
     "tarswart": ("teilen", "Wärter: feste Handgriffe auf dem Modell-Rechner (Zustand, Einheiten starten, GPU) für ein Panel anderswo"),
     "rechner": ("teilen", "Werte eines Rechners: CPU (auch je Dienst), Speicher, Platte, Netz, Temperatur, Strom (für beide Rechner gleich)"),
     "rundlauf": ("betrieb", "Rundlauf-Wächter: alle paar Minuten ein Probelauf durch Sprechen, Hören, Sprachmodell; meldet über den Dienst-Wächter"),
-    "spontanhilfe": ("zugang", "Spontanhilfe: Nummer und Link, Seite /hilfe mit eigener CSP, WebRTC zwischen zwei Browsern, Shell über den Anker"),
-    "fernzugang": ("zugang", "Fernzugang (Menüpunkt): Seite per Code entsperrt, Anker, Einmal-Code, Web-Terminal mit Ticket, fester Host-Schlüssel, eine abgerissene Shell 2 Minuten gehalten"),
-    "fernbild": ("zugang", "Fernzugang, Bildschirm: guacd auf 127.0.0.1, VNC oder RDP durch den Anker, erst nur ansehen, höchstens 15 Bilder/s"),
-    "ferndateien": ("zugang", "Fernzugang, Dateien: SFTP in derselben SSH-Verbindung, Liste, Einmal-Link zum Laden, Hochladen mit Größengrenze"),
+    "spontanhilfe": ("fern", "Spontanhilfe: Nummer und Link, Seite /hilfe mit eigener CSP, WebRTC zwischen zwei Browsern, Shell über den Anker"),
+    "fernzugang": ("fern", "Fernzugang: Seite per Code entsperrt, Anker, Einmal-Code, Terminal mit Ticket, Host-Schlüssel fest, Shell gehalten"),
+    "fernbild": ("fern", "Fernzugang, Bildschirm: guacd auf 127.0.0.1, VNC oder RDP durch den Anker, erst nur ansehen, höchstens 15 Bilder/s"),
+    "ferndateien": ("fern", "Fernzugang, Dateien: SFTP in derselben SSH-Verbindung, Liste, Einmal-Link zum Laden, Hochladen mit Größengrenze"),
     "wachposten": ("zugang", "Wachposten: feste Regeln auf dem Änderungsprotokoll melden den Admins Sperren, neue Zugänge, geänderten Schutz"),
     "schirm": ("teilen", "Steuerzentrale am Bildschirm: was die Textanzeige zeigt, nur lokal mit Schlüssel; der Dienst folgt dem Schalter"),
     "steuerzentrale": ("teilen", "Textanzeige auf tty1: zeichnet die Steuerzentrale, Schrift nach Auflösung, dunkel nach Zeitplan"),
@@ -516,6 +519,17 @@ KNOTEN = {
              "with its time, calendar and contacts apps through a door of their own.",
              ["mail.py", "calendars.py", "contacts.py", "mailvorrat.py", "senden.py", "kalenderserver.py", "kontaktserver.py",
               "static/js/post.js", "static/js/kalender.js", "static/js/kontakte.js"]),
+    "fernzugang": (194, 350, "Fernzugang", "Remote access", "SSH · SFTP · guacd", "fern",
+                   "Shell, Dateien und Bildschirm eigener Server durch ihren Anker, dazu die Spontanhilfe. Nur Admins, Seite "
+                   "per Code entsperrt, Einmal-Ticket je Fenster, angehefteter Host-Schlüssel; guacd nur auf 127.0.0.1.",
+                   "Shell, files and screen of own servers through their anchor, plus spontaneous help. Admins only, page "
+                   "unlocked by code, one-time ticket per window, pinned host key; guacd on 127.0.0.1 only.",
+                   ["static/js/fernzugang.js", "static/js/spontanhilfe.js"]),
+    "fernserver": (24, 794, "Fern-Server", "Remote servers", "spark-anker", "",
+                   "Eigene Server im Heimnetz oder im Internet mit dem Anker: er verbindet sich selbst hinaus zum Panel "
+                   "(WSS, direkt oder über den Reverse-Proxy), kein offener Port dort.",
+                   "Own servers at home or on the internet with the anchor: it connects out to the panel by itself (WSS, "
+                   "directly or through the reverse proxy), no open port there.", ["anker/spark-anker.py"]),
     "journal": (364, 610, "journald", "journald", "speech-spark", "", "Alle Dienste; wie lange und wie viel, stellt der Admin ein (Standard 14 Tage, 500 MB).",
                 "All services; how long and how much is set by the admin (default 14 days, 500 MB).", []),
 }
@@ -525,7 +539,8 @@ KANTEN = [("geraet", "middleware"), ("apps", "middleware"), ("kanaele", "middlew
           ("werkzeuge", "waechter"), ("waechter", "aussen"), ("waechter", "internet"), ("werkzeuge", "wissen"), ("antwort", "tts"), ("werkzeuge", "bild"),
           ("antwort", "geraet"), ("antwort", "betrieb"), ("betrieb", "state"), ("betrieb", "journal"),
           ("wissen", "users"), ("zugang", "users"), ("zugang", "state"), ("tts", "ablage"), ("zugang", "werkstatt"),
-          ("werkzeuge", "post"), ("post", "waechter"), ("post", "users")]
+          ("werkzeuge", "post"), ("post", "waechter"), ("post", "users"),
+          ("zugang", "fernzugang"), ("fernserver", "fernzugang")]
 # the picture's size and one box (the browser draws from these, test_technik checks every box and line inside)
 BILD = (1084, 862)
 KASTEN = (156, 52)
@@ -552,14 +567,15 @@ FARBEN = {"geraet": ("Geräte", "Devices"), "zugang": ("Zugang und Schutz", "Acc
 FARBE = {**dict.fromkeys(("geraet", "apps", "kanaele", "lautsprecher", "mcpc"), "geraet"),
          **dict.fromkeys(("middleware", "zugang", "sicherheit", "waechter"), "zugang"),
          **dict.fromkeys(("vorbereiten", "weiche", "antwort", "werkzeuge"), "gespraech"),
-         "wissen": "wissen", "post": "post", "betrieb": "betrieb", "werkstatt": "betrieb",
+         "wissen": "wissen", "post": "post", "fernzugang": "zugang", "fernserver": "aussen", "betrieb": "betrieb", "werkstatt": "betrieb",
          **dict.fromkeys(("llm", "asr", "tts", "bild", "teilen"), "modell"),
          **dict.fromkeys(("state", "users", "ablage", "journal"), "speicher"), "aussen": "aussen", "internet": "aussen"}
 SYMBOL = {"geraet": "💻", "apps": "📱", "kanaele": "💬", "lautsprecher": "🔊", "mcpc": "🧩", "middleware": "🚦",
           "zugang": "🔑", "sicherheit": "🛡️", "waechter": "🧱", "vorbereiten": "📝", "weiche": "🔀", "antwort": "💡",
           "werkzeuge": "🛠️", "wissen": "📚", "post": "✉️", "betrieb": "📊", "werkstatt": "🧪", "llm": "🧠",
           "asr": "🎙️", "tts": "🗣️", "bild": "🎨", "teilen": "🔗", "state": "🗄️", "users": "👤", "ablage": "💾",
-          "journal": "📜", "aussen": "🏠", "internet": "🌐"}
+          "journal": "📜", "aussen": "🏠", "internet": "🌐",
+          "fernzugang": "⌨️", "fernserver": "🖥️"}
 LEGENDE = (892, 18)            # x, y of the legend's first row (14 apart)
 NUR_BEI = {"teilen": ("nur bei Spark teilen", "only with Spark split")}
 # the two doors where the devices' way enters the Spark: kind, German, English, x, y (on the edge of the zone spark)
@@ -582,13 +598,15 @@ LINIEN = {
     "waechter>aussen": [(762, 528), (762, 706)], "waechter>internet": [(822, 528), (822, 794)],
     "antwort>betrieb": [(730, 274), (730, 312), (480, 312), (480, 350)],
     "betrieb>journal": [(442, 402), (442, 610)], "betrieb>state": [(380, 402), (380, 590), (300, 590), (300, 610)],
-    "zugang>state": [(240, 274), (240, 610)],
+    "zugang>state": [(350, 266), (357, 266), (357, 580), (240, 580), (240, 610)],
     "zugang>users": [(330, 274), (330, 300), (527, 300), (527, 598), (560, 598), (560, 610)],
     "wissen>users": [(534, 394), (527, 394), (527, 598), (560, 598), (560, 610)],
     "werkzeuge>post": [(720, 402), (720, 440), (650, 440), (650, 476)], "post>waechter": [(690, 502), (704, 502)],
     "post>users": [(612, 528), (612, 610)],
     "tts>ablage": [(1052, 444), (1060, 444), (1060, 636), (1052, 636)],
-    "zugang>werkstatt": [(210, 274), (210, 502), (180, 502)],
+    "zugang>werkstatt": [(350, 266), (357, 266), (357, 440), (187, 440), (187, 502), (180, 502)],
+    "zugang>fernzugang": [(272, 274), (272, 350)],
+    "fernserver>fernzugang": [(172, 794), (172, 560), (272, 560), (272, 402)],
 }
 
 # where a group lives in the picture (the node that lists it)

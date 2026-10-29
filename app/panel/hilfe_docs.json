@@ -851,6 +851,14 @@
 "lang": "de",
 "src": "architektur",
 "file": "Architektur und Datenfluss",
+"head": "Fernzugang",
+"title": "Fernzugang",
+"text": "Shell, Dateien und Bildschirm eigener Server über ihren Anker, dazu die Spontanhilfe; nur für Admins."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
 "head": "Spark teilen",
 "title": "Spark teilen",
 "text": "Panel auf einem eigenen Rechner, Modelle auf dem DGX: Kopplung, TLS-Tor, Wärter und Umzug."
@@ -3582,6 +3590,150 @@
 "head": "Im Code",
 "title": "Im Code",
 "text": "Selbsttests: test_mailvorrat, test_vorrat, test_mails_senden, test_kalenderserver, test_kontaktserver, test_kontakte_seite, test_kalenderspiegel, test_mailcode, test_einordnen"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Fernzugang",
+"title": "Fernzugang",
+"text": "Der Fernzugang öffnet Shell, Dateien und Bildschirm eines eigenen Servers im Browser, ohne offenen Port dort: der Anker auf dem Server verbindet sich selbst zum Panel, das Panel spricht SSH durch diese Leitung. Dazu die Spontanhilfe: eine Person teilt ihren Bildschirm mit einer Nummer. Nur für Admins, nie für Gäste, kein Werkzeug des Sprachmodells."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Fernzugang",
+"title": "Warum",
+"text": "Warum: Eine Shell auf einem Server ist das Mächtigste, was das Panel öffnen kann. Deshalb eine eigene Schranke vor der Seite (entsperren mit Code oder Passkey), ein Einmal-Ticket je Fenster, ein beim Koppeln angehefteter Host-Schlüssel und Logs nur mit festen Wörtern: was auf dem Server getippt wird und was er zeigt, speichert das Panel nie."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "1. Admin öffnet den Fernzugang: Funktionen → Fernzugang zu Servern ist standardmäßig aus (fernzugang.admin_on) und nur für Admins mit zweitem Schritt; Gäste und das Sprachmodell erreichen ihn nie. 2. Seite entsperrt?: Ein Code oder Passkey entsperrt die Seite für 5 bis 120 Minuten, nur für diese Anmeldung und vom selben Ort (fernzugang.entsperrt_bis); Sperren, Abmelden und Notaus sperren sofort, ein Neustart auch. 3. Koppeln: „Koppeln“ fragt den Code jedes Mal neu (fernzugang.admin_pair) und zeigt eine Zeile für den Server mit einem Einmal-Code, 10 Minuten gültig. Höchstens 10 Systeme; jedes bekommt einen eigenen SSH-Schlüssel des Panels, sein Host-Schlüssel wird angeheftet. 4. Ticket für das Fenster: „Shell“ gibt ein Einmal-Ticket (fernzugang.admin_session), das 30 Sekunden lang genau ein Web-Terminal öffnet (fernzugang.terminal_ws); höchstens 4 Sitzungen zugleich. 5. Anderer Host-Schlüssel?: Zeigt der Server einen anderen Host-Schlüssel als beim Koppeln, gibt es keine Verbindung (fernzugang.hostkey_wrong); nach einer Neuinstallation entfernen und neu koppeln. 6. Shell, Dateien, Bildschirm: SSH läuft durch den Kanal des Ankers; reißt das Fenster ab, wartet die Shell 120 Sekunden. "
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "Dateien über SFTP in derselben Verbindung (ferndateien.listing), Laden mit Einmal-Link für 60 Sekunden. Der Bildschirm geht über guacd nur auf 127.0.0.1 (fernbild.GUACD), höchstens 15 Bilder je Sekunde. Der Assistent (fernzugang.admin_help) fragt nur das eigene Modell und schlägt vor, getippt wird nie von selbst. 7. Spontanhilfe: Eine Hilfe (spontanhilfe.admin_new) gibt eine Nummer für 10 Minuten, nach 5 falschen ist sie tot. Der Bildschirm geht per WebRTC direkt zwischen den zwei Browsern, von unterwegs über TURN auf tars; das Panel vermittelt nur. 8. Logs und Verlauf: Logs nur mit festen Wörtern und Zahlen (fernzugang.log), der Verlauf nur Zeit, System, Admin, Art und Dauer (fernzugang.verlauf_add). Der Notaus schließt jede Leitung (fernzugang.notaus_close)."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Beispiele",
+"text": "Beispiele: Shell öffnen: Entsperrt, Ticket, Host-Schlüssel passt: die Shell läuft. · Server neu installiert: Anderer Host-Schlüssel: keine Verbindung. · Seite gesperrt: Erst mit Code oder Passkey entsperren."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Zahlen (aus dem Code)",
+"title": "Zahlen (aus dem Code)",
+"text": "- 10 min gilt ein Einmal-Code zum Koppeln (Schritt 3) - 30 s gilt ein Ticket für ein Fenster (Schritt 4) - 120 s wartet eine abgerissene Shell (Schritt 6) - 10 gekoppelte Systeme höchstens (Schritt 3) - 15 Bilder je Sekunde höchstens (Schritt 6) - 10 min gilt eine Nummer der Spontanhilfe (Schritt 7)"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Einstellen",
+"title": "Einstellen",
+"text": "- Funktionen → Fernzugang zu Servern: einschalten, Systeme koppeln, Bildschirm und Spontanhilfe."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Was du siehst",
+"title": "Was du siehst",
+"text": "- Zustand → Live: offene Sitzungen und Anker nach Art und Anzahl, nie ein Inhalt."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": "- app/panel/fernzugang.py entsperrt_bis: wie lange die Seite entsperrt ist (Schritt 2) - app/panel/fernzugang.py admin_pair: Koppeln mit Einmal-Code (Schritt 3) - app/panel/fernzugang.py terminal_ws: das Web-Terminal mit Ticket (Schritt 4) - app/panel/fernzugang.py hostkey_wrong: angehefteter Host-Schlüssel (Schritt 5) - app/panel/ferndateien.py listing: Dateien über SFTP (Schritt 6) - app/panel/fernbild.py GUACD: guacd nur auf 127.0.0.1 (Schritt 6) - app/panel/spontanhilfe.py admin_new: eine neue Spontanhilfe (Schritt 7) - app/panel/fernzugang.py notaus_close: Notaus schließt jede Leitung (Schritt 8)"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": "Selbsttests: test_fernzugang, test_fernbild, test_spontanhilfe"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Fern-Server",
+"title": "Fern-Server",
+"text": "Ein Fern-Server ist ein eigener Rechner (Linux oder Mac) im Heimnetz oder im Internet, auf dem der Anker läuft: ein kleines Programm, das sich selbst zum Panel verbindet und dort den Weg zu seinem SSH öffnet."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Fern-Server",
+"title": "Warum",
+"text": "Warum: So braucht der Server keinen offenen Port und keine Weiterleitung im Router: die Leitung geht von ihm hinaus, wie ein Browser von unterwegs. Das Panel kennt jeden Anker an seinem eigenen Schlüssel."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "1. Eine Zeile auf dem Server: Die Seite zeigt eine Zeile aus der Adresse, auf der der Browser ist (fernzugang.command); sie lädt den Anker vom eigenen Panel und richtet ihn als eigenen Systemdienst ein. 2. Koppeln mit dem Einmal-Code: Der Anker meldet sich einmal mit dem Code (fernzugang.anker_pair) und bekommt seinen Geräteschlüssel; das Panel behält davon nur den SHA-256, dazu Host-Schlüssel und Name. 3. Schlüssel bekannt?: Jede Verbindung des Ankers (fernzugang.anker_ws) zeigt den Geräteschlüssel; unbekannt oder entfernt heißt abgewiesen (fernzugang.by_key), mit Rate-Limit. 4. Leitung nach draußen: Der Anker hält eine WebSocket-Leitung mit TLS zum Panel, direkt im Heimnetz oder über den Reverse-Proxy, mit Lebenszeichen alle 20 Sekunden; jede Nachricht höchstens 65536 Bytes. 5. Kanal zum eigenen SSH: Nur auf Bitte des Panels öffnet der Anker einen Kanal zu seinem sshd auf 127.0.0.1 (binnen 15 Sekunden); angemeldet wird als Benutzer spark nur mit dem Schlüssel des Panels, sudo nur, wenn der Admin es dort einträgt. 6. Entfernen: „Entfernen“ lässt den Anker sich selbst abbauen und meldet es (fernzugang.anker_removed); ein entfernter, der nie wiederkommt, ist nach 90 Tagen vergessen."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Beispiele",
+"text": "Beispiele: Server einrichten: Gekoppelt und online. · Alter Schlüssel nach dem Entfernen: Abgewiesen."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Zahlen (aus dem Code)",
+"title": "Zahlen (aus dem Code)",
+"text": "- 20 s Lebenszeichen auf der Leitung (Schritt 4) - 65536 Bytes eine Nachricht höchstens (Schritt 4) - 90 Tage, bis ein entfernter vergessen ist (Schritt 6)"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Einstellen",
+"title": "Einstellen",
+"text": "- Funktionen → Fernzugang zu Servern: Koppeln, Entfernen, Bildschirm einrichten."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Was du siehst",
+"title": "Was du siehst",
+"text": "- Funktionen → Dienst-Wächter: ein Anker, der zu lange offline ist."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": "- app/panel/fernzugang.py command: die eine Zeile (Schritt 1) - app/panel/fernzugang.py anker_pair: Koppeln des Ankers (Schritt 2) - app/panel/fernzugang.py anker_ws: die Leitung des Ankers (Schritt 3) - app/panel/fernzugang.py by_key: Anker am Schlüssel erkennen (Schritt 3) - app/panel/fernzugang.py anker_removed: Abbau gemeldet (Schritt 6)"
 },
 {
 "lang": "de",
@@ -15317,7 +15469,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Spontanhilfe",
 "title": "Spontanhilfe",
-"text": " zeigt die Admin-Seite *Verlängern (Code)* für 60 Minuten mehr (jedes Mal ein frischer Code oder Passkey, Stufe „Schutz ändern“), nie über chat.spontanhilfe_max_min (Standard 180, 15 bis 720). Danach endet sie von selbst. *Beenden* auf beiden Seiten, Schließen des Fensters und der Notaus (jede Stufe) beenden sofort; Nummer und Link gelten dann nicht mehr. - Sichtbar: Solange eine Hilfe offen ist, steht oben im Inhalt jeder Seite des Admins eine schmale rote Zeile „Spontanhilfe aktiv · <Vorname> · noch <Zeit>“ mit *Beenden*, wie beim Fernzugang (beide zugleich: zwei Zeilen untereinander). *Gerade verbunden* (Admin, Vorname der Person, Zuhause oder Internet mit gekürzter Adresse, seit wann, *Trennen*) nur auf der Admin-Seite; *Zustand → Live* nur Art, Anzahl und Minuten, Namen nur mit logs.live_names, nie eine Adresse. Die Admins bekommen eine feste Mitteilung, wenn eine Person wartet. *Verlauf der Spontanhilfe* (state/spontanhilfe-verlauf.json, die Tage von chat.fernzugang_verlauf_tage): Zeit, Admin, Art, Dauer, Zuhause oder Internet, verfallene und gesperrte Nummern, nie ein Name, eine Adresse, ein Bild oder der Chat; *Verlauf löschen* (Bestätigen). - Einladung per E-Mail: nur aus "
+"text": " zeigt die Admin-Seite *Verlängern (Code)* für 60 Minuten mehr (jedes Mal ein frischer Code oder Passkey, Stufe „Schutz ändern“), nie über chat.spontanhilfe_max_min (Standard 180, 15 bis 720). Danach endet sie von selbst. *Beenden* auf beiden Seiten, Schließen des Fensters und der Notaus (jede Stufe) beenden sofort; Nummer und Link gelten dann nicht mehr. - Seite (V01.1.227, Dominik 2026-10-29 „A“, Bild spontanhilfe/seite/A-aufgeraeumt.png): aufgebaut wie *Systeme*: links *Läuft* (die eine Hilfe) und *Verlauf · 30 Tage* (fünf Einträge, *Alle anzeigen ›*, *Verlauf löschen*), oben rechts *+ Neue Hilfe*; rechts steht nur der nächste Schritt. Vier Punkte zeigen, wo die Hilfe steht (Hilfe erstellt → Person einladen → Person verbunden → Bildschirm geteilt); darunter die Nummer groß mit einem Ring, der die 10 Minuten herunterzählt, die Fehlversuche, *Neue Nummer* und *Verwerfen*. Die drei Wege sind Reiter: *Link* (Kopieren, Teilen, QR), *E-Mail* (Deutsch oder English als Umschalter) und *Shell (ohne Bildschirm)* mit Linux oder macOS und nur einer Zeile mit *Kopieren*. Bei 0:00 verschwindet die Nummer, es kommt „Abgelaufen – Neue Nummer“ (gilt der Link noch, steht seine Restzeit dabei), un"
 },
 {
 "lang": "de",
@@ -15325,7 +15477,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Spontanhilfe",
 "title": "Spontanhilfe",
-"text": "einem Admin-Profil mit E-Mail-Konto und *Mails senden*, über den vorhandenen Sendeweg (senden.send_now: Tageslimit, Notaus, Protokoll); feste Vorlage (Deutsch oder Englisch, nicht änderbar) mit Name des Admins, Link, Nummer zum Vergleichen am Telefon und Gültigkeit, nur Text. - Logs: spontanhilfe: <Wort> | <Grund> | <Zahl> mit festen Wörtern (nummer_neu, nummer_falsch, nummer_tot, wartet, ticket, sitzung_auf, sitzung_zu, verlaengert, einladung, meldung, abgewiesen, verlauf, verworfen, erlaubt), nie Nummer, Schlüssel, Name, Adresse oder Chat. - Shell einmalig (S3, V01.1.223): für einen Server ohne Bildschirm (Linux, macOS; Windows folgt mit Stufe 5). *Neue Hilfe* zeigt unter der Nummer eine Zeile für das Terminal, ohne sudo und nie mit der Nummer darin: curl -fsSL https://<Panel>/fernzugang/anker | python3 - hilfe https://<Panel> (im Heimnetz mit festgelegtem Zertifikat wie beim Koppeln, auf dem Mac /usr/bin/python3). Das Programm (derselbe Anker) läuft nie als root, fragt Nummer und Vornamen im Terminal und verbindet sich über wss://<Panel>/api/hilfe/shell (ohne Schlüssel; jeder Origin-Kopf wird abgewiesen, so kann keine Webseite diesen Weg nutzen; Nummer und Vorname werden geprüft"
+"text": "d die Hilfe rutscht in den Verlauf. Zeigepfeil und Vollbild gibt es erst, wenn die Person wirklich teilt; dann füllt ihr Bild die rechte Seite, Chat, *Verlängern (Code)* und *Beenden* stehen in der Leiste darüber. Meldungen („Einladung gesendet“, „Die Hilfe ist beendet.“, Fehler) kommen als kurze Einblendung unten statt als Textzeile unter der Seite; ebenso auf *Systeme*, dort mit *Neu verbinden* in der Einblendung. Am Handy stehen Liste und rechte Seite untereinander. - Sichtbar: Solange eine Hilfe offen ist, steht oben im Inhalt jeder Seite des Admins eine schmale rote Zeile „Spontanhilfe aktiv · <Vorname> · noch <Zeit>“ mit *Beenden*, wie beim Fernzugang (beide zugleich: zwei Zeilen untereinander). *Läuft* links in der Liste (Vorname der Person, was sie gerade tut, seit wann, Zuhause oder Internet) nur auf der Admin-Seite; *Zustand → Live* nur Art, Anzahl und Minuten, Namen nur mit logs.live_names, nie eine Adresse. Die Admins bekommen eine feste Mitteilung, wenn eine Person wartet. *Verlauf der Spontanhilfe* (state/spontanhilfe-verlauf.json, die Tage von chat.fernzugang_verlauf_tage): Zeit, Admin, Art, Dauer, Zuhause oder Internet, verfallene und gesperrte Nummern, nie ein Name"
 },
 {
 "lang": "de",
@@ -15333,7 +15485,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Spontanhilfe",
 "title": "Spontanhilfe",
-"text": " wie auf /hilfe, dieselbe Lastgrenze, dieselben 5 Fehlversuche). Nach *Annehmen* fragt das Terminal der Person noch einmal „Erlauben? [j/n]“; erst nach „j“ startet ihre eigene Shell in einem PTY mit ihren Rechten und die Bytes gehen in beide Richtungen (je Nachricht höchstens 16 KB), vorher keines; „n“ beendet die Hilfe. Die Person sieht alles mit und kann mittippen. Strg+C bei ihr, *Beenden*, die Sitzungsuhr oder der Notaus beenden sie; die Shell bekommt SIGHUP, das Terminal ist wie vorher, es bleibt nichts zurück (keine Datei, kein Benutzer, kein Dienst). Der Admin sieht die Shell als Terminal im Reiter Spontanhilfe; *Gerade verbunden*, Live und Verlauf zeigen die Art „Shell“, das Protokoll spontanhilfe: erlaubt | ja | 1 oder … | nein | 0. - Später: Steuern mit dem kleinen Programm SparkHilfe (S2)."
+"text": ", eine Adresse, ein Bild oder der Chat; *Verlauf löschen* (Bestätigen). - Einladung per E-Mail: nur aus einem Admin-Profil mit E-Mail-Konto und *Mails senden*, über den vorhandenen Sendeweg (senden.send_now: Tageslimit, Notaus, Protokoll); feste Vorlage (Deutsch oder Englisch, nicht änderbar) mit Name des Admins, Link, Nummer zum Vergleichen am Telefon und Gültigkeit, nur Text. - Logs: spontanhilfe: <Wort> | <Grund> | <Zahl> mit festen Wörtern (nummer_neu, nummer_falsch, nummer_tot, wartet, ticket, sitzung_auf, sitzung_zu, verlaengert, einladung, meldung, abgewiesen, verlauf, verworfen, erlaubt), nie Nummer, Schlüssel, Name, Adresse oder Chat. - Shell einmalig (S3, V01.1.223): für einen Server ohne Bildschirm (Linux, macOS; Windows folgt mit Stufe 5). *Neue Hilfe* zeigt unter der Nummer eine Zeile für das Terminal, ohne sudo und nie mit der Nummer darin: curl -fsSL https://<Panel>/fernzugang/anker | python3 - hilfe https://<Panel> (im Heimnetz mit festgelegtem Zertifikat wie beim Koppeln, auf dem Mac /usr/bin/python3). Das Programm (derselbe Anker) läuft nie als root, fragt Nummer und Vornamen im Terminal und verbindet sich über wss://<Panel>/api/hilfe/shell (ohne Schlüssel; jeder "
 },
 {
 "lang": "de",
@@ -16942,6 +17094,14 @@
 "head": "Speech services",
 "title": "Speech services",
 "text": "Speech recognition and speech output as their own services, ahead of everything else."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Remote access",
+"title": "Remote access",
+"text": "Shell, files and screen of own servers through their anchor, plus spontaneous help; admins only."
 },
 {
 "lang": "en",
@@ -19630,6 +19790,150 @@
 "head": "In the code",
 "title": "In the code",
 "text": "Self-tests: test_mailvorrat, test_vorrat, test_mails_senden, test_kalenderserver, test_kontaktserver, test_kontakte_seite, test_kalenderspiegel, test_mailcode, test_einordnen"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Remote access",
+"title": "Remote access",
+"text": "Remote access opens the shell, files and screen of an own server in the browser, without an open port there: the anchor on the server connects to the panel by itself, the panel speaks SSH through that line. Plus spontaneous help: a person shares their screen with a number. Admins only, never guests, no tool of the language model."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Remote access",
+"title": "Why",
+"text": "Why: A shell on a server is the most powerful thing the panel can open. So a barrier of its own in front of the page (unlock with a code or passkey), a one-time ticket per window, a host key pinned at pairing and logs with fixed words only: what is typed on the server and what it shows is never stored by the panel."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": "1. Admin opens remote access: Features → Remote access to servers is off by default (fernzugang.admin_on) and only for admins with the second step; guests and the language model never reach it. 2. Page unlocked?: A code or passkey unlocks the page for 5 to 120 minutes, only for this login and from the same place (fernzugang.entsperrt_bis); locking, logging out and the kill switch lock at once, a restart too. 3. Pairing: „Pair“ asks for the code every time (fernzugang.admin_pair) and shows one line for the server with a one-time code, valid 10 minutes. At most 10 systems; each gets an SSH key of the panel of its own, its host key is pinned. 4. Ticket for the window: „Shell“ hands out a one-time ticket (fernzugang.admin_session) that opens exactly one web terminal for 30 seconds (fernzugang.terminal_ws); at most 4 sessions at once. 5. Another host key?: If the server shows another host key than at pairing, there is no connection (fernzugang.hostkey_wrong); after a reinstall remove and pair again. 6. Shell, files, screen: SSH runs through the anchor's channel; if the window drops, the shell waits 120 seconds. Files through SFTP in the same connection (ferndateien.listing), downloads w"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": "ith a one-time link for 60 seconds. The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most 15 pictures a second. The assistant (fernzugang.admin_help) asks only the own model and suggests, nothing is typed by itself. 7. Spontaneous help: A help (spontanhilfe.admin_new) gives a number for 10 minutes, after 5 wrong ones it is dead. The screen goes by WebRTC directly between the two browsers, on the way through TURN on tars; the panel only connects them. 8. Logs and history: Logs with fixed words and numbers only (fernzugang.log), the history only time, system, admin, kind and duration (fernzugang.verlauf_add). The kill switch closes every line (fernzugang.notaus_close)."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Examples",
+"text": "Examples: Open a shell: Unlocked, ticket, host key fits: the shell runs. · Server reinstalled: Another host key: no connection. · Page locked: Unlock with a code or passkey first."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Numbers (from the code)",
+"title": "Numbers (from the code)",
+"text": "- 10 min a one-time pairing code is valid (step 3) - 30 s a ticket for one window is valid (step 4) - 120 s a dropped shell waits (step 6) - 10 paired systems at most (step 3) - 15 pictures a second at most (step 6) - 10 min a number of spontaneous help is valid (step 7)"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Settings",
+"title": "Settings",
+"text": "- Features → Remote access to servers: switch on, pair systems, screen and spontaneous help."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "What you see",
+"title": "What you see",
+"text": "- Status → Live: open sessions and anchors by kind and count, never a content."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "In the code",
+"title": "In the code",
+"text": "- app/panel/fernzugang.py entsperrt_bis: how long the page is unlocked (step 2) - app/panel/fernzugang.py admin_pair: pairing with a one-time code (step 3) - app/panel/fernzugang.py terminal_ws: the web terminal with a ticket (step 4) - app/panel/fernzugang.py hostkey_wrong: pinned host key (step 5) - app/panel/ferndateien.py listing: files through SFTP (step 6) - app/panel/fernbild.py GUACD: guacd on 127.0.0.1 only (step 6) - app/panel/spontanhilfe.py admin_new: a new spontaneous help (step 7) - app/panel/fernzugang.py notaus_close: kill switch closes every line (step 8)"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "In the code",
+"title": "In the code",
+"text": "Self-tests: test_fernzugang, test_fernbild, test_spontanhilfe"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Remote servers",
+"title": "Remote servers",
+"text": "A remote server is an own computer (Linux or Mac) at home or on the internet that runs the anchor: a small program that connects to the panel by itself and opens the way to its SSH there."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Remote servers",
+"title": "Why",
+"text": "Why: So the server needs no open port and no forwarding in the router: the line goes out from it, like a browser on the way. The panel knows every anchor by its own key."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": "1. One line on the server: The page shows one line from the address the browser is on (fernzugang.command); it loads the anchor from the own panel and sets it up as a system service of its own. 2. Pairing with the one-time code: The anchor signs in once with the code (fernzugang.anker_pair) and gets its device key; the panel keeps only its SHA-256, plus host key and name. 3. Key known?: Every connection of the anchor (fernzugang.anker_ws) shows the device key; unknown or removed means refused (fernzugang.by_key), with a rate limit. 4. Line going out: The anchor keeps a WebSocket line with TLS to the panel, directly at home or through the reverse proxy, with a heartbeat every 20 seconds; every message at most 65536 bytes. 5. Channel to its own SSH: Only when the panel asks does the anchor open a channel to its sshd on 127.0.0.1 (within 15 seconds); the login is user spark with the panel's key only, sudo only when the admin adds it there. 6. Remove: „Remove“ lets the anchor take itself down and report it (fernzugang.anker_removed); a removed one that never comes back is forgotten after 90 days."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Examples",
+"text": "Examples: Set up a server: Paired and online. · Old key after removal: Refused."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Numbers (from the code)",
+"title": "Numbers (from the code)",
+"text": "- 20 s heartbeat on the line (step 4) - 65536 Bytes one message at most (step 4) - 90 days until a removed one is forgotten (step 6)"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Settings",
+"title": "Settings",
+"text": "- Features → Remote access to servers: pair, remove, set up the screen."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "What you see",
+"title": "What you see",
+"text": "- Features → Service watch: an anchor that is offline too long."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "In the code",
+"title": "In the code",
+"text": "- app/panel/fernzugang.py command: the one line (step 1) - app/panel/fernzugang.py anker_pair: pairing of the anchor (step 2) - app/panel/fernzugang.py anker_ws: the anchor's line (step 3) - app/panel/fernzugang.py by_key: know an anchor by its key (step 3) - app/panel/fernzugang.py anker_removed: removal reported (step 6)"
 },
 {
 "lang": "en",
@@ -30973,7 +31277,7 @@
 "file": "Security and operation",
 "head": "Spontaneous help",
 "title": "Spontaneous help",
-"text": "t ends by itself. *End* on either side, closing the window and the emergency stop (any stage) end it at once; number and link stop working. - Visible: While a help is open, one slim red line \"Spontaneous help active · <first name> · <time> left\" with *End* stands at the top of the content of every page of the admin, as with remote access (both at once: two lines one under the other). *Connected now* (admin, the person's first name, home or internet with a shortened address, since when, *Disconnect*) only on the admin page; *Status → Live* only kind, count and minutes, names only with logs.live_names, never an address. The admins get a fixed notification when a person waits. *History of spontaneous help* (state/spontanhilfe-verlauf.json, the days of chat.fernzugang_verlauf_tage): time, admin, kind, duration, home or internet, expired and locked numbers, never a name, an address, a picture or the chat; *Delete history* (Confirm). - Invitation by e-mail: only from an admin profile with a mail account and *Send mail*, through the existing way of sending (senden.send_now: day limit, emergency stop, log); a fixed template (German or English, not editable) with the admin's name, the link,"
+"text": "t ends by itself. *End* on either side, closing the window and the emergency stop (any stage) end it at once; number and link stop working. - Page (V01.1.227, Dominik 2026-10-29 \"A\", picture spontanhilfe/seite/A-aufgeraeumt.png): built like *Systems*: on the left *Running* (the one help) and *History · 30 days* (five entries, *Show all ›*, *Delete history*), at the top right *+ New help*; the right side shows only the next step. Four dots show where the help stands (Help created → Invite the person → Person connected → Screen shared); below them the number in large type with a ring counting down the 10 minutes, the wrong tries, *New number* and *Discard*. The three ways are tabs: *Link* (copy, share, QR), *Email* (Deutsch or English as a switch) and *Shell (no screen)* with Linux or macOS and only one line with *Copy*. At 0:00 the number disappears, \"Expired – New number\" comes (while the link still holds, its time left stands there), and the help moves to the history. Pointer and full screen come only when the person really shares; then her picture fills the right side, chat, *Extend (code)* and *End* sit in the bar above it. Messages (\"Invitation sent\", \"The help has ended.\", err"
 },
 {
 "lang": "en",
@@ -30981,7 +31285,7 @@
 "file": "Security and operation",
 "head": "Spontaneous help",
 "title": "Spontaneous help",
-"text": " the number to compare on the phone and how long it works, text only. - Logs: spontanhilfe: <word> | <reason> | <number> with fixed words (nummer_neu, nummer_falsch, nummer_tot, wartet, ticket, sitzung_auf, sitzung_zu, verlaengert, einladung, meldung, abgewiesen, verlauf, verworfen, erlaubt), never number, key, name, address or chat. - One-time shell (S3, V01.1.223): for a server without a screen (Linux, macOS; Windows follows with stage 5). *New help* shows below the number one line for the terminal, without sudo and never with the number in it: curl -fsSL https://<panel>/fernzugang/anker | python3 - hilfe https://<panel> (at home with the pinned certificate as for pairing, on a Mac /usr/bin/python3). The program (the same anchor) never runs as root, asks the number and the first name in the terminal and connects through wss://<panel>/api/hilfe/shell (without a key; any Origin header is refused, so no web page can use this way; number and first name are checked as on /hilfe, the same rate limit, the same 5 wrong tries). After *Accept* the person's terminal asks once more \"Erlauben? [j/n]\"; only after \"j\" her own shell starts in a PTY with her rights and the bytes pass both ways (a"
+"text": "ors) come as a short toast at the bottom instead of a line under the page; the same on *Systems*, there with *Connect again* in the toast. On a phone the list and the right side stack. - Visible: While a help is open, one slim red line \"Spontaneous help active · <first name> · <time> left\" with *End* stands at the top of the content of every page of the admin, as with remote access (both at once: two lines one under the other). *Running* in the list on the left (the person's first name, what she does right now, since when, home or internet) only on the admin page; *Status → Live* only kind, count and minutes, names only with logs.live_names, never an address. The admins get a fixed notification when a person waits. *History of spontaneous help* (state/spontanhilfe-verlauf.json, the days of chat.fernzugang_verlauf_tage): time, admin, kind, duration, home or internet, expired and locked numbers, never a name, an address, a picture or the chat; *Delete history* (Confirm). - Invitation by e-mail: only from an admin profile with a mail account and *Send mail*, through the existing way of sending (senden.send_now: day limit, emergency stop, log); a fixed template (German or English, not "
 },
 {
 "lang": "en",
@@ -30989,7 +31293,7 @@
 "file": "Security and operation",
 "head": "Spontaneous help",
 "title": "Spontaneous help",
-"text": "t most 16 KB per message), none before; \"n\" ends the help. The person sees everything and can type along. Ctrl+C at hers, *End*, the session clock or the emergency stop end it; the shell gets SIGHUP, the terminal is as before, nothing is left behind (no file, no user, no service). The admin sees the shell as a terminal in the Spontaneous help tab; *Connected now*, Live and the history show the kind \"Shell\", the log spontanhilfe: erlaubt | ja | 1 or … | nein | 0. - Later: control with the small program SparkHilfe (S2)."
+"text": "editable) with the admin's name, the link, the number to compare on the phone and how long it works, text only. - Logs: spontanhilfe: <word> | <reason> | <number> with fixed words (nummer_neu, nummer_falsch, nummer_tot, wartet, ticket, sitzung_auf, sitzung_zu, verlaengert, einladung, meldung, abgewiesen, verlauf, verworfen, erlaubt), never number, key, name, address or chat. - One-time shell (S3, V01.1.223): for a server without a screen (Linux, macOS; Windows follows with stage 5). *New help* shows below the number one line for the terminal, without sudo and never with the number in it: curl -fsSL https://<panel>/fernzugang/anker | python3 - hilfe https://<panel> (at home with the pinned certificate as for pairing, on a Mac /usr/bin/python3). The program (the same anchor) never runs as root, asks the number and the first name in the terminal and connects through wss://<panel>/api/hilfe/shell (without a key; any Origin header is refused, so no web page can use this way; number and first name are checked as on /hilfe, the same rate limit, the same 5 wrong tries). After *Accept* the person's terminal asks once more \"Erlauben? [j/n]\"; only after \"j\" her own shell starts in a PTY with "
 },
 {
 "lang": "en",

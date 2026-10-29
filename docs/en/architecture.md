@@ -36,6 +36,7 @@ flowchart TB
       betrieb["Logs and live<br/>tracelog · live"]
       werkstatt["Workshop<br/>werkstatt.py"]
       post["Mail and contacts<br/>/caldav · /carddav"]
+      fernzugang["Remote access<br/>SSH · SFTP · guacd"]
     end
     subgraph z_modelle["Models · on the DGX"]
       llm["Language model<br/>:31006 → :31016"]
@@ -56,6 +57,7 @@ flowchart TB
   end
   subgraph z_internet["Internet · going out"]
     internet["Internet services<br/>IMAP, CalDAV, Web"]
+    fernserver["Remote servers<br/>spark-anker"]
   end
   geraet --> middleware
   apps --> middleware
@@ -87,6 +89,8 @@ flowchart TB
   werkzeuge --> post
   post --> waechter
   post --> users
+  zugang --> fernzugang
+  fernserver --> fernzugang
 ```
 <!-- /technik:bild -->
 
@@ -163,9 +167,6 @@ Every request passes here first: size, origin, kill switch, login, profile and r
 | `app/panel/coadmin.py` | Profiles as admins. |
 | `app/panel/core.py` | Shared panel helpers: paths, logins (admin password, profiles) and small system calls. |
 | `app/panel/features.py` | One description per function. |
-| `app/panel/fernbild.py` | Fernzugang, Bildschirm: the screen of a paired system in the browser, through the same anchor pipe as its shell. |
-| `app/panel/ferndateien.py` | Fernzugang, Dateien: the files of a paired remote server in the browser over SFTP, inside one SSH connection like the shell's (fernzugang.aufbauen with art " … |
-| `app/panel/fernzugang.py` | Fernzugang: a server elsewhere (a VPS, a NAS at friends') calls the panel by itself and the admin works in its shell in the browser, like Raspberry Pi Connec … |
 | `app/panel/guard.py` | Protection of the logins: lockout after wrong passwords or PINs, requests from foreign pages, and the change log (who changed what, from where). |
 | `app/panel/join.py` | New people by invitation. |
 | `app/panel/mfa.py` | Second login step: a six-digit code from an authenticator app (TOTP, RFC 6238), or a one-time recovery code when the phone is gone. |
@@ -176,7 +177,6 @@ Every request passes here first: size, origin, kill switch, login, profile and r
 | `app/panel/passkey.py` | Passkeys (Face ID, Touch ID, Windows Hello; WebAuthn) instead of typing the six-digit code. |
 | `app/panel/profiles.py` | User profiles for the assistant: who is talking, and what the assistant remembers about them. |
 | `app/panel/signatur.py` | Signed update manifests (Ed25519), optional until a key exists. |
-| `app/panel/spontanhilfe.py` | Spontanhilfe: an admin helps a person (family, friends) once at their computer, like TeamViewer QuickSupport. |
 | `app/panel/stufen.py` | Wann fragt der Spark nach dem Code? |
 | `app/panel/vault.py` | Secrets at rest: calendar and mail passwords and Home Assistant tokens are stored encrypted, so a copy of the profile folders (a backup, a look into the file … |
 | `app/panel/wachposten.py` | Wachposten: the Spark tells its admins by itself when something happens on the doors and locks, so nobody has to read the change log to notice it. |
@@ -533,6 +533,17 @@ Speech recognition and speech output as their own services, ahead of everything 
 | `app/tts_proxy.py` | Qwen3-TTS front end for the vllm-omni engine (backend "vllm-omni"). |
 | `app/tts_server.py` | Qwen3-TTS as a small HTTP service (OpenAI-style /v1/audio/speech). |
 | `app/panel/vorrang.py` | Speech first: speech recognition and speech output always go before the panel's background work. |
+
+### Remote access
+
+Shell, files and screen of own servers through their anchor, plus spontaneous help; admins only.
+
+| Module | Task |
+|---|---|
+| `app/panel/fernbild.py` | Fernzugang, Bildschirm: the screen of a paired system in the browser, through the same anchor pipe as its shell. |
+| `app/panel/ferndateien.py` | Fernzugang, Dateien: the files of a paired remote server in the browser over SFTP, inside one SSH connection like the shell's (fernzugang.aufbauen with art " … |
+| `app/panel/fernzugang.py` | Fernzugang: a server elsewhere (a VPS, a NAS at friends') calls the panel by itself and the admin works in its shell in the browser, like Raspberry Pi Connec … |
+| `app/panel/spontanhilfe.py` | Spontanhilfe: an admin helps a person (family, friends) once at their computer, like TeamViewer QuickSupport. |
 
 ### Spark split
 
@@ -3855,6 +3866,136 @@ flowchart TD
 - `app/panel/kontaktserver.py` `_write`: card from a contacts app ([step 10](#kn-post-s10))
 
 Self-tests: `test_mailvorrat`, `test_vorrat`, `test_mails_senden`, `test_kalenderserver`, `test_kontaktserver`, `test_kontakte_seite`, `test_kalenderspiegel`, `test_mailcode`, `test_einordnen`
+
+### Remote access
+
+Remote access opens the shell, files and screen of an own server in the browser, without an open port there: the anchor on the server connects to the panel by itself, the panel speaks SSH through that line. Plus spontaneous help: a person shares their screen with a number. Admins only, never guests, no tool of the language model.
+
+**Why:** A shell on a server is the most powerful thing the panel can open. So a barrier of its own in front of the page (unlock with a code or passkey), a one-time ticket per window, a host key pinned at pairing and logs with fixed words only: what is typed on the server and what it shows is never stored by the panel.
+
+#### Way
+
+```mermaid
+flowchart TD
+  s1(["1. Admin opens remote access"])
+  s2{{"2. Page unlocked?"}}
+  s3["3. Pairing"]
+  s4["4. Ticket for the window"]
+  s5{{"5. Another host key?"}}
+  s6["6. Shell, files, screen"]
+  s7["7. Spontaneous help"]
+  s8(["8. Logs and history"])
+  s1 --> s2
+  s2 -->|yes| s3
+  s3 --> s4
+  s4 --> s5
+  s5 -->|no| s6
+  s6 --> s7
+  s7 --> s8
+  s2x(["Locked, nothing to see"])
+  s2 -->|no| s2x
+  s5x(["No connection"])
+  s5 -->|yes| s5x
+```
+
+1. <a id="kn-fernzugang-s1"></a>**Admin opens remote access**: Features → Remote access to servers is off by default (fernzugang.admin_on) and only for admins with the second step; guests and the language model never reach it.
+2. <a id="kn-fernzugang-s2"></a>**Page unlocked?**: A code or passkey unlocks the page for 5 to 120 minutes, only for this login and from the same place (fernzugang.entsperrt_bis); locking, logging out and the kill switch lock at once, a restart too.
+3. <a id="kn-fernzugang-s3"></a>**Pairing**: „Pair“ asks for the code every time (fernzugang.admin_pair) and shows one line for the server with a one-time code, valid 10 minutes. At most 10 systems; each gets an SSH key of the panel of its own, its host key is pinned.
+4. <a id="kn-fernzugang-s4"></a>**Ticket for the window**: „Shell“ hands out a one-time ticket (fernzugang.admin_session) that opens exactly one web terminal for 30 seconds (fernzugang.terminal_ws); at most 4 sessions at once.
+5. <a id="kn-fernzugang-s5"></a>**Another host key?**: If the server shows another host key than at pairing, there is no connection (fernzugang.hostkey_wrong); after a reinstall remove and pair again.
+6. <a id="kn-fernzugang-s6"></a>**Shell, files, screen**: SSH runs through the anchor's channel; if the window drops, the shell waits 120 seconds. Files through SFTP in the same connection (ferndateien.listing), downloads with a one-time link for 60 seconds. The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most 15 pictures a second. The assistant (fernzugang.admin_help) asks only the own model and suggests, nothing is typed by itself.
+7. <a id="kn-fernzugang-s7"></a>**Spontaneous help**: A help (spontanhilfe.admin_new) gives a number for 10 minutes, after 5 wrong ones it is dead. The screen goes by WebRTC directly between the two browsers, on the way through TURN on tars; the panel only connects them.
+8. <a id="kn-fernzugang-s8"></a>**Logs and history**: Logs with fixed words and numbers only (fernzugang.log), the history only time, system, admin, kind and duration (fernzugang.verlauf_add). The kill switch closes every line (fernzugang.notaus_close).
+
+**Examples:** Open a shell: Unlocked, ticket, host key fits: the shell runs. · Server reinstalled: Another host key: no connection. · Page locked: Unlock with a code or passkey first.
+
+#### Numbers (from the code)
+
+- **10 min** a one-time pairing code is valid ([step 3](#kn-fernzugang-s3))
+- **30 s** a ticket for one window is valid ([step 4](#kn-fernzugang-s4))
+- **120 s** a dropped shell waits ([step 6](#kn-fernzugang-s6))
+- **10** paired systems at most ([step 3](#kn-fernzugang-s3))
+- **15** pictures a second at most ([step 6](#kn-fernzugang-s6))
+- **10 min** a number of spontaneous help is valid ([step 7](#kn-fernzugang-s7))
+
+#### Settings
+
+- Features → Remote access to servers: switch on, pair systems, screen and spontaneous help.
+
+#### What you see
+
+- Status → Live: open sessions and anchors by kind and count, never a content.
+
+#### In the code
+
+- `app/panel/fernzugang.py` `entsperrt_bis`: how long the page is unlocked ([step 2](#kn-fernzugang-s2))
+- `app/panel/fernzugang.py` `admin_pair`: pairing with a one-time code ([step 3](#kn-fernzugang-s3))
+- `app/panel/fernzugang.py` `terminal_ws`: the web terminal with a ticket ([step 4](#kn-fernzugang-s4))
+- `app/panel/fernzugang.py` `hostkey_wrong`: pinned host key ([step 5](#kn-fernzugang-s5))
+- `app/panel/ferndateien.py` `listing`: files through SFTP ([step 6](#kn-fernzugang-s6))
+- `app/panel/fernbild.py` `GUACD`: guacd on 127.0.0.1 only ([step 6](#kn-fernzugang-s6))
+- `app/panel/spontanhilfe.py` `admin_new`: a new spontaneous help ([step 7](#kn-fernzugang-s7))
+- `app/panel/fernzugang.py` `notaus_close`: kill switch closes every line ([step 8](#kn-fernzugang-s8))
+
+Self-tests: `test_fernzugang`, `test_fernbild`, `test_spontanhilfe`
+
+### Remote servers
+
+A remote server is an own computer (Linux or Mac) at home or on the internet that runs the anchor: a small program that connects to the panel by itself and opens the way to its SSH there.
+
+**Why:** So the server needs no open port and no forwarding in the router: the line goes out from it, like a browser on the way. The panel knows every anchor by its own key.
+
+#### Way
+
+```mermaid
+flowchart TD
+  s1(["1. One line on the server"])
+  s2["2. Pairing with the one-time code"]
+  s3{{"3. Key known?"}}
+  s4["4. Line going out"]
+  s5["5. Channel to its own SSH"]
+  s6(["6. Remove"])
+  s1 --> s2
+  s2 --> s3
+  s3 -->|yes| s4
+  s4 --> s5
+  s5 --> s6
+  s3x(["Refused"])
+  s3 -->|no| s3x
+```
+
+1. <a id="kn-fernserver-s1"></a>**One line on the server**: The page shows one line from the address the browser is on (fernzugang.command); it loads the anchor from the own panel and sets it up as a system service of its own.
+2. <a id="kn-fernserver-s2"></a>**Pairing with the one-time code**: The anchor signs in once with the code (fernzugang.anker_pair) and gets its device key; the panel keeps only its SHA-256, plus host key and name.
+3. <a id="kn-fernserver-s3"></a>**Key known?**: Every connection of the anchor (fernzugang.anker_ws) shows the device key; unknown or removed means refused (fernzugang.by_key), with a rate limit.
+4. <a id="kn-fernserver-s4"></a>**Line going out**: The anchor keeps a WebSocket line with TLS to the panel, directly at home or through the reverse proxy, with a heartbeat every 20 seconds; every message at most 65536 bytes.
+5. <a id="kn-fernserver-s5"></a>**Channel to its own SSH**: Only when the panel asks does the anchor open a channel to its sshd on 127.0.0.1 (within 15 seconds); the login is user spark with the panel's key only, sudo only when the admin adds it there.
+6. <a id="kn-fernserver-s6"></a>**Remove**: „Remove“ lets the anchor take itself down and report it (fernzugang.anker_removed); a removed one that never comes back is forgotten after 90 days.
+
+**Examples:** Set up a server: Paired and online. · Old key after removal: Refused.
+
+#### Numbers (from the code)
+
+- **20 s** heartbeat on the line ([step 4](#kn-fernserver-s4))
+- **65536 Bytes** one message at most ([step 4](#kn-fernserver-s4))
+- **90** days until a removed one is forgotten ([step 6](#kn-fernserver-s6))
+
+#### Settings
+
+- Features → Remote access to servers: pair, remove, set up the screen.
+
+#### What you see
+
+- Features → Service watch: an anchor that is offline too long.
+
+#### In the code
+
+- `app/panel/fernzugang.py` `command`: the one line ([step 1](#kn-fernserver-s1))
+- `app/panel/fernzugang.py` `anker_pair`: pairing of the anchor ([step 2](#kn-fernserver-s2))
+- `app/panel/fernzugang.py` `anker_ws`: the anchor's line ([step 3](#kn-fernserver-s3))
+- `app/panel/fernzugang.py` `by_key`: know an anchor by its key ([step 3](#kn-fernserver-s3))
+- `app/panel/fernzugang.py` `anker_removed`: removal reported ([step 6](#kn-fernserver-s6))
+
+Self-tests: `test_fernzugang`
 
 ### journald
 
