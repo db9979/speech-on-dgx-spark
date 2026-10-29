@@ -408,7 +408,7 @@ class WebAndMail(Plus):
         msg.add_attachment(b"%PDF-1.4 ganz\n%%EOF\n", maintype="application", subtype="pdf", filename="b.pdf")
 
         class Sess:
-            def __init__(self, a):
+            def __init__(self, a, folder="INBOX"):   # the signature of mail._Session
                 pass
 
             def __enter__(self):

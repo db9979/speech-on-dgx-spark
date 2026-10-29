@@ -44,7 +44,12 @@ class BrowserThere(unittest.TestCase):
         for name in sorted(os.listdir(here)):
             if name.startswith("test_") and name.endswith(".py"):
                 with open(os.path.join(here, name), encoding="utf-8") as f:
-                    self.assertNotIn("SPEECH_UI" + "_TESTS", f.read(), name)
+                    text = f.read()
+                self.assertNotIn("SPEECH_UI" + "_TESTS", text, name)
+                # a module that opens the browser skips with browser_ok() (2026-10-29: test_mail_nachladen.Page had
+                # no skip and was red in the Werkstatt copy on the Pi, night run and „Rote Tests noch mal“)
+                if name != "test_ui_browser.py" and re.search(r"Browser\.setUpClass|async_playwright", text):
+                    self.assertIn("browser_ok()", text, name)
 
 
 # what the hands-free test shows when the microphone did not come back

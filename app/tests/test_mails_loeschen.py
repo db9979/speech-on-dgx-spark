@@ -11,6 +11,7 @@
 The fake mailbox (helpers.FakeMailbox); no wall clock, no network.
 """
 import asyncio
+import json
 import contextlib
 import io
 import unittest
@@ -297,7 +298,8 @@ class Page(unittest.TestCase):
                     await b.until(pg, "POST.data.items.length===0")
                     await server(lambda: FMB.boxes["Deleted Messages"] == [])   # the list goes at once, the mailbox follows
                     self.assertEqual(FMB.boxes["Deleted Messages"], [])
-                    self.assertIn("Endgültig gelöscht", await pg.inner_text("#postview .postundo"))
+                    # the note comes with the answer, which under load may reach the page after the mailbox changed
+                    await b.until(pg, "(document.querySelector('#postview .postundo')||{}).innerText.includes('Endgültig gelöscht')")
                     self.assertEqual(errors, [])
                 finally:
                     await br.close()
@@ -324,6 +326,7 @@ class Page(unittest.TestCase):
                     self.assertTrue(await pg.evaluate("$('postview').querySelector('.postfold').hidden"))
                     for n in range(3):
                         row = pg.locator("#postview .ld-list [data-id]", has_text="Bob").first
+                        rid = await row.get_attribute("data-id")
                         await row.hover()
                         await pg.mouse.down()
                         await pg.mouse.move(600, 400, steps=4)
@@ -333,8 +336,12 @@ class Page(unittest.TestCase):
                         await pg.mouse.move(box["x"] + 20, box["y"] + box["height"] / 2, steps=6)
                         await pg.mouse.up()
                         await b.until(pg, f"POST.data.items.length==={4 - n}")
+                        # its answer redraws the list: the next drag only after it, or under load the row under the
+                        # mouse is another one by then (a Shop mail went into Projekte, 2026-10-30)
+                        await b.until(pg, f"!!POST.done&&POST.done.id==={json.dumps(rid)}", seconds=60)
                     await server(lambda: len(FMB.boxes["Projekte"]) == 3)       # moved at once on the page, the mailbox follows
                     self.assertEqual(len(FMB.boxes["Projekte"]), 3)
+                    self.assertTrue(all(b"From: Bob" in m["raw"] for m in FMB.boxes["Projekte"]))   # Bob's three, no other
                     # the hint comes with the answer to the third move, which may come last under load: wait for it
                     await b.until(pg, "!!document.querySelector('#postview .posthint [data-h=save]')", seconds=60)
                     self.assertIn("bob@example.de", await pg.inner_text("#postview .posthint"))

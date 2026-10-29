@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.271** · 2026-10-30 · Test fix: the page test "Load older mail" skips itself without a browser like every page test (was red in the Werkstatt on the Spark), a guard test catches that from now on; the briefing and background tests count only their own things (were wobbly in the night run); the mail tests' stand-in mailboxes take a folder like the real one (TypeError in mail._older in the GitHub log); the mail delete test waits for the page's answer before it drags on (was red alongside other mail tests)
 - **V01.1.270** Measure knowledge: times and memory of search, knowledge book and knowledge map with 5000 made-up documents or one profile (read only), under Status → Checks and `sudo speech-spark wissen messen`
 - **V01.1.269** Companion: "Offen" in the tab Heute with the open cases and their fixed buttons, "Finden" with Ctrl+Alt+F (Mac ⌃⌥F) as title and source, a click opens the panel
 - **V01.1.268** Companion: Sprung-Links to Lists, Open, Find and Dungeon Master from outside too, every function in the companion or outside with a reason, buttons into the panel in its settings (my data, memory, remote access for admins)
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.264** Redesign stage 3: line icons instead of emoji, one source `icons.js`
 - **V01.1.263** Map helps the search (knowledge map step 3 of 4, own switch, off): when a question names a person, company or deadline of the map, the document search also finds its passages and those of its neighbours; it only adds to the hits, below the answer it says "via the knowledge map"
 - **V01.1.262** Remote access: every shell measures its line (round trip and rate through the heartbeat, quietly in the red bar and the ⓘ) and on a slow connection says once that the direct https access is faster; output waits at most 32 pieces (backpressure) and goes to the window in bundles
-- **V01.1.261** Find: a new search clears the old hits at once
 
 
 

@@ -39,7 +39,7 @@ OWNERS = {}   # uid -> [account]: the fake profiles' mailboxes
 
 class Box:
     """Answers like an IMAP session of one account: two messages, one of them read."""
-    def __init__(self, acct):
+    def __init__(self, acct, folder="INBOX"):   # the signature of mail._Session (Ältere nachladen opens a folder)
         pass
 
     def __enter__(self):

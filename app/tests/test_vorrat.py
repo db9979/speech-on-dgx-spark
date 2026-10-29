@@ -523,12 +523,16 @@ class BriefingAhead(unittest.TestCase):
         c.put("/api/profile/settings", json={"briefing_at": "07:30", "tz": "Europe/Berlin"})
         written, sent = [], []
 
+        # only this profile counts: a profile of an earlier test in the same run (an app, a briefing time) gets its
+        # own briefing on the same minutes (wackelig in the Spark's night run, 2026-10-29)
         async def brief(u, tz="", markdown=False):
-            written.append(u)
+            if u == uid:
+                written.append(u)
             return "Guten Morgen."
 
         async def send(u, title, body, tag="", private=True, why=""):
-            sent.append(u)
+            if u == uid:
+                sent.append(u)
             return 1
         old = chat.morning_briefing, push.send, push.subs
         chat.morning_briefing, push.send = brief, send

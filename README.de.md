@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.271** · 2026-10-30 · Test-Fix: der Seitentest „Ältere Mails nachladen“ überspringt sich ohne Browser wie alle Seitentests (war in der Werkstatt auf dem Spark rot), ein Wächter-Test fängt das künftig ab; Briefing- und Hintergrund-Test zählen nur ihre eigenen Sachen (waren im Nachtlauf wackelig); die Ersatz-Postfächer der Mail-Tests nehmen wie das echte einen Ordner an (TypeError in mail._older im GitHub-Log); der Mail-Löschen-Test wartet auf die Antwort der Seite, bevor er weiterzieht (war parallel zu anderen Mail-Tests rot)
 - **V01.1.270** Wissen messen: Zeiten und Speicher von Suche, Wissensbuch und Wissenskarte mit 5000 erfundenen Dokumenten oder einem Profil (nur lesend), unter Zustand → Prüfen und `sudo speech-spark wissen messen`
 - **V01.1.269** Begleiter: „Offen“ im Reiter Heute mit den offenen Vorgängen und ihren festen Knöpfen, „Finden“ mit Strg+Alt+F (Mac ⌃⌥F) als Titel und Quelle, ein Klick öffnet das Panel
 - **V01.1.268** Begleiter: Sprung-Links von draußen auch zu Listen, Offen, Finden und Dungeon-Master, jede Funktion im Begleiter oder mit Grund draußen, Knöpfe ins Panel in seinen Einstellungen (Meine Daten, Gedächtnis, Fernzugang für Admins)
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.264** Redesign Stufe 3: Linien-Icons statt Emoji, eine Quelle `icons.js`
 - **V01.1.263** Karte hilft der Suche (Wissenskarte Stufe 3 von 4, eigener Schalter, aus): nennt eine Frage eine Person, Firma oder Frist der Karte, findet die Dokumentsuche auch deren Stellen und die ihrer Nachbarn; ergänzt die Treffer nur, unter der Antwort steht „über die Wissenskarte“
 - **V01.1.262** Fernzugang: jede Shell misst ihre Leitung (Laufzeit und Rate über das Lebenszeichen, unauffällig in der roten Leiste und im ⓘ) und sagt bei langsamer Verbindung einmal, dass der direkte https-Zugang schneller ist; die Ausgabe wartet höchstens 32 Stücke (Gegendruck) und geht gebündelt ans Fenster
-- **V01.1.261** Finden: eine neue Suche leert sofort die alten Treffer
 
 
 

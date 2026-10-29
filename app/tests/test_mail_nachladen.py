@@ -29,6 +29,7 @@ import mailvorrat  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 from tests.test_mailclient_c import profile  # noqa: E402
 from tests.test_terminal import program  # noqa: E402
+from tests.test_ui_browser import browser_ok  # noqa: E402
 
 FMB = helpers.FakeMailbox
 NOW = datetime.datetime.now(datetime.timezone.utc)
@@ -290,6 +291,7 @@ class Merge(unittest.TestCase):
         self.assertEqual(sorted(seen), sorted(f"{a}:{u}" for a, b in self.boxes.items() for u in b))
 
 
+@unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
 class Page(unittest.TestCase):
     """The page E-Mail at 1280 and 390 px: at the end of the list the older mails come by themselves, page by page,
     down to „Keine älteren Mails“; no row twice, nothing sideways."""
