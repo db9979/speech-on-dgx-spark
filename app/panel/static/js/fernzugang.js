@@ -18,7 +18,7 @@ const FZ={d:null,sel:'',tab:'systeme',timer:0,ws:null,term:null,sitz:null,code:n
 // „Dateien“ (ferndateien.py, stage 3): SFTP in the same SSH connection, on the unlocked page; names come as text only,
 // a download goes through a one-time link, an upload as the raw file (at most chat.fernzugang_datei_mb).
 // what the own window takes over from its opener (admin_get): the rules and the assistant's limits
-const FZ_MIT=['chips','folge','erklaert','sudo_tip','hinweis','hilfe','gefahr','hilfe_zeilen','hilfe_schirm','hilfe_befehle','vorschlag_s'];
+const FZ_MIT=['chips','folge','erklaert','sudo_tip','hinweis','hilfe','gefahr','ki_zeilen','ki_zeilen_wahl','ki_zeichen','ziel_min','hilfe_befehle','vorschlag_s'];
 const FZ_FENSTER=location.hash==='#fernfenster'&&!!window.opener;
 const FZ_SPALTE=[280,520];   // the assistant's column: its width in pixels, dragged between these
 function fzEl(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e}
@@ -203,7 +203,7 @@ function fzTerm(tk,sitz,cols,rows){
 function fzVerbinde(tk,term){const ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/api/fernzugang/terminal?t='+encodeURIComponent(tk));
   ws.binaryType='arraybuffer';FZ.ws=ws;FZ.grund='';FZ.zuletzt=Date.now();clearInterval(FZ.pt);
   FZ.pt=setInterval(()=>{if(FZ.ws===ws&&ws.readyState===1&&Date.now()-FZ.zuletzt>50000)ws.close(4000)},5000);
-  ws.onmessage=ev=>{FZ.zuletzt=Date.now();if(ev.data instanceof ArrayBuffer){term.write(new Uint8Array(ev.data));return}let m;try{m=JSON.parse(ev.data)}catch{return}
+  ws.onmessage=ev=>{FZ.zuletzt=Date.now();if(ev.data instanceof ArrayBuffer){term.write(new Uint8Array(ev.data),()=>{if(FZ.ziel)fzZielTick(false)});return}let m;try{m=JSON.parse(ev.data)}catch{return}
     if(m.typ==='stand'&&m.stand==='offen'){FZ.sid=m.id||'';FZ.wieder=null;fzWiederZeigen();if(m.wieder)term.reset();fzResize();
       term.write('\x1b[2m'+(m.wieder?t('Wieder verbunden · ','Connected again · '):t('Verbunden · SSH · Host-Schlüssel ','Connected · SSH · host key ')+m.fp+t(' geprüft',' checked')+' ')+'\x1b[0m\r\n');FZ.fp=String(m.fp||'');fzInfo(FZ.fp);fzBanner()}
     if(m.typ==='bald')fzBald(Number(m.s)||0);
@@ -272,7 +272,7 @@ function fzFolge(line){const w=String(line||'').trim().split(/\s+/).filter(Boole
     const arg=w[words.length];const out=next.filter(c=>typeof c==='string'&&(!c.includes('{1}')||arg)).map(c=>({c:c.split('{1}').join(arg?fzQuote(arg):''),r:c}));
     if(out.length)return out.slice(0,4)}
   return null}
-function fzZeile(x){if(x==='\r'){FZ.zeile=FZ.buf||'';FZ.buf='';FZ.ki=null;fzMerke(FZ.zeile);fzChips();fzVorschlagPlan();return}
+function fzZeile(x){if(x==='\r'){FZ.zeile=FZ.buf||'';FZ.buf='';FZ.ki=null;fzMerke(FZ.zeile);fzChips();fzVorschlagPlan();fzZielTick(true);return}
   if(x==='\x7f'){FZ.buf=(FZ.buf||'').slice(0,-1);return}
   if(/[\x00-\x1f]/.test(x)){if(x.endsWith('\r')&&!/[\x00-\x0c\x0e-\x1f]/.test(x)){FZ.buf=(FZ.buf||'')+x.slice(0,-1);fzZeile('\r')}else FZ.buf='';return}
   FZ.buf=((FZ.buf||'')+x).slice(-500)}
@@ -313,15 +313,42 @@ function fzChip(c,was){c=String(c).replace(/[\r\n]+/g,' ').trim();const b=fzEl('
 function fzEinfuegen(c){if(!FZ.term)return;if(NARROW())fzBlatt(false);const i=c.search(/<[^<>]+>/),s=c.replace(/<[^<>]+>/g,'');FZ.term.paste(s);
   if(i>=0&&FZ.ws&&FZ.ws.readyState===1){const back=s.length-i;if(back>0)FZ.ws.send(new TextEncoder().encode('\x1b[D'.repeat(back)))}FZ.term.focus()}
 // the assistant: only while the switch is on; the commands only kept for it (the last hilfe_befehle, in this page)
-function fzHilfeNeu(){FZ.hist=[];FZ.ki=null;clearTimeout(FZ.vt);const h=$('fzhilfe');if(!h)return;h.hidden=!(FZ.d&&FZ.d.hilfe);$('fzview').classList.toggle('fzki',!h.hidden);
-  $('fzschirm').checked=false;$('fzantwort').textContent='';$('fzfrage').value=''}
+function fzHilfeNeu(){FZ.hist=[];FZ.ki=null;clearTimeout(FZ.vt);fzZielEnde('');const h=$('fzhilfe');if(!h)return;h.hidden=!(FZ.d&&FZ.d.hilfe);$('fzview').classList.toggle('fzki',!h.hidden);
+  $('fzschirm').checked=false;$('fzantwort').textContent='';$('fzfrage').value='';$('fzgekuerzt').hidden=true;
+  const sel=$('fzzeilen'),d=FZ.d||{},n=Number(d.ki_zeilen)||80;sel.textContent='';
+  for(const z of [...new Set([...(d.ki_zeilen_wahl||[80,300,1000]),n])].sort((a,b)=>a-b)){const o=fzEl('option','',String(z));o.value=String(z);sel.appendChild(o)}sel.value=String(n)}
 function fzMerke(line){if(!(FZ.d&&FZ.d.hilfe)||!line.trim())return;FZ.hist.push(line.slice(0,300));FZ.hist=FZ.hist.slice(-((FZ.d&&FZ.d.hilfe_befehle)||10))}
-// the visible screen, only with „Bildschirm mitschicken“: the last hilfe_zeilen lines, at most hilfe_schirm bytes
-function fzSchirm(){if(!$('fzschirm').checked||!FZ.term)return '';const b=FZ.term.buffer.active,n=(FZ.d&&FZ.d.hilfe_zeilen)||60,out=[];
+// the visible screen, only with „Bildschirm mitschicken“: the last lines as chosen in the drawer (ki_zeilen), at most
+// ki_zeichen characters, the newest kept; cut, the drawer says „gekürzt“
+function fzSchirm(){FZ.gek=false;if(!$('fzschirm').checked||!FZ.term)return '';const b=FZ.term.buffer.active,n=Number($('fzzeilen').value)||(FZ.d&&FZ.d.ki_zeilen)||80,out=[];
   for(let i=Math.max(0,b.length-n);i<b.length;i++){const l=b.getLine(i);out.push(l?l.translateToString(true):'')}
-  let s=out.join('\n').replace(/\s+$/,'');const max=(FZ.d&&FZ.d.hilfe_schirm)||8192,enc=new TextEncoder();while(enc.encode(s).length>max)s=s.slice(Math.ceil(s.length/20));return s}
-async function fzHilfe(art,body){const r=await api('/api/admin/fernzugang/hilfe'+(art==='vorschlag'?'?art=vorschlag':''),{method:'POST',headers:{'Content-Type':'application/json'},
-  body:JSON.stringify({sitzung:FZ.sid,befehle:FZ.hist,bildschirm:fzSchirm(),...body})});return r.json()}
+  let s=out.join('\n').replace(/\s+$/,'');const max=(FZ.d&&FZ.d.ki_zeichen)||60000;if(s.length>max){s=s.slice(-max);FZ.gek=true}return s}
+async function fzHilfe(art,body,signal){const r=await api('/api/admin/fernzugang/hilfe'+(art!=='frage'?'?art='+art:''),{method:'POST',headers:{'Content-Type':'application/json'},signal,
+  body:JSON.stringify({sitzung:FZ.sid,befehle:FZ.hist,bildschirm:fzSchirm(),...body})});const d=await r.json();$('fzgekuerzt').hidden=!(FZ.gek||d.gekuerzt);return d}
+// „Ziel“ (Dominik 2026-10-29 08:38): the question pinned as a goal; after each own command (the prompt back or 1.5 s
+// quiet) the screen goes to the own model again, only with „Bildschirm mitschicken“, and one chip with its reason comes
+// back. Never Enter; a dangerous one stays red with its second tap. One request at a time (a new one cancels the old),
+// the same screen not twice, at most ziel_min a minute; „Fertig“ or „Ziel beenden“ end it.
+function fzZielStart(){const q=$('fzfrage').value.trim();if(!q||!FZ.sid)return;if(!$('fzschirm').checked){$('fzzielstand').textContent='';fzMsg(t('Das Ziel braucht „Bildschirm mitschicken“.','The goal needs "Send the screen along".'),true);$('fzschirm').focus();return}
+  fzZielEnde('');FZ.ziel={text:q,last:'',zeiten:[],ctl:null,t:null,wartet:true};$('fzfrage').value='';$('fzfrage').focus();$('fzziel').hidden=false;$('fzzieltext').textContent=q;
+  $('fzzielchip').textContent='';fzZielStand(t('Schaut auf den Bildschirm …','Looking at the screen …'));fzZielSchritt()}
+function fzZielStand(x){$('fzzielstand').textContent=x}
+function fzZielEnde(x){const z=FZ.ziel;FZ.ziel=null;if(z){clearTimeout(z.t);if(z.ctl)z.ctl.abort()}const b=$('fzziel');if(!b)return;
+  if(x){fzZielStand(x);$('fzzielchip').textContent=''}else b.hidden=true}
+// called on every piece of output and after Enter: a command counts as ended with the prompt back or 1.5 s quiet
+function fzZielTick(enter){const z=FZ.ziel;if(!z)return;if(enter)z.wartet=true;if(!z.wartet)return;clearTimeout(z.t);
+  let prompt=false;try{const b=FZ.term.buffer.active,l=b.getLine(b.baseY+b.cursorY);prompt=/[$#%>]\s*$/.test(l?l.translateToString(true):'')}catch{}
+  z.t=setTimeout(fzZielSchritt,prompt&&!enter?300:1500)}
+async function fzZielSchritt(){const z=FZ.ziel;if(!z||!FZ.sid)return;if(!$('fzschirm').checked){fzZielEnde(t('Ziel angehalten: „Bildschirm mitschicken“ ist aus.','Goal paused: "Send the screen along" is off.'));return}
+  const scr=fzSchirm();if(!scr||scr===z.last)return;
+  const now=Date.now();z.zeiten=z.zeiten.filter(x=>now-x<60000);const most=(FZ.d&&FZ.d.ziel_min)||6;
+  if(z.zeiten.length>=most){clearTimeout(z.t);z.t=setTimeout(fzZielSchritt,60000-(now-z.zeiten[0])+50);fzZielStand(t('Wartet kurz (höchstens ','Waiting a moment (at most ')+most+t(' Schritte je Minute) …',' steps a minute) …'));return}
+  z.wartet=false;z.last=scr;z.zeiten.push(now);if(z.ctl)z.ctl.abort();const ctl=new AbortController();z.ctl=ctl;fzZielStand(t('Der Assistent denkt …','The assistant is thinking …'));
+  let d;try{d=await fzHilfe('ziel',{ziel:z.text},ctl.signal)}catch(e){if(FZ.ziel===z&&!ctl.signal.aborted&&e.status!==409)fzZielStand(e.message);return}finally{if(z.ctl===ctl)z.ctl=null}
+  if(FZ.ziel!==z||d.unveraendert)return;const box=$('fzzielchip');box.textContent='';
+  if(d.fertig){fzZielEnde(t('Fertig: ','Done: ')+(d.grund||t('das Ziel ist erreicht.','the goal is reached.')));$('fzziel').hidden=false;return}
+  if(d.unlesbar||typeof d.befehl!=='string'||!d.befehl||d.befehl.length>200||/[\x00-\x1f]/.test(d.befehl)){fzZielStand(t('Die Antwort war nicht lesbar; nach dem nächsten Befehl noch einmal.','The answer was not readable; again after the next command.'));return}
+  box.appendChild(fzChip(d.befehl,String(d.grund||t('Vom Assistenten vorgeschlagen','Suggested by the assistant')).slice(0,120)));if(d.grund)box.appendChild(fzEl('div','fzzielgrund',String(d.grund).slice(0,120)));fzZielStand(t('Nächster Schritt:','Next step:'))}
 // the field empties as soon as the question is sent and keeps the focus (Dominik 2026-10-29 08:35)
 async function fzFragen(){const f=$('fzfrage'),q=f.value.trim(),a=$('fzantwort');if(!q||!FZ.sid)return;f.value='';f.focus();a.textContent=t('Der Assistent denkt …','The assistant is thinking …');
   try{const d=await fzHilfe('frage',{frage:q});fzAntwort(String(d.antwort||''))}catch(e){a.textContent=e.message}}
@@ -379,11 +406,11 @@ addEventListener('message',async e=>{if(e.origin!==location.origin||!e.data||typ
   else if(e.data.typ==='fz-ticket'&&FZ_FENSTER&&e.source===window.opener&&!FZ.ws&&typeof e.data.ticket==='string'){
     const mit=e.data.mit||{};FZ.d={chips:Array.isArray(mit.chips)?mit.chips.filter(x=>typeof x==='string'):[],folge:Array.isArray(mit.folge)?mit.folge:[],
       erklaert:mit.erklaert&&typeof mit.erklaert==='object'?mit.erklaert:{},sudo_tip:Array.isArray(mit.sudo_tip)?mit.sudo_tip:[],hinweis:Array.isArray(mit.hinweis)?mit.hinweis:[],hilfe:mit.hilfe===true,
-      gefahr:mit.gefahr&&typeof mit.gefahr==='object'?mit.gefahr:{},hilfe_zeilen:Number(mit.hilfe_zeilen)||60,hilfe_schirm:Number(mit.hilfe_schirm)||8192,hilfe_befehle:Number(mit.hilfe_befehle)||10,vorschlag_s:Number(mit.vorschlag_s)||5};const sitz=e.data.sitz||{};
+      gefahr:mit.gefahr&&typeof mit.gefahr==='object'?mit.gefahr:{},ki_zeilen:Number(mit.ki_zeilen)||80,ki_zeilen_wahl:Array.isArray(mit.ki_zeilen_wahl)?mit.ki_zeilen_wahl.map(Number).filter(n=>n>=20&&n<=1000):[80,300,1000],ki_zeichen:Number(mit.ki_zeichen)||60000,ziel_min:Number(mit.ziel_min)||6,hilfe_befehle:Number(mit.hilfe_befehle)||10,vorschlag_s:Number(mit.vorschlag_s)||5};const sitz=e.data.sitz||{};
     try{await fzLaden()}catch(x){fzMsg(x.message,true);return}
     document.title=String(sitz.name||'')+' · '+t('Fernzugang','Remote access');fzChips();const [c,r]=fzGroesse();
     fzTerm(e.data.ticket,{name:String(sitz.name||''),gid:String(sitz.gid||''),art:['windows','macos'].includes(sitz.art)?sitz.art:'linux',seit:Number(sitz.seit)||Date.now()/1000,max:Number(sitz.max)||1,leer:Number(sitz.leer)||15},c,r)}});
-function fzWeg(){const ws=FZ.ws,sitz=FZ.sitz;FZ.ws=null;FZ.grund='';FZ.zeile=FZ.buf='';FZ.hist=[];FZ.ki=null;clearTimeout(FZ.vt);if(FZ.term){FZ.term.dispose();FZ.term=null}window.removeEventListener('resize',fzResize);clearInterval(FZ.pt);fzBald(0);
+function fzWeg(){const ws=FZ.ws,sitz=FZ.sitz;FZ.ws=null;FZ.grund='';FZ.zeile=FZ.buf='';FZ.hist=[];FZ.ki=null;clearTimeout(FZ.vt);fzZielEnde('');if(FZ.term){FZ.term.dispose();FZ.term=null}window.removeEventListener('resize',fzResize);clearInterval(FZ.pt);fzBald(0);
   if(FZ_FENSTER){window.close();return}
   FZ.weg={sid:FZ.sid,sitz};FZ.sitz=sitz;fzBanner();$('fzview').hidden=true;fzVerbergen();fzWegZeigen();if(ws&&ws.readyState<2)ws.close(1000)}
 function fzWegZeigen(){const b=$('fzweg');if(!b)return;b.hidden=!FZ.weg;if(FZ.weg)$('fzwegname').textContent=FZ.weg.sitz?FZ.weg.sitz.name:'';if(!FZ.weg&&FZ.d)fzShow()}
@@ -392,7 +419,7 @@ async function fzZurueck(){const w=FZ.weg;if(!w)return;let tk;try{await fzLaden(
 async function fzWegTrennen(){const w=FZ.weg,p=FZ.pop;if(p&&p.w&&!p.w.closed){p.w.close();return}
   if(w&&w.sid){try{await api(`/api/admin/fernzugang/sitzung/${w.sid}/trennen`,{method:'POST'})}catch(e){fzMsg(e.message,true)}}FZ.weg=null;FZ.sitz=null;fzBanner();fzWegZeigen();fzLoad()}
 function fzTrennen(){if(FZ.ws){const ws=FZ.ws;FZ.grund='getrennt';if(ws.readyState===1)ws.send(JSON.stringify({typ:'ende'}));ws.close(1000)}else if(FZ.wieder){FZ.wieder=null;fzWiederZeigen();fzZu(fzGrund('getrennt'))}else if(FZ.weg)fzWegTrennen();else if(FZ.fs)fzFSchliessen();else if(FZ.fb)fbTrennen()}
-function fzZu(text){const ws=FZ.ws;FZ.ws=null;FZ.grund='';FZ.zeile=FZ.buf='';FZ.hist=[];FZ.ki=null;FZ.wieder=null;fzWiederZeigen();fzBald(0);clearTimeout(FZ.vt);clearInterval(FZ.pt);if(ws&&ws.readyState<2)ws.close(1000);if(FZ.term){FZ.term.dispose();FZ.term=null}FZ.sitz=null;fzBanner();
+function fzZu(text){const ws=FZ.ws;FZ.ws=null;FZ.grund='';FZ.zeile=FZ.buf='';FZ.hist=[];FZ.ki=null;FZ.wieder=null;fzWiederZeigen();fzBald(0);clearTimeout(FZ.vt);fzZielEnde('');clearInterval(FZ.pt);if(ws&&ws.readyState<2)ws.close(1000);if(FZ.term){FZ.term.dispose();FZ.term=null}FZ.sitz=null;fzBanner();
   window.removeEventListener('resize',fzResize);$('fzview').hidden=true;$('fzmain').hidden=false;fzVerbergen();if(text)fzNeuKnopf(text);fzLoad()}
 // every end message offers „Neu verbinden“ to the system it was (a new session, a new code only if the page is locked)
 function fzNeuKnopf(text){const g=FZ.letzt;sayToast(text,20000,{bad:true,knopf:g?[t('Neu verbinden','Connect again'),()=>fzOpen(g)]:null,id:'fzwiederneu'})}
@@ -436,7 +463,7 @@ async function fzHoch(){const fs=FZ.fs,f=$('fzffile').files[0];if(!fs)return;if(
     fzMsg(t('Hochgeladen: ','Uploaded: ')+fzKB(f.size));$('fzffile').value='';fzListe(fs.pfad)}catch(e){fzMsg(e.message,true)}finally{b.disabled=false;if(FZ.fs)FZ.fs.laeuft=false}}
 async function fzFSchliessen(text){const fs=FZ.fs;if(!fs)return;try{await api(`/api/admin/fernzugang/dateien/${fs.id}`,{method:'DELETE'})}catch{}fzFZu(typeof text==='string'?text:'')}
 function fzFZu(text){FZ.fs=null;FZ.sitz=null;fzBanner();$('fzfiles').hidden=true;$('fzflist').textContent='';$('fzmain').hidden=false;if(text)fzMsg(text,true);fzLoad()}
-{const k=$('fzgo');if(k){$('fzheraus').onclick=fzHeraus;$('fzverlaufweg').onclick=fzVerlaufWeg;$('fzfragen').onclick=fzFragen;
+{const k=$('fzgo');if(k){$('fzheraus').onclick=fzHeraus;$('fzverlaufweg').onclick=fzVerlaufWeg;$('fzfragen').onclick=fzFragen;$('fzzielgo').onclick=fzZielStart;$('fzzielende').onclick=()=>fzZielEnde('');
   $('fzfrage').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();fzFragen()}};$('fzalletasten').onclick=fzAlleTasten;$('fzdrawertab').onclick=()=>fzLade();$('fzzurueck').onclick=fzZurueck;$('fzwegstop').onclick=fzWegTrennen;
   if(!(navigator.keyboard&&typeof navigator.keyboard.lock==='function'))$('fzalletasten').title=t('Nur in Chrome oder Edge','Only in Chrome or Edge');k.onclick=fzKoppeln;$('fzalle').onclick=fzAlle;$('fzbtrennen').onclick=fzTrennen;$('fzweiter').onclick=fzWeiter;$('fzbaldende').onclick=fzTrennen;$('fzsperrplus').onclick=fzEntsperren;$('fzalle2').onclick=fzAlle;
   $('fzbinfo').onclick=e=>fzInfoPop(undefined,e.currentTarget);$('fzinfobtn').onclick=e=>fzInfoPop(undefined,e.currentTarget);$('fzkeycopy').onclick=e=>{if(FZ.fp)copyString(FZ.fp,e.currentTarget)};

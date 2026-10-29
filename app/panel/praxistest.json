@@ -4356,6 +4356,13 @@
 "titel": "Spontanhilfe-Seite aufgeräumt",
 "text": "Fernzugang → Spontanhilfe am Laptop: ohne Hilfe nur „Keine Hilfe offen“ und der Verlauf links, kein Zeigen/Vollbild/Beenden. „+ Neue Hilfe“: vier Punkte (erstellt → einladen), Nummer groß mit Ring, „0 von 5 Fehlversuchen“, Reiter Link/E-Mail/Shell; im Reiter Shell Linux/macOS umschalten, immer nur eine Zeile. Link kopieren: kurze Einblendung unten statt Textzeile. 10 Minuten warten (oder Nummer verfallen lassen): Nummer verschwindet, „Abgelaufen – Neue Nummer“, Eintrag im Verlauf. Mit einer zweiten Person teilen lassen: erst dann Zeigepfeil und Vollbild, das Bild füllt die rechte Seite. Am iPhone: Liste und rechte Seite untereinander, nichts seitlich verschoben.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P647",
+"v": 1228,
+"titel": "Ziel-Modus im Assistenten",
+"text": "Fernzugang → Systeme → Shell eines Linux-Systems, Assistent offen, „Bildschirm mitschicken“ an. In das Fragefeld „Freien Platz auf / schaffen“ und „Als Ziel verfolgen“. Erwartet: das Feld leert sich, oben steht das Ziel, nach kurzer Zeit ein Vorschlag mit einem Satz Grund. Einfügen, selbst Enter drücken; nach dem Ende des Befehls kommt der nächste Vorschlag. Ein Vorschlag mit rm -rf steht rot und braucht zwei Tipps. Nichts wird von selbst ausgeführt. Am Ende „Fertig: …“ oder „Ziel beenden“. Mit „Zeilen“ 1000 und einem langen Log (journalctl -n 2000) erscheint „gekürzt“, wenn mehr als 60 000 Zeichen dastehen. Im Protokoll nur hilfe_ziel mit Wort, Zeilenzahl und ms.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }
