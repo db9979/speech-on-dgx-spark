@@ -4510,6 +4510,13 @@
 "titel": "Gedächtnis und Gespräche versiegelt",
 "text": "Nach dem Update (Zustand → Logs, Bereich Profile): einmal „profiles: versiegelt | profile=… dateien=…“ mit fehler=0, unter Einstellungen → Sicherung eine neue Sicherung „vor-siegel“. Unter Ich → Gedächtnis stehen alle Einträge wie vorher, die Gespräche im Assistenten sind alle da. Zustand → Live, Kasten Gedächtnis: „🔒 n von n Dateien versiegelt“, kein „unlesbar beiseite“. Nach einem Neustart des Panels: keine zweite Zeile „versiegelt“ und keine zweite Sicherung „vor-siegel“. Im Gespräch „Merk dir, ich trinke gern Tee.“: der Eintrag erscheint wie gewohnt.",
 "thread": "Nutzerwissen sicherer und sichtbarer"
+},
+{
+"id": "P669",
+"v": 1252,
+"titel": "Auch das Gelernte versiegelt",
+"text": "Nach dem Update (Zustand → Logs, Bereich Profile): einmal „profiles: versiegelt | …“ mit fehler=0 und unter Einstellungen → Sicherung eine neue Sicherung „vor-siegel“. Unter Ich → Was ich über dich weiß stehen die Interessen wie vorher, das Spark-Tagebuch zeigt die alten Einträge. Im Gespräch einen Fernseher per Rückfrage wählen (gemerkte Zuordnung): beim nächsten Mal fragt der Spark nicht noch einmal. Zustand → Live, Kasten Gedächtnis: „🔒 n von n Dateien versiegelt“.",
+"thread": "Nutzerwissen sicherer und sichtbarer"
 }
 ]
 }

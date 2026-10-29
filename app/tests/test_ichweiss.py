@@ -138,8 +138,7 @@ class IchWeiss(unittest.TestCase):
                     {"name": "Rad", "state": "yes", "senders": "Rose"}, {"name": "Rad", "state": "yes", "senders": [1]},
                     {"name": "Rad", "state": "yes", "senders": ["a"] * 21}):
             self.assertEqual(p.post("/api/profile/ichweiss/interest", json=bad).status_code, 400, bad)
-        with open(profiles._path(uid, "interessen.json")) as f:
-            raw = f.read()
+        raw = profiles.own_bytes(uid, "interessen.json").decode()   # opened: the seal would hide everything
         for bad in ("Gesamtsumme", "49,90", "shop@"):
             self.assertNotIn(bad, raw)
         self.assertEqual(features.OWN["ichweiss"][0](uid), 1)
@@ -232,8 +231,7 @@ class IchWeiss(unittest.TestCase):
         self.assertEqual(p.post("/api/profile/ichweiss/interest", json={"name": "Sport & Fitness", "state": "drop", "senders": []}).status_code, 400)
         self.assertEqual(p.post("/api/profile/ichweiss/interest", json={"name": "Gibtsnicht", "state": "rename", "to": "Xyz"}).status_code, 404)
         self.assertEqual(p.post("/api/profile/ichweiss/interest", json={"name": "Bergwandern", "state": "rename", "to": " x "}).status_code, 400)
-        with open(profiles._path(uid, "interessen.json")) as f:
-            raw = f.read()
+        raw = profiles.own_bytes(uid, "interessen.json").decode()   # opened: the seal would hide everything
         for word in ("ESP32", "Zigbee", "Herbstbrief", "Oktober", "iotthinks.example"):   # subjects never in the file
             self.assertNotIn(word, raw)
 

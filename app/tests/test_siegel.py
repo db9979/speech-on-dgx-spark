@@ -29,8 +29,6 @@ from fastapi.testclient import TestClient  # noqa: E402
 
 PANEL = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "panel")
 HELPERS = {"read_own", "write_own", "drop_own"}
-# moved to the helpers ahead of their seal (V01.1.250): siegel= in dateien.py follows in V01.1.252
-VORAB = {"interessen.json", "tagebuch.json", "zuordnungen.json", "learned.json", "memory-ask.json"}
 ADMIN = TestClient(panel.app)
 ADMIN.post("/api/login", json={"password": "secret-admin"})
 SECRET = "Sgl-Geheimwort-7731"
@@ -38,7 +36,7 @@ CRYPTO = unittest.skipUnless(vault.available(), "needs cryptography")
 
 
 def own_files():
-    return set(dateien.SIEGEL) | VORAB
+    return set(dateien.SIEGEL)
 
 
 def direct_uses(names, folder=PANEL):
@@ -109,7 +107,12 @@ class OnlyThroughTheHelpers(unittest.TestCase):
             self.assertEqual(direct_uses({"memory.json"}, d), [("x.py", 4, "memory.json")])
 
     def test_the_register_is_the_one_list(self):
-        self.assertEqual(dateien.SIEGEL, frozenset({"memory.json", "convos.json", "toollog.json", "room-history.json"}))
+        self.assertEqual(dateien.SIEGEL, frozenset({"memory.json", "convos.json", "toollog.json", "room-history.json",
+                                                    "learned.json", "zuordnungen.json", "memory-ask.json",
+                                                    "interessen.json", "tagebuch.json"}))
+        for d in dateien.DATEIEN:     # what a profile says or the Spark learned about it: memory and conversations
+            if d.ort == "profil" and d.bereich in ("gedaechtnis", "gespraeche"):
+                self.assertTrue(d.siegel, d.name)
         for d in dateien.DATEIEN:
             if d.siegel:
                 self.assertEqual(d.ort, "profil", d.name)
@@ -122,7 +125,7 @@ class Helpers(unittest.TestCase):
 
     def setUp(self):
         os.makedirs(profiles._path(self.UID), exist_ok=True)
-        for n in ("memory.json", "tagebuch.json"):
+        for n in ("memory.json", "mailstil.json"):
             self.addCleanup(profiles.drop_own, self.UID, n)
 
     def test_round_trip_only_for_the_service_user(self):
@@ -147,8 +150,9 @@ class Helpers(unittest.TestCase):
         self.assertEqual(profiles.read_own(self.UID, "memory.json", []), [{"id": "p1", "text": "Alt und offen."}])
 
     def test_a_file_without_siegel_stays_plain(self):
-        profiles.write_own(self.UID, "tagebuch.json", {"items": []})
-        self.assertEqual(json.loads(raw(self.UID, "tagebuch.json")), {"items": []})
+        self.assertNotIn("mailstil.json", dateien.SIEGEL)
+        profiles.write_own(self.UID, "mailstil.json", {"items": []})
+        self.assertEqual(json.loads(raw(self.UID, "mailstil.json")), {"items": []})
 
 
 @CRYPTO

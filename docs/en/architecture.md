@@ -613,8 +613,8 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/toollog.json` | Tool log |  | sealed whole (AES-256-GCM) | yes | Conversations |
 | `users/ID/room-history.json` | Room mode history |  | sealed whole (AES-256-GCM) | yes | Conversations |
 | `users/ID/memory.json` | Memory |  | sealed whole (AES-256-GCM) | yes | Memory |
-| `users/ID/learned.json` | Read marks of learning from conversations |  | – | yes | Memory |
-| `users/ID/zuordnungen.json` | Remembered matches |  | – | yes | Memory |
+| `users/ID/learned.json` | Read marks of learning from conversations |  | sealed whole (AES-256-GCM) | yes | Memory |
+| `users/ID/zuordnungen.json` | Remembered matches |  | sealed whole (AES-256-GCM) | yes | Memory |
 | `users/ID/tasks.json` | Tasks |  | – | yes | Tasks and reminders |
 | `users/ID/reminders.json` | Reminders |  | – | yes | Tasks and reminders |
 | `users/ID/wissen.db` | Documents: text, sections with context line, search, vectors (SQLite) |  | – | yes | Documents (text, search, originals) |
@@ -654,7 +654,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/dungeon-kampagnen.json` | AI Dungeon Master: your campaigns with the story so far, the last chapter's narrations and the guests' characters | State | – | yes | – |
 | `users/ID/dungeon-buch.json` | AI Dungeon Master: hero book to the reMarkable, per hero the last edition (number, time, checksum, counts for „new since“) and what still waits | State | – | yes | – |
 | `users/ID/dungeon-wappen.json` | AI Dungeon Master: colour and charge you chose as host for your group's arms | State | – | yes | – |
-| `users/ID/interessen.json` | What I know about you: confirmed and refused interests with topic and senders and the last web tip (no subject, never a mail) | Settings | – | yes | – |
+| `users/ID/interessen.json` | What I know about you: confirmed and refused interests with topic and senders and the last web tip (no subject, never a mail) | Settings | sealed whole (AES-256-GCM) | yes | – |
 | `users/ID/mailstil.json` | Mail style (only the summary, never a mail) | Settings | – | yes | – |
 | `users/ID/mail-regeln.json` | Mail rules of the E-mail page and rule suggestions (senders, words, folders; never a mail) | Settings | – | yes | – |
 | `users/ID/mail-spaeter.bin` | Send later: planned mails until they go out, after that for a day the line without text | Queue | sealed | yes | – |
@@ -682,7 +682,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/agent-pending.json` | Waiting for yes | Queue | – | yes | – |
 | `users/ID/calendar-pending.json` | Waiting for yes | Queue | – | yes | – |
 | `users/ID/fix-pending.json` | Waiting for yes | Queue | – | yes | – |
-| `users/ID/memory-ask.json` | Open memory question | Queue | – | yes | – |
+| `users/ID/memory-ask.json` | Open memory question | Queue | sealed whole (AES-256-GCM) | yes | – |
 | `users/ID/mail-pending.json` | Waiting for yes | Queue | – | yes | – |
 | `users/ID/mcp-dienste-pending.json` | Waiting for yes | Queue | – | yes | – |
 | `users/ID/messages-pending.json` | Waiting for yes | Queue | – | no | – |
@@ -691,7 +691,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/tasks-pending.json` | Waiting for yes | Queue | – | yes | – |
 | `users/ID/remarkable-pending.json` | Waiting for yes | Queue | – | yes | – |
 | `users/ID/rueckfrage-pending.json` | The assistant's last question back (10 minutes, only its buttons) | Queue | – | yes | – |
-| `users/ID/tagebuch.json` | Spark diary | State | – | yes | – |
+| `users/ID/tagebuch.json` | Spark diary | State | sealed whole (AES-256-GCM) | yes | – |
 | `users/ID/gesundheit.json` | Steps, pulse and sleep from the Pebble watch (30 days) | Health | sealed | yes | – |
 | `users/ID/docling-wait` | Files until Docling has read them | Queue | – | yes | – |
 | `users/ID/mfa.json` | Profile's second step | Key | sealed | yes | – |
@@ -3574,7 +3574,7 @@ flowchart TD
 
 1. <a id="kn-users-s1"></a>**A request with a profile**: profiles.current finds the profile from the signed login cookie or the device key. What the language model says never picks a profile.
 2. <a id="kn-users-s2"></a>**Path in its own folder**: Every file lies under users/ID/ with a fixed name from the code. The ID comes from step 1, never from a text.
-3. <a id="kn-users-s3"></a>**A secret in it?**: Passwords of mail, calendar and storage places, tokens of Home Assistant and MCP and the own storage key are sealed with the Spark's key. The voiceprint (voice.json) is biometric and is sealed whole; an older open file is sealed the first time it is read. Memory and conversations (4 files, siegel= in the file register) lie sealed whole: AES-256-GCM with a key of their own from secret.key, the profile and the file name as associated data, so readable neither in another profile nor under another name. siegel.migrate seals older open files once, after a backup „vor-siegel“.
+3. <a id="kn-users-s3"></a>**A secret in it?**: Passwords of mail, calendar and storage places, tokens of Home Assistant and MCP and the own storage key are sealed with the Spark's key. The voiceprint (voice.json) is biometric and is sealed whole; an older open file is sealed the first time it is read. Memory and conversations (9 files, siegel= in the file register) lie sealed whole: AES-256-GCM with a key of their own from secret.key, the profile and the file name as associated data, so readable neither in another profile nor under another name. siegel.migrate seals older open files once, after a backup „vor-siegel“.
 4. <a id="kn-users-s4"></a>**Write for the service only**: profiles._write creates the folder so that only the service looks into it, writes a temporary file only the service can read and swaps it in one step.
 5. <a id="kn-users-s4b"></a>**Does the sealed file open?**: Only profiles.read_own and write_own read and write these files. If one does not open (another key, another profile, changed on the disk), it is set aside once (name.unlesbar), never overwritten, and the profile starts empty. The admin sees a hint; after the move backup „Read in again“ under Me → Memory brings it back.
 6. <a id="kn-users-s5"></a>**Every file sorted**: Every file name has exactly one line in the file register dateien.py: with an area (dateien.AREAS, may go to the own storage) or with its kind (dateien.LOCAL, stays on the Spark: keys, accounts, settings, voiceprint, queues). speicher.py takes both lists from there. test_technik checks every name the code writes.

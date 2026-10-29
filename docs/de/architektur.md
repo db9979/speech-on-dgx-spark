@@ -613,8 +613,8 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/toollog.json` | Werkzeug-Log |  | ganz versiegelt (AES-256-GCM) | ja | Gespräche |
 | `users/ID/room-history.json` | Raummodus-Verlauf |  | ganz versiegelt (AES-256-GCM) | ja | Gespräche |
 | `users/ID/memory.json` | Gedächtnis |  | ganz versiegelt (AES-256-GCM) | ja | Gedächtnis |
-| `users/ID/learned.json` | Lesemarken des Lernens aus Gesprächen |  | – | ja | Gedächtnis |
-| `users/ID/zuordnungen.json` | Gemerkte Zuordnungen |  | – | ja | Gedächtnis |
+| `users/ID/learned.json` | Lesemarken des Lernens aus Gesprächen |  | ganz versiegelt (AES-256-GCM) | ja | Gedächtnis |
+| `users/ID/zuordnungen.json` | Gemerkte Zuordnungen |  | ganz versiegelt (AES-256-GCM) | ja | Gedächtnis |
 | `users/ID/tasks.json` | Aufgaben |  | – | ja | Aufgaben und Erinnerungen |
 | `users/ID/reminders.json` | Erinnerungen |  | – | ja | Aufgaben und Erinnerungen |
 | `users/ID/wissen.db` | Dokumente: Text, Abschnitte mit Kontextzeile, Suche, Vektoren (SQLite) |  | – | ja | Dokumente (Text, Suche, Originale) |
@@ -654,7 +654,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/dungeon-kampagnen.json` | KI-Dungeon-Master: deine Kampagnen mit „Bisher geschah“, den Erzählungen des letzten Kapitels und den Figuren der Gäste | Zustand | – | ja | – |
 | `users/ID/dungeon-buch.json` | KI-Dungeon-Master: Heldenbuch aufs reMarkable, je Held die letzte Ausgabe (Nummer, Zeit, Prüfsumme, Zahlen für „Neu seit“) und was noch wartet | Zustand | – | ja | – |
 | `users/ID/dungeon-wappen.json` | KI-Dungeon-Master: Farbe und Zeichen, die du als Gastgeber für das Wappen deiner Gruppe gewählt hast | Zustand | – | ja | – |
-| `users/ID/interessen.json` | Was ich über dich weiß: bestätigte und abgelehnte Interessen mit Thema und Absendern und der letzte Netz-Tipp (kein Betreff, keine Mail) | Einstellungen | – | ja | – |
+| `users/ID/interessen.json` | Was ich über dich weiß: bestätigte und abgelehnte Interessen mit Thema und Absendern und der letzte Netz-Tipp (kein Betreff, keine Mail) | Einstellungen | ganz versiegelt (AES-256-GCM) | ja | – |
 | `users/ID/mailstil.json` | Mailstil (nur die Zusammenfassung, keine Mail) | Einstellungen | – | ja | – |
 | `users/ID/mail-regeln.json` | Mail-Regeln der Seite E-Mail und Regel-Vorschläge (Absender, Wörter, Ordner; keine Mail) | Einstellungen | – | ja | – |
 | `users/ID/mail-spaeter.bin` | Später senden: geplante Mails bis zum Senden, danach einen Tag die Zeile ohne Text | Warteschlange | versiegelt | ja | – |
@@ -682,7 +682,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/agent-pending.json` | Wartet auf Ja | Warteschlange | – | ja | – |
 | `users/ID/calendar-pending.json` | Wartet auf Ja | Warteschlange | – | ja | – |
 | `users/ID/fix-pending.json` | Wartet auf Ja | Warteschlange | – | ja | – |
-| `users/ID/memory-ask.json` | Offene Frage zum Gedächtnis | Warteschlange | – | ja | – |
+| `users/ID/memory-ask.json` | Offene Frage zum Gedächtnis | Warteschlange | ganz versiegelt (AES-256-GCM) | ja | – |
 | `users/ID/mail-pending.json` | Wartet auf Ja | Warteschlange | – | ja | – |
 | `users/ID/mcp-dienste-pending.json` | Wartet auf Ja | Warteschlange | – | ja | – |
 | `users/ID/messages-pending.json` | Wartet auf Ja | Warteschlange | – | nein | – |
@@ -691,7 +691,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/tasks-pending.json` | Wartet auf Ja | Warteschlange | – | ja | – |
 | `users/ID/remarkable-pending.json` | Wartet auf Ja | Warteschlange | – | ja | – |
 | `users/ID/rueckfrage-pending.json` | Letzte Rückfrage des Assistenten (10 Minuten, nur ihre Knöpfe) | Warteschlange | – | ja | – |
-| `users/ID/tagebuch.json` | Spark-Tagebuch | Zustand | – | ja | – |
+| `users/ID/tagebuch.json` | Spark-Tagebuch | Zustand | ganz versiegelt (AES-256-GCM) | ja | – |
 | `users/ID/gesundheit.json` | Schritte, Puls und Schlaf von der Pebble-Uhr (30 Tage) | Gesundheit | versiegelt | ja | – |
 | `users/ID/docling-wait` | Dateien, bis Docling sie gelesen hat | Warteschlange | – | ja | – |
 | `users/ID/mfa.json` | Zweiter Schritt des Profils | Schlüssel | versiegelt | ja | – |
@@ -3574,7 +3574,7 @@ flowchart TD
 
 1. <a id="kn-users-s1"></a>**Anfrage mit Profil**: profiles.current findet das Profil aus dem signierten Anmelde-Cookie oder dem Geräteschlüssel. Was das Sprachmodell sagt, wählt nie ein Profil.
 2. <a id="kn-users-s2"></a>**Pfad im eigenen Ordner**: Jede Datei liegt unter users/ID/ mit einem festen Namen aus dem Code. Die ID kommt aus Schritt 1, nie aus einem Text.
-3. <a id="kn-users-s3"></a>**Ein Geheimnis dabei?**: Passwörter von Mail, Kalender und Speicherorten, Tokens von Home Assistant und MCP und der Schlüssel des eigenen Speichers werden mit dem Schlüssel des Spark versiegelt. Der Stimmabdruck (voice.json) ist biometrisch und wird ganz versiegelt; eine ältere offene Datei wird beim ersten Lesen versiegelt. Gedächtnis und Gespräche (4 Dateien, siegel= im Datei-Register) liegen ganz versiegelt: AES-256-GCM mit einem eigenen Schlüssel aus secret.key, Profil und Dateiname als Zusatzdaten, also weder in einem anderen Profil noch unter einem anderen Namen lesbar. Ältere offene Dateien versiegelt siegel.migrate einmal, nach einer Sicherung „vor-siegel“.
+3. <a id="kn-users-s3"></a>**Ein Geheimnis dabei?**: Passwörter von Mail, Kalender und Speicherorten, Tokens von Home Assistant und MCP und der Schlüssel des eigenen Speichers werden mit dem Schlüssel des Spark versiegelt. Der Stimmabdruck (voice.json) ist biometrisch und wird ganz versiegelt; eine ältere offene Datei wird beim ersten Lesen versiegelt. Gedächtnis und Gespräche (9 Dateien, siegel= im Datei-Register) liegen ganz versiegelt: AES-256-GCM mit einem eigenen Schlüssel aus secret.key, Profil und Dateiname als Zusatzdaten, also weder in einem anderen Profil noch unter einem anderen Namen lesbar. Ältere offene Dateien versiegelt siegel.migrate einmal, nach einer Sicherung „vor-siegel“.
 4. <a id="kn-users-s4"></a>**Schreiben nur für den Dienst**: profiles._write legt den Ordner so an, dass nur der Dienst hineinsieht, schreibt eine Zwischendatei, die nur der Dienst lesen kann, und tauscht sie in einem Schritt aus.
 5. <a id="kn-users-s4b"></a>**Öffnet die versiegelte Datei?**: Diese Dateien liest und schreibt nur profiles.read_own und write_own. Öffnet eine nicht (fremder Schlüssel, anderes Profil, auf der Platte geändert), wird sie einmal beiseitegelegt (Name.unlesbar), nie überschrieben, und das Profil beginnt leer. Der Admin sieht einen Hinweis; nach der Umzugs-Sicherung holt „Wieder einlesen“ unter Ich → Gedächtnis sie zurück.
 6. <a id="kn-users-s5"></a>**Jede Datei einsortiert**: Jeder Dateiname hat genau eine Zeile im Datei-Register dateien.py: mit einem Bereich (dateien.AREAS, darf auf den eigenen Speicher) oder mit seiner Art (dateien.LOCAL, bleibt auf dem Spark: Schlüssel, Zugänge, Einstellungen, Stimmabdruck, Warteschlangen). speicher.py nimmt beide Listen von dort. test_technik prüft jeden Namen, den der Code schreibt.

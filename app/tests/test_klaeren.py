@@ -102,8 +102,7 @@ class Klaeren(unittest.TestCase):
         self.assertEqual(choices(evs), [])
         self.assertEqual(helpers.HA_CALLS[n:], [{"entity_id": "media_player.the_frame", "service": "media_player.turn_off"}])
         # the code word never reaches the stored mapping
-        with open(profiles._path(uid, "zuordnungen.json")) as f:
-            self.assertNotIn("apollo", f.read().lower())
+        self.assertNotIn("apollo", profiles.own_bytes(uid, "zuordnungen.json").decode().lower())   # opened, not sealed
         # a mapping needs the code word all the same: without it the command waits as before
         n = len(helpers.HA_CALLS)
         ask(a, "Schalte den Fernseher an")
@@ -125,8 +124,7 @@ class Klaeren(unittest.TestCase):
             ask(a, "den Samsung The Frame")
             rows = tagebuch.recent(uid, art="geraet")
             self.assertEqual([r["title"] for r in rows], ["Samsung The Frame ausgeschaltet"])
-            with open(profiles._path(uid, "tagebuch.json")) as f:
-                self.assertNotIn("apollo", f.read().lower())
+            self.assertNotIn("apollo", profiles.own_bytes(uid, "tagebuch.json").decode().lower())   # opened, not sealed
         finally:
             helpers.set_config(tagebuch=False)
 
