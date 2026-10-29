@@ -1768,5 +1768,9 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **Assistent im Fernzugang** (Funktionen → Zugang → „Assistent im Fernzugang“; baut auf „Fernzugang zu Servern“): Neben dem Terminal unter Fernzugang → Systeme steht „Frag den Assistenten“: du fragst etwa „Warum startet nginx nicht?“ und das eigene Sprachmodell antwortet mit Text und Befehlen.
 
+- **Bildschirm im Fernzugang** (Funktionen → Zugang → „Bildschirm im Fernzugang“; baut auf „Fernzugang zu Servern“): Den Bildschirm eines gekoppelten Systems im Browser, unter Fernzugang → Systeme mit „Bildschirm“: Linux mit X11 (x11vnc), GNOME auf Wayland (gnome-remote-desktop) oder andere Wayland-Oberflächen (wayvnc) und macOS (die eingebaute Bildsch …
+
+- **Zwischenablage beim Bildschirm** (Funktionen → Zugang → „Zwischenablage beim Bildschirm“; baut auf „Bildschirm im Fernzugang“): Text zwischen deinem Browser und dem System austauschen, während du „Steuern“ hast: kopierst du dort etwas, landet es in deiner Zwischenablage; „Zwischenablage senden“ schickt deine hinüber.
+
 - **Angriffsprobe** (Funktionen → Zugang → „Angriffsprobe“; baut auf „Werkstatt“): Misst auf Knopfdruck, wie oft das laufende Sprachmodell einem Befehl in fremdem Text folgen würde (Dokument, Mail, Webseite, Kalender, Smart Home).
 <!-- /funktionen:liste -->

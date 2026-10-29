@@ -30,10 +30,11 @@ if [ "$YES" = 0 ]; then
   case "$ans" in y|Y|j|J|yes|ja) ;; *) echo "Aborted."; exit 1 ;; esac
 fi
 
-for s in asr asr-engine tts tts-engine tts-design turn bild musik llm llmtor sehen panel watch update wechsel messen-wunsch gehaeuse tlstor waerter teilen-fw notasr schirm werkstatt; do
+for s in asr asr-engine tts tts-engine tts-design turn bild musik llm llmtor sehen panel watch update wechsel messen-wunsch gehaeuse tlstor waerter teilen-fw notasr schirm werkstatt guacd; do
   systemctl disable --now "speech-spark-$s.service" 2>/dev/null || true
   rm -f "/etc/systemd/system/speech-spark-$s.service"
 done
+systemctl unmask guacd.service 2>/dev/null || true   # --fernbild masked the distribution's own
 systemctl daemon-reload
 # B9: the Steuerzentrale had tty1; the login prompt comes back there
 systemctl start getty@tty1.service 2>/dev/null || true

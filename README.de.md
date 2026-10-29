@@ -32,6 +32,7 @@ Am Ende stehen Adresse, Passwort und API-Schlüssel auf dem Bildschirm, danach s
 | Adressen und Schlüssel anzeigen | `sudo speech-spark info` |
 | Eigenes Sprachmodell | `sudo ./install.sh --llm`, danach `sudo speech-spark modelle llm uebernehmen` (zurück: `… zurueck`) |
 | Werkstatt (Testlauf, Code-Messung, Diagnose, Reparatur) | auf dem Modell-Rechner `sudo ./install.sh --werkstatt`, dann *Funktionen → Werkstatt* |
+| Bildschirm im Fernzugang (guacd) | auf dem Rechner mit dem Panel `sudo ./install.sh --fernbild`, dann *Funktionen → Fernzugang zu Servern → Bildschirm* |
 | Portal auf einen anderen Rechner umziehen | `sudo speech-spark umziehen --code`, siehe [Spark teilen](docs/de/spark-teilen.md) |
 | Deinstallieren | `sudo ./uninstall.sh` (Konfiguration, Modelle und Stimmen bleiben; `--purge` löscht alles) |
 
@@ -41,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.225** Fernzugang Stufe 4 Bildschirm: „Bildschirm“ zeigt den Bildschirm eines gekoppelten Systems im Browser (X11, GNOME auf Wayland, andere Wayland-Oberflächen, macOS), erst nur ansehen, „Steuern“ mit einem Klick; guacd als eigener Dienst nur auf 127.0.0.1 (install.sh --fernbild), höchstens 15 Bilder/s, „Sparsam“ mit 16 Bit und ein Hinweis bei langsamer Leitung; dazu sagen die Befehls-Vorschläge beim Zeigen, was sie tun, und das Fragefeld des Assistenten leert sich nach dem Senden
 - **V01.1.224** Spontanhilfe: die Einladung „Per E-Mail“ kommt im neuen Design „Karte“ (Text und HTML, per du, Deutsch oder Englisch, ohne Bilder von außen) und nur einmal je Hilfe und Adresse: der Knopf ist beim Senden aus (mit Kreisel), ein zweiter Klick bekommt „Einladung schon gesendet“, „Nochmal senden“ erst nach 60 Sekunden mit Rückfrage, und eine unvollständige Einladung geht nie hinaus
 - **V01.1.223** Spontanhilfe Stufe S3 Shell einmalig: für einen Server ohne Bildschirm fügt die Person eine Zeile (ohne sudo) in ihr Terminal ein, tippt dort Nummer und Vornamen und erlaubt mit „j“; dann arbeitet der Admin im Reiter Spontanhilfe in ihrer Shell, mit ihren Rechten, und nichts bleibt zurück
 - **V01.1.222** Fernzugang Stufe 3 Dateien: auf der entsperrten Seite öffnet „Dateien“ ohne neuen Code die Ordner des Servers über SFTP in derselben SSH-Verbindung (Ordner öffnen, Laden über einen Einmal-Link, Hochladen bis zur eingestellten Größe, Standard 100 MB, „Ersetzen“ nur auf Wunsch); was geht, entscheiden die Rechte des Benutzers spark; Sperren schließt die Dateien, im Protokoll nie ein Name
@@ -50,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.218** Fernzugang: Terminal im Layout A (Assistent als Spalte rechts, ziehbar und zuklappbar, Vorschläge als eine Zeile, Sitzungsangaben im ⓘ der roten Zeile, Symbolleiste, Menü klappt weg, Seite scrollt nie; Handy mit Blatt von unten); eine endende Sitzung ließ eine spätere Verbindung hängen
 - **V01.1.217** Fernzugang: „Herauslösen“ zeigt im eigenen Fenster wieder das Terminal (statt der Startseite); „Alle Tasten“ füllt den Bildschirm nur mit dem Terminal, Vorschläge und Assistent in einer Schublade (Strg+Umschalt+Leertaste); Vorschläge für screen und tmux statt uptime und df -h; der Anker auf dem Mac: Zertifizierungsstellen des Systems, wenn Python keine mitbringt, Code direkt vom Terminal (auch unter curl | sudo), eigene Zeile mit /usr/bin/python3
 - **V01.1.216** Fernzugang Stufe 6: der Anker richtet sich auch auf dem Mac ein (dieselbe Zeile, ab macOS 13): versteckter Benutzer spark, launchd-Dienst, Entfernte Anmeldung nur für den Anker eingeschaltet und beim Entfernen wieder so wie vorher
-- **V01.1.215** Fernzugang: die laufende Sitzung zeigt sich als schmale rote Zeile oben im Inhalt auf jeder Seite (Punkt, „Fernsitzung aktiv · Server · Minuten“, „Trennen“; „Notaus trennt sofort“ als Hinweis), unter der Kopfleiste und am Handy unter der oberen Leiste, auch im eigenen Fenster; der Anker hört auf macOS und Windows mit einem festen Satz auf und richtet nichts halb ein, fehlt auf Linux der Host-Schlüssel, nennt er `sudo ssh-keygen -A`
 
 
 

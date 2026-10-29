@@ -71,6 +71,8 @@ OPEN = {
     "/pebble/spark-zifferblatt.pbw": "the Spark watchface (Paket 2), a public app file like the watch app",
     "/fernzugang/anker": "the spark-anker program for curl … | sudo python3 - einrichten; no secret in it, 404 while Fernzugang is off",
     "/static/xterm/{name}": "page files (xterm.js for Fernzugang → Systeme, pinned in fernzugang.XTERM)",
+    "/static/guac/{name}": "page files (guacamole-common-js for Fernzugang → Bildschirm, pinned in fernbild.GUAC)",
+    "/api/fernzugang/anker/bildschirm": "the anchor sets up or removes its screen; only with its own device key (Bearer), lockout, 404 while off",
     "/api/fernzugang/anker/koppeln": "an anchor's first contact; only with a one-time code the admin made (fresh code first), lockout, 404 while off",
     "/hilfe": "the Spontanhilfe page for a person without a login (own strict CSP, no data in it), 404 while off",
     "/api/hilfe/start": "a person's number or link key for the one open Spontanhilfe; same answer for every wrong try, dead after 5, rate limit, 404 while off",

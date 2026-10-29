@@ -1768,5 +1768,9 @@ Every function of the Spark with its switch, what it builds on, where you set it
 
 - **Assistant in remote access** (Features → Access → "Assistant in remote access"; builds on "Remote access to servers"): Beside the terminal under Remote access → Systems there is "Ask the assistant": you ask e.g.
 
+- **Screen in remote access** (Features → Access → "Screen in remote access"; builds on "Remote access to servers"): The screen of a paired system in the browser, under Remote access → Systems with "Screen": Linux with X11 (x11vnc), GNOME on Wayland (gnome-remote-desktop) or other Wayland desktops (wayvnc) and macOS (the built-in screen sharing).
+
+- **Clipboard with the screen** (Features → Access → "Clipboard with the screen"; builds on "Screen in remote access"): Exchange text between your browser and the system while you have "Control": what you copy there lands in your clipboard; "Send clipboard" sends yours over.
+
 - **Attack probe** (Features → Access → "Attack probe"; builds on "Workshop"): Measures on a button how often the running language model would follow an order in outside text (document, mail, web page, calendar, smart home).
 <!-- /funktionen:liste -->

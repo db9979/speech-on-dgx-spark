@@ -49,7 +49,7 @@ DEFAULT_REMOTE=https://github.com/db9979/speech-on-dgx-spark
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 SMALL=0; WITH_ASR=1; WITH_TTS=1; PASSWORD=""; DOWNLOAD=1; SMOKE=1; FROM_UPDATE=0; TTS_BACKEND=""; ASR_BACKEND=""
-TEILEN_PICK=0; MODELLE_PICK=""; PANEL_PICK=0; GEHAEUSE_PICK=""; WERKSTATT_PICK=0
+TEILEN_PICK=0; MODELLE_PICK=""; PANEL_PICK=0; GEHAEUSE_PICK=""; WERKSTATT_PICK=0; FERNBILD_PICK=0
 MODE=""; ASR_PICK=""; TTS_PICK=""; VD_PICK=""; BILD_PICK=""; MUSIK_PICK=""; NET_PICK=""; YES=0; CHOOSE_MODELS=0; LLM_PICK=0; KOLIBRI_PICK=0
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -74,6 +74,7 @@ while [ $# -gt 0 ]; do
     --gehaeuse) GEHAEUSE_PICK="${2:-}"; shift ;;
     --kolibri) LLM_PICK=1; KOLIBRI_PICK=1 ;;
     --werkstatt) WERKSTATT_PICK=1 ;;      # the Werkstatt: OpenCode and its sandbox (app/werkstatt.py)
+    --fernbild) FERNBILD_PICK=1 ;;        # Fernzugang → Bildschirm: guacd on 127.0.0.1 (app/panel/fernbild.py)
     --local) NET_PICK=local ;;
     --network) NET_PICK=network ;;
     --yes|-y) YES=1 ;;
@@ -204,6 +205,25 @@ if [ "$MODE" = full ]; then
     { apt-get -o DPkg::Lock::Timeout=120 update -q && \
       apt-get -o DPkg::Lock::Timeout=120 install -y -q --no-install-recommends coturn; } \
       || warn "coturn not installed: calls only work at home for now (sudo apt install coturn, then sudo speech-spark update)"
+  fi
+fi
+# Fernzugang → Bildschirm (app/panel/fernbild.py, --fernbild, on the computer with the panel): guacd from the
+# distribution's packages (its security updates come with apt), only the releases fernbild was tested with
+# (GUACD_OK), only VNC and RDP. The distribution's guacd.service is masked before installing, so only our own unit
+# below runs it, on 127.0.0.1:4822 and able to reach nothing but 127.0.0.1. Once there, an update keeps it; missing
+# guacd only means no screen (never stops an update).
+GUACD_OK='^1\.(3|4|5)\.'
+WITH_FERNBILD=$FERNBILD_PICK; [ -x /usr/sbin/guacd ] && WITH_FERNBILD=1
+if [ "$WITH_FERNBILD" = 1 ]; then
+  systemctl mask --now guacd.service >/dev/null 2>&1 || true
+  if ! [ -x /usr/sbin/guacd ] || ! dpkg -s libguac-client-vnc0 >/dev/null 2>&1; then
+    { apt-get -o DPkg::Lock::Timeout=120 update -q && \
+      apt-get -o DPkg::Lock::Timeout=120 install -y -q --no-install-recommends guacd libguac-client-vnc0 libguac-client-rdp0; } \
+      || warn "guacd not installed: no screen in Fernzugang for now (sudo ./install.sh --fernbild again later)"
+  fi
+  GUACD_V=$(dpkg-query -W -f '${Version}' guacd 2>/dev/null || true)
+  if [ -n "$GUACD_V" ] && ! printf '%s' "$GUACD_V" | grep -Eq "$GUACD_OK"; then
+    warn "guacd $GUACD_V is not a release Fernzugang → Bildschirm was tested with (1.3 to 1.5): the screen may not work"
   fi
 fi
 PY=$(command -v python3)
@@ -1003,7 +1023,7 @@ fi
 {
   printf '%s ALL=(root) NOPASSWD: ' "$SVC_USER"
   first=1
-  for u in asr asr-engine tts tts-engine bild musik tts-design turn llm llmtor sehen helfer; do
+  for u in asr asr-engine tts tts-engine bild musik tts-design turn llm llmtor sehen helfer guacd; do
     for a in start stop restart; do
       [ $first = 1 ] || printf ', '
       printf '/usr/bin/systemctl %s speech-spark-%s' "$a" "$u"; first=0
@@ -1310,6 +1330,48 @@ RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
 CapabilityBoundingSet=
 LockPersonality=yes
 EOF
+
+# guacd for Fernzugang → Bildschirm (fernbild.py): never enabled here, the panel starts it when a screen opens. Only
+# 127.0.0.1:4822, and IPAddressDeny keeps it from reaching anything but 127.0.0.1 (the panel's one local port of
+# each session); a user of its own (DynamicUser), nothing writable, no recording, no drive.
+if [ "$WITH_FERNBILD" = 1 ] && [ -x /usr/sbin/guacd ]; then
+cat >/etc/systemd/system/speech-spark-guacd.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: guacd for the remote screen (127.0.0.1 only)
+After=network-online.target
+ConditionPathExists=/usr/sbin/guacd
+
+[Service]
+LogNamespace=speech-spark
+DynamicUser=yes
+ExecStart=/usr/sbin/guacd -f -b 127.0.0.1 -l 4822 -L info
+Restart=on-failure
+RestartSec=5
+MemoryMax=1G
+CPUQuota=200%
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+IPAddressDeny=any
+IPAddressAllow=localhost
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+CapabilityBoundingSet=
+UMask=0077
+EOF
+fi
 
 # Bilder malen (bild_server.py): only on 127.0.0.1, the panel is its only caller. It starts the picture engine
 # (sd-server) as its own child only while painting and stops it after image.idle_min minutes. No MemoryMax= for

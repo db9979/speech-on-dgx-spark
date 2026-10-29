@@ -6,6 +6,8 @@
     curl -fsSL https://<panel>/fernzugang/anker | sudo python3 - entfernen                  the same without the program
     spark-anker zustand                                                                     set up? which panel?
     curl -fsSL https://<panel>/fernzugang/anker | python3 - hilfe https://<panel>           Spontanhilfe (S3): once
+    curl -fsSL https://<panel>/fernzugang/anker | sudo python3 - bildschirm                 the screen too (stage 4)
+    sudo spark-anker bildschirm aus                                                         the screen off again
 
 It calls the panel by itself (WebSocket over TLS, the panel's normal https address, no port opened here) and passes
 bytes only between the panel and this server's own sshd on 127.0.0.1:22. SSH runs end to end between the panel and
@@ -32,6 +34,18 @@ launchd and dscl: the hidden user `spark` (number below 500, home /var/spark) an
 (AllowUsers spark@127.0.0.1, no passwords) and the list „nur diese Benutzer“ with spark alone; removing switches it
 off again. When it was on, spark joins an existing list and nothing else of sshd changes. Missing host keys are made
 with `ssh-keygen -A`.
+
+The screen (stage 4, `bildschirm`, as root, after `einrichten`): the anchor looks at the graphical session and sets
+up what fits, always only on 127.0.0.1 and with a random password the panel makes and keeps in its vault:
+- X11: x11vnc, started by systemd only when the panel opens the screen (socket spark-anker-bild on 127.0.0.1:5930,
+  password file /etc/spark-anker/bild.pw, root only); x11vnc is installed with apt when it is missing;
+- GNOME on Wayland: gnome-remote-desktop as RDP (`grdctl --system`, its own self-signed certificate, the user
+  spark-bild with that password); RDP listens on port 3389 like GNOME always does;
+- other Wayland desktops (wlroots: Sway, Hyprland …): wayvnc in the user's session (a user unit, 127.0.0.1:5930);
+- macOS: the built-in Bildschirmfreigabe on port 5900 (switched on by the person; the macOS user and password are
+  asked in the panel for every session and never stored).
+The anchor then opens channels to that one port too (the panel asks with „ziel“: „bild“), never to another address.
+`bildschirm aus` and `entfernen` take it all away again.
 
 Spontanhilfe S3 (`hilfe`, never as root, nothing set up): the person types the number and her first name on this
 terminal, the program opens WSS /api/hilfe/shell (no key, no Origin) and waits. When the admin accepts, it asks once
@@ -67,7 +81,7 @@ import threading
 import time
 import urllib.parse
 
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 LIB = "/usr/local/lib/spark-anker"
 PROG = LIB + "/spark-anker.py"
 BIN = "/usr/local/bin/spark-anker"
@@ -87,6 +101,14 @@ MAX_MSG = 64 * 1024       # the panel takes no bigger message
 CHUNK = 32 * 1024
 PING_S = 25               # keeps the reverse proxy from closing a quiet connection
 MARK = "spark-fernzugang-"  # the comment of the panel's line in authorized_keys
+BILD_PORT = 5930          # x11vnc and wayvnc: only on 127.0.0.1
+BILD = {"x11vnc": BILD_PORT, "wayvnc": BILD_PORT, "grd": 3389, "mac": 5900}   # the screen's one local port per kind
+BILD_PW = ETC + "/bild.pw"
+BILD_UNITS = ("/etc/systemd/system/spark-anker-bild.socket", "/etc/systemd/system/spark-anker-bild@.service")
+WAYVNC_UNIT = "/etc/systemd/user/spark-anker-wayvnc.service"
+WAYVNC_CONF = ETC + "/wayvnc.conf"
+RDP_USER = "spark-bild"
+RDP_FILES = (ETC + "/rdp.key", ETC + "/rdp.crt")
 WORD = re.compile(r"[^A-Za-z0-9._\- ()/+]")
 
 UNIT_RUN = """[Unit]
@@ -128,6 +150,43 @@ RestrictAddressFamilies=AF_INET AF_INET6
 [Install]
 WantedBy=multi-user.target
 """
+UNIT_BILD_SOCKET = """[Unit]
+Description=Spark-Anker: Bildschirm (x11vnc nur auf 127.0.0.1, erst wenn das Panel ihn öffnet)
+
+[Socket]
+ListenStream=127.0.0.1:5930
+Accept=yes
+MaxConnections=2
+
+[Install]
+WantedBy=sockets.target
+"""
+# x11vnc finds the display of the person signed in (-find, as root: her X authority) and reads the password file;
+# no PrivateTmp/ProtectHome: it needs /tmp/.X11-unix and that authority
+UNIT_BILD = """[Unit]
+Description=Spark-Anker: x11vnc für eine Bildschirm-Sitzung des Panels
+
+[Service]
+ExecStart=/usr/bin/x11vnc -inetd -find -passwdfile /etc/spark-anker/bild.pw -shared -noxdamage -nolookup -quiet
+StandardInput=socket
+StandardError=journal
+NoNewPrivileges=yes
+"""
+UNIT_WAYVNC = """[Unit]
+Description=Spark-Anker: wayvnc nur auf 127.0.0.1 für das Panel
+ConditionUser={user}
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+ExecStart=/usr/bin/wayvnc -C /etc/spark-anker/wayvnc.conf
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=graphical-session.target
+"""
+WAYVNC_TEXT = "address=127.0.0.1\nport={port}\nenable_auth=true\nrelax_encryption=true\nusername=spark\npassword={pw}\n"
 UNIT_PATH = """[Unit]
 Description=Spark-Anker: Abbau, wenn das Panel ihn verlangt
 
@@ -389,9 +448,10 @@ class Lauf:
     """One connection to the panel: channels to the own sshd, nothing else. One thread for everything (a TLS socket
     is never read and written from two threads at once)."""
 
-    def __init__(self, ws):
+    def __init__(self, ws, bild=""):
         self.ws = ws
-        self.kanaele = {}      # n -> socket to the own sshd
+        self.bild = bild if bild in BILD else ""   # the screen's kind (`bildschirm`), its one port in BILD
+        self.kanaele = {}      # n -> socket to the own sshd (or the screen's port)
 
     def _close(self, n, tell):
         s = self.kanaele.pop(n, None)
@@ -409,8 +469,14 @@ class Lauf:
         if m.get("typ") == "abbauen":
             return "abbauen"
         if m.get("typ") == "auf" and isinstance(n, int) and 1 <= n < 64 and n not in self.kanaele:
+            target = SSHD
+            if m.get("ziel") == "bild":          # the screen: only its one port on 127.0.0.1, only when set up
+                if not self.bild:
+                    self.ws.send_json({"typ": "fehler", "kanal": n})
+                    return None
+                target = ("127.0.0.1", BILD[self.bild])
             try:
-                s = socket.create_connection(SSHD, timeout=10)   # only the own sshd, never another address
+                s = socket.create_connection(target, timeout=10)   # only these, never another address
                 s.settimeout(None)
             except OSError:
                 self.ws.send_json({"typ": "fehler", "kanal": n})
@@ -422,7 +488,7 @@ class Lauf:
         return None
 
     def run(self):
-        self.ws.send_json({"typ": "hallo", "os": os_name(), "version": VERSION})
+        self.ws.send_json({"typ": "hallo", "os": os_name(), "version": VERSION, "bild": self.bild})
         last = time.monotonic()
         try:
             while True:
@@ -484,7 +550,7 @@ def cmd_run(args):
             ws = WS.open(conf["url"], conf.get("fp") or "", "/api/fernzugang/anker", conf["key"])
             say("mit dem Panel verbunden")
             pause = 5
-            if Lauf(ws).run() == "abbauen":
+            if Lauf(ws, str(conf.get("bild") or "")).run() == "abbauen":
                 say("das Panel verlangt den Abbau")
                 try:
                     with open(Ctx().s.flag, "w") as f:   # spark-anker-abbau.path or the launchd job (root) runs `entfernen`
@@ -670,6 +736,7 @@ def linux_start(ctx, runner):
 
 def linux_stop(ctx, conf):
     ctx.run(["systemctl", "disable", "--now", "spark-anker.service", "spark-anker-abbau.path"])
+    bild_off(ctx, conf)
 
 
 def linux_after(ctx, conf, home_gone):
@@ -944,7 +1011,8 @@ def cmd_setup(args, code_reader=read_code, run=run_cmd, ctx=None):
 def remove_paths(root="/", s=None):
     """Every path the anchor made (the user spark's home only when the anchor made the user)."""
     s = s or LINUX
-    return [here(root, p) for p in (*s.services, s.bin, s.lib, s.etc, s.var)]
+    extra = (*BILD_UNITS, WAYVNC_UNIT) if s is LINUX else ()
+    return [here(root, p) for p in (*s.services, *extra, s.bin, s.lib, s.etc, s.var)]
 
 
 def strip_key(path):
@@ -993,6 +1061,139 @@ def cmd_remove(args, root="/", run=run_cmd, tell=True, home=None, ctx=None):
         except (OSError, Fehler):
             say("Panel nicht erreicht; dort „Entfernen“ wählen")
     s.last(ctx, conf)
+    return 0
+
+
+# ---------------------------------------------------------------- the screen (stage 4)
+def linux_bild_art(ctx):
+    """(kind, user) of the graphical session signed in here: X11 → x11vnc, GNOME on Wayland → grd, other Wayland →
+    wayvnc; the active one first. None of them: a fixed sentence, nothing set up."""
+    found = []
+    for line in ctx.out(["loginctl", "list-sessions", "--no-legend"]).splitlines():
+        sid = line.split()[0] if line.split() else ""
+        if not re.fullmatch(r"[A-Za-z0-9]{1,20}", sid):
+            continue
+        d = dict(x.split("=", 1) for x in ctx.out(["loginctl", "show-session", sid, "-p", "Type", "-p", "Desktop",
+                                                   "-p", "Name", "-p", "Class", "-p", "Active"]).splitlines() if "=" in x)
+        if d.get("Class") == "user" and d.get("Type") in ("x11", "wayland") and re.fullmatch(r"[a-z_][a-z0-9_.\-]{0,31}", d.get("Name", "")):
+            found.append((d.get("Active") != "yes", d["Type"], d.get("Desktop", "").lower(), d["Name"]))
+    if not found:
+        raise Fehler("keine grafische Sitzung angemeldet (ein Server ohne Bildschirm?). Erst am Gerät anmelden, dann "
+                     "den Befehl noch einmal. Es wurde nichts eingerichtet.")
+    _, typ, desk, user = sorted(found)[0]
+    if typ == "x11":
+        return "x11vnc", user
+    return ("grd" if "gnome" in desk else "wayvnc"), user
+
+
+def bild_off(ctx, conf):
+    """Everything of the screen away again (`bildschirm aus`, `entfernen`): units, files, GNOME's RDP as it was."""
+    art = conf.get("bild")
+    if art == "x11vnc":
+        ctx.run(["systemctl", "disable", "--now", "spark-anker-bild.socket"])
+    if art == "wayvnc":
+        ctx.run(["systemctl", "--global", "disable", "spark-anker-wayvnc.service"])
+    if art == "grd":
+        ctx.run(["grdctl", "--system", "rdp", "disable"])
+        ctx.run(["grdctl", "--system", "rdp", "clear-credentials"])
+        if conf.get("grd_neu"):
+            ctx.run(["systemctl", "disable", "--now", "gnome-remote-desktop.service"])
+    for p in (*BILD_UNITS, WAYVNC_UNIT, BILD_PW, WAYVNC_CONF, *RDP_FILES):
+        with contextlib.suppress(OSError):
+            os.remove(ctx.path(p))
+
+
+def _restart_anchor(ctx):
+    if ctx.s is MAC:
+        ctx.run(["/bin/launchctl", "kickstart", "-k", "system/" + MAC_JOB])
+    else:
+        ctx.run(["systemctl", "restart", "spark-anker.service"])
+
+
+def cmd_screen(args, run=run_cmd, ctx=None):
+    """`bildschirm [aus]`: the screen of this system for the panel (stage 4), or off again."""
+    ctx = ctx or Ctx(run=run)
+    s = ctx.s
+    if ctx.euid() != 0:
+        say("bitte mit sudo")
+        return 1
+    conf = load(ctx.root, s)
+    if not conf:
+        say("erst einrichten (der Befehl aus dem Panel unter System koppeln)")
+        return 1
+    if getattr(args, "aus", "") == "aus":
+        bild_off(ctx, conf)
+        conf.pop("bild", None)
+        conf.pop("grd_neu", None)
+        write(ctx.path(s.conf), json.dumps(conf, indent=1), 0o640)
+        with contextlib.suppress(OSError, Fehler):
+            http_call(conf["url"], conf.get("fp") or "", "DELETE", "/api/fernzugang/anker/bildschirm", None, conf["key"], 10)
+        _restart_anchor(ctx)
+        say("Bildschirm aus: nichts davon ist mehr da")
+        return 0
+    if s is MAC:
+        art, user = "mac", ""
+        if ctx.run(["/bin/launchctl", "print", "system/com.apple.screensharing"]):
+            raise Fehler("die Bildschirmfreigabe ist aus. Systemeinstellungen → Allgemein → Teilen → „Bildschirmfreigabe“ "
+                         "einschalten, dann den Befehl noch einmal. Es wurde nichts geändert.")
+    else:
+        art, user = linux_bild_art(ctx)
+    status, raw = http_call(conf["url"], conf.get("fp") or "", "POST", "/api/fernzugang/anker/bildschirm", {"art": art}, conf["key"])
+    if status != 200:
+        raise Fehler({404: "Bildschirm im Panel ist aus (Funktionen → Fernzugang zu Servern → Bildschirm)",
+                      403: "das Panel kennt diesen Anker nicht mehr"}.get(status, f"Panel antwortet {status}"))
+    d = json.loads(raw)
+    pw = str(d.get("passwort") or "")
+    if art != "mac" and not re.fullmatch(r"[A-Za-z0-9]{8,64}", pw):
+        raise Fehler("das Panel gab kein Passwort")
+    bild_off(ctx, conf)                     # a kind set up before goes first
+    if art == "x11vnc":
+        if not shutil.which("x11vnc") and ctx.root == "/" and ctx.run(["apt-get", "install", "-y", "-q", "x11vnc"]):
+            raise Fehler("x11vnc ließ sich nicht installieren (`sudo apt install x11vnc`). Es wurde nichts geändert.")
+        write(ctx.path(BILD_PW), pw + "\n", 0o600)
+        write(ctx.path(BILD_UNITS[0]), UNIT_BILD_SOCKET)
+        write(ctx.path(BILD_UNITS[1]), UNIT_BILD)
+        ctx.run(["systemctl", "daemon-reload"])
+        if ctx.run(["systemctl", "enable", "--now", "spark-anker-bild.socket"]):
+            raise Fehler("systemd ließ spark-anker-bild.socket nicht starten (journalctl -u spark-anker-bild.socket)")
+    elif art == "wayvnc":
+        if not shutil.which("wayvnc") and ctx.root == "/" and ctx.run(["apt-get", "install", "-y", "-q", "wayvnc"]):
+            raise Fehler("wayvnc ließ sich nicht installieren (`sudo apt install wayvnc`). Es wurde nichts geändert.")
+        ids = ctx.ids(user)
+        write(ctx.path(WAYVNC_CONF), WAYVNC_TEXT.format(port=BILD_PORT, pw=pw), 0o600)
+        if ids:
+            ctx.chown(ctx.path(WAYVNC_CONF), ids[0], ids[1])
+        write(ctx.path(WAYVNC_UNIT), UNIT_WAYVNC.format(user=user))
+        ctx.run(["systemctl", "--global", "enable", "spark-anker-wayvnc.service"])
+    elif art == "grd":
+        if ctx.run(["grdctl", "--system", "--help"]):
+            raise Fehler("gnome-remote-desktop mit `grdctl --system` fehlt (ab GNOME 46). Es wurde nichts geändert.")
+        conf["grd_neu"] = bool(ctx.run(["systemctl", "is-enabled", "--quiet", "gnome-remote-desktop.service"]))
+        key, crt = (ctx.path(p) for p in RDP_FILES)
+        os.makedirs(os.path.dirname(key), exist_ok=True)
+        if ctx.run(["openssl", "req", "-x509", "-newkey", "rsa:3072", "-nodes", "-days", "3650", "-subj",
+                    "/CN=spark-anker", "-keyout", key, "-out", crt]):
+            raise Fehler("openssl ließ kein Zertifikat für RDP machen. Es wurde nichts geändert.")
+        ids = ctx.ids("gnome-remote-desktop")
+        for p in (key, crt):
+            if ids:
+                ctx.chown(p, ids[0], ids[1])
+            with contextlib.suppress(OSError):
+                os.chmod(p, 0o600)
+        for cmd in (["grdctl", "--system", "rdp", "set-tls-key", key], ["grdctl", "--system", "rdp", "set-tls-cert", crt],
+                    ["grdctl", "--system", "rdp", "set-credentials", RDP_USER, pw], ["grdctl", "--system", "rdp", "enable"],
+                    ["systemctl", "enable", "--now", "gnome-remote-desktop.service"]):
+            if ctx.run(cmd):
+                raise Fehler(f"`{cmd[0]} {' '.join(cmd[1:4])}` ging nicht. `sudo spark-anker bildschirm aus` räumt auf.")
+    pw = ""
+    conf["bild"] = art
+    write(ctx.path(s.conf), json.dumps(conf, indent=1), 0o640)
+    _restart_anchor(ctx)
+    say({"x11vnc": "Bildschirm eingerichtet: x11vnc startet nur, wenn das Panel den Bildschirm öffnet (127.0.0.1:5930)",
+         "wayvnc": f"Bildschirm eingerichtet: wayvnc in der Sitzung von {user} (127.0.0.1:5930), ab der nächsten Anmeldung",
+         "grd": "Bildschirm eingerichtet: GNOME-Remotedesktop (RDP) mit eigenem Zertifikat und Passwort aus dem Panel",
+         "mac": "Bildschirm eingerichtet: die Bildschirmfreigabe von macOS; Benutzer und Passwort fragt das Panel jedes Mal"}[art])
+    say("aus: sudo spark-anker bildschirm aus")
     return 0
 
 
@@ -1299,13 +1500,15 @@ def main(argv=None, system=None):
     r.add_argument("--vom-panel", action="store_true", help=argparse.SUPPRESS)
     sub.add_parser("lauf", help="der Dienst (startet systemd bzw. launchd)")
     sub.add_parser("zustand", help="eingerichtet? welches Panel?")
+    b = sub.add_parser("bildschirm", help="den Bildschirm für das Panel einrichten (oder `bildschirm aus`)")
+    b.add_argument("aus", nargs="?", default="", choices=["", "aus"], help="aus: alles vom Bildschirm wieder weg")
     h = sub.add_parser("hilfe", help="Spontanhilfe: einmal, in diesem Terminal, ohne sudo (fragt die Nummer)")
     h.add_argument("adresse", help="https-Adresse des Panels")
     h.add_argument("--fp", default="", help="SHA-256 des Panel-Zertifikats (steht im Befehl aus dem Panel)")
     args = p.parse_args(argv)
     try:
         return {"einrichten": cmd_setup, "entfernen": cmd_remove, "lauf": cmd_run, "zustand": cmd_state,
-                "hilfe": cmd_help}[args.cmd](args)
+                "hilfe": cmd_help, "bildschirm": cmd_screen}[args.cmd](args)
     except Fehler as e:
         say(str(e))
         return 1

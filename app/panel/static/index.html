@@ -278,9 +278,11 @@
         <label for="chat.fernzugang_entsperrt_min">Ein Code entsperrt die Seite für (Minuten)</label><input class="num" id="chat.fernzugang_entsperrt_min" type="number" min="5" max="120"><div class="fh">5 bis 120, Standard 60. Nur diese Anmeldung in diesem Browser; Koppeln und Entfernen fragen trotzdem jedes Mal.</div>
         <label for="chat.fernzugang_datei_mb">Größte Datei beim Laden und Hochladen (MB)</label><input class="num" id="chat.fernzugang_datei_mb" type="number" min="1" max="4096"><div class="fh">1 bis 4096, Standard 100.</div>
         <label for="chat.fernzugang_offline_min">Dienst-Wächter meldet einen Server nach (Minuten offline)</label><input class="num" id="chat.fernzugang_offline_min" type="number" min="5" max="1440"><div class="fh">5 bis 1440, Standard 30.</div>
+        <div class="setrow"><div class="lbl"><b>Bildschirm</b><span>Den Bildschirm eines gekoppelten Systems im Browser, über seinen Anker und guacd auf dem Spark. Erst nur ansehen, Steuern mit einem Klick.</span></div><label class="tgl"><input type="checkbox" id="chat.fernbild"><i></i></label></div>
+        <div data-show="chat.fernbild" style="margin-left:18px"><div class="setrow"><div class="lbl"><b>Zwischenablage beim Bildschirm</b><span>Text zwischen Browser und System austauschen, nur während „Steuern“. Aus: keine Zwischenablage in beide Richtungen.</span></div><label class="tgl"><input type="checkbox" id="chat.fernbild_zwischenablage"><i></i></label></div></div>
         <div class="setrow"><div class="lbl"><b>Spontanhilfe</b><span>Einmal helfen: die Person teilt auf /hilfe ihren Bildschirm, ohne Installation. Nur Admins, im Reiter Spontanhilfe der entsperrten Seite.</span></div><label class="tgl"><input type="checkbox" id="chat.spontanhilfe"><i></i></label></div>
         <div data-show="chat.spontanhilfe"><label for="chat.spontanhilfe_max_min">Höchstdauer einer Hilfe (Minuten)</label><input class="num" id="chat.spontanhilfe_max_min" type="number" min="15" max="720"><div class="fh">15 bis 720, Standard 180. Eine Hilfe beginnt mit 60 Minuten, „Verlängern“ gibt je 60 mehr bis hierher.</div></div>
-        <div class="fh">Koppeln und die Shell öffnen unter Fernzugang → Systeme, helfen unter Fernzugang → Spontanhilfe.</div>
+        <div class="fh">Koppeln, die Shell und den Bildschirm öffnen unter Fernzugang → Systeme, helfen unter Fernzugang → Spontanhilfe.</div>
       </div>
       <div class="setrow"><div class="lbl"><b>Einstellungs-Assistent</b><span>Fehler, 👎 und unklare Fragen werden Fälle mit Vorschlägen aus einem festen Katalog. Übernehmen nur du, unter Zustand → Verbessern.</span></div><label class="tgl"><input type="checkbox" id="chat.berater"><i></i></label></div>
       <div class="setrow" data-show="chat.berater" style="margin-left:18px"><div class="lbl"><b>👍/👎 unter Antworten</b><span>Profile können eine Antwort bewerten (fünf Gründe, kurzer Text) oder „Das war falsch“ sagen.</span></div><label class="tgl"><input type="checkbox" id="chat.bewerten"><i></i></label></div>
@@ -1161,7 +1163,7 @@
     <div class="mut" id="shmsg" role="status"></div>
   </div>
   <div class="card fzweg" id="fzweg" hidden><div><b>Die Shell läuft im eigenen Fenster.</b><div class="fh"><span id="fzwegname"></span> · Schließt du das Fenster, endet die Sitzung.</div></div><div class="row"><button class="b p" type="button" id="fzzurueck">Zurückholen</button><button class="b danger" type="button" id="fzwegstop">Trennen</button></div></div>
-  <div class="fzview" id="fzview" hidden>
+  <div class="fzview" id="fzview" hidden><div class="fztip" id="fztip" role="tooltip" hidden></div>
     <div class="fzvollbar" id="fzvollbar" role="status"><span class="fzrec"></span><span id="fzvolltext"></span></div>
     <div class="fzvollhint" id="fzvollhint" role="status" hidden>Alle Tasten aktiv · Esc 2 s halten zum Verlassen</div>
     <button class="fzdrawertab" type="button" id="fzdrawertab" aria-expanded="false" aria-controls="fzside" title="Assistent (Strg+Umschalt+Leertaste)" aria-label="Assistent">‹</button>
@@ -1202,6 +1204,11 @@
         <div class="card"><h3>Diese Dateien-Sitzung</h3><dl class="fzfacts" id="fzfinfo"></dl><div class="row"><button class="b danger" type="button" id="fzfstop">Schließen</button></div></div>
       </div>
     </div>
+  </div>
+  <div class="fzbild" id="fzbild" hidden>
+    <div class="row fbbar"><button class="b p" type="button" id="fbsteuern" aria-pressed="false">Steuern</button><span class="fh" id="fbstand">Nur ansehen: Maus und Tasten gehen nicht zum System.</span><span class="fzfill"></span><button class="b" type="button" id="fbablage" hidden>Zwischenablage senden</button><span class="fh" id="fbrate" aria-live="off"></span><button class="b" type="button" id="fbvoll">Vollbild</button><button class="b danger" type="button" id="fbtrennen">Trennen</button></div>
+    <div class="note" id="fblangsam" hidden>Langsame Verbindung. Über den Proxy der Synology kommen nur etwa 50 bis 70 KB/s an; „Sparsam“ beim Öffnen hilft, von unterwegs ist der direkte https-Zugang deutlich schneller.</div>
+    <div class="fbschirm" id="fbschirm" tabindex="0" aria-label="Bildschirm des Systems"></div>
   </div>
   <div class="mut" id="fzmsg" role="status"></div>
 </div></section>
@@ -1369,6 +1376,15 @@
   <div class="row"><button class="b p" type="button" id="fzgo">Koppeln (Code)</button></div>
   <div id="fzcode"></div>
   <details class="fzpruef"><summary>Was das Panel aufschreibt</summary><div class="fh">Nur feste Wörter und Zahlen, nie Tasten oder Ausgaben. Beispiel:</div><pre class="fzcmd" id="fzlog"></pre></details>
+</div></div>
+<div id="fbmodal" class="modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="fbhead"><div class="card modalcard fzblattkarte">
+  <div class="rowin"><h2 id="fbhead">Bildschirm von <span id="fbname"></span></h2><button class="b" type="button" id="fbab">Abbrechen</button></div>
+  <div class="fh">Zuerst nur ansehen; Maus und Tasten gehen erst nach „Steuern“ zum System. Nichts wird aufgezeichnet.</div>
+  <div id="fbmacrow" hidden><div class="fh">Die Anmeldung am Mac, nur für diese Sitzung: wird nicht gespeichert und nie ins Log geschrieben.</div>
+    <input id="fbmacuser" type="text" maxlength="64" autocomplete="off" placeholder="Benutzer am Mac" aria-label="Benutzer am Mac">
+    <input id="fbmacpw" type="password" maxlength="256" autocomplete="off" placeholder="Passwort am Mac" aria-label="Passwort am Mac"></div>
+  <label class="chk"><input type="checkbox" id="fbsparsam"> Sparsam: weniger Farben (16 Bit) für eine langsame Verbindung</label>
+  <div class="row"><button class="b p" type="button" id="fbgo">Bildschirm öffnen</button></div>
 </div></div>
 <div id="fzverlaufmodal" class="modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="fzvhead"><div class="card modalcard fzblattkarte">
   <div class="rowin"><h2 id="fzvhead">Verlauf</h2><button class="b" type="button" id="fzvzu">Schließen</button></div>
@@ -1606,6 +1622,7 @@
 <script src="/static/js/modelle.js"></script>
 <script src="/static/js/werkstatt.js"></script>
 <script src="/static/js/fernzugang.js"></script>
+<script src="/static/js/fernbild.js"></script>
 <script src="/static/js/spontanhilfe.js"></script>
 <script src="/static/js/praxistest.js"></script>
 <script src="/static/js/seite.js"></script>

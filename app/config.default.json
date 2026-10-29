@@ -388,6 +388,8 @@
     "spontanhilfe": false,
     "spontanhilfe_max_min": 180,
     "fernzugang_datei_mb": 100,
+    "fernbild": false,
+    "fernbild_zwischenablage": false,
     "angriffsprobe": false,
     "werkstatt_stunde": 3,
     "modelle_eigene": false,

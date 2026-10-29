@@ -100,6 +100,7 @@ flowchart TB
 | Wyoming in the panel | 31003 | Home Assistant Assist |
 | Phone in the panel | UDP 31060, sound UDP 31062–31068 | Calling the Spark (SIP and RTP only with the telephone system in the home network) |
 | `speech-spark-turn` | 3478, relay 49160–49200 | Relay for calls from outside (coturn), only with its switch on |
+| `speech-spark-guacd` | 4822 (local only) | guacd for the screen in Remote access, only with `--fernbild`; the panel starts it when a screen opens, it reaches only 127.0.0.1 |
 | `speech-spark-llmtor` → `speech-spark-llm` | 31006 → 31016 (local only) | Own language model (vLLM) behind the LLM-Tor; image understanding `speech-spark-sehen` on 31017 and helper model `speech-spark-helfer` on 31018 on demand |
 | `speech-spark-bild` | 31005 → 31015 (local only) | Painting and changing pictures (FLUX.2 klein) |
 | `speech-spark-musik` | 31004 → 31014 (local only) | Making music (ACE-Step 1.5), the engine only while making a song |
@@ -162,6 +163,7 @@ Every request passes here first: size, origin, kill switch, login, profile and r
 | `app/panel/coadmin.py` | Profiles as admins. |
 | `app/panel/core.py` | Shared panel helpers: paths, logins (admin password, profiles) and small system calls. |
 | `app/panel/features.py` | One description per function. |
+| `app/panel/fernbild.py` | Fernzugang, Bildschirm: the screen of a paired system in the browser, through the same anchor pipe as its shell. |
 | `app/panel/ferndateien.py` | Fernzugang, Dateien: the files of a paired remote server in the browser over SFTP, inside one SSH connection like the shell's (fernzugang.aufbauen with art " … |
 | `app/panel/fernzugang.py` | Fernzugang: a server elsewhere (a VPS, a NAS at friends') calls the panel by itself and the admin works in its shell in the browser, like Raspberry Pi Connec … |
 | `app/panel/guard.py` | Protection of the logins: lockout after wrong passwords or PINs, requests from foreign pages, and the change log (who changed what, from where). |

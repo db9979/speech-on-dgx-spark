@@ -119,6 +119,12 @@ sudo ./install.sh --werkstatt
 sudo speech-spark werkstatt status
 ```
 
+With `--fernbild` (on the computer with the panel) guacd for the screen in Remote access comes along: the distribution's packages `guacd`, `libguac-client-vnc0` and `libguac-client-rdp0` (tested with 1.3 to 1.5, security updates come with apt), their own unit `guacd.service` stays masked; only the unit `speech-spark-guacd` runs, on 127.0.0.1:4822, started by the panel when a screen opens. Once there, an update keeps it. Then switch on Features → Remote access to servers → Screen and run `sudo spark-anker bildschirm` once on the system.
+
+```bash
+sudo ./install.sh --fernbild
+```
+
 ## Uninstalling
 
 ```bash

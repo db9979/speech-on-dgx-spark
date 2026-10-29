@@ -13829,6 +13829,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Zugang",
 "title": "Zugang",
+"text": "- Bildschirm im Fernzugang (Funktionen → Zugang → „Bildschirm im Fernzugang“; baut auf „Fernzugang zu Servern“): Den Bildschirm eines gekoppelten Systems im Browser, unter Fernzugang → Systeme mit „Bildschirm“: Linux mit X11 (x11vnc), GNOME auf Wayland (gnome-remote-desktop) oder andere Wayland-Oberflächen (wayvnc) und macOS (die eingebaute Bildsch …"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Zugang",
+"title": "Zugang",
+"text": "- Zwischenablage beim Bildschirm (Funktionen → Zugang → „Zwischenablage beim Bildschirm“; baut auf „Bildschirm im Fernzugang“): Text zwischen deinem Browser und dem System austauschen, während du „Steuern“ hast: kopierst du dort etwas, landet es in deiner Zwischenablage; „Zwischenablage senden“ schickt deine hinüber."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Zugang",
+"title": "Zugang",
 "text": "- Angriffsprobe (Funktionen → Zugang → „Angriffsprobe“; baut auf „Werkstatt“): Misst auf Knopfdruck, wie oft das laufende Sprachmodell einem Befehl in fremdem Text folgen würde (Dokument, Mail, Webseite, Kalender, Smart Home). <!-- /funktionen:liste -->"
 },
 {
@@ -13982,6 +13998,14 @@
 "head": "Musik machen (optional)",
 "title": "Musik machen (optional)",
 "text": "Mit --werkstatt (auf dem Modell-Rechner) kommt die Werkstatt dazu: OpenCode als eine Datei aus der npm-Registry, Version und SHA-512 fest in app/werkstatt.py, nach /opt/speech-spark/werkstatt; dazu der Nutzer spark-werkstatt mit dem Ordner /var/lib/spark-werkstatt/arbeit und die Einheit speech-spark-werkstatt. Ohne die Option wird nichts davon geladen; einmal da, behält ein Update sie. Danach Funktionen → Werkstatt einschalten."
+},
+{
+"lang": "de",
+"src": "installation",
+"file": "Installation im Detail",
+"head": "Musik machen (optional)",
+"title": "Musik machen (optional)",
+"text": "Mit --fernbild (auf dem Rechner mit dem Panel) kommt guacd für Fernzugang → Bildschirm dazu: die Pakete guacd, libguac-client-vnc0 und libguac-client-rdp0 der Distribution (getestet mit 1.3 bis 1.5, Sicherheits-Updates kommen mit apt), deren eigene Einheit guacd.service bleibt gesperrt; es läuft nur die Einheit speech-spark-guacd auf 127.0.0.1:4822, die das Panel startet, wenn ein Bildschirm aufgeht. Einmal da, behält ein Update sie. Danach Funktionen → Fernzugang zu Servern → Bildschirm einschalten und auf dem System einmal sudo spark-anker bildschirm."
 },
 {
 "lang": "de",
@@ -29549,6 +29573,22 @@
 "file": "Assistant and panel",
 "head": "Access",
 "title": "Access",
+"text": "- Screen in remote access (Features → Access → \"Screen in remote access\"; builds on \"Remote access to servers\"): The screen of a paired system in the browser, under Remote access → Systems with \"Screen\": Linux with X11 (x11vnc), GNOME on Wayland (gnome-remote-desktop) or other Wayland desktops (wayvnc) and macOS (the built-in screen sharing)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Access",
+"title": "Access",
+"text": "- Clipboard with the screen (Features → Access → \"Clipboard with the screen\"; builds on \"Screen in remote access\"): Exchange text between your browser and the system while you have \"Control\": what you copy there lands in your clipboard; \"Send clipboard\" sends yours over."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Access",
+"title": "Access",
 "text": "- Attack probe (Features → Access → \"Attack probe\"; builds on \"Workshop\"): Measures on a button how often the running language model would follow an order in outside text (document, mail, web page, calendar, smart home). <!-- /funktionen:liste -->"
 },
 {
@@ -29686,6 +29726,14 @@
 "head": "Making music (optional)",
 "title": "Making music (optional)",
 "text": "With --werkstatt (on the model computer) the workshop comes along: OpenCode as one file from the npm registry, version and SHA-512 fixed in app/werkstatt.py, into /opt/speech-spark/werkstatt; plus the user spark-werkstatt with the folder /var/lib/spark-werkstatt/arbeit and the unit speech-spark-werkstatt. Without the option nothing of it is fetched; once there, an update keeps it. Then switch on Features → Workshop."
+},
+{
+"lang": "en",
+"src": "installation",
+"file": "Installation in detail",
+"head": "Making music (optional)",
+"title": "Making music (optional)",
+"text": "With --fernbild (on the computer with the panel) guacd for the screen in Remote access comes along: the distribution's packages guacd, libguac-client-vnc0 and libguac-client-rdp0 (tested with 1.3 to 1.5, security updates come with apt), their own unit guacd.service stays masked; only the unit speech-spark-guacd runs, on 127.0.0.1:4822, started by the panel when a screen opens. Once there, an update keeps it. Then switch on Features → Remote access to servers → Screen and run sudo spark-anker bildschirm once on the system."
 },
 {
 "lang": "en",

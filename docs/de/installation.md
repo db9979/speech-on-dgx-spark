@@ -119,6 +119,12 @@ sudo ./install.sh --werkstatt
 sudo speech-spark werkstatt status
 ```
 
+Mit `--fernbild` (auf dem Rechner mit dem Panel) kommt guacd für Fernzugang → Bildschirm dazu: die Pakete `guacd`, `libguac-client-vnc0` und `libguac-client-rdp0` der Distribution (getestet mit 1.3 bis 1.5, Sicherheits-Updates kommen mit apt), deren eigene Einheit `guacd.service` bleibt gesperrt; es läuft nur die Einheit `speech-spark-guacd` auf 127.0.0.1:4822, die das Panel startet, wenn ein Bildschirm aufgeht. Einmal da, behält ein Update sie. Danach Funktionen → Fernzugang zu Servern → Bildschirm einschalten und auf dem System einmal `sudo spark-anker bildschirm`.
+
+```bash
+sudo ./install.sh --fernbild
+```
+
 ## Deinstallieren
 
 ```bash

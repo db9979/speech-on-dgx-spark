@@ -4328,6 +4328,20 @@
 "titel": "Spontanhilfe: Einladung als Karte, nur einmal",
 "text": "Fernzugang → Spontanhilfe → Neue Hilfe, eine eigene Adresse eintragen und „Per E-Mail“ schnell zwei- bis dreimal klicken: genau eine Mail kommt an, der Knopf zeigt beim Senden einen Kreisel und bleibt danach aus. Dieselbe Adresse noch einmal: „Einladung schon gesendet.“; nach einer Minute fragt das Panel „Nochmal senden?“ und schickt erst nach Ja eine zweite Mail. Die Mail selbst: eine Karte mit „Hilfe starten“, der Nummer, gültig bis zur genannten Uhrzeit, den drei Schritten und dem Server-Namen des Panels; am Handy einspaltig, im Dunkelmodus dunkel, keine nachgeladenen Bilder; mit „Englisch“ dasselbe auf Englisch.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P643",
+"v": 1225,
+"titel": "Fernzugang: Bildschirm",
+"text": "Auf dem Spark einmal sudo ./install.sh --fernbild, Funktionen → Fernzugang zu Servern → Bildschirm an. Auf einem gekoppelten Linux-Rechner mit Desktop den Befehl aus dem Panel noch einmal (Anker 1.2.0), dann sudo spark-anker bildschirm. Fernzugang → Systeme → das System → „Bildschirm“ → „Bildschirm öffnen“: der Desktop erscheint, Maus und Tasten wirken noch nicht. „Steuern“: jetzt geht beides, der Rahmen ist farbig; „Nur ansehen“ nimmt es zurück. Rechts oben steht die Rate in KB/s; über den Synology-Proxy erscheint der Hinweis „Langsame Verbindung“. „Trennen“ schließt, der Verlauf zeigt „Bildschirm“. Am Mac (Bildschirmfreigabe an) fragt das Panel Benutzer und Passwort; mit GNOME auf Wayland und mit Sway/KDE (wayvnc) dasselbe prüfen. Danach sudo spark-anker bildschirm aus.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P644",
+"v": 1225,
+"titel": "Fernzugang: Vorschläge erklären sich",
+"text": "Eine Shell öffnen, mit der Maus auf „screen -x“ zeigen: sofort erscheint „an die laufende screen-Sitzung anhängen, gemeinsam mit dem anderen“. Auf „sudo ls -la /run/screen/“: dazu „braucht sudo …“. „systemctl status ssh“ tippen, dann auf „systemctl restart ssh“ zeigen: „diesen Dienst neu starten“. Mit der Tab-Taste auf einen Vorschlag: dasselbe Feld. Am Handy lange auf einen Vorschlag drücken. Bei schmalem Fenster lässt sich die Zeile seitwärts schieben, rechts wird sie weich. Mit offenem Assistenten: ein ✦-Vorschlag zeigt „Vorschlag des Assistenten: …“ oder „Vom Assistenten vorgeschlagen“.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }

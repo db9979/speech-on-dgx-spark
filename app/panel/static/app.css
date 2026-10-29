@@ -2900,7 +2900,7 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .fzback{display:none}
 .fzdkopf{display:flex;gap:14px;align-items:center}.fzdtext{min-width:0}.fzdname{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.fzdname b{font-size:20px}
 .fzknoepfe{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0 4px;padding-bottom:14px;border-bottom:1px solid var(--line)}
-.fzspaeter{margin-left:6px;font-size:11px;padding:0 5px;border-radius:5px;background:color-mix(in srgb,var(--line) 70%,transparent);color:var(--mut)}
+
 .fzdgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 24px;flex:1 0 auto}
 .fzfacts{display:grid;grid-template-columns:max-content 1fr;gap:4px 12px;margin:4px 0 10px;font-size:13.5px}.fzfacts dt{color:var(--mut)}.fzfacts dd{margin:0;overflow-wrap:anywhere}
 .fzkey code{font-size:12.5px}
@@ -2930,7 +2930,7 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
   .fzback{display:inline-block;align-self:flex-start;border:0;background:none;color:var(--acc);padding:4px 0;font:inherit;cursor:pointer}
   .fzdkopf{flex-direction:column;text-align:center}.fzdname{justify-content:center}
   .fzknoepfe{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:0}
-  .fzknoepfe .fzk{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:72px;font-weight:600}.fzknoepfe .fzk .fzspaeter{margin:0}
+  .fzknoepfe .fzk{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:72px;font-weight:600}
   .fzknoepfe .fzfill{display:none}.fzknoepfe .fzankercut{grid-column:1/-1}
   .fzdgrid{grid-template-columns:minmax(0,1fr)}.fzplatz{grid-template-columns:1fr}.fzplatz>div:last-child{display:none}
   .fzlock{order:5;width:100%;box-sizing:border-box}.fzdfuss{flex-direction:column;align-items:stretch}}
@@ -2990,7 +2990,7 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
   .fzview.fzki .fzfragbtn{display:block;flex:none;margin-top:6px;padding:9px 14px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--mut);font:inherit;text-align:left;cursor:pointer}
   .fzview.fzki .fzside,.fzview.fzki.fzzu .fzside{display:flex;position:fixed;left:0;right:0;bottom:0;height:min(70vh,560px);z-index:9500;border-radius:16px 16px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.3);transform:translateY(105%);visibility:hidden;transition:transform .2s}
   #fzbox.fzoffen{padding:6px}  .fzview.fzblatt .fzside{transform:none;visibility:visible}.fzbanner .fzbleer{display:none}}
-.fzview[hidden],.fzdetail[hidden],.fzfiles[hidden]{display:none}
+.fzview[hidden],.fzdetail[hidden],.fzfiles[hidden],.fzbild[hidden]{display:none}
 .fzq{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--line);font-size:11px;font-weight:600;color:var(--mut);cursor:help;vertical-align:middle}
 .fzchip .fzinfo{font-size:11px;color:var(--mut);border:1px solid var(--line);border-radius:6px;padding:0 5px;margin-right:6px}
 /* xterm's own scroll bar dark and thin, no light strip at the terminal's edge */
@@ -3062,3 +3062,12 @@ button.fzfname{background:none;border:0;padding:4px 0;color:var(--acc,inherit);c
 .shmsg.mine{align-self:flex-end;background:var(--acc);color:#fff}#shuhr.warn{border-color:var(--bad)}
 @media (max-width:760px){.shcols{grid-template-columns:1fr}}
 #shmailgo.senden::before{content:'';display:inline-block;width:.8em;height:.8em;margin-right:6px;vertical-align:-1px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:shdreh .8s linear infinite}@keyframes shdreh{to{transform:rotate(360deg)}}
+.fzbild{margin-top:8px;display:flex;flex-direction:column;gap:6px}.fbbar{align-items:center;flex-wrap:wrap;gap:6px}
+.fbschirm{position:relative;height:calc(100vh - 230px);min-height:260px;background:#0b1020;border-radius:10px;overflow:hidden;outline:none;cursor:default}
+.fbschirm:focus-visible{box-shadow:0 0 0 2px var(--acc)}.fzbild.fbsteuert .fbschirm{box-shadow:0 0 0 2px var(--warn)}
+.fzbild:fullscreen{background:#000;padding:6px;margin:0}.fzbild:fullscreen .fbschirm{height:calc(100vh - 60px);border-radius:0}
+#fbmacrow{display:grid;gap:6px;margin:8px 0}#fbmacrow[hidden]{display:none}
+.fztip{position:fixed;z-index:9600;max-width:min(360px,calc(100vw - 8px));padding:6px 9px;border-radius:8px;background:var(--fg);color:var(--bg);font-size:12.5px;line-height:1.35;box-shadow:0 4px 14px rgba(0,0,0,.25);pointer-events:none}.fztip[hidden]{display:none}
+.fzchiprow .fzchips.fzrechts{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent)}
+.fzchiprow .fzchips.fzlinks{-webkit-mask-image:linear-gradient(to right,transparent,#000 28px);mask-image:linear-gradient(to right,transparent,#000 28px)}
+.fzchiprow .fzchips.fzlinks.fzrechts{-webkit-mask-image:linear-gradient(to right,transparent,#000 28px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,transparent,#000 28px,#000 calc(100% - 28px),transparent)}

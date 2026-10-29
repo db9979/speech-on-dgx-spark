@@ -1011,6 +1011,40 @@ class Pieces(Base):
         body = js[js.index("function fzZeile("):js.index("function fzChips(")]
         self.assertNotRegex(body, r"api\(|fetch\(|localStorage|sessionStorage|\.send\(")   # memory only, never sent
 
+    def test_every_fixed_chip_says_what_it_does(self):
+        """Dominik 2026-10-29: hovering a chip explains it. Every command of CHIPS and FOLGE has exactly one short
+        explanation in German and English (ERKLAERT, one source), served with the chips; the page shows it as its own
+        tooltip (text only), the sudo badge and the danger reason too, a suggestion of the assistant as such."""
+        cmds = set(fernzugang.CHIPS) | {c for _, nxt in fernzugang.FOLGE for c in nxt}
+        self.assertEqual(set(fernzugang.ERKLAERT), cmds)                       # each one, nothing left over
+        for c, (de, en) in fernzugang.ERKLAERT.items():
+            for x in (de, en):
+                self.assertTrue(0 < len(x) <= fernzugang.ERKLAERT_LEN and not re.search(r"[\x00-\x1f<>]", x), (c, x))
+            self.assertNotEqual(de, en, c)
+        self.assertTrue(all(0 < len(x) <= 120 for x in fernzugang.SUDO_TIP))
+        self.pair()
+        d = ADMIN.get("/api/admin/fernzugang").json()
+        self.assertEqual(d["erklaert"], {k: list(v) for k, v in fernzugang.ERKLAERT.items()})
+        self.assertEqual(d["sudo_tip"], list(fernzugang.SUDO_TIP))
+        with open(os.path.join(helpers.APP, "panel", "static", "js", "fernzugang.js"), encoding="utf-8") as f:
+            js = f.read()
+        tip = js[js.index("function fzTipZeig("):js.index("function fzTipWeg(")]
+        self.assertIn("tip.textContent=x", tip)
+        self.assertNotIn("innerHTML", tip)
+        self.assertIn("'erklaert'", js[:js.index("const FZ_FENSTER")])            # the window gets them too
+        for s in ("Vom Assistenten vorgeschlagen", "Vorschlag des Assistenten: ", "Vorsicht: "):
+            self.assertIn(s, js)
+
+    def test_the_assistants_reason_strictly_one_plain_line(self):
+        V = fernzugang._vorschlaege
+        self.assertEqual(V('[{"befehl": "df -h", "grund": "freier Platz"}, "free -h"]'), [("df -h", "freier Platz"), ("free -h", "")])
+        self.assertEqual(fernzugang.vorschlaege('[{"befehl": "df -h", "grund": "x"}, "free -h"]'), ["df -h", "free -h"])
+        long = "x" * (fernzugang.GRUND_LEN + 1)
+        self.assertEqual(V(f'[{{"befehl": "a", "grund": "{long}"}}, {{"befehl": "b", "grund": "zwei\\nzeilen"}}]'), [("a", ""), ("b", "")])
+        self.assertEqual(V('[{"befehl": "a", "grund": 5}, "b"]'), [("a", ""), ("b", "")])
+        self.assertIsNone(V('[{"befehl": "a", "mehr": "x"}, "b"]'))                # nothing but befehl and grund
+        self.assertIsNone(V('[{"grund": "x"}, "b"]'))
+
     def test_chips_never_press_enter_and_no_model_sees_the_shell(self):
         for c in fernzugang.CHIPS:
             self.assertNotRegex(c, r"[\r\n]")
@@ -1040,7 +1074,7 @@ class Pieces(Base):
         self.assertTrue(any(k == "fernzugang" and re.match(rx, "fernzugang: koppeln | ok | 1") for k, rx in logfilter.AREAS))
         self.pair("geheimer-server")
         d = fernzugang.for_live()
-        self.assertEqual(set(d), {"on", "gekoppelt", "online", "sitzungen", "abbau", "hostkey", "offen", "systeme", "hilfe", "entsperrt", "dateien", "uebertragungen"})
+        self.assertEqual(set(d), {"on", "gekoppelt", "online", "sitzungen", "abbau", "hostkey", "offen", "systeme", "hilfe", "entsperrt", "dateien", "bildschirm", "uebertragungen"})
         self.assertTrue(all(isinstance(v, (bool, int)) for k, v in d.items() if k not in ("offen", "systeme")))
         self.assertEqual(d["offen"], [])
         self.assertEqual(d["systeme"], [{"name": "System 1", "online": False}])   # no name without live_names
@@ -1058,8 +1092,8 @@ class Pieces(Base):
         numbers, never a name (standing rule: a change to Live and Monitoring reaches all of them in one commit)."""
         self.pair("geheimer-server")
         st = ADMIN.get("/api/status").json()["fernzugang"]
-        self.assertEqual(st, {"on": True, "gekoppelt": 1, "online": 0, "sitzungen": 0, "abbau": 0, "hostkey": 0, "hilfe": 0, "dateien": 0, "uebertragungen": 0,
-                              "offen": [], "systeme": [{"name": "System 1", "online": False}], "entsperrt": 1})
+        self.assertEqual(st, {"on": True, "gekoppelt": 1, "online": 0, "sitzungen": 0, "abbau": 0, "hostkey": 0, "hilfe": 0, "dateien": 0, "bildschirm": 0,
+                              "uebertragungen": 0, "offen": [], "systeme": [{"name": "System 1", "online": False}], "entsperrt": 1})
         import steuerzentrale as sz
         from tests.test_steuerzentrale import beispiel
         d = beispiel()
@@ -1337,6 +1371,7 @@ class Helper(_HelperBase):
         self.answer = '["journalctl -u nginx -n 50", "systemctl restart nginx"]'
         r = self.ask(s.id, "vorschlag", befehle=["systemctl status nginx"])
         self.assertEqual(r.json()["vorschlaege"], ["journalctl -u nginx -n 50", "systemctl restart nginx"])
+        self.assertEqual(r.json()["gruende"], ["", ""])
         with journal() as j:
             self.assertEqual(self.ask(s.id, "vorschlag", befehle=["ls"]).status_code, 429)
         self.assertIn("fernzugang: hilfe_vorschlag | zu schnell | 0", j.getvalue())
@@ -1950,6 +1985,7 @@ class InBrowser(unittest.TestCase):
                 await pg.wait_for_timeout(1600)
                 self.assertEqual(len(asked), 1)
                 await pg.evaluate("$('fzschirm').checked=true;$('fzfrage').value='Was nun?';fzFragen()")
+                self.assertEqual(await pg.evaluate("[$('fzfrage').value,document.activeElement.id]"), ["", "fzfrage"])   # empty at once, focus kept
                 await pg.wait_for_function("document.querySelectorAll('#fzantwort .fzchip').length===2", timeout=10000)
                 body = asked[-1][1]
                 self.assertEqual(body["frage"], "Was nun?")
@@ -2300,7 +2336,7 @@ class ShellForReal(Base):
             self.assertIn("vps-1", await pg.evaluate("$('fzlist').textContent"))
             self.assertIn("Online · 1", await pg.evaluate("$('fzlist').textContent"))
             names = [k[0] for k in b["knoepfe"]]
-            self.assertEqual(names[:3], ["Shell", "Dateien", "Bildschirmspäter"], b)   # files since stage 3
+            self.assertEqual(names[:3], ["Shell", "Dateien", "Bildschirm"], b)   # files since stage 3, the screen stage 4 (off here)
             self.assertEqual([k[1] for k in b["knoepfe"][:3]], [False, False, True])
             self.assertIn("Anker trennen", names)
             self.assertIn("✓", await pg.evaluate("$('fzdetail').querySelector('.fzkey').textContent"))

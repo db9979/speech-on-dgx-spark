@@ -32,6 +32,7 @@ At the end it prints the address, password and API key, then TTS speaks a senten
 | Show addresses and keys | `sudo speech-spark info` |
 | Own language model | `sudo ./install.sh --llm`, then `sudo speech-spark modelle llm uebernehmen` (back: `… zurueck`) |
 | Workshop (test run, code measurement, diagnosis, repair) | on the model computer `sudo ./install.sh --werkstatt`, then *Features → Workshop* |
+| Screen in remote access (guacd) | on the computer with the panel `sudo ./install.sh --fernbild`, then *Features → Remote access to servers → Screen* |
 | Move the panel to another computer | `sudo speech-spark umziehen --code`, see [Spark split](docs/en/spark-split.md) |
 | Uninstall | `sudo ./uninstall.sh` (config, models and voices stay; `--purge` removes everything) |
 
@@ -41,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.225** Remote access stage 4 screen: "Screen" shows the screen of a paired system in the browser (X11, GNOME on Wayland, other Wayland desktops, macOS), watching first, "Control" with one click; guacd as its own service only on 127.0.0.1 (install.sh --fernbild), at most 15 pictures/s, "Economical" with 16 bit and a hint on a slow line; and the command suggestions say what they do on hover, and the assistant's question field empties after sending
 - **V01.1.224** Spontanhilfe: the "By e-mail" invitation comes in the new "card" design (text and HTML, informal, German or English, no outside images) and only once per help and address: the button is off while sending (with a spinner), a second click gets "Invitation already sent", "Send again" only after 60 seconds with a confirm, and an incomplete invitation never goes out
 - **V01.1.223** Spontaneous help stage S3 one-time shell: for a server without a screen the person pastes one line (without sudo) into her terminal, types number and first name there and allows with "j"; then the admin works in her shell in the Spontaneous help tab, with her rights, and nothing is left behind
 - **V01.1.222** Remote access stage 3 files: on the unlocked page "Files" opens the server's folders over SFTP in the same SSH connection without another code (open folders, download through a one-time link, upload up to the set size, default 100 MB, "Replace" only on request); the permissions of the user spark decide; Lock closes the files, never a name in the log
@@ -50,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.218** Remote access: terminal in layout A (assistant as a column on the right, draggable and foldable, suggestions in one row, session facts behind the ⓘ of the red line, icon bar, menu folds away, page never scrolls; phone with a sheet from below); an ending session could leave a later connection hanging
 - **V01.1.217** Remote access: "Detach" shows the terminal in its own window again (instead of the start page); "All keys" fills the screen with the terminal only, suggestions and assistant in a drawer (Ctrl+Shift+Space); suggestions for screen and tmux instead of uptime and df -h; the anchor on a Mac: the system's authorities when Python brings none, the code straight from the terminal (also under curl | sudo), its own line with /usr/bin/python3
 - **V01.1.216** Remote access stage 6: the anchor also sets itself up on a Mac (the same line, from macOS 13): hidden user spark, launchd service, Remote Login switched on only for the anchor and back as it was on removal
-- **V01.1.215** Remote access: the running session shows as one slim red line at the top of the content on every page (dot, "Remote session active · server · minutes", "Disconnect"; "the emergency stop ends it at once" as a hint), below the header and on a phone below the top bar, also in the own window; the anchor stops on macOS and Windows with a fixed sentence and sets up nothing halfway, a missing host key on Linux names `sudo ssh-keygen -A`
 
 
 

@@ -100,6 +100,7 @@ flowchart TB
 | Wyoming im Panel | 31003 | Home Assistant Assist |
 | Telefon im Panel | UDP 31060, Ton UDP 31062–31068 | Den Spark anrufen (SIP und RTP nur mit der Telefonanlage im Heimnetz) |
 | `speech-spark-turn` | 3478, Relais 49160–49200 | Vermittler für Anrufe von unterwegs (coturn), nur mit dem Schalter an |
+| `speech-spark-guacd` | 4822 (nur lokal) | guacd für Fernzugang → Bildschirm, nur mit `--fernbild`; das Panel startet es, wenn ein Bildschirm aufgeht, es erreicht nur 127.0.0.1 |
 | `speech-spark-llmtor` → `speech-spark-llm` | 31006 → 31016 (nur lokal) | Eigenes Sprachmodell (vLLM) hinter dem LLM-Tor; Bildverständnis `speech-spark-sehen` auf 31017 und Hilfsmodell `speech-spark-helfer` auf 31018 bei Bedarf |
 | `speech-spark-bild` | 31005 → 31015 (nur lokal) | Bilder malen und ändern (FLUX.2 klein) |
 | `speech-spark-musik` | 31004 → 31014 (nur lokal) | Musik machen (ACE-Step 1.5), die Engine nur während eines Lieds |
@@ -162,6 +163,7 @@ Jede Anfrage geht zuerst hier durch: Größe, Herkunft, Notaus, Anmeldung, Profi
 | `app/panel/coadmin.py` | Profile als Admins: Admin und Verwalter, ohne zweite Stufe |
 | `app/panel/core.py` | Admin-Passwort, Sitzungen, gemeinsame Pfade und Helfer |
 | `app/panel/features.py` | Alle Funktionen mit Namen und Freigaben an einer Stelle |
+| `app/panel/fernbild.py` | Fernzugang, Bildschirm: guacd auf 127.0.0.1, VNC oder RDP durch den Anker, erst nur ansehen, höchstens 15 Bilder/s |
 | `app/panel/ferndateien.py` | Fernzugang, Dateien: SFTP in derselben SSH-Verbindung, Liste, Einmal-Link zum Laden, Hochladen mit Größengrenze |
 | `app/panel/fernzugang.py` | Fernzugang (Menüpunkt): Seite per Code entsperrt, Anker, Einmal-Code, Web-Terminal mit Ticket, fester Host-Schlüssel |
 | `app/panel/guard.py` | Rate-Limits, Sperren nach falschen Versuchen, fremde Seiten, audit.log mit Prüfkette |
