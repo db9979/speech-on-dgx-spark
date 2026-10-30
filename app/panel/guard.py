@@ -556,6 +556,7 @@ LIVE_WORDS = {
     "fernzugang_koppeln_failed": ("Eingang", "Fern-Server mit falschem Code abgewiesen"), "fernzugang_anker_failed": ("Eingang", "Anker mit unbekanntem Schlüssel abgewiesen"),
     "fernzugang_hostkey": ("Wächter", "Host-Schlüssel eines Fern-Servers geändert, keine Verbindung"), "fernzugang_revoked": ("Eingang", "Fern-Server entfernt"),
     "fernzugang_removed": ("Eingang", "Fern-Server hat seinen Anker abgebaut"), "fernzugang_allow": ("Eingang", "Fern-Server zugelassen oder gesperrt"),
+    "fernzugang_confirm": ("Eingang", "Fern-Server aus der Windows-Datei bestätigt"),
     "verbund_peer_allow": ("Eingang", "Anderen Spark erlaubt"), "verbund_peer_block": ("Eingang", "Anderen Spark gesperrt"),
     "verbund_peer_remove": ("Eingang", "Anderen Spark entfernt"),
     "invite_made": ("Eingang", "Einladung erstellt"), "invite_revoked": ("Eingang", "Einladung zurückgezogen"),

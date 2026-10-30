@@ -554,6 +554,7 @@ Shell, Dateien und Bildschirm eigener Server über ihren Anker, dazu die Spontan
 | `app/panel/ferngross.py` | Fernzugang, große Dateien: in Teilen mit SHA-256, per Link (curl) oder vom NAS, Prüfsumme vor dem Umbenennen |
 | `app/panel/fernnotiz.py` | Fernzugang, Notizen je System: versiegelt, 10 Fassungen, Tresor-Hinweis, Assistent liest nur mit Haken |
 | `app/panel/fernordner.py` | Fernzugang, Ordner: eine Ebene, Name und Symbol, Reihenfolge per Ziehen, nur Ordnung, Rechte je System |
+| `app/panel/fernwindows.py` | Fernzugang, Windows: spark-anker-einrichten.cmd mit Einmal-Schlüssel, Python mit fester Prüfsumme |
 | `app/panel/fernzugang.py` | Fernzugang: Seite per Code entsperrt, Anker, Einmal-Code, Terminal mit Ticket, Host-Schlüssel fest, Shell gehalten |
 | `app/panel/spontanhilfe.py` | Spontanhilfe: Nummer und Link, Seite /hilfe mit eigener CSP, WebRTC zwischen zwei Browsern, Shell über den Anker |
 
@@ -3984,7 +3985,7 @@ flowchart TD
 
 1. <a id="kn-fernzugang-s1"></a>**Admin öffnet den Fernzugang**: Funktionen → Fernzugang zu Servern ist standardmäßig aus (fernzugang.admin_on) und nur für Admins mit zweitem Schritt; Gäste und das Sprachmodell erreichen ihn nie.
 2. <a id="kn-fernzugang-s2"></a>**Seite entsperrt?**: Ein Code oder Passkey entsperrt die Seite für 5 bis 120 Minuten, nur für diese Anmeldung (in der eigenen iPhone-App für deren Schlüssel, fernzugang._tor) und vom selben Ort (fernzugang.entsperrt_bis); Sperren, Abmelden und Notaus sperren sofort, ein Neustart auch.
-3. <a id="kn-fernzugang-s3"></a>**Koppeln**: „Koppeln“ fragt den Code jedes Mal neu (fernzugang.admin_pair) und zeigt eine Zeile für den Server mit einem Einmal-Code, 10 Minuten gültig, dazu einen Einmal-Link mit QR-Code, der auf dem neuen System nur diese Zeile zeigt, nie den Code (fernzugang.link_check). Höchstens 10 Systeme; jedes bekommt einen eigenen SSH-Schlüssel des Panels, sein Host-Schlüssel wird angeheftet.
+3. <a id="kn-fernzugang-s3"></a>**Koppeln**: „Koppeln“ fragt den Code jedes Mal neu (fernzugang.admin_pair) und zeigt eine Zeile für den Server mit einem Einmal-Code, 10 Minuten gültig, dazu einen Einmal-Link mit QR-Code, der auf dem neuen System nur diese Zeile zeigt, nie den Code (fernzugang.link_check). Windows: der Link gibt einmal die Datei spark-anker-einrichten.cmd (fernzugang.link_file) mit Einmal-Schlüssel statt Code; das System wartet dann, bis der Admin es mit Code oder Passkey bestätigt (fernzugang.admin_confirm). Höchstens 10 Systeme; jedes bekommt einen eigenen SSH-Schlüssel des Panels, sein Host-Schlüssel wird angeheftet.
 4. <a id="kn-fernzugang-s4"></a>**Ticket für das Fenster**: „Shell“ gibt ein Einmal-Ticket (fernzugang.admin_session), das 30 Sekunden lang genau ein Web-Terminal öffnet (fernzugang.terminal_ws); höchstens 4 Sitzungen zugleich.
 5. <a id="kn-fernzugang-s5"></a>**Anderer Host-Schlüssel?**: Zeigt der Server einen anderen Host-Schlüssel als beim Koppeln, gibt es keine Verbindung (fernzugang.hostkey_wrong); nach einer Neuinstallation entfernen und neu koppeln.
 6. <a id="kn-fernzugang-s6"></a>**Shell, Dateien, Bildschirm**: SSH läuft durch den Kanal des Ankers; reißt das Fenster ab, wartet die Shell 120 Sekunden. Ein Lebenszeichen alle 5 Sekunden misst Laufzeit und Rate; die Ausgabe wartet in höchstens 32 Stücken auf das Fenster, dann bremst SSH den Server (Gegendruck). Dateien über SFTP in derselben Verbindung (ferndateien.listing), Laden mit Einmal-Link für 60 Sekunden; große Dateien in Teilen von 8 MB MB mit SHA-256 je Stück (ferngross.upload_piece). Der Bildschirm geht über guacd nur auf 127.0.0.1 (fernbild.GUACD), höchstens 15 Bilder je Sekunde. Der Assistent (fernzugang.admin_help) fragt nur das eigene Modell und schlägt vor, getippt wird nie von selbst. Notizen je System liegen versiegelt, 10 Fassungen bleiben; das Modell liest sie nur mit Haken (fernnotiz.fuer_modell). Ordner ordnen nur die Liste (fernordner.view), höchstens 30; Rechte bleiben je System.
@@ -4017,6 +4018,8 @@ flowchart TD
 
 - `app/panel/fernzugang.py` `entsperrt_bis`: wie lange die Seite entsperrt ist ([Schritt 2](#kn-fernzugang-s2))
 - `app/panel/fernzugang.py` `admin_pair`: Koppeln mit Einmal-Code ([Schritt 3](#kn-fernzugang-s3))
+- `app/panel/fernzugang.py` `link_file`: Windows: die Datei spark-anker-einrichten.cmd mit Einmal-Schlüssel, einmal ([Schritt 3](#kn-fernzugang-s3))
+- `app/panel/fernzugang.py` `admin_confirm`: neues System erst nach Bestätigung mit Code oder Passkey ([Schritt 3](#kn-fernzugang-s3))
 - `app/panel/fernzugang.py` `terminal_ws`: das Web-Terminal mit Ticket ([Schritt 4](#kn-fernzugang-s4))
 - `app/panel/fernzugang.py` `hostkey_wrong`: angehefteter Host-Schlüssel ([Schritt 5](#kn-fernzugang-s5))
 - `app/panel/ferndateien.py` `listing`: Dateien über SFTP ([Schritt 6](#kn-fernzugang-s6))

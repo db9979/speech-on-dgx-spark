@@ -246,6 +246,7 @@ struct StatusView: View {
                     if (fz["dateien"] as? Int ?? 0) > 0 { LabeledContent("Davon Dateien") { Text(verbatim: Self.num(fz["dateien"] ?? 0)) } }
                     if (fz["uebertragungen"] as? Int ?? 0) > 0 { LabeledContent("Übertragungen") { Text(verbatim: Self.num(fz["uebertragungen"] ?? 0)) } }
                     if (fz["abbau"] as? Int ?? 0) > 0 { LabeledContent("Warten auf Abbau") { Text(verbatim: Self.num(fz["abbau"] ?? 0)) } }
+                    if (fz["wartet"] as? Int ?? 0) > 0 { LabeledContent("Warten auf Bestätigung") { Text(verbatim: Self.num(fz["wartet"] ?? 0)).foregroundStyle(.orange) } }
                     if (fz["hostkey"] as? Int ?? 0) > 0 {
                         LabeledContent("Host-Schlüssel falsch") { Text(verbatim: Self.num(fz["hostkey"] ?? 0)).foregroundStyle(.red) }
                     }
@@ -1975,6 +1976,7 @@ struct FernServer: Identifiable {
     let zuletzt: Date?
     let stand: String
     let erlaubt: Bool
+    let wartet: Bool        // paired with the Windows file: no session before „Bestätigen“
     let hostkeyFalsch: Bool
     let fp: String
     let sitzungen: Int
@@ -2083,14 +2085,19 @@ struct FernzugangView: View {
                         if g.hostkeyFalsch {
                             Text("Der Server zeigt einen anderen Host-Schlüssel als bei der Kopplung: keine Verbindung. War das eine Neuinstallation, „Entfernen“ und neu koppeln.").foregroundStyle(.red)
                         }
+                        if g.wartet && g.stand != "abbau" {
+                            Text("Neu über die Windows-Datei eingerichtet. Nur bestätigen, wenn du das gerade selbst eingerichtet hast und der Host-Schlüssel zu dem passt, den der PC gezeigt hat. Bis dahin geht keine Sitzung.")
+                                .foregroundStyle(.orange)
+                            Button("Bestätigen (Code/Passkey)") { ask = CodeRequest { c in await confirm(g, code: c) } }
+                        }
                         if g.stand != "abbau" {
                             if d["notizen"] as? Bool == true {
                                 NavigationLink { FernNotizView(server: g) } label: {
                                     LabeledContent("Notiz") { Text(g.notiz ? "📝" : "–") }
                                 }
                             }
-                            Toggle("Darf sich verbinden", isOn: Binding(get: { g.erlaubt }, set: { v in Task { await allow(g, v) } }))
-                            Button("Shell oder Dateien im Panel öffnen") { panel() }.disabled(!g.online || g.hostkeyFalsch || !g.erlaubt)
+                            Toggle("Darf sich verbinden", isOn: Binding(get: { g.erlaubt }, set: { v in Task { await allow(g, v) } })).disabled(g.wartet)
+                            Button("Shell oder Dateien im Panel öffnen") { panel() }.disabled(!g.online || g.hostkeyFalsch || !g.erlaubt || g.wartet)
                             Button("Trennen") { Task { await cut(g) } }.disabled(!g.online && g.sitzungen == 0)
                             Button("Entfernen", role: .destructive) { askRemove = g }
                         }
@@ -2168,10 +2175,10 @@ struct FernzugangView: View {
         return s > 0 ? Date(timeIntervalSince1970: s) : nil
     }
     static func word(_ g: FernServer) -> LocalizedStringKey {
-        g.stand == "abbau" ? "wird abgebaut" : g.hostkeyFalsch ? "Host-Schlüssel falsch" : !g.erlaubt ? "gesperrt" : g.online ? "online" : "offline"
+        g.stand == "abbau" ? "wird abgebaut" : g.hostkeyFalsch ? "Host-Schlüssel falsch" : g.wartet ? "wartet auf Bestätigung" : !g.erlaubt ? "gesperrt" : g.online ? "online" : "offline"
     }
     static func color(_ g: FernServer) -> Color {
-        g.hostkeyFalsch ? .red : g.stand == "abbau" || !g.erlaubt ? .orange : g.online ? .green : .secondary
+        g.hostkeyFalsch ? .red : g.stand == "abbau" || !g.erlaubt || g.wartet ? .orange : g.online ? .green : .secondary
     }
 
     private func load() async {
@@ -2183,7 +2190,7 @@ struct FernzugangView: View {
                 return FernServer(id: id, name: String((x["name"] as? String ?? "").prefix(40)), os: String((x["os"] as? String ?? "").prefix(40)),
                                   anker: String((x["anker"] as? String ?? "").prefix(20)), online: x["online"] as? Bool ?? false,
                                   onlineSeit: Self.date(x["online_seit"]), weg: Self.date(x["weg"]), zuletzt: Self.date(x["zuletzt"]),
-                                  stand: x["stand"] as? String ?? "ok", erlaubt: x["erlaubt"] as? Bool ?? true,
+                                  stand: x["stand"] as? String ?? "ok", erlaubt: x["erlaubt"] as? Bool ?? true, wartet: x["wartet"] as? Bool ?? false,
                                   hostkeyFalsch: x["hostkey_falsch"] as? Bool ?? false, fp: String((x["fp"] as? String ?? "").prefix(80)),
                                   sitzungen: Self.num(x["sitzungen"]), notiz: x["notiz"] as? Bool ?? false,
                                   ordner: Self.folderId(x["ordner"]))
@@ -2207,6 +2214,16 @@ struct FernzugangView: View {
     private func allow(_ g: FernServer, _ on: Bool) async {
         do { _ = try await AdminSession.shared.call("PUT", "api/admin/fernzugang/geraete/\(g.id)", body: ["erlaubt": on]); error = nil }
         catch { self.error = error.localizedDescription }
+        await load()
+    }
+
+    /// „Bestätigen“: a system from the Windows file gets sessions only now, with a fresh code or passkey
+    private func confirm(_ g: FernServer, code: String) async {
+        do {
+            _ = try await AdminSession.shared.call("POST", "api/admin/fernzugang/geraete/\(g.id)/bestaetigen", body: [:], code: code)
+            note = String(localized: "Bestätigt.")
+            error = nil
+        } catch { self.error = error.localizedDescription }
         await load()
     }
 

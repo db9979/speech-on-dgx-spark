@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""spark-anker: lets the own Speech-on-DGX-Spark panel reach this server's SSH (Fernzugang → Systeme). Linux and macOS.
+"""spark-anker: lets the own Speech-on-DGX-Spark panel reach this server's SSH (Fernzugang → Systeme). Linux, macOS
+and Windows (stage 5: the panel's file spark-anker-einrichten.cmd starts it, see below).
 
     curl -fsSL https://<panel>/fernzugang/anker | sudo python3 - einrichten https://<panel>   set up once (asks the code)
     sudo spark-anker entfernen                                                              removes everything again
@@ -50,6 +51,21 @@ up what fits, always only on 127.0.0.1 and with a random password the panel make
 The anchor then opens channels to that one port too (the panel asks with „ziel“: „bild“), never to another address.
 `bildschirm aus` and `entfernen` take it all away again.
 
+On Windows (10 or 11, 64-bit; stage 5) the panel's file spark-anker-einrichten.cmd (fernwindows.py, as Administrator)
+adds OpenSSH Server when it is missing, unpacks python.org's embeddable Python (PY_EMBED: version and SHA-256, the one
+source) to %ProgramFiles%/SparkAnker/python-<version> for this program only and runs `einrichten <panel> --token -`
+with its one-time key on stdin (no code typed; the panel then waits for the admin's „Bestätigen“). The same steps then
+go through sc.exe, reg, icacls, schtasks and PowerShell: sshd only on 127.0.0.1 without passwords, AllowUsers
+spark@127.0.0.1, PowerShell as its shell and its firewall rule off, all only when sshd did not run before (else only a
+marked block „Match User spark“); the user spark (no Administrator, a random password made and forgotten inside
+PowerShell, hidden from the sign-in screen; in „OpenSSH Users“ when sshd_config names AllowGroups) with the panel's
+line in %ProgramData%/SparkAnker/authorized_keys (owned by SYSTEM); the
+task SparkAnker (this program as LOCAL SERVICE) and SparkAnker-Waechter (SYSTEM: „abbauen“ and „aktualisieren“ like
+the root units); „Spark Anker“ under Settings, Apps to remove it. Removing puts sshd, its shell and firewall rule back
+as they were and takes user, tasks, settings, program and its Python away (the folder with the running Python, and the
+profile of spark Windows holds after an SSH session, through a one-off SYSTEM task: right after this process, else at
+the next start). Not yet on Windows: `bildschirm` and `hilfe`.
+
 Spontanhilfe S3 (`hilfe`, never as root, nothing set up): the person types the number and her first name on this
 terminal, the program opens WSS /api/hilfe/shell (no key, no Origin) and waits. When the admin accepts, it asks once
 more („j“); only then her own shell runs in a PTY with her rights, its output goes to the panel and to this terminal,
@@ -71,15 +87,17 @@ the anchor's folder, the user spark-anker, the panel's line in authorized_keys a
 the anchor made it; then it tells the panel (best effort) so it forgets this server too.
 """
 import argparse
+import ast
 import base64
 import contextlib
+import getpass
 import hashlib
 import hmac
 import http.client
+import io
 import json
 import os
 import platform
-import pwd
 import re
 import secrets
 import select
@@ -94,8 +112,14 @@ import sys
 import threading
 import time
 import urllib.parse
+import zipfile
 
-VERSION = "1.4.0"
+try:
+    import pwd
+except ImportError:      # Windows: no passwd database (the anchor asks `net user` there)
+    pwd = None
+
+VERSION = "1.5.0"
 LIB = "/usr/local/lib/spark-anker"
 PROG = LIB + "/spark-anker.py"
 BIN = "/usr/local/bin/spark-anker"
@@ -248,11 +272,17 @@ class Fehler(Exception):
 
 
 def say(text):
-    print(f"spark-anker: {text}", flush=True)
+    try:
+        print(f"spark-anker: {text}", flush=True)
+    except UnicodeEncodeError:                 # a console page without „→“ (Windows cp1252 through a pipe)
+        print(f"spark-anker: {text}".encode("ascii", "replace").decode(), flush=True)
 
 
 def here(root, path):
-    """path below root (/ normally; a temporary folder in the tests)."""
+    """path below root (/ normally; a temporary folder in the tests). A Windows path keeps its drive only at the real
+    root: below a temporary folder „C:“ is dropped (never a real path when the tests pass a root)."""
+    if root != "/" and re.match(r"[A-Za-z]:[/\\]", path):
+        path = path[2:].replace("\\", "/")
     return os.path.join(root, path.lstrip("/"))
 
 
@@ -610,6 +640,9 @@ def load(root="/", s=None):
 def os_name(s=None):
     if (s or Ctx().s) is MAC:
         return WORD.sub("", "macOS " + platform.mac_ver()[0]).strip()[:40]
+    if (s or Ctx().s) is WIN:
+        edition = getattr(platform, "win32_edition", lambda: "")() or ""
+        return WORD.sub("", f"Windows {platform.release()} {edition}").strip()[:40]
     try:
         with open("/etc/os-release") as f:
             m = re.search(r'^PRETTY_NAME="?([^"\n]*)', f.read(), re.M)
@@ -831,7 +864,10 @@ def _again(fn, *a):
 def read_code(tty="/dev/tty"):
     """The pairing code, typed on this terminal (never stdin: that is the program itself when it comes through curl),
     echo off on that terminal; SIGTTOU ignored meanwhile (not the foreground group under `curl | sudo`), the
-    terminal always as it was afterwards. Without echo control the code is read visibly, with a hint."""
+    terminal always as it was afterwards. Without echo control the code is read visibly, with a hint. Windows: the
+    console itself, hidden (getpass reads the console there, not stdin)."""
+    if os.name == "nt":
+        return getpass.getpass("Kopplungs-Code aus dem Panel: ").strip()
     try:
         fd = os.open(tty, os.O_RDWR | getattr(os, "O_NOCTTY", 0))
     except OSError:
@@ -909,7 +945,8 @@ class Ctx:
     sshd's port. The self-tests pass a temporary root and record the commands; nothing else changes it."""
 
     def __init__(self, system=None, root="/", run=run_cmd):
-        self.s = MAC if (system or platform.system()) == "Darwin" else LINUX
+        system = system or platform.system()
+        self.s = MAC if system == "Darwin" else WIN if system == "Windows" else LINUX
         self.root = root
         self.run = run
 
@@ -917,15 +954,24 @@ class Ctx:
         return here(self.root, p)
 
     def out(self, cmd):
-        """A command's output (empty when it fails); only for reading (dscl -list)."""
+        """A command's output (empty when it fails); only for reading (dscl -list, reg query, sc qc)."""
         r = subprocess.run(cmd, check=False, capture_output=True, text=True)
         return r.stdout if r.returncode == 0 else ""
 
     def euid(self):
+        """0 for root, on Windows for an elevated Administrator (the .cmd file asks for it)."""
+        if self.s is WIN:
+            try:
+                import ctypes
+                return 0 if ctypes.windll.shell32.IsUserAnAdmin() else 1
+            except (ImportError, AttributeError, OSError):
+                return 1
         return os.geteuid()
 
     def ids(self, name):
-        """(uid, gid, home) of a user, None when there is none."""
+        """(uid, gid, home) of a user, None when there is none (Windows: only whether `net user` knows it)."""
+        if self.s is WIN:
+            return (0, 0, "") if self.run(["net", "user", name]) == 0 else None
         try:
             pw = pwd.getpwnam(name)
         except KeyError:
@@ -933,7 +979,11 @@ class Ctx:
         return pw.pw_uid, pw.pw_gid, pw.pw_dir
 
     def chown(self, path, uid, gid):
-        os.chown(path, uid, gid)
+        if self.s is not WIN:                  # Windows: icacls in win_users
+            os.chown(path, uid, gid)
+
+    def fetch(self, url, cap):
+        return fetch_https(url, cap)
 
     def port_open(self):
         try:
@@ -1205,89 +1255,567 @@ def mac_last(ctx, conf):
     ctx.run(["/bin/launchctl", "bootout", "system/" + MAC_JOB_ABBAU])
 
 
+# ---------------------------------------------------------------- Windows (OpenSSH Server, Aufgabenplanung, net user)
+def _win_dir(key, name, default, drive=""):
+    """A folder of Windows as the registry names it (never from variables; %SystemDrive% as the system's drive),
+    else the usual one."""
+    try:
+        import winreg
+        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, key) as k:
+            value = winreg.QueryValueEx(k, name)[0]
+    except (ImportError, OSError):
+        value = ""
+    if isinstance(value, str) and drive:
+        value = re.sub(r"(?i)%SystemDrive%", drive, value)
+    return (value if isinstance(value, str) and re.fullmatch(r"[A-Za-z]:\\[^%]*", value) else default).replace("\\", "/").rstrip("/")
+
+
+WIN_ROOT = _win_dir(r"SOFTWARE\Microsoft\Windows NT\CurrentVersion", "SystemRoot", "C:/Windows")
+WIN_PF = _win_dir(r"SOFTWARE\Microsoft\Windows\CurrentVersion", "ProgramFilesDir", "C:/Program Files")
+WIN_PD = _win_dir(r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList", "ProgramData", "C:/ProgramData", WIN_ROOT[:2])
+WIN_SYS = WIN_ROOT + "/System32"
+WIN_LIB = WIN_PF + "/SparkAnker"                     # the program, its own Python (python-<version>), spark-anker.cmd
+WIN_ETC = WIN_PD + "/SparkAnker"                     # settings and the panel's key line: SYSTEM and Administrators only
+WIN_VAR = WIN_ETC + "/var"                           # the anchor's own folder (LOCAL SERVICE may write)
+WIN_KEYS = WIN_ETC + "/authorized_keys"              # sshd reads it for spark only (Match User spark)
+WIN_SSH = WIN_PD + "/ssh"
+WIN_SSHD_CONF = WIN_SSH + "/sshd_config"
+WIN_OPENSSH = WIN_SYS + "/OpenSSH"
+WIN_PS = WIN_SYS + "/WindowsPowerShell/v1.0/powershell.exe"
+WIN_TASK, WIN_TASK_W = "SparkAnker", "SparkAnker-Waechter"
+WIN_TASK_E = "SparkAnker-Einmal"      # name start of a PowerShell after this process (win_once); the task deletes itself
+WIN_SIDS = {"system": "S-1-5-18", "admins": "S-1-5-32-544", "lokal": "S-1-5-19"}   # LOCAL SERVICE runs the anchor
+WIN_CAP = "OpenSSH.Server~~~~0.0.1.0"
+WIN_REG_OPENSSH = r"HKLM\SOFTWARE\OpenSSH"
+WIN_REG_HIDE = r"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList"
+WIN_REG_APPS = r"HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\SparkAnker"   # Apps → „Spark Anker“
+WIN_FW_RULE = "OpenSSH-Server-In-TCP"
+WIN_SSH_GROUP = "OpenSSH Users"      # sshd_config of newer OpenSSH: AllowGroups administrators "openssh users"
+WIN_MARK = ("# spark-anker anfang", "# spark-anker ende")
+WIN_SSHD_TOP = ("ListenAddress 127.0.0.1\nPasswordAuthentication no\n"
+                f"AllowUsers {USER}@127.0.0.1\n")
+WIN_SSHD_MATCH = f"Match User {USER}\n    AuthorizedKeysFile __PROGRAMDATA__/SparkAnker/authorized_keys\n"
+WIN_WAECHTER_S = 5                                   # the root side looks for „abbauen“ and „aktualisieren“ this often
+# Python for the anchor on Windows: python.org's embeddable package (PSF licence), only in WIN_LIB, never on PATH. The
+# one source of version and SHA-256 (the panel's .cmd file reads them from here; a new runtime comes with a signed
+# anchor like every update).
+PY_EMBED = {"version": "3.13.16", "amd64": "97dae5274cc54867065e8d5a3226e48c35017ed332a0fdb0e27d5b5821961297",
+            "arm64": "790d097697a2020477549a6764d89d22194c88d6e42caebcb2db63791e004c94"}
+PY_EMBED_URL = "https://www.python.org/ftp/python/{v}/python-{v}-embed-{arch}.zip"
+PY_EMBED_MAX = 64 * 1024 * 1024
+
+
+def py_embed(prog):
+    """PY_EMBED as a program names it ({"version", "amd64", "arm64"}), None when it names none or a malformed one."""
+    m = re.search(rb"^PY_EMBED = (\{.*?\})\r?$", prog or b"", re.M | re.S)   # \r: a checkout with CRLF
+    try:
+        pins = ast.literal_eval(m.group(1).decode()) if m else None
+    except (ValueError, SyntaxError):
+        return None
+    ok = isinstance(pins, dict) and VER.fullmatch(str(pins.get("version") or "")) and \
+        all(FP.fullmatch(str(pins.get(a) or "")) for a in ("amd64", "arm64"))
+    return pins if ok else None
+WIN_TASK_XML = """<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo><Description>{desc}</Description></RegistrationInfo>
+  <Triggers><BootTrigger><Enabled>true</Enabled></BootTrigger></Triggers>
+  <Principals><Principal id="Author"><UserId>{sid}</UserId><RunLevel>{level}</RunLevel></Principal></Principals>
+  <Settings>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
+    <RestartOnFailure><Interval>PT1M</Interval><Count>999</Count></RestartOnFailure>
+    <Hidden>true</Hidden>
+  </Settings>
+  <Actions Context="Author"><Exec><Command>{python}</Command><Arguments>-I "{prog}" {arg}</Arguments></Exec></Actions>
+</Task>
+"""
+WIN_ONCE_XML = """<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo><Description>Spark-Anker: einmal nach dem Anker</Description></RegistrationInfo>
+  <Triggers><BootTrigger><Enabled>true</Enabled></BootTrigger></Triggers>
+  <Principals><Principal id="Author"><UserId>{sid}</UserId><RunLevel>HighestAvailable</RunLevel></Principal></Principals>
+  <Settings><MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy><DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries><ExecutionTimeLimit>PT1H</ExecutionTimeLimit><Hidden>true</Hidden></Settings>
+  <Actions Context="Author"><Exec><Command>{ps}</Command><Arguments>{args}</Arguments></Exec></Actions>
+</Task>
+"""
+WIN_CMD = """@echo off
+rem spark-anker: Fernzugang des Spark-Panels (entfernen, zustand); fragt selbst nach Administratorrechten
+net session >nul 2>&1 || (powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -ArgumentList '%*' -Verb RunAs" & exit /b)
+"{python}" -I "{prog}" %*
+pause
+"""
+# the user spark: a random password made and forgotten inside PowerShell (never an argument, never stored), hidden
+WIN_USER_PS = ("$b=New-Object byte[] 24;[Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b);"
+               "$p=ConvertTo-SecureString ([Convert]::ToBase64String($b)+'aA1!') -AsPlainText -Force;"
+               f"New-LocalUser -Name {USER} -Password $p -PasswordNeverExpires -UserMayNotChangePassword "
+               "-Description 'Spark Fernzugang' | Out-Null")
+WIN_SID_PS = f"(Get-LocalUser -Name {USER}).SID.Value"
+# the user spark away with its profile: its processes end first (a session still open keeps the profile loaded, and a
+# new spark would get the folder spark.<PC>); a profile Windows still holds goes later (WIN_LATER_PS)
+WIN_USER_WEG_PS = (f"$u=Get-LocalUser -Name {USER} -ErrorAction SilentlyContinue; if($u){{"
+                   "Get-Process -IncludeUserName -ErrorAction SilentlyContinue | Where-Object {$_.UserName -like "
+                   f"'*\\{USER}'}} | Stop-Process -Force -ErrorAction SilentlyContinue;"
+                   "Get-CimInstance Win32_UserProfile | Where-Object {$_.SID -eq $u.SID.Value} | "
+                   "Remove-CimInstance -ErrorAction SilentlyContinue;"
+                   f"Remove-LocalUser -Name {USER}}}")
+# spark joins the group AllowGroups lets in (exit 3: joined now, 0: was in it already)
+WIN_GROUP_PS = (f"$g='{WIN_SSH_GROUP}';if(-not (Get-LocalGroupMember -Group $g -Member {USER} -ErrorAction SilentlyContinue))"
+                f"{{Add-LocalGroupMember -Group $g -Member {USER};exit 3}}")
+WIN_GROUP_WEG_PS = f"Remove-LocalGroupMember -Group '{WIN_SSH_GROUP}' -Member {USER} -ErrorAction SilentlyContinue"
+# after the anchor (win_once): its folder once the Python in it ended (never a folder a new setup made: then anker.json
+# is there again) and the profile of the removed spark once Windows let go of it (after an SSH session Windows keeps it
+# loaded until the next start); two minutes, then again at every start until both are gone
+WIN_LATER_PS = ("$l='{lib}';$s='{sid}';$lw=$false;$fertig=$false;for($i=0;$i -lt 60;$i++){{"
+                "if(-not $lw){{if(Test-Path -LiteralPath '{conf}'){{$lw=$true}}else{{"
+                "Remove-Item -LiteralPath $l -Recurse -Force -ErrorAction SilentlyContinue;$lw=-not (Test-Path -LiteralPath $l)}}}};"
+                "$p=$null;if($s){{$p=Get-CimInstance Win32_UserProfile | Where-Object {{$_.SID -eq $s}};"
+                "if($p){{try{{$p | Remove-CimInstance -ErrorAction Stop;$p=$null}}catch{{}}}}}};"
+                "if($lw -and -not $p){{$fertig=$true;break}};Start-Sleep 2}};if(-not $fertig){{exit 1}}")
+
+
+def win_native(p):
+    return p.replace("/", "\\")
+
+
+def win_once(ctx, name, script):
+    """script (PowerShell) once more after this process ended, as SYSTEM in a task of its own: a child of this process
+    would end with the task's job (the Task Scheduler takes it down). The task deletes itself when the script ends
+    without „exit“; else it runs again at the next start. name: WIN_TASK_E-<name>, one task per purpose."""
+    name = f"{WIN_TASK_E}-{name}"
+    xml = ctx.path(f"{WIN_LIB}/{name}.xml")
+    args = f'-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "{script}; schtasks /delete /tn {name} /f"'
+    with open(xml, "w", encoding="utf-16") as f:
+        f.write(WIN_ONCE_XML.format(sid=WIN_SIDS["system"], ps=win_native(WIN_PS), args=args.replace("&", "&amp;")
+                                    .replace("<", "&lt;").replace(">", "&gt;")))
+    rc = ctx.run(["schtasks", "/create", "/tn", name, "/xml", win_native(xml), "/f"]) or \
+        ctx.run(["schtasks", "/run", "/tn", name])
+    with contextlib.suppress(OSError):
+        os.remove(xml)
+    return rc
+
+
+def win_ps(ctx, script):
+    return ctx.run([WIN_PS, "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script])
+
+
+def win_runtime_dir(version=None):
+    return f"{WIN_LIB}/python-{version or PY_EMBED['version']}"
+
+
+def win_arch():
+    """The Python this runs on (the one the file chose for this Windows): amd64 or arm64."""
+    return "arm64" if platform.machine().lower() in ("arm64", "aarch64") else "amd64"
+
+
+def _marked(block):
+    return f"{WIN_MARK[0]}\n{block}{WIN_MARK[1]}\n"
+
+
+def win_unmark(text):
+    """The sshd settings without the anchor's marked blocks (everything else as the owner left it)."""
+    return re.sub(rf"(?ms)^{re.escape(WIN_MARK[0])}\n.*?^{re.escape(WIN_MARK[1])}\n?", "", text)
+
+
+def win_sshd_text(text, own):
+    """The anchor's blocks into sshd_config: the first values count, so ListenAddress and AllowUsers go to the top
+    (only when the anchor switched sshd on); Match User spark always at the very end."""
+    text = win_unmark(text)
+    if text and not text.endswith("\n"):
+        text += "\n"
+    return (_marked(WIN_SSHD_TOP) if own else "") + text + _marked(WIN_SSHD_MATCH)
+
+
+def win_reg_value(ctx, key, name):
+    """A registry value as `reg query` prints it, "" when there is none."""
+    m = re.search(rf"^\s*{re.escape(name)}\s+REG_\w+\s+(.*?)\s*$", ctx.out(["reg", "query", key, "/v", name]), re.M)
+    return m.group(1) if m else ""
+
+
+def win_check(ctx):
+    """Before anything changes: OpenSSH Server there (the .cmd file adds it), its settings readable, the host key
+    (made by ssh-keygen -A when sshd never ran), a list „AllowUsers“ of the owner that would keep spark out."""
+    if not os.path.isfile(ctx.path(WIN_OPENSSH + "/sshd.exe")):
+        raise Fehler("OpenSSH-Server fehlt. Abhilfe: die Datei spark-anker-einrichten.cmd aus dem Panel nehmen (sie "
+                     "richtet ihn ein) oder Einstellungen → System → Optionale Features → „OpenSSH-Server“. "
+                     "Es wurde nichts eingerichtet.")
+    before = ctx.port_open()
+    conf = ctx.path(WIN_SSHD_CONF)
+    if not os.path.isfile(conf):
+        default = ctx.path(WIN_OPENSSH + "/sshd_config_default")
+        if not os.path.isfile(default):
+            raise Fehler("sshd_config fehlt und keine Vorlage da. Es wurde nichts eingerichtet.")
+        os.makedirs(os.path.dirname(conf), exist_ok=True)
+        shutil.copyfile(default, conf)
+    with open(conf, encoding="utf-8", errors="replace") as f:
+        text = win_unmark(f.read())
+    allow = re.findall(r"^\s*AllowUsers\s+(.+)$", text, re.M | re.I)
+    listen = [x for x in re.findall(r"^\s*ListenAddress\s+(\S+)", text, re.M | re.I) if x not in ("127.0.0.1", "127.0.0.1:22")]
+    if not before and listen:
+        raise Fehler(f"sshd_config nennt eigene Adressen (ListenAddress). Der Anker schaltet sshd nur für 127.0.0.1 ein; "
+                     f"bitte dort entfernen oder sshd selbst starten, dann die Datei noch einmal. Es wurde nichts eingerichtet.")
+    if before and allow and not any(re.fullmatch(rf"{USER}(@\S+)?", w, re.I) for a in allow for w in a.split()):
+        raise Fehler(f"sshd lässt hier nur bestimmte Benutzer herein (AllowUsers in {win_native(WIN_SSHD_CONF)}). "
+                     f"Abhilfe: dort {USER}@127.0.0.1 ergänzen, dann die Datei noch einmal. Es wurde nichts eingerichtet.")
+    groups = [g.strip('"').lower() for a in re.findall(r"^\s*AllowGroups\s+(.+)$", text, re.M | re.I)
+              for g in re.findall(r'"[^"]*"|\S+', a)]
+    if groups and WIN_SSH_GROUP.lower() not in groups:
+        raise Fehler(f"sshd lässt hier nur bestimmte Gruppen herein (AllowGroups in {win_native(WIN_SSHD_CONF)}). "
+                     f"Abhilfe: dort \"{WIN_SSH_GROUP.lower()}\" ergänzen, dann die Datei noch einmal. Es wurde nichts eingerichtet.")
+    if not os.path.isfile(ctx.path(WIN_SSH + "/ssh_host_ed25519_key.pub")) and ctx.run([WIN_OPENSSH + "/ssh-keygen.exe", "-A"]):
+        raise Fehler("die Host-Schlüssel ließen sich nicht anlegen (ssh-keygen -A). Es wurde nichts eingerichtet.")
+    start = re.search(r"START_TYPE\s*:\s*\d+\s+(\w+)", ctx.out(["sc.exe", "qc", "sshd"]))
+    return {"sshd_vorher": before, "sshd_start_vorher": start.group(1).lower() if start else "demand",
+            "ssh_gruppe_noetig": bool(groups)}
+
+
+def win_acl(ctx, path, *grants):
+    """Only these may touch path (no rights inherited from above): SYSTEM and Administrators always."""
+    return ctx.run(["icacls", win_native(ctx.path(path)), "/inheritance:r", "/grant:r",
+                    f"*{WIN_SIDS['system']}:(OI)(CI)F", f"*{WIN_SIDS['admins']}:(OI)(CI)F", *grants])
+
+
+def win_users(ctx, conf):
+    for d in (WIN_ETC, WIN_VAR):
+        os.makedirs(ctx.path(d), exist_ok=True)
+    if win_acl(ctx, WIN_ETC, f"*{WIN_SIDS['lokal']}:(OI)(CI)RX") or \
+            ctx.run(["icacls", win_native(ctx.path(WIN_VAR)), "/grant", f"*{WIN_SIDS['lokal']}:(OI)(CI)M"]):
+        raise Fehler(f"die Rechte von {win_native(WIN_ETC)} ließen sich nicht setzen")
+    if conf["user_neu"]:
+        if win_ps(ctx, WIN_USER_PS):
+            raise Fehler(f"Benutzer {USER} ließ sich nicht anlegen")
+        ctx.run(["reg", "add", WIN_REG_HIDE, "/v", USER, "/t", "REG_DWORD", "/d", "0", "/f"])   # not on the sign-in screen
+    if conf.get("ssh_gruppe_noetig"):           # AllowGroups: spark joins „OpenSSH Users“ (no other right comes with it)
+        rc = win_ps(ctx, WIN_GROUP_PS)
+        if rc not in (0, 3):
+            raise Fehler(f"Benutzer {USER} ließ sich nicht in die Gruppe {WIN_SSH_GROUP} aufnehmen")
+        conf["ssh_gruppe"] = "dazu" if rc == 3 else ""
+    path = ctx.path(WIN_SSHD_CONF)
+    with open(path, encoding="utf-8", errors="replace") as f:
+        old = f.read()
+    own = not conf["sshd_vorher"]
+    write_atomic(path, win_sshd_text(old, own).encode(), 0o644)
+    conf["sshd_conf"] = True
+    if ctx.run([WIN_OPENSSH + "/sshd.exe", "-t"]):
+        write_atomic(path, old.encode(), 0o644)
+        raise Fehler("sshd nimmt die Einstellungen des Ankers nicht an; nichts an sshd geändert")
+    if own:
+        conf["shell_vorher"] = win_reg_value(ctx, WIN_REG_OPENSSH, "DefaultShell")
+        ctx.run(["reg", "add", WIN_REG_OPENSSH, "/v", "DefaultShell", "/t", "REG_SZ", "/d", win_native(WIN_PS), "/f"])
+        win_ps(ctx, f"Disable-NetFirewallRule -Name {WIN_FW_RULE} -ErrorAction SilentlyContinue")
+        conf["sshd_an"] = True
+        ctx.run(["sc.exe", "config", "sshd", "start=", "auto"])
+        ctx.run(["sc.exe", "start", "sshd"])
+        for _ in range(20):
+            if ctx.port_open():
+                break
+            ctx.wait(0.5)
+        else:
+            raise Fehler("sshd ließ sich nicht starten (Dienste → OpenSSH SSH Server)")
+    else:
+        win_ps(ctx, "Restart-Service sshd")      # reads Match User spark; sessions already open stay
+    return (0, 0, ""), (0, 0, "")
+
+
+def win_keys(ctx, user, line):
+    """The panel's line (LF only) in WIN_KEYS; sshd takes the file only when SYSTEM or Administrators own it, so the
+    owner is set to SYSTEM (an elevated admin would otherwise own it on a PC without UAC)."""
+    with open(ctx.path(WIN_KEYS), "a", encoding="ascii", newline="\n") as f:
+        f.write(line + "\n")
+    if ctx.run(["icacls", win_native(ctx.path(WIN_KEYS)), "/setowner", f"*{WIN_SIDS['system']}"]):
+        raise Fehler(f"die Rechte von {win_native(WIN_KEYS)} ließen sich nicht setzen")
+
+
+def win_units(ctx):
+    """The tasks of this version (the anchor as LOCAL SERVICE, the watcher as SYSTEM, both at start), spark-anker.cmd
+    and the entry in Apps, always with the Python running this (its own, in WIN_LIB)."""
+    py, prog, rc = win_native(sys.executable), win_native(WIN.prog), 0
+    os.makedirs(ctx.path(WIN_ETC + "/aufgaben"), exist_ok=True)
+    for name, sid, level, arg, desc in ((WIN_TASK, WIN_SIDS["lokal"], "LeastPrivilege", "lauf", "Spark-Anker"),
+                                         (WIN_TASK_W, WIN_SIDS["system"], "HighestAvailable", "waechter", "Spark-Anker Abbau und Aktualisieren")):
+        xml = ctx.path(f"{WIN_ETC}/aufgaben/{name}.xml")
+        with open(xml, "w", encoding="utf-16") as f:
+            f.write(WIN_TASK_XML.format(desc=desc, sid=sid, level=level, python=py, prog=prog, arg=arg))
+        rc |= ctx.run(["schtasks", "/create", "/tn", name, "/xml", win_native(xml), "/f"])
+    with open(ctx.path(WIN_LIB + "/spark-anker.cmd"), "w", newline="\r\n") as f:
+        f.write(WIN_CMD.format(python=py, prog=prog))
+    cmd = win_native(WIN_LIB + "/spark-anker.cmd")
+    for name, typ, value in (("DisplayName", "REG_SZ", "Spark Anker"), ("DisplayVersion", "REG_SZ", VERSION),
+                             ("Publisher", "REG_SZ", "Speech on DGX Spark"), ("InstallLocation", "REG_SZ", win_native(WIN_LIB)),
+                             ("UninstallString", "REG_SZ", f'"{cmd}" entfernen'), ("NoModify", "REG_DWORD", "1"),
+                             ("NoRepair", "REG_DWORD", "1")):
+        ctx.run(["reg", "add", WIN_REG_APPS, "/v", name, "/t", typ, "/d", value, "/f"])
+    return rc
+
+
+def win_start(ctx, runner):
+    if win_units(ctx):
+        raise Fehler("die Aufgabenplanung nahm die Aufgaben nicht an (Aufgabenplanung → SparkAnker)")
+    for name in (WIN_TASK_W, WIN_TASK):
+        if ctx.run(["schtasks", "/run", "/tn", name]):
+            raise Fehler(f"die Aufgabe {name} ließ sich nicht starten (Aufgabenplanung)")
+
+
+def win_stop(ctx, conf):
+    ctx.run(["schtasks", "/end", "/tn", WIN_TASK])
+    ctx.run(["schtasks", "/delete", "/tn", WIN_TASK, "/f"])      # the watcher goes last (win_last): it may be the one removing
+
+
+def win_after(ctx, conf, home_gone):
+    """sshd, its shell and firewall rule, the user spark and the entry in Apps as they were before the anchor."""
+    path = ctx.path(WIN_SSHD_CONF)
+    if conf.get("sshd_conf") and os.path.isfile(path):
+        with open(path, encoding="utf-8", errors="replace") as f:
+            text = f.read()
+        write_atomic(path, win_unmark(text).encode(), 0o644)
+    if conf.get("sshd_an"):
+        ctx.run(["sc.exe", "stop", "sshd"])
+        ctx.run(["sc.exe", "config", "sshd", "start=", {"auto": "auto", "disabled": "disabled"}.get(conf.get("sshd_start_vorher"), "demand")])
+        if conf.get("shell_vorher"):
+            ctx.run(["reg", "add", WIN_REG_OPENSSH, "/v", "DefaultShell", "/t", "REG_SZ", "/d", conf["shell_vorher"], "/f"])
+        else:
+            ctx.run(["reg", "delete", WIN_REG_OPENSSH, "/v", "DefaultShell", "/f"])
+        win_ps(ctx, f"Enable-NetFirewallRule -Name {WIN_FW_RULE} -ErrorAction SilentlyContinue")
+    elif conf.get("sshd_conf"):
+        win_ps(ctx, "Restart-Service sshd")
+    if conf.get("ssh_gruppe") == "dazu" and not conf.get("user_neu"):   # a new spark leaves the group with itself
+        win_ps(ctx, WIN_GROUP_WEG_PS)
+    if conf.get("user_neu"):
+        conf["sid_weg"] = ctx.out([WIN_PS, "-NoProfile", "-NonInteractive", "-Command", WIN_SID_PS]).strip()   # win_last
+        win_ps(ctx, WIN_USER_WEG_PS)
+        ctx.run(["reg", "delete", WIN_REG_HIDE, "/v", USER, "/f"])
+    if conf.get("sshd_neu"):                         # the .cmd file added OpenSSH Server: away again
+        win_ps(ctx, f"Remove-WindowsCapability -Online -Name {WIN_CAP} | Out-Null")
+    ctx.run(["reg", "delete", WIN_REG_APPS, "/f"])
+
+
+def win_last(ctx, conf):
+    """The program's folder holds the very Python running this: a small PowerShell takes it away once it is free.
+    The watcher's task last of all (when it is the one removing, deleting it may end this process)."""
+    sid = conf.get("sid_weg", "") if re.fullmatch(r"S-1-5-21(-\d{1,10}){1,8}", str(conf.get("sid_weg", ""))) else ""
+    # one task per removed spark (its SID's last number): a new spark removed before the next start has its own
+    win_once(ctx, "weg-" + (sid.rsplit("-", 1)[-1] if sid else "0"), WIN_LATER_PS.format(lib=win_native(ctx.path(WIN_LIB)), conf=win_native(ctx.path(WIN.conf)), sid=sid))
+    ctx.run(["schtasks", "/delete", "/tn", WIN_TASK_W, "/f"])
+
+
+def win_runtime(ctx, prog):
+    """The Python a new program names (PY_EMBED in it, signed with it), fetched from python.org only when it is not
+    there yet, checked by its SHA-256 and unpacked beside the one running: the path of its python.exe, "" when it
+    fails (the update then stays with the one before)."""
+    pins = py_embed(prog)
+    if not isinstance(pins, dict) or not VER.fullmatch(str(pins.get("version") or "")) or not FP.fullmatch(str(pins.get(win_arch()) or "")):
+        return ""
+    target = ctx.path(win_runtime_dir(pins["version"]))
+    exe = os.path.join(target, "python.exe")
+    if os.path.isfile(exe):
+        return exe
+    url = PY_EMBED_URL.format(v=pins["version"], arch=win_arch())
+    try:
+        data = ctx.fetch(url, PY_EMBED_MAX)
+    except (OSError, Fehler, ssl.SSLError, http.client.HTTPException):
+        return ""
+    if not data or not hmac.compare_digest(hashlib.sha256(data).hexdigest(), pins[win_arch()]):
+        return ""
+    tmp = target + ".neu"
+    shutil.rmtree(tmp, ignore_errors=True)
+    try:
+        with zipfile.ZipFile(io.BytesIO(data)) as z:
+            for n in z.namelist():
+                if n.startswith(("/", "\\")) or ".." in n.replace("\\", "/").split("/") or ":" in n:
+                    return ""
+            z.extractall(tmp)
+        os.replace(tmp, target)
+    except (OSError, zipfile.BadZipFile):
+        shutil.rmtree(tmp, ignore_errors=True)
+        return ""
+    return exe if os.path.isfile(exe) else ""
+
+
+def fetch_https(url, cap):
+    """GET url with the system's authorities (python.org for the runtime), at most cap bytes, no redirect."""
+    u = urllib.parse.urlsplit(url)
+    if u.scheme != "https" or not u.hostname:
+        raise Fehler("nur https")
+    c = http.client.HTTPSConnection(u.hostname, u.port or 443, timeout=60, context=authorities())
+    try:
+        c.request("GET", u.path, headers={"User-Agent": f"spark-anker/{VERSION}"})
+        r = c.getresponse()
+        if r.status != 200:
+            raise Fehler(f"{u.hostname} antwortet {r.status}")
+        data = r.read(cap + 1)
+    finally:
+        c.close()
+    if len(data) > cap:
+        raise Fehler("zu groß")
+    return data
+
+
+def win_old_runtimes(ctx):
+    """Pythons of earlier versions the watcher no longer runs from (after a runtime update)."""
+    here_ = os.path.dirname(os.path.abspath(sys.executable)).replace("\\", "/").lower()
+    lib = ctx.path(WIN_LIB)
+    with contextlib.suppress(OSError):
+        for n in os.listdir(lib):
+            p = os.path.join(lib, n)
+            if n.startswith("python-") and os.path.isdir(p) and p.replace("\\", "/").lower() != here_:
+                shutil.rmtree(p, ignore_errors=True)
+
+
+def cmd_watch(args, ctx=None, rounds=None):
+    """`waechter` (Windows, the task SparkAnker-Waechter as SYSTEM): what the root units do on Linux. „abbauen“ from
+    the panel removes everything, „aktualisieren“ swaps the program (cmd_apply); after a new Python the watcher
+    starts again on it."""
+    ctx = ctx or Ctx()
+    s = ctx.s
+    if s is not WIN or ctx.euid() != 0:
+        say("nur unter Windows als SYSTEM (Aufgabe SparkAnker-Waechter)")
+        return 1
+    win_old_runtimes(ctx)
+    n = 0
+    while rounds is None or n < rounds:
+        n += 1
+        if os.path.lexists(ctx.path(s.flag)):
+            cmd_remove(argparse.Namespace(vom_panel=True), ctx=ctx)
+            return 0
+        if os.path.lexists(ctx.path(s.var + "/aktualisieren")):
+            cmd_apply(args, ctx)
+            if os.path.normcase(getattr(ctx, "python_neu", "") or sys.executable) != os.path.normcase(sys.executable):
+                win_once(ctx, "neu", f"Start-Sleep 3; Start-ScheduledTask -TaskName {WIN_TASK_W}")   # again, on the new Python
+                return 0
+        ctx.wait(WIN_WAECHTER_S)
+    return 0
+
+
 class System:
     def __init__(self, **kw):
         self.__dict__.update(kw)
 
 
+def home_keys(ctx, user, line):
+    """The panel's line in ~/.ssh/authorized_keys of the user spark (Linux, macOS)."""
+    ssh = ctx.path(os.path.join(user[2], ".ssh"))
+    os.makedirs(ssh, mode=0o700, exist_ok=True)
+    ak = os.path.join(ssh, "authorized_keys")
+    with open(ak, "a") as f:
+        f.write(line + "\n")
+    for p, m in ((ssh, 0o700), (ak, 0o600)):
+        ctx.chown(p, user[0], user[1])
+        os.chmod(p, m)
+
+
+SUDO = "bitte mit sudo"
 LINUX = System(name="Linux", lib=LIB, prog=PROG, bin=BIN, etc=ETC, conf=CONF, var=VAR, flag=FLAG, services=UNITS,
-               python="/usr/bin/python3", units=linux_units,
-               runner=RUNNER, check=linux_check, users=linux_users, start=linux_start, stop=linux_stop,
-               after=linux_after, last=linux_last, started="der Dienst spark-anker läuft")
+               python="/usr/bin/python3", units=linux_units, hostkey=HOSTKEY, keys=home_keys, sudo=SUDO,
+               weg="sudo spark-anker entfernen", runner=RUNNER, check=linux_check, users=linux_users, start=linux_start,
+               stop=linux_stop, after=linux_after, last=linux_last, started="der Dienst spark-anker läuft")
 MAC = System(name="Darwin", lib=MAC_LIB, prog=MAC_LIB + "/spark-anker.py", bin=BIN,
              etc=MAC_ETC, conf=MAC_ETC + "/anker.json", var=MAC_VAR, flag=MAC_VAR + "/abbauen", services=MAC_PLISTS,
-             python=MAC_PY, units=mac_units, runner=MAC_RUNNER, check=mac_check, users=mac_users, start=mac_start, stop=mac_stop,
+             python=MAC_PY, units=mac_units, hostkey=HOSTKEY, keys=home_keys, sudo=SUDO, weg="sudo spark-anker entfernen",
+             runner=MAC_RUNNER, check=mac_check, users=mac_users, start=mac_start, stop=mac_stop,
              after=mac_after, last=mac_last, started="der Dienst de.speech-spark.anker läuft (launchd)")
+WIN = System(name="Windows", lib=WIN_LIB, prog=WIN_LIB + "/spark-anker.py", bin=None, etc=WIN_ETC,
+             conf=WIN_ETC + "/anker.json", var=WIN_VAR, flag=WIN_VAR + "/abbauen", services=(), python=sys.executable,
+             units=win_units, hostkey=WIN_SSH + "/ssh_host_ed25519_key.pub", keys=win_keys,
+             sudo="bitte als Administrator (die Datei aus dem Panel fragt selbst danach)",
+             weg="in den Windows-Einstellungen unter Apps „Spark Anker“ deinstallieren", runner=WIN_SIDS["lokal"], check=win_check,
+             users=win_users, start=win_start, stop=win_stop, after=win_after, last=win_last,
+             started="die Aufgabe SparkAnker läuft (Aufgabenplanung)")
 
 
-def cmd_setup(args, code_reader=read_code, run=run_cmd, ctx=None):
+TOKEN = re.compile(r"[A-Za-z0-9_\-]{20,64}")
+
+
+def read_token(stream=None):
+    """The one-time key of the Windows file (spark-anker-einrichten.cmd hands it over on stdin, never as an argument)."""
+    s = stream or sys.stdin
+    raw = getattr(s, "buffer", s).readline(400)      # bytes from PowerShell's pipe: a BOM or UTF-16 zeros are dropped
+    line = (raw.decode("utf-8", "replace") if isinstance(raw, bytes) else raw).replace("\x00", "").lstrip("\ufeff").strip()
+    if not TOKEN.fullmatch(line):
+        raise Fehler("der Einmal-Schlüssel der Datei fehlt oder ist kaputt: die Datei im Panel neu laden. "
+                     "Es wurde nichts eingerichtet.")
+    return line
+
+
+def cmd_setup(args, code_reader=read_code, run=run_cmd, ctx=None, token_reader=read_token):
     ctx = ctx or Ctx(run=run)
     s = ctx.s
     if ctx.euid() != 0:
-        say("bitte mit sudo")
+        say(s.sudo)
         return 1
     if load(ctx.root, s):
-        say("schon eingerichtet. Neue Version: `curl -fsSL <Panel>/fernzugang/anker | sudo python3 - aktualisieren` "
-            "(die Zeile steht im Panel beim System; Kopplung und Schlüssel bleiben). Neu koppeln: erst `sudo spark-anker entfernen`")
+        if s is WIN:
+            say(f"schon eingerichtet. Neu koppeln: erst {s.weg}, dann die Datei aus dem Panel noch einmal")
+        else:
+            say("schon eingerichtet. Neue Version: `curl -fsSL <Panel>/fernzugang/anker | sudo python3 - aktualisieren` "
+                "(die Zeile steht im Panel beim System; Kopplung und Schlüssel bleiben). Neu koppeln: erst `sudo spark-anker entfernen`")
         return 1
     base = base_url(args.adresse)
     fp = (args.fp or "").lower()
     if fp and not FP.fullmatch(fp):
         raise Fehler("--fp: 64 Zeichen 0-9 a-f")
+    token = token_reader() if getattr(args, "token", "") == "-" else ""
     state = s.check(ctx)
-    with open(ctx.path(HOSTKEY)) as f:
+    with open(ctx.path(s.hostkey)) as f:
         hostkey = " ".join(f.read().split()[:2])
+    with contextlib.suppress(IndexError, ValueError):   # the panel shows it the same way, to compare before „Bestätigen“
+        say("Host-Schlüssel dieses Systems: SHA256:" + base64.b64encode(
+            hashlib.sha256(base64.b64decode(hostkey.split()[1])).digest()).decode().rstrip("="))
     sock, got = tls_connect(base, fp)
     sock.close()
     say(f"Panel {base}, Zertifikat SHA-256 {got[:16]}…{got[-8:]}" + (" (festgelegt)" if fp else " (geprüft gegen die Zertifizierungsstellen)"))
-    code = code_reader()
+    secret = {"token": token} if token else {"code": code_reader()}
     status, raw = http_call(base, fp, "POST", "/api/fernzugang/anker/koppeln",
-                            {"code": code, "hostkey": hostkey, "os": os_name(s), "version": VERSION})
-    code = ""
+                            {**secret, "hostkey": hostkey, "os": os_name(s), "version": VERSION})
+    secret = token = None
     if status != 200:
-        raise Fehler({403: "Code falsch oder abgelaufen", 404: "Fernzugang im Panel ist aus",
-                      409: "zu viele Server gekoppelt", 429: "zu viele Versuche, später noch einmal"}.get(status, f"Panel antwortet {status}"))
+        raise Fehler({403: "Code falsch oder abgelaufen" if not getattr(args, "token", "") else
+                      "die Datei ist abgelaufen oder schon benutzt: im Panel neu laden",
+                      404: "Fernzugang im Panel ist aus", 409: "zu viele Server gekoppelt",
+                      429: "zu viele Versuche, später noch einmal"}.get(status, f"Panel antwortet {status}"))
     d = json.loads(raw)
     status, prog = http_call(base, fp, "GET", "/fernzugang/anker")
     if status != 200 or not hmac.compare_digest(hashlib.sha256(prog).hexdigest(), str(d.get("anker_sha256", ""))):
         raise Fehler("das Programm vom Panel passt nicht zu seiner Prüfsumme")
     conf = {"url": base, "fp": fp, "id": d["id"], "key": d["key"], "user_neu": not ctx.ids(USER), "seit": int(time.time()),
             **state}
+    if getattr(args, "sshd_neu", False):         # the .cmd file added OpenSSH Server just now: removing takes it away
+        conf["sshd_neu"] = True
     if _b64(d.get("sign_pub"), 32):            # the panel's signing key for updates, pinned with the pairing
         conf["sign_pub"] = d["sign_pub"]
     if intern_ok(d.get("intern")):
         conf["intern"] = intern_ok(d.get("intern"))   # paired at home: the panel's own address first (verbinden)
     user, runner = s.users(ctx, conf)
-    ssh = ctx.path(os.path.join(user[2], ".ssh"))
-    os.makedirs(ssh, mode=0o700, exist_ok=True)
-    ak = os.path.join(ssh, "authorized_keys")
-    with open(ak, "a") as f:
-        f.write(key_line(str(d["pi_key"])) + "\n")
-    for p, m in ((ssh, 0o700), (ak, 0o600)):
-        ctx.chown(p, user[0], user[1])
-        os.chmod(p, m)
-    write(ctx.path(s.prog), prog.decode(), 0o755)
-    bin_ = ctx.path(s.bin)
-    os.makedirs(os.path.dirname(bin_), exist_ok=True)
-    if os.path.lexists(bin_):
-        os.remove(bin_)
-    os.symlink(s.prog, bin_)
+    s.keys(ctx, user, key_line(str(d["pi_key"])))
+    os.makedirs(os.path.dirname(ctx.path(s.prog)), exist_ok=True)
+    write_atomic(ctx.path(s.prog), prog, 0o755)     # the bytes as checked (no line ends changed on Windows)
+    if s.bin:
+        bin_ = ctx.path(s.bin)
+        os.makedirs(os.path.dirname(bin_), exist_ok=True)
+        if os.path.lexists(bin_):
+            os.remove(bin_)
+        os.symlink(s.prog, bin_)
     write(ctx.path(s.conf), json.dumps(conf, indent=1), 0o640)
     ctx.chown(ctx.path(s.conf), 0, runner[1])
     ctx.chown(ctx.path(s.etc), 0, runner[1])
     os.chmod(ctx.path(s.etc), 0o750)
     s.start(ctx, runner)
     say(f"eingerichtet: der Panel-Schlüssel darf als {USER} nur über den Anker herein; {s.started}")
-    say("entfernen: sudo spark-anker entfernen (oder im Panel „Entfernen“)")
+    if d.get("wartet"):
+        say("jetzt im Panel das neue System bestätigen (Fernzugang → Systeme); erst dann geht eine Sitzung")
+    say(f"entfernen: {s.weg} (oder im Panel „Entfernen“)")
     return 0
 
 
 # ---------------------------------------------------------------- removing everything
 def remove_paths(root="/", s=None):
-    """Every path the anchor made (the user spark's home only when the anchor made the user)."""
+    """Every path the anchor made (the user spark's home only when the anchor made the user). Windows: not the program's
+    folder, it holds the Python running this (its standard library too); win_last takes it away after this process."""
     s = s or LINUX
     extra = (*BILD_UNITS, WAYVNC_UNIT) if s is LINUX else ()
-    return [here(root, p) for p in (*s.services, *extra, s.bin, s.lib, s.etc, s.var)]
+    return [here(root, p) for p in (*s.services, *extra, s.bin, s.lib if s is not WIN else None, s.etc, s.var) if p]
 
 
 def strip_key(path):
@@ -1312,7 +1840,7 @@ def cmd_remove(args, root="/", run=run_cmd, tell=True, home=None, ctx=None):
     ctx = ctx or Ctx(root=root, run=run)
     s = ctx.s
     if ctx.root == "/" and ctx.euid() != 0:
-        say("bitte mit sudo")
+        say(ctx.s.sudo)
         return 1
     conf = load(ctx.root, s) or {}
     s.stop(ctx, conf)
@@ -1379,7 +1907,10 @@ def bild_off(ctx, conf):
 
 
 def _restart_anchor(ctx):
-    if ctx.s is MAC:
+    if ctx.s is WIN:
+        ctx.run(["schtasks", "/end", "/tn", WIN_TASK])
+        ctx.run(["schtasks", "/run", "/tn", WIN_TASK])
+    elif ctx.s is MAC:
         ctx.run(["/bin/launchctl", "kickstart", "-k", "system/" + MAC_JOB])
     else:
         ctx.run(["systemctl", "restart", "spark-anker.service"])
@@ -1390,7 +1921,7 @@ def cmd_screen(args, run=run_cmd, ctx=None):
     ctx = ctx or Ctx(run=run)
     s = ctx.s
     if ctx.euid() != 0:
-        say("bitte mit sudo")
+        say(ctx.s.sudo)
         return 1
     conf = load(ctx.root, s)
     if not conf:
@@ -1489,7 +2020,7 @@ def cmd_units(args, ctx=None):
     """`einheiten` (root, from the update): the units or launchd jobs of this version; the update starts the anchor."""
     ctx = ctx or Ctx()
     if ctx.euid() != 0:
-        say("bitte mit sudo")
+        say(ctx.s.sudo)
         return 1
     return 1 if ctx.s.units(ctx) else 0
 
@@ -1517,7 +2048,7 @@ def cmd_apply(args, ctx=None, wait=UPDATE_S):
     ctx = ctx or Ctx()
     s = ctx.s
     if ctx.euid() != 0:
-        say("bitte mit sudo")
+        say(ctx.s.sudo)
         return 1
     var = lambda n: ctx.path(s.var + "/" + n)
     with contextlib.suppress(OSError):
@@ -1554,10 +2085,14 @@ def cmd_apply(args, ctx=None, wait=UPDATE_S):
     with contextlib.suppress(OSError):
         os.unlink(var("ok"))
     t0 = time.time()
-    if ctx.run([s.python, "-I", s.prog, "einheiten"]) == 0:
+    python = s.python
+    if s is WIN:                 # the Python the new program names (PY_EMBED, signed with it), beside the one running
+        python = win_runtime(ctx, prog)
+    if python and ctx.run([python, "-I", s.prog, "einheiten"]) == 0:
         _restart_anchor(ctx)
         if _wait_ok(ctx, var("ok"), v, t0, wait):
             os.unlink(path + ".alt")
+            ctx.python_neu = python
             return done("ok", v)
     write_atomic(path, before, 0o755)        # back to the one before, its own units, and started again
     os.unlink(path + ".alt")
@@ -1576,7 +2111,7 @@ def cmd_upgrade(args, ctx=None):
     ctx = ctx or Ctx()
     s = ctx.s
     if ctx.euid() != 0:
-        say("bitte mit sudo")
+        say(ctx.s.sudo)
         return 1
     conf = load(ctx.root, s)
     if not conf:
@@ -1882,43 +2417,48 @@ def cmd_help(args, tty=None, shell=None):
             t.restore()
 
 
-# Systems the anchor does not set up (yet): a fixed sentence and nothing done, never half a setup.
+# What the anchor does not do on a system (yet): a fixed sentence and nothing done, never half a setup.
 NOT_YET = {
-    "Windows": "Windows wird ab einer späteren Version unterstützt (Stufe 5); bitte Panel aktualisieren. Es wurde nichts eingerichtet.",
+    ("Windows", "bildschirm"): "Den Bildschirm unter Windows richtet der Anker noch nicht ein (eine spätere Stufe). Es wurde nichts eingerichtet.",
+    ("Windows", "hilfe"): "Die Spontanhilfe in der Shell gibt es unter Windows noch nicht; „Bildschirm teilen“ auf der Hilfe-Seite geht. Es wurde nichts verbunden.",
 }
 
 
-def not_yet(system=None):
-    """The fixed sentence for a system the anchor cannot set up, else None (Linux, macOS)."""
-    return NOT_YET.get(system or platform.system())
+def not_yet(cmd, system=None):
+    """The fixed sentence for what the anchor cannot do on this system, else None."""
+    return NOT_YET.get((system or platform.system(), cmd))
 
 
 def main(argv=None, system=None):
-    stop = not_yet(system)
-    if stop:
-        say(stop)
-        return 1
     p = argparse.ArgumentParser(prog="spark-anker", description="Fernzugang des Spark-Panels zu diesem sshd")
     sub = p.add_subparsers(dest="cmd", required=True)
     a = sub.add_parser("einrichten", help="einmal einrichten (fragt den Code im Terminal)")
     a.add_argument("adresse", help="https-Adresse des Panels")
     a.add_argument("--fp", default="", help="SHA-256 des Panel-Zertifikats (steht im Befehl aus dem Panel)")
+    a.add_argument("--token", default="", choices=["", "-"], help=argparse.SUPPRESS)   # Windows file: its key on stdin
+    a.add_argument("--sshd-neu", action="store_true", help=argparse.SUPPRESS)       # Windows file: it added OpenSSH Server
     r = sub.add_parser("entfernen", help="alles entfernen, was der Anker eingerichtet hat")
     r.add_argument("--vom-panel", action="store_true", help=argparse.SUPPRESS)
-    sub.add_parser("lauf", help="der Dienst (startet systemd bzw. launchd)")
+    sub.add_parser("lauf", help="der Dienst (startet systemd, launchd oder die Aufgabenplanung)")
     sub.add_parser("zustand", help="eingerichtet? welches Panel?")
     u = sub.add_parser("aktualisieren", help="dieses Programm anstelle des eingerichteten (ohne Code, Kopplung bleibt)")
     u.add_argument("--vom-anker", action="store_true", help=argparse.SUPPRESS)
     sub.add_parser("einheiten", help=argparse.SUPPRESS)
+    sub.add_parser("waechter", help=argparse.SUPPRESS)
     b = sub.add_parser("bildschirm", help="den Bildschirm für das Panel einrichten (oder `bildschirm aus`)")
     b.add_argument("aus", nargs="?", default="", choices=["", "aus"], help="aus: alles vom Bildschirm wieder weg")
     h = sub.add_parser("hilfe", help="Spontanhilfe: einmal, in diesem Terminal, ohne sudo (fragt die Nummer)")
     h.add_argument("adresse", help="https-Adresse des Panels")
     h.add_argument("--fp", default="", help="SHA-256 des Panel-Zertifikats (steht im Befehl aus dem Panel)")
     args = p.parse_args(argv)
+    stop = not_yet(args.cmd, system)
+    if stop:
+        say(stop)
+        return 1
     try:
         return {"einrichten": cmd_setup, "entfernen": cmd_remove, "lauf": cmd_run, "zustand": cmd_state,
-                "hilfe": cmd_help, "bildschirm": cmd_screen, "aktualisieren": cmd_upgrade, "einheiten": cmd_units}[args.cmd](args)
+                "hilfe": cmd_help, "bildschirm": cmd_screen, "aktualisieren": cmd_upgrade, "einheiten": cmd_units,
+                "waechter": cmd_watch}[args.cmd](args)
     except Fehler as e:
         say(str(e))
         return 1

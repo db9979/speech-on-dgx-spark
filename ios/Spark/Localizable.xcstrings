@@ -18630,6 +18630,56 @@
           }
         }
       }
+    },
+    "Neu über die Windows-Datei eingerichtet. Nur bestätigen, wenn du das gerade selbst eingerichtet hast und der Host-Schlüssel zu dem passt, den der PC gezeigt hat. Bis dahin geht keine Sitzung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set up with the Windows file. Only confirm when you just set it up yourself and the host key matches the one the PC showed. Until then no session opens."
+          }
+        }
+      }
+    },
+    "Bestätigen (Code/Passkey)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm (code/passkey)"
+          }
+        }
+      }
+    },
+    "wartet auf Bestätigung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "waiting for confirmation"
+          }
+        }
+      }
+    },
+    "Bestätigt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmed."
+          }
+        }
+      }
+    },
+    "Warten auf Bestätigung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for confirmation"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

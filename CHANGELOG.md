@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.264** · 2026-10-30 · Fernzugang auf Windows (Stufe 5): Koppeln über einen Einmal-Link zur Datei spark-anker-einrichten.cmd (Doppelklick, „Ja“, kein Code), danach bestätigt der Admin das neue System mit Code oder Passkey; OpenSSH nur auf 127.0.0.1, Python nur für den Anker mit fester Prüfsumme, Entfernen unter Apps „Spark Anker“ stellt alles wieder her; geprüft auf einem echten Windows (GitHub-Action „Fernzugang Windows“)
 - **V01.1.263** · 2026-10-30 · Fernzugang: Terminal und Vorschläge springen nicht mehr (die Statuszeile über dem Terminal blieb nach dem Öffnen stehen und verschwand beim nächsten Laden, Hinweise oben schoben das Terminal nach unten); Browser-Test über 20 Sekunden.
 - **V01.1.262** · 2026-10-30 · Fernzugang: jede Shell misst ihre Leitung (Laufzeit und Rate über das Lebenszeichen, unauffällig in der roten Leiste und im ⓘ) und sagt bei langsamer Verbindung einmal, dass der direkte https-Zugang schneller ist; die Ausgabe wartet höchstens 32 Stücke (Gegendruck) und geht gebündelt ans Fenster
 - **V01.1.261** · 2026-10-30 · ROT-FIX Finden: Strg K und die Karte unter einer Antwort leeren sofort die Treffer und den offenen Eintrag der Suche davor, niemand wählt mehr einen alten Treffer, während die neue Suche läuft (test_fund_mail auf GitHub rot)

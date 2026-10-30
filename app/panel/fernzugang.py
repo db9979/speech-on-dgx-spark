@@ -70,7 +70,8 @@ Rules (fixed, Sicherheits-Checkliste):
     POST   /api/admin/fernzugang/sitzung/{sid}/fenster {fenster}  ticket that moves the open shell of this login into
                                                          its own window or back („Herauslösen“, „Zurückholen“)
     POST   /api/admin/fernzugang/hilfe[?art=vorschlag] {sitzung, frage, befehle, bildschirm}  the assistant (stage 2b)
-    PUT    /api/admin/fernzugang/geraete/{gid} {erlaubt} may connect or not (browser or app)
+    PUT    /api/admin/fernzugang/geraete/{gid} {erlaubt} may connect or not (browser or app; not while it waits)
+    POST   /api/admin/fernzugang/geraete/{gid}/bestaetigen  a system from the Windows file gets sessions (admin_code_fresh)
     POST   /api/admin/fernzugang/geraete/{gid}/trennen   ends its sessions and its anchor connection (browser or app)
     DELETE /api/admin/fernzugang/geraete/{gid}           removes it; the anchor cleans itself up (admin_code_fresh; browser or app)
     POST   /api/admin/fernzugang/sitzung/{sid}/trennen   ends that one session („Gerade verbunden“; browser or app)
@@ -81,10 +82,13 @@ Rules (fixed, Sicherheits-Checkliste):
     (the screen, stage 4: POST /api/admin/fernzugang/bildschirm and WS /api/fernzugang/bildschirm in fernbild.py)
     anchor (no cookies):
     GET    /fernzugang/anker                             the program (public, no secrets; 404 while off)
-    POST   /api/fernzugang/anker/koppeln {code, hostkey, os, version}  -> {id, key, pi_key, user, anker_sha256, intern?}
+    POST   /api/fernzugang/anker/koppeln {code | token, hostkey, os, version}  -> {id, key, pi_key, user, anker_sha256,
+                                                         intern?, wartet?} (token: the Windows file's one-time key)
     link (no login: the pairing's „Einmal-Link“, its key behind „#“):
     GET    /koppeln                                      the page (own strict CSP, no data in it; 404 while off)
-    POST   /api/fernzugang/koppeln/link {link}           -> {os, befehl, gilt_s}: the one line, never the code
+    POST   /api/fernzugang/koppeln/link {link}           -> {os, befehl, gilt_s, datei}: the one line, never the code
+    POST   /api/fernzugang/koppeln/datei {link}          Windows: spark-anker-einrichten.cmd with a one-time key, once
+                                                         (fernwindows.py); that system waits for „Bestätigen“
     POST   /api/fernzugang/anker/abgebaut                (Bearer key) the anchor removed itself
     WS     /api/fernzugang/anker                         (Bearer key) the pipe; text: control, binary: channel byte + data
 
@@ -172,7 +176,7 @@ HOSTKEY = re.compile(r"ssh-ed25519 [A-Za-z0-9+/]{60,100}={0,2}")
 WORD = re.compile(r"[A-Za-z0-9._\- ()/+]{0,40}")
 ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"   # no 0/O, 1/I: typed from the screen
 LINK = re.compile(r"[A-Za-z0-9_\-]{20,30}")     # the key of a pairing's „Einmal-Link“ (behind „#“)
-LINK_OS = ("linux", "mac")                     # the systems a link shows a line for (Windows: a later stage)
+LINK_OS = ("linux", "mac", "windows")          # the systems a link is for (Windows: the file, fernwindows.py)
 LINK_CSP = ("default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; "
             "frame-ancestors 'none'; base-uri 'none'; form-action 'none'")
 LINK_PAGE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "koppeln.html")
@@ -251,7 +255,7 @@ HINWEIS = ((("screen", "-x"), ("Strg+A D = abkoppeln (die Sitzung dort läuft we
            (("tmux", "attach"), ("Strg+B D = abkoppeln (die Sitzung dort läuft weiter)", "Ctrl+B D = detach (the session there keeps running)")),
            (("tmux", "a"), ("Strg+B D = abkoppeln (die Sitzung dort läuft weiter)", "Ctrl+B D = detach (the session there keeps running)")))
 # the journal's words (fernzugang: <word> | ...), one line for every result of every action
-WORDS = ("koppeln_code", "koppeln", "anker_auf", "anker_zu", "anker_abgewiesen", "ticket", "sitzung_auf", "sitzung_zu",
+WORDS = ("koppeln_code", "koppeln", "koppeln_datei", "bestaetigt", "anker_auf", "anker_zu", "anker_abgewiesen", "ticket", "sitzung_auf", "sitzung_zu",
          "sitzung_abgewiesen", "hostkey_falsch", "abbauen", "abgebaut", "trennen", "alle_trennen", "erlaubt", "download", "verlauf", "meldung",
          "hilfe_frage", "hilfe_vorschlag", "hilfe_ziel", "entsperrt", "verlaengert", "gesperrt", "dateien_auf", "dateien_zu",
          "dateien_abgewiesen", "liste", "link", "laden", "hoch", "bild_ticket", "bild_auf", "bild_zu", "bild_rate", "bild_abgewiesen",
@@ -292,7 +296,18 @@ GEFAHR = {"linux": ((r"\brm\s+(-[A-Za-z-]+\s+)*-[A-Za-z]*[rRf]", "löscht Dateie
           (r"\bgit\s+(reset\s+--hard|clean\s+-[A-Za-z]*f)", "verwirft Änderungen", "throws changes away"),
           (r"\b(apt|apt-get|dnf|yum)\s+(\S+\s+)*(remove|purge|autoremove)\b", "entfernt Pakete", "removes packages"),
           (r"\bdocker\s+(system|volume|image)\s+prune\b", "löscht Docker-Daten", "deletes Docker data"),
-          (r"\bmv\s+(\S+\s+)+/dev/null\b|>\s*/etc/(passwd|shadow|sudoers)\b", "überschreibt oder verwirft Dateien", "overwrites or discards files"))}
+          (r"\bmv\s+(\S+\s+)+/dev/null\b|>\s*/etc/(passwd|shadow|sudoers)\b", "überschreibt oder verwirft Dateien", "overwrites or discards files")),
+          # Windows (PowerShell and cmd, stage 5): the same kinds of harm in their words
+          "windows": ((r"\b(Remove-Item|ri|rm|del|erase|rd|rmdir)\b[^|;&]*\s(-Recurse\b|-r\b|/s\b)", "löscht Ordner mit allem darin", "deletes folders with everything in them"),
+                      (r"\b(Format-Volume|Clear-Disk|Initialize-Disk|diskpart|cipher\s+/w)\b|\bformat\s+[A-Za-z]:", "Datenträger formatieren oder löschen", "formats or wipes a disk"),
+                      (r"\b(Stop-Computer|Restart-Computer)\b|\bshutdown(\.exe)?\s+/[srp]", "fährt den Rechner herunter oder neu", "shuts down or restarts the computer"),
+                      (r"\b(Remove-LocalUser|Set-LocalUser|Disable-LocalUser)\b|\bnet\s+user\b[^|;&]*(/delete|/del\b|\s\S+\s+\S+)", "ändert Benutzer oder Passwörter", "changes users or passwords"),
+                      (r"\b(iex|Invoke-Expression)\b[^|;&]*\b(iwr|irm|Invoke-WebRequest|Invoke-RestMethod|DownloadString)\b|\b(iwr|irm|Invoke-WebRequest|Invoke-RestMethod)\b[^;&]*\|\s*(iex|Invoke-Expression)\b", "führt ein Skript aus dem Netz aus", "runs a script from the net"),
+                      (r"\bSet-ExecutionPolicy\s+(Unrestricted|Bypass)\b", "schaltet den Skriptschutz ab", "switches script protection off"),
+                      (r"\b(Set-NetFirewallProfile[^|;&]*-Enabled\s+(False|0)|netsh\s+advfirewall\s+set\s+\S+\s+state\s+off)\b", "schaltet die Firewall ab", "switches the firewall off"),
+                      (r"\b(Remove-ItemProperty|reg\s+delete)\b[^|;&]*\bHKLM\b|\bbcdedit\b", "ändert die Systemeinstellungen tief", "changes deep system settings"),
+                      (r"\bvssadmin\s+delete\s+shadows\b|\bwbadmin\s+delete\b", "löscht Sicherungen", "deletes backups"),
+                      (r"\bgit\s+(reset\s+--hard|clean\s+-[A-Za-z]*f)", "verwirft Änderungen", "throws changes away"))}
 HILFE_SYSTEM = ("Du hilfst einem Admin in der Shell eines Servers (welches System, steht im Material). Antworte kurz und in der Sprache der Frage. "
                 "Jeder Befehl steht in einem eigenen Codeblock ```sh … ``` mit genau einem Befehl, nichts anderes darin. "
                 "Du hast keine Werkzeuge und führst nichts aus: der Mensch fügt einen Befehl selbst ein und drückt selbst "
@@ -511,7 +526,9 @@ class Anker:
 ANKER = {}       # gid -> Anker
 SITZUNG = {}     # sid -> Sitzung
 TICKETS = {}     # sha256(ticket) -> {"gid", "login", "until", "cols", "rows", "who"}
-LINKS = {}       # sha256(link key) -> {"bis", "code_h", "os", "befehl"}: a pairing's „Einmal-Link“, only in memory
+LINKS = {}       # sha256(link key) -> {"bis", "code_h", "os", "befehl"} (Windows: "code", "url", "fp"): a pairing's
+                 # „Einmal-Link“, only in memory
+TOKENS = {}      # sha256(one-time key in a Windows file) -> {"bis", "code", "code_h"}: only in memory, once
 STATS = {"heute": "", "sitzungen": 0, "abgewiesen": 0, "hilfe": 0, "uebertragungen": 0}   # uebertragungen: files moving now
 
 
@@ -566,6 +583,7 @@ def counts(now=None):
     g = _read(now)["geraete"]
     ok = [k for k, x in g.items() if x.get("stand") != "abbau"]
     return {"gekoppelt": len(ok), "online": sum(1 for k in ok if k in ANKER), "sitzungen": len(SITZUNG),
+            "wartet": sum(1 for k in ok if g[k].get("wartet")),
             "abbau": len(g) - len(ok), "hostkey": sum(1 for k in ok if g[k].get("hostkey_falsch")),
             "dateien": sum(1 for s in SITZUNG.values() if s.art == "dateien"),
             "bildschirm": sum(1 for s in SITZUNG.values() if s.art == "bildschirm"),
@@ -622,6 +640,7 @@ def live_sub(d):
             + (f" · {d['gehalten']} wartet auf Rückkehr" if d.get("gehalten") else "") + offen
             + (f" · {d['uebertragungen']} Übertragungen" if d.get("uebertragungen") else "")
             + (f" · {d['abbau']} warten auf Abbau" if d.get("abbau") else "")
+            + (f" · {d['wartet']} warten auf Bestätigung" if d.get("wartet") else "")
             + (f" · {d['hostkey']} Host-Schlüssel falsch" if d.get("hostkey") else "")
             + (f" · {d['hilfe']} Fragen an den Assistenten" if d.get("hilfe") else "")
             + (f" · {d['entsperrt']} entsperrt" if d.get("entsperrt") else "")
@@ -635,7 +654,7 @@ def probes(c=None):
     if not admin_on(c):
         return {}
     return {gid: {"fernanker": gid} for gid, x in _read()["geraete"].items()
-            if x.get("stand") != "abbau" and x.get("erlaubt", True)}
+            if x.get("stand") != "abbau" and x.get("erlaubt", True) and not x.get("wartet")}
 
 
 def anker_ok(gid, now=None):
@@ -680,6 +699,7 @@ async def notaus_close():
     """notaus.after_change: any stage closes everything and locks every unlocked page; new ones are refused while it is on."""
     sperren_alle("notaus")
     LINKS.clear()
+    TOKENS.clear()
     n = await close_all("notaus")
     log("alle_trennen", "notaus", n)
 
@@ -1047,8 +1067,8 @@ def _platz(gid):
         return None, None, None, "voll"
     g = _read()["geraete"].get(gid)
     a = ANKER.get(gid)
-    if not g or not a or g.get("stand") == "abbau" or not g.get("erlaubt", True) or g.get("hostkey_falsch"):
-        return None, None, None, "offline"
+    if not g or not a or g.get("stand") == "abbau" or not g.get("erlaubt", True) or g.get("hostkey_falsch") or g.get("wartet"):
+        return None, None, None, "offline"      # waiting for the admin's confirmation (Windows file): not ready either
     n = _free_channel(a)
     if n is None:
         return None, None, None, "voll"
@@ -1443,13 +1463,16 @@ async def anker_pair(request: Request):
     body = await json_body(request, MAX_BODY)
     hostkey = str(body.get("hostkey") or "").strip()
     raw = body.get("code")
+    datei = "token" in body                  # the Windows file: its one-time key stands for the code, the admin confirms
+    if datei:
+        raw = token_take(body.get("token"))
     peek = _code_form(raw)
     expired = bool(peek) and any(hmac.compare_digest(k, hashlib.sha256(peek.encode()).hexdigest())
                                  and time.time() - v["t"] > CODE_S for k, v in list(CODES.pending.items()))
     name = CODES.take(raw)
     if not name:
         guard.failed(request, "fernzugang-koppeln", what="fernzugang_koppeln")
-        log("koppeln", "abgelaufen" if expired else "falsch", 0)
+        log("koppeln", "datei falsch" if datei else "abgelaufen" if expired else "falsch", 0)
         raise HTTPException(403, "code expired" if expired else "wrong code")
     if not HOSTKEY.fullmatch(hostkey) or not fingerprint(hostkey):
         log("koppeln", "hostkey ungueltig", 0)
@@ -1471,17 +1494,18 @@ async def anker_pair(request: Request):
         ver = str(body.get("version") or "")[:20]
         d["geraete"][gid] = {"name": name, "os": os_ if WORD.fullmatch(os_) else "", "anker": ver if WORD.fullmatch(ver) else "",
                              "key_sha": _key_sha(key), "hostkey": hostkey, "pi_key": sealed, "pi_pub": pub,
-                             "seit": int(time.time()), "zuletzt": 0, "stand": "ok", "erlaubt": True}
+                             "seit": int(time.time()), "zuletzt": 0, "stand": "ok", "erlaubt": True,
+                             **({"wartet": True} if datei else {})}
         _write(d)
     guard.succeeded(request, "fernzugang-koppeln")
     link_weg(peek)
     import fernordner
     fernordner.nach_koppeln(peek, gid)
-    log("koppeln", "ok", 1)
-    guard.log("fernzugang_paired", detail="Fern-Server gekoppelt")
+    log("koppeln", "datei" if datei else "ok", 1)
+    guard.log("fernzugang_paired", detail="Fern-Server gekoppelt" + (" (wartet auf Bestätigung)" if datei else ""))
     _live("Fern-Server gekoppelt")
     out = {"id": gid, "key": key, "pi_key": f"{pub} spark-fernzugang-{gid}", "user": USER,
-           "anker_sha256": _sum(PROGRAM), "sign_pub": sign_pub}
+           "anker_sha256": _sum(PROGRAM), "sign_pub": sign_pub, **({"wartet": True} if datei else {})}
     intern = _intern(request)
     if intern:
         out["intern"] = intern
@@ -1552,9 +1576,11 @@ def link_neu(code, os_, cmd, now=None):
     for k in [k for k, v in LINKS.items() if v["bis"] <= now]:
         LINKS.pop(k, None)
     key = secrets.token_urlsafe(16)
-    LINKS[hashlib.sha256(key.encode()).hexdigest()] = {
-        "bis": now + CODE_S, "code_h": hashlib.sha256(_code_form(code).encode()).hexdigest(), "os": os_,
-        "befehl": cmd["befehl_mac"] if os_ == "mac" else cmd["befehl"]}
+    v = {"bis": now + CODE_S, "code_h": hashlib.sha256(_code_form(code).encode()).hexdigest(), "os": os_,
+         "befehl": "" if os_ == "windows" else cmd["befehl_mac"] if os_ == "mac" else cmd["befehl"]}
+    if os_ == "windows":                     # the file carries a key for this code: the code stays here, in memory only
+        v.update(code=_code_form(code), url=cmd["url"], fp=cmd.get("fp") or "")
+    LINKS[hashlib.sha256(key.encode()).hexdigest()] = v
     return f"{cmd['url']}/koppeln#{key}"
 
 
@@ -1563,6 +1589,20 @@ def link_weg(code_form):
     h = hashlib.sha256(str(code_form).encode()).hexdigest()
     for k in [k for k, v in LINKS.items() if hmac.compare_digest(v["code_h"], h)]:
         LINKS.pop(k, None)
+    for k in [k for k, v in TOKENS.items() if hmac.compare_digest(v["code_h"], h)]:
+        TOKENS.pop(k, None)
+
+
+def token_take(tok, now=None):
+    """The code a Windows file's one-time key stands for, once; None for a wrong, used or old key."""
+    now = time.time() if now is None else now
+    for k in [k for k, v in TOKENS.items() if v["bis"] <= now]:
+        TOKENS.pop(k, None)
+    tok = str(tok or "")
+    if not re.fullmatch(r"[A-Za-z0-9_\-]{20,64}", tok):
+        return None
+    v = TOKENS.pop(hashlib.sha256(tok.encode()).hexdigest(), None)
+    return v["code"] if v else None
 
 
 def link_page(request: Request):
@@ -1594,7 +1634,40 @@ async def link_check(request: Request):
         log("koppeln_link", "falsch", 0)
         raise HTTPException(404, "Link nicht gültig")
     log("koppeln_link", "ok", 1)
-    return {"os": v["os"], "befehl": v["befehl"], "gilt_s": int(v["bis"] - now)}
+    return {"os": v["os"], "befehl": v["befehl"], "gilt_s": int(v["bis"] - now), "datei": v["os"] == "windows"}
+
+
+@router.post("/api/fernzugang/koppeln/datei")
+async def link_file(request: Request):
+    """The Windows file of a pairing's link (fernwindows.cmd_file): once; the link is used up with it. Its one-time key
+    stands for the pairing's code until the code expires; the system it pairs waits for the admin's confirmation."""
+    import fernwindows
+    from fastapi.responses import Response
+    if not admin_on():
+        raise HTTPException(404, "Not Found")
+    guard.limit(request, "fernzugang_link")
+    if _notaus(count=True):
+        log("koppeln_datei", "notaus", 0)
+        raise HTTPException(503, "Gerade nicht möglich.")
+    body = await json_body(request, MAX_BODY)
+    key, now = str(body.get("link") or ""), time.time()
+    h = hashlib.sha256(key.encode()).hexdigest() if LINK.fullmatch(key) else ""
+    v = LINKS.get(h)
+    if v is None or v["bis"] <= now or v["os"] != "windows":
+        log("koppeln_datei", "falsch", 0)
+        raise HTTPException(404, "Link nicht gültig")
+    tok = secrets.token_urlsafe(24)
+    data = await asyncio.to_thread(fernwindows.cmd_file, v["url"], v["fp"], tok)
+    if not data:
+        log("koppeln_datei", "fehlt", 0)
+        raise HTTPException(503, "Die Windows-Datei ist gerade nicht da.")
+    LINKS.pop(h, None)
+    TOKENS[hashlib.sha256(tok.encode()).hexdigest()] = {"bis": v["bis"], "code": v["code"], "code_h": v["code_h"]}
+    log("koppeln_datei", "ok", 1)
+    _live("Windows-Datei zum Koppeln geladen")
+    return Response(data, media_type="application/octet-stream", headers={
+        "Content-Disposition": f'attachment; filename="{fernwindows.NAME}"', "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff", "Referrer-Policy": "no-referrer"})
 
 
 def download(request: Request):
@@ -1807,6 +1880,7 @@ def admin_get(request: Request):
                      "online": a is not None, "online_seit": int(a.seit) if a else None, "weg": x.get("weg"),
                      "zuletzt": x.get("zuletzt") or None, "seit": x.get("seit"), "stand": x.get("stand", "ok"),
                      "erlaubt": x.get("erlaubt", True), "hostkey_falsch": bool(x.get("hostkey_falsch")),
+                     "wartet": bool(x.get("wartet")),
                      "fp": fingerprint(x.get("hostkey", "")), "art": art(x.get("os")),
                      "bild": x.get("bild") or "", "bild_anker": fernbild.anchor_ok(x.get("anker")),
                      "sitzungen": sum(1 for s in SITZUNG.values() if s.gid == gid), **fernanker.row(x, pv),
@@ -2012,6 +2086,9 @@ async def admin_allow(gid: str, request: Request):
         d = _read()
         if gid not in d["geraete"]:
             raise HTTPException(404, "no such system")
+        if d["geraete"][gid].get("wartet"):
+            log("erlaubt", "wartet", 0)
+            raise HTTPException(409, "Erst bestätigen (Code oder Passkey).")
         d["geraete"][gid]["erlaubt"] = on
         _write(d)
     if not on and gid in ANKER:
@@ -2019,6 +2096,37 @@ async def admin_allow(gid: str, request: Request):
     log("erlaubt", "an" if on else "aus")
     guard.log("fernzugang_allow", detail="Fern-Server darf sich verbinden" if on else "Fern-Server gesperrt")
     return {"erlaubt": on}
+
+
+@router.post("/api/admin/fernzugang/geraete/{gid}/bestaetigen", dependencies=[Depends(auth), Depends(admin_code_fresh)])
+async def admin_confirm(gid: str, request: Request):
+    """„Bestätigen“: a system paired with the Windows file (no code typed over there) gets sessions only after this,
+    with a fresh code or passkey (browser or app). „Ablehnen“ is „Entfernen“."""
+    if not admin_on():
+        raise HTTPException(404, "Fernzugang ist aus (Funktionen → Fernzugang zu Servern)")
+    _admin_here(request)
+    _frei(request)
+    _second_step(request)
+    if _notaus(count=True):
+        raise HTTPException(503, "Notaus: Fernzugang gesperrt")
+    guard.limit(request, "fernzugang", admin=True)
+    if not GID.fullmatch(gid):
+        raise HTTPException(400, "no such system")
+    with _lock:
+        d = _read()
+        x = d["geraete"].get(gid)
+        if not x or x.get("stand") == "abbau":
+            log("bestaetigt", "unbekannt", 0)
+            raise HTTPException(404, "no such system")
+        if not x.get("wartet"):
+            log("bestaetigt", "schon", 0)
+            return {"wartet": False}
+        x.pop("wartet", None)
+        _write(d)
+    log("bestaetigt", _who(request), 1)
+    guard.log("fernzugang_confirm", detail="Fern-Server bestätigt")
+    _live("Fern-Server bestätigt")
+    return {"wartet": False}
 
 
 @router.post("/api/admin/fernzugang/geraete/{gid}/trennen", dependencies=[Depends(auth)])

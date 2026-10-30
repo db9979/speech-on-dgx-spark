@@ -407,6 +407,7 @@ MODULE = {
     "fernanker": ("fern", "Fernzugang, Anker aktualisieren: eigener Ed25519-Schlüssel im Tresor, signierte neue Version, nie zurück"),
     "fernordner": ("fern", "Fernzugang, Ordner: eine Ebene, Name und Symbol, Reihenfolge per Ziehen, nur Ordnung, Rechte je System"),
     "fernnotiz": ("fern", "Fernzugang, Notizen je System: versiegelt, 10 Fassungen, Tresor-Hinweis, Assistent liest nur mit Haken"),
+    "fernwindows": ("fern", "Fernzugang, Windows: spark-anker-einrichten.cmd mit Einmal-Schlüssel, Python mit fester Prüfsumme"),
     "ferndateien": ("fern", "Fernzugang, Dateien: SFTP in derselben SSH-Verbindung, Liste, Einmal-Link zum Laden, Hochladen mit Größengrenze"),
     "wachposten": ("zugang", "Wachposten: feste Regeln auf dem Änderungsprotokoll melden den Admins Sperren, neue Zugänge, geänderten Schutz"),
     "schirm": ("teilen", "Steuerzentrale am Bildschirm: was die Textanzeige zeigt, nur lokal mit Schlüssel; der Dienst folgt dem Schalter"),

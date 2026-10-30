@@ -40,6 +40,7 @@ LIST = {
     ("POST", "/api/admin/notaus/off"): (PROTECT, "Schutz", "Notaus aufheben", "Lift the emergency stop"),
     ("POST", "/api/admin/fernzugang/koppeln"): (PROTECT, "Schutz", "Fern-Server koppeln (Code für den Anker)", "Pair a remote server (code for the anchor)"),
     ("DELETE", "/api/admin/fernzugang/geraete/{gid}"): (PROTECT, "Schutz", "Fern-Server entfernen (Anker baut sich ab)", "Remove a remote server (the anchor removes itself)"),
+    ("POST", "/api/admin/fernzugang/geraete/{gid}/bestaetigen"): (PROTECT, "Schutz", "Fern-Server aus der Windows-Datei bestätigen (erst dann Sitzungen)", "Confirm a remote server from the Windows file (sessions only then)"),
     ("POST", "/api/admin/fernzugang/entsperren"): (PROTECT, "Schutz", "Fernzugang entsperren (die Seite für eine Weile, nur diese Anmeldung)", "Unlock remote access (the page for a while, this login only)"),
     ("POST", "/api/admin/spontanhilfe/verlaengern"): (PROTECT, "Schutz", "Spontanhilfe verlängern", "Extend spontaneous help"),
     ("POST", "/api/notaus/mine/off"): (PROTECT, "Schutz", "Eigenen Notaus aufheben", "Lift my own emergency stop"),
