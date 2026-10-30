@@ -3255,3 +3255,8 @@ button.fzfname{background:none;border:0;padding:4px 0;color:var(--acc,inherit);c
 .fzchiprow .fzchips.fzrechts{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent)}
 .fzchiprow .fzchips.fzlinks{-webkit-mask-image:linear-gradient(to right,transparent,#000 28px);mask-image:linear-gradient(to right,transparent,#000 28px)}
 .fzchiprow .fzchips.fzlinks.fzrechts{-webkit-mask-image:linear-gradient(to right,transparent,#000 28px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,transparent,#000 28px,#000 calc(100% - 28px),transparent)}
+/* Mappen (mappen.js): the budget bar like .ulbar, the chip above the conversation like .merknote */
+.mpbudget{margin:8px 0}.mpbar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:4px 0}
+.mpbar i{display:block;height:100%;border-radius:99px;background:var(--acc)}
+.mprow .ld-right{gap:6px;display:flex;align-items:center}.mpchip button{margin-left:4px;padding:0 8px}
+.mpedit label{display:block;margin:6px 0}

@@ -279,6 +279,8 @@
     "knowledge_book_sample": 50,
     "knowledge_map": false,
     "fund": false,
+    "mappen": false,
+    "mappe_token": 24000,
     "fund_mail": false,
     "fund_termine": false,
     "fund_kontakte": false,

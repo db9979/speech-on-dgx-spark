@@ -257,6 +257,7 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/gemerkt.py` | Gemerkt-Hinweis: „Gemerkt: …“ mit Rückgängig, Karte für von selbst Gelerntes |
 | `app/panel/kiwix.py` | Eigenes Kiwix als Wissensquelle ohne Internet |
 | `app/panel/lokal.py` | Erst lokal suchen, bevor etwas nach außen geht |
+| `app/panel/mappen.py` | Mappen: Dokumente, Seiten und Notizen bündeln, Kontext-Stufe je Eintrag (aus, kurz, ganz) nach festen Regeln |
 | `app/panel/meinedaten.py` | Alle meine Daten herunterladen: eine ZIP nach frischem Code, einmal abholen |
 | `app/panel/memtidy.py` | Wöchentliches Aufräumen des Gedächtnisses |
 | `app/panel/musik.py` | Musik machen: Wunsch prüfen, Modell wählen, Auftrag, Ablage, Liedkarte, Musik testen je Modell |
@@ -625,7 +626,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/zuordnungen.json` | Gemerkte Zuordnungen |  | ganz versiegelt (AES-256-GCM) | ja | Gedächtnis |
 | `users/ID/tasks.json` | Aufgaben |  | – | ja | Aufgaben und Erinnerungen |
 | `users/ID/reminders.json` | Erinnerungen |  | – | ja | Aufgaben und Erinnerungen |
-| `users/ID/wissen.db` | Dokumente: Text, Abschnitte mit Kontextzeile, Suche, Vektoren; Wissensbuch und Wissenskarte mit Personen, Firmen und Fristen (SQLite) |  | – | ja | Dokumente (Text, Suche, Originale) |
+| `users/ID/wissen.db` | Dokumente: Text, Abschnitte mit Kontextzeile, Suche, Vektoren; Wissensbuch und Wissenskarte mit Personen, Firmen und Fristen; Mappen mit Einträgen und Stufen (SQLite) |  | – | ja | Dokumente (Text, Suche, Originale) |
 | `users/ID/docs/files/` | Originale der Uploads |  | – | ja | Dokumente (Text, Suche, Originale) |
 | `users/ID/fund.db` | Finden: Suchindex über die eigenen Daten (Titel, Felder, Schlagworte, eigene Schlagworte, Mails und Anhänge, Termine, Kontakte, Listen, Erinnerungen, Bilder, Lieder; Gespräche nur Datum und Kanal; SQLite) |  | Marken mit eigenem Schlüssel je Profil (HMAC); Mails, Anhänge, Termine und Kontakte: Titel, Auszug, Felder und Schlagworte AES-GCM | ja | Dokumente (Text, Suche, Originale) |
 | `users/ID/suchpruefung.json` | Prüffragen und Läufe der Suchprüfung |  | – | ja | Dokumente (Text, Suche, Originale) |
@@ -1918,7 +1919,7 @@ flowchart TD
 2. <a id="kn-vorbereiten-s2"></a>**Verlauf kürzen, Sperre übernehmen**: Der Verlauf wird auf sein Budget gekürzt. Steht eine Antwort aus fremdem Text unter den letzten drei Nachrichten, beginnt dieser Zug gesperrt; ältere werden gar nicht mehr mitgeschickt. Wünscht sich die Person in eigenen Worten ein Lied, bleibt so eine Antwort bis 7 Nachrichten zurück als Daten dabei (Akkorde, Stil). Eine Bildschirm-Beschreibung kommt nur als fester Hinweis mit und sperrt nichts.
 3. <a id="kn-vorbereiten-s3"></a>**Gast oder fremde Stimme?**: Ohne Profil, oder am eigenen Lautsprecher oder Telefon, wenn die Spracherkennung nicht klar die Stimme des Profils gehört hat (am Telefon: und keine Telefon-PIN getippt wurde), gibt es nur Frage und Antwort: kein Werkzeug, kein Gedächtnis, kein Verlauf. Wessen Stimme es war, setzt nur das Panel selbst, nie die Anfrage.
 4. <a id="kn-vorbereiten-s4"></a>**Weiche liest die Frage**: Feste Regeln ordnen die eigene letzte Nachricht einer Gruppe zu. Eine neue eigene Bitte, die nicht auf die Antwort aus fremdem Text zurückzeigt, lässt diese Antwort und ihre Sperre weg. Erkennt keine Regel die Frage, kann das Modell parallel einmal aus einer festen Liste wählen (wenn der Admin das anhat). Eine Folgefrage wie „Und morgen?“ übernimmt die Gruppe der eigenen Frage davor (intent.follow_up); Hinweiswörter geben ihre Gruppen dazu, auch neben der Wahl des Modells. Ein Foto mit Änderungswunsch (bilder.wants_change) ist die Gruppe Bilder, ohne Wahl des Modells.
-5. <a id="kn-vorbereiten-s5"></a>**Systemprompt bauen**: Der Systemprompt des Admins, dazu Länge und Stil des Profils und ein Hinweis je Kanal (Uhr, Siri, Lautsprecher, Telefon, Telegram, App, Browser). Mit „Schneller Antwortbeginn“ geht, was nur für diesen Zug gilt, mit der Frage statt in den Systemprompt, damit der Server ihn aus dem Cache liest. Mit „Großes Gedächtnis kürzen“ stehen bei einem langen Gedächtnis nur die neuesten Fakten fest darin (höchstens 6000 Zeichen), dazu bis zu 5 ältere, die Wörter mit der Frage teilen, nur für diesen Zug (chat.memory_split). Ist das Wissensbuch an und hat Seiten, kommen bis zu 40 Seitentitel dazu, die am besten zur Frage passen, als fremder Text (wissensbuch.hint).
+5. <a id="kn-vorbereiten-s5"></a>**Systemprompt bauen**: Der Systemprompt des Admins, dazu Länge und Stil des Profils und ein Hinweis je Kanal (Uhr, Siri, Lautsprecher, Telefon, Telegram, App, Browser). Mit „Schneller Antwortbeginn“ geht, was nur für diesen Zug gilt, mit der Frage statt in den Systemprompt, damit der Server ihn aus dem Cache liest. Mit „Großes Gedächtnis kürzen“ stehen bei einem langen Gedächtnis nur die neuesten Fakten fest darin (höchstens 6000 Zeichen), dazu bis zu 5 ältere, die Wörter mit der Frage teilen, nur für diesen Zug (chat.memory_split). Ist das Wissensbuch an und hat Seiten, kommen bis zu 40 Seitentitel dazu, die am besten zur Frage passen, als fremder Text (wissensbuch.hint). Hat die Person das Gespräch auf eine ihrer Mappen beschränkt (Feld mappe, eine eigene ID, vom Panel geprüft), kommen deren Einträge nach den festen Stufen aus, kurz und ganz als fremder Text dazu (mappen.for_turn); der Zug ist dann gesperrt wie nach fremdem Text.
 6. <a id="kn-vorbereiten-s6"></a>**Fester Satz?**: Sätze wie „Spark Notaus“, „Problem melden: …“ oder „Das war falsch“ führt das Panel selbst aus, nur aus den eigenen Worten des Profils und nie über MCP. Das Modell sagt nur das Ergebnis und bekommt in diesem Zug kein Werkzeug.
 7. <a id="kn-vorbereiten-s7"></a>**Antwort auf eine Rückfrage?**: Hat das Panel gefragt, welches Gerät gemeint ist, gilt als Antwort ein Knopf, eine Zahl oder der Name, nur im selben Gespräch, vom eigenen Profil und innerhalb von 2 Minuten. „Keins davon“ bringt die ganze Liste, „Nein, den anderen“ korrigiert die letzte Wahl. Das Panel führt die Wahl aus und bietet an, sie sich zu merken; ein „Ja“ dazu zählt 15 Minuten.
 8. <a id="kn-vorbereiten-s8"></a>**Notaus oder Mein Notaus?**: Ab Notaus-Stufe 2 oder mit dem eigenen Notaus des Profils werden alle wartenden Vorschläge verworfen; kein „Ja“ führt etwas aus. Lesen und Antworten gehen weiter.
@@ -1979,7 +1980,7 @@ Selbsttests: `test_klaeren`, `test_features`, `test_notaus`, `test_hardening`, `
 
 ### Weiche
 
-Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und so weiter, heute 24 Gruppen) und grenzt damit die Werkzeuge ein, die das Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen.
+Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und so weiter, heute 25 Gruppen) und grenzt damit die Werkzeuge ein, die das Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen.
 
 **Warum:** Wenige passende Werkzeuge machen das Modell schneller und treffsicherer: es liest weniger und greift seltener daneben. Weil die Weiche nur wegnimmt, was die Rechte und Sperren übrig gelassen haben, kann ein falsch zugeordneter Satz nie mehr erlauben, höchstens ein Werkzeug fehlen lassen.
 
@@ -2056,21 +2057,21 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 
 #### Alltagsquote
 
-- Die Testsätze (189) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
+- Die Testsätze (195) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
 
 #### Werkzeugnamen
 
-- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (93 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.
+- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (96 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.
 
 #### Zahlen (aus dem Code)
 
-- **24** Gruppen der Weiche ([Schritt 4](#kn-weiche-s4), [Schritt 6](#kn-weiche-s6))
+- **25** Gruppen der Weiche ([Schritt 4](#kn-weiche-s4), [Schritt 6](#kn-weiche-s6))
 - **2** Gruppen höchstens, die noch eingrenzen ([Schritt 6](#kn-weiche-s6))
 - **80** Zeichen höchstens für eine Folgefrage ([Schritt 8](#kn-weiche-s8))
 - **4** Sekunden höchstens für die Wahl des Modells ([Schritt 10](#kn-weiche-s10))
 - **300 ms** Wartezeit mit „Schneller Antwortbeginn“ ([Schritt 10](#kn-weiche-s10))
 - **80 %** Standard-Schwelle der Einordnung ([Schritt 10](#kn-weiche-s10))
-- **189** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
+- **195** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
 - **216** Alltagssätze zum Messen ([Schritt 14](#kn-weiche-s14))
 - **20** Versionen für Rückgängig ([Schritt 4](#kn-weiche-s4))
 
@@ -2291,7 +2292,7 @@ Gilt bei: [Schritt 4](#kn-werkzeuge-s4)
 - **3** Gedächtnis-Notizen pro Antwort ([Schritt 1](#kn-werkzeuge-s1))
 - **13** Werkzeuge gesperrt nach fremdem Text ([Schritt 4](#kn-werkzeuge-s4))
 - **7** Werkzeuge ohne Internet bei Notaus ([Schritt 3](#kn-werkzeuge-s3))
-- **93** Werkzeuge mit verständlichem Namen ([Schritt 11](#kn-werkzeuge-s11))
+- **96** Werkzeuge mit verständlichem Namen ([Schritt 11](#kn-werkzeuge-s11))
 
 #### Einstellen
 
@@ -2321,7 +2322,7 @@ Selbsttests: `test_fast_start`, `test_dienstwacht`, `test_taten`, `test_notaus`,
 
 ### Wissen
 
-Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene Kiwix-Archiv und erstellte Dokumente. Die Seite zeigt den Weg, auf dem eine Frage passende Stellen in den Dokumenten findet. Finden (fund.py, eigene Datei fund.db pro Profil) legt darüber einen Index aus Titeln, Feldern und Schlagworten nach festen Regeln und nutzt für den Text dieselbe Suche; Mails und Anhänge (fundmail.py) liest es in ruhigen Minuten in Scheiben ein und hält sie nur versiegelt (AES-GCM) mit ihren Wörtern als HMAC-Marken; Termine und Kontakte (fundquellen.py) ebenso, Gespräche nur mit Datum und Kanal (ihre Wörter sucht recall.liste), Listen, Erinnerungen, Bilder und Lieder wie ihre Quelle. Zeiträume („letzte Woche“, „2023“) rechnet frisch.spanne nach festen Regeln, „vom OP“ sucht den letzten vergangenen Termin im eigenen Kalender (fund.bezug_aus): 14 Tage davor bis 60 danach steht weiter oben, nie eine harte Grenze. Mit „Schlagworte vom Modell“ schlägt das Sprachmodell in ruhigen Minuten Schlagworte vor; fund.pruefe behält nur Kategorien der festen Liste und Namen, die wörtlich im Eintrag stehen, verknüpft Personen, Firmen und Orte mit den Punkten der Wissenskarte (nur lesend) und lässt weg, was die Person entfernt hat. Ein klarer Treffer kommt als fester Satz des Panels (fund.sofort_satz), nie mit Worten des Modells.
+Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene Kiwix-Archiv und erstellte Dokumente. Die Seite zeigt den Weg, auf dem eine Frage passende Stellen in den Dokumenten findet. Finden (fund.py, eigene Datei fund.db pro Profil) legt darüber einen Index aus Titeln, Feldern und Schlagworten nach festen Regeln und nutzt für den Text dieselbe Suche; Mails und Anhänge (fundmail.py) liest es in ruhigen Minuten in Scheiben ein und hält sie nur versiegelt (AES-GCM) mit ihren Wörtern als HMAC-Marken; Termine und Kontakte (fundquellen.py) ebenso, Gespräche nur mit Datum und Kanal (ihre Wörter sucht recall.liste), Listen, Erinnerungen, Bilder und Lieder wie ihre Quelle. Zeiträume („letzte Woche“, „2023“) rechnet frisch.spanne nach festen Regeln, „vom OP“ sucht den letzten vergangenen Termin im eigenen Kalender (fund.bezug_aus): 14 Tage davor bis 60 danach steht weiter oben, nie eine harte Grenze. Mit „Schlagworte vom Modell“ schlägt das Sprachmodell in ruhigen Minuten Schlagworte vor; fund.pruefe behält nur Kategorien der festen Liste und Namen, die wörtlich im Eintrag stehen, verknüpft Personen, Firmen und Orte mit den Punkten der Wissenskarte (nur lesend) und lässt weg, was die Person entfernt hat. Ein klarer Treffer kommt als fester Satz des Panels (fund.sofort_satz), nie mit Worten des Modells. Mappen (mappen.py, Tabellen in wissen.db) bündeln eigene Dokumente, Wissensbuch-Seiten und Notizen; ein Gespräch, das die Person auf eine Mappe beschränkt, bekommt deren Einträge nach festen Stufen (mappen.plan: aus nie, kurz nur der Steckbrief, ganz der Text bis zum Budget, der Rest nur über die Suche) als Daten, und die Antwort ist danach gesperrt wie nach jedem Text von außen.
 
 **Warum:** Das Sprachmodell kennt die eigenen Unterlagen nicht. Es bekommt nur die wenigen Stellen, die das Panel mit festen Regeln und zwei kleinen Modellen auf dem Prozessor heraussucht, jeweils mit Herkunft. Was in einem Dokument steht, ist Text von außen: Daten, nie ein Befehl.
 
@@ -2401,6 +2402,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 | Erst lokal suchen | Volltext ohne Warten auf Modelle, vor der ersten Runde | wie die Werkzeuge der Anfrage |
 | Wissensbuch | document_search: passende Seiten vor den Stellen | eigenes Profil, nur eigene Dokumente |
 | Wissenskarte | dritte Trefferliste: Punkte, die die Frage nennt, und ihre Nachbarn | eigenes Profil, nur eigene Dokumente in der Suche |
+| Mappen | vom Panel vor der ersten Runde nach Stufen: kurz, ganz bis zum Budget, sonst Suche | eigenes Profil, nur eigene Einträge |
 
 #### Wissensbuch
 
@@ -2487,6 +2489,9 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - **50** Stellen, die die Karte der Suche höchstens nennt ([Schritt 6](#kn-wissen-s6))
 - **20** Punkte, die die Suchwörter höchstens treffen ([Schritt 6](#kn-wissen-s6))
 - **0.5** Gewicht der Liste aus der Karte ([Schritt 6](#kn-wissen-s6))
+- **50** Mappen pro Profil ([Schritt 13](#kn-wissen-s13))
+- **100** Einträge je Mappe ([Schritt 13](#kn-wissen-s13))
+- **24000** Token einer Mappe ans Modell (Standard) ([Schritt 13](#kn-wissen-s13))
 
 #### Einstellen
 
@@ -2498,6 +2503,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - Funktionen → Eigene Dokumente → Wissensbuch und darunter Wissenskarte an: Verbindungen zwischen den Seiten, zu sehen im Menü Wissensbuch auf der Seite Karte, dazu wie viele Dokumente am Tag (eigene Grenze).
 - Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte und darunter Personen, Firmen und Fristen an: eigene Punkte aus den Dokumenten auf der Karte, dazu wie viele Dokumente am Tag (eigene Grenze).
 - Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte → Personen, Firmen und Fristen und darunter Karte hilft der Suche an: die Karte als dritte Trefferliste der Dokumentsuche (Standard aus).
+- Funktionen → Eigene Dokumente und darunter Mappen an: die Seite Mappen im Menü, dazu wie viele Token eine Mappe dem Modell höchstens gibt.
 
 #### Was du siehst
 
@@ -2551,6 +2557,9 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - `app/panel/wissenskarte.py` `liste`: Stück-Ids aus der Karte für die Suche, nur lesend ([Schritt 6](#kn-wissen-s6))
 - `app/panel/wissenskarte.py` `trifft`: trifft ein Suchwort einen Punkt? feste Regel ([Schritt 6](#kn-wissen-s6))
 - `app/panel/documents.py` `_karte`: die Liste der Karte in die Mischung, mit den Filtern der Suche ([Schritt 6](#kn-wissen-s6))
+- `app/panel/mappen.py` `plan`: feste Regel der Stufen aus, kurz, ganz und des Budgets ([Schritt 13](#kn-wissen-s13))
+- `app/panel/mappen.py` `kontext`: die Einträge einer Mappe als Datenblock mit Marken [M…] ([Schritt 13](#kn-wissen-s13))
+- `app/panel/mappen.py` `for_turn`: nur die eigene, freigegebene Mappe; als Text von außen ([Schritt 13](#kn-wissen-s13))
 - `app/panel/documents.py` `_similar`: Ähnlichkeit blockweise in float32 ([Schritt 6](#kn-wissen-s6))
 - `app/panel/gedaechtnis.py` `hint_lines`: Fakten in drei Blöcken ([Schritt 13](#kn-wissen-s13))
 - `app/panel/profiles.py` `_cap`: Obergrenze: nur alte gelernte Fakten machen Platz ([Schritt 13](#kn-wissen-s13))

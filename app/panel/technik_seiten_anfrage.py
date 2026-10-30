@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "vorbereiten": {
-        "stand": "c961402289",
+        "stand": "83fd2769cf",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -78,14 +78,19 @@ SEITEN = {
                "{chat.MEMORY_CORE} Zeichen), dazu bis zu {chat.MEMORY_EXTRA} ältere, die Wörter mit der Frage teilen, "
                "nur für diesen Zug (chat.memory_split). Ist das Wissensbuch an und hat Seiten, kommen bis zu "
                "{wissensbuch.HINT_PAGES} Seitentitel dazu, die am besten zur Frage passen, als fremder Text "
-               "(wissensbuch.hint).",
+               "(wissensbuch.hint). Hat die Person das Gespräch auf eine ihrer Mappen beschränkt (Feld mappe, eine "
+               "eigene ID, vom Panel geprüft), kommen deren Einträge nach den festen Stufen aus, kurz und ganz als fremder "
+               "Text dazu (mappen.for_turn); der Zug ist dann gesperrt wie nach fremdem Text.",
                "The admin's system prompt, plus the profile's length and style and a note per channel (watch, Siri, "
                "speaker, phone, Telegram, app, browser). With „Fast answer start“ what holds for this turn only goes with the "
                "question instead of the system prompt, so the server reads it from its cache. With „Trim a large "
                "memory“ a long memory keeps only the newest facts fixed in it (at most {chat.MEMORY_CORE} characters), "
                "plus up to {chat.MEMORY_EXTRA} older ones that share words with the question, for this turn only "
                "(chat.memory_split). When the knowledge book is on and has pages, up to {wissensbuch.HINT_PAGES} page "
-               "titles that fit the question best come along, as outside text (wissensbuch.hint).")),
+               "titles that fit the question best come along, as outside text (wissensbuch.hint). When the person limited "
+               "the conversation to one of their collections (field mappe, an own id, checked by the panel), its entries "
+               "come along by the fixed levels off, short and whole as outside text (mappen.for_turn); the turn is then "
+               "locked as after outside text.")),
             S("s6", "frage", ("Fester Satz?", "Fixed sentence?"),
               ("Rolle · Notaus · Problem melden · Bewertung", "role · kill switch · report · rating"),
               ("Sätze wie „Spark Notaus“, „Problem melden: …“ oder „Das war falsch“ führt das Panel selbst aus, nur aus "
@@ -233,7 +238,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)
     "weiche": {
-        "stand": "d9527035a1",
+        "stand": "00a48f7e64",
         "bezug": {
             "intent.GROUPS": ["s4", "s6"], "intent_bench.BENCH": ["s4", "s5"], "intent_alltag.ALLTAG": ["s14"],
             "weiche.KEEP_VERSIONS": ["s4"], "intent.Route": ["s6"], "intent.follow_up": ["s8"],

@@ -12,7 +12,7 @@ ROOTS = ("Einstellungen", "Funktionen", "Zustand", "Personen und Geräte", "Ich"
          "Settings", "Features", "Status", "People and devices", "Me",
          # the pages of their own (features.OWN_PAGES, way.js WAY_ROOTS): "E-Mail → Für dich", "Finden → Schlagworte"
          "Kalender", "Calendar", "E-Mail", "E-mail", "Listen", "Lists", "Offen", "Open", "Kontakte", "Contacts",
-         "Wissensbuch", "Knowledge book", "Finden", "Find", "Dungeon-Master", "Dungeon Master",
+         "Wissensbuch", "Knowledge book", "Finden", "Find", "Mappen", "Collections", "Dungeon-Master", "Dungeon Master",
          # the admin's menu entry Fernzugang (fernzugang.js): "Fernzugang → Systeme"
          "Fernzugang", "Remote access")
 # a root followed by an arrow; not "Mein Notaus", not a way inside another program's way ("Open WebUI → Einstellungen")

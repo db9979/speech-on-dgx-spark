@@ -62,7 +62,7 @@ TOOLS = {
     "mail_read": "mail", "mail_search": "mail", "mail_tidy_overview": "mail", "mail_tidy_propose": "mail",
     "fuer_dich": "mail", "fuer_dich_tun": "mail", "offen_zeigen": "cal",   # Offen lives on the Kalender node
     "contacts_search": "contacts", "remarkable_note": "rm", "remarkable_page": "rm", "remarkable_attachment": "rm", "remarkable_sent": "rm", "remarkable_sheet": "rm", "remarkable_library": "rm", "iphone_action": "push", "weather": "weather",
-    "parcels": "parcels", "transit": "transit", "feeds_news": "feeds", "document_search": "mem", "document_list": "mem", "fund_suche": "mem", "history_search": "mem", "local_search": "mem",
+    "parcels": "parcels", "transit": "transit", "feeds_news": "feeds", "document_search": "mem", "document_list": "mem", "fund_suche": "mem", "mappe_liste": "mem", "mappe_stand": "mem", "mappe_dazu": "mem", "history_search": "mem", "local_search": "mem",
     "memory_forget": "mem", "memory_save": "mem", "reminder_cancel": "mem", "reminder_list": "mem", "reminder_set": "mem",
     "message_announce": "mem", "message_read": "mem", "message_send": "mem", "agent_list": "mem",
     "agent_schedule": "mem", "agent_task": "mem", "routine_save": "mem", "agent_watch": "mem",
@@ -188,6 +188,8 @@ TARGETS = {
     # with fundmail.py the mails read today and left to read, with fundquellen.py the entries per further source, with
     # Stufe D the model's tags today and the Sofort-Karten (numbers only)
     "fund": ("Finden", "Suchindex über die eigenen Daten · auf dem Spark", "spark", False),
+    # Mappen (mappen.py): shown while it is on, Mappen and entries of all profiles, conversations bound today (numbers only)
+    "mappen": ("Mappen", "Dokumente, Seiten und Notizen je Vorhaben · auf dem Spark", "spark", False),
     # KI-Dungeon-Master (dungeon.py): shown while it is on, rounds, players, guests, turns, loot and levels today (numbers only)
     "dungeon": ("Dungeon-Master", "Rollenspiel-Runden mit dem eigenen Sprachmodell · auf dem Spark", "spark", False),
     # Teilen mit Profilen (geteilt.py): shown while it is on, single shares and today's changes (numbers only)
@@ -1452,6 +1454,13 @@ def snapshot(view="admin", now=None):
     if wms.get("on"):
         used.add("wmessen")
     try:
+        import mappen
+        mpn = mappen.for_live()
+    except Exception:
+        mpn = {"on": False}
+    if mpn.get("on"):
+        used.add("mappen")
+    try:
         import fund
         fnd = fund.for_live()
     except Exception:
@@ -2097,6 +2106,10 @@ def snapshot(view="admin", now=None):
                         + (f" · {wbk['widerspruch']} Widersprüche" if wbk.get("widerspruch") else "")
                         + (f" · {wbk['veraltet']} veraltet?" if wbk.get("veraltet") else "")
                         + (" · arbeitet" if wbk.get("running") else ""))
+        if x["id"] == "mappen":    # Mappen: Mappen, entries, profiles, conversations bound today, refused (numbers only, never a name)
+            x["sub"] = (f"{mpn.get('mappen', 0)} Mappen · {mpn.get('eintraege', 0)} Einträge in {mpn.get('profile', 0)} Profilen"
+                        + f" · heute {mpn.get('chats', 0)} Gespräche mit Mappe"
+                        + (f" · {mpn['abgelehnt']} abgelehnt" if mpn.get("abgelehnt") else ""))
         if x["id"] == "fund":      # Finden: entries, profiles, own tags, searches today, median time (numbers only, never a word)
             x["sub"] = (f"{fnd.get('eintraege', 0)} Einträge in {fnd.get('profile', 0)} Profilen · {fnd.get('hand', 0)} eigene Schlagworte"
                         + f" · heute {fnd.get('suchen', 0)} Suchen"

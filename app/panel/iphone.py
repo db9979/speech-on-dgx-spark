@@ -137,6 +137,11 @@ THINGS = {
     # own tags); every path checks the release of Finden again
     "fund": ((("POST",), r"/api/profile/fund/(?:suche|neu)"), (("GET",), r"/api/profile/fund/(?:stand|eintrag/[0-9]{1,12})"),
              (("PUT",), r"/api/profile/fund/eintrag/[0-9]{1,12}/schlagworte"), (("DELETE",), r"/api/profile/fund")),
+    # Mappen (mappen.py): the list, one Mappe, new, rename, delete (only the assignment), entries in and out with their
+    # level, a note; every path checks the release of Mappen again (deleting also while blocked: own data)
+    "mappen": ((("GET", "POST"), r"/api/profile/mappen"), (("GET", "PUT", "DELETE"), r"/api/profile/mappen/[0-9a-f]{12}"),
+               (("POST", "PUT", "DELETE"), r"/api/profile/mappen/[0-9a-f]{12}/eintrag"),
+               (("POST",), r"/api/profile/mappen/[0-9a-f]{12}/notiz")),
     # Wissenskarte (wissenskarte.py): see the part of the map around a page or of a document, "Stimmt nicht" for one
     # connection; the export as text stays in the browser
     "wissenskarte": ((("GET",), r"/api/profile/wissenskarte"), (("DELETE",), r"/api/profile/wissenskarte/kante/[0-9]{1,12}")),

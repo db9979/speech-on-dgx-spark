@@ -62,6 +62,13 @@ BENCH = [
     ("Such im Internet nach Thomann", "websuche"),
     ("Wann ist mein OP-Termin", "kalender"),
     ("Lies meine neuen Mails", "mail"),
+    # Mappen (mappen.py, plan open-notebook Stufe 1): the own collections by name; a document word keeps „dokument“
+    ("Welche Mappen habe ich?", "mappe"),
+    ("Was liegt in der Mappe Urlaub?", "mappe"),
+    ("Zeig mir die Mappe Auto", "mappe"),
+    ("Leg den Mietvertrag in die Mappe Wohnung", "dokument+mappe"),
+    ("Which collections do I have?", "mappe"),
+    ("Put the lease into the collection Flat", "mappe"),
     # the own Kiwix archive (V01.0.264): mein, dein, im Archiv, never the uploaded documents
     ("Schaue in deinem Archiv nach, was du über Albert Einstein", "archiv"),
     ("Schau in meinem Archiv nach Sauerteig", "archiv"),

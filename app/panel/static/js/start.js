@@ -54,6 +54,7 @@ async function startPage(){let who=null;try{who=await (await /*raw: the first wh
   if(window.lstStart)lstStart(who);   // Listen (listen.js): the menu entry only for a profile that may use lists
   if(window.wbStart)wbStart(who);   // Wissensbuch (wissensbuch.js): the menu entry only when the admin released it
   if(window.fundStart)fundStart(who);   // Finden (finden.js): the menu entry only when the admin released it
+  if(window.mpStart)mpStart(who);   // Mappen (mappen.js): the menu entry only when the admin released it
   if(window.dmStart)dmStart(who);   // KI-Dungeon-Master (dungeon.js): the menu entry only when the admin released it
   if(window.vgStart)vgStart(who);   // Offen (offen.js): the menu entry, the cards in the conversation and their stream
   if(window.fzStart)fzStart(who);   // Fernzugang (fernzugang.js): the menu entry only for an admin while the switch is on

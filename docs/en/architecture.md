@@ -257,6 +257,7 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 | `app/panel/gemerkt.py` | Gemerkt-Hinweis: what the Spark keeps about a person is seen at once and can be taken back. |
 | `app/panel/kiwix.py` | The person's own Kiwix (kiwix-serve with ZIM files: Wikipedia, Wikivoyage, handbooks ...) as a knowledge source that works without the internet. |
 | `app/panel/lokal.py` | Erst lokal suchen: before anything goes outside, the panel looks in the person's own sources itself. |
+| `app/panel/mappen.py` | Mappen: a Mappe bundles own documents, Wissensbuch pages and notes for one undertaking; per entry a context level aus / kurz / ganz decides what of it the la … |
 | `app/panel/meinedaten.py` | Alle meine Daten herunterladen: one ZIP with everything a profile keeps on the Spark, for the person herself. |
 | `app/panel/memtidy.py` | Weekly memory cleanup per profile: the language model looks at the remembered facts and proposes which ones to merge (duplicates, the same thing said twice) … |
 | `app/panel/musik.py` | Musik machen: songs from a wish, made on the model computer by ACE-Step 1.5 (musik_server.py, music.port 31004, installed with `install.sh --musik 2b\|xl`). |
@@ -625,7 +626,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/zuordnungen.json` | Remembered matches |  | sealed whole (AES-256-GCM) | yes | Memory |
 | `users/ID/tasks.json` | Tasks |  | – | yes | Tasks and reminders |
 | `users/ID/reminders.json` | Reminders |  | – | yes | Tasks and reminders |
-| `users/ID/wissen.db` | Documents: text, sections with context line, search, vectors; knowledge book and map with people, companies and deadlines (SQLite) |  | – | yes | Documents (text, search, originals) |
+| `users/ID/wissen.db` | Documents: text, sections with context line, search, vectors; knowledge book and map with people, companies and deadlines; collections with entries and levels (SQLite) |  | – | yes | Documents (text, search, originals) |
 | `users/ID/docs/files/` | Originals of uploads |  | – | yes | Documents (text, search, originals) |
 | `users/ID/fund.db` | Find: search index over the own data (titles, fields, tags, own tags, mail and attachments, appointments, contacts, lists, reminders, pictures, songs; conversations only date and channel; SQLite) |  | marks with a key of its own per profile (HMAC); mail, attachments, appointments and contacts: title, excerpt, fields and tags AES-GCM | yes | Documents (text, search, originals) |
 | `users/ID/suchpruefung.json` | Test questions and runs of the search check |  | – | yes | Documents (text, search, originals) |
@@ -1918,7 +1919,7 @@ flowchart TD
 2. <a id="kn-vorbereiten-s2"></a>**Trim history, carry the lock**: The history is trimmed to its budget. If an answer from outside text is among the last three messages, this turn starts locked; older ones are not sent at all. When the person asks for a song in their own words, such an answer up to 7 messages back stays along as data (chords, style). A screen description only comes along as a fixed note and locks nothing.
 3. <a id="kn-vorbereiten-s3"></a>**Guest or unknown voice?**: Without a profile, or at an own speaker or phone when speech recognition did not clearly hear the profile's voice (on the phone: and no phone PIN was typed), there is only question and answer: no tool, no memory, no history. Whose voice it was only the panel itself sets, never the request.
 4. <a id="kn-vorbereiten-s4"></a>**The switch reads the question**: Fixed rules put the own latest message into a group. A new own request that does not point back at the answer from outside text leaves that answer and its lock out. If no rule knows the question, the model may pick once from a fixed list in parallel (when the admin has that on). A follow-up like „And tomorrow?“ takes the group of the own question before (intent.follow_up); hint words add their groups, also beside the model's pick. A photo with a wish to change it (bilder.wants_change) is the group pictures, without the model's pick.
-5. <a id="kn-vorbereiten-s5"></a>**Build the system prompt**: The admin's system prompt, plus the profile's length and style and a note per channel (watch, Siri, speaker, phone, Telegram, app, browser). With „Fast answer start“ what holds for this turn only goes with the question instead of the system prompt, so the server reads it from its cache. With „Trim a large memory“ a long memory keeps only the newest facts fixed in it (at most 6000 characters), plus up to 5 older ones that share words with the question, for this turn only (chat.memory_split). When the knowledge book is on and has pages, up to 40 page titles that fit the question best come along, as outside text (wissensbuch.hint).
+5. <a id="kn-vorbereiten-s5"></a>**Build the system prompt**: The admin's system prompt, plus the profile's length and style and a note per channel (watch, Siri, speaker, phone, Telegram, app, browser). With „Fast answer start“ what holds for this turn only goes with the question instead of the system prompt, so the server reads it from its cache. With „Trim a large memory“ a long memory keeps only the newest facts fixed in it (at most 6000 characters), plus up to 5 older ones that share words with the question, for this turn only (chat.memory_split). When the knowledge book is on and has pages, up to 40 page titles that fit the question best come along, as outside text (wissensbuch.hint). When the person limited the conversation to one of their collections (field mappe, an own id, checked by the panel), its entries come along by the fixed levels off, short and whole as outside text (mappen.for_turn); the turn is then locked as after outside text.
 6. <a id="kn-vorbereiten-s6"></a>**Fixed sentence?**: Sentences like „Spark Notaus“, „report a problem: …“ or „that was wrong“ the panel carries out itself, only from the profile's own words and never over MCP. The model only says the result and gets no tool in this turn.
 7. <a id="kn-vorbereiten-s7"></a>**Answer to a question back?**: If the panel asked which device is meant, a button, a number or the name counts as the answer, only in the same conversation, from the own profile and within 2 minutes. „None of these“ brings the whole list, „No, the other one“ corrects the last choice. The panel carries out the choice and offers to remember it; a „yes“ to that counts for 15 minutes.
 8. <a id="kn-vorbereiten-s8"></a>**Kill switch or my kill switch?**: From kill switch stage 2 or with the profile's own kill switch every waiting proposal is dropped; no „yes“ carries anything out. Reading and answering go on.
@@ -1979,7 +1980,7 @@ Self-tests: `test_klaeren`, `test_features`, `test_notaus`, `test_hardening`, `t
 
 ### Switch
 
-The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 24 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow.
+The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 25 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow.
 
 **Why:** Few fitting tools make the model faster and more accurate: it reads less and misses less often. Because the switch only takes away from what rights and locks left, a wrongly sorted sentence can never allow more, at most leave a tool out.
 
@@ -2056,21 +2057,21 @@ Applies at: [step 9](#kn-weiche-s9)
 
 #### Everyday score
 
-- The test sentences (189) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
+- The test sentences (195) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
 
 #### Tool names
 
-- Wherever a tool shows, a readable name comes from one table (93 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
+- Wherever a tool shows, a readable name comes from one table (96 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
 
 #### Numbers (from the code)
 
-- **24** groups of the switch ([step 4](#kn-weiche-s4), [step 6](#kn-weiche-s6))
+- **25** groups of the switch ([step 4](#kn-weiche-s4), [step 6](#kn-weiche-s6))
 - **2** groups at most that still narrow ([step 6](#kn-weiche-s6))
 - **80** characters at most for a follow-up ([step 8](#kn-weiche-s8))
 - **4** seconds at most for the model's pick ([step 10](#kn-weiche-s10))
 - **300 ms** waiting with „Fast answer start“ ([step 10](#kn-weiche-s10))
 - **80 %** default threshold of the classification ([step 10](#kn-weiche-s10))
-- **189** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
+- **195** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
 - **216** everyday sentences for measuring ([step 14](#kn-weiche-s14))
 - **20** versions for undo ([step 4](#kn-weiche-s4))
 
@@ -2291,7 +2292,7 @@ Applies at: [step 4](#kn-werkzeuge-s4)
 - **3** memory notes per answer ([step 1](#kn-werkzeuge-s1))
 - **13** tools locked after outside text ([step 4](#kn-werkzeuge-s4))
 - **7** tools without internet with the kill switch ([step 3](#kn-werkzeuge-s3))
-- **93** tools with a readable name ([step 11](#kn-werkzeuge-s11))
+- **96** tools with a readable name ([step 11](#kn-werkzeuge-s11))
 
 #### Settings
 
@@ -2321,7 +2322,7 @@ Self-tests: `test_fast_start`, `test_dienstwacht`, `test_taten`, `test_notaus`, 
 
 ### Knowledge
 
-Knowledge is everything the Spark knows without going to the internet: the uploaded documents of each profile (one SQLite file wissen.db per profile), the memory, earlier conversations, the own Kiwix archive and created documents. This page shows the way a question finds fitting passages in the documents. Find (fund.py, its own file fund.db per profile) adds an index of titles, fields and tags by fixed rules on top and uses the same search for the text; mail and attachments (fundmail.py) it reads in slices in quiet minutes and keeps only sealed (AES-GCM) with their words as HMAC marks; appointments and contacts (fundquellen.py) likewise, conversations only with date and channel (recall.liste searches their words), lists, reminders, pictures and songs like their source. Periods („last week“, „2023“) come from frisch.spanne by fixed rules, „from the surgery“ looks for the last past appointment in the own calendar (fund.bezug_aus): 14 days before to 60 after rank higher, never a hard limit. With „Tags by the model“ the language model proposes tags in quiet minutes; fund.pruefe keeps only categories of the fixed list and names that stand in the entry word for word, links people, companies and places to the points of the knowledge map (read only) and leaves out what the person removed. A clear hit comes as the panel's fixed sentence (fund.sofort_satz), never in the model's words.
+Knowledge is everything the Spark knows without going to the internet: the uploaded documents of each profile (one SQLite file wissen.db per profile), the memory, earlier conversations, the own Kiwix archive and created documents. This page shows the way a question finds fitting passages in the documents. Find (fund.py, its own file fund.db per profile) adds an index of titles, fields and tags by fixed rules on top and uses the same search for the text; mail and attachments (fundmail.py) it reads in slices in quiet minutes and keeps only sealed (AES-GCM) with their words as HMAC marks; appointments and contacts (fundquellen.py) likewise, conversations only with date and channel (recall.liste searches their words), lists, reminders, pictures and songs like their source. Periods („last week“, „2023“) come from frisch.spanne by fixed rules, „from the surgery“ looks for the last past appointment in the own calendar (fund.bezug_aus): 14 days before to 60 after rank higher, never a hard limit. With „Tags by the model“ the language model proposes tags in quiet minutes; fund.pruefe keeps only categories of the fixed list and names that stand in the entry word for word, links people, companies and places to the points of the knowledge map (read only) and leaves out what the person removed. A clear hit comes as the panel's fixed sentence (fund.sofort_satz), never in the model's words. Collections (mappen.py, tables in wissen.db) bundle own documents, knowledge book pages and notes; a conversation the person limits to a collection gets its entries by fixed levels (mappen.plan: off never, short only the document card, whole the text up to the budget, the rest only through the search) as data, and the answer is locked after it like after any outside text.
 
 **Why:** The language model does not know the own papers. It only gets the few passages the panel picks with fixed rules and two small models on the processor, each with its source. What a document says is outside text: data, never a command.
 
@@ -2401,6 +2402,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 | Look locally first | full text without waiting for models, before the first round | as the request's tools |
 | Knowledge book | document_search: fitting pages before the passages | own profile, own documents only |
 | Knowledge map | third list of hits: points the question names and their neighbours | own profile, own documents in the search only |
+| Collections | by the panel before the first round by level: short, whole up to the budget, else search | own profile, own entries only |
 
 #### Knowledge book
 
@@ -2487,6 +2489,9 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - **50** passages the map names to the search at most ([step 6](#kn-wissen-s6))
 - **20** points the search words hit at most ([step 6](#kn-wissen-s6))
 - **0.5** weight of the list from the map ([step 6](#kn-wissen-s6))
+- **50** collections per profile ([step 13](#kn-wissen-s13))
+- **100** entries per collection ([step 13](#kn-wissen-s13))
+- **24000** tokens of a collection to the model (default) ([step 13](#kn-wissen-s13))
 
 #### Settings
 
@@ -2498,6 +2503,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - Features → Own documents → Knowledge book and below it Knowledge map on: connections between the pages, shown in the menu Knowledge book on the page Map, with how many documents a day (own limit).
 - Features → Own documents → Knowledge book → Knowledge map and below it People, companies and deadlines on: points of their own from the documents on the map, with how many documents a day (own limit).
 - Features → Own documents → Knowledge book → Knowledge map → People, companies and deadlines and below it Map helps the search on: the map as third list of hits of the document search (default off).
+- Features → Own documents and below it Collections on: the page Collections in the menu, with how many tokens a collection gives the model at most.
 
 #### What you see
 
@@ -2551,6 +2557,9 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/wissenskarte.py` `liste`: piece ids from the map for the search, read only ([step 6](#kn-wissen-s6))
 - `app/panel/wissenskarte.py` `trifft`: does a search word hit a point? fixed rule ([step 6](#kn-wissen-s6))
 - `app/panel/documents.py` `_karte`: the map's list into the mix, with the search's filters ([step 6](#kn-wissen-s6))
+- `app/panel/mappen.py` `plan`: fixed rule of the levels off, short, whole and the budget ([step 13](#kn-wissen-s13))
+- `app/panel/mappen.py` `kontext`: a collection's entries as a data block with marks [M…] ([step 13](#kn-wissen-s13))
+- `app/panel/mappen.py` `for_turn`: only the own, released collection; as outside text ([step 13](#kn-wissen-s13))
 - `app/panel/documents.py` `_similar`: similarity block by block in float32 ([step 6](#kn-wissen-s6))
 - `app/panel/gedaechtnis.py` `hint_lines`: facts in three blocks ([step 13](#kn-wissen-s13))
 - `app/panel/profiles.py` `_cap`: cap: only old learned facts make room ([step 13](#kn-wissen-s13))

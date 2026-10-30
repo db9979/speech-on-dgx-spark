@@ -4846,6 +4846,20 @@
 "titel": "Wissenskarte: Doppelte erkennen und kürzere Auswahl",
 "text": "A: Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte → Personen, Firmen und Fristen an. B: Ein Dokument hochladen, in dem „Herr Dominik Bornhäuser“, „Bornhäuser, Dominik“, „Dr. Dominik Bornhäuser“, „D. Bornhäuser“, „Müller GmbH“ und „Müller AG“ stehen; nach ruhigen Minuten zeigt Wissensbuch → Karte unter Personen nur einen Punkt „Herr Dominik Bornhäuser“ (die anderen Schreibweisen als andere Namen) und über der Karte „Vielleicht doppelt 2“ (D. Bornhäuser, Müller GmbH/AG). C: „Verschieden“ beim Firmenpaar: das Paar verschwindet und kommt auch nach dem nächsten Lauf nicht wieder. D: „Zusammenführen“ beim Personenpaar: mit Code (wenn der zweite Schritt an ist), danach ein Punkt. E: Einen Punkt antippen: „Zusammenführen mit …“ ist ein Suchfeld, oben die ähnlichsten Punkte derselben Art, beim Tippen höchstens 20 Treffer. F: Zustand → Logs, Bereich Wissen: „wissen: wissenskarte doppelt geprueft | …“ und „doppelt einlesen | 1 knoten | anrede“ ohne Namen; Zustand → Live, Kasten Wissenskarte: „Doppelte: n Vorschläge offen, m automatisch zusammengeführt“. G: iPhone-App, Wissensbuch → Karte: „Vielleicht doppelt“, nach links wischen „Verschieden“.",
 "thread": "Wissenskarte Stufe 2 statt Neo4j"
+},
+{
+"id": "P717",
+"v": 1287,
+"titel": "Mappen: anlegen, füllen, Stufen und Budget",
+"text": "Funktionen → Mappen an. Unter Mappen eine Mappe „Wohnung“ anlegen, mit „+ Dokument“ zwei eigene Dokumente hineinlegen, mit „+ Notiz“ eine Notiz. Je Eintrag aus, kurz und ganz umschalten: der Balken „≈ X von Y Token“ ändert sich, ein großes Dokument auf „ganz“ zeigt „zu groß: nur die passenden Stellen“. × nimmt einen Eintrag heraus, das Dokument bleibt unter Ich → Dokumente. Mappe löschen: die Dokumente bleiben.",
+"thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P718",
+"v": 1287,
+"titel": "Mappen: Im Assistenten fragen",
+"text": "In der Mappe „Im Assistenten fragen“: über dem Gespräch steht der Chip „Mappe „Wohnung““. Eine Frage zu einem Dokument der Mappe beantwortet der Assistent mit [M1]-Verweisen; eine Frage zu etwas, das nicht darin steht, sagt das. × am Chip beendet die Bindung. „Welche Mappen habe ich?“ und „Leg den Mietvertrag in die Mappe Wohnung“ funktionieren im normalen Gespräch; auf dem iPhone öffnet Ich → Mappen die Panel-Ansicht.",
+"thread": "Ideen aus Open Notebook übernehmen"
 }
 ]
 }

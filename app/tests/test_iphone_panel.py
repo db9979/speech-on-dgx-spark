@@ -241,7 +241,7 @@ class Things(unittest.TestCase):
     PROBE = {"documents": ("GET", "/api/profile/wissen", 200), "memory": ("GET", "/api/profile/memory", 200),
              "bilder": ("GET", "/api/bilder", 200), "musik": ("GET", "/api/musik", 200),
              "wissensbuch": ("GET", "/api/profile/wissensbuch", 200), "wissenskarte": ("GET", "/api/profile/wissenskarte", 200),
-             "fund": ("GET", "/api/profile/fund/stand", 200),
+             "fund": ("GET", "/api/profile/fund/stand", 200), "mappen": ("GET", "/api/profile/mappen", 200),
              "wissensknoten": ("GET", "/api/profile/wissenskarte/knoten", 200),
              "calendar": ("GET", "/api/profile/calendar/view", 200), "mail": ("GET", "/api/profile/mail/inbox", 200),
              "mailmanage": ("GET", "/api/profile/mail/folders", 400), "mailsend": ("POST", "/api/profile/mail/send/preview", 400),
@@ -266,11 +266,11 @@ class Things(unittest.TestCase):
     def setUp(self):
         helpers.keep_chat(self, "iphone", "iphone_panel", "bilder", "musik", "deny", "documents", "knowledge_book", "knowledge_map",
                           "knowledge_ents", "calendar", "mail", "mail_manage", "mail_send", "calendar_server", "mail_insight", "tasks", "reminders", "vorgaenge",
-                          "contacts", "contacts_edit", "mail_invites", "dungeon", "fund")
+                          "contacts", "contacts_edit", "mail_invites", "dungeon", "fund", "mappen")
         helpers.set_config(iphone=True, iphone_panel=False, bilder=True, musik=True, deny={}, documents=True,
                            knowledge_book=True, knowledge_map=True, knowledge_ents=True, calendar=True, mail=True, mail_manage=True, mail_send=True,
                            calendar_server=True, mail_insight=True, tasks=True, reminders=True, vorgaenge=True,
-                           contacts=True, contacts_edit=True, mail_invites=True, dungeon=True, fund=True)
+                           contacts=True, contacts_edit=True, mail_invites=True, dungeon=True, fund=True, mappen=True)
         for name in ("image", "music"):     # the picture and music models count as installed
             old = self.section(name, enabled=True)
             self.addCleanup(lambda n=name, o=old: self.section(n, **dict({"enabled": False}, **o)))
@@ -302,6 +302,7 @@ class Things(unittest.TestCase):
             self.assertTrue(hello[k], k)
             self.assertEqual(a.request(method, path, **self.body(method)).status_code, ok, k)   # without the panel switch
         for k, (method, path, ok) in self.PROBE.items():
+            guard._rate.clear()   # every round asks each part once more; the per-minute limits are not what this checks
             helpers.set_config(deny={k: [self.uid("Thea")]})
             try:
                 self.assertFalse(a.get("/api/iphone/hello").json()["areas"][k], k)

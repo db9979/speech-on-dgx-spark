@@ -243,7 +243,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "e5550bfdb5",
+        "stand": "588f250958",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -272,6 +272,8 @@ SEITEN = {
             "pdftabellen.read": ["s5"], "documents._rows": ["s5"], "documents.due_tables": ["s5"], "lokal.excerpt": ["s5"],
             "pdftabellen.BUDGET_S": ["s5"], "documents.TABLE": ["s5"], "lokal.MAX_HIT_CHARS": ["s5"],
             "wissensmessung.lauf": ["s6"], "wissensmessung._synth": ["s6"], "wissensmessung.MESSTEILE": ["s6"],
+            "regel:Mappen": ["s13"], "mappen.plan": ["s13"], "mappen.kontext": ["s13"], "mappen.for_turn": ["s13"],
+            "mappen.MAX_MAPPEN": ["s13"], "mappen.MAX_EINTRAEGE": ["s13"], "mappen.TOKEN": ["s13"],
         },
         "kurz": ("Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente "
                  "jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene "
@@ -287,7 +289,11 @@ SEITEN = {
                  "schlägt das Sprachmodell in ruhigen Minuten Schlagworte vor; fund.pruefe behält nur Kategorien der "
                  "festen Liste und Namen, die wörtlich im Eintrag stehen, verknüpft Personen, Firmen und Orte mit den "
                  "Punkten der Wissenskarte (nur lesend) und lässt weg, was die Person entfernt hat. Ein klarer Treffer "
-                 "kommt als fester Satz des Panels (fund.sofort_satz), nie mit Worten des Modells.",
+                 "kommt als fester Satz des Panels (fund.sofort_satz), nie mit Worten des Modells. Mappen (mappen.py, "
+                 "Tabellen in wissen.db) bündeln eigene Dokumente, Wissensbuch-Seiten und Notizen; ein Gespräch, "
+                 "das die Person auf eine Mappe beschränkt, bekommt deren Einträge nach festen Stufen (mappen.plan: "
+                 "aus nie, kurz nur der Steckbrief, ganz der Text bis zum Budget, der Rest nur über die Suche) als "
+                 "Daten, und die Antwort ist danach gesperrt wie nach jedem Text von außen.",
                  "Knowledge is everything the Spark knows without going to the internet: the uploaded documents of "
                  "each profile (one SQLite file wissen.db per profile), the memory, earlier conversations, the own "
                  "Kiwix archive and created documents. This page shows the way a question finds fitting passages in "
@@ -302,7 +308,11 @@ SEITEN = {
                  "quiet minutes; fund.pruefe keeps only categories of the fixed list and names that stand in the entry "
                  "word for word, links people, companies and places to the points of the knowledge map (read only) "
                  "and leaves out what the person removed. A clear hit comes as the panel's fixed sentence "
-                 "(fund.sofort_satz), never in the model's words."),
+                 "(fund.sofort_satz), never in the model's words. Collections (mappen.py, tables in wissen.db) bundle "
+                 "own documents, knowledge book pages and notes; a conversation the person limits to a collection "
+                 "gets its entries by fixed levels (mappen.plan: off never, short only the document card, whole the "
+                 "text up to the budget, the rest only through the search) as data, and the answer is locked after it "
+                 "like after any outside text."),
         "warum": ("Das Sprachmodell kennt die eigenen Unterlagen nicht. Es bekommt nur die wenigen Stellen, die das "
                   "Panel mit festen Regeln und zwei kleinen Modellen auf dem Prozessor heraussucht, jeweils mit "
                   "Herkunft. Was in einem Dokument steht, ist Text von außen: Daten, nie ein Befehl.",
@@ -464,6 +474,7 @@ SEITEN = {
             [("Erst lokal suchen", "Look locally first"), ("Volltext ohne Warten auf Modelle, vor der ersten Runde", "full text without waiting for models, before the first round"), ("wie die Werkzeuge der Anfrage", "as the request's tools")],
             [("Wissensbuch", "Knowledge book"), ("document_search: passende Seiten vor den Stellen", "document_search: fitting pages before the passages"), ("eigenes Profil, nur eigene Dokumente", "own profile, own documents only")],
             [("Wissenskarte", "Knowledge map"), ("dritte Trefferliste: Punkte, die die Frage nennt, und ihre Nachbarn", "third list of hits: points the question names and their neighbours"), ("eigenes Profil, nur eigene Dokumente in der Suche", "own profile, own documents in the search only")],
+            [("Mappen", "Collections"), ("vom Panel vor der ersten Runde nach Stufen: kurz, ganz bis zum Budget, sonst Suche", "by the panel before the first round by level: short, whole up to the budget, else search"), ("eigenes Profil, nur eigene Einträge", "own profile, own entries only")],
         ],
         "zahlen": [
             ("{nachsortieren.CANDIDATES}", ("Kandidaten für das Nachsortieren", "candidates for re-ranking"), "nachsortieren.CANDIDATES"),
@@ -496,6 +507,9 @@ SEITEN = {
             ("{wissenskarte.KARTE_MOST}", ("Stellen, die die Karte der Suche höchstens nennt", "passages the map names to the search at most"), "wissenskarte.KARTE_MOST"),
             ("{wissenskarte.KARTE_KNOTEN}", ("Punkte, die die Suchwörter höchstens treffen", "points the search words hit at most"), "wissenskarte.KARTE_KNOTEN"),
             ("{documents.KARTE_WEIGHT}", ("Gewicht der Liste aus der Karte", "weight of the list from the map"), "documents.KARTE_WEIGHT"),
+            ("{mappen.MAX_MAPPEN}", ("Mappen pro Profil", "collections per profile"), "mappen.MAX_MAPPEN"),
+            ("{mappen.MAX_EINTRAEGE}", ("Einträge je Mappe", "entries per collection"), "mappen.MAX_EINTRAEGE"),
+            ("{mappen.TOKEN}", ("Token einer Mappe ans Modell (Standard)", "tokens of a collection to the model (default)"), "mappen.TOKEN"),
         ],
         "einstellen": [
             ("Funktionen → Eigene Dokumente und darunter Bedeutungssuche an: Stellen bekommen einen Bedeutungsvektor "
@@ -524,6 +538,10 @@ SEITEN = {
              "Karte hilft der Suche an: die Karte als dritte Trefferliste der Dokumentsuche (Standard aus).",
              "Features → Own documents → Knowledge book → Knowledge map → People, companies and deadlines and below it "
              "Map helps the search on: the map as third list of hits of the document search (default off)."),
+            ("Funktionen → Eigene Dokumente und darunter Mappen an: die Seite Mappen im Menü, dazu wie viele Token "
+             "eine Mappe dem Modell höchstens gibt.",
+             "Features → Own documents and below it Collections on: the page Collections in the menu, with how many "
+             "tokens a collection gives the model at most."),
         ],
         "sehen": [
             ("Zustand → Logs → Anfragen: der Schritt „Nachsortieren“ mit Zahl der Kandidaten, behaltenen Stellen und "
@@ -901,6 +919,9 @@ SEITEN = {
             ("wissenskarte.liste", ("Stück-Ids aus der Karte für die Suche, nur lesend", "piece ids from the map for the search, read only")),
             ("wissenskarte.trifft", ("trifft ein Suchwort einen Punkt? feste Regel", "does a search word hit a point? fixed rule")),
             ("documents._karte", ("die Liste der Karte in die Mischung, mit den Filtern der Suche", "the map's list into the mix, with the search's filters")),
+            ("mappen.plan", ("feste Regel der Stufen aus, kurz, ganz und des Budgets", "fixed rule of the levels off, short, whole and the budget")),
+            ("mappen.kontext", ("die Einträge einer Mappe als Datenblock mit Marken [M…]", "a collection's entries as a data block with marks [M…]")),
+            ("mappen.for_turn", ("nur die eigene, freigegebene Mappe; als Text von außen", "only the own, released collection; as outside text")),
             ("documents._similar", ("Ähnlichkeit blockweise in float32", "similarity block by block in float32")),
             ("gedaechtnis.hint_lines", ("Fakten in drei Blöcken", "facts in three blocks")),
             ("profiles._cap", ("Obergrenze: nur alte gelernte Fakten machen Platz", "cap: only old learned facts make room")),

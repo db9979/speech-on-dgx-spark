@@ -1848,6 +1848,10 @@ def start_trace(request, turn, t_req, t0):
     if mem:   # Gedächtnis prüfen (gedaechtnis.py): how the panel sorted the facts, numbers only
         tr.step("prep", "Gedächtnis (Panel)", t0, t0, facts=mem["facts"], confirmed=mem["ok"], learned=mem["learned"],
                 stale=mem["stale"] + mem["contra"] or None)
+    mp = getattr(turn, "mp", None)
+    if mp:   # Mappen (mappen.py): the bound Mappe, numbers only (entries by level, ≈ tokens), never a name or text
+        tr.step("prep", "Mappe (Panel)", t0, t0, entries=mp["eintraege"], kurz=mp["kurz"], ganz=mp["ganz"],
+                suche=mp["suche"], token=mp["token"])
     tr.step("weiche", "Weiche: " + (tr.intent or "-"), t0, t0, offered=len(turn.tools or []),
             of=getattr(turn, "all_tools", None), narrow=bool(getattr(turn, "route_on", False)),
             must=(getattr(turn, "force", None) or ", ".join(sorted(turn.need or [])))[:60] or None,

@@ -64,6 +64,7 @@ OWN_PAGES = (("calbox", "cal", "Kalender", "Calendar"), ("mailbox", "post", "E-M
              ("taskbox", "listen", "Listen", "Lists"), ("vgbox", "offen", "Offen", "Open"),
              ("conbox", "kontakte", "Kontakte", "Contacts"),
              ("wbbox", "wbuch", "Wissensbuch", "Knowledge book"), ("fundbox", "finden", "Finden", "Find"),
+             ("mpbox", "mappen", "Mappen", "Collections"),
              ("dmbox", "dungeon", "Dungeon-Master", "Dungeon Master"))
 # Ich pages every profile has, whatever is switched on (me.js meAll shows them for every profile too)
 ME_ALWAYS = frozenset(("setbox", "factbox", "logbox", "secbox"))
@@ -472,6 +473,9 @@ FEATURES = (
     # search a third list of hits (the words name a point, its neighbours, their places); fixed rules, never the model
     F("kartensuche", "Karte hilft der Suche", "Map helps the search", "data", ("knowledge_search",),
       parent="wissensknoten", me="wbbox", guide="kartensuche"),
+    # Mappen (mappen.py, plan open-notebook Stufe 1, Dominik 2026-10-30 „1a 2a“): own documents, Wissensbuch pages and
+    # notes bundled per undertaking, a context level per entry; a conversation bound to a Mappe gets its entries as data
+    F("mappen", "Mappen", "Collections", "data", ("mappen",), parent="documents", me="mpbox", guide="mappen"),
     # Finden (fund.py, plan such-index, Stufe A): one index over the own data with fields and tags, the page Finden,
     # Strg K and the tool fund_suche; each source follows its own function (documents, NAS, reMarkable, Wissensbuch)
     F("fund", "Finden in allen Daten", "Find in all data", "data", ("fund",), me="fundbox", guide="fund"),

@@ -421,6 +421,16 @@ async def prepare(request):
     tg = body.get("client") == "telegram"
     tset = profiles.settings(who["id"]) if tg and who else {}
     private_ok = (not tg or bool(tset.get("tg_private"))) and own_browser
+    # Mappen (mappen.py): the Mappe the person chose for this conversation (body "mappe", an own id, checked there);
+    # its entries by the fixed levels go as data and lock this answer like any outside text
+    mp = None
+    if body.get("mappe") and who and own_browser and private_ok and not mcp and not pics \
+            and messages[-1]["role"] == "user":
+        import mappen
+        mp = await asyncio.to_thread(mappen.for_turn, who, str(body.get("mappe"))[:20], messages[-1]["content"])
+        if mp:
+            carry = carry or "outside"
+            system = per_turn(system, mp["text"])
     if tg and ha and not (tset.get("tg_ha") and homeassistant.needs_code(ha)):
         ha = None
     # from the iPhone app the smart home switches only when the profile allowed it there (app_ha); the

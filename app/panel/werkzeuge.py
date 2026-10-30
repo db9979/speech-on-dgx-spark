@@ -44,6 +44,8 @@ NAMES = {
     "iphone_action": ("iPhone-Aktion", "iPhone action"), "spark_hilfe": ("Spark-Hilfe", "Spark help"),
     "spark_tagebuch": ("Spark-Tagebuch", "Spark diary"), "spark_zustand": ("Spark-Zustand", "Spark status"),
     "fund_suche": ("In allen Daten finden", "Find in all data"),
+    "mappe_liste": ("Mappen auflisten", "List collections"), "mappe_stand": ("Mappe ansehen", "Show collection"),
+    "mappe_dazu": ("In Mappe legen", "Put into collection"),
     "rechnen": ("Rechnen", "Calculate"),
     "spark_vorschlag": ("Spark-Vorschlag", "Spark suggestion"), "wikipedia": ("Wikipedia", "Wikipedia"),
     "article_more": ("Artikel weiterlesen", "Read on"), "archive_search": ("Eigenes Archiv", "Own archive"),
