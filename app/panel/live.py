@@ -1255,14 +1255,15 @@ def ruhe(targets, busy, now=None):
 
 
 def _dungeon_musik(m):
-    """The Dungeon-Master's music made ahead (dungeon_musik.for_live): pieces, full fields, making, today, marked annoying (numbers only)."""
+    """The Dungeon-Master's music made ahead (dungeon_musik.for_live): pieces, full fields, making, today, marked annoying, outdated, changed sound templates (numbers only)."""
     if not m.get("an") and not m.get("stuecke"):
         return ""
     return (f" · Musik {m.get('stuecke', 0)} Stücke ({m.get('mb', 0)} MB), {m.get('voll', 0)} Felder voll"
             + (", macht ein Stück" if m.get("macht") else "") + (f", {m['wartet']} Felder warten" if m.get("wartet") else "")
             + f", heute {m.get('gemacht', 0)} gemacht, {m.get('weg', 0)} nicht gekommen"
             + (f", {m['markiert']} als nervig markiert" if m.get("markiert") else "")
-            + (f", {m['alt']} im alten Stil" if m.get("alt") else "")
+            + (f", {m['alt']} veraltet" if m.get("alt") else "")
+            + (f", {m['vorlagen']} Klangvorlagen geändert" if m.get("vorlagen") else "")
             + (f", heute {m['nervt']}× Nervt" if m.get("nervt") else ""))
 
 

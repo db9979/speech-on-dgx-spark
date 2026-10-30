@@ -4811,6 +4811,13 @@
 "titel": "Dungeon-Musik: Qualität, Länge, Lautheit",
 "text": "Voraussetzung: Musik am Tisch mit „Musik vorbereiten“, Musikmodell installiert. A: Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch: zwei Reiter „Vorrat“ und „Qualität“; im Reiter Qualität stehen Qualität (Schnell, Gut, Beste), Länge (Kurz, Mittel, Lang) und Lautheit (Normal, Lauter), am Handy (390 px) ohne seitliches Rollen. B: Gut, Kurz, Lauter wählen, Speichern, Reiter Vorrat → „Musik jetzt vorbereiten“: Zustand → Logs, Bereich Dungeon-Master: „dungeon: musik | einstellung | … | gut | kurz | lauter | …“ und „dungeon: musik | ok | … | 90 s oder 120 s | gut | … ms“. C: Hörprobe am Tisch: ein Gut-Stück neben einem alten Schnell-Stück derselben Stimmung (klarer, weniger Rauschen?), Lauter deutlich lauter? D: Beste wählen: tagsüber entsteht Gut (Log „| gut |“); nachts ohne SFT-Modell zeigt die Karte „Das genauere Klangmodell (SFT) ist nicht installiert“. E: Ich → Musik ein eigenes Lied machen: wie bisher (Log des Musik-Dienstes „musik: gemacht … schnell …“). F: Zustand → Prüfen → „Musik testen“: ohne SFT-Modell nur die installierten Modelle wie bisher.",
 "thread": "Dungeon-Musik anpassbar machen"
+},
+{
+"id": "P712",
+"v": 1282,
+"titel": "Dungeon-Musik: Klangvorlage je Welt und Stimmung",
+"text": "Voraussetzung: Musik am Tisch mit „Musik vorbereiten“, Musikmodell installiert. A: Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch: drei Reiter „Vorrat“, „Klang“, „Qualität“; im Reiter Klang Welt und Paket oben, links die Stimmungen mit Punkt (alle ○ Standard), rechts Genre, Tonart (mit Welt-Tonart), Takt, Instrumente, Charakter, Tempo, Gesang und „Geht so an das Musikmodell“; kein Textfeld; am Handy (320 und 390 px) ohne seitliches Rollen. B: Fantasy, Kampf: Genre „Epic Hybrid“, 5 Instrumente (ein sechstes lässt sich nicht wählen), Takt 3/4, Tempo 120, Gesang „Chor ohne Worte“, Speichern: Punkt bei Kampf ●, die Vorschau zeigt die Wörter, bpm 120 und 3/4; Hinweis „… Stücke dieses Feldes sind veraltet“, Zustand → Logs: „dungeon: musik | klang | gespeichert | kampf | 5 werte“. C: Live-Übersicht: „… veraltet, 1 Klangvorlagen geändert“. D: Paket „Keltisch“ → „Für alle Stimmungen übernehmen“: alle Stimmungen ●, Log „dungeon: musik | paket | keltisch | 9 felder“. E: Reiter Vorrat → „Musik jetzt vorbereiten“, dann am Tisch einen Kampf hören: klingt nach der Vorlage (Chor ohne Worte, 3/4)? Alte Stücke spielen bis dahin weiter. F: Paket „Standard (alles zurück)“ übernehmen: alle ○, „Auf Standard zurück“ bei einem Feld nimmt nur dieses zurück. G: Android-App und iPhone-App (Sprung-Link) zeigen dieselbe Karte.",
+"thread": "Dungeon-Musik anpassbar machen"
 }
 ]
 }

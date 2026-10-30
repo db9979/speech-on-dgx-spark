@@ -747,7 +747,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/dungeon-klone` | AI Dungeon Master: every character's voice as clone reference when the speech output has a Base model (WAV with the sentence spoken, at most 200, for all rounds) | – | no |
 | `state/dungeon-lieder` | AI Dungeon Master: hero songs per round and chapter from the own music model (MP3 with the heroes' names) | – | no |
 | `state/dungeon-musik` | AI Dungeon Master: music pieces per world and mood from the own music model (MP3, for every round, nothing personal) | – | no |
-| `state/dungeon-musik.json` | AI Dungeon Master: prepare music on or off, pieces per world and mood, storage, quality, length, loudness | – | yes |
+| `state/dungeon-musik.json` | AI Dungeon Master: prepare music on or off, pieces per world and mood, storage, quality, length, loudness, sound templates per world and mood | – | yes |
 | `state/dungeon-personen.json` | AI Dungeon Master: people catalog with card, traits, role, voice, face and attitude towards the heroes (game data only) | – | yes |
 | `state/dungeon-pruefstand.json` | AI Dungeon Master: the balance bench's result (wins, life lost and turns per level and group size, without and with runes, against master and boss) | – | yes |
 | `state/dungeon-regeln.json` | AI Dungeon Master: the admin's own rules and catalog entries | – | yes |

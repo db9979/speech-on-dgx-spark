@@ -9277,6 +9277,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Klangvorlage je Welt und Stimmung (V01.1.282, Plan dungeon-musik-tuning/plan.md V2a, V3a und V4a, Dominik 2026-10-30 „1-8“): Die Karte unter Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch hat einen dritten Reiter Klang. Links stehen die Stimmungen der gewählten Welt (Punkt: geändert oder Standard), rechts die Vorlage des Feldes: Genre (16 feste Genres oder „Wie die Welt“), Tonart (24 Tonarten oder die Welt-Tonart), Takt (4/4, 3/4, 6/8), Instrumente (höchstens 5 aus einer festen Liste von 42), Charakter (höchstens 3), Tempo (50 bis 140 bpm) und Gesang (ohne oder Chor ohne Worte). Ein Paket (Orchester, Mittelalter, Keltisch, Dark Ambient, Gothic, Synth, Episch, Seefahrer) füllt mit „Für alle Stimmungen übernehmen“ jede Stimmung der Welt passend zu ihrer Rolle; „Standard“ nimmt alle Änderungen der Welt zurück, „Auf Standard zurück“ nur das gewählte Feld. Es gibt kein Freitextfeld: das Panel nimmt nur Werte aus seinen Listen (dungeon_musik.pruefen), alles andere lehnt es ab (400). Darunter steht, was an das Musikmodell geht (gespeicherter Stand, nur feste Wörter). Gespeichert wird nur, was vom Standard abweicht, in dungeon-musik.json (Schlüssel sti"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "l); die Vorlage gilt für alle Tische. Jedes Stück trägt den Fingerabdruck seiner Vorlage (ersetzt die Stil-Nummer): ändert sich die Vorlage, sind die Stücke des Feldes „veraltet“, spielen aber weiter, bis neue da sind; die Nacht ersetzt sie nach und nach. Endpunkte: PUT /api/admin/dungeon/musik/stil und POST /api/admin/dungeon/musik/paket, nur Admin, mit CSRF, Größen- und Rate-Limit. Live-Übersicht: Zahl veralteter Stücke und geänderter Klangvorlagen. Die Apps zeigen die Regel-Seite des Panels (Android in der Panel-Ansicht, iPhone über den Sprung-Link)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: größerer Katalog aus dem SRD (V01.0.980, Thread „DnDAppFiles für den Dungeon-Master“, Dominik 2026-10-23 „1-6“): Aus dem Repo DnDAppFiles wurde nichts übernommen (keine Lizenz, wörtlich aus den geschützten Büchern abgeschrieben). Die Daten stammen aus dem System Reference Document 5.1 (SRD 5.1) von Wizards of the Coast, das unter CC-BY-4.0 steht. Sie sind gekürzt, auf die Werte des Spiels umgerechnet und ins Deutsche übertragen. Dazu kommen eigene Einträge für Horror, Sci-Fi und Piraten. Alles liegt als feste Datei app/panel/dungeon_srd.json im Repo, zur Laufzeit wird nichts nachgeladen. Die Grundregeln bestehen auch allein: was die fünf alten Klassen und ihre Gegenstände aus dem SRD dazubekommen (Waffen, Zauber je Grad, neue Klassen), steht als dazu in der SRD-Datei. Das Panel legt sie als Schicht zwischen dungeon_regeln.json und die Regeln des Admins (Funktionen → KI-Dungeon-Master → Regeln anpassen); der Admin ändert oder entfernt jeden Eintrag wie bisher über seine id (\"aus\": true). Inhalt: 212 Gegner (142 aus dem SRD, 70 eigene) mit Stufe (Herausforderungsgrad), Leben, Rüstungsklasse, Trefferbonus, Schadenswürfeln, sechs Werten, Erfahrung, Größe, Welten und "
 },
 {
@@ -26270,6 +26286,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "the names (quality, loud), the music service checks them (musik_server.quality, else 400). A guidance control is missing on purpose: the turbo models hold it at 1.0 anyway. Making music and editing music send no level and stay at Fast. Changes apply to new pieces, old ones play on. Test music (State → Checks) also measures \"2B SFT, 50 steps\" with the same two songs and the same seed once the SFT model is installed (turbo against SFT to listen to); the samples are kept as musik-test-2b-sft-1.mp3 and -2.mp3. Log: dungeon: musik | ok | kampf | 240 s | gut | … ms and dungeon: musik | einstellung | … | gut | lang | normal | …; the music service writes the level into musik: gemacht …. Storage: dungeon-musik.json (with quality, length, loudness; in the backup)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: sound template per world and mood (V01.1.282, plan dungeon-musik-tuning/plan.md V2a, V3a and V4a, Dominik 2026-10-30 \"1-8\"): The card under Features → AI Dungeon Master → Adjust rules → Music at the table has a third tab Sound. On the left are the moods of the chosen world (dot: changed or standard), on the right the field's template: genre (16 fixed genres or \"As the world\"), key (24 keys or the world key), time (4/4, 3/4, 6/8), instruments (at most 5 from a fixed list of 42), character (at most 3), tempo (50 to 140 bpm) and singing (none or wordless choir). A package (orchestral, medieval, Celtic, dark ambient, gothic, synth, epic, seafaring) fills every mood of the world fitting its role with \"Apply to all moods\"; \"Standard\" takes back every change of the world, \"Back to standard\" only the chosen field. There is no free text field: the panel takes only values from its lists (dungeon_musik.pruefen) and refuses anything else (400). Below it shows what goes to the music model (saved state, fixed words only). Only what differs from the standard is stored, in dungeon-musik.json (key stil); the template applies to every table. Every piece carries the fingerprint of "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "its template (replacing the style number): when the template changes, the field's pieces are \"outdated\" but play on until new ones are there; the night replaces them bit by bit. Endpoints: PUT /api/admin/dungeon/musik/stil and POST /api/admin/dungeon/musik/paket, admin only, with CSRF, size and rate limit. Live overview: number of outdated pieces and changed sound templates. The apps show the panel's rules page (Android in the panel view, iPhone through the jump link)."
 },
 {
 "lang": "en",

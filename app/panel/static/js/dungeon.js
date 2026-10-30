@@ -93,6 +93,9 @@ const dmMsg=S=>`<div class="dmmsg ${S.err?'err':'mut'}" role="status">${esc(S.ms
 // the host hides a line of table talk or an action (Punkt 13 of 2026-10-24); only on the own page, a guest never hosts
 const dmHide=(v,art,n,pid)=>v.gastgeber?`<button type="button" class="ic-ib dm-hide" data-dmhide="${art}" data-n="${n}"${pid?` data-pid="${esc(pid)}"`:''} title="${esc(t('Für alle ausblenden','Hide for everyone'))}" aria-label="${esc(t('Für alle ausblenden','Hide for everyone'))}">⊘</button>`:'';
 const DMGRUND={
+  'feld':['Diese Welt oder Stimmung gibt es nicht.','This world or mood does not exist.'],
+  'felder':['Diese Auswahl gibt es nicht; bitte neu laden.','This choice does not exist; please reload.'],
+  'paket':['Dieses Paket oder diese Welt gibt es nicht.','This package or world does not exist.'],
   'heiler':['Der Heiler findet keine Wunde mit einer Folge, die er nehmen könnte.','The healer finds no wound with a consequence to take.'],
   'gefaehrte':['Diesen Gefährten gibt es hier nicht oder er ist schon dabei.','This companion is not here or already with you.'],
   'gefaehrten':['Die Gruppe ist voll: höchstens zwei Gefährten und vier zusammen.','The group is full: at most two companions and four together.'],

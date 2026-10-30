@@ -17,7 +17,7 @@ A store of music for the whole Spark, one field per world and mood (STIMMUNGEN),
   be as its negative prompt (meta, plan dungeon-musik-tuning V1a, Dominik 2026-10-30 „1-8“); a boss fight has its own
   mood (boss: a foe with the bestiary's boss mark still stands in the panel's fight, V8a), the fight's pieces until
   its field has some; a vault of the map has its own
-  mood (gewoelbe), a rest at the campfire too (lager, D&D idea 4, Dominik 2026-10-25 „1-12“); a piece of an older style (STIL_V) plays until its field has new ones and then goes first;
+  mood (gewoelbe), a rest at the campfire too (lager, D&D idea 4, Dominik 2026-10-25 „1-12“); a piece of an older sound (its field's fingerprint, V2a) plays until its field has new ones and then goes first;
 - full: per field marked, then older, then the most played pieces go first, and the store stays within the megabytes;
 - „👎 Nervt“ (Dominik 2026-10-24 „als schlecht oder nervig markieren, auch von Spielern, in der Nacht erneuert“): any
   seat of a running round (a profile or a guest) marks the piece playing; one mark is enough, the piece is never played
@@ -33,8 +33,8 @@ model; without them the table has its sounds and dice and no music. Every seat o
 profile by its login, a guest by its seat code, dungeon._guest); nothing of the store is personal. The journal gets
 fixed words and numbers only („dungeon: musik | …“), Live only counts.
 
-    STATE/dungeon-musik.json          {"an", "stuecke", "mb", "qualitaet", "laenge", "laut"}   the admin's settings
-    STATE/dungeon-musik/index.json    {"stuecke": [{id, w, st, s, t, b, n, v, nervt?}]}   the store
+    STATE/dungeon-musik.json          {"an", "stuecke", "mb", "qualitaet", "laenge", "laut", "stil"}   the admin's settings
+    STATE/dungeon-musik/index.json    {"stuecke": [{id, w, st, s, t, b, n, k, nervt?}]}   the store (k: the sound's fingerprint)
     STATE/dungeon-musik/<id>.mp3      one piece
 
     GET    /api/profile/dungeon/{rid}/musik/{sid}   a piece for a seat of the round (MP3)
@@ -46,6 +46,8 @@ fixed words and numbers only („dungeon: musik | …“), Live only counts.
     POST   /api/admin/dungeon/musik/jetzt            fill every field up to the number now
     DELETE /api/admin/dungeon/musik                  delete every piece
     POST   /api/admin/dungeon/musik/{sid}/zurueck    take the marks of a piece back
+    PUT    /api/admin/dungeon/musik/stil             {welt, st, werte}: the template of a field (V2a, fixed lists only)
+    POST   /api/admin/dungeon/musik/paket            {welt, paket}: a fixed package into every mood of a world (V4a)
 """
 import asyncio
 import hashlib
@@ -107,7 +109,6 @@ GRUENDE = ("memory", "belegt", "missing", "engine", "dienst", "zeit", "pause")  
 # „1-8“): the caption is a list of tags as ACE-Step 1.5 was trained on (genre, instruments, mood, production), never a
 # sentence and never a negation; tempo, key and time signature go as the song's metadata (meta), so the planner of
 # the engine keeps the caption word for word, and what a piece must not be goes as its negative prompt (NEGATIV).
-STIL_V = 5                 # the style of the pieces: an older one plays until its field has new ones, then goes first
 STIL = {"fantasy": "medieval fantasy, celtic folk, cinematic", "horror": "dark ambient, gothic horror, cinematic",
         "scifi": "science fiction, synthwave, cinematic", "piraten": "pirate adventure, sea shanty folk, cinematic"}
 EIGEN = "cinematic adventure, orchestral"
@@ -216,6 +217,103 @@ PRODUKTION = ("instrumental, tabletop role-playing game background music, steady
               "long gentle fade-out, seamless loop, warm balanced mix")
 # what a piece must not be: the planner's negative prompt (lm_negative_prompt), never words in the caption
 NEGATIV = "vocals, singing, spoken words, hectic, frantic, chaotic, abrupt changes, sudden stops"
+NEGATIV_CHOR = "lyrics, spoken words, hectic, frantic, chaotic, abrupt changes, sudden stops"   # a wordless choir sings
+
+# the admin's sound template (plan dungeon-musik-tuning V2a, V3a, V4a; Dominik 2026-10-30 „1-8“): per world and mood
+# only what differs from the standard above (THEMA, TEMPO, TONART, TAKT), from these fixed lists only, never a free
+# text; id -> (German, English, the words for the music model)
+GENRES = {
+    "orchester": ("Orchester-Filmmusik", "Orchestral film score", "orchestral film score, cinematic"),
+    "mittelalter": ("Mittelalter-Folk", "Medieval folk", "medieval folk, renaissance"),
+    "keltisch": ("Keltisch", "Celtic", "celtic folk"),
+    "darkambient": ("Dark Ambient", "Dark ambient", "dark ambient, atmospheric"),
+    "gothic": ("Gothic", "Gothic", "gothic, dark orchestral"),
+    "synthwave": ("Synthwave", "Synthwave", "synthwave, retro electronic"),
+    "chiptune": ("Chiptune/Retro", "Chiptune/retro", "chiptune, retro video game"),
+    "shanty": ("Seemannslied", "Sea shanty", "sea shanty folk"),
+    "tavernfolk": ("Taverne-Folk", "Tavern folk", "tavern folk, acoustic"),
+    "epic": ("Epic Hybrid", "Epic hybrid", "epic hybrid orchestral"),
+    "akustisch": ("Akustisch", "Acoustic", "acoustic, unplugged"),
+    "choral": ("Choral", "Choral", "choral, sacred"),
+    "ambient": ("Ambient", "Ambient", "ambient, calm atmosphere"),
+    "weltmusik": ("Weltmusik", "World music", "world music, ethnic"),
+    "lounge": ("Lounge", "Lounge", "lounge, downtempo"),
+    "minimal": ("Minimal", "Minimal", "minimal, sparse"),
+}
+INSTRUMENTE = {
+    "kriegstrommeln": ("Kriegstrommeln", "War drums", "war drums"), "taiko": ("Taiko", "Taiko", "taiko"),
+    "pauken": ("Pauken", "Timpani", "timpani"), "rahmentrommel": ("Rahmentrommel", "Frame drum", "frame drum"),
+    "handtrommel": ("Handtrommel", "Hand drum", "hand drum"), "bodhran": ("Bodhrán", "Bodhrán", "bodhran drum"),
+    "tamburin": ("Tamburin", "Tambourine", "tambourine"), "elektrodrums": ("Elektro-Schlagzeug", "Electronic drums", "electronic drums"),
+    "kontrabass": ("Kontrabass", "Upright bass", "upright bass"), "tiefbass": ("Tiefer Bass", "Deep bass", "deep bass"),
+    "synthbass": ("Synth-Bass", "Synth bass", "synth bass"), "laute": ("Laute", "Lute", "lute"),
+    "fiedel": ("Fiedel", "Fiddle", "fiddle"), "harfe": ("Harfe", "Harp", "harp"), "floete": ("Flöte", "Flute", "flute"),
+    "whistle": ("Tin Whistle", "Tin whistle", "tin whistle"), "dudelsack": ("Dudelsack", "Bagpipes", "bagpipes"),
+    "drehleier": ("Drehleier", "Hurdy-gurdy", "hurdy-gurdy"), "akkordeon": ("Akkordeon", "Accordion", "accordion"),
+    "konzertina": ("Konzertina", "Concertina", "concertina"), "banjo": ("Banjo", "Banjo", "banjo"),
+    "gitarre": ("Akustikgitarre", "Acoustic guitar", "acoustic guitar"), "mandoline": ("Mandoline", "Mandolin", "mandolin"),
+    "hackbrett": ("Hackbrett", "Dulcimer", "dulcimer"), "streicher": ("Streicher", "Strings", "strings"),
+    "staccato": ("Streicher staccato", "Staccato strings", "staccato strings"), "cello": ("Cello", "Cello", "cello"),
+    "violine": ("Violine", "Violin", "violin"), "hoerner": ("Hörner", "Horns", "horns"),
+    "blech": ("Tiefe Blechbläser", "Low brass", "low brass"), "trompete": ("Trompete", "Trumpet", "trumpet"),
+    "orgel": ("Orgel", "Pipe organ", "pipe organ"), "klavier": ("Klavier", "Piano", "piano"),
+    "spieluhr": ("Spieluhr", "Music box", "music box"), "glocken": ("Glocken", "Bells", "bells"),
+    "chorpads": ("Chorflächen", "Choir pads", "choir pads"), "synthpads": ("Synth-Flächen", "Synth pads", "warm synth pads"),
+    "arpeggio": ("Synth-Arpeggio", "Synth arpeggio", "arpeggiated synth"), "celesta": ("Celesta", "Celesta", "celesta"),
+    "glasharmonika": ("Glasharmonika", "Glass harmonica", "glass harmonica"), "steeldrum": ("Steeldrum", "Steel drum", "steel drum"),
+    "drones": ("Klangteppich", "Drones", "deep drones"),
+}
+CHARAKTER = {
+    "ruhig": ("ruhig", "calm", "calm"), "duester": ("düster", "dark", "dark"), "heroisch": ("heroisch", "heroic", "heroic"),
+    "verspielt": ("verspielt", "playful", "playful"), "bedrohlich": ("bedrohlich", "menacing", "menacing"),
+    "warm": ("warm", "warm", "warm"), "feierlich": ("feierlich", "solemn", "solemn"), "treibend": ("treibend", "driving", "driving"),
+    "geheimnisvoll": ("geheimnisvoll", "mysterious", "mysterious"), "episch": ("episch", "epic", "epic"),
+    "froehlich": ("fröhlich", "cheerful", "cheerful"), "melancholisch": ("melancholisch", "melancholic", "melancholic"),
+    "spannend": ("spannend", "suspenseful", "suspenseful"), "vertraeumt": ("verträumt", "dreamy", "dreamy"),
+}
+_NOTEN = {"C": "C", "C#": "Cis", "D": "D", "Eb": "Es", "E": "E", "F": "F", "F#": "Fis", "G": "G", "Ab": "As", "A": "A",
+          "Bb": "B", "B": "H"}
+TONARTEN = {f"{n} {m}": (f"{de}-{'Dur' if m == 'major' else 'Moll'}", f"{n} {m}") for n, de in _NOTEN.items()
+            for m in ("major", "minor")}   # in acestep.cpp's notation (musik_server.KEYSCALE)
+TAKTE = {"4": "4/4", "3": "3/4", "6": "6/8"}
+GESANG = {"aus": ("Ohne", "None"), "chor": ("Chor ohne Worte", "Wordless choir")}
+CHOR = "wordless choir"     # the words of a choir without lyrics (the lyrics stay [Instrumental])
+INSTR_MAX, ART_MAX = 5, 3
+TEMPO_SPANNE = (50, 140)
+FELDER = ("genre", "instr", "tempo", "tonart", "takt", "art", "gesang")
+# fixed packages (V4a): one click fills every mood of a world; tempo, key and time stay the field's own. Per package
+# the genre and per kind of mood (ROLLE) instruments and character; „standard“ takes every change of the world back
+ROLLE = {"erkunden": "ruhig", "lager": "ruhig", "taverne": "fest", "sieg": "fest", "spannung": "dunkel",
+         "gewoelbe": "dunkel", "kampf": "kampf", "boss": "kampf", "finale": "kampf"}
+ART_ROLLE = {"erkunden": ("geheimnisvoll", "warm"), "lager": ("ruhig", "warm"), "taverne": ("froehlich", "verspielt"),
+             "sieg": ("feierlich", "froehlich"), "spannung": ("spannend", "duester"), "gewoelbe": ("geheimnisvoll", "duester"),
+             "kampf": ("heroisch", "treibend"), "boss": ("bedrohlich", "episch"), "finale": ("episch", "heroisch")}
+PAKETE = {
+    "orchestral": (("Klassisch-orchestral", "Classical orchestral"), "orchester", {
+        "ruhig": ("harfe", "floete", "streicher", "kontrabass", "handtrommel"), "fest": ("hoerner", "streicher", "pauken", "kontrabass"),
+        "dunkel": ("cello", "drones", "pauken", "tiefbass"), "kampf": ("kriegstrommeln", "pauken", "blech", "staccato", "tiefbass")}),
+    "mittelalter": (("Mittelalter-Folk", "Medieval folk"), "mittelalter", {
+        "ruhig": ("laute", "floete", "rahmentrommel", "kontrabass"), "fest": ("laute", "fiedel", "drehleier", "tamburin", "kontrabass"),
+        "dunkel": ("drehleier", "drones", "rahmentrommel", "tiefbass"), "kampf": ("kriegstrommeln", "fiedel", "drehleier", "tiefbass")}),
+    "keltisch": (("Keltisch", "Celtic"), "keltisch", {
+        "ruhig": ("harfe", "whistle", "bodhran", "kontrabass"), "fest": ("fiedel", "whistle", "bodhran", "gitarre", "kontrabass"),
+        "dunkel": ("dudelsack", "drones", "bodhran", "tiefbass"), "kampf": ("dudelsack", "kriegstrommeln", "fiedel", "tiefbass")}),
+    "darkambient": (("Dark Ambient", "Dark ambient"), "darkambient", {
+        "ruhig": ("synthpads", "glocken", "handtrommel", "tiefbass"), "fest": ("klavier", "synthpads", "handtrommel", "tiefbass"),
+        "dunkel": ("drones", "glasharmonika", "taiko", "tiefbass"), "kampf": ("taiko", "drones", "blech", "tiefbass")}),
+    "gothic": (("Gothic-Horror", "Gothic horror"), "gothic", {
+        "ruhig": ("spieluhr", "klavier", "cello", "kontrabass", "handtrommel"), "fest": ("akkordeon", "klavier", "rahmentrommel", "kontrabass"),
+        "dunkel": ("orgel", "chorpads", "cello", "pauken", "tiefbass"), "kampf": ("orgel", "chorpads", "taiko", "staccato", "tiefbass")}),
+    "synth": (("Synth/Retro", "Synth/retro"), "synthwave", {
+        "ruhig": ("synthpads", "arpeggio", "elektrodrums", "synthbass"), "fest": ("arpeggio", "synthpads", "elektrodrums", "synthbass"),
+        "dunkel": ("drones", "synthpads", "elektrodrums", "synthbass"), "kampf": ("arpeggio", "elektrodrums", "taiko", "synthbass")}),
+    "epic": (("Epic Hybrid", "Epic hybrid"), "epic", {
+        "ruhig": ("streicher", "klavier", "synthpads", "tiefbass", "handtrommel"), "fest": ("hoerner", "streicher", "kriegstrommeln", "tiefbass"),
+        "dunkel": ("drones", "staccato", "taiko", "tiefbass"), "kampf": ("taiko", "kriegstrommeln", "blech", "chorpads", "tiefbass")}),
+    "seefahrer": (("Seefahrer-Folk", "Seafarer folk"), "shanty", {
+        "ruhig": ("gitarre", "konzertina", "handtrommel", "kontrabass"), "fest": ("akkordeon", "fiedel", "banjo", "tamburin", "kontrabass"),
+        "dunkel": ("cello", "drones", "rahmentrommel", "tiefbass"), "kampf": ("kriegstrommeln", "fiedel", "hoerner", "tiefbass")}),
+}
 
 # the panel's word lists over the scene, the act and the place (the model's words are data: they only pick one of these)
 _W = lambda s: re.compile(r"(?i)\b(" + s + r")")   # noqa: E731 - a word at its start (German compounds end freely)
@@ -313,8 +411,9 @@ def spielbar(x):
 
 
 def neu(x):
-    """A piece of the current style (STIL_V); an older one plays until its field has new ones and goes first."""
-    return x.get("v") == STIL_V
+    """A piece of its field's current sound (its fingerprint, fingerprint); an older one plays until its field has
+    new ones and goes first."""
+    return x.get("k") == fingerprint(x["w"], x["st"])
 
 
 def count(d, welt, st):
@@ -354,17 +453,106 @@ def prune(d, ziel, mb, keep=""):
 
 def caption(welt, st, rng):
     """The words for the music model: only fixed words of this module (never a text of the game), as tags: genre,
-    instruments, mood, production."""
+    instruments, mood, (a wordless choir,) production; what the admin's template (vorlage) changed from its lists."""
+    v = vorlage(welt, st)
     art, wie = THEMA.get(welt, EIGEN_THEMA)[st]
-    return ", ".join((STIL.get(welt, EIGEN), rng.choice(wie), art, PRODUKTION))
+    teile = [GENRES[v["genre"]][2] if v["genre"] else STIL.get(welt, EIGEN),
+             ", ".join(INSTRUMENTE[i][2] for i in v["instr"]) if v["instr"] else rng.choice(wie),
+             ", ".join(CHARAKTER[a][2] for a in v["art"]) if v["art"] else art]
+    return ", ".join(teile + ([CHOR] if v["gesang"] == "chor" else []) + [PRODUKTION])
+
+
+def welt_tonart(welt, st):
+    """The field's standard key: the world's minor, its relative major for DUR, a fifth up for the boss."""
+    return TONART.get(welt, TONART_EIGEN)[1 if st in DUR else 2 if st == "boss" else 0]
 
 
 def meta(welt, st):
-    """The piece's metadata for the engine (musik_server.metadata): tempo, key and time signature of the field and
-    the negative prompt; with all of them the engine's planner keeps the caption as it is."""
-    tonart = TONART.get(welt, TONART_EIGEN)
-    return {"bpm": TEMPO[st], "keyscale": tonart[1 if st in DUR else 2 if st == "boss" else 0],
-            "timesignature": TAKT.get(st, "4"), "negative": NEGATIV}
+    """The piece's metadata for the engine (musik_server.metadata): tempo, key and time signature of the field (the
+    admin's template or the standard) and the negative prompt; with all of them the engine's planner keeps the
+    caption as it is."""
+    v = vorlage(welt, st)
+    return {"bpm": v["tempo"], "keyscale": welt_tonart(welt, st) if v["tonart"] == "welt" else v["tonart"],
+            "timesignature": v["takt"], "negative": NEGATIV_CHOR if v["gesang"] == "chor" else NEGATIV}
+
+
+# ---------------------------------------------------------------- the admin's sound template (V2a)
+def standard(st):
+    """The standard of a field: "" and [] mean the world's own words (THEMA, STIL)."""
+    return {"genre": "", "instr": [], "tempo": TEMPO[st], "tonart": "welt", "takt": TAKT.get(st, "4"), "art": [], "gesang": "aus"}
+
+
+def pruefen(st, werte):
+    """The admin's values of one field, each checked against its fixed list or range; ValueError(the field) else.
+    Only fields given are returned."""
+    if not isinstance(werte, dict) or set(werte) - set(FELDER):
+        raise ValueError("felder")
+    out = {}
+    for k, x in werte.items():
+        if k == "genre" and (x == "" or x in GENRES):
+            out[k] = x
+        elif k in ("instr", "art") and isinstance(x, list) and len(x) <= (INSTR_MAX if k == "instr" else ART_MAX) \
+                and len(set(x)) == len(x) and all(isinstance(i, str) and i in (INSTRUMENTE if k == "instr" else CHARAKTER) for i in x):
+            out[k] = list(x)
+        elif k == "tempo" and _int(x, *TEMPO_SPANNE, None) is not None:
+            out[k] = x
+        elif k == "tonart" and isinstance(x, str) and (x == "welt" or x in TONARTEN):
+            out[k] = x
+        elif k == "takt" and isinstance(x, str) and x in TAKTE:
+            out[k] = x
+        elif k == "gesang" and isinstance(x, str) and x in GESANG:
+            out[k] = x
+        else:
+            raise ValueError(k)
+    return out
+
+
+_stilcache = {"mtime": None, "stil": {}, "fp": {}}
+
+
+def _stil():
+    """The admin's changes {welt: {st: {feld: wert}}}, read again only when the file changed."""
+    try:
+        st_ = os.stat(SETTINGS)
+        m = (st_.st_mtime_ns, st_.st_size)
+    except OSError:
+        m = None
+    if _stilcache["mtime"] != m or m is None:
+        s = read_json(SETTINGS, {}) if m is not None else {}
+        st = s.get("stil") if isinstance(s, dict) else None
+        _stilcache.update(mtime=m, stil=st if isinstance(st, dict) else {}, fp={})
+    return _stilcache["stil"]
+
+
+def vorlage(welt, st):
+    """The field's template: its standard with the admin's checked changes on top (a broken entry counts as none)."""
+    v = standard(st)
+    w = _stil().get(welt)
+    x = w.get(st) if isinstance(w, dict) else None
+    if isinstance(x, dict):
+        try:
+            v.update(pruefen(st, x))
+        except ValueError:
+            pass
+    return v
+
+
+def geaendert(welt, st):
+    """The fields of the template that differ from the standard."""
+    v, std = vorlage(welt, st), standard(st)
+    return [k for k in FELDER if v[k] != std[k]]
+
+
+def fingerprint(welt, st):
+    """The field's sound in 10 hex digits: its template and the standard words it falls back on. Another one makes
+    every piece of the field „veraltet“: it plays until the field has new ones, the night replaces it."""
+    _stil()
+    fp = _stilcache["fp"]
+    if (welt, st) not in fp:
+        teile = [vorlage(welt, st), THEMA.get(welt, EIGEN_THEMA)[st], STIL.get(welt, EIGEN), welt_tonart(welt, st),
+                 PRODUKTION, NEGATIV, NEGATIV_CHOR, CHOR]
+        fp[(welt, st)] = hashlib.sha256(repr(teile).encode()).hexdigest()[:10]
+    return fp[(welt, st)]
 
 
 # ---------------------------------------------------------------- the mood (panel rules)
@@ -557,6 +745,7 @@ async def make(welt, st, rng=None):
     s = settings()
     secs = SIEG_S if st == "sieg" else rng.choice(LAENGEN[s["laenge"]][0])
     stufe = quality_now(s, time.time())
+    k = fingerprint(welt, st)
     body = {"caption": caption(welt, st, rng), "seconds": secs, "lyrics": "", "language": "", "seed": rng.randrange(2 ** 31),
             "title": f"Dungeon {st}", **meta(welt, st), "quality": stufe, "loud": s["laut"]}
     if musik.model():
@@ -583,7 +772,7 @@ async def make(welt, st, rng=None):
                 os.replace(file_of(sid) + ".neu", file_of(sid))
                 d = _read()
                 d = {"stuecke": list(d["stuecke"]) + [{"id": sid, "w": welt, "st": st, "s": secs, "t": int(time.time()),
-                                                       "b": len(mp3), "n": 0, "v": STIL_V}]}
+                                                       "b": len(mp3), "n": 0, "k": k}]}
                 gone = prune(d, s["stuecke"], s["mb"], keep=sid)   # a new act's pieces push out the most played
                 _write(d)
                 w = _want.get((welt, st))
@@ -750,7 +939,8 @@ def for_live():
     return {"an": on(s), "stuecke": sum(1 for x in d["stuecke"] if spielbar(x)), "alt": sum(1 for x in d["stuecke"] if not neu(x)), "mb": round(sum(x.get("b", 0) for x in d["stuecke"]) / 1024 / 1024),
             "voll": sum(1 for k in fields if count(d, *k) >= s["stuecke"]), "macht": bool(_state["run"]),
             "wartet": len(_want), "gemacht": t["gemacht"], "weg": t["weg"], "geholt": t["geholt"], "entfernt": t["entfernt"],
-            "markiert": sum(1 for x in d["stuecke"] if not spielbar(x)), "nervt": t["nervt"]}
+            "markiert": sum(1 for x in d["stuecke"] if not spielbar(x)), "nervt": t["nervt"],
+            "vorlagen": sum(1 for w in _stil().values() if isinstance(w, dict) for x in w.values() if isinstance(x, dict) and x)}
 
 
 # ---------------------------------------------------------------- routes
@@ -854,7 +1044,106 @@ def admin_view(lang="de"):
             "mb_noetig": round(len(r["welten"]) * len(STIMMUNGEN) * s["stuecke"] * sum(LAENGEN[s["laenge"]][0]) / len(LAENGEN[s["laenge"]][0]) / 60 * MB_JE_MINUTE),
             "wahl": {k: [{"id": x, "name": (v[1] if k == "laenge" else v)[li]} for x, v in t.items()] for k, t in WAHL.items()},
             "beste_fehlt": _state["beste_fehlt"],
+            "klang": klang_view(d, r["welten"], li),
             "live": for_live()}
+
+
+def vorschau(welt, st):
+    """What goes to the music model for the field, as the admin's card shows it (the first way of playing when the
+    instruments are the world's own; tempo, key, time signature and the lyrics as the service sets them)."""
+    m = meta(welt, st)
+    return f"{caption(welt, st, random.Random(0))} · bpm {m['bpm']} · {m['keyscale']} · {TAKTE[m['timesignature']]} · [Instrumental]"
+
+
+def klang_view(d, welten, li):
+    """The tab „Klang“: the fixed lists with their names, the packages and per world and mood the template, its
+    standard, which fields changed, how many pieces are „veraltet“ and what goes to the music model."""
+    nl = lambda t: [{"id": k, "name": v[li]} for k, v in t.items()]   # noqa: E731
+    alt = {}
+    for x in d["stuecke"]:
+        if not neu(x):
+            alt[(x["w"], x["st"])] = alt.get((x["w"], x["st"]), 0) + 1
+    return {"listen": {"genre": nl(GENRES), "instr": nl(INSTRUMENTE), "art": nl(CHARAKTER), "tonart": nl(TONARTEN),
+                       "takt": [{"id": k, "name": v} for k, v in TAKTE.items()], "gesang": nl(GESANG),
+                       "paket": [{"id": k, "name": v[0][li]} for k, v in PAKETE.items()]},
+            "max": {"instr": INSTR_MAX, "art": ART_MAX}, "tempo": TEMPO_SPANNE,
+            "felder": {w["id"]: {st: {"werte": vorlage(w["id"], st), "standard": standard(st), "geaendert": geaendert(w["id"], st),
+                                      "welt_tonart": TONARTEN[welt_tonart(w["id"], st)][li], "veraltet": alt.get((w["id"], st), 0),
+                                      "vorschau": vorschau(w["id"], st)} for st in STIMMUNGEN} for w in welten}}
+
+
+def _welten():
+    import dungeon
+    return {w["id"] for w in dungeon.rules()["welten"]}
+
+
+def stil_save(welt, st, werte):
+    """The admin's template of one field: only what differs from its standard is kept, {} takes it back. Returns the
+    changed fields; ValueError(the field) for anything outside the lists."""
+    if welt not in _welten() or st not in STIMMUNGEN:
+        raise ValueError("feld")
+    neu_ = pruefen(st, werte)
+    std = standard(st)
+    keep_ = {k: v for k, v in neu_.items() if v != std[k]}
+    with _lock:
+        s = read_json(SETTINGS, {})
+        s = s if isinstance(s, dict) else {}
+        stil = s.get("stil") if isinstance(s.get("stil"), dict) else {}
+        stil = {w: dict(x) for w, x in stil.items() if w in _welten() and isinstance(x, dict)}
+        if keep_:
+            stil.setdefault(welt, {})[st] = keep_
+        else:
+            stil.get(welt, {}).pop(st, None)
+        s["stil"] = {w: x for w, x in stil.items() if x}
+        write_json(SETTINGS, s, 2, 0o600, False, 0o700)
+    return sorted(keep_)
+
+
+def paket(welt, pid):
+    """A package (PAKETE) into every mood of a world, or "standard": every change of the world back. Returns how
+    many fields it set."""
+    if welt not in _welten() or (pid != "standard" and pid not in PAKETE):
+        raise ValueError("paket")
+    n = 0
+    for st in STIMMUNGEN:
+        if pid == "standard":
+            stil_save(welt, st, {})
+        else:
+            _name, genre, rollen = PAKETE[pid]
+            stil_save(welt, st, {"genre": genre, "instr": list(rollen[ROLLE[st]]), "art": list(ART_ROLLE[st])})
+        n += 1
+    return n
+
+
+@router.put("/api/admin/dungeon/musik/stil", dependencies=[Depends(auth)])
+async def admin_stil(request: Request):
+    """{welt, st, werte: {genre?, instr?, tempo?, tonart?, takt?, art?, gesang?}}: the field's template (only values of
+    the fixed lists; {} back to the standard)."""
+    guard.limit(request, "dungeonmusik", admin=True)
+    b = await json_body(request, 4096)
+    welt, st, werte = b.get("welt"), b.get("st"), b.get("werte")
+    try:
+        felder = await asyncio.to_thread(stil_save, welt, st, werte)
+    except ValueError as e:
+        print(f"dungeon: musik | klang abgelehnt | {e if str(e) in FELDER + ('feld', 'felder') else 'wert'}", flush=True)
+        raise HTTPException(400, "werte")
+    print(f"dungeon: musik | klang | gespeichert | {st} | {len(felder)} werte", flush=True)
+    return admin_view("en" if b.get("lang") == "en" else "de")
+
+
+@router.post("/api/admin/dungeon/musik/paket", dependencies=[Depends(auth)])
+async def admin_paket(request: Request):
+    """{welt, paket}: a fixed package into every mood of the world („standard“: all back)."""
+    guard.limit(request, "dungeonmusik", admin=True)
+    b = await json_body(request, 1024)
+    pid = b.get("paket")
+    try:
+        n = await asyncio.to_thread(paket, b.get("welt"), pid)
+    except ValueError:
+        print("dungeon: musik | paket abgelehnt", flush=True)
+        raise HTTPException(400, "paket")
+    print(f"dungeon: musik | paket | {pid} | {n} felder", flush=True)
+    return admin_view("en" if b.get("lang") == "en" else "de")
 
 
 @router.get("/api/admin/dungeon/musik", dependencies=[Depends(auth)])

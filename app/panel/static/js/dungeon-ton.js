@@ -148,12 +148,12 @@ setInterval(()=>{if(!DMT.ctx)return;const table=document.querySelector('.dm .dm-
 // the admin's card under Funktionen → Dungeon-Master → Regeln anpassen → Musik am Tisch, in sub-tabs (plan
 // dungeon-musik-tuning, Entwurf): Vorrat (on/off, pieces per field, megabytes, the fields), Qualität (V6a: level,
 // length, loudness; fixed values only); the drafts of every tab go along with each Save
-const DMMU={tab:'vorrat',s:null};
+const DMMU={tab:'vorrat',s:null,kw:'',kst:'',kv:null,mehr:false};
 async function dmMusikAdm(){const c=$('dmmusikadm');if(!c)return;const {r,d}=await apiTry('/api/admin/dungeon/musik?lang='+(L==='en'?'en':'de'));if(!r.ok){c.textContent='';return}DMMU.s=null;dmMusikDraw(d,'')}
 function dmMusikSeg(k,list,cur){return `<span class="segc" role="radiogroup" aria-label="${esc(k)}">${list.map(x=>`<button type="button" data-dmmwahl="${esc(k)}" data-v="${esc(x.id)}" class="${x.id===cur?'on':''}" aria-pressed="${x.id===cur}">${esc(x.name)}</button>`).join('')}</span>`}
 function dmMusikTake(){const s=DMMU.s;if(!s)return;if($('dmmusikan'))s.an=$('dmmusikan').checked;if($('dmmusikn'))s.stuecke=+$('dmmusikn').value;if($('dmmusikmb'))s.mb=+$('dmmusikmb').value}
 function dmMusikDraw(d,err){const c=$('dmmusikadm');if(!c)return;DMMU.d=d;if(!DMMU.s)DMMU.s=Object.assign({},d.einstellung);const s=DMMU.s,L2=d.live,tab=DMMU.tab,w=d.wahl||{};
-  const tabs=[['vorrat',t('Vorrat','Store')],['qualitaet',t('Qualität','Quality')]];
+  const tabs=[['vorrat',t('Vorrat','Store')],['klang',t('Klang','Sound')],['qualitaet',t('Qualität','Quality')]];
   const vorrat=`<div class="dm-two"><div><label for="dmmusikn">${esc(t('Stücke je Welt und Stimmung','Pieces per world and mood'))}</label><input id="dmmusikn" type="number" min="${d.spanne.stuecke[0]}" max="${d.spanne.stuecke[1]}" value="${s.stuecke}"></div>
       <div><label for="dmmusikmb">${esc(t('Speicherplatz (MB)','Storage (MB)'))}</label><input id="dmmusikmb" type="number" min="${d.spanne.mb[0]}" max="${d.spanne.mb[1]}" step="50" value="${s.mb}"></div></div>
     ${s.mb<d.mb_noetig?`<small class="dm-wrest">${esc(t(`Für ${s.stuecke} Stücke je Feld braucht der Vorrat etwa ${d.mb_noetig} MB; mit ${s.mb} MB gehen die meistgespielten früher.`,`For ${s.stuecke} pieces per field the store needs about ${d.mb_noetig} MB; with ${s.mb} MB the most played go sooner.`))}</small>`:''}
@@ -171,9 +171,9 @@ function dmMusikDraw(d,err){const c=$('dmmusikadm');if(!c)return;DMMU.d=d;if(!DM
     <div class="pintro">${esc(t('Das eigene Musikmodell macht Stücke je Welt und Stimmung, beim Start einer Runde und vor jedem neuen Akt im Voraus, nachts bis zur Zahl je Feld. Sprache und andere schwere Aufträge gehen vor. Geräusche und Würfel gibt es immer, auch ohne Musik.','The own music model makes pieces per world and mood, ahead when a round starts and before each new act, at night up to the number per field. Speech and other heavy jobs go first. Sounds and dice are always there, even without music.'))}</div>
     ${d.installiert?'':`<div class="ic-note"><div class="ic-mid"><b>${esc(t('Kein Musikmodell installiert.','No music model installed.'))}</b><span>${esc(t('Ohne Musikmodell gibt es am Tisch nur Geräusche und Würfel.','Without a music model the table has sounds and dice only.'))}</span></div></div>`}
     <span class="segc dm-mtabs" role="tablist">${tabs.map(([k,n])=>`<button type="button" role="tab" data-dmmtab="${k}" class="${k===tab?'on':''}" aria-selected="${k===tab}">${esc(n)}</button>`).join('')}</span>
-    ${tab==='qualitaet'?qual:vorrat}
+    ${tab==='qualitaet'?qual:tab==='klang'?dmKlang(d):vorrat}
     ${err?`<div class="err">${esc(err)}</div>`:''}
-    <div class="row"><button type="button" class="b p" data-dmmusik="save">${esc(t('Speichern','Save'))}</button>${tab==='vorrat'?`<button type="button" class="b" data-dmmusik="jetzt"${s.an&&d.installiert?'':' disabled'}>${esc(t('Musik jetzt vorbereiten','Prepare music now'))}</button><button type="button" class="b danger" data-dmmusik="weg">${esc(t('Alle Stücke löschen','Delete all pieces'))}</button>`:''}</div>`}
+    ${tab==='klang'?`<div class="row dm-kfoot"><button type="button" class="b" data-dmklang="standard">${esc(t('Auf Standard zurück','Back to standard'))}</button><small class="mut">${esc(t('Neue Stücke entstehen beim nächsten Vorbereiten, spätestens nachts.','New pieces come with the next preparing, at night at the latest.'))}</small><button type="button" class="b p" data-dmklang="save">${esc(t('Speichern','Save'))}</button></div>`:`<div class="row"><button type="button" class="b p" data-dmmusik="save">${esc(t('Speichern','Save'))}</button>${tab==='vorrat'?`<button type="button" class="b" data-dmmusik="jetzt"${s.an&&d.installiert?'':' disabled'}>${esc(t('Musik jetzt vorbereiten','Prepare music now'))}</button><button type="button" class="b danger" data-dmmusik="weg">${esc(t('Alle Stücke löschen','Delete all pieces'))}</button>`:''}</div>`}`}
 document.body.addEventListener('click',e=>{const b=e.target.closest('#dmmusikadm [data-dmmtab],#dmmusikadm [data-dmmwahl]');if(!b||!DMMU.d)return;dmMusikTake();
   if(b.dataset.dmmtab)DMMU.tab=b.dataset.dmmtab;else DMMU.s[b.dataset.dmmwahl]=b.dataset.v;dmMusikDraw(DMMU.d,'')});
 document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmmusikadm [data-dmmusik]');if(!b)return;const k=b.dataset.dmmusik,q='?lang='+(L==='en'?'en':'de');
@@ -184,6 +184,45 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmmu
   const o=k==='save'?{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({an:!!s.an,stuecke:+s.stuecke,mb:+s.mb,qualitaet:s.qualitaet,laenge:s.laenge,laut:s.laut})}:k==='jetzt'?{method:'POST'}:{method:'DELETE'};
   const {r,d}=await apiTry('/api/admin/dungeon/musik'+(k==='jetzt'?'/jetzt':'')+q,o);if(r.ok){DMMU.s=null;dmMusikDraw(d,'');if(k==='save')sayToast(t('Gespeichert','Saved'));return}
   const g=await apiTry('/api/admin/dungeon/musik'+q);if(g.r.ok)dmMusikDraw(g.d,errSay(r.status,d.detail,''))});
+// the tab „Klang“ (Dominik 2026-10-30, plan V2a/V4a/V3a): per world and mood genre, up to 5 instruments, key, time,
+// tempo, character and singing, only from the fixed lists the panel sends (no free text); a package fills every mood
+// of a world; Save sends the one field, „Back to standard“ takes it back
+function dmKlangPick(k){const f=DMMU.d.klang.felder;if(!f[DMMU.kw])DMMU.kw=Object.keys(f)[0]||'';const w=f[DMMU.kw]||{};if(!w[DMMU.kst])DMMU.kst=Object.keys(w)[0]||'';
+  if(!DMMU.kv||k)DMMU.kv=JSON.parse(JSON.stringify((w[DMMU.kst]||{}).werte||{}));return w[DMMU.kst]}
+function dmKlangChips(k,list,max){const v=DMMU.kv[k]||[],voll=v.length>=max,all=k==='instr'&&!DMMU.mehr?list.filter((x,i)=>v.includes(x.id)||i<12):list;
+  return `<div class="dm-kchips" role="group" aria-label="${esc(k)}">${all.map(x=>{const on=v.includes(x.id);return `<button type="button" class="chip${on?' hi':''}" data-dmkchip="${k}" data-v="${esc(x.id)}" aria-pressed="${on}"${!on&&voll?' disabled':''}>${esc(x.name)}</button>`}).join('')}${k==='instr'&&!DMMU.mehr&&all.length<list.length?`<button type="button" class="chip" data-dmkmehr="1">${esc(t('+ weitere','+ more'))}</button>`:''}</div>`}
+function dmKlangSeg(k,list){return `<span class="segc" role="radiogroup" aria-label="${esc(k)}">${list.map(x=>`<button type="button" data-dmkwahl="${k}" data-v="${esc(x.id)}" class="${x.id===DMMU.kv[k]?'on':''}" aria-pressed="${x.id===DMMU.kv[k]}">${esc(x.name)}</button>`).join('')}</span>`}
+function dmKlang(d){const K=d.klang,f=dmKlangPick(false);if(!f)return '';const v=DMMU.kv,li=K.listen,welt=(d.felder.find(x=>x.welt===DMMU.kw)||{}).name||DMMU.kw;
+  const alt=Object.values(K.felder[DMMU.kw]).reduce((a,x)=>a+x.veraltet,0);
+  const sel=(id,k,list,first)=>`<select id="${id}" data-dmksel="${k}">${first}${list.map(x=>`<option value="${esc(x.id)}"${x.id===v[k]?' selected':''}>${esc(x.name)}</option>`).join('')}</select>`;
+  return `<div class="pintro">${esc(t('Wie die Stücke je Welt und Stimmung klingen. Alles wird aus festen Wörtern gebaut; eine Änderung gilt für neue Stücke, alte spielen weiter, bis ihr Feld neue hat.','How the pieces sound per world and mood. Everything is built from fixed words; a change applies to new pieces, old ones play on until their field has new ones.'))}</div>
+    <div class="row dm-ktop"><label for="dmkwelt">${esc(t('Welt','World'))}</label><select id="dmkwelt">${d.felder.map(x=>`<option value="${esc(x.welt)}"${x.welt===DMMU.kw?' selected':''}>${esc(x.name)}</option>`).join('')}</select>
+      <label for="dmkpaket">${esc(t('Paket','Package'))}</label><select id="dmkpaket"><option value="standard">${esc(t('Standard (alles zurück)','Standard (all back)'))}</option>${li.paket.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('')}</select>
+      <button type="button" class="b" data-dmklang="paket">${esc(t('Für alle Stimmungen übernehmen','Apply to all moods'))}</button></div>
+    <div class="dm-klang"><div class="dm-kst" role="tablist" aria-label="${esc(welt)}">${d.stimmungen.map(m=>{const x=K.felder[DMMU.kw][m.id];return `<button type="button" role="tab" data-dmkst="${esc(m.id)}" class="${m.id===DMMU.kst?'on':''}" aria-selected="${m.id===DMMU.kst}">${esc(m.name)}<i class="${x.geaendert.length?'ge':''}" title="${esc(x.geaendert.length?t('geändert','changed'):t('Standard','standard'))}"></i></button>`}).join('')}
+      <small class="mut">${esc(t('● geändert · ○ Standard','● changed · ○ standard'))}</small>${alt?`<span class="chip dm-kalt">${esc(t(`${alt} Stücke veraltet`,`${alt} pieces outdated`))}</span>`:''}</div>
+    <div class="dm-kform"><div class="dm-two"><div><label for="dmkgenre">${esc(t('Genre','Genre'))}</label>${sel('dmkgenre','genre',li.genre,`<option value=""${v.genre===''?' selected':''}>${esc(t('Wie die Welt','As the world'))}</option>`)}</div>
+      <div><label for="dmktonart">${esc(t('Tonart','Key'))}</label>${sel('dmktonart','tonart',li.tonart,`<option value="welt"${v.tonart==='welt'?' selected':''}>${esc(f.welt_tonart+' '+t('(Welt-Tonart)','(world key)'))}</option>`)}</div></div>
+      <label>${esc(t('Takt','Time'))}</label>${dmKlangSeg('takt',li.takt)}
+      <label>${esc(t(`Instrumente (höchstens ${K.max.instr})`,`Instruments (at most ${K.max.instr})`))}</label>${dmKlangChips('instr',li.instr,K.max.instr)}
+      <label>${esc(t(`Charakter (höchstens ${K.max.art})`,`Character (at most ${K.max.art})`))}</label>${dmKlangChips('art',li.art,K.max.art)}
+      <div class="dm-two"><div><label for="dmktempo">${esc(t('Tempo','Tempo'))}</label><div class="row"><input id="dmktempo" type="range" min="${K.tempo[0]}" max="${K.tempo[1]}" value="${v.tempo}"><output for="dmktempo">${v.tempo} bpm</output></div></div>
+        <div><label>${esc(t('Gesang','Singing'))}</label>${dmKlangSeg('gesang',li.gesang)}</div></div>
+      <label>${esc(t('Geht so an das Musikmodell (gespeicherter Stand, nur feste Wörter)','Goes to the music model like this (saved state, fixed words only)'))}</label><pre class="dm-kvor">${esc(f.vorschau)}</pre>
+      ${f.veraltet?`<small class="dm-wrest">${esc(t(`${f.veraltet} Stücke dieses Feldes sind veraltet; sie spielen weiter, bis neue da sind.`,`${f.veraltet} pieces of this field are outdated; they play on until new ones are there.`))}</small>`:''}</div></div>`}
+document.body.addEventListener('click',e=>{const b=e.target.closest('#dmmusikadm [data-dmkst],#dmmusikadm [data-dmkchip],#dmmusikadm [data-dmkwahl],#dmmusikadm [data-dmkmehr]');if(!b||!DMMU.d)return;const v=DMMU.kv;
+  if(b.dataset.dmkst){DMMU.kst=b.dataset.dmkst;dmKlangPick(true)}else if(b.dataset.dmkmehr)DMMU.mehr=true;else if(b.dataset.dmkwahl)v[b.dataset.dmkwahl]=b.dataset.v;
+  else{const k=b.dataset.dmkchip,l=v[k]||[],i=l.indexOf(b.dataset.v);if(i>=0)l.splice(i,1);else if(l.length<DMMU.d.klang.max[k])l.push(b.dataset.v);v[k]=l}
+  dmMusikDraw(DMMU.d,'')});
+document.body.addEventListener('change',e=>{const x=e.target;if(!DMMU.d||!x.closest('#dmmusikadm'))return;
+  if(x.id==='dmkwelt'){DMMU.kw=x.value;dmKlangPick(true);dmMusikDraw(DMMU.d,'')}else if(x.dataset.dmksel){DMMU.kv[x.dataset.dmksel]=x.value;dmMusikDraw(DMMU.d,'')}});
+document.body.addEventListener('input',e=>{const x=e.target;if(x.id!=='dmktempo'||!DMMU.kv)return;DMMU.kv.tempo=+x.value;const o=x.parentNode.querySelector('output');if(o)o.textContent=x.value+' bpm'});
+document.body.addEventListener('click',async e=>{const b=e.target.closest('#dmmusikadm [data-dmklang]');if(!b||!DMMU.d)return;const k=b.dataset.dmklang,lang=L==='en'?'en':'de';
+  const body=k==='paket'?{welt:DMMU.kw,paket:($('dmkpaket')||{}).value,lang}:{welt:DMMU.kw,st:DMMU.kst,werte:k==='save'?DMMU.kv:{},lang};
+  const {r,d}=await apiTry('/api/admin/dungeon/musik/'+(k==='paket'?'paket':'stil'),{method:k==='paket'?'POST':'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(r.ok){DMMU.kv=null;DMMU.s=null;dmMusikDraw(d,'');sayToast(t('Gespeichert','Saved'));return}
+  const why={werte:t('Diese Auswahl gibt es nicht; bitte neu laden.','This choice does not exist; please reload.'),paket:t('Dieses Paket oder diese Welt gibt es nicht.','This package or world does not exist.'),
+    feld:t('Diese Welt oder Stimmung gibt es nicht.','This world or mood does not exist.')}[d&&d.detail];dmMusikDraw(DMMU.d,why||errSay(r.status,d.detail,''))});
 // the admin listens to a marked piece before deciding (Dominik 2026-10-25 „anhören können, um da nochmal zu entscheiden“):
 // one at a time, the same button stops it; null stops whatever plays
 const DMT_PROBE={a:null,b:null,u:''};

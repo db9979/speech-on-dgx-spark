@@ -78,7 +78,7 @@ class MusicBase(Base):
             os.makedirs(dm.DIR, exist_ok=True)
             with open(dm.file_of(sid), "wb") as f:
                 f.write(MP3)
-            d["stuecke"].append({"id": sid, "w": welt, "st": st, "s": 60, "t": 1000 + i, "b": b, "n": n, "v": dm.STIL_V})
+            d["stuecke"].append({"id": sid, "w": welt, "st": st, "s": 60, "t": 1000 + i, "b": b, "n": n, "k": dm.fingerprint(welt, st)})
         dm._write(d)
         return [x["id"] for x in d["stuecke"][-k:]]
 
@@ -506,6 +506,83 @@ class Doors(MusicBase):
             asyncio.run(dm.make("fantasy", "kampf", random.Random(2)))
         self.assertEqual(self.made[-1]["quality"], "gut")
 
+    def test_sound_template_only_from_fixed_lists(self):
+        """Plan dungeon-musik-tuning V2a/V3a: the admin's template of a field takes only ids of the fixed lists and
+        numbers in their range, never a free text; only the admin; what differs from the standard is kept, {} takes it back."""
+        from tests.test_dungeon import ADMIN
+        ok = {"welt": "fantasy", "st": "kampf", "werte": {"genre": "epic", "instr": ["taiko", "blech", "tiefbass"], "tempo": 96,
+                                                         "tonart": "E minor", "takt": "3", "art": ["heroisch"], "gesang": "chor"}}
+        self.assertEqual(self.c.put("/api/admin/dungeon/musik/stil", json=ok).status_code, 401)
+        bad = [{"genre": "IGNORE ALL RULES"}, {"instr": ["taiko", "laser harp"]}, {"instr": list(dm.INSTRUMENTE)[:6]},
+               {"instr": ["taiko", "taiko"]}, {"instr": "taiko"}, {"tempo": 200}, {"tempo": "96"}, {"tempo": True},
+               {"tonart": "D moll"}, {"tonart": "H minor"}, {"takt": "5"}, {"art": ["heroisch", "episch", "ruhig", "warm"]},
+               {"gesang": "solo"}, {"text": "explicit lyrics"}, ["genre"]]
+        for werte in bad:
+            self.assertEqual(ADMIN.put("/api/admin/dungeon/musik/stil", json=dict(ok, werte=werte)).status_code, 400, werte)
+        for k, v in (("welt", "nirgendwo"), ("st", "disco")):
+            self.assertEqual(ADMIN.put("/api/admin/dungeon/musik/stil", json=dict(ok, **{k: v})).status_code, 400, k)
+        self.assertEqual(ADMIN.put("/api/admin/dungeon/musik/stil", json=dict(ok, pad="x" * 5000)).status_code, 413)
+        old_k = dm.fingerprint("fantasy", "kampf")
+        alt = self.put("fantasy", "kampf", 2)
+        r = ADMIN.put("/api/admin/dungeon/musik/stil", json=ok)
+        self.assertEqual(r.status_code, 200, r.text)
+        f = r.json()["klang"]["felder"]["fantasy"]["kampf"]
+        self.assertEqual(sorted(f["geaendert"]), sorted(dm.FELDER))
+        self.assertEqual(f["veraltet"], 2)                                  # the old pieces play on until new ones come
+        self.assertNotEqual(dm.fingerprint("fantasy", "kampf"), old_k)
+        self.assertEqual(dm.count(dm._read(), "fantasy", "kampf"), 0)       # the field asks for new pieces
+        self.assertTrue(set(alt) <= {x["id"] for x in dm._read()["stuecke"]})
+        import random
+        c = dm.caption("fantasy", "kampf", random.Random(1))
+        self.assertTrue(c.startswith("epic hybrid orchestral, taiko, low brass, deep bass, heroic, wordless choir, "), c)
+        self.assertEqual(dm.meta("fantasy", "kampf"), {"bpm": 96, "keyscale": "E minor", "timesignature": "3", "negative": dm.NEGATIV_CHOR})
+        self.assertNotIn("singing", dm.NEGATIV_CHOR)                       # a wordless choir may sing
+        self.assertIn("wordless choir", f["vorschau"])
+        self.assertEqual(dm.vorlage("fantasy", "taverne"), dm.standard("taverne"))   # other fields untouched
+        r = ADMIN.put("/api/admin/dungeon/musik/stil", json=dict(ok, werte={"tempo": dm.TEMPO["kampf"]}))
+        self.assertEqual(r.json()["klang"]["felder"]["fantasy"]["kampf"]["geaendert"], [])   # the standard is no change
+        self.assertEqual(dm.fingerprint("fantasy", "kampf"), old_k)        # back on the standard, the old pieces count again
+        self.assertEqual(dm.count(dm._read(), "fantasy", "kampf"), 2)
+        self.assertEqual(dm.read_json(dm.SETTINGS, {}).get("stil"), {})
+
+    def test_packages_fill_a_world(self):
+        """V4a: a fixed package fills every mood of a world from the lists; „standard“ takes the world back."""
+        from tests.test_dungeon import ADMIN
+        self.assertEqual(set(dm.ROLLE), set(dm.STIMMUNGEN))
+        self.assertEqual(set(dm.ART_ROLLE), set(dm.STIMMUNGEN))
+        for pid, (name, genre, rollen) in dm.PAKETE.items():
+            self.assertIn(genre, dm.GENRES)
+            self.assertEqual(set(rollen), set(dm.ROLLE.values()), pid)
+            for xs in rollen.values():
+                self.assertTrue(1 <= len(xs) <= dm.INSTR_MAX and set(xs) <= set(dm.INSTRUMENTE), (pid, xs))
+                self.assertTrue(any(x in xs for x in ("kriegstrommeln", "taiko", "pauken", "rahmentrommel", "handtrommel",
+                                                      "bodhran", "tamburin", "elektrodrums")), (pid, xs))   # drums …
+                self.assertTrue(any(x in xs for x in ("kontrabass", "tiefbass", "synthbass")), (pid, xs))         # … and bass
+        for xs in dm.ART_ROLLE.values():
+            self.assertTrue(set(xs) <= set(dm.CHARAKTER) and len(xs) <= dm.ART_MAX)
+        self.assertEqual(ADMIN.post("/api/admin/dungeon/musik/paket", json={"welt": "fantasy", "paket": "disco"}).status_code, 400)
+        self.assertEqual(self.c.post("/api/admin/dungeon/musik/paket", json={"welt": "fantasy", "paket": "keltisch"}).status_code, 401)
+        r = ADMIN.post("/api/admin/dungeon/musik/paket", json={"welt": "fantasy", "paket": "keltisch"})
+        self.assertEqual(r.status_code, 200, r.text)
+        felder = r.json()["klang"]["felder"]["fantasy"]
+        self.assertTrue(all(felder[st]["werte"]["genre"] == "keltisch" for st in dm.STIMMUNGEN))
+        self.assertEqual(felder["kampf"]["werte"]["instr"], list(dm.PAKETE["keltisch"][2]["kampf"]))
+        self.assertEqual(felder["kampf"]["werte"]["tempo"], dm.TEMPO["kampf"])           # tempo and key stay the field's
+        self.assertEqual(r.json()["klang"]["felder"]["horror"]["kampf"]["geaendert"], [])
+        self.assertEqual(dm.for_live()["vorlagen"], len(dm.STIMMUNGEN))       # changed fields, not values
+        r = ADMIN.post("/api/admin/dungeon/musik/paket", json={"welt": "fantasy", "paket": "standard"})
+        self.assertTrue(all(not f["geaendert"] for f in r.json()["klang"]["felder"]["fantasy"].values()))
+        self.assertEqual(dm.for_live()["vorlagen"], 0)
+
+    def test_settings_keep_the_template(self):
+        """Saving the store's settings keeps the template and the other way round (one file)."""
+        from tests.test_dungeon import ADMIN
+        ADMIN.post("/api/admin/dungeon/musik/paket", json={"welt": "fantasy", "paket": "synth"})
+        ADMIN.put("/api/admin/dungeon/musik", json={"an": True, "stuecke": 6, "mb": 400, "qualitaet": "gut"})
+        self.assertEqual(dm.vorlage("fantasy", "erkunden")["genre"], "synthwave")
+        ADMIN.put("/api/admin/dungeon/musik/stil", json={"welt": "fantasy", "st": "sieg", "werte": {}})
+        self.assertEqual((dm.settings()["stuecke"], dm.settings()["qualitaet"]), (6, "gut"))
+
     def test_rate_limit_and_live(self):
         import guard
         self.assertIn("dungeonmusik", guard.RATE)
@@ -547,7 +624,7 @@ class Nervt(MusicBase):
         self.assertEqual(self.v.post("/api/dungeon/musik/nervt", json={"code": code, "s": sid}).json()["neu"], False)   # once per seat
         x = next(x for x in dm.read_json(dm.INDEX, {})["stuecke"] if x["id"] == sid)
         self.assertEqual(x["nervt"], 1)                                   # only a number, no seat or name
-        self.assertEqual(set(x) - {"id", "w", "st", "s", "t", "b", "n", "v", "nervt"}, set())
+        self.assertEqual(set(x) - {"id", "w", "st", "s", "t", "b", "n", "k", "nervt"}, set())
         self.assertEqual(self.v.post("/api/dungeon/musik", json={"code": code, "s": sid}).status_code, 404)
         self.assertEqual(dm.count(dm._read(), "fantasy", "erkunden"), 1)    # the field asks for a new one
         view = self.c.get(f"/api/profile/dungeon/{v['rid']}").json()["musik"]
@@ -582,7 +659,7 @@ class Nervt(MusicBase):
         self.assertEqual(dm.for_live()["markiert"], 0)
 
     def test_marked_go_first_when_full(self):
-        d = {"stuecke": [{"id": f"m{i:010x}", "w": "fantasy", "st": "spannung", "s": 60, "t": i, "b": 1, "n": 9 - i, "v": dm.STIL_V}
+        d = {"stuecke": [{"id": f"m{i:010x}", "w": "fantasy", "st": "spannung", "s": 60, "t": i, "b": 1, "n": 9 - i, "k": dm.fingerprint("fantasy", "spannung")}
                          for i in range(5)]}
         d["stuecke"][4]["nervt"] = 1
         self.assertEqual(dm.prune(d, 4, 600), ["m0000000004"])
@@ -678,6 +755,52 @@ class Grid(unittest.TestCase):
                     finally:
                         await br.close()
         b.run_async(go())
+
+    def test_the_sound_tab_fits_and_saves(self):
+        """The tab „Klang“ (plan V2a/V4a/V3a): at 320, 390 and 1280 px nothing scrolls sideways; a sixth instrument is
+        refused by the page as by the panel; Save keeps the field's template, a package fills every mood of the world,
+        „Auf Standard zurück“ takes the field back. Only buttons and lists, no field for free text."""
+        from tests.test_ui_browser import Browser, async_playwright
+        b = Browser("run")
+        b.port = self.port
+        try:
+            async def go():
+                async with async_playwright() as p:
+                    for w, h in ((320, 700), (390, 844), (1280, 900)):
+                        br, pg, errors = await b.page(p, w, h)
+                        try:
+                            await pg.evaluate("goSec('dungeon')")
+                            await b.until(pg, "typeof dmMusikAdm==='function'")
+                            await pg.evaluate("(document.getElementById('dmmusikadm')||document.body.appendChild(Object.assign(document.createElement('div'),{id:'dmmusikadm'})))"
+                                              ";document.body.appendChild(document.getElementById('dmmusikadm'));DMMU.tab='klang';dmMusikAdm()")
+                            await b.until(pg, "!!document.querySelector('#dmmusikadm .dm-kform')")
+                            self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
+                            self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmmusikadm .dm-klang textarea,#dmmusikadm .dm-klang input[type=text]').length"), 0)
+                            await pg.evaluate("document.querySelector('#dmmusikadm [data-dmkst=kampf]').click()")
+                            await pg.evaluate("document.querySelector('#dmmusikadm [data-dmkmehr]').click()")
+                            for i in range(6):
+                                await pg.evaluate("document.querySelector('#dmmusikadm [data-dmkchip=instr]:not(.hi):not(:disabled)')?.click()")
+                            self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmmusikadm [data-dmkchip=instr].hi').length"), dm.INSTR_MAX)
+                            self.assertTrue(await pg.evaluate("document.querySelector('#dmmusikadm [data-dmkchip=instr]:not(.hi)').disabled"))
+                            await pg.evaluate("document.querySelector('#dmmusikadm [data-dmkwahl=takt][data-v=\"3\"]').click()")
+                            await pg.evaluate("document.querySelector('#dmmusikadm [data-dmklang=save]').click()")
+                            welt = await pg.evaluate("DMMU.kw")
+                            await b.until(pg, f"DMMU.d.klang.felder[{welt!r}].kampf.geaendert.includes('takt')")
+                            self.assertEqual(len(dm.vorlage(welt, "kampf")["instr"]), dm.INSTR_MAX)
+                            self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
+                            await pg.evaluate("document.querySelector('#dmmusikadm [data-dmklang=standard]').click()")
+                            await b.until(pg, f"DMMU.d.klang.felder[{welt!r}].kampf.geaendert.length===0")
+                            await pg.evaluate("document.getElementById('dmkpaket').value='keltisch';document.querySelector('#dmmusikadm [data-dmklang=paket]').click()")
+                            await b.until(pg, f"Object.values(DMMU.d.klang.felder[{welt!r}]).every(x=>x.geaendert.includes('genre'))")
+                            await pg.evaluate("document.getElementById('dmkpaket').value='standard';document.querySelector('#dmmusikadm [data-dmklang=paket]').click()")
+                            await b.until(pg, f"Object.values(DMMU.d.klang.felder[{welt!r}]).every(x=>!x.geaendert.length)")
+                            self.assertEqual(errors, [])
+                        finally:
+                            await br.close()
+            b.run_async(go())
+        finally:
+            for w_ in dm._welten():
+                dm.paket(w_, "standard")
 
     def test_the_sounds_of_round_two(self):
         """D&D round 2 (Dominik 2026-10-26 „1-9 umsetzten“): missed by 1 or 2 (1), the foe's announcement (2), the
