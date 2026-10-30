@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.264** Kein Ping-Pong mehr bei Mail-Regeln: eine Mail, die eine Regel oder das Aufräumen verschoben hat und die du zurück in den Posteingang legst, bleibt dort; die Regeln merken sich, was sie verschoben haben (30 Tage)
 - **V01.1.263** Karte hilft der Suche (Wissenskarte Stufe 3 von 4, eigener Schalter, aus): nennt eine Frage eine Person, Firma oder Frist der Karte, findet die Dokumentsuche auch deren Stellen und die ihrer Nachbarn; ergänzt die Treffer nur, unter der Antwort steht „über die Wissenskarte“
 - **V01.1.262** Fernzugang: jede Shell misst ihre Leitung (Laufzeit und Rate über das Lebenszeichen, unauffällig in der roten Leiste und im ⓘ) und sagt bei langsamer Verbindung einmal, dass der direkte https-Zugang schneller ist; die Ausgabe wartet höchstens 32 Stücke (Gegendruck) und geht gebündelt ans Fenster
 - **V01.1.261** Finden: eine neue Suche leert sofort die alten Treffer
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.257** Finden Stufe C: Termine und Kontakte versiegelt, frühere Gespräche (nur Datum und Kanal), Listen, Erinnerungen, Bilder und Lieder im Suchindex; Zeiträume nach festen Regeln, „vom OP“ über den eigenen Kalender; fünf Unterschalter, ab Werk aus
 - **V01.1.256** Finden Stufe B: alle Mails und Anhänge in den Suchindex (Posteingang, Archiv, Gesendet, nie Spam und Papierkorb), die neuesten zuerst, ältere in ruhigen Minuten und nachts in Häppchen, nur versiegelt (AES-GCM, Wörter als HMAC-Marken), Anhang-Text und Felder nach festen Regeln, Treffer öffnet die Mail; Unterschalter „Mails und Anhänge finden“, ab Werk aus
 - **V01.1.255** Alle meine Daten herunterladen: unter Ich → Sicherheit → Meine Daten eine ZIP mit allem vom eigenen Profil (versiegelte Dateien geöffnet, Einstellungen ohne Geheimnisse, aus Chats nur die eigenen Nachrichten, LIESMICH de+en mit dem, was draußen bleibt und warum), jedes Mal nach frischem Code oder Passkey, 3 je Stunde, höchstens 2 GB, Abhol-Link 10 Minuten und einmal; kein Schalter (Auskunftsrecht), auch in der iPhone- und Android-App
-- **V01.1.254** Fernzugang: die iPhone-App ist wie die Seite erst gesperrt und wird mit Code oder Passkey entsperrt (Verlängern, Sperren); das Koppeln-Blatt zeigt einen Einmal-Link mit Kopieren, Teilen, E-Mail und QR-Code, der auf dem neuen System nur die eine Zeile zeigt, nie den Code
 
 
 

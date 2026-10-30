@@ -145,8 +145,8 @@ DATEIEN = [
     profil("interessen.json", "Was ich über dich weiß: bestätigte und abgelehnte Interessen mit Thema und Absendern und der letzte Netz-Tipp (kein Betreff, keine Mail)",
            "What I know about you: confirmed and refused interests with topic and senders and the last web tip (no subject, never a mail)", art="Einstellungen", siegel=True),
     profil("mailstil.json", "Mailstil (nur die Zusammenfassung, keine Mail)", "Mail style (only the summary, never a mail)", art="Einstellungen", export=JA),
-    profil("mail-regeln.json", "Mail-Regeln der Seite E-Mail und Regel-Vorschläge (Absender, Wörter, Ordner; keine Mail)",
-           "Mail rules of the E-mail page and rule suggestions (senders, words, folders; never a mail)", art="Einstellungen", export=JA),  # mailregeln.py
+    profil("mail-regeln.json", "Mail-Regeln der Seite E-Mail und Regel-Vorschläge (Absender, Wörter, Ordner; keine Mail), dazu 30 Tage die Message-IDs der von Regeln verschobenen Mails",
+           "Mail rules of the E-mail page and rule suggestions (senders, words, folders; never a mail), plus for 30 days the Message-IDs of mails a rule moved", art="Einstellungen", export=JA),  # mailregeln.py
     profil("mail-spaeter.bin", "Später senden: geplante Mails bis zum Senden, danach einen Tag die Zeile ohne Text",
            "Send later: planned mails until they go out, after that for a day the line without text", art="Warteschlange",
            schutz=("versiegelt", "sealed")),  # senden.py

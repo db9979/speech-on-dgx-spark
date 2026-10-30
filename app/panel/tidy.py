@@ -66,6 +66,7 @@ EVERY = (5, 15, 60)
 PREFIX = "Spark"
 MAX_MOVES = 200
 LOG_DAYS = 30
+LOG_MAX = 3000           # moves remembered at most (also the rules' list, mailregeln.spark_moved)
 BACKLOG_DAYS = 90
 BACKLOG_MAX = 3000
 NEW_MAX = 500
@@ -131,7 +132,7 @@ def _mut(uid, fn):
         d = state(uid)
         res = fn(d)
         cut = time.time() - LOG_DAYS * 86400
-        d["log"] = [x for x in d["log"] if x.get("t", 0) > cut][-3000:]
+        d["log"] = [x for x in d["log"] if x.get("t", 0) > cut][-LOG_MAX:]
         d["preview"] = [x for x in d["preview"] if x.get("t", 0) > time.time() - PREVIEW_DAYS * 86400][-500:]
         d["questions"] = d["questions"][-60:]
         d["todo"] = d["todo"][-200:]
@@ -998,8 +999,9 @@ def _run(uid, aid, acct, d, a, mode, idle):
         new = sorted(u for u in b.search("UID", f"{last + 1}:*") if u > last)[-NEW_MAX:]
         heads = b.headers(new) if new else {}
         report["new"] = len(new)
-        moved_mids = {x["mid"]: x for x in d["log"] if x["aid"] == aid and not x.get("undone") and x["mid"]}
-        undone_mids = {x["mid"] for x in d["log"] if x["aid"] == aid and x.get("undone") and x["mid"]}
+        import mailregeln
+        moved = mailregeln.spark_moved(uid, aid, st=d)     # both sorters, one list (plan mail-lernen 1a + 2a)
+        ruled_back = []
         decided = []        # (uid, h, cat, why, stage, act)
         waiting = [x for x in d["todo"] if x["aid"] == aid]
         for u in new:
@@ -1007,11 +1009,14 @@ def _run(uid, aid, acct, d, a, mode, idle):
             if msg is None:
                 continue
             h = head(msg)
-            if h["mid"] and h["mid"] in undone_mids:
+            x = mailregeln.user_moved(moved, h["mid"], "INBOX")
+            if x and x.get("undone"):
                 continue        # brought back with "Zurück": stays in the inbox
-            if h["mid"] and h["mid"] in moved_mids:
+            if x and x["by"] == "rule":
+                ruled_back.append(h["mid"])     # a Mail-Regel moved it, the person put it back: no sorter touches it
+                continue
+            if x:
                 # moved by the Spark and now back in the inbox: the person moved it back
-                x = moved_mids[h["mid"]]
                 _mut(uid, lambda dd, i=x["id"]: [y.update(returned=True) for y in dd["log"] if y["id"] == i])
                 questions_add.append((u, h, "keep", "du hast sie zurück in den Posteingang gelegt"))
                 continue
@@ -1020,6 +1025,9 @@ def _run(uid, aid, acct, d, a, mode, idle):
                 waiting.append({"aid": aid, "uid": u})
                 continue
             decided.append((u, h, cat, why, stage, action(d, cat, stage)))
+        if ruled_back:
+            mailregeln.mark_back(uid, ruled_back)
+            print(f"mail: tidy skip | user_moved | {len(ruled_back)} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
         # the model for the rest, only while nobody talks to the assistant
         if waiting and idle:
             done = set()

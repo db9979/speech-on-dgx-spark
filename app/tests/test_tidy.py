@@ -106,6 +106,28 @@ class Tidy(unittest.TestCase):
         self.assertIn("Neue Kontakte", self.inbox_subjects())
         self.assertIn("news@linkedin.com", {q["sender"] for q in p.get("/api/profile/tidy").json()["questions"]})
 
+    def test_a_mail_a_rule_moved_and_the_person_put_back_stays(self):
+        """Plan mail-lernen 2a: one list of both sorters (mailregeln.spark_moved). A mail a Mail-Regel moved that the
+        person put back into the inbox is not sorted by the tidying either, and it does not ask about it."""
+        import contextlib
+        import io
+        import mailregeln
+        p, aid = self.setup_profile("Regina")
+        uid = p.get("/api/whoami").json()["profile"]["id"]
+        try:
+            mailregeln._remember(uid, aid, {"id": "r1", "then": {"folder": "Newsletter"}}, ["<pp-9@x>"])
+            FMB.put("INBOX", helpers.box_mail("Shop <news@shop.example>", "Rabatt", headers=PROMO, mid="<pp-9@x>"))
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                r = p.post("/api/profile/tidy/run", json={"aid": aid}).json()
+            self.assertEqual(r["report"]["moved"], 0, r)
+            self.assertIn("Rabatt", self.inbox_subjects())
+            self.assertNotIn("news@shop.example", {q["sender"] for q in p.get("/api/profile/tidy").json()["questions"]})
+            self.assertIn("mail: tidy skip | user_moved | 1 |", out.getvalue())
+            self.assertTrue(mailregeln.load(uid)["moved"][0]["back"])
+        finally:
+            mailregeln.forget(uid)
+
     def test_preview_moves_nothing_and_brake(self):
         p, aid = self.setup_profile("Pauline", mode="preview")
         FMB.put("INBOX", helpers.box_mail("Shop <news@shop.example>", "Gutschein für dich", headers=PROMO))
