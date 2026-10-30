@@ -64,13 +64,16 @@ echo "guacd-bauen: configure (VNC and RDP only)"
   || { tail -n 30 "$BAU/configure.log"; ende configure; }
 grep -Eq '^ *RDP \.+ yes' "$BAU/configure.log" && grep -Eq '^ *VNC \.+ yes' "$BAU/configure.log" \
   || { grep -E 'RDP|VNC' "$BAU/configure.log" | tail -n 4; echo "guacd-bauen: VNC or RDP missing"; ende configure; }
+grep -E '^ *(RDP|VNC|FreeRDP|freerdp)' "$BAU/configure.log" || true
+grep -iE 'checking .*(freerdp|rdp)' "$BAU/configure.log" | head -n 60 || true
 echo "guacd-bauen: building with $(nproc) cores (on a Raspberry Pi 5 about 10 to 15 minutes)"
 t0=$(date +%s)
-( cd "$SRC" && als nice -n 10 make -j "$(nproc)" >"$BAU/make.log" 2>&1 ) || { tail -n 30 "$BAU/make.log"; ende bauen; }
+( cd "$SRC" && als nice -n 10 make -j "$(nproc)" >"$BAU/make.log" 2>&1 ) \
+  || { grep -m 40 -iE 'error' "$BAU/make.log"; grep -iE 'freerdp|rdp' "$SRC/config.h" | head -n 40; ende bauen; }
 ( cd "$SRC" && als make install DESTDIR="$BAU/stage" >"$BAU/install.log" 2>&1 ) || { tail -n 20 "$BAU/install.log"; ende installieren; }
 echo "guacd-bauen: built in $(( $(date +%s) - t0 )) s"
 NEU="$ZIEL.neu"
-rm -rf -- "$NEU" && cp -a -- "$BAU/stage$ZIEL" "$NEU" || ende installieren
+mkdir -p -- "$(dirname "$ZIEL")" && rm -rf -- "$NEU" && cp -a -- "$BAU/stage$ZIEL" "$NEU" || ende installieren
 rm -rf -- "$NEU/include" "$NEU/share" "$NEU/lib/pkgconfig"; find "$NEU" -name '*.la' -delete
 chown -R root:root "$NEU" && chmod -R go-w "$NEU" || ende installieren
 [ -x "$NEU/sbin/guacd" ] && ls "$NEU"/lib/libguac-client-vnc.so* "$NEU"/lib/libguac-client-rdp.so* >/dev/null 2>&1 \
