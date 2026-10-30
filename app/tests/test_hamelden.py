@@ -294,7 +294,7 @@ class Live(Base):
         eid = "binary_sensor.flur_bewegung"
 
         async def go():
-            helpers.HA_WS["subs"].clear()
+            helpers.ha_ws_reset()
             await hamelden.ensure()
             self.assertTrue(await self.wait(lambda: hamelden.cache(uid) is not None))
             self.assertEqual(helpers.HA_WS["subs"][-1]["type"], "subscribe_entities")

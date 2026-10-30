@@ -376,6 +376,8 @@ class Browser(unittest.TestCase):
         import profiles
         import tipps
         uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Uitest")
+        # back as they were afterwards: tasks=False left behind took Listen away from test_listen_page (red at V01.1.272)
+        helpers.keep_chat(self, "spark_help", "feature_tips", "tasks", "routing", "direct_read", "deny")
         helpers.set_config(spark_help=True, feature_tips=True, tasks=False, routing=False, direct_read=False, deny={})
 
         async def go():
@@ -1020,6 +1022,8 @@ class Browser(unittest.TestCase):
         import profiles
         import tasks
         me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
+        helpers.keep_chat(self, "tasks")
+        helpers.set_config(tasks=True)      # its own switch, never what an earlier test left (red at V01.1.272)
         asyncio.run(tasks.add(me, "einkauf", ["2 Milch", "Brot"]))
 
         async def go():
@@ -1556,7 +1560,9 @@ class Browser(unittest.TestCase):
                         await self.until(pg, "document.querySelectorAll('#doclist .ld-badge.off').length===2", 20)
                         await pg.click("#docbulk [data-bulk=use]")
                         await self.until(pg, "document.querySelectorAll('#doclist .ld-badge.off').length===0", 20)
-                        self.assertEqual(len(documents.list_docs(me, used_only=True)), 60)
+                        # only its own 60 count: a document another test left for Uitest made 61 (red at V01.1.272)
+                        used = {d["id"] for d in documents.list_docs(me, used_only=True)}
+                        self.assertEqual(len(used & set(ids)), 60, name)
                         self.assertEqual(errors, [], name)
                     finally:
                         await br.close()

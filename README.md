@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.288** Test fix: six tests that got in each other's way clean up or count only their own (Find mail, backup, lists, documents, Home Assistant live, cards)
 - **V01.1.287** Collections: bundle documents, knowledge book pages and notes for one undertaking, per entry off, short or whole to the model, bind a conversation in the assistant to a collection
 - **V01.1.286** The knowledge map finds doubles: the same person with a title, another spelling or "last name, first name" becomes one point; similar ones stand under "Maybe double" with "Merge" or "Different"; "Merge with …" is a search field
 - **V01.1.285** Find's measurement is now a part of Measure knowledge (`sudo speech-spark wissen messen synth 5000`, Status → Checks → Measure knowledge): 50,000 sealed made-up mails with 5000 documents, search p50/p95, size and RAM; `speech-spark finden messen` is gone
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.281** Dungeon music: quality fast, good or best (at night), length and loudness adjustable
 - **V01.1.280** Dungeon music: tempo, key and time signature as metadata, caption as tags without negations, new mood "Boss"
 - **V01.1.279** Remote access → Systems, button “Web services”: web pages of a paired system (Grafana, router, Home Assistant there) in the browser through its anchor, on an origin of their own (tunnel door port 31090 or tunnel address), the panel's cookies and sign-in stay out, targets by fixed rules on both sides (network behind it per system with the code), Found shows listening ports, WebSocket passes through; anchor 1.6.0
-- **V01.1.278** Remote access, screen: the Spark now builds guacd itself from Apache's source (1.6.0, pinned with SHA-256, VNC and RDP only, FreeRDP 3 or 2, built as nobody, to /opt/speech-spark/guacd), as Debian 12/13 and Raspberry Pi OS have no guacd package any more; the update builds it by itself once the screen is on, a failure never stops it and the panel names the reason; every grey button of a system says why (for the screen with the command to copy or insert).
 
 
 

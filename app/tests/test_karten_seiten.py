@@ -130,10 +130,13 @@ class Page(unittest.TestCase):
                     # without the pages, or with something that is not a day or an id: no card
                     self.assertTrue(await pg.evaluate("CAL_ON=false;MAIL_ON=false;gotoCard([{to:'cal',day:'2026-03-10'},{to:'post',id:'%s:100'}])===null" % acct))
                     self.assertTrue(await pg.evaluate("CAL_ON=true;MAIL_ON=true;gotoCard([{to:'cal',day:'morgen'},{to:'post',id:'javascript:1'}])===null"))
-                    await pg.evaluate("document.body.appendChild(gotoCard([{to:'cal',day:'2026-03-10'}])).id='gk1'")
+                    # the card stands where the phone's tab bar (#aptabs, fixed at the bottom, shown once two tabs are
+                    # on) never covers it: at the body's end it lay under the bar and the click never came (red at V01.1.272)
+                    pin = ".style.cssText='position:fixed;top:120px;left:8px;right:8px;z-index:60'"
+                    await pg.evaluate("(()=>{const c=document.body.appendChild(gotoCard([{to:'cal',day:'2026-03-10'}]));c.id='gk1';c%s})()" % pin)
                     await pg.click("#gk1 button")
                     await b.until(pg, "!!KAL.data&&!KAL.busy&&KAL.day.getFullYear()===2026&&KAL.day.getMonth()===2&&KAL.day.getDate()===10")
-                    await pg.evaluate("document.body.appendChild(gotoCard([{to:'post',id:'%s:100'}])).id='gk2'" % acct)
+                    await pg.evaluate("(()=>{const c=document.body.appendChild(gotoCard([{to:'post',id:'%s:100'}]));c.id='gk2';c%s})()" % (acct, pin))
                     await pg.click("#gk2 button")
                     await b.until(pg, "!!POST.msg&&!!document.querySelector('#postview .posttext')")
                     self.assertIn("Wagen", await pg.evaluate("document.querySelector('#postview .posttext').textContent"))
