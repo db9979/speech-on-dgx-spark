@@ -1880,6 +1880,8 @@ def snapshot(view="admin", now=None):
         if x["id"] == "mail" and post_rules.get("rules"):   # Mail-Regeln: rules and what they took today (numbers only)
             x["sub"] += (f" · {post_rules['rules']} Regeln bei {post_rules['profiles']} Profilen"
                          + (f", heute {post_rules['taken']} Mails einsortiert" if post_rules.get("taken") else ""))
+        if x["id"] == "mail" and post_rules.get("back"):   # kein Ping-Pong: mails put back after a rule, left alone (a number)
+            x["sub"] += f" · heute {post_rules['back']} zurückgelegte Mails nicht wieder einsortiert"
         if x["id"] == "mail" and post_rules.get("hints"):   # Regel-Vorschlag: hints shown today (a number)
             x["sub"] += f" · heute {post_rules['hints']} Regel-Vorschläge"
         if x["id"] == "mail" and post_rules.get("stats"):   # Mail-Statistik: looked at today (a number, never who)

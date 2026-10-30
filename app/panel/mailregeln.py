@@ -16,6 +16,12 @@ folder (learn); the LEARN_AFTER-th move within LEARN_DAYS asks once on the page 
 rule for that sender and folder is there or the profile said „Nicht mehr fragen“ (never). The counts sit in the same
 file as the rules; only the page's own moves count, never a rule's or the tidying's.
 
+Merkliste und kein Ping-Pong (Dominik 2026-10-30 „nach Empfehlung umsetzen“, plan mail-lernen 1a + 2a, a fix without
+a switch): every mail a rule moves is remembered with its Message-ID, mailbox, folder, rule and time for tidy.LOG_DAYS
+(at most tidy.LOG_MAX, in the same file). spark_moved is the one list of both sorters (the rules' list and the log of
+„Mails aufräumen“); user_moved asks it whether the Spark moved a mail and the person put it somewhere else since (back
+into the inbox with a new UID, same Message-ID). Such a mail no rule and no tidying ever touches again.
+
 Mail-Statistik (Dominik 2026-10-21 „6“): stats() counts who writes most in 30 days and the mails a week, from the
 listing the Mail-Vorrat keeps; the tab Regeln shows it with „Regel …“ per sender.
 
@@ -65,7 +71,7 @@ FREEMAIL = ("gmail.com", "googlemail.com", "gmx.de", "gmx.net", "gmx.at", "gmx.c
 _lock = threading.Lock()
 _last = {}               # uid -> when its rules last ran
 _sug_day = {}            # uid -> the night its rule suggestions were looked for
-_count = DayCounter(genommen=0, laeufe=0, vorschlaege=0, nacht=0, statistik=0)   # per day: mails taken, looks, rule hints, night suggestions, statistics shown
+_count = DayCounter(genommen=0, laeufe=0, vorschlaege=0, nacht=0, statistik=0, zurueck=0)   # per day: mails taken, looks, rule hints, night suggestions, statistics shown, mails the person put back
 
 
 def _file(uid):
@@ -87,6 +93,10 @@ def load(uid):
     d["suggest"] = [x for x in (d.get("suggest") if isinstance(d.get("suggest"), list) else [])
                     if isinstance(x, dict) and isinstance(x.get("id"), str)][-SUGGEST_MAX:]
     d["looked"] = d.get("looked") if isinstance(d.get("looked"), dict) else {}
+    cut = time.time() - tidy.LOG_DAYS * 86400
+    d["moved"] = [x for x in (d.get("moved") if isinstance(d.get("moved"), list) else [])
+                  if isinstance(x, dict) and isinstance(x.get("mid"), str) and x["mid"]
+                  and isinstance(x.get("t"), int) and x["t"] > cut][-tidy.LOG_MAX:]
     return d
 
 
@@ -329,6 +339,59 @@ def _do(box, targets, rule, uids):
     return []
 
 
+# ---------------------------------------------------------------- Merkliste (plan mail-lernen 1a + 2a)
+def _remember(uid, aid, rule, mids):
+    """What a rule moved: {mid, aid, folder, rid, t} per mail, only the Message-ID of the mail (no sender, no subject)."""
+    mids = [m for m in (tidy.clean_mid(x) for x in mids) if m]
+    if not mids:
+        return
+    now = int(time.time())
+    with _lock:
+        d = load(uid)
+        d["moved"] = (d["moved"] + [{"mid": m, "aid": aid, "folder": rule["then"].get("folder", ""), "rid": rule["id"], "t": now}
+                                    for m in mids])[-tidy.LOG_MAX:]
+        _save(uid, d)
+
+
+def spark_moved(uid, aid, d=None, st=None):
+    """The one list of both sorters: {Message-ID: entry with "by" ("rule" or "tidy") and "folder"} of every mail of this
+    mailbox the Spark moved itself in the last tidy.LOG_DAYS: the Mail-Regeln (their list here) and „Mails aufräumen“
+    (its log; an entry brought back with „Zurück“ wins and carries "undone"). d and st when the caller has them."""
+    d = load(uid) if d is None else d
+    st = tidy.state(uid) if st is None else st
+    out = {x["mid"]: dict(x, by="rule") for x in d["moved"] if x.get("aid") == aid}
+    for x in st["log"]:
+        if x.get("aid") == aid and x.get("mid"):
+            if x.get("undone") or not out.get(x["mid"], {}).get("undone"):
+                out[x["mid"]] = dict(x, by="tidy")
+    return out
+
+
+def user_moved(moved, mid, where):
+    """Did the Spark move this mail, and did the person put it somewhere else since (`where`, the inbox above all)?
+    Its entry of spark_moved, else None. Such a mail no sorter touches again (no ping-pong)."""
+    x = moved.get(mid) if mid else None
+    return x if x and (x.get("undone") or x.get("folder") != where) else None
+
+
+def mark_back(uid, mids):
+    """Mails a rule moved that the person put back: marked once (counted for Live). Returns how many were new."""
+    mids = set(mids)
+    if not mids:
+        return 0
+    now, n = int(time.time()), 0
+    with _lock:
+        d = load(uid)
+        for x in d["moved"]:
+            if x["mid"] in mids and not x.get("back"):
+                x["back"], n = now, n + 1
+        if n:
+            _save(uid, d)
+    if n:
+        _count.bump("zurueck", n)
+    return n
+
+
 def _bump(uid, rid, n):
     with _lock:
         d = load(uid)
@@ -367,15 +430,23 @@ def run(uid, now=None):
                 if not new:
                     continue
                 heads = box.headers(new, HEAD)
-                todo = {}
+                moved = spark_moved(uid, acct["id"], d)
+                todo, back = {}, []
                 for u in new:
                     if u in heads:
-                        r = first(mine, head(heads[u]), acct["id"])
+                        h = head(heads[u])
+                        if user_moved(moved, h["mid"], "INBOX"):   # the Spark moved it, the person put it back: it stays
+                            back.append(h["mid"])
+                            continue
+                        r = first(mine, h, acct["id"])
                         if r:
                             todo.setdefault(r["id"], (r, []))[1].append(u)
+                if back:
+                    mark_back(uid, back)
+                    print(f"mail: rule skip | user_moved | {len(back)} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
                 for r, us in todo.values():
                     try:
-                        _do(box, targets, r, us)
+                        _remember(uid, acct["id"], r, _do(box, targets, r, us))
                         _bump(uid, r["id"], len(us))
                         taken += len(us)
                     except (ValueError, OSError) as e:
@@ -620,16 +691,18 @@ async def due_once(now=None):
 
 
 def _matching(uid, rule, most):
-    """{account id: [uid, …]} of inbox mails of the last PREVIEW_DAYS the rule fits (newest PREVIEW_MAX looked at)."""
-    out = {}
+    """{account id: [uid, …]} of inbox mails of the last PREVIEW_DAYS the rule fits (newest PREVIEW_MAX looked at);
+    a mail the Spark moved and the person put back is never one of them (user_moved)."""
+    out, d, st = {}, load(uid), tidy.state(uid)
     for acct in mail.get(uid)["accounts"]:
         if rule.get("account") and rule["account"] != acct["id"]:
             continue
+        moved = spark_moved(uid, acct["id"], d, st)
         with tidy.Box(acct) as box:
             box.select("INBOX")
             uids = sorted(box.search("SINCE", tidy._since(PREVIEW_DAYS)))[-PREVIEW_MAX:]
-            heads = box.headers(uids, HEAD)
-            hit = [u for u in uids if u in heads and fits(rule, head(heads[u]))]
+            heads = {u: head(m) for u, m in box.headers(uids, HEAD).items()}
+            hit = [u for u in uids if u in heads and fits(rule, heads[u]) and not user_moved(moved, heads[u]["mid"], "INBOX")]
             if hit:
                 out[acct["id"]] = hit[-most:]
     return out
@@ -661,6 +734,7 @@ def apply(uid, rid):
                 targets, _ = postfach._targets(box)
                 box.select("INBOX", write=True)
                 mids = _do(box, targets, rule, us)
+            _remember(uid, aid, rule, mids)
             n += len(us)
             if mids:
                 moved.append({"acct": aid, "mids": mids[:postfach.MANY]})
@@ -728,7 +802,8 @@ def stats(uid, now=None):
 
 
 def for_live():
-    """Live (Post): profiles with rules, rules in all, mails the rules took today; numbers only."""
+    """Live (Post): profiles with rules, rules in all, mails the rules took today, mails put back that a rule leaves
+    alone now; numbers only."""
     c = _count.counts()
     profs = rules = 0
     for uid in profiles.user_ids():
@@ -736,7 +811,7 @@ def for_live():
             n = len(load(uid)["rules"])
             profs += 1 if n else 0
             rules += n
-    return {"profiles": profs, "rules": rules, "taken": c.get("genommen", 0), "hints": c.get("vorschlaege", 0),
+    return {"profiles": profs, "rules": rules, "taken": c.get("genommen", 0), "back": c.get("zurueck", 0), "hints": c.get("vorschlaege", 0),
             "night": c.get("nacht", 0), "stats": c.get("statistik", 0)}
 
 

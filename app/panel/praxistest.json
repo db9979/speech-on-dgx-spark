@@ -4622,6 +4622,13 @@
 "titel": "Karte hilft der Suche",
 "text": "Voraussetzung: Wissenskarte mit Personen, Firmen und Fristen hat Punkte. A: Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte → Personen, Firmen und Fristen → Karte hilft der Suche an (ab Werk aus). B: Im Gespräch nach einer Firma fragen, die in mehreren Dokumenten steht („Was gibt es zur Hausverwaltung …?“): unter der Antwort steht bei einer Quelle „über die Wissenskarte“. C: Zustand → Logs, Bereich Wissen: „wissen: kartensuche | n von m stellen über die karte“, kein Name. D: Zustand → Live, Kasten Wissenskarte: „Suche über die Karte an: n Suchen, m Stellen“, nur Zahlen. E: Ich → Dokumente → Suchprüfung → Jetzt prüfen: ein Balken „Mit Wissenskarte“ neben „Gemischt“, nicht schlechter. F: Schalter aus: kein „über die Wissenskarte“ mehr, keine Zeile kartensuche.",
 "thread": "Wissenskarte Stufe 2 statt Neo4j"
+},
+{
+"id": "P685",
+"v": 1265,
+"titel": "Mail-Regeln: zurückgelegte Mail bleibt im Posteingang (kein Ping-Pong)",
+"text": "Eine Mail-Regel unter E-Mail → Regeln (Absender → Ordner) anlegen und eine passende Mail schicken: sie landet im Ordner. In Apple Mail (oder auf der Seite E-Mail) dieselbe Mail zurück in den Posteingang ziehen und 10 Minuten warten: sie bleibt im Posteingang, auch nach „auch die vorhandenen“ an der Regel; mit „Postfach aufräumen“ an wird sie auch dort nicht verschoben. Zustand → Logs, Bereich Mail: „mail: rule skip | user_moved | 1“ ohne Absender oder Ordner; Zustand → Live, Post: „heute 1 zurückgelegte Mails nicht wieder einsortiert“.",
+"thread": "Falsch einsortierte Mails lernen lassen"
 }
 ]
 }
