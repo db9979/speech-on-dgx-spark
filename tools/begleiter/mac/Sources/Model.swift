@@ -64,6 +64,8 @@ struct DeskConfig: Equatable {
     var face = FaceKind.saved
     /// Antworten vorlesen of the profile (panel: Gespräch einstellen): off = Frag Spark never reads answers aloud
     var aloud = true
+    /// config.fern: the settings (Übersicht) show the Sprung-Link to Fernzugang (only a profile with the admin role)
+    var fern = false
     /// config.office.web: Word, Excel and Outlook can be set up (the panel knows its https address)
     var officeWeb = false
     /// config.auslassen: sub folders of the watched folder the Spark never reads (Ich → Dokumente → Ausgelassene Ordner)
@@ -112,6 +114,7 @@ struct DeskConfig: Equatable {
         v4 = V4Config(d)
         face = FaceKind(d["face"])
         aloud = d["aloud"] as? Bool ?? true
+        fern = d["fern"] as? Bool ?? false
         officeWeb = (d["office"] as? [String: Any])?["web"] as? Bool ?? false
         leftOut = LeftOut(d["auslassen"])
         FaceKind.saved = face

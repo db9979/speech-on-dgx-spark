@@ -174,6 +174,30 @@ struct SettingsView: View {
         let s = status
         StatusCard(title: s.title, detail: model.statusLine, color: s.color, good: s.good)
         panelSettings
+        panelLinks
+    }
+
+    // Sprung-Links ins Panel (Begleiter Paket A, Dominik 2026-10-30): no screens of their own, a click opens
+    // <Spark>/#weg=<way> in the browser; Fernzugang only for a profile with the admin role (config.fern)
+    static let wayData = "Ich → Sicherheit → Meine Daten"
+    static let wayMemory = "Ich → Gedächtnis"
+    static let wayFern = "Fernzugang → Systeme"
+
+    @ViewBuilder
+    private var panelLinks: some View {
+        SectionLabel(text: "Im Panel")
+        HStack(spacing: 8) {
+            Button("Meine Daten") { model.openPanel(Wege.hash(Self.wayData)) }
+            Button("Gedächtnis") { model.openPanel(Wege.hash(Self.wayMemory)) }
+            if model.config?.fern == true {
+                Button("Fernzugang") { model.openPanel(Wege.hash(Self.wayFern)) }
+            }
+        }
+        .buttonStyle(SoftButtonStyle())
+        .disabled(model.base == nil)
+        Text(verbatim: "Öffnet das Panel im Browser an dieser Stelle.")
+            .font(.caption)
+            .foregroundColor(Theme.muted)
     }
 
     // ------------------------------------------------------------------ Kopplung

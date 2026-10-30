@@ -4657,6 +4657,27 @@
 "titel": "Finden: Messung auf dem Pi",
 "text": "Auf dem Pi `sudo speech-spark finden messen` (dauert einige Minuten): die Zeile „fund: messung | 50000 mails | 10000 anhaenge | 5000 dokumente | p50 … ms | p95 … ms …“ erscheint, danach „fund: messung ziel | 95 % unter 150 ms | erreicht … % | ja“. Unter Zustand → Live im Kasten Finden steht „Messung 50000 Mails: p50 … ms, p95 … ms …“. Kein Profil hat danach neue Einträge, neben users/ bleibt kein Ordner fundmessung-… liegen. p95 und die Größe von fund.db bitte zurückmelden.",
 "thread": "Alles schnell finden über einen Index"
+},
+{
+"id": "P690",
+"v": 1268,
+"titel": "Begleiter: Knöpfe „Im Panel“ in den Einstellungen",
+"text": "Am Mac und unter Windows die Einstellungen des Begleiters öffnen, Seite „Übersicht“: unten unter „Im Panel“ stehen „Meine Daten“ und „Gedächtnis“. Ein Klick öffnet das Panel im Browser auf Ich → Sicherheit bei „Meine Daten“ bzw. auf Ich → Gedächtnis. Mit einem Profil ohne Admin-Rolle fehlt „Fernzugang“.",
+"thread": "Begleiter-App auf neuen Stand bringen"
+},
+{
+"id": "P691",
+"v": 1268,
+"titel": "Begleiter: Fernzugang nur für Admins",
+"text": "Fernzugang eingeschaltet, Begleiter mit einem Profil mit Admin-Rolle (zweiter Anmeldeschritt an) gekoppelt: nach dem nächsten Abruf steht unter „Im Panel“ zusätzlich „Fernzugang“ und öffnet Fernzugang → Systeme. Rolle wegnehmen oder Fernzugang ausschalten: der Knopf verschwindet mit dem nächsten Abruf.",
+"thread": "Begleiter-App auf neuen Stand bringen"
+},
+{
+"id": "P692",
+"v": 1268,
+"titel": "Sprung-Links auf Listen, Offen, Finden und Dungeon-Master von draußen",
+"text": "Eine Mitteilung oder Telegram-Nachricht mit einem Weg wie „Finden → Schlagworte“ oder „Listen → Einstellungen“ (z. B. aus einem Hinweis): Antippen in iPhone-App, Android-App, Begleiter oder der Telegram-Knopf „Im Panel öffnen“ führt auf die Seite und den Reiter.",
+"thread": "Begleiter-App auf neuen Stand bringen"
 }
 ]
 }

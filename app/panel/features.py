@@ -72,6 +72,38 @@ APP_SKIP = {"overbox": "the app's own start screen shows the overview",
             "gobox": "first steps in the browser after signing up",
             "loginbox": "the app is signed in by its own key",
             "andbox": "the Android app, not for an iPhone"}
+# Begleiter-Gleichstand (Dominik 2026-10-30, Begleiter Paket A): every function is in the Begleiter on purpose or
+# left out with its reason. DESK: the function → the Begleiter parts (begleiter.PARTS) that carry it; DESK_SKIP: the
+# function → why not. A sub-function follows its parent unless it stands here itself. test_app_gleichstand.Begleiter
+# checks that every function is in exactly one of both and every part belongs to a function.
+DESK = {"begleiter": ("ask", "dictate", "notes", "status", "notaus", "files", "screen", "context", "actions", "act",
+                      "wake", "speak", "inbox", "quiet", "meeting", "daily", "view"),
+        "schreib": ("write", "mail", "office"), "documents": ("folder",), "calendar": ("agenda", "capture"),
+        "reminders": ("capture", "notes"), "vorgaenge": ("actions",), "tasks": ("lists",), "mail": ("post",),
+        "ha": ("home",), "proactive": ("notes",)}
+_D_PANEL = "stays in the panel: set up, looked at and deleted there"
+_D_LINK = "stays in the panel; the Begleiter's settings (Übersicht) link to its place"
+_D_TALK = "works in every answer, Frag Spark included; nothing of its own on the computer, set up in the panel"
+_D_SPARK = "a setting of the whole Spark for the admin, stays in the panel"
+_D_VOICE = "for speaking in the room (speakers, phone); the Begleiter asks by text, dictation or the wake word"
+_D_DEVICE = "another device with its own app or page"
+DESK_SKIP = {
+    **dict.fromkeys(("search", "wiki", "kiwix", "lokal", "roles", "style", "klaeren", "ablauf", "images", "rechnen",
+                     "hilfe", "verlaufsync", "eingespraech", "offlinelesen", "tagebuch", "sparkzustand",
+                     "rueckgaengig"), _D_TALK),
+    **dict.fromkeys(("follow", "selfecho", "anhalten", "satzende"), _D_VOICE),
+    **dict.fromkeys(("toolthink", "routing", "direct", "hoeren", "sofort", "gedkurz", "einordnung", "helfer", "vorrang",
+                     "berater", "geraeteupdate", "dienstwacht", "wachposten", "wartung", "notbetriebasr", "gehaeuse",
+                     "schirm", "modellwechsel", "werkstatt"), _D_SPARK),
+    **dict.fromkeys(("history", "teilen", "bilder", "musik", "dungeon", "mystatus", "agent", "chats", "weather",
+                     "feeds", "contacts", "transit", "speaker", "verbrauch", "nas"), _D_PANEL),
+    **dict.fromkeys(("room", "esp32", "wyoming", "telefon", "telegram", "android", "pebble", "terminal", "mcpserver",
+                     "iphone", "appmerken"), _D_DEVICE),
+    "memory": _D_LINK, "mfa": _D_LINK + " (Meine Daten on the Ich page Sicherheit)",
+    "melden": "stays in the panel; the Begleiter's Kopplung page opens it (Problem melden …)",
+    "fernzugang": "an admin page, stays in the panel; the Begleiter's settings (Übersicht) link to it for an admin",
+    "fund": "not in the Begleiter yet (Finden there is planned next); until then in the panel",
+}
 # Code-Prüfung D8 (one name per thing): an Ich page carries the name of its function, or a word of it, so "Funktionen →
 # Telefon" and "Ich → Telefon" are found as the same thing; these pages are named otherwise, each with its reason
 # (test_namen)

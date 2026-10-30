@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.268** Begleiter: Sprung-Links von draußen auch zu Listen, Offen, Finden und Dungeon-Master, jede Funktion im Begleiter oder mit Grund draußen, Knöpfe ins Panel in seinen Einstellungen (Meine Daten, Gedächtnis, Fernzugang für Admins)
 - **V01.1.267** Finden Stufe E: Messung mit 50 000 Mails (`sudo speech-spark finden messen`), schnellere Suche, Finden nativ in der iPhone-App, „Original öffnen“ auch im iPhone-Chat und im Begleiter
 - **V01.1.266** „Spark verwalten“ in der iPhone-App: war die App vor dem (neu eingerichteten) zweiten Schritt gekoppelt, sagt sie das und schaltet sich mit „Mit Code bestätigen“ (Code oder Passkey) einmal frei, statt nur „kein Admin“ zu zeigen
 - **V01.1.265** Kein Ping-Pong mehr bei Mail-Regeln: eine Mail, die eine Regel oder das Aufräumen verschoben hat und die du zurück in den Posteingang legst, bleibt dort; die Regeln merken sich, was sie verschoben haben (30 Tage)
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.261** Finden: eine neue Suche leert sofort die alten Treffer
 - **V01.1.260** Redesign Stufe 2: ruhige Seitenleiste, Seitenkopf, Systemschrift und blauer Akzent aus `tokens.css`; kein schwebendes Gesicht mehr, „Frag Spark“ als Zeichen oben
 - **V01.1.259** Browser-Tests finden Chromium auch unter `chrome-linux64` (neuere Playwright-Builds)
-- **V01.1.258** Finden Stufe D: Schlagworte vom Modell (eigener Unterschalter, aus), nur nach festen Regeln geprüft und als „vom Modell“ gezeigt, entfernte kommen nie wieder; Personen, Firmen und Orte als Punkte der Wissenskarte; eine Rangfolge über alle Listen; Sofort-Karte bei klarem Treffer mit festem Satz und „Original öffnen“
 
 
 

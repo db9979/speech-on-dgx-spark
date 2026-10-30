@@ -308,6 +308,14 @@ def aloud(uid):
     return profiles.effective(uid).get("speak") is not False
 
 
+def fern_link(uid):
+    """Whether the program's settings (Übersicht) show the Sprung-Link to Fernzugang: only for a profile whose admin
+    role acts (coadmin.acts, with its second step) while the admin released Fernzugang. Only a link: the page itself
+    checks the admin as always (fernzugang.is_admin_browser), the program learns nothing else about the role."""
+    import coadmin
+    return bool(features.allowed("fernzugang", uid) and coadmin.acts(uid) == "admin")
+
+
 def program_rev(did, uid):
     """(settings, rev) for the program itself: rev also goes up when what the switches allow changes (the
     admin under Gesperrte Funktionen, the profile under Ich), so the program fetches its config with the next poll and
@@ -315,6 +323,7 @@ def program_rev(did, uid):
     mask = "".join("1" if v else "0" for v in may(uid).values())
     mask += ":" + profiles.face_of(uid, load_config().get("chat", {}))   # another face: the program draws it now
     mask += ":" + ("1" if aloud(uid) else "0")   # Antworten vorlesen switched: the program hears of it now
+    mask += ":" + ("1" if fern_link(uid) else "0")   # an admin role given or taken: the link to Fernzugang follows
     # Ausgelassene Ordner changed (auslassen.py): the program stops sending from them with its next poll
     mask += ":" + hashlib.sha256(json.dumps(auslassen.for_desk(uid), sort_keys=True).encode()).hexdigest()[:12]
     with _lock:
@@ -682,6 +691,9 @@ async def program_config(request: Request, version: str = "", arch: str = ""):
             "face": profiles.face_of(prof["id"], load_config().get("chat", {})),   # own face, else the Spark's
             # Antworten vorlesen (profile switch speak): off = Frag Spark answers as text only, never spoken by itself
             "aloud": aloud(prof["id"]),
+            # Sprung-Links in the program's settings (Übersicht): Meine Daten and Gedächtnis for everyone, Fernzugang
+            # only for an admin (fern_link); each opens <panel>/#weg=…, the panel checks as always
+            "fern": fern_link(prof["id"]),
             "update": newer(arch, version), "parts": parts, "allowed": ok,
             # Ich → Dokumente → Ausgelassene Ordner: the program sends nothing from these (names, folders "a/b")
             "auslassen": auslassen.for_desk(prof["id"]) if parts["folder"] else {"names": [], "folders": []},

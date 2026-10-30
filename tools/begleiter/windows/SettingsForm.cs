@@ -103,6 +103,17 @@ internal sealed class SettingsForm : ThemedForm
     private readonly TLabel _partsHint = new(TextRole.SmallMuted, "Ein- und ausschalten im Panel unter Ich → Begleiter.");
     private bool _partsAll;
 
+    // Sprung-Links ins Panel (Begleiter Paket A, Dominik 2026-10-30): keine eigenen Bildschirme, ein Klick öffnet
+    // <Spark>/#weg=<Weg> im Browser (Wege.cs); Fernzugang nur für ein Profil mit Admin-Rolle (config.fern)
+    public const string WayData = "Ich → Sicherheit → Meine Daten";
+    public const string WayMemory = "Ich → Gedächtnis";
+    public const string WayFern = "Fernzugang → Systeme";
+    private readonly TLabel _linksHeading = new(TextRole.Section, "IM PANEL");
+    private readonly SparkButton _linkData = new(ButtonKind.Secondary, "Meine Daten");
+    private readonly SparkButton _linkMemory = new(ButtonKind.Secondary, "Gedächtnis");
+    private readonly SparkButton _linkFern = new(ButtonKind.Secondary, "Fernzugang");
+    private readonly TLabel _linksHint = new(TextRole.SmallMuted, "Öffnet das Panel im Browser an dieser Stelle.");
+
     // Tastenkürzel
     private readonly TLabel _hotkeyTitle = new(TextRole.Title, "Tastenkürzel");
     private readonly TLabel _hotkeyIntro = new(TextRole.Muted, "In ein Feld klicken und die neue Kombination drücken (mit Strg oder Alt, z. B. Strg+Alt+S).");
@@ -193,7 +204,13 @@ internal sealed class SettingsForm : ThemedForm
         _close.TabIndex = 21;
 
         // Übersicht
-        _pageOverview.Controls.AddRange(new Control[] { _ovTitle, _ovIntro, _ovCard, _partsHeading, _parts, _partsMore, _partsHint });
+        _pageOverview.Controls.AddRange(new Control[] { _ovTitle, _ovIntro, _ovCard, _partsHeading, _parts, _partsMore, _partsHint, _linksHeading, _linkData, _linkMemory, _linkFern, _linksHint });
+        _linkData.AccessibleName = "Meine Daten im Panel öffnen";
+        _linkMemory.AccessibleName = "Gedächtnis im Panel öffnen";
+        _linkFern.AccessibleName = "Fernzugang im Panel öffnen";
+        _linkData.Click += (_, _) => Wege.OpenFrom(WayData);
+        _linkMemory.Click += (_, _) => Wege.OpenFrom(WayMemory);
+        _linkFern.Click += (_, _) => Wege.OpenFrom(WayFern);
         _partsMore.Click += (_, _) =>
         {
             _partsAll = !_partsAll;
@@ -441,6 +458,24 @@ internal sealed class SettingsForm : ThemedForm
 
         y += S(6);
         y += _partsHint.Fit(0, y, width);
+
+        // Im Panel: Sprung-Links, Fernzugang nur für ein Profil mit Admin-Rolle
+        y += S(20);
+        y += _linksHeading.Fit(S(2), y, width) + S(8);
+        bool fern = _host.Desk?.Fern == true;
+        _linkFern.Visible = fern;
+        int lx = 0;
+        int rowH = 0;
+        foreach (SparkButton link in fern ? new[] { _linkData, _linkMemory, _linkFern } : new[] { _linkData, _linkMemory })
+        {
+            Size size = link.Preferred();
+            link.Bounds = new Rectangle(lx, y, size.Width, size.Height);
+            lx += size.Width + S(8);
+            rowH = Math.Max(rowH, size.Height);
+        }
+
+        y += rowH + S(8);
+        y += _linksHint.Fit(0, y, width);
         return y;
     }
 
@@ -612,6 +647,7 @@ internal sealed class SettingsForm : ThemedForm
         }
 
         _panel.Enabled = !string.IsNullOrEmpty(config.Base);
+        _linkData.Enabled = _linkMemory.Enabled = _linkFern.Enabled = !string.IsNullOrEmpty(config.Base);
         _unpair.Enabled = config.IsPaired;
         _repair.Text = config.IsPaired ? "Neu koppeln …" : "Koppeln …";
 

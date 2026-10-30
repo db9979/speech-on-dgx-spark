@@ -45,7 +45,7 @@ extension SparkAPI {
 
     /// Ways into the panel in a text ("Einschalten im Panel unter Ich → iPhone-App"): same rule as wege.py on the
     /// Spark. "Einstellungen → …" without "Panel" right before it is the iPhone's own settings, not a way.
-    static let wayRoots = "Einstellungen|Funktionen|Zustand|Personen und Geräte|Ich|Settings|Features|Status|People and devices|Me|Kalender|Calendar|E-Mail|E-mail|Kontakte|Contacts|Wissensbuch|Knowledge book|Fernzugang|Remote access"
+    static let wayRoots = "Einstellungen|Funktionen|Zustand|Personen und Geräte|Ich|Settings|Features|Status|People and devices|Me|Kalender|Calendar|E-Mail|E-mail|Listen|Lists|Offen|Open|Kontakte|Contacts|Wissensbuch|Knowledge book|Finden|Find|Dungeon-Master|Dungeon Master|Fernzugang|Remote access"
     private static let wayRx = try? NSRegularExpression(
         pattern: "(?<![\\w-])(?<!Mein )(?<!My )(?<!→ )(?:\(wayRoots))\\s*→[^\\n.;:()!?]{1,160}")
 

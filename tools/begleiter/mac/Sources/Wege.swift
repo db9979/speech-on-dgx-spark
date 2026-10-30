@@ -5,7 +5,7 @@ import Foundation
 /// "Einstellungen → …" without "Panel" right before it is the Begleiter's or the Mac's own settings.
 /// Only navigation: the link opens the panel in the browser, nothing else.
 enum Wege {
-    static let roots = "Einstellungen|Funktionen|Zustand|Personen und Geräte|Ich|Settings|Features|Status|People and devices|Me|Kalender|Calendar|E-Mail|E-mail|Kontakte|Contacts|Wissensbuch|Knowledge book|Fernzugang|Remote access"
+    static let roots = "Einstellungen|Funktionen|Zustand|Personen und Geräte|Ich|Settings|Features|Status|People and devices|Me|Kalender|Calendar|E-Mail|E-mail|Listen|Lists|Offen|Open|Kontakte|Contacts|Wissensbuch|Knowledge book|Finden|Find|Dungeon-Master|Dungeon Master|Fernzugang|Remote access"
     private static let rx = try? NSRegularExpression(
         pattern: "(?<![\\w-])(?<!Mein )(?<!My )(?<!→ )(?:\(roots))\\s*→[^\\n.;:()!?]{1,160}")
     private static let plain = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~")
@@ -28,6 +28,12 @@ enum Wege {
     static func link(_ way: String, base: String?) -> URL? {
         guard let base, !way.isEmpty, let q = String(way.prefix(200)).addingPercentEncoding(withAllowedCharacters: plain) else { return nil }
         return URL(string: base.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + "/#weg=" + q)
+    }
+
+    /// `#weg=<way>` for model.openPanel (a fixed way from the code, a button that only opens the panel there).
+    static func hash(_ way: String) -> String {
+        guard let q = String(way.prefix(200)).addingPercentEncoding(withAllowedCharacters: plain) else { return "" }
+        return "#weg=" + q
     }
 
     /// A text with its way as a link into the own Spark's panel; plain text when there is none or no Spark yet.

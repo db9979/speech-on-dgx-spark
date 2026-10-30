@@ -1625,6 +1625,67 @@ class LogQuiet(unittest.TestCase):
         self.assertEqual(seen, [])
 
 
+class PanelLinks(unittest.TestCase):
+    """Begleiter Paket A (Dominik 2026-10-30): the settings' Übersicht carries Sprung-Links to Meine Daten and
+    Gedächtnis, and for a profile with the admin role to Fernzugang, on the Mac and on Windows. Only links into the
+    panel (#weg=), no screens of their own; the role comes from config.fern and changes rev."""
+    WAYS = ("Ich → Sicherheit → Meine Daten", "Ich → Gedächtnis", "Fernzugang → Systeme")
+
+    def setUp(self):
+        Begleiter.setUp(self)
+
+    def tearDown(self):
+        Begleiter.tearDown(self)
+
+    def test_fern_only_for_an_acting_admin_role(self):
+        import coadmin
+        c = Begleiter.on(self, "DkFernLink")
+        _, prog = Begleiter.pair(self, c)
+        uid = uid_of("DkFernLink")
+        d = prog.get("/api/desk/config").json()
+        self.assertIs(d["fern"], False)
+        helpers.set_config(fernzugang=True)
+        try:
+            self.assertIs(prog.get("/api/desk/config").json()["fern"], False)   # no admin role
+            with unittest.mock.patch.object(coadmin, "acts", lambda u: "admin" if u == uid else ""):
+                d2 = prog.get("/api/desk/config").json()
+                self.assertIs(d2["fern"], True)
+                self.assertGreater(d2["rev"], d["rev"])                         # the program hears of it now
+            with unittest.mock.patch.object(coadmin, "acts", lambda u: "manager" if u == uid else ""):
+                self.assertIs(prog.get("/api/desk/config").json()["fern"], False)   # a Verwalter never
+            helpers.set_config(fernzugang=False)
+            with unittest.mock.patch.object(coadmin, "acts", lambda u: "admin" if u == uid else ""):
+                self.assertIs(prog.get("/api/desk/config").json()["fern"], False)   # Fernzugang off
+        finally:
+            helpers.set_config(fernzugang=False)
+
+    def test_both_programs_link_the_same_places(self):
+        import wege
+        root = Office.ROOT
+        if not os.path.isdir(root):
+            self.skipTest("only app/ copied")
+        with open(os.path.join(root, "mac", "Sources", "SettingsView.swift"), encoding="utf-8") as f:
+            mac = f.read()
+        with open(os.path.join(root, "windows", "SettingsForm.cs"), encoding="utf-8") as f:
+            win = f.read()
+        for way in self.WAYS:
+            self.assertEqual(wege.find(way), way)
+            self.assertIn(f'= "{way}"', mac, way)
+            self.assertIn(f'= "{way}";', win, way)
+        # on the Übersicht, through the way helpers (#weg=), Fernzugang only with config.fern
+        overview = mac[mac.index("private var overview: some View"):mac.index("// ------------------------------------------------------------------ Kopplung")]
+        self.assertIn("panelLinks", overview)
+        self.assertEqual(mac.count("model.openPanel(Wege.hash(Self.way"), 3)
+        self.assertIn("if model.config?.fern == true {", overview)
+        self.assertIn("_linksHeading, _linkData, _linkMemory, _linkFern, _linksHint", win)
+        self.assertEqual(win.count("Wege.OpenFrom(Way"), 3)
+        self.assertIn("bool fern = _host.Desk?.Fern == true;", win)
+        with open(os.path.join(root, "windows", "DeskConfig.cs"), encoding="utf-8") as f:
+            self.assertIn('config.Fern = Json.Bool(json["fern"]) ?? false;', f.read())
+        with open(os.path.join(root, "mac", "Sources", "Model.swift"), encoding="utf-8") as f:
+            self.assertIn('fern = d["fern"] as? Bool ?? false', f.read())
+
+
 if __name__ == "__main__":
     unittest.main()
 

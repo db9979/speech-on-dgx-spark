@@ -165,6 +165,44 @@ class PagesFollowTheRelease(unittest.TestCase):
         self.assertIn({"id": "factbox", "name": ["Gedächtnis", "Memory"]}, pages)
 
 
+class Begleiter(unittest.TestCase):
+    """Begleiter-Gleichstand (Dominik 2026-10-30, Begleiter Paket A): every function is in the Begleiter on purpose
+    (features.DESK, with the parts of the program that carry it) or left out with its reason (features.DESK_SKIP).
+    A sub-function follows its parent unless it stands there itself. Every part of the program belongs to a function,
+    and both programs know the same parts as the Spark."""
+
+    def test_every_function_is_in_or_out_with_a_reason(self):
+        keys = {f.key for f in features.FEATURES}
+        self.assertEqual(sorted(set(features.DESK) - keys), [], "DESK: no such function")
+        self.assertEqual(sorted(set(features.DESK_SKIP) - keys), [], "DESK_SKIP: no such function")
+        self.assertEqual(sorted(set(features.DESK) & set(features.DESK_SKIP)), [], "in DESK and DESK_SKIP")
+        missing = [f.key for f in features.FEATURES if not f.parent and f.key not in features.DESK
+                   and f.key not in features.DESK_SKIP]
+        self.assertEqual(missing, [], "a new function: into features.DESK (with its Begleiter parts) or "
+                                      "features.DESK_SKIP (with its reason)")
+        for k, why in features.DESK_SKIP.items():
+            self.assertGreater(len(why), 20, k)
+
+    def test_the_parts_belong_to_functions(self):
+        import begleiter
+        used = set()
+        for k, parts in features.DESK.items():
+            self.assertTrue(parts, k)
+            self.assertEqual(sorted(set(parts) - set(begleiter.PARTS)), [], k)
+            used |= set(parts)
+        self.assertEqual(sorted(set(begleiter.PARTS) - used), [], "a part of the program without its function in DESK")
+
+    def test_both_programs_know_the_same_parts(self):
+        import begleiter
+        mac = read(need(os.path.join(ROOT, "tools", "begleiter", "mac", "Sources", "Model.swift")))
+        names = re.search(r"static let partNames = \[([^\]]*)\]", mac).group(1)
+        self.assertEqual(re.findall(r'"(\w+)"', names), list(begleiter.PARTS))
+        win = read(ROOT, "tools", "begleiter", "windows", "Hotkey.cs")
+        const = dict(re.findall(r'public const string (\w+) = "(\w+)";', win))
+        order = re.search(r"public static readonly string\[\] All =\s*\{([^}]*)\}", win).group(1)
+        self.assertEqual([const[n] for n in re.findall(r"\w+", order)], list(begleiter.PARTS))
+
+
 class AppTexts(unittest.TestCase):
     """Every German text of the iPhone app has its English one in Localizable.xcstrings."""
     # texts without English on 2026-10-14; this list only gets shorter
