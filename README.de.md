@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.276** Fernzugang: Terminal und Vorschläge springen nicht mehr (die Statuszeile über dem Terminal blieb nach dem Öffnen stehen und verschwand beim nächsten Laden, Hinweise oben schoben das Terminal nach unten); Browser-Test über 20 Sekunden.
 - **V01.1.275** Nach „Regel anlegen“ auf der Karte einer Korrektur entscheidet die neue Mail-Regel: „Postfach aufräumen“ fragt bei diesem Absender nicht mehr
 - **V01.1.274** Falsch einsortierte Mails lernen (Stufen 2–4, eigener Schalter, aus): legst du eine vom Spark sortierte Mail woanders hin oder nach „Falsch sortiert“, wird der Absender Ausnahme der Regel, nach 3 Korrekturen pausiert sie; Korrekturen (30 Tage) mit „Rückgängig“ unter E-Mail → Regeln und am iPhone; das Modell schlägt nur vor, eine Regel entsteht nur per Knopf
 - **V01.1.273** Wissenskarte: Seite und Punkt gleichen Namens sind ein Punkt, Umbenennen nimmt die Seite mit (keine Doppelseite), „Seite umbenennen“ mit Code; feste Typregeln für Verbindungen, Fristen nur mit Datum oder Zahl
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.269** Begleiter: „Offen“ im Reiter Heute mit den offenen Vorgängen und ihren festen Knöpfen, „Finden“ mit Strg+Alt+F (Mac ⌃⌥F) als Titel und Quelle, ein Klick öffnet das Panel
 - **V01.1.268** Begleiter: Sprung-Links von draußen auch zu Listen, Offen, Finden und Dungeon-Master, jede Funktion im Begleiter oder mit Grund draußen, Knöpfe ins Panel in seinen Einstellungen (Meine Daten, Gedächtnis, Fernzugang für Admins)
 - **V01.1.267** Finden Stufe E: Messung mit 50 000 Mails (`sudo speech-spark finden messen`), schnellere Suche, Finden nativ in der iPhone-App, „Original öffnen“ auch im iPhone-Chat und im Begleiter
-- **V01.1.266** „Spark verwalten“ in der iPhone-App: war die App vor dem (neu eingerichteten) zweiten Schritt gekoppelt, sagt sie das und schaltet sich mit „Mit Code bestätigen“ (Code oder Passkey) einmal frei, statt nur „kein Admin“ zu zeigen
 
 
 

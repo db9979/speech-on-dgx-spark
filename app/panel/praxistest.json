@@ -4741,6 +4741,13 @@
 "titel": "Nach „Regel anlegen“ entscheidet die Regel: Postfach aufräumen fragt nicht mehr",
 "text": "A: Wie P700 B bis D: Modell-Einordnung korrigiert, auf der Karte „Regel anlegen“. B: Eine neue Mail desselben Absenders kommen lassen: die Mail-Regel legt sie in den Ordner, „Postfach aufräumen“ stellt keine Frage mehr dazu. Zustand → Logs, Bereich Mail: „mail: rule suggestion taken | card model | 1 settled“ und, wenn Postfach aufräumen sie zuerst sieht, „mail: tidy skip | rule decides | 1“, ohne Absender oder Ordner. C: Die Regel unter E-Mail → Regeln pausieren und eine weitere Mail kommen lassen: Postfach aufräumen fragt wieder.",
 "thread": "Falsch einsortierte Mails lernen lassen"
+},
+{
+"id": "P702",
+"v": 1276,
+"titel": "Fernzugang: Terminal springt nicht",
+"text": "Shell zu einem System öffnen und 2 Minuten ruhig ansehen, dabei ein paar Befehle tippen (etwa screen -ls, dann ls), einmal den Assistenten fragen und von unterwegs über den Proxy verbinden: Terminal und die Zeile Vorschläge bleiben genau an ihrem Platz, keine Zeile geht hoch oder runter, auch nicht, wenn rechts oben „· 12 ms“ wechselt, Vorschläge mit „braucht sudo“ kommen oder nach 15 Sekunden die Liste neu geladen wird. WLAN kurz aus und wieder an: „Verbindung wird wiederhergestellt …“ legt sich über den Kopf des Terminals, das Terminal selbst bleibt stehen.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }

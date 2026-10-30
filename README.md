@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.276** Remote access: terminal and suggestions no longer jump (the status line above the terminal stayed after opening and vanished on the next load, notices at the top pushed the terminal down); a browser test over 20 seconds.
 - **V01.1.275** After "Make the rule" on a correction's card the new mail rule decides: "Inbox tidying" no longer asks about this sender
 - **V01.1.274** Learn from wrongly sorted mail (stages 2–4, own switch, off): put a mail the Spark sorted somewhere else or into "Falsch sortiert" and the sender becomes an exception of the rule, after 3 corrections it pauses; corrections (30 days) with "Undo" under E-mail → Rules and on the iPhone; the model only suggests, a rule only comes from a button
 - **V01.1.273** Knowledge map: a page and a point of the same name are one point, renaming takes the page along (no double page), "Rename page" with code; fixed type rules for connections, deadlines only with a date or number
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.269** Companion: "Offen" in the tab Heute with the open cases and their fixed buttons, "Finden" with Ctrl+Alt+F (Mac ⌃⌥F) as title and source, a click opens the panel
 - **V01.1.268** Companion: Sprung-Links to Lists, Open, Find and Dungeon Master from outside too, every function in the companion or outside with a reason, buttons into the panel in its settings (my data, memory, remote access for admins)
 - **V01.1.267** Find stage E: measurement with 50,000 mails (`sudo speech-spark finden messen`), faster search, Find native in the iPhone app, "Open the original" also in the iPhone chat and the companion
-- **V01.1.266** "Spark verwalten" in the iPhone app: when the app was paired before the (newly set up) second step, it says so and unlocks once with "Confirm with code" (code or passkey), instead of only showing "not an admin"
 
 
 

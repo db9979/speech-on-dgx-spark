@@ -54,13 +54,16 @@ function fzLeeren(){for(const id of ['fzlist','fzdetail','fzjetztlist','fzstatus
   $('fzdetail').hidden=true;$('fzjetzt').hidden=true;FZ.sel='';FZ.auf=false;FZ.code=null;FZ.ordner='';FZ.neuOrdner=false;FZ.ordnerEdit=false;fzMenuZu();
   for(const id of ['fzkoppelnmodal','fzverlaufmodal'])$(id).style.display='none'}
 // the tabs „Systeme | Spontanhilfe“: only on the unlocked page and only while Spontanhilfe is on; true on its tab
-function fzTabs(){const d=FZ.d,h=typeof SH!=='undefined'&&SH.d,busy=!!FZ.ws||!!FZ.weg||!!FZ.fs||!!FZ.fb;
+// something open (a shell, also while it connects or reconnects, its own window, files, a screen): the list, its tabs and
+// the status line above stay away, so nothing above the terminal comes and goes (Dominik 2026-10-30: the shell jumped)
+function fzOffen(){const v=$('fzview');return !!FZ.ws||!!FZ.weg||!!FZ.fs||!!FZ.fb||!!(v&&!v.hidden)}
+function fzTabs(){const d=FZ.d,h=typeof SH!=='undefined'&&SH.d,busy=fzOffen();
   const zeig=!!(d&&d.on&&!d.gesperrt&&!d.notaus&&!busy&&h&&h.on&&!h.gesperrt&&!h.notaus);
   if(!zeig)FZ.tab='systeme';$('fztabs').hidden=!zeig;
   for(const b of $('fztabs').querySelectorAll('button')){const on=b.dataset.tab===FZ.tab;b.classList.toggle('on',on);b.setAttribute('aria-selected',String(on))}
   return FZ.tab!=='systeme'}
 function fzTab(tab){FZ.tab=tab;fzShow();if(window.shShow)shShow();fzSeite()}
-function fzShow(){const d=FZ.d,box=$('fzmain');if(!d||!box)return;const zu=!!(d.on&&d.gesperrt),busy=!!FZ.ws||!!FZ.weg||!!FZ.fs||!!FZ.fb;
+function fzShow(){const d=FZ.d,box=$('fzmain');if(!d||!box)return;const zu=!!(d.on&&d.gesperrt),busy=fzOffen();
   $('fzoff').hidden=!!d.on;$('fznotaus').hidden=!d.notaus;$('fzsperrmin').textContent=d.entsperrt_min||60;
   $('fzgesperrt').hidden=!zu||busy||!!d.notaus;$('fzneu').hidden=!d.on||zu||!!d.notaus;
   $('fzlock').hidden=!d.on||zu||!d.entsperrt_bis;clearTimeout(FZ.st);
@@ -538,7 +541,7 @@ function fzFZu(text){if(window.fgZu)fgZu();FZ.fs=null;FZ.sitz=null;fzBanner();$(
   $('fzallev').onclick=()=>fzVerlaufZeigen('');$('fzsuche').oninput=fzSucheNotiz;for(const b of $('fzsidetabs').querySelectorAll('button'))b.onclick=()=>fzSeiteWahl(b.dataset.w);FZ.os='linux';for(const b of $('fzos').querySelectorAll('button'))b.onclick=()=>fzOsWahl(b.dataset.os);
   for(const id of ['fzkoppelnmodal','fzverlaufmodal']){const m=$(id);m.addEventListener('click',e=>{if(e.target===m)m.style.display='none'});m.addEventListener('keydown',e=>{if(e.key==='Escape')m.style.display='none'})}new MutationObserver(()=>{if(FZ.d)fzChips()}).observe($('fzview'),{attributes:true,attributeFilter:['hidden']})}}
 // ---------------------------------------------------------------- layout A
-function fzZeigen(){$('fzview').hidden=false;$('fzmain').hidden=true;$('fzbox').classList.add('fzoffen');fzMenu();fzLayout();
+function fzZeigen(){$('fzview').hidden=false;$('fzmain').hidden=true;$('fzstatus').hidden=true;$('fzbox').classList.add('fzoffen');fzMenu();fzLayout();
   clearInterval(FZ.lt);FZ.lt=setInterval(fzLayout,1000)}   // notices above the page come and go: the height follows within a second
 function fzVerbergen(){clearInterval(FZ.lt);$('fzbox').classList.remove('fzoffen');fzInfoPop(false);fzBlatt(false);fzMenu();$('fzview').style.removeProperty('--fzh')}
 // the page never scrolls with a terminal open: the view takes what the window has left below it
