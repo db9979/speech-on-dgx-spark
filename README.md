@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.268** The model only suggests: correct a mail the model filed and a card asks "Mails from … always to …?" (Make the rule / Just this mail / Never); for "Falsch sortiert" the model may suggest one of your folders from the domain alone, you decide
 - **V01.1.267** See the corrections: under E-mail → Rules and on the iPhone the corrections of the last 30 days with "Undo", per rule "taken · corrected", exceptions to remove and "On again"
 - **V01.1.266** Learn sorting from corrections (own switch, off): put a mail the Spark sorted somewhere else or into "Falsch sortiert" and the sender becomes an exception of the rule, after 3 corrections it pauses, and a card asks "Change the rule?" or "Where does this mail belong?"
 - **V01.1.264** Mail rules no longer play ping-pong: a mail a rule or the tidying moved and you put back into the inbox stays there; the rules remember what they moved (30 days)
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.260** Redesign stage 2: calm side menu, page head, system font and blue accent from `tokens.css`; no floating face any more, "Ask Spark" as a sign at the top
 - **V01.1.259** Browser tests also find Chromium under `chrome-linux64` (newer Playwright builds)
 - **V01.1.258** Find stage D: tags by the model (own sub-switch, off), checked only by fixed rules and shown as "by the model", removed ones never come back; people, companies and places as points of the knowledge map; one ranking over all lists; Sofort-Karte for a clear hit with a fixed sentence and "Open the original"
-- **V01.1.257** Find stage C: appointments and contacts sealed, past conversations (only date and channel), lists, reminders, pictures and songs in the search index; periods by fixed rules, "from the surgery" through the own calendar; five sub-switches, off by default
 
 
 

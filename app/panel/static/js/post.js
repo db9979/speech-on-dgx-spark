@@ -758,7 +758,7 @@ const POST_FIX_STATE={wartet:['wartet','waiting','due'],ausnahme:['Ausnahme gese
 function postFixHtml(list){if(!list.length)return '';
   return `<div class="ld-list postfix"><div class="ld-grp"><span>${esc(t('Korrekturen (30 Tage)','Corrections (30 days)'))}</span><span>${list.length}</span></div>`+list.map(x=>{const st=POST_FIX_STATE[x.state]||POST_FIX_STATE.bleibt;
     return `<div class="ld-row"><span class="ld-mid"><b>${esc(x.from||'–')}</b><small>${esc(postFixFolder(x.von)+' → '+postFixFolder(x.nach)+' · '+
-      (x.by==='tidy'?t('Postfach aufräumen','Inbox tidying'):x.rule?t('Regel „'+x.rule+'“','Rule "'+x.rule+'"'):t('Regel gelöscht','rule deleted'))+' · '+cxDay(x.t)+(x.box?' · '+x.box:''))}</small></span>`+
+      (x.by==='tidy'?t('Postfach aufräumen','Inbox tidying')+(x.model?t(' (Modell)',' (model)'):''):x.rule?t('Regel „'+x.rule+'“','Rule "'+x.rule+'"'):t('Regel gelöscht','rule deleted'))+' · '+cxDay(x.t)+(x.box?' · '+x.box:''))}</small></span>`+
     `<span class="ld-right"><span class="ld-badge ${st[2]}">${esc(t(st[0],st[1]))}</span>`+
     (x.undo&&x.state!=='wartet'?`<button class="ld-chip" type="button" data-fu="${esc(x.id)}">${esc(t('Rückgängig','Undo'))}</button>`:'')+
     (x.rid?`<button class="ld-chip" type="button" data-fe="${esc(x.rid)}">${esc(t('Regel ändern','Change the rule'))}</button>`:'')+`</span></div>`}).join('')+'</div>'}

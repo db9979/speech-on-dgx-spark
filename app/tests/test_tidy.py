@@ -153,6 +153,41 @@ class Tidy(unittest.TestCase):
             helpers.set_config(mail_manage=False, mail_learn=False)
             mailregeln.forget(uid)
 
+    def test_learning_a_model_sorting_corrected_is_asked_about(self):
+        """Stufe 4 (plan mail-lernen 6a): the model sorted a mail (its log says so), the person put it back: a correction of
+        the model; the next mail of that sender the model would move again is asked about instead (the model never decides
+        on its own for that sender), and nothing goes to the model but what classify sends anyway."""
+        import contextlib
+        import io
+        import mailregeln
+        tidy.classify = lambda h, text: ("werbung", 99)
+        p, aid = self.setup_profile("Modella", mode="auto")
+        uid = p.get("/api/whoami").json()["profile"]["id"]
+        helpers.set_config(mail_manage=True, mail_learn=True)
+        try:
+            FMB.put("INBOX", helpers.box_mail("Laden <lena@laden.example>", "Hallo 1", mid="<ml-1@x>"))
+            r = p.post("/api/profile/tidy/run", json={"aid": aid}).json()
+            self.assertEqual(r["report"]["moved"], 1, r)
+            (x,) = [x for x in tidy.state(uid)["log"] if x["mid"] == "<ml-1@x>"]
+            self.assertEqual((x["folder"], x.get("model")), ("Spark/Werbung", True))
+            FMB.put("INBOX", FMB.boxes["Spark/Werbung"].pop()["raw"])          # the person puts it back
+            FMB.put("INBOX", helpers.box_mail("Laden <lena@laden.example>", "Hallo 2", mid="<ml-2@x>"))
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                r = p.post("/api/profile/tidy/run", json={"aid": aid}).json()
+            self.assertEqual(r["report"]["moved"], 0, r)
+            self.assertIn("mail: tidy model fix | 1 |", out.getvalue())
+            self.assertNotIn("laden", out.getvalue())
+            (f,) = mailregeln.load(uid)["fixes"]
+            self.assertEqual((f["by"], f["how"], f.get("model")), ("tidy", "inbox", True))
+            self.assertIn("Hallo 2", self.inbox_subjects())
+            q = [q for q in p.get("/api/profile/tidy").json()["questions"] if q["sender"] == "lena@laden.example"]
+            self.assertTrue(q and "Hallo 2" in q[0]["subjects"], q)
+            self.assertEqual(mailregeln.load(uid)["rules"], [])               # asked: no rule without the person
+        finally:
+            helpers.set_config(mail_manage=False, mail_learn=False)
+            mailregeln.forget(uid)
+
     def test_preview_moves_nothing_and_brake(self):
         p, aid = self.setup_profile("Pauline", mode="preview")
         FMB.put("INBOX", helpers.box_mail("Shop <news@shop.example>", "Gutschein für dich", headers=PROMO))
@@ -313,14 +348,14 @@ class Tidy(unittest.TestCase):
         self.assertIn("Neue Karte", self.inbox_subjects(tidy._utf7("Spark/Lieferdienste & Co.")))
         self.assertEqual(tidy.parse_class('{"category": "%s", "confidence": 99}' % key), (None, 0))
         # a name that is already a folder takes that folder, nothing is overwritten or doubled
-        FMB.put("INBOX", helpers.box_mail("Laden <info@laden.example>", "Hallo"))
+        FMB.put("INBOX", helpers.box_mail("Laden <lena@laden.example>", "Hallo"))
         p.post("/api/profile/tidy/run", json={"aid": aid})
-        q2 = next(q for q in p.get("/api/profile/tidy").json()["questions"] if q["sender"] == "info@laden.example")
+        q2 = next(q for q in p.get("/api/profile/tidy").json()["questions"] if q["sender"] == "lena@laden.example")
         d = p.post("/api/profile/tidy/answer", json={"id": q2["id"], "new": "werbung", "always": False}).json()
         self.assertEqual(d["report"]["cat"], "werbung")
         self.assertEqual(d["own"], [key])
         self.assertIn("Hallo", self.inbox_subjects("Spark/Werbung"))
-        self.assertFalse(any(x["match"] == "info@laden.example" for x in d["rules"]))   # without "Immer so" no rule
+        self.assertFalse(any(x["match"] == "lena@laden.example" for x in d["rules"]))   # without "Immer so" no rule
         # renamed on the server like the fixed folders; then taken off the list: rules go, folder and mail stay
         r = p.put("/api/profile/tidy", json={"folders": {key: "Essen"}})
         self.assertEqual(r.status_code, 200, r.text)

@@ -636,7 +636,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Post, Kalender, Kontakte
     "post": {
-        "stand": "bd5d056f6b",
+        "stand": "29c3dd7358",
         "bezug": {
             "kalenderserver.login": ["s2", "s10"], "kontaktserver._write": ["s10"], "kontaktserver.MAX_CARDS": ["s10"],
             "mail.MAX_ACCOUNTS": ["s3"], "mail.lookup": ["s1", "s5", "s7"], "calendars.view": ["s1"],
@@ -645,7 +645,7 @@ SEITEN = {
             "frisch.stand": ["s7"], "senden.preview": ["s9"], "senden.send": ["s9"], "senden.MAX_DAY": ["s9"],
             "contacts.save": ["s9"], "senden.later": ["s9"], "einordnen.start": ["s9"], "mailcode.arrived": ["s8"],
             "mailregeln.spark_moved": ["s9"], "tidy.LOG_DAYS": ["s9"], 
-            "mailregeln.FIX_PAUSE": ["s9"],
+            "mailregeln.FIX_PAUSE": ["s9"], "mailregeln.model_hint": ["s9"],
         },
         "kurz": ("Die Seiten E-Mail, Kalender und Kontakte und der Assistent lesen dieselben Daten: Postfächer per IMAP, "
                  "Kalender und Adressbücher per CalDAV und CardDAV beim Anbieter, dazu die Spark-Kalender und das Adressbuch "
@@ -726,7 +726,10 @@ SEITEN = {
                "die Person so eine Mail woandershin, etwa zurück in den Posteingang, fasst kein Sortierer sie wieder an. Mit „Sortieren aus "
                "Korrekturen lernen“ zählt das als Korrektur (mailregeln.correct, auch der Ordner „Falsch sortiert“): der Absender "
                "wird Ausnahme der Regel, nach {mailregeln.FIX_PAUSE} Korrekturen in {mailregeln.FIX_DAYS} Tagen pausiert sie, "
-               "eine Karte fragt; nur Kopfzeilen, nie das Modell. Unter E-Mail → Regeln stehen die Korrekturen (mailregeln.fix_list) "
+               "eine Karte fragt; nur Kopfzeilen, die Entscheidung trifft nie das Modell. Hatte das Modell die Mail einsortiert, fragt "
+               "die Karte „Mails von … immer nach …?“ (eine Regel nur per Knopf), und für „Falsch sortiert“ darf das Modell nur aus "
+               "Domain und Ordnernamen einen vorhandenen Ordner vorschlagen (mailregeln.model_hint, tidy.suggest_folder; jede andere "
+               "Antwort wird verworfen). Unter E-Mail → Regeln stehen die Korrekturen (mailregeln.fix_list) "
                "mit „Rückgängig“ (mailregeln.undo_fix nimmt Ausnahme und Pause zurück, verschiebt nie eine Mail). contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich "
                "inzwischen geändert, wird nichts überschrieben.",
                "A mail goes out only after the preview sheet and the tap on Send (senden.preview, senden.send, at most "
@@ -736,8 +739,10 @@ SEITEN = {
                "with its Message-ID on one list (mailregeln.spark_moved); when the person puts such a mail somewhere else, back "
                "into the inbox for instance, no sorter touches it again. With \"Learn sorting from corrections\" that is a correction "
                "(mailregeln.correct, also the folder \"Falsch sortiert\"): the sender becomes an exception of the rule, after "
-               "{mailregeln.FIX_PAUSE} corrections in {mailregeln.FIX_DAYS} days it pauses, a card asks; headers only, never the "
-               "model. Under E-mail → Rules the corrections are listed (mailregeln.fix_list) with \"Undo\" (mailregeln.undo_fix "
+               "{mailregeln.FIX_PAUSE} corrections in {mailregeln.FIX_DAYS} days it pauses, a card asks; headers only, the model never "
+               "decides. Had the model sorted the mail, the card asks \"Mails from … always to …?\" (a rule only by button), and "
+               "for \"Falsch sortiert\" the model may only suggest a folder there is, from the domain and the folder names "
+               "(mailregeln.model_hint, tidy.suggest_folder; any other answer is dropped). Under E-mail → Rules the corrections are listed (mailregeln.fix_list) with \"Undo\" (mailregeln.undo_fix "
                "takes back exception and pause, never moves a mail). contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is "
                "overwritten."),
               ("ok", ("fertig", "done"), "s11")),
@@ -805,6 +810,7 @@ SEITEN = {
             ("senden.later", ("später senden, versiegelt", "send later, sealed")),
             ("einordnen.start", ("einen Ordner einordnen, erst Vorschlag", "sort a folder, a proposal first")),
             ("mailregeln.spark_moved", ("was der Spark verschoben hat, kein Ping-Pong", "what the Spark moved, no ping-pong")),
+            ("mailregeln.model_hint", ("das Modell schlägt nur einen vorhandenen Ordner vor", "the model only suggests a folder there is")),
             ("mailcode.arrived", ("Bestätigungscode als Mitteilung", "confirmation code as a note")),
             ("contacts.save", ("Karte zurück mit If-Match", "card back with If-Match")),
             ("kalenderserver.login", ("Tür für Kalender- und Kontakte-Apps", "door for calendar and contacts apps")),

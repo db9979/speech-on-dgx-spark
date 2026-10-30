@@ -100,7 +100,7 @@ _lock = threading.Lock()
 _last = {}               # uid -> when its rules last ran
 _sug_day = {}            # uid -> the night its rule suggestions were looked for
 _count = DayCounter(genommen=0, laeufe=0, vorschlaege=0, nacht=0, statistik=0, zurueck=0, korrektur=0, ausnahme=0, pausiert=0,
-                    rueckgaengig=0)
+                    rueckgaengig=0, modellfix=0, modellrat=0)
 # per day: mails taken, looks, rule hints, night suggestions, statistics shown, mails the person put back, corrections,
 # exceptions made by them, rules paused by them, corrections taken back on the tab Regeln
 
@@ -485,17 +485,26 @@ def _srv(box, x):
 
 def found(box, x, sender, nach):
     """One correction for correct(): the entry x of spark_moved, the sender address, where it lies now (a folder, "INBOX",
-    or "" for „Falsch sortiert“)."""
+    or "" for „Falsch sortiert“); "model" when „Postfach aufräumen“ had sorted it by the model (its stage 4, Vorschlag 6a)."""
     return {"mid": x.get("mid", ""), "by": x.get("by", "rule"), "rid": x.get("rid", "") if x.get("by") == "rule" else "",
-            "von": _srv(box, x), "from": str(sender or "").lower()[:200], "nach": nach}
+            "von": _srv(box, x), "from": str(sender or "").lower()[:200], "nach": nach,
+            "model": x.get("by") == "tidy" and bool(x.get("model"))}
 
 
-def correct(uid, aid, fixes, usual=None, now=None):
+def model_folders(box, st):
+    """The folders the model may name for a mail in „Falsch sortiert“ (Vorschlag 6a): the category folders of „Postfach
+    aufräumen“ that are there in this mailbox, in the server's spelling. correct() adds the sender's usual folders."""
+    return [n for n in (box.name(tidy.folder_of(st, c)) for c in tidy.cats(st)) if n in box.boxes]
+
+
+def correct(uid, aid, fixes, usual=None, now=None, folders=()):
     """The person corrected the Spark (fixes from found()). Fixed rules, never the model: one correction per mail (a mail
     in „Falsch sortiert“ put into a folder later gets its goal); FIX_EXCEPT of a sender against a rule → exception;
     FIX_PAUSE of a rule in FIX_DAYS → paused with a card; a goal counts FIX_WEIGHT times in learn → the card
     „Regel-Vorschlag“; „Falsch sortiert“ → the card „Wohin gehört diese Mail?“. usual: {sender: {folder: n}} seen in
-    the night (for the card's folder buttons). Returns {"new": n, "placed": n}."""
+    the night (for the card's folder buttons). Vorschlag 6a: a mail the model had sorted asks „Mails von … immer nach
+    …?“ (Regel anlegen / Nur diese Mail / Nie); in „Falsch sortiert“ the model may name one of `folders` (model_hint,
+    in the background) as the card's first button. Returns {"new": n, "placed": n}."""
     if not fixes or not features.allowed("maillearn", uid):
         return {"new": 0, "placed": 0}
     now = int(now or time.time())
@@ -516,7 +525,7 @@ def correct(uid, aid, fixes, usual=None, now=None):
                 continue
             how = "wrong" if not x["nach"] else "inbox" if x["nach"].upper() == "INBOX" else "folder"
             f = {"id": secrets.token_hex(4), "mid": x["mid"], "aid": aid, "by": x["by"], "rid": x["rid"], "von": x["von"],
-                 "nach": x["nach"], "how": how, "from": x["from"], "t": now}
+                 "nach": x["nach"], "how": how, "from": x["from"], "t": now, **({"model": True} if x.get("model") else {})}
             d["fixes"].append(f)
             have[(aid, x["mid"])] = f
             made.append(f)
@@ -543,6 +552,9 @@ def correct(uid, aid, fixes, usual=None, now=None):
             print(f"mail: rule correction | {how} | {n} | {who}", flush=True)
     if placed:
         print(f"mail: rule correction | placed | {len(placed)} | {who}", flush=True)
+    models = sum(1 for f in made if f.get("model"))
+    if models:      # corrections of what the model sorted: „Postfach aufräumen“ asks for this sender from now on
+        print(f"mail: tidy model fix | {models} | {who}", flush=True)
     if excepted:
         print(f"mail: rule exception | {excepted} | {who}", flush=True)
     for _, n in paused:
@@ -550,6 +562,7 @@ def correct(uid, aid, fixes, usual=None, now=None):
     _count.bump("korrektur", len(made))
     _count.bump("ausnahme", excepted)
     _count.bump("pausiert", len(paused))
+    _count.bump("modellfix", models)
     # the cards (vorgaenge, kind "regel"): the known Regel-Vorschlag for a goal, „Wohin …?“ for „Falsch sortiert“, a pause
     sug, open_ = [], {(x["from"], x["folder"]) for x in load(uid)["suggest"] if x.get("kind") == "fix" and x["account"] == aid}
     for f in [f for f in made + placed if f["nach"] and f["nach"].upper() != "INBOX" and f["from"]]:
@@ -558,13 +571,13 @@ def correct(uid, aid, fixes, usual=None, now=None):
         open_.add((f["from"], f["nach"]))
         if learn(uid, aid, [f["from"]], f["nach"], now, FIX_WEIGHT):
             sug.append({"kind": "fix", "account": aid, "from": f["from"], "folder": f["nach"], "von": f["von"],
-                        "rid": f["rid"], "n": FIX_WEIGHT, "inbox": 0})
+                        "rid": f["rid"], "n": FIX_WEIGHT, "inbox": 0, **({"model": True} if f.get("model") else {})})
     d = load(uid)
     for f in [f for f in made if f["how"] == "wrong" and f["from"]]:
         if _key(aid, f["from"], "") in d["never"] or any(x.get("mid") == f["mid"] for x in d["suggest"]):
             continue
         sug.append({"kind": "wohin", "account": aid, "from": f["from"], "folder": "", "von": f["von"], "rid": f["rid"],
-                    "mid": f["mid"], "inbox": 0, "n": 0,
+                    "mid": f["mid"], "inbox": 0, "n": 0, **({"model": True} if f.get("model") else {}),
                     "ziele": _ziele(d, aid, f["from"], {f["von"], ""}, (usual or {}).get(f["from"]))})
     for rid, n in paused:
         sug.append({"kind": "pause", "account": aid, "from": "", "folder": "", "rid": rid, "n": n, "inbox": 0})
@@ -580,7 +593,59 @@ def correct(uid, aid, fixes, usual=None, now=None):
         for x in sug:
             _card(uid, x, say=x["kind"] != "wohin" or wohin == 1)
         _cards_done(uid, [i for i in gone if i not in {x["id"] for x in d["suggest"]}], "abgelaufen")
+        asked = sum(1 for x in sug if x["kind"] == "fix" and x.get("model"))
+        if asked:
+            print(f"mail: rule card model | asked | {asked} | {who}", flush=True)
+        for x in sug:       # Vorschlag 6a: the model may name a folder there is; the card shows it, the person decides
+            if x["kind"] == "wohin" and x.get("model"):
+                cands = [n for n in dict.fromkeys(list(x["ziele"]) + list(folders)) if n and n not in (x["von"], "INBOX")]
+                if cands:
+                    _spawn(model_hint, uid, x["id"], cands[:tidy.FOLDER_MAX])
     return {"new": len(made), "placed": len(placed)}
+
+
+def _spawn(fn, *args):
+    """model_hint in the background: the page and the night look do not wait for the model."""
+    threading.Thread(target=fn, args=args, daemon=True, name="mail-modellvorschlag").start()
+
+
+def model_hint(uid, sid, folders):
+    """Vorschlag 6a „Das Modell schlägt nur vor“: for the card „Wohin gehört diese Mail?“ of a mail the model had sorted,
+    the model names one of `folders` from the sender's domain alone (tidy.suggest_folder: never the address, the subject
+    or the text). Only a name exactly in the list counts, it becomes the card's first button with „Vorschlag des Modells“;
+    anything else is dropped. Nothing moves and no rule is made here: the person decides by button. The folder or ""."""
+    who = profiles.log_name(profiles.by_id(uid))
+    if not features.allowed("maillearn", uid):
+        print(f"mail: rule card model | off | {who}", flush=True)
+        return ""
+    sug = next((y for y in load(uid)["suggest"] if y["id"] == sid and y.get("kind") == "wohin"), None)
+    if sug is None:
+        print(f"mail: rule card model | gone | {who}", flush=True)
+        return ""
+    try:
+        pick = tidy.suggest_folder(sug["from"].rpartition("@")[2], folders)
+    except Exception as e:
+        print(f"mail: rule card model failed ({type(e).__name__}) | {who}", flush=True)
+        return ""
+    if pick is None:
+        print(f"mail: rule card model | no model | {who}", flush=True)
+        return ""
+    if not pick or pick == sug["von"] or pick not in folders:
+        print(f"mail: rule card model | refused | {who}", flush=True)
+        return ""
+    with _lock:
+        d = load(uid)
+        sug = next((y for y in d["suggest"] if y["id"] == sid and y.get("kind") == "wohin"), None)
+        if sug is None:
+            print(f"mail: rule card model | gone | {who}", flush=True)
+            return ""
+        sug["ziele"] = ([pick] + [z for z in sug.get("ziele") or [] if z != pick])[:WOHIN_MAX]
+        sug["rat"] = pick
+        _save(uid, d)
+    _card(uid, sug, say=False)
+    _count.bump("modellrat")
+    print(f"mail: rule card model | suggested | 1 | {who}", flush=True)
+    return pick
 
 
 def _ziele(d, aid, sender, skip, seen=None):
@@ -619,7 +684,7 @@ def page_moved(uid, box, aid, src, dst, pairs):
         elif sender:
             rest.append(sender)
     if fixes:
-        correct(uid, aid, fixes)
+        correct(uid, aid, fixes, folders=model_folders(box, st))
     return learn(uid, aid, rest, dst) if rest and dst and dst != wrong else None
 
 
@@ -668,7 +733,7 @@ def fix_list(d, names):
         out.append({"id": f.get("id", ""), "from": f.get("from", ""), "von": f.get("von", ""), "nach": f.get("nach", ""),
                     "how": f.get("how", ""), "by": f.get("by", "rule"), "rid": f.get("rid", "") if r else "",
                     "rule": _rule_words(r) if r else "", "t": f["t"], "box": names.get(f.get("aid"), ""),
-                    "state": fix_state(f, r), "undo": not f.get("undone")})
+                    "state": fix_state(f, r), "undo": not f.get("undone"), "model": bool(f.get("model"))})
     return out
 
 
@@ -916,7 +981,7 @@ def suggest(uid, now=None):
     new, looked = [], dict(d["looked"])
     for acct in mail.get(uid)["accounts"]:
         aid = acct["id"]
-        fixes, usual = [], {}
+        fixes, usual, cands = [], {}, []
         try:
             with tidy.Box(acct) as box:
                 wrong = ensure_wrong(uid, box, st) if learn_on else ""
@@ -949,6 +1014,7 @@ def suggest(uid, now=None):
                         n, a = where.get(m, ("", ""))
                         if n and n != von:
                             fixes.append(found(box, all_moved[m], a, "" if n == wrong else n))
+                    cands = model_folders(box, st) if fixes else []
                     for n, by in count.items():
                         for a, k in by.items():
                             usual.setdefault(a, {})[n] = k
@@ -956,7 +1022,7 @@ def suggest(uid, now=None):
             print(f"mail: rule suggestions not looked ({type(e).__name__}) | {who}", flush=True)
             continue
         if fixes:
-            correct(uid, aid, fixes, usual=usual)
+            correct(uid, aid, fixes, usual=usual, folders=cands)
             d = load(uid)
         own = {str(acct.get("user") or "").lower()}
         skip = {(x["from"], x["folder"]) for x in d["suggest"] if x["account"] == aid}
@@ -994,6 +1060,9 @@ CARD = "regel"
 #   "wohin"  a mail in „Falsch sortiert“: the sender's usual folders, „Posteingang“, „Anderer Ordner …“ (the page), „Nur
 #            diese Mail“ (no exception for the sender), „Absender als Ausnahme“, „Nicht mehr fragen“
 #   "pause"  a rule paused after FIX_PAUSE corrections: „Wieder einschalten“, „Regel ansehen …“ (the page)
+# Vorschlag 6a „Das Modell schlägt nur vor“: a "fix" or "wohin" of a mail „Postfach aufräumen“ had sorted by the model
+# carries "model": the "fix" asks „Mails von … immer nach …?“ with „Regel anlegen“ / „Nur diese Mail“ / „Nie“ (a fixed
+# Mail-Regel only on the button); the "wohin" may get the model's folder as its first button ("rat", model_hint).
 WAYS = {"wohin": "E-Mail → Posteingang", "pause": "E-Mail → Regeln"}
 
 
@@ -1006,13 +1075,18 @@ def _card(uid, x, say=True):
     import vorgaenge
     kind = x.get("kind", "")
     daten = {"weg": WAYS[kind]} if kind in WAYS else None
-    if kind == "fix":
+    if kind == "fix" and x.get("model"):
+        titel = f"Regel-Vorschlag: Mails von {x['from']}"
+        zeile = (f"Mails von {x['from']} immer nach „{x['folder']}“? "      # the question first: the line is cut at its end
+                 f"Das Modell hatte sie nach „{x['von']}“ sortiert, du hast sie dorthin gelegt.")
+    elif kind == "fix":
         titel = f"Regel-Vorschlag: Mails von {x['from']}"
         zeile = (f"War in „{x['von']}“, du hast sie nach „{x['folder']}“ gelegt. "
                  + ("Soll die Regel künftig dorthin sortieren?" if x.get("rid") else "Soll das künftig eine Regel machen?"))
     elif kind == "wohin":
         titel = "Wohin gehört diese Mail?"
-        zeile = f"Von {x['from']}, der Spark hatte sie in „{x['von']}“ sortiert; du hast sie nach „Falsch sortiert“ gelegt."
+        zeile = ((f"Vorschlag des Modells: „{x['rat']}“, du entscheidest. " if x.get("rat") else "")
+                 + f"Von {x['from']}, der Spark hatte sie in „{x['von']}“ sortiert; du hast sie nach „Falsch sortiert“ gelegt.")
     elif kind == "pause":
         r = next((y for y in load(uid)["rules"] if y["id"] == x.get("rid")), None)
         titel = f"Regel pausiert: {_rule_words(r) if r else '…'}"
@@ -1051,6 +1125,8 @@ def _card_acts(uid, x):
     if kind and not features.allowed("maillearn", uid):
         return set()
     rule = _rule_of(uid, sug)
+    if kind == "fix" and sug.get("model") and not rule:
+        return {"rg_regel", "rg_nur", "rg_nie"}
     if kind == "fix":
         return ({"rg_aendern", "rg_ausnahme"} if rule else {"rg_regel"}) | {"rg_nie"}
     if kind == "wohin":
@@ -1064,8 +1140,12 @@ def _card_acts(uid, x):
 def _card_names(uid, x):
     """The words of buttons that say what they do on this card (the folder of „Wohin …?“), shown as text."""
     sug = _card_sug(uid, x) or {}
+    if sug.get("kind") == "fix" and sug.get("model") and not sug.get("rid"):
+        return {"rg_nie": ("Nie", "Never")}
     if sug.get("kind") == "wohin":
-        out = {f"rg_w{i + 1}": (f"Nach „{f[:40]}“", f'To "{f[:40]}"') for i, f in enumerate((sug.get("ziele") or [])[:WOHIN_MAX])}
+        out = {f"rg_w{i + 1}": (f"Nach „{f[:40]}“" + (" (Vorschlag des Modells)" if i == 0 and sug.get("rat") == f else ""),
+                                f'To "{f[:40]}"' + (" (the model's suggestion)" if i == 0 and sug.get("rat") == f else ""))
+               for i, f in enumerate((sug.get("ziele") or [])[:WOHIN_MAX])}
         return dict(out, rg_ausnahme=("Absender als Ausnahme", "Sender as exception"), oeffnen=("Anderer Ordner …", "Other folder …"))
     if sug.get("kind") == "pause":
         return {"oeffnen": ("Regel ansehen …", "Show the rule …")}
@@ -1143,6 +1223,12 @@ def _fix_run(uid, sug, name, who):
             print(f"mail: rule hint never | {who}", flush=True)
         _drop(uid, sug["id"], "ausblenden")
         return {"text": "Gut, dazu frage ich nicht mehr."}
+    if name == "rg_regel" and sug["kind"] == "fix":
+        # a fixed Mail-Regel from this sender into that folder, made only by this button (never by the model)
+        add(uid, {"account": aid, "when": {"from": sender}, "then": {"folder": sug["folder"]}})
+        print(f"mail: rule suggestion taken | card{' model' if sug.get('model') else ''} | {who}", flush=True)
+        _drop(uid, sug["id"], "erledigt")
+        return {"text": f"Regel angelegt: Mails von {sender} kommen künftig nach „{sug['folder']}“."}
     if name == "rg_aendern":
         rule = _rule_of(uid, sug)
         if not rule:
@@ -1353,7 +1439,8 @@ def stats(uid, now=None):
 
 def for_live():
     """Live (Post): profiles with rules, rules in all, mails the rules took today, mails put back that a rule leaves
-    alone now, corrections today, exceptions and rules paused by corrections, corrections taken back today; numbers only."""
+    alone now, corrections today, exceptions and rules paused by corrections, corrections taken back today, corrections of
+    the model's sorting and folders the model named on a card today (Vorschlag 6a); numbers only."""
     c = _count.counts()
     profs = rules = exc = paused = 0
     for uid in profiles.user_ids():
@@ -1367,7 +1454,7 @@ def for_live():
             "night": c.get("nacht", 0), "stats": c.get("statistik", 0),
             # Sortieren aus Korrekturen lernen: on, corrections today, exceptions and paused rules in all (numbers only)
             "learn": features.admin_on("maillearn"), "fixes": c.get("korrektur", 0), "excepts": exc, "paused": paused,
-            "undone": c.get("rueckgaengig", 0)}
+            "undone": c.get("rueckgaengig", 0), "modelfix": c.get("modellfix", 0), "modelhint": c.get("modellrat", 0)}
 
 
 _register()

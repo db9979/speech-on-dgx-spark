@@ -3645,7 +3645,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ektur (mailregeln.correct, auch der Ordner „Falsch sortiert“): der Absender wird Ausnahme der Regel, nach 3 Korrekturen in 30 Tagen pausiert sie, eine Karte fragt; nur Kopfzeilen, nie das Modell. Unter E-Mail → Regeln stehen die Korrekturen (mailregeln.fix_list) mit „Rückgängig“ (mailregeln.undo_fix nimmt Ausnahme und Pause zurück, verschiebt nie eine Mail). contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich inzwischen geändert, wird nichts überschrieben. 10. Tür für Apps: kalenderserver.login weist fremde Webseiten ab, sperrt falsche Passwörter wie eine PIN, hält Mein Notaus und den Schalter ein und zählt die Lastgrenze. Danach sieht die App nur die Spark-Kalender und das Adressbuch „Auf dem Spark“ des Profils; kontaktserver._write nimmt je Karte eine vCard, höchstens 2000, und schreibt nur mit „Kontakte ändern“. 11. Nur eigene Daten: Kein Profil sieht die Post, Termine oder Kontakte eines anderen, außer einem Kalender, den der Besitzer teilt."
+"text": "ektur (mailregeln.correct, auch der Ordner „Falsch sortiert“): der Absender wird Ausnahme der Regel, nach 3 Korrekturen in 30 Tagen pausiert sie, eine Karte fragt; nur Kopfzeilen, die Entscheidung trifft nie das Modell. Hatte das Modell die Mail einsortiert, fragt die Karte „Mails von … immer nach …?“ (eine Regel nur per Knopf), und für „Falsch sortiert“ darf das Modell nur aus Domain und Ordnernamen einen vorhandenen Ordner vorschlagen (mailregeln.model_hint, tidy.suggest_folder; jede andere Antwort wird verworfen). Unter E-Mail → Regeln stehen die Korrekturen (mailregeln.fix_list) mit „Rückgängig“ (mailregeln.undo_fix nimmt Ausnahme und Pause zurück, verschiebt nie eine Mail). contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich inzwischen geändert, wird nichts überschrieben. 10. Tür für Apps: kalenderserver.login weist fremde Webseiten ab, sperrt falsche Passwörter wie eine PIN, hält Mein Notaus und den Schalter ein und zählt die Lastgrenze. Danach sieht die App nur die Spark-Kalender und das Adressbuch „Auf dem Spark“ des Profils; kontaktserver._write nimmt je Karte eine vCard, höchstens 2000, und schreibt nur mit „Kontakte ändern“. 11. Nur eigene Daten: Kein Pro"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "fil sieht die Post, Termine oder Kontakte eines anderen, außer einem Kalender, den der Besitzer teilt."
 },
 {
 "lang": "de",
@@ -3685,7 +3693,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/mail.py lookup: Mails mit Stand (Schritt 1, Schritt 5, Schritt 7) - app/panel/calendars.py view: Termine für die Seite (Schritt 1) - app/panel/netguard.py IMAP4_SSL: IMAP nur zu geprüften Adressen (Schritt 4) - app/panel/kalenderspiegel.py objects: Kalender-Kopie holt Änderungen (Schritt 4) - app/panel/mailvorrat.py keep_heads: Vorrat der Kopfzeilen (Schritt 6) - app/panel/vorrat.py seal: versiegelt auf der Platte (Schritt 6) - app/panel/frisch.py stand: Stand mit Tag (Schritt 7) - app/panel/senden.py preview: Vorschau-Blatt (Schritt 9) - app/panel/senden.py send: senden nach dem Tipp (Schritt 9) - app/panel/senden.py later: später senden, versiegelt (Schritt 9) - app/panel/einordnen.py start: einen Ordner einordnen, erst Vorschlag (Schritt 9) - app/panel/mailregeln.py spark_moved: was der Spark verschoben hat, kein Ping-Pong (Schritt 9) - app/panel/mailcode.py arrived: Bestätigungscode als Mitteilung (Schritt 8) - app/panel/contacts.py save: Karte zurück mit If-Match (Schritt 9) - app/panel/kalenderserver.py login: Tür für Kalender- und Kontakte-Apps (Schritt 2, Schritt 10) - app/panel/kontaktserver.py _write: Karte einer Kontakte-App (Schritt 10)"
+"text": "- app/panel/mail.py lookup: Mails mit Stand (Schritt 1, Schritt 5, Schritt 7) - app/panel/calendars.py view: Termine für die Seite (Schritt 1) - app/panel/netguard.py IMAP4_SSL: IMAP nur zu geprüften Adressen (Schritt 4) - app/panel/kalenderspiegel.py objects: Kalender-Kopie holt Änderungen (Schritt 4) - app/panel/mailvorrat.py keep_heads: Vorrat der Kopfzeilen (Schritt 6) - app/panel/vorrat.py seal: versiegelt auf der Platte (Schritt 6) - app/panel/frisch.py stand: Stand mit Tag (Schritt 7) - app/panel/senden.py preview: Vorschau-Blatt (Schritt 9) - app/panel/senden.py send: senden nach dem Tipp (Schritt 9) - app/panel/senden.py later: später senden, versiegelt (Schritt 9) - app/panel/einordnen.py start: einen Ordner einordnen, erst Vorschlag (Schritt 9) - app/panel/mailregeln.py spark_moved: was der Spark verschoben hat, kein Ping-Pong (Schritt 9) - app/panel/mailregeln.py model_hint: das Modell schlägt nur einen vorhandenen Ordner vor (Schritt 9) - app/panel/mailcode.py arrived: Bestätigungscode als Mitteilung (Schritt 8) - app/panel/contacts.py save: Karte zurück mit If-Match (Schritt 9) - app/panel/kalenderserver.py login: Tür für Kalender- und Kontakte-Apps (Schritt 2, Schrit"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": "t 10) - app/panel/kontaktserver.py _write: Karte einer Kontakte-App (Schritt 10)"
 },
 {
 "lang": "de",
@@ -9806,6 +9822,22 @@
 "head": "Sprach-Chat",
 "title": "Korrekturen ansehen (V01.1.267, Plan `mail-lernen/plan.md` Stufe 3, 7a)",
 "text": "en für die nächste Pause nur neue Korrekturen). Beide Endpunkte: Anmeldung, Profilbindung, CSRF, Größenlimit, Rate-Limit postordnen, Schalter Mails ordnen und „Sortieren aus Korrekturen lernen“, Gäste nie; Logzeilen mail: rule correction undone | N |, mail: rule exception removed | 1 | und je Ablehnung eine Zeile, nie Absender oder Ordner. Live zählt „zurückgenommen“ (nur die Zahl). iPhone: dieselbe Liste unter E-Mail → Regeln mit „Rückgängig“, „Regel ändern“, Zählern, Ausnahmen zum Entfernen und „Wieder an“ (Wischen); Android über die Panel-Ansicht."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Das Modell schlägt nur vor (V01.1.268, Plan `mail-lernen/plan.md` Stufe 4, 6a)",
+"text": "Das Modell schlägt nur vor (V01.1.268, Plan mail-lernen/plan.md Stufe 4, 6a): Ohne neuen Schalter, nur mit „Sortieren aus Korrekturen lernen“. „Postfach aufräumen“ vermerkt im Protokoll, wenn das Modell eine Mail einsortiert hat (Stufe 4, model). Korrigiert die Person so eine Einordnung, trägt die Korrektur das Zeichen mit (mailregeln.found/correct, Log mail: tidy model fix | N), und „Postfach aufräumen“ fragt bei diesem Absender 30 Tage lang, statt per Modell zu verschieben (mailregeln.fixed_senders, wirkt schon im selben Lauf). Hat die Korrektur ein Ziel, fragt die bekannte Karte „Regel-Vorschlag“ (Art regel, kind fix mit model): „Mails von <Absender> immer nach „<Ordner>“?“ mit „Regel anlegen“ (eine feste Mail-Regel Absender → Ordner, nur auf diesen Knopf), „Nur diese Mail“ und „Nie“ (Nie-Liste), Log mail: rule card model | asked | N. Liegt so eine Mail in „Falsch sortiert“ (kein klares Ziel), darf das Modell im Hintergrund einen vorhandenen Ordner vorschlagen (mailregeln.model_hint, tidy.suggest_folder über denselben Modellweg wie die Einordnung, tidy._ask, mit Wartungspause und Vorrang): es bekommt nur die Domain des Absenders und die Namen der Ordner (Kategorien von „Postfach"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Das Modell schlägt nur vor (V01.1.268, Plan `mail-lernen/plan.md` Stufe 4, 6a)",
+"text": " aufräumen“, die es im Postfach gibt, und die üblichen Ordner des Absenders, höchstens tidy.FOLDER_MAX = 30), nie Adresse, Betreff oder Text. Seine Antwort zählt nur, wenn sie genau einer dieser Namen ist (tidy.parse_folder), sonst wird sie verworfen (mail: rule card model | refused). Ein gültiger Vorschlag wird der erste Knopf der Karte „Wohin gehört diese Mail?“ mit „(Vorschlag des Modells)“; erst der Tipp der Person legt die Mail ab, und erst danach fragt die Karte nach einer Regel. Das Modell verschiebt nichts und legt nie eine Regel an. Unter E-Mail → Regeln steht bei solchen Korrekturen „Postfach aufräumen (Modell)“. Live: „N davon Modell-Einordnungen, M Ordner vom Modell vorgeschlagen“ (Zahlen). Nebenbei behoben: „Regel anlegen“ auf der Karte einer Korrektur ohne Regel („Postfach aufräumen“) lief ins Leere. Selbsttests test_mail_lernen.ModelOnlySuggests, test_tidy."
 },
 {
 "lang": "de",
@@ -20549,7 +20581,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ys it pauses, a card asks; headers only, never the model. Under E-mail → Rules the corrections are listed (mailregeln.fix_list) with \"Undo\" (mailregeln.undo_fix takes back exception and pause, never moves a mail). contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is overwritten. 10. Door for apps: kalenderserver.login refuses other sites' web pages, locks wrong passwords like a PIN, keeps My emergency stop and the switch and counts the rate limit. Then the app sees only the profile's Spark calendars and the address book \"On the Spark\"; kontaktserver._write takes one vCard per card, at most 2000, and writes only with \"Edit contacts\". 11. Own data only: No profile sees another one's mail, appointments or contacts, except a calendar its owner shares."
+"text": "ys it pauses, a card asks; headers only, the model never decides. Had the model sorted the mail, the card asks \"Mails from … always to …?\" (a rule only by button), and for \"Falsch sortiert\" the model may only suggest a folder there is, from the domain and the folder names (mailregeln.model_hint, tidy.suggest_folder; any other answer is dropped). Under E-mail → Rules the corrections are listed (mailregeln.fix_list) with \"Undo\" (mailregeln.undo_fix takes back exception and pause, never moves a mail). contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is overwritten. 10. Door for apps: kalenderserver.login refuses other sites' web pages, locks wrong passwords like a PIN, keeps My emergency stop and the switch and counts the rate limit. Then the app sees only the profile's Spark calendars and the address book \"On the Spark\"; kontaktserver._write takes one vCard per card, at most 2000, and writes only with \"Edit contacts\". 11. Own data only: No profile sees another one's mail, appointments or contacts, except a calendar its owner shares."
 },
 {
 "lang": "en",
@@ -20589,7 +20621,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/mail.py lookup: mail with its time (step 1, step 5, step 7) - app/panel/calendars.py view: appointments for the page (step 1) - app/panel/netguard.py IMAP4_SSL: IMAP only to checked addresses (step 4) - app/panel/kalenderspiegel.py objects: calendar copy fetches changes (step 4) - app/panel/mailvorrat.py keep_heads: supply of headers (step 6) - app/panel/vorrat.py seal: sealed on the disk (step 6) - app/panel/frisch.py stand: time with its day (step 7) - app/panel/senden.py preview: preview sheet (step 9) - app/panel/senden.py send: send after the tap (step 9) - app/panel/senden.py later: send later, sealed (step 9) - app/panel/einordnen.py start: sort a folder, a proposal first (step 9) - app/panel/mailregeln.py spark_moved: what the Spark moved, no ping-pong (step 9) - app/panel/mailcode.py arrived: confirmation code as a note (step 8) - app/panel/contacts.py save: card back with If-Match (step 9) - app/panel/kalenderserver.py login: door for calendar and contacts apps (step 2, step 10) - app/panel/kontaktserver.py _write: card from a contacts app (step 10)"
+"text": "- app/panel/mail.py lookup: mail with its time (step 1, step 5, step 7) - app/panel/calendars.py view: appointments for the page (step 1) - app/panel/netguard.py IMAP4_SSL: IMAP only to checked addresses (step 4) - app/panel/kalenderspiegel.py objects: calendar copy fetches changes (step 4) - app/panel/mailvorrat.py keep_heads: supply of headers (step 6) - app/panel/vorrat.py seal: sealed on the disk (step 6) - app/panel/frisch.py stand: time with its day (step 7) - app/panel/senden.py preview: preview sheet (step 9) - app/panel/senden.py send: send after the tap (step 9) - app/panel/senden.py later: send later, sealed (step 9) - app/panel/einordnen.py start: sort a folder, a proposal first (step 9) - app/panel/mailregeln.py spark_moved: what the Spark moved, no ping-pong (step 9) - app/panel/mailregeln.py model_hint: the model only suggests a folder there is (step 9) - app/panel/mailcode.py arrived: confirmation code as a note (step 8) - app/panel/contacts.py save: card back with If-Match (step 9) - app/panel/kalenderserver.py login: door for calendar and contacts apps (step 2, step 10) - app/panel/kontaktserver.py _write: card from a contacts app (step 10)"
 },
 {
 "lang": "en",
@@ -26494,6 +26526,22 @@
 "head": "Voice chat",
 "title": "See the corrections (V01.1.267, plan `mail-lernen/plan.md` stage 3, 7a)",
 "text": "ing, CSRF, size limit, rate limit postordnen, the switches Order mail and \"Learn sorting from corrections\", never guests; journal lines mail: rule correction undone | N |, mail: rule exception removed | 1 | and one line per refusal, never sender or folder. Live counts \"taken back\" (the number only). iPhone: the same list under E-mail → Rules with \"Undo\", \"Change the rule\", counters, exceptions to remove and \"On again\" (swipe); Android through the panel view."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "The model only suggests (V01.1.268, plan `mail-lernen/plan.md` stage 4, 6a)",
+"text": "The model only suggests (V01.1.268, plan mail-lernen/plan.md stage 4, 6a): No new switch, only with \"Learn sorting from corrections\". \"Inbox tidying\" notes in its log when the model filed a mail (stage 4, model). When the person corrects such a filing, the correction carries the mark (mailregeln.found/correct, log mail: tidy model fix | N), and \"Inbox tidying\" asks about this sender for 30 days instead of moving by the model (mailregeln.fixed_senders, already in the same run). If the correction has a goal, the known card \"Rule suggestion\" asks (kind regel, kind fix with model): \"Mails from <sender> always to \"<folder>\"?\" with \"Make the rule\" (a fixed mail rule sender → folder, only by this button), \"Just this mail\" and \"Never\" (never list), log mail: rule card model | asked | N. If such a mail lies in \"Falsch sortiert\" (no clear goal), the model may suggest a folder there is in the background (mailregeln.model_hint, tidy.suggest_folder through the same model path as the filing, tidy._ask, with maintenance pause and priority): it gets only the sender's domain and the folder names (the categories of \"Inbox tidying\" that exist in the mailbox and the sender's usual folders, at most tid"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "The model only suggests (V01.1.268, plan `mail-lernen/plan.md` stage 4, 6a)",
+"text": "y.FOLDER_MAX = 30), never the address, subject or text. Its answer counts only if it is exactly one of these names (tidy.parse_folder), else it is dropped (mail: rule card model | refused). A valid suggestion becomes the first button of the card \"Where does this mail belong?\" marked \"(the model's suggestion)\"; only the person's tap files the mail, and only then the card asks for a rule. The model moves nothing and never makes a rule. Under E-mail → Rules such corrections show \"Inbox tidying (model)\". Live: \"N of them filings of the model, M folders suggested by the model\" (numbers). Fixed on the way: \"Make the rule\" on the card of a correction without a rule (\"Inbox tidying\") did nothing. Self-tests test_mail_lernen.ModelOnlySuggests, test_tidy."
 },
 {
 "lang": "en",
