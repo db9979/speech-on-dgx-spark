@@ -14,6 +14,10 @@ final class AdminSession: ObservableObject {
     @Published var version = ""
     /// the profile's role on the Spark: "admin", "manager" or "" (none, or resting without the second step)
     @Published private(set) var role = ""
+    /// why this app is not admin right now, a fixed word from the Spark (coadmin.APP_WHY): "key_older" (paired before
+    /// the profile's second step was set up: one code or passkey here binds the key), "no_mfa", "not_admin", "app_off",
+    /// "notaus"; "" when it is admin or the Spark did not say
+    @Published private(set) var why = ""
     private let session: URLSession = {
         let c = URLSessionConfiguration.ephemeral
         c.httpCookieAcceptPolicy = .never
@@ -33,6 +37,34 @@ final class AdminSession: ObservableObject {
         let by = who["admin_by"] as? String ?? ""
         role = ["admin", "manager"].contains(by) ? by : ""
         signedIn = !role.isEmpty
+        why = signedIn ? "" : (who["admin_why"] as? String ?? "")
+    }
+
+    /// „Mit Code bestätigen“: the app was paired before the profile's second step; a fresh code or passkey binds this
+    /// app's key to the second step as it is now (POST /api/iphone/admin-step, asked every time).
+    func prove(code: String) async throws {
+        _ = try await call("POST", "api/iphone/admin-step", body: [:], code: code)
+        await refresh()
+    }
+
+    static let whyWords: Set<String> = ["key_older", "no_mfa", "app_off", "notaus", "not_admin"]
+
+    /// The text for a reason word of the Spark (the word itself never shows).
+    static func whyText(_ why: String) -> String {
+        switch why {
+        case "key_older":
+            return String(localized: "Dieses iPhone wurde gekoppelt, bevor der zweite Anmeldeschritt deines Profils (neu) eingerichtet wurde. Bestätige einmal mit deinem Code oder Passkey, dann ist die App wieder Admin.")
+        case "no_mfa":
+            return String(localized: "Dein Profil hat gerade keinen zweiten Anmeldeschritt. Einrichten unter Ich → Sicherheit, dann ist die App wieder Admin.")
+        case "app_off":
+            return String(localized: "Die iPhone-App ist für dein Profil gerade gesperrt.")
+        case "notaus":
+            return String(localized: "Dein eigener Notaus hält die Admin-Rechte an, bis er aufgehoben ist.")
+        case "not_admin":
+            return String(localized: "Dein Profil hat keine Admin-Rolle.")
+        default:
+            return String(localized: "Admin-Rechte gibt es nur mit dem zweiten Anmeldeschritt deines Profils (Ich → Sicherheit). Das Panel-Passwort (Notzugang) geht nur im Browser.")
+        }
     }
 
     func call(_ method: String, _ path: String, query: [String: String] = [:], body: [String: Any]? = nil,
@@ -74,6 +106,8 @@ final class AdminSession: ObservableObject {
 struct AdminView: View {
     @ObservedObject private var s = AdminSession.shared
     @State private var unlocked = false
+    @State private var ask: CodeRequest?
+    @State private var error: String?
 
     var body: some View {
         Form {
@@ -84,8 +118,13 @@ struct AdminView: View {
             } else if !s.signedIn {
                 Section {
                     Text("Dein Profil ist gerade kein Admin.")
+                    if s.why == "key_older" {
+                        // the second step proven once in this app binds its key (coadmin.prove_app_key)
+                        Button("Mit Code bestätigen") { ask = CodeRequest { c in await prove(code: c) } }
+                    }
+                    if let error { Text(error).foregroundStyle(.red) }
                 } footer: {
-                    Text(SparkAPI.way(String(localized: "Admin-Rechte gibt es nur mit dem zweiten Anmeldeschritt deines Profils (Ich → Sicherheit). Das Panel-Passwort (Notzugang) geht nur im Browser.")))
+                    Text(SparkAPI.way(AdminSession.whyText(s.why)))
                 }
             } else {
                 Section {
@@ -111,8 +150,19 @@ struct AdminView: View {
             }
         }
         .navigationTitle("Spark verwalten")
+        .codeAlert($ask)
         .task {
             if !unlocked { unlocked = await AdminSession.unlock(String(localized: "Spark verwalten")) }
+            await s.refresh()
+        }
+    }
+
+    private func prove(code: String) async {
+        do { try await s.prove(code: code); error = nil }
+        catch {
+            // a refusal names its reason as a fixed word (409): shown in the app's own words, then the page asks again
+            let msg = error.localizedDescription
+            self.error = AdminSession.whyWords.contains(msg) ? nil : msg
             await s.refresh()
         }
     }

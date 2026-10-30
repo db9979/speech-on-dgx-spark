@@ -18630,6 +18630,66 @@
           }
         }
       }
+    },
+    "Dieses iPhone wurde gekoppelt, bevor der zweite Anmeldeschritt deines Profils (neu) eingerichtet wurde. Bestätige einmal mit deinem Code oder Passkey, dann ist die App wieder Admin.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This iPhone was paired before your profile's second login step was set up (again). Confirm once with your code or passkey, and the app is admin again."
+          }
+        }
+      }
+    },
+    "Dein Profil hat gerade keinen zweiten Anmeldeschritt. Einrichten unter Ich → Sicherheit, dann ist die App wieder Admin.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your profile has no second login step right now. Set it up under Me → Security, and the app is admin again."
+          }
+        }
+      }
+    },
+    "Die iPhone-App ist für dein Profil gerade gesperrt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The iPhone app is blocked for your profile right now."
+          }
+        }
+      }
+    },
+    "Dein eigener Notaus hält die Admin-Rechte an, bis er aufgehoben ist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your own emergency stop holds the admin rights until it is lifted."
+          }
+        }
+      }
+    },
+    "Dein Profil hat keine Admin-Rolle.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your profile has no admin role."
+          }
+        }
+      }
+    },
+    "Mit Code bestätigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm with code"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

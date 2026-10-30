@@ -46,6 +46,7 @@ LIST = {
     ("POST", "/api/admin/notaus/mine/off"): (PROTECT, "Schutz", "Notaus einer Person aufheben", "Lift a person's emergency stop"),
     ("POST", "/api/admin/notaus/keys"): (PROTECT, "Schutz", "Notaus-Schlüssel für Home Assistant", "Emergency stop key for Home Assistant"),
     ("POST", "/api/iphone/update"): (PROTECT, "Schutz", "Spark-Update aus der App", "Spark update from the app"),
+    ("POST", "/api/iphone/admin-step"): (PROTECT, "Schutz", "Spark verwalten in dieser iPhone-App freischalten (App vor dem zweiten Schritt gekoppelt)", "Unlock Spark verwalten in this iPhone app (app paired before the second step)"),
     # ------------------------------------------------------------------ all data in or out
     ("POST", "/api/backups/move"): (PROTECT, "Daten", "Sicherungen umziehen", "Move backups"),
     ("POST", "/api/backups/{name}/ticket"): (PROTECT, "Daten", "Sicherung herunterladen", "Download a backup"),

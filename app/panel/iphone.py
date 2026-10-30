@@ -19,6 +19,7 @@ from fastapi.responses import JSONResponse
 
 import appmerken
 import appupdate
+import coadmin
 import guard
 import kopplung
 import images
@@ -367,8 +368,44 @@ async def app_pair(request: Request):
 
 def _admin_role(uid):
     """The role the app acts with: an admin profile is admin in its own app by its key (coadmin.session)."""
-    import coadmin
     return coadmin.acts(uid)
+
+
+@router.post("/api/iphone/admin-step", dependencies=[Depends(assistant)])
+async def app_admin_step(request: Request, prof=Depends(own_profile)):
+    """„Spark verwalten“ in an app paired before the profile's second step was set up (or set up again): a fresh code
+    or passkey, every time, binds this app's key to the second step as it is now (coadmin.prove_app_key). Never more
+    than the role gives; without a role, without the second step, with the app blocked or the own Notaus nothing
+    changes and the answer is the fixed word (coadmin.APP_WHY)."""
+    uid = prof["id"]
+    dev = profiles._device(profiles._load(), request)
+    if not dev or dev.get("scope") != "app" or dev.get("user") != uid:
+        print("iphone: admin step refused not_app for", profiles.log_name(prof), flush=True)
+        raise HTTPException(403, "only the iPhone app")
+    guard.limit(request, "pair", uid)   # rare like pairing: binding the key is part of it
+    if int(request.headers.get("content-length") or 0) > MAX_BODY:
+        print("iphone: admin step refused too_large for", profiles.log_name(prof), flush=True)
+        raise HTTPException(413, "too large")
+    why = coadmin.app_why(uid, dev)
+    if why != "key_older":
+        print("iphone: admin step", why or "already", "for", profiles.log_name(prof), flush=True)
+        if why:
+            raise HTTPException(409, why)
+        return {"ok": True, "role": coadmin.acts(uid), "why": ""}
+    try:
+        await confirm_code(request, uid, prof["name"], fresh=True)   # never the confirmation window: it gives rights
+    except HTTPException as e:
+        print("iphone: admin step", "code_asked" if e.detail == "code required" else "code_refused", "for",
+              profiles.log_name(prof), flush=True)
+        raise
+    coadmin.prove_app_key(uid, dev)
+    why = coadmin.app_why(uid, profiles._device(profiles._load(), request) or {})
+    print("iphone: admin step", "ok" if not why else "failed " + why, "for", profiles.log_name(prof), flush=True)
+    if why:
+        raise HTTPException(409, why)
+    import account
+    account.admin_signed_in(request, uid, prof["name"])   # protocol and a note to the admin profiles, as a browser login
+    return {"ok": True, "role": coadmin.acts(uid), "why": ""}
 
 
 @router.get("/api/iphone/hello", dependencies=[Depends(assistant)])
@@ -377,6 +414,7 @@ def app_hello(prof=Depends(own_profile), request: Request = None):
     import pruefzugang
     pruefzugang.tidy()   # an expired review access loses its iPhones (this very key at the next request)
     s = profiles.settings(prof["id"])
+    role = _admin_role(prof["id"])
     import apns
     import proactive
     return {"profile": prof["name"], "version": app_version(), "language": _language(),
@@ -394,7 +432,10 @@ def app_hello(prof=Depends(own_profile), request: Request = None):
             # CarPlay: the smart home only with its own switch
             "car_ha": bool(s.get("app_car_ha")),
             # "Spark verwalten" with the profile's own role (coadmin.py): "admin", "manager" or "" (none, or its second step off)
-            "admin_role": _admin_role(prof["id"]),
+            "admin_role": role,
+            # why this app is not admin although the profile has the role (coadmin.APP_WHY; "" when it is admin):
+            # „Spark verwalten“ then says it and offers „Mit Code bestätigen“ for an app paired before the second step
+            "admin_why": coadmin.app_why(prof["id"], profiles._device(profiles._load(), request) or {}) if role else "",
             # documents from the app into "Meine Dokumente"
             "docs": features.allowed("documents", prof["id"]),
             # Apple Reminders: Spark reminders and list entries may be written into the iPhone's Reminders

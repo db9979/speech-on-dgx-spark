@@ -103,7 +103,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - Für folgende Dinge braucht es eine Browser-Anmeldung und einen frischen Code (`browser_profile` + `confirm_code`), nie den Geräteschlüssel: Geheimnisse, Adressen, die ein Token bekommen, Codewort, Push-Ziele und Mail-Konten. (C)
   - Einzige Ausnahme: der iPhone-App-Schlüssel mit dem Bereichsschalter (`secret_profile`).
 - „Frisch“ heißt: richtiger Code derselben Anmeldung in den letzten 10 Minuten.
-  - Wirklich jedes Mal gefragt wird bei `*_fresh` bzw. `fresh=True`. Das sind Passwort, zweiter Schritt, Rollen und Haupt-Admin, Sicherungen, Codewort und Spark-Update aus der App.
+  - Wirklich jedes Mal gefragt wird bei `*_fresh` bzw. `fresh=True`. Das sind Passwort, zweiter Schritt, Rollen und Haupt-Admin, Sicherungen, Codewort, Spark-Update aus der App und „Spark verwalten“ in einer App freischalten, die vor dem zweiten Schritt gekoppelt wurde.
   - Admins (Panel-Passwort oder Profil mit Rolle, angemeldet mit dem zweiten Schritt) fragt die Stufe „Bestätigen“ nie, nur „Schutz ändern“ (`core.admin_login`). Admin-Rechte kommen nur aus einer Anmeldung mit zweitem Schritt, nie aus PIN oder Übergabe. Neue Admin-Endpunkte nehmen `core.auth`, eine zweite Admin-Stufe gibt es nicht. Was nur das Panel-Passwort lesen darf (`core.main_auth`), fragen die Seiten erst nach `elevated()` ab, sonst sieht ein Admin-Profil 403 in der Konsole (`test_coadmin`).
   - Ein Passkey zählt wie ein Code. Code-Abfragen laufen deshalb immer über `confirm_code`, nie über ein eigenes `mfa.verify`.
   - (C; 🧪 test_stufen, test_zweiter_schritt, test_passkey)

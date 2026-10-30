@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.266** "Spark verwalten" in the iPhone app: when the app was paired before the (newly set up) second step, it says so and unlocks once with "Confirm with code" (code or passkey), instead of only showing "not an admin"
 - **V01.1.265** Mail rules no longer play ping-pong: a mail a rule or the tidying moved and you put back into the inbox stays there; the rules remember what they moved (30 days)
 - **V01.1.264** Redesign stage 3: line icons instead of emoji, one source `icons.js`
 - **V01.1.263** Map helps the search (knowledge map step 3 of 4, own switch, off): when a question names a person, company or deadline of the map, the document search also finds its passages and those of its neighbours; it only adds to the hits, below the answer it says "via the knowledge map"
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.259** Browser tests also find Chromium under `chrome-linux64` (newer Playwright builds)
 - **V01.1.258** Find stage D: tags by the model (own sub-switch, off), checked only by fixed rules and shown as "by the model", removed ones never come back; people, companies and places as points of the knowledge map; one ranking over all lists; Sofort-Karte for a clear hit with a fixed sentence and "Open the original"
 - **V01.1.257** Find stage C: appointments and contacts sealed, past conversations (only date and channel), lists, reminders, pictures and songs in the search index; periods by fixed rules, "from the surgery" through the own calendar; five sub-switches, off by default
-- **V01.1.256** Find stage B: every mail and attachment in the search index (inbox, archive, sent, never spam or trash), the newest first, older ones in quiet minutes and at night in slices, only sealed (AES-GCM, words as HMAC marks), attachment text and fields by fixed rules, a hit opens the mail; sub-switch "Find mail and attachments", off by default
 
 
 

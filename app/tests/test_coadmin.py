@@ -295,6 +295,71 @@ class CoAdmin(unittest.TestCase):
         finally:
             helpers.set_config(iphone=False)
 
+    def test_app_paired_before_the_second_step_proves_it_once(self):
+        """Dominik 2026-10-30: an admin profile's app paired before its second step was set up (or set up again) is not
+        admin; it says why with a fixed word, and a fresh code in the app binds the key to the step as it is now.
+        A new setup ends that again; without a role, with the step off or without a code nothing is given."""
+        import io
+        import contextlib
+        import time
+        helpers.set_config(iphone=True)
+        iphone._pending.clear()
+        real_status = mfa.status
+        self.addCleanup(setattr, mfa, "status", real_status)
+        since = {}
+        mfa.status = lambda who: {"on": who in self.mfa_on, "codes_left": 0, "since": since.get(who)}
+        try:
+            c, uid = self.give("KoAlma")
+            for k in [k for k in guard._rate if k[0] == "pair"]:
+                guard._rate.pop(k, None)
+            key = pair(c).json()["token"]
+            a = TestClient(panel.app)
+            a.headers[profiles.DEVICE_HEADER] = key
+            self.assertEqual(a.get("/api/admin/profiles").status_code, 200)     # paired after the step: admin
+            since[uid] = int(time.time()) + 100                                 # the step set up again after pairing
+            self.gen[uid] = 1
+            self.assertEqual(a.get("/api/admin/profiles").status_code, 401)
+            hello = a.get("/api/iphone/hello").json()
+            self.assertEqual((hello["admin_role"], hello["admin_why"]), ("admin", "key_older"))
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                who = a.get("/api/whoami").json()
+            self.assertEqual((who["admin"], who["admin_why"]), (False, "key_older"))
+            self.assertIn("coadmin: app not admin key_older", out.getvalue())
+            self.assertNotIn("KoAlma", out.getvalue())
+            # no code, a wrong code: nothing given, every outcome in the journal
+            with contextlib.redirect_stdout(out):
+                self.assertEqual(a.post("/api/iphone/admin-step", json={}).status_code, 428)
+                self.assertEqual(a.post("/api/iphone/admin-step", json={}, headers={"X-Speech-Code": "000000"}).status_code, 428)
+            self.assertIn("iphone: admin step code_asked", out.getvalue())
+            self.assertIn("iphone: admin step code_refused", out.getvalue())
+            self.assertEqual(a.get("/api/admin/profiles").status_code, 401)
+            # the code once: admin again in this app, a browser-like protocol line
+            with contextlib.redirect_stdout(out):
+                r = a.post("/api/iphone/admin-step", json={}, headers=CODE)
+            self.assertEqual(r.status_code, 200, r.text)
+            self.assertEqual(r.json()["role"], "admin")
+            self.assertIn("iphone: admin step ok", out.getvalue())
+            self.assertEqual(a.get("/api/admin/profiles").status_code, 200)
+            self.assertEqual(a.get("/api/whoami").json()["admin_why"], "")
+            self.assertEqual(a.get("/api/iphone/hello").json()["admin_why"], "")
+            # a new setup of the second step ends the binding; the step off says no_mfa and gives nothing
+            self.gen[uid] = 2
+            self.assertEqual(a.get("/api/admin/profiles").status_code, 401)
+            self.mfa_on.discard(uid)
+            self.assertEqual(a.post("/api/iphone/admin-step", json={}, headers=CODE).status_code, 409)
+            self.mfa_on.add(uid)
+            # without a role: the code changes nothing
+            _, other = self.give("KoAlmo")       # so KoAlma is not the last admin
+            coadmin.set_role(uid, "")
+            r = a.post("/api/iphone/admin-step", json={}, headers=CODE)
+            self.assertEqual((r.status_code, r.json().get("detail")), (409, "not_admin"))
+            self.assertEqual(a.get("/api/iphone/hello").json()["admin_why"], "")
+            # other device keys and browsers never reach it
+            self.assertEqual(c.post("/api/iphone/admin-step", json={}, headers=CODE).status_code, 403)
+        finally:
+            helpers.set_config(iphone=False)
+
     def test_admin_log_shows_the_newest(self):
         """The protocol comes newest first; the page keeps the first lines, so a fresh sign-in is never cut off."""
         c, uid = self.give("KoNele")

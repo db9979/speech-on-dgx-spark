@@ -4629,6 +4629,13 @@
 "titel": "Mail-Regeln: zurückgelegte Mail bleibt im Posteingang (kein Ping-Pong)",
 "text": "Eine Mail-Regel unter E-Mail → Regeln (Absender → Ordner) anlegen und eine passende Mail schicken: sie landet im Ordner. In Apple Mail (oder auf der Seite E-Mail) dieselbe Mail zurück in den Posteingang ziehen und 10 Minuten warten: sie bleibt im Posteingang, auch nach „auch die vorhandenen“ an der Regel; mit „Postfach aufräumen“ an wird sie auch dort nicht verschoben. Zustand → Logs, Bereich Mail: „mail: rule skip | user_moved | 1“ ohne Absender oder Ordner; Zustand → Live, Post: „heute 1 zurückgelegte Mails nicht wieder einsortiert“.",
 "thread": "Falsch einsortierte Mails lernen lassen"
+},
+{
+"id": "P686",
+"v": 1266,
+"titel": "Spark verwalten: App vor dem zweiten Schritt gekoppelt, einmal mit Code bestätigen",
+"text": "Mit einem Admin-Profil, dessen iPhone-App vor dem (neu eingerichteten) zweiten Schritt gekoppelt wurde: in der App „Spark verwalten“ öffnen, nach Face ID steht „Dein Profil ist gerade kein Admin.“ mit dem Grund „gekoppelt, bevor der zweite Anmeldeschritt … eingerichtet wurde“ und dem Knopf „Mit Code bestätigen“. Ein falscher Code ändert nichts; mit dem richtigen Code (oder Passkey) erscheinen Überblick, Logs und Ändern. Unter Logs → Diagnose (Bereich Apps) stehen „iphone: admin step …“-Zeilen ohne Namen, im Admin-Protokoll „Anmeldung eines Admin-Profils“. Danach den zweiten Schritt im Browser neu einrichten: die App ist wieder kein Admin und fragt erneut.",
+"thread": "Fix Spark verwalten in der iPhone-App"
 }
 ]
 }

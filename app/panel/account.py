@@ -153,6 +153,8 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
     own = prof and not request.headers.get(profiles.DEVICE_HEADER) and coadmin.role(prof["id"])
     return {"admin": bool(main or elev), "admin_by": "main" if main else elev["role"] if elev else "",
             "admin_name": elev["name"] if elev else "",
+            # the own iPhone app with a role that is not admin right now: why, as a fixed word (coadmin.APP_WHY)
+            "admin_why": "" if (main or elev) else coadmin.why_not(request),
             # the profile's own role: Ich → Sicherheit says what it may, or why its rights rest right now
             "admin_role": {"role": own, "mfa": mfa.enabled(prof["id"]), "acts": bool(elev),
                            "main": prof["id"] == coadmin.main_uid()} if own else None,
@@ -373,7 +375,7 @@ async def admin_role_set(uid: str, request: Request):
     return coadmin.listing()
 
 
-def _admin_signed_in(request, uid, name):
+def admin_signed_in(request, uid, name):
     """A profile with a role signed in with its second step: log line and a note to the admin profiles."""
     r = coadmin.acts(uid)
     if not r:
@@ -426,7 +428,7 @@ async def profile_login(request: Request):
     if mfa.enabled(uid):
         profiles.mark_second_step(value, mfa.mark(uid))
     _trust(r, body, uid, request)
-    _admin_signed_in(request, uid, next((u["name"] for u in profiles.names() if u["id"] == uid), name.strip()))
+    admin_signed_in(request, uid, next((u["name"] for u in profiles.names() if u["id"] == uid), name.strip()))
     vorwaermen.ask(uid)   # signed in: read its calendars and mail ahead (vorwaermen.py)
     return r
 

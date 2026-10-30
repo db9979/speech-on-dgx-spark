@@ -396,12 +396,12 @@ SEITEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "2676dc187b",
+        "stand": "660c18e050",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
             "account.profile_login": ["s3", "s5"], "account.second_step": ["s4"], "core.is_main_admin": ["s6"],
-            "profiles._cookie_user": ["s6"], "features.reason": ["s11"], "regeln": ["s6", "s7"],
+            "profiles._cookie_user": ["s6"], "coadmin.app_why": ["s6"], "features.reason": ["s11"], "regeln": ["s6", "s7"],
             "regel:Gast": ["s8", "s10"],
         },
         "kurz": ("Hier entscheidet das Panel, wer eine Anfrage stellt und was diese Person darf: Anmeldung mit "
@@ -476,9 +476,14 @@ SEITEN = {
               ("profiles.current", "profiles.current"),
               ("Zuerst, was nur das Panel selbst setzt (Telegram, „Spark fragen“ über MCP), dann der Geräteschlüssel "
                "(nur sein Hash ist gespeichert), dann das Cookie: Signatur, Alter, Sitzung noch in der Liste und nicht "
-               "abgemeldet.",
+               "abgemeldet. Der Schlüssel der eigenen iPhone-App zählt für eine Admin-Rolle nur, wenn er nach dem "
+               "zweiten Schritt angelegt oder einmal mit Code oder Passkey in der App an ihn gebunden wurde; sonst "
+               "nennt das Panel den Grund als festes Wort (key_older, no_mfa, not_admin, app_off, notaus).",
                "First what only the panel itself sets (Telegram, „Ask Spark“ over MCP), then the device key (only its "
-               "hash is stored), then the cookie: signature, age, session still in the list and not logged out.")),
+               "hash is stored), then the cookie: signature, age, session still in the list and not logged out. The "
+               "own iPhone app's key counts for an admin role only when it was made after the second step or bound "
+               "to it once with a code or passkey in the app; otherwise the panel names the reason as a fixed word "
+               "(key_older, no_mfa, not_admin, app_off, notaus).")),
             S("s7", "frage", ("Schlüssel für diesen Weg frei?", "Key free for this path?"),
               ("Bereich des Schlüssels", "the key's scope"),
               ("Ein Schlüssel mit Bereich (App, Uhr, Raum, Home Assistant, Schreibhilfe, Begleiter, Terminal) reicht nur für "
@@ -550,7 +555,10 @@ SEITEN = {
             [("Admin", "Admin"), ("Passwort-Cookie oder HTTP Basic", "password cookie or HTTP Basic"),
              ("Admin-Seiten; HTTP Basic nur ohne zweiten Schritt", "admin pages; HTTP Basic only without a second step")],
             [("Profil mit Admin-Rolle", "Profile with an admin role"),
-             ("Cookie mit Zeichen des zweiten Schritts oder App-Schlüssel von danach", "cookie with the second step's mark or an app key made after it"),
+             ("Cookie mit Zeichen des zweiten Schritts; App-Schlüssel von danach oder einmal mit Code in der App bestätigt "
+              "(sonst ein festes Wort als Grund)",
+              "cookie with the second step's mark; an app key made after it or confirmed once with a code in the app "
+              "(otherwise a fixed word as the reason)"),
              ("Admin-Seiten seiner Rolle; nur „Schutz ändern“ fragt den Code", "the admin pages of its role; only „change protection“ asks for the code")],
             [("Geräteschlüssel ohne Bereich", "Device key without scope"), ("Hash des Schlüssels", "hash of the key"),
              ("Assistent des Profils, keine Verbindungen oder Sicherheit ändern", "the profile's assistant, no changes to connections or security")],
@@ -608,6 +616,7 @@ SEITEN = {
             ("account.profile_login", ("Anmeldung eines Profils", "a profile's login")),
             ("account.second_step", ("Code oder Passkey", "code or passkey")),
             ("core.is_main_admin", ("Admin per Cookie oder HTTP Basic", "admin by cookie or HTTP Basic")),
+            ("coadmin.app_why", ("warum die eigene iPhone-App gerade kein Admin ist", "why the own iPhone app is not admin right now")),
             ("profiles.current", ("das Profil hinter einer Anfrage", "the profile behind a request")),
             ("profiles._cookie_user", ("Cookie prüfen", "check a cookie")),
             ("core.assistant", ("Profil, Gastzugang oder Admin", "profile, guest access or admin")),

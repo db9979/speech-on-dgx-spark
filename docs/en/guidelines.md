@@ -103,7 +103,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - The following things need a browser login and a fresh code (`browser_profile` + `confirm_code`), never the device key: secrets, addresses that receive a token, code word, push targets and mail accounts. (C)
   - Only exception: the iPhone app key with the scope switch (`secret_profile`).
 - "Fresh" means: correct code of the same login within the last 10 minutes.
-  - Really asked every time with `*_fresh` or `fresh=True`. These are password, second step, roles and main admin, backups, code word and Spark update from the app.
+  - Really asked every time with `*_fresh` or `fresh=True`. These are password, second step, roles and main admin, backups, code word, Spark update from the app and unlocking "Spark verwalten" in an app paired before the second step.
   - Admins (panel password or a profile with a role, signed in with the second step) are never asked at the "confirm" level, only at "change protection" (`core.admin_login`). Admin rights only come from a login with the second step, never from a PIN or handoff. New admin endpoints use `core.auth`; there is no second admin stage. What only the panel password may read (`core.main_auth`) the pages fetch only after `elevated()`, else an admin profile sees 403 in the console (`test_coadmin`).
   - A passkey counts like a code. Code prompts therefore always run via `confirm_code`, never via a separate `mfa.verify`.
   - (C; 🧪 test_stufen, test_zweiter_schritt, test_passkey)

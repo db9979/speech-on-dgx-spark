@@ -516,6 +516,21 @@ def add_device(name, uid, scope=None):
         return token  # shown once; only its hash is stored
 
 
+def set_device_step(did, uid, mark):
+    """The iPhone app key `did` of `uid` was confirmed with the profile's second step (code or passkey in the app):
+    remember that step's fingerprint (mfa.mark), as mark_second_step does for a browser login (coadmin.key_proved)."""
+    if not mark:
+        return False
+    with _lock:
+        d = _load()
+        for x in d["devices"]:
+            if x["id"] == did and x.get("user") == uid and x.get("scope") == "app":
+                x["step"] = mark
+                _write(_path("profiles.json"), d)
+                return True
+        return False
+
+
 def set_device_user(did, uid):
     with _lock:
         d = _load()
@@ -524,6 +539,7 @@ def set_device_user(did, uid):
         for x in d["devices"]:
             if x["id"] == did:
                 x["user"] = uid
+                x.pop("step", None)   # another profile's second step never carries over (set_device_step)
                 _write(_path("profiles.json"), d)
                 return True
         return False
@@ -771,6 +787,8 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
              "/api/tasks/inbox", "/api/profile/tasks/einkauf", "/api/profile/tasks/aufgaben",
              # Spark updates (appupdate.py): rights only from the admin, starting needs a fresh code
              "/api/iphone/update",
+             # „Spark verwalten“ in an app paired before the second step: a fresh code binds the key (coadmin.prove_app_key)
+             "/api/iphone/admin-step",
              # chats (chats.py): the list, a chat's messages, writing, reacting, groups, the event stream
              "/api/chats", "/api/chats/items", "/api/chats/open", "/api/chats/group", "/api/chats/send", "/api/chats/edit",
              "/api/chats/back", "/api/chats/react", "/api/chats/read", "/api/chats/typing", "/api/chats/opts",
