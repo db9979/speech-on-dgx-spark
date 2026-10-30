@@ -4615,6 +4615,13 @@
 "titel": "Fernzugang: Leitung gemessen und Hinweis bei langsamer Verbindung",
 "text": "Eine Shell öffnen. A: Nach einigen Sekunden steht in der roten Leiste „· N ms“; das ⓘ zeigt unter „Verbindung“ Laufzeit und KB/s. B: Im Terminal eine große Datei ausgeben (cat einer großen Log-Datei): das Panel bleibt bedienbar (andere Seiten laden normal), Strg+C hält die Ausgabe an. C: Von unterwegs über den Proxy der Synology dasselbe: nach etwa 10 Sekunden einmal der Hinweis „Langsame Verbindung (etwa … KB/s)“ mit dem direkten https-Zugang; über den direkten https-Zugang kommt er nicht. D: Eine Weile nichts tippen: die Messung zählt nicht als Tastendruck, der Leerlauf trennt wie eingestellt.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P684",
+"v": 1263,
+"titel": "Karte hilft der Suche",
+"text": "Voraussetzung: Wissenskarte mit Personen, Firmen und Fristen hat Punkte. A: Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte → Personen, Firmen und Fristen → Karte hilft der Suche an (ab Werk aus). B: Im Gespräch nach einer Firma fragen, die in mehreren Dokumenten steht („Was gibt es zur Hausverwaltung …?“): unter der Antwort steht bei einer Quelle „über die Wissenskarte“. C: Zustand → Logs, Bereich Wissen: „wissen: kartensuche | n von m stellen über die karte“, kein Name. D: Zustand → Live, Kasten Wissenskarte: „Suche über die Karte an: n Suchen, m Stellen“, nur Zahlen. E: Ich → Dokumente → Suchprüfung → Jetzt prüfen: ein Balken „Mit Wissenskarte“ neben „Gemischt“, nicht schlechter. F: Schalter aus: kein „über die Wissenskarte“ mehr, keine Zeile kartensuche.",
+"thread": "Wissenskarte Stufe 2 statt Neo4j"
 }
 ]
 }

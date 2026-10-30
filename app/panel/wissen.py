@@ -245,15 +245,20 @@ async def search(uid, query, k=5, tags=None, art=None, semantic=True, keep=True,
     (lokal.py's quick look before the answer does not wait for the meaning model). The one place both
     document_search and "Erst lokal suchen" rank in, so "Neueste zuerst" (fresh_on) works for both.
     keep=False: the meaning model is used only if it runs anyway and is not held awake by it. With "Treffer
-    nachsortieren" (nachsortieren.py, Stufe 3) the mix hands over its 30 best and the cross-encoder picks k."""
+    nachsortieren" (nachsortieren.py, Stufe 3) the mix hands over its 30 best and the cross-encoder picks k.
+    With "Karte hilft der Suche" (wissenskarte.liste, plan wissensgraph Stufe 3) the profile's own search mixes in the
+    map's list as a third one (never for the documents others offer: the map is the profile's own); a hit it named
+    carries "karte"."""
     import nachsortieren
+    import wissenskarte
     rerank = features.allowed("nachsortieren", uid)
+    karte = wissenskarte.suche_allowed(uid)
     want, k = k, (nachsortieren.CANDIDATES if rerank else k)
     qvec = await docembed.query(query, keep) if semantic and on(uid, "semantic") and query.strip() else None
     narrow = bool(tags or art)
     fresh = features.allowed("rmfresh", uid)
     own = documents.match_docs(uid, tags, art) if narrow else None
-    hits = await asyncio.to_thread(documents.search, uid, query, k, qvec, False, own, fresh)
+    hits = await asyncio.to_thread(documents.search, uid, query, k, qvec, False, own, fresh, None, karte)
     for o in _sharers(uid):
         owner, offer = _owner_name(o), _offer(uid, o)
         keep = documents.match_docs(o, tags, art, shared_only=offer) if narrow else None
@@ -262,6 +267,9 @@ async def search(uid, query, k=5, tags=None, art=None, semantic=True, keep=True,
     hits = sorted(hits, key=lambda h: -h.get("score", 0))[:k]
     if rerank:
         hits, _ = await nachsortieren.rank(query, hits, want, keep, trace)
+    if karte:
+        print(f"wissen: kartensuche | {sum(1 for h in hits[:want] if h.get('karte'))} von {len(hits[:want])} stellen "
+              f"über die karte", flush=True)
     return hits[:want]
 
 

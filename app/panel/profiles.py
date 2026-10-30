@@ -1303,7 +1303,8 @@ def _att(a):
                 out.append({"k": "src", "q": str(x.get("q", ""))[:200], "l": items})
         elif k == "doc" and isinstance(x.get("l"), list):
             items = [{"n": str(i.get("n", ""))[:120], "id": str(i.get("id", ""))[:40] if re.fullmatch(r"[\w\-]{0,40}", str(i.get("id", ""))) else "",
-                      "p": i.get("p") if isinstance(i.get("p"), int) and 0 < i.get("p") < 100000 else 0}
+                      "p": i.get("p") if isinstance(i.get("p"), int) and 0 < i.get("p") < 100000 else 0,
+                      **({"w": 1} if i.get("w") is True or i.get("w") == 1 else {})}     # w: found over the Wissenskarte
                      for i in x["l"][:6] if isinstance(i, dict) and i.get("n")]
             if items:
                 out.append({"k": "doc", "l": items})

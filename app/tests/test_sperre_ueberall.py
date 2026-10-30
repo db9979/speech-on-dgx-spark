@@ -490,6 +490,7 @@ ADMIN_ON_OK = {
     "fund.py:tags_on": "Spark switch for the model's background tags and Live; per profile features.allowed(\"fundschlagworte\", uid)",
     "wissenskarte.py:admin_on": "Spark switch for the background step, Live and the admin page; per profile wissenskarte.allowed",
     "wissenskarte.py:ents_on": "Spark switch for the background step of the points and Live; per profile wissenskarte.ents_allowed",
+    "wissenskarte.py:suche_on": "Live only (Karte hilft der Suche: on or off); per profile wissenskarte.suche_allowed",
     "tasks.py:admin_on": "Spark switch; per profile features.allowed tasks, endpoints add features.blocked",
     "telegram.py:admin_on": "Spark-wide bot; per profile features.allowed / features.blocked",
     "tidy.py:admin_on": "Spark switch; per profile features.allowed tidy",

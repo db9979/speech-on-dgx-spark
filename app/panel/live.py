@@ -1264,6 +1264,14 @@ def _dungeon_musik(m):
             + (f", heute {m['nervt']}× Nervt" if m.get("nervt") else ""))
 
 
+def _kartensuche(s):
+    """Karte hilft der Suche (wissenskarte.liste): on, searches it helped and pieces it named, failures (numbers only)."""
+    if not s.get("on"):
+        return ""
+    return (f" · Suche über die Karte an: {s.get('suchen', 0)} Suchen, {s.get('stellen', 0)} Stellen"
+            + (f", {s['fehler']} Fehler" if s.get("fehler") else ""))
+
+
 def snapshot(view="admin", now=None):
     now = now or time.time()
     with _lock:
@@ -2275,6 +2283,7 @@ def snapshot(view="admin", now=None):
                         + f" · {wkk.get('profile', 0)} Profile"
                         + (f" · {sum(kn.values())} Knoten" + (f" ({kinds})" if kinds else "")
                            + f" · {wkk.get('knoten_warten', 0)} Dokumente warten auf Knoten" if kn else "")
+                        + _kartensuche(wkk.get("suche") or {})
                         + (" · arbeitet" if wkk.get("running") else ""))
         if x["id"] == "modell" and mr.get("on"):   # Modell-Rechner: reachable, units active, version (no address)
             x["sub"] = (("nicht erreichbar" + (" · Notbetrieb" if mr.get("notbetrieb") else "")) if not mr.get("ok") else

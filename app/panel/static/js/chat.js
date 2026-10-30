@@ -587,7 +587,7 @@ function openConvo(id,picked){const c=id&&convos.load().find(x=>x.id===id);chat.
 // reload show it again (profiles._att checks it on the Spark). live: right after the answer, where the card itself shows.
 function attOf(searches,sources,docs,drefs,mkcards,blcards){const a=[];
   if(sources.length)a.push({k:'src',q:searches.join(' · ').slice(0,200),l:sources.slice(0,5).map(x=>({t:String(x.title||'').slice(0,100),u:String(x.url||'').slice(0,500)}))});
-  if(docs.length)a.push({k:'doc',l:(drefs.length?drefs.slice(0,6):docs.slice(0,6).map(n=>({name:n}))).map(r=>({n:String(r.name||'').slice(0,120),id:r.id?String(r.id).slice(0,40):'',p:r.page||0}))});
+  if(docs.length)a.push({k:'doc',l:(drefs.length?drefs.slice(0,6):docs.slice(0,6).map(n=>({name:n}))).map(r=>({n:String(r.name||'').slice(0,120),id:r.id?String(r.id).slice(0,40):'',p:r.page||0,...(r.karte?{w:1}:{})}))});
   for(const c of mkcards.slice(0,3))a.push({k:'mk',t:String(c.title||'').slice(0,120),n:String(c.kind_name||'').slice(0,40)});
   for(const c of (blcards||[]).slice(0,3))a.push({k:c.type==='musik'?'musik':'bild',p:String(c.type==='musik'?c.caption||'':c.prompt||'').slice(0,300),j:String(c.job||'').slice(0,12)});
   return a}
@@ -599,7 +599,7 @@ function attRender(el,att,live,via){
       d.innerHTML=`<span>${t('Gesucht','Searched')}: ${esc(a.q||'')}</span>`+a.l.filter(x=>/^https?:\/\//.test(x.u||'')).map((x,i)=>`<a href="${esc(x.u)}" target="_blank" rel="noopener noreferrer">${i+1}. ${esc(String(x.t||'').slice(0,70))}</a>`).join('');el.appendChild(d)}
     // the sources: a kept original opens as a download, otherwise Ich → Dokumente
     else if(a.k==='doc'&&a.l&&a.l.length){const d=document.createElement('div');d.className='mem';
-      d.innerHTML=esc(t('Aus deinen Dokumenten: ','From your documents: '))+a.l.map(r=>`<button type="button" class="mlink" data-docopen="${esc(r.id||'')}">${esc(r.n+(r.p?' · '+t('S. ','p. ')+r.p:''))}</button>`).join(' · ');
+      d.innerHTML=esc(t('Aus deinen Dokumenten: ','From your documents: '))+a.l.map(r=>`<button type="button" class="mlink" data-docopen="${esc(r.id||'')}">${esc(r.n+(r.p?' · '+t('S. ','p. ')+r.p:'')+(r.w?' · '+t('über die Wissenskarte','via the knowledge map'):''))}</button>`).join(' · ');
       // Suchprüfung (suchpruefung.js): wrong passage? the question and the first document go into a test question
       if(typeof sprCan==='function'&&sprCan()){const ask=el.closest('.msg')?.previousElementSibling;
         d.insertAdjacentHTML('beforeend',` · <button type="button" class="mlink" data-sprfix>${esc(t('Richtige Stelle angeben','Name the right place'))}</button>`);

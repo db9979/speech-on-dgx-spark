@@ -2221,7 +2221,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "le und in ihrer Kontextzeile (Titel, Art, Überschriften), die nur mit 0.4 zählt. Die besten 30 bekommen einen Rang. 6. Bedeutung dazumischen: Hat die Frage einen Vektor, werden die Vektoren aller Stellen verglichen. Unter 0,75 Ähnlichkeit gilt nichts als verwandt; die besten 30 darüber bekommen ebenfalls einen Rang. Beide Ränge werden addiert, so steigt eine Stelle, die in beiden Listen weit oben steht. Die Vektoren liegen als float16 im Speicher (halb so viel wie float32); gerechnet wird blockweise je 4096 Stellen in float32, die Rangfolge bleibt gleich. Neu gelesen werden sie nur, wenn sich Stellen oder genutzte Dokumente ändern; solange noch Vektoren fehlen, höchstens alle 30 Sekunden. 7. Neueste zuerst?: Mit „Neueste zuerst“ bekommt eine kürzlich geänderte Stelle einen kleinen Vorsprung, etwa zwei Plätze, der mit dem Alter kleiner wird. Die Passung bleibt wichtiger; jeder Treffer trägt dann sein Datum. 8. Geteilte Dokumente der anderen: Mit „Gemeinsame Dokumente“ läuft dieselbe Suche in den Dateien der anderen Profile, aber nur über Dokumente, die dort „Für alle“ sind oder mit „Teilen mit Profilen“ einzeln mit diesem Profil geteilt (documents.Offer). Ist der Haushaltsordner für"
+"text": "le und in ihrer Kontextzeile (Titel, Art, Überschriften), die nur mit 0.4 zählt. Die besten 30 bekommen einen Rang. 6. Bedeutung dazumischen: Hat die Frage einen Vektor, werden die Vektoren aller Stellen verglichen. Unter 0,75 Ähnlichkeit gilt nichts als verwandt; die besten 30 darüber bekommen ebenfalls einen Rang. Beide Ränge werden addiert, so steigt eine Stelle, die in beiden Listen weit oben steht. Die Vektoren liegen als float16 im Speicher (halb so viel wie float32); gerechnet wird blockweise je 4096 Stellen in float32, die Rangfolge bleibt gleich. Neu gelesen werden sie nur, wenn sich Stellen oder genutzte Dokumente ändern; solange noch Vektoren fehlen, höchstens alle 30 Sekunden. Mit „Karte hilft der Suche“ kommt eine dritte Liste aus der Wissenskarte dazu (wissenskarte.liste): nennen die Suchwörter einen Punkt (Person, Firma, Ort …), zählen seine Stellen und die seiner Nachbarn, höchstens 50, mit dem Gewicht 0.5; eine Stelle nur aus der Karte steht so hinter jeder, die Wörter oder Bedeutung fanden. Nur für die eigenen Dokumente. 7. Neueste zuerst?: Mit „Neueste zuerst“ bekommt eine kürzlich geänderte Stelle einen kleinen Vorsprung, etwa zwei Plätze, der mit dem Alter klei"
 },
 {
 "lang": "de",
@@ -2229,7 +2229,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " das Profil frei, läuft sie auch im Bestand des Haushalts (users/haushalt/). Die Treffer tragen den Namen des Besitzers oder „Haushalt“; alles wird nach Rang sortiert. 9. Treffer nachsortieren an?: Ohne Nachsortieren gehen die ersten fünf der Mischung weiter. Mit Nachsortieren reicht die Mischung ihre besten 30 weiter. 10. Cross-Encoder ordnet: Ein kleines Modell auf dem Prozessor liest Frage und Stelle zusammen und gibt jeder eine Zahl. Stellen unter -4.0 beantworten die Frage nicht und fallen weg, die besten fünf bleiben. Schläft das Modell, ist es belegt, zu langsam oder kaputt, bleibt die Reihenfolge der Mischung; die Antwort wartet nie länger als eingestellt. 11. „Was habe ich zuletzt notiert?“: Fragt die Person mit eigenen Worten nach dem, was sie zuletzt, heute oder diese Woche notiert hat, kommen die zuletzt geänderten Seiten zuerst. Ist in der Zeit nichts geändert, sagt das Werkzeug das, statt zu raten. 12. Keine Stelle gefunden?: Eine Stelle geht nur weiter, wenn sie mindestens 0.6 der Suchwörter enthält (Füllwörter wie „Informationen“ oder „Archiv“ zählen nicht); eine Händlerliste mit nur „Dresden“ ist keine Antwort zur Frauenkirche. Fällt so alles weg, sagt ein fester S"
+"text": "ner wird. Die Passung bleibt wichtiger; jeder Treffer trägt dann sein Datum. 8. Geteilte Dokumente der anderen: Mit „Gemeinsame Dokumente“ läuft dieselbe Suche in den Dateien der anderen Profile, aber nur über Dokumente, die dort „Für alle“ sind oder mit „Teilen mit Profilen“ einzeln mit diesem Profil geteilt (documents.Offer). Ist der Haushaltsordner für das Profil frei, läuft sie auch im Bestand des Haushalts (users/haushalt/). Die Treffer tragen den Namen des Besitzers oder „Haushalt“; alles wird nach Rang sortiert. 9. Treffer nachsortieren an?: Ohne Nachsortieren gehen die ersten fünf der Mischung weiter. Mit Nachsortieren reicht die Mischung ihre besten 30 weiter. 10. Cross-Encoder ordnet: Ein kleines Modell auf dem Prozessor liest Frage und Stelle zusammen und gibt jeder eine Zahl. Stellen unter -4.0 beantworten die Frage nicht und fallen weg, die besten fünf bleiben. Schläft das Modell, ist es belegt, zu langsam oder kaputt, bleibt die Reihenfolge der Mischung; die Antwort wartet nie länger als eingestellt. 11. „Was habe ich zuletzt notiert?“: Fragt die Person mit eigenen Worten nach dem, was sie zuletzt, heute oder diese Woche notiert hat, kommen die zuletzt geänderten Seit"
 },
 {
 "lang": "de",
@@ -2237,7 +2237,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "atz: nichts Passendes, sag das und such im Archiv oder im Web, wenn angeboten. Findet die Suche nichts, waren aber Tags oder Art genannt, bekommt das Modell die Steckbrief-Zeilen der passenden Dokumente. Sonst heißt es: nichts gefunden, sag das, rate nicht. 13. Stellen mit Herkunft ans Modell: Jede Stelle geht mit Dokument, Seite und Abschnitt ans Modell. Ab jetzt gilt die Antwort als eine, die Text von außen gelesen hat: Schalten, Merken und Erinnerungen sind in ihr gesperrt. Das Gerät zeigt die Quellen."
+"text": "en zuerst. Ist in der Zeit nichts geändert, sagt das Werkzeug das, statt zu raten. 12. Keine Stelle gefunden?: Eine Stelle geht nur weiter, wenn sie mindestens 0.6 der Suchwörter enthält (Füllwörter wie „Informationen“ oder „Archiv“ zählen nicht); eine Händlerliste mit nur „Dresden“ ist keine Antwort zur Frauenkirche. Fällt so alles weg, sagt ein fester Satz: nichts Passendes, sag das und such im Archiv oder im Web, wenn angeboten. Findet die Suche nichts, waren aber Tags oder Art genannt, bekommt das Modell die Steckbrief-Zeilen der passenden Dokumente. Sonst heißt es: nichts gefunden, sag das, rate nicht. 13. Stellen mit Herkunft ans Modell: Jede Stelle geht mit Dokument, Seite und Abschnitt ans Modell. Ab jetzt gilt die Antwort als eine, die Text von außen gelesen hat: Schalten, Merken und Erinnerungen sind in ihr gesperrt. Das Gerät zeigt die Quellen."
 },
 {
 "lang": "de",
@@ -2285,7 +2285,23 @@
 "file": "Architektur und Datenfluss",
 "head": "Personen, Firmen und Fristen",
 "title": "Personen, Firmen und Fristen",
-"text": "- Ist der Schalter unter der Wissenskarte an, schlägt das Sprachmodell nach den Verbindungen je Stelle eines Dokuments nur JSON vor: Personen, Firmen, Orte, Verträge, Konten und Fristen mit Art und Nummer der Stelle. Das Panel behält einen Namen nur nach festen Regeln (wissenskarte.check_ent): die Art aus der festen Liste, der Name steht in der Stelle (klein, ohne Akzente, Leerzeichen zusammengezogen), 2 bis 80 Zeichen ohne Link, Auszeichnung oder Befehl, eine Frist nur mit Datum in der Stelle, ein Konto nur als IBAN oder Nummer; höchstens 40 je Dokument und 5000 je Profil. Verbindungen dieser Punkte prüft dieselbe Regel wie die der Seiten. - Jeder Punkt hat eine feste Nummer (wk_ent) und seine Stellen (wk_ment: Dokument und Stück). Andere Teile lesen nur: wissenskarte.finde_knoten (genau über Name und andere Namen) und wissenskarte.knoten_liste (nach Namen sortiert). Zusammenführen (wissenskarte.zusammen), Umbenennen und Löschen geschehen nur per Klick der Besitzerin oder des Besitzers mit dem Code von „Bestätigen“, nie durch das Modell; jede Änderung meldet wissenskarte.GEAENDERT. Geht ein Dokument, gehen seine Stellen sofort mit, ein Punkt ohne Stelle verschwindet."
+"text": "- Ist der Schalter unter der Wissenskarte an, schlägt das Sprachmodell nach den Verbindungen je Stelle eines Dokuments nur JSON vor: Personen, Firmen, Orte, Verträge, Konten und Fristen mit Art und Nummer der Stelle. Das Panel behält einen Namen nur nach festen Regeln (wissenskarte.check_ent): die Art aus der festen Liste, der Name steht in der Stelle (klein, ohne Akzente, Leerzeichen zusammengezogen), 2 bis 80 Zeichen ohne Link, Auszeichnung oder Befehl, eine Frist nur mit Datum in der Stelle, ein Konto nur als IBAN oder Nummer; höchstens 40 je Dokument und 5000 je Profil. Verbindungen dieser Punkte prüft dieselbe Regel wie die der Seiten. - Jeder Punkt hat eine feste Nummer (wk_ent) und seine Stellen (wk_ment: Dokument und Stück). Andere Teile lesen nur: wissenskarte.finde_knoten (genau über Name und andere Namen) und wissenskarte.knoten_liste (nach Namen sortiert) und wissenskarte.knoten_von_dok (die Punkte eines Dokuments nach Art und Name, höchstens 200). Zusammenführen (wissenskarte.zusammen), Umbenennen und Löschen geschehen nur per Klick der Besitzerin oder des Besitzers mit dem Code von „Bestätigen“, nie durch das Modell; jede Änderung meldet wissenskarte.GEAENDERT. Geht e"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Personen, Firmen und Fristen",
+"title": "Personen, Firmen und Fristen",
+"text": "in Dokument, gehen seine Stellen sofort mit, ein Punkt ohne Stelle verschwindet."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Karte hilft der Suche",
+"title": "Karte hilft der Suche",
+"text": "- wissenskarte.liste(uid, worte, k) gibt Stück-Ids mit Rang ab 1 zurück, nur lesend (SQLite mit mode=ro) und nur für das eigene Profil. Feste Regeln, nie das Modell: Die Suchwörter treffen einen Punkt, wenn sein Name oder ein anderer Name ganz in der Frage steht (verglichen wie wissenskarte.ent_norm) oder ein Wort des Namens ab 4 Buchstaben, das keine Zahl und keine Rechtsform ist (wissenskarte.trifft); höchstens 20 Punkte. Dazu kommen ihre Nachbarn einen Schritt weit (dieselbe Abfrage wie wissenskarte.rund_um) und von allen die Stellen in genutzten, gelesenen Dokumenten. Eine Stelle mit einem genannten Punkt steht vor einer mit nur Nachbarn, mehr Punkte vor weniger, höchstens 50. - documents.search mischt die Liste wie die anderen mit 60 plus Platz, gewichtet mit 0.5, und nur Stellen, die dieselbe Bedingung der Suche durchlässt (documents._karte). Ein so gefundener Treffer trägt „karte“, unter der Antwort steht „über die Wissenskarte“. Die Suchprüfung misst die Mischung mit der Karte als eigenen Balken. Fällt die Karte aus, sucht die Suche ohne sie weiter und schreibt eine Zeile „wissen: kartensuche fehler“."
 },
 {
 "lang": "de",
@@ -2333,7 +2349,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "n (Schritt 6) - 200 Dokumente am Tag für die Wissenskarte (Standard) (Schritt 13) - 40 Personen, Firmen, Orte, Verträge, Konten und Fristen, die ein Dokument bringen darf (Schritt 13) - 5000 solche Punkte pro Profil (Schritt 13) - 80 Zeichen, die der Name eines solchen Punktes höchstens hat (Schritt 13) - 200 Dokumente am Tag für diese Punkte (Standard) (Schritt 13)"
+"text": "n (Schritt 6) - 200 Dokumente am Tag für die Wissenskarte (Standard) (Schritt 13) - 40 Personen, Firmen, Orte, Verträge, Konten und Fristen, die ein Dokument bringen darf (Schritt 13) - 5000 solche Punkte pro Profil (Schritt 13) - 80 Zeichen, die der Name eines solchen Punktes höchstens hat (Schritt 13) - 200 Dokumente am Tag für diese Punkte (Standard) (Schritt 13) - 50 Stellen, die die Karte der Suche höchstens nennt (Schritt 6) - 20 Punkte, die die Suchwörter höchstens treffen (Schritt 6) - 0.5 Gewicht der Liste aus der Karte (Schritt 6)"
 },
 {
 "lang": "de",
@@ -2341,7 +2357,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "- Funktionen → Eigene Dokumente und darunter Bedeutungssuche an: Stellen bekommen einen Bedeutungsvektor (Standard aus). - Funktionen → Eigene Dokumente und darunter Treffer nachsortieren an: dazu Modellgröße und wie lange höchstens gewartet wird. - Funktionen → Eigene Dokumente und darunter Steckbrief und Tags an: Suche nach Tags und Art. - Funktionen → Eigene Dokumente und darunter Gemeinsame Dokumente an: Dokumente „Für alle“. - Funktionen → Eigene Dokumente und darunter Wissensbuch an: Seiten aus den eigenen Dokumenten, dazu wie viele Dokumente am Tag. - Funktionen → Eigene Dokumente → Wissensbuch und darunter Wissenskarte an: Verbindungen zwischen den Seiten, zu sehen im Menü Wissensbuch auf der Seite Karte, dazu wie viele Dokumente am Tag (eigene Grenze). - Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte und darunter Personen, Firmen und Fristen an: eigene Punkte aus den Dokumenten auf der Karte, dazu wie viele Dokumente am Tag (eigene Grenze)."
+"text": "- Funktionen → Eigene Dokumente und darunter Bedeutungssuche an: Stellen bekommen einen Bedeutungsvektor (Standard aus). - Funktionen → Eigene Dokumente und darunter Treffer nachsortieren an: dazu Modellgröße und wie lange höchstens gewartet wird. - Funktionen → Eigene Dokumente und darunter Steckbrief und Tags an: Suche nach Tags und Art. - Funktionen → Eigene Dokumente und darunter Gemeinsame Dokumente an: Dokumente „Für alle“. - Funktionen → Eigene Dokumente und darunter Wissensbuch an: Seiten aus den eigenen Dokumenten, dazu wie viele Dokumente am Tag. - Funktionen → Eigene Dokumente → Wissensbuch und darunter Wissenskarte an: Verbindungen zwischen den Seiten, zu sehen im Menü Wissensbuch auf der Seite Karte, dazu wie viele Dokumente am Tag (eigene Grenze). - Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte und darunter Personen, Firmen und Fristen an: eigene Punkte aus den Dokumenten auf der Karte, dazu wie viele Dokumente am Tag (eigene Grenze). - Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte → Personen, Firmen und Fristen und darunter Karte hilft der Suche an: die Karte als dritte Trefferliste der Dokumentsuche (Standard aus)."
 },
 {
 "lang": "de",
@@ -2365,7 +2381,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "tück einer Stelle mit den Suchwörtern (Schritt 5) - app/panel/pdftabellen.py read: Tabellen in PDFs zeilenweise lesen (Schritt 5) - app/panel/documents.py _rows: lange Tabellen nur zwischen Zeilen teilen (Schritt 5) - app/panel/documents.py due_tables: PDFs von vorher neu lesen, wenn sie Tabellen haben (Schritt 5) - app/panel/wissensbuch.py answer_block: passende Seiten des Wissensbuchs mit Quellen (Schritt 13) - app/panel/wissenskarte.py check_edge: feste Regeln für jede vorgeschlagene Verbindung (Schritt 13) - app/panel/wissenskarte.py view: der sichtbare Teil der Karte (Schritt 13) - app/panel/wissenskarte.py rund_um: Seiten um eine Seite, WITH RECURSIVE (Schritt 13) - app/panel/wissenskarte.py weg: kürzester Weg zwischen zwei Seiten (Schritt 13) - app/panel/wissenskarte.py check_ent: feste Regeln für jede Person, Firma, Frist … (Schritt 13) - app/panel/wissenskarte.py finde_knoten: Punkte genau über Name und andere Namen, nur lesend (Schritt 13) - app/panel/wissenskarte.py knoten_liste: Punkte einer Art nach Namen, nur lesend (Schritt 13) - app/panel/wissenskarte.py zusammen: zwei Punkte zusammenführen, nur per Klick (Schritt 13) - app/panel/wissensbuch.py search_pages: passend"
+"text": "tück einer Stelle mit den Suchwörtern (Schritt 5) - app/panel/pdftabellen.py read: Tabellen in PDFs zeilenweise lesen (Schritt 5) - app/panel/documents.py _rows: lange Tabellen nur zwischen Zeilen teilen (Schritt 5) - app/panel/documents.py due_tables: PDFs von vorher neu lesen, wenn sie Tabellen haben (Schritt 5) - app/panel/wissensbuch.py answer_block: passende Seiten des Wissensbuchs mit Quellen (Schritt 13) - app/panel/wissenskarte.py check_edge: feste Regeln für jede vorgeschlagene Verbindung (Schritt 13) - app/panel/wissenskarte.py view: der sichtbare Teil der Karte (Schritt 13) - app/panel/wissenskarte.py rund_um: Seiten um eine Seite, WITH RECURSIVE (Schritt 13) - app/panel/wissenskarte.py weg: kürzester Weg zwischen zwei Seiten (Schritt 13) - app/panel/wissenskarte.py check_ent: feste Regeln für jede Person, Firma, Frist … (Schritt 13) - app/panel/wissenskarte.py finde_knoten: Punkte genau über Name und andere Namen, nur lesend (Schritt 13) - app/panel/wissenskarte.py knoten_liste: Punkte einer Art nach Namen, nur lesend (Schritt 13) - app/panel/wissenskarte.py knoten_von_dok: Punkte eines Dokuments nach Art und Name, nur lesend (Schritt 13) - app/panel/wissenskarte.py zus"
 },
 {
 "lang": "de",
@@ -2373,7 +2389,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "e Seiten über den Suchindex wb_fts (Schritt 13) - app/panel/wissensbuch.py _fts_sync: Suchindex der Seiten nachziehen (Schritt 13) - app/panel/wissensbuch.py liste: Seiten-Ids mit Rang für andere Teile, nur lesend (Schritt 13) - app/panel/documents.py _similar: Ähnlichkeit blockweise in float32 (Schritt 6) - app/panel/gedaechtnis.py hint_lines: Fakten in drei Blöcken (Schritt 13) - app/panel/profiles.py _cap: Obergrenze: nur alte gelernte Fakten machen Platz (Schritt 13) - app/panel/gedaechtnis.py slot_of: fester Themen-Platz eines Fakts nach festen Mustern (Schritt 13) - app/panel/gemerkt.py take_back: Rückgängig nur bei unverändertem Fakt (Schritt 13)"
+"text": "ammen: zwei Punkte zusammenführen, nur per Klick (Schritt 13) - app/panel/wissensbuch.py search_pages: passende Seiten über den Suchindex wb_fts (Schritt 13) - app/panel/wissensbuch.py _fts_sync: Suchindex der Seiten nachziehen (Schritt 13) - app/panel/wissensbuch.py liste: Seiten-Ids mit Rang für andere Teile, nur lesend (Schritt 13) - app/panel/wissenskarte.py liste: Stück-Ids aus der Karte für die Suche, nur lesend (Schritt 6) - app/panel/wissenskarte.py trifft: trifft ein Suchwort einen Punkt? feste Regel (Schritt 6) - app/panel/documents.py _karte: die Liste der Karte in die Mischung, mit den Filtern der Suche (Schritt 6) - app/panel/documents.py _similar: Ähnlichkeit blockweise in float32 (Schritt 6) - app/panel/gedaechtnis.py hint_lines: Fakten in drei Blöcken (Schritt 13) - app/panel/profiles.py _cap: Obergrenze: nur alte gelernte Fakten machen Platz (Schritt 13) - app/panel/gedaechtnis.py slot_of: fester Themen-Platz eines Fakts nach festen Mustern (Schritt 13) - app/panel/gemerkt.py take_back: Rückgängig nur bei unverändertem Fakt (Schritt 13)"
 },
 {
 "lang": "de",
@@ -2381,7 +2397,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_wissen, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten"
+"text": "Selbsttests: test_wissen, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche"
 },
 {
 "lang": "de",
@@ -5214,6 +5230,30 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": " und das Modell antwortet. Erst lokal: lokal.SOURCES[\"fund\"] schaut im kurzen Blick in die klaren Quellen ohne eigenen Index dort (Wissensbuch, Listen, Erinnerungen, Bilder, Lieder; nie Mails, Termine, Kontakte). Logs fund: schlagworte modell | 3 ok | 1 verworfen | … | nicht_im_text=1, fund: schlagworte modell fehler | ValueError | …, fund: knoten zusammen | 2 schlagworte | …, fund: knoten verknuepft | 4 schlagworte | …, fund: sofort | 1 treffer klar vorn | … (nie ein Wort); Live *Finden*: „Schlagworte heute N Einträge, M übernommen, K verworfen, L offen“, „Sofort-Karten heute N“. Selbsttests tests/test_fund_schlagworte.py (gehorsames Modell, feste Uhrzeit, Browser-Test)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Karte hilft der Suche (V01.1.263, Plan *wissensgraph* Stufe 3, Schritt 3 von 4, Dominik 2026-10-29 „Empfehlung umsetzen“): Admin-Schalter *Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte → Personen, Firmen und Fristen → Karte hilft der Suche* (chat.knowledge_search, ab Werk aus, Kind von wissensknoten; kein Profilschalter, der Admin sperrt einzelne Profile, Gäste nie). Die Wissenskarte liefert der Dokumentsuche eine dritte Trefferliste neben Wörtern und Bedeutung: wissenskarte.liste(uid, worte, k) gibt [(Stück-Id, Rang ab 1)] zurück, höchstens KARTE_MOST (50), nur lesend (SQLite mode=ro) und nur für das eigene Profil; ohne Freigabe eine leere Liste. Diese Zusage gilt auch für den Thread „Alles schnell finden über einen Index“. Feste Regeln, nie das Modell: (1) die Suchwörter treffen Punkte über Name und andere Namen (wissenskarte.trifft): ganz, wie ent_norm vergleicht (klein, ohne Akzente, Leerzeichen zusammengezogen, ein Konto auch ohne Leerzeichen), oder mit einem Wort des Namens ab 4 Buchstaben, das keine Zahl und keine Rechtsform ist (KARTE_ALLGEMEIN: GmbH, AG, KG …), wobei das Wort der Frage bis zu zwei Buchstaben länger sein darf („Stadtwerken“); höchstens KARTE_KN"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "OTEN (20) Punkte; (2) dazu ihre Nachbarn einen Schritt weit über Verbindungen, die zählen (dieselbe Abfrage wie rund_um); (3) deren Fundstellen aus wk_ment, nur in genutzten, gelesenen eigenen Dokumenten; (4) eine Stelle mit einem genannten Punkt steht vor einer mit nur Nachbarn, mehr Punkte vor weniger, dann die kleinere Stück-Id. documents.search(..., karte=True) mischt die Liste wie die anderen mit 60 plus Platz, gewichtet mit documents.KARTE_WEIGHT (0,5), und nur Stellen, die dieselbe Bedingung der Suche durchlässt (genutzt, eingegrenzte Dokumente); bei Dokumenten anderer Profile (shared_only) nie. Das Gewicht liegt unter 60/89: eine Stelle nur aus der Karte steht hinter jeder, die Wörter oder Bedeutung unter ihren 30 fanden, sie ergänzt also und ersetzt nie. Ein so gefundener Treffer trägt karte, unter der Antwort steht „über die Wissenskarte“ (im Gespräch gespeichert als w der Quelle, profiles._att). Nutzt nur wissen.search (document_search, „Erst lokal suchen“), schreibt je Suche eine Zeile wissen: kartensuche | n von m stellen über die karte, bei einem Fehler wissen: kartensuche fehler | Art und sucht ohne Karte weiter. Zustand → Live, Kasten Wissenskarte: „Suche über die K"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "arte an: n Suchen, m Stellen“ (nur Zahlen). Die Suchprüfung misst die Mischung mit der Karte als eigenen Balken „Mit Wissenskarte“. Gemessen mit der Prüfbank (tests/data/suchbank.json, nur Wörter, die Punkte so, wie ein fehlerfreies Modell sie nennt): Einzelfragen ohne und mit Karte 87 % unter den ersten fünf (gleich), Sammelfragen 83 % → 89 % der Dokumente unter den ersten fünf, alle Dokumente 62 % → 75 %; Untergrenze KARTE_SAMMEL_FLOOR 89 %, FLOOR und SAMMEL_FLOOR unverändert. Sicherheit: nur lesend, an das Profil gebunden, dieselben Filter wie die Suche; die Stellen bleiben Text von außen. Dazu für andere Teile (Thread „Ideen aus Open Notebook übernehmen“) die Lesefunktion wissenskarte.knoten_von_dok(uid, doc, arten=None): die Punkte eines Dokuments über wk_ment als [{id, art, name}], nach Art und Name sortiert, höchstens 200, arten filtert (unbekannte Arten fallen weg), nur lesend, an das Profil gebunden, leer für Gäste und ohne Freigabe von „Personen, Firmen und Fristen“."
 },
 {
 "lang": "de",
@@ -13285,6 +13325,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Meine Daten",
 "title": "Meine Daten",
+"text": "- Karte hilft der Suche (Funktionen → Meine Daten → „Karte hilft der Suche“; baut auf „Personen, Firmen und Fristen“; Wissensbuch → Einstellungen): Fragst du nach etwas in deinen Dokumenten, sucht der Spark nicht nur nach deinen Wörtern und ihrer Bedeutung, sondern auch über die Wissenskarte: Nennen deine Wörter eine Person, Firma, einen Ort, Vertrag, ein Konto oder eine Frist, komm …"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
 "text": "- Finden in allen Daten (Funktionen → Meine Daten → „Finden in allen Daten“; Finden → Einstellungen): Ein Suchindex über deine eigenen Sachen: Dokumente, Wissensordner auf dem NAS, reMarkable und Wissensbuch, mit „Mails und Anhänge finden“ auch alle Mails, mit den weiteren Unterschaltern Termine, Kontakte, frühere Gespräche, Listen, Erin …"
 },
 {
@@ -19069,7 +19117,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": ", headings), which counts only 0.4. The best 30 get a rank. 6. Mix in meaning: If the question has a vector, it is compared with every passage's vector. Below 0.75 similarity nothing counts as related; the best 30 above get a rank too. Both ranks are added, so a passage high in both lists rises. The vectors are kept in memory as float16 (half of float32); they are reckoned in float32 block by block, 4096 passages at a time, so the ranking stays the same. They are read again only when passages or used documents change; while vectors are still missing, at most every 30 seconds. 7. Newest first?: With „Newest first“ a passage changed lately gets a small lead, about two places, which shrinks with age. Fit stays more important; each hit then carries its date. 8. Shared documents of the others: With „Shared documents“ the same search runs in the other profiles' files, but only over documents marked „for everyone“ there or shared singly with this profile through „Sharing with profiles“ (documents.Offer). With the household folder released for the profile it also runs in the household's store (users/haushalt/). The hits carry the owner's name or „Haushalt“; everything is sorted by rank. 9."
+"text": ", headings), which counts only 0.4. The best 30 get a rank. 6. Mix in meaning: If the question has a vector, it is compared with every passage's vector. Below 0.75 similarity nothing counts as related; the best 30 above get a rank too. Both ranks are added, so a passage high in both lists rises. The vectors are kept in memory as float16 (half of float32); they are reckoned in float32 block by block, 4096 passages at a time, so the ranking stays the same. They are read again only when passages or used documents change; while vectors are still missing, at most every 30 seconds. With „Map helps the search“ a third list from the knowledge map joins (wissenskarte.liste): if the search words name a point (person, company, place …), its passages and those of its neighbours count, at most 50, with the weight 0.5; a passage only from the map so stands behind every one words or meaning found. Only for the own documents. 7. Newest first?: With „Newest first“ a passage changed lately gets a small lead, about two places, which shrinks with age. Fit stays more important; each hit then carries its date. 8. Shared documents of the others: With „Shared documents“ the same search runs in the other p"
 },
 {
 "lang": "en",
@@ -19077,7 +19125,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " Re-rank hits on?: Without re-ranking the first five of the mix go on. With re-ranking the mix hands over its best 30. 10. Cross-encoder orders: A small model on the processor reads question and passage together and gives each a number. Passages below -4.0 do not answer the question and drop out, the best five stay. If the model sleeps, is busy, too slow or broken, the mix's order stays; the answer never waits longer than set. 11. „What did I note lately?“: If the person asks in their own words what they noted lately, today or this week, the pages changed last come first. If nothing changed in that time, the tool says so instead of guessing. 12. No passage found?: A passage only goes on when it holds at least 0.6 of the search words (filler words like „information“ or „archive“ do not count); a dealer list with only „Dresden“ is no answer about the Frauenkirche. If all drop out so, a fixed sentence says: nothing fitting, say so and look in the archive or on the web if offered. If the search finds nothing but tags or a kind were given, the model gets the card lines of the fitting documents. Otherwise: nothing found, say so, do not guess. 13. Passages with source to the model: Each p"
+"text": "rofiles' files, but only over documents marked „for everyone“ there or shared singly with this profile through „Sharing with profiles“ (documents.Offer). With the household folder released for the profile it also runs in the household's store (users/haushalt/). The hits carry the owner's name or „Haushalt“; everything is sorted by rank. 9. Re-rank hits on?: Without re-ranking the first five of the mix go on. With re-ranking the mix hands over its best 30. 10. Cross-encoder orders: A small model on the processor reads question and passage together and gives each a number. Passages below -4.0 do not answer the question and drop out, the best five stay. If the model sleeps, is busy, too slow or broken, the mix's order stays; the answer never waits longer than set. 11. „What did I note lately?“: If the person asks in their own words what they noted lately, today or this week, the pages changed last come first. If nothing changed in that time, the tool says so instead of guessing. 12. No passage found?: A passage only goes on when it holds at least 0.6 of the search words (filler words like „information“ or „archive“ do not count); a dealer list with only „Dresden“ is no answer about th"
 },
 {
 "lang": "en",
@@ -19085,7 +19133,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "assage goes to the model with document, page and section. From now on the answer counts as one that read outside text: switching, saving to memory and reminders are locked in it. The device shows the sources."
+"text": "e Frauenkirche. If all drop out so, a fixed sentence says: nothing fitting, say so and look in the archive or on the web if offered. If the search finds nothing but tags or a kind were given, the model gets the card lines of the fitting documents. Otherwise: nothing found, say so, do not guess. 13. Passages with source to the model: Each passage goes to the model with document, page and section. From now on the answer counts as one that read outside text: switching, saving to memory and reminders are locked in it. The device shows the sources."
 },
 {
 "lang": "en",
@@ -19133,7 +19181,23 @@
 "file": "Architecture and data flow",
 "head": "People, companies and deadlines",
 "title": "People, companies and deadlines",
-"text": "- When the switch below the knowledge map is on, the language model proposes only JSON per passage of a document after the connections: people, companies, places, contracts, accounts and deadlines with kind and the number of the passage. The panel keeps a name only by fixed rules (wissenskarte.check_ent): the kind from the fixed list, the name stands in the passage (lower case, without accents, spaces drawn together), 2 to 80 characters without link, markup or command, a deadline only with a date in the passage, an account only as IBAN or number; at most 40 per document and 5000 per profile. Connections of these points are checked by the same rule as those of the pages. - Every point has a fixed number (wk_ent) and its passages (wk_ment: document and piece). Other parts only read: wissenskarte.finde_knoten (exactly by name and other names) and wissenskarte.knoten_liste (sorted by name). Merging (wissenskarte.zusammen), renaming and deleting happen only by the owner's click with the code of „Confirm“, never by the model; every change reports to wissenskarte.GEAENDERT. When a document goes, its passages go with it at once, a point without a passage disappears."
+"text": "- When the switch below the knowledge map is on, the language model proposes only JSON per passage of a document after the connections: people, companies, places, contracts, accounts and deadlines with kind and the number of the passage. The panel keeps a name only by fixed rules (wissenskarte.check_ent): the kind from the fixed list, the name stands in the passage (lower case, without accents, spaces drawn together), 2 to 80 characters without link, markup or command, a deadline only with a date in the passage, an account only as IBAN or number; at most 40 per document and 5000 per profile. Connections of these points are checked by the same rule as those of the pages. - Every point has a fixed number (wk_ent) and its passages (wk_ment: document and piece). Other parts only read: wissenskarte.finde_knoten (exactly by name and other names) and wissenskarte.knoten_liste (sorted by name) and wissenskarte.knoten_von_dok (the points of one document by kind and name, at most 200). Merging (wissenskarte.zusammen), renaming and deleting happen only by the owner's click with the code of „Confirm“, never by the model; every change reports to wissenskarte.GEAENDERT. When a document goes, its"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "People, companies and deadlines",
+"title": "People, companies and deadlines",
+"text": " passages go with it at once, a point without a passage disappears."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Map helps the search",
+"title": "Map helps the search",
+"text": "- wissenskarte.liste(uid, worte, k) returns piece ids with a rank from 1, read only (SQLite with mode=ro) and only for the own profile. Fixed rules, never the model: the search words hit a point when its name or another name stands whole in the question (compared like wissenskarte.ent_norm) or a word of the name with at least 4 letters that is no number and no legal form (wissenskarte.trifft); at most 20 points. Their neighbours one step away join (the same query as wissenskarte.rund_um), and of all of them the passages in used, read documents. A passage with a named point stands before one with only neighbours, more points before fewer, at most 50. - documents.search mixes the list like the others with 60 plus place, weighed 0.5, and only passages the same condition of the search lets through (documents._karte). A hit found so carries „karte“, below the answer it says „via the knowledge map“. The search check measures the mix with the map as a bar of its own. If the map fails, the search goes on without it and writes a line „wissen: kartensuche fehler“."
 },
 {
 "lang": "en",
@@ -19181,7 +19245,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "places, contracts, accounts and deadlines one document may bring (step 13) - 5000 such points per profile (step 13) - 80 characters the name of such a point has at most (step 13) - 200 documents a day for these points (default) (step 13)"
+"text": "places, contracts, accounts and deadlines one document may bring (step 13) - 5000 such points per profile (step 13) - 80 characters the name of such a point has at most (step 13) - 200 documents a day for these points (default) (step 13) - 50 passages the map names to the search at most (step 6) - 20 points the search words hit at most (step 6) - 0.5 weight of the list from the map (step 6)"
 },
 {
 "lang": "en",
@@ -19189,7 +19253,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- Features → Own documents and below it Meaning search on: passages get a meaning vector (default off). - Features → Own documents and below it Re-rank hits on: with model size and the longest wait. - Features → Own documents and below it Document card and tags on: search by tags and kind. - Features → Own documents and below it Shared documents on: documents „for everyone“. - Features → Own documents and below it Knowledge book on: pages from the own documents, with how many documents a day. - Features → Own documents → Knowledge book and below it Knowledge map on: connections between the pages, shown in the menu Knowledge book on the page Map, with how many documents a day (own limit). - Features → Own documents → Knowledge book → Knowledge map and below it People, companies and deadlines on: points of their own from the documents on the map, with how many documents a day (own limit)."
+"text": "- Features → Own documents and below it Meaning search on: passages get a meaning vector (default off). - Features → Own documents and below it Re-rank hits on: with model size and the longest wait. - Features → Own documents and below it Document card and tags on: search by tags and kind. - Features → Own documents and below it Shared documents on: documents „for everyone“. - Features → Own documents and below it Knowledge book on: pages from the own documents, with how many documents a day. - Features → Own documents → Knowledge book and below it Knowledge map on: connections between the pages, shown in the menu Knowledge book on the page Map, with how many documents a day (own limit). - Features → Own documents → Knowledge book → Knowledge map and below it People, companies and deadlines on: points of their own from the documents on the map, with how many documents a day (own limit). - Features → Own documents → Knowledge book → Knowledge map → People, companies and deadlines and below it Map helps the search on: the map as third list of hits of the document search (default off)."
 },
 {
 "lang": "en",
@@ -19213,7 +19277,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": " tables in PDFs row by row (step 5) - app/panel/documents.py _rows: cut long tables only between rows (step 5) - app/panel/documents.py due_tables: read PDFs from before again when they have tables (step 5) - app/panel/wissensbuch.py answer_block: fitting pages of the knowledge book with sources (step 13) - app/panel/wissenskarte.py check_edge: fixed rules for every proposed connection (step 13) - app/panel/wissenskarte.py view: the visible part of the map (step 13) - app/panel/wissenskarte.py rund_um: pages around a page, WITH RECURSIVE (step 13) - app/panel/wissenskarte.py weg: shortest way between two pages (step 13) - app/panel/wissenskarte.py check_ent: fixed rules for every person, company, deadline … (step 13) - app/panel/wissenskarte.py finde_knoten: points exactly by name and other names, read only (step 13) - app/panel/wissenskarte.py knoten_liste: points of one kind by name, read only (step 13) - app/panel/wissenskarte.py zusammen: merge two points, only by click (step 13) - app/panel/wissensbuch.py search_pages: fitting pages through the search index wb_fts (step 13) - app/panel/wissensbuch.py _fts_sync: bring the pages' search index up to date (step 13) - app/panel/wis"
+"text": " tables in PDFs row by row (step 5) - app/panel/documents.py _rows: cut long tables only between rows (step 5) - app/panel/documents.py due_tables: read PDFs from before again when they have tables (step 5) - app/panel/wissensbuch.py answer_block: fitting pages of the knowledge book with sources (step 13) - app/panel/wissenskarte.py check_edge: fixed rules for every proposed connection (step 13) - app/panel/wissenskarte.py view: the visible part of the map (step 13) - app/panel/wissenskarte.py rund_um: pages around a page, WITH RECURSIVE (step 13) - app/panel/wissenskarte.py weg: shortest way between two pages (step 13) - app/panel/wissenskarte.py check_ent: fixed rules for every person, company, deadline … (step 13) - app/panel/wissenskarte.py finde_knoten: points exactly by name and other names, read only (step 13) - app/panel/wissenskarte.py knoten_liste: points of one kind by name, read only (step 13) - app/panel/wissenskarte.py knoten_von_dok: points of one document by kind and name, read only (step 13) - app/panel/wissenskarte.py zusammen: merge two points, only by click (step 13) - app/panel/wissensbuch.py search_pages: fitting pages through the search index wb_fts (step 13)"
 },
 {
 "lang": "en",
@@ -19221,7 +19285,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "sensbuch.py liste: page ids with rank for other parts, read only (step 13) - app/panel/documents.py _similar: similarity block by block in float32 (step 6) - app/panel/gedaechtnis.py hint_lines: facts in three blocks (step 13) - app/panel/profiles.py _cap: cap: only old learned facts make room (step 13) - app/panel/gedaechtnis.py slot_of: a fact's fixed topic place by fixed patterns (step 13) - app/panel/gemerkt.py take_back: undo only while the fact is unchanged (step 13)"
+"text": " - app/panel/wissensbuch.py _fts_sync: bring the pages' search index up to date (step 13) - app/panel/wissensbuch.py liste: page ids with rank for other parts, read only (step 13) - app/panel/wissenskarte.py liste: piece ids from the map for the search, read only (step 6) - app/panel/wissenskarte.py trifft: does a search word hit a point? fixed rule (step 6) - app/panel/documents.py _karte: the map's list into the mix, with the search's filters (step 6) - app/panel/documents.py _similar: similarity block by block in float32 (step 6) - app/panel/gedaechtnis.py hint_lines: facts in three blocks (step 13) - app/panel/profiles.py _cap: cap: only old learned facts make room (step 13) - app/panel/gedaechtnis.py slot_of: a fact's fixed topic place by fixed patterns (step 13) - app/panel/gemerkt.py take_back: undo only while the fact is unchanged (step 13)"
 },
 {
 "lang": "en",
@@ -19229,7 +19293,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_wissen, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten"
+"text": "Self-tests: test_wissen, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche"
 },
 {
 "lang": "en",
@@ -21982,6 +22046,30 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "own there (knowledge book, lists, reminders, pictures, songs; never mail, appointments, contacts). Logs fund: schlagworte modell | 3 ok | 1 verworfen | … | nicht_im_text=1, fund: schlagworte modell fehler | ValueError | …, fund: knoten zusammen | 2 schlagworte | …, fund: knoten verknuepft | 4 schlagworte | …, fund: sofort | 1 treffer klar vorn | … (never a word); live *Find*: \"Schlagworte heute N Einträge, M übernommen, K verworfen, L offen\", \"Sofort-Karten heute N\". Self-tests tests/test_fund_schlagworte.py (an obeying model, a fixed time, browser test)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Map helps the search (V01.1.263, plan *wissensgraph* stage 3, step 3 of 4, Dominik 2026-10-29 \"Empfehlung umsetzen\"): admin switch *Features → Own documents → Knowledge book → Knowledge map → People, companies and deadlines → Map helps the search* (chat.knowledge_search, off by default, child of wissensknoten; no profile switch, the admin blocks single profiles, never guests). The knowledge map gives the document search a third list of hits besides words and meaning: wissenskarte.liste(uid, worte, k) returns [(piece id, rank from 1)], at most KARTE_MOST (50), read only (SQLite mode=ro) and only for the own profile; an empty list without release. This promise also holds for the thread \"Alles schnell finden über einen Index\". Fixed rules, never the model: (1) the search words hit points by name and other names (wissenskarte.trifft): whole, compared as ent_norm does (lower case, without accents, spaces drawn together, an account also without spaces), or by one word of the name with at least 4 letters that is no number and no legal form (KARTE_ALLGEMEIN: GmbH, AG, KG …), where the question's word may be up to two letters longer (\"Stadtwerken\"); at most KARTE_KNOTEN (20) points; (2) the"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ir neighbours one step away over connections that count (the same query as rund_um); (3) their places from wk_ment, only in used, read own documents; (4) a piece with a named point stands before one with only neighbours, more points before fewer, then the smaller piece id. documents.search(..., karte=True) mixes the list like the others with 60 plus place, weighed documents.KARTE_WEIGHT (0.5), and only pieces the same condition of the search lets through (in use, narrowed documents); never for documents of other profiles (shared_only). The weight is below 60/89: a piece only from the map stands behind every one words or meaning found among their 30, so it adds and never replaces. A hit found so carries karte, below the answer it says \"via the knowledge map\" (kept in the conversation as w of the source, profiles._att). Only wissen.search uses it (document_search, \"Look locally first\"); per search it writes one line wissen: kartensuche | n von m stellen über die karte, on a failure wissen: kartensuche fehler | kind and goes on without the map. Status → Live, box Knowledge map: \"Suche über die Karte an: n Suchen, m Stellen\" (numbers only). The search check measures the mix with the ma"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "p as a bar of its own \"With knowledge map\". Measured with the test bank (tests/data/suchbank.json, words only, the points as a model without mistakes names them): single questions without and with the map 87 % among the first five (the same), multi-document questions 83 % → 89 % of their documents among the first five, all documents 62 % → 75 %; floor KARTE_SAMMEL_FLOOR 89 %, FLOOR and SAMMEL_FLOOR unchanged. Security: read only, bound to the profile, the same filters as the search; the passages stay outside text. Also for other parts (thread \"Ideen aus Open Notebook übernehmen\") the read function wissenskarte.knoten_von_dok(uid, doc, arten=None): the points of one document through wk_ment as [{id, art, name}], sorted by kind and name, at most 200, arten filters (unknown kinds drop out), read only, bound to the profile, empty for guests and without the release of \"People, companies and deadlines\"."
 },
 {
 "lang": "en",
@@ -29766,6 +29854,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- People, companies and deadlines (Features → My data → \"People, companies and deadlines\"; builds on \"Knowledge map\"; Knowledge book → Settings): People, companies, places, contracts, accounts and deadlines from your documents become points of their own on the knowledge map, such as \"Nordstern Versicherung\", \"José García\" or \"30.09.2026\", each with the passages where it stands and …"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Map helps the search (Features → My data → \"Map helps the search\"; builds on \"People, companies and deadlines\"; Knowledge book → Settings): When you ask about something in your documents, the Spark searches not only for your words and their meaning but also over the knowledge map: if your words name a person, company, place, contract, account or deadline, the passages where …"
 },
 {
 "lang": "en",

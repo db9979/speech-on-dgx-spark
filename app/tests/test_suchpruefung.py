@@ -33,6 +33,8 @@ BANK = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "suchban
 SAMMEL_FLOOR = 75  # Sammelfragen: share of their documents among the first five, measured 80 % (all found 60 %) words only
 #                    (Stufe A of plan wissensbuch); raised, never lowered
 FLOOR = 85      # measured 84 % words only (V01.0.508), 89 % with the context lines (V01.0.519); raised, never lowered
+KARTE_SAMMEL_FLOOR = 89  # Sammelfragen with „Karte hilft der Suche“ (plan wissensgraph Stufe 3): measured 89 % (without the
+#                          map 83 %) words only, the points of the bank as a model without mistakes names them; never lowered
 
 
 def profile(name, pin="1234"):
@@ -385,6 +387,52 @@ class Suchbank(Base):
         for i in range(len(bank["sammelfragen"])):
             self.assertEqual(res[f"s{i}"]["von"], len(bank["sammelfragen"][i]["docs"]))
             self.assertLessEqual(res[f"s{i}"]["wort"], res[f"s{i}"]["von"])
+
+    def test_the_map_helps_and_never_finds_worse(self):
+        """Stufe 3 of plan wissensgraph: the same bank with and without „Karte hilft der Suche“. The points come from
+        the bank ("knoten", "verbindungen") through the panel's fixed rules. Without the switch nothing changes; with
+        it the mix with the map („karte“) finds no single question worse and more documents of the Sammelfragen."""
+        from tests.test_kartensuche import ON, KEYS, anlegen
+        import wissenskarte
+        with open(BANK, encoding="utf-8") as f:
+            bank = json.load(f)
+        self.assertGreaterEqual(len(bank["knoten"]), 20)
+        helpers.keep_chat(self, *KEYS)
+        _, uid, _, _ = self.fresh("Spruefkarte")
+        for d in documents.list_docs(uid):
+            documents.delete(uid, d["id"])
+        with wissenskarte._Db(uid) as con:
+            for t in ("wk_edges", "wk_ent", "wk_ment", "wk_entdocs", "wk_entblock"):
+                con.execute(f"DELETE FROM {t}")
+        ids = {d["name"]: add_doc(uid, d["name"], d["text"]) for d in bank["docs"]}
+        helpers.set_config(**ON)
+        anlegen(uid, ids.values(), bank["knoten"], bank["verbindungen"])
+        self.assertGreaterEqual(len(wissenskarte.knoten_liste(uid, None, "", 200)), 20)
+        qs = [{"id": str(i), "q": f["q"], "doc": ids[f["doc"]]} for i, f in enumerate(bank["fragen"])]
+        qs += [{"id": f"s{i}", "q": f["q"], "doc": ids[f["docs"][0]], "mehr": [ids[x] for x in f["docs"][1:]]}
+               for i, f in enumerate(bank["sammelfragen"])]
+        helpers.set_config(knowledge_search=False)
+        res_off, off = suchpruefung._measure(uid, qs, None, False, 0)
+        self.assertNotIn("karte", off["modes"])                     # without the switch: no mode, the search of before
+        helpers.set_config(knowledge_search=True)
+        res_on, on = suchpruefung._measure(uid, qs, None, False, 0)
+        for m in ("wort", "gemischt"):                               # the lists of before are the same with the switch
+            self.assertEqual(on["modes"][m], off["modes"][m])
+            self.assertEqual(on["sammel"]["modes"][m], off["sammel"]["modes"][m])
+        k, g = on["modes"]["karte"], on["modes"]["gemischt"]
+        self.assertGreaterEqual(k["top5"], g["top5"], on)
+        self.assertGreaterEqual(k["top5"], FLOOR, on)
+        sk, sg = on["sammel"]["modes"]["karte"], on["sammel"]["modes"]["gemischt"]
+        self.assertGreaterEqual(sk["teil"], sg["teil"], on)
+        self.assertGreaterEqual(sk["alle"], sg["alle"], on)
+        self.assertGreaterEqual(sg["teil"], SAMMEL_FLOOR, on)
+        self.assertGreaterEqual(sk["teil"], KARTE_SAMMEL_FLOOR, on)
+        for q in qs:                                                 # no single question found worse
+            a, b = res_on[q["id"]]["gemischt"], res_on[q["id"]]["karte"]
+            if "mehr" in q:
+                self.assertGreaterEqual(b, a, q["q"])
+            elif 0 < a <= 5:                                         # found among five without the map: still so
+                self.assertTrue(0 < b <= 5, (q["q"], a, b))
 
 
 if __name__ == "__main__":

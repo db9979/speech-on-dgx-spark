@@ -2364,7 +2364,7 @@ flowchart TD
 3. <a id="kn-wissen-s3"></a>**Meaning vector of the question**: With meaning search a small vector model (own process, processor only) computes the question's vector. It starts only with at least 8.5 GiB free memory (on a panel computer 1.5 GiB) and ends after 10 minutes without work. Without a vector the Spark searches full text only, without an error.
 4. <a id="kn-wissen-s4"></a>**Narrowed?**: With tags or kind, match_docs first finds the documents that carry all tags and the kind. Only their passages stay in the race; if none fits, there are no hits.
 5. <a id="kn-wissen-s5"></a>**Full text: words and context line**: The question is split into search words (filler words dropped, endings roughly cut). The search looks in each passage's words and in its context line (title, kind, headings), which counts only 0.4. The best 30 get a rank.
-6. <a id="kn-wissen-s6"></a>**Mix in meaning**: If the question has a vector, it is compared with every passage's vector. Below 0.75 similarity nothing counts as related; the best 30 above get a rank too. Both ranks are added, so a passage high in both lists rises. The vectors are kept in memory as float16 (half of float32); they are reckoned in float32 block by block, 4096 passages at a time, so the ranking stays the same. They are read again only when passages or used documents change; while vectors are still missing, at most every 30 seconds.
+6. <a id="kn-wissen-s6"></a>**Mix in meaning**: If the question has a vector, it is compared with every passage's vector. Below 0.75 similarity nothing counts as related; the best 30 above get a rank too. Both ranks are added, so a passage high in both lists rises. The vectors are kept in memory as float16 (half of float32); they are reckoned in float32 block by block, 4096 passages at a time, so the ranking stays the same. They are read again only when passages or used documents change; while vectors are still missing, at most every 30 seconds. With „Map helps the search“ a third list from the knowledge map joins (wissenskarte.liste): if the search words name a point (person, company, place …), its passages and those of its neighbours count, at most 50, with the weight 0.5; a passage only from the map so stands behind every one words or meaning found. Only for the own documents.
 7. <a id="kn-wissen-s7"></a>**Newest first?**: With „Newest first“ a passage changed lately gets a small lead, about two places, which shrinks with age. Fit stays more important; each hit then carries its date.
 8. <a id="kn-wissen-s8"></a>**Shared documents of the others**: With „Shared documents“ the same search runs in the other profiles' files, but only over documents marked „for everyone“ there or shared singly with this profile through „Sharing with profiles“ (documents.Offer). With the household folder released for the profile it also runs in the household's store (users/haushalt/). The hits carry the owner's name or „Haushalt“; everything is sorted by rank.
 9. <a id="kn-wissen-s9"></a>**Re-rank hits on?**: Without re-ranking the first five of the mix go on. With re-ranking the mix hands over its best 30.
@@ -2388,6 +2388,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 | Kiwix | archive_search and wikipedia via the own Kiwix in the home network | all profiles, never guests |
 | Look locally first | full text without waiting for models, before the first round | as the request's tools |
 | Knowledge book | document_search: fitting pages before the passages | own profile, own documents only |
+| Knowledge map | third list of hits: points the question names and their neighbours | own profile, own documents in the search only |
 
 #### Knowledge book
 
@@ -2408,7 +2409,12 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 #### People, companies and deadlines
 
 - When the switch below the knowledge map is on, the language model proposes only JSON per passage of a document after the connections: people, companies, places, contracts, accounts and deadlines with kind and the number of the passage. The panel keeps a name only by fixed rules (wissenskarte.check_ent): the kind from the fixed list, the name stands in the passage (lower case, without accents, spaces drawn together), 2 to 80 characters without link, markup or command, a deadline only with a date in the passage, an account only as IBAN or number; at most 40 per document and 5000 per profile. Connections of these points are checked by the same rule as those of the pages.
-- Every point has a fixed number (wk_ent) and its passages (wk_ment: document and piece). Other parts only read: wissenskarte.finde_knoten (exactly by name and other names) and wissenskarte.knoten_liste (sorted by name). Merging (wissenskarte.zusammen), renaming and deleting happen only by the owner's click with the code of „Confirm“, never by the model; every change reports to wissenskarte.GEAENDERT. When a document goes, its passages go with it at once, a point without a passage disappears.
+- Every point has a fixed number (wk_ent) and its passages (wk_ment: document and piece). Other parts only read: wissenskarte.finde_knoten (exactly by name and other names) and wissenskarte.knoten_liste (sorted by name) and wissenskarte.knoten_von_dok (the points of one document by kind and name, at most 200). Merging (wissenskarte.zusammen), renaming and deleting happen only by the owner's click with the code of „Confirm“, never by the model; every change reports to wissenskarte.GEAENDERT. When a document goes, its passages go with it at once, a point without a passage disappears.
+
+#### Map helps the search
+
+- wissenskarte.liste(uid, worte, k) returns piece ids with a rank from 1, read only (SQLite with mode=ro) and only for the own profile. Fixed rules, never the model: the search words hit a point when its name or another name stands whole in the question (compared like wissenskarte.ent_norm) or a word of the name with at least 4 letters that is no number and no legal form (wissenskarte.trifft); at most 20 points. Their neighbours one step away join (the same query as wissenskarte.rund_um), and of all of them the passages in used, read documents. A passage with a named point stands before one with only neighbours, more points before fewer, at most 50.
+- documents.search mixes the list like the others with 60 plus place, weighed 0.5, and only passages the same condition of the search lets through (documents._karte). A hit found so carries „karte“, below the answer it says „via the knowledge map“. The search check measures the mix with the map as a bar of its own. If the map fails, the search goes on without it and writes a line „wissen: kartensuche fehler“.
 
 #### Look locally first
 
@@ -2455,6 +2461,9 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - **5000** such points per profile ([step 13](#kn-wissen-s13))
 - **80** characters the name of such a point has at most ([step 13](#kn-wissen-s13))
 - **200** documents a day for these points (default) ([step 13](#kn-wissen-s13))
+- **50** passages the map names to the search at most ([step 6](#kn-wissen-s6))
+- **20** points the search words hit at most ([step 6](#kn-wissen-s6))
+- **0.5** weight of the list from the map ([step 6](#kn-wissen-s6))
 
 #### Settings
 
@@ -2465,6 +2474,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - Features → Own documents and below it Knowledge book on: pages from the own documents, with how many documents a day.
 - Features → Own documents → Knowledge book and below it Knowledge map on: connections between the pages, shown in the menu Knowledge book on the page Map, with how many documents a day (own limit).
 - Features → Own documents → Knowledge book → Knowledge map and below it People, companies and deadlines on: points of their own from the documents on the map, with how many documents a day (own limit).
+- Features → Own documents → Knowledge book → Knowledge map → People, companies and deadlines and below it Map helps the search on: the map as third list of hits of the document search (default off).
 
 #### What you see
 
@@ -2499,17 +2509,21 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/wissenskarte.py` `check_ent`: fixed rules for every person, company, deadline … ([step 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `finde_knoten`: points exactly by name and other names, read only ([step 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `knoten_liste`: points of one kind by name, read only ([step 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `knoten_von_dok`: points of one document by kind and name, read only ([step 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `zusammen`: merge two points, only by click ([step 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `search_pages`: fitting pages through the search index wb_fts ([step 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `_fts_sync`: bring the pages' search index up to date ([step 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `liste`: page ids with rank for other parts, read only ([step 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `liste`: piece ids from the map for the search, read only ([step 6](#kn-wissen-s6))
+- `app/panel/wissenskarte.py` `trifft`: does a search word hit a point? fixed rule ([step 6](#kn-wissen-s6))
+- `app/panel/documents.py` `_karte`: the map's list into the mix, with the search's filters ([step 6](#kn-wissen-s6))
 - `app/panel/documents.py` `_similar`: similarity block by block in float32 ([step 6](#kn-wissen-s6))
 - `app/panel/gedaechtnis.py` `hint_lines`: facts in three blocks ([step 13](#kn-wissen-s13))
 - `app/panel/profiles.py` `_cap`: cap: only old learned facts make room ([step 13](#kn-wissen-s13))
 - `app/panel/gedaechtnis.py` `slot_of`: a fact's fixed topic place by fixed patterns ([step 13](#kn-wissen-s13))
 - `app/panel/gemerkt.py` `take_back`: undo only while the fact is unchanged ([step 13](#kn-wissen-s13))
 
-Self-tests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`
+Self-tests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`
 
 ### Guard
 

@@ -243,7 +243,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "3d40cb46e7",
+        "stand": "bb8c962666",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -262,6 +262,9 @@ SEITEN = {
             "wissenskarte.check_ent": ["s13"], "wissenskarte.finde_knoten": ["s13"], "wissenskarte.knoten_liste": ["s13"],
             "wissenskarte.zusammen": ["s13"], "wissenskarte.ENT_PER_DOC": ["s13"], "wissenskarte.MAX_ENT": ["s13"],
             "wissenskarte.ENT_DAY": ["s13"], "wissenskarte.ENT_NAME_LEN": ["s13"],
+            "wissenskarte.knoten_von_dok": ["s13"], "wissenskarte.liste": ["s6"], "wissenskarte.trifft": ["s6"], "documents._karte": ["s6"],
+            "documents.KARTE_WEIGHT": ["s6"], "wissenskarte.KARTE_MOST": ["s6"], "wissenskarte.KARTE_KNOTEN": ["s6"],
+            "regel:Wissenskarte": ["s6"],
             "pdftabellen.read": ["s5"], "documents._rows": ["s5"], "documents.due_tables": ["s5"], "lokal.excerpt": ["s5"],
             "pdftabellen.BUDGET_S": ["s5"], "documents.TABLE": ["s5"], "lokal.MAX_HIT_CHARS": ["s5"],
         },
@@ -353,13 +356,21 @@ SEITEN = {
                "addiert, so steigt eine Stelle, die in beiden Listen weit oben steht. Die Vektoren liegen als "
                "float16 im Speicher (halb so viel wie float32); gerechnet wird blockweise je {documents.VEC_BLOCK} "
                "Stellen in float32, die Rangfolge bleibt gleich. Neu gelesen werden sie nur, wenn sich Stellen oder "
-               "genutzte Dokumente ändern; solange noch Vektoren fehlen, höchstens alle {documents.VEC_CATCHUP_S} Sekunden.",
+               "genutzte Dokumente ändern; solange noch Vektoren fehlen, höchstens alle {documents.VEC_CATCHUP_S} Sekunden. "
+               "Mit „Karte hilft der Suche“ kommt eine dritte Liste aus der Wissenskarte dazu (wissenskarte.liste): "
+               "nennen die Suchwörter einen Punkt (Person, Firma, Ort …), zählen seine Stellen und die seiner Nachbarn, "
+               "höchstens {wissenskarte.KARTE_MOST}, mit dem Gewicht {documents.KARTE_WEIGHT}; eine Stelle nur aus der "
+               "Karte steht so hinter jeder, die Wörter oder Bedeutung fanden. Nur für die eigenen Dokumente.",
                "If the question has a vector, it is compared with every passage's vector. Below 0.75 similarity "
                "nothing counts as related; the best 30 above get a rank too. Both ranks are added, so a passage "
                "high in both lists rises. The vectors are kept in memory as float16 (half of float32); they are "
                "reckoned in float32 block by block, {documents.VEC_BLOCK} passages at a time, so the ranking stays "
                "the same. They are read again only when passages or used documents change; while vectors are still "
-               "missing, at most every {documents.VEC_CATCHUP_S} seconds.")),
+               "missing, at most every {documents.VEC_CATCHUP_S} seconds. With „Map helps the search“ a third list "
+               "from the knowledge map joins (wissenskarte.liste): if the search words name a point (person, company, "
+               "place …), its passages and those of its neighbours count, at most {wissenskarte.KARTE_MOST}, with the "
+               "weight {documents.KARTE_WEIGHT}; a passage only from the map so stands behind every one words or "
+               "meaning found. Only for the own documents.")),
             S("s7", "frage", ("Neueste zuerst?", "Newest first?"),
               ("bei reMarkable-Notizen", "with reMarkable notes"),
               ("Mit „Neueste zuerst“ bekommt eine kürzlich geänderte Stelle einen kleinen Vorsprung, etwa zwei Plätze, "
@@ -447,6 +458,7 @@ SEITEN = {
             [("Kiwix", "Kiwix"), ("archive_search und wikipedia über das eigene Kiwix im Heimnetz", "archive_search and wikipedia via the own Kiwix in the home network"), ("alle Profile, nie Gäste", "all profiles, never guests")],
             [("Erst lokal suchen", "Look locally first"), ("Volltext ohne Warten auf Modelle, vor der ersten Runde", "full text without waiting for models, before the first round"), ("wie die Werkzeuge der Anfrage", "as the request's tools")],
             [("Wissensbuch", "Knowledge book"), ("document_search: passende Seiten vor den Stellen", "document_search: fitting pages before the passages"), ("eigenes Profil, nur eigene Dokumente", "own profile, own documents only")],
+            [("Wissenskarte", "Knowledge map"), ("dritte Trefferliste: Punkte, die die Frage nennt, und ihre Nachbarn", "third list of hits: points the question names and their neighbours"), ("eigenes Profil, nur eigene Dokumente in der Suche", "own profile, own documents in the search only")],
         ],
         "zahlen": [
             ("{nachsortieren.CANDIDATES}", ("Kandidaten für das Nachsortieren", "candidates for re-ranking"), "nachsortieren.CANDIDATES"),
@@ -473,6 +485,9 @@ SEITEN = {
             ("{wissenskarte.MAX_ENT}", ("solche Punkte pro Profil", "such points per profile"), "wissenskarte.MAX_ENT"),
             ("{wissenskarte.ENT_NAME_LEN}", ("Zeichen, die der Name eines solchen Punktes höchstens hat", "characters the name of such a point has at most"), "wissenskarte.ENT_NAME_LEN"),
             ("{wissenskarte.ENT_DAY}", ("Dokumente am Tag für diese Punkte (Standard)", "documents a day for these points (default)"), "wissenskarte.ENT_DAY"),
+            ("{wissenskarte.KARTE_MOST}", ("Stellen, die die Karte der Suche höchstens nennt", "passages the map names to the search at most"), "wissenskarte.KARTE_MOST"),
+            ("{wissenskarte.KARTE_KNOTEN}", ("Punkte, die die Suchwörter höchstens treffen", "points the search words hit at most"), "wissenskarte.KARTE_KNOTEN"),
+            ("{documents.KARTE_WEIGHT}", ("Gewicht der Liste aus der Karte", "weight of the list from the map"), "documents.KARTE_WEIGHT"),
         ],
         "einstellen": [
             ("Funktionen → Eigene Dokumente und darunter Bedeutungssuche an: Stellen bekommen einen Bedeutungsvektor "
@@ -497,6 +512,10 @@ SEITEN = {
              "eigene Punkte aus den Dokumenten auf der Karte, dazu wie viele Dokumente am Tag (eigene Grenze).",
              "Features → Own documents → Knowledge book → Knowledge map and below it People, companies and deadlines "
              "on: points of their own from the documents on the map, with how many documents a day (own limit)."),
+            ("Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte → Personen, Firmen und Fristen und darunter "
+             "Karte hilft der Suche an: die Karte als dritte Trefferliste der Dokumentsuche (Standard aus).",
+             "Features → Own documents → Knowledge book → Knowledge map → People, companies and deadlines and below it "
+             "Map helps the search on: the map as third list of hits of the document search (default off)."),
         ],
         "sehen": [
             ("Zustand → Logs → Anfragen: der Schritt „Nachsortieren“ mit Zahl der Kandidaten, behaltenen Stellen und "
@@ -618,16 +637,46 @@ SEITEN = {
                  "these points are checked by the same rule as those of the pages."),
                 ("Jeder Punkt hat eine feste Nummer (wk_ent) und seine Stellen (wk_ment: Dokument und Stück). Andere "
                  "Teile lesen nur: wissenskarte.finde_knoten (genau über Name und andere Namen) und "
-                 "wissenskarte.knoten_liste (nach Namen sortiert). Zusammenführen (wissenskarte.zusammen), Umbenennen "
+                 "wissenskarte.knoten_liste (nach Namen sortiert) und wissenskarte.knoten_von_dok (die Punkte eines "
+                 "Dokuments nach Art und Name, höchstens {wissenskarte.LISTE_MOST}). Zusammenführen (wissenskarte.zusammen), Umbenennen "
                  "und Löschen geschehen nur per Klick der Besitzerin oder des Besitzers mit dem Code von „Bestätigen“, "
                  "nie durch das Modell; jede Änderung meldet wissenskarte.GEAENDERT. Geht ein Dokument, gehen seine "
                  "Stellen sofort mit, ein Punkt ohne Stelle verschwindet.",
                  "Every point has a fixed number (wk_ent) and its passages (wk_ment: document and piece). Other parts "
                  "only read: wissenskarte.finde_knoten (exactly by name and other names) and wissenskarte.knoten_liste "
-                 "(sorted by name). Merging (wissenskarte.zusammen), renaming and deleting happen only by the owner's "
+                 "(sorted by name) and wissenskarte.knoten_von_dok (the points of one document by kind and name, at most "
+                 "{wissenskarte.LISTE_MOST}). Merging (wissenskarte.zusammen), renaming and deleting happen only by the owner's "
                  "click with the code of „Confirm“, never by the model; every change reports to "
                  "wissenskarte.GEAENDERT. When a document goes, its passages go with it at once, a point without a "
                  "passage disappears."),
+            ]),
+            (("Karte hilft der Suche", "Map helps the search"), [
+                ("wissenskarte.liste(uid, worte, k) gibt Stück-Ids mit Rang ab 1 zurück, nur lesend (SQLite mit mode=ro) "
+                 "und nur für das eigene Profil. Feste Regeln, nie das Modell: Die Suchwörter treffen einen Punkt, wenn "
+                 "sein Name oder ein anderer Name ganz in der Frage steht (verglichen wie wissenskarte.ent_norm) oder "
+                 "ein Wort des Namens ab {wissenskarte.KARTE_WORT} Buchstaben, das keine Zahl und keine Rechtsform ist "
+                 "(wissenskarte.trifft); höchstens {wissenskarte.KARTE_KNOTEN} Punkte. Dazu kommen ihre Nachbarn einen "
+                 "Schritt weit (dieselbe Abfrage wie wissenskarte.rund_um) und von allen die Stellen in genutzten, "
+                 "gelesenen Dokumenten. Eine Stelle mit einem genannten Punkt steht vor einer mit nur Nachbarn, mehr "
+                 "Punkte vor weniger, höchstens {wissenskarte.KARTE_MOST}.",
+                 "wissenskarte.liste(uid, worte, k) returns piece ids with a rank from 1, read only (SQLite with "
+                 "mode=ro) and only for the own profile. Fixed rules, never the model: the search words hit a point when "
+                 "its name or another name stands whole in the question (compared like wissenskarte.ent_norm) or a "
+                 "word of the name with at least {wissenskarte.KARTE_WORT} letters that is no number and no legal form "
+                 "(wissenskarte.trifft); at most {wissenskarte.KARTE_KNOTEN} points. Their neighbours one step away "
+                 "join (the same query as wissenskarte.rund_um), and of all of them the passages in used, read "
+                 "documents. A passage with a named point stands before one with only neighbours, more points before "
+                 "fewer, at most {wissenskarte.KARTE_MOST}."),
+                ("documents.search mischt die Liste wie die anderen mit 60 plus Platz, gewichtet mit "
+                 "{documents.KARTE_WEIGHT}, und nur Stellen, die dieselbe Bedingung der Suche durchlässt "
+                 "(documents._karte). Ein so gefundener Treffer trägt „karte“, unter der Antwort steht „über die "
+                 "Wissenskarte“. Die Suchprüfung misst die Mischung mit der Karte als eigenen Balken. Fällt die Karte "
+                 "aus, sucht die Suche ohne sie weiter und schreibt eine Zeile „wissen: kartensuche fehler“.",
+                 "documents.search mixes the list like the others with 60 plus place, weighed {documents.KARTE_WEIGHT}, "
+                 "and only passages the same condition of the search lets through (documents._karte). A hit found so "
+                 "carries „karte“, below the answer it says „via the knowledge map“. The search check measures the mix "
+                 "with the map as a bar of its own. If the map fails, the search goes on without it and writes a line "
+                 "„wissen: kartensuche fehler“."),
             ]),
             (("Erst lokal suchen", "Look locally first"), [
                 ("Vor der ersten Runde schaut das Panel selbst in Dokumente, Kiwix und frühere Gespräche, gleichzeitig "
@@ -750,10 +799,14 @@ SEITEN = {
             ("wissenskarte.check_ent", ("feste Regeln für jede Person, Firma, Frist …", "fixed rules for every person, company, deadline …")),
             ("wissenskarte.finde_knoten", ("Punkte genau über Name und andere Namen, nur lesend", "points exactly by name and other names, read only")),
             ("wissenskarte.knoten_liste", ("Punkte einer Art nach Namen, nur lesend", "points of one kind by name, read only")),
+            ("wissenskarte.knoten_von_dok", ("Punkte eines Dokuments nach Art und Name, nur lesend", "points of one document by kind and name, read only")),
             ("wissenskarte.zusammen", ("zwei Punkte zusammenführen, nur per Klick", "merge two points, only by click")),
             ("wissensbuch.search_pages", ("passende Seiten über den Suchindex wb_fts", "fitting pages through the search index wb_fts")),
             ("wissensbuch._fts_sync", ("Suchindex der Seiten nachziehen", "bring the pages' search index up to date")),
             ("wissensbuch.liste", ("Seiten-Ids mit Rang für andere Teile, nur lesend", "page ids with rank for other parts, read only")),
+            ("wissenskarte.liste", ("Stück-Ids aus der Karte für die Suche, nur lesend", "piece ids from the map for the search, read only")),
+            ("wissenskarte.trifft", ("trifft ein Suchwort einen Punkt? feste Regel", "does a search word hit a point? fixed rule")),
+            ("documents._karte", ("die Liste der Karte in die Mischung, mit den Filtern der Suche", "the map's list into the mix, with the search's filters")),
             ("documents._similar", ("Ähnlichkeit blockweise in float32", "similarity block by block in float32")),
             ("gedaechtnis.hint_lines", ("Fakten in drei Blöcken", "facts in three blocks")),
             ("profiles._cap", ("Obergrenze: nur alte gelernte Fakten machen Platz", "cap: only old learned facts make room")),
@@ -762,7 +815,7 @@ SEITEN = {
         ],
         "tests": ["test_wissen", "test_nachsortieren", "test_abschnitte", "test_lokal", "test_kiwix", "test_gedaechtnis",
                   "test_gedaechtnis_grenze", "test_gemerkt",
-                  "test_suchpruefung", "test_wissensbuch", "test_wissenskarte", "test_wissensknoten"],
+                  "test_suchpruefung", "test_wissensbuch", "test_wissenskarte", "test_wissensknoten", "test_kartensuche"],
         "heute": [],
     },
 

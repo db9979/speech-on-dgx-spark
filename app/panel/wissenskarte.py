@@ -48,6 +48,12 @@ last place goes (documents.GONE, read again) goes too and says "weg". Own admin 
     POST   /api/profile/wissenskarte/knoten/{id}/name  rename (the old name becomes an alias)
     POST   /api/profile/wissenskarte/knoten/{id}/zusammen  merge into another point of the same kind
     DELETE /api/profile/wissenskarte/knoten/{id}       delete; never back from the documents it stood in
+
+Karte hilft der Suche (plan wissensgraph Stufe 3, Dominik 2026-10-29 „Empfehlung umsetzen“): liste(uid, worte, k) gives
+the document search a third list of hits, [(piece id, rank from 1)], by fixed rules (see liste), read only and bound to
+the profile; documents.search mixes it with the fixed weight documents.KARTE_WEIGHT (it adds, never replaces) and marks
+such hits "karte". Own admin switch below the points (Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte →
+Personen, Firmen und Fristen → Karte hilft der Suche, chat.knowledge_search), no endpoint of its own.
 """
 import asyncio
 import datetime
@@ -784,6 +790,133 @@ def knoten_liste(uid, art, anfang="", most=50):
     return [{"id": r["id"], "art": r["art"], "name": r["name"], "alias": _aliases(r["alias"]), "n": r["n"]} for r in rows]
 
 
+def knoten_von_dok(uid, doc, arten=None):
+    """The points of one document (thread „Ideen aus Open Notebook übernehmen“): [{"id", "art", "name"}] of the wk_ent
+    that stand in it (wk_ment), sorted by kind and compared name, at most LISTE_MOST. arten: an optional filter of
+    ENT_ARTEN (unknown kinds are left out; none left: []). Read only and bound to uid; [] for guests and while the
+    points are not released for the profile."""
+    if not isinstance(doc, str) or not _ID.fullmatch(doc):
+        return []
+    want = None if arten is None else ({arten} if isinstance(arten, str) else set(arten))
+    kinds = ENT_ARTEN if want is None else tuple(a for a in ENT_ARTEN if a in want)
+    if not kinds:
+        return []
+    con = _lesen(uid)
+    if con is None:
+        return []
+    try:
+        q = ",".join("?" * len(kinds))
+        rows = con.execute(f"SELECT e.id, e.art, e.name FROM wk_ent e WHERE e.art IN ({q}) AND e.id IN (SELECT ent FROM "
+                           f"wk_ment WHERE doc=?) ORDER BY e.art, e.norm, e.id LIMIT ?", (*kinds, doc, LISTE_MOST)).fetchall()
+    finally:
+        con.close()
+    return [{"id": r["id"], "art": r["art"], "name": r["name"]} for r in rows]
+
+
+# ---------------------------------------------------------------- Karte hilft der Suche (Stufe 3)
+# The third list of the document search (documents.search, karte=True) and the list the index thread asks
+# („Alles schnell finden über einen Index“): liste(uid, worte, k) -> [(piece id, rank from 1)]. Fixed rules only.
+KARTE_MOST = 50          # pieces liste hands out at most
+KARTE_KNOTEN = 20        # points the words may hit at most (the first by these rules)
+KARTE_NACHBARN = 50      # neighbours of them at most (one step on the map)
+KARTE_WORT = 4           # a single word of a longer name hits from this many letters on (never a number)
+KARTE_ENDUNG = 2         # letters a word of the question may have more than the word of the name („Kranichs“)
+# words of a name that never hit on their own: legal forms and little words („GmbH“ alone is no company)
+KARTE_ALLGEMEIN = frozenset(("gmbh", "mbh", "ggmbh", "ag", "kg", "ohg", "ug", "gbr", "ev", "se", "co", "inc", "ltd",
+                             "llc", "und", "and", "der", "die", "das", "des", "von", "vom", "zu", "zur", "zum", "the",
+                             "haftungsbeschrankt", "firma", "herr", "frau"))
+SUCHE = {"suchen": 0, "stellen": 0, "fehler": 0}     # Live-Übersicht: in the memory only, numbers only
+
+
+def suche_on():
+    return features.admin_on("kartensuche")
+
+
+def suche_allowed(uid):
+    """The map may help this profile's document search (the admin's switch below the points); guests never."""
+    return bool(uid) and ents_allowed(uid) and features.allowed("kartensuche", uid)
+
+
+def _wort_trifft(nw, qs):
+    """A word of a name meets a word of the question: the same, or the question's word has at most KARTE_ENDUNG
+    letters more at its end („stadtwerken“ meets „stadtwerke“)."""
+    return any(q == nw or q.startswith(nw) and len(q) - len(nw) <= KARTE_ENDUNG for q in qs)
+
+
+def trifft(name, art, text, qwords):
+    """How a point's name (or other name) meets the words of a question: 2 the whole name stands in it (as
+    stands() compares, an account also without spaces), 1 one word of the name of at least KARTE_WORT letters that
+    is no number and not in KARTE_ALLGEMEIN, 0 not at all."""
+    qn = ent_norm(text)
+    return _trifft(ent_norm(name), art, qn, _compact(qn), qwords)
+
+
+def _trifft(nn, art, qn, qc, qwords):
+    """trifft with name and question already compared as ent_norm writes them (qc: the question as _compact writes
+    it), so a list of many points normalizes the question once."""
+    if nn and nn in qn and re.search(r"(?<!\w)" + re.escape(nn) + r"(?!\w)", qn):
+        return 2
+    if art == "konto" and len(_compact(nn)) >= 5 and _compact(nn) in qc:
+        return 2
+    words = [w for w in re.findall(r"\w+", nn) if len(w) >= KARTE_WORT and not w.isdigit() and w not in KARTE_ALLGEMEIN]
+    return 1 if any(_wort_trifft(w, qwords) for w in words) else 0
+
+
+def liste(uid, worte, k=KARTE_MOST):
+    """For the document search and the index thread: the pieces of this profile's own documents the map leads to,
+    as [(piece id, rank from 1)], at most k (1 to KARTE_MOST). Fixed rules, never the model:
+      1. the words hit points by name or other name (trifft; compared as ent_norm writes them), at most KARTE_KNOTEN;
+      2. their neighbours one step away over connections that count (_rund_um, the same query as rund_um);
+      3. the places of these points (wk_ment) in documents in use and read (the filters of documents.search);
+      4. a piece with a point the words hit comes before one with only neighbours, more points before fewer,
+         then the smaller piece id.
+    worte: a text or a list of words. Read only and bound to uid; [] for guests and while the points or this switch
+    are not released for the profile. Never a name, only ids."""
+    if not uid or not suche_allowed(uid):
+        return []
+    text = worte if isinstance(worte, str) else " ".join(w for w in (worte or ()) if isinstance(w, str))
+    text = text[:2000]
+    qn = ent_norm(text)
+    qc = _compact(qn)
+    qwords = {w for w in re.findall(r"\w+", qn) if len(w) >= 2}
+    if not qwords:
+        return []
+    k = max(1, min(KARTE_MOST, int(k)))
+    con = _lesen(uid)
+    if con is None:
+        return []
+    try:
+        hit = []
+        for r in con.execute("SELECT id, art, norm, alias FROM wk_ent ORDER BY id"):
+            how = max([_trifft(r["norm"], r["art"], qn, qc, qwords)] + [_trifft(ent_norm(a), r["art"], qn, qc, qwords)
+                                                                         for a in _aliases(r["alias"])])
+            if how:
+                hit.append((-how, r["id"]))
+        direkt = [i for _, i in sorted(hit)[:KARTE_KNOTEN]]
+        if not direkt:
+            SUCHE["suchen"] += 1
+            return []
+        near = set()
+        if con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='wb_pages'").fetchone():
+            for i in direkt:
+                near |= {int(x[1:]) for x in _rund_um(con, f"k{i}", 1, True) if x.startswith("k")}
+        nachbarn = sorted(near - set(direkt))[:KARTE_NACHBARN]
+        rows = con.execute(
+            "SELECT c.id, m.ent FROM wk_ment m JOIN chunks c ON c.doc=m.doc AND c.n=m.chunk JOIN docs d ON d.id=m.doc "
+            "WHERE m.ent IN (SELECT value FROM json_each(?)) AND d.use=1 AND d.state='ready'",
+            (json.dumps(direkt + nachbarn),)).fetchall()
+    finally:
+        con.close()
+    own, nb = {}, {}
+    mine = set(direkt)
+    for cid, ent in rows:
+        (own if ent in mine else nb).setdefault(cid, set()).add(ent)
+    order = sorted(set(own) | set(nb), key=lambda c: (-len(own.get(c, ())), -len(nb.get(c, ())), c))[:k]
+    SUCHE["suchen"] += 1
+    SUCHE["stellen"] += len(order)
+    return [(c, i + 1) for i, c in enumerate(order)]
+
+
 # ---------------------------------------------------------------- the owner's click (never the model)
 def umbenennen(uid, kid, name):
     """A point gets another name; the old one stays as other name. "ok", or why not: "ungueltig", "nicht da",
@@ -1073,12 +1206,17 @@ def counts(uid):
             "knoten": {k: kinds.get(k, 0) for k in ENT_ARTEN}, "knoten_warten": len((booked & live) - mine)}
 
 
+def _suche_live():
+    """Karte hilft der Suche: on or off, searches the map helped and pieces it named since the start (numbers only)."""
+    return {"on": suche_on() and ents_on(), **SUCHE}
+
+
 def for_live():
     """Live-Übersicht: connections, points and documents waiting, summed over all profiles (numbers only)."""
     if not admin_on():
         return {"on": False}
     if _live["d"] is not None and time.time() - _live["at"] < LIVE_CACHE:
-        return dict(_live["d"], running=bool(_running))
+        return dict(_live["d"], running=bool(_running), suche=_suche_live())
     e = n = w = profs = kw = 0
     kinds = dict.fromkeys(ENT_ARTEN, 0)
     on = ents_on()
@@ -1096,7 +1234,7 @@ def for_live():
                 kinds[k] += v
     _live.update(at=time.time(), d={"on": True, "verbindungen": e, "punkte": n, "warten": w, "profile": profs,
                                     "knoten": kinds if on else {}, "knoten_warten": kw})
-    return dict(_live["d"], running=bool(_running))
+    return dict(_live["d"], running=bool(_running), suche=_suche_live())
 
 
 def _need(uid):

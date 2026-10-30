@@ -437,6 +437,10 @@ FEATURES = (
     # and deadlines of the documents as own points of the map; the panel's fixed rules decide, never the model
     F("wissensknoten", "Personen, Firmen und Fristen", "People, companies and deadlines", "data", ("knowledge_ents",),
       parent="wissenskarte", me="wbbox", guide="wissensknoten"),
+    # Karte hilft der Suche (wissenskarte.liste, plan wissensgraph Stufe 3): the points from documents give the document
+    # search a third list of hits (the words name a point, its neighbours, their places); fixed rules, never the model
+    F("kartensuche", "Karte hilft der Suche", "Map helps the search", "data", ("knowledge_search",),
+      parent="wissensknoten", me="wbbox", guide="kartensuche"),
     # Finden (fund.py, plan such-index, Stufe A): one index over the own data with fields and tags, the page Finden,
     # Strg K and the tool fund_suche; each source follows its own function (documents, NAS, reMarkable, Wissensbuch)
     F("fund", "Finden in allen Daten", "Find in all data", "data", ("fund",), me="fundbox", guide="fund"),

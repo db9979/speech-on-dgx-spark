@@ -68,6 +68,7 @@ SAMMEL_TOP = 5         # pieces the assistant gets from one search (wissen.searc
 MAX_SAMMEL = 60        # Sammelfragen the model writes per profile
 SAMMEL_EVERY = 3       # every third attempt of the day tries a Sammelfrage first
 MODES = ("wort", "bedeutung", "gemischt", "nachsortiert")   # Sammelfragen also "wissensbuch" (the pages plus the mix)
+KARTE = "karte"        # with „Karte hilft der Suche“ on: the mix with the Wissenskarte's list as a third one
 SOURCES = ("spark", "eigen", "antwort")
 _running = set()       # profiles being measured right now
 _last_click = {}       # uid or "admin" -> when "Jetzt prüfen" ran last
@@ -332,16 +333,19 @@ def _measure(uid, qs, vecs, fresh, embed_ms, mixed=None):
     A single question's result is the place of its document; a Sammelfrage's is how many of its documents were
     among the first SAMMEL_TOP ("von": how many it has). mixed: a dict that gets the mixed hits per question."""
     import wissensbuch
+    import wissenskarte
     out, ms = {}, []
     modes = MODES if vecs is not None else ("wort", "gemischt")
     book = wissensbuch.allowed(uid)
+    # Karte hilft der Suche: measured beside the mix without it, so the run shows whether the map helps
+    extra = (KARTE,) if wissenskarte.suche_allowed(uid) else ()
     for i, q in enumerate(qs):
         vec = vecs[i] if vecs is not None else None
         res = {"von": len(all_docs(q))} if is_sammel(q) else {}
-        for m in modes:
+        for m in modes + extra:
             t0 = time.perf_counter()
             hits = documents.search(uid, "" if m == "bedeutung" else q["q"], DEPTH, vec if m != "wort" else None,
-                                    False, None, fresh)
+                                    False, None, fresh, None, m == KARTE)
             took = (time.perf_counter() - t0) * 1000
             res[m] = _found(hits, q) if is_sammel(q) else _place(hits, q["doc"])
             if m == "gemischt" and mixed is not None:
@@ -358,8 +362,9 @@ def _measure(uid, qs, vecs, fresh, embed_ms, mixed=None):
     many = [q for q in qs if is_sammel(q)]
     summary = {"n": len(one), "modes": {}}
     if many:
-        summary["sammel"] = {"n": len(many), "modes": {m: _sammel_sums(many, out, m) for m in modes + (("wissensbuch",) if book else ())}}
-    for m in modes:
+        summary["sammel"] = {"n": len(many), "modes": {m: _sammel_sums(many, out, m)
+                                                       for m in modes + (("wissensbuch",) if book else ()) + extra}}
+    for m in modes + extra:
         places = [out[q["id"]][m] for q in one]
         summary["modes"][m] = {"top5": _pct(sum(1 for p in places if 0 < p <= 5), len(places)),
                                "top1": _pct(sum(1 for p in places if p == 1), len(places))}
@@ -418,6 +423,7 @@ async def run(uid, now=None, why="nacht"):
         sg = (summary.get("sammel") or {}).get("modes", {}).get("gemischt")
         print(f"wissen: suchpruefung lauf fertig | {why} | {summary['n']} fragen | top5 {g['top5']} top1 {g['top1']} | "
               + (f"{summary['sammel']['n']} sammelfragen alle {sg['alle']} teil {sg['teil']} | " if sg else "")
+              + (f"karte top5 {kg['top5']} top1 {kg['top1']} | " if (kg := summary["modes"].get(KARTE)) else "")
               + f"{summary['ms']} ms", flush=True)
         return summary
     except Exception as e:
@@ -652,8 +658,8 @@ def admin_state():
     if not admin_on():
         return {"on": False}
     profs = n = 0
-    agg = {m: [0.0, 0.0, 0] for m in MODES}     # found in five, found first, questions measured
-    sagg = {m: [0.0, 0.0, 0] for m in MODES + ("wissensbuch",)}    # Sammelfragen: all found, share found, questions measured
+    agg = {m: [0.0, 0.0, 0] for m in MODES + (KARTE,)}     # found in five, found first, questions measured
+    sagg = {m: [0.0, 0.0, 0] for m in MODES + ("wissensbuch", KARTE)}    # Sammelfragen: all found, share found, questions measured
     ms, last = [], 0
     for uid in profiles.user_ids():
         if not allowed(uid) or not os.path.exists(_path(uid)):

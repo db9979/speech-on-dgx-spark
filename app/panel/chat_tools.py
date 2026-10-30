@@ -260,7 +260,9 @@ async def run(t, name, args, st):
         import wissensbuch      # Wissensbuch: the fitting pages first, each sentence with its source
         book, brefs = await asyncio.to_thread(wissensbuch.answer_block, t.who["id"], query) if win is None else ("", [])
         if hits or brefs:
-            refs = list({(h["id"], h["page"]): {"id": h["id"], "name": h["name"], "page": h["page"], "file": h["file"]}
+            # "karte": the hit came (also) over the Wissenskarte (Karte hilft der Suche), the line under the answer says so
+            refs = list({(h["id"], h["page"]): {"id": h["id"], "name": h["name"], "page": h["page"], "file": h["file"],
+                                                **({"karte": True} if h.get("karte") else {})}
                          for h in brefs + hits}.values())
             await t.out.put({"type": "docsources", "items": sorted({h["name"] for h in brefs + hits}), "refs": refs[:8]})
             wissensbuch.note_sources(t.who["id"], docs=[(h["id"], h["page"]) for h in hits])   # Stufe D: may be filed

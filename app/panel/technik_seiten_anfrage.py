@@ -799,7 +799,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "71fad39436",
+        "stand": "215b6645cb",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_AFTER_MAIL": ["s4"],

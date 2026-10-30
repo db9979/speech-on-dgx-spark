@@ -1,5 +1,5 @@
 {
-  "zweck": "Feste Prüfbank der Dokumentensuche (test_suchbank, Plan suche-schaerfen Stufe 1): erfundene Unterlagen eines Haushalts und Fragen mit bekannter richtiger Stelle, in eigenen Worten. Alle Namen, Nummern und Adressen sind erfunden. Sammelfragen (Plan wissensbuch, Stufe A) brauchen mehrere Dokumente zugleich.",
+  "zweck": "Feste Prüfbank der Dokumentensuche (test_suchbank, Plan suche-schaerfen Stufe 1): erfundene Unterlagen eines Haushalts und Fragen mit bekannter richtiger Stelle, in eigenen Worten. Alle Namen, Nummern und Adressen sind erfunden. Sammelfragen (Plan wissensbuch, Stufe A) brauchen mehrere Dokumente zugleich. Knoten und Verbindungen (Plan wissensgraph, Stufe 3) sind die Punkte der Wissenskarte, wie ein fehlerfreies Sprachmodell sie vorschlagen würde; test_suchpruefung legt sie über die festen Regeln (wissenskarte.apply_ents) an und misst die Suche mit und ohne „Karte hilft der Suche“.",
   "docs": [
     {"name": "Mietvertrag Lindenweg.txt", "text": "Mietvertrag über Wohnraum\n\nZwischen der Hausverwaltung Kranich GmbH, Am Wall 4, 28195 Bremen (Vermieter) und Dominik Beispiel (Mieter) wird folgender Vertrag geschlossen.\n\n§ 1 Mietsache. Vermietet wird die Wohnung im 2. Obergeschoss links, Lindenweg 12, bestehend aus drei Zimmern, Küche, Bad und Balkon, Wohnfläche rund 78 Quadratmeter. Zur Wohnung gehört der Kellerraum Nummer 7.\n\n§ 2 Mietzeit. Das Mietverhältnis beginnt am 1. März 2024 und läuft auf unbestimmte Zeit. Die Kündigungsfrist für den Mieter beträgt drei Monate zum Monatsende; die Kündigung muss schriftlich erfolgen.\n\n§ 3 Miete. Die Grundmiete beträgt 890 Euro im Monat. Dazu kommt eine Vorauszahlung auf die Betriebskosten von 210 Euro. Die Miete ist bis zum dritten Werktag eines Monats auf das Konto der Vermieterin zu zahlen.\n\n§ 4 Kaution. Der Mieter leistet eine Sicherheit von 2670 Euro, zahlbar in drei gleichen Raten. Die Kaution wird auf einem Sparkonto getrennt vom Vermögen der Vermieterin angelegt.\n\n§ 5 Tierhaltung. Kleintiere wie Fische oder Hamster sind erlaubt. Hunde und Katzen nur mit vorheriger schriftlicher Zustimmung der Hausverwaltung.\n\n§ 6 Schönheitsreparaturen. Der Mieter streicht Wände und Decken bei Bedarf in hellen, neutralen Farben. Beim Auszug ist die Wohnung besenrein zu übergeben."},
     {"name": "Kfz-Versicherung Golf.txt", "text": "Versicherungsschein Kraftfahrtversicherung\nVersicherer: Nordstern Versicherung AG, Vertragsnummer KF-448-2219\nFahrzeug: VW Golf, amtliches Kennzeichen HB-DB 482, Erstzulassung 05/2019\n\nVersicherungsumfang: Kfz-Haftpflicht mit einer Deckungssumme von 100 Millionen Euro pauschal, Vollkasko mit 500 Euro Selbstbeteiligung, Teilkasko mit 150 Euro Selbstbeteiligung.\n\nSchadenfreiheitsklasse Haftpflicht SF 12, Vollkasko SF 9. Jahresbeitrag 684,20 Euro, fällig jeweils am 1. Januar.\n\nSchutzbrief: Pannenhilfe und Abschleppen bis 300 Euro, europaweit, Telefon der Notrufzentrale 0800 123 4567.\n\nWer fährt: Versicherungsnehmer und Ehepartner, beide über 25 Jahre. Fahrer unter 23 Jahren sind nicht mitversichert.\n\nKündigung: Der Vertrag verlängert sich um ein Jahr, wenn er nicht spätestens einen Monat vor Ablauf gekündigt wird, also bis zum 30. November."},
@@ -79,6 +79,55 @@
     {"q": "Welche Versicherungen habe ich für Auto und Hausrat und was kosten sie?", "docs": ["Kfz-Versicherung Golf.txt", "Hausratversicherung.txt"]},
     {"q": "Wie viele Tage darf ich zu Hause arbeiten und was hat mir das Homeoffice bei der Steuer gebracht?", "docs": ["Arbeitsvertrag Nordlicht.txt", "Steuerbescheid 2024.txt"]},
     {"q": "Bis wann muss ich die Autoversicherung und den Stromvertrag spätestens kündigen?", "docs": ["Kfz-Versicherung Golf.txt", "Rechnung Stadtwerke Strom 2025.txt"]},
-    {"q": "Wie viel Lohnsteuer stand im Bescheid für 2024 und wie viel wird mir jetzt im Monat abgezogen?", "docs": ["Steuerbescheid 2024.txt", "Gehaltsabrechnung März 2026.txt"]}
+    {"q": "Wie viel Lohnsteuer stand im Bescheid für 2024 und wie viel wird mir jetzt im Monat abgezogen?", "docs": ["Steuerbescheid 2024.txt", "Gehaltsabrechnung März 2026.txt"]},
+    {"q": "Was gibt es alles zur Hausverwaltung Kranich?", "docs": ["Mietvertrag Lindenweg.txt", "Nebenkostenabrechnung Lindenweg 2025.txt", "Protokoll Eigentümerversammlung.txt"]},
+    {"q": "Welche Verträge laufen über die Hanse Schutz?", "docs": ["Hausratversicherung.txt", "Reiseplan Lissabon.txt"]},
+    {"q": "Was gibt es zu den Stadtwerken Weserland?", "docs": ["Rechnung Stadtwerke Strom 2025.txt", "Rechnung Stadtwerke Gas 2025.txt"]},
+    {"q": "Welche Unterlagen gibt es zu Lissabon?", "docs": ["Reiseplan Lissabon.txt", "Flugbuchung Lissabon.txt"]},
+    {"q": "Was steht in meinen Unterlagen zur Wohnung im Lindenweg?", "docs": ["Mietvertrag Lindenweg.txt", "Nebenkostenabrechnung Lindenweg 2025.txt", "Hausratversicherung.txt"]},
+    {"q": "Was kostet mich die Wohnung Lindenweg 12 im Monat?", "docs": ["Mietvertrag Lindenweg.txt", "Nebenkostenabrechnung Lindenweg 2025.txt", "Hausratversicherung.txt"]}
+  ],
+  "knoten": [
+    {"art": "firma", "name": "Hausverwaltung Kranich GmbH"},
+    {"art": "person", "name": "Frau Kranich"},
+    {"art": "person", "name": "Dominik Beispiel"},
+    {"art": "person", "name": "Sabine Beispiel"},
+    {"art": "person", "name": "Helene Sommer"},
+    {"art": "ort", "name": "Lindenweg 12"},
+    {"art": "ort", "name": "Lindenweg 10 bis 14"},
+    {"art": "ort", "name": "Bremen"},
+    {"art": "ort", "name": "Lissabon"},
+    {"art": "ort", "name": "Frankfurt"},
+    {"art": "firma", "name": "Nordstern Versicherung AG"},
+    {"art": "firma", "name": "Stadtwerke Weserland"},
+    {"art": "firma", "name": "Nordlicht Software GmbH"},
+    {"art": "firma", "name": "Hanse Schutz"},
+    {"art": "firma", "name": "Autohaus Weserblick"},
+    {"art": "firma", "name": "Lufthansa"},
+    {"art": "firma", "name": "Holzmann"},
+    {"art": "firma", "name": "WellenNetz"},
+    {"art": "firma", "name": "Radhaus Ostertor"},
+    {"art": "firma", "name": "Finanzamt Bremen-Mitte"},
+    {"art": "firma", "name": "Kita Sonnenblume"},
+    {"art": "vertrag", "name": "KF-448-2219"},
+    {"art": "vertrag", "name": "HR-77120"},
+    {"art": "konto", "name": "5530-117"},
+    {"art": "frist", "name": "15.02.2026"}
+  ],
+  "verbindungen": [
+    {"von": "Dominik Beispiel", "nach": "Nordlicht Software GmbH", "art": "arbeitet bei"},
+    {"von": "Dominik Beispiel", "nach": "Hausverwaltung Kranich GmbH", "art": "Vertrag mit"},
+    {"von": "Dominik Beispiel", "nach": "Lindenweg 12", "art": "wohnt in"},
+    {"von": "Hausverwaltung Kranich GmbH", "nach": "Bremen", "art": "liegt in"},
+    {"von": "Frau Kranich", "nach": "Lindenweg 10 bis 14", "art": "betrifft"},
+    {"von": "Holzmann", "nach": "Lindenweg 10 bis 14", "art": "betrifft"},
+    {"von": "5530-117", "nach": "Stadtwerke Weserland", "art": "gehört zu"},
+    {"von": "15.02.2026", "nach": "Stadtwerke Weserland", "art": "Frist für"},
+    {"von": "HR-77120", "nach": "Hanse Schutz", "art": "Vertrag mit"},
+    {"von": "Lindenweg 12", "nach": "Hanse Schutz", "art": "versichert bei"},
+    {"von": "KF-448-2219", "nach": "Nordstern Versicherung AG", "art": "Vertrag mit"},
+    {"von": "Sabine Beispiel", "nach": "Lufthansa", "art": "Vertrag mit"},
+    {"von": "Dominik Beispiel", "nach": "Lufthansa", "art": "Vertrag mit"},
+    {"von": "Lufthansa", "nach": "Lissabon", "art": "betrifft"}
   ]
 }

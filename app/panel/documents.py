@@ -87,6 +87,9 @@ HEADV = 1                      # raise to build every context line again (in qui
 TABLEV = 1                     # raise to look at every kept PDF again for tables (in quiet moments, due_tables)
 TABLE_AUTO = 20 * 1024 * 1024  # bigger PDFs are read again only by hand (Ich → Dokumente, "Neu lesen")
 HEAD_WEIGHT = 0.4              # the context line counts this much against the piece's own words
+# Karte hilft der Suche (wissenskarte.liste, Stufe 3): the map's list counts this much. Below 60/89, so a piece only
+# the map names stays below every piece the words or the meaning found among their 30 (it adds, never replaces)
+KARTE_WEIGHT = 0.5
 TABLE = 2400                   # a table stays one piece up to this many characters
 FRESH = 1 / 60 - 1 / 62      # the most a fresh piece gains in the search: about two places in the ranking
 FRESH_HALF = 14 * 86400      # ... halved every two weeks
@@ -1661,12 +1664,15 @@ def _terms(text):
     return out
 
 
-def search(uid, query, k=5, qvec=None, shared_only=False, only_docs=None, fresh=False, now=None):
+def search(uid, query, k=5, qvec=None, shared_only=False, only_docs=None, fresh=False, now=None, karte=False):
     """Best-matching pieces of this profile's documents in use: [{"id", "name", "page", "text", "file", "score"}].
     qvec: the query's meaning vector (docembed), merged with the full-text ranking. shared_only: only the
     documents this profile offers to everyone ("Für alle", True) or to one other profile (an Offer), for its search. only_docs: a set
     of document ids (tags, art) the search keeps to. fresh ("Neueste zuerst"): a piece changed lately gains up
-    to FRESH (about two places), halved every FRESH_HALF; fit stays first. Each hit then carries "changed"."""
+    to FRESH (about two places), halved every FRESH_HALF; fit stays first. Each hit then carries "changed".
+    karte (only for the profile's own search, never for shared_only): the Wissenskarte's list (wissenskarte.liste,
+    switch kartensuche) is the third list of the mix, weighed KARTE_WEIGHT, kept to the pieces this search may show
+    (the same condition); a hit it named carries "karte": True, so the answer can say so."""
     if not os.path.exists(db_path(uid)) and not os.path.isdir(_dir(uid)):
         return []
     q = sorted(set(t for t in _terms(query) if re.fullmatch(r"\w+", t)))
@@ -1705,6 +1711,7 @@ def search(uid, query, k=5, qvec=None, shared_only=False, only_docs=None, fresh=
                     continue
                 ranks[ids[j]] = ranks.get(ids[j], 0) + 1 / (60 + i)
                 i += 1
+    via = _karte(uid, query, cond, ranks) if karte and q and not shared_only else set()
     if not ranks:
         return []
     when = {}
@@ -1723,7 +1730,29 @@ def search(uid, query, k=5, qvec=None, shared_only=False, only_docs=None, fresh=
                   "part": got[i]["part"] or "", "head": got[i]["head"] or "",
                   "file": bool(got[i]["file"]) or got[i]["source"] == "nas", "source": got[i]["source"], "score": ranks[i]},
                  **({"place": got[i]["place"] or ""} if got[i]["source"] == "nas" else {}),
-                 **({"changed": when.get(i, 0)} if fresh else {})) for i in best if i in got]
+                 **({"changed": when.get(i, 0)} if fresh else {}), **({"karte": True} if i in via else {})) for i in best if i in got]
+
+
+def _karte(uid, query, cond, ranks):
+    """The Wissenskarte's list into the mix (ranks, like the other lists with 60 + place): only pieces the search's own
+    condition lets through (in use, the documents it keeps to), weighed KARTE_WEIGHT. Returns the piece ids it named.
+    A failure never stops the search: one journal line, and the search goes on without the map."""
+    import wissenskarte
+    try:
+        got = wissenskarte.liste(uid, query, wissenskarte.KARTE_MOST)
+        if not got:
+            return set()
+        with _Db(uid) as con:
+            ok = {r[0] for r in con.execute("SELECT c.id FROM chunks c JOIN docs d ON d.id=c.doc WHERE c.id IN (SELECT "
+                                            "value FROM json_each(?)) AND " + cond, (json.dumps([c for c, _ in got]),))}
+    except Exception as e:   # noqa: BLE001
+        wissenskarte.SUCHE["fehler"] += 1
+        print("wissen: kartensuche fehler |", type(e).__name__, flush=True)
+        return set()
+    for cid, rang in got:
+        if cid in ok:
+            ranks[cid] = ranks.get(cid, 0) + KARTE_WEIGHT / (60 + rang - 1)
+    return ok
 
 
 def _changed(uid, ids):

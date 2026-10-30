@@ -163,6 +163,7 @@ WITHOUT = {
     "fundlisten": "sammelt nur Listen und Erinnerungen in den Index ein, Fragen beantwortet fund_suche (Finden in allen Daten)",
     "fundmedien": "sammelt nur Bilder und Lieder in den Index ein, Fragen beantwortet fund_suche (Finden in allen Daten)",
     "fundschlagworte": "arbeitet im Hintergrund, schlägt nur Schlagworte für den Index vor, Fragen beantwortet fund_suche (Finden in allen Daten)",
+    "kartensuche": "kein eigenes Werkzeug, document_search findet über die Karte mit (wissenskarte.liste als dritte Trefferliste)",
     "dungeon": "dungeon.py: kein Werkzeug, ein Spiel auf seiner eigenen Seite (Erzählung nur als Daten, Werte vom Panel)",
     "dungeongold": "dungeon_gold.py: kein Werkzeug, Angebote der Siedlung mit festen Preisen des Panels, nie das Modell",
     "dungeongrenzen": "dungeon_grenzen.py: kein Werkzeug, Grenzen und X-Karte prüft das Panel mit festen Wortlisten, nie das Modell",

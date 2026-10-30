@@ -269,7 +269,7 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/wiki.py` | Wikipedia für „Was ist …?“ |
 | `app/panel/wissen.py` | Wissen aus eigenen Uploads: Schalter und Kontingent |
 | `app/panel/wissensbuch.py` | Wissensbuch: Seiten aus eigenen Dokumenten, jeder Satz mit Quelle; Suchindex FTS5, Lesefunktion liste |
-| `app/panel/wissenskarte.py` | Wissenskarte: geprüfte Verbindungen zwischen den Seiten des Wissensbuchs, jede mit Quelle, Ausschnitt per WITH RECURSIVE |
+| `app/panel/wissenskarte.py` | Wissenskarte: geprüfte Verbindungen und Punkte aus Dokumenten, je mit Quelle, WITH RECURSIVE, Trefferliste der Suche |
 
 ### Anbindungen
 
@@ -2364,7 +2364,7 @@ flowchart TD
 3. <a id="kn-wissen-s3"></a>**Bedeutungsvektor der Frage**: Mit Bedeutungssuche rechnet ein kleines Vektormodell (eigener Prozess, nur Prozessor) den Vektor der Frage. Es startet nur bei mindestens 8.5 GiB freiem Speicher (auf einem Panel-Rechner 1.5 GiB) und endet nach 10 Minuten ohne Arbeit. Kommt kein Vektor, sucht der Spark nur im Volltext, ohne Fehler.
 4. <a id="kn-wissen-s4"></a>**Eingegrenzt?**: Mit Tags oder Art sucht match_docs zuerst die Dokumente, die alle Tags und die Art tragen. Nur deren Stellen kommen weiter in Frage; passt keines, gibt es keine Treffer.
 5. <a id="kn-wissen-s5"></a>**Volltext: Wörter und Kontextzeile**: Die Frage wird in Suchwörter zerlegt (Füllwörter weg, Endungen grob gekürzt). Gesucht wird in den Wörtern jeder Stelle und in ihrer Kontextzeile (Titel, Art, Überschriften), die nur mit 0.4 zählt. Die besten 30 bekommen einen Rang.
-6. <a id="kn-wissen-s6"></a>**Bedeutung dazumischen**: Hat die Frage einen Vektor, werden die Vektoren aller Stellen verglichen. Unter 0,75 Ähnlichkeit gilt nichts als verwandt; die besten 30 darüber bekommen ebenfalls einen Rang. Beide Ränge werden addiert, so steigt eine Stelle, die in beiden Listen weit oben steht. Die Vektoren liegen als float16 im Speicher (halb so viel wie float32); gerechnet wird blockweise je 4096 Stellen in float32, die Rangfolge bleibt gleich. Neu gelesen werden sie nur, wenn sich Stellen oder genutzte Dokumente ändern; solange noch Vektoren fehlen, höchstens alle 30 Sekunden.
+6. <a id="kn-wissen-s6"></a>**Bedeutung dazumischen**: Hat die Frage einen Vektor, werden die Vektoren aller Stellen verglichen. Unter 0,75 Ähnlichkeit gilt nichts als verwandt; die besten 30 darüber bekommen ebenfalls einen Rang. Beide Ränge werden addiert, so steigt eine Stelle, die in beiden Listen weit oben steht. Die Vektoren liegen als float16 im Speicher (halb so viel wie float32); gerechnet wird blockweise je 4096 Stellen in float32, die Rangfolge bleibt gleich. Neu gelesen werden sie nur, wenn sich Stellen oder genutzte Dokumente ändern; solange noch Vektoren fehlen, höchstens alle 30 Sekunden. Mit „Karte hilft der Suche“ kommt eine dritte Liste aus der Wissenskarte dazu (wissenskarte.liste): nennen die Suchwörter einen Punkt (Person, Firma, Ort …), zählen seine Stellen und die seiner Nachbarn, höchstens 50, mit dem Gewicht 0.5; eine Stelle nur aus der Karte steht so hinter jeder, die Wörter oder Bedeutung fanden. Nur für die eigenen Dokumente.
 7. <a id="kn-wissen-s7"></a>**Neueste zuerst?**: Mit „Neueste zuerst“ bekommt eine kürzlich geänderte Stelle einen kleinen Vorsprung, etwa zwei Plätze, der mit dem Alter kleiner wird. Die Passung bleibt wichtiger; jeder Treffer trägt dann sein Datum.
 8. <a id="kn-wissen-s8"></a>**Geteilte Dokumente der anderen**: Mit „Gemeinsame Dokumente“ läuft dieselbe Suche in den Dateien der anderen Profile, aber nur über Dokumente, die dort „Für alle“ sind oder mit „Teilen mit Profilen“ einzeln mit diesem Profil geteilt (documents.Offer). Ist der Haushaltsordner für das Profil frei, läuft sie auch im Bestand des Haushalts (users/haushalt/). Die Treffer tragen den Namen des Besitzers oder „Haushalt“; alles wird nach Rang sortiert.
 9. <a id="kn-wissen-s9"></a>**Treffer nachsortieren an?**: Ohne Nachsortieren gehen die ersten fünf der Mischung weiter. Mit Nachsortieren reicht die Mischung ihre besten 30 weiter.
@@ -2388,6 +2388,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 | Kiwix | archive_search und wikipedia über das eigene Kiwix im Heimnetz | alle Profile, nie Gäste |
 | Erst lokal suchen | Volltext ohne Warten auf Modelle, vor der ersten Runde | wie die Werkzeuge der Anfrage |
 | Wissensbuch | document_search: passende Seiten vor den Stellen | eigenes Profil, nur eigene Dokumente |
+| Wissenskarte | dritte Trefferliste: Punkte, die die Frage nennt, und ihre Nachbarn | eigenes Profil, nur eigene Dokumente in der Suche |
 
 #### Wissensbuch
 
@@ -2408,7 +2409,12 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 #### Personen, Firmen und Fristen
 
 - Ist der Schalter unter der Wissenskarte an, schlägt das Sprachmodell nach den Verbindungen je Stelle eines Dokuments nur JSON vor: Personen, Firmen, Orte, Verträge, Konten und Fristen mit Art und Nummer der Stelle. Das Panel behält einen Namen nur nach festen Regeln (wissenskarte.check_ent): die Art aus der festen Liste, der Name steht in der Stelle (klein, ohne Akzente, Leerzeichen zusammengezogen), 2 bis 80 Zeichen ohne Link, Auszeichnung oder Befehl, eine Frist nur mit Datum in der Stelle, ein Konto nur als IBAN oder Nummer; höchstens 40 je Dokument und 5000 je Profil. Verbindungen dieser Punkte prüft dieselbe Regel wie die der Seiten.
-- Jeder Punkt hat eine feste Nummer (wk_ent) und seine Stellen (wk_ment: Dokument und Stück). Andere Teile lesen nur: wissenskarte.finde_knoten (genau über Name und andere Namen) und wissenskarte.knoten_liste (nach Namen sortiert). Zusammenführen (wissenskarte.zusammen), Umbenennen und Löschen geschehen nur per Klick der Besitzerin oder des Besitzers mit dem Code von „Bestätigen“, nie durch das Modell; jede Änderung meldet wissenskarte.GEAENDERT. Geht ein Dokument, gehen seine Stellen sofort mit, ein Punkt ohne Stelle verschwindet.
+- Jeder Punkt hat eine feste Nummer (wk_ent) und seine Stellen (wk_ment: Dokument und Stück). Andere Teile lesen nur: wissenskarte.finde_knoten (genau über Name und andere Namen) und wissenskarte.knoten_liste (nach Namen sortiert) und wissenskarte.knoten_von_dok (die Punkte eines Dokuments nach Art und Name, höchstens 200). Zusammenführen (wissenskarte.zusammen), Umbenennen und Löschen geschehen nur per Klick der Besitzerin oder des Besitzers mit dem Code von „Bestätigen“, nie durch das Modell; jede Änderung meldet wissenskarte.GEAENDERT. Geht ein Dokument, gehen seine Stellen sofort mit, ein Punkt ohne Stelle verschwindet.
+
+#### Karte hilft der Suche
+
+- wissenskarte.liste(uid, worte, k) gibt Stück-Ids mit Rang ab 1 zurück, nur lesend (SQLite mit mode=ro) und nur für das eigene Profil. Feste Regeln, nie das Modell: Die Suchwörter treffen einen Punkt, wenn sein Name oder ein anderer Name ganz in der Frage steht (verglichen wie wissenskarte.ent_norm) oder ein Wort des Namens ab 4 Buchstaben, das keine Zahl und keine Rechtsform ist (wissenskarte.trifft); höchstens 20 Punkte. Dazu kommen ihre Nachbarn einen Schritt weit (dieselbe Abfrage wie wissenskarte.rund_um) und von allen die Stellen in genutzten, gelesenen Dokumenten. Eine Stelle mit einem genannten Punkt steht vor einer mit nur Nachbarn, mehr Punkte vor weniger, höchstens 50.
+- documents.search mischt die Liste wie die anderen mit 60 plus Platz, gewichtet mit 0.5, und nur Stellen, die dieselbe Bedingung der Suche durchlässt (documents._karte). Ein so gefundener Treffer trägt „karte“, unter der Antwort steht „über die Wissenskarte“. Die Suchprüfung misst die Mischung mit der Karte als eigenen Balken. Fällt die Karte aus, sucht die Suche ohne sie weiter und schreibt eine Zeile „wissen: kartensuche fehler“.
 
 #### Erst lokal suchen
 
@@ -2455,6 +2461,9 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - **5000** solche Punkte pro Profil ([Schritt 13](#kn-wissen-s13))
 - **80** Zeichen, die der Name eines solchen Punktes höchstens hat ([Schritt 13](#kn-wissen-s13))
 - **200** Dokumente am Tag für diese Punkte (Standard) ([Schritt 13](#kn-wissen-s13))
+- **50** Stellen, die die Karte der Suche höchstens nennt ([Schritt 6](#kn-wissen-s6))
+- **20** Punkte, die die Suchwörter höchstens treffen ([Schritt 6](#kn-wissen-s6))
+- **0.5** Gewicht der Liste aus der Karte ([Schritt 6](#kn-wissen-s6))
 
 #### Einstellen
 
@@ -2465,6 +2474,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - Funktionen → Eigene Dokumente und darunter Wissensbuch an: Seiten aus den eigenen Dokumenten, dazu wie viele Dokumente am Tag.
 - Funktionen → Eigene Dokumente → Wissensbuch und darunter Wissenskarte an: Verbindungen zwischen den Seiten, zu sehen im Menü Wissensbuch auf der Seite Karte, dazu wie viele Dokumente am Tag (eigene Grenze).
 - Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte und darunter Personen, Firmen und Fristen an: eigene Punkte aus den Dokumenten auf der Karte, dazu wie viele Dokumente am Tag (eigene Grenze).
+- Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte → Personen, Firmen und Fristen und darunter Karte hilft der Suche an: die Karte als dritte Trefferliste der Dokumentsuche (Standard aus).
 
 #### Was du siehst
 
@@ -2499,17 +2509,21 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - `app/panel/wissenskarte.py` `check_ent`: feste Regeln für jede Person, Firma, Frist … ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `finde_knoten`: Punkte genau über Name und andere Namen, nur lesend ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `knoten_liste`: Punkte einer Art nach Namen, nur lesend ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `knoten_von_dok`: Punkte eines Dokuments nach Art und Name, nur lesend ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `zusammen`: zwei Punkte zusammenführen, nur per Klick ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `search_pages`: passende Seiten über den Suchindex wb_fts ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `_fts_sync`: Suchindex der Seiten nachziehen ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `liste`: Seiten-Ids mit Rang für andere Teile, nur lesend ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `liste`: Stück-Ids aus der Karte für die Suche, nur lesend ([Schritt 6](#kn-wissen-s6))
+- `app/panel/wissenskarte.py` `trifft`: trifft ein Suchwort einen Punkt? feste Regel ([Schritt 6](#kn-wissen-s6))
+- `app/panel/documents.py` `_karte`: die Liste der Karte in die Mischung, mit den Filtern der Suche ([Schritt 6](#kn-wissen-s6))
 - `app/panel/documents.py` `_similar`: Ähnlichkeit blockweise in float32 ([Schritt 6](#kn-wissen-s6))
 - `app/panel/gedaechtnis.py` `hint_lines`: Fakten in drei Blöcken ([Schritt 13](#kn-wissen-s13))
 - `app/panel/profiles.py` `_cap`: Obergrenze: nur alte gelernte Fakten machen Platz ([Schritt 13](#kn-wissen-s13))
 - `app/panel/gedaechtnis.py` `slot_of`: fester Themen-Platz eines Fakts nach festen Mustern ([Schritt 13](#kn-wissen-s13))
 - `app/panel/gemerkt.py` `take_back`: Rückgängig nur bei unverändertem Fakt ([Schritt 13](#kn-wissen-s13))
 
-Selbsttests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`
+Selbsttests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`
 
 ### Wächter
 

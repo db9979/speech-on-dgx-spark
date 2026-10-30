@@ -290,6 +290,7 @@
     "knowledge_map_day": 200,
     "knowledge_ents": false,
     "knowledge_ents_day": 200,
+    "knowledge_search": false,
     "rerank": false,
     "rerank_model": "klein",
     "rerank_ms": 800,
