@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.280** Dungeon music: tempo, key and time signature as metadata, caption as tags without negations, new mood "Boss"
 - **V01.1.279** Remote access → Systems, button “Web services”: web pages of a paired system (Grafana, router, Home Assistant there) in the browser through its anchor, on an origin of their own (tunnel door port 31090 or tunnel address), the panel's cookies and sign-in stay out, targets by fixed rules on both sides (network behind it per system with the code), Found shows listening ports, WebSocket passes through; anchor 1.6.0
 - **V01.1.278** Remote access, screen: the Spark now builds guacd itself from Apache's source (1.6.0, pinned with SHA-256, VNC and RDP only, FreeRDP 3 or 2, built as nobody, to /opt/speech-spark/guacd), as Debian 12/13 and Raspberry Pi OS have no guacd package any more; the update builds it by itself once the screen is on, a failure never stops it and the panel names the reason; every grey button of a system says why (for the screen with the command to copy or insert).
 - **V01.1.277** Remote access on Windows (stage 5): pairing through a one-time link to the file spark-anker-einrichten.cmd (double-click, "Yes", no code), then the admin confirms the new system with a code or passkey; OpenSSH only on 127.0.0.1, Python only for the anchor with a pinned checksum, removing under Apps "Spark Anker" puts everything back; checked on a real Windows (GitHub action "Fernzugang Windows")
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.273** Knowledge map: a page and a point of the same name are one point, renaming takes the page along (no double page), "Rename page" with code; fixed type rules for connections, deadlines only with a date or number
 - **V01.1.272** Redesign stage 5: settings, features, Me pages and app tiles in the system style (grey groups, list and detail, a save bar that stands)
 - **V01.1.271** · 2026-10-30 · Test fix: the page test "Load older mail" skips itself without a browser like every page test (was red in the Werkstatt on the Spark), a guard test catches that from now on; the briefing and background tests count only their own things (were wobbly in the night run); the mail tests' stand-in mailboxes take a folder like the real one (TypeError in mail._older in the GitHub log); the mail delete test waits for the page's answer before it drags on (was red alongside other mail tests)
-- **V01.1.270** Measure knowledge: times and memory of search, knowledge book and knowledge map with 5000 made-up documents or one profile (read only), under Status → Checks and `sudo speech-spark wissen messen`
 
 
 

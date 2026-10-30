@@ -4797,6 +4797,13 @@
 "titel": "Webdienste enden sicher",
 "text": "Einen Webdienst öffnen, dann oben „Sperren“: der Rahmen meldet, dass der Fernzugang gesperrt ist, ein Neuladen im eigenen Tab auch. Wieder öffnen und den Notaus drücken: der Webdienst endet sofort. „Netz dahinter“ an (fragt den Code), einen Dienst auf einer privaten Adresse im Netz des Systems anlegen und öffnen; „Netz dahinter“ aus: der Dienst ist weg. Eine Adresse aus dem Netz des Pi lehnt das Panel ab. In Logs → Fernzugang nur feste Wörter und Portnummern, nie eine Adresse oder ein Pfad.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P710",
+"v": 1280,
+"titel": "Dungeon-Musik: fester Grundton und Boss",
+"text": "Voraussetzung: KI-Dungeon-Master an, Musik am Tisch mit „Musik vorbereiten“, Musikmodell installiert. A: Vorher ein altes Kampf- und ein Taverne-Stück der Fantasy-Welt am Tisch anhören (Hörprobe vorher, kurz notieren: Tempo gleichmäßig? Gesang? hektisch?). B: Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch → „Musik jetzt vorbereiten“: die Tabelle hat eine Spalte „Boss“; neue Stücke entstehen nach und nach (alte spielen weiter, bis ihr Feld neue hat). C: Zustand → Logs, Bereich Dungeon-Master: „dungeon: musik | ok | kampf | … s | … ms“ und später „… | boss | …“, keine Beschreibung und kein Text. D: Hörprobe nachher am Tisch, dieselben Felder: zwei Stücke derselben Stimmung haben dasselbe Tempo und dieselbe Tonart, die Überblendung holpert nicht, kein Gesang, nichts Hektisches; Taverne im Dreiertakt-Schwung (6/8), Lagerfeuer im 3/4. E: In einer Runde einen Kampf mit einem Boss aus dem Bestiarium beginnen: ohne Boss-Stück spielt die Kampfmusik und die Leiste zeigt „Kampf“, mit Boss-Stücken „Boss“; fällt der Boss, wechselt sie zu „Kampf“. F: Heldenlied am Kapitelende: deutscher Gesang wie bisher, Tempo ruhig. G: Ich → Musik ein eigenes Lied machen: klingt wie bisher (keine Änderung).",
+"thread": "Dungeon-Musik anpassbar machen"
 }
 ]
 }

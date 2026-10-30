@@ -322,7 +322,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_legenden.py` | Dungeon-Master-Legenden: 20 benannte Einzelstücke je Welt, nur aus Boss, Belohnung oder Truhe, einmal je Kampagne |
 | `app/panel/dungeon_lied.py` | Dungeon-Master: Heldenlied des Barden, am Kapitelende feste Strophen mit Heldennamen, gesungen vom Musikmodell |
 | `app/panel/dungeon_mitkommen.py` | Dungeon-Master: Überreden zum Mitkommen, Haltung und Charisma-Probe des Panels, die Karte nimmt die Person mit |
-| `app/panel/dungeon_musik.py` | KI-Dungeon-Master: Musik je Welt und Stimmung im Voraus (Akt n+1, nachts), Geräusche und Würfel im Browser |
+| `app/panel/dungeon_musik.py` | KI-Dungeon-Master: Musik je Welt und Stimmung (auch Boss) vorab, Tempo/Tonart als Metadaten; Klänge, Würfel im Browser |
 | `app/panel/dungeon_mut.py` | Dungeon-Master-Heldenmut: einmal am Abend neu würfeln oder kritisch treffen, ein zweiter durch 👍 der Mitspieler |
 | `app/panel/dungeon_narben.py` | Dungeon-Master: Narben und bleibende Wunden nach fester W20-Tabelle, ein Heiler in der Siedlung nimmt die Folgen |
 | `app/panel/dungeon_nsc.py` | Dungeon-Master-NSC-Gedächtnis: Karten aus festen Tabellen, Haltung und Beziehungen nach festen Regeln, Chronik und Ruf |
@@ -3155,7 +3155,7 @@ flowchart TD
 4. <a id="kn-bild-s4"></a>**Innerhalb der Grenzen?**: Pro Profil gelten Bilder pro Tag (gleitend 24 Stunden), Platz und höchstens 300 Bilder; Lieder: Lieder pro Tag, Platz und längstes Lied (musik.start), je Lied höchstens 10 Fassungen, 10 eigene Dateien am Tag; jede Zahl einer Änderung prüft musik.plan_edit. Admin-Profile haben keine Tageslimits (coadmin.unbegrenzt), Platz und Warteschlange gelten auch für sie. Auf dem ganzen Spark warten höchstens 10 schwere Aufträge, Bilder und Lieder zusammen.
 5. <a id="kn-bild-s5"></a>**Warten auf Pause und Platz**: Der Auftrag läuft im Hintergrund (bilder._work, musik._work): er wartet, bis niemand spricht (vorrang), und stellt sich in die eine Warteschlange für Bilder und Lieder (schwer.run). Die feste Regel schwer.pick nimmt den ältesten; solange die geladene Art noch wartet, kommt sie zuerst, aber höchstens 3-mal hintereinander, während die andere Art wartet. Ist eine andere Art dran, beendet das Panel zuerst das geladene Modell. Wer hinter anderen steht, bekommt einen festen Satz mit Platz und ungefährer Dauer (schwer.hint), die Karte zeigt „Wartet · Platz 2 von 3“. Ein Bild darf höchstens 720 Sekunden brauchen.
 6. <a id="kn-bild-s6"></a>**Modell geladen?**: bild_server.Engine.start nimmt zuerst den einen Platz (bedarf.OnDemand.claim, Sperre bedarf.lock: hält ihn der Musik-Dienst, antwortet er „belegt“) und startet sd-server als eigenen Prozess auf 127.0.0.1, aber nur, wenn genug gemeinsamer Speicher frei ist; sonst bleibt alles andere ungestört. Zu wenig Speicher beendet den Auftrag nicht: er behält seinen Platz und versucht es alle 30 Sekunden neu, höchstens 600 Sekunden lang.
-7. <a id="kn-bild-s7"></a>**Malen**: Die Engine malt das Bild in 4 Schritten in der gewählten Größe; ihre eigene Ausgabe kommt nie ins Journal, weil sie den Prompt nennen würde.
+7. <a id="kn-bild-s7"></a>**Malen**: Die Engine malt das Bild in 4 Schritten in der gewählten Größe; ihre eigene Ausgabe kommt nie ins Journal, weil sie den Prompt nennen würde. Für ein Lied setzt musik_server.request_body jedes Feld selbst; Tempo, Tonart, Takt und einen Negativ-Text nimmt es nur aus festen Werten an (musik_server.metadata). Die Dungeon-Musik gibt alle mit, so schreibt das Planer-Modell ihre Beschreibung nicht um.
 8. <a id="kn-bild-s8"></a>**Bild unbedenklich?**: bild_server.nsfw_share lässt einen Klassifikator auf der CPU das Bild prüfen. Über 0.5 wird es verworfen; fehlt die Prüfung, zeigt das Panel nichts.
 9. <a id="kn-bild-s9"></a>**Als KI-Bild kennzeichnen**: bild_server.finish kodiert das Bild neu als PNG und schreibt hinein, dass es KI-erzeugt ist, ein geändertes Bild KI-bearbeitet (auch als IPTC-Angabe).
 10. <a id="kn-bild-s10"></a>**Bild abgelegt**: Das Bild kommt mit seinem Auftrag in den Ordner des Profils (bilder.keep), die Karte im Chat und in der iPhone-App zeigt es, auch in einem wieder geöffneten Gespräch; über App oder Telegram kommt ein Push. Nach einer Ruhezeit beendet der Bild-Dienst die Engine und gibt den Speicher frei. Ein Lied liegt als MP3 unter users/ID/musik/ (musik.keep), mit Abspieler im Chat und unter Ich → Musik.
@@ -3216,6 +3216,8 @@ flowchart TD
 - `app/panel/musik.py` `tone`: Schneiden, Tempo, Tonart ohne Modell ([Schritt 1](#kn-bild-s1))
 - `app/panel/musik.py` `upload`: Eigene Datei mit Rechte-Haken ([Schritt 1](#kn-bild-s1))
 - `app/musik_server.py` `edit_body`: Feste Felder für repaint und cover ([Schritt 7](#kn-bild-s7))
+- `app/musik_server.py` `request_body`: Feste Felder für ein neues Lied ([Schritt 7](#kn-bild-s7))
+- `app/musik_server.py` `metadata`: Tempo, Tonart, Takt und Negativ-Text nur aus festen Werten (Dungeon-Musik) ([Schritt 7](#kn-bild-s7))
 
 Selbsttests: `test_bilder`, `test_musik`, `test_musik_liedtext`, `test_schwer`
 

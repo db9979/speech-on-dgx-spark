@@ -390,7 +390,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Bilder malen (and Musik machen in the same box)
     "bild": {
-        "stand": "d56c3ed081",
+        "stand": "297bfe64f5",
         "bezug": {
             "bilder.MAX_PICS": ["s4"], "schwer.WAITING": ["s4"], "bilder.JOB_SECONDS": ["s5"], "bilder.NSFW_MAX": ["s8"],
             "schwer.run": ["s5"], "schwer.pick": ["s5"], "schwer.hint": ["s5"], "schwer.BUNDLE": ["s5"],
@@ -400,6 +400,7 @@ SEITEN = {
             "musik._measure": ["s5"], "musik.start": ["s4"], "musik.keep": ["s10"], "musik._work": ["s5"], "musik.refuse_text": ["s3"],
             "musik.plan_edit": ["s4"], "musik.start_edit": ["s1"], "musik.tone": ["s1"], "musik.upload": ["s1"],
             "musik_server.edit_body": ["s7"], "musik.write_lyrics": ["s3"], "musik.MAX_VERSIONS": ["s4"], "musik.UPLOADS_DAY": ["s4"],
+            "musik_server.request_body": ["s7"], "musik_server.metadata": ["s7"],
         },
         "kurz": ("Bilder malen macht aus einem Wunsch ein Bild, auf dem Spark selbst. Das Panel prüft den Wunsch mit "
                  "festen Regeln und gibt ihn an den Bild-Dienst, der nur auf dieser Maschine lauscht. Der lädt FLUX.2 "
@@ -518,9 +519,15 @@ SEITEN = {
             S("s7", "schritt", ("Malen", "Paint"),
               ("FLUX.2 klein, {bildmodell.STEPS} Schritte", "FLUX.2 klein, {bildmodell.STEPS} steps"),
               ("Die Engine malt das Bild in {bildmodell.STEPS} Schritten in der gewählten Größe; ihre eigene Ausgabe "
-               "kommt nie ins Journal, weil sie den Prompt nennen würde.",
+               "kommt nie ins Journal, weil sie den Prompt nennen würde. Für ein Lied setzt musik_server.request_body "
+               "jedes Feld selbst; Tempo, Tonart, Takt und einen Negativ-Text nimmt es nur aus festen Werten an "
+               "(musik_server.metadata). Die Dungeon-Musik gibt alle mit, so schreibt das Planer-Modell ihre "
+               "Beschreibung nicht um.",
                "The engine paints the picture in {bildmodell.STEPS} steps at the chosen size; its own output never "
-               "reaches the journal, because it would name the prompt.")),
+               "reaches the journal, because it would name the prompt. For a song musik_server.request_body sets "
+               "every field itself; tempo, key, time signature and a negative prompt it takes only from fixed values "
+               "(musik_server.metadata). The dungeon music gives all of them, so the planner model does not rewrite "
+               "its caption.")),
             S("s8", "frage", ("Bild unbedenklich?", "Picture harmless?"),
               ("Bildprüfung nach dem Malen", "image check after painting"),
               ("bild_server.nsfw_share lässt einen Klassifikator auf der CPU das Bild prüfen. Über "
@@ -625,6 +632,9 @@ SEITEN = {
             ("musik.tone", ("Schneiden, Tempo, Tonart ohne Modell", "cut, tempo, key without a model")),
             ("musik.upload", ("Eigene Datei mit Rechte-Haken", "own file with the rights tick")),
             ("musik_server.edit_body", ("Feste Felder für repaint und cover", "fixed fields for repaint and cover")),
+            ("musik_server.request_body", ("Feste Felder für ein neues Lied", "fixed fields for a new song")),
+            ("musik_server.metadata", ("Tempo, Tonart, Takt und Negativ-Text nur aus festen Werten (Dungeon-Musik)",
+                                       "tempo, key, time signature and negative prompt from fixed values only (dungeon music)")),
         ],
         "tests": ["test_bilder", "test_musik", "test_musik_liedtext", "test_schwer"],
         "heute": [],

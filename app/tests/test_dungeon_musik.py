@@ -113,42 +113,84 @@ class OffByDefault(MusicBase):
 class Words(MusicBase):
     def test_caption_only_fixed_words(self):
         import random
-        themen = [t for w in list(dm.THEMA.values()) + [dm.EIGEN_THEMA] for sz, wie in w.values() for t in (sz, *wie)]
-        fixed = set(re.findall(r"[a-z]+", " ".join([dm.EIGEN, dm.ENDE, *dm.STIL.values(), *themen, *dm.TONART_EIGEN,
-                                                     *[x for v in dm.TONART.values() for x in v], *dm.TEMPO.values()]).lower()))
+        themen = [t for w in list(dm.THEMA.values()) + [dm.EIGEN_THEMA] for art, wie in w.values() for t in (art, *wie)]
+        fixed = set(re.findall(r"[a-z]+", " ".join([dm.EIGEN, dm.PRODUKTION, *dm.STIL.values(), *themen]).lower()))
         for welt in list(dm.STIL) + ["eigene", EVIL]:
             for st in dm.STIMMUNGEN:
                 c = dm.caption(welt, st, random.Random(1))
                 self.assertLessEqual(len(c), musik.MAX_CAPTION)
                 self.assertNotIn("IGNORE", c)
                 self.assertLessEqual(set(re.findall(r"[a-z]+", c.lower())), fixed)
+                m = dm.meta(welt, st)                                       # the metadata: fixed values only
+                self.assertEqual(set(m), {"bpm", "keyscale", "timesignature", "negative"})
+                self.assertNotIn("IGNORE", json.dumps(m))
 
     def test_theme_drums_and_bass_never_hectic(self):
         """Dominik 2026-10-24: the pieces fit the theme, drums and bass welcome; 2026-10-23: never annoying or too fast."""
         import random
         for welt in list(dm.STIL) + ["eigene"]:
             table = dm.THEMA.get(welt, dm.EIGEN_THEMA)
-            self.assertEqual(set(table), set(dm.STIMMUNGEN))               # every mood has its own scene
+            self.assertEqual(set(table), set(dm.STIMMUNGEN))               # every mood has its own character
             for st in dm.STIMMUNGEN:
                 for seed in range(20):
                     c = dm.caption(welt, st, random.Random(seed)).lower()
                     self.assertIn(table[st][0], c)
                     self.assertRegex(c, r"drum|taiko|timpani|percussion|tambourine")
                     self.assertRegex(c, r"bass")
-                    self.assertTrue(c.endswith(dm.ENDE.lower()))
-                    self.assertNotRegex(c[:-len(dm.ENDE)], r"\b(fast|frantic|hectic|relentless|chaotic|no drums)\b")
-                    bpm = [int(x) for x in re.findall(r"(\d+) bpm", c)]
-                    self.assertEqual(len(bpm), 1, c)
-                    self.assertLessEqual(bpm[0], 110)
-        self.assertIn("never hectic", dm.ENDE)
-        import random as rnd
-        for welt in list(dm.STIL) + ["eigene"]:                               # one key and tempo per field: smooth crossfades
-            for st in dm.STIMMUNGEN:
-                cs = {re.search(r"\d+ bpm, in [a-z ]+? (?:major|minor)", dm.caption(welt, st, rnd.Random(i)).lower()).group(0) for i in range(10)}
-                self.assertEqual(len(cs), 1, (welt, st, cs))
-        self.assertIn("fade-out ending", dm.ENDE)
+                    self.assertTrue(c.endswith(dm.PRODUKTION.lower()))
+                    self.assertNotRegex(c, r"\b(fast|frantic|hectic|relentless|chaotic|no drums)\b")
+                self.assertLessEqual(dm.meta(welt, st)["bpm"], 110)
+        self.assertIn("hectic", dm.NEGATIV)                                 # „never hectic“ is the negative prompt now
+        self.assertIn("fade-out", dm.PRODUKTION)
         self.assertGreaterEqual(min(dm.LAENGE), 180)                          # Dominik 2026-10-25: at least three times as long
         self.assertNotEqual(dm.caption("fantasy", "taverne", random.Random(1)), dm.caption("piraten", "taverne", random.Random(1)))
+
+    def test_caption_is_tags_without_negations(self):
+        """Plan dungeon-musik-tuning V1a (Dominik 2026-10-30): the caption is tags (genre, instruments, mood,
+        production), no sentence, no tempo or key as words and never a negation: those go as the negative prompt."""
+        import random
+        for welt in list(dm.STIL) + ["eigene"]:
+            for st in dm.STIMMUNGEN:
+                for seed in range(6):
+                    c = dm.caption(welt, st, random.Random(seed)).lower()
+                    self.assertNotRegex(c, r"\b(no|not|never|without|avoid|none|nothing|vocals?|singing|voice)\b", c)
+                    self.assertNotRegex(c, r"\d+ ?bpm|\b(major|minor)\b", c)
+                    self.assertTrue(all(len(t.split()) <= 6 for t in c.split(", ")), c)   # tags, never a sentence
+        for word in ("vocals", "hectic", "abrupt changes"):
+            self.assertIn(word, dm.NEGATIV)
+        self.assertNotRegex(dm.NEGATIV, r"\b(no|not|never)\b")             # a negative prompt names, it never negates
+
+    def test_metadata_one_key_and_tempo_per_field(self):
+        """Tempo, key and time signature go as the song's metadata, the same for every piece of a field (smooth
+        crossfades) and only values the engine's planner knows (musik_server.KEYSCALE, TIMESIG, BPM)."""
+        import musik_server
+        for welt in list(dm.STIL) + ["eigene", EVIL]:
+            for st in dm.STIMMUNGEN:
+                m = dm.meta(welt, st)
+                self.assertEqual(m, dm.meta(welt, st))
+                self.assertTrue(musik_server.KEYSCALE.fullmatch(m["keyscale"]), m)
+                self.assertIn(m["timesignature"], musik_server.TIMESIG)
+                self.assertTrue(musik_server.BPM[0] <= m["bpm"] <= musik_server.BPM[1])
+                self.assertTrue(musik_server.NEGATIVE.fullmatch(m["negative"]) and len(m["negative"]) <= musik_server.MAX_NEGATIVE)
+                self.assertEqual(m["keyscale"].endswith("major"), st in dm.DUR)
+        self.assertEqual(dm.meta("fantasy", "kampf")["keyscale"], "D minor")
+        self.assertEqual(dm.meta("horror", "sieg")["keyscale"], "Eb major")
+        self.assertNotEqual(dm.meta("fantasy", "boss")["keyscale"], dm.meta("fantasy", "kampf")["keyscale"])   # the boss: its own key
+
+    def test_the_request_carries_the_metadata(self):
+        """A piece's body goes to the service with tempo, key, time signature and the negative prompt; the service
+        hands all of them to the engine (with all of them its planner keeps the caption word for word)."""
+        import musik_server
+        import random
+        self.music_on()
+        self.assertEqual(asyncio.run(dm.make("fantasy", "kampf", random.Random(3))), "ok")
+        body = self.made[-1]
+        self.assertEqual({k: body[k] for k in ("bpm", "keyscale", "timesignature", "negative")}, dm.meta("fantasy", "kampf"))
+        req = musik_server.request_body(dict(body, variant=None))
+        self.assertEqual((req["bpm"], req["keyscale"], req["timesignature"], req["lm_negative_prompt"]),
+                         (100, "D minor", "4", dm.NEGATIV))
+        self.assertEqual(req["caption"], body["caption"])
+        self.assertNotIn("bpm", req["caption"])
 
     def test_game_text_never_reaches_the_model(self):
         self.music_on()
@@ -221,12 +263,42 @@ class Moods(MusicBase):
         self.assertEqual((out["sieg_zug"], out["tuer_zug"]), (3, 2))
 
 
+    def test_boss_fight_is_the_panels_rule(self):
+        """Plan dungeon-musik-tuning V8a: „Boss“ only when the panel's fight has a foe with the bestiary's boss mark
+        still standing; the model's words (a scene „Bossfight“, a foe named „Boss“) never make one, a fallen boss
+        gives the fight back."""
+        foe = lambda **k: dict({"k": "g1", "name": "Ork", "leben": 5, "aus": "", "boss": False}, **k)   # noqa: E731
+        rd = {"welt": "fantasy", "szene": {"ort": "Thronsaal", "stimmung": ""}}
+        self.assertEqual(dm.mood(dict(rd, kampf={"gegner": [foe(), foe(k="g2", boss=True, name="Drache")]})), "boss")
+        self.assertEqual(dm.mood(dict(rd, kampf={"gegner": [foe(name="Boss der Orks")]})), "kampf")
+        self.assertEqual(dm.mood(dict(rd, kampf={"gegner": [foe(boss=True, aus="tot")]})), "kampf")
+        self.assertEqual(dm.mood(dict(rd, kampf={"gegner": [foe(boss="ja")]})), "kampf")     # only the panel's True
+        self.assertEqual(dm.mood({"szene": {"ort": "Boss", "stimmung": "Bossfight gegen den Endboss"}}), "erkunden")
+        self.assertEqual(dm.mood(dict(rd, kampf={"gegner": [foe(boss=True)]}, rast={"art": "kurz"})), "boss")
+        self.assertIn("boss", dm.STIMMUNGEN)
+        self.assertNotIn("boss", dm.DUR)
+        self.assertLessEqual(dm.TEMPO["boss"], 110)
+
+    def test_boss_without_pieces_plays_the_fight(self):
+        """No boss piece in the store yet: the table plays the fight's pieces (and says so), then the boss's own."""
+        self.music_on()
+        kampf = self.put("fantasy", "kampf", 2)
+        rd = {"welt": "fantasy", "szene": {}, "status": "laeuft", "log": [],
+              "kampf": {"gegner": [{"k": "g1", "name": "Drache", "leben": 50, "aus": "", "boss": True}]}}
+        out = dm.for_view("r9", rd)
+        self.assertEqual((out["st"], set(out["stuecke"])), ("kampf", set(kampf)))
+        self.assertIn(("fantasy", "boss"), dm._want)                    # the boss's field is asked for
+        boss = self.put("fantasy", "boss", 1)
+        out = dm.for_view("r9", rd)
+        self.assertEqual((out["st"], out["stuecke"], out["name"]), ("boss", boss, "Boss"))
+
+
 class Ahead(MusicBase):
     def test_round_asks_for_its_acts(self):
         self.music_on(n=6)
         rd = {"welt": "fantasy", "plan": Moods.PLAN, "akt": 0, "szene": {}, "status": "laeuft", "log": []}
         dm.ask_round("r1", rd)
-        self.assertEqual(set(dm._want), {("fantasy", m) for m in ("erkunden", "spannung", "kampf", "sieg")})
+        self.assertEqual(set(dm._want), {("fantasy", m) for m in ("erkunden", "spannung", "kampf", "boss", "sieg")})
         self.assertTrue(all(w["upto"] == dm.BEREIT and w["extra"] == 0 for w in dm._want.values()))
         dm._want.clear()
         dm.ask_round("r0", dict(rd, karte={"orte": []}))      # a round with a map asks for its vault too

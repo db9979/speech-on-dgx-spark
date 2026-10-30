@@ -11,12 +11,14 @@ One song at a time. The unit's OOMScoreAdjust (1000) makes the engine the first 
 
 A song takes two steps of the engine: /lm (the small language model plans structure, lyrics when none are given,
 and the audio codes), then /synth (the DiT makes the sound, the VAE the wave, out as MP3). Every field of both
-requests is set here; the caller gives only caption, seconds, lyrics, language and seed. The MP3 is checked (size,
+requests is set here; the caller gives only caption, seconds, lyrics, language and seed, and may fix tempo, key,
+time signature and a negative prompt from fixed values (metadata; the Dungeon-Master's music does). The MP3 is checked (size,
 frame header) and gets our own ID3 tag that marks it as made by an AI. The service never logs a caption or lyrics:
 only seconds, sizes and states.
 
     GET  /health        status (off | starting | ready | busy | error | missing), variant, counts, measurements
-    POST /v1/musik      {caption, seconds, lyrics?, language?, seed?, variant?} -> {mp3, variant, seconds, lm_s, ...}
+    POST /v1/musik      {caption, seconds, lyrics?, language?, seed?, variant?, bpm?, keyscale?, timesignature?, negative?}
+                        -> {mp3, variant, seconds, lm_s, ...}
     POST /v1/musik/stop ends the engine now (Wartungspause, Musik testen)
 
 Musik bearbeiten (plan musik-experte, Dominik 2026-10-20 „alles nach Empfehlung“, Stufe E1): the panel sends one of
@@ -78,6 +80,15 @@ TASKS = {"abschnitt": "repaint", "verlaengern": "repaint", "richtung": "cover", 
 TEMPO = (0.75, 1.25)
 HALFTONES = 4
 KEY = re.compile(r"[A-G][#b]?\s?(?:major|minor|maj|min|dur|moll)?")
+# the song's metadata a caller may fix (Dungeon-Musik, plan dungeon-musik-tuning V1a, Dominik 2026-10-30 „1-8“): with
+# tempo, key, time signature and length all given acestep.cpp skips the planner's rewriting of the caption (src/
+# pipeline-lm.cpp at musikmodell.ACECPP_COMMIT: "Filled = don't touch"); only the values its planner knows
+# (src/metadata-fsm.h: A-G with #/b, major/minor; time signature 2, 3, 4, 6)
+BPM = (40, 220)
+KEYSCALE = re.compile(r"[A-G][#b]? (?:major|minor)")
+TIMESIG = ("2", "3", "4", "6")
+MAX_NEGATIVE = 200
+NEGATIVE = re.compile(r"[a-z][a-z ,-]*")   # the panel's own fixed English words only, never a text from elsewhere
 
 app = FastAPI(title="Musik machen (ACE-Step 1.5 via acestep.cpp)")
 app.add_middleware(BodyLimit, default=MAX_BODY, gate=api_key_ok, gated=("/v1/",), limits=[
@@ -353,7 +364,8 @@ def pick(b):
 
 
 def request_body(b, v=None):
-    """The checked request for the engine: every field fixed here except caption, length, lyrics, language, seed.
+    """The checked request for the engine: every field fixed here except caption, length, lyrics, language, seed and
+    the optional metadata (metadata: tempo, key, time signature, negative prompt; absent as before).
     ace-server knows its models by the whole file name, .gguf included (V01.0.681)."""
     if not isinstance(b, dict):
         raise HTTPException(400, "JSON object")
@@ -379,7 +391,35 @@ def request_body(b, v=None):
             "duration": float(secs), "seed": seed, "lm_batch_size": 1, "synth_batch_size": 1,
             "inference_steps": musikmodell.STEPS, "task_type": "text2music", "output_format": "mp3",
             "mp3_bitrate": musikmodell.MP3_KBPS, "synth_model": v["dit"].name, "lm_model": v["lm"].name,
-            "use_cot_caption": True, "lm_mode": "generate", "adapter": ""}
+            "use_cot_caption": True, "lm_mode": "generate", "adapter": "", **metadata(b)}
+
+
+def metadata(b):
+    """The optional metadata of a song, each checked here (absent: the engine's planner fills it as before):
+    bpm (whole number in BPM), keyscale („D minor“, KEYSCALE), timesignature (TIMESIG), negative (the planner's
+    negative prompt lm_negative_prompt: lowercase words, commas and hyphens, at most MAX_NEGATIVE)."""
+    out = {}
+    bpm = b.get("bpm")
+    if bpm is not None:
+        if isinstance(bpm, bool) or not isinstance(bpm, int) or not BPM[0] <= bpm <= BPM[1]:
+            raise HTTPException(400, f"bpm: {BPM[0]}-{BPM[1]}")
+        out["bpm"] = bpm
+    key = b.get("keyscale")
+    if key is not None:
+        if not isinstance(key, str) or not KEYSCALE.fullmatch(key):
+            raise HTTPException(400, "keyscale")
+        out["keyscale"] = key
+    ts = b.get("timesignature")
+    if ts is not None:
+        if ts not in TIMESIG:
+            raise HTTPException(400, "timesignature")
+        out["timesignature"] = ts
+    neg = b.get("negative")
+    if neg is not None:
+        if not isinstance(neg, str) or len(neg) > MAX_NEGATIVE or not NEGATIVE.fullmatch(neg):
+            raise HTTPException(400, f"negative: at most {MAX_NEGATIVE} lowercase words")
+        out["lm_negative_prompt"] = neg
+    return out
 
 
 @app.post("/v1/musik", dependencies=auth)
@@ -562,7 +602,7 @@ def edit_body(b, v):
         req.update(audio_cover_strength=near)
         bpm = b.get("bpm")
         if bpm is not None:
-            if isinstance(bpm, bool) or not isinstance(bpm, int) or not 40 <= bpm <= 220:
+            if isinstance(bpm, bool) or not isinstance(bpm, int) or not BPM[0] <= bpm <= BPM[1]:
                 raise HTTPException(400, "bpm")
             req["bpm"] = bpm
     return req
