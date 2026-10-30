@@ -2973,7 +2973,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "nen Negativ-Text nimmt es nur aus festen Werten an (musik_server.metadata). Die Dungeon-Musik gibt alle mit, so schreibt das Planer-Modell ihre Beschreibung nicht um. 8. Bild unbedenklich?: bild_server.nsfw_share lässt einen Klassifikator auf der CPU das Bild prüfen. Über 0.5 wird es verworfen; fehlt die Prüfung, zeigt das Panel nichts. 9. Als KI-Bild kennzeichnen: bild_server.finish kodiert das Bild neu als PNG und schreibt hinein, dass es KI-erzeugt ist, ein geändertes Bild KI-bearbeitet (auch als IPTC-Angabe). 10. Bild abgelegt: Das Bild kommt mit seinem Auftrag in den Ordner des Profils (bilder.keep), die Karte im Chat und in der iPhone-App zeigt es, auch in einem wieder geöffneten Gespräch; über App oder Telegram kommt ein Push. Nach einer Ruhezeit beendet der Bild-Dienst die Engine und gibt den Speicher frei. Ein Lied liegt als MP3 unter users/ID/musik/ (musik.keep), mit Abspieler im Chat und unter Ich → Musik."
+"text": "nen Negativ-Text nimmt es nur aus festen Werten an (musik_server.metadata). Die Dungeon-Musik gibt alle mit, so schreibt das Planer-Modell ihre Beschreibung nicht um. Eine Qualitätsstufe (Schnell, Gut, Beste) und die Lautheit nennt der Aufrufer nur beim Namen, die Werte stehen in musikmodell.QUALITAET (musik_server.quality); Beste nimmt das SFT-Modell mit 50 Schritten nur, wenn es installiert ist, sonst Gut. 8. Bild unbedenklich?: bild_server.nsfw_share lässt einen Klassifikator auf der CPU das Bild prüfen. Über 0.5 wird es verworfen; fehlt die Prüfung, zeigt das Panel nichts. 9. Als KI-Bild kennzeichnen: bild_server.finish kodiert das Bild neu als PNG und schreibt hinein, dass es KI-erzeugt ist, ein geändertes Bild KI-bearbeitet (auch als IPTC-Angabe). 10. Bild abgelegt: Das Bild kommt mit seinem Auftrag in den Ordner des Profils (bilder.keep), die Karte im Chat und in der iPhone-App zeigt es, auch in einem wieder geöffneten Gespräch; über App oder Telegram kommt ein Push. Nach einer Ruhezeit beendet der Bild-Dienst die Engine und gibt den Speicher frei. Ein Lied liegt als MP3 unter users/ID/musik/ (musik.keep), mit Abspieler im Chat und unter Ich → Musik."
 },
 {
 "lang": "de",
@@ -3021,7 +3021,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "tler, Geheimnisse (Schritt 3) - app/panel/musik.py write_lyrics: Liedtext aus der Beschreibung, Namen zu Stilwörtern (Schritt 3) - app/panel/musik.py _work: Lied im Hintergrund (Schritt 5) - app/panel/musik.py keep: Lied ablegen (Schritt 10) - app/panel/musik.py _measure: Musik testen je Modell (Schritt 5) - app/panel/musik.py start_edit: Änderung eines Liedes annehmen (Schritt 1) - app/panel/musik.py plan_edit: Jede Zahl der Änderung prüfen (Schritt 4) - app/panel/musik.py tone: Schneiden, Tempo, Tonart ohne Modell (Schritt 1) - app/panel/musik.py upload: Eigene Datei mit Rechte-Haken (Schritt 1) - app/musik_server.py edit_body: Feste Felder für repaint und cover (Schritt 7) - app/musik_server.py request_body: Feste Felder für ein neues Lied (Schritt 7) - app/musik_server.py metadata: Tempo, Tonart, Takt und Negativ-Text nur aus festen Werten (Dungeon-Musik) (Schritt 7)"
+"text": "tler, Geheimnisse (Schritt 3) - app/panel/musik.py write_lyrics: Liedtext aus der Beschreibung, Namen zu Stilwörtern (Schritt 3) - app/panel/musik.py _work: Lied im Hintergrund (Schritt 5) - app/panel/musik.py keep: Lied ablegen (Schritt 10) - app/panel/musik.py _measure: Musik testen je Modell (Schritt 5) - app/panel/musik.py start_edit: Änderung eines Liedes annehmen (Schritt 1) - app/panel/musik.py plan_edit: Jede Zahl der Änderung prüfen (Schritt 4) - app/panel/musik.py tone: Schneiden, Tempo, Tonart ohne Modell (Schritt 1) - app/panel/musik.py upload: Eigene Datei mit Rechte-Haken (Schritt 1) - app/musik_server.py edit_body: Feste Felder für repaint und cover (Schritt 7) - app/musik_server.py request_body: Feste Felder für ein neues Lied (Schritt 7) - app/musik_server.py metadata: Tempo, Tonart, Takt und Negativ-Text nur aus festen Werten (Dungeon-Musik) (Schritt 7) - app/musik_server.py quality: Qualitätsstufe und Lautheit aus festen Werten, Beste nur mit SFT-Modell (Schritt 7)"
 },
 {
 "lang": "de",
@@ -3317,7 +3317,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 104). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, "
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 106). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, "
 },
 {
 "lang": "de",
@@ -3341,7 +3341,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 47 Dateien in jeder Sicherung (Schritt 7) - 104 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 47 Dateien in jeder Sicherung (Schritt 7) - 106 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -9254,6 +9254,22 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "fes Blech, tiefer Bass) und Stimmung (episch, bedrohlich). Jede laufende Runde bittet wie beim Kampf um 2 Boss-Stücke im Voraus. Liegt noch kein Boss-Stück im Vorrat, spielt der Tisch die Kampf-Stücke und zeigt „Kampf“. Die Tabelle unter Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch hat damit eine Spalte mehr. Kein neuer Schalter: alles gehört zu „Musik am Tisch“. Log wie bisher dungeon: musik | ok | boss | …."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Qualität der Musik (V01.1.281, Plan dungeon-musik-tuning/plan.md V6a und V7a, Dominik 2026-10-30 „1-8“): Die Karte unter Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch hat zwei Reiter: Vorrat (wie bisher) und Qualität. Dort wählt der Admin mit Segmentknöpfen: Qualität Schnell (Standard, wie bisher: Turbo-Modell, 8 Schritte), Gut (dasselbe Modell, sorgfältigerer Löser dpm3m, Qualitätskorrektur 0,1 und ein ruhigerer Planer, Temperatur 0,75) oder Beste (das SFT-Klangmodell mit 50 Schritten). Beste rechnet nur nachts (1 bis 6 Uhr); tagsüber entstehen die Stücke mit Gut. Ist das SFT-Modell nicht installiert, macht der Musik-Dienst Gut und sagt das; die Karte zeigt dann „Das genauere Klangmodell (SFT) ist nicht installiert“. Das SFT-Modell ist vorbereitet (musikmodell.SFT, sft_installed), aber noch nicht installierbar: seine Datei kommt erst mit geprüftem SHA-256 in die feste Liste. Länge: Kurz (1½ bis 2 Minuten), Mittel (2 bis 3) oder Lang (3 bis 6, Standard wie bisher); ein Sieg bleibt 30 s. Lautheit: Normal (Standard) oder Lauter (die Engine schneidet die lautesten 0,01 % statt 0,001 % ab und hebt so leise Stellen an). Alle Werte stehen fest in mu"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "sikmodell.QUALITAET und LAUT; das Panel schickt nur die Namen (quality, loud), der Musik-Dienst prüft sie (musik_server.quality, sonst 400). Ein Guidance-Regler fehlt mit Absicht: Die Turbo-Modelle halten ihn ohnehin bei 1,0. Musik machen und Musik bearbeiten schicken keine Stufe und bleiben bei Schnell. Neues gilt für neue Stücke, alte spielen weiter. Musik testen (Zustand → Prüfen) misst zusätzlich „2B SFT, 50 Schritte“ mit denselben zwei Liedern und demselben Zufallswert, sobald das SFT-Modell installiert ist (Turbo gegen SFT zum Anhören); die Probestücke liegen als musik-test-2b-sft-1.mp3 und -2.mp3. Log: dungeon: musik | ok | kampf | 240 s | gut | … ms und dungeon: musik | einstellung | … | gut | lang | normal | …; der Musik-Dienst schreibt die Stufe in musik: gemacht …. Ablage: dungeon-musik.json (mit Qualität, Länge, Lautheit; in der Sicherung)."
 },
 {
 "lang": "de",
@@ -20205,7 +20221,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": ". 8. Picture harmless?: bild_server.nsfw_share lets a classifier on the CPU check the picture. Above 0.5 it is discarded; without the check the panel shows nothing. 9. Mark as AI picture: bild_server.finish re-encodes the picture as PNG and writes into it that it is AI-made, a changed picture AI-edited (also as an IPTC entry). 10. Picture stored: The picture goes into the profile's folder with its job (bilder.keep), the card in the chat and in the iPhone app shows it, also in a conversation opened again; a push goes out through the app or Telegram. After a quiet time the picture service stops the engine and frees the memory. A song is kept as MP3 under users/ID/musik/ (musik.keep), with a player in the chat and under Me → Music."
+"text": ". A quality level (fast, good, best) and the loudness the caller only names, the values are in musikmodell.QUALITAET (musik_server.quality); best takes the SFT model with 50 steps only when it is installed, else good. 8. Picture harmless?: bild_server.nsfw_share lets a classifier on the CPU check the picture. Above 0.5 it is discarded; without the check the panel shows nothing. 9. Mark as AI picture: bild_server.finish re-encodes the picture as PNG and writes into it that it is AI-made, a changed picture AI-edited (also as an IPTC entry). 10. Picture stored: The picture goes into the profile's folder with its job (bilder.keep), the card in the chat and in the iPhone app shows it, also in a conversation opened again; a push goes out through the app or Telegram. After a quiet time the picture service stops the engine and frees the memory. A song is kept as MP3 under users/ID/musik/ (musik.keep), with a player in the chat and under Me → Music."
 },
 {
 "lang": "en",
@@ -20253,7 +20269,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "le words (step 3) - app/panel/musik.py _work: song in the background (step 5) - app/panel/musik.py keep: store the song (step 10) - app/panel/musik.py _measure: test music per model (step 5) - app/panel/musik.py start_edit: accept a change of a song (step 1) - app/panel/musik.py plan_edit: check every number of the change (step 4) - app/panel/musik.py tone: cut, tempo, key without a model (step 1) - app/panel/musik.py upload: own file with the rights tick (step 1) - app/musik_server.py edit_body: fixed fields for repaint and cover (step 7) - app/musik_server.py request_body: fixed fields for a new song (step 7) - app/musik_server.py metadata: tempo, key, time signature and negative prompt from fixed values only (dungeon music) (step 7)"
+"text": "le words (step 3) - app/panel/musik.py _work: song in the background (step 5) - app/panel/musik.py keep: store the song (step 10) - app/panel/musik.py _measure: test music per model (step 5) - app/panel/musik.py start_edit: accept a change of a song (step 1) - app/panel/musik.py plan_edit: check every number of the change (step 4) - app/panel/musik.py tone: cut, tempo, key without a model (step 1) - app/panel/musik.py upload: own file with the rights tick (step 1) - app/musik_server.py edit_body: fixed fields for repaint and cover (step 7) - app/musik_server.py request_body: fixed fields for a new song (step 7) - app/musik_server.py metadata: tempo, key, time signature and negative prompt from fixed values only (dungeon music) (step 7) - app/musik_server.py quality: quality level and loudness from fixed values, best only with the SFT model (step 7)"
 },
 {
 "lang": "en",
@@ -20533,7 +20549,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 104). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again, and profiles forgets what it had opened of the profiles' sealed files."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 106). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again, and profiles forgets what it had opened of the profiles' sealed files."
 },
 {
 "lang": "en",
@@ -20549,7 +20565,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 47 files in every backup (step 7) - 104 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 47 files in every backup (step 7) - 106 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -26238,6 +26254,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ece yet, the table plays the fight's pieces and shows \"Fight\". The table under Features → AI Dungeon Master → Adjust rules → Music at the table gets one more column. No new switch: everything belongs to \"Music at the table\". Log as before dungeon: musik | ok | boss | …."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: quality of the music (V01.1.281, plan dungeon-musik-tuning/plan.md V6a and V7a, Dominik 2026-10-30 \"1-8\"): The card under Features → AI Dungeon Master → Adjust rules → Music at the table has two tabs: Store (as before) and Quality. There the admin picks with segment buttons: quality Fast (default, as before: the turbo model, 8 steps), Good (the same model, the more careful solver dpm3m, quality correction 0.1 and a calmer planner, temperature 0.75) or Best (the SFT sound model with 50 steps). Best computes only at night (1 to 6 o'clock); by day the pieces are made with Good. Without the SFT model installed the music service makes Good and says so; the card then shows \"The finer sound model (SFT) is not installed\". The SFT model is prepared (musikmodell.SFT, sft_installed) but cannot be installed yet: its file comes into the fixed list only with a checked SHA-256. Length: Short (1½ to 2 minutes), Medium (2 to 3) or Long (3 to 6, default as before); a victory stays 30 s. Loudness: Normal (default) or Louder (the engine clips the loudest 0.01 % instead of 0.001 % and so lifts quiet parts). All values are fixed in musikmodell.QUALITAET and LAUT; the panel sends only "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "the names (quality, loud), the music service checks them (musik_server.quality, else 400). A guidance control is missing on purpose: the turbo models hold it at 1.0 anyway. Making music and editing music send no level and stay at Fast. Changes apply to new pieces, old ones play on. Test music (State → Checks) also measures \"2B SFT, 50 steps\" with the same two songs and the same seed once the SFT model is installed (turbo against SFT to listen to); the samples are kept as musik-test-2b-sft-1.mp3 and -2.mp3. Log: dungeon: musik | ok | kampf | 240 s | gut | … ms and dungeon: musik | einstellung | … | gut | lang | normal | …; the music service writes the level into musik: gemacht …. Storage: dungeon-musik.json (with quality, length, loudness; in the backup)."
 },
 {
 "lang": "en",

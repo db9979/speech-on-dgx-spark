@@ -1201,7 +1201,7 @@ function musikTestShow(d){const m=$('musiktestmsg'),box=$('musiktestrows');musik
     down:t('Musik-Dienst antwortet nicht','music service does not answer'),off:t('entladen','unloaded'),starting:t('lädt','loading'),ready:t('geladen','loaded'),busy:t('macht Musik','making music'),error:t('Fehler','error')}[h.status]||'';
   const num=(v,u)=>v==null?'':String(v).replace('.',L==='en'?'.':',')+' '+u;
   const why={missing:t('nicht installiert','not installed'),memory:t('zu wenig Speicher frei','too little memory free'),engine:t('Engine-Fehler','engine error'),zeit:t('Zeit abgelaufen','timed out'),dienst:t('Dienst antwortet nicht','service does not answer'),pause:t('Wartungspause','maintenance pause')};
-  const vn={};(d&&d.variants||[]).forEach(([k,de,en])=>vn[k]=L==='en'?en:de);
+  const vn={};(d&&d.variants||[]).concat(d&&d.sft_test?[d.sft_test]:[]).forEach(([k,de,en])=>vn[k]=L==='en'?en:de);
   const inst=(h.installed||[]).map(k=>vn[k]||k).join(', ');
   m.textContent=[inst?t('installiert: ','installed: ')+inst:h.name,st,d&&d.run?t('misst … ','measuring … ')+(d.done||0)+'/'+(d.total||2):''].filter(Boolean).join(' · ');
   const names={};(d&&d.tests||[]).forEach(x=>names[x.n]=L==='en'?x.name.en:x.name.de);

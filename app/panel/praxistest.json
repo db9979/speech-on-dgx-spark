@@ -4804,6 +4804,13 @@
 "titel": "Dungeon-Musik: fester Grundton und Boss",
 "text": "Voraussetzung: KI-Dungeon-Master an, Musik am Tisch mit „Musik vorbereiten“, Musikmodell installiert. A: Vorher ein altes Kampf- und ein Taverne-Stück der Fantasy-Welt am Tisch anhören (Hörprobe vorher, kurz notieren: Tempo gleichmäßig? Gesang? hektisch?). B: Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch → „Musik jetzt vorbereiten“: die Tabelle hat eine Spalte „Boss“; neue Stücke entstehen nach und nach (alte spielen weiter, bis ihr Feld neue hat). C: Zustand → Logs, Bereich Dungeon-Master: „dungeon: musik | ok | kampf | … s | … ms“ und später „… | boss | …“, keine Beschreibung und kein Text. D: Hörprobe nachher am Tisch, dieselben Felder: zwei Stücke derselben Stimmung haben dasselbe Tempo und dieselbe Tonart, die Überblendung holpert nicht, kein Gesang, nichts Hektisches; Taverne im Dreiertakt-Schwung (6/8), Lagerfeuer im 3/4. E: In einer Runde einen Kampf mit einem Boss aus dem Bestiarium beginnen: ohne Boss-Stück spielt die Kampfmusik und die Leiste zeigt „Kampf“, mit Boss-Stücken „Boss“; fällt der Boss, wechselt sie zu „Kampf“. F: Heldenlied am Kapitelende: deutscher Gesang wie bisher, Tempo ruhig. G: Ich → Musik ein eigenes Lied machen: klingt wie bisher (keine Änderung).",
 "thread": "Dungeon-Musik anpassbar machen"
+},
+{
+"id": "P711",
+"v": 1281,
+"titel": "Dungeon-Musik: Qualität, Länge, Lautheit",
+"text": "Voraussetzung: Musik am Tisch mit „Musik vorbereiten“, Musikmodell installiert. A: Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch: zwei Reiter „Vorrat“ und „Qualität“; im Reiter Qualität stehen Qualität (Schnell, Gut, Beste), Länge (Kurz, Mittel, Lang) und Lautheit (Normal, Lauter), am Handy (390 px) ohne seitliches Rollen. B: Gut, Kurz, Lauter wählen, Speichern, Reiter Vorrat → „Musik jetzt vorbereiten“: Zustand → Logs, Bereich Dungeon-Master: „dungeon: musik | einstellung | … | gut | kurz | lauter | …“ und „dungeon: musik | ok | … | 90 s oder 120 s | gut | … ms“. C: Hörprobe am Tisch: ein Gut-Stück neben einem alten Schnell-Stück derselben Stimmung (klarer, weniger Rauschen?), Lauter deutlich lauter? D: Beste wählen: tagsüber entsteht Gut (Log „| gut |“); nachts ohne SFT-Modell zeigt die Karte „Das genauere Klangmodell (SFT) ist nicht installiert“. E: Ich → Musik ein eigenes Lied machen: wie bisher (Log des Musik-Dienstes „musik: gemacht … schnell …“). F: Zustand → Prüfen → „Musik testen“: ohne SFT-Modell nur die installierten Modelle wie bisher.",
+"thread": "Dungeon-Musik anpassbar machen"
 }
 ]
 }

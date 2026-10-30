@@ -747,7 +747,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/dungeon-klone` | KI-Dungeon-Master: die Stimme jeder Figur als Klon-Vorlage, wenn die Sprachausgabe ein Base-Modell hat (WAV mit dem gesprochenen Satz, höchstens 200, für alle Runden) | – | nein |
 | `state/dungeon-lieder` | KI-Dungeon-Master: Heldenlieder je Runde und Kapitel vom eigenen Musikmodell (MP3 mit den Namen der Helden) | – | nein |
 | `state/dungeon-musik` | KI-Dungeon-Master: Musikstücke je Welt und Stimmung vom eigenen Musikmodell (MP3, für alle Runden, nichts Persönliches) | – | nein |
-| `state/dungeon-musik.json` | KI-Dungeon-Master: Musik vorbereiten an oder aus, Stücke je Welt und Stimmung, Speicherplatz | – | ja |
+| `state/dungeon-musik.json` | KI-Dungeon-Master: Musik vorbereiten an oder aus, Stücke je Welt und Stimmung, Speicherplatz, Qualität, Länge, Lautheit | – | ja |
 | `state/dungeon-personen.json` | KI-Dungeon-Master: Personen-Katalog mit Karte, Wesen, Rolle, Stimme, Gesicht und Haltung zu den Helden (nur Spieldaten) | – | ja |
 | `state/dungeon-pruefstand.json` | KI-Dungeon-Master: Ergebnis des Balance-Prüfstands (Siege, verlorenes Leben und Runden je Stufe und Gruppengröße, ohne und mit Runen, gegen Herr und Boss) | – | ja |
 | `state/dungeon-regeln.json` | KI-Dungeon-Master: eigene Regeln und Katalog-Einträge des Admins | – | ja |
@@ -798,6 +798,8 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/musik-test-2b-2.mp3` | Probestück 2 mit 2B (Musik testen) | – | nein |
 | `state/musik-test-2b-klein-1.mp3` | Probestück 1 mit 2B klein (Musik testen) | – | nein |
 | `state/musik-test-2b-klein-2.mp3` | Probestück 2 mit 2B klein (Musik testen) | – | nein |
+| `state/musik-test-2b-sft-1.mp3` | Probestück 1 mit 2B SFT (Musik testen, Turbo gegen SFT) | – | nein |
+| `state/musik-test-2b-sft-2.mp3` | Probestück 2 mit 2B SFT (Musik testen, Turbo gegen SFT) | – | nein |
 | `state/musik-test-xl-1.mp3` | Probestück 1 mit XL (Musik testen) | – | nein |
 | `state/musik-test-xl-2.mp3` | Probestück 2 mit XL (Musik testen) | – | nein |
 | `state/musik-test.json` | Letzte Messung (Musik testen) | – | nein |
@@ -3155,7 +3157,7 @@ flowchart TD
 4. <a id="kn-bild-s4"></a>**Innerhalb der Grenzen?**: Pro Profil gelten Bilder pro Tag (gleitend 24 Stunden), Platz und höchstens 300 Bilder; Lieder: Lieder pro Tag, Platz und längstes Lied (musik.start), je Lied höchstens 10 Fassungen, 10 eigene Dateien am Tag; jede Zahl einer Änderung prüft musik.plan_edit. Admin-Profile haben keine Tageslimits (coadmin.unbegrenzt), Platz und Warteschlange gelten auch für sie. Auf dem ganzen Spark warten höchstens 10 schwere Aufträge, Bilder und Lieder zusammen.
 5. <a id="kn-bild-s5"></a>**Warten auf Pause und Platz**: Der Auftrag läuft im Hintergrund (bilder._work, musik._work): er wartet, bis niemand spricht (vorrang), und stellt sich in die eine Warteschlange für Bilder und Lieder (schwer.run). Die feste Regel schwer.pick nimmt den ältesten; solange die geladene Art noch wartet, kommt sie zuerst, aber höchstens 3-mal hintereinander, während die andere Art wartet. Ist eine andere Art dran, beendet das Panel zuerst das geladene Modell. Wer hinter anderen steht, bekommt einen festen Satz mit Platz und ungefährer Dauer (schwer.hint), die Karte zeigt „Wartet · Platz 2 von 3“. Ein Bild darf höchstens 720 Sekunden brauchen.
 6. <a id="kn-bild-s6"></a>**Modell geladen?**: bild_server.Engine.start nimmt zuerst den einen Platz (bedarf.OnDemand.claim, Sperre bedarf.lock: hält ihn der Musik-Dienst, antwortet er „belegt“) und startet sd-server als eigenen Prozess auf 127.0.0.1, aber nur, wenn genug gemeinsamer Speicher frei ist; sonst bleibt alles andere ungestört. Zu wenig Speicher beendet den Auftrag nicht: er behält seinen Platz und versucht es alle 30 Sekunden neu, höchstens 600 Sekunden lang.
-7. <a id="kn-bild-s7"></a>**Malen**: Die Engine malt das Bild in 4 Schritten in der gewählten Größe; ihre eigene Ausgabe kommt nie ins Journal, weil sie den Prompt nennen würde. Für ein Lied setzt musik_server.request_body jedes Feld selbst; Tempo, Tonart, Takt und einen Negativ-Text nimmt es nur aus festen Werten an (musik_server.metadata). Die Dungeon-Musik gibt alle mit, so schreibt das Planer-Modell ihre Beschreibung nicht um.
+7. <a id="kn-bild-s7"></a>**Malen**: Die Engine malt das Bild in 4 Schritten in der gewählten Größe; ihre eigene Ausgabe kommt nie ins Journal, weil sie den Prompt nennen würde. Für ein Lied setzt musik_server.request_body jedes Feld selbst; Tempo, Tonart, Takt und einen Negativ-Text nimmt es nur aus festen Werten an (musik_server.metadata). Die Dungeon-Musik gibt alle mit, so schreibt das Planer-Modell ihre Beschreibung nicht um. Eine Qualitätsstufe (Schnell, Gut, Beste) und die Lautheit nennt der Aufrufer nur beim Namen, die Werte stehen in musikmodell.QUALITAET (musik_server.quality); Beste nimmt das SFT-Modell mit 50 Schritten nur, wenn es installiert ist, sonst Gut.
 8. <a id="kn-bild-s8"></a>**Bild unbedenklich?**: bild_server.nsfw_share lässt einen Klassifikator auf der CPU das Bild prüfen. Über 0.5 wird es verworfen; fehlt die Prüfung, zeigt das Panel nichts.
 9. <a id="kn-bild-s9"></a>**Als KI-Bild kennzeichnen**: bild_server.finish kodiert das Bild neu als PNG und schreibt hinein, dass es KI-erzeugt ist, ein geändertes Bild KI-bearbeitet (auch als IPTC-Angabe).
 10. <a id="kn-bild-s10"></a>**Bild abgelegt**: Das Bild kommt mit seinem Auftrag in den Ordner des Profils (bilder.keep), die Karte im Chat und in der iPhone-App zeigt es, auch in einem wieder geöffneten Gespräch; über App oder Telegram kommt ein Push. Nach einer Ruhezeit beendet der Bild-Dienst die Engine und gibt den Speicher frei. Ein Lied liegt als MP3 unter users/ID/musik/ (musik.keep), mit Abspieler im Chat und unter Ich → Musik.
@@ -3218,6 +3220,7 @@ flowchart TD
 - `app/musik_server.py` `edit_body`: Feste Felder für repaint und cover ([Schritt 7](#kn-bild-s7))
 - `app/musik_server.py` `request_body`: Feste Felder für ein neues Lied ([Schritt 7](#kn-bild-s7))
 - `app/musik_server.py` `metadata`: Tempo, Tonart, Takt und Negativ-Text nur aus festen Werten (Dungeon-Musik) ([Schritt 7](#kn-bild-s7))
+- `app/musik_server.py` `quality`: Qualitätsstufe und Lautheit aus festen Werten, Beste nur mit SFT-Modell ([Schritt 7](#kn-bild-s7))
 
 Selbsttests: `test_bilder`, `test_musik`, `test_musik_liedtext`, `test_schwer`
 
@@ -3553,7 +3556,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 104). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 106). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -3564,7 +3567,7 @@ flowchart TD
 #### Zahlen (aus dem Code)
 
 - **47** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
-- **104** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
+- **106** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
 - **8 MB** größte Datei beim Wiederherstellen ([Schritt 9](#kn-state-s9))
 - **12** Zeichen hat das Umzugs-Passwort mindestens ([Schritt 8](#kn-state-s8))
 

@@ -390,7 +390,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Bilder malen (and Musik machen in the same box)
     "bild": {
-        "stand": "297bfe64f5",
+        "stand": "ebd06c9157",
         "bezug": {
             "bilder.MAX_PICS": ["s4"], "schwer.WAITING": ["s4"], "bilder.JOB_SECONDS": ["s5"], "bilder.NSFW_MAX": ["s8"],
             "schwer.run": ["s5"], "schwer.pick": ["s5"], "schwer.hint": ["s5"], "schwer.BUNDLE": ["s5"],
@@ -400,7 +400,7 @@ SEITEN = {
             "musik._measure": ["s5"], "musik.start": ["s4"], "musik.keep": ["s10"], "musik._work": ["s5"], "musik.refuse_text": ["s3"],
             "musik.plan_edit": ["s4"], "musik.start_edit": ["s1"], "musik.tone": ["s1"], "musik.upload": ["s1"],
             "musik_server.edit_body": ["s7"], "musik.write_lyrics": ["s3"], "musik.MAX_VERSIONS": ["s4"], "musik.UPLOADS_DAY": ["s4"],
-            "musik_server.request_body": ["s7"], "musik_server.metadata": ["s7"],
+            "musik_server.request_body": ["s7"], "musik_server.metadata": ["s7"], "musik_server.quality": ["s7"],
         },
         "kurz": ("Bilder malen macht aus einem Wunsch ein Bild, auf dem Spark selbst. Das Panel prüft den Wunsch mit "
                  "festen Regeln und gibt ihn an den Bild-Dienst, der nur auf dieser Maschine lauscht. Der lädt FLUX.2 "
@@ -522,12 +522,16 @@ SEITEN = {
                "kommt nie ins Journal, weil sie den Prompt nennen würde. Für ein Lied setzt musik_server.request_body "
                "jedes Feld selbst; Tempo, Tonart, Takt und einen Negativ-Text nimmt es nur aus festen Werten an "
                "(musik_server.metadata). Die Dungeon-Musik gibt alle mit, so schreibt das Planer-Modell ihre "
-               "Beschreibung nicht um.",
+               "Beschreibung nicht um. Eine Qualitätsstufe (Schnell, Gut, Beste) und die Lautheit nennt der Aufrufer "
+               "nur beim Namen, die Werte stehen in musikmodell.QUALITAET (musik_server.quality); Beste nimmt das "
+               "SFT-Modell mit {musikmodell.SFT_STEPS} Schritten nur, wenn es installiert ist, sonst Gut.",
                "The engine paints the picture in {bildmodell.STEPS} steps at the chosen size; its own output never "
                "reaches the journal, because it would name the prompt. For a song musik_server.request_body sets "
                "every field itself; tempo, key, time signature and a negative prompt it takes only from fixed values "
                "(musik_server.metadata). The dungeon music gives all of them, so the planner model does not rewrite "
-               "its caption.")),
+               "its caption. A quality level (fast, good, best) and the loudness the caller only names, the values "
+               "are in musikmodell.QUALITAET (musik_server.quality); best takes the SFT model with "
+               "{musikmodell.SFT_STEPS} steps only when it is installed, else good.")),
             S("s8", "frage", ("Bild unbedenklich?", "Picture harmless?"),
               ("Bildprüfung nach dem Malen", "image check after painting"),
               ("bild_server.nsfw_share lässt einen Klassifikator auf der CPU das Bild prüfen. Über "
@@ -635,6 +639,8 @@ SEITEN = {
             ("musik_server.request_body", ("Feste Felder für ein neues Lied", "fixed fields for a new song")),
             ("musik_server.metadata", ("Tempo, Tonart, Takt und Negativ-Text nur aus festen Werten (Dungeon-Musik)",
                                        "tempo, key, time signature and negative prompt from fixed values only (dungeon music)")),
+            ("musik_server.quality", ("Qualitätsstufe und Lautheit aus festen Werten, Beste nur mit SFT-Modell",
+                                      "quality level and loudness from fixed values, best only with the SFT model")),
         ],
         "tests": ["test_bilder", "test_musik", "test_musik_liedtext", "test_schwer"],
         "heute": [],

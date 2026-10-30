@@ -33,7 +33,7 @@ model; without them the table has its sounds and dice and no music. Every seat o
 profile by its login, a guest by its seat code, dungeon._guest); nothing of the store is personal. The journal gets
 fixed words and numbers only („dungeon: musik | …“), Live only counts.
 
-    STATE/dungeon-musik.json          {"an", "stuecke", "mb"}   the admin's settings
+    STATE/dungeon-musik.json          {"an", "stuecke", "mb", "qualitaet", "laenge", "laut"}   the admin's settings
     STATE/dungeon-musik/index.json    {"stuecke": [{id, w, st, s, t, b, n, v, nervt?}]}   the store
     STATE/dungeon-musik/<id>.mp3      one piece
 
@@ -42,7 +42,7 @@ fixed words and numbers only („dungeon: musik | …“), Live only counts.
     POST   /api/profile/dungeon/{rid}/musik/{sid}/nervt   „👎 Nervt“ from a seat of the round
     POST   /api/dungeon/musik/nervt                  {code, s}: the same for a guest's seat
     GET    /api/admin/dungeon/musik                  settings, the fields with their counts, Live
-    PUT    /api/admin/dungeon/musik                  {an, stuecke, mb}
+    PUT    /api/admin/dungeon/musik                  {an, stuecke, mb, qualitaet?, laenge?, laut?}
     POST   /api/admin/dungeon/musik/jetzt            fill every field up to the number now
     DELETE /api/admin/dungeon/musik                  delete every piece
     POST   /api/admin/dungeon/musik/{sid}/zurueck    take the marks of a piece back
@@ -83,6 +83,14 @@ MB_SPANNE = (100, 5000)
 BEREIT = 2                 # pieces the moods of the current and the next act get first (2a; long pieces, two last a while)
 NEU_JE_AKT = 2             # new pieces every act asks for (2a: no two campaigns sound alike)
 LAENGE = (180, 240, 300, 360)     # seconds of a piece, a seed picks one (Dominik 2026-10-25 „mindestens verdreifachen“)
+# the admin's quality (plan dungeon-musik-tuning V6a): the level the music service makes (musikmodell.QUALITAET holds
+# the engine's values, the panel only names it), the length of a piece and its loudness; Standard as before
+QUALITAETEN = {"schnell": ("Schnell", "Fast"), "gut": ("Gut", "Good"), "beste": ("Beste", "Best")}
+LAENGEN = {"kurz": ((90, 120), ("Kurz", "Short")),            # 1½ to 2 minutes
+           "mittel": ((120, 150, 180), ("Mittel", "Medium")),     # 2 to 3 minutes
+           "lang": (LAENGE, ("Lang", "Long"))}                     # 3 to 6 minutes, as before
+LAUT = {"normal": ("Normal", "Normal"), "lauter": ("Lauter", "Louder")}
+STANDARD = {"qualitaet": "schnell", "laenge": "lang", "laut": "normal"}
 SIEG_S = 30                # a victory is short and plays once
 NACHT = (1, 6)             # local hours the night fills the fields
 TAKT = 10                  # seconds between two looks at the queue
@@ -229,7 +237,7 @@ _cache = {"mtime": None, "d": None}
 _want = {}                 # (welt, st) -> {"upto": n, "extra": n}   the queue, in the order asked
 _akte = {}                 # rid -> the act seen last (a new act asks for new pieces)
 _plays = {}                # id -> plays since the index was written last
-_state = {"run": None, "fehler": 0, "ruhe": 0.0, "nacht": ""}
+_state = {"run": None, "fehler": 0, "ruhe": 0.0, "nacht": "", "q": "", "beste_fehlt": False}
 _day = DayCounter(gemacht=0, weg=0, geholt=0, entfernt=0, nervt=0)
 _gemerkt = {}              # id -> hashes of the seats that marked it (in memory: a seat marks a piece once)
 NERVT_MAX = 99             # marks kept per piece
@@ -239,7 +247,17 @@ NERVT_MAX = 99             # marks kept per piece
 def settings():
     s = read_json(SETTINGS, {})
     s = s if isinstance(s, dict) else {}
-    return {"an": s.get("an") is True, "stuecke": _int(s.get("stuecke"), *ZIEL_SPANNE, ZIEL), "mb": _int(s.get("mb"), *MB_SPANNE, MB)}
+    return {"an": s.get("an") is True, "stuecke": _int(s.get("stuecke"), *ZIEL_SPANNE, ZIEL), "mb": _int(s.get("mb"), *MB_SPANNE, MB),
+            **{k: s.get(k) if s.get(k) in WAHL[k] else v for k, v in STANDARD.items()}}
+
+
+WAHL = {"qualitaet": QUALITAETEN, "laenge": LAENGEN, "laut": LAUT}
+
+
+def quality_now(s, now):
+    """The level a piece is made with: „Beste“ only in the night (NACHT), by day „Gut“ (plan V6a: the SFT model takes
+    50 steps)."""
+    return "gut" if s["qualitaet"] == "beste" and not night(now) else s["qualitaet"]
 
 
 def _int(x, lo, hi, default):
@@ -526,7 +544,8 @@ async def render(body, jid):
         if wartung.paused("musik"):
             raise ValueError("pause")
         return await musik.make(body)
-    mp3, _d = await asyncio.wait_for(schwer.run("musik", jid, time.time(), once), musik.JOB_SECONDS + schwer.WAIT_S)
+    mp3, d = await asyncio.wait_for(schwer.run("musik", jid, time.time(), once), musik.JOB_SECONDS + schwer.WAIT_S)
+    _state["q"] = d.get("quality") if isinstance(d, dict) and d.get("quality") in QUALITAETEN else ""
     return mp3
 
 
@@ -535,9 +554,11 @@ async def make(welt, st, rng=None):
     why not (GRUENDE). Never raises."""
     import musik
     rng = rng or random.Random(secrets.randbits(32))
-    secs = SIEG_S if st == "sieg" else rng.choice(LAENGE)
+    s = settings()
+    secs = SIEG_S if st == "sieg" else rng.choice(LAENGEN[s["laenge"]][0])
+    stufe = quality_now(s, time.time())
     body = {"caption": caption(welt, st, rng), "seconds": secs, "lyrics": "", "language": "", "seed": rng.randrange(2 ** 31),
-            "title": f"Dungeon {st}", **meta(welt, st)}
+            "title": f"Dungeon {st}", **meta(welt, st), "quality": stufe, "loud": s["laut"]}
     if musik.model():
         body["variant"] = musik.model()
     jid = secrets.token_hex(6)
@@ -545,7 +566,11 @@ async def make(welt, st, rng=None):
     t0 = time.perf_counter()
     why = "ok"
     try:
+        _state["q"] = ""
         mp3 = await render(body, jid)
+        if stufe == "beste":   # the service made „Gut“: the SFT model is not installed (the admin's card says so)
+            _state["beste_fehlt"] = _state["q"] not in ("", "beste")
+        stufe = _state["q"] or stufe
         sid = "m" + secrets.token_hex(5)
 
         def keep():
@@ -584,7 +609,7 @@ async def make(welt, st, rng=None):
         if _state["fehler"] >= FEHLER_MAX:
             _state.update(ruhe=time.time() + PAUSE_S, fehler=0)
             print(f"dungeon: musik | ruhe | {FEHLER_MAX} fehler | {PAUSE_S // 60} min", flush=True)
-    print(f"dungeon: musik | {why} | {st} | {secs} s | {round((time.perf_counter() - t0) * 1000)} ms", flush=True)
+    print(f"dungeon: musik | {why} | {st} | {secs} s | {stufe} | {round((time.perf_counter() - t0) * 1000)} ms", flush=True)
     return why
 
 
@@ -826,7 +851,9 @@ def admin_view(lang="de"):
             "markiert": [{"id": x["id"], "welt": next((w["name"][li] for w in r["welten"] if w["id"] == x["w"]), x["w"]),
                           "st": NAMEN.get(x["st"], ("", ""))[li], "nervt": x["nervt"], "s": x.get("s", 0)}
                          for x in sorted(d["stuecke"], key=lambda x: -x.get("t", 0)) if not spielbar(x)],
-            "mb_noetig": round(len(r["welten"]) * len(STIMMUNGEN) * s["stuecke"] * sum(LAENGE) / len(LAENGE) / 60 * MB_JE_MINUTE),
+            "mb_noetig": round(len(r["welten"]) * len(STIMMUNGEN) * s["stuecke"] * sum(LAENGEN[s["laenge"]][0]) / len(LAENGEN[s["laenge"]][0]) / 60 * MB_JE_MINUTE),
+            "wahl": {k: [{"id": x, "name": (v[1] if k == "laenge" else v)[li]} for x, v in t.items()] for k, t in WAHL.items()},
+            "beste_fehlt": _state["beste_fehlt"],
             "live": for_live()}
 
 
@@ -837,14 +864,21 @@ def admin_show(request: Request):
 
 @router.put("/api/admin/dungeon/musik", dependencies=[Depends(auth)])
 async def admin_save(request: Request):
-    """{an, stuecke, mb}: refused unless every value is within its range."""
+    """{an, stuecke, mb, qualitaet?, laenge?, laut?}: refused unless every value is within its range or list (a
+    choice left out keeps its value)."""
     guard.limit(request, "dungeonmusik", admin=True)
     b = await json_body(request, 1024)
     an, n, mb = b.get("an"), b.get("stuecke"), b.get("mb")
-    if not isinstance(an, bool) or _int(n, *ZIEL_SPANNE, None) is None or _int(mb, *MB_SPANNE, None) is None:
+    old = settings()
+    wahl = {k: b.get(k, old[k]) for k in WAHL}
+    if not isinstance(an, bool) or _int(n, *ZIEL_SPANNE, None) is None or _int(mb, *MB_SPANNE, None) is None \
+            or any(not isinstance(v, str) or v not in WAHL[k] for k, v in wahl.items()):
         print("dungeon: musik | einstellung abgelehnt", flush=True)
-        raise HTTPException(400, f"an: true/false, stuecke: {ZIEL_SPANNE[0]}-{ZIEL_SPANNE[1]}, mb: {MB_SPANNE[0]}-{MB_SPANNE[1]}")
-    await asyncio.to_thread(write_json, SETTINGS, {"an": an, "stuecke": n, "mb": mb}, 2, 0o600, False, 0o700)
+        raise HTTPException(400, f"an: true/false, stuecke: {ZIEL_SPANNE[0]}-{ZIEL_SPANNE[1]}, mb: {MB_SPANNE[0]}-{MB_SPANNE[1]}, "
+                                 + ", ".join(f"{k}: {'/'.join(WAHL[k])}" for k in WAHL))
+    keep = read_json(SETTINGS, {})
+    keep = {k: v for k, v in keep.items() if k not in ("an", "stuecke", "mb", *WAHL)} if isinstance(keep, dict) else {}
+    await asyncio.to_thread(write_json, SETTINGS, {**keep, "an": an, "stuecke": n, "mb": mb, **wahl}, 2, 0o600, False, 0o700)
 
     def shrink():
         with _lock:
@@ -857,7 +891,8 @@ async def admin_save(request: Request):
     if not an:
         with _lock:
             _want.clear()
-    print(f"dungeon: musik | einstellung | {'an' if an else 'aus'} | {n} stuecke | {mb} mb | {gone} entfernt", flush=True)
+    print(f"dungeon: musik | einstellung | {'an' if an else 'aus'} | {n} stuecke | {mb} mb | {wahl['qualitaet']} | {wahl['laenge']} | "
+          f"{wahl['laut']} | {gone} entfernt", flush=True)
     return admin_view("en" if b.get("lang") == "en" else "de")
 
 

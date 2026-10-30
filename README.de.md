@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.281** Dungeon-Musik: Qualität Schnell, Gut oder Beste (nachts), Länge und Lautheit einstellbar
 - **V01.1.280** Dungeon-Musik: Tempo, Tonart und Takt als Metadaten, Beschreibung als Schlagwörter ohne Verneinungen, neue Stimmung „Boss“
 - **V01.1.279** Fernzugang → Systeme, Knopf „Webdienste“: Webseiten eines gekoppelten Systems (Grafana, Router, Home Assistant dort) im Browser durch seinen Anker, auf einer eigenen Herkunft (Tunnel-Tür Port 31090 oder Tunnel-Adresse), Cookies des Panels und Anmeldung bleiben draußen, Ziele nach festen Regeln auf beiden Seiten (Netz dahinter je System mit Code), Gefunden zeigt lauschende Ports, WebSocket geht durch; Anker 1.6.0
 - **V01.1.278** Fernzugang → Bildschirm: guacd baut der Spark jetzt selbst aus Apaches Quelltext (1.6.0, fest mit SHA-256, nur VNC und RDP, FreeRDP 3 oder 2, als nobody gebaut, nach /opt/speech-spark/guacd), weil Debian 12/13 und Raspberry Pi OS kein guacd-Paket mehr haben; das Update baut es von selbst, sobald der Bildschirm eingeschaltet ist, ein Fehler hält es nie auf und das Panel nennt den Grund; jeder graue Knopf eines Systems sagt, warum (beim Bildschirm mit dem Befehl zum Kopieren oder Einfügen).
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.274** Falsch einsortierte Mails lernen (Stufen 2–4, eigener Schalter, aus): legst du eine vom Spark sortierte Mail woanders hin oder nach „Falsch sortiert“, wird der Absender Ausnahme der Regel, nach 3 Korrekturen pausiert sie; Korrekturen (30 Tage) mit „Rückgängig“ unter E-Mail → Regeln und am iPhone; das Modell schlägt nur vor, eine Regel entsteht nur per Knopf
 - **V01.1.273** Wissenskarte: Seite und Punkt gleichen Namens sind ein Punkt, Umbenennen nimmt die Seite mit (keine Doppelseite), „Seite umbenennen“ mit Code; feste Typregeln für Verbindungen, Fristen nur mit Datum oder Zahl
 - **V01.1.272** Redesign Stufe 5: Einstellungen, Funktionen, Ich-Seiten und Apps-Kacheln im Systemstil (graue Gruppen, Liste und Detail, Speichern-Leiste steht)
-- **V01.1.271** · 2026-10-30 · Test-Fix: der Seitentest „Ältere Mails nachladen“ überspringt sich ohne Browser wie alle Seitentests (war in der Werkstatt auf dem Spark rot), ein Wächter-Test fängt das künftig ab; Briefing- und Hintergrund-Test zählen nur ihre eigenen Sachen (waren im Nachtlauf wackelig); die Ersatz-Postfächer der Mail-Tests nehmen wie das echte einen Ordner an (TypeError in mail._older im GitHub-Log); der Mail-Löschen-Test wartet auf die Antwort der Seite, bevor er weiterzieht (war parallel zu anderen Mail-Tests rot)
 
 
 

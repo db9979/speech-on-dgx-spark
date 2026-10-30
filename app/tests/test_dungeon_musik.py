@@ -53,7 +53,7 @@ class MusicBase(Base):
         dm._akte.clear()
         dm._plays.clear()
         dm._gemerkt.clear()
-        dm._state.update(run=None, fehler=0, ruhe=0.0, nacht="", stil=False)
+        dm._state.update(run=None, fehler=0, ruhe=0.0, nacht="", stil=False, q="", beste_fehlt=False)
         self.made = []
 
         async def make(body):
@@ -453,10 +453,58 @@ class Doors(MusicBase):
             self.assertEqual(ADMIN.put("/api/admin/dungeon/musik", json=bad).status_code, 400)
         r = ADMIN.put("/api/admin/dungeon/musik", json={"an": True, "stuecke": 8, "mb": 300})
         self.assertEqual(r.status_code, 200, r.text)
-        self.assertEqual(r.json()["einstellung"], {"an": True, "stuecke": 8, "mb": 300})
+        self.assertEqual(r.json()["einstellung"], dict(dm.STANDARD, an=True, stuecke=8, mb=300))
         self.assertEqual(ADMIN.post("/api/admin/dungeon/musik/jetzt").status_code, 200)
         self.assertTrue(dm._want)
         self.assertEqual(ADMIN.delete("/api/admin/dungeon/musik").status_code, 200)
+
+    def test_quality_length_and_loudness_from_fixed_lists(self):
+        """Plan dungeon-musik-tuning V6a: the admin picks a level, a length and a loudness from fixed lists only; a
+        left-out choice keeps its value; the names are the music service's own (musikmodell, one source)."""
+        import musikmodell
+        from tests.test_dungeon import ADMIN
+        self.assertEqual(set(dm.QUALITAETEN), set(musikmodell.QUALITAET))
+        self.assertEqual(set(dm.LAUT), set(musikmodell.LAUT))
+        self.assertEqual(dm.settings(), dict(dm.STANDARD, an=False, stuecke=dm.ZIEL, mb=dm.MB))
+        self.assertEqual((dm.STANDARD["qualitaet"], dm.LAENGEN[dm.STANDARD["laenge"]][0]), ("schnell", dm.LAENGE))   # as before
+        base = {"an": True, "stuecke": 8, "mb": 300}
+        for bad in ({"qualitaet": "ultra"}, {"laenge": 600}, {"laut": "LAUT"}, {"qualitaet": ["gut"]}):
+            self.assertEqual(ADMIN.put("/api/admin/dungeon/musik", json=dict(base, **bad)).status_code, 400, bad)
+        r = ADMIN.put("/api/admin/dungeon/musik", json=dict(base, qualitaet="beste", laenge="kurz", laut="lauter"))
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual({k: r.json()["einstellung"][k] for k in dm.STANDARD}, {"qualitaet": "beste", "laenge": "kurz", "laut": "lauter"})
+        self.assertEqual({x["id"] for x in r.json()["wahl"]["qualitaet"]}, set(dm.QUALITAETEN))
+        r = ADMIN.put("/api/admin/dungeon/musik", json=base)                  # the old card's body keeps them
+        self.assertEqual(r.json()["einstellung"]["qualitaet"], "beste")
+
+    def test_best_only_at_night_and_the_service_says_what_it_made(self):
+        """„Beste“ (the SFT model, 50 steps) only in the night, by day „Gut“; when the service made „Gut“ (no SFT model)
+        the admin's card says so. The body names the level and the loudness, the length comes from its list."""
+        import random
+        from unittest import mock
+        self.music_on()
+        s = dict(dm.settings(), qualitaet="beste")
+        self.assertEqual(dm.quality_now(s, at_hour(3)), "beste")
+        self.assertEqual(dm.quality_now(s, at_hour(12)), "gut")
+        self.assertEqual(dm.quality_now(dict(s, qualitaet="schnell"), at_hour(3)), "schnell")
+        with open(dm.SETTINGS, "w") as f:
+            json.dump({"an": True, "stuecke": 4, "mb": 600, "qualitaet": "beste", "laenge": "kurz", "laut": "lauter"}, f)
+
+        async def made_good(body):
+            self.made.append(body)
+            return MP3, {"seconds": 1.0, "quality": "gut"}
+        old = musik.make
+        musik.make = made_good
+        self.addCleanup(setattr, musik, "make", old)
+        with mock.patch.object(dm, "night", lambda now: True):
+            self.assertEqual(asyncio.run(dm.make("fantasy", "kampf", random.Random(1))), "ok")
+        body = self.made[-1]
+        self.assertEqual((body["quality"], body["loud"]), ("beste", "lauter"))
+        self.assertIn(body["seconds"], dm.LAENGEN["kurz"][0])
+        self.assertTrue(dm.admin_view()["beste_fehlt"])
+        with mock.patch.object(dm, "night", lambda now: False):
+            asyncio.run(dm.make("fantasy", "kampf", random.Random(2)))
+        self.assertEqual(self.made[-1]["quality"], "gut")
 
     def test_rate_limit_and_live(self):
         import guard

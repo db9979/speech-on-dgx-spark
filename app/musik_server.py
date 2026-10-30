@@ -12,13 +12,14 @@ One song at a time. The unit's OOMScoreAdjust (1000) makes the engine the first 
 A song takes two steps of the engine: /lm (the small language model plans structure, lyrics when none are given,
 and the audio codes), then /synth (the DiT makes the sound, the VAE the wave, out as MP3). Every field of both
 requests is set here; the caller gives only caption, seconds, lyrics, language and seed, and may fix tempo, key,
-time signature and a negative prompt from fixed values (metadata; the Dungeon-Master's music does). The MP3 is checked (size,
+time signature and a negative prompt from fixed values (metadata) and name a quality level and loudness
+(quality, musikmodell.QUALITAET; the Dungeon-Master's music does). The MP3 is checked (size,
 frame header) and gets our own ID3 tag that marks it as made by an AI. The service never logs a caption or lyrics:
 only seconds, sizes and states.
 
     GET  /health        status (off | starting | ready | busy | error | missing), variant, counts, measurements
-    POST /v1/musik      {caption, seconds, lyrics?, language?, seed?, variant?, bpm?, keyscale?, timesignature?, negative?}
-                        -> {mp3, variant, seconds, lm_s, ...}
+    POST /v1/musik      {caption, seconds, lyrics?, language?, seed?, variant?, bpm?, keyscale?, timesignature?, negative?,
+                         quality?, loud?} -> {mp3, variant, quality, seconds, lm_s, ...}
     POST /v1/musik/stop ends the engine now (Wartungspause, Musik testen)
 
 Musik bearbeiten (plan musik-experte, Dominik 2026-10-20 „alles nach Empfehlung“, Stufe E1): the panel sends one of
@@ -391,7 +392,27 @@ def request_body(b, v=None):
             "duration": float(secs), "seed": seed, "lm_batch_size": 1, "synth_batch_size": 1,
             "inference_steps": musikmodell.STEPS, "task_type": "text2music", "output_format": "mp3",
             "mp3_bitrate": musikmodell.MP3_KBPS, "synth_model": v["dit"].name, "lm_model": v["lm"].name,
-            "use_cot_caption": True, "lm_mode": "generate", "adapter": "", **metadata(b)}
+            "use_cot_caption": True, "lm_mode": "generate", "adapter": "", **metadata(b), **quality(b)[1]}
+
+
+def quality(b):
+    """The quality level and loudness a caller names (musikmodell.QUALITAET, LAUT; absent: the engine's defaults as
+    before) -> (the level made, the engine's fields). "beste" takes the SFT DiT with SFT_STEPS only when it is
+    installed, else QUALITAET_ERSATZ (the answer says which level it was)."""
+    q = b.get("quality", "schnell")
+    if q not in musikmodell.QUALITAET:
+        raise HTTPException(400, "quality")
+    loud = b.get("loud")
+    if loud is not None and loud not in musikmodell.LAUT:
+        raise HTTPException(400, "loud")
+    if musikmodell.QUALITAET[q].get("sft") and not musikmodell.sft_installed():
+        q = musikmodell.QUALITAET_ERSATZ
+    out = {k: v for k, v in musikmodell.QUALITAET[q].items() if k != "sft"}
+    if musikmodell.QUALITAET[q].get("sft"):
+        out.update(synth_model=musikmodell.SFT.name, inference_steps=musikmodell.SFT_STEPS)
+    if loud is not None:
+        out["peak_clip"] = musikmodell.LAUT[loud]
+    return q, out
 
 
 def metadata(b):
@@ -428,6 +449,7 @@ async def musik(request: Request):
         b = await request.json()
         v = pick(b)
         req = request_body(b, v)
+        stufe = quality(b)[0]
     except ValueError:
         raise HTTPException(400, "JSON object")
     title = str(b.get("title") or "")[:120]
@@ -446,9 +468,9 @@ async def musik(request: Request):
     stats.update(last_s=round(lm_s + synth_s, 1), last_lm_s=round(lm_s, 1), last_synth_s=round(synth_s, 1),
                  last_len_s=int(req["duration"]), peak_gib=round(peak, 1))
     sung = req["lyrics"] != INSTRUMENTAL
-    print(f"musik: gemacht {int(req['duration'])} s {'gesang' if sung else 'instrumental'} {v} "
+    print(f"musik: gemacht {int(req['duration'])} s {'gesang' if sung else 'instrumental'} {v} {stufe} "
           f"{lm_s + synth_s:.1f} s spitze {peak:.1f} gib", flush=True)
-    return {"mp3": base64.b64encode(mp3).decode(), "variant": v, "seconds": round(lm_s + synth_s, 1), "lm_s": round(lm_s, 1),
+    return {"mp3": base64.b64encode(mp3).decode(), "variant": v, "quality": stufe, "seconds": round(lm_s + synth_s, 1), "lm_s": round(lm_s, 1),
             "synth_s": round(synth_s, 1), "peak_gib": round(peak, 1), "length_s": int(req["duration"]),
             "sung": sung, "seed": req["seed"], "bytes": len(mp3)}
 
@@ -745,7 +767,7 @@ async def health(request: Request):
         return {"service": "musik", "status": status}
     return {"service": "musik", "status": status, "variant": v, "name": musikmodell.VARIANTS[v]["name"],
             "license": musikmodell.LICENSE, "need_gib": musikmodell.VARIANTS[v]["need_gib"],
-            "missing": musikmodell.missing(v), "installed": musikmodell.available(),
+            "missing": musikmodell.missing(v), "installed": musikmodell.available(), "sft": musikmodell.sft_installed(),
             "loaded": engine.variant if engine.state == "ready" else "", "idle_min": int(c["idle_min"]), "uptime_s": round(time.time() - started),
             "idle_s": round(time.time() - engine.used) if engine.state == "ready" else None, **stats}
 
