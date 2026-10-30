@@ -18,6 +18,7 @@ import asyncio
 import json
 import os
 import re
+import shutil
 import time
 import unittest
 
@@ -47,13 +48,15 @@ class MusicBase(Base):
                 os.remove(f)
         if os.path.isdir(dm.DIR):
             for f in os.listdir(dm.DIR):
-                os.remove(os.path.join(dm.DIR, f))
+                (shutil.rmtree if os.path.isdir(os.path.join(dm.DIR, f)) else os.remove)(os.path.join(dm.DIR, f))
         dm._cache.update(mtime=None, d=None)
         dm._want.clear()
         dm._akte.clear()
         dm._plays.clear()
         dm._gemerkt.clear()
-        dm._state.update(run=None, fehler=0, ruhe=0.0, nacht="", stil=False, q="", beste_fehlt=False)
+        dm._gemocht.clear()
+        dm._day.update(day="")
+        dm._state.update(run=None, fehler=0, ruhe=0.0, nacht="", stil=False, q="", beste_fehlt=False, probe=None)
         self.made = []
 
         async def make(body):
@@ -624,7 +627,7 @@ class Nervt(MusicBase):
         self.assertEqual(self.v.post("/api/dungeon/musik/nervt", json={"code": code, "s": sid}).json()["neu"], False)   # once per seat
         x = next(x for x in dm.read_json(dm.INDEX, {})["stuecke"] if x["id"] == sid)
         self.assertEqual(x["nervt"], 1)                                   # only a number, no seat or name
-        self.assertEqual(set(x) - {"id", "w", "st", "s", "t", "b", "n", "k", "nervt"}, set())
+        self.assertEqual(set(x) - {"id", "w", "st", "s", "t", "b", "n", "k", "seed", "lm", "nervt"}, set())
         self.assertEqual(self.v.post("/api/dungeon/musik", json={"code": code, "s": sid}).status_code, 404)
         self.assertEqual(dm.count(dm._read(), "fantasy", "erkunden"), 1)    # the field asks for a new one
         view = self.c.get(f"/api/profile/dungeon/{v['rid']}").json()["musik"]
@@ -712,6 +715,139 @@ class Nervt(MusicBase):
         self.assertIn('data-dmmusik="zurueck"', js)
 
 
+class Proben(MusicBase):
+    """Plan dungeon-musik-tuning V5a: the admin hears a probe of a field before the night makes its pieces, keeps a
+    good one (liked, kept when the field is full, first in the table's list); „👍 Gefällt“ at the table."""
+
+    def probe(self, welt="fantasy", st="kampf", laenge="voll", von=None):
+        async def go():
+            secs = dm.probe_start(welt, st, laenge, von)
+            while dm._state["probe"]:
+                await asyncio.sleep(0.01)
+            return secs
+        return asyncio.run(go())
+
+    def test_probe_with_its_seeds_and_at_most_three_per_field(self):
+        self.assertEqual(self.probe(laenge="30"), dm.PROBE_KURZ)
+        self.assertEqual(self.made[-1]["seconds"], dm.PROBE_KURZ)
+        self.assertIn("lm_seed", self.made[-1])
+        self.assertEqual(self.made[-1]["caption"], self.made[-1]["caption"])
+        xs = dm._proben()
+        self.assertEqual(len(xs), 1)
+        self.assertEqual((xs[0]["seed"], xs[0]["lm"]), (self.made[-1]["seed"], self.made[-1]["lm_seed"]))
+        self.assertFalse(dm.voll(xs[0]))
+        self.probe(von=xs[0]["id"])                                       # Variation: the same planner seed, a new seed
+        self.assertEqual(self.made[-1]["lm_seed"], xs[0]["lm"])
+        self.assertIn(self.made[-1]["seconds"], dm.LAENGEN[dm.settings()["laenge"]][0])
+        for _ in range(3):
+            self.probe()
+        self.assertEqual(len([x for x in dm._proben() if x["st"] == "kampf"]), dm.PROBE_FELD)
+        self.assertEqual(len(os.listdir(dm.PROBEN)), dm.PROBE_FELD + 1)   # the files of the kept ones and the index
+        self.assertEqual(dm.for_live()["proben_heute"], 5)
+        self.assertEqual(dm.proben_weg(), dm.PROBE_FELD)                   # the night
+        self.assertEqual(os.listdir(dm.PROBEN), ["index.json"])
+
+    def test_one_at_a_time_a_day_s_number_and_only_fixed_fields(self):
+        for bad in (("atlantis", "kampf", "30"), ("fantasy", "disco", "30"), ("fantasy", "kampf", "60"), ("fantasy", "kampf", EVIL)):
+            with self.assertRaisesRegex(ValueError, "feld"):
+                dm.probe_start(*bad)
+        with self.assertRaisesRegex(ValueError, "feld"):
+            dm.probe_start("fantasy", "kampf", "30", "p0000000000")        # Variation only of a probe of this field
+        dm._state["probe"] = {"w": "fantasy", "st": "sieg"}
+        with self.assertRaisesRegex(ValueError, "belegt"):
+            dm.probe_start("fantasy", "kampf", "30")
+        dm._state["probe"] = None
+        dm._day.bump("proben", dm.PROBE_TAG)
+        with self.assertRaisesRegex(ValueError, "tag"):
+            dm.probe_start("fantasy", "kampf", "30")
+        dm._day.update(day="")
+        dm.installed = lambda: False
+        with self.assertRaisesRegex(ValueError, "aus"):
+            dm.probe_start("fantasy", "kampf", "30")
+        self.assertEqual(self.made, [])
+
+    def test_into_the_store_as_liked_only_full_and_current(self):
+        self.music_on(n=4)
+        self.probe(laenge="30")
+        kurz = dm._proben()[0]["id"]
+        with self.assertRaisesRegex(ValueError, "kurz"):
+            dm.probe_keep(kurz)
+        self.probe()
+        pid = next(x["id"] for x in dm._proben() if x["id"] != kurz)
+        self.assertEqual(dm.probe_keep(pid), "kampf")
+        x = dm._read()["stuecke"][0]
+        self.assertEqual((x["gut"], x["k"], x["st"]), (1, dm.fingerprint("fantasy", "kampf"), "kampf"))
+        self.assertTrue(os.path.exists(dm.file_of(x["id"])))
+        self.assertFalse(os.path.exists(dm.probe_file(pid)))
+        with self.assertRaises(LookupError):
+            dm.probe_keep(pid)
+        self.put("fantasy", "kampf", 4)
+        d = dm._read()
+        d = {"stuecke": [dict(y) for y in d["stuecke"]]}
+        self.assertNotIn(x["id"], dm.prune(d, 4, 600))                     # the liked one stays when the field is full
+        self.probe()
+        alt = next(y["id"] for y in dm._proben() if y["id"] != kurz)
+        dm.stil_save("fantasy", "kampf", {"takt": "3"})
+        with self.assertRaisesRegex(ValueError, "veraltet"):
+            dm.probe_keep(alt)
+        dm.probe_del(alt)
+        with self.assertRaises(LookupError):
+            dm.probe_del(alt)
+        dm.stil_save("fantasy", "kampf", {})
+
+    def test_admin_doors(self):
+        from tests.test_dungeon import ADMIN
+        self.probe(laenge="30")
+        pid = dm._proben()[0]["id"]
+        for r in (self.c.post("/api/admin/dungeon/musik/probe", json={"welt": "fantasy", "st": "kampf", "laenge": "30"}),
+                  self.c.post(f"/api/admin/dungeon/musik/probe/{pid}/behalten"), self.c.delete(f"/api/admin/dungeon/musik/probe/{pid}"),
+                  self.c.get(f"/api/admin/dungeon/musik/{pid}")):
+            self.assertEqual(r.status_code, 401)
+        r = ADMIN.get(f"/api/admin/dungeon/musik/{pid}")
+        self.assertEqual((r.status_code, r.content), (200, MP3))
+        self.assertEqual(ADMIN.post("/api/admin/dungeon/musik/probe", json={"welt": "fantasy", "st": EVIL, "laenge": "30"}).status_code, 400)
+        dm._state["probe"] = {"w": "fantasy", "st": "kampf"}
+        r = ADMIN.post("/api/admin/dungeon/musik/probe", json={"welt": "fantasy", "st": "kampf", "laenge": "30"})
+        self.assertEqual((r.status_code, r.json()["detail"]), (409, "belegt"))
+        dm._state["probe"] = None
+        dm._day.bump("proben", dm.PROBE_TAG)
+        self.assertEqual(ADMIN.post("/api/admin/dungeon/musik/probe", json={"welt": "fantasy", "st": "kampf", "laenge": "30"}).status_code, 429)
+        self.assertEqual(ADMIN.post(f"/api/admin/dungeon/musik/probe/{pid}/behalten").status_code, 409)   # 30 s
+        k = ADMIN.get("/api/admin/dungeon/musik").json()["klang"]
+        self.assertEqual([x["id"] for x in k["felder"]["fantasy"]["kampf"]["proben"]], [pid])
+        self.assertEqual(k["probe"]["max"], dm.PROBE_TAG)
+        self.assertEqual(ADMIN.delete(f"/api/admin/dungeon/musik/probe/{pid}").status_code, 200)
+        for bad in (pid, "p0000000000", "..%2Findex"):
+            self.assertEqual(ADMIN.delete(f"/api/admin/dungeon/musik/probe/{bad}").status_code, 404)
+            self.assertEqual(ADMIN.post(f"/api/admin/dungeon/musik/probe/{bad}/behalten").status_code, 404)
+
+    def test_liked_at_the_table_once_per_seat_and_first(self):
+        import guard
+        self.assertIn("dungeongefaellt", guard.RATE)
+        self.music_on()
+        sid, other = self.put("fantasy", "erkunden", 2)
+        v = self.new_round()
+        code, _ = self.guest(v["rid"])
+        r = self.v.post("/api/dungeon/musik/gefaellt", json={"code": code, "s": sid})
+        self.assertEqual((r.status_code, r.json()), (200, {"ok": True, "neu": True}))
+        self.assertEqual(self.v.post("/api/dungeon/musik/gefaellt", json={"code": code, "s": sid}).json()["neu"], False)
+        self.assertEqual(self.v.post("/api/dungeon/musik/gefaellt", json={"code": code, "s": "../index"}).status_code, 404)
+        self.assertEqual(self.v.post("/api/dungeon/musik/gefaellt", json={"code": "x" * 32, "s": sid}).status_code, 400)
+        self.assertIn(self.c2.post(f"/api/profile/dungeon/{v['rid']}/musik/{other}/gefaellt").status_code, (403, 404))   # no seat
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{v['rid']}/musik/{sid}/gefaellt").json(), {"ok": True, "neu": True})
+        x = next(x for x in dm.read_json(dm.INDEX, {})["stuecke"] if x["id"] == sid)
+        self.assertEqual(x["gut"], 2)                                     # only a number, no seat or name
+        self.assertTrue(dm.spielbar(x))
+        view = self.c.get(f"/api/profile/dungeon/{v['rid']}").json()["musik"]
+        if view.get("st") == "erkunden":
+            self.assertEqual(view["stuecke"][0], sid)                     # the liked one first
+        live = dm.for_live()
+        self.assertEqual((live["gefaellt"], live["gemocht"]), (2, 1))
+        js = open(os.path.join(os.path.dirname(dm.__file__), "static", "js", "dungeon-ton.js"), encoding="utf-8").read()
+        self.assertIn('data-dmton="gefaellt"', js)
+        self.assertIn("/api/dungeon/musik/gefaellt", js)
+
+
 # the fields' grid: one column for the world, then one per mood, read from the page itself (Dominik 2026-10-26
 # „tabelle verschoben“: the eighth mood „Lagerfeuer“ came with the CSS still counting seven, every row slid one over)
 GRID = """(()=>{const g=document.querySelector('#dmmusikadm .dm-mfeld'),c=[...g.children],n=+getComputedStyle(g).getPropertyValue('--n'),out=[];
@@ -763,6 +899,13 @@ class Grid(unittest.TestCase):
         from tests.test_ui_browser import Browser, async_playwright
         b = Browser("run")
         b.port = self.port
+        welt0 = dm.admin_view()["felder"][0]["welt"]   # the world the tab opens with
+        os.makedirs(dm.PROBEN, exist_ok=True)
+        for i, pid in enumerate(("p00000000a1", "p00000000a2")):   # two probes of the first world's „Kampf“ (V5a)
+            with open(dm.probe_file(pid), "wb") as f:
+                f.write(MP3)
+        dm._proben_write([{"id": pid, "w": welt0, "st": "kampf", "s": (30, 240)[i], "t": int(time.time()) - 60 * i, "b": len(MP3),
+                           "k": dm.fingerprint(welt0, "kampf"), "seed": 1, "lm": 2} for i, pid in enumerate(("p00000000a1", "p00000000a2"))])
         try:
             async def go():
                 async with async_playwright() as p:
@@ -777,6 +920,9 @@ class Grid(unittest.TestCase):
                             self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
                             self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmmusikadm .dm-klang textarea,#dmmusikadm .dm-klang input[type=text]').length"), 0)
                             await pg.evaluate("document.querySelector('#dmmusikadm [data-dmkst=kampf]').click()")
+                            self.assertEqual(await pg.evaluate("document.querySelectorAll('#dmmusikadm .dm-kprobe [data-dmprobe=behalten]').length"), 2)
+                            self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#dmmusikadm .dm-kprobe [data-dmprobe=behalten]')].map(x=>x.disabled)"), [True, False])
+                            self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0, w)
                             await pg.evaluate("document.querySelector('#dmmusikadm [data-dmkmehr]').click()")
                             for i in range(6):
                                 await pg.evaluate("document.querySelector('#dmmusikadm [data-dmkchip=instr]:not(.hi):not(:disabled)')?.click()")
@@ -801,6 +947,7 @@ class Grid(unittest.TestCase):
         finally:
             for w_ in dm._welten():
                 dm.paket(w_, "standard")
+            dm.proben_weg()
 
     def test_the_sounds_of_round_two(self):
         """D&D round 2 (Dominik 2026-10-26 „1-9 umsetzten“): missed by 1 or 2 (1), the foe's announcement (2), the

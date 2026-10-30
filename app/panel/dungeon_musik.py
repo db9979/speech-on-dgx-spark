@@ -22,7 +22,13 @@ A store of music for the whole Spark, one field per world and mood (STIMMUNGEN),
 - „👎 Nervt“ (Dominik 2026-10-24 „als schlecht oder nervig markieren, auch von Spielern, in der Nacht erneuert“): any
   seat of a running round (a profile or a guest) marks the piece playing; one mark is enough, the piece is never played
   again and its field asks for a new one, the night throws the marked pieces away; the admin's list takes a mark back
-  until then (each seat marks a piece once, own rate limit dungeonnervt, no name is kept: only the number of marks).
+  until then (each seat marks a piece once, own rate limit dungeonnervt, no name is kept: only the number of marks);
+  „👍 Gefällt“ is its counterpart (same rules, own rate limit dungeongefaellt): a liked piece is kept when its field
+  is full and stands first in the table's list (plan dungeon-musik-tuning V5a);
+- a probe (V5a): the admin makes one piece of a field with its current template (30 s or the full length) before the
+  night does, one at a time and PROBE_TAG a day, the voice first; at most PROBE_FELD per field, the night throws them
+  away; „👍 In den Vorrat“ moves a full-length probe into the store as a liked piece, „Variation“ makes another with
+  the same planner seed (lm_seed) and a new seed. Every piece keeps its seed and lm_seed.
 
 Sounds (3a) and the d20 (4a) are made in the browser (dungeon-ton.js, WebAudio, no files); the panel only names them:
 the ambient sound of the place (KLANG, a word list over place and mood), the turn a door was told, the turn of the
@@ -34,13 +40,16 @@ profile by its login, a guest by its seat code, dungeon._guest); nothing of the 
 fixed words and numbers only („dungeon: musik | …“), Live only counts.
 
     STATE/dungeon-musik.json          {"an", "stuecke", "mb", "qualitaet", "laenge", "laut", "stil"}   the admin's settings
-    STATE/dungeon-musik/index.json    {"stuecke": [{id, w, st, s, t, b, n, k, nervt?}]}   the store (k: the sound's fingerprint)
+    STATE/dungeon-musik/index.json    {"stuecke": [{id, w, st, s, t, b, n, k, seed, lm, nervt?, gut?}]}   the store (k: the sound's fingerprint)
     STATE/dungeon-musik/<id>.mp3      one piece
+    STATE/dungeon-musik/probe/index.json, <pid>.mp3   the admin's probes {"proben": [{id, w, st, s, t, b, k, seed, lm}]}
 
     GET    /api/profile/dungeon/{rid}/musik/{sid}   a piece for a seat of the round (MP3)
     POST   /api/dungeon/musik                        {code, s}: the same for a guest's seat
     POST   /api/profile/dungeon/{rid}/musik/{sid}/nervt   „👎 Nervt“ from a seat of the round
     POST   /api/dungeon/musik/nervt                  {code, s}: the same for a guest's seat
+    POST   /api/profile/dungeon/{rid}/musik/{sid}/gefaellt   „👍 Gefällt“ from a seat of the round
+    POST   /api/dungeon/musik/gefaellt               {code, s}: the same for a guest's seat
     GET    /api/admin/dungeon/musik                  settings, the fields with their counts, Live
     PUT    /api/admin/dungeon/musik                  {an, stuecke, mb, qualitaet?, laenge?, laut?}
     POST   /api/admin/dungeon/musik/jetzt            fill every field up to the number now
@@ -48,6 +57,10 @@ fixed words and numbers only („dungeon: musik | …“), Live only counts.
     POST   /api/admin/dungeon/musik/{sid}/zurueck    take the marks of a piece back
     PUT    /api/admin/dungeon/musik/stil             {welt, st, werte}: the template of a field (V2a, fixed lists only)
     POST   /api/admin/dungeon/musik/paket            {welt, paket}: a fixed package into every mood of a world (V4a)
+    POST   /api/admin/dungeon/musik/probe            {welt, st, laenge: "30"|"voll", von?}: a probe of the field (V5a)
+    POST   /api/admin/dungeon/musik/probe/{pid}/behalten   the probe into the store, liked
+    DELETE /api/admin/dungeon/musik/probe/{pid}      the probe away
+    (GET /api/admin/dungeon/musik/{id} plays a probe as it plays a piece of the store)
 """
 import asyncio
 import hashlib
@@ -71,6 +84,13 @@ router = APIRouter()
 SETTINGS = os.path.join(STATE, "dungeon-musik.json")
 DIR = os.path.join(STATE, "dungeon-musik")
 INDEX = os.path.join(DIR, "index.json")
+PROBEN = os.path.join(DIR, "probe")
+PROBEN_INDEX = os.path.join(PROBEN, "index.json")
+PROBE_ID = re.compile(r"p[0-9a-f]{10}")
+PROBE_FELD = 3             # probes kept per field (the oldest goes)
+PROBE_TAG = 20             # probes a day (LLM10: the admin's button never runs the model without end)
+PROBE_KURZ = 30            # seconds of a short probe
+SEED = 2 ** 31             # seed and lm_seed of the engine (musik_server: -1 <= seed < 2**31)
 
 STIMMUNGEN = ("erkunden", "taverne", "spannung", "kampf", "finale", "sieg", "gewoelbe", "lager", "boss")
 NAMEN = {"erkunden": ("Erkunden", "Exploring"), "taverne": ("Taverne", "Tavern"), "spannung": ("Spannung", "Tension"),
@@ -335,9 +355,10 @@ _cache = {"mtime": None, "d": None}
 _want = {}                 # (welt, st) -> {"upto": n, "extra": n}   the queue, in the order asked
 _akte = {}                 # rid -> the act seen last (a new act asks for new pieces)
 _plays = {}                # id -> plays since the index was written last
-_state = {"run": None, "fehler": 0, "ruhe": 0.0, "nacht": "", "q": "", "beste_fehlt": False}
-_day = DayCounter(gemacht=0, weg=0, geholt=0, entfernt=0, nervt=0)
+_state = {"run": None, "fehler": 0, "ruhe": 0.0, "nacht": "", "q": "", "beste_fehlt": False, "probe": None}
+_day = DayCounter(gemacht=0, weg=0, geholt=0, entfernt=0, nervt=0, gefaellt=0, proben=0)
 _gemerkt = {}              # id -> hashes of the seats that marked it (in memory: a seat marks a piece once)
+_gemocht = {}              # id -> hashes of the seats that liked it („👍 Gefällt“, the same once per seat)
 NERVT_MAX = 99             # marks kept per piece
 
 
@@ -423,9 +444,9 @@ def count(d, welt, st):
 
 
 def prune(d, ziel, mb, keep=""):
-    """Inside the lock: each field at most ziel pieces and the store within mb; the most played go first (then the
-    oldest), never keep (the piece just made). Returns the ids taken out."""
-    plays = lambda x: (spielbar(x), neu(x), -(x.get("n", 0) + _plays.get(x["id"], 0)), x.get("t", 0))   # noqa: E731 - marked, older first
+    """Inside the lock: each field at most ziel pieces and the store within mb; marked, older and not liked ones go
+    first, then the most played (then the oldest), never keep (the piece just made). Returns the ids taken out."""
+    plays = lambda x: (spielbar(x), neu(x), bool(x.get("gut")), -(x.get("n", 0) + _plays.get(x["id"], 0)), x.get("t", 0))   # noqa: E731 - marked, older, not liked first
     out = []
     fields = {}
     for x in d["stuecke"]:
@@ -673,8 +694,8 @@ def for_view(rid, rd, lang="de"):
             return out
         st = ask_round(rid, rd, s)
         d = _read()
-        def pick(m):   # the current style once its field has one, until then the older pieces
-            xs = [x for x in sorted(d["stuecke"], key=lambda x: -x.get("t", 0)) if x["w"] == rd.get("welt") and x["st"] == m and spielbar(x)]
+        def pick(m):   # the current style once its field has one, until then the older pieces; liked ones first
+            xs = [x for x in sorted(d["stuecke"], key=lambda x: (not x.get("gut"), -x.get("t", 0))) if x["w"] == rd.get("welt") and x["st"] == m and spielbar(x)]
             return [x["id"] for x in ([x for x in xs if neu(x)] or xs)][:LISTE]
         xs = pick(st)
         if not xs and st in ERSATZ:   # a boss without its own pieces yet: the fight's (the table plays on as a fight)
@@ -746,7 +767,8 @@ async def make(welt, st, rng=None):
     secs = SIEG_S if st == "sieg" else rng.choice(LAENGEN[s["laenge"]][0])
     stufe = quality_now(s, time.time())
     k = fingerprint(welt, st)
-    body = {"caption": caption(welt, st, rng), "seconds": secs, "lyrics": "", "language": "", "seed": rng.randrange(2 ** 31),
+    seed, lm = rng.randrange(SEED), rng.randrange(SEED)
+    body = {"caption": caption(welt, st, rng), "seconds": secs, "lyrics": "", "language": "", "seed": seed, "lm_seed": lm,
             "title": f"Dungeon {st}", **meta(welt, st), "quality": stufe, "loud": s["laut"]}
     if musik.model():
         body["variant"] = musik.model()
@@ -772,7 +794,7 @@ async def make(welt, st, rng=None):
                 os.replace(file_of(sid) + ".neu", file_of(sid))
                 d = _read()
                 d = {"stuecke": list(d["stuecke"]) + [{"id": sid, "w": welt, "st": st, "s": secs, "t": int(time.time()),
-                                                       "b": len(mp3), "n": 0, "k": k}]}
+                                                       "b": len(mp3), "n": 0, "k": k, "seed": seed, "lm": lm}]}
                 gone = prune(d, s["stuecke"], s["mb"], keep=sid)   # a new act's pieces push out the most played
                 _write(d)
                 w = _want.get((welt, st))
@@ -816,8 +838,9 @@ async def step(now=None):
     if night(now) and _state["nacht"] != day and not notaus.blocks("auto"):
         _state["nacht"] = day
         await asyncio.to_thread(markierte_weg)
-        print(f"dungeon: musik | nacht | {fill_all(s)} felder | {await asyncio.to_thread(_lieder_weg)} lieder weg", flush=True)
-    if _state["run"] or dungeon_lied._state["run"] or now < _state["ruhe"]:
+        print(f"dungeon: musik | nacht | {fill_all(s)} felder | {await asyncio.to_thread(_lieder_weg)} lieder weg"
+              f" | {await asyncio.to_thread(proben_weg)} proben weg", flush=True)
+    if _state["run"] or _state["probe"] or dungeon_lied._state["run"] or now < _state["ruhe"]:
         return "ruht"
     if dungeon_lied.pending():   # a chapter's song goes before the store's pieces (dungeon_lied.py)
         return "wartet" if schwer.offen() else await dungeon_lied.make_next()
@@ -904,6 +927,182 @@ def markierte_weg():
     return len(weg)
 
 
+def gefaellt(sid, seat):
+    """„👍 Gefällt“ from a seat, the counterpart of nervt (only its hash in memory, once per seat): the piece counts as
+    liked, prune keeps it and the table's list has it first. Returns (welt, st, counted) or raises LookupError."""
+    if not isinstance(sid, str) or not ID.fullmatch(sid):
+        print("dungeon: musik | gefaellt abgelehnt | unbekannt", flush=True)
+        raise LookupError("stueck")
+    h = hashlib.sha256(seat.encode()).hexdigest()[:16]
+    with _lock:
+        d = _read()
+        x = next((x for x in d["stuecke"] if x["id"] == sid), None)
+        if not x:
+            print("dungeon: musik | gefaellt abgelehnt | unbekannt", flush=True)
+            raise LookupError("stueck")
+        seen = _gemocht.setdefault(sid, set())
+        if h in seen:
+            print(f"dungeon: musik | gefaellt schon | {x['st']}", flush=True)
+            return x["w"], x["st"], False
+        seen.add(h)
+        _write({"stuecke": [dict(y, gut=min(NERVT_MAX, y.get("gut", 0) + 1)) if y["id"] == sid else y for y in d["stuecke"]]})
+    _day.bump("gefaellt")
+    print(f"dungeon: musik | gefaellt | {x['st']}", flush=True)
+    return x["w"], x["st"], True
+
+
+# ---------------------------------------------------------------- probes (plan V5a)
+def probe_file(pid):
+    return os.path.join(PROBEN, pid + ".mp3")
+
+
+def _proben():
+    """The probes, each with its file; older than a day counts as gone (the night throws them away)."""
+    d = read_json(PROBEN_INDEX, {})
+    xs = d.get("proben") if isinstance(d, dict) else None
+    return [x for x in xs or [] if isinstance(x, dict) and PROBE_ID.fullmatch(str(x.get("id"))) and x.get("st") in STIMMUNGEN
+            and isinstance(x.get("w"), str) and time.time() - x.get("t", 0) < 86400]
+
+
+def _proben_write(xs):
+    os.makedirs(PROBEN, mode=0o700, exist_ok=True)
+    write_json(PROBEN_INDEX, {"proben": xs}, None, 0o600, False, 0o700)
+    keep = {x["id"] + ".mp3" for x in xs} | {"index.json"}
+    for f in os.listdir(PROBEN):
+        if f not in keep and (f.endswith(".mp3") or f.endswith(".neu")):
+            try:
+                os.remove(os.path.join(PROBEN, f))
+            except OSError:
+                pass
+
+
+def proben_weg():
+    """The night: every probe away. Returns how many."""
+    with _lock:
+        n = len(_proben())
+        if n or os.path.isdir(PROBEN):
+            _proben_write([])
+    return n
+
+
+def voll(x):
+    """A probe of the field's full length („👍 In den Vorrat“: a 30 s probe would loop at the table; a victory is short)."""
+    return x["st"] == "sieg" or x["s"] > PROBE_KURZ
+
+
+def probe_geht():
+    """Probes need the game and an installed music model (the admin's own button, Spark-wide like on())."""
+    return features.admin_on("dungeon") and installed()
+
+
+def probe_start(welt, st, laenge, von=None):
+    """Checks a probe and starts it in the background: ValueError(why) for a wrong field (feld), another probe making
+    (belegt), the day's number reached (tag), no music model or game (aus); von: a probe whose lm_seed it keeps
+    (Variation). Returns the seconds."""
+    if welt not in _welten() or st not in STIMMUNGEN or laenge not in ("30", "voll"):
+        raise ValueError("feld")
+    if not probe_geht():
+        raise ValueError("aus")
+    lm = None
+    if von is not None:
+        x = next((x for x in _proben() if x["id"] == von), None) if isinstance(von, str) else None
+        if not x or x["w"] != welt or x["st"] != st:
+            raise ValueError("feld")
+        lm = x.get("lm")
+    if _state["probe"]:
+        raise ValueError("belegt")
+    if _day.counts()["proben"] >= PROBE_TAG:
+        raise ValueError("tag")
+    s = settings()
+    rng = random.Random(secrets.randbits(32))
+    secs = PROBE_KURZ if laenge == "30" or st == "sieg" else rng.choice(LAENGEN[s["laenge"]][0])
+    _state["probe"] = {"w": welt, "st": st}
+    _day.bump("proben")
+    asyncio.get_running_loop().create_task(_probe_make(welt, st, secs, rng, lm))
+    return secs
+
+
+async def _probe_make(welt, st, secs, rng, lm=None):
+    """One probe on the heavy jobs' place (render, the voice first), kept with its seeds; at most PROBE_FELD per
+    field. Never raises; one journal line for every result."""
+    s = settings()
+    stufe = quality_now(s, time.time())
+    k = fingerprint(welt, st)
+    seed, lm = rng.randrange(SEED), (lm if isinstance(lm, int) and 0 <= lm < SEED else rng.randrange(SEED))
+    body = {"caption": caption(welt, st, rng), "seconds": secs, "lyrics": "", "language": "", "seed": seed, "lm_seed": lm,
+            "title": f"Dungeon {st}", **meta(welt, st), "quality": stufe, "loud": s["laut"]}
+    import musik
+    if musik.model():
+        body["variant"] = musik.model()
+    t0 = time.perf_counter()
+    why = "ok"
+    try:
+        mp3 = await render(body, secrets.token_hex(6))
+        stufe = _state["q"] or stufe
+        pid = "p" + secrets.token_hex(5)
+
+        def keep():
+            with _lock:
+                os.makedirs(PROBEN, mode=0o700, exist_ok=True)
+                with open(probe_file(pid) + ".neu", "wb") as f:
+                    f.write(mp3)
+                os.chmod(probe_file(pid) + ".neu", 0o600)
+                os.replace(probe_file(pid) + ".neu", probe_file(pid))
+                xs = _proben() + [{"id": pid, "w": welt, "st": st, "s": secs, "t": int(time.time()), "b": len(mp3), "k": k,
+                                   "seed": seed, "lm": lm, "q": stufe}]
+                feld = sorted((x for x in xs if x["w"] == welt and x["st"] == st), key=lambda x: x["t"])
+                alt = {x["id"] for x in feld[:max(0, len(feld) - PROBE_FELD)]}
+                _proben_write([x for x in xs if x["id"] not in alt])
+        await asyncio.to_thread(keep)
+    except asyncio.TimeoutError:
+        why = "zeit"
+    except ValueError as e:
+        why = str(e) if str(e) in GRUENDE else "dienst"
+    except Exception:   # noqa: BLE001 - every probe ends with a journal line
+        why = "dienst"
+    finally:
+        _state["probe"] = None
+    print(f"dungeon: musik | probe | {why} | {st} | {secs} s | {stufe} | {round((time.perf_counter() - t0) * 1000)} ms", flush=True)
+    return why
+
+
+def probe_keep(pid):
+    """„👍 In den Vorrat“: a full-length probe of the field's current sound into the store, liked (prune keeps it).
+    LookupError for an unknown probe, ValueError("kurz") for a 30 s one, ValueError("veraltet") after the template
+    changed."""
+    with _lock:
+        xs = _proben()
+        x = next((x for x in xs if isinstance(pid, str) and x["id"] == pid), None)
+        if not x or not os.path.exists(probe_file(pid)):
+            raise LookupError("probe")
+        if not voll(x):
+            raise ValueError("kurz")
+        if x["k"] != fingerprint(x["w"], x["st"]):
+            raise ValueError("veraltet")
+        sid = "m" + secrets.token_hex(5)
+        os.makedirs(DIR, mode=0o700, exist_ok=True)
+        os.replace(probe_file(pid), file_of(sid))
+        s = settings()
+        d = _read()
+        d = {"stuecke": list(d["stuecke"]) + [{"id": sid, "w": x["w"], "st": x["st"], "s": x["s"], "t": int(time.time()),
+                                               "b": x["b"], "n": 0, "k": x["k"], "seed": x["seed"], "lm": x["lm"], "gut": 1}]}
+        gone = prune(d, s["stuecke"], s["mb"], keep=sid)
+        _write(d)
+        _proben_write([y for y in xs if y["id"] != pid])
+    if gone:
+        _day.bump("entfernt", len(gone))
+    return x["st"]
+
+
+def probe_del(pid):
+    """The probe away. LookupError for an unknown one."""
+    with _lock:
+        xs = _proben()
+        if not any(isinstance(pid, str) and x["id"] == pid for x in xs):
+            raise LookupError("probe")
+        _proben_write([x for x in xs if x["id"] != pid])
+
+
 def clear():
     """Every piece out (the admin's „Vorrat löschen“). Returns how many."""
     with _lock:
@@ -920,6 +1119,9 @@ def clear():
 def piece(sid, probe=False):
     """The MP3 of a piece of the store (any seat of a running round may hear any piece: nothing of it is personal).
     probe: the admin listens before deciding on a mark (Dominik 2026-10-25), a marked piece too, not counted as played."""
+    if probe and isinstance(sid, str) and PROBE_ID.fullmatch(sid) and any(x["id"] == sid for x in _proben()):
+        with open(probe_file(sid), "rb") as f:   # the admin's probe of a field (V5a)
+            return f.read()
     if not isinstance(sid, str) or not ID.fullmatch(sid) or not any(x["id"] == sid and (probe or spielbar(x)) for x in _read()["stuecke"]):
         raise LookupError("stueck")
     with open(file_of(sid), "rb") as f:
@@ -931,7 +1133,8 @@ def piece(sid, probe=False):
 
 
 def for_live():
-    """Numbers only: pieces, full fields, making or waiting, made/failed/fetched/pruned today."""
+    """Numbers only: pieces, full fields, making or waiting, made/failed/fetched/pruned today, outdated, changed
+    templates, probes (kept, making, today), liked today and liked pieces."""
     s = settings()
     d = _read()
     t = _day.counts()
@@ -940,7 +1143,9 @@ def for_live():
             "voll": sum(1 for k in fields if count(d, *k) >= s["stuecke"]), "macht": bool(_state["run"]),
             "wartet": len(_want), "gemacht": t["gemacht"], "weg": t["weg"], "geholt": t["geholt"], "entfernt": t["entfernt"],
             "markiert": sum(1 for x in d["stuecke"] if not spielbar(x)), "nervt": t["nervt"],
-            "vorlagen": sum(1 for w in _stil().values() if isinstance(w, dict) for x in w.values() if isinstance(x, dict) and x)}
+            "vorlagen": sum(1 for w in _stil().values() if isinstance(w, dict) for x in w.values() if isinstance(x, dict) and x),
+            "proben": len(_proben()), "probe_macht": bool(_state["probe"]), "proben_heute": t["proben"], "gefaellt": t["gefaellt"],
+            "gemocht": sum(1 for x in d["stuecke"] if x.get("gut"))}
 
 
 # ---------------------------------------------------------------- routes
@@ -1021,6 +1226,40 @@ async def gast_nervt(request: Request):
         raise dungeon._http(e)
 
 
+@router.post("/api/profile/dungeon/{rid}/musik/{sid}/gefaellt", dependencies=[Depends(assistant)])
+async def stueck_gefaellt(rid: str, sid: str, request: Request, prof=Depends(own_profile)):
+    """„👍 Gefällt“ from a profile's seat of a running round."""
+    import dungeon
+    uid = prof["id"]
+    dungeon._need(uid)
+    guard.limit(request, "dungeongefaellt", uid)
+    try:
+        def go():
+            pid = dungeon._seat_uid(rid, uid)
+            _seat_ok(rid, pid)
+            return gefaellt(sid, f"{rid}:{pid}")
+        _w, _st, neu = await asyncio.to_thread(go)
+        return {"ok": True, "neu": neu}
+    except dungeon.KNOWN as e:
+        raise dungeon._http(e)
+
+
+@router.post("/api/dungeon/musik/gefaellt")
+async def gast_gefaellt(request: Request):
+    """{"code", "s"}: „👍 Gefällt“ from a guest's seat (the seat link's door, dungeon._guest)."""
+    import dungeon
+    b, rid, pid = await dungeon._guest(request)
+    guard.limit(request, "dungeongefaellt")
+    try:
+        def go():
+            _seat_ok(rid, pid)
+            return gefaellt(b.get("s"), f"{rid}:{pid}")
+        _w, _st, neu = await asyncio.to_thread(go)
+        return {"ok": True, "neu": neu}
+    except dungeon.KNOWN as e:
+        raise dungeon._http(e)
+
+
 def _short(d, s, welt, st):
     """The field is asked for and still short of pieces (the admin's table shows ⏳)."""
     w = _want.get((welt, st))
@@ -1057,9 +1296,12 @@ def vorschau(welt, st):
 
 def klang_view(d, welten, li):
     """The tab „Klang“: the fixed lists with their names, the packages and per world and mood the template, its
-    standard, which fields changed, how many pieces are „veraltet“ and what goes to the music model."""
+    standard, which fields changed, how many pieces are „veraltet“, what goes to the music model and its probes."""
     nl = lambda t: [{"id": k, "name": v[li]} for k, v in t.items()]   # noqa: E731
-    alt = {}
+    alt, pr = {}, {}
+    for x in sorted(_proben(), key=lambda x: -x["t"]):
+        pr.setdefault((x["w"], x["st"]), []).append({"id": x["id"], "s": x["s"], "t": x["t"], "q": x.get("q", ""), "voll": voll(x),
+                                                     "veraltet": x["k"] != fingerprint(x["w"], x["st"])})
     for x in d["stuecke"]:
         if not neu(x):
             alt[(x["w"], x["st"])] = alt.get((x["w"], x["st"]), 0) + 1
@@ -1067,9 +1309,11 @@ def klang_view(d, welten, li):
                        "takt": [{"id": k, "name": v} for k, v in TAKTE.items()], "gesang": nl(GESANG),
                        "paket": [{"id": k, "name": v[0][li]} for k, v in PAKETE.items()]},
             "max": {"instr": INSTR_MAX, "art": ART_MAX}, "tempo": TEMPO_SPANNE,
+            "probe": {"macht": _state["probe"], "heute": _day.counts()["proben"], "max": PROBE_TAG, "kurz": PROBE_KURZ,
+                      "geht": probe_geht()},
             "felder": {w["id"]: {st: {"werte": vorlage(w["id"], st), "standard": standard(st), "geaendert": geaendert(w["id"], st),
                                       "welt_tonart": TONARTEN[welt_tonart(w["id"], st)][li], "veraltet": alt.get((w["id"], st), 0),
-                                      "vorschau": vorschau(w["id"], st)} for st in STIMMUNGEN} for w in welten}}
+                                      "vorschau": vorschau(w["id"], st), "proben": pr.get((w["id"], st), [])} for st in STIMMUNGEN} for w in welten}}
 
 
 def _welten():
@@ -1126,7 +1370,7 @@ async def admin_stil(request: Request):
         felder = await asyncio.to_thread(stil_save, welt, st, werte)
     except ValueError as e:
         print(f"dungeon: musik | klang abgelehnt | {e if str(e) in FELDER + ('feld', 'felder') else 'wert'}", flush=True)
-        raise HTTPException(400, "werte")
+        raise HTTPException(400, "felder")
     print(f"dungeon: musik | klang | gespeichert | {st} | {len(felder)} werte", flush=True)
     return admin_view("en" if b.get("lang") == "en" else "de")
 
@@ -1144,6 +1388,51 @@ async def admin_paket(request: Request):
         raise HTTPException(400, "paket")
     print(f"dungeon: musik | paket | {pid} | {n} felder", flush=True)
     return admin_view("en" if b.get("lang") == "en" else "de")
+
+
+@router.post("/api/admin/dungeon/musik/probe", dependencies=[Depends(auth)])
+async def admin_probe(request: Request):
+    """{welt, st, laenge: "30"|"voll", von?}: a probe of the field with its current template, in the background (one at
+    a time, PROBE_TAG a day, the voice first); von: Variation of that probe (its lm_seed, a new seed)."""
+    guard.limit(request, "dungeonmusik", admin=True)
+    b = await json_body(request, 1024)
+    try:
+        secs = probe_start(b.get("welt"), b.get("st"), b.get("laenge"), b.get("von"))
+    except ValueError as e:
+        why = str(e) if str(e) in ("feld", "aus", "belegt", "tag") else "feld"
+        print(f"dungeon: musik | probe abgelehnt | {why}", flush=True)
+        raise HTTPException({"feld": 400, "aus": 409, "belegt": 409, "tag": 429}[why], why)
+    st = b["st"]   # checked by probe_start (STIMMUNGEN)
+    print(f"dungeon: musik | probe | gestartet | {st} | {secs} s{' | variation' if b.get('von') else ''}", flush=True)
+    return admin_view("en" if b.get("lang") == "en" else "de")
+
+
+@router.post("/api/admin/dungeon/musik/probe/{pid}/behalten", dependencies=[Depends(auth)])
+async def admin_probe_behalten(pid: str, request: Request):
+    """„👍 In den Vorrat“: the full-length probe into the store as a liked piece."""
+    guard.limit(request, "dungeonmusik", admin=True)
+    try:
+        st = await asyncio.to_thread(probe_keep, pid)
+    except LookupError:
+        print("dungeon: musik | probe behalten abgelehnt | unbekannt", flush=True)
+        raise HTTPException(404, "probe")
+    except ValueError as e:
+        print(f"dungeon: musik | probe behalten abgelehnt | {'kurz' if str(e) == 'kurz' else 'veraltet'}", flush=True)
+        raise HTTPException(409, "kurz" if str(e) == "kurz" else "veraltet")
+    print(f"dungeon: musik | probe behalten | {st}", flush=True)
+    return admin_view("en" if request.query_params.get("lang") == "en" else "de")
+
+
+@router.delete("/api/admin/dungeon/musik/probe/{pid}", dependencies=[Depends(auth)])
+async def admin_probe_weg(pid: str, request: Request):
+    guard.limit(request, "dungeonmusik", admin=True)
+    try:
+        await asyncio.to_thread(probe_del, pid)
+    except LookupError:
+        print("dungeon: musik | probe weg abgelehnt | unbekannt", flush=True)
+        raise HTTPException(404, "probe")
+    print("dungeon: musik | probe weg | 1", flush=True)
+    return admin_view("en" if request.query_params.get("lang") == "en" else "de")
 
 
 @router.get("/api/admin/dungeon/musik", dependencies=[Depends(auth)])

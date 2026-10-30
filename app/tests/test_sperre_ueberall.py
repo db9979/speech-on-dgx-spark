@@ -302,6 +302,7 @@ ADMIN_ON_OK = {
     "dungeon_runen.py:wirkt": "Spark-wide: whether runes already in things do anything (13a, read in every check and fight without a round); finding, setting and buying ask features.allowed dungeonrunen for the host (dungeon_runen.on)",
     "dungeon.py:for_live": "Zustand → Live: Spark-wide flag beside numbers; each round asks features.allowed dungeon for its host",
     "dungeon.py:_planner_limits": "the admin's story planner (uid None; a host's form asks features.allowed): the act field „Besonderes Ding“ only while the Spark-wide switch is on; a round asks features.allowed dungeonquest for its host",
+    "dungeon_musik.py:probe_geht": "admin-only: the admin's probe of a field of the Spark-wide music store (Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch), no profile acts here",
     "dungeon_musik.py:on": "Spark-wide: one shared music store for every round (nothing personal); a seat reaches a round only through dungeon.py, which asks features.allowed dungeon for its host",
     "dungeon_dingbild.py:on": "the catalog's pictures are Spark-wide (one picture per entry and world, painted at night); a find asks dungeon.pictures_on (features.allowed bilder) for its host",
     "dungeon_dingbild.py:person_on": "the people catalog's faces are catalog pictures (Spark-wide, painted at night, the admin's „Personen (NSC)“); a round shows a face only while dungeon_gesicht.on asks features.allowed for its host",

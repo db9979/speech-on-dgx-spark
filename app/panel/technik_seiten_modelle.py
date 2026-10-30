@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "asr": {
-        "stand": "b616c1e1bd",
+        "stand": "35783ee71c",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "common.NOTASR_PORT": ["s9"], "common.NOTASR_IDLE": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],
@@ -390,7 +390,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Bilder malen (and Musik machen in the same box)
     "bild": {
-        "stand": "ebd06c9157",
+        "stand": "c1726c95dd",
         "bezug": {
             "bilder.MAX_PICS": ["s4"], "schwer.WAITING": ["s4"], "bilder.JOB_SECONDS": ["s5"], "bilder.NSFW_MAX": ["s8"],
             "schwer.run": ["s5"], "schwer.pick": ["s5"], "schwer.hint": ["s5"], "schwer.BUNDLE": ["s5"],
@@ -524,14 +524,16 @@ SEITEN = {
                "(musik_server.metadata). Die Dungeon-Musik gibt alle mit, so schreibt das Planer-Modell ihre "
                "Beschreibung nicht um. Eine Qualitätsstufe (Schnell, Gut, Beste) und die Lautheit nennt der Aufrufer "
                "nur beim Namen, die Werte stehen in musikmodell.QUALITAET (musik_server.quality); Beste nimmt das "
-               "SFT-Modell mit {musikmodell.SFT_STEPS} Schritten nur, wenn es installiert ist, sonst Gut.",
+               "SFT-Modell mit {musikmodell.SFT_STEPS} Schritten nur, wenn es installiert ist, sonst Gut. Die Zahl "
+               "des Planers (lm_seed) darf der Aufrufer mitgeben, damit ein Stück sich wiederholen oder abwandeln lässt.",
                "The engine paints the picture in {bildmodell.STEPS} steps at the chosen size; its own output never "
                "reaches the journal, because it would name the prompt. For a song musik_server.request_body sets "
                "every field itself; tempo, key, time signature and a negative prompt it takes only from fixed values "
                "(musik_server.metadata). The dungeon music gives all of them, so the planner model does not rewrite "
                "its caption. A quality level (fast, good, best) and the loudness the caller only names, the values "
                "are in musikmodell.QUALITAET (musik_server.quality); best takes the SFT model with "
-               "{musikmodell.SFT_STEPS} steps only when it is installed, else good.")),
+               "{musikmodell.SFT_STEPS} steps only when it is installed, else good. The caller may give the planner's "
+               "number (lm_seed), so a piece can be repeated or varied.")),
             S("s8", "frage", ("Bild unbedenklich?", "Picture harmless?"),
               ("Bildprüfung nach dem Malen", "image check after painting"),
               ("bild_server.nsfw_share lässt einen Klassifikator auf der CPU das Bild prüfen. Über "

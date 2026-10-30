@@ -18,7 +18,7 @@ frame header) and gets our own ID3 tag that marks it as made by an AI. The servi
 only seconds, sizes and states.
 
     GET  /health        status (off | starting | ready | busy | error | missing), variant, counts, measurements
-    POST /v1/musik      {caption, seconds, lyrics?, language?, seed?, variant?, bpm?, keyscale?, timesignature?, negative?,
+    POST /v1/musik      {caption, seconds, lyrics?, language?, seed?, lm_seed?, variant?, bpm?, keyscale?, timesignature?, negative?,
                          quality?, loud?} -> {mp3, variant, quality, seconds, lm_s, ...}
     POST /v1/musik/stop ends the engine now (Wartungspause, Musik testen)
 
@@ -365,8 +365,8 @@ def pick(b):
 
 
 def request_body(b, v=None):
-    """The checked request for the engine: every field fixed here except caption, length, lyrics, language, seed and
-    the optional metadata (metadata: tempo, key, time signature, negative prompt; absent as before).
+    """The checked request for the engine: every field fixed here except caption, length, lyrics, language, seed, the
+    optional planner seed (lm_seed) and the optional metadata (metadata: tempo, key, time signature, negative prompt; absent as before).
     ace-server knows its models by the whole file name, .gguf included (V01.0.681)."""
     if not isinstance(b, dict):
         raise HTTPException(400, "JSON object")
@@ -387,12 +387,16 @@ def request_body(b, v=None):
     seed = b.get("seed", -1)
     if isinstance(seed, bool) or not isinstance(seed, int) or not -1 <= seed < 2**31:
         raise HTTPException(400, "seed")
+    lm_seed = b.get("lm_seed")   # optional: the planner's seed, kept by the Dungeon-Master's store (plan V5a)
+    if lm_seed is not None and (isinstance(lm_seed, bool) or not isinstance(lm_seed, int) or not 0 <= lm_seed < 2**31):
+        raise HTTPException(400, "lm_seed")
     v = musikmodell.VARIANTS[v or pick(b)]
     return {"caption": caption, "lyrics": lyrics or INSTRUMENTAL, "vocal_language": lang if lyrics else "unknown",
             "duration": float(secs), "seed": seed, "lm_batch_size": 1, "synth_batch_size": 1,
             "inference_steps": musikmodell.STEPS, "task_type": "text2music", "output_format": "mp3",
             "mp3_bitrate": musikmodell.MP3_KBPS, "synth_model": v["dit"].name, "lm_model": v["lm"].name,
-            "use_cot_caption": True, "lm_mode": "generate", "adapter": "", **metadata(b), **quality(b)[1]}
+            "use_cot_caption": True, "lm_mode": "generate", "adapter": "", **metadata(b), **quality(b)[1],
+            **({} if lm_seed is None else {"lm_seed": lm_seed})}
 
 
 def quality(b):

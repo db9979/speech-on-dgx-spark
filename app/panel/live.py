@@ -1255,7 +1255,7 @@ def ruhe(targets, busy, now=None):
 
 
 def _dungeon_musik(m):
-    """The Dungeon-Master's music made ahead (dungeon_musik.for_live): pieces, full fields, making, today, marked annoying, outdated, changed sound templates (numbers only)."""
+    """The Dungeon-Master's music made ahead (dungeon_musik.for_live): pieces, full fields, making, today, marked annoying, outdated, changed sound templates, liked, probes (numbers only)."""
     if not m.get("an") and not m.get("stuecke"):
         return ""
     return (f" · Musik {m.get('stuecke', 0)} Stücke ({m.get('mb', 0)} MB), {m.get('voll', 0)} Felder voll"
@@ -1264,7 +1264,11 @@ def _dungeon_musik(m):
             + (f", {m['markiert']} als nervig markiert" if m.get("markiert") else "")
             + (f", {m['alt']} veraltet" if m.get("alt") else "")
             + (f", {m['vorlagen']} Klangvorlagen geändert" if m.get("vorlagen") else "")
-            + (f", heute {m['nervt']}× Nervt" if m.get("nervt") else ""))
+            + (f", heute {m['nervt']}× Nervt" if m.get("nervt") else "")
+            + (f", heute {m['gefaellt']}× Gefällt" if m.get("gefaellt") else "")
+            + (f", {m['gemocht']} gemocht" if m.get("gemocht") else "")
+            + (f", {m['proben']} Proben" if m.get("proben") else "") + (", macht eine Probe" if m.get("probe_macht") else "")
+            + (f", heute {m['proben_heute']} Proben gemacht" if m.get("proben_heute") else ""))
 
 
 def _kartennacht(n):

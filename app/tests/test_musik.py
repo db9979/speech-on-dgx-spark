@@ -629,6 +629,15 @@ class Service(unittest.TestCase):
             with self.assertRaises(HTTPException, msg=bad):
                 musik_server.request_body(dict({"caption": "a", "seconds": 30}, **bad))
 
+    def test_planner_seed_is_optional_and_checked(self):
+        """Plan dungeon-musik-tuning V5a: the planner's seed (lm_seed) only when the caller gives it, a whole number
+        0 to 2**31-1; the dungeon's store keeps it with the seed."""
+        self.assertNotIn("lm_seed", musik_server.request_body({"caption": "calm piano", "seconds": 30}))
+        self.assertEqual(musik_server.request_body({"caption": "a", "seconds": 30, "lm_seed": 7})["lm_seed"], 7)
+        for bad in (-1, 2 ** 31, 1.5, True, "7", [7]):
+            with self.assertRaises(HTTPException, msg=bad):
+                musik_server.request_body({"caption": "a", "seconds": 30, "lm_seed": bad})
+
     def test_quality_levels_are_fixed_values(self):
         """Plan dungeon-musik-tuning V6a/V7a: a caller names a level and a loudness, the values are the service's own;
         none named: the engine's defaults as before; „beste“ takes the SFT model only when it is pinned and installed,
