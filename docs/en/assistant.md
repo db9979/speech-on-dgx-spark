@@ -1860,6 +1860,8 @@ Every function of the Spark with its switch, what it builds on, where you set it
 
 - **Note on a remote session** (Features → Access → "Note on a remote session"; builds on "Remote access to servers"): When an admin opens the shell of a server from the internet or from a place they never opened it from, all admins get a note on their phone with a fixed text: who, which server, home or internet, never an address.
 
+- **Send to all in remote access** (Features → Access → "Send to all in remote access"; builds on "Remote access to servers"): With two or more connected shells of the same kind (say all Linux) the tab bar shows "To all …".
+
 - **Spontaneous help** (Features → Access → "Spontaneous help"; builds on "Remote access to servers"): Help once, like TeamViewer QuickSupport: the person opens the page /hilfe of your panel, types the 6-digit number and her first name and shares her screen after you accept.
 
 - **Assistant in remote access** (Features → Access → "Assistant in remote access"; builds on "Remote access to servers"): Beside the terminal under Remote access → Systems there is "Ask the assistant": you ask e.g.

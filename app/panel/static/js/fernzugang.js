@@ -312,7 +312,7 @@ function fzVerbinde(tk,S){const term=S.term,an=()=>S===FZ.cur;
   ws.onmessage=ev=>{S.zuletzt=Date.now();if(ev.data instanceof ArrayBuffer){term.write(new Uint8Array(ev.data),()=>{if(an()&&FZ.ziel)fzZielTick(false)});if(!fzSichtbar(S)&&!S.neu){S.neu=true;fzReiterZeigen()}return}
     let m;try{m=JSON.parse(ev.data)}catch{return}
     if(m.typ==='stand'&&m.stand==='offen'){S.sid=m.id||'';S.wieder=null;if(an())fzWiederZeigen();if(fzImFeld(S))fzResize();if(S.nachher){const l=S.nachher;S.nachher='';setTimeout(()=>{if(an())fzEinfuegen(l)},400)}if(m.wieder)term.reset();
-      term.write('\x1b[2m'+(m.wieder?t('Wieder verbunden · ','Connected again · '):t('Verbunden · SSH · Host-Schlüssel ','Connected · SSH · host key ')+m.fp+t(' geprüft',' checked')+' ')+'\x1b[0m\r\n');S.fp=String(m.fp||'');if(an())fzInfo(S.fp);fzBanner();fzReiterZeigen()}
+      term.write('\x1b[2m'+(m.wieder?t('Wieder verbunden · ','Connected again · '):t('Verbunden · SSH · Host-Schlüssel ','Connected · SSH · host key ')+m.fp+t(' geprüft',' checked')+' ')+'\x1b[0m\r\n');S.fp=String(m.fp||'');if(an())fzInfo(S.fp);fzBanner();fzReiterZeigen();fzAlleStand()}
     if(m.typ==='bald')fzBald(Number(m.s)||0,S);
     if(m.typ==='puls'){if(Number.isInteger(m.t)&&m.t>0)ws.send(JSON.stringify({typ:'pong',t:m.t}));fzMess(m,S)}
     if(m.typ==='fehler'||m.typ==='zu')S.grund=m.grund;if(m.typ==='weg')S.grund='weg'};
@@ -562,7 +562,7 @@ function fzZu(text,S){S=S||FZ.cur;const i=S?FZ.reiter.indexOf(S):-1,war=S&&S===F
   else if(S&&FZ.reiter.length){fzNotizSpeichern();fzZielEnde('');FZ.cur=null;fzReiterWahl(FZ.reiter[Math.min(Math.max(i,0),FZ.reiter.length-1)])}
   else if(!FZ.reiter.length){fzNotizSpeichern();FZ.cur=null;FZ_LOS.sitz=null;fzWiederZeigen();fzBald(0);clearTimeout(FZ.vt);fzZielEnde('');fzBanner();fzReiterZeigen();
     window.removeEventListener('resize',fzResize);$('fzview').hidden=true;$('fzmain').hidden=false;fzVerbergen();fzLoad()}
-  if(text)fzNeuKnopf(text,g);if(noch)fzOpen(g)}
+  fzAlleStand();if(text)fzNeuKnopf(text,g);if(noch)fzOpen(g)}
 // every end message offers „Neu verbinden“ to the system it was (a new session, a new code only if the page is locked)
 function fzNeuKnopf(text,g){g=g||FZ.letzt;sayToast(text,20000,{bad:true,knopf:g?[t('Neu verbinden','Connect again'),()=>fzOpen(g)]:null,id:'fzwiederneu'})}
 async function fzAlle(){if(!confirm(t('Jede Sitzung und jeden Anker jetzt trennen?','Disconnect every session and anchor now?')))return;
@@ -585,7 +585,7 @@ function fzReiterZeigen(){const bar=$('fzreiter');if(!bar)return;bar.textContent
     b.ondrop=e=>{e.preventDefault();const z=FZ.zieht;FZ.zieht=null;if(!z||z===S)return;const von=FZ.reiter.indexOf(z),nach=FZ.reiter.indexOf(S);FZ.reiter.splice(von,1);FZ.reiter.splice(nach,0,z);fzReiterZeigen()};
     bar.appendChild(b)});
   const plus=fzBtn('+ '+t('System','System'),'fzreitplus',fzWahl);plus.title=t('System wählen (Strg+Umschalt+O)','Choose a system (Ctrl+Shift+O)');bar.appendChild(plus);
-  bar.appendChild(fzEl('span','fzreithint',t('Strg+Umschalt+1…9 · ←/→','Ctrl+Shift+1…9 · ←/→')));fzAnsichtKnoepfe(bar)}
+  bar.appendChild(fzEl('span','fzreithint',t('Strg+Umschalt+1…9 · ←/→','Ctrl+Shift+1…9 · ←/→')));fzAnsichtKnoepfe(bar);fzAlleKnopf(bar)}
 // a tab comes forward: its box shows, the bar, the line, the chips, the ⓘ and the assistant's answers are its own
 function fzReiterWahl(S,neu,immer){const alt=FZ.cur;if(alt===S&&!neu){if(immer){fzFeldFuer(S,alt);fzAnsichtMalen();fzLayout();requestAnimationFrame(()=>{fzResize();if(S.term&&fzImFeld(S))S.term.focus()})}fzReiterZeigen();return}
   const a=$('fzantwort');if(alt&&FZ.reiter.includes(alt)){fzNotizSpeichern();if(a){const f=document.createDocumentFragment();while(a.firstChild)f.appendChild(a.firstChild);alt.antwort=f}}
@@ -593,7 +593,7 @@ function fzReiterWahl(S,neu,immer){const alt=FZ.cur;if(alt===S&&!neu){if(immer){
   fzFeldFuer(S,alt);FZ.cur=S;S.neu=false;fzAnsichtMalen();$('fztname').textContent=S.sitz.name;
   if(neu)fzHilfeNeu();else if(a){a.textContent='';if(S.antwort)a.appendChild(S.antwort);S.antwort=null;fzSeiteWahl(FZ.seite)}
   fzInfo(S.fp||'');const e=$('fzbmess');if(e)e.textContent=S.mess&&S.mess.rtt!==null?' · '+S.mess.rtt+' ms':'';
-  fzWiederZeigen();fzChips();fzBanner();fzReiterZeigen();fzLayout();requestAnimationFrame(()=>{fzResize();if(S.term&&S===FZ.cur)S.term.focus()})}
+  fzWiederZeigen();fzChips();fzBanner();fzReiterZeigen();fzAlleStand();fzLayout();requestAnimationFrame(()=>{fzResize();if(S.term&&S===FZ.cur)S.term.focus()})}
 function fzReiterMenu(S,an){fzMenuZu();const m=fzEl('div','fzomenu');m.id='fzomenu';m.setAttribute('role','menu');m.appendChild(fzEl('div','fzomkopf',S.sitz.name));
   for(const [txt,fn,geht,cls] of [[t('Daneben anzeigen','Show beside it'),()=>fzDaneben(S),S!==FZ.cur&&fzAnsichtGeht('neben',FZ.reiter.length)],[t('Herauslösen (eigenes Fenster)','Pop out (own window)'),()=>fzHeraus(S),!!(S.ws&&S.sid)],[t('Neu verbinden','Connect again'),()=>{S.nochmal=true;fzTrennen(S)},true],
     [t('Schließen (trennt)','Close (disconnects)'),()=>fzTrennen(S),true],[t('Andere trennen','Disconnect the others'),()=>{for(const x of FZ.reiter.filter(x=>x!==S))fzTrennen(x)},FZ.reiter.length>1,'fzrot']]){
@@ -680,6 +680,44 @@ function fzAnsichtKnoepfe(bar){const g=fzEl('div','fzansicht');g.setAttribute('r
     const b=fzBtn(txt,'fzansichtb'+(m===a?' on':''),()=>fzAnsicht(a));b.dataset.a=a;b.title=tip;b.setAttribute('aria-pressed',m===a?'true':'false');g.appendChild(b)}
   if(eine)bar.appendChild(g)}
 addEventListener('resize',()=>{if(FZ.reiter.length&&!$('fzview').hidden){const m=fzModus();if(m!==(FZ.gemalt||'')){FZ.gemalt=m;fzAnsichtMalen();fzReiterZeigen();requestAnimationFrame(fzResize)}}});
+// ---------------------------------------------------------------- An alle senden (Stufe 4, Bild 4-an-alle)
+// with Funktionen → Fernzugang zu Servern → An alle senden on (off by default): a red line of its own above the
+// terminals, never the keys mirrored. It names the systems that take part (the connected shells of the same kind of
+// system as the tab in front, at least two) and the ones that do not. Enter asks each time with the line and the names;
+// a line of the Vorsicht list never goes (the page says so, and the panel checks the same rules again). After a send,
+// on another page, after 5 minutes and when fewer than two systems are left it goes off by itself. The assistant
+// never inserts here; nothing of the line is kept or logged.
+const FZ_ALLE_S=300;
+function fzAlleArt(S){return (S&&S.sitz&&S.sitz.art)||'linux'}
+function fzAlleZiele(){const k=fzAlleArt(FZ.cur),bereit=S=>S.ws&&S.ws.readyState===1&&S.sid;
+  return {mit:FZ.reiter.filter(S=>bereit(S)&&fzAlleArt(S)===k),ohne:FZ.reiter.filter(S=>!(bereit(S)&&fzAlleArt(S)===k))}}
+function fzAlleGeht(){return !!(FZ.d&&FZ.d.alle)&&!FZ_FENSTER&&fzAlleZiele().mit.length>=2}
+function fzAlleKnopf(bar){if(!fzAlleGeht())return;const b=fzBtn(t('An alle …','To all …'),'fzallebtn'+(FZ.alle?' on':''),()=>FZ.alle?fzAlleAus():fzAlleAn());
+  b.title=t('Eine Zeile an alle verbundenen Shells dieser Art (jedes Mal mit Rückfrage)','One line to every connected shell of this kind (asked each time)');b.setAttribute('aria-pressed',FZ.alle?'true':'false');bar.appendChild(b)}
+function fzAlleAn(){if(!fzAlleGeht())return;FZ.alle={bis:Date.now()+FZ_ALLE_S*1000};let z=$('fzsende');
+  if(!z){z=fzEl('div','fzalle');z.id='fzsende';z.setAttribute('role','group');z.setAttribute('aria-label',t('An alle senden','Send to all'));
+    const kopf=fzEl('div','fzsendekopf'),q=document.createElement('input'),los=fzBtn(t('Senden …','Send …'),'p',fzAlleSenden),zu=fzBtn('×','fzallezu',fzAlleAus);
+    kopf.id='fzsendekopf';q.id='fzsendezeile';q.type='text';q.autocomplete='off';q.spellcheck=false;q.maxLength=(FZ.d&&FZ.d.alle_zeichen)||500;
+    q.placeholder=t('Eine Zeile für alle, Enter fragt nach','One line for all, Enter asks first');q.setAttribute('aria-label',t('Zeile für alle','Line for all'));
+    zu.title=t('An alle aus','Send to all off');zu.setAttribute('aria-label',zu.title);
+    q.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();fzAlleSenden()}else if(e.key==='Escape'){e.preventDefault();fzAlleAus()}};
+    const reihe=fzEl('div','fzallereihe');reihe.append(q,los,zu);z.append(kopf,reihe);$('fzterm').before(z)}
+  z.hidden=false;fzAlleStand();fzReiterZeigen();fzLayout();$('fzsendezeile').focus();
+  clearInterval(FZ.allet);FZ.allet=setInterval(()=>{if(!FZ.alle)return;if(Date.now()>FZ.alle.bis||!document.querySelector('section#fern.on')||$('fzview').hidden)fzAlleAus()},1000)}
+function fzAlleAus(){FZ.alle=null;clearInterval(FZ.allet);const z=$('fzsende');if(z){z.hidden=true;const q=$('fzsendezeile');if(q)q.value=''}fzReiterZeigen();fzLayout();if(FZ.term&&fzImFeld(FZ.cur))FZ.term.focus()}
+// who takes part, said above the line; fewer than two: off
+function fzAlleStand(){if(!FZ.alle)return;const {mit,ohne}=fzAlleZiele();if(mit.length<2||!(FZ.d&&FZ.d.alle)){fzAlleAus();return}
+  const k=$('fzsendekopf');if(!k)return;k.textContent='';
+  k.append(fzEl('b','',t(`Eingabe geht an ${mit.length} Systeme: `,`Input goes to ${mit.length} systems: `)),fzEl('span','',mit.map(S=>S.sitz.name).join(', ')));
+  if(ohne.length)k.appendChild(fzEl('small','',' · '+t('nicht dabei: ','not included: ')+ohne.map(S=>S.sitz.name+' ('+(S.ws&&S.sid?t('andere Art','other kind'):t('nicht verbunden','not connected'))+')').join(', ')))}
+async function fzAlleSenden(){const q=$('fzsendezeile');if(!q||!FZ.alle)return;const zeile=q.value.trim();if(!zeile)return;
+  if(/[\x00-\x1f\x7f]/.test(zeile)){fzMsg(t('Nur eine Zeile ohne Steuerzeichen.','One line without control characters only.'),true);return}
+  const g=fzGefahr(zeile);if(g){fzMsg(t('Befehle der Vorsicht-Liste gehen nie an alle: ','Commands from the caution list never go to all: ')+g,true);return}
+  const {mit}=fzAlleZiele();if(mit.length<2){fzAlleAus();return}
+  if(!confirm(t(`„${zeile}“ an ${mit.length} Systeme senden?`,`Send "${zeile}" to ${mit.length} systems?`)+'\n\n'+mit.map(S=>'· '+S.sitz.name).join('\n')))return;
+  try{const r=await api('/api/admin/fernzugang/alle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({zeile,sitzungen:mit.map(S=>S.sid)})});const d=await r.json();
+    fzMsg(t(`An ${d.n} Systeme gesendet.`,`Sent to ${d.n} systems.`));fzAlleAus()}
+  catch(e){const w=String(e.message||'');fzMsg(w.includes('vorsicht')?t('Der Spark hat die Zeile abgewiesen: Vorsicht-Liste.','The Spark refused the line: caution list.'):w.includes('gemischt')?t('Der Spark hat abgewiesen: Systeme verschiedener Art.','The Spark refused: systems of different kinds.'):w,true)}}
 // ---------------------------------------------------------------- the files (SFTP)
 const fzKB=n=>n==null?'':n<1024?n+' B':n<1048576?Math.round(n/1024)+' KB':n<1073741824?(n/1048576).toFixed(1)+' MB':(n/1073741824).toFixed(1)+' GB';
 async function fzDateien(g){if(fzBelegt()){fzMsg(t('Erst die offene Sitzung trennen.','Disconnect the open session first.'),true);return}let d;

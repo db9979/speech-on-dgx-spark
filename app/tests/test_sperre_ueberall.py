@@ -383,6 +383,7 @@ ADMIN_ON_OK = {
     "gehaeuse.py:admin_on": "admin only: the case of the panel computer (display, LEDs, fans), no profile part",
     "rundlauf.py:an": "admin only: the round trip through the models with fixed words, no profile part",
     "fernzugang.py:admin_on": "admin only: the shell of a remote server, admin-only endpoints and the anchor's own door, no profile part",
+    "fernzugang.py:alle_on": "admin only: one line into several open shells of an admin's own login, no profile part",
     "fernzugang.py:meldung_on": "admin only: a fixed note to the admins about a remote session of an admin, no profile part",
     "spontanhilfe.py:admin_on": "Spark-wide: the person's page and the admin's help, admin-only doors, no profile part",
     "fernbild.py:admin_on": "admin only: the screen of a paired system in an admin's own browser, admin-only doors and the anchor's own door, no profile part",

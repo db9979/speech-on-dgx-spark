@@ -258,6 +258,7 @@ WITHOUT = {
     "fernzugang": "fernzugang.py: die Shell eines Fern-Servers nur vom Admin auf Fernzugang → Systeme; das Modell bekommt kein Werkzeug und nie eine Ausgabe der Shell",
     "fernzugangmeldung": "fernzugang.py: feste Mitteilung an die Admins und eine feste Zeile im Journal des Servers nach festen Regeln, nie eine Adresse, kein Werkzeug",
     "spontanhilfe": "spontanhilfe.py: eine Person teilt einmal ihren Bildschirm im Browser, nur Admins helfen; das Modell bekommt kein Werkzeug und nie ein Bild oder den Chat",
+    "fernzugangalle": "fernzugang.py: eine Zeile an mehrere offene Shells desselben Admins nach festen Regeln (eine Art System, nie die Vorsicht-Liste), nach Rückfrage im Browser; kein Werkzeug, das Modell fügt dort nie ein",
     "fernweb": "fernweb.py: Webseiten eines gekoppelten Systems nur im Browser des Admins über die eigene Tunnel-Tür, feste Ziel-Regeln; kein Werkzeug, das Modell sieht nichts davon",
     "ferngross": "ferngross.py: große Dateien in Teilen, per Link oder vom NAS nur vom Admin in seiner Dateien-Sitzung, feste Befehle, Prüfsumme; kein Werkzeug",
     "fernbild": "fernbild.py: der Bildschirm eines Systems nur vom Admin im eigenen Browser, erst nur ansehen; das Modell bekommt kein Werkzeug und nie ein Bild",

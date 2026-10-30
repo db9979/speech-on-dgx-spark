@@ -257,7 +257,7 @@ HINWEIS = ((("screen", "-x"), ("Strg+A D = abkoppeln (die Sitzung dort läuft we
 # the journal's words (fernzugang: <word> | ...), one line for every result of every action
 WORDS = ("koppeln_code", "koppeln", "koppeln_datei", "bestaetigt", "anker_auf", "anker_zu", "anker_abgewiesen", "ticket", "sitzung_auf", "sitzung_zu",
          "sitzung_abgewiesen", "hostkey_falsch", "abbauen", "abgebaut", "trennen", "alle_trennen", "erlaubt", "download", "verlauf", "meldung",
-         "hilfe_frage", "hilfe_vorschlag", "hilfe_ziel", "entsperrt", "verlaengert", "gesperrt", "dateien_auf", "dateien_zu",
+         "hilfe_frage", "hilfe_vorschlag", "hilfe_ziel", "alle", "entsperrt", "verlaengert", "gesperrt", "dateien_auf", "dateien_zu",
          "dateien_abgewiesen", "liste", "link", "laden", "hoch", "bild_ticket", "bild_auf", "bild_zu", "bild_rate", "bild_abgewiesen",
          "bild_steuern", "bild_passwort", "bild_guacd", "verbindung", "aktualisieren", "notiz", "ordner",
          "gross_auf", "gross_teil", "gross_weiter", "gross_fertig", "gross_ab", "gross_rate", "gross_rest", "gross_stand", "holen",
@@ -378,6 +378,11 @@ def max_sitzungen(c=None):
 
 def verlauf_s(c=None):
     return 86400 * (_num("fernzugang_verlauf_tage", VERLAUF_TAGE, c) or 30)
+
+
+def alle_on(c=None):
+    """Funktionen → Fernzugang zu Servern → An alle senden (off): one line into several open shells at once."""
+    return features.admin_on("fernzugangalle", c)
 
 
 def meldung_on(c=None):
@@ -1881,7 +1886,7 @@ def admin_get(request: Request):
            "erklaert": {k: list(v) for k, v in ERKLAERT.items()}, "sudo_tip": list(SUDO_TIP),
            "hinweis": [[list(w), list(x)] for w, x in HINWEIS], "anker": _program(), "code_s": CODE_S, "counts": counts(),
            "notaus": _notaus(), "browser": is_admin_browser(request),
-           "hilfe": hilfe_on(c), "gefahr": {k: [list(g) for g in v] for k, v in GEFAHR.items()}, "ki_zeilen": ki_zeilen(c),
+           "hilfe": hilfe_on(c), "alle": alle_on(c), "alle_zeichen": ALLE_ZEICHEN, "gefahr": {k: [list(g) for g in v] for k, v in GEFAHR.items()}, "ki_zeilen": ki_zeilen(c),
            "ki_zeilen_wahl": sorted(set(KI_ZEILEN_WAHL) | {ki_zeilen(c)}), "ki_zeichen": KI_ZEICHEN, "ziel_min": ZIEL_MIN,
            "hilfe_befehle": HILFE_BEFEHLE, "vorschlag_s": VORSCHLAG_S, "bildschirm": fernbild.admin_on(c), "bild_dienst": fernbild.dienst() if fernbild.admin_on(c) else None,
            "zwischenablage": fernbild.clipboard_on(c), "bild_langsam": fernbild.LANGSAM}
@@ -2015,6 +2020,60 @@ async def admin_session(request: Request):
                                                        "uid": prof["id"] if prof else None}
     log("ticket", _who(request), 1)
     return {"ticket": t, "gilt_s": TICKET_S}
+
+
+# „An alle senden“ (Mehrere Sitzungen Stufe 4, mockup 4-an-alle; chat.fernzugang_alle, off): one line into the open
+# shells of this login at once, after the page asked each time with the line and the systems. Fixed rules decide here,
+# never the model and never the page alone: shells of this login only, all of one kind of system (art), at least
+# ALLE_MIN, one line without control characters of at most ALLE_ZEICHEN, never a line the rules GEFAHR match. The
+# journal and Live count the systems and never write the line.
+ALLE_ZEICHEN = 500
+ALLE_MIN = 2
+
+
+@router.post("/api/admin/fernzugang/alle", dependencies=[Depends(auth)])
+async def admin_alle(request: Request):
+    _on(request)
+    _second_step(request)
+    _frei(request)
+    guard.limit(request, "fernzugang_alle", admin=True)
+    if not alle_on():
+        log("alle", "aus", 0)
+        raise HTTPException(403, "switched off")
+    body = await json_body(request, MAX_BODY)
+    zeile, ids = body.get("zeile"), body.get("sitzungen")
+    zeile = zeile.strip() if isinstance(zeile, str) else ""
+    if not zeile or len(zeile) > ALLE_ZEICHEN or re.search(r"[\x00-\x1f\x7f]", zeile):
+        log("alle", "zeile", 0)
+        raise HTTPException(400, "one line of text")
+    ids = list(dict.fromkeys(str(x) for x in ids)) if isinstance(ids, list) else []
+    if not ALLE_MIN <= len(ids) <= SITZUNGEN[1]:
+        log("alle", "anzahl", 0)
+        raise HTTPException(400, "two sessions or more")
+    login = _login(request)
+    sess = [SITZUNG.get(i) for i in ids]
+    if any(x is None or x.art != "shell" or x.login != login or x.ende.is_set() or x.chan is None for x in sess):
+        log("alle", "sitzung", 0)
+        raise HTTPException(404, "no such session")
+    g = _read()["geraete"]
+    kinds = {art(g.get(x.gid, {}).get("os")) for x in sess}
+    if len(kinds) != 1:
+        log("alle", "gemischt", 0)
+        raise HTTPException(409, "gemischt")
+    if gefahr(zeile, kinds.pop()):
+        log("alle", "vorsicht", 0)
+        raise HTTPException(409, "vorsicht")
+    data, n = (zeile + "\r").encode(), 0
+    for x in sess:
+        try:
+            await asyncio.to_thread(x.chan.sendall, data)
+        except (OSError, EOFError, AttributeError):
+            continue
+        x.zuletzt = time.time()
+        n += 1
+    log("alle", "gesendet", n)
+    guard.log("fernzugang_alle", detail=f"an {n} Systeme")
+    return {"n": n}
 
 
 @router.post("/api/admin/fernzugang/sitzung/{sid}/fenster", dependencies=[Depends(auth)])

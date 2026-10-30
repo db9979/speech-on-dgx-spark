@@ -794,6 +794,8 @@ FEATURES = (
     F("fernzugang", "Fernzugang zu Servern", "Remote access to servers", "sec", ("fernzugang",), guide="fernzugang"),
     # a push to the admins when a remote session opens from the internet or a new place (on under the switch)
     F("fernzugangmeldung", "Meldung bei Fernsitzung", "Note on a remote session", "sec", ("fernzugang_meldung",), parent="fernzugang", guide="fernzugangmeldung"),
+    # Mehrere Sitzungen Stufe 4 (Dominik 2026-10-30 „alle“, mockup 4-an-alle): one line into several open shells, off
+    F("fernzugangalle", "An alle senden im Fernzugang", "Send to all in remote access", "sec", ("fernzugang_alle",), parent="fernzugang", guide="fernzugangalle"),
     # spontanhilfe.py (plan spontanhilfe, S1): a person shares her screen once in the browser (/hilfe), admins only
     F("spontanhilfe", "Spontanhilfe", "Spontaneous help", "sec", ("spontanhilfe",), parent="fernzugang", guide="spontanhilfe"),
     # stage 2b: „Frag den Assistenten“ beside the terminal, the own language model only, no tool, admins only
@@ -912,7 +914,7 @@ DUTY = None
 REVIEW = None
 
 # chat.* switches that are no function a profile uses (how the Spark itself works)
-SPARK_ONLY = {"wachposten", "public", "thinking", "prompt_cache", "answer_check", "answer_check_more", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "angriffsprobe", "weicheabstimmen", "fernzugang", "fernzugangmeldung", "spontanhilfe", "fernzuganghilfe", "fernbild", "fernbildablage", "fernnotizen", "fernordner", "ferngross", "fernweb",
+SPARK_ONLY = {"wachposten", "public", "thinking", "prompt_cache", "answer_check", "answer_check_more", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "angriffsprobe", "weicheabstimmen", "fernzugang", "fernzugangmeldung", "fernzugangalle", "spontanhilfe", "fernzuganghilfe", "fernbild", "fernbildablage", "fernnotizen", "fernordner", "ferngross", "fernweb",
               "helfer", "helferweiche", "helferdungeon", "helfermail", "helferangriff", "helferkurz"}
 # Everything starts off (Dominik 2026-10-08). The only values shipped on in config.default.json are protection and
 # stability rules and the basic functions the Spark had from the start, each with its reason here (Dominik 2026-10-12,

@@ -1987,6 +1987,78 @@ def fake_session(gid, **kw):
     return s
 
 
+class SendToAll(Base):
+    """An alle senden (Mehrere Sitzungen Stufe 4, chat.fernzugang_alle, off): the panel decides by fixed rules, never
+    the page alone: switch on, shells of this login only, at least two, one kind of system, one line without control
+    characters, never a line of the Vorsicht list; the line goes with Enter into each shell, the journal counts only."""
+
+    class Chan:
+        def __init__(self):
+            self.got = []
+
+        def sendall(self, data):
+            self.got.append(data)
+
+    def login(self):
+        gid = self.pair()["id"]
+        Ticket.online(self, gid)
+        r = ADMIN.post("/api/admin/fernzugang/sitzung", json={"geraet": gid}, headers=CODE)
+        self.assertEqual(r.status_code, 200, r.text)
+        return gid, next(iter(fernzugang.TICKETS.values()))["login"]
+
+    def shells(self, n=2):
+        gid, login = self.login()
+        out = [fake_session(gid, login=login, chan=self.Chan()) for _ in range(n)]
+        return gid, login, out
+
+    def send(self, zeile, sessions, code=200):
+        r = ADMIN.post("/api/admin/fernzugang/alle", json={"zeile": zeile, "sitzungen": [x.id for x in sessions]})
+        self.assertEqual(r.status_code, code, r.text)
+        return r
+
+    def test_off_by_default_and_refused_when_off(self):
+        with open(os.path.join(helpers.APP, "config.default.json"), encoding="utf-8") as f:
+            self.assertIs(json.load(f)["chat"]["fernzugang_alle"], False)
+        self.assertFalse(fernzugang.alle_on())
+        _, _, sess = self.shells()
+        self.send("uptime", sess, 403)
+        self.assertEqual([x.chan.got for x in sess], [[], []])
+
+    def test_one_line_into_each_shell_of_this_login_and_the_log_counts_only(self):
+        helpers.set_config(fernzugang_alle=True)
+        self.addCleanup(helpers.set_config, fernzugang_alle=False)   # the switch never leaks into later tests
+        gid, login, sess = self.shells(3)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), unittest.mock.patch.object(guard, "log") as ereignis:
+            self.assertEqual(self.send("  uptime  ", sess).json(), {"n": 3})
+        ereignis.assert_any_call("fernzugang_alle", detail="an 3 Systeme")
+        self.assertEqual([x.chan.got for x in sess], [[b"uptime\r"]] * 3)
+        self.assertIn("fernzugang: alle | gesendet | 3", out.getvalue())
+        self.assertNotIn("uptime", out.getvalue())                       # never the line itself
+
+    def test_rules_the_panel_checks_itself(self):
+        helpers.set_config(fernzugang_alle=True)
+        self.addCleanup(helpers.set_config, fernzugang_alle=False)   # the switch never leaks into later tests
+        gid, login, sess = self.shells(2)
+        fremd = fake_session(gid, login="jemand-anders", chan=self.Chan())
+        self.send("uptime", [sess[0], fremd], 404)                          # another login's shell
+        self.send("uptime", [sess[0]], 400)                                 # one is no broadcast
+        self.send("uptime\nrm -rf /", sess, 400)                            # one line only, no control characters
+        self.send("echo \x1b[2J", sess, 400)
+        self.send("x" * (fernzugang.ALLE_ZEICHEN + 1), sess, 400)
+        self.send("rm -rf /tmp/x", sess, 409)                               # the Vorsicht list never goes to all
+        datei = fake_session(gid, login=login, chan=self.Chan(), art="dateien")
+        self.send("uptime", [sess[0], datei], 404)                          # shells only
+        other = self.pair("win-1")["id"]
+        d2 = fernzugang._read()
+        d2["geraete"][other]["os"] = "Windows 11"
+        fernzugang._write(d2)
+        win = fake_session(other, login=login, chan=self.Chan())
+        r = self.send("uptime", [sess[0], win], 409)                        # one kind of system
+        self.assertIn("gemischt", r.text)
+        self.assertEqual([x.chan.got for x in sess + [fremd, datei, win]], [[], [], [], [], []])
+
+
 class _Spy:
     """A session's channel and socket that must never get a byte from the assistant."""
     def __init__(self):
@@ -3697,6 +3769,44 @@ class ShellForReal(_ShellPage):
             await pg.set_viewport_size({"width": 900, "height": 900})
             await pg.wait_for_function("fzModus()==='einzeln'&&!$('fzterm').classList.contains('fz2')&&FZ.reiter[0].box.hidden&&!document.querySelector('#fzreiter .fzansicht')", timeout=10000)
             self.assertEqual(await pg.evaluate("FZ.ansicht"), "neben")
+        self.run_page(body, size=(1500, 900))
+
+    def test_send_to_all_red_line_asks_and_goes_to_both(self):
+        """An alle senden (Stufe 4): only with its switch; the red line names the systems, a line of the Vorsicht list
+        stays in the page, Enter asks with the line and the names, then both shells get it and the line goes off."""
+        async def body(ctx, pg):                                            # no timing assumed (busy test machine)
+            self.weitere.append(self.anchor_for(self.pair(name="vps-2", hostkey=HOST_PUB)))
+            await pg.evaluate("fzLoad()")
+            await pg.wait_for_function("(FZ.d.geraete||[]).length===2", timeout=60000)
+            await pg.evaluate("fzOpen(FZ.d.geraete.find(g=>g.name==='vps-2'))")
+            await pg.wait_for_function("FZ.reiter.length===2&&FZ.reiter.every(S=>S.ws&&S.ws.readyState===1&&S.sid)", timeout=60000)
+            self.assertFalse(await pg.evaluate("!!document.querySelector('#fzreiter .fzallebtn')"))   # switch off: no button
+            helpers.set_config(fernzugang_alle=True)
+            self.addCleanup(helpers.set_config, fernzugang_alle=False)   # the switch never leaks into later tests
+            await pg.evaluate("fzLoad()")
+            await pg.wait_for_function("FZ.d.alle===true", timeout=60000)
+            await pg.evaluate("fzReiterZeigen()")
+            await pg.click("#fzreiter .fzallebtn")
+            await pg.wait_for_function("!$('fzsende').hidden&&document.activeElement===$('fzsendezeile')", timeout=60000)
+            self.assertIn("Eingabe geht an 2 Systeme", await pg.evaluate("$('fzsendekopf').textContent"))
+            asked = []
+
+            async def dialog(d):
+                asked.append(d.message)
+                await d.accept()
+            pg.on("dialog", lambda d: asyncio.ensure_future(dialog(d)))
+            await pg.fill("#fzsendezeile", "rm -rf /tmp/x")
+            await pg.keyboard.press("Enter")
+            await pg.wait_for_function("$('updtoast').textContent.includes('Vorsicht-Liste')", timeout=60000)
+            self.assertEqual(asked, [])                                     # refused before asking
+            await pg.fill("#fzsendezeile", "z")
+            await pg.keyboard.press("Enter")
+            text = "(n=>{const b=FZ.reiter[n].term.buffer.active;let s='';for(let i=0;i<b.length;i++)s+=b.getLine(i).translateToString(true);return s})"
+            await pg.wait_for_function(f"{text}(0).includes('echo:z')&&{text}(1).includes('echo:z')", timeout=60000)
+            self.assertEqual(len(asked), 1)
+            self.assertIn("„z“ an 2 Systeme senden?", asked[0])
+            self.assertIn("vps-2", asked[0])
+            await pg.wait_for_function("$('fzsende').hidden&&!FZ.alle", timeout=60000)      # off after use
         self.run_page(body, size=(1500, 900))
 
     def test_herausloesen_clicked_shows_the_terminal_in_its_own_window(self):

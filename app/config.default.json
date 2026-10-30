@@ -398,6 +398,7 @@
     "fernzugang_sitzungen": 4,
     "fernzugang_offline_min": 30,
     "fernzugang_meldung": true,
+    "fernzugang_alle": false,
     "fernzugang_verlauf_tage": 30,
     "fernzugang_entsperrt_min": 60,
     "spontanhilfe": false,

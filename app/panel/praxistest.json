@@ -4895,6 +4895,13 @@
 "titel": "Fernzugang: Übersicht aller Sitzungen",
 "text": "Mit drei offenen Reitern oben rechts „Übersicht“: jede Sitzung ist eine Kachel mit Name, grünem Punkt, „verbunden“ und den letzten Zeilen ihres Bildschirms; läuft in einer „top“, ändern sich die Zeilen etwa alle 2 Sekunden. Tippen ändert nichts in den Shells. Eine Kachel anklicken: das System ist groß zu sehen und hat die Tasten. In der Auswahl (Strg+Umschalt+O) ein System mit Umschalt+Enter öffnen: es steht neben dem bisherigen.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P724",
+"v": 1293,
+"titel": "Fernzugang: An alle senden",
+"text": "Funktionen → Fernzugang zu Servern → An alle senden an. Zwei Linux-Systeme als Reiter öffnen: in der Reiterleiste steht „An alle …“. Anklicken: eine rote Zeile sagt „Eingabe geht an 2 Systeme“ mit beiden Namen. „rm -rf /tmp/test“ eingeben und Enter: die Seite weist es ab (Vorsicht-Liste), nichts kommt in den Shells an. „uptime“ und Enter: die Rückfrage nennt die Zeile und beide Namen, nach OK zeigen beide Shells die Ausgabe, die rote Zeile geht aus. Mit einem Windows-System als drittem Reiter steht es unter „nicht dabei“. Zustand → Logs zeigt „fernzugang: alle | gesendet | 2“ ohne den Befehl. Schalter aus: kein „An alle …“ mehr.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }
