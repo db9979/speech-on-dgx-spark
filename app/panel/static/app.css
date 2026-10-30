@@ -41,6 +41,12 @@ input[type=checkbox]{accent-color:var(--acc);width:16px;height:16px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.err{color:var(--bad);white-space:pre-wrap}.mut{color:var(--mut)}.intro{color:var(--mut);font-size:13px;line-height:1.5;margin:0 0 8px}.intro.sm{font-size:12px}
 .card>h2:first-child,.card>div>h2:first-child,.modalcard h2:first-child,.ptab>h2:first-child{margin-top:0}
 code{font:var(--t-mono);word-break:break-all}
+/* Linien-Icons (icons.js, Redesign Stufe 3): in the text colour, as big as the text unless a place sets its size
+   (zero specificity, so every rule of a place wins; a width attribute wins too) */
+:where(.ic){flex:none;vertical-align:-.2em;fill:none;stroke:currentColor;stroke-width:var(--ic-stroke);stroke-linecap:round;stroke-linejoin:round}
+:where(.ic:not([width])){width:1.15em;height:1.15em}
+.ic.pic{width:19px;height:19px;stroke-width:2}.ic.konic{width:20px;height:20px}
+.ic.okc{color:var(--okt)}.ic.badc{color:var(--badt)}.ld-ico .ic,.wkic .ic{width:16px;height:16px}.ric .ic{width:15px;height:15px}
 pre{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;max-height:60vh;overflow:auto;font-size:12px;white-space:pre-wrap}
 svg.spark{width:100%;height:60px;display:block;margin-top:6px}.chk{display:flex;gap:8px;align-items:center;color:var(--fg);font-size:13px}.chk input{width:16px}
 .note{padding:12px 14px;border-radius:12px;background:color-mix(in srgb,var(--warn) 12%,transparent);border:1px solid color-mix(in srgb,var(--warn) 25%,transparent);margin-bottom:14px}
@@ -735,7 +741,7 @@ details.adv h3.sec{margin-top:14px}
 .rtop{display:flex;gap:6px;align-items:baseline;min-width:0}.rtop .rt{font:12.5px ui-monospace,Menlo,monospace;color:var(--mut);margin-right:4px}
 .rtop .rdev{color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}.rtop .rdur{font:12.5px ui-monospace,Menlo,monospace;white-space:nowrap}.rtop .rid{color:var(--mut);font:12px ui-monospace,Menlo,monospace;white-space:nowrap;margin-right:8px}
 .rrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:4px 0 0 66px}
-/* 👍/👎 on a request (Logs → Anfragen, tracelog.vote) */
+/* thumbs on a request (Logs → Anfragen, tracelog.vote) */
 .rtop .rvote{margin-left:6px;font-size:13px;line-height:1;padding:1px 5px;border-radius:99px;border:1px solid currentColor;white-space:nowrap}.rtop .rvote.up{color:var(--ok)}.rtop .rvote.dn{color:var(--bad)}
 .rvoted{font-size:13px;padding:8px 12px;border-radius:10px;margin:8px 0;overflow-wrap:anywhere}.rvoted.up{background:color-mix(in srgb,var(--ok) 9%,transparent);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent)}.rvoted.dn{background:color-mix(in srgb,var(--bad) 9%,transparent);border:1px solid color-mix(in srgb,var(--bad) 35%,transparent)}
 .rpill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11.5px;font-weight:600;background:var(--line);white-space:nowrap}
@@ -1406,8 +1412,9 @@ textarea.factedit{width:100%;margin:0 0 6px}
 /* the mode buttons of a mailbox never push a narrow page sideways (wider fonts on some systems) */
 .ic-seg{max-width:100%;min-width:0}.ic-seg button{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @container (max-width:420px){.ic-seg{display:flex;flex:1 1 100%}.ic-seg button{flex:1 1 0;padding:5px 4px}}
-.needcode::after{content:" 🔒";font-size:.85em}body.cfree .needcode::after{content:none}.needcode2::after{content:" 🔒🔒";font-size:.85em}
-/* 👍/👎 under an answer (bewerten.js): never part of copied answer text */
+/* the lock of icons.js as a mask in the text colour: one for „Bestätigen“, two for „Schutz ändern“ (mfa.js) */
+.needcode::after,.needcode2::after{content:"";display:inline-block;width:.9em;height:.9em;margin-left:.3em;vertical-align:-.1em;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2'/%3E%3Cpath d='M8 11V7a4 4 0 0 1 8 0v4'/%3E%3C/svg%3E") left/.9em .9em repeat-x;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2'/%3E%3Cpath d='M8 11V7a4 4 0 0 1 8 0v4'/%3E%3C/svg%3E") left/.9em .9em repeat-x}.needcode2::after{width:1.8em}body.cfree .needcode::after{content:none}
+/* thumbs under an answer (bewerten.js): never part of copied answer text */
 .vbquote{margin-top:4px;overflow-wrap:anywhere}.vbquote .vbqbad{color:var(--bad)}
 .vbneed{margin:2px 0 6px;font-size:13.5px;overflow-wrap:anywhere}.vbneed .vbqok{color:var(--ok)}.vbneed .vbqmid{color:var(--warn)}.vbneed .vbqbad{color:var(--bad)}
 /* Klartext-Karte (klartext.card, Plan „Verbessern verständlicher“): was, woher, warum, was hilft; „Warum dieser Vorschlag“ */
@@ -1841,7 +1848,7 @@ main:has(>#cal.on){max-width:none}   /* the calendar takes the whole width (Domi
 .kal .kalquick input{flex:1 1 260px;min-width:0}
 .kal .kqchips{display:flex;flex-wrap:wrap;gap:6px;flex:1 1 100%;order:3}.kal .kqchips:empty{display:none}
 .kal .kq{font-size:12.5px;padding:3px 10px;border-radius:99px;background:color-mix(in srgb,var(--acc) 12%,var(--card));border:1px solid color-mix(in srgb,var(--acc) 30%,var(--line))}
-.kal .kq.t{font-weight:600}.kal .kq.d::before{content:"🗓 "}.kal .kq.l::before{content:"📍 "}
+.kal .kq.t{font-weight:600}.kal .kq .ic{margin-right:3px}
 .kal .kalqmsg{flex:1 1 100%;order:4}.kal .kalqmsg:empty{display:none}
 .kal .kalundo:empty{display:none}
 /* „Rückgängig“ floats at the foot of the screen: the view never moves when it comes or goes */

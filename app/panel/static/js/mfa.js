@@ -96,7 +96,7 @@ function confirmAsk(wrong,opt,info){
   info=info||{};const pk=!!(opt&&PK);
   return new Promise(done=>{const m=document.createElement('div');m.className='modal';m.id='pkmodal';const card=document.createElement('div');card.className='card modalcard';
     const h=document.createElement('h3');const what=L==='en'?(info.what_en||info.what):info.what;
-    h.textContent=(info.level==='protect'?'🔒🔒 ':'🔒 ')+(what?t('Bestätigen: ','Confirm: ')+what:t('Bestätigen','Confirm'));
+    h.append(...(info.level==='protect'?[icNode('lock'),icNode('lock')]:[icNode('lock')]),' '+(what?t('Bestätigen: ','Confirm: ')+what:t('Bestätigen','Confirm')));
     const p=document.createElement('div');p.className='fh';
     const whose=info.who?(info.who==='Notzugang'?t('Code des Notzugangs','Code of the emergency access'):t('Code von ','Code of ')+info.who):t('Dein Code','Your code');
     p.textContent=(wrong?t('Das hat nicht geklappt. ','That did not work. '):'')+whose+t(' aus der Authenticator-App (oder ein Wiederherstellungscode)',' from the authenticator app (or a recovery code)')+(pk?t(', oder dein Passkey.',', or your passkey.'):'.');
@@ -145,8 +145,8 @@ async function pkShow(box,base){let d;try{d=await (await api(base+'/passkeys')).
     row.append(name,add);wrap.appendChild(row)}
   box.appendChild(wrap)}
 window.pkLoginOffer=pkLoginOffer;window.confirmAsk=confirmAsk;
-// Buttons that ask for the code carry a lock beforehand (stufen.py): 🔒 Bestätigen (the code then counts 10 minutes),
-// 🔒🔒 Schutz ändern (asked every time). Buttons made later mark themselves with codeLock(button, level).
+// Buttons that ask for the code carry a lock beforehand (stufen.py): one lock for Bestätigen (the code then counts 10 minutes),
+// two locks for Schutz ändern (asked every time). Buttons made later mark themselves with codeLock(button, level).
 const CODE_LOCKS={confirm:['gehein','gehaus','gehneu','tgsave','telsave','tgdel','apnssave','apnsdel','pushgo','voicego','calsave','mailsave','hasave','offnow','dadd','updprev'],
   protect:['pwset','hacodesave','bakup','bakmove','offsave','dlsave','mydgo']};
 function codeLock(b,level){if(!b)return;b.classList.add(level==='protect'?'needcode2':'needcode');
@@ -156,10 +156,10 @@ for(const [lv,ids] of Object.entries(CODE_LOCKS))for(const id of ids)codeLock(do
 const stufenBox=document.getElementById('stufenbox');
 if(stufenBox)stufenBox.addEventListener('toggle',async()=>{if(!stufenBox.open||stufenBox.dataset.done)return;let d;try{d=await (await api('/api/stufen')).json()}catch{return}
   stufenBox.dataset.done='1';const out=$('stufenlist');out.textContent='';
-  const part=(title,text,areas)=>{const h=document.createElement('b');h.textContent=title;const p=document.createElement('div');p.textContent=text;out.append(h,p);
+  const part=(locks,title,text,areas)=>{const h=document.createElement('b');for(let i=0;i<locks;i++)h.appendChild(icNode('lock'));h.append(' '+title);const p=document.createElement('div');p.textContent=text;out.append(h,p);
     for(const [area,items] of Object.entries(areas)){const ul=document.createElement('ul');ul.className='facts small';
       const li0=document.createElement('li');li0.className='mut';li0.textContent=L==='en'?({Schutz:'Protection',Daten:'Data',Konten:'Accounts','Geräte':'Devices',Personen:'People'}[area]||area):area;ul.appendChild(li0);
       for(const x of items){const li=document.createElement('li');li.textContent=L==='en'?x.en:x.de;ul.appendChild(li)}out.appendChild(ul)}};
   const p0=document.createElement('div');p0.textContent=t('Lesen und normale Einstellungen fragen nie. Gefragt wird immer dein eigener Code (oder dein Passkey).','Reading and ordinary settings never ask. It is always your own code (or your passkey).');out.appendChild(p0);
-  part(t('🔒 Bestätigen','🔒 Confirm'),t('Ein richtiger Code gilt danach ','A right code then counts ')+d.minutes+t(' Minuten in dieser Anmeldung. Admins werden hier nicht gefragt.',' minutes in this login. Admins are not asked here.'),d.levels.confirm);
-  part(t('🔒🔒 Schutz ändern','🔒🔒 Change protection'),t('Fragt jedes Mal.','Asks every time.'),d.levels.protect)});
+  part(1,t('Bestätigen','Confirm'),t('Ein richtiger Code gilt danach ','A right code then counts ')+d.minutes+t(' Minuten in dieser Anmeldung. Admins werden hier nicht gefragt.',' minutes in this login. Admins are not asked here.'),d.levels.confirm);
+  part(2,t('Schutz ändern','Change protection'),t('Fragt jedes Mal.','Asks every time.'),d.levels.protect)});

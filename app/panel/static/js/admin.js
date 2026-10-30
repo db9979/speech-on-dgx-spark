@@ -86,18 +86,8 @@ window.zustand=zustand;
 const zAgo=s=>{if(!s)return t('noch nie','never');const m=Math.round((Date.now()/1e3-s)/60);return m<1?t('gerade eben','just now'):m<90?(L==='en'?m+' min ago':'vor '+m+' Min.'):m<2880?(L==='en'?Math.round(m/60)+' h ago':'vor '+Math.round(m/60)+' Std.'):(L==='en'?Math.round(m/1440)+' days ago':'vor '+Math.round(m/1440)+' Tagen')};
 function zTech(id){const d=$('ztech');d.open=true;const el=id&&$(id);(el?el.closest('.card'):d).scrollIntoView({behavior:'smooth',block:'start'})}
 // line icons (24 grid) of the tiles and of the cards under Zustand; a card without one shows none
-const ZICO={ear:['M6 8.5a6 6 0 1 1 12 0c0 3-2 4-3 5.5s-1 3.5-3.5 3.5','M9.5 9a2.5 2.5 0 0 1 5 0'],spk:['M11 5 6 9H3v6h3l5 4z','M15.5 8.5a5 5 0 0 1 0 7','M18.5 5.5a9 9 0 0 1 0 13'],
-  llm:['M8 5h8a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3z','M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4'],
-  mem:['M5 6h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z','M7 10v4M11 10v4M15 10v4'],chat:['M21 12a8 8 0 0 1-11.6 7.1L4 20l1.2-4.4A8 8 0 1 1 21 12z'],
-  timer:['M20 13a8 8 0 1 1-16 0 8 8 0 0 1 16 0z','M12 9v4l2.5 2.5M9 2h6'],esp:['M9 3h6a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3z','M15 14a3 3 0 1 1-6 0 3 3 0 0 1 6 0z','M12 7h.01'],
-  pulse:['M3 12h4l3-8 4 16 3-8h4'],chev:['M9 6l6 6-6 6'],alert:['M12 3 2 20h20z','M12 10v4M12 17h.01'],user:['M20 21a8 8 0 0 0-16 0','M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z'],
-  globe:['M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z','M3 12h18','M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18'],pause:['M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z','M10 9v6M14 9v6'],
-  nas:['M6 3h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z','M6 14h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2z','M8 6.5h.01M8 17.5h.01'],
-  folder:['M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'],copy:['M8 8h11v11H8z','M5 16V5h11'],dev:['M12 3v12M7 10l5 5 5-5','M4 19h16'],
-  doc:['M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z','M14 3v5h5M9 13h6M9 17h4'],bars:['M4 19V9M10 19V5M16 19v-7M22 19H2']};
 const ZCARD_ICO={zneed:'alert',zroom:'ear',zbg:'user',zsvc:'globe',zoffline:'globe',zwart:'pause',znas:'nas',znaszustand:'nas',znasquelle:'folder',zverbrauch:'bars',zstore:'copy',zdev:'dev',zdocs:'doc'};
-function zIco(name,cls){const N='http://www.w3.org/2000/svg',v=document.createElementNS(N,'svg');v.setAttribute('viewBox','0 0 24 24');v.setAttribute('aria-hidden','true');v.setAttribute('class',cls||'zico');
-  for(const d of ZICO[name]||[]){const p=document.createElementNS(N,'path');p.setAttribute('d',d);v.appendChild(p)}return v}
+function zIco(name,cls){return icNode(name,cls||'zico')}   // icons.js
 for(const [id,ic] of Object.entries(ZCARD_ICO)){const h=document.querySelector('#'+id+'>h2');if(h){const b=document.createElement('span');b.className='zbub';b.appendChild(zIco(ic));h.prepend(b)}}
 $('zgo').onclick=()=>sFlash($('zneed'));
 // one tile: icon, name, big value (+unit), one small line; a button (go) or a jump link (way) or nothing
@@ -973,7 +963,7 @@ $('updprev').onclick=async()=>{if(!await ulAsk(t('Vorige Version einspielen?','I
   try{ul.clicked=Date.now();ulShow();await api('/api/update/rollback',{method:'POST'})}catch(e){ulStop();$('updlock').style.display='none';$('updmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 const LIVE={llm:t('Sprachmodell','Language model'),tools:t('Werkzeugwahl','Tool choice'),search:t('Websuche','Web search'),tts:t('Sprachausgabe','Speech output'),asr:t('Spracherkennung','Speech recognition')};
 function liveRender(r){if(!r||!r.steps){$('livesteps').innerHTML=`<tr><td class="mut">${t('Noch nicht geprüft.','Not checked yet.')}</td></tr>`;$('livemsg').textContent='';return}
-  $('livesteps').innerHTML=r.steps.map(s=>`<tr><td style="width:34%">${s.ok===true?'✅':s.ok===false?'❌':'➖'} ${esc(LIVE[s.name]||s.name)}</td><td><span class="mut">${s.seconds} s</span> ${esc(s.detail||'')}</td></tr>`).join('');
+  $('livesteps').innerHTML=r.steps.map(s=>`<tr><td style="width:34%">${ic(s.ok===true?'check':s.ok===false?'x':'minus',s.ok===true?'okc':s.ok===false?'badc':'')} ${esc(LIVE[s.name]||s.name)}</td><td><span class="mut">${s.seconds} s</span> ${esc(s.detail||'')}</td></tr>`).join('');
   $('livemsg').textContent=new Date(r.t*1000).toLocaleString()+' · '+(r.version||'')+(r.reason==='after update'?t(' · nach dem Update',' · after the update'):'')}
 // how long people wait for the first sound of an answer (latency.py)
 function latRender(l){const f=s=>s?`<b>${s.median} s</b> <span class="mut">(${s.n} ${t('Antworten','answers')}, ${t('9 von 10 unter','9 of 10 below')} ${s.p90} s)</span>`:`<span class="mut">${t('noch keine','none yet')}</span>`;
@@ -1023,7 +1013,7 @@ function qRender(d){const r=d&&d.last;clearTimeout(qTimer);qProg(d&&d.running?(d
     +(x.held&&x.held.length?`<br>${t('Antwort-Prüfung hat zurückgehalten','Answer check held back')}: ${esc(x.held.join(', '))}${x.raw?' · „'+esc(x.raw)+'“':''}`:'')
     +(x.retried?`<br>${t('Ohne Werkzeug geantwortet, neu gefragt','Answered without a tool, asked again')}`:'')
     +(x.judge?`<br>${t('Einordnung (systemone)','Classification (systemone)')}: ${t('beantwortet','answers')} ${String(x.judge.passt).replace('.',',')} ${t('von 2','of 2')} · ${t('erfunden','made up')} ${Math.round(x.judge.erfunden*100)} %${doubt(x)?' · '+t('zweifelt','doubts'):''}`:'');
-  const head=x=>`<div class="qq"><span>${x.ok?'✅':'❌'} ${esc(x.q)}${mark(x)}</span><span class="qt">${esc(x.tools.map(wzName).join(', ')||t('kein Werkzeug','no tool'))}</span></div>`;
+  const head=x=>`<div class="qq"><span>${ic(x.ok?'check':'x',x.ok?'okc':'badc')} ${esc(x.q)}${mark(x)}</span><span class="qt">${esc(x.tools.map(wzName).join(', ')||t('kein Werkzeug','no tool'))}</span></div>`;
   // only questions that need a look stay open (one line each, answer clipped to two lines, tap opens it); the rest is folded
   const look=[...bad,...flaky,...held,...doubted];
   $('qlist').innerHTML=look.map(x=>`<div class="qrow">${head(x)}${x.ok?'':`<div class="qw">${esc(x.why.join('; '))}</div>`}<div class="qa" title="${t('Antippen zeigt alles','Tap to show all')}">${esc(x.answer||'–')}${extra(x)}</div></div>`).join('');

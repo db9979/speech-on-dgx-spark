@@ -16829,7 +16829,15 @@
 "file": "Technik und Fehlersuche",
 "head": "Design-System (Tokens)",
 "title": "Design-System (Tokens)",
-"text": "ste. - Gesicht (V01.1.260): Das Roboter-Gesicht steht nur noch im Assistenten, kleiner und ruhig (kein Wippen, die Augen folgen nicht der Maus; mit prefers-reduced-motion ein Bild je Stimmung), das Comic-Gesicht bleibt wählbar. Auf allen anderen Seiten startet das Linien-Zeichen „Frag Spark“ (#fabface) oben das Sprechen und öffnet daneben sein Fenster; seine Stimmung zeigt es nur als Farbe (data-mode). - Wächter: tests/test_design_tokens.py prüft, dass tokens.css nur Variablen enthält, auf jeder Seite mit app.css davor geladen wird und kein Token anderswo neu steht. Feste Hex-Farben und Schriftgrößen außerhalb der Skala zählt er je Stildatei gegen eine Altlastenliste, die nur schrumpft (wie test_aufraeumen); eine neue Stildatei beginnt bei null."
+"text": "ste. - Gesicht (V01.1.260): Das Roboter-Gesicht steht nur noch im Assistenten, kleiner und ruhig (kein Wippen, die Augen folgen nicht der Maus; mit prefers-reduced-motion ein Bild je Stimmung), das Comic-Gesicht bleibt wählbar. Auf allen anderen Seiten startet das Linien-Zeichen „Frag Spark“ (#fabface) oben das Sprechen und öffnet daneben sein Fenster; seine Stimmung zeigt es nur als Farbe (data-mode). - Symbole (V01.1.264, Stufe 3): Eine Quelle für alle Symbole: app/panel/static/js/icons.js mit der Tabelle ICONS (Linien-Icons auf dem 24er-Raster, eigene Zeichnung, keine fremde Bibliothek, nichts wird nachgeladen; die strenge CSP bleibt). ic('name') gibt das SVG als Text, icNode('name') als Element, <i data-ic=\"name\"> und <i class=\"ni\" data-ni=\"name\"> füllt base.js beim Laden. Die Stile zeichnen jedes .ic in der Textfarbe mit --ic-stroke (1,75); ein Ort setzt nur die Größe. Die früheren Tabellen (Seitenleiste NI, Handy-Ansicht IC, Ich-Bausteine, E-Mail-Knöpfe, Zustandskacheln, Kontakte, Fernzugang, Geräte, die zweite Spalte) nehmen jetzt Namen aus dieser Tabelle; ein unbekannter Name zeichnet ein leeres Symbol. Emoji als Symbole sind ersetzt (Chats, Logs, Live, Verbessern, E-Mail, "
+},
+{
+"lang": "de",
+"src": "technik",
+"file": "Technik und Fehlersuche",
+"head": "Design-System (Tokens)",
+"title": "Design-System (Tokens)",
+"text": "Kalender, Bestätigen-Schloss, Schließen-Knöpfe …); es bleiben Emoji, die Menschen schreiben, das Spiel Dungeon, die Texte der Anleitungen und drei Funktionsnamen mit Daumen (Altlastenliste). live.html lädt icons.js ebenfalls. - Wächter: tests/test_design_tokens.py prüft, dass tokens.css nur Variablen enthält, auf jeder Seite mit app.css davor geladen wird und kein Token anderswo neu steht. Feste Hex-Farben und Schriftgrößen außerhalb der Skala zählt er je Stildatei gegen eine Altlastenliste, die nur schrumpft (wie test_aufraeumen); eine neue Stildatei beginnt bei null. Klar3 prüft die eine Symbol-Quelle (geladen vor den Skripten, kein unbekannter Name, keine zweite Tabelle, Textfarbe, kein Knopf nur mit ✕); Emoji und OwnSymbols zählen Emoji als Symbole und eigene SVG-Pfade je Datei gegen ihre Altlastenliste."
 },
 {
 "lang": "de",
@@ -33277,7 +33285,15 @@
 "file": "Technical details and troubleshooting",
 "head": "Design system (tokens)",
 "title": "Design system (tokens)",
-"text": " the robot face stands only in the assistant, smaller and calm (no bobbing, the eyes do not follow the mouse; with prefers-reduced-motion one picture per mood), the comic face stays selectable. On every other page the line sign \"Ask Spark\" (#fabface) at the top starts talking and opens its window beside it; it shows its mood only as a colour (data-mode). - Guard: tests/test_design_tokens.py checks that tokens.css holds only variables, loads before app.css on every page that has it, and that no token is defined anywhere else. It counts fixed hex colours and font sizes outside the scale per style sheet against a legacy list that only shrinks (like test_aufraeumen); a new style sheet starts at zero."
+"text": " the robot face stands only in the assistant, smaller and calm (no bobbing, the eyes do not follow the mouse; with prefers-reduced-motion one picture per mood), the comic face stays selectable. On every other page the line sign \"Ask Spark\" (#fabface) at the top starts talking and opens its window beside it; it shows its mood only as a colour (data-mode). - Symbols (V01.1.264, stage 3): one source for all symbols: app/panel/static/js/icons.js with the table ICONS (line icons on the 24 grid, own drawings, no third-party library, nothing is loaded later; the strict CSP stays). ic('name') gives the SVG as text, icNode('name') as an element, <i data-ic=\"name\"> and <i class=\"ni\" data-ni=\"name\"> are filled by base.js on load. The styles draw every .ic in the text colour with --ic-stroke (1.75); a place only sets the size. The former tables (side menu NI, phone view IC, Me building blocks, mail buttons, status tiles, contacts, remote access, devices, the second column) now take names from this table; an unknown name draws an empty symbol. Emoji used as symbols are replaced (Chats, Logs, Live, Improve, Mail, Calendar, the confirm lock, close buttons …); emoji people write, the game Dungeon,"
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "Design system (tokens)",
+"title": "Design system (tokens)",
+"text": " the guide texts and three feature names with thumbs stay (legacy list). live.html loads icons.js too. - Guard: tests/test_design_tokens.py checks that tokens.css holds only variables, loads before app.css on every page that has it, and that no token is defined anywhere else. It counts fixed hex colours and font sizes outside the scale per style sheet against a legacy list that only shrinks (like test_aufraeumen); a new style sheet starts at zero. Klar3 checks the one symbol source (loaded before the scripts, no unknown name, no second table, text colour, no button with only ✕); Emoji and OwnSymbols count emoji used as symbols and own SVG paths per file against their legacy list."
 },
 {
 "lang": "en",

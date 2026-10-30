@@ -25,7 +25,7 @@ function musikCard(ev){const d=icEl('div','hcard mucard');const h=icEl('h4','',t
   return d}
 // what stays under the answer in the history (profiles._att "musik"): the song itself (its job leads to it, also
 // after a reload and on every device), else the description and a way to the songs
-function musikAtt(a){const d=icEl('div','mem');d.appendChild(document.createTextNode('🎵 '+t('Lied: ','Song: ')+String(a.p||'').slice(0,120)+' '));
+function musikAtt(a){const d=icEl('div','mem');d.append(icNode('music'),document.createTextNode(' '+t('Lied: ','Song: ')+String(a.p||'').slice(0,120)+' '));
   const b=icEl('button','mlink',t('Anhören','Listen'));b.type='button';b.onclick=()=>openMe('musikbox');d.appendChild(b);
   if(a.j&&MUSIK_ON)muFollow(a.j,d,j=>{if(j.state==='done'&&j.song)d.appendChild(muAudio(j.song.id))});
   return d}
@@ -48,7 +48,7 @@ const muClock=x=>{x=Math.max(0,Math.floor(x||0));return Math.floor(x/60)+':'+Str
 function muIcon(on){const i=icEl('span','mu-ic'+(on?' pa':''));i.setAttribute('aria-hidden','true');return i}
 function muAu(){if(MU.au)return MU.au;const a=MU.au=new Audio();a.preload='none';
   for(const e of ['play','pause','ended','timeupdate','loadedmetadata'])a.addEventListener(e,()=>{if(e==='ended')MU.play='';muSync()});return a}
-// ▶/⏸ for one song: the same player everywhere; another song stops the one before
+// play and pause for one song: the same player everywhere; another song stops the one before
 function muToggle(s){const a=muAu();if(MU.play===s.id){if(a.paused)a.play().catch(()=>{});else a.pause();return}
   MU.play=s.id;a.src=muFile(s.id);a.play().catch(()=>{});muSync()}
 // draws the state of the one player into the rows, the details and the bar at the bottom
@@ -140,7 +140,7 @@ async function showMusik(){const box=$('musikbox');if(!box)return;if(!PROFILE||!
   bt.onclick=()=>{const s=d.songs.find(x=>x.id===MU.play);if(s)open(s)};bar.append(bb,bt);wrap.appendChild(bar);
   const open=s=>{MU.sel=s.id;list.querySelectorAll('.ld-row').forEach(x=>x.classList.toggle('on',x.dataset.id===rootOf(s)));wrap.classList.add('ld-sel');det.hidden=false;det.textContent='';
     const back=icEl('button','b ld-back',t('‹ Alle Lieder','‹ All songs'));back.type='button';back.onclick=()=>{MU.sel='';det.hidden=true;wrap.classList.remove('ld-sel');paint()};
-    // the player: ▶/⏸, the time and a slider to jump; it plays through MU.au like the rows
+    // the player: play and pause, the time and a slider to jump; it plays through MU.au like the rows
     const pl=icEl('div','mu-player');pl.dataset.id=s.id;const pb=icEl('button','mu-pb');pb.type='button';pb.dataset.muplay=s.id;pb.onclick=()=>muToggle(s);
     const rg=document.createElement('input');rg.type='range';rg.min='0';rg.max=String(Math.round(s.length_s||0));rg.value='0';rg.setAttribute('aria-label',t('Stelle im Lied','Position in the song'));
     rg.oninput=()=>{if(MU.play!==s.id)muToggle(s);const a=muAu();if(isFinite(a.duration))a.currentTime=+rg.value};
@@ -229,7 +229,7 @@ function muLyricsEditor(parts){const box=icEl('div','mu-parts');box.setAttribute
     ta.setAttribute('aria-label',t('Text des Teils','Text of the part'));ta.oninput=()=>{x.text=ta.value};
     const mv=(d,lbl,ic)=>{const b=icEl('button','b mu-mv',ic);b.type='button';b.setAttribute('aria-label',lbl);b.disabled=i+d<0||i+d>=parts.length;
       b.onclick=()=>{const [m]=parts.splice(i,1);parts.splice(i+d,0,m);draw()};return b};
-    const del=icEl('button','b mu-mv ic-red','✕');del.type='button';del.setAttribute('aria-label',t('Teil entfernen','Remove part'));del.onclick=()=>{parts.splice(i,1);draw()};
+    const del=icEl('button','b mu-mv ic-red');del.appendChild(icNode('x'));del.type='button';del.setAttribute('aria-label',t('Teil entfernen','Remove part'));del.onclick=()=>{parts.splice(i,1);draw()};
     const top=icEl('div','mu-part-h');top.append(h,sel,icEl('span','mu-sp'),mv(-1,t('Nach oben','Up'),'↑'),mv(1,t('Nach unten','Down'),'↓'),del);row.append(top,ta);box.appendChild(row)});
     const add=icEl('div','mu-opts');for(const [k,de,en] of MUPARTS.slice(0,4)){const b=icEl('button','b','+ '+t(de,en));b.type='button';b.onclick=()=>{parts.push({tag:k,text:''});draw();
       const l=box.querySelectorAll('textarea');if(l.length)l[l.length-1].focus()};add.appendChild(b)}box.appendChild(add)};

@@ -13,7 +13,7 @@ async function auShow(){const box=$('auslbox');if(!box)return;
   if(AUCUR&&!AU.sources.some(s=>s.nas===AUCUR.nas))AUCUR=null;
   auDraw();if(AU.job&&AU.job.running)auFollow()}
 function auDraw(){const box=$('auslin');if(!box||!AU)return;
-  const names=AU.names.map(n=>`<span class="chip"><b>${esc(n)}</b> <button class="b" type="button" data-auname="${esc(n)}" aria-label="${esc(t('Regel entfernen','Remove rule'))}">✕</button></span>`).join('');
+  const names=AU.names.map(n=>`<span class="chip"><b>${esc(n)}</b> <button class="b" type="button" data-auname="${esc(n)}" aria-label="${esc(t('Regel entfernen','Remove rule'))}">${ic('x')}</button></span>`).join('');
   const rows=AU.folders.map(f=>`<div class="zrow"><span class="pill">${esc(f.place||t('Ort','Place'))}</span><span><b>${esc(f.path)}</b></span><button class="b" type="button" data-auort="${esc(f.ort)}" data-aupath="${esc(f.path)}">${esc(t('Wieder zulassen','Let in again'))}</button></div>`).join('');
   const srcs=AU.sources.map((s,i)=>s.tree===false?'':`<option value="${i}">${esc((s.place?s.place+' · ':'')+s.path+(s.haus?' · '+t('Haushaltsordner','household folder'):''))}</option>`).join('');
   box.innerHTML=`<div class="intro">${esc(t('Ordner, die der Spark nie liest. Was schon gelesen war, verschwindet sofort aus der Suche, aus „Erst lokal“ und dem Wissensbuch. Am Ort ändert sich nichts; „Wieder zulassen“ liest neu.','Folders the Spark never reads. What was already read leaves the search, "Local first" and the knowledge book at once. Nothing changes at the place; "Let in again" reads anew.'))}</div>
@@ -44,7 +44,7 @@ async function auTree(){const out=$('ausltree');if(!out)return;const s=AU.source
       :w==='ordner'?`<span class="pill warn">${esc(t('Ordner darüber ausgelassen','folder above left out'))}</span>`
       :w==='name'?`<span class="pill warn">${esc(t('Namensregel','name rule'))}</span>`
       :`<button class="b" type="button" data-auout="${esc(n)}">${esc(t('Auslassen','Leave out'))}</button>`;
-    return `<div class="zrow" data-aurow="${esc(n)}"><button class="b${w?' mut':''}" type="button" data-audir="${esc(n)}">📁 ${esc(n)}</button><span></span>${right}</div>`}).join('')
+    return `<div class="zrow" data-aurow="${esc(n)}"><button class="b${w?' mut':''}" type="button" data-audir="${esc(n)}">${ic('folder')} ${esc(n)}</button><span></span>${right}</div>`}).join('')
     +`<div class="fh">${esc((own?(d.dirs.length?'':t('Keine Unterordner bekannt.','No sub folders known.')):t(`${d.files} Dateien direkt hier`,`${d.files} files right here`))+(d.more?' · '+t('nur die ersten 500 Ordner','only the first 500 folders'):''))}</div>`;
   out.querySelectorAll('[data-audir]').forEach(b=>b.onclick=()=>{AUCUR.path=here+'/'+b.dataset.audir;auTree()});
   out.querySelectorAll('[data-auup]').forEach(b=>b.onclick=()=>{AUCUR.path=here.split('/').slice(0,-1).join('/');if(AUCUR.path.length<AUCUR.root.length)AUCUR.path=AUCUR.root;auTree()});

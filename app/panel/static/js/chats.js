@@ -17,7 +17,7 @@ function cxWhen(ts){const d=new Date(ts*1000),n=new Date();
   return d.toLocaleDateString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit'})}
 // a colour per person from its id (same person, same colour on every device); the letter from its name
 const cxHue=id=>{let h=0;for(const c of String(id||''))h=(h*31+c.charCodeAt(0))%360;return h};
-const cxAva=(id,name,group)=>`<span class="cx-ava${group?' grp':''}" data-hue="${cxHue(id)}">${group?'👥':esc((name||'?').trim().charAt(0).toUpperCase()||'?')}</span>`;
+const cxAva=(id,name,group)=>`<span class="cx-ava${group?' grp':''}" data-hue="${cxHue(id)}">${group?ic('users'):esc((name||'?').trim().charAt(0).toUpperCase()||'?')}</span>`;
 // the panel's German sentences (why, titles) in English; the two with a name by pattern
 const cxTr=s=>{if(L!=='en')return s;if(typeof EN!=='undefined'&&EN[s])return EN[s];let m=/^(.+) nimmt gerade keine Nachrichten von dir an\.$/.exec(s);
   if(m)return m[1]+' does not take messages from you right now.';m=/^(.+) hat Chats nicht eingeschaltet\.$/.exec(s);
@@ -78,24 +78,24 @@ setInterval(()=>{const tp=CX.typing[CX.cur];if(tp&&tp.until<Date.now()){delete C
 function cxPreview(c){const l=c.last;if(!l)return '';
   if(l.gone)return t('Nachricht zurückgenommen','Message taken back');
   if(l.kind==='sys'&&String(l.sys||'').startsWith('call'))return cxCallLine(l);
-  if(l.kind==='sys')return l.sys==='joined'?(l.name||'')+' '+t('ist dazugekommen','joined'):l.sys==='newkey'||l.sys==='keygone'?'🔒 '+t('Geräte geändert','Devices changed'):t('Änderung in der Gruppe','Change in the group');
-  if(l.kind==='box')return (l.mine?t('Du: ','You: '):'')+'🔒 '+t('Nachricht','Message');
+  if(l.kind==='sys')return l.sys==='joined'?(l.name||'')+' '+t('ist dazugekommen','joined'):l.sys==='newkey'||l.sys==='keygone'?t('Geräte geändert','Devices changed'):t('Änderung in der Gruppe','Change in the group');
+  if(l.kind==='box')return (l.mine?t('Du: ','You: '):'')+t('Private Nachricht','Private message');
   const who=l.mine?t('Du: ','You: '):c.kind==='group'&&l.name?l.name+': ':'';
-  if(l.kind==='photo')return who+'📷 '+(l.text||t('Foto','Photo'));
-  if(l.kind==='file')return who+'📄 '+(l.text||t('Datei','File'));
-  if(l.kind==='voice')return who+'🎤 '+t('Sprachnachricht','Voice message')+(l.secs?' ('+cxDur(l.secs)+')':'');
+  if(l.kind==='photo')return who+t('Foto','Photo')+(l.text?': '+l.text:'');
+  if(l.kind==='file')return who+t('Datei','File')+(l.text?': '+l.text:'');
+  if(l.kind==='voice')return who+t('Sprachnachricht','Voice message')+(l.secs?' ('+cxDur(l.secs)+')':'');
   return who+(l.text||'')}
 const cxDur=s=>Math.floor((+s||0)/60)+':'+String(Math.round(+s||0)%60).padStart(2,'0');
 const cxSize=b=>b>=1048576?(b/1048576).toFixed(1).replace('.',L==='en'?'.':',')+' MB':Math.max(1,Math.round((+b||0)/1024))+' KB';
-const cxKindWord=k=>k==='photo'?t('📷 Foto','📷 Photo'):k==='file'?t('📄 Datei','📄 File'):k==='voice'?t('🎤 Sprachnachricht','🎤 Voice message'):'';
+const cxKindWord=k=>k==='photo'?t('Foto','Photo'):k==='file'?t('Datei','File'):k==='voice'?t('Sprachnachricht','Voice message'):'';
 function cxList(){const box=cxEl('cxlist');if(!box)return;const S=CX.S||{chats:[]};
   if(CX.hits){cxHitsShow();return}
-  const asks=S.far_asks?`<button type="button" class="cx-row cx-ask" data-cxfar="1"><span class="cx-ava inv">🌐</span><span class="cx-mid"><b>${esc(t('Kontaktanfragen','Contact requests'))}</b><small>${esc(S.far_asks+' '+t('von anderen Sparks warten auf deine Antwort','from other Sparks wait for your answer'))}</small></span><span class="cx-right"><span class="cx-flags"><em class="cx-un">${S.far_asks}</em></span></span></button>`:'';
+  const asks=S.far_asks?`<button type="button" class="cx-row cx-ask" data-cxfar="1"><span class="cx-ava inv">${ic('globe')}</span><span class="cx-mid"><b>${esc(t('Kontaktanfragen','Contact requests'))}</b><small>${esc(S.far_asks+' '+t('von anderen Sparks warten auf deine Antwort','from other Sparks wait for your answer'))}</small></span><span class="cx-right"><span class="cx-flags"><em class="cx-un">${S.far_asks}</em></span></span></button>`:'';
   if(!S.chats.length){box.innerHTML=asks+`<div class="cx-none mut">${esc(t('Noch keine Chats. Mit „＋ Neuer Chat“ schreibst du jemandem.','No chats yet. With "＋ New chat" you write to someone.'))}</div>`;return}
   box.innerHTML=asks+S.chats.map(c=>`<button type="button" class="cx-row${c.id===CX.cur?' on':''}" data-cx="${esc(c.id)}">${cxAva(c.with||c.id,cxTitle(c.title),c.kind==='group')}`+
-    `<span class="cx-mid"><b>${c.private?'🔒 ':''}${c.far?'🌐 ':''}${esc(cxTitle(c.title))}</b><small>${esc(cxPreview(c))}</small></span>`+
+    `<span class="cx-mid"><b>${c.private?ic('lock','cxmk')+' ':''}${c.far?ic('globe','cxmk')+' ':''}${esc(cxTitle(c.title))}</b><small>${esc(cxPreview(c))}</small></span>`+
     `<span class="cx-right"><span class="cx-when">${c.last?esc(cxWhen(c.last.t)):''}</span>`+
-    `<span class="cx-flags">${c.mute?`<i class="cx-mute" title="${esc(t('stumm','muted'))}">🔕</i>`:''}${c.unread?`<em class="cx-un${c.mute?' quiet':''}">${c.unread>99?'99+':c.unread}</em>`:''}</span></span></button>`).join('');
+    `<span class="cx-flags">${c.mute?`<i class="cx-mute" title="${esc(t('stumm','muted'))}">${ic('belloff')}</i>`:''}${c.unread?`<em class="cx-un${c.mute?' quiet':''}">${c.unread>99?'99+':c.unread}</em>`:''}</span></span></button>`).join('');
   cxHues(box);if(S.private&&window.csShareCheck)csShareCheck(box)}
 cxEl('cxlist').addEventListener('click',e=>{if(e.target.closest('[data-cxfar]')){cxFindReset();if(!CX.cur)CX.data=null;cxPane('far');return}
   const h=e.target.closest('[data-hit]');if(h){const mid=h.dataset.mid;cxFindReset();cxOpen(h.dataset.hit).then(()=>cxJump(mid));return}
@@ -133,7 +133,7 @@ function cxTop(){const d=CX.data;if(!d)return;cxEl('cxempty').hidden=true;cxEl('
   const tp=CX.typing[CX.cur],sub=tp&&tp.until>Date.now()?(d.kind==='group'?tp.name+' '+t('schreibt …','is typing …'):t('schreibt …','typing …'))
     :d.kind==='group'?d.members.map(m=>m.name).filter(Boolean).join(', '):d.far?d.addr||'':'';
   cxEl('cxinfo').hidden=false;
-  const tt=cxEl('cxtitle');tt.querySelector('b').textContent=(d.private?'🔒 ':'')+(d.far?'🌐 ':'')+cxTitle(d.title);tt.querySelector('small').textContent=sub;tt.querySelector('small').hidden=!sub;
+  const tt=cxEl('cxtitle');tt.dataset.mk=d.private?'private':d.far?'far':'';tt.querySelector('b').innerHTML=(d.private?ic('lock','cxmk')+' ':'')+(d.far?ic('globe','cxmk')+' ':'')+esc(cxTitle(d.title));tt.querySelector('small').textContent=sub;tt.querySelector('small').hidden=!sub;
   const why=cxEl('cxwhy');why.hidden=d.can_send;why.textContent=d.can_send?'':cxTr(d.why||t('Hier kannst du gerade nicht schreiben.','You cannot write here right now.'));
   cxEl('cxcomp').hidden=!d.can_send||!!CX.pane||!!CXR.rec;cxEl('cxreply').hidden=!CX.reply&&!CX.edit||!!CX.pane;
   const md=!!(CX.S&&CX.S.media)&&!CX.edit&&(!d.far||!!CX.S.far_media)&&!cxSpans(d);cxEl('cxatt').hidden=!md;cxEl('cxmic').hidden=!md;
@@ -148,24 +148,24 @@ function cxSysLine(x){const who=x.mine?t('Du','You'):x.name||t('Jemand','Someone
   if(x.sys==='vanish'){const v=CX_VANISH.find(([s])=>s===x.secs);return who+' '+(x.secs?t('stellte ein: Nachrichten verschwinden ','set: messages disappear ')+(v?v[1]:''):t('schaltete „Nachrichten verschwinden“ aus','switched off "messages disappear"'))}
   const s=CX_SYS[x.sys]||['',''];if(x.sys==='name')return who+' '+t(s[0],s[1])+'„'+(x.text||'')+'“';
   if(x.sys==='leave'||x.sys==='newkey'||x.sys==='keygone')return who+' '+t(s[0],s[1]);return who+' '+t(s[0],s[1])+(x.who||[]).join(', ')}
-function cxCallLine(x){const ic=x.video?'🎥 ':'📞 ',v=!!x.video;
-  if(x.sys==='call')return ic+(v?t('Videoanruf','Video call'):t('Anruf','Call'))+(x.secs?' · '+cxDur(x.secs):'');
-  if(x.sys==='call_rejected')return ic+(v?t('Videoanruf abgelehnt','Video call declined'):t('Anruf abgelehnt','Call declined'));
-  return ic+(x.mine?(v?t('Videoanruf nicht angenommen','Video call not answered'):t('Anruf nicht angenommen','Call not answered')):(v?t('Verpasster Videoanruf','Missed video call'):t('Verpasster Anruf','Missed call')))}
+function cxCallLine(x){const v=!!x.video;
+  if(x.sys==='call')return (v?t('Videoanruf','Video call'):t('Anruf','Call'))+(x.secs?' · '+cxDur(x.secs):'');
+  if(x.sys==='call_rejected')return (v?t('Videoanruf abgelehnt','Video call declined'):t('Anruf abgelehnt','Call declined'));
+  return (x.mine?(v?t('Videoanruf nicht angenommen','Video call not answered'):t('Anruf nicht angenommen','Call not answered')):(v?t('Verpasster Videoanruf','Missed video call'):t('Verpasster Anruf','Missed call')))}
 function cxTick(k){return k==='read'?`<i class="cx-tk read" title="${esc(t('gelesen','read'))}">✓✓</i>`:k==='got'?`<i class="cx-tk" title="${esc(t('zugestellt','delivered'))}">✓✓</i>`:`<i class="cx-tk" title="${esc(t('gesendet','sent'))}">✓</i>`}
 function cxLog(){const d=CX.data,log=cxEl('cxlog');log.hidden=!!CX.pane;let html='',day='',prev='';
   if(d.more)html+=`<div class="cx-more"><button type="button" class="b" data-cxa="more">${esc(t('Ältere Nachrichten','Older messages'))}</button></div>`;
-  if(d.vanish){const v=CX_VANISH.find(([s])=>s===d.vanish);html+=`<div class="cx-sys">⏱ ${esc(t('Nachrichten verschwinden ','Messages disappear ')+(v?v[1]:''))}</div>`}
+  if(d.vanish){const v=CX_VANISH.find(([s])=>s===d.vanish);html+=`<div class="cx-sys">${ic('timer')} ${esc(t('Nachrichten verschwinden ','Messages disappear ')+(v?v[1]:''))}</div>`}
   for(const x of d.items){const dy=cxDay(x.t);if(dy!==day){html+=`<div class="cx-day"><span>${esc(dy)}</span></div>`;day=dy;prev=''}
     if(x.kind==='sys'){html+=`<div class="cx-sys">${esc(cxSysLine(x))}</div>`;prev='';continue}
     const head=d.kind==='group'&&!x.mine&&prev!==x.from?`<b class="cx-who" data-hue="${cxHue(x.from)}">${esc(x.name||t('Gelöschtes Profil','Deleted profile'))}</b>`:'';prev=x.from;
     const rep=x.reply?`<button type="button" class="cx-quote" data-cxa="jump" data-mid="${esc(x.reply.id)}"><b>${esc(x.reply.name||'')}</b><span>${esc(x.reply.gone?t('Nachricht zurückgenommen','Message taken back'):x.reply.text||cxKindWord(x.reply.kind))}</span></button>`:'';
     const body=x.gone?`<span class="cx-gone">${esc(x.mine?t('Du hast diese Nachricht zurückgenommen.','You took this message back.'):t('Diese Nachricht wurde zurückgenommen.','This message was taken back.'))}</span>`
       :cxMediaHtml(x)+(x.text?`<span class="cx-txt${x.kind==='voice'?' cx-said':''}">${esc(x.text)}</span>`:'');
-    const meta=`<span class="cx-meta">${x.via==='spark'?`<i title="${esc(t('über den Assistenten','via the assistant'))}">🎙</i> `:''}${x.edited?esc(t('bearbeitet','edited'))+' · ':''}${esc(cxHm(x.t))}${x.fail?` <i class="cx-tk fail" title="${esc(t('nicht zugestellt: der andere Spark war 7 Tage nicht erreichbar','not delivered: the other Spark was not reachable for 7 days'))}">⚠</i>`:x.tick?' '+cxTick(x.tick):''}</span>`;
+    const meta=`<span class="cx-meta">${x.via==='spark'?`<i title="${esc(t('über den Assistenten','via the assistant'))}">${ic('mic')}</i> `:''}${x.edited?esc(t('bearbeitet','edited'))+' · ':''}${esc(cxHm(x.t))}${x.fail?` <i class="cx-tk fail" title="${esc(t('nicht zugestellt: der andere Spark war 7 Tage nicht erreichbar','not delivered: the other Spark was not reachable for 7 days'))}">${ic('warn')}</i>`:x.tick?' '+cxTick(x.tick):''}</span>`;
     const re=(x.react||[]).length?`<span class="cx-reacts">${x.react.map(r=>`<button type="button" class="cx-rc${r.me?' me':''}" data-cxa="react" data-mid="${esc(x.id)}" data-e="${esc(r.e)}">${esc(r.e)}${r.n>1?' '+r.n:''}</button>`).join('')}</span>`:'';
     html+=`<div class="cx-msg${x.mine?' mine':''}" data-mid="${esc(x.id)}"><div class="cx-bub" tabindex="0" role="button" aria-haspopup="true">${head}${rep}${body}${meta}</div>${re}</div>`}
-  if(!d.items.length)html+=`<div class="cx-sys">${esc(d.private?t('🔒 Privat: Nur eure beiden Geräte können diesen Chat lesen, der Spark nicht.','🔒 Private: only your two people\'s devices can read this chat, the Spark cannot.'):d.kind==='group'?t('Die Gruppe ist da. Schreib die erste Nachricht.','The group is ready. Write the first message.'):d.far?t('🌐 Diese Person ist auf einem anderen Spark. Text geht schon, Fotos, Dateien und Sprache kommen später.','🌐 This person is on another Spark. Text works already, photos, files and voice come later.'):t('Schreib die erste Nachricht.','Write the first message.'))}</div>`;
+  if(!d.items.length)html+=`<div class="cx-sys">${esc(d.private?t('Privat: Nur eure beiden Geräte können diesen Chat lesen, der Spark nicht.','Private: only your two people\'s devices can read this chat, the Spark cannot.'):d.kind==='group'?t('Die Gruppe ist da. Schreib die erste Nachricht.','The group is ready. Write the first message.'):d.far?t('Diese Person ist auf einem anderen Spark. Text geht schon, Fotos, Dateien und Sprache kommen später.','This person is on another Spark. Text works already, photos, files and voice come later.'):t('Schreib die erste Nachricht.','Write the first message.'))}</div>`;
   log.innerHTML=html;cxHues(log);if(d.private&&window.csAfter)csAfter(log,d);
   // a change from elsewhere draws the chat again: an open menu stays open
   const m=CX.menu&&log.querySelector(`.cx-msg[data-mid="${CSS.escape(CX.menu)}"]`);CX.menu='';if(m)cxMenu(m)}
@@ -227,18 +227,18 @@ function cxPane(k){CX.pane=k;const p=cxEl('cxpane');p.hidden=!k;if(!k){p.innerHT
   if(k==='new')cxNew();else if(k==='group')cxGroup();else if(k==='invite')cxInvite();else if(k==='info')cxInfo();else if(k==='add')cxAdd();else if(k==='ann')cxAnn();else if(k==='far'&&window.vbPane)window.vbPane()}
 const cxPeople=(list,sel)=>list.length?`<div class="cx-people">${list.map(p=>`<label class="cx-pp">${sel?`<input type="checkbox" data-pp="${esc(p.id)}"${CX.pick.has(p.id)?' checked':''}>`:''}`+
   `${cxAva(p.id,p.name)}<span>${esc(p.name)}</span>${sel?'':`<button type="button" class="b" data-cxn="one" data-to="${esc(p.id)}">${esc(t('Schreiben','Write'))}</button>`+
-  (CX.S&&CX.S.private?`<button type="button" class="b" data-cxn="priv" data-to="${esc(p.id)}" title="${esc(t('Privat: Ende-zu-Ende verschlüsselt','Private: end-to-end encrypted'))}">🔒 ${esc(t('Privat','Private'))}</button>`:'')}</label>`).join('')}</div>`
+  (CX.S&&CX.S.private?`<button type="button" class="b" data-cxn="priv" data-to="${esc(p.id)}" title="${esc(t('Privat: Ende-zu-Ende verschlüsselt','Private: end-to-end encrypted'))}">${ic('lock')} ${esc(t('Privat','Private'))}</button>`:'')}</label>`).join('')}</div>`
   :`<div class="cx-none mut">${esc(t('Niemand nimmt gerade Nachrichten von dir an. Jede Person legt unter Ich → Gespräch → Chats fest, wer ihr schreiben darf.','Nobody takes messages from you right now. Each person sets under Me → Conversation → Chats who may write to them.'))}</div>`;
 function cxNew(){const S=CX.S||{contacts:[]},p=cxEl('cxpane');
   p.innerHTML=(S.groups?`<button type="button" class="cx-bigrow" data-cxn="group">${cxAva('g','',true)}<b>${esc(t('Neue Gruppe','New group'))}</b></button>`:'')+
-    (S.invite||S.invite_switch?`<button type="button" class="cx-bigrow" data-cxn="invite"><span class="cx-ava inv">✉️</span><b>${esc(t('Jemanden einladen','Invite someone'))}</b></button>`:'')+
-    (S.verbund?`<button type="button" class="cx-bigrow" data-cxn="far"><span class="cx-ava inv">🌐</span><b>${esc(t('Jemand auf einem anderen Spark','Someone on another Spark'))}</b></button>`:'')+
-    ((S.speakers||[]).length?`<button type="button" class="cx-bigrow" data-cxn="ann"><span class="cx-ava inv">📢</span><b>${esc(t('Durchsage','Announcement'))}</b></button>`:'')+
+    (S.invite||S.invite_switch?`<button type="button" class="cx-bigrow" data-cxn="invite"><span class="cx-ava inv">${ic('mail')}</span><b>${esc(t('Jemanden einladen','Invite someone'))}</b></button>`:'')+
+    (S.verbund?`<button type="button" class="cx-bigrow" data-cxn="far"><span class="cx-ava inv">${ic('globe')}</span><b>${esc(t('Jemand auf einem anderen Spark','Someone on another Spark'))}</b></button>`:'')+
+    ((S.speakers||[]).length?`<button type="button" class="cx-bigrow" data-cxn="ann"><span class="cx-ava inv">${ic('megaphone')}</span><b>${esc(t('Durchsage','Announcement'))}</b></button>`:'')+
     `<div class="cx-grp">${esc(t('Personen','People'))}</div>`+cxPeople(S.contacts||[],false);cxHues(p)}
 // Durchsage (messages.py): the speakers whose owner allows it, the text typed here; said at once or at the next wake word
 function cxAnn(){const S=CX.S||{speakers:[]},p=cxEl('cxpane');CX.pick.clear();
   p.innerHTML=`<div class="cx-grp">${esc(t('Auf welchen Lautsprechern?','On which speakers?'))}</div><div class="cx-people">`+
-    (S.speakers||[]).map(x=>`<label class="cx-pp"><input type="checkbox" data-pp="${esc(x.id)}"><span>📢 ${esc(x.name)}</span></label>`).join('')+`</div>`+
+    (S.speakers||[]).map(x=>`<label class="cx-pp"><input type="checkbox" data-pp="${esc(x.id)}"><span>${ic('megaphone')} ${esc(x.name)}</span></label>`).join('')+`</div>`+
     `<label class="cx-lbl" for="cxanntext">${esc(t('Was soll gesagt werden?','What should be said?'))}</label><input id="cxanntext" maxlength="300" autocomplete="off" placeholder="${esc(t('z. B. Essen ist fertig','e.g. Dinner is ready'))}">`+
     `<div class="cx-acts2"><button type="button" class="b p" data-cxn="anngo">${esc(t('Durchsagen','Announce'))}</button><button type="button" class="b" data-cxn="cancel">${esc(t('Abbrechen','Cancel'))}</button></div><div class="cx-msgline mut" id="cxpmsg"></div>`;
   cxEl('cxanntext').focus()}
@@ -318,8 +318,8 @@ const cxMediaUrl=(mid,part)=>'/api/chats/media?'+new URLSearchParams({id:CX.cur,
 function cxMediaHtml(x){const m=x.media||{};if(x.att&&window.csMediaHtml)return csMediaHtml(x);
   if(x.kind==='photo'){const w=+m.w||4,h=+m.h||3,f=Math.min(1,240/Math.max(w,h));
     return `<button type="button" class="cx-ph" data-cxa="photo" data-mid="${esc(x.id)}" aria-label="${esc(t('Foto groß zeigen','Show photo large'))}"><img loading="lazy" src="${esc(cxMediaUrl(x.id,'t'))}" width="${Math.round(w*f)}" height="${Math.round(h*f)}" alt="${esc(t('Foto','Photo'))}"></button>`}
-  if(x.kind==='voice')return `<span class="cx-voice"><audio controls preload="none" src="${esc(cxMediaUrl(x.id,'f'))}"></audio><small class="mut">🎤 ${esc(cxDur(m.secs))}</small></span>`;
-  if(x.kind==='file')return `<a class="cx-file" href="${esc(cxMediaUrl(x.id,'f'))}" download="${esc(m.name||'')}"><span class="cx-fi">📄</span><span><b>${esc(m.name||t('Datei','File'))}</b><small class="mut">${esc((m.ext||'').toUpperCase()+' · '+cxSize(m.size))}</small></span></a>`;
+  if(x.kind==='voice')return `<span class="cx-voice"><audio controls preload="none" src="${esc(cxMediaUrl(x.id,'f'))}"></audio><small class="mut">${ic('mic')} ${esc(cxDur(m.secs))}</small></span>`;
+  if(x.kind==='file')return `<a class="cx-file" href="${esc(cxMediaUrl(x.id,'f'))}" download="${esc(m.name||'')}"><span class="cx-fi">${ic('doc')}</span><span><b>${esc(m.name||t('Datei','File'))}</b><small class="mut">${esc((m.ext||'').toUpperCase()+' · '+cxSize(m.size))}</small></span></a>`;
   return ''}
 function cxBig(x){cxEl('cxbigimg').src=cxMediaUrl(x.id,'f');cxEl('cxbig').hidden=false;cxEl('cxbigx').focus()}
 function cxBigClose(){const b=cxEl('cxbig');if(b.hidden)return false;b.hidden=true;cxEl('cxbigimg').removeAttribute('src');return true}
@@ -338,7 +338,7 @@ async function cxUpload(kind,blob,name,secs){if(!CX.cur||CX.busy)return;const L2
 cxEl('cxatt').addEventListener('click',()=>cxEl('cxfile').click());
 cxEl('cxfile').addEventListener('change',()=>{const f=cxEl('cxfile').files[0];cxEl('cxfile').value='';if(!f)return;
   cxUpload(/^image\//.test(f.type)?'photo':'file',f,f.name)});
-// a voice message: tap 🎤, speak, ➤ sends (✕ throws it away); at most voice_secs, then it sends by itself
+// a voice message: tap the microphone, speak, ➤ sends (✕ throws it away); at most voice_secs, then it sends by itself
 const CXR={rec:null,chunks:[],t0:0,tick:0,send:false};
 async function cxRecStart(){if(CXR.rec||CX.busy||!CX.cur)return;
   if(!navigator.mediaDevices||!window.MediaRecorder){cxSay(t('Dieser Browser kann keine Sprachnachricht aufnehmen.','This browser cannot record a voice message.'));return}

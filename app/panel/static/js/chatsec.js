@@ -79,9 +79,9 @@ window.csPrepare=async(d,cid)=>{if(!d||!d.private)return;d.cs='';
     if(!p){try{p=await csUnbox(cid,x.from,x.box,keys)}catch{p=null}if(p)CS.open.set(ck,p)}   // not yet: maybe the history comes
     csShow(x,p)}
   for(const x of d.items)if(x.reply&&!x.reply.gone){const p=CS.open.get(cid+'|'+x.reply.id);
-    if(p){x.reply.text=p.t;x.reply.kind=p.a?p.a.kind:'text'}else if(x.reply.kind==='box')x.reply.text='🔒'}};
+    if(p){x.reply.text=p.t;x.reply.kind=p.a?p.a.kind:'text'}else if(x.reply.kind==='box')x.reply.text=t('Private Nachricht','Private message')}};
 function csShow(x,p){x.box=null;
-  if(!p){x.kind='text';x.locked=true;x.text=t('🔒 Auf diesem Gerät nicht lesbar (vor seinem Eintragen geschickt).','🔒 Not readable on this device (sent before it was added).');return}
+  if(!p){x.kind='text';x.locked=true;x.text=t('Auf diesem Gerät nicht lesbar (vor seinem Eintragen geschickt).','Not readable on this device (sent before it was added).');return}
   x.text=p.t;if(p.a){x.kind=p.a.kind;x.att=p.a;x.media={name:p.a.name,size:p.a.size,secs:p.a.secs,w:p.a.w,h:p.a.h,ext:(p.a.name.split('.').pop()||'')}}else x.kind='text'}
 function csLock(d){d.can_send=false;d.why=d.cs==='https'?csNoHttps():d.cs==='need'?t('Dieses Gerät hat noch keinen Schlüssel für private Chats.','This device has no key for private chats yet.')
   :t('Die Schlüssel für private Chats sind gerade nicht zu holen.','The keys for private chats cannot be fetched right now.');
@@ -98,8 +98,8 @@ window.csAfter=(log,d)=>{if(!d||!d.private)return;
 window.csMediaHtml=x=>{const a=x.att,m=x.media||{};
   if(a.kind==='photo'){const w=+m.w||4,h=+m.h||3,f=Math.min(1,240/Math.max(w,h));
     return `<button type="button" class="cx-ph" data-cxa="photo" data-mid="${esc(x.id)}" aria-label="${esc(t('Foto groß zeigen','Show photo large'))}"><img data-cse="${esc(x.id)}" width="${Math.round(w*f)}" height="${Math.round(h*f)}" alt="${esc(t('Foto','Photo'))}"></button>`}
-  if(a.kind==='voice')return `<span class="cx-voice"><audio controls preload="none" data-cse="${esc(x.id)}"></audio><small class="mut">🎤 ${esc(cxDur(m.secs))}</small></span>`;
-  return `<a class="cx-file" data-cse="${esc(x.id)}" href="#" download="${esc(m.name||'')}"><span class="cx-fi">📄</span><span><b>${esc(m.name||t('Datei','File'))}</b><small class="mut">${esc((m.ext||'').toUpperCase()+' · '+cxSize(m.size))}</small></span></a>`};
+  if(a.kind==='voice')return `<span class="cx-voice"><audio controls preload="none" data-cse="${esc(x.id)}"></audio><small class="mut">${ic('mic')} ${esc(cxDur(m.secs))}</small></span>`;
+  return `<a class="cx-file" data-cse="${esc(x.id)}" href="#" download="${esc(m.name||'')}"><span class="cx-fi">${ic('doc')}</span><span><b>${esc(m.name||t('Datei','File'))}</b><small class="mut">${esc((m.ext||'').toUpperCase()+' · '+cxSize(m.size))}</small></span></a>`};
 async function csBlobUrl(cid,x){const ck=cid+'|'+x.id;if(CS.urls.has(ck))return CS.urls.get(ck);
   const pr=(async()=>{const r=await api('/api/chats/media?'+new URLSearchParams({id:cid,mid:x.id,part:'f'}));const b=new Uint8Array(await r.arrayBuffer());
     const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b.subarray(0,12)},await csAes(csUn(x.att.k),'decrypt'),b.subarray(12));
@@ -108,7 +108,7 @@ async function csBlobUrl(cid,x){const ck=cid+'|'+x.id;if(CS.urls.has(ck))return 
     return URL.createObjectURL(new Blob([pt],{type}))})();
   CS.urls.set(ck,pr);pr.catch(()=>CS.urls.delete(ck));return pr}
 async function csMedia(el,d){const x=d.items.find(y=>y.id===el.dataset.cse);if(!x||!x.att)return;
-  try{const u=await csBlobUrl(CX.cur,x);if(el.tagName==='A')el.href=u;else el.src=u}catch{el.replaceWith(document.createTextNode(t('🔒 Anhang nicht lesbar','🔒 Attachment not readable')))}}
+  try{const u=await csBlobUrl(CX.cur,x);if(el.tagName==='A')el.href=u;else el.src=u}catch{el.replaceWith(document.createTextNode(t('Anhang nicht lesbar','Attachment not readable')))}}
 window.csBig=async x=>{try{cxEl('cxbigimg').src=await csBlobUrl(CX.cur,x);cxEl('cxbig').hidden=false;cxEl('cxbigx').focus()}catch(e){cxSay(e.message)}};
 
 // ---------------------------------------------------------------- sending
@@ -137,7 +137,7 @@ async function csNumber(cid,keys){const by={};for(const k of keys)if(!k.gone)(by
   const h=new Uint8Array(await crypto.subtle.digest('SHA-512',csEnc('spark-e2e-v1|'+cid+'|'+s))),out=[];
   for(let i=0;i<12;i++){let v=0;for(let j=0;j<5;j++)v=(v*256+h[i*5+j])%100000;out.push(String(v).padStart(5,'0'))}return out.join(' ')}
 const csSeen=cid=>{try{return localStorage.getItem('cs-ok:'+cxMe()+':'+cid)||''}catch{return ''}};
-window.csInfoHtml=()=>`<div class="cx-grp">🔒 ${esc(t('Ende-zu-Ende','End-to-end'))}</div><div id="csinfo" class="cx-cs"><span class="mut">…</span></div>`;
+window.csInfoHtml=()=>`<div class="cx-grp">${ic('lock')} ${esc(t('Ende-zu-Ende','End-to-end'))}</div><div id="csinfo" class="cx-cs"><span class="mut">…</span></div>`;
 window.csInfo=async cid=>{const box=cxEl('csinfo');if(!box)return;let h='';
   if(!csOk()){box.textContent=csNoHttps();return}
   try{await csDevice(false);const keys=await csKeys(cid,true),num=await csNumber(cid,keys),ok=csSeen(cid)===num;
@@ -184,10 +184,10 @@ window.csShareCheck=async box=>{if(!csOk())return;csShareDraw(box);if(CSH.busy)r
   if((nk&&nk.id)!==(CSH.nk&&CSH.nk.id)){CSH.nk=nk||null;CSH.msg='';CSH.code=nk?await csCode(nk.pub):''}
   csShareDraw(cxEl('cxlist'))};
 function csShareDraw(box){if(!box)return;const old=box.querySelector('.cx-share');if(old)old.remove();const nk=CSH.nk;
-  if(!nk){if(CSH.ok){const n=document.createElement('div');n.className='cx-share';n.innerHTML=`<b>🔒 ${esc(CSH.ok)}</b>`;box.prepend(n)}return}
+  if(!nk){if(CSH.ok){const n=document.createElement('div');n.className='cx-share';n.innerHTML=`<b>${ic('lock')} ${esc(CSH.ok)}</b>`;box.prepend(n)}return}
   const when=new Date(nk.t*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
   const n=document.createElement('div');n.className='cx-share';
-  n.innerHTML=`<b>🔒 ${esc(t('Neues Gerät','New device'))}: ${esc(csKindName(nk.kind)+', '+when)}</b>`+
+  n.innerHTML=`<b>${ic('lock')} ${esc(t('Neues Gerät','New device'))}: ${esc(csKindName(nk.kind)+', '+when)}</b>`+
     `<small>${esc(t('Verlauf deiner privaten Chats dorthin übertragen? Nur wenn dort derselbe Code steht:','Transfer the history of your private chats there? Only if it shows the same code:'))} <b class="cx-code">${esc(CSH.code)}</b></small>`+
     `<span class="cx-acts2"><button type="button" class="b p" data-csh="go"${CSH.busy?' disabled':''}>${esc(t('Übertragen','Transfer'))}</button>`+
     `<button type="button" class="b danger" data-csh="no"${CSH.busy?' disabled':''}>${esc(t('Nicht ich','Not me'))}</button></span>`+

@@ -16,12 +16,12 @@ const pro={since:Date.now()-10*60e3,seen:new Set(),busy:false,greeted:0,
     else{const b=chatLog('assistant',x.text);b.classList.add('pro');
     const m={role:'assistant',content:x.text,...(x.mail?{mail:true}:{outside:true})};chat.msgs.push(m);deletable(b,m);saveConvo();
     const row=document.createElement('div');row.className='prorow';   // quick feedback, same as saying it
-    row.innerHTML=`<button type="button" class="ib" data-v="more" title="${t('Gut so','Good')}">👍</button><button type="button" class="ib" data-v="less">${t('Weniger davon','Less of this')}</button><button type="button" class="ib" data-v="pause">${t('Nicht jetzt','Not now')}</button>`;
+    row.innerHTML=`<button type="button" class="ib" data-v="more" title="${t('Gut so','Good')}" aria-label="${t('Gut so','Good')}">${ic('up_thumb')}</button><button type="button" class="ib" data-v="less">${t('Weniger davon','Less of this')}</button><button type="button" class="ib" data-v="pause">${t('Nicht jetzt','Not now')}</button>`;
     row.querySelectorAll('button').forEach(btn=>btn.onclick=async()=>{const v=btn.dataset.v;
       row.innerHTML=`<small class="mut">${v==='pause'?t('Gut, zwei Stunden Ruhe.','OK, quiet for two hours.'):v==='less'?t('Gemerkt, kommt seltener.','Noted, less often.'):t('Danke.','Thanks.')}</small>`;
       try{await api('/api/proactive/feedback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind:x.kind,vote:v})})}catch{}});
     b.appendChild(row)}chime();
-    if(document.hidden)try{if(window.Notification&&Notification.permission==='granted')new Notification('💬 Spark',{body:x.text,tag:x.id})}catch{}
+    if(document.hidden)try{if(window.Notification&&Notification.permission==='granted')new Notification('Spark',{body:x.text,tag:x.id})}catch{}
     if(chat.rec||chat.ctrl||playing())return;   // a conversation is running: the bubble and the chime suffice
     if(typeof voiceOn==='function'&&!voiceOn())return;   // Vorlesen off: the bubble and the chime suffice
     sayText(x.text)}};

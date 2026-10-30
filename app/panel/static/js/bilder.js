@@ -38,7 +38,7 @@ function bildCard(ev){const d=icEl('div','hcard blcard');const h=icEl('h4','',ev
   return d}
 // what stays under the answer in the history (profiles._att "bild"): the picture itself (its job leads to it, also
 // after a reload and on every device), else the prompt and a way to the pictures
-function bildAtt(a){const d=icEl('div','mem');d.appendChild(document.createTextNode('🖼 '+t('Bild: ','Picture: ')+String(a.p||'').slice(0,120)+' '));
+function bildAtt(a){const d=icEl('div','mem');d.append(icNode('image'),document.createTextNode(' '+t('Bild: ','Picture: ')+String(a.p||'').slice(0,120)+' '));
   const b=icEl('button','mlink',t('Ansehen','View'));b.type='button';b.onclick=()=>openMe('bildbox');d.appendChild(b);
   if(a.j&&BILD_ON)blFollow(a.j,d,j=>{if(j.state!=='done'||!j.pic)return;const l=document.createElement('a');l.href=blFile(j.pic.id);
     l.target='_blank';l.rel='noopener';l.className='blatt';l.appendChild(blImg(j.pic,'blbig'));d.prepend(l)});

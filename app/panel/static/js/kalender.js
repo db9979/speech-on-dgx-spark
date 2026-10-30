@@ -112,7 +112,7 @@ function kalMini(month,mode){const first=new Date(month.getFullYear(),month.getM
     [...Array(42)].map((_,i)=>{const d=kalAdd(a,i),iso=kalIso(d);return `<button type="button" data-mday="${iso}" class="${d.getMonth()!==first.getMonth()?'other':''}${iso===today?' now':''}${iso===sel&&mode==='side'?' sel':''}">${d.getDate()}</button>`}).join('')+`</div></div>`}
 function kalSide(w,a){const d=KAL.data,mini=KAL.mini||KAL.day;
   a.innerHTML=kalMini(mini,'side')+`<div class="kcals"><b>${esc(t('Kalender','Calendars'))}</b>`+d.calendars.map((n,i)=>{const ro=!(d.edit||[]).includes(i)&&!(d.add||[]).includes(i);
-    return `<label class="kcal ${kalKc(i)}"><input type="checkbox" data-cal="${i}"${KAL_HIDE.has(n)?'':' checked'}><i></i><span>${esc(n)}</span>${(d.shared||[]).includes(i)?`<small>${esc(t('geteilt','shared'))}</small>`:ro?`<small aria-label="${esc(t('nur lesen','read only'))}">🔒</small>`:''}</label>`}).join('')+`</div>`;
+    return `<label class="kcal ${kalKc(i)}"><input type="checkbox" data-cal="${i}"${KAL_HIDE.has(n)?'':' checked'}><i></i><span>${esc(n)}</span>${(d.shared||[]).includes(i)?`<small>${esc(t('geteilt','shared'))}</small>`:ro?`<small aria-label="${esc(t('nur lesen','read only'))}">${ic('lock')}</small>`:''}</label>`}).join('')+`</div>`;
   a.querySelectorAll('[data-mnav]').forEach(b=>b.onclick=()=>{KAL.mini=new Date(mini.getFullYear(),mini.getMonth()+Number(b.dataset.mnav),1);kalSide(w,a)});
   a.querySelectorAll('[data-mday]').forEach(b=>b.onclick=()=>{KAL.day=new Date(b.dataset.mday+'T00:00');KAL.mini=null;if(KAL.view==='year')KAL.view='day';if(!kalWide())KAL.side=false;KAL.sel=null;KAL.form=null;kalLoad()});
   a.querySelectorAll('[data-cal]').forEach(c=>c.onchange=()=>{kalHideSet(d.calendars[Number(c.dataset.cal)],!c.checked);KAL.mini=mini;kalDraw()});
@@ -146,7 +146,7 @@ function kalLanes(day,h0){const evs=kalOn(day).filter(x=>!x.allday).sort((x,y)=>
   for(const x of evs){let i=lanes.findIndex(end=>end<=x.start);if(i<0){i=lanes.length;lanes.push(0)}lanes[i]=Math.max(x.end,x.start+900);out.push([x,i])}
   return out.map(([x,i])=>{const s=Math.max(x.start,day.getTime()/1000),e=Math.min(Math.max(x.end,x.start+900),kalAdd(day,1).getTime()/1000),
     y=(s-top)/3600*KAL_H,hgt=Math.max((e-s)/3600*KAL_H-2,18),w=100/lanes.length;
-    return `<button type="button" class="kev ${kalKc(x.cal)}${KAL.sel===x?' on':''}${x.edit?' move':''}" data-i="${KAL.data.events.indexOf(x)}" style="top:${y}px;height:${hgt}px;left:${i*w}%;width:${w}%"><b>${x.edit?'':'<span class="kro" aria-label="'+esc(t('nur lesen','read only'))+'">🔒</span>'}${x.rule?'<span class="krep" aria-label="'+esc(t('wiederholt sich','repeats'))+'">↻</span>':''}${esc(x.title)}</b><small>${esc(kalTime(x.start)+(x.location?' · '+x.location:''))}</small>${x.edit&&!x.allday?`<i class="kres" title="${esc(t('Ziehen ändert die Länge','Drag to change the length'))}"></i>`:''}</button>`}).join('')+
+    return `<button type="button" class="kev ${kalKc(x.cal)}${KAL.sel===x?' on':''}${x.edit?' move':''}" data-i="${KAL.data.events.indexOf(x)}" style="top:${y}px;height:${hgt}px;left:${i*w}%;width:${w}%"><b>${x.edit?'':'<span class="kro" aria-label="'+esc(t('nur lesen','read only'))+'">'+ic('lock')+'</span>'}${x.rule?'<span class="krep" aria-label="'+esc(t('wiederholt sich','repeats'))+'">↻</span>':''}${esc(x.title)}</b><small>${esc(kalTime(x.start)+(x.location?' · '+x.location:''))}</small>${x.edit&&!x.allday?`<i class="kres" title="${esc(t('Ziehen ändert die Länge','Drag to change the length'))}"></i>`:''}</button>`}).join('')+
     (gh&&!gh.allday&&gh.day===kalIso(day)?`<div class="kev kghost ${kalKc((KAL.form&&KAL.form.v&&KAL.form.v.cal)||0)}" style="top:${(gh.a-h0*60)/60*KAL_H}px;height:${Math.max((gh.b-gh.a)/60*KAL_H-2,18)}px;left:0;width:100%"><b>${esc((KAL.form&&KAL.form.v&&KAL.form.v.title)||t('Neuer Termin','New appointment'))}</b><small>${esc(kalHm2(new Date(2000,0,1,0,gh.a))+'–'+kalHm2(new Date(2000,0,1,0,gh.b)))}</small></div>`:'')}
 // one colour per calendar, written out so the style check finds every class
 const KAL_KC=['kc0','kc1','kc2','kc3','kc4','kc5','kc6','kc7'],kalKc=i=>KAL_KC[i%8];
@@ -164,7 +164,7 @@ function kalMonth(m){const [a]=kalRange(),mon=KAL.day.getMonth(),today=kalIso(ne
 function kalList(m){const [a,n]=kalRange();let html='';
   for(let i=0;i<n;i++){const day=kalAdd(a,i),evs=kalOn(day);if(!evs.length)continue;
     html+=`<div class="ld-grp"><span>${esc(day.toLocaleDateString(kalLoc(),{weekday:'long',day:'numeric',month:'long'}))}</span><span>${evs.length}</span></div>`+
-      evs.map(x=>`<button type="button" class="kli${KAL.sel===x?' on':''}" data-i="${KAL.data.events.indexOf(x)}"><span class="kt">${esc(x.allday?t('ganztägig','all day'):kalTime(x.start))}${x.allday?'':`<small>${esc(kalTime(x.end))}</small>`}</span><i class="kbar ${kalKc(x.cal)}"></i><span class="kx"><b>${x.edit?'':'<span class="kro" aria-label="'+esc(t('nur lesen','read only'))+'">🔒</span>'}${x.rule?'<span class="krep" aria-label="'+esc(t('wiederholt sich','repeats'))+'">↻</span>':''}${esc(x.title)}</b>${x.location?`<small>${esc(x.location)}</small>`:''}</span></button>`).join('')}
+      evs.map(x=>`<button type="button" class="kli${KAL.sel===x?' on':''}" data-i="${KAL.data.events.indexOf(x)}"><span class="kt">${esc(x.allday?t('ganztägig','all day'):kalTime(x.start))}${x.allday?'':`<small>${esc(kalTime(x.end))}</small>`}</span><i class="kbar ${kalKc(x.cal)}"></i><span class="kx"><b>${x.edit?'':'<span class="kro" aria-label="'+esc(t('nur lesen','read only'))+'">'+ic('lock')+'</span>'}${x.rule?'<span class="krep" aria-label="'+esc(t('wiederholt sich','repeats'))+'">↻</span>':''}${esc(x.title)}</b>${x.location?`<small>${esc(x.location)}</small>`:''}</span></button>`).join('')}
   m.innerHTML=html||(KAL.busy?'':`<div class="empty">${esc(t('In diesen zwei Wochen steht nichts an.','Nothing planned in these two weeks.'))}</div>`);kalBind(m)}
 // a tap: an own appointment opens the inspector at once (Apple), one that is read-only its details
 function kalBind(m){m.querySelectorAll('[data-i]').forEach(b=>b.onclick=e=>{e.stopPropagation();if(KAL.dragged){KAL.dragged=false;return}
@@ -188,10 +188,10 @@ function kalDetail(w){const box=w.querySelector('.kaldet'),x=KAL.sel;if(!box)ret
   if(!x){box.hidden=true;if(!(KAL.side&&!kalWide()))w.querySelector('.kalshade').hidden=true;return}
   const d=KAL.data,when=x.allday?new Date(x.start*1000).toLocaleDateString(kalLoc(),{weekday:'short',day:'numeric',month:'long'})+' · '+t('ganztägig','all day')
     :new Date(x.start*1000).toLocaleDateString(kalLoc(),{weekday:'short',day:'numeric',month:'long'})+', '+kalTime(x.start)+'–'+kalTime(x.end);
-  box.innerHTML=`<button type="button" class="kalx" data-close="1" aria-label="${esc(t('Schließen','Close'))}">✕</button><div class="mut"><i class="kdot ${kalKc(x.cal)}"></i>${esc((d.calendars||[])[x.cal]||'')}</div><h3>${esc(x.title)}</h3>`+
+  box.innerHTML=`<button type="button" class="kalx" data-close="1" aria-label="${esc(t('Schließen','Close'))}">${ic('x')}</button><div class="mut"><i class="kdot ${kalKc(x.cal)}"></i>${esc((d.calendars||[])[x.cal]||'')}</div><h3>${esc(x.title)}</h3>`+
     `<dl class="ld-facts"><dt>${esc(t('Wann','When'))}</dt><dd>${esc(when)}</dd>${x.location?`<dt>${esc(t('Wo','Where'))}</dt><dd>${esc(x.location)}</dd>`:''}${x.rule?`<dt>${esc(t('Wiederholen','Repeat'))}</dt><dd>${esc(kalRuleName(x.rule,x.until))}</dd>`:''}${x.alarm?`<dt>${esc(t('Erinnerung','Alert'))}</dt><dd>${esc(kalAlarmName(x.alarm))}</dd>`:''}${x.link?`<dt>${esc(t('Link','Link'))}</dt><dd class="kallink">${esc(x.link)}</dd>`:''}</dl>`+
     (x.note?`<div class="kalnote${x.note.length>400||x.note.split('\n').length>8?' cut':''}">${esc(x.note)}</div>${x.note.length>400||x.note.split('\n').length>8?`<button type="button" class="b kalmore" data-act="more">${esc(t('Weiter lesen','Read on'))}</button>`:''}`:'')+
-    `<div class="kalro">🔒 ${esc(x.title==='belegt'&&(d.shared||[]).includes(x.cal)?t('Privater Termin aus einem geteilten Kalender.','Private appointment from a shared calendar.'):t(...(KAL_WHY[x.why]||KAL_WHY.lesen)))}</div>`;
+    `<div class="kalro">${ic('lock')} ${esc(x.title==='belegt'&&(d.shared||[]).includes(x.cal)?t('Privater Termin aus einem geteilten Kalender.','Private appointment from a shared calendar.'):t(...(KAL_WHY[x.why]||KAL_WHY.lesen)))}</div>`;
   box.querySelector('[data-close]').onclick=()=>kalClose();
   const more=box.querySelector('[data-act=more]');if(more)more.onclick=()=>{box.querySelector('.kalnote').classList.remove('cut');more.remove()};
   kalPlace(w,box)}
@@ -316,7 +316,7 @@ function kalQChips(w){const q=KAL.qi,box=w.querySelector('.kqchips');if(!box)ret
   if(!q){box.innerHTML='';return}
   const s=new Date(q.allday?q.start+'T00:00':q.start),e=new Date(q.allday?q.end+'T00:00':q.end),o={weekday:'short',day:'numeric',month:'short'};
   const when=s.toLocaleDateString(kalLoc(),o)+(q.allday?' · '+t('ganztägig','all day'):' · '+kalHm2(s)+'–'+kalHm2(e));
-  box.innerHTML=`<span class="kq t">${esc(q.title)}</span><span class="kq d">${esc(when)}</span>`+(q.location?`<span class="kq l">${esc(q.location)}</span>`:'')}
+  box.innerHTML=`<span class="kq t">${esc(q.title)}</span><span class="kq d">${ic('cal')}${esc(when)}</span>`+(q.location?`<span class="kq l">${ic('pin')}${esc(q.location)}</span>`:'')}
 async function kalQuickSave(w){const q=KAL.qi;if(!q)return;
   const d=await kalSend('POST',{title:q.title,start:q.start,end:q.end,allday:q.allday,location:q.location,calendar:''},w.querySelector('.kalqmsg'));
   if(d){KAL.q='';KAL.qi=null;KAL.undo={text:t('Eingetragen: ','Added: ')+q.title,token:d.undo,at:Date.now()}}}
@@ -334,7 +334,7 @@ function kalItem(v,full){const item={title:v.title.trim(),allday:v.allday,locati
 function kalForm(box){const f=KAL.form,v=f.v,x=f.x,d=KAL.data,add=(d.add||[]).map(i=>[i,d.calendars[i]]);
   const opt=(list,cur)=>list.map(([k,l])=>`<option value="${esc(String(k))}"${String(k)===String(cur)?' selected':''}>${esc(l)}</option>`).join('');
   const rules=KAL_RULES.concat(v.rule==='custom'?[['custom',t('Eigene Regel (bleibt)','Own rule (stays)')]]:[]),alarms=KAL_ALARMS.concat(KAL_ALARMS.includes(Number(v.alarm))?[]:[Number(v.alarm)]).map(n=>[n,kalAlarmName(n)]);
-  box.innerHTML=`<button type="button" class="kalx" data-close="1" aria-label="${esc(t('Schließen und sichern','Close and save'))}">✕</button>`+
+  box.innerHTML=`<button type="button" class="kalx" data-close="1" aria-label="${esc(t('Schließen und sichern','Close and save'))}">${ic('x')}</button>`+
     `<input class="kalti" data-f="title" maxlength="200" placeholder="${esc(t('Neuer Termin','New appointment'))}" aria-label="${esc(t('Titel','Title'))}" value="${esc(v.title)}">`+
     `<input data-f="location" maxlength="200" placeholder="${esc(t('Ort oder Videoanruf','Place or video call'))}" aria-label="${esc(t('Ort','Place'))}" value="${esc(v.location)}">`+
     `<div class="kgrp"><label class="kalad"><input type="checkbox" data-f="allday"${v.allday?' checked':''}> ${esc(t('ganztägig','all day'))}</label>`+
@@ -345,7 +345,7 @@ function kalForm(box){const f=KAL.form,v=f.v,x=f.x,d=KAL.data,add=(d.add||[]).ma
     `<div class="krow"><span>${esc(t('Erinnerung','Alert'))}</span><select data-f="alarm">${opt(alarms,v.alarm)}</select></div>`+
     (f.mode==='new'&&add.length>1?`<div class="krow"><span>${esc(t('Kalender','Calendar'))}</span><select data-f="cal">${opt(add,v.cal)}</select></div>`
       :`<div class="krow"><span>${esc(t('Kalender','Calendar'))}</span><b class="kcalname"><i class="kdot ${kalKc(v.cal||0)}"></i>${esc((d.calendars||[])[v.cal]||'')}</b></div>`)+`</div>`+
-    `<div class="kgrp"><span class="kglab">${esc(t('Personen','People'))}</span><div class="kpeople">${v.people.map((p,i)=>`<span class="kpp">${esc(kalWho(p))}<button type="button" data-pp="${i}" aria-label="${esc(t('Entfernen','Remove'))}">✕</button></span>`).join('')}</div>`+
+    `<div class="kgrp"><span class="kglab">${esc(t('Personen','People'))}</span><div class="kpeople">${v.people.map((p,i)=>`<span class="kpp">${esc(kalWho(p))}<button type="button" data-pp="${i}" aria-label="${esc(t('Entfernen','Remove'))}">${ic('x')}</button></span>`).join('')}</div>`+
     `<input data-f="pin" maxlength="300" autocomplete="off" placeholder="${esc(t('Name <anna@beispiel.de> und Enter','Name <anna@example.org> and Enter'))}" aria-label="${esc(t('Person hinzufügen','Add a person'))}"><small class="mut">${esc(t('Nur eine Liste im Termin: es geht keine Einladung raus.','Only a list in the appointment: no invitation goes out.'))}</small></div>`+
     `<div class="kgrp"><textarea data-f="note" maxlength="2000" rows="3" placeholder="${esc(t('Notiz','Note'))}" aria-label="${esc(t('Notiz','Note'))}">${esc(v.note)}</textarea>`+
     `<input data-f="link" maxlength="300" type="url" placeholder="${esc(t('Link (https://…)','Link (https://…)'))}" aria-label="${esc(t('Link','Link'))}" value="${esc(v.link)}"></div>`+

@@ -18,7 +18,7 @@ const wissName=x=>L==='en'&&x.en?x.en:x.name;
 function wissProposal(x){const E=icEl,box=E('div','wiss-prop'),head=E('div','wiss-head');head.appendChild(E('span','ic-t',wissName(x)));
   if(x.unclear)head.appendChild(E('span','ic-badge warn',t('Thema unklar','Topic unclear')));box.appendChild(head);
   if(!x.unclear&&(x.senders||[]).length){const c=E('div','wiss-chips');for(const n of x.senders){const ch=E('span','chip',n+' ');
-      const b=E('button','b',' ✕');b.type='button';b.title=t('Diesen Absender nicht','Not this sender');b.setAttribute('aria-label',b.title);b.dataset.wissChipNo=n;
+      const b=E('button','b');b.appendChild(icNode('x'));b.type='button';b.title=t('Diesen Absender nicht','Not this sender');b.setAttribute('aria-label',b.title);b.dataset.wissChipNo=n;
       b.onclick=()=>wissSet(n,'no',{src:'shop'});ch.appendChild(b);c.appendChild(ch)}box.appendChild(c)}
   const ex=(x.ex||[]).map(v=>'„'+v+'“').join(', ');
   if(ex&&!x.unclear)box.appendChild(E('small','ic-meta wiss-ex',t('z. B. ','e.g. ')+ex));
@@ -92,7 +92,7 @@ function wissDetail(det,x){const d=WISS,E=icEl;
   det.appendChild(E('small','ic-meta',x.old?t('Früher bestätigter Absender: gib ihm unten ein Thema, dann bleibt er als Absender darunter.','Sender confirmed earlier: give it a topic below, then it stays as a sender under it.')
     :(d.sources[x.src]||[])[L==='en'?1:0]||''));
   if((x.senders||[]).length){det.appendChild(E('div','ic-gl wiss-dl',t('Absender','Senders')));const c=E('div','wiss-chips');
-    for(const n of x.senders){const ch=E('span','chip',n+' ');const b=E('button','b',' ✕');b.type='button';b.title=t('Diesen Absender herausnehmen','Take this sender out');b.setAttribute('aria-label',b.title);
+    for(const n of x.senders){const ch=E('span','chip',n+' ');const b=E('button','b');b.appendChild(icNode('x'));b.type='button';b.title=t('Diesen Absender herausnehmen','Take this sender out');b.setAttribute('aria-label',b.title);
       b.dataset.wissDrop=n;b.onclick=()=>wissSet(x.name,'drop',{senders:[n]});ch.appendChild(b);c.appendChild(ch)}det.appendChild(c)}
   det.appendChild(E('div','ic-gl wiss-dl',t('Name und Thema','Name and topic')));
   if(WISS_EDIT===x.name)det.appendChild(wissEditForm(x));

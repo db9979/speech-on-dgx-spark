@@ -44,7 +44,7 @@ function lstPaint(w){const d=LST.data;w.classList.toggle('ld-sel',!!LST.sel);
   const list=w.querySelector('.ld-list');list.classList.toggle('busy',LST.busy&&!d);
   if(!d){list.innerHTML=LST.busy?`<div class="ld-empty mut">${esc(t('Lade die Listen …','Loading the lists …'))}</div>`:'';return}
   const row=k=>{const l=d.lists[k],n=l.items.length,ppl=Object.keys(l.shares||{}).length,
-      sub=(l.shared?t('von ','from ')+l.shared.owner+' · ':ppl?'👥 '+ppl+' · ':'')+(l.target?t('in ','in ')+l.target.name:l.error?t('nicht erreichbar','not reachable')
+      sub=(l.shared?t('von ','from ')+l.shared.owner+' · ':ppl?t('mit ','with ')+ppl+' · ':'')+(l.target?t('in ','in ')+l.target.name:l.error?t('nicht erreichbar','not reachable')
       :n?l.items.slice(0,3).map(x=>x.text).join(', ')+(n>3?' …':''):t('leer','empty'));
     return `<div class="ld-row${k===LST.sel?' on':''}" role="button" tabindex="0" data-l="${esc(k)}"><span class="ld-ico lstico" aria-hidden="true">${esc(l.icon)}</span>`+
       `<span class="ld-mid"><b>${esc(lstName(l))}</b><small>${esc(sub)}</small></span><span class="ld-right"><b class="lstcnt">${n}</b></span></div>`};
@@ -79,7 +79,7 @@ function lstDetail(w){const box=w.querySelector('.lstdet'),l=lstList();box.hidde
   const who=x=>`<small>${esc(lstWho(x))}</small>`;
   const item=x=>`<div class="lstitem">${write?`<button type="button" class="lstck" data-tick="${esc(x.id)}" aria-label="${esc(t('Abhaken: ','Tick off: ')+x.text)}"></button>`:'<span class="lstck" aria-hidden="true"></span>'}`+
     `<span class="lstit"><b>${esc(x.text)}</b>${x.qty?` <span class="lstqty">${esc(x.qty)}</span>`:''}${lstDue(x)}${who(x)}</span>`+
-    (mine?`<button type="button" class="ic-ib lstdel" data-del="${esc(x.id)}" title="${esc(t('Löschen','Delete'))}" aria-label="${esc(t('Löschen: ','Delete: ')+x.text)}">✕</button>`:'')+`</div>`;
+    (mine?`<button type="button" class="ic-ib lstdel" data-del="${esc(x.id)}" title="${esc(t('Löschen','Delete'))}" aria-label="${esc(t('Löschen: ','Delete: ')+x.text)}">${ic('x')}</button>`:'')+`</div>`;
   let body='';
   if(l.shop){const groups=new Map();for(const x of l.items){const k=L==='en'?x.dept_en:x.dept;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(x)}
     const order=(LST.data.depts||[]).map(g=>L==='en'?g[1]:g[0]);

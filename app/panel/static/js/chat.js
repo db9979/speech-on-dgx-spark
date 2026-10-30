@@ -287,19 +287,19 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
         else if(ev.type==='truncated'){full=full.slice(0,full.length-ev.drop).trimEnd();show(full+' … '+t('(Längenlimit erreicht: Konfiguration → Assistent → Max. Tokens)','(length limit reached: Configuration → Assistant → Max. tokens)'),true)}
         else if(ev.type==='search'){chatSay(t('Suche im Netz: ','Searching the web: ')+ev.query);searches.push(ev.query)}
         else if(ev.type==='sources'){sources.push(...ev.items)}
-        else if(ev.type==='proposal'){mems.push('📥 '+t('Vorschlag: ','Proposal: ')+ev.text)}
+        else if(ev.type==='proposal'){mems.push(t('Vorschlag: ','Proposal: ')+ev.text)}
         else if(ev.type==='mail'){mailUsed=true;chatSay(t('Lese deine E-Mails …','Reading your e-mail …'))}
         else if(ev.type==='outside'){outsideUsed=true}
         else if(ev.type==='screen'){screenUsed=true;outsideUsed=true}  // described screen: shown here, never stored (profiles.SCREEN_NOTE)
         else if(ev.type==='calendar'){chatSay(t('Schaue in deinen Kalender …','Checking your calendar …'))}
         else if(ev.type==='briefing'){chatSay(t('Stelle dein Tagesbriefing zusammen …','Putting your daily briefing together …'))}
-        else if(ev.type==='home'){chatSay('🏠 '+ev.command)}
-        else if(ev.type==='home_done'){mems.push('🏠 '+(ev.ok?'':'⚠ ')+(ev.targets&&ev.targets.length?ev.targets.join(', ')+': ':'')+ev.text)}
+        else if(ev.type==='home'){chatSay(t('Smart Home: ','Smart home: ')+ev.command)}
+        else if(ev.type==='home_done'){mems.push(t('Smart Home: ','Smart home: ')+(ev.ok?'':t('nicht geklappt · ','failed · '))+(ev.targets&&ev.targets.length?ev.targets.join(', ')+': ':'')+ev.text)}
         else if(ev.type==='historysearch'){chatSay(t('Schaue in früheren Gesprächen nach …','Looking through earlier conversations …'))}
         else if(ev.type==='docsearch'){chatSay(t('Suche in deinen Dokumenten: ','Searching your documents: ')+ev.query)}
         else if(ev.type==='docsources'){for(const n of ev.items)if(!docs.includes(n))docs.push(n);for(const r of (ev.refs||[]))if(!drefs.some(x=>x.id===r.id&&x.page===r.page))drefs.push(r)}
         else if(ev.type==='speaker'){const w=document.createElement('div');w.className='who';foreign=!!ev.foreign;
-          w.textContent='🎙 '+ev.name+(foreign?t(' · nicht in diesem Verlauf gespeichert',' · not kept in this history'):'');ub.parentNode.appendChild(w)}
+          w.append(icNode('mic'),' '+ev.name+(foreign?t(' · nicht in diesem Verlauf gespeichert',' · not kept in this history'):''));ub.parentNode.appendChild(w)}
         else if(ev.type==='why'){why=ev}
         else if(ev.type==='hilfe'){hcards.push(ev.card)}
         else if(ev.type==='docmake'){mkcards.push(ev.card)}
@@ -313,7 +313,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
           if(/SparkAndroid\//.test(navigator.userAgent)&&/^\+?[0-9][0-9 \/()\-]{2,28}$/.test(n))location.href='tel:'+n.replace(/[^0-9+]/g,'')}
         else if(ev.type==='rate'){rateId=ev.id}
         else if(ev.type==='wbuch'){wbId=ev.id}
-        else if(ev.type==='more'){more=ev}   // the panel's sentences under the answer (saetze.js)   // 👍/👎 for this answer (faelle.py, bewerten.js)
+        else if(ev.type==='more'){more=ev}   // the panel's sentences under the answer (saetze.js)   // thumbs for this answer (faelle.py, bewerten.js)
         else if(ev.type==='reminder'){rem.event(ev);mems.push(ev.action==='set'?t('Erinnerung: ','Reminder: ')+rem.when(ev.item.due)+' '+ev.item.text:t('Erinnerung gelöscht','Reminder cancelled'))}
         else if(ev.type==='memory'){if(ev.action==='saved'&&ev.id&&window.gmChips&&gms.length<3)gms.push(ev);else mems.push((ev.action==='saved'?t('Gemerkt: ','Remembered: '):t('Vergessen: ','Forgotten: '))+ev.text)}   // Gemerkt-Hinweis (gemerkt.js): a chip with Rückgängig
         else if(ev.type==='search_error'){chatSay(t('Websuche fehlgeschlagen: ','Web search failed: ')+ev.message)}
@@ -362,12 +362,12 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
     if(chat.ctrl||chat.rec||chat.held)return;
     chatSay(t('Bereit.','Ready.'));if(S.hands)startListening({opened:'hands'});else if(spoken&&followSecs())startListening({follow:followSecs()})};
   await done()}
-// Ablauf zeigen (ablauf.py): the tools of this answer, folded: „3 Werkzeuge benutzt · 2,1 s“, open: ✓/⚠ name and time
+// Ablauf zeigen (ablauf.py): the tools of this answer, folded: „3 Werkzeuge benutzt · 2,1 s“, open: ✓ or the warning symbol, name and time
 function stepsFold(steps){const d=document.createElement('details');d.className='steps';const s=document.createElement('summary');
   const sec=x=>(x/1000).toLocaleString(L==='en'?'en':'de',{maximumFractionDigits:1})+' s',all=steps.reduce((a,x)=>a+(x.ms||0),0);
   s.textContent=(steps.length===1?t('1 Werkzeug benutzt','1 tool used'):t(steps.length+' Werkzeuge benutzt',steps.length+' tools used'))+' · '+sec(all);d.appendChild(s);
   const ul=document.createElement('ul');for(const x of steps){const li=document.createElement('li');li.className=x.ok?'ok':'bad';
-    li.textContent=(x.ok?'✓ ':'⚠ ')+(L==='en'?x.en:x.de)+' · '+sec(x.ms||0);ul.appendChild(li)}
+    li.append(x.ok?'✓ ':icNode('warn'),(x.ok?'':' ')+(L==='en'?x.en:x.de)+' · '+sec(x.ms||0));ul.appendChild(li)}
   d.appendChild(ul);return d}
 // Freigabe-Karte (ablauf.py): Ja and Nein send the words like a typed answer; the module that proposed decides by its rules
 // „Im Kalender ansehen“ / „Mail öffnen“ / „In Finden ansehen“ (fund.py) under an answer that read appointments or a mail (chat_tools.py, event "goto"):
@@ -606,7 +606,7 @@ function attRender(el,att,live,via){
         d.querySelector('[data-sprfix]').onclick=()=>sprFromAnswer(ask&&ask.classList.contains('user')?ask.textContent:'',a.l[0].id)}
       d.addEventListener('click',async e=>{const b=e.target.closest('[data-docopen]');if(!b)return;await openMe('docbox');if(b.dataset.docopen)docView(b.dataset.docopen)});el.appendChild(d)}
     else if(a.k==='mk'&&!live){const d=document.createElement('div');d.className='mem';
-      d.innerHTML=`📄 ${esc((a.n||t('Dokument','Document'))+' „'+a.t+'“')} <button type="button" class="mlink">${esc(t('Ansehen','View'))}</button>`;
+      d.innerHTML=`${ic('doc')} ${esc((a.n||t('Dokument','Document'))+' „'+a.t+'“')} <button type="button" class="mlink">${esc(t('Ansehen','View'))}</button>`;
       d.querySelector('button').onclick=()=>openMe('docbox');el.appendChild(d)}
     else if(a.k==='bild'&&!live&&typeof bildAtt==='function')el.appendChild(bildAtt(a))
     else if(a.k==='musik'&&!live&&typeof musikAtt==='function')el.appendChild(musikAtt(a))}}
@@ -624,10 +624,10 @@ async function sayText(text){stopAnswer();const ctrl=new AbortController();chat.
 // A question goes together with its answer; the conversation is saved again without them.
 function deletable(bubble,m){const d=bubble.parentNode;d._m=m;if(d.querySelector('.mdel'))return;
   const b=document.createElement('button');b.className='mdel';b.type='button';b.title=t('Löschen','Delete');
-  b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>';
+  b.innerHTML=ic('trash');
   b.onclick=e=>{e.stopPropagation();deleteMsg(d)};
   if(m.role==='assistant'){const r=document.createElement('button');r.className='mdel mplay';r.type='button';r.title=t('Nochmal vorlesen','Read again');
-    r.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+    r.innerHTML=ic('vol');
     r.onclick=e=>{e.stopPropagation();audioCtx();stopListening(true);sayText(d._m.content)};d.appendChild(r)}
   d.appendChild(b);
   bubble.addEventListener('click',()=>{if(window.getSelection&&String(window.getSelection()))return;

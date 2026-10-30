@@ -30,17 +30,22 @@ class Static(unittest.TestCase):
     def test_every_menu_page_has_its_symbol(self):
         """One style on every page with a second column (Dominik 2026-10-17: „durchgängigen Style verwenden“): each
         page of Zustand, Funktionen and Personen und Geräte has its symbol (seite.js IC 'z:<id>'), each group of
-        Funktionen the symbol of the same group in Ich (MEG)."""
+        Funktionen the symbol of the same group in Ich (MEG); every symbol is a name of icons.js (one source)."""
         base, seite, guides = read("js", "base.js"), read("js", "seite.js"), read("js", "guides.js")
+        icons = read("js", "icons.js")
+        names = set(re.findall(r"^  ([a-z_]+):'", icons, re.M)) | set(re.findall(r"\b([a-z_]+):'[a-z_]+'", icons[icons.index("Object.entries({"):]))
+        for k, n in re.findall(r"'?([a-z:]+)'?:'([a-z_]+)'", seite[seite.index("const IC={"):seite.index("function icon(")]
+                                + seite[seite.index("const MEG={"):seite.index("function featGroupIcons")]):
+            self.assertIn(n, names, f"seite.js {k}: no symbol „{n}“ in icons.js")
         groups = base[base.index("const GROUPS={"):base.index("const lastSec")]
         for g in ("mon", "feat", "prof"):
             body = groups[groups.index(g + ":["):]
             body = body[:body.index("]],") + 2]
             for page in re.findall(r"\['([a-z]+)',t\(", body):
-                self.assertIn(f"'z:{page}':[", seite, f"{g}/{page} without a symbol")
+                self.assertIn(f"'z:{page}':'", seite, f"{g}/{page} without a symbol")
         meg = seite[seite.index("const MEG={"):seite.index("const MEI=")]
         for gid in re.findall(r"\['([a-z]+)','[^']+','[^']+'\]", guides[guides.index("const GGROUPS="):guides.index("const GSECT=")]):
-            self.assertRegex(meg, r"\b" + gid + r":\[", gid)
+            self.assertRegex(meg, r"\b" + gid + r":'", gid)
         self.assertIn("featGroupIcons();", seite)
 
     def test_people_list_is_tidy(self):
@@ -97,7 +102,7 @@ class Static(unittest.TestCase):
         # every page of the menu has its symbol
         js = read("js", "seite.js")
         for p in re.findall(r'<button data-p="(\w+)"', html[html.index('id="cfgnav"'):html.index('id="cfgback"')]):
-            self.assertRegex(js, rf"\b{p}:\[", p)
+            self.assertRegex(js, rf"\b{p}:'[a-z_]+'", p)     # a name of icons.js (test_every_menu_page_has_its_symbol)
 
     def test_feature_groups_match(self):
         # the Funktionen page (guides.js) and the feature register (features.py, Gesperrte Funktionen, the apps) use the

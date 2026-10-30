@@ -34,10 +34,8 @@ function fzStand(g){return g.stand==='abbau'?['warn',t('wird beim nächsten Kont
   :g.hostkey_falsch?['bad',t('Host-Schlüssel falsch','host key wrong')]:!g.erlaubt?['warn',t('gesperrt','blocked')]
   :g.online?['ok',t('online','online')]:['',t('offline','offline')]}
 // the kind of system as its icon (fixed pictures, never text from outside)
-const FZ_SVG={linux:'<path d="M7 9l3 3-3 3M12 15h5"/>',windows:'<path d="M4 5h7v6H4zM13 5h7v6h-7zM4 13h7v6H4zM13 13h7v6h-7z"/>',
-  macos:'<rect x="5" y="5" width="14" height="10" rx="1.5"/><path d="M3 19h18"/>'};
-function fzIcon(g,gross){const a=FZ_SVG[g.art]?g.art:'linux',s=fzEl('span','fzos '+a+(gross?' gross':''));
-  s.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+FZ_SVG[a]+'</svg>';return s}
+const FZ_OS=new Set(['linux','windows','macos']);
+function fzIcon(g,gross){const a=FZ_OS.has(g.art)?g.art:'linux',s=fzEl('span','fzos '+a+(gross?' gross':''));s.innerHTML=ic(a);return s}
 // what a running shell keeps when the page locks meanwhile: the rules of the chips and the assistant, never the systems
 const FZ_BLEIBT=FZ_MIT.concat(['max','leerlauf']);
 async function fzLoad(){clearTimeout(FZ.timer);const box=$('fzbox');if(!box||document.body.classList.contains('mgr')||FZ_FENSTER)return;
@@ -91,9 +89,9 @@ function fzShow(){const d=FZ.d,box=$('fzmain');if(!d||!box)return;const zu=!!(d.
   const akt=fzAktBereit(gs);$('fzalleakt').hidden=!akt.length;$('fzalleaktn').textContent=akt.length?'('+akt.length+')':'';
   const o=d.offen||[],jl=$('fzjetztlist');$('fzjetzt').hidden=!o.length;jl.textContent='';for(const x of o)jl.appendChild(fzJetztZeile(x,true));
   fzDetail();if($('fzverlaufmodal').style.display==='grid')fzVerlauf();fzSeite()}
-// one system in the list on the left: icon, name (📝 with a note, a tag with a session), the second line, a hit in its note
+// one system in the list on the left: icon, name (the note symbol with a note, a tag with a session), the second line, a hit in its note
 function fzSysZeile(g,tr){const [lvl]=fzStand(g),row=fzEl('button','fzrow'+(g.id===FZ.sel?' on':''));row.type='button';row.dataset.id=g.id;
-      const tx=fzEl('span','fzrtext'),nm=fzEl('span','fzrname');nm.appendChild(fzEl('b','',g.name));if(g.notiz){const n=fzEl('span','fznzmark','📝');n.title=t('hat eine Notiz','has a note');nm.appendChild(n)}if(g.sitzungen)nm.appendChild(fzEl('span','fztag',t('Sitzung','Session')));
+      const tx=fzEl('span','fzrtext'),nm=fzEl('span','fzrname');nm.appendChild(fzEl('b','',g.name));if(g.notiz){const n=fzEl('span','fznzmark');n.appendChild(icNode('note'));n.title=t('hat eine Notiz','has a note');nm.appendChild(n)}if(g.sitzungen)nm.appendChild(fzEl('span','fztag',t('Sitzung','Session')));
       tx.append(nm,fzEl('small','',[g.os,fzWie(g),g.anker_neu?t('Anker: neu ','anchor: new ')+g.anker_neu:''].filter(Boolean).join(' · ')));
       const h=tr[g.id];if(h){const sn=fzEl('small','fznzsnip');sn.append(document.createTextNode(t('Notiz: „','Note: "')+h.vor),fzEl('mark','',h.treffer),document.createTextNode(h.nach+t('“','"')));tx.appendChild(sn)}
       row.append(fzIcon(g),tx,fzEl('span','fzdot '+(g.sitzungen?'bad':lvl)));row.onclick=()=>{FZ.sel=g.id;FZ.ordner='';FZ.auf=true;fzShow()};return row}
@@ -630,14 +628,14 @@ function fzNotizZeigen(){const n=FZ.notiz,box=FZ.notizEl||(FZ.notizEl=fzEl('div'
       const b=fzEl('button','fzlink',t('Wiederherstellen','Restore'));b.type='button';b.onclick=()=>fzNotizZurueck(f.t);r.appendChild(b);fl.appendChild(r)}
     fl.appendChild(fzEl('div','fh',t('Die letzten 10 Fassungen bleiben erhalten; eine neue beginnt, wenn 10 Minuten nichts gespeichert wurde.','The last 10 versions are kept; a new one starts when nothing was saved for 10 minutes.')));box.appendChild(fl)}}
 function fzNotizKopf(box,n){const k=box.querySelector('.fznzkopf');if(!k)return;k.textContent='';
-  k.append(fzEl('b','','📝 '+t('Notizen','Notes')),fzEl('span','fznzstand'+(n.stand==='fehler'?' bad':''),n.stand==='tippt'?'…':n.stand==='speichert'?t('speichert …','saving …'):n.stand==='fehler'?t('nicht gespeichert','not saved'):n.t?'✓ '+t('gespeichert ','saved ')+fzUhr(n.t):''),fzEl('span','fzfill'));
+  k.append(fzEl('b','',t('Notizen','Notes')),fzEl('span','fznzstand'+(n.stand==='fehler'?' bad':''),n.stand==='tippt'?'…':n.stand==='speichert'?t('speichert …','saving …'):n.stand==='fehler'?t('nicht gespeichert','not saved'):n.t?'✓ '+t('gespeichert ','saved ')+fzUhr(n.t):''),fzEl('span','fzfill'));
   if(n.edit)for(const [l,tip,fn] of [['B',t('Fett','Bold'),()=>fzNotizMark('**','**')],['•',t('Liste','List'),()=>fzNotizZeile('- ')],['</>',t('Code-Block','Code block'),()=>fzNotizMark('```\n','\n```')]]){
     const b=fzEl('button','b fznzt',l);b.type='button';b.title=tip;b.setAttribute('aria-label',tip);b.onmousedown=e=>e.preventDefault();b.onclick=fn;k.appendChild(b)}
   if(n.fassungen&&n.fassungen.length){const f=fzEl('button','b fznzt',t('Fassungen','Versions')+' ('+n.fassungen.length+')');f.type='button';f.setAttribute('aria-expanded',String(!!n.offen));f.onclick=()=>{n.offen=!n.offen;fzNotizZeigen()};k.appendChild(f)}
   const e=fzEl('button','b fznzt'+(n.edit?' p':''),n.edit?t('Fertig','Done'):t('Bearbeiten','Edit'));e.type='button';e.onclick=()=>fzNotizEdit(!n.edit);e.disabled=!n.geladen;k.appendChild(e)}
 function fzNotizWarn(box,n){const w=box.querySelector('.fznzwarn');if(!w)return;w.textContent='';
   for(const x of n.warnungen||[]){const r=fzEl('div','note warn fznzw'),was=FZ_GEHEIM[x.art]||FZ_GEHEIM.token;
-    r.appendChild(document.createTextNode('⚠ '+t(`Zeile ${x.zeile} sieht aus wie ${was[0]}. Das gehört in den Tresor, nicht in die Notiz. `,`Line ${x.zeile} looks like ${was[1]}. That belongs in the vault, not in the note. `)));
+    r.append(icNode('warn'),document.createTextNode(' '+t(`Zeile ${x.zeile} sieht aus wie ${was[0]}. Das gehört in den Tresor, nicht in die Notiz. `,`Line ${x.zeile} looks like ${was[1]}. That belongs in the vault, not in the note. `)));
     const b=fzEl('button','fzlink',t('Entfernen','Remove'));b.type='button';b.onclick=()=>fzNotizWeg(x.zeile);r.appendChild(b);w.appendChild(r)}}
 function fzNotizEdit(on){const n=FZ.notiz;if(!n)return;if(!on)fzNotizSpeichern();n.edit=!!on;fzNotizZeigen();if(on){const ta=$('fznztext');if(ta)ta.focus()}}
 function fzNotizMark(a,b){const ta=$('fznztext'),n=FZ.notiz;if(!ta||!n)return;const s=ta.selectionStart,e=ta.selectionEnd,v=ta.value;

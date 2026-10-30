@@ -3551,7 +3551,7 @@ class ShellForReal(_ShellPage):
 class NotesForReal(_ShellPage):
     """Notizen in the real page (Dominik 2026-10-29, Bilder 1-detail und 2-terminal): the box under „Angaben“ saves
     while typing, shows the code lines with „Ins Terminal“ (the shell opens, the line is typed in, never Enter),
-    „gehört in den Tresor“ with „Entfernen“, the search finds the note with 📝, and the tab beside the assistant."""
+    „gehört in den Tresor“ with „Entfernen“, the search finds the note with the note symbol, and the tab beside the assistant."""
 
     def setUp(self):
         helpers.set_config(fernzugang_notizen=True)
@@ -3591,13 +3591,13 @@ class NotesForReal(_ShellPage):
             sent = await pg.evaluate("window._fzsent.join('')")
             self.assertIn("uptime", sent)
             self.assertNotRegex(sent, r"[\r\n]")                                # never with Enter
-            # after „Trennen“: the box under „Angaben“, the search finds the note text with 📝 and a snippet
+            # after „Trennen“: the box under „Angaben“, the search finds the note text with the note symbol and a snippet
             await pg.evaluate("fzTrennen()")
             await pg.wait_for_function("!$('fzmain').hidden&&!!document.querySelector('#fzdetail .fznotiz .fznzcode')", timeout=30000)
             await pg.fill("#fzsuche", "opt/shop")
             await pg.wait_for_function("!!document.querySelector('#fzlist .fznzsnip mark')", timeout=30000)
             self.assertEqual(await pg.evaluate("document.querySelector('#fzlist .fznzsnip mark').textContent"), "opt/shop")
-            self.assertIn("📝", await pg.evaluate("$('fzlist').textContent"))
+            self.assertTrue(await pg.evaluate("!!$('fzlist').querySelector('.fznzmark svg.ic')"))
         spy = ("window._fzsent=[];const _s=WebSocket.prototype.send;WebSocket.prototype.send=function(d){"
                "if(typeof d!=='string')window._fzsent.push(new TextDecoder().decode(d));return _s.call(this,d)}")
         self.run_page(body, init=spy)

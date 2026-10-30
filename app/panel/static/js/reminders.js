@@ -22,7 +22,7 @@ const rem={list:[],rung:new Set(),
     if(d.toDateString()!==n.toDateString())Object.assign(o,{day:'2-digit',month:'2-digit'});
     return d.toLocaleString(L==='en'?'en-GB':'de-DE',o)},
   show(){const el=$('remlist');el.hidden=!REM_ON||!this.list.length;
-    el.innerHTML=this.list.map(x=>`<span class="rem" title="${esc(x.text)}">⏰ <b>${this.when(x.due)}</b><span>${esc(x.text)}</span><button type="button" data-id="${esc(x.id)}" title="${t('Löschen','Cancel')}">✕</button></span>`).join('');
+    el.innerHTML=this.list.map(x=>`<span class="rem" title="${esc(x.text)}">${ic('alarm')} <b>${this.when(x.due)}</b><span>${esc(x.text)}</span><button type="button" data-id="${esc(x.id)}" title="${t('Löschen','Cancel')}">${ic('x')}</button></span>`).join('');
     el.querySelectorAll('button').forEach(b=>b.onclick=()=>this.drop(b.dataset.id))},
   // A profile's reminder rings on one device only: the first that plays it takes it on the Spark
   // (/api/profile/reminders/played); every other page, the iPhone app and push then stay silent.
@@ -34,10 +34,10 @@ const rem={list:[],rung:new Set(),
   async ring(x){this.rung.add(x.id);if(!await this.take(x))return;
     const card=x.vg&&window.vgLive;
     if(Date.now()-x.due>10*60e3){   // long missed (page was closed): shown quietly, not chimed or said
-      if(card)vgLive(x.vg,x.text);else chatLog('assistant','⏰ '+t('Verpasst ','Missed ')+'('+this.when(x.due)+'): '+x.text);return}
+      if(card)vgLive(x.vg,x.text);else chatLog('assistant',t('Verpasst ','Missed ')+'('+this.when(x.due)+'): '+x.text);return}
     const line=t('Erinnerung: ','Reminder: ')+x.text;
-    chime();setTimeout(chime,350);if(card)vgLive(x.vg,line);else chatLog('assistant','⏰ '+line).classList.add('alarm');
-    if(document.hidden)try{if(window.Notification&&Notification.permission==='granted')new Notification('⏰ '+x.text,{body:t('Erinnerung','Reminder'),tag:x.id})}catch{}
+    chime();setTimeout(chime,350);if(card)vgLive(x.vg,line);else chatLog('assistant',line).classList.add('alarm');
+    if(document.hidden)try{if(window.Notification&&Notification.permission==='granted')new Notification(x.text,{body:t('Erinnerung','Reminder'),tag:x.id})}catch{}
     if(chat.rec||chat.ctrl||playing())return;   // a conversation is running: the bubble and the chime suffice
     if(typeof voiceOn==='function'&&!voiceOn())return;   // Vorlesen off: the bubble and the chime suffice
     sayText(line)},

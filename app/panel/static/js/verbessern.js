@@ -32,10 +32,10 @@ function vbLists(d){const p=d.props||[];return {
 function vbRender(){const d=VB.d;if(!d)return;const L=vbLists(d);
   $('vboff').hidden=d.on;$('vbmain').hidden=!d.on;
   $('vbneed').innerHTML=d.on?vbNeed(d,L):'';$('vbneed').hidden=!d.on;
-  const lv=d.live||{};$('vbsum').textContent=d.on?t(`Heute ${lv.gut||0} 👍 · ${lv.schlecht||0} 👎 · ${lv.faelle||0} neue Fälle · ${L.props.length} ${L.props.length===1?'Vorschlag':'Vorschläge'} offen`,
-    `Today ${lv.gut||0} 👍 · ${lv.schlecht||0} 👎 · ${lv.faelle||0} new cases · ${L.props.length} ${L.props.length===1?'proposal':'proposals'} open`)+(d.model?'':' · '+t('ohne Sprachmodell im Heimnetz: die Regel wählt','no language model at home: the rule picks')):'';
-  // the 👍 share per group (7 days): red under 75 % (from 20 ratings on that is a finding of its own)
-  $('vbquote').innerHTML=(d.quote||[]).length?esc(t('👍-Quote, 7 Tage: ','👍 share, 7 days: '))+d.quote.map(q=>`<span class="${q.pct<75&&q.good+q.bad>=20?'vbqbad':''}">${esc(q.name)} ${q.pct} % (${q.good+q.bad})</span>`).join(' · '):'';
+  const lv=d.live||{};$('vbsum').innerHTML=d.on?esc(t('Heute ','Today '))+`${ic('up_thumb')} ${lv.gut||0} · ${ic('down_thumb')} ${lv.schlecht||0} · `+esc(t(`${lv.faelle||0} neue Fälle · ${L.props.length} ${L.props.length===1?'Vorschlag':'Vorschläge'} offen`,
+    `${lv.faelle||0} new cases · ${L.props.length} ${L.props.length===1?'proposal':'proposals'} open`)+(d.model?'':' · '+t('ohne Sprachmodell im Heimnetz: die Regel wählt','no language model at home: the rule picks'))):'';
+  // the share of good ratings per group (7 days): red under 75 % (from 20 ratings on that is a finding of its own)
+  $('vbquote').innerHTML=(d.quote||[]).length?ic('up_thumb')+' '+esc(t('Anteil gut, 7 Tage: ','share good, 7 days: '))+d.quote.map(q=>`<span class="${q.pct<75&&q.good+q.bad>=20?'vbqbad':''}">${esc(q.name)} ${q.pct} % (${q.good+q.bad})</span>`).join(' · '):'';
   $('vbquote').hidden=!d.on||!(d.quote||[]).length;
   const tabs=[['cases',t('Eingang','Inbox'),L.cases.length],['props',t('Vorschläge','Proposals'),L.props.length],['check',t('Nachkontrolle','Re-check'),L.check.length],
     ['done',t('Erledigt','Done'),L.done.length],['luecken',t('Lücken','Gaps'),L.luecken.length],['regeln',t('Regeln','Rules'),L.regeln.length],['bericht',t('Bericht','Report'),''],['kat',t('Katalog','Catalog'),L.kat.length]];
@@ -49,7 +49,7 @@ function vbRender(){const d=VB.d;if(!d)return;const L=vbLists(d);
     check:t('Nichts wartet auf die Nachkontrolle.','Nothing waits for the re-check.'),done:t('Noch nichts erledigt.','Nothing done yet.')}[VB.tab])}</div>`;
   else html=(VB.tab==='props'?vbLegend(d):'')+rows.slice(0,VB.more).map(x=>VB.tab==='cases'?vbCaseRow(x,d):vbPropRow(x)).join('')+(rows.length>VB.more?`<div class="ld-more"><button type="button" class="b" data-vbmore="1">${esc(t('Weitere zeigen','Show more'))}</button></div>`:'');
   $('vblist').innerHTML=html;vbDetail()}
-// „Was braucht dich“ (Plan 7): what waits for the admin in plain words, the best pick one tap away, and the 👍 share of
+// „Was braucht dich“ (Plan 7): what waits for the admin in plain words, the best pick one tap away, and the share of good ratings of
 // the last 7 days as a light (green from 85 %, yellow from 75 %, red below; a colour only from 20 ratings on)
 function vbNeed(d,L){const take=L.props.filter(x=>'ABC'.includes(x.stufe)&&x.pruef&&x.pruef.ok),self=L.props.filter(x=>x.stufe==='U'),rep=L.props.filter(x=>x.stufe==='I');
   const n=take.length+self.length+rep.length,cases=rep.reduce((a,x)=>a+Math.max(1,(x.faelle||[]).length),0);
@@ -60,8 +60,8 @@ function vbNeed(d,L){const take=L.props.filter(x=>'ABC'.includes(x.stufe)&&x.pru
   const pct=g+b?Math.round(100*g/(g+b)):null,cls=pct==null||g+b<20?'':pct>=85?'vbqok':pct>=75?'vbqmid':'vbqbad';
   const best=d.best&&(d.props||[]).find(x=>x.id===d.best);
   return `<b>${esc(n?t(`${n} ${n===1?'Ding braucht':'Dinge brauchen'} dich: `,`${n} ${n===1?'thing needs':'things need'} you: `)+parts.join(' · '):t('Nichts braucht dich gerade.','Nothing needs you right now.'))}</b>`+
-    (best?` <button type="button" class="mlink" data-vbsel="p${esc(best.id)}">★ ${esc(vbT(best.title))}</button>`:'')+
-    (pct!=null?`<br><span class="${cls}">${esc(t(`Bewertungen der letzten 7 Tage: ${g} 👍 · ${b} 👎 (${pct} % gut)`,`Ratings of the last 7 days: ${g} 👍 · ${b} 👎 (${pct} % good)`))}</span>`:'')}
+    (best?` <button type="button" class="mlink" data-vbsel="p${esc(best.id)}">${ic('star')} ${esc(vbT(best.title))}</button>`:'')+
+    (pct!=null?`<br><span class="${cls}">${esc(t('Bewertungen der letzten 7 Tage: ','Ratings of the last 7 days: '))}${ic('up_thumb')} ${g} · ${ic('down_thumb')} ${b} ${esc(t(`(${pct} % gut)`,`(${pct} % good)`))}</span>`:'')}
 function vbCaseRow(x,d){const k=(d.kinds||{})[x.kind]||[x.kind,x.kind];
   const sub=x.karte?vbT(x.karte.was):[x.title||'',x.tool?wzName(x.tool):''].filter(Boolean).join(' · ');
   return `<div class="ld-row${VB.sel==='c'+x.id?' on':''}" tabindex="0" data-vbsel="c${esc(x.id)}"><div class="ld-mid"><b>${esc(vbT(k))}</b><small>${esc(sub||'–')}</small></div>
@@ -70,7 +70,7 @@ function vbPropRow(x){const st=x.status==='uebernommen'&&x.check?VBRES[x.check.r
   const cls=x.status==='offen'?(x.pruef&&x.pruef.ok?'read':'err'):x.check&&x.check.result==='schlechter'?'err':x.check&&x.check.result==='hilft'?'sh':'off';
   const n=(x.faelle||[]).length,sub=(n>1?t(`${n} Fälle · `,`${n} cases · `):'')+(x.karte?vbT(x.karte.was):x.why||'');
   return `<div class="ld-row${VB.sel==='p'+x.id?' on':''}" tabindex="0" data-vbsel="p${esc(x.id)}"><div class="ld-mid"><b>${esc(vbT(x.title))}</b><small>${esc(sub)}</small></div>
-    <div class="ld-right">${VB.d&&VB.d.best===x.id?`<span class="ld-badge sh">★ ${esc(t('beste Empfehlung','best pick'))}</span>`:''}<span class="ld-badge ${cls}">${esc(st)}</span><span class="ld-badge off">${esc(vbStufe(x.stufe))}</span>${x.auto?`<span class="ld-badge due">${esc(t('Autopilot','autopilot'))}</span>`:''}</div></div>`}
+    <div class="ld-right">${VB.d&&VB.d.best===x.id?`<span class="ld-badge sh">${ic('star')} ${esc(t('beste Empfehlung','best pick'))}</span>`:''}<span class="ld-badge ${cls}">${esc(st)}</span><span class="ld-badge off">${esc(vbStufe(x.stufe))}</span>${x.auto?`<span class="ld-badge due">${esc(t('Autopilot','autopilot'))}</span>`:''}</div></div>`}
 function vbKat(d){const g={A:[],B:[],C:[],P:[]};for(const e of d.katalog||[])(g[e.stufe]||[]).push(e);
   return Object.entries(g).map(([s,rows])=>`<div class="ld-grp"><span>${esc(vbStufe(s))}</span><span>${rows.length}</span></div>`+rows.map(e=>`<div class="ld-row" style="cursor:default"><div class="ld-mid"><b>${esc(vbT(e.name))}</b><small>${esc(e.way)}${e.range?' · '+esc(e.range[0]+' … '+e.range[1]+', '+t('Schritt','step')+' '+e.range[2]):''}</small></div></div>`).join('')).join('')+
     `<div class="ld-grp"><span>${esc(t('Stufe D · nie','Stage D · never'))}</span><span>${(d.never||[]).length}</span></div>`+(d.never||[]).map(x=>`<div class="ld-row" style="cursor:default"><div class="ld-mid"><b>${esc(vbT(x))}</b></div></div>`).join('')+
@@ -94,7 +94,7 @@ function vbBuiltin(d){const b=d.eingebaut||[];if(!b.length)return '';
 function vbReport(r){const g=r.groups||[];
   return `<div class="ld-note">${esc(t(`Letzte ${r.days||30} Tage: ${r.taken||0} Regeln übernommen (${r.auto||0} Autopilot), ${r.helped||0} geholfen, ${r.worse||0} schlechter, ${r.undone||0} zurückgenommen · ${r.open||0} Vorschläge offen · ${r.gaps||0} Lücken · ${r.rules||0} eigene Regeln`,
     `Last ${r.days||30} days: ${r.taken||0} rules taken (${r.auto||0} autopilot), ${r.helped||0} helped, ${r.worse||0} worse, ${r.undone||0} undone · ${r.open||0} proposals open · ${r.gaps||0} gaps · ${r.rules||0} own rules`))}</div>`+
-    g.map(x=>`<div class="ld-row" style="cursor:default"><div class="ld-mid"><b>${esc(x.name)}</b><small>${x.good} 👍 · ${x.bad} 👎</small></div><div class="ld-right"><span class="ld-badge ${x.before!=null&&x.pct<x.before?'err':x.before!=null&&x.pct>x.before?'sh':''}">${x.pct==null?'–':x.pct+' %'}${x.before!=null?' ('+esc(t('davor','before'))+' '+x.before+' %)':''}</span></div></div>`).join('')}
+    g.map(x=>`<div class="ld-row" style="cursor:default"><div class="ld-mid"><b>${esc(x.name)}</b><small>${ic('up_thumb')} ${x.good} · ${ic('down_thumb')} ${x.bad}</small></div><div class="ld-right"><span class="ld-badge ${x.before!=null&&x.pct<x.before?'err':x.before!=null&&x.pct>x.before?'sh':''}">${x.pct==null?'–':x.pct+' %'}${x.before!=null?' ('+esc(t('davor','before'))+' '+x.before+' %)':''}</span></div></div>`).join('')}
 // Version 3: export, import (Prüfstand first) and the kept versions of the rules
 function vbRuleTools(d){const v=d.versionen||[];
   return `<div class="ld-acts"><button type="button" class="b" data-vbrx="export">${esc(t('Exportieren','Export'))}</button><label class="b" style="cursor:pointer">${esc(t('Importieren','Import'))}<input type="file" accept="application/json,.json" data-vbrx="import" hidden></label></div>`+
@@ -104,7 +104,7 @@ async function vbImport(file,force){let rules;try{const j=JSON.parse(await file.
     if(!im.ok){if(confirm(t(`${im.count} Testsätze der Weiche kämen anders heraus. Trotzdem importieren?`,`${im.count} test sentences of the Weiche would come out differently. Import anyway?`)))return vbImport(file,true)}
     else $('vbmsg').textContent=t('Regeln importiert; die Version davor ist aufgehoben.','Rules imported; the version before is kept.');vbRender()}catch(e){$('vbmsg').textContent=e.message}}
 // the Befund (befund.py): the cause by fixed rules, before any proposal
-const VBSRC={person:t('laut Person (👎)','by the person (👎)'),admin:t('laut Admin','by the admin'),weiche:t('laut Weiche','by the Weiche'),frage:t('aus der Frage','from the question'),pflicht:t('Pflicht-Regel','must rule')};
+const VBSRC={person:t('laut Person (schlecht bewertet)','by the person (rated bad)'),admin:t('laut Admin','by the admin'),weiche:t('laut Weiche','by the Weiche'),frage:t('aus der Frage','from the question'),pflicht:t('Pflicht-Regel','must rule')};
 function vbBefund(rows){return (rows||[]).length?`<div class="ld-note"><span class="mut">${esc(t('Befund:','Finding:'))}</span> `+rows.map(r=>esc(t(r.de,r.en))+(r.src&&VBSRC[r.src]?` <span class="mut">(${esc(VBSRC[r.src])})</span>`:'')).join('<br>')+'</div>':''}
 function vbSoll(x,d){const k=d.karte||[],cur=(x.want_tool||[])[0]||'';const top=Object.entries(x.soll||{}).sort((a,b)=>b[1]-a[1])[0];
   return `<label for="vbsoll">${esc(t('Was wäre richtig gewesen? Erwartetes Werkzeug','What would have been right? Expected tool'))}</label>`+
@@ -131,7 +131,7 @@ function vbDetail(){const el=$('vbdetail'),f=vbFind(),box=$('vbbox');el.hidden=!
   const x=f.p,pr=x.pruef||{};
   const ch=x.change||{},facts=[[t('Art','Kind'),vbStufe(x.stufe)],[t('Zustand','State'),VBST[x.status]||x.status],[t('Seit','Since'),vbWhen(x.t)]];
   if('old' in ch)facts.push([t('Jetzt','Now'),String(ch.old)],[t('Neu','New'),String(ch.new)]);
-  if(x.check)facts.push([t('Nachkontrolle','Re-check'),(VBRES[x.check.result]||x.check.result)+' · '+t(`${x.check.again} neue Meldungen`,`${x.check.again} new reports`)+(x.check.drop!=null?' · 👍 '+(x.check.drop>0?'−':'+')+Math.abs(x.check.drop)+t(' Punkte',' points'):'')]);
+  if(x.check)facts.push([t('Nachkontrolle','Re-check'),(VBRES[x.check.result]||x.check.result)+' · '+t(`${x.check.again} neue Meldungen`,`${x.check.again} new reports`)+(x.check.drop!=null?' · '+t('Anteil gut ','share good ')+(x.check.drop>0?'−':'+')+Math.abs(x.check.drop)+t(' Punkte',' points'):'')]);
   else if(x.check_at&&x.status==='uebernommen')facts.push([t('Nachkontrolle','Re-check'),vbWhen(x.check_at)]);
   let acts='';
   if(x.status==='offen'){
@@ -174,7 +174,7 @@ function vbWeg(id){const w=VB.weg[id];if(!w)return '';
 // „Warum dieser Vorschlag“ (berater._prop_why, best_pick): the cause it fits, what it risks and how it is undone,
 // the cases it stands for (each opens its own card)
 function vbWhy(x){const fs=x.faelle||[];
-  return `<div class="vbk-s"><b>${esc(t('Warum dieser Vorschlag','Why this proposal'))}</b>${VB.d.best===x.id?`<span class="ld-badge sh">★ ${esc(t('beste Empfehlung','best pick'))}</span> `:''}${esc(vbT(x.warum))}`+
+  return `<div class="vbk-s"><b>${esc(t('Warum dieser Vorschlag','Why this proposal'))}</b>${VB.d.best===x.id?`<span class="ld-badge sh">${ic('star')} ${esc(t('beste Empfehlung','best pick'))}</span> `:''}${esc(vbT(x.warum))}`+
     (vbRisk(x.stufe)?`<br><span class="mut">${esc(t('Risiko und Rückgängig:','Risk and undo:'))}</span> ${esc(vbRisk(x.stufe))}`:'')+
     (fs.length>1?`<ol class="vbk-cases">${fs.map(c=>`<li><button type="button" class="mlink" data-vbsel="c${esc(c.case)}">${esc(c.was?vbT(c.was):c.why||c.case)}</button></li>`).join('')}</ol>`:'')+'</div>'}
 // Ideen außerhalb des Katalogs: only to read, a way to the named setting, steps to copy; the panel never applies them
@@ -228,5 +228,5 @@ if($('vbbox')){
   $('vbrun').onclick=async()=>{$('vbmsg').textContent=t('Schaue nach …','Looking …');
     try{VB.d=await (await api('/api/admin/berater/run',{method:'POST'})).json();$('vbmsg').textContent=t(`${VB.d.made||0} neue Vorschläge.`,`${VB.d.made||0} new proposals.`);vbRender()}catch(e){$('vbmsg').textContent=e.message}}}
 window.loadVerb=loadVerb;
-// the 👎 on a request in Zustand → Logs → Anfragen jumps to its case (logs.js rdetail)
+// the thumbs down on a request in Zustand → Logs → Anfragen jumps to its case (logs.js rdetail)
 window.openCase=id=>{VB.tab='cases';VB.sel='c'+id;VB.more=10;if(typeof goSec==='function')goSec('verb')};

@@ -65,7 +65,7 @@ function palMe(){if(!PROFILE||palWarm||typeof renderSet!=='function'||GATE||isGu
 function palOpen(){if(!ADMIN&&!PROFILE)return;const p=$('fpal');p.hidden=false;PAL.open=true;PAL.sel=0;$('palq').value='';palDraw();palMe();setTimeout(()=>$('palq').focus(),0)}
 function palClose(){$('fpal').hidden=true;PAL.open=false}
 (function(){const p=document.createElement('div');p.id='fpal';p.className='fpal';p.hidden=true;p.setAttribute('role','dialog');p.setAttribute('aria-modal','true');
-  p.innerHTML=`<div class="fbox"><div class="fin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="palq" type="search" autocomplete="off"><button type="button" class="fx" id="palx">✕</button></div><div class="fres" id="palres"></div><div class="ffoot"><span></span><span></span><span></span></div></div>`;
+  p.innerHTML=`<div class="fbox"><div class="fin">${ic('find')}<input id="palq" type="search" autocomplete="off"><button type="button" class="fx" id="palx">${ic('x')}</button></div><div class="fres" id="palres"></div><div class="ffoot"><span></span><span></span><span></span></div></div>`;
   document.body.appendChild(p);const q=$('palq');q.placeholder=t('Suchen …','Search …');q.setAttribute('aria-label',t('Suchen','Search'));
   const f=p.querySelectorAll('.ffoot span');f[0].textContent=t('↑↓ wählen','↑↓ choose');f[1].textContent=t('Enter öffnen','Enter opens');f[2].textContent=t('Esc schließt','Esc closes');
   p.onclick=e=>{if(e.target===p)palClose()};

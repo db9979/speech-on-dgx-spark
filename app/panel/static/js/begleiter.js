@@ -107,7 +107,7 @@ async function showDesk(){const box=$('deskbox');if(!box)return;if(!PROFILE||!DE
     <div class="fh" id="dkmsg"></div>
     <label>${esc(t('Gekoppelte Geräte','Paired devices'))}</label>
     ${d.devices.map(dev).join('')||`<div class="fh mut">${esc(t('Noch keins.','None yet.'))}</div>`}
-    <div class="fh">${esc(t('Neue Versionen holt der Spark selbst; das Programm zeigt sie an und installiert erst nach deinem Klick. Der Spark ist kostenlos: ','The Spark fetches new versions itself; the program shows them and installs only after your click. The Spark is free: '))}<a href="${DESK_COFFEE}" target="_blank" rel="noopener">☕ ${esc(t('Spark unterstützen','Support Spark'))}</a></div>`:''}`;
+    <div class="fh">${esc(t('Neue Versionen holt der Spark selbst; das Programm zeigt sie an und installiert erst nach deinem Klick. Der Spark ist kostenlos: ','The Spark fetches new versions itself; the program shows them and installs only after your click. The Spark is free: '))}<a href="${DESK_COFFEE}" target="_blank" rel="noopener">${ic('coffee')} ${esc(t('Spark unterstützen','Support Spark'))}</a></div>`:''}`;
   xbind(box,showDesk);
   if(!d.on)return;
   $('dkpair').onclick=async()=>{xmsg('dkmsg','…');

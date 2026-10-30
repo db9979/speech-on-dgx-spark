@@ -39,7 +39,7 @@ function rmDraw(box,d){const E=icEl,lib=d.library||[];
   const st=d.busy?t('Abgleich läuft …','Comparing …'):t('zuletzt abgeglichen ','last compared ')+rmWhen(d.last);
   const sync=E('button','b',t('Jetzt abgleichen','Compare now'));sync.type='button';sync.id='rmsync';sync.disabled=!!d.busy;sync.prepend(icSvg('sync',14));
   sync.onclick=async()=>{try{await api('/api/profile/remarkable/sync',{method:'POST'});showRm()}catch(e){xmsg('rmmsg',e.message,true)}};
-  box.appendChild(icCard('pen',t('my.remarkable','my.remarkable'),t('Verbunden seit ','Connected since ')+rmWhen(d.since)+' · '+st+(d.error?' · ⚠ '+d.error:''),[sync],
+  box.appendChild(icCard('pen',t('my.remarkable','my.remarkable'),t('Verbunden seit ','Connected since ')+rmWhen(d.since)+' · '+st+(d.error?' · '+t('Fehler: ','Error: ')+d.error:''),[sync],
     [{label:t('Trennen …','Disconnect …'),danger:true,act:rmDisconnect}]));
   if(!d.pictures)box.appendChild(E('div','fh',t('Handschrift wird erst gelesen, wenn unter Ich → Dokumente „Bilder und Scans lesen lassen“ an ist. Getippter Text und Markierungen kommen sofort.','Handwriting is only read once "Let pictures and scans be read" is on under Me → Documents. Typed text and highlights come at once.')));
   const stats=[[d.count,t('Notizbücher im Spark','notebooks on the Spark')],[RMALL?t('alle','all'):String(RMPICK.size),t('ausgewählt zum Lesen','chosen to read')]];

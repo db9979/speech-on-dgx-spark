@@ -1,5 +1,5 @@
-// 👍/👎 under an answer (faelle.py, plan einstellungs-assistent.md Punkt 12): only for a profile whose switch is on
-// (the server sends a "rate" event with an id only then). 👎 opens five reasons, a short text (200 characters) and
+// thumbs up and down under an answer (faelle.py, plan einstellungs-assistent.md Punkt 12): only for a profile whose switch is on
+// (the server sends a "rate" event with an id only then). Thumbs down opens five reasons, a short text (200 characters) and
 // „Frage mitschicken“ (off: without it the case keeps no words of the question). A vote can be changed.
 // Also: Ich → Gespräch „Vorschläge für dich“ (berater.py, Punkt 10): the profile's own settings, taken only here.
 const RATE_WHY=[['werkzeug',t('falsches Werkzeug','wrong tool')],['antwort',t('falsche Antwort','wrong answer')],['langsam',t('zu langsam','too slow')],
@@ -9,8 +9,8 @@ const RATE_SOLL=[['dokumente',t('meinen Dokumenten','my documents')],['erstellt'
   ['kalender',t('Kalender','calendar')],['mail',t('Mails','mails')],['geraete',t('Geräten','devices')],['erinnerung',t('Erinnerungen','reminders')],
   ['web',t('Web','web')],['verlauf',t('früheren Gesprächen','earlier conversations')]];
 function rateBar(id){const d=document.createElement('div');d.className='ratebar';d.dataset.rid=id;
-  d.innerHTML=`<button type="button" class="b rb" data-rate="up" aria-label="${esc(t('Gute Antwort','Good answer'))}" title="${esc(t('Gute Antwort','Good answer'))}">👍</button>`+
-    `<button type="button" class="b rb" data-rate="down" aria-label="${esc(t('Schlechte Antwort','Bad answer'))}" title="${esc(t('Schlechte Antwort','Bad answer'))}">👎</button><span class="mut rmsg"></span>`;
+  d.innerHTML=`<button type="button" class="b rb" data-rate="up" aria-label="${esc(t('Gute Antwort','Good answer'))}" title="${esc(t('Gute Antwort','Good answer'))}">${ic('up_thumb')}</button>`+
+    `<button type="button" class="b rb" data-rate="down" aria-label="${esc(t('Schlechte Antwort','Bad answer'))}" title="${esc(t('Schlechte Antwort','Bad answer'))}">${ic('down_thumb')}</button><span class="mut rmsg"></span>`;
   return d}
 async function rateSend(bar,body){const m=bar.querySelector('.rmsg');
   try{await api('/api/chat/rate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({id:bar.dataset.rid},body))});

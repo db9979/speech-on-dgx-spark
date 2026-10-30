@@ -194,7 +194,7 @@ function knMarkApply(blink,from,src){const box=$('tkview'),p=knPd();if(!box||!p)
   const li=box.querySelector(`.kn-steps li[data-kns="${id}"]`),g=box.querySelector(`.kn-svg g.kn-st[data-kns="${id}"]`);
   if(li)li.insertAdjacentHTML('beforeend',knRelHtml(p,id));
   if(!knWide()&&from==='bild'&&g){const pic=g.closest('.kn-pic'),r=g.getBoundingClientRect(),q=pic.getBoundingClientRect();
-    pic.insertAdjacentHTML('beforeend',`<div class="kn-pop" style="top:${Math.round(r.bottom-q.top+pic.scrollTop+6)}px"><button class="b kn-popx" type="button" data-knmk="" aria-label="${esc(t('Schließen','Close'))}">✕</button><b>${esc(st.n+'. '+st.name)}</b> ${esc(st.text)}${knRelHtml(p,id)}</div>`)}
+    pic.insertAdjacentHTML('beforeend',`<div class="kn-pop" style="top:${Math.round(r.bottom-q.top+pic.scrollTop+6)}px"><button class="b kn-popx" type="button" data-knmk="" aria-label="${esc(t('Schließen','Close'))}">${ic('x')}</button><b>${esc(st.n+'. '+st.name)}</b> ${esc(st.text)}${knRelHtml(p,id)}</div>`)}
   if(!blink)return;const pop=box.querySelector('.kn-pop');
   if(from==='bild'){knBlink([g,pop||li].filter(Boolean));if(pop)knInView(pop);else if(li)knInView(li);return}
   // a line or the text was clicked: the page stays where it is; a bubble out of sight shows up under the line

@@ -44,7 +44,7 @@ function mkCard(c){const d=document.createElement('div');d.className='hcard mkca
   const draw=()=>{const fm=(c.formats||[c.format]).map(f=>[f,MKFMT[f]||f]),st=mkStyles().length?mkStyles():[[c.style,c.style]];
     d.innerHTML=`<h4>${esc(c.kind_name||t('Dokument','Document'))}</h4>
       <label class="mklbl">${esc(t('Titel','Title'))}<input class="mktitle" maxlength="200" value="${esc(c.title||'')}"></label>
-      <ol class="mksecs">${secs.map((s,i)=>`<li><input data-mksec="${i}" maxlength="200" value="${esc(s.heading)}" aria-label="${esc(t('Teil ','Part ')+(i+1))}">${secs.length>1?`<button type="button" class="mlink" data-mkrm="${i}" aria-label="${esc(t('Teil weglassen','Remove part'))}">✕</button>`:''}</li>`).join('')}</ol>
+      <ol class="mksecs">${secs.map((s,i)=>`<li><input data-mksec="${i}" maxlength="200" value="${esc(s.heading)}" aria-label="${esc(t('Teil ','Part ')+(i+1))}">${secs.length>1?`<button type="button" class="mlink" data-mkrm="${i}" aria-label="${esc(t('Teil weglassen','Remove part'))}">${ic('x')}</button>`:''}</li>`).join('')}</ol>
       ${c.kind!=='brief'&&secs.length<((MK&&MK.limits&&MK.limits.sections)||30)?`<button type="button" class="mlink" data-mkdo="add">+ ${esc(t('Teil','Part'))}</button>`:''}
       <div class="mkpick"><label>${esc(t('Format','Format'))}<select data-mk="format">${mkOpts(fm,c.format)}</select></label>
         <label>${esc(t('Aussehen','Look'))}<select data-mk="style">${mkOpts(st,c.template||c.style)}</select></label></div>
@@ -133,13 +133,13 @@ async function mkOpen(id,v){MKOPEN={id,v:v||0};const box=$('mkview');if(!box)ret
     ${(s.steps||[]).length?`<ol>${s.steps.map(p=>`<li><b>${esc(p.label||'')}</b> ${esc(p.text||'')}</li>`).join('')}</ol>`:''}
     ${s.compare?['left','right'].map(k=>{const x=s.compare[k]||{};return `<p><b>${esc(x.title||'')}</b>: ${esc((x.points||[]).join(' · '))}</p>`}).join(''):''}
     ${s.table?`<div class="mktbl"><table>${(s.table.head||[]).length?`<tr>${s.table.head.map(h=>`<th>${esc(h)}</th>`).join('')}</tr>`:''}${(s.table.rows||[]).slice(0,30).map(r=>`<tr>${r.map(x=>`<td>${esc(x)}</td>`).join('')}</tr>`).join('')}</table>${(s.table.rows||[]).length>30?`<small class="mut">${esc(t(`… und ${s.table.rows.length-30} weitere Zeilen in der Datei`,`… and ${s.table.rows.length-30} more rows in the file`))}</small>`:''}</div>`:''}
-    ${s.chart?`<div class="mut">📊 ${esc(t('Diagramm','Chart'))}: ${esc(s.chart.title||'')} (${esc(s.chart.labels.length+' '+t('Werte','values'))})</div>`:''}
-    ${(s.pictures||[]).length?`<div class="mut">🖼 ${esc(t(`${s.pictures.length} Bild(er)`,`${s.pictures.length} picture(s)`))}</div>`:''}
-    ${s.wikipic?`<div class="mut">🖼 ${esc(s.wikipic.credit||t('Bild aus dem Kiwix','Picture from the Kiwix'))}</div>`:''}
+    ${s.chart?`<div class="mut">${ic('chart')} ${esc(t('Diagramm','Chart'))}: ${esc(s.chart.title||'')} (${esc(s.chart.labels.length+' '+t('Werte','values'))})</div>`:''}
+    ${(s.pictures||[]).length?`<div class="mut">${ic('image')} ${esc(t(`${s.pictures.length} Bild(er)`,`${s.pictures.length} picture(s)`))}</div>`:''}
+    ${s.wikipic?`<div class="mut">${ic('image')} ${esc(s.wikipic.credit||t('Bild aus dem Kiwix','Picture from the Kiwix'))}</div>`:''}
     ${s.chart&&s.chart.source?`<small class="mut">${esc(t('Quelle: ','Source: ')+s.chart.source)}</small>`:''}
     ${s.notes?`<small class="mut">${esc(t('Notizen: ','Notes: ')+s.notes)}</small>`:''}<div class="mkedit"></div></div>`;
   const L_=c.letter;
-  box.innerHTML=`<div class="dvhead"><b>${esc(d.title)}</b><span><button type="button" class="b" data-mkdo="close">✕</button></span></div>
+  box.innerHTML=`<div class="dvhead"><b>${esc(d.title)}</b><span><button type="button" class="b" data-mkdo="close">${ic('x')}</button></span></div>
     <div class="mkpick"><label>${esc(t('Version','Version'))}<select data-mk="ver">${mkOpts(d.history.slice().reverse().map(h=>[String(h.n),h.n+' · '+mkWhen(h.t)+(h.note?' · '+h.note:'')]),String(d.v))}</select></label>
       ${old?`<button type="button" class="b" data-mkdo="restore" data-v="${d.v}">${esc(t('Diese Version zurückholen','Bring back this version'))}</button>`:''}</div>
     <div class="mkpick"><label>${esc(t('Datei als','File as'))}<select data-mk="fmt">${mkOpts(fm,d.format)}</select></label><a class="b p" data-mk="dl" data-mkdl="${esc(id)}" data-fmt="${esc(d.format)}" data-v="${old?d.v:''}" href="${mkFile(id,d.format,old?d.v:0)}">${esc(t('Herunterladen','Download'))}</a><button type="button" class="b" data-mkdo="link">${esc(t('Link kopieren','Copy link'))}</button>

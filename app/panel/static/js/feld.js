@@ -42,7 +42,7 @@ document.addEventListener('keydown',e=>{const ta=e.target;if(feldOn(ta)&&ta.data
 // ⤢ und Zähler: je ein Element für die ganze Seite, am Feld mit dem Cursor
 function feldEl(){if($('feldgross'))return;const b=document.createElement('button');b.type='button';b.id='feldgross';b.className='ib';b.hidden=true;
   b.title=t('Groß bearbeiten','Edit in a large view');b.setAttribute('aria-label',b.title);
-  b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg>';
+  b.innerHTML=ic('grow');
   b.addEventListener('pointerdown',e=>e.preventDefault());b.addEventListener('click',()=>{if(FELD.cur)feldGross(FELD.cur)});
   const z=document.createElement('span');z.id='feldzahl';z.hidden=true;z.setAttribute('aria-live','polite');document.body.append(b,z)}
 function feldZahl(ta){const max=ta.maxLength,n=ta.value.length;return max>0&&n>=max*FELD.warn?n.toLocaleString()+' / '+max.toLocaleString():''}

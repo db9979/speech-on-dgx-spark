@@ -34,7 +34,7 @@
 <div id="updtoast" class="updtoast" style="display:none"></div>
 <div id="roomlive" class="roomlive" hidden><i></i><span></span><button class="b" type="button" id="roomlivego">Ansehen</button></div>
 <div id="llmbanner" class="updbanner llmbanner" style="display:none"><span id="llmbtext"></span><button class="b" id="llmbgo" type="button">Ansehen</button></div>
-<div id="updbanner" class="updbanner" style="display:none"><span id="updbtext"></span><button class="b p" id="updbgo" type="button">Zum Update</button><button class="ib" id="updbx" type="button" title="Später">✕</button></div>
+<div id="updbanner" class="updbanner" style="display:none"><span id="updbtext"></span><button class="b p" id="updbgo" type="button">Zum Update</button><button class="ib" id="updbx" type="button" title="Später"><i data-ic="x"></i></button></div>
 <div id="notausband" class="notausband" role="alert" hidden><b id="nbtitle"></b><span id="nbtext"></span><button class="b" id="nbup" type="button" hidden>Stufe erhöhen</button><button class="b nblift" id="nblift" type="button" hidden>Wieder einschalten …</button></div>
 <div id="notausall" class="notausall" hidden><div class="card"><div class="nadot"></div><h2 id="natitle">Notaus</h2><p id="natext"></p><p class="mut" id="nameta"></p>
   <div class="row"><button class="b nared" id="naup" type="button" hidden>Stufe erhöhen</button><button class="b p" id="nalift" type="button" hidden>Wieder einschalten …</button><button class="b" id="nalogin" type="button" hidden>Als Admin anmelden</button></div></div></div>
@@ -984,12 +984,12 @@
       <div class="cx-log" id="cxlog" role="log" aria-live="polite" hidden></div>
       <div class="cx-pane" id="cxpane" hidden></div>
       <div class="cx-why" id="cxwhy" hidden></div>
-      <div class="cx-reply" id="cxreply" hidden><span></span><button type="button" class="ib" id="cxreplyx" aria-label="Antwort abbrechen">✕</button></div>
+      <div class="cx-reply" id="cxreply" hidden><span></span><button type="button" class="ib" id="cxreplyx" aria-label="Antwort abbrechen"><i data-ic="x"></i></button></div>
       <form class="cx-comp" id="cxcomp" hidden><button type="button" class="ib cx-att" id="cxatt" hidden title="Foto oder Datei schicken" aria-label="Foto oder Datei schicken"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5l-8.6 8.6a5 5 0 0 1-7.1-7.1l8.6-8.6a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l7.9-7.9"/></svg></button><input type="file" id="cxfile" hidden accept="image/*,.pdf,.docx,.xlsx,.pptx,.odt,.ods,.odp,.txt,.csv,.md"><label for="cxtext" class="srl">Nachricht</label><textarea id="cxtext" rows="1" data-zeilen="6" data-senden="form" maxlength="4000" placeholder="Nachricht"></textarea><button type="button" class="ib cx-mic" id="cxmic" hidden title="Sprachnachricht aufnehmen" aria-label="Sprachnachricht aufnehmen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button class="send" id="cxsend" type="submit" title="Senden" aria-label="Senden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></form>
       <div class="cx-rec" id="cxrec" hidden><i class="cx-dot"></i><span id="cxrect">0:00</span><span class="mut cx-recmax">höchstens 5 Minuten</span><button type="button" class="b" id="cxrecx">Verwerfen</button><button class="send" id="cxrecgo" type="button" title="Sprachnachricht senden" aria-label="Sprachnachricht senden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div>
     </div>
   </div>
-  <div class="cx-big" id="cxbig" hidden><img id="cxbigimg" alt="Foto"><button type="button" class="ib" id="cxbigx" title="Schließen" aria-label="Schließen">✕</button></div>
+  <div class="cx-big" id="cxbig" hidden><img id="cxbigimg" alt="Foto"><button type="button" class="ib" id="cxbigx" title="Schließen" aria-label="Schließen"><i data-ic="x"></i></button></div>
 </div></section>
 
 <section id="test">
@@ -1162,7 +1162,7 @@
             <div class="shmeta"><div id="shnummerinfo"></div><div><span id="shfehl"></span> · <button class="fzlink shinline" type="button" id="shneunr">Neue Nummer</button></div></div>
             <span class="fzfill"></span><button class="b danger" type="button" id="shweg">Verwerfen</button></div>
           <div class="shabgelaufen" id="shabgelaufen" hidden><b>Abgelaufen</b><span class="fh" id="shabgelaufeninfo"></span><button class="b p" type="button" id="shneunr2">Neue Nummer</button></div>
-          <div id="shwtabsbox"><div class="shwtabs" id="shwtabs" role="tablist" aria-label="Wie die Person kommt"><button type="button" role="tab" class="on" data-w="link" id="shwlink">🔗 Link</button><button type="button" role="tab" data-w="mail" id="shwmail">✉️ E-Mail</button><button type="button" role="tab" data-w="shell" id="shwshell">⌨️ Shell (ohne Bildschirm)</button></div>
+          <div id="shwtabsbox"><div class="shwtabs" id="shwtabs" role="tablist" aria-label="Wie die Person kommt"><button type="button" role="tab" class="on" data-w="link" id="shwlink">Link</button><button type="button" role="tab" data-w="mail" id="shwmail">E-Mail</button><button type="button" role="tab" data-w="shell" id="shwshell">Shell (ohne Bildschirm)</button></div>
           <div class="shweg" id="shplink"><div class="row shnowrap"><code class="shinp" id="shlink"></code><button class="b p" type="button" id="shkopie">Link kopieren</button><button class="b" type="button" id="shteilen">Teilen</button><button class="b" type="button" id="shqr">QR</button></div>
             <div class="fh">Gilt 30 Minuten und einmal. Die Person öffnet den Link, gibt ihren Vornamen ein und klickt „Bildschirm teilen“.</div><div id="shqrbild"></div></div>
           <div class="shweg" id="shpmail" hidden><div id="shmailrow"><div class="row shnowrap"><input id="shan" type="email" maxlength="254" autocomplete="off" placeholder="E-Mail-Adresse der Person" aria-label="E-Mail-Adresse der Person"><button class="b p" type="button" id="shmailgo">Senden</button></div>
@@ -1209,7 +1209,7 @@
     </div>
     <div class="fzgriff" id="fzgriff" role="separator" aria-orientation="vertical" aria-controls="fzside" tabindex="0" title="Ziehen ändert die Breite, Doppelklick klappt zu" aria-label="Breite des Assistenten"></div>
     <aside class="fzside" id="fzside">
-      <div class="fzsidetabs" id="fzsidetabs" role="tablist" aria-label="Spalte neben dem Terminal" hidden><button type="button" role="tab" data-w="ki" id="fzseiteki">✦ Assistent</button><button type="button" role="tab" data-w="notiz" id="fzseitenotiz">📝 Notizen</button></div>
+      <div class="fzsidetabs" id="fzsidetabs" role="tablist" aria-label="Spalte neben dem Terminal" hidden><button type="button" role="tab" data-w="ki" id="fzseiteki">✦ Assistent</button><button type="button" role="tab" data-w="notiz" id="fzseitenotiz">Notizen</button></div>
       <div class="fznotizseite" id="fznotizseite" hidden></div>
       <div class="fzhilfe" id="fzhilfe" hidden>
         <div class="fzshead"><b>✦ Assistent</b><button class="fzicon" type="button" id="fzspaltezu" title="Assistent zuklappen" aria-label="Assistent zuklappen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button></div>
@@ -1393,7 +1393,7 @@
   <button class="mi" id="milogout" type="button">Abmelden</button>
 </div></div>
 <div id="wizmodal" class="modal" style="display:none"><div class="card modalcard wizcard">
-  <div class="row" style="justify-content:space-between"><span class="mut" id="wizstep"></span><button class="ib" id="wizclose" type="button" title="Schließen">✕</button></div>
+  <div class="row" style="justify-content:space-between"><span class="mut" id="wizstep"></span><button class="ib" id="wizclose" type="button" title="Schließen"><i data-ic="x"></i></button></div>
   <div id="wizbody" class="wizbody"></div>
   <div class="row mefoot"><button class="b" id="wizback" type="button">Zurück</button><span id="wizmsg" class="mut" style="flex:1"></span><button class="b" id="wizskip" type="button">Überspringen</button><button class="b p" id="wiznext" type="button">Weiter</button></div>
 </div></div>
@@ -1567,6 +1567,7 @@
 <div class="an-bar" id="anbar" role="alertdialog" aria-labelledby="anbartext" hidden><span id="anbartext"></span><button type="button" class="an-b an-ok" id="anbargo">Anrufen</button><button type="button" class="an-b" id="anbarno">Nicht jetzt</button></div>
 <div class="an-call" id="ancall" role="dialog" aria-modal="true" aria-labelledby="anname" hidden><video id="anremote" class="an-remote" autoplay playsinline></video><video id="anlocal" class="an-local" autoplay playsinline muted></video><div class="an-info"><b id="anname"></b><span id="anstate" aria-live="polite"></span></div><div class="an-row" id="anincoming" hidden><button type="button" class="an-b an-no" id="anno">Ablehnen</button><button type="button" class="an-b an-ok" id="anok">Annehmen</button><button type="button" class="an-b an-ok" id="anokv" hidden>Mit Video</button></div><div class="an-row" id="anctl" hidden><button type="button" class="an-b" id="anmute" aria-pressed="false">Stumm</button><button type="button" class="an-b" id="ancam" aria-pressed="false" hidden>Kamera aus</button><button type="button" class="an-b an-no" id="anhang">Auflegen</button></div></div>
 <script src="/static/js/i18n.js"></script>
+<script src="/static/js/icons.js"></script>
 <script src="/static/js/werkzeuge.js"></script>
 <script src="/static/js/base.js"></script>
 <script src="/static/js/laden.js"></script>

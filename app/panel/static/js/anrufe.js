@@ -67,7 +67,7 @@ const anCid=/^c[0-9a-f]{12}$/;
 window.anFromAssistant=async ev=>{if(AN.call||!ev||!anCid.test(String(ev.id||'')))return;anBar(null);
   showSec('chats');await cxOpen(ev.id);if(CX.cur!==ev.id||!CX.data)return;anStart(!!ev.video)};
 window.anBar=r=>{const b=anEl('anbar');if(!r||AN.call||!anCid.test(String(r.id||''))){b.hidden=true;AN.bar=null;return}
-  AN.bar=r;anEl('anbartext').textContent=(r.video?'🎥 ':'📞 ')+String(r.name||'').slice(0,60)+t(' anrufen?',': call now?');b.hidden=false};
+  AN.bar=r;anEl('anbartext').textContent=(r.video?t('Video: ','Video: '):'')+String(r.name||'').slice(0,60)+t(' anrufen?',': call now?');b.hidden=false};
 anEl('anbargo').addEventListener('click',()=>{const r=AN.bar;if(r)anFromAssistant(r)});
 anEl('anbarno').addEventListener('click',async()=>{anBar(null);try{await api('/api/anrufe/bereit',{method:'DELETE'})}catch{}});
 async function anAnswer(video){const call=AN.call;if(!call||AN.pc)return;anToneStop();
@@ -83,7 +83,7 @@ async function anEnd(why){const call=AN.call;if(!call){anClean();return}
 window.anEvent=async ev=>{const ty=ev.type;
   if(ty==='call'){if(AN.call)return;   // already in a call here: the Spark lets the other one hear "besetzt" next time
     Object.assign(AN,{call:ev.call,cid:ev.id,name:String(ev.name||''),video:!!ev.video,role:'in'});
-    anShow(ev.video?t('🎥 Videoanruf','🎥 Video call'):t('📞 Anruf','📞 Call'));anTone('in');return}
+    anShow(ev.video?t('Videoanruf','Video call'):t('Anruf','Call'));anTone('in');return}
   if(ev.call!==AN.call)return;
   if(ty==='call_taken'&&ev.dev!==AN.dev&&!AN.pc){anClean(t('Auf einem anderen Gerät angenommen.','Answered on another device.'));return}
   if(ty==='call_ok'&&AN.role==='out'&&!AN.pc){anToneStop();anState(t('Verbinde …','Connecting …'));const pc=anPc();

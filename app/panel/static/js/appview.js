@@ -9,28 +9,16 @@ const NAR=matchMedia('(max-width:760px)'),STAND=matchMedia('(display-mode: stand
 const B=document.body;
 const wanted=()=>{try{return localStorage.getItem('appview')!=='off'}catch{return true}};
 let ON=false,TAB='spark',hd=0,dirty=false;
-const SV=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
-const IC={spark:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',
-  chats:'<path d="M17 9h2a2 2 0 0 1 2 2v9l-3-3h-7a2 2 0 0 1-2-2v-1"/><path d="M15 4H5a2 2 0 0 0-2 2v9l3-3h9a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>',
-  today:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
-  docs:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>',
-  me:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
-  manage:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
-  new:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
-  hist:'<path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/><path d="M12 7.5V12l3 2"/>',
-  set:'<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
-  more:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
-  vol:'<path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/>',
-  mute:'<path d="M11 5L6 9H3v6h3l5 4z"/><path d="M16 9l5 6M21 9l-5 6"/>',
-  back:'<path d="M15 5l-7 7 7 7"/>',find:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>'};
+// the symbols come from icons.js (one source); the tab „Assistent“ shows the speech bubble
+const SV=n=>ic(n==='spark'?'chat':n);
 const TABS=[['spark',t('Assistent','Assistant')],['chats',t('Chats','Chats')],['today',t('Heute','Today')],['docs',t('Dokumente','Documents')],['me',t('Ich','Me')],['manage',t('Verwalten','Manage')]];
 const mk=(tag,id,cls,html)=>{const e=document.createElement(tag);if(id)e.id=id;if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e};
 const label=b=>b?[...b.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim():'';
 const navBtn=s=>document.querySelector(`nav button[data-s=${s}]`);
 const mainEl=()=>document.querySelector('main');
 // ---------------------------------------------------------------- the pieces (built once, hidden without .appview)
-const bar=mk('div','apbar','',`<button type="button" class="apnb" id="apback">${SV(IC.back)}<span></span></button><div class="aplead" id="aplead"></div><b id="aptitle"></b><div class="aptrail" id="aptrail"></div>`);
-const tabs=mk('div','aptabs','',TABS.map(([k,l])=>`<button type="button" data-tab="${k}">${SV(IC[k])}<span>${esc(l)}</span>${k==='manage'?'<em class="apdot" hidden></em>':k==='chats'?'<em class="apcnt" hidden></em>':''}</button>`).join(''));
+const bar=mk('div','apbar','',`<button type="button" class="apnb" id="apback">${SV('back')}<span></span></button><div class="aplead" id="aplead"></div><b id="aptitle"></b><div class="aptrail" id="aptrail"></div>`);
+const tabs=mk('div','aptabs','',TABS.map(([k,l])=>`<button type="button" data-tab="${k}">${SV(k)}<span>${esc(l)}</span>${k==='manage'?'<em class="apdot" hidden></em>':k==='chats'?'<em class="apcnt" hidden></em>':''}</button>`).join(''));
 tabs.setAttribute('role','tablist');
 const today=mk('div','aptoday','appg'),manage=mk('div','apmanage','appg');
 const sheet=mk('div','apsheet','',`<div class="apshade"></div><div class="apscard" role="dialog" aria-modal="true"><div class="sheetgrip"></div><div class="apshead"><span></span><b></b><button type="button" class="apnb" data-close="1">${esc(t('Fertig','Done'))}</button></div><div class="apsbody"></div></div>`);
@@ -105,12 +93,12 @@ function render(){if(!ON)return;if(manage.classList.contains('on')&&manageSig()!
   B.classList.toggle('aptab-docs',TAB==='docs');
   const back=$('apback'),lead=$('aplead'),trail=$('aptrail');let show=false,title='',bl='',lh='',th='';
   if(TAB==='spark'&&!pm&&!page){show=true;title='Spark';
-    lh=`<button type="button" class="apib" data-ap="new" aria-label="${esc(t('Neues Gespräch','New conversation'))}">${SV(IC.new)}</button><button type="button" class="apib" data-ap="hist" aria-label="${esc(t('Verlauf','History'))}">${SV(IC.hist)}</button>`;
+    lh=`<button type="button" class="apib" data-ap="new" aria-label="${esc(t('Neues Gespräch','New conversation'))}">${SV('new')}</button><button type="button" class="apib" data-ap="hist" aria-label="${esc(t('Verlauf','History'))}">${SV('hist')}</button>`;
     // "Vorlesen" on this device (chat.js voiceShow): the speaker in the top bar; locked while the profile has it off
     const vc=$('chatvoice'),von=!!(vc&&vc.checked);
     // Suchen (plaene/suche-gesicht.md): the magnifier at the top for admins and profiles, guests have nothing to find
-    th=(ADMIN||PROFILE?`<button type="button" class="apib" data-ap="find" aria-label="${esc(t('Suchen','Search'))}">${SV(IC.find)}</button>`:'')+(vc?`<button type="button" class="apib" data-ap="voice" aria-pressed="${von}"${vc.disabled?' disabled':''} aria-label="${esc(vc.closest('label').title||t('Vorlesen','Read aloud'))}">${SV(von?IC.vol:IC.mute)}</button>`:'')+(isGuest()?`<button type="button" class="apib" data-ap="menu" aria-label="${esc(t('Menü','Menu'))}">${SV(IC.more)}</button>`
-      :`<button type="button" class="apib" data-ap="set" aria-label="${esc(t('Gespräch einstellen','Conversation settings'))}">${SV(IC.set)}</button>`)}
+    th=(ADMIN||PROFILE?`<button type="button" class="apib" data-ap="find" aria-label="${esc(t('Suchen','Search'))}">${SV('find')}</button>`:'')+(vc?`<button type="button" class="apib" data-ap="voice" aria-pressed="${von}"${vc.disabled?' disabled':''} aria-label="${esc(vc.closest('label').title||t('Vorlesen','Read aloud'))}">${SV(von?'vol':'mute')}</button>`:'')+(isGuest()?`<button type="button" class="apib" data-ap="menu" aria-label="${esc(t('Menü','Menu'))}">${SV('more')}</button>`
+      :`<button type="button" class="apib" data-ap="set" aria-label="${esc(t('Gespräch einstellen','Conversation settings'))}">${SV('set')}</button>`)}
   else if(TAB==='manage'&&!page&&!pm){show=true;const n=manageNav();title=n.title;bl=n.back}
   if(bl&&bl.trim()===title.trim())bl=t('Zurück','Back');   // „Funktionen ‹ Funktionen“
   bar.hidden=!show;$('aptitle').textContent=title;back.hidden=!bl;back.querySelector('span').textContent=bl;
@@ -179,7 +167,7 @@ function day(ts){const d=new Date(ts),n=new Date(),y=new Date(n);y.setDate(n.get
   return d.toLocaleDateString(L==='en'?'en-GB':'de-DE',{weekday:'long',day:'numeric',month:'long'})}
 function openHist(){let list=[];try{list=convos.load()}catch{}
   const hm=ts=>new Date(ts).toLocaleTimeString(L==='en'?'en-GB':'de-DE',{hour:'2-digit',minute:'2-digit'});
-  let html=`<button type="button" class="apsearch" data-sa="find">${SV(IC.find)}<span>${esc(t('In Gesprächen suchen','Search conversations'))}</span></button>`+
+  let html=`<button type="button" class="apsearch" data-sa="find">${SV('find')}<span>${esc(t('In Gesprächen suchen','Search conversations'))}</span></button>`+
     `<div class="apgrp"><div class="apgb"><button type="button" class="aprow" data-sa="new"><span class="apl apacc">${esc(t('Neues Gespräch','New conversation'))}</span></button></div></div>`;
   let cur=null,rows='';
   const flush=()=>{if(cur!==null&&rows)html+=`<div class="apgrp"><div class="apgh">${esc(cur)}</div><div class="apgb">${rows}</div></div>`;rows=''};
@@ -211,7 +199,7 @@ function renderManage(){mSig=manageSig();const z=$('zhead'),lvl=(z&&z.dataset.lv
     (can('mon')?row('data-go="logs"',esc(t('Logs','Logs'))):'')+
     (can('cfg')?row('data-cfg="upd"',esc(t('Update','Update')),esc(ver))+row('data-cfg="bak"',esc(t('Sicherung','Backup')),''):'');
   manage.innerHTML=`<h1 class="aplt">${esc(t('Spark verwalten','Manage the Spark'))}</h1>`+
-    `<button type="button" class="apsearch" data-ax="find">${SV(IC.find)}<span>${esc(t('Seite, Schalter oder Anleitung','Page, switch or guide'))}</span></button>`+
+    `<button type="button" class="apsearch" data-ax="find">${SV('find')}<span>${esc(t('Seite, Schalter oder Anleitung','Page, switch or guide'))}</span></button>`+
     (zt?`<button type="button" class="apstat" data-sec="mon" data-lvl="${esc(lvl)}"><b>${esc(zt)}</b>${zx?`<span>${esc(zx)}</span>`:''}</button>`:'')+
     (typeof NA!=='undefined'&&NA.s.may?grp('',row('data-ax="notaus"',esc(NA.s.level?t('Notaus: Stufe ändern','Kill switch: change stage'):t('Notaus','Kill switch')),
       NA.s.level?esc(t('Stufe ','Stage ')+NA.s.level):'',{cls:'apred'})):'')+

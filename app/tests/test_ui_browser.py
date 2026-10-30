@@ -3581,7 +3581,7 @@ class Browser(unittest.TestCase):
             helpers.set_config(chats=False, chats_groups=False)
 
     def test_chat_photo_voice_and_invite(self):
-        """Chats Schritt B (chats.js): with "Fotos, Dateien und Sprache" the composer shows 📎 and 🎤; a photo
+        """Chats Schritt B (chats.js): with "Fotos, Dateien und Sprache" the composer shows the paper clip and the microphone; a photo
         goes up as the raw body and comes back as a preview, a tap opens it large and a tap closes it; with
         "In einen Chat einladen" the new-chat pane offers "Jemanden einladen". Strict CSP, nothing sticks out."""
         import io
@@ -3649,7 +3649,7 @@ class Browser(unittest.TestCase):
             join._write(jd)
 
     def test_private_chat_end_to_end(self):
-        """Private Chats Schritt C (chatsec.js): "🔒 Privat" beside a person gives this browser its own key and opens
+        """Private Chats Schritt C (chatsec.js): "Privat" (with the lock symbol) beside a person gives this browser its own key and opens
         the private chat; what the page sends the Spark keeps only as a box that the other device (here Python with
         its own key) opens; a box from Python is read in the page; a photo goes encrypted and is shown from a blob
         address; ⓘ shows the same Sicherheitsnummer Python computes. Strict CSP, nothing sticks out."""
@@ -3723,7 +3723,7 @@ class Browser(unittest.TestCase):
                     await self.until(pg, f"!!(CX.S&&(CX.S.contacts||[]).some(x=>x.id=={other['id']!r}))", 20)
                     await pg.click("#cxnew")
                     await pg.click(f"[data-cxn=priv][data-to='{other['id']}']")
-                    await self.until(pg, "$('cxtitle').textContent.includes('🔒')&&!$('cxcomp').hidden")
+                    await self.until(pg, "$('cxtitle').dataset.mk==='private'&&!!$('cxtitle').querySelector('svg.cxmk')&&!$('cxcomp').hidden")
                     cid = chatsec.priv_id(me["id"], other["id"])
                     await pg.fill("#cxtext", "Streng geheim 42")
                     await pg.click("#cxsend")
@@ -3798,7 +3798,7 @@ class Browser(unittest.TestCase):
                 chatsec.forget(u)
 
     def test_a_video_call_between_two_pages(self):
-        """Anrufe (anrufe.js): 🎥 in a chat of two rings the other person's open Chats page, "Mit Video" connects the
+        """Anrufe (anrufe.js): the video button in a chat of two rings the other person's open Chats page, "Mit Video" connects the
         two pages straight (WebRTC, fake camera and microphone, no Vermittler at home), both show the running time,
         hanging up closes both windows and leaves one line "call" in the chat. Strict CSP, nothing sticks out."""
         import anrufe
@@ -3878,7 +3878,7 @@ class Browser(unittest.TestCase):
 
     def test_chat_with_someone_on_another_spark(self):
         """Spark-Verbund V1 (verbund.js): a request from another Spark (played in Python, signed with its own key)
-        shows as "Kontaktanfragen" on top of the list; Annehmen opens the chat with 🌐, a message goes into the
+        shows as "Kontaktanfragen" on top of the list; Annehmen opens the chat with the globe symbol, a message goes into the
         queue for the other Spark. Own address and QR code in the pane. Strict CSP, nothing sticks out at 320 px."""
         import base64
         import json
@@ -3925,7 +3925,7 @@ class Browser(unittest.TestCase):
                     over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                     self.assertLessEqual(over, 1, f"{name}/verbund: {over}px zu breit")
                     await pg.click("[data-vb=ok]")
-                    await self.until(pg, "$('cxtitle').textContent.includes('🌐')&&!$('cxcomp').hidden")
+                    await self.until(pg, "$('cxtitle').dataset.mk==='far'&&!!$('cxtitle').querySelector('svg.cxmk')&&!$('cxcomp').hidden")
                     self.assertTrue(await pg.evaluate("$('cxatt').hidden"))     # text only across Sparks (V1)
                     await pg.fill("#cxtext", "Hallo nach drüben " + name)
                     await pg.click("#cxsend")

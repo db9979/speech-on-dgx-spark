@@ -48,39 +48,24 @@ new MutationObserver(ms=>ms.forEach(m=>{const p=m.target;if(p.classList.contains
 // (at most every 60 ms, but never put off: pages that change all the time must not keep the boxes away)
 new MutationObserver(()=>{if(all.t)return;all.t=setTimeout(()=>{all.t=0;$('cfg').querySelectorAll('.setpane:not([data-sgrp])').forEach(grp);segs($('cfg'),true)},60)}).observe($('cfg'),{childList:true,subtree:true});
 all();
-// symbols in the settings menu (one colour per block, like the iPhone settings); appended after the text so code
-// that reads the button's first text node (dirty pages, the search) keeps working, CSS puts them in front
-const IC={start:['gray','M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z'],feat:['violet','M4 6h16M4 12h16M4 18h16'],
-  talk:['violet','M4 6h16M4 12h16M4 18h16M8 4v4M15 10v4M10 16v4'],ai:['blue','M12 3a4 4 0 00-4 4 4 4 0 00-3 6.5A4 4 0 009 20h6a4 4 0 004-6.5A4 4 0 0016 7a4 4 0 00-4-4zM12 3v17'],
-  asr:['teal','M9 3h6v11H9zM5 11a7 7 0 0014 0M12 18v3'],tts:['teal','M4 9h4l5-4v14l-5-4H4zM16 9a4 4 0 010 6M19 6a8 8 0 010 12'],
-  voices:['teal','M3 12h2M7 8v8M11 5v14M15 8v8M19 11v2'],sec:['red','M5 11h14v10H5zM8 11V7a4 4 0 018 0v4'],
-  sysc:['gray','M6 6h12v12H6zM9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4'],upd:['green','M12 3v12M7 10l5 5 5-5M4 20h16'],
-  bak:['green','M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10'],
-  // the pages of Zustand (base.js subnav): Beobachten blue, Prüfen green, Technik violet
-  'z:mon':['blue','M3 12h4l3-7 4 14 3-7h4'],'z:live':['blue','M12 12h.01M8.5 8.5a5 5 0 000 7M15.5 8.5a5 5 0 010 7M5.6 5.6a9 9 0 000 12.8M18.4 5.6a9 9 0 010 12.8'],
-  'z:logs':['blue','M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01'],'z:test':['green','M5 12l5 5L20 7'],
-  'z:werk':['green','M14.7 6.3a4 4 0 00-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 005.4-5.4l-2.4 2.4-2.6-.6-.6-2.6z'],
-  'z:verb':['green','M9 18h6M10 21h4M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z'],'z:praxis':['green','M9 4h6v3H9zM7 5H5v16h14V5h-2M9 14l2 2 4-4'],
-  'z:usage':['violet','M4 20V10M10 20V4M16 20v-7M22 20H2'],'z:models':['violet','M12 3a4 4 0 00-4 4 4 4 0 00-3 6.5A4 4 0 009 20h6a4 4 0 004-6.5A4 4 0 0016 7a4 4 0 00-4-4zM12 3v17'],
-  'z:tech':['violet','M6 6h12v12H6zM9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4'],
+// symbols in the settings menu, the second column of Zustand, Funktionen and Personen und Geräte, the groups of
+// Funktionen and the pages of Ich: names from icons.js (one source, line symbols in the text colour, Redesign Stufe 3);
+// appended after the text so code that reads the button's first text node (dirty pages, the search) keeps working,
+// CSS puts them in front
+const IC={start:'grid',feat:'all',talk:'sliders',ai:'brain',asr:'mic',tts:'vol',voices:'wave',sec:'lock',sysc:'cpu',upd:'download',bak:'box',
+  // the pages of Zustand (base.js subnav)
+  'z:mon':'mon','z:live':'radio','z:logs':'logs','z:test':'check','z:werk':'wrench','z:verb':'bulb','z:praxis':'clipboard',
+  'z:usage':'bars','z:models':'brain','z:tech':'cpu',
   // Funktionen and Personen und Geräte the same way (Dominik 2026-10-17: „durchgängigen Style verwenden“)
-  'z:feat':['violet','M4 6h16M4 12h16M4 18h16'],'z:route':['teal','M6 3v6a6 6 0 006 6h6M15 12l3 3-3 3M6 21v-6'],
-  'z:int':['amber','M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2zM4 19V5M8 7h7'],
-  'z:prof':['blue','M9 11a4 4 0 100-8 4 4 0 000 8zM2 21a7 7 0 0114 0M17 3.5a4 4 0 010 7M22 21a7 7 0 00-5-6.7'],
-  'z:apps':['green','M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z']};
-const NS='http://www.w3.org/2000/svg';
-function icon(k){const d=IC[k];if(!d)return null;const sp=document.createElement('span');sp.className='cic c-'+d[0];sp.setAttribute('aria-hidden','true');
-  const sv=document.createElementNS(NS,'svg');sv.setAttribute('viewBox','0 0 24 24');const pa=document.createElementNS(NS,'path');pa.setAttribute('d',d[1]);sv.appendChild(pa);sp.appendChild(sv);return sp}
+  'z:feat':'all','z:route':'route','z:int':'book','z:prof':'prof','z:apps':'grid'};
+function icon(k){const n=IC[k];if(!n)return null;const sp=document.createElement('span');sp.className='cic';sp.setAttribute('aria-hidden','true');
+  sp.appendChild(icNode(n));return sp}
 document.querySelectorAll('#cfgnav button[data-p]').forEach(b=>{if(b.querySelector('.cic'))return;const i=icon(b.dataset.p);if(i){b.appendChild(i);b.classList.add('hasic')}});
 window.pageIcon=icon;
-// the pages of Ich get symbols too: a colour per group (as on the Funktionen page), a few pages their own symbol
-const MEG={talk:['violet','M4 5h16v11H9l-5 4z'],speed:['violet','M13 3L5 14h6l-1 7 8-11h-6z'],data:['blue','M5 6c0-1.7 3-3 7-3s7 1.3 7 3-3 3-7 3-7-1.3-7-3zM5 6v12c0 1.7 3 3 7 3s7-1.3 7-3V6M5 12c0 1.7 3 3 7 3s7-1.3 7-3'],
-  day:['amber','M4 6h16v14H4zM4 10h16M9 3v4M15 3v4'],post:['blue','M3 6h18v12H3zM3 7l9 6 9-6'],home:['green','M4 11l8-7 8 7M6 10v10h12V10'],
-  go:['teal','M8 3h8v18H8zM11 18h2'],sec:['red','M5 11h14v10H5zM8 11V7a4 4 0 018 0v4']};
-const MEI={overbox:['gray','M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z'],gobox:['green','M5 21V4h11l-2 4 2 4H5'],kannbox:['amber','M9 18h6M10 21h4M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z'],setbox:['violet','M4 5h16v11H9l-5 4z'],
-  loginbox:['gray','M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0'],bgbox:['red','M3 12h4l3-7 4 14 3-7h4'],usebox:['blue','M4 20V10M10 20V4M16 20v-7M22 20H2'],telbox:['green','M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2'],logbox:['gray','M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01'],
-  secbox:['red','M5 11h14v10H5zM8 11V7a4 4 0 018 0v4'],voicebox:['teal','M3 12h2M7 8v8M11 5v14M15 8v8M19 11v2'],rpbox:['amber','M12 8v5M12 16h.01M10.3 3.9L2 18a2 2 0 001.7 3h16.6a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z']};
-// the groups of Funktionen (guides.js guidesFeat) carry the symbol of the same group in Ich
+// the pages of Ich get symbols too: one per group (as on the Funktionen page), a few pages their own symbol
+const MEG={talk:'bubble',speed:'bolt',data:'db',day:'cal',post:'mail',home:'home',go:'mobile',sec:'lock'};
+const MEI={overbox:'grid',gobox:'flag',kannbox:'bulb',setbox:'bubble',loginbox:'user',bgbox:'mon',usebox:'bars',telbox:'tel',logbox:'logs',
+  secbox:'lock',voicebox:'wave',rpbox:'warn'};
 function featGroupIcons(){document.querySelectorAll('#pane-feat .fgrp>summary b').forEach(b=>{const g=b.closest('.fgrp').dataset.grp,d=MEG[g];
   if(!d||b.querySelector('.cic'))return;IC['g:'+g]=d;b.appendChild(icon('g:'+g))})}
 featGroupIcons();
