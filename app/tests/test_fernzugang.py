@@ -1428,13 +1428,13 @@ class WindowsAnchor(unittest.TestCase):
         with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
             p.main(["einrichten", "https://spark.example.org", "--token", "T" * 32], system="Windows")   # never as argument
 
-    def test_the_screen_and_the_shell_help_are_not_yet_there(self):
+    def test_the_shell_help_is_not_yet_there(self):
         p = program()
         ran = []
         p.cmd_screen = lambda *a, **k: ran.append("screen")
         p.cmd_help = lambda *a, **k: ran.append("help")
         p.cmd_setup = lambda *a, **k: ran.append("setup") or 0
-        for argv, want in ((["bildschirm"], "Bildschirm unter Windows"), (["hilfe", "https://spark.example.org"], "Spontanhilfe in der Shell")):
+        for argv, want in ((["hilfe", "https://spark.example.org"], "Spontanhilfe in der Shell"),):
             out = io.StringIO()
             with contextlib.redirect_stdout(out):
                 self.assertEqual(p.main(argv, system="Windows"), 1)

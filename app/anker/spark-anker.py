@@ -80,7 +80,10 @@ task SparkAnker (this program as LOCAL SERVICE) and SparkAnker-Waechter (SYSTEM:
 the root units); „Spark Anker“ under Settings, Apps to remove it. Removing puts sshd, its shell and firewall rule back
 as they were and takes user, tasks, settings, program and its Python away (the folder with the running Python, and the
 profile of spark Windows holds after an SSH session, through a one-off SYSTEM task: right after this process, else at
-the next start). Not yet on Windows: `bildschirm`, `hilfe` and `steuern`.
+the next start). `bildschirm` (stage 5b) installs TightVNC's server from its official MSI (TIGHTVNC: version and
+SHA-256 pinned; an empty pin refuses), only on 127.0.0.1:5930 with the panel's password, refuses when TightVNC is
+there already, and `bildschirm aus` or removing uninstalls it with its settings. Not yet on Windows: `hilfe` and
+`steuern`.
 
 Spontanhilfe S3 (`hilfe`, never as root, nothing set up): the person types the number and her first name on this
 terminal, the program opens WSS /api/hilfe/shell (no key, no Origin) and waits. When the admin accepts, it asks once
@@ -174,7 +177,7 @@ CHUNK = 32 * 1024
 PING_S = 25               # keeps the reverse proxy from closing a quiet connection
 MARK = "spark-fernzugang-"  # the comment of the panel's line in authorized_keys
 BILD_PORT = 5930          # x11vnc and wayvnc: only on 127.0.0.1
-BILD = {"x11vnc": BILD_PORT, "wayvnc": BILD_PORT, "grd": 3389, "mac": 5900}   # the screen's one local port per kind
+BILD = {"x11vnc": BILD_PORT, "wayvnc": BILD_PORT, "grd": 3389, "mac": 5900, "tightvnc": BILD_PORT}   # the screen's one local port per kind
 # Webdienste (1.6.0): channels „ziel: web“ to one port of a web service, numbered 64 and up (one byte: at most WEB_MAX)
 WEB_MAX = 250
 WEB_ERSTER = 64           # the shells, files and the screen keep 1..63
@@ -1771,6 +1774,15 @@ PY_EMBED = {"version": "3.13.16", "amd64": "97dae5274cc54867065e8d5a3226e48c3501
             "arm64": "790d097697a2020477549a6764d89d22194c88d6e42caebcb2db63791e004c94"}
 PY_EMBED_URL = "https://www.python.org/ftp/python/{v}/python-{v}-embed-{arch}.zip"
 PY_EMBED_MAX = 64 * 1024 * 1024
+# The screen on Windows (stage 5b): TightVNC's server (GPL-2.0, tightvnc.com), its official MSI fetched only by
+# `bildschirm`, never part of this program; version and SHA-256 pinned here (the one source). An empty pin fails
+# closed: nothing is fetched or changed until a person checked the file's SHA-256 against the publisher and set it.
+# Only 127.0.0.1:BILD_PORT (loopback only, no firewall rule, no web viewer); VNC passwords are cut at 8 characters by
+# the protocol, acceptable only because nothing outside this computer can reach the port.
+TIGHTVNC = {"version": "2.8.85", "amd64": ""}
+TIGHTVNC_URL = "https://www.tightvnc.com/download/{v}/tightvnc-{v}-gpl-setup-64bit.msi"
+TIGHTVNC_MAX = 16 * 1024 * 1024
+WIN_TVNC_REG = r"HKLM\SOFTWARE\TightVNC"
 
 
 def py_embed(prog):
@@ -2507,9 +2519,55 @@ def linux_bild_art(ctx):
     return ("grd" if "gnome" in desk else "wayvnc"), user
 
 
+def win_tvnc_msi():
+    return WIN_LIB + "/tightvnc.msi"
+
+
+def win_tvnc_props(pw, ctl):
+    """msiexec's properties for TightVNC's server: a service, VNC password from the panel, a random control password
+    nobody keeps, only 127.0.0.1:BILD_PORT, no web viewer, no firewall rule, no Strg+Alt+Entf from outside."""
+    v = {"USEVNCAUTHENTICATION": 1, "PASSWORD": pw, "USECONTROLAUTHENTICATION": 1, "CONTROLPASSWORD": ctl,
+         "ALLOWLOOPBACK": 1, "LOOPBACKONLY": 1, "RFBPORT": BILD_PORT, "ACCEPTHTTPCONNECTIONS": 0,
+         "RUNCONTROLINTERFACE": 0}
+    props = ["ADDLOCAL=Server", "SERVER_REGISTER_AS_SERVICE=1", "SERVER_ADD_FIREWALL_EXCEPTION=0", "SERVER_ALLOW_SAS=0"]
+    for k, x in v.items():
+        props += [f"SET_{k}=1", f"VALUE_OF_{k}={x}"]
+    return props
+
+
+def win_tvnc_fetch(ctx):
+    """TightVNC's MSI checked against TIGHTVNC (amd64 only): the path where it lies, else a Fehler and nothing changed."""
+    if win_arch() != "amd64":
+        raise Fehler("TightVNC gibt es nur für 64-Bit-Windows auf Intel/AMD, nicht für ARM. Es wurde nichts geändert.")
+    pin = str(TIGHTVNC.get("amd64") or "")
+    if not FP.fullmatch(pin) or not VER.fullmatch(str(TIGHTVNC.get("version") or "")):
+        raise Fehler("TightVNC ist in diesem Anker noch nicht freigegeben (Prüfsumme fehlt). Es wurde nichts geändert.")
+    if not ctx.run(["reg", "query", WIN_TVNC_REG]):
+        raise Fehler("TightVNC ist auf diesem PC schon eingerichtet; der Anker ändert keine fremde Einrichtung. "
+                     "Es wurde nichts geändert.")
+    try:
+        data = ctx.fetch(TIGHTVNC_URL.format(v=TIGHTVNC["version"]), TIGHTVNC_MAX)
+    except (OSError, Fehler, ssl.SSLError, http.client.HTTPException):
+        data = b""
+    if not data or not hmac.compare_digest(hashlib.sha256(data).hexdigest(), pin):
+        raise Fehler("TightVNC ließ sich nicht laden oder die Prüfsumme stimmt nicht. Es wurde nichts geändert.")
+    path = ctx.path(win_tvnc_msi())
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "wb") as f:
+        f.write(data)
+    return path
+
+
 def bild_off(ctx, conf):
-    """Everything of the screen away again (`bildschirm aus`, `entfernen`): units, files, GNOME's RDP as it was."""
+    """Everything of the screen away again (`bildschirm aus`, `entfernen`): units, files, GNOME's RDP as it was,
+    TightVNC uninstalled with its settings."""
     art = conf.get("bild")
+    if art == "tightvnc":
+        msi = ctx.path(win_tvnc_msi())
+        ctx.run(["msiexec", "/x", win_native(msi), "/quiet", "/norestart"])
+        ctx.run(["reg", "delete", WIN_TVNC_REG, "/f"])
+        with contextlib.suppress(OSError):
+            os.remove(msi)
     if art == "x11vnc":
         ctx.run(["systemctl", "disable", "--now", "spark-anker-bild.socket"])
     if art == "wayvnc":
@@ -2560,6 +2618,9 @@ def cmd_screen(args, run=run_cmd, ctx=None):
         if ctx.run(["/bin/launchctl", "print", "system/com.apple.screensharing"]):
             raise Fehler("die Bildschirmfreigabe ist aus. Systemeinstellungen → Allgemein → Teilen → „Bildschirmfreigabe“ "
                          "einschalten, dann den Befehl noch einmal. Es wurde nichts geändert.")
+    elif s is WIN:
+        art, user = "tightvnc", ""
+        msi = win_tvnc_fetch(ctx)           # before the panel is asked: a failed download changes nothing
     else:
         art, user = linux_bild_art(ctx)
     status, raw = http_call(conf["url"], conf.get("fp") or "", "POST", "/api/fernzugang/anker/bildschirm", {"art": art}, conf["key"])
@@ -2609,6 +2670,11 @@ def cmd_screen(args, run=run_cmd, ctx=None):
                     ["systemctl", "enable", "--now", "gnome-remote-desktop.service"]):
             if ctx.run(cmd):
                 raise Fehler(f"`{cmd[0]} {' '.join(cmd[1:4])}` ging nicht. `sudo spark-anker bildschirm aus` räumt auf.")
+    elif art == "tightvnc":
+        if ctx.run(["msiexec", "/i", win_native(msi), "/quiet", "/norestart", *win_tvnc_props(pw, secrets.token_hex(4))]):
+            conf["bild"] = art              # half installed: `bildschirm aus` takes it away
+            write(ctx.path(s.conf), json.dumps(conf, indent=1), 0o640)
+            raise Fehler("TightVNC ließ sich nicht einrichten. `spark-anker bildschirm aus` (als Administrator) räumt auf.")
     pw = ""
     conf["bild"] = art
     write(ctx.path(s.conf), json.dumps(conf, indent=1), 0o640)
@@ -2616,7 +2682,8 @@ def cmd_screen(args, run=run_cmd, ctx=None):
     say({"x11vnc": "Bildschirm eingerichtet: x11vnc startet nur, wenn das Panel den Bildschirm öffnet (127.0.0.1:5930)",
          "wayvnc": f"Bildschirm eingerichtet: wayvnc in der Sitzung von {user} (127.0.0.1:5930), ab der nächsten Anmeldung",
          "grd": "Bildschirm eingerichtet: GNOME-Remotedesktop (RDP) mit eigenem Zertifikat und Passwort aus dem Panel",
-         "mac": "Bildschirm eingerichtet: die Bildschirmfreigabe von macOS; Benutzer und Passwort fragt das Panel jedes Mal"}[art])
+         "mac": "Bildschirm eingerichtet: die Bildschirmfreigabe von macOS; Benutzer und Passwort fragt das Panel jedes Mal",
+         "tightvnc": "Bildschirm eingerichtet: TightVNC als Dienst, nur 127.0.0.1:5930, Passwort aus dem Panel"}[art])
     say("aus: sudo spark-anker bildschirm aus")
     return 0
 
@@ -3769,7 +3836,6 @@ def cmd_control(args, tty=None, screen=None, env=None):
 
 # What the anchor does not do on a system (yet): a fixed sentence and nothing done, never half a setup.
 NOT_YET = {
-    ("Windows", "bildschirm"): "Den Bildschirm unter Windows richtet der Anker noch nicht ein (eine spätere Stufe). Es wurde nichts eingerichtet.",
     ("Windows", "hilfe"): "Die Spontanhilfe in der Shell gibt es unter Windows noch nicht; „Bildschirm teilen“ auf der Hilfe-Seite geht. Es wurde nichts verbunden.",
     ("Windows", "steuern"): "Unter Windows steuert das Programm SparkHilfe von der Hilfe-Seite, nicht diese Zeile. Es wurde nichts verbunden.",
     ("Darwin", "steuern"): "Steuern am Mac gibt es noch nicht (erst mit Notarisierung); „Bildschirm teilen“ auf der Hilfe-Seite geht. Es wurde nichts verbunden.",
