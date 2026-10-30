@@ -34,8 +34,9 @@ function fundOpen(){if(!PROFILE)return;const root=$('fundroot'),box=$('fundbox')
     {k:'set',label:t('Einstellungen','Settings'),body:()=>{const b=$('fundbox');b.hidden=false;fundSettings(b);return b}}]));
   fundStand()}
 window.fundOpen=fundOpen;
-// Strg K and the card under an answer: the page with these words
-window.fundSuche=q=>{FUND.q=String(q||'').slice(0,200);FUND.item=null;icTabSet('finden','show');goSec('finden');fundRun()};
+// Strg K and the card under an answer: the page with these words; the hits and the open entry of the search before go
+// at once, so nobody picks an old hit while the new search still runs
+window.fundSuche=q=>{FUND.q=String(q||'').slice(0,200);FUND.item=null;FUND.hits=null;icTabSet('finden','show');goSec('finden');fundDraw();fundRun()};
 async function fundStand(){if(!FUND_ON)return;const {r,d}=await apiTry('/api/profile/fund/stand');
   if(r.ok){FUND.stand=d}else{FUND.stand=null;fundSay(errSay(r.status,d.detail,''),true)}fundDraw()}
 function fundSay(x,err){FUND.msg=String(x||'').slice(0,300);FUND.err=!!err;document.querySelectorAll('.fundmsg').forEach(m=>{m.className='fundmsg '+(err?'err':'mut');m.textContent=FUND.msg})}
