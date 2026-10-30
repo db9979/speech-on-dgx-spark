@@ -267,7 +267,7 @@ class OwnSymbols(Ratchet, unittest.TestCase):
 
 class HexColours(Ratchet, unittest.TestCase):
     WHAT = "a fixed hex colour outside tokens.css; take a token (var(--…)) or add one to tokens.css"
-    ALT = {"app.css": 424, "appview.css": 24, "live.css": 18, "spontanhilfe.css": 19, "technik.css": 10, "weiche.css": 2}
+    ALT = {"app.css": 414, "appview.css": 24, "live.css": 18, "spontanhilfe.css": 19, "technik.css": 10, "weiche.css": 2}
 
     def hits(self):
         return {n: c for n in sheets() if n != TOKENS and (c := hex_colours(read(n)))}
@@ -275,7 +275,7 @@ class HexColours(Ratchet, unittest.TestCase):
 
 class FontSizes(Ratchet, unittest.TestCase):
     WHAT = "a font size outside the scale (SCALE); take a size of the scale"
-    ALT = {"app.css": 394, "appview.css": 17, "live.css": 21, "spontanhilfe.css": 5, "technik.css": 30, "weiche.css": 14}
+    ALT = {"app.css": 382, "appview.css": 17, "live.css": 21, "spontanhilfe.css": 5, "technik.css": 30, "weiche.css": 14}
 
     def hits(self):
         return {n: c for n in sheets() if n != TOKENS and (c := off_scale(read(n)))}

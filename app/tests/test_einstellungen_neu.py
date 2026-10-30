@@ -1,5 +1,5 @@
 """Einstellungsseiten neu (plaene/einstellungen-neu.md): one page frame for every settings page. The rows of a section
-sit in one box (.sgrp), short fixed choices are segment buttons, the save bar floats only while something is unsaved,
+sit in one box (.sgrp), short fixed choices are segment buttons, the save bar stands at the bottom with one height,
 and on phones the face no longer covers the switches. Static checks run everywhere, the browser checks where
 Playwright and Chromium exist (container, GitHub "Tests"); no test reads the clock."""
 import asyncio
@@ -132,6 +132,48 @@ class Static(unittest.TestCase):
         self.assertIn("presetMove", read("js", "admin.js"))
 
 
+def rules(css, sel):
+    """The bodies of every rule whose selector list names sel exactly (comments taken out)."""
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
+    return [b for s, b in re.findall(r"([^{}]+)\{([^{}]*)\}", css) if sel in [x.strip() for x in s.split(",")]]
+
+
+class Klar5(unittest.TestCase):
+    """Redesign Stufe 5 (Konfigurationsseiten, Tafel redesign/a-rechner-einstellung.png): grey grouped sections with
+    hairlines, one look for switches, segments and fields, Funktionen as list and detail, a quiet save bar that stands."""
+
+    def test_switch_and_segment_are_quiet(self):
+        """The switch is one colour (no gradient), its knob a token; segments and filters lie on --fill, not as pills."""
+        css = read("app.css")
+        on = rules(css, ".tgl input:checked+i")
+        self.assertTrue(on)
+        self.assertTrue(all("gradient" not in b for b in on), on)
+        self.assertIn("background:var(--on-acc)", "".join(rules(css, ".tgl i::after")))
+        for sel in (".segc", ".ffilt"):
+            self.assertIn("background:var(--fill)", "".join(rules(css, sel)), sel)
+
+    def test_save_bar_stands_and_says_what_changed(self):
+        """The save bar of a settings page always stands at the bottom with one height (nothing jumps when a value
+        changes), a changed row gets a dot instead of moving, no dark floating box any more."""
+        css = read("app.css")
+        bar = "".join(rules(css, "#cfg .pane>.savebar"))
+        for part in ("position:sticky", "min-height:var(--h-bar)", "background:var(--bg)"):
+            self.assertIn(part, bar)
+        self.assertEqual(rules(css, "#cfg .pane>.savebar.dirty"), [])
+        dirty = "".join(rules(css, ".setrow.dirtyrow"))
+        self.assertNotIn("margin-left", dirty)
+        self.assertNotIn("padding-left", dirty)
+
+    def test_list_and_detail_of_functions(self):
+        """Wide, the list of Funktionen has the width --list-w and the open function the rest beside it; the page of
+        settings is one column of at most --detail-max; the groups carry no shadow."""
+        css = read("app.css")
+        self.assertIn("var(--list-w)", "".join(rules(css, "#pane-feat.fsplit")))
+        self.assertIn("var(--detail-max)", "".join(rules(css, "#cfg .pane:not(#pane-feat)")))
+        for sel in (".sgrp", ".fdbody", ".fdin"):
+            self.assertNotRegex("".join(rules(css, sel)), r"box-shadow:(?!none)", sel)
+
+
 @unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
 class Frame(unittest.TestCase):
     @classmethod
@@ -248,6 +290,38 @@ class Frame(unittest.TestCase):
                     self.assertEqual(errors, [])
                 finally:
                     await br.close()
+        asyncio.run(go())
+
+    def test_save_bar_stands_still(self):
+        """Redesign Stufe 5: the save bar of a settings page stands at the bottom with one height before and after a
+        change (it no longer appears as a floating box), says what changed, and the changed row does not move
+        (a dot in front of its title instead of a line that shifted it). Computer and phone."""
+        async def go():
+            async with async_playwright() as p:
+                for w, h in ((1280, 900), (390, 844)):
+                    br, pg, errors = await self.page(p, w, h)
+                    try:
+                        await self.open_pane(pg, "talk")
+                        await pg.wait_for_timeout(400)
+                        sel = await pg.evaluate("(()=>{const s=document.querySelector('#chatdefaults select.segsel');return s&&s.id})()")
+                        self.assertTrue(sel, w)
+                        box = ("(()=>{const b=$('pane-talk').querySelector(':scope>.savebar'),r=document.getElementById('" + sel +
+                               "').closest('.setrow').getBoundingClientRect(),c=b.getBoundingClientRect();"
+                               "return [getComputedStyle(b).position,Math.round(c.height),Math.round(r.left),Math.round(r.width),Math.round(r.height)]})()")
+                        before = await pg.evaluate(box)
+                        self.assertEqual(before[0], "sticky", w)
+                        await pg.evaluate(f"document.getElementById('{sel}').previousElementSibling.querySelector('button:not(.on)').click()")
+                        await pg.wait_for_timeout(100)
+                        after = await pg.evaluate(box)
+                        self.assertEqual(after, before, f"{w}: the bar or the row moved")
+                        self.assertTrue(await pg.is_visible("#pane-talk>.savebar .unsaved"), w)
+                        self.assertTrue(await pg.is_visible("#pane-talk>.savebar .undo"), w)
+                        await pg.evaluate("loadCfg()")
+                        await pg.wait_for_timeout(500)
+                        self.assertEqual((await pg.evaluate(box))[:2], before[:2], f"{w}: the bar after discarding")
+                        self.assertEqual(errors, [])
+                    finally:
+                        await br.close()
         asyncio.run(go())
 
     def test_phone_face_and_title_leave_room(self):

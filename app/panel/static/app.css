@@ -127,13 +127,13 @@ body.inchat #fab{display:none}
 .opts .chk{margin:4px 0}
 .toggles{flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px 18px;width:100%}
 .tgl{display:inline-flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;user-select:none}.tgl input{position:absolute;opacity:0;width:0;height:0}
-.tgl i{width:36px;height:20px;border-radius:99px;background:var(--line);position:relative;transition:background .2s;flex:none}
-.tgl i::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s}
-.tgl input:checked+i{background:linear-gradient(135deg,var(--acc),var(--acc2))}.tgl input:checked+i::after{transform:translateX(16px)}
+.tgl i{width:36px;height:20px;border-radius:var(--r-pill);background:var(--line);position:relative;transition:background-color var(--dur) var(--ease);flex:none}
+.tgl i::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--on-acc);box-shadow:0 1px 2px rgba(0,0,0,.22);transition:transform var(--dur) var(--ease)}
+.tgl input:checked+i{background:var(--acc)}.tgl input:checked+i::after{transform:translateX(16px)}
 .tgl input:focus-visible+i{outline:2px solid var(--acc);outline-offset:2px}
 .setpane:not(.on){display:none}.setpane{min-height:150px}
 .setrow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
-.setrow .lbl{flex:1;min-width:0}.setrow .lbl b{font-weight:600;font-size:14px;display:block}.setrow .lbl span{font-size:12px;color:var(--mut)}
+.setrow .lbl{flex:1;min-width:0}.setrow .lbl b{font-weight:600;font-size:14px;display:block}.setrow .lbl span{font-size:12.5px;color:var(--mut)}
 .setrow select{width:auto;max-width:170px}.setrow input[type=range]{width:120px}.setrow output{font-size:12px;color:var(--mut);min-width:34px;text-align:right;font-variant-numeric:tabular-nums}
 .hint{font-size:12px;margin-top:8px;position:relative}
 .chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:14px;min-height:24px;position:relative}
@@ -428,7 +428,7 @@ a.b{text-decoration:none;color:inherit;display:inline-flex;align-items:center}
   .mebody .ptab{min-height:0}
 }
 /* guides (guides.js): groups in Funktionen, an "Anleitung" per service, headers in the "Ich" menu */
-.fgrp{margin-top:14px}.fitem>.fdetail{margin:0 0 10px 18px!important;padding:2px 0 8px 12px;border-left:2px solid var(--line)}.fgrp>summary{display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;padding:8px 0;border-bottom:2px solid var(--line);font-size:15px}
+.fgrp{margin-top:14px}.fitem>.fdetail{margin:0 0 10px 18px!important;padding:2px 0 8px 12px;border-left:2px solid var(--line)}.fgrp>summary{display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;padding:8px 0}
 .fgrp>summary b{display:inline-flex;align-items:center;gap:10px}
 .fcount{font-size:12px;color:var(--mut);font-weight:400}
 /* Funktionen as short lines (guides.js featItem): name + switch, the rest opens with the arrow or a tap on the name */
@@ -437,19 +437,21 @@ a.b{text-decoration:none;color:inherit;display:inline-flex;align-items:center}
 .fitem:not(.open)>:not(:first-child){display:none!important}
 .fitem:not(.open)>.setrow:first-child .lbl>span,.fitem:not(.open)>.setrow:first-child .ftags,.fitem:not(.open)>.setrow:first-child .gbtn{display:none}
 .fitem.open{padding-bottom:6px}
-.fexp{flex:none;width:22px;height:22px;margin-right:-6px;border:0;background:none;color:var(--mut);cursor:pointer;padding:0;font:inherit;display:grid;place-items:center}
-.fexp::before{content:"";width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s}
+.fexp{flex:none;width:22px;height:22px;margin-right:-6px;border:0;background:none;color:var(--faint);cursor:pointer;padding:0;font:inherit;display:grid;place-items:center}
+.fexp::before{content:"";width:7px;height:7px;border-right:1.75px solid currentColor;border-bottom:1.75px solid currentColor;transform:rotate(-45deg);transition:transform var(--dur) var(--ease)}
 .fitem.open .fexp::before{transform:rotate(45deg)}
-.setrow .lbl b .fneed{display:inline-block;margin-left:8px;font-size:12px;font-weight:600;line-height:1.6;padding:0 7px;border-radius:9px;vertical-align:1px;background:color-mix(in srgb,var(--warn,#b7791f) 16%,transparent);color:var(--warnt)}
-.grundcard{margin:12px 0 6px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--ok,#18a06b) 40%,var(--line));border-radius:14px;background:color-mix(in srgb,var(--ok,#18a06b) 7%,var(--card))}
+.setrow .lbl b .fneed{display:inline-flex;align-items:center;gap:5px;margin-left:8px;font:var(--t-sub);font-weight:500;color:var(--warnt)}
+.setrow .lbl b .fneed::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:var(--warn)}
+.grundcard{margin:12px 0 6px;padding:12px var(--s4);border:1px solid var(--line);border-radius:var(--r-box);background:var(--card)}
 .grundcard .gcpart+.gcpart{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}.grundcard .gcn{font-size:12px;color:var(--mut)}
 .grundcard .gcline{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}.grundcard .gcline .gcn{margin-right:auto}.grundcard .gcmore{margin-top:8px}.grundcard .fh{margin:4px 0 6px}.grundcard .row{margin-top:8px}.grundcard .gcmsg:empty{display:none}
-.setrow .lbl b .frec{display:inline-block;margin-left:8px;font-size:12px;font-weight:600;line-height:1.6;padding:0 7px;border-radius:9px;vertical-align:1px;background:color-mix(in srgb,var(--ok,#18a06b) 16%,transparent);color:var(--okt)}
-.fbar{margin:10px 0 4px}.ffilt,.fjump{display:flex;flex-wrap:wrap;gap:6px}.fjump{margin-top:8px}
-.ffilt button{border:1px solid var(--line);background:var(--card);color:var(--fg,inherit);border-radius:16px;padding:5px 12px;font:inherit;font-size:13px;cursor:pointer}
-.ffilt button i{font-style:normal;color:var(--mut)}.ffilt button.on{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}.ffilt button.on i{color:inherit;opacity:.85}
-.ffilt button.need:not(.on){border-color:var(--warn,#b7791f);color:var(--warnt)}
-.fjump button{border:0;background:color-mix(in srgb,var(--acc) 10%,transparent);color:var(--acct);border-radius:6px;padding:3px 9px;font:inherit;font-size:12px;cursor:pointer}
+.setrow .lbl b .frec{display:inline;margin-left:8px;font:var(--t-sub);color:var(--mut)}
+.fbar{margin:var(--s3) 0 var(--s1)}.ffilt,.fjump{display:flex;flex-wrap:wrap;gap:6px}.fjump{margin-top:var(--s2);gap:2px 10px}
+.ffilt{gap:2px;padding:2px;flex-wrap:nowrap;width:fit-content;max-width:100%;background:var(--fill);border-radius:var(--r-item)}
+.ffilt button{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;border:0;background:none;color:var(--fg);border-radius:var(--r-ctl);min-height:24px;padding:2px 7px;font:inherit;font-size:12.5px;font-weight:500;cursor:pointer;white-space:nowrap;transition:background-color var(--dur) var(--ease)}
+.ffilt button i{font-style:normal;color:var(--mut)}.ffilt button.on{background:var(--card);color:var(--fg);font-weight:600;box-shadow:0 0 0 .5px var(--line)}
+.ffilt button.need:not(.on){color:var(--warnt)}
+.fjump button{border:0;background:none;color:var(--acct);border-radius:var(--r-badge);padding:2px 0;font:inherit;font-size:12.5px;cursor:pointer}
 .setrow .lbl b .fneed[hidden],.fgrp[hidden],.fitem[hidden],.fjump button[hidden],.ffilt button[hidden]{display:none!important}
 .gbtn{display:block;border:0;background:none;color:var(--acc);font:inherit;font-size:12px;padding:4px 0 0;cursor:pointer}.gbtn.on{font-weight:600}
 .fh .gbtn{display:inline;margin-left:6px;padding:0}
@@ -464,9 +466,9 @@ div.guide.inline{border:0;border-bottom:1px solid var(--line);border-radius:0;ma
 @media (max-width:760px){.menav{flex-wrap:nowrap}}
 #conadd{margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:8px 12px}#conadd summary{cursor:pointer;font-weight:600;font-size:14px}
 .setrow:has(>textarea){flex-wrap:wrap}.setrow>textarea{width:100%;min-width:0}
-.ftags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}.ftag{font-size:11px;line-height:1.5;padding:0 7px;border-radius:9px;background:var(--line);color:var(--mut);white-space:nowrap}
-.ftag.out{background:color-mix(in srgb,var(--acc) 14%,transparent);color:var(--acc)}
-.savebar .unsaved,.savebar .undo{display:none}.savebar.dirty .unsaved{display:inline;font-size:13px;color:var(--warn,#b7791f);font-weight:600;margin-right:4px}.savebar.dirty .undo{display:inline-flex}
+.ftags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}.ftag{font-size:11.5px;line-height:1.5;padding:0 7px;border-radius:var(--r-badge);background:var(--fill);color:var(--mut);white-space:nowrap}
+.ftag.out{background:var(--acc-weak);color:var(--acct)}
+.savebar .unsaved,.savebar .undo{display:none}.savebar.dirty .unsaved{display:inline;font-size:12.5px;color:var(--warnt);font-weight:600;margin-right:4px}.savebar.dirty .undo{display:inline-flex}
 .savebar.dirty{position:sticky;bottom:0;z-index:3;background:var(--card)}
 .cgrp{font:var(--t-cap);color:var(--mut);padding:14px 10px 4px}.cgrp:first-child{padding-top:0}
 @media (max-width:760px){.cgrp{padding:12px 16px 6px;background:var(--bg);border-bottom:1px solid var(--line)}.cgrp:first-child{padding-top:12px}}
@@ -822,7 +824,7 @@ span.dtag{cursor:default}.dtag.on{background:color-mix(in srgb,var(--acc) 18%,tr
 .wlink{border:0;background:none;padding:0;margin-left:4px;font:inherit;color:var(--acc);cursor:pointer}
 /* locked rows and the list of what the admin has not switched on (V01.0.270) */
 .setrow.locked .lbl b{color:var(--mut)}.setrow.locked .tgl,.setrow.locked select,.setrow.locked textarea{opacity:.5}
-.setrow .lbl .why{display:block;font-style:normal;font-size:12px;color:#b45309;margin-top:2px}
+.setrow .lbl .why{display:block;font-style:normal;font-size:12px;color:var(--warnt);margin-top:2px}
 .ptab.ownonly>:not(.meown){display:none!important}
 .meown{border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin:0 0 14px;overflow-wrap:anywhere;max-width:100%;box-sizing:border-box}
 .meown .danger{color:var(--bad)}.meown>p:first-child{margin:0 0 10px}.meown>.fh{margin:8px 0 0}.meown>.fh:empty{display:none}
@@ -997,8 +999,8 @@ body.hilfeon .fabpop{max-height:min(70vh,560px);overflow:auto;box-sizing:border-
 .setrow:has(+.protail){border-bottom:0;padding-bottom:4px}.protail{padding:0 0 12px 14px;border-bottom:1px solid var(--line);min-width:0}
 .protail .setrow:last-child{border-bottom:1px solid var(--line)}.protail .facts li{min-width:0;display:flex;justify-content:space-between;align-items:center;gap:10px}.protail .facts li>span:last-child:not(:first-child){display:flex;gap:6px;flex:none}.protail .facts li>span:first-child{min-width:0;overflow-wrap:anywhere}
 @media (max-width:760px){.protail{padding-left:8px}.protail .facts li{flex-wrap:wrap}.protail .facts li>span:first-child{flex:1 1 100%}}
-.hqbtn{margin-left:6px;width:20px;height:20px;padding:0;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--mut);font-size:12px;font-weight:600;line-height:18px;cursor:pointer;vertical-align:1px}
-.hqbtn:hover{color:var(--acc);border-color:var(--acc)}body:not(.hilfeon) .hqbtn{display:none}
+.hqbtn{margin-left:6px;width:16px;height:16px;padding:0;border-radius:50%;border:0;background:var(--fill);color:var(--mut);font-size:11.5px;font-weight:600;line-height:16px;cursor:pointer;vertical-align:1px;transition:color var(--dur) var(--ease)}
+.hqbtn:hover{color:var(--acc)}body:not(.hilfeon) .hqbtn{display:none}
 .setrow .lbl b:has(+.hqbtn){display:inline}.setrow .lbl>.hqbtn+span{display:block}
 .nayaml{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;background:var(--bg2,#0001);padding:8px;border-radius:8px;max-width:100%}
 #nakeys li{display:flex;gap:8px;align-items:center;flex-wrap:wrap}#nakeys li button{margin-left:auto}
@@ -1159,53 +1161,80 @@ select.ld-chip{width:auto;max-width:180px;padding:3px 8px}
 .mkpeek.slide.st-frisch{border-top:4px solid #0f766e}.mkpeek.st-frisch b{color:#0f766e}
 .mkpeek.slide.st-warm{border-top:4px solid #c2410c}.mkpeek.st-warm{background:#fffbf5;color:#1f1a17}.mkpeek.st-warm b{color:#c2410c;font-family:Georgia,serif}
 .mkpeek.st-brief{font-family:Arial,sans-serif}
-/* Seitengerüst (plaene/einstellungen-neu.md, Paket 1, js/seite.js): the page sits on the background, the rows of
-   each section in one rounded box (.sgrp) under a small heading; segment buttons for short choices (.segc);
-   the save bar floats at the bottom while something is unsaved */
+/* Seitengerüst (plaene/einstellungen-neu.md, Paket 1, js/seite.js; Redesign Stufe 5 „Konfigurationsseiten“, Tafel
+   redesign/a-rechner-einstellung.png): the page sits on the grey background in one column of at most --detail-max, the
+   rows of each section in one white group (.sgrp) with hairlines under a small grey heading; a row is the title with
+   one sentence below on the left and one control on the right (switch, segment, pop-up, field), all of one height;
+   "Erweitert" is a row of its own that opens below; the save bar stands at the bottom of every page with the same
+   height, quiet while nothing changed, with a blue dot and the changes while something is unsaved */
 #cfg .cfgwrap{max-width:none;grid-template-columns:var(--sidecol) minmax(0,1fr);gap:var(--sidegap)}
 #cfg .cfgwrap.featmode{grid-template-columns:minmax(0,1fr)}   /* Funktionen from the sidebar: no settings menu, the page takes the width */
 #cfg .pane{background:none;border:0;box-shadow:none;padding:4px 2px 0;overflow:visible}
+#cfg .pane:not(#pane-feat){max-width:calc(var(--detail-max) + 4px)}
 #cfg .pane .pt{font:var(--t-title);letter-spacing:var(--track-display);margin:0 0 2px}
-#cfg .pane>.pintro{margin:0 0 18px}
-#cfg .pane h3.sec{border:0;margin:22px 4px 7px;padding:0;font:600 12.5px/1.3 var(--font);color:var(--mut)}
+#cfg .pane>.pintro{margin:0 0 var(--s5);font:var(--t-body);color:var(--mut)}
+#cfg .pane h3.sec,#setform h3.sec{border:0;margin:var(--s6) var(--s1) 6px;padding:0;font:600 12.5px/1.3 var(--font);color:var(--mut)}
 #cfg .pane h3.sec span{font-size:11.5px;font-weight:400;opacity:.85}
-.sgrp{background:var(--card);border:1px solid var(--line);border-radius:var(--r-box);box-shadow:var(--shadow);padding:2px 14px;margin:0 0 6px;min-width:0}
+.sgrp{background:var(--card);border:1px solid var(--line);border-radius:var(--r-box);padding:0 var(--s4);margin:0 0 6px;min-width:0}
 .sgrp:not(:has(>:not([hidden]):not([style*="display: none"]):not([style*="display:none"]))){display:none}
-.sgrp>.setrow,.sgrp>div>.setrow{padding:11px 0;min-height:52px}
+.sgrp>.setrow,.sgrp>div>.setrow{padding:var(--s2) 0;min-height:var(--h-row);gap:var(--s3)}
 .sgrp>.setrow:last-child,.sgrp>:last-child>.setrow:last-child{border-bottom:0}
 .sgrp>label:first-child{margin-top:10px}.sgrp>table{margin:4px 0}.sgrp>.fh:last-child{margin-bottom:10px}
 .sgrp>textarea,.sgrp>.full{margin:2px 0 10px}
-#cfg details.adv{background:var(--card);border:1px dashed color-mix(in srgb,var(--mut) 35%,var(--line));border-radius:14px;padding:12px 14px;margin-top:22px}
-#cfg details.adv[open]{border-style:solid;background:color-mix(in srgb,var(--bg) 45%,var(--card))}
-#cfg details.adv .sgrp{box-shadow:none}
-.segc{display:inline-flex;flex:none;background:color-mix(in srgb,var(--line) 70%,transparent);border-radius:10px;padding:2px;gap:1px}
+/* a row: the title in the text weight, the sentence small and grey below it */
+.sgrp .setrow .lbl b,.fitem>.setrow .lbl>b{font-weight:500}
+.sgrp .setrow .lbl>span,.sgrp .setrow .lbl>small{display:block;font:var(--t-sub);color:var(--mut);margin-top:1px}
+/* controls of one look in the groups: grey fields and pop-ups of one height, a segment, the switch */
+:is(#cfg,#setform,#prof,#apps) :is(.sgrp,.fdbody,.pcard) :is(input:not([type]),input[type=text],input[type=number],input[type=url],input[type=password],input[type=email],input[type=search],input[type=time],select:not([multiple])){
+  min-height:var(--h-ctl);padding:4px 10px;border:1px solid transparent;border-radius:var(--r-ctl);background:var(--fill);font:var(--t-body)}
+:is(#cfg,#setform,#prof,#apps) :is(.sgrp,.fdbody,.pcard) textarea{border-radius:var(--r-ctl);background:var(--fill);border-color:transparent;font:var(--t-body)}
+:is(#cfg,#setform,#prof,#apps) :is(.sgrp,.fdbody,.pcard) :is(input,select,textarea):focus{background:var(--card);border-color:var(--acc)}
+:is(#cfg,#setform,#prof,#apps) :is(.sgrp,.fdbody,.pcard) select:not([multiple]){padding-right:6px;cursor:pointer}
+/* "Erweitert": a row with a chevron, what is inside opens below it in its own groups */
+#cfg details.adv,#setform details.adv{background:none;border:0;border-radius:0;padding:0;margin-top:var(--s6)}
+#cfg details.adv>summary,#setform details.adv>summary{list-style:none;display:block;position:relative;min-height:var(--h-row);padding:12px 40px 12px var(--s4);
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r-box);cursor:pointer;font:500 14px/1.35 var(--font);color:var(--fg)}
+#cfg details.adv>summary::-webkit-details-marker,#setform details.adv>summary::-webkit-details-marker{display:none}
+#cfg details.adv>summary::after,#setform details.adv>summary::after{content:"";position:absolute;right:var(--s4);top:50%;margin-top:-5px;width:7px;height:7px;border:solid var(--faint);border-width:0 1.75px 1.75px 0;transform:rotate(-45deg);transition:transform var(--dur) var(--ease)}
+#cfg details.adv[open]>summary::after,#setform details.adv[open]>summary::after{transform:rotate(45deg)}
+#cfg details.adv>summary .mut,#setform details.adv>summary span{font:var(--t-sub);color:var(--mut)}#setform details.adv>summary span{display:block;margin-top:1px}
+#cfg details.adv[open]>summary,#setform details.adv[open]>summary{margin-bottom:var(--s2)}
+.segc{display:inline-flex;flex:none;background:var(--fill);border-radius:var(--r-item);padding:2px;gap:2px}
 .segc[hidden]{display:none}
-.segc button{border:0;background:none;color:var(--mut);font:inherit;font-size:13px;font-weight:500;padding:5px 11px;border-radius:8px;cursor:pointer;white-space:nowrap}
-.segc button.on{background:var(--card);color:var(--fg);font-weight:600;box-shadow:0 1px 3px rgba(16,24,40,.12)}
+.segc button{border:0;background:none;color:var(--fg);font:inherit;font-size:12.5px;font-weight:500;min-height:24px;padding:2px 12px;border-radius:var(--r-ctl);cursor:pointer;white-space:nowrap;transition:background-color var(--dur) var(--ease)}
+.segc button.on{background:var(--card);font-weight:600;box-shadow:0 0 0 .5px var(--line)}
 .segc button:disabled{cursor:default;opacity:.5}
 select.segsel{display:none!important}
-/* save bar: quiet while nothing changed, a floating dark bar with the changes while something is unsaved */
-#cfg .pane>.savebar{border:0;margin:18px 0 0;padding:0}
-#cfg .pane>.savebar:not(.dirty) .savebtn{background:var(--card);color:var(--mut);border:1px solid var(--line);box-shadow:none}
-#cfg .pane>.savebar.dirty{position:sticky;bottom:18px;z-index:6;margin:22px auto 0;max-width:660px;padding:9px 10px 9px 16px;border-radius:14px;
-  background:#1b2030;color:var(--on-acc);box-shadow:0 12px 34px rgba(0,0,0,.28)}
-#cfg .pane>.savebar.dirty .unsaved{color:var(--on-acc)}#cfg .pane>.savebar.dirty .savemsg{color:#c9cfe0}
-#cfg .pane>.savebar.dirty .undo{background:transparent;color:var(--on-acc);border-color:rgba(255,255,255,.28)}
-#cfg .pane>.savebar.dirty .savebtn{margin-left:auto;order:9}
-.setrow.dirtyrow{box-shadow:inset 3px 0 0 var(--acc);padding-left:10px!important;margin-left:-14px;padding-right:0}
+/* the save bar stands at the bottom of the page (sticky) with the same height whether something changed or not; changed:
+   a blue dot and what changed on the left, Verwerfen and Speichern on the right; nothing changed: Speichern grey */
+#cfg .pane>.savebar{position:sticky;bottom:0;z-index:6;display:flex;flex-wrap:nowrap;align-items:center;gap:var(--s2);min-height:var(--h-bar);margin:var(--s6) 0 0;padding:var(--s2) 0;
+  border:0;border-top:1px solid var(--line);background:var(--bg);color:var(--fg);box-shadow:none;border-radius:0}
+#cfg .pane>.savebar .unsaved{order:1;display:block;flex:0 1 auto;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font:var(--t-sub);font-weight:400;color:var(--fg);margin:0}
+#cfg .pane>.savebar .unsaved::before{content:"";display:inline-block;width:7px;height:7px;margin-right:var(--s2);vertical-align:1px;border-radius:50%;background:var(--acc)}
+#cfg .pane>.savebar:not(.dirty) .unsaved{display:none}
+#cfg .pane>.savebar .savemsg{order:2;flex:0 1 auto;min-width:0;font:var(--t-sub);color:var(--mut)}
+#cfg .pane>.savebar .b{flex:none}
+#cfg .pane>.savebar .undo{order:8;margin-left:auto;background:var(--fill);border-color:transparent;color:var(--fg)}
+#cfg .pane>.savebar .savebtn{order:9;margin-left:auto}
+#cfg .pane>.savebar.dirty .savebtn{margin-left:0}
+#cfg .pane>.savebar:not(.dirty) .savebtn{background:var(--fill);color:var(--mut);border-color:transparent}
+/* a changed row: a blue dot in front of its title, nothing moves */
+.setrow.dirtyrow{position:relative}
+.setrow.dirtyrow::before{content:"";position:absolute;left:calc(-1 * var(--s3));top:50%;margin-top:-3px;width:6px;height:6px;border-radius:50%;background:var(--acc)}
 @media (max-width:760px){
   #cfg .pane{padding:0}
-  .sgrp{padding:2px 12px;border-radius:12px}
-  .setrow.dirtyrow{margin-left:-12px;padding-left:9px!important}
-  #cfg .pane>.savebar.dirty{bottom:calc(10px + env(safe-area-inset-bottom));margin:18px 0 0;padding:9px 10px 9px 14px;border-radius:14px}
-  body.appview #cfg .pane>.savebar.dirty{bottom:calc(64px + env(safe-area-inset-bottom))}
-  .segc button{padding:6px 10px}
+  #cfg .pane:not(#pane-feat){max-width:none}
+  .sgrp{padding:0 var(--s3);border-radius:var(--r-box)}
+  .setrow.dirtyrow::before{left:-9px}
+  #cfg .pane>.savebar{bottom:env(safe-area-inset-bottom);padding:var(--s2) 0}
+  body.appview #cfg .pane>.savebar{bottom:calc(59px + env(safe-area-inset-bottom));background:var(--apbg,var(--bg))}
+  .segc button{min-height:30px;padding:4px 10px}
 }
 .setrow .ctl>input:not(.num):not([type=checkbox]){flex:1 1 auto;min-width:0}
 /* a control that leaves the text less than ~180 px moves below it instead of squeezing it: at every width, the box is
    narrow beside the two menus too (820 px), and a field next to it never shrinks the text to one word per line */
 .sgrp .setrow{flex-wrap:wrap}.sgrp .setrow>.lbl{flex:1 1 180px}.sgrp .setrow>:not(.lbl){min-width:0}
-.sgrp .setrow:has(>input[type=range])>.lbl{flex-basis:110px}.sgrp .setrow>.ctl{flex-wrap:wrap}
+.sgrp .setrow:has(>input[type=range])>.lbl{flex-basis:130px}.sgrp .setrow>.ctl{flex-wrap:wrap}
 .sgrp .setrow:has(>.tgl){flex-wrap:nowrap}.sgrp .setrow:has(>.tgl)>.lbl{flex-basis:0}
 @media (max-width:760px){.sgrp .setrow:has(>.ctl.full,>input.wide,>select.wide)>.lbl{flex:1}}
 /* settings menu with a coloured symbol per page (js/seite.js) */
@@ -1221,33 +1250,64 @@ button.on>.cic{color:var(--acc)}
   #cfgnav button.hasic .cic{position:absolute;left:16px;top:50%;margin-top:-12px;width:24px;height:24px}
 }
 #cfgnav button[data-p=feat].hasic{display:none}
-/* Funktionen als Liste + Detail (Paket 3, js/fdetail.js): wide, the open function shows in a column on the right that
-   stays in view while the list scrolls; narrow it opens below its line as before */
+/* Funktionen als Liste + Detail (Paket 3, js/fdetail.js; Redesign Stufe 5, Tafel redesign/a-rechner-funktionen.png):
+   wide, the list is one column of --list-w (name, one line below, switch) and the open function fills the space beside
+   it: its title and sentence on top, then its rows in one white group with hairlines; the open line is blue. Narrow it
+   opens below its line as before. Filters as one segment, "braucht dich" as an orange dot with the word, no other badges */
 .fdet{display:none}
-#pane-feat.fsplit{position:relative;padding-right:384px}
-#pane-feat.fsplit>.fdet{display:block;position:absolute;top:0;right:0;bottom:0;width:364px}
-.fdin{position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px 18px}
-.fdempty{display:flex;flex-direction:column;gap:6px;color:var(--mut);font-size:13.5px;padding:18px 4px}.fdempty b{color:var(--fg);font-size:15px}
-.fdhead{border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:6px}
-.fdtop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.fdtop b{font-size:17px;letter-spacing:-.01em}
-.fdx{flex:none;width:28px;height:28px;border:0;border-radius:8px;background:none;color:var(--mut);font-size:20px;line-height:1;cursor:pointer}
-.fdx:hover{background:var(--bg);color:var(--fg)}
-.fdhead p{margin:6px 0 0;font-size:13.5px;color:var(--mut);line-height:1.45}.fdhead .ftags{margin-top:8px}
-.fdhead .fdguide{margin-top:10px;font-size:12.5px;padding:5px 12px}
-.fdbody>.setrow{padding-left:0;padding-right:0}.fdbody>.fdetail{margin:0 0 10px!important;padding:2px 0 8px;border-left:0}
+#pane-feat.fsplit{position:relative;padding-right:calc(100% - var(--list-w))}
+#pane-feat.fsplit>.fdet{display:block;position:absolute;top:0;bottom:0;left:calc(var(--list-w) + var(--s3));right:0}
+#pane-feat.fsplit .fjump{display:none}
+.fdin{position:sticky;top:var(--s4);max-height:calc(100vh - 2 * var(--s4));overflow:auto;background:none;border:0;border-left:1px solid var(--line);border-radius:0;box-shadow:none;padding:var(--s1) var(--s1) var(--s4) var(--s6)}
+.fdin>*{max-width:var(--detail-max)}
+.fdempty{display:flex;flex-direction:column;gap:6px;color:var(--mut);font:var(--t-body);padding:var(--s12) 0;text-align:center;align-items:center}.fdempty b{color:var(--fg);font:var(--t-head)}
+.fdhead{border:0;padding:0 0 var(--s4);margin:0}
+.fdtop{display:flex;align-items:center;gap:var(--s3)}.fdtop b{flex:1;min-width:0;font:var(--t-title);letter-spacing:var(--track-display)}
+.fdtop .cic.fdsym{order:0;width:40px;height:40px;border:1px solid var(--line);border-radius:var(--r-box);background:var(--card);color:var(--fg)}.fdtop .fdsym svg{width:22px;height:22px}
+.fdx{flex:none;display:grid;place-items:center;width:var(--h-ctl);height:var(--h-ctl);border:0;border-radius:var(--r-ctl);background:none;color:var(--mut);font-size:17px;line-height:1;cursor:pointer;transition:background-color var(--dur) var(--ease)}
+.fdx:hover{background:var(--fill);color:var(--fg)}
+.fdhead p{margin:var(--s1) 0 0;font:var(--t-body);color:var(--mut)}.fdhead .ftags{margin-top:var(--s2)}
+.fdtop:has(.fdsym)~:is(p,.ftags,.fdguide){margin-left:52px}
+.fdhead .fdguide{margin-top:var(--s3);font:var(--t-sub);font-weight:500;padding:4px 12px;min-height:var(--h-ctl);background:var(--fill);border-color:transparent}
+.fdbody{background:var(--card);border:1px solid var(--line);border-radius:var(--r-box);padding:0 var(--s4)}
+.fdbody>*{border-bottom:1px solid var(--line)}.fdbody>:last-child{border-bottom:0}.fdbody>[hidden],.fdbody>[style*="display: none"]{border:0}
+.fdbody>.setrow{padding:var(--s2) 0;min-height:var(--h-row)}
+.fdbody>.fdetail{margin:0!important;padding:var(--s2) 0 var(--s3);border-left:0}
 .fdbody>.setrow[style*="margin-left"]{margin-left:0!important}
-#pane-feat.fsplit .fitem>.setrow:first-child .lbl>span,#pane-feat.fsplit .fitem>.setrow:first-child .ftags,#pane-feat.fsplit .fitem>.setrow:first-child .gbtn{display:none!important}
+.fdbody .setrow .lbl b{font-weight:500}.fdbody .setrow .lbl>span{display:block;font:var(--t-sub);color:var(--mut)}
+#pane-feat.fsplit .fitem>.setrow:first-child .ftags,#pane-feat.fsplit .fitem>.setrow:first-child .gbtn{display:none!important}
 #pane-feat.fsplit .fitem.open{padding-bottom:0}
-.fitem.fside>.setrow:first-child{background:color-mix(in srgb,var(--acc) 9%,transparent);border-radius:10px;box-shadow:inset 3px 0 0 var(--acc)}
-.fwho{margin:4px 0 10px;padding:10px 12px;border-radius:12px;background:var(--bg)}
-.fwline{font-size:13px;line-height:1.5}.fwline .fwblk{color:var(--bad)}.fwline+.fwrow{margin-top:8px}
+/* the list: groups under a small grey heading, the lines in one white group */
+#pane-feat .fgrp{margin-top:var(--s5)}
+#pane-feat .fgrp>summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:var(--h-nav);padding:0 var(--s1) 2px;border:0;font:600 12.5px/1.3 var(--font);color:var(--mut);cursor:pointer}
+#pane-feat .fgrp>summary::-webkit-details-marker{display:none}
+#pane-feat .fgrp>summary b{font-weight:600;gap:var(--s2)}#pane-feat .fgrp>summary .cic{width:16px;height:16px}#pane-feat .fgrp>summary .cic svg{width:var(--ic-sm);height:var(--ic-sm)}
+#pane-feat .fgrp>.fitem{background:var(--card);border:1px solid var(--line);border-top:0;padding:0 var(--s3)}
+#pane-feat .fgrp>.fitem:not([hidden]):not(.fitem:not([hidden])~.fitem){border-top:1px solid var(--line);border-radius:var(--r-box) var(--r-box) 0 0}
+#pane-feat .fgrp>.fitem:not([hidden]):not(:has(~.fitem:not([hidden]))){border-bottom-left-radius:var(--r-box);border-bottom-right-radius:var(--r-box)}
+#pane-feat .fitem>.setrow:first-child{min-height:var(--h-item);padding:6px 0}
+/* one line below the name (its sentence, cut with „…“), the whole sentence once it is open below its line */
+#pane-feat .fitem>.setrow:first-child .lbl>span{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;font:var(--t-sub);color:var(--mut)}
+#pane-feat:not(.fsplit) .fitem.open>.setrow:first-child .lbl>span{display:block;-webkit-line-clamp:none;overflow:visible}
+#pane-feat .fitem>.setrow:first-child .lbl>span .mlink{display:none}
+#pane-feat:not(.fsplit) .fitem.open>.setrow:first-child .lbl>span .mlink{display:inline}
+/* the open function on the right: its line in the accent, text and switch in white */
+#pane-feat .fgrp>.fitem.fside{background:var(--acc);border-color:var(--acc)}
+.fitem.fside>.setrow:first-child{background:none;box-shadow:none}
+#pane-feat .fitem.fside>.setrow:first-child :is(.lbl,.lbl b,.lbl>span,.fexp,.frec,.hqbtn){color:var(--on-acc)}#pane-feat .fitem.fside>.setrow:first-child .lbl>span{opacity:.85}
+.fitem.fside>.setrow:first-child .tgl i{background:color-mix(in srgb,var(--on-acc) 28%,transparent)}
+.fitem.fside>.setrow:first-child .tgl input:checked+i{background:color-mix(in srgb,var(--on-acc) 42%,transparent)}
+.fitem.fside>.setrow:first-child .fneed{color:var(--on-acc)}
+.fwho{margin:0;padding:var(--s3) 0;border-radius:0;background:none}
+.fwline{font:var(--t-body)}.fwline b{font-weight:500}.fwline .fwblk{color:var(--badt)}.fwline+.fwrow{margin-top:var(--s2)}
 .fwho[hidden]{display:none}
-.fwrow+.fwrow{margin-top:10px;padding-top:8px;border-top:1px solid var(--line)}.fwname{font-size:12.5px;font-weight:600;margin-bottom:4px}
+.fwrow+.fwrow{margin-top:10px;padding-top:8px;border-top:1px solid var(--line)}.fwname{font:var(--t-sub);font-weight:600;margin-bottom:4px}
 .fwchips{display:flex;flex-wrap:wrap;gap:6px}
-.fwc{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:999px;padding:4px 11px;font:inherit;font-size:12.5px;cursor:pointer}
+.fwc{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:var(--r-pill);padding:3px 11px;font:inherit;font-size:12.5px;cursor:pointer}
 .fwc.on{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}.fwc:disabled{opacity:.5;cursor:default;border-style:dashed}
-.fwc.blk{border-color:var(--bad);color:var(--bad);text-decoration:line-through}.fwg{font-size:12px;margin-top:6px}
-.fpreset .lbl>b{font-size:13px}
+.fwc.blk{border-color:var(--bad);color:var(--badt);text-decoration:line-through}.fwg{font-size:12px;margin-top:6px}
+.fpreset .lbl>b{font-size:14px}
+@media (max-width:760px){#pane-feat .fgrp>.fitem{padding:0 var(--s3)}}
 /* Ich als Seite (Paket 4): beside the sidebar it looks like the settings pages: no card, the page title on top of
    the content, symbols in the column, the conversation settings in boxes one below the other; "Schließen" goes
    (Ich is a menu entry like the others), the face no longer covers a button */
@@ -1269,39 +1329,37 @@ button.on>.cic{color:var(--acc)}
   #ptabs button.hasic{padding-left:46px}
   #ptabs button.hasic .cic{position:absolute;left:4px;top:50%;margin-top:-14px;width:28px;height:28px;border-radius:8px}
 }
-#setform h3.sec{border:0;margin:22px 4px 7px;padding:0;font:600 12.5px/1.3 var(--font);color:var(--mut)}
 #setform>.setpane:first-child>h3.sec{margin-top:4px}
+@media (min-width:761px){#setform{max-width:calc(var(--detail-max) + 4px)}}
 #setform [hidden]{display:none!important}
-#setform details.adv{background:var(--card);border:1px dashed color-mix(in srgb,var(--mut) 35%,var(--line));border-radius:14px;padding:12px 14px;margin-top:18px}
-#setform details.adv[open]{border-style:solid;background:color-mix(in srgb,var(--bg) 45%,var(--card))}
-#setform details.adv>summary{cursor:pointer;font-weight:600;font-size:14px}
-#setform details.adv>summary span{display:block;font-weight:400;font-size:12.5px;color:var(--mut);margin-top:2px}
-#setform details.adv[open]>summary{margin-bottom:8px}
-#setform details.adv .sgrp{box-shadow:none}
 #setform details.melockrows>summary{color:var(--mut)}
 /* Personen und Geräte als Liste + Detail (Paket 5, js/users.js pSide): wide, the list on the left and the open person on
    the right; the devices below over the full width */
 .pstack{display:flex;flex-direction:column;gap:16px}
 .pside{display:none}
 .pcard.split .psplit{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:20px;align-items:start}
-.pcard.split .pside{display:block;position:sticky;top:16px;border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:color-mix(in srgb,var(--bg) 40%,var(--card));max-height:calc(100vh - 32px);overflow:auto}
+.pcard.split .pside{display:block;position:sticky;top:var(--s4);border:1px solid var(--line);border-radius:var(--r-box);padding:14px var(--s4);background:var(--card);max-height:calc(100vh - 2 * var(--s4));overflow:auto}
 .pcard.split #proflist tr[data-prow]{cursor:pointer}
-.pcard.split #proflist tr.pon>td{background:color-mix(in srgb,var(--acc) 9%,transparent)}
-.pcard.split #proflist tr.pon>td:first-child{box-shadow:inset 3px 0 0 var(--acc)}
+.pcard.split #proflist tr.pon>td{background:var(--sel)}
+.pcard.split #proflist tr.pon>td:first-child{border-radius:var(--r-item) 0 0 var(--r-item)}.pcard.split #proflist tr.pon>td:last-child{border-radius:0 var(--r-item) var(--r-item) 0}
 .pdhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px}.pdhead b{font-size:17px}
-/* Apps und Schnittstellen als Kacheln (Paket 5, js/kacheln.js): name and one sentence per app; open = full width */
-.atiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:16px;align-items:start}
-.atiles>.atile{margin:0;min-width:0}
-.atile>h2:first-child{margin:0}
-.atbtn{all:unset;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;font-weight:650}
-.atbtn::after{content:"";width:7px;height:7px;border-right:2px solid var(--mut);border-bottom:2px solid var(--mut);transform:rotate(-45deg);transition:transform .15s;flex:none}
+/* Apps und Schnittstellen als Kacheln (Paket 5, js/kacheln.js; Redesign Stufe 5): quiet tiles of one height with the
+   name, one or two lines and a chevron; a function behind a tile shows as a dot and a word; open = full width */
+.atiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:var(--s3);margin-top:var(--s4);align-items:stretch}
+.atiles>.atile{margin:0;min-width:0;box-shadow:none;border:1px solid var(--line);border-radius:var(--r-box);padding:var(--s3) var(--s4)}
+.atile:not(.open){min-height:var(--h-tile)}
+.atile>h2:first-child{margin:0;font:var(--t-body);font-weight:600}
+.atbtn{all:unset;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;font-weight:600}
+.atbtn::after{content:"";width:7px;height:7px;border-right:1.75px solid var(--faint);border-bottom:1.75px solid var(--faint);transform:rotate(-45deg);transition:transform var(--dur) var(--ease);flex:none}
 .atile.open .atbtn::after{transform:rotate(45deg)}
-.atbtn:focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:4px}
+.atbtn:focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:var(--r-badge)}
 .atile:not(.open)>:not(h2:first-child):not(.atsum):not(.atstate){display:none!important}
-.atile:not(.open)>.atsum{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13px;margin-top:6px}
+.atile:not(.open)>.atsum{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font:var(--t-sub);color:var(--mut);margin-top:var(--s1)}
 .atile.open{grid-column:1/-1}
-.atstate{display:inline-block;margin-top:8px;border:1px solid var(--line);background:var(--card);color:var(--mut);border-radius:999px;padding:3px 10px;font:inherit;font-size:12px;cursor:pointer}
-.atstate.on{background:color-mix(in srgb,var(--ok) 14%,transparent);border-color:color-mix(in srgb,var(--ok) 40%,transparent);color:var(--ok)}
+.atstate{display:inline-flex;align-items:center;gap:6px;margin-top:6px;border:0;background:none;padding:0;color:var(--mut);font:var(--t-sub);cursor:pointer;transition:color var(--dur) var(--ease)}
+.atstate::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:var(--faint)}
+.atstate.on{color:var(--fg)}.atstate.on::before{background:var(--ok)}
+.atstate:hover{color:var(--acc)}
 /* Ich-Seiten aufräumen (ich-aufraeumen/plan.md, js/ichteile.js): one look for every "Ich" page. No list scrolls
    inside the page (the page scrolls, long lists show "Weitere … zeigen"), long addresses and paths wrap or end with
    "…" instead of pushing the buttons out, sub-tabs with counts instead of small arrows. */
