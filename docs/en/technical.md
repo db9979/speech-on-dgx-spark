@@ -80,7 +80,7 @@ Since V01.1.270 (knowledge map stage 4, preparing the test with 5000 documents a
 - **Knowledge map:** pages, points, connections, places, connections per document (mean and most) and `view` (the best connected ones and around a point), `rund_um` (2 steps), `weg` and `wissenskarte.liste`.
 - **Find** (measuring part "fund", since V01.1.285, `app/panel/fundmessung.py`, only with "made up"): per document of the run 10 sealed made-up mails (with 5000 documents 50,000 mails, every fifth with an attachment, the first 1000 as real MIME messages through `fundmail.eintraege`, all through `fundmail.schreiben` with AES-GCM and HMAC marks) and the documents as rows of the index, in the throwaway profile's `fund.db`. Measured: `fund.suche` over 200 fixed searches (`suche_p50_ms`, `suche_p95_ms`, `suche_max_ms`, the share below the goal of 150 ms), reading in and writing per 1000 mails, the size of `fund.db` (MB and KB per entry), the measuring process's RAM before, after, peak and growth. Without the Spark's key the part measures nothing (`schluessel` false) and never makes one.
 - Every time as median, p95 and maximum over 20 fixed samples from the own titles and names (`PROBEN`), and the measuring process's memory at the start and at the end.
-- **Limits:** for the knowledge book's pages (300), the connections (3000) and the points (5000) the run says how many there are now, how many the documents would bring and whether the limit is full. With made-up documents the need is what the build would have made without the limit; with a profile what it brings per document, projected to 5000 documents (an upper estimate).
+- **Limits:** for the knowledge book's pages (3000), the connections (25,000) and the points (15,000) the run says how many there are now, how many the documents would bring and whether the limit is full. With made-up documents the need is what the build would have made without the limit; with a profile what it brings per document, projected to 5000 documents (an upper estimate).
 
 Made-up documents come from a fixed seed (`SEED`) in a throwaway profile under `state/wissensmessung-tmp/lauf-…`: pieces of made-up words with random float16 vectors, context lines, pages and sentences of the knowledge book, points with their places and connections, with the limits of the real code and fixed assumptions per document (`SYN_*`: about 10 pieces, 2 pages, 6 places of points, 4 connections). After the run the folder is gone, also after a stop; a folder of a crashed run is cleared by the next one. A real profile is only read: every connection of the measuring process has `PRAGMA query_only`, a database of another version or without the tables of a part is not touched.
 
@@ -102,6 +102,31 @@ Example on a development computer (4 cores, V01.1.270, 5000 made-up documents, a
 | Pages · points · connections | 300 · 5000 · 3000 | 3005 · 10558 · 19791 |
 
 The vector matrix needs 38.5 MB (built in 0.2 s), the measuring process grows from about 80 to 165 MB. All three limits are full at 5000 documents (need about 3000 pages, 20 000 connections, 10 800 points); without them `wissenskarte.liste` (it walks every point in Python) becomes the slowest part of the search.
+
+### Speed of the knowledge map (V01.1.291)
+
+Since V01.1.291 (knowledge map stage 2 instead of Neo4j) higher limits apply: 3000 pages in the knowledge book (`wissensbuch.MAX_PAGES`, before 300), 25,000 connections (`wissenskarte.MAX_EDGES`, before 3000) and 15,000 points (`wissenskarte.MAX_ENT`, before 5000) per profile. The daily limits stay as they were and can still be set; the map still shows at most 150 points and 400 connections at once. So that the search stays fast, the ways of the map go over indexes instead of over every row; the answers stay the same:
+
+- **List for the search** (`wissenskarte.liste`): the search words find their points over the word index `wk_entwort` (per name and other name the first word, the words that hit on their own, and for accounts the first signs without spaces). It only picks candidates; whether and how a point is hit is decided by the same fixed rule as before (`trifft`). Triggers mark new, changed and deleted points, with every commit the marked ones are written again (reading in, renaming, merging, deleting, also by other parts); on the first open after the update every profile builds the index once ("wissen: wissenskarte wortindex aufgebaut | n punkte"). One query fetches the neighbours of all points hit, the places come over the new index `chunks_doc_n` of the document search, without reading text and vector of the pieces.
+- **Map** (`view`): the panel fetches the build of the map (names, connections per point and document, who stands next to whom) once from SQLite and keeps it in memory while nothing changes: triggers count every change of the tables involved in `wk_stand` (`wissenskarte.STAND_TABELLEN`), at most 4 builds for 10 minutes. Each call only picks its part from it.
+- **Around and way:** one query per step for the whole ring, over the indexes on both ends of the connections; whether a connection counts SQLite checks per row over the indexes instead of with a list of every point. Each point is looked at once, a ring never runs on. `weg` searches from both ends at once and stops as soon as they meet; which points lie on a shortest way follows from both sides, so the chosen way stays the same.
+- **Nightly check:** it runs in slices of at most 4000 connections and 200 deadlines per step (`NACHT_SCHEIBE`, `NACHT_FRISTEN`), the next step goes on from there; each slice writes its line, all but the last with "| weiter".
+- **Doubles:** the quiet run for doubles (`wissensdoppelt.lauf`) goes in slices of at most 0.2 s (`SCHEIBE_S`): it looks at the clock every 200 keys, before each merge (from 10 on) and every 100 comparisons, the next slice goes on in the memory where the last stood (changed points or an hour of rest start it again). The limits per run count for the whole run, the slices of one run count once for "at most six times a day". With 15,000 people one slice took at most 196 ms on the development machine (before: one run of 3 s in one go).
+- **Guard:** `test_wissenstempo` checks without a clock: the query plan uses the indexes, the list looks at a small part of the points only, the build is made once per stand, `weg` and the list answer as the slow way over everything, the nightly check and the run for doubles reach the same end in slices, and the limits are fixed.
+
+Measured with `sudo speech-spark wissen messen` (5000 made-up documents, both times with the new limits, so 3000 pages, about 10,500 points and 19,800 connections) on the development computer (4 cores), times in ms; "before" is the state before V01.1.273 with the new limits:
+
+| Way | before p50 | before p95 | after p50 | after p95 |
+|---|---|---|---|---|
+| Document search | 57 | 90 | 60 | 80 |
+| Document search with the map | 464 | 557 | 80 | 116 |
+| `wissenskarte.liste` | 376 | 470 | 17 | 62 |
+| `view` (the best connected) | 259 | 289 | 4 | 279 |
+| `view` (around a point) | 272 | 298 | 4 | 9 |
+| `rund_um` (2 steps) | 20 | 34 | 4 | 20 |
+| `weg` | 125 | 266 | 3 | 61 |
+
+The first call of `view` after a change makes the build anew (the p95 of the five calls is that first one); after that the map comes from memory. The versions V01.1.273 to V01.1.290 (page and point as one point) were slower still with many points, because every query worked out the mapping page → point over all rows (map list about 2 s, way up to minutes); that too now goes over the build and the indexes.
 
 ### Measuring parts
 

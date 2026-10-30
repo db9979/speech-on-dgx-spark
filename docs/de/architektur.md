@@ -272,7 +272,7 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/wissen.py` | Wissen aus eigenen Uploads: Schalter und Kontingent |
 | `app/panel/wissensbuch.py` | Wissensbuch: Seiten aus eigenen Dokumenten, jeder Satz mit Quelle; Suchindex FTS5, Lesefunktion liste |
 | `app/panel/wissensdoppelt.py` | Doppelte der Wissenskarte: feste Regeln für gleiche und vielleicht gleiche Punkte, Vorschläge, Verschieden |
-| `app/panel/wissenskarte.py` | Wissenskarte: geprüfte Verbindungen und Punkte aus Dokumenten, je mit Quelle, WITH RECURSIVE, Trefferliste der Suche |
+| `app/panel/wissenskarte.py` | Wissenskarte: geprüfte Verbindungen und Punkte aus Dokumenten mit Quelle, Aufbau im Speicher, Wortindex, Suchliste |
 | `app/panel/wissensmessung.py` | Wissen messen: Zeiten und Speicher von Suche, Wissensbuch, Karte und Finden, erfunden oder ein Profil lesend |
 
 ### Anbindungen
@@ -2418,14 +2418,14 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - Ist die Wissenskarte an, bekommt das Sprachmodell nach dem Wissensbuch dasselbe Dokument noch einmal mit höchstens 12 Seiten, die das Panel auswählt (die Seiten des Dokuments und Seiten, deren Titel es nennt). Das Modell schlägt Verbindungen als JSON vor, jede mit einer Art aus einer festen Liste und der Nummer ihrer Stelle.
 - Das Panel behält eine Verbindung nur, wenn beide Seiten angeboten waren, beide in der Stelle genannt sind, jede Zahl des Zusatzes in der Stelle steht und eine Ursache (führte zu, verursacht, erhöht, senkt) ein Wort des Grundes in der Stelle hat. Höchstens 30 je Dokument; „Stimmt nicht“ bringt dieselbe Verbindung aus demselben Dokument nie wieder.
 - Die Karte zeichnen Browser und App mit eigenem Code aus Namen und Arten, nie aus SVG, Mermaid oder DOT des Modells. Das Panel liefert nur den sichtbaren Teil mit höchstens 150 Punkten; der Export als Mermaid- oder Graphviz-Text entsteht aus festem Code mit gereinigten Namen.
-- Den sichtbaren Teil wählt SQLite: Verbindungen je Seite und Dokument zählt eine feste Abfrage, und rund um eine Seite läuft WITH RECURSIVE höchstens zwei Schritte über die Verbindungen; UNION nimmt jede Seite je Schritt nur einmal, ein Ring läuft also nie weiter. Nur die gewählten Punkte und höchstens 400 Verbindungen kommen ins Panel. Zwei feste Abfragen mit Werten nur als Parameter, nie aus Text des Modells: wissenskarte.rund_um (Seiten um eine Seite) und wissenskarte.weg (kürzester Weg zwischen zwei Seiten, höchstens 4 Schritte).
+- Den Aufbau der Karte (Namen, Verbindungen je Punkt und Dokument, wer neben wem steht) holt eine feste Abfrage aus SQLite und das Panel behält ihn im Speicher, solange sich nichts ändert: Trigger zählen jede Änderung der Tabellen in wissenskarte.STAND_TABELLEN in wk_stand, höchstens 4 Aufbauten und 600 s lang. Jede Antwort wählt daraus nur ihren Teil, höchstens 400 Verbindungen. Zwei feste Abfragen mit Werten nur als Parameter, nie aus Text des Modells: wissenskarte.rund_um (Punkte um einen Punkt, je Schritt eine Abfrage über die Indizes für den ganzen Ring, jeder Punkt nur einmal, ein Ring läuft also nie weiter) und wissenskarte.weg (kürzester Weg, höchstens 4 Schritte, von beiden Enden zugleich, endet, sobald sie sich treffen). Die Liste für die Suche findet ihre Punkte über den Wortindex wk_entwort (Trigger merken neue und geänderte Punkte, wissenskarte._worte_sync schreibt sie mit jedem Speichern), nie über alle Punkte. Die Nachtprüfung läuft in Scheiben von 4000 Verbindungen und 200 Fristen.
 
 #### Personen, Firmen und Fristen
 
-- Ist der Schalter unter der Wissenskarte an, schlägt das Sprachmodell nach den Verbindungen je Stelle eines Dokuments nur JSON vor: Personen, Firmen, Orte, Verträge, Konten und Fristen mit Art und Nummer der Stelle. Das Panel behält einen Namen nur nach festen Regeln (wissenskarte.check_ent): die Art aus der festen Liste, der Name steht in der Stelle (klein, ohne Akzente, Leerzeichen zusammengezogen), 2 bis 80 Zeichen ohne Link, Auszeichnung oder Befehl, eine Frist nur mit Datum oder Zahl mit Zeiteinheit im Namen, ein Konto nur als IBAN oder Nummer; höchstens 40 je Dokument und 5000 je Profil. Verbindungen dieser Punkte prüft dieselbe Regel wie die der Seiten.
+- Ist der Schalter unter der Wissenskarte an, schlägt das Sprachmodell nach den Verbindungen je Stelle eines Dokuments nur JSON vor: Personen, Firmen, Orte, Verträge, Konten und Fristen mit Art und Nummer der Stelle. Das Panel behält einen Namen nur nach festen Regeln (wissenskarte.check_ent): die Art aus der festen Liste, der Name steht in der Stelle (klein, ohne Akzente, Leerzeichen zusammengezogen), 2 bis 80 Zeichen ohne Link, Auszeichnung oder Befehl, eine Frist nur mit Datum oder Zahl mit Zeiteinheit im Namen, ein Konto nur als IBAN oder Nummer; höchstens 40 je Dokument und 15000 je Profil. Verbindungen dieser Punkte prüft dieselbe Regel wie die der Seiten.
 - Jeder Punkt hat eine feste Nummer (wk_ent) und seine Stellen (wk_ment: Dokument und Stück). Andere Teile lesen nur: wissenskarte.finde_knoten (genau über Name und andere Namen) und wissenskarte.knoten_liste (nach Namen sortiert) und wissenskarte.knoten_von_dok (die Punkte eines Dokuments nach Art und Name, höchstens 200). Zusammenführen (wissenskarte.zusammen), Umbenennen und Löschen geschehen nur per Klick der Besitzerin oder des Besitzers mit dem Code von „Bestätigen“, nie durch das Modell; jede Änderung meldet wissenskarte.GEAENDERT. Geht ein Dokument, gehen seine Stellen sofort mit, ein Punkt ohne Stelle verschwindet.
 - Seite und Punkt, Typregeln, Fristen: Heißt eine Seite des Wissensbuchs wie ein Punkt der Art person, firma oder ort, sind beide ein Punkt (wk_entpage); die feste Regel wissenskarte._verbinde verbindet sie beim Einlesen der Punkte, nachts und einmal beim Anlegen, nie das Modell. Ihre Verbindungen zählen in view, rund_um, weg und liste als die des Punktes; umbenannt werden beide zusammen (wissensbuch.retitle, der alte Titel bleibt in wb_alttitel, so entsteht beim Einarbeiten keine Doppelseite). Jede Verbindung folgt der Tabelle wissenskarte.TYPEN (erlaubte Arten am Anfang und am Ende, eine Seite zählt als „seite“), eine Frist braucht im Namen ein Datum oder eine Zahl mit Zeiteinheit (wissenskarte.frist_name, Zahlwörter über eine feste Liste). Die Nachtprüfung (wissenskarte.nachtpruefung) entfernt, was vorher gespeichert wurde und dagegen verstößt.
-- Doppelte (wissensdoppelt.py) erkennt nur eine feste Regel, wissensdoppelt.aehnlich, nie das Modell: jeder Name in seiner Normalform je Art (wissensdoppelt.normalform: ß/ss und Umlaute, Satzzeichen, bei Personen ohne Anrede und Titel und „Nachname, Vorname“ umgestellt, bei Firmen ohne Rechtsform und „Firma“, bei Orten „Str.“ als „Straße“). „Gleich“ sind nur Personen mit Vor- und Nachnamen und Orte, die sich allein darin unterscheiden, sowie Konten, Verträge und Fristen mit derselben Normalform; beim Einlesen wird so ein Name ein anderer Name des Punktes (wissensdoppelt.gleich_id), vorhandene führt der ruhige Lauf über wissenskarte.zusammen zusammen (wissensdoppelt.lauf). Ein Vorschlag sind kleine Schreibfehler (Damerau-Levenshtein höchstens 2 ab 6 Buchstaben, 1 bei 4 bis 5), eine Initiale, wenn genau eine Person passt, und eine Firma mit gleichem Kern; verglichen wird nur in Blöcken, höchstens 200000 Paare je Lauf, höchstens 300 offene Vorschläge. „Verschieden“ (wissensdoppelt.verschieden) merkt sich die Namen, das Paar kommt nie wieder; Zusammenführen bleibt der Klick mit Code. „Zusammenführen mit …“ zeigt oben die 8 ähnlichsten Punkte derselben Art (wissensdoppelt.auswahl), den Rest über die Suche.
+- Doppelte (wissensdoppelt.py) erkennt nur eine feste Regel, wissensdoppelt.aehnlich, nie das Modell: jeder Name in seiner Normalform je Art (wissensdoppelt.normalform: ß/ss und Umlaute, Satzzeichen, bei Personen ohne Anrede und Titel und „Nachname, Vorname“ umgestellt, bei Firmen ohne Rechtsform und „Firma“, bei Orten „Str.“ als „Straße“). „Gleich“ sind nur Personen mit Vor- und Nachnamen und Orte, die sich allein darin unterscheiden, sowie Konten, Verträge und Fristen mit derselben Normalform; beim Einlesen wird so ein Name ein anderer Name des Punktes (wissensdoppelt.gleich_id), vorhandene führt der ruhige Lauf über wissenskarte.zusammen zusammen (wissensdoppelt.lauf). Ein Vorschlag sind kleine Schreibfehler (Damerau-Levenshtein höchstens 2 ab 6 Buchstaben, 1 bei 4 bis 5), eine Initiale, wenn genau eine Person passt, und eine Firma mit gleichem Kern; verglichen wird nur in Blöcken, höchstens 200000 Paare je Lauf, höchstens 300 offene Vorschläge. Der Lauf geht in Scheiben von höchstens 0.2 s, die nächste macht weiter, wo die letzte stand (im Speicher; geänderte Punkte beginnen ihn neu). „Verschieden“ (wissensdoppelt.verschieden) merkt sich die Namen, das Paar kommt nie wieder; ein gelöschter Punkt kommt auch in keiner „gleichen“ Schreibweise zurück (wissensdoppelt.gesperrt). Zusammenführen bleibt der Klick mit Code. „Zusammenführen mit …“ zeigt oben die 8 ähnlichsten Punkte derselben Art (wissensdoppelt.auswahl), den Rest über die Suche.
 
 #### Karte hilft der Suche
 
@@ -2470,22 +2470,27 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - **2400** Zeichen, bis zu denen eine Tabelle eine Stelle bleibt ([Schritt 5](#kn-wissen-s5))
 - **20 s** längste Zeit je PDF für das Lesen der Tabellen ([Schritt 5](#kn-wissen-s5))
 - **5** Seiten, die ein Dokument im Wissensbuch ändern darf ([Schritt 13](#kn-wissen-s13))
-- **300** Seiten im Wissensbuch pro Profil ([Schritt 13](#kn-wissen-s13))
+- **3000** Seiten im Wissensbuch pro Profil ([Schritt 13](#kn-wissen-s13))
 - **50** Sätze, die das Modell nachts gegen ihre Quelle prüft (Standard) ([Schritt 13](#kn-wissen-s13))
 - **30** Verbindungen, die ein Dokument in die Wissenskarte bringen darf ([Schritt 13](#kn-wissen-s13))
-- **3000** Verbindungen in der Wissenskarte pro Profil ([Schritt 13](#kn-wissen-s13))
+- **25000** Verbindungen in der Wissenskarte pro Profil ([Schritt 13](#kn-wissen-s13))
 - **150** Punkte, die die Karte auf einmal zeigt ([Schritt 13](#kn-wissen-s13))
 - **400** Verbindungen, die die Karte auf einmal zeigt ([Schritt 13](#kn-wissen-s13))
 - **4** Schritte, die wissenskarte.weg höchstens sucht ([Schritt 13](#kn-wissen-s13))
+- **4** Aufbauten der Karte, die das Panel im Speicher behält ([Schritt 13](#kn-wissen-s13))
+- **600 s** so lange bleibt ein Aufbau höchstens ([Schritt 13](#kn-wissen-s13))
+- **4000** Verbindungen je Scheibe der Nachtprüfung ([Schritt 13](#kn-wissen-s13))
+- **200** Fristen ohne Zahl, die eine Scheibe höchstens entfernt ([Schritt 13](#kn-wissen-s13))
 - **4096** Stellen je Block beim Vergleich der Vektoren ([Schritt 6](#kn-wissen-s6))
 - **200** Dokumente am Tag für die Wissenskarte (Standard) ([Schritt 13](#kn-wissen-s13))
 - **40** Personen, Firmen, Orte, Verträge, Konten und Fristen, die ein Dokument bringen darf ([Schritt 13](#kn-wissen-s13))
-- **5000** solche Punkte pro Profil ([Schritt 13](#kn-wissen-s13))
+- **15000** solche Punkte pro Profil ([Schritt 13](#kn-wissen-s13))
 - **80** Zeichen, die der Name eines solchen Punktes höchstens hat ([Schritt 13](#kn-wissen-s13))
 - **200** Dokumente am Tag für diese Punkte (Standard) ([Schritt 13](#kn-wissen-s13))
 - **200000** Paare, die ein Lauf der Doppelten je Profil höchstens vergleicht ([Schritt 13](#kn-wissen-s13))
 - **300** offene Vorschläge „Vielleicht doppelt“ je Profil ([Schritt 13](#kn-wissen-s13))
 - **8** ähnlichste Punkte oben in „Zusammenführen mit …“ ([Schritt 13](#kn-wissen-s13))
+- **0.2 s** höchstens je Scheibe des ruhigen Laufs der Doppelten ([Schritt 13](#kn-wissen-s13))
 - **50** Stellen, die die Karte der Suche höchstens nennt ([Schritt 6](#kn-wissen-s6))
 - **20** Punkte, die die Suchwörter höchstens treffen ([Schritt 6](#kn-wissen-s6))
 - **0.5** Gewicht der Liste aus der Karte ([Schritt 6](#kn-wissen-s6))
@@ -2533,8 +2538,10 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - `app/panel/wissensbuch.py` `answer_block`: passende Seiten des Wissensbuchs mit Quellen ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `check_edge`: feste Regeln für jede vorgeschlagene Verbindung ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `view`: der sichtbare Teil der Karte ([Schritt 13](#kn-wissen-s13))
-- `app/panel/wissenskarte.py` `rund_um`: Seiten um eine Seite, WITH RECURSIVE ([Schritt 13](#kn-wissen-s13))
-- `app/panel/wissenskarte.py` `weg`: kürzester Weg zwischen zwei Seiten ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `rund_um`: Punkte um einen Punkt, eine Abfrage je Schritt ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `weg`: kürzester Weg, von beiden Enden zugleich ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `_bau`: Aufbau der Karte im Speicher, neu bei jeder Änderung (wk_stand) ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `_worte_sync`: Wortindex der Punkte für die Liste der Suche ([Schritt 6](#kn-wissen-s6))
 - `app/panel/wissenskarte.py` `check_ent`: feste Regeln für jede Person, Firma, Frist … ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `finde_knoten`: Punkte genau über Name und andere Namen, nur lesend ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `knoten_liste`: Punkte einer Art nach Namen, nur lesend ([Schritt 13](#kn-wissen-s13))
@@ -2548,9 +2555,10 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - `app/panel/wissensdoppelt.py` `aehnlich`: gleich, Vorschlag oder nichts: die eine feste Regel für Doppelte ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissensdoppelt.py` `normalform`: ein Name in seiner Normalform je Art ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissensdoppelt.py` `gleich_id`: beim Einlesen: gleicher Name wird anderer Name ([Schritt 13](#kn-wissen-s13))
-- `app/panel/wissensdoppelt.py` `lauf`: ruhiger Lauf: zusammenführen und Vorschläge in Blöcken ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `lauf`: ruhiger Lauf: zusammenführen und Vorschläge in Blöcken, in Scheiben ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissensdoppelt.py` `auswahl`: „Zusammenführen mit …“: die ähnlichsten zuerst ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissensdoppelt.py` `verschieden`: „Verschieden“ gilt für immer ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `gesperrt`: gelöscht bleibt gelöscht, in jeder „gleichen“ Schreibweise ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `search_pages`: passende Seiten über den Suchindex wb_fts ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `_fts_sync`: Suchindex der Seiten nachziehen ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `liste`: Seiten-Ids mit Rang für andere Teile, nur lesend ([Schritt 13](#kn-wissen-s13))
@@ -2569,7 +2577,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - `app/panel/wissensmessung.py` `_synth`: das Wegwerf-Profil aus festem Zufall, mit den Grenzen des Codes ([Schritt 6](#kn-wissen-s6))
 - `app/panel/wissensmessung.py` `MESSTEILE`: die Messteile, erweiterbar ([Schritt 6](#kn-wissen-s6))
 
-Selbsttests: `test_wissen`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`
+Selbsttests: `test_wissen`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`, `test_wissenstempo`
 
 ### Wächter
 

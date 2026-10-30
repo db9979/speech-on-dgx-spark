@@ -243,7 +243,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "588f250958",
+        "stand": "ac6f4e0801",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -257,6 +257,8 @@ SEITEN = {
             "wissensbuch.SAMPLE": ["s13"], "wissenskarte.view": ["s13"], "wissenskarte.check_edge": ["s13"],
             "wissenskarte.EDGES_PER_DOC": ["s13"], "wissenskarte.VIEW_NODES": ["s13"], "wissenskarte.VIEW_EDGES": ["s13"],
             "wissenskarte.WEG_MOST": ["s13"], "wissenskarte.rund_um": ["s13"], "wissenskarte.weg": ["s13"],
+            "wissenskarte._bau": ["s13"], "wissenskarte._worte_sync": ["s6"], "wissenskarte.BAU_MOST": ["s13"],
+            "wissenskarte.BAU_S": ["s13"], "wissenskarte.NACHT_SCHEIBE": ["s13"], "wissenskarte.NACHT_FRISTEN": ["s13"],
             "wissensbuch.search_pages": ["s13"], "wissensbuch._fts_sync": ["s13"], "wissensbuch.liste": ["s13"], "documents._similar": ["s6"],
             "documents.VEC_BLOCK": ["s6"], "wissenskarte.MAX_EDGES": ["s13"], "wissenskarte.DAY": ["s13"],
             "wissenskarte.check_ent": ["s13"], "wissenskarte.finde_knoten": ["s13"], "wissenskarte.knoten_liste": ["s13"],
@@ -264,8 +266,8 @@ SEITEN = {
             "wissenskarte.frist_name": ["s13"], "wissenskarte.nachtpruefung": ["s13"], "wissensbuch.retitle": ["s13"], "wissenskarte.ENT_PER_DOC": ["s13"], "wissenskarte.MAX_ENT": ["s13"],
             "wissenskarte.ENT_DAY": ["s13"], "wissenskarte.ENT_NAME_LEN": ["s13"],
             "wissensdoppelt.aehnlich": ["s13"], "wissensdoppelt.normalform": ["s13"], "wissensdoppelt.gleich_id": ["s13"],
-            "wissensdoppelt.lauf": ["s13"], "wissensdoppelt.auswahl": ["s13"], "wissensdoppelt.verschieden": ["s13"],
-            "wissensdoppelt.VERGLEICHE_MOST": ["s13"], "wissensdoppelt.PAARE_MOST": ["s13"], "wissensdoppelt.AEHNLICH_MOST": ["s13"],
+            "wissensdoppelt.lauf": ["s13"], "wissensdoppelt.gesperrt": ["s13"], "wissensdoppelt.auswahl": ["s13"], "wissensdoppelt.verschieden": ["s13"],
+            "wissensdoppelt.VERGLEICHE_MOST": ["s13"], "wissensdoppelt.PAARE_MOST": ["s13"], "wissensdoppelt.SCHEIBE_S": ["s13"], "wissensdoppelt.AEHNLICH_MOST": ["s13"],
             "wissenskarte.knoten_von_dok": ["s13"], "wissenskarte.liste": ["s6"], "wissenskarte.trifft": ["s6"], "documents._karte": ["s6"],
             "documents.KARTE_WEIGHT": ["s6"], "wissenskarte.KARTE_MOST": ["s6"], "wissenskarte.KARTE_KNOTEN": ["s6"],
             "regel:Wissenskarte": ["s6"],
@@ -495,6 +497,10 @@ SEITEN = {
             ("{wissenskarte.VIEW_NODES}", ("Punkte, die die Karte auf einmal zeigt", "points the map shows at once"), "wissenskarte.VIEW_NODES"),
             ("{wissenskarte.VIEW_EDGES}", ("Verbindungen, die die Karte auf einmal zeigt", "connections the map shows at once"), "wissenskarte.VIEW_EDGES"),
             ("{wissenskarte.WEG_MOST}", ("Schritte, die wissenskarte.weg höchstens sucht", "steps wissenskarte.weg looks for at most"), "wissenskarte.WEG_MOST"),
+            ("{wissenskarte.BAU_MOST}", ("Aufbauten der Karte, die das Panel im Speicher behält", "builds of the map the panel keeps in memory"), "wissenskarte.BAU_MOST"),
+            ("{wissenskarte.BAU_S} s", ("so lange bleibt ein Aufbau höchstens", "a build stays this long at most"), "wissenskarte.BAU_S"),
+            ("{wissenskarte.NACHT_SCHEIBE}", ("Verbindungen je Scheibe der Nachtprüfung", "connections per slice of the nightly check"), "wissenskarte.NACHT_SCHEIBE"),
+            ("{wissenskarte.NACHT_FRISTEN}", ("Fristen ohne Zahl, die eine Scheibe höchstens entfernt", "deadlines without a number one slice removes at most"), "wissenskarte.NACHT_FRISTEN"),
             ("{documents.VEC_BLOCK}", ("Stellen je Block beim Vergleich der Vektoren", "passages per block when comparing vectors"), "documents.VEC_BLOCK"),
             ("{wissenskarte.DAY}", ("Dokumente am Tag für die Wissenskarte (Standard)", "documents a day for the knowledge map (default)"), "wissenskarte.DAY"),
             ("{wissenskarte.ENT_PER_DOC}", ("Personen, Firmen, Orte, Verträge, Konten und Fristen, die ein Dokument bringen darf", "people, companies, places, contracts, accounts and deadlines one document may bring"), "wissenskarte.ENT_PER_DOC"),
@@ -504,6 +510,7 @@ SEITEN = {
             ("{wissensdoppelt.VERGLEICHE_MOST}", ("Paare, die ein Lauf der Doppelten je Profil höchstens vergleicht", "pairs one run for doubles compares per profile at most"), "wissensdoppelt.VERGLEICHE_MOST"),
             ("{wissensdoppelt.PAARE_MOST}", ("offene Vorschläge „Vielleicht doppelt“ je Profil", "open suggestions „Maybe double“ per profile"), "wissensdoppelt.PAARE_MOST"),
             ("{wissensdoppelt.AEHNLICH_MOST}", ("ähnlichste Punkte oben in „Zusammenführen mit …“", "most similar points on top of „Merge with …“"), "wissensdoppelt.AEHNLICH_MOST"),
+            ("{wissensdoppelt.SCHEIBE_S} s", ("höchstens je Scheibe des ruhigen Laufs der Doppelten", "at most per slice of the quiet run for doubles"), "wissensdoppelt.SCHEIBE_S"),
             ("{wissenskarte.KARTE_MOST}", ("Stellen, die die Karte der Suche höchstens nennt", "passages the map names to the search at most"), "wissenskarte.KARTE_MOST"),
             ("{wissenskarte.KARTE_KNOTEN}", ("Punkte, die die Suchwörter höchstens treffen", "points the search words hit at most"), "wissenskarte.KARTE_KNOTEN"),
             ("{documents.KARTE_WEIGHT}", ("Gewicht der Liste aus der Karte", "weight of the list from the map"), "documents.KARTE_WEIGHT"),
@@ -631,18 +638,30 @@ SEITEN = {
                  "Browser and app draw the map with their own code from names and kinds, never from SVG, Mermaid or "
                  "DOT of the model. The panel only answers the visible part with at most {wissenskarte.VIEW_NODES} "
                  "points; the export as Mermaid or Graphviz text comes from fixed code with cleaned names."),
-                ("Den sichtbaren Teil wählt SQLite: Verbindungen je Seite und Dokument zählt eine feste Abfrage, und "
-                 "rund um eine Seite läuft WITH RECURSIVE höchstens zwei Schritte über die Verbindungen; UNION nimmt "
-                 "jede Seite je Schritt nur einmal, ein Ring läuft also nie weiter. Nur die gewählten Punkte und "
-                 "höchstens {wissenskarte.VIEW_EDGES} Verbindungen kommen ins Panel. Zwei feste Abfragen mit Werten "
-                 "nur als Parameter, nie aus Text des Modells: wissenskarte.rund_um (Seiten um eine Seite) und "
-                 "wissenskarte.weg (kürzester Weg zwischen zwei Seiten, höchstens {wissenskarte.WEG_MOST} Schritte).",
-                 "SQLite picks the visible part: a fixed query counts the connections per page and document, and "
-                 "around a page WITH RECURSIVE walks at most two steps over the connections; UNION takes each page "
-                 "only once per step, so a ring never runs on. Only the chosen points and at most "
-                 "{wissenskarte.VIEW_EDGES} connections reach the panel. Two fixed queries with values only as "
-                 "parameters, never from the model's text: wissenskarte.rund_um (pages around a page) and "
-                 "wissenskarte.weg (shortest way between two pages, at most {wissenskarte.WEG_MOST} steps)."),
+                ("Den Aufbau der Karte (Namen, Verbindungen je Punkt und Dokument, wer neben wem steht) holt eine "
+                 "feste Abfrage aus SQLite und das Panel behält ihn im Speicher, solange sich nichts ändert: Trigger "
+                 "zählen jede Änderung der Tabellen in wissenskarte.STAND_TABELLEN in wk_stand, höchstens "
+                 "{wissenskarte.BAU_MOST} Aufbauten und {wissenskarte.BAU_S} s lang. Jede Antwort wählt daraus nur "
+                 "ihren Teil, höchstens {wissenskarte.VIEW_EDGES} Verbindungen. Zwei feste Abfragen mit Werten nur "
+                 "als Parameter, nie aus Text des Modells: wissenskarte.rund_um (Punkte um einen Punkt, je Schritt "
+                 "eine Abfrage über die Indizes für den ganzen Ring, jeder Punkt nur einmal, ein Ring läuft also nie "
+                 "weiter) und wissenskarte.weg (kürzester Weg, höchstens {wissenskarte.WEG_MOST} Schritte, von beiden "
+                 "Enden zugleich, endet, sobald sie sich treffen). Die Liste für die Suche findet ihre Punkte über "
+                 "den Wortindex wk_entwort (Trigger merken neue und geänderte Punkte, wissenskarte._worte_sync "
+                 "schreibt sie mit jedem Speichern), nie über alle Punkte. Die Nachtprüfung läuft in Scheiben von "
+                 "{wissenskarte.NACHT_SCHEIBE} Verbindungen und {wissenskarte.NACHT_FRISTEN} Fristen.",
+                 "The build of the map (names, connections per point and document, who stands next to whom) comes "
+                 "from one fixed query in SQLite and the panel keeps it in memory while nothing changes: triggers "
+                 "count every change of the tables in wissenskarte.STAND_TABELLEN in wk_stand, at most "
+                 "{wissenskarte.BAU_MOST} builds for {wissenskarte.BAU_S} s. Each answer only picks its part from it, "
+                 "at most {wissenskarte.VIEW_EDGES} connections. Two fixed queries with values only as parameters, "
+                 "never from the model's text: wissenskarte.rund_um (points around a point, one query over the "
+                 "indexes per step for the whole ring, each point only once, so a ring never runs on) and "
+                 "wissenskarte.weg (shortest way, at most {wissenskarte.WEG_MOST} steps, from both ends at once, "
+                 "ending as soon as they meet). The list for the search finds its points over the word index "
+                 "wk_entwort (triggers mark new and changed points, wissenskarte._worte_sync writes them with every "
+                 "commit), never over all points. The nightly check runs in slices of {wissenskarte.NACHT_SCHEIBE} "
+                 "connections and {wissenskarte.NACHT_FRISTEN} deadlines."),
             ]),
             (("Personen, Firmen und Fristen", "People, companies and deadlines"), [
                 ("Ist der Schalter unter der Wissenskarte an, schlägt das Sprachmodell nach den Verbindungen je Stelle "
@@ -703,8 +722,10 @@ SEITEN = {
                  "Schreibfehler (Damerau-Levenshtein höchstens 2 ab 6 Buchstaben, 1 bei 4 bis 5), eine Initiale, wenn "
                  "genau eine Person passt, und eine Firma mit gleichem Kern; verglichen wird nur in Blöcken, höchstens "
                  "{wissensdoppelt.VERGLEICHE_MOST} Paare je Lauf, höchstens {wissensdoppelt.PAARE_MOST} offene "
-                 "Vorschläge. „Verschieden“ (wissensdoppelt.verschieden) merkt sich die Namen, das Paar kommt nie "
-                 "wieder; Zusammenführen bleibt der Klick mit Code. „Zusammenführen mit …“ zeigt oben die "
+                 "Vorschläge. Der Lauf geht in Scheiben von höchstens {wissensdoppelt.SCHEIBE_S} s, die nächste macht "
+                 "weiter, wo die letzte stand (im Speicher; geänderte Punkte beginnen ihn neu). „Verschieden“ (wissensdoppelt.verschieden) merkt sich die Namen, das Paar kommt nie "
+                 "wieder; ein gelöschter Punkt kommt auch in keiner „gleichen“ Schreibweise zurück "
+                 "(wissensdoppelt.gesperrt). Zusammenführen bleibt der Klick mit Code. „Zusammenführen mit …“ zeigt oben die "
                  "{wissensdoppelt.AEHNLICH_MOST} ähnlichsten Punkte derselben Art (wissensdoppelt.auswahl), den Rest über "
                  "die Suche.",
                  "Doubles (wissensdoppelt.py) are found by one fixed rule only, wissensdoppelt.aehnlich, never by the "
@@ -717,7 +738,9 @@ SEITEN = {
                  "suggestion are small typing errors (Damerau-Levenshtein at most 2 from 6 letters, 1 for 4 to 5), an "
                  "initial when exactly one person fits, and a company with the same core; compared only in blocks, at "
                  "most {wissensdoppelt.VERGLEICHE_MOST} pairs per run, at most {wissensdoppelt.PAARE_MOST} open "
-                 "suggestions. „Different“ (wissensdoppelt.verschieden) keeps the names, the pair never comes back; "
+                 "suggestions. The run goes in slices of at most {wissensdoppelt.SCHEIBE_S} s, the next goes on where "
+                 "the last stood (in the memory; changed points start it again). „Different“ (wissensdoppelt.verschieden) keeps the names, the pair never comes back; "
+                 "a deleted point also never comes back in a spelling that is „the same“ (wissensdoppelt.gesperrt); "
                  "merging stays the click with the code. „Merge with …“ shows the {wissensdoppelt.AEHNLICH_MOST} most "
                  "similar points of the same kind on top (wissensdoppelt.auswahl), the rest by search."),
             ]),
@@ -895,8 +918,10 @@ SEITEN = {
             ("wissensbuch.answer_block", ("passende Seiten des Wissensbuchs mit Quellen", "fitting pages of the knowledge book with sources")),
             ("wissenskarte.check_edge", ("feste Regeln für jede vorgeschlagene Verbindung", "fixed rules for every proposed connection")),
             ("wissenskarte.view", ("der sichtbare Teil der Karte", "the visible part of the map")),
-            ("wissenskarte.rund_um", ("Seiten um eine Seite, WITH RECURSIVE", "pages around a page, WITH RECURSIVE")),
-            ("wissenskarte.weg", ("kürzester Weg zwischen zwei Seiten", "shortest way between two pages")),
+            ("wissenskarte.rund_um", ("Punkte um einen Punkt, eine Abfrage je Schritt", "points around a point, one query per step")),
+            ("wissenskarte.weg", ("kürzester Weg, von beiden Enden zugleich", "shortest way, from both ends at once")),
+            ("wissenskarte._bau", ("Aufbau der Karte im Speicher, neu bei jeder Änderung (wk_stand)", "build of the map in memory, new on every change (wk_stand)")),
+            ("wissenskarte._worte_sync", ("Wortindex der Punkte für die Liste der Suche", "word index of the points for the search's list")),
             ("wissenskarte.check_ent", ("feste Regeln für jede Person, Firma, Frist …", "fixed rules for every person, company, deadline …")),
             ("wissenskarte.finde_knoten", ("Punkte genau über Name und andere Namen, nur lesend", "points exactly by name and other names, read only")),
             ("wissenskarte.knoten_liste", ("Punkte einer Art nach Namen, nur lesend", "points of one kind by name, read only")),
@@ -910,9 +935,10 @@ SEITEN = {
             ("wissensdoppelt.aehnlich", ("gleich, Vorschlag oder nichts: die eine feste Regel für Doppelte", "the same, a suggestion or nothing: the one fixed rule for doubles")),
             ("wissensdoppelt.normalform", ("ein Name in seiner Normalform je Art", "a name in its normal form per kind")),
             ("wissensdoppelt.gleich_id", ("beim Einlesen: gleicher Name wird anderer Name", "while reading: the same name becomes an other name")),
-            ("wissensdoppelt.lauf", ("ruhiger Lauf: zusammenführen und Vorschläge in Blöcken", "quiet run: merge and suggestions in blocks")),
+            ("wissensdoppelt.lauf", ("ruhiger Lauf: zusammenführen und Vorschläge in Blöcken, in Scheiben", "quiet run: merge and suggestions in blocks, in slices")),
             ("wissensdoppelt.auswahl", ("„Zusammenführen mit …“: die ähnlichsten zuerst", "„Merge with …“: the most similar first")),
             ("wissensdoppelt.verschieden", ("„Verschieden“ gilt für immer", "„Different“ is for good")),
+            ("wissensdoppelt.gesperrt", ("gelöscht bleibt gelöscht, in jeder „gleichen“ Schreibweise", "deleted stays deleted, in every spelling that is „the same“")),
             ("wissensbuch.search_pages", ("passende Seiten über den Suchindex wb_fts", "fitting pages through the search index wb_fts")),
             ("wissensbuch._fts_sync", ("Suchindex der Seiten nachziehen", "bring the pages' search index up to date")),
             ("wissensbuch.liste", ("Seiten-Ids mit Rang für andere Teile, nur lesend", "page ids with rank for other parts, read only")),
@@ -934,7 +960,7 @@ SEITEN = {
         "tests": ["test_wissen", "test_wissensdoppelt", "test_nachsortieren", "test_abschnitte", "test_lokal", "test_kiwix", "test_gedaechtnis",
                   "test_gedaechtnis_grenze", "test_gemerkt",
                   "test_suchpruefung", "test_wissensbuch", "test_wissenskarte", "test_wissensknoten", "test_kartensuche",
-                  "test_wissensmessung"],
+                  "test_wissensmessung", "test_wissenstempo"],
         "heute": [],
     },
 

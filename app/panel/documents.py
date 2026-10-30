@@ -103,7 +103,10 @@ CREATE TABLE IF NOT EXISTS docs (id TEXT PRIMARY KEY, name TEXT NOT NULL, size I
     use INTEGER DEFAULT 1, file TEXT DEFAULT '', source TEXT DEFAULT 'upload', shared INTEGER DEFAULT 0);
 CREATE TABLE IF NOT EXISTS chunks (id INTEGER PRIMARY KEY, doc TEXT NOT NULL, n INTEGER, page INTEGER,
     text TEXT NOT NULL, vec BLOB);
-CREATE INDEX IF NOT EXISTS chunks_doc ON chunks(doc);
+-- the pieces of a document by their number: also where a place of the Wissenskarte stands (wk_ment → chunks in
+-- wissenskarte.liste) without reading text and vector of the piece (5000 documents: 113 ms → a few ms)
+CREATE INDEX IF NOT EXISTS chunks_doc_n ON chunks(doc, n);
+DROP INDEX IF EXISTS chunks_doc;
 -- the pieces still without a meaning vector (missing_vectors, vector_state): without it each batch of the catch-up
 -- read the whole table, text and vectors (Pi 2026-10-19: 46000 pieces, the panel stalled on every file access)
 CREATE INDEX IF NOT EXISTS chunks_novec ON chunks(id) WHERE vec IS NULL;
@@ -831,7 +834,7 @@ def count_docs(uid, used_only=False):
 def _list_docs(uid, used_only):
     with _Db(uid) as con:
         todo = dict(con.execute("SELECT doc, COUNT(*) FROM pages GROUP BY doc").fetchall())
-        # counted once per table through its indexes (chunks_doc, chunks_novec): counting the vectors per document read every
+        # counted once per table through its indexes (chunks_doc_n, chunks_novec): counting the vectors per document read every
         # piece with text and vector, 0.4 s per question at 20000 documents (code check 19.10. B1)
         pieces = dict(con.execute("SELECT doc, COUNT(*) FROM chunks GROUP BY doc").fetchall())
         novec = dict(con.execute("SELECT doc, COUNT(*) FROM chunks WHERE vec IS NULL GROUP BY doc").fetchall())

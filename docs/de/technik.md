@@ -80,7 +80,7 @@ Seit V01.1.270 (Wissenskarte Stufe 4, Vorbereitung des Tests mit 5000 Dokumenten
 - **Wissenskarte:** Seiten, Punkte, Verbindungen, Stellen, Verbindungen je Dokument (Mittel und höchstens) und `view` (die am besten verbundenen und um einen Punkt), `rund_um` (2 Schritte), `weg` und `wissenskarte.liste`.
 - **Finden** (Messteil „fund“, seit V01.1.285, `app/panel/fundmessung.py`, nur bei „erfunden“): je Dokument des Laufs 10 versiegelte erfundene Mails (bei 5000 Dokumenten 50 000 Mails, jede fünfte mit Anhang, die ersten 1000 als echte MIME-Nachrichten über `fundmail.eintraege`, alle über `fundmail.schreiben` mit AES-GCM und HMAC-Marken) und die Dokumente als Zeilen des Index, in `fund.db` des Wegwerf-Profils. Gemessen: `fund.suche` über 200 feste Suchen (`suche_p50_ms`, `suche_p95_ms`, `suche_max_ms`, Anteil unter dem Ziel von 150 ms), Einlesen und Schreiben je 1000 Mails, Größe von `fund.db` (MB und KB je Eintrag), RAM des Messprozesses vorher, nachher, Spitze und Zuwachs. Ohne den Schlüssel des Sparks misst der Teil nichts (`schluessel` falsch) und legt nie einen an.
 - Jede Zeit als Median, p95 und Höchstwert über 20 feste Beispiele aus den eigenen Titeln und Namen (`PROBEN`), dazu der Speicher des Messprozesses am Anfang und am Ende.
-- **Grenzen:** Für die Seiten des Wissensbuchs (300), die Verbindungen (3000) und die Punkte (5000) sagt der Lauf, wie viele es jetzt sind, wie viele die Dokumente bringen würden und ob die Grenze voll ist. Bei erfundenen Dokumenten ist der Bedarf das, was der Aufbau ohne Grenze angelegt hätte; bei einem Profil das, was es je Dokument bringt, hochgerechnet auf 5000 Dokumente (eine obere Schätzung).
+- **Grenzen:** Für die Seiten des Wissensbuchs (3000), die Verbindungen (25 000) und die Punkte (15 000) sagt der Lauf, wie viele es jetzt sind, wie viele die Dokumente bringen würden und ob die Grenze voll ist. Bei erfundenen Dokumenten ist der Bedarf das, was der Aufbau ohne Grenze angelegt hätte; bei einem Profil das, was es je Dokument bringt, hochgerechnet auf 5000 Dokumente (eine obere Schätzung).
 
 Erfundene Dokumente entstehen aus festem Zufall (`SEED`) in einem Wegwerf-Profil unter `state/wissensmessung-tmp/lauf-…`: Stücke mit erfundenen Wörtern und zufälligen float16-Vektoren, Kontextzeilen, Seiten und Sätze des Wissensbuchs, Punkte mit ihren Stellen und Verbindungen, mit den Grenzen des echten Codes und festen Annahmen je Dokument (`SYN_*`: etwa 10 Stücke, 2 Seiten, 6 Stellen von Punkten, 4 Verbindungen). Nach dem Lauf ist der Ordner weg, auch nach einem Abbruch; ein Ordner eines abgestürzten Laufs räumt der nächste weg. Ein echtes Profil wird nur gelesen: jede Verbindung des Messprozesses hat `PRAGMA query_only`, eine Datenbank einer anderen Version oder ohne die Tabellen eines Teils wird nicht angefasst.
 
@@ -102,6 +102,31 @@ Beispiel auf einem Entwicklungsrechner (4 Kerne, V01.1.270, 5000 erfundene Dokum
 | Seiten · Punkte · Verbindungen | 300 · 5000 · 3000 | 3005 · 10558 · 19791 |
 
 Die Vektor-Matrix braucht 38,5 MB (Aufbau 0,2 s), der Messprozess wächst von etwa 80 auf 165 MB. Alle drei Grenzen sind bei 5000 Dokumenten voll (Bedarf etwa 3000 Seiten, 20 000 Verbindungen, 10 800 Punkte); ohne sie wird `wissenskarte.liste` (geht jeden Punkt in Python durch) zum langsamsten Teil der Suche.
+
+### Tempo der Wissenskarte (V01.1.291)
+
+Seit V01.1.291 (Wissenskarte Stufe 2 statt Neo4j) gelten höhere Grenzen: 3000 Seiten im Wissensbuch (`wissensbuch.MAX_PAGES`, vorher 300), 25 000 Verbindungen (`wissenskarte.MAX_EDGES`, vorher 3000) und 15 000 Punkte (`wissenskarte.MAX_ENT`, vorher 5000) je Profil. Die Tageslimits bleiben, wie sie waren, und einstellbar; die Karte zeigt weiter höchstens 150 Punkte und 400 Verbindungen auf einmal. Damit die Suche dabei schnell bleibt, gehen die Wege der Karte über Indizes statt über alle Zeilen; die Antworten bleiben dieselben:
+
+- **Liste für die Suche** (`wissenskarte.liste`): Die Suchwörter finden ihre Punkte über den Wortindex `wk_entwort` (je Name und anderem Namen das erste Wort, die Wörter, die allein treffen, und bei Konten die ersten Zeichen ohne Leerzeichen). Er wählt nur Kandidaten; ob und wie ein Punkt getroffen ist, entscheidet dieselbe feste Regel wie vorher (`trifft`). Trigger merken neue, geänderte und gelöschte Punkte, mit jedem Speichern werden die gemerkten neu geschrieben (Einlesen, Umbenennen, Zusammenführen, Löschen, auch von anderen Teilen); beim ersten Öffnen nach dem Update baut jedes Profil den Index einmal („wissen: wissenskarte wortindex aufgebaut | n punkte“). Die Nachbarn aller getroffenen Punkte holt eine Abfrage, die Stellen der neue Index `chunks_doc_n` der Dokumentsuche, ohne Text und Vektor der Stücke zu lesen.
+- **Karte** (`view`): Den Aufbau der Karte (Namen, Verbindungen je Punkt und Dokument, wer neben wem steht) holt das Panel einmal aus SQLite und behält ihn im Speicher, solange sich nichts ändert: Trigger zählen jede Änderung der beteiligten Tabellen in `wk_stand` (`wissenskarte.STAND_TABELLEN`), höchstens 4 Aufbauten und 10 Minuten lang. Jeder Aufruf wählt daraus nur seinen Ausschnitt.
+- **Rund um und Weg:** Je Schritt geht eine Abfrage für den ganzen Ring über die Indizes auf beiden Enden der Verbindungen; ob eine Verbindung zählt, prüft SQLite je Zeile über die Indizes statt mit einer Liste aller Punkte. Jeder Punkt wird nur einmal angesehen, ein Ring läuft nie weiter. `weg` sucht von beiden Enden zugleich und hört auf, sobald sie sich treffen; welche Punkte auf einem kürzesten Weg liegen, ergibt sich aus beiden Seiten, also bleibt der gewählte Weg derselbe.
+- **Nachtprüfung:** Sie läuft in Scheiben von höchstens 4000 Verbindungen und 200 Fristen je Schritt (`NACHT_SCHEIBE`, `NACHT_FRISTEN`), der nächste Schritt macht dort weiter; jede Scheibe schreibt ihre Zeile, alle außer der letzten mit „| weiter“.
+- **Doppelte:** Der ruhige Lauf der Doppelten (`wissensdoppelt.lauf`) geht in Scheiben von höchstens 0,2 s (`SCHEIBE_S`): er schaut alle 200 Schlüssel, vor jedem Zusammenführen (ab 10) und alle 100 Vergleiche auf die Uhr, die nächste Scheibe macht im Speicher dort weiter, wo die letzte stand (geänderte Punkte oder eine Stunde Ruhe beginnen ihn neu). Die Grenzen je Lauf gelten für den ganzen Lauf, die Scheiben eines Laufs zählen einmal für „höchstens sechsmal am Tag“. Bei 15 000 Personen dauerte eine Scheibe auf dem Entwicklungsrechner höchstens 196 ms (vorher ein Lauf von 3 s am Stück).
+- **Wächter:** `test_wissenstempo` prüft ohne Uhr: der Abfrageplan nutzt die Indizes, die Liste sieht nur einen kleinen Teil der Punkte an, der Aufbau entsteht einmal je Stand, `weg` und die Liste antworten wie der langsame Weg über alles, die Nachtprüfung und der Lauf der Doppelten kommen in Scheiben zum selben Ende, und die Grenzen stehen fest.
+
+Gemessen mit `sudo speech-spark wissen messen` (5000 erfundene Dokumente, beide Male mit den neuen Grenzen, also 3000 Seiten, etwa 10 500 Punkte und 19 800 Verbindungen) auf dem Entwicklungsrechner (4 Kerne), Zeiten in ms; „vorher“ ist der Stand vor V01.1.273 mit den neuen Grenzen:
+
+| Weg | vorher p50 | vorher p95 | nachher p50 | nachher p95 |
+|---|---|---|---|---|
+| Dokumentsuche | 57 | 90 | 60 | 80 |
+| Dokumentsuche mit Karte | 464 | 557 | 80 | 116 |
+| `wissenskarte.liste` | 376 | 470 | 17 | 62 |
+| `view` (die am besten verbundenen) | 259 | 289 | 4 | 279 |
+| `view` (um einen Punkt) | 272 | 298 | 4 | 9 |
+| `rund_um` (2 Schritte) | 20 | 34 | 4 | 20 |
+| `weg` | 125 | 266 | 3 | 61 |
+
+Beim ersten Aufruf von `view` nach einer Änderung entsteht der Aufbau neu (der p95 der fünf Aufrufe ist dieser erste); danach kommt die Karte aus dem Speicher. Die Stände V01.1.273 bis V01.1.290 (Seite und Punkt als ein Punkt) waren bei vielen Punkten noch langsamer, weil jede Abfrage die Abbildung Seite → Punkt über alle Zeilen rechnete (Karte-Liste etwa 2 s, Weg bis zu Minuten); auch das geht jetzt über den Aufbau und die Indizes.
 
 ### Messteile
 

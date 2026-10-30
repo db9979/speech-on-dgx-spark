@@ -69,7 +69,7 @@ from core import assistant, auth, browser_profile, confirm_code, json_body, own_
 
 router = APIRouter()
 ARTS = ("Thema", "Person", "Firma", "Ding", "Ort")
-MAX_PAGES = 300          # pages per profile
+MAX_PAGES = 3000         # pages per profile
 MAX_SENT = 60            # sentences per page
 PAGES_PER_DOC = 5        # pages one document may change
 SENT_PER_DOC = 8         # new sentences per page from one document

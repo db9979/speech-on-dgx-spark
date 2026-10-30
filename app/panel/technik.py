@@ -136,7 +136,7 @@ MODULE = {
     "suchpruefung": ("wissen", "Suchprüfung: Prüffragen messen, wie gut die Dokumentensuche trifft"),
     "wissensmessung": ("wissen", "Wissen messen: Zeiten und Speicher von Suche, Wissensbuch, Karte und Finden, erfunden oder ein Profil lesend"),
     "wissensbuch": ("wissen", "Wissensbuch: Seiten aus eigenen Dokumenten, jeder Satz mit Quelle; Suchindex FTS5, Lesefunktion liste"),
-    "wissenskarte": ("wissen", "Wissenskarte: geprüfte Verbindungen und Punkte aus Dokumenten, je mit Quelle, WITH RECURSIVE, Trefferliste der Suche"),
+    "wissenskarte": ("wissen", "Wissenskarte: geprüfte Verbindungen und Punkte aus Dokumenten mit Quelle, Aufbau im Speicher, Wortindex, Suchliste"),
     "wissensdoppelt": ("wissen", "Doppelte der Wissenskarte: feste Regeln für gleiche und vielleicht gleiche Punkte, Vorschläge, Verschieden"),
     "mappen": ("wissen", "Mappen: Dokumente, Seiten und Notizen bündeln, Kontext-Stufe je Eintrag (aus, kurz, ganz) nach festen Regeln"),
     "fund": ("wissen", "Finden: Suchindex über die eigenen Daten, Felder und Schlagworte nach festen Regeln, Blind-Marken je Profil"),

@@ -2418,14 +2418,14 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - When the knowledge map is on, the language model gets the same document again after the knowledge book, with at most 12 pages the panel picks (the document's pages and pages whose title it names). The model proposes connections as JSON, each with a kind from a fixed list and the number of its passage.
 - The panel keeps a connection only when both pages were offered, both are named in the passage, every number of the detail stands in the passage and a cause (led to, causes, raises, lowers) has a word of reason in the passage. At most 30 per document; „Not right“ never brings the same connection back from the same document.
 - Browser and app draw the map with their own code from names and kinds, never from SVG, Mermaid or DOT of the model. The panel only answers the visible part with at most 150 points; the export as Mermaid or Graphviz text comes from fixed code with cleaned names.
-- SQLite picks the visible part: a fixed query counts the connections per page and document, and around a page WITH RECURSIVE walks at most two steps over the connections; UNION takes each page only once per step, so a ring never runs on. Only the chosen points and at most 400 connections reach the panel. Two fixed queries with values only as parameters, never from the model's text: wissenskarte.rund_um (pages around a page) and wissenskarte.weg (shortest way between two pages, at most 4 steps).
+- The build of the map (names, connections per point and document, who stands next to whom) comes from one fixed query in SQLite and the panel keeps it in memory while nothing changes: triggers count every change of the tables in wissenskarte.STAND_TABELLEN in wk_stand, at most 4 builds for 600 s. Each answer only picks its part from it, at most 400 connections. Two fixed queries with values only as parameters, never from the model's text: wissenskarte.rund_um (points around a point, one query over the indexes per step for the whole ring, each point only once, so a ring never runs on) and wissenskarte.weg (shortest way, at most 4 steps, from both ends at once, ending as soon as they meet). The list for the search finds its points over the word index wk_entwort (triggers mark new and changed points, wissenskarte._worte_sync writes them with every commit), never over all points. The nightly check runs in slices of 4000 connections and 200 deadlines.
 
 #### People, companies and deadlines
 
-- When the switch below the knowledge map is on, the language model proposes only JSON per passage of a document after the connections: people, companies, places, contracts, accounts and deadlines with kind and the number of the passage. The panel keeps a name only by fixed rules (wissenskarte.check_ent): the kind from the fixed list, the name stands in the passage (lower case, without accents, spaces drawn together), 2 to 80 characters without link, markup or command, a deadline only with a date or a number with a unit in its name, an account only as IBAN or number; at most 40 per document and 5000 per profile. Connections of these points are checked by the same rule as those of the pages.
+- When the switch below the knowledge map is on, the language model proposes only JSON per passage of a document after the connections: people, companies, places, contracts, accounts and deadlines with kind and the number of the passage. The panel keeps a name only by fixed rules (wissenskarte.check_ent): the kind from the fixed list, the name stands in the passage (lower case, without accents, spaces drawn together), 2 to 80 characters without link, markup or command, a deadline only with a date or a number with a unit in its name, an account only as IBAN or number; at most 40 per document and 15000 per profile. Connections of these points are checked by the same rule as those of the pages.
 - Every point has a fixed number (wk_ent) and its passages (wk_ment: document and piece). Other parts only read: wissenskarte.finde_knoten (exactly by name and other names) and wissenskarte.knoten_liste (sorted by name) and wissenskarte.knoten_von_dok (the points of one document by kind and name, at most 200). Merging (wissenskarte.zusammen), renaming and deleting happen only by the owner's click with the code of „Confirm“, never by the model; every change reports to wissenskarte.GEAENDERT. When a document goes, its passages go with it at once, a point without a passage disappears.
 - Page and point, type rules, deadlines: when a page of the knowledge book has the name of a point of the kind person, firma or ort, both are one point (wk_entpage); the fixed rule wissenskarte._verbinde links them when points are read, at night and once when the table is made, never the model. Their connections count as the point's in view, rund_um, weg and liste; both are renamed together (wissensbuch.retitle, the old title stays in wb_alttitel, so working in makes no double page). Every connection follows the table wissenskarte.TYPEN (allowed kinds at the start and the end, a page counts as „seite“), a deadline needs a date or a number with a unit of time in its name (wissenskarte.frist_name, number words by a fixed list). The nightly check (wissenskarte.nachtpruefung) removes what was stored before and breaks them.
-- Doubles (wissensdoppelt.py) are found by one fixed rule only, wissensdoppelt.aehnlich, never by the model: every name in its normal form per kind (wissensdoppelt.normalform: ß/ss and umlauts, signs, people without form of address and title and „last name, first name“ turned round, companies without legal form and „Firma“, places with „Str.“ as „Straße“). „The same“ are only people with first and last name and places that differ in nothing else, and accounts, contracts and deadlines with the same normal form; while reading such a name becomes an other name of the point (wissensdoppelt.gleich_id), the quiet run merges points already there through wissenskarte.zusammen (wissensdoppelt.lauf). A suggestion are small typing errors (Damerau-Levenshtein at most 2 from 6 letters, 1 for 4 to 5), an initial when exactly one person fits, and a company with the same core; compared only in blocks, at most 200000 pairs per run, at most 300 open suggestions. „Different“ (wissensdoppelt.verschieden) keeps the names, the pair never comes back; merging stays the click with the code. „Merge with …“ shows the 8 most similar points of the same kind on top (wissensdoppelt.auswahl), the rest by search.
+- Doubles (wissensdoppelt.py) are found by one fixed rule only, wissensdoppelt.aehnlich, never by the model: every name in its normal form per kind (wissensdoppelt.normalform: ß/ss and umlauts, signs, people without form of address and title and „last name, first name“ turned round, companies without legal form and „Firma“, places with „Str.“ as „Straße“). „The same“ are only people with first and last name and places that differ in nothing else, and accounts, contracts and deadlines with the same normal form; while reading such a name becomes an other name of the point (wissensdoppelt.gleich_id), the quiet run merges points already there through wissenskarte.zusammen (wissensdoppelt.lauf). A suggestion are small typing errors (Damerau-Levenshtein at most 2 from 6 letters, 1 for 4 to 5), an initial when exactly one person fits, and a company with the same core; compared only in blocks, at most 200000 pairs per run, at most 300 open suggestions. The run goes in slices of at most 0.2 s, the next goes on where the last stood (in the memory; changed points start it again). „Different“ (wissensdoppelt.verschieden) keeps the names, the pair never comes back; a deleted point also never comes back in a spelling that is „the same“ (wissensdoppelt.gesperrt); merging stays the click with the code. „Merge with …“ shows the 8 most similar points of the same kind on top (wissensdoppelt.auswahl), the rest by search.
 
 #### Map helps the search
 
@@ -2470,22 +2470,27 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - **2400** characters up to which a table stays one passage ([step 5](#kn-wissen-s5))
 - **20 s** longest time per PDF for reading its tables ([step 5](#kn-wissen-s5))
 - **5** pages one document may change in the knowledge book ([step 13](#kn-wissen-s13))
-- **300** pages in the knowledge book per profile ([step 13](#kn-wissen-s13))
+- **3000** pages in the knowledge book per profile ([step 13](#kn-wissen-s13))
 - **50** sentences the model checks against their source at night (default) ([step 13](#kn-wissen-s13))
 - **30** connections one document may bring into the knowledge map ([step 13](#kn-wissen-s13))
-- **3000** connections in the knowledge map per profile ([step 13](#kn-wissen-s13))
+- **25000** connections in the knowledge map per profile ([step 13](#kn-wissen-s13))
 - **150** points the map shows at once ([step 13](#kn-wissen-s13))
 - **400** connections the map shows at once ([step 13](#kn-wissen-s13))
 - **4** steps wissenskarte.weg looks for at most ([step 13](#kn-wissen-s13))
+- **4** builds of the map the panel keeps in memory ([step 13](#kn-wissen-s13))
+- **600 s** a build stays this long at most ([step 13](#kn-wissen-s13))
+- **4000** connections per slice of the nightly check ([step 13](#kn-wissen-s13))
+- **200** deadlines without a number one slice removes at most ([step 13](#kn-wissen-s13))
 - **4096** passages per block when comparing vectors ([step 6](#kn-wissen-s6))
 - **200** documents a day for the knowledge map (default) ([step 13](#kn-wissen-s13))
 - **40** people, companies, places, contracts, accounts and deadlines one document may bring ([step 13](#kn-wissen-s13))
-- **5000** such points per profile ([step 13](#kn-wissen-s13))
+- **15000** such points per profile ([step 13](#kn-wissen-s13))
 - **80** characters the name of such a point has at most ([step 13](#kn-wissen-s13))
 - **200** documents a day for these points (default) ([step 13](#kn-wissen-s13))
 - **200000** pairs one run for doubles compares per profile at most ([step 13](#kn-wissen-s13))
 - **300** open suggestions „Maybe double“ per profile ([step 13](#kn-wissen-s13))
 - **8** most similar points on top of „Merge with …“ ([step 13](#kn-wissen-s13))
+- **0.2 s** at most per slice of the quiet run for doubles ([step 13](#kn-wissen-s13))
 - **50** passages the map names to the search at most ([step 6](#kn-wissen-s6))
 - **20** points the search words hit at most ([step 6](#kn-wissen-s6))
 - **0.5** weight of the list from the map ([step 6](#kn-wissen-s6))
@@ -2533,8 +2538,10 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/wissensbuch.py` `answer_block`: fitting pages of the knowledge book with sources ([step 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `check_edge`: fixed rules for every proposed connection ([step 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `view`: the visible part of the map ([step 13](#kn-wissen-s13))
-- `app/panel/wissenskarte.py` `rund_um`: pages around a page, WITH RECURSIVE ([step 13](#kn-wissen-s13))
-- `app/panel/wissenskarte.py` `weg`: shortest way between two pages ([step 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `rund_um`: points around a point, one query per step ([step 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `weg`: shortest way, from both ends at once ([step 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `_bau`: build of the map in memory, new on every change (wk_stand) ([step 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `_worte_sync`: word index of the points for the search's list ([step 6](#kn-wissen-s6))
 - `app/panel/wissenskarte.py` `check_ent`: fixed rules for every person, company, deadline … ([step 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `finde_knoten`: points exactly by name and other names, read only ([step 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `knoten_liste`: points of one kind by name, read only ([step 13](#kn-wissen-s13))
@@ -2548,9 +2555,10 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/wissensdoppelt.py` `aehnlich`: the same, a suggestion or nothing: the one fixed rule for doubles ([step 13](#kn-wissen-s13))
 - `app/panel/wissensdoppelt.py` `normalform`: a name in its normal form per kind ([step 13](#kn-wissen-s13))
 - `app/panel/wissensdoppelt.py` `gleich_id`: while reading: the same name becomes an other name ([step 13](#kn-wissen-s13))
-- `app/panel/wissensdoppelt.py` `lauf`: quiet run: merge and suggestions in blocks ([step 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `lauf`: quiet run: merge and suggestions in blocks, in slices ([step 13](#kn-wissen-s13))
 - `app/panel/wissensdoppelt.py` `auswahl`: „Merge with …“: the most similar first ([step 13](#kn-wissen-s13))
 - `app/panel/wissensdoppelt.py` `verschieden`: „Different“ is for good ([step 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `gesperrt`: deleted stays deleted, in every spelling that is „the same“ ([step 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `search_pages`: fitting pages through the search index wb_fts ([step 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `_fts_sync`: bring the pages' search index up to date ([step 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `liste`: page ids with rank for other parts, read only ([step 13](#kn-wissen-s13))
@@ -2569,7 +2577,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/wissensmessung.py` `_synth`: the throwaway profile from a fixed seed, with the code's limits ([step 6](#kn-wissen-s6))
 - `app/panel/wissensmessung.py` `MESSTEILE`: the measuring parts, extensible ([step 6](#kn-wissen-s6))
 
-Self-tests: `test_wissen`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`
+Self-tests: `test_wissen`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`, `test_wissenstempo`
 
 ### Guard
 

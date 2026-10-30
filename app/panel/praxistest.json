@@ -4874,6 +4874,13 @@
 "titel": "Fernzugang: Plätze voll und Seitenwechsel",
 "text": "Mit zwei offenen Reitern auf Zustand → Live wechseln: die rote Zeile oben sagt „2 Fernsitzungen aktiv“ mit beiden Namen und hat „Zum Terminal“; der Knopf führt zurück zum zuletzt gezeigten Reiter, beide Shells laufen noch (Ausgabe von top lief weiter). Unter Funktionen → Fernzugang zu Servern „Sitzungen gleichzeitig“ auf 2 stellen und ein drittes System öffnen: es öffnet nicht, die Meldung sagt „2 von 2 Plätzen belegt“, keine alte Sitzung schließt sich. Auf dem iPhone oder einem schmalen Fenster bleiben die Reiter bedienbar.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P721",
+"v": 1291,
+"titel": "Wissen messen nach Grenzen-Erhöhung",
+"text": "A: Zustand → Prüfen → Wissen messen: „Erfundene Dokumente“, 5000, Messen. Die Grenzen zeigen 3000 Seiten, 25 000 Verbindungen und 15 000 Punkte; bei 5000 Dokumenten ist nur noch die Seiten-Grenze ungefähr voll (Bedarf etwa 3000), Verbindungen und Punkte „reicht“. Die Zeiten bitte an den Thread geben: „Suche mit Karte“ soll im p95 deutlich unter 300 ms liegen (vorher auf dem Pi 257 ms mit den alten, kleineren Grenzen), „Karte-Liste“ und „Rund um“ einstellig bis niedrig zweistellig im Median, „Karte“ im Median wenige ms (der erste Aufruf baut die Karte, danach kommt sie aus dem Speicher). B: Wissensbuch → Karte mit vielen Punkten öffnen, einen Punkt antippen, „Weg“ zu einem anderen: die Karte antwortet ohne spürbare Wartezeit; nach dem Einlesen eines neuen Dokuments zeigt sie es beim nächsten Öffnen. C: Am Morgen nach der Nacht in Zustand → Logs, Bereich Wissen: „wissen: wissenskarte geprueft | …“, bei vielen Verbindungen mehrere Zeilen mit „| weiter“ und zuletzt eine ohne; ebenso „wissen: wissenskarte doppelt geprueft | …“ bei vielen Punkten in mehreren Zeilen mit „| weiter“ und zuletzt „| fertig“ oder „| grenze“; Zustand → Logs zeigt keinen Hänger des Panels („loopwacht“). D: Nach dem Update einmal „wissen: wissenskarte wortindex aufgebaut | n punkte“ je Profil, kein Name. E: Auf der Karte eine Person „Herr …“ löschen und ihr Dokument noch einmal einlesen lassen: sie kommt weder als „Nachname, Vorname“ noch mit „Dr.“ oder ohne Anrede zurück; Zustand → Logs zeigt „blocked=…“.",
+"thread": "Wissenskarte Stufe 2 statt Neo4j"
 }
 ]
 }

@@ -23,9 +23,11 @@ What happens with it:
 2. In quiet minutes (wissen.due_once, after the map) lauf() merges points there that are "gleich" through
    wissenskarte.zusammen (the same function as the owner's click, so GEAENDERT says "zusammen") and fills wk_paar with
    suggestions by the rules above: compared only within blocks (first and last letters, last name, core of a
-   company) and with neighbours of similar length, at most VERGLEICHE_MOST comparisons, LAUF_S seconds, PAARE_LAUF new
-   suggestions per run and PAARE_MOST open per profile; it runs again only when the points changed, at most LAEUFE_TAG
-   times a day per profile.
+   company) and with neighbours of similar length, at most VERGLEICHE_MOST comparisons, PAARE_LAUF new suggestions
+   per run and PAARE_MOST open per profile; it runs again only when the points changed, at most LAEUFE_TAG times a day
+   per profile. It runs in slices of at most SCHEIBE_S seconds (Wissenskarte Tempo, Dominik 2026-10-30): the next
+   quiet step goes on where the last stood (lauf with scheibe), so the database is never held long; called alone
+   (tests, LAUF_S seconds) it is one run as before.
 3. The owner sees them under Wissensbuch → Karte → „Vielleicht doppelt“ and at a chosen point („Vielleicht dieselbe
    Person: …“): „Zusammenführen“ goes through the endpoint of the click (code of „Bestätigen“, stufen.LIST),
    „Verschieden“ is kept by the names (stand "verschieden"), so the pair never comes back, also not automatically.
@@ -70,7 +72,13 @@ PAARE_MOST = 300         # open suggestions per profile
 AUTO_LAUF = 200          # points one run merges by itself per profile
 VERGLEICHE_MOST = 200000  # pairs one run compares per profile
 NACHBARN_MOST = 40       # neighbours (by length) one point is compared with in a block
-LAUF_S = 3.0             # seconds one run may take per profile
+LAUF_S = 3.0             # seconds one run may take per profile when called alone (without slices)
+SCHEIBE_S = 0.2          # seconds one slice of the quiet run takes (wissen.due_once): the run goes on in the next
+SCHEIBE_RUHE = 3600      # seconds a run in slices may rest; after that it starts again from the beginning
+FRISCH_SCHRITT = 200     # points auffrischen does between two looks at the clock (slices only)
+ZUSAMMEN_SCHRITT = 10    # merges from which a slice looks at the clock before each one (fewer: all in one slice)
+VERGLEICHE_SCHRITT = 100  # comparisons between two looks at the clock (slices only; without slices 500)
+SCHEIBE_TEIL = 0.75      # part of SCHEIBE_S after which a slice stops at the next look (its last step still fits)
 LAEUFE_TAG = 6           # runs per profile and day (only when the points changed)
 VERSCHIEDEN_MOST = 5000  # pairs kept as „Verschieden“ per profile (the oldest go first)
 _GRUND_RANG = {g: i for i, g in enumerate(GRUENDE)}
@@ -87,6 +95,7 @@ TABELLEN = ("wk_paar", "wk_entkey", "wk_entsig")
 ZAHLEN = {"auto": 0, "einlesen": 0, "verschieden": 0}   # Live-Übersicht: since the start, in the memory only
 _busy = set()
 _sig = {}
+_scheibe = {}             # uid -> where a run in slices stands (in the memory only, see lauf)
 _live = {"at": 0.0, "d": None}
 LIVE_CACHE = 20
 
@@ -253,13 +262,17 @@ def _namen(row):
     return [row["name"]] + wk._aliases(row["alias"])
 
 
-def auffrischen(con, art=None):
+def auffrischen(con, art=None, bis=None):
     """Brings wk_entkey up to the points there: a point whose name or other names changed (or that is new) gets its
-    keys again (fingerprint in wk_entsig); keys of points that went are only ever read through a join with wk_ent."""
+    keys again (fingerprint in wk_entsig); keys of points that went are only ever read through a join with wk_ent.
+    With bis (time.monotonic) it stops after the FRISCH_SCHRITT points during which that time went by and returns
+    None (the rest comes next time, the fingerprints say which); else the number of points."""
     q = ("SELECT e.id, e.art, e.name, e.alias FROM wk_ent e LEFT JOIN wk_entsig s ON s.ent = e.id "
          "WHERE (s.sig IS NULL OR s.sig <> e.name || char(31) || e.alias)" + (" AND e.art = ?" if art else ""))
     rows = con.execute(q, (art,) if art else ()).fetchall()
-    for r in rows:
+    for k, r in enumerate(rows):
+        if bis is not None and k and k % FRISCH_SCHRITT == 0 and time.monotonic() > bis:
+            return None
         con.execute("DELETE FROM wk_entkey WHERE ent=?", (r["id"],))
         keys = {k for k in (schluessel(r["art"], n) for n in _namen(r)) if k}
         con.executemany("INSERT INTO wk_entkey (ent, art, key) VALUES (?, ?, ?)", [(r["id"], r["art"], k) for k in sorted(keys)])
@@ -306,11 +319,21 @@ def gleich_id(con, art, name):
     return None
 
 
+def gesperrt(art, norm, gesperrte):
+    """wissenskarte.apply_ents: a new name (as ent_norm writes it) stays away when a point deleted from this document
+    (wk_entblock: {(art, norm)} of all its names) is "gleich" to it by aehnlich, so also with another form of address,
+    title, spelling or order of the names; a "vorschlag" never blocks. Fixed rules only."""
+    if (art, norm) in gesperrte:
+        return True
+    return any(a == art and aehnlich(art, norm, n)[0] == "gleich" for a, n in gesperrte)
+
+
 def leeren(con):
     """Ich → Daten löschen (wissenskarte._ent_clear): the suggestions, „Verschieden“ and the keys go too."""
     tabellen(con)
     for t in TABELLEN:
         con.execute(f"DELETE FROM {t}")
+    _scheibe.clear()                    # no names of points stay in the memory (the other profiles start again)
 
 
 # ---------------------------------------------------------------- the quiet run
@@ -332,128 +355,203 @@ def _bloecke(art, rows):
     return out
 
 
-def _vergleiche(art, rows, c, t0, budget):
-    """The pairs („vorschlag“) of one kind, compared in blocks and with neighbours of similar length: {(a, b): grund}."""
+def _vergleiche(art, rows, c, p):
+    """The pairs („vorschlag“) of one kind, compared in blocks and with neighbours of similar length: {(a, b): grund}.
+    p holds where the run stands: from block p["blk"] and point p["x"] on, the comparisons so far (p["n"]) and the
+    persons with an initial (p["init"]); it looks at the clock every p["schritt"] comparisons. When the time (p["bis"])
+    or VERGLEICHE_MOST is up, p["stop"] says which and p["blk"],
+    p["x"] where the next slice goes on (that point is compared once more)."""
     name = dict(rows)
-    found, initial, seen = {}, {}, set()
-    for key, ids in sorted(_bloecke(art, rows).items()):
+    found, initial, seen = {}, p["init"], set()
+    for b, (key, ids) in enumerate(sorted(_bloecke(art, rows).items())):
+        if b < p["blk"]:
+            continue
         ids = sorted(ids, key=lambda i: (len(normalform(art, name[i])[1]), i))
         for x, i in enumerate(ids):
+            if b == p["blk"] and x < p["x"]:
+                continue
             for j in ids[x + 1:x + 1 + NACHBARN_MOST]:
                 if key[0] in ("a", "z") and len(normalform(art, name[j])[1]) - len(normalform(art, name[i])[1]) > 2:
                     break
-                p = (min(i, j), max(i, j))
-                if p in seen:
+                q = (min(i, j), max(i, j))
+                if q in seen:
                     continue
-                seen.add(p)
+                seen.add(q)
                 c["vergleiche"] += 1
-                if c["vergleiche"] >= VERGLEICHE_MOST or c["vergleiche"] % 500 == 0 and time.monotonic() - t0 > budget:
+                p["n"] += 1
+                if p["n"] >= VERGLEICHE_MOST or p["n"] % p["schritt"] == 0 and time.monotonic() > p["bis"]:
                     c["fertig"] = False
+                    p.update(stop="grenze" if p["n"] >= VERGLEICHE_MOST else "zeit", blk=b, x=x)
                     return found, initial
-                s, g = aehnlich(art, name[p[0]], name[p[1]])
+                s, g = aehnlich(art, name[q[0]], name[q[1]])
                 if s != "vorschlag":
                     continue
                 if g == "initiale":       # only when exactly one person fits the one with the initial
-                    for x1, x2 in (p, p[::-1]):
+                    for x1, x2 in (q, q[::-1]):
                         if any(len(t) == 1 for t in normalform(art, name[x1])[0][:-1]):
                             initial.setdefault(x1, set()).add(x2)
                 else:
-                    found[p] = g
+                    found[q] = g
     return found, initial
 
 
-def lauf(uid, now=None, budget=LAUF_S):
+def _zeichen(con):
+    """What a run depends on: the points, their names and „Verschieden“ (a fingerprint, numbers only)."""
+    r = con.execute("SELECT COUNT(*), COALESCE(MAX(id), 0), COALESCE(SUM(LENGTH(name) + LENGTH(alias)), 0) "
+                    "FROM wk_ent").fetchone()
+    n = con.execute("SELECT COUNT(*) FROM wk_paar WHERE stand='verschieden'").fetchone()[0]
+    return (r[0], r[1], r[2], n)
+
+
+def lauf(uid, now=None, budget=LAUF_S, scheibe=False):
     """One run for one profile: merges what is "gleich" (through wissenskarte.zusammen) and finds suggestions. Returns
-    the counts {"auto", "neu", "offen", "weg", "vergleiche", "fertig"}."""
+    the counts {"auto", "neu", "offen", "weg", "vergleiche", "fertig", "weiter"}.
+
+    With scheibe (wissen.due_once) it is one slice of the run of at most budget seconds (SCHEIBE_S): it looks at the
+    clock every FRISCH_SCHRITT keys, before each merge (from ZUSAMMEN_SCHRITT merges on) and every VERGLEICHE_SCHRITT
+    comparisons and stops there with "weiter" once SCHEIBE_TEIL of budget went by; the next slice goes on where it stood (_scheibe, in the memory: the step, the block and point, the names of the kinds
+    compared and their fingerprint _zeichen; changed points or SCHEIBE_RUHE seconds of rest start it again). The
+    limits AUTO_LAUF, VERGLEICHE_MOST and PAARE_LAUF count for the whole run, as without slices."""
     t0 = time.monotonic()
     now = int(now or time.time())
-    c = {"auto": 0, "neu": 0, "offen": 0, "weg": 0, "vergleiche": 0, "fertig": True}
-    with _Db(uid) as con:
-        auffrischen(con)
-        con.execute("DELETE FROM wk_entkey WHERE ent NOT IN (SELECT id FROM wk_ent)")
-        con.execute("DELETE FROM wk_entsig WHERE ent NOT IN (SELECT id FROM wk_ent)")
-        rows = {r["id"]: r for r in con.execute("SELECT id, art, name, alias FROM wk_ent ORDER BY id")}
-        nein = _nein(con)
-        merges = []
-        for r in con.execute("SELECT k.art, GROUP_CONCAT(DISTINCT k.ent) AS ids FROM wk_entkey k JOIN wk_ent e ON "
-                             "e.id = k.ent GROUP BY k.art, k.key HAVING COUNT(DISTINCT k.ent) > 1 ORDER BY MIN(k.ent)"):
-            ids = sorted(int(x) for x in r["ids"].split(","))
-            for o in ids[1:]:
-                a, b = rows[ids[0]], rows[o]
-                if _gleich(r["art"], _namen(a), _namen(b)) and not _verschieden(nein, r["art"], _namen(a), _namen(b)):
-                    merges.append((o, ids[0]))
-    into = {}
-    for o, t in merges[:AUTO_LAUF]:
-        while t in into:                      # the target went into another point already
-            t = into[t]
-        if o == t or o in into:
-            continue
-        if wk.zusammen(uid, o, t) == "ok":     # the same function as the owner's click: GEAENDERT says "zusammen"
-            into[o] = t
-            c["auto"] += 1
-    if len(merges) > AUTO_LAUF:
+    c = {"auto": 0, "neu": 0, "offen": 0, "weg": 0, "vergleiche": 0, "fertig": True, "weiter": False}
+    p = _scheibe.pop(uid, None) if scheibe else None
+    if not p or time.monotonic() - p["t"] > SCHEIBE_RUHE:
+        p = {"teil": "zusammen", "auto": 0, "grenze": False}
+    bis = t0 + budget * SCHEIBE_TEIL if scheibe else None
+
+    def weiter():
+        p["t"] = time.monotonic()
+        _scheibe[uid] = p
+        c.update(fertig=False, weiter=True)
+        return c
+
+    if p["teil"] == "zusammen":
+        with _Db(uid) as con:
+            frisch = auffrischen(con, bis=bis)
+            if frisch is None:
+                return weiter()
+            con.execute("DELETE FROM wk_entkey WHERE ent NOT IN (SELECT id FROM wk_ent)")
+            con.execute("DELETE FROM wk_entsig WHERE ent NOT IN (SELECT id FROM wk_ent)")
+            rows = {r["id"]: r for r in con.execute("SELECT id, art, name, alias FROM wk_ent ORDER BY id")}
+            nein = _nein(con)
+            merges = []
+            for r in con.execute("SELECT k.art, GROUP_CONCAT(DISTINCT k.ent) AS ids FROM wk_entkey k JOIN wk_ent e ON "
+                                 "e.id = k.ent GROUP BY k.art, k.key HAVING COUNT(DISTINCT k.ent) > 1 ORDER BY MIN(k.ent)"):
+                ids = sorted(int(x) for x in r["ids"].split(","))
+                for o in ids[1:]:
+                    a, b = rows[ids[0]], rows[o]
+                    if _gleich(r["art"], _namen(a), _namen(b)) and not _verschieden(nein, r["art"], _namen(a), _namen(b)):
+                        merges.append((o, ids[0]))
+        into, most, halt = {}, AUTO_LAUF - p["auto"], False
+        for k, (o, t) in enumerate(merges[:most]):
+            if bis is not None and len(merges) >= ZUSAMMEN_SCHRITT and k and time.monotonic() > bis:
+                halt = True                   # the rest is found again in the next slice (keys and names)
+                break
+            while t in into:                      # the target went into another point already
+                t = into[t]
+            if o == t or o in into:
+                continue
+            if wk.zusammen(uid, o, t) == "ok":     # the same function as the owner's click: GEAENDERT says "zusammen"
+                into[o] = t
+                c["auto"] += 1
+        p["auto"] += c["auto"]
+        ZAHLEN["auto"] += c["auto"]
+        if halt:
+            return weiter()
+        if len(merges) > most:
+            p["grenze"] = True
+        p["teil"] = "erste"
+        if bis is not None and (frisch >= FRISCH_SCHRITT or len(merges) >= ZUSAMMEN_SCHRITT) and time.monotonic() > bis:
+            return weiter()                   # a slice with much to do: the suggestions come in the next
+    if p["grenze"]:                       # AUTO_LAUF was reached: as without slices, one kind is compared
         c["fertig"] = False
-    ZAHLEN["auto"] += c["auto"]
     with _Db(uid) as con:
-        c["weg"] = con.execute("DELETE FROM wk_paar WHERE stand='offen' AND (a NOT IN (SELECT id FROM wk_ent) OR "
-                               "b NOT IN (SELECT id FROM wk_ent))").rowcount
-        rows = {r["id"]: r for r in con.execute("SELECT id, art, name, alias FROM wk_ent ORDER BY id")}
-        for p in con.execute("SELECT a, b, art FROM wk_paar WHERE stand='offen'").fetchall():   # renamed since
-            if aehnlich(p["art"], rows[p["a"]]["name"], rows[p["b"]]["name"])[0] != "vorschlag":
-                c["weg"] += con.execute("DELETE FROM wk_paar WHERE a=? AND b=?", (p["a"], p["b"])).rowcount
+        if p["teil"] == "erste":
+            c["weg"] = con.execute("DELETE FROM wk_paar WHERE stand='offen' AND (a NOT IN (SELECT id FROM wk_ent) OR "
+                                   "b NOT IN (SELECT id FROM wk_ent))").rowcount
+            rows = {r["id"]: r for r in con.execute("SELECT id, art, name, alias FROM wk_ent ORDER BY id")}
+            for q in con.execute("SELECT a, b, art FROM wk_paar WHERE stand='offen'").fetchall():   # renamed since
+                if aehnlich(q["art"], rows[q["a"]]["name"], rows[q["b"]]["name"])[0] != "vorschlag":
+                    c["weg"] += con.execute("DELETE FROM wk_paar WHERE a=? AND b=?", (q["a"], q["b"])).rowcount
+            p.update(teil="vergleiche", art=0, blk=0, x=0, n=0, neu=0, init={}, zeichen=_zeichen(con),
+                     namen={art: [(i, r["name"]) for i, r in rows.items() if r["art"] == art] for art in TIPP_ARTEN})
+        elif _zeichen(con) != p["zeichen"]:      # the points changed between two slices: the run starts again
+            p = {"teil": "zusammen", "auto": 0, "grenze": False}
+            return weiter()
+        nein = _nein(con)
         have = {(r[0], r[1]) for r in con.execute("SELECT a, b FROM wk_paar")}
         offen = con.execute("SELECT COUNT(*) FROM wk_paar WHERE stand='offen'").fetchone()[0]
-        found = {}
-        for art in TIPP_ARTEN:
-            got, initial = _vergleiche(art, [(i, r["name"]) for i, r in rows.items() if r["art"] == art], c, t0, budget)
+        found, halt = {}, False
+        p.update(bis=bis if scheibe else t0 + budget, schritt=VERGLEICHE_SCHRITT if scheibe else 500)
+        while p["art"] < len(TIPP_ARTEN):
+            p["stop"] = ""
+            got, initial = _vergleiche(TIPP_ARTEN[p["art"]], p["namen"][TIPP_ARTEN[p["art"]]], c, p)
             found.update(got)
+            if scheibe and p["stop"] == "zeit":
+                halt = True                   # the persons with an initial wait in p["init"] for the rest of the kind
+                break
             for i, others in initial.items():
                 if len(others) == 1:
                     j = next(iter(others))
                     found.setdefault((min(i, j), max(i, j)), "initiale")
             if not c["fertig"]:
                 break
+            p.update(art=p["art"] + 1, blk=0, x=0, init={})
+        ids = sorted({i for q in found for i in q})
+        rows = {r["id"]: r for r in con.execute("SELECT id, art, name, alias FROM wk_ent WHERE id IN "
+                                                "(SELECT value FROM json_each(?))", (json.dumps(ids),))}
         for (a, b), g in sorted(found.items(), key=lambda x: (_GRUND_RANG[x[1]], x[0])):
-            if (a, b) in have or _verschieden(nein, rows[a]["art"], _namen(rows[a]), _namen(rows[b])):
+            if a not in rows or b not in rows or (a, b) in have or \
+                    _verschieden(nein, rows[a]["art"], _namen(rows[a]), _namen(rows[b])):
                 continue
-            if c["neu"] >= PAARE_LAUF or offen >= PAARE_MOST:
+            if p["neu"] >= PAARE_LAUF or offen >= PAARE_MOST:
                 c["fertig"] = c["fertig"] and offen >= PAARE_MOST
+                halt = False
+                p["grenze"] = p["grenze"] or not c["fertig"]
                 break
             con.execute("INSERT INTO wk_paar (a, b, art, grund, stand, na, nb, at) VALUES (?, ?, ?, ?, 'offen', ?, ?, ?)",
                         (a, b, rows[a]["art"], g, wk.ent_norm(rows[a]["name"]), wk.ent_norm(rows[b]["name"]), now))
+            have.add((a, b))
             c["neu"] += 1
+            p["neu"] += 1
             offen += 1
         c["offen"] = offen
+    if halt:
+        return weiter()
+    if p["grenze"]:
+        c["fertig"] = False
     return c
 
 
 def _stand(uid):
-    """What a run depends on: the points, their names and „Verschieden“ (a fingerprint, numbers only)."""
+    """_zeichen of one profile."""
     with _Db(uid) as con:
-        r = con.execute("SELECT COUNT(*), COALESCE(MAX(id), 0), COALESCE(SUM(LENGTH(name) + LENGTH(alias)), 0) "
-                        "FROM wk_ent").fetchone()
-        n = con.execute("SELECT COUNT(*) FROM wk_paar WHERE stand='verschieden'").fetchone()[0]
-    return (r[0], r[1], r[2], n)
+        return _zeichen(con)
 
 
 async def due_once(now=None):
-    """One step of quiet work (wissen.due_once, after the map): one run for one profile whose points changed since its
-    last run, at most LAEUFE_TAG a day. Returns "wissensdoppelt" when it ran, else None."""
+    """One step of quiet work (wissen.due_once, after the map): one slice (SCHEIBE_S seconds) of the run for one
+    profile, the next of a run under way first; a new run only when its points changed since its last run, at most
+    LAEUFE_TAG a day (the slices of one run count once). Returns "wissensdoppelt" when it ran, else None."""
     if not wk.ents_on():
+        _scheibe.clear()
         return None
     now = now or time.time()
     day = datetime.datetime.fromtimestamp(now).strftime("%Y-%m-%d")
-    for uid in profiles.user_ids():
+    for uid in sorted(profiles.user_ids(), key=lambda u: u not in _scheibe):
         if uid in _busy or not wk.ents_allowed(uid) or not os.path.exists(documents.db_path(uid)):
+            _scheibe.pop(uid, None)
             continue
-        sig = await asyncio.to_thread(_stand, uid)
-        if not sig[0] or _sig.get(uid) == sig or documents.count_today(uid, day, key="wkdoppelt") >= LAEUFE_TAG:
-            continue
-        documents.count_today(uid, day, add=1, key="wkdoppelt")
+        if uid not in _scheibe:
+            sig = await asyncio.to_thread(_stand, uid)
+            if not sig[0] or _sig.get(uid) == sig or documents.count_today(uid, day, key="wkdoppelt") >= LAEUFE_TAG:
+                continue
+            documents.count_today(uid, day, add=1, key="wkdoppelt")
         _busy.add(uid)
         t0 = time.time()
         try:
-            c = await asyncio.to_thread(lauf, uid, now)
+            c = await asyncio.to_thread(lauf, uid, now, SCHEIBE_S, True)
         except Exception as e:     # noqa: BLE001
             print("wissen: wissenskarte doppelt fehler |", type(e).__name__, flush=True)
             return "wissensdoppelt"
@@ -463,7 +561,7 @@ async def due_once(now=None):
             _sig[uid] = await asyncio.to_thread(_stand, uid)
         print(f"wissen: wissenskarte doppelt geprueft | {c['auto']} zusammengefuehrt | {c['neu']} vorschlaege neu | "
               f"{c['offen']} offen | {c['weg']} weg | {c['vergleiche']} vergleiche | "
-              + ("fertig" if c["fertig"] else "grenze"), flush=True)
+              + ("fertig" if c["fertig"] else "weiter" if c["weiter"] else "grenze"), flush=True)
         _live["d"] = None
         import live
         live.bg_done("Wissenskarte: Doppelte", True, time.time() - t0)

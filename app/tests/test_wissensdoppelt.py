@@ -157,6 +157,27 @@ class Base(unittest.TestCase):
 
 
 class Reading(Base):
+    def test_a_deleted_point_stays_away_in_every_spelling_that_is_the_same(self):
+        c, uid, _ = self.fresh("Wkdsperre")
+        self.read_in(uid, ("person", "Herr Dominik Bornhäuser"), ("firma", "Müller GmbH"))
+        ids = self.ids(uid)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertTrue(wk.loeschen(uid, ids["Herr Dominik Bornhäuser"]))
+            self.assertTrue(wk.loeschen(uid, ids["Müller GmbH"]))
+        with wk._Db(uid) as con:
+            con.execute("UPDATE wb_docs SET sig='again'")
+        log = self.read_in(uid, ("person", "Bornhäuser, Dominik"), ("person", "Dr. Dominik Bornhäuser"),
+                           ("person", "Dominik Bornhäuser"), ("person", "Dominik Bornhäußer"), ("firma", "Müller AG"))
+        self.assertIn("blocked=3", log)                       # "gleich": order, title, without form of address
+        left = set(self.ids(uid))
+        self.assertFalse(left & {"Bornhäuser, Dominik", "Dr. Dominik Bornhäuser", "Dominik Bornhäuser"})
+        self.assertTrue({"Dominik Bornhäußer", "Müller AG"} <= left, left)       # a suggestion never blocks
+        self.assertTrue(wd.gesperrt("person", wk.ent_norm("Herr Dominik Bornhäuser"),
+                                    {("person", wk.ent_norm("Herr Dominik Bornhäuser"))}))
+        self.assertFalse(wd.gesperrt("person", wk.ent_norm("Frau Dominik Bornhäuser"),       # „Herr“ and „Frau“ never
+                                     {("person", wk.ent_norm("Herr Dominik Bornhäuser"))}))
+        self.assertFalse(wd.gesperrt("ort", wk.ent_norm("Dominik Bornhäuser"), {("person", wk.ent_norm("Dominik Bornhäuser"))}))
+
     def test_a_name_that_is_the_same_becomes_an_other_name(self):
         c, uid, _ = self.fresh("Wkdlesen")
         log = self.standard(uid)
