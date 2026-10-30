@@ -3170,6 +3170,17 @@ html.fzvoll,html.fzvoll body{overflow:hidden}html.fzvoll,html:has(body.fztermina
 .fzreithint{margin-left:auto;padding-left:8px;color:var(--mut);font-size:11.5px;white-space:nowrap}
 @media (max-width:700px){.fzreithint{display:none}}
 .fzterm1{height:100%}.fzterm1[hidden]{display:none}
+.fzterm.fzgeteilt{display:grid;gap:6px;padding:6px}.fzterm.fz2{grid-template-columns:1fr 1fr;grid-template-rows:1fr}.fzterm.fz4{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.fzgeteilt .fzterm1{position:relative;min-width:0;min-height:0;height:auto;padding:22px 4px 4px;border:1px solid var(--line);border-radius:var(--r-item);box-sizing:border-box;overflow:hidden}
+.fzgeteilt .fzterm1::before{content:attr(data-name);position:absolute;top:3px;left:8px;right:8px;color:var(--mut);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fzgeteilt .fzterm1.fokus{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}.fzgeteilt .fzterm1.fokus::before{color:var(--acc)}
+.fzterm.fzkachelnan{overflow-y:auto}
+.fzkacheln{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;padding:4px}
+.fzkachel{display:flex;flex-direction:column;gap:6px;min-width:0;padding:8px;border:1px solid var(--line);border-radius:var(--r-item);background:var(--card);color:var(--fg);font:inherit;text-align:left;cursor:pointer}
+.fzkachel:hover,.fzkachel:focus-visible{border-color:var(--acc)}.fzkachel.on{box-shadow:inset 0 -2px 0 var(--acc)}
+.fzkachelkopf{display:flex;align-items:center;gap:6px;min-width:0;font-size:12.5px}.fzkachelkopf b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.fzkachelkopf small{margin-left:auto;color:var(--mut);font-size:11.5px;white-space:nowrap}
+.fzkacheltext{margin:0;height:calc(12 * 1.35em);overflow:hidden;font-family:var(--mono);font-size:11.5px;line-height:1.35;white-space:pre;color:var(--mut)}
+.fzansicht{flex:none;display:flex;gap:2px;margin-left:8px}.fzansicht .b{height:28px;padding:0 8px;font-size:12px}.fzansicht .b.on{border-color:var(--acc);color:var(--fg)}
 .fzview:fullscreen .fzreiter{display:none}
 .fzwahl{position:fixed;z-index:1000;top:12vh;left:50%;transform:translateX(-50%);width:min(460px,calc(100vw - 32px));max-height:70vh;display:flex;flex-direction:column;gap:6px;padding:8px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-box);box-shadow:var(--shadow-pop)}
 .fzwahl input{width:100%;box-sizing:border-box}

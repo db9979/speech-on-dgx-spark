@@ -4881,6 +4881,20 @@
 "titel": "Wissen messen nach Grenzen-Erhöhung",
 "text": "A: Zustand → Prüfen → Wissen messen: „Erfundene Dokumente“, 5000, Messen. Die Grenzen zeigen 3000 Seiten, 25 000 Verbindungen und 15 000 Punkte; bei 5000 Dokumenten ist nur noch die Seiten-Grenze ungefähr voll (Bedarf etwa 3000), Verbindungen und Punkte „reicht“. Die Zeiten bitte an den Thread geben: „Suche mit Karte“ soll im p95 deutlich unter 300 ms liegen (vorher auf dem Pi 257 ms mit den alten, kleineren Grenzen), „Karte-Liste“ und „Rund um“ einstellig bis niedrig zweistellig im Median, „Karte“ im Median wenige ms (der erste Aufruf baut die Karte, danach kommt sie aus dem Speicher). B: Wissensbuch → Karte mit vielen Punkten öffnen, einen Punkt antippen, „Weg“ zu einem anderen: die Karte antwortet ohne spürbare Wartezeit; nach dem Einlesen eines neuen Dokuments zeigt sie es beim nächsten Öffnen. C: Am Morgen nach der Nacht in Zustand → Logs, Bereich Wissen: „wissen: wissenskarte geprueft | …“, bei vielen Verbindungen mehrere Zeilen mit „| weiter“ und zuletzt eine ohne; ebenso „wissen: wissenskarte doppelt geprueft | …“ bei vielen Punkten in mehreren Zeilen mit „| weiter“ und zuletzt „| fertig“ oder „| grenze“; Zustand → Logs zeigt keinen Hänger des Panels („loopwacht“). D: Nach dem Update einmal „wissen: wissenskarte wortindex aufgebaut | n punkte“ je Profil, kein Name. E: Auf der Karte eine Person „Herr …“ löschen und ihr Dokument noch einmal einlesen lassen: sie kommt weder als „Nachname, Vorname“ noch mit „Dr.“ oder ohne Anrede zurück; Zustand → Logs zeigt „blocked=…“.",
 "thread": "Wissenskarte Stufe 2 statt Neo4j"
+},
+{
+"id": "P722",
+"v": 1292,
+"titel": "Fernzugang: zwei Systeme nebeneinander",
+"text": "Am großen Bildschirm (mindestens 1100 Pixel breit) zwei Shells als Reiter öffnen, oben rechts „Nebeneinander“: beide Terminals stehen nebeneinander, das mit Fokus ist blau umrandet. In das rechte klicken und „uptime“ tippen: nur dort erscheint es, der Assistent rechts gehört jetzt zu diesem System. Einen dritten Reiter öffnen und „2 × 2“ wählen: drei Felder zeigen je ein System, jedes Terminal füllt sein Feld (top oder htop passt sich an). Einen Reiter auf ein Feld ziehen: das System dort wechselt. Das Fenster schmaler als 1100 Pixel ziehen: nur noch ein System ist zu sehen, breiter wieder geteilt.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P723",
+"v": 1292,
+"titel": "Fernzugang: Übersicht aller Sitzungen",
+"text": "Mit drei offenen Reitern oben rechts „Übersicht“: jede Sitzung ist eine Kachel mit Name, grünem Punkt, „verbunden“ und den letzten Zeilen ihres Bildschirms; läuft in einer „top“, ändern sich die Zeilen etwa alle 2 Sekunden. Tippen ändert nichts in den Shells. Eine Kachel anklicken: das System ist groß zu sehen und hat die Tasten. In der Auswahl (Strg+Umschalt+O) ein System mit Umschalt+Enter öffnen: es steht neben dem bisherigen.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }

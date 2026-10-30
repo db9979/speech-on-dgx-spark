@@ -880,9 +880,11 @@ SEITEN = {
             S("s4", "schritt", ("Ticket für das Fenster", "Ticket for the window"),
               ("{fernzugang.TICKET_S} s, einmal", "{fernzugang.TICKET_S} s, once"),
               ("„Shell“ gibt ein Einmal-Ticket (fernzugang.admin_session), das {fernzugang.TICKET_S} Sekunden lang genau "
-               "ein Web-Terminal öffnet (fernzugang.terminal_ws); höchstens {fernzugang.SITZUNGEN.1} Sitzungen zugleich.",
+               "ein Web-Terminal öffnet (fernzugang.terminal_ws); höchstens {fernzugang.SITZUNGEN.1} Sitzungen zugleich. "
+               "Jede ist ein Reiter; nebeneinander, 2 × 2 oder als Übersicht zeigt nur die Seite mehrere zugleich, am Panel bleibt jede für sich.",
                "„Shell“ hands out a one-time ticket (fernzugang.admin_session) that opens exactly one web terminal for "
-               "{fernzugang.TICKET_S} seconds (fernzugang.terminal_ws); at most {fernzugang.SITZUNGEN.1} sessions at once.")),
+               "{fernzugang.TICKET_S} seconds (fernzugang.terminal_ws); at most {fernzugang.SITZUNGEN.1} sessions at once. "
+               "Each one is a tab; side by side, 2 × 2 or as an overview only the page shows several at once, on the panel each stays on its own.")),
             S("s5", "frage", ("Anderer Host-Schlüssel?", "Another host key?"),
               ("fernzugang.hostkey_wrong", "fernzugang.hostkey_wrong"),
               ("Zeigt der Server einen anderen Host-Schlüssel als beim Koppeln, gibt es keine Verbindung "

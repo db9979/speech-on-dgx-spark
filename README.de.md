@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.292** Fernzugang: geteilte Ansicht und Übersicht (Mehrere Sitzungen Stufe 2): ab zwei Reitern Einzeln, Nebeneinander, 2 × 2 (ab drei) und Übersicht; jedes Terminal passt sich seinem Feld an, nur das blau umrandete Feld bekommt Tasten und Assistent, Klick oder Strg+Umschalt+1…9 holt den Fokus, Reiter auf ein Feld ziehen tauscht das System; Daneben anzeigen im Rechtsklick und Umschalt+Enter in der Auswahl; die Übersicht zeigt jede Sitzung als Kachel mit den letzten Zeilen ihres Bildschirms (nur im Browser), ein Klick holt sie groß; unter 1100 Pixel nur Einzeln
 - **V01.1.291** Wissenskarte schneller bei mehr Platz: 3000 Seiten, 25 000 Verbindungen und 15 000 Punkte je Profil; Suche mit Karte bei 5000 Dokumenten etwa fünfmal so schnell, nächtliche Läufe in kurzen Scheiben; ein gelöschter Punkt kommt auch mit anderer Anrede oder Schreibweise nicht zurück
 - **V01.1.290** Redesign Stufe 4: Personen und Geräte, Offen und Chats als Liste und Detail (Zeilen fester Höhe, Zustand als Punkt mit Wort, Filter als Segment, am Handy Detail als eigene Seite)
 - **V01.1.289** Fernzugang: mehrere Sitzungen als Reiter (Stufe 1): jede Shell ein Reiter mit Symbol, Stand und Punkt für neue Ausgabe, + System mit Suche (Strg+Umschalt+O), Wechsel mit Strg+Umschalt+1…9 und ←/→, Assistent und Verlauf je Reiter, Rechtsklick-Menü; bis zu 8 Plätze (Standard 4), voll heißt „n von n Plätzen belegt“ statt still zu schließen; auf anderen Seiten bleiben alle Sitzungen offen, die rote Zeile führt mit Zum Terminal zurück.
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.285** Finden messen ist jetzt ein Teil von Wissen messen (`sudo speech-spark wissen messen synth 5000`, Zustand → Prüfen → Wissen messen): 50 000 versiegelte erfundene Mails zu 5000 Dokumenten, Suche p50/p95, Größe und RAM; `speech-spark finden messen` gibt es nicht mehr
 - **V01.1.284** Begleiter im Systemstil des Panels: ruhige Grautöne, ein blauer Akzent, keine Verläufe, das Gesicht in den Fenstern nur auf Wunsch
 - **V01.1.283** Dungeon-Musik: Probe hören (30 s oder voll), gute Probe in den Vorrat, „Gefällt“ am Tisch
-- **V01.1.282** Dungeon-Musik: Klangvorlage je Welt und Stimmung (Genre, Instrumente, Tonart, Takt, Tempo, Charakter, Gesang) und feste Pakete
 
 
 

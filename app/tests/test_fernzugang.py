@@ -3658,6 +3658,47 @@ class ShellForReal(_ShellPage):
             self.assertEqual(len(fernzugang.SITZUNG), 1)
         self.run_page(body)
 
+    def test_split_view_and_overview(self):
+        """Mehrere Sitzungen Stufe 2 (mockups 2-geteilt, 3-kacheln): side by side both terminals show, each sized to its
+        pane, only the framed pane gets the keys; a click moves the focus; the overview shows every session as a tile
+        with its last lines and takes no keys, a click on a tile brings that one up alone; narrow there is only Einzeln."""
+        async def body(ctx, pg):
+            self.weitere.append(self.anchor_for(self.pair(name="vps-2", hostkey=HOST_PUB)))
+            await pg.evaluate("fzLoad()")
+            await pg.wait_for_function("(FZ.d.geraete||[]).length===2", timeout=15000)
+            await pg.evaluate("fzOpen(FZ.d.geraete.find(g=>g.name==='vps-2'))")
+            await pg.wait_for_function("FZ.reiter.length===2&&FZ.reiter.every(S=>S.ws&&S.ws.readyState===1&&S.sid)", timeout=30000)
+            self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#fzreiter .fzansicht [data-a]')].map(b=>b.dataset.a)"),
+                             ["einzeln", "neben", "uebersicht"])                 # 2 × 2 only from three tabs
+            await pg.click("#fzreiter .fzansicht [data-a=neben]")
+            await pg.wait_for_function("$('fzterm').classList.contains('fz2')&&FZ.reiter.every(S=>!S.box.hidden)", timeout=10000)
+            geo = await pg.evaluate("FZ.reiter.map(S=>{const r=S.box.getBoundingClientRect();return [Math.round(r.left),Math.round(r.width),S.term.cols]})")
+            self.assertNotEqual(geo[0][0], geo[1][0])                             # side by side
+            whole = await pg.evaluate("$('fzterm').clientWidth")
+            await pg.wait_for_function("FZ.reiter.every(S=>S.term.cols<" + str(int(whole / 8.6) - 10) + ")", timeout=10000)   # each fits its pane
+            self.assertEqual(await pg.evaluate("FZ.reiter.map(S=>S.box.classList.contains('fokus'))"), [False, True])
+            await pg.keyboard.type("r")
+            await pg.wait_for_function("(()=>{const b=FZ.reiter[1].term.buffer.active;let s='';for(let i=0;i<b.length;i++)s+=b.getLine(i).translateToString(true);return s.includes('echo:r')})()", timeout=30000)
+            await pg.click("#fzterm .fzterm1:not(.fokus)")
+            await pg.wait_for_function("FZ.cur===FZ.reiter[0]&&FZ.reiter[0].box.classList.contains('fokus')&&!FZ.reiter[1].box.hidden", timeout=10000)
+            await pg.keyboard.type("l")
+            await pg.wait_for_function("(()=>{const b=FZ.reiter[0].term.buffer.active;let s='';for(let i=0;i<b.length;i++)s+=b.getLine(i).translateToString(true);return s.includes('echo:l')})()", timeout=30000)
+            self.assertNotIn("echo:l", await pg.evaluate("(()=>{const b=FZ.reiter[1].term.buffer.active;let s='';for(let i=0;i<b.length;i++)s+=b.getLine(i).translateToString(true);return s})()"))
+            # the overview: tiles with the last lines, no terminal takes keys
+            await pg.click("#fzreiter .fzansicht [data-a=uebersicht]")
+            await pg.wait_for_function("document.querySelectorAll('#fzkacheln .fzkachel').length===2&&FZ.reiter.every(S=>S.box.hidden)", timeout=10000)
+            tiles = await pg.evaluate("[...document.querySelectorAll('#fzkacheln .fzkachel')].map(k=>[k.querySelector('b').textContent,k.querySelector('pre').textContent])")
+            self.assertEqual([x[0] for x in tiles], [await pg.evaluate("FZ.reiter[0].sitz.name"), "vps-2"])
+            self.assertIn("echo:r", tiles[1][1])
+            await pg.locator("#fzkacheln .fzkachel").nth(1).click()
+            await pg.wait_for_function("FZ.ansicht==='einzeln'&&FZ.cur===FZ.reiter[1]&&!FZ.reiter[1].box.hidden&&FZ.reiter[0].box.hidden&&!$('fzkacheln')", timeout=10000)
+            # narrow: only Einzeln, the choice stays for the wide window
+            await pg.evaluate("fzAnsicht('neben')")
+            await pg.set_viewport_size({"width": 900, "height": 900})
+            await pg.wait_for_function("fzModus()==='einzeln'&&!$('fzterm').classList.contains('fz2')&&FZ.reiter[0].box.hidden&&!document.querySelector('#fzreiter .fzansicht')", timeout=10000)
+            self.assertEqual(await pg.evaluate("FZ.ansicht"), "neben")
+        self.run_page(body, size=(1500, 900))
+
     def test_herausloesen_clicked_shows_the_terminal_in_its_own_window(self):
         """Dominik 2026-10-28 19:56 on his Pi: „Herauslösen“ opened the normal assistant page instead of the terminal.
         The new window must show the terminal over the whole window and get output; the tab before says where it is."""
