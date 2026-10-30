@@ -12,7 +12,11 @@ A store of music for the whole Spark, one field per world and mood (STIMMUNGEN),
   new act adds NEU_JE_AKT new pieces for the act after it, the night fills every field up to the number (and the
   admin's „Musik jetzt vorbereiten“ at once); one piece at a time, only while no other heavy job waits;
 - the theme (Dominik 2026-10-24 „mehr mit den Themen zu tun, gerne mit Trommeln und Bässen“): every world and mood
-  has its own scene and instruments (THEMA), drums and bass with measure, never hectic; a vault of the map has its own
+  has its own character and instruments (THEMA), drums and bass with measure, never hectic; the caption is a list of
+  tags (genre, instruments, mood, production), tempo, key and time signature go as metadata and what a piece must not
+  be as its negative prompt (meta, plan dungeon-musik-tuning V1a, Dominik 2026-10-30 „1-8“); a boss fight has its own
+  mood (boss: a foe with the bestiary's boss mark still stands in the panel's fight, V8a), the fight's pieces until
+  its field has some; a vault of the map has its own
   mood (gewoelbe), a rest at the campfire too (lager, D&D idea 4, Dominik 2026-10-25 „1-12“); a piece of an older style (STIL_V) plays until its field has new ones and then goes first;
 - full: per field marked, then older, then the most played pieces go first, and the store stays within the megabytes;
 - „👎 Nervt“ (Dominik 2026-10-24 „als schlecht oder nervig markieren, auch von Spielern, in der Nacht erneuert“): any
@@ -66,13 +70,14 @@ SETTINGS = os.path.join(STATE, "dungeon-musik.json")
 DIR = os.path.join(STATE, "dungeon-musik")
 INDEX = os.path.join(DIR, "index.json")
 
-STIMMUNGEN = ("erkunden", "taverne", "spannung", "kampf", "finale", "sieg", "gewoelbe", "lager")
+STIMMUNGEN = ("erkunden", "taverne", "spannung", "kampf", "finale", "sieg", "gewoelbe", "lager", "boss")
 NAMEN = {"erkunden": ("Erkunden", "Exploring"), "taverne": ("Taverne", "Tavern"), "spannung": ("Spannung", "Tension"),
          "kampf": ("Kampf", "Fight"), "finale": ("Finale", "Finale"), "sieg": ("Sieg", "Victory"),
-         "gewoelbe": ("Gewölbe", "Vault"), "lager": ("Lagerfeuer", "Campfire")}
+         "gewoelbe": ("Gewölbe", "Vault"), "lager": ("Lagerfeuer", "Campfire"), "boss": ("Boss", "Boss")}
+ERSATZ = {"boss": "kampf"}  # a mood without a piece yet plays these (plan dungeon-musik-tuning V8a)
 ZIEL = 12                  # Dominik 1a: pieces per world and mood
 ZIEL_SPANNE = (4, 30)
-MB = 2400                  # the store on the whole Spark (12 × 8 moods × 5 worlds of about 4.5 min at about 1 MB a minute)
+MB = 2400                  # the store on the whole Spark (about 12 × 9 moods × 5 worlds of 4.5 min at about 1 MB a minute)
 MB_JE_MINUTE = 1.0         # an MP3 of the music model (for the admin's hint how much the number needs)
 MB_SPANNE = (100, 5000)
 BEREIT = 2                 # pieces the moods of the current and the next act get first (2a; long pieces, two last a while)
@@ -89,104 +94,120 @@ GRUENDE = ("memory", "belegt", "missing", "engine", "dienst", "zeit", "pause")  
 
 # the sound of a world (the admin's own worlds take EIGEN) and of its moods: fixed English words for the music model.
 # Dominik 2026-10-24 "mehr mit den Themen zu tun ... auch gerne mit Trommeln und Bässen" (after 2026-10-23 "nichts
-# nervig und zu schnell"): every world and mood has its own scene and instruments, drums and bass with measure, steady
-# and never hectic (TEMPO at most 110 bpm, a fight included)
-STIL_V = 4                 # the style of the pieces: an older one plays until its field has new ones, then goes first
-STIL = {"fantasy": "medieval fantasy role-playing soundtrack", "horror": "dark gothic horror role-playing soundtrack",
-        "scifi": "science fiction role-playing soundtrack", "piraten": "pirate adventure role-playing soundtrack"}
-EIGEN = "cinematic adventure role-playing soundtrack"
-# (world, mood) -> (the scene, the ways of playing: one is picked per piece); EIGEN_THEMA for the admin's own worlds
+# nervig und zu schnell"): every world and mood has its own instruments and character, drums and bass with measure,
+# steady and never hectic (TEMPO at most 110 bpm, a fight included). Plan dungeon-musik-tuning V1a (Dominik 2026-10-30
+# „1-8“): the caption is a list of tags as ACE-Step 1.5 was trained on (genre, instruments, mood, production), never a
+# sentence and never a negation; tempo, key and time signature go as the song's metadata (meta), so the planner of
+# the engine keeps the caption word for word, and what a piece must not be goes as its negative prompt (NEGATIV).
+STIL_V = 5                 # the style of the pieces: an older one plays until its field has new ones, then goes first
+STIL = {"fantasy": "medieval fantasy, celtic folk, cinematic", "horror": "dark ambient, gothic horror, cinematic",
+        "scifi": "science fiction, synthwave, cinematic", "piraten": "pirate adventure, sea shanty folk, cinematic"}
+EIGEN = "cinematic adventure, orchestral"
+# (world, mood) -> (the mood's tags, the ways of playing: one is picked per piece); EIGEN_THEMA for the admin's own worlds
 THEMA = {
     "fantasy": {
-        "erkunden": ("wandering through green hills and old forests, wonder", ("harp, flute and soft frame drum, warm bass",
-                     "lute, strings and hand drum, round bass", "celtic whistle, bodhran drum, cello and bass")),
-        "taverne": ("busy medieval tavern, folk dance, mugs on wooden tables", ("lute, fiddle, frame drum and upright bass",
-                    "hurdy-gurdy, bodhran drum and plucked bass", "recorder, tambourine, mandolin and bass")),
-        "spannung": ("dark forest at night, something follows", ("low strings, deep bass drone and soft timpani",
-                     "cello, distant war drum and bass pulse", "dark choir pads, low frame drum and bass")),
-        "kampf": ("sword fight against orcs, battle", ("war drums, deep bass, low brass and strings",
-                  "taiko, timpani, horns and driving bass", "frame drums, cellos staccato and deep bass")),
-        "finale": ("battle against the dragon in the ruined castle", ("choir, war drums, timpani and deep bass",
-                   "full orchestra, big drums and brass, deep bass")),
-        "sieg": ("victory, the heroes return to the village", ("horns, strings, festive drums and bass", "lute, fiddle, drums and bass")),
-        "gewoelbe": ("deep dungeon vault, torches, dripping stone", ("low drums with echo, deep bass drone and dulcimer",
-                     "frame drum in a cave, cello and bass", "distant taiko, harp and dark bass")),
-        "lager": ("campfire under the stars in the wild, rest", ("acoustic guitar, soft flute, gentle hand drum and warm bass",
-                  "lute, harp, brushed frame drum and upright bass")),
+        "erkunden": ("wonder, adventurous, pastoral, open", ("harp, flute, soft frame drum, warm bass",
+                     "lute, strings, hand drum, round bass", "celtic whistle, bodhran drum, cello, bass")),
+        "taverne": ("lively, cheerful, folk dance, rustic", ("lute, fiddle, frame drum, upright bass",
+                    "hurdy-gurdy, bodhran drum, plucked bass", "recorder, tambourine, mandolin, bass")),
+        "spannung": ("mysterious, dark, suspenseful, creeping", ("low strings, deep bass drone, soft timpani",
+                     "cello, distant war drum, bass pulse", "dark choir pads, low frame drum, bass")),
+        "kampf": ("heroic, driving, intense, battle", ("war drums, deep bass, low brass, strings",
+                  "taiko, timpani, horns, driving bass", "frame drums, staccato cellos, deep bass")),
+        "finale": ("epic, triumphant, grand, climactic", ("choir, war drums, timpani, deep bass",
+                   "full orchestra, big drums, brass, deep bass")),
+        "sieg": ("victorious, joyful, festive, warm", ("horns, strings, festive drums, bass", "lute, fiddle, drums, bass")),
+        "gewoelbe": ("dark, cavernous, echoing, ancient", ("low drums with echo, deep bass drone, dulcimer",
+                     "frame drum, cello, bass", "distant taiko, harp, dark bass")),
+        "lager": ("calm, warm, peaceful, starry night", ("acoustic guitar, soft flute, gentle hand drum, warm bass",
+                  "lute, harp, brushed frame drum, upright bass")),
+        "boss": ("epic, menacing, powerful, dramatic", ("low choir, war drums, low brass, deep bass",
+                 "taiko, timpani, horns, string ostinato, deep bass", "dark choir, frame drums, cellos, deep bass")),
     },
     "horror": {
-        "erkunden": ("misty graveyard and abandoned village", ("music box, low piano, soft drum and bass drone",
-                     "cello, soft heartbeat drum and deep bass", "organ pads, bells, slow tom drums and sub bass")),
-        "taverne": ("gloomy inn with whispering guests", ("out of tune piano, accordion, brushed drums and upright bass",
-                    "creaking fiddle, frame drum and bass")),
-        "spannung": ("haunted manor, footsteps in the dark", ("heartbeat bass drum, low strings and drones",
-                     "deep sub bass, ticking percussion and dissonant strings", "low taiko, glass harmonica and bass")),
-        "kampf": ("fight against the creature of the night", ("pounding low drums, distorted bass and harsh strings",
-                  "taiko, organ stabs and deep bass", "metal percussion, cellos and heavy bass")),
-        "finale": ("ritual in the cathedral crypt, the ancient evil rises", ("pipe organ, choir, huge drums and sub bass",
-                   "dark orchestra, timpani and deep bass")),
-        "sieg": ("dawn after the nightmare, relief", ("strings, soft bells, soft drums and warm bass", "piano, cello, soft drums and bass")),
-        "gewoelbe": ("catacombs full of bones, echoing", ("low drums with long echo, deep drones and bass",
-                     "dripping percussion, cello and sub bass")),
-        "lager": ("small fire in a dark forest, the night is quiet for now", ("acoustic guitar, music box, soft drum and warm bass",
-                  "cello, soft piano, gentle hand drum and bass")),
+        "erkunden": ("eerie, melancholic, misty, lonely", ("music box, low piano, soft drum, bass drone",
+                     "cello, soft heartbeat drum, deep bass", "organ pads, bells, slow tom drums, sub bass")),
+        "taverne": ("gloomy, uneasy, whispering, old", ("detuned piano, accordion, brushed drums, upright bass",
+                    "creaking fiddle, frame drum, bass")),
+        "spannung": ("suspenseful, haunted, ominous, creeping", ("heartbeat bass drum, low strings, drones",
+                     "deep sub bass, ticking percussion, dissonant strings", "low taiko, glass harmonica, bass")),
+        "kampf": ("dark, aggressive, intense, battle", ("pounding low drums, distorted bass, harsh strings",
+                  "taiko, organ stabs, deep bass", "metal percussion, cellos, heavy bass")),
+        "finale": ("apocalyptic, ritual, epic, dark", ("pipe organ, choir, huge drums, sub bass",
+                   "dark orchestra, timpani, deep bass")),
+        "sieg": ("relief, dawn, hopeful, tender", ("strings, soft bells, soft drums, warm bass", "piano, cello, soft drums, bass")),
+        "gewoelbe": ("cavernous, dread, echoing, cold", ("low drums with long echo, deep drones, bass",
+                     "dripping percussion, cello, sub bass")),
+        "lager": ("quiet, fragile, uneasy calm, night", ("acoustic guitar, music box, soft drum, warm bass",
+                  "cello, soft piano, gentle hand drum, bass")),
+        "boss": ("menacing, sinister, dread, powerful", ("pipe organ, low choir, pounding drums, sub bass",
+                 "taiko, dissonant strings, low brass, deep bass")),
     },
     "scifi": {
-        "erkunden": ("drifting past an alien planet, space station", ("warm synth pads, soft electronic drums and analog bass",
-                     "arpeggiated synth, light percussion and deep bass", "glassy bells, soft electronic drums and synth bass")),
-        "taverne": ("neon bar on a space port, lounge", ("synth groove, electronic drums and funky bass",
-                    "lounge keys, brushed drums and synth bass")),
-        "spannung": ("dark corridors of a derelict starship", ("deep synth bass, low pulses and metallic percussion",
-                     "drones, ticking electronic drums and sub bass")),
-        "kampf": ("space battle, laser fire", ("hybrid orchestra, electronic drums and heavy synth bass",
-                  "taiko, synth bass and brass", "pounding electronic drums, strings and deep bass")),
-        "finale": ("final battle at the core of the alien mothership", ("hybrid orchestra, choir, huge drums and sub bass",
-                   "synth arpeggios, big drums and deep bass")),
-        "sieg": ("mission complete, the crew celebrates", ("bright synths, drums and warm bass", "strings, pads, soft drums and bass")),
-        "gewoelbe": ("inside an ancient alien vault", ("low electronic drums with echo, deep drones and bass",
-                     "metallic percussion, pads and sub bass")),
-        "lager": ("resting at a camp beside the landing craft, alien night sky", ("warm synth pads, soft electronic drums and round bass",
-                  "soft keys, light percussion and warm synth bass")),
+        "erkunden": ("floating, wonder, spacious, calm", ("warm synth pads, soft electronic drums, analog bass",
+                     "arpeggiated synth, light percussion, deep bass", "glassy bells, soft electronic drums, synth bass")),
+        "taverne": ("groovy, laid-back, neon lounge, cool", ("synth groove, electronic drums, funky bass",
+                    "lounge keys, brushed drums, synth bass")),
+        "spannung": ("dark, tense, mechanical, suspenseful", ("deep synth bass, low pulses, metallic percussion",
+                     "drones, ticking electronic drums, sub bass")),
+        "kampf": ("driving, intense, futuristic, battle", ("hybrid orchestra, electronic drums, heavy synth bass",
+                  "taiko, synth bass, brass", "pounding electronic drums, strings, deep bass")),
+        "finale": ("epic, massive, climactic, futuristic", ("hybrid orchestra, choir, huge drums, sub bass",
+                   "synth arpeggios, big drums, deep bass")),
+        "sieg": ("triumphant, bright, celebratory, warm", ("bright synths, drums, warm bass", "strings, pads, soft drums, bass")),
+        "gewoelbe": ("alien, ancient, echoing, mysterious", ("low electronic drums with echo, deep drones, bass",
+                     "metallic percussion, pads, sub bass")),
+        "lager": ("calm, dreamy, peaceful, night sky", ("warm synth pads, soft electronic drums, round bass",
+                  "soft keys, light percussion, warm synth bass")),
+        "boss": ("menacing, massive, powerful, dark", ("hybrid orchestra, choir, electronic drums, heavy synth bass",
+                 "taiko, brass, synth arpeggios, deep bass")),
     },
     "piraten": {
-        "erkunden": ("sailing on open sea, wind in the sails", ("accordion, fiddle, hand drum and upright bass",
-                     "guitar, tin whistle, frame drum and bass", "concertina, strings, soft drums and bass")),
-        "taverne": ("rowdy harbour tavern, sea shanty", ("accordion, fiddle, stomping drums and bass",
-                    "concertina, banjo, barrel drum and upright bass")),
-        "spannung": ("fog over a hidden reef at night", ("low strings, deep bass and distant drum",
-                     "creaking cello, ocean drum and bass drone")),
-        "kampf": ("pirate ship battle, cannons, boarding", ("barrel drums, war drums, brass and deep bass",
-                  "taiko, fiddle, horns and driving bass", "stomping drums, strings staccato and bass")),
-        "finale": ("duel on the deck in a storm against the pirate king", ("full orchestra, huge drums, choir and deep bass",
-                   "brass, timpani, fiddle and bass")),
-        "sieg": ("treasure found, cheering crew", ("accordion, fiddle, drums and bass", "horns, strings, festive drums and bass")),
-        "gewoelbe": ("treasure cave under the island, dripping water", ("low drums with echo, ocean drum and deep bass",
-                     "cello, steel drum and bass drone")),
-        "lager": ("campfire on a lonely beach, waves at night", ("acoustic guitar, concertina, soft hand drum and upright bass",
-                  "fiddle, guitar, gentle frame drum and bass")),
+        "erkunden": ("adventurous, breezy, free, open sea", ("accordion, fiddle, hand drum, upright bass",
+                     "guitar, tin whistle, frame drum, bass", "concertina, strings, soft drums, bass")),
+        "taverne": ("rowdy, cheerful, stomping, jolly", ("accordion, fiddle, stomping drums, bass",
+                    "concertina, banjo, barrel drum, upright bass")),
+        "spannung": ("foggy, suspenseful, dark, creeping", ("low strings, deep bass, distant drum",
+                     "creaking cello, ocean drum, bass drone")),
+        "kampf": ("swashbuckling, driving, intense, battle", ("barrel drums, war drums, brass, deep bass",
+                  "taiko, fiddle, horns, driving bass", "stomping drums, staccato strings, bass")),
+        "finale": ("epic, stormy, heroic, climactic", ("full orchestra, huge drums, choir, deep bass",
+                   "brass, timpani, fiddle, bass")),
+        "sieg": ("joyful, festive, triumphant, cheering", ("accordion, fiddle, drums, bass", "horns, strings, festive drums, bass")),
+        "gewoelbe": ("mysterious, cavernous, dripping, echoing", ("low drums with echo, ocean drum, deep bass",
+                     "cello, steel drum, bass drone")),
+        "lager": ("calm, warm, gentle waves, night", ("acoustic guitar, concertina, soft hand drum, upright bass",
+                  "fiddle, guitar, gentle frame drum, bass")),
+        "boss": ("menacing, stormy, powerful, dramatic", ("full orchestra, war drums, low choir, deep bass",
+                 "brass, timpani, fiddle, driving bass")),
     },
 }
 EIGEN_THEMA = {
-    "erkunden": ("journey through a wide land", ("strings, flute, hand drum and bass", "guitar, pads, soft drums and bass")),
-    "taverne": ("lively inn, music and laughter", ("fiddle, guitar, frame drum and upright bass",)),
-    "spannung": ("danger ahead, something lurks", ("low strings, deep bass and distant drums",)),
-    "kampf": ("battle", ("war drums, brass, strings and deep bass", "taiko, cellos staccato and bass")),
-    "finale": ("the last great battle", ("full orchestra, choir, huge drums and deep bass",)),
-    "sieg": ("victory", ("horns, strings, festive drums and bass",)),
-    "gewoelbe": ("dark dungeon vault", ("low drums with echo, deep drones and bass",)),
-    "lager": ("campfire at night, rest", ("acoustic guitar, flute, gentle hand drum and warm bass",)),
+    "erkunden": ("adventurous, wide, open", ("strings, flute, hand drum, bass", "guitar, pads, soft drums, bass")),
+    "taverne": ("lively, cheerful, folk dance", ("fiddle, guitar, frame drum, upright bass",)),
+    "spannung": ("suspenseful, dark, creeping", ("low strings, deep bass, distant drums",)),
+    "kampf": ("heroic, driving, battle", ("war drums, brass, strings, deep bass", "taiko, staccato cellos, bass")),
+    "finale": ("epic, grand, climactic", ("full orchestra, choir, huge drums, deep bass",)),
+    "sieg": ("victorious, festive, warm", ("horns, strings, festive drums, bass",)),
+    "gewoelbe": ("dark, cavernous, echoing", ("low drums with echo, deep drones, bass",)),
+    "lager": ("calm, warm, peaceful", ("acoustic guitar, flute, gentle hand drum, warm bass",)),
+    "boss": ("epic, menacing, powerful", ("low choir, war drums, brass, deep bass",)),
 }
-# one tempo per mood and one key per world (minor, the tavern and the victory in its relative major): two pieces of a
-# field share key and tempo, so the crossfade between them is smooth (Dominik 2026-10-25 „smoother Übergang …
-# eventuell gleiche Chord-Progression“); tempo at most 110 bpm, a fight included
-TEMPO = {"erkunden": "75 bpm", "taverne": "96 bpm", "spannung": "72 bpm", "kampf": "100 bpm", "finale": "92 bpm",
-         "sieg": "96 bpm", "gewoelbe": "66 bpm", "lager": "70 bpm"}
-TONART = {"fantasy": ("in D minor", "in F major"), "horror": ("in C minor", "in E flat major"),
-          "scifi": ("in A minor", "in C major"), "piraten": ("in E minor", "in G major")}
-TONART_EIGEN = ("in D minor", "in F major")
+# one tempo and time signature per mood and one key per world (minor, the tavern, the victory and the camp in its
+# relative major, the boss in the minor key a fifth up): two pieces of a field share them, so the crossfade between
+# them is smooth (Dominik 2026-10-25 „smoother Übergang … eventuell gleiche Chord-Progression“); tempo at most 110 bpm,
+# a fight included. The key as acestep.cpp's planner names it („D minor“, „Eb major“: musik_server.KEYSCALE).
+TEMPO = {"erkunden": 75, "taverne": 96, "spannung": 72, "kampf": 100, "finale": 92, "sieg": 96, "gewoelbe": 66,
+         "lager": 70, "boss": 104}
+TAKT = {"taverne": "6", "lager": "3"}      # else 4/4 (musik_server.TIMESIG)
+TONART = {"fantasy": ("D minor", "F major", "A minor"), "horror": ("C minor", "Eb major", "G minor"),
+          "scifi": ("A minor", "C major", "E minor"), "piraten": ("E minor", "G major", "B minor")}
+TONART_EIGEN = ("D minor", "F major", "A minor")
 DUR = ("taverne", "sieg", "lager")
-ENDE = ("instrumental background music for a tabletop role-playing game, steady groove, never hectic, "
-        "soft fade-in intro, long gentle fade-out ending, no sudden changes, no vocals, loops well")
+PRODUKTION = ("instrumental, tabletop role-playing game background music, steady groove, soft fade-in, "
+              "long gentle fade-out, seamless loop, warm balanced mix")
+# what a piece must not be: the planner's negative prompt (lm_negative_prompt), never words in the caption
+NEGATIV = "vocals, singing, spoken words, hectic, frantic, chaotic, abrupt changes, sudden stops"
 
 # the panel's word lists over the scene, the act and the place (the model's words are data: they only pick one of these)
 _W = lambda s: re.compile(r"(?i)\b(" + s + r")")   # noqa: E731 - a word at its start (German compounds end freely)
@@ -314,10 +335,18 @@ def prune(d, ziel, mb, keep=""):
 
 
 def caption(welt, st, rng):
-    """The words for the music model: only fixed words of this module (never a text of the game)."""
-    szene, wie = THEMA.get(welt, EIGEN_THEMA)[st]
-    tonart = TONART.get(welt, TONART_EIGEN)[1 if st in DUR else 0]
-    return ", ".join((STIL.get(welt, EIGEN), szene, rng.choice(wie), TEMPO[st], tonart, ENDE))
+    """The words for the music model: only fixed words of this module (never a text of the game), as tags: genre,
+    instruments, mood, production."""
+    art, wie = THEMA.get(welt, EIGEN_THEMA)[st]
+    return ", ".join((STIL.get(welt, EIGEN), rng.choice(wie), art, PRODUKTION))
+
+
+def meta(welt, st):
+    """The piece's metadata for the engine (musik_server.metadata): tempo, key and time signature of the field and
+    the negative prompt; with all of them the engine's planner keeps the caption as it is."""
+    tonart = TONART.get(welt, TONART_EIGEN)
+    return {"bpm": TEMPO[st], "keyscale": tonart[1 if st in DUR else 2 if st == "boss" else 0],
+            "timesignature": TAKT.get(st, "4"), "negative": NEGATIV}
 
 
 # ---------------------------------------------------------------- the mood (panel rules)
@@ -348,11 +377,21 @@ def _im_gewoelbe(rd):
         return False
 
 
+def boss(rd):
+    """A boss fight (plan dungeon-musik-tuning V8a): the panel's fight (dungeon_kampf, rd["kampf"]) has a foe still
+    standing whose bestiary entry carries the boss mark; never the model's words."""
+    k = rd.get("kampf")
+    return isinstance(k, dict) and any(isinstance(g, dict) and g.get("boss") is True and not g.get("aus")
+                                       for g in k.get("gegner") or [])
+
+
 def mood(rd):
-    """The round's mood now: a fight (5b's kampf or the scene's words) > a rest at the campfire > in a vault > a merchant or a settlement > the finale >
-    tension in the scene's words > the act's mood > exploring."""
+    """The round's mood now: a boss fight > a fight (5b's kampf or the scene's words) > a rest at the campfire > in a
+    vault > a merchant or a settlement > the finale > tension in the scene's words > the act's mood > exploring."""
     sz = rd.get("szene") or {}
     text = f"{sz.get('ort') or ''} {sz.get('stimmung') or ''}"
+    if boss(rd):
+        return "boss"
     if rd.get("kampf") or KAMPF.search(text):
         return "kampf"
     if rd.get("rast"):                         # resting at the campfire (D&D idea 4, the main thread sets rd["rast"])
@@ -399,13 +438,13 @@ def want(welt, st, upto=0, extra=0):
 
 
 def ask_round(rid, rd, s=None):
-    """The current mood, the moods of this act and the next one (BEREIT each, the fight and the victory too) and, on
+    """The current mood, the moods of this act and the next one (BEREIT each, the fight, the boss and the victory too) and, on
     a new act, NEU_JE_AKT new pieces for the act after it."""
     s = s or settings()
     welt, plan, i = rd.get("welt"), rd.get("plan"), rd.get("akt", 0)
     now_m = mood(rd)
     nxt = act_mood(plan, i + 1)
-    for m in (now_m, act_mood(plan, i), nxt, "kampf", "sieg", "gewoelbe" if rd.get("karte") else "", "lager" if rd.get("rast") else ""):
+    for m in (now_m, act_mood(plan, i), nxt, "kampf", "boss", "sieg", "gewoelbe" if rd.get("karte") else "", "lager" if rd.get("rast") else ""):
         if m:
             want(welt, m, min(BEREIT, s["stuecke"]))
     seen = _akte.get(rid)
@@ -431,7 +470,11 @@ def for_view(rid, rd, lang="de"):
         def pick(m):   # the current style once its field has one, until then the older pieces
             xs = [x for x in sorted(d["stuecke"], key=lambda x: -x.get("t", 0)) if x["w"] == rd.get("welt") and x["st"] == m and spielbar(x)]
             return [x["id"] for x in ([x for x in xs if neu(x)] or xs)][:LISTE]
-        out.update(an=True, st=st, name=NAMEN[st][li], stuecke=pick(st), sieg=pick("sieg"), ziel=s["stuecke"])
+        xs = pick(st)
+        if not xs and st in ERSATZ:   # a boss without its own pieces yet: the fight's (the table plays on as a fight)
+            st = ERSATZ[st]
+            xs = pick(st)
+        out.update(an=True, st=st, name=NAMEN[st][li], stuecke=xs, sieg=pick("sieg"), ziel=s["stuecke"])
         out.update(dungeon_lied.ask_round(rid, rd))   # the bard's song of each chapter (lieder, lied: the newest)
     except Exception as e:   # noqa: BLE001 - the table never fails for its music
         print("dungeon: musik | ansicht fehler", type(e).__name__, flush=True)
@@ -494,7 +537,7 @@ async def make(welt, st, rng=None):
     rng = rng or random.Random(secrets.randbits(32))
     secs = SIEG_S if st == "sieg" else rng.choice(LAENGE)
     body = {"caption": caption(welt, st, rng), "seconds": secs, "lyrics": "", "language": "", "seed": rng.randrange(2 ** 31),
-            "title": f"Dungeon {st}"}
+            "title": f"Dungeon {st}", **meta(welt, st)}
     if musik.model():
         body["variant"] = musik.model()
     jid = secrets.token_hex(6)

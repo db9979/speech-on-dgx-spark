@@ -2941,7 +2941,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " und stellt sich in die eine Warteschlange für Bilder und Lieder (schwer.run). Die feste Regel schwer.pick nimmt den ältesten; solange die geladene Art noch wartet, kommt sie zuerst, aber höchstens 3-mal hintereinander, während die andere Art wartet. Ist eine andere Art dran, beendet das Panel zuerst das geladene Modell. Wer hinter anderen steht, bekommt einen festen Satz mit Platz und ungefährer Dauer (schwer.hint), die Karte zeigt „Wartet · Platz 2 von 3“. Ein Bild darf höchstens 720 Sekunden brauchen. 6. Modell geladen?: bild_server.Engine.start nimmt zuerst den einen Platz (bedarf.OnDemand.claim, Sperre bedarf.lock: hält ihn der Musik-Dienst, antwortet er „belegt“) und startet sd-server als eigenen Prozess auf 127.0.0.1, aber nur, wenn genug gemeinsamer Speicher frei ist; sonst bleibt alles andere ungestört. Zu wenig Speicher beendet den Auftrag nicht: er behält seinen Platz und versucht es alle 30 Sekunden neu, höchstens 600 Sekunden lang. 7. Malen: Die Engine malt das Bild in 4 Schritten in der gewählten Größe; ihre eigene Ausgabe kommt nie ins Journal, weil sie den Prompt nennen würde. 8. Bild unbedenklich?: bild_server.nsfw_share lässt einen Klassifikator auf der CPU das Bi"
+"text": " und stellt sich in die eine Warteschlange für Bilder und Lieder (schwer.run). Die feste Regel schwer.pick nimmt den ältesten; solange die geladene Art noch wartet, kommt sie zuerst, aber höchstens 3-mal hintereinander, während die andere Art wartet. Ist eine andere Art dran, beendet das Panel zuerst das geladene Modell. Wer hinter anderen steht, bekommt einen festen Satz mit Platz und ungefährer Dauer (schwer.hint), die Karte zeigt „Wartet · Platz 2 von 3“. Ein Bild darf höchstens 720 Sekunden brauchen. 6. Modell geladen?: bild_server.Engine.start nimmt zuerst den einen Platz (bedarf.OnDemand.claim, Sperre bedarf.lock: hält ihn der Musik-Dienst, antwortet er „belegt“) und startet sd-server als eigenen Prozess auf 127.0.0.1, aber nur, wenn genug gemeinsamer Speicher frei ist; sonst bleibt alles andere ungestört. Zu wenig Speicher beendet den Auftrag nicht: er behält seinen Platz und versucht es alle 30 Sekunden neu, höchstens 600 Sekunden lang. 7. Malen: Die Engine malt das Bild in 4 Schritten in der gewählten Größe; ihre eigene Ausgabe kommt nie ins Journal, weil sie den Prompt nennen würde. Für ein Lied setzt musik_server.request_body jedes Feld selbst; Tempo, Tonart, Takt und ei"
 },
 {
 "lang": "de",
@@ -2949,7 +2949,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ld prüfen. Über 0.5 wird es verworfen; fehlt die Prüfung, zeigt das Panel nichts. 9. Als KI-Bild kennzeichnen: bild_server.finish kodiert das Bild neu als PNG und schreibt hinein, dass es KI-erzeugt ist, ein geändertes Bild KI-bearbeitet (auch als IPTC-Angabe). 10. Bild abgelegt: Das Bild kommt mit seinem Auftrag in den Ordner des Profils (bilder.keep), die Karte im Chat und in der iPhone-App zeigt es, auch in einem wieder geöffneten Gespräch; über App oder Telegram kommt ein Push. Nach einer Ruhezeit beendet der Bild-Dienst die Engine und gibt den Speicher frei. Ein Lied liegt als MP3 unter users/ID/musik/ (musik.keep), mit Abspieler im Chat und unter Ich → Musik."
+"text": "nen Negativ-Text nimmt es nur aus festen Werten an (musik_server.metadata). Die Dungeon-Musik gibt alle mit, so schreibt das Planer-Modell ihre Beschreibung nicht um. 8. Bild unbedenklich?: bild_server.nsfw_share lässt einen Klassifikator auf der CPU das Bild prüfen. Über 0.5 wird es verworfen; fehlt die Prüfung, zeigt das Panel nichts. 9. Als KI-Bild kennzeichnen: bild_server.finish kodiert das Bild neu als PNG und schreibt hinein, dass es KI-erzeugt ist, ein geändertes Bild KI-bearbeitet (auch als IPTC-Angabe). 10. Bild abgelegt: Das Bild kommt mit seinem Auftrag in den Ordner des Profils (bilder.keep), die Karte im Chat und in der iPhone-App zeigt es, auch in einem wieder geöffneten Gespräch; über App oder Telegram kommt ein Push. Nach einer Ruhezeit beendet der Bild-Dienst die Engine und gibt den Speicher frei. Ein Lied liegt als MP3 unter users/ID/musik/ (musik.keep), mit Abspieler im Chat und unter Ich → Musik."
 },
 {
 "lang": "de",
@@ -2997,7 +2997,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "tler, Geheimnisse (Schritt 3) - app/panel/musik.py write_lyrics: Liedtext aus der Beschreibung, Namen zu Stilwörtern (Schritt 3) - app/panel/musik.py _work: Lied im Hintergrund (Schritt 5) - app/panel/musik.py keep: Lied ablegen (Schritt 10) - app/panel/musik.py _measure: Musik testen je Modell (Schritt 5) - app/panel/musik.py start_edit: Änderung eines Liedes annehmen (Schritt 1) - app/panel/musik.py plan_edit: Jede Zahl der Änderung prüfen (Schritt 4) - app/panel/musik.py tone: Schneiden, Tempo, Tonart ohne Modell (Schritt 1) - app/panel/musik.py upload: Eigene Datei mit Rechte-Haken (Schritt 1) - app/musik_server.py edit_body: Feste Felder für repaint und cover (Schritt 7)"
+"text": "tler, Geheimnisse (Schritt 3) - app/panel/musik.py write_lyrics: Liedtext aus der Beschreibung, Namen zu Stilwörtern (Schritt 3) - app/panel/musik.py _work: Lied im Hintergrund (Schritt 5) - app/panel/musik.py keep: Lied ablegen (Schritt 10) - app/panel/musik.py _measure: Musik testen je Modell (Schritt 5) - app/panel/musik.py start_edit: Änderung eines Liedes annehmen (Schritt 1) - app/panel/musik.py plan_edit: Jede Zahl der Änderung prüfen (Schritt 4) - app/panel/musik.py tone: Schneiden, Tempo, Tonart ohne Modell (Schritt 1) - app/panel/musik.py upload: Eigene Datei mit Rechte-Haken (Schritt 1) - app/musik_server.py edit_body: Feste Felder für repaint und cover (Schritt 7) - app/musik_server.py request_body: Feste Felder für ein neues Lied (Schritt 7) - app/musik_server.py metadata: Tempo, Tonart, Takt und Negativ-Text nur aus festen Werten (Dungeon-Musik) (Schritt 7)"
 },
 {
 "lang": "de",
@@ -9158,6 +9158,30 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "n: POST /api/profile/dungeon/{rid}/musik/{sid}/nervt (Profil mit Platz) und POST /api/dungeon/musik/nervt (Gast mit Platz-Code), eigenes Rate-Limit dungeonnervt; POST /api/admin/dungeon/musik/{sid}/zurueck und GET /api/admin/dungeon/musik/{sid} (Anhören, auch markierte Stücke) nur für den Admin. Live: markierte Stücke und heutige Markierungen, Log dungeon: musik | nervt … nur mit festen Wörtern."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: Musik mit festem Grundton und Boss-Stimmung (V01.1.270, Plan dungeon-musik-tuning/plan.md V1a und V8a, Dominik 2026-10-30 „1-8“): Die Beschreibung für das Musikmodell ist jetzt eine kurze Liste von Schlagwörtern in der Reihenfolge, mit der ACE-Step 1.5 gelernt hat: Genre (je Welt), Instrumente (eine Spielart je Stück), Stimmung (je Welt und Stimmung) und Produktion (instrumental, Hintergrundmusik, ruhiger Groove, weicher Anfang, langes Ausklingen, nahtlose Schleife). Ganze Sätze und Verneinungen („nie hektisch“, „ohne Gesang“) stehen nicht mehr darin. Tempo, Tonart und Takt gehen als Metadaten an die Musik-Engine (bpm, keyscale, timesignature, dungeon_musik.meta): Erkunden 75, Taverne 96 (6/8), Spannung 72, Kampf 100, Finale 92, Sieg 96, Gewölbe 66, Lagerfeuer 70 (3/4), Boss 104 Schläge pro Minute, sonst 4/4; jede Welt hat ihre Moll-Tonart (Fantasy D-Moll, Horror C-Moll, Sci-Fi A-Moll, Piraten E-Moll), Taverne, Sieg und Lagerfeuer die Dur-Parallele, der Boss die Moll-Tonart eine Quinte höher. Sind alle Metadaten da, schreibt das kleine Planer-Modell der Engine die Beschreibung nicht mehr um, sie kommt Wort für Wort beim Klangmodell an. Was ein Stück nicht sein so"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ll (Gesang, Sprache, hektisch, chaotisch, abrupte Wechsel), geht als Negativ-Text (lm_negative_prompt) mit. Der Musik-Dienst nimmt diese vier Felder nur an, wenn sie gegeben sind, und prüft sie selbst noch einmal (musik_server.metadata): Tempo ganzzahlig 40 bis 220, Tonart nur „A“ bis „G“ mit „#“ oder „b“ und „major“ oder „minor“, Takt nur 2, 3, 4 oder 6, Negativ-Text nur Kleinbuchstaben, Komma und Bindestrich, höchstens 200 Zeichen; sonst 400. Musik machen und Musik bearbeiten schicken sie nicht und klingen wie bisher. Das Heldenlied bekommt dasselbe: Schlagwörter je Welt, Tempo je Welt, die Moll-Tonart der Welt aus derselben Tabelle, 4/4 und einen eigenen Negativ-Text. Der Stil der Stücke steht jetzt auf 5 (STIL_V): ältere Stücke spielen weiter, bis ihr Feld neue hat, nachts füllt der Spark auf. Boss: eine neunte Stimmung. Das Panel wählt sie nach fester Regel, nie das Modell: Im Kampf am Tisch steht noch ein Gegner, dessen Eintrag im Bestiarium das Boss-Merkmal trägt (dungeon_musik.boss). Sie geht vor jeder anderen Stimmung; ein gefallener Boss gibt den Kampf zurück, Wörter in der Szene oder im Namen zählen nicht. Jede Welt hat dafür eigene Instrumente (Chor, Kriegstrommeln, tie"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "fes Blech, tiefer Bass) und Stimmung (episch, bedrohlich). Jede laufende Runde bittet wie beim Kampf um 2 Boss-Stücke im Voraus. Liegt noch kein Boss-Stück im Vorrat, spielt der Tisch die Kampf-Stücke und zeigt „Kampf“. Die Tabelle unter Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch hat damit eine Spalte mehr. Kein neuer Schalter: alles gehört zu „Musik am Tisch“. Log wie bisher dungeon: musik | ok | boss | …."
 },
 {
 "lang": "de",
@@ -19917,7 +19941,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": ".pick takes the oldest; while the loaded kind still waits it goes first, but at most 3 times in a row while the other kind waits. When another kind is next, the panel first ends the loaded model. Who stands behind others gets a fixed sentence with the place and about how long (schwer.hint), the card shows \"Waiting · place 2 of 3\". A picture may take at most 720 seconds. 6. Model loaded?: bild_server.Engine.start first takes the one place (bedarf.OnDemand.claim, lock bedarf.lock: when the music service holds it, it answers \"belegt\") and starts sd-server as its own process on 127.0.0.1, but only when enough shared memory is free; otherwise everything else stays undisturbed. Too little memory does not end the job: it keeps its place and tries again every 30 seconds, for at most 600 seconds. 7. Paint: The engine paints the picture in 4 steps at the chosen size; its own output never reaches the journal, because it would name the prompt. 8. Picture harmless?: bild_server.nsfw_share lets a classifier on the CPU check the picture. Above 0.5 it is discarded; without the check the panel shows nothing. 9. Mark as AI picture: bild_server.finish re-encodes the picture as PNG and writes into it "
+"text": ".pick takes the oldest; while the loaded kind still waits it goes first, but at most 3 times in a row while the other kind waits. When another kind is next, the panel first ends the loaded model. Who stands behind others gets a fixed sentence with the place and about how long (schwer.hint), the card shows \"Waiting · place 2 of 3\". A picture may take at most 720 seconds. 6. Model loaded?: bild_server.Engine.start first takes the one place (bedarf.OnDemand.claim, lock bedarf.lock: when the music service holds it, it answers \"belegt\") and starts sd-server as its own process on 127.0.0.1, but only when enough shared memory is free; otherwise everything else stays undisturbed. Too little memory does not end the job: it keeps its place and tries again every 30 seconds, for at most 600 seconds. 7. Paint: The engine paints the picture in 4 steps at the chosen size; its own output never reaches the journal, because it would name the prompt. For a song musik_server.request_body sets every field itself; tempo, key, time signature and a negative prompt it takes only from fixed values (musik_server.metadata). The dungeon music gives all of them, so the planner model does not rewrite its caption"
 },
 {
 "lang": "en",
@@ -19925,7 +19949,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "that it is AI-made, a changed picture AI-edited (also as an IPTC entry). 10. Picture stored: The picture goes into the profile's folder with its job (bilder.keep), the card in the chat and in the iPhone app shows it, also in a conversation opened again; a push goes out through the app or Telegram. After a quiet time the picture service stops the engine and frees the memory. A song is kept as MP3 under users/ID/musik/ (musik.keep), with a player in the chat and under Me → Music."
+"text": ". 8. Picture harmless?: bild_server.nsfw_share lets a classifier on the CPU check the picture. Above 0.5 it is discarded; without the check the panel shows nothing. 9. Mark as AI picture: bild_server.finish re-encodes the picture as PNG and writes into it that it is AI-made, a changed picture AI-edited (also as an IPTC entry). 10. Picture stored: The picture goes into the profile's folder with its job (bilder.keep), the card in the chat and in the iPhone app shows it, also in a conversation opened again; a push goes out through the app or Telegram. After a quiet time the picture service stops the engine and frees the memory. A song is kept as MP3 under users/ID/musik/ (musik.keep), with a player in the chat and under Me → Music."
 },
 {
 "lang": "en",
@@ -19973,7 +19997,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "le words (step 3) - app/panel/musik.py _work: song in the background (step 5) - app/panel/musik.py keep: store the song (step 10) - app/panel/musik.py _measure: test music per model (step 5) - app/panel/musik.py start_edit: accept a change of a song (step 1) - app/panel/musik.py plan_edit: check every number of the change (step 4) - app/panel/musik.py tone: cut, tempo, key without a model (step 1) - app/panel/musik.py upload: own file with the rights tick (step 1) - app/musik_server.py edit_body: fixed fields for repaint and cover (step 7)"
+"text": "le words (step 3) - app/panel/musik.py _work: song in the background (step 5) - app/panel/musik.py keep: store the song (step 10) - app/panel/musik.py _measure: test music per model (step 5) - app/panel/musik.py start_edit: accept a change of a song (step 1) - app/panel/musik.py plan_edit: check every number of the change (step 4) - app/panel/musik.py tone: cut, tempo, key without a model (step 1) - app/panel/musik.py upload: own file with the rights tick (step 1) - app/musik_server.py edit_body: fixed fields for repaint and cover (step 7) - app/musik_server.py request_body: fixed fields for a new song (step 7) - app/musik_server.py metadata: tempo, key, time signature and negative prompt from fixed values only (dungeon music) (step 7)"
 },
 {
 "lang": "en",
@@ -25902,6 +25926,30 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "uest with a seat code), own rate limit dungeonnervt; POST /api/admin/dungeon/musik/{sid}/zurueck and GET /api/admin/dungeon/musik/{sid} (listening, marked pieces too) for the admin only. Live: marked pieces and today's marks, log dungeon: musik | nervt … with fixed words only."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: music with a fixed ground tone and a boss mood (V01.1.270, plan dungeon-musik-tuning/plan.md V1a and V8a, Dominik 2026-10-30 \"1-8\"): The caption for the music model is now a short list of tags in the order ACE-Step 1.5 was trained on: genre (per world), instruments (one way of playing per piece), mood (per world and mood) and production (instrumental, background music, steady groove, soft start, long fade-out, seamless loop). Whole sentences and negations (\"never hectic\", \"no vocals\") are gone. Tempo, key and time signature go to the music engine as metadata (bpm, keyscale, timesignature, dungeon_musik.meta): exploring 75, tavern 96 (6/8), tension 72, fight 100, finale 92, victory 96, vault 66, campfire 70 (3/4), boss 104 beats per minute, else 4/4; every world has its minor key (fantasy D minor, horror C minor, sci-fi A minor, pirates E minor), tavern, victory and campfire the relative major, the boss the minor key a fifth up. With all metadata given, the engine's small planner model no longer rewrites the caption, it reaches the sound model word for word. What a piece must not be (vocals, speech, hectic, chaotic, abrupt changes) goes along as a negative prompt "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "(lm_negative_prompt). The music service takes these four fields only when they are given and checks them again itself (musik_server.metadata): tempo a whole number from 40 to 220, key only \"A\" to \"G\" with \"#\" or \"b\" and \"major\" or \"minor\", time signature only 2, 3, 4 or 6, negative prompt only lowercase letters, commas and hyphens, at most 200 characters; else 400. Making music and editing music send none of them and sound as before. The bard's song gets the same: tags per world, a tempo per world, the world's minor key from the same table, 4/4 and its own negative prompt. The style of the pieces is now 5 (STIL_V): older pieces play on until their field has new ones, the night fills up. Boss: a ninth mood. The panel picks it by a fixed rule, never the model: the fight at the table still has a foe whose bestiary entry carries the boss mark (dungeon_musik.boss). It comes before every other mood; a fallen boss gives the fight back, words in the scene or in a name do not count. Every world has its own instruments for it (choir, war drums, low brass, deep bass) and mood (epic, menacing). Every running round asks for 2 boss pieces ahead, like for the fight. While the store has no boss pi"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ece yet, the table plays the fight's pieces and shows \"Fight\". The table under Features → AI Dungeon Master → Adjust rules → Music at the table gets one more column. No new switch: everything belongs to \"Music at the table\". Log as before dungeon: musik | ok | boss | …."
 },
 {
 "lang": "en",

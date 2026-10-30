@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.270** Dungeon music: tempo, key and time signature as metadata, caption as tags without negations, new mood "Boss"
 - **V01.1.269** Companion: "Offen" in the tab Heute with the open cases and their fixed buttons, "Finden" with Ctrl+Alt+F (Mac ⌃⌥F) as title and source, a click opens the panel
 - **V01.1.268** Companion: Sprung-Links to Lists, Open, Find and Dungeon Master from outside too, every function in the companion or outside with a reason, buttons into the panel in its settings (my data, memory, remote access for admins)
 - **V01.1.267** Find stage E: measurement with 50,000 mails (`sudo speech-spark finden messen`), faster search, Find native in the iPhone app, "Open the original" also in the iPhone chat and the companion
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.263** Map helps the search (knowledge map step 3 of 4, own switch, off): when a question names a person, company or deadline of the map, the document search also finds its passages and those of its neighbours; it only adds to the hits, below the answer it says "via the knowledge map"
 - **V01.1.262** Remote access: every shell measures its line (round trip and rate through the heartbeat, quietly in the red bar and the ⓘ) and on a slow connection says once that the direct https access is faster; output waits at most 32 pieces (backpressure) and goes to the window in bundles
 - **V01.1.261** Find: a new search clears the old hits at once
-- **V01.1.260** Redesign stage 2: calm side menu, page head, system font and blue accent from `tokens.css`; no floating face any more, "Ask Spark" as a sign at the top
 
 
 

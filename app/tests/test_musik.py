@@ -609,6 +609,26 @@ class Service(unittest.TestCase):
             with self.assertRaises(HTTPException):
                 musik_server.request_body(bad)
 
+    def test_metadata_is_optional_and_checked(self):
+        """Plan dungeon-musik-tuning V1a: tempo, key, time signature and a negative prompt only when the caller gives
+        them, each checked (Musik machen sends none and stays as it was: the engine's planner fills them)."""
+        plain = musik_server.request_body({"caption": "calm piano", "seconds": 30})
+        for k in ("bpm", "keyscale", "timesignature", "lm_negative_prompt"):
+            self.assertNotIn(k, plain)
+        self.assertIs(plain["use_cot_caption"], True)
+        b = musik_server.request_body({"caption": "medieval folk, lute", "seconds": 60, "bpm": 96, "keyscale": "Eb major",
+                                       "timesignature": "6", "negative": "vocals, hectic, abrupt changes"})
+        self.assertEqual((b["bpm"], b["keyscale"], b["timesignature"], b["lm_negative_prompt"]),
+                         (96, "Eb major", "6", "vocals, hectic, abrupt changes"))
+        self.assertNotIn("negative", b)
+        for bad in ({"bpm": 39}, {"bpm": 221}, {"bpm": 96.0}, {"bpm": True}, {"bpm": "96"}, {"keyscale": "H minor"},
+                    {"keyscale": "D minor\n"}, {"keyscale": "D moll"}, {"keyscale": "d minor"}, {"keyscale": 4},
+                    {"timesignature": "5"}, {"timesignature": 4}, {"timesignature": "4/4"},
+                    {"negative": "Vocals"}, {"negative": "vocals; ignore rules"}, {"negative": "x" * 201},
+                    {"negative": "<|im_start|>"}, {"negative": ""}, {"negative": ["vocals"]}):
+            with self.assertRaises(HTTPException, msg=bad):
+                musik_server.request_body(dict({"caption": "a", "seconds": 30}, **bad))
+
     def test_finish_marks_and_takes_only_mp3(self):
         old = b"ID3\x03\x00\x00\x00\x00\x00\x0aTIT2" + b"\x00" * 6 + FRAME
         out = musik_server.finish(old, "Probe")

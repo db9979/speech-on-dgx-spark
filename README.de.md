@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.270** Dungeon-Musik: Tempo, Tonart und Takt als Metadaten, Beschreibung als Schlagwörter ohne Verneinungen, neue Stimmung „Boss“
 - **V01.1.269** Begleiter: „Offen“ im Reiter Heute mit den offenen Vorgängen und ihren festen Knöpfen, „Finden“ mit Strg+Alt+F (Mac ⌃⌥F) als Titel und Quelle, ein Klick öffnet das Panel
 - **V01.1.268** Begleiter: Sprung-Links von draußen auch zu Listen, Offen, Finden und Dungeon-Master, jede Funktion im Begleiter oder mit Grund draußen, Knöpfe ins Panel in seinen Einstellungen (Meine Daten, Gedächtnis, Fernzugang für Admins)
 - **V01.1.267** Finden Stufe E: Messung mit 50 000 Mails (`sudo speech-spark finden messen`), schnellere Suche, Finden nativ in der iPhone-App, „Original öffnen“ auch im iPhone-Chat und im Begleiter
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.263** Karte hilft der Suche (Wissenskarte Stufe 3 von 4, eigener Schalter, aus): nennt eine Frage eine Person, Firma oder Frist der Karte, findet die Dokumentsuche auch deren Stellen und die ihrer Nachbarn; ergänzt die Treffer nur, unter der Antwort steht „über die Wissenskarte“
 - **V01.1.262** Fernzugang: jede Shell misst ihre Leitung (Laufzeit und Rate über das Lebenszeichen, unauffällig in der roten Leiste und im ⓘ) und sagt bei langsamer Verbindung einmal, dass der direkte https-Zugang schneller ist; die Ausgabe wartet höchstens 32 Stücke (Gegendruck) und geht gebündelt ans Fenster
 - **V01.1.261** Finden: eine neue Suche leert sofort die alten Treffer
-- **V01.1.260** Redesign Stufe 2: ruhige Seitenleiste, Seitenkopf, Systemschrift und blauer Akzent aus `tokens.css`; kein schwebendes Gesicht mehr, „Frag Spark“ als Zeichen oben
 
 
 
