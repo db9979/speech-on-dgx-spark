@@ -3645,7 +3645,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "sie mit dem Schlüssel des Spark im Ordner des Profils. 7. Antwort mit Stand: Kommt etwas nicht frisch vom Anbieter, sagt frisch.stand mit festem Satz, von wann es ist („Stand gestern 18:00“). Die Seiten zeigen sofort, was da ist, und laden im Hintergrund nach. 8. Etwas ändern?: Lesen ist alles, was ohne weitere Schalter geht. Ein Bestätigungscode aus einer neuen Mail wird mit eigenem Schalter nur eine Mitteilung aufs genutzte Gerät (mailcode.arrived), nie über Telegram, nie im Log. 9. Ändern mit Prüfung: Eine Mail geht erst nach dem Vorschau-Blatt und dem Tipp auf Senden raus (senden.preview, senden.send, höchstens 30 am Tag). „Später senden“ legt sie bis zur Zeit versiegelt ab (senden.later); brach ein Senden ab, geht sie nie ein zweites Mal. „Alle Mails hier einordnen“ (einordnen.start) schlägt erst vor und verschiebt nach festen Regeln erst nach dem Tipp, mit Rückgängig. Was Mail-Regeln und „Postfach aufräumen“ von selbst verschieben, steht 30 Tage mit seiner Message-ID in einer Merkliste (mailregeln.spark_moved); legt die Person so eine Mail woandershin, etwa zurück in den Posteingang, fasst kein Sortierer sie wieder an. contacts.save schreibt eine Karte mit If-Match zurück: ha"
+"text": "sie mit dem Schlüssel des Spark im Ordner des Profils. 7. Antwort mit Stand: Kommt etwas nicht frisch vom Anbieter, sagt frisch.stand mit festem Satz, von wann es ist („Stand gestern 18:00“). Die Seiten zeigen sofort, was da ist, und laden im Hintergrund nach. 8. Etwas ändern?: Lesen ist alles, was ohne weitere Schalter geht. Ein Bestätigungscode aus einer neuen Mail wird mit eigenem Schalter nur eine Mitteilung aufs genutzte Gerät (mailcode.arrived), nie über Telegram, nie im Log. 9. Ändern mit Prüfung: Eine Mail geht erst nach dem Vorschau-Blatt und dem Tipp auf Senden raus (senden.preview, senden.send, höchstens 30 am Tag). „Später senden“ legt sie bis zur Zeit versiegelt ab (senden.later); brach ein Senden ab, geht sie nie ein zweites Mal. „Alle Mails hier einordnen“ (einordnen.start) schlägt erst vor und verschiebt nach festen Regeln erst nach dem Tipp, mit Rückgängig. Was Mail-Regeln und „Postfach aufräumen“ von selbst verschieben, steht 30 Tage mit seiner Message-ID in einer Merkliste (mailregeln.spark_moved); legt die Person so eine Mail woandershin, etwa zurück in den Posteingang, fasst kein Sortierer sie wieder an. Mit „Sortieren aus Korrekturen lernen“ zählt das als Korr"
 },
 {
 "lang": "de",
@@ -3653,7 +3653,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "t sie sich inzwischen geändert, wird nichts überschrieben. 10. Tür für Apps: kalenderserver.login weist fremde Webseiten ab, sperrt falsche Passwörter wie eine PIN, hält Mein Notaus und den Schalter ein und zählt die Lastgrenze. Danach sieht die App nur die Spark-Kalender und das Adressbuch „Auf dem Spark“ des Profils; kontaktserver._write nimmt je Karte eine vCard, höchstens 2000, und schreibt nur mit „Kontakte ändern“. 11. Nur eigene Daten: Kein Profil sieht die Post, Termine oder Kontakte eines anderen, außer einem Kalender, den der Besitzer teilt."
+"text": "ektur (mailregeln.correct, auch der Ordner „Falsch sortiert“): der Absender wird Ausnahme der Regel, nach 3 Korrekturen in 30 Tagen pausiert sie, eine Karte fragt; nur Kopfzeilen, die Entscheidung trifft nie das Modell. Hatte das Modell die Mail einsortiert, fragt die Karte „Mails von … immer nach …?“ (eine Regel nur per Knopf), und für „Falsch sortiert“ darf das Modell nur aus Domain und Ordnernamen einen vorhandenen Ordner vorschlagen (mailregeln.model_hint, tidy.suggest_folder; jede andere Antwort wird verworfen). Unter E-Mail → Regeln stehen die Korrekturen (mailregeln.fix_list) mit „Rückgängig“ (mailregeln.undo_fix nimmt Ausnahme und Pause zurück, verschiebt nie eine Mail). contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich inzwischen geändert, wird nichts überschrieben. 10. Tür für Apps: kalenderserver.login weist fremde Webseiten ab, sperrt falsche Passwörter wie eine PIN, hält Mein Notaus und den Schalter ein und zählt die Lastgrenze. Danach sieht die App nur die Spark-Kalender und das Adressbuch „Auf dem Spark“ des Profils; kontaktserver._write nimmt je Karte eine vCard, höchstens 2000, und schreibt nur mit „Kontakte ändern“. 11. Nur eigene Daten: Kein Pro"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "fil sieht die Post, Termine oder Kontakte eines anderen, außer einem Kalender, den der Besitzer teilt."
 },
 {
 "lang": "de",
@@ -3669,7 +3677,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 4 Postfächer höchstens je Profil (Schritt 3) - 15 s wartet ein Postfach höchstens (Schritt 4) - 300 Kopfzeilen je Postfach im Vorrat (Schritt 6) - 40 Mailtexte je Profil im Vorrat (Schritt 6) - 30 Mails höchstens am Tag (Schritt 9) - 30 Tage merkt sich der Spark, was er verschoben hat (Schritt 9) - 2000 Karten im Adressbuch „Auf dem Spark“ (Schritt 10)"
+"text": "- 4 Postfächer höchstens je Profil (Schritt 3) - 15 s wartet ein Postfach höchstens (Schritt 4) - 300 Kopfzeilen je Postfach im Vorrat (Schritt 6) - 40 Mailtexte je Profil im Vorrat (Schritt 6) - 30 Mails höchstens am Tag (Schritt 9) - 30 Tage merkt sich der Spark, was er verschoben hat (Schritt 9) - 3 Korrekturen pausieren eine Regel (Schritt 9) - 2000 Karten im Adressbuch „Auf dem Spark“ (Schritt 10)"
 },
 {
 "lang": "de",
@@ -3693,7 +3701,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/mail.py lookup: Mails mit Stand (Schritt 1, Schritt 5, Schritt 7) - app/panel/calendars.py view: Termine für die Seite (Schritt 1) - app/panel/netguard.py IMAP4_SSL: IMAP nur zu geprüften Adressen (Schritt 4) - app/panel/kalenderspiegel.py objects: Kalender-Kopie holt Änderungen (Schritt 4) - app/panel/mailvorrat.py keep_heads: Vorrat der Kopfzeilen (Schritt 6) - app/panel/vorrat.py seal: versiegelt auf der Platte (Schritt 6) - app/panel/frisch.py stand: Stand mit Tag (Schritt 7) - app/panel/senden.py preview: Vorschau-Blatt (Schritt 9) - app/panel/senden.py send: senden nach dem Tipp (Schritt 9) - app/panel/senden.py later: später senden, versiegelt (Schritt 9) - app/panel/einordnen.py start: einen Ordner einordnen, erst Vorschlag (Schritt 9) - app/panel/mailregeln.py spark_moved: was der Spark verschoben hat, kein Ping-Pong (Schritt 9) - app/panel/mailcode.py arrived: Bestätigungscode als Mitteilung (Schritt 8) - app/panel/contacts.py save: Karte zurück mit If-Match (Schritt 9) - app/panel/kalenderserver.py login: Tür für Kalender- und Kontakte-Apps (Schritt 2, Schritt 10) - app/panel/kontaktserver.py _write: Karte einer Kontakte-App (Schritt 10)"
+"text": "- app/panel/mail.py lookup: Mails mit Stand (Schritt 1, Schritt 5, Schritt 7) - app/panel/calendars.py view: Termine für die Seite (Schritt 1) - app/panel/netguard.py IMAP4_SSL: IMAP nur zu geprüften Adressen (Schritt 4) - app/panel/kalenderspiegel.py objects: Kalender-Kopie holt Änderungen (Schritt 4) - app/panel/mailvorrat.py keep_heads: Vorrat der Kopfzeilen (Schritt 6) - app/panel/vorrat.py seal: versiegelt auf der Platte (Schritt 6) - app/panel/frisch.py stand: Stand mit Tag (Schritt 7) - app/panel/senden.py preview: Vorschau-Blatt (Schritt 9) - app/panel/senden.py send: senden nach dem Tipp (Schritt 9) - app/panel/senden.py later: später senden, versiegelt (Schritt 9) - app/panel/einordnen.py start: einen Ordner einordnen, erst Vorschlag (Schritt 9) - app/panel/mailregeln.py spark_moved: was der Spark verschoben hat, kein Ping-Pong (Schritt 9) - app/panel/mailregeln.py model_hint: das Modell schlägt nur einen vorhandenen Ordner vor (Schritt 9) - app/panel/mailcode.py arrived: Bestätigungscode als Mitteilung (Schritt 8) - app/panel/contacts.py save: Karte zurück mit If-Match (Schritt 9) - app/panel/kalenderserver.py login: Tür für Kalender- und Kontakte-Apps (Schritt 2, Schrit"
 },
 {
 "lang": "de",
@@ -3701,7 +3709,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_mailvorrat, test_vorrat, test_mails_senden, test_kalenderserver, test_kontaktserver, test_kontakte_seite, test_kalenderspiegel, test_mailcode, test_einordnen, test_mailregeln, test_tidy"
+"text": "t 10) - app/panel/kontaktserver.py _write: Karte einer Kontakte-App (Schritt 10)"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": "Selbsttests: test_mailvorrat, test_vorrat, test_mails_senden, test_kalenderserver, test_kontaktserver, test_kontakte_seite, test_kalenderspiegel, test_mailcode, test_einordnen, test_mailregeln, test_tidy, test_mail_lernen"
 },
 {
 "lang": "de",
@@ -9813,6 +9829,62 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "Sortieren aus Korrekturen lernen (V01.1.270, Dominik 2026-10-30 „nach Empfehlung umsetzen“, Plan mail-lernen/plan.md Stufe 2, 3a + 4a + 5a): Eigener Admin-Schalter unter Funktionen → E-Mail lesen → Mails ordnen → „Sortieren aus Korrekturen lernen“ (chat.mail_learn, ab Werk aus, kein Profilschalter, Gäste nie). Legt die Person eine Mail, die eine Mail-Regel oder „Postfach aufräumen“ sortiert hat (die Merkliste mailregeln.spark_moved), woanders hin, ist das eine Korrektur (mailregeln.correct): auf der Seite E-Mail sofort (mailregeln.page_moved, das Panel kennt den Ordner, aus dem sie kommt), zurück im Posteingang beim nächsten Lauf der Regeln oder des Aufräumens, unter dem KI-Ordner im Nachtlauf der Regel-Vorschläge (nur wenn sich ein Ordner geändert hat). Ziehen in den festen Ordner „Falsch sortiert“ unter dem KI-Ordner (tidy.WRONG, der Spark legt ihn an, sobald der Schalter an ist; kein eigener Ordner des Aufräumens darf so heißen) heißt „war falsch“ ohne Ziel. Archivieren ist keine Korrektur. Folgen nach festen Schwellen an einer Stelle (FIX_EXCEPT = 1, FIX_PAUSE = 3, FIX_DAYS = 30, FIX_WEIGHT = 3), nie das Modell: die Mail selbst fasst kein Sortierer wieder an; schon eine Korrekt"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ur macht die Absender-Adresse zur Ausnahme der Regel (except, höchstens 50, fits überspringt sie, bei einer Domain-Regel nur diese Adresse); 3 Korrekturen einer Regel in 30 Tagen pausieren sie (on aus, paused, unter E-Mail → Regeln „pausiert, oft korrigiert“) mit einer Karte „Regel pausiert“ („Wieder einschalten“, „Regel ansehen …“). „Postfach aufräumen“ fragt bei einem korrigierten Absender, statt zu verschieben, bis eine neuere Regel der Person entscheidet. Eine Korrektur mit Ziel zählt im bestehenden Lernen dreifach, deshalb kommt gleich die bekannte Karte „Regel-Vorschlag“ (keine neue Kartenart): „War in A, du hast sie nach B gelegt“ mit „Regel ändern“ (der Ordner der Regel wird B, die Ausnahme geht), „Nur Ausnahme“ und „Nicht mehr fragen“; ohne Regel (Aufräumen) „Regel anlegen“. Für eine Mail in „Falsch sortiert“ fragt die Karte „Wohin gehört diese Mail?“ mit den Ordnern, in die dieser Absender sonst kommt (Ablegen, Korrekturen, Regeln, Nachtlauf; höchstens 3), „Posteingang“, „Anderer Ordner …“ (öffnet E-Mail → Posteingang), „Nur diese Mail“ (die Ausnahme geht wieder), „Absender als Ausnahme“ (beim Aufräumen: bleibt im Posteingang) und „Nicht mehr fragen“. Ein Ordner-Knopf ver"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "schiebt genau diese Mail (Message-ID) aus „Falsch sortiert“. Die Knöpfe laufen über vorgaenge.act (Anmeldung, nur eigene Karte, CSRF, Größenlimit, Rate-Limit, Notaus); das iPhone zeigt mehr als drei Knöpfe unter „Mehr“. Gespeichert in mail-regeln.json (Korrekturen 30 Tage, höchstens 500: Message-ID, Absender, Ordner). Log nur mit festen Wörtern und Zahlen (mail: rule correction | folder|inbox|wrong|placed | N, mail: rule exception | N, mail: rule paused | N, mail: rule wrong folder | made); Live: „Sortieren aus Korrekturen lernen an: heute N Korrekturen, M Ausnahmen, K Regeln pausiert“."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Korrekturen ansehen (V01.1.270, Plan `mail-lernen/plan.md` Stufe 3, 7a)",
+"text": "Korrekturen ansehen (V01.1.270, Plan mail-lernen/plan.md Stufe 3, 7a): Nur mit „Sortieren aus Korrekturen lernen“ zeigt E-Mail → Regeln den Bereich „Korrekturen (30 Tage)“ (mailregeln.fix_list, neueste zuerst, höchstens FIX_SHOW = 100): je Korrektur Absender, von → nach („Falsch sortiert“, Posteingang oder Ordner), welche Regel oder „Postfach aufräumen“, Tag und Stand nach festen Regeln (mailregeln.fix_state: wartet, Ausnahme gesetzt, Regel pausiert, nicht wieder verschoben, zurückgenommen). „Rückgängig“ (POST /api/profile/mail/rules/fixes/{id}/undo, mailregeln.undo_fix) nimmt die Ausnahme und die Pause zurück, die aus dieser Korrektur entstanden, und zählt sie nicht mehr (Pause, Fragen von „Postfach aufräumen“); die Mail selbst wird nicht verschoben und bleibt nie wieder angefasst; die offene Karte „Wohin gehört diese Mail?“ oder „Regel pausiert“ schließt. „Regel ändern“ öffnet die Regel. Jede Regel zeigt „N genommen (Monat) · M korrigiert (30 Tage)“ mit Balken (Zähler month und fixed, keine neue Zählung), ihre Ausnahmen einzeln zum Entfernen (POST /api/profile/mail/rules/{rid}/except, mailregeln.drop_except) und, wenn pausiert, „Wieder an“ (die Regel mit on gesichert; danach zähl"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Korrekturen ansehen (V01.1.270, Plan `mail-lernen/plan.md` Stufe 3, 7a)",
+"text": "en für die nächste Pause nur neue Korrekturen). Beide Endpunkte: Anmeldung, Profilbindung, CSRF, Größenlimit, Rate-Limit postordnen, Schalter Mails ordnen und „Sortieren aus Korrekturen lernen“, Gäste nie; Logzeilen mail: rule correction undone | N |, mail: rule exception removed | 1 | und je Ablehnung eine Zeile, nie Absender oder Ordner. Live zählt „zurückgenommen“ (nur die Zahl). iPhone: dieselbe Liste unter E-Mail → Regeln mit „Rückgängig“, „Regel ändern“, Zählern, Ausnahmen zum Entfernen und „Wieder an“ (Wischen); Android über die Panel-Ansicht."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Das Modell schlägt nur vor (V01.1.270, Plan `mail-lernen/plan.md` Stufe 4, 6a)",
+"text": "Das Modell schlägt nur vor (V01.1.270, Plan mail-lernen/plan.md Stufe 4, 6a): Ohne neuen Schalter, nur mit „Sortieren aus Korrekturen lernen“. „Postfach aufräumen“ vermerkt im Protokoll, wenn das Modell eine Mail einsortiert hat (Stufe 4, model). Korrigiert die Person so eine Einordnung, trägt die Korrektur das Zeichen mit (mailregeln.found/correct, Log mail: tidy model fix | N), und „Postfach aufräumen“ fragt bei diesem Absender 30 Tage lang, statt per Modell zu verschieben (mailregeln.fixed_senders, wirkt schon im selben Lauf). Hat die Korrektur ein Ziel, fragt die bekannte Karte „Regel-Vorschlag“ (Art regel, kind fix mit model): „Mails von <Absender> immer nach „<Ordner>“?“ mit „Regel anlegen“ (eine feste Mail-Regel Absender → Ordner, nur auf diesen Knopf), „Nur diese Mail“ und „Nie“ (Nie-Liste), Log mail: rule card model | asked | N. Liegt so eine Mail in „Falsch sortiert“ (kein klares Ziel), darf das Modell im Hintergrund einen vorhandenen Ordner vorschlagen (mailregeln.model_hint, tidy.suggest_folder über denselben Modellweg wie die Einordnung, tidy._ask, mit Wartungspause und Vorrang): es bekommt nur die Domain des Absenders und die Namen der Ordner (Kategorien von „Postfach"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Das Modell schlägt nur vor (V01.1.270, Plan `mail-lernen/plan.md` Stufe 4, 6a)",
+"text": " aufräumen“, die es im Postfach gibt, und die üblichen Ordner des Absenders, höchstens tidy.FOLDER_MAX = 30), nie Adresse, Betreff oder Text. Seine Antwort zählt nur, wenn sie genau einer dieser Namen ist (tidy.parse_folder), sonst wird sie verworfen (mail: rule card model | refused). Ein gültiger Vorschlag wird der erste Knopf der Karte „Wohin gehört diese Mail?“ mit „(Vorschlag des Modells)“; erst der Tipp der Person legt die Mail ab, und erst danach fragt die Karte nach einer Regel. Das Modell verschiebt nichts und legt nie eine Regel an. Unter E-Mail → Regeln steht bei solchen Korrekturen „Postfach aufräumen (Modell)“. Live: „N davon Modell-Einordnungen, M Ordner vom Modell vorgeschlagen“ (Zahlen). Nebenbei behoben: „Regel anlegen“ auf der Karte einer Korrektur ohne Regel („Postfach aufräumen“) lief ins Leere. Selbsttests test_mail_lernen.ModelOnlySuggests, test_tidy."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "E-Mail wie Apple Mail, Stufe 1 (V01.0.874, Plan apple-stil/plan.md 1a 2a 3a, Dominik 2026-10-20 „ok“): Die Seite E-Mail folgt dem Aufbau von Apple Mail, ohne neuen Schalter (Teil von „E-Mail lesen“)."
 },
 {
@@ -13926,6 +13998,14 @@
 "head": "Post und Kontakte",
 "title": "Post und Kontakte",
 "text": "- Mails löschen (Funktionen → Post und Kontakte → „Mails löschen“; baut auf „Mails ordnen“; E-Mail → Einstellungen): Auf der Seite E-Mail löschst du eine Mail mit dem Papierkorb-Symbol, der Taste Entf oder indem du sie auf den Papierkorb ziehst, auch mehrere angehakte auf einmal."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Post und Kontakte",
+"title": "Post und Kontakte",
+"text": "- Sortieren aus Korrekturen lernen (Funktionen → Post und Kontakte → „Sortieren aus Korrekturen lernen“; baut auf „Mails ordnen“; E-Mail → Einstellungen): Sortiert eine deiner Regeln oder „Postfach aufräumen“ eine Mail falsch, legst du sie einfach woanders hin: auf der Seite E-Mail, in Apple Mail oder am iPhone."
 },
 {
 "lang": "de",
@@ -20581,7 +20661,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "t fresh from the provider, frisch.stand says with a fixed sentence when it is from (\"as of yesterday 18:00\"). The pages show at once what is there and load the rest behind. 8. Change something?: Reading is all that works without further switches. A confirmation code from a new mail becomes, with a switch of its own, only a note on the device in use (mailcode.arrived), never by Telegram, never in a log. 9. Change with a check: A mail goes out only after the preview sheet and the tap on Send (senden.preview, senden.send, at most 30 a day). \"Send later\" keeps it sealed until its time (senden.later); if a sending broke off, it never goes a second time. \"Sort every mail here\" (einordnen.start) proposes first and moves by fixed rules only after the tap, with Undo. What the mail rules and \"Inbox tidying\" move by themselves stays 30 days with its Message-ID on one list (mailregeln.spark_moved); when the person puts such a mail somewhere else, back into the inbox for instance, no sorter touches it again. contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is overwritten. 10. Door for apps: kalenderserver.login refuses other sites' web pages, locks wrong password"
+"text": "t fresh from the provider, frisch.stand says with a fixed sentence when it is from (\"as of yesterday 18:00\"). The pages show at once what is there and load the rest behind. 8. Change something?: Reading is all that works without further switches. A confirmation code from a new mail becomes, with a switch of its own, only a note on the device in use (mailcode.arrived), never by Telegram, never in a log. 9. Change with a check: A mail goes out only after the preview sheet and the tap on Send (senden.preview, senden.send, at most 30 a day). \"Send later\" keeps it sealed until its time (senden.later); if a sending broke off, it never goes a second time. \"Sort every mail here\" (einordnen.start) proposes first and moves by fixed rules only after the tap, with Undo. What the mail rules and \"Inbox tidying\" move by themselves stays 30 days with its Message-ID on one list (mailregeln.spark_moved); when the person puts such a mail somewhere else, back into the inbox for instance, no sorter touches it again. With \"Learn sorting from corrections\" that is a correction (mailregeln.correct, also the folder \"Falsch sortiert\"): the sender becomes an exception of the rule, after 3 corrections in 30 da"
 },
 {
 "lang": "en",
@@ -20589,7 +20669,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "s like a PIN, keeps My emergency stop and the switch and counts the rate limit. Then the app sees only the profile's Spark calendars and the address book \"On the Spark\"; kontaktserver._write takes one vCard per card, at most 2000, and writes only with \"Edit contacts\". 11. Own data only: No profile sees another one's mail, appointments or contacts, except a calendar its owner shares."
+"text": "ys it pauses, a card asks; headers only, the model never decides. Had the model sorted the mail, the card asks \"Mails from … always to …?\" (a rule only by button), and for \"Falsch sortiert\" the model may only suggest a folder there is, from the domain and the folder names (mailregeln.model_hint, tidy.suggest_folder; any other answer is dropped). Under E-mail → Rules the corrections are listed (mailregeln.fix_list) with \"Undo\" (mailregeln.undo_fix takes back exception and pause, never moves a mail). contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is overwritten. 10. Door for apps: kalenderserver.login refuses other sites' web pages, locks wrong passwords like a PIN, keeps My emergency stop and the switch and counts the rate limit. Then the app sees only the profile's Spark calendars and the address book \"On the Spark\"; kontaktserver._write takes one vCard per card, at most 2000, and writes only with \"Edit contacts\". 11. Own data only: No profile sees another one's mail, appointments or contacts, except a calendar its owner shares."
 },
 {
 "lang": "en",
@@ -20605,7 +20685,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 4 mailboxes at most per profile (step 3) - 15 s a mailbox is waited for at most (step 4) - 300 headers per mailbox in the supply (step 6) - 40 mail texts per profile in the supply (step 6) - 30 mails at most a day (step 9) - 30 Tage the Spark remembers what it moved (step 9) - 2000 cards in the address book \"On the Spark\" (step 10)"
+"text": "- 4 mailboxes at most per profile (step 3) - 15 s a mailbox is waited for at most (step 4) - 300 headers per mailbox in the supply (step 6) - 40 mail texts per profile in the supply (step 6) - 30 mails at most a day (step 9) - 30 Tage the Spark remembers what it moved (step 9) - 3 corrections pause a rule (step 9) - 2000 cards in the address book \"On the Spark\" (step 10)"
 },
 {
 "lang": "en",
@@ -20629,7 +20709,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/mail.py lookup: mail with its time (step 1, step 5, step 7) - app/panel/calendars.py view: appointments for the page (step 1) - app/panel/netguard.py IMAP4_SSL: IMAP only to checked addresses (step 4) - app/panel/kalenderspiegel.py objects: calendar copy fetches changes (step 4) - app/panel/mailvorrat.py keep_heads: supply of headers (step 6) - app/panel/vorrat.py seal: sealed on the disk (step 6) - app/panel/frisch.py stand: time with its day (step 7) - app/panel/senden.py preview: preview sheet (step 9) - app/panel/senden.py send: send after the tap (step 9) - app/panel/senden.py later: send later, sealed (step 9) - app/panel/einordnen.py start: sort a folder, a proposal first (step 9) - app/panel/mailregeln.py spark_moved: what the Spark moved, no ping-pong (step 9) - app/panel/mailcode.py arrived: confirmation code as a note (step 8) - app/panel/contacts.py save: card back with If-Match (step 9) - app/panel/kalenderserver.py login: door for calendar and contacts apps (step 2, step 10) - app/panel/kontaktserver.py _write: card from a contacts app (step 10)"
+"text": "- app/panel/mail.py lookup: mail with its time (step 1, step 5, step 7) - app/panel/calendars.py view: appointments for the page (step 1) - app/panel/netguard.py IMAP4_SSL: IMAP only to checked addresses (step 4) - app/panel/kalenderspiegel.py objects: calendar copy fetches changes (step 4) - app/panel/mailvorrat.py keep_heads: supply of headers (step 6) - app/panel/vorrat.py seal: sealed on the disk (step 6) - app/panel/frisch.py stand: time with its day (step 7) - app/panel/senden.py preview: preview sheet (step 9) - app/panel/senden.py send: send after the tap (step 9) - app/panel/senden.py later: send later, sealed (step 9) - app/panel/einordnen.py start: sort a folder, a proposal first (step 9) - app/panel/mailregeln.py spark_moved: what the Spark moved, no ping-pong (step 9) - app/panel/mailregeln.py model_hint: the model only suggests a folder there is (step 9) - app/panel/mailcode.py arrived: confirmation code as a note (step 8) - app/panel/contacts.py save: card back with If-Match (step 9) - app/panel/kalenderserver.py login: door for calendar and contacts apps (step 2, step 10) - app/panel/kontaktserver.py _write: card from a contacts app (step 10)"
 },
 {
 "lang": "en",
@@ -20637,7 +20717,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_mailvorrat, test_vorrat, test_mails_senden, test_kalenderserver, test_kontaktserver, test_kontakte_seite, test_kalenderspiegel, test_mailcode, test_einordnen, test_mailregeln, test_tidy"
+"text": "Self-tests: test_mailvorrat, test_vorrat, test_mails_senden, test_kalenderserver, test_kontaktserver, test_kontakte_seite, test_kalenderspiegel, test_mailcode, test_einordnen, test_mailregeln, test_tidy, test_mail_lernen"
 },
 {
 "lang": "en",
@@ -26525,6 +26605,62 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
+"text": "Learn sorting from corrections (V01.1.270, Dominik 2026-10-30 \"nach Empfehlung umsetzen\", plan mail-lernen/plan.md stage 2, 3a + 4a + 5a): its own admin switch under Features → Reading e-mail → Order mail → \"Learn sorting from corrections\" (chat.mail_learn, off by default, no profile switch, never for guests). When the person puts a mail that a mail rule or \"Inbox tidying\" sorted (the list mailregeln.spark_moved) somewhere else, that is a correction (mailregeln.correct): on the E-mail page at once (mailregeln.page_moved, the panel knows the folder it came from), back in the inbox at the next run of the rules or the tidying, below the KI folder in the night look for rule suggestions (only when a folder changed). Dragging it into the fixed folder \"Falsch sortiert\" below the KI folder (tidy.WRONG, the Spark makes it once the switch is on; no folder of the tidying may have that name) means \"was wrong\" without a goal. Archiving is no correction. Consequences by fixed thresholds in one place (FIX_EXCEPT = 1, FIX_PAUSE = 3, FIX_DAYS = 30, FIX_WEIGHT = 3), never the model: no sorter touches that mail again; one correction already makes the sender address an exception of the rule (except, a"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "t most 50, fits skips it, for a domain rule only that address); 3 corrections of one rule in 30 days pause it (on off, paused, under E-mail → Rules \"paused, often corrected\") with a card \"Rule paused\" (\"Switch on again\", \"Show the rule …\"). \"Inbox tidying\" asks about a corrected sender instead of moving, until a newer rule of the person decides. A correction with a goal counts three times in the existing learning, so the known card \"Rule suggestion\" comes at once (no new kind of card): \"Was in A, you put it into B\" with \"Change the rule\" (the rule's folder becomes B, the exception goes), \"Exception only\" and \"Don't ask again\"; without a rule (tidying) \"Make the rule\". For a mail in \"Falsch sortiert\" the card asks \"Where does this mail belong?\" with the folders this sender usually goes to (filing, corrections, rules, night look; at most 3), \"Inbox\", \"Other folder …\" (opens E-mail → Inbox), \"Just this mail\" (the exception goes again), \"Sender as exception\" (for the tidying: stays in the inbox) and \"Don't ask again\". A folder button moves exactly this mail (Message-ID) out of \"Falsch sortiert\". The buttons go through vorgaenge.act (sign-in, own card only, CSRF, size limit, rate limit,"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " Notaus); the iPhone shows more than three buttons under \"More\". Kept in mail-regeln.json (corrections 30 days, at most 500: Message-ID, sender, folders). Logs with fixed words and numbers only (mail: rule correction | folder|inbox|wrong|placed | N, mail: rule exception | N, mail: rule paused | N, mail: rule wrong folder | made); Live: \"Sortieren aus Korrekturen lernen an: heute N Korrekturen, M Ausnahmen, K Regeln pausiert\"."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "See the corrections (V01.1.270, plan `mail-lernen/plan.md` stage 3, 7a)",
+"text": "See the corrections (V01.1.270, plan mail-lernen/plan.md stage 3, 7a): Only with \"Learn sorting from corrections\", E-mail → Rules shows the section \"Corrections (30 days)\" (mailregeln.fix_list, newest first, at most FIX_SHOW = 100): per correction the sender, from → to (\"Falsch sortiert\", inbox or folder), which rule or \"Inbox tidying\", the day and the state by fixed rules (mailregeln.fix_state: waiting, exception set, rule paused, not moved again, taken back). \"Undo\" (POST /api/profile/mail/rules/fixes/{id}/undo, mailregeln.undo_fix) takes back the exception and the pause this correction made and counts it no more (pause, questions of \"Inbox tidying\"); the mail itself is not moved and is still never touched again; the open card \"Where does this mail belong?\" or \"Rule paused\" closes. \"Change the rule\" opens the rule. Every rule shows \"N taken (month) · M corrected (30 days)\" with a bar (the counters month and fixed, no new counting), its exceptions to remove one by one (POST /api/profile/mail/rules/{rid}/except, mailregeln.drop_except) and, when paused, \"On again\" (the rule saved with on; after that only new corrections count for the next pause). Both endpoints: login, profile bind"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "See the corrections (V01.1.270, plan `mail-lernen/plan.md` stage 3, 7a)",
+"text": "ing, CSRF, size limit, rate limit postordnen, the switches Order mail and \"Learn sorting from corrections\", never guests; journal lines mail: rule correction undone | N |, mail: rule exception removed | 1 | and one line per refusal, never sender or folder. Live counts \"taken back\" (the number only). iPhone: the same list under E-mail → Rules with \"Undo\", \"Change the rule\", counters, exceptions to remove and \"On again\" (swipe); Android through the panel view."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "The model only suggests (V01.1.270, plan `mail-lernen/plan.md` stage 4, 6a)",
+"text": "The model only suggests (V01.1.270, plan mail-lernen/plan.md stage 4, 6a): No new switch, only with \"Learn sorting from corrections\". \"Inbox tidying\" notes in its log when the model filed a mail (stage 4, model). When the person corrects such a filing, the correction carries the mark (mailregeln.found/correct, log mail: tidy model fix | N), and \"Inbox tidying\" asks about this sender for 30 days instead of moving by the model (mailregeln.fixed_senders, already in the same run). If the correction has a goal, the known card \"Rule suggestion\" asks (kind regel, kind fix with model): \"Mails from <sender> always to \"<folder>\"?\" with \"Make the rule\" (a fixed mail rule sender → folder, only by this button), \"Just this mail\" and \"Never\" (never list), log mail: rule card model | asked | N. If such a mail lies in \"Falsch sortiert\" (no clear goal), the model may suggest a folder there is in the background (mailregeln.model_hint, tidy.suggest_folder through the same model path as the filing, tidy._ask, with maintenance pause and priority): it gets only the sender's domain and the folder names (the categories of \"Inbox tidying\" that exist in the mailbox and the sender's usual folders, at most tid"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "The model only suggests (V01.1.270, plan `mail-lernen/plan.md` stage 4, 6a)",
+"text": "y.FOLDER_MAX = 30), never the address, subject or text. Its answer counts only if it is exactly one of these names (tidy.parse_folder), else it is dropped (mail: rule card model | refused). A valid suggestion becomes the first button of the card \"Where does this mail belong?\" marked \"(the model's suggestion)\"; only the person's tap files the mail, and only then the card asks for a rule. The model moves nothing and never makes a rule. Under E-mail → Rules such corrections show \"Inbox tidying (model)\". Live: \"N of them filings of the model, M folders suggested by the model\" (numbers). Fixed on the way: \"Make the rule\" on the card of a correction without a rule (\"Inbox tidying\") did nothing. Self-tests test_mail_lernen.ModelOnlySuggests, test_tidy."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
 "text": "Mail like Apple Mail, stage 1 (V01.0.874, plan apple-stil/plan.md 1a 2a 3a, Dominik 2026-10-20 \"ok\"): the Mail page follows the layout of Apple Mail, without a new switch (part of \"Read mail\")."
 },
 {
@@ -30542,6 +30678,14 @@
 "head": "Mail and contacts",
 "title": "Mail and contacts",
 "text": "- Delete mail (Features → Mail and contacts → \"Delete mail\"; builds on \"Order mail\"; E-mail → Settings): On the E-mail page you delete a mail with the trash symbol, the Delete key or by dragging it onto the trash, also several ticked ones at once."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Mail and contacts",
+"title": "Mail and contacts",
+"text": "- Learn sorting from corrections (Features → Mail and contacts → \"Learn sorting from corrections\"; builds on \"Order mail\"; E-mail → Settings): If one of your rules or \"Inbox tidying\" sorts a mail wrongly, just put it somewhere else: on the E-mail page, in Apple Mail or on the iPhone."
 },
 {
 "lang": "en",

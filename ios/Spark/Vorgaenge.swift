@@ -202,10 +202,20 @@ struct VorgangKarte: View {
                 ForEach(x.facts.indices, id: \.self) { i in
                     LabeledContent(x.facts[i].0 == "Von" ? String(localized: "Von") : x.facts[i].0) { Text(verbatim: x.facts[i].1) }.font(.subheadline)
                 }
+                let main = x.knoepfe.filter { $0.k != "spaeter" && $0.k != "zurueck" }
                 HStack {
-                    ForEach(x.knoepfe.filter { $0.k != "spaeter" && $0.k != "zurueck" }.prefix(3), id: \.self) { b in
+                    ForEach(Array(main.prefix(3)), id: \.self) { b in
                         Button { run(b.k, page: b.page) } label: { Text(verbatim: b.name).lineLimit(1) }
                             .buttonStyle(.bordered)
+                    }
+                    // more buttons than fit (the card „Wohin gehört diese Mail?“ of Sortieren aus Korrekturen lernen): in a menu
+                    if main.count > 3 {
+                        Menu {
+                            ForEach(Array(main.dropFirst(3)), id: \.self) { b in
+                                Button { run(b.k, page: b.page) } label: { Text(verbatim: b.name) }
+                            }
+                        } label: { Text("Mehr") }
+                        .buttonStyle(.bordered)
                     }
                     if x.state == "spaeter" && x.has("zurueck") { Button("Jetzt zeigen") { run("zurueck") }.buttonStyle(.bordered) }
                     if x.has("spaeter") {

@@ -322,6 +322,7 @@
     "mail_idle": false,
     "mail_code": false,
     "mail_delete": false,
+    "mail_learn": false,
     "share": false,
     "mail_send": false,
     "mail_invites": false,

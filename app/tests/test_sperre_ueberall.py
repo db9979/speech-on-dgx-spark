@@ -493,6 +493,7 @@ ADMIN_ON_OK = {
     "wissenskarte.py:suche_on": "Live only (Karte hilft der Suche: on or off); per profile wissenskarte.suche_allowed",
     "tasks.py:admin_on": "Spark switch; per profile features.allowed tasks, endpoints add features.blocked",
     "telegram.py:admin_on": "Spark-wide bot; per profile features.allowed / features.blocked",
+    "mailregeln.py:for_live": "Live only (Sortieren aus Korrekturen lernen: on or off); per profile features.allowed(\"maillearn\", uid)",
     "tidy.py:admin_on": "Spark switch; per profile features.allowed tidy",
     "tipps.py:<module>": "tip about the second step: a protection, never blocked per profile",
     "tracelog.py:traces": "admin's request log",

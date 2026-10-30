@@ -19170,6 +19170,126 @@
           }
         }
       }
+    },
+    "Korrekturen (30 Tage)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corrections (30 days)"
+          }
+        }
+      }
+    },
+    "%lld genommen · %lld korrigiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld taken · %lld corrected"
+          }
+        }
+      }
+    },
+    "pausiert · %lld genommen · %lld korrigiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "paused · %lld taken · %lld corrected"
+          }
+        }
+      }
+    },
+    "Wieder an": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On again"
+          }
+        }
+      }
+    },
+    "Ausnahmen der Regeln": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exceptions of the rules"
+          }
+        }
+      }
+    },
+    "Entfernt: die Regel nimmt neue Mails dieses Absenders wieder. Mails bleiben, wo sie sind.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed: the rule takes this sender's new mails again. Mails stay where they are."
+          }
+        }
+      }
+    },
+    "Falsch sortiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wrongly sorted"
+          }
+        }
+      }
+    },
+    "Regel gelöscht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "rule deleted"
+          }
+        }
+      }
+    },
+    "Ausnahme gesetzt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "exception set"
+          }
+        }
+      }
+    },
+    "Regel pausiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "rule paused"
+          }
+        }
+      }
+    },
+    "zurückgenommen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "taken back"
+          }
+        }
+      }
+    },
+    "nicht wieder verschoben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not moved again"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
