@@ -2414,8 +2414,9 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 
 #### Personen, Firmen und Fristen
 
-- Ist der Schalter unter der Wissenskarte an, schlägt das Sprachmodell nach den Verbindungen je Stelle eines Dokuments nur JSON vor: Personen, Firmen, Orte, Verträge, Konten und Fristen mit Art und Nummer der Stelle. Das Panel behält einen Namen nur nach festen Regeln (wissenskarte.check_ent): die Art aus der festen Liste, der Name steht in der Stelle (klein, ohne Akzente, Leerzeichen zusammengezogen), 2 bis 80 Zeichen ohne Link, Auszeichnung oder Befehl, eine Frist nur mit Datum in der Stelle, ein Konto nur als IBAN oder Nummer; höchstens 40 je Dokument und 5000 je Profil. Verbindungen dieser Punkte prüft dieselbe Regel wie die der Seiten.
+- Ist der Schalter unter der Wissenskarte an, schlägt das Sprachmodell nach den Verbindungen je Stelle eines Dokuments nur JSON vor: Personen, Firmen, Orte, Verträge, Konten und Fristen mit Art und Nummer der Stelle. Das Panel behält einen Namen nur nach festen Regeln (wissenskarte.check_ent): die Art aus der festen Liste, der Name steht in der Stelle (klein, ohne Akzente, Leerzeichen zusammengezogen), 2 bis 80 Zeichen ohne Link, Auszeichnung oder Befehl, eine Frist nur mit Datum oder Zahl mit Zeiteinheit im Namen, ein Konto nur als IBAN oder Nummer; höchstens 40 je Dokument und 5000 je Profil. Verbindungen dieser Punkte prüft dieselbe Regel wie die der Seiten.
 - Jeder Punkt hat eine feste Nummer (wk_ent) und seine Stellen (wk_ment: Dokument und Stück). Andere Teile lesen nur: wissenskarte.finde_knoten (genau über Name und andere Namen) und wissenskarte.knoten_liste (nach Namen sortiert) und wissenskarte.knoten_von_dok (die Punkte eines Dokuments nach Art und Name, höchstens 200). Zusammenführen (wissenskarte.zusammen), Umbenennen und Löschen geschehen nur per Klick der Besitzerin oder des Besitzers mit dem Code von „Bestätigen“, nie durch das Modell; jede Änderung meldet wissenskarte.GEAENDERT. Geht ein Dokument, gehen seine Stellen sofort mit, ein Punkt ohne Stelle verschwindet.
+- Seite und Punkt, Typregeln, Fristen: Heißt eine Seite des Wissensbuchs wie ein Punkt der Art person, firma oder ort, sind beide ein Punkt (wk_entpage); die feste Regel wissenskarte._verbinde verbindet sie beim Einlesen der Punkte, nachts und einmal beim Anlegen, nie das Modell. Ihre Verbindungen zählen in view, rund_um, weg und liste als die des Punktes; umbenannt werden beide zusammen (wissensbuch.retitle, der alte Titel bleibt in wb_alttitel, so entsteht beim Einarbeiten keine Doppelseite). Jede Verbindung folgt der Tabelle wissenskarte.TYPEN (erlaubte Arten am Anfang und am Ende, eine Seite zählt als „seite“), eine Frist braucht im Namen ein Datum oder eine Zahl mit Zeiteinheit (wissenskarte.frist_name, Zahlwörter über eine feste Liste). Die Nachtprüfung (wissenskarte.nachtpruefung) entfernt, was vorher gespeichert wurde und dagegen verstößt.
 
 #### Karte hilft der Suche
 
@@ -2523,6 +2524,11 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - `app/panel/wissenskarte.py` `knoten_liste`: Punkte einer Art nach Namen, nur lesend ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `knoten_von_dok`: Punkte eines Dokuments nach Art und Name, nur lesend ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `zusammen`: zwei Punkte zusammenführen, nur per Klick ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `_verbinde`: Seite und Punkt gleichen Namens verbinden, feste Regel ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `erlaubt`: Typregeln je Art der Verbindung (TYPEN) ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `frist_name`: eine Frist nur mit Datum oder Zahl im Namen ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `nachtpruefung`: nachts: verbinden, Verstöße und Fristen ohne Zahl entfernen ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissensbuch.py` `retitle`: Seite umbenennen, der alte Titel bleibt ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `search_pages`: passende Seiten über den Suchindex wb_fts ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `_fts_sync`: Suchindex der Seiten nachziehen ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `liste`: Seiten-Ids mit Rang für andere Teile, nur lesend ([Schritt 13](#kn-wissen-s13))

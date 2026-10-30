@@ -134,6 +134,7 @@ LIST = {
     ("POST", "/api/profile/wissenskarte/knoten/{kid}/name"): (CONFIRM, "Daten", "Knoten der Wissenskarte umbenennen", "Rename a point of the knowledge map"),
     ("POST", "/api/profile/wissenskarte/knoten/{kid}/zusammen"): (CONFIRM, "Daten", "Knoten der Wissenskarte zusammenführen", "Merge points of the knowledge map"),
     ("DELETE", "/api/profile/wissenskarte/knoten/{kid}"): (CONFIRM, "Daten", "Knoten der Wissenskarte löschen", "Delete a point of the knowledge map"),
+    ("POST", "/api/profile/wissensbuch/{pid}/name"): (CONFIRM, "Daten", "Seite des Wissensbuchs umbenennen", "Rename a page of the knowledge book"),
     ("POST", "/api/update/rollback"): (CONFIRM, "Spark", "Zurück zur vorigen Version", "Back to the previous version"),
     ("POST", "/api/admin/modelle/wechseln"): (CONFIRM, "Spark", "Ein Modell wechseln", "Switch a model"),
     ("POST", "/api/admin/modelle/platz"): (CONFIRM, "Spark", "Lange Gespräche einstellen", "Set long conversations"),

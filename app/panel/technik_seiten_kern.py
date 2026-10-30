@@ -243,7 +243,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "fce761974e",
+        "stand": "1828297f86",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -260,7 +260,8 @@ SEITEN = {
             "wissensbuch.search_pages": ["s13"], "wissensbuch._fts_sync": ["s13"], "wissensbuch.liste": ["s13"], "documents._similar": ["s6"],
             "documents.VEC_BLOCK": ["s6"], "wissenskarte.MAX_EDGES": ["s13"], "wissenskarte.DAY": ["s13"],
             "wissenskarte.check_ent": ["s13"], "wissenskarte.finde_knoten": ["s13"], "wissenskarte.knoten_liste": ["s13"],
-            "wissenskarte.zusammen": ["s13"], "wissenskarte.ENT_PER_DOC": ["s13"], "wissenskarte.MAX_ENT": ["s13"],
+            "wissenskarte.zusammen": ["s13"], "wissenskarte._verbinde": ["s13"], "wissenskarte.erlaubt": ["s13"],
+            "wissenskarte.frist_name": ["s13"], "wissenskarte.nachtpruefung": ["s13"], "wissensbuch.retitle": ["s13"], "wissenskarte.ENT_PER_DOC": ["s13"], "wissenskarte.MAX_ENT": ["s13"],
             "wissenskarte.ENT_DAY": ["s13"], "wissenskarte.ENT_NAME_LEN": ["s13"],
             "wissenskarte.knoten_von_dok": ["s13"], "wissenskarte.liste": ["s6"], "wissenskarte.trifft": ["s6"], "documents._karte": ["s6"],
             "documents.KARTE_WEIGHT": ["s6"], "wissenskarte.KARTE_MOST": ["s6"], "wissenskarte.KARTE_KNOTEN": ["s6"],
@@ -625,7 +626,7 @@ SEITEN = {
                  "Nummer der Stelle. Das Panel behält einen Namen nur nach festen Regeln (wissenskarte.check_ent): die "
                  "Art aus der festen Liste, der Name steht in der Stelle (klein, ohne Akzente, Leerzeichen "
                  "zusammengezogen), 2 bis {wissenskarte.ENT_NAME_LEN} Zeichen ohne Link, Auszeichnung oder Befehl, eine "
-                 "Frist nur mit Datum in der Stelle, ein Konto nur als IBAN oder Nummer; höchstens "
+                 "Frist nur mit Datum oder Zahl mit Zeiteinheit im Namen, ein Konto nur als IBAN oder Nummer; höchstens "
                  "{wissenskarte.ENT_PER_DOC} je Dokument und {wissenskarte.MAX_ENT} je Profil. Verbindungen dieser "
                  "Punkte prüft dieselbe Regel wie die der Seiten.",
                  "When the switch below the knowledge map is on, the language model proposes only JSON per passage of a "
@@ -633,7 +634,7 @@ SEITEN = {
                  "kind and the number of the passage. The panel keeps a name only by fixed rules "
                  "(wissenskarte.check_ent): the kind from the fixed list, the name stands in the passage (lower case, "
                  "without accents, spaces drawn together), 2 to {wissenskarte.ENT_NAME_LEN} characters without link, "
-                 "markup or command, a deadline only with a date in the passage, an account only as IBAN or number; at "
+                 "markup or command, a deadline only with a date or a number with a unit in its name, an account only as IBAN or number; at "
                  "most {wissenskarte.ENT_PER_DOC} per document and {wissenskarte.MAX_ENT} per profile. Connections of "
                  "these points are checked by the same rule as those of the pages."),
                 ("Jeder Punkt hat eine feste Nummer (wk_ent) und seine Stellen (wk_ment: Dokument und Stück). Andere "
@@ -650,6 +651,24 @@ SEITEN = {
                  "click with the code of „Confirm“, never by the model; every change reports to "
                  "wissenskarte.GEAENDERT. When a document goes, its passages go with it at once, a point without a "
                  "passage disappears."),
+                ("Seite und Punkt, Typregeln, Fristen: Heißt eine Seite des Wissensbuchs wie ein Punkt der Art person, "
+                 "firma oder ort, sind beide ein Punkt (wk_entpage); die feste Regel wissenskarte._verbinde verbindet sie "
+                 "beim Einlesen der Punkte, nachts und einmal beim Anlegen, nie das Modell. Ihre Verbindungen zählen in "
+                 "view, rund_um, weg und liste als die des Punktes; umbenannt werden beide zusammen "
+                 "(wissensbuch.retitle, der alte Titel bleibt in wb_alttitel, so entsteht beim Einarbeiten keine "
+                 "Doppelseite). Jede Verbindung folgt der Tabelle wissenskarte.TYPEN (erlaubte Arten am Anfang und am "
+                 "Ende, eine Seite zählt als „seite“), eine Frist braucht im Namen ein Datum oder eine Zahl mit "
+                 "Zeiteinheit (wissenskarte.frist_name, Zahlwörter über eine feste Liste). Die Nachtprüfung "
+                 "(wissenskarte.nachtpruefung) entfernt, was vorher gespeichert wurde und dagegen verstößt.",
+                 "Page and point, type rules, deadlines: when a page of the knowledge book has the name of a point of the "
+                 "kind person, firma or ort, both are one point (wk_entpage); the fixed rule wissenskarte._verbinde links "
+                 "them when points are read, at night and once when the table is made, never the model. Their "
+                 "connections count as the point's in view, rund_um, weg and liste; both are renamed together "
+                 "(wissensbuch.retitle, the old title stays in wb_alttitel, so working in makes no double page). Every "
+                 "connection follows the table wissenskarte.TYPEN (allowed kinds at the start and the end, a page counts "
+                 "as „seite“), a deadline needs a date or a number with a unit of time in its name "
+                 "(wissenskarte.frist_name, number words by a fixed list). The nightly check (wissenskarte.nachtpruefung) "
+                 "removes what was stored before and breaks them."),
             ]),
             (("Karte hilft der Suche", "Map helps the search"), [
                 ("wissenskarte.liste(uid, worte, k) gibt Stück-Ids mit Rang ab 1 zurück, nur lesend (SQLite mit mode=ro) "
@@ -830,6 +849,11 @@ SEITEN = {
             ("wissenskarte.knoten_liste", ("Punkte einer Art nach Namen, nur lesend", "points of one kind by name, read only")),
             ("wissenskarte.knoten_von_dok", ("Punkte eines Dokuments nach Art und Name, nur lesend", "points of one document by kind and name, read only")),
             ("wissenskarte.zusammen", ("zwei Punkte zusammenführen, nur per Klick", "merge two points, only by click")),
+            ("wissenskarte._verbinde", ("Seite und Punkt gleichen Namens verbinden, feste Regel", "link a page and a point of the same name, fixed rule")),
+            ("wissenskarte.erlaubt", ("Typregeln je Art der Verbindung (TYPEN)", "type rules per kind of connection (TYPEN)")),
+            ("wissenskarte.frist_name", ("eine Frist nur mit Datum oder Zahl im Namen", "a deadline only with a date or number in its name")),
+            ("wissenskarte.nachtpruefung", ("nachts: verbinden, Verstöße und Fristen ohne Zahl entfernen", "at night: link, remove violations and deadlines without a number")),
+            ("wissensbuch.retitle", ("Seite umbenennen, der alte Titel bleibt", "rename a page, the old title stays")),
             ("wissensbuch.search_pages", ("passende Seiten über den Suchindex wb_fts", "fitting pages through the search index wb_fts")),
             ("wissensbuch._fts_sync", ("Suchindex der Seiten nachziehen", "bring the pages' search index up to date")),
             ("wissensbuch.liste", ("Seiten-Ids mit Rang für andere Teile, nur lesend", "page ids with rank for other parts, read only")),

@@ -2414,8 +2414,9 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 
 #### People, companies and deadlines
 
-- When the switch below the knowledge map is on, the language model proposes only JSON per passage of a document after the connections: people, companies, places, contracts, accounts and deadlines with kind and the number of the passage. The panel keeps a name only by fixed rules (wissenskarte.check_ent): the kind from the fixed list, the name stands in the passage (lower case, without accents, spaces drawn together), 2 to 80 characters without link, markup or command, a deadline only with a date in the passage, an account only as IBAN or number; at most 40 per document and 5000 per profile. Connections of these points are checked by the same rule as those of the pages.
+- When the switch below the knowledge map is on, the language model proposes only JSON per passage of a document after the connections: people, companies, places, contracts, accounts and deadlines with kind and the number of the passage. The panel keeps a name only by fixed rules (wissenskarte.check_ent): the kind from the fixed list, the name stands in the passage (lower case, without accents, spaces drawn together), 2 to 80 characters without link, markup or command, a deadline only with a date or a number with a unit in its name, an account only as IBAN or number; at most 40 per document and 5000 per profile. Connections of these points are checked by the same rule as those of the pages.
 - Every point has a fixed number (wk_ent) and its passages (wk_ment: document and piece). Other parts only read: wissenskarte.finde_knoten (exactly by name and other names) and wissenskarte.knoten_liste (sorted by name) and wissenskarte.knoten_von_dok (the points of one document by kind and name, at most 200). Merging (wissenskarte.zusammen), renaming and deleting happen only by the owner's click with the code of „Confirm“, never by the model; every change reports to wissenskarte.GEAENDERT. When a document goes, its passages go with it at once, a point without a passage disappears.
+- Page and point, type rules, deadlines: when a page of the knowledge book has the name of a point of the kind person, firma or ort, both are one point (wk_entpage); the fixed rule wissenskarte._verbinde links them when points are read, at night and once when the table is made, never the model. Their connections count as the point's in view, rund_um, weg and liste; both are renamed together (wissensbuch.retitle, the old title stays in wb_alttitel, so working in makes no double page). Every connection follows the table wissenskarte.TYPEN (allowed kinds at the start and the end, a page counts as „seite“), a deadline needs a date or a number with a unit of time in its name (wissenskarte.frist_name, number words by a fixed list). The nightly check (wissenskarte.nachtpruefung) removes what was stored before and breaks them.
 
 #### Map helps the search
 
@@ -2523,6 +2524,11 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/wissenskarte.py` `knoten_liste`: points of one kind by name, read only ([step 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `knoten_von_dok`: points of one document by kind and name, read only ([step 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `zusammen`: merge two points, only by click ([step 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `_verbinde`: link a page and a point of the same name, fixed rule ([step 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `erlaubt`: type rules per kind of connection (TYPEN) ([step 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `frist_name`: a deadline only with a date or number in its name ([step 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `nachtpruefung`: at night: link, remove violations and deadlines without a number ([step 13](#kn-wissen-s13))
+- `app/panel/wissensbuch.py` `retitle`: rename a page, the old title stays ([step 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `search_pages`: fitting pages through the search index wb_fts ([step 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `_fts_sync`: bring the pages' search index up to date ([step 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `liste`: page ids with rank for other parts, read only ([step 13](#kn-wissen-s13))

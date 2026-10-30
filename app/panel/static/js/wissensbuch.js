@@ -9,7 +9,7 @@
 // each kind with its colour and a filter above the map; renaming, merging and deleting only by the owner's click.
 const WBART={Thema:['Themen','Topics'],Person:['Personen','People'],Firma:['Firmen','Companies'],Ding:['Dinge','Things'],Ort:['Orte','Places'],Antwort:['Abgelegte Antworten','Filed answers']};
 const WBWORD={eingearbeitet:['eingearbeitet','worked in'],nichts:['nichts Neues','nothing new'],fehler:['nicht eingearbeitet','not worked in'],
-  geloescht:['Seite gelöscht','page deleted'],neu:['Seite neu geschrieben','page written again'],falsch:['Satz entfernt','sentence removed'],
+  geloescht:['Seite gelöscht','page deleted'],neu:['Seite neu geschrieben','page written again'],falsch:['Satz entfernt','sentence removed'],umbenannt:['Seite umbenannt','page renamed'],
   quelle:['Dokumente weg','documents gone'],geprueft:['nachts geprüft','checked at night'],probe:['Stichprobe: Satz entfernt','sample: sentence removed'],
   stimmt:['Widerspruch geklärt','contradiction settled'],noch:['stimmt noch','still right'],abgelegt:['Antwort abgelegt','answer filed'],
   nas:['auf den NAS kopiert','copied to the NAS']};
@@ -70,8 +70,19 @@ function wbDetail(w){const det=w.querySelector('.wbdet'),W=WB.data;if(!WB.sel||!
       (c.length||v.length?'':`<div class="mut">${esc(t('Nichts offen.','Nothing open.'))}</div>`);return}
   const p=WB.page;if(!p){det.innerHTML=back;return}
   det.innerHTML=back+`<h3>${esc(p.title)}</h3><div class="mut">${esc(t(...(WBART[p.art]||[p.art,p.art])))} · ${esc(t('zuletzt geändert ','last changed '))}${esc(wbWhen(p.changed))}</div>
+    ${(p.frueher||[]).length?`<div class="mut">${esc(t('Früher: ','Before: ')+p.frueher.join(', '))}</div>`:''}
     <ul class="facts wbsents">${p.saetze.map(s=>`<li><span>${esc(s.text)}<br><small class="mut">${wbSrcIn(s)}${s.mark==='widerspruch'?' · <b class="err">'+esc(t('Widerspruch','Contradiction'))+'</b>':''}${s.flag==='veraltet'?' · <span class="pill warn">'+esc(t('veraltet?','out of date?'))+'</span>':''}</small></span><button type="button" class="b" data-wbbad="${esc(String(s.id))}">${esc(t('Stimmt nicht','Wrong'))}</button></li>`).join('')}</ul>
-    <div class="row">${WK_ON?`<button type="button" class="b p" data-wbmap="${esc(p.id)}">${esc(t('Auf der Karte zeigen','Show on the map'))}</button>`:''}<button type="button" class="b" data-wbagain="${esc(p.id)}">${esc(t('Neu schreiben','Write again'))}</button><button type="button" class="b" data-wbdel="${esc(p.id)}">${esc(t('Seite löschen','Delete page'))}</button></div>`}
+    <div class="row">${WK_ON?`<button type="button" class="b p" data-wbmap="${esc(p.id)}">${esc(t('Auf der Karte zeigen','Show on the map'))}</button>`:''}<button type="button" class="b" data-wbagain="${esc(p.id)}">${esc(t('Neu schreiben','Write again'))}</button><button type="button" class="b" data-wbdel="${esc(p.id)}">${esc(t('Seite löschen','Delete page'))}</button></div>`;
+  wbRename(det,p)}
+// „Seite umbenennen“ (wissensbuch.py rename): only the owner, with the code of „Bestätigen“; a page that belongs to a
+// point of the map is renamed there, page and point together
+function wbRename(det,p){const box=icEl('div','wbren');box.appendChild(icEl('h4','',t('Seite umbenennen','Rename page')));
+  if(p.punkt){box.appendChild(icEl('div','mut',t('Diese Seite gehört zu einem Punkt der Karte. Umbenennen dort unter Wissensbuch → Karte, Seite und Punkt ändern sich zusammen.','This page belongs to a point of the map. Rename it there under Knowledge book → Map, page and point change together.')));det.appendChild(box);return}
+  const nm=icEl('input','');nm.type='text';nm.maxLength=60;nm.value=p.title;nm.setAttribute('aria-label',t('Neuer Titel','New title'));
+  const go=icEl('button','b',t('Umbenennen','Rename'));go.type='button';codeLock(go,'confirm');
+  go.onclick=async()=>{go.disabled=true;const r=await apiTry('/api/profile/wissensbuch/'+encodeURIComponent(p.id)+'/name',xjson('POST',{titel:nm.value.trim()}));go.disabled=false;
+    if(!r.r.ok){wbSay(errSay(r.r.status,r.d.detail,''),true);return}await wbLoad();wbSay(t('Umbenannt; der alte Titel bleibt als zweiter Name, die Seite wird wiedergefunden.','Renamed; the old title stays as a second name, the page is found again.'))};
+  const row=icEl('div','row');row.append(nm,go);box.appendChild(row);det.appendChild(box)}
 {document.body.addEventListener('click',async e=>{const b=e.target.closest('#wbview [data-wbbad],#wbview [data-wbagain],#wbview [data-wbdel],#wbview [data-wbdoc],#wbview [data-wbright],#wbview [data-wbstill],#wbview [data-wbback],#wbview [data-wbmap]');if(!b)return;const D=b.dataset;
   if(D.wbback){WB.sel='';WB.page=null;wbDraw();return}
   if(D.wbdoc){e.preventDefault();if(typeof docView==='function')docView(D.wbdoc);return}
@@ -226,17 +237,18 @@ function wkaDetail(w){const det=w.querySelector('.wkdet'),d=WKA.data;det.textCon
     det.appendChild(icEl('div','mut wklegend',t('Gestrichelt: Ursache und Wirkung, nur wenn die Quelle den Grund nennt.','Dashed: cause and effect, only when the source names the reason.')));return}
   if(sel.k==='e'){const e=d.edges.find(x=>x.id===sel.id);if(!e)return;det.appendChild(icEl('h3','',wkaArt(e.art)));const ul=icEl('ul','facts');ul.appendChild(wkaEdgeRow(e,byId));det.appendChild(ul);return}
   const n=byId[sel.id];if(!n)return;const h=icEl('h3','');h.append(icEl('span','wkdot '+wkaNodeCls(n)),document.createTextNode(n.title));det.appendChild(h);
-  const kind=n.ent?(d.ent_arten&&d.ent_arten[n.ent]?t(...d.ent_arten[n.ent]):n.art):t(...(WBART[n.art]||[n.art,n.art]));
+  const kind=n.ent?(d.ent_arten&&d.ent_arten[n.ent]?t(...d.ent_arten[n.ent]):n.art)+(n.seite?t(' · mit Seite',' · with page'):''):t(...(WBART[n.art]||[n.art,n.art]));
   det.appendChild(icEl('div','mut',kind+' · '+(n.ent?t(`${n.n} Stellen`,`${n.n} passages`):t(`${n.n} Sätze`,`${n.n} sentences`))+' · '+t(`${n.deg} Verbindungen`,`${n.deg} connections`)));
   const mine=d.edges.filter(e=>e.a===n.id||e.b===n.id);if(mine.length){det.appendChild(icEl('h4','',t('Verbindungen','Connections')));const ul=icEl('ul','facts');for(const e of mine)ul.appendChild(wkaEdgeRow(e,byId));det.appendChild(ul)}
   const row=icEl('div','row');const mid=icEl('button','b p',t('In die Mitte','Into the middle'));mid.type='button';mid.onclick=()=>wkaFocus(n.id);row.appendChild(mid);
-  if(!n.ent){const op=icEl('button','b',t('Seite öffnen','Open page'));op.type='button';op.onclick=()=>{WB.sel=n.id;icTabSet('wbuch','show');wbOpen();wbPick(n.id)};row.appendChild(op)}
+  const pg=n.ent?n.seite:n.id;   // a point with a page (same name): one point on the map, its page opens from here
+  if(pg){const op=icEl('button','b',t('Seite öffnen','Open page'));op.type='button';op.onclick=()=>{WB.sel=pg;icTabSet('wbuch','show');wbOpen();wbPick(pg)};row.appendChild(op)}
   det.appendChild(row);if(n.ent)wkaOwn(det,n)}
 // a point from documents: only the owner renames, merges (same kind) or deletes it, each with the code of „Bestätigen“
 function wkaOwn(det,n){const kid=n.id.slice(1),box=icEl('div','wkown');
   const nm=icEl('input','');nm.type='text';nm.maxLength=80;nm.value=n.title;nm.setAttribute('aria-label',t('Neuer Name','New name'));
   const ren=icEl('button','b',t('Umbenennen','Rename'));ren.type='button';codeLock(ren,'confirm');
-  ren.onclick=()=>wkaAct(ren,'/api/profile/wissenskarte/knoten/'+kid+'/name',{method:'POST',body:JSON.stringify({name:nm.value.trim()})},t('Umbenannt; der alte Name findet ihn weiter.','Renamed; the old name still finds it.'));
+  ren.onclick=()=>wkaAct(ren,'/api/profile/wissenskarte/knoten/'+kid+'/name',{method:'POST',body:JSON.stringify({name:nm.value.trim()})},n.seite?t('Umbenannt, die Seite mit; der alte Name bleibt als zweiter Name.','Renamed, the page too; the old name stays as a second name.'):t('Umbenannt; der alte Name findet ihn weiter.','Renamed; the old name still finds it.'));
   const r1=icEl('div','row');r1.append(nm,ren);box.appendChild(r1);
   const sel=icEl('select','');sel.setAttribute('aria-label',t('Zusammenführen mit','Merge with'));sel.appendChild(new Option(t('Zusammenführen mit …','Merge with …'),''));
   const mg=icEl('button','b',t('Zusammenführen','Merge'));mg.type='button';mg.disabled=true;codeLock(mg,'confirm');sel.onchange=()=>{mg.disabled=!sel.value};

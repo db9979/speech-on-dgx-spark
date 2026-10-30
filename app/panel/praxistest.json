@@ -4706,6 +4706,13 @@
 "titel": "5000 Dokumente messen",
 "text": "A: Zustand → Prüfen → Wissen messen: „Erfundene Dokumente“, 5000, Messen (Code nur ohne zweiten Schritt). Der Knopf zeigt „Misst gerade …“, nach einigen Minuten stehen Dokumente, Stücke, Vektor-Matrix in MB, Speicher vorher → nachher, die Zeiten (Median und p95) von Dokumentensuche, Suche mit Karte, Wissensbuch, Karte, Rund um, Weg und Karte-Liste und die drei Grenzen mit jetzt, Bedarf und „voll“ oder „reicht“; nirgends ein Titel oder Name. Die Zahlen bitte an den Thread geben. B: Während einer Messung etwas zum Spark sagen: die Messung hört auf („abgebrochen: jemand hat gesprochen“), die Antwort kommt so schnell wie sonst. C: Dasselbe mit „Profil …“ (eigenes Profil mit vielen Dokumenten): nur Zahlen, die Dokumente bleiben unverändert. D: Zustand → Live, Kasten „Wissen messen“: nur Zahlen. Zustand → Logs, Bereich Wissen: „wissen: messung teil …“ je Teil. Zustand → Überblick → Rechner zeigt „Wissen messen“, solange sie läuft. E: Auf dem Pi in der Konsole: sudo speech-spark wissen messen (und synth 5000 --ohne-grenzen): dieselben Zahlen; ein zweiter Start gleichzeitig sagt „laeuft“.",
 "thread": "Wissenskarte Stufe 2 statt Neo4j"
+},
+{
+"id": "P697",
+"v": 1273,
+"titel": "Wissenskarte: Seite und Punkt als ein Punkt, Typregeln, Fristen",
+"text": "Voraussetzung: Personen, Firmen und Fristen an, ein Dokument mit einer Person, die auch eine Seite im Wissensbuch hat. A: Wissensbuch → Karte: die Person steht nur einmal, eckig, im Detail „mit Seite“ und „Seite öffnen“; ihre Verbindungen und die der Seite hängen am selben Punkt. B: Den Punkt antippen, neuen Namen eintragen, „Umbenennen“ mit Code: Wissensbuch → Seiten zeigt die Seite unter dem neuen Titel mit „Früher: …“. C: Auf der Seite „Neu schreiben“: nach dem nächsten Einarbeiten gibt es die Seite einmal, unter dem neuen Titel, keine zweite unter dem alten. D: Eine Seite ohne Punkt antippen, unten „Seite umbenennen“, neuen Titel, „Umbenennen“ mit Code; eine Seite mit Punkt zeigt stattdessen den Hinweis auf Wissensbuch → Karte. E: Keine Verbindung „arbeitet bei“ zwischen zwei Personen, kein Frist-Punkt ohne Zahl oder Datum (aus „einem Monat“ wird „1 Monat“). F: Am Morgen nach der Nacht in Zustand → Logs, Bereich Wissen: „wissen: wissenskarte geprueft | n verbindungen gegen typregeln | n fristen ohne zahl | n mit seite“, kein Name; Zustand → Live, Kasten Wissenskarte: „n mit Seite“ und was nachts entfernt wurde, nur Zahlen.",
+"thread": "Wissenskarte Stufe 2 statt Neo4j"
 }
 ]
 }

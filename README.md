@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.273** Knowledge map: a page and a point of the same name are one point, renaming takes the page along (no double page), "Rename page" with code; fixed type rules for connections, deadlines only with a date or number
 - **V01.1.272** Redesign stage 5: settings, features, Me pages and app tiles in the system style (grey groups, list and detail, a save bar that stands)
 - **V01.1.271** · 2026-10-30 · Test fix: the page test "Load older mail" skips itself without a browser like every page test (was red in the Werkstatt on the Spark), a guard test catches that from now on; the briefing and background tests count only their own things (were wobbly in the night run); the mail tests' stand-in mailboxes take a folder like the real one (TypeError in mail._older in the GitHub log); the mail delete test waits for the page's answer before it drags on (was red alongside other mail tests)
 - **V01.1.270** Measure knowledge: times and memory of search, knowledge book and knowledge map with 5000 made-up documents or one profile (read only), under Status → Checks and `sudo speech-spark wissen messen`
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.266** "Spark verwalten" in the iPhone app: when the app was paired before the (newly set up) second step, it says so and unlocks once with "Confirm with code" (code or passkey), instead of only showing "not an admin"
 - **V01.1.265** Mail rules no longer play ping-pong: a mail a rule or the tidying moved and you put back into the inbox stays there; the rules remember what they moved (30 days)
 - **V01.1.264** Redesign stage 3: line icons instead of emoji, one source `icons.js`
-- **V01.1.263** Map helps the search (knowledge map step 3 of 4, own switch, off): when a question names a person, company or deadline of the map, the document search also finds its passages and those of its neighbours; it only adds to the hits, below the answer it says "via the knowledge map"
 
 
 

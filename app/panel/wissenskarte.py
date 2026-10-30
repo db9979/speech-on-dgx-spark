@@ -37,7 +37,7 @@ places, contracts, accounts and deadlines of the documents become points of thei
 map), each with the places it stands on (wk_ment: document and piece). The model proposes only JSON
 [{art, name, quelle}] per piece; the panel decides by fixed rules (check_ent): the kind from ENT_ARTEN, the name stands
 in its piece (lower case, without accents, spaces drawn together), 2 to ENT_NAME_LEN characters without links, markup or
-command words, a deadline only with a date in its piece, an account only in the form of an IBAN or a number; at most
+command words, a deadline only with a date or a number with a unit of time in its name (frist_name), an account only in the form of an IBAN or a number; at most
 ENT_PER_DOC per document and MAX_ENT per profile, own daily limit chat.knowledge_ents_day. Their connections to pages
 and to each other use the same ARTEN and check_edge. The model never merges, renames or deletes: only the owner's
 click does (code with „Bestätigen“, stufen.LIST), and every change calls the subscribers of GEAENDERT. A point whose
@@ -48,6 +48,14 @@ last place goes (documents.GONE, read again) goes too and says "weg". Own admin 
     POST   /api/profile/wissenskarte/knoten/{id}/name  rename (the old name becomes an alias)
     POST   /api/profile/wissenskarte/knoten/{id}/zusammen  merge into another point of the same kind
     DELETE /api/profile/wissenskarte/knoten/{id}       delete; never back from the documents it stood in
+
+Seite und Punkt, Typregeln, Fristen (Dominik 2026-10-30 „1-4“, no switch of its own): a page of the Wissensbuch and a
+point of the kind person, firma or ort with the same name are one point on the map (wk_entpage, made only by the fixed
+rule _verbinde when points are read, at night and once as migration); its connections count as the point's in view,
+rund_um, weg and liste, and renaming the point renames the page in the same step (wissensbuch.retitle; the old title
+stays in wb_alttitel). Every connection follows the fixed type rules TYPEN (check_edge, reason "typ"); a deadline's
+name holds a date or a number with a unit of time (frist_name, words for numbers by ZAHLWORTE). The nightly check
+(nachtpruefung) links, removes stored connections against TYPEN and deadlines without a number, and logs the counts.
 
 Karte hilft der Suche (plan wissensgraph Stufe 3, Dominik 2026-10-29 „Empfehlung umsetzen“): liste(uid, worte, k) gives
 the document search a third list of hits, [(piece id, rank from 1)], by fixed rules (see liste), read only and bound to
@@ -116,6 +124,7 @@ CREATE INDEX IF NOT EXISTS wk_ment_doc ON wk_ment(doc);
 CREATE TABLE IF NOT EXISTS wk_entdocs (doc TEXT PRIMARY KEY, state TEXT, at INTEGER, sig TEXT);
 CREATE TABLE IF NOT EXISTS wk_entblock (doc TEXT NOT NULL, art TEXT NOT NULL, norm TEXT NOT NULL,
     PRIMARY KEY (doc, art, norm));
+CREATE TABLE IF NOT EXISTS wk_entpage (ent INTEGER PRIMARY KEY, page TEXT NOT NULL UNIQUE);
 """
 PROMPT = ("Du verbindest Seiten im Wissensbuch eines Menschen. Du bekommst ein Dokument in nummerierten Stellen [S1], "
           "[S2] … und eine Liste von Seiten [K1], [K2] … Nenne, welche Seiten das Dokument miteinander verbindet, je "
@@ -145,11 +154,16 @@ def allowed(uid):
 
 
 class _Db(wissensbuch._Db):
-    """The profile's wissen.db with the tables of the Wissensbuch and the map."""
+    """The profile's wissen.db with the tables of the Wissensbuch and the map. The first time the table of pages and
+    points (wk_entpage) is made, the fixed rule links what is there once (migration)."""
     def __enter__(self):
         con = super().__enter__()
         try:
+            new = not con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='wk_entpage'").fetchone()
             con.executescript(SCHEMA)
+            if new:
+                n = _verbinde(con)
+                print(f"wissen: wissenskarte seiten verbunden | {n} punkte | einmalig", flush=True)
         except BaseException:
             self.__exit__(Exception)
             raise
@@ -202,9 +216,16 @@ def check_detail(text, piece):
     return s, ""
 
 
+def erlaubt(art, von, nach):
+    """The fixed type rule of a kind of connection (TYPEN): may it go from a point of kind von to one of kind nach?
+    A page counts as SEITE, a page that belongs to a point (wk_entpage) as the kind of its point."""
+    rule = TYPEN.get(art)
+    return bool(rule) and von in rule[0] and nach in rule[1]
+
+
 def check_edge(e, nodes, src):
-    """One proposed connection through the fixed rules: (row, "") or (None, reason). nodes: {"K1": page}, src:
-    {number: (page of the document, text)}."""
+    """One proposed connection through the fixed rules: (row, "") or (None, reason). nodes: {"K1": page} (with
+    "kind" for the type rules, else SEITE), src: {number: (page of the document, text)}."""
     if not isinstance(e, dict):
         return None, "form"
     a, b = nodes.get(str(e.get("von") or "").strip()), nodes.get(str(e.get("nach") or "").strip())
@@ -213,6 +234,8 @@ def check_edge(e, nodes, src):
     art = kind(e.get("art"))
     if not art:
         return None, "kind"
+    if not erlaubt(art, a.get("kind", SEITE), b.get("kind", SEITE)):
+        return None, "typ"
     try:
         n = int(e.get("quelle"))
     except (TypeError, ValueError):
@@ -267,6 +290,9 @@ def nodes_for(uid, doc, text):
             "GROUP BY p.id ORDER BY n DESC, p.title", (doc,))]
         rest = [dict(r) for r in con.execute("SELECT id, title, art FROM wb_pages WHERE art<>? ORDER BY changed DESC",
                                              (wissensbuch.ANSWER,))]
+        links = _seiten_arten(con) if ents_allowed(uid) else {}
+    for p in own + rest:
+        p["kind"] = links.get(p["id"], SEITE)
     out, seen = [], set()
     for p in own:
         if len(out) < NODES_PER_DOC and p["id"] not in seen:
@@ -376,10 +402,17 @@ async def work_in(uid, now=None):
 
 
 async def due_once(now=None):
-    """One step of background work (wissen.due_once, after the Wissensbuch): one document of one profile."""
+    """One step of background work (wissen.due_once, after the Wissensbuch): the nightly check of one profile once a
+    night (in suchpruefung's night window, like the Wissensbuch), else one document of one profile."""
     if not admin_on():
         return None
     now = now or time.time()
+    import suchpruefung
+    if suchpruefung.night(now):
+        for uid in profiles.user_ids():
+            if allowed(uid) and os.path.exists(documents.db_path(uid)) and await asyncio.to_thread(_nacht_faellig, uid, now):
+                await asyncio.to_thread(nachtpruefung, uid)
+                return "wissenskarte-pruefung"
     day = datetime.datetime.fromtimestamp(now).strftime("%Y-%m-%d")
     for uid in profiles.user_ids():
         if not allowed(uid) or not os.path.exists(documents.db_path(uid)):
@@ -400,6 +433,46 @@ async def due_once(now=None):
         if got:
             return got
     return None
+
+
+NACHT = {"typ": 0, "frist": 0, "laeufe": 0}     # Live-Übersicht: what the nightly checks took out since the start
+
+
+def _nacht_faellig(uid, now):
+    """At most one nightly check of the map per profile and night (wissensbuch.RUN_GAP), noted in wb_state."""
+    with _Db(uid) as con:
+        r = con.execute("SELECT val FROM wb_state WHERE key='wk_check_at'").fetchone()
+        if r and now - (r[0] or 0) <= wissensbuch.RUN_GAP:
+            return False
+        con.execute("INSERT OR REPLACE INTO wb_state (key, val) VALUES ('wk_check_at', ?)", (int(now),))
+    return True
+
+
+def nachtpruefung(uid):
+    """The nightly check of the map, fixed rules only (never the model): pages and points of the same name are linked
+    (_verbinde), stored connections against the type rules (TYPEN) go, and with the points released, deadlines whose
+    name holds neither a date nor a number with a unit (frist_name) go with their places and connections (GEAENDERT
+    "weg"). Returns {"typ", "frist", "seiten"}; the journal gets the numbers."""
+    ents = ents_allowed(uid)
+    with _Db(uid) as con:
+        seiten = _verbinde(con)
+        fristen = [r[0] for r in con.execute("SELECT id, name FROM wk_ent WHERE art='frist' ORDER BY id")
+                   if not frist_name(r[1])] if ents else []
+        for kid in fristen:
+            _raus(con, kid)
+        rows = con.execute("SELECT id, a, b, art FROM wk_edges ORDER BY id").fetchall()
+        kinds = _arten_von(con, list({x for r in rows for x in (r["a"], r["b"])}), ents)
+        bad = [r["id"] for r in rows if r["art"] in TYPEN and r["a"] in kinds and r["b"] in kinds
+               and not erlaubt(r["art"], kinds[r["a"]], kinds[r["b"]])]
+        con.execute("DELETE FROM wk_edges WHERE id IN (SELECT value FROM json_each(?))", (json.dumps(bad),))
+    for kid in fristen:
+        _melde(uid, kid, None, "weg")
+    NACHT["typ"] += len(bad)
+    NACHT["frist"] += len(fristen)
+    NACHT["laeufe"] += 1
+    print(f"wissen: wissenskarte geprueft | {len(bad)} verbindungen gegen typregeln | {len(fristen)} fristen ohne zahl | "
+          f"{seiten} mit seite", flush=True)
+    return {"typ": len(bad), "frist": len(fristen), "seiten": seiten}
 
 
 def forget(uid, ids, why="geloescht"):
@@ -444,6 +517,42 @@ def drop_edge(uid, eid):
 ENT_ARTEN = ("person", "firma", "ort", "vertrag", "konto", "frist")
 ENT_NAMEN = {"person": ("Person", "Person"), "firma": ("Firma", "Company"), "ort": ("Ort", "Place"),
              "vertrag": ("Vertrag", "Contract"), "konto": ("Konto", "Account"), "frist": ("Frist", "Deadline")}
+SEITE = "seite"          # the kind of a page of the Wissensbuch in the type rules
+
+
+def _k(*arten):
+    return frozenset(arten) | {SEITE}
+
+
+_ALLE = _k(*ENT_ARTEN)
+# The fixed type rules (Dominik 2026-10-30 „1-4“): per kind of connection the kinds it may go from and to. A page
+# counts as SEITE (it has no kind of its own), a page that belongs to a point as the kind of that point. check_edge
+# refuses anything else, and the nightly check (nachtpruefung) takes out what was stored before.
+TYPEN = {"gehoert_zu": (_ALLE, _ALLE), "teil_von": (_ALLE, _k("firma", "ort", "vertrag")),
+         "besitzt": (_k("person", "firma"), _k("firma", "ort", "vertrag", "konto")),
+         "bezahlt_an": (_k("person", "firma", "vertrag", "konto"), _k("person", "firma", "konto")),
+         "versichert_bei": (_k("person", "firma", "ort", "vertrag"), _k("firma")),
+         "vertrag_mit": (_k("person", "firma", "vertrag"), _k("person", "firma")),
+         "arbeitet_bei": (_k("person"), _k("firma", "ort")), "wohnt_in": (_k("person"), _k("ort")),
+         "liegt_in": (_k("firma", "ort"), _k("ort")), "betrifft": (_ALLE, _ALLE),
+         "frist_fuer": (_k("frist"), _k("person", "firma", "ort", "vertrag", "konto")),
+         "ersetzt": (_k("firma", "vertrag", "konto", "frist"), _k("firma", "vertrag", "konto", "frist")),
+         "haengt_ab_von": (_ALLE, _ALLE), "fuehrte_zu": (_ALLE, _ALLE), "verursacht": (_ALLE, _ALLE),
+         "erhoeht": (_ALLE, _k("vertrag", "konto", "frist")), "senkt": (_ALLE, _k("vertrag", "konto", "frist"))}
+# A page and a point with the same name are one point on the map (wk_entpage): only for these kinds of points, a
+# page of the kind Person, Firma or Ort first to the point of its kind; never a page of the kind Antwort.
+SEITE_ARTEN = ("person", "firma", "ort")
+_SEITE_ART = {"Person": "person", "Firma": "firma", "Ort": "ort"}
+# words for numbers before a unit of time in the name of a deadline („einem Monat“ → „1 Monat“), a fixed list
+ZAHLWORTE = {"ein": 1, "eine": 1, "einen": 1, "einem": 1, "einer": 1, "eines": 1, "zwei": 2, "drei": 3, "vier": 4,
+             "fünf": 5, "sechs": 6, "sieben": 7, "acht": 8, "neun": 9, "zehn": 10, "elf": 11, "zwölf": 12,
+             "vierzehn": 14, "zwanzig": 20, "dreißig": 30, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
+             "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10, "twelve": 12, "fourteen": 14, "thirty": 30}
+_EINHEIT = (r"(?:werktag(?:e|en)?|arbeitstag(?:e|en)?|kalendertag(?:e|en)?|tag(?:e|en)?|woche(?:n)?|monat(?:e|en)?|"
+            r"quartal(?:e|en)?|jahr(?:e|en)?|stunde(?:n)?|days?|weeks?|months?|quarters?|years?|hours?)")
+_ZAHLWORT = re.compile(r"(?<!\w)(" + "|".join(sorted(ZAHLWORTE, key=len, reverse=True)) + r")(\s+)(?=" + _EINHEIT
+                       + r"(?!\w))", re.I)
+_FRIST = re.compile(r"(?<!\w)\d+\s*" + _EINHEIT + r"(?!\w)", re.I)
 ENT_NAME_MIN = 2         # characters of a name, at least
 ENT_NAME_LEN = 80        # and at most
 ENT_PER_DOC = 40         # points one document may bring
@@ -466,8 +575,9 @@ ENT_PROMPT = ("Du findest in einem Dokument eines Menschen Personen, Firmen, Ort
               "bekommst das Dokument in nummerierten Stellen [S1], [S2] … und eine Liste von Seiten seines "
               "Wissensbuchs [K1], [K2] … Nenne jedes Ding genau so geschrieben, wie es in der Stelle steht, mit einer "
               "Art aus dieser Liste: " + ", ".join(ENT_ARTEN) + ", und der Nummer der Stelle. Ein Konto nur mit IBAN "
-              "oder Nummer, eine Frist nur mit ihrem Datum in der Stelle. Nenne dann Verbindungen zwischen den Dingen "
-              "(D1, D2 … in der Reihenfolge deiner Liste) und den Seiten (K1, K2 …), je mit genau einer Art aus dieser "
+              "oder Nummer, eine Frist nur mit ihrem Datum oder ihrer Dauer („14 Tage“) aus der Stelle als Name. "
+              "Nenne dann Verbindungen zwischen den Dingen (D1, D2 … in der Reihenfolge deiner Liste) und den Seiten "
+              "(K1, K2 …), je mit genau einer Art aus dieser "
               "Liste: " + ", ".join(v[0] for v in ARTEN.values()) + ". Erfinde nichts. Antworte nur mit einem "
               "JSON-Objekt: {\"dinge\": [{\"art\": Art, \"name\": Name, \"quelle\": Nummer der Stelle}], "
               "\"verbindungen\": [{\"von\": \"D1\", \"nach\": \"K2\", \"art\": Art, \"detail\": höchstens fünf Wörter "
@@ -511,6 +621,18 @@ def has_date(piece):
     return bool(_DATE.search(str(piece or "")))
 
 
+def zahlen(text):
+    """Words for numbers before a unit of time as digits, by the fixed list ZAHLWORTE („zwei Wochen“ → „2 Wochen“)."""
+    return _ZAHLWORT.sub(lambda m: str(ZAHLWORTE[m[1].lower()]) + m[2], str(text or ""))
+
+
+def frist_name(name):
+    """The name of a deadline after the fixed rule: with words for numbers as digits, and only when it holds a date or
+    a number with a unit of time („1 Monat“, „14 Tage“, „31.12.2026“); else ""."""
+    n = zahlen(name)
+    return n if has_date(n) or _FRIST.search(n) else ""
+
+
 def stands(name, piece, art=""):
     """Whether the name stands in the piece, compared as ent_norm writes both (an account also without spaces)."""
     n, p = ent_norm(name), ent_norm(piece)
@@ -550,10 +672,15 @@ def check_ent(e, src):
     if n not in src:
         return None, "source"
     piece = src[n][1]
-    if not stands(name, piece, art):
+    if art == "frist":       # the name itself holds a date or a number with a unit; it stands there as said or as digits
+        fn = frist_name(name)
+        if not fn:
+            return None, "no date"
+        if not (stands(name, piece) or stands(fn, zahlen(piece))):
+            return None, "not named"
+        name = clean_name(fn)
+    elif not stands(name, piece, art):
         return None, "not named"
-    if art == "frist" and not has_date(piece):
-        return None, "no date"
     if art == "konto" and not is_account(name):
         return None, "no account"
     return {"art": art, "name": name, "norm": ent_norm(name), "part": n}, ""
@@ -585,8 +712,66 @@ def _prune(con):
         keys = json.dumps([f"k{x}" for x in gone])
         con.execute("DELETE FROM wk_edges WHERE a IN (SELECT value FROM json_each(?)) OR b IN (SELECT value FROM "
                     "json_each(?))", (keys, keys))
+        con.execute("DELETE FROM wk_entpage WHERE ent IN (SELECT value FROM json_each(?))", (json.dumps(gone),))
         con.execute("DELETE FROM wk_ent WHERE id IN (SELECT value FROM json_each(?))", (json.dumps(gone),))
     return gone
+
+
+def _verbinde(con):
+    """The fixed rule that makes a page and a point one point on the map (never the model): links whose page or
+    point went go; then every page without a point (not of the kind Antwort) gets the point of a kind in SEITE_ARTEN
+    without a page whose name or other name is the page's title or an earlier title (compared as ent_norm writes
+    them): the point of the page's own kind first, then a name before another name, then person, firma, ort, then the
+    smaller id. One page, one point. Returns how many links are new."""
+    con.execute("DELETE FROM wk_entpage WHERE page NOT IN (SELECT id FROM wb_pages) OR ent NOT IN (SELECT id FROM wk_ent)")
+    have_p = {r[0] for r in con.execute("SELECT page FROM wk_entpage")}
+    have_e = {r[0] for r in con.execute("SELECT ent FROM wk_entpage")}
+    names = {}
+    q = ",".join("?" * len(SEITE_ARTEN))
+    for r in con.execute(f"SELECT id, art, norm, alias FROM wk_ent WHERE art IN ({q}) ORDER BY id", SEITE_ARTEN):
+        if r["id"] not in have_e:
+            for how, nm in [(0, r["norm"])] + [(1, ent_norm(a)) for a in _aliases(r["alias"])]:
+                names.setdefault(nm, []).append((how, r["art"], r["id"]))
+    if not names:
+        return 0
+    olds = {}
+    for a in con.execute("SELECT name, titel FROM wb_alttitel"):
+        olds.setdefault(a["titel"], []).append(a["name"])
+    n = 0
+    for p in con.execute("SELECT id, title, art FROM wb_pages WHERE art<>? ORDER BY id", (wissensbuch.ANSWER,)).fetchall():
+        if p["id"] in have_p:
+            continue
+        found = [(art != _SEITE_ART.get(p["art"]), how, SEITE_ARTEN.index(art), eid)
+                 for t in [p["title"]] + olds.get(p["title"], []) for how, art, eid in names.get(ent_norm(t), ())
+                 if eid not in have_e]
+        if found:
+            eid = min(found)[-1]
+            con.execute("INSERT INTO wk_entpage (ent, page) VALUES (?, ?)", (eid, p["id"]))
+            have_e.add(eid)
+            n += 1
+    return n
+
+
+def _seite_von(con, kid):
+    """The page that belongs to this point, else None."""
+    r = con.execute("SELECT l.page FROM wk_entpage l JOIN wb_pages p ON p.id=l.page WHERE l.ent=?", (int(kid),)).fetchone()
+    return r[0] if r else None
+
+
+def _seiten_arten(con):
+    """{page id: kind of its point} of the pages that belong to a point."""
+    return {r[0]: r[1] for r in con.execute("SELECT l.page, e.art FROM wk_entpage l JOIN wk_ent e ON e.id=l.ent")}
+
+
+def _arten_von(con, ids, ents):
+    """{id: kind for the type rules} of these points: a point from documents its kind, a page SEITE, or (ents) the
+    kind of the point it belongs to."""
+    links = _seiten_arten(con) if ents else {}
+    own = [int(x[1:]) for x in ids if x.startswith("k") and x[1:].isdigit()]
+    out = {f"k{r[0]}": r[1] for r in con.execute("SELECT id, art FROM wk_ent WHERE id IN (SELECT value FROM json_each(?))",
+                                                  (json.dumps(own),))}
+    out.update({x: links.get(x, SEITE) for x in ids if not x.startswith("k")})
+    return out
 
 
 def _melde(uid, alt, neu, was):
@@ -674,11 +859,12 @@ def apply_ents(uid, doc, got, nodes, parts, now=None):
             places += con.execute("INSERT OR IGNORE INTO wk_ment (ent, doc, chunk) VALUES (?, ?, ?)",
                                   (eid, doc, ns[k - 1] if 0 < k <= len(ns) else k)).rowcount
             took.add(eid)
-            keyed[f"D{i + 1}"] = {"id": f"k{eid}", "title": row["name"]}
+            keyed[f"D{i + 1}"] = {"id": f"k{eid}", "title": row["name"], "kind": row["art"]}
         c["erkannt"] = len(took)
         if isinstance(links, list):
             _put_edges(con, doc, links, keyed, src, now, c["kanten"], ents=True)
         gone = _prune(con)
+        c["seiten"] = _verbinde(con)          # a page and a point of the same name: one point (fixed rule)
     return c, gone
 
 
@@ -722,7 +908,7 @@ async def ents_work_in(uid, now=None):
     why = " ".join(f"{w.replace(' ', '_')}={v}" for w, v in sorted((c["gruende"] | {
         "kante_" + w: v for w, v in k["gruende"].items()}).items()))
     print(f"wissen: wissenskarte knoten erkannt | {c['erkannt']} knoten | {c['neu']} neu | {c['verworfen']} verworfen | "
-          f"{k['neu']} verbindungen | {len(gone)} weg" + (f" | {why}" if why else ""), flush=True)
+          f"{k['neu']} verbindungen | {len(gone)} weg | {c['seiten']} mit seite" + (f" | {why}" if why else ""), flush=True)
     import live
     live.bg_done("Wissenskarte: Knoten", True, time.time() - t0)
     return "wissenskarte"
@@ -898,8 +1084,9 @@ def liste(uid, worte, k=KARTE_MOST):
             return []
         near = set()
         if con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='wb_pages'").fetchone():
-            for i in direkt:
-                near |= {int(x[1:]) for x in _rund_um(con, f"k{i}", 1, True) if x.startswith("k")}
+            how = True if con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='wk_entpage'").fetchone() else "ohne"
+            for i in direkt:        # with a page of its own: the neighbours of the page count too
+                near |= {int(x[1:]) for x in _rund_um(con, f"k{i}", 1, how) if x.startswith("k")}
         nachbarn = sorted(near - set(direkt))[:KARTE_NACHBARN]
         rows = con.execute(
             "SELECT c.id, m.ent FROM wk_ment m JOIN chunks c ON c.doc=m.doc AND c.n=m.chunk JOIN docs d ON d.id=m.doc "
@@ -919,8 +1106,10 @@ def liste(uid, worte, k=KARTE_MOST):
 
 # ---------------------------------------------------------------- the owner's click (never the model)
 def umbenennen(uid, kid, name):
-    """A point gets another name; the old one stays as other name. "ok", or why not: "ungueltig", "nicht da",
-    "gleich" (the same name), "vergeben" (another point of the kind has it: merge instead)."""
+    """A point gets another name; the old one stays as other name. A page that belongs to the point gets the same
+    title in the same step (its old title stays in wb_alttitel, so working in again finds it). "ok", or why not:
+    "ungueltig", "nicht da", "gleich" (the same name), "vergeben" (another point of the kind has it: merge instead),
+    "seite ungueltig" / "seite vergeben" (the page cannot take the name; then nothing changes)."""
     name = clean_name(name)
     if not name:
         return "ungueltig"
@@ -933,6 +1122,11 @@ def umbenennen(uid, kid, name):
             return "gleich"
         if con.execute("SELECT 1 FROM wk_ent WHERE art=? AND norm=? AND id<>?", (r["art"], n, r["id"])).fetchone():
             return "vergeben"
+        pid = _seite_von(con, r["id"])
+        if pid:
+            got = wissensbuch.retitle(con, pid, name)
+            if got not in ("ok", "gleich"):
+                return "seite " + got
         al = _aliases(r["alias"]) + ([r["name"]] if r["norm"] != n else [])
         keep, seen = [], {n}
         for a in al:
@@ -964,6 +1158,11 @@ def zusammen(uid, von, nach):
                 seen.add(ent_norm(x))
                 keep.append(x)
         con.execute("UPDATE wk_ent SET alias=? WHERE id=?", (json.dumps(keep[:ALIAS_MOST], ensure_ascii=False), nach))
+        pa, pb = _seite_von(con, von), _seite_von(con, nach)
+        con.execute("DELETE FROM wk_entpage WHERE ent=?", (von,))
+        if pa and not pb:         # the page of von goes along and takes the name of nach when it can
+            con.execute("INSERT INTO wk_entpage (ent, page) VALUES (?, ?)", (nach, pa))
+            wissensbuch.retitle(con, pa, b["name"])
         con.execute("UPDATE OR IGNORE wk_ment SET ent=? WHERE ent=?", (nach, von))
         con.execute("DELETE FROM wk_ment WHERE ent=?", (von,))
         ka, kb = f"k{von}", f"k{nach}"
@@ -977,6 +1176,14 @@ def zusammen(uid, von, nach):
     return "ok"
 
 
+def _raus(con, kid):
+    """A point leaves with its places, connections and its link to a page (the page stays)."""
+    con.execute("DELETE FROM wk_ment WHERE ent=?", (kid,))
+    con.execute("DELETE FROM wk_edges WHERE a=? OR b=?", (f"k{kid}",) * 2)
+    con.execute("DELETE FROM wk_entpage WHERE ent=?", (kid,))
+    con.execute("DELETE FROM wk_ent WHERE id=?", (kid,))
+
+
 def loeschen(uid, kid):
     """The point goes with its places and connections, and never comes back from the documents it stood in."""
     with _Db(uid) as con:
@@ -987,9 +1194,7 @@ def loeschen(uid, kid):
         docs = [x[0] for x in con.execute("SELECT DISTINCT doc FROM wk_ment WHERE ent=?", (r["id"],))]
         con.executemany("INSERT OR IGNORE INTO wk_entblock (doc, art, norm) VALUES (?, ?, ?)",
                         [(d, r["art"], n) for d in docs for n in sorted(norms)])
-        con.execute("DELETE FROM wk_ment WHERE ent=?", (r["id"],))
-        con.execute("DELETE FROM wk_edges WHERE a=? OR b=?", (f"k{r['id']}",) * 2)
-        con.execute("DELETE FROM wk_ent WHERE id=?", (r["id"],))
+        _raus(con, r["id"])
     _melde(uid, int(kid), None, "weg")
     return True
 
@@ -1005,27 +1210,50 @@ _PAGE_SET = "SELECT id FROM wb_pages"
 _NODE_SET = "SELECT id FROM wb_pages UNION ALL SELECT 'k' || id FROM wk_ent"
 
 
-def _sql(ents):
-    """(_COUNTS, _OK, _WALK) over the pages only or the pages and the points from documents: fixed text, no value."""
+# With the points (Stufe 2) a page that belongs to a point (wk_entpage) stands for that point: every connection of the
+# page counts as one of the point (em), a connection between the two goes, and the same connection twice stays once
+# (the smaller id) (ok). Only fixed text, the link table is read inside SQLite.
+_LINKED = "SELECT 'k' || l.ent FROM wk_entpage l JOIN wk_ent x ON x.id = l.ent WHERE l.page = "
+
+
+def _sql(ents, link=False):
+    """(_COUNTS, _OK, _WALK) over the pages only, the pages and the points from documents, or (link) with a page
+    that belongs to a point as that point: fixed text, no value."""
     nodes = _NODE_SET if ents else _PAGE_SET
     counts = ("e.a IN (" + nodes + ") AND e.b IN (" + nodes + ") "
               "AND e.doc IN (SELECT id FROM docs WHERE use=1 AND state='ready')")
-    walk = ("WITH RECURSIVE walk(node, d) AS (SELECT ?, 0 UNION SELECT CASE WHEN e.a = walk.node THEN e.b ELSE e.a "
-            "END, walk.d + 1 FROM walk JOIN wk_edges e ON e.a = walk.node OR e.b = walk.node WHERE walk.d < ? AND "
-            + counts + ") SELECT node, MIN(d) FROM walk GROUP BY node")
-    return counts, "ok AS (SELECT e.* FROM wk_edges e WHERE " + counts + ")", walk
+    if link:
+        ok = ("em AS (SELECT e.id, COALESCE((" + _LINKED + "e.a), e.a) AS a, COALESCE((" + _LINKED + "e.b), e.b) AS b, "
+              "e.art, e.detail, e.doc, e.part, e.dpage, e.made FROM wk_edges e WHERE " + counts + "), "
+              "ok AS (SELECT MIN(e.id) AS id, e.a, e.b, e.art, e.detail, e.doc, e.part, e.dpage, e.made FROM em e "
+              "WHERE e.a <> e.b GROUP BY e.a, e.b, e.art)")
+    else:
+        ok = "ok AS (SELECT e.* FROM wk_edges e WHERE " + counts + ")"
+    walk = ("WITH RECURSIVE " + ok + ", walk(node, d) AS (SELECT ?, 0 UNION SELECT CASE WHEN e.a = walk.node THEN e.b "
+            "ELSE e.a END, walk.d + 1 FROM walk JOIN ok e ON e.a = walk.node OR e.b = walk.node WHERE walk.d < ?) "
+            "SELECT node, MIN(d) FROM walk GROUP BY node")
+    return counts, ok, walk
 
 
 _COUNTS, _OK, _WALK = _sql(False)
-_SQL = {False: (_COUNTS, _OK, _WALK), True: _sql(True)}
+# False: pages only; True: with the points, a page with a point as that point; "ohne": with the points, before the
+# table of pages and points exists (a read-only connection of an older database)
+_SQL = {False: (_COUNTS, _OK, _WALK), True: _sql(True, True), "ohne": _sql(True)}
 WEG_MOST = 4             # steps weg() looks for at most
 _ID = re.compile(r"[0-9a-f]{12}")
 _NODE = re.compile(r"[0-9a-f]{12}|k[1-9][0-9]{0,11}")     # a page, or a point from documents
 
 
 def _rund_um(con, knoten, tiefe, ents=False):
-    """{point: fewest steps} of every point at most tiefe steps from knoten (knoten itself with 0)."""
-    return {r[0]: r[1] for r in con.execute(_SQL[ents][2], (knoten, int(tiefe)))}
+    """{point: fewest steps} of every point at most tiefe steps from knoten (knoten itself with 0); with the points a
+    page that belongs to a point stands for it."""
+    return {r[0]: r[1] for r in con.execute(_SQL[ents][2], (_haupt(con, knoten) if ents is True else knoten, int(tiefe)))}
+
+
+def _haupt(con, knoten):
+    """The point a page belongs to (wk_entpage), else the id itself."""
+    r = con.execute(_LINKED + "?", (knoten,)).fetchone() if _ID.fullmatch(knoten) else None
+    return r[0] if r else knoten
 
 
 def _there(con, ids, ents):
@@ -1049,7 +1277,7 @@ def rund_um(uid, knoten, tiefe=1):
     with _Db(uid) as con:
         if not _there(con, [knoten], ents):
             return {}
-        return _rund_um(con, knoten, tiefe, ents)
+        return _rund_um(con, knoten, tiefe, ents)     # a page with a point: around its point
 
 
 def weg(uid, a, b, tiefe=WEG_MOST):
@@ -1060,10 +1288,12 @@ def weg(uid, a, b, tiefe=WEG_MOST):
     if not all(isinstance(x, str) and _NODE.fullmatch(x) for x in (a, b)) or not os.path.exists(documents.db_path(uid)):
         return None
     ents = ents_allowed(uid)
-    counts = _SQL[ents][0]
+    ok = _SQL[ents][1]
     with _Db(uid) as con:
         if _there(con, list({a, b}), ents) < len({a, b}):
             return None
+        if ents:                                          # a page with a point: the way of its point
+            a, b = _haupt(con, a), _haupt(con, b)
         if a == b:
             return {"pages": [a], "edges": []}
         dist = _rund_um(con, a, tiefe, ents)
@@ -1071,8 +1301,8 @@ def weg(uid, a, b, tiefe=WEG_MOST):
             return None
         pages, edges, here = [b], [], b
         while here != a:                                  # back from b, one step nearer to a each time
-            r = con.execute("SELECT e.id, CASE WHEN e.a=? THEN e.b ELSE e.a END AS o FROM wk_edges e "
-                            "WHERE (e.a=? OR e.b=?) AND " + counts + " ORDER BY e.id", (here, here, here)).fetchall()
+            r = con.execute("WITH " + ok + " SELECT e.id, CASE WHEN e.a=? THEN e.b ELSE e.a END AS o FROM ok e "
+                            "WHERE e.a=? OR e.b=? ORDER BY e.id", (here, here, here)).fetchall()
             step = min(((x["o"], x["id"]) for x in r if dist.get(x["o"]) == dist[here] - 1))
             edges.append(step[1])
             pages.append(step[0])
@@ -1088,16 +1318,24 @@ def view(uid, um="", tiefe=2, doc="", art=""):
     points and at most VIEW_EDGES + 1 connections come to Python."""
     tiefe = 1 if tiefe == 1 else 2
     ents = ents_allowed(uid)
-    counts, ok, _ = _SQL[ents]
+    ok = _SQL[ents][1]
     art = art if ents and art in ENT_ARTEN else ""
     with _Db(uid) as con:
         docs = wissensbuch._own_ready(con)
         pages = {r["id"]: dict(r, ent="") for r in con.execute("SELECT id, title, art FROM wb_pages")}
         sents = {r["page"]: r["n"] for r in con.execute("SELECT page, COUNT(*) AS n FROM wb_sent GROUP BY page")}
+        seite = {}
         if ents:      # the points from documents: their name, kind and how often they stand in documents
             pages.update({r["id"]: {"id": r["id"], "title": r["name"], "art": ENT_NAMEN[r["art"]][0], "ent": r["art"]}
                           for r in con.execute("SELECT 'k' || id AS id, name, art FROM wk_ent") if r["art"] in ENT_NAMEN})
             sents.update({r[0]: r[1] for r in con.execute("SELECT 'k' || ent, COUNT(*) FROM wk_ment GROUP BY ent")})
+            # a page that belongs to a point is that point on the map (square, „mit Seite“)
+            for r in con.execute("SELECT l.page, 'k' || l.ent FROM wk_entpage l JOIN wk_ent e ON e.id=l.ent "
+                                 "JOIN wb_pages p ON p.id=l.page"):
+                if r[1] in pages:
+                    seite[r[1]] = r[0]
+                    pages.pop(r[0], None)
+            um = _haupt(con, um) if um else um
         # connections per point, in the order a point first appears (as the walk over all rows by id counted them)
         deg = {r[0]: r[1] for r in con.execute(
             "WITH " + ok + " SELECT x, COUNT(*) FROM (SELECT a AS x, id FROM ok UNION ALL SELECT b, id FROM ok) "
@@ -1109,12 +1347,12 @@ def view(uid, um="", tiefe=2, doc="", art=""):
             dist = _rund_um(con, um, tiefe, ents)
             pick = [um] + [p for d in range(1, tiefe + 1) for p in sorted((x for x, n in dist.items() if n == d), key=rank)]
         elif doc and doc in docs:
-            mine = {x for r in con.execute("SELECT e.a, e.b FROM wk_edges e WHERE e.doc=? AND " + counts, (doc,)) for x in r}
+            mine = {x for r in con.execute("WITH " + ok + " SELECT e.a, e.b FROM ok e WHERE e.doc=?", (doc,)) for x in r}
             pick = sorted(mine, key=rank)
         elif art:     # the points of one kind first (also without a connection), then their neighbours
             own = sorted((x for x, p in pages.items() if p["ent"] == art), key=rank)
-            near = {x for r in con.execute("SELECT e.a, e.b FROM wk_edges e WHERE (e.a IN (SELECT value FROM json_each(?)) "
-                                           "OR e.b IN (SELECT value FROM json_each(?))) AND " + counts,
+            near = {x for r in con.execute("WITH " + ok + " SELECT e.a, e.b FROM ok e WHERE e.a IN (SELECT value FROM "
+                                           "json_each(?)) OR e.b IN (SELECT value FROM json_each(?))",
                                            (json.dumps(own[:VIEW_NODES]),) * 2) for x in r} - set(own)
             pick = own + sorted(near, key=rank)
         else:
@@ -1124,8 +1362,8 @@ def view(uid, um="", tiefe=2, doc="", art=""):
         only_doc = bool(doc) and not um
         ks = json.dumps(keep)                          # the chosen ids as one parameter (json_each), never in the SQL
         edges = [dict(r) for r in con.execute(
-            "SELECT e.* FROM wk_edges e WHERE e.a IN (SELECT value FROM json_each(?)) AND e.b IN (SELECT value FROM "
-            "json_each(?)) AND " + counts + " AND (? = 0 OR e.doc = ?) ORDER BY e.id LIMIT ?",
+            "WITH " + ok + " SELECT e.* FROM ok e WHERE e.a IN (SELECT value FROM json_each(?)) AND e.b IN (SELECT value "
+            "FROM json_each(?)) AND (? = 0 OR e.doc = ?) ORDER BY e.id LIMIT ?",
             (ks, ks, int(only_doc), doc, VIEW_EDGES + 1))]
         done = {r[0] for r in con.execute("SELECT doc FROM wk_docs")}
         booked = {r[0] for r in con.execute("SELECT doc FROM wb_docs WHERE state='ok'")}
@@ -1133,7 +1371,7 @@ def view(uid, um="", tiefe=2, doc="", art=""):
     cut = cut or len(edges) > VIEW_EDGES
     edges = edges[:VIEW_EDGES]
     return {"nodes": [{"id": p, "title": pages[p]["title"], "art": pages[p]["art"], "ent": pages[p]["ent"],
-                       "deg": deg.get(p, 0), "n": sents.get(p, 0)} for p in keep],
+                       "deg": deg.get(p, 0), "n": sents.get(p, 0), "seite": seite.get(p, "")} for p in keep],
             "edges": [{"id": e["id"], "a": e["a"], "b": e["b"], "art": e["art"], "cause": ARTEN[e["art"]][2],
                        "detail": e["detail"] or "", "doc": e["doc"], "page": e["dpage"] or 0,
                        "name": docs[e["doc"]]["title"] or docs[e["doc"]]["name"]} for e in edges if e["art"] in ARTEN],
@@ -1202,8 +1440,10 @@ def counts(uid):
         live = set(wissensbuch._own_ready(con))
         kinds = {r[0]: r[1] for r in con.execute("SELECT art, COUNT(*) FROM wk_ent GROUP BY art")}
         mine = {r[0] for r in con.execute("SELECT doc FROM wk_entdocs")}
+        linked = con.execute("SELECT COUNT(*) FROM wk_entpage").fetchone()[0]
     return {"verbindungen": e, "punkte": n, "warten": len((booked & live) - done),
-            "knoten": {k: kinds.get(k, 0) for k in ENT_ARTEN}, "knoten_warten": len((booked & live) - mine)}
+            "knoten": {k: kinds.get(k, 0) for k in ENT_ARTEN}, "knoten_warten": len((booked & live) - mine),
+            "mit_seite": linked}
 
 
 def _suche_live():
@@ -1216,8 +1456,8 @@ def for_live():
     if not admin_on():
         return {"on": False}
     if _live["d"] is not None and time.time() - _live["at"] < LIVE_CACHE:
-        return dict(_live["d"], running=bool(_running), suche=_suche_live())
-    e = n = w = profs = kw = 0
+        return dict(_live["d"], running=bool(_running), suche=_suche_live(), nacht=dict(NACHT))
+    e = n = w = profs = kw = ms = 0
     kinds = dict.fromkeys(ENT_ARTEN, 0)
     on = ents_on()
     for uid in profiles.user_ids():
@@ -1230,11 +1470,12 @@ def for_live():
         w += c["warten"]
         if on and ents_allowed(uid):
             kw += c["knoten_warten"]
+            ms += c["mit_seite"]
             for k, v in c["knoten"].items():
                 kinds[k] += v
     _live.update(at=time.time(), d={"on": True, "verbindungen": e, "punkte": n, "warten": w, "profile": profs,
-                                    "knoten": kinds if on else {}, "knoten_warten": kw})
-    return dict(_live["d"], running=bool(_running), suche=_suche_live())
+                                    "knoten": kinds if on else {}, "knoten_warten": kw, "mit_seite": ms})
+    return dict(_live["d"], running=bool(_running), suche=_suche_live(), nacht=dict(NACHT))
 
 
 def _need(uid):
@@ -1310,7 +1551,9 @@ def points(request: Request, prof=Depends(own_profile)):
 
 _SAY = {"ungueltig": (400, "name: 2 to 80 characters, no link, markup or command"), "nicht da": (404, "no such point"),
         "gleich": (400, "the same"), "vergeben": (409, "another point of this kind has this name: merge instead"),
-        "art": (400, "only points of the same kind")}
+        "art": (400, "only points of the same kind"),
+        "seite ungueltig": (400, "the page of this point takes 2 to 60 characters without quotes, link, markup or command"),
+        "seite vergeben": (409, "another page has this title")}
 
 
 @router.post("/api/profile/wissenskarte/knoten/{kid}/name", dependencies=[Depends(assistant)])
@@ -1400,14 +1643,30 @@ def _ent_clear(uid):
     with _Db(uid) as con:
         ids = [r[0] for r in con.execute("SELECT id FROM wk_ent ORDER BY id")]
         con.execute("DELETE FROM wk_edges WHERE a LIKE 'k%' OR b LIKE 'k%'")
-        for t in ("wk_ent", "wk_ment", "wk_entdocs", "wk_entblock"):
+        for t in ("wk_ent", "wk_ment", "wk_entdocs", "wk_entblock", "wk_entpage"):
             con.execute(f"DELETE FROM {t}")
     for x in ids:
         _melde(uid, x, None, "weg")
     print(f"wissen: wissenskarte knoten geleert | {len(ids)} knoten | daten loeschen", flush=True)
 
 
+def _seiten_weg(con):
+    """wissensbuch.SEITEN_WEG: a page left the book, its link to a point goes in the same step."""
+    if con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='wk_entpage'").fetchone():
+        con.execute("DELETE FROM wk_entpage WHERE page NOT IN (SELECT id FROM wb_pages)")
+
+
+def _mit_punkt(con, uid, pid):
+    """wissensbuch.SEITE_MIT_PUNKT: the page belongs to a point the profile sees (then the point renames it)."""
+    return ents_allowed(uid) and bool(con.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='wk_entpage'").fetchone()) and bool(con.execute(
+            "SELECT 1 FROM wk_entpage l JOIN wk_ent e ON e.id=l.ent WHERE l.page=?", (pid,)).fetchone())
+
+
 features.OWN["wissenskarte"] = (_own_count, _own_clear)
+for _fn, _list in ((_seiten_weg, wissensbuch.SEITEN_WEG), (_mit_punkt, wissensbuch.SEITE_MIT_PUNKT)):
+    if _fn not in _list:
+        _list.append(_fn)
 features.OWN["wissensknoten"] = (_ent_count, _ent_clear)
 if forget not in documents.GONE:     # deleted or left-out documents: their connections go at once (documents.on_gone)
     documents.GONE.append(forget)

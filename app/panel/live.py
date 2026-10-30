@@ -1266,6 +1266,14 @@ def _dungeon_musik(m):
             + (f", heute {m['nervt']}× Nervt" if m.get("nervt") else ""))
 
 
+def _kartennacht(n):
+    """Nachtprüfung der Wissenskarte (wissenskarte.nachtpruefung): connections against the type rules and deadlines
+    without a number taken out since the start (numbers only)."""
+    if not n.get("laeufe"):
+        return ""
+    return f" · nachts {n.get('typ', 0)} Verbindungen gegen Typregeln, {n.get('frist', 0)} Fristen ohne Zahl entfernt"
+
+
 def _kartensuche(s):
     """Karte hilft der Suche (wissenskarte.liste): on, searches it helped and pieces it named, failures (numbers only)."""
     if not s.get("on"):
@@ -2299,7 +2307,9 @@ def snapshot(view="admin", now=None):
             x["sub"] = (f"{wkk.get('verbindungen', 0)} Verbindungen · {wkk.get('punkte', 0)} Punkte · {wkk.get('warten', 0)} Dokumente warten"
                         + f" · {wkk.get('profile', 0)} Profile"
                         + (f" · {sum(kn.values())} Knoten" + (f" ({kinds})" if kinds else "")
-                           + f" · {wkk.get('knoten_warten', 0)} Dokumente warten auf Knoten" if kn else "")
+                           + f" · {wkk.get('knoten_warten', 0)} Dokumente warten auf Knoten"
+                           + f" · {wkk.get('mit_seite', 0)} mit Seite" if kn else "")
+                        + _kartennacht(wkk.get("nacht") or {})
                         + _kartensuche(wkk.get("suche") or {})
                         + (" · arbeitet" if wkk.get("running") else ""))
         if x["id"] == "wmessen" and wms.get("on"):    # Wissen messen: running or the newest run's numbers, never a title

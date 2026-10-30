@@ -18481,6 +18481,16 @@
         }
       }
     },
+    "Seite umbenennen geht im Panel unter Wissensbuch → Seiten, eine Seite mit Punkt unter Wissensbuch → Karte.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renaming a page is in the panel under Knowledge book → Pages, a page with a point under Knowledge book → Map."
+          }
+        }
+      }
+    },
     "Umbenennen und Zusammenführen gehen im Panel unter Wissensbuch → Karte.": {
       "localizations": {
         "en": {
