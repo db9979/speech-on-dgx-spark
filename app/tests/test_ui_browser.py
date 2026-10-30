@@ -22,7 +22,9 @@ except ImportError:  # the panel venv on the Spark has no browser
 def chromium():
     if os.environ.get("SPEECH_SPARK_CHROMIUM"):
         return os.environ["SPEECH_SPARK_CHROMIUM"]
-    found = sorted(glob.glob("/opt/pw-browsers/chromium-*/chrome-linux/chrome"))
+    # older Playwright builds unpack to chrome-linux, newer ones (cloud containers since 2026-10) to chrome-linux64
+    found = sorted(glob.glob("/opt/pw-browsers/chromium-*/chrome-linux/chrome")
+                   + glob.glob("/opt/pw-browsers/chromium-*/chrome-linux64/chrome"))
     return found[-1] if found else None   # None: Playwright's own download (GitHub workflow)
 
 
