@@ -36,6 +36,10 @@ that the person took out of where it put it is a correction (correct, kept as �
     gets the card „Wohin gehört diese Mail?“ with the sender's usual folders, the inbox and „Anderer Ordner …“
 Only headers (sender address, Message-ID) are compared; nothing goes to the model; the journal carries fixed words and
 numbers only.
+Stufe 3 (plan mail-lernen 7a): the tab Regeln and the iPhone app show „Korrekturen (30 Tage)“ (fix_list, fix_state)
+with „Rückgängig“ (undo_fix: takes back the exception and the pause one correction made, never moves a mail), per rule
+„N genommen · M korrigiert“, the exceptions to remove one by one (drop_except) and „Wieder an“ for a paused rule (add
+with on; a pause counts only the corrections after the last „Wieder an“, _spend).
 
 Mail-Statistik (Dominik 2026-10-21 „6“): stats() counts who writes most in 30 days and the mails a week, from the
 listing the Mail-Vorrat keeps; the tab Regeln shows it with „Regel …“ per sender.
@@ -87,6 +91,7 @@ FIX_DAYS = 30            # corrections older than this do not count and go
 FIX_WEIGHT = 3           # a correction with a goal counts this often in learn (one is enough for the card)
 FIX_MAX = 500            # corrections kept per profile
 EXCEPT_MAX = 50          # exceptions per rule
+FIX_SHOW = 100           # corrections shown on the tab Regeln (newest first)
 WOHIN_MAX = 3            # folder buttons on the card „Wohin gehört diese Mail?“
 FREEMAIL = ("gmail.com", "googlemail.com", "gmx.de", "gmx.net", "gmx.at", "gmx.ch", "web.de", "t-online.de", "icloud.com",
             "me.com", "mac.com", "outlook.com", "outlook.de", "hotmail.com", "hotmail.de", "live.com", "live.de", "yahoo.com",
@@ -94,9 +99,10 @@ FREEMAIL = ("gmail.com", "googlemail.com", "gmx.de", "gmx.net", "gmx.at", "gmx.c
 _lock = threading.Lock()
 _last = {}               # uid -> when its rules last ran
 _sug_day = {}            # uid -> the night its rule suggestions were looked for
-_count = DayCounter(genommen=0, laeufe=0, vorschlaege=0, nacht=0, statistik=0, zurueck=0, korrektur=0, ausnahme=0, pausiert=0)
+_count = DayCounter(genommen=0, laeufe=0, vorschlaege=0, nacht=0, statistik=0, zurueck=0, korrektur=0, ausnahme=0, pausiert=0,
+                    rueckgaengig=0)
 # per day: mails taken, looks, rule hints, night suggestions, statistics shown, mails the person put back, corrections,
-# exceptions made by them, rules paused by them
+# exceptions made by them, rules paused by them, corrections taken back on the tab Regeln
 
 
 def _file(uid):
@@ -182,8 +188,8 @@ def add(uid, body, rid=""):
             if not old:
                 raise LookupError("no such rule")
             old.update(r)
-            if r["on"]:
-                old.pop("paused", None)      # switched on again: the pause of the corrections is over
+            if r["on"] and old.pop("paused", None):     # switched on again: the pause of the corrections is over,
+                _spend(d, rid)                          # the corrections before it no longer count for the next one
             r = old
         else:
             if len(d["rules"]) >= MAX_RULES:
@@ -312,7 +318,13 @@ def public(uid):
         old = []
     sug = [{k: x.get(k, 0) for k in ("id", "account", "from", "folder", "n", "inbox")} | {"box": names.get(x["account"], "")}
            for x in _fresh(d["suggest"]) if x["account"] in names and x.get("kind", "fix") == "fix"]
-    return {"rules": rules, "tidy": old, "accounts": [{"id": k, "name": v} for k, v in names.items()], "suggest": sug}
+    out = {"rules": rules, "tidy": old, "accounts": [{"id": k, "name": v} for k, v in names.items()], "suggest": sug}
+    if features.allowed("maillearn", uid):      # Sortieren aus Korrekturen lernen, Stufe 3: „Korrekturen (30 Tage)“
+        out.update(learn=True, fixes=fix_list(d, names))
+        cut = time.time() - FIX_DAYS * 86400
+        for r in rules:
+            r["fixed"] = sum(1 for f in d["fixes"] if f.get("rid") == r["id"] and f["t"] > cut and not f.get("undone"))
+    return out
 
 
 # ---------------------------------------------------------------- deciding
@@ -511,7 +523,8 @@ def correct(uid, aid, fixes, usual=None, now=None):
             r = rules.get(f["rid"]) if f["rid"] else None
             if r is None:
                 continue
-            mine = [y for y in d["fixes"] if y.get("rid") == r["id"] and now - y["t"] < FIX_DAYS * 86400]
+            mine = [y for y in d["fixes"] if y.get("rid") == r["id"] and now - y["t"] < FIX_DAYS * 86400
+                    and not y.get("undone") and not y.get("spent")]
             exc = r.get("except") or []
             if f["from"] and sum(1 for y in mine if y.get("from") == f["from"]) >= FIX_EXCEPT \
                     and f["from"] not in exc and len(exc) < EXCEPT_MAX:
@@ -520,6 +533,7 @@ def correct(uid, aid, fixes, usual=None, now=None):
                 excepted += 1
             if len(mine) >= FIX_PAUSE and r.get("on", True):
                 r["on"], r["paused"] = False, now
+                f["pause"] = True
                 paused.append((r["id"], len(mine)))
         d["fixes"] = d["fixes"][-FIX_MAX:]
         _save(uid, d)
@@ -616,9 +630,102 @@ def fixed_senders(uid, aid):
         return {}
     out = {}
     for x in load(uid)["fixes"]:
-        if x.get("aid") == aid and x.get("by") == "tidy" and x.get("from"):
+        if x.get("aid") == aid and x.get("by") == "tidy" and x.get("from") and not x.get("undone"):
             out[x["from"]] = max(out.get(x["from"], 0), x["t"])
     return out
+
+
+def _spend(d, rid):
+    """A paused rule switched on again: its corrections so far count no more for the next pause (shown still)."""
+    for y in d["fixes"]:
+        if y.get("rid") == rid:
+            y["spent"] = True
+
+
+def fix_state(f, rule):
+    """What became of one correction, by fixed rules: "zurueck" taken back on the tab Regeln, "wartet" in „Falsch sortiert“
+    waiting for its card, "pausiert" it paused its rule (still paused), "ausnahme" its sender is the rule's exception
+    (still), else "bleibt": the mail itself is never moved again."""
+    if f.get("undone"):
+        return "zurueck"
+    if f.get("how") == "wrong" and not f.get("nach"):
+        return "wartet"
+    if rule and f.get("pause") and rule.get("on") is False and rule.get("paused"):
+        return "pausiert"
+    if rule and f.get("exc") and f.get("from") in (rule.get("except") or ()):
+        return "ausnahme"
+    return "bleibt"
+
+
+def fix_list(d, names):
+    """„Korrekturen (30 Tage)“ on the tab Regeln and in the iPhone app, newest first, at most FIX_SHOW: sender, from where
+    to where ("" = „Falsch sortiert“, "INBOX"), which rule (its words) or „Postfach aufräumen“, when, the state and
+    whether „Rückgängig“ has anything to take back. Texts of the profile's own mailbox, shown escaped."""
+    rules = {r["id"]: r for r in d["rules"]}
+    out = []
+    for f in reversed(d["fixes"][-FIX_SHOW:]):
+        r = rules.get(f.get("rid") or "")
+        out.append({"id": f.get("id", ""), "from": f.get("from", ""), "von": f.get("von", ""), "nach": f.get("nach", ""),
+                    "how": f.get("how", ""), "by": f.get("by", "rule"), "rid": f.get("rid", "") if r else "",
+                    "rule": _rule_words(r) if r else "", "t": f["t"], "box": names.get(f.get("aid"), ""),
+                    "state": fix_state(f, r), "undo": not f.get("undone")})
+    return out
+
+
+def undo_fix(uid, fid):
+    """„Rückgängig“ at a correction (tab Regeln, iPhone): takes back what it made, never a mail move: the sender's exception
+    it set (if still there), the pause it caused (if the rule is still paused), and it counts no more (pause, „Postfach
+    aufräumen“ asking). The mail itself stays where the person put it and is still never moved again. The open card of
+    that mail („Wohin …?“) or of that pause closes. LookupError: no such correction; ValueError: taken back already."""
+    who = profiles.log_name(profiles.by_id(uid))
+    took = []
+    with _lock:
+        d = load(uid)
+        f = next((x for x in d["fixes"] if x.get("id") == fid), None)
+        if f is None:
+            print(f"mail: rule correction undo refused, not found | {who}", flush=True)
+            raise LookupError("no such correction")
+        if f.get("undone"):
+            print(f"mail: rule correction undo refused, done already | {who}", flush=True)
+            raise ValueError("Diese Korrektur ist schon zurückgenommen.")
+        r = next((x for x in d["rules"] if f.get("rid") and x["id"] == f["rid"]), None)
+        if r is not None and f.get("exc") and f.get("from") in (r.get("except") or []):
+            r["except"] = [a for a in r["except"] if a != f["from"]]
+            took.append("exception")
+        if r is not None and f.get("pause") and r.get("on") is False and r.get("paused"):
+            r["on"] = True
+            r.pop("paused", None)
+            _spend(d, r["id"])
+            took.append("pause")
+        f["undone"] = int(time.time())
+        gone = [x["id"] for x in d["suggest"] if (x.get("kind") == "wohin" and x.get("mid") == f["mid"])
+                or ("pause" in took and x.get("kind") == "pause" and x.get("rid") == f.get("rid"))]
+        d["suggest"] = [x for x in d["suggest"] if x["id"] not in gone]
+        _save(uid, d)
+    _cards_done(uid, gone, "erledigt")
+    _count.bump("rueckgaengig")
+    print(f"mail: rule correction undone | {len(took)} | {who}", flush=True)
+    return {"took": took}
+
+
+def drop_except(uid, rid, sender):
+    """A sender off a rule's exceptions on the tab Regeln (the rule takes its mails again from now on; no mail moves).
+    LookupError: no such rule; ValueError: the sender is no exception of it."""
+    who = profiles.log_name(profiles.by_id(uid))
+    sender = str(sender or "").strip().lower()[:200]
+    with _lock:
+        d = load(uid)
+        r = next((x for x in d["rules"] if x["id"] == rid), None)
+        if r is None:
+            print(f"mail: rule exception removed refused, not found | {who}", flush=True)
+            raise LookupError("no such rule")
+        if not sender or sender not in (r.get("except") or []):
+            print(f"mail: rule exception removed refused, not there | {who}", flush=True)
+            raise ValueError("Dieser Absender ist keine Ausnahme der Regel.")
+        r["except"] = [a for a in r["except"] if a != sender]
+        _save(uid, d)
+    print(f"mail: rule exception removed | 1 | {who}", flush=True)
+    return True
 
 
 def _place(uid, aid, mid, dst):
@@ -1246,7 +1353,7 @@ def stats(uid, now=None):
 
 def for_live():
     """Live (Post): profiles with rules, rules in all, mails the rules took today, mails put back that a rule leaves
-    alone now, corrections today, exceptions and rules paused by corrections; numbers only."""
+    alone now, corrections today, exceptions and rules paused by corrections, corrections taken back today; numbers only."""
     c = _count.counts()
     profs = rules = exc = paused = 0
     for uid in profiles.user_ids():
@@ -1259,7 +1366,8 @@ def for_live():
     return {"profiles": profs, "rules": rules, "taken": c.get("genommen", 0), "back": c.get("zurueck", 0), "hints": c.get("vorschlaege", 0),
             "night": c.get("nacht", 0), "stats": c.get("statistik", 0),
             # Sortieren aus Korrekturen lernen: on, corrections today, exceptions and paused rules in all (numbers only)
-            "learn": features.admin_on("maillearn"), "fixes": c.get("korrektur", 0), "excepts": exc, "paused": paused}
+            "learn": features.admin_on("maillearn"), "fixes": c.get("korrektur", 0), "excepts": exc, "paused": paused,
+            "undone": c.get("rueckgaengig", 0)}
 
 
 _register()

@@ -726,7 +726,8 @@ SEITEN = {
                "die Person so eine Mail woandershin, etwa zurück in den Posteingang, fasst kein Sortierer sie wieder an. Mit „Sortieren aus "
                "Korrekturen lernen“ zählt das als Korrektur (mailregeln.correct, auch der Ordner „Falsch sortiert“): der Absender "
                "wird Ausnahme der Regel, nach {mailregeln.FIX_PAUSE} Korrekturen in {mailregeln.FIX_DAYS} Tagen pausiert sie, "
-               "eine Karte fragt; nur Kopfzeilen, nie das Modell. contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich "
+               "eine Karte fragt; nur Kopfzeilen, nie das Modell. Unter E-Mail → Regeln stehen die Korrekturen (mailregeln.fix_list) "
+               "mit „Rückgängig“ (mailregeln.undo_fix nimmt Ausnahme und Pause zurück, verschiebt nie eine Mail). contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich "
                "inzwischen geändert, wird nichts überschrieben.",
                "A mail goes out only after the preview sheet and the tap on Send (senden.preview, senden.send, at most "
                "{senden.MAX_DAY} a day). \"Send later\" keeps it sealed until its time (senden.later); if a sending broke "
@@ -736,7 +737,8 @@ SEITEN = {
                "into the inbox for instance, no sorter touches it again. With \"Learn sorting from corrections\" that is a correction "
                "(mailregeln.correct, also the folder \"Falsch sortiert\"): the sender becomes an exception of the rule, after "
                "{mailregeln.FIX_PAUSE} corrections in {mailregeln.FIX_DAYS} days it pauses, a card asks; headers only, never the "
-               "model. contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is "
+               "model. Under E-mail → Rules the corrections are listed (mailregeln.fix_list) with \"Undo\" (mailregeln.undo_fix "
+               "takes back exception and pause, never moves a mail). contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is "
                "overwritten."),
               ("ok", ("fertig", "done"), "s11")),
             S("s10", "schritt", ("Tür für Apps", "Door for apps"),

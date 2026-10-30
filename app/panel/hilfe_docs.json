@@ -3645,7 +3645,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ektur (mailregeln.correct, auch der Ordner „Falsch sortiert“): der Absender wird Ausnahme der Regel, nach 3 Korrekturen in 30 Tagen pausiert sie, eine Karte fragt; nur Kopfzeilen, nie das Modell. contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich inzwischen geändert, wird nichts überschrieben. 10. Tür für Apps: kalenderserver.login weist fremde Webseiten ab, sperrt falsche Passwörter wie eine PIN, hält Mein Notaus und den Schalter ein und zählt die Lastgrenze. Danach sieht die App nur die Spark-Kalender und das Adressbuch „Auf dem Spark“ des Profils; kontaktserver._write nimmt je Karte eine vCard, höchstens 2000, und schreibt nur mit „Kontakte ändern“. 11. Nur eigene Daten: Kein Profil sieht die Post, Termine oder Kontakte eines anderen, außer einem Kalender, den der Besitzer teilt."
+"text": "ektur (mailregeln.correct, auch der Ordner „Falsch sortiert“): der Absender wird Ausnahme der Regel, nach 3 Korrekturen in 30 Tagen pausiert sie, eine Karte fragt; nur Kopfzeilen, nie das Modell. Unter E-Mail → Regeln stehen die Korrekturen (mailregeln.fix_list) mit „Rückgängig“ (mailregeln.undo_fix nimmt Ausnahme und Pause zurück, verschiebt nie eine Mail). contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich inzwischen geändert, wird nichts überschrieben. 10. Tür für Apps: kalenderserver.login weist fremde Webseiten ab, sperrt falsche Passwörter wie eine PIN, hält Mein Notaus und den Schalter ein und zählt die Lastgrenze. Danach sieht die App nur die Spark-Kalender und das Adressbuch „Auf dem Spark“ des Profils; kontaktserver._write nimmt je Karte eine vCard, höchstens 2000, und schreibt nur mit „Kontakte ändern“. 11. Nur eigene Daten: Kein Profil sieht die Post, Termine oder Kontakte eines anderen, außer einem Kalender, den der Besitzer teilt."
 },
 {
 "lang": "de",
@@ -9790,6 +9790,22 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "schiebt genau diese Mail (Message-ID) aus „Falsch sortiert“. Die Knöpfe laufen über vorgaenge.act (Anmeldung, nur eigene Karte, CSRF, Größenlimit, Rate-Limit, Notaus); das iPhone zeigt mehr als drei Knöpfe unter „Mehr“. Gespeichert in mail-regeln.json (Korrekturen 30 Tage, höchstens 500: Message-ID, Absender, Ordner). Log nur mit festen Wörtern und Zahlen (mail: rule correction | folder|inbox|wrong|placed | N, mail: rule exception | N, mail: rule paused | N, mail: rule wrong folder | made); Live: „Sortieren aus Korrekturen lernen an: heute N Korrekturen, M Ausnahmen, K Regeln pausiert“."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Korrekturen ansehen (V01.1.267, Plan `mail-lernen/plan.md` Stufe 3, 7a)",
+"text": "Korrekturen ansehen (V01.1.267, Plan mail-lernen/plan.md Stufe 3, 7a): Nur mit „Sortieren aus Korrekturen lernen“ zeigt E-Mail → Regeln den Bereich „Korrekturen (30 Tage)“ (mailregeln.fix_list, neueste zuerst, höchstens FIX_SHOW = 100): je Korrektur Absender, von → nach („Falsch sortiert“, Posteingang oder Ordner), welche Regel oder „Postfach aufräumen“, Tag und Stand nach festen Regeln (mailregeln.fix_state: wartet, Ausnahme gesetzt, Regel pausiert, nicht wieder verschoben, zurückgenommen). „Rückgängig“ (POST /api/profile/mail/rules/fixes/{id}/undo, mailregeln.undo_fix) nimmt die Ausnahme und die Pause zurück, die aus dieser Korrektur entstanden, und zählt sie nicht mehr (Pause, Fragen von „Postfach aufräumen“); die Mail selbst wird nicht verschoben und bleibt nie wieder angefasst; die offene Karte „Wohin gehört diese Mail?“ oder „Regel pausiert“ schließt. „Regel ändern“ öffnet die Regel. Jede Regel zeigt „N genommen (Monat) · M korrigiert (30 Tage)“ mit Balken (Zähler month und fixed, keine neue Zählung), ihre Ausnahmen einzeln zum Entfernen (POST /api/profile/mail/rules/{rid}/except, mailregeln.drop_except) und, wenn pausiert, „Wieder an“ (die Regel mit on gesichert; danach zähl"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Korrekturen ansehen (V01.1.267, Plan `mail-lernen/plan.md` Stufe 3, 7a)",
+"text": "en für die nächste Pause nur neue Korrekturen). Beide Endpunkte: Anmeldung, Profilbindung, CSRF, Größenlimit, Rate-Limit postordnen, Schalter Mails ordnen und „Sortieren aus Korrekturen lernen“, Gäste nie; Logzeilen mail: rule correction undone | N |, mail: rule exception removed | 1 | und je Ablehnung eine Zeile, nie Absender oder Ordner. Live zählt „zurückgenommen“ (nur die Zahl). iPhone: dieselbe Liste unter E-Mail → Regeln mit „Rückgängig“, „Regel ändern“, Zählern, Ausnahmen zum Entfernen und „Wieder an“ (Wischen); Android über die Panel-Ansicht."
 },
 {
 "lang": "de",
@@ -20533,7 +20549,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ys it pauses, a card asks; headers only, never the model. contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is overwritten. 10. Door for apps: kalenderserver.login refuses other sites' web pages, locks wrong passwords like a PIN, keeps My emergency stop and the switch and counts the rate limit. Then the app sees only the profile's Spark calendars and the address book \"On the Spark\"; kontaktserver._write takes one vCard per card, at most 2000, and writes only with \"Edit contacts\". 11. Own data only: No profile sees another one's mail, appointments or contacts, except a calendar its owner shares."
+"text": "ys it pauses, a card asks; headers only, never the model. Under E-mail → Rules the corrections are listed (mailregeln.fix_list) with \"Undo\" (mailregeln.undo_fix takes back exception and pause, never moves a mail). contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is overwritten. 10. Door for apps: kalenderserver.login refuses other sites' web pages, locks wrong passwords like a PIN, keeps My emergency stop and the switch and counts the rate limit. Then the app sees only the profile's Spark calendars and the address book \"On the Spark\"; kontaktserver._write takes one vCard per card, at most 2000, and writes only with \"Edit contacts\". 11. Own data only: No profile sees another one's mail, appointments or contacts, except a calendar its owner shares."
 },
 {
 "lang": "en",
@@ -26462,6 +26478,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": " Notaus); the iPhone shows more than three buttons under \"More\". Kept in mail-regeln.json (corrections 30 days, at most 500: Message-ID, sender, folders). Logs with fixed words and numbers only (mail: rule correction | folder|inbox|wrong|placed | N, mail: rule exception | N, mail: rule paused | N, mail: rule wrong folder | made); Live: \"Sortieren aus Korrekturen lernen an: heute N Korrekturen, M Ausnahmen, K Regeln pausiert\"."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "See the corrections (V01.1.267, plan `mail-lernen/plan.md` stage 3, 7a)",
+"text": "See the corrections (V01.1.267, plan mail-lernen/plan.md stage 3, 7a): Only with \"Learn sorting from corrections\", E-mail → Rules shows the section \"Corrections (30 days)\" (mailregeln.fix_list, newest first, at most FIX_SHOW = 100): per correction the sender, from → to (\"Falsch sortiert\", inbox or folder), which rule or \"Inbox tidying\", the day and the state by fixed rules (mailregeln.fix_state: waiting, exception set, rule paused, not moved again, taken back). \"Undo\" (POST /api/profile/mail/rules/fixes/{id}/undo, mailregeln.undo_fix) takes back the exception and the pause this correction made and counts it no more (pause, questions of \"Inbox tidying\"); the mail itself is not moved and is still never touched again; the open card \"Where does this mail belong?\" or \"Rule paused\" closes. \"Change the rule\" opens the rule. Every rule shows \"N taken (month) · M corrected (30 days)\" with a bar (the counters month and fixed, no new counting), its exceptions to remove one by one (POST /api/profile/mail/rules/{rid}/except, mailregeln.drop_except) and, when paused, \"On again\" (the rule saved with on; after that only new corrections count for the next pause). Both endpoints: login, profile bind"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "See the corrections (V01.1.267, plan `mail-lernen/plan.md` stage 3, 7a)",
+"text": "ing, CSRF, size limit, rate limit postordnen, the switches Order mail and \"Learn sorting from corrections\", never guests; journal lines mail: rule correction undone | N |, mail: rule exception removed | 1 | and one line per refusal, never sender or folder. Live counts \"taken back\" (the number only). iPhone: the same list under E-mail → Rules with \"Undo\", \"Change the rule\", counters, exceptions to remove and \"On again\" (swipe); Android through the panel view."
 },
 {
 "lang": "en",

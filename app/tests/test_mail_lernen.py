@@ -262,6 +262,97 @@ class Learn(unittest.TestCase):
         self.assertEqual(mailregeln._card_acts(self.uid, card), set())
         self.assertFalse(mailregeln.features.allowed("maillearn", self.uid))
 
+    # ---------------------------------------------------------------- Stufe 3 (plan 7a): Korrekturen (30 Tage) on the tab Regeln
+    def corrected(self, sender, mid, rid_folder=("@autohaus-kehl.de", "Auto")):
+        self.arrive(sender, mid)
+        mailregeln.run(self.uid)
+        postfach.act(self.uid, f"{self.acct}:{self.uid_in(rid_folder[1], mid)}", "move", "Newsletter", src=rid_folder[1])
+
+    def test_corrections_list_and_undo(self):
+        rid = self.rule("@autohaus-kehl.de", "Auto")
+        self.corrected("Anna <anna@autohaus-kehl.de>", "<u-1@x>")
+        d = self.c.get("/api/profile/mail/rules").json()
+        self.assertTrue(d["learn"])
+        (f,) = d["fixes"]
+        self.assertEqual({k: f[k] for k in ("from", "von", "nach", "how", "by", "rid", "rule", "state", "undo")},
+                         {"from": "anna@autohaus-kehl.de", "von": "Auto", "nach": "Newsletter", "how": "folder", "by": "rule",
+                          "rid": rid, "rule": "@autohaus-kehl.de", "state": "ausnahme", "undo": True})
+        (r,) = d["rules"]
+        self.assertEqual((r["fixed"], r["month"], r["except"]), (1, 1, ["anna@autohaus-kehl.de"]))
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            res = self.c.post(f"/api/profile/mail/rules/fixes/{f['id']}/undo")
+        self.assertEqual(res.status_code, 200, res.text)
+        self.assertIn("mail: rule correction undone | 1 |", out.getvalue())
+        self.assertNotIn("anna", out.getvalue())
+        (f,) = res.json()["fixes"]
+        self.assertEqual((f["state"], f["undo"], res.json()["rules"][0]["fixed"]), ("zurueck", False, 0))
+        self.assertEqual(self.rule_of(rid)["except"], [])
+        self.assertIn("<u-1@x>", {x["mid"] for x in mailregeln.load(self.uid)["moved"]})   # the mail itself: never again
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(self.c.post(f"/api/profile/mail/rules/fixes/{f['id']}/undo").status_code, 400)
+            self.assertEqual(self.c.post("/api/profile/mail/rules/fixes/nichtda/undo").status_code, 404)
+        self.assertIn("mail: rule correction undo refused, done already |", out.getvalue())
+        self.assertIn("mail: rule correction undo refused, not found |", out.getvalue())
+
+    def test_undo_lifts_the_pause_and_resume_counts_anew(self):
+        rid = self.rule("@autohaus-kehl.de", "Auto")
+        for i, who in enumerate(("anna", "bob", "carl")):
+            self.corrected(f"{who} <{who}@autohaus-kehl.de>", f"<q-{i}@x>")
+        self.assertEqual(self.rule_of(rid)["on"], False)
+        d = self.c.get("/api/profile/mail/rules").json()
+        self.assertEqual([x["state"] for x in d["fixes"]], ["pausiert", "ausnahme", "ausnahme"])   # newest first
+        self.assertEqual(d["rules"][0]["fixed"], 3)
+        res = self.c.post(f"/api/profile/mail/rules/fixes/{d['fixes'][0]['id']}/undo")
+        self.assertEqual(res.status_code, 200, res.text)
+        r = self.rule_of(rid)
+        self.assertEqual((r["on"], "paused" in r, r["except"]), (True, False, ["anna@autohaus-kehl.de", "bob@autohaus-kehl.de"]))
+        self.assertTrue(all(x["zustand"] != "offen" for x in cards(self.uid).values() if x["titel"].startswith("Regel pausiert")))
+        # paused again by hand and „Wieder an“ (the rule saved with on): only corrections after it count for the next pause
+        for on in (False, True):
+            body = {"id": rid, "account": r["account"], "when": r["when"], "then": r["then"], "on": on}
+            self.assertEqual(self.c.post("/api/profile/mail/rules", json=body).status_code, 200)
+        self.corrected("dora <dora@autohaus-kehl.de>", "<q-9@x>")
+        self.assertEqual(self.rule_of(rid)["on"], True)
+
+    def test_exception_removed_on_the_tab(self):
+        rid = self.rule("@autohaus-kehl.de", "Auto")
+        self.corrected("Anna <anna@autohaus-kehl.de>", "<e-1@x>")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            res = self.c.post(f"/api/profile/mail/rules/{rid}/except", json={"from": "anna@autohaus-kehl.de"})
+            self.assertEqual(res.status_code, 200, res.text)
+            self.assertEqual(self.c.post(f"/api/profile/mail/rules/{rid}/except", json={"from": "anna@autohaus-kehl.de"}).status_code, 400)
+            self.assertEqual(self.c.post("/api/profile/mail/rules/nichtda/except", json={"from": "a@b.de"}).status_code, 404)
+        log = out.getvalue()
+        for line in ("mail: rule exception removed | 1 |", "mail: rule exception removed refused, not there |",
+                     "mail: rule exception removed refused, not found |"):
+            self.assertIn(line, log)
+        self.assertNotIn("anna", log)
+        self.assertEqual(self.rule_of(rid)["except"], [])
+        self.assertEqual(res.json()["fixes"][0]["state"], "bleibt")      # the mail itself still stays where it is
+
+    def test_corrections_need_the_switch_the_profile_and_the_page(self):
+        rid = self.rule("@autohaus-kehl.de", "Auto")
+        self.corrected("Anna <anna@autohaus-kehl.de>", "<s-1@x>")
+        fid = mailregeln.load(self.uid)["fixes"][0]["id"]
+        other, _ = profile("Lern Lutz")
+        self.assertEqual(other.post(f"/api/profile/mail/rules/fixes/{fid}/undo").status_code, 404)    # not in its file
+        self.assertEqual(other.post(f"/api/profile/mail/rules/{rid}/except", json={"from": "anna@autohaus-kehl.de"}).status_code, 404)
+        guest = TestClient(panel.app)
+        self.assertIn(guest.post(f"/api/profile/mail/rules/fixes/{fid}/undo").status_code, (401, 403))
+        self.assertIn(guest.get("/api/profile/mail/rules").status_code, (401, 403))
+        foreign = self.c.post(f"/api/profile/mail/rules/fixes/{fid}/undo", headers={"sec-fetch-site": "cross-site"})
+        self.assertEqual(foreign.status_code, 403)                                                     # CSRF
+        self.assertEqual(self.c.post(f"/api/profile/mail/rules/{rid}/except", content=b"x" * 5000,
+                                     headers={"Content-Type": "application/json"}).status_code, 413)  # size limit
+        helpers.set_config(mail_learn=False)
+        self.assertNotIn("fixes", self.c.get("/api/profile/mail/rules").json())
+        self.assertEqual(self.c.post(f"/api/profile/mail/rules/fixes/{fid}/undo").status_code, 403)
+        self.assertEqual(self.rule_of(rid)["except"], ["anna@autohaus-kehl.de"])
+        self.assertEqual(mailregeln.for_live()["undone"], mailregeln._count.counts().get("rueckgaengig", 0))
+
 
 if __name__ == "__main__":
     unittest.main()

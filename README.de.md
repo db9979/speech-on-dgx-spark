@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.267** Korrekturen ansehen: unter E-Mail → Regeln und am iPhone die Korrekturen der letzten 30 Tage mit „Rückgängig“, je Regel „genommen · korrigiert“, Ausnahmen entfernen und „Wieder an“
 - **V01.1.266** Sortieren aus Korrekturen lernen (eigener Schalter, aus): legst du eine vom Spark sortierte Mail woanders hin oder nach „Falsch sortiert“, wird der Absender Ausnahme der Regel, nach 3 Korrekturen pausiert sie, und eine Karte fragt „Regel ändern?“ oder „Wohin gehört diese Mail?“
 - **V01.1.264** Kein Ping-Pong mehr bei Mail-Regeln: eine Mail, die eine Regel oder das Aufräumen verschoben hat und die du zurück in den Posteingang legst, bleibt dort; die Regeln merken sich, was sie verschoben haben (30 Tage)
 - **V01.1.263** Karte hilft der Suche (Wissenskarte Stufe 3 von 4, eigener Schalter, aus): nennt eine Frage eine Person, Firma oder Frist der Karte, findet die Dokumentsuche auch deren Stellen und die ihrer Nachbarn; ergänzt die Treffer nur, unter der Antwort steht „über die Wissenskarte“
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.259** Browser-Tests finden Chromium auch unter `chrome-linux64` (neuere Playwright-Builds)
 - **V01.1.258** Finden Stufe D: Schlagworte vom Modell (eigener Unterschalter, aus), nur nach festen Regeln geprüft und als „vom Modell“ gezeigt, entfernte kommen nie wieder; Personen, Firmen und Orte als Punkte der Wissenskarte; eine Rangfolge über alle Listen; Sofort-Karte bei klarem Treffer mit festem Satz und „Original öffnen“
 - **V01.1.257** Finden Stufe C: Termine und Kontakte versiegelt, frühere Gespräche (nur Datum und Kanal), Listen, Erinnerungen, Bilder und Lieder im Suchindex; Zeiträume nach festen Regeln, „vom OP“ über den eigenen Kalender; fünf Unterschalter, ab Werk aus
-- **V01.1.256** Finden Stufe B: alle Mails und Anhänge in den Suchindex (Posteingang, Archiv, Gesendet, nie Spam und Papierkorb), die neuesten zuerst, ältere in ruhigen Minuten und nachts in Häppchen, nur versiegelt (AES-GCM, Wörter als HMAC-Marken), Anhang-Text und Felder nach festen Regeln, Treffer öffnet die Mail; Unterschalter „Mails und Anhänge finden“, ab Werk aus
 
 
 
