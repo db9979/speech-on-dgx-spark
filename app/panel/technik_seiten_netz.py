@@ -898,7 +898,8 @@ SEITEN = {
                "Dateien über SFTP in derselben Verbindung (ferndateien.listing), Laden mit Einmal-Link für "
                "{ferndateien.LINK_S} Sekunden; große Dateien in Teilen von {ferngross.TEIL|mb} MB mit SHA-256 je Stück "
                "(ferngross.upload_piece). Der Bildschirm geht über guacd nur auf 127.0.0.1 (fernbild.GUACD), höchstens "
-               "{fernbild.FPS} Bilder je Sekunde. Der Assistent (fernzugang.admin_help) fragt nur das eigene Modell und "
+               "{fernbild.FPS} Bilder je Sekunde; guacd {fernbild.GUACD_VERSION} baut der Spark selbst aus Apaches Quelltext, "
+               "fest mit SHA-256 (fernbild.dienst sagt der Seite, warum er fehlt). Der Assistent (fernzugang.admin_help) fragt nur das eigene Modell und "
                "schlägt vor, getippt wird nie von selbst. Notizen je System liegen versiegelt, "
                "{fernnotiz.FASSUNGEN} Fassungen bleiben; das Modell liest sie nur mit Haken (fernnotiz.fuer_modell). Ordner ordnen nur die Liste "
                "(fernordner.view), höchstens {fernordner.MAX_ORDNER}; Rechte bleiben je System.",
@@ -908,7 +909,8 @@ SEITEN = {
                "Files through SFTP in the same connection (ferndateien.listing), downloads with a one-time link for "
                "{ferndateien.LINK_S} seconds; big files in pieces of {ferngross.TEIL|mb} MB with a SHA-256 per piece "
                "(ferngross.upload_piece). The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most "
-               "{fernbild.FPS} pictures a second. The assistant (fernzugang.admin_help) asks only the own model and "
+               "{fernbild.FPS} pictures a second; the Spark builds guacd {fernbild.GUACD_VERSION} itself from Apache's source, "
+               "pinned with SHA-256 (fernbild.dienst tells the page why it is missing). The assistant (fernzugang.admin_help) asks only the own model and "
                "suggests, nothing is typed by itself. Notes per system are stored sealed, "
                "{fernnotiz.FASSUNGEN} versions stay; the model reads them only when ticked (fernnotiz.fuer_modell). Folders only order the list "
                "(fernordner.view), at most {fernordner.MAX_ORDNER}; rights stay per system.")),

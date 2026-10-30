@@ -766,6 +766,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/gehaeuse-wunsch.json` | The panel's wish for the case (set up, remove, restart), seconds | – | no |
 | `state/geraete-updates.json` | Device updates | – | yes |
 | `state/github-token.json` | GitHub read token | sealed | yes |
+| `state/guacd-bau.json` | Remote access, screen: how the last build of guacd ended (ok or a fixed word like laden or bauen, and when); install.sh writes it, the next update replaces it | – | no |
 | `state/guard-xff-hinted.json` | Proxy hint shown | – | no |
 | `state/guard.json` | Lockouts | – | no |
 | `state/gut-saetze.json` | Questions confirmed with 👍 | – | yes |
@@ -3549,7 +3550,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 103). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 104). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3560,7 +3561,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **47** files in every backup ([step 7](#kn-state-s7))
-- **103** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **104** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 
@@ -4027,7 +4028,7 @@ flowchart TD
 3. <a id="kn-fernzugang-s3"></a>**Pairing**: „Pair“ asks for the code every time (fernzugang.admin_pair) and shows one line for the server with a one-time code, valid 10 minutes, plus a one-time link with a QR code that shows only this line on the new system, never the code (fernzugang.link_check). Windows: the link gives the file spark-anker-einrichten.cmd once (fernzugang.link_file) with a one-time key instead of the code; the system then waits until the admin confirms it with a code or passkey (fernzugang.admin_confirm). At most 10 systems; each gets an SSH key of the panel of its own, its host key is pinned.
 4. <a id="kn-fernzugang-s4"></a>**Ticket for the window**: „Shell“ hands out a one-time ticket (fernzugang.admin_session) that opens exactly one web terminal for 30 seconds (fernzugang.terminal_ws); at most 4 sessions at once.
 5. <a id="kn-fernzugang-s5"></a>**Another host key?**: If the server shows another host key than at pairing, there is no connection (fernzugang.hostkey_wrong); after a reinstall remove and pair again.
-6. <a id="kn-fernzugang-s6"></a>**Shell, files, screen**: SSH runs through the anchor's channel; if the window drops, the shell waits 120 seconds. A heartbeat every 5 seconds measures round trip and rate; output waits for the window in at most 32 pieces, then SSH slows the server (backpressure). Files through SFTP in the same connection (ferndateien.listing), downloads with a one-time link for 60 seconds; big files in pieces of 8 MB MB with a SHA-256 per piece (ferngross.upload_piece). The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most 15 pictures a second. The assistant (fernzugang.admin_help) asks only the own model and suggests, nothing is typed by itself. Notes per system are stored sealed, 10 versions stay; the model reads them only when ticked (fernnotiz.fuer_modell). Folders only order the list (fernordner.view), at most 30; rights stay per system.
+6. <a id="kn-fernzugang-s6"></a>**Shell, files, screen**: SSH runs through the anchor's channel; if the window drops, the shell waits 120 seconds. A heartbeat every 5 seconds measures round trip and rate; output waits for the window in at most 32 pieces, then SSH slows the server (backpressure). Files through SFTP in the same connection (ferndateien.listing), downloads with a one-time link for 60 seconds; big files in pieces of 8 MB MB with a SHA-256 per piece (ferngross.upload_piece). The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most 15 pictures a second; the Spark builds guacd 1.6.0 itself from Apache's source, pinned with SHA-256 (fernbild.dienst tells the page why it is missing). The assistant (fernzugang.admin_help) asks only the own model and suggests, nothing is typed by itself. Notes per system are stored sealed, 10 versions stay; the model reads them only when ticked (fernnotiz.fuer_modell). Folders only order the list (fernordner.view), at most 30; rights stay per system.
 7. <a id="kn-fernzugang-s7"></a>**Spontaneous help**: A help (spontanhilfe.admin_new) gives a number for 10 minutes, after 5 wrong ones it is dead. The screen goes by WebRTC directly between the two browsers, on the way through TURN on tars; the panel only connects them.
 8. <a id="kn-fernzugang-s8"></a>**Logs and history**: Logs with fixed words and numbers only (fernzugang.log), the history only time, system, admin, kind and duration (fernzugang.verlauf_add). The kill switch closes every line (fernzugang.notaus_close).
 

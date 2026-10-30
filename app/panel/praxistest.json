@@ -4762,6 +4762,20 @@
 "titel": "Fernzugang Windows: Entfernen stellt alles wieder her",
 "text": "Am Windows-PC aus P674: A: In den Windows-Einstellungen unter Apps „Spark Anker“ deinstallieren (fragt nach Administratorrechten): danach keine Aufgaben SparkAnker in der Aufgabenplanung, kein Benutzer spark, kein Ordner C:\\Program Files\\SparkAnker und C:\\ProgramData\\SparkAnker, der OpenSSH-Server wieder entfernt, im Panel ist das System weg. B: Noch einmal koppeln und diesmal im Panel „Entfernen“: dasselbe Ergebnis innerhalb einer Minute. C: Auf einem PC, auf dem der OpenSSH-Server schon lief: nach dem Entfernen läuft er weiter, seine sshd_config ist wie vorher.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P705",
+"v": 1278,
+"titel": "Bildschirm: guacd kommt mit dem Update",
+"text": "Auf dem Raspberry Pi mit eingeschaltetem Funktionen → Fernzugang zu Servern und darunter Bildschirm: sudo speech-spark update. Im Update-Log steht „guacd-bauen: fetching guacamole-server-1.6.0.tar.gz“, dann „building …“ und nach einigen Minuten „guacd 1.6.0 in /opt/speech-spark/guacd“ (bitte die Zeile „built in … s“ notieren). Danach öffnet „Bildschirm“ bei einem eingerichteten System das Bild. Ein zweites Update baut nicht noch einmal („already there“). systemctl cat speech-spark-guacd zeigt /opt/speech-spark/guacd/sbin/guacd und 127.0.0.1.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P706",
+"v": 1278,
+"titel": "Grauer Knopf sagt warum",
+"text": "Fernzugang → Systeme, den uConsole wählen (Anker 1.4.0, Bildschirm dort noch nicht eingerichtet): unter den Knöpfen steht „Bildschirm: Auf dem System noch nicht eingerichtet: dort „sudo spark-anker bildschirm““ mit Kopieren und In die Shell einfügen; Letzteres öffnet die Shell und setzt den Befehl in die Zeile, ohne Enter. Beim Darüberfahren über den grauen Knopf derselbe Text. Ein System offline: alle drei Knöpfe sagen „Das System ist offline.“ Vor dem ersten Bau (oder wenn er scheiterte) sagt der Bildschirm-Knopf, dass guacd auf dem Spark fehlt und warum.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }

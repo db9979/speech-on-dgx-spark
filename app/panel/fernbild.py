@@ -47,6 +47,7 @@ import codecs
 import contextlib
 import hashlib
 import hmac
+import os
 import re
 import secrets
 import socket
@@ -60,6 +61,7 @@ import features
 import fernzugang
 import guard
 import vault
+from common import PREFIX, STATE, read_json
 from core import auth, json_body
 
 router = APIRouter()
@@ -67,6 +69,21 @@ router = APIRouter()
 GUACD = ("127.0.0.1", 4822)
 GUACD_UNIT = "speech-spark-guacd"
 GUACD_S = 10            # guacd answers the handshake within this long
+# guacd itself: built on the Spark from Apache's source (Debian 12/13 and Raspberry Pi OS have no guacd since 2024),
+# only this release, only from Apache's own servers, checked against this SHA-256 (the one source: install.sh and
+# app/guacd-bauen.sh read both lines). guacamole-server 1.6.0 knows FreeRDP 3 (Debian 13) and 2.
+GUACD_VERSION = "1.6.0"
+GUACD_SHA256 = "8bc45675da96d7b6f39728160181e3d4ff3c08f460f6d26de5805b642bf13f2b"
+GUACD_BIN = os.path.join(PREFIX, "guacd", "sbin", "guacd")
+GUACD_BAU = os.path.join(STATE, "guacd-bau.json")   # the last build's result (install.sh, as the service user)
+BAU_GRUENDE = {   # word of guacd-bauen.sh -> what the panel says (the build's own output stays in the update log)
+    "abhaengigkeiten": ("die Pakete zum Bauen ließen sich nicht installieren (apt)", "the packages for building could not be installed (apt)"),
+    "laden": ("der Quelltext ließ sich nicht von apache.org laden", "the source could not be fetched from apache.org"),
+    "pruefsumme": ("der geladene Quelltext passt nicht zu seiner Prüfsumme", "the fetched source does not match its checksum"),
+    "configure": ("die Vorbereitung des Baus scheiterte (fehlt eine Bibliothek?)", "preparing the build failed (a library missing?)"),
+    "bauen": ("das Bauen scheiterte", "building failed"),
+    "installieren": ("das Installieren nach /opt/speech-spark/guacd scheiterte", "installing to /opt/speech-spark/guacd failed"),
+}
 GUAC_VERSION = "1.5.0"  # guacamole-common-js, vendored in static/guac (Apache-2.0)
 GUAC = {"guacamole-common.min.js": "f543f240fee1f04653a5921aa1398eb5c680e8760cb3ddf0a9ee5f8c1963774e",
         "LICENSE": "3c7f148c26065e0a581b5dda114e68e16243bf5ae0b4f6209749a0e3373201d5"}
@@ -95,6 +112,20 @@ def log(word, why="", n=1):
 def admin_on(c=None):
     """Funktionen → Fernzugang zu Servern → Bildschirm (admin, off); a Spark-wide door under the Fernzugang."""
     return features.admin_on("fernbild", c) and fernzugang.admin_on(c)
+
+
+def dienst():
+    """The screen service on this Spark for the page (no secret, no path of the system): installed or not, its version,
+    and when the last build failed its word (BAU_GRUENDE) and when; the page says why the screen cannot open."""
+    da = os.access(GUACD_BIN, os.X_OK)
+    out = {"da": da, "version": GUACD_VERSION}
+    b = read_json(GUACD_BAU, {})
+    grund = b.get("grund")
+    if not da and grund in BAU_GRUENDE:
+        t = b.get("zeit")
+        out.update(grund=grund, grund_de=BAU_GRUENDE[grund][0], grund_en=BAU_GRUENDE[grund][1],
+                   zeit=int(t) if isinstance(t, (int, float)) and not isinstance(t, bool) else None)
+    return out
 
 
 def clipboard_on(c=None):

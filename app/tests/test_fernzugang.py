@@ -2934,6 +2934,59 @@ class InBrowser(unittest.TestCase):
         cls.port = helpers._port()
         helpers.serve_panel(cls, cls.port)
 
+    def test_a_grey_button_always_says_why(self):
+        """Dominik 2026-10-30 08:45: „Bildschirm“ grey on the uConsole without a word. Every grey button of a system
+        says why in its title; the screen's reason also as a line under the buttons: not set up over there (the command
+        with „Kopieren“ and „In die Shell einfügen“, never Enter), the anchor too old, offline, places taken, no guacd
+        on the Spark (with the build's reason, or „kommt mit dem nächsten Update“)."""
+        from tests.test_ui_browser import PAGE_READY, async_playwright, chromium
+
+        async def go():
+            async with async_playwright() as p:
+                exe = chromium()
+                br = await p.chromium.launch(**({"executable_path": exe} if exe else {}))
+                base = f"http://127.0.0.1:{self.port}"
+                ctx = await br.new_context(viewport={"width": 1280, "height": 900}, locale="de-DE", bypass_csp=True)
+                pg = await ctx.new_page()
+                await pg.goto(base + "/")
+                await pg.request.post(base + "/api/login", data={"password": "secret-admin"})
+                await pg.goto(base + "/")
+                await pg.wait_for_function(PAGE_READY, timeout=30000)
+                show = """([g,dienst,n])=>{FZ.d={on:true,bildschirm:true,max:4,counts:{sitzungen:n||0},geraete:[g],bild_dienst:dienst};
+                    FZ.sel=g.id;fzDetail();const b=[...$('fzdetail').querySelectorAll('.fzknoepfe button')];
+                    const w=$('fzdetail').querySelector('.fzwarum');
+                    return {knoepfe:b.map(x=>[x.textContent,x.disabled,x.title]),warum:w?w.textContent:'',
+                            tasten:w?[...w.querySelectorAll('button')].map(x=>x.textContent):[]}}"""
+                g = {"id": "g_1", "name": "uconsole", "os": "Debian 13", "anker": "1.4.0", "online": True, "online_seit": 1,
+                     "erlaubt": True, "art": "linux", "bild": "", "bild_anker": True, "stand": "ok"}
+                da = {"da": True, "version": "1.6.0"}
+                r = await pg.evaluate(show, [g, da, 0])
+                bild = [k for k in r["knoepfe"] if k[0] == "Bildschirm"][0]
+                self.assertTrue(bild[1])
+                self.assertIn("sudo spark-anker bildschirm", bild[2])
+                self.assertIn("Auf dem System noch nicht eingerichtet", r["warum"])
+                self.assertEqual(r["tasten"], ["Kopieren", "In die Shell einfügen"])
+                self.assertEqual([k[1] for k in r["knoepfe"] if k[0] in ("Shell", "Dateien")], [False, False])
+                r = await pg.evaluate(show, [{**g, "bild": "x11vnc", "bild_anker": False}, da, 0])
+                self.assertIn("Anker zu alt", r["warum"])
+                self.assertEqual(r["tasten"], [])
+                r = await pg.evaluate(show, [{**g, "online": False}, da, 0])
+                self.assertTrue(all(k[1] and "offline" in k[2] for k in r["knoepfe"] if k[0] in ("Shell", "Dateien", "Bildschirm")), r)
+                r = await pg.evaluate(show, [{**g, "bild": "x11vnc"}, da, 4])
+                self.assertTrue(all(k[1] and "4 von 4 Plätzen belegt" in k[2] for k in r["knoepfe"] if k[0] in ("Shell", "Bildschirm")), r)
+                r = await pg.evaluate(show, [{**g, "bild": "x11vnc"}, {"da": False, "version": "1.6.0"}, 0])
+                self.assertIn("kommt mit dem nächsten Update", r["warum"])
+                r = await pg.evaluate(show, [{**g, "bild": "x11vnc"}, {"da": False, "version": "1.6.0", "grund": "laden",
+                                                                      "grund_de": "der Quelltext ließ sich nicht von apache.org laden", "grund_en": "x"}, 0])
+                self.assertIn("nicht installiert: der Quelltext ließ sich nicht von apache.org laden", r["warum"])
+                r = await pg.evaluate(show, [{**g, "bild": "x11vnc"}, da, 0])
+                self.assertEqual(r["warum"], "")
+                self.assertFalse([k for k in r["knoepfe"] if k[0] == "Bildschirm"][0][1])
+                self.assertIn("nicht installiert", await pg.evaluate("""FZ.d.bild_dienst={da:false,grund:'bauen',grund_de:'das Bauen scheiterte',grund_en:'building failed'};fbGrund('guacd')"""))
+                self.assertIn("startet nicht", await pg.evaluate("FZ.d.bild_dienst={da:true};fbGrund('guacd')"))
+                await br.close()
+        asyncio.run(go())
+
     def test_the_session_bar_is_a_slim_line_on_top_of_every_page(self):
         """Dominik 2026-10-28 18:54: while a session runs, one slim red line (at most 40 px) at the top of the content,
         on every page, also after scrolling, on a wide screen and on a phone; „Notaus trennt sofort“ only as a hint."""

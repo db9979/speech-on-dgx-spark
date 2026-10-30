@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.278** Remote access, screen: the Spark now builds guacd itself from Apache's source (1.6.0, pinned with SHA-256, VNC and RDP only, FreeRDP 3 or 2, built as nobody, to /opt/speech-spark/guacd), as Debian 12/13 and Raspberry Pi OS have no guacd package any more; the update builds it by itself once the screen is on, a failure never stops it and the panel names the reason; every grey button of a system says why (for the screen with the command to copy or insert).
 - **V01.1.277** Remote access on Windows (stage 5): pairing through a one-time link to the file spark-anker-einrichten.cmd (double-click, "Yes", no code), then the admin confirms the new system with a code or passkey; OpenSSH only on 127.0.0.1, Python only for the anchor with a pinned checksum, removing under Apps "Spark Anker" puts everything back; checked on a real Windows (GitHub action "Fernzugang Windows")
 - **V01.1.276** Remote access: terminal and suggestions no longer jump (the status line above the terminal stayed after opening and vanished on the next load, notices at the top pushed the terminal down); a browser test over 20 seconds.
 - **V01.1.275** After "Make the rule" on a correction's card the new mail rule decides: "Inbox tidying" no longer asks about this sender
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.271** · 2026-10-30 · Test fix: the page test "Load older mail" skips itself without a browser like every page test (was red in the Werkstatt on the Spark), a guard test catches that from now on; the briefing and background tests count only their own things (were wobbly in the night run); the mail tests' stand-in mailboxes take a folder like the real one (TypeError in mail._older in the GitHub log); the mail delete test waits for the page's answer before it drags on (was red alongside other mail tests)
 - **V01.1.270** Measure knowledge: times and memory of search, knowledge book and knowledge map with 5000 made-up documents or one profile (read only), under Status → Checks and `sudo speech-spark wissen messen`
 - **V01.1.269** Companion: "Offen" in the tab Heute with the open cases and their fixed buttons, "Finden" with Ctrl+Alt+F (Mac ⌃⌥F) as title and source, a click opens the panel
-- **V01.1.268** Companion: Sprung-Links to Lists, Open, Find and Dungeon Master from outside too, every function in the companion or outside with a reason, buttons into the panel in its settings (my data, memory, remote access for admins)
 
 
 

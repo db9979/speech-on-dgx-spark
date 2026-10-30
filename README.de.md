@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.278** Fernzugang → Bildschirm: guacd baut der Spark jetzt selbst aus Apaches Quelltext (1.6.0, fest mit SHA-256, nur VNC und RDP, FreeRDP 3 oder 2, als nobody gebaut, nach /opt/speech-spark/guacd), weil Debian 12/13 und Raspberry Pi OS kein guacd-Paket mehr haben; das Update baut es von selbst, sobald der Bildschirm eingeschaltet ist, ein Fehler hält es nie auf und das Panel nennt den Grund; jeder graue Knopf eines Systems sagt, warum (beim Bildschirm mit dem Befehl zum Kopieren oder Einfügen).
 - **V01.1.277** Fernzugang auf Windows (Stufe 5): Koppeln über einen Einmal-Link zur Datei spark-anker-einrichten.cmd (Doppelklick, „Ja“, kein Code), danach bestätigt der Admin das neue System mit Code oder Passkey; OpenSSH nur auf 127.0.0.1, Python nur für den Anker mit fester Prüfsumme, Entfernen unter Apps „Spark Anker“ stellt alles wieder her; geprüft auf einem echten Windows (GitHub-Action „Fernzugang Windows“)
 - **V01.1.276** Fernzugang: Terminal und Vorschläge springen nicht mehr (die Statuszeile über dem Terminal blieb nach dem Öffnen stehen und verschwand beim nächsten Laden, Hinweise oben schoben das Terminal nach unten); Browser-Test über 20 Sekunden.
 - **V01.1.275** Nach „Regel anlegen“ auf der Karte einer Korrektur entscheidet die neue Mail-Regel: „Postfach aufräumen“ fragt bei diesem Absender nicht mehr
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.271** · 2026-10-30 · Test-Fix: der Seitentest „Ältere Mails nachladen“ überspringt sich ohne Browser wie alle Seitentests (war in der Werkstatt auf dem Spark rot), ein Wächter-Test fängt das künftig ab; Briefing- und Hintergrund-Test zählen nur ihre eigenen Sachen (waren im Nachtlauf wackelig); die Ersatz-Postfächer der Mail-Tests nehmen wie das echte einen Ordner an (TypeError in mail._older im GitHub-Log); der Mail-Löschen-Test wartet auf die Antwort der Seite, bevor er weiterzieht (war parallel zu anderen Mail-Tests rot)
 - **V01.1.270** Wissen messen: Zeiten und Speicher von Suche, Wissensbuch und Wissenskarte mit 5000 erfundenen Dokumenten oder einem Profil (nur lesend), unter Zustand → Prüfen und `sudo speech-spark wissen messen`
 - **V01.1.269** Begleiter: „Offen“ im Reiter Heute mit den offenen Vorgängen und ihren festen Knöpfen, „Finden“ mit Strg+Alt+F (Mac ⌃⌥F) als Titel und Quelle, ein Klick öffnet das Panel
-- **V01.1.268** Begleiter: Sprung-Links von draußen auch zu Listen, Offen, Finden und Dungeon-Master, jede Funktion im Begleiter oder mit Grund draußen, Knöpfe ins Panel in seinen Einstellungen (Meine Daten, Gedächtnis, Fernzugang für Admins)
 
 
 

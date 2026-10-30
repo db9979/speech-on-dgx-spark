@@ -1863,7 +1863,7 @@ def admin_get(request: Request):
            "notaus": _notaus(), "browser": is_admin_browser(request),
            "hilfe": hilfe_on(c), "gefahr": {k: [list(g) for g in v] for k, v in GEFAHR.items()}, "ki_zeilen": ki_zeilen(c),
            "ki_zeilen_wahl": sorted(set(KI_ZEILEN_WAHL) | {ki_zeilen(c)}), "ki_zeichen": KI_ZEICHEN, "ziel_min": ZIEL_MIN,
-           "hilfe_befehle": HILFE_BEFEHLE, "vorschlag_s": VORSCHLAG_S, "bildschirm": fernbild.admin_on(c),
+           "hilfe_befehle": HILFE_BEFEHLE, "vorschlag_s": VORSCHLAG_S, "bildschirm": fernbild.admin_on(c), "bild_dienst": fernbild.dienst() if fernbild.admin_on(c) else None,
            "zwischenablage": fernbild.clipboard_on(c), "bild_langsam": fernbild.LANGSAM}
     import fernnotiz
     out["notizen"] = notizen = fernnotiz.on(c)

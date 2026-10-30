@@ -207,25 +207,6 @@ if [ "$MODE" = full ]; then
       || warn "coturn not installed: calls only work at home for now (sudo apt install coturn, then sudo speech-spark update)"
   fi
 fi
-# Fernzugang → Bildschirm (app/panel/fernbild.py, --fernbild, on the computer with the panel): guacd from the
-# distribution's packages (its security updates come with apt), only the releases fernbild was tested with
-# (GUACD_OK), only VNC and RDP. The distribution's guacd.service is masked before installing, so only our own unit
-# below runs it, on 127.0.0.1:4822 and able to reach nothing but 127.0.0.1. Once there, an update keeps it; missing
-# guacd only means no screen (never stops an update).
-GUACD_OK='^1\.(3|4|5)\.'
-WITH_FERNBILD=$FERNBILD_PICK; [ -x /usr/sbin/guacd ] && WITH_FERNBILD=1
-if [ "$WITH_FERNBILD" = 1 ]; then
-  systemctl mask --now guacd.service >/dev/null 2>&1 || true
-  if ! [ -x /usr/sbin/guacd ] || ! dpkg -s libguac-client-vnc0 >/dev/null 2>&1; then
-    { apt-get -o DPkg::Lock::Timeout=120 update -q && \
-      apt-get -o DPkg::Lock::Timeout=120 install -y -q --no-install-recommends guacd libguac-client-vnc0 libguac-client-rdp0; } \
-      || warn "guacd not installed: no screen in Fernzugang for now (sudo ./install.sh --fernbild again later)"
-  fi
-  GUACD_V=$(dpkg-query -W -f '${Version}' guacd 2>/dev/null || true)
-  if [ -n "$GUACD_V" ] && ! printf '%s' "$GUACD_V" | grep -Eq "$GUACD_OK"; then
-    warn "guacd $GUACD_V is not a release Fernzugang → Bildschirm was tested with (1.3 to 1.5): the screen may not work"
-  fi
-fi
 PY=$(command -v python3)
 
 # ---------------------------------------------------------------- user and dirs
@@ -1331,20 +1312,44 @@ CapabilityBoundingSet=
 LockPersonality=yes
 EOF
 
+# Fernzugang → Bildschirm (app/panel/fernbild.py, --fernbild, on the computer with the panel): guacd built here from
+# Apache's source by app/guacd-bauen.sh (Debian 12/13 and Raspberry Pi OS have no guacd package): the release and its
+# SHA-256 pinned in fernbild.py, only VNC and RDP, built as nobody, installed to $PREFIX/guacd, rebuilt only when the
+# pin changes. Wanted with --fernbild, when the admin switched on Fernzugang and its Bildschirm (an update then builds
+# it by itself), and kept once it is there. A distribution's guacd.service is masked, so only our own unit below runs
+# guacd, on 127.0.0.1:4822 and able to reach nothing but 127.0.0.1. A failed build never stops an update: its word
+# goes to $VAR/state/guacd-bau.json and the panel says why there is no screen (fernbild.dienst).
+WITH_FERNBILD=$FERNBILD_PICK; [ -x "$PREFIX/guacd/sbin/guacd" ] || [ -x /usr/sbin/guacd ] && WITH_FERNBILD=1
+[ -f "$ETC/config.json" ] && [ "$(cfgq -r '(.chat.fernzugang == true) and (.chat.fernbild == true)' 2>/dev/null)" = true ] && WITH_FERNBILD=1
+if [ "$WITH_FERNBILD" = 1 ]; then
+  systemctl mask --now guacd.service >/dev/null 2>&1 || true
+  say "Fernzugang → Bildschirm: guacd (built here once per release; a few minutes the first time)"
+  GLOG=$(mktemp)   # the build's lines go to the update log as they come, the last one names the result
+  bash "$INSTALL_FROM/app/guacd-bauen.sh" "$PREFIX/guacd" 2>&1 | tee "$GLOG" || true
+  GUACD_WORT=$(sed -n 's/^guacd-bauen: ERGEBNIS \([a-z]*\)$/\1/p' "$GLOG" | tail -n 1); rm -f -- "$GLOG"
+  case "$GUACD_WORT" in
+    ok|vorhanden) GUACD_STAND='{"ok":true}' ;;
+    *) warn "guacd not built (${GUACD_WORT:-bauen}): no screen in Fernzugang for now; the panel says why, the next update tries again"
+       GUACD_STAND=$(jq -cn --arg g "${GUACD_WORT:-bauen}" --argjson t "$(date +%s)" '{ok:false,grund:$g,zeit:$t}') ;;
+  esac
+  no_links "$VAR/state/guacd-bau.json"
+  printf '%s\n' "$GUACD_STAND" | as_svc tee -- "$VAR/state/guacd-bau.json" >/dev/null || true
+fi
 # guacd for Fernzugang → Bildschirm (fernbild.py): never enabled here, the panel starts it when a screen opens. Only
 # 127.0.0.1:4822, and IPAddressDeny keeps it from reaching anything but 127.0.0.1 (the panel's one local port of
 # each session); a user of its own (DynamicUser), nothing writable, no recording, no drive.
-if [ "$WITH_FERNBILD" = 1 ] && [ -x /usr/sbin/guacd ]; then
+if [ "$WITH_FERNBILD" = 1 ] && [ -x "$PREFIX/guacd/sbin/guacd" ]; then
 cat >/etc/systemd/system/speech-spark-guacd.service <<EOF
 [Unit]
 Description=Speech on DGX Spark: guacd for the remote screen (127.0.0.1 only)
 After=network-online.target
-ConditionPathExists=/usr/sbin/guacd
+ConditionPathExists=$PREFIX/guacd/sbin/guacd
 
 [Service]
 LogNamespace=speech-spark
 DynamicUser=yes
-ExecStart=/usr/sbin/guacd -f -b 127.0.0.1 -l 4822 -L info
+Environment=LD_LIBRARY_PATH=$PREFIX/guacd/lib
+ExecStart=$PREFIX/guacd/sbin/guacd -f -b 127.0.0.1 -l 4822 -L info
 Restart=on-failure
 RestartSec=5
 MemoryMax=1G

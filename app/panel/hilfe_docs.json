@@ -3309,7 +3309,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 103). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, "
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 104). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, "
 },
 {
 "lang": "de",
@@ -3333,7 +3333,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 47 Dateien in jeder Sicherung (Schritt 7) - 103 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 47 Dateien in jeder Sicherung (Schritt 7) - 104 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -3765,7 +3765,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "g genau ein Web-Terminal öffnet (fernzugang.terminal_ws); höchstens 4 Sitzungen zugleich. 5. Anderer Host-Schlüssel?: Zeigt der Server einen anderen Host-Schlüssel als beim Koppeln, gibt es keine Verbindung (fernzugang.hostkey_wrong); nach einer Neuinstallation entfernen und neu koppeln. 6. Shell, Dateien, Bildschirm: SSH läuft durch den Kanal des Ankers; reißt das Fenster ab, wartet die Shell 120 Sekunden. Ein Lebenszeichen alle 5 Sekunden misst Laufzeit und Rate; die Ausgabe wartet in höchstens 32 Stücken auf das Fenster, dann bremst SSH den Server (Gegendruck). Dateien über SFTP in derselben Verbindung (ferndateien.listing), Laden mit Einmal-Link für 60 Sekunden; große Dateien in Teilen von 8 MB MB mit SHA-256 je Stück (ferngross.upload_piece). Der Bildschirm geht über guacd nur auf 127.0.0.1 (fernbild.GUACD), höchstens 15 Bilder je Sekunde. Der Assistent (fernzugang.admin_help) fragt nur das eigene Modell und schlägt vor, getippt wird nie von selbst. Notizen je System liegen versiegelt, 10 Fassungen bleiben; das Modell liest sie nur mit Haken (fernnotiz.fuer_modell). Ordner ordnen nur die Liste (fernordner.view), höchstens 30; Rechte bleiben je System. 7. Spontanhilfe: Eine Hil"
+"text": "g genau ein Web-Terminal öffnet (fernzugang.terminal_ws); höchstens 4 Sitzungen zugleich. 5. Anderer Host-Schlüssel?: Zeigt der Server einen anderen Host-Schlüssel als beim Koppeln, gibt es keine Verbindung (fernzugang.hostkey_wrong); nach einer Neuinstallation entfernen und neu koppeln. 6. Shell, Dateien, Bildschirm: SSH läuft durch den Kanal des Ankers; reißt das Fenster ab, wartet die Shell 120 Sekunden. Ein Lebenszeichen alle 5 Sekunden misst Laufzeit und Rate; die Ausgabe wartet in höchstens 32 Stücken auf das Fenster, dann bremst SSH den Server (Gegendruck). Dateien über SFTP in derselben Verbindung (ferndateien.listing), Laden mit Einmal-Link für 60 Sekunden; große Dateien in Teilen von 8 MB MB mit SHA-256 je Stück (ferngross.upload_piece). Der Bildschirm geht über guacd nur auf 127.0.0.1 (fernbild.GUACD), höchstens 15 Bilder je Sekunde; guacd 1.6.0 baut der Spark selbst aus Apaches Quelltext, fest mit SHA-256 (fernbild.dienst sagt der Seite, warum er fehlt). Der Assistent (fernzugang.admin_help) fragt nur das eigene Modell und schlägt vor, getippt wird nie von selbst. Notizen je System liegen versiegelt, 10 Fassungen bleiben; das Modell liest sie nur mit Haken (fernnotiz.fu"
 },
 {
 "lang": "de",
@@ -3773,7 +3773,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "fe (spontanhilfe.admin_new) gibt eine Nummer für 10 Minuten, nach 5 falschen ist sie tot. Der Bildschirm geht per WebRTC direkt zwischen den zwei Browsern, von unterwegs über TURN auf tars; das Panel vermittelt nur. 8. Logs und Verlauf: Logs nur mit festen Wörtern und Zahlen (fernzugang.log), der Verlauf nur Zeit, System, Admin, Art und Dauer (fernzugang.verlauf_add). Der Notaus schließt jede Leitung (fernzugang.notaus_close)."
+"text": "er_modell). Ordner ordnen nur die Liste (fernordner.view), höchstens 30; Rechte bleiben je System. 7. Spontanhilfe: Eine Hilfe (spontanhilfe.admin_new) gibt eine Nummer für 10 Minuten, nach 5 falschen ist sie tot. Der Bildschirm geht per WebRTC direkt zwischen den zwei Browsern, von unterwegs über TURN auf tars; das Panel vermittelt nur. 8. Logs und Verlauf: Logs nur mit festen Wörtern und Zahlen (fernzugang.log), der Verlauf nur Zeit, System, Admin, Art und Dauer (fernzugang.verlauf_add). Der Notaus schließt jede Leitung (fernzugang.notaus_close)."
 },
 {
 "lang": "de",
@@ -14949,7 +14949,15 @@
 "file": "Installation im Detail",
 "head": "Musik machen (optional)",
 "title": "Musik machen (optional)",
-"text": "Mit --fernbild (auf dem Rechner mit dem Panel) kommt guacd für Fernzugang → Bildschirm dazu: die Pakete guacd, libguac-client-vnc0 und libguac-client-rdp0 der Distribution (getestet mit 1.3 bis 1.5, Sicherheits-Updates kommen mit apt), deren eigene Einheit guacd.service bleibt gesperrt; es läuft nur die Einheit speech-spark-guacd auf 127.0.0.1:4822, die das Panel startet, wenn ein Bildschirm aufgeht. Einmal da, behält ein Update sie. Danach Funktionen → Fernzugang zu Servern → Bildschirm einschalten und auf dem System einmal sudo spark-anker bildschirm."
+"text": "Für Fernzugang → Bildschirm baut der Rechner mit dem Panel guacd selbst aus dem Quelltext von Apache (seit V01.1.278; Debian 12 und 13 und Raspberry Pi OS haben kein guacd-Paket mehr): app/guacd-bauen.sh lädt genau die Version aus fernbild.GUACD_VERSION (guacamole-server 1.6.0, Apache-2.0) nur von downloads.apache.org oder archive.apache.org, prüft sie gegen fernbild.GUACD_SHA256, baut als nobody in einem frischen Ordner unter /var/tmp nur mit VNC und RDP (FreeRDP 3, wo es das gibt, sonst 2) und legt das Ergebnis nach /opt/speech-spark/guacd. Zum Bauen installiert es build-essential pkg-config libtool-bin libcairo2-dev libjpeg-dev libpng-dev libwebp-dev uuid-dev libvncserver-dev und freerdp3-dev (oder freerdp2-dev); das dauert einmal einige Minuten (Pakete laden und bauen; das Bauen selbst dauerte auf einem ARM-Rechner mit 4 Kernen im GitHub-Test etwa 5 Sekunden), der Fortschritt steht im Update-Log. Neu gebaut wird nur, wenn sich die Version ändert. Gebaut wird mit --fernbild, bei jedem Update, sobald Funktionen → Fernzugang zu Servern und darunter Bildschirm eingeschaltet sind, und solange guacd schon da ist. Ein Fehler hält das Update nie auf: das Panel sagt dann beim Bildschirm"
+},
+{
+"lang": "de",
+"src": "installation",
+"file": "Installation im Detail",
+"head": "Musik machen (optional)",
+"title": "Musik machen (optional)",
+"text": "-Knopf, woran es lag („guacd auf dem Spark nicht installiert: …“), und das nächste Update versucht es wieder. Eine guacd-Einheit der Distribution bleibt gesperrt; es läuft nur speech-spark-guacd auf 127.0.0.1:4822, die das Panel startet, wenn ein Bildschirm aufgeht. Ausschalten deinstalliert nichts. Danach auf dem System einmal sudo spark-anker bildschirm."
 },
 {
 "lang": "de",
@@ -20477,7 +20485,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 103). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again, and profiles forgets what it had opened of the profiles' sealed files."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 104). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again, and profiles forgets what it had opened of the profiles' sealed files."
 },
 {
 "lang": "en",
@@ -20493,7 +20501,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 47 files in every backup (step 7) - 103 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 47 files in every backup (step 7) - 104 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -20893,7 +20901,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ang.terminal_ws); at most 4 sessions at once. 5. Another host key?: If the server shows another host key than at pairing, there is no connection (fernzugang.hostkey_wrong); after a reinstall remove and pair again. 6. Shell, files, screen: SSH runs through the anchor's channel; if the window drops, the shell waits 120 seconds. A heartbeat every 5 seconds measures round trip and rate; output waits for the window in at most 32 pieces, then SSH slows the server (backpressure). Files through SFTP in the same connection (ferndateien.listing), downloads with a one-time link for 60 seconds; big files in pieces of 8 MB MB with a SHA-256 per piece (ferngross.upload_piece). The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most 15 pictures a second. The assistant (fernzugang.admin_help) asks only the own model and suggests, nothing is typed by itself. Notes per system are stored sealed, 10 versions stay; the model reads them only when ticked (fernnotiz.fuer_modell). Folders only order the list (fernordner.view), at most 30; rights stay per system. 7. Spontaneous help: A help (spontanhilfe.admin_new) gives a number for 10 minutes, after 5 wrong ones it is dead. The screen go"
+"text": "ang.terminal_ws); at most 4 sessions at once. 5. Another host key?: If the server shows another host key than at pairing, there is no connection (fernzugang.hostkey_wrong); after a reinstall remove and pair again. 6. Shell, files, screen: SSH runs through the anchor's channel; if the window drops, the shell waits 120 seconds. A heartbeat every 5 seconds measures round trip and rate; output waits for the window in at most 32 pieces, then SSH slows the server (backpressure). Files through SFTP in the same connection (ferndateien.listing), downloads with a one-time link for 60 seconds; big files in pieces of 8 MB MB with a SHA-256 per piece (ferngross.upload_piece). The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most 15 pictures a second; the Spark builds guacd 1.6.0 itself from Apache's source, pinned with SHA-256 (fernbild.dienst tells the page why it is missing). The assistant (fernzugang.admin_help) asks only the own model and suggests, nothing is typed by itself. Notes per system are stored sealed, 10 versions stay; the model reads them only when ticked (fernnotiz.fuer_modell). Folders only order the list (fernordner.view), at most 30; rights stay per system"
 },
 {
 "lang": "en",
@@ -20901,7 +20909,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "es by WebRTC directly between the two browsers, on the way through TURN on tars; the panel only connects them. 8. Logs and history: Logs with fixed words and numbers only (fernzugang.log), the history only time, system, admin, kind and duration (fernzugang.verlauf_add). The kill switch closes every line (fernzugang.notaus_close)."
+"text": ". 7. Spontaneous help: A help (spontanhilfe.admin_new) gives a number for 10 minutes, after 5 wrong ones it is dead. The screen goes by WebRTC directly between the two browsers, on the way through TURN on tars; the panel only connects them. 8. Logs and history: Logs with fixed words and numbers only (fernzugang.log), the history only time, system, admin, kind and duration (fernzugang.verlauf_add). The kill switch closes every line (fernzugang.notaus_close)."
 },
 {
 "lang": "en",
@@ -31741,7 +31749,15 @@
 "file": "Installation in detail",
 "head": "Making music (optional)",
 "title": "Making music (optional)",
-"text": "With --fernbild (on the computer with the panel) guacd for the screen in Remote access comes along: the distribution's packages guacd, libguac-client-vnc0 and libguac-client-rdp0 (tested with 1.3 to 1.5, security updates come with apt), their own unit guacd.service stays masked; only the unit speech-spark-guacd runs, on 127.0.0.1:4822, started by the panel when a screen opens. Once there, an update keeps it. Then switch on Features → Remote access to servers → Screen and run sudo spark-anker bildschirm once on the system."
+"text": "For the screen in Remote access the computer with the panel builds guacd itself from Apache's source (since V01.1.278; Debian 12 and 13 and Raspberry Pi OS have no guacd package any more): app/guacd-bauen.sh fetches exactly the release in fernbild.GUACD_VERSION (guacamole-server 1.6.0, Apache-2.0) only from downloads.apache.org or archive.apache.org, checks it against fernbild.GUACD_SHA256, builds it as nobody in a fresh folder under /var/tmp with VNC and RDP only (FreeRDP 3 where there is one, else 2) and puts the result in /opt/speech-spark/guacd. For building it installs build-essential pkg-config libtool-bin libcairo2-dev libjpeg-dev libpng-dev libwebp-dev uuid-dev libvncserver-dev and freerdp3-dev (or freerdp2-dev); that takes a few minutes once (fetching packages and building; the build itself took about 5 seconds on a 4-core ARM machine in the GitHub test), the progress is in the update log. It is built again only when the release changes. It is built with --fernbild, on every update once Features → Remote access to servers and Screen under it are on, and while guacd is already there. A failure never stops the update: the panel then says at the Screen button what went wrong "
+},
+{
+"lang": "en",
+"src": "installation",
+"file": "Installation in detail",
+"head": "Making music (optional)",
+"title": "Making music (optional)",
+"text": "(\"guacd not installed on the Spark: …\"), and the next update tries again. A distribution's guacd unit stays masked; only speech-spark-guacd runs, on 127.0.0.1:4822, started by the panel when a screen opens. Switching off uninstalls nothing. Then run sudo spark-anker bildschirm once on the system."
 },
 {
 "lang": "en",
