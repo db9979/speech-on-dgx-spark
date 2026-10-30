@@ -168,7 +168,7 @@ MODULE = {
     "senden": ("post", "Mails senden auf der Seite E-Mail: Vorschau-Blatt, SMTP über TLS, Kopie in Gesendet, Später senden versiegelt"),
     "antwortvorschlag": ("post", "Antwortvorschläge beim Antworten auf eine Mail: drei Richtungen, umformen, nur im Speicher"),
     "postfach": ("post", "Mails ordnen auf der Seite E-Mail: gelesen, markieren, Archiv, Ordner, Mehrfachauswahl, Löschen in den Papierkorb"),
-    "mailregeln": ("post", "Mail-Regeln: wenn Absender/Betreff, dann Ordner, gelesen, markieren; nie löschen; kein Ping-Pong; Vorschläge, Statistik"),
+    "mailregeln": ("post", "Mail-Regeln: wenn Absender/Betreff, dann Ordner, gelesen, markieren; nie löschen; kein Ping-Pong; lernt aus Korrekturen"),
     "ichweiss": ("dienste", "Was ich über dich weiß: Interessen als Themen mit Beleg, Wiederkehrendes, Woche, Monat, ein Netz-Tipp am Tag"),
     "fuerdich": ("dienste", "Für dich: findet Rechnungen, Verträge, Bestellungen, Angebote, offene Antworten, Phishing; letzte Lesung versiegelt"),
     "mailansicht": ("post", "Mail formatiert (Seite E-Mail, iPhone): HTML bereinigt, Rahmen ohne Skript, Bilder von außen nur per Klick"),

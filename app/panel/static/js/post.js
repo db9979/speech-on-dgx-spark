@@ -708,13 +708,13 @@ function postRuleThen(r){const x=r.then,p=[];if(x.folder)p.push('→ '+x.folder)
 function postRulesPaint(b){const d=RULES.data;
   if(RULES.form){postRuleForm(b);return}
   if(!d){b.innerHTML=RULES.err?`<div class="note warn">${esc(RULES.err)}</div>`:`<div class="ld-empty mut">${esc(t('Lade die Regeln …','Loading the rules …'))}</div>`;return}
-  const rows=d.rules.map((r,i)=>`<div class="ld-row" data-rid="${esc(r.id)}"><span class="ld-mid"><b>${esc(postRuleWhen(r))}</b><small>${esc(postRuleThen(r)+(r.box?' · '+r.box:''))}</small></span>`+
-    `<span class="ld-right"><span class="ld-badge ${r.on===false?'off':'read'}">${esc(r.on===false?t('pausiert','paused'):t('diesen Monat ','this month ')+r.month)}</span>`+
-    `<button class="ld-chip" type="button" data-up="${i}" aria-label="${esc(t('nach oben','up'))}"${i?'':' disabled'}>▲</button><button class="ld-chip" type="button" data-on="${esc(r.id)}">${esc(r.on===false?t('Weiter','Resume'):t('Pause','Pause'))}</button>`+
+  const rows=d.rules.map((r,i)=>`<div class="ld-row" data-rid="${esc(r.id)}"><span class="ld-mid"><b>${esc(postRuleWhen(r))}</b><small>${esc(postRuleThen(r)+(r.box?' · '+r.box:'')+(r.except&&r.except.length&&!d.learn?' · '+t(r.except.length+' Ausnahmen',r.except.length+' exceptions'):''))}</small>${d.learn?postRuleLearnHtml(r):''}</span>`+
+    `<span class="ld-right"><span class="ld-badge ${r.on===false?'off':'read'}">${esc(r.on===false?(r.paused?t('pausiert, oft korrigiert','paused, often corrected'):t('pausiert','paused')):d.learn?t('an','on'):t('diesen Monat ','this month ')+r.month)}</span>`+
+    `<button class="ld-chip" type="button" data-up="${i}" aria-label="${esc(t('nach oben','up'))}"${i?'':' disabled'}>▲</button><button class="ld-chip${r.paused&&r.on===false?' on':''}" type="button" data-on="${esc(r.id)}">${esc(r.on===false?(r.paused?t('Wieder an','On again'):t('Weiter','Resume')):t('Pause','Pause'))}</button>`+
     `<button class="ld-chip" type="button" data-ed="${esc(r.id)}">${esc(t('Ändern','Edit'))}</button><button class="ld-chip" type="button" data-del="${esc(r.id)}">${esc(t('Löschen','Delete'))}</button></span></div>`).join('');
   b.innerHTML=`<div class="ld-tools"><button class="b p" type="button" data-k="new">${esc(t('+ Neue Regel','+ New rule'))}</button></div>`+
     (RULES.msg?`<div class="note">${esc(RULES.msg)}${RULES.undo?` <button class="b" type="button" data-k="undo">${esc(t('Rückgängig','Undo'))}</button>`:''}</div>`:'')+
-    (RULES.err?`<div class="note warn">${esc(RULES.err)}</div>`:'')+postSugHtml(d.suggest||[])+postStatHtml()+
+    (RULES.err?`<div class="note warn">${esc(RULES.err)}</div>`:'')+postSugHtml(d.suggest||[])+(d.learn?postFixHtml(d.fixes||[]):'')+postStatHtml()+
     `<div class="ld-list">${rows||`<div class="ld-empty mut">${esc(t('Noch keine Regel. Am schnellsten geht es an einer Mail: „Regel daraus …“.','No rule yet. Quickest from a mail: "Rule from this …".'))}</div>`}`+
     (d.tidy&&d.tidy.length?`<div class="ld-grp"><span>${esc(t('Aus „Mails aufräumen“','From "Tidy mails"'))}</span></div>`+d.tidy.map(r=>`<div class="ld-row"><span class="ld-mid"><b>${esc(r.match)}</b><small>${esc(r.keep?t('bleibt im Posteingang','stays in the inbox'):'→ '+r.folder)}</small></span><span class="ld-right"><button class="ld-chip" type="button" data-tdel="${esc(r.id)}">${esc(t('Löschen','Delete'))}</button></span></div>`).join(''):'')+
     `</div><div class="fh">${esc(t('Die erste passende Regel entscheidet (▲ ändert die Reihenfolge). Regeln nehmen neue Mails; gelöscht wird nie eine Mail, nichts kommt in Papierkorb oder Spam.','The first rule that fits decides (▲ changes the order). Rules take new mail; a mail is never deleted, nothing goes into trash or junk.'))}</div>`;
@@ -730,7 +730,31 @@ function postRulesPaint(b){const d=RULES.data;
   b.querySelectorAll('[data-on]').forEach(x=>x.onclick=()=>{const r=d.rules.find(y=>y.id===x.dataset.on);
     call('/api/profile/mail/rules',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:r.id,account:r.account,when:r.when,then:r.then,on:r.on===false})})});
   b.querySelectorAll('[data-ed]').forEach(x=>x.onclick=()=>{const r=d.rules.find(y=>y.id===x.dataset.ed);RULES.form=JSON.parse(JSON.stringify({id:r.id,account:r.account,when:r.when,then:r.then,on:r.on}));RULES.test=null;postRulesDraw()});
-  b.querySelectorAll('[data-sg]').forEach(x=>x.onclick=()=>postSugDo(d.suggest.find(y=>y.id===x.dataset.sid),x.dataset.sg,call));postStatBind(b)}
+  b.querySelectorAll('[data-sg]').forEach(x=>x.onclick=()=>postSugDo(d.suggest.find(y=>y.id===x.dataset.sid),x.dataset.sg,call));postStatBind(b);
+  // Sortieren aus Korrekturen lernen, Stufe 3: „Rückgängig“ at a correction, „Regel ändern“ opens the form, an exception off the rule
+  b.querySelectorAll('[data-fu]').forEach(x=>x.onclick=()=>call('/api/profile/mail/rules/fixes/'+encodeURIComponent(x.dataset.fu)+'/undo',{method:'POST'}));
+  b.querySelectorAll('[data-fe]').forEach(x=>x.onclick=()=>{const r=d.rules.find(y=>y.id===x.dataset.fe);if(!r)return;RULES.form=JSON.parse(JSON.stringify({id:r.id,account:r.account,when:r.when,then:r.then,on:r.on}));RULES.test=null;postRulesDraw()});
+  b.querySelectorAll('[data-xr]').forEach(x=>x.onclick=()=>{const r=d.rules.find(y=>y.id===x.dataset.xr),a=r&&r.except[+x.dataset.xi];if(!a)return;
+    if(confirm(t('„'+a+'“ ist keine Ausnahme mehr: die Regel nimmt seine neuen Mails wieder. Mails bleiben, wo sie sind.','"'+a+'" is no exception any more: the rule takes its new mails again. Mails stay where they are.')))
+      call('/api/profile/mail/rules/'+encodeURIComponent(r.id)+'/except',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({from:a})})})}
+// Korrekturen (30 Tage) (mailregeln.fix_list, plan mail-lernen 7a): what the person re-sorted after the Spark, with what became
+// of it; „Rückgängig“ takes back the exception or pause it made (never moves a mail), „Regel ändern“ opens the rule
+const postFixFolder=f=>f===''?t('Falsch sortiert','Wrongly sorted'):f.toUpperCase()==='INBOX'?t('Posteingang','Inbox'):f;
+const POST_FIX_STATE={wartet:['wartet','waiting','due'],ausnahme:['Ausnahme gesetzt','exception set','read'],pausiert:['Regel pausiert','rule paused','off'],
+  bleibt:['nicht wieder verschoben','not moved again','read'],zurueck:['zurückgenommen','taken back','off']};
+function postFixHtml(list){if(!list.length)return '';
+  return `<div class="ld-list postfix"><div class="ld-grp"><span>${esc(t('Korrekturen (30 Tage)','Corrections (30 days)'))}</span><span>${list.length}</span></div>`+list.map(x=>{const st=POST_FIX_STATE[x.state]||POST_FIX_STATE.bleibt;
+    return `<div class="ld-row"><span class="ld-mid"><b>${esc(x.from||'–')}</b><small>${esc(postFixFolder(x.von)+' → '+postFixFolder(x.nach)+' · '+
+      (x.by==='tidy'?t('Postfach aufräumen','Inbox tidying')+(x.model?t(' (Modell)',' (model)'):''):x.rule?t('Regel „'+x.rule+'“','Rule "'+x.rule+'"'):t('Regel gelöscht','rule deleted'))+' · '+cxDay(x.t)+(x.box?' · '+x.box:''))}</small></span>`+
+    `<span class="ld-right"><span class="ld-badge ${st[2]}">${esc(t(st[0],st[1]))}</span>`+
+    (x.undo&&x.state!=='wartet'?`<button class="ld-chip" type="button" data-fu="${esc(x.id)}">${esc(t('Rückgängig','Undo'))}</button>`:'')+
+    (x.rid?`<button class="ld-chip" type="button" data-fe="${esc(x.rid)}">${esc(t('Regel ändern','Change the rule'))}</button>`:'')+`</span></div>`}).join('')+'</div>'}
+// per rule: „N genommen · M korrigiert“ (this month's count, corrections of 30 days) with a bar, its exceptions to remove
+function postRuleLearnHtml(r){const n=r.month||0,k=r.fixed||0,ex=r.except||[];
+  return `<small>${esc(t(n+' genommen (Monat) · '+k+' korrigiert (30 Tage)',n+' taken (month) · '+k+' corrected (30 days)'))}</small>`+
+    (n+k?`<span class="poststatbar${r.on===false?' warn':''}" style="width:${Math.round(100*n/(n+k))}%"></span>`:'')+
+    (ex.length?`<details class="postexc"><summary>${esc(t(ex.length+(ex.length>1?' Ausnahmen':' Ausnahme'),ex.length+(ex.length>1?' exceptions':' exception')))}</summary>`+
+      ex.map((a,i)=>`<span class="postexcrow"><span>${esc(a)}</span><button class="ld-chip" type="button" data-xr="${esc(r.id)}" data-xi="${i}" aria-label="${esc(t('Ausnahme entfernen','Remove the exception'))}">${ic('x')}</button></span>`).join('')+'</details>':'')}
 // Regel-Vorschläge aus dem Ablegen (Dominik 2026-10-21 „ok“): what the night found below the KI folder; a rule only after a click
 function postSugHtml(list){if(!list.length)return '';
   return `<div class="ld-list postsug"><div class="ld-grp"><span>${esc(t('Vorschläge aus deinem Ablegen','Suggestions from your filing'))}</span></div>`+list.map(x=>

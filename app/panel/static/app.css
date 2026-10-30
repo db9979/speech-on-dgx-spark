@@ -2138,6 +2138,11 @@ body.adm .post .postfoot{bottom:calc(59px + env(safe-area-inset-bottom))}
 .postrules .postwk{display:flex;flex-direction:column}.postrules .postwk small{color:var(--mut)}
 .postrules .poststat .ld-mid{position:relative;min-width:0}
 .postrules .poststatbar{display:block;height:3px;border-radius:2px;background:var(--acc);opacity:.5;margin-top:3px}
+/* Korrekturen (Sortieren aus Korrekturen lernen, Stufe 3): the bar of a paused rule, its exceptions one per line */
+.postrules .poststatbar.warn{background:var(--warn)}
+.postrules .postexc summary{cursor:pointer;color:var(--mut);font-size:12px}
+.postrules .postexcrow{display:flex;gap:8px;align-items:center;justify-content:space-between;font-size:12px;min-width:0}
+.postrules .postexcrow>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .post .postlaterl .ld-row{padding:6px 0}
 .post .postthrrow{border-top:1px solid var(--line)}
 .post .postthrrow summary{display:flex;gap:10px;align-items:center;padding:8px 2px;cursor:pointer;list-style:none;min-height:44px}

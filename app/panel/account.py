@@ -74,6 +74,7 @@ from core import (  # noqa: E402
     assistant,
     calendar_on,
     calshare_on,
+    maillearn_on,
     mailmanage_on,
     mailsend_on,
     check_password,
@@ -92,7 +93,7 @@ router = APIRouter()
 
 # whoami flag -> function in features.py
 WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speaker", "calendar": "calendar",
-       "homeassistant": "ha", "mail": "mail", "mail_tidy": "tidy", "mail_style": "mailstil", "mail_insight": "fuerdich", "ichweiss": "ichweiss", "share": "teilen", "mail_manage": "mailmanage", "mail_delete": "maildelete", "mail_code": "mailcode", "mail_send": "mailsend", "proactive": "proactive", "room": "room",
+       "homeassistant": "ha", "mail": "mail", "mail_tidy": "tidy", "mail_style": "mailstil", "mail_insight": "fuerdich", "ichweiss": "ichweiss", "share": "teilen", "mail_manage": "mailmanage", "mail_delete": "maildelete", "mail_learn": "maillearn", "mail_code": "mailcode", "mail_send": "mailsend", "proactive": "proactive", "room": "room",
        "room_voices": "roomtv", "room_ha": "roomha", "room_remote": "roomfar", "weather": "weather", "contacts": "contacts",
        "parcels": "parcels", "telegram": "telegram", "tasks": "tasks", "vorgaenge": "vorgaenge", "knowledge_book": "wissensbuch", "knowledge_map": "wissenskarte", "knowledge_ents": "wissensknoten", "knowledge_search": "kartensuche", "find": "fund", "transit": "transit", "feeds": "feeds",
        "esp32": "esp32", "iphone": "iphone", "iphone_panel": "iphonepanel", "pebble": "pebble", "pebble_chat": "pebblechat", "pebble_reply": "pebbleantwort", "pebble_remote": "pebblefern", "pebble_health": "pebblegesund", "pebble_face": "pebblezifferblatt", "pebble_day": "pebbletag", "pebble_alerts": "pebblemeldung", "pebble_note": "pebblemerken", "pebble_place": "pebbleort", "pebble_follow": "pebblefolge", "pebble_quick": "pebbleschnell", "pebble_remind": "pebbleerinnern", "terminal": "terminal",
@@ -1597,6 +1598,28 @@ async def profile_mail_rule_apply(request: Request, rid: str, prof=Depends(secre
     """„Auch die vorhandenen“: the rule on the inbox mails it fits now (with the code; „Rückgängig“ brings them back)."""
     guard.limit(request, "postordnen", prof["id"])
     return await _rule(prof, "apply", mailregeln.apply, rid[:20])
+
+
+# Sortieren aus Korrekturen lernen, Stufe 3 (plan mail-lernen 7a): „Korrekturen (30 Tage)“ on the tab Regeln comes with
+# GET /api/profile/mail/rules (fixes, per rule fixed); „Wieder an“ is the rule saved with on (POST /api/profile/mail/rules)
+@router.post("/api/profile/mail/rules/fixes/{fid}/undo",
+             dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on), Depends(maillearn_on)])
+async def profile_mail_rule_fix_undo(request: Request, fid: str, prof=Depends(browser_profile)):
+    """„Rückgängig“ at a correction: the exception and the pause it made go again; no mail moves (mailregeln.undo_fix
+    writes its journal line for every outcome)."""
+    guard.limit(request, "postordnen", prof["id"])
+    await _rule(prof, "correction undo", mailregeln.undo_fix, fid[:20])
+    return mailregeln.public(prof["id"])
+
+
+@router.post("/api/profile/mail/rules/{rid}/except",
+             dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on), Depends(maillearn_on)])
+async def profile_mail_rule_except(request: Request, rid: str, prof=Depends(browser_profile)):
+    """An exception of the rule removed: {from}; the rule takes this sender's new mail again (mailregeln.drop_except)."""
+    guard.limit(request, "postordnen", prof["id"])
+    b = await json_body(request, 1024)
+    await _rule(prof, "exception", mailregeln.drop_except, rid[:20], str(b.get("from") or "")[:200])
+    return mailregeln.public(prof["id"])
 
 
 async def _einordnen(prof, what, fn, *args):

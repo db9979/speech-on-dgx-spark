@@ -661,7 +661,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/dungeon-wappen.json` | AI Dungeon Master: colour and charge you chose as host for your group's arms | State | – | yes | – |
 | `users/ID/interessen.json` | What I know about you: confirmed and refused interests with topic and senders and the last web tip (no subject, never a mail) | Settings | sealed whole (AES-256-GCM) | yes | – |
 | `users/ID/mailstil.json` | Mail style (only the summary, never a mail) | Settings | – | yes | – |
-| `users/ID/mail-regeln.json` | Mail rules of the E-mail page and rule suggestions (senders, words, folders; never a mail), plus for 30 days the Message-IDs of mails a rule moved | Settings | – | yes | – |
+| `users/ID/mail-regeln.json` | Mail rules of the E-mail page and rule suggestions (senders, words, folders; never a mail), plus for 30 days the Message-IDs of mails a rule moved and the corrections (Message-ID, sender, folders) | Settings | – | yes | – |
 | `users/ID/mail-spaeter.bin` | Send later: planned mails until they go out, after that for a day the line without text | Queue | sealed | yes | – |
 | `users/ID/mail-einordnen.bin` | Sort every mail here: the last run for "Undo" (folders and Message-IDs, never a mail), 30 days | State | sealed | yes | – |
 | `users/ID/spark-kalender.json` | Spark calendar: appointments of the calendars without an account (only here) | Appointments | sealed | yes | – |
@@ -3941,7 +3941,7 @@ flowchart TD
 6. <a id="kn-post-s6"></a>**Supply sealed**: mailvorrat.keep_heads keeps the newest headers, plus the texts read last; vorrat.seal seals them with the Spark's key in the profile's folder.
 7. <a id="kn-post-s7"></a>**Answer with its time**: When something is not fresh from the provider, frisch.stand says with a fixed sentence when it is from ("as of yesterday 18:00"). The pages show at once what is there and load the rest behind.
 8. <a id="kn-post-s8"></a>**Change something?**: Reading is all that works without further switches. A confirmation code from a new mail becomes, with a switch of its own, only a note on the device in use (mailcode.arrived), never by Telegram, never in a log.
-9. <a id="kn-post-s9"></a>**Change with a check**: A mail goes out only after the preview sheet and the tap on Send (senden.preview, senden.send, at most 30 a day). "Send later" keeps it sealed until its time (senden.later); if a sending broke off, it never goes a second time. "Sort every mail here" (einordnen.start) proposes first and moves by fixed rules only after the tap, with Undo. What the mail rules and "Inbox tidying" move by themselves stays 30 days with its Message-ID on one list (mailregeln.spark_moved); when the person puts such a mail somewhere else, back into the inbox for instance, no sorter touches it again. contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is overwritten.
+9. <a id="kn-post-s9"></a>**Change with a check**: A mail goes out only after the preview sheet and the tap on Send (senden.preview, senden.send, at most 30 a day). "Send later" keeps it sealed until its time (senden.later); if a sending broke off, it never goes a second time. "Sort every mail here" (einordnen.start) proposes first and moves by fixed rules only after the tap, with Undo. What the mail rules and "Inbox tidying" move by themselves stays 30 days with its Message-ID on one list (mailregeln.spark_moved); when the person puts such a mail somewhere else, back into the inbox for instance, no sorter touches it again. With "Learn sorting from corrections" that is a correction (mailregeln.correct, also the folder "Falsch sortiert"): the sender becomes an exception of the rule, after 3 corrections in 30 days it pauses, a card asks; headers only, the model never decides. Had the model sorted the mail, the card asks "Mails from … always to …?" (a rule only by button), and for "Falsch sortiert" the model may only suggest a folder there is, from the domain and the folder names (mailregeln.model_hint, tidy.suggest_folder; any other answer is dropped). Under E-mail → Rules the corrections are listed (mailregeln.fix_list) with "Undo" (mailregeln.undo_fix takes back exception and pause, never moves a mail). contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is overwritten.
 10. <a id="kn-post-s10"></a>**Door for apps**: kalenderserver.login refuses other sites' web pages, locks wrong passwords like a PIN, keeps My emergency stop and the switch and counts the rate limit. Then the app sees only the profile's Spark calendars and the address book "On the Spark"; kontaktserver._write takes one vCard per card, at most 2000, and writes only with "Edit contacts".
 11. <a id="kn-post-s11"></a>**Own data only**: No profile sees another one's mail, appointments or contacts, except a calendar its owner shares.
 
@@ -3955,6 +3955,7 @@ flowchart TD
 - **40** mail texts per profile in the supply ([step 6](#kn-post-s6))
 - **30** mails at most a day ([step 9](#kn-post-s9))
 - **30 Tage** the Spark remembers what it moved ([step 9](#kn-post-s9))
+- **3** corrections pause a rule ([step 9](#kn-post-s9))
 - **2000** cards in the address book "On the Spark" ([step 10](#kn-post-s10))
 
 #### Settings
@@ -3981,12 +3982,13 @@ flowchart TD
 - `app/panel/senden.py` `later`: send later, sealed ([step 9](#kn-post-s9))
 - `app/panel/einordnen.py` `start`: sort a folder, a proposal first ([step 9](#kn-post-s9))
 - `app/panel/mailregeln.py` `spark_moved`: what the Spark moved, no ping-pong ([step 9](#kn-post-s9))
+- `app/panel/mailregeln.py` `model_hint`: the model only suggests a folder there is ([step 9](#kn-post-s9))
 - `app/panel/mailcode.py` `arrived`: confirmation code as a note ([step 8](#kn-post-s8))
 - `app/panel/contacts.py` `save`: card back with If-Match ([step 9](#kn-post-s9))
 - `app/panel/kalenderserver.py` `login`: door for calendar and contacts apps ([step 2](#kn-post-s2), [step 10](#kn-post-s10))
 - `app/panel/kontaktserver.py` `_write`: card from a contacts app ([step 10](#kn-post-s10))
 
-Self-tests: `test_mailvorrat`, `test_vorrat`, `test_mails_senden`, `test_kalenderserver`, `test_kontaktserver`, `test_kontakte_seite`, `test_kalenderspiegel`, `test_mailcode`, `test_einordnen`, `test_mailregeln`, `test_tidy`
+Self-tests: `test_mailvorrat`, `test_vorrat`, `test_mails_senden`, `test_kalenderserver`, `test_kontaktserver`, `test_kontakte_seite`, `test_kalenderspiegel`, `test_mailcode`, `test_einordnen`, `test_mailregeln`, `test_tidy`, `test_mail_lernen`
 
 ### Remote access
 

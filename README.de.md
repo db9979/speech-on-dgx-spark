@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.274** Falsch einsortierte Mails lernen (Stufen 2–4, eigener Schalter, aus): legst du eine vom Spark sortierte Mail woanders hin oder nach „Falsch sortiert“, wird der Absender Ausnahme der Regel, nach 3 Korrekturen pausiert sie; Korrekturen (30 Tage) mit „Rückgängig“ unter E-Mail → Regeln und am iPhone; das Modell schlägt nur vor, eine Regel entsteht nur per Knopf
 - **V01.1.273** Wissenskarte: Seite und Punkt gleichen Namens sind ein Punkt, Umbenennen nimmt die Seite mit (keine Doppelseite), „Seite umbenennen“ mit Code; feste Typregeln für Verbindungen, Fristen nur mit Datum oder Zahl
 - **V01.1.272** Redesign Stufe 5: Einstellungen, Funktionen, Ich-Seiten und Apps-Kacheln im Systemstil (graue Gruppen, Liste und Detail, Speichern-Leiste steht)
 - **V01.1.271** · 2026-10-30 · Test-Fix: der Seitentest „Ältere Mails nachladen“ überspringt sich ohne Browser wie alle Seitentests (war in der Werkstatt auf dem Spark rot), ein Wächter-Test fängt das künftig ab; Briefing- und Hintergrund-Test zählen nur ihre eigenen Sachen (waren im Nachtlauf wackelig); die Ersatz-Postfächer der Mail-Tests nehmen wie das echte einen Ordner an (TypeError in mail._older im GitHub-Log); der Mail-Löschen-Test wartet auf die Antwort der Seite, bevor er weiterzieht (war parallel zu anderen Mail-Tests rot)
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.267** Finden Stufe E: Messung mit 50 000 Mails (`sudo speech-spark finden messen`), schnellere Suche, Finden nativ in der iPhone-App, „Original öffnen“ auch im iPhone-Chat und im Begleiter
 - **V01.1.266** „Spark verwalten“ in der iPhone-App: war die App vor dem (neu eingerichteten) zweiten Schritt gekoppelt, sagt sie das und schaltet sich mit „Mit Code bestätigen“ (Code oder Passkey) einmal frei, statt nur „kein Admin“ zu zeigen
 - **V01.1.265** Kein Ping-Pong mehr bei Mail-Regeln: eine Mail, die eine Regel oder das Aufräumen verschoben hat und die du zurück in den Posteingang legst, bleibt dort; die Regeln merken sich, was sie verschoben haben (30 Tage)
-- **V01.1.264** Redesign Stufe 3: Linien-Icons statt Emoji, eine Quelle `icons.js`
 
 
 

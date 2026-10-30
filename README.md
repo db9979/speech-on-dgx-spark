@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.274** Learn from wrongly sorted mail (stages 2–4, own switch, off): put a mail the Spark sorted somewhere else or into "Falsch sortiert" and the sender becomes an exception of the rule, after 3 corrections it pauses; corrections (30 days) with "Undo" under E-mail → Rules and on the iPhone; the model only suggests, a rule only comes from a button
 - **V01.1.273** Knowledge map: a page and a point of the same name are one point, renaming takes the page along (no double page), "Rename page" with code; fixed type rules for connections, deadlines only with a date or number
 - **V01.1.272** Redesign stage 5: settings, features, Me pages and app tiles in the system style (grey groups, list and detail, a save bar that stands)
 - **V01.1.271** · 2026-10-30 · Test fix: the page test "Load older mail" skips itself without a browser like every page test (was red in the Werkstatt on the Spark), a guard test catches that from now on; the briefing and background tests count only their own things (were wobbly in the night run); the mail tests' stand-in mailboxes take a folder like the real one (TypeError in mail._older in the GitHub log); the mail delete test waits for the page's answer before it drags on (was red alongside other mail tests)
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.267** Find stage E: measurement with 50,000 mails (`sudo speech-spark finden messen`), faster search, Find native in the iPhone app, "Open the original" also in the iPhone chat and the companion
 - **V01.1.266** "Spark verwalten" in the iPhone app: when the app was paired before the (newly set up) second step, it says so and unlocks once with "Confirm with code" (code or passkey), instead of only showing "not an admin"
 - **V01.1.265** Mail rules no longer play ping-pong: a mail a rule or the tidying moved and you put back into the inbox stays there; the rules remember what they moved (30 days)
-- **V01.1.264** Redesign stage 3: line icons instead of emoji, one source `icons.js`
 
 
 

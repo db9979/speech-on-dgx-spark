@@ -319,6 +319,7 @@ WITHOUT = {
     "mailmanage": "nur Knöpfe auf der Seite E-Mail (gelesen, Archiv, Verschieben); per Stimme ordnet Postfach aufräumen",
     "ichweiss": "eine Seite unter Ich → Was ich über dich weiß; Fristen und Rückblick per Sprache über fuer_dich",
     "maildelete": "kein Werkzeug: nur Knopf, Taste oder Ziehen auf der Seite E-Mail; Modell, Regeln, Für dich und Stimme löschen nie",
+    "maillearn": "kein Werkzeug: erkennt umsortierte Mails nach festen Regeln (Seite, Regel-Lauf, Nachtlauf), Knöpfe nur auf der Karte Regel-Vorschlag",
     "einladungen": "kein Werkzeug: die Einladung nimmt nur der Tipp auf der Seite E-Mail an, nie der Assistent",
     "kontaktserver": "kein Werkzeug: Kontakte-Apps erreichen den Spark über CardDAV (kontaktserver.py)",
     "kontakteaendern": "kein Werkzeug: nur Bearbeiten auf der Seite Kontakte und in der iPhone-App; Modell und Stimme ändern nie Kontakte",

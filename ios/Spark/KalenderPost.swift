@@ -1723,6 +1723,9 @@ struct MailRule: Identifiable {
     var on = true
     var month = 0
     var box = ""
+    var fixed = 0
+    var paused = false
+    var exceptions: [String] = []
     var key = UUID()
 
     init(account: String = "", from: String = "", subject: String = "") { self.account = account; self.from = from; self.subject = subject }
@@ -1735,6 +1738,9 @@ struct MailRule: Identifiable {
         folder = String((t["folder"] as? String ?? "").prefix(200)); read = t["read"] as? Bool ?? false
         flag = t["flag"] as? Bool ?? false; quiet = t["quiet"] as? Bool ?? false
         on = d["on"] as? Bool ?? true; month = d["month"] as? Int ?? 0; box = String((d["box"] as? String ?? "").prefix(60))
+        // Sortieren aus Korrekturen lernen (Stufe 3): corrections of 30 days, paused by them, the senders it leaves alone
+        fixed = d["fixed"] as? Int ?? 0; paused = (d["paused"] as? Int ?? 0) > 0
+        exceptions = (d["except"] as? [String] ?? []).prefix(50).map { String($0.prefix(200)) }
     }
 
     var body: [String: Any] {
@@ -1771,6 +1777,8 @@ struct MailRules: View {
     @State private var suggest: [MailSuggestion] = []
     @State private var stats: MailStats?
     @State private var accounts: [(String, String)] = []
+    @State private var learn = false
+    @State private var fixes: [MailFix] = []
     @State private var editing: MailRule?
     @State private var loading = true
     @State private var error: String?
@@ -1805,18 +1813,52 @@ struct MailRules: View {
                         }
                     }
                 }
+                // Korrekturen (30 Tage) (Sortieren aus Korrekturen lernen, Stufe 3): what you re-sorted after the Spark;
+                // „Rückgängig“ takes back the exception or pause it made, no mail moves
+                if learn && !fixes.isEmpty {
+                    Section("Korrekturen (30 Tage)") {
+                        ForEach(fixes) { x in
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text(verbatim: x.from.isEmpty ? "–" : x.from).lineLimit(1)
+                                    Spacer()
+                                    Text(x.stateKey).font(.caption2).foregroundStyle(x.state == "wartet" ? Color.orange : Color.secondary)
+                                }
+                                Text(verbatim: x.line).font(.caption).foregroundStyle(.secondary)
+                                HStack {
+                                    if x.undo && x.state != "wartet" {
+                                        Button("Rückgängig") { Task { await call("POST", "api/profile/mail/rules/fixes/\(x.id)/undo", [:]) } }
+                                            .buttonStyle(.bordered)
+                                    }
+                                    if let r = rules.first(where: { $0.id == x.rid }) {
+                                        Button("Regel ändern") { editing = r }.buttonStyle(.bordered)
+                                    }
+                                }
+                                .font(.caption)
+                            }
+                        }
+                    }
+                }
                 Section {
                     ForEach(rules) { r in
                         Button { editing = r } label: {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(verbatim: r.when).foregroundStyle(r.on ? Color.primary : Color.secondary)
                                 Text(verbatim: r.then + (r.box.isEmpty ? "" : " · " + r.box)).font(.caption).foregroundStyle(.secondary)
-                                Text(r.on ? LocalizedStringKey("Diesen Monat \(r.month)") : LocalizedStringKey("pausiert")).font(.caption2).foregroundStyle(.secondary)
+                                if learn {
+                                    Text(r.on ? LocalizedStringKey("\(r.month) genommen · \(r.fixed) korrigiert") : LocalizedStringKey("pausiert · \(r.month) genommen · \(r.fixed) korrigiert"))
+                                        .font(.caption2).foregroundStyle(r.on ? Color.secondary : Color.orange)
+                                    if r.month + r.fixed > 0 {
+                                        ProgressView(value: Double(r.month), total: Double(r.month + r.fixed)).tint(r.on ? Color.green : Color.orange)
+                                    }
+                                } else {
+                                    Text(r.on ? LocalizedStringKey("Diesen Monat \(r.month)") : LocalizedStringKey("pausiert")).font(.caption2).foregroundStyle(.secondary)
+                                }
                             }
                         }
                         .swipeActions(edge: .trailing) {
                             Button("Löschen", role: .destructive) { Task { await call("DELETE", "api/profile/mail/rules/\(r.id)", nil) } }
-                            Button(r.on ? LocalizedStringKey("Pause") : LocalizedStringKey("Weiter")) {
+                            Button(r.on ? LocalizedStringKey("Pause") : (r.paused ? LocalizedStringKey("Wieder an") : LocalizedStringKey("Weiter"))) {
                                 var x = r; x.on.toggle(); Task { await call("POST", "api/profile/mail/rules", x.body) }
                             }
                             .tint(.orange)
@@ -1836,6 +1878,28 @@ struct MailRules: View {
                     Button("Neue Regel") { editing = MailRule(account: accounts.first?.0 ?? "") }
                 } footer: {
                     Text("Die erste passende Regel entscheidet. Regeln nehmen neue Mails; gelöscht wird nie eine Mail.")
+                }
+                // the exceptions of the rules (Sortieren aus Korrekturen lernen): removed one by one, the rule takes them again
+                if learn && rules.contains(where: { !$0.exceptions.isEmpty }) {
+                    Section {
+                        ForEach(rules.filter { !$0.exceptions.isEmpty }) { r in
+                            ForEach(r.exceptions, id: \.self) { a in
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(verbatim: a).lineLimit(1)
+                                        Text(verbatim: r.when).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                                    }
+                                    Spacer()
+                                    Button("Entfernen") { Task { await call("POST", "api/profile/mail/rules/\(r.id)/except", ["from": a]) } }
+                                        .buttonStyle(.bordered).font(.caption)
+                                }
+                            }
+                        }
+                    } header: {
+                        Text("Ausnahmen der Regeln")
+                    } footer: {
+                        Text("Entfernt: die Regel nimmt neue Mails dieses Absenders wieder. Mails bleiben, wo sie sind.")
+                    }
                 }
                 if !tidy.isEmpty {
                     Section("Aus „Mails aufräumen“") { ForEach(tidy, id: \.self) { Text(verbatim: $0) } }
@@ -1912,6 +1976,8 @@ struct MailRules: View {
         }
         accounts = (d["accounts"] as? [[String: Any]] ?? []).prefix(4).map { (String(($0["id"] as? String ?? "").prefix(9)), String(($0["name"] as? String ?? "").prefix(60))) }
         if let x = d["suggest"] as? [[String: Any]] { suggest = x.prefix(20).compactMap(MailSuggestion.init) }
+        learn = d["learn"] as? Bool ?? false
+        fixes = (d["fixes"] as? [[String: Any]] ?? []).prefix(100).compactMap(MailFix.init)
     }
 
     /// a suggestion taken: the rule, and with file also the mails of that sender in the inbox now (as on the page)
@@ -2012,6 +2078,58 @@ struct MailThreadItem: Identifiable {
         date = Date(timeIntervalSince1970: TimeInterval(d["date"] as? Int ?? 0))
         text = String((d["text"] as? String ?? "").prefix(1500))
         own = d["own"] as? Bool ?? false
+    }
+}
+
+/// A correction (mailregeln.fix_list, Sortieren aus Korrekturen lernen Stufe 3): a mail the Spark sorted that the person
+/// put elsewhere; sender, from where to where, which rule or „Postfach aufräumen“, when, what became of it
+struct MailFix: Identifiable {
+    let id: String
+    let from: String
+    let von: String
+    let nach: String
+    let by: String
+    let rid: String
+    let rule: String
+    let t: Int
+    let state: String
+    let undo: Bool
+
+    init?(_ d: [String: Any]) {
+        guard let id = d["id"] as? String, !id.isEmpty else { return nil }
+        self.id = String(id.prefix(20))
+        from = String((d["from"] as? String ?? "").prefix(200))
+        von = String((d["von"] as? String ?? "").prefix(200))
+        nach = String((d["nach"] as? String ?? "").prefix(200))
+        by = d["by"] as? String ?? "rule"
+        rid = String((d["rid"] as? String ?? "").prefix(20))
+        rule = String((d["rule"] as? String ?? "").prefix(120))
+        t = d["t"] as? Int ?? 0
+        state = d["state"] as? String ?? ""
+        undo = d["undo"] as? Bool ?? false
+    }
+
+    static func folder(_ f: String) -> String {
+        if f.isEmpty { return String(localized: "Falsch sortiert") }
+        if f.uppercased() == "INBOX" { return String(localized: "Posteingang") }
+        return f
+    }
+
+    var line: String {
+        let who = by == "tidy" ? String(localized: "Postfach aufräumen")
+            : (rule.isEmpty ? String(localized: "Regel gelöscht") : String(localized: "Regel") + " „" + rule + "“")
+        let day = Date(timeIntervalSince1970: TimeInterval(t)).formatted(date: .abbreviated, time: .omitted)
+        return MailFix.folder(von) + " → " + MailFix.folder(nach) + " · " + who + " · " + day
+    }
+
+    var stateKey: LocalizedStringKey {
+        switch state {
+        case "wartet": return "wartet"
+        case "ausnahme": return "Ausnahme gesetzt"
+        case "pausiert": return "Regel pausiert"
+        case "zurueck": return "zurückgenommen"
+        default: return "nicht wieder verschoben"
+        }
     }
 }
 

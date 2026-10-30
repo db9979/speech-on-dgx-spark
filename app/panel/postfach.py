@@ -147,10 +147,14 @@ def _outcome(uid, action, fn, ref, n=1, inbox=True):
     return out
 
 
-def _hint(uid, account_id, senders, folder):
-    """Regel-Vorschlag: the moves of one sender into one folder are counted (mailregeln.learn); the third asks."""
+def _hint(uid, account_id, senders, folder, box=None, src="", pairs=(), action="move"):
+    """Regel-Vorschlag: the moves of one sender into one folder are counted (mailregeln.learn); the third asks. With
+    „Sortieren aus Korrekturen lernen“ a mail the Spark sorted and the person moves out of there is a correction instead
+    (mailregeln.page_moved, box still open); archiving is done with a mail, never a correction."""
     import mailregeln
     try:
+        if pairs and box is not None and action == "move":
+            return mailregeln.page_moved(uid, box, account_id, src, folder, list(pairs))
         return mailregeln.learn(uid, account_id, senders, folder)
     except Exception as e:   # a hint never stops the move that already happened
         print(f"mail: rule hint failed ({type(e).__name__}) | {profiles.log_name(profiles.by_id(uid))}", flush=True)
@@ -368,11 +372,16 @@ def _erase(box, u, mid):
 
 def _senders(box, uids):
     """The sender addresses of messages about to move (for the rule hint), lower case."""
+    return [a for _, a in _pairs(box, uids) if a]
+
+
+def _pairs(box, uids):
+    """(Message-ID, sender address or "") of messages about to move (rule hint, Sortieren aus Korrekturen lernen): header only."""
     out = []
-    for h in box.headers(uids, "FROM").values():
+    for h in box.headers(uids, "FROM MESSAGE-ID").values():
         a = email.utils.parseaddr(str(h.get("From") or ""))[1].strip().lower()
-        if re.fullmatch(r"[^@\s<>\"]{1,64}@[\w.\-]+\.\w{2,}", a):
-            out.append(a)
+        out.append((str(h.get("Message-ID") or "").strip()[:300],
+                    a if re.fullmatch(r"[^@\s<>\"]{1,64}@[\w.\-]+\.\w{2,}", a) else ""))
     return out
 
 
@@ -441,9 +450,10 @@ def _act(uid, ref, action, folder, mid, src="INBOX"):
             return {"done": action, "mid": "", "folder": ""}
         dst = _dest(box, targets, arch, action, folder, here)
         m = _mid(box, u)
-        who = _senders(box, [u])
+        pairs = _pairs(box, [u])
         _move(box, [u], dst)
-        return {"done": action, "mid": m, "folder": dst, "hint": _hint(uid, acct["id"], who, dst)}
+        return {"done": action, "mid": m, "folder": dst,
+                "hint": _hint(uid, acct["id"], [a for _, a in pairs if a], dst, box, here, pairs, action)}
 
 
 def _act_many(uid, refs, action, folder, src="INBOX"):
@@ -482,11 +492,12 @@ def _act_many(uid, refs, action, folder, src="INBOX"):
                 if action != "delete":
                     dst = _dest(box, targets, arch, action, folder, here)
                 mids = [str(h.get("Message-ID") or "").strip()[:300] for h in box.headers(there, "MESSAGE-ID").values()]
-                who = _senders(box, there) if action != "delete" else []
+                pairs = _pairs(box, there) if action != "delete" else []
                 _move(box, there, dst)
                 moved.append({"acct": acct["id"], "mids": [m for m in mids if m][:MANY]})
                 where = dst
-                hint = hint or _hint(uid, acct["id"], who, dst)
+                if action != "delete":
+                    hint = _hint(uid, acct["id"], [a for _, a in pairs if a], dst, box, here, pairs, action) or hint
             n += len(there)
     if not n:
         raise LookupError("the messages are not there")
