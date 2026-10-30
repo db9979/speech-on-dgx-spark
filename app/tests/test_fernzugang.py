@@ -3102,6 +3102,44 @@ class _ShellPage(Base):
 class ShellForReal(_ShellPage):
     """The shell's page itself (the harness above: a real anchor, the SSH test server, the page as the admin)."""
 
+
+    def test_nothing_jumps_while_chips_hints_answers_and_the_line_change(self):
+        """Dominik 2026-10-30 08:28 (screenshot „shell springt“): shell and the row of suggestions went up and down by a
+        line or two. Over 20 s of what changes on its own (suggestions with and without „braucht sudo“ and ✦, the
+        hint after screen, the assistant's answers, the measured line every few seconds, toasts, typed commands) the
+        terminal keeps its box and its rows and columns, and so does the row of suggestions."""
+        helpers.set_config(fernzugang_hilfe=True)
+
+        async def body(ctx, pg):
+            box = """(()=>{const r=e=>{const b=$(e)?$(e).getBoundingClientRect():document.querySelector(e).getBoundingClientRect();
+                return [Math.round(b.top),Math.round(b.height),Math.round(b.width)]};
+                return JSON.stringify([r('fzterm'),r('.fzchiprow'),FZ.term.rows,FZ.term.cols,Math.round(scrollY)])})()"""
+            await pg.wait_for_timeout(1500)                                   # the first layout settled
+            first = await pg.evaluate(box)
+            seen = {first}
+            steps = [
+                "FZ.ki=['sudo ls -la /run/screen/','sudo -u benutzer screen -x name','free -h','systemctl --failed','journalctl -p err -b'];FZ.kig=[];fzChips()",
+                "fzMess({rtt_ms:12,kb_s:340})",
+                "FZ.ki=null;FZ.zeile='screen -ls';fzChips()",
+                "fzAntwort('Erst nachsehen:\\n```\\nsudo ls -la /run/screen/\\n```\\nund dann\\n```\\nscreen -x name\\n```\\n'+'Viel Text. '.repeat(120))",
+                "fzMess({rtt_ms:1234,kb_s:12})",
+                "sayToast('Sitzung beendet.',3000,{bad:true})",
+                "FZ.zeile='';fzChips();fzAntwort('')",
+                "fzMess({rtt_ms:null})",
+                "const w=FZ.ws;FZ.ws=null;fzShow();FZ.ws=w",                  # a list refresh while it reconnects
+                "$('fzwieder').hidden=false;fzTopLine()",
+                "$('fzwieder').hidden=true;fzTopLine();fzLoad()",
+            ]
+            for i in range(44):
+                await pg.evaluate(steps[i % len(steps)])
+                if i % 10 == 5:
+                    await pg.click("#fzterm")
+                    await pg.keyboard.type("ls\n")
+                await pg.wait_for_timeout(500)
+                seen.add(await pg.evaluate(box))
+            self.assertEqual(seen, {first})
+        self.run_page(body, size=(1500, 900))
+
     def test_herausloesen_clicked_shows_the_terminal_in_its_own_window(self):
         """Dominik 2026-10-28 19:56 on his Pi: „Herauslösen“ opened the normal assistant page instead of the terminal.
         The new window must show the terminal over the whole window and get output; the tab before says where it is."""

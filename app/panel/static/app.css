@@ -2956,6 +2956,7 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 /* the running remote session: one slim red line at the top of the content (Dominik 2026-10-28 18:54), on every page;
    system, time and the idle limit there, everything else behind its ⓘ (Dominik 2026-10-28 20:07, layout A) */
 .fztop{position:sticky;top:var(--fzbtop,0px);z-index:4;display:flex;flex-direction:column;gap:4px;margin:0 0 8px}.fztop[hidden]{display:none}   /* the remote session and a Spontanhilfe, one under the other */
+body.fzterminal .fztop{height:30px}   /* with a terminal open more lines (reconnecting, countdowns) lie over its head instead of pushing it down */
 .fzbanner{display:flex;align-items:center;gap:8px;height:30px;box-sizing:border-box;padding:0 10px;margin:0;background:var(--bad);color:var(--on-acc);border-radius:8px;font-size:13px;font-weight:600;line-height:30px;white-space:nowrap;overflow:hidden}
 .fzbanner[hidden]{display:none}.fzbanner .fzbtext{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}.fzbanner .fzrec{flex:none;width:8px;height:8px;border-radius:50%;background:#fff}
 .fzbanner .fzbleer{flex:0 2 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:400;opacity:.92}.fzbanner .fzbfill{flex:1}

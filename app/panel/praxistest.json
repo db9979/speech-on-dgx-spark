@@ -4615,6 +4615,13 @@
 "titel": "Fernzugang: Leitung gemessen und Hinweis bei langsamer Verbindung",
 "text": "Eine Shell öffnen. A: Nach einigen Sekunden steht in der roten Leiste „· N ms“; das ⓘ zeigt unter „Verbindung“ Laufzeit und KB/s. B: Im Terminal eine große Datei ausgeben (cat einer großen Log-Datei): das Panel bleibt bedienbar (andere Seiten laden normal), Strg+C hält die Ausgabe an. C: Von unterwegs über den Proxy der Synology dasselbe: nach etwa 10 Sekunden einmal der Hinweis „Langsame Verbindung (etwa … KB/s)“ mit dem direkten https-Zugang; über den direkten https-Zugang kommt er nicht. D: Eine Weile nichts tippen: die Messung zählt nicht als Tastendruck, der Leerlauf trennt wie eingestellt.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P684",
+"v": 1263,
+"titel": "Fernzugang: Terminal springt nicht",
+"text": "Shell zu einem System öffnen und 2 Minuten ruhig ansehen, dabei ein paar Befehle tippen (etwa screen -ls, dann ls), einmal den Assistenten fragen und von unterwegs über den Proxy verbinden: Terminal und die Zeile Vorschläge bleiben genau an ihrem Platz, keine Zeile geht hoch oder runter, auch nicht, wenn rechts oben „· 12 ms“ wechselt, Vorschläge mit „braucht sudo“ kommen oder nach 15 Sekunden die Liste neu geladen wird. WLAN kurz aus und wieder an: „Verbindung wird wiederhergestellt …“ legt sich über den Kopf des Terminals, das Terminal selbst bleibt stehen.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }
