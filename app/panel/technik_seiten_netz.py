@@ -729,7 +729,8 @@ SEITEN = {
                "eine Karte fragt; nur Kopfzeilen, die Entscheidung trifft nie das Modell. Hatte das Modell die Mail einsortiert, fragt "
                "die Karte „Mails von … immer nach …?“ (eine Regel nur per Knopf), und für „Falsch sortiert“ darf das Modell nur aus "
                "Domain und Ordnernamen einen vorhandenen Ordner vorschlagen (mailregeln.model_hint, tidy.suggest_folder; jede andere "
-               "Antwort wird verworfen). Unter E-Mail → Regeln stehen die Korrekturen (mailregeln.fix_list) "
+               "Antwort wird verworfen). Nach „Regel anlegen“ entscheidet die neue Regel: „Postfach aufräumen“ fragt bei diesem "
+               "Absender nicht mehr (mailregeln.settle). Unter E-Mail → Regeln stehen die Korrekturen (mailregeln.fix_list) "
                "mit „Rückgängig“ (mailregeln.undo_fix nimmt Ausnahme und Pause zurück, verschiebt nie eine Mail). contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich "
                "inzwischen geändert, wird nichts überschrieben.",
                "A mail goes out only after the preview sheet and the tap on Send (senden.preview, senden.send, at most "
@@ -742,7 +743,9 @@ SEITEN = {
                "{mailregeln.FIX_PAUSE} corrections in {mailregeln.FIX_DAYS} days it pauses, a card asks; headers only, the model never "
                "decides. Had the model sorted the mail, the card asks \"Mails from … always to …?\" (a rule only by button), and "
                "for \"Falsch sortiert\" the model may only suggest a folder there is, from the domain and the folder names "
-               "(mailregeln.model_hint, tidy.suggest_folder; any other answer is dropped). Under E-mail → Rules the corrections are listed (mailregeln.fix_list) with \"Undo\" (mailregeln.undo_fix "
+               "(mailregeln.model_hint, tidy.suggest_folder; any other answer is dropped). After \"Make the rule\" the new rule decides: "
+               "\"Inbox tidying\" asks no more about this sender (mailregeln.settle). "
+               "Under E-mail → Rules the corrections are listed (mailregeln.fix_list) with \"Undo\" (mailregeln.undo_fix "
                "takes back exception and pause, never moves a mail). contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is "
                "overwritten."),
               ("ok", ("fertig", "done"), "s11")),

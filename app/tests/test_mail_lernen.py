@@ -235,7 +235,7 @@ class Learn(unittest.TestCase):
         self.assertEqual([(x.get("kind"), x["from"], x["folder"]) for x in sug], [("fix", "promo@shop.de", "KI/Rechnungen")])
         (card,) = cards(self.uid).values()
         self.assertEqual([k["k"] for k in vorgaenge.public(self.uid, card)["acts"]], ["rg_regel", "rg_nie", "spaeter"])
-        self.assertIn("promo@shop.de", mailregeln.fixed_senders(self.uid, self.acct))
+        self.assertIn("promo@shop.de", mailregeln.tidy_fixed(self.uid, self.acct)[0])
 
     def test_exceptions_in_fits_and_thresholds_in_one_place(self):
         h = {"from": "anna@x.de", "to": [], "subject": "", "attach": False}
@@ -399,7 +399,7 @@ class ModelOnlySuggests(Learn):
         self.assertEqual(acts, [("rg_regel", "Regel anlegen"), ("rg_nur", "Nur diese Mail"), ("rg_nie", "Nie"), ("spaeter", "Später")])
         self.assertEqual(self.asked, [])                                     # a goal is clear: the model is not asked
         self.assertEqual(mailregeln.load(self.uid)["rules"], [])            # without a click no rule
-        self.assertIn("promo@shop.de", mailregeln.fixed_senders(self.uid, self.acct))   # „Postfach aufräumen“ asks now
+        self.assertIn("promo@shop.de", mailregeln.tidy_fixed(self.uid, self.acct)[0])   # „Postfach aufräumen“ asks now
         self.assertEqual(self.c.get("/api/profile/mail/rules").json()["fixes"][0]["model"], True)
         self.assertGreaterEqual(mailregeln.for_live()["modelfix"], 1)
         res = vorgaenge.act(self.uid, card["id"], "rg_regel")
@@ -407,6 +407,11 @@ class ModelOnlySuggests(Learn):
         (r,) = mailregeln.load(self.uid)["rules"]
         self.assertEqual((r["account"], r["when"]["from"], r["then"]["folder"], r["on"]), (self.acct, "promo@shop.de", "Newsletter", True))
         self.assertEqual(cards(self.uid)[card["key"]]["zustand"], "erledigt")
+        # the rule decides from now on: „Postfach aufräumen“ asks no more about this sender (its correction is settled)
+        self.assertEqual(mailregeln.load(self.uid)["fixes"][0]["ruled"], r["id"])
+        self.assertEqual(mailregeln.tidy_fixed(self.uid, self.acct), ({}, {"promo@shop.de"}))
+        mailregeln.add(self.uid, dict(r, on=False), r["id"])           # paused (or deleted): asked about again
+        self.assertEqual(list(mailregeln.tidy_fixed(self.uid, self.acct)[0]), ["promo@shop.de"])
 
     def test_only_this_mail_and_never_make_no_rule(self):
         for i, act in enumerate(("rg_nur", "rg_nie")):

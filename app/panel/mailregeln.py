@@ -688,16 +688,38 @@ def page_moved(uid, box, aid, src, dst, pairs):
     return learn(uid, aid, rest, dst) if rest and dst and dst != wrong else None
 
 
-def fixed_senders(uid, aid):
-    """„Mails aufräumen“ (tidy._run): {sender: time of its last correction} of what it sorted and the person corrected in
-    FIX_DAYS; such a sender is asked about instead of moved until a newer rule of the profile decides."""
+def tidy_fixed(uid, aid):
+    """„Mails aufräumen“ (tidy._run): (fixed, ruled) of what it sorted and the person corrected in FIX_DAYS. fixed
+    {sender: time of its last correction}: such a sender is asked about instead of moved. ruled {sender}: „Regel
+    anlegen“ on the correction's card made a Mail-Regel (settle) that is still there and on: that rule decides, the
+    tidying leaves the sender's new mails to it and asks no more; deleted or paused, the sender is asked about again."""
     if not features.allowed("maillearn", uid):
-        return {}
-    out = {}
-    for x in load(uid)["fixes"]:
+        return {}, set()
+    d = load(uid)
+    live = {r["id"] for r in d["rules"] if r.get("on", True)}
+    fixed, ruled = {}, set()
+    for x in d["fixes"]:
         if x.get("aid") == aid and x.get("by") == "tidy" and x.get("from") and not x.get("undone"):
-            out[x["from"]] = max(out.get(x["from"], 0), x["t"])
-    return out
+            if x.get("ruled") in live:
+                ruled.add(x["from"])
+            else:
+                fixed[x["from"]] = max(fixed.get(x["from"], 0), x["t"])
+    return {k: v for k, v in fixed.items() if k not in ruled}, ruled
+
+
+def settle(uid, aid, sender, rid):
+    """„Regel anlegen“ on a correction's card made the rule rid for sender: the corrections of „Mails aufräumen“ for this
+    sender are settled by it (tidy_fixed), the rule decides from now on. Returns how many."""
+    n = 0
+    with _lock:
+        d = load(uid)
+        for x in d["fixes"]:
+            if x.get("aid") == aid and x.get("by") == "tidy" and x.get("from") == sender and not x.get("undone"):
+                x["ruled"] = rid
+                n += 1
+        if n:
+            _save(uid, d)
+    return n
 
 
 def _spend(d, rid):
@@ -1225,8 +1247,9 @@ def _fix_run(uid, sug, name, who):
         return {"text": "Gut, dazu frage ich nicht mehr."}
     if name == "rg_regel" and sug["kind"] == "fix":
         # a fixed Mail-Regel from this sender into that folder, made only by this button (never by the model)
-        add(uid, {"account": aid, "when": {"from": sender}, "then": {"folder": sug["folder"]}})
-        print(f"mail: rule suggestion taken | card{' model' if sug.get('model') else ''} | {who}", flush=True)
+        r = add(uid, {"account": aid, "when": {"from": sender}, "then": {"folder": sug["folder"]}})
+        n = settle(uid, aid, sender, r["id"])     # „Mails aufräumen“ asks no more about this sender: the rule decides
+        print(f"mail: rule suggestion taken | card{' model' if sug.get('model') else ''} | {n} settled | {who}", flush=True)
         _drop(uid, sug["id"], "erledigt")
         return {"text": f"Regel angelegt: Mails von {sender} kommen künftig nach „{sug['folder']}“."}
     if name == "rg_aendern":

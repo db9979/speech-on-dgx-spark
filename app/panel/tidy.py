@@ -1059,8 +1059,8 @@ def _run(uid, aid, acct, d, a, mode, idle):
                 mailregeln.ensure_wrong(uid, b, d)
             except (ValueError, imaplib.IMAP4.error):
                 pass
-        fixed = mailregeln.fixed_senders(uid, aid)         # senders whose sorting the person corrected: asked, not moved
-        ruled_back, fixes = [], []
+        fixed, ruled = mailregeln.tidy_fixed(uid, aid)     # senders whose sorting the person corrected: asked, not moved;
+        ruled_back, fixes, left = [], [], 0                 # ruled: a Mail-Regel made from such a correction decides
         decided = []        # (uid, h, cat, why, stage, act)
         waiting = [x for x in d["todo"] if x["aid"] == aid]
         for u in new:
@@ -1083,6 +1083,9 @@ def _run(uid, aid, acct, d, a, mode, idle):
                 _mut(uid, lambda dd, i=x["id"]: [y.update(returned=True) for y in dd["log"] if y["id"] == i])
                 questions_add.append((u, h, "keep", "du hast sie zurück in den Posteingang gelegt"))
                 continue
+            if h["sender"] in ruled:
+                left += 1           # „Regel anlegen“ on the correction's card: that Mail-Regel takes it, no question
+                continue
             cat, why, stage = decide(d, aid, h, acct.get("user", ""))
             if stage == 4:
                 waiting.append({"aid": aid, "uid": u})
@@ -1091,6 +1094,8 @@ def _run(uid, aid, acct, d, a, mode, idle):
         if ruled_back:
             mailregeln.mark_back(uid, ruled_back)
             print(f"mail: tidy skip | user_moved | {len(ruled_back)} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+        if left:
+            print(f"mail: tidy skip | rule decides | {left} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
         # the model for the rest, only while nobody talks to the assistant
         if waiting and idle:
             done = set()
