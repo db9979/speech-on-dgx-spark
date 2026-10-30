@@ -800,7 +800,7 @@ SEITEN = {
     # ------------------------------------------------------------------ Browser und Handy
     # ------------------------------------------------------------------ Fernzugang (Dominik 2026-10-29 „in Technik → Überblick fehlt die Fernwartung“)
     "fernzugang": {
-        "stand": "1e03e35cae",
+        "stand": "5a214758ee",
         "bezug": {
             "fernzugang.entsperrt_bis": ["s2"], "fernzugang.admin_pair": ["s3"], "fernzugang.CODE_S": ["s3"], "fernzugang.TICKET_S": ["s4"], "fernzugang.terminal_ws": ["s4"], "fernzugang.hostkey_wrong": ["s5"], "fernzugang.HALTEN_S": ["s6"], "ferndateien.listing": ["s6"], "fernbild.GUACD": ["s6"], "fernbild.FPS": ["s6"], "spontanhilfe.admin_new": ["s7"], "spontanhilfe.NUMMER_S": ["s7"], "fernzugang.notaus_close": ["s8"], "fernzugang.MAX_ANKER": ["s3"], "fernnotiz.fuer_modell": ["s6"], "fernnotiz.FASSUNGEN": ["s6"], "fernordner.view": ["s6"], "fernordner.MAX_ORDNER": ["s6"], "ferngross.upload_piece": ["s6"], "ferngross.TEIL": ["s6"],
         },
@@ -862,6 +862,8 @@ SEITEN = {
             S("s6", "schritt", ("Shell, Dateien, Bildschirm", "Shell, files, screen"),
               ("SSH · SFTP · guacd", "SSH · SFTP · guacd"),
               ("SSH läuft durch den Kanal des Ankers; reißt das Fenster ab, wartet die Shell {fernzugang.HALTEN_S} Sekunden. "
+               "Ein Lebenszeichen alle {fernzugang.MESS_S} Sekunden misst Laufzeit und Rate; die Ausgabe "
+               "wartet in höchstens {fernzugang.STAU} Stücken auf das Fenster, dann bremst SSH den Server (Gegendruck). "
                "Dateien über SFTP in derselben Verbindung (ferndateien.listing), Laden mit Einmal-Link für "
                "{ferndateien.LINK_S} Sekunden; große Dateien in Teilen von {ferngross.TEIL|mb} MB mit SHA-256 je Stück "
                "(ferngross.upload_piece). Der Bildschirm geht über guacd nur auf 127.0.0.1 (fernbild.GUACD), höchstens "
@@ -870,6 +872,8 @@ SEITEN = {
                "{fernnotiz.FASSUNGEN} Fassungen bleiben; das Modell liest sie nur mit Haken (fernnotiz.fuer_modell). Ordner ordnen nur die Liste "
                "(fernordner.view), höchstens {fernordner.MAX_ORDNER}; Rechte bleiben je System.",
                "SSH runs through the anchor's channel; if the window drops, the shell waits {fernzugang.HALTEN_S} seconds. "
+               "A heartbeat every {fernzugang.MESS_S} seconds measures round trip and rate; output waits "
+               "for the window in at most {fernzugang.STAU} pieces, then SSH slows the server (backpressure). "
                "Files through SFTP in the same connection (ferndateien.listing), downloads with a one-time link for "
                "{ferndateien.LINK_S} seconds; big files in pieces of {ferngross.TEIL|mb} MB with a SHA-256 per piece "
                "(ferngross.upload_piece). The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most "

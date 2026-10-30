@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.262** Remote access: every shell measures its line (round trip and rate through the heartbeat, quietly in the red bar and the ⓘ) and on a slow connection says once that the direct https access is faster; output waits at most 32 pieces (backpressure) and goes to the window in bundles
 - **V01.1.261** Find: a new search clears the old hits at once
 - **V01.1.260** Redesign stage 2: calm side menu, page head, system font and blue accent from `tokens.css`; no floating face any more, "Ask Spark" as a sign at the top
 - **V01.1.259** Browser tests also find Chromium under `chrome-linux64` (newer Playwright builds)
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.255** Download all my data: under Me → Security → My data one ZIP with everything of the own profile (sealed files opened, settings without secrets, from chats only the own messages, a README de+en with what stays out and why), each time after a fresh code or passkey, 3 per hour, at most 2 GB, pickup link 10 minutes and once; no switch (right of access), also in the iPhone and Android app
 - **V01.1.254** Remote access: the iPhone app is locked first like the page and unlocks with a code or passkey (extend, lock); the pairing sheet shows a one-time link with copy, share, e-mail and QR code that shows only the one line on the new system, never the code
 - **V01.1.253** People, companies and deadlines as points of the knowledge map (step 2 of 4, own switch below the knowledge map, off): the language model only proposes names per passage, the panel checks them by fixed rules (kind from a fixed list, name stands in the passage, deadline only with a date, account only as IBAN or number, limits per document, profile and day); colours and a filter by kind on the map, renaming, merging and deleting only by click with code, event GEAENDERT and read functions finde_knoten/knoten_liste for other parts; the iPhone shows and deletes
-- **V01.1.252** What was learned sealed too: the read marks of learning, remembered matches, the open memory question, interests ("What I know about you") and the Spark diary now lie sealed as well, once after a backup "vor-siegel"; every file of memory and conversations must be sealed (plan nutzerwissen, stage 4c; test_siegel)
 
 
 

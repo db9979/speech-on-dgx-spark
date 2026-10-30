@@ -30,6 +30,7 @@ from tests import helpers
 helpers.start()
 import admin  # noqa: E402
 import dienstwacht  # noqa: E402
+import fernbild  # noqa: E402
 import fernzugang  # noqa: E402
 import guard  # noqa: E402
 import live  # noqa: E402
@@ -2287,6 +2288,89 @@ Object.defineProperty(Navigator.prototype,'keyboard',{configurable:true,get(){re
 TICKET = "T" * 43
 
 
+class LineMeasured(_EndToEndBase):
+    """The line of a shell session (the coordinator 2026-10-30, perf): the heartbeat carries a token the page answers
+    at once (round trip), the rate of the last MESS_S seconds and „stau“ when output had to wait; the answer is no
+    activity. Output waits in a bounded queue (backpressure) and goes out in bundles (batching)."""
+
+    def test_heartbeat_round_trip_rate_and_the_answer_is_no_activity(self):
+        d = self.pair(hostkey=HOST_PUB)
+        sshd = _Server(d["pi_key"].split()[1])
+        ws, _ = self.anchor(d["key"], sshd.port)
+        with unittest.mock.patch.object(fernzugang, "MESS_S", 0.3):
+            conn = self.browser(d["id"])
+            got, _ = self.read_until(conn, b"hallo vom server")
+            s = next(iter(fernzugang.SITZUNG.values()))
+
+            def puls():
+                while True:
+                    m = conn.recv(timeout=30)
+                    if isinstance(m, str) and json.loads(m).get("typ") == "puls":
+                        return json.loads(m)
+            p = puls()
+            self.assertIsInstance(p["t"], int)
+            self.assertEqual(p["langsam"], fernbild.LANGSAM)
+            before = s.zuletzt
+            conn.send(json.dumps({"typ": "pong", "t": p["t"]}, separators=(",", ":")))
+            self.assertTrue(helpers.until(lambda: s.rtt_ms is not None))
+            self.assertGreaterEqual(s.rtt_ms, 0)
+            self.assertEqual(s.zuletzt, before)                   # the answer keeps the idle clock as it is
+            self.assertTrue(helpers.until(lambda: puls().get("rtt_ms") == s.rtt_ms))
+            r = s.rtt_ms
+            s.pong(12345)                                         # an old or foreign token counts nothing
+            self.assertEqual(s.rtt_ms, r)
+            conn.send(b"y" * 60000)                               # output: the rate of the next heartbeat
+            self.assertTrue(helpers.until(lambda: puls().get("kb_s", 0) > 0))
+            conn.close()
+        helpers.until(lambda: not fernzugang.SITZUNG)
+        ws.sock.shutdown(socket.SHUT_RDWR)
+
+    def test_output_waits_bounded_and_goes_out_in_bundles(self):
+        async def go():
+            s = object.__new__(fernzugang.Sitzung)
+            s.loop, s.ende = asyncio.get_running_loop(), asyncio.Event()
+            s.puffer, s.raus, s.stau, s.browser = bytearray(), 0, False, None
+
+            class Chan:                       # a shell that writes without end
+                n = 0
+
+                def recv(self, k):
+                    Chan.n += 1
+                    return b"z" * 32768
+            s.chan = Chan()
+            q = asyncio.Queue(fernzugang.STAU)
+            th = threading.Thread(target=s._reader, args=(q,), daemon=True)
+            th.start()
+            for _ in range(200):
+                await asyncio.sleep(0.01)
+                if q.full():
+                    break
+            await asyncio.sleep(0.2)
+            self.assertTrue(q.full())
+            self.assertLessEqual(Chan.n, fernzugang.STAU + 2)       # the reader waits: nothing piles up in memory
+
+            sent = []
+
+            class Win:
+                async def send_bytes(self, b):
+                    sent.append(len(b))
+            s.browser = Win()
+            s.end = lambda why: asyncio.sleep(0)
+            task = asyncio.create_task(s._to_browser(q))
+            for _ in range(200):
+                await asyncio.sleep(0.01)
+                if sum(sent) >= 32768 * fernzugang.STAU:
+                    break
+            self.assertTrue(s.stau)
+            self.assertLessEqual(max(sent), fernzugang.BUENDEL + 32768)
+            self.assertLess(len(sent), sum(sent) // 32768)           # fewer messages than chunks: bundled
+            s.ende.set()
+            task.cancel()
+            th.join(5)
+            self.assertFalse(th.is_alive())                         # the reader leaves with the session
+        asyncio.run(go())
+
+
 class Comeback(_EndToEndBase):
     """A window that drops without closing (network, proxy, sleep): the shell is held HALTEN_S with its last output
     (PUFFER, memory only); the same login, unlocked, comes back with a fresh one-time ticket and sees the screen
@@ -2331,7 +2415,7 @@ class Comeback(_EndToEndBase):
         return helpers.until(cond)
 
     def test_heartbeat_and_ssh_keepalive(self):
-        with unittest.mock.patch.object(fernzugang, "PULS_S", 0.3):
+        with unittest.mock.patch.object(fernzugang, "PULS_S", 0.3), unittest.mock.patch.object(fernzugang, "MESS_S", 0.3):
             tab, sid = self.open()
             s = fernzugang.SITZUNG[sid]
             self.assertEqual(s.transport.packetizer._Packetizer__keepalive_interval, 0.3)   # SSH's own keepalive
@@ -2340,9 +2424,10 @@ class Comeback(_EndToEndBase):
                 m = tab.recv(timeout=10)
                 if isinstance(m, str):
                     seen.append(json.loads(m))
-                    if {"typ": "puls"} in seen:
+                    if seen[-1].get("typ") == "puls":
                         break
-            self.assertIn({"typ": "puls"}, seen)
+            self.assertEqual(seen[-1]["typ"], "puls")             # the heartbeat, with its measurement (LineMeasured)
+            self.assertEqual(set(seen[-1]), {"typ", "t", "rtt_ms", "kb_s", "stau", "langsam"})
             tab.close()
         self.assertTrue(self.wait(lambda: not fernzugang.SITZUNG))
 

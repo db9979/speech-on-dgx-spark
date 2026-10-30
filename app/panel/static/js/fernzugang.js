@@ -243,13 +243,14 @@ async function fzOpen(g){if(FZ.ws||FZ.weg||FZ.fs||FZ.fb){fzMsg(t('Erst die offen
 function fzTerm(tk,sitz,cols,rows){
   const term=new window.Terminal({cursorBlink:true,fontSize:14,cols,rows,scrollback:2000,theme:{background:'#0b1020'}});
   $('fzterm').textContent='';term.open($('fzterm'));term.attachCustomKeyEventHandler(fzFang);term.focus();FZ.term=term;
-  FZ.sitz=sitz;FZ.fp='';fzBanner();fzInfo('');fzHilfeNeu();$('fztname').textContent=sitz.name;fzLayout();
+  FZ.sitz=sitz;FZ.fp='';FZ.mess=null;FZ.lahm=0;FZ.lahmGesagt=false;fzBanner();fzInfo('');fzHilfeNeu();$('fztname').textContent=sitz.name;fzLayout();
   term.write(t('Verbinde mit ','Connecting to ')+sitz.name+' …\r\n');const enc=new TextEncoder();
   term.onData(x=>{const ws=FZ.ws;if(!ws||ws.readyState!==1)return;if(FZ.ctrl&&x.length===1){const c=x.toUpperCase().charCodeAt(0);if(c>=64&&c<96)x=String.fromCharCode(c-64);FZ.ctrl=false;fzKeys()}
     if(FZ.alt&&x.length===1){x='\x1b'+x;FZ.alt=false;fzKeys()}fzZeile(x);if(FZ.bald)fzBald(0);ws.send(enc.encode(x))});
   fzVerbinde(tk,term);window.addEventListener('resize',fzResize)}
 // one WebSocket for the terminal (the first, or after a drop with a fresh ticket of the same login): the panel's
-// heartbeat comes every 20 s; nothing for 50 s counts as a dropped line
+// heartbeat comes every 5 s (answered at once: its round trip and the rate are the panel's measurement, fzMess);
+// nothing for 50 s counts as a dropped line
 function fzVerbinde(tk,term){const ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/api/fernzugang/terminal?t='+encodeURIComponent(tk));
   ws.binaryType='arraybuffer';FZ.ws=ws;FZ.grund='';FZ.zuletzt=Date.now();clearInterval(FZ.pt);
   FZ.pt=setInterval(()=>{if(FZ.ws===ws&&ws.readyState===1&&Date.now()-FZ.zuletzt>50000)ws.close(4000)},5000);
@@ -257,6 +258,7 @@ function fzVerbinde(tk,term){const ws=new WebSocket((location.protocol==='https:
     if(m.typ==='stand'&&m.stand==='offen'){FZ.sid=m.id||'';FZ.wieder=null;fzWiederZeigen();if(FZ.nachher){const l=FZ.nachher;FZ.nachher='';setTimeout(()=>fzEinfuegen(l),400)}if(m.wieder)term.reset();fzResize();
       term.write('\x1b[2m'+(m.wieder?t('Wieder verbunden · ','Connected again · '):t('Verbunden · SSH · Host-Schlüssel ','Connected · SSH · host key ')+m.fp+t(' geprüft',' checked')+' ')+'\x1b[0m\r\n');FZ.fp=String(m.fp||'');fzInfo(FZ.fp);fzBanner()}
     if(m.typ==='bald')fzBald(Number(m.s)||0);
+    if(m.typ==='puls'){if(Number.isInteger(m.t)&&m.t>0)ws.send(JSON.stringify({typ:'pong',t:m.t}));fzMess(m)}
     if(m.typ==='fehler'||m.typ==='zu')FZ.grund=m.grund;if(m.typ==='weg')FZ.grund='weg'};
   ws.onclose=()=>{if(FZ.ws!==ws)return;clearInterval(FZ.pt);if(FZ.grund==='weg'){fzWeg();return}
     if(!FZ.grund&&FZ.sid){fzWieder(term);return}if(FZ_FENSTER){window.close();return}fzZu(fzGrund(FZ.grund))}}
@@ -300,12 +302,20 @@ function fzBanner(){const b=$('fzbanner');if(!FZ.sitz){b.hidden=true;document.bo
   $('fzbtext').textContent=$('fzvolltext').textContent=(FZ.sitz.art==='dateien'?t('Fern-Dateien offen · ','Remote files open · '):FZ.sitz.art==='bildschirm'?t('Fern-Bildschirm offen · ','Remote screen open · '):t('Fernsitzung aktiv · ','Remote session active · '))+FZ.sitz.name+' · '+fzMin(FZ.sitz.seit);b.title=t('Notaus trennt sofort','The emergency stop ends it at once');
   $('fzbleer').textContent=FZ.sitz.leer?' · '+t('Leerlauf trennt nach ','idle ends after ')+FZ.sitz.leer+' min':'';$('fzbinfo').hidden=!FZ.ws;
   clearTimeout(FZ.bt);FZ.bt=setTimeout(fzBanner,30000)}
+// the line as the panel measured it (numbers only): the round trip quietly in the red line, round trip and rate in
+// „Diese Sitzung“; output that had to wait at a low rate twice in a row: one hint per session to the direct https way
+function fzMess(m){const rtt=Number.isInteger(m.rtt_ms)?m.rtt_ms:null,kb=Number.isInteger(m.kb_s)?m.kb_s:0;FZ.mess={rtt,kb,stau:!!m.stau};
+  const e=$('fzbmess');if(e)e.textContent=rtt===null?'':' · '+rtt+' ms';
+  if(m.stau)FZ.lahm=kb<(Number(m.langsam)||100)?(FZ.lahm||0)+1:0;
+  if(FZ.lahm>=2&&!FZ.lahmGesagt){FZ.lahmGesagt=true;sayToast(t(`Langsame Verbindung (etwa ${kb} KB/s). Über den Proxy der Synology kommen nur etwa 50 bis 70 KB/s an; der direkte https-Zugang ist deutlich schneller, besonders für Bildschirm und große Dateien.`,`Slow connection (about ${kb} KB/s). Through the Synology proxy only about 50 to 70 KB/s arrive; the direct https access is much faster, above all for the screen and big files.`),12000,{})}
+  if($('fzinfopop')&&!$('fzinfopop').hidden)fzInfo(FZ.fp)}
 // „Diese Sitzung“ behind the ⓘ (red line and terminal bar): the host key shortened, whole on hover and „kopieren“
 function fzKurz(fp){fp=String(fp||'');const i=fp.indexOf(':')+1;return fp.length>i+12?fp.slice(0,i+4)+'…'+fp.slice(-6):fp}
 function fzInfo(fp){const dl=$('fzinfo');dl.textContent='';const s=FZ.sitz||{},c=(FZ.d&&FZ.d.counts)||{};
   const os={linux:'Linux',macos:'macOS',windows:'Windows'}[s.art]||'';
   for(const [k,v] of [[t('System','System'),[s.name||'',os].filter(Boolean).join(' · ')],[t('Host-Schlüssel','Host key'),fp||'…'],[t('Anmeldung','Sign-in'),t('frischer Code oder Passkey','fresh code or passkey')],
-    [t('Sitzungen','Sessions'),s.max?(c.sitzungen||1)+t(' von höchstens ',' of at most ')+s.max:'–'],[t('Aufgezeichnet','Recorded'),t('nichts (nur Wörter und Zahlen im Log)','nothing (only words and numbers in the log)')]]){
+    [t('Sitzungen','Sessions'),s.max?(c.sitzungen||1)+t(' von höchstens ',' of at most ')+s.max:'–'],
+    [t('Verbindung','Connection'),FZ.mess&&FZ.mess.rtt!==null?FZ.mess.rtt+' ms'+(FZ.mess.kb?' · '+FZ.mess.kb+' KB/s':''):t('wird gemessen …','being measured …')],[t('Aufgezeichnet','Recorded'),t('nichts (nur Wörter und Zahlen im Log)','nothing (only words and numbers in the log)')]]){
     const dd=fzEl('dd','',v);if(v===fp&&fp){dd.textContent=fzKurz(fp)+' ';dd.title=fp;dd.dataset.voll=fp;dd.appendChild(fzEl('span','fzok','✓ '+t('geprüft','checked')))}dl.append(fzEl('dt','',k),dd)}
   $('fztkey').hidden=!fp;$('fztkey').title=fp||'';$('fzkeycopy').disabled=!fp}
 function fzInfoPop(open,btn){const p=$('fzinfopop');if(!p)return;open=open===undefined?p.hidden:!!open;

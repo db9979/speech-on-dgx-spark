@@ -136,7 +136,12 @@ CODE_S = 600            # a pairing code works this long, once
 TICKET_S = 30           # a ticket opens the terminal this long after „Shell“, once
 HALTEN_S = 120          # a shell whose window dropped (not closed) waits this long for the same login to come back
 PUFFER = 256 * 1024     # the shell's last output kept in memory to draw the screen again after coming back (never stored)
-PULS_S = 20             # a heartbeat to the window and SSH keepalive this often (a proxy closes a quiet line)
+PULS_S = 20             # SSH keepalive this often (a proxy closes a quiet line)
+MESS_S = 5              # the heartbeat to the window this often, with the measured line: its answer („pong“) gives the
+                        # round trip, the bytes of the last MESS_S seconds the rate; slow under load: a hint (LANGSAM)
+STAU = 32               # chunks of output (32 KB each) waiting for the window at most; then the shell's reader waits
+                        # and SSH's own window slows the server (backpressure: a `cat` of a big log never fills memory)
+BUENDEL = 128 * 1024    # output waiting together goes to the window as one message, at most this many bytes
 BALD_S = 120            # the window hears this long before the idle end that the session ends soon
 GEWOLLT = (1000, 4001)  # WebSocket close codes of a window that closed on purpose (Trennen) or was taken over
 MAX_ANKER = 10          # paired systems at most
@@ -704,6 +709,10 @@ class Sitzung:
         self.ziel_task = None   # goal: the one request running (a new one cancels it)
         self.ziel_hash = ""     # goal: what the last request sent (the same again is not asked)
         self.seit = self.zuletzt = time.time()
+        self.puls_t = 0         # the token of the last heartbeat (monotonic ms) and when it went
+        self.rtt_ms = None      # the last measured round trip to the window, ms (MESS_S)
+        self.raus = 0           # bytes to the window since the last heartbeat (the rate)
+        self.stau = False       # output had to wait for the window since the last heartbeat (the line is the limit)
         self.loop = asyncio.get_running_loop()
         self.ende = asyncio.Event()
         self.grund = ""
@@ -773,23 +782,53 @@ class Sitzung:
             log("meldung", "server nicht", 0)
 
     def _reader(self, q):
-        """In a thread: the shell's output into the queue of the event loop (never kept, never logged)."""
+        """In a thread: the shell's output into the queue of the event loop (never kept, never logged). The queue holds
+        STAU chunks at most: a slow window makes this thread wait, SSH's window then holds the server back, and the
+        panel's event loop and memory stay free (backpressure)."""
+        import concurrent.futures
         while True:
             try:
                 data = self.chan.recv(32 * 1024)
             except Exception:
                 data = b""
-            self.loop.call_soon_threadsafe(q.put_nowait, data)
+            try:
+                fut = asyncio.run_coroutine_threadsafe(q.put(data), self.loop)
+            except RuntimeError:          # the loop is gone
+                return
+            while True:
+                try:
+                    fut.result(1)
+                    break
+                except concurrent.futures.TimeoutError:
+                    if self.ende.is_set():
+                        fut.cancel()
+                        return
+                except Exception:
+                    return
             if not data:
                 return
 
     async def _to_browser(self, q):
         """The shell's output to the window, and into the ring buffer (PUFFER) for a comeback; while the window is
         gone (held, HALTEN_S) only into the buffer."""
-        while True:
+        eof = False
+        while not eof:
             data = await q.get()
             if not data:
                 break
+            if not q.empty():             # output waited: the window (the line) is slower than the shell
+                self.stau = True
+                parts = [data]
+                n = len(data)
+                while not q.empty() and n < BUENDEL:    # one message for what waited together (batching)
+                    nxt = q.get_nowait()
+                    if not nxt:
+                        eof = True
+                        break
+                    parts.append(nxt)
+                    n += len(nxt)
+                data = b"".join(parts)
+            self.raus += len(data)
             self.puffer += data
             if len(self.puffer) > PUFFER:
                 del self.puffer[:len(self.puffer) - PUFFER]
@@ -821,12 +860,27 @@ class Sitzung:
         self.tasks.append(asyncio.create_task(wait()))
 
     async def _puls(self):
-        """A heartbeat to the window every PULS_S seconds (the page knows the line is alive, a proxy sees traffic)."""
+        """A heartbeat to the window every MESS_S seconds (the page knows the line is alive, a proxy sees traffic) with
+        the measured line: the round trip of the last heartbeat (the page answers „pong“ at once) and the rate of the
+        last MESS_S seconds; „stau“ when output had to wait for the window (only then a low rate means a slow line).
+        Numbers only, nothing of the session."""
+        mark = time.monotonic()
         while not self.ende.is_set():
             with contextlib.suppress(asyncio.TimeoutError):
-                await asyncio.wait_for(self.ende.wait(), PULS_S)
+                await asyncio.wait_for(self.ende.wait(), MESS_S)
+            now = time.monotonic()
+            kb_s = int(self.raus / 1024 / max(0.5, now - mark))
+            stau, self.raus, self.stau, mark = self.stau, 0, False, now
             if not self.ende.is_set() and self.browser is not None:
-                await self._say({"typ": "puls"})
+                self.puls_t = int(now * 1000)
+                await self._say({"typ": "puls", "t": self.puls_t, "rtt_ms": self.rtt_ms, "kb_s": kb_s, "stau": stau,
+                                 "langsam": _langsam()})
+
+    def pong(self, t):
+        """The page's answer to the last heartbeat: the round trip in ms (an old or foreign token counts nothing)."""
+        if isinstance(t, int) and not isinstance(t, bool) and t and t == self.puls_t:
+            self.rtt_ms = max(0, int(time.monotonic() * 1000) - t)
+            self.puls_t = 0
 
     async def _idle(self):
         while not self.ende.is_set():
@@ -1116,7 +1170,7 @@ async def terminal_ws(ws: WebSocket):
     log("sitzung_auf", s.who, len(SITZUNG))
     _live("Fernsitzung geöffnet")
     s.tasks.append(asyncio.create_task(_melden(s, g)))
-    q = asyncio.Queue()
+    q = asyncio.Queue(STAU)
     threading.Thread(target=s._reader, args=(q,), name="fernzugang-lesen", daemon=True).start()
     s.tasks += [asyncio.create_task(s._to_browser(q)), asyncio.create_task(s._idle()), asyncio.create_task(s._puls())]
     await s._say({"typ": "stand", "stand": "offen", "fp": fingerprint(g["hostkey"]), "leerlauf": leerlauf_s() // 60,
@@ -1178,6 +1232,12 @@ async def _terminal_loop(s, ws):
             if _notaus() or not admin_on():
                 await s.end("notaus" if _notaus() else "aus")
                 break
+            if text and text.startswith('{"typ":"pong"'):     # the heartbeat's answer: no key, not activity
+                with contextlib.suppress(ValueError):
+                    m = json.loads(text)
+                    if isinstance(m, dict) and m.get("typ") == "pong":
+                        s.pong(m.get("t"))
+                        continue
             s.zuletzt = time.time()
             if data:
                 await asyncio.to_thread(s.chan.sendall, data)
@@ -1207,6 +1267,12 @@ async def _terminal_loop(s, ws):
                 await s.halten(ws)
             else:
                 await s.end(s.grund or ("fenster" if s.fenster else "browser"))
+
+
+def _langsam():
+    """KB/s under which a busy line counts as slow (one number with the screen's hint, fernbild.LANGSAM)."""
+    import fernbild
+    return fernbild.LANGSAM
 
 
 def _size(cols, rows):
