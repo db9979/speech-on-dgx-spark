@@ -346,6 +346,8 @@ DATEIEN = [
     state("umzug-hinweis.json", "Hinweis nach dem Umzug (nur die Zeit)", "Hint after the move (time only)", lokal="gilt nur für den Rechner, auf den das Panel umgezogen ist (14 Tage)"),
     state("notbetrieb-satz-en.pcm", "Notbetrieb-Satz als Ton (Englisch)", "Emergency sentence as sound (English)", lokal="Satz für Lautsprecher, wenn der Modell-Rechner fehlt; macht der Spark selbst neu"),
     state("nasquelle-tmp", "Zwischendateien der Wissensordner, Sekunden", "Knowledge folder staging, seconds", lokal="Zwischendateien beim Lesen von Wissensordnern, werden sofort gelöscht"),
+    state("wissensmessung.json", "Wissen messen: die letzten 10 Läufe, nur Zahlen (Zeiten, Speicher, Anzahlen, Grenzen)", "Measuring knowledge: the last 10 runs, numbers only (times, memory, counts, limits)", lokal="Messwerte dieses Geräts (Zustand → Prüfen)"),
+    state("wissensmessung-tmp", "Wissen messen: das Wegwerf-Profil eines Laufs, nur während er läuft", "Measuring knowledge: a run's throwaway profile, only while it runs", lokal="Wegwerf-Daten einer Messung, werden nach dem Lauf gelöscht"),
     state("notaus-mine.json", "Mein Notaus", "My kill switch", lokal="Notaus gilt nur auf diesem Gerät"),
     state("notaus-keys.json", "Notaus-Auslöser", "Kill switch triggers", lokal="Auslöser gelten nur auf diesem Gerät"),
     state("meldung-token.json", "Token für Meldungen", "Report token", lokal="Token wird neu eingetragen", schutz=("versiegelt", "sealed")),

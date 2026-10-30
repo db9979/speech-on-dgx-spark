@@ -271,6 +271,7 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 | `app/panel/wissen.py` | Knowledge from one's own uploads. |
 | `app/panel/wissensbuch.py` | Wissensbuch: the language model works each own document once into a few pages ("Auto", "Versicherungen", "Werkstatt Müller"), sentence by sentence and each s … |
 | `app/panel/wissenskarte.py` | Wissenskarte: the pages of the Wissensbuch are the points of a map, this module adds the connections between them ("Auto versichert bei HUK", "Parkschaden fü … |
+| `app/panel/wissensmessung.py` | Wissen messen: times and memory of the document search, the Wissensbuch and the Wissenskarte, for the planned test with 5000 documents (Wissenskarte Stufe 2 … |
 
 ### Connections
 
@@ -854,6 +855,8 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/weiche-unklar.json` | Unclear questions of the switch, anonymized (at most 100, 7 days) | sealed | no |
 | `state/werkstatt-wunsch.json` | The panel's wish for the Workshop's next order (kind, the admin's text), seconds | – | no |
 | `state/werkstatt.json` | The Workshop's results: last 20 orders with answer and patch, code measurement per language model, last test run | – | no |
+| `state/wissensmessung-tmp` | Measuring knowledge: a run's throwaway profile, only while it runs | – | no |
+| `state/wissensmessung.json` | Measuring knowledge: the last 10 runs, numbers only (times, memory, counts, limits) | – | no |
 <!-- /technik:speicher -->
 
 ### Keys and encryption
@@ -2438,6 +2441,12 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - Fixed topics (gedaechtnis.SLOTS: home, employer, job, partner, children, birthday, diet, pet, car, names, favourites, each with „who“) only the panel recognizes by fixed patterns (gedaechtnis.slot_of). Per place one fact holds the value: something said or corrected gives it the new wording, the old one stays as an earlier version (at most 5, reason „platz“). A value learned by itself never replaces a confirmed one: it waits as an offer on the fact with the card „Take it / Discard“. The model gets per place only the value that holds it, never earlier versions or an offer.
 - Remembered note (gemerkt.py): memory_save sends the fact's number and state along (gemerkt.rev_of), under the answer stands „Remembered: …“ with „Undo“; the conversation keeps only the numbers. Undo (gemerkt.take_back) works only while the fact is unchanged since: a new fact goes, a fixed place gets its earlier version back. What was learned by itself becomes a card „Remembered by itself“ (up to 3 facts, 7 days) with „That's right“ and „Undo“; its title names only a number, never the fact.
 
+#### Measuring knowledge
+
+- Status → Checks → Measure knowledge measures times and memory of these ways, for the test with 5000 documents: the vector matrix (float16, MB and the process's memory before and after), the document search with and without the map, wissensbuch.liste, view, rund_um, weg and wissenskarte.liste, each median and p95 over 20 fixed samples from the own titles and names, and pages, points, connections and connections per document. Numbers only, never a title or a name.
+- It measures in a process of its own with low priority (nice and SCHED_IDLE, one thread), only in a quiet minute, at most 1800 s, one at a time (wissensmessung.lauf). If somebody speaks, it stops. Made-up documents come from a fixed seed in a throwaway profile under state/wissensmessung-tmp and are gone afterwards; the limits of the real code hold, and the run says how much the documents would have brought without them. A real profile is only read (PRAGMA query_only).
+- Other parts join as a measuring part (wissensmessung.MESSTEILE: a name and fn(ordner, anzahl), numbers only, only in the run's throwaway folder).
+
 #### Numbers (from the code)
 
 - **30** candidates for re-ranking ([step 9](#kn-wissen-s9))
@@ -2525,8 +2534,11 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/profiles.py` `_cap`: cap: only old learned facts make room ([step 13](#kn-wissen-s13))
 - `app/panel/gedaechtnis.py` `slot_of`: a fact's fixed topic place by fixed patterns ([step 13](#kn-wissen-s13))
 - `app/panel/gemerkt.py` `take_back`: undo only while the fact is unchanged ([step 13](#kn-wissen-s13))
+- `app/panel/wissensmessung.py` `lauf`: one measurement in its own process, stops on speech ([step 6](#kn-wissen-s6))
+- `app/panel/wissensmessung.py` `_synth`: the throwaway profile from a fixed seed, with the code's limits ([step 6](#kn-wissen-s6))
+- `app/panel/wissensmessung.py` `MESSTEILE`: the measuring parts, extensible ([step 6](#kn-wissen-s6))
 
-Self-tests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`
+Self-tests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`
 
 ### Guard
 
@@ -3530,7 +3542,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 101). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 103). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3541,7 +3553,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **47** files in every backup ([step 7](#kn-state-s7))
-- **101** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **103** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 

@@ -271,6 +271,7 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/wissen.py` | Wissen aus eigenen Uploads: Schalter und Kontingent |
 | `app/panel/wissensbuch.py` | Wissensbuch: Seiten aus eigenen Dokumenten, jeder Satz mit Quelle; Suchindex FTS5, Lesefunktion liste |
 | `app/panel/wissenskarte.py` | Wissenskarte: geprüfte Verbindungen und Punkte aus Dokumenten, je mit Quelle, WITH RECURSIVE, Trefferliste der Suche |
+| `app/panel/wissensmessung.py` | Wissen messen: Zeiten und Speicher von Suche, Wissensbuch und Karte, erfunden oder ein Profil lesend |
 
 ### Anbindungen
 
@@ -854,6 +855,8 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/weiche-unklar.json` | Unklare Fragen der Weiche, anonymisiert (höchstens 100, 7 Tage) | versiegelt | nein |
 | `state/werkstatt-wunsch.json` | Wunsch des Panels für den nächsten Auftrag der Werkstatt (Art, Text des Admins), Sekunden | – | nein |
 | `state/werkstatt.json` | Ergebnisse der Werkstatt: letzte 20 Aufträge mit Antwort und Patch, Code-Messung je Sprachmodell, letzter Testlauf | – | nein |
+| `state/wissensmessung-tmp` | Wissen messen: das Wegwerf-Profil eines Laufs, nur während er läuft | – | nein |
+| `state/wissensmessung.json` | Wissen messen: die letzten 10 Läufe, nur Zahlen (Zeiten, Speicher, Anzahlen, Grenzen) | – | nein |
 <!-- /technik:speicher -->
 
 ### Schlüssel und Verschlüsselung
@@ -2438,6 +2441,12 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - Feste Themen (gedaechtnis.SLOTS: Wohnort, Arbeitgeber, Beruf, Partner, Kinder, Geburtstag, Ernährung, Haustier, Auto, Namen, Lieblings-…, je mit „wer“) erkennt nur das Panel an festen Mustern (gedaechtnis.slot_of). Je Platz hält ein Fakt den Wert: Gesagtes oder Korrigiertes gibt ihm den neuen Wortlaut, der alte bleibt als frühere Fassung (höchstens 5, Grund „platz“). Ein von selbst gelernter Wert ersetzt nie einen bestätigten: er wartet als Angebot am Fakt mit der Karte „Übernehmen / Verwerfen“. Das Modell bekommt je Platz nur den Wert, der ihn hält, nie frühere Fassungen oder ein Angebot.
 - Gemerkt-Hinweis (gemerkt.py): memory_save schickt Nummer und Stand des Fakts (gemerkt.rev_of) mit, unter der Antwort steht „Gemerkt: …“ mit „Rückgängig“; das Gespräch behält nur die Nummern. Rückgängig (gemerkt.take_back) geht nur, solange der Fakt seitdem unverändert ist: ein neuer Fakt geht, ein fester Platz bekommt seine frühere Fassung zurück. Von selbst Gelerntes wird eine Karte „Gemerkt von selbst“ (bis zu 3 Fakten, 7 Tage) mit „Stimmt“ und „Rückgängig“; ihr Titel nennt nur eine Zahl, nie den Fakt.
 
+#### Wissen messen
+
+- Zustand → Prüfen → Wissen messen misst Zeiten und Speicher dieser Wege, für den Test mit 5000 Dokumenten: die Vektor-Matrix (float16, MB und Speicher des Prozesses vorher und nachher), die Dokumentsuche mit und ohne Karte, wissensbuch.liste, view, rund_um, weg und wissenskarte.liste, je Median und p95 über 20 feste Beispiele aus den eigenen Titeln und Namen, dazu Seiten, Punkte, Verbindungen und Verbindungen je Dokument. Nur Zahlen, nie ein Titel oder Name.
+- Gemessen wird in einem eigenen Prozess mit niedriger Priorität (nice und SCHED_IDLE, ein Thread), erst in einer ruhigen Minute, höchstens 1800 s, einer zur Zeit (wissensmessung.lauf). Spricht jemand, hört er auf. Erfundene Dokumente entstehen aus festem Zufall in einem Wegwerf-Profil unter state/wissensmessung-tmp und sind danach weg; die Grenzen des echten Codes gelten dabei, und der Lauf sagt, wie viel die Dokumente ohne sie gebracht hätten. Ein echtes Profil wird nur gelesen (PRAGMA query_only).
+- Andere Teile hängen sich als Messteil an (wissensmessung.MESSTEILE: Name und fn(ordner, anzahl), nur Zahlen, nur im Wegwerf-Ordner des Laufs).
+
 #### Zahlen (aus dem Code)
 
 - **30** Kandidaten für das Nachsortieren ([Schritt 9](#kn-wissen-s9))
@@ -2525,8 +2534,11 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - `app/panel/profiles.py` `_cap`: Obergrenze: nur alte gelernte Fakten machen Platz ([Schritt 13](#kn-wissen-s13))
 - `app/panel/gedaechtnis.py` `slot_of`: fester Themen-Platz eines Fakts nach festen Mustern ([Schritt 13](#kn-wissen-s13))
 - `app/panel/gemerkt.py` `take_back`: Rückgängig nur bei unverändertem Fakt ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissensmessung.py` `lauf`: eine Messung im eigenen Prozess, bricht bei Sprache ab ([Schritt 6](#kn-wissen-s6))
+- `app/panel/wissensmessung.py` `_synth`: das Wegwerf-Profil aus festem Zufall, mit den Grenzen des Codes ([Schritt 6](#kn-wissen-s6))
+- `app/panel/wissensmessung.py` `MESSTEILE`: die Messteile, erweiterbar ([Schritt 6](#kn-wissen-s6))
 
-Selbsttests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`
+Selbsttests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`
 
 ### Wächter
 
@@ -3530,7 +3542,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 101). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 103). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -3541,7 +3553,7 @@ flowchart TD
 #### Zahlen (aus dem Code)
 
 - **47** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
-- **101** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
+- **103** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
 - **8 MB** größte Datei beim Wiederherstellen ([Schritt 9](#kn-state-s9))
 - **12** Zeichen hat das Umzugs-Passwort mindestens ([Schritt 8](#kn-state-s8))
 

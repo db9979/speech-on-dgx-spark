@@ -35,6 +35,7 @@
 #   speech-spark werkstatt nachtest "<test> …"  only these tests again (the red ones of a test run)
 #   speech-spark werkstatt ergebnis <id>  text and change of one order
 #   speech-spark finden messen [mails] [dokumente]  measure Finden's search index with synthetic data (default 50000 5000)
+#   speech-spark wissen messen [synth [anzahl] [--ohne-grenzen] | profil <name>] [--json]  times and memory of search and map
 set -euo pipefail
 # runuser, nft, systemctl live in /usr/sbin on Debian and Raspberry Pi OS; a caller with PATH=/usr/bin:/bin (teilen.py
 # runs "teilen umzug-einspielen" that way) would not find them
@@ -1165,6 +1166,15 @@ cmd_finden() {
   esac
 }
 
+# Wissen messen (app/panel/wissensmessung.py, Wissenskarte Stufe 4): one run as the panel user, numbers only; the
+# measuring process lowers its own priority and stops while somebody speaks
+cmd_wissen() {
+  case "${1:-}" in
+    messen) need_root wissen messen; shift; as_panel_user wissensmessung.py cli "$@" ;;
+    *) die "speech-spark wissen messen [synth [anzahl] [--ohne-grenzen] | profil <name>] [--json]" ;;
+  esac
+}
+
 [ -r "$CONFIG" ] || die "cannot read $CONFIG; run with sudo (or install first)"
 case "${1:-}" in
   status) shift; cmd_status ;;
@@ -1184,6 +1194,7 @@ case "${1:-}" in
   gehaeuse) shift; cmd_gehaeuse "$@" ;;
   werkstatt) shift; cmd_werkstatt "$@" ;;
   finden) shift; cmd_finden "$@" ;;
-  ""|-h|--help|help) sed -n '2,37p' "$0" | sed 's/^# \{0,1\}//' ;;
+  wissen) shift; cmd_wissen "$@" ;;
+  ""|-h|--help|help) sed -n '2,38p' "$0" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (see: speech-spark help)" ;;
 esac

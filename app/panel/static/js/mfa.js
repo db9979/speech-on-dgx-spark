@@ -147,7 +147,7 @@ async function pkShow(box,base){let d;try{d=await (await api(base+'/passkeys')).
 window.pkLoginOffer=pkLoginOffer;window.confirmAsk=confirmAsk;
 // Buttons that ask for the code carry a lock beforehand (stufen.py): one lock for Bestätigen (the code then counts 10 minutes),
 // two locks for Schutz ändern (asked every time). Buttons made later mark themselves with codeLock(button, level).
-const CODE_LOCKS={confirm:['gehein','gehaus','gehneu','tgsave','telsave','tgdel','apnssave','apnsdel','pushgo','voicego','calsave','mailsave','hasave','offnow','dadd','updprev'],
+const CODE_LOCKS={confirm:['gehein','gehaus','gehneu','tgsave','telsave','tgdel','apnssave','apnsdel','pushgo','voicego','calsave','mailsave','hasave','offnow','dadd','updprev','wmgo'],
   protect:['pwset','hacodesave','bakup','bakmove','offsave','dlsave','mydgo']};
 function codeLock(b,level){if(!b)return;b.classList.add(level==='protect'?'needcode2':'needcode');
   b.title=level==='protect'?t('Fragt jedes Mal nach dem Code','Asks for the code every time'):t('Fragt nach dem Code (gilt dann 10 Minuten)','Asks for the code (then counts 10 minutes)')}

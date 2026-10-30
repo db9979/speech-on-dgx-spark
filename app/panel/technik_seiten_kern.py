@@ -243,7 +243,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "bb8c962666",
+        "stand": "fce761974e",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -267,6 +267,7 @@ SEITEN = {
             "regel:Wissenskarte": ["s6"],
             "pdftabellen.read": ["s5"], "documents._rows": ["s5"], "documents.due_tables": ["s5"], "lokal.excerpt": ["s5"],
             "pdftabellen.BUDGET_S": ["s5"], "documents.TABLE": ["s5"], "lokal.MAX_HIT_CHARS": ["s5"],
+            "wissensmessung.lauf": ["s6"], "wissensmessung._synth": ["s6"], "wissensmessung.MESSTEILE": ["s6"],
         },
         "kurz": ("Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente "
                  "jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene "
@@ -771,6 +772,34 @@ SEITEN = {
                  "{gemerkt.CARD_MAX} facts, {gemerkt.OFFEN_TAGE} days) with „That's right“ and „Undo“; its title names "
                  "only a number, never the fact."),
             ]),
+            (("Wissen messen", "Measuring knowledge"), [
+                ("Zustand → Prüfen → Wissen messen misst Zeiten und Speicher dieser Wege, für den Test mit 5000 "
+                 "Dokumenten: die Vektor-Matrix (float16, MB und Speicher des Prozesses vorher und nachher), die "
+                 "Dokumentsuche mit und ohne Karte, wissensbuch.liste, view, rund_um, weg und wissenskarte.liste, je "
+                 "Median und p95 über {wissensmessung.PROBEN} feste Beispiele aus den eigenen Titeln und Namen, dazu "
+                 "Seiten, Punkte, Verbindungen und Verbindungen je Dokument. Nur Zahlen, nie ein Titel oder Name.",
+                 "Status → Checks → Measure knowledge measures times and memory of these ways, for the test with 5000 "
+                 "documents: the vector matrix (float16, MB and the process's memory before and after), the document "
+                 "search with and without the map, wissensbuch.liste, view, rund_um, weg and wissenskarte.liste, each "
+                 "median and p95 over {wissensmessung.PROBEN} fixed samples from the own titles and names, and pages, "
+                 "points, connections and connections per document. Numbers only, never a title or a name."),
+                ("Gemessen wird in einem eigenen Prozess mit niedriger Priorität (nice und SCHED_IDLE, ein Thread), "
+                 "erst in einer ruhigen Minute, höchstens {wissensmessung.MAX_S} s, einer zur Zeit (wissensmessung.lauf). "
+                 "Spricht jemand, hört er auf. Erfundene Dokumente entstehen aus festem Zufall in einem Wegwerf-Profil "
+                 "unter state/wissensmessung-tmp und sind danach weg; die Grenzen des echten Codes gelten dabei, und der "
+                 "Lauf sagt, wie viel die Dokumente ohne sie gebracht hätten. Ein echtes Profil wird nur gelesen "
+                 "(PRAGMA query_only).",
+                 "It measures in a process of its own with low priority (nice and SCHED_IDLE, one thread), only in a "
+                 "quiet minute, at most {wissensmessung.MAX_S} s, one at a time (wissensmessung.lauf). If somebody "
+                 "speaks, it stops. Made-up documents come from a fixed seed in a throwaway profile under "
+                 "state/wissensmessung-tmp and are gone afterwards; the limits of the real code hold, and the run says "
+                 "how much the documents would have brought without them. A real profile is only read (PRAGMA "
+                 "query_only)."),
+                ("Andere Teile hängen sich als Messteil an (wissensmessung.MESSTEILE: Name und fn(ordner, anzahl), "
+                 "nur Zahlen, nur im Wegwerf-Ordner des Laufs).",
+                 "Other parts join as a measuring part (wissensmessung.MESSTEILE: a name and fn(ordner, anzahl), "
+                 "numbers only, only in the run's throwaway folder)."),
+            ]),
         ],
         "code": [
             ("wissen.search", ("eigene und geteilte Dokumente, Mischung, Nachsortieren", "own and shared documents, mix, re-ranking")),
@@ -812,10 +841,14 @@ SEITEN = {
             ("profiles._cap", ("Obergrenze: nur alte gelernte Fakten machen Platz", "cap: only old learned facts make room")),
             ("gedaechtnis.slot_of", ("fester Themen-Platz eines Fakts nach festen Mustern", "a fact's fixed topic place by fixed patterns")),
             ("gemerkt.take_back", ("Rückgängig nur bei unverändertem Fakt", "undo only while the fact is unchanged")),
+            ("wissensmessung.lauf", ("eine Messung im eigenen Prozess, bricht bei Sprache ab", "one measurement in its own process, stops on speech")),
+            ("wissensmessung._synth", ("das Wegwerf-Profil aus festem Zufall, mit den Grenzen des Codes", "the throwaway profile from a fixed seed, with the code's limits")),
+            ("wissensmessung.MESSTEILE", ("die Messteile, erweiterbar", "the measuring parts, extensible")),
         ],
         "tests": ["test_wissen", "test_nachsortieren", "test_abschnitte", "test_lokal", "test_kiwix", "test_gedaechtnis",
                   "test_gedaechtnis_grenze", "test_gemerkt",
-                  "test_suchpruefung", "test_wissensbuch", "test_wissenskarte", "test_wissensknoten", "test_kartensuche"],
+                  "test_suchpruefung", "test_wissensbuch", "test_wissenskarte", "test_wissensknoten", "test_kartensuche",
+                  "test_wissensmessung"],
         "heute": [],
     },
 

@@ -142,6 +142,7 @@ LIST = {
     ("DELETE", "/api/admin/fernzugang/verlauf"): (CONFIRM, "Spark", "Verlauf des Fernzugangs löschen", "Delete the remote access history"),
     ("DELETE", "/api/admin/spontanhilfe/verlauf"): (CONFIRM, "Spark", "Verlauf der Spontanhilfe löschen", "Delete the spontaneous help history"),
     ("POST", "/api/admin/werkstatt/auftrag"): (CONFIRM, "Spark", "Werkstatt: Diagnose, Reparatur oder Code-Messung", "Workshop: diagnosis, repair or code measurement"),
+    ("POST", "/api/admin/wissensmessung"): (CONFIRM, "Spark", "Wissen messen (liest die Dokumente eines Profils, nur Zahlen)", "Measure knowledge (reads a profile's documents, numbers only)"),
     ("POST", "/api/admin/modelle/messen"): (CONFIRM, "Spark", "Ein Modell messen", "Measure a model"),
     ("POST", "/api/admin/modelle/eigen"): (CONFIRM, "Spark", "Ein eigenes Modell hinzufügen", "Add an own model"),
     ("DELETE", "/api/admin/modelle/eigen/{mid}"): (CONFIRM, "Spark", "Ein eigenes Modell löschen", "Delete an own model"),

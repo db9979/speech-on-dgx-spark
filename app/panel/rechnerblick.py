@@ -79,7 +79,8 @@ DIENST_NAMEN = {"asr": ("Spracherkennung", "Speech recognition"), "asr-engine": 
                 "docker": ("Modell in Docker", "Model in Docker"), "rest": ("System und Rest", "System and rest")}
 # the parts inside the panel (rechenteile.py); a background job („bg:<job>“) shows its fixed name from the code
 TEIL_NAMEN = {"anfragen": ("Anfragen und Seiten", "Requests and pages"), "bedeutungssuche": ("Bedeutungssuche", "Meaning search"),
-              "nachsortieren": ("Nachsortieren", "Re-ranking"), "auslassen": ("Ordner auslassen", "Leaving out folders"),
+              "nachsortieren": ("Nachsortieren", "Re-ranking"), "wissenmessen": ("Wissen messen", "Measuring knowledge"),
+              "auslassen": ("Ordner auslassen", "Leaving out folders"),
               "loopwacht": ("Hänge-Wächter", "Stall watch"), "aufraeumen": ("Chat löschen", "Deleting a chat"),
               "halive": ("Home Assistant live", "Home Assistant live"),
               "weitere": ("Weitere Threads", "Other threads"), "uebrig": ("Kurze Programme und Rest", "Short programs and rest")}

@@ -134,6 +134,7 @@ MODULE = {
     "pdftabellen": ("wissen", "Tabellen in PDFs zeilenweise lesen: eine Zeile bleibt ein Eintrag mit Kopfzeile"),
     "doclingdienst": ("wissen", "Docling-Server im Heimnetz: Dokumente und Scans besser lesen"),
     "suchpruefung": ("wissen", "Suchprüfung: Prüffragen messen, wie gut die Dokumentensuche trifft"),
+    "wissensmessung": ("wissen", "Wissen messen: Zeiten und Speicher von Suche, Wissensbuch und Karte, erfunden oder ein Profil lesend"),
     "wissensbuch": ("wissen", "Wissensbuch: Seiten aus eigenen Dokumenten, jeder Satz mit Quelle; Suchindex FTS5, Lesefunktion liste"),
     "wissenskarte": ("wissen", "Wissenskarte: geprüfte Verbindungen und Punkte aus Dokumenten, je mit Quelle, WITH RECURSIVE, Trefferliste der Suche"),
     "fund": ("wissen", "Finden: Suchindex über die eigenen Daten, Felder und Schlagworte nach festen Regeln, Blind-Marken je Profil"),

@@ -62,6 +62,57 @@ Three settings under **Settings → Speech output → Advanced** are meant to ma
 
 `engine.sh` writes both engine values into the deploy file (`state/tts-deploy-main.yaml`) and the stage values; a change restarts speech output. vllm-omni 0.30 already bounds the decoder's reference context to 72 frames itself (`ref_code_context_frames` follows `codec_left_context_frames`).
 
+## Measuring knowledge
+
+In the panel under **Status → Checks → Measure knowledge** (admins only, code of the level "Confirm") or on the console:
+
+```bash
+sudo speech-spark wissen messen                          # 5000 made-up documents (default)
+sudo speech-spark wissen messen synth 20000              # another number, 50 to 20000
+sudo speech-spark wissen messen synth 5000 --ohne-grenzen  # without the code's limits: what do they cost?
+sudo speech-spark wissen messen profil Anna              # the documents of one profile, read only
+```
+
+Since V01.1.270 (knowledge map stage 4, preparing the test with 5000 documents after which stage 2 of the knowledge map comes) `app/panel/wissensmessung.py` measures times and memory of the knowledge ways, numbers only, never a title, a name or a sentence:
+
+- **Document search:** documents, pieces, vectors, the vector matrix (float16, MB, time to build, the process's memory before and after) and `documents.search` with and without the map.
+- **Knowledge book:** pages, sentences, pages per document and `wissensbuch.liste`.
+- **Knowledge map:** pages, points, connections, places, connections per document (mean and most) and `view` (the best connected ones and around a point), `rund_um` (2 steps), `weg` and `wissenskarte.liste`.
+- Every time as median, p95 and maximum over 20 fixed samples from the own titles and names (`PROBEN`), and the measuring process's memory at the start and at the end.
+- **Limits:** for the knowledge book's pages (300), the connections (3000) and the points (5000) the run says how many there are now, how many the documents would bring and whether the limit is full. With made-up documents the need is what the build would have made without the limit; with a profile what it brings per document, projected to 5000 documents (an upper estimate).
+
+Made-up documents come from a fixed seed (`SEED`) in a throwaway profile under `state/wissensmessung-tmp/lauf-…`: pieces of made-up words with random float16 vectors, context lines, pages and sentences of the knowledge book, points with their places and connections, with the limits of the real code and fixed assumptions per document (`SYN_*`: about 10 pieces, 2 pages, 6 places of points, 4 connections). After the run the folder is gone, also after a stop; a folder of a crashed run is cleared by the next one. A real profile is only read: every connection of the measuring process has `PRAGMA query_only`, a database of another version or without the tables of a part is not touched.
+
+It measures in a process of its own (`wissensmessung.py kind`) with low priority (nice 10 and `SCHED_IDLE` like the search's vectors, numpy with one thread), at most 30 minutes, only one at a time on the Spark (a lock file, also against the console), from the panel at most every 5 minutes. Speech goes first: the panel starts only in a quiet minute, and when somebody speaks, panel and measuring process stop between two queries ("stopped: somebody spoke"). Inside the measuring process the profiles' releases do not apply: it measures what the code can do.
+
+The result stands under Status → Checks → Measure knowledge (the last measurement with numbers, times and limits, earlier ones folded), in `state/wissensmessung.json` (the last 10 runs, not in the backup), in the log (area Wissen: `wissen: messung …` with one line per part) and in Status → Live in the box "Wissen messen" (running now or the numbers of the last measurement). The iPhone app shows it through Status → Checks in the panel, the Android app shows the panel itself.
+
+Example on a development computer (4 cores, V01.1.270, 5000 made-up documents, about 52 000 pieces), p95 in ms:
+
+| Way | with limits | without limits |
+|---|---|---|
+| Document search | 84 | 78 |
+| Document search with the map | 220 | 512 |
+| `wissensbuch.liste` | 8 | 4 |
+| `view` (around a point) | 126 | 294 |
+| `rund_um` (2 steps) | 15 | 28 |
+| `weg` | 61 | 206 |
+| `wissenskarte.liste` | 167 | 525 |
+| Pages · points · connections | 300 · 5000 · 3000 | 3005 · 10558 · 19791 |
+
+The vector matrix needs 38.5 MB (built in 0.2 s), the measuring process grows from about 80 to 165 MB. All three limits are full at 5000 documents (need about 3000 pages, 20 000 connections, 10 800 points); without them `wissenskarte.liste` (it walks every point in Python) becomes the slowest part of the search.
+
+### Measuring parts
+
+Other parts join with one line (`wissensmessung.MESSTEILE`, for example "fund" for the search index over mail):
+
+```python
+MESSTEILE = {"name": fn}
+fn(ordner, anzahl) -> {"key": number, ...}    # e.g. p50_ms, p95_ms, max_ms, mb, ram_mb
+```
+
+`fn` works only in `ordner`, the run's empty throwaway folder, never in a real profile, and builds `anzahl` documents, mails or entries there. Only numbers come back (int, float, bool) under keys of a–z, 0–9 and `_`; everything else is dropped. Between two steps `fn` calls `wissensmessung.ruhe()` (stops when somebody speaks); `zeiten(name, fn, args)` gives median, p95 and maximum, `rss_mb()` the memory. The parts run one after the other in the same measuring process; the run writes one log line per part and keeps the numbers under its name.
+
 ## Language model: own or dgx-spark-qwen38
 
 The language model runs either as the own vLLM behind the LLM-Tor (`sudo ./install.sh --llm`, then `sudo speech-spark modelle llm uebernehmen`, back with `… zurueck`) or, as before, from [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38). With the Spark split only the own one works, because the panel computer cannot reach qwen38. The points below about lanes and the cockpit only apply while qwen38 runs.

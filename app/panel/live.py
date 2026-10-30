@@ -182,6 +182,8 @@ TARGETS = {
     "wbuch": ("Wissensbuch", "Seiten aus den eigenen Dokumenten · auf dem Spark", "spark", False),
     # Wissenskarte (wissenskarte.py): shown while it is on, checked connections, discarded ones and documents waiting (numbers only)
     "wkarte": ("Wissenskarte", "Verbindungen zwischen Wissensbuch-Seiten · auf dem Spark", "spark", False),
+    # Wissen messen (wissensmessung.py): shown while a run measures and once there is one; times, memory, counts only
+    "wmessen": ("Wissen messen", "Zeiten und Speicher · auf dem Spark", "spark", False),
     # Finden (fund.py): shown while it is on, entries of the search index, profiles, searches today and the median time,
     # with fundmail.py the mails read today and left to read, with fundquellen.py the entries per further source, with
     # Stufe D the model's tags today and the Sofort-Karten (numbers only)
@@ -1417,6 +1419,13 @@ def snapshot(view="admin", now=None):
     if wkk.get("on"):
         used.add("wkarte")
     try:
+        import wissensmessung
+        wms = wissensmessung.for_live()
+    except Exception:
+        wms = {"on": False}
+    if wms.get("on"):
+        used.add("wmessen")
+    try:
         import fund
         fnd = fund.for_live()
     except Exception:
@@ -2293,6 +2302,9 @@ def snapshot(view="admin", now=None):
                            + f" · {wkk.get('knoten_warten', 0)} Dokumente warten auf Knoten" if kn else "")
                         + _kartensuche(wkk.get("suche") or {})
                         + (" · arbeitet" if wkk.get("running") else ""))
+        if x["id"] == "wmessen" and wms.get("on"):    # Wissen messen: running or the newest run's numbers, never a title
+            import wissensmessung
+            x["sub"] = wissensmessung.live_sub(wms)
         if x["id"] == "modell" and mr.get("on"):   # Modell-Rechner: reachable, units active, version (no address)
             x["sub"] = (("nicht erreichbar" + (" · Notbetrieb" if mr.get("notbetrieb") else "")) if not mr.get("ok") else
                         f"{mr.get('aktiv', 0)} von {mr.get('n', 0)} Diensten aktiv" + (f" · {mr['version']}" if mr.get("version") else "")
@@ -2357,7 +2369,8 @@ def snapshot(view="admin", now=None):
             "make": make.get("run") or make.get("wait"), "bild": bild.get("run") or bild.get("wait"), "musik": mus.get("run") or mus.get("wait"),
             # Dominik 2026-10-28 „im live log monitoring fehlt die Dungen Master Anzeige“: its box stays out of „+ N bereit“
             # while someone sits at a table, the model narrates, reads aloud or sums up a chapter
-            "dungeon": dgn.get("online") or dgn.get("denkt") or dgn.get("liest") or dgn.get("schreibt")}
+            "dungeon": dgn.get("online") or dgn.get("denkt") or dgn.get("liest") or dgn.get("schreibt"),
+            "wmessen": wms.get("laeuft")}
     ruhe(targets, {k for k, v in work.items() if v} | {h["at"] for h in hs} | {k for k, v in svc.items() if v.get("st") != "ok"}
          | {s["to"] for r in reqs if not r["done"] for s in r["steps"] if s["to"]} | {r["to"] for r in reqs if not r["done"] and r["to"]}, now)
     return {"t": round(now, 1), "view": view, "fade": FADE, "reqs": reqs, "targets": targets, "speaking": speaking,

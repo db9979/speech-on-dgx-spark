@@ -62,6 +62,57 @@ Drei Einstellungen unter **Einstellungen → Sprachausgabe → Erweitert** solle
 
 Die beiden Engine-Werte schreibt `engine.sh` in die Deploy-Datei (`state/tts-deploy-main.yaml`) und in die Stufen-Werte; eine Änderung startet die Sprachausgabe neu. Den Referenz-Kontext des Decoders begrenzt vllm-omni 0.30 schon selbst auf 72 Takte (`ref_code_context_frames` folgt `codec_left_context_frames`).
 
+## Wissen messen
+
+Im Panel unter **Zustand → Prüfen → Wissen messen** (nur Admin, Code der Stufe „Bestätigen“) oder auf der Konsole:
+
+```bash
+sudo speech-spark wissen messen                          # 5000 erfundene Dokumente (Standard)
+sudo speech-spark wissen messen synth 20000              # eine andere Anzahl, 50 bis 20000
+sudo speech-spark wissen messen synth 5000 --ohne-grenzen  # ohne die Grenzen des Codes: was kosten sie?
+sudo speech-spark wissen messen profil Anna              # die Dokumente eines Profils, nur lesend
+```
+
+Seit V01.1.270 (Wissenskarte Stufe 4, Vorbereitung des Tests mit 5000 Dokumenten, nach dem Stufe 2 der Wissenskarte folgt) misst `app/panel/wissensmessung.py` Zeiten und Speicher der Wissenswege, nur Zahlen, nie ein Titel, ein Name oder ein Satz:
+
+- **Dokumentsuche:** Dokumente, Stücke, Vektoren, die Vektor-Matrix (float16, MB, Zeit zum Aufbauen, Speicher des Prozesses vorher und nachher) und `documents.search` mit und ohne Karte.
+- **Wissensbuch:** Seiten, Sätze, Seiten je Dokument und `wissensbuch.liste`.
+- **Wissenskarte:** Seiten, Punkte, Verbindungen, Stellen, Verbindungen je Dokument (Mittel und höchstens) und `view` (die am besten verbundenen und um einen Punkt), `rund_um` (2 Schritte), `weg` und `wissenskarte.liste`.
+- Jede Zeit als Median, p95 und Höchstwert über 20 feste Beispiele aus den eigenen Titeln und Namen (`PROBEN`), dazu der Speicher des Messprozesses am Anfang und am Ende.
+- **Grenzen:** Für die Seiten des Wissensbuchs (300), die Verbindungen (3000) und die Punkte (5000) sagt der Lauf, wie viele es jetzt sind, wie viele die Dokumente bringen würden und ob die Grenze voll ist. Bei erfundenen Dokumenten ist der Bedarf das, was der Aufbau ohne Grenze angelegt hätte; bei einem Profil das, was es je Dokument bringt, hochgerechnet auf 5000 Dokumente (eine obere Schätzung).
+
+Erfundene Dokumente entstehen aus festem Zufall (`SEED`) in einem Wegwerf-Profil unter `state/wissensmessung-tmp/lauf-…`: Stücke mit erfundenen Wörtern und zufälligen float16-Vektoren, Kontextzeilen, Seiten und Sätze des Wissensbuchs, Punkte mit ihren Stellen und Verbindungen, mit den Grenzen des echten Codes und festen Annahmen je Dokument (`SYN_*`: etwa 10 Stücke, 2 Seiten, 6 Stellen von Punkten, 4 Verbindungen). Nach dem Lauf ist der Ordner weg, auch nach einem Abbruch; ein Ordner eines abgestürzten Laufs räumt der nächste weg. Ein echtes Profil wird nur gelesen: jede Verbindung des Messprozesses hat `PRAGMA query_only`, eine Datenbank einer anderen Version oder ohne die Tabellen eines Teils wird nicht angefasst.
+
+Gemessen wird in einem eigenen Prozess (`wissensmessung.py kind`) mit niedriger Priorität (nice 10 und `SCHED_IDLE` wie die Vektoren der Suche, numpy mit einem Thread), höchstens 30 Minuten, immer nur einer auf dem Spark (Sperrdatei, auch gegen die Konsole), aus dem Panel höchstens alle 5 Minuten. Sprache geht vor: Das Panel startet erst in einer ruhigen Minute, und spricht jemand, hören Panel und Messprozess zwischen zwei Abfragen auf („abgebrochen: jemand hat gesprochen“). Im Messprozess gelten die Freigaben der Profile nicht: gemessen wird, was der Code kann.
+
+Das Ergebnis steht unter Zustand → Prüfen → Wissen messen (die letzte Messung mit Zahlen, Zeiten und Grenzen, frühere zugeklappt), in `state/wissensmessung.json` (die letzten 10 Läufe, nicht in der Sicherung), im Log (Bereich Wissen: `wissen: messung …` mit einer Zeile je Teil) und in Zustand → Live im Kasten „Wissen messen“ (läuft gerade oder die Zahlen der letzten Messung). Die iPhone-App zeigt es über Zustand → Prüfen im Panel, die Android-App zeigt das Panel selbst.
+
+Beispiel auf einem Entwicklungsrechner (4 Kerne, V01.1.270, 5000 erfundene Dokumente, etwa 52 000 Stücke), p95 in ms:
+
+| Weg | mit Grenzen | ohne Grenzen |
+|---|---|---|
+| Dokumentsuche | 84 | 78 |
+| Dokumentsuche mit Karte | 220 | 512 |
+| `wissensbuch.liste` | 8 | 4 |
+| `view` (um einen Punkt) | 126 | 294 |
+| `rund_um` (2 Schritte) | 15 | 28 |
+| `weg` | 61 | 206 |
+| `wissenskarte.liste` | 167 | 525 |
+| Seiten · Punkte · Verbindungen | 300 · 5000 · 3000 | 3005 · 10558 · 19791 |
+
+Die Vektor-Matrix braucht 38,5 MB (Aufbau 0,2 s), der Messprozess wächst von etwa 80 auf 165 MB. Alle drei Grenzen sind bei 5000 Dokumenten voll (Bedarf etwa 3000 Seiten, 20 000 Verbindungen, 10 800 Punkte); ohne sie wird `wissenskarte.liste` (geht jeden Punkt in Python durch) zum langsamsten Teil der Suche.
+
+### Messteile
+
+Andere Teile hängen sich mit einer Zeile an (`wissensmessung.MESSTEILE`, zum Beispiel „fund“ für den Suchindex über Mails):
+
+```python
+MESSTEILE = {"name": fn}
+fn(ordner, anzahl) -> {"schluessel": zahl, ...}    # z. B. p50_ms, p95_ms, max_ms, mb, ram_mb
+```
+
+`fn` arbeitet nur in `ordner`, dem leeren Wegwerf-Ordner des Laufs, nie in einem echten Profil, und baut dort `anzahl` Dokumente, Mails oder Einträge. Zurück kommen nur Zahlen (int, float, bool) unter Schlüsseln aus a–z, 0–9 und `_`; alles andere fällt weg. Zwischen zwei Schritten ruft `fn` `wissensmessung.ruhe()` (bricht ab, wenn jemand spricht); `zeiten(name, fn, args)` liefert Median, p95 und Höchstwert, `rss_mb()` den Speicher. Die Teile laufen nacheinander im selben Messprozess; der Lauf schreibt je Teil eine Zeile ins Log und hält die Zahlen unter seinem Namen.
+
 ## Sprachmodell: eigenes oder dgx-spark-qwen38
 
 Das Sprachmodell läuft entweder als eigenes vLLM hinter dem LLM-Tor (`sudo ./install.sh --llm`, dann `sudo speech-spark modelle llm uebernehmen`, zurück mit `… zurueck`) oder wie früher aus [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38). Beim Spark teilen geht nur das eigene, weil der Panel-Rechner qwen38 nicht erreicht. Die Punkte unten zu Lanes und Cockpit gelten nur, solange qwen38 läuft.

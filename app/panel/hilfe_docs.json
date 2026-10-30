@@ -2347,6 +2347,14 @@
 "lang": "de",
 "src": "architektur",
 "file": "Architektur und Datenfluss",
+"head": "Wissen messen",
+"title": "Wissen messen",
+"text": "- Zustand → Prüfen → Wissen messen misst Zeiten und Speicher dieser Wege, für den Test mit 5000 Dokumenten: die Vektor-Matrix (float16, MB und Speicher des Prozesses vorher und nachher), die Dokumentsuche mit und ohne Karte, wissensbuch.liste, view, rund_um, weg und wissenskarte.liste, je Median und p95 über 20 feste Beispiele aus den eigenen Titeln und Namen, dazu Seiten, Punkte, Verbindungen und Verbindungen je Dokument. Nur Zahlen, nie ein Titel oder Name. - Gemessen wird in einem eigenen Prozess mit niedriger Priorität (nice und SCHED_IDLE, ein Thread), erst in einer ruhigen Minute, höchstens 1800 s, einer zur Zeit (wissensmessung.lauf). Spricht jemand, hört er auf. Erfundene Dokumente entstehen aus festem Zufall in einem Wegwerf-Profil unter state/wissensmessung-tmp und sind danach weg; die Grenzen des echten Codes gelten dabei, und der Lauf sagt, wie viel die Dokumente ohne sie gebracht hätten. Ein echtes Profil wird nur gelesen (PRAGMA query_only). - Andere Teile hängen sich als Messteil an (wissensmessung.MESSTEILE: Name und fn(ordner, anzahl), nur Zahlen, nur im Wegwerf-Ordner des Laufs)."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
 "text": "- 30 Kandidaten für das Nachsortieren (Schritt 9) - -4.0 Untergrenze des Cross-Encoders (Schritt 10) - 0.4 Gewicht der Kontextzeile (Schritt 5) - 8 s längstes Warten auf den Fragevektor (Schritt 3) - 8.5 GiB freier Speicher, damit das Vektormodell startet (Schritt 3) - 1.5 GiB dasselbe auf einem Panel-Rechner (Spark teilen) (Schritt 3) - 3 Treffer höchstens bei „Erst lokal suchen“ (Schritt 5) - 500 Zeichen je Treffer bei „Erst lokal suchen“, um die Suchwörter (Schritt 5) - 2400 Zeichen, bis zu denen eine Tabelle eine Stelle bleibt (Schritt 5) - 20 s längste Zeit je PDF für das Lesen der Tabellen (Schritt 5) - 5 Seiten, die ein Dokument im Wissensbuch ändern darf (Schritt 13) - 300 Seiten im Wissensbuch pro Profil (Schritt 13) - 50 Sätze, die das Modell nachts gegen ihre Quelle prüft (Standard) (Schritt 13) - 30 Verbindungen, die ein Dokument in die Wissenskarte bringen darf (Schritt 13) - 3000 Verbindungen in der Wissenskarte pro Profil (Schritt 13) - 150 Punkte, die die Karte auf einmal zeigt (Schritt 13) - 400 Verbindungen, die die Karte auf einmal zeigt (Schritt 13) - 4 Schritte, die wissenskarte.weg höchstens sucht (Schritt 13) - 4096 Stellen je Block beim Vergleich der Vektore"
@@ -2397,7 +2405,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "ammen: zwei Punkte zusammenführen, nur per Klick (Schritt 13) - app/panel/wissensbuch.py search_pages: passende Seiten über den Suchindex wb_fts (Schritt 13) - app/panel/wissensbuch.py _fts_sync: Suchindex der Seiten nachziehen (Schritt 13) - app/panel/wissensbuch.py liste: Seiten-Ids mit Rang für andere Teile, nur lesend (Schritt 13) - app/panel/wissenskarte.py liste: Stück-Ids aus der Karte für die Suche, nur lesend (Schritt 6) - app/panel/wissenskarte.py trifft: trifft ein Suchwort einen Punkt? feste Regel (Schritt 6) - app/panel/documents.py _karte: die Liste der Karte in die Mischung, mit den Filtern der Suche (Schritt 6) - app/panel/documents.py _similar: Ähnlichkeit blockweise in float32 (Schritt 6) - app/panel/gedaechtnis.py hint_lines: Fakten in drei Blöcken (Schritt 13) - app/panel/profiles.py _cap: Obergrenze: nur alte gelernte Fakten machen Platz (Schritt 13) - app/panel/gedaechtnis.py slot_of: fester Themen-Platz eines Fakts nach festen Mustern (Schritt 13) - app/panel/gemerkt.py take_back: Rückgängig nur bei unverändertem Fakt (Schritt 13)"
+"text": "ammen: zwei Punkte zusammenführen, nur per Klick (Schritt 13) - app/panel/wissensbuch.py search_pages: passende Seiten über den Suchindex wb_fts (Schritt 13) - app/panel/wissensbuch.py _fts_sync: Suchindex der Seiten nachziehen (Schritt 13) - app/panel/wissensbuch.py liste: Seiten-Ids mit Rang für andere Teile, nur lesend (Schritt 13) - app/panel/wissenskarte.py liste: Stück-Ids aus der Karte für die Suche, nur lesend (Schritt 6) - app/panel/wissenskarte.py trifft: trifft ein Suchwort einen Punkt? feste Regel (Schritt 6) - app/panel/documents.py _karte: die Liste der Karte in die Mischung, mit den Filtern der Suche (Schritt 6) - app/panel/documents.py _similar: Ähnlichkeit blockweise in float32 (Schritt 6) - app/panel/gedaechtnis.py hint_lines: Fakten in drei Blöcken (Schritt 13) - app/panel/profiles.py _cap: Obergrenze: nur alte gelernte Fakten machen Platz (Schritt 13) - app/panel/gedaechtnis.py slot_of: fester Themen-Platz eines Fakts nach festen Mustern (Schritt 13) - app/panel/gemerkt.py take_back: Rückgängig nur bei unverändertem Fakt (Schritt 13) - app/panel/wissensmessung.py lauf: eine Messung im eigenen Prozess, bricht bei Sprache ab (Schritt 6) - app/panel/wissensmessung."
 },
 {
 "lang": "de",
@@ -2405,7 +2413,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_wissen, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche"
+"text": "py _synth: das Wegwerf-Profil aus festem Zufall, mit den Grenzen des Codes (Schritt 6) - app/panel/wissensmessung.py MESSTEILE: die Messteile, erweiterbar (Schritt 6)"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": "Selbsttests: test_wissen, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung"
 },
 {
 "lang": "de",
@@ -3293,7 +3309,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 101). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, "
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 103). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, "
 },
 {
 "lang": "de",
@@ -3317,7 +3333,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 47 Dateien in jeder Sicherung (Schritt 7) - 101 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 47 Dateien in jeder Sicherung (Schritt 7) - 103 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -5093,7 +5109,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": ", nach einem Messtest mit 5000 Dokumenten), Stufe 3 (Werkzeuge wissen_weg und schaubild nach Messung), Stufe 4 (Code-Dateien mit festem Leser)."
+"text": ", nach einem Messtest mit 5000 Dokumenten; gemessen wird seit V01.1.270 unter Zustand → Prüfen → Wissen messen), Stufe 3 (Werkzeuge wissen_weg und schaubild nach Messung), Stufe 4 (Code-Dateien mit festem Leser)."
 },
 {
 "lang": "de",
@@ -16635,6 +16651,86 @@
 "lang": "de",
 "src": "technik",
 "file": "Technik und Fehlersuche",
+"head": "Wissen messen",
+"title": "Wissen messen",
+"text": "Im Panel unter Zustand → Prüfen → Wissen messen (nur Admin, Code der Stufe „Bestätigen“) oder auf der Konsole:"
+},
+{
+"lang": "de",
+"src": "technik",
+"file": "Technik und Fehlersuche",
+"head": "Wissen messen",
+"title": "Wissen messen",
+"text": "Seit V01.1.270 (Wissenskarte Stufe 4, Vorbereitung des Tests mit 5000 Dokumenten, nach dem Stufe 2 der Wissenskarte folgt) misst app/panel/wissensmessung.py Zeiten und Speicher der Wissenswege, nur Zahlen, nie ein Titel, ein Name oder ein Satz:"
+},
+{
+"lang": "de",
+"src": "technik",
+"file": "Technik und Fehlersuche",
+"head": "Wissen messen",
+"title": "Wissen messen",
+"text": "- Dokumentsuche: Dokumente, Stücke, Vektoren, die Vektor-Matrix (float16, MB, Zeit zum Aufbauen, Speicher des Prozesses vorher und nachher) und documents.search mit und ohne Karte. - Wissensbuch: Seiten, Sätze, Seiten je Dokument und wissensbuch.liste. - Wissenskarte: Seiten, Punkte, Verbindungen, Stellen, Verbindungen je Dokument (Mittel und höchstens) und view (die am besten verbundenen und um einen Punkt), rund_um (2 Schritte), weg und wissenskarte.liste. - Jede Zeit als Median, p95 und Höchstwert über 20 feste Beispiele aus den eigenen Titeln und Namen (PROBEN), dazu der Speicher des Messprozesses am Anfang und am Ende. - Grenzen: Für die Seiten des Wissensbuchs (300), die Verbindungen (3000) und die Punkte (5000) sagt der Lauf, wie viele es jetzt sind, wie viele die Dokumente bringen würden und ob die Grenze voll ist. Bei erfundenen Dokumenten ist der Bedarf das, was der Aufbau ohne Grenze angelegt hätte; bei einem Profil das, was es je Dokument bringt, hochgerechnet auf 5000 Dokumente (eine obere Schätzung)."
+},
+{
+"lang": "de",
+"src": "technik",
+"file": "Technik und Fehlersuche",
+"head": "Wissen messen",
+"title": "Wissen messen",
+"text": "Erfundene Dokumente entstehen aus festem Zufall (SEED) in einem Wegwerf-Profil unter state/wissensmessung-tmp/lauf-…: Stücke mit erfundenen Wörtern und zufälligen float16-Vektoren, Kontextzeilen, Seiten und Sätze des Wissensbuchs, Punkte mit ihren Stellen und Verbindungen, mit den Grenzen des echten Codes und festen Annahmen je Dokument (SYN_*: etwa 10 Stücke, 2 Seiten, 6 Stellen von Punkten, 4 Verbindungen). Nach dem Lauf ist der Ordner weg, auch nach einem Abbruch; ein Ordner eines abgestürzten Laufs räumt der nächste weg. Ein echtes Profil wird nur gelesen: jede Verbindung des Messprozesses hat PRAGMA query_only, eine Datenbank einer anderen Version oder ohne die Tabellen eines Teils wird nicht angefasst."
+},
+{
+"lang": "de",
+"src": "technik",
+"file": "Technik und Fehlersuche",
+"head": "Wissen messen",
+"title": "Wissen messen",
+"text": "Gemessen wird in einem eigenen Prozess (wissensmessung.py kind) mit niedriger Priorität (nice 10 und SCHED_IDLE wie die Vektoren der Suche, numpy mit einem Thread), höchstens 30 Minuten, immer nur einer auf dem Spark (Sperrdatei, auch gegen die Konsole), aus dem Panel höchstens alle 5 Minuten. Sprache geht vor: Das Panel startet erst in einer ruhigen Minute, und spricht jemand, hören Panel und Messprozess zwischen zwei Abfragen auf („abgebrochen: jemand hat gesprochen“). Im Messprozess gelten die Freigaben der Profile nicht: gemessen wird, was der Code kann."
+},
+{
+"lang": "de",
+"src": "technik",
+"file": "Technik und Fehlersuche",
+"head": "Wissen messen",
+"title": "Wissen messen",
+"text": "Das Ergebnis steht unter Zustand → Prüfen → Wissen messen (die letzte Messung mit Zahlen, Zeiten und Grenzen, frühere zugeklappt), in state/wissensmessung.json (die letzten 10 Läufe, nicht in der Sicherung), im Log (Bereich Wissen: wissen: messung … mit einer Zeile je Teil) und in Zustand → Live im Kasten „Wissen messen“ (läuft gerade oder die Zahlen der letzten Messung). Die iPhone-App zeigt es über Zustand → Prüfen im Panel, die Android-App zeigt das Panel selbst."
+},
+{
+"lang": "de",
+"src": "technik",
+"file": "Technik und Fehlersuche",
+"head": "Wissen messen",
+"title": "Wissen messen",
+"text": "Beispiel auf einem Entwicklungsrechner (4 Kerne, V01.1.270, 5000 erfundene Dokumente, etwa 52 000 Stücke), p95 in ms:"
+},
+{
+"lang": "de",
+"src": "technik",
+"file": "Technik und Fehlersuche",
+"head": "Wissen messen",
+"title": "Wissen messen",
+"text": "Die Vektor-Matrix braucht 38,5 MB (Aufbau 0,2 s), der Messprozess wächst von etwa 80 auf 165 MB. Alle drei Grenzen sind bei 5000 Dokumenten voll (Bedarf etwa 3000 Seiten, 20 000 Verbindungen, 10 800 Punkte); ohne sie wird wissenskarte.liste (geht jeden Punkt in Python durch) zum langsamsten Teil der Suche."
+},
+{
+"lang": "de",
+"src": "technik",
+"file": "Technik und Fehlersuche",
+"head": "Messteile",
+"title": "Messteile",
+"text": "Andere Teile hängen sich mit einer Zeile an (wissensmessung.MESSTEILE, zum Beispiel „fund“ für den Suchindex über Mails):"
+},
+{
+"lang": "de",
+"src": "technik",
+"file": "Technik und Fehlersuche",
+"head": "Messteile",
+"title": "Messteile",
+"text": "fn arbeitet nur in ordner, dem leeren Wegwerf-Ordner des Laufs, nie in einem echten Profil, und baut dort anzahl Dokumente, Mails oder Einträge. Zurück kommen nur Zahlen (int, float, bool) unter Schlüsseln aus a–z, 0–9 und _; alles andere fällt weg. Zwischen zwei Schritten ruft fn wissensmessung.ruhe() (bricht ab, wenn jemand spricht); zeiten(name, fn, args) liefert Median, p95 und Höchstwert, rss_mb() den Speicher. Die Teile laufen nacheinander im selben Messprozess; der Lauf schreibt je Teil eine Zeile ins Log und hält die Zahlen unter seinem Namen."
+},
+{
+"lang": "de",
+"src": "technik",
+"file": "Technik und Fehlersuche",
 "head": "Sprachmodell: eigenes oder dgx-spark-qwen38",
 "title": "Sprachmodell: eigenes oder dgx-spark-qwen38",
 "text": "Das Sprachmodell läuft entweder als eigenes vLLM hinter dem LLM-Tor (sudo ./install.sh --llm, dann sudo speech-spark modelle llm uebernehmen, zurück mit … zurueck) oder wie früher aus dgx-spark-qwen38. Beim Spark teilen geht nur das eigene, weil der Panel-Rechner qwen38 nicht erreicht. Die Punkte unten zu Lanes und Cockpit gelten nur, solange qwen38 läuft."
@@ -19331,6 +19427,14 @@
 "lang": "en",
 "src": "architecture",
 "file": "Architecture and data flow",
+"head": "Measuring knowledge",
+"title": "Measuring knowledge",
+"text": "- Status → Checks → Measure knowledge measures times and memory of these ways, for the test with 5000 documents: the vector matrix (float16, MB and the process's memory before and after), the document search with and without the map, wissensbuch.liste, view, rund_um, weg and wissenskarte.liste, each median and p95 over 20 fixed samples from the own titles and names, and pages, points, connections and connections per document. Numbers only, never a title or a name. - It measures in a process of its own with low priority (nice and SCHED_IDLE, one thread), only in a quiet minute, at most 1800 s, one at a time (wissensmessung.lauf). If somebody speaks, it stops. Made-up documents come from a fixed seed in a throwaway profile under state/wissensmessung-tmp and are gone afterwards; the limits of the real code hold, and the run says how much the documents would have brought without them. A real profile is only read (PRAGMA query_only). - Other parts join as a measuring part (wissensmessung.MESSTEILE: a name and fn(ordner, anzahl), numbers only, only in the run's throwaway folder)."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
 "text": "- 30 candidates for re-ranking (step 9) - -4.0 cross-encoder's lower limit (step 10) - 0.4 weight of the context line (step 5) - 8 s longest wait for the question vector (step 3) - 8.5 GiB free memory for the vector model to start (step 3) - 1.5 GiB the same on a panel computer (Spark teilen) (step 3) - 3 hits at most with „Look locally first“ (step 5) - 500 characters per hit with „Look locally first“, around the search words (step 5) - 2400 characters up to which a table stays one passage (step 5) - 20 s longest time per PDF for reading its tables (step 5) - 5 pages one document may change in the knowledge book (step 13) - 300 pages in the knowledge book per profile (step 13) - 50 sentences the model checks against their source at night (default) (step 13) - 30 connections one document may bring into the knowledge map (step 13) - 3000 connections in the knowledge map per profile (step 13) - 150 points the map shows at once (step 13) - 400 connections the map shows at once (step 13) - 4 steps wissenskarte.weg looks for at most (step 13) - 4096 passages per block when comparing vectors (step 6) - 200 documents a day for the knowledge map (default) (step 13) - 40 people, companies, "
@@ -19381,7 +19485,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": " - app/panel/wissensbuch.py _fts_sync: bring the pages' search index up to date (step 13) - app/panel/wissensbuch.py liste: page ids with rank for other parts, read only (step 13) - app/panel/wissenskarte.py liste: piece ids from the map for the search, read only (step 6) - app/panel/wissenskarte.py trifft: does a search word hit a point? fixed rule (step 6) - app/panel/documents.py _karte: the map's list into the mix, with the search's filters (step 6) - app/panel/documents.py _similar: similarity block by block in float32 (step 6) - app/panel/gedaechtnis.py hint_lines: facts in three blocks (step 13) - app/panel/profiles.py _cap: cap: only old learned facts make room (step 13) - app/panel/gedaechtnis.py slot_of: a fact's fixed topic place by fixed patterns (step 13) - app/panel/gemerkt.py take_back: undo only while the fact is unchanged (step 13)"
+"text": " - app/panel/wissensbuch.py _fts_sync: bring the pages' search index up to date (step 13) - app/panel/wissensbuch.py liste: page ids with rank for other parts, read only (step 13) - app/panel/wissenskarte.py liste: piece ids from the map for the search, read only (step 6) - app/panel/wissenskarte.py trifft: does a search word hit a point? fixed rule (step 6) - app/panel/documents.py _karte: the map's list into the mix, with the search's filters (step 6) - app/panel/documents.py _similar: similarity block by block in float32 (step 6) - app/panel/gedaechtnis.py hint_lines: facts in three blocks (step 13) - app/panel/profiles.py _cap: cap: only old learned facts make room (step 13) - app/panel/gedaechtnis.py slot_of: a fact's fixed topic place by fixed patterns (step 13) - app/panel/gemerkt.py take_back: undo only while the fact is unchanged (step 13) - app/panel/wissensmessung.py lauf: one measurement in its own process, stops on speech (step 6) - app/panel/wissensmessung.py _synth: the throwaway profile from a fixed seed, with the code's limits (step 6) - app/panel/wissensmessung.py MESSTEILE: the measuring parts, extensible (step 6)"
 },
 {
 "lang": "en",
@@ -19389,7 +19493,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_wissen, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche"
+"text": "Self-tests: test_wissen, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung"
 },
 {
 "lang": "en",
@@ -20253,7 +20357,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 101). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again, and profiles forgets what it had opened of the profiles' sealed files."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 103). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again, and profiles forgets what it had opened of the profiles' sealed files."
 },
 {
 "lang": "en",
@@ -20269,7 +20373,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 47 files in every backup (step 7) - 101 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 47 files in every backup (step 7) - 103 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -21989,7 +22093,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "sage (SIGNALE), at most 30 connections per document and 3000 per profile, \"Wrong\" (wk_block) for good. Existing documents are worked in bit by bit (fingerprint wb_docs.sig), deleted ones take their connections at once (documents.on_gone). Browser (own SVG code with textContent) and iPhone (SwiftUI) draw the map themselves from the JSON of GET /api/profile/wissenskarte (at most 150 points and 400 connections, around a page, of a document or the best connected ones); the model never delivers SVG, Mermaid or DOT. Export as Mermaid or Graphviz text from fixed code (names cleaned, no click, style or link lines), as SVG and PNG from the browser, in the Obsidian folder every connection as a [[link]] with its kind. Drag points, drag a document onto the map, \"To the middle\", zoom with the wheel and two fingers. Status → Live only connections, points, waiting documents and profiles; the journal only fixed words and numbers (wissen: wissenskarte verbunden | n verbindungen | m verworfen | …). Tables wk_edges, wk_docs, wk_block in users/<profile>/wissen.db. Next: stage 2 (all documents, islands, filters, after a measuring test with 5000 documents), stage 3 (tools wissen_weg and schaubild after "
+"text": "sage (SIGNALE), at most 30 connections per document and 3000 per profile, \"Wrong\" (wk_block) for good. Existing documents are worked in bit by bit (fingerprint wb_docs.sig), deleted ones take their connections at once (documents.on_gone). Browser (own SVG code with textContent) and iPhone (SwiftUI) draw the map themselves from the JSON of GET /api/profile/wissenskarte (at most 150 points and 400 connections, around a page, of a document or the best connected ones); the model never delivers SVG, Mermaid or DOT. Export as Mermaid or Graphviz text from fixed code (names cleaned, no click, style or link lines), as SVG and PNG from the browser, in the Obsidian folder every connection as a [[link]] with its kind. Drag points, drag a document onto the map, \"To the middle\", zoom with the wheel and two fingers. Status → Live only connections, points, waiting documents and profiles; the journal only fixed words and numbers (wissen: wissenskarte verbunden | n verbindungen | m verworfen | …). Tables wk_edges, wk_docs, wk_block in users/<profile>/wissen.db. Next: stage 2 (all documents, islands, filters, after a measuring test with 5000 documents; measured since V01.1.270 under Status → Checks "
 },
 {
 "lang": "en",
@@ -21997,7 +22101,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "measuring), stage 4 (code files with a fixed reader)."
+"text": "→ Measure knowledge), stage 3 (tools wissen_weg and schaubild after measuring), stage 4 (code files with a fixed reader)."
 },
 {
 "lang": "en",
@@ -33158,6 +33262,86 @@
 "head": "Several voices at once",
 "title": "Several voices at once",
 "text": "engine.sh writes both engine values into the deploy file (state/tts-deploy-main.yaml) and the stage values; a change restarts speech output. vllm-omni 0.30 already bounds the decoder's reference context to 72 frames itself (ref_code_context_frames follows codec_left_context_frames)."
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "Measuring knowledge",
+"title": "Measuring knowledge",
+"text": "In the panel under Status → Checks → Measure knowledge (admins only, code of the level \"Confirm\") or on the console:"
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "Measuring knowledge",
+"title": "Measuring knowledge",
+"text": "Since V01.1.270 (knowledge map stage 4, preparing the test with 5000 documents after which stage 2 of the knowledge map comes) app/panel/wissensmessung.py measures times and memory of the knowledge ways, numbers only, never a title, a name or a sentence:"
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "Measuring knowledge",
+"title": "Measuring knowledge",
+"text": "- Document search: documents, pieces, vectors, the vector matrix (float16, MB, time to build, the process's memory before and after) and documents.search with and without the map. - Knowledge book: pages, sentences, pages per document and wissensbuch.liste. - Knowledge map: pages, points, connections, places, connections per document (mean and most) and view (the best connected ones and around a point), rund_um (2 steps), weg and wissenskarte.liste. - Every time as median, p95 and maximum over 20 fixed samples from the own titles and names (PROBEN), and the measuring process's memory at the start and at the end. - Limits: for the knowledge book's pages (300), the connections (3000) and the points (5000) the run says how many there are now, how many the documents would bring and whether the limit is full. With made-up documents the need is what the build would have made without the limit; with a profile what it brings per document, projected to 5000 documents (an upper estimate)."
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "Measuring knowledge",
+"title": "Measuring knowledge",
+"text": "Made-up documents come from a fixed seed (SEED) in a throwaway profile under state/wissensmessung-tmp/lauf-…: pieces of made-up words with random float16 vectors, context lines, pages and sentences of the knowledge book, points with their places and connections, with the limits of the real code and fixed assumptions per document (SYN_*: about 10 pieces, 2 pages, 6 places of points, 4 connections). After the run the folder is gone, also after a stop; a folder of a crashed run is cleared by the next one. A real profile is only read: every connection of the measuring process has PRAGMA query_only, a database of another version or without the tables of a part is not touched."
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "Measuring knowledge",
+"title": "Measuring knowledge",
+"text": "It measures in a process of its own (wissensmessung.py kind) with low priority (nice 10 and SCHED_IDLE like the search's vectors, numpy with one thread), at most 30 minutes, only one at a time on the Spark (a lock file, also against the console), from the panel at most every 5 minutes. Speech goes first: the panel starts only in a quiet minute, and when somebody speaks, panel and measuring process stop between two queries (\"stopped: somebody spoke\"). Inside the measuring process the profiles' releases do not apply: it measures what the code can do."
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "Measuring knowledge",
+"title": "Measuring knowledge",
+"text": "The result stands under Status → Checks → Measure knowledge (the last measurement with numbers, times and limits, earlier ones folded), in state/wissensmessung.json (the last 10 runs, not in the backup), in the log (area Wissen: wissen: messung … with one line per part) and in Status → Live in the box \"Wissen messen\" (running now or the numbers of the last measurement). The iPhone app shows it through Status → Checks in the panel, the Android app shows the panel itself."
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "Measuring knowledge",
+"title": "Measuring knowledge",
+"text": "Example on a development computer (4 cores, V01.1.270, 5000 made-up documents, about 52 000 pieces), p95 in ms:"
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "Measuring knowledge",
+"title": "Measuring knowledge",
+"text": "The vector matrix needs 38.5 MB (built in 0.2 s), the measuring process grows from about 80 to 165 MB. All three limits are full at 5000 documents (need about 3000 pages, 20 000 connections, 10 800 points); without them wissenskarte.liste (it walks every point in Python) becomes the slowest part of the search."
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "Measuring parts",
+"title": "Measuring parts",
+"text": "Other parts join with one line (wissensmessung.MESSTEILE, for example \"fund\" for the search index over mail):"
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "Measuring parts",
+"title": "Measuring parts",
+"text": "fn works only in ordner, the run's empty throwaway folder, never in a real profile, and builds anzahl documents, mails or entries there. Only numbers come back (int, float, bool) under keys of a–z, 0–9 and _; everything else is dropped. Between two steps fn calls wissensmessung.ruhe() (stops when somebody speaks); zeiten(name, fn, args) gives median, p95 and maximum, rss_mb() the memory. The parts run one after the other in the same measuring process; the run writes one log line per part and keeps the numbers under its name."
 },
 {
 "lang": "en",

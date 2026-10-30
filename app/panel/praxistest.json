@@ -4699,6 +4699,13 @@
 "titel": "Begleiter: Finden per Tastenkürzel",
 "text": "Ich → Begleiter: Teil „Finden im Begleiter“ einschalten (Finden in allen Daten muss freigegeben sein). Strg+Alt+F (Mac ⌃⌥F), „Rechnung“ eingeben, Return: Treffer mit Titel und Quelle; ein Klick öffnet den Eintrag im Panel, „In Finden ansehen“ die Seite Finden mit derselben Suche. In Logs → Begleiter steht nur die Zahl der Treffer, nie die Wörter.",
 "thread": "Begleiter-App auf neuen Stand bringen"
+},
+{
+"id": "P696",
+"v": 1270,
+"titel": "5000 Dokumente messen",
+"text": "A: Zustand → Prüfen → Wissen messen: „Erfundene Dokumente“, 5000, Messen (Code nur ohne zweiten Schritt). Der Knopf zeigt „Misst gerade …“, nach einigen Minuten stehen Dokumente, Stücke, Vektor-Matrix in MB, Speicher vorher → nachher, die Zeiten (Median und p95) von Dokumentensuche, Suche mit Karte, Wissensbuch, Karte, Rund um, Weg und Karte-Liste und die drei Grenzen mit jetzt, Bedarf und „voll“ oder „reicht“; nirgends ein Titel oder Name. Die Zahlen bitte an den Thread geben. B: Während einer Messung etwas zum Spark sagen: die Messung hört auf („abgebrochen: jemand hat gesprochen“), die Antwort kommt so schnell wie sonst. C: Dasselbe mit „Profil …“ (eigenes Profil mit vielen Dokumenten): nur Zahlen, die Dokumente bleiben unverändert. D: Zustand → Live, Kasten „Wissen messen“: nur Zahlen. Zustand → Logs, Bereich Wissen: „wissen: messung teil …“ je Teil. Zustand → Überblick → Rechner zeigt „Wissen messen“, solange sie läuft. E: Auf dem Pi in der Konsole: sudo speech-spark wissen messen (und synth 5000 --ohne-grenzen): dieselben Zahlen; ein zweiter Start gleichzeitig sagt „laeuft“.",
+"thread": "Wissenskarte Stufe 2 statt Neo4j"
 }
 ]
 }
