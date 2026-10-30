@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.290** Redesign Stufe 4: Personen und Geräte, Offen und Chats als Liste und Detail (Zeilen fester Höhe, Zustand als Punkt mit Wort, Filter als Segment, am Handy Detail als eigene Seite)
 - **V01.1.289** Fernzugang: mehrere Sitzungen als Reiter (Stufe 1): jede Shell ein Reiter mit Symbol, Stand und Punkt für neue Ausgabe, + System mit Suche (Strg+Umschalt+O), Wechsel mit Strg+Umschalt+1…9 und ←/→, Assistent und Verlauf je Reiter, Rechtsklick-Menü; bis zu 8 Plätze (Standard 4), voll heißt „n von n Plätzen belegt“ statt still zu schließen; auf anderen Seiten bleiben alle Sitzungen offen, die rote Zeile führt mit Zum Terminal zurück.
 - **V01.1.288** Test-Fix: sechs Tests, die einander störten, räumen auf oder zählen nur das Eigene (Finden-Mail, Sicherung, Listen, Dokumente, Home Assistant live, Karten)
 - **V01.1.287** Mappen: Dokumente, Wissensbuch-Seiten und Notizen zu einem Vorhaben bündeln, je Eintrag aus, kurz oder ganz ans Modell, Gespräch im Assistenten an eine Mappe binden
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.283** Dungeon-Musik: Probe hören (30 s oder voll), gute Probe in den Vorrat, „Gefällt“ am Tisch
 - **V01.1.282** Dungeon-Musik: Klangvorlage je Welt und Stimmung (Genre, Instrumente, Tonart, Takt, Tempo, Charakter, Gesang) und feste Pakete
 - **V01.1.281** Dungeon-Musik: Qualität Schnell, Gut oder Beste (nachts), Länge und Lautheit einstellbar
-- **V01.1.280** Dungeon-Musik: Tempo, Tonart und Takt als Metadaten, Beschreibung als Schlagwörter ohne Verneinungen, neue Stimmung „Boss“
 
 
 

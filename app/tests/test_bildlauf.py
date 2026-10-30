@@ -56,7 +56,6 @@ FENSTER = {
     ".post .postfold": "the mail folders (narrow screens: a panel over the list)",
     ".post .postcmpb": "the window „Neue E-Mail“: its text scrolls inside the window",
     ".fdin": "the sticky detail column of Funktionen",
-    ".pcard.split .pside": "the sticky side column of a person",
     ".choice .chrows": "a choice card inside the conversation",
     ".cx-list": "Chats: the list of chats beside the messages",
     ".fzantwort": "Fernzugang: the assistant's answers in its column beside the terminal; the newest stays in view",
@@ -142,7 +141,7 @@ for(const e of document.querySelectorAll('body *')){if(modal&&!modal.contains(e)
   const over=e.scrollHeight-e.clientHeight;let up=e.parentElement;while(up&&up!==document.documentElement&&!scrolls(up))up=up.parentElement;
   out.push({el:name(e),over,bar,scroll:over>1,inside:up?(up===document.documentElement?(scrolls(up)?'html':''):name(up)):''})}
 return {boxes:out,page:modal?(getComputedStyle(document.documentElement).overflowY==='hidden'||!scrolls(document.documentElement)):true}})()"""
-ALLOWED_INSIDE = re.compile(r"^(pre|div\.lout|div\.rlist|div\.ullog|div\.mdstand|div\.wkpatch|div#chatlog|div\.cx-|div\.ld-detail|div\.fdin|div\.pside|div\.pcard|div#fabtext|div#fabpop)")
+ALLOWED_INSIDE = re.compile(r"^(pre|div\.lout|div\.rlist|div\.ullog|div\.mdstand|div\.wkpatch|div#chatlog|div\.cx-|div\.ld-detail|div\.fdin|div#fabtext|div#fabpop)")
 
 
 @unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")

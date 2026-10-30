@@ -59,6 +59,29 @@ window.icSearch=(ph,val,oninput,id)=>{const w=el('label','ic-search');w.appendCh
 window.icCheck=(state,label,act)=>{const b=el('button','ic-cb'+(state===true?' on':state==='half'?' half':''));b.type='button';b.setAttribute('role','checkbox');
   b.setAttribute('aria-checked',state===true?'true':state==='half'?'mixed':'false');b.setAttribute('aria-label',label);if(state===true)b.appendChild(icSvg('check',12));
   b.onclick=e=>{e.stopPropagation();act(b)};return b};
+// ---------------------------------------------------------------- Liste + Detail (Klar 4, Redesign Stufe 4)
+// The building blocks of every list page (Personen und Geräte, Offen, Chats; the look in app.css „Klar 4“): a row of
+// one height with a symbol (ldIco) or initials (ldAva), a title, one line below and on the right the state as a dot
+// with a word (ldSt), a time or a count; filters as one segment (ldSeg); an empty list says one sentence under its
+// symbol (ldEmpty). Text from outside (names, titles) goes in as textContent only.
+window.ldInit=n=>{const w=String(n||'?').trim().split(/\s+/).filter(Boolean);return ((w.length>1?w[0][0]+w[1][0]:(w[0]||'?').slice(0,2))||'?').toUpperCase()};
+window.ldIco=n=>{const s=el('span','ld-ico');s.setAttribute('aria-hidden','true');s.appendChild(icSvg(n,16));return s};
+window.ldAva=(name,icon)=>{const s=el('span','ld-ava',icon?null:ldInit(name));s.setAttribute('aria-hidden','true');if(icon)s.appendChild(icSvg(icon,16));return s};
+window.ldSt=(kind,word)=>el('span','ld-st'+(kind?' '+kind:''),word);
+window.ldEmpty=(icon,text)=>{const d=el('div','ld-empty');d.append(icSvg(icon,28),el('span','',text));return d};
+// one row; act(row) on a click or Enter/Space (a button, link or field inside keeps its own click); without act it
+// is a plain line (no pointer, no hover)
+window.ldRow=(o)=>{const r=el('div','ld-row'+(o.on?' on':''));if(o.act){r.setAttribute('role','button');r.tabIndex=0}if(o.lead)r.appendChild(o.lead);
+  const m=el('span','ld-mid');m.appendChild(el('b','',o.title));if(o.sub)m.appendChild(el('small','',o.sub));r.appendChild(m);
+  const right=(o.right||[]).filter(Boolean);if(right.length){const x=el('span','ld-right');x.append(...right);r.appendChild(x)}
+  if(o.act){r.onclick=e=>{if(e.target.closest('button,a,input,select,label'))return;o.act(r)};
+    r.onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target===r){e.preventDefault();o.act(r)}}}
+  return r};
+// filters as one segment: items [[key, label, count?]], the chosen one cur; act(key)
+window.ldSeg=(items,cur,act,label)=>{const s=el('div','segc ld-seg');s.setAttribute('role','radiogroup');if(label)s.setAttribute('aria-label',label);
+  for(const [k,l,n] of items){const b=el('button',k===cur?'on':'',l);b.type='button';b.setAttribute('role','radio');b.setAttribute('aria-checked',String(k===cur));
+    if(n!=null&&n!=='')b.appendChild(el('i','',String(n)));b.onclick=()=>act(k);s.appendChild(b)}
+  return s};
 // A page drawn as headings with lists below (Aufträge, Nachrichten, Sicherheit): from the first h3 on, every heading
 // becomes a tab and what follows it its panel. The nodes are moved, not copied (ids and handlers stay). A message
 // line (id …msg) and what follows .ic-tabend stay below the tabs, visible whatever tab is open. hot: a selector that

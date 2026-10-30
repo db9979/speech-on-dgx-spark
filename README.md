@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.290** Redesign stage 4: People and devices, Open and Chats as list and detail (rows of one height, state as a dot with a word, filters as a segment, on a phone the detail as a page of its own)
 - **V01.1.289** Remote access: several sessions as tabs (stage 1): every shell a tab with icon, state and a dot for new output, + System with search (Ctrl+Shift+O), switching with Ctrl+Shift+1…9 and ←/→, assistant and history per tab, a right-click menu; up to 8 places (default 4), full means "n of n places taken" instead of closing silently; on other pages all sessions stay open, the red line leads back with To the terminal.
 - **V01.1.288** Test fix: six tests that got in each other's way clean up or count only their own (Find mail, backup, lists, documents, Home Assistant live, cards)
 - **V01.1.287** Collections: bundle documents, knowledge book pages and notes for one undertaking, per entry off, short or whole to the model, bind a conversation in the assistant to a collection
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.283** Dungeon music: hear a probe (30 s or full), a good probe into the store, "Liked" at the table
 - **V01.1.282** Dungeon music: sound template per world and mood (genre, instruments, key, time, tempo, character, singing) and fixed packages
 - **V01.1.281** Dungeon music: quality fast, good or best (at night), length and loudness adjustable
-- **V01.1.280** Dungeon music: tempo, key and time signature as metadata, caption as tags without negations, new mood "Boss"
 
 
 

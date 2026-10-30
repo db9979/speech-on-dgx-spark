@@ -6,14 +6,14 @@
 // (vorgaenge.AKTIONEN) and the Spark checks each again (rev: 409 when another device was quicker). Titles are the
 // panel's words, a sender from a mail is outside text: everything through textContent (icEl), never innerHTML.
 let VG_ON=false;
-const VG={items:new Map(),rev:0,counts:{braucht:0,spaeter:0,erledigt:0},spaeter:{},seq:0,es:null,sel:'',grp:'braucht',art:'',msg:'',open:false,busy:''};
+const VG={loaded:false,items:new Map(),rev:0,counts:{braucht:0,spaeter:0,erledigt:0},spaeter:{},seq:0,es:null,sel:'',grp:'braucht',art:'',msg:'',open:false,busy:''};
 // the menu entry and the store only for a signed-in profile that may use it (start.js, like Listen)
 window.vgStart=who=>{VG_ON=!!(who&&who.profile&&who.vorgaenge);document.querySelectorAll('nav button[data-s=offen]').forEach(b=>b.hidden=!VG_ON);
   if(VG_ON){vgLoad(true);vgStream()}else{if(VG.es){VG.es.close();VG.es=null}VG.items.clear();vgPaint()}};
 async function vgLoad(all){if(!VG_ON)return;const seq=++VG.seq;
   const {r,d}=await apiTry('/api/profile/vorgaenge?seit='+(all?0:VG.rev));if(seq!==VG.seq||!r.ok)return;
   if(all)VG.items.clear();for(const x of d.items)VG.items.set(x.id,x);
-  VG.rev=d.rev;VG.counts=d.counts;VG.spaeter=d.spaeter||{};vgPaint()}
+  VG.rev=d.rev;VG.counts=d.counts;VG.spaeter=d.spaeter||{};VG.loaded=true;vgPaint()}
 // only numbers come: the changed ones are fetched; a new card is in today's conversation (convoLook shows it)
 function vgStream(){if(VG.es||typeof EventSource==='undefined')return;const es=new EventSource('/api/profile/vorgaenge/stream');VG.es=es;
   es.onmessage=e=>{let d;try{d=JSON.parse(e.data)}catch{return}if(!d||d.type!=='vorgang'||d.rev<=VG.rev)return;
@@ -111,24 +111,29 @@ window.vgOpen=()=>{if(!PROFILE)return;const root=$('vgroot'),box=$('vgbox');if(b
     {k:'set',label:t('Einstellungen','Settings'),body:()=>{const b=$('vgbox');b.hidden=false;vgSettings(b);return b}}]));
   vgLoad(true)};
 function vgBody(){const w=document.createElement('div');w.className='ld-box ld-frame vg';w.id='vgview';vgPage(w);return w}
+// Liste + Detail (Klar 4): the three groups as a segment, the kinds as a choice beside it; a row per card with its
+// symbol, title, one line and a due date or „dringend“ as a dot with a word; the open card on the right (on a phone as
+// a page with „‹ Offen“); placeholders of the row's height until the first answer, a quiet sentence when empty
 function vgPage(w){w.classList.toggle('ld-sel',!!VG.sel);
-  if(!w.querySelector('.ld-split'))w.innerHTML='<div class="ld-split"><div class="ld-list"></div><div class="ld-detail vgdet" hidden></div></div>';
-  const list=w.querySelector('.ld-list');list.textContent='';
-  const chips=icEl('div','ld-chips');for(const [k,l] of VG_GRP)chips.appendChild(icChip(l+' '+(VG.counts[k]||0),VG.grp===k,()=>{VG.grp=k;VG.sel='';vgPaint()}));
+  if(!w.querySelector('.ld-split'))w.innerHTML='<div class="ld-tools vgtools"></div><div class="ld-split ld-wide"><div class="ld-list"></div><div class="ld-detail vgdet"></div></div>';
+  const tools=w.querySelector('.vgtools'),list=w.querySelector('.ld-list');
+  tools.replaceChildren(ldSeg(VG_GRP.map(([k,l])=>[k,l,VG.counts[k]||0]),VG.grp,k=>{VG.grp=k;VG.sel='';vgPaint()},t('Offen','Open')));
   const arts=[...new Set([...VG.items.values()].map(x=>x.art))];
-  if(arts.length>1)for(const a of arts){const x=[...VG.items.values()].find(y=>y.art===a);chips.appendChild(icChip(vgName(x),VG.art===a,()=>{VG.art=VG.art===a?'':a;vgPaint()},'vg-art'))}
-  list.appendChild(chips);
+  if(arts.length>1){const s=document.createElement('select');s.setAttribute('aria-label',t('Art','Kind'));
+    for(const a of ['',...arts]){const o=document.createElement('option');o.value=a;o.textContent=a?vgName([...VG.items.values()].find(y=>y.art===a)):t('Alle Arten','All kinds');o.selected=a===VG.art;s.appendChild(o)}
+    s.onchange=()=>{VG.art=s.value;VG.sel='';vgPaint()};tools.appendChild(s)}
   const rows=[...VG.items.values()].filter(x=>x.gruppe===VG.grp&&(!VG.art||x.art===VG.art))
     .sort(VG.grp==='spaeter'?(a,b)=>(a.spaeter_bis||9e9)-(b.spaeter_bis||9e9):VG.grp==='erledigt'?(a,b)=>b.ge-a.ge:(a,b)=>(b.dringend-a.dringend)||(b.t-a.t));
-  if(!rows.length)list.appendChild(icEl('div','ld-empty mut',VG.grp==='braucht'?t('Nichts offen. Was dich braucht, kommt als Karte ins Gespräch und steht dann hier.','Nothing open. What needs you comes as a card into the conversation and then stands here.')
+  if(!VG.loaded&&!rows.length)list.replaceChildren(lzSkel('zeilen',5));
+  else if(!rows.length)list.replaceChildren(ldEmpty(VG.grp==='erledigt'?'check':VG.grp==='spaeter'?'clock':'inbox',VG.grp==='braucht'?t('Nichts offen. Was dich braucht, kommt als Karte ins Gespräch und steht dann hier.','Nothing open. What needs you comes as a card into the conversation and then stands here.')
     :VG.grp==='spaeter'?t('Nichts für später.','Nothing for later.'):t('In den letzten 7 Tagen nichts erledigt.','Nothing done in the last 7 days.')));
-  for(const x of rows){const r=icEl('div','ld-row'+(x.id===VG.sel?' on':''));r.setAttribute('role','button');r.tabIndex=0;
-    const ic=icEl('span','ld-ico vk-sym');ic.appendChild(icSvg(vgSym(x),15));const mid=icEl('span','ld-mid');
-    mid.append(icEl('b','',x.titel),icEl('small','',[vgName(x),vgState(x)||x.zeile].filter(Boolean).join(' · ')));
-    const right=icEl('span','ld-right');const f=vgFrist(x.frist);if(f)right.appendChild(icEl('span','frist'+(f[1]?' warn':''),f[0]));
-    r.append(ic,mid,right);const go=()=>{VG.sel=x.id;VG.msg='';vgPaint()};r.onclick=go;r.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}};list.appendChild(r)}
-  const det=w.querySelector('.vgdet'),x=VG.items.get(VG.sel);det.hidden=!x;det.textContent='';if(!x)return;
-  if(NARROW()){const bk=icEl('button','b ld-back','‹ '+t('Offen','Open'));bk.type='button';bk.onclick=()=>{VG.sel='';vgPaint()};det.appendChild(bk)}
+  else list.replaceChildren(...rows.map(x=>{const f=vgFrist(x.frist);
+    const st=f?ldSt(f[1]?'warn':'',f[0]):x.dringend&&x.gruppe==='braucht'?ldSt('bad',t('dringend','urgent')):null;
+    const r=ldRow({lead:ldIco(vgSym(x)),title:x.titel,sub:[vgName(x),vgState(x)||x.zeile].filter(Boolean).join(' · '),right:[st],on:x.id===VG.sel,act:()=>{VG.sel=x.id;VG.msg='';vgPaint()}});
+    r.dataset.vg=x.id;return r}));
+  const det=w.querySelector('.vgdet'),x=VG.items.get(VG.sel);det.classList.toggle('ld-idle',!x);det.textContent='';
+  if(!x){det.appendChild(ldEmpty('inbox',t('Eine Karte antippen: hier steht sie dann mit ihren Knöpfen.','Tap a card: it then shows here with its buttons.')));return}
+  const bk=icEl('button','b ld-back');bk.type='button';bk.append(icSvg('back',16),' '+t('Offen','Open'));bk.onclick=()=>{VG.sel='';vgPaint()};det.appendChild(bk);
   det.appendChild(vgCard(x,'page'));
   const dl=icEl('dl','vk-f vg-facts'),add=(a,b)=>{if(b)dl.append(icEl('dt','',a),icEl('dd','',b))};
   add(t('Seit','Since'),vgWhen(x.t));add(t('Zustand','State'),{offen:t('offen','open'),gesehen:t('gesehen','seen'),spaeter:t('später','later'),erledigt:t('erledigt','done'),weg:t('weg','gone')}[x.zustand]);

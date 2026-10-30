@@ -1,17 +1,15 @@
 // Admin: profiles and devices.
 // ---------------------------------------------------------------- profiles and devices (admin)
 // For many profiles: search, filter, sort and pages of 25 (the Spark does it); details open per profile.
+// Liste + Detail (Klar 4, Redesign Stufe 4): a row per person with initials, one line below and the state as a dot with a
+// word; the open person beside the list (from 660 px of the box, app.css .ld-wide), on a phone as a page with „‹ Personen“.
+// Everything is built with textContent (ichteile.js ldRow …), names never go in as HTML.
 const PL={q:'',show:'',sort:'name',page:0,open:'',names:[],timer:null};
 const pwhen=s=>s?new Date(s*1000).toLocaleString([], {dateStyle:'short',timeStyle:'short'}):t('noch nie','never');
-// a row of the list: initials on a colour of the name (the same colours as the symbols), counts in words, setup as a bar
-const PAVC=['blue','violet','teal','green','amber','red'];
-const pAvatar=n=>{const w=String(n||'?').trim().split(/\s+/),i=(w.length>1?w[0][0]+w[1][0]:String(n||'?').slice(0,2)).toUpperCase();
-  let h=0;for(const c of String(n))h=(h*31+c.charCodeAt(0))>>>0;return `<span class="cic c-${PAVC[h%PAVC.length]} pav" aria-hidden="true">${esc(i)}</span>`};
 const pCount=(n,one,many)=>`${n} ${n===1?one:many}`;
-const pSetup=s=>`<span class="psetup${s.done>=s.total?' ok':''}" title="${esc(t('Einrichten','Setup'))}"><span class="psbar"><i style="width:${Math.round(100*s.done/s.total)}%"></i></span>${s.done}/${s.total}</span>`;
 // the kind of a device as a symbol: speaker, iPhone app, watch, terminal, Home Assistant, own program (key)
 const PDEV={speaker:'speaker',app:'mobile',watch:'watch',tui:'fern',room:'home',key:'key'};   // names in icons.js
-const pDevIcon=x=>`<span class="cic pav" aria-hidden="true">${ic(PDEV[x.speaker?'speaker':x.kind==='app'||x.app?'app':PDEV[x.kind]?x.kind:'key'])}</span>`;
+const pDevIcon=x=>ldIco(PDEV[x.speaker?'speaker':x.kind==='app'||x.app?'app':PDEV[x.kind]?x.kind:'key']);
 const perr=(id,e)=>{$(id).innerHTML=`<span class="err">${esc(e.message)}</span>`};
 // The profile of a device: a list of all profiles, sorted by name. Keys a profile set up itself under Ich
 // (speaker, iPhone app, Pebble watch, terminal, Home Assistant) stay with it: they show the name and where they are managed.
@@ -22,60 +20,58 @@ const dkind=x=>x.speaker?t('Lautsprecher, eingerichtet unter Ich → Lautspreche
   :x.kind==='watch'?t('Pebble-Uhr, gekoppelt unter Ich → Pebble-Uhr','Pebble watch, paired under Me → Pebble watch')
   :x.kind==='tui'?t('Terminal, gekoppelt unter Ich → Terminal','Terminal, paired under Me → Terminal')
   :x.kind==='room'?t('Home Assistant, erzeugt unter Ich → Raum-Modus','Home Assistant, made under Me → Room mode'):'';
-function profFilter(){if($('pfilter').dataset.done)return;$('pfilter').dataset.done='1';
-  const o=(v,l)=>`<option value="${v}">${esc(l)}</option>`;
-  $('pfilter').innerHTML=`<input id="pq" type="search" placeholder="${esc(t('Suchen: Name, Rufname oder Gerät','Search: name, call name or device'))}" style="flex:2;min-width:140px" maxlength="40">
-    <select id="pshow" style="width:auto">${o('',t('alle','all'))}${o('idle',t('seit 90 Tagen nicht benutzt','not used for 90 days'))}${o('nodev',t('ohne Gerät','without a device'))}${o('mfa',t('mit zweitem Schritt','with second step'))}${o('nomfa',t('ohne zweiten Schritt','without second step'))}${o('room',t('hört gerade zu','listening right now'))}</select>
-    <select id="psort" style="width:auto">${o('name',t('nach Name','by name'))}${o('recent',t('zuletzt benutzt zuerst','last used first'))}${o('new',t('neueste zuerst','newest first'))}</select>`;
-  $('pq').oninput=()=>{clearTimeout(PL.timer);PL.timer=setTimeout(()=>{PL.q=$('pq').value;PL.page=0;loadProf()},250)};
-  $('pshow').onchange=()=>{PL.show=$('pshow').value;PL.page=0;loadProf()};$('psort').onchange=()=>{PL.sort=$('psort').value;PL.page=0;loadProf()}}
+// filters as a segment, search and sort on top (the Spark knows more filters: mfa, room, for the other pages)
+const PSHOW=()=>[['',t('Alle','All')],['idle',t('Ungenutzt','Unused')],['nodev',t('Ohne Gerät','No device')],['nomfa',t('Ohne 2FA','No 2FA')]];
+function profFilter(){const f=$('pfilter');if(!f.dataset.done){f.dataset.done='1';
+    const q=document.createElement('input');q.id='pq';q.type='search';q.maxLength=40;q.placeholder=t('Suchen: Name, Rufname oder Gerät','Search: name, call name or device');q.setAttribute('aria-label',q.placeholder);
+    const so=document.createElement('select');so.id='psort';so.setAttribute('aria-label',t('Sortieren','Sort'));
+    for(const [v,l] of [['name',t('nach Name','by name')],['recent',t('zuletzt benutzt zuerst','last used first')],['new',t('neueste zuerst','newest first')]]){const o=document.createElement('option');o.value=v;o.textContent=l;so.appendChild(o)}
+    const seg=document.createElement('div');seg.id='pshow';f.append(q,so);f.after(seg);
+    q.oninput=()=>{clearTimeout(PL.timer);PL.timer=setTimeout(()=>{PL.q=q.value;PL.page=0;loadProf()},250)};
+    so.onchange=()=>{PL.sort=so.value;PL.page=0;loadProf()}}
+  $('pshow').replaceChildren(ldSeg(PSHOW(),PL.show,k=>{PL.show=k;PL.page=0;loadProf()},t('Filter','Filter')))}
+const PROLE=()=>typeof ROLE_NAME!=='undefined'?ROLE_NAME:{admin:t('Admin','Admin'),manager:t('Verwalter','Manager')};
+// the line below a name: role, call name, last use, devices, facts; the state on the right: listening, setup still open
+function pRow(u){const R=PROLE(),sub=[u.role?R[u.role]||u.role:'',u.call,u.last?t('zuletzt ','last ')+pwhen(u.last):t('noch nie benutzt','never used'),
+    pCount(u.devices,t('Gerät','device'),t('Geräte','devices')),pCount(u.facts,t('Fakt','fact'),t('Fakten','facts'))].filter(Boolean).join(' · ');
+  const st=u.room?ldSt('ok',t('hört zu','listening')):u.setup&&u.setup.total&&u.setup.done<u.setup.total?ldSt('warn',t('eingerichtet ','set up ')+u.setup.done+'/'+u.setup.total)
+    :u.mfa?ldSt('ok',t('2. Schritt','2nd step')):null;
+  const r=ldRow({lead:ldAva(u.name),title:u.name,sub,right:[st],on:PL.open===u.id,act:()=>pOpen(u.id)});r.dataset.prow=u.id;return r}
+function pOpen(id){PL.open=id;loadProf();const b=$('pbox');if(b&&NARROW())b.scrollIntoView({block:'start'})}
 async function loadProf(){profFilter();let d;const keep=window.lzKeep?lzKeep($('prof')):()=>{};   // open parts and the scroll stay (ruhige-seiten.md)
   try{d=await (await api('/api/admin/profiles?'+new URLSearchParams({q:PL.q,show:PL.show,sort:PL.sort,page:PL.page,per:25}))).json()}catch(e){perr('pmsg',e);return}
   PL.page=d.page;PL.names=d.names;const name=id=>(d.names.find(u=>u.id===id)||{}).name||'?';
   $('duser').innerHTML=popts($('duser').value,t('Profil wählen …','Pick a profile …'));
-  const side=pSide();
-  $('proflist').innerHTML=d.users.map(u=>`<tr data-prow="${esc(u.id)}"${PL.open===u.id?' class="pon"':''}><td><div class="prow">${pAvatar(u.name)}<div class="pmid"><div class="pname"><b>${esc(u.name)}</b>${u.call?` <span class="mut">${esc(u.call)}</span>`:''}${u.role?` <span class="pill">${esc(PROLE()[u.role]||u.role)}</span>`:''}${u.mfa?` <span class="pill ok" title="${esc(t('mit zweitem Anmeldeschritt','with second login step'))}">2FA</span>`:''}${u.room?` <span class="pill ok">${t('hört zu','listening')}</span>`:''}</div>
-    <div class="pmeta">${u.last?esc(t('zuletzt ','last ')+pwhen(u.last)):t('noch nie benutzt','never used')} · ${pCount(u.devices,t('Gerät','device'),t('Geräte','devices'))} · ${pCount(u.facts,t('Fakt','fact'),t('Fakten','facts'))}${u.msg?' · '+t('Nachrichten an','messages on'):''}</div></div>
-    ${u.setup&&u.setup.total?pSetup(u.setup):''}</div></td>
-    <td class="pgo"><button class="b pchev" type="button" data-popen="${esc(u.id)}" aria-label="${esc(PL.open===u.id?t('Schließen','Close'):t('Details','Details'))}" title="${esc(PL.open===u.id?t('Schließen','Close'):t('Details','Details'))}">${ic(PL.open===u.id?'up':'chev')}</button></td></tr>${PL.open===u.id&&!side?`<tr><td colspan="2"><div id="pdetail" class="mut">…</div></td></tr>`:''}`).join('')
-    ||`<tr><td class="mut">${d.all?t('Kein Profil passt.','No profile matches.'):t('Noch keine.','None yet.')}</td></tr>`;
-  // Gäste as the first row: who talks without a profile, and what they get
-  if(d.guests&&!PL.q&&!PL.show&&!d.page)$('proflist').insertAdjacentHTML('afterbegin',`<tr class="pguest"><td><div class="prow"><span class="cic c-gray pav" aria-hidden="true">?</span><div class="pmid"><div class="pname"><b>${t('Gäste','Guests')}</b> <span class="pill${d.guests.public?' ok':''}">${d.guests.public?t('Gastzugang an','guest access on'):t('Gastzugang aus','guest access off')}</span></div><div class="pmeta">${d.guests.public
-      ?t('Nur Fragen und Antworten, keine Funktionen und keine Werkzeuge, nie persönliche Daten','Questions and answers only, no functions and no tools, never personal data'):t('Ohne Profil spricht niemand mit dem Assistenten.','Without a profile nobody talks to the assistant.')}</div></div></div></td>
-    <td class="pgo"></td></tr>`);
+  const list=$('proflist'),rows=d.users.map(pRow);
+  // Gäste as the first row: who talks without a profile, and what they get (nothing to open)
+  if(d.guests&&!PL.q&&!PL.show&&!d.page){const g=ldRow({lead:ldAva('','user'),title:t('Gäste','Guests'),sub:d.guests.public
+      ?t('Nur Fragen und Antworten, keine Funktionen und keine Werkzeuge, nie persönliche Daten','Questions and answers only, no functions and no tools, never personal data'):t('Ohne Profil spricht niemand mit dem Assistenten.','Without a profile nobody talks to the assistant.'),
+    right:[ldSt(d.guests.public?'ok':'',d.guests.public?t('Gastzugang an','guest access on'):t('Gastzugang aus','guest access off'))]});g.classList.add('pguest');rows.unshift(g)}
+  list.replaceChildren(...(rows.length?rows:[ldEmpty('users',d.all?t('Kein Profil passt.','No profile matches.'):t('Noch keine Profile.','No profiles yet.'))]));
   const pages=Math.max(1,Math.ceil(d.total/d.per));
-  $('ppager').innerHTML=`<span class="mut">${d.total===d.all?d.all+' '+t('Profile','profiles'):d.total+' '+t('von','of')+' '+d.all+' '+t('Profilen','profiles')}${pages>1?' · '+t('Seite','page')+' '+(d.page+1)+'/'+pages:''}</span>${pages>1?`<button class="b" type="button" data-ppage="${d.page-1}"${d.page?'':' disabled'}>‹</button><button class="b" type="button" data-ppage="${d.page+1}"${d.page+1<pages?'':' disabled'}>›</button>`:''}`;
+  $('ppager').innerHTML=`<span class="mut">${d.total===d.all?d.all+' '+t('Profile','profiles'):d.total+' '+t('von','of')+' '+d.all+' '+t('Profilen','profiles')}${pages>1?' · '+t('Seite','page')+' '+(d.page+1)+'/'+pages:''}</span>${pages>1?`<button class="b" type="button" data-ppage="${d.page-1}"${d.page?'':' disabled'} aria-label="${esc(t('Seite zurück','Previous page'))}">${ic('back')}</button><button class="b" type="button" data-ppage="${d.page+1}"${d.page+1<pages?'':' disabled'} aria-label="${esc(t('Seite weiter','Next page'))}">${ic('chev')}</button>`:''}`;
   $('ppager').querySelectorAll('[data-ppage]').forEach(b=>b.onclick=()=>{PL.page=+b.dataset.ppage;loadProf()});
-  $('proflist').querySelectorAll('[data-popen]').forEach(b=>b.onclick=()=>{PL.open=PL.open===b.dataset.popen?'':b.dataset.popen;loadProf()});
-  // wide: the open profile on the right (Paket 5), the whole line opens it; narrow it opens below its line
-  if(side){$('proflist').querySelectorAll('[data-prow]').forEach(r=>r.onclick=e=>{if(e.target.closest('button,a,input,select'))return;PL.open=r.dataset.prow;loadProf()});
-    const ps=$('pside'),u=d.users.find(x=>x.id===PL.open);
-    const old=$('pdetail');if(u&&old&&old.dataset.pid===u.id&&ps.contains(old)){}   // the same person stays open: no „…“ in between
-    else if(u){ps.textContent='';const h=document.createElement('div');h.className='pdhead';const b=document.createElement('b');b.textContent=u.name;
-      const x=document.createElement('button');x.type='button';x.className='fdx';x.textContent='×';x.setAttribute('aria-label',t('Schließen','Close'));x.onclick=()=>{PL.open='';loadProf()};
-      h.append(b,x);const det=document.createElement('div');det.id='pdetail';det.dataset.pid=u.id;det.className='mut';det.textContent='…';ps.append(h,det)}
-    else{ps.textContent='';const e=document.createElement('div');e.className='fdempty';const b=document.createElement('b');b.textContent=t('Person antippen','Tap a person');
-      const sp=document.createElement('span');sp.textContent=t('Hier stehen dann Zugang, Geräte, Funktionen, Rechte mit dem Platz für Uploads und Löschen.','Access, devices, functions, rights with the space for uploads, and delete then show here.');e.append(b,sp);ps.appendChild(e)}}
+  // the open person beside the list (a phone shows it as a page instead of the list)
+  const ps=$('pside'),u=d.users.find(x=>x.id===PL.open);$('pbox').classList.toggle('ld-sel',!!u);ps.classList.toggle('ld-idle',!u);
+  const old=$('pdetail');if(u&&old&&old.dataset.pid===u.id&&ps.contains(old)){}   // the same person stays open: no „…“ in between
+  else if(u){const h=icEl('div','pdhead'),bk=icEl('button','b ld-back');bk.type='button';bk.append(icSvg('back',16),' '+t('Personen','People'));bk.onclick=()=>{PL.open='';loadProf()};
+    const nm=icEl('span');nm.append(icEl('b','',u.name),icEl('small','',u.call||PROLE()[u.role]||t('Profil','Profile')));
+    const x=icEl('button','fdx');x.type='button';x.setAttribute('aria-label',t('Schließen','Close'));x.title=t('Schließen','Close');x.appendChild(icSvg('x',16));x.onclick=()=>{PL.open='';loadProf()};
+    h.append(bk,ldAva(u.name),nm,x);const det=icEl('div','mut','…');det.id='pdetail';det.dataset.pid=u.id;ps.replaceChildren(h,det)}
+  else ps.replaceChildren(ldEmpty('user',t('Person antippen: Zugang, Geräte, Funktionen und Rechte stehen dann hier.','Tap a person: access, devices, functions and rights then show here.')));
   $('dadd').disabled=!d.all;
-  const mid='style="vertical-align:middle"';
-  $('devlist').innerHTML=d.devices.map(x=>{const k=dkind(x);return `<tr><td ${mid}><div class="prow">${pDevIcon(x)}<div class="pmid"><div class="pname"><b>${esc(x.name)}</b>${x.room?` <span class="pill ok">${t('hört zu','listening')}</span>`:''}</div><div class="pmeta">${k?esc(k)+' · ':''}${t('zuletzt','last used')}: ${x.last?esc(pwhen(x.last.t))+' · '+esc(x.last.ip||''):t('noch nie','never')}</div></div></div></td>
-    <td style="vertical-align:middle;width:150px">${k?`<span title="${esc(t('Fest bei diesem Profil. Zum Wechseln dort entfernen und unter dem anderen Profil neu einrichten.','Fixed to this profile. To change it, remove it there and set it up again under the other profile.'))}">${esc(name(x.user))} <small class="mut">${ic('lock')} ${t('fest','fixed')}</small></span>`
-      :`<select data-dmove="${esc(x.id)}" aria-label="${esc(t('Profil','Profile'))}" style="width:100%">${popts(x.user)}</select>`}</td>
-    <td style="text-align:right;vertical-align:middle"><button class="b" type="button" data-ddel="${esc(x.id)}" data-dname="${esc(x.name)}" data-dspk="${x.speaker?'1':''}">${t('Löschen','Delete')}</button></td></tr>`}).join('')
-    ||`<tr><td class="mut">${PL.q||PL.show?t('Keine Geräte bei den gezeigten Profilen.','No devices with the profiles shown.'):t('Noch keine.','None yet.')}</td></tr>`;
-  $('devlist').querySelectorAll('[data-dmove]').forEach(i=>i.onchange=()=>devUser(i.dataset.dmove,i.value));
-  $('devlist').querySelectorAll('[data-ddel]').forEach(b=>b.onclick=()=>delDev(b.dataset.ddel,b.dataset.dname,b.dataset.dspk));
+  $('devlist').replaceChildren(...(d.devices.length?d.devices.map(x=>{const k=dkind(x),right=[];
+      if(k){const f=icEl('span');f.title=t('Fest bei diesem Profil. Zum Wechseln dort entfernen und unter dem anderen Profil neu einrichten.','Fixed to this profile. To change it, remove it there and set it up again under the other profile.');
+        f.append(name(x.user)+' ',icEl('small','mut'));f.lastChild.append(icSvg('lock',12),' '+t('fest','fixed'));right.push(f)}
+      else{const s=document.createElement('select');s.dataset.dmove=x.id;s.setAttribute('aria-label',t('Profil','Profile'));s.innerHTML=popts(x.user);s.onchange=()=>devUser(x.id,s.value);right.push(s)}
+      const del=icEl('button','b',t('Löschen','Delete'));del.type='button';del.dataset.ddel=x.id;del.onclick=()=>delDev(x.id,x.name,x.speaker?'1':'');right.push(del);
+      const sub=(k?k+' · ':'')+t('zuletzt','last used')+': '+(x.last?pwhen(x.last.t)+(x.last.ip?' · '+x.last.ip:''):t('noch nie','never'));
+      return ldRow({lead:pDevIcon(x),title:x.name,sub,right:[x.room?ldSt('ok',t('hört zu','listening')):null,...right]})})
+    :[ldEmpty('key',PL.q||PL.show?t('Keine Geräte bei den gezeigten Profilen.','No devices with the profiles shown.'):t('Noch keine Geräte.','No devices yet.'))]));
   if(PL.open&&$('pdetail'))profDetail(PL.open,keep);else keep()}
-// Personen als Liste + Detail (plaene/einstellungen-neu.md, Paket 5): from about 740 px card width the details sit beside
-// the list; switching between wide and narrow draws the list again
-function pSide(){const c=document.querySelector('#prof .pcard');if(!c)return false;const w=c.getBoundingClientRect().width;
-  const on=w>=740&&!document.body.classList.contains('appview');c.classList.toggle('split',on);return on}
-{const c=document.querySelector('#prof .pcard');let was=null;if(c)new ResizeObserver(()=>{const w=c.getBoundingClientRect().width;if(!w)return;
-  const on=w>=740&&!document.body.classList.contains('appview');if(was!==null&&on!==was&&$('prof').classList.contains('on'))loadProf();was=on}).observe(c)}
 // One profile in detail (plan „Vereinheitlichen“ Phase 5): Zugang (PIN, zweiter Schritt, Rolle, Browser), Rufname,
 // Geräte, Funktionen „n von m an“ with the functions blocked for this profile (tap lifts the block), Rechte (Aufträge, Spark-Update aus der App, Platz für
 // Uploads) and Löschen. Everything that used to sit on other pages per profile is here; the pages stay for the overview.
-const PROLE=()=>typeof ROLE_NAME!=='undefined'?ROLE_NAME:{admin:t('Admin','Admin'),manager:t('Verwalter','Manager')};
 const pbtn=(id,l,extra='')=>`<button class="b" type="button" id="${id}"${extra}>${esc(l)}</button>`;
 const pmb=b=>b>=1024**2?(b/1024**2).toFixed(b>=10*1024**2?0:1)+' MB':Math.ceil(b/1024)+' KB';
 async function profDetail(id,keep){keep=keep||(window.lzKeep&&$('pdetail')?lzKeep($('pdetail')):null);let u;try{u=await (await api('/api/admin/profiles/'+encodeURIComponent(id))).json()}catch(e){perr('pmsg',e);return}

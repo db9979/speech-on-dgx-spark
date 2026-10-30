@@ -2659,11 +2659,11 @@ class Browser(unittest.TestCase):
                     self.assertTrue(await pg.evaluate(f"!!document.querySelector('#devlist select[data-dmove=\"{ids['Uiskript']}\"]')"), name)
                     for fixed in ("Uiphone", "Uiuhr"):
                         self.assertFalse(await pg.evaluate(f"!!document.querySelector('[data-dmove=\"{ids[fixed]}\"]')"), name)
-                    rows = await pg.evaluate("""[...document.querySelectorAll('#devlist tr')].filter(r=>/Uiskript|Uiphone|Uiuhr/.test(r.textContent)).map(r=>r.textContent)""")
+                    rows = await pg.evaluate("""[...document.querySelectorAll('#devlist .ld-row')].filter(r=>/Uiskript|Uiphone|Uiuhr/.test(r.textContent)).map(r=>r.textContent)""")
                     self.assertTrue(any("Pebble-Uhr" in r and "fest" in r for r in rows), rows)
                     self.assertTrue(any("iPhone-App" in r and "fest" in r for r in rows), rows)
                     # the profile and the button sit in the middle of their row, like in every other row
-                    off = await pg.evaluate("""[...document.querySelectorAll('#devlist tr')].map(r=>{const c=[...r.children].slice(1).map(td=>{const e=td.firstElementChild;if(!e)return null;const b=e.getBoundingClientRect(),t=td.getBoundingClientRect();return Math.abs((b.top+b.bottom)/2-(t.top+t.bottom)/2)}).filter(x=>x!==null);return Math.max(0,...c)})""")
+                    off = await pg.evaluate("""[...document.querySelectorAll('#devlist .ld-row')].map(r=>{const t=(r.querySelector('.ld-right')||r).getBoundingClientRect();const c=[...r.querySelectorAll('.ld-right>*')].map(e=>{const b=e.getBoundingClientRect();return Math.abs((b.top+b.bottom)/2-(t.top+t.bottom)/2)});return Math.max(0,...c)})""")
                     self.assertLess(max(off), 4, (name, off))
                     await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP), f"geraete-{name}.png"), full_page=False)
                     self.assertEqual(errors, [])
@@ -2973,7 +2973,7 @@ class Browser(unittest.TestCase):
                     helpers.set_config(deny={"weather": [me]})
                     br, pg, errors = await self.page(p, w, h)
                     await pg.evaluate("goSec('prof')")
-                    await pg.wait_for_selector("#proflist tr.pguest")
+                    await pg.wait_for_selector("#proflist .pguest")
                     self.assertFalse(await pg.is_visible("#pname"))
                     await pg.click("#pnew summary")
                     self.assertTrue(await pg.is_visible("#pname"))
@@ -2981,7 +2981,7 @@ class Browser(unittest.TestCase):
                     # at V01.0.721 when the parts were cut anew), so the search brings it up; awaited, not typed, so
                     # no late reload of the list wipes the open detail
                     await pg.evaluate("PL.q='Uitest';PL.page=0;loadProf()")
-                    await pg.click(f"#proflist [data-popen='{me}']")
+                    await pg.click(f"#proflist [data-prow='{me}']")
                     await pg.wait_for_selector("#pdetail .pdet")
                     heads = await pg.evaluate("[...document.querySelectorAll('#pdetail h3.sec')].map(x=>x.textContent)")
                     self.assertEqual(heads, ["Zugang", "Rufname", "Geräte", "Funktionen", "Rechte", "Daten"])
@@ -3546,9 +3546,9 @@ class Browser(unittest.TestCase):
                         await self.until(pg, "!document.querySelector('#aptabs [data-tab=chats]').hidden")
                         await self.until(pg, "!document.querySelector('#aptabs [data-tab=chats] .apcnt').hidden")
                         await pg.click("#aptabs [data-tab=chats]")
-                    await pg.wait_for_selector(f".cx-row[data-cx='{cid}']")
-                    self.assertIn("Chatpartner", await pg.inner_text(f".cx-row[data-cx='{cid}']"))
-                    await pg.click(f".cx-row[data-cx='{cid}']")
+                    await pg.wait_for_selector(f"#cxlist .ld-row[data-cx='{cid}']")
+                    self.assertIn("Chatpartner", await pg.inner_text(f"#cxlist .ld-row[data-cx='{cid}']"))
+                    await pg.click(f"#cxlist .ld-row[data-cx='{cid}']")
                     await pg.wait_for_selector(".cx-msg:not(.mine) .cx-txt")
                     self.assertIn("kommst du heute", await pg.inner_text("#cxlog"))
                     await pg.fill("#cxtext", "Ja, gern!")
@@ -3629,7 +3629,7 @@ class Browser(unittest.TestCase):
                     else:
                         await self.until(pg, "!document.querySelector('#aptabs [data-tab=chats]').hidden")
                         await pg.click("#aptabs [data-tab=chats]")
-                    await pg.click(f".cx-row[data-cx='{cid}']")
+                    await pg.click(f"#cxlist .ld-row[data-cx='{cid}']")
                     await pg.wait_for_selector("#cxatt:not([hidden])")
                     self.assertTrue(await pg.is_visible("#cxmic"))
                     await pg.set_input_files("#cxfile", files=[{"name": "urlaub.jpg", "mimeType": "image/jpeg", "buffer": photo}])

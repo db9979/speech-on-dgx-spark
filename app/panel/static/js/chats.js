@@ -15,9 +15,10 @@ function cxWhen(ts){const d=new Date(ts*1000),n=new Date();
   if(d.toDateString()===n.toDateString())return cxHm(ts);
   if(n-d<6*864e5)return d.toLocaleDateString(L==='en'?'en-GB':'de-DE',{weekday:'short'});
   return d.toLocaleDateString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit'})}
-// a colour per person from its id (same person, same colour on every device); the letter from its name
+// a colour per person from its id for the sender's name in a group (same person, same colour on every device)
 const cxHue=id=>{let h=0;for(const c of String(id||''))h=(h*31+c.charCodeAt(0))%360;return h};
-const cxAva=(id,name,group)=>`<span class="cx-ava${group?' grp':''}" data-hue="${cxHue(id)}">${group?ic('users'):esc((name||'?').trim().charAt(0).toUpperCase()||'?')}</span>`;
+// initials on grey (Klar 4, ichteile.js ldInit), a group as its symbol; id is kept for the callers
+const cxAva=(id,name,group)=>`<span class="ld-ava${group?' grp':''}" aria-hidden="true">${group?ic('users'):esc(ldInit(name))}</span>`;
 // the panel's German sentences (why, titles) in English; the two with a name by pattern
 const cxTr=s=>{if(L!=='en')return s;if(typeof EN!=='undefined'&&EN[s])return EN[s];let m=/^(.+) nimmt gerade keine Nachrichten von dir an\.$/.exec(s);
   if(m)return m[1]+' does not take messages from you right now.';m=/^(.+) hat Chats nicht eingeschaltet\.$/.exec(s);
@@ -88,18 +89,23 @@ function cxPreview(c){const l=c.last;if(!l)return '';
 const cxDur=s=>Math.floor((+s||0)/60)+':'+String(Math.round(+s||0)%60).padStart(2,'0');
 const cxSize=b=>b>=1048576?(b/1048576).toFixed(1).replace('.',L==='en'?'.':',')+' MB':Math.max(1,Math.round((+b||0)/1024))+' KB';
 const cxKindWord=k=>k==='photo'?t('Foto','Photo'):k==='file'?t('Datei','File'):k==='voice'?t('Sprachnachricht','Voice message'):'';
+// the list (Klar 4): ld- rows of one height, initials, title, the last message, on the right the time and the count
+const cxRow=(attrs,on,lead,title,sub,right)=>`<div class="ld-row${on?' on':''}" role="button" tabindex="0" ${attrs}>${lead}<span class="ld-mid"><b>${title}</b><small>${sub}</small></span><span class="ld-right cx-right">${right}</span></div>`;
 function cxList(){const box=cxEl('cxlist');if(!box)return;const S=CX.S||{chats:[]};
   if(CX.hits){cxHitsShow();return}
-  const asks=S.far_asks?`<button type="button" class="cx-row cx-ask" data-cxfar="1"><span class="cx-ava inv">${ic('globe')}</span><span class="cx-mid"><b>${esc(t('Kontaktanfragen','Contact requests'))}</b><small>${esc(S.far_asks+' '+t('von anderen Sparks warten auf deine Antwort','from other Sparks wait for your answer'))}</small></span><span class="cx-right"><span class="cx-flags"><em class="cx-un">${S.far_asks}</em></span></span></button>`:'';
-  if(!S.chats.length){box.innerHTML=asks+`<div class="cx-none mut">${esc(t('Noch keine Chats. Mit „＋ Neuer Chat“ schreibst du jemandem.','No chats yet. With "＋ New chat" you write to someone.'))}</div>`;return}
-  box.innerHTML=asks+S.chats.map(c=>`<button type="button" class="cx-row${c.id===CX.cur?' on':''}" data-cx="${esc(c.id)}">${cxAva(c.with||c.id,cxTitle(c.title),c.kind==='group')}`+
-    `<span class="cx-mid"><b>${c.private?ic('lock','cxmk')+' ':''}${c.far?ic('globe','cxmk')+' ':''}${esc(cxTitle(c.title))}</b><small>${esc(cxPreview(c))}</small></span>`+
-    `<span class="cx-right"><span class="cx-when">${c.last?esc(cxWhen(c.last.t)):''}</span>`+
-    `<span class="cx-flags">${c.mute?`<i class="cx-mute" title="${esc(t('stumm','muted'))}">${ic('belloff')}</i>`:''}${c.unread?`<em class="cx-un${c.mute?' quiet':''}">${c.unread>99?'99+':c.unread}</em>`:''}</span></span></button>`).join('');
-  cxHues(box);if(S.private&&window.csShareCheck)csShareCheck(box)}
-cxEl('cxlist').addEventListener('click',e=>{if(e.target.closest('[data-cxfar]')){cxFindReset();if(!CX.cur)CX.data=null;cxPane('far');return}
+  if(!CX.S){box.replaceChildren(lzSkel('zeilen',4));return}   // the first answer is not there yet: placeholders of the row's height
+  const asks=S.far_asks?cxRow('data-cxfar="1"',false,`<span class="ld-ava inv">${ic('globe')}</span>`,esc(t('Kontaktanfragen','Contact requests')),
+    esc(S.far_asks+' '+t('von anderen Sparks warten auf deine Antwort','from other Sparks wait for your answer')),`<span class="cx-flags"><em class="cx-un">${S.far_asks}</em></span>`):'';
+  if(!S.chats.length){box.innerHTML=asks+`<div class="ld-empty">${ic('chats')}<span>${esc(t('Noch keine Chats. Mit „＋ Neuer Chat“ schreibst du jemandem.','No chats yet. With "＋ New chat" you write to someone.'))}</span></div>`;return}
+  box.innerHTML=asks+S.chats.map(c=>cxRow(`data-cx="${esc(c.id)}"`,c.id===CX.cur,cxAva(c.with||c.id,cxTitle(c.title),c.kind==='group'),
+    `${c.private?ic('lock','cxmk')+' ':''}${c.far?ic('globe','cxmk')+' ':''}${esc(cxTitle(c.title))}`,esc(cxPreview(c)),
+    `<span class="ld-when">${c.last?esc(cxWhen(c.last.t)):''}</span><span class="cx-flags">${c.mute?`<i class="cx-mute" title="${esc(t('stumm','muted'))}">${ic('belloff')}</i>`:''}${c.unread?`<em class="cx-un${c.mute?' quiet':''}">${c.unread>99?'99+':c.unread}</em>`:''}</span>`)).join('');
+  if(S.private&&window.csShareCheck)csShareCheck(box)}
+const cxPick=e=>{if(e.target.closest('[data-cxfar]')){cxFindReset();if(!CX.cur)CX.data=null;cxPane('far');return}
   const h=e.target.closest('[data-hit]');if(h){const mid=h.dataset.mid;cxFindReset();cxOpen(h.dataset.hit).then(()=>cxJump(mid));return}
-  const b=e.target.closest('[data-cx]');if(b)cxOpen(b.dataset.cx)});
+  const b=e.target.closest('[data-cx]');if(b)cxOpen(b.dataset.cx)};
+cxEl('cxlist').addEventListener('click',cxPick);
+cxEl('cxlist').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.classList.contains('ld-row')){e.preventDefault();cxPick(e)}});
 // search: only in the own chats, on the Spark (the texts are sealed there)
 let cxFindT=0;
 cxEl('cxfind').addEventListener('input',()=>{clearTimeout(cxFindT);const q=cxEl('cxfind').value.trim();
@@ -107,9 +113,9 @@ cxEl('cxfind').addEventListener('input',()=>{clearTimeout(cxFindT);const q=cxEl(
   cxFindT=setTimeout(async()=>{try{CX.hits=(await cxApi('/api/chats/find',{q})).hits||[];CX.q=q;cxList()}catch{}},350)});   // POST: no words in the address (access log)
 function cxFindReset(){cxEl('cxfind').value='';CX.hits=null;cxList()}
 function cxHitsShow(){const box=cxEl('cxlist');
-  box.innerHTML=`<div class="cx-grp">${esc(t('Treffer','Matches'))}</div>`+(CX.hits.length?CX.hits.map(h=>`<button type="button" class="cx-row" data-hit="${esc(h.id)}" data-mid="${esc(h.mid)}">`+
-    `<span class="cx-mid"><b>${esc(cxTitle(h.title))}</b><small>${esc((h.name?h.name+': ':'')+(h.text||''))}</small></span><span class="cx-right"><span class="cx-when">${h.t?esc(cxWhen(h.t)):''}</span></span></button>`).join('')
-    :`<div class="cx-none mut">${esc(t('Nichts gefunden.','Nothing found.'))}</div>`)}
+  box.innerHTML=`<div class="ld-grp">${esc(t('Treffer','Matches'))}</div>`+(CX.hits.length?CX.hits.map(h=>cxRow(`data-hit="${esc(h.id)}" data-mid="${esc(h.mid)}"`,false,
+    `<span class="ld-ava">${ic('find')}</span>`,esc(cxTitle(h.title)),esc((h.name?h.name+': ':'')+(h.text||'')),`<span class="ld-when">${h.t?esc(cxWhen(h.t)):''}</span>`)).join('')
+    :`<div class="ld-empty">${ic('find')}<span>${esc(t('Nichts gefunden.','Nothing found.'))}</span></div>`)}
 
 // ---------------------------------------------------------------- one chat
 const box=()=>cxEl('cxbox');
@@ -122,7 +128,7 @@ async function cxOpen(cid,quiet){if(!cid)return;const first=CX.cur!==cid;
   if(CX.pane){CX.data=d;return}   // a refresh from elsewhere while info, new chat or invite is open: the pane stays
   const log=cxEl('cxlog'),atEnd=log.scrollHeight-log.scrollTop-log.clientHeight<80;
   CX.data=d;cxTop();cxLog();if(first||atEnd)log.scrollTop=log.scrollHeight;
-  cxEl('cxlist').querySelectorAll('.cx-row').forEach(r=>r.classList.toggle('on',r.dataset.cx===cid));
+  cxEl('cxlist').querySelectorAll('.ld-row[data-cx]').forEach(r=>r.classList.toggle('on',r.dataset.cx===cid));
   const c=(CX.S&&CX.S.chats||[]).find(x=>x.id===cid);
   if(c&&c.unread&&!document.hidden){c.unread=0;cxBadge();cxList();try{await cxApi('/api/chats/read',{id:cid})}catch{}}
   if(first&&!matchMedia('(pointer:coarse)').matches)cxEl('cxtext').focus()}
@@ -231,9 +237,9 @@ const cxPeople=(list,sel)=>list.length?`<div class="cx-people">${list.map(p=>`<l
   :`<div class="cx-none mut">${esc(t('Niemand nimmt gerade Nachrichten von dir an. Jede Person legt unter Ich → Gespräch → Chats fest, wer ihr schreiben darf.','Nobody takes messages from you right now. Each person sets under Me → Conversation → Chats who may write to them.'))}</div>`;
 function cxNew(){const S=CX.S||{contacts:[]},p=cxEl('cxpane');
   p.innerHTML=(S.groups?`<button type="button" class="cx-bigrow" data-cxn="group">${cxAva('g','',true)}<b>${esc(t('Neue Gruppe','New group'))}</b></button>`:'')+
-    (S.invite||S.invite_switch?`<button type="button" class="cx-bigrow" data-cxn="invite"><span class="cx-ava inv">${ic('mail')}</span><b>${esc(t('Jemanden einladen','Invite someone'))}</b></button>`:'')+
-    (S.verbund?`<button type="button" class="cx-bigrow" data-cxn="far"><span class="cx-ava inv">${ic('globe')}</span><b>${esc(t('Jemand auf einem anderen Spark','Someone on another Spark'))}</b></button>`:'')+
-    ((S.speakers||[]).length?`<button type="button" class="cx-bigrow" data-cxn="ann"><span class="cx-ava inv">${ic('megaphone')}</span><b>${esc(t('Durchsage','Announcement'))}</b></button>`:'')+
+    (S.invite||S.invite_switch?`<button type="button" class="cx-bigrow" data-cxn="invite"><span class="ld-ava inv">${ic('mail')}</span><b>${esc(t('Jemanden einladen','Invite someone'))}</b></button>`:'')+
+    (S.verbund?`<button type="button" class="cx-bigrow" data-cxn="far"><span class="ld-ava inv">${ic('globe')}</span><b>${esc(t('Jemand auf einem anderen Spark','Someone on another Spark'))}</b></button>`:'')+
+    ((S.speakers||[]).length?`<button type="button" class="cx-bigrow" data-cxn="ann"><span class="ld-ava inv">${ic('megaphone')}</span><b>${esc(t('Durchsage','Announcement'))}</b></button>`:'')+
     `<div class="cx-grp">${esc(t('Personen','People'))}</div>`+cxPeople(S.contacts||[],false);cxHues(p)}
 // Durchsage (messages.py): the speakers whose owner allows it, the text typed here; said at once or at the next wake word
 function cxAnn(){const S=CX.S||{speakers:[]},p=cxEl('cxpane');CX.pick.clear();
