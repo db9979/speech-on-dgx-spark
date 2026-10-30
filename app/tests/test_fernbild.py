@@ -426,6 +426,8 @@ class Anchor(unittest.TestCase):
             return 0
         ctx = p.Ctx(system="Windows", root=root, run=run)
         ctx.euid = lambda: 0
+        regs = {}
+        ctx.reg_binary = lambda key, name, data: regs.__setitem__((key, name), data)
         msi = b"MSI-of-TightVNC"
         ctx.fetch = lambda url, cap: fetched.append(url) or msi
         p.write(ctx.path(ctx.s.conf), json.dumps({"url": "https://s.example.org", "fp": "", "id": "g_1", "key": "fz_k"}), 0o640)
@@ -457,11 +459,15 @@ class Anchor(unittest.TestCase):
             self.assertTrue(fetched[-1].startswith("https://www.tightvnc.com/"))
             self.assertEqual(calls[-1], ("POST", "/api/fernzugang/anker/bildschirm", {"art": "tightvnc"}))
             inst = [c for c in ran if c[:2] == ["msiexec", "/i"]][-1]
-            for want in ("VALUE_OF_LOOPBACKONLY=1", "VALUE_OF_ALLOWLOOPBACK=1", "VALUE_OF_RFBPORT=5930", "VALUE_OF_PASSWORD=Ab3dEf7h",
+            for want in ("VALUE_OF_LOOPBACKONLY=1", "VALUE_OF_ALLOWLOOPBACK=1", "VALUE_OF_RFBPORT=5930",
                          "VALUE_OF_ACCEPTHTTPCONNECTIONS=0", "SERVER_ADD_FIREWALL_EXCEPTION=0", "SERVER_ALLOW_SAS=0"):
                 self.assertIn(want, inst)
-            ctl = [x for x in inst if x.startswith("VALUE_OF_CONTROLPASSWORD=")][0]
-            self.assertNotIn("Ab3dEf7h", ctl)
+            self.assertFalse(any("Ab3dEf7h" in x or "PASSWORD=" in x.replace("AUTHENTICATION", "") for c in ran for x in c))
+            # the password only from this process into the registry (VNC's DES), with the service stopped before
+            self.assertEqual(regs[(p.WIN_TVNC_SERVER, "Password")], p.vnc_obfuscate("Ab3dEf7h"))
+            self.assertNotEqual(regs[(p.WIN_TVNC_SERVER, "ControlPassword")], p.vnc_obfuscate("Ab3dEf7h"))
+            order = [c[:2] for c in ran if c[0] in ("msiexec", "sc.exe")]
+            self.assertEqual(order, [["msiexec", "/i"], ["sc.exe", "stop"], ["sc.exe", "start"]])
             conf = json.loads(open(ctx.path(ctx.s.conf)).read())
             self.assertEqual(conf["bild"], "tightvnc")
             self.assertNotIn("Ab3dEf7h", json.dumps(conf))                            # the password only in the vault
@@ -476,6 +482,12 @@ class Anchor(unittest.TestCase):
         self.assertEqual(calls[-1][:2], ("DELETE", "/api/fernzugang/anker/bildschirm"))
         self.assertEqual(fernbild.ARTEN["tightvnc"], "vnc")
         shutil.rmtree(root, ignore_errors=True)
+
+    def test_vnc_password_obfuscation_matches_the_known_values(self):
+        p = program()
+        self.assertEqual(p.des_block(bytes.fromhex("133457799BBCDFF1"), bytes.fromhex("0123456789ABCDEF")).hex(), "85e813540f0ab405")
+        self.assertEqual(p.vnc_obfuscate("password").hex(), "dbd83cfd727a1458")      # what vncpasswd writes
+        self.assertEqual(p.vnc_obfuscate("Ab3dEf7hXYZ"), p.vnc_obfuscate("Ab3dEf7h"))  # VNC keeps 8 characters
 
 
 def _free(port):
