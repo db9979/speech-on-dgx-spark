@@ -4629,6 +4629,13 @@
 "titel": "Mail-Regeln: zurückgelegte Mail bleibt im Posteingang (kein Ping-Pong)",
 "text": "Eine Mail-Regel unter E-Mail → Regeln (Absender → Ordner) anlegen und eine passende Mail schicken: sie landet im Ordner. In Apple Mail (oder auf der Seite E-Mail) dieselbe Mail zurück in den Posteingang ziehen und 10 Minuten warten: sie bleibt im Posteingang, auch nach „auch die vorhandenen“ an der Regel; mit „Postfach aufräumen“ an wird sie auch dort nicht verschoben. Zustand → Logs, Bereich Mail: „mail: rule skip | user_moved | 1“ ohne Absender oder Ordner; Zustand → Live, Post: „heute 1 zurückgelegte Mails nicht wieder einsortiert“.",
 "thread": "Falsch einsortierte Mails lernen lassen"
+},
+{
+"id": "P686",
+"v": 1266,
+"titel": "Sortieren aus Korrekturen lernen: Ausnahme, Pause und Karte „Wohin gehört diese Mail?“",
+"text": "A: Funktionen → E-Mail lesen → Mails ordnen → Sortieren aus Korrekturen lernen an (ab Werk aus); Alles Offene im Assistenten an. Nach höchstens 5 Minuten gibt es unter dem KI-Ordner den Ordner „Falsch sortiert“. B: Eine Domain-Regel (@firma.de → Ordner X) anlegen, eine Mail von anna@firma.de kommen lassen, sie landet in X. Auf der Seite E-Mail aus X in Ordner Y schieben: sofort unter Offen eine Karte „Regel-Vorschlag: Mails von anna@firma.de – War in „X“, du hast sie nach „Y“ gelegt“ mit „Regel ändern“, „Nur Ausnahme“, „Nicht mehr fragen“; unter E-Mail → Regeln steht an der Regel „1 Ausnahmen“, eine neue Mail von Anna bleibt im Posteingang, eine von bob@firma.de kommt weiter nach X. C: „Regel ändern“: die Regel zeigt → Y, keine Ausnahme mehr. D: Drei Mails verschiedener Absender der Regel umsortieren: die Regel steht auf „pausiert, oft korrigiert“, Karte „Regel pausiert“ mit „Wieder einschalten“. E: In Apple Mail eine von einer Regel einsortierte Mail unter dem KI-Ordner nach „Falsch sortiert“ ziehen; am nächsten Morgen (Nachtlauf 2–5 Uhr) Karte „Wohin gehört diese Mail?“ mit Ordner-Knöpfen, „Posteingang“, „Anderer Ordner …“; ein Ordner-Knopf verschiebt genau diese Mail. Am iPhone unter Offen dieselbe Karte, weitere Knöpfe unter „Mehr“. F: Zustand → Logs, Bereich Mail: „mail: rule correction | folder | 1“, „mail: rule exception | 1“, „mail: rule paused | 3“ ohne Absender oder Ordner; Live, Post: „Sortieren aus Korrekturen lernen an: heute N Korrekturen …“. G: Schalter aus: Umsortieren ändert keine Regel mehr, keine neue Karte.",
+"thread": "Falsch einsortierte Mails lernen lassen"
 }
 ]
 }

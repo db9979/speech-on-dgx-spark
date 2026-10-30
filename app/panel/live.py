@@ -1888,6 +1888,9 @@ def snapshot(view="admin", now=None):
             x["sub"] += f" · heute {post_rules['stats']}× Statistik angesehen"
         if x["id"] == "mail" and post_rules.get("night"):   # Regel-Vorschläge aus dem Ablegen: made last night (a number)
             x["sub"] += f" · {post_rules['night']} Vorschläge aus dem Ablegen"
+        if x["id"] == "mail" and post_rules.get("learn"):   # Sortieren aus Korrekturen lernen: corrections today, exceptions, paused (numbers)
+            x["sub"] += (f" · Sortieren aus Korrekturen lernen an: heute {post_rules.get('fixes', 0)} Korrekturen, "
+                         f"{post_rules.get('excepts', 0)} Ausnahmen, {post_rules.get('paused', 0)} Regeln pausiert")
         if x["id"] == "mail" and post_view.get("html"):   # Apple-Stil „2a“: mails shown formatted, pictures from outside loaded (numbers)
             x["sub"] += f" · heute {post_view['html']} formatiert gezeigt" + (f", {post_view['bilder']} Bilder von außen geladen" if post_view.get("bilder") else "")
         if x["id"] == "mail" and post_files:     # Anhang laden: attachments fetched today (a number, never which)

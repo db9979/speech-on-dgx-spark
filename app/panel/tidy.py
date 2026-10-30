@@ -72,6 +72,9 @@ BACKLOG_MAX = 3000
 NEW_MAX = 500
 SURE = 85
 KEPT_GUARD = 3                  # a sender kept this often is asked about instead of moved
+# Sortieren aus Korrekturen lernen (mailregeln.py, plan mail-lernen 3a): the one fixed folder under the main folder the person drags
+# a wrongly sorted mail into; the Spark makes it when the function is on and never sorts into it or out of it itself
+WRONG = "Falsch sortiert"
 PREVIEW_DAYS = 14
 PENDING_SECONDS = 15 * 60
 MODEL_PER_RUN = 20
@@ -156,6 +159,8 @@ def check_new_name(d, name):
         raise ValueError("folder name: 1 to 40 letters or digits (also space . , & ( ) + ' -), no / or other marks")
     if reserved(name):
         raise ValueError(f"'{name}' is a folder of the mail program")
+    if name.lower() == WRONG.lower():
+        raise ValueError(f"'{name}' is the folder for wrongly sorted mail")
     same = next((k for k, v in d["folders"].items() if v.lower() == name.lower()), None)
     if same:
         return same, d["folders"][same]
@@ -293,6 +298,8 @@ def _new_names(d, root, folders):
         bad = [v for v in new_folders.values() if reserved(v)]
         if bad:
             raise ValueError(f"'{bad[0]}' is a folder of the mail program; without a main folder pick another name")
+    if any(v.lower() == WRONG.lower() for v in new_folders.values()):
+        raise ValueError(f"'{WRONG}' is the folder for wrongly sorted mail; pick another name")
     if len({v.lower() for v in new_folders.values()}) < len(new_folders):
         raise ValueError("two kinds of mail cannot share one folder name")
     return new_root, new_folders
@@ -1001,7 +1008,14 @@ def _run(uid, aid, acct, d, a, mode, idle):
         report["new"] = len(new)
         import mailregeln
         moved = mailregeln.spark_moved(uid, aid, st=d)     # both sorters, one list (plan mail-lernen 1a + 2a)
-        ruled_back = []
+        learn_on = features.allowed("maillearn", uid)                # Sortieren aus Korrekturen lernen (plan mail-lernen 3a + 4a)
+        if learn_on and write:
+            try:
+                mailregeln.ensure_wrong(uid, b, d)
+            except (ValueError, imaplib.IMAP4.error):
+                pass
+        fixed = mailregeln.fixed_senders(uid, aid)         # senders whose sorting the person corrected: asked, not moved
+        ruled_back, fixes = [], []
         decided = []        # (uid, h, cat, why, stage, act)
         waiting = [x for x in d["todo"] if x["aid"] == aid]
         for u in new:
@@ -1012,6 +1026,8 @@ def _run(uid, aid, acct, d, a, mode, idle):
             x = mailregeln.user_moved(moved, h["mid"], "INBOX")
             if x and x.get("undone"):
                 continue        # brought back with "Zurück": stays in the inbox
+            if x and learn_on:
+                fixes.append(mailregeln.found(b, x, h["sender"], "INBOX"))
             if x and x["by"] == "rule":
                 ruled_back.append(h["mid"])     # a Mail-Regel moved it, the person put it back: no sorter touches it
                 continue
@@ -1066,6 +1082,10 @@ def _run(uid, aid, acct, d, a, mode, idle):
             if stage != 2 and d["kept"].get(h["sender"], 0) >= KEPT_GUARD:
                 questions_add.append((u, h, cat, why + "; bisher immer im Posteingang behalten"))
                 continue
+            r2 = rule_for(d, h["sender"]) if stage == 2 else None
+            if h["sender"] in fixed and (stage != 2 or (r2 or {}).get("t", 0) < fixed[h["sender"]]):
+                questions_add.append((u, h, cat, why + "; du hast eine Mail dieses Absenders umsortiert"))
+                continue
             sure = stage in (2, 3) or mode == "auto"
             if mode == "preview" or not sure:
                 preview.append((u, h, cat, why))
@@ -1117,6 +1137,8 @@ def _run(uid, aid, acct, d, a, mode, idle):
             dd["kept"][s] = dd["kept"].get(s, 0) + 1
         dd["todo"] = [x for x in dd["todo"] if x["aid"] != aid] + todo_left
     _mut(uid, save)
+    if fixes:
+        mailregeln.correct(uid, aid, fixes)
     report.update(preview=len(preview), asked=len(questions_add), kept=len(kept), waiting=len(todo_left))
     if log:
         print(f"mail tidy: moved {len(log)} message(s)", flush=True)

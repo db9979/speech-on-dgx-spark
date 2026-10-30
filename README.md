@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.266** Learn sorting from corrections (own switch, off): put a mail the Spark sorted somewhere else or into "Falsch sortiert" and the sender becomes an exception of the rule, after 3 corrections it pauses, and a card asks "Change the rule?" or "Where does this mail belong?"
 - **V01.1.264** Mail rules no longer play ping-pong: a mail a rule or the tidying moved and you put back into the inbox stays there; the rules remember what they moved (30 days)
 - **V01.1.263** Map helps the search (knowledge map step 3 of 4, own switch, off): when a question names a person, company or deadline of the map, the document search also finds its passages and those of its neighbours; it only adds to the hits, below the answer it says "via the knowledge map"
 - **V01.1.262** Remote access: every shell measures its line (round trip and rate through the heartbeat, quietly in the red bar and the ⓘ) and on a slow connection says once that the direct https access is faster; output waits at most 32 pieces (backpressure) and goes to the window in bundles
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.258** Find stage D: tags by the model (own sub-switch, off), checked only by fixed rules and shown as "by the model", removed ones never come back; people, companies and places as points of the knowledge map; one ranking over all lists; Sofort-Karte for a clear hit with a fixed sentence and "Open the original"
 - **V01.1.257** Find stage C: appointments and contacts sealed, past conversations (only date and channel), lists, reminders, pictures and songs in the search index; periods by fixed rules, "from the surgery" through the own calendar; five sub-switches, off by default
 - **V01.1.256** Find stage B: every mail and attachment in the search index (inbox, archive, sent, never spam or trash), the newest first, older ones in quiet minutes and at night in slices, only sealed (AES-GCM, words as HMAC marks), attachment text and fields by fixed rules, a hit opens the mail; sub-switch "Find mail and attachments", off by default
-- **V01.1.255** Download all my data: under Me → Security → My data one ZIP with everything of the own profile (sealed files opened, settings without secrets, from chats only the own messages, a README de+en with what stays out and why), each time after a fresh code or passkey, 3 per hour, at most 2 GB, pickup link 10 minutes and once; no switch (right of access), also in the iPhone and Android app
 
 
 

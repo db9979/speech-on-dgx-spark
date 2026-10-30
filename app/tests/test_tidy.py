@@ -128,6 +128,31 @@ class Tidy(unittest.TestCase):
         finally:
             mailregeln.forget(uid)
 
+    def test_learning_a_corrected_sender_is_asked_about(self):
+        """Sortieren aus Korrekturen lernen (plan mail-lernen 4a): a mail the tidying sorted and the person put back is a correction;
+        the next mail of that sender is asked about instead of moved, until a newer rule of the profile decides. Off: as before."""
+        import mailregeln
+        p, aid = self.setup_profile("Korrekta")
+        uid = p.get("/api/whoami").json()["profile"]["id"]
+        helpers.set_config(mail_manage=True, mail_learn=True)
+        try:
+            tidy._mut(uid, lambda d: d["log"].append({"id": "l1", "run": "r", "t": 10 ** 10, "aid": aid, "mid": "<kk-1@x>",
+                                                       "sender": "news@shop.example", "folder": "Spark/Werbung"}))
+            FMB.put("INBOX", helpers.box_mail("Shop <news@shop.example>", "Rabatt 1", headers=PROMO, mid="<kk-1@x>"))
+            p.post("/api/profile/tidy/run", json={"aid": aid})
+            self.assertIn("Spark/Falsch sortiert", FMB.boxes)
+            (f,) = mailregeln.load(uid)["fixes"]
+            self.assertEqual((f["by"], f["how"], f["from"]), ("tidy", "inbox", "news@shop.example"))
+            FMB.put("INBOX", helpers.box_mail("Shop <news@shop.example>", "Rabatt 2", headers=PROMO, mid="<kk-2@x>"))
+            r = p.post("/api/profile/tidy/run", json={"aid": aid}).json()
+            self.assertEqual(r["report"]["moved"], 0, r)
+            self.assertIn("Rabatt 2", self.inbox_subjects())
+            q = [q for q in p.get("/api/profile/tidy").json()["questions"] if q["sender"] == "news@shop.example"]
+            self.assertTrue(q and "Rabatt 2" in q[0]["subjects"], q)          # asked, together with the first one
+        finally:
+            helpers.set_config(mail_manage=False, mail_learn=False)
+            mailregeln.forget(uid)
+
     def test_preview_moves_nothing_and_brake(self):
         p, aid = self.setup_profile("Pauline", mode="preview")
         FMB.put("INBOX", helpers.box_mail("Shop <news@shop.example>", "Gutschein für dich", headers=PROMO))

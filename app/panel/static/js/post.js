@@ -721,8 +721,8 @@ function postRuleThen(r){const x=r.then,p=[];if(x.folder)p.push('→ '+x.folder)
 function postRulesPaint(b){const d=RULES.data;
   if(RULES.form){postRuleForm(b);return}
   if(!d){b.innerHTML=RULES.err?`<div class="note warn">${esc(RULES.err)}</div>`:`<div class="ld-empty mut">${esc(t('Lade die Regeln …','Loading the rules …'))}</div>`;return}
-  const rows=d.rules.map((r,i)=>`<div class="ld-row" data-rid="${esc(r.id)}"><span class="ld-mid"><b>${esc(postRuleWhen(r))}</b><small>${esc(postRuleThen(r)+(r.box?' · '+r.box:''))}</small></span>`+
-    `<span class="ld-right"><span class="ld-badge ${r.on===false?'off':'read'}">${esc(r.on===false?t('pausiert','paused'):t('diesen Monat ','this month ')+r.month)}</span>`+
+  const rows=d.rules.map((r,i)=>`<div class="ld-row" data-rid="${esc(r.id)}"><span class="ld-mid"><b>${esc(postRuleWhen(r))}</b><small>${esc(postRuleThen(r)+(r.box?' · '+r.box:'')+(r.except&&r.except.length?' · '+t(r.except.length+' Ausnahmen',r.except.length+' exceptions'):''))}</small></span>`+
+    `<span class="ld-right"><span class="ld-badge ${r.on===false?'off':'read'}">${esc(r.on===false?(r.paused?t('pausiert, oft korrigiert','paused, often corrected'):t('pausiert','paused')):t('diesen Monat ','this month ')+r.month)}</span>`+
     `<button class="ld-chip" type="button" data-up="${i}" aria-label="${esc(t('nach oben','up'))}"${i?'':' disabled'}>▲</button><button class="ld-chip" type="button" data-on="${esc(r.id)}">${esc(r.on===false?t('Weiter','Resume'):t('Pause','Pause'))}</button>`+
     `<button class="ld-chip" type="button" data-ed="${esc(r.id)}">${esc(t('Ändern','Edit'))}</button><button class="ld-chip" type="button" data-del="${esc(r.id)}">${esc(t('Löschen','Delete'))}</button></span></div>`).join('');
   b.innerHTML=`<div class="ld-tools"><button class="b p" type="button" data-k="new">${esc(t('+ Neue Regel','+ New rule'))}</button></div>`+

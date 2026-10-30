@@ -35,6 +35,7 @@ OHNE = {
     "kartensuche": "liest nur die Punkte der Wissenskarte für die Suche, speichert nichts; die Punkte löscht Personen, Firmen und Fristen",
     "mailmanage": "ordnet nur Mails im eigenen Postfach, speichert nichts im Spark; die Mails löscht das Postfach selbst",
     "maildelete": "legt nur Mails im eigenen Postfach in dessen Papierkorb (endgültig nur dort), speichert nichts im Spark",
+    "maillearn": "die Korrekturen, Ausnahmen und Pausen liegen in mail-regeln.json und gehen mit den Daten von Mails ordnen (mailregeln.forget)",
     "mailsend": "gesendete Mails liegen im Postfach unter Gesendet; im Spark bleibt nur die Vorschau höchstens 10 Minuten, ein Vorschlag per Sprache 5 Minuten; geplante Mails (Später senden) versiegelt bis zum Senden, sie gehen mit den Daten von E-Mail lesen",
     "mailcode": "keine eigenen Daten: ein Code lebt nur mit seiner Mitteilung im Speicher, nie auf der Platte",
     "bildaendern": "geänderte und hochgeladene Bilder liegen bei den Bildern (features.OWN bilder, Ich → Bilder)",

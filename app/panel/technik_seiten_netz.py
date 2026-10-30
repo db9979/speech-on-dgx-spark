@@ -636,7 +636,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Post, Kalender, Kontakte
     "post": {
-        "stand": "3c162ed190",
+        "stand": "bd5d056f6b",
         "bezug": {
             "kalenderserver.login": ["s2", "s10"], "kontaktserver._write": ["s10"], "kontaktserver.MAX_CARDS": ["s10"],
             "mail.MAX_ACCOUNTS": ["s3"], "mail.lookup": ["s1", "s5", "s7"], "calendars.view": ["s1"],
@@ -644,7 +644,8 @@ SEITEN = {
             "mailvorrat.keep_heads": ["s6"], "mailvorrat.HEADS": ["s6"], "mailvorrat.TEXTS": ["s6"], "vorrat.seal": ["s6"],
             "frisch.stand": ["s7"], "senden.preview": ["s9"], "senden.send": ["s9"], "senden.MAX_DAY": ["s9"],
             "contacts.save": ["s9"], "senden.later": ["s9"], "einordnen.start": ["s9"], "mailcode.arrived": ["s8"],
-            "mailregeln.spark_moved": ["s9"], "tidy.LOG_DAYS": ["s9"],
+            "mailregeln.spark_moved": ["s9"], "tidy.LOG_DAYS": ["s9"], 
+            "mailregeln.FIX_PAUSE": ["s9"],
         },
         "kurz": ("Die Seiten E-Mail, Kalender und Kontakte und der Assistent lesen dieselben Daten: Postfächer per IMAP, "
                  "Kalender und Adressbücher per CalDAV und CardDAV beim Anbieter, dazu die Spark-Kalender und das Adressbuch "
@@ -722,14 +723,20 @@ SEITEN = {
                "brach ein Senden ab, geht sie nie ein zweites Mal. „Alle Mails hier einordnen“ (einordnen.start) schlägt erst vor "
                "und verschiebt nach festen Regeln erst nach dem Tipp, mit Rückgängig. Was Mail-Regeln und „Postfach aufräumen“ von selbst "
                "verschieben, steht {tidy.LOG_DAYS} Tage mit seiner Message-ID in einer Merkliste (mailregeln.spark_moved); legt "
-               "die Person so eine Mail woandershin, etwa zurück in den Posteingang, fasst kein Sortierer sie wieder an. contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich "
+               "die Person so eine Mail woandershin, etwa zurück in den Posteingang, fasst kein Sortierer sie wieder an. Mit „Sortieren aus "
+               "Korrekturen lernen“ zählt das als Korrektur (mailregeln.correct, auch der Ordner „Falsch sortiert“): der Absender "
+               "wird Ausnahme der Regel, nach {mailregeln.FIX_PAUSE} Korrekturen in {mailregeln.FIX_DAYS} Tagen pausiert sie, "
+               "eine Karte fragt; nur Kopfzeilen, nie das Modell. contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich "
                "inzwischen geändert, wird nichts überschrieben.",
                "A mail goes out only after the preview sheet and the tap on Send (senden.preview, senden.send, at most "
                "{senden.MAX_DAY} a day). \"Send later\" keeps it sealed until its time (senden.later); if a sending broke "
                "off, it never goes a second time. \"Sort every mail here\" (einordnen.start) proposes first and moves by fixed "
                "rules only after the tap, with Undo. What the mail rules and \"Inbox tidying\" move by themselves stays {tidy.LOG_DAYS} days "
                "with its Message-ID on one list (mailregeln.spark_moved); when the person puts such a mail somewhere else, back "
-               "into the inbox for instance, no sorter touches it again. contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is "
+               "into the inbox for instance, no sorter touches it again. With \"Learn sorting from corrections\" that is a correction "
+               "(mailregeln.correct, also the folder \"Falsch sortiert\"): the sender becomes an exception of the rule, after "
+               "{mailregeln.FIX_PAUSE} corrections in {mailregeln.FIX_DAYS} days it pauses, a card asks; headers only, never the "
+               "model. contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is "
                "overwritten."),
               ("ok", ("fertig", "done"), "s11")),
             S("s10", "schritt", ("Tür für Apps", "Door for apps"),
@@ -765,6 +772,7 @@ SEITEN = {
             ("{mailvorrat.TEXTS}", ("Mailtexte je Profil im Vorrat", "mail texts per profile in the supply"), "mailvorrat.TEXTS"),
             ("{senden.MAX_DAY}", ("Mails höchstens am Tag", "mails at most a day"), "senden.MAX_DAY"),
             ("{tidy.LOG_DAYS} Tage", ("merkt sich der Spark, was er verschoben hat", "the Spark remembers what it moved"), "tidy.LOG_DAYS"),
+            ("{mailregeln.FIX_PAUSE}", ("Korrekturen pausieren eine Regel", "corrections pause a rule"), "mailregeln.FIX_PAUSE"),
             ("{kontaktserver.MAX_CARDS}", ("Karten im Adressbuch „Auf dem Spark“", "cards in the address book \"On the Spark\""),
              "kontaktserver.MAX_CARDS"),
         ],
@@ -801,7 +809,8 @@ SEITEN = {
             ("kontaktserver._write", ("Karte einer Kontakte-App", "card from a contacts app")),
         ],
         "tests": ["test_mailvorrat", "test_vorrat", "test_mails_senden", "test_kalenderserver", "test_kontaktserver",
-                  "test_kontakte_seite", "test_kalenderspiegel", "test_mailcode", "test_einordnen", "test_mailregeln", "test_tidy"],
+                  "test_kontakte_seite", "test_kalenderspiegel", "test_mailcode", "test_einordnen", "test_mailregeln", "test_tidy",
+                  "test_mail_lernen"],
         "heute": [],
     },
     # ------------------------------------------------------------------ Browser und Handy

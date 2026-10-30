@@ -574,6 +574,11 @@ FEATURES = (
     # there for good after the page's own question; rules, the model, „Für dich“ and the voice never delete
     F("maildelete", "Mails löschen", "Delete mail", "post", ("mail_delete", "mail_manage", "mail"), parent="mailmanage",
       me="mailbox", guide="maildelete"),
+    # mailregeln.py „Sortieren aus Korrekturen lernen“ (Dominik 2026-10-30, plan mail-lernen 3a 4a 5a): a mail the Spark sorted and
+    # the person put elsewhere (or into „Falsch sortiert“) is a correction; fixed thresholds make an exception, pause a
+    # rule and bring the card „Regel-Vorschlag“; never the model
+    F("maillearn", "Sortieren aus Korrekturen lernen", "Learn sorting from corrections", "post", ("mail_learn", "mail_manage", "mail"),
+      parent="mailmanage", me="mailbox", guide="maillearn"),
     # einladung.py (Dominik 2026-10-21 „ja alles umsetzen 1-6“, Punkt 3): an invitation (.ics) in a mail into a calendar
     # with one tap, Zusagen/Vielleicht/Absagen to the organiser (with „Mails senden“)
     F("einladungen", "Einladungen aus Mails", "Invitations from mail", "post", ("mail_invites", "mail", "calendar"),
