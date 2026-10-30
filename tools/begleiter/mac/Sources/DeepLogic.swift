@@ -290,8 +290,37 @@ enum NoteActions {
         case "done": return "Erledigt"
         case "fdremind": return "Erinnern"
         case "read": return "Gelesen"
+        case "stimmt": return "Stimmt"
+        case "rueck": return "Rückgängig"
         default: return nil
         }
+    }
+
+    /// a note about a card „Gemerkt von selbst“ (begleiter.NOTE_VG_ACTS, Begleiter Paket B): Stimmt, Rückgängig,
+    /// Panel öffnen; both act through the panel like "done" (POST /api/desk/note/act, vorgaenge.act there)
+    static let gm = ["stimmt", "rueck", "open"]
+
+    /// the buttons of such a note, nil when it is none
+    static func parseGm(_ raw: Any?) -> [String]? {
+        let given = (raw as? [Any] ?? []).compactMap { $0 as? String }
+        guard given.contains("stimmt") || given.contains("rueck") else { return nil }
+        return gm.filter { given.contains($0) }
+    }
+
+    static func gmCategory(_ actions: [String]) -> String? {
+        let a = gm.filter { actions.contains($0) }
+        return a.isEmpty ? nil : "gm." + a.joined(separator: ".")
+    }
+
+    static var gmCombinations: [[String]] {
+        (1..<(1 << gm.count)).map { mask in gm.enumerated().filter { mask & (1 << $0.offset) != 0 }.map { $0.element } }
+    }
+
+    /// the notification category of a note's buttons: a new mail, a Gemerkt card or the plain ones
+    static func categoryFor(tag: String, _ actions: [String]) -> String? {
+        if tag == mailTag { return mailCategory(actions) }
+        if actions.contains("stimmt") || actions.contains("rueck") { return gmCategory(actions) }
+        return category4(actions)
     }
 
     /// the note's "actions", in a fixed order, unknown ones dropped

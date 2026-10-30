@@ -4678,6 +4678,27 @@
 "titel": "Sprung-Links auf Listen, Offen, Finden und Dungeon-Master von draußen",
 "text": "Eine Mitteilung oder Telegram-Nachricht mit einem Weg wie „Finden → Schlagworte“ oder „Listen → Einstellungen“ (z. B. aus einem Hinweis): Antippen in iPhone-App, Android-App, Begleiter oder der Telegram-Knopf „Im Panel öffnen“ führt auf die Seite und den Reiter.",
 "thread": "Begleiter-App auf neuen Stand bringen"
+},
+{
+"id": "P693",
+"v": 1269,
+"titel": "Begleiter: Offen im Reiter Heute",
+"text": "Ich → Begleiter: beim Gerät den Teil „Offen im Begleiter“ einschalten (Alles Offene im Assistenten muss freigegeben sein). Im Begleiter-Fenster unter Heute stehen „Offen“ mit der Zahl und bis zu drei Karten; ein Knopf wie „Erledigt“ oder „Später“ wirkt, die Karte verschwindet auch im Panel unter Offen; eine Karte ohne Knopf öffnet Offen im Panel.",
+"thread": "Begleiter-App auf neuen Stand bringen"
+},
+{
+"id": "P694",
+"v": 1269,
+"titel": "Begleiter: Gemerkt von selbst mit Stimmt und Rückgängig",
+"text": "Eine Meldung „Gemerkt von selbst“ am Rechner: „Stimmt“ bestätigt den Eintrag, „Rückgängig“ nimmt ihn zurück; im Panel unter Offen ist die Karte danach weg.",
+"thread": "Begleiter-App auf neuen Stand bringen"
+},
+{
+"id": "P695",
+"v": 1269,
+"titel": "Begleiter: Finden per Tastenkürzel",
+"text": "Ich → Begleiter: Teil „Finden im Begleiter“ einschalten (Finden in allen Daten muss freigegeben sein). Strg+Alt+F (Mac ⌃⌥F), „Rechnung“ eingeben, Return: Treffer mit Titel und Quelle; ein Klick öffnet den Eintrag im Panel, „In Finden ansehen“ die Seite Finden mit derselben Suche. In Logs → Begleiter steht nur die Zahl der Treffer, nie die Wörter.",
+"thread": "Begleiter-App auf neuen Stand bringen"
 }
 ]
 }

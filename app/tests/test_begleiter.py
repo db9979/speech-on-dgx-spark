@@ -1625,6 +1625,143 @@ class LogQuiet(unittest.TestCase):
         self.assertEqual(seen, [])
 
 
+def _journal():
+    """The journal lines (stdout) of the code inside the block."""
+    import contextlib
+    import io
+    out = io.StringIO()
+
+    class Box(contextlib.redirect_stdout):
+        def __enter__(self):
+            super().__enter__()
+            return out
+    return Box(out)
+
+
+class OffenUndFinden(unittest.TestCase):
+    """Begleiter Paket B (Dominik 2026-10-30): Offen in the tab Heute (part offen) with only the direct buttons of a
+    card (vorgaenge.knoepfe), run through vorgaenge.act with wo "desk"; Finden by hotkey (part find) through
+    fund.suche, title and source only, the words never in a log line; „Gemerkt von selbst“ gets Stimmt and Rückgängig
+    in the note. Both parts off until set per device and only while their function is released."""
+
+    def setUp(self):
+        Begleiter.setUp(self)
+        helpers.set_config(reminders=True, vorgaenge=True, fund=True)
+        for k in [k for k in guard._rate if k[0] in ("deskoffen", "deskfund", "desknote")]:
+            guard._rate.pop(k, None)
+
+    def tearDown(self):
+        helpers.set_config(vorgaenge=False, fund=False)
+        Begleiter.tearDown(self)
+
+    def device(self, name, **on):
+        c = Begleiter.on(self, name)
+        _, prog = Begleiter.pair(self, c)
+        Deeper.parts(self, c, prog, **on)
+        return c, prog, uid_of(name)
+
+    def test_parts_off_by_default_and_follow_their_function(self):
+        self.assertIs(begleiter.DEFAULT["parts"]["offen"], False)
+        self.assertIs(begleiter.DEFAULT["parts"]["find"], False)
+        c, prog, uid = self.device("DkOffenAus")
+        self.assertEqual(prog.get("/api/desk/offen").status_code, 403)                  # part off
+        self.assertEqual(prog.post("/api/desk/fund", json={"worte": "Rechnung"}).status_code, 403)
+        Deeper.parts(self, c, prog, offen=True, find=True)
+        self.assertEqual(prog.get("/api/desk/offen").status_code, 200)
+        helpers.set_config(vorgaenge=False, fund=False)
+        cfg = prog.get("/api/desk/config").json()
+        self.assertEqual((cfg["allowed"]["offen"], cfg["allowed"]["find"]), (False, False))
+        self.assertEqual(prog.get("/api/desk/offen").status_code, 403)                  # the function off: refused
+        self.assertEqual(prog.post("/api/desk/fund", json={"worte": "Rechnung"}).status_code, 403)
+        guest = TestClient(panel.app, client=HOME)
+        self.assertIn(guest.get("/api/desk/offen").status_code, (401, 403))
+        for path in ("/api/desk/offen", "/api/desk/offen/act", "/api/desk/fund"):
+            self.assertIn(path, profiles.DESK_PATHS)
+
+    def test_offen_shows_cards_and_runs_only_direct_buttons(self):
+        import vorgaenge
+        c, prog, uid = self.device("DkOffen", offen=True)
+        x, _ = vorgaenge.put(uid, "erinnerung", "erinnerung:dk1", "Erinnerung: Ofen aus")
+        d = prog.get("/api/desk/offen").json()
+        self.assertEqual(d["n"], 1)
+        card = d["cards"][0]
+        self.assertEqual((card["id"], card["titel"]), (x["id"], "Erinnerung: Ofen aus"))
+        self.assertEqual({a["k"] for a in card["acts"]}, {"erledigt", "spaeter"})
+        bad = prog.post("/api/desk/offen/act", json={"id": x["id"], "act": "vs_ja", "rev": card["rev"]})
+        self.assertEqual(bad.status_code, 403)                                           # never a yes here
+        self.assertEqual(prog.post("/api/desk/offen/act", json={"id": x["id"], "act": "erledigt"}).status_code, 400)
+        with _journal() as j:
+            r = prog.post("/api/desk/offen/act", json={"id": x["id"], "act": "erledigt", "rev": card["rev"]})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["n"], 0)
+        self.assertIn("begleiter: offen knopf=erledigt ok", j.getvalue())
+        self.assertEqual(vorgaenge.find(uid, x["id"])["wo"], "Begleiter")              # vorgaenge.act, wo "desk"
+        stale = prog.post("/api/desk/offen/act", json={"id": x["id"], "act": "erledigt", "rev": card["rev"]})
+        self.assertIn(stale.status_code, (403, 409))                                     # done: the button is gone
+
+    def test_note_about_gemerkt_card_carries_stimmt_and_rueckgaengig(self):
+        import vorgaenge
+        c, prog, uid = self.device("DkGemerkt", actions=True)
+        x, _ = vorgaenge.put(uid, "erinnerung", "erinnerung:dk2", "Erinnerung: Tee")
+        n = begleiter.keep(uid, "↺ Spark hat sich etwas gemerkt", "Gemerkt von selbst", tag="vg-" + x["id"], vg=x["id"])
+        note = {"n": n, "tag": "vg-" + x["id"], "vg": x["id"]}
+        self.assertEqual(begleiter.note_acts(uid, note), ["done", "reply", "later", "open"])
+        seen = []
+        with unittest.mock.patch.object(vorgaenge, "knoepfe", lambda u, v: [("gm_stimmt", "Stimmt"), ("gm_weg", "Rückgängig"), ("spaeter", "Später")]), \
+                unittest.mock.patch.object(vorgaenge, "act", lambda u, v, k, rev=None, wann="", wo="web": seen.append((v, k, wo)) or {"text": "Bestätigt."}):
+            self.assertEqual(begleiter.note_acts(uid, note), ["stimmt", "rueck", "reply", "later", "open"])
+            r = prog.post("/api/desk/note/act", json={"note": n, "act": "stimmt"})
+            self.assertEqual(r.status_code, 200, r.text)
+            self.assertEqual(r.json()["text"], "Bestätigt.")
+        self.assertEqual(seen, [(x["id"], "gm_stimmt", "desk")])
+        for a in ("stimmt", "rueck"):
+            self.assertIn(a, begleiter.NOTE_PANEL_ACTS)
+
+    def test_find_gives_titles_and_sources_never_words_in_the_log(self):
+        import fund
+        c, prog, uid = self.device("DkFinden", find=True)
+        got = []
+
+        def fake(u, worte, *a, **kw):
+            got.append((u, worte, a[-1] if a else None))
+            return [{"id": 7, "quelle": "dokument", "titel": "Rechnung Thomann", "wann": 1700000000, "auszug": "geheim"}]
+        with unittest.mock.patch.object(fund, "suche", fake), _journal() as j:
+            r = prog.post("/api/desk/fund", json={"worte": "Rechnung Thomann"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["treffer"], [{"id": 7, "titel": "Rechnung Thomann", "quelle": "Dokument", "wann": 1700000000}])
+        self.assertEqual(got, [(uid, "Rechnung Thomann", begleiter.FIND_SHOWN)])
+        self.assertIn("begleiter: finden | 1 treffer", j.getvalue())
+        self.assertNotIn("Thomann", j.getvalue())
+        self.assertEqual(prog.post("/api/desk/fund", json={"worte": "  "}).status_code, 400)
+        helpers.set_config(deny={"fund": [uid]})                                         # blocked for this profile
+        self.assertEqual(prog.post("/api/desk/fund", json={"worte": "Rechnung"}).status_code, 403)
+
+    def test_programs_carry_offen_and_find(self):
+        root = Office.ROOT
+        if not os.path.isdir(root):
+            self.skipTest("only app/ copied")
+
+        def src(*names):
+            return "".join(open(os.path.join(root, n), encoding="utf-8").read() for n in names)
+        mac = src("mac/Sources/Offen.swift", "mac/Sources/Hotkeys.swift", "mac/Sources/TrayPanel.swift", "mac/Sources/Model.swift")
+        win = src("windows/Offen.cs", "windows/Hotkey.cs", "windows/TrayPanel.cs", "windows/TrayContext.cs")
+        for path in ("api/desk/offen", "api/desk/offen/act", "api/desk/fund"):
+            self.assertIn('"' + path + '"', mac, path)                                    # client.get("api/desk/...")
+            self.assertIn('"/' + path + '"', win, path)                                   # baseUrl + "/api/desk/..."
+        self.assertIn('label: "⌃⌥F"', mac)                                               # ⌥⌘F is taken in Notes and Xcode
+        self.assertIn("Parts.Find => new Hotkey(Keys.Control | Keys.Alt, Keys.F)", win)
+        for s in (mac, win):
+            self.assertIn("#fundq=", s)
+            self.assertIn("#fund=", s)
+            self.assertIn("#me=vgbox", s)
+        self.assertIn('case "offen": return "Offen im Begleiter"', src("mac/Sources/SettingsView.swift"))
+        self.assertIn('case "find": return "Finden im Begleiter"', src("mac/Sources/SettingsView.swift"))
+        self.assertIn('Offen => "Offen im Begleiter"', src("windows/Hotkey.cs"))
+        self.assertIn('Find => "Finden im Begleiter"', src("windows/Hotkey.cs"))
+        self.assertIn('"stimmt"', src("windows/Karten.cs"))
+        self.assertIn('"rueck"', src("mac/Sources/DeepLogic.swift"))
+
+
 class PanelLinks(unittest.TestCase):
     """Begleiter Paket A (Dominik 2026-10-30): the settings' Übersicht carries Sprung-Links to Meine Daten and
     Gedächtnis, and for a profile with the admin role to Fernzugang, on the Mac and on Windows. Only links into the
@@ -1859,7 +1996,7 @@ class Office(unittest.TestCase):
     def test_mac_sets_up_word_and_excel_only_on_request(self):
         office = self.src("mac", "Sources", "Office.swift")
         model = self.src("mac", "Sources", "Model.swift")
-        self.assertIn('"daily", "office", "view", "post", "capture", "lists"]', model)
+        self.assertIn('"daily", "office", "view", "post", "capture", "lists", "offen", "find"]', model)
         self.assertIn('OfficeSetup.apply(on: on && part("office"))', model)
         self.assertIn("a.runModal() == .alertFirstButtonReturn", office)
         self.assertIn('api/desk/office/\\(w.app).xml', office)

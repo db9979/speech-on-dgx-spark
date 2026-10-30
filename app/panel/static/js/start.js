@@ -89,6 +89,9 @@ async function startPage(){let who=null;try{who=await (await /*raw: the first wh
   // #fund=<id> from Telegram's Sofort-Karte (fund.py): the original of that entry of Finden, as the server gives it
   try{const f=/^#fund=(\d{1,12})$/.exec(location.hash);if(f){history.replaceState(null,'',location.pathname+location.search);
     if(PROFILE&&typeof fundTreffer==='function')fundTreffer(f[1])}}catch{}
+  // #fundq=<words> from the Begleiter's search (Strg+Alt+F, begleiter.py program_find): the page Finden with this search
+  try{const f=/^#fundq=(.{1,600})$/.exec(location.hash);if(f){history.replaceState(null,'',location.pathname+location.search);
+    if(PROFILE&&window.FUND_ON&&typeof fundSuche==='function')fundSuche(decodeURIComponent(f[1]).slice(0,200))}}catch{}
   // #weg=<a way like „Ich → Sicherheit“> from the apps, mails and messages: opens it like a Sprung-Link (way.js)
   try{if(typeof wayHash==='function')wayHash()}catch{}
   // #meldung=<number> from a tapped notification: the note as a card above the conversation (mitteilung.js)

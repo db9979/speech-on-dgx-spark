@@ -211,6 +211,15 @@ internal sealed partial class TrayContext
             any = true;
         }
 
+        if (IsOn(Parts.Find))
+        {
+            _menu.Items.Add(new ToolStripMenuItem("Finden …", null, async (_, _) => await OpenFindAsync(fromHotkey: false))
+            {
+                ShortcutKeyDisplayString = _config.GetHotkey(Parts.Find).ToString(),
+            });
+            any = true;
+        }
+
         if (IsOn(Parts.Speak))
         {
             bool active = _speaker is not null || _speakCts is not null;
@@ -239,6 +248,11 @@ internal sealed partial class TrayContext
         if (IsOn(Parts.Capture))
         {
             items.Add(new PanelItem("Erfassen", Glyph.Plus, _config.GetHotkey(Parts.Capture).ToString(), () => _ = OpenCaptureAsync(fromHotkey: false)));
+        }
+
+        if (IsOn(Parts.Find))
+        {
+            items.Add(new PanelItem("Finden", Glyph.Search, _config.GetHotkey(Parts.Find).ToString(), () => _ = OpenFindAsync(fromHotkey: false)));
         }
 
         if (IsOn(Parts.Speak))

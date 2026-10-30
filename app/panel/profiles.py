@@ -861,6 +861,8 @@ DESK_PATHS = ("/api/write", "/api/write/assist", "/api/write/suggest", "/api/des
               "/api/desk/note/act",
               # Post im Begleiter (part post): unread, Für dich, the buttons of its cards
               "/api/desk/post", "/api/desk/post/act",
+              # Begleiter Paket B (Dominik 2026-10-30): Offen in „Heute“ and its direct buttons, Finden by hotkey
+              "/api/desk/offen", "/api/desk/offen/act", "/api/desk/fund",
               # Schnell erfassen (part capture): the chips of one line, „Eintragen“, Rückgängig
               "/api/desk/capture", "/api/desk/capture/undo", "/api/desk/lists",
               # Ordner auslassen (auslassen.py): the sub folders of "Spark-Wissen", for the tree

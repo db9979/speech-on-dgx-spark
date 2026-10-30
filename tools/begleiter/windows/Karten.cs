@@ -8,7 +8,7 @@ namespace SparkBegleiter;
 /// </summary>
 internal static class NoteActs
 {
-    public static readonly string[] Known = { "reply", "later", "open", "done", "fdremind", "draft", "read", "copy" };
+    public static readonly string[] Known = { "reply", "later", "open", "done", "fdremind", "draft", "read", "copy", "stimmt", "rueck" };
 
     /// <summary>Bestätigungscodes (mailcode.py): der Code einer Meldung ist ihr erstes Wort (4 bis 8 Großbuchstaben oder Ziffern), sonst null.</summary>
     public static string? CodeOf(string body)
@@ -23,6 +23,8 @@ internal static class NoteActs
         "done" => "Erledigt",
         "fdremind" => "Erinnern",
         "read" => "Gelesen",
+        "stimmt" => "Stimmt",   // Gemerkt von selbst (Paket B): über vorgaenge.act wie die Karte unter Offen
+        "rueck" => "Rückgängig",
         _ => null,
     };
 

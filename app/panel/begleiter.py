@@ -100,7 +100,10 @@ PARTS = ("write", "ask", "dictate", "notes", "status", "notaus",
          # Begleiter nachziehen 4a: Schnell erfassen (Strg+Alt+N / ⌃⌥N), an appointment or a reminder from one line
          "capture",
          # Begleiter nachziehen 8a: the lists (tasks.py, page Listen) in the window; Schnell erfassen also onto a list
-         "lists")
+         "lists",
+         # Begleiter Paket B (Dominik 2026-10-30): Offen in the tab Heute with its direct buttons (vorgaenge.py),
+         # Finden by hotkey (Strg+Alt+F / ⌃⌥F, fund.py): a search field, hits as title and source
+         "offen", "find")
 PART_NAMES = {"write": "Schreibhilfe", "ask": "Frag Spark", "dictate": "Diktieren", "notes": "Meldungen",
               "status": "Zustandspunkt", "notaus": "Mein Notaus", "files": "Rechtsklick auf Dateien",
               "screen": "Bildschirm fragen", "context": "App erkennen", "mail": "Antwort entwerfen",
@@ -109,7 +112,8 @@ PART_NAMES = {"write": "Schreibhilfe", "ask": "Frag Spark", "dictate": "Diktiere
               "agenda": "Termine im Begleiter", "quiet": "Nicht stören erkennen", "meeting": "Besprechung mitschreiben",
               "home": "Smart-Home-Knöpfe", "daily": "Tagesstart und Feierabend", "office": "Office-Add-ins",
               "view": "Bildschirm zeigen und bedienen", "post": "Post im Begleiter",
-              "capture": "Schnell erfassen", "lists": "Listen im Begleiter"}
+              "capture": "Schnell erfassen", "lists": "Listen im Begleiter", "offen": "Offen im Begleiter",
+              "find": "Finden im Begleiter"}
 KINDS = {"windows": "Windows", "mac": "Mac"}
 MAX_DEVICES = 10
 MAX_BODY = 8 * 1024
@@ -128,7 +132,10 @@ NOTE_MAX = 30
 NOTE_ACTS = {"pro-fuerdich": ("done", "fdremind", "open"), "mail-new": ("draft", "read", "open"), "mailcode": ("copy",)}
 NOTE_ACTS_PLAIN = ("reply", "later", "open")
 NOTE_WEG = {"pro-fuerdich": "E-Mail → Für dich", "mail-new": "E-Mail → Posteingang"}
-NOTE_PANEL_ACTS = ("done", "fdremind", "read")   # the buttons that act here (POST /api/desk/note/act)
+NOTE_PANEL_ACTS = ("done", "fdremind", "read", "stimmt", "rueck")   # the buttons that act here (POST /api/desk/note/act)
+# a note about a Vorgang of Offen (its vg): the card's direct buttons that the note carries too, by fixed names; „Gemerkt
+# von selbst“ (gemerkt.py) gets „Stimmt“ and „Rückgängig“, everything else „Erledigt“ (Begleiter Paket B)
+NOTE_VG_ACTS = {"erledigt": "done", "cx_gelesen": "done", "gm_stimmt": "stimmt", "gm_weg": "rueck"}
 DICT_LANGS = ("auto", "de", "en", "fr", "es", "it", "nl")
 RELEASES = {"windows": "https://github.com/db9979/speech-on-dgx-spark/releases/tag/begleiter-windows",
             "mac": "https://github.com/db9979/speech-on-dgx-spark/releases/tag/begleiter-mac"}
@@ -137,7 +144,8 @@ DEFAULT = {"parts": {"write": True, "ask": True, "dictate": False, "notes": True
                      "files": False, "screen": False, "context": False, "mail": False, "folder": False,
                      "actions": False, "act": False, "wake": False, "speak": False, "inbox": False, "agenda": False,
                      "quiet": False, "meeting": False, "home": False, "daily": False, "office": False,
-                     "view": False, "post": False, "capture": False, "lists": False},
+                     "view": False, "post": False, "capture": False, "lists": False,
+                     "offen": False, "find": False},
            "act": {"apps": []}, "home": {"buttons": []}, "office": {"base": ""},
            "write": {"art": "korrigieren", "sprache": "en", "wunsch": "", "arts": list(schreib.ARTS), "preview": True},
            "dictate": {"sprache": "auto"}, "autostart": True}
@@ -210,7 +218,11 @@ def may(uid):
             "capture": features.allowed("calendar", uid) or features.allowed("reminders", uid)
             or features.allowed("tasks", uid),
             # Listen im Begleiter: the lists of the page Listen (Funktionen → Listen)
-            "lists": features.allowed("tasks", uid)}
+            "lists": features.allowed("tasks", uid),
+            # Offen im Begleiter: the cards of the page Offen (Funktionen → Alles Offene im Assistenten)
+            "offen": features.allowed("vorgaenge", uid),
+            # Finden im Begleiter: the search of the page Finden (Funktionen → Finden in allen Daten)
+            "find": features.allowed("fund", uid)}
     return {p: bool(need.get(p, True)) for p in PARTS}
 
 
@@ -502,15 +514,22 @@ def note_weg(x):
 
 def _vg_done(uid, vg):
     """The Vorgang's direct button that closes it („Erledigt“, a chat's „Gelesen“), or ""."""
+    return next((k for k, a in _vg_acts(uid, vg).items() if a == "done"), "")
+
+
+def _vg_acts(uid, vg):
+    """{card button: note button} of a Vorgang's direct buttons the note carries (NOTE_VG_ACTS, vorgaenge.knoepfe)."""
     import vorgaenge
-    return next((k for k, _ in vorgaenge.knoepfe(uid, vg) if k in ("erledigt", "cx_gelesen")), "")
+    return {k: NOTE_VG_ACTS[k] for k, _ in vorgaenge.knoepfe(uid, vg) if k in NOTE_VG_ACTS}
 
 
 def note_acts(uid, x):
     """The buttons of one note (part actions on): by its kind; the Für-dich ones only with a card behind it."""
     acts = NOTE_ACTS.get(x.get("tag", ""), NOTE_ACTS_PLAIN)
-    if acts is NOTE_ACTS_PLAIN and x.get("vg") and _vg_done(uid, x["vg"]):   # a note about a Vorgang of Offen
-        return ["done"] + list(acts)
+    if acts is NOTE_ACTS_PLAIN and x.get("vg"):   # a note about a Vorgang of Offen: the card's direct buttons first
+        vg = list(dict.fromkeys(_vg_acts(uid, x["vg"]).values()))
+        if vg:
+            return vg + list(acts)
     if "done" in acts and not (x.get("ref") and features.allowed("fuerdich", uid)):
         return ["open"]
     if "read" in acts:
@@ -822,21 +841,27 @@ async def program_note_act(request: Request):
             print(f"begleiter: meldung knopf abgelehnt grund=post_aus {profiles.log_name(prof)}", flush=True)
             raise HTTPException(403, f"{PART_NAMES['post']} ist für dieses Gerät aus (Ich → Begleiter).")
         return await _mail_read(prof, x["ref"], "meldung")
-    if act == "done" and x.get("vg") and x.get("tag", "") not in NOTE_ACTS:
-        return _vg_act(prof, x["vg"])
+    if act in ("done", "stimmt", "rueck") and x.get("vg") and x.get("tag", "") not in NOTE_ACTS:
+        return _vg_act(prof, x["vg"], act)
     return _fd_act(prof, x["ref"], act, "meldung")
 
 
-def _vg_act(prof, vg):
-    """„Erledigt“ on a note about a Vorgang: the same checks as its card (vorgaenge.act, wo "desk")."""
+def _vg_act(prof, vg, act="done"):
+    """„Erledigt“ („Stimmt“, „Rückgängig“) on a note about a Vorgang: the same checks as its card (vorgaenge.act,
+    wo "desk"), the button only while the card has it (_vg_acts)."""
     import vorgaenge
-    k = _vg_done(prof["id"], vg)
+    k = next((c for c, a in _vg_acts(prof["id"], vg).items() if a == act), "")
     if not k:
         print(f"begleiter: meldung knopf abgelehnt grund=vorgang_zu {profiles.log_name(prof)}", flush=True)
         raise HTTPException(404, "Das ist schon erledigt.")
-    vorgaenge.act(prof["id"], vg, k, wo="desk")
-    print(f"begleiter: meldung knopf=erledigt ok {profiles.log_name(prof)}", flush=True)
-    return {"ok": True, "text": "Erledigt."}
+    try:
+        r = vorgaenge.act(prof["id"], vg, k, wo="desk")
+    except HTTPException as e:
+        print(f"begleiter: meldung knopf={act} abgelehnt grund={e.status_code} {profiles.log_name(prof)}", flush=True)
+        raise
+    print(f"begleiter: meldung knopf={act} ok {profiles.log_name(prof)}", flush=True)
+    said = {"done": "Erledigt.", "stimmt": "Bestätigt.", "rueck": "Rückgängig gemacht."}[act]
+    return {"ok": True, "text": str(r.get("text") or said)[:240]}   # the source's fixed sentence (gemerkt.SAY …)
 
 
 def _fd_act(prof, ref, act, where):
@@ -2425,6 +2450,98 @@ async def program_lists(request: Request):
     _part(prof, dev, "lists")
     guard.limit(request, "deskpost", prof["id"])
     return await desk_lists(prof["id"])
+
+
+# ---- offen: Offen im Begleiter (Begleiter Paket B, Dominik 2026-10-30)
+# The tab Heute shows how many Vorgänge of the page Offen need the person and the first OFFEN_SHOWN cards: kind, title
+# and line as vorgaenge.public gives them (fixed words, names and subjects, never a mail's text), with only their direct
+# buttons (vorgaenge.knoepfe: Erledigt, Später „Morgen früh“, Stimmt …). A button runs through vorgaenge.act with
+# wo "desk", the same checks as the card; nothing that sends, adds or says yes, that stays on the page (a click opens
+# Offen in the panel).
+OFFEN_SHOWN = 3
+
+
+def desk_offen(uid):
+    import vorgaenge
+    d = vorgaenge._load(uid)
+    need = sorted((x for x in d["items"] if vorgaenge.group_of(x) == "braucht"), key=lambda x: -x["t"])
+    cards = []
+    for x in need[:OFFEN_SHOWN]:
+        p = vorgaenge.public(uid, x)
+        cards.append({"id": p["id"], "rev": p["rev"], "art": p["art_de"][:40], "titel": p["titel"][:120],
+                      "zeile": p["zeile"][:160],
+                      "acts": [{"k": k, "de": de} for k, de in vorgaenge.knoepfe(uid, x["id"])][:4]})
+    return {"n": len(need), "cards": cards}
+
+
+@router.get("/api/desk/offen", dependencies=[Depends(assistant)])
+async def program_offen(request: Request):
+    prof, dev = _program(request)
+    _part(prof, dev, "offen")
+    guard.limit(request, "deskoffen", prof["id"])
+    out = desk_offen(prof["id"])
+    print(f"begleiter: offen angesehen n={out['n']} karten={len(out['cards'])} {profiles.log_name(prof)}", flush=True)
+    return out
+
+
+@router.post("/api/desk/offen/act", dependencies=[Depends(assistant)])
+@shown("Knopf unter Offen")
+async def program_offen_act(request: Request):
+    """{"id", "act", "rev"}: a direct button of a card under Offen; vorgaenge.act checks it like the card's own."""
+    import vorgaenge
+    prof, dev = _program(request)
+    uid = prof["id"]
+    _part(prof, dev, "offen")
+    guard.limit(request, "desknote", uid)
+    body = await json_body(request, MAX_BODY)
+    vid, act, rev = body.get("id"), body.get("act"), body.get("rev")
+    if not isinstance(vid, str) or not vorgaenge.ID.fullmatch(vid) or not isinstance(act, str) \
+            or not isinstance(rev, int) or isinstance(rev, bool):
+        print(f"begleiter: offen knopf abgelehnt grund=eingabe {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(400, "id, act und rev")
+    if act not in dict(vorgaenge.knoepfe(uid, vid)):     # only the direct ones a note may carry, never a yes
+        print(f"begleiter: offen knopf abgelehnt grund=nicht_erlaubt {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(403, "Diesen Knopf gibt es hier nicht. Unter Offen im Panel ansehen.")
+    try:
+        r = vorgaenge.act(uid, vid, act, rev, "morgen" if act == "spaeter" else "", wo="desk")
+    except HTTPException as e:
+        print(f"begleiter: offen knopf={act} abgelehnt grund={e.status_code} {profiles.log_name(prof)}", flush=True)
+        raise
+    print(f"begleiter: offen knopf={act} ok {profiles.log_name(prof)}", flush=True)
+    _live("Offen: Knopf")
+    said = "Kommt morgen früh wieder." if act == "spaeter" else "Erledigt."
+    return dict(desk_offen(uid), ok=True, text=str(r.get("text") or said)[:240])
+
+
+# ---- find: Finden im Begleiter (Begleiter Paket B): Strg+Alt+F / ⌃⌥F opens a search field; the hits come from
+# fund.suche (the profile's own index, only the sources it may use) as title, source and date; a click opens the
+# panel (#fund=<id> the entry, #fundq=<words> the page Finden with this search). The words never go into a log line.
+FIND_SHOWN = 8
+
+
+@router.post("/api/desk/fund", dependencies=[Depends(assistant)])
+@shown("Finden")
+async def program_find(request: Request):
+    import fund
+    prof, dev = _program(request)
+    uid = prof["id"]
+    _part(prof, dev, "find")
+    guard.limit(request, "deskfund", uid)
+    body = await json_body(request, 1024)
+    worte = body.get("worte")
+    if not isinstance(worte, str) or not worte.strip():
+        print(f"begleiter: finden abgelehnt grund=eingabe {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(400, "worte")
+    t0 = time.time()
+    hits = await asyncio.to_thread(fund.suche, uid, worte.strip()[:fund.MAX_WORTE], None, None, None, None, None,
+                                   None, FIND_SHOWN)
+    out = [{"id": h["id"], "titel": str(h.get("titel") or "")[:120],
+            "quelle": fund.BY_NAME[h["quelle"]].de if h.get("quelle") in fund.BY_NAME else "",
+            "wann": int(h.get("wann") or 0)} for h in hits[:FIND_SHOWN]]
+    print(f"begleiter: finden | {len(out)} treffer | {int((time.time() - t0) * 1000)} ms | {profiles.log_name(prof)}",
+          flush=True)
+    _live("Finden")
+    return {"treffer": out}
 
 
 def _zone_of(uid, tz):

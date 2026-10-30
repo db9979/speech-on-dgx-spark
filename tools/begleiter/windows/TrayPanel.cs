@@ -30,7 +30,7 @@ internal enum PanelItemKind
 /// </summary>
 internal enum PanelTab
 {
-    /// <summary>Als Nächstes, Post, Listen.</summary>
+    /// <summary>Als Nächstes, Post, Listen, Offen.</summary>
     Heute,
 
     /// <summary>Meldungen mit ihren Knöpfen, die neueste oben.</summary>
@@ -100,6 +100,12 @@ internal sealed class PanelModel
     /// <summary>Teil "lists": eine Karte je Liste unter „Listen“; <c>null</c> = Abschnitt fehlt.</summary>
     public IReadOnlyList<PanelNote>? Lists { get; init; }
 
+    /// <summary>Teil "offen" (Paket B): die ersten drei offenen Vorgänge mit ihren festen Knöpfen; <c>null</c> = Abschnitt fehlt.</summary>
+    public IReadOnlyList<PanelNote>? Offen { get; init; }
+
+    /// <summary>Wie viele Vorgänge offen sind (Zahl neben „Offen“).</summary>
+    public int OffenCount { get; init; }
+
     /// <summary>Meldungen mit Knöpfen (Teil "actions").</summary>
     public IReadOnlyList<PanelNote> Notes { get; init; } = Array.Empty<PanelNote>();
 
@@ -144,7 +150,7 @@ internal sealed class PanelModel
 /// Begleiter-Fenster beim Linksklick aufs Symbol, an der Taskleiste verankert (Entwurf „Begleiter aufpolieren“ 1a,
 /// Dominik 2026-10-17): oben Farbverlauf und Kopf mit Gesicht, Gruß, Gerät und Zustandspunkt, rechts Einstellungen
 /// und Schließen; darunter der Update-Hinweis, das Fragefeld „Frag Spark …“ und die Befehle als kleine Kacheln.
-/// Darunter drei Reiter (Dominik 2026-10-21 „Begleiter-Fenster ordnen“): „Heute“ (Als Nächstes, Post, Listen),
+/// Darunter drei Reiter (Dominik 2026-10-21 „Begleiter-Fenster ordnen“): „Heute“ (Als Nächstes, Post, Listen, Offen),
 /// „Meldungen“ und „Rechner“ (Zuhause, Dieser Rechner); nur der Reiter rollt, das Fenster ist höchstens so hoch
 /// wie der freie Bildschirm. Unten „Panel öffnen“ und Notaus. Schließt bei Fokusverlust und mit Esc.
 /// </summary>
@@ -160,6 +166,7 @@ internal sealed class TrayPanel : ThemedForm
     private readonly List<Action> _actions = new();
     private readonly CardGroup _notes = new();
     private readonly CardGroup _postCards = new();
+    private readonly CardGroup _offenCards = new();
     private readonly List<SparkButton> _lists = new();
     private readonly List<SparkButton> _home = new();
     private readonly List<Action> _homeActions = new();
@@ -496,6 +503,7 @@ internal sealed class TrayPanel : ThemedForm
     {
         BuildCards(_postCards, _model.Post ?? Array.Empty<PanelNote>(), 40);
         BuildLists();
+        BuildCards(_offenCards, _model.Offen ?? Array.Empty<PanelNote>(), 70);
         BuildCards(_notes, _model.Notes, 50);
     }
 
@@ -628,7 +636,7 @@ internal sealed class TrayPanel : ThemedForm
     /// <summary>Hat der Reiter etwas zu zeigen? Reiter ohne Inhalt fehlen in der Leiste.</summary>
     private bool Has(PanelTab tab) => tab switch
     {
-        PanelTab.Heute => _model.Agenda is not null || _postCards.Cards.Count > 0 || _model.Lists is not null,
+        PanelTab.Heute => _model.Agenda is not null || _postCards.Cards.Count > 0 || _model.Lists is not null || _model.Offen is not null,
         PanelTab.Meldungen => _model.NotesOn || _notes.Cards.Count > 0,
         _ => _model.Home is not null || _items.Any(b => b.Kind is ButtonKind.Toggle or ButtonKind.Row),
     };
@@ -913,7 +921,8 @@ internal sealed class TrayPanel : ThemedForm
     /// <summary>Zu welchem Reiter ein Teil auf der Rollfläche gehört.</summary>
     private PanelTab TabOf(Control c)
     {
-        if (c == _agendaMore || c == _postMore || (c is SparkButton b && (_lists.Contains(b) || _postCards.Cards.Any(card => card.Buttons.Contains(b)))))
+        if (c == _agendaMore || c == _postMore || (c is SparkButton b && (_lists.Contains(b) || _postCards.Cards.Any(card => card.Buttons.Contains(b))
+            || _offenCards.Cards.Any(card => card.Buttons.Contains(b)))))
         {
             return PanelTab.Heute;
         }
@@ -946,6 +955,7 @@ internal sealed class TrayPanel : ThemedForm
                 LayoutCards(_postCards, ref y, pad, inner, _postAll ? int.MaxValue : FirstShown);
                 More(_postMore, _postCards.Cards.Count, _postAll, ref y, pad);
                 LayoutLists(ref y, pad, inner);
+                LayoutCards(_offenCards, ref y, pad, inner, int.MaxValue);
                 break;
             case PanelTab.Meldungen:
                 // die Leiste nennt den Reiter schon; ohne Leiste steht die Überschrift da
@@ -1245,6 +1255,7 @@ internal sealed class TrayPanel : ThemedForm
                     PaintBox(g, _listBox, _listLines);
                 }
 
+                PaintCards(g, _offenCards, "Offen", _model.OffenCount);
                 break;
             case PanelTab.Meldungen:
                 PaintCards(g, _notes, "Meldungen", _notes.Cards.Count);

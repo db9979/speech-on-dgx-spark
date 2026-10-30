@@ -18,7 +18,7 @@ struct LangInfo: Identifiable, Equatable {
 struct DeskConfig: Equatable {
     static let partNames = ["write", "ask", "dictate", "notes", "status", "notaus",
                             "files", "screen", "context", "mail", "folder", "actions", "act", "wake",
-                            "speak", "inbox", "agenda", "quiet", "meeting", "home", "daily", "office", "view", "post", "capture", "lists"]
+                            "speak", "inbox", "agenda", "quiet", "meeting", "home", "daily", "office", "view", "post", "capture", "lists", "offen", "find"]
     static let fallbackArts = [
         ArtInfo(id: "korrigieren", de: "Korrigieren", changes: true),
         ArtInfo(id: "glaetten", de: "Glätten", changes: true),
@@ -346,7 +346,7 @@ final class AppModel: ObservableObject {
                 // an important new mail (part post) has its own buttons: Antwort entwerfen, Gelesen, Ansehen
                 let acts = tag == NoteActions.mailTag ? NoteActions.parseMail(x["actions"])
                     : tag == NoteActions.codeTag ? NoteActions.parseCode(x["actions"])
-                    : NoteActions.parse(x["actions"])
+                    : NoteActions.parseGm(x["actions"]) ?? NoteActions.parse(x["actions"])
                 // the note's number on the Spark (mitteilungen.py): a click opens it as a card in the panel
                 let m = (x["m"] as? String).flatMap { $0.range(of: "^[0-9a-f]{16}$", options: .regularExpression) != nil ? $0 : nil }
                 return (n, x["title"] as? String ?? "", x["body"] as? String ?? "", tag, acts, weg, m)
@@ -357,7 +357,7 @@ final class AppModel: ObservableObject {
             for note in notes.sorted(by: { $0.n < $1.n }).suffix(5) {
                 var buttons = part("actions") ? note.actions.filter { $0 != "draft" || part("ask") } : []
                 if part("agenda") && !buttons.contains("fdremind") && note.tag != NoteActions.mailTag
-                    && note.tag != NoteActions.codeTag { buttons.append("remind") }
+                    && note.tag != NoteActions.codeTag && NoteActions.gmCategory(buttons) == nil { buttons.append("remind") }
                 Notifier.show(title: note.title, body: note.body, tag: note.tag, id: "note-\(note.n)",
                               note: note.n, actions: buttons, weg: note.weg, meldung: note.m)
                 NotesCenter.shared.add(.init(n: note.n, title: note.title, body: note.body, tag: note.tag,
@@ -459,6 +459,8 @@ final class AppModel: ObservableObject {
             Meeting.shared.toggle()
         case .capture:
             CaptureController.open(fromHotkey: true)
+        case .find:
+            FindController.open(fromHotkey: true)
         case .dictate:
             if NSApp.isActive, let key = NSApp.keyWindow, key === Windows.shared.window("ask") {
                 Dictation.shared.toggle(.ask)
@@ -554,6 +556,7 @@ final class AppModel: ObservableObject {
         AgendaCenter.shared.apply(on: on && part("agenda"))
         PostCenter.shared.apply(on: on && part("post"))
         ListsCenter.shared.apply(on: on && part("lists"))
+        OffenCenter.shared.apply(on: on && part("offen"))
         Quiet.shared.apply(on: on && part("quiet"))
         Meeting.shared.apply(on: on && part("meeting"))
         HomeCenter.shared.apply(on: on && part("home"), configured: config?.v4.homeButtons ?? [])
@@ -745,7 +748,7 @@ final class NotesCenter: ObservableObject {
     func run(_ action: String, _ item: Item) {
         dismiss(item)
         let category = item.tag == NoteActions.codeTag ? NoteActions.codeCategory
-            : (item.tag == NoteActions.mailTag ? NoteActions.mailCategory(item.buttons) : NoteActions.category4(item.buttons)) ?? ""
+            : NoteActions.categoryFor(tag: item.tag, item.buttons) ?? ""
         Notifier.handle(action: action, typed: "", note: item.n, title: item.title, body: item.body, thread: item.tag,
                         category: category, weg: item.weg)
     }
@@ -831,6 +834,15 @@ enum Notifier {
             set.insert(UNNotificationCategory(identifier: id, actions: actions, intentIdentifiers: [],
                                               hiddenPreviewsBodyPlaceholder: "Neue Mail", options: []))
         }
+        // „Gemerkt von selbst“ (Begleiter Paket B): Stimmt and Rückgängig act through the panel, Ansehen opens it
+        for combo in NoteActions.gmCombinations {
+            guard let id = NoteActions.gmCategory(combo) else { continue }
+            let actions: [UNNotificationAction] = combo.map { a in
+                a == "open" ? UNNotificationAction(identifier: "open", title: "Ansehen", options: [.foreground])
+                    : UNNotificationAction(identifier: a, title: NoteActions.panelLabel(a) ?? a, options: [])
+            }
+            set.insert(UNNotificationCategory(identifier: id, actions: actions, intentIdentifiers: [], options: []))
+        }
         // Bestätigungscodes: „Code kopieren“ puts the code on the clipboard, nothing goes to the Spark
         set.insert(UNNotificationCategory(identifier: NoteActions.codeCategory,
                                           actions: [UNNotificationAction(identifier: "copy", title: "Code kopieren", options: [])],
@@ -857,7 +869,7 @@ enum Notifier {
         if !info.isEmpty { c.userInfo = info }
         if tag == NoteActions.codeTag {
             if actions.contains("copy") { c.categoryIdentifier = NoteActions.codeCategory }
-        } else if let cat = tag == NoteActions.mailTag ? NoteActions.mailCategory(actions) : NoteActions.category4(actions) {
+        } else if let cat = NoteActions.categoryFor(tag: tag, actions) {
             c.categoryIdentifier = cat
         }
         let r = UNNotificationRequest(identifier: id, content: c, trigger: nil)
@@ -912,8 +924,9 @@ enum Notifier {
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(code, forType: .string)
             HUD.show("Code kopiert")
-        case "done", "fdremind", "read":
-            // a button of a note about a Für-dich card or a new mail: the Spark checks the note and what is behind it
+        case "done", "fdremind", "read", "stimmt", "rueck":
+            // a button of a note about a Für-dich card, a new mail or a card of Offen: the Spark checks the note and
+            // what is behind it
             guard model.part("actions") else { return HUD.show(AppModel.offHint("Knöpfe in Meldungen")) }
             guard let note, let client = model.client else { return }
             Task { @MainActor in

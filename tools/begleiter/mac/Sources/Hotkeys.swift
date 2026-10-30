@@ -21,6 +21,7 @@ enum HotAction: UInt32, CaseIterable, Identifiable {
     case speak = 6
     case meeting = 7
     case capture = 8
+    case find = 9
 
     var id: UInt32 { rawValue }
 
@@ -35,6 +36,7 @@ enum HotAction: UInt32, CaseIterable, Identifiable {
         case .speak: return "speak"
         case .meeting: return "meeting"
         case .capture: return "capture"
+        case .find: return "find"
         }
     }
 
@@ -48,10 +50,11 @@ enum HotAction: UInt32, CaseIterable, Identifiable {
         case .speak: return "Vorlesen"
         case .meeting: return "Besprechung"
         case .capture: return "Schnell erfassen"
+        case .find: return "Finden"
         }
     }
 
-    /// ⌥⌘S, ⌥⌘A, ⌥⌘D, ⌥⌘B, ⌥⌘M, ⌥⌘L, ⌥⌘R; Schnell erfassen ⌃⌥N
+    /// ⌥⌘S, ⌥⌘A, ⌥⌘D, ⌥⌘B, ⌥⌘M, ⌥⌘L, ⌥⌘R; Schnell erfassen ⌃⌥N, Finden ⌃⌥F (⌥⌘F is taken in Notes and Xcode)
     var standard: Hotkey {
         let mods = UInt32(cmdKey | optionKey)
         switch self {
@@ -63,6 +66,7 @@ enum HotAction: UInt32, CaseIterable, Identifiable {
         case .speak: return Hotkey(keyCode: UInt32(kVK_ANSI_L), mods: mods, label: "⌥⌘L")
         case .meeting: return Hotkey(keyCode: UInt32(kVK_ANSI_R), mods: mods, label: "⌥⌘R")
         case .capture: return Hotkey(keyCode: UInt32(kVK_ANSI_N), mods: UInt32(controlKey | optionKey), label: "⌃⌥N")
+        case .find: return Hotkey(keyCode: UInt32(kVK_ANSI_F), mods: UInt32(controlKey | optionKey), label: "⌃⌥F")
         }
     }
 }

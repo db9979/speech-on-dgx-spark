@@ -716,6 +716,8 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
             TabChosen = ChoosePanelTab,
             Post = BuildPostCards(),
             Lists = BuildListCards(),
+            Offen = BuildOffenCards(),
+            OffenCount = OffenCount(),
             Agenda = BuildAgendaLines(),
             AgendaEmpty = AgendaEmptyText(),
             Home = BuildHomeButtons(),
@@ -1003,6 +1005,9 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
                     break;
                 case Parts.Capture:
                     await OpenCaptureAsync(fromHotkey: true);
+                    break;
+                case Parts.Find:
+                    await OpenFindAsync(fromHotkey: true);
                     break;
             }
         }

@@ -79,8 +79,8 @@ APP_SKIP = {"overbox": "the app's own start screen shows the overview",
 DESK = {"begleiter": ("ask", "dictate", "notes", "status", "notaus", "files", "screen", "context", "actions", "act",
                       "wake", "speak", "inbox", "quiet", "meeting", "daily", "view"),
         "schreib": ("write", "mail", "office"), "documents": ("folder",), "calendar": ("agenda", "capture"),
-        "reminders": ("capture", "notes"), "vorgaenge": ("actions",), "tasks": ("lists",), "mail": ("post",),
-        "ha": ("home",), "proactive": ("notes",)}
+        "reminders": ("capture", "notes"), "vorgaenge": ("actions", "offen"), "tasks": ("lists",), "mail": ("post",),
+        "ha": ("home",), "proactive": ("notes",), "fund": ("find",)}
 _D_PANEL = "stays in the panel: set up, looked at and deleted there"
 _D_LINK = "stays in the panel; the Begleiter's settings (Übersicht) link to its place"
 _D_TALK = "works in every answer, Frag Spark included; nothing of its own on the computer, set up in the panel"
@@ -102,7 +102,6 @@ DESK_SKIP = {
     "memory": _D_LINK, "mfa": _D_LINK + " (Meine Daten on the Ich page Sicherheit)",
     "melden": "stays in the panel; the Begleiter's Kopplung page opens it (Problem melden …)",
     "fernzugang": "an admin page, stays in the panel; the Begleiter's settings (Übersicht) link to it for an admin",
-    "fund": "not in the Begleiter yet (Finden there is planned next); until then in the panel",
 }
 # Code-Prüfung D8 (one name per thing): an Ich page carries the name of its function, or a word of it, so "Funktionen →
 # Telefon" and "Ich → Telefon" are found as the same thing; these pages are named otherwise, each with its reason

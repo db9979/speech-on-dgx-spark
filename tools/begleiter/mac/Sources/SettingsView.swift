@@ -610,6 +610,8 @@ struct SettingsView: View {
         case "post": return "Post im Begleiter"
         case "lists": return "Listen im Begleiter"
         case "capture": return "Schnell erfassen"
+        case "offen": return "Offen im Begleiter"
+        case "find": return "Finden im Begleiter"
         default: return p
         }
     }

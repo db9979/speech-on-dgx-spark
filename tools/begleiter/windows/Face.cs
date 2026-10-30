@@ -157,6 +157,7 @@ internal enum Glyph
     Sun,
     Link,
     Info,
+    Search,
 }
 
 internal static class Glyphs
@@ -219,6 +220,11 @@ internal static class Glyphs
                 case Glyph.Plus:
                     g.DrawLine(pen, 8, 3, 8, 13);
                     g.DrawLine(pen, 3, 8, 13, 8);
+                    break;
+                case Glyph.Search:
+                    // Lupe (Finden, Paket B)
+                    g.DrawEllipse(pen, 2.5f, 2.5f, 8, 8);
+                    g.DrawLine(pen, 9.5f, 9.5f, 13.5f, 13.5f);
                     break;
                 case Glyph.Screen:
                     // Auswahlrahmen: vier Ecken
