@@ -556,6 +556,7 @@ Shell, files and screen of own servers through their anchor, plus spontaneous he
 | `app/panel/ferngross.py` | Fernzugang, große Dateien: three ways for a big file onto a paired server, inside the open „Dateien“ session (ferndateien.py: the same SSH connection, the sa … |
 | `app/panel/fernnotiz.py` | Notizen je System im Fernzugang: one note per paired system, written by the admin, for the admin. |
 | `app/panel/fernordner.py` | Ordner im Fernzugang: the paired systems in folders. |
+| `app/panel/fernwindows.py` | Fernzugang Stufe 5 (Windows): the file spark-anker-einrichten.cmd a pairing's „Einmal-Link“ hands out. |
 | `app/panel/fernzugang.py` | Fernzugang: a server elsewhere (a VPS, a NAS at friends') calls the panel by itself and the admin works in its shell in the browser, like Raspberry Pi Connec … |
 | `app/panel/spontanhilfe.py` | Spontanhilfe: an admin helps a person (family, friends) once at their computer, like TeamViewer QuickSupport. |
 
@@ -4023,7 +4024,7 @@ flowchart TD
 
 1. <a id="kn-fernzugang-s1"></a>**Admin opens remote access**: Features → Remote access to servers is off by default (fernzugang.admin_on) and only for admins with the second step; guests and the language model never reach it.
 2. <a id="kn-fernzugang-s2"></a>**Page unlocked?**: A code or passkey unlocks the page for 5 to 120 minutes, only for this login (in the own iPhone app for its key, fernzugang._tor) and from the same place (fernzugang.entsperrt_bis); locking, logging out and the kill switch lock at once, a restart too.
-3. <a id="kn-fernzugang-s3"></a>**Pairing**: „Pair“ asks for the code every time (fernzugang.admin_pair) and shows one line for the server with a one-time code, valid 10 minutes, plus a one-time link with a QR code that shows only this line on the new system, never the code (fernzugang.link_check). At most 10 systems; each gets an SSH key of the panel of its own, its host key is pinned.
+3. <a id="kn-fernzugang-s3"></a>**Pairing**: „Pair“ asks for the code every time (fernzugang.admin_pair) and shows one line for the server with a one-time code, valid 10 minutes, plus a one-time link with a QR code that shows only this line on the new system, never the code (fernzugang.link_check). Windows: the link gives the file spark-anker-einrichten.cmd once (fernzugang.link_file) with a one-time key instead of the code; the system then waits until the admin confirms it with a code or passkey (fernzugang.admin_confirm). At most 10 systems; each gets an SSH key of the panel of its own, its host key is pinned.
 4. <a id="kn-fernzugang-s4"></a>**Ticket for the window**: „Shell“ hands out a one-time ticket (fernzugang.admin_session) that opens exactly one web terminal for 30 seconds (fernzugang.terminal_ws); at most 4 sessions at once.
 5. <a id="kn-fernzugang-s5"></a>**Another host key?**: If the server shows another host key than at pairing, there is no connection (fernzugang.hostkey_wrong); after a reinstall remove and pair again.
 6. <a id="kn-fernzugang-s6"></a>**Shell, files, screen**: SSH runs through the anchor's channel; if the window drops, the shell waits 120 seconds. A heartbeat every 5 seconds measures round trip and rate; output waits for the window in at most 32 pieces, then SSH slows the server (backpressure). Files through SFTP in the same connection (ferndateien.listing), downloads with a one-time link for 60 seconds; big files in pieces of 8 MB MB with a SHA-256 per piece (ferngross.upload_piece). The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most 15 pictures a second. The assistant (fernzugang.admin_help) asks only the own model and suggests, nothing is typed by itself. Notes per system are stored sealed, 10 versions stay; the model reads them only when ticked (fernnotiz.fuer_modell). Folders only order the list (fernordner.view), at most 30; rights stay per system.
@@ -4056,6 +4057,8 @@ flowchart TD
 
 - `app/panel/fernzugang.py` `entsperrt_bis`: how long the page is unlocked ([step 2](#kn-fernzugang-s2))
 - `app/panel/fernzugang.py` `admin_pair`: pairing with a one-time code ([step 3](#kn-fernzugang-s3))
+- `app/panel/fernzugang.py` `link_file`: Windows: the file spark-anker-einrichten.cmd with a one-time key, once ([step 3](#kn-fernzugang-s3))
+- `app/panel/fernzugang.py` `admin_confirm`: a new system only after confirming with a code or passkey ([step 3](#kn-fernzugang-s3))
 - `app/panel/fernzugang.py` `terminal_ws`: the web terminal with a ticket ([step 4](#kn-fernzugang-s4))
 - `app/panel/fernzugang.py` `hostkey_wrong`: pinned host key ([step 5](#kn-fernzugang-s5))
 - `app/panel/ferndateien.py` `listing`: files through SFTP ([step 6](#kn-fernzugang-s6))

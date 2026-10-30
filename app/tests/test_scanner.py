@@ -75,6 +75,7 @@ OPEN = {
     "/api/fernzugang/anker/bildschirm": "the anchor sets up or removes its screen; only with its own device key (Bearer), lockout, 404 while off",
     "/api/fernzugang/anker/koppeln": "an anchor's first contact; only with a one-time code the admin made (fresh code first), lockout, 404 while off",
     "/koppeln": "the page of a Fernzugang pairing's one-time link (own strict CSP, no data in it, the key behind #), 404 while off",
+    "/api/fernzugang/koppeln/datei": "a Windows pairing link's key (as /koppeln/link) for the file spark-anker-einrichten.cmd, once: the link dies with it; its one-time key pairs only into „wartet“ until the admin confirms with a code or passkey; rate limit, 404 while off",
     "/api/fernzugang/koppeln/link": "a pairing link's key (128 bits, only its hash kept, as long as the code, dies with the pairing) for the one line, never the code; same answer for every wrong key, rate limit, 404 while off",
     "/hilfe": "the Spontanhilfe page for a person without a login (own strict CSP, no data in it), 404 while off",
     "/api/hilfe/start": "a person's number or link key for the one open Spontanhilfe; same answer for every wrong try, dead after 5, rate limit, 404 while off",

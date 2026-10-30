@@ -8,6 +8,7 @@ no tool and no model ever sees the shell. A real run end to end: the anchor prog
 (paramiko) and a small SSH server. No test depends on the time of day."""
 import argparse
 import asyncio
+import base64
 import contextlib
 import hashlib
 import importlib.util
@@ -81,6 +82,7 @@ def reset():
     fernzugang.SITZUNG.clear()
     fernzugang.ENTSPERRT.clear()
     fernzugang.LINKS.clear()
+    fernzugang.TOKENS.clear()
     fernzugang.STATS["hilfe"] = 0
     fernzugang.STATS["uebertragungen"] = 0
     with contextlib.suppress(OSError):
@@ -765,6 +767,130 @@ class PairingLink(Base):
             self.assertIn(want, js)
 
 
+class WindowsFile(Base):
+    """Stage 5 (Dominik 2026-10-30): on Windows only the download: the link gives the file spark-anker-einrichten.cmd
+    once, its one-time key stands for the code (never typed there), and the system waits for „Bestätigen“ with a
+    fresh code or passkey before any session."""
+
+    def link(self):
+        r = ADMIN.post("/api/admin/fernzugang/koppeln", json={"name": "win-pc", "os": "windows", "origin": OUT}, headers=CODE)
+        self.assertEqual(r.status_code, 200, r.text)
+        d = r.json()
+        return d, d["link"].split("#", 1)[1]
+
+    def load(self, key):
+        return TestClient(panel.app).post("/api/fernzugang/koppeln/datei", json={"link": key})
+
+    def token(self, data):
+        m = re.search(rb"\$Token = '([A-Za-z0-9_\-]{20,64})'", data)
+        self.assertTrue(m)
+        return m.group(1).decode()
+
+    def test_the_file_once_with_its_key_never_the_code(self):
+        d, key = self.link()
+        r = TestClient(panel.app).post("/api/fernzugang/koppeln/link", json={"link": key})
+        self.assertEqual((r.status_code, r.json()["os"], r.json()["datei"], r.json()["befehl"]), (200, "windows", True, ""))
+        with journal() as j:
+            r = self.load(key)
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertIn('filename="spark-anker-einrichten.cmd"', r.headers["content-disposition"])
+        self.assertEqual(r.headers["cache-control"], "no-store")
+        data = r.content
+        self.assertTrue(data.startswith(b"@echo off\r\n"))
+        self.assertNotIn(b"\n", data.replace(b"\r\n", b""))                       # CRLF only (cmd needs it)
+        self.assertNotIn(d["code"].encode(), data)                                 # never the code
+        self.assertNotIn(d["code"].replace("-", "").encode(), data)
+        tok = self.token(data)
+        self.assertNotIn(tok, json.dumps(fernzugang.TOKENS))                       # only its hash is kept
+        self.assertIn(f"$Panel = '{OUT}'".encode(), data)
+        with open(fernzugang.PROGRAM, "rb") as f:
+            prog = f.read()
+        self.assertIn(hashlib.sha256(prog).hexdigest().encode(), data)
+        b64 = re.search(rb"\$Anker = @'\r\n(.*?)\r\n'@", data, re.S).group(1).replace(b"\r\n", b"")
+        self.assertEqual(base64.b64decode(b64), prog)                               # the very program
+        pins = program().PY_EMBED
+        for v in (pins["version"], pins["amd64"], pins["arm64"]):
+            self.assertIn(v.encode(), data)                                        # the one source of the runtime
+        self.assertIn(b"$Token | & $py @a", data)                                  # on stdin, never an argument
+        self.assertIn(b"(goto) 2>nul & del \"%~f0\"", data)                        # it deletes itself
+        out = j.getvalue()
+        self.assertIn("fernzugang: koppeln_datei | ok | 1", out)
+        self.assertNotIn(tok, out)
+        self.assertNotIn(key, out)
+        # once: the link is used up with it, a second load and the line page both say no
+        self.assertEqual(self.load(key).status_code, 404)
+        self.assertEqual(TestClient(panel.app).post("/api/fernzugang/koppeln/link", json={"link": key}).status_code, 404)
+        # a Linux link gives no file
+        r = ADMIN.post("/api/admin/fernzugang/koppeln", json={"name": "lin", "os": "linux", "origin": OUT}, headers=CODE)
+        with journal() as j:
+            self.assertEqual(self.load(r.json()["link"].split("#", 1)[1]).status_code, 404)
+        self.assertIn("fernzugang: koppeln_datei | falsch | 0", j.getvalue())
+
+    def test_the_key_pairs_once_and_the_system_waits_for_the_admin(self):
+        d, key = self.link()
+        tok = self.token(self.load(key).content)
+        anchor = TestClient(panel.app)
+        with journal() as j:
+            r = anchor.post("/api/fernzugang/anker/koppeln", json={"token": "x" * 32, "hostkey": HOST_PUB})
+            self.assertEqual(r.status_code, 403)
+            r = anchor.post("/api/fernzugang/anker/koppeln", json={"token": tok, "hostkey": HOST_PUB,
+                                                                   "os": "Windows 11 Professional", "version": "1.5.0"})
+            self.assertEqual(r.status_code, 200, r.text)
+            self.assertIs(r.json()["wartet"], True)
+            self.assertEqual(anchor.post("/api/fernzugang/anker/koppeln", json={"token": tok, "hostkey": HOST_PUB}).status_code, 403)
+            self.assertEqual(anchor.post("/api/fernzugang/anker/koppeln", json={"code": d["code"], "hostkey": HOST_PUB}).status_code, 403)
+        out = j.getvalue()
+        self.assertIn("fernzugang: koppeln | datei falsch | 0", out)
+        self.assertIn("fernzugang: koppeln | datei | 1", out)
+        self.assertNotIn(tok, out)
+        gid = r.json()["id"]
+        row = next(g for g in ADMIN.get("/api/admin/fernzugang").json()["geraete"] if g["id"] == gid)
+        self.assertEqual((row["wartet"], row["art"]), (True, "windows"))
+        self.assertEqual(fernzugang.counts()["wartet"], 1)
+        self.assertIn("1 warten auf Bestätigung", fernzugang.live_sub(fernzugang.for_live()))
+        self.assertNotIn(gid, fernzugang.probes())                         # the Dienst-Wächter waits too
+        # online, but no session: aufbauen refuses like an offline system
+        fernzugang.ANKER[gid] = types.SimpleNamespace(kanaele={}, wait={}, seit=time.time())
+        self.assertEqual(fernzugang._platz(gid)[3], "offline")
+        # „Darf sich verbinden“ is no way around it
+        self.assertEqual(ADMIN.put(f"/api/admin/fernzugang/geraete/{gid}", json={"erlaubt": True}).status_code, 409)
+        # „Bestätigen“ wants a fresh code or passkey, the admin only
+        self.assertIn(TestClient(panel.app).post(f"/api/admin/fernzugang/geraete/{gid}/bestaetigen").status_code, (401, 403))
+        self.assertNotEqual(ADMIN.post(f"/api/admin/fernzugang/geraete/{gid}/bestaetigen").status_code, 200)
+        with journal() as j:
+            r = ADMIN.post(f"/api/admin/fernzugang/geraete/{gid}/bestaetigen", headers=CODE)
+        self.assertEqual((r.status_code, r.json()), (200, {"wartet": False}))
+        self.assertIn("fernzugang: bestaetigt | admin | 1", j.getvalue())
+        self.assertEqual(fernzugang._platz(gid)[3], "")
+        self.assertNotIn("wartet", fernzugang._read()["geraete"][gid])
+        fernzugang.ANKER.clear()
+
+    def test_the_key_ends_with_its_code_and_at_the_notaus(self):
+        _, key = self.link()
+        tok = self.token(self.load(key).content)
+        with unittest.mock.patch.object(fernzugang.time, "time", return_value=time.time() + fernzugang.CODE_S + 1):
+            self.assertIsNone(fernzugang.token_take(tok))
+        _, key = self.link()
+        self.load(key)
+        old, _ = notaus.trigger(1, "test", "", "panel")
+        asyncio.run(notaus.after_change(old, 1, "test", "panel"))
+        self.assertEqual((fernzugang.LINKS, fernzugang.TOKENS), ({}, {}))
+        self.assertEqual(self.load("x" * 22).status_code, 503)
+        notaus.lift(0, "test")
+
+    def test_the_page_and_sheet_offer_the_file(self):
+        with open(os.path.join(helpers.APP, "panel", "static", "js", "koppeln-seite.js"), encoding="utf-8") as f:
+            js = f.read()
+        for want in ("/api/fernzugang/koppeln/datei", "a.download='spark-anker-einrichten.cmd'", "credentials:'omit'"):
+            self.assertIn(want, js)
+        self.assertNotIn("innerHTML", js)
+        with open(os.path.join(helpers.APP, "panel", "static", "js", "fernzugang.js"), encoding="utf-8") as f:
+            js = f.read()
+        for want in ("function fzWartet", "/bestaetigen`", "k.os==='windows'"):
+            self.assertIn(want, js)
+        self.assertNotIn("$('fzgo').disabled=os==='windows'", js)
+
+
 class Program(unittest.TestCase):
     """The anchor program itself (no root needed)."""
 
@@ -823,26 +949,6 @@ class Program(unittest.TestCase):
             p.cmd_remove(None, root=root, run=lambda c: ran.append(c) or 0, tell=False, home=home)
         self.assertNotIn(["userdel", "--remove", "spark"], ran)
         self.assertFalse(os.path.exists(ak))
-
-
-    def test_the_anchor_stops_with_a_fixed_sentence_on_windows(self):
-        """Not yet set up there: the anchor says so and sets up nothing (macOS is set up since stage 6)."""
-        p = program()
-        ran = []
-        p.cmd_setup = lambda *a, **k: ran.append("setup")
-        p.cmd_remove = lambda *a, **k: ran.append("remove")
-        for argv in (["einrichten", "https://spark.example.org"], ["entfernen"], ["lauf"], ["zustand"]):
-            out = io.StringIO()
-            with contextlib.redirect_stdout(out):
-                self.assertEqual(p.main(argv, system="Windows"), 1)
-            self.assertIn("Windows wird ab einer späteren Version unterstützt (Stufe 5)", out.getvalue())
-            self.assertIn("nichts eingerichtet", out.getvalue())
-        self.assertEqual(ran, [])
-        self.assertIsNone(p.not_yet("Linux"))
-        self.assertIsNone(p.not_yet("Darwin"))
-        with contextlib.redirect_stdout(io.StringIO()):
-            p.main(["einrichten", "https://spark.example.org"], system="Darwin")
-        self.assertEqual(ran, ["setup"])
 
     def test_a_missing_host_key_or_sshd_says_how_to_fix_it(self):
         p = program()
@@ -1098,6 +1204,306 @@ class MacAnchor(unittest.TestCase):
                 self.assertFalse(any(c[1:3] == [".", "-create"] for c in ran), kw)
             self.assertFalse(os.path.exists(os.path.join(root, p.MAC_SSHD_CONF.lstrip("/"))))
 
+
+
+class WindowsAnchor(unittest.TestCase):
+    """Stage 5: the same anchor on Windows (the file spark-anker-einrichten.cmd starts it with its own Python), with a
+    temporary root and recorded commands: OpenSSH Server only on 127.0.0.1 and back as it was, the user spark only
+    with the panel's key, two tasks, the entry in Apps; no Linux or Mac path, no Linux or Mac command."""
+
+    DEFAULT = "#Port 22\n#ListenAddress 0.0.0.0\nSubsystem sftp sftp-server.exe\nAllowGroups administrators \"openssh users\"\n" \
+              "Match Group administrators\n" \
+              "       AuthorizedKeysFile __PROGRAMDATA__/ssh/administrators_authorized_keys\n"
+
+    def win(self, before=False, sshd=True, config=None, sshd_ok=True):
+        p = program()
+        root = tempfile.mkdtemp(prefix="anker-win-")
+        w = lambda path: os.path.join(root, path[3:])                     # "C:/x" below the temporary root
+        os.makedirs(w(p.WIN_OPENSSH))
+        if sshd:
+            open(w(p.WIN_OPENSSH + "/sshd.exe"), "w").close()
+        with open(w(p.WIN_OPENSSH + "/sshd_config_default"), "w") as f:
+            f.write(self.DEFAULT)
+        if config is not None:
+            os.makedirs(w(p.WIN_SSH))
+            with open(w(p.WIN_SSHD_CONF), "w") as f:
+                f.write(config)
+        state = {"port": before}
+        ran, later = [], []
+
+        def run(cmd):
+            ran.append(cmd)
+            if cmd[0].endswith("ssh-keygen.exe"):
+                os.makedirs(w(p.WIN_SSH), exist_ok=True)
+                with open(w(p.WIN_SSH + "/ssh_host_ed25519_key.pub"), "w") as f:
+                    f.write(HOST_PUB + " system@win\n")
+            if cmd[0].endswith("sshd.exe"):
+                return 0 if sshd_ok else 255
+            if cmd[:3] == ["sc.exe", "start", "sshd"]:
+                state["port"] = True
+            if cmd[:3] == ["sc.exe", "stop", "sshd"]:
+                state["port"] = False
+            if cmd[:3] == ["schtasks", "/create", "/tn"] and cmd[3].startswith(p.WIN_TASK_E + "-"):   # win_once
+                with open(cmd[5].replace("\\", "/"), encoding="utf-16") as f:
+                    later.append(f.read())
+            return 0
+        ctx = p.Ctx(system="Windows", root=root, run=run)
+        ctx.euid = lambda: 0
+        ctx.ids = lambda name: None
+        ctx.port_open = lambda: state["port"]
+        ctx.wait = lambda s: None
+        ctx.out = lambda cmd: ("SERVICE_NAME: sshd\n        START_TYPE         : 3   DEMAND_START\n" if cmd[:2] == ["sc.exe", "qc"] else
+                               "S-1-5-21-11-22-33-1001\r\n" if cmd[-1] == p.WIN_SID_PS else "")
+        prog = b"#!/usr/bin/env python3\nprint('anker')\n"
+        sent = []
+        p.tls_connect = lambda base, fp: (io.BytesIO(), "ab" * 32)
+
+        def http_call(base, fp, method, path, body=None, key=None, timeout=20):
+            sent.append((path, body))
+            if path.endswith("/koppeln"):
+                return 200, json.dumps({"id": "g_1", "key": "fz_k", "pi_key": "ssh-ed25519 AAAApi spark-fernzugang-g_1",
+                                        "anker_sha256": hashlib.sha256(prog).hexdigest(), "wartet": True}).encode()
+            return (200, prog) if path == "/fernzugang/anker" else (200, b"{}")
+        p.http_call = http_call
+        return types.SimpleNamespace(p=p, root=root, w=w, ran=ran, later=later, ctx=ctx, state=state, sent=sent, prog=prog)
+
+    def setup(self, t, token=False, sshd_neu=False):
+        args = argparse.Namespace(adresse="https://spark.example.org", fp="", token="-" if token else "", sshd_neu=sshd_neu)
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            rc = t.p.cmd_setup(args, code_reader=lambda: "ABC", ctx=t.ctx, token_reader=lambda: "T" * 32)
+        return rc, out.getvalue()
+
+    def read(self, t, path, enc="utf-8"):
+        with open(t.w(path), encoding=enc) as f:
+            return f.read()
+
+    def no_linux_or_mac(self, t):
+        for d, _, fs in os.walk(t.root):
+            for f in fs:
+                rel = "/" + os.path.relpath(os.path.join(d, f), t.root)
+                self.assertFalse(any(x in rel for x in ("etc/systemd", "/usr/", "/var/lib", "/Library/", "/home/")), rel)
+        for cmd in t.ran:
+            self.assertNotIn(os.path.basename(cmd[0]), ("useradd", "userdel", "systemctl", "launchctl", "dscl", "sudo"), cmd)
+
+    def test_set_up_with_sshd_off_and_removed_again(self):
+        t = self.win()
+        rc, out = self.setup(t, token=True, sshd_neu=True)
+        self.assertEqual(rc, 0, out)
+        p, ran = t.p, t.ran
+        self.assertIn("Host-Schlüssel dieses Systems: SHA256:", out)
+        self.assertIn("jetzt im Panel das neue System bestätigen", out)
+        self.assertIn([p.WIN_OPENSSH + "/ssh-keygen.exe", "-A"], ran)     # never ran before: host keys made
+        self.assertEqual(t.sent[0][1]["token"], "T" * 32)                   # the file's key, no code asked
+        self.assertNotIn("code", t.sent[0][1])
+        conf_text = self.read(t, p.WIN_SSHD_CONF)
+        self.assertTrue(conf_text.startswith("# spark-anker anfang\nListenAddress 127.0.0.1\nPasswordAuthentication no\n"
+                                             "AllowUsers spark@127.0.0.1\n# spark-anker ende\n"), conf_text)
+        self.assertTrue(conf_text.endswith("Match User spark\n    AuthorizedKeysFile __PROGRAMDATA__/SparkAnker/authorized_keys\n"
+                                           "# spark-anker ende\n"), conf_text)
+        self.assertLess(ran.index([p.WIN_OPENSSH + "/sshd.exe", "-t"]), ran.index(["sc.exe", "start", "sshd"]))
+        self.assertIn(["reg", "add", p.WIN_REG_OPENSSH, "/v", "DefaultShell", "/t", "REG_SZ", "/d", p.win_native(p.WIN_PS), "/f"], ran)
+        self.assertIn(["sc.exe", "config", "sshd", "start=", "auto"], ran)
+        ps = [c[-1] for c in ran if c[0] == p.WIN_PS]
+        self.assertIn(p.WIN_USER_PS, ps)
+        self.assertLess(ps.index(p.WIN_USER_PS), ps.index(p.WIN_GROUP_PS))   # AllowGroups: spark joins „OpenSSH Users“
+        self.assertNotRegex(" ".join(" ".join(c) for c in ran), r"-Password\s+'")   # no password ever in a command
+        self.assertIn("Disable-NetFirewallRule -Name OpenSSH-Server-In-TCP -ErrorAction SilentlyContinue", ps)
+        self.assertIn(["reg", "add", p.WIN_REG_HIDE, "/v", "spark", "/t", "REG_DWORD", "/d", "0", "/f"], ran)
+        acl = next(c for c in ran if c[0] == "icacls" and "/inheritance:r" in c)
+        self.assertIn("*S-1-5-19:(OI)(CI)RX", acl)                          # LOCAL SERVICE reads, nobody else but SYSTEM/admins
+        self.assertNotIn("*S-1-5-32-545", " ".join(acl))
+        self.assertEqual(self.read(t, p.WIN_KEYS), p.key_line("ssh-ed25519 AAAApi spark-fernzugang-g_1") + "\n")
+        for name, sid, arg in (("SparkAnker", "S-1-5-19", "lauf"), ("SparkAnker-Waechter", "S-1-5-18", "waechter")):
+            xml = self.read(t, f"{p.WIN_ETC}/aufgaben/{name}.xml", "utf-16")
+            self.assertIn(f"<UserId>{sid}</UserId>", xml)
+            self.assertIn(f'</Command><Arguments>-I "{p.win_native(p.WIN.prog)}" {arg}</Arguments>', xml)
+            self.assertIn("<ExecutionTimeLimit>PT0S</ExecutionTimeLimit>", xml)
+            self.assertIn(["schtasks", "/create", "/tn", name, "/xml", p.win_native(t.w(f"{p.WIN_ETC}/aufgaben/{name}.xml")), "/f"], ran)
+            self.assertIn(["schtasks", "/run", "/tn", name], ran)
+        apps = {c[4]: c[8] for c in ran if c[:3] == ["reg", "add", p.WIN_REG_APPS]}
+        self.assertEqual(apps["DisplayName"], "Spark Anker")
+        self.assertEqual(apps["UninstallString"], f'"{p.win_native(p.WIN_LIB + "/spark-anker.cmd")}" entfernen')
+        with open(t.w(p.WIN_LIB + "/spark-anker.cmd"), "rb") as f:
+            self.assertIn(b"-Verb RunAs", f.read())
+        with open(t.w(p.WIN.prog), "rb") as f:
+            self.assertEqual(f.read(), t.prog)                              # the bytes as checked
+        conf = p.load(t.root, p.WIN)
+        self.assertEqual((conf["sshd_vorher"], conf["sshd_an"], conf["user_neu"], conf["sshd_neu"], conf["shell_vorher"]),
+                         (False, True, True, True, ""))
+        self.no_linux_or_mac(t)
+        ran.clear()
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(p.cmd_remove(None, tell=False, ctx=t.ctx), 0)
+        self.assertEqual(ran[0], ["schtasks", "/end", "/tn", "SparkAnker"])
+        for cmd in (["schtasks", "/delete", "/tn", "SparkAnker", "/f"], ["schtasks", "/delete", "/tn", "SparkAnker-Waechter", "/f"],
+                    ["sc.exe", "stop", "sshd"], ["sc.exe", "config", "sshd", "start=", "demand"],
+                    ["reg", "delete", p.WIN_REG_OPENSSH, "/v", "DefaultShell", "/f"], ["reg", "delete", p.WIN_REG_HIDE, "/v", "spark", "/f"],
+                    ["reg", "delete", p.WIN_REG_APPS, "/f"]):
+            self.assertIn(cmd, ran)
+        ps = [c[-1] for c in ran if c[0] == p.WIN_PS]
+        self.assertIn(p.WIN_USER_WEG_PS, ps)
+        self.assertIn("Enable-NetFirewallRule -Name OpenSSH-Server-In-TCP -ErrorAction SilentlyContinue", ps)
+        self.assertIn("Remove-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0 | Out-Null", ps)   # the file added it
+        self.assertEqual(self.read(t, p.WIN_SSHD_CONF), self.DEFAULT)       # sshd's settings exactly as before
+        self.assertFalse(t.state["port"])
+        self.assertFalse(os.path.exists(t.w(p.WIN_ETC)))
+        self.assertTrue(os.path.isfile(t.w(p.WIN.prog)))                    # not while its Python runs (stdlib inside)
+        self.assertEqual(len(t.later), 1)                                   # the folder with the running Python: afterwards
+        self.assertIn("Remove-Item -LiteralPath", t.later[0])
+        self.assertIn("<UserId>S-1-5-18</UserId>", t.later[0])            # a task of its own (SYSTEM), not a child
+        self.assertIn("schtasks /delete /tn SparkAnker-Einmal-weg-1001 /f", t.later[0])   # per removed spark
+        self.assertIn("$s='S-1-5-21-11-22-33-1001'", t.later[0])           # the removed spark's profile, once Windows lets go
+        self.assertIn("<BootTrigger>", t.later[0])                          # not done in 30 minutes: again after a restart
+        self.assertIn(["schtasks", "/run", "/tn", "SparkAnker-Einmal-weg-1001"], ran)
+        self.assertLess(ran.index(["schtasks", "/run", "/tn", "SparkAnker-Einmal-weg-1001"]), ran.index(["schtasks", "/delete", "/tn", "SparkAnker-Waechter", "/f"]))
+        self.no_linux_or_mac(t)
+
+    def test_sshd_that_was_on_gets_only_the_match_block(self):
+        own = "Port 22\nAllowUsers alice spark@127.0.0.1\n"
+        t = self.win(before=True, config=own)
+        os.makedirs(t.w(t.p.WIN_SSH), exist_ok=True)
+        with open(t.w(t.p.WIN_SSH + "/ssh_host_ed25519_key.pub"), "w") as f:
+            f.write(HOST_PUB + " system@win\n")
+        self.assertEqual(self.setup(t)[0], 0)
+        text = self.read(t, t.p.WIN_SSHD_CONF)
+        self.assertTrue(text.startswith(own))
+        self.assertNotIn("ListenAddress", text)
+        self.assertIn("Match User spark", text)
+        self.assertNotIn(["sc.exe", "start", "sshd"], t.ran)
+        self.assertFalse(any("DefaultShell" in c for c in t.ran))          # the owner's shell stays
+        self.assertIn("Restart-Service sshd", [c[-1] for c in t.ran if c[0] == t.p.WIN_PS])
+        self.assertEqual(t.sent[0][1]["code"], "ABC")                       # without the file: the code, typed
+        t.ran.clear()
+        with contextlib.redirect_stdout(io.StringIO()):
+            t.p.cmd_remove(None, tell=False, ctx=t.ctx)
+        self.assertEqual(self.read(t, t.p.WIN_SSHD_CONF), own)
+        self.assertNotIn(["sc.exe", "stop", "sshd"], t.ran)
+        self.assertTrue(t.state["port"])
+        self.assertFalse(any("Remove-WindowsCapability" in c[-1] for c in t.ran))
+
+    def test_nothing_is_set_up_when_sshd_would_keep_spark_out(self):
+        for kw, want in (({"sshd": False}, "spark-anker-einrichten.cmd"),
+                         ({"before": True, "config": "AllowUsers alice\n"}, "AllowUsers"),
+                         ({"before": True, "config": "AllowGroups administrators\n"}, "AllowGroups"),
+                         ({"config": "ListenAddress 0.0.0.0\n"}, "ListenAddress")):
+            t = self.win(**kw)
+            before = sorted(os.path.relpath(os.path.join(d, f), t.root) for d, _, fs in os.walk(t.root) for f in fs)
+            with self.assertRaises(t.p.Fehler) as e:
+                self.setup(t)
+            self.assertIn(want, str(e.exception), kw)
+            self.assertEqual(t.sent, [], kw)                                # nothing reached the panel
+            self.assertFalse(any(c[0] in ("icacls", "schtasks", "sc.exe") for c in t.ran), kw)
+            after = sorted(os.path.relpath(os.path.join(d, f), t.root) for d, _, fs in os.walk(t.root) for f in fs)
+            self.assertEqual(after, before, kw)
+        t = self.win(sshd_ok=False)
+        with self.assertRaises(t.p.Fehler) as e:
+            self.setup(t)
+        self.assertIn("sshd nimmt die Einstellungen", str(e.exception))
+        self.assertEqual(self.read(t, t.p.WIN_SSHD_CONF), self.DEFAULT)     # back as it was
+        self.assertNotIn(["sc.exe", "start", "sshd"], t.ran)
+
+    def test_an_existing_spark_joins_the_group_and_leaves_it_again(self):
+        t = self.win()
+        t.ctx.ids = lambda name: (1001, 1001, "C:/Users/spark")
+        run = t.ctx.run
+        t.ctx.run = lambda cmd: 3 if cmd[0] == t.p.WIN_PS and cmd[-1] == t.p.WIN_GROUP_PS else run(cmd)
+        self.assertEqual(self.setup(t)[0], 0)
+        conf = t.p.load(t.root, t.p.WIN)
+        self.assertEqual((conf["user_neu"], conf["ssh_gruppe"]), (False, "dazu"))
+        self.assertNotIn(t.p.WIN_USER_PS, [c[-1] for c in t.ran if c[0] == t.p.WIN_PS])
+        t.ran.clear()
+        with contextlib.redirect_stdout(io.StringIO()):
+            t.p.cmd_remove(None, tell=False, ctx=t.ctx)
+        ps = [c[-1] for c in t.ran if c[0] == t.p.WIN_PS]
+        self.assertIn(t.p.WIN_GROUP_WEG_PS, ps)
+        self.assertNotIn(t.p.WIN_USER_WEG_PS, ps)                           # the owner's spark stays
+
+    def test_the_key_of_the_file_comes_on_stdin_only(self):
+        p = program()
+        self.assertEqual(p.read_token(io.StringIO("A" * 32 + "\n")), "A" * 32)
+        self.assertEqual(p.read_token(io.BytesIO(b"\xef\xbb\xbf" + b"A" * 32 + b"\r\n")), "A" * 32)   # PowerShell's pipe
+        for bad in ("", "kurz\n", "A" * 30 + " B\n", "x" * 300):
+            with self.assertRaises(p.Fehler):
+                p.read_token(io.StringIO(bad))
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            p.main(["einrichten", "https://spark.example.org", "--token", "T" * 32], system="Windows")   # never as argument
+
+    def test_the_screen_and_the_shell_help_are_not_yet_there(self):
+        p = program()
+        ran = []
+        p.cmd_screen = lambda *a, **k: ran.append("screen")
+        p.cmd_help = lambda *a, **k: ran.append("help")
+        p.cmd_setup = lambda *a, **k: ran.append("setup") or 0
+        for argv, want in ((["bildschirm"], "Bildschirm unter Windows"), (["hilfe", "https://spark.example.org"], "Spontanhilfe in der Shell")):
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                self.assertEqual(p.main(argv, system="Windows"), 1)
+            self.assertIn(want, out.getvalue())
+        self.assertEqual(ran, [])
+        with contextlib.redirect_stdout(io.StringIO()):
+            p.main(["einrichten", "https://spark.example.org"], system="Windows")
+            p.main(["bildschirm"], system="Linux")
+        self.assertEqual(ran, ["setup", "screen"])
+
+    def test_a_new_python_only_with_its_pinned_sha256(self):
+        import zipfile
+        t = self.win()
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as z:
+            z.writestr("python.exe", b"MZ")
+            z.writestr("python313.zip", b"PK")
+        data = buf.getvalue()
+        sha = hashlib.sha256(data).hexdigest()
+        prog = ('PY_EMBED = {"version": "3.14.1", "amd64": "%s",\n            "arm64": "%s"}\n' % (sha, sha)).encode()
+        fetched = []
+        t.ctx.fetch = lambda url, cap: fetched.append(url) or data
+        exe = t.p.win_runtime(t.ctx, prog)
+        self.assertEqual(exe, os.path.join(t.w(t.p.WIN_LIB + "/python-3.14.1"), "python.exe"))
+        self.assertEqual(fetched, ["https://www.python.org/ftp/python/3.14.1/python-3.14.1-embed-amd64.zip"])
+        self.assertEqual(t.p.win_runtime(t.ctx, prog), exe)                 # there already: nothing fetched again
+        self.assertEqual(len(fetched), 1)
+        t.ctx.fetch = lambda url, cap: data + b"x"                          # another file than pinned: nothing unpacked
+        self.assertEqual(t.p.win_runtime(t.ctx, prog.replace(b"3.14.1", b"3.14.2")), "")
+        self.assertFalse(os.path.exists(t.w(t.p.WIN_LIB + "/python-3.14.2")))
+        evil = io.BytesIO()
+        with zipfile.ZipFile(evil, "w") as z:
+            z.writestr("../../boese.exe", b"MZ")
+        e = evil.getvalue()
+        t.ctx.fetch = lambda url, cap: e
+        bad = prog.replace(sha.encode(), hashlib.sha256(e).hexdigest().encode()).replace(b"3.14.1", b"3.14.3")
+        self.assertEqual(t.p.win_runtime(t.ctx, bad), "")
+        self.assertFalse(any("boese" in f for _, _, fs in os.walk(os.path.dirname(t.root)) for f in fs))
+        self.assertEqual(t.p.win_runtime(t.ctx, b"no pins"), "")
+        with open(fernzugang.PROGRAM, "rb") as f:
+            self.assertEqual(t.p.py_embed(f.read())["version"], t.p.PY_EMBED["version"])
+
+    def test_the_watcher_removes_on_the_panels_word(self):
+        t = self.win()
+        self.assertEqual(self.setup(t)[0], 0)
+        removed = []
+        t.p.cmd_remove = lambda args, **k: removed.append(args.vom_panel) or 0
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(t.p.cmd_watch(None, ctx=t.ctx, rounds=3), 0)
+        self.assertEqual(removed, [])
+        with open(t.w(t.p.WIN.flag), "w") as f:
+            f.write("1\n")
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(t.p.cmd_watch(None, ctx=t.ctx, rounds=3), 0)
+        self.assertEqual(removed, [True])
+        # „aktualisieren“ with a new Python: the watcher starts again on it through a task of its own (not a child)
+        os.remove(t.w(t.p.WIN.flag))
+        with open(t.w(t.p.WIN_VAR + "/aktualisieren"), "w") as f:
+            f.write("1\n")
+        t.p.cmd_apply = lambda args, ctx: setattr(ctx, "python_neu", "C:/Program Files/SparkAnker/python-9.9.9/python.exe")
+        t.later.clear()
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(t.p.cmd_watch(None, ctx=t.ctx, rounds=3), 0)
+        self.assertEqual(len(t.later), 1)
+        self.assertIn("Start-ScheduledTask -TaskName SparkAnker-Waechter", t.later[0])
+        lin = t.p.Ctx(system="Linux", root=t.root, run=lambda c: 0)
+        lin.euid = lambda: 0
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(t.p.cmd_watch(None, ctx=lin, rounds=1), 1)
 
 def _signed(prog, version, key=None):
     """(sha256, sig) of a program as the panel signs it (or with another key)."""
@@ -1521,7 +1927,7 @@ class Pieces(Base):
         self.assertTrue(any(k == "fernzugang" and re.match(rx, "fernzugang: koppeln | ok | 1") for k, rx in logfilter.AREAS))
         self.pair("geheimer-server")
         d = fernzugang.for_live()
-        self.assertEqual(set(d), {"on", "gekoppelt", "online", "sitzungen", "abbau", "hostkey", "offen", "systeme", "hilfe", "entsperrt", "dateien", "bildschirm", "gehalten", "uebertragungen", "notizen", "ordner"})
+        self.assertEqual(set(d), {"on", "gekoppelt", "online", "sitzungen", "wartet", "abbau", "hostkey", "offen", "systeme", "hilfe", "entsperrt", "dateien", "bildschirm", "gehalten", "uebertragungen", "notizen", "ordner"})
         self.assertTrue(all(isinstance(v, (bool, int)) for k, v in d.items() if k not in ("offen", "systeme")))
         self.assertEqual(d["offen"], [])
         self.assertEqual(d["systeme"], [{"name": "System 1", "online": False}])   # no name without live_names
@@ -1539,7 +1945,7 @@ class Pieces(Base):
         numbers, never a name (standing rule: a change to Live and Monitoring reaches all of them in one commit)."""
         self.pair("geheimer-server")
         st = ADMIN.get("/api/status").json()["fernzugang"]
-        self.assertEqual(st, {"on": True, "gekoppelt": 1, "online": 0, "sitzungen": 0, "abbau": 0, "hostkey": 0, "hilfe": 0, "dateien": 0, "bildschirm": 0,
+        self.assertEqual(st, {"on": True, "gekoppelt": 1, "online": 0, "sitzungen": 0, "wartet": 0, "abbau": 0, "hostkey": 0, "hilfe": 0, "dateien": 0, "bildschirm": 0,
                               "gehalten": 0, "uebertragungen": 0, "offen": [], "systeme": [{"name": "System 1", "online": False}], "entsperrt": 1,
                               "notizen": 0, "ordner": 0})
         import steuerzentrale as sz
@@ -1554,9 +1960,13 @@ class Pieces(Base):
         swift = os.path.join(helpers.APP, "..", "ios", "Spark", "AdminViews.swift")
         if os.path.exists(swift):      # a copy with only app/ has no app sources; the rest above still runs there
             with open(swift, encoding="utf-8") as f:
-                self.assertIn('d["fernzugang"]', f.read())
+                src = f.read()
+            self.assertIn('d["fernzugang"]', src)
+            self.assertIn('fz["wartet"]', src)
         with open(os.path.join(helpers.APP, "panel", "static", "js", "admin.js"), encoding="utf-8") as f:
-            self.assertIn("zFern(s.fernzugang", f.read())
+            src = f.read()
+        self.assertIn("zFern(s.fernzugang", src)
+        self.assertIn("['wartet','warten auf Bestätigung'", src)
 
 
 # ---------------------------------------------------------------- end to end: anchor program, panel, SSH server
@@ -3401,11 +3811,11 @@ class ShellForReal(_ShellPage):
             self.assertGreater(b["detail"]["x"], b["list"]["x"] + b["list"]["w"] - 1)   # list left, the system right
             self.assertLessEqual(b["scroll"], 0, b)                  # 1440 × 900: no page scroll
             self.assertEqual(await pg.evaluate("document.querySelector('#fzbox .fzgear').dataset.way"), "Funktionen → Fernzugang zu Servern")
-            # the sheet „System koppeln“: Linux, Windows or macOS; Windows not yet
+            # the sheet „System koppeln“: Linux, Windows or macOS; Windows: only the link to its file (stage 5)
             await pg.click("#fzneu")
             self.assertEqual(await pg.evaluate("$('fzkoppelnmodal').style.display"), "grid")
             await pg.click("#fzos button[data-os=windows]")
-            self.assertEqual(await pg.evaluate("[$('fzwin').hidden,$('fzgo').disabled]"), [False, True])
+            self.assertEqual(await pg.evaluate("[$('fzwin').hidden,$('fzgo').disabled]"), [False, False])
             await pg.click("#fzos button[data-os=linux]")
             self.assertEqual(await pg.evaluate("[$('fzwin').hidden,$('fzgo').disabled]"), [True, False])
             await pg.click("#fzkzu")

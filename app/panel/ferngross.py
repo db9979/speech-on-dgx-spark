@@ -89,7 +89,7 @@ SAY = {"zu gross": (413, "Größer als erlaubt (Funktionen → Fernzugang zu Ser
        "offline": (502, "Der Server erreicht die Adresse nicht."), "http": (502, "Die Adresse antwortet mit einem Fehler."),
        "zeit": (504, "Die Adresse antwortet zu langsam."), "zertifikat": (502, "Das Zertifikat der Adresse ist nicht gültig."),
        "umleitung": (502, "Zu viele Weiterleitungen."), "curl fehlt": (501, "Auf dem Server fehlt curl."),
-       "abgebrochen": (503, "Abgebrochen."), "windows": (501, "Unter Windows kommt das mit Stufe 5."),
+       "abgebrochen": (503, "Abgebrochen."), "windows": (501, "Große Dateien gehen unter Windows noch nicht; dort „Dateien“ nehmen."),
        "nas": (502, "Das NAS gibt die Datei nicht."), "fehler": (502, "Der Server hat das nicht ausgeführt.")}
 
 UPLOADS = {}   # id -> Upload

@@ -4748,6 +4748,20 @@
 "titel": "Fernzugang: Terminal springt nicht",
 "text": "Shell zu einem System öffnen und 2 Minuten ruhig ansehen, dabei ein paar Befehle tippen (etwa screen -ls, dann ls), einmal den Assistenten fragen und von unterwegs über den Proxy verbinden: Terminal und die Zeile Vorschläge bleiben genau an ihrem Platz, keine Zeile geht hoch oder runter, auch nicht, wenn rechts oben „· 12 ms“ wechselt, Vorschläge mit „braucht sudo“ kommen oder nach 15 Sekunden die Liste neu geladen wird. WLAN kurz aus und wieder an: „Verbindung wird wiederhergestellt …“ legt sich über den Kopf des Terminals, das Terminal selbst bleibt stehen.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P703",
+"v": 1277,
+"titel": "Fernzugang Windows: Einrichten über die Datei und Bestätigen",
+"text": "Auf einem Windows-PC (10 oder 11, ohne OpenSSH-Server): im Panel Fernzugang → „+ System koppeln“, Windows, Name, „Koppeln (Code)“. A: Das Blatt zeigt nur Einmal-Link und QR-Code, keinen Code und keine Zeile. B: Den Link am PC öffnen, „Datei laden“, spark-anker-einrichten.cmd doppelklicken, „Ja“ (SmartScreen: „Weitere Informationen“, „Trotzdem ausführen“): sie fügt den OpenSSH-Server hinzu, lädt Python, zeigt den Host-Schlüssel und ist danach aus dem Download-Ordner verschwunden. Den Link ein zweites Mal öffnen: „gilt nicht mehr“. C: Im Panel steht das System mit „wartet auf Bestätigung“, Shell und „Darf sich verbinden“ gehen nicht. Host-Schlüssel vergleichen, „Bestätigen (Code/Passkey)“: danach öffnet „Shell“ eine PowerShell als spark, „Dateien“ zeigt C:/Users/spark. D: Dasselbe Bestätigen einmal in der iPhone-App.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P704",
+"v": 1277,
+"titel": "Fernzugang Windows: Entfernen stellt alles wieder her",
+"text": "Am Windows-PC aus P674: A: In den Windows-Einstellungen unter Apps „Spark Anker“ deinstallieren (fragt nach Administratorrechten): danach keine Aufgaben SparkAnker in der Aufgabenplanung, kein Benutzer spark, kein Ordner C:\\Program Files\\SparkAnker und C:\\ProgramData\\SparkAnker, der OpenSSH-Server wieder entfernt, im Panel ist das System weg. B: Noch einmal koppeln und diesmal im Panel „Entfernen“: dasselbe Ergebnis innerhalb einer Minute. C: Auf einem PC, auf dem der OpenSSH-Server schon lief: nach dem Entfernen läuft er weiter, seine sshd_config ist wie vorher.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }

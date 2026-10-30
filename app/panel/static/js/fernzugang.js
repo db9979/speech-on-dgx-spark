@@ -31,7 +31,7 @@ function fzMin(s){const m=Math.max(0,Math.round((Date.now()/1000-s)/60));return 
 function fzMsg(text,bad){if(text)sayToast(text,bad?8000:4000,{bad:!!bad})}
 function fzUhr(s){return new Date(s*1000).toLocaleTimeString(L==='en'?'en-GB':'de-DE',{hour:'2-digit',minute:'2-digit'})}
 function fzStand(g){return g.stand==='abbau'?['warn',t('wird beim nächsten Kontakt abgebaut','removed at next contact')]
-  :g.hostkey_falsch?['bad',t('Host-Schlüssel falsch','host key wrong')]:!g.erlaubt?['warn',t('gesperrt','blocked')]
+  :g.hostkey_falsch?['bad',t('Host-Schlüssel falsch','host key wrong')]:g.wartet?['warn',t('wartet auf Bestätigung','waiting for confirmation')]:!g.erlaubt?['warn',t('gesperrt','blocked')]
   :g.online?['ok',t('online','online')]:['',t('offline','offline')]}
 // the kind of system as its icon (fixed pictures, never text from outside)
 const FZ_OS=new Set(['linux','windows','macos']);
@@ -83,7 +83,7 @@ function fzShow(){const d=FZ.d,box=$('fzmain');if(!d||!box)return;const zu=!!(d.
   const q=$('fzsuche').value.trim().toLowerCase(),list=$('fzlist');list.textContent='';
   if(!gs.length)list.appendChild(fzEl('div','mut fzleer',t('Noch kein System gekoppelt. „+ System koppeln“ zeigt den Befehl für das neue System.','No system paired yet. "+ Pair a system" shows the command for the new system.')));
   const tr=FZ.treffer&&FZ.treffer.q.toLowerCase()===q?FZ.treffer.t:{};
-  const passt=gs.filter(g=>!q||(g.name+' '+(g.os||'')).toLowerCase().includes(q)||!!tr[g.id]),bereit=g=>g.online&&g.erlaubt&&!g.hostkey_falsch&&g.stand!=='abbau';
+  const passt=gs.filter(g=>!q||(g.name+' '+(g.os||'')).toLowerCase().includes(q)||!!tr[g.id]),bereit=g=>g.online&&g.erlaubt&&!g.wartet&&!g.hostkey_falsch&&g.stand!=='abbau';
   if(ord)fzOrdnerListe(list,ord,passt,tr,!!q);
   else for(const [de,en,teil] of [['Online','Online',passt.filter(bereit)],['Offline oder gesperrt','Offline or blocked',passt.filter(g=>!bereit(g))]]){
     if(!teil.length)continue;list.appendChild(fzEl('div','fzgrp',t(de,en)+' · '+teil.length));
@@ -99,7 +99,7 @@ function fzSysZeile(g,tr){const [lvl]=fzStand(g),row=fzEl('button','fzrow'+(g.id
       const h=tr[g.id];if(h){const sn=fzEl('small','fznzsnip');sn.append(document.createTextNode(t('Notiz: „','Note: "')+h.vor),fzEl('mark','',h.treffer),document.createTextNode(h.nach+t('“','"')));tx.appendChild(sn)}
       row.append(fzIcon(g),tx,fzEl('span','fzdot '+(g.sitzungen?'bad':lvl)));row.onclick=()=>{FZ.sel=g.id;FZ.ordner='';FZ.auf=true;fzShow()};return row}
 // online since, offline since, or why it may not connect: the second line of a system
-function fzWie(g){return g.stand==='abbau'?t('wird abgebaut','being removed'):g.hostkey_falsch?t('Host-Schlüssel falsch','host key wrong')
+function fzWie(g){return g.stand==='abbau'?t('wird abgebaut','being removed'):g.hostkey_falsch?t('Host-Schlüssel falsch','host key wrong'):g.wartet?t('wartet auf deine Bestätigung','waiting for your confirmation')
   :!g.erlaubt?t('darf sich nicht verbinden','may not connect'):g.online?t('online seit ','online since ')+fzZeit(g.online_seit)
   :g.weg?t('offline seit ','offline since ')+fzZeit(g.weg):t('offline','offline')}
 // „Gerade verbunden“: who has a session open, from where (Zuhause or Internet, the address shortened) and with what
@@ -120,13 +120,14 @@ function fzDetail(){const d=FZ.d,box=$('fzdetail'),g=(d.geraete||[]).find(x=>x.i
   ht.append(nm,fzEl('div','mut',[g.os,g.anker?t('Anker ','anchor ')+g.anker:'',g.online?t('online seit ','online since ')+fzZeit(g.online_seit)+' ('+fzMin(g.online_seit)+')':fzWie(g)].filter(Boolean).join(' · ')));
   hd.append(fzIcon(g,true),ht);box.appendChild(hd);
   const kn=fzEl('div','fzknoepfe');
-  const sh=fzBtn(t('Shell','Shell'),'p fzk',()=>fzOpen(g));sh.disabled=!g.online||g.hostkey_falsch||!g.erlaubt||g.stand==='abbau'||(c.sitzungen||0)>=d.max;
+  const sh=fzBtn(t('Shell','Shell'),'p fzk',()=>fzOpen(g));sh.disabled=!g.online||g.hostkey_falsch||!g.erlaubt||g.wartet||g.stand==='abbau'||(c.sitzungen||0)>=d.max;
   const da=fzBtn(t('Dateien','Files'),'fzk',()=>fzDateien(g)),bs=fzBtn(t('Bildschirm','Screen'),'fzk',()=>fbOpen(g));da.disabled=sh.disabled;
   bs.disabled=sh.disabled||!d.bildschirm||!g.bild||!g.bild_anker;if(!d.bildschirm)bs.hidden=true;
   const cut=fzBtn(t('Anker trennen','Disconnect anchor'),'fzankercut',async()=>{try{await api(`/api/admin/fernzugang/geraete/${g.id}/trennen`,{method:'POST'});fzMsg(t('Getrennt. Der Anker kommt nach seiner Pause wieder, solange er sich verbinden darf.','Disconnected. The anchor comes back after its pause while it may connect.'));fzLoad()}catch(e){fzFehler(e)}});
   cut.disabled=!g.online;kn.append(sh,da,bs,fzEl('span','fzfill'),cut);box.appendChild(kn);
   if(d.bildschirm&&!(g.bild&&g.bild_anker))box.appendChild(fzEl('div','fh',g.bild?t('Für den Bildschirm ist der Anker zu alt: dort noch einmal „sudo spark-anker bildschirm“ mit dem Programm aus dem Panel.','The anchor is too old for the screen: run "sudo spark-anker bildschirm" there again with the program from the panel.'):t('Bildschirm: auf dem System einmal „sudo spark-anker bildschirm“.','Screen: run "sudo spark-anker bildschirm" once on the system.')));
   if(g.hostkey_falsch)box.appendChild(fzEl('div','note err',t('Das System zeigt einen anderen Host-Schlüssel als bei der Kopplung: keine Verbindung. War das eine Neuinstallation, „Entfernen“ und neu koppeln.','The system shows another host key than at pairing: no connection. If it was reinstalled, "Remove" and pair again.')));
+  if(g.wartet)box.appendChild(fzWartet(g));
   if(g.anker_neu||g.update_stand)box.appendChild(fzAktBlock(g));
   const grid=fzEl('div','fzdgrid'),li=fzEl('div','fzdcol'),re=fzEl('div','fzdcol');grid.append(li,re);box.appendChild(grid);
   const o=(d.offen||[]).filter(x=>x.geraet===g.id);
@@ -140,7 +141,7 @@ function fzDetail(){const d=FZ.d,box=$('fzdetail'),g=(d.geraete||[]).find(x=>x.i
   li.appendChild(dl);
   const nz=fzNotizFuer(g.id);if(nz){const fo=nz.contains(document.activeElement)?document.activeElement:null;li.appendChild(nz);if(fo&&document.activeElement!==fo){const a=fo.selectionStart,b=fo.selectionEnd;fo.focus();if(a!=null)fo.setSelectionRange(a,b)}}
   const sw=fzEl('div','setrow');const lb=fzEl('div','lbl');lb.append(fzEl('b','',t('Darf sich verbinden','May connect')),fzEl('span','',t('Aus: der Anker wird abgewiesen.','Off: the anchor is refused.')));
-  const tg=fzEl('label','tgl'),inp=document.createElement('input');inp.type='checkbox';inp.checked=!!g.erlaubt;inp.disabled=g.stand==='abbau';inp.setAttribute('aria-label',t('Darf sich verbinden','May connect'));tg.append(inp,fzEl('i'));
+  const tg=fzEl('label','tgl'),inp=document.createElement('input');inp.type='checkbox';inp.checked=!!g.erlaubt;inp.disabled=g.stand==='abbau'||!!g.wartet;inp.setAttribute('aria-label',t('Darf sich verbinden','May connect'));tg.append(inp,fzEl('i'));
   inp.onchange=async()=>{try{await api(`/api/admin/fernzugang/geraete/${g.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({erlaubt:inp.checked})});fzLoad()}catch(e){inp.checked=!inp.checked;fzFehler(e)}};
   sw.append(lb,tg);li.appendChild(sw);
   re.appendChild(fzEl('div','fzgrp',t(`Verlauf · ${d.verlauf_tage||30} Tage`,`History · ${d.verlauf_tage||30} days`)));
@@ -171,11 +172,16 @@ function fzAktBlock(g){const b=fzEl('div','fzakt');const kopf=fzEl('div','fzaktk
 async function fzAktZeile(g,box,knopf){let d;try{const r=await api('/api/admin/fernzugang/aktualisieren/befehl',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({origin:location.origin})});d=await r.json()}catch(e){fzFehler(e);return}
   knopf.remove();const z=g.art==='macos'&&d.befehl_mac?d.befehl_mac:d.befehl;const pre=fzEl('pre','fzcmd',z);pre.id='fzaktbefehl';box.appendChild(pre);
   const row=fzEl('div','row');row.append(fzBtn(t('Kopieren','Copy'),'',e=>copyString(z,e.target)));
-  const ein=fzBtn(t('In die Shell einfügen','Paste into the shell'),'',()=>{FZ.nachher=z;fzOpen(g)});ein.id='fzakteinf';ein.disabled=!g.online||g.hostkey_falsch||!g.erlaubt;
+  const ein=fzBtn(t('In die Shell einfügen','Paste into the shell'),'',()=>{FZ.nachher=z;fzOpen(g)});ein.id='fzakteinf';ein.disabled=!g.online||g.hostkey_falsch||!g.erlaubt||g.wartet;
   ein.title=t('Öffnet eine Shell und schreibt die Zeile hinein; Enter drückst du selbst.','Opens a shell and types the line in; you press Enter yourself.');row.appendChild(ein);box.appendChild(row)}
 async function fzAktualisieren(ids){try{const r=await api('/api/admin/fernzugang/aktualisieren',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({geraete:ids})});const d=await r.json();
     const teile=[[d.gesendet,'gesendet','sent'],[d.aktuell,'schon aktuell','up to date'],[d.alt,'brauchen einmal die Zeile','need the line once'],[d.offline,'offline','offline'],[d.belegt,'mit offener Sitzung','with a session open']]
       .filter(x=>x[0]).map(x=>x[0]+' '+t(x[1],x[2]));fzMsg(t('Aktualisieren auf ','Update to ')+d.version+': '+teile.join(' · '),!d.gesendet);fzLoad()}catch(e){fzFehler(e)}}
+// a system from the Windows file (no code typed over there) waits: „Bestätigen“ with a fresh code or passkey, „Ablehnen“ removes it
+function fzWartet(g){const w=fzEl('div','note');
+  w.appendChild(fzEl('div','',t('Neu über die Windows-Datei eingerichtet. Nur bestätigen, wenn du das gerade selbst eingerichtet hast und der Host-Schlüssel unten zu dem passt, den der PC gezeigt hat. Bis dahin geht keine Sitzung.','Set up with the Windows file. Only confirm when you just set it up yourself and the host key below matches the one the PC showed. Until then no session opens.')));
+  const row=fzEl('div','row');row.append(fzBtn(t('Bestätigen (Code/Passkey)','Confirm (code/passkey)'),'p',async()=>{try{await api(`/api/admin/fernzugang/geraete/${g.id}/bestaetigen`,{method:'POST'});fzMsg(t('Bestätigt.','Confirmed.'));fzLoad()}catch(e){fzFehler(e)}}),
+    fzBtn(t('Ablehnen','Reject'),'danger',()=>fzRemove(g)));w.appendChild(row);return w}
 async function fzRemove(g){if(g.notiz&&confirm(t(`„${g.name}“ hat eine Notiz. Sie wird mit dem System gelöscht. Notiz vorher herunterladen?`,`"${g.name}" has a note. It is deleted with the system. Download the note first?`)))fzNotizLadenDatei(g);
   if(!confirm(t(`„${g.name}“ entfernen? Der Schlüssel gilt sofort nicht mehr; der Anker baut auf dem System alles ab, was er eingerichtet hat (jetzt oder beim nächsten Kontakt). Danach fragt der Spark nach Code oder Passkey.`,`Remove "${g.name}"? The key stops at once; the anchor removes everything it set up on the system (now or at its next contact). Then the Spark asks for a code or passkey.`)))return;
   try{const r=await api(`/api/admin/fernzugang/geraete/${g.id}`,{method:'DELETE'});const d=await r.json();
@@ -186,13 +192,17 @@ async function fzSperren(){try{await api('/api/admin/fernzugang/entsperren',{met
 // „System koppeln“: a sheet with the name and the kind of system, then a fresh code; the code is shown once, never in the command
 function fzKoppelnAuf(){$('fzkoppelnmodal').style.display='grid';fzKoppelnOrdner();fzKoppelnZeigen();fzProtokoll();setTimeout(()=>$('fzname').focus(),50)}
 function fzOsWahl(os){FZ.os=os;for(const b of $('fzos').querySelectorAll('button')){const on=b.dataset.os===os;b.classList.toggle('on',on);b.setAttribute('aria-checked',on?'true':'false')}
-  $('fzwin').hidden=os!=='windows';$('fzgo').disabled=os==='windows';fzKoppelnZeigen()}
-async function fzKoppeln(){const name=$('fzname').value.trim();if(!name){$('fzname').focus();return}if(FZ.os==='windows')return;
+  $('fzwin').hidden=os!=='windows';fzKoppelnZeigen()}
+async function fzKoppeln(){const name=$('fzname').value.trim();if(!name){$('fzname').focus();return}
   try{const r=await api('/api/admin/fernzugang/koppeln',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,os:FZ.os,origin:location.origin,ordner:$('fzkordner').value||''})});
-    FZ.code=Object.assign(await r.json(),{name,bis:Date.now()/1000+0});FZ.code.bis+=FZ.code.gilt_s;$('fzname').value='';fzKoppelnZeigen();fzLoad()}catch(e){fzFehler(e)}}
+    FZ.code=Object.assign(await r.json(),{name,os:FZ.os,bis:Date.now()/1000+0});FZ.code.bis+=FZ.code.gilt_s;$('fzname').value='';fzKoppelnZeigen();fzLoad()}catch(e){fzFehler(e)}}
 function fzKoppelnZeigen(){const box=$('fzcode');if(!box)return;box.textContent='';const k=FZ.code,mac=FZ.os==='mac';
-  if(FZ.os==='windows')return;
   if(!k||Date.now()/1000>k.bis){FZ.code=null;return}
+  if(k.os==='windows'||FZ.os==='windows'){if(k.os!=='windows')return;   // Windows: only the link (the file carries its key), no code, no line
+    box.appendChild(fzEl('div','',t(`Einmal-Link für „${k.name}“ (Windows). Er gilt bis `,`One-time link for "${k.name}" (Windows). It counts until `)+fzZeit(k.bis)+t(' und nur einmal.',' and only once.')));
+    if(k.link)fzKoppelnLink(box,k);
+    box.appendChild(fzEl('div','fh',t('Auf dem Windows-PC öffnen, „Datei laden“, dann spark-anker-einrichten.cmd doppelklicken und bei der Frage von Windows „Ja“ wählen. Danach erscheint das System hier und wartet, bis du es bestätigst.','Open it on the Windows PC, "Load file", then double-click spark-anker-einrichten.cmd and choose "Yes" when Windows asks. The system then shows up here and waits until you confirm it.')));
+    return}
   box.appendChild(fzEl('div','',t(`Einmal-Code für „${k.name}“. Er wird nur jetzt gezeigt und gilt bis `,`One-time code for "${k.name}". It is shown only now and counts until `)+fzZeit(k.bis)+'.'));
   box.appendChild(fzEl('div','fzbig',k.code));
   if(k.link)fzKoppelnLink(box,k);
@@ -208,7 +218,7 @@ function fzKoppelnZeigen(){const box=$('fzcode');if(!box)return;box.textContent=
   box.appendChild(pr)}
 // the „Einmal-Link“ beside the code: opened on the new system it shows the one line; the code is never in it
 function fzKoppelnLink(box,k){const w=fzEl('div','fzklink');
-  w.appendChild(fzEl('div','fh',t('Einmal-Link für das neue System (gilt so lange wie der Code, nur bis zum Koppeln). Auf dem System öffnen: er zeigt die eine Zeile, der Code steht nie darin.','One-time link for the new system (counts as long as the code, only until pairing). Open it on the system: it shows the one line, the code is never in it.')));
+  if(k.os!=='windows')w.appendChild(fzEl('div','fh',t('Einmal-Link für das neue System (gilt so lange wie der Code, nur bis zum Koppeln). Auf dem System öffnen: er zeigt die eine Zeile, der Code steht nie darin.','One-time link for the new system (counts as long as the code, only until pairing). Open it on the system: it shows the one line, the code is never in it.')));
   w.appendChild(fzEl('code','fzlinktext',k.link));
   const row=fzEl('div','row');row.appendChild(fzBtn(t('Kopieren','Copy'),'',e=>copyString(k.link,e.target)));
   if(navigator.share)row.appendChild(fzBtn(t('Teilen','Share'),'',()=>navigator.share({title:t('System koppeln','Pair a system'),url:k.link}).catch(()=>{})));
@@ -605,7 +615,7 @@ function fzNotizTerminal(gid,line){line=String(line).replace(/[\r\n]+/g,' ').tri
   if(FZ.ws&&FZ.sitz&&FZ.sitz.gid===gid&&FZ.ws.readyState===1){fzEinfuegen(line);return}
   if(FZ.ws||FZ.weg||FZ.fs||FZ.fb){fzMsg(t('Erst die offene Sitzung trennen.','Disconnect the open session first.'),true);return}
   const g=((FZ.d&&FZ.d.geraete)||[]).find(x=>x.id===gid);if(!g)return;
-  if(!g.online||g.hostkey_falsch||!g.erlaubt||g.stand==='abbau'){fzMsg(t('Das System ist nicht bereit für eine Shell.','The system is not ready for a shell.'),true);return}
+  if(!g.online||g.hostkey_falsch||!g.erlaubt||g.wartet||g.stand==='abbau'){fzMsg(t('Das System ist nicht bereit für eine Shell.','The system is not ready for a shell.'),true);return}
   fzOpen(g).then(()=>{if(FZ.ws&&FZ.sitz&&FZ.sitz.gid===gid)FZ.nachher=line})}
 async function fzNotizLaden(gid){const n={gid,text:'',lesen:true,t:null,fassungen:[],warnungen:[],edit:false,stand:'',offen:false};FZ.notiz=n;fzNotizZeigen();
   try{const r=await api('/api/admin/fernzugang/notiz/'+gid);const d=await r.json();if(FZ.notiz!==n)return;Object.assign(n,d,{geladen:true})}

@@ -827,9 +827,9 @@ SEITEN = {
     # ------------------------------------------------------------------ Browser und Handy
     # ------------------------------------------------------------------ Fernzugang (Dominik 2026-10-29 „in Technik → Überblick fehlt die Fernwartung“)
     "fernzugang": {
-        "stand": "5a214758ee",
+        "stand": "cd2eda00d7",
         "bezug": {
-            "fernzugang.entsperrt_bis": ["s2"], "fernzugang.admin_pair": ["s3"], "fernzugang.CODE_S": ["s3"], "fernzugang.TICKET_S": ["s4"], "fernzugang.terminal_ws": ["s4"], "fernzugang.hostkey_wrong": ["s5"], "fernzugang.HALTEN_S": ["s6"], "ferndateien.listing": ["s6"], "fernbild.GUACD": ["s6"], "fernbild.FPS": ["s6"], "spontanhilfe.admin_new": ["s7"], "spontanhilfe.NUMMER_S": ["s7"], "fernzugang.notaus_close": ["s8"], "fernzugang.MAX_ANKER": ["s3"], "fernnotiz.fuer_modell": ["s6"], "fernnotiz.FASSUNGEN": ["s6"], "fernordner.view": ["s6"], "fernordner.MAX_ORDNER": ["s6"], "ferngross.upload_piece": ["s6"], "ferngross.TEIL": ["s6"],
+            "fernzugang.entsperrt_bis": ["s2"], "fernzugang.admin_pair": ["s3"], "fernzugang.link_file": ["s3"], "fernzugang.admin_confirm": ["s3"], "fernzugang.CODE_S": ["s3"], "fernzugang.TICKET_S": ["s4"], "fernzugang.terminal_ws": ["s4"], "fernzugang.hostkey_wrong": ["s5"], "fernzugang.HALTEN_S": ["s6"], "ferndateien.listing": ["s6"], "fernbild.GUACD": ["s6"], "fernbild.FPS": ["s6"], "spontanhilfe.admin_new": ["s7"], "spontanhilfe.NUMMER_S": ["s7"], "fernzugang.notaus_close": ["s8"], "fernzugang.MAX_ANKER": ["s3"], "fernnotiz.fuer_modell": ["s6"], "fernnotiz.FASSUNGEN": ["s6"], "fernordner.view": ["s6"], "fernordner.MAX_ORDNER": ["s6"], "ferngross.upload_piece": ["s6"], "ferngross.TEIL": ["s6"],
         },
         "kurz": ("Der Fernzugang öffnet Shell, Dateien und Bildschirm eines eigenen Servers im Browser, ohne offenen Port "
                  "dort: der Anker auf dem Server verbindet sich selbst zum Panel, das Panel spricht SSH durch diese "
@@ -867,11 +867,15 @@ SEITEN = {
               ("Einmal-Code {fernzugang.CODE_S|min} min", "one-time code {fernzugang.CODE_S|min} min"),
               ("„Koppeln“ fragt den Code jedes Mal neu (fernzugang.admin_pair) und zeigt eine Zeile für den Server mit "
                "einem Einmal-Code, {fernzugang.CODE_S|min} Minuten gültig, dazu einen Einmal-Link mit QR-Code, der auf dem "
-               "neuen System nur diese Zeile zeigt, nie den Code (fernzugang.link_check). Höchstens {fernzugang.MAX_ANKER} Systeme; "
+               "neuen System nur diese Zeile zeigt, nie den Code (fernzugang.link_check). Windows: der Link gibt einmal die "
+               "Datei spark-anker-einrichten.cmd (fernzugang.link_file) mit Einmal-Schlüssel statt Code; das System wartet dann, "
+               "bis der Admin es mit Code oder Passkey bestätigt (fernzugang.admin_confirm). Höchstens {fernzugang.MAX_ANKER} Systeme; "
                "jedes bekommt einen eigenen SSH-Schlüssel des Panels, sein Host-Schlüssel wird angeheftet.",
                "„Pair“ asks for the code every time (fernzugang.admin_pair) and shows one line for the server with a "
                "one-time code, valid {fernzugang.CODE_S|min} minutes, plus a one-time link with a QR code that shows only "
-               "this line on the new system, never the code (fernzugang.link_check). At most {fernzugang.MAX_ANKER} systems; each gets "
+               "this line on the new system, never the code (fernzugang.link_check). Windows: the link gives the file "
+               "spark-anker-einrichten.cmd once (fernzugang.link_file) with a one-time key instead of the code; the system then "
+               "waits until the admin confirms it with a code or passkey (fernzugang.admin_confirm). At most {fernzugang.MAX_ANKER} systems; each gets "
                "an SSH key of the panel of its own, its host key is pinned.")),
             S("s4", "schritt", ("Ticket für das Fenster", "Ticket for the window"),
               ("{fernzugang.TICKET_S} s, einmal", "{fernzugang.TICKET_S} s, once"),
@@ -953,6 +957,8 @@ SEITEN = {
         "code": [
             ("fernzugang.entsperrt_bis", ("wie lange die Seite entsperrt ist", "how long the page is unlocked")),
             ("fernzugang.admin_pair", ("Koppeln mit Einmal-Code", "pairing with a one-time code")),
+            ("fernzugang.link_file", ("Windows: die Datei spark-anker-einrichten.cmd mit Einmal-Schlüssel, einmal", "Windows: the file spark-anker-einrichten.cmd with a one-time key, once")),
+            ("fernzugang.admin_confirm", ("neues System erst nach Bestätigung mit Code oder Passkey", "a new system only after confirming with a code or passkey")),
             ("fernzugang.terminal_ws", ("das Web-Terminal mit Ticket", "the web terminal with a ticket")),
             ("fernzugang.hostkey_wrong", ("angehefteter Host-Schlüssel", "pinned host key")),
             ("ferndateien.listing", ("Dateien über SFTP", "files through SFTP")),
@@ -967,7 +973,7 @@ SEITEN = {
         "heute": [],
     },
     "fernserver": {
-        "stand": "620f6561dd",
+        "stand": "63b29291b1",
         "bezug": {
             "fernzugang.command": ["s1"], "fernzugang.anker_pair": ["s2"], "fernzugang.by_key": ["s3"], "fernzugang.anker_ws": ["s3"], "fernzugang.PULS_S": ["s4"], "fernzugang.MAX_MSG": ["s4"], "fernzugang.anker_removed": ["s6"], "fernzugang.ABBAU_TAGE": ["s6"], "fernanker.admin_update": ["s7"], "fernanker.stand": ["s7"],
         },
