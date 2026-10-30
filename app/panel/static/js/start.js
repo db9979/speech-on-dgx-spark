@@ -35,6 +35,11 @@ async function placeBack(){let p=null;try{p=JSON.parse(sessionStorage.getItem('p
   if(p.mey)$('profmodal').scrollTop=p.mey
   if(p.y)window.scrollTo(0,p.y)}
 // the start of the page; theme.js (Start-Wächter) learns how it ended: a start that failed loads the page again later
+// the side menu's foot (Klar 2, Redesign Stufe 2): who is signed in, with the initials as a grey circle; a tap opens Ich.
+// Only the profile's name (textContent), never anything else of it
+function sideWho(){const b=$('sidewho');if(!b)return;const n=PROFILE&&PROFILE.name||(ADMIN?t('Admin','Admin'):'');b.hidden=!n;if(!n)return;
+  $('sidewhon').textContent=n;$('sidewhor').textContent=ADMIN?t('Admin','Admin'):t('Profil','Profile');
+  $('sidewhoi').textContent=n.split(/\s+/).map(w=>w.charAt(0)).join('').slice(0,2).toUpperCase();b.onclick=()=>$('navme').click()}
 async function startPage(){let who=null;try{who=await (await /*raw: the first who-am-I, before the login and the bar exist*/fetch('/api/whoami')).json()}catch{}
   // no answer from the Spark: a browser the profile trusts opens its offline copy to read (verlauf.js); else the Spark
   // is restarting (an update): the Start-Wächter waits for it and loads the page again (before: an empty admin page for good)
@@ -68,6 +73,7 @@ async function startPage(){let who=null;try{who=await (await /*raw: the first wh
     // with only what it may (Assistent, Ich); guests keep the plain page with the assistant
     if(who.profile){document.body.classList.remove('guest');document.body.classList.add('adm','prof')}}
   else{$('logoutbtn').style.display='inline-block';document.body.classList.add('adm');hdrH();if(typeof grundLoad==='function')grundLoad()}
+  sideWho();
   document.querySelector('nav button[data-s=chat]').click();       // the assistant is the start page
   placeBack();   // a reload the page did itself: back to the same place (base.js placeNow)
   startBusy=false;if(startGo){const s=startGo;startGo=null;goSec(s)}   // a jump asked for during the start (base.js goSec)

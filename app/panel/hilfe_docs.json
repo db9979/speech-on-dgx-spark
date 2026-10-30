@@ -3949,7 +3949,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "Der Assistent braucht das Mikrofon, und Browser erlauben das nur über https. Das Panel läuft deshalb zusätzlich auf https://SPARK:31443 mit einem selbst erstellten Zertifikat; der Browser warnt beim ersten Aufruf einmal. Die LLM-Verbindung steht unter Einstellungen → Sprachmodell (Standard: qwen38 auf http://127.0.0.1:30001/v1). Seit V01.0.292 zeigt „Modell“ dort eine Auswahl der Modelle, die der Server unter dieser Adresse meldet (/v1/models, nur für den Admin, 60 Sekunden zwischengespeichert, „Neu laden“ fragt sofort); „Automatisch“ nimmt das erste, „Anderes eingeben …“ öffnet das Textfeld. Ist die Liste nicht abrufbar, bleibt das Textfeld mit dem Grund darüber. Den API-Schlüssel von qwen38 übernimmt der Installer aus ~/.config/qwen38/api-key des Benutzers, der sudo ./install.sh aufruft. Das Nachdenken des Modells ist für den Chat aus, damit die Antwort sofort beginnt. Ein animiertes Assistenten-Gesicht zeigt, ob es zuhört, nachdenkt oder spricht; der Mund folgt der Stimme. Dasselbe Gesicht sitzt auf jedem Reiter unten rechts, so lässt sich von überall im Panel sprechen. Seit V01.0.154 wählt der Admin unter Einstellungen → Vorgaben → „Gesicht des Assistenten“ zwischen *Roboter* ("
+"text": "Der Assistent braucht das Mikrofon, und Browser erlauben das nur über https. Das Panel läuft deshalb zusätzlich auf https://SPARK:31443 mit einem selbst erstellten Zertifikat; der Browser warnt beim ersten Aufruf einmal. Die LLM-Verbindung steht unter Einstellungen → Sprachmodell (Standard: qwen38 auf http://127.0.0.1:30001/v1). Seit V01.0.292 zeigt „Modell“ dort eine Auswahl der Modelle, die der Server unter dieser Adresse meldet (/v1/models, nur für den Admin, 60 Sekunden zwischengespeichert, „Neu laden“ fragt sofort); „Automatisch“ nimmt das erste, „Anderes eingeben …“ öffnet das Textfeld. Ist die Liste nicht abrufbar, bleibt das Textfeld mit dem Grund darüber. Den API-Schlüssel von qwen38 übernimmt der Installer aus ~/.config/qwen38/api-key des Benutzers, der sudo ./install.sh aufruft. Das Nachdenken des Modells ist für den Chat aus, damit die Antwort sofort beginnt. Ein animiertes Assistenten-Gesicht zeigt, ob es zuhört, nachdenkt oder spricht; der Mund folgt der Stimme. Seit V01.1.260 (Redesign Stufe 2) steht das Gesicht nur noch im Assistenten, ruhig und kleiner; auf jeder anderen Seite startet das Zeichen „Frag Spark“ oben (am Rechner neben „Spark“ in der Seitenleiste, am H"
 },
 {
 "lang": "de",
@@ -3957,7 +3957,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "bisher, Standard) und *Comic* (eine Karikatur mit Stachelhaaren und kurzem Schnurrbart, seit V01.0.187 nur über der Oberlippe). Seit V01.0.497 gibt es als dritte Wahl *Comic (Frau)*: eine Frau mit langen dunklen Haaren und Seitenscheitel, im selben Stil gezeichnet, mit Wimpern und Lippen, die sich beim Sprechen öffnen; sie bewegt sich wie das Comic-Gesicht und zeigt auch die Ausdrücke. iPhone-App, Begleiter (Mac und Windows, als ruhendes Bild) und Pebble zeichnen sie ebenso. Das Comic-Gesicht schaut umher, blinzelt mit schweren Lidern, hebt die Brauen, neigt den Kopf, bewegt Mund und Schnurrbart mit der Stimme und zeigt den Zustand mit einem farbigen Ring: grau Ruhe, blau zuhören, gelb nachdenken, grün sprechen, rot Fehler. Die Wahl gilt für alle, auch für die iPhone-App; weitere Gesichter lassen sich in static/js/face.js ergänzen. Seit V01.0.521 wählt jedes Profil sein eigenes Gesicht unter Ich → Gespräch → *Anzeige* mit Bildern (*Vorgabe*, *Roboter*, *Comic*, *Comic (Frau)*); es gilt auf allen Geräten des Profils (Panel, iPhone-App, Begleiter, Pebble), *Vorgabe* nimmt das Gesicht des Spark. In der iPhone-App steht dieselbe Wahl ganz oben unter Einstellungen → *Gesicht* (mit dem n"
+"text": "andy in der Leiste oben) das Sprechen. Seit V01.0.154 wählt der Admin unter Einstellungen → Vorgaben → „Gesicht des Assistenten“ zwischen *Roboter* (bisher, Standard) und *Comic* (eine Karikatur mit Stachelhaaren und kurzem Schnurrbart, seit V01.0.187 nur über der Oberlippe). Seit V01.0.497 gibt es als dritte Wahl *Comic (Frau)*: eine Frau mit langen dunklen Haaren und Seitenscheitel, im selben Stil gezeichnet, mit Wimpern und Lippen, die sich beim Sprechen öffnen; sie bewegt sich wie das Comic-Gesicht und zeigt auch die Ausdrücke. iPhone-App, Begleiter (Mac und Windows, als ruhendes Bild) und Pebble zeichnen sie ebenso. Das Comic-Gesicht schaut umher, blinzelt mit schweren Lidern, hebt die Brauen, neigt den Kopf, bewegt Mund und Schnurrbart mit der Stimme und zeigt den Zustand mit einem farbigen Ring: grau Ruhe, blau zuhören, gelb nachdenken, grün sprechen, rot Fehler. Die Wahl gilt für alle, auch für die iPhone-App; weitere Gesichter lassen sich in static/js/face.js ergänzen. Seit V01.0.521 wählt jedes Profil sein eigenes Gesicht unter Ich → Gespräch → *Anzeige* mit Bildern (*Vorgabe*, *Roboter*, *Comic*, *Comic (Frau)*); es gilt auf allen Geräten des Profils (Panel, iPhone-App, "
 },
 {
 "lang": "de",
@@ -3965,7 +3965,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "ächsten TestFlight-Build). Die Wahl des Admins steht seitdem ganz oben unter Einstellungen → Vorgaben → *Gesicht*, ebenfalls mit Bildern, und gilt für Gäste, geteilte Geräte und alle, die nichts Eigenes gewählt haben; die Vorgaben kopieren nie ein Gesicht in ein Profil. Der Server nimmt nur die festen Namen an (profiles.FACES), alle Geräte fragen über profiles.face_of. Seit V01.0.241 zeigt auch das kleine Bild vor jeder Antwort im Verlauf das gewählte Gesicht. Seit V01.0.294 gibt es daneben den Schalter „Gesicht zeigt, was es tut“ (aus): Dann zeigt das Gesicht neben dem Kopf ein kleines Zeichen, was die Antwort gerade tut, und zwar nur aus den Ereignissen des Panels, nie aus dem Text des Modells: Lupe beim Suchen im Netz, in Dokumenten oder früheren Gesprächen, Kalenderblatt bei Kalender und Tagesbriefing, Brief bei Mails, Glühbirne bei Home Assistant, Notizblock beim Merken und bei Erinnerungen, Denkblasen beim Nachdenken. Nach einer erledigten Aktion (Gerät geschaltet, gemerkt, Erinnerung gestellt) freut es sich kurz und zwinkert, bei einem Fehler schaut es ratlos mit Fragezeichen, und nach 5 Minuten ohne Gespräch und ohne Bedienung schläft es mit „zzz“ ein; Tippen, eine Taste od"
+"text": "Begleiter, Pebble), *Vorgabe* nimmt das Gesicht des Spark. In der iPhone-App steht dieselbe Wahl ganz oben unter Einstellungen → *Gesicht* (mit dem nächsten TestFlight-Build). Die Wahl des Admins steht seitdem ganz oben unter Einstellungen → Vorgaben → *Gesicht*, ebenfalls mit Bildern, und gilt für Gäste, geteilte Geräte und alle, die nichts Eigenes gewählt haben; die Vorgaben kopieren nie ein Gesicht in ein Profil. Der Server nimmt nur die festen Namen an (profiles.FACES), alle Geräte fragen über profiles.face_of. Seit V01.0.241 zeigt auch das kleine Bild vor jeder Antwort im Verlauf das gewählte Gesicht. Seit V01.0.294 gibt es daneben den Schalter „Gesicht zeigt, was es tut“ (aus): Dann zeigt das Gesicht neben dem Kopf ein kleines Zeichen, was die Antwort gerade tut, und zwar nur aus den Ereignissen des Panels, nie aus dem Text des Modells: Lupe beim Suchen im Netz, in Dokumenten oder früheren Gesprächen, Kalenderblatt bei Kalender und Tagesbriefing, Brief bei Mails, Glühbirne bei Home Assistant, Notizblock beim Merken und bei Erinnerungen, Denkblasen beim Nachdenken. Nach einer erledigten Aktion (Gerät geschaltet, gemerkt, Erinnerung gestellt) freut es sich kurz und zwinkert, be"
 },
 {
 "lang": "de",
@@ -3973,7 +3973,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "er die Maus über dem Gesicht wecken es."
+"text": "i einem Fehler schaut es ratlos mit Fragezeichen, und nach 5 Minuten ohne Gespräch und ohne Bedienung schläft es mit „zzz“ ein; Tippen, eine Taste oder die Maus über dem Gesicht wecken es."
 },
 {
 "lang": "de",
@@ -11381,7 +11381,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Kopf unten rechts überall (V01.0.359)",
-"text": "Kopf unten rechts überall (V01.0.359): Der Kopf unten rechts ist für jede Anmeldung (nicht für Gäste) auf jeder Seite, über Ich und in der Handy-Ansicht da, auch ohne die Spark-Hilfe. Ein Tipp startet das Zuhören und öffnet sein Fenster mit „Gespräch öffnen“, „Stopp“ und einem Feld zum Tippen; ein zweiter Tipp beendet das Zuhören, der zweite Tipp eines Doppeltipps zählt nicht und markiert keinen Text. Mit der Tastatur: Tab bis zum Kopf, dann Enter oder Leertaste. Die Seite, auf der man ist, geht nur mit „Frag Spark auf jeder Seite“ mit. Der Live-Monitor an der Wand (/live) bleibt eine reine Anzeige ohne Kopf."
+"text": "Kopf unten rechts überall (V01.0.359): Der Kopf unten rechts ist für jede Anmeldung (nicht für Gäste) auf jeder Seite, über Ich und in der Handy-Ansicht da, auch ohne die Spark-Hilfe. Ein Tipp startet das Zuhören und öffnet sein Fenster mit „Gespräch öffnen“, „Stopp“ und einem Feld zum Tippen; ein zweiter Tipp beendet das Zuhören, der zweite Tipp eines Doppeltipps zählt nicht und markiert keinen Text. Mit der Tastatur: Tab bis zum Kopf, dann Enter oder Leertaste. Die Seite, auf der man ist, geht nur mit „Frag Spark auf jeder Seite“ mit. Der Live-Monitor an der Wand (/live) bleibt eine reine Anzeige ohne Kopf. Seit V01.1.260 ist der Kopf kein schwebendes Gesicht mehr, sondern das Zeichen „Frag Spark“ oben; es tut dasselbe."
 },
 {
 "lang": "de",
@@ -12093,7 +12093,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Alle Funktionen",
 "title": "Alle Funktionen",
-"text": "- Frag Spark auf jeder Seite (Funktionen → Gespräch → „Frag Spark auf jeder Seite“; baut auf „Hilfe zum Spark“; Ich → Gespräch): Der Kopf unten rechts ist auf jeder Seite der Assistent."
+"text": "- Frag Spark auf jeder Seite (Funktionen → Gespräch → „Frag Spark auf jeder Seite“; baut auf „Hilfe zum Spark“; Ich → Gespräch): Das Zeichen „Frag Spark“ oben (am Rechner neben „Spark“ in der Seitenleiste, am Handy in der Leiste oben) ist auf jeder Seite der Assistent."
 },
 {
 "lang": "de",
@@ -16757,7 +16757,7 @@
 "file": "Technik und Fehlersuche",
 "head": "Design-System (Tokens)",
 "title": "Design-System (Tokens)",
-"text": "Seit V01.1.246 (Redesign Stufe 1, Plan redesign/plan.md, Dominik 2026-10-29 „wie Empfehlung“: Richtung A Systemstil, Hell/Dunkel folgt dem System, Systemschrift) hat das Panel eine Quelle für sein Aussehen: app/panel/static/tokens.css. Stufe 1 ändert nichts Sichtbares; sie legt die Quelle an und stellt die Stile darauf um. Die neuen Werte („Klar 2“: neutrale Grautöne, ein blauer Akzent, keine Verläufe und Schatten im Inhalt) folgen in den nächsten Stufen nur über diese Datei."
+"text": "Seit V01.1.246 (Redesign Stufe 1, Plan redesign/plan.md, Dominik 2026-10-29 „wie Empfehlung“: Richtung A Systemstil, Hell/Dunkel folgt dem System, Systemschrift) hat das Panel eine Quelle für sein Aussehen: app/panel/static/tokens.css. Stufe 1 änderte nichts Sichtbares; sie legte die Quelle an und stellte die Stile darauf um. Seit V01.1.260 (Stufe 2) stehen dort die Werte von „Klar 2“: neutrale Apple-Grautöne, ein blauer Akzent (#0071e3, dunkel #0a84ff), keine Verläufe und Schatten im Inhalt, Systemschrift."
 },
 {
 "lang": "de",
@@ -16765,7 +16765,7 @@
 "file": "Technik und Fehlersuche",
 "head": "Design-System (Tokens)",
 "title": "Design-System (Tokens)",
-"text": "- Was drin steht: Farben hell und dunkel (--bg, --card, --fg, --mut, --line, --acc, --acc2, Status --ok, --warn, --bad und ihre Textstufen --okt, --warnt, --badt, --acct), Text auf farbigem Grund --on-acc, --shadow, Radius --r, --visor (Gesicht), der Seitenrahmen (--frame, --sidecol, --sidegap) und die Farben der Speicherleiste (--mdf-bild, --mdf-musik). Hell/Dunkel folgt dem System, außer <html data-theme=\"light|dark\"> legt es fest (Kopfknopf). - Wie es geladen wird: index.html und live.html laden tokens.css vor app.css, wie jede Stildatei mit Fingerabdruck (panel.file_tag) über die Liste in panel.static_file. Die Hilfe am Bildschirm (spontanhilfe.css) behält als öffentliche Seite ohne app.css ihre eigene kleine Palette. - Regel: Neue Stile nehmen var(--…), nie eine feste Hex-Farbe oder eine Schriftgröße außerhalb der Skala (11,5/12/12,5/14/16/17/22/26/32 px). Fehlt ein Wert, kommt er als Token nach tokens.css; keine andere Stildatei definiert einen Token neu. - Wächter: tests/test_design_tokens.py prüft, dass tokens.css nur Variablen enthält, auf jeder Seite mit app.css davor geladen wird und kein Token anderswo neu steht. Feste Hex-Farben und Schriftgrößen außerhalb der Skala zä"
+"text": "- Was drin steht: Farben hell und dunkel (--bg, --card, --side für Seitenleiste und zweite Spalte, --fg, --mut, --faint, --line, --fill, --sel, --acc, --acc-weak, --acc2 ist dieselbe Farbe wie --acc, Status --ok, --warn, --bad und ihre Textstufen --okt, --warnt, --badt, --acct), Text auf farbigem Grund --on-acc, --shadow (im Inhalt keiner), --shadow-pop und --shadow-drag für Schwebendes, Radius --r und die Radien --r-badge bis --r-pill, Schrift (--font, --font-display, --mono, --serif und die sieben Stufen --t-large 26, --t-title 22, --t-head 17, --t-body 14, --t-sub 12,5, --t-cap 11,5, --t-mono 12), Abstände im 4/8-Raster (--s1 … --s12), feste Höhen (--h-nav, --h-row, --h-item, --h-bar …), Breiten (--side-w 232 px Seitenleiste, --list-w, --detail-max), Bewegung (--dur, --ease, mit prefers-reduced-motion 0) und Icons (--ic, --ic-stroke 1,75), --visor (Gesicht), der Seitenrahmen (--frame, --sidecol, --sidegap) und die Farben der Speicherleiste (--mdf-bild, --mdf-musik). Hell/Dunkel folgt dem System, außer <html data-theme=\"light|dark\"> legt es fest (Kopfknopf). - Wie es geladen wird: index.html und live.html laden tokens.css vor app.css, wie jede Stildatei mit Fingerabdruck (panel.f"
 },
 {
 "lang": "de",
@@ -16773,7 +16773,15 @@
 "file": "Technik und Fehlersuche",
 "head": "Design-System (Tokens)",
 "title": "Design-System (Tokens)",
-"text": "hlt er je Stildatei gegen eine Altlastenliste, die nur schrumpft (wie test_aufraeumen); eine neue Stildatei beginnt bei null."
+"text": "ile_tag) über die Liste in panel.static_file. Die Hilfe am Bildschirm (spontanhilfe.css) behält als öffentliche Seite ohne app.css ihre eigene kleine Palette. - Regel: Neue Stile nehmen var(--…), nie eine feste Hex-Farbe oder eine Schriftgröße außerhalb der Skala (11,5/12/12,5/14/16/17/22/26/32 px). Fehlt ein Wert, kommt er als Token nach tokens.css; keine andere Stildatei definiert einen Token neu. - Navigation und Seitenkopf (V01.1.260, Stufe 2): Die Seitenleiste hat grauen Grund, oben „Spark“ mit dem Zeichen „Frag Spark“, die Suche (Strg K) als graues Feld, die Einträge mit Linien-Icons in --mut (das offene im Akzent, graue Auswahl) und unten wer angemeldet ist (Kreis mit Initialen, ein Tipp öffnet Ich), den Notaus mit rotem Rand sowie klein Hell/Dunkel, Sprache und Abmelden. Die zweite Spalte (Zustand, Funktionen, Personen und Geräte, Einstellungen) trägt oben ihren Namen und Linien-Icons in einer Farbe statt bunter Kacheln. Jede Seite einer Gruppe bekommt einen Seitenkopf: großer Titel und ein Satz (#phead, pageHead in base.js, Text immer als textContent); Seiten mit eigenem Titel (Funktionen) behalten ihren. Am Handy steht der Seitenkopf wie ein großer iOS-Titel unter der Lei"
+},
+{
+"lang": "de",
+"src": "technik",
+"file": "Technik und Fehlersuche",
+"head": "Design-System (Tokens)",
+"title": "Design-System (Tokens)",
+"text": "ste. - Gesicht (V01.1.260): Das Roboter-Gesicht steht nur noch im Assistenten, kleiner und ruhig (kein Wippen, die Augen folgen nicht der Maus; mit prefers-reduced-motion ein Bild je Stimmung), das Comic-Gesicht bleibt wählbar. Auf allen anderen Seiten startet das Linien-Zeichen „Frag Spark“ (#fabface) oben das Sprechen und öffnet daneben sein Fenster; seine Stimmung zeigt es nur als Farbe (data-mode). - Wächter: tests/test_design_tokens.py prüft, dass tokens.css nur Variablen enthält, auf jeder Seite mit app.css davor geladen wird und kein Token anderswo neu steht. Feste Hex-Farben und Schriftgrößen außerhalb der Skala zählt er je Stildatei gegen eine Altlastenliste, die nur schrumpft (wie test_aufraeumen); eine neue Stildatei beginnt bei null."
 },
 {
 "lang": "de",
@@ -20733,7 +20741,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "The Assistant page needs the microphone, and browsers only allow it over https. The panel therefore also listens on https://SPARK:31443 with a self-signed certificate; the browser warns once. The LLM connection is under Settings → Language model (default: qwen38 at http://127.0.0.1:30001/v1). Since V01.0.292 \"Model\" there offers a choice of the models the server at this address reports (/v1/models, admin only, kept 60 seconds, \"Reload\" asks at once); \"Automatic\" takes the first, \"Type another …\" opens the text field. If the list cannot be read, the text field stays with the reason above it. The installer takes the qwen38 API key from ~/.config/qwen38/api-key of the user who runs sudo ./install.sh. Thinking is off for the chat so the answer starts right away. An animated assistant face shows whether it is listening, thinking or speaking; its mouth follows the voice. The same face sits in the bottom right corner of every tab, so you can talk from anywhere in the panel. Since V01.0.154 the admin picks under Settings → Defaults → \"Gesicht des Assistenten\" between *Robot* (as before, the default) and *Comic* (a caricature with spiky hair and a short mustache, since V01.0.187 only above "
+"text": "The Assistant page needs the microphone, and browsers only allow it over https. The panel therefore also listens on https://SPARK:31443 with a self-signed certificate; the browser warns once. The LLM connection is under Settings → Language model (default: qwen38 at http://127.0.0.1:30001/v1). Since V01.0.292 \"Model\" there offers a choice of the models the server at this address reports (/v1/models, admin only, kept 60 seconds, \"Reload\" asks at once); \"Automatic\" takes the first, \"Type another …\" opens the text field. If the list cannot be read, the text field stays with the reason above it. The installer takes the qwen38 API key from ~/.config/qwen38/api-key of the user who runs sudo ./install.sh. Thinking is off for the chat so the answer starts right away. An animated assistant face shows whether it is listening, thinking or speaking; its mouth follows the voice. Since V01.1.260 (redesign stage 2) the face stands only in the assistant, calm and smaller; on every other page the sign \"Ask Spark\" at the top (on a computer next to \"Spark\" in the side menu, on a phone in the top bar) starts talking. Since V01.0.154 the admin picks under Settings → Defaults → \"Gesicht des Assistenten\" "
 },
 {
 "lang": "en",
@@ -20741,7 +20749,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "the upper lip). Since V01.0.497 there is a third choice, *Comic (woman)*: a woman with long dark hair and a side parting, drawn in the same style, with lashes and lips that open when she speaks; she moves like the comic face and shows the expressions too. The iPhone app, the companions (Mac and Windows, as a still) and the Pebble draw her too. The comic face looks around, blinks with heavy lids, raises its brows, tilts its head, moves mouth and mustache with the voice and shows the state with a coloured ring: grey idle, blue listening, yellow thinking, green speaking, red error. The choice applies to everybody, the iPhone app included; more faces can be added in static/js/face.js. Since V01.0.521 every profile picks its own face under Me → Conversation → *Display* with pictures (*Default*, *Robot*, *Comic*, *Comic (woman)*); it applies on all of the profile's devices (panel, iPhone app, companions, Pebble), *Default* takes the Spark's face. In the iPhone app the same choice sits at the top of Settings → *Face* (with the next TestFlight build). The admin's pick has since been at the top of Settings → Defaults → *Face*, with pictures as well, and applies to guests, shared devices and"
+"text": "between *Robot* (as before, the default) and *Comic* (a caricature with spiky hair and a short mustache, since V01.0.187 only above the upper lip). Since V01.0.497 there is a third choice, *Comic (woman)*: a woman with long dark hair and a side parting, drawn in the same style, with lashes and lips that open when she speaks; she moves like the comic face and shows the expressions too. The iPhone app, the companions (Mac and Windows, as a still) and the Pebble draw her too. The comic face looks around, blinks with heavy lids, raises its brows, tilts its head, moves mouth and mustache with the voice and shows the state with a coloured ring: grey idle, blue listening, yellow thinking, green speaking, red error. The choice applies to everybody, the iPhone app included; more faces can be added in static/js/face.js. Since V01.0.521 every profile picks its own face under Me → Conversation → *Display* with pictures (*Default*, *Robot*, *Comic*, *Comic (woman)*); it applies on all of the profile's devices (panel, iPhone app, companions, Pebble), *Default* takes the Spark's face. In the iPhone app the same choice sits at the top of Settings → *Face* (with the next TestFlight build). The admi"
 },
 {
 "lang": "en",
@@ -20749,7 +20757,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": " everybody who picked nothing of their own; the presets never copy a face into a profile. The server only takes the fixed names (profiles.FACES), every device asks through profiles.face_of. Since V01.0.241 the small picture before each answer in the history shows the chosen face as well. Since V01.0.294 there is a switch \"Gesicht zeigt, was es tut\" next to it (off): the face then shows a small sign beside the head for what the answer is doing, taken only from the panel's events, never from the model's text: a magnifier for web, document or history searches, a calendar sheet for calendar and briefing, a letter for mail, a light bulb for Home Assistant, a note pad for memory and reminders, thought bubbles while thinking. After an action was done (device switched, something remembered, reminder set) it is pleased for a moment and winks, on an error it looks puzzled with a question mark, and after 5 minutes without conversation or use it falls asleep with \"zzz\"; a tap, a key or the mouse over the face wake it."
+"text": "n's pick has since been at the top of Settings → Defaults → *Face*, with pictures as well, and applies to guests, shared devices and everybody who picked nothing of their own; the presets never copy a face into a profile. The server only takes the fixed names (profiles.FACES), every device asks through profiles.face_of. Since V01.0.241 the small picture before each answer in the history shows the chosen face as well. Since V01.0.294 there is a switch \"Gesicht zeigt, was es tut\" next to it (off): the face then shows a small sign beside the head for what the answer is doing, taken only from the panel's events, never from the model's text: a magnifier for web, document or history searches, a calendar sheet for calendar and briefing, a letter for mail, a light bulb for Home Assistant, a note pad for memory and reminders, thought bubbles while thinking. After an action was done (device switched, something remembered, reminder set) it is pleased for a moment and winks, on an error it looks puzzled with a question mark, and after 5 minutes without conversation or use it falls asleep with \"zzz\"; a tap, a key or the mouse over the face wake it."
 },
 {
 "lang": "en",
@@ -27877,7 +27885,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "The face at the bottom right everywhere (V01.0.359)",
-"text": "The face at the bottom right everywhere (V01.0.359): the face at the bottom right is there for every login (not for guests) on every page, over Me and in the phone view, also without the Spark help. One tap starts listening and opens its window with \"Open conversation\", \"Stop\" and a field to type in; a second tap stops listening, the second tap of a double tap does not count and marks no text. With the keyboard: tab to the face, then Enter or Space. The page you are on only goes along with \"Ask Spark on every page\". The wall monitor (/live) stays a pure display without a face."
+"text": "The face at the bottom right everywhere (V01.0.359): the face at the bottom right is there for every login (not for guests) on every page, over Me and in the phone view, also without the Spark help. One tap starts listening and opens its window with \"Open conversation\", \"Stop\" and a field to type in; a second tap stops listening, the second tap of a double tap does not count and marks no text. With the keyboard: tab to the face, then Enter or Space. The page you are on only goes along with \"Ask Spark on every page\". The wall monitor (/live) stays a pure display without a face. Since V01.1.260 it is no floating face any more but the sign \"Ask Spark\" at the top; it does the same."
 },
 {
 "lang": "en",
@@ -28565,7 +28573,7 @@
 "file": "Assistant and panel",
 "head": "All functions",
 "title": "All functions",
-"text": "- Ask Spark on every page (Features → Conversation → \"Ask Spark on every page\"; builds on \"Help with the Spark\"; Me → Conversation): The face at the bottom right is the assistant on every page."
+"text": "- Ask Spark on every page (Features → Conversation → \"Ask Spark on every page\"; builds on \"Help with the Spark\"; Me → Conversation): The sign \"Ask Spark\" at the top (on a computer next to \"Spark\" in the side menu, on a phone in the top bar) is the assistant on every page."
 },
 {
 "lang": "en",
@@ -33141,7 +33149,7 @@
 "file": "Technical details and troubleshooting",
 "head": "Design system (tokens)",
 "title": "Design system (tokens)",
-"text": "Since V01.1.246 (redesign stage 1, plan redesign/plan.md, Dominik 2026-10-29 \"as recommended\": direction A system style, light/dark follows the system, system font) the panel has one source for its look: app/panel/static/tokens.css. Stage 1 changes nothing visible; it creates the source and moves the styles onto it. The new values (\"Clear 2\": neutral greys, one blue accent, no gradients and shadows in the content) follow in the next stages through this file only."
+"text": "Since V01.1.246 (redesign stage 1, plan redesign/plan.md, Dominik 2026-10-29 \"as recommended\": direction A system style, light/dark follows the system, system font) the panel has one source for its look: app/panel/static/tokens.css. Stage 1 changed nothing visible; it created the source and moved the styles onto it. Since V01.1.260 (stage 2) it holds the values of \"Clear 2\": neutral Apple greys, one blue accent (#0071e3, dark #0a84ff), no gradients and shadows in the content, system font."
 },
 {
 "lang": "en",
@@ -33149,7 +33157,7 @@
 "file": "Technical details and troubleshooting",
 "head": "Design system (tokens)",
 "title": "Design system (tokens)",
-"text": "- What it holds: colours light and dark (--bg, --card, --fg, --mut, --line, --acc, --acc2, status --ok, --warn, --bad and their text shades --okt, --warnt, --badt, --acct), text on a coloured ground --on-acc, --shadow, radius --r, --visor (face), the page frame (--frame, --sidecol, --sidegap) and the colours of the memory bar (--mdf-bild, --mdf-musik). Light/dark follows the system unless <html data-theme=\"light|dark\"> sets it (header button). - How it loads: index.html and live.html load tokens.css before app.css, with a fingerprint like every style sheet (panel.file_tag) through the list in panel.static_file. The screen help (spontanhilfe.css) is a public page without app.css and keeps its own small palette. - Rule: new styles use var(--…), never a fixed hex colour or a font size outside the scale (11.5/12/12.5/14/16/17/22/26/32 px). A missing value goes into tokens.css as a token; no other style sheet defines a token again. - Guard: tests/test_design_tokens.py checks that tokens.css holds only variables, loads before app.css on every page that has it, and that no token is defined anywhere else. It counts fixed hex colours and font sizes outside the scale per style sheet against "
+"text": "- What it holds: colours light and dark (--bg, --card, --side for the side menu and second column, --fg, --mut, --faint, --line, --fill, --sel, --acc, --acc-weak, --acc2 is the same colour as --acc, status --ok, --warn, --bad and their text shades --okt, --warnt, --badt, --acct), text on a coloured ground --on-acc, --shadow (none in the content), --shadow-pop and --shadow-drag for floating things, radius --r and the radii --r-badge to --r-pill, type (--font, --font-display, --mono, --serif and the seven steps --t-large 26, --t-title 22, --t-head 17, --t-body 14, --t-sub 12.5, --t-cap 11.5, --t-mono 12), spacing on the 4/8 grid (--s1 … --s12), fixed heights (--h-nav, --h-row, --h-item, --h-bar …), widths (--side-w 232 px side menu, --list-w, --detail-max), motion (--dur, --ease, 0 with prefers-reduced-motion) and icons (--ic, --ic-stroke 1.75), --visor (face), the page frame (--frame, --sidecol, --sidegap) and the colours of the memory bar (--mdf-bild, --mdf-musik). Light/dark follows the system unless <html data-theme=\"light|dark\"> sets it (header button). - How it loads: index.html and live.html load tokens.css before app.css, with a fingerprint like every style sheet (panel.file_"
 },
 {
 "lang": "en",
@@ -33157,7 +33165,15 @@
 "file": "Technical details and troubleshooting",
 "head": "Design system (tokens)",
 "title": "Design system (tokens)",
-"text": "a legacy list that only shrinks (like test_aufraeumen); a new style sheet starts at zero."
+"text": "tag) through the list in panel.static_file. The screen help (spontanhilfe.css) is a public page without app.css and keeps its own small palette. - Rule: new styles use var(--…), never a fixed hex colour or a font size outside the scale (11.5/12/12.5/14/16/17/22/26/32 px). A missing value goes into tokens.css as a token; no other style sheet defines a token again. - Navigation and page head (V01.1.260, stage 2): the side menu has a grey ground, \"Spark\" on top with the sign \"Ask Spark\", the search (Ctrl K) as a grey field, the entries with line icons in --mut (the open one in the accent, grey choice) and at the bottom who is signed in (a circle with the initials, a tap opens Me), the emergency stop with a red border and, small, light/dark, language and sign out. The second column (Zustand, Funktionen, Personen und Geräte, Einstellungen) carries its name on top and line icons in one colour instead of coloured tiles. Every page of a group gets a page head: big title and one sentence (#phead, pageHead in base.js, text always as textContent); pages with a title of their own (Funktionen) keep theirs. On a phone the page head stands like a large iOS title under the bar. - Face (V01.1.260):"
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "Design system (tokens)",
+"title": "Design system (tokens)",
+"text": " the robot face stands only in the assistant, smaller and calm (no bobbing, the eyes do not follow the mouse; with prefers-reduced-motion one picture per mood), the comic face stays selectable. On every other page the line sign \"Ask Spark\" (#fabface) at the top starts talking and opens its window beside it; it shows its mood only as a colour (data-mode). - Guard: tests/test_design_tokens.py checks that tokens.css holds only variables, loads before app.css on every page that has it, and that no token is defined anywhere else. It counts fixed hex colours and font sizes outside the scale per style sheet against a legacy list that only shrinks (like test_aufraeumen); a new style sheet starts at zero."
 },
 {
 "lang": "en",

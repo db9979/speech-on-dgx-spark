@@ -4,7 +4,7 @@ const ME_LOAD={p:null,next:null};   // Ich's boxes: the load running now and the
 function setProfile(p){const changed=(p&&p.id)!==(PROFILE&&PROFILE.id);PROFILE=p||null;
   $('profname').textContent=PROFILE?PROFILE.name:t('Gast','Guest');
   if(changed){stopListening(true);stopAnswer();syncStop();if(!PROFILE){offlineWipe(true);merkWipe(true)}convos.cache=[];openConvo(null);convos.sync().then(()=>{if(!chat.msgs.length)openConvo(latestConvo())})}
-  loadSettings();rem.load();if(window.room)room.show();guestLock()}
+  loadSettings();rem.load();if(window.room)room.show();guestLock();if(typeof sideWho==='function')sideWho()}
 // Guests change no settings and cannot use room mode: they get the admin's defaults (the admin's own browser may).
 const isGuest=()=>!PROFILE&&!ADMIN;
 // Without a profile the assistant only answers, without any tool (Dominik 2026-10-13); the note says so with the way in

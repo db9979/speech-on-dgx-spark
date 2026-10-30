@@ -155,7 +155,7 @@ const NI={chat:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 
   cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',post:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',listen:'<path d="M9 6h11M9 12h11M9 18h11"/><path d="m3.5 6 1.2 1.2L7 5M3.5 12l1.2 1.2L7 11M3.5 18l1.2 1.2L7 17"/>',offen:'<path d="M4 13h4l2 3h4l2-3h4"/><path d="M5.5 6 4 13v5a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-5l-1.5-7a1 1 0 0 0-1-1h-11a1 1 0 0 0-1 1z"/>',kontakte:'<circle cx="12" cy="9" r="3.5"/><path d="M5.5 19a6.5 6.5 0 0 1 13 0"/><rect x="3" y="3" width="18" height="18" rx="3"/>',dungeon:'<path d="M12 2 21 7v10l-9 5-9-5V7z"/><path d="M12 2v20M3 7l9 5 9-5"/>',wbuch:'<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><circle cx="10" cy="9" r="1.6"/><circle cx="15" cy="12" r="1.6"/><path d="m11.4 9.8 2.2 1.4"/>',finden:'<circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5.5 5.5"/><path d="M8 9h5M8 12h3.5"/>',
   fern:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 3 3-3 3M13 15h4"/>',
   more:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>'};
-document.querySelectorAll('i.ni').forEach(e=>e.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+(NI[e.dataset.ni]||'')+'</svg>');
+document.querySelectorAll('i.ni').forEach(e=>e.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">'+(NI[e.dataset.ni]||'')+'</svg>');
 // the phone bar marks the page that is open (Ich while its window is open, else the section's menu entry)
 function mbarMark(g){document.querySelectorAll('#mbar button').forEach(x=>x.classList.toggle('on',x.dataset.m===({chat:'chat',chats:'chats',mon:'mon',me:'me'}[g]||'more')))}
 // Main menu: Zustand, Funktionen and Personen und Geräte hold several pages behind a sub-tab bar. Funktionen is the
@@ -199,9 +199,15 @@ const GNAME={mon:t('Zustand','Status'),feat:t('Funktionen','Features'),prof:t('P
 // Zustand in three blocks like Einstellungen (Webanwendung 6, V01.0.750): the heading stands before the first page of
 // its block, each page gets its symbol (seite.js pageIcon, appended after the text like in #cfgnav)
 const SUBGRP={mon:t('Beobachten','Watch'),test:t('Prüfen','Check'),usage:t('Technik','Technology')};
+// Seitenkopf (Klar 2, Redesign Stufe 2): a page of a group gets the big title and one sentence above its content, the
+// second column the group's name on top; pages that bring their own title (Funktionen: #pane-feat h2.pt) keep theirs
+const PHEAD_OWN=new Set(['feat']);
+const PINTRO={mon:()=>t('Was der Spark gerade tut und was dich braucht','What the Spark is doing right now and what needs you')};
+function pageHead(g,s,many){const ph=$('phead');if(!ph)return;const it=GROUPS[g].find(x=>x[0]===s),off=!many||!it||PHEAD_OWN.has(s);ph.hidden=off;if(off)return;
+  $('pheadt').textContent=it[1];$('pheadi').textContent=(PINTRO[s]||SUBDESC[s]||(()=>''))()}
 function subnav(g,s){const items=GROUPS[g],bar=$('subnav'),many=items.length>1;bar.hidden=!many;document.querySelector('main').classList.toggle('hassub',many);
-  if(!many)document.querySelector('main').classList.remove('sublist');
-  bar.innerHTML=!many?'':items.map(([id,l])=>(g==='mon'&&SUBGRP[id]?`<div class="cgrp">${esc(SUBGRP[id])}</div>`:'')+`<button type="button" data-sub="${id}"${id===s?' class="on"':''}>${esc(l)}<small class="gls">${esc(SUBDESC[id]?SUBDESC[id]():'')}</small></button>`).join('');
+  if(!many)document.querySelector('main').classList.remove('sublist');pageHead(g,s,many);
+  bar.innerHTML=!many?'':`<h2 class="colhd">${esc(GNAME[g]||'')}</h2>`+items.map(([id,l])=>(g==='mon'&&SUBGRP[id]?`<div class="cgrp">${esc(SUBGRP[id])}</div>`:'')+`<button type="button" data-sub="${id}"${id===s?' class="on"':''}>${esc(l)}<small class="gls">${esc(SUBDESC[id]?SUBDESC[id]():'')}</small></button>`).join('');
   if(window.pageIcon)bar.querySelectorAll('button[data-sub]').forEach(b=>{const i=pageIcon('z:'+b.dataset.sub);if(i){b.appendChild(i);b.classList.add('hasic')}});
   $('subback').querySelector('span').textContent=GNAME[g]||'';
   bar.querySelectorAll('button').forEach(b=>b.onclick=()=>{lastSec[g]=b.dataset.sub;subnav(g,b.dataset.sub);document.querySelector('main').classList.remove('sublist');showSec(b.dataset.sub);if(NARROW())window.scrollTo(0,0)});updBadge(window.UPD)}

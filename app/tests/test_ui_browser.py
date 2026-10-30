@@ -215,7 +215,7 @@ class Browser(unittest.TestCase):
         self.run_async(go())
 
     def test_frag_spark_in_the_face(self):
-        """Spark-Hilfe (hilfe.js): "Frag Spark" lives in the face at the bottom right, names the page (also over Ich),
+        """Spark-Hilfe (hilfe.js): "Frag Spark" lives in the sign at the top (Klar 2: no floating face), names the page (also over Ich),
         a typed question there carries the page and gets the card, "Übernehmen" switches only after the tap (here the
         admin's Spark switch: a profile switches no function on itself any more); no sideways scrolling on a phone,
         with the strict CSP on. Ich asks again what the admin allows (V01.0.335)."""
@@ -283,7 +283,7 @@ class Browser(unittest.TestCase):
             helpers.set_config(spark_help=False, spark_suggest=False, spark_drawer=False, routing=False, follow_up=False)
 
     def test_face_starts_everywhere_with_one_tap(self):
-        """The face at the bottom right (face.js, V01.0.359): on every page, over Ich and on a phone, also without
+        """The sign „Frag Spark“ at the top (face.js, V01.0.359; Klar 2: no face any more): on every page, over Ich and on a phone, also without
         the Spark-Hilfe, one tap starts listening and opens its window (the tap on #talk used to close it at once),
         the second tap of a double tap is ignored and marks no text, and a question can be typed."""
         import profiles
@@ -323,7 +323,8 @@ class Browser(unittest.TestCase):
         self.run_async(go())
 
     def test_every_face_draws_and_moves(self):
-        """Every face the admin can pick (core.FACES) mounts in the chat and the floating button with the strict CSP on,
+        """Every face the admin can pick (core.FACES) mounts in the chat with the strict CSP on, and only there: the sign
+        „Frag Spark“ at the top stays a line symbol, never a face (Klar 2, Redesign Stufe 2),
         and the comic faces move: lids, mouth line and, for the comic woman (V01.0.497), the lips around the mouth.
         The small picture before each answer follows the face."""
         from core import FACES
@@ -339,6 +340,8 @@ class Browser(unittest.TestCase):
                         await pg.wait_for_timeout(400)
                         self.assertEqual(await pg.evaluate("document.body.dataset.face"), kind)
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#face svg,#fabface svg').length"), 2, kind)
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#face svg').length"), 1, kind)
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#fabface [data-p],#fabface .feyeL').length"), 0, kind)
                         if kind == "robot":
                             continue
                         await self.until(pg, "!!document.querySelector('#face [data-p=ml]').getAttribute('d')")

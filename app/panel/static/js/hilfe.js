@@ -36,7 +36,7 @@ function hilfeCard(c){const d=document.createElement('div');d.className='hcard';
     if(st==='applied'){after();row.innerHTML=`<button type="button" class="b" data-hdo="undo">${esc(t('Rückgängig','Undo'))}</button>`;msg.textContent=t('Übernommen.','Applied.');return}
     if(st==='undone'){after();row.remove();msg.textContent=t('Zurückgenommen, alles wie vorher.','Undone, everything as before.')}});
   return d}
-// ---------------------------------------------------------------- Frag Spark (chat.spark_drawer): the face at the bottom right
+// ---------------------------------------------------------------- Frag Spark (chat.spark_drawer): the sign at the top (Klar 2, no floating face)
 // The face is the same assistant on every page, so no button of its own: with "Frag Spark auf jeder Seite" on it
 // also shows over Ich and for profiles, names the page it is on, takes a typed question too, and every question
 // asked through it (spoken or typed, chat.js ask()) carries the page. Same conversation as the chat.

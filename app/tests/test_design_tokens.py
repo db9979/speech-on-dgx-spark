@@ -127,9 +127,60 @@ class Tokens(unittest.TestCase):
         self.assertEqual(off_scale(".a{font-size:var(--t)}.b{font:700 26px/1.15 x}.c{font-size:inherit!important}"), 0)
 
 
+class Klar2(unittest.TestCase):
+    """Redesign Stufe 2 (Navigation und Seitenkopf): system font and the type scale as tokens, a calm side menu, a page
+    head, nothing that jumps, and no floating face: the face lives only in the assistant."""
+    def test_font_and_type_scale_are_tokens(self):
+        names = token_names()
+        for name in ("--font", "--font-display", "--mono", "--serif", "--t-large", "--t-title", "--t-head", "--t-body",
+                     "--t-sub", "--t-cap", "--t-mono", "--side", "--side-w", "--sel", "--fill", "--faint", "--dur"):
+            self.assertIn(name, names)
+        css = read("app.css")
+        self.assertIn("body{margin:0;min-height:100vh;color:var(--fg);font:var(--t-body);", css)
+        self.assertNotRegex(css, r"body\{[^}]*gradient")          # a calm ground, no gradient behind the pages
+        # no font is loaded from anywhere: the system's own (Google Fonts or a CDN would leave the house)
+        for name in sheets():
+            self.assertNotIn("@import", read(name), name)
+            self.assertNotIn("@font-face", read(name), name)
+
+    def test_nothing_jumps_on_hover(self):
+        """Bewegung only as opacity and colour: no translateY or scale when the pointer is over something."""
+        for name in sheets():
+            css = re.sub(r"/\*.*?\*/", "", read(name), flags=re.S)
+            for sel, body in re.findall(r"([^{}]*:hover[^{}]*)\{([^{}]*)\}", css):
+                self.assertNotRegex(body, r"translateY|scale\(", f"{name}: {sel.strip()[-60:]}")
+
+    def test_side_menu_and_page_head(self):
+        css, html = read("app.css"), read("index.html")
+        self.assertIn("body.adm{padding-left:var(--side-w)}", css)
+        self.assertIn("background:var(--side)", css)
+        self.assertIn("body.adm nav button.on{background:var(--sel)", css)
+        self.assertIn('<div class="phead" id="phead" hidden><h2 class="pt" id="pheadt"></h2><div class="pintro" id="pheadi"></div></div>', html)
+        base = read(os.path.join("js", "base.js"))
+        self.assertIn("function pageHead(g,s,many)", base)
+        self.assertIn("$('pheadt').textContent=it[1]", base)   # text, never HTML
+        # the coloured tiles of the second column are gone: one line colour, the open page in the accent
+        self.assertNotRegex(css, r"\.cic\.c-\w+\{background")
+
+    def test_no_floating_face(self):
+        """Dominik 2026-10-29 („wie Empfehlung“): the face only in the assistant. The button „Frag Spark“ (#fabface)
+        is a line sign in the top row, never a mounted face, never fixed at the bottom of the window."""
+        html, css = read("index.html"), read("app.css")
+        fab = html[html.index('<div class="fabface" id="fabface"'):]
+        fab = fab[:fab.index("</div>")]
+        self.assertIn('stroke="currentColor"', fab)
+        self.assertNotIn("face fabface", html)
+        self.assertIn("function mountAll(){faces.length=0;FD.vis=null;FD.mode=null;mountFace($('face'),'A')}",
+                      read(os.path.join("js", "face.js")))
+        rule = re.search(r"\n#fab\{([^}]*)\}", css).group(1)
+        self.assertIn("top:", rule)
+        self.assertNotIn("bottom:", rule)
+        self.assertNotRegex(re.search(r"\n\.fabface\{([^}]*)\}", css).group(1), r"shadow|transform")
+
+
 class HexColours(Ratchet, unittest.TestCase):
     WHAT = "a fixed hex colour outside tokens.css; take a token (var(--…)) or add one to tokens.css"
-    ALT = {"app.css": 431, "appview.css": 24, "live.css": 18, "spontanhilfe.css": 19, "technik.css": 10, "weiche.css": 2}
+    ALT = {"app.css": 424, "appview.css": 24, "live.css": 18, "spontanhilfe.css": 19, "technik.css": 10, "weiche.css": 2}
 
     def hits(self):
         return {n: c for n in sheets() if n != TOKENS and (c := hex_colours(read(n)))}
@@ -137,7 +188,7 @@ class HexColours(Ratchet, unittest.TestCase):
 
 class FontSizes(Ratchet, unittest.TestCase):
     WHAT = "a font size outside the scale (SCALE); take a size of the scale"
-    ALT = {"app.css": 406, "appview.css": 17, "live.css": 21, "spontanhilfe.css": 5, "technik.css": 30, "weiche.css": 14}
+    ALT = {"app.css": 396, "appview.css": 17, "live.css": 21, "spontanhilfe.css": 5, "technik.css": 30, "weiche.css": 14}
 
     def hits(self):
         return {n: c for n in sheets() if n != TOKENS and (c := off_scale(read(n)))}

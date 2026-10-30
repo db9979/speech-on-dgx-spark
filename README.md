@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.260** Redesign stage 2: calm side menu, page head, system font and blue accent from `tokens.css`; no floating face any more, "Ask Spark" as a sign at the top
 - **V01.1.259** Browser tests also find Chromium under `chrome-linux64` (newer Playwright builds)
 - **V01.1.258** Find stage D: tags by the model (own sub-switch, off), checked only by fixed rules and shown as "by the model", removed ones never come back; people, companies and places as points of the knowledge map; one ranking over all lists; Sofort-Karte for a clear hit with a fixed sentence and "Open the original"
 - **V01.1.257** Find stage C: appointments and contacts sealed, past conversations (only date and channel), lists, reminders, pictures and songs in the search index; periods by fixed rules, "from the surgery" through the own calendar; five sub-switches, off by default
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.253** People, companies and deadlines as points of the knowledge map (step 2 of 4, own switch below the knowledge map, off): the language model only proposes names per passage, the panel checks them by fixed rules (kind from a fixed list, name stands in the passage, deadline only with a date, account only as IBAN or number, limits per document, profile and day); colours and a filter by kind on the map, renaming, merging and deleting only by click with code, event GEAENDERT and read functions finde_knoten/knoten_liste for other parts; the iPhone shows and deletes
 - **V01.1.252** What was learned sealed too: the read marks of learning, remembered matches, the open memory question, interests ("What I know about you") and the Spark diary now lie sealed as well, once after a backup "vor-siegel"; every file of memory and conversations must be sealed (plan nutzerwissen, stage 4c; test_siegel)
 - **V01.1.251** Memory and conversations sealed: memory.json, convos.json, toollog.json and room-history.json lie sealed whole in the profile (AES-256-GCM, a key per purpose from secret.key, the profile and the file name as associated data), once after a backup "vor-siegel" with a check per file; with another key set aside instead of overwritten, a hint to the admin, "Read in again" under Me → Memory (plan nutzerwissen, stage 4b; test_siegel)
-- **V01.1.250** One way to the own data: memory, conversations, tool log, room mode history, read marks, matches, interests, Spark diary and the open memory question are read and written by the panel only through profiles.read_own/write_own/drop_own (preparing the seal, nothing changes for the person)
 
 
 

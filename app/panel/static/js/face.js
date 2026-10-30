@@ -3,7 +3,9 @@
 // "robot" (the first face) or "comic" (a caricature of Dominik) or "comic_woman" (a woman drawn the same way). A new face is one more drawing here,
 // one more name in core.FACES and one more option under Einstellungen → Vorgaben.
 // ---------------------------------------------------------------- assistant face
-// One animation drives both faces (chat tab and the floating button); its mood follows the chat state.
+// The face lives only in the assistant (Klar 2, Redesign Stufe 2, Dominik 2026-10-29 „wie Empfehlung“): the button at
+// the top (#fabface, „Frag Spark“) is a calm line sign, no face; it only shows the mood as a colour (data-mode).
+// The robot is a calm sign there: no bobbing, no eyes after the mouse; with prefers-reduced-motion it stands still.
 const FACE_SVG=`<svg viewBox="0 0 200 200" aria-hidden="true"><defs><linearGradient id="fhead" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--acc)"/><stop offset="1" style="stop-color:var(--acc2)"/></linearGradient><radialGradient id="fshine" cx=".35" cy=".25" r=".8"><stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></radialGradient><filter id="fglow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="fsoft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="8"/></filter></defs><circle class="fhalo" cx="100" cy="104" r="80" fill="url(#fhead)" opacity=".25" filter="url(#fsoft)"/><circle class="spin" cx="100" cy="104" r="90" fill="none" stroke="url(#fhead)" stroke-width="3" stroke-linecap="round" stroke-dasharray="60 505"/><g class="fbody"><line x1="100" y1="34" x2="100" y2="18" stroke="url(#fhead)" stroke-width="4" stroke-linecap="round"/><circle class="fant" cx="100" cy="15" r="6" style="fill:var(--acc2)" filter="url(#fglow)"/><rect x="26" y="34" width="148" height="136" rx="56" fill="url(#fhead)"/><rect x="26" y="34" width="148" height="136" rx="56" fill="url(#fshine)"/><rect x="18" y="86" width="12" height="34" rx="6" fill="url(#fhead)"/><rect x="170" y="86" width="12" height="34" rx="6" fill="url(#fhead)"/><rect x="44" y="62" width="112" height="82" rx="38" style="fill:var(--visor)"/><g class="fcheeks" opacity=".0"><ellipse cx="62" cy="124" rx="9" ry="5" fill="#ff7aa8" opacity=".55"/><ellipse cx="138" cy="124" rx="9" ry="5" fill="#ff7aa8" opacity=".55"/></g><g class="feyes" filter="url(#fglow)" fill="#bff6ff"><rect class="feyeL" x="66" y="84" width="18" height="24" rx="9"/><rect class="feyeR" x="116" y="84" width="18" height="24" rx="9"/></g><path class="fmouth" d="M86 122 Q100 130 114 122" fill="#bff6ff" stroke="#bff6ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" filter="url(#fglow)"/></g></svg>`;
 // The comic face: one drawing in a 200 × 200 box, the moving parts (iris, lids, brows, mouth,
 // mustache, head, ring) are found by data-p and moved every frame. Shapes and colours are the same
@@ -156,7 +158,7 @@ function mountRobot(el,sfx){el.innerHTML=FACE_SVG.replace(/\b(fhead|fshine|fglow
   const q=c=>el.querySelector('.'+c);return {el,eyeL:q('feyeL'),eyeR:q('feyeR'),mouth:q('fmouth'),halo:q('fhalo'),ant:q('fant'),cheeks:q('fcheeks'),body:q('fbody')}}
 function mountComic(el,sfx){const[s,draw]=COMICS[FACE_KIND],b=draw(sfx);el.innerHTML=b.svg;const q=n=>el.querySelector(`[data-p="${n}"]`);
   return {el,comic:1,s,mcy:b.mcy,p:{head:q('head'),iL:q('irisL'),iR:q('irisR'),lL:q('lidL'),lR:q('lidR'),llL:q('llL'),llR:q('llR'),bL:q('browL'),bR:q('browR'),mo:q('mo'),ml:q('ml'),lip:q('lip'),lipT:q('lipT'),lipB:q('lipB'),st:q('st'),ring:q('ring')}}}
-function mountAll(){faces.length=0;FD.vis=null;mountFace($('face'),'A');mountFace($('fabface'),'B')}
+function mountAll(){faces.length=0;FD.vis=null;FD.mode=null;mountFace($('face'),'A')}
 // called with whoami's "face" and after the admin saved another one; unknown names keep the robot
 // the small picture before each answer (chat.js .av) follows the face: a still of the comic face,
 // drawn once from the same drawing (lids at rest, mouth closed)
@@ -249,10 +251,13 @@ function comicFrame(vis,mode,out,mic,now){const s=vis[0].s,dt=Math.min(.05,(now-
 document.addEventListener('input',()=>{FD.typed=performance.now()},true);
 document.addEventListener('keydown',()=>{FD.typed=performance.now()},true);
 const faceTyping=now=>now-FD.typed<1500;
+const FACE_RM=matchMedia('(prefers-reduced-motion: reduce)');
 function faceFrame(now){requestAnimationFrame(faceFrame);
   if(faceTyping(now)&&now-FD.last<100)return;
+  const fab=$('fabface'),fm=faceMode();if(fab.dataset.mode!==fm)fab.dataset.mode=fm;   // the sign at the top: only its colour
+  if(FACE_RM.matches&&fm===FD.mode)return;   // reduced motion: one picture per mood, nothing moves
   if(!FD.vis||now-FD.visAt>250){FD.vis=faces.filter(f=>f.el.offsetParent);FD.visAt=now}
-  const vis=FD.vis;if(!vis.length)return;FD.last=now;FD.n++;
+  const vis=FD.vis;if(!vis.length)return;FD.last=now;FD.n++;FD.mode=fm;
   let mode=faceMode();if(FACE_LIFE)mode=lifeMode(mode,now);let out=0;
   if(chat.out&&mode==='speak'){outBuf=outBuf||new Float32Array(chat.out.fftSize);chat.out.getFloatTimeDomainData(outBuf);let e=0;for(const v of outBuf)e+=v*v;out=Math.min(1,Math.sqrt(e/outBuf.length)*6)}
   const mic=chat.micLevel||0;
@@ -269,8 +274,6 @@ function faceFrame(now){requestAnimationFrame(faceFrame);
   const bl=mode!=='sleep'&&now-F.blink<150?Math.max(.08,Math.abs(1-(now-F.blink)/75)):1;
   for(const f of vis){let tx=0,ty=0;
     if(lg){tx=lg[0]*7;ty=lg[1]*6}else if(mode==='think'){tx=6;ty=-6}
-    else if(F.mx>=0){const r=f.el.getBoundingClientRect(),dx=F.mx-(r.left+r.width/2),dy=F.my-(r.top+r.height/2),d=Math.hypot(dx,dy)||1;
-      const m=Math.min(6,d/40);tx=dx/d*m;ty=dy/d*m*.7}
     f.lx=lerp(f.lx||0,tx,.12);f.ly=lerp(f.ly||0,ty,.12);
     const h=F.eyeH*bl,y=96-h/2+f.ly;
     f.eyeL.setAttribute('x',66+f.lx);f.eyeR.setAttribute('x',116+f.lx);
@@ -281,11 +284,11 @@ function faceFrame(now){requestAnimationFrame(faceFrame);
     f.cheeks.setAttribute('opacity',F.cheeks.toFixed(2));
     f.ant.style.fill=mode==='listen'?'#ff6b6b':mode==='sad'||mode==='error'?'#f59e0b':'var(--acc2)';
     f.ant.setAttribute('opacity',['think','search','calendar','mail','home','memory'].includes(mode)?(.4+.6*Math.abs(Math.sin(now/220))).toFixed(2):1);
-    f.body.setAttribute('transform',`${F.tilt?`rotate(${F.tilt.toFixed(2)} 100 170) `:''}translate(0 ${(Math.sin(now/(mode==='sleep'?1300:900))*1.6+(mode==='speak'?out*-1.5:0)+(P&&P.nod||0)*.8).toFixed(2)})`);
+    f.body.setAttribute('transform',`${F.tilt?`rotate(${F.tilt.toFixed(2)} 100 170) `:''}translate(0 ${((mode==='speak'?out*-1.5:0)+(P&&P.nod||0)*.8).toFixed(2)})`);
     f.el.dataset.mode=mode}}
 requestAnimationFrame(faceFrame);
 $('face').onclick=()=>$('talk').click();
-// floating button: talk from any tab, the conversation is the same as in the chat tab
+// the sign „Frag Spark“ at the top: talk from any tab, the conversation is the same as in the chat tab
 // one tap starts (or stops) listening; the second tap of a double tap is ignored (it stopped it again and marked
 // the text nearby). The window opens after the tap on #talk, whose click reaches the "outside" closer below.
 $('fabface').onclick=e=>{e.stopPropagation();if(e.detail>1)return;if(!CFG)api('/api/config').then(r=>r.json()).then(c=>CFG=CFG||c).catch(()=>{});

@@ -1,22 +1,52 @@
-/* Design-Tokens: die eine Quelle für Farben, Schatten, Radien und den Seitenrahmen des Panels (Redesign Stufe 1,
+/* Design-Tokens: die eine Quelle für Farben, Schrift, Abstände, Schatten, Radien und den Seitenrahmen des Panels (Redesign Stufe 1,
    Plan redesign/plan.md, Dominik 2026-10-29). Geladen vor app.css (index.html, live.html); app.css und die übrigen
    Stile lesen nur var(--…). Neue Farben, Größen und Abstände kommen hierher, nie als fester Wert in eine andere Datei
-   (test_design_tokens). Stufe 1 bildet die heutigen Werte ab, das Aussehen bleibt gleich; die Werte von „Klar 2“
-   (Systemstil) folgen in den nächsten Stufen. Nur Variablen und color-scheme, keine Regeln für Bausteine. */
+   (test_design_tokens). Stufe 1 bildete die alten Werte ab, seit Stufe 2 stehen hier die Werte von „Klar 2“
+   (Systemstil). Nur Variablen und color-scheme, keine Regeln für Bausteine. */
 
-/* Farben hell. Hell/Dunkel folgt dem System, außer <html data-theme="light|dark"> legt es fest (Kopfknopf, theme.js) */
-:root{--bg:#f4f6fb;--card:#fff;--fg:#141824;--mut:#5f6b85;--line:#e3e7f0;--acc:#5b5bf0;--acc2:#0ea5c6;--ok:#16a34a;--warn:#c27803;--bad:#dc2626;
+/* Farben „Klar 2 · Systemstil“ (Redesign Stufe 2, Tafel redesign/a-designsystem.png): neutrale Apple-Grautöne, ein
+   Akzent (Blau). Hell/Dunkel folgt dem System, außer <html data-theme="light|dark"> legt es fest (Kopfknopf, theme.js).
+   --acc2 ist kein zweiter Akzent mehr (früher Cyan für Verläufe): dieselbe Farbe, damit alte Verläufe ruhig werden. */
+:root{--bg:#f5f5f7;--card:#fff;--fg:#1d1d1f;--mut:#6e6e73;--line:#e2e2e7;--acc:#0071e3;--acc2:var(--acc);--ok:#28a745;--warn:#e08600;--bad:#e5342b;
+  /* Seitenleiste und zweite Spalte, Platzhalter und Pfeile, Grund von Suchfeld, Segment und Knopf, gewählte Zeile */
+  --side:#efeff2;--faint:#a1a1a6;--fill:rgba(118,118,128,.12);--sel:rgba(0,0,0,.065);--acc-weak:rgba(0,113,227,.1);
   /* text on a light tint of these colours (pills, marks): at least 4.5:1 (code check 19.10. D5) */
-  --okt:#166534;--warnt:#92400e;--badt:#b91c1c;--acct:#4343d6;
+  --okt:#1f7a35;--warnt:#a35a00;--badt:#c4271f;--acct:#0060c0;
   /* text on a coloured ground (accent, status, picture): the same in light and dark */
   --on-acc:#fff;
-  --shadow:0 1px 2px rgba(16,24,40,.04),0 6px 20px rgba(16,24,40,.06);--r:16px;--visor:#151a2e}
-/* Farben dunkel */
-@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0b0d14;--card:#131722;--fg:#e8ebf2;--mut:#8b95ab;--line:#242a3a;--acc:#8b8cff;--acc2:#22d3ee;
-  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.25);--visor:#070912;color-scheme:dark;--okt:#4ade80;--warnt:#fbbf24;--badt:#f87171;--acct:#a5a6ff}}
-:root[data-theme=dark]{--bg:#0b0d14;--card:#131722;--fg:#e8ebf2;--mut:#8b95ab;--line:#242a3a;--acc:#8b8cff;--acc2:#22d3ee;
-  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.25);--visor:#070912;color-scheme:dark;--okt:#4ade80;--warnt:#fbbf24;--badt:#f87171;--acct:#a5a6ff}
+  /* keine Schatten im Seiteninhalt; nur Schwebendes (Menü, Fenster, gezogenes Element) bekommt --shadow-pop/--shadow-drag */
+  --shadow:none;--shadow-pop:0 0 0 .5px rgba(0,0,0,.12),0 8px 28px rgba(0,0,0,.12);--shadow-drag:0 10px 30px rgba(0,0,0,.18),0 0 0 1px var(--acc);
+  --r:10px;--visor:#151a2e}
+/* Farben dunkel: echte System-Grautöne */
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#161618;--card:#242426;--fg:#f5f5f7;--mut:#a1a1a6;--line:#38383b;--acc:#0a84ff;
+  --ok:#32d74b;--warn:#ff9f0a;--bad:#ff453a;--side:#1f1f21;--faint:#6e6e73;--fill:rgba(118,118,128,.24);--sel:rgba(255,255,255,.08);--acc-weak:rgba(10,132,255,.16);
+  --shadow-pop:0 0 0 .5px rgba(255,255,255,.1),0 8px 28px rgba(0,0,0,.5);--visor:#070912;color-scheme:dark;--okt:#32d74b;--warnt:#ffb340;--badt:#ff6961;--acct:#4da3ff}}
+:root[data-theme=dark]{--bg:#161618;--card:#242426;--fg:#f5f5f7;--mut:#a1a1a6;--line:#38383b;--acc:#0a84ff;
+  --ok:#32d74b;--warn:#ff9f0a;--bad:#ff453a;--side:#1f1f21;--faint:#6e6e73;--fill:rgba(118,118,128,.24);--sel:rgba(255,255,255,.08);--acc-weak:rgba(10,132,255,.16);
+  --shadow-pop:0 0 0 .5px rgba(255,255,255,.1),0 8px 28px rgba(0,0,0,.5);--visor:#070912;color-scheme:dark;--okt:#32d74b;--warnt:#ffb340;--badt:#ff6961;--acct:#4da3ff}
 :root[data-theme=light]{color-scheme:light}
+
+/* Schrift: System (SF Pro, Segoe UI Variable, Roboto; Inter nur Ersatz), nichts wird geladen. Sieben Stufen:
+   großer Titel 26, Titel 22, Überschrift 17, Text 14, Neben 12,5, Klein 11,5 und Mono 12 (test_design_tokens SCALE) */
+:root{--font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",Roboto,"Helvetica Neue",Inter,system-ui,sans-serif;
+  --font-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI Variable Display","Segoe UI",Roboto,Inter,system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"JetBrains Mono",monospace;
+  --serif:"Iowan Old Style",Charter,"Bitstream Charter",Georgia,serif;
+  --t-large:700 26px/1.15 var(--font-display);--t-title:700 22px/1.2 var(--font-display);--t-head:600 17px/1.3 var(--font);
+  --t-body:400 14px/1.45 var(--font);--t-sub:400 12.5px/1.35 var(--font);--t-cap:600 11.5px/1.3 var(--font);--t-mono:400 12px/1.4 var(--mono);
+  --track-display:-.02em}
+
+/* Abstände im 4/8-Raster und feste Höhen (nichts springt; ein Skelett hat dieselbe Höhe) */
+:root{--s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:20px;--s6:24px;--s8:32px;--s10:40px;--s12:48px;
+  --h-ctl:28px;--h-row:46px;--h-item:52px;--h-nav:30px;--h-log:28px;--h-tile:104px;--h-bar:52px;--h-touch:44px;
+  --side-w:232px;--list-w:380px;--detail-max:660px}
+
+/* Radien: Abzeichen, Knopf und Feld, Listenzeile, Gruppe, Fenster, Schalter */
+:root{--r-badge:5px;--r-ctl:6px;--r-item:8px;--r-box:10px;--r-win:12px;--r-pill:999px}
+
+/* Bewegung: nur Deckkraft und Farbe; prefers-reduced-motion schaltet sie ab. Icons: 24er Raster, Strich 1,75 */
+:root{--dur:150ms;--ease:cubic-bezier(.2,0,0,1);--ic:18px;--ic-sm:15px;--ic-stroke:1.75}
+@media (prefers-reduced-motion:reduce){:root{--dur:0ms}}
 
 /* One frame for every page with a side menu (Dominik 2026-10-14 „alle Reiter wie Technik framen“): Zustand, Funktionen,
    Personen und Geräte, Einstellungen and Ich use the same width and the same menu column, so nothing jumps when switching

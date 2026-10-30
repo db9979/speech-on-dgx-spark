@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.260** Redesign Stufe 2: ruhige Seitenleiste, Seitenkopf, Systemschrift und blauer Akzent aus `tokens.css`; kein schwebendes Gesicht mehr, „Frag Spark“ als Zeichen oben
 - **V01.1.259** Browser-Tests finden Chromium auch unter `chrome-linux64` (neuere Playwright-Builds)
 - **V01.1.258** Finden Stufe D: Schlagworte vom Modell (eigener Unterschalter, aus), nur nach festen Regeln geprüft und als „vom Modell“ gezeigt, entfernte kommen nie wieder; Personen, Firmen und Orte als Punkte der Wissenskarte; eine Rangfolge über alle Listen; Sofort-Karte bei klarem Treffer mit festem Satz und „Original öffnen“
 - **V01.1.257** Finden Stufe C: Termine und Kontakte versiegelt, frühere Gespräche (nur Datum und Kanal), Listen, Erinnerungen, Bilder und Lieder im Suchindex; Zeiträume nach festen Regeln, „vom OP“ über den eigenen Kalender; fünf Unterschalter, ab Werk aus
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.253** Personen, Firmen und Fristen als Punkte der Wissenskarte (Stufe 2 von 4, eigener Schalter unter Wissenskarte, aus): das Sprachmodell schlägt je Stelle nur Namen vor, das Panel prüft nach festen Regeln (Art aus fester Liste, Name steht in der Stelle, Frist nur mit Datum, Konto nur als IBAN oder Nummer, Grenzen je Dokument, Profil und Tag); Farben und Filter nach Art auf der Karte, Umbenennen, Zusammenführen und Löschen nur per Klick mit Code, Ereignis GEAENDERT und Lesefunktionen finde_knoten/knoten_liste für andere Teile; iPhone zeigt und löscht
 - **V01.1.252** Auch das Gelernte versiegelt: Lesemarken des Lernens, gemerkte Zuordnungen, offene Gedächtnis-Frage, Interessen („Was ich über dich weiß“) und Spark-Tagebuch liegen jetzt ebenso versiegelt, einmal nach einer Sicherung „vor-siegel“; jede Datei aus Gedächtnis und Gesprächen muss versiegelt sein (Plan nutzerwissen, Stufe 4c; test_siegel)
 - **V01.1.251** Gedächtnis und Gespräche versiegelt: memory.json, convos.json, toollog.json und room-history.json liegen ganz versiegelt im Profil (AES-256-GCM, Schlüssel je Zweck aus secret.key, Profil und Dateiname als Zusatzdaten), einmalig nach einer Sicherung „vor-siegel“ und mit Probe je Datei; mit fremdem Schlüssel beiseite statt überschrieben, Hinweis an den Admin, „Wieder einlesen“ unter Ich → Gedächtnis (Plan nutzerwissen, Stufe 4b; test_siegel)
-- **V01.1.250** Ein Weg zu den eigenen Daten: Gedächtnis, Gespräche, Werkzeug-Log, Raummodus-Verlauf, Lesemarken, Zuordnungen, Interessen, Spark-Tagebuch und die offene Gedächtnis-Frage liest und schreibt das Panel nur noch über profiles.read_own/write_own/drop_own (Vorbereitung zum Versiegeln, für die Person ändert sich nichts)
 
 
 

@@ -5,18 +5,17 @@ html{scrollbar-gutter:stable}
 /* an open window (Ich, sign-in, search …) has the only scroll bar: the page under it stands still, no bar that scrolls
    a hidden page (test_bildlauf) */
 html:has(.modal[style*="grid"]){overflow:hidden;scrollbar-gutter:auto}
-body{margin:0;min-height:100vh;color:var(--fg);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;
-  background:radial-gradient(900px 420px at 0% -10%,color-mix(in srgb,var(--acc) 12%,transparent),transparent 70%),
-             radial-gradient(800px 400px at 100% -15%,color-mix(in srgb,var(--acc2) 10%,transparent),transparent 70%),var(--bg);background-attachment:fixed}
+/* Klar 2 (Redesign Stufe 2): Systemschrift aus den Tokens, ruhiger Grund ohne Verlauf */
+body{margin:0;min-height:100vh;color:var(--fg);font:var(--t-body);-webkit-font-smoothing:antialiased;background:var(--bg)}
 header{display:flex;align-items:center;gap:14px;padding:12px 22px;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;
   background:color-mix(in srgb,var(--card) 78%,transparent);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px)}
 header h1{font-size:16px;margin:0;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;gap:10px;white-space:nowrap}
-.logo{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(135deg,var(--acc),var(--acc2));box-shadow:0 4px 14px color-mix(in srgb,var(--acc) 35%,transparent)}
+.logo{width:28px;height:28px;border-radius:var(--r-ctl);display:grid;place-items:center;background:var(--fg);color:var(--bg)}
 nav{display:flex;gap:2px;margin-left:auto;flex-wrap:wrap;padding:3px;border-radius:12px;background:color-mix(in srgb,var(--line) 55%,transparent)}
 nav button{background:none;border:0;color:var(--mut);padding:6px 11px;border-radius:9px;cursor:pointer;font:inherit;font-weight:500;transition:color .15s,background .15s}
 nav button:hover{color:var(--fg)}nav button.on{background:var(--card);color:var(--fg);font-weight:600;box-shadow:var(--shadow)}
-main{max-width:1240px;margin:0 auto;padding:24px 18px 48px}section{display:none}section.on{display:block;animation:fade .25s ease}
-@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+main{max-width:1240px;margin:0 auto;padding:24px 18px 48px}section{display:none}section.on{display:block;animation:fade var(--dur) var(--ease)}
+@keyframes fade{from{opacity:0}to{opacity:1}}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:16px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);overflow-x:auto}
 .grid .card{position:relative;overflow:hidden}
@@ -28,9 +27,10 @@ th{color:var(--mut);font-weight:500;font-size:12px;border-top:0}
 .pill.ok{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--okt)}
 .pill.warn{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warnt)}
 .pill.bad{background:color-mix(in srgb,var(--bad) 16%,transparent);color:var(--badt)}
-button.b,a.b{background:var(--card);border:1px solid var(--line);color:var(--fg);padding:7px 13px;border-radius:10px;cursor:pointer;font:inherit;font-weight:500;transition:transform .12s,box-shadow .15s,border-color .15s}
-button.b:hover:not(:disabled),a.b:hover{border-color:color-mix(in srgb,var(--acc) 45%,var(--line));transform:translateY(-1px)}
-button.b.p,a.b.p{background:linear-gradient(135deg,var(--acc),color-mix(in srgb,var(--acc) 55%,var(--acc2)));border-color:transparent;color:var(--on-acc);box-shadow:0 4px 14px color-mix(in srgb,var(--acc) 30%,transparent)}
+/* Knöpfe (Klar 2): ruhig, nur Farbe ändert sich beim Darüberfahren, kein Hochspringen, kein Verlauf */
+button.b,a.b{background:var(--card);border:1px solid var(--line);color:var(--fg);padding:7px 13px;border-radius:var(--r-ctl);cursor:pointer;font:inherit;font-weight:500;transition:background-color var(--dur) var(--ease),border-color var(--dur) var(--ease)}
+button.b:hover:not(:disabled),a.b:hover{border-color:color-mix(in srgb,var(--acc) 45%,var(--line))}
+button.b.p,a.b.p{background:var(--acc);border-color:transparent;color:var(--on-acc)}
 button.b:disabled{opacity:.45;cursor:default}
 label{display:block;font-size:12px;color:var(--mut);margin:12px 0 5px}
 input,select,textarea{width:100%;padding:8px 11px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg);font:inherit;transition:border-color .15s,box-shadow .15s}
@@ -40,13 +40,14 @@ input[type=checkbox]{accent-color:var(--acc);width:16px;height:16px}
 #credit{text-align:center;font-size:11px;color:var(--mut);padding:10px 16px 18px}body.inchat #credit{padding-top:2px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.err{color:var(--bad);white-space:pre-wrap}.mut{color:var(--mut)}.intro{color:var(--mut);font-size:13px;line-height:1.5;margin:0 0 8px}.intro.sm{font-size:12px}
 .card>h2:first-child,.card>div>h2:first-child,.modalcard h2:first-child,.ptab>h2:first-child{margin-top:0}
-code{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all}
+code{font:var(--t-mono);word-break:break-all}
 pre{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;max-height:60vh;overflow:auto;font-size:12px;white-space:pre-wrap}
 svg.spark{width:100%;height:60px;display:block;margin-top:6px}.chk{display:flex;gap:8px;align-items:center;color:var(--fg);font-size:13px}.chk input{width:16px}
 .note{padding:12px 14px;border-radius:12px;background:color-mix(in srgb,var(--warn) 12%,transparent);border:1px solid color-mix(in srgb,var(--warn) 25%,transparent);margin-bottom:14px}
 a{color:var(--acc)}
 @media (max-width:640px){#hdr{display:none}header{flex-wrap:wrap;padding:10px 16px;position:static}nav{margin-left:0;width:100%}main{padding:16px}.two{grid-template-columns:1fr}}
 
+#themebtn{display:inline-flex;align-items:center;padding:7px 9px}#themebtn,#langbtn{order:3}#logoutbtn{order:4}
 #themebtn svg{display:none}:root[data-theme=light] #themebtn .ti-sun,:root[data-theme=dark] #themebtn .ti-moon,:root:not([data-theme]) #themebtn .ti-auto{display:block}
 body.guest #themebtn{margin-left:auto}
 @media (display-mode:standalone){header{padding-top:max(12px,env(safe-area-inset-top))}main{padding-bottom:max(48px,env(safe-area-inset-bottom))}}
@@ -78,18 +79,21 @@ body.mgr .mainonly,body.coadm .pwonly,nav button[hidden]{display:none!important}
 .meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ok),var(--warn),var(--bad));transition:width .08s}
 #vrec.rec{background:linear-gradient(135deg,#ef4444,#f97316)}
 /* voice chat */
-#fab{position:fixed;right:20px;bottom:20px;z-index:20;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+#fab{position:fixed;left:calc(var(--side-w) - 44px);top:14px;z-index:20;display:flex}
 body.inchat #fab{display:none}
-.fabface{width:68px;height:68px;border-radius:50%;cursor:pointer;background:var(--card);border:1px solid var(--line);box-shadow:0 10px 30px rgba(16,24,40,.22);padding:4px;transition:transform .15s}
-.fabface:hover{transform:scale(1.06)}#fab .fabface{user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}.fabface svg{width:100%;height:100%;overflow:visible}
-.fabface[data-mode=listen]{box-shadow:0 0 0 4px rgba(239,68,68,.35),0 10px 30px rgba(16,24,40,.22)}
-.fabpop{display:none;width:min(320px,calc(100vw - 40px));background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 14px 40px rgba(16,24,40,.22);padding:12px 14px;animation:pop .2s ease}
+/* „Frag Spark“ (Klar 2, Redesign Stufe 2): no floating face any more, a calm line sign in the top bar (phone) or in the
+   side menu's first row (computer); its window opens beside it. The mood is only a colour, nothing moves */
+.fabface{width:30px;height:30px;border-radius:var(--r-ctl);cursor:pointer;background:none;color:var(--mut);display:grid;place-items:center;transition:background-color var(--dur) var(--ease),color var(--dur) var(--ease)}
+.fabface:hover,.fabface:focus-visible{background:var(--sel);color:var(--fg)}#fab .fabface{user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}.fabface svg{width:var(--ic);height:var(--ic)}
+#fab.open .fabface{background:var(--sel);color:var(--acc)}
+.fabface[data-mode=listen]{color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,transparent)}.fabface[data-mode=speak],.fabface[data-mode=think]{color:var(--acc)}
+.fabpop{display:none;position:fixed;top:12px;left:calc(var(--side-w) + 12px);width:min(340px,calc(100vw - 24px));background:var(--card);border:1px solid var(--line);border-radius:var(--r-win);box-shadow:var(--shadow-pop);padding:12px 14px;animation:fade var(--dur) var(--ease)}
 #fab.open .fabpop{display:block}
-.fabstate{font-weight:600;font-size:13px}.fabtext{font-size:13px;color:var(--mut);margin-top:4px;max-height:140px;overflow:auto;white-space:pre-wrap}
+.fabstate{font:var(--t-head);font-size:14px}.fabtext{font:var(--t-sub);color:var(--mut);margin-top:4px;max-height:140px;overflow:auto;white-space:pre-wrap}
 .fabstate{min-height:18px}
 /* sticky: stays in reach when the window scrolls inside */
-.fabx{position:sticky;top:0;float:right;z-index:1;margin:-6px -8px 0 6px;width:28px;height:28px;border:0;border-radius:50%;background:var(--card);color:var(--mut);font-size:20px;line-height:1;cursor:pointer;padding:0}
-.fabx:hover,.fabx:focus-visible{background:var(--line);color:var(--fg)}
+.fabx{position:sticky;top:0;float:right;z-index:1;margin:-6px -8px 0 6px;width:28px;height:28px;border:0;border-radius:var(--r-ctl);background:var(--card);color:var(--mut);font-size:17px;line-height:1;cursor:pointer;padding:0}
+.fabx:hover,.fabx:focus-visible{background:var(--sel);color:var(--fg)}
 /* on a small screen the window never takes more than half of it: it scrolls inside */
 @media (max-width:760px),(max-height:600px){.fabpop{max-height:50vh!important;overflow:auto;box-sizing:border-box}}
 .fabtext:empty{display:none}.fabrow{display:flex;gap:8px;margin-top:10px}.fabrow .ib{padding:6px 12px;font-size:12px}
@@ -99,15 +103,14 @@ body.inchat #fab{display:none}
 .talkwrap{display:grid;grid-template-columns:minmax(300px,5fr) 6fr;gap:16px;align-items:start}
 @media (max-width:860px){.talkwrap{grid-template-columns:1fr}}
 .stage{display:flex;flex-direction:column;align-items:center;text-align:center;padding:26px 20px 20px;position:relative;overflow:hidden}
-.stage::before{content:"";position:absolute;inset:-40% -20% auto;height:80%;background:radial-gradient(closest-side,color-mix(in srgb,var(--acc) 16%,transparent),transparent);pointer-events:none}
-#face{width:min(250px,64vw);aspect-ratio:1;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent}
+#face{width:min(160px,44vw);aspect-ratio:1;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent}
 #face svg{width:100%;height:100%;overflow:visible}
 @keyframes spin{to{transform:rotate(360deg)}}
 .state{font-size:15px;font-weight:600;margin-top:10px;min-height:22px;position:relative}
 .ctrls{display:flex;gap:12px;align-items:center;justify-content:center;margin:16px 0 6px;position:relative}
-.mic{display:flex;align-items:center;gap:10px;border:0;border-radius:99px;padding:14px 26px;font:inherit;font-size:16px;font-weight:650;color:var(--on-acc);cursor:pointer;
-  background:linear-gradient(135deg,var(--acc),var(--acc2));box-shadow:0 8px 24px color-mix(in srgb,var(--acc) 38%,transparent);transition:transform .12s,box-shadow .2s;position:relative}
-.mic:hover{transform:translateY(-1px) scale(1.02)}.mic:active{transform:scale(.98)}
+.mic{display:flex;align-items:center;gap:10px;border:0;border-radius:var(--r-pill);padding:12px 24px;font:inherit;font-size:16px;font-weight:600;color:var(--on-acc);cursor:pointer;
+  background:var(--acc);transition:background-color var(--dur) var(--ease);position:relative}
+.mic:hover{background:color-mix(in srgb,var(--acc) 88%,var(--fg))}
 .mic svg{width:20px;height:20px}
 .mic.rec{background:linear-gradient(135deg,#ef4444,#f97316);box-shadow:0 8px 24px rgba(239,68,68,.4)}
 .mic.rec::after{content:"";position:absolute;inset:-6px;border-radius:99px;border:2px solid rgba(239,68,68,.55);animation:ring 1.3s ease-out infinite}
@@ -168,7 +171,7 @@ body.inchat #fab{display:none}
    stand one below the other in it */
 @media (min-width:1101px){
   body.inchat .stage{padding:18px 16px}
-  body.inchat .stage #face{width:180px;max-width:180px}
+  body.inchat .stage #face{width:120px;max-width:120px}
   body.inchat .stage .ctrls{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:240px;margin-left:auto;margin-right:auto}
   body.inchat .stage .ctrls #talk{grid-column:1/-1;order:-1;justify-content:center;width:100%}
   body.inchat .stage .ctrls .ib{justify-content:center;width:100%}
@@ -176,13 +179,10 @@ body.inchat #fab{display:none}
   body.inchat .stage .opts.toggles .tgl{justify-content:space-between;flex-direction:row-reverse;width:100%}
   body.inchat .stage .opts.toggles #chatset{align-self:center;margin-top:4px}
 }
-/* Webanwendung 5: away from the assistant the page ends with room for the floating face (#fab), so its last rows can
-   always be scrolled out from under it; the width of the pages stays the same (Seitenrahmen) */
-@media (min-width:761px){body.adm:not(.inchat):not(.prof):not(.appview) main:not(:has(>section.on .ld-frame)){padding-bottom:110px}}
 @media (min-width:761px) and (max-width:1100px){
   body.inchat .talkwrap{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
   body.inchat .stage{display:grid;grid-template-columns:140px 1fr;column-gap:22px;align-items:center;justify-items:start;text-align:left;padding:14px 22px}
-  body.inchat .stage #face{width:140px;grid-row:1/span 9;grid-column:1}
+  body.inchat .stage #face{width:110px;grid-row:1/span 9;grid-column:1}
   body.inchat .stage>*:not(#face){grid-column:2}
   body.inchat .stage .state{margin:0}
   body.inchat .stage .ctrls{margin:6px 0 0;justify-content:flex-start}
@@ -271,12 +271,12 @@ body[data-face=comic] .av,body[data-face=comic_woman] .av{background:var(--avfac
 }
 #mback,.mbar{display:none}
 .cfgwrap{display:grid;grid-template-columns:190px minmax(0,1fr);gap:16px;align-items:start;max-width:960px}
-.cfgnav{display:flex;flex-direction:column;gap:4px;position:sticky;top:110px}
+.cfgnav{display:flex;flex-direction:column;gap:1px;position:sticky;top:110px}
 .subnav{max-width:640px;margin:0 0 16px}.subnav[hidden]{display:none}.subnav button{flex:0 1 auto}
-.cfgnav button{border:0;background:none;color:var(--fg);text-align:left;padding:9px 12px;border-radius:10px;cursor:pointer;font:inherit;font-size:14px;position:relative}
-.cfgnav button:hover{background:var(--line)}.cfgnav button.on{background:var(--card);box-shadow:var(--shadow);font-weight:600}
+.cfgnav button{border:0;background:none;color:var(--fg);text-align:left;padding:7px 10px;border-radius:var(--r-item);cursor:pointer;font:inherit;font-size:14px;position:relative;transition:background-color var(--dur) var(--ease)}
+.cfgnav button:hover{background:var(--sel)}.cfgnav button.on{background:var(--sel);font-weight:600}
 .cfgnav button.dirty::after{content:"";position:absolute;right:10px;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;background:var(--warn)}
-.pane{display:none}.pane.on{display:block;animation:fade .2s ease}.pane .pt{margin-top:0;font-size:18px}
+.pane{display:none}.pane.on{display:block;animation:fade var(--dur) var(--ease)}.pane .pt{margin-top:0;font:var(--t-title);letter-spacing:var(--track-display)}
 .fh{font-size:12px;color:var(--mut);margin-top:4px;line-height:1.45}.chk+.fh{margin:-2px 0 6px 24px}
 details.adv{margin-top:18px;border-top:1px solid var(--line);padding-top:10px}details.adv summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--mut)}
 .savebar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
@@ -356,8 +356,9 @@ a.b{text-decoration:none;color:inherit;display:inline-flex;align-items:center}
   .card{padding:16px;border-radius:14px}
   section>.card+.card,section>.card+.two,section>.two+.card,section>.two+.two{margin-top:12px}.two{gap:12px}
   h2{font-size:16px}
-  /* the voice button: smaller, above the home bar, hidden while typing */
-  #fab{right:14px;bottom:calc(14px + env(safe-area-inset-bottom))}.fabface{width:56px;height:56px;padding:3px}
+  /* the sign in the top bar, its window below it; hidden while typing */
+  #fab{left:auto;right:10px;top:calc(8px + env(safe-area-inset-top))}.fabface{width:36px;height:36px}
+  .fabpop{left:auto;right:8px;top:calc(52px + env(safe-area-inset-top))}
   body.kbd #fab{display:none}
   /* monitoring: two compact tiles per row */
   .grid{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}.grid .card{padding:12px 14px}.v{font-size:20px}svg.spark{height:38px}
@@ -393,7 +394,7 @@ a.b{text-decoration:none;color:inherit;display:inline-flex;align-items:center}
   .cfgwrap.sub .cfgnav,.cfgwrap:not(.sub) .pane{display:none!important}
   .cfgwrap.sub .cfgback{display:inline-flex;align-items:center;gap:4px;margin:0 0 10px;padding:8px 12px 8px 6px;border:0;background:none;color:var(--acc);font-weight:600}
   .cfgback svg{width:20px;height:20px}
-  .pane .pt{font-size:20px}
+  .pane .pt{font:var(--t-title)}
   .savebar{position:sticky;bottom:0;z-index:3;margin:20px -16px -16px;padding:12px 84px calc(12px + env(safe-area-inset-bottom)) 16px;background:var(--card);border-radius:0 0 14px 14px;box-shadow:0 -6px 16px -10px rgba(0,0,0,.25)}
   /* windows: no page scrolling behind them */
   .modal{overscroll-behavior:contain}
@@ -461,7 +462,7 @@ div.guide.inline{border:0;border-bottom:1px solid var(--line);border-radius:0;ma
 .ftag.out{background:color-mix(in srgb,var(--acc) 14%,transparent);color:var(--acc)}
 .savebar .unsaved,.savebar .undo{display:none}.savebar.dirty .unsaved{display:inline;font-size:13px;color:var(--warn,#b7791f);font-weight:600;margin-right:4px}.savebar.dirty .undo{display:inline-flex}
 .savebar.dirty{position:sticky;bottom:0;z-index:3;background:var(--card)}
-.cgrp{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);padding:14px 12px 3px}.cgrp:first-child{padding-top:0}
+.cgrp{font:var(--t-cap);color:var(--mut);padding:14px 10px 4px}.cgrp:first-child{padding-top:0}
 @media (max-width:760px){.cgrp{padding:12px 16px 6px;background:var(--bg);border-bottom:1px solid var(--line)}.cgrp:first-child{padding-top:12px}}
 .menav .mst{display:none}
 @media (max-width:760px){.menav .mst{display:block;font-size:13px;color:var(--mut);font-weight:400;margin-top:2px}.menav .mst:empty{display:none}}
@@ -481,7 +482,11 @@ div.guide.inline{border:0;border-bottom:1px solid var(--line);border-radius:0;ma
 .sflash{animation:sflash 2.2s ease}@keyframes sflash{0%,40%{background:color-mix(in srgb,var(--acc) 18%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 18%,transparent)}100%{background:transparent;box-shadow:none}}
 @media (max-width:760px){.cfgnav .sbox{margin:0;padding:10px;border-bottom:1px solid var(--line)}.cfgnav .sbox input{font-size:16px}.menav .sbox input{font-size:16px}}
 /* ---- design „Klar“ (V01.0.145): sidebar on computers, bar at the bottom on phones (admin only) ---- */
-.hfoot{display:contents}.navgrp,.ni,#mbar,.hdot,.ncnt[hidden]{display:none}
+.hfoot,.hsmall{display:contents}.navgrp,.ni,#mbar,.hdot,.ncnt[hidden],.sidewho{display:none}
+.sidewho{grid-column:1;align-items:center;gap:8px;min-width:0;border:0;background:none;color:var(--fg);font:inherit;text-align:left;padding:4px 6px;border-radius:var(--r-item);cursor:pointer}
+.sidewho:hover{background:var(--sel)}.sidewho span{min-width:0;display:flex;flex-direction:column}
+.sidewho b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sidewho small{font-size:11.5px;color:var(--mut)}
+.sav{width:28px;height:28px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--fill);color:var(--mut);font:var(--t-cap);font-style:normal}
 .ncnt{font-size:11px;font-weight:700;line-height:18px;min-width:18px;padding:0 6px;border-radius:9px;background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn);margin-left:auto;text-align:center}
 .hdot{width:8px;height:8px;border-radius:50%;background:var(--line);margin-left:auto;flex:none}
 .hdot.ok{background:var(--ok)}.hdot.warn{background:var(--warn)}.hdot.bad{background:var(--bad)}
@@ -504,24 +509,32 @@ body.guest .navme{display:none}
 .bghist{grid-column:2/-1;font-size:12px;color:var(--mut);margin-top:4px}.bghist li{margin:1px 0}
 @media (max-width:760px){.bgrow{grid-template-columns:14px minmax(0,1fr)}.bgbtns{grid-column:2;justify-content:flex-start}}
 @media (min-width:761px){
-  body.adm{padding-left:232px}
-  body.adm header{position:fixed;left:0;top:0;bottom:0;width:232px;flex-direction:column;align-items:stretch;gap:4px;padding:16px 12px;
-    border-bottom:0;border-right:1px solid var(--line);overflow-y:auto;background:color-mix(in srgb,var(--card) 70%,var(--bg))}
-  body.adm header h1{padding:2px 8px 0;white-space:normal;line-height:1.25}
-  body.adm #hdr{padding:0 8px 10px 48px;font-size:12px;margin:0}
+  /* Seitenleiste (Klar 2, Redesign Stufe 2): grauer Grund, graue Auswahl, Linien-Icons in --mut, das offene im Akzent */
+  body.adm{padding-left:var(--side-w)}
+  body.adm header{position:fixed;left:0;top:0;bottom:0;width:var(--side-w);flex-direction:column;align-items:stretch;gap:2px;padding:14px 10px 12px;
+    border-bottom:0;border-right:1px solid var(--line);overflow-y:auto;background:var(--side);backdrop-filter:none;-webkit-backdrop-filter:none}
+  body.adm header h1{padding:2px 8px 0;white-space:normal;line-height:1.25;font:var(--t-head);min-height:30px}
+  body.adm #hdr{padding:0 8px 8px 46px;font-size:11.5px;margin:0;color:var(--faint)}
   body.adm nav{flex-direction:column;flex-wrap:nowrap;margin:6px 0 0;padding:0;background:none;border-radius:0;gap:1px}
-  body.adm nav button{display:flex;align-items:center;gap:10px;text-align:left;padding:8px 10px;border-radius:10px;color:var(--fg);font-weight:500}
-  body.adm nav button:hover{background:color-mix(in srgb,var(--line) 60%,transparent)}
-  body.adm nav button.on{background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--acc);font-weight:600;box-shadow:none}
-  body.adm:has(#profmodal[style*="grid"]) nav button.on{background:none;color:var(--fg);font-weight:500}
-  body.adm:has(#profmodal[style*="grid"]) #navme{background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--acc);font-weight:600}
-  body.adm .ni{display:inline-grid;width:18px;height:18px;flex:none}.ni svg{width:100%;height:100%}
-  body.adm .navgrp{display:block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);padding:16px 10px 6px}
+  body.adm nav button{display:flex;align-items:center;gap:10px;text-align:left;min-height:var(--h-nav);padding:4px 10px;border-radius:var(--r-item);color:var(--fg);font-weight:400}
+  body.adm nav button:hover{background:var(--sel)}
+  body.adm nav button.on{background:var(--sel);color:var(--fg);font-weight:600;box-shadow:none}
+  body.adm:has(#profmodal[style*="grid"]) nav button.on{background:none;font-weight:400}
+  body.adm:has(#profmodal[style*="grid"]) #navme{background:var(--sel);font-weight:600}
+  body.adm .ni{display:inline-grid;width:var(--ic);height:var(--ic);flex:none;color:var(--mut)}.ni svg{width:100%;height:100%}
+  body.adm nav button.on .ni,body.adm:has(#profmodal[style*="grid"]) #navme .ni{color:var(--acc)}
+  body.adm:has(#profmodal[style*="grid"]) nav button.on:not(#navme) .ni{color:var(--mut)}
+  body.adm .navgrp{display:block;font:var(--t-cap);color:var(--mut);padding:16px 10px 4px}
   body.adm .hdot{display:block}
   body.adm nav #updbadge{margin-left:4px}
-  body.adm .hfoot{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:12px;border-top:1px solid var(--line)}
-  body.adm .hfoot .b{order:0!important}
-  body.adm #logoutbtn{flex:1}
+  /* Fußzeile: wer angemeldet ist und der Notaus, darunter Hell/Dunkel, Sprache und Abmelden klein */
+  body.adm .hfoot{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center;margin-top:auto;padding-top:10px;border-top:1px solid var(--line)}
+  body.adm .hfoot>.notausbtn{grid-column:2;grid-row:1;order:0}
+  body.adm .sidewho:not([hidden]){display:flex}
+  body.adm .hsmall{grid-column:1/-1;grid-row:2;display:flex;gap:2px;align-items:center}
+  body.adm .hsmall .b{background:none;border:0;color:var(--mut);padding:4px 8px;font-size:12px;display:inline-flex;align-items:center}
+  body.adm .hsmall .b:hover{background:var(--sel);color:var(--fg)}
+  body.adm #logoutbtn{margin-left:auto}
   body.adm main{max-width:var(--frame)}
 }
 @media (max-width:760px){
@@ -534,7 +547,6 @@ body.guest .navme{display:none}
   body:has(#profmodal[style*="grid"]) #mbar button.on{color:var(--mut)}body:has(#profmodal[style*="grid"]) #mbar button[data-m=me]{color:var(--acc)}
   body.kbd #mbar{display:none!important}
   body.adm main{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
-  body.adm:not(.kbd) #fab{bottom:calc(76px + env(safe-area-inset-bottom))}
   /* the conversation: the bar is the last row of the full-height column, under the text field */
   body.inchat.adm #mbar{position:static;flex:none}
   body.inchat.adm main{padding-bottom:0}
@@ -558,7 +570,7 @@ details.zmore{margin-top:14px}details.zmore>summary{cursor:pointer;font-weight:6
 @media (max-width:760px){.zrow{flex-wrap:wrap}.zrow .b{margin-left:auto}}
 /* Ich as a page beside the sidebar (design „Klar“, V01.0.147): no veil, same list → page as the settings */
 @media (min-width:761px){
-  body.adm #profmodal{left:232px;background:var(--bg);backdrop-filter:none;-webkit-backdrop-filter:none;padding:24px 18px;place-items:start center;z-index:6}
+  body.adm #profmodal{left:var(--side-w);background:var(--bg);backdrop-filter:none;-webkit-backdrop-filter:none;padding:24px 18px;place-items:start center;z-index:6}
   body.adm #profmodal .mecard{min-height:0;animation:none}
 }
 /* Ich → Lautsprecher (esp.js): list → one speaker in sections */
@@ -613,7 +625,10 @@ details.qhow{margin-top:6px}details.qhow>summary{cursor:pointer;font-size:13px;f
 /* building blocks of every settings page (V01.0.207, docs/de/technik.md „Bausteine“): title + one sentence,
    sections, rows with the control on the right, one sentence of help plus „Mehr“, Erweitert folded,
    actions that work at once in their own section */
-.pintro{font-size:13px;color:var(--mut);margin:-6px 0 4px;line-height:1.45}
+.pintro{font:var(--t-body);color:var(--mut);margin:-6px 0 4px}
+/* Seitenkopf (Klar 2, Redesign Stufe 2): großer Titel und ein Satz über jeder Seite einer Gruppe (base.js pageHead) */
+.phead{margin:2px 0 18px}.phead[hidden]{display:none}.phead .pt{font:var(--t-large);letter-spacing:var(--track-display);margin:0}.phead .pintro{margin:4px 0 0}
+.colhd{display:none}
 h3.sec{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:22px 0 2px;padding-bottom:6px;border-bottom:2px solid var(--line);font-size:15px;font-weight:650}
 h3.sec span{font-size:12px;font-weight:400;color:var(--mut)}
 .setrow .ctl{display:flex;gap:8px;align-items:center;flex:none;max-width:60%}.setrow .ctl>*{flex:none}
@@ -647,10 +662,12 @@ details.adv h3.sec{margin-top:14px}
 /* the one frame for every page with a side menu: --frame, --sidecol, --sidegap in tokens.css (test_seitenrahmen) */
 @media (min-width:761px){main.hassub{display:grid;grid-template-columns:var(--sidecol) minmax(0,1fr);column-gap:var(--sidegap);align-items:start}
   main.hassub>*{grid-column:2;min-width:0}
-  main.hassub>#subnav{grid-column:1;grid-row:1/span 40;flex-direction:column;flex-wrap:nowrap;gap:4px;padding:0;margin:0;background:none;max-width:none;position:sticky;top:24px}
-  main.hassub>#subnav button{flex:none;text-align:left;padding:9px 12px;border-radius:10px;font-size:14px;white-space:normal}
-  main.hassub>#subnav button:hover{background:var(--line)}main.hassub>#subnav button.on{background:var(--card);box-shadow:var(--shadow);font-weight:600}
+  main.hassub>#subnav{grid-column:1;grid-row:1/span 40;flex-direction:column;flex-wrap:nowrap;gap:1px;padding:0;margin:0;background:none;max-width:none;position:sticky;top:24px}
+  main.hassub>#subnav button{flex:none;text-align:left;padding:7px 10px;border-radius:var(--r-item);font-size:14px;white-space:normal;transition:background-color var(--dur) var(--ease)}
+  main.hassub>#subnav button:hover{background:var(--sel)}main.hassub>#subnav button.on{background:var(--sel);box-shadow:none;font-weight:600}
   main.hassub>#subnav button.hasic{display:flex;align-items:center;gap:10px;padding:6px 10px}
+  /* the second column's name on top, like the big title of the page beside it */
+  .colhd{display:block;order:-1;font:var(--t-head);font-size:22px;letter-spacing:var(--track-display);margin:0 0 12px;padding:0 10px}
   /* the footer at the bottom of the window, not in the middle of a short page (Webanwendung 6) */
   body.adm:not(.inchat):not(.appview){min-height:100vh;display:flex;flex-direction:column}
   body.adm:not(.inchat):not(.appview) main{flex:1 0 auto;width:100%;box-sizing:border-box}}
@@ -664,7 +681,7 @@ details.adv h3.sec{margin-top:14px}
   main.sublist>#subnav button::before{content:"";position:absolute;right:18px;top:50%;width:8px;height:8px;margin-top:-5px;border:solid var(--mut);border-width:2px 2px 0 0;transform:rotate(45deg)}
   main.sublist>#subnav small.gls{display:block;font-size:13px;color:var(--mut);font-weight:400;margin-top:2px}
   main.sublist>#subnav button.hasic{padding-left:54px}
-  main.sublist>#subnav button.hasic .cic{position:absolute;left:14px;top:50%;margin-top:-15px;width:30px;height:30px;border-radius:8px}}
+  main.sublist>#subnav button.hasic .cic{position:absolute;left:16px;top:50%;margin-top:-12px;width:24px;height:24px}}
 @media (max-width:760px){.cfgnav .glneed .glrow{display:flex;flex-direction:row;align-items:center;padding:10px 2px;min-height:0;font-size:15px;border-radius:0;border-bottom:1px solid var(--line)}
   .cfgnav .glneed .glrow:last-child{border-bottom:0}.cfgnav .glneed .glrow::before{display:none}}
 @media (min-width:761px){#svc td.row{flex-wrap:nowrap}}
@@ -770,8 +787,9 @@ span.dtag{cursor:default}.dtag.on{background:color-mix(in srgb,var(--acc) 18%,tr
 /* Plan „Bedienung gesamt“ (V01.0.263): search in the menu (Strg K), Funktionen as its own page */
 .navfind{display:none}
 @media (min-width:761px){
-  body.adm nav .navfind{display:flex;align-items:center;gap:8px;margin:0 0 8px;padding:7px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--mut);font-weight:400}
-  body.adm nav .navfind svg{width:16px;height:16px;flex:none}body.adm nav .navfind kbd{margin-left:auto;font:11px ui-monospace,monospace;border:1px solid var(--line);border-radius:5px;padding:0 5px}
+  body.adm nav .navfind{display:flex;align-items:center;gap:8px;margin:2px 0 8px;min-height:var(--h-nav);padding:4px 10px;border:0;border-radius:var(--r-ctl);background:var(--fill);color:var(--mut);font-weight:400}
+  body.adm nav .navfind:hover{background:var(--fill)}
+  body.adm nav .navfind svg{width:15px;height:15px;flex:none}body.adm nav .navfind kbd{margin-left:auto;font:11.5px var(--font);color:var(--faint)}
 }
 #cfgnav button[data-p=feat]{display:none}
 .cfgwrap.featmode{grid-template-columns:minmax(0,1fr)}.cfgwrap.featmode .cfgnav,.cfgwrap.featmode .cfgback{display:none!important}
@@ -845,7 +863,7 @@ span.dtag{cursor:default}.dtag.on{background:color-mix(in srgb,var(--acc) 18%,tr
 .zcards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:6px}.zcards[hidden]{display:none}
 .zcard{--zc:var(--mut);position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:13px 14px 12px 17px;border:1px solid var(--line);border-radius:16px;
   background:var(--card);color:var(--fg);font:inherit;text-decoration:none;box-shadow:var(--shadow);min-width:0;transition:transform .12s,border-color .15s}
-a.zcard,button.zcard{cursor:pointer}a.zcard:hover,button.zcard:hover{border-color:color-mix(in srgb,var(--zc) 45%,var(--line));transform:translateY(-1px)}
+a.zcard,button.zcard{cursor:pointer}a.zcard:hover,button.zcard:hover{border-color:color-mix(in srgb,var(--zc) 45%,var(--line))}
 .zcard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--zc)}
 .zcard[data-lvl=ok]{--zc:var(--ok)}.zcard[data-lvl=warn]{--zc:var(--warn)}.zcard[data-lvl=bad]{--zc:var(--bad);border-color:color-mix(in srgb,var(--bad) 45%,var(--line))}
 .zcard[data-lvl=acc]{--zc:var(--acc)}.zcard[data-lvl=acc2]{--zc:var(--acc2)}
@@ -901,10 +919,9 @@ details.ztech{margin-top:4px}details.ztech>summary{cursor:pointer;font-weight:65
 /* Rückgängig above the admin log (C5, V01.0.286) */
 .lundo{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:0 0 10px;background:var(--card)}.lundo .zrow span{font-size:13.5px}
 /* Notaus (notaus.js, plan plaene/notaus.md): red button, band on every page, the whole page in stage 3 or from outside */
-.b.notausbtn{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:var(--bad);color:var(--on-acc);border-color:var(--bad);font-weight:700;order:1}
-.b.notausbtn[hidden]{display:none}.b.notausbtn:hover{filter:brightness(1.08)}
-body.adm .notausbtn{flex:1 1 100%}
-.napow{width:13px;height:13px;border-radius:50%;border:2px solid currentColor;border-top-color:transparent;position:relative;flex:none}
+.b.notausbtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:none;color:var(--badt);border:1px solid color-mix(in srgb,var(--bad) 45%,transparent);font-weight:600;padding:4px 10px;order:1}
+.b.notausbtn[hidden]{display:none}.b.notausbtn:hover{background:color-mix(in srgb,var(--bad) 10%,transparent);border-color:var(--bad)}
+.napow{width:12px;height:12px;border-radius:50%;border:2px solid currentColor;border-top-color:transparent;position:relative;flex:none}
 .napow:after{content:"";position:absolute;left:50%;top:-5px;width:2px;height:8px;margin-left:-1px;background:currentColor;border-radius:2px}
 .b.nared{background:var(--bad);color:var(--on-acc);border-color:var(--bad);font-weight:700}
 .notausband{position:sticky;top:0;z-index:61;display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;padding:9px 16px;background:var(--bad);color:var(--on-acc);font-size:14px}
@@ -954,16 +971,15 @@ body.adm .notausbtn{flex:1 1 100%}
 .mkview .mkedit textarea,.mkview .mkedit input{width:100%;box-sizing:border-box}.mkview .mkedit label{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--mut)}
 .mktbl{overflow-x:auto;max-width:100%}.mktbl table{border-collapse:collapse;font-size:12px}.mktbl th,.mktbl td{border:1px solid var(--line);padding:2px 6px;text-align:left}
 
-/* Frag Spark lives in the face at the bottom right (hilfe.js): also over Ich and for profiles, not over the keyboard */
+/* Frag Spark lives in the sign at the top (hilfe.js): also over Ich and for profiles, not over the keyboard */
 body.hilfeon:not(.kbd):not(.appview.inchats) #fab,body.hilfeon #fab:focus-within{display:flex!important;z-index:62}
-/* the face on every page and over Ich for everybody signed in (V01.0.359): starting and asking work everywhere;
+/* the sign on every page and over Ich for everybody signed in (V01.0.359): starting and asking work everywhere;
    not over Chats on a phone, where its place on top is the chat's ⓘ (V01.0.473) */
 body:not(.guest):not(.kbd):not(.inchat):not(.appview.inchats) #fab,body:not(.guest):not(.kbd):has(#profmodal[style*="grid"]) #fab{display:flex!important;z-index:62}
 body.hilfeon .fabpop{max-height:min(70vh,560px);overflow:auto;box-sizing:border-box}
 .fabask{margin-top:10px}.fabask[hidden]{display:none}.fabask .mut{font-size:12px;margin-bottom:6px}
 .fabin{display:flex;gap:6px}.fabin textarea{flex:1;min-width:0}
 #fabcards .hcard{margin-top:8px}
-@media (min-width:760px){body.hilfeon #profmodal{padding-right:104px}}   /* the face must not cover "Schließen" */
 /* Schreibhilfe (schreib.js): the changes the panel worked out */
 .wrdiff{white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:4px 0 8px;line-height:1.5}
 .wrdiff del{color:var(--bad);text-decoration:line-through}
@@ -1143,12 +1159,11 @@ select.ld-chip{width:auto;max-width:180px;padding:3px 8px}
 #cfg .cfgwrap{max-width:none;grid-template-columns:var(--sidecol) minmax(0,1fr);gap:var(--sidegap)}
 #cfg .cfgwrap.featmode{grid-template-columns:minmax(0,1fr)}   /* Funktionen from the sidebar: no settings menu, the page takes the width */
 #cfg .pane{background:none;border:0;box-shadow:none;padding:4px 2px 0;overflow:visible}
-#cfg .pane .pt{font-size:22px;letter-spacing:-.02em;margin:0 0 2px}
-#cfg .pane>.pintro{font-size:13.5px;margin:0 0 18px}
-#cfg .pane h3.sec{border:0;margin:22px 4px 7px;padding:0;font-size:12px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--mut)}
-#cfg .pane h3.sec span{text-transform:none;letter-spacing:0;font-size:11.5px;font-weight:400;opacity:.85}
-#cfg .pane h3.sec .hqbtn{text-transform:none}
-.sgrp{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:2px 14px;margin:0 0 6px;min-width:0}
+#cfg .pane .pt{font:var(--t-title);letter-spacing:var(--track-display);margin:0 0 2px}
+#cfg .pane>.pintro{margin:0 0 18px}
+#cfg .pane h3.sec{border:0;margin:22px 4px 7px;padding:0;font:600 12.5px/1.3 var(--font);color:var(--mut)}
+#cfg .pane h3.sec span{font-size:11.5px;font-weight:400;opacity:.85}
+.sgrp{background:var(--card);border:1px solid var(--line);border-radius:var(--r-box);box-shadow:var(--shadow);padding:2px 14px;margin:0 0 6px;min-width:0}
 .sgrp:not(:has(>:not([hidden]):not([style*="display: none"]):not([style*="display:none"]))){display:none}
 .sgrp>.setrow,.sgrp>div>.setrow{padding:11px 0;min-height:52px}
 .sgrp>.setrow:last-child,.sgrp>:last-child>.setrow:last-child{border-bottom:0}
@@ -1173,7 +1188,7 @@ select.segsel{display:none!important}
 #cfg .pane>.savebar.dirty .savebtn{margin-left:auto;order:9}
 .setrow.dirtyrow{box-shadow:inset 3px 0 0 var(--acc);padding-left:10px!important;margin-left:-14px;padding-right:0}
 @media (max-width:760px){
-  #cfg .pane{padding:0}#cfg .pane .pt{font-size:22px}
+  #cfg .pane{padding:0}
   .sgrp{padding:2px 12px;border-radius:12px}
   .setrow.dirtyrow{margin-left:-12px;padding-left:9px!important}
   #cfg .pane>.savebar.dirty{bottom:calc(10px + env(safe-area-inset-bottom));margin:18px 0 0;padding:9px 10px 9px 14px;border-radius:14px}
@@ -1188,15 +1203,16 @@ select.segsel{display:none!important}
 .sgrp .setrow:has(>.tgl){flex-wrap:nowrap}.sgrp .setrow:has(>.tgl)>.lbl{flex-basis:0}
 @media (max-width:760px){.sgrp .setrow:has(>.ctl.full,>input.wide,>select.wide)>.lbl{flex:1}}
 /* settings menu with a coloured symbol per page (js/seite.js) */
-.cic{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:7px;color:var(--on-acc);flex:none;order:-1}
-.cic svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-.cic.c-blue{background:#3b82f6}.cic.c-violet{background:#7c5cf0}.cic.c-teal{background:#0ea5a5}.cic.c-red{background:#e5484d}.cic.c-gray{background:#7b8499}.cic.c-green{background:#22a35a}.cic.c-amber{background:#e09a14}
+/* a line symbol per page (js/seite.js), in one colour like the side menu (Klar 2: no coloured tiles), the open page's in the accent */
+.cic{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:var(--r-ctl);color:var(--mut);flex:none;order:-1}
+.cic svg{width:var(--ic);height:var(--ic);fill:none;stroke:currentColor;stroke-width:var(--ic-stroke);stroke-linecap:round;stroke-linejoin:round}
+button.on>.cic{color:var(--acc)}
+.cic.pav{width:26px;height:26px;border-radius:50%;background:var(--fill);font:var(--t-cap)}
 #cfgnav button.hasic{display:flex;align-items:center;gap:10px;padding:6px 10px}
 @media (max-width:760px){
   /* a column, never display:block: Safari centres the content of a block button (V01.0.919, the titles sat at different indents) */
   #cfgnav button.hasic{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;position:relative;padding:12px 40px 12px 54px;min-height:56px}
-  #cfgnav button.hasic .cic{position:absolute;left:14px;top:50%;margin-top:-15px;width:30px;height:30px;border-radius:8px}
-  #cfgnav button.hasic .cic svg{width:17px;height:17px}
+  #cfgnav button.hasic .cic{position:absolute;left:16px;top:50%;margin-top:-12px;width:24px;height:24px}
 }
 #cfgnav button[data-p=feat].hasic{display:none}
 /* Funktionen als Liste + Detail (Paket 3, js/fdetail.js): wide, the open function shows in a column on the right that
@@ -1247,7 +1263,7 @@ select.segsel{display:none!important}
   #ptabs button.hasic{padding-left:46px}
   #ptabs button.hasic .cic{position:absolute;left:4px;top:50%;margin-top:-14px;width:28px;height:28px;border-radius:8px}
 }
-#setform h3.sec{border:0;margin:22px 4px 7px;padding:0;font-size:12px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--mut)}
+#setform h3.sec{border:0;margin:22px 4px 7px;padding:0;font:600 12.5px/1.3 var(--font);color:var(--mut)}
 #setform>.setpane:first-child>h3.sec{margin-top:4px}
 #setform [hidden]{display:none!important}
 #setform details.adv{background:var(--card);border:1px dashed color-mix(in srgb,var(--mut) 35%,var(--line));border-radius:14px;padding:12px 14px;margin-top:18px}
