@@ -4720,6 +4720,13 @@
 "titel": "Das Modell schlägt nur vor: Korrektur einer Modell-Einordnung fragt nach einer festen Regel",
 "text": "A: Wie P696 eingerichtet (Sortieren aus Korrekturen lernen an), Postfach aufräumen im Modus „automatisch“, Alles Offene im Assistenten an. B: Eine Mail eines Absenders ohne Regel und ohne Abmelde-Link kommen lassen, die das Modell nach „KI/Werbung“ einsortiert (Protokoll von Postfach aufräumen: „Modell, NN % sicher“). Auf der Seite E-Mail aus KI/Werbung in einen anderen Ordner Y schieben: sofort Karte „Regel-Vorschlag: Mails von …“ mit „Mails von … immer nach „Y“? Das Modell hatte sie nach „KI/Werbung“ sortiert …“ und den Knöpfen „Regel anlegen“, „Nur diese Mail“, „Nie“; unter E-Mail → Regeln ist noch keine neue Regel, bei der Korrektur steht „Postfach aufräumen (Modell)“. C: Eine zweite Mail desselben Absenders kommen lassen: Postfach aufräumen verschiebt sie nicht, sondern fragt (Frage mit „du hast eine Mail dieses Absenders umsortiert“). D: „Regel anlegen“: unter E-Mail → Regeln steht die Regel Absender → Y, die Karte ist erledigt; mit „Nur diese Mail“ bzw. „Nie“ (andere Mail) entsteht keine Regel. E: Eine andere vom Modell einsortierte Mail in Apple Mail nach „KI/Falsch sortiert“ ziehen und den Nachtlauf (2–5 Uhr) abwarten: Karte „Wohin gehört diese Mail?“, wenn das Modell einen vorhandenen Ordner nennt, beginnt die Zeile mit „Vorschlag des Modells: „…“, du entscheidest.“ und der erste Knopf heißt „Nach „…“ (Vorschlag des Modells)“; nichts ist verschoben, bis du tippst; erst danach fragt die Karte nach einer Regel. F: Zustand → Logs, Bereich Mail: „mail: tidy model fix | 1“, „mail: rule card model | asked | 1“, „mail: rule card model | suggested | 1“ oder „| refused“, nie Absender, Domain, Betreff oder Ordner. Live, Post: „…, N davon Modell-Einordnungen, M Ordner vom Modell vorgeschlagen“. G: Schalter aus: keine solche Karte, kein Modellaufruf für Ordner.",
 "thread": "Falsch einsortierte Mails lernen lassen"
+},
+{
+"id": "P699",
+"v": 1271,
+"titel": "Nach „Regel anlegen“ entscheidet die Regel: Postfach aufräumen fragt nicht mehr",
+"text": "A: Wie P698 B bis D: Modell-Einordnung korrigiert, auf der Karte „Regel anlegen“. B: Eine neue Mail desselben Absenders kommen lassen: die Mail-Regel legt sie in den Ordner, „Postfach aufräumen“ stellt keine Frage mehr dazu. Zustand → Logs, Bereich Mail: „mail: rule suggestion taken | card model | 1 settled“ und, wenn Postfach aufräumen sie zuerst sieht, „mail: tidy skip | rule decides | 1“, ohne Absender oder Ordner. C: Die Regel unter E-Mail → Regeln pausieren und eine weitere Mail kommen lassen: Postfach aufräumen fragt wieder.",
+"thread": "Falsch einsortierte Mails lernen lassen"
 }
 ]
 }

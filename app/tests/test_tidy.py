@@ -188,6 +188,42 @@ class Tidy(unittest.TestCase):
             helpers.set_config(mail_manage=False, mail_learn=False)
             mailregeln.forget(uid)
 
+    def test_learning_a_rule_from_the_card_decides(self):
+        """Nachbesserung Stufe 4: after „Regel anlegen“ on a correction's card (mailregeln.settle) the tidying asks no more
+        about that sender and leaves its new mails to the Mail-Regel; paused, the sender is asked about again."""
+        import contextlib
+        import io
+        import mailregeln
+        tidy.classify = lambda h, text: ("werbung", 99)
+        p, aid = self.setup_profile("Regula", mode="auto")
+        uid = p.get("/api/whoami").json()["profile"]["id"]
+        helpers.set_config(mail_manage=True, mail_learn=True)
+        try:
+            mailregeln.correct(uid, aid, [{"mid": "<rd-0@x>", "by": "tidy", "rid": "", "von": "Spark/Werbung",
+                                           "from": "lena@laden.example", "nach": "Laden", "model": True}])
+            self.assertIn("lena@laden.example", mailregeln.tidy_fixed(uid, aid)[0])
+            FMB.boxes.setdefault("Laden", [])
+            r = mailregeln.add(uid, {"account": aid, "when": {"from": "lena@laden.example"}, "then": {"folder": "Laden"}})
+            self.assertEqual(mailregeln.settle(uid, aid, "lena@laden.example", r["id"]), 1)
+            FMB.put("INBOX", helpers.box_mail("Laden <lena@laden.example>", "Hallo 3", mid="<rd-1@x>"))
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                res = p.post("/api/profile/tidy/run", json={"aid": aid}).json()
+            self.assertEqual(res["report"]["moved"], 0, res)
+            self.assertIn("Hallo 3", self.inbox_subjects())                 # left for the Mail-Regel
+            self.assertFalse([q for q in p.get("/api/profile/tidy").json()["questions"] if q["sender"] == "lena@laden.example"])
+            self.assertIn("mail: tidy skip | rule decides | 1 |", out.getvalue())
+            self.assertNotIn("laden", out.getvalue())
+            mailregeln.add(uid, dict(r, on=False), r["id"])                  # paused: asked about again
+            FMB.put("INBOX", helpers.box_mail("Laden <lena@laden.example>", "Hallo 4", mid="<rd-2@x>"))
+            res = p.post("/api/profile/tidy/run", json={"aid": aid}).json()
+            self.assertEqual(res["report"]["moved"], 0, res)
+            q = [q for q in p.get("/api/profile/tidy").json()["questions"] if q["sender"] == "lena@laden.example"]
+            self.assertTrue(q and "Hallo 4" in q[0]["subjects"], q)
+        finally:
+            helpers.set_config(mail_manage=False, mail_learn=False)
+            mailregeln.forget(uid)
+
     def test_preview_moves_nothing_and_brake(self):
         p, aid = self.setup_profile("Pauline", mode="preview")
         FMB.put("INBOX", helpers.box_mail("Shop <news@shop.example>", "Gutschein für dich", headers=PROMO))
