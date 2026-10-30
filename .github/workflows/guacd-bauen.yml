@@ -7,7 +7,7 @@ name: guacd bauen
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, claude/project-thread-34t0d8]
     paths:
       - app/guacd-bauen.sh
       - app/panel/fernbild.py
