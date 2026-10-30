@@ -60,7 +60,7 @@ echo "guacd-bauen: configure (VNC and RDP only)"
 ( cd "$SRC" && als ./configure --prefix="$ZIEL" --disable-static --disable-guacenc --disable-guaclog \
     --with-vnc --with-rdp --without-libssh2 --without-telnet --without-websockets --without-pango \
     --without-pulse --without-vorbis --without-ssl --without-libavcodec --without-libavformat \
-    --without-libavutil --without-libswscale CFLAGS="-O2 -Wno-error" >"$BAU/configure.log" 2>&1 ) \
+    --without-libavutil --without-libswscale CFLAGS="-O2 -Wno-error -Wno-deprecated-declarations" >"$BAU/configure.log" 2>&1 ) \
   || { tail -n 30 "$BAU/configure.log"; ende configure; }
 grep -Eq '^ *RDP \.+ yes' "$BAU/configure.log" && grep -Eq '^ *VNC \.+ yes' "$BAU/configure.log" \
   || { grep -E 'RDP|VNC' "$BAU/configure.log" | tail -n 4; echo "guacd-bauen: VNC or RDP missing"; ende configure; }
