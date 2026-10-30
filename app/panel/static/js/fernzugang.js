@@ -107,6 +107,28 @@ function fzWie(g){return g.stand==='abbau'?t('wird abgebaut','being removed'):g.
 // „Gerade verbunden“: who has a session open, from where (Zuhause or Internet, the address shortened) and with what
 const FZ_CLIENT={browser:['Browser','Browser'],iphone:['iPhone','iPhone'],android:['Android','Android'],fenster:['Fenster','Window']};
 function fzWoher(h){return h==='internet'?t('Internet','Internet'):t('Zuhause','Home')}
+// a button that cannot be pressed always says why (Dominik 2026-10-30: „Bildschirm“ grey on the uConsole without a
+// word): the shell's and the files' reason, then the screen's own; as the button's title and, for the screen, a line
+// under the buttons with the command to run over there (Kopieren, In die Shell einfügen: never with Enter)
+function fzWarum(g,d,c){if(!g.online)return t('Das System ist offline.','The system is offline.');
+  if(g.hostkey_falsch)return t('Anderer Host-Schlüssel als bei der Kopplung (siehe unten).','Another host key than at pairing (see below).');
+  if(g.stand==='abbau')return t('Das System wird gerade entfernt.','The system is being removed.');
+  if(g.wartet)return t('Das System wartet auf deine Bestätigung (siehe unten).','The system waits for your confirmation (see below).');
+  if(!g.erlaubt)return t('Das System ist gesperrt.','The system is blocked.');
+  const n=(c&&c.sitzungen)||0,max=d.max||1;if(n>=max)return t(`${n} von ${max} Plätzen belegt.`,`${n} of ${max} places taken.`);
+  return ''}
+function fzBildDienst(d){const x=d&&d.bild_dienst;if(!x||x.da)return '';
+  return x.grund?t('Bildschirm-Dienst (guacd) auf dem Spark nicht installiert: ','Screen service (guacd) not installed on the Spark: ')+t(x.grund_de||'',x.grund_en||'')+t('. Das nächste Update versucht es wieder (oder auf dem Spark „sudo speech-spark update“).','. The next update tries again (or "sudo speech-spark update" on the Spark).')
+    :t('Bildschirm-Dienst (guacd) auf dem Spark noch nicht installiert: kommt mit dem nächsten Update (einmal etwa 10 bis 15 Minuten Bauzeit).','Screen service (guacd) not installed on the Spark yet: it comes with the next update (built once, about 10 to 15 minutes).')}
+function fzBildWarum(g,d){if(!d.bildschirm)return {text:t('Der Bildschirm ist ausgeschaltet.','The screen is switched off.')};
+  if(g.art==='windows')return {text:t('Den Bildschirm von Windows gibt es noch nicht.','The screen of Windows is not there yet.')};
+  if(!g.bild_anker)return {text:t('Anker zu alt für den Bildschirm: erst aktualisieren.','Anchor too old for the screen: update it first.')};
+  if(!g.bild)return {text:t('Auf dem System noch nicht eingerichtet: dort „sudo spark-anker bildschirm“.','Not set up on the system yet: run "sudo spark-anker bildschirm" there.'),cmd:'sudo spark-anker bildschirm'};
+  const sp=fzBildDienst(d);return sp?{text:sp}:null}
+function fzBildHinweis(g,w){const z=fzEl('div','fh fzwarum');z.append(fzEl('span','',t('Bildschirm: ','Screen: ')+w.text));
+  if(w.cmd){const k=fzBtn(t('Kopieren','Copy'),'',()=>copyString(w.cmd,k)),e=fzBtn(t('In die Shell einfügen','Insert into the shell'),'',()=>fzNotizTerminal(g.id,w.cmd));
+    e.title=t('Setzt den Befehl in die Zeile, Enter drückst du selbst.','Puts the command in the line; you press Enter yourself.');z.append(' ',k,' ',e)}
+  return z}
 function fzArt(a){return a==='shell'?t('Shell','Shell'):a==='bildschirm'?t('Bildschirm','Screen'):a==='dateien'?t('Dateien','Files'):a}
 function fzJetztZeile(x,mitSystem){const d=FZ.d,name=((d.geraete||[]).find(g=>g.id===x.geraet)||{}).name||'';
   const r=fzEl('div','fzjrow'),tx=fzEl('div','fzjtext'),wo=fzWoher(x.herkunft)+(x.ip?' ('+x.ip+')':''),seit=t('seit ','since ')+fzZeit(x.seit);
@@ -122,12 +144,14 @@ function fzDetail(){const d=FZ.d,box=$('fzdetail'),g=(d.geraete||[]).find(x=>x.i
   ht.append(nm,fzEl('div','mut',[g.os,g.anker?t('Anker ','anchor ')+g.anker:'',g.online?t('online seit ','online since ')+fzZeit(g.online_seit)+' ('+fzMin(g.online_seit)+')':fzWie(g)].filter(Boolean).join(' · ')));
   hd.append(fzIcon(g,true),ht);box.appendChild(hd);
   const kn=fzEl('div','fzknoepfe');
-  const sh=fzBtn(t('Shell','Shell'),'p fzk',()=>fzOpen(g));sh.disabled=!g.online||g.hostkey_falsch||!g.erlaubt||g.wartet||g.stand==='abbau'||(c.sitzungen||0)>=d.max;
+  const sh=fzBtn(t('Shell','Shell'),'p fzk',()=>fzOpen(g));const wsh=fzWarum(g,d,c);sh.disabled=!!wsh;
   const da=fzBtn(t('Dateien','Files'),'fzk',()=>fzDateien(g)),bs=fzBtn(t('Bildschirm','Screen'),'fzk',()=>fbOpen(g));da.disabled=sh.disabled;
-  bs.disabled=sh.disabled||!d.bildschirm||!g.bild||!g.bild_anker;if(!d.bildschirm)bs.hidden=true;
+  const wbs=wsh?{text:wsh}:fzBildWarum(g,d);
+  bs.disabled=!!wbs;if(!d.bildschirm)bs.hidden=true;
+  for(const [b,w] of [[sh,wsh],[da,wsh],[bs,wbs&&wbs.text]])if(w){b.title=w;b.setAttribute('aria-description',w)}
   const cut=fzBtn(t('Anker trennen','Disconnect anchor'),'fzankercut',async()=>{try{await api(`/api/admin/fernzugang/geraete/${g.id}/trennen`,{method:'POST'});fzMsg(t('Getrennt. Der Anker kommt nach seiner Pause wieder, solange er sich verbinden darf.','Disconnected. The anchor comes back after its pause while it may connect.'));fzLoad()}catch(e){fzFehler(e)}});
   cut.disabled=!g.online;kn.append(sh,da,bs,fzEl('span','fzfill'),cut);box.appendChild(kn);
-  if(d.bildschirm&&!(g.bild&&g.bild_anker))box.appendChild(fzEl('div','fh',g.bild?t('Für den Bildschirm ist der Anker zu alt: dort noch einmal „sudo spark-anker bildschirm“ mit dem Programm aus dem Panel.','The anchor is too old for the screen: run "sudo spark-anker bildschirm" there again with the program from the panel.'):t('Bildschirm: auf dem System einmal „sudo spark-anker bildschirm“.','Screen: run "sudo spark-anker bildschirm" once on the system.')));
+  if(d.bildschirm&&wbs&&!wsh)box.appendChild(fzBildHinweis(g,wbs));
   if(g.hostkey_falsch)box.appendChild(fzEl('div','note err',t('Das System zeigt einen anderen Host-Schlüssel als bei der Kopplung: keine Verbindung. War das eine Neuinstallation, „Entfernen“ und neu koppeln.','The system shows another host key than at pairing: no connection. If it was reinstalled, "Remove" and pair again.')));
   if(g.wartet)box.appendChild(fzWartet(g));
   if(g.anker_neu||g.update_stand)box.appendChild(fzAktBlock(g));

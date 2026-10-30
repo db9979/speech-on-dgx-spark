@@ -11,6 +11,7 @@ import contextlib
 import hashlib
 import json
 import os
+import re
 import shutil
 import socket
 import ssl
@@ -196,6 +197,116 @@ class Door(FbBase):
                                 headers={"Authorization": "Bearer " + d["key"]}).json()["passwort"], r"^[A-Za-z0-9]{8}$")
         self.assertEqual(c.delete("/api/fernzugang/anker/bildschirm", headers={"Authorization": "Bearer " + d["key"]}).status_code, 200)
         self.assertIsNone(fernzugang._read()["geraete"][d["id"]].get("bild"))
+
+
+def _beside_app(rel):
+    """A file of the repository next to app/ (install.sh, a workflow), or None in a copy with only app/."""
+    try:
+        with open(os.path.join(os.path.dirname(helpers.APP), rel), encoding="utf-8") as f:
+            return f.read()
+    except OSError:
+        return None
+
+
+class Bau(unittest.TestCase):
+    """guacd built on the Spark (app/guacd-bauen.sh, Dominik 2026-10-30: Debian 12/13 and Raspberry Pi OS have no guacd
+    package): one pinned release from Apache only, checked by SHA-256, the packages for FreeRDP 3 or 2 as the system
+    has them, a release already there left alone, a failed build a fixed word the panel names, never the update's end."""
+    SCRIPT = os.path.join(helpers.APP, "guacd-bauen.sh")
+
+    def run_script(self, *args, path=None):
+        env = {"PATH": (path + ":" if path else "") + os.environ.get("PATH", "/usr/bin:/bin"), "LC_ALL": "C"}
+        return subprocess.run(["bash", self.SCRIPT, *args], capture_output=True, text=True, env=env, timeout=60)
+
+    def fake_apt_cache(self, has):
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d, True)
+        with open(os.path.join(d, "apt-cache"), "w") as f:
+            f.write("#!/bin/sh\n[ \"$1\" = show ] || exit 2\n" + "".join(f'[ "$2" = {p} ] && exit 0\n' for p in has) + "exit 100\n")
+        os.chmod(os.path.join(d, "apt-cache"), 0o755)
+        return d
+
+    def test_one_pinned_release_from_apache_only(self):
+        self.assertRegex(fernbild.GUACD_VERSION, r"^1\.(6|7|8)\.\d+$")       # 1.6.0 knows FreeRDP 3 (Debian 13)
+        self.assertRegex(fernbild.GUACD_SHA256, r"^[0-9a-f]{64}$")
+        with open(self.SCRIPT, encoding="utf-8") as f:
+            src = f.read()
+        urls = re.findall(r"https://[^\s\"']+", src)
+        self.assertTrue(urls)
+        for u in urls:                                    # nothing but Apache's own servers
+            self.assertRegex(u, r"^https://(downloads\.apache\.org|archive\.apache\.org/dist)/guacamole/\$V/source/\$TAR$")
+        self.assertIn("sha256sum -c", src)
+        self.assertIn("--proto '=https'", src)
+        self.assertIn("runuser -u nobody", src)            # never built as root
+        for proto in ("--with-vnc", "--with-rdp", "--without-libssh2", "--without-telnet", "--without-websockets"):
+            self.assertIn(proto, src)
+        wf = _beside_app(".github/workflows/guacd-bauen.yml")
+        if wf is not None:                                # in a copy with only app/ there is no workflow to check
+            self.assertIn("app/guacd-bauen.sh", wf)
+            self.assertIn("debian:trixie", wf)
+            self.assertIn("debian:bookworm", wf)
+
+    def test_freerdp_3_where_the_system_has_it_else_2(self):
+        for has, want, other in ((["freerdp3-dev", "freerdp2-dev"], "freerdp3-dev", "freerdp2-dev"),
+                                 (["freerdp2-dev"], "freerdp2-dev", "freerdp3-dev")):
+            r = self.run_script("--pakete", path=self.fake_apt_cache(has))
+            self.assertEqual(r.returncode, 0, r.stderr)
+            words = r.stdout.split()
+            self.assertIn(want, words)
+            self.assertNotIn(other, words)
+            for p in ("libvncserver-dev", "libcairo2-dev", "libjpeg-dev", "libpng-dev", "uuid-dev"):
+                self.assertIn(p, words)
+            self.assertFalse([w for w in words if "ssh" in w or "telnet" in w or "pulse" in w])
+
+    def test_a_release_already_there_is_left_alone_and_a_wrong_target_is_a_word(self):
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d, True)
+        os.makedirs(os.path.join(d, "sbin"))
+        g = os.path.join(d, "sbin", "guacd")
+        with open(g, "w") as f:
+            f.write("#!/bin/sh\n")
+        os.chmod(g, 0o755)
+        with open(os.path.join(d, ".gebaut"), "w") as f:
+            f.write(f"{fernbild.GUACD_VERSION} {fernbild.GUACD_SHA256}\n")
+        r = self.run_script(d)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(r.stdout.strip().splitlines()[-1], "guacd-bauen: ERGEBNIS vorhanden")
+        r = self.run_script("relativ/guacd")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertEqual(r.stdout.strip().splitlines()[-1], "guacd-bauen: ERGEBNIS installieren")
+
+    def test_install_builds_it_on_update_never_stops_and_keeps_the_word(self):
+        src = _beside_app("install.sh")
+        if src is None:
+            raise unittest.SkipTest("a copy with only app/: no install.sh")
+        self.assertIn('bash "$INSTALL_FROM/app/guacd-bauen.sh" "$PREFIX/guacd" 2>&1 | tee "$GLOG" || true', src)
+        self.assertIn("(.chat.fernzugang == true) and (.chat.fernbild == true)", src)
+        self.assertIn('as_svc tee -- "$VAR/state/guacd-bau.json"', src)
+        self.assertIn("ExecStart=$PREFIX/guacd/sbin/guacd -f -b 127.0.0.1 -l 4822", src)
+        self.assertNotIn("libguac-client-vnc0 libguac-client-rdp0", src)     # no fixed distribution names any more
+        with open(self.SCRIPT, encoding="utf-8") as f:
+            words = re.findall(r"ende ([a-z]+)", f.read())
+        self.assertIn("pruefsumme", words)
+        for word in words:
+            self.assertTrue(word in fernbild.BAU_GRUENDE or word in ("ok", "vorhanden"), word)
+
+    def test_the_page_hears_why_there_is_no_guacd(self):
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d, True)
+        bau = os.path.join(d, "guacd-bau.json")
+        with unittest.mock.patch.object(fernbild, "GUACD_BIN", os.path.join(d, "fehlt")), \
+                unittest.mock.patch.object(fernbild, "GUACD_BAU", bau):
+            self.assertEqual(fernbild.dienst(), {"da": False, "version": fernbild.GUACD_VERSION})   # not built yet
+            with open(bau, "w") as f:
+                json.dump({"ok": False, "grund": "laden", "zeit": 1700000000}, f)
+            x = fernbild.dienst()
+            self.assertEqual((x["grund"], x["zeit"]), ("laden", 1700000000))
+            self.assertIn("apache.org", x["grund_de"])
+            with open(bau, "w") as f:
+                json.dump({"ok": False, "grund": "<b>frei erfunden</b>"}, f)     # only the fixed words reach the page
+            self.assertNotIn("grund", fernbild.dienst())
+        with unittest.mock.patch.object(fernbild, "GUACD_BIN", "/bin/sh"), unittest.mock.patch.object(fernbild, "GUACD_BAU", bau):
+            self.assertEqual(fernbild.dienst(), {"da": True, "version": fernbild.GUACD_VERSION})
 
 
 class Anchor(unittest.TestCase):

@@ -1,0 +1,72 @@
+name: guacd bauen
+
+# Fernzugang → Bildschirm: app/guacd-bauen.sh builds the pinned guacamole-server (fernbild.GUACD_VERSION, checked
+# against fernbild.GUACD_SHA256, only from apache.org) the way install.sh does on the Spark and the Raspberry Pi:
+# Debian 13 and 12 (no guacd package there), Ubuntu 24.04, on x86 and on ARM like the Pi. Then the built guacd
+# answers the handshake for VNC and for RDP on 127.0.0.1, so a broken build or a missing protocol turns this red.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - app/guacd-bauen.sh
+      - app/panel/fernbild.py
+      - .github/workflows/guacd-bauen.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: guacd-bauen
+  cancel-in-progress: true
+
+jobs:
+  bauen:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {runner: ubuntu-24.04-arm, image: "debian:trixie"}
+          - {runner: ubuntu-24.04-arm, image: "debian:bookworm"}
+          - {runner: ubuntu-latest, image: "debian:trixie"}
+          - {runner: ubuntu-latest, image: "ubuntu:24.04"}
+    runs-on: ${{ matrix.runner }}
+    container: ${{ matrix.image }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - name: What install.sh has there already
+        run: |
+          apt-get update -q
+          DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends ca-certificates curl python3
+      - name: Build as install.sh does
+        run: |
+          bash app/guacd-bauen.sh --pakete
+          bash app/guacd-bauen.sh /opt/speech-spark/guacd | tee bau.log
+          tail -n 1 bau.log | grep -qx 'guacd-bauen: ERGEBNIS ok'
+          bash app/guacd-bauen.sh /opt/speech-spark/guacd | tail -n 1 | grep -qx 'guacd-bauen: ERGEBNIS vorhanden'
+      - name: guacd answers for VNC and RDP
+        run: |
+          LD_LIBRARY_PATH=/opt/speech-spark/guacd/lib /opt/speech-spark/guacd/sbin/guacd -b 127.0.0.1 -l 4822 -L debug
+          python3 - <<'EOF'
+          import socket, time
+          for proto in ("vnc", "rdp"):
+              for _ in range(50):
+                  try:
+                      s = socket.create_connection(("127.0.0.1", 4822), 2)
+                      break
+                  except OSError:
+                      time.sleep(0.2)
+              s.sendall(f"6.select,{len(proto)}.{proto};".encode())
+              s.settimeout(20)
+              got = b""
+              while b";" not in got:
+                  part = s.recv(4096)
+                  assert part, proto
+                  got += part
+              print(proto, got[:80])
+              assert got.startswith(b"4.args,"), (proto, got[:200])
+              s.close()
+          EOF

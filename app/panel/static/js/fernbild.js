@@ -5,13 +5,13 @@
 // on), keys only while „Steuern“ is on. „spark-steuern“ tells the panel; „spark-rate“ is the panel's rate (KB/s).
 // On a Mac the macOS user and password are asked here for each session and sent once with the ticket, never kept.
 const FB={c:null,tunnel:null,kb:null,mouse:null,g:null,steuern:false,rate:[],grund:''};
-const FB_GRUND={guacd:['Der Bildschirm-Dienst (guacd) läuft nicht: auf dem Spark „install.sh --fernbild“.','The screen service (guacd) is not running: "install.sh --fernbild" on the Spark.'],
+const FB_GRUND={guacd:['Der Bildschirm-Dienst (guacd) startet nicht: auf dem Spark „journalctl -u speech-spark-guacd“ zeigt warum.','The screen service (guacd) does not start: "journalctl -u speech-spark-guacd" on the Spark shows why.'],
   sshd:['Das System zeigt keinen Bildschirm: dort „sudo spark-anker bildschirm“.','The system shows no screen: run "sudo spark-anker bildschirm" there.'],
   anker:['Der Anker ist nicht verbunden.','The anchor is not connected.'],voll:['Schon so viele Sitzungen offen, wie erlaubt sind.','As many sessions open as allowed.'],
   zu_gross:['Eine Nachricht der Seite war zu groß: der Bildschirm ist zu.','A message of the page was too big: the screen is closed.'],
   ticket:['Die Freigabe ist abgelaufen. Noch einmal „Bildschirm“.','The permission expired. "Screen" once more.'],
   aus:['Der Bildschirm ist ausgeschaltet worden.','The screen was switched off.']};
-function fbGrund(w){return FB_GRUND[w]?t(...FB_GRUND[w]):fzGrund(w)}
+function fbGrund(w){if(w==='guacd'){const x=fzBildDienst(FZ.d);if(x)return x}return FB_GRUND[w]?t(...FB_GRUND[w]):fzGrund(w)}
 function fbLaden(){if(window.Guacamole)return Promise.resolve();
   return new Promise((ok,bad)=>{window.module={exports:{}};const s=document.createElement('script');s.src='/static/guac/guacamole-common.min.js?v='+encodeURIComponent(SPARK_VER);
     s.onload=()=>{delete window.module;window.Guacamole?ok():bad(new Error(t('Der Bildschirm-Baustein fehlt.','The screen component is missing.')))};
