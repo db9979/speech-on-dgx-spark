@@ -66,6 +66,7 @@ grep -Eq '^ *RDP \.+ yes' "$BAU/configure.log" && grep -Eq '^ *VNC \.+ yes' "$BA
   || { grep -E 'RDP|VNC' "$BAU/configure.log" | tail -n 4; echo "guacd-bauen: VNC or RDP missing"; ende configure; }
 grep -E '^ *(RDP|VNC|FreeRDP|freerdp)' "$BAU/configure.log" || true
 grep -iE 'checking .*(freerdp|rdp)' "$BAU/configure.log" | head -n 60 || true
+sed -n '/whether freerdp structs have a context/,/^configure:[0-9]*: result/p' "$SRC/config.log" | head -n 60 || true
 echo "guacd-bauen: building with $(nproc) cores (on a Raspberry Pi 5 about 10 to 15 minutes)"
 t0=$(date +%s)
 ( cd "$SRC" && als nice -n 10 make -j "$(nproc)" >"$BAU/make.log" 2>&1 ) \
