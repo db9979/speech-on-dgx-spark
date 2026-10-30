@@ -1573,7 +1573,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell; ebenso führt nur ihr Klick Punkte der Wissenskarte zusammen, benennt sie um oder löscht sie (mit dem Code von „Bestätigen“). Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal), Gedächtnis und Gespräche ganz versiegelt im Ordner des Profils (profiles.write_own). Was ein Dienst für ein Profil vorhält (Mail-Vorrat, Mails, Anhänge, Termine und Kontakte in Finden), liegt nur mit AES-GCM"
+"text": "ist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell; ebenso führt nur ihr Klick Punkte der Wissenskarte zusammen, benennt sie um oder löscht sie (mit dem Code von „Bestätigen“); von selbst nur eine feste Regel bei gleichem Namen in anderer Schreibweise (wissensdoppelt.aehnlich), nie das Modell, und nie gegen ihr „Verschieden“. Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal), Gedächtnis und Gespräche ganz versiegelt im Ordner des P"
 },
 {
 "lang": "de",
@@ -1581,7 +1581,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " versiegelt (vorrat.seal), die Wörter im Suchindex nur als HMAC-Marken mit einem Schlüssel je Profil (vorrat.marke); ohne Schlüssel wird nichts geschrieben. Schlagworte, die das Sprachmodell für Finden vorschlägt, sind Daten: fund.pruefe behält nur Kategorien der festen Liste und Namen, die wörtlich im Eintrag stehen, nie ein Befehlswort."
+"text": "rofils (profiles.write_own). Was ein Dienst für ein Profil vorhält (Mail-Vorrat, Mails, Anhänge, Termine und Kontakte in Finden), liegt nur mit AES-GCM versiegelt (vorrat.seal), die Wörter im Suchindex nur als HMAC-Marken mit einem Schlüssel je Profil (vorrat.marke); ohne Schlüssel wird nichts geschrieben. Schlagworte, die das Sprachmodell für Finden vorschlägt, sind Daten: fund.pruefe behält nur Kategorien der festen Liste und Namen, die wörtlich im Eintrag stehen, nie ein Befehlswort."
 },
 {
 "lang": "de",
@@ -1645,7 +1645,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": ", ohne Skript und ohne Laden von außen (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt ablegen (Schritt 10) - app/panel/profiles.py write_own: Gedächtnis und Gespräche ganz versiegelt (Schritt 10) - app/panel/vorrat.py key: ein Schlüssel je Zweck aus secret.key (Schritt 10) - app/panel/meinedaten.py api_export: eigene Daten nur nach frischem Code, Passkey oder PIN (Schritt 3) - app/panel/meinedaten.py build: die ZIP nur aus dem Datei-Register, ohne Geheimnisse (Schritt 10) - app/panel/profiles.py _cap: Obergrenze des Gedächtnisses ohne Datenverlust (Schritt 8) - app/panel/gedaechtnis.py offer: Gelerntes ersetzt nie Bestätigtes: nur ein Angebot (Schritt 8) - app/panel/gemerkt.py take_back: Rückgängig nur für den eigenen, unveränderten Fakt (Schritt 8)"
+"text": ", ohne Skript und ohne Laden von außen (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt ablegen (Schritt 10) - app/panel/profiles.py write_own: Gedächtnis und Gespräche ganz versiegelt (Schritt 10) - app/panel/vorrat.py key: ein Schlüssel je Zweck aus secret.key (Schritt 10) - app/panel/meinedaten.py api_export: eigene Daten nur nach frischem Code, Passkey oder PIN (Schritt 3) - app/panel/meinedaten.py build: die ZIP nur aus dem Datei-Register, ohne Geheimnisse (Schritt 10) - app/panel/profiles.py _cap: Obergrenze des Gedächtnisses ohne Datenverlust (Schritt 8) - app/panel/gedaechtnis.py offer: Gelerntes ersetzt nie Bestätigtes: nur ein Angebot (Schritt 8) - app/panel/gemerkt.py take_back: Rückgängig nur für den eigenen, unveränderten Fakt (Schritt 8) - app/panel/wissensdoppelt.py aehnlich: Punkte der Karte von selbst nur nach fester Regel zusammen, nie gege"
 },
 {
 "lang": "de",
@@ -1653,7 +1653,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_hardening, test_angriffe, test_gaeste, test_kontext_trennung, test_scanner, test_stufen, test_notaus, test_waerter, test_protokoll, test_wachposten, test_markdown, test_gedaechtnis_grenze, test_gemerkt, test_siegel, test_meinedaten"
+"text": "n „Verschieden“ (Schritt 8)"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": "Selbsttests: test_hardening, test_angriffe, test_gaeste, test_kontext_trennung, test_scanner, test_stufen, test_notaus, test_waerter, test_protokoll, test_wachposten, test_markdown, test_gedaechtnis_grenze, test_gemerkt, test_siegel, test_meinedaten, test_wissensdoppelt"
 },
 {
 "lang": "de",
@@ -2309,7 +2317,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Personen, Firmen und Fristen",
 "title": "Personen, Firmen und Fristen",
-"text": "rte.GEAENDERT. Geht ein Dokument, gehen seine Stellen sofort mit, ein Punkt ohne Stelle verschwindet. - Seite und Punkt, Typregeln, Fristen: Heißt eine Seite des Wissensbuchs wie ein Punkt der Art person, firma oder ort, sind beide ein Punkt (wk_entpage); die feste Regel wissenskarte._verbinde verbindet sie beim Einlesen der Punkte, nachts und einmal beim Anlegen, nie das Modell. Ihre Verbindungen zählen in view, rund_um, weg und liste als die des Punktes; umbenannt werden beide zusammen (wissensbuch.retitle, der alte Titel bleibt in wb_alttitel, so entsteht beim Einarbeiten keine Doppelseite). Jede Verbindung folgt der Tabelle wissenskarte.TYPEN (erlaubte Arten am Anfang und am Ende, eine Seite zählt als „seite“), eine Frist braucht im Namen ein Datum oder eine Zahl mit Zeiteinheit (wissenskarte.frist_name, Zahlwörter über eine feste Liste). Die Nachtprüfung (wissenskarte.nachtpruefung) entfernt, was vorher gespeichert wurde und dagegen verstößt."
+"text": "rte.GEAENDERT. Geht ein Dokument, gehen seine Stellen sofort mit, ein Punkt ohne Stelle verschwindet. - Seite und Punkt, Typregeln, Fristen: Heißt eine Seite des Wissensbuchs wie ein Punkt der Art person, firma oder ort, sind beide ein Punkt (wk_entpage); die feste Regel wissenskarte._verbinde verbindet sie beim Einlesen der Punkte, nachts und einmal beim Anlegen, nie das Modell. Ihre Verbindungen zählen in view, rund_um, weg und liste als die des Punktes; umbenannt werden beide zusammen (wissensbuch.retitle, der alte Titel bleibt in wb_alttitel, so entsteht beim Einarbeiten keine Doppelseite). Jede Verbindung folgt der Tabelle wissenskarte.TYPEN (erlaubte Arten am Anfang und am Ende, eine Seite zählt als „seite“), eine Frist braucht im Namen ein Datum oder eine Zahl mit Zeiteinheit (wissenskarte.frist_name, Zahlwörter über eine feste Liste). Die Nachtprüfung (wissenskarte.nachtpruefung) entfernt, was vorher gespeichert wurde und dagegen verstößt. - Doppelte (wissensdoppelt.py) erkennt nur eine feste Regel, wissensdoppelt.aehnlich, nie das Modell: jeder Name in seiner Normalform je Art (wissensdoppelt.normalform: ß/ss und Umlaute, Satzzeichen, bei Personen ohne Anrede und Titel und"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Personen, Firmen und Fristen",
+"title": "Personen, Firmen und Fristen",
+"text": " „Nachname, Vorname“ umgestellt, bei Firmen ohne Rechtsform und „Firma“, bei Orten „Str.“ als „Straße“). „Gleich“ sind nur Personen mit Vor- und Nachnamen und Orte, die sich allein darin unterscheiden, sowie Konten, Verträge und Fristen mit derselben Normalform; beim Einlesen wird so ein Name ein anderer Name des Punktes (wissensdoppelt.gleich_id), vorhandene führt der ruhige Lauf über wissenskarte.zusammen zusammen (wissensdoppelt.lauf). Ein Vorschlag sind kleine Schreibfehler (Damerau-Levenshtein höchstens 2 ab 6 Buchstaben, 1 bei 4 bis 5), eine Initiale, wenn genau eine Person passt, und eine Firma mit gleichem Kern; verglichen wird nur in Blöcken, höchstens 200000 Paare je Lauf, höchstens 300 offene Vorschläge. „Verschieden“ (wissensdoppelt.verschieden) merkt sich die Namen, das Paar kommt nie wieder; Zusammenführen bleibt der Klick mit Code. „Zusammenführen mit …“ zeigt oben die 8 ähnlichsten Punkte derselben Art (wissensdoppelt.auswahl), den Rest über die Suche."
 },
 {
 "lang": "de",
@@ -2381,7 +2397,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "n (Schritt 6) - 200 Dokumente am Tag für die Wissenskarte (Standard) (Schritt 13) - 40 Personen, Firmen, Orte, Verträge, Konten und Fristen, die ein Dokument bringen darf (Schritt 13) - 5000 solche Punkte pro Profil (Schritt 13) - 80 Zeichen, die der Name eines solchen Punktes höchstens hat (Schritt 13) - 200 Dokumente am Tag für diese Punkte (Standard) (Schritt 13) - 50 Stellen, die die Karte der Suche höchstens nennt (Schritt 6) - 20 Punkte, die die Suchwörter höchstens treffen (Schritt 6) - 0.5 Gewicht der Liste aus der Karte (Schritt 6)"
+"text": "n (Schritt 6) - 200 Dokumente am Tag für die Wissenskarte (Standard) (Schritt 13) - 40 Personen, Firmen, Orte, Verträge, Konten und Fristen, die ein Dokument bringen darf (Schritt 13) - 5000 solche Punkte pro Profil (Schritt 13) - 80 Zeichen, die der Name eines solchen Punktes höchstens hat (Schritt 13) - 200 Dokumente am Tag für diese Punkte (Standard) (Schritt 13) - 200000 Paare, die ein Lauf der Doppelten je Profil höchstens vergleicht (Schritt 13) - 300 offene Vorschläge „Vielleicht doppelt“ je Profil (Schritt 13) - 8 ähnlichste Punkte oben in „Zusammenführen mit …“ (Schritt 13) - 50 Stellen, die die Karte der Suche höchstens nennt (Schritt 6) - 20 Punkte, die die Suchwörter höchstens treffen (Schritt 6) - 0.5 Gewicht der Liste aus der Karte (Schritt 6)"
 },
 {
 "lang": "de",
@@ -2421,7 +2437,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "ammen: zwei Punkte zusammenführen, nur per Klick (Schritt 13) - app/panel/wissenskarte.py _verbinde: Seite und Punkt gleichen Namens verbinden, feste Regel (Schritt 13) - app/panel/wissenskarte.py erlaubt: Typregeln je Art der Verbindung (TYPEN) (Schritt 13) - app/panel/wissenskarte.py frist_name: eine Frist nur mit Datum oder Zahl im Namen (Schritt 13) - app/panel/wissenskarte.py nachtpruefung: nachts: verbinden, Verstöße und Fristen ohne Zahl entfernen (Schritt 13) - app/panel/wissensbuch.py retitle: Seite umbenennen, der alte Titel bleibt (Schritt 13) - app/panel/wissensbuch.py search_pages: passende Seiten über den Suchindex wb_fts (Schritt 13) - app/panel/wissensbuch.py _fts_sync: Suchindex der Seiten nachziehen (Schritt 13) - app/panel/wissensbuch.py liste: Seiten-Ids mit Rang für andere Teile, nur lesend (Schritt 13) - app/panel/wissenskarte.py liste: Stück-Ids aus der Karte für die Suche, nur lesend (Schritt 6) - app/panel/wissenskarte.py trifft: trifft ein Suchwort einen Punkt? feste Regel (Schritt 6) - app/panel/documents.py _karte: die Liste der Karte in die Mischung, mit den Filtern der Suche (Schritt 6) - app/panel/documents.py _similar: Ähnlichkeit blockweise in float"
+"text": "ammen: zwei Punkte zusammenführen: per Klick oder bei „gleich“ nach fester Regel (Schritt 13) - app/panel/wissenskarte.py _verbinde: Seite und Punkt gleichen Namens verbinden, feste Regel (Schritt 13) - app/panel/wissenskarte.py erlaubt: Typregeln je Art der Verbindung (TYPEN) (Schritt 13) - app/panel/wissenskarte.py frist_name: eine Frist nur mit Datum oder Zahl im Namen (Schritt 13) - app/panel/wissenskarte.py nachtpruefung: nachts: verbinden, Verstöße und Fristen ohne Zahl entfernen (Schritt 13) - app/panel/wissensbuch.py retitle: Seite umbenennen, der alte Titel bleibt (Schritt 13) - app/panel/wissensdoppelt.py aehnlich: gleich, Vorschlag oder nichts: die eine feste Regel für Doppelte (Schritt 13) - app/panel/wissensdoppelt.py normalform: ein Name in seiner Normalform je Art (Schritt 13) - app/panel/wissensdoppelt.py gleich_id: beim Einlesen: gleicher Name wird anderer Name (Schritt 13) - app/panel/wissensdoppelt.py lauf: ruhiger Lauf: zusammenführen und Vorschläge in Blöcken (Schritt 13) - app/panel/wissensdoppelt.py auswahl: „Zusammenführen mit …“: die ähnlichsten zuerst (Schritt 13) - app/panel/wissensdoppelt.py verschieden: „Verschieden“ gilt für immer (Schritt 13) - app/pa"
 },
 {
 "lang": "de",
@@ -2429,7 +2445,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "32 (Schritt 6) - app/panel/gedaechtnis.py hint_lines: Fakten in drei Blöcken (Schritt 13) - app/panel/profiles.py _cap: Obergrenze: nur alte gelernte Fakten machen Platz (Schritt 13) - app/panel/gedaechtnis.py slot_of: fester Themen-Platz eines Fakts nach festen Mustern (Schritt 13) - app/panel/gemerkt.py take_back: Rückgängig nur bei unverändertem Fakt (Schritt 13) - app/panel/wissensmessung.py lauf: eine Messung im eigenen Prozess, bricht bei Sprache ab (Schritt 6) - app/panel/wissensmessung.py _synth: das Wegwerf-Profil aus festem Zufall, mit den Grenzen des Codes (Schritt 6) - app/panel/wissensmessung.py MESSTEILE: die Messteile, erweiterbar (Schritt 6)"
+"text": "nel/wissensbuch.py search_pages: passende Seiten über den Suchindex wb_fts (Schritt 13) - app/panel/wissensbuch.py _fts_sync: Suchindex der Seiten nachziehen (Schritt 13) - app/panel/wissensbuch.py liste: Seiten-Ids mit Rang für andere Teile, nur lesend (Schritt 13) - app/panel/wissenskarte.py liste: Stück-Ids aus der Karte für die Suche, nur lesend (Schritt 6) - app/panel/wissenskarte.py trifft: trifft ein Suchwort einen Punkt? feste Regel (Schritt 6) - app/panel/documents.py _karte: die Liste der Karte in die Mischung, mit den Filtern der Suche (Schritt 6) - app/panel/documents.py _similar: Ähnlichkeit blockweise in float32 (Schritt 6) - app/panel/gedaechtnis.py hint_lines: Fakten in drei Blöcken (Schritt 13) - app/panel/profiles.py _cap: Obergrenze: nur alte gelernte Fakten machen Platz (Schritt 13) - app/panel/gedaechtnis.py slot_of: fester Themen-Platz eines Fakts nach festen Mustern (Schritt 13) - app/panel/gemerkt.py take_back: Rückgängig nur bei unverändertem Fakt (Schritt 13) - app/panel/wissensmessung.py lauf: eine Messung im eigenen Prozess, bricht bei Sprache ab (Schritt 6) - app/panel/wissensmessung.py _synth: das Wegwerf-Profil aus festem Zufall, mit den Grenzen des C"
 },
 {
 "lang": "de",
@@ -2437,7 +2453,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_wissen, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung"
+"text": "odes (Schritt 6) - app/panel/wissensmessung.py MESSTEILE: die Messteile, erweiterbar (Schritt 6)"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": "Selbsttests: test_wissen, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung"
 },
 {
 "lang": "de",
@@ -5382,6 +5406,38 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "Zahl mit Zeiteinheit („31.12.2026“, „14 Tage“); Zahlwörter vor einer Zeiteinheit werden über die feste Liste ZAHLWORTE zu Ziffern („einem Monat“ → „1 Monat“, „zwei Wochen“ → „2 Wochen“), der Name muss so oder in Ziffern in der Stelle stehen, sonst no date. (4) Nachtprüfung (wissenskarte.nachtpruefung, einmal je Nacht und Profil im Nachtfenster der Suchprüfung): verbindet Seiten und Punkte, entfernt gespeicherte Verbindungen gegen die Typregeln und Fristen ohne Zahl oder Datum (mit GEAENDERT „weg“) und schreibt wissen: wissenskarte geprueft | n verbindungen gegen typregeln | n fristen ohne zahl | n mit seite. Live, Kasten Wissenskarte: Zahl der Punkte mit Seite und was die Nacht entfernt hat. Einen Namen korrigieren: Wissensbuch → Karte, den Punkt antippen, neuen Namen eintragen, „Umbenennen“ mit Code (die Seite ändert sich mit); zwei Punkte für dasselbe: „Zusammenführen mit …“; ein falscher Punkt: „Löschen“; eine Seite ohne Punkt: Wissensbuch → Seiten, Seite antippen, „Seite umbenennen“. Rund ist eine Seite des Wissensbuchs, eckig ein Punkt aus den Dokumenten; der alte Name bleibt immer als zweiter Name. Selbsttest test_wissensseite."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Doppelte erkennen und kürzere Auswahl (V01.1.286, Plan *wissensgraph*, Nachtrag zu Stufe 2, Dominik 2026-10-30 „ok nach Empfehlung umsetzen“): kein eigener Schalter, es gehört zu *Personen, Firmen und Fristen* (chat.knowledge_ents) und folgt dessen Freigabe; Gäste nie. Keine Vorliebe für das selbsttätige Zusammenführen: es ist die Regel, nach der Punkte entstehen (wie derselbe Name schon immer denselben Punkt bekam), es meldet und sendet nichts und ändert nur die eigene Karte. Ob zwei Punkte derselbe sind, entscheidet nur wissensdoppelt.aehnlich(art, a, b) -> (stufe, grund), nie das Modell: stufe ist gleich, vorschlag oder None, grund ein festes Wort (schreibweise, anrede, reihenfolge, initiale, rechtsform, tippfehler). Verglichen wird die Normalform je Art (wissensdoppelt.normalform): ß/ss, ä/ae, ö/oe, ü/ue, Akzente, Satzzeichen und Leerzeichen zählen nicht; Personen ohne Anrede und Titel (wissenskarte.ANREDEN: Herr, Frau, Hr., Fr., Dr., Prof., Dipl.-Ing. …) und „Nachname, Vorname“ als „Vorname Nachname“; Firmen ohne Rechtsform (wissenskarte.RECHTSFORMEN: GmbH, AG, KG, GmbH & Co. KG, UG, e. V., e. K., OHG, SE, Ltd, Inc …), ohne „Firma“ davor und mit „&“ als „und“; Orte mit „Str.“ "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "als „Straße“. Gleich sind nur Personen mit Vor- und Nachnamen und Orte, die sich allein durch Anrede, Titel, Schreibweise oder die Reihenfolge von Nach- und Vorname unterscheiden („Herr Dominik Bornhäuser“, „Dr. Dominik Bornhäuser“, „Bornhäuser, Dominik“; nie „Herr“ und „Frau“ zusammen), dazu Konten (ohne Leerzeichen), Verträge und Fristen mit derselben Normalform. Eine Firma ist nie von selbst gleich: „Müller GmbH“ und „Müller AG“ sind nur ein Vorschlag. Vorschlag sind kleine Schreibfehler (Damerau-Levenshtein höchstens 2 bei Normalformen ab 6 Buchstaben, 1 bei 4 bis 5, darunter nie; „Dominik Bornhäußer“), eine Initiale („D. Bornhäuser“) nur, wenn genau eine Person passt, und Firmen mit gleichem Kern ohne Rechtsform. Verschiedene Zahlen sind nie derselbe Punkt; Konten, Verträge und Fristen nie über Schreibfehler. Beim Einlesen (wissenskarte._match → wissensdoppelt.gleich_id) wird ein gleicher Name ein anderer Name des vorhandenen Punktes statt eines neuen; ein Index der Schlüssel (wk_entkey, mit Fingerabdruck in wk_entsig) hält das schnell. In ruhigen Minuten (wissen.due_once nach der Karte, wissensdoppelt.due_once) führt ein Lauf je Profil vorhandene gleiche Punkte über wissenska"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "rte.zusammen zusammen (dieselbe Funktion wie der Klick, GEAENDERT meldet zusammen) und füllt die Tabelle wk_paar(a, b, art, grund, stand, na, nb, at) mit Vorschlägen (stand offen). Verglichen wird nur in Blöcken (gleiche erste oder letzte drei Buchstaben, gleicher Nachname, gleicher Firmenkern) mit Nachbarn ähnlicher Länge, höchstens 200 000 Vergleiche und 3 s je Lauf, 100 neue und 300 offene Vorschläge je Profil; bei 5000 Punkten nie alle mit allen. Ein Lauf kommt nur, wenn sich die Punkte geändert haben, höchstens sechsmal am Tag je Profil. Auf der Karte steht über der Karte „Vielleicht doppelt“ mit der Zahl: die Paare mit Grund und „Zusammenführen“ (über POST /api/profile/wissenskarte/knoten/{id}/zusammen, Code von „Bestätigen“ wie bisher) oder „Verschieden“ (POST /api/profile/wissenskarte/paare/verschieden, ohne Code, es geht nichts verloren): gemerkt über die Namen (stand verschieden), das Paar kommt nie wieder, auch nicht von selbst zusammengeführt. Beim gewählten Punkt steht „Vielleicht dieselbe Person: …“ (Firma, Ort …) mit denselben zwei Knöpfen. „Zusammenführen mit …“ ist statt einer langen Liste ein Suchfeld: oben die 8 ähnlichsten Punkte derselben Art, beim Tippen höchs"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "tens 20 Treffer über Name und andere Namen (GET /api/profile/wissenskarte/knoten/{id}/aehnlich?q=, wissensdoppelt.auswahl). Alle neuen Wege mit Anmeldung, Profilbindung, CSRF, Größenlimit (256 Byte) und Rate-Limit. Logs nur feste Wörter und Zahlen: wissen: wissenskarte doppelt einlesen | 1 knoten | anrede, wissen: wissenskarte doppelt geprueft | n zusammengefuehrt | n vorschlaege neu | n offen | n weg | n vergleiche | fertig, wissen: wissenskarte doppelt verschieden | 1 paar und … abgelehnt | grund. Live, Kasten Wissenskarte: „Doppelte: n Vorschläge offen, m automatisch zusammengeführt“. iPhone: „Vielleicht doppelt“ unter der Karte und beim Punkt, nach links wischen ist „Verschieden“, Löschen wie bisher; Zusammenführen mit Hinweis auf das Panel. Selbsttest test_wissensdoppelt."
 },
 {
 "lang": "de",
@@ -15349,7 +15405,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Meine Sachen",
 "title": "Meine Sachen",
-"text": "e im Gespräch öffnet Finden mit der Frage und hat „Original öffnen“. Alles geht über die vorhandenen Pfade (iphone.THINGS „fund“), der Spark prüft jede Änderung. Android zeigt Finden über die Panel-Ansicht (Reiter Finden), das genügt dort. - Personen, Firmen und Fristen (seit V01.1.253, Plan *wissensgraph* Stufe 2, nur wenn der Admin sie freigegeben hat): Auf der Karte stehen Personen, Firmen, Orte, Verträge, Konten und Fristen aus den Dokumenten als eigene Punkte mit der Farbe ihrer Art; „Nach Art“ zeigt eine Art mit ihren Nachbarn. Ein Tippen auf so einen Punkt zeigt seine Art und Stellen und „Löschen“ (mit dem Code von „Bestätigen“, wenn das Profil den zweiten Schritt hat). Umbenennen und Zusammenführen bleiben im Panel (Wissensbuch → Karte), ebenso „Seite umbenennen“ (Wissensbuch → Seiten); die Seite eines Wissensbuch-Eintrags nennt beide Wege (seit V01.1.273). Der Spark prüft jede Änderung (iphone.THINGS „wissensknoten“). - Vom Spark erstellt: die Dokumente, die der Spark gemacht hat, wie bisher. - Bilder: alle gemalten Bilder als Raster, ein Tippen zeigt eines groß mit Wunsch und Zeit, Teilen und Löschen. Oben ein Feld „Was soll ich malen?“; solange gemalt wird, schaut die Ap"
+"text": "e im Gespräch öffnet Finden mit der Frage und hat „Original öffnen“. Alles geht über die vorhandenen Pfade (iphone.THINGS „fund“), der Spark prüft jede Änderung. Android zeigt Finden über die Panel-Ansicht (Reiter Finden), das genügt dort. - Personen, Firmen und Fristen (seit V01.1.253, Plan *wissensgraph* Stufe 2, nur wenn der Admin sie freigegeben hat): Auf der Karte stehen Personen, Firmen, Orte, Verträge, Konten und Fristen aus den Dokumenten als eigene Punkte mit der Farbe ihrer Art; „Nach Art“ zeigt eine Art mit ihren Nachbarn. Ein Tippen auf so einen Punkt zeigt seine Art und Stellen und „Löschen“ (mit dem Code von „Bestätigen“, wenn das Profil den zweiten Schritt hat). Umbenennen und Zusammenführen bleiben im Panel (Wissensbuch → Karte), ebenso „Seite umbenennen“ (Wissensbuch → Seiten); die Seite eines Wissensbuch-Eintrags nennt beide Wege (seit V01.1.273). Der Spark prüft jede Änderung (iphone.THINGS „wissensknoten“). - Vielleicht doppelt (seit V01.1.286, nur mit Personen, Firmen und Fristen): unter der Karte „Vielleicht doppelt“ mit der Zahl offener Vorschläge der festen Regeln des Spark; ein Tippen zeigt die Paare mit Grund, nach links wischen ist „Verschieden“ (das Paar"
 },
 {
 "lang": "de",
@@ -15357,7 +15413,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Meine Sachen",
 "title": "Meine Sachen",
-"text": "p alle 4 Sekunden nach. Ändern, Schnellknöpfe und eigene Fotos gehen weiter im Panel unter Ich → Bilder. - Musik: alle Lieder nach Tag gruppiert wie im Panel (Heute, Gestern, Letzte 7 Tage, Älter), mit Abspielen direkt in der App, Länge, mit oder ohne Gesang, Uhrzeit oder Tag, wischen zum Löschen. Oben „Was für Musik?“ mit der Länge zur Wahl (dieselben Längen wie die Chips im Panel, bis zur Grenze des Admins) macht ein Stück ohne Gesang; Gesang und eigener Liedtext gehen im Panel unter Ich → Musik. - Gedächtnis: alle gemerkten Fakten mit Suche, „aus einem Gespräch gelernt“ oder „selbst gesagt“ mit Datum. Wischen zum Ändern oder Löschen, „Auswählen“ löscht mehrere, „Aufräumen vorschlagen“ fragt das Sprachmodell nach doppelten Einträgen, erst nach deinem „Übernehmen“ ändert sich etwas. Alles auf einmal vergessen geht weiter nur im Browser."
+"text": " kommt nie wieder). Beim Punkt stehen seine Vorschläge unter „Vielleicht derselbe Punkt“. Zusammenführen geht im Panel unter Wissensbuch → Karte (mit dem Code von „Bestätigen“); die App sagt das mit einem Sprung-Link. - Vom Spark erstellt: die Dokumente, die der Spark gemacht hat, wie bisher. - Bilder: alle gemalten Bilder als Raster, ein Tippen zeigt eines groß mit Wunsch und Zeit, Teilen und Löschen. Oben ein Feld „Was soll ich malen?“; solange gemalt wird, schaut die App alle 4 Sekunden nach. Ändern, Schnellknöpfe und eigene Fotos gehen weiter im Panel unter Ich → Bilder. - Musik: alle Lieder nach Tag gruppiert wie im Panel (Heute, Gestern, Letzte 7 Tage, Älter), mit Abspielen direkt in der App, Länge, mit oder ohne Gesang, Uhrzeit oder Tag, wischen zum Löschen. Oben „Was für Musik?“ mit der Länge zur Wahl (dieselben Längen wie die Chips im Panel, bis zur Grenze des Admins) macht ein Stück ohne Gesang; Gesang und eigener Liedtext gehen im Panel unter Ich → Musik. - Gedächtnis: alle gemerkten Fakten mit Suche, „aus einem Gespräch gelernt“ oder „selbst gesagt“ mit Datum. Wischen zum Ändern oder Löschen, „Auswählen“ löscht mehrere, „Aufräumen vorschlagen“ fragt das Sprachmodell nac"
 },
 {
 "lang": "de",
@@ -18909,7 +18965,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "tes points of the knowledge map (with the code of „Confirm“). Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it. 9. Check the answer: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML. 10. Traces: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own). What a service keeps for a profile (the mail supply, mail, attachments, appointments and contacts in Find) lies only sealed with AES-GCM (vorrat.seal), the words in the search index only as HMAC marks with a key per profile (vorrat.marke); without a key nothing is written. Tags the language model proposes"
+"text": "tes points of the knowledge map (with the code of „Confirm“); by itself only a fixed rule for the same name in another spelling (wissensdoppelt.aehnlich), never the model, and never against their „Different“. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it. 9. Check the answer: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML. 10. Traces: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own). What a service keeps for a profile (the mail supply, mail, attachments, appointments and contacts in Find) lies only sealed with AES-GCM (vorrat.seal), the wor"
 },
 {
 "lang": "en",
@@ -18917,7 +18973,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " for Find are data: fund.pruefe keeps only categories of the fixed list and names that stand in the entry word for word, never a command word."
+"text": "ds in the search index only as HMAC marks with a key per profile (vorrat.marke); without a key nothing is written. Tags the language model proposes for Find are data: fund.pruefe keeps only categories of the fixed list and names that stand in the entry word for word, never a command word."
 },
 {
 "lang": "en",
@@ -18981,7 +19037,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/vault.py seal: store secrets sealed (step 10) - app/panel/profiles.py write_own: memory and conversations sealed whole (step 10) - app/panel/vorrat.py key: a key per purpose from secret.key (step 10) - app/panel/meinedaten.py api_export: own data only after a fresh code, passkey or PIN (step 3) - app/panel/meinedaten.py build: the ZIP only from the file register, without secrets (step 10) - app/panel/profiles.py _cap: the memory's cap without data loss (step 8) - app/panel/gedaechtnis.py offer: learned never replaces confirmed: only an offer (step 8) - app/panel/gemerkt.py take_back: undo only for the own, unchanged fact (step 8)"
+"text": "/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/vault.py seal: store secrets sealed (step 10) - app/panel/profiles.py write_own: memory and conversations sealed whole (step 10) - app/panel/vorrat.py key: a key per purpose from secret.key (step 10) - app/panel/meinedaten.py api_export: own data only after a fresh code, passkey or PIN (step 3) - app/panel/meinedaten.py build: the ZIP only from the file register, without secrets (step 10) - app/panel/profiles.py _cap: the memory's cap without data loss (step 8) - app/panel/gedaechtnis.py offer: learned never replaces confirmed: only an offer (step 8) - app/panel/gemerkt.py take_back: undo only for the own, unchanged fact (step 8) - app/panel/wissensdoppelt.py aehnlich: points of the map merged by themselves only by a fixed rule, never against „Different“ (step 8)"
 },
 {
 "lang": "en",
@@ -18989,7 +19045,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_hardening, test_angriffe, test_gaeste, test_kontext_trennung, test_scanner, test_stufen, test_notaus, test_waerter, test_protokoll, test_wachposten, test_markdown, test_gedaechtnis_grenze, test_gemerkt, test_siegel, test_meinedaten"
+"text": "Self-tests: test_hardening, test_angriffe, test_gaeste, test_kontext_trennung, test_scanner, test_stufen, test_notaus, test_waerter, test_protokoll, test_wachposten, test_markdown, test_gedaechtnis_grenze, test_gemerkt, test_siegel, test_meinedaten, test_wissensdoppelt"
 },
 {
 "lang": "en",
@@ -19637,7 +19693,15 @@
 "file": "Architecture and data flow",
 "head": "People, companies and deadlines",
 "title": "People, companies and deadlines",
-"text": " a document goes, its passages go with it at once, a point without a passage disappears. - Page and point, type rules, deadlines: when a page of the knowledge book has the name of a point of the kind person, firma or ort, both are one point (wk_entpage); the fixed rule wissenskarte._verbinde links them when points are read, at night and once when the table is made, never the model. Their connections count as the point's in view, rund_um, weg and liste; both are renamed together (wissensbuch.retitle, the old title stays in wb_alttitel, so working in makes no double page). Every connection follows the table wissenskarte.TYPEN (allowed kinds at the start and the end, a page counts as „seite“), a deadline needs a date or a number with a unit of time in its name (wissenskarte.frist_name, number words by a fixed list). The nightly check (wissenskarte.nachtpruefung) removes what was stored before and breaks them."
+"text": " a document goes, its passages go with it at once, a point without a passage disappears. - Page and point, type rules, deadlines: when a page of the knowledge book has the name of a point of the kind person, firma or ort, both are one point (wk_entpage); the fixed rule wissenskarte._verbinde links them when points are read, at night and once when the table is made, never the model. Their connections count as the point's in view, rund_um, weg and liste; both are renamed together (wissensbuch.retitle, the old title stays in wb_alttitel, so working in makes no double page). Every connection follows the table wissenskarte.TYPEN (allowed kinds at the start and the end, a page counts as „seite“), a deadline needs a date or a number with a unit of time in its name (wissenskarte.frist_name, number words by a fixed list). The nightly check (wissenskarte.nachtpruefung) removes what was stored before and breaks them. - Doubles (wissensdoppelt.py) are found by one fixed rule only, wissensdoppelt.aehnlich, never by the model: every name in its normal form per kind (wissensdoppelt.normalform: ß/ss and umlauts, signs, people without form of address and title and „last name, first name“ turned rou"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "People, companies and deadlines",
+"title": "People, companies and deadlines",
+"text": "nd, companies without legal form and „Firma“, places with „Str.“ as „Straße“). „The same“ are only people with first and last name and places that differ in nothing else, and accounts, contracts and deadlines with the same normal form; while reading such a name becomes an other name of the point (wissensdoppelt.gleich_id), the quiet run merges points already there through wissenskarte.zusammen (wissensdoppelt.lauf). A suggestion are small typing errors (Damerau-Levenshtein at most 2 from 6 letters, 1 for 4 to 5), an initial when exactly one person fits, and a company with the same core; compared only in blocks, at most 200000 pairs per run, at most 300 open suggestions. „Different“ (wissensdoppelt.verschieden) keeps the names, the pair never comes back; merging stays the click with the code. „Merge with …“ shows the 8 most similar points of the same kind on top (wissensdoppelt.auswahl), the rest by search."
 },
 {
 "lang": "en",
@@ -19709,7 +19773,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "places, contracts, accounts and deadlines one document may bring (step 13) - 5000 such points per profile (step 13) - 80 characters the name of such a point has at most (step 13) - 200 documents a day for these points (default) (step 13) - 50 passages the map names to the search at most (step 6) - 20 points the search words hit at most (step 6) - 0.5 weight of the list from the map (step 6)"
+"text": "places, contracts, accounts and deadlines one document may bring (step 13) - 5000 such points per profile (step 13) - 80 characters the name of such a point has at most (step 13) - 200 documents a day for these points (default) (step 13) - 200000 pairs one run for doubles compares per profile at most (step 13) - 300 open suggestions „Maybe double“ per profile (step 13) - 8 most similar points on top of „Merge with …“ (step 13) - 50 passages the map names to the search at most (step 6) - 20 points the search words hit at most (step 6) - 0.5 weight of the list from the map (step 6)"
 },
 {
 "lang": "en",
@@ -19741,7 +19805,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": " tables in PDFs row by row (step 5) - app/panel/documents.py _rows: cut long tables only between rows (step 5) - app/panel/documents.py due_tables: read PDFs from before again when they have tables (step 5) - app/panel/wissensbuch.py answer_block: fitting pages of the knowledge book with sources (step 13) - app/panel/wissenskarte.py check_edge: fixed rules for every proposed connection (step 13) - app/panel/wissenskarte.py view: the visible part of the map (step 13) - app/panel/wissenskarte.py rund_um: pages around a page, WITH RECURSIVE (step 13) - app/panel/wissenskarte.py weg: shortest way between two pages (step 13) - app/panel/wissenskarte.py check_ent: fixed rules for every person, company, deadline … (step 13) - app/panel/wissenskarte.py finde_knoten: points exactly by name and other names, read only (step 13) - app/panel/wissenskarte.py knoten_liste: points of one kind by name, read only (step 13) - app/panel/wissenskarte.py knoten_von_dok: points of one document by kind and name, read only (step 13) - app/panel/wissenskarte.py zusammen: merge two points, only by click (step 13) - app/panel/wissenskarte.py _verbinde: link a page and a point of the same name, fixed rule (ste"
+"text": " tables in PDFs row by row (step 5) - app/panel/documents.py _rows: cut long tables only between rows (step 5) - app/panel/documents.py due_tables: read PDFs from before again when they have tables (step 5) - app/panel/wissensbuch.py answer_block: fitting pages of the knowledge book with sources (step 13) - app/panel/wissenskarte.py check_edge: fixed rules for every proposed connection (step 13) - app/panel/wissenskarte.py view: the visible part of the map (step 13) - app/panel/wissenskarte.py rund_um: pages around a page, WITH RECURSIVE (step 13) - app/panel/wissenskarte.py weg: shortest way between two pages (step 13) - app/panel/wissenskarte.py check_ent: fixed rules for every person, company, deadline … (step 13) - app/panel/wissenskarte.py finde_knoten: points exactly by name and other names, read only (step 13) - app/panel/wissenskarte.py knoten_liste: points of one kind by name, read only (step 13) - app/panel/wissenskarte.py knoten_von_dok: points of one document by kind and name, read only (step 13) - app/panel/wissenskarte.py zusammen: merge two points: by click or by fixed rule when „the same“ (step 13) - app/panel/wissenskarte.py _verbinde: link a page and a point of th"
 },
 {
 "lang": "en",
@@ -19749,7 +19813,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "p 13) - app/panel/wissenskarte.py erlaubt: type rules per kind of connection (TYPEN) (step 13) - app/panel/wissenskarte.py frist_name: a deadline only with a date or number in its name (step 13) - app/panel/wissenskarte.py nachtpruefung: at night: link, remove violations and deadlines without a number (step 13) - app/panel/wissensbuch.py retitle: rename a page, the old title stays (step 13) - app/panel/wissensbuch.py search_pages: fitting pages through the search index wb_fts (step 13) - app/panel/wissensbuch.py _fts_sync: bring the pages' search index up to date (step 13) - app/panel/wissensbuch.py liste: page ids with rank for other parts, read only (step 13) - app/panel/wissenskarte.py liste: piece ids from the map for the search, read only (step 6) - app/panel/wissenskarte.py trifft: does a search word hit a point? fixed rule (step 6) - app/panel/documents.py _karte: the map's list into the mix, with the search's filters (step 6) - app/panel/documents.py _similar: similarity block by block in float32 (step 6) - app/panel/gedaechtnis.py hint_lines: facts in three blocks (step 13) - app/panel/profiles.py _cap: cap: only old learned facts make room (step 13) - app/panel/gedaechtni"
+"text": "e same name, fixed rule (step 13) - app/panel/wissenskarte.py erlaubt: type rules per kind of connection (TYPEN) (step 13) - app/panel/wissenskarte.py frist_name: a deadline only with a date or number in its name (step 13) - app/panel/wissenskarte.py nachtpruefung: at night: link, remove violations and deadlines without a number (step 13) - app/panel/wissensbuch.py retitle: rename a page, the old title stays (step 13) - app/panel/wissensdoppelt.py aehnlich: the same, a suggestion or nothing: the one fixed rule for doubles (step 13) - app/panel/wissensdoppelt.py normalform: a name in its normal form per kind (step 13) - app/panel/wissensdoppelt.py gleich_id: while reading: the same name becomes an other name (step 13) - app/panel/wissensdoppelt.py lauf: quiet run: merge and suggestions in blocks (step 13) - app/panel/wissensdoppelt.py auswahl: „Merge with …“: the most similar first (step 13) - app/panel/wissensdoppelt.py verschieden: „Different“ is for good (step 13) - app/panel/wissensbuch.py search_pages: fitting pages through the search index wb_fts (step 13) - app/panel/wissensbuch.py _fts_sync: bring the pages' search index up to date (step 13) - app/panel/wissensbuch.py liste:"
 },
 {
 "lang": "en",
@@ -19757,7 +19821,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "s.py slot_of: a fact's fixed topic place by fixed patterns (step 13) - app/panel/gemerkt.py take_back: undo only while the fact is unchanged (step 13) - app/panel/wissensmessung.py lauf: one measurement in its own process, stops on speech (step 6) - app/panel/wissensmessung.py _synth: the throwaway profile from a fixed seed, with the code's limits (step 6) - app/panel/wissensmessung.py MESSTEILE: the measuring parts, extensible (step 6)"
+"text": " page ids with rank for other parts, read only (step 13) - app/panel/wissenskarte.py liste: piece ids from the map for the search, read only (step 6) - app/panel/wissenskarte.py trifft: does a search word hit a point? fixed rule (step 6) - app/panel/documents.py _karte: the map's list into the mix, with the search's filters (step 6) - app/panel/documents.py _similar: similarity block by block in float32 (step 6) - app/panel/gedaechtnis.py hint_lines: facts in three blocks (step 13) - app/panel/profiles.py _cap: cap: only old learned facts make room (step 13) - app/panel/gedaechtnis.py slot_of: a fact's fixed topic place by fixed patterns (step 13) - app/panel/gemerkt.py take_back: undo only while the fact is unchanged (step 13) - app/panel/wissensmessung.py lauf: one measurement in its own process, stops on speech (step 6) - app/panel/wissensmessung.py _synth: the throwaway profile from a fixed seed, with the code's limits (step 6) - app/panel/wissensmessung.py MESSTEILE: the measuring parts, extensible (step 6)"
 },
 {
 "lang": "en",
@@ -19765,7 +19829,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_wissen, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung"
+"text": "Self-tests: test_wissen, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung"
 },
 {
 "lang": "en",
@@ -22598,6 +22662,38 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": " time become digits by the fixed list ZAHLWORTE (\"einem Monat\" → \"1 Monat\", \"zwei Wochen\" → \"2 Wochen\"), the name must stand in the passage as said or in digits, else no date. (4) Nightly check (wissenskarte.nachtpruefung, once per night and profile in the search check's night window): links pages and points, removes stored connections against the type rules and deadlines without a number or date (with GEAENDERT \"weg\") and writes wissen: wissenskarte geprueft | n verbindungen gegen typregeln | n fristen ohne zahl | n mit seite. Live, box Knowledge map: the number of points with a page and what the night removed. Correcting a name: Knowledge book → Map, tap the point, enter the new name, \"Rename\" with the code (the page changes too); two points for the same thing: \"Merge with …\"; a wrong point: \"Delete\"; a page without a point: Knowledge book → Pages, tap the page, \"Rename page\". Round is a page of the knowledge book, square a point from the documents; the old name always stays as a second name. Self-test test_wissensseite."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Find doubles and a shorter choice (V01.1.286, plan *wissensgraph*, addition to stage 2, Dominik 2026-10-30 \"ok nach Empfehlung umsetzen\"): no switch of its own, it belongs to *People, companies and deadlines* (chat.knowledge_ents) and follows its release; guests never. No preference for merging by itself: it is the rule by which points are made (as the same name always got the same point), it reports and sends nothing and only changes the own map. Whether two points are the same is decided only by wissensdoppelt.aehnlich(art, a, b) -> (stufe, grund), never by the model: stufe is gleich, vorschlag or None, grund a fixed word (schreibweise, anrede, reihenfolge, initiale, rechtsform, tippfehler). The normal form per kind is compared (wissensdoppelt.normalform): ß/ss, ä/ae, ö/oe, ü/ue, accents, signs and spaces do not count; people without form of address and title (wissenskarte.ANREDEN: Herr, Frau, Hr., Fr., Dr., Prof., Dipl.-Ing. …) and \"last name, first name\" as \"first name last name\"; companies without legal form (wissenskarte.RECHTSFORMEN: GmbH, AG, KG, GmbH & Co. KG, UG, e. V., e. K., OHG, SE, Ltd, Inc …), without \"Firma\" in front and with \"&\" as \"und\"; places with \"Str.\" as \"Str"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "aße\". The same are only people with first and last name and places that differ in nothing but a form of address, a title, the spelling or the order of last and first name (\"Herr Dominik Bornhäuser\", \"Dr. Dominik Bornhäuser\", \"Bornhäuser, Dominik\"; never \"Herr\" and \"Frau\" together), and accounts (without spaces), contracts and deadlines with the same normal form. A company is never the same by itself: \"Müller GmbH\" and \"Müller AG\" are only a suggestion. A suggestion are small typing errors (Damerau-Levenshtein at most 2 for normal forms from 6 letters, 1 for 4 to 5, never below; \"Dominik Bornhäußer\"), an initial (\"D. Bornhäuser\") only when exactly one person fits, and companies with the same core without legal form. Different numbers are never the same point; accounts, contracts and deadlines never by typing errors. While reading (wissenskarte._match → wissensdoppelt.gleich_id) a name that is the same becomes an other name of the point there instead of a new one; an index of keys (wk_entkey, with a fingerprint in wk_entsig) keeps that fast. In quiet minutes (wissen.due_once after the map, wissensdoppelt.due_once) one run per profile merges points there that are the same through wiss"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "enskarte.zusammen (the same function as the click, GEAENDERT says zusammen) and fills the table wk_paar(a, b, art, grund, stand, na, nb, at) with suggestions (stand offen). Comparisons happen only in blocks (the same first or last three letters, the same last name, the same core of a company) with neighbours of similar length, at most 200,000 comparisons and 3 s per run, 100 new and 300 open suggestions per profile; with 5000 points never all with all. A run comes only when the points changed, at most six times a day per profile. On the map \"Maybe double\" with its number stands above the map: the pairs with their reason and \"Merge\" (through POST /api/profile/wissenskarte/knoten/{id}/zusammen, the code of \"Confirm\" as before) or \"Different\" (POST /api/profile/wissenskarte/paare/verschieden, without a code, nothing is lost): kept by the names (stand verschieden), the pair never comes back, nor is it merged by itself. At the chosen point \"Maybe the same person: …\" (company, place …) stands with the same two buttons. \"Merge with …\" is a search field instead of a long list: the 8 most similar points of the same kind on top, while typing at most 20 hits by name and other names (GET /api/"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "profile/wissenskarte/knoten/{id}/aehnlich?q=, wissensdoppelt.auswahl). Every new way with login, profile binding, CSRF, size limit (256 bytes) and rate limit. Logs fixed words and numbers only: wissen: wissenskarte doppelt einlesen | 1 knoten | anrede, wissen: wissenskarte doppelt geprueft | n zusammengefuehrt | n vorschlaege neu | n offen | n weg | n vergleiche | fertig, wissen: wissenskarte doppelt verschieden | 1 paar and … abgelehnt | grund. Live, box Knowledge map: \"Doppelte: n Vorschläge offen, m automatisch zusammengeführt\". iPhone: \"Maybe double\" below the map and at the point, swipe left for \"Different\", delete as before; merging with a hint to the panel. Self-test test_wissensdoppelt."
 },
 {
 "lang": "en",
@@ -32245,7 +32341,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "My things",
 "title": "My things",
-"text": "s (iphone.THINGS \"fund\"), the Spark checks every change. Android shows Find through the panel view (tab Find), which is enough there. - People, companies and deadlines (since V01.1.253, plan *wissensgraph* stage 2, only when the admin released them): on the map, people, companies, places, contracts, accounts and deadlines from the documents stand as points of their own in the colour of their kind; \"By kind\" shows one kind with its neighbours. A tap on such a point shows its kind and passages and \"Delete\" (with the code of \"Confirm\" when the profile has the second step). Renaming and merging stay in the panel (Knowledge book → Map), as does \"Rename page\" (Knowledge book → Pages); the page of a knowledge book entry names both ways (since V01.1.273). The Spark checks every change (iphone.THINGS \"wissensknoten\"). - Made by the Spark: the documents the Spark made, as before. - Pictures: all painted pictures as a grid; a tap shows one large with wish and time, share and delete. At the top a field \"What shall I paint?\"; while painting, the app looks again every 4 seconds. Changing, quick buttons and own photos stay in the panel under Me → Pictures. - Music: all songs grouped by day like i"
+"text": "s (iphone.THINGS \"fund\"), the Spark checks every change. Android shows Find through the panel view (tab Find), which is enough there. - People, companies and deadlines (since V01.1.253, plan *wissensgraph* stage 2, only when the admin released them): on the map, people, companies, places, contracts, accounts and deadlines from the documents stand as points of their own in the colour of their kind; \"By kind\" shows one kind with its neighbours. A tap on such a point shows its kind and passages and \"Delete\" (with the code of \"Confirm\" when the profile has the second step). Renaming and merging stay in the panel (Knowledge book → Map), as does \"Rename page\" (Knowledge book → Pages); the page of a knowledge book entry names both ways (since V01.1.273). The Spark checks every change (iphone.THINGS \"wissensknoten\"). - Maybe double (since V01.1.286, only with people, companies and deadlines): below the map \"Maybe double\" with the number of open suggestions of the Spark's fixed rules; a tap shows the pairs with their reason, swipe left for \"Different\" (the pair never comes back). At a point its suggestions stand under \"Maybe the same point\". Merging is in the panel under Knowledge book → Ma"
 },
 {
 "lang": "en",
@@ -32253,7 +32349,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "My things",
 "title": "My things",
-"text": "n the panel (Today, Yesterday, Last 7 days, Older), played right in the app, with length, with or without singing, the time or day, swipe to delete. At the top \"What kind of music?\" with the length to pick (the same lengths as the chips in the panel, up to the admin's limit) makes a piece without singing; singing and own lyrics work in the panel under Me → Music. - Memory: all remembered facts with search, \"learned from a conversation\" or \"said yourself\" with the date. Swipe to change or delete, \"Select\" deletes several, \"Suggest tidying up\" asks the language model about double entries, and only your \"Accept\" changes anything. Forgetting everything at once stays in the browser."
+"text": "p (with the code of \"Confirm\"); the app says so with a jump link. - Made by the Spark: the documents the Spark made, as before. - Pictures: all painted pictures as a grid; a tap shows one large with wish and time, share and delete. At the top a field \"What shall I paint?\"; while painting, the app looks again every 4 seconds. Changing, quick buttons and own photos stay in the panel under Me → Pictures. - Music: all songs grouped by day like in the panel (Today, Yesterday, Last 7 days, Older), played right in the app, with length, with or without singing, the time or day, swipe to delete. At the top \"What kind of music?\" with the length to pick (the same lengths as the chips in the panel, up to the admin's limit) makes a piece without singing; singing and own lyrics work in the panel under Me → Music. - Memory: all remembered facts with search, \"learned from a conversation\" or \"said yourself\" with the date. Swipe to change or delete, \"Select\" deletes several, \"Suggest tidying up\" asks the language model about double entries, and only your \"Accept\" changes anything. Forgetting everything at once stays in the browser."
 },
 {
 "lang": "en",

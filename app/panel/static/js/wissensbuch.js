@@ -7,6 +7,8 @@
 // text (textContent, esc), never markup. Drag a point to place it, drag a document onto the map to see its part.
 // With „Personen, Firmen und Fristen“ (Stufe 2, own switch) the points from documents ("k" and their number) come along,
 // each kind with its colour and a filter above the map; renaming, merging and deleting only by the owner's click.
+// Doppelte (wissensdoppelt.py): „Vielleicht doppelt“ above the map and at a chosen point lists the suggestions of the
+// panel's fixed rules with „Zusammenführen“ (code) and „Verschieden“; „Zusammenführen mit …“ is a search field.
 const WBART={Thema:['Themen','Topics'],Person:['Personen','People'],Firma:['Firmen','Companies'],Ding:['Dinge','Things'],Ort:['Orte','Places'],Antwort:['Abgelegte Antworten','Filed answers']};
 const WBWORD={eingearbeitet:['eingearbeitet','worked in'],nichts:['nichts Neues','nothing new'],fehler:['nicht eingearbeitet','not worked in'],
   geloescht:['Seite gelöscht','page deleted'],neu:['Seite neu geschrieben','page written again'],falsch:['Satz entfernt','sentence removed'],umbenannt:['Seite umbenannt','page renamed'],
@@ -103,7 +105,12 @@ async function wbFile(id,b){b.disabled=true;const r=await apiTry('/api/profile/w
   wbShow()}
 
 // ---------------------------------------------------------------- Karte (wissenskarte.py)
-const WKA={data:null,um:'',doc:'',art:'',tiefe:2,sel:null,pos:{},lay:'',seq:0,view:{x:0,y:0,k:1},q:'',more:false,msg:'',same:null};
+const WKA={data:null,um:'',doc:'',art:'',tiefe:2,sel:null,pos:{},lay:'',seq:0,view:{x:0,y:0,k:1},q:'',more:false,msg:'',same:null,paare:null};
+// Doppelte (wissensdoppelt.py): why the panel's fixed rules think two points may be the same, and the kind in a sentence
+const WKGRUND={schreibweise:['andere Schreibweise','other spelling'],anrede:['mit Anrede oder Titel','with a title'],reihenfolge:['Nachname zuerst','last name first'],
+  initiale:['mit Initiale','with an initial'],rechtsform:['andere Rechtsform','other legal form'],tippfehler:['fast gleich geschrieben','spelt almost the same']};
+const WKSAME={person:['Vielleicht dieselbe Person','Maybe the same person'],firma:['Vielleicht dieselbe Firma','Maybe the same company'],ort:['Vielleicht derselbe Ort','Maybe the same place'],
+  vertrag:['Vielleicht derselbe Vertrag','Maybe the same contract'],konto:['Vielleicht dasselbe Konto','Maybe the same account'],frist:['Vielleicht dieselbe Frist','Maybe the same deadline']};
 const WK_SVG='http://www.w3.org/2000/svg';
 function wkaS(tag,attrs,text){const n=document.createElementNS(WK_SVG,tag);for(const [k,v] of Object.entries(attrs||{}))n.setAttribute(k,String(v));if(text!=null)n.textContent=String(text);return n}
 const wkaArt=k=>{const a=WKA.data&&WKA.data.arten[k];return a?(L==='en'?a[1]:a[0]):k};
@@ -116,7 +123,10 @@ async function wkaLoad(){const seq=++WKA.seq,qs=new URLSearchParams();if(WKA.um)
   if(!r.ok){WKA.msg=errSay(r.status,d.detail,'');wkaPaint();return}
   WKA.data=d;WKA.msg='';if(WKA.um&&!d.um)WKA.um='';if(WKA.doc&&!d.doc)WKA.doc='';if(WKA.art&&!d.art)WKA.art='';
   const lay=[d.um,d.doc,d.art,WKA.tiefe].join('|'),fit=lay!==WKA.lay;if(fit){WKA.pos={};WKA.lay=lay}   // another part: placed anew; the same part keeps its places
-  wkaLayout();if(fit)wkaFit();wkaPaint()}
+  wkaLayout();if(fit)wkaFit();wkaPaint();if(d.ents)wkaPairs(seq);else WKA.paare=null}
+// „Vielleicht doppelt“: the open suggestions of the panel's fixed rules (wissensdoppelt.py), loaded beside the map
+async function wkaPairs(seq){const {r,d}=await apiTry('/api/profile/wissenskarte/paare');if(seq!==WKA.seq||!r.ok)return;WKA.paare=d;
+  if(!d.offen&&WKA.sel&&WKA.sel.k==='p')WKA.sel=null;wkaPaint(!!(WKA.sel&&WKA.sel.k!=='p'))}   // a chosen point or connection keeps its detail (and a search typed there)
 // placing the points: around a page in rings (the page in the middle), else a force layout that always starts the same;
 // a point already placed (or dragged) keeps its place, so nothing jumps when more comes in
 function wkaLayout(){const d=WKA.data;if(!d)return;const ns=d.nodes,P=WKA.pos,fresh=ns.filter(n=>!P[n.id]);if(!fresh.length)return;
@@ -141,7 +151,7 @@ function wkaFit(){const d=WKA.data,box=document.querySelector('#wkview .wkmap');
   let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const n of d.nodes){const [x,y]=WKA.pos[n.id],w=wkaW(n)/2;x0=Math.min(x0,x-w);x1=Math.max(x1,x+w);y0=Math.min(y0,y-WK_H);y1=Math.max(y1,y+WK_H)}
   const W=box.clientWidth||800,H=box.clientHeight||520,k=Math.max(0.25,Math.min(1.4,Math.min(W/(x1-x0+60),H/(y1-y0+60))));
   WKA.view={k,x:W/2-k*(x0+x1)/2,y:H/2-k*(y0+y1)/2}}
-function wkaPaint(){const w=$('wkview');if(!w)return;const d=WKA.data;
+function wkaPaint(keep){const w=$('wkview');if(!w)return;const d=WKA.data;
   w.querySelector('.wkmsg').textContent=WKA.msg;
   const tools=w.querySelector('.wktools');tools.textContent='';
   if(!d){tools.appendChild(icEl('span','mut',WKA.msg?'':t('Lade die Karte …','Loading the map …')));return}
@@ -149,6 +159,7 @@ function wkaPaint(){const w=$('wkview');if(!w)return;const d=WKA.data;
   const crumb=icEl('span','wkcrumb');crumb.appendChild(icChip(t('Alles','Everything'),!um&&!dc&&!d.art,()=>{WKA.um='';WKA.doc='';WKA.art='';WKA.sel=null;wkaLoad()}));
   // the points from documents by kind (numbers only from the panel); a kind shows its points with their neighbours
   if(d.ents)for(const [k,n] of Object.entries(d.knoten||{})){if(!n)continue;const c=icChip(t(...WKKPL[k])+' '+n,d.art===k,()=>{WKA.art=d.art===k?'':k;WKA.um='';WKA.doc='';WKA.sel=null;wkaLoad()},'wkk '+WKKCLS[k]);crumb.appendChild(c)}
+  const pp=WKA.paare;if(d.ents&&pp&&pp.offen)crumb.appendChild(icChip(t('Vielleicht doppelt ','Maybe double ')+pp.offen,!!(WKA.sel&&WKA.sel.k==='p'),()=>{WKA.sel=WKA.sel&&WKA.sel.k==='p'?null:{k:'p'};wkaPaint()}));
   if(um){crumb.appendChild(icChip(t('Um ','Around ')+um.title,true,null));const seg=icEl('span','segc');
     for(const k of [1,2]){const b=icEl('button',WKA.tiefe===k?'on':'',k===1?t('1 Schritt','1 step'):t('2 Schritte','2 steps'));b.type='button';b.setAttribute('aria-pressed',String(WKA.tiefe===k));b.onclick=()=>{WKA.tiefe=k;wkaLoad()};seg.appendChild(b)}crumb.appendChild(seg)}
   if(dc)crumb.appendChild(icChip(t('Dokument ','Document ')+dc.name,true,null));
@@ -162,7 +173,7 @@ function wkaPaint(){const w=$('wkview');if(!w)return;const d=WKA.data;
   for(const [fmt,lab] of [['mermaid','Mermaid'],['dot','Graphviz']]){const a=icEl('a','b',lab);a.href='/api/profile/wissenskarte/export?fmt='+fmt+'&'+qs;a.setAttribute('download','Wissenskarte.'+(fmt==='dot'?'dot':'mmd'));m.appendChild(a)}
   for(const [kind,lab] of [['svg',t('Bild (SVG)','Picture (SVG)')],['png',t('Bild (PNG)','Picture (PNG)')]]){const b=icEl('button','b',lab);b.type='button';b.onclick=()=>wkaSave(kind);m.appendChild(b)}
   tools.appendChild(ex);
-  wkaSide(w);wkaDraw();wkaDetail(w)}
+  wkaSide(w);wkaDraw();if(!keep)wkaDetail(w)}
 function wkaSide(w){const d=WKA.data,side=w.querySelector('.wkside');side.textContent='';
   const q=icEl('input','');q.type='search';q.placeholder=t('In der Karte suchen','Search the map');q.setAttribute('aria-label',q.placeholder);q.value=WKA.q;
   q.oninput=()=>{WKA.q=q.value;const pos=q.selectionStart;wkaSide(w);const n=w.querySelector('.wkside input');n.focus();n.setSelectionRange(pos,pos)};side.appendChild(q);
@@ -235,6 +246,8 @@ function wkaEdgeRow(e,byId){const li=icEl('li','');const s=icEl('span','');const
 function wkaDetail(w){const det=w.querySelector('.wkdet'),d=WKA.data;det.textContent='';if(!d)return;const byId={};for(const n of d.nodes)byId[n.id]=n;const sel=WKA.sel;
   if(!sel){det.appendChild(icEl('h3','',t('Ausgewählt','Selected')));det.appendChild(icEl('div','mut',t('Tippe einen Punkt oder eine Verbindung an. Doppelt tippen stellt den Punkt in die Mitte.','Tap a point or a connection. A double tap puts the point in the middle.')));
     det.appendChild(icEl('div','mut wklegend',t('Gestrichelt: Ursache und Wirkung, nur wenn die Quelle den Grund nennt.','Dashed: cause and effect, only when the source names the reason.')));return}
+  if(sel.k==='p'){det.appendChild(icEl('h3','',t('Vielleicht doppelt','Maybe double')));det.appendChild(icEl('div','mut',t('Nach festen Regeln vielleicht derselbe Punkt. „Zusammenführen“ legt den unteren in den oberen, „Verschieden“ fragt nie wieder.','Maybe the same point by fixed rules. „Merge“ puts the lower one into the upper one, „Different“ never asks again.')));
+    const ul=icEl('ul','facts');for(const p of (WKA.paare&&WKA.paare.paare)||[])ul.appendChild(wkaPairRow(p,null));det.appendChild(ul);return}
   if(sel.k==='e'){const e=d.edges.find(x=>x.id===sel.id);if(!e)return;det.appendChild(icEl('h3','',wkaArt(e.art)));const ul=icEl('ul','facts');ul.appendChild(wkaEdgeRow(e,byId));det.appendChild(ul);return}
   const n=byId[sel.id];if(!n)return;const h=icEl('h3','');h.append(icEl('span','wkdot '+wkaNodeCls(n)),document.createTextNode(n.title));det.appendChild(h);
   const kind=n.ent?(d.ent_arten&&d.ent_arten[n.ent]?t(...d.ent_arten[n.ent]):n.art)+(n.seite?t(' · mit Seite',' · with page'):''):t(...(WBART[n.art]||[n.art,n.art]));
@@ -250,16 +263,38 @@ function wkaOwn(det,n){const kid=n.id.slice(1),box=icEl('div','wkown');
   const ren=icEl('button','b',t('Umbenennen','Rename'));ren.type='button';codeLock(ren,'confirm');
   ren.onclick=()=>wkaAct(ren,'/api/profile/wissenskarte/knoten/'+kid+'/name',{method:'POST',body:JSON.stringify({name:nm.value.trim()})},n.seite?t('Umbenannt, die Seite mit; der alte Name bleibt als zweiter Name.','Renamed, the page too; the old name stays as a second name.'):t('Umbenannt; der alte Name findet ihn weiter.','Renamed; the old name still finds it.'));
   const r1=icEl('div','row');r1.append(nm,ren);box.appendChild(r1);
-  const sel=icEl('select','');sel.setAttribute('aria-label',t('Zusammenführen mit','Merge with'));sel.appendChild(new Option(t('Zusammenführen mit …','Merge with …'),''));
-  const mg=icEl('button','b',t('Zusammenführen','Merge'));mg.type='button';mg.disabled=true;codeLock(mg,'confirm');sel.onchange=()=>{mg.disabled=!sel.value};
-  mg.onclick=()=>{if(!sel.value)return;const other=sel.options[sel.selectedIndex].text;if(!confirm(t(`„${n.title}“ in „${other}“ aufgehen lassen? Stellen und Verbindungen wandern mit.`,`Merge "${n.title}" into "${other}"? Passages and connections move along.`)))return;
-    wkaAct(mg,'/api/profile/wissenskarte/knoten/'+kid+'/zusammen',{method:'POST',body:JSON.stringify({mit:+sel.value})},t('Zusammengeführt.','Merged.'),'k'+sel.value)};
-  const r2=icEl('div','row');r2.append(sel,mg);box.appendChild(r2);
-  apiTry('/api/profile/wissenskarte/knoten?art='+encodeURIComponent(n.ent)).then(({r,d})=>{if(!r.ok)return;for(const x of d.knoten||[])if('k'+x.id!==n.id)sel.appendChild(new Option(x.name,String(x.id)))});
+  const maybe=icEl('ul','facts');box.appendChild(maybe);
+  // merge: a search field, the most similar points of the same kind first (wissensdoppelt.auswahl), the rest by search
+  const q=icEl('input','');q.type='search';q.maxLength=80;q.placeholder=t('Zusammenführen mit …','Merge with …');q.setAttribute('aria-label',q.placeholder);
+  const mg=icEl('button','b',t('Zusammenführen','Merge'));mg.type='button';mg.disabled=true;codeLock(mg,'confirm');
+  const r2=icEl('div','row');r2.append(q,mg);box.appendChild(r2);const picked=icEl('div','mut'),head=icEl('div','mut'),list=icEl('ul','facts');box.append(picked,head,list);
+  let pick=null,timer=0,seq=0;
+  const choose=x=>{pick=x;mg.disabled=!x;picked.textContent=x?t(`„${n.title}“ geht in „${x.name}“ auf.`,`"${n.title}" goes into "${x.name}".`):'';list.querySelectorAll('li').forEach(li=>li.classList.toggle('on',!!x&&li.dataset.id===String(x.id)))};
+  const draw=d=>{maybe.textContent='';for(const p of d.vielleicht||[])maybe.appendChild(wkaPairRow(p,n));
+    const items=q.value.trim()?d.treffer:d.aehnlich;head.textContent=q.value.trim()?(items.length?t('Treffer','Hits'):t('Nichts gefunden.','Nothing found.')):(items.length?t('Am ähnlichsten','Most similar'):'');
+    list.textContent='';for(const x of items){const li=icEl('li','');li.dataset.id=String(x.id);const sp=icEl('span','');sp.append(icEl('b','',x.name),document.createTextNode(' '),icEl('small','mut',t(`${x.n} Stellen`,`${x.n} passages`)+(x.grund?' · '+t(...WKGRUND[x.grund]||[x.grund,x.grund]):'')));
+      const b=icEl('button','b',t('Wählen','Pick'));b.type='button';b.onclick=()=>choose(x);li.append(sp,b);list.appendChild(li)}
+    if(pick&&!items.some(x=>x.id===pick.id))choose(null)};
+  const ask=async()=>{const s=++seq,w=q.value.trim();const {r,d}=await apiTry('/api/profile/wissenskarte/knoten/'+kid+'/aehnlich'+(w?'?q='+encodeURIComponent(w):''));if(s!==seq||!r.ok)return;draw(d)};
+  q.oninput=()=>{clearTimeout(timer);timer=setTimeout(ask,200)};
+  mg.onclick=()=>{if(!pick)return;const other=pick.name;if(!confirm(t(`„${n.title}“ in „${other}“ aufgehen lassen? Stellen und Verbindungen wandern mit.`,`Merge "${n.title}" into "${other}"? Passages and connections move along.`)))return;
+    wkaAct(mg,'/api/profile/wissenskarte/knoten/'+kid+'/zusammen',{method:'POST',body:JSON.stringify({mit:pick.id})},t('Zusammengeführt.','Merged.'),'k'+pick.id)};
+  ask();
   const del=icEl('button','b danger',t('Löschen','Delete'));del.type='button';codeLock(del,'confirm');
   del.onclick=()=>{if(!confirm(t(`„${n.title}“ löschen? Aus diesen Dokumenten kommt der Punkt nicht wieder.`,`Delete "${n.title}"? The point does not come back from these documents.`)))return;
     wkaAct(del,'/api/profile/wissenskarte/knoten/'+kid,{method:'DELETE'},t('Gelöscht; aus diesen Dokumenten kommt er nicht wieder.','Deleted; it does not come back from these documents.'),'')};
   box.appendChild(del);det.appendChild(box)}
+// one suggestion: „Zusammenführen“ (b goes into a, the code of „Bestätigen“ like every merge) or „Verschieden“ (never again);
+// at a point (n) it says „Vielleicht dieselbe Person: …“ with the other one
+function wkaPairRow(p,n){const li=icEl('li',''),sp=icEl('span',''),why=t(...WKGRUND[p.grund]||[p.grund,p.grund]);
+  if(n){const o=('k'+p.a.id)===n.id?p.b:p.a;sp.append(document.createTextNode(t(...WKSAME[n.ent]||WKSAME.person)+': '),icEl('b','',o.name),document.createTextNode(' '),icEl('small','mut',why))}
+  else sp.append(icEl('b','',p.a.name),document.createTextNode(t(' und ',' and ')),icEl('b','',p.b.name),document.createElement('br'),icEl('small','mut',(WKA.data&&WKA.data.ent_arten&&WKA.data.ent_arten[p.art]?t(...WKA.data.ent_arten[p.art]):p.art)+' · '+why+' · '+t(`${p.a.n} und ${p.b.n} Stellen`,`${p.a.n} and ${p.b.n} passages`)));
+  const mg=icEl('button','b',t('Zusammenführen','Merge'));mg.type='button';codeLock(mg,'confirm');
+  mg.onclick=()=>wkaAct(mg,'/api/profile/wissenskarte/knoten/'+p.b.id+'/zusammen',{method:'POST',body:JSON.stringify({mit:p.a.id})},t(`„${p.b.name}“ ist jetzt Teil von „${p.a.name}“.`,`"${p.b.name}" is now part of "${p.a.name}".`),n?'k'+p.a.id:undefined);
+  const no=icEl('button','b',t('Verschieden','Different'));no.type='button';no.onclick=()=>wkaDifferent(p,no);li.append(sp,mg,no);return li}
+async function wkaDifferent(p,b){b.disabled=true;const {r,d}=await apiTry('/api/profile/wissenskarte/paare/verschieden',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({a:p.a.id,b:p.b.id})});
+  if(!r.ok){WKA.msg=errSay(r.status,d.detail,'');b.disabled=false;wkaPaint();return}WKA.msg=t('Gemerkt: verschieden. Dieses Paar kommt nicht wieder.','Noted: different. This pair does not come back.');
+  if(WKA.sel&&WKA.sel.k==='p'){WKA.sel={k:'p'}}await wkaPairs(WKA.seq);wkaPaint()}
 async function wkaAct(b,path,opts,done,next){b.disabled=true;const {r,d}=await apiTry(path,Object.assign({headers:{'Content-Type':'application/json'}},opts));b.disabled=false;
   if(!r.ok){WKA.msg=errSay(r.status,d.detail,'');wkaPaint();return}
   if(next!==undefined){if(WKA.um===WKA.sel.id)WKA.um=next;WKA.sel=next?{k:'n',id:next}:null}

@@ -270,6 +270,7 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/wiki.py` | Wikipedia für „Was ist …?“ |
 | `app/panel/wissen.py` | Wissen aus eigenen Uploads: Schalter und Kontingent |
 | `app/panel/wissensbuch.py` | Wissensbuch: Seiten aus eigenen Dokumenten, jeder Satz mit Quelle; Suchindex FTS5, Lesefunktion liste |
+| `app/panel/wissensdoppelt.py` | Doppelte der Wissenskarte: feste Regeln für gleiche und vielleicht gleiche Punkte, Vorschläge, Verschieden |
 | `app/panel/wissenskarte.py` | Wissenskarte: geprüfte Verbindungen und Punkte aus Dokumenten, je mit Quelle, WITH RECURSIVE, Trefferliste der Suche |
 | `app/panel/wissensmessung.py` | Wissen messen: Zeiten und Speicher von Suche, Wissensbuch, Karte und Finden, erfunden oder ein Profil lesend |
 
@@ -1654,7 +1655,7 @@ flowchart TD
 5. <a id="kn-sicherheit-s5"></a>**Freigabe und Sperre**: Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten.
 6. <a id="kn-sicherheit-s6"></a>**Fremdes bleibt Daten**: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell (textnorm.defuse: Blockende und die eigenen Marken des Modells wie „<|im_start|>“ oder „<tool_call>“ werden entschärft; das LLM-Tor tut das für jede Nachricht noch einmal, llm_tor.entschaerft). Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt; nach einer Mail sind es 19, dazu gehört alles, was ins Internet fragt (Websuche, Wikipedia, Wetter, Fahrplan), damit kein Suchwort Mail-Inhalt hinausträgt. Ob das hält, prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed). Eine Mail mit HTML zeigt die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick über den Wächter, ein Link erst nach der Frage mit seiner echten Adresse.
 7. <a id="kn-sicherheit-s7"></a>**Sprachmodell schlägt vor**: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht.
-8. <a id="kn-sicherheit-s8"></a>**Ändert es etwas?**: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät, oder dem Ja-Knopf seiner Karte „Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell; ebenso führt nur ihr Klick Punkte der Wissenskarte zusammen, benennt sie um oder löscht sie (mit dem Code von „Bestätigen“). Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut.
+8. <a id="kn-sicherheit-s8"></a>**Ändert es etwas?**: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät, oder dem Ja-Knopf seiner Karte „Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell; ebenso führt nur ihr Klick Punkte der Wissenskarte zusammen, benennt sie um oder löscht sie (mit dem Code von „Bestätigen“); von selbst nur eine feste Regel bei gleichem Namen in anderer Schreibweise (wissensdoppelt.aehnlich), nie das Modell, und nie gegen ihr „Verschieden“. Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut.
 9. <a id="kn-sicherheit-s9"></a>**Antwort prüfen**: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML.
 10. <a id="kn-sicherheit-s10"></a>**Spuren**: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal), Gedächtnis und Gespräche ganz versiegelt im Ordner des Profils (profiles.write_own). Was ein Dienst für ein Profil vorhält (Mail-Vorrat, Mails, Anhänge, Termine und Kontakte in Finden), liegt nur mit AES-GCM versiegelt (vorrat.seal), die Wörter im Suchindex nur als HMAC-Marken mit einem Schlüssel je Profil (vorrat.marke); ohne Schlüssel wird nichts geschrieben. Schlagworte, die das Sprachmodell für Finden vorschlägt, sind Daten: fund.pruefe behält nur Kategorien der festen Liste und Namen, die wörtlich im Eintrag stehen, nie ein Befehlswort.
 
@@ -1734,8 +1735,9 @@ Gilt bei: [Schritt 4](#kn-sicherheit-s4), [Schritt 5](#kn-sicherheit-s5)
 - `app/panel/profiles.py` `_cap`: Obergrenze des Gedächtnisses ohne Datenverlust ([Schritt 8](#kn-sicherheit-s8))
 - `app/panel/gedaechtnis.py` `offer`: Gelerntes ersetzt nie Bestätigtes: nur ein Angebot ([Schritt 8](#kn-sicherheit-s8))
 - `app/panel/gemerkt.py` `take_back`: Rückgängig nur für den eigenen, unveränderten Fakt ([Schritt 8](#kn-sicherheit-s8))
+- `app/panel/wissensdoppelt.py` `aehnlich`: Punkte der Karte von selbst nur nach fester Regel zusammen, nie gegen „Verschieden“ ([Schritt 8](#kn-sicherheit-s8))
 
-Selbsttests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_siegel`, `test_meinedaten`
+Selbsttests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_siegel`, `test_meinedaten`, `test_wissensdoppelt`
 
 ### Anmeldung, Profil
 
@@ -2421,6 +2423,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - Ist der Schalter unter der Wissenskarte an, schlägt das Sprachmodell nach den Verbindungen je Stelle eines Dokuments nur JSON vor: Personen, Firmen, Orte, Verträge, Konten und Fristen mit Art und Nummer der Stelle. Das Panel behält einen Namen nur nach festen Regeln (wissenskarte.check_ent): die Art aus der festen Liste, der Name steht in der Stelle (klein, ohne Akzente, Leerzeichen zusammengezogen), 2 bis 80 Zeichen ohne Link, Auszeichnung oder Befehl, eine Frist nur mit Datum oder Zahl mit Zeiteinheit im Namen, ein Konto nur als IBAN oder Nummer; höchstens 40 je Dokument und 5000 je Profil. Verbindungen dieser Punkte prüft dieselbe Regel wie die der Seiten.
 - Jeder Punkt hat eine feste Nummer (wk_ent) und seine Stellen (wk_ment: Dokument und Stück). Andere Teile lesen nur: wissenskarte.finde_knoten (genau über Name und andere Namen) und wissenskarte.knoten_liste (nach Namen sortiert) und wissenskarte.knoten_von_dok (die Punkte eines Dokuments nach Art und Name, höchstens 200). Zusammenführen (wissenskarte.zusammen), Umbenennen und Löschen geschehen nur per Klick der Besitzerin oder des Besitzers mit dem Code von „Bestätigen“, nie durch das Modell; jede Änderung meldet wissenskarte.GEAENDERT. Geht ein Dokument, gehen seine Stellen sofort mit, ein Punkt ohne Stelle verschwindet.
 - Seite und Punkt, Typregeln, Fristen: Heißt eine Seite des Wissensbuchs wie ein Punkt der Art person, firma oder ort, sind beide ein Punkt (wk_entpage); die feste Regel wissenskarte._verbinde verbindet sie beim Einlesen der Punkte, nachts und einmal beim Anlegen, nie das Modell. Ihre Verbindungen zählen in view, rund_um, weg und liste als die des Punktes; umbenannt werden beide zusammen (wissensbuch.retitle, der alte Titel bleibt in wb_alttitel, so entsteht beim Einarbeiten keine Doppelseite). Jede Verbindung folgt der Tabelle wissenskarte.TYPEN (erlaubte Arten am Anfang und am Ende, eine Seite zählt als „seite“), eine Frist braucht im Namen ein Datum oder eine Zahl mit Zeiteinheit (wissenskarte.frist_name, Zahlwörter über eine feste Liste). Die Nachtprüfung (wissenskarte.nachtpruefung) entfernt, was vorher gespeichert wurde und dagegen verstößt.
+- Doppelte (wissensdoppelt.py) erkennt nur eine feste Regel, wissensdoppelt.aehnlich, nie das Modell: jeder Name in seiner Normalform je Art (wissensdoppelt.normalform: ß/ss und Umlaute, Satzzeichen, bei Personen ohne Anrede und Titel und „Nachname, Vorname“ umgestellt, bei Firmen ohne Rechtsform und „Firma“, bei Orten „Str.“ als „Straße“). „Gleich“ sind nur Personen mit Vor- und Nachnamen und Orte, die sich allein darin unterscheiden, sowie Konten, Verträge und Fristen mit derselben Normalform; beim Einlesen wird so ein Name ein anderer Name des Punktes (wissensdoppelt.gleich_id), vorhandene führt der ruhige Lauf über wissenskarte.zusammen zusammen (wissensdoppelt.lauf). Ein Vorschlag sind kleine Schreibfehler (Damerau-Levenshtein höchstens 2 ab 6 Buchstaben, 1 bei 4 bis 5), eine Initiale, wenn genau eine Person passt, und eine Firma mit gleichem Kern; verglichen wird nur in Blöcken, höchstens 200000 Paare je Lauf, höchstens 300 offene Vorschläge. „Verschieden“ (wissensdoppelt.verschieden) merkt sich die Namen, das Paar kommt nie wieder; Zusammenführen bleibt der Klick mit Code. „Zusammenführen mit …“ zeigt oben die 8 ähnlichsten Punkte derselben Art (wissensdoppelt.auswahl), den Rest über die Suche.
 
 #### Karte hilft der Suche
 
@@ -2478,6 +2481,9 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - **5000** solche Punkte pro Profil ([Schritt 13](#kn-wissen-s13))
 - **80** Zeichen, die der Name eines solchen Punktes höchstens hat ([Schritt 13](#kn-wissen-s13))
 - **200** Dokumente am Tag für diese Punkte (Standard) ([Schritt 13](#kn-wissen-s13))
+- **200000** Paare, die ein Lauf der Doppelten je Profil höchstens vergleicht ([Schritt 13](#kn-wissen-s13))
+- **300** offene Vorschläge „Vielleicht doppelt“ je Profil ([Schritt 13](#kn-wissen-s13))
+- **8** ähnlichste Punkte oben in „Zusammenführen mit …“ ([Schritt 13](#kn-wissen-s13))
 - **50** Stellen, die die Karte der Suche höchstens nennt ([Schritt 6](#kn-wissen-s6))
 - **20** Punkte, die die Suchwörter höchstens treffen ([Schritt 6](#kn-wissen-s6))
 - **0.5** Gewicht der Liste aus der Karte ([Schritt 6](#kn-wissen-s6))
@@ -2527,12 +2533,18 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - `app/panel/wissenskarte.py` `finde_knoten`: Punkte genau über Name und andere Namen, nur lesend ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `knoten_liste`: Punkte einer Art nach Namen, nur lesend ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `knoten_von_dok`: Punkte eines Dokuments nach Art und Name, nur lesend ([Schritt 13](#kn-wissen-s13))
-- `app/panel/wissenskarte.py` `zusammen`: zwei Punkte zusammenführen, nur per Klick ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `zusammen`: zwei Punkte zusammenführen: per Klick oder bei „gleich“ nach fester Regel ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `_verbinde`: Seite und Punkt gleichen Namens verbinden, feste Regel ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `erlaubt`: Typregeln je Art der Verbindung (TYPEN) ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `frist_name`: eine Frist nur mit Datum oder Zahl im Namen ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `nachtpruefung`: nachts: verbinden, Verstöße und Fristen ohne Zahl entfernen ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `retitle`: Seite umbenennen, der alte Titel bleibt ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `aehnlich`: gleich, Vorschlag oder nichts: die eine feste Regel für Doppelte ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `normalform`: ein Name in seiner Normalform je Art ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `gleich_id`: beim Einlesen: gleicher Name wird anderer Name ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `lauf`: ruhiger Lauf: zusammenführen und Vorschläge in Blöcken ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `auswahl`: „Zusammenführen mit …“: die ähnlichsten zuerst ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `verschieden`: „Verschieden“ gilt für immer ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `search_pages`: passende Seiten über den Suchindex wb_fts ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `_fts_sync`: Suchindex der Seiten nachziehen ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `liste`: Seiten-Ids mit Rang für andere Teile, nur lesend ([Schritt 13](#kn-wissen-s13))
@@ -2548,7 +2560,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - `app/panel/wissensmessung.py` `_synth`: das Wegwerf-Profil aus festem Zufall, mit den Grenzen des Codes ([Schritt 6](#kn-wissen-s6))
 - `app/panel/wissensmessung.py` `MESSTEILE`: die Messteile, erweiterbar ([Schritt 6](#kn-wissen-s6))
 
-Selbsttests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`
+Selbsttests: `test_wissen`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`
 
 ### Wächter
 

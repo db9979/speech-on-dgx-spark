@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.286** Wissenskarte findet Doppelte: dieselbe Person mit Anrede, Titel, anderer Schreibweise oder „Nachname, Vorname“ wird ein Punkt; Ähnliches steht unter „Vielleicht doppelt“ mit „Zusammenführen“ oder „Verschieden“; „Zusammenführen mit …“ ist ein Suchfeld
 - **V01.1.285** Finden messen ist jetzt ein Teil von Wissen messen (`sudo speech-spark wissen messen synth 5000`, Zustand → Prüfen → Wissen messen): 50 000 versiegelte erfundene Mails zu 5000 Dokumenten, Suche p50/p95, Größe und RAM; `speech-spark finden messen` gibt es nicht mehr
 - **V01.1.284** Begleiter im Systemstil des Panels: ruhige Grautöne, ein blauer Akzent, keine Verläufe, das Gesicht in den Fenstern nur auf Wunsch
 - **V01.1.283** Dungeon-Musik: Probe hören (30 s oder voll), gute Probe in den Vorrat, „Gefällt“ am Tisch
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.279** Fernzugang → Systeme, Knopf „Webdienste“: Webseiten eines gekoppelten Systems (Grafana, Router, Home Assistant dort) im Browser durch seinen Anker, auf einer eigenen Herkunft (Tunnel-Tür Port 31090 oder Tunnel-Adresse), Cookies des Panels und Anmeldung bleiben draußen, Ziele nach festen Regeln auf beiden Seiten (Netz dahinter je System mit Code), Gefunden zeigt lauschende Ports, WebSocket geht durch; Anker 1.6.0
 - **V01.1.278** Fernzugang → Bildschirm: guacd baut der Spark jetzt selbst aus Apaches Quelltext (1.6.0, fest mit SHA-256, nur VNC und RDP, FreeRDP 3 oder 2, als nobody gebaut, nach /opt/speech-spark/guacd), weil Debian 12/13 und Raspberry Pi OS kein guacd-Paket mehr haben; das Update baut es von selbst, sobald der Bildschirm eingeschaltet ist, ein Fehler hält es nie auf und das Panel nennt den Grund; jeder graue Knopf eines Systems sagt, warum (beim Bildschirm mit dem Befehl zum Kopieren oder Einfügen).
 - **V01.1.277** Fernzugang auf Windows (Stufe 5): Koppeln über einen Einmal-Link zur Datei spark-anker-einrichten.cmd (Doppelklick, „Ja“, kein Code), danach bestätigt der Admin das neue System mit Code oder Passkey; OpenSSH nur auf 127.0.0.1, Python nur für den Anker mit fester Prüfsumme, Entfernen unter Apps „Spark Anker“ stellt alles wieder her; geprüft auf einem echten Windows (GitHub-Action „Fernzugang Windows“)
-- **V01.1.276** Fernzugang: Terminal und Vorschläge springen nicht mehr (die Statuszeile über dem Terminal blieb nach dem Öffnen stehen und verschwand beim nächsten Laden, Hinweise oben schoben das Terminal nach unten); Browser-Test über 20 Sekunden.
 
 
 

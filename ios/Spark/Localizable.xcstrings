@@ -19360,6 +19360,106 @@
           }
         }
       }
+    },
+    "mit Anrede oder Titel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "with a title"
+          }
+        }
+      }
+    },
+    "Nachname zuerst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "last name first"
+          }
+        }
+      }
+    },
+    "mit Initiale": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "with an initial"
+          }
+        }
+      }
+    },
+    "andere Rechtsform": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "other legal form"
+          }
+        }
+      }
+    },
+    "fast gleich geschrieben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "spelt almost the same"
+          }
+        }
+      }
+    },
+    "andere Schreibweise": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "other spelling"
+          }
+        }
+      }
+    },
+    "Vielleicht doppelt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maybe double"
+          }
+        }
+      }
+    },
+    "Verschieden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Different"
+          }
+        }
+      }
+    },
+    "Vielleicht derselbe Punkt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maybe the same point"
+          }
+        }
+      }
+    },
+    "Nach links wischen: „Verschieden“, dann fragt der Spark nie wieder. Zusammenführen geht im Panel unter Wissensbuch → Karte.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swipe left: “Different”, then the Spark never asks again. Merging is in the panel under Knowledge book → Map."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

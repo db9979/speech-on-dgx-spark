@@ -632,7 +632,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ sicherheit (the model as a whole)
     "sicherheit": {
-        "stand": "7735496c09",
+        "stand": "d49c6cc859",
         "bezug": {
             "features.blocked": ["s5"], "geteilt.put": ["s5"], "mitschreiblink.find": ["s3", "s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
             "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"],
@@ -748,7 +748,8 @@ SEITEN = {
                "„Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer "
                "Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell; "
                "ebenso führt nur ihr Klick Punkte der Wissenskarte zusammen, benennt sie um oder löscht sie (mit dem Code von "
-               "„Bestätigen“). "
+               "„Bestätigen“); von selbst nur eine feste Regel bei gleichem Namen in anderer Schreibweise "
+               "(wissensdoppelt.aehnlich), nie das Modell, und nie gegen ihr „Verschieden“. "
                "Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft "
                "das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen "
                "würde, öffnet nur die Seite, auf der die Person es selbst tut.",
@@ -757,7 +758,8 @@ SEITEN = {
                "its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only "
                "from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model; "
                "likewise only their click merges, renames or deletes points of the knowledge map (with the code of "
-               "„Confirm“). "
+               "„Confirm“); by itself only a fixed rule for the same name in another spelling (wissensdoppelt.aehnlich), "
+               "never the model, and never against their „Different“. "
                "Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks "
                "every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something "
                "without a proposal only opens the page where the person does it."),
@@ -926,10 +928,11 @@ SEITEN = {
             ("profiles._cap", ("Obergrenze des Gedächtnisses ohne Datenverlust", "the memory's cap without data loss")),
             ("gedaechtnis.offer", ("Gelerntes ersetzt nie Bestätigtes: nur ein Angebot", "learned never replaces confirmed: only an offer")),
             ("gemerkt.take_back", ("Rückgängig nur für den eigenen, unveränderten Fakt", "undo only for the own, unchanged fact")),
+            ("wissensdoppelt.aehnlich", ("Punkte der Karte von selbst nur nach fester Regel zusammen, nie gegen „Verschieden“", "points of the map merged by themselves only by a fixed rule, never against „Different“")),
         ],
         "tests": ["test_hardening", "test_angriffe", "test_gaeste", "test_kontext_trennung", "test_scanner", "test_stufen", "test_notaus",
                   "test_waerter", "test_protokoll", "test_wachposten", "test_markdown", "test_gedaechtnis_grenze", "test_gemerkt", "test_siegel",
-                  "test_meinedaten"],
+                  "test_meinedaten", "test_wissensdoppelt"],
         "heute": [],
     },
 

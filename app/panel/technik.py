@@ -137,6 +137,7 @@ MODULE = {
     "wissensmessung": ("wissen", "Wissen messen: Zeiten und Speicher von Suche, Wissensbuch, Karte und Finden, erfunden oder ein Profil lesend"),
     "wissensbuch": ("wissen", "Wissensbuch: Seiten aus eigenen Dokumenten, jeder Satz mit Quelle; Suchindex FTS5, Lesefunktion liste"),
     "wissenskarte": ("wissen", "Wissenskarte: geprüfte Verbindungen und Punkte aus Dokumenten, je mit Quelle, WITH RECURSIVE, Trefferliste der Suche"),
+    "wissensdoppelt": ("wissen", "Doppelte der Wissenskarte: feste Regeln für gleiche und vielleicht gleiche Punkte, Vorschläge, Verschieden"),
     "fund": ("wissen", "Finden: Suchindex über die eigenen Daten, Felder und Schlagworte nach festen Regeln, Blind-Marken je Profil"),
     "fundmail": ("wissen", "Finden: alle Mails und Anhänge in Scheiben eingelesen, versiegelt (AES-GCM) mit Blind-Marken je Profil"),
     "fundquellen": ("wissen", "Finden: Termine und Kontakte versiegelt, Gespräche nur Datum und Kanal, Listen, Medien"),

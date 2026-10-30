@@ -243,7 +243,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "f06f933feb",
+        "stand": "e5550bfdb5",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -263,6 +263,9 @@ SEITEN = {
             "wissenskarte.zusammen": ["s13"], "wissenskarte._verbinde": ["s13"], "wissenskarte.erlaubt": ["s13"],
             "wissenskarte.frist_name": ["s13"], "wissenskarte.nachtpruefung": ["s13"], "wissensbuch.retitle": ["s13"], "wissenskarte.ENT_PER_DOC": ["s13"], "wissenskarte.MAX_ENT": ["s13"],
             "wissenskarte.ENT_DAY": ["s13"], "wissenskarte.ENT_NAME_LEN": ["s13"],
+            "wissensdoppelt.aehnlich": ["s13"], "wissensdoppelt.normalform": ["s13"], "wissensdoppelt.gleich_id": ["s13"],
+            "wissensdoppelt.lauf": ["s13"], "wissensdoppelt.auswahl": ["s13"], "wissensdoppelt.verschieden": ["s13"],
+            "wissensdoppelt.VERGLEICHE_MOST": ["s13"], "wissensdoppelt.PAARE_MOST": ["s13"], "wissensdoppelt.AEHNLICH_MOST": ["s13"],
             "wissenskarte.knoten_von_dok": ["s13"], "wissenskarte.liste": ["s6"], "wissenskarte.trifft": ["s6"], "documents._karte": ["s6"],
             "documents.KARTE_WEIGHT": ["s6"], "wissenskarte.KARTE_MOST": ["s6"], "wissenskarte.KARTE_KNOTEN": ["s6"],
             "regel:Wissenskarte": ["s6"],
@@ -487,6 +490,9 @@ SEITEN = {
             ("{wissenskarte.MAX_ENT}", ("solche Punkte pro Profil", "such points per profile"), "wissenskarte.MAX_ENT"),
             ("{wissenskarte.ENT_NAME_LEN}", ("Zeichen, die der Name eines solchen Punktes höchstens hat", "characters the name of such a point has at most"), "wissenskarte.ENT_NAME_LEN"),
             ("{wissenskarte.ENT_DAY}", ("Dokumente am Tag für diese Punkte (Standard)", "documents a day for these points (default)"), "wissenskarte.ENT_DAY"),
+            ("{wissensdoppelt.VERGLEICHE_MOST}", ("Paare, die ein Lauf der Doppelten je Profil höchstens vergleicht", "pairs one run for doubles compares per profile at most"), "wissensdoppelt.VERGLEICHE_MOST"),
+            ("{wissensdoppelt.PAARE_MOST}", ("offene Vorschläge „Vielleicht doppelt“ je Profil", "open suggestions „Maybe double“ per profile"), "wissensdoppelt.PAARE_MOST"),
+            ("{wissensdoppelt.AEHNLICH_MOST}", ("ähnlichste Punkte oben in „Zusammenführen mit …“", "most similar points on top of „Merge with …“"), "wissensdoppelt.AEHNLICH_MOST"),
             ("{wissenskarte.KARTE_MOST}", ("Stellen, die die Karte der Suche höchstens nennt", "passages the map names to the search at most"), "wissenskarte.KARTE_MOST"),
             ("{wissenskarte.KARTE_KNOTEN}", ("Punkte, die die Suchwörter höchstens treffen", "points the search words hit at most"), "wissenskarte.KARTE_KNOTEN"),
             ("{documents.KARTE_WEIGHT}", ("Gewicht der Liste aus der Karte", "weight of the list from the map"), "documents.KARTE_WEIGHT"),
@@ -669,6 +675,33 @@ SEITEN = {
                  "as „seite“), a deadline needs a date or a number with a unit of time in its name "
                  "(wissenskarte.frist_name, number words by a fixed list). The nightly check (wissenskarte.nachtpruefung) "
                  "removes what was stored before and breaks them."),
+                ("Doppelte (wissensdoppelt.py) erkennt nur eine feste Regel, wissensdoppelt.aehnlich, nie das Modell: "
+                 "jeder Name in seiner Normalform je Art (wissensdoppelt.normalform: ß/ss und Umlaute, Satzzeichen, bei "
+                 "Personen ohne Anrede und Titel und „Nachname, Vorname“ umgestellt, bei Firmen ohne Rechtsform und "
+                 "„Firma“, bei Orten „Str.“ als „Straße“). „Gleich“ sind nur Personen mit Vor- und Nachnamen und Orte, "
+                 "die sich allein darin unterscheiden, sowie Konten, Verträge und Fristen mit derselben Normalform; beim "
+                 "Einlesen wird so ein Name ein anderer Name des Punktes (wissensdoppelt.gleich_id), vorhandene führt "
+                 "der ruhige Lauf über wissenskarte.zusammen zusammen (wissensdoppelt.lauf). Ein Vorschlag sind kleine "
+                 "Schreibfehler (Damerau-Levenshtein höchstens 2 ab 6 Buchstaben, 1 bei 4 bis 5), eine Initiale, wenn "
+                 "genau eine Person passt, und eine Firma mit gleichem Kern; verglichen wird nur in Blöcken, höchstens "
+                 "{wissensdoppelt.VERGLEICHE_MOST} Paare je Lauf, höchstens {wissensdoppelt.PAARE_MOST} offene "
+                 "Vorschläge. „Verschieden“ (wissensdoppelt.verschieden) merkt sich die Namen, das Paar kommt nie "
+                 "wieder; Zusammenführen bleibt der Klick mit Code. „Zusammenführen mit …“ zeigt oben die "
+                 "{wissensdoppelt.AEHNLICH_MOST} ähnlichsten Punkte derselben Art (wissensdoppelt.auswahl), den Rest über "
+                 "die Suche.",
+                 "Doubles (wissensdoppelt.py) are found by one fixed rule only, wissensdoppelt.aehnlich, never by the "
+                 "model: every name in its normal form per kind (wissensdoppelt.normalform: ß/ss and umlauts, signs, "
+                 "people without form of address and title and „last name, first name“ turned round, companies without "
+                 "legal form and „Firma“, places with „Str.“ as „Straße“). „The same“ are only people with first and "
+                 "last name and places that differ in nothing else, and accounts, contracts and deadlines with the same "
+                 "normal form; while reading such a name becomes an other name of the point (wissensdoppelt.gleich_id), "
+                 "the quiet run merges points already there through wissenskarte.zusammen (wissensdoppelt.lauf). A "
+                 "suggestion are small typing errors (Damerau-Levenshtein at most 2 from 6 letters, 1 for 4 to 5), an "
+                 "initial when exactly one person fits, and a company with the same core; compared only in blocks, at "
+                 "most {wissensdoppelt.VERGLEICHE_MOST} pairs per run, at most {wissensdoppelt.PAARE_MOST} open "
+                 "suggestions. „Different“ (wissensdoppelt.verschieden) keeps the names, the pair never comes back; "
+                 "merging stays the click with the code. „Merge with …“ shows the {wissensdoppelt.AEHNLICH_MOST} most "
+                 "similar points of the same kind on top (wissensdoppelt.auswahl), the rest by search."),
             ]),
             (("Karte hilft der Suche", "Map helps the search"), [
                 ("wissenskarte.liste(uid, worte, k) gibt Stück-Ids mit Rang ab 1 zurück, nur lesend (SQLite mit mode=ro) "
@@ -850,12 +883,18 @@ SEITEN = {
             ("wissenskarte.finde_knoten", ("Punkte genau über Name und andere Namen, nur lesend", "points exactly by name and other names, read only")),
             ("wissenskarte.knoten_liste", ("Punkte einer Art nach Namen, nur lesend", "points of one kind by name, read only")),
             ("wissenskarte.knoten_von_dok", ("Punkte eines Dokuments nach Art und Name, nur lesend", "points of one document by kind and name, read only")),
-            ("wissenskarte.zusammen", ("zwei Punkte zusammenführen, nur per Klick", "merge two points, only by click")),
+            ("wissenskarte.zusammen", ("zwei Punkte zusammenführen: per Klick oder bei „gleich“ nach fester Regel", "merge two points: by click or by fixed rule when „the same“")),
             ("wissenskarte._verbinde", ("Seite und Punkt gleichen Namens verbinden, feste Regel", "link a page and a point of the same name, fixed rule")),
             ("wissenskarte.erlaubt", ("Typregeln je Art der Verbindung (TYPEN)", "type rules per kind of connection (TYPEN)")),
             ("wissenskarte.frist_name", ("eine Frist nur mit Datum oder Zahl im Namen", "a deadline only with a date or number in its name")),
             ("wissenskarte.nachtpruefung", ("nachts: verbinden, Verstöße und Fristen ohne Zahl entfernen", "at night: link, remove violations and deadlines without a number")),
             ("wissensbuch.retitle", ("Seite umbenennen, der alte Titel bleibt", "rename a page, the old title stays")),
+            ("wissensdoppelt.aehnlich", ("gleich, Vorschlag oder nichts: die eine feste Regel für Doppelte", "the same, a suggestion or nothing: the one fixed rule for doubles")),
+            ("wissensdoppelt.normalform", ("ein Name in seiner Normalform je Art", "a name in its normal form per kind")),
+            ("wissensdoppelt.gleich_id", ("beim Einlesen: gleicher Name wird anderer Name", "while reading: the same name becomes an other name")),
+            ("wissensdoppelt.lauf", ("ruhiger Lauf: zusammenführen und Vorschläge in Blöcken", "quiet run: merge and suggestions in blocks")),
+            ("wissensdoppelt.auswahl", ("„Zusammenführen mit …“: die ähnlichsten zuerst", "„Merge with …“: the most similar first")),
+            ("wissensdoppelt.verschieden", ("„Verschieden“ gilt für immer", "„Different“ is for good")),
             ("wissensbuch.search_pages", ("passende Seiten über den Suchindex wb_fts", "fitting pages through the search index wb_fts")),
             ("wissensbuch._fts_sync", ("Suchindex der Seiten nachziehen", "bring the pages' search index up to date")),
             ("wissensbuch.liste", ("Seiten-Ids mit Rang für andere Teile, nur lesend", "page ids with rank for other parts, read only")),
@@ -871,7 +910,7 @@ SEITEN = {
             ("wissensmessung._synth", ("das Wegwerf-Profil aus festem Zufall, mit den Grenzen des Codes", "the throwaway profile from a fixed seed, with the code's limits")),
             ("wissensmessung.MESSTEILE", ("die Messteile, erweiterbar", "the measuring parts, extensible")),
         ],
-        "tests": ["test_wissen", "test_nachsortieren", "test_abschnitte", "test_lokal", "test_kiwix", "test_gedaechtnis",
+        "tests": ["test_wissen", "test_wissensdoppelt", "test_nachsortieren", "test_abschnitte", "test_lokal", "test_kiwix", "test_gedaechtnis",
                   "test_gedaechtnis_grenze", "test_gemerkt",
                   "test_suchpruefung", "test_wissensbuch", "test_wissenskarte", "test_wissensknoten", "test_kartensuche",
                   "test_wissensmessung"],

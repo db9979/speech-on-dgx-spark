@@ -4839,6 +4839,13 @@
 "titel": "Begleiter: Gesicht nur auf Wunsch",
 "text": "In den Einstellungen des Begleiters, Seite „Übersicht“: „Gesicht in den Fenstern zeigen“ ist aus, Begleiter-Fenster, Frag Spark und Text verbessern zeigen kein Gesicht, die Titel beginnen links. Einschalten: das Gesicht steht wieder im Kopf und neben den Antworten; das Symbol in Menü- oder Taskleiste zeigt es immer.",
 "thread": "Begleiter-App auf neuen Stand bringen"
+},
+{
+"id": "P716",
+"v": 1286,
+"titel": "Wissenskarte: Doppelte erkennen und kürzere Auswahl",
+"text": "A: Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte → Personen, Firmen und Fristen an. B: Ein Dokument hochladen, in dem „Herr Dominik Bornhäuser“, „Bornhäuser, Dominik“, „Dr. Dominik Bornhäuser“, „D. Bornhäuser“, „Müller GmbH“ und „Müller AG“ stehen; nach ruhigen Minuten zeigt Wissensbuch → Karte unter Personen nur einen Punkt „Herr Dominik Bornhäuser“ (die anderen Schreibweisen als andere Namen) und über der Karte „Vielleicht doppelt 2“ (D. Bornhäuser, Müller GmbH/AG). C: „Verschieden“ beim Firmenpaar: das Paar verschwindet und kommt auch nach dem nächsten Lauf nicht wieder. D: „Zusammenführen“ beim Personenpaar: mit Code (wenn der zweite Schritt an ist), danach ein Punkt. E: Einen Punkt antippen: „Zusammenführen mit …“ ist ein Suchfeld, oben die ähnlichsten Punkte derselben Art, beim Tippen höchstens 20 Treffer. F: Zustand → Logs, Bereich Wissen: „wissen: wissenskarte doppelt geprueft | …“ und „doppelt einlesen | 1 knoten | anrede“ ohne Namen; Zustand → Live, Kasten Wissenskarte: „Doppelte: n Vorschläge offen, m automatisch zusammengeführt“. G: iPhone-App, Wissensbuch → Karte: „Vielleicht doppelt“, nach links wischen „Verschieden“.",
+"thread": "Wissenskarte Stufe 2 statt Neo4j"
 }
 ]
 }

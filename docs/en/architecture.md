@@ -270,6 +270,7 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 | `app/panel/wiki.py` | Wikipedia straight away: for "Was ist ...?" or "Wer war ...?" the panel asks Wikipedia for the best matching article and hands its short intro to the model, … |
 | `app/panel/wissen.py` | Knowledge from one's own uploads. |
 | `app/panel/wissensbuch.py` | Wissensbuch: the language model works each own document once into a few pages ("Auto", "Versicherungen", "Werkstatt Müller"), sentence by sentence and each s … |
+| `app/panel/wissensdoppelt.py` | Doppelte Punkte der Wissenskarte: the people, companies, places, contracts, accounts and deadlines of the documents (wissenskarte.py, wk_ent) come in many sp … |
 | `app/panel/wissenskarte.py` | Wissenskarte: the pages of the Wissensbuch are the points of a map, this module adds the connections between them ("Auto versichert bei HUK", "Parkschaden fü … |
 | `app/panel/wissensmessung.py` | Wissen messen: times and memory of the document search, the Wissensbuch and the Wissenskarte, for the planned test with 5000 documents (Wissenskarte Stufe 2 … |
 
@@ -1654,7 +1655,7 @@ flowchart TD
 5. <a id="kn-sicherheit-s5"></a>**Release and block**: Every function is off until the admin releases it; then it counts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool.
 6. <a id="kn-sicherheit-s6"></a>**Outside stays data**: What a tool reads from outside reaches the model as a marked block of data (textnorm.defuse: the block's end and the model's own markers such as „<|im_start|>“ or „<tool_call>“ are defused; the LLM-Tor does it once more for every message, llm_tor.entschaerft). From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory; after a mail it is 19, everything that asks the internet among them (web search, Wikipedia, weather, transit), so no search word carries mail content out. Whether this holds is checked by the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed). A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures from outside only after the own click and through the guard, a link only after the question with its real address.
 7. <a id="kn-sicherheit-s7"></a>**The language model proposes**: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run.
-8. <a id="kn-sicherheit-s8"></a>**Does it change something?**: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model; likewise only their click merges, renames or deletes points of the knowledge map (with the code of „Confirm“). Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it.
+8. <a id="kn-sicherheit-s8"></a>**Does it change something?**: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model; likewise only their click merges, renames or deletes points of the knowledge map (with the code of „Confirm“); by itself only a fixed rule for the same name in another spelling (wissensdoppelt.aehnlich), never the model, and never against their „Different“. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it.
 9. <a id="kn-sicherheit-s9"></a>**Check the answer**: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML.
 10. <a id="kn-sicherheit-s10"></a>**Traces**: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own). What a service keeps for a profile (the mail supply, mail, attachments, appointments and contacts in Find) lies only sealed with AES-GCM (vorrat.seal), the words in the search index only as HMAC marks with a key per profile (vorrat.marke); without a key nothing is written. Tags the language model proposes for Find are data: fund.pruefe keeps only categories of the fixed list and names that stand in the entry word for word, never a command word.
 
@@ -1734,8 +1735,9 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 - `app/panel/profiles.py` `_cap`: the memory's cap without data loss ([step 8](#kn-sicherheit-s8))
 - `app/panel/gedaechtnis.py` `offer`: learned never replaces confirmed: only an offer ([step 8](#kn-sicherheit-s8))
 - `app/panel/gemerkt.py` `take_back`: undo only for the own, unchanged fact ([step 8](#kn-sicherheit-s8))
+- `app/panel/wissensdoppelt.py` `aehnlich`: points of the map merged by themselves only by a fixed rule, never against „Different“ ([step 8](#kn-sicherheit-s8))
 
-Self-tests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_siegel`, `test_meinedaten`
+Self-tests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_siegel`, `test_meinedaten`, `test_wissensdoppelt`
 
 ### Login, profile
 
@@ -2421,6 +2423,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - When the switch below the knowledge map is on, the language model proposes only JSON per passage of a document after the connections: people, companies, places, contracts, accounts and deadlines with kind and the number of the passage. The panel keeps a name only by fixed rules (wissenskarte.check_ent): the kind from the fixed list, the name stands in the passage (lower case, without accents, spaces drawn together), 2 to 80 characters without link, markup or command, a deadline only with a date or a number with a unit in its name, an account only as IBAN or number; at most 40 per document and 5000 per profile. Connections of these points are checked by the same rule as those of the pages.
 - Every point has a fixed number (wk_ent) and its passages (wk_ment: document and piece). Other parts only read: wissenskarte.finde_knoten (exactly by name and other names) and wissenskarte.knoten_liste (sorted by name) and wissenskarte.knoten_von_dok (the points of one document by kind and name, at most 200). Merging (wissenskarte.zusammen), renaming and deleting happen only by the owner's click with the code of „Confirm“, never by the model; every change reports to wissenskarte.GEAENDERT. When a document goes, its passages go with it at once, a point without a passage disappears.
 - Page and point, type rules, deadlines: when a page of the knowledge book has the name of a point of the kind person, firma or ort, both are one point (wk_entpage); the fixed rule wissenskarte._verbinde links them when points are read, at night and once when the table is made, never the model. Their connections count as the point's in view, rund_um, weg and liste; both are renamed together (wissensbuch.retitle, the old title stays in wb_alttitel, so working in makes no double page). Every connection follows the table wissenskarte.TYPEN (allowed kinds at the start and the end, a page counts as „seite“), a deadline needs a date or a number with a unit of time in its name (wissenskarte.frist_name, number words by a fixed list). The nightly check (wissenskarte.nachtpruefung) removes what was stored before and breaks them.
+- Doubles (wissensdoppelt.py) are found by one fixed rule only, wissensdoppelt.aehnlich, never by the model: every name in its normal form per kind (wissensdoppelt.normalform: ß/ss and umlauts, signs, people without form of address and title and „last name, first name“ turned round, companies without legal form and „Firma“, places with „Str.“ as „Straße“). „The same“ are only people with first and last name and places that differ in nothing else, and accounts, contracts and deadlines with the same normal form; while reading such a name becomes an other name of the point (wissensdoppelt.gleich_id), the quiet run merges points already there through wissenskarte.zusammen (wissensdoppelt.lauf). A suggestion are small typing errors (Damerau-Levenshtein at most 2 from 6 letters, 1 for 4 to 5), an initial when exactly one person fits, and a company with the same core; compared only in blocks, at most 200000 pairs per run, at most 300 open suggestions. „Different“ (wissensdoppelt.verschieden) keeps the names, the pair never comes back; merging stays the click with the code. „Merge with …“ shows the 8 most similar points of the same kind on top (wissensdoppelt.auswahl), the rest by search.
 
 #### Map helps the search
 
@@ -2478,6 +2481,9 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - **5000** such points per profile ([step 13](#kn-wissen-s13))
 - **80** characters the name of such a point has at most ([step 13](#kn-wissen-s13))
 - **200** documents a day for these points (default) ([step 13](#kn-wissen-s13))
+- **200000** pairs one run for doubles compares per profile at most ([step 13](#kn-wissen-s13))
+- **300** open suggestions „Maybe double“ per profile ([step 13](#kn-wissen-s13))
+- **8** most similar points on top of „Merge with …“ ([step 13](#kn-wissen-s13))
 - **50** passages the map names to the search at most ([step 6](#kn-wissen-s6))
 - **20** points the search words hit at most ([step 6](#kn-wissen-s6))
 - **0.5** weight of the list from the map ([step 6](#kn-wissen-s6))
@@ -2527,12 +2533,18 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/wissenskarte.py` `finde_knoten`: points exactly by name and other names, read only ([step 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `knoten_liste`: points of one kind by name, read only ([step 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `knoten_von_dok`: points of one document by kind and name, read only ([step 13](#kn-wissen-s13))
-- `app/panel/wissenskarte.py` `zusammen`: merge two points, only by click ([step 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `zusammen`: merge two points: by click or by fixed rule when „the same“ ([step 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `_verbinde`: link a page and a point of the same name, fixed rule ([step 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `erlaubt`: type rules per kind of connection (TYPEN) ([step 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `frist_name`: a deadline only with a date or number in its name ([step 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `nachtpruefung`: at night: link, remove violations and deadlines without a number ([step 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `retitle`: rename a page, the old title stays ([step 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `aehnlich`: the same, a suggestion or nothing: the one fixed rule for doubles ([step 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `normalform`: a name in its normal form per kind ([step 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `gleich_id`: while reading: the same name becomes an other name ([step 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `lauf`: quiet run: merge and suggestions in blocks ([step 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `auswahl`: „Merge with …“: the most similar first ([step 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `verschieden`: „Different“ is for good ([step 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `search_pages`: fitting pages through the search index wb_fts ([step 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `_fts_sync`: bring the pages' search index up to date ([step 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `liste`: page ids with rank for other parts, read only ([step 13](#kn-wissen-s13))
@@ -2548,7 +2560,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/wissensmessung.py` `_synth`: the throwaway profile from a fixed seed, with the code's limits ([step 6](#kn-wissen-s6))
 - `app/panel/wissensmessung.py` `MESSTEILE`: the measuring parts, extensible ([step 6](#kn-wissen-s6))
 
-Self-tests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`
+Self-tests: `test_wissen`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`
 
 ### Guard
 

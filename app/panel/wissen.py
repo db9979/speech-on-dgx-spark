@@ -499,6 +499,10 @@ async def due_once(idle=True, now=None):
     got = await wissenskarte.due_once(now)
     if got:
         return got
+    import wissensdoppelt   # Doppelte der Wissenskarte: points "gleich" merged, suggestions found (fixed rules, no model)
+    got = await wissensdoppelt.due_once(now)
+    if got:
+        return got
     import fund             # Finden, Stufe D (plan such-index): the model proposes tags for one entry of the index
     got = await fund.schlagworte_due(now)
     if got:

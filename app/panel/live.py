@@ -1287,6 +1287,19 @@ def _kartensuche(s):
             + (f", {s['fehler']} Fehler" if s.get("fehler") else ""))
 
 
+def _doppelte():
+    """Doppelte der Wissenskarte (wissensdoppelt.py): open suggestions, merged by itself, „Verschieden“ (numbers only)."""
+    try:
+        import wissensdoppelt
+        d = wissensdoppelt.for_live()
+    except Exception:
+        return ""
+    if not d.get("on"):
+        return ""
+    return (f" · Doppelte: {d.get('offen', 0)} Vorschläge offen, {d.get('auto', 0) + d.get('einlesen', 0)} automatisch "
+            f"zusammengeführt" + (f", {d['verschieden']} verschieden" if d.get("verschieden") else ""))
+
+
 def snapshot(view="admin", now=None):
     now = now or time.time()
     with _lock:
@@ -2316,7 +2329,7 @@ def snapshot(view="admin", now=None):
                            + f" · {wkk.get('knoten_warten', 0)} Dokumente warten auf Knoten"
                            + f" · {wkk.get('mit_seite', 0)} mit Seite" if kn else "")
                         + _kartennacht(wkk.get("nacht") or {})
-                        + _kartensuche(wkk.get("suche") or {})
+                        + _kartensuche(wkk.get("suche") or {}) + _doppelte()
                         + (" · arbeitet" if wkk.get("running") else ""))
         if x["id"] == "wmessen" and wms.get("on"):    # Wissen messen: running or the newest run's numbers, never a title
             import wissensmessung

@@ -57,6 +57,10 @@ stays in wb_alttitel). Every connection follows the fixed type rules TYPEN (chec
 name holds a date or a number with a unit of time (frist_name, words for numbers by ZAHLWORTE). The nightly check
 (nachtpruefung) links, removes stored connections against TYPEN and deadlines without a number, and logs the counts.
 
+Doppelte (wissensdoppelt.py, Dominik 2026-10-30): a new name that is "gleich" to a point there by the fixed rules of
+wissensdoppelt.aehnlich becomes its other name (_match); the quiet run merges such points through zusammen and suggests
+the rest to the owner; ANREDEN and RECHTSFORMEN below are the one list of forms of address and legal forms.
+
 Karte hilft der Suche (plan wissensgraph Stufe 3, Dominik 2026-10-29 „Empfehlung umsetzen“): liste(uid, worte, k) gives
 the document search a third list of hits, [(piece id, rank from 1)], by fixed rules (see liste), read only and bound to
 the profile; documents.search mixes it with the fixed weight documents.KARTE_WEIGHT (it adds, never replaces) and marks
@@ -694,14 +698,18 @@ def _aliases(raw):
     return [str(x)[:ENT_NAME_LEN] for x in v if isinstance(x, str)][:ALIAS_MOST] if isinstance(v, list) else []
 
 
-def _match(con, art, norm):
-    """The id of the point of this kind with this name or other name, else None."""
+def _match(con, art, norm, name=None):
+    """The id of the point of this kind with this name or other name, else None. With name also a point whose name
+    is "gleich" by the fixed rules of wissensdoppelt.aehnlich (the new name becomes its other name)."""
     r = con.execute("SELECT id FROM wk_ent WHERE art=? AND norm=?", (art, norm)).fetchone()
     if r:
         return r[0]
     for r in con.execute("SELECT id, alias FROM wk_ent WHERE art=? AND alias<>'[]' ORDER BY id", (art,)):
         if norm in {ent_norm(a) for a in _aliases(r["alias"])}:
             return r["id"]
+    if name:
+        import wissensdoppelt
+        return wissensdoppelt.gleich_id(con, art, name)
     return None
 
 
@@ -841,7 +849,7 @@ def apply_ents(uid, doc, got, nodes, parts, now=None):
             row, why = check_ent(e, src)
             if row and (row["art"], row["norm"]) in blocked:
                 row, why = None, "blocked"
-            eid = _match(con, row["art"], row["norm"]) if row else None
+            eid = _match(con, row["art"], row["norm"], row["name"]) if row else None
             if row and eid not in took and (len(took) >= ENT_PER_DOC or places >= MENT_PER_DOC):
                 row, why = None, "limit"
             if row and eid is None and total >= MAX_ENT:
@@ -1007,10 +1015,15 @@ KARTE_KNOTEN = 20        # points the words may hit at most (the first by these 
 KARTE_NACHBARN = 50      # neighbours of them at most (one step on the map)
 KARTE_WORT = 4           # a single word of a longer name hits from this many letters on (never a number)
 KARTE_ENDUNG = 2         # letters a word of the question may have more than the word of the name („Kranichs“)
+# legal forms of a company and forms of address or titles of a person, as written (one source: the search below and
+# the rules for doubles in wissensdoppelt.normalform compare them in their own normal form)
+RECHTSFORMEN = ("GmbH", "mbH", "gGmbH", "AG", "KG", "KGaA", "OHG", "UG", "haftungsbeschränkt", "GbR", "e.V.", "e.K.",
+                "SE", "Co.", "Inc.", "Ltd.", "LLC", "PLC", "Corp.")
+ANREDEN = ("Herr", "Frau", "Hr.", "Fr.", "Dr.", "Prof.", "Dipl.-Ing.", "Dipl.", "Ing.", "med.", "Mag.", "Mr.", "Mrs.", "Ms.")
 # words of a name that never hit on their own: legal forms and little words („GmbH“ alone is no company)
-KARTE_ALLGEMEIN = frozenset(("gmbh", "mbh", "ggmbh", "ag", "kg", "ohg", "ug", "gbr", "ev", "se", "co", "inc", "ltd",
-                             "llc", "und", "and", "der", "die", "das", "des", "von", "vom", "zu", "zur", "zum", "the",
-                             "haftungsbeschrankt", "firma", "herr", "frau"))
+KARTE_ALLGEMEIN = frozenset({w for x in RECHTSFORMEN for w in re.findall(r"\w+", ent_norm(x.replace(".", "")))}
+                            | {"und", "and", "der", "die", "das", "des", "von", "vom", "zu", "zur", "zum", "the", "firma",
+                               "herr", "frau"})
 SUCHE = {"suchen": 0, "stellen": 0, "fehler": 0}     # Live-Übersicht: in the memory only, numbers only
 
 
@@ -1645,6 +1658,8 @@ def _ent_clear(uid):
         con.execute("DELETE FROM wk_edges WHERE a LIKE 'k%' OR b LIKE 'k%'")
         for t in ("wk_ent", "wk_ment", "wk_entdocs", "wk_entblock", "wk_entpage"):
             con.execute(f"DELETE FROM {t}")
+        import wissensdoppelt
+        wissensdoppelt.leeren(con)          # suggestions, „Verschieden“ and the keys of the names go too
     for x in ids:
         _melde(uid, x, None, "weg")
     print(f"wissen: wissenskarte knoten geleert | {len(ids)} knoten | daten loeschen", flush=True)

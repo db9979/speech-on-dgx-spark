@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.286** The knowledge map finds doubles: the same person with a title, another spelling or "last name, first name" becomes one point; similar ones stand under "Maybe double" with "Merge" or "Different"; "Merge with …" is a search field
 - **V01.1.285** Find's measurement is now a part of Measure knowledge (`sudo speech-spark wissen messen synth 5000`, Status → Checks → Measure knowledge): 50,000 sealed made-up mails with 5000 documents, search p50/p95, size and RAM; `speech-spark finden messen` is gone
 - **V01.1.284** Companion in the panel's system style: calm greys, one blue accent, no gradients, the face in the windows only on request
 - **V01.1.283** Dungeon music: hear a probe (30 s or full), a good probe into the store, "Liked" at the table
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.279** Remote access → Systems, button “Web services”: web pages of a paired system (Grafana, router, Home Assistant there) in the browser through its anchor, on an origin of their own (tunnel door port 31090 or tunnel address), the panel's cookies and sign-in stay out, targets by fixed rules on both sides (network behind it per system with the code), Found shows listening ports, WebSocket passes through; anchor 1.6.0
 - **V01.1.278** Remote access, screen: the Spark now builds guacd itself from Apache's source (1.6.0, pinned with SHA-256, VNC and RDP only, FreeRDP 3 or 2, built as nobody, to /opt/speech-spark/guacd), as Debian 12/13 and Raspberry Pi OS have no guacd package any more; the update builds it by itself once the screen is on, a failure never stops it and the panel names the reason; every grey button of a system says why (for the screen with the command to copy or insert).
 - **V01.1.277** Remote access on Windows (stage 5): pairing through a one-time link to the file spark-anker-einrichten.cmd (double-click, "Yes", no code), then the admin confirms the new system with a code or passkey; OpenSSH only on 127.0.0.1, Python only for the anchor with a pinned checksum, removing under Apps "Spark Anker" puts everything back; checked on a real Windows (GitHub action "Fernzugang Windows")
-- **V01.1.276** Remote access: terminal and suggestions no longer jump (the status line above the terminal stayed after opening and vanished on the next load, notices at the top pushed the terminal down); a browser test over 20 seconds.
 
 
 
