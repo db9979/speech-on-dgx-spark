@@ -82,6 +82,10 @@ HINTS = (
     ("fund", r"^fund: mail uidvalidity gewechselt", "Der Mailserver hat einen Ordner neu nummeriert (UIDVALIDITY): "
      "Finden liest ihn von vorn ein, das ist kein Fehler.",
      "The mail server numbered a folder anew (UIDVALIDITY): Find reads it again from the start; this is no error."),
+    ("fund", r"^fund: schlagworte modell fehler", "Das Sprachmodell hat keine lesbaren Schlagworte geliefert: Finden "
+     "versucht denselben Eintrag später noch einmal, höchstens zweimal. Läuft das Sprachmodell (Zustand → Prüfen)?",
+     "The language model gave no readable tags: Find tries the same entry again later, at most twice. Is the language "
+     "model running (Status → Checks)?"),
     ("telegram", r".", "Telegram klappt nicht: Bot unter Funktionen → Telegram prüfen.",
      "Telegram fails: check the bot under Features → Telegram."),
 )

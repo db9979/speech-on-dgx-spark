@@ -18,7 +18,7 @@ A fixed rule (classify) sorts the person's own latest message, never the model:
 - "": anything else (switching, lists, mail, small talk ...). Nothing changes.
 
 Which sources a person gets is exactly what the tools of this turn offer (document_search, archive_search,
-history_search): a voice that is not the owner's, Telegram without personal data, a guest get none of them.
+history_search, and fund_suche for Finden's clear sources since its Stufe D): a voice that is not the owner's, Telegram without personal data, a guest get none of them.
 
 Web after documents: an answer that read the person's documents normally cannot search the web (a document
 could carry its text away in a query). With this switch on the search stays possible, but the panel sends the
@@ -55,8 +55,11 @@ COVER = 0.6                 # share of the question's words a passage must conta
 PREFIX = 4                  # letters of a long word kept when the title lookup completes it (variants)
 MAX_VARIANTS = 3            # further title lookups per book when the whole question found no title
 MAX_TEST = 500
-SOURCES = {"docs": "document_search", "kiwix": "archive_search", "history": "history_search"}
-LABELS = {"docs": "Dokumente", "kiwix": "Archiv", "history": "Verlauf"}
+# "fund": Finden's index (fund.py, Stufe D), only its clear sources without an index of their own here (Wissensbuch,
+# lists, reminders, pictures, songs: fund.LOKAL); documents and conversations come through their own source, mail,
+# appointments and contacts never in the quick look (sealed, and a stranger's mail is no answer to a knowledge question)
+SOURCES = {"docs": "document_search", "kiwix": "archive_search", "history": "history_search", "fund": "fund_suche"}
+LABELS = {"docs": "Dokumente", "kiwix": "Archiv", "history": "Verlauf", "fund": "Finden"}
 
 # words that only ask, they say nothing about what is asked for ("Wie hoch ist die Zugspitze?" -> zugspitze)
 _ASK = """wer wen wem wessen was wie wo woher wohin wann warum wieso weshalb welche welcher welches welchen welchem
@@ -336,6 +339,16 @@ async def _kiwix(q, words):
              "date": b.get("date", "")}]
 
 
+def _fund(uid, q, words):
+    import fund
+    import frisch
+    hits = fund.suche(uid, q, anzahl=MAX_HITS, quellen=fund.LOKAL)
+    return [{"src": "fund", "title": f"Finden: {fund.BY_NAME[h['quelle']].de} „{_cut(h['titel'], 80)}“"
+             + (f", {frisch.stand(h['wann']).split(',')[0]}" if h.get("wann") else ""),
+             "text": _cut(h.get("auszug") or h["titel"])}
+            for h in hits if cover(words, h["titel"] + " " + (h.get("auszug") or "")) >= COVER]
+
+
 def _quiet(task):
     """A source that came back too late: its result or error is dropped without a warning."""
     if not task.cancelled():
@@ -358,6 +371,8 @@ async def look(uid, text, srcs, ms, skip=None):
             jobs["history"] = asyncio.ensure_future(asyncio.to_thread(_history, uid, words, skip))
         if "kiwix" in srcs:
             jobs["kiwix"] = asyncio.ensure_future(_kiwix(q, words))
+        if "fund" in srcs:
+            jobs["fund"] = asyncio.ensure_future(asyncio.to_thread(_fund, uid, q, words))
     own = [j for k, j in jobs.items() if k != "kiwix"]
     if own:
         await asyncio.wait(own, timeout=ms / 1000)
@@ -374,7 +389,8 @@ async def look(uid, text, srcs, ms, skip=None):
         else:
             found[k] = job.result()
             out["n"][k] = len(found[k])
-    out["hits"] = (found.get("docs", [])[:2] + found.get("kiwix", [])[:1] + found.get("history", [])[:1])[:MAX_HITS]
+    out["hits"] = (found.get("docs", [])[:2] + found.get("fund", [])[:1] + found.get("kiwix", [])[:1]
+                   + found.get("history", [])[:1])[:MAX_HITS]
     out["ms"] = int((time.monotonic() - t0) * 1000)
     return out
 

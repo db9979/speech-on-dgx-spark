@@ -285,6 +285,8 @@
     "fund_chats": false,
     "fund_listen": false,
     "fund_medien": false,
+    "fund_schlagworte": false,
+    "fund_tag_day": 200,
     "knowledge_map_day": 200,
     "knowledge_ents": false,
     "knowledge_ents_day": 200,

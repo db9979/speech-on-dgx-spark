@@ -204,6 +204,18 @@ def more_keys(ev):
     return {"keyboard": rows, "one_time_keyboard": True, "resize_keyboard": True} if rows else None
 
 
+def fund_key(ev):
+    """Finden's Sofort-Karte in Telegram: a button „Original öffnen“ to `<panel>/#fund=<id>` (start.js opens the entry's
+    original as the server gives it to the profile; only navigation), when the admin entered the panel's address for
+    links (chat.telegram_panel_url) and the event names one entry; else None."""
+    import wege
+    fid = str(ev.get("id") or "")
+    base = str(load_config().get("chat", {}).get("telegram_panel_url") or "").strip()
+    if not re.fullmatch(r"\d{1,12}", fid) or not wege.URL.fullmatch(base):
+        return None
+    return {"inline_keyboard": [[{"text": "Original öffnen", "url": base.rstrip("/") + "/#fund=" + fid}]]}
+
+
 def take_keys(uid):
     return _keys.pop(uid, None)
 
@@ -253,6 +265,11 @@ async def ask(uid, text, pictures=None):
                 error = "Der Spark konnte gerade nicht antworten."
             elif ev.get("type") == "choice":   # the panel asks which one (klaeren.py): buttons under the answer
                 _keys[uid] = keyboard(ev)
+            elif ev.get("type") == "goto" and ev.get("to") == "fund" and uid not in _keys:
+                # the Sofort-Karte of Finden (fund.py): a button to the original in the panel, when it has an address
+                got = fund_key(ev)
+                if got:
+                    _keys[uid] = got
             elif ev.get("type") == "more" and uid not in _keys:   # a question of the panel's own goes first
                 _keys[uid] = more_keys(ev)
                 _offered[uid] = {str((x.get("text") or [""])[0])[:60]: x.get("tool") for x in (ev.get("items") or [])

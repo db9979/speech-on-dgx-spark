@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.258** Find stage D: tags by the model (own sub-switch, off), checked only by fixed rules and shown as "by the model", removed ones never come back; people, companies and places as points of the knowledge map; one ranking over all lists; Sofort-Karte for a clear hit with a fixed sentence and "Open the original"
 - **V01.1.257** Find stage C: appointments and contacts sealed, past conversations (only date and channel), lists, reminders, pictures and songs in the search index; periods by fixed rules, "from the surgery" through the own calendar; five sub-switches, off by default
 - **V01.1.256** Find stage B: every mail and attachment in the search index (inbox, archive, sent, never spam or trash), the newest first, older ones in quiet minutes and at night in slices, only sealed (AES-GCM, words as HMAC marks), attachment text and fields by fixed rules, a hit opens the mail; sub-switch "Find mail and attachments", off by default
 - **V01.1.255** Download all my data: under Me → Security → My data one ZIP with everything of the own profile (sealed files opened, settings without secrets, from chats only the own messages, a README de+en with what stays out and why), each time after a fresh code or passkey, 3 per hour, at most 2 GB, pickup link 10 minutes and once; no switch (right of access), also in the iPhone and Android app
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.251** Memory and conversations sealed: memory.json, convos.json, toollog.json and room-history.json lie sealed whole in the profile (AES-256-GCM, a key per purpose from secret.key, the profile and the file name as associated data), once after a backup "vor-siegel" with a check per file; with another key set aside instead of overwritten, a hint to the admin, "Read in again" under Me → Memory (plan nutzerwissen, stage 4b; test_siegel)
 - **V01.1.250** One way to the own data: memory, conversations, tool log, room mode history, read marks, matches, interests, Spark diary and the open memory question are read and written by the panel only through profiles.read_own/write_own/drop_own (preparing the seal, nothing changes for the person)
 - **V01.1.249** Remembered note: "✓ Remembered: …" with "Undo" under the answer; what was learned by itself comes as a card with "That's right" and "Undo", notifications and Telegram only name the number
-- **V01.1.248** Memory with fixed topics (home, employer, car …): per topic the newest value said counts, the old one stays to bring back; what was learned by itself never replaces what was confirmed, it comes as a card "Take it / Discard"; plus "N of 200"
 
 
 

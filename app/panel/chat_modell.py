@@ -373,6 +373,22 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
                 msgs[-1]["content"] += "\n\n" + chat.SEARCH_LOCKED_NOTE
             used = True
             st["check"] = check_on  # an answer from tool results: its figures are checked
+            if st.get("fest"):
+                # Sofort-Karte (fund.py): one hit clearly ahead, the panel's fixed sentence (shown in full, spoken
+                # short), never reworded by the model; the card under it opens the original
+                satz = st.pop("fest")
+                en = chat.guess_language(messages[-1]["content"]) == "English"
+                shown, spoken = satz["en" if en else "de"]
+                await settle(st)
+                await out.put({"type": "text", "delta": ("\n\n" if st["shown"] or trace["said"].strip() else "") + shown})
+                trace["said"] += shown
+                st["shown"] += len(shown) + 1
+                await sentences.put(spoken)
+                trace["calls"].append({"name": "Sofort-Karte (Panel)", "args": "", "result": "fester Satz, ohne Modell"})
+                if tr:
+                    tr.step("prep", "Sofort-Karte (Panel)", time.time(), panel=True)
+                calls, finish = [], "stop"
+                break
         if (calls or st["xml"]) and finish != "length" and not last_noted:
             # out of tool rounds while the model still wanted one: one last answer without tools
             await settle(st)

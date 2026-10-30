@@ -380,6 +380,8 @@ function gotoCard(list){const row=document.createElement('div');row.className='c
     else if(c.to==='post'&&typeof postRead==='function'&&PROFILE&&MAIL_ON&&/^m[0-9a-f]{8}:\d{1,10}$/.test(c.id||''))
       btn(t('Mail öffnen','Open mail'),()=>{icTabSet('post','show');goSec('post');postRead(c.id)})
     else if(c.to==='fund'&&typeof fundSuche==='function'&&PROFILE&&window.FUND_ON&&typeof c.q==='string'&&!row.querySelector('[data-fund]')){
+      // the Sofort-Karte (fund.py, one hit clearly ahead): first its original, then the whole list
+      if(/^\d{1,12}$/.test(String(c.id||''))&&typeof fundTreffer==='function'){btn(t('Original öffnen','Open the original'),()=>fundTreffer(c.id));row.lastChild.classList.add('on')}
       btn(t('In Finden ansehen','Show in Find'),()=>fundSuche(c.q.slice(0,200)));row.lastChild.dataset.fund='1'}}
   return row.children.length?row:null}
 function confirmCard(c){const d=document.createElement('div');d.className='confirmc';const h=document.createElement('b');

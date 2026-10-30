@@ -765,12 +765,15 @@ SEITEN = {
                "(vault.seal), Gedächtnis und Gespräche ganz versiegelt im Ordner des Profils (profiles.write_own). Was ein Dienst für ein "
                "Profil vorhält (Mail-Vorrat, Mails, Anhänge, Termine und Kontakte in Finden), liegt nur mit AES-GCM versiegelt (vorrat.seal), "
                "die Wörter im Suchindex nur als HMAC-Marken mit einem Schlüssel je Profil (vorrat.marke); ohne Schlüssel "
-               "wird nichts geschrieben.",
+               "wird nichts geschrieben. Schlagworte, die das Sprachmodell für Finden vorschlägt, sind Daten: fund.pruefe "
+               "behält nur Kategorien der festen Liste und Namen, die wörtlich im Eintrag stehen, nie ein Befehlswort.",
                "Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a "
                "SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault "
                "(vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own). What a service keeps for a "
                "profile (the mail supply, mail, attachments, appointments and contacts in Find) lies only sealed with AES-GCM (vorrat.seal), the words "
-               "in the search index only as HMAC marks with a key per profile (vorrat.marke); without a key nothing is written.")),
+               "in the search index only as HMAC marks with a key per profile (vorrat.marke); without a key nothing is written. "
+               "Tags the language model proposes for Find are data: fund.pruefe keeps only categories of the fixed list and "
+               "names that stand in the entry word for word, never a command word.")),
         ],
         "beispiele": [
             (("Mail verlangt eine Handlung", "A mail demands an action"), ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s9", "s10"],

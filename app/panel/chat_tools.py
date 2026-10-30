@@ -68,7 +68,10 @@ async def run(t, name, args, st):
                                                          "text": t.ask_text, "request": t.request,
                                                          "outside": bool(st["mail"] or st["outside"]),
                                                          # a target the person chose after the panel asked (klaeren.py)
-                                                         "pin": getattr(t, "kl_pin", None), "outside_before": before})
+                                                         "pin": getattr(t, "kl_pin", None), "outside_before": before,
+                                                         # the panel's own fixed answer instead of the model's
+                                                         # (Sofort-Karte, fund.py): chat_modell says it and stops
+                                                         "fest": lambda satz: st.__setitem__("fest", satz)})
     if name.startswith("mail_tidy_") and t.tidy_on:
         return await tidy_tool(t, name, args, st)
     if name == "mail_draft" and t.drafts_on:

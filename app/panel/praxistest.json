@@ -4587,6 +4587,27 @@
 "titel": "Finden: Kontakte, Listen, Bilder; geteilte Liste nur mit Recht",
 "text": "Termine, Kontakte, Listen und Erinnerungen, Bilder und Lieder finden an. Unter Finden einen Firmennamen aus den Kontakten suchen: Treffer Kontakt mit Firma und Ort, nie eine Telefonnummer (die Nummer selbst findet nichts); „Öffnen“ zeigt die Karte. Ein Wort von der Einkaufsliste, eine Erinnerung und ein gemaltes Bild finden, „Öffnen“ geht auf Listen, Mitteilungen und Bilder. Ein zweites Profil teilt eine Liste mit dir: erst mit „Listen teilen“ und der Freigabe wird sie gefunden, nach dem Zurückziehen nach höchstens fünf Minuten nicht mehr. Zustand → Live, Kasten Finden: „Termine N · Kontakte N …“, nur Zahlen.",
 "thread": "Alles schnell finden über einen Index"
+},
+{
+"id": "P680",
+"v": 1258,
+"titel": "Finden: Neu vom Modell übernehmen und verwerfen",
+"text": "Als Admin Funktionen → Finden in allen Daten → Schlagworte vom Modell an (ab Werk aus). Eine Rechnung mit Firma, Person und Ort hochladen und ein paar ruhige Minuten warten (niemand spricht). Finden → Schlagworte, „Neu vom Modell“: Vorschläge wie „Einkauf“ oder der Ort stehen dort, nur Kategorien der festen Liste und Namen aus der Rechnung selbst. Bei einem ✓: er gilt als deiner (gefüllt). Bei einem anderen ×: er verschwindet und kommt auch nach „Neu aufbauen“ nicht wieder. Zustand → Live, Kasten Finden: „Schlagworte heute N Einträge, M übernommen, K verworfen, L offen“, nur Zahlen.",
+"thread": "Alles schnell finden über einen Index"
+},
+{
+"id": "P681",
+"v": 1258,
+"titel": "Finden: Chip vom Modell ist erkennbar gestrichelt, Punkte der Wissenskarte",
+"text": "Mit Schlagworten vom Modell einen Treffer unter Finden öffnen: ein Schlagwort des Modells hat einen gestrichelten Rand und „vom Modell“, eines der Regeln ist grau gefüllt, ein eigenes gefüllt. Mit Wissenskarte → Personen, Firmen und Fristen an: eine Firma, die dort ein Punkt ist, trägt einen farbigen Punkt; in der Wissenskarte zwei Punkte zusammenführen, danach zeigt das Schlagwort weiter einen Punkt; einen Punkt löschen, danach bleibt das Schlagwort ohne Punkt stehen.",
+"thread": "Alles schnell finden über einen Index"
+},
+{
+"id": "P682",
+"v": 1258,
+"titel": "Finden: Sofort-Karte bei klarem Treffer auf allen Wegen",
+"text": "Mit nur einer Thomann-Rechnung im Index im Panel-Chat „Such mir die Rechnung von Thomann“: sofort der feste Satz „Gefunden: … vom … , Betrag …“ ohne weitere Worte des Modells, darunter „Original öffnen“ (öffnet Dokument bzw. Mail) und „In Finden ansehen“. Dieselbe Frage in Telegram (mit eingetragener Panel-Adresse für Links): derselbe Satz und der Knopf „Original öffnen“. Am Lautsprecher, auf der Uhr oder in CarPlay: der kurze Satz ohne Anhang. Mit zwei gleich guten Rechnungen antwortet das Modell aus den Treffern.",
+"thread": "Alles schnell finden über einen Index"
 }
 ]
 }

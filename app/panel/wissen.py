@@ -491,6 +491,10 @@ async def due_once(idle=True, now=None):
     got = await wissenskarte.due_once(now)
     if got:
         return got
+    import fund             # Finden, Stufe D (plan such-index): the model proposes tags for one entry of the index
+    got = await fund.schlagworte_due(now)
+    if got:
+        return got
     # context lines of the pieces (Stufe 2 of plan suche-schaerfen): before the vectors, which read them
     for uid in _readers():
         if not _docs_ok(uid) or not await asyncio.to_thread(documents.heads_left, uid):

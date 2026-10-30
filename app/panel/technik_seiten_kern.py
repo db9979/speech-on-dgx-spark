@@ -243,11 +243,12 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "15703b17a5",
+        "stand": "3d40cb46e7",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
             "docembed._call": ["s3"], "nachsortieren.rank": ["s10"], "wissen.recent_window": ["s11"], "frisch.spanne": ["s11"],
+            "fund.pruefe": ["s13"], "fund.sofort_satz": ["s13"], "fund.klar_vorn": ["s13"],
             "wissen.where": ["s13"], "lokal.look": ["s5"], "gedaechtnis.hint_lines": ["s13"], "profiles._cap": ["s13"],
             "gedaechtnis.slot_of": ["s13"], "gemerkt.take_back": ["s13"],
             "regeln": ["s1", "s8"], "regel:Geteilte Dokumente": ["s8"], "regel:Gedächtnis": ["s13"],
@@ -274,7 +275,11 @@ SEITEN = {
                  "ebenso, Gespräche nur mit Datum und Kanal (ihre Wörter sucht recall.liste), Listen, Erinnerungen, "
                  "Bilder und Lieder wie ihre Quelle. Zeiträume („letzte Woche“, „2023“) rechnet frisch.spanne nach "
                  "festen Regeln, „vom OP“ sucht den letzten vergangenen Termin im eigenen Kalender (fund.bezug_aus): "
-                 "14 Tage davor bis 60 danach steht weiter oben, nie eine harte Grenze.",
+                 "14 Tage davor bis 60 danach steht weiter oben, nie eine harte Grenze. Mit „Schlagworte vom Modell“ "
+                 "schlägt das Sprachmodell in ruhigen Minuten Schlagworte vor; fund.pruefe behält nur Kategorien der "
+                 "festen Liste und Namen, die wörtlich im Eintrag stehen, verknüpft Personen, Firmen und Orte mit den "
+                 "Punkten der Wissenskarte (nur lesend) und lässt weg, was die Person entfernt hat. Ein klarer Treffer "
+                 "kommt als fester Satz des Panels (fund.sofort_satz), nie mit Worten des Modells.",
                  "Knowledge is everything the Spark knows without going to the internet: the uploaded documents of "
                  "each profile (one SQLite file wissen.db per profile), the memory, earlier conversations, the own "
                  "Kiwix archive and created documents. This page shows the way a question finds fitting passages in "
@@ -285,7 +290,11 @@ SEITEN = {
                  "and channel (recall.liste searches their words), lists, reminders, pictures and songs like their "
                  "source. Periods („last week“, „2023“) come from frisch.spanne by fixed rules, „from the surgery“ "
                  "looks for the last past appointment in the own calendar (fund.bezug_aus): 14 days before to 60 "
-                 "after rank higher, never a hard limit."),
+                 "after rank higher, never a hard limit. With „Tags by the model“ the language model proposes tags in "
+                 "quiet minutes; fund.pruefe keeps only categories of the fixed list and names that stand in the entry "
+                 "word for word, links people, companies and places to the points of the knowledge map (read only) "
+                 "and leaves out what the person removed. A clear hit comes as the panel's fixed sentence "
+                 "(fund.sofort_satz), never in the model's words."),
         "warum": ("Das Sprachmodell kennt die eigenen Unterlagen nicht. Es bekommt nur die wenigen Stellen, die das "
                   "Panel mit festen Regeln und zwei kleinen Modellen auf dem Prozessor heraussucht, jeweils mit "
                   "Herkunft. Was in einem Dokument steht, ist Text von außen: Daten, nie ein Befehl.",
@@ -724,6 +733,9 @@ SEITEN = {
             ("nachsortieren.rank", ("Cross-Encoder oder Reihenfolge der Mischung", "cross-encoder or the mix's order")),
             ("wissen.recent_window", ("„zuletzt notiert“ als feste Regel", "„noted lately“ as a fixed rule")),
             ("frisch.spanne", ("Zeitraum aus den eigenen Worten, feste Regeln", "period from the own words, fixed rules")),
+            ("fund.pruefe", ("Schlagworte des Modells nur nach festen Regeln", "the model's tags only by fixed rules")),
+            ("fund.klar_vorn", ("ein Treffer klar vorn: feste Regel", "one hit clearly ahead: a fixed rule")),
+            ("fund.sofort_satz", ("Sofort-Karte: fester Satz des Panels", "Sofort-Karte: the panel's fixed sentence")),
             ("wissen.where", ("Herkunft einer Stelle für das Modell", "source of a passage for the model")),
             ("lokal.look", ("der kurze Blick vor der Antwort", "the quick look before the answer")),
             ("lokal.excerpt", ("das Stück einer Stelle mit den Suchwörtern", "the part of a passage with the search words")),

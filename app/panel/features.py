@@ -457,6 +457,10 @@ FEATURES = (
       parent="fund", me="fundbox", guide="fundlisten"),
     F("fundmedien", "Bilder und Lieder finden", "Find pictures and songs", "data", ("fund_medien", "fund"), parent="fund",
       me="fundbox", guide="fundmedien"),
+    # Finden, Stufe D (fund.schlagworte_due): the language model proposes tags in quiet minutes, the panel keeps only
+    # what its fixed rules allow (fund.pruefe), always marked „vom Modell“, the own tags win; off, never for guests
+    F("fundschlagworte", "Schlagworte vom Modell", "Tags by the model", "data", ("fund_schlagworte", "fund"), parent="fund",
+      me="fundbox", guide="fundschlagworte"),
     F("suchfragen", "Prüffragen vom Spark", "Test questions by the Spark", "data", ("search_check_auto",),
       parent="suchpruefung", me="docbox", guide="suchfragen"),
     # everyday

@@ -2222,6 +2222,7 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .wkah{fill:var(--mut)}.wkah.c{fill:var(--warn)}.wkah.s{fill:var(--bad)}
 .wkside input[type=search]{width:100%;margin-bottom:6px}.wkside .ld-row{padding:6px 8px}.wkdoc{cursor:grab}
 .wkdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--wkc);flex:none;margin-right:6px}
+.fundtag.modell{background:transparent;border:1px dashed var(--mut)}.fundtag.modell small{font-weight:400;color:var(--mut)}.fundtag .wkdot{width:7px;height:7px;margin-right:4px}
 .wkdrop{border:2px dashed var(--line);border-radius:12px;padding:10px;text-align:center;font-size:12.5px;margin-top:8px}
 .wkdet{border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--card);min-width:0}
 .wkdet h3{margin:0 0 4px;font-size:16px;display:flex;align-items:center;overflow-wrap:anywhere}.wkdet h4{margin:12px 0 4px}

@@ -456,7 +456,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Telegram, Siri, Uhr
     "kanaele": {
-        "stand": "05bfebae07",
+        "stand": "ee90c68135",
         "bezug": {
             "watch.JOB_TTL": ["s9"], "telegram.loop": ["s1"], "telegram.handle": ["s2", "s3", "s4"],
             "telegram.ask": ["s7", "s8", "s11"], "telegram.transcribe": ["s5"], "chat.siri_ask": ["s1", "s3"],
@@ -542,11 +542,13 @@ SEITEN = {
               ("Aus dem Strom zählen Textstücke und Rücknahmen. Kam die Antwort aus Mail oder fremdem Text, wird sie "
                "so markiert, damit die nächste Frage gesperrt beginnt. Eine Rückfrage des Panels wird in Telegram zu "
                "Knöpfen, die wie eine getippte Antwort zurückkommen; ohne Rückfrage werden die Beispielsätze von „Das "
-               "kannst du auch sagen“ zu Antworttasten.",
+               "kannst du auch sagen“ zu Antworttasten. Die Sofort-Karte von Finden (ein Treffer klar vorn) wird ein "
+               "Knopf „Original öffnen“ zur Panel-Adresse für Links (#fund=, nur Navigation), wenn sie eingetragen ist.",
                "From the stream, pieces of text and retractions count. If the answer came from mail or outside text it "
                "is marked so, so the next question starts locked. A question back from the panel becomes buttons in "
                "Telegram that come back like a typed answer; without one, the example sentences of „You can also say“ "
-               "become reply buttons.")),
+               "become reply buttons. Find's Sofort-Karte (one hit clearly ahead) becomes a button „Original öffnen“ "
+               "to the panel's address for links (#fund=, only navigation) when one is entered.")),
             S("s9", "schritt", ("Ausgabe je Kanal", "Output per channel"),
               ("Text ohne Markdown · Ton für die Uhr", "text without Markdown · sound for the watch"),
               ("Telegram bekommt reinen Text und, wenn das Profil es will, eine Sprachnachricht in seiner Stimme. Siri "

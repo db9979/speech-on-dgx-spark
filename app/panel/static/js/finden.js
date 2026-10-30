@@ -5,6 +5,8 @@
 // „Einstellungen“: per source how many entries and how fresh, „Neu aufbauen“, „Index löschen“. Titles, fields and tags
 // come from documents and mails (Stufe B, fundmail.py) and are only ever text (esc, textContent), never markup; a mail
 // opens on the page E-Mail in its folder, an attachment's mail likewise. Strg K offers „In meinen Daten finden“.
+// Stufe D: tags of the model shown dashed with „vom Modell“, points of the Wissenskarte with their dot, „Neu vom Modell“
+// on the tab Schlagworte (✓ keeps, × removes for good), the Sofort-Karte's „Original öffnen“ (fundTreffer).
 // Stufe C (fundquellen.py): appointments open the calendar on their day, contacts, lists, conversations, reminders,
 // pictures and songs their own page; a period („letzte Woche“) or an event („vom OP“) in the typed words shows as a
 // line with what the panel made of it (deutung: the appointment's day, or that there is none).
@@ -14,7 +16,7 @@ window.fundStart=who=>{FUND_ON=!!(who&&who.profile&&who.find);window.FUND_ON=FUN
   document.querySelectorAll('nav button[data-s=finden]').forEach(b=>b.hidden=!FUND_ON)};
 const fundWhen=s=>s?new Date(s*1000).toLocaleDateString(L==='en'?'en-GB':'de-DE',{dateStyle:'medium'}):'';
 const FUND_TYP={kategorie:['Kategorie','Category'],person:['Person','Person'],firma:['Firma','Company'],ort:['Ort','Place'],frei:['Schlagwort','Tag']};
-const FUND_FROM={regel:['Regel','rule'],modell:['Modell','model'],hand:['von dir','yours'],dokument:['Steckbrief','profile card']};
+const FUND_FROM={regel:['Regel','rule'],modell:['vom Modell','by the model'],hand:['von dir','yours'],dokument:['Steckbrief','profile card']};
 const FUND_FELD={absender:['Absender','Sender'],an:['An','To'],betrag:['Betrag','Amount'],nr:['Nummer','Number'],datum:['Datum','Date'],name:['Datei','File'],anhaenge:['Anhänge','Attachments'],kb:['Größe (KB)','Size (KB)'],
   ort:['Ort','Place'],kalender:['Kalender','Calendar'],firma:['Firma','Company'],kanal:['Kanal','Channel'],fragen:['Fragen','Questions'],offen:['Offen','Open'],erledigt:['Erledigt','Done'],wiederholt:['Wiederholt','Repeats'],format:['Format','Format']};
 // what the panel read from the typed words: a period and an event of the own calendar (fund.zeitraum, fund.bezug_aus)
@@ -45,7 +47,9 @@ async function fundRun(){const seq=++FUND.seq;const body={worte:FUND.q.trim()};i
   const {r,d}=await apiTry('/api/profile/fund/suche',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(seq!==FUND.seq)return;
   if(r.ok){FUND.hits=d.treffer||[];FUND.deut=d.deutung||null;FUND.msg='';FUND.err=false}else{FUND.hits=[];FUND.deut=null;FUND.msg=errSay(r.status,d.detail,'');FUND.err=true}fundDraw()}
 const fundSrc=n=>{const q=((FUND.stand&&FUND.stand.quellen)||[]).find(x=>x.name===n);return q?t(q.de,q.en):n};
-const fundTag=x=>`<span class="pill fundtag${x.herkunft==='hand'?' on':''}" title="${esc(t(...(FUND_TYP[x.typ]||[x.typ,x.typ]))+' · '+t(...(FUND_FROM[x.herkunft]||[x.herkunft,x.herkunft])))}">${esc(x.wert)}</span>`;
+// Stufe D: a tag of the model has a dashed edge and says „vom Modell“; a person, company or place that is a point of
+// the Wissenskarte has a dot in that point's colour (wk-k-…); an own tag is filled
+const fundTag=x=>`<span class="pill fundtag${x.herkunft==='hand'?' on':''}${x.herkunft==='modell'?' modell':''}" title="${esc(t(...(FUND_TYP[x.typ]||[x.typ,x.typ]))+' · '+t(...(FUND_FROM[x.herkunft]||[x.herkunft,x.herkunft])))}">${x.knoten?`<i class="wkdot wk-k-${esc(x.typ)}" aria-hidden="true"></i>`:''}${esc(x.wert)}${x.herkunft==='modell'?` <small>${esc(t('vom Modell','by the model'))}</small>`:''}</span>`;
 function fundPaint(w){w.classList.toggle('ld-sel',!!FUND.item);
   if(!w.querySelector('.ld-split'))w.innerHTML=`<div class="ld-split"><div class="ld-list"></div><div class="ld-detail funddet" hidden></div></div>`;
   const list=w.querySelector('.ld-list'),S=FUND.stand;
@@ -78,7 +82,7 @@ function fundDetail(w){const det=w.querySelector('.funddet'),it=FUND.item;if(!it
     <ul class="facts fundtaglist">${(it.tags||[]).map((x,i)=>`<li><span>${fundTag(x)} <small class="mut">${esc(t(...(FUND_TYP[x.typ]||[x.typ,x.typ])))} · ${esc(t(...(FUND_FROM[x.herkunft]||[x.herkunft,x.herkunft])))}</small></span><span>${x.herkunft==='hand'?'':`<button type="button" class="b" data-fundkeep="${i}" title="${esc(t('Behalten','Keep'))}">✓</button>`} <button type="button" class="b" data-fundrm="${i}" title="${esc(t('Entfernen','Remove'))}" aria-label="${esc(t('Entfernen','Remove'))}">×</button></span></li>`).join('')||`<li class="mut">${esc(t('Noch keine.','None yet.'))}</li>`}</ul>
     <div class="row"><select class="fundtyp" aria-label="${esc(t('Art des Schlagworts','Kind of tag'))}">${Object.keys(FUND_TYP).map(k=>`<option value="${k}">${esc(t(...FUND_TYP[k]))}</option>`).join('')}</select>
       <input type="text" class="fundneu" maxlength="60" placeholder="${esc(t('Neues Schlagwort','New tag'))}" aria-label="${esc(t('Neues Schlagwort','New tag'))}" list="fundkatlist">
-      <datalist id="fundkatlist">${((FUND.stand&&FUND.stand.kategorien)||[]).map(k=>`<option value="${esc(k.wert)}">`).join('')}</datalist>
+      <datalist id="fundkatlist">${((FUND.stand&&FUND.stand.kategorien)||[]).map(k=>`<option value="${esc(k.wert)}">`).join('')}${Object.values((FUND.stand&&FUND.stand.knoten)||{}).flat().map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
       <button type="button" class="b" data-fundadd="1">+ ${esc(t('Hinzufügen','Add'))}</button></div>
     ${(it.minus||[]).length?`<div class="mut small">${esc(t('Entfernt (kommt nicht wieder): ','Removed (does not come back): '))}${it.minus.map(x=>esc(x.wert)).join(', ')}</div>`:''}
     <div class="row">${it.weg?`<button type="button" class="b p" data-fundgo="1">${esc(t('Öffnen','Open'))}</button>`:''}</div>
@@ -92,6 +96,15 @@ function fundGo(w,it){
   else if(w.art==='erinnerung'&&typeof openMe==='function')openMe('notebox');
   else if(w.art==='bild'&&typeof openMe==='function')openMe('bildbox');
   else if(w.art==='musik'&&typeof openMe==='function')openMe('musikbox')}
+// „Öffnen“: the original of an entry on its own page (a document, a Wissensbuch page, a mail, the other sources)
+async function fundOriginal(it){const w=it.weg||{};if(w.art==='dokument'){if(typeof openMe==='function')await openMe('docbox');if(typeof docView==='function')docView(w.id)}
+  else if(w.art==='wissensbuch'&&typeof WB!=='undefined'){WB.sel=w.id;icTabSet('wbuch','show');goSec('wbuch')}
+  else if(w.art==='mail'||w.art==='anhang')await fundMail(w);
+  else fundGo(w,it)}
+// Stufe D: the Sofort-Karte under an answer („Original öffnen“, chat.js) and #fund=<id> from Telegram (start.js): the
+// entry as the server gives it to this profile, then its original; nothing else happens
+window.fundTreffer=async id=>{if(!FUND_ON||!/^\d{1,12}$/.test(String(id)))return;const {r,d}=await apiTry('/api/profile/fund/eintrag/'+encodeURIComponent(id));
+  if(!r.ok){FUND.item=null;icTabSet('finden','show');goSec('finden');fundSay(errSay(r.status,d.detail,''),true);return}await fundOriginal(d)};
 // the own tags: what stays (plus) and what is gone for good (minus), sent whole each time
 async function fundTags(plus,minus){const it=FUND.item;if(!it)return;
   const {r,d}=await apiTry('/api/profile/fund/eintrag/'+encodeURIComponent(it.id)+'/schlagworte',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({plus,minus})});
@@ -100,10 +113,7 @@ const fundOwn=()=>{const it=FUND.item;return{plus:(it.tags||[]).filter(x=>x.herk
 {document.body.addEventListener('click',async e=>{const b=e.target.closest('#fundview [data-fundback],#fundview [data-fundkeep],#fundview [data-fundrm],#fundview [data-fundadd],#fundview [data-fundgo]');if(!b)return;const D=b.dataset,it=FUND.item;
   if(D.fundback){FUND.item=null;fundDraw();return}
   if(!it)return;const own=fundOwn();
-  if(D.fundgo){const w=it.weg||{};if(w.art==='dokument'){if(typeof openMe==='function')await openMe('docbox');if(typeof docView==='function')docView(w.id)}
-    else if(w.art==='wissensbuch'&&typeof WB!=='undefined'){WB.sel=w.id;icTabSet('wbuch','show');goSec('wbuch')}
-    else if(w.art==='mail'||w.art==='anhang')await fundMail(w);
-    else fundGo(w,it);return}
+  if(D.fundgo)return fundOriginal(it);
   if(D.fundkeep!==undefined){const x=it.tags[+D.fundkeep];if(!x)return;own.plus.push({typ:x.typ,wert:x.wert});return fundTags(own.plus,own.minus)}
   if(D.fundrm!==undefined){const x=it.tags[+D.fundrm];if(!x)return;own.plus=own.plus.filter(y=>!(y.typ===x.typ&&y.wert===x.wert));
     if(x.herkunft!=='hand')own.minus.push({typ:x.typ,wert:x.wert});return fundTags(own.plus,own.minus)}
@@ -113,8 +123,19 @@ function fundWorte(w){const S=FUND.stand;if(!S){w.innerHTML=`<div class="mut">${
   const k=S.kategorien||[];
   w.innerHTML=`<p class="mut">${esc(t('Die Kategorien sind eine feste Liste. Tippe eine an, um ihre Einträge zu sehen. Eigene Schlagworte setzt du am Eintrag; sie gehen immer vor.','The categories are a fixed list. Tap one to see its entries. Own tags are set on the entry; they always come first.'))}</p>
     <ul class="facts">${k.map(x=>`<li><span><a href="#" data-fundkat="${esc(x.wert)}">${esc(x.wert)}</a> <small class="mut">${esc(x.bereich?t('Bereich','Area'):t('Art','Kind'))}</small></span><b>${x.n}</b></li>`).join('')}</ul>
-    <div class="mut">${esc(t(`${S.eigene} eigene Schlagworte`,`${S.eigene} own tags`))}</div>`;
-  w.querySelectorAll('[data-fundkat]').forEach(a=>a.onclick=e=>{e.preventDefault();FUND.kat=a.dataset.fundkat;FUND.q='';FUND.item=null;icTabSet('finden','show');goSec('finden');fundRun()})}
+    <div class="mut">${esc(t(`${S.eigene} eigene Schlagworte`,`${S.eigene} own tags`))}</div>
+    ${S.modell?`<h4>${esc(t('Neu vom Modell','New from the model'))}</h4>
+    <p class="mut small">${esc(t(`Vorschläge des Sprachmodells, nach festen Regeln geprüft. ✓ übernimmt eines als deins, × entfernt es für immer. Noch ${S.modell_offen||0} Einträge ohne Vorschlag.`,`Proposals of the language model, checked by fixed rules. ✓ keeps one as yours, × removes it for good. ${S.modell_offen||0} entries still without a proposal.`))}</p>
+    <ul class="facts fundmneu">${(S.modell_neu||[]).map((x,i)=>`<li><span>${fundTag(x)} <small class="mut">${esc(x.titel||'?')}</small></span><span><button type="button" class="b" data-fundmok="${i}" title="${esc(t('Übernehmen','Keep'))}">✓</button> <button type="button" class="b" data-fundmweg="${i}" title="${esc(t('Entfernen','Remove'))}" aria-label="${esc(t('Entfernen','Remove'))}">×</button></span></li>`).join('')||`<li class="mut">${esc(t('Gerade nichts Neues.','Nothing new right now.'))}</li>`}</ul>`:''}
+    <div class="fundmsg ${FUND.err?'err':'mut'}" role="status">${esc(FUND.msg)}</div>`;
+  w.querySelectorAll('[data-fundkat]').forEach(a=>a.onclick=e=>{e.preventDefault();FUND.kat=a.dataset.fundkat;FUND.q='';FUND.item=null;icTabSet('finden','show');goSec('finden');fundRun()});
+  // ✓ and × on a proposal: the entry's own lists as the server has them now, then the one change (Hand vor Modell)
+  w.querySelectorAll('[data-fundmok],[data-fundmweg]').forEach(b=>b.onclick=async()=>{const x=(S.modell_neu||[])[+(b.dataset.fundmok??b.dataset.fundmweg)];if(!x)return;
+    const {r,d}=await apiTry('/api/profile/fund/eintrag/'+encodeURIComponent(x.id));if(!r.ok){fundSay(errSay(r.status,d.detail,''),true);return}
+    const plus=(d.tags||[]).filter(y=>y.herkunft==='hand').map(y=>({typ:y.typ,wert:y.wert})),minus=(d.minus||[]).slice();
+    if(b.dataset.fundmok!==undefined)plus.push({typ:x.typ,wert:x.wert});else minus.push({typ:x.typ,wert:x.wert});
+    const s=await apiTry('/api/profile/fund/eintrag/'+encodeURIComponent(x.id)+'/schlagworte',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({plus,minus})});
+    if(!s.r.ok){fundSay(errSay(s.r.status,s.d.detail,''),true);return}fundSay(b.dataset.fundmok!==undefined?t('Übernommen. Es gilt jetzt als deins.','Kept. It counts as yours now.'):t('Entfernt. Das Modell schlägt es hier nie wieder vor.','Removed. The model never proposes it here again.'));fundStand()})}
 function fundSettings(b){let s=$('fundset');if(!s){b.textContent='';s=document.createElement('div');s.id='fundset';s.className='card';b.appendChild(s)}fundSettingsPaint(s)}
 function fundSettingsPaint(s){const S=FUND.stand;if(!S){s.innerHTML=`<div class="fundmsg ${FUND.err?'err':'mut'}" role="status">${esc(FUND.msg||t('Lade …','Loading …'))}</div>`;return}
   s.innerHTML=`<h3>${esc(t('Suchindex','Search index'))}</h3>

@@ -533,7 +533,7 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "c3e8f0ccde",
+        "stand": "a8d814f290",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -596,12 +596,16 @@ SEITEN = {
                "Verlangt die Frage ein Werkzeug, muss das Modell eines wählen (tool_choice), mit eigener Temperatur. "
                "Die fünfte Runde hat keine Liste mehr: das Modell hört, dass es jetzt antworten soll. Geräte ohne "
                "Bildschirm (Lautsprecher, Telefon, Uhr, Siri, Android-Assistent, CarPlay) bekommen höchstens "
-               "{chat.SPOKEN_MAX_TOKENS} Tokens; eine längere Antwort endet am letzten ganzen Satz.",
+               "{chat.SPOKEN_MAX_TOKENS} Tokens; eine längere Antwort endet am letzten ganzen Satz. Gibt ein Werkzeug "
+               "den festen Satz des Panels zurück (Sofort-Karte von Finden: ein Treffer klar vorn), endet die Antwort "
+               "dort: gezeigt wird der ganze Satz, gesprochen seine kurze Form, das Modell wird nicht mehr gefragt.",
                "Offered is the list without locked tools, tools stopped after errors or used too often. When the "
                "question needs a tool, the model must choose one (tool_choice), with its own temperature. The fifth "
                "round has no list: the model is told to answer now. Devices without a screen (speaker, phone, watch, "
                "Siri, Android assistant, CarPlay) get at most {chat.SPOKEN_MAX_TOKENS} tokens; a longer answer ends at "
-               "its last full sentence.")),
+               "its last full sentence. When a tool hands back the panel's fixed sentence (Find's Sofort-Karte: one hit "
+               "clearly ahead), the answer ends there: the whole sentence is shown, its short form spoken, the model "
+               "is not asked again.")),
             S("s5", "schritt", ("Streamen und in Sätze schneiden", "Stream and cut into sentences"),
               ("erster Satz ab {chat.FIRST_CUT} Zeichen am Komma", "first sentence cut at a comma after {chat.FIRST_CUT} characters"),
               ("Die Antwort kommt Stück für Stück. Denktext und als Text geschriebene Werkzeugaufrufe werden nie "
@@ -795,7 +799,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "87b91c9922",
+        "stand": "71fad39436",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_AFTER_MAIL": ["s4"],
@@ -882,12 +886,15 @@ SEITEN = {
                "draußen gehen über den Wächter. Home Assistant liest Zustände aus der Kopie der Live-Verbindung "
                "(halive.states), solange sie für genau diese Adresse und diesen Schlüssel steht, sonst über HTTP. Den "
                "Zeitraum der Websuche bestimmen die eigenen Worte der Frage und die Suchwörter (frisch.zeitraum), nie "
-               "die Zeitangabe des Panels.",
+               "die Zeitangabe des Panels. Eine Erweiterung kann statt einer Antwort des Modells den festen Satz des "
+               "Panels übergeben (ctx „fest“, die Sofort-Karte von Finden); das Modell formuliert ihn nie um.",
                "Extensions get profile, device and origin from the panel, never from the model. Smart home changes need "
                "the code word in the latest message when one is set. Connections to outside services go through the "
                "guard. Home Assistant reads states from the live connection's copy (halive.states) while it stands for "
                "exactly this address and key, else over HTTP. The period of the web search comes from the question's own "
-               "words and the query (frisch.zeitraum), never from the panel's time note.")),
+               "words and the query (frisch.zeitraum), never from the panel's time note. An extension can hand over the "
+               "panel's fixed sentence instead of a model answer (ctx „fest“, Find's Sofort-Karte); the model never "
+               "rewords it.")),
             S("s8", "schritt", ("Fehler als Satz", "Errors as a sentence"),
               ("„nicht erreichbar“, nie raten", "„not reachable“, never guess"),
               ("Ist ein Dienst nicht erreichbar, wird daraus ein kurzer Ergebnis-Text („nicht erreichbar“, „Suche "

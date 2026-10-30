@@ -80,6 +80,9 @@ async function startPage(){let who=null;try{who=await (await /*raw: the first wh
   // #kal=YYYY-MM-DD from the Begleiter („Als Nächstes“, Begleiter nachziehen 7a): the page Kalender on that day
   try{const k=/^#kal=(\d{4})-(\d{2})-(\d{2})$/.exec(location.hash);if(k){history.replaceState(null,'',location.pathname+location.search);
     if(PROFILE&&typeof KAL!=='undefined'&&$('cal')){KAL.day=new Date(+k[1],k[2]-1,+k[3]);icTabSet('cal','show');goSec('cal')}}}catch{}
+  // #fund=<id> from Telegram's Sofort-Karte (fund.py): the original of that entry of Finden, as the server gives it
+  try{const f=/^#fund=(\d{1,12})$/.exec(location.hash);if(f){history.replaceState(null,'',location.pathname+location.search);
+    if(PROFILE&&typeof fundTreffer==='function')fundTreffer(f[1])}}catch{}
   // #weg=<a way like „Ich → Sicherheit“> from the apps, mails and messages: opens it like a Sprung-Link (way.js)
   try{if(typeof wayHash==='function')wayHash()}catch{}
   // #meldung=<number> from a tapped notification: the note as a card above the conversation (mitteilung.js)
