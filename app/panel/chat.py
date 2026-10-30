@@ -2641,14 +2641,17 @@ async def text_ask(request, prof, body, who="siri"):
 DESK_GOTO = {"cal": ("Im Kalender ansehen", "#me=calbox"), "post": ("Mail öffnen", "#me=mailbox"),
              "fund": ("In Finden ansehen", "#me=fundbox"),
              "mem": ("Gedächtnis ansehen", "#me=factbox")}
+# Finden's Sofort-Karte (fund.py, Stufe E): one entry clearly ahead also opens its original (#fund=<number>, start.js),
+# the Begleiter takes only this form beside the pages of DESK_GOTO
+DESK_ORIGINAL = ("Original öffnen", "#fund=")
 
 
 def desk_cards(steps, cards, mems=(), undo=False):
     """Frag Spark im Begleiter (Begleiter nachziehen 5a, Dominik 2026-10-20): the same events the page shows under an
     answer, in fixed words for a program without a page: "steps" one line (the readable tool names, ok or not, the
     time), "cards" [{"title", "buttons": [{"label", "send" | "open" | "focus", "main"?}]}]. A "send" button sends its
-    word like a typed answer, so the module that asked decides with its own rules; "open" is only a page of DESK_GOTO;
-    "focus" puts the cursor in the field. Nothing on a card comes from the model but the parts of „A oder B?“
+    word like a typed answer, so the module that asked decides with its own rules; "open" is only a page of DESK_GOTO
+    or an entry of Finden (DESK_ORIGINAL, the Sofort-Karte); "focus" puts the cursor in the field. Nothing on a card comes from the model but the parts of „A oder B?“
     (ablauf.asks: the answer's own words, never after mail or outside text). mems: what memory_save kept in this answer
     (Gemerkt-Hinweis, gemerkt.note): a card „Gemerkt: …“ with „Rückgängig“ (sends „Mach das rückgängig“, so the
     undo asks for its yes like a typed one; only with undo on) and „Gedächtnis ansehen“."""
@@ -2662,7 +2665,7 @@ def desk_cards(steps, cards, mems=(), undo=False):
         sec = sum(int(ev.get("ms") or 0) for ev in steps) / 1000
         out["steps"] = (f"{len(steps)} Werkzeug{'' if len(steps) == 1 else 'e'} benutzt · " + f"{sec:.1f}".replace(".", ",")
                         + " s" + (": " + ", ".join(names[:4]) if names else ""))
-    shown, goto = [], []
+    shown, goto, original = [], [], ""
     for ev in cards:
         if ev.get("type") == "confirm":
             shown.append({"title": str(ev.get("de") or "Vorschlag")[:30] + " wartet auf dein Ja",
@@ -2677,8 +2680,13 @@ def desk_cards(steps, cards, mems=(), undo=False):
                 shown.append({"title": "", "buttons": buttons})
         elif ev.get("type") == "goto" and ev.get("to") in DESK_GOTO and ev["to"] not in goto:
             goto.append(ev["to"])
+            if ev["to"] == "fund" and re.fullmatch(r"[0-9]{1,12}", str(ev.get("id") or "")):
+                original = str(ev["id"])   # the Sofort-Karte: only an entry's number, the Spark checks it again on opening
     if goto:
-        shown.append({"title": "", "buttons": [{"label": DESK_GOTO[k][0], "open": DESK_GOTO[k][1]} for k in goto]})
+        buttons = [{"label": DESK_GOTO[k][0], "open": DESK_GOTO[k][1]} for k in goto]
+        if original:
+            buttons.insert(goto.index("fund"), {"label": DESK_ORIGINAL[0], "open": DESK_ORIGINAL[1] + original, "main": True})
+        shown.append({"title": "", "buttons": buttons})
     if mems:   # the facts are the person's own words (memory_save), shown on the own computer only
         text = "; ".join(str(m.get("text") or "") for m in mems)
         shown.append({"title": ("Gemerkt: " + text)[:60], "buttons": (

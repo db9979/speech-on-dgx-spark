@@ -4636,6 +4636,27 @@
 "titel": "Spark verwalten: App vor dem zweiten Schritt gekoppelt, einmal mit Code bestätigen",
 "text": "Mit einem Admin-Profil, dessen iPhone-App vor dem (neu eingerichteten) zweiten Schritt gekoppelt wurde: in der App „Spark verwalten“ öffnen, nach Face ID steht „Dein Profil ist gerade kein Admin.“ mit dem Grund „gekoppelt, bevor der zweite Anmeldeschritt … eingerichtet wurde“ und dem Knopf „Mit Code bestätigen“. Ein falscher Code ändert nichts; mit dem richtigen Code (oder Passkey) erscheinen Überblick, Logs und Ändern. Unter Logs → Diagnose (Bereich Apps) stehen „iphone: admin step …“-Zeilen ohne Namen, im Admin-Protokoll „Anmeldung eines Admin-Profils“. Danach den zweiten Schritt im Browser neu einrichten: die App ist wieder kein Admin und fragt erneut.",
 "thread": "Fix Spark verwalten in der iPhone-App"
+},
+{
+"id": "P687",
+"v": 1267,
+"titel": "Finden auf dem iPhone: suchen, Schlagwort ändern, im Panel sichtbar",
+"text": "Mit „Finden in allen Daten“ freigegeben in der iPhone-App Meine Sachen → Finden öffnen: „Rechnung“ suchen, die Chips Quelle, Kategorie und Zeitraum ändern die Treffer. Einen Treffer öffnen: Felder, Schlagworte mit Herkunft, bei einer Mail ihre Anhänge. Ein Schlagwort mit + hinzufügen und eines mit × entfernen; danach im Panel unter Finden derselbe Eintrag mit denselben eigenen Schlagworten. „Original öffnen“ zeigt den Eintrag in der Panel-Ansicht. Sperrt der Admin Finden für das Profil, verschwindet die Zeile Finden.",
+"thread": "Alles schnell finden über einen Index"
+},
+{
+"id": "P688",
+"v": 1267,
+"titel": "Finden: Sofort-Karte im iPhone-Chat und im Begleiter öffnet das Original",
+"text": "Mit nur einer Thomann-Rechnung im Index „Such mir die Rechnung von Thomann“ in der iPhone-App fragen: unter der Antwort „Original öffnen“ (öffnet das Panel in der App bei dieser Rechnung) und „In Finden ansehen“. Dieselbe Frage im Begleiter auf Windows und auf dem Mac: zuerst „Original öffnen“, es öffnet das Panel bei derselben Rechnung, daneben „In Finden ansehen“.",
+"thread": "Alles schnell finden über einen Index"
+},
+{
+"id": "P689",
+"v": 1267,
+"titel": "Finden: Messung auf dem Pi",
+"text": "Auf dem Pi `sudo speech-spark finden messen` (dauert einige Minuten): die Zeile „fund: messung | 50000 mails | 10000 anhaenge | 5000 dokumente | p50 … ms | p95 … ms …“ erscheint, danach „fund: messung ziel | 95 % unter 150 ms | erreicht … % | ja“. Unter Zustand → Live im Kasten Finden steht „Messung 50000 Mails: p50 … ms, p95 … ms …“. Kein Profil hat danach neue Einträge, neben users/ bleibt kein Ordner fundmessung-… liegen. p95 und die Größe von fund.db bitte zurückmelden.",
+"thread": "Alles schnell finden über einen Index"
 }
 ]
 }

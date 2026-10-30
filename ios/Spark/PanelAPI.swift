@@ -36,6 +36,13 @@ extension SparkAPI {
         return URL(string: base.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + "/#" + place)
     }
 
+    /// Finden's Sofort-Karte (fund.py, Stufe E): „Original öffnen“ in the panel inside the app, #fund=<number> only
+    /// (start.js opens the entry's original as the Spark gives it to this profile)
+    static func fundLink(_ id: Int) -> URL? {
+        guard let base = Store.baseURL, (1...999_999_999_999).contains(id) else { return nil }
+        return URL(string: base.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + "/#fund=" + String(id))
+    }
+
     /// Ways into the panel in a text ("Einschalten im Panel unter Ich → iPhone-App"): same rule as wege.py on the
     /// Spark. "Einstellungen → …" without "Panel" right before it is the iPhone's own settings, not a way.
     static let wayRoots = "Einstellungen|Funktionen|Zustand|Personen und Geräte|Ich|Settings|Features|Status|People and devices|Me|Kalender|Calendar|E-Mail|E-mail|Kontakte|Contacts|Wissensbuch|Knowledge book|Fernzugang|Remote access"

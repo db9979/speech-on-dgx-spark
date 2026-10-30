@@ -259,23 +259,31 @@ def _lesen(uid, aid, fkey, rolle, box, uids, now, ende):
             i += 1
             msg = _holen(box, u)
             batch.append((u, eintraege(aid, fkey, rolle, u, msg) if msg is not None else None))
-        with fund._Db(uid) as con:   # one transaction per slice (the SD card)
-            for u, got in batch:
-                if got is None:
-                    continue
-                m, anh = got
-                mid = fund.put_sealed(con, uid, "mail", m, now)
-                if mid is None:
-                    raise RuntimeError("no key")
-                old = [r[0] for r in con.execute("SELECT id FROM fund_item WHERE eltern=?", (mid,))]
-                fund._drop(con, old)
-                for a in anh:
-                    fund.put_sealed(con, uid, "anhang", a, now, eltern=mid)
+        schreiben(uid, [got for _, got in batch], now)
+        done += [u for u, _ in batch]
+    return done
+
+
+def schreiben(uid, batch, now, zaehlen=True):
+    """One slice into the index in one transaction (the SD card): each (mail, [attachments]) of eintraege sealed through
+    fund.put_sealed, the mail's old attachments replaced; None in the batch is a mail that could not be fetched.
+    The measurement (fundmessung.py) writes through here too, without counting (zaehlen)."""
+    with fund._Db(uid) as con:
+        for got in batch:
+            if got is None:
+                continue
+            m, anh = got
+            mid = fund.put_sealed(con, uid, "mail", m, now)
+            if mid is None:
+                raise RuntimeError("no key")
+            old = [r[0] for r in con.execute("SELECT id FROM fund_item WHERE eltern=?", (mid,))]
+            fund._drop(con, old)
+            for a in anh:
+                fund.put_sealed(con, uid, "anhang", a, now, eltern=mid)
+            if zaehlen:
                 _count.bump("mails")
                 if anh:
                     _count.bump("anhaenge", len(anh))
-        done += [u for u, _ in batch]
-    return done
 
 
 def _ordner(uid, aid, box, name, rolle, now, ende, ruhig, who):

@@ -2075,6 +2075,12 @@ def snapshot(view="admin", now=None):
                            f"{fnd.get('tag_weg', 0)} verworfen, {fnd.get('tag_offen', 0)} offen" if fnd.get("tag_on") else "")
                         + (f", {fnd['tag_fehler']} Fehler" if fnd.get("tag_on") and fnd.get("tag_fehler") else "")
                         + (f" · Sofort-Karten heute {fnd['sofort']}" if fnd.get("sofort") else "")
+                        # Stufe E: the last measurement (sudo speech-spark finden messen): searches p50/p95, reading in,
+                        # the file and the RAM (numbers only)
+                        + (f" · Messung {fnd['messung'].get('mails', 0)} Mails: p50 {fnd['messung'].get('p50_ms', 0)} ms, "
+                           f"p95 {fnd['messung'].get('p95_ms', 0)} ms, {fnd['messung'].get('einlesen_1000_s', 0)} s je 1000, "
+                           f"{fnd['messung'].get('db_mb', 0)} MB, RAM {fnd['messung'].get('ram_mb', 0)} MB"
+                           if isinstance(fnd.get("messung"), dict) else "")
                         + (" · liest ein" if fnd.get("running") else ""))
         if x["id"] == "dungeon":   # Dungeon-Master: rounds, players and guests, turns, loot, levels, campaigns, read aloud and spoken today, stories with acts moved on and proposals, markets, purchases and sales, pictures painted, discarded and on their way, game dates and notes sent, music pieces made ahead, world truths, summaries, rewrites and thumbs, rounds waiting and table talk lines (numbers only, never a name or a text)
             x["sub"] = (f"{dgn.get('runden', 0)} Runden · {dgn.get('spieler', 0)} Spieler, {dgn.get('online', 0)} da, {dgn.get('gaeste', 0)} Gäste"

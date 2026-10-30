@@ -10,6 +10,7 @@
 // Stufe C (fundquellen.py): appointments open the calendar on their day, contacts, lists, conversations, reminders,
 // pictures and songs their own page; a period („letzte Woche“) or an event („vom OP“) in the typed words shows as a
 // line with what the panel made of it (deutung: the appointment's day, or that there is none).
+// Stufe E: a mail's attachments listed in its detail („Zu Dokumenten übernehmen“ follows with wissen.aufnehmen).
 const FUND={q:'',quelle:'',kat:'',hits:null,sel:0,item:null,stand:null,msg:'',err:false,seq:0,deut:null};
 let FUND_ON=false;
 window.fundStart=who=>{FUND_ON=!!(who&&who.profile&&who.find);window.FUND_ON=FUND_ON;
@@ -77,7 +78,7 @@ function fundDetail(w){const det=w.querySelector('.funddet'),it=FUND.item;if(!it
   det.hidden=false;const f=it.felder||{};
   det.innerHTML=`<button class="b ld-back" type="button" data-fundback="1">‹ ${esc(OWN_PAGES.fundbox[1])}</button><h3>${esc(it.titel||'?')}</h3>
     <div class="mut">${esc(fundSrc(it.quelle))}${it.wann?' · '+esc(fundWhen(it.wann)):''}</div>
-    <ul class="facts small">${Object.keys(FUND_FELD).filter(k=>f[k]).map(k=>`<li><span>${esc(t(...FUND_FELD[k]))}</span><b>${esc(Array.isArray(f[k])?f[k].join(', '):String(f[k]))}</b></li>`).join('')}</ul>
+    <ul class="facts small">${Object.keys(FUND_FELD).filter(k=>f[k]&&!(k==='anhaenge'&&(it.anhaenge||[]).length)).map(k=>`<li><span>${esc(t(...FUND_FELD[k]))}</span><b>${esc(Array.isArray(f[k])?f[k].join(', '):String(f[k]))}</b></li>`).join('')}</ul>
     ${it.auszug?`<p class="mut">${esc(it.auszug)}</p>`:''}
     <h4>${esc(t('Schlagworte','Tags'))}</h4>
     <ul class="facts fundtaglist">${(it.tags||[]).map((x,i)=>`<li><span>${fundTag(x)} <small class="mut">${esc(t(...(FUND_TYP[x.typ]||[x.typ,x.typ])))} · ${esc(t(...(FUND_FROM[x.herkunft]||[x.herkunft,x.herkunft])))}</small></span><span>${x.herkunft==='hand'?'':`<button type="button" class="b" data-fundkeep="${i}" title="${esc(t('Behalten','Keep'))}">✓</button>`} <button type="button" class="b" data-fundrm="${i}" title="${esc(t('Entfernen','Remove'))}" aria-label="${esc(t('Entfernen','Remove'))}">×</button></span></li>`).join('')||`<li class="mut">${esc(t('Noch keine.','None yet.'))}</li>`}</ul>
@@ -86,6 +87,7 @@ function fundDetail(w){const det=w.querySelector('.funddet'),it=FUND.item;if(!it
       <datalist id="fundkatlist">${((FUND.stand&&FUND.stand.kategorien)||[]).map(k=>`<option value="${esc(k.wert)}">`).join('')}${Object.values((FUND.stand&&FUND.stand.knoten)||{}).flat().map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
       <button type="button" class="b" data-fundadd="1">+ ${esc(t('Hinzufügen','Add'))}</button></div>
     ${(it.minus||[]).length?`<div class="mut small">${esc(t('Entfernt (kommt nicht wieder): ','Removed (does not come back): '))}${it.minus.map(x=>esc(x.wert)).join(', ')}</div>`:''}
+    ${(it.anhaenge||[]).length?`<h4>${esc(t('Anhänge','Attachments'))}</h4><ul class="facts fundanh">${it.anhaenge.map(a=>`<li><span>${esc(a.titel||'?')}</span></li>`).join('')}</ul>`:''}
     <div class="row">${it.weg?`<button type="button" class="b p" data-fundgo="1">${esc(t('Öffnen','Open'))}</button>`:''}</div>
     <div class="fundmsg ${FUND.err?'err':'mut'}" role="status">${esc(FUND.msg)}</div>`}
 // Stufe C: each source on its own page (the day of an appointment, the card of a contact, the list, the conversation)

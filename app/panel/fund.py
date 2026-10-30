@@ -539,17 +539,45 @@ def klar(uid, item):
     return offen(uid, q, e, "titel", item["titel"]), offen(uid, q, e, "auszug", item["auszug"]), f
 
 
+MK_MOST = 50_000         # word marks kept per profile in RAM (Stufe E: the same words come again and again)
+_mk, _mk_lock = {}, threading.Lock()   # uid -> (the key they were made with, {word: mark})
+
+
+def _marke(uid, wort):
+    """vorrat.marke, remembered per profile while the Spark's key stays the same (the same word always gives the same
+    mark): reading in 50 000 mails made the same marks a million times, base32 and HMAC were most of the time
+    (measurement of Stufe E). Never shared between profiles; a new key starts empty."""
+    k = vorrat.key("vorrat")
+    if not k or not uid:
+        return None
+    with _mk_lock:
+        got = _mk.get(uid)
+        if got is None or got[0] is not k:
+            if len(_mk) > 64:
+                _mk.clear()
+            got = _mk[uid] = (k, {})
+        m = got[1].get(wort)
+    if m is None:
+        m = vorrat.marke(uid, wort)
+        if m:
+            with _mk_lock:
+                if len(got[1]) >= MK_MOST:
+                    got[1].clear()
+                got[1][wort] = m
+    return m
+
+
 def marken(uid, text, absender=""):
     """The blind words of a sealed entry: per word stem its mark, per stem of four letters or more the mark of its
     first four (a search word finds the longer forms, like lokal.PREFIX), per word of the sender a mark of its own
     ("@", the filters firma and person). Marks only, never a word."""
     out = set()
     for t in terms(text):
-        out.add(vorrat.marke(uid, t))
+        out.add(_marke(uid, t))
         if len(t) >= 4:
-            out.add(vorrat.marke(uid, "~" + t[:4]))
+            out.add(_marke(uid, "~" + t[:4]))
     for t in terms(absender):
-        out.add(vorrat.marke(uid, "@" + t))
+        out.add(_marke(uid, "@" + t))
     out.discard(None)
     return sorted(out)
 
@@ -973,6 +1001,18 @@ def _tag_items(con, uid, typ, wert):
     return ids
 
 
+def _klar_absender(con, wert):
+    """Clear entries whose sender field holds wert word for word (norm). A plain word of letters and digits is looked
+    for in SQL first (instr on the stored fields: a necessary condition, also for the one sign that lowers to a plain
+    letter, the Kelvin sign), so 5 000 documents are not read as JSON for each search; the exact check stays here."""
+    w = norm(wert)
+    sql, args = "SELECT id, felder FROM fund_item WHERE schutz=0", []
+    if re.fullmatch(r"[a-z0-9]+", w):
+        sql += " AND (instr(lower(felder), ?) > 0" + (" OR instr(felder, ?) > 0)" if "k" in w else ")")
+        args = [w] + (["\u212a"] if "k" in w else [])
+    return {r[0] for r in con.execute(sql, args) if w in norm(json.loads(r[1] or "{}").get("absender", ""))}
+
+
 def _blind_from(con, uid, wert):
     """Items of sealed sources whose sender holds every word of wert (the "@" marks, fundmail)."""
     mk = [vorrat.marke(uid, "@" + t) for t in terms(wert)]
@@ -1044,16 +1084,43 @@ def _termin_fuer(con, uid, wort, now, kalender):
     return best
 
 
+class _Erlaubt:
+    """The entries that pass a search's conditions (sources, own mailboxes and calendars, period) and its tag filters,
+    asked in SQL only for the candidates the lists bring (at most a few hundred), never every id of 50 000 mails
+    read into a set first (the measurement of Stufe E: that alone took half the search). Same answer as the set."""
+    def __init__(self, con, where, args, ok_ids):
+        self.con, self.where, self.args, self.ok, self.known = con, where, list(args), ok_ids, {}
+
+    def vorab(self, ids):
+        new = [i for i in dict.fromkeys(ids) if isinstance(i, int) and i not in self.known]
+        for at in range(0, len(new), 500):
+            part = new[at:at + 500]
+            # NOT INDEXED: looked up by the row id only (else the planner walks the index of every mail's source)
+            got = {r[0] for r in self.con.execute(f"SELECT id FROM fund_item NOT INDEXED WHERE id IN (%s) AND ({self.where})"
+                                                  % ",".join("?" * len(part)), part + self.args)}
+            for i in part:
+                self.known[i] = i in got and (self.ok is None or i in self.ok)
+
+    def __contains__(self, iid):
+        if not isinstance(iid, int):
+            return False
+        if iid not in self.known:
+            self.vorab([iid])
+        return self.known[iid]
+
+
 def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, von=None, bis=None, anzahl=MAX_SHOW,
-          now=None, bezug=None, info=None, quellen=None):
+          now=None, bezug=None, info=None, quellen=None, frei=None):
     """The hits of this profile: [{"id", "quelle", "ext", "titel", "wann", "auszug", "felder", "tags", "weg", "score"}]
     (a mail also "anhaenge": the attachments that matched, one card with them). Only the profile's own index and the
     sources it may use; never another profile's (its file, its marks). bezug: an event word from the person's own words
     (bezug_aus): with an appointment of the own calendar, entries of its window get a bonus; `info` (a dict) learns
-    {"bezug": word, "termin": unix time or None}. quellen: only these sources (lokal: fund.LOKAL)."""
+    {"bezug": word, "termin": unix time or None}. quellen: only these sources (lokal: fund.LOKAL). frei: (sources,
+    mailbox ids, calendar ids) given instead of the profile's releases, only for the measurement on its own
+    throw-away index (fundmessung.py), never from a request."""
     t0 = time.time()
     now = time.time() if now is None else now
-    mine = {q.name: q for q in quellen_fuer(uid)}
+    mine = {q.name: q for q in quellen_fuer(uid)} if frei is None else {n: BY_NAME[n] for n in frei[0] if n in BY_NAME}
     if quelle:
         mine = {k: v for k, v in mine.items() if k == quelle}
     if quellen is not None:
@@ -1065,13 +1132,14 @@ def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, v
     q = terms(worte)
     ranks = {}
     lo, hi = _ts(von) if von else None, _ts(bis, True) if bis else None
-    konten = _konten(uid, mine)
-    kalender = _kalender(uid, mine)
+    konten = _konten(uid, mine) if frei is None else frei[1]
+    kalender = _kalender(uid, mine) if frei is None else frei[2]
     fenster = None
     with _Db(uid) as con:
         if bezug:
             # the appointment is looked up in the termin source (its sub-switch), whatever source is asked for now
-            cal = _fq().kalender_ids(uid) if "termin" in {x.name for x in quellen_fuer(uid)} else []
+            cal = (_fq().kalender_ids(uid) if "termin" in {x.name for x in quellen_fuer(uid)} else []) if frei is None \
+                else list(frei[2] or [])
             when = _termin_fuer(con, uid, bezug, now, cal)
             fenster = (when - BEZUG_VOR * 86400, when + (BEZUG_NACH + 1) * 86400) if when is not None else None
             if info is not None:
@@ -1081,9 +1149,7 @@ def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, v
             if wert:
                 got = _tag_items(con, uid, typ, wert)
                 if typ in ("firma", "person"):   # also the sender field, word for word
-                    for r in con.execute("SELECT id, felder FROM fund_item WHERE schutz=0"):
-                        if norm(wert) in norm(json.loads(r["felder"] or "{}").get("absender", "")):
-                            got.add(r["id"])
+                    got |= _klar_absender(con, wert)
                     got |= _blind_from(con, uid, wert)
                 ok_ids = got if ok_ids is None else ok_ids & got
         cond, args = ["quelle IN (%s)" % ",".join("?" * len(mine))], list(mine)
@@ -1101,18 +1167,17 @@ def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, v
             cond.append("wann <= ?")
             args.append(hi)
         where = " AND ".join(cond)
-        allowed_ids = {r[0] for r in con.execute(f"SELECT id FROM fund_item WHERE {where}", args)}
-        if ok_ids is not None:
-            allowed_ids &= ok_ids
+        allowed_ids = _Erlaubt(con, where, args, ok_ids)
         if q:
             # L1: the index's own words (fields, titles, tags) and the marks of sealed sources (mail, attachments)
             rows = con.execute("SELECT rowid, bm25(fund_fts) FROM fund_fts WHERE fund_fts MATCH ? ORDER BY bm25(fund_fts) "
                                "LIMIT 200", (_match(q),)).fetchall()
-            marks = [m for m in (vorrat.marke(uid, t) for t in q) if m]
-            marks += [m for m in (vorrat.marke(uid, "~" + t[:4]) for t in q if len(t) > 4) if m]
+            marks = [m for m in (_marke(uid, t) for t in q) if m]
+            marks += [m for m in (_marke(uid, "~" + t[:4]) for t in q if len(t) > 4) if m]
             if marks:
                 rows += con.execute("SELECT rowid, bm25(fund_blind) FROM fund_blind WHERE fund_blind MATCH ? "
                                     "ORDER BY bm25(fund_blind) LIMIT 200", (_match(marks),)).fetchall()
+            allowed_ids.vorab(r[0] for r in rows)
             i = 0
             for r in sorted(rows, key=lambda x: x[1]):
                 if r[0] in allowed_ids and r[0] not in ranks and i < MAX_HITS:
@@ -1131,9 +1196,10 @@ def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, v
         dq = [n for n in ("dokument", "nas", "remarkable") if n in mine]
         if q and dq:
             seen, i = set(), 0
-            ext_id = {(r["quelle"], r["ext"]): r["id"] for r in con.execute(
-                "SELECT id, quelle, ext FROM fund_item WHERE quelle IN (%s)" % ",".join("?" * len(dq)), dq)}
-            for h in documents.search(uid, worte, k=MAX_HITS):
+            dh = documents.search(uid, worte, k=MAX_HITS)
+            ext_id = _ext_ids(con, dq, [h["id"] for h in dh], pairs=True)
+            allowed_ids.vorab(ext_id.get((_doc_source({"source": h.get("source")}), h["id"])) for h in dh)
+            for h in dh:
                 iid = ext_id.get((_doc_source({"source": h.get("source")}), h["id"]))
                 if iid is None or iid in seen or iid not in allowed_ids:
                     continue
@@ -1153,9 +1219,11 @@ def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, v
         if q and dq and callable(getattr(wissenskarte, "liste", None)):
             _fuse(con, ranks, allowed_ids, tuple(dq), wissenskarte.liste, uid, worte, key=lambda k: _stueck_doc(uid, k))
         if not q:   # only filters: the newest first
-            for i, r in enumerate(con.execute(f"SELECT id FROM fund_item WHERE {where} ORDER BY wann DESC LIMIT 2000", args)):
-                if r[0] in allowed_ids and len(ranks) < MAX_HITS:
-                    ranks[r[0]] = 1 / (RRF + len(ranks))
+            newest = [r[0] for r in con.execute(f"SELECT id FROM fund_item WHERE {where} ORDER BY wann DESC LIMIT 2000", args)]
+            allowed_ids.vorab(newest)
+            for r in newest:
+                if r in allowed_ids and len(ranks) < MAX_HITS:
+                    ranks[r] = 1 / (RRF + len(ranks))
         if not ranks:
             _note((time.time() - t0) * 1000, now=now)
             return []
@@ -1212,19 +1280,32 @@ def _fuse(con, ranks, allowed_ids, quelle, liste, uid, worte, key=str):
     """One more list into the fusion (reciprocal rank, k = RRF like documents.search): its keys mapped onto the index
     rows of these sources (key turns a key into an entry's ext). A list that breaks leaves the others."""
     names = (quelle,) if isinstance(quelle, str) else tuple(quelle)
-    ext_id = {r["ext"]: r["id"] for r in con.execute(
-        "SELECT id, ext FROM fund_item WHERE quelle IN (%s)" % ",".join("?" * len(names)), names)}
     try:
         got = liste(uid, worte, MAX_HITS)
     except Exception as e:   # noqa: BLE001
         print(f"fund: liste fehler | {names[0]} | {type(e).__name__}", flush=True)
         return
     seen = set()
-    for k, rang in got or []:
-        iid = ext_id.get(key(k))
+    got = [(key(k), rang) for k, rang in got or []]
+    ext_id = _ext_ids(con, names, [k for k, _ in got])
+    got = [(ext_id.get(k), rang) for k, rang in got]
+    allowed_ids.vorab(iid for iid, _ in got)
+    for iid, rang in got:
         if iid in allowed_ids and iid not in seen:
             seen.add(iid)
             ranks[iid] = ranks.get(iid, 0) + 1 / (RRF + max(0, int(rang) - 1))
+
+
+def _ext_ids(con, names, exts, pairs=False):
+    """{ext: id} (pairs: {(source, ext): id}) of only these entry keys of these sources, looked up by their unique key
+    (never every row of a source read into a dict: 5 000 documents were 6 ms of each search)."""
+    out, exts = {}, [str(e) for e in dict.fromkeys(exts) if e]
+    for at in range(0, len(exts), 400):
+        part = exts[at:at + 400]
+        for r in con.execute("SELECT id, quelle, ext FROM fund_item WHERE quelle IN (%s) AND ext IN (%s)"
+                             % (",".join("?" * len(names)), ",".join("?" * len(part))), list(names) + part):
+            out[(r["quelle"], r["ext"]) if pairs else r["ext"]] = r["id"]
+    return out
 
 
 def _stueck_doc(uid, chunk):
@@ -1257,15 +1338,24 @@ def eintrag(uid, iid):
         item = dict(r)
         tags = tags_of(con, uid, item)
         plus, minus = hand(con, item["quelle"], item["ext"], uid)
+        # a mail's attachments as entries of their own (Stufe E: listed in the mail's detail)
+        kids = [dict(k) for k in con.execute("SELECT * FROM fund_item WHERE eltern=? AND quelle='anhang' ORDER BY ext",
+                                             (item["id"],))][:ANHANG_MOST] if item["quelle"] == "mail" else []
     titel, auszug, f = klar(uid, item)
     q = BY_NAME[item["quelle"]]
     if q.zeigen:
         titel, auszug = q.zeigen(uid, item["ext"])
     f = dict(f)
     f.pop("tags", None)
-    return {"id": item["id"], "quelle": item["quelle"], "ext": item["ext"], "titel": titel, "wann": item["wann"],
-            "auszug": auszug, "felder": f, "tags": tags, "minus": [{"typ": t, "wert": w} for t, w in minus],
-            "weg": BY_NAME[item["quelle"]].oeffnen(uid, item["ext"])}
+    out = {"id": item["id"], "quelle": item["quelle"], "ext": item["ext"], "titel": titel, "wann": item["wann"],
+           "auszug": auszug, "felder": f, "tags": tags, "minus": [{"typ": t, "wert": w} for t, w in minus],
+           "weg": BY_NAME[item["quelle"]].oeffnen(uid, item["ext"])}
+    if kids:
+        out["anhaenge"] = [{"id": k["id"], "titel": klar(uid, k)[0]} for k in kids]
+    return out
+
+
+ANHANG_MOST = 20         # attachments of a mail shown in its detail (fundmail.ANHANG_N)
 
 
 def export(uid):
@@ -1369,9 +1459,20 @@ def for_live():
              # entries still waiting, Sofort-Karten today, changes of the Wissenskarte's points followed (numbers only)
              "tag_on": tags_on(), "tag_offen": offen_n,
              **{k: _stat[k] if _stat["day"] == _day(time.time()) else 0
-                for k in ("tag_heute", "tag_ok", "tag_weg", "tag_fehler", "sofort")}, "knoten": _stat["knoten"]}
+                for k in ("tag_heute", "tag_ok", "tag_weg", "tag_fehler", "sofort")}, "knoten": _stat["knoten"],
+             # Stufe E: the last measurement (sudo speech-spark finden messen, fundmessung.py), numbers only
+             "messung": _messung()}
     _live.update(at=time.time(), d=d)
     return dict(d, running=bool(_running or _fm()._running))
+
+
+def _messung():
+    """The numbers of the last measurement (state/fundmessung.json), or None; a broken file is no measurement."""
+    try:
+        import fundmessung
+        return fundmessung.letzte()
+    except Exception:   # noqa: BLE001
+        return None
 
 
 # ---------------------------------------------------------------- tags proposed by the model (S1, S2, Stufe D)

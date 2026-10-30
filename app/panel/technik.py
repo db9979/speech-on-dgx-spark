@@ -139,6 +139,7 @@ MODULE = {
     "fund": ("wissen", "Finden: Suchindex über die eigenen Daten, Felder und Schlagworte nach festen Regeln, Blind-Marken je Profil"),
     "fundmail": ("wissen", "Finden: alle Mails und Anhänge in Scheiben eingelesen, versiegelt (AES-GCM) mit Blind-Marken je Profil"),
     "fundquellen": ("wissen", "Finden: Termine und Kontakte versiegelt, Gespräche nur Datum und Kanal, Listen, Medien"),
+    "fundmessung": ("wissen", "Finden messen: 50 000 Mails und 5 000 Dokumente synthetisch in einem eigenen Ordner, nur Zahlen"),
     "nachsortieren": ("wissen", "Treffer nachsortieren: ein Cross-Encoder auf dem Prozessor ordnet die Kandidaten"),
     "docembed": ("wissen", "Bedeutungsvektoren für die Dokumentsuche"),
     "embed_worker": ("wissen", "Das Vektormodell im eigenen Prozess"),

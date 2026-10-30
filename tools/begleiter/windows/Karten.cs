@@ -47,6 +47,16 @@ internal static class AskCards
     /// <summary>Die Panel-Seiten, die ein Sprung-Knopf öffnen darf (chat.DESK_GOTO).</summary>
     public static readonly string[] Pages = { "#me=calbox", "#me=mailbox", "#me=fundbox", "#me=factbox" };
 
+    /// <summary>
+    /// Die Sofort-Karte von Finden (chat.DESK_ORIGINAL): „Original öffnen“ führt zu „#fund=“ und der Nummer eines
+    /// Eintrags, sonst nichts; das Panel prüft beim Öffnen selbst, ob der Eintrag zum Profil gehört.
+    /// </summary>
+    public static bool IsFund(string? page) =>
+        page is not null && System.Text.RegularExpressions.Regex.IsMatch(page, @"^#fund=[0-9]{1,12}\z");
+
+    /// <summary>Ob ein Sprung-Knopf diese Stelle öffnen darf: eine Seite aus <see cref="Pages"/> oder ein Eintrag von Finden.</summary>
+    public static bool Allowed(string? page) => page is not null && (Pages.Contains(page) || IsFund(page));
+
     public static IReadOnlyList<AskCard> Parse(JsonNode? node)
     {
         var cards = new List<AskCard>();
@@ -67,7 +77,7 @@ internal static class AskCards
             {
                 string label = Short(b?["label"]);
                 string send = Short(b?["send"]);
-                string? open = b?["open"] is JsonValue v && v.TryGetValue(out string? page) && Pages.Contains(page) ? page : null;
+                string? open = b?["open"] is JsonValue v && v.TryGetValue(out string? page) && Allowed(page) ? page : null;
                 bool focus = b?["focus"] is JsonValue f && f.TryGetValue(out bool yes) && yes;
                 bool main = b?["main"] is JsonValue m && m.TryGetValue(out bool isMain) && isMain;
                 if (label.Length == 0 || (send.Length == 0 && open is null && !focus))

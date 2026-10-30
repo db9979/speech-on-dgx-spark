@@ -147,14 +147,14 @@ struct ThingsView: View {
 
     /// whether the profile has any part of Meine Sachen (the button beside the conversation and the row in Einstellungen)
     static func any(_ a: Allowed) -> Bool {
-        a.make || !a.areas.isDisjoint(with: ["documents", "bilder", "musik", "memory", "calendar", "mail", "tasks", "vorgaenge", "contacts"])
+        a.make || !a.areas.isDisjoint(with: ["documents", "bilder", "musik", "memory", "calendar", "mail", "tasks", "vorgaenge", "contacts", "fund"])
     }
 
     private var a: Allowed { talk.allowed }
     private var none: Bool {
         !a.areas.contains("documents") && !a.make && !a.areas.contains("bilder") && !a.areas.contains("musik")
             && !a.areas.contains("memory") && !a.areas.contains("calendar") && !a.areas.contains("mail")
-            && !a.areas.contains("tasks") && !a.areas.contains("vorgaenge") && !a.areas.contains("contacts")
+            && !a.areas.contains("tasks") && !a.areas.contains("vorgaenge") && !a.areas.contains("contacts") && !a.areas.contains("fund")
     }
 
     var body: some View {
@@ -168,7 +168,7 @@ struct ThingsView: View {
                 // Kalender, E-Mail (KalenderPost.swift), Listen (ListenView.swift), Offen (Vorgaenge.swift), Kontakte, Dungeon-Master: pages of their
                 // own, like in the panel's menu
                 if a.areas.contains("calendar") || a.areas.contains("mail") || a.areas.contains("tasks") || a.areas.contains("vorgaenge")
-                    || a.areas.contains("contacts") || a.areas.contains("dungeon") {
+                    || a.areas.contains("contacts") || a.areas.contains("dungeon") || a.areas.contains("fund") {
                     Section {
                         if a.areas.contains("calendar") {
                             NavigationLink { KalenderView() } label: { Label("Kalender", systemImage: "calendar") }
@@ -184,6 +184,9 @@ struct ThingsView: View {
                         }
                         if a.areas.contains("contacts") {
                             NavigationLink { KontakteView() } label: { Label("Kontakte", systemImage: "person.crop.circle") }
+                        }
+                        if a.areas.contains("fund") {   // Finden in allen Daten (FindenView.swift, fund.py)
+                            NavigationLink { FindenView() } label: { Label("Finden", systemImage: "magnifyingglass") }
                         }
                         if a.areas.contains("dungeon") {   // KI-Dungeon-Master (DungeonView.swift)
                             NavigationLink { DungeonView() } label: { Label("Dungeon-Master", systemImage: "die.face.5") }

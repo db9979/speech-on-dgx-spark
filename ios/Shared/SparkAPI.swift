@@ -28,6 +28,7 @@ enum ChatEvent {
     case answers([String])  // Rückfrage-Karte (ablauf.asks, klaeren.py): the answers to the question this answer asks
     case wbuch(String)      // "Ins Wissensbuch" may go under this answer (wissensbuch.keep_offer): the id the Spark kept it by
     case memory(id: String, rev: String, text: String, undo: Bool)   // Gemerkt-Hinweis (gemerkt.py): what memory_save kept
+    case fund(q: String, id: Int?)   // Finden (fund.py): the card „In Finden ansehen“, with the Sofort-Karte the entry's number
 }
 
 /// One tool of an answer (ablauf.py): only its readable name, whether it worked and its time, never what it found.
@@ -997,6 +998,12 @@ struct SparkAPI {
                             // only a short id of letters and digits (faelle.py), never other text from the event
                             if let id = ev["id"] as? String, (4...40).contains(id.count),
                                id.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) }) { cont.yield(.rate(id)) }
+                        case "goto" where ev["to"] as? String == "fund":
+                            // Finden: the search words as plain text (at most 120) and, for the Sofort-Karte, only an
+                            // entry's number; opening it, the Spark checks again that it is the profile's own
+                            let q = String((ev["q"] as? String ?? "").prefix(120))
+                            let n = (ev["id"] as? NSNumber)?.intValue
+                            cont.yield(.fund(q: q, id: n.flatMap { (1...999_999_999_999).contains($0) ? $0 : nil }))
                         case "wbuch":
                             // only the 16 hex digits the Spark kept the answer by; the click names nothing else
                             if let id = ev["id"] as? String, id.count == 16,
