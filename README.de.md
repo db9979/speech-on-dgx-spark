@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.289** Fernzugang: mehrere Sitzungen als Reiter (Stufe 1): jede Shell ein Reiter mit Symbol, Stand und Punkt für neue Ausgabe, + System mit Suche (Strg+Umschalt+O), Wechsel mit Strg+Umschalt+1…9 und ←/→, Assistent und Verlauf je Reiter, Rechtsklick-Menü; bis zu 8 Plätze (Standard 4), voll heißt „n von n Plätzen belegt“ statt still zu schließen; auf anderen Seiten bleiben alle Sitzungen offen, die rote Zeile führt mit Zum Terminal zurück.
 - **V01.1.288** Test-Fix: sechs Tests, die einander störten, räumen auf oder zählen nur das Eigene (Finden-Mail, Sicherung, Listen, Dokumente, Home Assistant live, Karten)
 - **V01.1.287** Mappen: Dokumente, Wissensbuch-Seiten und Notizen zu einem Vorhaben bündeln, je Eintrag aus, kurz oder ganz ans Modell, Gespräch im Assistenten an eine Mappe binden
 - **V01.1.286** Wissenskarte findet Doppelte: dieselbe Person mit Anrede, Titel, anderer Schreibweise oder „Nachname, Vorname“ wird ein Punkt; Ähnliches steht unter „Vielleicht doppelt“ mit „Zusammenführen“ oder „Verschieden“; „Zusammenführen mit …“ ist ein Suchfeld
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.282** Dungeon-Musik: Klangvorlage je Welt und Stimmung (Genre, Instrumente, Tonart, Takt, Tempo, Charakter, Gesang) und feste Pakete
 - **V01.1.281** Dungeon-Musik: Qualität Schnell, Gut oder Beste (nachts), Länge und Lautheit einstellbar
 - **V01.1.280** Dungeon-Musik: Tempo, Tonart und Takt als Metadaten, Beschreibung als Schlagwörter ohne Verneinungen, neue Stimmung „Boss“
-- **V01.1.279** Fernzugang → Systeme, Knopf „Webdienste“: Webseiten eines gekoppelten Systems (Grafana, Router, Home Assistant dort) im Browser durch seinen Anker, auf einer eigenen Herkunft (Tunnel-Tür Port 31090 oder Tunnel-Adresse), Cookies des Panels und Anmeldung bleiben draußen, Ziele nach festen Regeln auf beiden Seiten (Netz dahinter je System mit Code), Gefunden zeigt lauschende Ports, WebSocket geht durch; Anker 1.6.0
 
 
 

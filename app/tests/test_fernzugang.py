@@ -3263,7 +3263,7 @@ class InBrowser(unittest.TestCase):
                 await pg.evaluate("document.querySelectorAll('.modal').forEach(m=>m.style.display='none')")   # kept: the page fills its own
                 shown = "id=>{const e=$(id);return !!e&&!e.hidden&&getComputedStyle(e).display!=='none'&&getComputedStyle($('fztop')).display!=='none'}"
                 # the idle end: what the panel sends ({typ:'bald', s}) counts down; „Weiterarbeiten“ tells the panel
-                await pg.evaluate("window._sent=[];FZ.ws={readyState:1,send:m=>window._sent.push(m),close(){}};fzBald(95)")
+                await pg.evaluate("window._sent=[];FZ.cur={hist:[]};FZ.reiter=[FZ.cur];FZ.ws={readyState:1,send:m=>window._sent.push(m),close(){}};fzBald(95)")
                 self.assertTrue(await pg.evaluate(f"({shown})('fzbald')"))
                 self.assertRegex(await pg.evaluate("$('fzbaldtext').textContent"), r"^Sitzung endet in 1:3[45]$")
                 self.assertEqual(await pg.evaluate("[$('fzweiter').textContent,$('fzbaldende').textContent]"), ["Weiterarbeiten", "Jetzt beenden"])
@@ -3334,7 +3334,7 @@ class InBrowser(unittest.TestCase):
                 await pg.goto(base + "/")
                 await pg.wait_for_function(PAGE_READY, timeout=30000)
                 async with ctx.expect_page() as pop_info:
-                    await pg.evaluate("""FZ.ws={readyState:1,send(){},close(){}};FZ.sid='abcd1234';
+                    await pg.evaluate("""FZ.cur={hist:[]};FZ.reiter=[FZ.cur];FZ.ws={readyState:1,send(){},close(){}};FZ.sid='abcd1234';
                         FZ.sitz={name:'vps-1',gid:'g_0123456789ab',seit:Date.now()/1000,max:2,leer:15};
                         FZ.d={chips:['uptime'],folge:""" + json.dumps([[list(w), list(f)] for w, f in fernzugang.FOLGE]) + """};fzHeraus()""")
                 pop = await pop_info.value
@@ -3498,10 +3498,14 @@ class _ShellPage(Base):
 
     def setUp(self):
         super().setUp()
-        d = self.pair(hostkey=HOST_PUB)
-        self.sshd = _Server(d["pi_key"].split()[1])
+        self.ws, self.sshd = self.anchor_for(self.pair(hostkey=HOST_PUB))
+        self.weitere = []
+
+    def anchor_for(self, d):
+        """A real anchor (its own copy of the program) and SSH test server for the pairing d: (its socket, server)."""
+        sshd = _Server(d["pi_key"].split()[1])
         p = program()
-        p.SSHD = ("127.0.0.1", self.sshd.port)
+        p.SSHD = ("127.0.0.1", sshd.port)
         port = self.port
 
         class Plain(socket.socket):      # the test panel speaks plain http; the anchor asks its TLS socket for pending()
@@ -3514,14 +3518,16 @@ class _ShellPage(Base):
             s.connect(("127.0.0.1", port))
             return s, ""
         p.tls_connect = plain
-        self.ws = p.WS.open(f"https://127.0.0.1:{self.port}", "", "/api/fernzugang/anker", d["key"])
-        threading.Thread(target=p.Lauf(self.ws).run, daemon=True).start()
+        ws = p.WS.open(f"https://127.0.0.1:{self.port}", "", "/api/fernzugang/anker", d["key"])
+        threading.Thread(target=p.Lauf(ws).run, daemon=True).start()
         helpers.until(lambda: d["id"] in fernzugang.ANKER)
         self.assertIn(d["id"], fernzugang.ANKER)
+        return ws, sshd
 
     def tearDown(self):
-        with contextlib.suppress(OSError):
-            self.ws.sock.shutdown(socket.SHUT_RDWR)
+        for ws in [self.ws] + [w for w, _ in self.weitere]:
+            with contextlib.suppress(OSError):
+                ws.sock.shutdown(socket.SHUT_RDWR)
         super().tearDown()
 
     def run_page(self, body, init="", size=(1280, 900)):
@@ -3604,6 +3610,54 @@ class ShellForReal(_ShellPage):
             self.assertEqual(seen, {first})
         self.run_page(body, size=(1500, 900))
 
+    def test_tabs_two_systems_switch_by_keys_and_close_one(self):
+        """Mehrere Sitzungen Stufe 1 (Dominik 2026-10-30 „alle“, mockups mehrere/1): a second system opens as a second tab
+        (picker on Strg+Umschalt+O, search, Enter), each tab its own terminal and session, Strg+Umschalt+1/→ switch
+        before the shell sees the keys, typing goes to the shown tab only, × closes that one and the other comes
+        forward; beyond chat.fernzugang_sitzungen a tab never opens and no old one closes silently."""
+        async def body(ctx, pg):
+            self.weitere.append(self.anchor_for(self.pair(name="vps-2", hostkey=HOST_PUB)))
+            await pg.evaluate("fzLoad()")
+            await pg.wait_for_function("(FZ.d.geraete||[]).length===2", timeout=15000)
+            await pg.click("#fzterm")
+            await pg.keyboard.press("Control+Shift+KeyO")
+            await pg.wait_for_selector("#fzwahl input", timeout=10000)
+            await pg.keyboard.type("vps-2")
+            await pg.keyboard.press("Enter")
+            await pg.wait_for_function("FZ.reiter.length===2&&FZ.cur===FZ.reiter[1]&&FZ.cur.sitz.name==='vps-2'&&FZ.ws&&FZ.ws.readyState===1", timeout=30000)
+            await pg.wait_for_function(self.TEXT + ".includes('hallo vom server')", timeout=30000)
+            self.assertEqual(len(fernzugang.SITZUNG), 2)
+            self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#fzreiter .fzreit')].map(b=>[b.textContent.includes('vps'),b.classList.contains('on')])"),
+                             [[True, False], [True, True]])
+            self.assertEqual(await pg.evaluate("[FZ.reiter[0].box.hidden,FZ.reiter[1].box.hidden]"), [True, False])
+            await pg.keyboard.press("Control+Shift+Digit1")                  # the page's key, not the shell's
+            await pg.wait_for_function("FZ.cur===FZ.reiter[0]", timeout=10000)
+            self.assertEqual(await pg.evaluate("[FZ.reiter[0].box.hidden,FZ.reiter[1].box.hidden]"), [False, True])
+            await pg.keyboard.type("q")
+            await pg.wait_for_function(self.TEXT + ".includes('echo:q')", timeout=30000)
+            await pg.keyboard.press("Control+Shift+ArrowRight")
+            await pg.wait_for_function("FZ.cur===FZ.reiter[1]", timeout=10000)
+            self.assertNotIn("echo:q", await pg.evaluate(self.TEXT))          # typed in tab 1 only
+            # another page: both sessions stay, the red line names both and leads back to the tab shown last
+            await pg.evaluate("goSec('live')")
+            await pg.wait_for_function("!$('fzbhin').hidden", timeout=10000)
+            self.assertIn("2 Fernsitzungen aktiv", await pg.evaluate("$('fzbtext').textContent"))
+            self.assertEqual(len(fernzugang.SITZUNG), 2)
+            await pg.click("#fzbhin")
+            await pg.wait_for_function("!!document.querySelector('section#fern.on')&&$('fzbhin').hidden&&FZ.cur===FZ.reiter[1]&&!$('fzview').hidden", timeout=10000)
+            # full: one place only now, a third open is refused with the count and nothing closes
+            helpers.set_config(fernzugang_sitzungen=1)
+            await pg.evaluate("fzLoad()")
+            await pg.wait_for_function("FZ.d.max===1", timeout=15000)
+            await pg.evaluate("fzOpen({id:'x',name:'vps-3'})")
+            self.assertIn("2 von 1 Plätzen belegt", await pg.evaluate("$('updtoast').textContent"))
+            self.assertEqual(await pg.evaluate("FZ.reiter.length"), 2)
+            await pg.locator("#fzreiter .fzreit").first.locator(".fzreitzu").click()
+            await pg.wait_for_function("FZ.reiter.length===1&&FZ.cur.sitz.name==='vps-2'&&!FZ.cur.box.hidden", timeout=30000)
+            helpers.until(lambda: len(fernzugang.SITZUNG) == 1)
+            self.assertEqual(len(fernzugang.SITZUNG), 1)
+        self.run_page(body)
+
     def test_herausloesen_clicked_shows_the_terminal_in_its_own_window(self):
         """Dominik 2026-10-28 19:56 on his Pi: „Herauslösen“ opened the normal assistant page instead of the terminal.
         The new window must show the terminal over the whole window and get output; the tab before says where it is."""
@@ -3628,7 +3682,7 @@ class ShellForReal(_ShellPage):
             await pop.wait_for_function(self.TEXT + ".includes('echo:u')", timeout=60000)
             # the tab before: „läuft im eigenen Fenster“ with the system's name, the session still one
             await pg.wait_for_function("!$('fzweg').hidden", timeout=60000)
-            self.assertEqual(await pg.evaluate("$('fzwegname').textContent"), "vps-1")
+            self.assertIn("vps-1", await pg.evaluate("$('fzweg').textContent"))
             self.assertTrue(await pg.evaluate("$('fzview').hidden"))
             self.assertEqual(len(fernzugang.SITZUNG), 1)
         self.run_page(body)

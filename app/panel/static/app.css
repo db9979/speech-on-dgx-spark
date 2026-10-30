@@ -3164,6 +3164,27 @@ html.fzvoll,html.fzvoll body{overflow:hidden}html.fzvoll,html:has(body.fztermina
 .fzview:fullscreen .fzvollhint:not([hidden]){display:block;position:absolute;top:32px;left:50%;transform:translateX(-50%);z-index:5;padding:6px 12px;border-radius:8px;background:rgba(15,23,42,.8);color:var(--on-acc);font-size:13px;pointer-events:none}
 /* „Herauslösen“ (#fernfenster): the panel page in its own window: the same order (line, terminal, chips, column), no menu */
 .fzweg{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-color:var(--bad)}.fzweg[hidden]{display:none}
+/* Fernzugang: several sessions as tabs above the terminal (Mehrere Sitzungen Stufe 1) */
+.fzreiter{flex:none;display:flex;align-items:center;gap:4px;min-height:34px;padding:0 0 6px;overflow-x:auto;scrollbar-width:thin}.fzreiter[hidden]{display:none}
+.fzreit{flex:none;display:flex;align-items:center;gap:6px;max-width:220px;height:30px;padding:0 4px 0 10px;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--fill);color:var(--mut);font-size:12.5px;cursor:pointer;user-select:none}
+.fzreit:hover,.fzreit:focus-visible{color:var(--fg)}.fzreit.on{background:var(--card);color:var(--fg);border-color:var(--acc);box-shadow:inset 0 -2px 0 var(--acc)}
+.fzreitname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.fzreitneu{width:7px;height:7px;border-radius:50%;background:var(--acc);flex:none}
+.fzreitzu{border:0;background:none;color:inherit;font:inherit;width:22px;height:22px;padding:0;border-radius:6px;cursor:pointer;line-height:1}.fzreitzu:hover{background:color-mix(in srgb,var(--line) 60%,transparent)}
+.fzreitplus{flex:none;height:30px;padding:0 10px;border:1px dashed var(--line);border-radius:var(--r-ctl);background:none;color:var(--mut);font:inherit;font-size:12.5px;cursor:pointer}.fzreitplus:hover{color:var(--fg);border-color:var(--acc)}
+.fzreithint{margin-left:auto;padding-left:8px;color:var(--mut);font-size:11.5px;white-space:nowrap}
+@media (max-width:700px){.fzreithint{display:none}}
+.fzterm1{height:100%}.fzterm1[hidden]{display:none}
+.fzview:fullscreen .fzreiter{display:none}
+.fzwahl{position:fixed;z-index:1000;top:12vh;left:50%;transform:translateX(-50%);width:min(460px,calc(100vw - 32px));max-height:70vh;display:flex;flex-direction:column;gap:6px;padding:8px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-box);box-shadow:var(--shadow-pop)}
+.fzwahl input{width:100%;box-sizing:border-box}
+.fzwahlliste{display:flex;flex-direction:column;gap:2px;overflow-y:auto;min-height:0}
+.fzwahlzeile{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border:0;border-radius:var(--r-item);background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.fzwahlzeile.on,.fzwahlzeile:hover:not(:disabled){background:var(--sel)}.fzwahlzeile:disabled{color:var(--mut);cursor:default}
+.fzwahltxt{display:flex;flex-direction:column;min-width:0}.fzwahltxt small{color:var(--mut);font-size:12px}
+.fzwahlfuss{padding:4px 6px 0;border-top:1px solid var(--line);color:var(--mut);font-size:12px}
+.fzweg{flex-direction:column;align-items:stretch}.fzwegzeile{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.fzomenu button.fzrot{color:var(--bad)}
 body.fzfenster .fztop{position:fixed;left:0;right:0;top:0;z-index:9001;margin:0}body.fzfenster .fzbanner{border-radius:0}
 /* the own window opens on the panel's start page: only the Fernzugang page counts there, whatever page the router picks */
 body.fzfenster main>section{display:none!important}body.fzfenster main>section#fern{display:block!important;animation:none}

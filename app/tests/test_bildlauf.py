@@ -66,6 +66,7 @@ FENSTER = {
     ".fzgnaslist": "Fernzugang, große Dateien: the files of one NAS folder to pick from, beside the transfer card",
     ".shchatlist": "Spontanhilfe: the chat with the person in its card beside the screen; the newest message stays in view",
     ".fzflist": "Fernzugang, Dateien: the entries of one remote folder (up to 1000) beside the upload card",
+    ".fzwahlliste": "Fernzugang: the system picker over the page (Strg+Umschalt+O); its list scrolls when there are many systems",
     ".cx-log": "Chats: the messages",
     ".cx-pane": "Chats: the side pane",
     ".dkvpic": "the companion's screen picture",

@@ -4860,6 +4860,20 @@
 "titel": "Mappen: Im Assistenten fragen",
 "text": "In der Mappe „Im Assistenten fragen“: über dem Gespräch steht der Chip „Mappe „Wohnung““. Eine Frage zu einem Dokument der Mappe beantwortet der Assistent mit [M1]-Verweisen; eine Frage zu etwas, das nicht darin steht, sagt das. × am Chip beendet die Bindung. „Welche Mappen habe ich?“ und „Leg den Mietvertrag in die Mappe Wohnung“ funktionieren im normalen Gespräch; auf dem iPhone öffnet Ich → Mappen die Panel-Ansicht.",
 "thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P719",
+"v": 1289,
+"titel": "Fernzugang: zwei Systeme als Reiter",
+"text": "Fernzugang entsperren, Shell zu System A öffnen, dann „+ System“ (oder Strg+Umschalt+O), System B suchen, Enter: oben stehen zwei Reiter mit Symbol, grünem Punkt und ×, B ist vorn. Strg+Umschalt+1 und Strg+Umschalt+→ wechseln, die Shell bekommt diese Tasten nicht (in beiden kein Zeichen getippt). In A „top“ starten, zu B wechseln: am Reiter A erscheint der blaue Punkt. Rechtsklick auf A: Herauslösen, Neu verbinden, Schließen, Andere trennen. × an A schließt nur A, B bleibt verbunden.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P720",
+"v": 1289,
+"titel": "Fernzugang: Plätze voll und Seitenwechsel",
+"text": "Mit zwei offenen Reitern auf Zustand → Live wechseln: die rote Zeile oben sagt „2 Fernsitzungen aktiv“ mit beiden Namen und hat „Zum Terminal“; der Knopf führt zurück zum zuletzt gezeigten Reiter, beide Shells laufen noch (Ausgabe von top lief weiter). Unter Funktionen → Fernzugang zu Servern „Sitzungen gleichzeitig“ auf 2 stellen und ein drittes System öffnen: es öffnet nicht, die Meldung sagt „2 von 2 Plätzen belegt“, keine alte Sitzung schließt sich. Auf dem iPhone oder einem schmalen Fenster bleiben die Reiter bedienbar.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }
