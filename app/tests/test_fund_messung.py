@@ -1,14 +1,15 @@
-"""Finden, Stufe E: die Messung (fundmessung.py, plan such-index §8 E).
+"""Finden messen (fundmessung.py, plan such-index §8 E; since V01.1.285 the part „fund“ of Wissen messen).
 
 - 50 000 synthetic mails (sealed like real mail, every fifth with an attachment, the first 1 000 as real MIME
   messages) and 5 000 documents in a throw-away index: the search stays fast (generous limits here, the GitHub runner
   is slower than the Pi and shared; the plan's goal on the Pi is 95 % below 150 ms), reading in per 1000, the size of
-  fund.db and the RAM stay within bounds. Numbers only: the journal line, state/fundmessung.json and Live.
+  fund.db and the RAM stay within bounds; the keys in the form of the other parts (suche_p50_ms …).
 - The search reads no longer every id of its sources into a set (fund._Erlaubt asks SQL only for the candidates) and
   looks up only the keys a list brings (fund._ext_ids), the sender filter first in SQL (fund._klar_absender): the same
   hits in the same order with the same scores as the old way, on the big index.
-- The command line (sudo speech-spark finden messen) runs in its own folder beside users/, removes it afterwards,
-  never touches a profile and never makes the Spark's key.
+- One way only (Richtlinie Teil 17, eine Quelle): the part runs inside Wissen messen's measuring process, in its run
+  folder (never a profile, nothing left), numbers only in the result, the journal and Live; speech stops it between
+  two slices; it never makes the Spark's key; there is no command line, unit or state file of its own any more.
 Fixed data (a seed), a fixed moment for its dates; nothing depends on the clock but the measured times themselves.
 """
 import contextlib
@@ -16,7 +17,7 @@ import io
 import json
 import os
 import re
-import subprocess
+import shutil
 import sys
 import tempfile
 import unittest
@@ -26,10 +27,13 @@ from tests import helpers
 helpers.start()
 import fund  # noqa: E402
 import fundmessung  # noqa: E402
+import profiles  # noqa: E402
+import vault  # noqa: E402
 import vorrat  # noqa: E402
+import wissensmessung as wm  # noqa: E402
 
 UID = "fundmessung-test"
-# generous limits for the shared GitHub runner; the Pi's own numbers come from sudo speech-spark finden messen
+# generous limits for the shared GitHub runner; the Pi's own numbers come from sudo speech-spark wissen messen synth 5000
 P95_MS = 1500
 P50_MS = 600
 EINLESEN_1000_S = 90
@@ -63,21 +67,24 @@ class Messung(unittest.TestCase):
 
     def test_50000_mails_and_5000_documents_stay_fast(self):
         r = self.r
-        print("\nfund messung (container):", fundmessung.zeile(r), file=sys.stderr)
+        print("\nfund messung (container):", wm._zeile("fund", r), file=sys.stderr)
         self.assertEqual((r["mails"], r["anhaenge"], r["dokumente"]), (50_000, 10_000, 5_000))
         with fund._Db(UID) as con:
             n = dict(con.execute("SELECT quelle, COUNT(*) FROM fund_item GROUP BY quelle").fetchall())
         self.assertEqual(n, {"mail": 50_000, "anhang": 10_000, "dokument": 200, "nas": 4_800})
-        self.assertGreater(r["mit_treffer"], r["suchen"] // 2)                 # the searches find something
-        self.assertLess(r["p50_ms"], P50_MS)
-        self.assertLess(r["p95_ms"], P95_MS)
-        self.assertLessEqual(r["p50_ms"], r["p95_ms"])
-        self.assertLessEqual(r["p95_ms"], r["max_ms"])
+        self.assertEqual(r["suche_n"], fundmessung.SUCHEN)
+        self.assertGreater(r["mit_treffer"], r["suche_n"] // 2)                # the searches find something
+        self.assertLess(r["suche_p50_ms"], P50_MS)
+        self.assertLess(r["suche_p95_ms"], P95_MS)
+        self.assertLessEqual(r["suche_p50_ms"], r["suche_p95_ms"])
+        self.assertLessEqual(r["suche_p95_ms"], r["suche_max_ms"])
         self.assertLess(r["einlesen_1000_s"], EINLESEN_1000_S)
         self.assertLess(r["schreiben_1000_s"], SCHREIBEN_1000_S)
         self.assertLess(r["db_mb"], DB_MB)
         self.assertLess(r["ram_zuwachs_mb"], RAM_ZUWACHS_MB)
         self.assertEqual(r["ziel_ms"], 150)
+        self.assertTrue(0 <= r["unter_ziel"] <= 100)
+        self.assertEqual(wm._zahlen(r), r)                                     # numbers only, plain keys: kept whole
 
     def test_sealed_like_real_mail(self):
         with open(fund.db_path(UID), "rb") as f:
@@ -100,30 +107,22 @@ class Messung(unittest.TestCase):
         for (w, f), a, b in zip(qs, new, old):
             self.assertEqual([(h["id"], h["score"]) for h in a], [(h["id"], h["score"]) for h in b], (w, f))
 
-    def test_numbers_only_in_the_log_the_file_and_live(self):
-        line = fundmessung.zeile(self.r)
-        self.assertTrue(line.startswith("fund: messung | "))
-        self.assertLessEqual(set(re.findall(r"[^\W\d_]+", line)), {"fund", "messung", "mails", "anhaenge", "dokumente", "p", "ms",
-                                                                 "max", "unter", "einlesen", "s", "je", "db", "mb", "ram", "spitze"})
-        fundmessung.behalten(dict(self.r, extra="Thomann"))
-        with open(fundmessung._file(), encoding="utf-8") as f:
-            kept = json.load(f)
-        self.assertEqual(set(kept), set(fundmessung.LIVE_KEYS) - {"schreiben_1000_s"} | ({"schreiben_1000_s"}
-                         if self.r.get("schreiben_1000_s") is not None else set()))
-        self.assertTrue(all(isinstance(v, (int, float)) for v in kept.values()))
-        self.assertEqual(fundmessung.letzte(), kept)
-        with open(fundmessung._file(), "w", encoding="utf-8") as f:
-            json.dump({"p50_ms": "Thomann", "mails": 3, "x": 1}, f)
-        self.assertEqual(fundmessung.letzte(), {"mails": 3})                   # only numbers of the fixed keys
-        fundmessung.behalten(self.r)
-        helpers.keep_chat(self, "fund")
-        helpers.set_config(fund=True)
-        fund._live.update(at=0.0, d=None)
-        self.assertEqual(fund.for_live()["messung"]["mails"], 50_000)
-        import live
-        snap = json.dumps(live.snapshot(), ensure_ascii=False)
-        self.assertIn("Messung 50000 Mails: p50 ", snap)
-        self.assertNotIn("Thomann", snap)
+    def test_speech_stops_it_between_two_slices(self):
+        class Wm:
+            rss_mb, zeiten = staticmethod(wm.rss_mb), staticmethod(wm.zeiten)
+            n = 0
+
+            @classmethod
+            def ruhe(cls):
+                cls.n += 1
+                if cls.n > 2:
+                    raise wm.Abbruch("sprache")
+        with self.assertRaises(wm.Abbruch):
+            fundmessung.messen("fundmessung-ruhe", 5_000, 50, wm=Wm)
+        self.assertEqual(Wm.n, 3)
+        for p in (fund.db_path("fundmessung-ruhe"), fund.db_path("fundmessung-ruhe") + "-wal"):
+            if os.path.exists(p):
+                os.remove(p)
 
 
 class Rules(unittest.TestCase):
@@ -153,58 +152,84 @@ class Rules(unittest.TestCase):
         self.assertIsNone(fund._marke("", "rechnung"))
 
 
-class Befehl(unittest.TestCase):
-    def run_cli(self, state, users, *args):
-        env = dict(os.environ, SPEECH_SPARK_STATE=state, SPEECH_SPARK_USERS=users)
-        return subprocess.run([sys.executable, os.path.join(helpers.APP, "panel", "fundmessung.py"), "messen", *args],
-                              capture_output=True, text=True, timeout=300, env=env, cwd=os.path.join(helpers.APP, "panel"))
-
-    def test_its_own_folder_never_a_profile(self):
+def _kind_state(key=True):
+    """The measuring process's own state folder (no other test's speech mark stops it), with the Spark's key."""
+    state = tempfile.mkdtemp(prefix="fm-state-")
+    if key:
         vorrat.marke("fundmessung-x", "probe")                                  # the test's Spark key exists
-        base = tempfile.mkdtemp(prefix="speech-spark-fundmessung-")
-        self.addCleanup(lambda: subprocess.run(["rm", "-rf", base]))
-        users = os.path.join(base, "users")
-        os.makedirs(users)
-        with open(os.path.join(users, "keep.txt"), "w") as f:
-            f.write("x")
-        state = os.environ["SPEECH_SPARK_STATE"]
-        before = sorted(os.listdir(state))
-        out = self.run_cli(state, users, "300", "40")
-        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
-        self.assertRegex(out.stdout, r"fund: messung \| 300 mails \| 60 anhaenge \| 40 dokumente \| p50 ")
-        self.assertEqual(sorted(os.listdir(users)), ["keep.txt"])               # no profile touched
-        self.assertEqual(sorted(os.listdir(base)), ["users"])                   # its own folder is gone again
-        self.assertEqual(sorted(set(os.listdir(state)) - set(before)) in ([], ["fundmessung.json"]), True)
-        self.assertEqual(fundmessung.letzte()["mails"], 300)
-        # whole numbers only, within the limits
-        bad = self.run_cli(state, users, "drei")
-        self.assertNotEqual(bad.returncode, 0)
+        shutil.copy(vault.KEY_FILE, os.path.join(state, "secret.key"))
+    return state
+
+
+class TeilVonWissenMessen(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.state = _kind_state()
+        cls.addClassCleanup(shutil.rmtree, cls.state, True)
+        os.makedirs(profiles.USERS_DIR, exist_ok=True)
+        cls.users_before = sorted(os.listdir(profiles.USERS_DIR))
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            cls.res = wm.lauf("synth", wm.ANZAHL_MIN, sprache=lambda: False, kind_env={"SPEECH_SPARK_STATE": cls.state})
+        cls.lines = [x for x in out.getvalue().splitlines() if x.startswith("wissen:")]
+
+    def test_registered_once_and_measured_in_its_run_folder(self):
+        self.assertEqual(list(wm.MESSTEILE).count("fund"), 1)
+        self.assertEqual(self.res["status"], "fertig", self.res)
+        f = self.res["teile"]["fund"]
+        n = wm.ANZAHL_MIN
+        self.assertEqual((f["schluessel"], f["dokumente"], f["mails"], f["anhaenge"]),
+                         (True, n, n * fundmessung.MAILS_JE_DOKUMENT, n * fundmessung.MAILS_JE_DOKUMENT // fundmessung.ANHANG_JEDE))
+        for k in ("suche_p50_ms", "suche_p95_ms", "suche_max_ms", "suche_n", "mit_treffer", "ziel_ms", "unter_ziel",
+                  "einlesen_1000_s", "dokumente_1000_s", "db_mb", "kb_je_eintrag", "ram_vorher_mb", "ram_mb",
+                  "ram_spitze_mb", "ram_zuwachs_mb"):
+            self.assertIn(k, f)
+        self.assertLessEqual(f["suche_p50_ms"], f["suche_p95_ms"])
+        self.assertEqual(f["suche_n"], fundmessung.SUCHEN)
+        # nothing left: no run folder, no throwaway profile among the real ones, no file of its own in state/
+        self.assertEqual([x for x in os.listdir(wm.TMP) if x != ".lock"], [])
+        self.assertEqual(sorted(os.listdir(profiles.USERS_DIR)), self.users_before)
+        self.assertFalse(os.path.exists(fund.db_path(fundmessung.UID)))
+        for st in (self.state, os.environ["SPEECH_SPARK_STATE"]):
+            self.assertNotIn("fundmessung.json", os.listdir(st))
+
+    def test_numbers_only_in_the_result_the_journal_and_live(self):
+        line = next(x for x in self.lines if x.startswith("wissen: messung teil fund | "))
+        self.assertRegex(line, r"^wissen: messung teil fund \| dokumente \d+ \| suche p95 \d+ ms \| ram [\d.]+ mb$")
+        text = json.dumps(self.res, ensure_ascii=False) + "\n".join(self.lines)
+        for word in ("Rechnung", "Thomann", "service@", "beleg", "Gesamtbetrag"):
+            self.assertNotIn(word, text)
+        self.assertNotIn("messung", fund.for_live())                            # no Live line of its own
+        import live
+        snap = json.dumps(live.snapshot(), ensure_ascii=False)
+        self.assertNotIn("Messung 50000 Mails", snap)
+        self.assertNotIn("Thomann", snap)
 
     def test_never_makes_the_key(self):
-        base = tempfile.mkdtemp(prefix="speech-spark-fundmessung-")
-        self.addCleanup(lambda: subprocess.run(["rm", "-rf", base]))
-        state, users = os.path.join(base, "state"), os.path.join(base, "users")
-        os.makedirs(state)
-        os.makedirs(users)
-        out = self.run_cli(state, users, "10", "1")
-        self.assertEqual(out.returncode, 1)
-        self.assertIn("fund: messung abgelehnt | kein schluessel", out.stdout)
-        self.assertEqual(os.listdir(state), [])
-        self.assertEqual(sorted(os.listdir(base)), ["state", "users"])
+        state = _kind_state(key=False)
+        self.addCleanup(shutil.rmtree, state, True)
+        with contextlib.redirect_stdout(io.StringIO()):
+            res = wm.lauf("synth", wm.ANZAHL_MIN, sprache=lambda: False, kind_env={"SPEECH_SPARK_STATE": state})
+        self.assertEqual(res["teile"]["fund"], {"schluessel": False})
+        self.assertNotIn("secret.key", os.listdir(state))
 
-    def test_wired_into_the_command_line(self):
+    def test_only_in_the_measuring_process_and_its_folder(self):
+        self.assertFalse(wm._KIND[0])
+        with self.assertRaises(RuntimeError):
+            wm.teil_fund(tempfile.mkdtemp(prefix="lauf-"), 10)
+
+    def test_one_way_only(self):
         sh = helpers.repo_file("app", "speech-spark.sh")
-        self.assertIn("finden) shift; cmd_finden", sh)
-        body = sh[sh.index("cmd_finden() {"):]
-        body = body[:body.index("\n}\n")]
-        self.assertIn('need_root finden messen', body)
-        self.assertIn('[[ "$mails" =~ ^[0-9]{1,6}$ && "$docs" =~ ^[0-9]{1,5}$ ]]', body)   # only whole numbers reach it
-        for prop in ("-p User=\"$svc\"", "-p Nice=10", "-p MemoryMax=", "-p PrivateTmp=yes", "-p LogNamespace=speech-spark"):
-            self.assertIn(prop, body)
+        for gone in ("cmd_finden", "finden messen", "fundmessung"):
+            self.assertNotIn(gone, sh)
         head = sh.splitlines()
         rng = int(re.search(r"sed -n '2,(\d+)p'", sh).group(1))
-        self.assertIn("speech-spark finden messen", "\n".join(head[1:rng]))
+        self.assertIn("speech-spark wissen messen", "\n".join(head[1:rng]))
         self.assertTrue(head[rng].startswith("set -euo"))
+        import dateien
+        self.assertNotIn("fundmessung.json", {d.name for d in dateien.DATEIEN})
+        for gone in ("main", "behalten", "letzte", "zeile", "LIVE_KEYS"):
+            self.assertFalse(hasattr(fundmessung, gone), gone)
 
 
 if __name__ == "__main__":

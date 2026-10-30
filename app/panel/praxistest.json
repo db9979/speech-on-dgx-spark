@@ -4653,9 +4653,9 @@
 },
 {
 "id": "P689",
-"v": 1267,
-"titel": "Finden: Messung auf dem Pi",
-"text": "Auf dem Pi `sudo speech-spark finden messen` (dauert einige Minuten): die Zeile „fund: messung | 50000 mails | 10000 anhaenge | 5000 dokumente | p50 … ms | p95 … ms …“ erscheint, danach „fund: messung ziel | 95 % unter 150 ms | erreicht … % | ja“. Unter Zustand → Live im Kasten Finden steht „Messung 50000 Mails: p50 … ms, p95 … ms …“. Kein Profil hat danach neue Einträge, neben users/ bleibt kein Ordner fundmessung-… liegen. p95 und die Größe von fund.db bitte zurückmelden.",
+"v": 1285,
+"titel": "Finden: Messung auf dem Pi (Teil von Wissen messen)",
+"text": "Auf dem Pi `sudo speech-spark wissen messen synth 5000` (dauert einige Minuten): am Ende steht „wissen: messung teil fund | dokumente 5000 | suche p95 … ms | ram … mb“ und die Zeilen „wissen: messung fund | mails 50000“, „… anhaenge 10000“, „… suche_p95_ms …“, „… db_mb …“. Zustand → Prüfen → Wissen messen zeigt dieselbe Messung mit „Finden: Suche über Mails und Dokumente“ (Median und p95) und „Finden: Mails · Anhänge · Größe des Index“; Zustand → Live, Kasten „Wissen messen“ zählt 4 Teile. `sudo speech-spark finden messen` gibt es nicht mehr. Während der Messung etwas zum Spark sagen: sie hört auf („abgebrochen: jemand hat gesprochen“). Kein Profil hat danach neue Einträge, unter state/wissensmessung-tmp bleibt kein Ordner lauf-… liegen. p95 und die Größe von fund.db bitte zurückmelden.",
 "thread": "Alles schnell finden über einen Index"
 },
 {

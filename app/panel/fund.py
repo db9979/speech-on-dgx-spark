@@ -1459,20 +1459,9 @@ def for_live():
              # entries still waiting, Sofort-Karten today, changes of the Wissenskarte's points followed (numbers only)
              "tag_on": tags_on(), "tag_offen": offen_n,
              **{k: _stat[k] if _stat["day"] == _day(time.time()) else 0
-                for k in ("tag_heute", "tag_ok", "tag_weg", "tag_fehler", "sofort")}, "knoten": _stat["knoten"],
-             # Stufe E: the last measurement (sudo speech-spark finden messen, fundmessung.py), numbers only
-             "messung": _messung()}
+                for k in ("tag_heute", "tag_ok", "tag_weg", "tag_fehler", "sofort")}, "knoten": _stat["knoten"]}
     _live.update(at=time.time(), d=d)
     return dict(d, running=bool(_running or _fm()._running))
-
-
-def _messung():
-    """The numbers of the last measurement (state/fundmessung.json), or None; a broken file is no measurement."""
-    try:
-        import fundmessung
-        return fundmessung.letzte()
-    except Exception:   # noqa: BLE001
-        return None
 
 
 # ---------------------------------------------------------------- tags proposed by the model (S1, S2, Stufe D)

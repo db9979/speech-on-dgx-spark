@@ -78,6 +78,7 @@ Seit V01.1.270 (Wissenskarte Stufe 4, Vorbereitung des Tests mit 5000 Dokumenten
 - **Dokumentsuche:** Dokumente, Stücke, Vektoren, die Vektor-Matrix (float16, MB, Zeit zum Aufbauen, Speicher des Prozesses vorher und nachher) und `documents.search` mit und ohne Karte.
 - **Wissensbuch:** Seiten, Sätze, Seiten je Dokument und `wissensbuch.liste`.
 - **Wissenskarte:** Seiten, Punkte, Verbindungen, Stellen, Verbindungen je Dokument (Mittel und höchstens) und `view` (die am besten verbundenen und um einen Punkt), `rund_um` (2 Schritte), `weg` und `wissenskarte.liste`.
+- **Finden** (Messteil „fund“, seit V01.1.285, `app/panel/fundmessung.py`, nur bei „erfunden“): je Dokument des Laufs 10 versiegelte erfundene Mails (bei 5000 Dokumenten 50 000 Mails, jede fünfte mit Anhang, die ersten 1000 als echte MIME-Nachrichten über `fundmail.eintraege`, alle über `fundmail.schreiben` mit AES-GCM und HMAC-Marken) und die Dokumente als Zeilen des Index, in `fund.db` des Wegwerf-Profils. Gemessen: `fund.suche` über 200 feste Suchen (`suche_p50_ms`, `suche_p95_ms`, `suche_max_ms`, Anteil unter dem Ziel von 150 ms), Einlesen und Schreiben je 1000 Mails, Größe von `fund.db` (MB und KB je Eintrag), RAM des Messprozesses vorher, nachher, Spitze und Zuwachs. Ohne den Schlüssel des Sparks misst der Teil nichts (`schluessel` falsch) und legt nie einen an.
 - Jede Zeit als Median, p95 und Höchstwert über 20 feste Beispiele aus den eigenen Titeln und Namen (`PROBEN`), dazu der Speicher des Messprozesses am Anfang und am Ende.
 - **Grenzen:** Für die Seiten des Wissensbuchs (300), die Verbindungen (3000) und die Punkte (5000) sagt der Lauf, wie viele es jetzt sind, wie viele die Dokumente bringen würden und ob die Grenze voll ist. Bei erfundenen Dokumenten ist der Bedarf das, was der Aufbau ohne Grenze angelegt hätte; bei einem Profil das, was es je Dokument bringt, hochgerechnet auf 5000 Dokumente (eine obere Schätzung).
 
@@ -104,7 +105,7 @@ Die Vektor-Matrix braucht 38,5 MB (Aufbau 0,2 s), der Messprozess wächst von et
 
 ### Messteile
 
-Andere Teile hängen sich mit einer Zeile an (`wissensmessung.MESSTEILE`, zum Beispiel „fund“ für den Suchindex über Mails):
+Andere Teile hängen sich mit einer Zeile an (`wissensmessung.MESSTEILE`, so seit V01.1.285 „fund“ für den Suchindex von Finden: `teil_fund` in `wissensmessung.py`, weil der Messprozess diese Datei als Hauptprogramm startet und keinen anderen Teil lädt; `teil_fund` gibt `fundmessung.teil` das Modul selbst mit `ruhe`, `zeiten` und `rss_mb`):
 
 ```python
 MESSTEILE = {"name": fn}

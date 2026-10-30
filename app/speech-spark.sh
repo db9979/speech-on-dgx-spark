@@ -34,8 +34,7 @@
 #   speech-spark werkstatt tests|messen|diagnose "<text>"|reparatur "<text>"  start one order in the sandbox
 #   speech-spark werkstatt nachtest "<test> …"  only these tests again (the red ones of a test run)
 #   speech-spark werkstatt ergebnis <id>  text and change of one order
-#   speech-spark finden messen [mails] [dokumente]  measure Finden's search index with synthetic data (default 50000 5000)
-#   speech-spark wissen messen [synth [anzahl] [--ohne-grenzen] | profil <name>] [--json]  times and memory of search and map
+#   speech-spark wissen messen [synth [anzahl] [--ohne-grenzen] | profil <name>] [--json]  times and memory of search, map and Finden
 set -euo pipefail
 # runuser, nft, systemctl live in /usr/sbin on Debian and Raspberry Pi OS; a caller with PATH=/usr/bin:/bin (teilen.py
 # runs "teilen umzug-einspielen" that way) would not find them
@@ -1138,36 +1137,8 @@ cmd_werkstatt() {
   esac
 }
 
-# Finden messen (app/panel/fundmessung.py, plan such-index Stufe E): the search index with synthetic mails and
-# documents in a throw-away folder beside users/ (never a profile), as the panel's user at low priority, in its own
-# unit whose lines go to the Spark's journal (Logs, area Finden); the numbers also to state/fundmessung.json (Live)
-FUND_UNIT=speech-spark-fundmessung
-cmd_finden() {
-  local mails docs svc rc=0 follow
-  case "${1:-}" in
-    messen)
-      need_root finden messen
-      mails=${2:-50000}; docs=${3:-5000}
-      [[ "$mails" =~ ^[0-9]{1,6}$ && "$docs" =~ ^[0-9]{1,5}$ ]] || die "speech-spark finden messen [mails] [dokumente]: whole numbers"
-      im_gang "$FUND_UNIT" && die "a measurement of Finden is running already: sudo speech-spark logs"
-      svc=$(panel_user)
-      echo "Finden messen: $mails Mails, $docs Dokumente (synthetisch, eigener Ordner, kein Profil; einige Minuten) …"
-      journalctl --namespace=speech-spark -u "$FUND_UNIT" -f -n 0 --no-pager -o cat &
-      follow=$!
-      systemd-run --quiet --collect --wait --unit="$FUND_UNIT" -p LogNamespace=speech-spark -p User="$svc" -p Group="$svc" \
-        -p Nice=10 -p IOSchedulingClass=idle -p MemoryMax=2G -p PrivateTmp=yes -p WorkingDirectory="$PREFIX/app/panel" \
-        -E LANG=C.UTF-8 -E PYTHONUNBUFFERED=1 -E SPEECH_SPARK_CONFIG="$CONFIG" -E SPEECH_SPARK_STATE="$VAR/state" \
-        -E SPEECH_SPARK_USERS="$VAR/users" -E SPEECH_SPARK_PREFIX="$PREFIX" \
-        "$PREFIX/venv-panel/bin/python" "$PREFIX/app/panel/fundmessung.py" messen "$mails" "$docs" || rc=$?
-      sleep 1; kill "$follow" 2>/dev/null || true
-      [ "$rc" = 0 ] || echo "Die Messung ist nicht durchgelaufen (sudo speech-spark logs)."
-      return "$rc" ;;
-    *) die "speech-spark finden messen [mails] [dokumente]" ;;
-  esac
-}
-
 # Wissen messen (app/panel/wissensmessung.py, Wissenskarte Stufe 4): one run as the panel user, numbers only; the
-# measuring process lowers its own priority and stops while somebody speaks
+# measuring process lowers its own priority and stops while somebody speaks (with the part fund: Finden's search index)
 cmd_wissen() {
   case "${1:-}" in
     messen) need_root wissen messen; shift; as_panel_user wissensmessung.py cli "$@" ;;
@@ -1193,8 +1164,7 @@ case "${1:-}" in
   zurueckholen) shift; cmd_zurueckholen "$@" ;;
   gehaeuse) shift; cmd_gehaeuse "$@" ;;
   werkstatt) shift; cmd_werkstatt "$@" ;;
-  finden) shift; cmd_finden "$@" ;;
   wissen) shift; cmd_wissen "$@" ;;
-  ""|-h|--help|help) sed -n '2,38p' "$0" | sed 's/^# \{0,1\}//' ;;
+  ""|-h|--help|help) sed -n '2,37p' "$0" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (see: speech-spark help)" ;;
 esac

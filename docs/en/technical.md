@@ -78,6 +78,7 @@ Since V01.1.270 (knowledge map stage 4, preparing the test with 5000 documents a
 - **Document search:** documents, pieces, vectors, the vector matrix (float16, MB, time to build, the process's memory before and after) and `documents.search` with and without the map.
 - **Knowledge book:** pages, sentences, pages per document and `wissensbuch.liste`.
 - **Knowledge map:** pages, points, connections, places, connections per document (mean and most) and `view` (the best connected ones and around a point), `rund_um` (2 steps), `weg` and `wissenskarte.liste`.
+- **Find** (measuring part "fund", since V01.1.285, `app/panel/fundmessung.py`, only with "made up"): per document of the run 10 sealed made-up mails (with 5000 documents 50,000 mails, every fifth with an attachment, the first 1000 as real MIME messages through `fundmail.eintraege`, all through `fundmail.schreiben` with AES-GCM and HMAC marks) and the documents as rows of the index, in the throwaway profile's `fund.db`. Measured: `fund.suche` over 200 fixed searches (`suche_p50_ms`, `suche_p95_ms`, `suche_max_ms`, the share below the goal of 150 ms), reading in and writing per 1000 mails, the size of `fund.db` (MB and KB per entry), the measuring process's RAM before, after, peak and growth. Without the Spark's key the part measures nothing (`schluessel` false) and never makes one.
 - Every time as median, p95 and maximum over 20 fixed samples from the own titles and names (`PROBEN`), and the measuring process's memory at the start and at the end.
 - **Limits:** for the knowledge book's pages (300), the connections (3000) and the points (5000) the run says how many there are now, how many the documents would bring and whether the limit is full. With made-up documents the need is what the build would have made without the limit; with a profile what it brings per document, projected to 5000 documents (an upper estimate).
 
@@ -104,7 +105,7 @@ The vector matrix needs 38.5 MB (built in 0.2 s), the measuring process grows fr
 
 ### Measuring parts
 
-Other parts join with one line (`wissensmessung.MESSTEILE`, for example "fund" for the search index over mail):
+Other parts join with one line (`wissensmessung.MESSTEILE`, so since V01.1.285 "fund" for Find's search index: `teil_fund` in `wissensmessung.py`, because the measuring process starts this file as its main program and loads no other part; it hands `fundmessung.teil` the module itself with `ruhe`, `zeiten` and `rss_mb`):
 
 ```python
 MESSTEILE = {"name": fn}

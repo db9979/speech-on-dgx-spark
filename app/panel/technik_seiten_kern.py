@@ -243,7 +243,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "1828297f86",
+        "stand": "f06f933feb",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -815,9 +815,11 @@ SEITEN = {
                  "how much the documents would have brought without them. A real profile is only read (PRAGMA "
                  "query_only)."),
                 ("Andere Teile hängen sich als Messteil an (wissensmessung.MESSTEILE: Name und fn(ordner, anzahl), "
-                 "nur Zahlen, nur im Wegwerf-Ordner des Laufs).",
+                 "nur Zahlen, nur im Wegwerf-Ordner des Laufs), so Finden mit „fund“ (wissensmessung.teil_fund, "
+                 "fundmessung.teil): versiegelte erfundene Mails und Dokumente, Suchzeiten, Größe von fund.db, RAM.",
                  "Other parts join as a measuring part (wissensmessung.MESSTEILE: a name and fn(ordner, anzahl), "
-                 "numbers only, only in the run's throwaway folder)."),
+                 "numbers only, only in the run's throwaway folder), so Find with \"fund\" (wissensmessung.teil_fund, "
+                 "fundmessung.teil): sealed made-up mails and documents, search times, the size of fund.db, RAM."),
             ]),
         ],
         "code": [

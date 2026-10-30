@@ -443,12 +443,21 @@ def teil_wissenskarte(ordner, anzahl):
     return messe_wissenskarte(_synth(ordner, anzahl, _GRENZEN[0]))
 
 
+def teil_fund(ordner, anzahl):
+    """Finden's search index (fundmessung.py): registered here, as this file runs as __main__ in the measuring process
+    and imports no other part; fundmessung gets this module (ruhe, zeiten, rss_mb) and the run folder's profiles."""
+    import fundmessung
+    _im_ordner(ordner)
+    return fundmessung.teil(anzahl, sys.modules[__name__])
+
+
 _GRENZEN = [True]        # measuring process: build the throwaway profile with the limits of the real code
 # the parts of a synthetic run, in this order (other parts add their own entry here; interface: see the top)
 MESSTEILE = {
     "documents": teil_documents,
     "wissensbuch": teil_wissensbuch,
     "wissenskarte": teil_wissenskarte,
+    "fund": teil_fund,
 }
 
 

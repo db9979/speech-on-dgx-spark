@@ -6,7 +6,8 @@ const WM={timer:0,d:null};
 const WM_ZEIT=[['documents','suche','Dokumentensuche','Document search'],['documents','suche_karte','Suche mit Karte','Search with the map'],
   ['wissensbuch','liste','Wissensbuch: Seiten zur Frage','Knowledge book: pages for a question'],['wissenskarte','view','Karte: Ausschnitt','Map: visible part'],
   ['wissenskarte','view_um','Karte um einen Punkt','Map around a point'],['wissenskarte','rund_um','Rund um einen Punkt (2 Schritte)','Around a point (2 steps)'],
-  ['wissenskarte','weg','Weg zwischen zwei Punkten','Way between two points'],['wissenskarte','liste','Karte: Stellen zur Frage','Map: passages for a question']];
+  ['wissenskarte','weg','Weg zwischen zwei Punkten','Way between two points'],['wissenskarte','liste','Karte: Stellen zur Frage','Map: passages for a question'],
+  ['fund','suche','Finden: Suche über Mails und Dokumente','Find: search over mails and documents']];
 const WM_GRENZE={seiten:['Wissensbuch-Seiten','Knowledge book pages'],kanten:['Verbindungen','Connections'],punkte:['Personen, Firmen und Fristen','People, companies and deadlines']};
 const WM_STATUS={fertig:['fertig','done'],sprache:['abgebrochen: jemand hat gesprochen','stopped: somebody spoke'],zeit:['abgebrochen: Zeit um','stopped: time is up'],
   fehler:['Fehler','error'],leer:['keine Dokumente','no documents'],alt:['Datenbank einer anderen Version','database of another version']};
@@ -18,6 +19,7 @@ function wmRun(r){if(!r)return'';const T=r.teile||{},d=T.documents||{},k=T.wisse
   const zahl=[[t('Dokumente','Documents'),d.dokumente],[t('Stücke','Pieces'),d.stuecke],[t('Vektor-Matrix (float16)','Vector matrix (float16)'),wmN(d.matrix_mb,' MB')],
     [t('Speicher vorher → nachher','Memory before → after'),`${wmN(r.ram_start_mb,' MB')} → ${wmN(r.ram_ende_mb,' MB')}`],[t('Seiten · Punkte · Verbindungen','Pages · points · connections'),`${wmN(b.seiten)} · ${wmN(k.punkte)} · ${wmN(k.kanten)}`],
     [t('Verbindungen je Dokument','Connections per document'),`${wmN(k.kanten_je_dok)} (${t('höchstens','at most')} ${wmN(k.kanten_je_dok_max)})`]];
+  const f=T.fund||{};if(f.mails)zahl.push([t('Finden: Mails · Anhänge · Größe des Index','Find: mails · attachments · size of the index'),`${wmN(f.mails)} · ${wmN(f.anhaenge)} · ${wmN(f.db_mb,' MB')}`]);
   const lim=Object.entries(r.engpaesse||{}).map(([g,v])=>`<tr><td>${esc(t(...(WM_GRENZE[g]||[g,g])))}</td><td>${esc(wmN(v.jetzt))}</td><td>${esc(wmN(v.bedarf))}</td><td>${esc(wmN(v.grenze))}</td><td>${v.voll?`<b>${esc(t('voll','full'))}</b>`:esc(t('reicht','enough'))}</td></tr>`).join('');
   return `<div class="mut">${esc(head)}</div>
     <table style="margin-top:8px"><tbody>${zahl.map(([a,v])=>`<tr><td>${esc(a)}</td><td>${esc(typeof v==='number'?wmN(v):v)}</td></tr>`).join('')}</tbody></table>
