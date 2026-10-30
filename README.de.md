@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.257** Finden Stufe C: Termine und Kontakte versiegelt, frühere Gespräche (nur Datum und Kanal), Listen, Erinnerungen, Bilder und Lieder im Suchindex; Zeiträume nach festen Regeln, „vom OP“ über den eigenen Kalender; fünf Unterschalter, ab Werk aus
 - **V01.1.256** Finden Stufe B: alle Mails und Anhänge in den Suchindex (Posteingang, Archiv, Gesendet, nie Spam und Papierkorb), die neuesten zuerst, ältere in ruhigen Minuten und nachts in Häppchen, nur versiegelt (AES-GCM, Wörter als HMAC-Marken), Anhang-Text und Felder nach festen Regeln, Treffer öffnet die Mail; Unterschalter „Mails und Anhänge finden“, ab Werk aus
 - **V01.1.255** Alle meine Daten herunterladen: unter Ich → Sicherheit → Meine Daten eine ZIP mit allem vom eigenen Profil (versiegelte Dateien geöffnet, Einstellungen ohne Geheimnisse, aus Chats nur die eigenen Nachrichten, LIESMICH de+en mit dem, was draußen bleibt und warum), jedes Mal nach frischem Code oder Passkey, 3 je Stunde, höchstens 2 GB, Abhol-Link 10 Minuten und einmal; kein Schalter (Auskunftsrecht), auch in der iPhone- und Android-App
 - **V01.1.254** Fernzugang: die iPhone-App ist wie die Seite erst gesperrt und wird mit Code oder Passkey entsperrt (Verlängern, Sperren); das Koppeln-Blatt zeigt einen Einmal-Link mit Kopieren, Teilen, E-Mail und QR-Code, der auf dem neuen System nur die eine Zeile zeigt, nie den Code
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.250** Ein Weg zu den eigenen Daten: Gedächtnis, Gespräche, Werkzeug-Log, Raummodus-Verlauf, Lesemarken, Zuordnungen, Interessen, Spark-Tagebuch und die offene Gedächtnis-Frage liest und schreibt das Panel nur noch über profiles.read_own/write_own/drop_own (Vorbereitung zum Versiegeln, für die Person ändert sich nichts)
 - **V01.1.249** Gemerkt-Hinweis: unter der Antwort „✓ Gemerkt: …“ mit „Rückgängig“; von selbst Gelerntes kommt als Karte mit „Stimmt“ und „Rückgängig“, Mitteilung und Telegram nennen nur die Zahl
 - **V01.1.248** Gedächtnis mit festen Themen (Wohnort, Arbeitgeber, Auto …): je Thema gilt der neueste gesagte Wert, der alte bleibt zum Zurückholen; von selbst Gelerntes ersetzt nie Bestätigtes, es kommt als Karte „Übernehmen / Verwerfen“; dazu „N von 200“
-- **V01.1.247** Gedächtnis ohne stilles Wegwerfen: über 200 Einträgen machen nur die ältesten von selbst gelernten, nie bestätigten Platz; Gesagtes, Korrigiertes und Bestätigtes fällt nie, sonst lehnt der Spark den neuen Eintrag mit Hinweis auf Ich → Gedächtnis ab (auch beim Aufräumen); „Gedächtnis prüfen“ ab Werk an
 
 
 

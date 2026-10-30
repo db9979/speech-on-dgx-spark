@@ -444,6 +444,19 @@ FEATURES = (
     # sealed (marks and AES-GCM), read in slices in quiet minutes and at night; needs E-Mail lesen
     F("fundmail", "Mails und Anhänge finden", "Find mail and attachments", "data", ("fund_mail", "fund", "mail"), parent="fund",
       me="fundbox", guide="fundmail"),
+    # Finden, Stufe C (fundquellen.py): each source a sub-switch of Finden, off, and it follows the function it comes
+    # from (fundquellen.frei): appointments of the own calendars from the Spark's copy and contacts sealed like mail;
+    # conversations only as date and channel (their words through recall); lists, reminders, pictures, songs clear
+    F("fundtermine", "Termine finden", "Find appointments", "data", ("fund_termine", "fund", "calendar"), parent="fund",
+      me="fundbox", guide="fundtermine"),
+    F("fundkontakte", "Kontakte finden", "Find contacts", "data", ("fund_kontakte", "fund", "contacts"), parent="fund",
+      me="fundbox", guide="fundkontakte"),
+    F("fundchats", "Gespräche finden", "Find conversations", "data", ("fund_chats", "fund", "history"), parent="fund",
+      me="fundbox", guide="fundchats"),
+    F("fundlisten", "Listen und Erinnerungen finden", "Find lists and reminders", "data", ("fund_listen", "fund"),
+      parent="fund", me="fundbox", guide="fundlisten"),
+    F("fundmedien", "Bilder und Lieder finden", "Find pictures and songs", "data", ("fund_medien", "fund"), parent="fund",
+      me="fundbox", guide="fundmedien"),
     F("suchfragen", "Prüffragen vom Spark", "Test questions by the Spark", "data", ("search_check_auto",),
       parent="suchpruefung", me="docbox", guide="suchfragen"),
     # everyday

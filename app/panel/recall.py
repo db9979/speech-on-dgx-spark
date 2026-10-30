@@ -68,6 +68,26 @@ def scored(uid, terms, skip=None, k=4):
     return rank([p for p in _pieces(uid, skip) if p["mark"] != "mail"], set(terms))[:k]
 
 
+LISTE_MOST = 30
+
+
+def liste(uid, worte, k=10):
+    """For Finden (fund.py, plan such-index Stufe C, the list signature of the fusion): the conversations of this
+    profile whose questions and answers share a search word, as [(conversation id, rank from 1)], best first, at most
+    k. Answers made from e-mail stay out (like scored). Only ids, never a word of a conversation."""
+    if not uid:
+        return []
+    q = set(documents._terms(str(worte or "")[:2000]))
+    out, seen = [], set()
+    for _, p in rank([p for p in _pieces(uid) if p["mark"] != "mail"], q):
+        if p["convo"] not in seen:
+            seen.add(p["convo"])
+            out.append((p["convo"], len(out) + 1))
+            if len(out) >= max(1, min(LISTE_MOST, int(k))):
+                break
+    return out
+
+
 def search(uid, query, days=None, skip=None, k=4):
     """Text for the LLM: the best-matching question/answer pairs of earlier conversations, or
     (without a query) an overview of the recent conversations."""

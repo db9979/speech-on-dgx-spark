@@ -317,26 +317,12 @@ def recent_window(text, zone=None, now=None):
     m = RECENT_WHEN.search(text)
     if not m or not RECENT_WHAT.search(text) or not RECENT_ME.search(text) or RECENT_NOT.search(text):
         return None
-    now = datetime.datetime.fromtimestamp(now or time.time(), zone)
-    day = now.replace(hour=0, minute=0, second=0, microsecond=0)
     w = re.sub(r"\s+", " ", m.group(0).lower())
-    ts = lambda d: int(d.timestamp())  # noqa: E731
-    if w in ("heute", "today"):
-        return ts(day), None
-    if w in ("gestern", "yesterday"):
-        return ts(day - datetime.timedelta(days=1)), ts(day)
-    if w == "vorgestern":
-        return ts(day - datetime.timedelta(days=2)), ts(day - datetime.timedelta(days=1))
-    monday = day - datetime.timedelta(days=day.weekday())
-    if "woche" in w or "week" in w:
-        return (ts(monday - datetime.timedelta(days=7)), ts(monday)) if w.startswith("letzte") else (ts(monday), None)
-    if "monat" in w:
-        first = day.replace(day=1)
-        if w.startswith("letzte"):
-            prev = (first - datetime.timedelta(days=1)).replace(day=1)
-            return ts(prev), ts(first)
-        return ts(first), None
-    return 0, None
+    if w in ("zuletzt", "kürzlich", "latest", "recently") or w.startswith(("neueste", "jüngste")):
+        return 0, None
+    import frisch   # the one rule for periods (plan such-index Stufe C)
+    got = frisch.spanne(w, now or time.time(), zone)
+    return (got[0], got[1]) if got else (0, None)
 
 
 async def recent(uid, since=0, until=None, k=8):

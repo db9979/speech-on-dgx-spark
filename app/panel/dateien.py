@@ -84,10 +84,12 @@ DATEIEN = [
     profil("reminders.json", "Erinnerungen", "Reminders", bereich="alltag"),
     profil("wissen.db", "Dokumente: Text, Abschnitte mit Kontextzeile, Suche, Vektoren; Wissensbuch und Wissenskarte mit Personen, Firmen und Fristen (SQLite)", "Documents: text, sections with context line, search, vectors; knowledge book and map with people, companies and deadlines (SQLite)", bereich="dokumente"),
     profil("docs/files/", "Originale der Uploads", "Originals of uploads", bereich="dokumente"),
-    profil("fund.db", "Finden: Suchindex über die eigenen Daten (Titel, Felder, Schlagworte, eigene Schlagworte, Mails und Anhänge; SQLite)",
-           "Find: search index over the own data (titles, fields, tags, own tags, mail and attachments; SQLite)", bereich="dokumente",
-           schutz=("Marken mit eigenem Schlüssel je Profil (HMAC); Mails und Anhänge: Betreff, Auszug, Felder und Schlagworte AES-GCM",
-                   "marks with a key of its own per profile (HMAC); mail and attachments: subject, excerpt, fields and tags AES-GCM")),
+    profil("fund.db", "Finden: Suchindex über die eigenen Daten (Titel, Felder, Schlagworte, eigene Schlagworte, Mails und Anhänge, "
+           "Termine, Kontakte, Listen, Erinnerungen, Bilder, Lieder; Gespräche nur Datum und Kanal; SQLite)",
+           "Find: search index over the own data (titles, fields, tags, own tags, mail and attachments, appointments, contacts, "
+           "lists, reminders, pictures, songs; conversations only date and channel; SQLite)", bereich="dokumente",
+           schutz=("Marken mit eigenem Schlüssel je Profil (HMAC); Mails, Anhänge, Termine und Kontakte: Titel, Auszug, Felder und Schlagworte AES-GCM",
+                   "marks with a key of its own per profile (HMAC); mail, attachments, appointments and contacts: title, excerpt, fields and tags AES-GCM")),
     profil("suchpruefung.json", "Prüffragen und Läufe der Suchprüfung", "Test questions and runs of the search check", bereich="dokumente"),
     profil("erstellt/", "Erstellte Dokumente", "Created documents", bereich="erstellt"),
     profil("bilder/", "Gemalte Bilder und ihr Verzeichnis (Prompt, Wunsch, Größe)", "Painted pictures and their index (prompt, wish, size)", bereich="bilder"),

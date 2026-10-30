@@ -214,6 +214,114 @@ def nachsatz(turn_state, said, en=False, now=None, zone=None):
     return ("Not quite current: " if en else "Nicht ganz aktuell: ") + "; ".join(parts) + "."
 
 
+# ---------------------------------------------------------------- spanne: a period from the person's own words
+# (plan such-index Stufe C): the one place that turns „gestern“, „letzte Woche“, „im März“, „2023“ or „vor 3 Wochen“
+# into unix times, by fixed rules (Finden's filter, wissen.recent_window). Never the model; no clock inside (now given).
+MONATE = (("januar", "jänner", "january", "jan"), ("februar", "feber", "february", "feb"), ("märz", "maerz", "march", "mar"),
+          ("april", "apr"), ("mai", "may"), ("juni", "june", "jun"), ("juli", "july", "jul"), ("august", "aug"),
+          ("september", "sept", "sep"), ("oktober", "october", "okt", "oct"), ("november", "nov"),
+          ("dezember", "december", "dez", "dec"))
+_MONAT = {w: i + 1 for i, ws in enumerate(MONATE) for w in ws}
+ZAHLWORTE = {"ein": 1, "einem": 1, "einer": 1, "one": 1, "a": 1, "an": 1, "zwei": 2, "two": 2, "drei": 3, "three": 3,
+             "vier": 4, "four": 4, "fünf": 5, "five": 5, "sechs": 6, "six": 6, "sieben": 7, "seven": 7, "acht": 8,
+             "eight": 8, "neun": 9, "nine": 9, "zehn": 10, "ten": 10, "elf": 11, "eleven": 11, "zwölf": 12, "twelve": 12}
+_M = "|".join(sorted(_MONAT, key=len, reverse=True))
+_N = r"\d{1,2}|" + "|".join(sorted(ZAHLWORTE, key=len, reverse=True))
+SPANNE = (   # (kind, pattern); a match of a longer kind first, the words stand as said (one line, lower case)
+    ("monatjahr", re.compile(r"(?i)(?<!\w)(" + _M + r")\.?\s+(19[5-9]\d|20\d\d)(?!\w)")),
+    ("vor", re.compile(r"(?i)(?<!\w)(?:vor\s+(" + _N + r")\s+(tag(?:en)?|woche(?:n)?|monat(?:en)?|jahr(?:en)?)|"
+                       r"(" + _N + r")\s+(days?|weeks?|months?|years?)\s+ago)(?!\w)")),
+    ("relativ", re.compile(r"(?i)(?<!\w)(vorgestern|gestern|heute|yesterday|today|"
+                           r"(?:diese[nmrs]?|letzte[nmrs]?|vergangene[nmrs]?|vorige[nmrs]?|this|last|past)\s+"
+                           r"(?:woche|monat|jahr|week|month|year)|im vorjahr)(?!\w)")),
+    ("monat", re.compile(r"(?i)(?<!\w)(?:im|in|vom|seit|ab|von|aus dem|during)\s+(" + _M + r")(?!\w)")),
+    ("jahr", re.compile(r"(?<![\w.,/-])(19[5-9]\d|20\d\d)(?![\w,/-]|\.\d)")),
+)
+
+
+def _tag0(now, zone):
+    return datetime.datetime.fromtimestamp(now, zone).replace(hour=0, minute=0, second=0, microsecond=0)
+
+
+def _ts(d):
+    return int(d.timestamp())
+
+
+def _monat0(year, month, zone):
+    return datetime.datetime(year, month, 1, tzinfo=zone)
+
+
+def _plus_monate(d, n):
+    m = d.month - 1 + n
+    return d.replace(year=d.year + m // 12, month=m % 12 + 1, day=1)
+
+
+def _eine(kind, m, now, zone):
+    """(von, bis) of one match: bis is the exclusive end, None for a period still running („heute“, „diese Woche“)."""
+    day = _tag0(now, zone)
+    if kind == "monatjahr":
+        a = _monat0(int(m.group(2)), _MONAT[m.group(1).lower()], zone)
+        return _ts(a), _ts(_plus_monate(a, 1))
+    if kind == "jahr":
+        y = int(m.group(1))
+        return _ts(datetime.datetime(y, 1, 1, tzinfo=zone)), _ts(datetime.datetime(y + 1, 1, 1, tzinfo=zone))
+    if kind == "monat":
+        mon = _MONAT[m.group(1).lower()]
+        year = day.year if mon <= day.month else day.year - 1   # the last such month that has begun
+        a = _monat0(year, mon, zone)
+        return _ts(a), _ts(_plus_monate(a, 1))
+    monday = day - datetime.timedelta(days=day.weekday())
+    first = day.replace(day=1)
+    jan = day.replace(month=1, day=1)
+    if kind == "vor":
+        n = m.group(1) or m.group(3)
+        n = int(n) if n.isdigit() else ZAHLWORTE[n.lower()]
+        unit = (m.group(2) or m.group(4)).lower()
+        if unit.startswith(("tag", "day")):
+            a = day - datetime.timedelta(days=n)
+            return _ts(a), _ts(a + datetime.timedelta(days=1))
+        if unit.startswith(("woche", "week")):
+            a = monday - datetime.timedelta(days=7 * n)
+            return _ts(a), _ts(a + datetime.timedelta(days=7))
+        if unit.startswith(("monat", "month")):
+            a = _plus_monate(first, -n)
+            return _ts(a), _ts(_plus_monate(a, 1))
+        a = jan.replace(year=jan.year - n)
+        return _ts(a), _ts(a.replace(year=a.year + 1))
+    w = re.sub(r"\s+", " ", m.group(1).lower())
+    if w in ("heute", "today"):
+        return _ts(day), None
+    if w in ("gestern", "yesterday"):
+        return _ts(day - datetime.timedelta(days=1)), _ts(day)
+    if w == "vorgestern":
+        return _ts(day - datetime.timedelta(days=2)), _ts(day - datetime.timedelta(days=1))
+    now_ = w.startswith(("diese", "this"))
+    if w == "im vorjahr" or w.endswith(("jahr", "year")):
+        return (_ts(jan), None) if now_ else (_ts(jan.replace(year=jan.year - 1)), _ts(jan))
+    if w.endswith(("monat", "month")):
+        return (_ts(first), None) if now_ else (_ts(_plus_monate(first, -1)), _ts(first))
+    return (_ts(monday), None) if now_ else (_ts(monday - datetime.timedelta(days=7)), _ts(monday))
+
+
+def spanne(text, now, zone=None):
+    """(von, bis, (start, end)) for the period the words name, or None: von/bis unix seconds (bis exclusive, None for a
+    period still running), (start, end) where in the text it was said (the caller can leave those words out of a
+    search). Fixed rules only; the first kind of SPANNE that matches wins; two different periods of one kind (2022 und
+    2023) are no period."""
+    text = str(text or "")[:2000]
+    zone = _zone(zone)
+    for kind, rx in SPANNE:
+        found = list(rx.finditer(text))
+        if not found:
+            continue
+        spans = {_eine(kind, m, now, zone) for m in found}
+        if len(spans) != 1:
+            return None
+        von, bis = spans.pop()
+        return von, bis, found[0].span()
+    return None
+
+
 def for_live():
     """Today: searches for a period, of them without a current hit, old hits dropped, hints added (numbers only)."""
     day = time.strftime("%Y-%m-%d")

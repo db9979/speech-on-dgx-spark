@@ -183,7 +183,7 @@ TARGETS = {
     # Wissenskarte (wissenskarte.py): shown while it is on, checked connections, discarded ones and documents waiting (numbers only)
     "wkarte": ("Wissenskarte", "Verbindungen zwischen Wissensbuch-Seiten · auf dem Spark", "spark", False),
     # Finden (fund.py): shown while it is on, entries of the search index, profiles, searches today and the median time,
-    # with fundmail.py the mails read today and left to read (numbers only)
+    # with fundmail.py the mails read today and left to read, with fundquellen.py the entries per further source (numbers only)
     "fund": ("Finden", "Suchindex über die eigenen Daten · auf dem Spark", "spark", False),
     # KI-Dungeon-Master (dungeon.py): shown while it is on, rounds, players, guests, turns, loot and levels today (numbers only)
     "dungeon": ("Dungeon-Master", "Rollenspiel-Runden mit dem eigenen Sprachmodell · auf dem Spark", "spark", False),
@@ -2052,6 +2052,12 @@ def snapshot(view="admin", now=None):
                         # Mails und Anhänge (fundmail.py): read today, left to read, the disk below its reserve (numbers)
                         + (f" · Mails: heute {fnd.get('mail_heute', 0)} eingelesen, {fnd.get('mail_rest', 0)} offen" if fnd.get("mail_on") else "")
                         + (" · Platz knapp" if fnd.get("mail_platz") else "")
+                        # Stufe C (fundquellen.py): entries per further source, events („vom OP“) found today (numbers)
+                        + "".join(f" · {lbl} {fnd['quellen'][k]}" for k, lbl in (("termin", "Termine"), ("kontakt", "Kontakte"),
+                                  ("chat", "Gespräche"), ("liste", "Listen"), ("erinnerung", "Erinnerungen"),
+                                  ("bild", "Bilder"), ("musik", "Lieder")) if (fnd.get("quellen") or {}).get(k))
+                        + (f" · Bezug heute {fnd.get('bezug', 0)} gefunden, {fnd.get('bezug_fehlt', 0)} ohne Termin"
+                           if fnd.get("bezug") or fnd.get("bezug_fehlt") else "")
                         + (" · liest ein" if fnd.get("running") else ""))
         if x["id"] == "dungeon":   # Dungeon-Master: rounds, players and guests, turns, loot, levels, campaigns, read aloud and spoken today, stories with acts moved on and proposals, markets, purchases and sales, pictures painted, discarded and on their way, game dates and notes sent, music pieces made ahead, world truths, summaries, rewrites and thumbs, rounds waiting and table talk lines (numbers only, never a name or a text)
             x["sub"] = (f"{dgn.get('runden', 0)} Runden · {dgn.get('spieler', 0)} Spieler, {dgn.get('online', 0)} da, {dgn.get('gaeste', 0)} Gäste"

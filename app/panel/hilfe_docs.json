@@ -1565,7 +1565,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell; ebenso führt nur ihr Klick Punkte der Wissenskarte zusammen, benennt sie um oder löscht sie (mit dem Code von „Bestätigen“). Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal), Gedächtnis und Gespräche ganz versiegelt im Ordner des Profils (profiles.write_own). Was ein Dienst für ein Profil vorhält (Mail-Vorrat, Mails und Anhänge in Finden), liegt nur mit AES-GCM versiegelt (vorrat"
+"text": "ist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell; ebenso führt nur ihr Klick Punkte der Wissenskarte zusammen, benennt sie um oder löscht sie (mit dem Code von „Bestätigen“). Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal), Gedächtnis und Gespräche ganz versiegelt im Ordner des Profils (profiles.write_own). Was ein Dienst für ein Profil vorhält (Mail-Vorrat, Mails, Anhänge, Termine und Kontakte in Finden), liegt nur mit AES-GCM"
 },
 {
 "lang": "de",
@@ -1573,7 +1573,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": ".seal), die Wörter im Suchindex nur als HMAC-Marken mit einem Schlüssel je Profil (vorrat.marke); ohne Schlüssel wird nichts geschrieben."
+"text": " versiegelt (vorrat.seal), die Wörter im Suchindex nur als HMAC-Marken mit einem Schlüssel je Profil (vorrat.marke); ohne Schlüssel wird nichts geschrieben."
 },
 {
 "lang": "de",
@@ -1925,7 +1925,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Alltagsquote",
 "title": "Alltagsquote",
-"text": "- Die Testsätze (184) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
+"text": "- Die Testsätze (189) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
 },
 {
 "lang": "de",
@@ -1941,7 +1941,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 24 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 184 eingebaute Testsätze (Schritt 4, Schritt 5) - 216 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
+"text": "- 24 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 189 eingebaute Testsätze (Schritt 4, Schritt 5) - 216 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
 },
 {
 "lang": "de",
@@ -2189,7 +2189,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Wissen",
 "title": "Wissen",
-"text": "Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene Kiwix-Archiv und erstellte Dokumente. Die Seite zeigt den Weg, auf dem eine Frage passende Stellen in den Dokumenten findet. Finden (fund.py, eigene Datei fund.db pro Profil) legt darüber einen Index aus Titeln, Feldern und Schlagworten nach festen Regeln und nutzt für den Text dieselbe Suche; Mails und Anhänge (fundmail.py) liest es in ruhigen Minuten in Scheiben ein und hält sie nur versiegelt (AES-GCM) mit ihren Wörtern als HMAC-Marken."
+"text": "Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene Kiwix-Archiv und erstellte Dokumente. Die Seite zeigt den Weg, auf dem eine Frage passende Stellen in den Dokumenten findet. Finden (fund.py, eigene Datei fund.db pro Profil) legt darüber einen Index aus Titeln, Feldern und Schlagworten nach festen Regeln und nutzt für den Text dieselbe Suche; Mails und Anhänge (fundmail.py) liest es in ruhigen Minuten in Scheiben ein und hält sie nur versiegelt (AES-GCM) mit ihren Wörtern als HMAC-Marken; Termine und Kontakte (fundquellen.py) ebenso, Gespräche nur mit Datum und Kanal (ihre Wörter sucht recall.liste), Listen, Erinnerungen, Bilder und Lieder wie ihre Quelle. Zeiträume („letzte Woche“, „2023“) rechnet frisch.spanne nach festen Regeln, „vom OP“ sucht den letzten vergangenen Termin im eigenen Kalender (fund.bezug_aus): 14 Tage davor bis 60 danach steht weiter oben, nie eine harte Grenze."
 },
 {
 "lang": "de",
@@ -2349,7 +2349,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/wissen.py search: eigene und geteilte Dokumente, Mischung, Nachsortieren (Schritt 1, Schritt 8, Schritt 9) - app/panel/documents.py search: Volltext und Vektoren, Rangmischung (Schritt 5, Schritt 6) - app/panel/documents.py _terms: Suchwörter aus der Frage (Schritt 5) - app/panel/documents.py match_docs: Dokumente mit Tags und Art (Schritt 4) - app/panel/docembed.py query: Fragevektor oder nichts (Schritt 3) - app/panel/docembed.py _call: ein Auftrag an den Modellprozess (Schritt 3) - app/panel/nachsortieren.py rank: Cross-Encoder oder Reihenfolge der Mischung (Schritt 10) - app/panel/wissen.py recent_window: „zuletzt notiert“ als feste Regel (Schritt 11) - app/panel/wissen.py where: Herkunft einer Stelle für das Modell (Schritt 13) - app/panel/lokal.py look: der kurze Blick vor der Antwort (Schritt 5) - app/panel/lokal.py excerpt: das Stück einer Stelle mit den Suchwörtern (Schritt 5) - app/panel/pdftabellen.py read: Tabellen in PDFs zeilenweise lesen (Schritt 5) - app/panel/documents.py _rows: lange Tabellen nur zwischen Zeilen teilen (Schritt 5) - app/panel/documents.py due_tables: PDFs von vorher neu lesen, wenn sie Tabellen haben (Schritt 5) - app/panel/wissensbuch"
+"text": "- app/panel/wissen.py search: eigene und geteilte Dokumente, Mischung, Nachsortieren (Schritt 1, Schritt 8, Schritt 9) - app/panel/documents.py search: Volltext und Vektoren, Rangmischung (Schritt 5, Schritt 6) - app/panel/documents.py _terms: Suchwörter aus der Frage (Schritt 5) - app/panel/documents.py match_docs: Dokumente mit Tags und Art (Schritt 4) - app/panel/docembed.py query: Fragevektor oder nichts (Schritt 3) - app/panel/docembed.py _call: ein Auftrag an den Modellprozess (Schritt 3) - app/panel/nachsortieren.py rank: Cross-Encoder oder Reihenfolge der Mischung (Schritt 10) - app/panel/wissen.py recent_window: „zuletzt notiert“ als feste Regel (Schritt 11) - app/panel/frisch.py spanne: Zeitraum aus den eigenen Worten, feste Regeln (Schritt 11) - app/panel/wissen.py where: Herkunft einer Stelle für das Modell (Schritt 13) - app/panel/lokal.py look: der kurze Blick vor der Antwort (Schritt 5) - app/panel/lokal.py excerpt: das Stück einer Stelle mit den Suchwörtern (Schritt 5) - app/panel/pdftabellen.py read: Tabellen in PDFs zeilenweise lesen (Schritt 5) - app/panel/documents.py _rows: lange Tabellen nur zwischen Zeilen teilen (Schritt 5) - app/panel/documents.py due_table"
 },
 {
 "lang": "de",
@@ -2357,7 +2357,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": ".py answer_block: passende Seiten des Wissensbuchs mit Quellen (Schritt 13) - app/panel/wissenskarte.py check_edge: feste Regeln für jede vorgeschlagene Verbindung (Schritt 13) - app/panel/wissenskarte.py view: der sichtbare Teil der Karte (Schritt 13) - app/panel/wissenskarte.py rund_um: Seiten um eine Seite, WITH RECURSIVE (Schritt 13) - app/panel/wissenskarte.py weg: kürzester Weg zwischen zwei Seiten (Schritt 13) - app/panel/wissenskarte.py check_ent: feste Regeln für jede Person, Firma, Frist … (Schritt 13) - app/panel/wissenskarte.py finde_knoten: Punkte genau über Name und andere Namen, nur lesend (Schritt 13) - app/panel/wissenskarte.py knoten_liste: Punkte einer Art nach Namen, nur lesend (Schritt 13) - app/panel/wissenskarte.py zusammen: zwei Punkte zusammenführen, nur per Klick (Schritt 13) - app/panel/wissensbuch.py search_pages: passende Seiten über den Suchindex wb_fts (Schritt 13) - app/panel/wissensbuch.py _fts_sync: Suchindex der Seiten nachziehen (Schritt 13) - app/panel/wissensbuch.py liste: Seiten-Ids mit Rang für andere Teile, nur lesend (Schritt 13) - app/panel/documents.py _similar: Ähnlichkeit blockweise in float32 (Schritt 6) - app/panel/gedaechtnis.py hint"
+"text": "s: PDFs von vorher neu lesen, wenn sie Tabellen haben (Schritt 5) - app/panel/wissensbuch.py answer_block: passende Seiten des Wissensbuchs mit Quellen (Schritt 13) - app/panel/wissenskarte.py check_edge: feste Regeln für jede vorgeschlagene Verbindung (Schritt 13) - app/panel/wissenskarte.py view: der sichtbare Teil der Karte (Schritt 13) - app/panel/wissenskarte.py rund_um: Seiten um eine Seite, WITH RECURSIVE (Schritt 13) - app/panel/wissenskarte.py weg: kürzester Weg zwischen zwei Seiten (Schritt 13) - app/panel/wissenskarte.py check_ent: feste Regeln für jede Person, Firma, Frist … (Schritt 13) - app/panel/wissenskarte.py finde_knoten: Punkte genau über Name und andere Namen, nur lesend (Schritt 13) - app/panel/wissenskarte.py knoten_liste: Punkte einer Art nach Namen, nur lesend (Schritt 13) - app/panel/wissenskarte.py zusammen: zwei Punkte zusammenführen, nur per Klick (Schritt 13) - app/panel/wissensbuch.py search_pages: passende Seiten über den Suchindex wb_fts (Schritt 13) - app/panel/wissensbuch.py _fts_sync: Suchindex der Seiten nachziehen (Schritt 13) - app/panel/wissensbuch.py liste: Seiten-Ids mit Rang für andere Teile, nur lesend (Schritt 13) - app/panel/documents.p"
 },
 {
 "lang": "de",
@@ -2365,7 +2365,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "_lines: Fakten in drei Blöcken (Schritt 13) - app/panel/profiles.py _cap: Obergrenze: nur alte gelernte Fakten machen Platz (Schritt 13) - app/panel/gedaechtnis.py slot_of: fester Themen-Platz eines Fakts nach festen Mustern (Schritt 13) - app/panel/gemerkt.py take_back: Rückgängig nur bei unverändertem Fakt (Schritt 13)"
+"text": "y _similar: Ähnlichkeit blockweise in float32 (Schritt 6) - app/panel/gedaechtnis.py hint_lines: Fakten in drei Blöcken (Schritt 13) - app/panel/profiles.py _cap: Obergrenze: nur alte gelernte Fakten machen Platz (Schritt 13) - app/panel/gedaechtnis.py slot_of: fester Themen-Platz eines Fakts nach festen Mustern (Schritt 13) - app/panel/gemerkt.py take_back: Rückgängig nur bei unverändertem Fakt (Schritt 13)"
 },
 {
 "lang": "de",
@@ -5150,6 +5150,30 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "freien Reserve von 2048 MB hält das Einlesen mit einer Logzeile an. Versiegelt (3a): Betreff, Auszug, Felder (Absender-Adresse, Betrag, Nummer, Ordnerrolle, Anhangnamen), Schlagwortwerte und eigene Schlagworte nur AES-GCM (vorrat.seal, gebunden an Profil, Quelle, Eintrag und Feld), die Wörter nur als HMAC-Marken in fund_blind (je Wortstamm, dazu der Anfang aus vier Buchstaben und die Wörter des Absenders); im Klartext stehen nur Quelle, Eintragsschlüssel (Postfach-ID, Marke des Ordners, UID) und Datum, ohne Schlüssel wird nichts geschrieben. Anhänge (PDF, Word, OpenDocument, Text …, höchstens 10 MB, Text bis 30 000 Zeichen) über das vorhandene Dokument-Lesen (documents.extract_pages): Text und Felder (Betrag, Rechnungsnummer, Firma nach den festen Regeln) gehen nur nach fund, nie als Dokument nach wissen.db; ein Scan ohne Text bleibt mit seinem Dateinamen. Ein Anhang-Treffer hebt seine Mail (eine Karte mit „Anhang: …“). „Öffnen“ zeigt die Mail auf der Seite E-Mail in ihrem Ordner (Archiv und Gesendet wie dort nur mit „Mails ordnen“). Wird ein Postfach entfernt, findet die Suche seine Mails sofort nicht mehr, die Zeilen gehen mit dem nächsten Blick. fund_suche zählt mit freigegebene"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Finden, Stufe C: Termine, Kontakte, Gespräche, Listen, Erinnerungen, Bilder, Lieder und „vom OP“ (V01.1.257, Plan *such-index*): fünf weitere Unterschalter unter *Funktionen → Finden in allen Daten*, alle ab Werk aus, Kinder von „fund“, jede Quelle folgt zusätzlich der Funktion, aus der sie kommt (fundquellen.frei); Gäste nie. fundquellen.py hält die Quellen, fund.runde sammelt sie in derselben Runde wie die Dokumente (höchstens alle fünf Minuten, nur wenn sich eine ihrer Dateien geändert hat, fundquellen.stempel; eine Runde, die an ihre Grenze von 200 Einträgen je Quelle kam, geht in der nächsten weiter). *Termine finden* (chat.fund_termine, braucht Kalender): die eigenen Kalender, nur aus der Kopie auf dem Spark (kalenderspiegel, ein Spark-Kalender aus sparkkalender), nie ein eigener Abruf; geteilte Kalender anderer bleiben draußen. Titel, Ort und Beschreibung versiegelt wie Mails (AES-GCM über fund.put_sealed, Wörter als HMAC-Marken), je Objekt das ETag als Stand (als Marke); ein entfernter Kalender verschwindet sofort aus der Suche. *Kontakte finden* (chat.fund_kontakte, braucht Kontakte): Name, Firma, Position und Ort jeder Karte versiegelt, nie Nummern, Mail-Adressen oder Str"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "aßen; Name, Firma und Ort werden Schlagworte (Person, Firma, Ort). *Gespräche finden* (chat.fund_chats, braucht Frühere Gespräche): je Gespräch nur Datum, Kanal (Telegram, Siri, Uhr …) und Anzahl der Fragen; die Wörter sucht recall.liste (BM25 des Verlaufs, Antworten aus Mails bleiben draußen), der Titel wird beim Zeigen aus dem Gespräch gelesen, nichts davon steht in fund.db. *Listen und Erinnerungen finden* (chat.fund_listen, braucht Listen bzw. Timer und Erinnerungen): eigene Listen auf dem Spark und Listen anderer nur über tasks.shared_to (Listen teilen für beide an, Freigabe noch da), dazu jede Erinnerung; klar wie ihre Quelle. *Bilder und Lieder finden* (chat.fund_medien, braucht Bilder malen bzw. Musik machen): Wunsch, Beschreibung und Liedtext. Ein Treffer öffnet seine Seite (Kalender am Tag des Termins, Kontaktkarte, Liste, Gespräch im Chat, Mitteilungen, Bilder, Musik). Zeiträume: frisch.spanne(text, now, zone) ist die eine Regel für „heute“, „gestern“, „vorgestern“, „diese/letzte Woche“, „diesen/letzten Monat“, „dieses/letztes Jahr“, „im März“, „März 2024“, „2023“, „vor drei Wochen“ (auch englisch); zwei verschiedene Zeiträume einer Art sind keiner. wissen.recent_window "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "und der Filter von fund_suche nehmen sie. „vom OP“: fund.bezug_aus liest aus den eigenen Worten „vom/vor dem/nach dem/seit dem <Wort>“ (sicher) oder „beim/zum/zur/von der <Wort>“ (nur wenn ein Termin passt), nie eine Zeit („vom letzten Jahr“, „vom Montag“). Das Panel sucht in den eigenen Kalendern den jüngsten vergangenen Termin (höchstens 3 Jahre) mit allen Wortstämmen über seine Marken; Einträge 14 Tage davor bis 60 Tage danach bekommen einen festen Rang-Bonus (1/60), nichts fällt weg. Ohne Termin sagt ein fester Satz „Einen Termin „OP“ habe ich im Kalender nicht gefunden.“ und die Suche läuft ohne Fenster. Das Wort selbst ist dann kein Suchwort mehr. Auf der Seite Finden zeigt eine Zeile über den Treffern Zeitraum und Termin. Logs fund: runde termin | 3 neu | 0 weg | …, fund: bezug | termin gefunden, fund: bezug | kein termin (nie das Wort); Live *Finden*: „Termine N · Kontakte N …“, „Bezug heute N gefunden, M ohne Termin“. Selbsttests tests/test_fund_quellen.py (feste Uhrzeit, nie die Uhr)."
 },
 {
 "lang": "de",
@@ -13221,7 +13245,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Meine Daten",
 "title": "Meine Daten",
-"text": "- Finden in allen Daten (Funktionen → Meine Daten → „Finden in allen Daten“; Finden → Einstellungen): Ein Suchindex über deine eigenen Sachen: Dokumente, Wissensordner auf dem NAS, reMarkable und Wissensbuch, mit „Mails und Anhänge finden“ auch alle Mails (Termine, Kontakte, Listen und mehr folgen)."
+"text": "- Finden in allen Daten (Funktionen → Meine Daten → „Finden in allen Daten“; Finden → Einstellungen): Ein Suchindex über deine eigenen Sachen: Dokumente, Wissensordner auf dem NAS, reMarkable und Wissensbuch, mit „Mails und Anhänge finden“ auch alle Mails, mit den weiteren Unterschaltern Termine, Kontakte, frühere Gespräche, Listen, Erin …"
 },
 {
 "lang": "de",
@@ -13230,6 +13254,46 @@
 "head": "Meine Daten",
 "title": "Meine Daten",
 "text": "- Mails und Anhänge finden (Funktionen → Meine Daten → „Mails und Anhänge finden“; baut auf „Finden in allen Daten“; Finden → Einstellungen): Finden liest alle deine Mails ein: Posteingang, Archiv und Gesendet jedes Postfachs, die neuesten zuerst, ohne Obergrenze."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Termine finden (Funktionen → Meine Daten → „Termine finden“; baut auf „Finden in allen Daten“; Finden → Einstellungen): Finden nimmt die Termine deiner eigenen Kalender in den Suchindex: Titel, Ort und Beschreibung, versiegelt wie Mails (nur Marken und AES-GCM)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Kontakte finden (Funktionen → Meine Daten → „Kontakte finden“; baut auf „Finden in allen Daten“; Finden → Einstellungen): Finden nimmt von jeder Kontaktkarte Name, Firma, Position und Ort in den Suchindex, versiegelt wie Mails; nie Telefonnummern, Mail-Adressen oder Straßen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Gespräche finden (Funktionen → Meine Daten → „Gespräche finden“; baut auf „Finden in allen Daten“; Finden → Einstellungen): Finden zeigt auch frühere Gespräche mit dem Assistenten, auch über Telegram, Siri oder die Uhr."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Listen und Erinnerungen finden (Funktionen → Meine Daten → „Listen und Erinnerungen finden“; baut auf „Finden in allen Daten“; Finden → Einstellungen): Finden nimmt deine Listen auf dem Spark (Einkauf, Aufgaben, eigene) mit offenen und erledigten Einträgen und jede Erinnerung in den Suchindex."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
+"text": "- Bilder und Lieder finden (Funktionen → Meine Daten → „Bilder und Lieder finden“; baut auf „Finden in allen Daten“; Finden → Einstellungen): Finden nimmt deine gemalten Bilder, Fotos und Lieder über ihren Wunsch, ihre Beschreibung und den Liedtext in den Suchindex."
 },
 {
 "lang": "de",
@@ -15437,7 +15501,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Daten auf der Platte und neue Schreibwege",
 "title": "Daten auf der Platte und neue Schreibwege",
-"text": "icher Marken). Ohne Schlüssel wird nichts geschrieben; unter 2048 MB freiem Platz hält das Einlesen an. Nur lesend (EXAMINE, PEEK) und nur zu den eigenen Postfächern; ein entferntes Postfach verschwindet sofort aus der Suche. Kein neuer Weg hinein, kein neuer Schreibweg nach außen. - Vorräte versiegelt (seit V01.0.872/879): Was ein Dienst für ein Profil gelesen hat, liegt als Vorrat versiegelt (vault) im Profil, damit Antworten bei einem Ausfall mit „Stand …“ kommen: Mail-Vorrat (mail-vorrat.bin, Kopfzeilen und bis zu 40 Mailtexte ohne Anhänge), Wetter-, Paket- und Für-dich-Vorrat. Nicht in der Sicherung, „Daten löschen“ entfernt sie. Liste aller Dateien: Architektur → Datenablage. - Unklare Fragen anonym (seit V01.0.927, Schalter „Unklare Fragen anonym merken“ unter Funktionen → Gezielte Werkzeugwahl, aus; Vorliebe je Profil unter Ich → Gespräch → Datenschutz): Fragen, die keine Regel der Weiche erkennt, liegen nur geschwärzt (feste Regeln wie bei „Probleme melden“, dazu Adressbuch-Namen und jede Zahl, zweite Leck-Prüfung verwirft) und versiegelt in state/weiche-unklar.json: ohne Profil, Gerät und Uhrzeit, höchstens 100, nach 7 Tagen weg, nicht in der Sicherung. Nie ein Satz mit d"
+"text": "icher Marken). Ohne Schlüssel wird nichts geschrieben; unter 2048 MB freiem Platz hält das Einlesen an. Nur lesend (EXAMINE, PEEK) und nur zu den eigenen Postfächern; ein entferntes Postfach verschwindet sofort aus der Suche. Kein neuer Weg hinein, kein neuer Schreibweg nach außen. - Finden: Termine, Kontakte, Gespräche, Listen, Medien (seit V01.1.257, Schalter „Termine finden“, „Kontakte finden“, „Gespräche finden“, „Listen und Erinnerungen finden“, „Bilder und Lieder finden“, alle aus): Termine (nur aus der Kopie der eigenen Kalender auf dem Spark, kein eigener Abruf, keine geteilten Kalender anderer) und Kontakte (Name, Firma, Position, Ort; nie Nummern, Mail-Adressen, Straßen) liegen in fund.db nur versiegelt wie Mails, ihr Stand nur als Marke. Von Gesprächen stehen nur Datum, Kanal und Anzahl der Fragen im Index; ihre Wörter sucht recall.liste im Verlauf (Antworten aus Mails bleiben draußen). Listen und Erinnerungen, Bilder und Lieder liegen klar wie ihre Quelle; Listen anderer nur, solange Listen teilen für beide an und die Freigabe da ist. Zeiträume (frisch.spanne) und „vom OP“ (fund.bezug_aus, nur aus den eigenen Worten, der Termin nur aus den eigenen Kalendern) sind feste "
 },
 {
 "lang": "de",
@@ -15445,7 +15509,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Daten auf der Platte und neue Schreibwege",
 "title": "Daten auf der Platte und neue Schreibwege",
-"text": "em Codewort, nie Gäste. Sehen und löschen nur Admin und Mit-Admin auf Funktionen → Weiche. - Kontakte ändern (seit V01.0.888, Schalter „Kontakte ändern“, aus): Geändert wird nur im eigenen Adressbuch des Profils und nur mit If-Match (ETag); hat sich die Karte inzwischen geändert, überschreibt der Spark nichts. Neue Karten gehen in das gewählte Buch oder „Auf dem Spark“. - Suche beim Mailserver (seit V01.0.887): Was man ins Suchfeld tippt, wird zu IMAP-SEARCH-Wörtern; nur Buchstaben, Ziffern, @, . und - kommen hinein, nie ein Anführungszeichen, ein Wort außerhalb von ASCII als UTF-8-Literal. Gesucht wird nur in den eigenen Postfächern. - Heldenbuch aufs reMarkable (seit V01.1.143, Schalter unter Funktionen → KI-Dungeon-Master, aus): Das Buch eines Helden verlässt den Spark nur auf dem Weg des reMarkable (dessen Cloud, remarkable.place, Tageslimits). Es enthält nur Daten des Panels: Katalog, Heldenwerte, die eigene Chronik aus festen Arten und Zahlen, von Personen nur das Freigeschaltete, von Mitspielern nur Name, Volk und Klasse; nie Text des Modells. Bilder werden mit Pillow unter einer Pixel- und Bytegrenze neu geöffnet. Zustand users/<id>/dungeon-buch.json, „Daten löschen“ entfer"
+"text": "Regeln, nie das Modell; das Fenster um den Termin ist ein Rang-Bonus, keine Grenze. Kein neuer Weg hinein oder hinaus. - Vorräte versiegelt (seit V01.0.872/879): Was ein Dienst für ein Profil gelesen hat, liegt als Vorrat versiegelt (vault) im Profil, damit Antworten bei einem Ausfall mit „Stand …“ kommen: Mail-Vorrat (mail-vorrat.bin, Kopfzeilen und bis zu 40 Mailtexte ohne Anhänge), Wetter-, Paket- und Für-dich-Vorrat. Nicht in der Sicherung, „Daten löschen“ entfernt sie. Liste aller Dateien: Architektur → Datenablage. - Unklare Fragen anonym (seit V01.0.927, Schalter „Unklare Fragen anonym merken“ unter Funktionen → Gezielte Werkzeugwahl, aus; Vorliebe je Profil unter Ich → Gespräch → Datenschutz): Fragen, die keine Regel der Weiche erkennt, liegen nur geschwärzt (feste Regeln wie bei „Probleme melden“, dazu Adressbuch-Namen und jede Zahl, zweite Leck-Prüfung verwirft) und versiegelt in state/weiche-unklar.json: ohne Profil, Gerät und Uhrzeit, höchstens 100, nach 7 Tagen weg, nicht in der Sicherung. Nie ein Satz mit dem Codewort, nie Gäste. Sehen und löschen nur Admin und Mit-Admin auf Funktionen → Weiche. - Kontakte ändern (seit V01.0.888, Schalter „Kontakte ändern“, aus): Geän"
 },
 {
 "lang": "de",
@@ -15453,7 +15517,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Daten auf der Platte und neue Schreibwege",
 "title": "Daten auf der Platte und neue Schreibwege",
-"text": "nt ihn. - Gemerkt-Hinweis (seit V01.1.249, Schalter Funktionen → Gemerkt-Hinweis, ab Werk an): Ein Gespräch behält zu einer Antwort nur Nummer und Stand der gemerkten Einträge (mem), nie ihren Text; die Karte „Gemerkt von selbst“ liegt mit dem Text der Einträge in vorgaenge.json des Profils (7 Tage). Der neue Schreibweg POST /api/profile/memory/{id}/undo nimmt nur einen eigenen Eintrag zurück und nur, solange er seit dem Merken unverändert ist; Mitteilungen und Telegram bekommen nur die Zahl. - Gedächtnis und Gespräche versiegelt (seit V01.1.251, Plan *nutzerwissen*, Stufe 4, kein Schalter: feste Schutzregel wie der Vorrat): memory.json, convos.json, toollog.json und room-history.json jedes Profils, seit V01.1.252 auch, was der Spark über die Person gelernt hat (learned.json, zuordnungen.json, memory-ask.json, interessen.json, tagebuch.json), liegen ganz versiegelt (AES-256-GCM, ein eigener Schlüssel für den Zweck „profildaten“ aus secret.key über HKDF, Profil und Dateiname als Zusatzdaten, eine frische Nonce bei jedem Schreiben); welche Dateien, sagt siegel= im Datei-Register. Ältere offene Dateien versiegelt der Spark einmal beim Start, nach einer Sicherung „vor-siegel“, und öffn"
+"text": "dert wird nur im eigenen Adressbuch des Profils und nur mit If-Match (ETag); hat sich die Karte inzwischen geändert, überschreibt der Spark nichts. Neue Karten gehen in das gewählte Buch oder „Auf dem Spark“. - Suche beim Mailserver (seit V01.0.887): Was man ins Suchfeld tippt, wird zu IMAP-SEARCH-Wörtern; nur Buchstaben, Ziffern, @, . und - kommen hinein, nie ein Anführungszeichen, ein Wort außerhalb von ASCII als UTF-8-Literal. Gesucht wird nur in den eigenen Postfächern. - Heldenbuch aufs reMarkable (seit V01.1.143, Schalter unter Funktionen → KI-Dungeon-Master, aus): Das Buch eines Helden verlässt den Spark nur auf dem Weg des reMarkable (dessen Cloud, remarkable.place, Tageslimits). Es enthält nur Daten des Panels: Katalog, Heldenwerte, die eigene Chronik aus festen Arten und Zahlen, von Personen nur das Freigeschaltete, von Mitspielern nur Name, Volk und Klasse; nie Text des Modells. Bilder werden mit Pillow unter einer Pixel- und Bytegrenze neu geöffnet. Zustand users/<id>/dungeon-buch.json, „Daten löschen“ entfernt ihn. - Gemerkt-Hinweis (seit V01.1.249, Schalter Funktionen → Gemerkt-Hinweis, ab Werk an): Ein Gespräch behält zu einer Antwort nur Nummer und Stand der gemerkt"
 },
 {
 "lang": "de",
@@ -15461,7 +15525,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Daten auf der Platte und neue Schreibwege",
 "title": "Daten auf der Platte und neue Schreibwege",
-"text": "et jede danach zur Probe. Auf diesem Spark öffnet jede Sicherung sie wieder; auf einem anderen Spark nur mit der Umzugs-Sicherung (sie trägt secret.key). Ohne sie legt der Spark die Datei als <Name>.unlesbar beiseite, überschreibt nie etwas, das Profil beginnt leer, und die Admins sehen einen Hinweis mit Weg (Einstellungen → Sicherung); nach der Umzugs-Sicherung holt „Wieder einlesen“ unter Ich → Gedächtnis sie zurück. Die „Kopie meiner Daten“ nimmt sie geöffnet in ihre eigene Verschlüsselung und ist damit der Rettungsweg. Neuer Schreibweg POST /api/profile/memory/einlesen (nur das eigene Profil, Rate-Limit, 256 Byte). - Personen, Firmen und Fristen in der Wissenskarte (seit V01.1.253, Schalter unter Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte, aus): Namen von Personen, Firmen, Orten, Verträgen, Konten (IBAN oder Nummer) und Fristen aus den eigenen Dokumenten liegen als Tabellen wk_ent und wk_ment in der wissen.db des Profils, nie anderswo, nie im Log oder in Live (dort nur Anzahl je Art). Andere Teile lesen sie nur (wissenskarte.finde_knoten, knoten_liste, schreibgeschützte Verbindung). Umbenennen, Zusammenführen und Löschen gehen nur per Klick der Person mit dem Co"
+"text": "en Einträge (mem), nie ihren Text; die Karte „Gemerkt von selbst“ liegt mit dem Text der Einträge in vorgaenge.json des Profils (7 Tage). Der neue Schreibweg POST /api/profile/memory/{id}/undo nimmt nur einen eigenen Eintrag zurück und nur, solange er seit dem Merken unverändert ist; Mitteilungen und Telegram bekommen nur die Zahl. - Gedächtnis und Gespräche versiegelt (seit V01.1.251, Plan *nutzerwissen*, Stufe 4, kein Schalter: feste Schutzregel wie der Vorrat): memory.json, convos.json, toollog.json und room-history.json jedes Profils, seit V01.1.252 auch, was der Spark über die Person gelernt hat (learned.json, zuordnungen.json, memory-ask.json, interessen.json, tagebuch.json), liegen ganz versiegelt (AES-256-GCM, ein eigener Schlüssel für den Zweck „profildaten“ aus secret.key über HKDF, Profil und Dateiname als Zusatzdaten, eine frische Nonce bei jedem Schreiben); welche Dateien, sagt siegel= im Datei-Register. Ältere offene Dateien versiegelt der Spark einmal beim Start, nach einer Sicherung „vor-siegel“, und öffnet jede danach zur Probe. Auf diesem Spark öffnet jede Sicherung sie wieder; auf einem anderen Spark nur mit der Umzugs-Sicherung (sie trägt secret.key). Ohne sie l"
 },
 {
 "lang": "de",
@@ -18293,7 +18357,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "tes points of the knowledge map (with the code of „Confirm“). Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it. 9. Check the answer: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML. 10. Traces: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own). What a service keeps for a profile (the mail supply, mail and attachments in Find) lies only sealed with AES-GCM (vorrat.seal), the words in the search index only as HMAC marks with a key per profile (vorrat.marke); without a key nothing is written."
+"text": "tes points of the knowledge map (with the code of „Confirm“). Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it. 9. Check the answer: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML. 10. Traces: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own). What a service keeps for a profile (the mail supply, mail, attachments, appointments and contacts in Find) lies only sealed with AES-GCM (vorrat.seal), the words in the search index only as HMAC marks with a key per profile (vorrat.marke); without a key nothing is written."
 },
 {
 "lang": "en",
@@ -18645,7 +18709,7 @@
 "file": "Architecture and data flow",
 "head": "Everyday score",
 "title": "Everyday score",
-"text": "- The test sentences (184) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
+"text": "- The test sentences (189) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
 },
 {
 "lang": "en",
@@ -18661,7 +18725,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 24 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 184 built-in test sentences (step 4, step 5) - 216 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
+"text": "- 24 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 189 built-in test sentences (step 4, step 5) - 216 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
 },
 {
 "lang": "en",
@@ -18909,7 +18973,7 @@
 "file": "Architecture and data flow",
 "head": "Knowledge",
 "title": "Knowledge",
-"text": "Knowledge is everything the Spark knows without going to the internet: the uploaded documents of each profile (one SQLite file wissen.db per profile), the memory, earlier conversations, the own Kiwix archive and created documents. This page shows the way a question finds fitting passages in the documents. Find (fund.py, its own file fund.db per profile) adds an index of titles, fields and tags by fixed rules on top and uses the same search for the text; mail and attachments (fundmail.py) it reads in slices in quiet minutes and keeps only sealed (AES-GCM) with their words as HMAC marks."
+"text": "Knowledge is everything the Spark knows without going to the internet: the uploaded documents of each profile (one SQLite file wissen.db per profile), the memory, earlier conversations, the own Kiwix archive and created documents. This page shows the way a question finds fitting passages in the documents. Find (fund.py, its own file fund.db per profile) adds an index of titles, fields and tags by fixed rules on top and uses the same search for the text; mail and attachments (fundmail.py) it reads in slices in quiet minutes and keeps only sealed (AES-GCM) with their words as HMAC marks; appointments and contacts (fundquellen.py) likewise, conversations only with date and channel (recall.liste searches their words), lists, reminders, pictures and songs like their source. Periods („last week“, „2023“) come from frisch.spanne by fixed rules, „from the surgery“ looks for the last past appointment in the own calendar (fund.bezug_aus): 14 days before to 60 after rank higher, never a hard limit."
 },
 {
 "lang": "en",
@@ -19069,7 +19133,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/wissen.py search: own and shared documents, mix, re-ranking (step 1, step 8, step 9) - app/panel/documents.py search: full text and vectors, rank fusion (step 5, step 6) - app/panel/documents.py _terms: search words from the question (step 5) - app/panel/documents.py match_docs: documents with tags and kind (step 4) - app/panel/docembed.py query: question vector or nothing (step 3) - app/panel/docembed.py _call: one job for the model process (step 3) - app/panel/nachsortieren.py rank: cross-encoder or the mix's order (step 10) - app/panel/wissen.py recent_window: „noted lately“ as a fixed rule (step 11) - app/panel/wissen.py where: source of a passage for the model (step 13) - app/panel/lokal.py look: the quick look before the answer (step 5) - app/panel/lokal.py excerpt: the part of a passage with the search words (step 5) - app/panel/pdftabellen.py read: read tables in PDFs row by row (step 5) - app/panel/documents.py _rows: cut long tables only between rows (step 5) - app/panel/documents.py due_tables: read PDFs from before again when they have tables (step 5) - app/panel/wissensbuch.py answer_block: fitting pages of the knowledge book with sources (step 13) - app/pa"
+"text": "- app/panel/wissen.py search: own and shared documents, mix, re-ranking (step 1, step 8, step 9) - app/panel/documents.py search: full text and vectors, rank fusion (step 5, step 6) - app/panel/documents.py _terms: search words from the question (step 5) - app/panel/documents.py match_docs: documents with tags and kind (step 4) - app/panel/docembed.py query: question vector or nothing (step 3) - app/panel/docembed.py _call: one job for the model process (step 3) - app/panel/nachsortieren.py rank: cross-encoder or the mix's order (step 10) - app/panel/wissen.py recent_window: „noted lately“ as a fixed rule (step 11) - app/panel/frisch.py spanne: period from the own words, fixed rules (step 11) - app/panel/wissen.py where: source of a passage for the model (step 13) - app/panel/lokal.py look: the quick look before the answer (step 5) - app/panel/lokal.py excerpt: the part of a passage with the search words (step 5) - app/panel/pdftabellen.py read: read tables in PDFs row by row (step 5) - app/panel/documents.py _rows: cut long tables only between rows (step 5) - app/panel/documents.py due_tables: read PDFs from before again when they have tables (step 5) - app/panel/wissensbuch.py an"
 },
 {
 "lang": "en",
@@ -19077,7 +19141,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "nel/wissenskarte.py check_edge: fixed rules for every proposed connection (step 13) - app/panel/wissenskarte.py view: the visible part of the map (step 13) - app/panel/wissenskarte.py rund_um: pages around a page, WITH RECURSIVE (step 13) - app/panel/wissenskarte.py weg: shortest way between two pages (step 13) - app/panel/wissenskarte.py check_ent: fixed rules for every person, company, deadline … (step 13) - app/panel/wissenskarte.py finde_knoten: points exactly by name and other names, read only (step 13) - app/panel/wissenskarte.py knoten_liste: points of one kind by name, read only (step 13) - app/panel/wissenskarte.py zusammen: merge two points, only by click (step 13) - app/panel/wissensbuch.py search_pages: fitting pages through the search index wb_fts (step 13) - app/panel/wissensbuch.py _fts_sync: bring the pages' search index up to date (step 13) - app/panel/wissensbuch.py liste: page ids with rank for other parts, read only (step 13) - app/panel/documents.py _similar: similarity block by block in float32 (step 6) - app/panel/gedaechtnis.py hint_lines: facts in three blocks (step 13) - app/panel/profiles.py _cap: cap: only old learned facts make room (step 13) - app/pane"
+"text": "swer_block: fitting pages of the knowledge book with sources (step 13) - app/panel/wissenskarte.py check_edge: fixed rules for every proposed connection (step 13) - app/panel/wissenskarte.py view: the visible part of the map (step 13) - app/panel/wissenskarte.py rund_um: pages around a page, WITH RECURSIVE (step 13) - app/panel/wissenskarte.py weg: shortest way between two pages (step 13) - app/panel/wissenskarte.py check_ent: fixed rules for every person, company, deadline … (step 13) - app/panel/wissenskarte.py finde_knoten: points exactly by name and other names, read only (step 13) - app/panel/wissenskarte.py knoten_liste: points of one kind by name, read only (step 13) - app/panel/wissenskarte.py zusammen: merge two points, only by click (step 13) - app/panel/wissensbuch.py search_pages: fitting pages through the search index wb_fts (step 13) - app/panel/wissensbuch.py _fts_sync: bring the pages' search index up to date (step 13) - app/panel/wissensbuch.py liste: page ids with rank for other parts, read only (step 13) - app/panel/documents.py _similar: similarity block by block in float32 (step 6) - app/panel/gedaechtnis.py hint_lines: facts in three blocks (step 13) - app/pan"
 },
 {
 "lang": "en",
@@ -19085,7 +19149,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "l/gedaechtnis.py slot_of: a fact's fixed topic place by fixed patterns (step 13) - app/panel/gemerkt.py take_back: undo only while the fact is unchanged (step 13)"
+"text": "el/profiles.py _cap: cap: only old learned facts make room (step 13) - app/panel/gedaechtnis.py slot_of: a fact's fixed topic place by fixed patterns (step 13) - app/panel/gemerkt.py take_back: undo only while the fact is unchanged (step 13)"
 },
 {
 "lang": "en",
@@ -21782,6 +21846,30 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "nd own tags only AES-GCM (vorrat.seal, bound to profile, source, entry and field), the words only as HMAC marks in fund_blind (per word stem, plus its first four letters and the sender's words); in plain text stand only source, entry key (mailbox id, a mark of the folder, UID) and date, and without a key nothing is written. Attachments (PDF, Word, OpenDocument, text …, at most 10 MB, text up to 30,000 characters) through the existing document reading (documents.extract_pages): text and fields (amount, invoice number, company by the fixed rules) go only into fund, never as a document into wissen.db; a scan without text keeps its file name. An attachment hit lifts its mail (one card with \"Attachment: …\"). \"Open\" shows the mail on the E-mail page in its folder (archive and sent, as there, only with \"Order mail\"). When a mailbox is removed, the search no longer finds its mail at once, the rows go with the next look. With mail released fund_suche counts as a mail reader (offer()[\"mail\"]): the locks after mail (LOCKED_AFTER_MAIL) apply. Logs fund: runde mail | 120 neu | 0 weg | 4800 offen | 12.3 s | P1, fund: mail platz knapp | … MB frei, fund: mail uidvalidity gewechselt | ordner neu, f"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Find, stage C: appointments, contacts, conversations, lists, reminders, pictures, songs and \"from the surgery\" (V01.1.257, plan *such-index*): five more sub-switches under *Features → Find in all data*, all off by default, children of \"fund\", and each source also follows the function it comes from (fundquellen.frei); never guests. fundquellen.py holds the sources, fund.runde collects them in the same round as the documents (at most every five minutes, only when one of their files changed, fundquellen.stempel; a round that reached its limit of 200 entries per source goes on in the next one). *Find appointments* (chat.fund_termine, needs Calendar): the own calendars, only from the copy on the Spark (kalenderspiegel, a Spark calendar from sparkkalender), never a fetch of its own; calendars others share stay out. Title, place and description sealed like mail (AES-GCM through fund.put_sealed, words as HMAC marks), per object the ETag as its state (as a mark); a removed calendar leaves the search at once. *Find contacts* (chat.fund_kontakte, needs Contacts): name, company, position and town of every card sealed, never numbers, mail addresses or streets; name, company and town become tags"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " (person, company, place). *Find conversations* (chat.fund_chats, needs Past conversations): per conversation only date, channel (Telegram, Siri, watch …) and number of questions; the words are searched by recall.liste (BM25 of the history, answers from mail stay out), the title is read from the conversation when shown, nothing of it is in fund.db. *Find lists and reminders* (chat.fund_listen, needs Lists or Timers and reminders): own lists on the Spark and lists of others only through tasks.shared_to (Share lists on for both, the share still there), plus every reminder; clear like their source. *Find pictures and songs* (chat.fund_medien, needs Painting pictures or Making music): wish, description and lyrics. A hit opens its page (the calendar on the appointment's day, the contact card, the list, the conversation in the chat, notifications, pictures, music). Periods: frisch.spanne(text, now, zone) is the one rule for \"heute\", \"gestern\", \"vorgestern\", \"diese/letzte Woche\", \"diesen/letzten Monat\", \"dieses/letztes Jahr\", \"im März\", \"März 2024\", \"2023\", \"vor drei Wochen\" (also in English); two different periods of one kind are none. wissen.recent_window and the filter of fund_suche ta"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ke it. \"vom OP\" (from the surgery): fund.bezug_aus reads from the person's own words \"vom/vor dem/nach dem/seit dem <word>\" (sure) or \"beim/zum/zur/von der <word>\" (only when an appointment fits), never a time (\"vom letzten Jahr\", \"vom Montag\"). The panel looks in the own calendars for the newest past appointment (at most 3 years) with all word stems through its marks; entries 14 days before to 60 days after get a fixed rank bonus (1/60), nothing is dropped. Without an appointment a fixed sentence says \"Einen Termin „OP“ habe ich im Kalender nicht gefunden.\" and the search runs without a window. The word itself is then no search word. On the page Find a line above the hits shows period and appointment. Logs fund: runde termin | 3 neu | 0 weg | …, fund: bezug | termin gefunden, fund: bezug | kein termin (never the word); live *Find*: \"Termine N · Kontakte N …\", \"Bezug heute N gefunden, M ohne Termin\". Self-tests tests/test_fund_quellen.py (a fixed time, never the clock)."
 },
 {
 "lang": "en",
@@ -29573,7 +29661,7 @@
 "file": "Assistant and panel",
 "head": "My data",
 "title": "My data",
-"text": "- Find in all data (Features → My data → \"Find in all data\"; Find → Settings): A search index over your own things: documents, knowledge folders on the NAS, reMarkable and the knowledge book, with \"Find mail and attachments\" also every mail (appointments, contacts, lists and more follow)."
+"text": "- Find in all data (Features → My data → \"Find in all data\"; Find → Settings): A search index over your own things: documents, knowledge folders on the NAS, reMarkable and the knowledge book, with \"Find mail and attachments\" also every mail, with the further sub-switches appointments, contacts, past conversations, …"
 },
 {
 "lang": "en",
@@ -29582,6 +29670,46 @@
 "head": "My data",
 "title": "My data",
 "text": "- Find mail and attachments (Features → My data → \"Find mail and attachments\"; builds on \"Find in all data\"; Find → Settings): Find reads all your mail: the inbox, archive and sent folder of every mailbox, the newest first, with no upper limit."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Find appointments (Features → My data → \"Find appointments\"; builds on \"Find in all data\"; Find → Settings): Find takes the appointments of your own calendars into the search index: title, place and description, sealed like mail (only marks and AES-GCM)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Find contacts (Features → My data → \"Find contacts\"; builds on \"Find in all data\"; Find → Settings): Find takes name, company, position and town of every contact card into the search index, sealed like mail; never phone numbers, mail addresses or streets."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Find conversations (Features → My data → \"Find conversations\"; builds on \"Find in all data\"; Find → Settings): Find also shows past conversations with the assistant, also over Telegram, Siri or the watch."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Find lists and reminders (Features → My data → \"Find lists and reminders\"; builds on \"Find in all data\"; Find → Settings): Find takes your lists on the Spark (shopping, tasks, own ones) with open and done entries and every reminder into the search index."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Find pictures and songs (Features → My data → \"Find pictures and songs\"; builds on \"Find in all data\"; Find → Settings): Find takes your painted pictures, photos and songs into the search index by their wish, description and lyrics."
 },
 {
 "lang": "en",
@@ -31717,7 +31845,7 @@
 "file": "Security and operation",
 "head": "Data on the disk and new ways to write",
 "title": "Data on the disk and new ways to write",
-"text": " reading stops. Only reading (EXAMINE, PEEK) and only to the own mailboxes; a removed mailbox leaves the search at once. No new way in, no new way of writing out. - Supplies sealed (since V01.0.872/879): what a service read for a profile lies sealed (vault) in the profile as a supply, so answers come with \"as of …\" during an outage: mail supply (mail-vorrat.bin, headers and up to 40 mail texts without attachments), weather, parcel and for-you supply. Not in the backup, \"Delete data\" removes them. All files: Architecture → data storage. - Unclear questions, anonymous (since V01.0.927, switch \"Keep unclear questions anonymously\" under Features → Targeted tool choice, off; preference per profile under Me → Conversation → Privacy): questions no rule of the switch recognizes are kept only redacted (fixed rules as in \"Report a problem\", plus address book names and every number, a second leak check drops) and sealed in state/weiche-unklar.json: without profile, device and time of day, at most 100, gone after 7 days, not in the backup. Never a sentence with the code word, never guests. Only admin and co-admin see and delete them on Features → Routing. - Edit contacts (since V01.0.888, swit"
+"text": " reading stops. Only reading (EXAMINE, PEEK) and only to the own mailboxes; a removed mailbox leaves the search at once. No new way in, no new way of writing out. - Find: appointments, contacts, conversations, lists, media (since V01.1.257, switches \"Find appointments\", \"Find contacts\", \"Find conversations\", \"Find lists and reminders\", \"Find pictures and songs\", all off): appointments (only from the copy of the own calendars on the Spark, no fetch of its own, no calendars shared by others) and contacts (name, company, position, town; never numbers, mail addresses, streets) lie in fund.db only sealed like mail, their state only as a mark. Of conversations the index holds only date, channel and number of questions; their words are searched by recall.liste in the history (answers from mail stay out). Lists and reminders, pictures and songs lie clear like their source; lists of others only while Share lists is on for both and the share is there. Periods (frisch.spanne) and \"from the surgery\" (fund.bezug_aus, only from the own words, the appointment only from the own calendars) are fixed rules, never the model; the window around the appointment is a rank bonus, no limit. No new way in o"
 },
 {
 "lang": "en",
@@ -31725,7 +31853,7 @@
 "file": "Security and operation",
 "head": "Data on the disk and new ways to write",
 "title": "Data on the disk and new ways to write",
-"text": "ch \"Edit contacts\", off): changes go only into the profile's own address book and only with If-Match (ETag); when the card changed meanwhile, the Spark overwrites nothing. New cards go into the chosen book or \"On the Spark\". - Search at the mail server (since V01.0.887): what you type into the search field becomes IMAP SEARCH words; only letters, digits, @, . and - get in, never a quote, a word beyond ASCII as a UTF-8 literal. Only the own mailboxes are searched. - Hero book to the reMarkable (since V01.1.143, switch under Features → AI Dungeon Master, off): A hero's book leaves the Spark only on the reMarkable's way (its cloud, remarkable.place, daily limits). It holds only the panel's data: catalog, hero values, the own chronicle of fixed kinds and numbers, of people only what was unlocked, of fellow heroes only name, people and class; never a text of the model. Pictures are opened again with Pillow under a pixel and byte bound. State users/<id>/dungeon-buch.json, \"Delete data\" removes it. - Remembered note (since V01.1.249, switch Features → Remembered note, on by default): a conversation keeps per answer only the number and state of the entries remembered (mem), never their tex"
+"text": "r out. - Supplies sealed (since V01.0.872/879): what a service read for a profile lies sealed (vault) in the profile as a supply, so answers come with \"as of …\" during an outage: mail supply (mail-vorrat.bin, headers and up to 40 mail texts without attachments), weather, parcel and for-you supply. Not in the backup, \"Delete data\" removes them. All files: Architecture → data storage. - Unclear questions, anonymous (since V01.0.927, switch \"Keep unclear questions anonymously\" under Features → Targeted tool choice, off; preference per profile under Me → Conversation → Privacy): questions no rule of the switch recognizes are kept only redacted (fixed rules as in \"Report a problem\", plus address book names and every number, a second leak check drops) and sealed in state/weiche-unklar.json: without profile, device and time of day, at most 100, gone after 7 days, not in the backup. Never a sentence with the code word, never guests. Only admin and co-admin see and delete them on Features → Routing. - Edit contacts (since V01.0.888, switch \"Edit contacts\", off): changes go only into the profile's own address book and only with If-Match (ETag); when the card changed meanwhile, the Spark over"
 },
 {
 "lang": "en",
@@ -31733,7 +31861,7 @@
 "file": "Security and operation",
 "head": "Data on the disk and new ways to write",
 "title": "Data on the disk and new ways to write",
-"text": "t; the card \"Remembered by itself\" lies with the entries' text in the profile's vorgaenge.json (7 days). The new way to write POST /api/profile/memory/{id}/undo takes back only an own entry and only while it is unchanged since it was remembered; notifications and Telegram get only the number. - Memory and conversations sealed (since V01.1.251, plan *nutzerwissen*, stage 4, no switch: a fixed protection rule like the supply): memory.json, convos.json, toollog.json and room-history.json of every profile, since V01.1.252 also what the Spark learned about the person (learned.json, zuordnungen.json, memory-ask.json, interessen.json, tagebuch.json), lie sealed whole (AES-256-GCM, a key of its own for the purpose \"profildaten\" from secret.key through HKDF, the profile and the file name as associated data, a fresh nonce on every write); which files is said by siegel= in the file register. The Spark seals older open files once at the start, after a backup \"vor-siegel\", and opens each one again as a check. On this Spark every backup opens them again; on another Spark only with the move backup (it carries secret.key). Without it the Spark sets the file aside as <name>.unlesbar, never overwrit"
+"text": "writes nothing. New cards go into the chosen book or \"On the Spark\". - Search at the mail server (since V01.0.887): what you type into the search field becomes IMAP SEARCH words; only letters, digits, @, . and - get in, never a quote, a word beyond ASCII as a UTF-8 literal. Only the own mailboxes are searched. - Hero book to the reMarkable (since V01.1.143, switch under Features → AI Dungeon Master, off): A hero's book leaves the Spark only on the reMarkable's way (its cloud, remarkable.place, daily limits). It holds only the panel's data: catalog, hero values, the own chronicle of fixed kinds and numbers, of people only what was unlocked, of fellow heroes only name, people and class; never a text of the model. Pictures are opened again with Pillow under a pixel and byte bound. State users/<id>/dungeon-buch.json, \"Delete data\" removes it. - Remembered note (since V01.1.249, switch Features → Remembered note, on by default): a conversation keeps per answer only the number and state of the entries remembered (mem), never their text; the card \"Remembered by itself\" lies with the entries' text in the profile's vorgaenge.json (7 days). The new way to write POST /api/profile/memory/{id}/"
 },
 {
 "lang": "en",
@@ -31741,7 +31869,7 @@
 "file": "Security and operation",
 "head": "Data on the disk and new ways to write",
 "title": "Data on the disk and new ways to write",
-"text": "es anything, the profile starts empty, and the admins see a hint with its way (Settings → Backup); after the move backup \"Read in again\" under Me → Memory brings it back. The \"Copy of my data\" takes them opened into its own encryption and so is the way to rescue them. New way to write POST /api/profile/memory/einlesen (only the own profile, rate limit, 256 bytes). - People, companies and deadlines in the knowledge map (since V01.1.253, switch under Features → Own documents → Knowledge book → Knowledge map, off): names of people, companies, places, contracts, accounts (IBAN or number) and deadlines from the own documents lie as the tables wk_ent and wk_ment in the profile's wissen.db, nowhere else, never in the log or in Live (there only a number per kind). Other parts only read them (wissenskarte.finde_knoten, knoten_liste, a read-only connection). Renaming, merging and deleting happen only by the person's click with the code of \"Confirm\" (stufen.LIST); when a document goes, its passages go with it at once. - Download all my data (since V01.1.255, plan *nutzerwissen*, stage 5, no switch: right of access, exception in guideline part 3, app/panel/meinedaten.py): under Me → Security →"
+"text": "undo takes back only an own entry and only while it is unchanged since it was remembered; notifications and Telegram get only the number. - Memory and conversations sealed (since V01.1.251, plan *nutzerwissen*, stage 4, no switch: a fixed protection rule like the supply): memory.json, convos.json, toollog.json and room-history.json of every profile, since V01.1.252 also what the Spark learned about the person (learned.json, zuordnungen.json, memory-ask.json, interessen.json, tagebuch.json), lie sealed whole (AES-256-GCM, a key of its own for the purpose \"profildaten\" from secret.key through HKDF, the profile and the file name as associated data, a fresh nonce on every write); which files is said by siegel= in the file register. The Spark seals older open files once at the start, after a backup \"vor-siegel\", and opens each one again as a check. On this Spark every backup opens them again; on another Spark only with the move backup (it carries secret.key). Without it the Spark sets the file aside as <name>.unlesbar, never overwrites anything, the profile starts empty, and the admins see a hint with its way (Settings → Backup); after the move backup \"Read in again\" under Me → Memory b"
 },
 {
 "lang": "en",

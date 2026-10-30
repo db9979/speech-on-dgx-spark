@@ -4566,6 +4566,27 @@
 "titel": "Finden: Rückstand der Mails sinkt in ruhigen Minuten",
 "text": "Als Admin Mails und Anhänge finden einschalten, bei einem Profil mit vielen Mails. Zustand → Live, Kasten Finden: „Mails: heute N eingelesen, M offen“, nur Zahlen. Ein paar Minuten nicht mit dem Spark sprechen: M sinkt, N steigt. Während einer Frage oder Sprachausgabe hält das Einlesen an (Zustand → Live: „Suchindex wartet“). Nachts geht es schneller. Finden → Einstellungen zeigt „Mails noch nicht eingelesen“; „Platz knapp“ erscheint nur, wenn auf dem Spark weniger als die feste Reserve frei ist.",
 "thread": "Alles schnell finden über einen Index"
+},
+{
+"id": "P677",
+"v": 1257,
+"titel": "Finden: Rechnung von Thomann vom OP (Ende zu Ende)",
+"text": "Funktionen → Finden in allen Daten → Termine finden und Mails und Anhänge finden an. Im eigenen Kalender steht ein vergangener Termin „OP“, ein paar Wochen danach kam eine Mail mit einer PDF-Rechnung von Thomann, dazu eine ältere Thomann-Rechnung von weit davor. Im Assistenten „Such mir die Rechnung von Thomann vom OP“: die Rechnung aus der Zeit nach dem OP steht zuerst, die Antwort nennt Quelle und Datum. Unter Finden „Thomann vom OP“ eintippen: über den Treffern „Termin „OP“ am …: Treffer davor und danach zuerst“. „Such die Rechnung vom Zahnarzt“ ohne solchen Termin: „Einen Termin „Zahnarzt“ habe ich im Kalender nicht gefunden.“ und trotzdem Treffer. Zustand → Logs, Bereich Finden: „fund: bezug | termin gefunden“, nie das Wort OP oder Thomann.",
+"thread": "Alles schnell finden über einen Index"
+},
+{
+"id": "P678",
+"v": 1257,
+"titel": "Finden: Telegram-Gespräch von letzter Woche finden",
+"text": "Funktionen → Finden in allen Daten → Gespräche finden an. Letzte Woche über Telegram etwas mit einem seltenen Wort gefragt (etwa „Zebrafinken“). Im Assistenten „Finde das Telegram-Gespräch von letzter Woche über Zebrafinken“: der Treffer ist das Gespräch mit Datum und Kanal Telegram; unter Finden „Zebrafinken letzte Woche“: Zeile „Zeitraum: …“ und das Gespräch, „Öffnen“ zeigt es im Chat. Ein Gespräch, dessen Antwort aus einer Mail kam, wird über die Mail-Wörter nie gefunden.",
+"thread": "Alles schnell finden über einen Index"
+},
+{
+"id": "P679",
+"v": 1257,
+"titel": "Finden: Kontakte, Listen, Bilder; geteilte Liste nur mit Recht",
+"text": "Termine, Kontakte, Listen und Erinnerungen, Bilder und Lieder finden an. Unter Finden einen Firmennamen aus den Kontakten suchen: Treffer Kontakt mit Firma und Ort, nie eine Telefonnummer (die Nummer selbst findet nichts); „Öffnen“ zeigt die Karte. Ein Wort von der Einkaufsliste, eine Erinnerung und ein gemaltes Bild finden, „Öffnen“ geht auf Listen, Mitteilungen und Bilder. Ein zweites Profil teilt eine Liste mit dir: erst mit „Listen teilen“ und der Freigabe wird sie gefunden, nach dem Zurückziehen nach höchstens fünf Minuten nicht mehr. Zustand → Live, Kasten Finden: „Termine N · Kontakte N …“, nur Zahlen.",
+"thread": "Alles schnell finden über einen Index"
 }
 ]
 }

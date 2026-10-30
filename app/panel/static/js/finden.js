@@ -5,14 +5,24 @@
 // „Einstellungen“: per source how many entries and how fresh, „Neu aufbauen“, „Index löschen“. Titles, fields and tags
 // come from documents and mails (Stufe B, fundmail.py) and are only ever text (esc, textContent), never markup; a mail
 // opens on the page E-Mail in its folder, an attachment's mail likewise. Strg K offers „In meinen Daten finden“.
-const FUND={q:'',quelle:'',kat:'',hits:null,sel:0,item:null,stand:null,msg:'',err:false,seq:0};
+// Stufe C (fundquellen.py): appointments open the calendar on their day, contacts, lists, conversations, reminders,
+// pictures and songs their own page; a period („letzte Woche“) or an event („vom OP“) in the typed words shows as a
+// line with what the panel made of it (deutung: the appointment's day, or that there is none).
+const FUND={q:'',quelle:'',kat:'',hits:null,sel:0,item:null,stand:null,msg:'',err:false,seq:0,deut:null};
 let FUND_ON=false;
 window.fundStart=who=>{FUND_ON=!!(who&&who.profile&&who.find);window.FUND_ON=FUND_ON;
   document.querySelectorAll('nav button[data-s=finden]').forEach(b=>b.hidden=!FUND_ON)};
 const fundWhen=s=>s?new Date(s*1000).toLocaleDateString(L==='en'?'en-GB':'de-DE',{dateStyle:'medium'}):'';
 const FUND_TYP={kategorie:['Kategorie','Category'],person:['Person','Person'],firma:['Firma','Company'],ort:['Ort','Place'],frei:['Schlagwort','Tag']};
 const FUND_FROM={regel:['Regel','rule'],modell:['Modell','model'],hand:['von dir','yours'],dokument:['Steckbrief','profile card']};
-const FUND_FELD={absender:['Absender','Sender'],an:['An','To'],betrag:['Betrag','Amount'],nr:['Nummer','Number'],datum:['Datum','Date'],name:['Datei','File'],anhaenge:['Anhänge','Attachments'],kb:['Größe (KB)','Size (KB)']};
+const FUND_FELD={absender:['Absender','Sender'],an:['An','To'],betrag:['Betrag','Amount'],nr:['Nummer','Number'],datum:['Datum','Date'],name:['Datei','File'],anhaenge:['Anhänge','Attachments'],kb:['Größe (KB)','Size (KB)'],
+  ort:['Ort','Place'],kalender:['Kalender','Calendar'],firma:['Firma','Company'],kanal:['Kanal','Channel'],fragen:['Fragen','Questions'],offen:['Offen','Open'],erledigt:['Erledigt','Done'],wiederholt:['Wiederholt','Repeats'],format:['Format','Format']};
+// what the panel read from the typed words: a period and an event of the own calendar (fund.zeitraum, fund.bezug_aus)
+function fundDeut(){const d=FUND.deut;if(!d)return '';const p=[];
+  if(d.von)p.push(t('Zeitraum','Period')+': '+d.von+(d.bis?' – '+d.bis:' – '+t('heute','today')));
+  if(d.bezug)p.push(d.termin?t(`Termin „${d.bezug}“ am ${fundWhen(d.termin)}: Treffer davor und danach zuerst`,`Appointment "${d.bezug}" on ${fundWhen(d.termin)}: hits around it first`)
+    :t(`Einen Termin „${d.bezug}“ habe ich im Kalender nicht gefunden.`,`I found no appointment "${d.bezug}" in the calendar.`));
+  return p.length?`<div class="mut small funddeut">${p.map(x=>esc(x)).join(' · ')}</div>`:''}
 // a mail (or an attachment's mail) on the page E-Mail: its folder like the folder list does, then the mail (post.js)
 async function fundMail(w){if(typeof postRead!=='function'||typeof POST==='undefined')return;icTabSet('post','show');POST.write=null;POST.prev=null;
   POST.box=w.folder&&w.folder!=='INBOX'?{account:String(w.id).split(':')[0],folder:w.folder,name:w.folder,role:w.rolle||'folder'}:null;goSec('post');await postRead(w.id)}
@@ -33,7 +43,7 @@ function fundDraw(){const w=$('fundview');if(w)fundPaint(w);const v=$('fundworte
 async function fundRun(){const seq=++FUND.seq;const body={worte:FUND.q.trim()};if(FUND.quelle)body.quelle=FUND.quelle;if(FUND.kat)body.kategorie=FUND.kat;
   if(!body.worte&&!body.quelle&&!body.kategorie){FUND.hits=null;fundDraw();return}
   const {r,d}=await apiTry('/api/profile/fund/suche',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(seq!==FUND.seq)return;
-  if(r.ok){FUND.hits=d.treffer||[];FUND.msg='';FUND.err=false}else{FUND.hits=[];FUND.msg=errSay(r.status,d.detail,'');FUND.err=true}fundDraw()}
+  if(r.ok){FUND.hits=d.treffer||[];FUND.deut=d.deutung||null;FUND.msg='';FUND.err=false}else{FUND.hits=[];FUND.deut=null;FUND.msg=errSay(r.status,d.detail,'');FUND.err=true}fundDraw()}
 const fundSrc=n=>{const q=((FUND.stand&&FUND.stand.quellen)||[]).find(x=>x.name===n);return q?t(q.de,q.en):n};
 const fundTag=x=>`<span class="pill fundtag${x.herkunft==='hand'?' on':''}" title="${esc(t(...(FUND_TYP[x.typ]||[x.typ,x.typ]))+' · '+t(...(FUND_FROM[x.herkunft]||[x.herkunft,x.herkunft])))}">${esc(x.wert)}</span>`;
 function fundPaint(w){w.classList.toggle('ld-sel',!!FUND.item);
@@ -43,6 +53,7 @@ function fundPaint(w){w.classList.toggle('ld-sel',!!FUND.item);
   list.innerHTML=`<div class="ld-tools"><input type="search" class="fundq" maxlength="200" placeholder="${esc(t('Wörter, Firma, Person, Nummer …','Words, company, person, number …'))}" aria-label="${esc(t('In meinen Daten finden','Find in my data'))}" value="${esc(FUND.q)}"></div>
     <div class="row"><select class="fundsrc" aria-label="${esc(t('Quelle','Source'))}"><option value="">${esc(t('Alle Quellen','All sources'))}</option>${srcs.map(q=>`<option value="${esc(q.name)}"${q.name===FUND.quelle?' selected':''}>${esc(t(q.de,q.en))}</option>`).join('')}</select>
     <select class="fundkat" aria-label="${esc(t('Kategorie','Category'))}"><option value="">${esc(t('Alle Kategorien','All categories'))}</option>${kats.map(k=>`<option value="${esc(k.wert)}"${k.wert===FUND.kat?' selected':''}>${esc(k.wert)}</option>`).join('')}</select></div>
+    ${FUND.hits!==null?fundDeut():''}
     ${S&&!S.eintraege?`<div class="ld-empty mut">${esc(t('Der Index ist noch leer. Er füllt sich im Hintergrund, alle paar Minuten ein Stück.','The index is still empty. It fills in the background, a part every few minutes.'))}</div>`:''}
     ${FUND.hits===null?(S&&S.eintraege?`<div class="ld-empty mut">${esc(t(`${S.eintraege} Einträge im Index. Gib Wörter ein oder wähle eine Kategorie.`,`${S.eintraege} entries in the index. Type words or choose a category.`))}</div>`:'')
       :FUND.hits.length?FUND.hits.map(h=>`<div class="ld-row${FUND.item&&FUND.item.id===h.id?' on':''}" role="button" tabindex="0" data-fundsel="${esc(String(h.id))}"><span class="ld-mid"><b>${esc(h.titel||'?')}</b><small>${esc(fundSrc(h.quelle))}${h.wann?' · '+esc(fundWhen(h.wann)):''}${h.felder&&h.felder.absender?' · '+esc(h.felder.absender):''}</small>${(h.anhaenge||[]).map(a=>`<small class="mut">${esc(t('Anhang','Attachment'))}: ${esc(a.titel)}${a.felder&&a.felder.betrag?' · '+esc(a.felder.betrag):''}</small>`).join('')}${(h.tags||[]).length?`<span class="fundtags">${h.tags.slice(0,6).map(fundTag).join(' ')}</span>`:''}</span></div>`).join('')
@@ -72,6 +83,15 @@ function fundDetail(w){const det=w.querySelector('.funddet'),it=FUND.item;if(!it
     ${(it.minus||[]).length?`<div class="mut small">${esc(t('Entfernt (kommt nicht wieder): ','Removed (does not come back): '))}${it.minus.map(x=>esc(x.wert)).join(', ')}</div>`:''}
     <div class="row">${it.weg?`<button type="button" class="b p" data-fundgo="1">${esc(t('Öffnen','Open'))}</button>`:''}</div>
     <div class="fundmsg ${FUND.err?'err':'mut'}" role="status">${esc(FUND.msg)}</div>`}
+// Stufe C: each source on its own page (the day of an appointment, the card of a contact, the list, the conversation)
+function fundGo(w,it){
+  if(w.art==='termin'&&typeof KAL!=='undefined'){KAL.day=new Date((it.wann||0)*1000);icTabSet('cal','show');goSec('cal')}
+  else if(w.art==='kontakt'&&typeof KON!=='undefined'){KON.sel=String(w.id);KON.form=null;icTabSet('kontakte','show');goSec('kontakte')}
+  else if(w.art==='liste'&&typeof LST!=='undefined'){LST.sel=String(w.id);icTabSet('listen','show');goSec('listen')}
+  else if(w.art==='chat'&&typeof openConvo==='function'){openConvo(String(w.id),true);goSec('chat')}
+  else if(w.art==='erinnerung'&&typeof openMe==='function')openMe('notebox');
+  else if(w.art==='bild'&&typeof openMe==='function')openMe('bildbox');
+  else if(w.art==='musik'&&typeof openMe==='function')openMe('musikbox')}
 // the own tags: what stays (plus) and what is gone for good (minus), sent whole each time
 async function fundTags(plus,minus){const it=FUND.item;if(!it)return;
   const {r,d}=await apiTry('/api/profile/fund/eintrag/'+encodeURIComponent(it.id)+'/schlagworte',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({plus,minus})});
@@ -82,7 +102,8 @@ const fundOwn=()=>{const it=FUND.item;return{plus:(it.tags||[]).filter(x=>x.herk
   if(!it)return;const own=fundOwn();
   if(D.fundgo){const w=it.weg||{};if(w.art==='dokument'){if(typeof openMe==='function')await openMe('docbox');if(typeof docView==='function')docView(w.id)}
     else if(w.art==='wissensbuch'&&typeof WB!=='undefined'){WB.sel=w.id;icTabSet('wbuch','show');goSec('wbuch')}
-    else if(w.art==='mail'||w.art==='anhang')await fundMail(w);return}
+    else if(w.art==='mail'||w.art==='anhang')await fundMail(w);
+    else fundGo(w,it);return}
   if(D.fundkeep!==undefined){const x=it.tags[+D.fundkeep];if(!x)return;own.plus.push({typ:x.typ,wert:x.wert});return fundTags(own.plus,own.minus)}
   if(D.fundrm!==undefined){const x=it.tags[+D.fundrm];if(!x)return;own.plus=own.plus.filter(y=>!(y.typ===x.typ&&y.wert===x.wert));
     if(x.herkunft!=='hand')own.minus.push({typ:x.typ,wert:x.wert});return fundTags(own.plus,own.minus)}
@@ -97,7 +118,7 @@ function fundWorte(w){const S=FUND.stand;if(!S){w.innerHTML=`<div class="mut">${
 function fundSettings(b){let s=$('fundset');if(!s){b.textContent='';s=document.createElement('div');s.id='fundset';s.className='card';b.appendChild(s)}fundSettingsPaint(s)}
 function fundSettingsPaint(s){const S=FUND.stand;if(!S){s.innerHTML=`<div class="fundmsg ${FUND.err?'err':'mut'}" role="status">${esc(FUND.msg||t('Lade …','Loading …'))}</div>`;return}
   s.innerHTML=`<h3>${esc(t('Suchindex','Search index'))}</h3>
-    <p class="mut">${esc(t('Finden merkt sich Titel, Felder und Schlagworte deiner Daten in einer eigenen Datei. Den Text der Dokumente sucht es über ihre eigene Suche. Mails und Anhänge liegen dort versiegelt, ihre Wörter nur als Marken.','Find keeps the titles, fields and tags of your data in a file of its own. It searches the documents\' text through their own search. Mails and attachments lie there sealed, their words only as marks.'))}</p>
+    <p class="mut">${esc(t('Finden merkt sich Titel, Felder und Schlagworte deiner Daten in einer eigenen Datei. Den Text der Dokumente sucht es über ihre eigene Suche. Mails, Anhänge, Termine und Kontakte liegen dort versiegelt, ihre Wörter nur als Marken; Gespräche sucht es über ihren Verlauf.','Find keeps the titles, fields and tags of your data in a file of its own. It searches the documents\' text through their own search. Mail, attachments, appointments and contacts lie there sealed, their words only as marks; conversations it searches through their history.'))}</p>
     <ul class="facts">${(S.quellen||[]).map(q=>`<li><span>${esc(t(q.de,q.en))}${q.an?'':` <small class="mut">${esc(t('nicht freigegeben','not released'))}</small>`}</span><b>${q.n}${q.stand?' · '+esc(q.stand):''}</b></li>`).join('')}
       <li><span>${esc(t('Noch nicht eingelesen','Not read yet'))}</span><b>${S.rueckstand}</b></li>
       ${(S.quellen||[]).some(q=>q.name==='mail'&&q.an)?`<li><span>${esc(t('Mails noch nicht eingelesen','Mails not read yet'))}</span><b>${S.mail_rest||0}</b></li>`:''}</ul>

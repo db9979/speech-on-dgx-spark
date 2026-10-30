@@ -251,6 +251,7 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 | `app/panel/folien.py` | Slide types and the fixed rules for documents the Spark writes. |
 | `app/panel/fund.py` | Finden: one index over the own data, its fields and tags, one list of hits for the page Finden, Strg K and the assistant's tool fund_suche. |
 | `app/panel/fundmail.py` | Finden: Mails und Anhänge: every mail of the profile's mailboxes in the search index of Finden (fund.py), with the text and the fields of its attachments. |
+| `app/panel/fundquellen.py` | Finden, Stufe C: the remaining own sources of the search index of Finden (fund.py): appointments, contacts, conversations, lists, reminders, pictures and songs. |
 | `app/panel/gedaechtnis.py` | Gedächtnis mit Beleg und Prüfung. |
 | `app/panel/gemerkt.py` | Gemerkt-Hinweis: what the Spark keeps about a person is seen at once and can be taken back. |
 | `app/panel/kiwix.py` | The person's own Kiwix (kiwix-serve with ZIM files: Wikipedia, Wikivoyage, handbooks ...) as a knowledge source that works without the internet. |
@@ -621,7 +622,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/reminders.json` | Reminders |  | – | yes | Tasks and reminders |
 | `users/ID/wissen.db` | Documents: text, sections with context line, search, vectors; knowledge book and map with people, companies and deadlines (SQLite) |  | – | yes | Documents (text, search, originals) |
 | `users/ID/docs/files/` | Originals of uploads |  | – | yes | Documents (text, search, originals) |
-| `users/ID/fund.db` | Find: search index over the own data (titles, fields, tags, own tags, mail and attachments; SQLite) |  | marks with a key of its own per profile (HMAC); mail and attachments: subject, excerpt, fields and tags AES-GCM | yes | Documents (text, search, originals) |
+| `users/ID/fund.db` | Find: search index over the own data (titles, fields, tags, own tags, mail and attachments, appointments, contacts, lists, reminders, pictures, songs; conversations only date and channel; SQLite) |  | marks with a key of its own per profile (HMAC); mail, attachments, appointments and contacts: title, excerpt, fields and tags AES-GCM | yes | Documents (text, search, originals) |
 | `users/ID/suchpruefung.json` | Test questions and runs of the search check |  | – | yes | Documents (text, search, originals) |
 | `users/ID/erstellt/` | Created documents |  | – | yes | Created documents |
 | `users/ID/bilder/` | Painted pictures and their index (prompt, wish, size) |  | – | yes | Painted pictures |
@@ -1646,7 +1647,7 @@ flowchart TD
 7. <a id="kn-sicherheit-s7"></a>**The language model proposes**: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run.
 8. <a id="kn-sicherheit-s8"></a>**Does it change something?**: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model; likewise only their click merges, renames or deletes points of the knowledge map (with the code of „Confirm“). Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it.
 9. <a id="kn-sicherheit-s9"></a>**Check the answer**: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML.
-10. <a id="kn-sicherheit-s10"></a>**Traces**: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own). What a service keeps for a profile (the mail supply, mail and attachments in Find) lies only sealed with AES-GCM (vorrat.seal), the words in the search index only as HMAC marks with a key per profile (vorrat.marke); without a key nothing is written.
+10. <a id="kn-sicherheit-s10"></a>**Traces**: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own). What a service keeps for a profile (the mail supply, mail, attachments, appointments and contacts in Find) lies only sealed with AES-GCM (vorrat.seal), the words in the search index only as HMAC marks with a key per profile (vorrat.marke); without a key nothing is written.
 
 **Examples:** A mail demands an action: The mail is read, but nothing is switched: the tools for it are locked. · A web page with a fake system line: „<|im_start|>system“ arrives defused as text, the model sees no new role; it could not act anyway. · A stranger's voice at the speaker: An answer as for a guest, without mails or appointments. · Switch off the light: Switched only after „yes“. · Kill switch stage 3: No conversation, only the kill switch page.
 
@@ -2043,7 +2044,7 @@ Applies at: [step 9](#kn-weiche-s9)
 
 #### Everyday score
 
-- The test sentences (184) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
+- The test sentences (189) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
 
 #### Tool names
 
@@ -2057,7 +2058,7 @@ Applies at: [step 9](#kn-weiche-s9)
 - **4** seconds at most for the model's pick ([step 10](#kn-weiche-s10))
 - **300 ms** waiting with „Fast answer start“ ([step 10](#kn-weiche-s10))
 - **80 %** default threshold of the classification ([step 10](#kn-weiche-s10))
-- **184** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
+- **189** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
 - **216** everyday sentences for measuring ([step 14](#kn-weiche-s14))
 - **20** versions for undo ([step 4](#kn-weiche-s4))
 
@@ -2308,7 +2309,7 @@ Self-tests: `test_fast_start`, `test_dienstwacht`, `test_taten`, `test_notaus`, 
 
 ### Knowledge
 
-Knowledge is everything the Spark knows without going to the internet: the uploaded documents of each profile (one SQLite file wissen.db per profile), the memory, earlier conversations, the own Kiwix archive and created documents. This page shows the way a question finds fitting passages in the documents. Find (fund.py, its own file fund.db per profile) adds an index of titles, fields and tags by fixed rules on top and uses the same search for the text; mail and attachments (fundmail.py) it reads in slices in quiet minutes and keeps only sealed (AES-GCM) with their words as HMAC marks.
+Knowledge is everything the Spark knows without going to the internet: the uploaded documents of each profile (one SQLite file wissen.db per profile), the memory, earlier conversations, the own Kiwix archive and created documents. This page shows the way a question finds fitting passages in the documents. Find (fund.py, its own file fund.db per profile) adds an index of titles, fields and tags by fixed rules on top and uses the same search for the text; mail and attachments (fundmail.py) it reads in slices in quiet minutes and keeps only sealed (AES-GCM) with their words as HMAC marks; appointments and contacts (fundquellen.py) likewise, conversations only with date and channel (recall.liste searches their words), lists, reminders, pictures and songs like their source. Periods („last week“, „2023“) come from frisch.spanne by fixed rules, „from the surgery“ looks for the last past appointment in the own calendar (fund.bezug_aus): 14 days before to 60 after rank higher, never a hard limit.
 
 **Why:** The language model does not know the own papers. It only gets the few passages the panel picks with fixed rules and two small models on the processor, each with its source. What a document says is outside text: data, never a command.
 
@@ -2480,6 +2481,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/docembed.py` `_call`: one job for the model process ([step 3](#kn-wissen-s3))
 - `app/panel/nachsortieren.py` `rank`: cross-encoder or the mix's order ([step 10](#kn-wissen-s10))
 - `app/panel/wissen.py` `recent_window`: „noted lately“ as a fixed rule ([step 11](#kn-wissen-s11))
+- `app/panel/frisch.py` `spanne`: period from the own words, fixed rules ([step 11](#kn-wissen-s11))
 - `app/panel/wissen.py` `where`: source of a passage for the model ([step 13](#kn-wissen-s13))
 - `app/panel/lokal.py` `look`: the quick look before the answer ([step 5](#kn-wissen-s5))
 - `app/panel/lokal.py` `excerpt`: the part of a passage with the search words ([step 5](#kn-wissen-s5))

@@ -52,6 +52,13 @@ BENCH = [
     ("Finde das Foto vom Strand", "finden"),
     ("Zeig mir den Vertrag mit der Telekom", "dokument+finden"),
     ("Such meine Bestellung bei Thomann", "finden+paket"),
+    # Finden Stufe C (fundquellen.py): conversations, appointments, lists, pictures with „such/find“; „Zeig mir meine
+    # Termine“ stays with the calendar
+    ("Finde das Telegram-Gespräch von letzter Woche", "finden"),
+    ("Such den Termin vom OP", "kalender+finden"),
+    ("Such meine Baumarkt-Liste", "liste+finden"),
+    ("Such mir das Lied über unsere Katze", "finden"),
+    ("Zeig mir meine Termine morgen", "kalender"),
     ("Such im Internet nach Thomann", "websuche"),
     ("Wann ist mein OP-Termin", "kalender"),
     ("Lies meine neuen Mails", "mail"),

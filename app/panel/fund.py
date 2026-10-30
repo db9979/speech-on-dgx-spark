@@ -4,7 +4,8 @@ tags, one list of hits for the page Finden, Strg K and the assistant's tool fund
 One source (plan „Grundsatz eine Quelle“): fund copies no text that already has an index. Documents, the NAS and the
 reMarkable stay in wissen.db (documents.search), the Wissensbuch in its pages; fund keeps for them only fields (kind,
 sender, date, amount, number) and tags and asks their own search. Text of its own it keeps only for sources without
-an index (mail and attachments since Stufe B, fundmail.py; appointments, contacts, lists … in Stufe C), sealed where the
+an index (mail and attachments since Stufe B, fundmail.py; appointments, contacts, lists, reminders, pictures and songs
+since Stufe C, fundquellen.py; conversations only as date and channel, their words through recall.liste), sealed where the
 source is private: then titles, excerpts, fields and tag values are AES-GCM (vorrat.seal, bound to profile, source, entry
 and field) and its words only HMAC marks in fund_blind (vorrat.marke), nothing of it in plain text on the disk.
 
@@ -30,7 +31,10 @@ never touches fund_hand.
 Search (suche): reciprocal rank fusion (k = 60 like documents.search) over the index's own words (fund_fts, and the
 marks in fund_blind), documents.search for the own documents, and the Wissensbuch's list when it has one; filters
 (source, category, company, person, period) only by fixed rules. The tool's filters come only from the person's own
-words of the message (filter_eigen); what the model adds beyond them is dropped and counted.
+words of the message (filter_eigen); what the model adds beyond them is dropped and counted. A period comes from
+frisch.spanne (the one rule for „letzte Woche“, „im März“, „2023“), an event from BEZUG („vom OP“, Stufe C): the newest
+past appointment with that word in the profile's own calendar gives a window from BEZUG_VOR days before to BEZUG_NACH
+days after it, a bonus in the ranking, never a hard limit; without such an appointment a fixed sentence says so.
 
 The journal gets fixed words and numbers only (fund: …), the profile only as profiles.log_name; Live only numbers.
 """
@@ -102,8 +106,9 @@ LIVE_CACHE = 10
 _locks, _locks_guard = {}, threading.Lock()
 _running = set()         # profiles whose round runs now
 _last = {}               # uid -> (when the last round ran, the stamp of its sources)
+_mehr = set()            # profiles whose last round stopped at its budget: the next one runs whatever the stamp
 _live = {"at": 0.0, "d": None}
-_stat = {"day": "", "suchen": 0, "ms": [], "verworfen": 0, "fehler": 0, "runden": 0}
+_stat = {"day": "", "suchen": 0, "ms": [], "verworfen": 0, "fehler": 0, "runden": 0, "bezug": 0, "bezug_fehlt": 0}
 _stat_lock = threading.Lock()
 
 
@@ -247,6 +252,7 @@ class Quelle(NamedTuple):
     de: str
     en: str
     runde: Callable = None   # a round of its own (uid, now, seconds) -> (new, gone): mail in slices (fundmail.py)
+    zeigen: Callable = None  # (uid, ext) -> (title, excerpt) read from the source when shown (chat: nothing copied)
 
 
 def _doc_source(d):
@@ -350,18 +356,53 @@ QUELLEN = (
     Quelle("anhang", "fundmail", 1, "eigen", lambda uid, known, budget: ([], {}, True),
            lambda uid, exts: _fm().noch_da(uid, exts), lambda uid, ext: _fm().weg(uid, ext), "Anhang", "Attachment",
            lambda uid, now, secs: (0, 0)),
+    # Stufe C (fundquellen.py): appointments of the own calendars from the Spark's copy and contacts, sealed like mail;
+    # conversations only as date and channel (their words through recall.liste); lists, reminders, pictures and songs
+    # clear like their source. Each follows its sub-switch and the function it comes from (fundquellen.frei).
+    Quelle("termin", "fundtermine", 1, "eigen", lambda uid, known, budget: _fq().termin_neu(uid, known, budget),
+           lambda uid, exts: _fq().termin_da(uid, exts), lambda uid, ext: {"art": "termin", "id": ext}, "Termin", "Appointment"),
+    Quelle("kontakt", "fundkontakte", 1, "eigen", lambda uid, known, budget: _fq().kontakt_neu(uid, known, budget),
+           lambda uid, exts: _fq().kontakt_da(uid, exts), lambda uid, ext: {"art": "kontakt", "id": ext}, "Kontakt", "Contact"),
+    Quelle("chat", "fundchats", 0, "verweis", lambda uid, known, budget: _fq().chat_neu(uid, known, budget),
+           lambda uid, exts: _fq().chat_da(uid, exts), lambda uid, ext: {"art": "chat", "id": ext}, "Gespräch", "Conversation",
+           zeigen=lambda uid, ext: _fq().chat_zeigen(uid, ext)),
+    Quelle("liste", "fundlisten", 0, "eigen", lambda uid, known, budget: _fq().liste_neu(uid, known, budget),
+           lambda uid, exts: _fq().liste_da(uid, exts), lambda uid, ext: {"art": "liste", "id": ext}, "Liste", "List"),
+    Quelle("erinnerung", "fundlisten", 0, "eigen", lambda uid, known, budget: _fq().erinnerung_neu(uid, known, budget),
+           lambda uid, exts: _fq().erinnerung_da(uid, exts), lambda uid, ext: {"art": "erinnerung", "id": ext},
+           "Erinnerung", "Reminder"),
+    Quelle("bild", "fundmedien", 0, "eigen", lambda uid, known, budget: _fq().bild_neu(uid, known, budget),
+           lambda uid, exts: _fq().bild_da(uid, exts), lambda uid, ext: {"art": "bild", "id": ext}, "Bild", "Picture"),
+    Quelle("musik", "fundmedien", 0, "eigen", lambda uid, known, budget: _fq().musik_neu(uid, known, budget),
+           lambda uid, exts: _fq().musik_da(uid, exts), lambda uid, ext: {"art": "musik", "id": ext}, "Lied", "Song"),
 )
 BY_NAME = {q.name: q for q in QUELLEN}
 # words of the person that name a source (the tool's filter „quelle“ only when one of them was said)
 QUELLE_WORTE = {"dokument": r"dokument\w*|unterlage\w*|datei\w*|pdf", "nas": r"nas\b|wissensordner\w*",
                 "remarkable": r"re\s?markable|notizbuch\w*", "wissensbuch": r"wissensbuch\w*",
-                "mail": r"e?-?mails?\b|\w*mails?\b|nachricht\w*", "anhang": r"anh[aä]ng\w*|attachment\w*"}
+                "mail": r"e?-?mails?\b|\w*mails?\b|nachricht\w*", "anhang": r"anh[aä]ng\w*|attachment\w*",
+                "termin": r"\w*termin\w*|kalender\w*|appointment\w*|calendar\w*",
+                "kontakt": r"kontakt\w*|adressbuch\w*|contacts?\b", "chat": r"gespräch\w*|chat\w*|unterhaltung\w*|telegram\w*|conversation\w*",
+                "liste": r"\w*liste\b|\w*listen\b|lists?\b", "erinnerung": r"erinnerung\w*|reminders?\b|timer\w*",
+                "bild": r"bild\w*|foto\w*|picture\w*|photo\w*", "musik": r"lied\w*|song\w*|musik\w*|music\b"}
 MAIL_Q = ("mail", "anhang")   # the sealed mail sources: their rows go with their mailbox (ext starts with its id)
+SEALED_C = ("termin", "kontakt")   # sealed sources of Stufe C, written by fund.runde through put_sealed
 
 
 def _fm():
     import fundmail   # fundmail imports this module
     return fundmail
+
+
+def _fq():
+    import fundquellen   # fundquellen imports this module
+    return fundquellen
+
+
+def zone():
+    """The Spark's time zone (frisch.spanne, the appointments' all-day dates)."""
+    import frisch
+    return frisch._zone(None)
 
 
 def on(c=None):
@@ -373,7 +414,8 @@ def quellen_fuer(uid, c=None):
     """The sources this profile may search: the index's own release and the function each comes from."""
     if not features.allowed("fund", uid, c):
         return []
-    return [q for q in QUELLEN if features.allowed(q.feature, uid, c) and (q.name != "wissensbuch" or _wb_allowed(uid))]
+    return [q for q in QUELLEN if features.allowed(q.feature, uid, c) and (q.name != "wissensbuch" or _wb_allowed(uid))
+            and _fq().frei(uid, q.name)]
 
 
 # ---------------------------------------------------------------- writing
@@ -448,8 +490,10 @@ def marken(uid, text, absender=""):
 def put_sealed(con, uid, quelle, e, now, eltern=None):
     """One entry of a sealed source (a source's own round, in its batch's transaction): title, excerpt and fields
     AES-GCM, its words and the sender as marks, the tags with sealed values and their marks. Without a key nothing is
-    written (None); in plain text stay only source, entry key and date."""
+    written (None); in plain text stay only source, entry key and date (and the state of a Stufe C source: a mark).
+    """
     ext = str(e["ext"])
+    stand = str(e.get("stand") or "")[:200]
     vals = [siegel(uid, quelle, ext, "titel", str(e.get("titel") or "")[:160]),
             siegel(uid, quelle, ext, "auszug", re.sub(r"\s+", " ", str(e.get("auszug") or ""))[:AUSZUG]),
             siegel(uid, quelle, ext, "felder", json.dumps(e.get("felder") or {}, ensure_ascii=False)[:4000])]
@@ -460,13 +504,13 @@ def put_sealed(con, uid, quelle, e, now, eltern=None):
     if row:
         iid = row["id"]
         con.execute("UPDATE fund_item SET eltern=?, wann=?, geaendert=?, gesehen=?, schutz=1, titel=?, auszug=?, felder=?, "
-                    "stand='' WHERE id=?", (eltern, int(e.get("wann") or 0), int(now), int(now), *vals, iid))
+                    "stand=? WHERE id=?", (eltern, int(e.get("wann") or 0), int(now), int(now), *vals, stand, iid))
         con.execute("DELETE FROM fund_blind WHERE rowid=?", (iid,))
         con.execute("DELETE FROM fund_tag WHERE item=? AND herkunft='regel'", (iid,))
     else:
         iid = con.execute("INSERT INTO fund_item (quelle, ext, eltern, wann, geaendert, gesehen, schutz, titel, auszug, "
-                          "felder, stand) VALUES (?,?,?,?,?,?,1,?,?,?,'')",
-                          (quelle, ext, eltern, int(e.get("wann") or 0), int(now), int(now), *vals)).lastrowid
+                          "felder, stand) VALUES (?,?,?,?,?,?,1,?,?,?,?)",
+                          (quelle, ext, eltern, int(e.get("wann") or 0), int(now), int(now), *vals, stand)).lastrowid
     con.execute("INSERT INTO fund_blind (rowid, marken) VALUES (?,?)", (iid, " ".join(mk)))
     for typ, wert, beleg in e.get("tags") or []:
         ok = clean_tag(typ, wert)
@@ -519,6 +563,7 @@ def runde(uid, now=None, budget=BUDGET, secs=None):
     mine = {x.name for x in quellen_fuer(uid)}
     out = {}
     t0 = time.time()
+    _mehr.discard(uid)
     for src in QUELLEN:
         if src.runde is not None:
             if src.name not in mine:
@@ -559,9 +604,14 @@ def runde(uid, now=None, budget=BUDGET, secs=None):
                 _stat["fehler"] += 1
             print(f"fund: runde {src.name} fehler | {type(e).__name__} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
             continue
+        if _done is False:
+            _mehr.add(uid)
         with _Db(uid) as con:
             for e in entries:
-                _put(con, uid, src, e, now)
+                if src.schutz:   # sealed (termin, kontakt): marks and AES-GCM like mail; without a key nothing
+                    put_sealed(con, uid, src.name, e, now)
+                else:
+                    _put(con, uid, src, e, now)
             gone = [r[0] for r in con.execute("SELECT id, ext FROM fund_item WHERE quelle=?", (src.name,))
                     if r[1] not in still and r[1] not in {x["ext"] for x in entries}]
             if gone:
@@ -582,17 +632,21 @@ def runde(uid, now=None, budget=BUDGET, secs=None):
 
 
 def _stamp(uid):
-    """What the document sources depend on: when it is unchanged, a round finds nothing new (no work every 5 min)."""
+    """What the sources depend on (the documents, the files of Stufe C): when it is unchanged, a round finds nothing new
+    (no work every 5 min)."""
+    names = sorted(q.name for q in quellen_fuer(uid))
+    more = _fq().stempel(uid, names)
     try:
         s = os.stat(documents.db_path(uid))
-        return (documents._gen.get(uid, 0), s.st_ino, s.st_mtime_ns, sorted(q.name for q in quellen_fuer(uid)))
+        return (documents._gen.get(uid, 0), s.st_ino, s.st_mtime_ns, names, more)
     except OSError:
-        return (documents._gen.get(uid, 0), None, None, sorted(q.name for q in quellen_fuer(uid)))
+        return (documents._gen.get(uid, 0), None, None, names, more)
 
 
 async def due_once(now=None):
     """From the panel's loop (extras.due_once): at most every ROUND_S per profile, only for profiles the index is
     allowed for and whose sources moved, in a worker thread with low priority (vorrang.in_thread "Suchindex")."""
+    import asyncio
     import vorrang
     now = time.time() if now is None else now
     if not on():
@@ -605,8 +659,8 @@ async def due_once(now=None):
         last = _last.get(uid)
         if last and now - last[0] < ROUND_S:
             continue
-        stamp = _stamp(uid)
-        if last and last[1] == stamp and _exists(uid):
+        stamp = await asyncio.to_thread(_stamp, uid)   # files of Stufe C looked at: never on the loop
+        if last and last[1] == stamp and _exists(uid) and uid not in _mehr:
             _last[uid] = (now, stamp)
             continue
         _running.add(uid)
@@ -757,11 +811,13 @@ def _day(now):
     return time.strftime("%Y-%m-%d", time.localtime(now))
 
 
-def _note(ms=None, verworfen=0, now=None):
+def _note(ms=None, verworfen=0, now=None, bezug=None):
     now = time.time() if now is None else now
     with _stat_lock:
         if _stat["day"] != _day(now):
-            _stat.update(day=_day(now), suchen=0, ms=[], verworfen=0)
+            _stat.update(day=_day(now), suchen=0, ms=[], verworfen=0, bezug=0, bezug_fehlt=0)
+        if bezug:
+            _stat["bezug" if bezug == "ok" else "bezug_fehlt"] += 1
         if ms is not None:
             _stat["suchen"] += 1
             _stat["ms"] = (_stat["ms"] + [int(ms)])[-200:]
@@ -814,11 +870,67 @@ def _konten(uid, mine):
     return [a["id"] for a in mail.get(uid)["accounts"]]
 
 
+def _kalender(uid, mine):
+    """The ids of the profile's own calendar entries now (an appointment of a calendar just removed is never a hit)."""
+    return _fq().kalender_ids(uid) if "termin" in mine else None
+
+
+# ---------------------------------------------------------------- „vom OP“: an event of the own calendar (Stufe C)
+BEZUG_VOR, BEZUG_NACH = 14, 60      # days of the window around the appointment (a bonus, never a limit)
+BEZUG_JAHRE = 3                     # only an appointment of the last years
+BEZUG_BONUS = 1.0 / RRF
+# strong words name an event for sure („vom OP“): without such an appointment a fixed sentence says so; weak ones
+# („beim Zahnarzt“, „zur Hochzeit“, „von der Hochzeit“) count only when an appointment fits
+BEZUG = re.compile(r"(?i)(?<!\w)(vom|vor dem|vor der|nach dem|nach der|seit dem|seit der)\s+([A-Za-zÄÖÜäöüß][\w-]{1,39})(?!\w)")
+BEZUG_SCHWACH = re.compile(r"(?i)(?<!\w)(beim|zum|zur|von der)\s+([A-Za-zÄÖÜäöüß][\w-]{1,39})(?!\w)")
+BEZUG_NICHT = re.compile(r"(?i)^(letzt\w*|vorig\w*|vergangen\w*|nächst\w*|kommend\w*|dies\w*|jetzig\w*|ersten|zweiten|"
+                         r"anfang|ende|mitte|beispiel|glück|schluss|thema|essen|frühstück|mittag\w*|abend\w*|morgen|"
+                         r"wochenende|monat\w*|jahr\w*|tag\w*|woche\w*|montag|dienstag|mittwoch|donnerstag|freitag|"
+                         r"samstag|sonntag|spark|assistent\w*|internet|kalender|termin\w*|händler|verkäufer|absender|"
+                         r"vermieter|amt|arbeitgeber|chef\w*|kunden\w*|anbieter)$")
+
+
+def bezug_aus(text):
+    """(word, strong, (start, end)) of an event the person's own words name („Rechnung vom OP“), or None. Fixed rules:
+    a preposition and one word, never a time („vom letzten Jahr“, „vom Montag“), a month or a number."""
+    import frisch
+    text = str(text or "")[:2000]
+    for rx, strong in ((BEZUG, True), (BEZUG_SCHWACH, False)):
+        for m in rx.finditer(text):
+            w = m.group(2).strip("-")
+            if len(w) < 2 or BEZUG_NICHT.match(w) or w.lower() in frisch._MONAT:
+                continue
+            return w, strong, m.span()
+    return None
+
+
+def _termin_fuer(con, uid, wort, now, kalender):
+    """The unix time of the newest past appointment (at most BEZUG_JAHRE back) whose words hold every stem of `wort`
+    (its blind marks), in the profile's own calendars now; None when there is none."""
+    mk = [vorrat.marke(uid, t) for t in terms(wort)]
+    if not mk or None in mk or not kalender:
+        return None
+    ids = [r[0] for r in con.execute("SELECT rowid FROM fund_blind WHERE fund_blind MATCH ?",
+                                     (" AND ".join(f'"{m}"' for m in sorted(set(mk))),))]
+    if not ids:
+        return None
+    best = None
+    for at in range(0, len(ids), 500):
+        part = ids[at:at + 500]
+        for r in con.execute("SELECT ext, wann FROM fund_item WHERE quelle='termin' AND wann <= ? AND wann >= ? AND id IN (%s)"
+                             % ",".join("?" * len(part)), [int(now), int(now - BEZUG_JAHRE * 366 * 86400)] + part):
+            if r["ext"].split(":")[0] in kalender and (best is None or r["wann"] > best):
+                best = r["wann"]
+    return best
+
+
 def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, von=None, bis=None, anzahl=MAX_SHOW,
-          now=None):
+          now=None, bezug=None, info=None):
     """The hits of this profile: [{"id", "quelle", "ext", "titel", "wann", "auszug", "felder", "tags", "weg", "score"}]
     (a mail also "anhaenge": the attachments that matched, one card with them). Only the profile's own index and the
-    sources it may use; never another profile's (its file, its marks)."""
+    sources it may use; never another profile's (its file, its marks). bezug: an event word from the person's own words
+    (bezug_aus): with an appointment of the own calendar, entries of its window get a bonus; `info` (a dict) learns
+    {"bezug": word, "termin": unix time or None}."""
     t0 = time.time()
     now = time.time() if now is None else now
     mine = {q.name: q for q in quellen_fuer(uid)}
@@ -832,7 +944,16 @@ def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, v
     ranks = {}
     lo, hi = _ts(von) if von else None, _ts(bis, True) if bis else None
     konten = _konten(uid, mine)
+    kalender = _kalender(uid, mine)
+    fenster = None
     with _Db(uid) as con:
+        if bezug:
+            # the appointment is looked up in the termin source (its sub-switch), whatever source is asked for now
+            cal = _fq().kalender_ids(uid) if "termin" in {x.name for x in quellen_fuer(uid)} else []
+            when = _termin_fuer(con, uid, bezug, now, cal)
+            fenster = (when - BEZUG_VOR * 86400, when + (BEZUG_NACH + 1) * 86400) if when is not None else None
+            if info is not None:
+                info.update(bezug=str(bezug)[:40], termin=when)
         ok_ids = None
         for typ, wert in (("kategorie", kategorie), ("firma", firma), ("person", person)):
             if wert:
@@ -848,6 +969,9 @@ def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, v
             cond.append("(quelle NOT IN ('mail','anhang') OR substr(ext, 1, instr(ext, ':') - 1) IN (%s))"
                         % ",".join("?" * max(1, len(konten))))
             args += konten or [""]
+        if kalender is not None:
+            cond.append("(quelle != 'termin' OR substr(ext, 1, instr(ext, ':') - 1) IN (%s))" % ",".join("?" * max(1, len(kalender))))
+            args += kalender or [""]
         if lo is not None:
             cond.append("wann >= ?")
             args.append(lo)
@@ -894,6 +1018,15 @@ def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, v
                 seen.add(iid)
                 ranks[iid] = ranks.get(iid, 0) + 1 / (RRF + i)
                 i += 1
+        # L3: the conversations' own search (recall: BM25 over questions and answers, answers from mail stay out),
+        # mapped onto their index rows; their words never in fund.db
+        if q and "chat" in mine:
+            import recall
+            ext_id = {r["ext"]: r["id"] for r in con.execute("SELECT id, ext FROM fund_item WHERE quelle='chat'")}
+            for key, rang in recall.liste(uid, worte, MAX_HITS):
+                iid = ext_id.get(str(key))
+                if iid in allowed_ids:
+                    ranks[iid] = ranks.get(iid, 0) + 1 / (RRF + max(0, int(rang) - 1))
         # L4: the Wissensbuch's own list once it has one (Wissenskarte thread, Stufe 1: liste(uid, worte, k))
         if q and "wissensbuch" in mine:
             import wissensbuch
@@ -936,8 +1069,11 @@ def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, v
                 ranks[r["id"]] += documents.FRESH * 0.5 ** (max(0, now - item["geaendert"]) / documents.FRESH_HALF)
             elif item["schutz"] and item["wann"]:   # a mail: fresh by its date
                 ranks[r["id"]] += documents.FRESH * 0.5 ** (max(0, now - item["wann"]) / documents.FRESH_HALF)
+            if fenster and item["quelle"] != "termin" and fenster[0] <= item["wann"] < fenster[1]:
+                ranks[r["id"]] += BEZUG_BONUS   # in the window of the event („vom OP“): a bonus, never a limit
             item["tags"] = tags
             item["titel"], item["auszug"], item["felder"] = klar(uid, item)
+            _zeigen(uid, item)
             item["anhaenge"] = []
             for a in inside.get(r["id"], []):
                 at, _, af = klar(uid, a)
@@ -959,6 +1095,13 @@ def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, v
     return out
 
 
+def _zeigen(uid, item):
+    """A source that copies nothing (chat): its title and excerpt read from the source now."""
+    q = BY_NAME.get(item["quelle"])
+    if q and q.zeigen:
+        item["titel"], item["auszug"] = q.zeigen(uid, item["ext"])
+
+
 def eintrag(uid, iid):
     """One item with every field and the origin of each tag, or None."""
     if not _exists(uid):
@@ -967,12 +1110,16 @@ def eintrag(uid, iid):
     konten = _konten(uid, mine)
     with _Db(uid) as con:
         r = con.execute("SELECT * FROM fund_item WHERE id=?", (int(iid),)).fetchone()
-        if not r or r["quelle"] not in mine or (r["quelle"] in MAIL_Q and r["ext"].split(":")[0] not in (konten or [])):
+        if not r or r["quelle"] not in mine or (r["quelle"] in MAIL_Q and r["ext"].split(":")[0] not in (konten or [])) \
+                or (r["quelle"] == "termin" and r["ext"].split(":")[0] not in (_kalender(uid, mine) or [])):
             return None
         item = dict(r)
         tags = tags_of(con, uid, item)
         plus, minus = hand(con, item["quelle"], item["ext"], uid)
     titel, auszug, f = klar(uid, item)
+    q = BY_NAME[item["quelle"]]
+    if q.zeigen:
+        titel, auszug = q.zeigen(uid, item["ext"])
     f = dict(f)
     f.pop("tags", None)
     return {"id": item["id"], "quelle": item["quelle"], "ext": item["ext"], "titel": titel, "wann": item["wann"],
@@ -1065,6 +1212,8 @@ def for_live():
         d = {"on": True, "eintraege": items, "profile": profs, "quellen": per, "hand": hand_n,
              "suchen": _stat["suchen"] if _stat["day"] == _day(time.time()) else 0, "ms": ms,
              "verworfen": _stat["verworfen"], "fehler": _stat["fehler"], "runden": _stat["runden"],
+             "bezug": _stat["bezug"] if _stat["day"] == _day(time.time()) else 0,
+             "bezug_fehlt": _stat["bezug_fehlt"] if _stat["day"] == _day(time.time()) else 0,
              "mail_on": fm["on"], "mail_rest": rest, "mail_heute": fm["heute"], "mail_fehler": fm["fehler"],
              "mail_platz": fm["platz"]}
     _live.update(at=time.time(), d=d)
@@ -1077,6 +1226,9 @@ FIND_VERB = re.compile(r"(?i)\b(such(e|en|st|t)?|durchsuch\w*|find(e|en|est)?|wi
 FIND_OBJECT = re.compile(r"(?i)\b(\w*rechnung\w*|\w*beleg\w*|quittung\w*|\w*mail\w*|\w*brief\w*|\w*vertr[aä]g\w*|"
                          r"\w*bestellung\w*|\w*buchung\w*|foto\w*|\w*notiz\w*|\w*dokument\w*|unterlage\w*|anh[aä]ng\w*|"
                          r"pdf|scan\w*|\w*bescheid\w*|police\w*|wissensbuch\w*|invoice|receipt)\b")
+# Stufe C: things that are also asked plainly („Zeig mir meine Termine“ stays with the calendar): only with „such/find“
+FIND_OBJECT_C = re.compile(r"(?i)\b(\w*termin\w*|kontakt\w*|gespräch\w*|chat\w*|unterhaltung\w*|telegram\w*|\w*liste\b|"
+                           r"\w*listen\b|erinnerung\w*|bild(er)?|lied(er)?|song\w*|appointment\w*|conversation\w*)\b")
 FIND_OWN = re.compile(r"(?i)\b(mein(e|en|em|er|es)?|my)\b")
 FIND_NOT = re.compile(r"(?i)\b(im (internet|netz|web)|online|google\w*|wikipedia|kiwix|archiv\w*)\b")
 
@@ -1094,7 +1246,8 @@ class _FindWords:
             return None
         if FIND_OBJECT.search(text):
             return v
-        if FIND_OWN.search(text) and re.match(r"(?i)(such|find|durchsuch|wiederfind|search)", v.group(0)):
+        strong = re.match(r"(?i)(such|find|durchsuch|wiederfind|search)", v.group(0))
+        if strong and (FIND_OWN.search(text) or FIND_OBJECT_C.search(text)):
             return v
         return None
 
@@ -1103,7 +1256,8 @@ FIND_WORDS = _FindWords()
 TOOL = {"type": "function", "function": {
     "name": "fund_suche",
     "description": "Search the user's OWN data index (documents, NAS, reMarkable, Wissensbuch, e-mails with their "
-                   "attachments when released): finds an item by words, "
+                   "attachments, appointments, contacts, past conversations, lists, reminders, pictures and songs when "
+                   "released): finds an item by words, "
                    "kind (Rechnung, Vertrag …), company, person or period. Returns at most five hits with source, date "
                    "and fields. Answer only from them and name source and date; never as a fact from a tag.",
     "parameters": {"type": "object", "properties": {
@@ -1112,13 +1266,43 @@ TOOL = {"type": "function", "function": {
         "kategorie": {"type": "string", "enum": list(KATEGORIEN)},
         "firma": {"type": "string"}, "person": {"type": "string"},
         "anzahl": {"type": "integer", "minimum": 1, "maximum": TOOL_MOST}}, "required": ["worte"]}}}
-HINT = ("Sucht der Nutzer etwas Eigenes (eine Rechnung, einen Vertrag, ein Dokument, eine Mail, eine Seite im Wissensbuch), "
-        "ruf fund_suche mit seinen Worten. Antworte nur aus den Treffern und nenne Quelle und Datum.")
+HINT = ("Sucht der Nutzer etwas Eigenes (eine Rechnung, einen Vertrag, ein Dokument, eine Mail, eine Seite im Wissensbuch, "
+        "einen alten Termin, ein früheres Gespräch, eine Liste), ruf fund_suche mit seinen Worten. Zeitraum und „vom …“ "
+        "(ein Termin) liest das Panel selbst aus seinen Worten. Antworte nur aus den Treffern und nenne Quelle und Datum.")
 
 
-def filter_eigen(args, text):
+def _tag_von(t, z):
+    import datetime
+    return datetime.datetime.fromtimestamp(t, z).strftime("%Y-%m-%d")
+
+
+def zeitraum(text, now=None, z=None):
+    """{"von", "bis"} (JJJJ-MM-TT, bis inclusive) of the period the person's own words name (frisch.spanne: „letzte
+    Woche“, „im März“, „2023“, „vor drei Monaten“), with the span of those words ("wo"), or {}."""
+    import frisch
+    now = time.time() if now is None else now
+    z = zone() if z is None else z
+    got = frisch.spanne(text, now, z)
+    if not got:
+        return {}
+    a, b, wo = got
+    out = {"von": _tag_von(a, z), "wo": wo}
+    if b is not None:
+        out["bis"] = _tag_von(b - 1, z)
+    return out
+
+
+def ohne(text, *spans):
+    """The text without the words at these spans (a period or an event is a filter, not a search word)."""
+    text = str(text or "")
+    for a, b in sorted((x for x in spans if x), reverse=True):
+        text = text[:a] + " " + text[b:]
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def filter_eigen(args, text, now=None, z=None):
     """The tool's filters, kept only when the person's own words of this message hold them (the panel decides, never
-    the model): {filter: value}, how many were dropped. A period comes only from a year the person said."""
+    the model): {filter: value}, how many were dropped. A period comes only from the person's words (frisch.spanne)."""
     own = str(text or "")[:4000]
     low, stems = own.lower(), set(terms(own))
     out, dropped = {}, 0
@@ -1138,9 +1322,8 @@ def filter_eigen(args, text):
             out["quelle"] = qv
         else:
             dropped += 1
-    years = sorted(set(re.findall(r"\b(19[5-9]\d|20\d\d)\b", own)))
-    if len(years) == 1:
-        out["von"], out["bis"] = f"{years[0]}-01-01", f"{years[0]}-12-31"
+    zr = zeitraum(own, now, z)
+    out.update({k: v for k, v in zr.items() if k in ("von", "bis")})
     for k in ("von", "bis"):
         if args.get(k) and args.get(k) != out.get(k):
             dropped += 1
@@ -1152,7 +1335,8 @@ def _line(h, now):
     f = h["felder"]
     when = frisch.stand(h["wann"], now).split(",")[0] if h["wann"] else "ohne Datum"
     parts = [f"[{BY_NAME[h['quelle']].de}] {h['titel']}", f"Datum: {when}"]
-    for k, label in (("absender", "Absender"), ("betrag", "Betrag"), ("nr", "Nummer"), ("name", "Datei")):
+    for k, label in (("absender", "Absender"), ("betrag", "Betrag"), ("nr", "Nummer"), ("name", "Datei"), ("ort", "Ort"),
+                     ("firma", "Firma"), ("kanal", "Kanal")):
         if f.get(k):
             parts.append(f"{label}: {f[k]}")
     for a in h.get("anhaenge") or []:   # a mail with the attachment that matched (the sender's address, never „von Firma“)
@@ -1186,26 +1370,50 @@ async def tool(name, args, ctx):
         return "Not done: Finden ist für dieses Profil aus (Funktionen → Finden in allen Daten)."
     args = args if isinstance(args, dict) else {}
     own = ctx.get("text") or ""
-    flt, dropped = filter_eigen(args, own)
+    now = time.time()
+    flt, dropped = filter_eigen(args, own, now)
     worte = str(args.get("worte") or "")[:MAX_WORTE].strip() or str(own)[:MAX_WORTE]
+    # the event („vom OP“) only from the person's own words; its words and a period are filters, no search words
+    bz = bezug_aus(own)
+    wb = bezug_aus(worte) if bz else None
+    worte = ohne(worte, wb[2] if wb else None, zeitraum(worte, now).get("wo") if flt.get("von") else None) or worte
     try:
         n = max(1, min(int(args.get("anzahl") or TOOL_MOST), TOOL_MOST))
     except (TypeError, ValueError):
         n = TOOL_MOST
     t0 = time.time()
-    hits = await asyncio.to_thread(suche, uid, worte, anzahl=n, **flt)
+    info = {}
+    hits = await asyncio.to_thread(suche, uid, worte, anzahl=n, bezug=bz[0] if bz else None, info=info, **flt)
     ms = int((time.time() - t0) * 1000)
     if dropped:
         _note(verworfen=dropped)
         print(f"fund: filter verworfen | {dropped}", flush=True)
+    satz = _bezug_note(bz, info)
     print(f"fund: suche | {len(hits)} treffer | {ms} ms | {profiles.log_name(who)}", flush=True)
     if ctx.get("out") is not None and hits:   # the card „In Finden ansehen“ (chat.js gotoCard, Begleiter DESK_GOTO)
         await ctx["out"].put({"type": "goto", "to": "fund", "q": worte[:120]})
     if not hits:
-        return "Keine Treffer in den eigenen Daten (Finden). Sag das kurz; erfinde nichts."
-    now = time.time()
-    return "Treffer in den eigenen Daten (Finden), neueste Daten zuerst nach Passung:\n" + \
+        return satz + "Keine Treffer in den eigenen Daten (Finden). Sag das kurz; erfinde nichts."
+    return satz + "Treffer in den eigenen Daten (Finden), neueste Daten zuerst nach Passung:\n" + \
         "\n".join(f"{i + 1}. {_line(h, now)}" for i, h in enumerate(hits))
+
+
+def _bezug_note(bz, info):
+    """The fixed sentence and the log line of an event: found (its day goes to the model), or for a strong word
+    without an appointment „Einen Termin ‚OP‘ habe ich im Kalender nicht gefunden.“ (the person's own word)."""
+    if not bz:
+        return ""
+    import frisch
+    if info.get("termin") is not None:
+        _note(bezug="ok")
+        print("fund: bezug | termin gefunden", flush=True)
+        day = frisch.stand(info["termin"]).split(",")[0]
+        return f"Bezug: der Termin „{bz[0]}“ am {day}; Treffer aus den Tagen davor und danach stehen weiter oben.\n"
+    if not bz[1]:
+        return ""
+    _note(bezug="fehlt")
+    print("fund: bezug | kein termin", flush=True)
+    return f"Einen Termin „{bz[0]}“ habe ich im Kalender nicht gefunden.\n"
 
 
 # ---------------------------------------------------------------- endpoints
@@ -1236,10 +1444,27 @@ async def search_route(request: Request, prof=Depends(own_profile)):
     kat = body.get("kategorie") if body.get("kategorie") in KATEGORIEN else None
     von = body.get("von") if _ts(body.get("von")) is not None else None
     bis = body.get("bis") if _ts(body.get("bis")) is not None else None
+    worte = str(body.get("worte") or "")[:MAX_WORTE]
+    # the typed words are the person's own: a period („letzte Woche“, „2023“) and an event („vom OP“) by the same rules
+    # as for the assistant, shown as chips; their words are filters, no search words
+    now = time.time()
+    zr = {} if von or bis else zeitraum(worte, now)
+    bz = bezug_aus(worte)
+    if zr:
+        von, bis = zr.get("von"), zr.get("bis")
+    rest = ohne(worte, zr.get("wo"), bz[2] if bz else None) if (zr or bz) else worte
+    info = {}
     t0 = time.time()
-    hits = await asyncio.to_thread(suche, uid, str(body.get("worte") or "")[:MAX_WORTE], quelle, kat, None, None, von, bis)
+    hits = await asyncio.to_thread(suche, uid, rest, quelle, kat, None, None, von, bis, MAX_SHOW, None,
+                                   bz[0] if bz else None, info)
+    deutung = {}
+    if zr:
+        deutung.update(von=zr["von"], bis=zr.get("bis", ""))
+    if bz and (info.get("termin") is not None or bz[1]):
+        deutung.update(bezug=bz[0], termin=info.get("termin") or 0)
+        _bezug_note(bz, info)
     print(f"fund: suche seite | {len(hits)} treffer | {int((time.time() - t0) * 1000)} ms | {profiles.log_name(prof)}", flush=True)
-    return {"treffer": hits}
+    return {"treffer": hits, "deutung": deutung}
 
 
 @router.get("/api/profile/fund/eintrag/{iid}", dependencies=[Depends(assistant)])
@@ -1295,7 +1520,7 @@ async def rebuild_route(request: Request, prof=Depends(browser_profile)):
     _running.add(uid)
     try:
         got = await vorrang.in_thread("Suchindex", runde, uid, None, BUDGET, 0)
-        _last[uid] = (time.time(), _stamp(uid))
+        _last[uid] = (time.time(), await asyncio.to_thread(_stamp, uid))
         _fm().anstossen(uid)   # the mails come again in their own round in the background, never waited for here
     finally:
         _running.discard(uid)

@@ -243,11 +243,11 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "2c40f3a8a9",
+        "stand": "15703b17a5",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
-            "docembed._call": ["s3"], "nachsortieren.rank": ["s10"], "wissen.recent_window": ["s11"],
+            "docembed._call": ["s3"], "nachsortieren.rank": ["s10"], "wissen.recent_window": ["s11"], "frisch.spanne": ["s11"],
             "wissen.where": ["s13"], "lokal.look": ["s5"], "gedaechtnis.hint_lines": ["s13"], "profiles._cap": ["s13"],
             "gedaechtnis.slot_of": ["s13"], "gemerkt.take_back": ["s13"],
             "regeln": ["s1", "s8"], "regel:Geteilte Dokumente": ["s8"], "regel:Gedächtnis": ["s13"],
@@ -270,14 +270,22 @@ SEITEN = {
                  "in den Dokumenten findet. Finden (fund.py, eigene Datei fund.db pro Profil) legt darüber einen "
                  "Index aus Titeln, Feldern und Schlagworten nach festen Regeln und nutzt für den Text dieselbe Suche; "
                  "Mails und Anhänge (fundmail.py) liest es in ruhigen Minuten in Scheiben ein und hält sie nur "
-                 "versiegelt (AES-GCM) mit ihren Wörtern als HMAC-Marken.",
+                 "versiegelt (AES-GCM) mit ihren Wörtern als HMAC-Marken; Termine und Kontakte (fundquellen.py) "
+                 "ebenso, Gespräche nur mit Datum und Kanal (ihre Wörter sucht recall.liste), Listen, Erinnerungen, "
+                 "Bilder und Lieder wie ihre Quelle. Zeiträume („letzte Woche“, „2023“) rechnet frisch.spanne nach "
+                 "festen Regeln, „vom OP“ sucht den letzten vergangenen Termin im eigenen Kalender (fund.bezug_aus): "
+                 "14 Tage davor bis 60 danach steht weiter oben, nie eine harte Grenze.",
                  "Knowledge is everything the Spark knows without going to the internet: the uploaded documents of "
                  "each profile (one SQLite file wissen.db per profile), the memory, earlier conversations, the own "
                  "Kiwix archive and created documents. This page shows the way a question finds fitting passages in "
                  "the documents. Find (fund.py, its own file fund.db per profile) adds an index of titles, fields "
                  "and tags by fixed rules on top and uses the same search for the text; mail and attachments "
                  "(fundmail.py) it reads in slices in quiet minutes and keeps only sealed (AES-GCM) with their words "
-                 "as HMAC marks."),
+                 "as HMAC marks; appointments and contacts (fundquellen.py) likewise, conversations only with date "
+                 "and channel (recall.liste searches their words), lists, reminders, pictures and songs like their "
+                 "source. Periods („last week“, „2023“) come from frisch.spanne by fixed rules, „from the surgery“ "
+                 "looks for the last past appointment in the own calendar (fund.bezug_aus): 14 days before to 60 "
+                 "after rank higher, never a hard limit."),
         "warum": ("Das Sprachmodell kennt die eigenen Unterlagen nicht. Es bekommt nur die wenigen Stellen, die das "
                   "Panel mit festen Regeln und zwei kleinen Modellen auf dem Prozessor heraussucht, jeweils mit "
                   "Herkunft. Was in einem Dokument steht, ist Text von außen: Daten, nie ein Befehl.",
@@ -715,6 +723,7 @@ SEITEN = {
             ("docembed._call", ("ein Auftrag an den Modellprozess", "one job for the model process")),
             ("nachsortieren.rank", ("Cross-Encoder oder Reihenfolge der Mischung", "cross-encoder or the mix's order")),
             ("wissen.recent_window", ("„zuletzt notiert“ als feste Regel", "„noted lately“ as a fixed rule")),
+            ("frisch.spanne", ("Zeitraum aus den eigenen Worten, feste Regeln", "period from the own words, fixed rules")),
             ("wissen.where", ("Herkunft einer Stelle für das Modell", "source of a passage for the model")),
             ("lokal.look", ("der kurze Blick vor der Antwort", "the quick look before the answer")),
             ("lokal.excerpt", ("das Stück einer Stelle mit den Suchwörtern", "the part of a passage with the search words")),
