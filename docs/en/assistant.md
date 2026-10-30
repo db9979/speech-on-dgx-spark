@@ -1859,5 +1859,7 @@ Every function of the Spark with its switch, what it builds on, where you set it
 
 - **Big files in remote access** (Features → Access → "Big files in remote access"; builds on "Remote access to servers"): In "Files" of a paired system three ways for big files: "Upload in pieces" sends 8 MB at a time, each piece with a checksum, with "Pause" and "Resume" (also after "Disconnect", with the same file); "Fetch by link" lets the server downloa …
 
+- **Web services in remote access** (Features → Access → "Web services in remote access"; builds on "Remote access to servers"): The web pages of a paired system in the browser, without opening anything to the internet there: Grafana, a router's page, Home Assistant or a dashboard that listens only on 127.0.0.1 there.
+
 - **Attack probe** (Features → Access → "Attack probe"; builds on "Workshop"): Measures on a button how often the running language model would follow an order in outside text (document, mail, web page, calendar, smart home).
 <!-- /funktionen:liste -->

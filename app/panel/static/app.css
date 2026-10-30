@@ -3128,7 +3128,7 @@ body.fzterminal .fztop{height:30px}   /* with a terminal open more lines (reconn
   .fzview.fzki .fzfragbtn{display:block;flex:none;margin-top:6px;padding:9px 14px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--mut);font:inherit;text-align:left;cursor:pointer}
   .fzview.fzki .fzside,.fzview.fzki.fzzu .fzside{display:flex;position:fixed;left:0;right:0;bottom:0;height:min(70vh,560px);z-index:9500;border-radius:16px 16px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.3);transform:translateY(105%);visibility:hidden;transition:transform .2s}
   #fzbox.fzoffen{padding:6px}  .fzview.fzblatt .fzside{transform:none;visibility:visible}.fzbanner .fzbleer{display:none}}
-.fzview[hidden],.fzdetail[hidden],.fzfiles[hidden],.fzbild[hidden]{display:none}
+.fzview[hidden],.fzdetail[hidden],.fzfiles[hidden],.fzbild[hidden],.fzweb[hidden]{display:none}
 .fzq{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--line);font-size:11px;font-weight:600;color:var(--mut);cursor:help;vertical-align:middle}
 .fzchip .fzinfo{font-size:11px;color:var(--mut);border:1px solid var(--line);border-radius:6px;padding:0 5px;margin-right:6px}
 /* xterm's own scroll bar dark and thin, no light strip at the terminal's edge */
@@ -3237,6 +3237,10 @@ button.fzfname{background:none;border:0;padding:4px 0;color:var(--acc,inherit);c
 .fbschirm:focus-visible{box-shadow:0 0 0 2px var(--acc)}.fzbild.fbsteuert .fbschirm{box-shadow:0 0 0 2px var(--warn)}
 .fzbild:fullscreen{background:#000;padding:6px;margin:0}.fzbild:fullscreen .fbschirm{height:calc(100vh - 60px);border-radius:0}
 #fbmacrow{display:grid;gap:6px;margin:8px 0}#fbmacrow[hidden]{display:none}
+.fzweb{margin-top:8px;display:flex;flex-direction:column;gap:6px}.fwframe{width:100%;height:calc(100vh - 230px);min-height:260px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.fwblock{margin-top:10px;display:flex;flex-direction:column;gap:6px}.fwkopf{display:flex;align-items:center;gap:6px}.fwliste{display:flex;flex-direction:column;gap:4px}
+.fwrow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:6px 8px;border:1px solid var(--line);border-radius:8px}.fwtext{flex:1;min-width:0;display:flex;flex-direction:column;overflow-wrap:anywhere}
+.fwform{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px;padding:8px;border:1px solid var(--line);border-radius:8px}.fwform label{display:flex;flex-direction:column;gap:2px}.fwform .row,.fwform .fh{grid-column:1/-1}
 .fztip{position:fixed;z-index:9600;max-width:min(360px,calc(100vw - 8px));padding:6px 9px;border-radius:8px;background:var(--fg);color:var(--bg);font-size:12.5px;line-height:1.35;box-shadow:0 4px 14px rgba(0,0,0,.25);pointer-events:none}.fztip[hidden]{display:none}
 .fzchiprow .fzchips.fzrechts{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent)}
 .fzchiprow .fzchips.fzlinks{-webkit-mask-image:linear-gradient(to right,transparent,#000 28px);mask-image:linear-gradient(to right,transparent,#000 28px)}

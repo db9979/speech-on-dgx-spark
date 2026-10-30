@@ -387,6 +387,7 @@ ADMIN_ON_OK = {
     "fernbild.py:admin_on": "admin only: the screen of a paired system in an admin's own browser, admin-only doors and the anchor's own door, no profile part",
     "fernbild.py:clipboard_on": "admin only: the clipboard of an admin's own screen session, no profile part",
     "fernzugang.py:hilfe_on": "admin only: the assistant beside the terminal of an admin's own remote session, no profile part",
+    "fernweb.py:admin_on": "admin only: the web services of a paired system in an admin's own browser, admin-only doors and the door's own port, no profile part",
     "ferngross.py:admin_on": "admin only: big files of an admin's own files session on a remote server, no profile part",
     "fernnotiz.py:on": "admin only: the notes of an admin on the paired systems, admin-only doors, no profile part",
     "fernordner.py:on": "admin only: the folders of the paired systems on the admin's page, admin-only doors, no profile part",

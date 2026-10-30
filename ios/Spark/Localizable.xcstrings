@@ -18021,6 +18021,16 @@
         }
       }
     },
+    "Webdienste im Panel öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open web services in the panel"
+          }
+        }
+      }
+    },
     "Shell oder Dateien im Panel öffnen": {
       "localizations": {
         "en": {

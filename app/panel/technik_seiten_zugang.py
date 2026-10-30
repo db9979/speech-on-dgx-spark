@@ -185,7 +185,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ middleware (panel.py, notaus.py)
     "middleware": {
-        "stand": "8380709088",
+        "stand": "b0f20679f0",
         "bezug": {
             "panel.slow_reads": ["s2"], "panel.emergency": ["s3", "s4"], "notaus.at_home": ["s5"],
             "panel.sessions": ["s7", "s11", "s12"], "guard.same_origin": ["s7"], "panel._may_upload": ["s8"],
@@ -308,11 +308,13 @@ SEITEN = {
             S("s12", "ende", ("Antwort mit Schutz", "Answer with protection"),
               ("Kopfzeilen · Protokoll · Cookies", "headers · log · cookies"),
               ("Jede Antwort bekommt die Schutz-Kopfzeilen (keine fremden Rahmen, strenge Content-Security-Policy, "
-               "auf https auch HSTS), unter /api/ „no-store“. Eine Änderung landet mit wer, Pfad und Status im "
+               "auf https auch HSTS; mit Fernzugang → Systeme, Knopf „Webdienste“ darf die Seite zusätzlich nur die eigene Tunnel-Tür "
+               "einrahmen, fernweb.frame_src), unter /api/ „no-store“. Eine Änderung landet mit wer, Pfad und Status im "
                "Admin-Protokoll, außer gewöhnlicher Nutzung aus guard.QUIET_WHY. Benutzte Anmeldungen werden "
                "erneuert, auf https immer mit Secure.",
                "Every answer gets the protective headers (no foreign frames, a strict Content-Security-Policy, on "
-               "https also HSTS), under /api/ „no-store“. A change goes into the admin log with who, path and status, "
+               "https also HSTS; with remote access web services the page may also frame only its own tunnel door, "
+               "fernweb.frame_src), under /api/ „no-store“. A change goes into the admin log with who, path and status, "
                "except normal use from guard.QUIET_WHY. Logins in use are renewed, on https always with Secure.")),
         ],
         "beispiele": [
@@ -396,7 +398,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "ef8d8c20d9",
+        "stand": "08b56e5457",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],

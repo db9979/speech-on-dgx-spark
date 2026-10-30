@@ -2148,6 +2148,9 @@ struct FernzugangView: View {
                             }
                             Toggle("Darf sich verbinden", isOn: Binding(get: { g.erlaubt }, set: { v in Task { await allow(g, v) } })).disabled(g.wartet)
                             Button("Shell oder Dateien im Panel öffnen") { panel() }.disabled(!g.online || g.hostkeyFalsch || !g.erlaubt || g.wartet)
+                            if d["webdienste"] as? Bool == true {   // Webdienste (fernweb.py): list and open them in the panel view
+                                Button("Webdienste im Panel öffnen") { panel() }.disabled(!g.online || g.hostkeyFalsch || !g.erlaubt || g.wartet)
+                            }
                             Button("Trennen") { Task { await cut(g) } }.disabled(!g.online && g.sitzungen == 0)
                             Button("Entfernen", role: .destructive) { askRemove = g }
                         }

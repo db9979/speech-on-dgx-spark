@@ -556,6 +556,7 @@ Shell, Dateien und Bildschirm eigener Server über ihren Anker, dazu die Spontan
 | `app/panel/ferngross.py` | Fernzugang, große Dateien: in Teilen mit SHA-256, per Link (curl) oder vom NAS, Prüfsumme vor dem Umbenennen |
 | `app/panel/fernnotiz.py` | Fernzugang, Notizen je System: versiegelt, 10 Fassungen, Tresor-Hinweis, Assistent liest nur mit Haken |
 | `app/panel/fernordner.py` | Fernzugang, Ordner: eine Ebene, Name und Symbol, Reihenfolge per Ziehen, nur Ordnung, Rechte je System |
+| `app/panel/fernweb.py` | Fernzugang, Webdienste: eigene Tunnel-Tür (Port 31090), Ziele nach festen Regeln, Cookies je Dienst getrennt |
 | `app/panel/fernwindows.py` | Fernzugang, Windows: spark-anker-einrichten.cmd mit Einmal-Schlüssel, Python mit fester Prüfsumme |
 | `app/panel/fernzugang.py` | Fernzugang: Seite per Code entsperrt, Anker, Einmal-Code, Terminal mit Ticket, Host-Schlüssel fest, Shell gehalten |
 | `app/panel/spontanhilfe.py` | Spontanhilfe: Nummer und Link, Seite /hilfe mit eigener CSP, WebRTC zwischen zwei Browsern, Shell über den Anker |
@@ -1552,7 +1553,7 @@ flowchart TD
 9. <a id="kn-middleware-s9"></a>**Zu groß?**: Jeder Pfad hat seine Grenze, sonst gilt eine kleine Standardgrenze von zwei MB. Eine zu große Content-Length wird sofort abgelehnt; beim Lesen zählt BodyLimit zusätzlich mit und bricht ab, sobald mehr kommt als erlaubt.
 10. <a id="kn-middleware-s10"></a>**Update läuft?**: Während ein Update läuft, werden Änderungen unter /api/ angehalten. Der Assistent, die Geräte und das Anmelden bleiben offen (update.UNLOCKED).
 11. <a id="kn-middleware-s11"></a>**Endpunkt**: Erst jetzt liest der Endpunkt die Anfrage und prüft selbst Anmeldung, Profil und Rate-Limit (die nächste Station, „Anmeldung, Profil“). Ist der Verbrauchszähler an, merkt sich die Anfrage vorher, für welches Profil sie läuft: was sie die Modelle fragt, zählt für dieses Profil.
-12. <a id="kn-middleware-s12"></a>**Antwort mit Schutz**: Jede Antwort bekommt die Schutz-Kopfzeilen (keine fremden Rahmen, strenge Content-Security-Policy, auf https auch HSTS), unter /api/ „no-store“. Eine Änderung landet mit wer, Pfad und Status im Admin-Protokoll, außer gewöhnlicher Nutzung aus guard.QUIET_WHY. Benutzte Anmeldungen werden erneuert, auf https immer mit Secure.
+12. <a id="kn-middleware-s12"></a>**Antwort mit Schutz**: Jede Antwort bekommt die Schutz-Kopfzeilen (keine fremden Rahmen, strenge Content-Security-Policy, auf https auch HSTS; mit Fernzugang → Systeme, Knopf „Webdienste“ darf die Seite zusätzlich nur die eigene Tunnel-Tür einrahmen, fernweb.frame_src), unter /api/ „no-store“. Eine Änderung landet mit wer, Pfad und Status im Admin-Protokoll, außer gewöhnlicher Nutzung aus guard.QUIET_WHY. Benutzte Anmeldungen werden erneuert, auf https immer mit Secure.
 
 **Beispiele:** Einstellung im Browser zu Hause: Durch: der Endpunkt prüft die Anmeldung, die Änderung steht im Admin-Protokoll. · Fremde Webseite schickt ein Formular: Abgewiesen mit 403, bevor ein Endpunkt etwas tut. · Notaus Stufe 1, App unterwegs: Gesperrt mit 503 und der Stufe; die App zeigt den Notaus. · Großer Upload ohne Anmeldung: Abgewiesen mit 401, kein Byte gelesen.
 
@@ -4028,7 +4029,7 @@ flowchart TD
 3. <a id="kn-fernzugang-s3"></a>**Koppeln**: „Koppeln“ fragt den Code jedes Mal neu (fernzugang.admin_pair) und zeigt eine Zeile für den Server mit einem Einmal-Code, 10 Minuten gültig, dazu einen Einmal-Link mit QR-Code, der auf dem neuen System nur diese Zeile zeigt, nie den Code (fernzugang.link_check). Windows: der Link gibt einmal die Datei spark-anker-einrichten.cmd (fernzugang.link_file) mit Einmal-Schlüssel statt Code; das System wartet dann, bis der Admin es mit Code oder Passkey bestätigt (fernzugang.admin_confirm). Höchstens 10 Systeme; jedes bekommt einen eigenen SSH-Schlüssel des Panels, sein Host-Schlüssel wird angeheftet.
 4. <a id="kn-fernzugang-s4"></a>**Ticket für das Fenster**: „Shell“ gibt ein Einmal-Ticket (fernzugang.admin_session), das 30 Sekunden lang genau ein Web-Terminal öffnet (fernzugang.terminal_ws); höchstens 4 Sitzungen zugleich.
 5. <a id="kn-fernzugang-s5"></a>**Anderer Host-Schlüssel?**: Zeigt der Server einen anderen Host-Schlüssel als beim Koppeln, gibt es keine Verbindung (fernzugang.hostkey_wrong); nach einer Neuinstallation entfernen und neu koppeln.
-6. <a id="kn-fernzugang-s6"></a>**Shell, Dateien, Bildschirm**: SSH läuft durch den Kanal des Ankers; reißt das Fenster ab, wartet die Shell 120 Sekunden. Ein Lebenszeichen alle 5 Sekunden misst Laufzeit und Rate; die Ausgabe wartet in höchstens 32 Stücken auf das Fenster, dann bremst SSH den Server (Gegendruck). Dateien über SFTP in derselben Verbindung (ferndateien.listing), Laden mit Einmal-Link für 60 Sekunden; große Dateien in Teilen von 8 MB MB mit SHA-256 je Stück (ferngross.upload_piece). Der Bildschirm geht über guacd nur auf 127.0.0.1 (fernbild.GUACD), höchstens 15 Bilder je Sekunde; guacd 1.6.0 baut der Spark selbst aus Apaches Quelltext, fest mit SHA-256 (fernbild.dienst sagt der Seite, warum er fehlt). Der Assistent (fernzugang.admin_help) fragt nur das eigene Modell und schlägt vor, getippt wird nie von selbst. Notizen je System liegen versiegelt, 10 Fassungen bleiben; das Modell liest sie nur mit Haken (fernnotiz.fuer_modell). Ordner ordnen nur die Liste (fernordner.view), höchstens 30; Rechte bleiben je System.
+6. <a id="kn-fernzugang-s6"></a>**Shell, Dateien, Bildschirm**: SSH läuft durch den Kanal des Ankers; reißt das Fenster ab, wartet die Shell 120 Sekunden. Ein Lebenszeichen alle 5 Sekunden misst Laufzeit und Rate; die Ausgabe wartet in höchstens 32 Stücken auf das Fenster, dann bremst SSH den Server (Gegendruck). Dateien über SFTP in derselben Verbindung (ferndateien.listing), Laden mit Einmal-Link für 60 Sekunden; große Dateien in Teilen von 8 MB MB mit SHA-256 je Stück (ferngross.upload_piece). Der Bildschirm geht über guacd nur auf 127.0.0.1 (fernbild.GUACD), höchstens 15 Bilder je Sekunde; guacd 1.6.0 baut der Spark selbst aus Apaches Quelltext, fest mit SHA-256 (fernbild.dienst sagt der Seite, warum er fehlt). Der Assistent (fernzugang.admin_help) fragt nur das eigene Modell und schlägt vor, getippt wird nie von selbst. Notizen je System liegen versiegelt, 10 Fassungen bleiben; das Modell liest sie nur mit Haken (fernnotiz.fuer_modell). Ordner ordnen nur die Liste (fernordner.view), höchstens 30; Rechte bleiben je System. Webdienste kommen über die Tunnel-Tür auf Port 31090, eine eigene Herkunft, nie die des Panels (fernweb.verbindung): ohne Cookies des Panels und ohne Anmeldung, die Cookies jedes Dienstes für sich, einbetten darf nur das Panel. Ziele nur nach festen Regeln (fernweb.ziel_ok), die der Anker selbst noch einmal prüft: 127.0.0.1 dort, private Adressen nur mit „Netz dahinter“, nie die Netze des Spark. Anders als die Shell geht das nicht als SSH Ende zu Ende, sondern durch die TLS-Leitung des Ankers mit angeheftetem Zertifikat; höchstens 4 Tunnel mit je 8 Verbindungen und Gegendruck.
 7. <a id="kn-fernzugang-s7"></a>**Spontanhilfe**: Eine Hilfe (spontanhilfe.admin_new) gibt eine Nummer für 10 Minuten, nach 5 falschen ist sie tot. Der Bildschirm geht per WebRTC direkt zwischen den zwei Browsern, von unterwegs über TURN auf tars; das Panel vermittelt nur.
 8. <a id="kn-fernzugang-s8"></a>**Logs und Verlauf**: Logs nur mit festen Wörtern und Zahlen (fernzugang.log), der Verlauf nur Zeit, System, Admin, Art und Dauer (fernzugang.verlauf_add). Der Notaus schließt jede Leitung (fernzugang.notaus_close).
 
@@ -4044,11 +4045,14 @@ flowchart TD
 - **10** Fassungen einer Notiz bleiben ([Schritt 6](#kn-fernzugang-s6))
 - **30** Ordner höchstens ([Schritt 6](#kn-fernzugang-s6))
 - **8 MB MB** ist ein Stück einer großen Datei ([Schritt 6](#kn-fernzugang-s6))
+- **4** Webdienste gleichzeitig offen höchstens ([Schritt 6](#kn-fernzugang-s6))
+- **8** Verbindungen je Webdienst zugleich höchstens ([Schritt 6](#kn-fernzugang-s6))
+- **31090** Port der Tunnel-Tür ([Schritt 6](#kn-fernzugang-s6))
 - **10 min** gilt eine Nummer der Spontanhilfe ([Schritt 7](#kn-fernzugang-s7))
 
 #### Einstellen
 
-- Funktionen → Fernzugang zu Servern: einschalten, Systeme koppeln, Bildschirm, Spontanhilfe, Notizen und Ordner.
+- Funktionen → Fernzugang zu Servern: einschalten, Systeme koppeln, Bildschirm, Webdienste, Spontanhilfe, Notizen und Ordner.
 
 #### Was du siehst
 
@@ -4069,8 +4073,10 @@ flowchart TD
 - `app/panel/fernnotiz.py` `fuer_modell`: die Notiz nur mit Haken für das Modell ([Schritt 6](#kn-fernzugang-s6))
 - `app/panel/fernordner.py` `view`: Ordner: nur die Reihenfolge der Liste ([Schritt 6](#kn-fernzugang-s6))
 - `app/panel/ferngross.py` `upload_piece`: große Datei: ein Stück nur ganz und mit passender SHA-256 ([Schritt 6](#kn-fernzugang-s6))
+- `app/panel/fernweb.py` `ziel_ok`: Webdienste: wohin ein Tunnel darf ([Schritt 6](#kn-fernzugang-s6))
+- `app/panel/fernweb.py` `verbindung`: die Tunnel-Tür: Köpfe umgeschrieben, Cookies getrennt ([Schritt 6](#kn-fernzugang-s6))
 
-Selbsttests: `test_fernzugang`, `test_fernbild`, `test_spontanhilfe`, `test_ferngross`
+Selbsttests: `test_fernzugang`, `test_fernbild`, `test_spontanhilfe`, `test_ferngross`, `test_fernweb`
 
 ### Fern-Server
 

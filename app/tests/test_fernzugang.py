@@ -1927,8 +1927,9 @@ class Pieces(Base):
         self.assertTrue(any(k == "fernzugang" and re.match(rx, "fernzugang: koppeln | ok | 1") for k, rx in logfilter.AREAS))
         self.pair("geheimer-server")
         d = fernzugang.for_live()
-        self.assertEqual(set(d), {"on", "gekoppelt", "online", "sitzungen", "wartet", "abbau", "hostkey", "offen", "systeme", "hilfe", "entsperrt", "dateien", "bildschirm", "gehalten", "uebertragungen", "notizen", "ordner"})
-        self.assertTrue(all(isinstance(v, (bool, int)) for k, v in d.items() if k not in ("offen", "systeme")))
+        self.assertEqual(set(d), {"on", "gekoppelt", "online", "sitzungen", "wartet", "abbau", "hostkey", "offen", "systeme", "hilfe", "entsperrt", "dateien", "bildschirm", "gehalten", "uebertragungen", "notizen", "ordner", "web"})
+        self.assertTrue(all(isinstance(v, (bool, int)) for k, v in d.items() if k not in ("offen", "systeme", "web")))
+        self.assertTrue(all(isinstance(v, int) for v in d["web"].values()), d["web"])   # Webdienste: counts only
         self.assertEqual(d["offen"], [])
         self.assertEqual(d["systeme"], [{"name": "System 1", "online": False}])   # no name without live_names
         sub = fernzugang.live_sub(d)
@@ -1947,7 +1948,7 @@ class Pieces(Base):
         st = ADMIN.get("/api/status").json()["fernzugang"]
         self.assertEqual(st, {"on": True, "gekoppelt": 1, "online": 0, "sitzungen": 0, "wartet": 0, "abbau": 0, "hostkey": 0, "hilfe": 0, "dateien": 0, "bildschirm": 0,
                               "gehalten": 0, "uebertragungen": 0, "offen": [], "systeme": [{"name": "System 1", "online": False}], "entsperrt": 1,
-                              "notizen": 0, "ordner": 0})
+                              "notizen": 0, "ordner": 0, "web": {"tunnel": 0}})
         import steuerzentrale as sz
         from tests.test_steuerzentrale import beispiel
         d = beispiel()

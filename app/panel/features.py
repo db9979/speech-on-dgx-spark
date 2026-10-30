@@ -804,6 +804,8 @@ FEATURES = (
     F("fernordner", "Ordner im Fernzugang", "Folders in remote access", "sec", ("fernzugang_ordner",), parent="fernzugang", guide="fernordner"),
     F("ferngross", "Große Dateien im Fernzugang", "Big files in remote access", "sec", ("fernzugang_gross",), parent="fernzugang",
       guide="ferngross"),
+    # fernweb.py (Dominik 2026-10-30 „1a, 2a“): the web pages of a paired system through its anchor, own origin, admins only
+    F("fernweb", "Webdienste im Fernzugang", "Web services in remote access", "sec", ("fernweb",), parent="fernzugang", guide="fernweb"),
     # angriffsprobe.py: how often the real model would follow an order in outside text (numbers only, nothing runs)
     F("angriffsprobe", "Angriffsprobe", "Attack probe", "sec", ("angriffsprobe",), parent="werkstatt", guide="angriffsprobe"),
     # nas.py (plan plaene/synology-bauplan.md): the places of a profile (NAS or cloud connected once), Ich → Speicher
@@ -906,7 +908,7 @@ DUTY = None
 REVIEW = None
 
 # chat.* switches that are no function a profile uses (how the Spark itself works)
-SPARK_ONLY = {"wachposten", "public", "thinking", "prompt_cache", "answer_check", "answer_check_more", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "angriffsprobe", "weicheabstimmen", "fernzugang", "fernzugangmeldung", "spontanhilfe", "fernzuganghilfe", "fernbild", "fernbildablage", "fernnotizen", "fernordner", "ferngross",
+SPARK_ONLY = {"wachposten", "public", "thinking", "prompt_cache", "answer_check", "answer_check_more", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "angriffsprobe", "weicheabstimmen", "fernzugang", "fernzugangmeldung", "spontanhilfe", "fernzuganghilfe", "fernbild", "fernbildablage", "fernnotizen", "fernordner", "ferngross", "fernweb",
               "helfer", "helferweiche", "helferdungeon", "helfermail", "helferangriff", "helferkurz"}
 # Everything starts off (Dominik 2026-10-08). The only values shipped on in config.default.json are protection and
 # stability rules and the basic functions the Spark had from the start, each with its reason here (Dominik 2026-10-12,

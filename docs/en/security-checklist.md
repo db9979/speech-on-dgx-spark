@@ -50,6 +50,7 @@ Go through before every commit. In the answer to Dominik briefly name which poin
 - [ ] The checked IP is pinned (no second DNS lookup, so no DNS rebinding gap), and every redirect is checked again.
 - [ ] Credentials go only to the same origin (also for hrefs from PROPFIND), there is never a fallback to http, and TLS verification is on.
 - [ ] `ref_audio` and similar only as `data:` with a size limit, never as a URL.
+- [ ] A tunnel to another computer (Remote access, web services) takes only IP addresses, never a name, and checks the target on both sides by the same fixed rules: the panel (`fernweb.ziel_ok`) and the anchor (`web_ziel`). Loopback there is allowed; private ranges only with an admin switch of their own per system and never in the own networks. Never allowed are link-local, the metadata address, multicast and the panel's own address.
 
 ## Injection
 - [ ] `subprocess` only with list arguments, never `shell=True`, `eval` or `exec`. No `pickle` and no `allow_pickle` on outside data.
@@ -103,6 +104,7 @@ Every change is checked not only against the traps above, but also against wheth
 **Connections**
 - [ ] Only TLS 1.2 or newer, TLS 1.3 preferred; certificate verification never off; no fallback to http; the own https server without session tickets (`panel.tls_context`, V01.1.243).
 - [ ] HSTS on https.
+- [ ] Remote access says how each kind is protected. Shell, files and big files run as SSH end to end (host key pinned at pairing). Screen and web services do not go as SSH but through the anchor's TLS line to the panel (certificate checked or pinned, V01.1.279). An https service there with its own certificate opens only after "Trust" and is then checked against its SHA-256 on every connection.
 
 **Login and session**
 - [ ] Passkeys (WebAuthn) before codes; second step as TOTP or passkey, never SMS.
@@ -112,6 +114,7 @@ Every change is checked not only against the traps above, but also against wheth
 **Browser**
 - [ ] Strict CSP (`script-src 'self'`, no `unsafe-eval`, no inline scripts), `frame-ancestors`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`.
 - [ ] Model output and outside texts are never executed as HTML in the interface.
+- [ ] Tunnelled outside pages (web services) never on the panel's origin, always on one of their own (own port or name). No panel cookies and no `Authorization` go there, and each service keeps its own cookies apart. Only the panel may embed them (`frame-ancestors`), and the door sets its own cookie only after a one-time ticket (`HttpOnly`, `Secure`, `SameSite=Strict`, `__Host-`).
 - [ ] Outside HTML (mail) only cleaned, in a `sandbox` frame without `allow-scripts` with its own CSP (`default-src 'none'`), outside pictures only through the Spark after the own click, the picture type by its first bytes, never SVG.
 
 **Supply chain and operation**

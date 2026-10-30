@@ -261,7 +261,9 @@ WORDS = ("koppeln_code", "koppeln", "koppeln_datei", "bestaetigt", "anker_auf", 
          "dateien_abgewiesen", "liste", "link", "laden", "hoch", "bild_ticket", "bild_auf", "bild_zu", "bild_rate", "bild_abgewiesen",
          "bild_steuern", "bild_passwort", "bild_guacd", "verbindung", "aktualisieren", "notiz", "ordner",
          "gross_auf", "gross_teil", "gross_weiter", "gross_fertig", "gross_ab", "gross_rate", "gross_rest", "gross_stand", "holen",
-         "holen_fertig", "nas_liste", "nas_holen", "nas_fertig", "job_ab", "koppeln_link")
+         "holen_fertig", "nas_liste", "nas_holen", "nas_fertig", "job_ab", "koppeln_link",
+         "web_auf", "web_zu", "web_ticket", "web_abgewiesen", "web_dienst", "web_netz", "web_suchen", "web_fp", "web_tor",
+         "web_verbindung", "web_websocket")
 # „Frag den Assistenten“ beside the terminal (stage 2b, Dominik 2026-10-28): the own language model only (llm.own_tor),
 # no tool, its answer is text for the person; the panel never types it. What goes to the model: the question, the
 # system's name and OS, the last HILFE_BEFEHLE own commands and, only with „Bildschirm mitschicken“, the last
@@ -618,7 +620,9 @@ def for_live(now=None):
               "min": int((now - x.seit) // 60)} for x in sorted(SITZUNG.values(), key=lambda x: x.seit)]
     import fernnotiz
     import fernordner
+    import fernweb
     return {"on": True, **counts(now), "hilfe": STATS["hilfe"], "offen": offen, "entsperrt": entsperrt_n(now),
+            "web": fernweb.for_live(now),
             "notizen": fernnotiz.anzahl() if fernnotiz.on() else 0,
             "ordner": fernordner.anzahl() if fernordner.on() else 0,
             "systeme": [{"name": sysname(k), "online": k in ANKER} for k in order]}
@@ -633,6 +637,7 @@ def _live_names():
 
 
 def live_sub(d):
+    import fernweb
     offen = "".join(f" · {x['art']} {x['system']}, {x['admin']}, {x['herkunft']}, {x['min']} min" for x in d.get("offen") or ())
     return (f"{d.get('gekoppelt', 0)} gekoppelt · {d.get('online', 0)} online · {d.get('sitzungen', 0)} Sitzungen"
             + (f" · davon {d['dateien']} Dateien" if d.get("dateien") else "")
@@ -645,7 +650,8 @@ def live_sub(d):
             + (f" · {d['hilfe']} Fragen an den Assistenten" if d.get("hilfe") else "")
             + (f" · {d['entsperrt']} entsperrt" if d.get("entsperrt") else "")
             + (f" · {d['notizen']} mit Notiz" if d.get("notizen") else "")
-            + (f" · {d['ordner']} Ordner" if d.get("ordner") else ""))
+            + (f" · {d['ordner']} Ordner" if d.get("ordner") else "")
+            + fernweb.live_sub(d.get("web") or {}))
 
 
 # ---------------------------------------------------------------- Dienst-Wächter
@@ -686,7 +692,8 @@ async def _close_anker(a, code=4000):
 async def close_all(why="alle"):
     """Ends every session and anchor connection (Alle trennen, Notaus). The anchors come back after their pause
     unless the Notaus is on."""
-    n = len(SITZUNG) + len(ANKER)
+    import fernweb
+    n = len(SITZUNG) + len(ANKER) + await fernweb.close_all(why)
     for s in list(SITZUNG.values()):
         await s.end(why)
     for a in list(ANKER.values()):
@@ -1407,6 +1414,11 @@ async def _on_anker_text(a, m):
         a.wait[n].set_result(typ == "offen")
     elif typ == "zu" and isinstance(n, int) and n in a.kanaele:
         await a.kanaele[n].end("server")
+    elif typ == "mehr" and isinstance(n, int) and getattr(a.kanaele.get(n), "art", "") == "web":
+        a.kanaele[n].mehr(m.get("n"))          # Webdienste: the anchor took this many bytes (fernweb.Kanal)
+    elif typ == "ports":
+        import fernweb
+        await fernweb.on_ports(a.gid, m)
     elif typ == "hallo":
         os_, ver = str(m.get("os", ""))[:40], str(m.get("version", ""))[:20]
         fields = {k: v for k, v in (("os", os_), ("anker", ver)) if v and WORD.fullmatch(v)}
@@ -1444,8 +1456,11 @@ def _forget(gid, why):
         _write(d)
     import fernnotiz
     import fernordner
+    import fernweb
     fernnotiz.forget(gid)
     fernordner.forget(gid)
+    fernweb.GEFUNDEN.pop(gid, None)
+    fernweb.ende_gid(gid, "abgebaut")
     log("abgebaut", why)
     guard.log("fernzugang_removed", detail="Fern-Server hat seinen Anker abgebaut")
     _live("Fern-Server abgebaut")
@@ -1733,7 +1748,10 @@ def _ende_login(login, why):
 
 
 def sperren_alle(why):
-    """Every unlocked page locked at once (Notaus, logout everywhere); logging out everywhere ends every session."""
+    """Every unlocked page locked at once (Notaus, logout everywhere); logging out everywhere ends every session. The
+    Webdienste live on an unlock: theirs end with it (fernweb.ende_tor)."""
+    import fernweb
+    fernweb.ende_tor(None, "gesperrt" if why != "notaus" else why)
     if why == "abmelden":
         _ende_login(None, why)
     n = len(ENTSPERRT)
@@ -1746,6 +1764,8 @@ def sperren(conn, why):
     """This login's page locked (Sperren, logout); logging out also ends this login's sessions (a held one too)."""
     if why == "abmelden":
         _ende_login(_login(conn), why)
+    import fernweb
+    fernweb.ende_tor(_tor(conn), "gesperrt")
     if ENTSPERRT.pop(_tor(conn), None) is not None:
         log("gesperrt", why, 1)
         return True
@@ -1865,6 +1885,8 @@ def admin_get(request: Request):
            "ki_zeilen_wahl": sorted(set(KI_ZEILEN_WAHL) | {ki_zeilen(c)}), "ki_zeichen": KI_ZEICHEN, "ziel_min": ZIEL_MIN,
            "hilfe_befehle": HILFE_BEFEHLE, "vorschlag_s": VORSCHLAG_S, "bildschirm": fernbild.admin_on(c), "bild_dienst": fernbild.dienst() if fernbild.admin_on(c) else None,
            "zwischenablage": fernbild.clipboard_on(c), "bild_langsam": fernbild.LANGSAM}
+    import fernweb
+    out["webdienste"] = web_an = fernweb.admin_on(c)
     import fernnotiz
     out["notizen"] = notizen = fernnotiz.on(c)
     out["notiz_max"] = fernnotiz.MAX_BYTES
@@ -1883,6 +1905,7 @@ def admin_get(request: Request):
                      "wartet": bool(x.get("wartet")),
                      "fp": fingerprint(x.get("hostkey", "")), "art": art(x.get("os")),
                      "bild": x.get("bild") or "", "bild_anker": fernbild.anchor_ok(x.get("anker")),
+                     "web_anker": fernweb.anchor_ok(x.get("anker")), "web": len(x.get("web") or []) if web_an else 0,
                      "sitzungen": sum(1 for s in SITZUNG.values() if s.gid == gid), **fernanker.row(x, pv),
                      "notiz": notizen and fernnotiz.has(gid)})
     if ordner_an:                            # folders on: the systems in their order, each with its folder
@@ -2179,6 +2202,8 @@ async def admin_remove(gid: str, request: Request):
     import fernordner
     fernnotiz.forget(gid)                    # the page offered to download it first
     fernordner.forget(gid)
+    import fernweb
+    fernweb.ende_gid(gid, "entfernt")
     guard.log("fernzugang_revoked", detail="Fern-Server entfernt")
     a = ANKER.get(gid)
     if a is None:

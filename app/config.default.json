@@ -408,6 +408,8 @@
     "fernbild_zwischenablage": false,
     "fernzugang_notizen": false,
     "fernzugang_ordner": false,
+    "fernweb": false,
+    "fernweb_adresse": "",
     "angriffsprobe": false,
     "werkstatt_stunde": 3,
     "modelle_eigene": false,

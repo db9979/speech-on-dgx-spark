@@ -556,6 +556,7 @@ Shell, files and screen of own servers through their anchor, plus spontaneous he
 | `app/panel/ferngross.py` | Fernzugang, große Dateien: three ways for a big file onto a paired server, inside the open „Dateien“ session (ferndateien.py: the same SSH connection, the sa … |
 | `app/panel/fernnotiz.py` | Notizen je System im Fernzugang: one note per paired system, written by the admin, for the admin. |
 | `app/panel/fernordner.py` | Ordner im Fernzugang: the paired systems in folders. |
+| `app/panel/fernweb.py` | Fernzugang, Webdienste: the web pages of a paired system (Grafana, a router page, Home Assistant over there …) in the admin's browser, through the same ancho … |
 | `app/panel/fernwindows.py` | Fernzugang Stufe 5 (Windows): the file spark-anker-einrichten.cmd a pairing's „Einmal-Link“ hands out. |
 | `app/panel/fernzugang.py` | Fernzugang: a server elsewhere (a VPS, a NAS at friends') calls the panel by itself and the admin works in its shell in the browser, like Raspberry Pi Connec … |
 | `app/panel/spontanhilfe.py` | Spontanhilfe: an admin helps a person (family, friends) once at their computer, like TeamViewer QuickSupport. |
@@ -1552,7 +1553,7 @@ flowchart TD
 9. <a id="kn-middleware-s9"></a>**Too large?**: Every path has its limit, else a small default of two MB holds. A Content-Length that is too large is refused at once; while reading, BodyLimit also counts and stops as soon as more arrives than allowed.
 10. <a id="kn-middleware-s10"></a>**Update running?**: While an update runs, changes under /api/ are held. The assistant, the devices and logging in stay open (update.UNLOCKED).
 11. <a id="kn-middleware-s11"></a>**Endpoint**: Only now the endpoint reads the request and checks login, profile and rate limit itself (the next box, „Login, profile“). With the usage counter on, the request first notes which profile it runs for: what it asks the models counts for that profile.
-12. <a id="kn-middleware-s12"></a>**Answer with protection**: Every answer gets the protective headers (no foreign frames, a strict Content-Security-Policy, on https also HSTS), under /api/ „no-store“. A change goes into the admin log with who, path and status, except normal use from guard.QUIET_WHY. Logins in use are renewed, on https always with Secure.
+12. <a id="kn-middleware-s12"></a>**Answer with protection**: Every answer gets the protective headers (no foreign frames, a strict Content-Security-Policy, on https also HSTS; with remote access web services the page may also frame only its own tunnel door, fernweb.frame_src), under /api/ „no-store“. A change goes into the admin log with who, path and status, except normal use from guard.QUIET_WHY. Logins in use are renewed, on https always with Secure.
 
 **Examples:** Setting in the browser at home: Passes: the endpoint checks the login, the change is in the admin log. · Foreign web page sends a form: Refused with 403 before any endpoint acts. · Kill switch stage 1, app on the road: Blocked with 503 and the stage; the app shows the kill switch. · Big upload without login: Refused with 401, not a byte read.
 
@@ -4028,7 +4029,7 @@ flowchart TD
 3. <a id="kn-fernzugang-s3"></a>**Pairing**: „Pair“ asks for the code every time (fernzugang.admin_pair) and shows one line for the server with a one-time code, valid 10 minutes, plus a one-time link with a QR code that shows only this line on the new system, never the code (fernzugang.link_check). Windows: the link gives the file spark-anker-einrichten.cmd once (fernzugang.link_file) with a one-time key instead of the code; the system then waits until the admin confirms it with a code or passkey (fernzugang.admin_confirm). At most 10 systems; each gets an SSH key of the panel of its own, its host key is pinned.
 4. <a id="kn-fernzugang-s4"></a>**Ticket for the window**: „Shell“ hands out a one-time ticket (fernzugang.admin_session) that opens exactly one web terminal for 30 seconds (fernzugang.terminal_ws); at most 4 sessions at once.
 5. <a id="kn-fernzugang-s5"></a>**Another host key?**: If the server shows another host key than at pairing, there is no connection (fernzugang.hostkey_wrong); after a reinstall remove and pair again.
-6. <a id="kn-fernzugang-s6"></a>**Shell, files, screen**: SSH runs through the anchor's channel; if the window drops, the shell waits 120 seconds. A heartbeat every 5 seconds measures round trip and rate; output waits for the window in at most 32 pieces, then SSH slows the server (backpressure). Files through SFTP in the same connection (ferndateien.listing), downloads with a one-time link for 60 seconds; big files in pieces of 8 MB MB with a SHA-256 per piece (ferngross.upload_piece). The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most 15 pictures a second; the Spark builds guacd 1.6.0 itself from Apache's source, pinned with SHA-256 (fernbild.dienst tells the page why it is missing). The assistant (fernzugang.admin_help) asks only the own model and suggests, nothing is typed by itself. Notes per system are stored sealed, 10 versions stay; the model reads them only when ticked (fernnotiz.fuer_modell). Folders only order the list (fernordner.view), at most 30; rights stay per system.
+6. <a id="kn-fernzugang-s6"></a>**Shell, files, screen**: SSH runs through the anchor's channel; if the window drops, the shell waits 120 seconds. A heartbeat every 5 seconds measures round trip and rate; output waits for the window in at most 32 pieces, then SSH slows the server (backpressure). Files through SFTP in the same connection (ferndateien.listing), downloads with a one-time link for 60 seconds; big files in pieces of 8 MB MB with a SHA-256 per piece (ferngross.upload_piece). The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most 15 pictures a second; the Spark builds guacd 1.6.0 itself from Apache's source, pinned with SHA-256 (fernbild.dienst tells the page why it is missing). The assistant (fernzugang.admin_help) asks only the own model and suggests, nothing is typed by itself. Notes per system are stored sealed, 10 versions stay; the model reads them only when ticked (fernnotiz.fuer_modell). Folders only order the list (fernordner.view), at most 30; rights stay per system. Web services come through the tunnel door on port 31090, an origin of its own, never the panel's (fernweb.verbindung): without the panel's cookies and without sign-in, each service's cookies apart, only the panel may embed it. Targets only by fixed rules (fernweb.ziel_ok), which the anchor checks again itself: 127.0.0.1 there, private addresses only with „Netz dahinter“, never the Spark's networks. Unlike the shell this is not SSH end to end but goes through the anchor's TLS line with a pinned certificate; at most 4 tunnels with 8 connections each and backpressure.
 7. <a id="kn-fernzugang-s7"></a>**Spontaneous help**: A help (spontanhilfe.admin_new) gives a number for 10 minutes, after 5 wrong ones it is dead. The screen goes by WebRTC directly between the two browsers, on the way through TURN on tars; the panel only connects them.
 8. <a id="kn-fernzugang-s8"></a>**Logs and history**: Logs with fixed words and numbers only (fernzugang.log), the history only time, system, admin, kind and duration (fernzugang.verlauf_add). The kill switch closes every line (fernzugang.notaus_close).
 
@@ -4044,11 +4045,14 @@ flowchart TD
 - **10** versions of a note stay ([step 6](#kn-fernzugang-s6))
 - **30** folders at most ([step 6](#kn-fernzugang-s6))
 - **8 MB MB** is one piece of a big file ([step 6](#kn-fernzugang-s6))
+- **4** web services open at once at most ([step 6](#kn-fernzugang-s6))
+- **8** connections per web service at once at most ([step 6](#kn-fernzugang-s6))
+- **31090** port of the tunnel door ([step 6](#kn-fernzugang-s6))
 - **10 min** a number of spontaneous help is valid ([step 7](#kn-fernzugang-s7))
 
 #### Settings
 
-- Features → Remote access to servers: switch on, pair systems, screen, spontaneous help, notes and folders.
+- Features → Remote access to servers: switch on, pair systems, screen, web services, spontaneous help, notes and folders.
 
 #### What you see
 
@@ -4069,8 +4073,10 @@ flowchart TD
 - `app/panel/fernnotiz.py` `fuer_modell`: the note for the model only when ticked ([step 6](#kn-fernzugang-s6))
 - `app/panel/fernordner.py` `view`: folders: only the order of the list ([step 6](#kn-fernzugang-s6))
 - `app/panel/ferngross.py` `upload_piece`: big file: a piece only whole and with a matching SHA-256 ([step 6](#kn-fernzugang-s6))
+- `app/panel/fernweb.py` `ziel_ok`: web services: where a tunnel may go ([step 6](#kn-fernzugang-s6))
+- `app/panel/fernweb.py` `verbindung`: the tunnel door: heads rewritten, cookies apart ([step 6](#kn-fernzugang-s6))
 
-Self-tests: `test_fernzugang`, `test_fernbild`, `test_spontanhilfe`, `test_ferngross`
+Self-tests: `test_fernzugang`, `test_fernbild`, `test_spontanhilfe`, `test_ferngross`, `test_fernweb`
 
 ### Remote servers
 

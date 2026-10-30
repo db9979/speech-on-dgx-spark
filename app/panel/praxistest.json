@@ -4776,6 +4776,27 @@
 "titel": "Grauer Knopf sagt warum",
 "text": "Fernzugang → Systeme, den uConsole wählen (Anker 1.4.0, Bildschirm dort noch nicht eingerichtet): unter den Knöpfen steht „Bildschirm: Auf dem System noch nicht eingerichtet: dort „sudo spark-anker bildschirm““ mit Kopieren und In die Shell einfügen; Letzteres öffnet die Shell und setzt den Befehl in die Zeile, ohne Enter. Beim Darüberfahren über den grauen Knopf derselbe Text. Ein System offline: alle drei Knöpfe sagen „Das System ist offline.“ Vor dem ersten Bau (oder wenn er scheiterte) sagt der Bildschirm-Knopf, dass guacd auf dem Spark fehlt und warum.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P707",
+"v": 1279,
+"titel": "Webdienst im Heimnetz öffnen",
+"text": "Funktionen → Fernzugang zu Servern → Webdienste an. Auf dem System mit Anker 1.6.0 (vorher „Aktualisieren“) lauscht ein Webdienst auf 127.0.0.1 (z. B. Grafana auf 3000). Fernzugang → Systeme, das System, „Webdienste“, „Suchen“: der Port steht unter „Gefunden“ mit Programmname und http, ein SSH-Port als „TCP · Stufe 2“. „Übernehmen“, „Speichern“, „Öffnen“: die Seite erscheint im Rahmen mit Leiste (Name, System, Rate). Anmelden dort klappt und bleibt nach „Schließen“ und neuem „Öffnen“ erhalten. „Neuer Tab“ öffnet sie in einem eigenen Tab; die Adresse dort ist https://<Pi>:31090, nie die des Panels.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P708",
+"v": 1279,
+"titel": "Webdienst von unterwegs",
+"text": "Im Reverse-Proxy der Synology eine Regel für den Namen der Tunnel-Adresse (z. B. fernwartung.metaluna9.i234.me) auf den Pi, Port 31090, mit den WebSocket-Kopfzeilen; den Namen unter Funktionen → Fernzugang zu Servern → Webdienste eintragen. Vom Handy über Mobilfunk das Panel öffnen, entsperren und einen Webdienst „Öffnen“: er erscheint unter diesem Namen. Eine Seite mit WebSocket (z. B. Home Assistant) aktualisiert sich live. Ohne Tunnel-Adresse sagt die Seite stattdessen, wie die Regel angelegt wird.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P709",
+"v": 1279,
+"titel": "Webdienste enden sicher",
+"text": "Einen Webdienst öffnen, dann oben „Sperren“: der Rahmen meldet, dass der Fernzugang gesperrt ist, ein Neuladen im eigenen Tab auch. Wieder öffnen und den Notaus drücken: der Webdienst endet sofort. „Netz dahinter“ an (fragt den Code), einen Dienst auf einer privaten Adresse im Netz des Systems anlegen und öffnen; „Netz dahinter“ aus: der Dienst ist weg. Eine Adresse aus dem Netz des Pi lehnt das Panel ab. In Logs → Fernzugang nur feste Wörter und Portnummern, nie eine Adresse oder ein Pfad.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }

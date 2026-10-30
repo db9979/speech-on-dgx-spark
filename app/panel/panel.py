@@ -188,6 +188,7 @@ import fernzugang  # noqa: E402
 import spontanhilfe  # noqa: E402
 import ferndateien  # noqa: E402
 import fernbild  # noqa: E402
+import fernweb  # noqa: E402
 import fernanker  # noqa: E402
 import fernnotiz  # noqa: E402
 import fernordner  # noqa: E402
@@ -195,7 +196,7 @@ import ferngross  # noqa: E402
 
 # no /docs, /redoc or /openapi.json: a map of every path for guests, and Swagger from a CDN
 app = FastAPI(title="Speech on DGX Spark", docs_url=None, redoc_url=None, openapi_url=None)
-for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, mailstil, fuerdich, ichweiss, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, terminal, android, appupdate, appmerken, pruefzugang, apns, transit, feeds, logfilter, agent, auftragsplan, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, wissensmessung, wissensbuch, fund, gemerkt, meinedaten, siegel, dungeon_dingbild, dungeon_musik, dungeon_echt, dungeon_lied, dungeon_knapp, dungeon_fluestern, dungeon_wunsch, dungeon_rast, dungeon_chronik, dungeon_buch, dungeon_regelseite, dungeon_pruefstand, dungeon_erzaehlstand, dungeon_import, dungeon_geschichten, dungeon, dungeon_karte, dungeon_gesicht, dungeon_wappen, wissenskarte, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, saetze, spickzettel, schreib, begleiter, fernsicht, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, weiche_abstimmen, weiche_unklar, dienstwacht, offline, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, auslassen, nasablage, naszustand, gehaeuse, schirm, verlauf, klaeren, technik, bilder, musik, verbrauch, modellseite, werkstattseite, praxistest, telefon, telefon_ich, kalenderserver, kontaktserver, einladung, zustellung, geteilt, vorgaenge, mailansicht, mitschreiblink, mitteilungen, fernzugang, spontanhilfe, ferndateien, fernbild, fernanker, fernnotiz, fernordner, ferngross):
+for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, mailstil, fuerdich, ichweiss, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, terminal, android, appupdate, appmerken, pruefzugang, apns, transit, feeds, logfilter, agent, auftragsplan, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, wissensmessung, wissensbuch, fund, gemerkt, meinedaten, siegel, dungeon_dingbild, dungeon_musik, dungeon_echt, dungeon_lied, dungeon_knapp, dungeon_fluestern, dungeon_wunsch, dungeon_rast, dungeon_chronik, dungeon_buch, dungeon_regelseite, dungeon_pruefstand, dungeon_erzaehlstand, dungeon_import, dungeon_geschichten, dungeon, dungeon_karte, dungeon_gesicht, dungeon_wappen, wissenskarte, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, saetze, spickzettel, schreib, begleiter, fernsicht, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, weiche_abstimmen, weiche_unklar, dienstwacht, offline, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, auslassen, nasablage, naszustand, gehaeuse, schirm, verlauf, klaeren, technik, bilder, musik, verbrauch, modellseite, werkstattseite, praxistest, telefon, telefon_ich, kalenderserver, kontaktserver, einladung, zustellung, geteilt, vorgaenge, mailansicht, mitschreiblink, mitteilungen, fernzugang, spontanhilfe, ferndateien, fernbild, fernweb, fernanker, fernnotiz, fernordner, ferngross):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -244,6 +245,12 @@ def protect(request, response):
     for k, v in SECURITY_HEADERS.items():
         if k.lower() not in response.headers:
             response.headers[k] = v
+    if response.headers.get("content-type", "").startswith("text/html") and \
+            response.headers.get("content-security-policy") == SECURITY_HEADERS["Content-Security-Policy"]:
+        door = fernweb.frame_src(request)    # Fernzugang → Systeme, Knopf „Webdienste“: the page frames the door's own origin only
+        if door:
+            response.headers["content-security-policy"] = SECURITY_HEADERS["Content-Security-Policy"].replace(
+                "frame-src 'self'", f"frame-src 'self' {door}")
     if guard.https(request):
         response.headers.setdefault("Strict-Transport-Security", "max-age=15552000")
 
@@ -900,6 +907,7 @@ async def serve():
         # lifespan off: the startup handlers (Telegram poller, reminders, watchdog, backups …) run once, with
         # the http server; before V01.0.214 they ran twice, and two Telegram pollers knocked each other out
         servers.append(Server(https_config(pcfg, cert, key)))
+    asyncio.get_running_loop().create_task(fernweb.wache())   # the Webdienste' door (TOR_PORT) with its switch
     import loopwacht   # the Hänge-Wächter: systemd restarts a panel whose loop stands still (WatchdogSec=)
     loopwacht.start()
     loop = asyncio.get_running_loop()

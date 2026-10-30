@@ -298,6 +298,8 @@
         <label for="chat.fernzugang_offline_min">Dienst-Wächter meldet einen Server nach (Minuten offline)</label><input class="num" id="chat.fernzugang_offline_min" type="number" min="5" max="1440"><div class="fh">5 bis 1440, Standard 30.</div>
         <div class="setrow"><div class="lbl"><b>Bildschirm</b><span>Den Bildschirm eines gekoppelten Systems im Browser, über seinen Anker und guacd auf dem Spark. Erst nur ansehen, Steuern mit einem Klick.</span></div><label class="tgl"><input type="checkbox" id="chat.fernbild"><i></i></label></div>
         <div data-show="chat.fernbild" style="margin-left:18px"><div class="setrow"><div class="lbl"><b>Zwischenablage beim Bildschirm</b><span>Text zwischen Browser und System austauschen, nur während „Steuern“. Aus: keine Zwischenablage in beide Richtungen.</span></div><label class="tgl"><input type="checkbox" id="chat.fernbild_zwischenablage"><i></i></label></div></div>
+        <div class="setrow"><div class="lbl"><b>Webdienste</b><span>Webseiten eines gekoppelten Systems (Grafana, Home Assistant) im Browser, durch seinen Anker, auf eigener Adresse. Erst nur 127.0.0.1.</span></div><label class="tgl"><input type="checkbox" id="chat.fernweb"><i></i></label></div>
+        <div data-show="chat.fernweb" style="margin-left:18px"><label for="chat.fernweb_adresse">Tunnel-Adresse von unterwegs</label><input id="chat.fernweb_adresse" placeholder="fernwartung.example.org" autocomplete="off"><div class="fh">Leer = Webdienste nur im Heimnetz (https://&lt;Pi&gt;:31090). Von unterwegs: im Reverse-Proxy der Synology eine Regel für diesen Namen auf den Pi, Port 31090, mit den WebSocket-Kopfzeilen.</div></div>
         <div class="setrow"><div class="lbl"><b>Notizen im Fernzugang</b><span>Je System eine Notiz mit Befehlen zum Einfügen, versiegelt gespeichert. Der Assistent liest sie nur mit „Assistent darf lesen“.</span></div><label class="tgl"><input type="checkbox" id="chat.fernzugang_notizen"><i></i></label></div>
         <div class="setrow"><div class="lbl"><b>Ordner im Fernzugang</b><span>Die Systeme links in Ordnern wie in Mail, mit Ziehen geordnet. Nur Ordnung: Rechte und Entsperren gelten weiter je System.</span></div><label class="tgl"><input type="checkbox" id="chat.fernzugang_ordner"><i></i></label></div>
         <div class="setrow"><div class="lbl"><b>Spontanhilfe</b><span>Einmal helfen: die Person teilt auf /hilfe ihren Bildschirm, ohne Installation. Nur Admins, im Reiter Spontanhilfe der entsperrten Seite.</span></div><label class="tgl"><input type="checkbox" id="chat.spontanhilfe"><i></i></label></div>
@@ -1246,6 +1248,11 @@
     <div class="note" id="fblangsam" hidden>Langsame Verbindung. Über den Proxy der Synology kommen nur etwa 50 bis 70 KB/s an; „Sparsam“ beim Öffnen hilft, von unterwegs ist der direkte https-Zugang deutlich schneller.</div>
     <div class="fbschirm" id="fbschirm" tabindex="0" aria-label="Bildschirm des Systems"></div>
   </div>
+  <div class="fzweb" id="fzweb" hidden>
+    <div class="row fbbar"><b id="fwname"></b><span class="mut" id="fwsystem"></span><span class="fzfill"></span><span class="fh" id="fwrate" aria-live="off"></span><button class="b" type="button" id="fwtab">Neuer Tab</button><button class="b danger" type="button" id="fwzu">Schließen</button></div>
+    <div class="note" id="fwlangsam" hidden>Langsame Verbindung. Über den Proxy der Synology kommen nur etwa 50 bis 70 KB/s an; im Heimnetz geht der Webdienst direkt zum Spark.</div>
+    <iframe class="fwframe" id="fwframe" title="Webdienst des Systems" referrerpolicy="no-referrer" src="about:blank"></iframe>
+  </div>
 </div></section>
 <section id="int">
   <div class="card"><h2>Alle Anleitungen</h2>
@@ -1673,6 +1680,7 @@
 <script src="/static/js/werkstatt.js"></script>
 <script src="/static/js/fernzugang.js"></script>
 <script src="/static/js/fernbild.js"></script>
+<script src="/static/js/fernweb.js"></script>
 <script src="/static/js/ferngross.js"></script>
 <script src="/static/js/spontanhilfe.js"></script>
 <script src="/static/js/praxistest.js"></script>

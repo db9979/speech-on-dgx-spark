@@ -827,9 +827,9 @@ SEITEN = {
     # ------------------------------------------------------------------ Browser und Handy
     # ------------------------------------------------------------------ Fernzugang (Dominik 2026-10-29 „in Technik → Überblick fehlt die Fernwartung“)
     "fernzugang": {
-        "stand": "cd2eda00d7",
+        "stand": "439d4ca997",
         "bezug": {
-            "fernzugang.entsperrt_bis": ["s2"], "fernzugang.admin_pair": ["s3"], "fernzugang.link_file": ["s3"], "fernzugang.admin_confirm": ["s3"], "fernzugang.CODE_S": ["s3"], "fernzugang.TICKET_S": ["s4"], "fernzugang.terminal_ws": ["s4"], "fernzugang.hostkey_wrong": ["s5"], "fernzugang.HALTEN_S": ["s6"], "ferndateien.listing": ["s6"], "fernbild.GUACD": ["s6"], "fernbild.FPS": ["s6"], "spontanhilfe.admin_new": ["s7"], "spontanhilfe.NUMMER_S": ["s7"], "fernzugang.notaus_close": ["s8"], "fernzugang.MAX_ANKER": ["s3"], "fernnotiz.fuer_modell": ["s6"], "fernnotiz.FASSUNGEN": ["s6"], "fernordner.view": ["s6"], "fernordner.MAX_ORDNER": ["s6"], "ferngross.upload_piece": ["s6"], "ferngross.TEIL": ["s6"],
+            "fernzugang.entsperrt_bis": ["s2"], "fernzugang.admin_pair": ["s3"], "fernzugang.link_file": ["s3"], "fernzugang.admin_confirm": ["s3"], "fernzugang.CODE_S": ["s3"], "fernzugang.TICKET_S": ["s4"], "fernzugang.terminal_ws": ["s4"], "fernzugang.hostkey_wrong": ["s5"], "fernzugang.HALTEN_S": ["s6"], "ferndateien.listing": ["s6"], "fernbild.GUACD": ["s6"], "fernbild.FPS": ["s6"], "spontanhilfe.admin_new": ["s7"], "spontanhilfe.NUMMER_S": ["s7"], "fernzugang.notaus_close": ["s8"], "fernzugang.MAX_ANKER": ["s3"], "fernnotiz.fuer_modell": ["s6"], "fernnotiz.FASSUNGEN": ["s6"], "fernordner.view": ["s6"], "fernordner.MAX_ORDNER": ["s6"], "ferngross.upload_piece": ["s6"], "ferngross.TEIL": ["s6"], "fernweb.verbindung": ["s6"], "fernweb.ziel_ok": ["s6"], "fernweb.TOR_PORT": ["s6"], "fernweb.MAX_TUNNEL": ["s6"], "fernweb.MAX_KANAELE": ["s6"],
         },
         "kurz": ("Der Fernzugang öffnet Shell, Dateien und Bildschirm eines eigenen Servers im Browser, ohne offenen Port "
                  "dort: der Anker auf dem Server verbindet sich selbst zum Panel, das Panel spricht SSH durch diese "
@@ -902,7 +902,13 @@ SEITEN = {
                "fest mit SHA-256 (fernbild.dienst sagt der Seite, warum er fehlt). Der Assistent (fernzugang.admin_help) fragt nur das eigene Modell und "
                "schlägt vor, getippt wird nie von selbst. Notizen je System liegen versiegelt, "
                "{fernnotiz.FASSUNGEN} Fassungen bleiben; das Modell liest sie nur mit Haken (fernnotiz.fuer_modell). Ordner ordnen nur die Liste "
-               "(fernordner.view), höchstens {fernordner.MAX_ORDNER}; Rechte bleiben je System.",
+               "(fernordner.view), höchstens {fernordner.MAX_ORDNER}; Rechte bleiben je System. Webdienste kommen über die "
+               "Tunnel-Tür auf Port {fernweb.TOR_PORT}, eine eigene Herkunft, nie die des Panels (fernweb.verbindung): ohne "
+               "Cookies des Panels und ohne Anmeldung, die Cookies jedes Dienstes für sich, einbetten darf nur das Panel. Ziele nur "
+               "nach festen Regeln (fernweb.ziel_ok), die der Anker selbst noch einmal prüft: 127.0.0.1 dort, private "
+               "Adressen nur mit „Netz dahinter“, nie die Netze des Spark. Anders als die Shell geht das nicht als SSH Ende "
+               "zu Ende, sondern durch die TLS-Leitung des Ankers mit angeheftetem Zertifikat; höchstens {fernweb.MAX_TUNNEL} "
+               "Tunnel mit je {fernweb.MAX_KANAELE} Verbindungen und Gegendruck.",
                "SSH runs through the anchor's channel; if the window drops, the shell waits {fernzugang.HALTEN_S} seconds. "
                "A heartbeat every {fernzugang.MESS_S} seconds measures round trip and rate; output waits "
                "for the window in at most {fernzugang.STAU} pieces, then SSH slows the server (backpressure). "
@@ -913,7 +919,13 @@ SEITEN = {
                "pinned with SHA-256 (fernbild.dienst tells the page why it is missing). The assistant (fernzugang.admin_help) asks only the own model and "
                "suggests, nothing is typed by itself. Notes per system are stored sealed, "
                "{fernnotiz.FASSUNGEN} versions stay; the model reads them only when ticked (fernnotiz.fuer_modell). Folders only order the list "
-               "(fernordner.view), at most {fernordner.MAX_ORDNER}; rights stay per system.")),
+               "(fernordner.view), at most {fernordner.MAX_ORDNER}; rights stay per system. Web services come through the "
+               "tunnel door on port {fernweb.TOR_PORT}, an origin of its own, never the panel's (fernweb.verbindung): without "
+               "the panel's cookies and without sign-in, each service's cookies apart, only the panel may embed it. Targets only "
+               "by fixed rules (fernweb.ziel_ok), which the anchor checks again itself: 127.0.0.1 there, private addresses "
+               "only with „Netz dahinter“, never the Spark's networks. Unlike the shell this is not SSH end to end but goes "
+               "through the anchor's TLS line with a pinned certificate; at most {fernweb.MAX_TUNNEL} tunnels with "
+               "{fernweb.MAX_KANAELE} connections each and backpressure.")),
             S("s7", "schritt", ("Spontanhilfe", "Spontaneous help"),
               ("Nummer {spontanhilfe.NUMMER_S|min} min", "number {spontanhilfe.NUMMER_S|min} min"),
               ("Eine Hilfe (spontanhilfe.admin_new) gibt eine Nummer für {spontanhilfe.NUMMER_S|min} Minuten, nach "
@@ -946,11 +958,14 @@ SEITEN = {
             ("{fernnotiz.FASSUNGEN}", ("Fassungen einer Notiz bleiben", "versions of a note stay"), "fernnotiz.FASSUNGEN"),
             ("{fernordner.MAX_ORDNER}", ("Ordner höchstens", "folders at most"), "fernordner.MAX_ORDNER"),
             ("{ferngross.TEIL|mb} MB", ("ist ein Stück einer großen Datei", "is one piece of a big file"), "ferngross.TEIL"),
+            ("{fernweb.MAX_TUNNEL}", ("Webdienste gleichzeitig offen höchstens", "web services open at once at most"), "fernweb.MAX_TUNNEL"),
+            ("{fernweb.MAX_KANAELE}", ("Verbindungen je Webdienst zugleich höchstens", "connections per web service at once at most"), "fernweb.MAX_KANAELE"),
+            ("{fernweb.TOR_PORT}", ("Port der Tunnel-Tür", "port of the tunnel door"), "fernweb.TOR_PORT"),
             ("{spontanhilfe.NUMMER_S|min} min", ("gilt eine Nummer der Spontanhilfe", "a number of spontaneous help is valid"), "spontanhilfe.NUMMER_S"),
         ],
         "einstellen": [
-            ("Funktionen → Fernzugang zu Servern: einschalten, Systeme koppeln, Bildschirm, Spontanhilfe, Notizen und Ordner.",
-             "Features → Remote access to servers: switch on, pair systems, screen, spontaneous help, notes and folders."),
+            ("Funktionen → Fernzugang zu Servern: einschalten, Systeme koppeln, Bildschirm, Webdienste, Spontanhilfe, Notizen und Ordner.",
+             "Features → Remote access to servers: switch on, pair systems, screen, web services, spontaneous help, notes and folders."),
         ],
         "sehen": [
             ("Zustand → Live: offene Sitzungen und Anker nach Art und Anzahl, nie ein Inhalt.",
@@ -970,8 +985,10 @@ SEITEN = {
             ("fernnotiz.fuer_modell", ("die Notiz nur mit Haken für das Modell", "the note for the model only when ticked")),
             ("fernordner.view", ("Ordner: nur die Reihenfolge der Liste", "folders: only the order of the list")),
             ("ferngross.upload_piece", ("große Datei: ein Stück nur ganz und mit passender SHA-256", "big file: a piece only whole and with a matching SHA-256")),
+            ("fernweb.ziel_ok", ("Webdienste: wohin ein Tunnel darf", "web services: where a tunnel may go")),
+            ("fernweb.verbindung", ("die Tunnel-Tür: Köpfe umgeschrieben, Cookies getrennt", "the tunnel door: heads rewritten, cookies apart")),
         ],
-        "tests": ["test_fernzugang", "test_fernbild", "test_spontanhilfe", "test_ferngross"],
+        "tests": ["test_fernzugang", "test_fernbild", "test_spontanhilfe", "test_ferngross", "test_fernweb"],
         "heute": [],
     },
     "fernserver": {

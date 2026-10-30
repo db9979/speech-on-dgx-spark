@@ -56,7 +56,7 @@ function fzLeeren(){for(const id of ['fzlist','fzdetail','fzjetztlist','fzstatus
 // the tabs „Systeme | Spontanhilfe“: only on the unlocked page and only while Spontanhilfe is on; true on its tab
 // something open (a shell, also while it connects or reconnects, its own window, files, a screen): the list, its tabs and
 // the status line above stay away, so nothing above the terminal comes and goes (Dominik 2026-10-30: the shell jumped)
-function fzOffen(){const v=$('fzview');return !!FZ.ws||!!FZ.weg||!!FZ.fs||!!FZ.fb||!!(v&&!v.hidden)}
+function fzOffen(){const v=$('fzview');return !!FZ.ws||!!FZ.weg||!!FZ.fs||!!FZ.fb||!!(typeof FW!=='undefined'&&FW.tunnel)||!!(v&&!v.hidden)}
 function fzTabs(){const d=FZ.d,h=typeof SH!=='undefined'&&SH.d,busy=fzOffen();
   const zeig=!!(d&&d.on&&!d.gesperrt&&!d.notaus&&!busy&&h&&h.on&&!h.gesperrt&&!h.notaus);
   if(!zeig)FZ.tab='systeme';$('fztabs').hidden=!zeig;
@@ -148,8 +148,11 @@ function fzDetail(){const d=FZ.d,box=$('fzdetail'),g=(d.geraete||[]).find(x=>x.i
   bs.disabled=!!wbs;if(!d.bildschirm)bs.hidden=true;
   for(const [b,w] of [[sh,wsh],[da,wsh],[bs,wbs&&wbs.text]])if(w){b.title=w;b.setAttribute('aria-description',w)}
   const cut=fzBtn(t('Anker trennen','Disconnect anchor'),'fzankercut',async()=>{try{await api(`/api/admin/fernzugang/geraete/${g.id}/trennen`,{method:'POST'});fzMsg(t('Getrennt. Der Anker kommt nach seiner Pause wieder, solange er sich verbinden darf.','Disconnected. The anchor comes back after its pause while it may connect.'));fzLoad()}catch(e){fzFehler(e)}});
-  cut.disabled=!g.online;kn.append(sh,da,bs,fzEl('span','fzfill'),cut);box.appendChild(kn);
+  const wd=fzBtn(t('Webdienste','Web services'),'fzk',()=>{FZ.web=FZ.web===g.id?'':g.id;fzShow()});wd.hidden=!d.webdienste;wd.setAttribute('aria-expanded',FZ.web===g.id?'true':'false');
+  if(!g.web_anker){const w=t('Anker aktualisieren: Webdienste brauchen den Anker 1.6.0 oder neuer.','Update the anchor: web services need anchor 1.6.0 or newer.');wd.title=w;wd.setAttribute('aria-description',w)}
+  cut.disabled=!g.online;kn.append(sh,da,bs,wd,fzEl('span','fzfill'),cut);box.appendChild(kn);
   if(d.bildschirm&&wbs&&!wsh)box.appendChild(fzBildHinweis(g,wbs));
+  if(d.webdienste&&FZ.web===g.id&&window.fwBlock)box.appendChild(fwBlock(g));
   if(g.hostkey_falsch)box.appendChild(fzEl('div','note err',t('Das System zeigt einen anderen Host-Schlüssel als bei der Kopplung: keine Verbindung. War das eine Neuinstallation, „Entfernen“ und neu koppeln.','The system shows another host key than at pairing: no connection. If it was reinstalled, "Remove" and pair again.')));
   if(g.wartet)box.appendChild(fzWartet(g));
   if(g.anker_neu||g.update_stand)box.appendChild(fzAktBlock(g));

@@ -1859,5 +1859,7 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **Große Dateien im Fernzugang** (Funktionen → Zugang → „Große Dateien im Fernzugang“; baut auf „Fernzugang zu Servern“): In „Dateien“ eines gekoppelten Systems drei Wege für große Dateien: „In Teilen hochladen“ schickt 8 MB auf einmal, jedes Stück mit Prüfsumme, mit „Pause“ und „Weiter“ (auch nach „Trennen“, mit derselben Datei); „Per Link holen“ lässt den …
 
+- **Webdienste im Fernzugang** (Funktionen → Zugang → „Webdienste im Fernzugang“; baut auf „Fernzugang zu Servern“): Die Webseiten eines gekoppelten Systems im Browser, ohne dort etwas ins Internet zu öffnen: Grafana, die Seite eines Routers, Home Assistant oder ein Dashboard, das dort nur auf 127.0.0.1 lauscht.
+
 - **Angriffsprobe** (Funktionen → Zugang → „Angriffsprobe“; baut auf „Werkstatt“): Misst auf Knopfdruck, wie oft das laufende Sprachmodell einem Befehl in fremdem Text folgen würde (Dokument, Mail, Webseite, Kalender, Smart Home).
 <!-- /funktionen:liste -->

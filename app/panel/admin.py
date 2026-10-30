@@ -659,6 +659,10 @@ def validate(new):
     why = fernzugang.check(ch)
     if why:
         raise HTTPException(400, why)
+    import fernweb
+    why = fernweb.check(ch)
+    if why:
+        raise HTTPException(400, why)
     import spontanhilfe
     why = spontanhilfe.check(ch)
     if why:

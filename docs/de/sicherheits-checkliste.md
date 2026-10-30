@@ -50,6 +50,7 @@ Vor jedem Commit durchgehen. In der Antwort an Dominik kurz nennen, welche Punkt
 - [ ] Die geprüfte IP wird festgehalten (kein zweites DNS, also keine DNS-Rebinding-Lücke), und jede Weiterleitung wird neu geprüft.
 - [ ] Zugangsdaten gehen nur an denselben Origin (auch bei hrefs aus PROPFIND), es gibt nie einen Rückfall auf http, und TLS-Prüfung ist an.
 - [ ] `ref_audio` und Ähnliches nur als `data:` mit Größengrenze, nie als URL.
+- [ ] Ein Tunnel zu einem fremden Rechner (Fernzugang → Systeme, Knopf „Webdienste“) nimmt nur IP-Adressen, nie einen Namen, und prüft das Ziel auf beiden Seiten nach denselben festen Regeln: Panel (`fernweb.ziel_ok`) und Anker (`web_ziel`). Erlaubt ist Loopback dort; private Bereiche nur mit eigenem Admin-Schalter je System und nie in den eigenen Netzen. Nie erlaubt sind link-local, Metadaten-Adresse, Multicast und die Adresse des Panels selbst.
 
 ## Injektion
 - [ ] `subprocess` nur mit Listen-Argumenten, nie `shell=True`, `eval` oder `exec`. Kein `pickle` und kein `allow_pickle` auf Fremddaten.
@@ -103,6 +104,7 @@ Jede Änderung wird nicht nur gegen die Fallen oben geprüft, sondern auch dageg
 **Verbindungen**
 - [ ] Nur TLS 1.2 oder neuer, TLS 1.3 bevorzugt; Zertifikatsprüfung nie aus; kein Rückfall auf http; der eigene https-Server ohne Session-Tickets (`panel.tls_context`, V01.1.243).
 - [ ] HSTS auf https.
+- [ ] Der Fernzugang sagt, wie jede Art geschützt ist. Shell, Dateien und große Dateien laufen als SSH Ende zu Ende (Host-Schlüssel beim Koppeln angeheftet). Bildschirm und Webdienste gehen nicht als SSH, sondern durch die TLS-Leitung des Ankers zum Panel (Zertifikat geprüft oder angeheftet, V01.1.279). Ein https-Dienst dort mit eigenem Zertifikat wird erst nach „Vertrauen“ geöffnet und danach bei jeder Verbindung gegen seine SHA-256 geprüft.
 
 **Anmeldung und Sitzung**
 - [ ] Passkeys (WebAuthn) vor Codes; zweiter Schritt als TOTP oder Passkey, nie SMS.
@@ -112,6 +114,7 @@ Jede Änderung wird nicht nur gegen die Fallen oben geprüft, sondern auch dageg
 **Browser**
 - [ ] Strenge CSP (`script-src 'self'`, kein `unsafe-eval`, keine Inline-Skripte), `frame-ancestors`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`.
 - [ ] Modellausgaben und fremde Texte werden in der Oberfläche nie als HTML ausgeführt.
+- [ ] Getunnelte fremde Seiten (Webdienste) nie auf der Herkunft des Panels, sondern auf einer eigenen (eigener Port oder Name). Dorthin gehen keine Cookies des Panels und kein `Authorization`, die Cookies jedes Dienstes bleiben für sich. Einbetten darf sie nur das Panel (`frame-ancestors`), und die Tür setzt ihr eigenes Cookie nur nach einem Einmal-Ticket (`HttpOnly`, `Secure`, `SameSite=Strict`, `__Host-`).
 - [ ] Fremdes HTML (Mail) nur bereinigt, im `sandbox`-Rahmen ohne `allow-scripts` mit eigener CSP (`default-src 'none'`), externe Bilder nur über den Spark nach eigenem Klick, Bildtyp nach den ersten Bytes, nie SVG.
 
 **Lieferkette und Betrieb**
