@@ -4,7 +4,7 @@ namespace SparkBegleiter;
 
 /// <summary>
 /// Das Spark-Gesicht aus dem Entwurf (SVG mit viewBox 0 0 200 200), mit GDI+-Pfaden nachgezeichnet:
-/// Antenne, Kopf mit Verlauf Akzent → Akzent 2 und Glanz, Visier, zwei Augen, Lächeln.
+/// Antenne, Kopf einfarbig im Akzent, Visier, zwei Augen, Lächeln (Klar 2: keine Verläufe).
 /// </summary>
 internal static class Face
 {
@@ -17,6 +17,25 @@ internal static class Face
 
     /// <summary>Das Panel hat die Comic-Frau gewählt (config.face "comic_woman", V01.0.497).</summary>
     public static bool ComicWoman { get; set; }
+
+    /// <summary>
+    /// Das Gesicht im Kopf der Fenster und neben den Antworten nur auf Wunsch (Redesign Stufe 9, Plan „Comic-Gesicht
+    /// nur auf Wunsch“): in den Einstellungen des Programms auf der Seite „Übersicht“ der Schalter „Gesicht in den Fenstern zeigen“, lokal, Standard aus
+    /// (<see cref="AppConfig.ShowFace"/>). Das Symbol im Infobereich und „Über und Update“ zeigen es immer.
+    /// </summary>
+    public static bool InHeader { get; set; }
+
+    /// <summary>Platz, den das Gesicht vor dem Titel braucht (Gesicht und Abstand), ohne Gesicht 0.</summary>
+    public static int Lead(int face, int gap) => InHeader ? face + gap : 0;
+
+    /// <summary>Das Gesicht im Fensterkopf, nur wenn es gewünscht ist.</summary>
+    public static void DrawHeader(Graphics g, RectangleF r, Palette p)
+    {
+        if (InHeader)
+        {
+            Draw(g, r, p);
+        }
+    }
 
     public static void Draw(Graphics g, RectangleF r, Palette p, bool tight = false)
     {
@@ -51,52 +70,25 @@ internal static class Face
             g.ScaleTransform(s, s);
 
             Color acc = p.HighContrast ? Palette.Light.Accent : p.Accent;
-            Color acc2 = p.HighContrast ? Palette.Light.Accent2 : p.Accent2;
             Color visor = p.HighContrast ? Palette.Light.Visor : p.Visor;
 
             // Antenne: Stiel und Kugel.
-            using (var stem = new Pen(acc2, 6f) { StartCap = LineCap.Round, EndCap = LineCap.Round })
+            using (var stem = new Pen(acc, 6f) { StartCap = LineCap.Round, EndCap = LineCap.Round })
             {
                 g.DrawLine(stem, 100, 34, 100, 18);
             }
 
-            using (var ball = new SolidBrush(acc2))
+            using (var ball = new SolidBrush(acc))
             {
                 g.FillEllipse(ball, 92, 7, 16, 16);
             }
 
-            // Kopf mit diagonalem Verlauf.
+            // Kopf einfarbig im Akzent (Klar 2: keine Verläufe, kein Glanz).
             var head = new RectangleF(26, 34, 148, 136);
             using (GraphicsPath headPath = SparkBegleiter.Draw.Round(head, 56))
             {
-                using (var gradient = new LinearGradientBrush(new PointF(25, 33), new PointF(175, 171), acc, acc2))
-                {
-                    g.FillPath(gradient, headPath);
-                }
-
-                // Glanz: radialer Verlauf (Mitte bei 35 % / 25 %, Radius 80 %), weiß 45 % → 0 bei der Hälfte.
-                GraphicsState clip = g.Save();
-                g.SetClip(headPath, CombineMode.Intersect);
-                using (var glossPath = new GraphicsPath())
-                {
-                    float cx = head.X + (head.Width * 0.35f);
-                    float cy = head.Y + (head.Height * 0.25f);
-                    float rx = head.Width * 0.8f;
-                    float ry = head.Height * 0.8f;
-                    glossPath.AddEllipse(cx - rx, cy - ry, rx * 2, ry * 2);
-                    using var gloss = new PathGradientBrush(glossPath)
-                    {
-                        CenterPoint = new PointF(cx, cy),
-                        InterpolationColors = new ColorBlend
-                        {
-                            Colors = new[] { Color.FromArgb(0, 255, 255, 255), Color.FromArgb(0, 255, 255, 255), Color.FromArgb(115, 255, 255, 255) },
-                            Positions = new[] { 0f, 0.5f, 1f },
-                        },
-                    };
-                    g.FillPath(gloss, glossPath);
-                }
-
-                g.Restore(clip);
+                using var fill = new SolidBrush(acc);
+                g.FillPath(fill, headPath);
             }
 
             // Visier.

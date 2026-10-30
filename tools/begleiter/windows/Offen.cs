@@ -422,7 +422,7 @@ internal sealed class FindForm : ThemedForm
     private void Show(string status, bool error)
     {
         _status.Text = status;
-        _status.ForeColor = error ? Palette.Hex(0xE5484D) : P.Muted;
+        _status.ForeColor = error ? Palette.Light.Bad : P.Muted;
         if (IsHandleCreated)
         {
             LayoutContent();
@@ -435,7 +435,7 @@ internal sealed class FindForm : ThemedForm
         int pad = S(16);
         int w = S(460);
         int inner = w - (2 * pad);
-        int y = BarHeight + pad;
+        int y = pad;
         int th = Draw.Measure("Ag", F(11f, FontStyle.Bold)).Height;
         _titleBox = new Rectangle(pad, y, inner, th);
         y += th + S(10);

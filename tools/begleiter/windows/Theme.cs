@@ -4,9 +4,13 @@ using Microsoft.Win32;
 namespace SparkBegleiter;
 
 /// <summary>
-/// Die Farben von Entwurf A ("Spark-Gesicht"), hell und dunkel wie im Panel. Bei hohem Kontrast kommen
-/// die Systemfarben von Windows.
+/// Die Farben von „Klar 2 · Systemstil“ (Redesign Stufe 9, Werte wie <c>app/panel/static/tokens.css</c>): neutrale
+/// Grautöne und ein Akzent (Blau), hell und dunkel wie im Panel, keine Verläufe. Bei hohem Kontrast kommen die
+/// Systemfarben von Windows. Jede Farbe der Fenster steht hier (test_design_tokens.Begleiter).
 /// </summary>
+/// <param name="Soft">Leiste und weicher Grund (Chips, Tastenkürzel, Zustand): Token <c>--side</c>.</param>
+/// <param name="Faint">Platzhalter und Pfeile: <c>--faint</c>.</param>
+/// <param name="OkText">Text in Grün, Gelb, Rot und Akzent auf hellem Grund (mindestens 4,5 : 1): <c>--okt --warnt --badt --acct</c>.</param>
 internal sealed record Palette(
     bool Dark,
     bool HighContrast,
@@ -16,12 +20,16 @@ internal sealed record Palette(
     Color Muted,
     Color Line,
     Color Accent,
-    Color Accent2,
     Color Ok,
     Color Warn,
     Color Bad,
     Color Visor,
     Color Soft,
+    Color Faint,
+    Color OkText,
+    Color WarnText,
+    Color BadText,
+    Color AccentText,
     Color InsBg,
     Color InsFg,
     Color DelBg,
@@ -32,30 +40,48 @@ internal sealed record Palette(
 {
     public static readonly Palette Light = new(
         Dark: false, HighContrast: false,
-        Bg: Hex(0xF4F6FB), Card: Hex(0xFFFFFF), Fg: Hex(0x141824), Muted: Hex(0x5F6B85), Line: Hex(0xE3E7F0),
-        Accent: Hex(0x5B5BF0), Accent2: Hex(0x0EA5C6), Ok: Hex(0x16A34A), Warn: Hex(0xC27803), Bad: Hex(0xDC2626),
-        Visor: Hex(0x151A2E), Soft: Hex(0xF4F6FB),
+        Bg: Hex(0xF5F5F7), Card: Hex(0xFFFFFF), Fg: Hex(0x1D1D1F), Muted: Hex(0x6E6E73), Line: Hex(0xE2E2E7),
+        Accent: Hex(0x0071E3), Ok: Hex(0x28A745), Warn: Hex(0xE08600), Bad: Hex(0xE5342B),
+        Visor: Hex(0x151A2E), Soft: Hex(0xEFEFF2), Faint: Hex(0xA1A1A6),
+        OkText: Hex(0x1F7A35), WarnText: Hex(0xA35A00), BadText: Hex(0xC4271F), AccentText: Hex(0x0060C0),
         InsBg: Hex(0xDCFCE7), InsFg: Hex(0x166534), DelBg: Hex(0xFEE2E2), DelFg: Hex(0x991B1B),
-        Coffee: Hex(0xFFDD00), CoffeeFg: Hex(0x1F1A00), OnAccent: Color.White);
+        Coffee: Hex(0xFFDD00), CoffeeFg: Hex(0x1F1A00), OnAccent: Hex(0xFFFFFF));
 
     public static readonly Palette DarkTheme = new(
         Dark: true, HighContrast: false,
-        Bg: Hex(0x0B0D14), Card: Hex(0x131722), Fg: Hex(0xE8EBF2), Muted: Hex(0x8B95AB), Line: Hex(0x242A3A),
-        Accent: Hex(0x8B8CFF), Accent2: Hex(0x22D3EE), Ok: Hex(0x16A34A), Warn: Hex(0xC27803), Bad: Hex(0xDC2626),
-        Visor: Hex(0x070912), Soft: Hex(0x1A1F2D),
+        Bg: Hex(0x161618), Card: Hex(0x242426), Fg: Hex(0xF5F5F7), Muted: Hex(0xA1A1A6), Line: Hex(0x38383B),
+        Accent: Hex(0x0A84FF), Ok: Hex(0x32D74B), Warn: Hex(0xFF9F0A), Bad: Hex(0xFF453A),
+        Visor: Hex(0x070912), Soft: Hex(0x1F1F21), Faint: Hex(0x6E6E73),
+        OkText: Hex(0x32D74B), WarnText: Hex(0xFFB340), BadText: Hex(0xFF6961), AccentText: Hex(0x4DA3FF),
         InsBg: Hex(0x123524), InsFg: Hex(0x86EFAC), DelBg: Hex(0x3B1717), DelFg: Hex(0xFCA5A5),
-        Coffee: Hex(0xFFDD00), CoffeeFg: Hex(0x1F1A00), OnAccent: Color.White);
+        Coffee: Hex(0xFFDD00), CoffeeFg: Hex(0x1F1A00), OnAccent: Hex(0xFFFFFF));
 
     /// <summary>Farbe des Augen und des Lächelns im Gesicht (in beiden Themen gleich).</summary>
     public static readonly Color Eye = Hex(0xBFF6FF);
 
-    /// <summary>Systemfarben für hohen Kontrast (keine Verläufe, keine eigenen Farbtöne).</summary>
+    /// <summary>Text auf farbigem Grund (Akzent, Rot, Bild), in hell und dunkel gleich: Token <c>--on-acc</c>.</summary>
+    public static readonly Color OnColor = Hex(0xFFFFFF);
+
+    /// <summary>Schwarz für Schleier und Abdunkeln (immer mit Deckkraft, nie als Fläche).</summary>
+    public static readonly Color Shade = Hex(0x000000);
+
+    /// <summary>Die schwebenden Anzeigen (Aufnahme, Diktat, Bildschirmauswahl) liegen immer auf dunklem Grund.</summary>
+    public static readonly Color HudBack = Light.Visor;
+
+    public static Color HudText => DarkTheme.Fg;
+
+    public static Color HudMuted => DarkTheme.Muted;
+
+    public static Color HudLine => DarkTheme.Line;
+
+    /// <summary>Systemfarben für hohen Kontrast (keine eigenen Farbtöne).</summary>
     public static Palette FromSystem() => new(
         Dark: SystemColors.Window.GetBrightness() < 0.5f, HighContrast: true,
         Bg: SystemColors.Window, Card: SystemColors.Window, Fg: SystemColors.WindowText, Muted: SystemColors.GrayText,
-        Line: SystemColors.WindowText, Accent: SystemColors.Highlight, Accent2: SystemColors.Highlight,
+        Line: SystemColors.WindowText, Accent: SystemColors.Highlight,
         Ok: SystemColors.WindowText, Warn: SystemColors.WindowText, Bad: SystemColors.WindowText,
-        Visor: SystemColors.WindowText, Soft: SystemColors.Window,
+        Visor: SystemColors.WindowText, Soft: SystemColors.Window, Faint: SystemColors.GrayText,
+        OkText: SystemColors.WindowText, WarnText: SystemColors.WindowText, BadText: SystemColors.WindowText, AccentText: SystemColors.Highlight,
         InsBg: SystemColors.Window, InsFg: SystemColors.WindowText, DelBg: SystemColors.Window, DelFg: SystemColors.GrayText,
         Coffee: SystemColors.ButtonFace, CoffeeFg: SystemColors.ControlText, OnAccent: SystemColors.HighlightText);
 
@@ -185,10 +211,13 @@ internal static class Theme
     }
 }
 
-/// <summary>Zeichenhilfen: abgerundete Rechtecke, Verläufe, Text, Pillen.</summary>
+/// <summary>Zeichenhilfen: abgerundete Rechtecke, Text, Pillen (keine Verläufe, keine Schatten: Klar 2).</summary>
 internal static class Draw
 {
     public const TextFormatFlags Line = TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis | TextFormatFlags.VerticalCenter;
+
+    /// <summary>Radien der Tokens (<c>--r-ctl --r-item --r-box</c>): Knopf und Feld 6, Listenzeile 8, Gruppe und Karte 10.</summary>
+    public const float RCtl = 6, RItem = 8, RBox = 10;
 
     public const TextFormatFlags Wrap = TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix | TextFormatFlags.TextBoxControl;
 
@@ -237,29 +266,6 @@ internal static class Draw
         }
     }
 
-    /// <summary>Pinsel mit dem Akzent-Verlauf (bei hohem Kontrast einfarbig).</summary>
-    public static Brush AccentBrush(RectangleF r, Palette p, float angle)
-    {
-        if (p.HighContrast || r.Width < 1 || r.Height < 1)
-        {
-            return new SolidBrush(p.Accent);
-        }
-
-        RectangleF area = RectangleF.Inflate(r, 1, 1);
-        return new LinearGradientBrush(area, p.Accent, p.Accent2, angle) { WrapMode = WrapMode.TileFlipXY };
-    }
-
-    /// <summary>Der 6-px-Farbverlauf oben an jedem Fenster.</summary>
-    public static void Bar(Graphics g, Rectangle r, Palette p)
-    {
-        if (r.Height <= 0 || r.Width <= 0)
-        {
-            return;
-        }
-
-        using Brush brush = AccentBrush(r, p, 0f);
-        g.FillRectangle(brush, r);
-    }
 
     public static void FillRound(Graphics g, Color color, RectangleF r, float radius)
     {

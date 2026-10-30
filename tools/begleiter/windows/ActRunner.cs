@@ -401,10 +401,10 @@ internal sealed class ActConfirmForm : ThemedForm
         int pad = S(16);
         int w = S(440);
         int inner = w - (2 * pad);
-        int y = BarHeight + pad;
+        int y = pad;
         int face = S(36);
         _face = new Rectangle(pad, y, face, face);
-        _title = new Rectangle(pad + face + S(10), y, inner - face - S(10), face);
+        _title = new Rectangle(pad + Face.Lead(face, S(10)), y, inner - Face.Lead(face, S(10)), face);
         y += face + S(12);
         y += _question.Fit(pad, y, inner) + S(8);
         y += _detail.Fit(pad, y, inner) + S(10);
@@ -424,7 +424,7 @@ internal sealed class ActConfirmForm : ThemedForm
 
     protected override void PaintContent(Graphics g)
     {
-        Face.Draw(g, _face, P);
+        Face.DrawHeader(g, _face, P);
         Draw.Text(g, "Spark möchte etwas tun", F(11f, FontStyle.Bold), _title, P.Fg);
     }
 
@@ -490,10 +490,10 @@ internal sealed class MessageForm : ThemedForm
         int pad = S(14);
         int w = ClientSize.Width;
         int h = ClientSize.Height;
-        int y = BarHeight + pad;
+        int y = pad;
         int face = S(28);
         _face = new Rectangle(pad, y, face, face);
-        _title = new Rectangle(pad + face + S(8), y, w - (2 * pad) - face - S(8), face);
+        _title = new Rectangle(pad + Face.Lead(face, S(8)), y, w - (2 * pad) - Face.Lead(face, S(8)), face);
         y += face + S(10);
         Size ok = _ok.Preferred();
         _ok.Bounds = new Rectangle(w - pad - ok.Width, h - pad - ok.Height, ok.Width, ok.Height);
@@ -502,7 +502,7 @@ internal sealed class MessageForm : ThemedForm
 
     protected override void PaintContent(Graphics g)
     {
-        Face.Draw(g, _face, P);
+        Face.DrawHeader(g, _face, P);
         Draw.Text(g, "Nachricht vom Spark", F(10.5f, FontStyle.Bold), _title, P.Fg);
     }
 }

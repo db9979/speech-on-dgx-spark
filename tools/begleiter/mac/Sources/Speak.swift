@@ -144,7 +144,7 @@ struct SpeakPillView: View {
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: speaker.loading ? "hourglass" : "speaker.wave.2.fill")
-                .foregroundColor(Theme.accent2)
+                .foregroundColor(Theme.accent)
             Text(verbatim: speaker.loading ? "Spark bereitet das Vorlesen vor …" : "Spark liest vor")
                 .font(.system(size: 13, weight: .semibold))
             if !hotkey.isEmpty {
@@ -158,7 +158,7 @@ struct SpeakPillView: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
         .background(Capsule().fill(Theme.visor))
-        .overlay(Capsule().stroke(Color.white.opacity(0.08), lineWidth: 1))
+        .overlay(Capsule().stroke(Theme.onAccent.opacity(0.08), lineWidth: 1))
         .fixedSize()
         .accessibilityElement(children: .contain)
         .accessibilityLabel(Text(verbatim: "Spark liest vor"))

@@ -10700,6 +10700,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Begleiter auf neuem Stand, Paket C: Systemstil (V01.1.284, Dominik 2026-10-30, Plan redesign/plan.md Stufe 9): Der Begleiter sieht am Mac und unter Windows aus wie das Panel in „Klar 2 · Systemstil“. Seine Farben stehen nur in Theme.swift und Theme.cs und sind die Werte aus tokens.css: neutrale Grautöne, ein blauer Akzent (hell #0071E3, dunkel #0A84FF), Grün, Gelb und Rot nur für Zustand, hell und dunkel nach dem System, bei hohem Kontrast die Systemfarben. Die Farbleiste oben an jedem Fenster, alle Verläufe (Hauptknopf, Schalter, eigene Frage, Gesicht) und die Schatten in den Fenstern sind weg; nur schwebende Anzeigen (Aufnahme, Diktat) behalten einen leichten Schatten. Knöpfe und Felder haben Radius 6, Karten und Gruppen 10. Die Kacheln zeigen Linien-Symbole (am Mac SF Symbols, unter Windows die eigenen Linien-Zeichen) im einen Akzent, Mitschreiben in Rot. Gesicht nur auf Wunsch: Im Kopf der Fenster, im Begleiter-Fenster und neben den Antworten von Frag Spark steht das Gesicht nur, wenn in den Einstellungen des Programms auf der Seite „Übersicht“ der Schalter „Gesicht in den Fenstern zeigen“ an ist (nur auf diesem Rechner, Standard aus); das Symbol in Menü- oder Taskleiste und „Ü"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ber und Update“ zeigen es immer, welches Gesicht (Roboter oder Comic) wählt weiter der Admin. Der Kaffee-Knopf steht nur unter „Über und Update“, die Schalter am Mac bleiben Zeilen in einem Kasten. Kein neuer Schalter im Panel, nichts geht an den Spark. Wächter: test_design_tokens.Begleiter (Theme gleich den Tokens, keine Farbe außerhalb des Themes, keine Verläufe, Gesicht nur auf Wunsch). Braucht den neuen Begleiter-Build."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Raum-Modus",
 "text": "Raum-Modus (Funktionen → „Raum-Modus“, standardmäßig aus; nur Profile): Der Schalter „Raum“ unter dem Gesicht lässt den Assistenten an diesem Gerät für eine gewählte Zeit (15 Minuten bis 4 Stunden, endet von selbst) dem Gespräch im Raum zuhören; ein oranger Punkt zeigt es an. In einer Pause hilft er, wenn ein fester Auslöser fiel: eine offene Frage („Wann wurde eigentlich …?“, mit Websuche, im Zweifel nichts), ein Termin („Freitag um 10 zum Zahnarzt“ → „Soll ich das eintragen?“), „kalt“, „zu warm“ oder „zu dunkel“ (die echte Temperatur des Raums aus Home Assistant und das Angebot, die Heizung um ein Grad zu ändern oder das Licht anzumachen) und Einkäufe („Wir brauchen noch Milch“ → Einkaufsliste in Home Assistant). Geändert wird nur nach einem „Ja“, bei Smart Home mit Codewort, wenn eines gesetzt ist. Im Fenster „Ich“ unter „Raum-Modus“ stellt jedes Gerät ein: Dauer, wie viel er sagen darf (nur Fragen, auch Hinweise, auch Kommentare), jede Art einzeln, den Raum des Geräts in Home Assistant und „Nur als Text“ (still im Verlauf statt gesprochen). Das Gehörte bleibt nur fünf Minuten im Arbeitsspeicher des Panels und wird nie gespeichert; Gedächtnis, Mails und frühere Gespräche nutzt d"
 },
@@ -27662,6 +27678,22 @@
 "head": "Voice chat",
 "title": "Companion brought up to date, package B (V01.1.269, Dominik 2026-10-30)",
 "text": "the entry in the panel (#fund=), \"In Finden ansehen\" the page Finden with this search (#fundq=). Nothing stays on the computer, the words are in no log. The part is only there when \"Find in all data\" is allowed for the profile. Endpoints GET /api/desk/offen, POST /api/desk/offen/act and POST /api/desk/fund only with the companion's device key (profiles.DESK_PATHS), profile binding, size and rate limit; log begleiter: offen angesehen, begleiter: offen knopf=… ok|abgelehnt, begleiter: finden | n treffer | ms. No new switch under Features. Needs the new companion build."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Companion brought up to date, package C: system style (V01.1.284, Dominik 2026-10-30, plan redesign/plan.md stage 9): the companion looks like the panel in \"Clear 2 · system style\" on the Mac and on Windows. Its colours stand only in Theme.swift and Theme.cs and are the values from tokens.css: neutral greys, one blue accent (light #0071E3, dark #0A84FF), green, yellow and red only for state, light and dark following the system, with high contrast the system colours. The colour bar on top of every window, all gradients (main button, switch, own question, face) and the shadows inside the windows are gone; only floating indicators (recording, dictation) keep a light shadow. Buttons and fields have radius 6, cards and groups 10. The tiles show line symbols (SF Symbols on the Mac, the own line signs on Windows) in the one accent, writing along in red. Face only on request: the face stands in the head of the windows, in the companion window and next to Ask Spark's answers only when the switch \"Gesicht in den Fenstern zeigen\" on the page \"Übersicht\" of the program's settings is on (on this computer only, off by default); the icon in the menu bar or taskbar and \"Über und Update\" always sho"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "w it, which face (robot or comic) the admin still picks. The coffee button stands only under \"Über und Update\", the switches on the Mac stay rows in a box. No new switch in the panel, nothing goes to the Spark. Guard: test_design_tokens.Begleiter (theme equal to the tokens, no colour outside the theme, no gradients, face only on request). Needs the new companion build."
 },
 {
 "lang": "en",

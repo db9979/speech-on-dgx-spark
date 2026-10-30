@@ -434,7 +434,7 @@ struct MeetingPillView: View {
     var body: some View {
         HStack(spacing: 10) {
             Circle()
-                .fill(Color.white)
+                .fill(Theme.onAccent)
                 .frame(width: 9, height: 9)
             VStack(alignment: .leading, spacing: 1) {
                 Text(verbatim: title)
@@ -454,11 +454,11 @@ struct MeetingPillView: View {
                 ProgressView().controlSize(.small)
             }
         }
-        .foregroundColor(.white)
+        .foregroundColor(Theme.onAccent)
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
         .background(Capsule().fill(Theme.bad))
-        .overlay(Capsule().stroke(Color.white.opacity(0.25), lineWidth: 1))
+        .overlay(Capsule().stroke(Theme.onAccent.opacity(0.25), lineWidth: 1))
         .fixedSize()
         .accessibilityElement(children: .contain)
         .accessibilityLabel(Text(verbatim: "Besprechung wird mitgeschrieben"))
@@ -486,7 +486,7 @@ struct MeetingButtonStyle: ButtonStyle {
             .foregroundColor(Theme.bad)
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
-            .background(Capsule().fill(Color.white))
+            .background(Capsule().fill(Theme.onAccent))
             .opacity(configuration.isPressed ? 0.8 : 1)
             .contentShape(Capsule())
     }
@@ -581,10 +581,9 @@ struct MeetingResultView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            GradientBar()
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 10) {
-                    FaceView(size: 28)
+                    if FacePref.on { FaceView(size: 28) }
                     VStack(alignment: .leading, spacing: 1) {
                         Text(verbatim: "Besprechung – Zusammenfassung")
                             .font(.system(size: 14, weight: .semibold))

@@ -27,13 +27,8 @@ internal abstract class ThemedForm : Form
 
     protected static Palette P => Theme.Current;
 
-    /// <summary>Farbverlauf oben zeigen.</summary>
-    protected virtual bool HasBar => true;
-
     /// <summary>Runde Ecken über DWM (für randlose Fenster; normale Fenster rundet Windows 11 ohnehin).</summary>
     protected virtual bool RoundCorners => false;
-
-    protected int BarHeight => HasBar ? S(6) : 0;
 
     /// <summary>Wert in 96-DPI-Pixeln auf die DPI dieses Fensters umrechnen.</summary>
     protected int S(float value) => Draw.Scale(value, DeviceDpi);
@@ -113,11 +108,6 @@ internal abstract class ThemedForm : Form
     {
         Graphics g = e.Graphics;
         g.Clear(P.Card);
-        if (HasBar)
-        {
-            Draw.Bar(g, new Rectangle(0, 0, ClientSize.Width, BarHeight), P);
-        }
-
         PaintContent(g);
     }
 
@@ -400,21 +390,21 @@ internal sealed class SparkButton : Button, IThemed
     private void PaintSecondary(Graphics g, RectangleF r, Palette p)
     {
         Color back = !Enabled ? p.Card : _pressed ? p.Line : _hover ? p.Soft : p.Card;
-        Draw.FillRound(g, back, r, S(9));
-        Draw.StrokeRound(g, p.Line, r, S(9));
+        Draw.FillRound(g, back, r, S(Draw.RCtl));
+        Draw.StrokeRound(g, p.Line, r, S(Draw.RCtl));
         PaintLabel(g, r, TextColor(Danger ? p.Bad : p.Fg), p.Accent);
     }
 
     private void PaintPrimary(Graphics g, RectangleF r, Palette p)
     {
-        using (GraphicsPath path = Draw.Round(r, S(9)))
+        using (GraphicsPath path = Draw.Round(r, S(Draw.RCtl)))
         {
-            using Brush brush = Draw.AccentBrush(r, p, 45f);
+            using var brush = new SolidBrush(p.Accent);
             g.FillPath(brush, path);
             int overlay = !Enabled ? 110 : _pressed ? 40 : _hover ? 28 : 0;
             if (overlay > 0)
             {
-                Color tint = !Enabled ? p.Card : _pressed ? Color.Black : Color.White;
+                Color tint = !Enabled ? p.Card : _pressed ? Palette.Shade : Palette.OnColor;
                 using var veil = new SolidBrush(Color.FromArgb(overlay, tint));
                 g.FillPath(veil, path);
             }
@@ -425,7 +415,7 @@ internal sealed class SparkButton : Button, IThemed
 
     private void PaintCoffee(Graphics g, RectangleF r, Palette p)
     {
-        Color back = _pressed ? Palette.Mix(p.Coffee, Color.Black, 0.12f) : _hover ? Palette.Mix(p.Coffee, Color.Black, 0.06f) : p.Coffee;
+        Color back = _pressed ? Palette.Mix(p.Coffee, Palette.Shade, 0.12f) : _hover ? Palette.Mix(p.Coffee, Palette.Shade, 0.06f) : p.Coffee;
         Draw.FillRound(g, back, r, r.Height / 2f);
         if (p.HighContrast)
         {
@@ -466,14 +456,14 @@ internal sealed class SparkButton : Button, IThemed
 
         float gs = S(16);
         Glyphs.Draw(g, _checked ? Glyph.Stop : Glyph, new RectangleF((r.Width - gs) / 2f, (r.Height - gs) / 2f, gs, gs),
-            _checked ? Color.White : Enabled ? p.Accent : p.Muted);
+            _checked ? Palette.OnColor : Enabled ? p.Accent : p.Muted);
     }
 
     private void PaintItem(Graphics g, RectangleF r, Palette p, bool focus)
     {
         if ((_hover || focus || _pressed) && Enabled)
         {
-            Draw.FillRound(g, _pressed ? p.Line : p.Soft, r, S(9));
+            Draw.FillRound(g, _pressed ? p.Line : p.Soft, r, S(Draw.RCtl));
         }
 
         if (focus)
@@ -507,8 +497,8 @@ internal sealed class SparkButton : Button, IThemed
     {
         Color tint = p.HighContrast ? p.Fg : Danger ? p.Bad : Tint ?? p.Accent;
         Color back = !Enabled ? p.Card : _pressed ? p.Line : _hover ? p.Soft : Danger ? Palette.Mix(p.Card, p.Bad, 0.06f) : p.Card;
-        Draw.FillRound(g, back, r, S(12));
-        Draw.StrokeRound(g, Danger ? Palette.Mix(p.Line, p.Bad, 0.45f) : p.Line, r, S(12));
+        Draw.FillRound(g, back, r, S(Draw.RBox));
+        Draw.StrokeRound(g, Danger ? Palette.Mix(p.Line, p.Bad, 0.45f) : p.Line, r, S(Draw.RBox));
 
         int box = Compact ? S(26) : S(28);
         var boxRect = Compact ? new RectangleF((Width - box) / 2f, S(7), box, box) : new RectangleF(S(10), S(10), box, box);
@@ -555,7 +545,7 @@ internal sealed class SparkButton : Button, IThemed
             var track = new RectangleF(right - S(36), (r.Height - S(20)) / 2f, S(36), S(20));
             if (Checked && Enabled)
             {
-                using Brush brush = Draw.AccentBrush(track, p, 45f);
+                using var brush = new SolidBrush(p.Accent);
                 using GraphicsPath path = Draw.Round(track, track.Height / 2f);
                 g.FillPath(brush, path);
             }
@@ -566,7 +556,7 @@ internal sealed class SparkButton : Button, IThemed
 
             float knob = S(16);
             float kx = Checked ? track.Right - knob - S(2) : track.X + S(2);
-            using (var knobBrush = new SolidBrush(p.HighContrast ? p.Fg : Color.White))
+            using (var knobBrush = new SolidBrush(p.HighContrast ? p.Fg : Palette.OnColor))
             {
                 g.FillEllipse(knobBrush, kx, track.Y + S(2), knob, knob);
             }
@@ -618,12 +608,12 @@ internal sealed class SparkButton : Button, IThemed
     {
         if (_checked)
         {
-            Draw.FillRound(g, p.Card, r, S(9));
-            Draw.StrokeRound(g, p.Line, r, S(9));
+            Draw.FillRound(g, p.Card, r, S(Draw.RCtl));
+            Draw.StrokeRound(g, p.Line, r, S(Draw.RCtl));
         }
         else if (_hover && Enabled)
         {
-            Draw.FillRound(g, Palette.Mix(p.Soft, p.Line, 0.6f), r, S(9));
+            Draw.FillRound(g, Palette.Mix(p.Soft, p.Line, 0.6f), r, S(Draw.RCtl));
         }
 
         Color color = !Enabled ? p.Muted : _checked ? p.Accent : p.Fg;
@@ -893,7 +883,7 @@ internal sealed class ToggleSwitch : CheckBox, IThemed
         var track = new RectangleF(S(1), S(2), S(34), S(18));
         if (Checked && Enabled)
         {
-            using Brush brush = Draw.AccentBrush(track, p, 45f);
+            using var brush = new SolidBrush(p.Accent);
             using GraphicsPath path = Draw.Round(track, track.Height / 2f);
             g.FillPath(brush, path);
         }

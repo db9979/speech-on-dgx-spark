@@ -321,10 +321,9 @@ enum ShowText {
         Windows.shared.close("act-show")
         Windows.shared.show("act-show", title: "Vom Spark", size: NSSize(width: 460, height: 300), floating: true) {
             VStack(spacing: 0) {
-                GradientBar()
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(spacing: 10) {
-                        FaceView(size: 28)
+                        if FacePref.on { FaceView(size: 28) }
                         Text(verbatim: "Vom Spark")
                             .font(.system(size: 14, weight: .semibold))
                         Spacer()

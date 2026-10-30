@@ -9,7 +9,7 @@ eigenen Spark. Es kann:
 | **Frag Spark** | kleines Fenster: Frage tippen (oder sprechen), Antwort lesen, nachfragen | **Strg+Alt+A** |
 | **Diktieren** | sprechen, der erkannte Text landet an der Cursorstelle | **Strg+Alt+D** |
 | **Meldungen** | Meldungen des Spark als Windows-Hinweis | – |
-| **Zustandspunkt** | Punkt im Symbol: grün = erreichbar, grau = nicht erreichbar, rot = Notaus (blau-violett = Update da, siehe unten) | – |
+| **Zustandspunkt** | Punkt im Symbol: grün = erreichbar, grau = nicht erreichbar, rot = Notaus (blau = Update da, siehe unten) | – |
 | **Mein-Notaus-Knopf** | Menüpunkt „Mein Notaus auslösen …“ (mit Rückfrage) | – |
 | **Rechtsklick auf Dateien** | Explorer-Untermenü „Mit Spark“: Zusammenfassen, Übersetzen, Erklären, Ins Wissen übernehmen | – |
 | **Bildschirm fragen** | Bereich am Bildschirm aufziehen, dann erklären lassen, Text herauslesen oder übersetzen | **Strg+Alt+B** |
@@ -42,14 +42,15 @@ kein Protokoll. Auch Updates kommen nur vom eigenen Spark.
 
 ## So sieht er aus
 
-Der Begleiter trägt die Farben und das Gesicht des Panels („Spark-Gesicht“):
+Der Begleiter trägt die Farben des Panels („Klar 2 · Systemstil“: neutrale Grautöne, ein blauer Akzent, keine
+Verläufe, hell und dunkel nach Windows). Das Spark-Gesicht steht im Symbol; im Kopf der Fenster nur, wenn
+**in den Einstellungen des Programms auf der Seite „Übersicht“ der Schalter „Gesicht in den Fenstern zeigen“** an ist (Standard aus):
 
 - **Symbol** im Infobereich: das Spark-Gesicht mit einem kleinen Punkt unten rechts – grün
   (verbunden), grau (nicht erreichbar), rot (Notaus), in der Akzentfarbe, wenn eine neue Version
   bereitsteht. Das Symbol wird für die Bildschirmauflösung der Taskleiste gezeichnet und bleibt
   auch bei 150 % oder 200 % scharf.
-- **Linksklick aufs Symbol** öffnet ein kleines Fenster direkt an der Taskleiste: oben das Gesicht
-  mit Gruß („Guten Morgen, Dominik“), Gerät und Zustand als Punkt („alles läuft“), rechts das Zahnrad
+- **Linksklick aufs Symbol** öffnet ein kleines Fenster direkt an der Taskleiste: oben der Gruß („Guten Morgen, Dominik“), Gerät und Zustand als Punkt („alles läuft“), rechts das Zahnrad
   für die **Einstellungen** und ✕. Darunter (falls vorhanden) der Update-Hinweis, dann das Feld
   **„Frag Spark …“** (Enter schickt die Frage ab, der Mikrofon-Knopf fragt per Sprache), die Befehle
   als kleine **Kacheln**, vier nebeneinander (Text verbessern, Diktieren, Bildschirm fragen, Vorlesen …;
@@ -63,8 +64,8 @@ Der Begleiter trägt die Farben und das Gesicht des Panels („Spark-Gesicht“)
   sichtbar. Es schließt sich, sobald man woanders hinklickt, oder mit **Esc**; mit Tab bzw. ↑/↓ und
   Enter geht alles auch per Tastatur.
 - **Rechtsklick aufs Symbol** zeigt weiter das schlichte Menü (Zustand, Teile, Einstellungen, Beenden).
-- Die Fenster für **Text verbessern**, **Frag Spark** und die **Einstellungen** haben oben den
-  Farbverlauf des Panels; Frag Spark zeigt Fragen und Antworten als Sprechblasen.
+- Die Fenster für **Text verbessern**, **Frag Spark** und die **Einstellungen** sind ruhig wie das Panel
+  (keine Farbleiste, kein Verlauf, ein Akzent); Frag Spark zeigt Fragen und Antworten als Sprechblasen.
 - **Hell oder dunkel** folgt der Windows-Einstellung „Standard-App-Modus“ (Einstellungen →
   Personalisierung → Farben) und wechselt sofort mit. Bei **hohem Kontrast** nimmt der Begleiter die
   Systemfarben. Mehrere Bildschirme mit unterschiedlicher Skalierung werden je Bildschirm richtig

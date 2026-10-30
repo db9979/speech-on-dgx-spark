@@ -283,3 +283,119 @@ class FontSizes(Ratchet, unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# ---------------------------------------------------------------- the companion (Redesign Stufe 9, Begleiter Paket C)
+DESK = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "tools", "begleiter")
+# the drawn faces are pictures with their own colours, not the look of the windows
+DESK_PICTURES = {"ComicFace.cs", "ComicWomanFace.cs", "ComicFace.swift"}
+# Theme name -> token (tokens.css), the same in light and dark
+MAC_TOKENS = {"bg": "bg", "card": "card", "fg": "fg", "muted": "mut", "line": "line", "soft": "side", "accent": "acc",
+              "ok": "ok", "warn": "warn", "bad": "bad", "visor": "visor"}
+WIN_TOKENS = dict(MAC_TOKENS, Faint="faint", OkText="okt", WarnText="warnt", BadText="badt", AccentText="acct",
+                  OnAccent="on-acc")
+WIN_TOKENS = {k[:1].upper() + k[1:]: v for k, v in WIN_TOKENS.items()}
+# a colour written in place, outside the theme file
+WIN_LITERAL = re.compile(r"\bHex\(0x|Color\.FromArgb\(\s*\d+\s*\)|Color\.FromArgb\([^,()]+,\s*\d+\s*,\s*\d+"
+                         r"|\bColor\.(?!FromArgb\b|Transparent\b|Empty\b)[A-Z]\w*|\b(?:Brushes|Pens)\.[A-Z]")
+MAC_LITERAL = re.compile(r"NSColor\((?:hex|calibrated|device|srgb|white:|red:)|\bColor\((?:red|white|hue)\b|CGColor\(red"
+                         r"|\bColor\.(?:white|black|red|green|blue|gray|yellow|orange|pink|purple|cyan|mint|teal|indigo|brown)\b"
+                         r"|\bNSColor\.(?:white|black|red|green|blue|gray|yellow|orange|system\w+)\b"
+                         r"|\((?:\.white|\.black|\.red|\.green|\.blue|\.gray)\)")
+GRADIENT = re.compile(r"LinearGradient|RadialGradient|AngularGradient|NSGradient|PathGradientBrush|LinearGradientBrush"
+                      r"|GradientBar|\.shadow\(")
+
+
+def token_values():
+    """{name: (light, dark)} of the plain colour tokens (#rgb or #rrggbb) as six lower-case hex digits."""
+    css = read(TOKENS)
+
+    def plain(block):
+        out = {}
+        for k, v in re.findall(r"--([\w-]+):#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})(?![0-9a-fA-F])", block):
+            out[k] = (v if len(v) == 6 else "".join(c * 2 for c in v)).lower()
+        return out
+    light = plain(re.search(r":root\{([^}]*)\}", css).group(1))
+    dark = plain(re.search(r":root\[data-theme=dark\]\{([^}]*)\}", css).group(1))
+    return {k: (v, dark.get(k, v)) for k, v in light.items()}
+
+
+class Begleiter(unittest.TestCase):
+    """Redesign Stufe 9 (Begleiter Paket C, Dominik 2026-10-30): the companion on the Mac and on Windows in „Klar 2 ·
+    Systemstil“. Its theme files hold the token values (light and dark), every colour of its windows comes from the
+    theme (the drawn comic faces excepted), no gradient and no shadow, and the face in the head of the windows only
+    on request (a local setting, off by default)."""
+
+    def setUp(self):
+        if not os.path.isdir(DESK):
+            self.skipTest("only app/ copied")
+
+    def src(self, *path):
+        with open(os.path.join(DESK, *path), encoding="utf-8") as f:
+            return f.read()
+
+    def files(self, sub, ext):
+        d = os.path.join(DESK, sub)
+        return sorted(n for n in os.listdir(d) if n.endswith(ext))
+
+    def test_mac_theme_is_the_tokens(self):
+        tok = token_values()
+        theme = self.src("mac", "Sources", "Theme.swift")
+        got = {n: (a.lower(), b.lower()) for n, a, b in
+               re.findall(r"static let (\w+) = c\(0x([0-9a-fA-F]{6}), 0x([0-9a-fA-F]{6})", theme)}
+        for name, token in MAC_TOKENS.items():
+            self.assertEqual(got.get(name), tok[token], f"Theme.{name} != --{token}")
+        self.assertIn("0x242426 : 0xffffff", theme)                                     # nsCard = --card
+        self.assertNotIn("accent2", theme)
+
+    def test_windows_theme_is_the_tokens(self):
+        tok = token_values()
+        theme = self.src("windows", "Theme.cs")
+        light = theme[theme.index("Palette Light = new("):theme.index("Palette DarkTheme = new(")]
+        dark = theme[theme.index("Palette DarkTheme = new("):theme.index("public static readonly Color Eye")]
+        for part, i in ((light, 0), (dark, 1)):
+            got = {n: v.lower() for n, v in re.findall(r"\b(\w+): Hex\(0x([0-9A-Fa-f]{6})\)", part)}
+            for name, token in WIN_TOKENS.items():
+                self.assertEqual(got.get(name), tok[token][i], f"Palette.{name} != --{token} ({'light dark'.split()[i]})")
+        self.assertNotIn("Accent2", theme)
+
+    def test_no_colour_outside_the_theme(self):
+        for name in self.files("windows", ".cs"):
+            if name == "Theme.cs" or name in DESK_PICTURES:
+                continue
+            for n, line in enumerate(self.src("windows", name).splitlines(), 1):
+                self.assertNotRegex(line, WIN_LITERAL, f"windows/{name}:{n}: a colour from Palette, not in place")
+        for name in self.files(os.path.join("mac", "Sources"), ".swift"):
+            if name == "Theme.swift" or name in DESK_PICTURES:
+                continue
+            for n, line in enumerate(self.src("mac", "Sources", name).splitlines(), 1):
+                self.assertNotRegex(line, MAC_LITERAL, f"mac/{name}:{n}: a colour from Theme, not in place")
+
+    def test_no_gradient_and_no_shadow(self):
+        for sub, ext in (("windows", ".cs"), (os.path.join("mac", "Sources"), ".swift")):
+            for name in self.files(sub, ext):
+                if name in DESK_PICTURES:
+                    continue
+                self.assertNotRegex(self.src(sub, name), GRADIENT, f"{sub}/{name}")
+        ui = self.src("windows", "UiControls.cs")
+        self.assertNotIn("BarHeight", ui)                                               # no bar on top of the windows
+
+    def test_the_face_only_on_request(self):
+        win = {n: self.src("windows", n) for n in self.files("windows", ".cs")}
+        drawers = sorted(n for n, s in win.items() if "Face.Draw(" in s)
+        # the icon, the face's own file and the big face on „Über und Update“ (FaceBox); every window head uses DrawHeader
+        self.assertEqual(drawers, ["AppIcon.cs", "Face.cs", "UiControls.cs"])
+        self.assertIn("public static void DrawHeader(Graphics g, RectangleF r, Palette p)\n    {\n        if (InHeader)", win["Face.cs"])
+        self.assertIn("public bool ShowFace { get; set; }\n", win["AppConfig.cs"])        # off by default
+        self.assertIn("Face.InHeader = _config.ShowFace;", win["TrayContext.cs"])
+        self.assertIn('new("Gesicht in den Fenstern zeigen")', win["SettingsForm.cs"])
+        mac = {n: self.src("mac", "Sources", n) for n in self.files(os.path.join("mac", "Sources"), ".swift")}
+        for name, s in mac.items():
+            for line in s.splitlines():
+                if not re.search(r"(?<!Comic)FaceView\(size:", line) or "struct FaceView" in line:
+                    continue
+                if name == "SettingsView.swift" and "FaceView(size: 52)" in line:          # „Über und Update“
+                    continue
+                self.assertIn("if FacePref.on { FaceView(", line, name)
+        self.assertIn("@AppStorage(FacePref.key) private var showFace = false", mac["SettingsView.swift"])
+        self.assertIn('SwitchRow(title: "Gesicht in den Fenstern zeigen"', mac["SettingsView.swift"])

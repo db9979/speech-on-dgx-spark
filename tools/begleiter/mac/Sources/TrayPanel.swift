@@ -104,7 +104,6 @@ struct TrayPanel: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            GradientBar()
             VStack(alignment: .leading, spacing: 10) {
                 header
                 if !detail.isEmpty {
@@ -344,7 +343,7 @@ struct TrayPanel: View {
 
     private var header: some View {
         HStack(spacing: 11) {
-            FaceView(size: 40)
+            if FacePref.on { FaceView(size: 40) }
             VStack(alignment: .leading, spacing: 1) {
                 Text(verbatim: greeting)
                     .font(.system(size: 14, weight: .semibold))
@@ -388,7 +387,7 @@ struct TrayPanel: View {
             }
             if model.part("dictate") {
                 PanelTile(title: dictation.recording ? "Diktat beenden" : "Diktieren",
-                          symbol: dictation.recording ? "stop.circle" : "mic", color: Theme.accent2,
+                          symbol: dictation.recording ? "stop.circle" : "mic", color: Theme.accent,
                           key: model.hotkeyLabel(.dictate), danger: dictation.recording, compact: true) {
                     go { dictation.toggle(.cursor(nil)) }
                 }
@@ -399,7 +398,7 @@ struct TrayPanel: View {
                 }
             }
             if model.part("mail") {
-                PanelTile(title: "Antwort entwerfen", symbol: "envelope", color: Theme.accent2, key: model.hotkeyLabel(.mail), compact: true) {
+                PanelTile(title: "Antwort entwerfen", symbol: "envelope", color: Theme.accent, key: model.hotkeyLabel(.mail), compact: true) {
                     go { MailDraft.start(front: nil) }
                 }
             }
@@ -411,7 +410,7 @@ struct TrayPanel: View {
                 }
             }
             if model.part("capture") {
-                PanelTile(title: "Erfassen", symbol: "plus.circle", color: Theme.accent2, key: model.hotkeyLabel(.capture), compact: true) {
+                PanelTile(title: "Erfassen", symbol: "plus.circle", color: Theme.accent, key: model.hotkeyLabel(.capture), compact: true) {
                     go { CaptureController.open(fromHotkey: false) }
                 }
             }
@@ -716,7 +715,7 @@ struct TrayPanel: View {
                         .opacity(0.8)
                 }
             }
-            .foregroundColor(on ? .white : Theme.fg)
+            .foregroundColor(on ? Theme.onAccent : Theme.fg)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(Capsule().fill(on ? Theme.accent : Theme.soft))
@@ -858,9 +857,9 @@ struct PanelAskField: View {
                 Button(action: speak) {
                     Image(systemName: "mic")
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(Theme.onAccent)
                         .frame(width: 26, height: 26)
-                        .background(RoundedRectangle(cornerRadius: 8).fill(Theme.diagonal))
+                        .background(RoundedRectangle(cornerRadius: 8).fill(Theme.accent))
                         .contentShape(RoundedRectangle(cornerRadius: 8))
                 }
                 .buttonStyle(.plain)

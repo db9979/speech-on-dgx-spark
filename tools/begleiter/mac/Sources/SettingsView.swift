@@ -89,7 +89,6 @@ struct SettingsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            GradientBar()
             HStack(spacing: 0) {
                 sidebar
                 Rectangle().fill(Theme.line).frame(width: 1)
@@ -132,7 +131,7 @@ struct SettingsView: View {
     private var sidebar: some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: 8) {
-                FaceView(size: 26)
+                if FacePref.on { FaceView(size: 26) }
                 Text(verbatim: "Begleiter")
                     .font(.system(size: 14, weight: .semibold))
             }
@@ -175,6 +174,19 @@ struct SettingsView: View {
         StatusCard(title: s.title, detail: model.statusLine, color: s.color, good: s.good)
         panelSettings
         panelLinks
+        looks
+    }
+
+    /// „Aussehen“ (Redesign Stufe 9): the face in the windows only on request, on this Mac only
+    @AppStorage(FacePref.key) private var showFace = false
+
+    @ViewBuilder
+    private var looks: some View {
+        SectionLabel(text: "Aussehen")
+        PanelBox {
+            SwitchRow(title: "Gesicht in den Fenstern zeigen", detail: "Nur auf diesem Mac. Das Symbol in der Menüleiste bleibt.",
+                      symbol: "face.smiling", isOn: $showFace)
+        }
     }
 
     // Sprung-Links ins Panel (Begleiter Paket A, Dominik 2026-10-30): no screens of their own, a click opens

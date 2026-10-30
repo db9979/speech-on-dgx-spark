@@ -4825,6 +4825,20 @@
 "titel": "Dungeon-Musik: Probe hören und Gefällt",
 "text": "Voraussetzung: Musikmodell installiert, KI-Dungeon-Master an. A: Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch → Reiter „Klang“, Fantasy, Kampf: Kasten „Probe hören“ mit „30 Sekunden“/„Volle Länge“ und „Probe machen“, darunter „heute 0 von 20“; am Handy (320 und 390 px) ohne seitliches Rollen. B: 30 Sekunden, „Probe machen“: der Knopf ist gesperrt, „Macht gerade eine Probe dieses Feldes …“, nach etwa einer Minute erscheint „Probe 1 · 30 s“ ohne Neuladen; Zustand → Logs: „dungeon: musik | probe | gestartet | kampf | 30 s“ und „dungeon: musik | probe | ok | kampf | 30 s | … ms“. C: ▶ Anhören spielt sie; „In den Vorrat“ ist bei 30 s gesperrt. D: Volle Länge, „Probe machen“, dann bei ihr „Variation“: klingt die Variation verwandt? E: „In den Vorrat“ bei der vollen Probe: Meldung „Im Vorrat, als gemocht“, die Probe ist weg, im Reiter Vorrat zählt das Feld eins mehr; Log „probe behalten | kampf“. F: eine vierte Probe des Feldes: es bleiben drei; „Weg“ entfernt eine. G: Vorlage ändern (Takt 3/4, Speichern): bei alten Proben steht „alte Vorlage“, „In den Vorrat“ ist gesperrt. H: am Tisch während eines Stücks das Herz neben 👎 drücken (Profil und Gast über Platz-Link): Meldung „Gemerkt: das Stück bleibt im Vorrat“, Log „dungeon: musik | gefaellt | …“, ein zweites Mal vom selben Platz „gefaellt schon“. I: Live-Übersicht: „heute 2× Gefällt, 2 gemocht, … Proben“. J: am nächsten Morgen sind die Proben weg (Log „… | n proben weg“).",
 "thread": "Dungeon-Musik anpassbar machen"
+},
+{
+"id": "P714",
+"v": 1284,
+"titel": "Begleiter im Systemstil",
+"text": "Neuen Begleiter-Build am Mac und unter Windows öffnen, hell und dunkel umschalten: Fenster ohne Farbleiste und ohne Verlauf, Grautöne und ein blauer Akzent wie im Panel, Hauptknopf und Schalter einfarbig blau, Kacheln mit Linien-Symbolen; bei hohem Kontrast (Windows) die Systemfarben.",
+"thread": "Begleiter-App auf neuen Stand bringen"
+},
+{
+"id": "P715",
+"v": 1284,
+"titel": "Begleiter: Gesicht nur auf Wunsch",
+"text": "In den Einstellungen des Begleiters, Seite „Übersicht“: „Gesicht in den Fenstern zeigen“ ist aus, Begleiter-Fenster, Frag Spark und Text verbessern zeigen kein Gesicht, die Titel beginnen links. Einschalten: das Gesicht steht wieder im Kopf und neben den Antworten; das Symbol in Menü- oder Taskleiste zeigt es immer.",
+"thread": "Begleiter-App auf neuen Stand bringen"
 }
 ]
 }

@@ -82,10 +82,9 @@ struct PairView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            GradientBar()
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 12) {
-                    FaceView(size: 40)
+                    if FacePref.on { FaceView(size: 40) }
                     Text(verbatim: "Mit dem eigenen Spark koppeln")
                         .font(.system(size: 15, weight: .semibold))
                 }

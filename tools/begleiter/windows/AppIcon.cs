@@ -91,10 +91,10 @@ internal static class AppIcon
         g.Clear(Color.Transparent);
         if (listening)
         {
-            // „hört“: Gesicht etwas kleiner, darum ein Ring in Akzent 2.
+            // „hört“: Gesicht etwas kleiner, darum ein Ring im Akzent.
             float ringWidth = Math.Max(1.5f, size / 10f);
             float inset = ringWidth / 2f;
-            using (var pen = new Pen(p.HighContrast ? Palette.Light.Accent2 : p.Accent2, ringWidth))
+            using (var pen = new Pen(p.HighContrast ? Palette.Light.Accent : p.Accent, ringWidth))
             {
                 g.DrawEllipse(pen, inset, inset, size - (2 * inset), size - (2 * inset));
             }
@@ -178,7 +178,7 @@ internal static class AppIcon
         {
             Draw.HighQuality(mg);
             mg.Clear(Color.Transparent);
-            Color color = p.HighContrast ? Palette.Light.Warn : Palette.Hex(0xF5B301);
+            Color color = p.HighContrast ? Palette.Light.Warn : Palette.Light.Warn;
             using (var fill = new SolidBrush(color))
             {
                 mg.FillEllipse(fill, 0, 0, d, d);

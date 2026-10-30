@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.284** Companion in the panel's system style: calm greys, one blue accent, no gradients, the face in the windows only on request
 - **V01.1.283** Dungeon music: hear a probe (30 s or full), a good probe into the store, "Liked" at the table
 - **V01.1.282** Dungeon music: sound template per world and mood (genre, instruments, key, time, tempo, character, singing) and fixed packages
 - **V01.1.281** Dungeon music: quality fast, good or best (at night), length and loudness adjustable
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.277** Remote access on Windows (stage 5): pairing through a one-time link to the file spark-anker-einrichten.cmd (double-click, "Yes", no code), then the admin confirms the new system with a code or passkey; OpenSSH only on 127.0.0.1, Python only for the anchor with a pinned checksum, removing under Apps "Spark Anker" puts everything back; checked on a real Windows (GitHub action "Fernzugang Windows")
 - **V01.1.276** Remote access: terminal and suggestions no longer jump (the status line above the terminal stayed after opening and vanished on the next load, notices at the top pushed the terminal down); a browser test over 20 seconds.
 - **V01.1.275** After "Make the rule" on a correction's card the new mail rule decides: "Inbox tidying" no longer asks about this sender
-- **V01.1.274** Learn from wrongly sorted mail (stages 2–4, own switch, off): put a mail the Spark sorted somewhere else or into "Falsch sortiert" and the sender becomes an exception of the rule, after 3 corrections it pauses; corrections (30 days) with "Undo" under E-mail → Rules and on the iPhone; the model only suggests, a rule only comes from a button
 
 
 

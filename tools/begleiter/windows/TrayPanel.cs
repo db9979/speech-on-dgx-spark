@@ -484,18 +484,14 @@ internal sealed class TrayPanel : ThemedForm
         _close.TabIndex = 111;
     }
 
-    /// <summary>Farbe des Kachel-Symbols: je Befehl eine eigene, aus den Panel-Farben gemischt.</summary>
+    /// <summary>Farbe des Kachel-Symbols (Klar 2): Linien-Icon im einen Akzent, nur Mitschreiben in Rot.</summary>
     private static Color? TintFor(Glyph glyph)
     {
         Palette p = Theme.Current;
         return glyph switch
         {
-            Glyph.Mic => p.Accent2,
-            Glyph.Screen => Palette.Mix(p.Accent, p.Accent2, 0.35f),
-            Glyph.Mail => Palette.Mix(p.Accent, p.Accent2, 0.6f),
-            Glyph.Speaker => Palette.Mix(p.Accent2, p.Ok, 0.5f),
             Glyph.Record => p.Bad,
-            _ => null,
+            _ => p.Accent,
         };
     }
 
@@ -719,7 +715,7 @@ internal sealed class TrayPanel : ThemedForm
         width = Math.Max(width, foot + (2 * pad));
         int inner = width - (2 * pad);
 
-        int y = BarHeight + pad;
+        int y = pad;
 
         // Kopf: Gesicht, Gruß, Gerät mit Zustandspunkt; rechts Einstellungen und Schließen
         int face = S(40);
@@ -728,7 +724,7 @@ internal sealed class TrayPanel : ThemedForm
         _close.Bounds = new Rectangle(width - pad + S(4) - icon.Width, y + ((face - icon.Height) / 2), icon.Width, icon.Height);
         _settings.Visible = m.Settings is not null;
         _settings.Bounds = new Rectangle(_close.Left - S(2) - icon.Width, _close.Top, icon.Width, icon.Height);
-        int textX = pad + face + S(11);
+        int textX = pad + Face.Lead(face, S(11));
         int textW = Math.Max(10, (m.Settings is not null ? _settings.Left : _close.Left) - S(6) - textX);
         int titleH = Draw.Measure("Ag", F(11f, FontStyle.Bold)).Height;
         int subH = Draw.Measure("Ag", F(8.5f)).Height;
@@ -1181,7 +1177,7 @@ internal sealed class TrayPanel : ThemedForm
             g.DrawRectangle(pen, 0, 0, ClientSize.Width - 1, ClientSize.Height - 1);
         }
 
-        Face.Draw(g, _face, p);
+        Face.DrawHeader(g, _face, p);
         Draw.Text(g, m.Title, F(11f, FontStyle.Bold), _title, p.Fg);
         if (!_subtitle.IsEmpty)
         {
@@ -1204,8 +1200,8 @@ internal sealed class TrayPanel : ThemedForm
 
         if (!_banner.IsEmpty && m.Update is { } u)
         {
-            Draw.FillRound(g, p.BannerBack, _banner, S(12));
-            Draw.StrokeRound(g, u.Error ? p.Bad : p.BannerLine, _banner, S(12));
+            Draw.FillRound(g, p.BannerBack, _banner, S(Draw.RBox));
+            Draw.StrokeRound(g, u.Error ? p.Bad : p.BannerLine, _banner, S(Draw.RBox));
             Draw.FillRound(g, p.Card, _bannerIcon, S(8));
             float gs = S(16);
             Glyphs.Draw(g, Glyph.Download, new RectangleF(_bannerIcon.X + ((_bannerIcon.Width - gs) / 2f), _bannerIcon.Y + ((_bannerIcon.Height - gs) / 2f), gs, gs), u.Error ? p.Bad : p.Accent);
@@ -1220,7 +1216,7 @@ internal sealed class TrayPanel : ThemedForm
                 if (done > track.Height)
                 {
                     var bar = new Rectangle(track.X, track.Y, done, track.Height);
-                    using Brush brush = Draw.AccentBrush(bar, p, 0f);
+                    using var brush = new SolidBrush(p.Accent);
                     using System.Drawing.Drawing2D.GraphicsPath path = Draw.Round(bar, bar.Height / 2f);
                     g.FillPath(brush, path);
                 }
@@ -1408,8 +1404,8 @@ internal sealed class TrayPanel : ThemedForm
         {
             var (card, title, body) = group.Rects[i];
             PanelNote note = group.Cards[i].Note;
-            Draw.FillRound(g, p.Card, card, S(12));
-            Draw.StrokeRound(g, p.Line, card, S(12));
+            Draw.FillRound(g, p.Card, card, S(Draw.RBox));
+            Draw.StrokeRound(g, p.Line, card, S(Draw.RBox));
             Draw.Text(g, note.Title, F(9f, FontStyle.Bold), title, p.Fg);
             if (body.Height > 0)
             {
@@ -1487,7 +1483,7 @@ internal sealed class TrayPanel : ThemedForm
         }
 
         Palette p = P;
-        Draw.StrokeRound(g, p.Line, box, S(12));
+        Draw.StrokeRound(g, p.Line, box, S(Draw.RBox));
         using var pen = new Pen(p.Line);
         foreach (int y in lines)
         {

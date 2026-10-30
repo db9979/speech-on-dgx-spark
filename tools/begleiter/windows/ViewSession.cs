@@ -471,7 +471,7 @@ internal sealed class ViewEdge : Form
         ShowInTaskbar = false;
         TopMost = true;
         StartPosition = FormStartPosition.Manual;
-        BackColor = Palette.Hex(0xE5484D);
+        BackColor = Palette.Light.Bad;
         Bounds = bounds;
         Text = "Spark-Begleiter – Bildschirm wird gezeigt";
     }
@@ -498,8 +498,8 @@ internal sealed class ViewEdge : Form
 /// <summary>Die Leiste oben in der Mitte: was gerade geschieht und „Beenden“.</summary>
 internal sealed class ViewBar : Form
 {
-    private readonly Label _text = new() { AutoSize = true, ForeColor = Color.White, BackColor = Color.Transparent };
-    private readonly Button _end = new() { Text = "Beenden", AutoSize = true, FlatStyle = FlatStyle.Flat, ForeColor = Color.White };
+    private readonly Label _text = new() { AutoSize = true, ForeColor = Palette.OnColor, BackColor = Color.Transparent };
+    private readonly Button _end = new() { Text = "Beenden", AutoSize = true, FlatStyle = FlatStyle.Flat, ForeColor = Palette.OnColor };
 
     /// <param name="task">Stufe 3: der Auftrag, den der Spark gerade erledigt; sonst <c>null</c>.</param>
     public ViewBar(Rectangle screen, bool control, string? task = null)
@@ -508,14 +508,14 @@ internal sealed class ViewBar : Form
         ShowInTaskbar = false;
         TopMost = true;
         StartPosition = FormStartPosition.Manual;
-        BackColor = Palette.Hex(0xB4232A);
+        BackColor = Palette.Light.BadText;
         Text = "Spark-Begleiter – Bildschirm wird gezeigt";
         AccessibleName = control ? "Bildschirm wird gezeigt und bedient" : "Bildschirm wird gezeigt";
         _text.Text = task is not null
             ? "Spark bedient deinen Rechner: " + (task.Length > 60 ? task[..59] + "…" : task)
             : control ? "Spark: dein Bildschirm wird gezeigt und bedient" : "Spark: dein Bildschirm wird gezeigt";
         _text.Font = new Font("Segoe UI", 10f, FontStyle.Bold);
-        _end.FlatAppearance.BorderColor = Color.White;
+        _end.FlatAppearance.BorderColor = Palette.OnColor;
         _end.Click += (_, _) => EndRequested?.Invoke(this, EventArgs.Empty);
         Controls.Add(_text);
         Controls.Add(_end);
@@ -663,10 +663,10 @@ internal sealed class ViewAskForm : ThemedForm
         int pad = S(16);
         int w = S(460);
         int inner = w - (2 * pad);
-        int y = BarHeight + pad;
+        int y = pad;
         int face = S(36);
         _face = new Rectangle(pad, y, face, face);
-        _title = new Rectangle(pad + face + S(10), y, inner - face - S(10), face);
+        _title = new Rectangle(pad + Face.Lead(face, S(10)), y, inner - Face.Lead(face, S(10)), face);
         y += face + S(12);
         y += _question.Fit(pad, y, inner) + S(8);
         y += _detail.Fit(pad, y, inner) + S(10);
@@ -688,7 +688,7 @@ internal sealed class ViewAskForm : ThemedForm
 
     protected override void PaintContent(Graphics g)
     {
-        Face.Draw(g, _face, P);
+        Face.DrawHeader(g, _face, P);
         Draw.Text(g, _operate ? "Spark den Rechner bedienen lassen?" : _look ? "Spark hinsehen lassen?" : "Bildschirm zeigen?", F(11f, FontStyle.Bold), _title, P.Fg);
     }
 

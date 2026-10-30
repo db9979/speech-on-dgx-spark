@@ -134,7 +134,7 @@ internal sealed class ActSettingsForm : ThemedForm
         int pad = S(18);
         int w = S(480);
         int inner = w - (2 * pad);
-        int y = BarHeight + pad;
+        int y = pad;
         y += _autoHeading.Fit(pad, y, inner) + S(4);
         y += _autoNote.Fit(pad, y, inner) + S(10);
         foreach ((_, ToggleSwitch t) in _autos)

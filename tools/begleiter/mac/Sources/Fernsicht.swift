@@ -434,7 +434,7 @@ final class ViewSession: NSObject {
         let v = NSView(frame: NSRect(x: 0, y: 0, width: size, height: size))
         v.wantsLayer = true
         v.layer?.cornerRadius = size / 2
-        v.layer?.borderColor = NSColor.systemRed.cgColor
+        v.layer?.borderColor = Theme.nsBad.cgColor
         v.layer?.borderWidth = 5
         w.contentView = v
         w.orderFrontRegardless()
@@ -508,7 +508,7 @@ final class ViewSession: NSObject {
         border.sharingType = .none            // our own windows stay out of the pictures
         let edge = NSView(frame: NSRect(origin: .zero, size: frame.size))
         edge.wantsLayer = true
-        edge.layer?.borderColor = NSColor.systemRed.cgColor
+        edge.layer?.borderColor = Theme.nsBad.cgColor
         edge.layer?.borderWidth = 4
         border.contentView = edge
         border.orderFrontRegardless()
@@ -522,10 +522,10 @@ final class ViewSession: NSObject {
         bar.hidesOnDeactivate = false
         bar.collectionBehavior = [.canJoinAllSpaces, .stationary]
         bar.sharingType = .none
-        bar.backgroundColor = NSColor(calibratedRed: 0.71, green: 0.14, blue: 0.16, alpha: 1)
+        bar.backgroundColor = Theme.nsBad
         let label = NSTextField(labelWithString: task.map { "Spark bedient deinen Mac: " + String($0.prefix(60)) }
                                 ?? (control ? "Spark: dein Bildschirm wird gezeigt und bedient" : "Spark: dein Bildschirm wird gezeigt"))
-        label.textColor = .white
+        label.textColor = Theme.nsOnAccent
         label.font = .boldSystemFont(ofSize: 13)
         let button = NSButton(title: "Beenden", target: self, action: #selector(endClicked))
         button.bezelStyle = .rounded

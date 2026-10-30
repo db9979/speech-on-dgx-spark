@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.284** Begleiter im Systemstil des Panels: ruhige Grautöne, ein blauer Akzent, keine Verläufe, das Gesicht in den Fenstern nur auf Wunsch
 - **V01.1.283** Dungeon-Musik: Probe hören (30 s oder voll), gute Probe in den Vorrat, „Gefällt“ am Tisch
 - **V01.1.282** Dungeon-Musik: Klangvorlage je Welt und Stimmung (Genre, Instrumente, Tonart, Takt, Tempo, Charakter, Gesang) und feste Pakete
 - **V01.1.281** Dungeon-Musik: Qualität Schnell, Gut oder Beste (nachts), Länge und Lautheit einstellbar
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.277** Fernzugang auf Windows (Stufe 5): Koppeln über einen Einmal-Link zur Datei spark-anker-einrichten.cmd (Doppelklick, „Ja“, kein Code), danach bestätigt der Admin das neue System mit Code oder Passkey; OpenSSH nur auf 127.0.0.1, Python nur für den Anker mit fester Prüfsumme, Entfernen unter Apps „Spark Anker“ stellt alles wieder her; geprüft auf einem echten Windows (GitHub-Action „Fernzugang Windows“)
 - **V01.1.276** Fernzugang: Terminal und Vorschläge springen nicht mehr (die Statuszeile über dem Terminal blieb nach dem Öffnen stehen und verschwand beim nächsten Laden, Hinweise oben schoben das Terminal nach unten); Browser-Test über 20 Sekunden.
 - **V01.1.275** Nach „Regel anlegen“ auf der Karte einer Korrektur entscheidet die neue Mail-Regel: „Postfach aufräumen“ fragt bei diesem Absender nicht mehr
-- **V01.1.274** Falsch einsortierte Mails lernen (Stufen 2–4, eigener Schalter, aus): legst du eine vom Spark sortierte Mail woanders hin oder nach „Falsch sortiert“, wird der Absender Ausnahme der Regel, nach 3 Korrekturen pausiert sie; Korrekturen (30 Tage) mit „Rückgängig“ unter E-Mail → Regeln und am iPhone; das Modell schlägt nur vor, eine Regel entsteht nur per Knopf
 
 
 

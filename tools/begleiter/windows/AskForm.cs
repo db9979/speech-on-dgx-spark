@@ -190,18 +190,18 @@ internal sealed class AskForm : ThemedForm
         int pad = S(14);
         int w = ClientSize.Width;
         int h = ClientSize.Height;
-        int y = BarHeight + pad;
+        int y = pad;
 
         int face = S(28);
         _face = new Rectangle(pad, y, face, face);
         Size title = Draw.Measure("Frag Spark", F(10.5f, FontStyle.Bold));
-        _title = new Rectangle(pad + face + S(8), y, title.Width + S(4), face);
+        _title = new Rectangle(pad + Face.Lead(face, S(8)), y, title.Width + S(4), face);
         int hintRight = w - pad;
         if (_speakShown)
         {
             Size chip = _speakMode.Preferred();
             chip.Height = Math.Min(chip.Height, S(26));
-            chip.Width = Math.Min(chip.Width, Math.Max(S(60), w - (2 * pad) - face - S(8) - title.Width));
+            chip.Width = Math.Min(chip.Width, Math.Max(S(60), w - (2 * pad) - Face.Lead(face, S(8)) - title.Width));
             _speakMode.Bounds = new Rectangle(w - pad - chip.Width, y + ((face - chip.Height) / 2), chip.Width, chip.Height);
             hintRight = _speakMode.Left - S(8);
         }
@@ -267,7 +267,7 @@ internal sealed class AskForm : ThemedForm
 
     protected override void PaintContent(Graphics g)
     {
-        Face.Draw(g, _face, P);
+        Face.DrawHeader(g, _face, P);
         Draw.Text(g, "Frag Spark", F(10.5f, FontStyle.Bold), _title, P.Fg);
         Draw.Text(g, "Enter = Senden · Umschalt+Enter = neue Zeile", F(8.5f), _hint, P.Muted, Draw.Line | TextFormatFlags.Right);
     }
@@ -939,8 +939,8 @@ internal sealed class ChatView : Panel, IThemed
             }
             else
             {
-                int bx = x0 + avatar + S(8);
-                int maxText = Math.Max(1, (int)((avail - avatar - S(8)) * 0.92) - (2 * padX));
+                int bx = x0 + Face.Lead(avatar, S(8));
+                int maxText = Math.Max(1, (int)((avail - Face.Lead(avatar, S(8))) * 0.92) - (2 * padX));
                 List<Row>? rows = null;
                 Size size;
                 if (md is not null)
@@ -1027,7 +1027,7 @@ internal sealed class ChatView : Panel, IThemed
             if (b.Mine)
             {
                 using System.Drawing.Drawing2D.GraphicsPath path = Draw.Round(bubble, r, r, small, r);
-                using Brush brush = Draw.AccentBrush(bubble, p, 45f);
+                using var brush = new SolidBrush(p.Accent);
                 g.FillPath(brush, path);
                 TextRenderer.DrawText(g, b.Text, Font, text, p.OnAccent, TextFlags);
             }
@@ -1035,7 +1035,7 @@ internal sealed class ChatView : Panel, IThemed
             {
                 Rectangle avatar = b.Avatar;
                 avatar.Offset(offset);
-                Face.Draw(g, avatar, p);
+                Face.DrawHeader(g, avatar, p);
                 using (System.Drawing.Drawing2D.GraphicsPath path = Draw.Round(bubble, r, r, r, small))
                 {
                     using var fill = new SolidBrush(p.Soft);

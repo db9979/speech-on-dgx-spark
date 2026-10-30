@@ -71,6 +71,7 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
         _desk = _config.IsPaired ? _config.Desk : null;
         Face.Comic = _desk?.Face == "comic";
         Face.ComicWoman = _desk?.Face == "comic_woman";
+        Face.InHeader = _config.ShowFace;
         _connection = _config.IsPaired ? Connection.Unknown : Connection.Unpaired;
         _updater = new Updater(Credentials);
         _updater.Changed += (_, _) => OnUpdaterChanged();
@@ -834,6 +835,15 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
         _checking = true;
         Changed?.Invoke(this, EventArgs.Empty);
         PollSoon(refetchConfig: true);
+    }
+
+    public void SetShowFace(bool on)
+    {
+        _config.ShowFace = on;
+        Face.InHeader = on;
+        TrySave();
+        RefreshPanel();
+        Changed?.Invoke(this, EventArgs.Empty);
     }
 
     public void SetAutoDownload(bool on)

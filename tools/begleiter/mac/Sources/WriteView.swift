@@ -280,10 +280,9 @@ struct WriteView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            GradientBar()
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
-                    FaceView(size: 28)
+                    if FacePref.on { FaceView(size: 28) }
                     Text(verbatim: "Text verbessern")
                         .font(.system(size: 14, weight: .semibold))
                     Spacer()

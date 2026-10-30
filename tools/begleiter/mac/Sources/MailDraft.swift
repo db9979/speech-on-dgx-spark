@@ -414,10 +414,9 @@ struct MailBoxView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            GradientBar()
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 10) {
-                    FaceView(size: 28)
+                    if FacePref.on { FaceView(size: 28) }
                     VStack(alignment: .leading, spacing: 1) {
                         Text(verbatim: "Antwort entwerfen")
                             .font(.system(size: 14, weight: .semibold))

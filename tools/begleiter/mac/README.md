@@ -38,13 +38,14 @@ Die Tastenkürzel stellt man dagegen **hier am Mac** ein (Begleiter-Fenster → 
 
 ## So sieht er aus
 
-Der Begleiter trägt dieselben Farben wie das Panel des Spark und das **Spark-Gesicht** (der kleine Roboterkopf mit
-Farbverlauf). Hell oder dunkel richtet sich nach macOS; „Kontrast erhöhen“ (Bedienungshilfen) macht Linien und
+Der Begleiter trägt dieselben Farben wie das Panel des Spark („Klar 2 · Systemstil“: neutrale Grautöne, ein blauer
+Akzent, keine Verläufe) und in der Menüleiste das **Spark-Gesicht**; im Kopf der Fenster steht es nur, wenn
+**in den Einstellungen des Programms auf der Seite „Übersicht“ der Schalter „Gesicht in den Fenstern zeigen“** an ist (Standard aus). Hell oder dunkel richtet sich nach macOS; „Kontrast erhöhen“ (Bedienungshilfen) macht Linien und
 graue Schrift kräftiger.
 
 - **Menüleiste:** das Gesicht als Symbol. Ein farbiger Punkt unten rechts sagt, wenn etwas ist (siehe
   „Zustandspunkt“).
-- **Klick aufs Gesicht** öffnet ein kleines Fenster: oben ein Farbverlauf, das Gesicht mit Gruß („Guten Morgen,
+- **Klick aufs Gesicht** öffnet ein kleines Fenster: oben der Gruß („Guten Morgen,
   Dominik“), Gerätename und Zustand als Punkt, rechts das Zahnrad für die **Einstellungen** und das
   Ein/Aus-Zeichen (beendet den Begleiter). Darunter gegebenenfalls der Hinweis auf eine neue Version, dann das Feld
   **„Frag Spark …“** (Enter fragt, das Mikrofon fragt per Sprache), die Befehle als kleine **Kacheln**, vier
@@ -59,8 +60,8 @@ graue Schrift kräftiger.
 - **Einstellungen** haben links ein Seitenmenü wie das Panel: Übersicht (Zustand und was im Panel an ist),
   Frag Spark, Tastenkürzel, Tagesstart, Wissen-Ordner und unter „Gerät“ Berechtigungen, Kopplung, Über und Update.
   Seiten von Teilen, die aus sind, fehlen.
-- **Text verbessern**, **Frag Spark**, **Einstellungen** und **Koppeln** haben denselben Farbverlauf oben, runde
-  Ecken und die Spark-Knöpfe.
+- **Text verbessern**, **Frag Spark**, **Einstellungen** und **Koppeln** sind ruhig wie das Panel (keine Farbleiste, kein
+  Verlauf, ein Akzent), mit runden Ecken und den Spark-Knöpfen.
 
 Voraussetzung: macOS 13 (Ventura) oder neuer, Apple-Chip oder Intel.
 
@@ -303,7 +304,7 @@ für den ganzen Spark eingestellt). Er schneidet dafür nur Sätze heraus, die l
   geht sie an den Spark.
 
 Solange das Weckwort hört, zeigt macOS den **orangen Mikrofon-Punkt** in der Menüleiste, und das Gesicht hat unten
-rechts einen **türkisen Ring**. Klick aufs Gesicht → Schalter **„Weckwort“** unter „Dieser Mac“ schaltet das Mikrofon ab, bis man
+rechts einen **blauen Ring**. Klick aufs Gesicht → Schalter **„Weckwort“** unter „Dieser Mac“ schaltet das Mikrofon ab, bis man
 „Weckwort fortsetzen“ wählt (das merkt sich der Begleiter auch über einen Neustart). Ganz aus geht es im Panel.
 Während eines Diktats wird nichts ans Weckwort geschickt.
 
@@ -406,8 +407,8 @@ je einmal am Tag, als Mitteilung und im Fenster von „Frag Spark“. An/aus und
 | Gesicht ohne Punkt (in der Farbe der Menüleiste) | Spark erreichbar, alles gut |
 | farbiges Gesicht mit **grauem** Punkt | Spark nicht erreichbar (oder noch nicht gekoppelt) – der Begleiter versucht es beim nächsten Abruf wieder |
 | farbiges Gesicht mit **rotem** Punkt | Notaus oder Mein Notaus ist an |
-| farbiges Gesicht mit **blauviolettem** Punkt | eine neue Version ist da (siehe „Updates“) |
-| farbiges Gesicht mit **türkisem Ring** | das Weckwort hört zu |
+| farbiges Gesicht mit **blauem** Punkt | eine neue Version ist da (siehe „Updates“) |
+| farbiges Gesicht mit **blauem Ring** | das Weckwort hört zu |
 | kleiner **Mond** oben links | „Nicht stören erkennen“: Anruf oder Präsentation erkannt, Meldungen warten |
 | rotes Mikrofon | Aufnahme läuft (Diktat oder Besprechung) |
 
@@ -469,7 +470,7 @@ Neue Versionen holt sich der Begleiter **nur von deinem eigenen Spark**, nie dir
 
 1. Der Spark lädt die neue Mac-Version von GitHub und merkt sich Größe und Prüfsumme (SHA-256).
 2. Beim nächsten Abruf sieht der Begleiter, dass es eine neuere Version gibt. Das Gesicht in der Menüleiste
-   bekommt einen **blauvioletten Punkt**, und im Fenster dahinter steht **„Neue Version 1.0.350 · Geprüft vom Spark ·
+   bekommt einen **blauen Punkt**, und im Fenster dahinter steht **„Neue Version 1.0.350 · Geprüft vom Spark ·
    64 MB“** mit dem Knopf **„Aktualisieren“**.
 3. Ist „Updates automatisch laden, vor dem Installieren fragen“ an (Standard), lädt der Begleiter die Datei schon
    im Hintergrund vom Spark und prüft sie. **Installiert wird nie ohne deinen Klick auf „Aktualisieren“.** Ist der

@@ -202,22 +202,22 @@ internal sealed class ScreenCapture : IDisposable
                     dim.Exclude(sel);
                 }
 
-                using var veil = new SolidBrush(Color.FromArgb(120, 0, 0, 0));
+                using var veil = new SolidBrush(Color.FromArgb(120, Palette.Shade));
                 g.FillRegion(veil, dim);
             }
 
             int dpi = DeviceDpi;
             if (sel.Width > 0 && sel.Height > 0 && sel.IntersectsWith(new Rectangle(0, 0, _screen.Width, _screen.Height)))
             {
-                using var pen = new Pen(p.HighContrast ? SystemColors.Highlight : p.Accent2, Math.Max(2, Draw.Scale(2, dpi)));
+                using var pen = new Pen(p.HighContrast ? SystemColors.Highlight : p.Accent, Math.Max(2, Draw.Scale(2, dpi)));
                 g.DrawRectangle(pen, sel);
                 string size = $"{_owner._selection.Width} × {_owner._selection.Height}";
                 Font small = Theme.UiFont(dpi, 8.5f);
                 Size t = Draw.Measure(size, small);
                 var label = new Rectangle(sel.X, Math.Max(0, sel.Y - t.Height - Draw.Scale(8, dpi)), t.Width + Draw.Scale(12, dpi), t.Height + Draw.Scale(4, dpi));
                 g.SmoothingMode = SmoothingMode.AntiAlias;
-                Draw.FillRound(g, p.HighContrast ? SystemColors.Window : Palette.Hex(0x151A2E), label, Draw.Scale(6, dpi));
-                Draw.Text(g, size, small, label, p.HighContrast ? SystemColors.WindowText : Color.White, Draw.Line | TextFormatFlags.HorizontalCenter);
+                Draw.FillRound(g, p.HighContrast ? SystemColors.Window : Palette.HudBack, label, Draw.Scale(6, dpi));
+                Draw.Text(g, size, small, label, p.HighContrast ? SystemColors.WindowText : Palette.OnColor, Draw.Line | TextFormatFlags.HorizontalCenter);
             }
 
             if (_screen.Contains(Cursor.Position) || _owner._overlays.Count == 1)
@@ -228,8 +228,8 @@ internal sealed class ScreenCapture : IDisposable
                 Size t = Draw.Measure(hint, font);
                 var pill = new Rectangle((_screen.Width - t.Width) / 2 - Draw.Scale(16, dpi), Draw.Scale(24, dpi), t.Width + Draw.Scale(32, dpi), t.Height + Draw.Scale(14, dpi));
                 g.SmoothingMode = SmoothingMode.AntiAlias;
-                Draw.FillRound(g, p.HighContrast ? SystemColors.Window : Palette.Hex(0x151A2E), pill, pill.Height / 2f);
-                Draw.Text(g, hint, font, pill, p.HighContrast ? SystemColors.WindowText : Palette.Hex(0xE8EBF2), Draw.Line | TextFormatFlags.HorizontalCenter);
+                Draw.FillRound(g, p.HighContrast ? SystemColors.Window : Palette.HudBack, pill, pill.Height / 2f);
+                Draw.Text(g, hint, font, pill, p.HighContrast ? SystemColors.WindowText : Palette.HudText, Draw.Line | TextFormatFlags.HorizontalCenter);
             }
         }
 
@@ -417,11 +417,11 @@ internal sealed class ScreenAskForm : ThemedForm
         int pad = S(14);
         int w = S(400) - S(2);
         int inner = w - (2 * pad);
-        int y = BarHeight + pad;
+        int y = pad;
 
         int face = S(28);
         _face = new Rectangle(pad, y, face, face);
-        _title = new Rectangle(pad + face + S(8), y, inner - face - S(8), face);
+        _title = new Rectangle(pad + Face.Lead(face, S(8)), y, inner - Face.Lead(face, S(8)), face);
         y += face + S(10);
 
         int maxH = S(150);
@@ -453,7 +453,7 @@ internal sealed class ScreenAskForm : ThemedForm
 
     protected override void PaintContent(Graphics g)
     {
-        Face.Draw(g, _face, P);
+        Face.DrawHeader(g, _face, P);
         Draw.Text(g, "Bildschirm fragen", F(10.5f, FontStyle.Bold), _title, P.Fg);
         g.InterpolationMode = InterpolationMode.HighQualityBicubic;
         g.DrawImage(_image, _preview);

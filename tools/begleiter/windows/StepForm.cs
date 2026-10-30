@@ -124,7 +124,7 @@ internal sealed class StepForm : ThemedForm
 
     protected override void OnThemeApplied()
     {
-        _warn.ForeColor = Palette.Hex(0xE5484D);
+        _warn.ForeColor = Palette.Light.Bad;
     }
 
     protected override void LayoutContent()
@@ -132,10 +132,10 @@ internal sealed class StepForm : ThemedForm
         int pad = S(16);
         int w = S(460);
         int inner = w - (2 * pad);
-        int y = BarHeight + pad;
+        int y = pad;
         int face = S(36);
         _face = new Rectangle(pad, y, face, face);
-        _titleBox = new Rectangle(pad + face + S(10), y, inner - face - S(10), face);
+        _titleBox = new Rectangle(pad + Face.Lead(face, S(10)), y, inner - Face.Lead(face, S(10)), face);
         y += face + S(12);
         y += _what.Fit(pad, y, inner) + S(8);
         if (_warn.Text.Length > 0)
@@ -161,7 +161,7 @@ internal sealed class StepForm : ThemedForm
 
     protected override void PaintContent(Graphics g)
     {
-        Face.Draw(g, _face, P);
+        Face.DrawHeader(g, _face, P);
         Draw.Text(g, _title, F(11f, FontStyle.Bold), _titleBox, P.Fg);
     }
 
@@ -188,7 +188,7 @@ internal sealed class ViewMarker : Form
         ShowInTaskbar = false;
         TopMost = true;
         StartPosition = FormStartPosition.Manual;
-        BackColor = Palette.Hex(0xE5484D);
+        BackColor = Palette.Light.Bad;
         Bounds = new Rectangle(center.X - (size / 2), center.Y - (size / 2), size, size);
         Text = "Spark-Begleiter – Ziel";
         using var path = new GraphicsPath { FillMode = FillMode.Alternate };

@@ -89,10 +89,10 @@ internal sealed class ChoiceForm : ThemedForm
         int pad = S(16);
         int w = S(460);
         int inner = w - (2 * pad);
-        int y = BarHeight + pad;
+        int y = pad;
         int face = S(36);
         _face = new Rectangle(pad, y, face, face);
-        _title = new Rectangle(pad + face + S(10), y, inner - face - S(10), face);
+        _title = new Rectangle(pad + Face.Lead(face, S(10)), y, inner - Face.Lead(face, S(10)), face);
         y += face + S(12);
         y += _text.Fit(pad, y, inner) + S(8);
         int dh = _detail.Fit(pad, y, inner);
@@ -115,7 +115,7 @@ internal sealed class ChoiceForm : ThemedForm
 
     protected override void PaintContent(Graphics g)
     {
-        Face.Draw(g, _face, P);
+        Face.DrawHeader(g, _face, P);
         Draw.Text(g, _heading, F(11f, FontStyle.Bold), _title, P.Fg);
     }
 }
@@ -174,10 +174,10 @@ internal sealed class CodeWordForm : ThemedForm
         int pad = S(16);
         int w = S(400);
         int inner = w - (2 * pad);
-        int y = BarHeight + pad;
+        int y = pad;
         int face = S(32);
         _face = new Rectangle(pad, y, face, face);
-        _title = new Rectangle(pad + face + S(10), y, inner - face - S(10), face);
+        _title = new Rectangle(pad + Face.Lead(face, S(10)), y, inner - Face.Lead(face, S(10)), face);
         y += face + S(12);
         y += _text.Fit(pad, y, inner) + S(10);
         _host.Bounds = new Rectangle(pad, y, inner, S(36));
@@ -192,7 +192,7 @@ internal sealed class CodeWordForm : ThemedForm
 
     protected override void PaintContent(Graphics g)
     {
-        Face.Draw(g, _face, P);
+        Face.DrawHeader(g, _face, P);
         Draw.Text(g, "Codewort nötig", F(11f, FontStyle.Bold), _title, P.Fg);
     }
 }
@@ -493,14 +493,14 @@ internal sealed class MeetingEndForm : ThemedForm
         int w = ClientSize.Width;
         int h = ClientSize.Height;
         int inner = Math.Max(S(100), w - (2 * pad));
-        int y = BarHeight + pad;
+        int y = pad;
         int face = S(32);
         _face = new Rectangle(pad, y, face, face);
         int titleH = Draw.Measure("Ag", F(11f, FontStyle.Bold)).Height;
         int subH = Draw.Measure("Ag", F(8.5f)).Height;
         int top = y + Math.Max(0, (face - titleH - subH) / 2);
-        _title = new Rectangle(pad + face + S(10), top, inner - face - S(10), titleH);
-        _sub = new Rectangle(pad + face + S(10), top + titleH, inner - face - S(10), subH);
+        _title = new Rectangle(pad + Face.Lead(face, S(10)), top, inner - Face.Lead(face, S(10)), titleH);
+        _sub = new Rectangle(pad + Face.Lead(face, S(10)), top + titleH, inner - Face.Lead(face, S(10)), subH);
         y += face + S(12);
 
         // Fuß von unten
@@ -567,7 +567,7 @@ internal sealed class MeetingEndForm : ThemedForm
 
     protected override void PaintContent(Graphics g)
     {
-        Face.Draw(g, _face, P);
+        Face.DrawHeader(g, _face, P);
         Draw.Text(g, "Besprechung – Zusammenfassung", F(11f, FontStyle.Bold), _title, P.Fg);
         Draw.Text(g, _subtitle, F(8.5f), _sub, P.Muted);
     }

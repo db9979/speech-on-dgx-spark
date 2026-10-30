@@ -280,12 +280,12 @@ internal sealed class AssistForm : ThemedForm
         int w = ClientSize.Width;
         int h = ClientSize.Height;
         int inner = w - (2 * pad);
-        int y = BarHeight + pad;
+        int y = pad;
 
         int face = S(28);
         _face = new Rectangle(pad, y, face, face);
         Size title = Draw.Measure("Text verbessern", F(10.5f, FontStyle.Bold));
-        _title = new Rectangle(pad + face + S(8), y, title.Width + S(4), face);
+        _title = new Rectangle(pad + Face.Lead(face, S(8)), y, title.Width + S(4), face);
         _from = new Rectangle(_title.Right + S(8), y, Math.Max(0, w - pad - _title.Right - S(8)), face);
         y += face + S(12);
 
@@ -367,7 +367,7 @@ internal sealed class AssistForm : ThemedForm
 
     protected override void PaintContent(Graphics g)
     {
-        Face.Draw(g, _face, P);
+        Face.DrawHeader(g, _face, P);
         Draw.Text(g, "Text verbessern", F(10.5f, FontStyle.Bold), _title, P.Fg);
         if (!string.IsNullOrEmpty(_sourceApp))
         {
