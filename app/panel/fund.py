@@ -4,7 +4,9 @@ tags, one list of hits for the page Finden, Strg K and the assistant's tool fund
 One source (plan „Grundsatz eine Quelle“): fund copies no text that already has an index. Documents, the NAS and the
 reMarkable stay in wissen.db (documents.search), the Wissensbuch in its pages; fund keeps for them only fields (kind,
 sender, date, amount, number) and tags and asks their own search. Text of its own it keeps only for sources without
-an index (mail, attachments, appointments, contacts, lists … from Stufe B and C), sealed where the source is private.
+an index (mail and attachments since Stufe B, fundmail.py; appointments, contacts, lists … in Stufe C), sealed where the
+source is private: then titles, excerpts, fields and tag values are AES-GCM (vorrat.seal, bound to profile, source, entry
+and field) and its words only HMAC marks in fund_blind (vorrat.marke), nothing of it in plain text on the disk.
 
     users/<id>/fund.db   own schema version (PRAGMA user_version), own lock, WAL, 0600 in a 0700 folder;
                          built again at any time („Neu aufbauen“), deleting = emptying its tables
@@ -14,8 +16,10 @@ oeffnen). neues_seit(uid, known, budget) -> (entries, state, done): known is {ex
 entries are what is new or changed (at most budget), state goes to fund_stand, done says nothing is left;
 noch_da(uid, exts) -> the exts still there; oeffnen(uid, ext) -> the way to open it ({"art", "id"}). art "verweis":
 only fields and tags, its words go through its own search; art "eigen": its text in fund_fts (clear) or fund_blind
-(marks, schutz 1). Each source follows the release of the function it comes from (documents, nasquelle, remarkable,
-wissensbuch); the index itself is the admin switch chat.fund (off), for every profile, never for guests.
+(marks, schutz 1). A source with a round of its own (runde: mail reads its mailboxes in slices, fundmail.py) writes
+itself through put_sealed. Each source follows the release of the function it comes from (documents, nasquelle,
+remarkable, wissensbuch, fundmail); the index itself is the admin switch chat.fund (off), for every profile, never for
+guests.
 
 Tags (S1–S4): the fixed list KATEGORIEN (documents.ARTS without „Sonstiges“ plus the areas BEREICHE), persons,
 companies and places; free tags of documents stay in the document's Steckbrief (documents.set_tags). Rules set them
@@ -242,6 +246,7 @@ class Quelle(NamedTuple):
     oeffnen: Callable
     de: str
     en: str
+    runde: Callable = None   # a round of its own (uid, now, seconds) -> (new, gone): mail in slices (fundmail.py)
 
 
 def _doc_source(d):
@@ -337,11 +342,26 @@ QUELLEN = (
     # those are on main (plan §9, S3)
     Quelle("wissensbuch", "wissensbuch", 0, "verweis", _wb_entries, _wb_still,
            lambda uid, ext: {"art": "wissensbuch", "id": ext}, "Wissensbuch", "Knowledge book"),
+    # mails of the inbox, the archive and the sent folder (never spam or trash), sealed, read in slices (fundmail.py,
+    # Stufe B, switch „Mails und Anhänge“); attachments go with their mail (eltern) and its round
+    Quelle("mail", "fundmail", 1, "eigen", lambda uid, known, budget: _fm().neues_seit(uid, known, budget),
+           lambda uid, exts: _fm().noch_da(uid, exts), lambda uid, ext: _fm().weg(uid, ext), "Mail", "Mail",
+           lambda uid, now, secs: _fm().runde(uid, now, secs)),
+    Quelle("anhang", "fundmail", 1, "eigen", lambda uid, known, budget: ([], {}, True),
+           lambda uid, exts: _fm().noch_da(uid, exts), lambda uid, ext: _fm().weg(uid, ext), "Anhang", "Attachment",
+           lambda uid, now, secs: (0, 0)),
 )
 BY_NAME = {q.name: q for q in QUELLEN}
 # words of the person that name a source (the tool's filter „quelle“ only when one of them was said)
 QUELLE_WORTE = {"dokument": r"dokument\w*|unterlage\w*|datei\w*|pdf", "nas": r"nas\b|wissensordner\w*",
-                "remarkable": r"re\s?markable|notizbuch\w*", "wissensbuch": r"wissensbuch\w*"}
+                "remarkable": r"re\s?markable|notizbuch\w*", "wissensbuch": r"wissensbuch\w*",
+                "mail": r"e?-?mails?\b|\w*mails?\b|nachricht\w*", "anhang": r"anh[aä]ng\w*|attachment\w*"}
+MAIL_Q = ("mail", "anhang")   # the sealed mail sources: their rows go with their mailbox (ext starts with its id)
+
+
+def _fm():
+    import fundmail   # fundmail imports this module
+    return fundmail
 
 
 def on(c=None):
@@ -382,6 +402,101 @@ def _put(con, uid, q, e, now):
     return iid
 
 
+# ---------------------------------------------------------------- sealed sources (schutz 1: mail, attachments)
+def _ad(uid, quelle, ext, feld):
+    """What a sealed value is bound to: profile, source, entry and field (a value copied elsewhere does not open)."""
+    return f"fund:{uid}:{quelle}:{ext}:{feld}"
+
+
+def siegel(uid, quelle, ext, feld, text):
+    return vorrat.seal(str(text or "").encode(), _ad(uid, quelle, ext, feld))
+
+
+def offen(uid, quelle, ext, feld, text):
+    """The plain value of a sealed one, "" when it does not open (other key, other profile, changed)."""
+    raw = vorrat.unseal(text, _ad(uid, quelle, ext, feld)) if text else None
+    return raw.decode("utf-8", "replace") if raw is not None else ""
+
+
+def klar(uid, item):
+    """(titel, auszug, felder) of a row as plain values, opened where it is sealed."""
+    if not item["schutz"]:
+        return item["titel"], item["auszug"], json.loads(item["felder"] or "{}")
+    q, e = item["quelle"], item["ext"]
+    try:
+        f = json.loads(offen(uid, q, e, "felder", item["felder"]) or "{}")
+    except ValueError:
+        f = {}
+    return offen(uid, q, e, "titel", item["titel"]), offen(uid, q, e, "auszug", item["auszug"]), f
+
+
+def marken(uid, text, absender=""):
+    """The blind words of a sealed entry: per word stem its mark, per stem of four letters or more the mark of its
+    first four (a search word finds the longer forms, like lokal.PREFIX), per word of the sender a mark of its own
+    ("@", the filters firma and person). Marks only, never a word."""
+    out = set()
+    for t in terms(text):
+        out.add(vorrat.marke(uid, t))
+        if len(t) >= 4:
+            out.add(vorrat.marke(uid, "~" + t[:4]))
+    for t in terms(absender):
+        out.add(vorrat.marke(uid, "@" + t))
+    out.discard(None)
+    return sorted(out)
+
+
+def put_sealed(con, uid, quelle, e, now, eltern=None):
+    """One entry of a sealed source (a source's own round, in its batch's transaction): title, excerpt and fields
+    AES-GCM, its words and the sender as marks, the tags with sealed values and their marks. Without a key nothing is
+    written (None); in plain text stay only source, entry key and date."""
+    ext = str(e["ext"])
+    vals = [siegel(uid, quelle, ext, "titel", str(e.get("titel") or "")[:160]),
+            siegel(uid, quelle, ext, "auszug", re.sub(r"\s+", " ", str(e.get("auszug") or ""))[:AUSZUG]),
+            siegel(uid, quelle, ext, "felder", json.dumps(e.get("felder") or {}, ensure_ascii=False)[:4000])]
+    mk = marken(uid, e.get("worte") or "", e.get("absender") or "")
+    if None in vals or not mk:
+        return None
+    row = con.execute("SELECT id FROM fund_item WHERE quelle=? AND ext=?", (quelle, ext)).fetchone()
+    if row:
+        iid = row["id"]
+        con.execute("UPDATE fund_item SET eltern=?, wann=?, geaendert=?, gesehen=?, schutz=1, titel=?, auszug=?, felder=?, "
+                    "stand='' WHERE id=?", (eltern, int(e.get("wann") or 0), int(now), int(now), *vals, iid))
+        con.execute("DELETE FROM fund_blind WHERE rowid=?", (iid,))
+        con.execute("DELETE FROM fund_tag WHERE item=? AND herkunft='regel'", (iid,))
+    else:
+        iid = con.execute("INSERT INTO fund_item (quelle, ext, eltern, wann, geaendert, gesehen, schutz, titel, auszug, "
+                          "felder, stand) VALUES (?,?,?,?,?,?,1,?,?,?,'')",
+                          (quelle, ext, eltern, int(e.get("wann") or 0), int(now), int(now), *vals)).lastrowid
+    con.execute("INSERT INTO fund_blind (rowid, marken) VALUES (?,?)", (iid, " ".join(mk)))
+    for typ, wert, beleg in e.get("tags") or []:
+        ok = clean_tag(typ, wert)
+        m = ok and vorrat.marke(uid, norm(ok[1]))
+        w = m and vorrat.seal(ok[1].encode(), _ad(uid, "tag", m, ok[0]))
+        if w:
+            con.execute("INSERT OR REPLACE INTO fund_tag (item, typ, wert, marke, herkunft, beleg, at) VALUES (?,?,?,?,?,?,?)",
+                        (iid, ok[0], w, m, "regel", int(bool(beleg)), int(now)))
+    return iid
+
+
+def _tag_wert(uid, item, r):
+    """A tag's value as shown: sealed for a sealed entry (bound to its mark and kind)."""
+    if not item["schutz"]:
+        return r["wert"]
+    raw = vorrat.unseal(r["wert"], _ad(uid, "tag", r["marke"], r["typ"]))
+    return raw.decode("utf-8", "replace") if raw is not None else ""
+
+
+def drop_ids(con, ids):
+    """Rows and everything hanging on them (an attachment goes with its mail). Returns how many."""
+    ids, kids = list(dict.fromkeys(ids)), []
+    for at in range(0, len(ids), 500):
+        part = ids[at:at + 500]
+        kids += [r[0] for r in con.execute("SELECT id FROM fund_item WHERE eltern IN (%s)" % ",".join("?" * len(part)), part)]
+    every = list(dict.fromkeys(ids + kids))
+    _drop(con, every)
+    return len(every)
+
+
 def _drop(con, ids):
     for at in range(0, len(ids), 500):
         part = ids[at:at + 500]
@@ -393,10 +508,11 @@ def _drop(con, ids):
         con.execute(f"DELETE FROM fund_item WHERE id IN ({q})", part)
 
 
-def runde(uid, now=None, budget=BUDGET):
+def runde(uid, now=None, budget=BUDGET, secs=None):
     """One collecting round for a profile (in a worker thread: vorrang.in_thread("Suchindex")): every source it may use
-    brings what is new or changed, what is gone leaves; sources no longer allowed lose their rows. Returns
-    {source: (new, gone)}."""
+    brings what is new or changed, what is gone leaves; sources no longer allowed lose their rows. A source with a round
+    of its own (mail) gets `secs` seconds (None: its own choice, 0: not this time; extras.due_once starts the mail's
+    round apart, fundmail.due). Returns {source: (new, gone)}."""
     now = time.time() if now is None else now
     if not features.allowed("fund", uid):
         return {}
@@ -404,6 +520,29 @@ def runde(uid, now=None, budget=BUDGET):
     out = {}
     t0 = time.time()
     for src in QUELLEN:
+        if src.runde is not None:
+            if src.name not in mine:
+                with _Db(uid) as con:
+                    gone = [r[0] for r in con.execute("SELECT id FROM fund_item WHERE quelle=?", (src.name,))]
+                    if gone:
+                        n = drop_ids(con, gone)
+                        con.execute("DELETE FROM fund_stand WHERE quelle=?", (src.name,))
+                        out[src.name] = (0, n)
+                        print(f"fund: runde {src.name} | 0 neu | {n} weg | nicht freigegeben | "
+                              f"{profiles.log_name(profiles.by_id(uid))}", flush=True)
+                continue
+            if secs == 0:
+                continue
+            try:
+                got = src.runde(uid, now, secs)
+            except Exception as e:
+                with _stat_lock:
+                    _stat["fehler"] += 1
+                print(f"fund: runde {src.name} fehler | {type(e).__name__} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+                continue
+            if got and (got[0] or got[1]):
+                out[src.name] = tuple(got)
+            continue
         with _Db(uid) as con:
             known = {r["ext"]: r["stand"] for r in con.execute("SELECT ext, stand FROM fund_item WHERE quelle=?", (src.name,))}
             if src.name not in mine:
@@ -462,6 +601,7 @@ async def due_once(now=None):
     for uid in profiles.user_ids():
         if uid in _running or not features.allowed("fund", uid):
             continue
+        _fm().due(uid, now)   # the mails: a round of their own in the background, never waited for here
         last = _last.get(uid)
         if last and now - last[0] < ROUND_S:
             continue
@@ -471,7 +611,7 @@ async def due_once(now=None):
             continue
         _running.add(uid)
         try:
-            await vorrang.in_thread("Suchindex", runde, uid, now)
+            await vorrang.in_thread("Suchindex", runde, uid, now, BUDGET, 0)
             _last[uid] = (now, stamp)
             did += 1
         except Exception as e:
@@ -482,15 +622,23 @@ async def due_once(now=None):
 
 
 def forget(uid, quelle, konto=""):
-    """An account or a source is gone (Stufe B: mail.remove, calendars.remove, contacts.remove): its rows leave at once."""
+    """An account or a source is gone: its rows leave at once (with konto only that mailbox's, whose id starts the
+    entry key; fundmail finds a removed mailbox itself at its next look, fundmail.ohne_konto)."""
     if not _exists(uid) or quelle not in BY_NAME:
         return 0
     with _Db(uid) as con:
-        ids = [r[0] for r in con.execute("SELECT id FROM fund_item WHERE quelle=?", (quelle,))]
-        _drop(con, ids)
-        con.execute("DELETE FROM fund_stand WHERE quelle=? AND konto=?", (quelle, konto))
-    print(f"fund: vergessen {quelle} | {len(ids)} weg | {profiles.log_name(profiles.by_id(uid))}", flush=True)
-    return len(ids)
+        if konto:
+            ids = [r[0] for r in con.execute("SELECT id FROM fund_item WHERE quelle=? AND ext LIKE ?", (quelle, konto + ":%"))]
+        else:
+            ids = [r[0] for r in con.execute("SELECT id FROM fund_item WHERE quelle=?", (quelle,))]
+        n = drop_ids(con, ids)
+        if konto:
+            con.execute("DELETE FROM fund_stand WHERE quelle=? AND konto=?", (quelle, konto))
+        else:
+            con.execute("DELETE FROM fund_stand WHERE quelle=?", (quelle,))
+    _live["d"] = None
+    print(f"fund: vergessen {quelle} | {n} weg | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+    return n
 
 
 def leeren(uid, hand=False):
@@ -509,7 +657,11 @@ def leeren(uid, hand=False):
 
 
 # ---------------------------------------------------------------- own tags (S4)
-def _load_list(v):
+def _load_list(v, uid=None, quelle="", ext="", feld=""):
+    """[(typ, wert)] of an own-tag list; a sealed source's list is sealed itself ("S:" + vorrat.seal)."""
+    v = v or "[]"
+    if v.startswith("S:"):
+        v = offen(uid, "hand", f"{quelle}:{ext}", feld, v[2:]) if uid else ""
     try:
         x = json.loads(v or "[]")
     except ValueError:
@@ -517,23 +669,36 @@ def _load_list(v):
     return [(t[0], t[1]) for t in x if isinstance(t, list) and len(t) == 2 and clean_tag(t[0], t[1])] if isinstance(x, list) else []
 
 
-def hand(con, quelle, ext):
+def hand(con, quelle, ext, uid=None):
     r = con.execute("SELECT plus, minus FROM fund_hand WHERE quelle=? AND ext=?", (quelle, ext)).fetchone()
-    return (_load_list(r["plus"]), _load_list(r["minus"])) if r else ([], [])
+    return (_load_list(r["plus"], uid, quelle, ext, "plus"), _load_list(r["minus"], uid, quelle, ext, "minus")) if r else ([], [])
+
+
+def _hand_text(uid, quelle, ext, feld, pairs):
+    """An own-tag list as stored: JSON, sealed for a sealed source (its words are the person's words about a mail)."""
+    v = json.dumps([list(t) for t in pairs], ensure_ascii=False)
+    if BY_NAME.get(quelle) and BY_NAME[quelle].schutz:
+        got = siegel(uid, "hand", f"{quelle}:{ext}", feld, v)
+        if got is None:
+            raise RuntimeError("no key")
+        return "S:" + got
+    return v
 
 
 def tags_of(con, uid, item):
     """The tags shown for an item: (regel ∪ modell − minus) ∪ plus, each {"typ", "wert", "herkunft", "beleg"};
     a document's free tags come from its Steckbrief (one place for them)."""
-    plus, minus = hand(con, item["quelle"], item["ext"])
+    plus, minus = hand(con, item["quelle"], item["ext"], uid)
     gone = {(t, norm(w)) for t, w in minus}
     out, seen = [], set()
-    for r in con.execute("SELECT typ, wert, herkunft, beleg FROM fund_tag WHERE item=? ORDER BY herkunft, typ, wert", (item["id"],)):
-        k = (r["typ"], norm(r["wert"]))
-        if k in gone or k in seen:
+    for r in con.execute("SELECT typ, wert, marke, herkunft, beleg FROM fund_tag WHERE item=? ORDER BY herkunft, typ, marke",
+                         (item["id"],)):
+        wert = _tag_wert(uid, item, r)
+        k = (r["typ"], norm(wert))
+        if not wert or k in gone or k in seen:
             continue
         seen.add(k)
-        out.append({"typ": r["typ"], "wert": r["wert"], "herkunft": r["herkunft"], "beleg": bool(r["beleg"])})
+        out.append({"typ": r["typ"], "wert": wert, "herkunft": r["herkunft"], "beleg": bool(r["beleg"])})
     if item["quelle"] in ("dokument", "nas", "remarkable"):
         f = json.loads(item["felder"] or "{}")
         for w in f.get("tags") or []:
@@ -572,8 +737,8 @@ def set_hand(uid, iid, plus, minus, now=None):
         if len(p) + len(m) > MAX_HAND:
             raise ValueError("too many")
         con.execute("INSERT OR REPLACE INTO fund_hand (quelle, ext, plus, minus, at) VALUES (?,?,?,?,?)",
-                    (item["quelle"], item["ext"], json.dumps([list(t) for t in p], ensure_ascii=False),
-                     json.dumps([list(t) for t in m], ensure_ascii=False), int(now)))
+                    (item["quelle"], item["ext"], _hand_text(uid, item["quelle"], item["ext"], "plus", p),
+                     _hand_text(uid, item["quelle"], item["ext"], "minus", m), int(now)))
     if doc and (frei or drop or have):
         new = documents.clean_tags([w for w in have if norm(w) not in drop] + frei)
         if [norm(x) for x in new] != [norm(x) for x in have]:
@@ -619,10 +784,11 @@ def _tag_items(con, uid, typ, wert):
     mk = vorrat.marke(uid, norm(wert))
     ids = {r[0] for r in con.execute("SELECT item FROM fund_tag WHERE typ=? AND marke=?", (typ, mk))} if mk else set()
     want = (typ, norm(wert))
-    for r in con.execute("SELECT h.plus, h.minus, i.id FROM fund_hand h JOIN fund_item i ON i.quelle=h.quelle AND i.ext=h.ext"):
-        if want in {(t, norm(w)) for t, w in _load_list(r["plus"])}:
+    for r in con.execute("SELECT h.plus, h.minus, h.quelle, h.ext, i.id FROM fund_hand h "
+                         "JOIN fund_item i ON i.quelle=h.quelle AND i.ext=h.ext"):
+        if want in {(t, norm(w)) for t, w in _load_list(r["plus"], uid, r["quelle"], r["ext"], "plus")}:
             ids.add(r["id"])
-        if want in {(t, norm(w)) for t, w in _load_list(r["minus"])}:
+        if want in {(t, norm(w)) for t, w in _load_list(r["minus"], uid, r["quelle"], r["ext"], "minus")}:
             ids.discard(r["id"])
     if typ == "frei":   # a document's own free tags (Steckbrief)
         for r in con.execute("SELECT id, felder FROM fund_item WHERE quelle IN ('dokument','nas','remarkable')"):
@@ -631,10 +797,28 @@ def _tag_items(con, uid, typ, wert):
     return ids
 
 
+def _blind_from(con, uid, wert):
+    """Items of sealed sources whose sender holds every word of wert (the "@" marks, fundmail)."""
+    mk = [vorrat.marke(uid, "@" + t) for t in terms(wert)]
+    if not mk or None in mk:
+        return set()
+    return {r[0] for r in con.execute("SELECT rowid FROM fund_blind WHERE fund_blind MATCH ?",
+                                      (" AND ".join(f'"{m}"' for m in sorted(set(mk))),))}
+
+
+def _konten(uid, mine):
+    """The ids of the profile's mailboxes now (a mail of a mailbox just removed is never a hit), or None without mail."""
+    if not any(n in mine for n in MAIL_Q):
+        return None
+    import mail
+    return [a["id"] for a in mail.get(uid)["accounts"]]
+
+
 def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, von=None, bis=None, anzahl=MAX_SHOW,
           now=None):
-    """The hits of this profile: [{"id", "quelle", "ext", "titel", "wann", "auszug", "felder", "tags", "weg", "score"}].
-    Only the profile's own index and the sources it may use; never another profile's (its file, its marks)."""
+    """The hits of this profile: [{"id", "quelle", "ext", "titel", "wann", "auszug", "felder", "tags", "weg", "score"}]
+    (a mail also "anhaenge": the attachments that matched, one card with them). Only the profile's own index and the
+    sources it may use; never another profile's (its file, its marks)."""
     t0 = time.time()
     now = time.time() if now is None else now
     mine = {q.name: q for q in quellen_fuer(uid)}
@@ -647,17 +831,23 @@ def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, v
     q = terms(worte)
     ranks = {}
     lo, hi = _ts(von) if von else None, _ts(bis, True) if bis else None
+    konten = _konten(uid, mine)
     with _Db(uid) as con:
         ok_ids = None
         for typ, wert in (("kategorie", kategorie), ("firma", firma), ("person", person)):
             if wert:
                 got = _tag_items(con, uid, typ, wert)
                 if typ in ("firma", "person"):   # also the sender field, word for word
-                    for r in con.execute("SELECT id, felder FROM fund_item"):
+                    for r in con.execute("SELECT id, felder FROM fund_item WHERE schutz=0"):
                         if norm(wert) in norm(json.loads(r["felder"] or "{}").get("absender", "")):
                             got.add(r["id"])
+                    got |= _blind_from(con, uid, wert)
                 ok_ids = got if ok_ids is None else ok_ids & got
         cond, args = ["quelle IN (%s)" % ",".join("?" * len(mine))], list(mine)
+        if konten is not None:
+            cond.append("(quelle NOT IN ('mail','anhang') OR substr(ext, 1, instr(ext, ':') - 1) IN (%s))"
+                        % ",".join("?" * max(1, len(konten))))
+            args += konten or [""]
         if lo is not None:
             cond.append("wann >= ?")
             args.append(lo)
@@ -669,7 +859,7 @@ def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, v
         if ok_ids is not None:
             allowed_ids &= ok_ids
         if q:
-            # L1: the index's own words (fields, titles, tags) and the marks of sealed sources (Stufe B)
+            # L1: the index's own words (fields, titles, tags) and the marks of sealed sources (mail, attachments)
             rows = con.execute("SELECT rowid, bm25(fund_fts) FROM fund_fts WHERE fund_fts MATCH ? ORDER BY bm25(fund_fts) "
                                "LIMIT 200", (_match(q),)).fetchall()
             marks = [m for m in (vorrat.marke(uid, t) for t in q) if m]
@@ -684,8 +874,10 @@ def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, v
                     i += 1
             # the own tags (fund_hand) are words of the person: found like the index's own words
             i = 0
-            for r in con.execute("SELECT h.plus, i.id FROM fund_hand h JOIN fund_item i ON i.quelle=h.quelle AND i.ext=h.ext"):
-                if r["id"] in allowed_ids and any(set(q) & set(terms(w)) for _, w in _load_list(r["plus"])) and i < MAX_HITS:
+            for r in con.execute("SELECT h.plus, h.quelle, h.ext, i.id FROM fund_hand h JOIN fund_item i ON i.quelle=h.quelle "
+                                 "AND i.ext=h.ext"):
+                if r["id"] in allowed_ids and i < MAX_HITS and \
+                        any(set(q) & set(terms(w)) for _, w in _load_list(r["plus"], uid, r["quelle"], r["ext"], "plus")):
                     ranks[r["id"]] = ranks.get(r["id"], 0) + 1 / (RRF + i)
                     i += 1
         items = {}
@@ -722,26 +914,47 @@ def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, v
             _note((time.time() - t0) * 1000, now=now)
             return []
         rows = con.execute("SELECT * FROM fund_item WHERE id IN (%s)" % ",".join("?" * len(ranks)), list(ranks)).fetchall()
+        # an attachment's hit lifts its mail: one card, the attachment inside it (unless only attachments are asked)
+        fold = quelle != "anhang" and "mail" in mine
+        parents = {r["eltern"] for r in rows if r["quelle"] == "anhang" and r["eltern"]} if fold else set()
+        parents = {r["id"]: r for r in con.execute("SELECT * FROM fund_item WHERE id IN (%s)" % ",".join("?" * len(parents)),
+                                                   list(parents))} if parents else {}
         qs = set(q)
+        inside = {}
+        for r in rows:
+            if fold and r["quelle"] == "anhang" and r["eltern"] in parents:
+                inside.setdefault(r["eltern"], []).append(r)
+                ranks[r["eltern"]] = ranks.get(r["eltern"], 0) + ranks.pop(r["id"])
+        rows = [r for r in rows if r["id"] in ranks] + [p for k, p in parents.items() if k not in {r["id"] for r in rows}]
         for r in rows:
             item = dict(r)
             tags = tags_of(con, uid, item)
             for t in tags:   # fixed bonuses: an own tag counts more than one by rule or model
                 if qs & set(terms(t["wert"])):
                     ranks[r["id"]] += (1.0 if t["herkunft"] == "hand" else 0.5) / RRF
-            if item["geaendert"]:
+            if item["geaendert"] and not item["schutz"]:
                 ranks[r["id"]] += documents.FRESH * 0.5 ** (max(0, now - item["geaendert"]) / documents.FRESH_HALF)
+            elif item["schutz"] and item["wann"]:   # a mail: fresh by its date
+                ranks[r["id"]] += documents.FRESH * 0.5 ** (max(0, now - item["wann"]) / documents.FRESH_HALF)
             item["tags"] = tags
+            item["titel"], item["auszug"], item["felder"] = klar(uid, item)
+            item["anhaenge"] = []
+            for a in inside.get(r["id"], []):
+                at, _, af = klar(uid, a)
+                item["anhaenge"].append({"id": a["id"], "titel": at, "felder": {k: v for k, v in af.items() if k in ("betrag", "nr", "kb")}})
             items[r["id"]] = item
     best = sorted(items, key=lambda x: (-ranks[x], -items[x]["wann"], x))[:max(1, min(int(anzahl or MAX_SHOW), MAX_SHOW))]
     out = []
     for iid in best:
         it = items[iid]
-        f = json.loads(it["felder"] or "{}")
+        f = dict(it["felder"])
         f.pop("tags", None)
-        out.append({"id": iid, "quelle": it["quelle"], "ext": it["ext"], "titel": it["titel"], "wann": it["wann"],
-                    "auszug": it["auszug"], "felder": f, "tags": it["tags"], "weg": BY_NAME[it["quelle"]].oeffnen(uid, it["ext"]),
-                    "score": round(ranks[iid], 6)})
+        hit = {"id": iid, "quelle": it["quelle"], "ext": it["ext"], "titel": it["titel"], "wann": it["wann"],
+               "auszug": it["auszug"], "felder": f, "tags": it["tags"], "weg": BY_NAME[it["quelle"]].oeffnen(uid, it["ext"]),
+               "score": round(ranks[iid], 6)}
+        if it["anhaenge"]:
+            hit["anhaenge"] = it["anhaenge"]
+        out.append(hit)
     _note((time.time() - t0) * 1000, now=now)
     return out
 
@@ -750,17 +963,20 @@ def eintrag(uid, iid):
     """One item with every field and the origin of each tag, or None."""
     if not _exists(uid):
         return None
+    mine = {q.name for q in quellen_fuer(uid)}
+    konten = _konten(uid, mine)
     with _Db(uid) as con:
         r = con.execute("SELECT * FROM fund_item WHERE id=?", (int(iid),)).fetchone()
-        if not r or r["quelle"] not in {q.name for q in quellen_fuer(uid)}:
+        if not r or r["quelle"] not in mine or (r["quelle"] in MAIL_Q and r["ext"].split(":")[0] not in (konten or [])):
             return None
         item = dict(r)
         tags = tags_of(con, uid, item)
-        plus, minus = hand(con, item["quelle"], item["ext"])
-    f = json.loads(item["felder"] or "{}")
+        plus, minus = hand(con, item["quelle"], item["ext"], uid)
+    titel, auszug, f = klar(uid, item)
+    f = dict(f)
     f.pop("tags", None)
-    return {"id": item["id"], "quelle": item["quelle"], "ext": item["ext"], "titel": item["titel"], "wann": item["wann"],
-            "auszug": item["auszug"], "felder": f, "tags": tags, "minus": [{"typ": t, "wert": w} for t, w in minus],
+    return {"id": item["id"], "quelle": item["quelle"], "ext": item["ext"], "titel": titel, "wann": item["wann"],
+            "auszug": auszug, "felder": f, "tags": tags, "minus": [{"typ": t, "wert": w} for t, w in minus],
             "weg": BY_NAME[item["quelle"]].oeffnen(uid, item["ext"])}
 
 
@@ -789,14 +1005,18 @@ def stand(uid, now=None):
     counts, the own tags. Numbers and the profile's own words only."""
     now = time.time() if now is None else now
     mine = [q.name for q in quellen_fuer(uid)]
-    per, last, kat, eigene, total = {}, {}, {}, 0, 0
+    per, last, kat, eigene, total, mail_rest = {}, {}, {}, 0, 0, 0
     if _exists(uid):
+        names = {vorrat.marke(uid, norm(k)): k for k in KATEGORIEN}   # sealed values: counted by their marks
         with _Db(uid) as con:
             per = dict(con.execute("SELECT quelle, COUNT(*) FROM fund_item GROUP BY quelle").fetchall())
             last = {r[0]: int(r[1]) for r in con.execute("SELECT quelle, wert FROM fund_stand WHERE schluessel='runde'")}
-            kat = dict(con.execute("SELECT wert, COUNT(DISTINCT item) FROM fund_tag WHERE typ='kategorie' GROUP BY wert").fetchall())
-            for r in con.execute("SELECT plus FROM fund_hand"):
-                for t, w in _load_list(r["plus"]):
+            for mk, n in con.execute("SELECT marke, COUNT(DISTINCT item) FROM fund_tag WHERE typ='kategorie' GROUP BY marke"):
+                if names.get(mk):
+                    kat[names[mk]] = kat.get(names[mk], 0) + n
+            mail_rest = _rest(con)
+            for r in con.execute("SELECT plus, quelle, ext FROM fund_hand"):
+                for t, w in _load_list(r["plus"], uid, r["quelle"], r["ext"], "plus"):
                     eigene += 1
                     if t == "kategorie":
                         kat[w] = kat.get(w, 0) + 1
@@ -806,7 +1026,8 @@ def stand(uid, now=None):
         docs = sum(1 for d in documents.list_docs(uid) if d.get("state") == "ready" and _doc_source(d) in mine)
     have_docs = sum(per.get(n, 0) for n in ("dokument", "nas", "remarkable"))
     import frisch
-    return {"on": True, "eintraege": total, "eigene": eigene, "laeuft": uid in _running,
+    return {"on": True, "eintraege": total, "eigene": eigene, "laeuft": uid in _running or uid in _fm()._running,
+            "mail_rest": mail_rest, "platz": bool(_fm().knapp.get(uid)),
             "quellen": [{"name": q.name, "de": q.de, "en": q.en, "an": q.name in mine, "n": per.get(q.name, 0),
                          "stand": frisch.stand(last[q.name], now) if last.get(q.name) else ""} for q in QUELLEN],
             "rueckstand": max(0, docs - have_docs),
@@ -814,13 +1035,19 @@ def stand(uid, now=None):
             "typen": [{"typ": k, "de": v[0], "en": v[1]} for k, v in TYP_WORT.items()]}
 
 
+def _rest(con):
+    """Mails of the mailboxes not read into the index yet (fundmail keeps the number per folder)."""
+    return int(con.execute("SELECT COALESCE(SUM(CAST(wert AS INTEGER)), 0) FROM fund_stand WHERE quelle='mail' "
+                           "AND schluessel LIKE '%:rest'").fetchone()[0] or 0)
+
+
 def for_live():
     """Live-Übersicht and Zustand: summed over all profiles, numbers only (never a title, a tag or a word)."""
     if not on():
         return {"on": False}
     if _live["d"] is not None and time.time() - _live["at"] < LIVE_CACHE:
-        return dict(_live["d"], running=bool(_running))
-    items = profs = hand_n = 0
+        return dict(_live["d"], running=bool(_running or _fm()._running))
+    items = profs = hand_n = rest = 0
     per = {}
     for uid in profiles.user_ids():
         if not features.allowed("fund", uid) or not _exists(uid):
@@ -831,13 +1058,17 @@ def for_live():
                 per[q] = per.get(q, 0) + n
                 items += n
             hand_n += con.execute("SELECT COUNT(*) FROM fund_hand").fetchone()[0]
+            rest += _rest(con)
+    fm = _fm().for_live()
     with _stat_lock:
         ms = int(statistics.median(_stat["ms"])) if _stat["ms"] else None
         d = {"on": True, "eintraege": items, "profile": profs, "quellen": per, "hand": hand_n,
              "suchen": _stat["suchen"] if _stat["day"] == _day(time.time()) else 0, "ms": ms,
-             "verworfen": _stat["verworfen"], "fehler": _stat["fehler"], "runden": _stat["runden"]}
+             "verworfen": _stat["verworfen"], "fehler": _stat["fehler"], "runden": _stat["runden"],
+             "mail_on": fm["on"], "mail_rest": rest, "mail_heute": fm["heute"], "mail_fehler": fm["fehler"],
+             "mail_platz": fm["platz"]}
     _live.update(at=time.time(), d=d)
-    return dict(d, running=bool(_running))
+    return dict(d, running=bool(_running or _fm()._running))
 
 
 # ---------------------------------------------------------------- the tool fund_suche (extras.py)
@@ -871,7 +1102,8 @@ class _FindWords:
 FIND_WORDS = _FindWords()
 TOOL = {"type": "function", "function": {
     "name": "fund_suche",
-    "description": "Search the user's OWN data index (documents, NAS, reMarkable, Wissensbuch): finds an item by words, "
+    "description": "Search the user's OWN data index (documents, NAS, reMarkable, Wissensbuch, e-mails with their "
+                   "attachments when released): finds an item by words, "
                    "kind (Rechnung, Vertrag …), company, person or period. Returns at most five hits with source, date "
                    "and fields. Answer only from them and name source and date; never as a fact from a tag.",
     "parameters": {"type": "object", "properties": {
@@ -880,8 +1112,8 @@ TOOL = {"type": "function", "function": {
         "kategorie": {"type": "string", "enum": list(KATEGORIEN)},
         "firma": {"type": "string"}, "person": {"type": "string"},
         "anzahl": {"type": "integer", "minimum": 1, "maximum": TOOL_MOST}}, "required": ["worte"]}}}
-HINT = ("Sucht der Nutzer etwas Eigenes (eine Rechnung, einen Vertrag, ein Dokument, eine Seite im Wissensbuch), ruf "
-        "fund_suche mit seinen Worten. Antworte nur aus den Treffern und nenne Quelle und Datum.")
+HINT = ("Sucht der Nutzer etwas Eigenes (eine Rechnung, einen Vertrag, ein Dokument, eine Mail, eine Seite im Wissensbuch), "
+        "ruf fund_suche mit seinen Worten. Antworte nur aus den Treffern und nenne Quelle und Datum.")
 
 
 def filter_eigen(args, text):
@@ -923,6 +1155,9 @@ def _line(h, now):
     for k, label in (("absender", "Absender"), ("betrag", "Betrag"), ("nr", "Nummer"), ("name", "Datei")):
         if f.get(k):
             parts.append(f"{label}: {f[k]}")
+    for a in h.get("anhaenge") or []:   # a mail with the attachment that matched (the sender's address, never „von Firma“)
+        parts.append("Anhang: " + a["titel"] + "".join(f", {lab} {a['felder'][k]}" for k, lab in (("betrag", "Betrag"),
+                                                                                              ("nr", "Nummer")) if a["felder"].get(k)))
     tags = [t["wert"] for t in h["tags"] if t["typ"] != "frei"][:6]
     if tags:
         parts.append("Schlagworte: " + ", ".join(tags))
@@ -936,7 +1171,9 @@ def offer(ctx):
     if not who or not ctx.get("own") or ctx.get("private") is False or ctx.get("client") == "mcp" \
             or not features.allowed("fund", who["id"]):
         return None
-    return {"tools": [TOOL], "hint": HINT, "outside": {"fund_suche"},
+    # with the mails released a hit can be a stranger's mail: the answer counts as one that read mail (LOCKED_AFTER_MAIL)
+    mails = features.allowed("fundmail", who["id"])
+    return {"tools": [TOOL], "hint": HINT, "outside": {"fund_suche"}, "mail": {"fund_suche"} if mails else set(),
             "filler": {"fund_suche": ("Ich schau in deinen Sachen nach.", "Let me look through your things.")}}
 
 
@@ -1027,6 +1264,9 @@ async def tags_route(iid: str, request: Request, prof=Depends(own_profile)):
     except ValueError:
         print("fund: schlagworte abgelehnt | zu viele", flush=True)
         raise HTTPException(400, f"höchstens {MAX_HAND} eigene Schlagworte") from None
+    except RuntimeError:
+        print("fund: schlagworte abgelehnt | ohne schluessel", flush=True)
+        raise HTTPException(503, "ohne Schlüssel nicht möglich") from None
     if got is None:
         print("fund: schlagworte abgelehnt | kein eintrag", flush=True)
         raise HTTPException(404, "no such entry")
@@ -1054,8 +1294,9 @@ async def rebuild_route(request: Request, prof=Depends(browser_profile)):
     print(f"fund: neu aufbauen | {n} eintraege geleert | {profiles.log_name(prof)}", flush=True)
     _running.add(uid)
     try:
-        got = await vorrang.in_thread("Suchindex", runde, uid)
+        got = await vorrang.in_thread("Suchindex", runde, uid, None, BUDGET, 0)
         _last[uid] = (time.time(), _stamp(uid))
+        _fm().anstossen(uid)   # the mails come again in their own round in the background, never waited for here
     finally:
         _running.discard(uid)
     return {"ok": True, "neu": sum(v[0] for v in got.values())}

@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.256** Find stage B: every mail and attachment in the search index (inbox, archive, sent, never spam or trash), the newest first, older ones in quiet minutes and at night in slices, only sealed (AES-GCM, words as HMAC marks), attachment text and fields by fixed rules, a hit opens the mail; sub-switch "Find mail and attachments", off by default
 - **V01.1.255** Download all my data: under Me → Security → My data one ZIP with everything of the own profile (sealed files opened, settings without secrets, from chats only the own messages, a README de+en with what stays out and why), each time after a fresh code or passkey, 3 per hour, at most 2 GB, pickup link 10 minutes and once; no switch (right of access), also in the iPhone and Android app
 - **V01.1.254** Remote access: the iPhone app is locked first like the page and unlocks with a code or passkey (extend, lock); the pairing sheet shows a one-time link with copy, share, e-mail and QR code that shows only the one line on the new system, never the code
 - **V01.1.253** People, companies and deadlines as points of the knowledge map (step 2 of 4, own switch below the knowledge map, off): the language model only proposes names per passage, the panel checks them by fixed rules (kind from a fixed list, name stands in the passage, deadline only with a date, account only as IBAN or number, limits per document, profile and day); colours and a filter by kind on the map, renaming, merging and deleting only by click with code, event GEAENDERT and read functions finde_knoten/knoten_liste for other parts; the iPhone shows and deletes
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.249** Remembered note: "✓ Remembered: …" with "Undo" under the answer; what was learned by itself comes as a card with "That's right" and "Undo", notifications and Telegram only name the number
 - **V01.1.248** Memory with fixed topics (home, employer, car …): per topic the newest value said counts, the old one stays to bring back; what was learned by itself never replaces what was confirmed, it comes as a card "Take it / Discard"; plus "N of 200"
 - **V01.1.247** Memory without silent throwing away: above 200 entries only the oldest ones learned by itself and never confirmed make room; what was said, corrected or confirmed never goes, otherwise the Spark refuses the new entry and points to Me → Memory (also when tidying up); "Memory check" on by default
-- **V01.1.246** Redesign stage 1: design tokens as one source (`tokens.css`), look unchanged; guard `test_design_tokens`
 
 
 

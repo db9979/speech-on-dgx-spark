@@ -4545,6 +4545,27 @@
 "titel": "Alle meine Daten herunterladen",
 "text": "Unter Ich → Sicherheit → Meine Daten auf „Auswählen …“: die Bereiche stehen mit Anzahl und Größe da, aufgeklappt „Was draußen bleibt und warum“ (Stimmabdruck, Anmeldung, Vorräte …). Einen Bereich abwählen, „Packen und herunterladen“: der Spark fragt den Code (ohne zweiten Schritt die PIN), dann lädt der Browser „spark-meine-daten-….zip“. In der ZIP: LIESMICH.txt (Deutsch und Englisch), uebersicht.json, das Gedächtnis lesbar, der abgewählte Bereich fehlt, keine voice.json, kein Passwort. Den Link aus dem Netzwerk-Tab ein zweites Mal öffnen: „Dieser Abhol-Code gilt nicht mehr“. Viermal in einer Stunde: beim vierten Mal „Höchstens 3 Mal je Stunde“. Zustand → Logs ohne Filter: die Zeile „GET /api/profile/export/…“ zeigt den Code nicht. Zustand → Logs, Bereich Speicher: „meinedaten: export … dateien=… mb=…“ ohne Namen; Zustand → Live, Kasten Gedächtnis: „Meine Daten: heute 1 gepackt · 1 abgeholt“. iPhone: Ich → Sicherheit → Meine Daten → Herunterladen, dann „Teilen oder sichern“. Android: im Panel derselbe Knopf, die ZIP liegt unter Downloads.",
 "thread": "Nutzerwissen sicherer und sichtbarer"
+},
+{
+"id": "P674",
+"v": 1256,
+"titel": "Finden: Mail mit PDF-Rechnung finden und öffnen",
+"text": "Funktionen → Finden in allen Daten → Mails und Anhänge finden an (E-Mail lesen mit einem Postfach). Sich selbst eine Mail mit einer PDF-Rechnung („Gesamtbetrag … €“, Rechnungsnummer) schicken. Nach höchstens fünf Minuten (mit „Neue Mails sofort“ gleich) unter Finden ein Wort aus dem PDF eingeben: der Treffer ist die Mail, darunter „Anhang: <Datei>“ mit Betrag; im Detail Absender (die Adresse, nie „von Firma“), Betrag, Nummer und Anhänge. „Öffnen“ zeigt die Mail auf der Seite E-Mail im richtigen Ordner, sie bleibt ungelesen. Eine Mail aus dem Archiv und eine gesendete werden genauso gefunden, eine aus Spam oder Papierkorb nie. Im Assistenten „Such die Mail von <Firma> mit der Rechnung“: Antwort mit Quelle und Datum; danach schaltet in derselben Antwort nichts im Smart Home.",
+"thread": "Alles schnell finden über einen Index"
+},
+{
+"id": "P675",
+"v": 1256,
+"titel": "Finden: Postfach entfernen, Mail-Treffer sind sofort weg",
+"text": "Mit Mails im Index unter Ich → E-Mail ein Postfach entfernen. Unter Finden sofort suchen: keine Mail dieses Postfachs mehr, auch nicht über einen alten Link zum Treffer. Nach höchstens fünf Minuten zeigt Finden → Einstellungen bei Mail die kleinere Zahl. Zustand → Logs, Bereich Finden: „fund: mail konto entfernt | N weg“, nie ein Betreff oder eine Adresse.",
+"thread": "Alles schnell finden über einen Index"
+},
+{
+"id": "P676",
+"v": 1256,
+"titel": "Finden: Rückstand der Mails sinkt in ruhigen Minuten",
+"text": "Als Admin Mails und Anhänge finden einschalten, bei einem Profil mit vielen Mails. Zustand → Live, Kasten Finden: „Mails: heute N eingelesen, M offen“, nur Zahlen. Ein paar Minuten nicht mit dem Spark sprechen: M sinkt, N steigt. Während einer Frage oder Sprachausgabe hält das Einlesen an (Zustand → Live: „Suchindex wartet“). Nachts geht es schneller. Finden → Einstellungen zeigt „Mails noch nicht eingelesen“; „Platz knapp“ erscheint nur, wenn auf dem Spark weniger als die feste Reserve frei ist.",
+"thread": "Alles schnell finden über einen Index"
 }
 ]
 }

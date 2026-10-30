@@ -762,10 +762,15 @@ SEITEN = {
               ("guard.log, Wachposten", "guard.log, Wachposten"),
               ("Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer "
                "SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault "
-               "(vault.seal), Gedächtnis und Gespräche ganz versiegelt im Ordner des Profils (profiles.write_own).",
+               "(vault.seal), Gedächtnis und Gespräche ganz versiegelt im Ordner des Profils (profiles.write_own). Was ein Dienst für ein "
+               "Profil vorhält (Mail-Vorrat, Mails und Anhänge in Finden), liegt nur mit AES-GCM versiegelt (vorrat.seal), "
+               "die Wörter im Suchindex nur als HMAC-Marken mit einem Schlüssel je Profil (vorrat.marke); ohne Schlüssel "
+               "wird nichts geschrieben.",
                "Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a "
                "SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault "
-               "(vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own).")),
+               "(vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own). What a service keeps for a "
+               "profile (the mail supply, mail and attachments in Find) lies only sealed with AES-GCM (vorrat.seal), the words "
+               "in the search index only as HMAC marks with a key per profile (vorrat.marke); without a key nothing is written.")),
         ],
         "beispiele": [
             (("Mail verlangt eine Handlung", "A mail demands an action"), ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s9", "s10"],

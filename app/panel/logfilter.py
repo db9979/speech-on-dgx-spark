@@ -75,6 +75,13 @@ HINTS = (
      "Docling-Server, Schlüssel neu eintragen oder „Zertifikat prüfen“.",
      "Docling server refuses the key or certificate: Features → Own documents → Docling server, enter the key again "
      "or \"Check certificate\"."),
+    ("fund", r"^fund: mail platz knapp", "Wenig freier Platz auf dem Spark: Finden liest keine Mails mehr ein, bis wieder "
+     "genug frei ist. Finden → Einstellungen zeigt, wie viele noch fehlen.",
+     "Little free space on the Spark: Find reads no more mail until enough is free again. Find → Settings shows how "
+     "many are still missing."),
+    ("fund", r"^fund: mail uidvalidity gewechselt", "Der Mailserver hat einen Ordner neu nummeriert (UIDVALIDITY): "
+     "Finden liest ihn von vorn ein, das ist kein Fehler.",
+     "The mail server numbered a folder anew (UIDVALIDITY): Find reads it again from the start; this is no error."),
     ("telegram", r".", "Telegram klappt nicht: Bot unter Funktionen → Telegram prüfen.",
      "Telegram fails: check the bot under Features → Telegram."),
 )

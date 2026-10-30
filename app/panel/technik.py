@@ -137,6 +137,7 @@ MODULE = {
     "wissensbuch": ("wissen", "Wissensbuch: Seiten aus eigenen Dokumenten, jeder Satz mit Quelle; Suchindex FTS5, Lesefunktion liste"),
     "wissenskarte": ("wissen", "Wissenskarte: geprüfte Verbindungen zwischen den Seiten des Wissensbuchs, jede mit Quelle, Ausschnitt per WITH RECURSIVE"),
     "fund": ("wissen", "Finden: Suchindex über die eigenen Daten, Felder und Schlagworte nach festen Regeln, Blind-Marken je Profil"),
+    "fundmail": ("wissen", "Finden: alle Mails und Anhänge in Scheiben eingelesen, versiegelt (AES-GCM) mit Blind-Marken je Profil"),
     "nachsortieren": ("wissen", "Treffer nachsortieren: ein Cross-Encoder auf dem Prozessor ordnet die Kandidaten"),
     "docembed": ("wissen", "Bedeutungsvektoren für die Dokumentsuche"),
     "embed_worker": ("wissen", "Das Vektormodell im eigenen Prozess"),

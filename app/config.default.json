@@ -279,6 +279,7 @@
     "knowledge_book_sample": 50,
     "knowledge_map": false,
     "fund": false,
+    "fund_mail": false,
     "knowledge_map_day": 200,
     "knowledge_ents": false,
     "knowledge_ents_day": 200,

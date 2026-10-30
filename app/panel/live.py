@@ -182,7 +182,8 @@ TARGETS = {
     "wbuch": ("Wissensbuch", "Seiten aus den eigenen Dokumenten · auf dem Spark", "spark", False),
     # Wissenskarte (wissenskarte.py): shown while it is on, checked connections, discarded ones and documents waiting (numbers only)
     "wkarte": ("Wissenskarte", "Verbindungen zwischen Wissensbuch-Seiten · auf dem Spark", "spark", False),
-    # Finden (fund.py): shown while it is on, entries of the search index, profiles, searches today and the median time (numbers only)
+    # Finden (fund.py): shown while it is on, entries of the search index, profiles, searches today and the median time,
+    # with fundmail.py the mails read today and left to read (numbers only)
     "fund": ("Finden", "Suchindex über die eigenen Daten · auf dem Spark", "spark", False),
     # KI-Dungeon-Master (dungeon.py): shown while it is on, rounds, players, guests, turns, loot and levels today (numbers only)
     "dungeon": ("Dungeon-Master", "Rollenspiel-Runden mit dem eigenen Sprachmodell · auf dem Spark", "spark", False),
@@ -2048,6 +2049,9 @@ def snapshot(view="admin", now=None):
                         + f" · heute {fnd.get('suchen', 0)} Suchen"
                         + (f", Median {fnd['ms']} ms" if fnd.get("ms") is not None else "")
                         + (f" · {fnd['verworfen']} Filter verworfen" if fnd.get("verworfen") else "")
+                        # Mails und Anhänge (fundmail.py): read today, left to read, the disk below its reserve (numbers)
+                        + (f" · Mails: heute {fnd.get('mail_heute', 0)} eingelesen, {fnd.get('mail_rest', 0)} offen" if fnd.get("mail_on") else "")
+                        + (" · Platz knapp" if fnd.get("mail_platz") else "")
                         + (" · liest ein" if fnd.get("running") else ""))
         if x["id"] == "dungeon":   # Dungeon-Master: rounds, players and guests, turns, loot, levels, campaigns, read aloud and spoken today, stories with acts moved on and proposals, markets, purchases and sales, pictures painted, discarded and on their way, game dates and notes sent, music pieces made ahead, world truths, summaries, rewrites and thumbs, rounds waiting and table talk lines (numbers only, never a name or a text)
             x["sub"] = (f"{dgn.get('runden', 0)} Runden · {dgn.get('spieler', 0)} Spieler, {dgn.get('online', 0)} da, {dgn.get('gaeste', 0)} Gäste"

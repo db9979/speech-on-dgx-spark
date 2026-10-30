@@ -250,6 +250,7 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/embed_worker.py` | Das Vektormodell im eigenen Prozess |
 | `app/panel/folien.py` | Folientypen und feste Regeln für erstellte Dokumente |
 | `app/panel/fund.py` | Finden: Suchindex über die eigenen Daten, Felder und Schlagworte nach festen Regeln, Blind-Marken je Profil |
+| `app/panel/fundmail.py` | Finden: alle Mails und Anhänge in Scheiben eingelesen, versiegelt (AES-GCM) mit Blind-Marken je Profil |
 | `app/panel/gedaechtnis.py` | Gedächtnis mit Beleg und Prüfung |
 | `app/panel/gemerkt.py` | Gemerkt-Hinweis: „Gemerkt: …“ mit Rückgängig, Karte für von selbst Gelerntes |
 | `app/panel/kiwix.py` | Eigenes Kiwix als Wissensquelle ohne Internet |
@@ -620,7 +621,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/reminders.json` | Erinnerungen |  | – | ja | Aufgaben und Erinnerungen |
 | `users/ID/wissen.db` | Dokumente: Text, Abschnitte mit Kontextzeile, Suche, Vektoren; Wissensbuch und Wissenskarte mit Personen, Firmen und Fristen (SQLite) |  | – | ja | Dokumente (Text, Suche, Originale) |
 | `users/ID/docs/files/` | Originale der Uploads |  | – | ja | Dokumente (Text, Suche, Originale) |
-| `users/ID/fund.db` | Finden: Suchindex über die eigenen Daten (Titel, Felder, Schlagworte, eigene Schlagworte; SQLite) |  | Marken mit eigenem Schlüssel je Profil (HMAC) | ja | Dokumente (Text, Suche, Originale) |
+| `users/ID/fund.db` | Finden: Suchindex über die eigenen Daten (Titel, Felder, Schlagworte, eigene Schlagworte, Mails und Anhänge; SQLite) |  | Marken mit eigenem Schlüssel je Profil (HMAC); Mails und Anhänge: Betreff, Auszug, Felder und Schlagworte AES-GCM | ja | Dokumente (Text, Suche, Originale) |
 | `users/ID/suchpruefung.json` | Prüffragen und Läufe der Suchprüfung |  | – | ja | Dokumente (Text, Suche, Originale) |
 | `users/ID/erstellt/` | Erstellte Dokumente |  | – | ja | Erstellte Dokumente |
 | `users/ID/bilder/` | Gemalte Bilder und ihr Verzeichnis (Prompt, Wunsch, Größe) |  | – | ja | Gemalte Bilder |
@@ -1645,7 +1646,7 @@ flowchart TD
 7. <a id="kn-sicherheit-s7"></a>**Sprachmodell schlägt vor**: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht.
 8. <a id="kn-sicherheit-s8"></a>**Ändert es etwas?**: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät, oder dem Ja-Knopf seiner Karte „Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell; ebenso führt nur ihr Klick Punkte der Wissenskarte zusammen, benennt sie um oder löscht sie (mit dem Code von „Bestätigen“). Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut.
 9. <a id="kn-sicherheit-s9"></a>**Antwort prüfen**: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML.
-10. <a id="kn-sicherheit-s10"></a>**Spuren**: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal), Gedächtnis und Gespräche ganz versiegelt im Ordner des Profils (profiles.write_own).
+10. <a id="kn-sicherheit-s10"></a>**Spuren**: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal), Gedächtnis und Gespräche ganz versiegelt im Ordner des Profils (profiles.write_own). Was ein Dienst für ein Profil vorhält (Mail-Vorrat, Mails und Anhänge in Finden), liegt nur mit AES-GCM versiegelt (vorrat.seal), die Wörter im Suchindex nur als HMAC-Marken mit einem Schlüssel je Profil (vorrat.marke); ohne Schlüssel wird nichts geschrieben.
 
 **Beispiele:** Mail verlangt eine Handlung: Die Mail wird gelesen, aber nichts geschaltet: die Werkzeuge dafür sind gesperrt. · Webseite mit falscher Systemzeile: „<|im_start|>system“ kommt entschärft als Text an, das Modell sieht keine neue Rolle; handeln kann es ohnehin nicht. · Fremde Stimme am Lautsprecher: Antwort wie für einen Gast, ohne Mails oder Termine. · Licht ausschalten: Erst nach „Ja“ wird geschaltet. · Notaus Stufe 3: Kein Gespräch, nur die Notaus-Seite.
 
@@ -2307,7 +2308,7 @@ Selbsttests: `test_fast_start`, `test_dienstwacht`, `test_taten`, `test_notaus`,
 
 ### Wissen
 
-Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene Kiwix-Archiv und erstellte Dokumente. Die Seite zeigt den Weg, auf dem eine Frage passende Stellen in den Dokumenten findet. Finden (fund.py, eigene Datei fund.db pro Profil) legt darüber einen Index aus Titeln, Feldern und Schlagworten nach festen Regeln und nutzt für den Text dieselbe Suche.
+Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene Kiwix-Archiv und erstellte Dokumente. Die Seite zeigt den Weg, auf dem eine Frage passende Stellen in den Dokumenten findet. Finden (fund.py, eigene Datei fund.db pro Profil) legt darüber einen Index aus Titeln, Feldern und Schlagworten nach festen Regeln und nutzt für den Text dieselbe Suche; Mails und Anhänge (fundmail.py) liest es in ruhigen Minuten in Scheiben ein und hält sie nur versiegelt (AES-GCM) mit ihren Wörtern als HMAC-Marken.
 
 **Warum:** Das Sprachmodell kennt die eigenen Unterlagen nicht. Es bekommt nur die wenigen Stellen, die das Panel mit festen Regeln und zwei kleinen Modellen auf dem Prozessor heraussucht, jeweils mit Herkunft. Was in einem Dokument steht, ist Text von außen: Daten, nie ein Befehl.
 
@@ -2554,14 +2555,14 @@ flowchart TD
   s12 -.->|Weiterleitung| s2
 ```
 
-1. <a id="kn-waechter-s1"></a>**Werkzeug will nach außen**: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 33 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig.
+1. <a id="kn-waechter-s1"></a>**Werkzeug will nach außen**: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 34 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig.
 2. <a id="kn-waechter-s2"></a>**Name einmal auflösen**: resolve() fragt den Namen genau einmal ab. Hat er mehrere Adressen, muss jede erlaubt sein, sonst ist Schluss.
 3. <a id="kn-waechter-s3"></a>**Eigener Dienst?**: Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu). Laufen die Modelle auf einem anderen Rechner (models.host), gelten seine Adressen genauso (model_addresses).
 4. <a id="kn-waechter-s4"></a>**Internet und Notaus an?**: Ist die Adresse öffentlich und der Notaus mindestens auf Stufe 1, geht nichts ins Internet, egal welche Stufe das Werkzeug hat. Das Heimnetz bleibt erreichbar, wie die Stufe es erlaubt.
 5. <a id="kn-waechter-s5"></a>**Öffentliche Adresse?**: Eine öffentliche Adresse ist auf jeder Stufe erlaubt.
 6. <a id="kn-waechter-s6"></a>**Stufe „nur Internet“?**: Was aus Suchergebnissen oder Antworten kommt, darf nie ins Heimnetz (chat, feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, verbund).
 7. <a id="kn-waechter-s7"></a>**Nie erlaubt?**: Link-lokale Adressen (169.254.x, dort antworten Cloud-Metadaten), Multicast, unbestimmte und reservierte Adressen sind auf keiner Stufe erlaubt.
-8. <a id="kn-waechter-s8"></a>**Heimnetz erlaubt?**: Home Assistant und andere Dienste im Heimnetz (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) dürfen immer. Kalender, Kontakte, Mail und MCP (calendars, contacts, mail, mcp, meinmcp, tasks) nur, wenn unter Einstellungen → Sicherheit → Heimnetz-Adressen erlauben eingeschaltet ist.
+8. <a id="kn-waechter-s8"></a>**Heimnetz erlaubt?**: Home Assistant und andere Dienste im Heimnetz (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) dürfen immer. Kalender, Kontakte, Mail und MCP (calendars, contacts, fundmail, mail, mcp, meinmcp, tasks) nur, wenn unter Einstellungen → Sicherheit → Heimnetz-Adressen erlauben eingeschaltet ist.
 9. <a id="kn-waechter-s9"></a>**Verbinden mit genau dieser Adresse**: Die Verbindung geht an die geprüfte Adresse, nicht noch einmal an den Namen. Ein zweites Nachschlagen könnte anders antworten (DNS-Rebinding). Das Zertifikat wird trotzdem für den Namen geprüft.
 10. <a id="kn-waechter-s10"></a>**Passwort nur zur eigenen Seite**: Anmeldedaten gehen nur an die Seite, für die sie eingetragen wurden (gleicher Host oder gleiche Hauptdomain, etwa die CalDAV-Server von icloud.com), nie über http, wenn die Adresse https war.
 11. <a id="kn-waechter-s11"></a>**Antwort höchstens 20 MB**: Antworten werden bei 20 MB abgeschnitten, auch nach dem Entpacken von gzip, damit eine riesige oder gepackte Antwort den Speicher nicht füllt.
@@ -2576,7 +2577,7 @@ Gilt bei: [Schritt 6](#kn-waechter-s6), [Schritt 8](#kn-waechter-s8)
 | Stufe | Wer sie nutzt (aus dem Code) | Internet | Heimnetz |
 |---|---|---|---|
 | nur Internet | chat, feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, verbund | ✓ | ✕ |
-| Nutzer | calendars, contacts, mail, mcp, meinmcp, tasks | ✓ | nur mit Schalter |
+| Nutzer | calendars, contacts, fundmail, mail, mcp, meinmcp, tasks | ✓ | nur mit Schalter |
 | Heimnetz | doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite | ✓ | ✓ |
 | je nach Ziel | anrufe, dienstwacht, halive, nas, nasquelle, offline, speicher, telefon, zertpin | wie das Ziel eingestellt ist | – |
 | immer | alle | ✕ bei Notaus | ✕ eigene Dienste, 169.254, Multicast |

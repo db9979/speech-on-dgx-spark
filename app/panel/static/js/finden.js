@@ -3,7 +3,8 @@
 // its detail (every tag with where it came from, ✓ keeps, × removes for good, + adds an own one) and „Öffnen“ goes to
 // the source (Eigene Dokumente, Wissensbuch). „Schlagworte“: the fixed categories with their counts and the own tags.
 // „Einstellungen“: per source how many entries and how fresh, „Neu aufbauen“, „Index löschen“. Titles, fields and tags
-// come from documents and are only ever text (esc, textContent), never markup. Strg K offers „In meinen Daten finden“.
+// come from documents and mails (Stufe B, fundmail.py) and are only ever text (esc, textContent), never markup; a mail
+// opens on the page E-Mail in its folder, an attachment's mail likewise. Strg K offers „In meinen Daten finden“.
 const FUND={q:'',quelle:'',kat:'',hits:null,sel:0,item:null,stand:null,msg:'',err:false,seq:0};
 let FUND_ON=false;
 window.fundStart=who=>{FUND_ON=!!(who&&who.profile&&who.find);window.FUND_ON=FUND_ON;
@@ -11,7 +12,10 @@ window.fundStart=who=>{FUND_ON=!!(who&&who.profile&&who.find);window.FUND_ON=FUN
 const fundWhen=s=>s?new Date(s*1000).toLocaleDateString(L==='en'?'en-GB':'de-DE',{dateStyle:'medium'}):'';
 const FUND_TYP={kategorie:['Kategorie','Category'],person:['Person','Person'],firma:['Firma','Company'],ort:['Ort','Place'],frei:['Schlagwort','Tag']};
 const FUND_FROM={regel:['Regel','rule'],modell:['Modell','model'],hand:['von dir','yours'],dokument:['Steckbrief','profile card']};
-const FUND_FELD={absender:['Absender','Sender'],betrag:['Betrag','Amount'],nr:['Nummer','Number'],datum:['Datum','Date'],name:['Datei','File']};
+const FUND_FELD={absender:['Absender','Sender'],an:['An','To'],betrag:['Betrag','Amount'],nr:['Nummer','Number'],datum:['Datum','Date'],name:['Datei','File'],anhaenge:['Anhänge','Attachments'],kb:['Größe (KB)','Size (KB)']};
+// a mail (or an attachment's mail) on the page E-Mail: its folder like the folder list does, then the mail (post.js)
+async function fundMail(w){if(typeof postRead!=='function'||typeof POST==='undefined')return;icTabSet('post','show');POST.write=null;POST.prev=null;
+  POST.box=w.folder&&w.folder!=='INBOX'?{account:String(w.id).split(':')[0],folder:w.folder,name:w.folder,role:w.rolle||'folder'}:null;goSec('post');await postRead(w.id)}
 function fundOpen(){if(!PROFILE)return;const root=$('fundroot'),box=$('fundbox');if(box){box.hidden=true;$('finden').appendChild(box)}root.textContent='';
   root.appendChild(icTabs('finden',[{k:'show',label:OWN_PAGES.fundbox[2],body:fundBody},
     {k:'worte',label:t('Schlagworte','Tags'),body:fundWorteBody},
@@ -41,7 +45,7 @@ function fundPaint(w){w.classList.toggle('ld-sel',!!FUND.item);
     <select class="fundkat" aria-label="${esc(t('Kategorie','Category'))}"><option value="">${esc(t('Alle Kategorien','All categories'))}</option>${kats.map(k=>`<option value="${esc(k.wert)}"${k.wert===FUND.kat?' selected':''}>${esc(k.wert)}</option>`).join('')}</select></div>
     ${S&&!S.eintraege?`<div class="ld-empty mut">${esc(t('Der Index ist noch leer. Er füllt sich im Hintergrund, alle paar Minuten ein Stück.','The index is still empty. It fills in the background, a part every few minutes.'))}</div>`:''}
     ${FUND.hits===null?(S&&S.eintraege?`<div class="ld-empty mut">${esc(t(`${S.eintraege} Einträge im Index. Gib Wörter ein oder wähle eine Kategorie.`,`${S.eintraege} entries in the index. Type words or choose a category.`))}</div>`:'')
-      :FUND.hits.length?FUND.hits.map(h=>`<div class="ld-row${FUND.item&&FUND.item.id===h.id?' on':''}" role="button" tabindex="0" data-fundsel="${esc(String(h.id))}"><span class="ld-mid"><b>${esc(h.titel||'?')}</b><small>${esc(fundSrc(h.quelle))}${h.wann?' · '+esc(fundWhen(h.wann)):''}${h.felder&&h.felder.absender?' · '+esc(h.felder.absender):''}</small>${(h.tags||[]).length?`<span class="fundtags">${h.tags.slice(0,6).map(fundTag).join(' ')}</span>`:''}</span></div>`).join('')
+      :FUND.hits.length?FUND.hits.map(h=>`<div class="ld-row${FUND.item&&FUND.item.id===h.id?' on':''}" role="button" tabindex="0" data-fundsel="${esc(String(h.id))}"><span class="ld-mid"><b>${esc(h.titel||'?')}</b><small>${esc(fundSrc(h.quelle))}${h.wann?' · '+esc(fundWhen(h.wann)):''}${h.felder&&h.felder.absender?' · '+esc(h.felder.absender):''}</small>${(h.anhaenge||[]).map(a=>`<small class="mut">${esc(t('Anhang','Attachment'))}: ${esc(a.titel)}${a.felder&&a.felder.betrag?' · '+esc(a.felder.betrag):''}</small>`).join('')}${(h.tags||[]).length?`<span class="fundtags">${h.tags.slice(0,6).map(fundTag).join(' ')}</span>`:''}</span></div>`).join('')
       :`<div class="ld-empty mut">${esc(t('Nichts gefunden.','Nothing found.'))}</div>`}
     <div class="fundmsg ${FUND.err?'err':'mut'}" role="status">${esc(FUND.msg)}</div>`;
   const qi=list.querySelector('.fundq');let tm=null;
@@ -57,7 +61,7 @@ function fundDetail(w){const det=w.querySelector('.funddet'),it=FUND.item;if(!it
   det.hidden=false;const f=it.felder||{};
   det.innerHTML=`<button class="b ld-back" type="button" data-fundback="1">‹ ${esc(OWN_PAGES.fundbox[1])}</button><h3>${esc(it.titel||'?')}</h3>
     <div class="mut">${esc(fundSrc(it.quelle))}${it.wann?' · '+esc(fundWhen(it.wann)):''}</div>
-    <ul class="facts small">${Object.keys(FUND_FELD).filter(k=>f[k]).map(k=>`<li><span>${esc(t(...FUND_FELD[k]))}</span><b>${esc(String(f[k]))}</b></li>`).join('')}</ul>
+    <ul class="facts small">${Object.keys(FUND_FELD).filter(k=>f[k]).map(k=>`<li><span>${esc(t(...FUND_FELD[k]))}</span><b>${esc(Array.isArray(f[k])?f[k].join(', '):String(f[k]))}</b></li>`).join('')}</ul>
     ${it.auszug?`<p class="mut">${esc(it.auszug)}</p>`:''}
     <h4>${esc(t('Schlagworte','Tags'))}</h4>
     <ul class="facts fundtaglist">${(it.tags||[]).map((x,i)=>`<li><span>${fundTag(x)} <small class="mut">${esc(t(...(FUND_TYP[x.typ]||[x.typ,x.typ])))} · ${esc(t(...(FUND_FROM[x.herkunft]||[x.herkunft,x.herkunft])))}</small></span><span>${x.herkunft==='hand'?'':`<button type="button" class="b" data-fundkeep="${i}" title="${esc(t('Behalten','Keep'))}">✓</button>`} <button type="button" class="b" data-fundrm="${i}" title="${esc(t('Entfernen','Remove'))}" aria-label="${esc(t('Entfernen','Remove'))}">×</button></span></li>`).join('')||`<li class="mut">${esc(t('Noch keine.','None yet.'))}</li>`}</ul>
@@ -77,7 +81,8 @@ const fundOwn=()=>{const it=FUND.item;return{plus:(it.tags||[]).filter(x=>x.herk
   if(D.fundback){FUND.item=null;fundDraw();return}
   if(!it)return;const own=fundOwn();
   if(D.fundgo){const w=it.weg||{};if(w.art==='dokument'){if(typeof openMe==='function')await openMe('docbox');if(typeof docView==='function')docView(w.id)}
-    else if(w.art==='wissensbuch'&&typeof WB!=='undefined'){WB.sel=w.id;icTabSet('wbuch','show');goSec('wbuch')}return}
+    else if(w.art==='wissensbuch'&&typeof WB!=='undefined'){WB.sel=w.id;icTabSet('wbuch','show');goSec('wbuch')}
+    else if(w.art==='mail'||w.art==='anhang')await fundMail(w);return}
   if(D.fundkeep!==undefined){const x=it.tags[+D.fundkeep];if(!x)return;own.plus.push({typ:x.typ,wert:x.wert});return fundTags(own.plus,own.minus)}
   if(D.fundrm!==undefined){const x=it.tags[+D.fundrm];if(!x)return;own.plus=own.plus.filter(y=>!(y.typ===x.typ&&y.wert===x.wert));
     if(x.herkunft!=='hand')own.minus.push({typ:x.typ,wert:x.wert});return fundTags(own.plus,own.minus)}
@@ -92,9 +97,11 @@ function fundWorte(w){const S=FUND.stand;if(!S){w.innerHTML=`<div class="mut">${
 function fundSettings(b){let s=$('fundset');if(!s){b.textContent='';s=document.createElement('div');s.id='fundset';s.className='card';b.appendChild(s)}fundSettingsPaint(s)}
 function fundSettingsPaint(s){const S=FUND.stand;if(!S){s.innerHTML=`<div class="fundmsg ${FUND.err?'err':'mut'}" role="status">${esc(FUND.msg||t('Lade …','Loading …'))}</div>`;return}
   s.innerHTML=`<h3>${esc(t('Suchindex','Search index'))}</h3>
-    <p class="mut">${esc(t('Finden merkt sich Titel, Felder und Schlagworte deiner Daten in einer eigenen Datei. Den Text der Dokumente sucht es über ihre eigene Suche.','Find keeps the titles, fields and tags of your data in a file of its own. It searches the documents\' text through their own search.'))}</p>
+    <p class="mut">${esc(t('Finden merkt sich Titel, Felder und Schlagworte deiner Daten in einer eigenen Datei. Den Text der Dokumente sucht es über ihre eigene Suche. Mails und Anhänge liegen dort versiegelt, ihre Wörter nur als Marken.','Find keeps the titles, fields and tags of your data in a file of its own. It searches the documents\' text through their own search. Mails and attachments lie there sealed, their words only as marks.'))}</p>
     <ul class="facts">${(S.quellen||[]).map(q=>`<li><span>${esc(t(q.de,q.en))}${q.an?'':` <small class="mut">${esc(t('nicht freigegeben','not released'))}</small>`}</span><b>${q.n}${q.stand?' · '+esc(q.stand):''}</b></li>`).join('')}
-      <li><span>${esc(t('Noch nicht eingelesen','Not read yet'))}</span><b>${S.rueckstand}</b></li></ul>
+      <li><span>${esc(t('Noch nicht eingelesen','Not read yet'))}</span><b>${S.rueckstand}</b></li>
+      ${(S.quellen||[]).some(q=>q.name==='mail'&&q.an)?`<li><span>${esc(t('Mails noch nicht eingelesen','Mails not read yet'))}</span><b>${S.mail_rest||0}</b></li>`:''}</ul>
+    ${S.platz?`<div class="err">${esc(t('Platz knapp: Das Einlesen der Mails hält an, bis auf dem Spark wieder genug Speicher frei ist.','Space low: reading mail stops until enough storage is free on the Spark again.'))}</div>`:''}
     <div class="row"><button type="button" class="b" data-fundnew="1"${S.laeuft?' disabled':''}>${esc(S.laeuft?t('Läuft …','Running …'):t('Neu aufbauen','Rebuild'))}</button>
       <button type="button" class="b" data-funddel="1">${esc(t('Index löschen','Delete the index'))}</button></div>
     <div class="fundmsg ${FUND.err?'err':'mut'}" role="status">${esc(FUND.msg)}</div>`;

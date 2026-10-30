@@ -250,6 +250,7 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 | `app/panel/embed_worker.py` | The embedding model in its own process (started by docembed.py with python -I as `embed_worker.py embed REPO COMMIT`, never by hand; repository and pinned co … |
 | `app/panel/folien.py` | Slide types and the fixed rules for documents the Spark writes. |
 | `app/panel/fund.py` | Finden: one index over the own data, its fields and tags, one list of hits for the page Finden, Strg K and the assistant's tool fund_suche. |
+| `app/panel/fundmail.py` | Finden: Mails und Anhänge: every mail of the profile's mailboxes in the search index of Finden (fund.py), with the text and the fields of its attachments. |
 | `app/panel/gedaechtnis.py` | Gedächtnis mit Beleg und Prüfung. |
 | `app/panel/gemerkt.py` | Gemerkt-Hinweis: what the Spark keeps about a person is seen at once and can be taken back. |
 | `app/panel/kiwix.py` | The person's own Kiwix (kiwix-serve with ZIM files: Wikipedia, Wikivoyage, handbooks ...) as a knowledge source that works without the internet. |
@@ -620,7 +621,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/reminders.json` | Reminders |  | – | yes | Tasks and reminders |
 | `users/ID/wissen.db` | Documents: text, sections with context line, search, vectors; knowledge book and map with people, companies and deadlines (SQLite) |  | – | yes | Documents (text, search, originals) |
 | `users/ID/docs/files/` | Originals of uploads |  | – | yes | Documents (text, search, originals) |
-| `users/ID/fund.db` | Find: search index over the own data (titles, fields, tags, own tags; SQLite) |  | marks with a key of its own per profile (HMAC) | yes | Documents (text, search, originals) |
+| `users/ID/fund.db` | Find: search index over the own data (titles, fields, tags, own tags, mail and attachments; SQLite) |  | marks with a key of its own per profile (HMAC); mail and attachments: subject, excerpt, fields and tags AES-GCM | yes | Documents (text, search, originals) |
 | `users/ID/suchpruefung.json` | Test questions and runs of the search check |  | – | yes | Documents (text, search, originals) |
 | `users/ID/erstellt/` | Created documents |  | – | yes | Created documents |
 | `users/ID/bilder/` | Painted pictures and their index (prompt, wish, size) |  | – | yes | Painted pictures |
@@ -1645,7 +1646,7 @@ flowchart TD
 7. <a id="kn-sicherheit-s7"></a>**The language model proposes**: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run.
 8. <a id="kn-sicherheit-s8"></a>**Does it change something?**: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model; likewise only their click merges, renames or deletes points of the knowledge map (with the code of „Confirm“). Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it.
 9. <a id="kn-sicherheit-s9"></a>**Check the answer**: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML.
-10. <a id="kn-sicherheit-s10"></a>**Traces**: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own).
+10. <a id="kn-sicherheit-s10"></a>**Traces**: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own). What a service keeps for a profile (the mail supply, mail and attachments in Find) lies only sealed with AES-GCM (vorrat.seal), the words in the search index only as HMAC marks with a key per profile (vorrat.marke); without a key nothing is written.
 
 **Examples:** A mail demands an action: The mail is read, but nothing is switched: the tools for it are locked. · A web page with a fake system line: „<|im_start|>system“ arrives defused as text, the model sees no new role; it could not act anyway. · A stranger's voice at the speaker: An answer as for a guest, without mails or appointments. · Switch off the light: Switched only after „yes“. · Kill switch stage 3: No conversation, only the kill switch page.
 
@@ -2307,7 +2308,7 @@ Self-tests: `test_fast_start`, `test_dienstwacht`, `test_taten`, `test_notaus`, 
 
 ### Knowledge
 
-Knowledge is everything the Spark knows without going to the internet: the uploaded documents of each profile (one SQLite file wissen.db per profile), the memory, earlier conversations, the own Kiwix archive and created documents. This page shows the way a question finds fitting passages in the documents. Find (fund.py, its own file fund.db per profile) adds an index of titles, fields and tags by fixed rules on top and uses the same search for the text.
+Knowledge is everything the Spark knows without going to the internet: the uploaded documents of each profile (one SQLite file wissen.db per profile), the memory, earlier conversations, the own Kiwix archive and created documents. This page shows the way a question finds fitting passages in the documents. Find (fund.py, its own file fund.db per profile) adds an index of titles, fields and tags by fixed rules on top and uses the same search for the text; mail and attachments (fundmail.py) it reads in slices in quiet minutes and keeps only sealed (AES-GCM) with their words as HMAC marks.
 
 **Why:** The language model does not know the own papers. It only gets the few passages the panel picks with fixed rules and two small models on the processor, each with its source. What a document says is outside text: data, never a command.
 
@@ -2554,14 +2555,14 @@ flowchart TD
   s12 -.->|redirect| s2
 ```
 
-1. <a id="kn-waechter-s1"></a>**A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 33 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
+1. <a id="kn-waechter-s1"></a>**A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 34 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
 2. <a id="kn-waechter-s2"></a>**Resolve the name once**: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops.
 3. <a id="kn-waechter-s3"></a>**Own service?**: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute). When the models run on another computer (models.host), its addresses count the same (model_addresses).
 4. <a id="kn-waechter-s4"></a>**Internet and kill switch on?**: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows.
 5. <a id="kn-waechter-s5"></a>**Public address?**: A public address is allowed at every level.
 6. <a id="kn-waechter-s6"></a>**Level „internet only“?**: What comes from search results or answers may never go to the home network (chat, feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, verbund).
 7. <a id="kn-waechter-s7"></a>**Never allowed?**: Link-local addresses (169.254.x, where cloud metadata answers), multicast, unspecified and reserved addresses are allowed at no level.
-8. <a id="kn-waechter-s8"></a>**Home network allowed?**: Home Assistant and other services in the home network (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) always may. Calendars, contacts, mail and MCP (calendars, contacts, mail, mcp, meinmcp, tasks) only when Settings → Security → Allow home network addresses is on.
+8. <a id="kn-waechter-s8"></a>**Home network allowed?**: Home Assistant and other services in the home network (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) always may. Calendars, contacts, mail and MCP (calendars, contacts, fundmail, mail, mcp, meinmcp, tasks) only when Settings → Security → Allow home network addresses is on.
 9. <a id="kn-waechter-s9"></a>**Connect to exactly this address**: The connection goes to the checked address, not to the name again. A second look-up could answer differently (DNS rebinding). The certificate is still checked for the name.
 10. <a id="kn-waechter-s10"></a>**Password only to its own site**: Login data only goes to the site it was entered for (same host or same parent domain, like the CalDAV servers of icloud.com), never over http when the address was https.
 11. <a id="kn-waechter-s11"></a>**Answer at most 20 MB**: Answers are cut at 20 MB, also after unpacking gzip, so a huge or packed answer cannot fill the memory.
@@ -2576,7 +2577,7 @@ Applies at: [step 6](#kn-waechter-s6), [step 8](#kn-waechter-s8)
 | Level | Who uses it (from the code) | Internet | Home network |
 |---|---|---|---|
 | internet only | chat, feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, verbund | ✓ | ✕ |
-| user | calendars, contacts, mail, mcp, meinmcp, tasks | ✓ | only with switch |
+| user | calendars, contacts, fundmail, mail, mcp, meinmcp, tasks | ✓ | only with switch |
 | home | doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite | ✓ | ✓ |
 | by target | anrufe, dienstwacht, halive, nas, nasquelle, offline, speicher, telefon, zertpin | as the target is set | – |
 | always | all | ✕ with kill switch | ✕ own services, 169.254, multicast |

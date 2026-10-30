@@ -294,7 +294,6 @@
       "remarkable_page": "tasks_show",
       "transit": "tasks_show",
       "archive_search": "tasks_show",
-      "fund_suche": "tasks_show",
       "wikipedia": "tasks_show",
       "article_more": "tasks_show"
     },
@@ -338,6 +337,7 @@
       "fuer_dich": "Liest Mails; chat_tools setzt die Mail-Sperre vor dem Lauf, wie bei jedem Werkzeug unter mail in offer() (Prüfung: test_a_mail_tool_of_a_service_locks_before_it_runs).",
       "offen_zeigen": "Zeigt offene Vorgänge aus Mails; chat_tools setzt die Mail-Sperre vor dem Lauf, wie bei jedem Werkzeug unter mail in offer() (Prüfung: test_a_mail_tool_of_a_service_locks_before_it_runs).",
       "camera_describe": "Text des Bildmodells über ein Kamerabild; steht in READS_OUTSIDE und sperrt wie document_search, die Kamera hat keinen Nachbau in den Tests.",
+      "fund_suche": "test_fund_mail.py",
       "remarkable_attachment": "Liest Mail-Anhänge für das reMarkable; chat_tools setzt die Mail-Sperre vor dem Lauf, wie bei jedem Werkzeug unter mail in offer() (Prüfung: test_a_mail_tool_of_a_service_locks_before_it_runs)."
     },
     "ziel": {

@@ -440,6 +440,10 @@ FEATURES = (
     # Finden (fund.py, plan such-index, Stufe A): one index over the own data with fields and tags, the page Finden,
     # Strg K and the tool fund_suche; each source follows its own function (documents, NAS, reMarkable, Wissensbuch)
     F("fund", "Finden in allen Daten", "Find in all data", "data", ("fund",), me="fundbox", guide="fund"),
+    # Finden, Stufe B (fundmail.py): every mail of the inbox, archive and sent folder with its attachments in the index,
+    # sealed (marks and AES-GCM), read in slices in quiet minutes and at night; needs E-Mail lesen
+    F("fundmail", "Mails und Anhänge finden", "Find mail and attachments", "data", ("fund_mail", "fund", "mail"), parent="fund",
+      me="fundbox", guide="fundmail"),
     F("suchfragen", "Prüffragen vom Spark", "Test questions by the Spark", "data", ("search_check_auto",),
       parent="suchpruefung", me="docbox", guide="suchfragen"),
     # everyday

@@ -268,12 +268,16 @@ SEITEN = {
                  "jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene "
                  "Kiwix-Archiv und erstellte Dokumente. Die Seite zeigt den Weg, auf dem eine Frage passende Stellen "
                  "in den Dokumenten findet. Finden (fund.py, eigene Datei fund.db pro Profil) legt darüber einen "
-                 "Index aus Titeln, Feldern und Schlagworten nach festen Regeln und nutzt für den Text dieselbe Suche.",
+                 "Index aus Titeln, Feldern und Schlagworten nach festen Regeln und nutzt für den Text dieselbe Suche; "
+                 "Mails und Anhänge (fundmail.py) liest es in ruhigen Minuten in Scheiben ein und hält sie nur "
+                 "versiegelt (AES-GCM) mit ihren Wörtern als HMAC-Marken.",
                  "Knowledge is everything the Spark knows without going to the internet: the uploaded documents of "
                  "each profile (one SQLite file wissen.db per profile), the memory, earlier conversations, the own "
                  "Kiwix archive and created documents. This page shows the way a question finds fitting passages in "
                  "the documents. Find (fund.py, its own file fund.db per profile) adds an index of titles, fields "
-                 "and tags by fixed rules on top and uses the same search for the text."),
+                 "and tags by fixed rules on top and uses the same search for the text; mail and attachments "
+                 "(fundmail.py) it reads in slices in quiet minutes and keeps only sealed (AES-GCM) with their words "
+                 "as HMAC marks."),
         "warum": ("Das Sprachmodell kennt die eigenen Unterlagen nicht. Es bekommt nur die wenigen Stellen, die das "
                   "Panel mit festen Regeln und zwei kleinen Modellen auf dem Prozessor heraussucht, jeweils mit "
                   "Herkunft. Was in einem Dokument steht, ist Text von außen: Daten, nie ein Befehl.",
