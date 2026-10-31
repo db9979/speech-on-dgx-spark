@@ -11,7 +11,7 @@
 // pictures and songs their own page; a period („letzte Woche“) or an event („vom OP“) in the typed words shows as a
 // line with what the panel made of it (deutung: the appointment's day, or that there is none).
 // Stufe E: a mail's attachments listed in its detail („Zu Dokumenten übernehmen“ follows with wissen.aufnehmen).
-const FUND={q:'',quelle:'',kat:'',hits:null,sel:0,item:null,stand:null,msg:'',err:false,seq:0,deut:null};
+const FUND={q:'',quelle:'',kat:'',mappe:'',hits:null,sel:0,item:null,stand:null,msg:'',err:false,seq:0,deut:null};
 let FUND_ON=false;
 window.fundStart=who=>{FUND_ON=!!(who&&who.profile&&who.find);window.FUND_ON=FUND_ON;
   document.querySelectorAll('nav button[data-s=finden]').forEach(b=>b.hidden=!FUND_ON)};
@@ -44,8 +44,8 @@ function fundSay(x,err){FUND.msg=String(x||'').slice(0,300);FUND.err=!!err;docum
 function fundBody(){const w=document.createElement('div');w.className='ld-box ld-frame fund';w.id='fundview';fundPaint(w);return w}
 function fundWorteBody(){const w=document.createElement('div');w.className='ld-box fund';w.id='fundworte';fundWorte(w);return w}
 function fundDraw(){const w=$('fundview');if(w)fundPaint(w);const v=$('fundworte');if(v)fundWorte(v);const b=$('fundset');if(b)fundSettingsPaint(b)}
-async function fundRun(){const seq=++FUND.seq;const body={worte:FUND.q.trim()};if(FUND.quelle)body.quelle=FUND.quelle;if(FUND.kat)body.kategorie=FUND.kat;
-  if(!body.worte&&!body.quelle&&!body.kategorie){FUND.hits=null;fundDraw();return}
+async function fundRun(){const seq=++FUND.seq;const body={worte:FUND.q.trim()};if(FUND.quelle)body.quelle=FUND.quelle;if(FUND.kat)body.kategorie=FUND.kat;if(FUND.mappe)body.mappe=FUND.mappe;
+  if(!body.worte&&!body.quelle&&!body.kategorie&&!body.mappe){FUND.hits=null;fundDraw();return}
   const {r,d}=await apiTry('/api/profile/fund/suche',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(seq!==FUND.seq)return;
   if(r.ok){FUND.hits=d.treffer||[];FUND.deut=d.deutung||null;FUND.msg='';FUND.err=false}else{FUND.hits=[];FUND.deut=null;FUND.msg=errSay(r.status,d.detail,'');FUND.err=true}fundDraw()}
 const fundSrc=n=>{const q=((FUND.stand&&FUND.stand.quellen)||[]).find(x=>x.name===n);return q?t(q.de,q.en):n};
@@ -58,7 +58,7 @@ function fundPaint(w){w.classList.toggle('ld-sel',!!FUND.item);
   const srcs=((S&&S.quellen)||[]).filter(q=>q.an),kats=((S&&S.kategorien)||[]);
   list.innerHTML=`<div class="ld-tools"><input type="search" class="fundq" maxlength="200" placeholder="${esc(t('Wörter, Firma, Person, Nummer …','Words, company, person, number …'))}" aria-label="${esc(t('In meinen Daten finden','Find in my data'))}" value="${esc(FUND.q)}"></div>
     <div class="row"><select class="fundsrc" aria-label="${esc(t('Quelle','Source'))}"><option value="">${esc(t('Alle Quellen','All sources'))}</option>${srcs.map(q=>`<option value="${esc(q.name)}"${q.name===FUND.quelle?' selected':''}>${esc(t(q.de,q.en))}</option>`).join('')}</select>
-    <select class="fundkat" aria-label="${esc(t('Kategorie','Category'))}"><option value="">${esc(t('Alle Kategorien','All categories'))}</option>${kats.map(k=>`<option value="${esc(k.wert)}"${k.wert===FUND.kat?' selected':''}>${esc(k.wert)}</option>`).join('')}</select></div>
+    <select class="fundkat" aria-label="${esc(t('Kategorie','Category'))}"><option value="">${esc(t('Alle Kategorien','All categories'))}</option>${kats.map(k=>`<option value="${esc(k.wert)}"${k.wert===FUND.kat?' selected':''}>${esc(k.wert)}</option>`).join('')}</select>${window.mpFundWahl?mpFundWahl(FUND.mappe):''}</div>
     ${FUND.hits!==null?fundDeut():''}
     ${S&&!S.eintraege?`<div class="ld-empty mut">${esc(t('Der Index ist noch leer. Er füllt sich im Hintergrund, alle paar Minuten ein Stück.','The index is still empty. It fills in the background, a part every few minutes.'))}</div>`:''}
     ${FUND.hits===null?(S&&S.eintraege?`<div class="ld-empty mut">${esc(t(`${S.eintraege} Einträge im Index. Gib Wörter ein oder wähle eine Kategorie.`,`${S.eintraege} entries in the index. Type words or choose a category.`))}</div>`:'')
@@ -70,6 +70,7 @@ function fundPaint(w){w.classList.toggle('ld-sel',!!FUND.item);
   qi.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();clearTimeout(tm);fundRun()}};
   list.querySelector('.fundsrc').onchange=e=>{FUND.quelle=e.target.value;fundRun()};
   list.querySelector('.fundkat').onchange=e=>{FUND.kat=e.target.value;fundRun()};
+  const fm=list.querySelector('.fundmappe');if(fm)fm.onchange=e=>{FUND.mappe=e.target.value;fundRun()};
   list.querySelectorAll('[data-fundsel]').forEach(r=>{const go=()=>fundPick(r.dataset.fundsel);r.onclick=go;r.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}}});
   fundDetail(w)}
 async function fundPick(id){const {r,d}=await apiTry('/api/profile/fund/eintrag/'+encodeURIComponent(id));

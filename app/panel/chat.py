@@ -452,7 +452,9 @@ DOC_TOOL = {"type": "function", "function": {
         "query": {"type": "string", "description": "keywords"},
         "tags": {"type": "array", "items": {"type": "string"},
                  "description": "optional: only documents with all these tags (from the document list)"},
-        "art": {"type": "string", "description": "optional: only documents of this kind, e.g. Vertrag, Rechnung"}},
+        "art": {"type": "string", "description": "optional: only documents of this kind, e.g. Vertrag, Rechnung"},
+        "mappe": {"type": "string", "description": "optional: only within this Mappe (collection) of the user, its name "
+                                                   "as the user said it"}},
         "required": ["query"]}}}
 
 # „Welche Dokumente habe ich?“ (plan werkzeug-abdeckung Paket 7): the list itself, one Steckbrief line each

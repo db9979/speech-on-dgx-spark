@@ -71,7 +71,10 @@ async def run(t, name, args, st):
                                                          "pin": getattr(t, "kl_pin", None), "outside_before": before,
                                                          # the panel's own fixed answer instead of the model's
                                                          # (Sofort-Karte, fund.py): chat_modell says it and stops
-                                                         "fest": lambda satz: st.__setitem__("fest", satz)})
+                                                         "fest": lambda satz: st.__setitem__("fest", satz),
+                                                         # the Mappe the person bound this conversation to (mappen.for_turn
+                                                         # checked it); fund_suche filters by it (mappen.fuer_werkzeug)
+                                                         "mappe": (getattr(t, "mp", None) or {}).get("id")})
     if name.startswith("mail_tidy_") and t.tidy_on:
         return await tidy_tool(t, name, args, st)
     if name == "mail_draft" and t.drafts_on:
@@ -236,7 +239,14 @@ async def run(t, name, args, st):
         art = str(args.get("art") or "")[:30]
         if not wissen.on(t.who["id"], "brief"):
             tags, art = [], ""
-        hits = await wissen.search(t.who["id"], query, tags=tags or None, art=art or None, trace=getattr(t, "tr", None))
+        # Mappen (mappen.py): a Mappe only from the person's own words or the one she bound the conversation to
+        nur, mnote = None, ""
+        if args.get("mappe") or getattr(t, "mp", None):
+            import mappen
+            nur, mnote = await asyncio.to_thread(mappen.fuer_werkzeug, t.who, args.get("mappe"), t.ask_text,
+                                                 (getattr(t, "mp", None) or {}).get("id"), "dokumente")
+        hits = await wissen.search(t.who["id"], query, tags=tags or None, art=art or None, trace=getattr(t, "tr", None),
+                                   only=nur[0] if nur else None)
         win = getattr(t, "recent_ask", None)
         gone = 0
         if win is None:     # only passages that hold the words asked for (lokal.COVER, Dominik 2026-10-26: „Dresden“ in a
@@ -250,15 +260,20 @@ async def run(t, name, args, st):
             newest = await wissen.recent(t.who["id"], win[0], win[1])
             seen = {(h["id"], h["page"]) for h in newest}
             hits = newest + [h for h in hits if (h["id"], h["page"]) not in seen and win[0] <= h.get("changed", 0) < (win[1] or 2 ** 62)]
+            if nur:
+                newest = [h for h in newest if h["id"] in nur[0]]
+                hits = [h for h in hits if h["id"] in nur[0] and not h.get("shared")]
             if not newest:
                 return "Nothing was noted or changed in the documents in this time. Say so; do not guess."
         if not hits and (tags or art):      # nothing in the text: at least which documents fit
             found = wissen.cards(t.who["id"], tags or None, art or None)
+            found = [d for d in found if d["id"] in nur[0] and not d.get("owner")] if nur else found
             if found:
                 return ("No passage matches the words, but these documents fit (their profiles):\n"
                         + "\n".join("- " + wissen.card_line(d) for d in found[:20]))
         import wissensbuch      # Wissensbuch: the fitting pages first, each sentence with its source
-        book, brefs = await asyncio.to_thread(wissensbuch.answer_block, t.who["id"], query) if win is None else ("", [])
+        book, brefs = await asyncio.to_thread(wissensbuch.answer_block, t.who["id"], query, nur[1] if nur else None) \
+            if win is None else ("", [])
         if hits or brefs:
             # "karte": the hit came (also) over the Wissenskarte (Karte hilft der Suche), the line under the answer says so
             refs = list({(h["id"], h["page"]): {"id": h["id"], "name": h["name"], "page": h["page"], "file": h["file"],
@@ -267,7 +282,7 @@ async def run(t, name, args, st):
             await t.out.put({"type": "docsources", "items": sorted({h["name"] for h in brefs + hits}), "refs": refs[:8]})
             wissensbuch.note_sources(t.who["id"], docs=[(h["id"], h["page"]) for h in hits])   # Stufe D: may be filed
         dated = any(h.get("changed") for h in hits)
-        return ((book + "\n\n" if book else "") + "\n\n".join(f"[{wissen.where(h)}]\n{h['text']}" for h in hits)
+        return mnote + ((book + "\n\n" if book else "") + "\n\n".join(f"[{wissen.where(h)}]\n{h['text']}" for h in hits)
                 + ("\n\n(Each passage names when it last changed; where passages disagree, the newer one counts, and say its date.)"
                    if dated and hits else "")) or (NOTHING_FITS if gone else "No matching passages in the documents. Say so; do not guess.")
     if name == "document_list" and t.docs and t.who:

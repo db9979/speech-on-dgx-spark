@@ -4965,6 +4965,27 @@
 "titel": "Spontanhilfe: Steuern mit SparkHilfe (sobald S2b da ist)",
 "text": "Nach S2b an einem Windows-PC: /hilfe zeigt „Programm laden“ mit Prüfsumme, die Datei heißt SparkHilfe-<Adresse>-<Schlüssel>.exe. Start, „Erlauben“: roter Rahmen bei ihr, beim Admin das Bild; „Steuern“ in der Leiste, Klicks und Tippen treffen; „Nur ansehen“ gibt zurück. Programm schließen beendet die Hilfe. Dieselbe Datei nach 10 Minuten oder ein zweites Mal: „Bitte neu laden“.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P734",
+"v": 1302,
+"titel": "Mappen: Suche nur in der Mappe",
+"text": "Mappe „Wohnung“ mit dem Mietvertrag auf „ganz“ und der Hausordnung auf „kurz“; ein drittes Dokument mit denselben Wörtern liegt nicht darin. „Im Assistenten fragen“, dann „Such nach der Lindenstraße“: die Fundstellen kommen nur aus dem Mietvertrag, nie aus dem dritten Dokument und nie aus Mails, Terminen oder Kontakten. Mietvertrag auf „aus“ stellen und dieselbe Frage: die Antwort sagt, dass in der Mappe nichts auf „ganz“ steht. Ohne Bindung: „Such in der Mappe Wohnung nach der Kaution“ sucht ebenso nur dort. Zustand → Logs, Bereich Wissen: „mappen: filter | dokumente | chat | 1 dokumente 0 seiten“ ohne Namen; Zustand → Live, Kasten Mappen: „n Suchen in Mappen“.",
+"thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P735",
+"v": 1302,
+"titel": "Mappen: Wähler in Finden",
+"text": "Funktionen → Finden in allen Daten und Mappen an. Unter Finden steht neben Quelle und Kategorie „Alle Mappen“; „Wohnung“ wählen: ohne Wörter zeigt die Liste genau die Dokumente der Mappe (jede Stufe), mit „Lindenstraße“ nur die passenden davon, keine Mail, kein Termin, kein Kontakt. Zurück auf „Alle Mappen“: wieder alle Treffer. Mappen für das Profil sperren: der Wähler verschwindet.",
+"thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P736",
+"v": 1302,
+"titel": "Mappen: iPhone nativ",
+"text": "iPhone-App, Meine Sachen → Mappen: die Liste wie im Panel, „+“ legt eine Mappe an. Eine Mappe antippen: Einträge mit aus/kurz/ganz als Segmented Control und „≈ X von Y Token“; eine Stufe ändern, im Panel unter Mappen neu laden: dieselbe Stufe und derselbe Balken. Nach links wischen nimmt einen Eintrag heraus (das Dokument bleibt); „Mappe löschen“ fragt nach und nimmt nur die Zuordnung. Englische Sprache: alle Texte englisch. Android: Ich → Mappen öffnet die Panel-Ansicht.",
+"thread": "Ideen aus Open Notebook übernehmen"
 }
 ]
 }

@@ -239,7 +239,7 @@ def find_shared(uid, doc_id):
     return None
 
 
-async def search(uid, query, k=5, tags=None, art=None, semantic=True, keep=True, trace=None):
+async def search(uid, query, k=5, tags=None, art=None, semantic=True, keep=True, trace=None, only=None):
     """The profile's own documents and the ones the others offer to everyone, best first; tags / art:
     only documents with these tags or of this kind (their "Steckbrief"). semantic=False: full text only
     (lokal.py's quick look before the answer does not wait for the meaning model). The one place both
@@ -248,7 +248,8 @@ async def search(uid, query, k=5, tags=None, art=None, semantic=True, keep=True,
     nachsortieren" (nachsortieren.py, Stufe 3) the mix hands over its 30 best and the cross-encoder picks k.
     With "Karte hilft der Suche" (wissenskarte.liste, plan wissensgraph Stufe 3) the profile's own search mixes in the
     map's list as a third one (never for the documents others offer: the map is the profile's own); a hit it named
-    carries "karte"."""
+    carries "karte". only: a set of the profile's own document ids (a Mappe, mappen.fuer_werkzeug): just these, none
+    of the documents others offer."""
     import nachsortieren
     import wissenskarte
     rerank = features.allowed("nachsortieren", uid)
@@ -258,8 +259,10 @@ async def search(uid, query, k=5, tags=None, art=None, semantic=True, keep=True,
     narrow = bool(tags or art)
     fresh = features.allowed("rmfresh", uid)
     own = documents.match_docs(uid, tags, art) if narrow else None
+    if only is not None:
+        own = set(only) if own is None else own & set(only)
     hits = await asyncio.to_thread(documents.search, uid, query, k, qvec, False, own, fresh, None, karte)
-    for o in _sharers(uid):
+    for o in _sharers(uid) if only is None else ():
         owner, offer = _owner_name(o), _offer(uid, o)
         keep = documents.match_docs(o, tags, art, shared_only=offer) if narrow else None
         theirs = await asyncio.to_thread(documents.search, o, query, k, qvec, offer, keep, fresh)
