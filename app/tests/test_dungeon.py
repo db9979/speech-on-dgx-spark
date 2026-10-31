@@ -2179,6 +2179,11 @@ class ReviewPanel(Turns):
             dungeon.apply(r, rd, [], story, self.rid, random.Random(5))
         self.assertEqual(len([e for e in rd["log"] if e["art"] == "beute"]), n)
         self.assertIn("dungeon: beute | ort schon", out.getvalue())
+        # the map counts its places from 0: its first place (and a vault behind it) is a place of its own, never the
+        # scene's name the narration sets later (with a map that started at place 0 a second find came, red at V01.1.287)
+        self.assertEqual(dungeon.fund_ort({"karte": {"hier": 0, "drin": None}, "szene": {"ort": "Rabenheim"}}), "0")
+        self.assertEqual(dungeon.fund_ort({"karte": {"hier": 5, "drin": 0}, "szene": {"ort": "Rabenheim"}}), "0")
+        self.assertEqual(dungeon.fund_ort({"szene": {"ort": "Rabenheim"}}), "Rabenheim")
 
 
 class Bibliothek(Base):

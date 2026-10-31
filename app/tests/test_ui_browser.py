@@ -102,7 +102,10 @@ class Browser(unittest.TestCase):
             await pg.wait_for_timeout(100)
         self.fail(f"never true: {expr}")
 
-    async def page(self, p, width, height, mic=False, csp=False):
+    async def page(self, p, width, height, mic=False, csp=False, who=("Uitest", "4711")):
+        """A browser page signed in as the admin and as the profile who (name, PIN). Uitest is the profile all page
+        tests share, with one budget of every rate limit per minute; a test that asks one endpoint often brings its
+        own profile, else what the tests before it asked takes its budget away (V01.1.295)."""
         exe = chromium()
         args = ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream",
                 "--autoplay-policy=no-user-gesture-required"] if mic else []
@@ -127,11 +130,11 @@ class Browser(unittest.TestCase):
                     raise
                 await pg.wait_for_timeout(500)
         self.assertEqual(r.status, 200)
-        r = await pg.request.post(base + "/api/profile/login", data={"name": "Uitest", "pin": "4711"})
+        r = await pg.request.post(base + "/api/profile/login", data={"name": who[0], "pin": who[1]})
         self.assertEqual(r.status, 200)
         await pg.goto(base + "/")
         # the page knows who is signed in (not a fixed 800 ms: a GitHub runner with the run's 600 profiles is slow)
-        await self.until(pg, "typeof PROFILE!=='undefined'&&!!PROFILE&&PROFILE.name==='Uitest'&&ADMIN===true")
+        await self.until(pg, "typeof PROFILE!=='undefined'&&!!PROFILE&&PROFILE.name===%s&&ADMIN===true" % json.dumps(who[0]))
         await pg.wait_for_timeout(300)
         await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
         # the Dungeon-Master's guide opens once per device as a window over the table (V01.1.004): a fresh test browser
@@ -1434,7 +1437,15 @@ class Browser(unittest.TestCase):
         import profiles
         import push
         helpers.set_config(doc_make=True, deny={})
-        me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
+        # a profile of its own: the card and Ich → Dokumente ask /api/make (rate limit „make“, 60 a minute per profile)
+        # about 18 times, and what the page tests before it asked for the shared Uitest took the rest, so the card
+        # never got its looks (red at V01.1.287)
+        who = ("Doku Dora", "4712")
+        try:
+            profiles.add_user(*who)
+        except Exception:
+            pass   # already there from an earlier run of this test
+        me = next(u for u in profiles._load()["users"] if u["name"] == who[0])["id"]
         real_part, real_push, real_bg = docmake.write_part, push.send, docmake.BACKGROUND
         docmake.BACKGROUND = True      # test_docmake runs its jobs itself; here the panel runs them
 
@@ -1456,12 +1467,12 @@ class Browser(unittest.TestCase):
                     docmake._pending.clear()
                     docmake._jobs.clear()
                     docmake._day.update(day="", n={})
-                    ctx = {"who": {"id": me, "name": "Uitest"}, "own": True, "private": True, "client": "web",
+                    ctx = {"who": {"id": me, "name": who[0]}, "own": True, "private": True, "client": "web",
                            "src": "web:x", "text": "Erstell eine Präsentation über die Pool-Saison", "out": None}
                     await docmake.tool("document_plan", {"kind": "praesentation", "title": "Pool-Saison 2026 mit einem recht langen Titel",
                                                          "sections": ["Rückblick", "Zahlen und Kosten", "Ausblick"]}, ctx)
                     card = _json.dumps(docmake.plan_public(docmake._pending[me]))
-                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    br, pg, errors = await self.page(p, w, h, csp=True, who=who)
                     try:
                         if name == "pc":   # released by the admin: the block is there at once, nothing to switch on
                             await pg.evaluate("openMe('docbox')")

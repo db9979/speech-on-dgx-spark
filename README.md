@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.295** Test fix: four tests that wobbled on GitHub in the first try: E-mail and Create documents sign in with profiles of their own, the seal tests clear files set aside, finds count only once at the first place of the dungeon map too
 - **V01.1.294** Dungeon music: the store did not start with the panel (name TAKT bound twice); guards for background loops at the start and for module-level names bound twice
 - **V01.1.293** Remote access: send to all (several sessions stage 4, own switch, off): a red line above the terminals sends one line to every connected shell of the same kind, keys are never mirrored; Enter asks each time with the line and the names; the Spark checks itself (own login, at least two, one kind, one line without control characters up to 500 characters, never the caution list); log and Live only count; goes off after sending, on another page and after 5 minutes
 - **V01.1.292** Remote access: split view and overview (several sessions stage 2): from two tabs Single, Side by side, 2 × 2 (from three) and Overview; each terminal fits its pane, only the pane with the blue frame gets keys and assistant, a click or Ctrl+Shift+1…9 moves the focus, dragging a tab onto a pane swaps the system; Show beside it in the right click and Shift+Enter in the picker; the overview shows every session as a tile with the last lines of its screen (browser only), a click brings it up; below 1100 pixels Single only
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.288** Test fix: six tests that got in each other's way clean up or count only their own (Find mail, backup, lists, documents, Home Assistant live, cards)
 - **V01.1.287** Collections: bundle documents, knowledge book pages and notes for one undertaking, per entry off, short or whole to the model, bind a conversation in the assistant to a collection
 - **V01.1.286** The knowledge map finds doubles: the same person with a title, another spelling or "last name, first name" becomes one point; similar ones stand under "Maybe double" with "Merge" or "Different"; "Merge with …" is a search field
-- **V01.1.285** Find's measurement is now a part of Measure knowledge (`sudo speech-spark wissen messen synth 5000`, Status → Checks → Measure knowledge): 50,000 sealed made-up mails with 5000 documents, search p50/p95, size and RAM; `speech-spark finden messen` is gone
 
 
 

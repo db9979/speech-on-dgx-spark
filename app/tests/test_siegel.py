@@ -165,6 +165,12 @@ class Sealed(unittest.TestCase):
         cls.c2, cls.uid2 = profile("Sgl Bert")
 
     def setUp(self):
+        self.clean()
+        # and afterwards too: a file the last test left aside stood as the hint „… liegen beiseite“ on the admin pages
+        # of every later page test (test_nothing_sticks_out_on_phones, red at V01.1.287)
+        self.addCleanup(self.clean)
+
+    def clean(self):
         for u in (self.uid, self.uid2):
             for n in dateien.SIEGEL:
                 profiles.drop_own(u, n)
@@ -172,6 +178,7 @@ class Sealed(unittest.TestCase):
                     with contextlib.suppress(FileNotFoundError):
                         os.remove(profiles._path(u, a))
         profiles._own_blocked.clear()
+        siegel._live[1] = None   # the counts of the hint and Live are read again
 
     def test_no_plain_text_on_the_disk(self):
         profiles.write_own(self.uid, "memory.json", [{"id": "f1", "text": SECRET}])

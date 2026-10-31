@@ -148,11 +148,16 @@ class Api(Fake):
 
 @unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
 class Page(Fake):
+    """Each test signs in as a profile of its own, never the shared Uitest: one look at a mail at three widths asks
+    the endpoints of rate limit „post“ (60 a minute per profile) about 30 times, and what other page tests had asked
+    for Uitest in the same minute took the rest, so the mail stayed „Zu viele Anfragen“ (red at V01.1.287)."""
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         from tests.test_ui_browser import Browser
         Browser.setUpClass.__func__(cls)
+        for name in ("Post Lisa", "Post Kim", "Post Vera"):
+            profile(name)
 
     def test_list_read_and_the_settings_sit_here(self):
         from tests.test_ui_browser import Browser, async_playwright
@@ -162,7 +167,7 @@ class Page(Fake):
         async def go():
             async with async_playwright() as p:
                 for width in (1280, 390, 320):
-                    br, pg, errors = await b.page(p, width, 900)
+                    br, pg, errors = await b.page(p, width, 900, who=("Post Lisa", "1234"))
                     try:
                         # the browser's own profile gets the mailbox (its id from the page, no name here)
                         OWNERS[await pg.evaluate("PROFILE.id")] = [ACCT]
@@ -243,7 +248,7 @@ class Page(Fake):
 
         async def go():
             async with async_playwright() as p:
-                br, pg, errors = await b.page(p, 1280, 900)
+                br, pg, errors = await b.page(p, 1280, 900, who=("Post Kim", "1234"))
                 try:
                     OWNERS[await pg.evaluate("PROFILE.id")] = [ACCT]
                     await pg.evaluate("MAIL_ON=true;CAL_ON=true;postStart({profile:PROFILE,mail:true});icTabSet('post','show');goSec('post')")
@@ -281,7 +286,7 @@ class Page(Fake):
 
         async def go():
             async with async_playwright() as p:
-                br, pg, errors = await b.page(p, 1280, 900)
+                br, pg, errors = await b.page(p, 1280, 900, who=("Post Vera", "1234"))
                 try:
                     await pg.evaluate("PRO_ON=true;MAIL_ON=true;postStart({profile:PROFILE,mail:true})")
                     await pg.evaluate("openMe('mailbox')")
