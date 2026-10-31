@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.294** Collections narrow the search: the assistant and Find search only within one collection on request, the iPhone shows collections natively with levels to switch
 - **V01.1.293** Remote access: send to all (several sessions stage 4, own switch, off): a red line above the terminals sends one line to every connected shell of the same kind, keys are never mirrored; Enter asks each time with the line and the names; the Spark checks itself (own login, at least two, one kind, one line without control characters up to 500 characters, never the caution list); log and Live only count; goes off after sending, on another page and after 5 minutes
 - **V01.1.292** Remote access: split view and overview (several sessions stage 2): from two tabs Single, Side by side, 2 × 2 (from three) and Overview; each terminal fits its pane, only the pane with the blue frame gets keys and assistant, a click or Ctrl+Shift+1…9 moves the focus, dragging a tab onto a pane swaps the system; Show beside it in the right click and Shift+Enter in the picker; the overview shows every session as a tile with the last lines of its screen (browser only), a click brings it up; below 1100 pixels Single only
 - **V01.1.291** Knowledge map faster with more room: 3000 pages, 25,000 connections and 15,000 points per profile; search with the map about five times as fast with 5000 documents, nightly runs in short slices; a deleted point does not come back with another form of address or spelling either
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.287** Collections: bundle documents, knowledge book pages and notes for one undertaking, per entry off, short or whole to the model, bind a conversation in the assistant to a collection
 - **V01.1.286** The knowledge map finds doubles: the same person with a title, another spelling or "last name, first name" becomes one point; similar ones stand under "Maybe double" with "Merge" or "Different"; "Merge with …" is a search field
 - **V01.1.285** Find's measurement is now a part of Measure knowledge (`sudo speech-spark wissen messen synth 5000`, Status → Checks → Measure knowledge): 50,000 sealed made-up mails with 5000 documents, search p50/p95, size and RAM; `speech-spark finden messen` is gone
-- **V01.1.284** Companion in the panel's system style: calm greys, one blue accent, no gradients, the face in the windows only on request
 
 
 

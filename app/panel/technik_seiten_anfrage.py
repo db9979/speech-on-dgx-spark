@@ -238,7 +238,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)
     "weiche": {
-        "stand": "00a48f7e64",
+        "stand": "ada1c77dcd",
         "bezug": {
             "intent.GROUPS": ["s4", "s6"], "intent_bench.BENCH": ["s4", "s5"], "intent_alltag.ALLTAG": ["s14"],
             "weiche.KEEP_VERSIONS": ["s4"], "intent.Route": ["s6"], "intent.follow_up": ["s8"],
@@ -804,7 +804,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "215b6645cb",
+        "stand": "b9684e68aa",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_AFTER_MAIL": ["s4"],
@@ -878,12 +878,15 @@ SEITEN = {
                "die Marke schon vor dem Lauf. Ab dann sind die Sperren aus Schritt 4 für den Rest der Antwort aktiv. "
                "document_search bringt mit dem Wissensbuch zuerst die passende Seite, dann die Stellen; beides ist "
                "fremder Text. Eine Stelle ohne die gefragten Wörter fällt weg (lokal.cover); bleibt keine, kommt der feste "
-               "Satz chat_tools.NOTHING_FITS statt fremder Stellen.",
+               "Satz chat_tools.NOTHING_FITS statt fremder Stellen. Eine Mappe (aus den eigenen Worten oder der Bindung "
+               "des Gesprächs, mappen.fuer_werkzeug) begrenzt document_search und fund_suche auf ihre Einträge auf „ganz“.",
                "Tools that bring outside text (web search, documents, calendar, earlier conversations, camera) set the "
                "mark before they run. From then on the locks of step 4 hold for the rest of the answer. With the "
                "knowledge book document_search brings the fitting page first, then the passages; both are outside text. "
                "A passage without the words asked for drops out (lokal.cover); if none is left, the fixed sentence "
-               "chat_tools.NOTHING_FITS comes instead of unrelated passages.")),
+               "chat_tools.NOTHING_FITS comes instead of unrelated passages. A collection (from the own words or the "
+               "conversation's binding, mappen.fuer_werkzeug) narrows document_search and fund_suche to its entries set "
+               "to whole.")),
             S("s7", "schritt", ("Werkzeug ausführen", "Run the tool"),
               ("Erweiterung oder eingebautes Werkzeug", "extension or built-in tool"),
               ("Erweiterungen bekommen Profil, Gerät und Herkunft vom Panel, nie vom Modell. Smart-Home-Änderungen "

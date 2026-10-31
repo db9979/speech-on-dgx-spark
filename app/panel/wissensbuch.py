@@ -423,14 +423,14 @@ def _ranked(uid, words):
     return sorted((x for x in got if x[0] > 0), reverse=True)
 
 
-def search_pages(uid, query, k=2):
+def search_pages(uid, query, k=2, only=None):
     """The pages that fit a question best (shared words, the title counting three times): [(score, page)], at least
-    two points and a sentence of a document still there."""
+    two points and a sentence of a document still there. only: just these page ids (a Mappe, mappen.fuer_werkzeug)."""
     words = set(documents._terms(query))
     if not words:
         return []
     out = []
-    for sc, pid in _ranked(uid, words)[:k]:
+    for sc, pid in [x for x in _ranked(uid, words) if only is None or x[1] in only][:k]:
         if sc >= 2:
             p = page(uid, pid)
             if p and p["saetze"]:
@@ -456,12 +456,12 @@ def liste(uid, worte, k=10):
     return [(pid, i + 1) for i, (_, pid) in enumerate(_ranked(uid, words)[:k])]
 
 
-def answer_block(uid, query):
+def answer_block(uid, query, only=None):
     """(text for document_search, refs) of the best fitting pages, or ("", []). The text is outside text: the tool's
-    answer is wrapped as data like every passage."""
+    answer is wrapped as data like every passage. only: just these page ids (a Mappe)."""
     if not allowed(uid):
         return "", []
-    found = search_pages(uid, query)
+    found = search_pages(uid, query, only=only)
     if not found:
         return "", []
     blocks, refs = [], {}

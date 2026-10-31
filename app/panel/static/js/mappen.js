@@ -131,3 +131,11 @@ window.mpBind=(id,name)=>{window.MP_CHAT={id:String(id),name:String(name||'').sl
   if(D.mplvl){b.disabled=true;const r=await apiTry(mpUrl(o.id,'/eintrag'),xjson('PUT',{...it,stufe:D.mplvl}));if(!r.r.ok){mpSay(r.d.detail,true);b.disabled=false;return}await mpPick(o.id,true);return}
   if(D.mpweg){b.disabled=true;const r=await apiTry(mpUrl(o.id,'/eintrag'),xjson('DELETE',it));if(!r.r.ok){mpSay(r.d.detail,true);b.disabled=false;return}
     await mpPick(o.id,true);await mpLoad();mpSay(t('Aus der Mappe genommen; das Dokument bleibt.','Taken out of the collection; the document stays.'))}})}
+// Finden (finden.js, Push 1b): the chooser „Alle Mappen“ / one own Mappe beside source and category; the page then
+// finds only what lies in that Mappe (every level: the person looks herself). The Spark checks the id again
+// (mappen.fuer_seite): another profile's or an unknown one finds nothing. Asks for the list once, then draws Finden again.
+let MP_FUNDLOAD=false;
+window.mpFundWahl=sel=>{if(!MP_ON)return'';
+  if(!MP.list){if(!MP_FUNDLOAD){MP_FUNDLOAD=true;mpLoad().then(()=>{if(MP.list&&typeof fundDraw==='function')fundDraw()})}return''}
+  const l=MP.list.mappen||[];if(!l.length&&!sel)return'';
+  return `<select class="fundmappe" aria-label="${esc(t('Mappe','Collection'))}"><option value="">${esc(t('Alle Mappen','All collections'))}</option>${l.map(m=>`<option value="${esc(m.id)}"${m.id===sel?' selected':''}>${esc(m.name)}</option>`).join('')}</select>`};

@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.294** Mappen begrenzen die Suche: der Assistent und Finden suchen auf Wunsch nur in einer Mappe, das iPhone zeigt Mappen nativ mit Stufen zum Umschalten
 - **V01.1.293** Fernzugang: An alle senden (Mehrere Sitzungen Stufe 4, eigener Schalter, aus): eine rote Zeile über den Terminals schickt eine Zeile an alle verbundenen Shells derselben Art, nie gespiegelte Tasten; Enter fragt jedes Mal mit Zeile und Namen nach; der Spark prüft selbst (eigene Anmeldung, mindestens zwei, eine Art, eine Zeile ohne Steuerzeichen bis 500 Zeichen, nie die Vorsicht-Liste); Log und Live zählen nur; geht nach dem Senden, beim Seitenwechsel und nach 5 Minuten von selbst aus
 - **V01.1.292** Fernzugang: geteilte Ansicht und Übersicht (Mehrere Sitzungen Stufe 2): ab zwei Reitern Einzeln, Nebeneinander, 2 × 2 (ab drei) und Übersicht; jedes Terminal passt sich seinem Feld an, nur das blau umrandete Feld bekommt Tasten und Assistent, Klick oder Strg+Umschalt+1…9 holt den Fokus, Reiter auf ein Feld ziehen tauscht das System; Daneben anzeigen im Rechtsklick und Umschalt+Enter in der Auswahl; die Übersicht zeigt jede Sitzung als Kachel mit den letzten Zeilen ihres Bildschirms (nur im Browser), ein Klick holt sie groß; unter 1100 Pixel nur Einzeln
 - **V01.1.291** Wissenskarte schneller bei mehr Platz: 3000 Seiten, 25 000 Verbindungen und 15 000 Punkte je Profil; Suche mit Karte bei 5000 Dokumenten etwa fünfmal so schnell, nächtliche Läufe in kurzen Scheiben; ein gelöschter Punkt kommt auch mit anderer Anrede oder Schreibweise nicht zurück
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.287** Mappen: Dokumente, Wissensbuch-Seiten und Notizen zu einem Vorhaben bündeln, je Eintrag aus, kurz oder ganz ans Modell, Gespräch im Assistenten an eine Mappe binden
 - **V01.1.286** Wissenskarte findet Doppelte: dieselbe Person mit Anrede, Titel, anderer Schreibweise oder „Nachname, Vorname“ wird ein Punkt; Ähnliches steht unter „Vielleicht doppelt“ mit „Zusammenführen“ oder „Verschieden“; „Zusammenführen mit …“ ist ein Suchfeld
 - **V01.1.285** Finden messen ist jetzt ein Teil von Wissen messen (`sudo speech-spark wissen messen synth 5000`, Zustand → Prüfen → Wissen messen): 50 000 versiegelte erfundene Mails zu 5000 Dokumenten, Suche p50/p95, Größe und RAM; `speech-spark finden messen` gibt es nicht mehr
-- **V01.1.284** Begleiter im Systemstil des Panels: ruhige Grautöne, ein blauer Akzent, keine Verläufe, das Gesicht in den Fenstern nur auf Wunsch
 
 
 

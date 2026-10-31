@@ -69,6 +69,10 @@ BENCH = [
     ("Leg den Mietvertrag in die Mappe Wohnung", "dokument+mappe"),
     ("Which collections do I have?", "mappe"),
     ("Put the lease into the collection Flat", "mappe"),
+    # Push 1b: a search within a Mappe keeps document_search (NARROW_KEEP), a finding word also fund_suche
+    ("Such in der Mappe Wohnung nach der Kaution", "mappe"),
+    ("Finde in der Mappe Wohnung die Rechnung", "finden+mappe"),
+    ("Search the collection Flat for the deposit", "mappe"),
     # the own Kiwix archive (V01.0.264): mein, dein, im Archiv, never the uploaded documents
     ("Schaue in deinem Archiv nach, was du über Albert Einstein", "archiv"),
     ("Schau in meinem Archiv nach Sauerteig", "archiv"),

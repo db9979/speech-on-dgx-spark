@@ -243,7 +243,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "ac6f4e0801",
+        "stand": "74df2ea1ac",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -276,6 +276,7 @@ SEITEN = {
             "wissensmessung.lauf": ["s6"], "wissensmessung._synth": ["s6"], "wissensmessung.MESSTEILE": ["s6"],
             "regel:Mappen": ["s13"], "mappen.plan": ["s13"], "mappen.kontext": ["s13"], "mappen.for_turn": ["s13"],
             "mappen.MAX_MAPPEN": ["s13"], "mappen.MAX_EINTRAEGE": ["s13"], "mappen.TOKEN": ["s13"],
+            "mappen.fuer_werkzeug": ["s6"], "mappen.fuer_seite": ["s6"], "mappen.refs_of": ["s6"],
         },
         "kurz": ("Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente "
                  "jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene "
@@ -295,7 +296,12 @@ SEITEN = {
                  "Tabellen in wissen.db) bündeln eigene Dokumente, Wissensbuch-Seiten und Notizen; ein Gespräch, "
                  "das die Person auf eine Mappe beschränkt, bekommt deren Einträge nach festen Stufen (mappen.plan: "
                  "aus nie, kurz nur der Steckbrief, ganz der Text bis zum Budget, der Rest nur über die Suche) als "
-                 "Daten, und die Antwort ist danach gesperrt wie nach jedem Text von außen.",
+                 "Daten, und die Antwort ist danach gesperrt wie nach jedem Text von außen. Eine Mappe begrenzt auch "
+                 "die Suche: document_search und fund_suche nehmen sie nur aus den eigenen Worten der Nachricht oder "
+                 "aus der Bindung des Gesprächs (mappen.fuer_werkzeug) und suchen dann nur in ihren Einträgen auf "
+                 "„ganz“; die Seite Finden filtert mit allen Einträgen der Mappe (mappen.fuer_seite). Gefiltert wird "
+                 "über die Zuordnung mp_eintrag, nie über Schlagworte; mit einer Mappe fallen Mails, Termine und "
+                 "Kontakte weg, eine fremde oder unbekannte Mappe findet nichts.",
                  "Knowledge is everything the Spark knows without going to the internet: the uploaded documents of "
                  "each profile (one SQLite file wissen.db per profile), the memory, earlier conversations, the own "
                  "Kiwix archive and created documents. This page shows the way a question finds fitting passages in "
@@ -314,7 +320,12 @@ SEITEN = {
                  "own documents, knowledge book pages and notes; a conversation the person limits to a collection "
                  "gets its entries by fixed levels (mappen.plan: off never, short only the document card, whole the "
                  "text up to the budget, the rest only through the search) as data, and the answer is locked after it "
-                 "like after any outside text."),
+                 "like after any outside text. A collection also narrows the search: document_search and fund_suche "
+                 "take it only from the person's own words of the message or from the conversation's binding "
+                 "(mappen.fuer_werkzeug) and then search only its entries set to whole; the page Find filters with "
+                 "every entry of the collection (mappen.fuer_seite). The filter goes over the assignment mp_eintrag, "
+                 "never over tags; with a collection mail, appointments and contacts fall away, another profile's or "
+                 "an unknown collection finds nothing."),
         "warum": ("Das Sprachmodell kennt die eigenen Unterlagen nicht. Es bekommt nur die wenigen Stellen, die das "
                   "Panel mit festen Regeln und zwei kleinen Modellen auf dem Prozessor heraussucht, jeweils mit "
                   "Herkunft. Was in einem Dokument steht, ist Text von außen: Daten, nie ein Befehl.",
@@ -948,6 +959,9 @@ SEITEN = {
             ("mappen.plan", ("feste Regel der Stufen aus, kurz, ganz und des Budgets", "fixed rule of the levels off, short, whole and the budget")),
             ("mappen.kontext", ("die Einträge einer Mappe als Datenblock mit Marken [M…]", "a collection's entries as a data block with marks [M…]")),
             ("mappen.for_turn", ("nur die eigene, freigegebene Mappe; als Text von außen", "only the own, released collection; as outside text")),
+            ("mappen.fuer_werkzeug", ("Mappe als Filter der Suche nur aus eigenen Worten oder der Bindung", "a collection as the search's filter only from own words or the binding")),
+            ("mappen.fuer_seite", ("Mappe als Filter der Seite Finden, fremd findet nichts", "a collection as the filter of the page Find, a foreign one finds nothing")),
+            ("mappen.refs_of", ("Dokumente und Seiten einer Mappe aus mp_eintrag", "documents and pages of a collection from mp_eintrag")),
             ("documents._similar", ("Ähnlichkeit blockweise in float32", "similarity block by block in float32")),
             ("gedaechtnis.hint_lines", ("Fakten in drei Blöcken", "facts in three blocks")),
             ("profiles._cap", ("Obergrenze: nur alte gelernte Fakten machen Platz", "cap: only old learned facts make room")),

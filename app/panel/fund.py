@@ -1110,14 +1110,15 @@ class _Erlaubt:
 
 
 def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, von=None, bis=None, anzahl=MAX_SHOW,
-          now=None, bezug=None, info=None, quellen=None, frei=None):
+          now=None, bezug=None, info=None, quellen=None, frei=None, nur=None):
     """The hits of this profile: [{"id", "quelle", "ext", "titel", "wann", "auszug", "felder", "tags", "weg", "score"}]
     (a mail also "anhaenge": the attachments that matched, one card with them). Only the profile's own index and the
     sources it may use; never another profile's (its file, its marks). bezug: an event word from the person's own words
     (bezug_aus): with an appointment of the own calendar, entries of its window get a bonus; `info` (a dict) learns
     {"bezug": word, "termin": unix time or None}. quellen: only these sources (lokal: fund.LOKAL). frei: (sources,
     mailbox ids, calendar ids) given instead of the profile's releases, only for the measurement on its own
-    throw-away index (fundmessung.py), never from a request."""
+    throw-away index (fundmessung.py), never from a request. nur: (document ids, Wissensbuch page ids) of a Mappe
+    (mappen.fuer_werkzeug / fuer_seite): only these, every other source falls away."""
     t0 = time.time()
     now = time.time() if now is None else now
     mine = {q.name: q for q in quellen_fuer(uid)} if frei is None else {n: BY_NAME[n] for n in frei[0] if n in BY_NAME}
@@ -1125,6 +1126,8 @@ def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, v
         mine = {k: v for k, v in mine.items() if k == quelle}
     if quellen is not None:
         mine = {k: v for k, v in mine.items() if k in quellen}
+    if nur is not None:   # a Mappe (mappen.py): only its documents and Wissensbuch pages
+        mine = {k: v for k, v in mine.items() if k in ("dokument", "nas", "remarkable", "wissensbuch")}
     if not mine or not _exists(uid):
         _note(0, now=now)
         return []
@@ -1152,6 +1155,12 @@ def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, v
                     got |= _klar_absender(con, wert)
                     got |= _blind_from(con, uid, wert)
                 ok_ids = got if ok_ids is None else ok_ids & got
+        if nur is not None:   # the entries of the Mappe, by their keys in the index (mp_eintrag, never fund_tag)
+            dn = [n for n in ("dokument", "nas", "remarkable") if n in mine]
+            got = set(_ext_ids(con, dn, nur[0]).values()) if dn and nur[0] else set()
+            if nur[1] and "wissensbuch" in mine:
+                got |= set(_ext_ids(con, ["wissensbuch"], nur[1]).values())
+            ok_ids = got if ok_ids is None else ok_ids & got
         cond, args = ["quelle IN (%s)" % ",".join("?" * len(mine))], list(mine)
         if konten is not None:
             cond.append("(quelle NOT IN ('mail','anhang') OR substr(ext, 1, instr(ext, ':') - 1) IN (%s))"
@@ -1196,7 +1205,7 @@ def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, v
         dq = [n for n in ("dokument", "nas", "remarkable") if n in mine]
         if q and dq:
             seen, i = set(), 0
-            dh = documents.search(uid, worte, k=MAX_HITS)
+            dh = documents.search(uid, worte, k=MAX_HITS, only_docs=set(nur[0]) if nur is not None else None)
             ext_id = _ext_ids(con, dq, [h["id"] for h in dh], pairs=True)
             allowed_ids.vorab(ext_id.get((_doc_source({"source": h.get("source")}), h["id"])) for h in dh)
             for h in dh:
@@ -1822,6 +1831,7 @@ TOOL = {"type": "function", "function": {
         "quelle": {"type": "string", "enum": [q.name for q in QUELLEN]},
         "kategorie": {"type": "string", "enum": list(KATEGORIEN)},
         "firma": {"type": "string"}, "person": {"type": "string"},
+        "mappe": {"type": "string", "description": "only within this Mappe (collection) of the user, its name as the user said it"},
         "anzahl": {"type": "integer", "minimum": 1, "maximum": TOOL_MOST}}, "required": ["worte"]}}}
 HINT = ("Sucht der Nutzer etwas Eigenes (eine Rechnung, einen Vertrag, ein Dokument, eine Mail, eine Seite im Wissensbuch, "
         "einen alten Termin, ein früheres Gespräch, eine Liste), ruf fund_suche mit seinen Worten. Zeitraum und „vom …“ "
@@ -1940,7 +1950,9 @@ async def tool(name, args, ctx):
         n = TOOL_MOST
     t0 = time.time()
     info = {}
-    hits = await asyncio.to_thread(suche, uid, worte, anzahl=n, bezug=bz[0] if bz else None, info=info, **flt)
+    import mappen
+    nur, mnote = await asyncio.to_thread(mappen.fuer_werkzeug, who, args.get("mappe"), own, ctx.get("mappe"))
+    hits = await asyncio.to_thread(suche, uid, worte, anzahl=n, bezug=bz[0] if bz else None, info=info, nur=nur, **flt)
     ms = int((time.time() - t0) * 1000)
     if dropped:
         _note(verworfen=dropped)
@@ -1961,8 +1973,8 @@ async def tool(name, args, ctx):
     elif hits and callable(fest):
         print(f"fund: sofort | nicht klar | {len(hits)} treffer an das modell", flush=True)
     if not hits:
-        return satz + "Keine Treffer in den eigenen Daten (Finden). Sag das kurz; erfinde nichts."
-    return satz + "Treffer in den eigenen Daten (Finden), neueste Daten zuerst nach Passung:\n" + \
+        return mnote + satz + "Keine Treffer in den eigenen Daten (Finden). Sag das kurz; erfinde nichts."
+    return mnote + satz + "Treffer in den eigenen Daten (Finden), neueste Daten zuerst nach Passung:\n" + \
         "\n".join(f"{i + 1}. {_line(h, now)}" for i, h in enumerate(hits))
 
 
@@ -2008,6 +2020,8 @@ async def search_route(request: Request, prof=Depends(own_profile)):
     _need(uid)
     guard.limit(request, "fund", uid)
     body = await json_body(request, 4096)
+    import mappen
+    nur = await asyncio.to_thread(mappen.fuer_seite, prof, body.get("mappe")) if body.get("mappe") else None
     quelle = body.get("quelle") if body.get("quelle") in BY_NAME else None
     kat = body.get("kategorie") if body.get("kategorie") in KATEGORIEN else None
     von = body.get("von") if _ts(body.get("von")) is not None else None
@@ -2024,7 +2038,7 @@ async def search_route(request: Request, prof=Depends(own_profile)):
     info = {}
     t0 = time.time()
     hits = await asyncio.to_thread(suche, uid, rest, quelle, kat, None, None, von, bis, MAX_SHOW, None,
-                                   bz[0] if bz else None, info)
+                                   bz[0] if bz else None, info, nur=nur)
     deutung = {}
     if zr:
         deutung.update(von=zr["von"], bis=zr.get("bis", ""))

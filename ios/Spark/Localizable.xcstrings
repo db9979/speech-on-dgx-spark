@@ -19460,6 +19460,196 @@
           }
         }
       }
+    },
+    "Einträge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entries"
+          }
+        }
+      }
+    },
+    "Mappe löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete collection"
+          }
+        }
+      }
+    },
+    "Mappe löschen? Die Dokumente bleiben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete the collection? The documents stay."
+          }
+        }
+      }
+    },
+    "Mappen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collections"
+          }
+        }
+      }
+    },
+    "Neue Mappe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New collection"
+          }
+        }
+      }
+    },
+    "Noch keine Mappe. Eine Mappe bündelt Dokumente, Seiten des Wissensbuchs und Notizen zu einem Vorhaben; der Assistent antwortet dann nur daraus.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No collection yet. A collection bundles documents, knowledge book pages and notes for one undertaking; the assistant then answers only from them."
+          }
+        }
+      }
+    },
+    "Noch leer. Leg im Panel Dokumente, Seiten oder eine Notiz hinein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Still empty. Put documents, pages or a note in from the panel."
+          }
+        }
+      }
+    },
+    "Stufe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Level"
+          }
+        }
+      }
+    },
+    "≈ %lld von %lld Token gehen mit jeder Frage an das Modell": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "≈ %1$lld of %2$lld tokens go to the model with every question"
+          }
+        }
+      }
+    },
+    "kurz ≈ %lld · ganz ≈ %lld Token": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "short ≈ %1$lld · whole ≈ %2$lld tokens"
+          }
+        }
+      }
+    },
+    "Dokumente hineinlegen, Notizen und Umbenennen gehen im Panel unter Mappen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Putting documents in, notes and renaming work in the panel under Collections."
+          }
+        }
+      }
+    },
+    "kurz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "short"
+          }
+        }
+      }
+    },
+    "ganz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "whole"
+          }
+        }
+      }
+    },
+    "geht kurz mit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "goes short"
+          }
+        }
+      }
+    },
+    "geht ganz mit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "goes whole"
+          }
+        }
+      }
+    },
+    "zu groß: nur die passenden Stellen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "too big: only the fitting parts"
+          }
+        }
+      }
+    },
+    "Budget voll: geht nicht mit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "budget full: does not go"
+          }
+        }
+      }
+    },
+    "geht nicht mit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "does not go"
+          }
+        }
+      }
+    },
+    "Wissensbuch gesperrt: geht nicht mit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Knowledge book blocked: does not go"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -4902,6 +4902,27 @@
 "titel": "Fernzugang: An alle senden",
 "text": "Funktionen → Fernzugang zu Servern → An alle senden an. Zwei Linux-Systeme als Reiter öffnen: in der Reiterleiste steht „An alle …“. Anklicken: eine rote Zeile sagt „Eingabe geht an 2 Systeme“ mit beiden Namen. „rm -rf /tmp/test“ eingeben und Enter: die Seite weist es ab (Vorsicht-Liste), nichts kommt in den Shells an. „uptime“ und Enter: die Rückfrage nennt die Zeile und beide Namen, nach OK zeigen beide Shells die Ausgabe, die rote Zeile geht aus. Mit einem Windows-System als drittem Reiter steht es unter „nicht dabei“. Zustand → Logs zeigt „fernzugang: alle | gesendet | 2“ ohne den Befehl. Schalter aus: kein „An alle …“ mehr.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P725",
+"v": 1294,
+"titel": "Mappen: Suche nur in der Mappe",
+"text": "Mappe „Wohnung“ mit dem Mietvertrag auf „ganz“ und der Hausordnung auf „kurz“; ein drittes Dokument mit denselben Wörtern liegt nicht darin. „Im Assistenten fragen“, dann „Such nach der Lindenstraße“: die Fundstellen kommen nur aus dem Mietvertrag, nie aus dem dritten Dokument und nie aus Mails, Terminen oder Kontakten. Mietvertrag auf „aus“ stellen und dieselbe Frage: die Antwort sagt, dass in der Mappe nichts auf „ganz“ steht. Ohne Bindung: „Such in der Mappe Wohnung nach der Kaution“ sucht ebenso nur dort. Zustand → Logs, Bereich Wissen: „mappen: filter | dokumente | chat | 1 dokumente 0 seiten“ ohne Namen; Zustand → Live, Kasten Mappen: „n Suchen in Mappen“.",
+"thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P726",
+"v": 1294,
+"titel": "Mappen: Wähler in Finden",
+"text": "Funktionen → Finden in allen Daten und Mappen an. Unter Finden steht neben Quelle und Kategorie „Alle Mappen“; „Wohnung“ wählen: ohne Wörter zeigt die Liste genau die Dokumente der Mappe (jede Stufe), mit „Lindenstraße“ nur die passenden davon, keine Mail, kein Termin, kein Kontakt. Zurück auf „Alle Mappen“: wieder alle Treffer. Mappen für das Profil sperren: der Wähler verschwindet.",
+"thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P727",
+"v": 1294,
+"titel": "Mappen: iPhone nativ",
+"text": "iPhone-App, Meine Sachen → Mappen: die Liste wie im Panel, „+“ legt eine Mappe an. Eine Mappe antippen: Einträge mit aus/kurz/ganz als Segmented Control und „≈ X von Y Token“; eine Stufe ändern, im Panel unter Mappen neu laden: dieselbe Stufe und derselbe Balken. Nach links wischen nimmt einen Eintrag heraus (das Dokument bleibt); „Mappe löschen“ fragt nach und nimmt nur die Zuordnung. Englische Sprache: alle Texte englisch. Android: Ich → Mappen öffnet die Panel-Ansicht.",
+"thread": "Ideen aus Open Notebook übernehmen"
 }
 ]
 }

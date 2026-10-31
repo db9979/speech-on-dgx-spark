@@ -2106,9 +2106,10 @@ def snapshot(view="admin", now=None):
                         + (f" · {wbk['widerspruch']} Widersprüche" if wbk.get("widerspruch") else "")
                         + (f" · {wbk['veraltet']} veraltet?" if wbk.get("veraltet") else "")
                         + (" · arbeitet" if wbk.get("running") else ""))
-        if x["id"] == "mappen":    # Mappen: Mappen, entries, profiles, conversations bound today, refused (numbers only, never a name)
+        if x["id"] == "mappen":    # Mappen: Mappen, entries, profiles, conversations bound today, searches within a Mappe, refused (numbers only, never a name)
             x["sub"] = (f"{mpn.get('mappen', 0)} Mappen · {mpn.get('eintraege', 0)} Einträge in {mpn.get('profile', 0)} Profilen"
                         + f" · heute {mpn.get('chats', 0)} Gespräche mit Mappe"
+                        + (f" · {mpn['filter']} Suchen in Mappen" if mpn.get("filter") else "")
                         + (f" · {mpn['abgelehnt']} abgelehnt" if mpn.get("abgelehnt") else ""))
         if x["id"] == "fund":      # Finden: entries, profiles, own tags, searches today, median time (numbers only, never a word)
             x["sub"] = (f"{fnd.get('eintraege', 0)} Einträge in {fnd.get('profile', 0)} Profilen · {fnd.get('hand', 0)} eigene Schlagworte"
