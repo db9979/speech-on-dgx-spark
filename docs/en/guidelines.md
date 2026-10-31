@@ -124,6 +124,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - Downloads streamed and with a byte limit. Texts for TTS and chat limited, the last message to about 4000 characters. (C, P Prüfung)
 - Rate limit per IP plus a global semaphore for LLM, ASR and TTS (`guard.limit`, `guard.Slot`). Upper limits for jobs, tool calls, searches and memory entries. (C)
 - Caches with expiry and maximum size. Heavy work runs via `to_thread` with a budget, never in the event loop. (C; 🧪 test_tempo.OffTheLoop)
+- **Background loops never end silently** (2026-10-31, after `dungeon_musik.loop` stopped on every start from V01.1.280 on with "hintergrund: background task … ended"): every loop the panel starts with `core.spawn` at startup comes to rest without an error and waits in `asyncio.sleep` or `asyncio.wait_for`. A module-level name never gets a second, unrelated value; the second one silently wins for every function of the module (there the pause `TAKT` in seconds became the list of time signatures). (🧪 test_startlaeufe, test_aufraeumen.DoubleModuleName)
 - **Nothing heavy on the panel's event loop** (Dominik 2026-10-18, after the stall when many folders were left out): programs (`subprocess`), pauses, deleting or walking folder trees, reading documents (`documents.add`, `reread`, …) and writing per document in a loop (`documents.delete`, `nasquelle._put_state`, …) run from an `async` function only via `asyncio.to_thread` or `vorrang.in_thread`. The test finds such ways across all modules; what another thread still moves stands with a reason in `test_loopwacht.LATER` (it only shrinks). What still hangs, the hang guard (`loopwacht.py`) finds: after 5 s a log line with the place and the thread computing right then, after 90 s systemd restarts the panel. A thread blocks the loop too when it computes long in Python (Python's lock, 2026-10-19: expanding calendar repeats): such work keeps its result, never runs twice at once and, when big, in a process of its own; the panel gives the lock back after 1 ms (`loopwacht.SWITCH_S`). (🧪 test_loopwacht)
 - Background work gives speech priority: `vorrang.run`, `post`, `in_thread`, `quiet` and `hold`. At most one background request at a time to the language model. This is a fixed rule. (M [[vorrang-sprache-plan]]; 🧪 test_vorrang)
 - **Maintenance pause** (Dominik 2026-10-14): background work that asks the language model goes through `vorrang.run`/`post` or waits first with `quiet`/`hold(…, model=True)`; that way it also waits during a maintenance pause. Code that asks the model itself in the foreground checks `wartung.paused("llm")` first and says `wartung.sentence` instead of waiting for a time-out. (🧪 test_wartung)
@@ -441,8 +442,9 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 | test_changelog | CHANGELOG format |
 | test_releases_aufraeumen | only the newest release per series |
 | test_app_gleichstand | one list of Ich pages, every page reachable in the apps (exceptions with a reason), pages follow the release, app texts with English, every function in the companion or outside with a reason (`DESK`, `DESK_SKIP`) |
-| test_aufraeumen | no new duplicates: own `<think>` filter, a dict key twice, unused import, own JSON write, own model call, raw `fetch(`, names differing between features.py and guides.js (the legacy list only shrinks) |
+| test_aufraeumen | no new duplicates: own `<think>` filter, a dict key twice, a module-level name twice, unused import, own JSON write, own model call, raw `fetch(`, names differing between features.py and guides.js (the legacy list only shrinks) |
 | test_grundausstattung | basic set only without setup, without anything new going out and without a code; internet part never shipped on; card for the admin only, with undo; help sentence in an empty chat |
+| test_startlaeufe | every background loop of the start comes to rest without an error (`asyncio.sleep`, `asyncio.wait_for`) |
 | test_loopwacht | nothing heavy on the panel's event loop (the list of open places only shrinks), hang guard with log line, busy thread and restart, limits of the panel and the emergency mode, the search worker on at most half of the cores as SCHED_IDLE, hardware watchdog only on a Raspberry Pi |
 | test_offline | models load without the network (`modelle.ohne_netz`, `HF_HUB_OFFLINE`), downloads only with a reason, no packages or images at run time, pages load nothing from outside, time server only as a private IPv4 address, the model computer's clock and its refusal because of the time |
 | test_richtlinie | values shipped on with a reason, journal without profile names, VERSION/CHANGELOG/README in agreement, guideline de/en present and its test names valid |
@@ -508,6 +510,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 |---|---|
 | OwnThinkFilter | `common.no_think` |
 | DoubleDictKey | a key once |
+| DoubleModuleName | a module-level name once (a step that reads the name itself does not count) |
 | UnusedImport | delete, or `# noqa: F401` with a reason |
 | OwnJsonWrite | `common.write_json` (fresh name instead of a fixed `.tmp`) |
 | OwnModelCall | `llm.complete` (language model) |

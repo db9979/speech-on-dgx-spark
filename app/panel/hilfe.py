@@ -158,8 +158,8 @@ DATA_ASK = re.compile(r"(?i)\b(heute|morgen|gestern|übermorgen|nächste[nrs]? w
 STRONG = re.compile(r"(?i)\b(was kannst du|was empfiehlst du|welche einstellung|was sollte ich|best practice|hilfe zum spark|"
                     r"what can you do|what do you recommend)")
 # on a page: "hier", "diese Seite", "dieser Schalter" points at the page (plan 2)
-HERE = re.compile(r"(?i)\b(hier|diese[rsnm]? (seite|schalter|knopf|einstellung|punkt|anzeige)|auf der seite|das da|"
-                  r"here|this (page|switch|button|setting))\b")
+POINTS_HERE = re.compile(r"(?i)\b(hier|diese[rsnm]? (seite|schalter|knopf|einstellung|punkt|anzeige)|auf der seite|das da|"
+                         r"here|this (page|switch|button|setting))\b")
 STATUS_ASK = re.compile(r"(?i)\b(was (heißt|bedeutet|ist) (das|der|die|da)|warum (ist|steht|sind)|rot|gelb|fehler|kaputt|"
                         r"läuft nicht|geht nicht|warnung|what does (this|that) mean|why is|red|error|broken)\b")
 # where a question comes from (plan 10): only from the panel itself (the key, the login, the client the panel set)
@@ -414,7 +414,7 @@ def page_rule(page, text, route_names):
     if not page or page == "chat":
         return False
     text = str(text or "")[:MAX_Q]
-    if help_question(text) or HERE.search(text):
+    if help_question(text) or POINTS_HERE.search(text):
         return True
     if page in STATUS_PAGES:
         return bool(STATUS_ASK.search(text))
@@ -910,7 +910,7 @@ def search(question, lang="de", page=None, n=MAX_HITS, level="admin", c=None, fo
     ix = index()
     qtext, extra = query_words(question)
     qs = tokens(qtext)
-    here = bool(page and HERE.search(str(question)))
+    here = bool(page and POINTS_HERE.search(str(question)))
     first = _focus_item(focus, lang, level, c)
     if not qs and not first and not here:
         return []

@@ -115,7 +115,7 @@ LAUT = {"normal": ("Normal", "Normal"), "lauter": ("Lauter", "Louder")}
 STANDARD = {"qualitaet": "schnell", "laenge": "lang", "laut": "normal"}
 SIEG_S = 30                # a victory is short and plays once
 NACHT = (1, 6)             # local hours the night fills the fields
-TAKT = 10                  # seconds between two looks at the queue
+WARTE_S = 10               # seconds between two looks at the queue
 PAUSE_S = 3600             # after FEHLER_MAX failures in a row the store rests this long
 FEHLER_MAX = 3
 LISTE = 30                 # pieces of one field a seat gets to choose from
@@ -864,7 +864,7 @@ async def loop():
             await step()
         except Exception as e:   # noqa: BLE001 - the loop goes on
             print("dungeon: musik | fehler", type(e).__name__, flush=True)
-        await asyncio.sleep(TAKT)
+        await asyncio.sleep(WARTE_S)
 
 
 def nervt(sid, seat):

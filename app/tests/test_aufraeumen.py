@@ -21,6 +21,8 @@ starts at zero.
      and technik take their lists from it)
 - l  no one-line wrapper around features.allowed (a function that only returns it): call features.allowed
      directly; the features.admin_on wrappers are the audited places of test_sperre_ueberall.ADMIN_ON_OK
+- m  no module-level name bound twice (the second value silently wins for the whole module, as a dict for a pause
+     in seconds did in dungeon_musik.TAKT)
 
 Reads only app/, so it runs in the app/-only copy the Spark tests too. No wall clock dependence.
 
@@ -96,6 +98,49 @@ class DoubleDictKey(Ratchet, unittest.TestCase):
                     n += len(keys) - len(set(keys))
             return n
         return count_by_file(py_files(), count)
+
+
+class DoubleModuleName(Ratchet, unittest.TestCase):
+    """A module-level name given a second, unrelated value (the second silently wins for every function of the
+    module): dungeon_musik.TAKT, the queue's pause in seconds, became the dict of time signatures (V01.1.280), and
+    its background loop ended at once on each start with asyncio.sleep({…}) (2026-10-31). A second value that reads
+    the name itself (CLAIMS = {k: re.compile(v) for k, v in CLAIMS.items()}) is a step, not a second name."""
+    WHAT = "a module-level name bound twice, the second value silently replaces the first: give one a new name"
+    ALT = {}
+
+    @staticmethod
+    def doubled(src):
+        first, out = {}, []
+        for node in ast.parse(src).body:
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                bound, value = [node.name], None
+            elif isinstance(node, ast.Assign):
+                bound, value = [t.id for t in node.targets if isinstance(t, ast.Name)], node.value
+            elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.value is not None:
+                bound, value = [node.target.id], node.value
+            else:
+                continue
+            reads = {n.id for n in ast.walk(value) if isinstance(n, ast.Name)} if value is not None else set()
+            for name in bound:
+                if name in first and name not in reads:
+                    out.append(f"{name} (lines {first[name]} and {node.lineno})")
+                first.setdefault(name, node.lineno)
+        return out
+
+    def hits(self):
+        return count_by_file(py_files(), lambda name, src: len(self.doubled(src)))
+
+    def test_the_scan_sees_a_name_bound_twice(self):
+        self.assertEqual(self.doubled("TAKT = 10\nTAKT = {'lager': '3'}\n"), ["TAKT (lines 1 and 2)"])
+        self.assertEqual(self.doubled("def f():\n    pass\n\n\ndef f():\n    pass\n"), ["f (lines 1 and 5)"])
+        self.assertEqual(self.doubled("A = {'x': 'y'}\nA = {k: v for k, v in A.items()}\n"), [])
+        self.assertEqual(self.doubled("A = 1\nA += 1\nif True:\n    A = 2\n"), [])
+
+    def test_which_names(self):
+        """The names behind a red count, so the message says where to look."""
+        found = {name: self.doubled(src) for name, src in py_files().items()}
+        self.assertEqual({k: v for k, v in found.items() if v and len(v) > self.ALT.get(k, 0)}, {},
+                         "a module-level name bound twice: give one of them its own name")
 
 
 class UnusedImport(Ratchet, unittest.TestCase):

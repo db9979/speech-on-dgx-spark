@@ -124,6 +124,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - Downloads gestreamt und mit Byte-Grenze. Texte für TTS und Chat begrenzt, die letzte Nachricht auf etwa 4000 Zeichen. (C, P Prüfung)
 - Rate-Limit pro IP plus globale Semaphore für LLM, ASR und TTS (`guard.limit`, `guard.Slot`). Obergrenzen für Jobs, Werkzeugaufrufe, Suchen und Speicher-Einträge. (C)
 - Caches mit Ablauf und Maximalgröße. Schwere Arbeit läuft per `to_thread` mit Budget, nie im Event-Loop. (C; 🧪 test_tempo.OffTheLoop)
+- **Hintergrund-Läufe enden nie still** (2026-10-31, nach `dungeon_musik.loop`, die ab V01.1.280 bei jedem Start mit „hintergrund: background task … ended“ stehen blieb): jeder Lauf, den das Panel beim Start mit `core.spawn` beginnt, kommt ohne Fehler zur Ruhe und wartet in `asyncio.sleep` oder `asyncio.wait_for`. Ein Name auf Modulebene bekommt nie einen zweiten, fremden Wert; der zweite gewinnt still für jede Funktion des Moduls (dort wurde die Pause `TAKT` in Sekunden zur Liste der Taktarten). (🧪 test_startlaeufe, test_aufraeumen.DoubleModuleName)
 - **Nichts Schweres auf der Ereignis-Schleife des Panels** (Dominik 2026-10-18, nach dem Hänger beim Auslassen vieler Ordner): Programme (`subprocess`), Pausen, Ordnerbäume löschen oder ablaufen, Dokumente lesen (`documents.add`, `reread`, …) und Schreiben je Dokument in einer Schleife (`documents.delete`, `nasquelle._put_state`, …) laufen aus einer `async`-Funktion nur über `asyncio.to_thread` oder `vorrang.in_thread`. Der Test findet solche Wege über alle Module; was ein anderer Thread noch umbaut, steht mit Grund in `test_loopwacht.LATER` (wird nur kürzer). Was trotzdem hängt, findet der Hänge-Wächter (`loopwacht.py`): nach 5 s eine Logzeile mit der Stelle und dem Faden, der gerade rechnet, nach 90 s startet systemd das Panel neu. Auch ein Faden blockiert die Schleife, wenn er lange in Python rechnet (Pythons Sperre, 2026-10-19: Kalender-Wiederholungen ausrechnen): solche Arbeit merkt sich ihr Ergebnis, läuft nie zweimal gleichzeitig und bei Großem in einem eigenen Prozess; das Panel gibt die Sperre nach 1 ms zurück (`loopwacht.SWITCH_S`). (🧪 test_loopwacht)
 - Hintergrundarbeit gibt der Sprache Vorrang: `vorrang.run`, `post`, `in_thread`, `quiet` und `hold`. Höchstens eine Hintergrund-Anfrage gleichzeitig ans Sprachmodell. Das ist eine feste Regel. (M [[vorrang-sprache-plan]]; 🧪 test_vorrang)
 - **Wartungspause** (Dominik 2026-10-14): Hintergrundarbeit, die das Sprachmodell fragt, läuft über `vorrang.run`/`post` oder wartet vorher mit `quiet`/`hold(…, model=True)`; so wartet sie auch während einer Wartungspause. Wer das Modell im Vordergrund selbst fragt, prüft vorher `wartung.paused("llm")` und sagt `wartung.sentence` statt auf eine Zeitüberschreitung zu warten. (🧪 test_wartung)
@@ -441,8 +442,9 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 | test_changelog | CHANGELOG-Format |
 | test_releases_aufraeumen | nur neuestes Release pro Reihe |
 | test_app_gleichstand | eine Liste der Ich-Seiten, jede Seite in den Apps erreichbar (Ausnahmen mit Grund), Seiten folgen der Freigabe, App-Texte mit Englisch, jede Funktion im Begleiter oder mit Grund draußen (`DESK`, `DESK_SKIP`) |
-| test_aufraeumen | keine neuen Doppel: eigener `<think>`-Filter, doppelter Dict-Schlüssel, ungenutzter Import, eigenes JSON-Schreiben, eigener Modellaufruf, roher `fetch(`, abweichende Namen in features.py und guides.js (Altlastenliste schrumpft nur) |
+| test_aufraeumen | keine neuen Doppel: eigener `<think>`-Filter, doppelter Dict-Schlüssel, doppelter Name auf Modulebene, ungenutzter Import, eigenes JSON-Schreiben, eigener Modellaufruf, roher `fetch(`, abweichende Namen in features.py und guides.js (Altlastenliste schrumpft nur) |
 | test_grundausstattung | Grundausstattung nur ohne Einrichtung, ohne Neues nach außen und ohne Code; Internet-Teil nie ab Werk; Karte nur für den Admin, mit Rückgängig; Hilfe-Satz im leeren Chat |
+| test_startlaeufe | jeder Hintergrund-Lauf vom Start kommt ohne Fehler zur Ruhe (`asyncio.sleep`, `asyncio.wait_for`) |
 | test_loopwacht | nichts Schweres auf der Ereignis-Schleife des Panels (Liste der noch offenen Stellen wird nur kürzer), Hänge-Wächter mit Logzeile, rechnendem Faden und Neustart, Grenzen von Panel und Notbetrieb, Worker der Suche auf höchstens der Hälfte der Kerne als SCHED_IDLE, Hardware-Watchdog nur am Raspberry Pi |
 | test_offline | Modelle laden ohne Netz (`modelle.ohne_netz`, `HF_HUB_OFFLINE`), Downloads nur mit Grund, keine Pakete oder Images zur Laufzeit, Seiten laden nichts von außen, Zeitserver nur als private IPv4-Adresse, Uhr des Modell-Rechners und Ablehnung wegen der Uhrzeit |
 | test_richtlinie | an ausgelieferte Werte mit Grund, Journal ohne Profilnamen, VERSION/CHANGELOG/README im Einklang, Richtlinie de/en vorhanden und ihre Testnamen gültig |
@@ -508,6 +510,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 |---|---|
 | OwnThinkFilter | `common.no_think` |
 | DoubleDictKey | ein Schlüssel einmal |
+| DoubleModuleName | ein Name auf Modulebene einmal (ein Schritt, der den Namen selbst liest, zählt nicht) |
 | UnusedImport | löschen oder `# noqa: F401` mit Grund |
 | OwnJsonWrite | `common.write_json` (frischer Name statt festem `.tmp`) |
 | OwnModelCall | `llm.complete` (Sprachmodell) |
