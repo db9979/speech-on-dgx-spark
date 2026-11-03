@@ -19680,6 +19680,36 @@
           }
         }
       }
+    },
+    "Größe des Index": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Size of the index"
+          }
+        }
+      }
+    },
+    "Dokumente und Wissen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Documents and knowledge"
+          }
+        }
+      }
+    },
+    "Die Aufteilung nach Quellen ist geschätzt, die Summen sind die Größe der Dateien.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The split by source is an estimate, the sums are the size of the files."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

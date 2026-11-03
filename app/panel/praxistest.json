@@ -4986,6 +4986,13 @@
 "titel": "Mappen: iPhone nativ",
 "text": "iPhone-App, Meine Sachen → Mappen: die Liste wie im Panel, „+“ legt eine Mappe an. Eine Mappe antippen: Einträge mit aus/kurz/ganz als Segmented Control und „≈ X von Y Token“; eine Stufe ändern, im Panel unter Mappen neu laden: dieselbe Stufe und derselbe Balken. Nach links wischen nimmt einen Eintrag heraus (das Dokument bleibt); „Mappe löschen“ fragt nach und nimmt nur die Zuordnung. Englische Sprache: alle Texte englisch. Android: Ich → Mappen öffnet die Panel-Ansicht.",
 "thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P737",
+"v": 1303,
+"titel": "Finden: Größe des Index in MB oder GB",
+"text": "Finden in allen Daten an, ein Profil mit Dokumenten (und Mails, falls „Mails und Anhänge finden“ an). P: Finden → Einstellungen: unter den Quellen steht „Größe des Index: … MB“ (ab 1 GB „1,2 GB“, englisch „1.2 GB“). Aufklappen: „Finden“ mit derselben Größe wie users/<id>/fund.db samt -wal und -shm (auf dem Spark mit ls -l vergleichen), darunter je Quelle ein Anteil (geschätzt, zusammen genau Finden) und „Dokumente und Wissen“ (wissen.db). Finden → Einstellungen → Index löschen: nach dem Neuladen ist „Finden“ kleiner. iPhone-App: Finden → Einstellungen zeigt dieselbe Zahl, aufklappbar; Android über die Panel-Ansicht. A: Personen und Geräte → das Profil → Abschnitt Daten: „Größe des Index: …“ mit Finden und Dokumente und Wissen, nur Zahlen. Zustand → Live, Kasten Finden: „Index … (Finden …, Dokumente und Wissen …)“ als Summe aller Profile, nie ein Name. Ein anderes Profil sieht in seinen Einstellungen nur seine eigene Größe; ein Gast sieht Finden gar nicht.",
+"thread": "Alles schnell finden über einen Index"
 }
 ]
 }

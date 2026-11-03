@@ -114,6 +114,8 @@ TEXT_RULES = 30_000      # characters of a document the rules read for amount an
 ROUND_S = 300            # a round per profile at most every five minutes
 AUSZUG = 300
 LIVE_CACHE = 10
+GROESSE_CACHE = 60       # seconds the sizes of the index files are kept (Finden → Einstellungen, Admin, Live)
+GROESSE_ZEILE = 64       # bytes a row costs besides its text when fund.db is split by source (an estimate)
 # Stufe D: tags proposed by the model (schlagworte_due, pruefe), the points of the Wissenskarte, the Sofort-Karte
 KNOTEN_TYPEN = tuple(t for t in TYPEN if t in wissenskarte.ENT_ARTEN)   # tags that can be a point of the Wissenskarte
 TAG_DAY = 200            # entries per profile and day the model looks at (chat.fund_tag_day, 5 to 500)
@@ -134,6 +136,7 @@ _running = set()         # profiles whose round runs now
 _last = {}               # uid -> (when the last round ran, the stamp of its sources)
 _mehr = set()            # profiles whose last round stopped at its budget: the next one runs whatever the stamp
 _live = {"at": 0.0, "d": None}
+_groesse_da = {}         # uid -> (when, the sizes of groesse)
 _stat = {"day": "", "suchen": 0, "ms": [], "verworfen": 0, "fehler": 0, "runden": 0, "bezug": 0, "bezug_fehlt": 0,
          "tag_heute": 0, "tag_ok": 0, "tag_weg": 0, "tag_fehler": 0, "sofort": 0, "knoten": 0}
 _stat_lock = threading.Lock()
@@ -800,9 +803,25 @@ def leeren(uid, hand=False):
             con.execute(f"DELETE FROM {t}")
         if hand:
             con.execute("DELETE FROM fund_hand")
+    _klein(uid)
     _last.pop(uid, None)
+    _groesse_da.pop(uid, None)
     _live["d"] = None
     return n
+
+
+def _klein(uid):
+    """After emptying: the file gives its pages back (VACUUM, then the WAL truncated), so the size shown goes down."""
+    with _lock(uid):
+        try:
+            con = sqlite3.connect(db_path(uid), timeout=15, isolation_level=None)
+            try:
+                con.execute("VACUUM")
+                con.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+            finally:
+                con.close()
+        except sqlite3.Error:
+            print("fund: verkleinern fehler", flush=True)
 
 
 # ---------------------------------------------------------------- the Wissenskarte's points (S3, Stufe D)
@@ -1425,7 +1444,87 @@ def stand(uid, now=None):
                          "stand": frisch.stand(last[q.name], now) if last.get(q.name) else ""} for q in QUELLEN],
             "rueckstand": max(0, docs - have_docs),
             "kategorien": [{"wert": k, "n": kat.get(k, 0), "bereich": k in BEREICHE} for k in KATEGORIEN],
-            "typen": [{"typ": k, "de": v[0], "en": v[1]} for k, v in TYP_WORT.items()]}
+            "typen": [{"typ": k, "de": v[0], "en": v[1]} for k, v in TYP_WORT.items()],
+            "groesse": groesse(uid)}
+
+
+# ---------------------------------------------------------------- the size of the index (Dominik 2026-11-03)
+def _datei(path):
+    """Bytes of an SQLite file with its -wal and -shm (0 for what is not there)."""
+    n = 0
+    for p in (path, path + "-wal", path + "-shm"):
+        try:
+            n += os.path.getsize(p)
+        except OSError:
+            pass
+    return n
+
+
+def dateien(uid):
+    """(fund.db, wissen.db) of a profile in bytes, each with -wal and -shm: only os.stat, nothing opened."""
+    return _datei(db_path(uid)), _datei(documents.db_path(uid))
+
+
+def _gewichte(uid):
+    """fund.db by source, the weights of the estimate: per source its rows weighed by the bytes of their own text, the
+    words or marks of its rows (fund_fts, fund_blind) and GROESSE_ZEILE each. Read only, without the profile's lock
+    (WAL: a round that writes is never waited for); as the last connection it leaves no -wal or -shm behind."""
+    if not _exists(uid):
+        return {}
+    try:
+        con = sqlite3.connect(db_path(uid), timeout=5)
+        try:
+            rows = con.execute(
+                "SELECT i.quelle, COUNT(*) * ? + COALESCE(SUM(LENGTH(CAST(i.titel AS BLOB)) + LENGTH(CAST(i.auszug AS BLOB)) "
+                "+ LENGTH(CAST(i.felder AS BLOB)) + LENGTH(CAST(i.ext AS BLOB)) + LENGTH(CAST(i.stand AS BLOB)) "
+                "+ COALESCE(LENGTH(CAST(f.c0 AS BLOB)), 0) + COALESCE(LENGTH(CAST(b.c0 AS BLOB)), 0)), 0) "
+                "FROM fund_item i LEFT JOIN fund_fts_content f ON f.id = i.id LEFT JOIN fund_blind_content b ON b.id = i.id "
+                "GROUP BY i.quelle", (GROESSE_ZEILE,)).fetchall()
+        finally:
+            con.close()
+    except sqlite3.Error:
+        return {}
+    return {str(q): int(w or 0) for q, w in rows if w}
+
+
+def _anteile(weights, total):
+    """total split by the weights; the parts add up to total exactly (the rest of the division to the largest)."""
+    alle = sum(weights.values())
+    if not alle or not total:
+        return []
+    teile = {q: total * w // alle for q, w in weights.items()}
+    gross = max(teile, key=lambda q: (teile[q], q))
+    teile[gross] += total - sum(teile.values())
+    return [{"name": q, "bytes": n} for q, n in sorted(teile.items(), key=lambda x: (-x[1], x[0]))]
+
+
+def _groesse(uid):
+    weights = _gewichte(uid)   # first, so the files are measured as that read left them
+    f, w = dateien(uid)
+    return {"index": f, "teile": _anteile(weights, f), "geschaetzt": True, "wissen": w, "summe": f + w}
+
+
+def groesse(uid, now=None):
+    """The size of a profile's index, numbers in bytes only (the one source for Finden → Einstellungen, the admin's
+    profile page, Live and the apps): index = fund.db with -wal and -shm, teile = that split by source (an estimate,
+    geschaetzt), wissen = wissen.db with -wal and -shm (Dokumente und Wissen: text, vectors, Wissensbuch, Wissenskarte),
+    summe = both. Kept GROESSE_CACHE seconds; it reads the files, so the routes call it in a thread."""
+    now = time.time() if now is None else now
+    hit = _groesse_da.get(uid)
+    if hit and 0 <= now - hit[0] < GROESSE_CACHE:
+        return hit[1]
+    d = _groesse(uid)
+    _groesse_da[uid] = (now, d)
+    return d
+
+
+def groesse_text(n, en=False):
+    """Live's words for a size (the panel's sizeText in base.js): MB below 1 GB, else GB with one decimal."""
+    n = int(n or 0)
+    if n >= 1_000_000_000:
+        v = f"{n / 1e9:.1f}"
+        return (v if en else v.replace(".", ",")) + " GB"
+    return f"{max(1, round(n / 1e6)) if n else 0} MB"
 
 
 def _rest(con):
@@ -1455,9 +1554,12 @@ def for_live():
             if features.allowed("fundschlagworte", uid):
                 offen_n += _offen(con)
     fm = _fm().for_live()
+    # the size of the index over all profiles (fund.db and wissen.db with -wal and -shm, os.stat only, never a name)
+    groessen = [dateien(u) for u in profiles.user_ids()]
     with _stat_lock:
         ms = int(statistics.median(_stat["ms"])) if _stat["ms"] else None
         d = {"on": True, "eintraege": items, "profile": profs, "quellen": per, "hand": hand_n,
+             "bytes_index": sum(g[0] for g in groessen), "bytes_wissen": sum(g[1] for g in groessen),
              "suchen": _stat["suchen"] if _stat["day"] == _day(time.time()) else 0, "ms": ms,
              "verworfen": _stat["verworfen"], "fehler": _stat["fehler"], "runden": _stat["runden"],
              "bezug": _stat["bezug"] if _stat["day"] == _day(time.time()) else 0,

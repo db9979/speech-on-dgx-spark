@@ -232,6 +232,9 @@ function rowLabels(){document.querySelectorAll('.setrow').forEach(r=>{const b=r.
 {let q=0;const later=()=>{if(!q)q=requestAnimationFrame(()=>{q=0;rowLabels()})};later();
  new MutationObserver(later).observe(document.body,{childList:true,subtree:true})}
 const tglIn=(attrs,on)=>`<label class="tgl"><input type="checkbox" ${attrs}${on?' checked':''}><i></i></label>`;
+// a size in bytes for people (one source, also Kiwix books and the size of the index in Finden and at the admin's
+// profile; Live has fund.groesse_text): MB below 1 GB, else GB with one decimal, German comma, English point
+const sizeText=n=>!n?'':n>=1e9?(n/1e9).toFixed(1).replace('.',L==='en'?'.':',')+' GB':Math.max(1,Math.round(n/1e6))+' MB';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // Strict CSP (plan „Bedienung gesamt“ D1 Stufe 2, V01.0.286): no inline handlers. A generated button names a function
 // of ON and its arguments, data-on="bakDel" data-args="[…]" (JSON through esc, so a name with ' or " stays text);

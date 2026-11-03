@@ -92,6 +92,38 @@ struct FundQuelle: Identifiable, Hashable {
     }
 }
 
+/// The size of the index (fund.groesse in the answer of stand): numbers in bytes only. index is Finden's own file,
+/// teile that split by source (an estimate), wissen the file of Dokumente und Wissen, summe both.
+struct FundGroesse {
+    let summe: Int64
+    let index: Int64
+    let wissen: Int64
+    let teile: [(name: String, bytes: Int64)]
+    let geschaetzt: Bool
+
+    init?(_ d: [String: Any]?) {
+        guard let d else { return nil }
+        func n(_ v: Any?) -> Int64 { max(0, (v as? NSNumber)?.int64Value ?? 0) }
+        summe = n(d["summe"])
+        index = n(d["index"])
+        wissen = n(d["wissen"])
+        teile = (d["teile"] as? [[String: Any]] ?? []).prefix(30).compactMap { x in
+            guard let name = x["name"] as? String, name.range(of: "^[a-z]{2,20}$", options: .regularExpression) != nil else { return nil }
+            return (name, n(x["bytes"]))
+        }
+        geschaetzt = d["geschaetzt"] as? Bool ?? true
+    }
+
+    /// as the panel writes it (sizeText in base.js): MB below 1 GB, else GB with one decimal, German comma
+    static func text(_ b: Int64) -> String {
+        if b >= 1_000_000_000 {
+            let v = String(format: "%.1f", Double(b) / 1e9)
+            return (FindenModel.de ? v.replacingOccurrences(of: ".", with: ",") : v) + " GB"
+        }
+        return String(b == 0 ? 0 : max(1, Int64((Double(b) / 1e6).rounded()))) + " MB"
+    }
+}
+
 /// One field of an entry: its fixed key and its value as text.
 struct FundFeld: Hashable {
     let k: String
@@ -178,6 +210,7 @@ final class FindenModel: ObservableObject {
     @Published var kategorien: [String] = []
     @Published var eintraege = 0
     @Published var rest = 0
+    @Published var groesse: FundGroesse?
     @Published var laeuft = false
     @Published var quelle = ""
     @Published var kategorie = ""
@@ -203,6 +236,7 @@ final class FindenModel: ObservableObject {
             eintraege = (d["eintraege"] as? NSNumber)?.intValue ?? 0
             rest = ((d["rueckstand"] as? NSNumber)?.intValue ?? 0) + ((d["mail_rest"] as? NSNumber)?.intValue ?? 0)
             laeuft = d["laeuft"] as? Bool ?? false
+            groesse = FundGroesse(d["groesse"] as? [String: Any])
             error = nil
         } catch { self.error = error.localizedDescription }
     }
@@ -624,8 +658,8 @@ struct FundDetailView: View {
     }
 }
 
-/// Finden → Einstellungen in the app: per source how many entries and how fresh, what is not read yet, „Neu
-/// aufbauen“ and „Index löschen“ (the own tags stay unless chosen too).
+/// Finden → Einstellungen in the app: per source how many entries and how fresh, what is not read yet, the size of
+/// the index (opened: its split), „Neu aufbauen“ and „Index löschen“ (the own tags stay unless chosen too).
 struct FundStandView: View {
     @ObservedObject var model: FindenModel
     @State private var asking = false
@@ -645,6 +679,25 @@ struct FundStandView: View {
                 LabeledContent { Text(verbatim: String(model.rest)) } label: { Text("Noch nicht eingelesen") }
             } header: { Text("Suchindex") } footer: {
                 Text("Mails, Anhänge, Termine und Kontakte liegen im Index versiegelt, ihre Wörter nur als Marken. Grau: nicht freigegeben.")
+            }
+            if let g = model.groesse {
+                Section {
+                    DisclosureGroup {
+                        LabeledContent { Text(verbatim: FundGroesse.text(g.index)) } label: { Text("Finden") }
+                        ForEach(g.teile, id: \.name) { x in
+                            LabeledContent { Text(verbatim: FundGroesse.text(x.bytes)) } label: {
+                                Text(verbatim: "· " + model.sourceName(x.name)).foregroundStyle(.secondary)
+                            }
+                        }
+                        LabeledContent { Text(verbatim: FundGroesse.text(g.wissen)) } label: { Text("Dokumente und Wissen") }
+                    } label: {
+                        LabeledContent { Text(verbatim: FundGroesse.text(g.summe)) } label: { Text("Größe des Index") }
+                    }
+                } footer: {
+                    if g.geschaetzt && !g.teile.isEmpty {
+                        Text("Die Aufteilung nach Quellen ist geschätzt, die Summen sind die Größe der Dateien.")
+                    }
+                }
             }
             Section {
                 Button {

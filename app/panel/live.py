@@ -188,7 +188,7 @@ TARGETS = {
     "wmessen": ("Wissen messen", "Zeiten und Speicher · auf dem Spark", "spark", False),
     # Finden (fund.py): shown while it is on, entries of the search index, profiles, searches today and the median time,
     # with fundmail.py the mails read today and left to read, with fundquellen.py the entries per further source, with
-    # Stufe D the model's tags today and the Sofort-Karten (numbers only)
+    # Stufe D the model's tags today and the Sofort-Karten, the size of the index over all profiles (numbers only)
     "fund": ("Finden", "Suchindex über die eigenen Daten · auf dem Spark", "spark", False),
     # Mappen (mappen.py): shown while it is on, Mappen and entries of all profiles, conversations bound today (numbers only)
     "mappen": ("Mappen", "Dokumente, Seiten und Notizen je Vorhaben · auf dem Spark", "spark", False),
@@ -2124,6 +2124,9 @@ def snapshot(view="admin", now=None):
                         + (f" · {mpn['abgelehnt']} abgelehnt" if mpn.get("abgelehnt") else ""))
         if x["id"] == "fund":      # Finden: entries, profiles, own tags, searches today, median time (numbers only, never a word)
             x["sub"] = (f"{fnd.get('eintraege', 0)} Einträge in {fnd.get('profile', 0)} Profilen · {fnd.get('hand', 0)} eigene Schlagworte"
+                        # the size of the index over all profiles: Finden's file and Dokumente und Wissen (numbers only)
+                        + f" · Index {fund.groesse_text(fnd.get('bytes_index', 0) + fnd.get('bytes_wissen', 0))}"
+                        + f" (Finden {fund.groesse_text(fnd.get('bytes_index', 0))}, Dokumente und Wissen {fund.groesse_text(fnd.get('bytes_wissen', 0))})"
                         + f" · heute {fnd.get('suchen', 0)} Suchen"
                         + (f", Median {fnd['ms']} ms" if fnd.get("ms") is not None else "")
                         + (f" · {fnd['verworfen']} Filter verworfen" if fnd.get("verworfen") else "")

@@ -414,6 +414,96 @@ class Live(Base):
 
 
 @unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
+class Size(Base):
+    """The size of the index (fund.groesse, Dominik 2026-11-03): the files' bytes exactly, numbers only, each profile
+    its own, never for guests, the admin's profile page and Live summed; no test reads the clock (now given)."""
+    def setUp(self):
+        super().setUp()
+        fund._groesse_da.clear()
+
+    @staticmethod
+    def files(path):
+        import os
+        return sum(os.path.getsize(p) for p in (path, path + "-wal", path + "-shm") if os.path.exists(p))
+
+    def test_size_is_the_files_and_numbers_only(self):
+        _, uid = self.fresh("Fundgross")
+        self.doc(uid, "Geheim.txt", SECRET, {"titel": "Zebrafink", "absender": "Zebrafink"})
+        self.doc(uid, "Rechnung.txt", INVOICE)
+        self.index(uid)
+        g = fund.groesse(uid, now=NOW)
+        self.assertEqual(g["index"], self.files(fund.db_path(uid)))
+        self.assertEqual(g["wissen"], self.files(documents.db_path(uid)))
+        self.assertEqual(g["summe"], g["index"] + g["wissen"])
+        self.assertGreater(g["index"], 0)
+        self.assertGreater(g["wissen"], 0)
+        self.assertTrue(g["geschaetzt"])
+        self.assertEqual(sum(x["bytes"] for x in g["teile"]), g["index"])      # the parts add up exactly
+        self.assertEqual({x["name"] for x in g["teile"]} - set(fund.BY_NAME), set())
+        self.assertIn("dokument", {x["name"] for x in g["teile"]})
+        self.assertNotIn("Zebrafink", json.dumps(g))
+        for k in ("index", "wissen", "summe"):
+            self.assertIsInstance(g[k], int, k)
+        for x in g["teile"]:
+            self.assertEqual(set(x), {"name", "bytes"})
+            self.assertIsInstance(x["bytes"], int)
+        # kept GROESSE_CACHE seconds, then read again; emptying the index gives its pages back at once
+        self.assertIs(fund.groesse(uid, now=NOW + fund.GROESSE_CACHE - 1), g)
+        with quiet():
+            fund.leeren(uid, hand=True)
+        g2 = fund.groesse(uid, now=NOW)
+        self.assertIsNot(g2, g)
+        self.assertEqual(g2["index"], self.files(fund.db_path(uid)))
+        self.assertLess(g2["index"], g["index"] + 1)
+        self.assertEqual(g2["teile"], [])
+
+    def test_text_mb_and_gb(self):
+        self.assertEqual(fund.groesse_text(0), "0 MB")
+        self.assertEqual(fund.groesse_text(1), "1 MB")
+        self.assertEqual(fund.groesse_text(12_400_000), "12 MB")
+        self.assertEqual(fund.groesse_text(999_000_000), "999 MB")
+        self.assertEqual(fund.groesse_text(1_000_000_000), "1,0 GB")
+        self.assertEqual(fund.groesse_text(2_345_000_000), "2,3 GB")
+        self.assertEqual(fund.groesse_text(2_345_000_000, en=True), "2.3 GB")
+
+    def test_own_profile_only_never_guests(self):
+        ca, a = self.fresh("Fundgranna")
+        cb, b = self.fresh("Fundgrbert")
+        self.doc(a, "Rechnung.txt", INVOICE)
+        self.doc(a, "Miete.txt", LEASE)
+        self.index(a)
+        self.index(b)
+        fund._groesse_da.clear()
+        ga, gb = ca.get("/api/profile/fund/stand").json()["groesse"], cb.get("/api/profile/fund/stand").json()["groesse"]
+        self.assertEqual(ga["index"], self.files(fund.db_path(a)))
+        self.assertEqual(gb["index"], self.files(fund.db_path(b)))
+        self.assertEqual(gb["wissen"], self.files(documents.db_path(b)))
+        self.assertNotEqual(ga["wissen"], gb["wissen"])
+        g = TestClient(panel.app)
+        self.assertIn(g.get("/api/profile/fund/stand").status_code, (401, 403))
+        with mock_blocked(b):
+            self.assertEqual(cb.get("/api/profile/fund/stand").status_code, 403)
+        # the admin's profile page: this profile's numbers, never another's; a profile never reaches it
+        d = ADMIN.get(f"/api/admin/profiles/{a}").json()["index"]
+        self.assertEqual(d["index"], ga["index"])
+        self.assertEqual(d["summe"], ga["summe"])
+        self.assertEqual(ca.get(f"/api/admin/profiles/{b}").status_code, 401)
+
+    def test_live_sums_all_profiles(self):
+        import profiles
+        _, uid = self.fresh("Fundgrlive")
+        self.doc(uid, "Geheim.txt", SECRET, {"titel": "Zebrafink", "absender": "Zebrafink"})
+        self.index(uid)
+        fund._live.update(at=0.0, d=None)
+        d = fund.for_live()
+        self.assertEqual(d["bytes_index"], sum(self.files(fund.db_path(u)) for u in profiles.user_ids()))
+        self.assertEqual(d["bytes_wissen"], sum(self.files(documents.db_path(u)) for u in profiles.user_ids()))
+        snap = live.snapshot("admin", NOW)
+        x = next(x for x in snap["targets"] if x["id"] == "fund")
+        self.assertRegex(x["sub"], r"· Index \d+(,\d)? (MB|GB) \(Finden \d+(,\d)? (MB|GB), Dokumente und Wissen ")
+        self.assertNotIn("Zebrafink", x["sub"])
+
+
 class Page(unittest.TestCase):
     """The page Finden in a real browser (strict CSP, 1280 and 390 px): search, a hit with its amount, an own tag set
     and taken away again, no script error, no sideways scrolling."""
@@ -481,6 +571,11 @@ class Page(unittest.TestCase):
                         await b.until(pg, "FUND.kat==='Rechnung'&&document.querySelectorAll('#fundview [data-fundsel]').length===1")
                         await pg.evaluate("icTabSet('finden','set');goSec('finden')")
                         await b.until(pg, "!!document.querySelector('#fundset [data-fundnew]')")
+                        # „Größe des Index“: the sum in MB, opened the split with the documents' file
+                        await b.until(pg, "!!document.querySelector('#fundset details.fundgr')")
+                        self.assertRegex(await pg.text_content("#fundset details.fundgr summary"), r"(Größe des Index|Size of the index): \d+(,\d)? (MB|GB)")
+                        await pg.click("#fundset details.fundgr summary")
+                        self.assertIn("Dokumente und Wissen", await pg.text_content("#fundset details.fundgr"))
                         self.assertEqual(errors, [])
                     finally:
                         await br.close()

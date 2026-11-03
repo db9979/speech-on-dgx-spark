@@ -817,9 +817,8 @@ let KXLN=null;try{KXLN=new Intl.DisplayNames([L==='en'?'en':'de'],{type:'languag
 const kxLang=c=>!c?t('ohne Sprache','no language'):c==='mul'?t('mehrsprachig','multilingual'):(()=>{try{const n=KXLN&&KXLN.of(c);return n&&n!==c?n:c}catch{return c}})();
 const KXG={wikipedia:'Wikipedia',wiktionary:'Wiktionary',wikivoyage:'Wikivoyage',wikibooks:'Wikibooks',wikiquote:'Wikiquote',wikisource:'Wikisource',wikiversity:'Wikiversity',wikinews:'Wikinews',ted:'TED',phet:'PhET',stack_exchange:'Stack Exchange',stackexchange:'Stack Exchange',gutenberg:'Gutenberg',devdocs:'Docs',vikidia:'Vikidia',wikihow:'wikiHow',other:t('Sonstiges','Other')};
 const kxGrp=g=>KXG[g]||(g?g.charAt(0).toUpperCase()+g.slice(1).replace(/_/g,' '):t('Sonstiges','Other'));
-const kxSize=n=>!n?'':n>=1e9?(n/1e9).toFixed(1).replace('.',L==='en'?'.':',')+' GB':Math.max(1,Math.round(n/1e6))+' MB';
 const kxNum=n=>n?n.toLocaleString(L==='en'?'en':'de')+' '+t('Artikel','articles'):'';
-const kxMeta=b=>[kxLang(b.lang),b.flavour,kxNum(b.count),kxSize(b.size),b.date].filter(Boolean).join(' · ');
+const kxMeta=b=>[kxLang(b.lang),b.flavour,kxNum(b.count),sizeText(b.size),b.date].filter(Boolean).join(' · ');
 function kxChips(){const box=$('kxsel'),sel=kxSel(),known=Object.fromEntries((KX.books||[]).map(b=>[b.key||kxKey(b.id),b]));box.textContent='';
   if(!sel.length){const m=document.createElement('span');m.className='mut';m.textContent=t('Keine Auswahl: deutsche und englische Wikipedia.','No choice: German and English Wikipedia.');box.appendChild(m);return}
   // one question asks at most kiwix.MAX_SEARCH_BOOKS (KX.most from the check): the German Wikipedia, the books that

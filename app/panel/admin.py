@@ -200,9 +200,11 @@ def admin_profile(uid: str, request: Request):
     devs = [dict(x, speaker=x["id"] in spk, room=x["id"] in listening) for x in profiles.own_devices(uid)]
     on, of = features.count(uid)
     me = acting_profile(request)
+    import fund
     out = dict(u, **_profile_extra(uid), last=profiles.last_use(uid, last), devices=devs,
                facts=len(profiles.memory(uid)), sessions=profiles.sessions(uid), trusted=mfa.list_trusted(uid),
-               features={"on": on, "of": of}, main=not me or me["role"] == "admin", owner=not me)
+               features={"on": on, "of": of}, main=not me or me["role"] == "admin", owner=not me,
+               index=fund.groesse(uid))   # the size of its index in bytes (Finden and Dokumente und Wissen), numbers only
     if not me or coadmin.role(me["id"]) != "manager":
         out["rights"] = _rights(uid)
     return out
