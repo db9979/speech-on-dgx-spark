@@ -96,7 +96,7 @@ internal sealed class StepForm : ThemedForm
         var done = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
         FormClosed += (_, _) => done.TrySetResult(_answer);
         Show();
-        ViewSession.Hide(this);
+        Sicht.Hide(this);
         Activate();
         _ = SetForegroundWindow(Handle);
         _stop.Focus();

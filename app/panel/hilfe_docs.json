@@ -3877,7 +3877,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "dmin_new) gibt eine Nummer für 10 Minuten, nach 5 falschen ist sie tot. Der Bildschirm geht per WebRTC direkt zwischen den zwei Browsern, von unterwegs über TURN auf tars; das Panel vermittelt nur. Steuern (spontansteuern.program_ws) geht über das Programm SparkHilfe mit einem Einmal-Schlüssel für 10 Minuten; Bilder und Eingaben laufen dann durch das Panel. 8. Logs und Verlauf: Logs nur mit festen Wörtern und Zahlen (fernzugang.log), der Verlauf nur Zeit, System, Admin, Art und Dauer (fernzugang.verlauf_add). Der Notaus schließt jede Leitung (fernzugang.notaus_close)."
+"text": "dmin_new) gibt eine Nummer für 10 Minuten, nach 5 falschen ist sie tot. Der Bildschirm geht per WebRTC direkt zwischen den zwei Browsern, von unterwegs über TURN auf tars; das Panel vermittelt nur. Steuern (spontansteuern.program_ws) geht über das Programm SparkHilfe mit einem Einmal-Schlüssel für 10 Minuten; Bilder und Eingaben laufen dann durch das Panel. Das Programm baut nur GitHub; der Spark holt es täglich aus dem Release (spontansteuern.fetch), nur mit passender Signatur, Größe und SHA-256, und gibt es nur aus seinem Speicher weiter. 8. Logs und Verlauf: Logs nur mit festen Wörtern und Zahlen (fernzugang.log), der Verlauf nur Zeit, System, Admin, Art und Dauer (fernzugang.verlauf_add). Der Notaus schließt jede Leitung (fernzugang.notaus_close)."
 },
 {
 "lang": "de",
@@ -3917,7 +3917,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/fernzugang.py entsperrt_bis: wie lange die Seite entsperrt ist (Schritt 2) - app/panel/fernzugang.py admin_pair: Koppeln mit Einmal-Code (Schritt 3) - app/panel/fernzugang.py link_file: Windows: die Datei spark-anker-einrichten.cmd mit Einmal-Schlüssel, einmal (Schritt 3) - app/panel/fernzugang.py admin_confirm: neues System erst nach Bestätigung mit Code oder Passkey (Schritt 3) - app/panel/fernzugang.py terminal_ws: das Web-Terminal mit Ticket (Schritt 4) - app/panel/fernzugang.py hostkey_wrong: angehefteter Host-Schlüssel (Schritt 5) - app/panel/ferndateien.py listing: Dateien über SFTP (Schritt 6) - app/panel/fernals.py choose: Dateien als anderer Benutzer: nur mit beiden Zustimmungen (Schritt 6) - app/panel/fernbild.py GUACD: guacd nur auf 127.0.0.1 (Schritt 6) - app/panel/spontanhilfe.py admin_new: eine neue Spontanhilfe (Schritt 7) - app/panel/spontansteuern.py program_ws: Steuern: der Socket des Programms SparkHilfe (Schritt 7) - app/panel/fernzugang.py notaus_close: Notaus schließt jede Leitung (Schritt 8) - app/panel/fernnotiz.py fuer_modell: die Notiz nur mit Haken für das Modell (Schritt 6) - app/panel/fernordner.py view: Ordner: nur die Reihenfolge der List"
+"text": "- app/panel/fernzugang.py entsperrt_bis: wie lange die Seite entsperrt ist (Schritt 2) - app/panel/fernzugang.py admin_pair: Koppeln mit Einmal-Code (Schritt 3) - app/panel/fernzugang.py link_file: Windows: die Datei spark-anker-einrichten.cmd mit Einmal-Schlüssel, einmal (Schritt 3) - app/panel/fernzugang.py admin_confirm: neues System erst nach Bestätigung mit Code oder Passkey (Schritt 3) - app/panel/fernzugang.py terminal_ws: das Web-Terminal mit Ticket (Schritt 4) - app/panel/fernzugang.py hostkey_wrong: angehefteter Host-Schlüssel (Schritt 5) - app/panel/ferndateien.py listing: Dateien über SFTP (Schritt 6) - app/panel/fernals.py choose: Dateien als anderer Benutzer: nur mit beiden Zustimmungen (Schritt 6) - app/panel/fernbild.py GUACD: guacd nur auf 127.0.0.1 (Schritt 6) - app/panel/spontanhilfe.py admin_new: eine neue Spontanhilfe (Schritt 7) - app/panel/spontansteuern.py program_ws: Steuern: der Socket des Programms SparkHilfe (Schritt 7) - app/panel/spontansteuern.py fetch: SparkHilfe aus dem Release: Signatur, Größe und SHA-256 geprüft (Schritt 7) - app/panel/fernzugang.py notaus_close: Notaus schließt jede Leitung (Schritt 8) - app/panel/fernnotiz.py fuer_modell: die No"
 },
 {
 "lang": "de",
@@ -3925,7 +3925,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "e (Schritt 6) - app/panel/ferngross.py upload_piece: große Datei: ein Stück nur ganz und mit passender SHA-256 (Schritt 6) - app/panel/fernweb.py ziel_ok: Webdienste: wohin ein Tunnel darf (Schritt 6) - app/panel/fernweb.py verbindung: die Tunnel-Tür: Köpfe umgeschrieben, Cookies getrennt (Schritt 6)"
+"text": "tiz nur mit Haken für das Modell (Schritt 6) - app/panel/fernordner.py view: Ordner: nur die Reihenfolge der Liste (Schritt 6) - app/panel/ferngross.py upload_piece: große Datei: ein Stück nur ganz und mit passender SHA-256 (Schritt 6) - app/panel/fernweb.py ziel_ok: Webdienste: wohin ein Tunnel darf (Schritt 6) - app/panel/fernweb.py verbindung: die Tunnel-Tür: Köpfe umgeschrieben, Cookies getrennt (Schritt 6)"
 },
 {
 "lang": "de",
@@ -21429,7 +21429,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " through TURN on tars; the panel only connects them. Control (spontansteuern.program_ws) goes through the program SparkHilfe with a one-time key for 10 minutes; pictures and inputs then pass through the panel. 8. Logs and history: Logs with fixed words and numbers only (fernzugang.log), the history only time, system, admin, kind and duration (fernzugang.verlauf_add). The kill switch closes every line (fernzugang.notaus_close)."
+"text": " through TURN on tars; the panel only connects them. Control (spontansteuern.program_ws) goes through the program SparkHilfe with a one-time key for 10 minutes; pictures and inputs then pass through the panel. Only GitHub builds the program; the Spark fetches it daily from the release (spontansteuern.fetch), only with a matching signature, size and SHA-256, and hands it out only from its store. 8. Logs and history: Logs with fixed words and numbers only (fernzugang.log), the history only time, system, admin, kind and duration (fernzugang.verlauf_add). The kill switch closes every line (fernzugang.notaus_close)."
 },
 {
 "lang": "en",
@@ -21469,7 +21469,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/fernzugang.py entsperrt_bis: how long the page is unlocked (step 2) - app/panel/fernzugang.py admin_pair: pairing with a one-time code (step 3) - app/panel/fernzugang.py link_file: Windows: the file spark-anker-einrichten.cmd with a one-time key, once (step 3) - app/panel/fernzugang.py admin_confirm: a new system only after confirming with a code or passkey (step 3) - app/panel/fernzugang.py terminal_ws: the web terminal with a ticket (step 4) - app/panel/fernzugang.py hostkey_wrong: pinned host key (step 5) - app/panel/ferndateien.py listing: files through SFTP (step 6) - app/panel/fernals.py choose: files as another user: only with both consents (step 6) - app/panel/fernbild.py GUACD: guacd on 127.0.0.1 only (step 6) - app/panel/spontanhilfe.py admin_new: a new spontaneous help (step 7) - app/panel/spontansteuern.py program_ws: control: the socket of the program SparkHilfe (step 7) - app/panel/fernzugang.py notaus_close: kill switch closes every line (step 8) - app/panel/fernnotiz.py fuer_modell: the note for the model only when ticked (step 6) - app/panel/fernordner.py view: folders: only the order of the list (step 6) - app/panel/ferngross.py upload_piece: big file:"
+"text": "- app/panel/fernzugang.py entsperrt_bis: how long the page is unlocked (step 2) - app/panel/fernzugang.py admin_pair: pairing with a one-time code (step 3) - app/panel/fernzugang.py link_file: Windows: the file spark-anker-einrichten.cmd with a one-time key, once (step 3) - app/panel/fernzugang.py admin_confirm: a new system only after confirming with a code or passkey (step 3) - app/panel/fernzugang.py terminal_ws: the web terminal with a ticket (step 4) - app/panel/fernzugang.py hostkey_wrong: pinned host key (step 5) - app/panel/ferndateien.py listing: files through SFTP (step 6) - app/panel/fernals.py choose: files as another user: only with both consents (step 6) - app/panel/fernbild.py GUACD: guacd on 127.0.0.1 only (step 6) - app/panel/spontanhilfe.py admin_new: a new spontaneous help (step 7) - app/panel/spontansteuern.py program_ws: control: the socket of the program SparkHilfe (step 7) - app/panel/spontansteuern.py fetch: SparkHilfe from the release: signature, size and SHA-256 checked (step 7) - app/panel/fernzugang.py notaus_close: kill switch closes every line (step 8) - app/panel/fernnotiz.py fuer_modell: the note for the model only when ticked (step 6) - app/panel/fe"
 },
 {
 "lang": "en",
@@ -21477,7 +21477,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": " a piece only whole and with a matching SHA-256 (step 6) - app/panel/fernweb.py ziel_ok: web services: where a tunnel may go (step 6) - app/panel/fernweb.py verbindung: the tunnel door: heads rewritten, cookies apart (step 6)"
+"text": "rnordner.py view: folders: only the order of the list (step 6) - app/panel/ferngross.py upload_piece: big file: a piece only whole and with a matching SHA-256 (step 6) - app/panel/fernweb.py ziel_ok: web services: where a tunnel may go (step 6) - app/panel/fernweb.py verbindung: the tunnel door: heads rewritten, cookies apart (step 6)"
 },
 {
 "lang": "en",

@@ -173,7 +173,7 @@ internal static class ActRunner
                     return null;
                 }
 
-                return new ActPlan("Drückt " + key.Label + " im Fenster vorn.", () => ActDo.Chord(key.Keys));
+                return new ActPlan("Drückt " + key.Label + " im Fenster vorn.", () => Sicht.Chord(key.Keys));
 
             case "type":
                 string typed = ask.Arg.Trim();
@@ -183,7 +183,7 @@ internal static class ActRunner
                     return null;
                 }
 
-                return new ActPlan("Tippt ins Fenster vorn: „" + Clip(typed.ReplaceLineEndings(" "), 200) + "“", () => ActDo.Type(typed));
+                return new ActPlan("Tippt ins Fenster vorn: „" + Clip(typed.ReplaceLineEndings(" "), 200) + "“", () => Sicht.Type(typed));
 
             case "folder":
                 if (!ActDo.Folders.TryGetValue(arg, out string? folder))

@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    SparkHilfe für Windows (Spontanhilfe S2b, Plan spontanhilfe/s2-plan.md): ein kleines Programm ohne Installation und
+    ohne Adminrechte. Die Person der Spontanhilfe lädt es auf /hilfe, startet es einmal aus den Downloads, es fragt sie
+    (Ablehnen / Nur ansehen / Erlauben) und ist weg, sobald sie es schließt. Adresse und Einmal-Schlüssel stehen nur im
+    eigenen Dateinamen (SparkHilfe-<Adresse>-<Schlüssel>.exe); es verbindet sich nur dorthin (WSS /api/hilfe/steuern,
+    normale TLS-Prüfung). Bild, Eingaben, roter Rahmen, Leiste und Frage kommen aus dem gemeinsamen Kern des
+    Spark-Begleiters (tools/begleiter/windows/Sicht.cs) samt dessen Farben und Bausteinen; sonst nichts vom Begleiter.
+    Gebaut von .github/workflows/sparkhilfe-windows.yml für win-x64 und win-arm64.
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <AssemblyName>SparkHilfe</AssemblyName>
+    <RootNamespace>SparkHilfe</RootNamespace>
+    <Version>1.0.0</Version>
+    <Product>SparkHilfe</Product>
+    <Description>SparkHilfe – Spontanhilfe vom Spark</Description>
+    <NeutralLanguage>de-DE</NeutralLanguage>
+    <SatelliteResourceLanguages>de;en</SatelliteResourceLanguages>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="*.cs" />
+    <!-- der gemeinsame Kern und was er braucht (Farben, Bausteine, Gesicht im Symbol, Win32), unverändert vom Begleiter -->
+    <Compile Include="..\..\begleiter\windows\Sicht.cs" Link="Kern\Sicht.cs" />
+    <Compile Include="..\..\begleiter\windows\NativeMethods.cs" Link="Kern\NativeMethods.cs" />
+    <Compile Include="..\..\begleiter\windows\NativeMethods.Fern.cs" Link="Kern\NativeMethods.Fern.cs" />
+    <Compile Include="..\..\begleiter\windows\Theme.cs" Link="Kern\Theme.cs" />
+    <Compile Include="..\..\begleiter\windows\UiControls.cs" Link="Kern\UiControls.cs" />
+    <Compile Include="..\..\begleiter\windows\Face.cs" Link="Kern\Face.cs" />
+    <Compile Include="..\..\begleiter\windows\ComicFace.cs" Link="Kern\ComicFace.cs" />
+    <Compile Include="..\..\begleiter\windows\ComicWomanFace.cs" Link="Kern\ComicWomanFace.cs" />
+    <Compile Include="..\..\begleiter\windows\AppIcon.cs" Link="Kern\AppIcon.cs" />
+    <Compile Include="..\..\begleiter\windows\Wege.cs" Link="Kern\Wege.cs" />
+  </ItemGroup>
+
+  <!-- Einzelne .exe (selbstständig, ohne installiertes .NET): komprimiert. -->
+  <PropertyGroup Condition="'$(PublishSingleFile)' == 'true'">
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+</Project>

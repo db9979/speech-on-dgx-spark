@@ -505,6 +505,7 @@ async def stability():
     spawn(esp32.fetch_loop())
     spawn(android.fetch_loop())
     spawn(begleiter.fetch_loop())
+    spawn(spontansteuern.fetch_loop())
     spawn(geraeteupdate.loop())
     spawn(dienstwacht.loop())
     spawn(rundlauf.loop())

@@ -27,8 +27,16 @@ the program learns the helper's name only after the key was taken. Inputs only f
 and the admin's toolbar says „Steuern“. The picture lives only in memory on its way through (no recording, nothing
 to a model). One help at a time, its clock (chat.spontanhilfe_max_min) and the Notaus end the program too and make
 key and file worthless. Logs: „spontanhilfe: steuern_frage|programm|steuern|steuern_zu | <word> | n“, fixed words.
-The program files come only from the cache CACHE that the signed manifest filled (S2b), checked by SHA-256 before
-every delivery.
+The program files come only from the cache CACHE that the signed manifest filled, checked by SHA-256 before every
+delivery.
+
+S2b, the program: SparkHilfe for Windows (tools/sparkhilfe/windows, x64 and ARM64, one self-contained file, no setup, no
+admin rights) is built only by CI (.github/workflows/sparkhilfe-windows.yml, actions pinned by SHA) and published with
+sparkhilfe.json (version, per kind name, size, SHA-256; signed with signatur.py once UPDATE_SIGNING_KEY exists) in the
+release TAG. While the switch is on and the Notaus lets the internet through, fetch() takes it once a day (after an
+error within the hour): only GitHub's download addresses (begleiter._download), the signature when keys are listed,
+size and SHA-256 of every file, else nothing is kept; then programme.json names the files. The Dienst-Wächter looks
+whether every program is there with its checksum (probes, vorhanden). Logs: „spontanhilfe: programm_holen | <word> | n“.
 """
 import asyncio
 import contextlib
@@ -40,6 +48,7 @@ import re
 import secrets
 import time
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket
 from fastapi.responses import FileResponse
 
@@ -47,7 +56,7 @@ import features
 import fernsicht
 import guard
 import spontanhilfe as sh
-from common import STATE, read_json
+from common import STATE, load_config, read_json, write_json
 from core import admin_code_fresh, auth, json_body
 
 router = APIRouter()
@@ -60,7 +69,12 @@ KEY = re.compile(r"[A-Za-z0-9_\-]{22}")
 SHA = re.compile(r"[0-9a-f]{64}")
 DATEI = re.compile(r"SparkHilfe-[a-z0-9\-]{1,40}\.(?:exe|zip)")
 MODI = ("no", "view", "control")
+TAG = "sparkhilfe-windows"     # the release the CI run fills (S2b)
+MANIFEST = "sparkhilfe.json"
+MAX_META = 4096
+FIRST = 120             # the first look this long after the start or after switching on
 _sha = {}               # path -> (mtime, size, sha256): checked again whenever the file changed
+_upd = {"checked": 0.0, "error": ""}
 
 
 def admin_on(c=None):
@@ -121,6 +135,17 @@ def programm(art):
     return (path, x["sha256"]) if hmac.compare_digest(seen[2], x["sha256"]) else None
 
 
+def vorhanden():
+    """For the Dienst-Wächter: every program of ARTEN is in the cache and matches its SHA-256 (reads the files when they
+    changed: call it in a thread)."""
+    return all(programm(art) is not None for art in ARTEN)
+
+
+def probes():
+    """The Dienst-Wächter's part while the switch is on (no question of its own, only the cache)."""
+    return {"sparkhilfe": {"sparkhilfe": True}} if admin_on() else {}
+
+
 def angebot():
     """The programs /hilfe may offer, with their checksums (shown beside the button)."""
     out = {}
@@ -129,6 +154,125 @@ def angebot():
         if p:
             out[art] = p[1]
     return out
+
+
+# ---------------------------------------------------------------- S2b: the program from the CI release
+def _repo():
+    return load_config().get("chat", {}).get("esp32_repo") or "db9979/speech-on-dgx-spark"
+
+
+async def fetch(c=None):
+    """Takes the newest SparkHilfe build when it is newer than the kept one or a file is missing; every file must match
+    size and SHA-256 of the (signed) sparkhilfe.json. Returns the version the Spark keeps now."""
+    import begleiter
+    import geraeteupdate
+    import signatur
+    own = c is None
+    c = c or httpx.AsyncClient(timeout=300, follow_redirects=True)
+    try:
+        api = os.environ.get("SPEECH_SPARK_GITHUB_API", "https://api.github.com")
+        import ghtoken
+        r = await ghtoken.get(c, f"{api}/repos/{_repo()}/releases/tags/{TAG}")
+        if r.status_code == 404:
+            raise begleiter.NotYet("Im Repo gibt es SparkHilfe noch nicht.")
+        r.raise_for_status()
+        assets = {a.get("name"): a.get("browser_download_url", "") for a in r.json().get("assets", [])}
+        if MANIFEST not in assets:
+            raise begleiter.NotYet("Die Version hat noch kein Verzeichnis.")
+        raw = await begleiter._download(c, assets[MANIFEST], MAX_META)
+        if signatur.required():
+            if MANIFEST + ".sig" not in assets:
+                raise ValueError("Die Version ist nicht signiert, nichts übernommen.")
+            signatur.verify(raw, await begleiter._download(c, assets[MANIFEST + ".sig"], signatur.MAX_SIG))
+        m = json.loads(raw)
+        ver, files = str(m.get("version", "")), m.get("files")
+        if not begleiter.VERSION_RE.fullmatch(ver) or not isinstance(files, dict):
+            raise ValueError("sparkhilfe.json ist ungültig.")
+        clean = {}
+        for art, v in files.items():
+            if art not in ARTEN or not isinstance(v, dict):
+                continue
+            name, size, sha = str(v.get("name", "")), v.get("size"), str(v.get("sha256", ""))
+            if not (DATEI.fullmatch(name) and name in assets and isinstance(size, int) and not isinstance(size, bool)
+                    and 0 < size <= begleiter.MAX_FILE and SHA.fullmatch(sha)):
+                raise ValueError("sparkhilfe.json ist ungültig.")
+            clean[art] = {"datei": name, "size": size, "sha256": sha, "version": ver}
+        if not clean:
+            raise ValueError("sparkhilfe.json nennt kein Programm.")
+        idx = read_json(os.path.join(CACHE, "programme.json"), {})
+        idx = idx if isinstance(idx, dict) else {}
+        cur = {k: x for k, x in idx.items() if k in ARTEN and isinstance(x, dict)}
+        have = {k for k in cur if await asyncio.to_thread(programm, k)}
+        old_ver = max((str(x.get("version", "")) for x in cur.values()), key=geraeteupdate.vt, default="")
+        if have >= set(clean) and old_ver and not geraeteupdate.newer(ver, old_ver):
+            return old_ver
+        os.makedirs(CACHE, exist_ok=True)
+        for v in clean.values():
+            part = os.path.join(CACHE, v["datei"] + ".part")
+            n, h = await begleiter._download(c, assets[v["datei"]], v["size"], part)
+            if n != v["size"] or not hmac.compare_digest(h, v["sha256"]):
+                os.remove(part)
+                raise ValueError("Prüfsumme passt nicht, nichts übernommen.")
+        for v in clean.values():
+            os.replace(os.path.join(CACHE, v["datei"] + ".part"), os.path.join(CACHE, v["datei"]))
+        write_json(os.path.join(CACHE, "programme.json"), clean, mode=0o644)
+        for name in {x.get("datei") for x in cur.values()} - {v["datei"] for v in clean.values()}:
+            if isinstance(name, str) and DATEI.fullmatch(name):
+                with contextlib.suppress(OSError):
+                    os.remove(os.path.join(CACHE, name))
+        sh.log("programm_holen", "neu", len(clean))
+        return ver
+    finally:
+        if own:
+            await c.aclose()
+
+
+async def check():
+    """One look on GitHub, with a line in the journal and a „Von selbst“ job on the Live page."""
+    import begleiter
+    t0, err, word = time.time(), "", "ok"
+    try:
+        await fetch()
+    except begleiter.NotYet as e:            # nothing wrong, just nothing to take yet
+        err, word = str(e)[:200], "noch nicht"
+    except Exception as e:
+        err, word = str(e)[:200] or type(e).__name__, "fehler"
+    sh.log("programm_holen", word, 1 if word == "ok" else 0)
+    _upd["checked"], _upd["error"] = time.time(), err
+    try:
+        import live
+        live.job("SparkHilfe holen", "GitHub", t0, ok=not err)
+    except Exception:
+        pass
+    return err
+
+
+def _may_fetch():
+    """Only while the switch is on and the Notaus lets the internet through."""
+    import notaus
+    return admin_on() and not notaus.blocks("internet")
+
+
+def _due(since, now):
+    """The first look FIRST after the switch went on (or the start), then once a day, after an error within the hour."""
+    import begleiter
+    every = begleiter.RETRY if _upd["error"] else begleiter.FETCH_EVERY
+    return now - since >= FIRST and now - _upd["checked"] > every
+
+
+async def fetch_loop():
+    since = 0.0
+    while True:
+        await asyncio.sleep(60)
+        try:
+            if not _may_fetch():
+                since = 0.0
+                continue
+            since = since or time.time()
+            if _due(since, time.time()):
+                await check()
+        except Exception:
+            sh.log("programm_holen", "schleife", 0)
 
 
 # ---------------------------------------------------------------- admin: ask for control

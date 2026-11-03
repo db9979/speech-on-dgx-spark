@@ -1,7 +1,7 @@
 name: Releases aufräumen
 
 # Keeps the releases tidy (V01.0.371): after every successful release run only the newest release of each
-# series stays (fw-…, android-v…; begleiter-windows/-mac are replaced in place), older ones and their
+# series stays (fw-…, android-v…; begleiter-windows/-mac and sparkhilfe-windows are replaced in place), older ones and their
 # tags go, as do retired series. Logic and the reasons nothing needs an old release:
 # .github/scripts/releases_aufraeumen.py. By hand: Actions → "Releases aufräumen" → Run workflow
 # (with "Nur anzeigen" it only lists what would go).
@@ -13,7 +13,7 @@ on:
         type: boolean
         default: false
   workflow_run:
-    workflows: ["Android app", "Speaker firmware", "Spark-Begleiter Windows", "Spark-Begleiter Mac"]
+    workflows: ["Android app", "Speaker firmware", "Spark-Begleiter Windows", "Spark-Begleiter Mac", "SparkHilfe Windows"]
     types: [completed]
     branches: [main]
 

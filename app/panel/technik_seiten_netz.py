@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "aussen": {
-        "stand": "9c8467a2fa",
+        "stand": "1d444b37e6",
         "bezug": {
             "dienstwacht.TIMEOUT": ["s5"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
             "netguard.client": ["s8", "s9", "s10"], "netguard.IMAP4_SSL": ["s9"],
@@ -188,7 +188,7 @@ SEITEN = {
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
     },
     "internet": {
-        "stand": "40ecf5dc08",
+        "stand": "60543d277f",
         "bezug": {
             "regeln": ["s3", "s4"], "regel:Seiten aus der Suche": ["s4", "s5"], "regel:Mail, Kalender, Kontakte": ["s4", "s5"],
             "regel:reMarkable": ["s4", "s5"], "regel:Wetter, Fahrplan, Wikipedia": ["s3"], "regel:Telegram": ["s7"],
@@ -854,9 +854,9 @@ SEITEN = {
     # ------------------------------------------------------------------ Browser und Handy
     # ------------------------------------------------------------------ Fernzugang (Dominik 2026-10-29 „in Technik → Überblick fehlt die Fernwartung“)
     "fernzugang": {
-        "stand": "cd201fac45",
+        "stand": "82ce3f63ca",
         "bezug": {
-            "fernzugang.entsperrt_bis": ["s2"], "fernzugang.admin_pair": ["s3"], "fernzugang.link_file": ["s3"], "fernzugang.admin_confirm": ["s3"], "fernzugang.CODE_S": ["s3"], "fernzugang.TICKET_S": ["s4"], "fernzugang.terminal_ws": ["s4"], "fernzugang.hostkey_wrong": ["s5"], "fernzugang.HALTEN_S": ["s6"], "ferndateien.listing": ["s6"], "fernbild.GUACD": ["s6"], "fernbild.FPS": ["s6"], "spontanhilfe.admin_new": ["s7"], "spontanhilfe.NUMMER_S": ["s7"], "fernzugang.notaus_close": ["s8"], "fernzugang.MAX_ANKER": ["s3"], "fernnotiz.fuer_modell": ["s6"], "fernnotiz.FASSUNGEN": ["s6"], "fernordner.view": ["s6"], "fernordner.MAX_ORDNER": ["s6"], "ferngross.upload_piece": ["s6"], "ferngross.TEIL": ["s6"], "fernweb.verbindung": ["s6"], "fernweb.ziel_ok": ["s6"], "fernweb.TOR_PORT": ["s6"], "fernweb.MAX_TUNNEL": ["s6"], "fernweb.MAX_KANAELE": ["s6"],
+            "fernzugang.entsperrt_bis": ["s2"], "fernzugang.admin_pair": ["s3"], "fernzugang.link_file": ["s3"], "fernzugang.admin_confirm": ["s3"], "fernzugang.CODE_S": ["s3"], "fernzugang.TICKET_S": ["s4"], "fernzugang.terminal_ws": ["s4"], "fernzugang.hostkey_wrong": ["s5"], "fernzugang.HALTEN_S": ["s6"], "ferndateien.listing": ["s6"], "fernbild.GUACD": ["s6"], "fernbild.FPS": ["s6"], "spontanhilfe.admin_new": ["s7"], "spontanhilfe.NUMMER_S": ["s7"], "spontansteuern.fetch": ["s7"], "fernzugang.notaus_close": ["s8"], "fernzugang.MAX_ANKER": ["s3"], "fernnotiz.fuer_modell": ["s6"], "fernnotiz.FASSUNGEN": ["s6"], "fernordner.view": ["s6"], "fernordner.MAX_ORDNER": ["s6"], "ferngross.upload_piece": ["s6"], "ferngross.TEIL": ["s6"], "fernweb.verbindung": ["s6"], "fernweb.ziel_ok": ["s6"], "fernweb.TOR_PORT": ["s6"], "fernweb.MAX_TUNNEL": ["s6"], "fernweb.MAX_KANAELE": ["s6"],
         },
         "kurz": ("Der Fernzugang öffnet Shell, Dateien und Bildschirm eines eigenen Servers im Browser, ohne offenen Port "
                  "dort: der Anker auf dem Server verbindet sich selbst zum Panel, das Panel spricht SSH durch diese "
@@ -967,12 +967,14 @@ SEITEN = {
                "{spontanhilfe.FEHL} falschen ist sie tot. Der Bildschirm geht per WebRTC direkt zwischen den zwei Browsern, "
                "von unterwegs über TURN auf tars; das Panel vermittelt nur. Steuern (spontansteuern.program_ws) geht über das "
                "Programm SparkHilfe mit einem Einmal-Schlüssel für {spontansteuern.KEY_S|min} Minuten; Bilder und Eingaben "
-               "laufen dann durch das Panel.",
+               "laufen dann durch das Panel. Das Programm baut nur GitHub; der Spark holt es täglich aus dem Release "
+               "(spontansteuern.fetch), nur mit passender Signatur, Größe und SHA-256, und gibt es nur aus seinem Speicher weiter.",
                "A help (spontanhilfe.admin_new) gives a number for {spontanhilfe.NUMMER_S|min} minutes, after "
                "{spontanhilfe.FEHL} wrong ones it is dead. The screen goes by WebRTC directly between the two browsers, "
                "on the way through TURN on tars; the panel only connects them. Control (spontansteuern.program_ws) goes through "
                "the program SparkHilfe with a one-time key for {spontansteuern.KEY_S|min} minutes; pictures and inputs then "
-               "pass through the panel.")),
+               "pass through the panel. Only GitHub builds the program; the Spark fetches it daily from the release "
+               "(spontansteuern.fetch), only with a matching signature, size and SHA-256, and hands it out only from its store.")),
             S("s8", "ende", ("Logs und Verlauf", "Logs and history"),
               ("fernzugang.log", "fernzugang.log"),
               ("Logs nur mit festen Wörtern und Zahlen (fernzugang.log), der Verlauf nur Zeit, System, Admin, Art und "
@@ -1022,6 +1024,7 @@ SEITEN = {
             ("fernbild.GUACD", ("guacd nur auf 127.0.0.1", "guacd on 127.0.0.1 only")),
             ("spontanhilfe.admin_new", ("eine neue Spontanhilfe", "a new spontaneous help")),
             ("spontansteuern.program_ws", ("Steuern: der Socket des Programms SparkHilfe", "control: the socket of the program SparkHilfe")),
+            ("spontansteuern.fetch", ("SparkHilfe aus dem Release: Signatur, Größe und SHA-256 geprüft", "SparkHilfe from the release: signature, size and SHA-256 checked")),
             ("fernzugang.notaus_close", ("Notaus schließt jede Leitung", "kill switch closes every line")),
             ("fernnotiz.fuer_modell", ("die Notiz nur mit Haken für das Modell", "the note for the model only when ticked")),
             ("fernordner.view", ("Ordner: nur die Reihenfolge der Liste", "folders: only the order of the list")),

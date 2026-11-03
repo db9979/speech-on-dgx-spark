@@ -119,7 +119,8 @@ BETREFF = {"de": "{name} möchte dir am Computer helfen", "en": "{name} would li
 FELD = re.compile(r"\{(name|name_s|link|nummer|gueltig|domain|min)\}")
 WORDS = ("nummer_neu", "nummer_falsch", "nummer_tot", "verworfen", "einladung", "wartet", "ticket", "sitzung_auf",
          "sitzung_zu", "verlaengert", "abgewiesen", "verlauf", "meldung", "erlaubt",
-         "steuern_frage", "programm", "steuern", "steuern_zu")      # the last four: S2 Steuern (spontansteuern.py)
+         "steuern_frage", "programm", "steuern", "steuern_zu",      # S2 Steuern (spontansteuern.py)
+         "programm_holen")                                          # S2b: the program SparkHilfe from the CI release
 
 HILFE = {}          # "h" -> the one Hilfe (or nothing)
 TICKETS = {}        # sha256(ticket) -> {"login", "until"}
