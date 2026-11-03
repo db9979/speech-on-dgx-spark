@@ -1862,6 +1862,8 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **Entwickeln auf dem Pi** (Funktionen → Zugang → „Entwickeln auf dem Pi“): Du entwickelst den Spark direkt auf dem Panel-Rechner weiter: Im Terminal (per SSH) arbeitet OpenCode mit dem eigenen Sprachmodell des Sparks, ohne Cloud.
 
+- **An GitHub geben** (Funktionen → Zugang → „An GitHub geben“; baut auf „Entwickeln auf dem Pi“): Weg A: Was du mit OpenCode auf dem Pi gebaut hast, geht als eigener Zweig opencode/<thema> an GitHub, nie an main.
+
 - **Fernzugang zu Servern** (Funktionen → Zugang → „Fernzugang zu Servern“): Die Shell eines Servers anderswo (ein VPS, eine NAS bei Freunden, ein Raspberry Pi) direkt im Browser, wie Raspberry Pi Connect, nur ist der Vermittler dein eigener Pi.
 
 - **Meldung bei Fernsitzung** (Funktionen → Zugang → „Meldung bei Fernsitzung“; baut auf „Fernzugang zu Servern“): Öffnet ein Admin die Shell eines Servers aus dem Internet oder von einem Ort, von dem er sie noch nie geöffnet hat, bekommen alle Admins eine Mitteilung aufs Handy mit festem Text: wer, welcher Server, Zuhause oder Internet, nie eine Adr …

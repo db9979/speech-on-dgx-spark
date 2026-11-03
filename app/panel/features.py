@@ -794,6 +794,9 @@ FEATURES = (
     # entwickeln.py + entwickelnseite.py (plan opencode-pi, package 1): OpenCode with the own language model in the
     # terminal of the panel computer (user spark-dev, its own clone), local changes installed like an update (Weg B)
     F("entwickeln", "Entwickeln auf dem Pi", "Develop on the Pi", "sec", ("entwickeln",), guide="entwickeln"),
+    # entwickeln.py an_github (package 2, Weg A): spark-dev's branch to GitHub as opencode/<thema> for a Claude thread
+    # to review; root pushes it with its own deploy key, never main, never forced; spark-dev stays off the internet
+    F("entwickelngithub", "An GitHub geben", "Hand to GitHub", "sec", ("entwickeln_github",), parent="entwickeln", guide="entwickelngithub"),
     # fernzugang.py + anker/spark-anker.py (plan ssh-vermittlung, stage 1): the shell of a server elsewhere in the
     # browser; the server's anchor calls the panel, admins only, no tool for the model
     F("fernzugang", "Fernzugang zu Servern", "Remote access to servers", "sec", ("fernzugang",), guide="fernzugang"),
@@ -925,7 +928,7 @@ DUTY = None
 REVIEW = None
 
 # chat.* switches that are no function a profile uses (how the Spark itself works)
-SPARK_ONLY = {"wachposten", "public", "thinking", "prompt_cache", "answer_check", "answer_check_more", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "entwickeln", "angriffsprobe", "weicheabstimmen", "fernzugang", "fernzugangmeldung", "fernzugangalle", "spontanhilfe", "fernzuganghilfe", "fernbild", "fernbildablage", "fernnotizen", "fernordner", "ferngross", "fernweb",
+SPARK_ONLY = {"wachposten", "public", "thinking", "prompt_cache", "answer_check", "answer_check_more", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "entwickeln", "entwickelngithub", "angriffsprobe", "weicheabstimmen", "fernzugang", "fernzugangmeldung", "fernzugangalle", "spontanhilfe", "fernzuganghilfe", "fernbild", "fernbildablage", "fernnotizen", "fernordner", "ferngross", "fernweb",
               "helfer", "helferweiche", "helferdungeon", "helfermail", "helferangriff", "helferkurz"}
 # Everything starts off (Dominik 2026-10-08). The only values shipped on in config.default.json are protection and
 # stability rules and the basic functions the Spark had from the start, each with its reason here (Dominik 2026-10-12,

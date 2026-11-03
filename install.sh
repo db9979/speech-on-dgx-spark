@@ -1047,6 +1047,7 @@ fi
   printf ', /usr/bin/systemctl enable --now speech-spark-schirm, /usr/bin/systemctl disable --now speech-spark-schirm, /usr/bin/systemctl start getty@tty1.service'   # B9
   printf ', /usr/bin/systemctl start --no-block speech-spark-wechsel'   # stage E4: takes the panel's checked wish
   printf ', /usr/bin/systemctl start --no-block speech-spark-werkstatt'   # Funktionen → Werkstatt: takes the checked wish
+  printf ', /usr/bin/systemctl start --no-block speech-spark-github'   # Entwickeln auf dem Pi → An GitHub geben: the same
   printf ', /usr/bin/systemctl start --no-block speech-spark-messen-wunsch\n'   # Zustand → Modelle „Messen“: the same
 } >/etc/sudoers.d/speech-spark
 chmod 440 /etc/sudoers.d/speech-spark
@@ -1878,7 +1879,41 @@ Persistent=true
 [Install]
 WantedBy=timers.target
 EOF
+  # Weg A (An GitHub geben): root's oneshot pushes spark-dev's branch as opencode/<thema> with root's deploy key
+  # (app/entwickeln.py an_github); the panel starts it after writing its wish, the timer tries a waiting wish again
+  # every 15 minutes (offline). spark-dev's firewall above stays closed: it never talks to GitHub itself.
+  cat >/etc/systemd/system/speech-spark-github.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: hand spark-dev's branch to GitHub (opencode/ only, never main)
+After=network-online.target
+
+[Service]
+LogNamespace=speech-spark
+Type=oneshot
+Nice=10
+MemoryMax=512M
+PrivateTmp=yes
+ProtectSystem=full
+NoNewPrivileges=yes
+Environment=SPEECH_SPARK_PREFIX=$PREFIX SPEECH_SPARK_ETC=$ETC SPEECH_SPARK_VAR=$VAR
+ExecStart=/bin/bash $PREFIX/app/speech-spark.sh lokal an-github --wunsch
+TimeoutStartSec=20min
+EOF
+  cat >/etc/systemd/system/speech-spark-github.timer <<EOF
+[Unit]
+Description=Speech on DGX Spark: a branch waiting for the internet goes to GitHub as soon as it answers
+
+[Timer]
+OnCalendar=*:0/15
+RandomizedDelaySec=60
+Persistent=false
+
+[Install]
+WantedBy=timers.target
+EOF
+  command -v ssh >/dev/null || apt_wait install -y -q openssh-client || warn "ssh missing: An GitHub geben does not work"
   systemctl daemon-reload
+  systemctl enable --now speech-spark-github.timer >/dev/null 2>&1 || true
   systemctl enable speech-spark-entwickeln-fw.service >/dev/null 2>&1 || true
   systemctl restart speech-spark-entwickeln-fw.service 2>/dev/null || warn "the firewall of spark-dev did not load"
   systemctl enable --now speech-spark-lokaltest-umgebung.timer >/dev/null 2>&1 || true

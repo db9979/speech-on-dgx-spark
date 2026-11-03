@@ -253,6 +253,7 @@ WITHOUT = {
     "weicheabstimmen": "weiche_abstimmen.py: nur der Admin auf Funktionen → Weiche; das Modell schlägt Wörter vor, feste Regeln messen, kein Werkzeug",
     "weicheunklar": "weiche_unklar.py: das Panel merkt unklare Fragen anonym für den Admin auf Funktionen → Weiche, kein Werkzeug",
     "entwickeln": "entwickeln.py: OpenCode nur im Terminal von spark-dev, einspielen nur ein Admin (Kommandozeile oder Panel-Endpunkt); das Modell im Gespräch bekommt kein Werkzeug dafür",
+    "entwickelngithub": "entwickeln.py an_github: nur ein Admin gibt den Zweig weiter (Kommandozeile oder Panel-Endpunkt mit Code), feste Regeln, kein Werkzeug fürs Modell",
     "werkstattnacht": "werkstattseite.py: feste Nachtregel im Panel (Testlauf, danach Code-Messung), kein Werkzeug",
     "angriffsprobe": "angriffsprobe.py: Knopf auf der Werkstatt-Seite, misst das Sprachmodell, kein Werkzeug",
     "werkstatt": "werkstattseite.py: Aufträge nur vom Admin auf der Seite oder nach der festen Nachtregel; der Agent bekommt kein Werkzeug, das Code laufen lässt",

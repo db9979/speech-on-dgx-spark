@@ -393,6 +393,7 @@
     "werkstatt": false,
     "werkstatt_nacht": false,
     "entwickeln": false,
+    "entwickeln_github": false,
     "fernzugang": false,
     "fernzugang_hilfe": false,
     "fernzugang_leerlauf_min": 15,

@@ -21,6 +21,14 @@ Optional part (`sudo ./install.sh --entwickeln` on the panel computer), admin sw
                writable: the affected test modules, the guard tests of tools/vorpush.py (WAECHTER, one list) and the
                smoke test, without a browser; one JSON object on stdout.
 
+Weg A, package 2 (switch Funktionen → Entwickeln auf dem Pi → An GitHub geben, chat.entwickeln_github, off):
+`speech-spark lokal an-github [thema]` or the panel's wish (unit speech-spark-github, timer every 15 minutes while
+offline): root takes spark-dev's branch as a bundle, checks it (pfade_github: never .github, no link or submodule),
+and pushes it as opencode/<thema> (ziel_ref: never main, no "+", no --force) with root's own deploy key GH_KEY over
+ssh.github.com:443 with GitHub's pinned host key. spark-dev's firewall stays closed; the panel never sees the key.
+A Claude thread reviews the branch and brings it onto main; the next update drops installed local commits that are
+in main by then (aufsetzen).
+
 An update never loses local work any more: with local commits installed, update.sh puts them on the new green main
 (commits already on main drop out, the branch can become empty) and runs the quick test; on a conflict or a red test
 the running version stays and the panel says so. Local commits are never upstream code: GitHub's green run and the
@@ -33,6 +41,7 @@ import json
 import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -60,6 +69,7 @@ TESTBASIS = os.environ.get("SPEECH_SPARK_LOKALTEST", "/var/lib/speech-spark-loka
 TESTVENV = os.path.join(PREFIX, "venv-lokaltest")
 PANELVENV = os.path.join(PREFIX, "venv-panel")
 SIGNERS = "/etc/speech-spark-signers"
+GIT_HOME = "/root"       # root's git: its HOME (no config of its own is read beyond what each call sets)
 TEST_UNIT = "speech-spark-lokaltest"
 REF_JETZT, REF_VORHER, REF_KANDIDAT = "refs/spark/lokal", "refs/spark/lokal-vorher", "refs/spark/kandidat"
 ARTEN = ("einspielen", "zurueck", "verwerfen", "aufsetzen")
@@ -343,14 +353,16 @@ def innen(ordner, python, dateien):
 
 
 # ---------------------------------------------------------------- root (update.sh, speech-spark lokal)
-def _git(*args, cwd=QUELLE, timeout=300, ident=False):
+def _git(*args, cwd=None, timeout=300, ident=False, env=None, mit_fehler=False):
+    """git as root in the installer's clone (or cwd): no hooks, no signing, no config of root's but this call's;
+    env adds variables (the push's ssh command), mit_fehler gives stderr too (only ever read by fixed rules)."""
     pre = ["-c", "core.hooksPath=/dev/null", "-c", "commit.gpgSign=false"]
     if ident:
         pre += ["-c", "user.name=Spark lokal", "-c", "user.email=lokal@spark.invalid"]
-    env = {"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8", "HOME": "/root", "GIT_CONFIG_NOSYSTEM": "1",
-           "GIT_TERMINAL_PROMPT": "0"}
-    p = subprocess.run(["git", *pre, "-C", cwd, *args], capture_output=True, text=True, timeout=timeout, env=env)
-    return p.returncode, p.stdout.strip()
+    umg = {"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8", "HOME": GIT_HOME, "GIT_CONFIG_NOSYSTEM": "1",
+           "GIT_TERMINAL_PROMPT": "0", **(env or {})}
+    p = subprocess.run(["git", *pre, "-C", cwd or QUELLE, *args], capture_output=True, text=True, timeout=timeout, env=umg)
+    return p.returncode, (p.stdout + "\n" + p.stderr if mit_fehler else p.stdout).strip()
 
 
 def _als_dev(*cmd, timeout=600, stdout=subprocess.PIPE):
@@ -371,12 +383,14 @@ def installiert():
     return basis, (kopf if KURZ.match(kopf) and n > 0 else ""), (n if KURZ.match(kopf) else 0)
 
 
-def _schalter_an():
-    """chat.entwickeln, read as the service user (root never reads the service user's config by a path)."""
+def _schalter_an(*namen):
+    """chat.entwickeln (and every switch named, e.g. entwickeln_github), read as the service user (root never reads
+    the service user's config by a path); only a real true counts."""
     p = subprocess.run(["runuser", "-u", "speech", "--", "cat", "--", os.environ.get("SPEECH_SPARK_CONFIG", "/etc/speech-spark/config.json")],
                        capture_output=True, text=True, timeout=30)
     try:
-        return json.loads(p.stdout).get("chat", {}).get("entwickeln") is True
+        chat = json.loads(p.stdout).get("chat", {})
+        return all(chat.get(n) is True for n in ("entwickeln", *namen))
     except (ValueError, AttributeError):
         return False
 
@@ -428,7 +442,6 @@ def signaturen(basis, kopf):
     if not os.path.lexists(SIGNERS):
         return "aus"
     st = os.lstat(SIGNERS)
-    import stat
     if not stat.S_ISREG(st.st_mode) or st.st_uid != 0 or st.st_mode & 0o022:
         raise Fehler("signatur")
     code, liste = _git("rev-list", f"{basis}..{kopf}")
@@ -625,6 +638,338 @@ def testumgebung(nacht=False):
     return "neu"
 
 
+# ---------------------------------------------------------------- Weg A: an GitHub geben (package 2)
+# spark-dev's branch goes to GitHub as opencode/<thema>, never to main, never forced, for a Claude thread to review
+# and bring onto main through the push queue. spark-dev itself never gets the internet (its firewall stays as in
+# package 1): root takes the branch as a bundle (like einspielen; root never reads the clone), checks it with fixed
+# rules and pushes it with a deploy key that only root can read (GH_KEY). The key is no person's: GitHub's ruleset on
+# main (bypass only for the repository's admins) holds for a deploy key, while a token of an admin's account would
+# pass it. Nothing of the branch ever runs here; GitHub's "Tests" run it on its own machines.
+GH_PREFIX = "opencode/"
+GH_KEY = os.environ.get("SPEECH_SPARK_GITHUB_KEY", "/etc/speech-spark-github-key")   # root's own (0600), .pub next to it
+# GitHub's published host key (ssh over port 443, the port every network lets out); a host that answers with another
+# key never gets the branch (StrictHostKeyChecking, no other known_hosts)
+# (fingerprint SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU, docs.github.com „GitHub's SSH key fingerprints“)
+GH_HOSTKEY = "[ssh.github.com]:443 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl"
+GH_WUNSCH = os.path.join(STATE, "github-wunsch")                  # the waiting wish: one topic (service user's file)
+GH_ANZEIGE = os.path.join(STATE, "entwickeln-github.json")        # the panel's copy: branches, short state words
+GH_UNIT = "speech-spark-github"                                     # root's oneshot (panel, timer every 15 minutes)
+REF_GITHUB = "refs/spark/github"
+THEMA = re.compile(r"^[a-z0-9][a-z0-9-]{0,39}$")
+ZWEIG_GH = re.compile(r"^opencode/[a-z0-9][a-z0-9-]{0,39}$")
+GH_ZWEIGE_MAX = 10       # branches the panel's copy keeps
+GH_PUSH_S = 300          # seconds for one push
+GH_GRUENDE = {   # fixed word -> what the command line and the panel say
+    "gegeben": ("An GitHub gegeben", "Handed to GitHub"),
+    "wartet": ("Wartet auf Internet: der Spark gibt den Zweig weiter, sobald GitHub erreichbar ist (alle 15 Minuten)",
+               "Waiting for the internet: the Spark hands the branch over as soon as GitHub answers (every 15 minutes)"),
+    "aus": ("An GitHub geben ist aus (Funktionen → Entwickeln auf dem Pi → An GitHub geben)", "Hand to GitHub is off"),
+    "thema": ("Das Thema braucht Buchstaben oder Ziffern (a-z, 0-9, Bindestrich, höchstens 40)",
+              "The topic needs letters or digits (a-z, 0-9, hyphen, at most 40)"),
+    "schluessel": ("Kein Schlüssel für GitHub, oder GitHub nimmt ihn nicht: sudo speech-spark entwickeln github-schluessel neu, "
+                   "dann als Deploy-Schlüssel mit Schreibrecht eintragen",
+                   "No key for GitHub, or GitHub does not take it: sudo speech-spark entwickeln github-schluessel neu, "
+                   "then add it as a deploy key with write access"),
+    "hostschluessel": ("GitHub meldete sich mit einem fremden Schlüssel; nichts gesendet",
+                       "GitHub answered with a foreign host key; nothing sent"),
+    "abgelehnt": ("GitHub lehnte den Zweig ab (Regeln oder Rechte); nichts geändert",
+                  "GitHub refused the branch (rules or rights); nothing changed"),
+    "nicht_vorwaerts": ("Den Zweig gibt es auf GitHub schon mit anderen Commits; er wird nie überschrieben, nimm ein anderes Thema",
+                        "The branch exists on GitHub with other commits; it is never overwritten, take another topic"),
+    "klon": ("Kein Klon mit dem Zweig „lokal“ unter /home/spark-dev", "No clone with the branch \"lokal\" in /home/spark-dev"),
+    "leer": ("Keine Commits, die GitHub noch nicht hat", "No commits GitHub does not have yet"),
+    "pfad": ("Der Zweig ändert .github oder bringt einen Link oder ein Untermodul; nichts gesendet",
+             "The branch changes .github or brings a link or a submodule; nothing sent"),
+    "zu_viele": ("Zu viele Commits oder Dateien auf einmal", "Too many commits or files at once"),
+    "fehler": ("Der Zweig konnte nicht weitergegeben werden", "The branch could not be handed over"),
+}
+GH_TESTS = ("gruen", "laeuft", "rot", "unbekannt")   # GitHub's "Tests" for the branch's head
+
+
+def thema_pruefen(text):
+    """A topic from a person or the panel -> the fixed charset of THEMA (lower case, umlauts spelled out, anything
+    else a hyphen, at most 40), "" when nothing is left. Never a path, never another prefix."""
+    t = str(text or "")[:200].strip().lower()
+    for a, b in (("ä", "ae"), ("ö", "oe"), ("ü", "ue"), ("ß", "ss")):
+        t = t.replace(a, b)
+    if t.startswith(GH_PREFIX):
+        t = t[len(GH_PREFIX):]
+    t = re.sub(r"[^a-z0-9]+", "-", t).strip("-")[:40].strip("-")
+    return t if THEMA.fullmatch(t) else ""
+
+
+def ziel_ref(thema):
+    """The one ref a push ever writes: refs/heads/opencode/<thema> (never main, never without the prefix)."""
+    if not THEMA.fullmatch(str(thema or "")):
+        raise Fehler("thema")
+    ref = "refs/heads/" + GH_PREFIX + thema
+    if not ZWEIG_GH.fullmatch(ref[len("refs/heads/"):]):
+        raise Fehler("thema")
+    return ref
+
+
+def github_ziel(remote):
+    """The installer's origin -> (ssh address over port 443, "owner/repo"), ("", "") for anything not on GitHub."""
+    m = re.fullmatch(r"(?:https://github\.com/|git@github\.com:|ssh://git@(?:ssh\.)?github\.com(?::443)?/)"
+                     r"([A-Za-z0-9-]{1,39})/([A-Za-z0-9._-]{1,100}?)(?:\.git)?/?", str(remote or "").strip())
+    if not m or m.group(2).strip(".") == "":
+        return "", ""
+    return f"ssh://git@ssh.github.com:443/{m.group(1)}/{m.group(2)}.git", f"{m.group(1)}/{m.group(2)}"
+
+
+def pfade_github(raw):
+    """Weg A: a Claude thread reviews every file, so install.sh or app/*.py may go too; never .git or .github (what
+    GitHub runs with its token stays Dominik's), never a link or a submodule. Fehler("pfad"/"zu_viele")."""
+    teile = raw.split("\0") if raw else []
+    dateien = []
+    for i in range(0, len(teile) - 1, 2):
+        kopf, pfad = teile[i], teile[i + 1]
+        m = re.match(r"^:(\d{6}) (\d{6}) [0-9a-f]+ [0-9a-f]+ ([AMDT])$", kopf)
+        if not m or NIE.search(pfad) or re.match(r"^\.github(/|$)", pfad) or len(pfad) > 200 or pfad.startswith("/"):
+            raise Fehler("pfad")
+        if m.group(3) != "D" and m.group(2) not in ("100644", "100755"):
+            raise Fehler("pfad")
+        dateien.append(pfad)
+    if len(dateien) > DATEIEN_MAX:
+        raise Fehler("zu_viele")
+    return dateien
+
+
+def push_grund(text):
+    """git's answer to a refused push -> one fixed word (the text itself is never shown or logged)."""
+    s = str(text or "")
+    if re.search(r"Host key verification failed|REMOTE HOST IDENTIFICATION HAS CHANGED|host key .* not known", s):
+        return "hostschluessel"
+    if re.search(r"Permission denied \(publickey|marked as read only|Repository not found|not authorized|"
+                 r"Key is already in use|deploy key", s, re.I):
+        return "schluessel"
+    if re.search(r"non-fast-forward|\(fetch first\)|\(stale info\)|Updates were rejected because", s):
+        return "nicht_vorwaerts"
+    if re.search(r"GH0\d\d|protected branch|rule violation|\[remote rejected\]|pre-receive hook declined", s, re.I):
+        return "abgelehnt"
+    if re.search(r"Could not resolve hostname|Name or service not known|Temporary failure in name resolution|"
+                 r"Network is unreachable|timed out|Connection refused|No route to host|Connection closed|"
+                 r"Connection reset|kex_exchange_identification", s, re.I):
+        return "wartet"
+    return "fehler"
+
+
+def ssh_befehl(schluessel, bekannt):
+    """git's ssh for the push: only this key, only GitHub's pinned host key, no config, no agent, never asking."""
+    return " ".join(["ssh", "-F", "/dev/null", "-i", schluessel, "-o", "IdentitiesOnly=yes", "-o", "IdentityAgent=none",
+                     "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes", "-o", "UserKnownHostsFile=" + bekannt,
+                     "-o", "GlobalKnownHostsFile=/dev/null", "-o", "UpdateHostKeys=no", "-o", "ProxyCommand=none",
+                     "-o", "PermitLocalCommand=no", "-o", "ForwardAgent=no", "-o", "ConnectTimeout=20",
+                     "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=4"])
+
+
+def schluessel_datei_ok(path=None, uid=0):
+    """The deploy key: root's own plain file, nobody else may read it; anything else stops the push (closed)."""
+    try:
+        st = os.lstat(path or GH_KEY)
+    except OSError:
+        return False
+    return stat.S_ISREG(st.st_mode) and st.st_uid == uid and not st.st_mode & 0o077 and 0 < st.st_size < 20000
+
+
+def hinweis(zweig, repo=""):
+    """The fixed hint after a push, with the branch's link (de, en)."""
+    link = f" https://github.com/{repo}/tree/{zweig}" if repo else ""
+    return (f"Gib den Zweig {zweig} einem Claude-Thread zum Prüfen:{link}",
+            f"Give the branch {zweig} to a Claude thread to review:{link}")
+
+
+def tests_zustand(runs, zweig, kopf):
+    """GitHub's "Tests" for the branch's head from the Actions API's runs: gruen, laeuft, rot or unbekannt."""
+    for r in runs if isinstance(runs, list) else []:
+        if isinstance(r, dict) and r.get("head_branch") == zweig and r.get("head_sha") == kopf:
+            if r.get("status") != "completed":
+                return "laeuft"
+            if r.get("conclusion") in ("cancelled", "skipped"):
+                continue
+            return "gruen" if r.get("conclusion") == "success" else "rot"
+    return "unbekannt"
+
+
+def _zweig_eintrag(z):
+    if not isinstance(z, dict) or not ZWEIG_GH.fullmatch(str(z.get("zweig") or "")) or not KURZ.match(str(z.get("kopf") or "")):
+        return None
+    n, t = z.get("anzahl"), z.get("t")
+    return {"zweig": z["zweig"], "kopf": z["kopf"],
+            "anzahl": n if isinstance(n, int) and not isinstance(n, bool) and 0 <= n <= ANZAHL_MAX else 0,
+            "t": t if isinstance(t, int) and not isinstance(t, bool) and 0 <= t < 10 ** 11 else 0}
+
+
+def github_anzeige(alt, zustand, eintrag=None, thema="", now=None):
+    """The panel's copy after one try: the branches handed over (newest first, at most GH_ZWEIGE_MAX) and the last
+    state as a fixed word; never a commit text, a path or git's output."""
+    alt = alt if isinstance(alt, dict) else {}
+    zweige = [z for z in (_zweig_eintrag(x) for x in alt.get("zweige") or []) if z]
+    neu = _zweig_eintrag(eintrag) if eintrag else None
+    if neu:
+        zweige = [neu] + [z for z in zweige if z["zweig"] != neu["zweig"]]
+    t = int(time.time() if now is None else now)
+    letzter = {"zustand": zustand if zustand in GH_GRUENDE else "fehler", "t": t}
+    if THEMA.fullmatch(str(thema or "")):
+        letzter["zweig"] = GH_PREFIX + thema
+    return {"zweige": zweige[:GH_ZWEIGE_MAX], "letzter": letzter}
+
+
+def github_anzeige_lesen(path=None):
+    """For the panel: the copy checked again (the file lies in the service user's folder)."""
+    d = read_json(path or GH_ANZEIGE, {})
+    if not isinstance(d, dict):
+        return {"zweige": []}
+    out = {"zweige": [z for z in (_zweig_eintrag(x) for x in d.get("zweige") or [] if isinstance(d.get("zweige"), list)) if z][:GH_ZWEIGE_MAX]}
+    lz = d.get("letzter")
+    if isinstance(lz, dict) and lz.get("zustand") in GH_GRUENDE:
+        out["letzter"] = {"zustand": lz["zustand"], "t": lz["t"] if isinstance(lz.get("t"), int) and not isinstance(lz.get("t"), bool) else 0}
+        if ZWEIG_GH.fullmatch(str(lz.get("zweig") or "")):
+            out["letzter"]["zweig"] = lz["zweig"]
+    return out
+
+
+def _als_svc(*cmd, eingabe=None):
+    """A file in the service user's state folder, as the service user (root never follows a path there)."""
+    return subprocess.run(["runuser", "-u", "speech", "--", *cmd], input=eingabe, capture_output=True, timeout=30)
+
+
+def _github_schreiben(zustand, eintrag=None, thema=""):
+    alt = read_json(GH_ANZEIGE, {})   # read only to keep the list; every entry is checked again
+    d = github_anzeige(alt, zustand, eintrag, thema)
+    _als_svc("tee", "--", GH_ANZEIGE, eingabe=json.dumps(d).encode())
+    return d
+
+
+def _update_laeuft():
+    """The update unit runs (a oneshot is "activating" for as long as it runs): the push waits for it."""
+    p = subprocess.run(["systemctl", "is-active", "speech-spark-update"], capture_output=True, text=True, timeout=30)
+    return p.stdout.strip() in ("active", "activating", "deactivating", "reloading")
+
+
+def an_github(thema):
+    """root: spark-dev's branch (its own opencode/<thema> when there, else lokal) to GitHub as opencode/<thema>.
+    Returns {"zweig", "kopf", "anzahl", "repo"}; Fehler with a word of GH_GRUENDE ("wartet": try again later)."""
+    if not _schalter_an("entwickeln_github"):
+        raise Fehler("aus")
+    ref = ziel_ref(thema)
+    url, repo = github_ziel(_git("remote", "get-url", "origin")[1])
+    if not url:
+        raise Fehler("fehler")
+    if not schluessel_datei_ok():
+        raise Fehler("schluessel")
+    if _update_laeuft():
+        raise Fehler("wartet")
+    quelle = f"refs/heads/{GH_PREFIX}{thema}"
+    if _als_dev("git", "-C", KLON, "rev-parse", "--verify", "-q", quelle, timeout=60).returncode != 0:
+        quelle = f"refs/heads/{ZWEIG}"
+        if _als_dev("git", "-C", KLON, "rev-parse", "--verify", "-q", quelle, timeout=60).returncode != 0:
+            raise Fehler("klon")
+    ziel = tempfile.mkdtemp(prefix="speech-spark-github-")
+    try:
+        datei = os.path.join(ziel, "zweig.bundle")
+        with open(datei, "wb") as f:
+            p = _als_dev("git", "-C", KLON, "bundle", "create", "-", quelle, "--not", "--remotes", timeout=600, stdout=f)
+        if p.returncode != 0:
+            raise Fehler("leer" if b"empty bundle" in (p.stderr or b"") else "klon")
+        if os.path.getsize(datei) > BUNDLE_MAX:
+            raise Fehler("zu_viele")
+        if _git("fetch", "--quiet", "--no-tags", datei, f"+{quelle}:{REF_GITHUB}", timeout=600)[0] != 0:
+            raise Fehler("fehler")
+        kopf = _git("rev-parse", REF_GITHUB)[1]
+        code, basis = _git("merge-base", "refs/remotes/origin/main", kopf)
+        if code != 0 or not KURZ.match(kopf) or not KURZ.match(basis):
+            raise Fehler("fehler")
+        n = int(_git("rev-list", "--count", f"{basis}..{kopf}")[1] or 0)
+        if not n:
+            raise Fehler("leer")
+        if n > ANZAHL_MAX:
+            raise Fehler("zu_viele")
+        code, raw = _git("diff", "--raw", "-z", "--no-renames", "--no-abbrev", basis, kopf)
+        if code != 0:
+            raise Fehler("fehler")
+        pfade_github(raw)
+        schluessel, bekannt = os.path.join(ziel, "key"), os.path.join(ziel, "known_hosts")
+        shutil.copyfile(GH_KEY, schluessel)
+        os.chmod(schluessel, 0o600)
+        with open(bekannt, "w") as f:
+            f.write(GH_HOSTKEY + "\n")
+        # no "+", no --force: a branch with other commits on GitHub is never overwritten
+        code, out = _git("push", "--porcelain", "--no-verify", url, f"{REF_GITHUB}:{ref}", timeout=GH_PUSH_S,
+                         env={"GIT_SSH_COMMAND": ssh_befehl(schluessel, bekannt), "GIT_SSH_VARIANT": "ssh"}, mit_fehler=True)
+        if code != 0:
+            raise Fehler(push_grund(out))
+    finally:
+        _git("update-ref", "-d", REF_GITHUB)
+        shutil.rmtree(ziel, ignore_errors=True)
+    return {"zweig": GH_PREFIX + thema, "kopf": kopf, "anzahl": n, "repo": repo}
+
+
+def github_wunsch_lesen():
+    """The waiting wish (the panel's or an offline try's): one topic, "" when there is none."""
+    p = _als_svc("head", "-c", "200", "--", GH_WUNSCH)
+    return thema_pruefen(p.stdout.decode("utf-8", "replace")) if p.returncode == 0 else ""
+
+
+def github_geben(thema, log=print):
+    """One try for the command line and the unit: the panel's copy, the wish (kept only while offline), log lines
+    with fixed words. 0 handed over, 4 waiting, 3 refused."""
+    try:
+        r = an_github(thema)
+    except Fehler as e:
+        grund = str(e) if str(e) in GH_GRUENDE else "fehler"
+        _github_schreiben(grund, thema=thema if THEMA.fullmatch(str(thema or "")) else "")
+        if grund == "wartet":
+            _als_svc("tee", "--", GH_WUNSCH, eingabe=thema.encode())
+            _log("github wartet")
+        else:
+            _als_svc("rm", "-f", "--", GH_WUNSCH)
+            _log(f"github abgelehnt {grund}")
+        log(GH_GRUENDE[grund][0])
+        return 4 if grund == "wartet" else 3
+    _github_schreiben("gegeben", {"zweig": r["zweig"], "kopf": r["kopf"], "anzahl": r["anzahl"], "t": int(time.time())}, thema)
+    _als_svc("rm", "-f", "--", GH_WUNSCH)
+    _log(f"github gegeben {r['anzahl']} commits")
+    log(f"entwickeln: an GitHub gegeben {r['zweig']} ({r['anzahl']} Commits, {r['kopf'][:7]})")
+    log(hinweis(r["zweig"], r["repo"])[0])
+    return 0
+
+
+def tests_holen(repo, zweig):
+    """root (speech-spark lokal zweige): the newest runs of "Tests" for one branch from GitHub's public API, no key
+    (like update.sh); None when GitHub does not answer."""
+    import urllib.parse
+    import urllib.request
+    if not re.fullmatch(r"[A-Za-z0-9-]{1,39}/[A-Za-z0-9._-]{1,100}", repo or "") or not ZWEIG_GH.fullmatch(zweig):
+        return None
+    url = (f"https://api.github.com/repos/{repo}/actions/workflows/tests.yml/runs?"
+           + urllib.parse.urlencode({"branch": zweig, "event": "push", "per_page": 5}))
+    try:
+        req = urllib.request.Request(url, headers={"Accept": "application/vnd.github+json", "User-Agent": "speech-spark"})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            return json.loads(r.read(2_000_000)).get("workflow_runs")
+    except (OSError, ValueError, AttributeError):
+        return None
+
+
+def zweige_text(d, repo, runs_von=None):
+    """The command line's lines for the branches handed over (fixed words, branch names, short commits, links)."""
+    z = []
+    lz = d.get("letzter") or {}
+    if lz.get("zustand") and lz["zustand"] != "gegeben":
+        z.append(f"entwickeln: zuletzt an GitHub {lz['zustand']}" + (f" ({lz['zweig']})" if lz.get("zweig") else ""))
+    if not d.get("zweige"):
+        z.append("entwickeln: noch kein Zweig an GitHub gegeben")
+    for e in d.get("zweige") or []:
+        stand = tests_zustand(runs_von(e["zweig"]) if runs_von else None, e["zweig"], e["kopf"])
+        z.append(f"entwickeln: zweig {e['zweig']} {e['kopf'][:7]} commits {e['anzahl']} tests {stand}")
+        if repo:
+            z.append(f"  https://github.com/{repo}/tree/{e['zweig']}")
+    if d.get("zweige"):
+        z.append(hinweis(d["zweige"][0]["zweig"])[0].rstrip(":"))
+    return z
+
+
 def status_text(d, opencode=None, klon=None):
     """The command line's lines (fixed words and numbers)."""
     z = [f"entwickeln: lokale aenderungen {d.get('anzahl', 0)}" + (f" auf {d['basis']}" if d.get("basis") else "")]
@@ -641,7 +986,8 @@ def status_text(d, opencode=None, klon=None):
 
 
 def cli(args, log=print):
-    """root (speech-spark lokal …, update.sh): vorbereiten <art> [neu], fertig, fehler, status, testumgebung;
+    """root (speech-spark lokal …, update.sh): vorbereiten <art> [neu], fertig, fehler, status, testumgebung,
+    an-github [thema|--wunsch|--abbrechen], zweige;
     panel user: tor-daten, schluessel-setzen <hash>|weg; spark-dev: einrichten (stdin: tor-daten), schluessel-machen;
     the sandbox: innen <ordner> <python> (stdin: the changed paths)."""
     try:
@@ -672,6 +1018,31 @@ def cli(args, log=print):
             klon = _als_dev("test", "-d", os.path.join(KLON, ".git"), timeout=30).returncode == 0
             for z in status_text(d, os.access(OPENCODE, os.X_OK), klon):
                 log(z)
+            return 0
+        if cmd == "an-github":             # root: Weg A, one try (an offline try waits as a wish for the timer)
+            arg = args[1] if len(args) > 1 else ""
+            if arg == "--abbrechen":
+                _als_svc("rm", "-f", "--", GH_WUNSCH)
+                _log("github abgebrochen")
+                log("entwickeln: wartender Zweig für GitHub abgebrochen")
+                return 0
+            if arg == "--wunsch":          # the unit (panel, timer): only when a wish waits; the result is in the
+                thema = github_wunsch_lesen()   # panel's copy, so the unit never ends "failed" while offline
+                if thema:
+                    github_geben(thema, log)
+                return 0
+            else:
+                thema = thema_pruefen(arg or ZWEIG)
+                if not thema:
+                    raise Fehler("thema")
+            return github_geben(thema, log)
+        if cmd == "zweige":                # root: the branches handed over and GitHub's tests for them
+            d = github_anzeige_lesen()
+            repo = github_ziel(_git("remote", "get-url", "origin")[1])[1]
+            for z in zweige_text(d, repo, lambda zweig: tests_holen(repo, zweig)):
+                log(z)
+            if github_wunsch_lesen():
+                log("entwickeln: " + GH_GRUENDE["wartet"][0])
             return 0
         if cmd == "testumgebung":
             log("entwickeln: testumgebung " + testumgebung(nacht="--nacht" in args))

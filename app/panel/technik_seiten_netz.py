@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "aussen": {
-        "stand": "1d444b37e6",
+        "stand": "8e8b4c5ddd",
         "bezug": {
             "dienstwacht.TIMEOUT": ["s5"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
             "netguard.client": ["s8", "s9", "s10"], "netguard.IMAP4_SSL": ["s9"],
@@ -188,7 +188,7 @@ SEITEN = {
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
     },
     "internet": {
-        "stand": "60543d277f",
+        "stand": "7ea5781469",
         "bezug": {
             "regeln": ["s3", "s4"], "regel:Seiten aus der Suche": ["s4", "s5"], "regel:Mail, Kalender, Kontakte": ["s4", "s5"],
             "regel:reMarkable": ["s4", "s5"], "regel:Wetter, Fahrplan, Wikipedia": ["s3"], "regel:Telegram": ["s7"],
@@ -245,9 +245,13 @@ SEITEN = {
             S("s7", "schritt", ("Was der Spark selbst schickt", "What the Spark sends by itself"),
               ("Telegram, Push, Update", "Telegram, push, update"),
               ("Ohne Werkzeug gehen nur feste Wege hinaus: die Telegram-Bot-API, Apple- und Browser-Push an bekannte "
-               "Dienste und die Update-Prüfung bei GitHub, jede mit Grund in netguard.DIRECT_OK.",
+               "Dienste und die Update-Prüfung bei GitHub, jede mit Grund in netguard.DIRECT_OK. Dazu, nur auf Befehl "
+               "eines Admins und nie aus dem Panel selbst: An GitHub geben (root schiebt einen Zweig opencode/… per ssh "
+               "an GitHub, Kasten Werkstatt).",
                "Without a tool only fixed ways go out: the Telegram bot API, Apple and browser push to known services "
-               "and the update check at GitHub, each with a reason in netguard.DIRECT_OK.")),
+               "and the update check at GitHub, each with a reason in netguard.DIRECT_OK. Plus, only on an admin's "
+               "command and never from the panel itself: Hand to GitHub (root pushes a branch opencode/… to GitHub over "
+               "ssh, box Workshop).")),
         ],
         "beispiele": [
             (("Seite aus der Suche lesen", "Read a page from search"), ["s1", "s2", "s3", "s4", "s5", "s6"],
@@ -470,7 +474,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Werkstatt
     "werkstatt": {
-        "stand": "30680924d2",
+        "stand": "9929812ff5",
         "bezug": {
             "werkstattseite.auftrag_geben": ["s1"], "werkstattseite.nacht_art": ["s1"], "werkstattseite.NACHT_FENSTER_H": ["s1"],
             "werkstatt.pruefen": ["s2"], "werkstatt.TEXT_MAX": ["s2"],
@@ -481,7 +485,8 @@ SEITEN = {
             "werkstatt.NAMEN_MAX": ["s2"], "werkstatt.pruefe_ergebnis": ["s9"], "werkstatt.AUFTRAEGE_MAX": ["s9"],
             "werkstatt.PATCH_MAX": ["s9"],
             "entwickeln.vorbereiten": ["s10"], "entwickeln.pfade_pruefen": ["s10"], "entwickeln.sandbox": ["s10"],
-            "entwickeln.aufsetzen": ["s10"],
+            "entwickeln.aufsetzen": ["s10"], "entwickeln.an_github": ["s10"], "entwickeln.ziel_ref": ["s10"],
+            "entwickeln.pfade_github": ["s10"], "entwickeln.GH_HOSTKEY": ["s10"],
         },
         "kurz": ("Die Werkstatt lässt einen Admin auf dem Modell-Rechner den vollen Testlauf laufen und mit OpenCode den Code "
                  "messen, ein Problem untersuchen oder eine Reparatur vorschlagen. Alles läuft in einer abgeschotteten Kopie "
@@ -589,13 +594,25 @@ SEITEN = {
                "„sudo speech-spark lokal einspielen“ nimmt dessen Commits (entwickeln.vorbereiten), lässt nur Dateien zu, "
                "die der Dienstnutzer ausführt (entwickeln.pfade_pruefen), testet sie im Sandkasten ohne Netz "
                "(entwickeln.sandbox) und spielt sie wie ein Update ein, nie als root ausgeführt. Ein Update setzt sie mit "
-               "entwickeln.aufsetzen auf die neue Version; passt das nicht, bleibt die laufende Version.",
+               "entwickeln.aufsetzen auf die neue Version; passt das nicht, bleibt die laufende Version; was inzwischen auf "
+               "main ist, fällt dabei weg. Weg A (eigener Schalter „An GitHub geben“): sudo speech-spark lokal an-github "
+               "nimmt den Zweig ebenfalls nur als Bündel (entwickeln.an_github), lässt nie .github, Links oder Untermodule "
+               "durch (entwickeln.pfade_github) und schiebt ihn als root mit einem eigenen Deploy-Schlüssel nur nach "
+               "opencode/<thema> (entwickeln.ziel_ref: nie main, nie erzwungen), über ssh mit GitHubs festem Hostschlüssel "
+               "(entwickeln.GH_HOSTKEY); spark-dev bleibt ohne Internet. Ohne Netz wartet der Auftrag. Ein Claude-Thread "
+               "prüft den Zweig und bringt ihn auf main.",
                "The admin hands the patch to a Claude thread or a person; the workshop never installs or pushes anything. "
                "Develop on the Pi is different (OpenCode in the panel computer's terminal, user spark-dev): \"sudo "
                "speech-spark lokal einspielen\" takes its commits (entwickeln.vorbereiten), allows only files the service "
                "user runs (entwickeln.pfade_pruefen), tests them in a sandbox without network (entwickeln.sandbox) and "
                "installs them like an update, never run as root. An update puts them on the new version with "
-               "entwickeln.aufsetzen; when that does not fit, the running version stays.")),
+               "entwickeln.aufsetzen; when that does not fit, the running version stays; what is on main by then drops "
+               "out. Way A (its own switch \"Hand to GitHub\"): sudo speech-spark lokal an-github also takes the branch only "
+               "as a bundle (entwickeln.an_github), never lets .github, links or submodules through (entwickeln.pfade_github) "
+               "and pushes it as root with a deploy key of its own only to opencode/<thema> (entwickeln.ziel_ref: never "
+               "main, never forced), over ssh with GitHub's pinned host key (entwickeln.GH_HOSTKEY); spark-dev stays "
+               "without the internet. Without network the order waits. A Claude thread reviews the branch and brings it "
+               "onto main.")),
         ],
         "beispiele": [
             (("Testlauf in der Nacht", "Test run at night"), ["s1", "s2", "s3", "s4", "s5", "s6", "s6!", "s8", "s9"],
@@ -627,6 +644,12 @@ SEITEN = {
              "auf dem Pi an; einspielen mit sudo speech-spark lokal einspielen (zurueck, verwerfen, status).",
              "Develop on the Pi: on the panel computer once sudo ./install.sh --entwickeln, then Features → Develop on the "
              "Pi on; install with sudo speech-spark lokal einspielen (zurueck, verwerfen, status)."),
+            ("An GitHub geben: sudo speech-spark entwickeln github-schluessel neu, die Zeile auf GitHub als Deploy-Schlüssel mit "
+             "Schreibrecht eintragen, main per Ruleset schützen, dann Funktionen → Entwickeln auf dem Pi → An GitHub geben an; "
+             "weitergeben mit sudo speech-spark lokal an-github <thema>.",
+             "Hand to GitHub: sudo speech-spark entwickeln github-schluessel neu, add the line on GitHub as a deploy key with "
+             "write access, protect main with a ruleset, then Features → Develop on the Pi → Hand to GitHub on; hand over "
+             "with sudo speech-spark lokal an-github <thema>."),
         ],
         "sehen": [
             ("Zustand → Werkstatt: links der Verlauf, rechts ein Ergebnis mit großen Zahlen, was es heißt (etwa „Was heißt "
@@ -639,6 +662,10 @@ SEITEN = {
              "sudo speech-spark lokal status zeigt dasselbe im Terminal.",
              "Status → Live: part \"Entwickeln\" with \"lokale Änderungen: N\" and the last fixed reason of a refusal; "
              "sudo speech-spark lokal status shows the same in the terminal."),
+            ("sudo speech-spark lokal zweige: die an GitHub gegebenen Zweige mit Link und dem Stand der GitHub-Tests; oben "
+             "auf den Admin-Seiten der Hinweis „Gib den Zweig opencode/<thema> einem Claude-Thread zum Prüfen“.",
+             "sudo speech-spark lokal zweige: the branches handed to GitHub with link and the state of GitHub's tests; on top "
+             "of the admin pages the hint \"Gib den Zweig opencode/<thema> einem Claude-Thread zum Prüfen\"."),
         ],
         "code": [
             ("werkstattseite.auftrag_geben", ("Auftrag vom Panel", "order from the panel")),
@@ -657,6 +684,10 @@ SEITEN = {
             ("entwickeln.pfade_pruefen", ("nur Dateien, die der Dienstnutzer ausführt", "only files the service user runs")),
             ("entwickeln.sandbox", ("Grenzen des Schnelltests", "limits of the quick test")),
             ("entwickeln.aufsetzen", ("lokale Commits auf die neue Version", "local commits onto the new version")),
+            ("entwickeln.an_github", ("Weg A: Zweig als Bündel, root schiebt", "way A: branch as a bundle, root pushes")),
+            ("entwickeln.ziel_ref", ("nur opencode/<thema>, nie main", "only opencode/<thema>, never main")),
+            ("entwickeln.pfade_github", ("nie .github, kein Link, kein Untermodul", "never .github, no link, no submodule")),
+            ("entwickeln.GH_HOSTKEY", ("GitHubs fester Hostschlüssel", "GitHub's pinned host key")),
         ],
         "tests": ["test_werkstatt", "test_entwickeln"],
         "heute": [],

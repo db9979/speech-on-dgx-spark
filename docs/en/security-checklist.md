@@ -73,6 +73,7 @@ Go through before every commit. In the answer to Dominik briefly name which poin
 - [ ] New packages are installed with a fixed version.
 - [ ] Nothing from the configuration ends up unchecked in a root script.
 - [ ] Local code (Develop on the Pi) never runs as root: a file root runs or loads does not belong in `entwickeln.ERLAUBT`, and a root program that loads panel modules runs as the service user while local changes are installed.
+- [ ] Code that goes to GitHub (Hand to GitHub) writes only `opencode/<thema>` and never `.github`; its key is a deploy key only root reads (no token of an admin account, which would get past the rule for main), and what GitHub tests on branches never counts for the update.
 
 ## Connection between two computers (Spark split)
 - [ ] Everything between panel computer and model computer goes through the TLS-Tor (`common.model_url`, TLS 1.3, pinned certificate), never in plain text and never with "accept anything".

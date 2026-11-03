@@ -157,6 +157,24 @@ sudo speech-spark lokal verwerfen   # Version ohne lokale Änderungen (bleiben i
 
 Eingespielt wird nur, was unter `app/panel/`, `app/tests/` und `docs/` liegt, dazu die beiden README und `CHANGELOG.md`, als normale Dateien: was root ausführt (`install.sh`, `update.sh`, `app/*.py` außerhalb von `app/panel`, die Paketlisten), kommt nur über GitHub. Ein normales Update verliert lokale Arbeit nie: Es setzt die lokalen Commits auf die neue Version und testet sie; passt etwas nicht oder ist der Schnelltest rot, läuft die bisherige Version weiter, und das Panel zeigt oben den Grund. Den Schlüssel von `spark-dev` neu machen oder zurückziehen: `sudo speech-spark entwickeln schluessel neu|weg`; nach einem Wechsel des Modell-Rechners `sudo speech-spark entwickeln einrichten`. Fehlt die Testumgebung, einmal mit Internet `sudo speech-spark lokal testumgebung` (danach erneuert sie sich jede Nacht, nur wenn sich die Paketliste ändert). Logs: `sudo speech-spark logs entwickeln`.
 
+### Weg A: an GitHub geben
+
+Was nicht über Weg B darf (etwa `install.sh` oder `app/*.py`) oder was in die offizielle Version soll, gibt ein Admin als eigenen Zweig `opencode/<thema>` an GitHub. Dort laufen die vollen Tests, und ein Claude-Thread prüft ihn und bringt ihn auf main. `spark-dev` bekommt dabei nie Internet: root nimmt den Zweig als Bündel und schiebt ihn mit einem eigenen Deploy-Schlüssel, nie an main und nie mit `--force`.
+
+1. **Schlüssel machen**: `sudo speech-spark entwickeln github-schluessel neu` zeigt eine Zeile, die mit `ssh-ed25519` beginnt. Den geheimen Teil (`/etc/speech-spark-github-key`) liest nur root.
+2. **Auf GitHub eintragen**: im Repository den Reiter „Settings“, links „Deploy keys“, „Add deploy key“. Titel etwa „Spark Pi opencode“, die Zeile einfügen, **„Allow write access“** anhaken, „Add key“. Nimm keinen persönlichen Token: der handelt als dein Admin-Konto und käme an der Regel für main vorbei.
+3. **main schützen** (einmal, auf GitHub): Reiter „Settings“, links „Rules“, „Rulesets“, „New ruleset“, „New branch ruleset“. Name „main schützen“, Enforcement status „Active“, bei „Target branches“ „Add target“ und „Include default branch“. Anhaken: „Restrict deletions“, „Restrict updates“, „Block force pushes“. Bei „Bypass list“ „Add bypass“ und „Repository admin“ (dein Konto, damit du und die Claude-Threads weiter auf main pushen). „Create“. Den Deploy-Schlüssel nie auf die Bypass-Liste setzen.
+4. **Einschalten**: als Admin *Funktionen → Entwickeln auf dem Pi → An GitHub geben* an. Nach dem Update auf diese Version einmal `sudo ./install.sh --entwickeln`, damit der Dienst `speech-spark-github` und sein Zeitgeber da sind.
+5. **Weitergeben**: `sudo speech-spark lokal an-github mein-thema`. Ohne Internet wartet der Auftrag und geht alle 15 Minuten von selbst los (`--abbrechen` verwirft ihn).
+6. **Übergeben**: `sudo speech-spark lokal zweige` zeigt den Zweig, seinen Link und den Stand der GitHub-Tests. Dann einem Claude-Thread: „Gib den Zweig opencode/mein-thema einem Claude-Thread zum Prüfen“. Ist er auf main, fallen beim nächsten Update eingespielte lokale Commits, die schon drin sind, von selbst weg; im Klon danach `git rebase spark/main`.
+
+```bash
+sudo speech-spark entwickeln github-schluessel neu   # 1. Zeile als Deploy-Schlüssel mit Schreibrecht eintragen
+sudo speech-spark lokal an-github mein-thema          # 5. als opencode/mein-thema an GitHub
+sudo speech-spark lokal zweige                        # 6. Zweige, Links, GitHub-Tests (gruen, laeuft, rot)
+sudo speech-spark entwickeln github-schluessel weg    # Schlüssel zurückziehen (auch auf GitHub löschen)
+```
+
 ## Deinstallieren
 
 ```bash

@@ -151,6 +151,7 @@ LIST = {
     ("POST", "/api/admin/entwickeln/einspielen"): (PROTECT, "Spark", "Lokale Änderungen einspielen (Entwickeln auf dem Pi)", "Install local changes (Develop on the Pi)"),
     ("POST", "/api/admin/entwickeln/zurueck"): (CONFIRM, "Spark", "Lokale Änderungen: zurück zur vorigen Fassung", "Local changes: back to the previous state"),
     ("POST", "/api/admin/entwickeln/verwerfen"): (CONFIRM, "Spark", "Lokale Änderungen verwerfen (bleiben im Klon)", "Drop local changes (they stay in the clone)"),
+    ("POST", "/api/admin/entwickeln/github"): (PROTECT, "Spark", "Zweig an GitHub geben (opencode/…, Entwickeln auf dem Pi)", "Hand a branch to GitHub (opencode/…, Develop on the Pi)"),
     ("POST", "/api/admin/wissensmessung"): (CONFIRM, "Spark", "Wissen messen (liest die Dokumente eines Profils, nur Zahlen)", "Measure knowledge (reads a profile's documents, numbers only)"),
     ("POST", "/api/admin/modelle/messen"): (CONFIRM, "Spark", "Ein Modell messen", "Measure a model"),
     ("POST", "/api/admin/modelle/eigen"): (CONFIRM, "Spark", "Ein eigenes Modell hinzufügen", "Add an own model"),

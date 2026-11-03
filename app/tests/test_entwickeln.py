@@ -552,5 +552,533 @@ class Seite(unittest.TestCase):
         self.assertIn("entwickelnseite", technik.MODULE)
 
 
+
+# ---------------------------------------------------------------- Weg A: an GitHub geben (package 2)
+class GitHubRegeln(unittest.TestCase):
+    """The fixed rules of An GitHub geben: only opencode/<thema> from a fixed charset, never main, never forced, never
+    .github, only GitHub's pinned host key, the deploy key root's own and never in a log, offline it waits."""
+
+    def test_the_topic_is_a_fixed_charset(self):
+        for roh, gut in (("Live-Übersicht", "live-uebersicht"), ("  Größe; rm -rf /  ", "groesse-rm-rf"),
+                         ("opencode/abc", "abc"), ("a" * 80, "a" * 40), ("--x--", "x"), ("../../main", "main"),
+                         ("refs/heads/main", "refs-heads-main"), ("lokal", "lokal")):
+            self.assertEqual(entwickeln.thema_pruefen(roh), gut, roh)
+        for roh in ("", None, "../..", "///", "äöü"[:0], "-"):
+            self.assertEqual(entwickeln.thema_pruefen(roh), "", roh)
+        self.assertTrue(all(entwickeln.THEMA.fullmatch(entwickeln.thema_pruefen(x)) for x in ("ÄÖÜ ß", "x y z", "1")))
+
+    def test_a_push_only_ever_writes_opencode(self):
+        """Every topic the charset allows ends below refs/heads/opencode/; anything else is refused before git."""
+        self.assertEqual(entwickeln.ziel_ref("main"), "refs/heads/opencode/main", "never refs/heads/main")
+        for t in ("abc", "x-1", "a" * 40):
+            self.assertTrue(entwickeln.ziel_ref(t).startswith("refs/heads/opencode/"), t)
+        for t in ("", "Main", "a/b", "../main", "x" * 41, "-x", "a b", None, "main\n"):
+            with self.assertRaises(entwickeln.Fehler, msg=repr(t)) as e:
+                entwickeln.ziel_ref(t)
+            self.assertEqual(str(e.exception), "thema")
+
+    def test_only_a_github_repository(self):
+        url, repo = entwickeln.github_ziel("https://github.com/db9979/speech-on-dgx-spark")
+        self.assertEqual((url, repo), ("ssh://git@ssh.github.com:443/db9979/speech-on-dgx-spark.git", "db9979/speech-on-dgx-spark"))
+        self.assertEqual(entwickeln.github_ziel("git@github.com:db9979/speech-on-dgx-spark.git")[1], "db9979/speech-on-dgx-spark")
+        for boese in ("https://github.com.evil.example/x/y", "https://evil.example/github.com/x/y", "http://github.com/x/y",
+                      "https://github.com/x", "https://github.com/x/y/z", "https://github.com/../..", "file:///root/x", "", None):
+            self.assertEqual(entwickeln.github_ziel(boese), ("", ""), boese)
+
+    def test_never_the_workflows_a_link_or_a_submodule(self):
+        """Weg A takes what Weg B never takes (a Claude thread reviews it), but never what GitHub runs with its token."""
+        ok = [("100644", "100755", "M", "install.sh"), ("100644", "100644", "M", "app/common.py"),
+              ("000000", "100644", "A", "app/neu.py"), ("100644", "000000", "D", "docs/alt.md")]
+        self.assertEqual(entwickeln.pfade_github(raw(*ok)), ["install.sh", "app/common.py", "app/neu.py", "docs/alt.md"])
+        for eintrag in (("100644", "100644", "M", ".github/workflows/tests.yml"), ("000000", "100644", "A", ".github/x"),
+                        ("100644", "000000", "D", ".github/workflows/tests.yml"), ("100644", "120000", "M", "app/x.py"),
+                        ("000000", "160000", "A", "sub"), ("100644", "100644", "M", "app/.git/config"),
+                        ("100644", "100644", "M", "app/../x"), ("100644", "100644", "M", "x" * 201)):
+            with self.assertRaises(entwickeln.Fehler, msg=eintrag) as e:
+                entwickeln.pfade_github(raw(eintrag))
+            self.assertEqual(str(e.exception), "pfad", eintrag)
+        viele = [("100644", "100644", "M", f"docs/{i}.md") for i in range(entwickeln.DATEIEN_MAX + 1)]
+        with self.assertRaises(entwickeln.Fehler) as e:
+            entwickeln.pfade_github(raw(*viele))
+        self.assertEqual(str(e.exception), "zu_viele")
+
+    def test_gits_answer_becomes_one_fixed_word(self):
+        for text, wort in (("ssh: Could not resolve hostname ssh.github.com: Temporary failure in name resolution", "wartet"),
+                           ("ssh: connect to host ssh.github.com port 443: Connection timed out", "wartet"),
+                           ("ssh: connect to host ssh.github.com port 443: Network is unreachable", "wartet"),
+                           ("git@ssh.github.com: Permission denied (publickey).\nfatal: Could not read from remote repository.", "schluessel"),
+                           ("ERROR: The key you are authenticating with has been marked as read only.", "schluessel"),
+                           ("Host key verification failed.", "hostschluessel"),
+                           (" ! [rejected] refs/spark/github -> opencode/x (fetch first)", "nicht_vorwaerts"),
+                           (" ! [rejected] refs/spark/github -> opencode/x (non-fast-forward)", "nicht_vorwaerts"),
+                           ("remote: error: GH013: Repository rule violations found for refs/heads/opencode/x.", "abgelehnt"),
+                           (" ! [remote rejected] x -> opencode/x (protected branch hook declined)", "abgelehnt"),
+                           ("irgendwas anderes", "fehler"), ("", "fehler"), (None, "fehler")):
+            self.assertEqual(entwickeln.push_grund(text), wort, text)
+        for k, (de, en) in entwickeln.GH_GRUENDE.items():
+            self.assertTrue(re.fullmatch(r"[a-z_]+", k) and de and en, k)
+
+    def test_ssh_takes_only_this_key_and_githubs_pinned_host_key(self):
+        cmd = entwickeln.ssh_befehl("/tmp/x/key", "/tmp/x/known_hosts").split()
+        self.assertEqual(cmd[:3], ["ssh", "-F", "/dev/null"], "no ssh config of root's")
+        for opt in ("IdentitiesOnly=yes", "IdentityAgent=none", "BatchMode=yes", "StrictHostKeyChecking=yes",
+                    "UserKnownHostsFile=/tmp/x/known_hosts", "GlobalKnownHostsFile=/dev/null", "ProxyCommand=none",
+                    "PermitLocalCommand=no", "UpdateHostKeys=no"):
+            self.assertIn(opt, cmd)
+        host, art, blob = entwickeln.GH_HOSTKEY.split()
+        self.assertEqual((host, art), ("[ssh.github.com]:443", "ssh-ed25519"))
+        import base64
+        fp = base64.b64encode(hashlib.sha256(base64.b64decode(blob)).digest()).decode().rstrip("=")
+        self.assertEqual(fp, "+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU", "GitHub's published fingerprint")
+
+    def test_the_deploy_key_is_roots_own_file_or_nothing_goes(self):
+        tmp = tempfile.mkdtemp(prefix="entwickeln-")
+        self.addCleanup(shutil.rmtree, tmp, True)
+        key = os.path.join(tmp, "key")
+        with open(key, "w") as f:
+            f.write("-----BEGIN OPENSSH PRIVATE KEY-----\nx\n")
+        os.chmod(key, 0o600)
+        me = os.getuid()
+        self.assertTrue(entwickeln.schluessel_datei_ok(key, uid=me))
+        self.assertFalse(entwickeln.schluessel_datei_ok(key, uid=me + 1), "another owner")
+        os.chmod(key, 0o640)
+        self.assertFalse(entwickeln.schluessel_datei_ok(key, uid=me), "readable by the group")
+        os.chmod(key, 0o600)
+        link = os.path.join(tmp, "link")
+        os.symlink(key, link)
+        self.assertFalse(entwickeln.schluessel_datei_ok(link, uid=me), "a link")
+        self.assertFalse(entwickeln.schluessel_datei_ok(tmp, uid=me), "a folder")
+        self.assertFalse(entwickeln.schluessel_datei_ok(os.path.join(tmp, "fehlt"), uid=me))
+        self.assertEqual(entwickeln.GH_KEY, "/etc/speech-spark-github-key", "root's own, never in spark-dev's home")
+        self.assertFalse(entwickeln.GH_KEY.startswith(entwickeln.HOME))
+
+    def test_githubs_tests_only_for_this_branch_and_head(self):
+        k = "c" * 40
+        runs = [{"head_branch": "main", "head_sha": k, "status": "completed", "conclusion": "success"},
+                {"head_branch": "opencode/x", "head_sha": k, "status": "completed", "conclusion": "cancelled"},
+                {"head_branch": "opencode/x", "head_sha": k, "status": "completed", "conclusion": "failure"}]
+        self.assertEqual(entwickeln.tests_zustand(runs, "opencode/x", k), "rot", "a run of main never counts")
+        self.assertEqual(entwickeln.tests_zustand(runs[:2], "opencode/x", k), "unbekannt", "cancelled says nothing")
+        self.assertEqual(entwickeln.tests_zustand([dict(runs[2], status="in_progress", conclusion=None)], "opencode/x", k), "laeuft")
+        self.assertEqual(entwickeln.tests_zustand([dict(runs[2], conclusion="success")], "opencode/x", k), "gruen")
+        self.assertEqual(entwickeln.tests_zustand([dict(runs[2], conclusion="success")], "opencode/x", "d" * 40), "unbekannt")
+        for kaputt in (None, {}, "x", [None, 5]):
+            self.assertEqual(entwickeln.tests_zustand(kaputt, "opencode/x", k), "unbekannt")
+        self.assertEqual(set(entwickeln.GH_TESTS), {"gruen", "laeuft", "rot", "unbekannt"})
+
+    def test_the_hint_for_dominik(self):
+        de, en = entwickeln.hinweis("opencode/x", "db9979/speech-on-dgx-spark")
+        self.assertEqual(de, "Gib den Zweig opencode/x einem Claude-Thread zum Prüfen: "
+                             "https://github.com/db9979/speech-on-dgx-spark/tree/opencode/x")
+        self.assertIn("Claude thread", en)
+
+    def test_the_panels_copy_holds_branches_and_fixed_words(self):
+        k = "c" * 40
+        d = entwickeln.github_anzeige({}, "gegeben", {"zweig": "opencode/x", "kopf": k, "anzahl": 2, "t": 5, "text": "geheim"}, "x", now=9)
+        self.assertEqual(d, {"zweige": [{"zweig": "opencode/x", "kopf": k, "anzahl": 2, "t": 5}],
+                             "letzter": {"zustand": "gegeben", "t": 9, "zweig": "opencode/x"}})
+        alt = {"zweige": [{"zweig": "main", "kopf": k}, {"zweig": "opencode/a", "kopf": "Commit-Text"},
+                          *[{"zweig": f"opencode/z{i}", "kopf": k, "anzahl": 1, "t": i} for i in range(12)]]}
+        d = entwickeln.github_anzeige(alt, "kaputt; rm", {"zweig": "opencode/z3", "kopf": "d" * 40, "anzahl": 1, "t": 1}, "../x", now=1)
+        self.assertEqual(len(d["zweige"]), entwickeln.GH_ZWEIGE_MAX)
+        self.assertEqual(d["zweige"][0]["kopf"], "d" * 40, "the same branch again: newest first, once")
+        self.assertEqual([z["zweig"] for z in d["zweige"]].count("opencode/z3"), 1)
+        self.assertNotIn("main", [z["zweig"] for z in d["zweige"]])
+        self.assertEqual(d["letzter"], {"zustand": "fehler", "t": 1})
+        tmp = tempfile.mkdtemp(prefix="entwickeln-")
+        self.addCleanup(shutil.rmtree, tmp, True)
+        p = os.path.join(tmp, "g.json")
+        with open(p, "w") as f:
+            json.dump({"zweige": [{"zweig": "opencode/x", "kopf": k, "anzahl": True, "t": "x", "text": "geheim"},
+                                  {"zweig": "opencode/../main", "kopf": k}],
+                       "letzter": {"zustand": "gegeben", "t": 3, "zweig": "main", "text": "geheim"}}, f)
+        back = entwickeln.github_anzeige_lesen(p)
+        self.assertEqual(back, {"zweige": [{"zweig": "opencode/x", "kopf": k, "anzahl": 0, "t": 0}],
+                                "letzter": {"zustand": "gegeben", "t": 3}})
+        self.assertEqual(entwickeln.github_anzeige_lesen(os.path.join(tmp, "fehlt.json")), {"zweige": []})
+
+
+class GitHubGeben(unittest.TestCase):
+    """an_github and github_geben with git, runuser and systemctl replaced: what root would run."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp(prefix="entwickeln-")
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.key = os.path.join(self.tmp, "github-key")
+        with open(self.key, "w") as f:
+            f.write("GEHEIMER-SCHLUESSEL")
+        os.chmod(self.key, 0o600)
+        self.calls = []
+        self.push = (0, "")
+        for name, wert in (("GH_KEY", self.key), ("_schalter_an", mock.Mock(return_value=True)),
+                           ("schluessel_datei_ok", mock.Mock(return_value=True)), ("_update_laeuft", mock.Mock(return_value=False)),
+                           ("_als_dev", mock.Mock(return_value=mock.Mock(returncode=0, stderr=b""))),
+                           ("_git", self.git), ("_als_svc", mock.Mock(return_value=mock.Mock(returncode=0, stdout=b"")))):
+            p = mock.patch.object(entwickeln, name, wert)
+            p.start()
+            self.addCleanup(p.stop)
+
+    def git(self, *args, **kw):
+        self.calls.append((args, kw))
+        if args[:2] == ("remote", "get-url"):
+            return 0, "https://github.com/db9979/speech-on-dgx-spark"
+        if args[0] == "rev-parse":
+            return 0, B
+        if args[0] == "merge-base":
+            return 0, A
+        if args[0] == "rev-list":
+            return 0, "2"
+        if args[0] == "diff":
+            return 0, raw(("100644", "100755", "M", "install.sh"))
+        if args[0] == "push":
+            return self.push
+        return 0, ""
+
+    def pushes(self):
+        return [(a, kw) for a, kw in self.calls if a[0] == "push"]
+
+    def test_the_push_never_writes_main_and_never_forces(self):
+        r = entwickeln.an_github("mein-thema")
+        self.assertEqual(r, {"zweig": "opencode/mein-thema", "kopf": B, "anzahl": 2, "repo": "db9979/speech-on-dgx-spark"})
+        (args, kw), = self.pushes()
+        self.assertEqual(args[-2:], ("ssh://git@ssh.github.com:443/db9979/speech-on-dgx-spark.git",
+                                     f"{entwickeln.REF_GITHUB}:refs/heads/opencode/mein-thema"))
+        self.assertFalse(any(a.startswith("+") or a in ("-f", "--force", "--force-with-lease", "--mirror", "--all",
+                                                        "--tags", "--delete", "-d") for a in args), args)
+        self.assertNotIn("main", " ".join(args[-1:]).replace("opencode/", ""))
+        self.assertIn("StrictHostKeyChecking=yes", kw["env"]["GIT_SSH_COMMAND"])
+        self.assertNotIn("GEHEIMER-SCHLUESSEL", json.dumps([list(a) for a, _ in self.calls]) + json.dumps([k for _, k in self.calls]),
+                         "the key is a file of root's, never an argument or a variable")
+        self.assertIn((("update-ref", "-d", entwickeln.REF_GITHUB), {}), self.calls, "the ref goes again")
+        fetch = [a for a, _ in self.calls if a[0] == "fetch"][0]
+        self.assertTrue(fetch[-1].endswith(":" + entwickeln.REF_GITHUB), "the bundle lands only in root's own ref")
+
+    def test_a_branch_of_spark_devs_own_topic_or_lokal(self):
+        dev = entwickeln._als_dev
+        dev.side_effect = lambda *a, **k: mock.Mock(returncode=1 if a[-1] == "refs/heads/opencode/x" else 0, stderr=b"")
+        entwickeln.an_github("x")
+        bundle = [c.args for c in dev.call_args_list if "bundle" in c.args][0]
+        self.assertEqual(bundle[bundle.index("create") + 2], "refs/heads/lokal")
+        self.assertEqual(bundle[-2:], ("--not", "--remotes"))
+
+    def test_nothing_while_the_switch_is_off(self):
+        entwickeln._schalter_an.return_value = False
+        with self.assertRaises(entwickeln.Fehler) as e:
+            entwickeln.an_github("x")
+        self.assertEqual(str(e.exception), "aus")
+        entwickeln._schalter_an.assert_called_with("entwickeln_github")
+        self.assertEqual(self.calls, [])
+
+    def test_no_key_no_push_and_never_while_updating(self):
+        entwickeln.schluessel_datei_ok.return_value = False
+        with self.assertRaises(entwickeln.Fehler) as e:
+            entwickeln.an_github("x")
+        self.assertEqual(str(e.exception), "schluessel")
+        entwickeln.schluessel_datei_ok.return_value = True
+        entwickeln._update_laeuft.return_value = True
+        with self.assertRaises(entwickeln.Fehler) as e:
+            entwickeln.an_github("x")
+        self.assertEqual(str(e.exception), "wartet")
+        self.assertEqual(self.pushes(), [])
+
+    def test_the_workflows_never_go(self):
+        orig = self.git
+
+        def git(*args, **kw):
+            if args[0] == "diff":
+                return 0, raw(("100644", "100644", "M", ".github/workflows/tests.yml"))
+            return orig(*args, **kw)
+        with mock.patch.object(entwickeln, "_git", git):
+            with self.assertRaises(entwickeln.Fehler) as e:
+                entwickeln.an_github("x")
+        self.assertEqual(str(e.exception), "pfad")
+        self.assertEqual(self.pushes(), [])
+
+    def test_offline_it_waits_and_says_so_without_gits_text(self):
+        self.push = (128, "ssh: Could not resolve hostname ssh.github.com GEHEIMER-SCHLUESSEL\nfatal: Could not read from remote repository.")
+        out, err, said = io.StringIO(), io.StringIO(), []
+        with redirect_stdout(out), mock.patch("sys.stderr", err):
+            self.assertEqual(entwickeln.github_geben("x", log=said.append), 4)
+        svc = [c.args for c in entwickeln._als_svc.call_args_list]
+        self.assertIn(("tee", "--", entwickeln.GH_WUNSCH), svc, "the wish stays for the timer")
+        self.assertNotIn(("rm", "-f", "--", entwickeln.GH_WUNSCH), svc)
+        self.assertEqual(said, [entwickeln.GH_GRUENDE["wartet"][0]])
+        self.assertIn("entwickeln: github wartet", err.getvalue())
+        alles = out.getvalue() + err.getvalue() + json.dumps(said) + json.dumps([str(c) for c in entwickeln._als_svc.call_args_list])
+        self.assertNotIn("GEHEIM", alles, "git's text never reaches a log, the panel or the screen")
+        self.assertNotIn("resolve", alles)
+
+    def test_a_refusal_drops_the_wish_and_success_gives_the_hint(self):
+        self.push = (1, "remote: error: GH013: Repository rule violations found")
+        err, said = io.StringIO(), []
+        with mock.patch("sys.stderr", err):
+            self.assertEqual(entwickeln.github_geben("x", log=said.append), 3)
+        self.assertIn(("rm", "-f", "--", entwickeln.GH_WUNSCH), [c.args for c in entwickeln._als_svc.call_args_list])
+        self.assertIn("entwickeln: github abgelehnt abgelehnt", err.getvalue())
+        self.push = (0, "")
+        said = []
+        with mock.patch("sys.stderr", err):
+            self.assertEqual(entwickeln.github_geben("x", log=said.append), 0)
+        self.assertIn("entwickeln: github gegeben 2 commits", err.getvalue())
+        self.assertEqual(said[-1], "Gib den Zweig opencode/x einem Claude-Thread zum Prüfen: "
+                                   "https://github.com/db9979/speech-on-dgx-spark/tree/opencode/x")
+        geschrieben = [c for c in entwickeln._als_svc.call_args_list if c.args[:3] == ("tee", "--", entwickeln.GH_ANZEIGE)][-1]
+        d = json.loads(geschrieben.kwargs["eingabe"])
+        self.assertEqual((d["letzter"]["zustand"], d["zweige"][0]["zweig"], d["zweige"][0]["kopf"]), ("gegeben", "opencode/x", B))
+
+    def test_the_unit_takes_only_a_waiting_wish(self):
+        said = []
+        with mock.patch.object(entwickeln, "github_geben") as geben:
+            self.assertEqual(entwickeln.cli(["an-github", "--wunsch"], log=said.append), 0)
+            geben.assert_not_called()
+            entwickeln._als_svc.return_value = mock.Mock(returncode=0, stdout="Größe; rm -rf /\n".encode())
+            geben.return_value = 4
+            self.assertEqual(entwickeln.cli(["an-github", "--wunsch"], log=said.append), 0, "offline is no failed unit")
+            geben.assert_called_once_with("groesse-rm-rf", said.append)
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            self.assertEqual(entwickeln.cli(["an-github", "///"], log=said.append), 2)
+        self.assertEqual(buf.getvalue().strip(), "entwickeln: abgelehnt thema")
+
+
+class Zusammengefuehrt(unittest.TestCase):
+    """After the branch is on main, the next update drops the installed local commits that are in it (aufsetzen,
+    git rebase --empty=drop): a real git repository in a temporary folder, nothing of the real one."""
+
+    def setUp(self):
+        if not shutil.which("git"):
+            self.skipTest("no git")
+        self.tmp = tempfile.mkdtemp(prefix="entwickeln-git-")
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.repo = os.path.join(self.tmp, "src")
+        os.makedirs(self.repo)
+        p = mock.patch.object(entwickeln, "GIT_HOME", self.tmp)   # not /root: GitHub's runner is no root
+        p.start()
+        self.addCleanup(p.stop)
+        self.g("init", "-q", "-b", "main")
+        self.schreiben("app/panel/a.py", "eins\nzwei\ndrei\n")
+        self.basis = self.commit("basis")
+
+    def g(self, *args):
+        return entwickeln._git(*args, cwd=self.repo, ident=True)[1]
+
+    def schreiben(self, pfad, text):
+        p = os.path.join(self.repo, pfad)
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        with open(p, "w") as f:
+            f.write(text)
+
+    def commit(self, text):
+        self.g("add", "-A")
+        self.g("commit", "-q", "-m", text)
+        return self.g("rev-parse", "HEAD")
+
+    def test_merged_commits_drop_out(self):
+        self.g("switch", "-q", "-c", "lokal")
+        self.schreiben("app/panel/a.py", "eins\nZWEI\ndrei\n")
+        lokal = self.commit("lokal: zwei groß")
+        self.g("switch", "-q", "main")
+        # what a Claude thread brings onto main: the same change, more in the same file, docs, another commit
+        self.schreiben("app/panel/a.py", "eins\nZWEI\ndrei\nvier\n")
+        self.schreiben("docs/de/x.md", "Doku\n")
+        self.commit("V01.1.300 aus opencode/x, ergänzt")
+        neu = self.commit_leer()
+        ziel = os.path.join(self.tmp, "ziel")
+        os.makedirs(ziel)
+        with mock.patch.object(entwickeln, "QUELLE", self.repo):
+            kopf, n = entwickeln.aufsetzen(neu, lokal, ziel)
+        self.assertEqual((kopf, n), (neu, 0), "every local commit is in main now: the branch is empty again")
+        # one that is not in main yet stays, on top of the new main
+        self.g("switch", "-q", "lokal")
+        self.schreiben("app/panel/b.py", "neu\n")
+        noch = self.commit("lokal: noch nicht auf main")
+        with mock.patch.object(entwickeln, "QUELLE", self.repo):
+            kopf, n = entwickeln.aufsetzen(neu, noch, ziel)
+        self.assertEqual(n, 1)
+        self.assertEqual(self.g("rev-parse", f"{kopf}^"), neu)
+
+    def commit_leer(self):
+        self.g("commit", "-q", "--allow-empty", "-m", "noch einer")
+        return self.g("rev-parse", "HEAD")
+
+
+class GitHubSeite(unittest.TestCase):
+    def setUp(self):
+        from fastapi.testclient import TestClient
+        import entwickelnseite
+        import panel
+        self.s = entwickelnseite
+        helpers.keep_chat(self, "entwickeln", "entwickeln_github")
+        self.tmp = tempfile.mkdtemp(prefix="entwickeln-")
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        for name, value in (("GH_WUNSCH", os.path.join(self.tmp, "github-wunsch")), ("GH_ANZEIGE", os.path.join(self.tmp, "g.json")),
+                            ("ANZEIGE", os.path.join(self.tmp, "e.json"))):
+            p = mock.patch.object(entwickeln, name, value)
+            p.start()
+            self.addCleanup(p.stop)
+        p = mock.patch.object(entwickelnseite, "_repo", return_value="db9979/speech-on-dgx-spark")
+        p.start()
+        self.addCleanup(p.stop)
+        entwickelnseite._tests.clear()
+        self.anon = TestClient(panel.app)
+        self.admin = TestClient(panel.app)
+        self.admin.post("/api/login", json={"password": "secret-admin"})
+
+    def test_admin_only_off_by_default_and_needs_entwickeln(self):
+        import features
+        self.assertNotIn("entwickelngithub", features.DEFAULT_ON)
+        with open(os.path.join(APP, "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["entwickeln_github"], False)
+        for m, path in (("get", "/api/admin/entwickeln/github"), ("post", "/api/admin/entwickeln/github")):
+            self.assertIn(getattr(self.anon, m)(path).status_code, (401, 403), path)
+        import core
+        for an in ((True, False), (False, True)):
+            helpers.set_config(entwickeln=an[0], entwickeln_github=an[1])
+            out = io.StringIO()
+            with redirect_stdout(out), mock.patch.object(core, "run", side_effect=AssertionError("never started")):
+                r = self.admin.post("/api/admin/entwickeln/github", json={"thema": "x"})
+            self.assertEqual(r.status_code, 409, (an, r.text))
+            self.assertFalse(os.path.exists(entwickeln.GH_WUNSCH))
+            self.assertIn("entwickeln: github abgelehnt aus", out.getvalue())
+
+    def test_the_wish_is_a_checked_topic_and_starts_roots_unit(self):
+        import core
+        helpers.set_config(entwickeln=True, entwickeln_github=True)
+        out = io.StringIO()
+        with mock.patch.object(core, "run", return_value=(0, "")) as run, redirect_stdout(out):
+            r = self.admin.post("/api/admin/entwickeln/github", json={"thema": "Größe; rm -rf / && git push origin main"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["zweig"], "opencode/groesse-rm-rf-git-push-origin-main")
+        run.assert_called_once_with(["sudo", "-n", "/usr/bin/systemctl", "start", "--no-block", "speech-spark-github"], timeout=20)
+        with open(entwickeln.GH_WUNSCH) as f:
+            self.assertEqual(f.read(), "groesse-rm-rf-git-push-origin-main")
+        self.assertIn("entwickeln: github gestartet", out.getvalue())
+        self.assertIn("Gib den Zweig opencode/groesse-rm-rf-git-push-origin-main einem Claude-Thread zum Prüfen", r.json()["hinweis"][0])
+        with redirect_stdout(out):
+            r = self.admin.post("/api/admin/entwickeln/github", json={"thema": "///"})
+        self.assertEqual(r.status_code, 400)
+        self.assertIn("entwickeln: github abgelehnt thema", out.getvalue())
+        os.remove(entwickeln.GH_WUNSCH)
+        with mock.patch.object(core, "run", return_value=(1, "sudo: a password is required")), redirect_stdout(out):
+            r = self.admin.post("/api/admin/entwickeln/github", json={})
+        self.assertEqual(r.status_code, 500)
+        self.assertNotIn("sudo:", r.text)
+        self.assertFalse(os.path.exists(entwickeln.GH_WUNSCH), "a wish without its unit goes again")
+        self.assertIn("entwickeln: github abgelehnt start", out.getvalue())
+        r = self.admin.post("/api/admin/entwickeln/github", content=b"x" * 2000, headers={"content-type": "application/json"})
+        self.assertEqual(r.status_code, 413)
+
+    def test_the_state_with_githubs_tests_and_the_hint(self):
+        import update
+        helpers.set_config(entwickeln=True, entwickeln_github=True)
+        k = "c" * 40
+        with open(entwickeln.GH_ANZEIGE, "w") as f:
+            json.dump(entwickeln.github_anzeige({}, "gegeben", {"zweig": "opencode/x", "kopf": k, "anzahl": 2, "t": 5}, "x", now=7), f)
+        runs = [{"head_branch": "opencode/x", "head_sha": k, "status": "completed", "conclusion": "success"}]
+
+        async def gruen(repo, branch, passed=False):
+            self.assertEqual((repo, branch), ("db9979/speech-on-dgx-spark", "opencode/x"))
+            return runs
+        with mock.patch.object(update, "green_runs", side_effect=gruen) as g:
+            d = self.admin.get("/api/admin/entwickeln/github").json()
+            self.admin.get("/api/admin/entwickeln/github")
+        self.assertEqual(g.call_count, 1, "GitHub is asked at most every TESTS_S per branch")
+        self.assertEqual(d["zweige"], [{"zweig": "opencode/x", "kopf": k[:7], "anzahl": 2, "t": 5, "tests": "gruen",
+                                        "link": "https://github.com/db9979/speech-on-dgx-spark/tree/opencode/x"}])
+        self.assertTrue(d["an"])
+        self.assertFalse(d["wartet"])
+        self.assertEqual(d["letzter"]["zustand"], "gegeben")
+        self.assertTrue(d["hinweis"][0].startswith("Gib den Zweig opencode/x einem Claude-Thread zum Prüfen"))
+        self.s._tests.clear()
+        with mock.patch.object(update, "green_runs", side_effect=update.GitHubRefused(403, 99)), redirect_stdout(io.StringIO()) as out:
+            d = self.admin.get("/api/admin/entwickeln/github").json()
+        self.assertEqual(d["zweige"][0]["tests"], "unbekannt")
+        self.assertIn("entwickeln: github tests unbekannt GitHubRefused", out.getvalue())
+
+    def test_live_and_the_hints_hold_no_content(self):
+        helpers.set_config(entwickeln=True, entwickeln_github=True)
+        k = "c" * 40
+        with open(entwickeln.GH_ANZEIGE, "w") as f:
+            json.dump(entwickeln.github_anzeige({}, "gegeben", {"zweig": "opencode/x", "kopf": k, "anzahl": 2, "t": 5}, "x", now=1000), f)
+        v = self.s.for_live()
+        self.assertEqual((v["github"], v["gegeben"]), ("gegeben", 1))
+        self.assertIn("an GitHub gegeben: 1", self.s.live_sub(v))
+        a = [x for x in self.s.alerts(now=1060) if x["kind"] == "entwickeln_github"]
+        self.assertEqual((a[0]["level"], a[0]["go"]), ("info", "Funktionen → Entwickeln auf dem Pi"))
+        self.assertIn("Gib den Zweig opencode/x einem Claude-Thread zum Prüfen", a[0]["text"])
+        self.assertEqual([x for x in self.s.alerts(now=1000 + self.s.HINWEIS_S + 1) if x["kind"] == "entwickeln_github"], [])
+        for zustand, n in (("wartet", 0), ("schluessel", 1)):
+            with open(entwickeln.GH_ANZEIGE, "w") as f:
+                json.dump(entwickeln.github_anzeige({}, zustand, None, "x", now=1000), f)
+            a = [x for x in self.s.alerts(now=1060) if x["kind"] == "entwickeln_github"]
+            self.assertEqual(len(a), n, zustand)
+        self.assertEqual(a[0]["level"], "warn")
+        self.assertIn(entwickeln.GH_GRUENDE["schluessel"][0], a[0]["text"])
+        self.assertIn("an GitHub zuletzt: schluessel", self.s.live_sub(self.s.for_live()))
+        helpers.set_config(entwickeln=True, entwickeln_github=False)
+        self.assertNotIn("github", self.s.for_live())
+        self.assertEqual([x for x in self.s.alerts(now=1060) if x["kind"] == "entwickeln_github"], [])
+
+    def test_registered_everywhere(self):
+        import berater_katalog
+        import dateien
+        import features
+        import guard
+        import rechnerblick
+        import stufen
+        f = {x.key: x for x in features.FEATURES}["entwickelngithub"]
+        self.assertEqual((f.admin, f.group, f.parent, f.guide), (("entwickeln_github",), "sec", "entwickeln", "entwickelngithub"))
+        self.assertIn("entwickelngithub", features.SPARK_ONLY)
+        self.assertEqual(stufen.LIST[("POST", "/api/admin/entwickeln/github")][0], stufen.PROTECT)
+        self.assertEqual(guard.RATE["entwickeln_github"], (0, 6), "never for guests")
+        self.assertIn("entwickeln_github", guard.LIVE_WORDS)
+        self.assertIn(("chat", "entwickeln_github"), berater_katalog.NEVER_KEYS)
+        self.assertTrue({"github-wunsch", "entwickeln-github.json"} <= {d.name for d in dateien.DATEIEN})
+        self.assertIn("github", rechnerblick.DIENST_NAMEN)
+
+
+class GitHubSkripte(unittest.TestCase):
+    def test_githubs_tests_run_on_opencode_branches_and_the_pi_only_looks_at_main(self):
+        p = os.path.join(ROOT, ".github", "workflows", "tests.yml")
+        if os.path.isfile(p):   # a copy with app/ only has no workflows
+            with open(p) as f:
+                wf = f.read()
+            self.assertIn("branches: [main, 'opencode/**']", wf)
+            self.assertIn("cancel-in-progress: false", wf)
+            self.assertIn("github.ref == 'refs/heads/main'", wf, "the notes main rot / Wackelnde Tests only from main")
+        u = helpers.repo_file("update.sh")
+        self.assertIn("\nBRANCH=main\n", u, "the Pi installs only from main")
+        self.assertIn('runs?branch=$BRANCH&event=push', u)
+        self.assertIn('select(.head_branch == $b and .conclusion == "success")', u, "a green opencode/ run never counts")
+        vp = os.path.join(ROOT, "tools", "vorpush.py")
+        if os.path.isfile(vp):
+            with open(vp) as f:
+                self.assertIn("runs?branch=main&event=push", f.read())
+
+    def test_spark_dev_stays_off_the_internet(self):
+        i = helpers.repo_file("install.sh")
+        teil = i[i.index('echo "table inet speech_spark_entwickeln {"'):]
+        teil = teil[:teil.index('} >"$(dirname "$ETC")/speech-spark-entwickeln.nft"')]
+        self.assertNotIn("443", teil, "spark-dev never gets https: root pushes")
+        self.assertNotIn("22", teil.replace("32768", ""))
+        unit = i[i.index("cat >/etc/systemd/system/speech-spark-github.service"):]
+        unit = unit[:unit.index("\nEOF\n")]
+        for z in ("MemoryMax=", "PrivateTmp=yes", "ProtectSystem=full", "NoNewPrivileges=yes", "lokal an-github --wunsch"):
+            self.assertIn(z, unit)
+        self.assertIn("printf ', /usr/bin/systemctl start --no-block speech-spark-github'", i)
+        self.assertNotRegex(i, r"sudoers[^\n]*spark-dev|spark-dev[^\n]*NOPASSWD")
+
+    def test_the_command_line(self):
+        with open(os.path.join(APP, "speech-spark.sh"), encoding="utf-8") as f:
+            s = f.read()
+        for z in ("an-github)", "need_root lokal an-github", "zweige) need_root lokal zweige", "github-schluessel)",
+                  "local gk=/etc/speech-spark-github-key", "( umask 077; ssh-keygen -q -t ed25519", 'chmod 600 "$gk"',
+                  "-u speech-spark-github"):
+            self.assertIn(z, s)
+        top = s.split("set -euo pipefail")[0]
+        self.assertIn("speech-spark lokal an-github", top)
+        self.assertIn("speech-spark entwickeln github-schluessel", top)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -3229,7 +3229,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "rüfung bei GitHub, jede mit Grund in netguard.DIRECT_OK."
+"text": "rüfung bei GitHub, jede mit Grund in netguard.DIRECT_OK. Dazu, nur auf Befehl eines Admins und nie aus dem Panel selbst: An GitHub geben (root schiebt einen Zweig opencode/… per ssh an GitHub, Kasten Werkstatt)."
 },
 {
 "lang": "de",
@@ -3397,7 +3397,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 108). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, "
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 110). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, "
 },
 {
 "lang": "de",
@@ -3421,7 +3421,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 47 Dateien in jeder Sicherung (Schritt 7) - 108 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 47 Dateien in jeder Sicherung (Schritt 7) - 110 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -3685,7 +3685,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ckeln.sandbox) und spielt sie wie ein Update ein, nie als root ausgeführt. Ein Update setzt sie mit entwickeln.aufsetzen auf die neue Version; passt das nicht, bleibt die laufende Version."
+"text": "ckeln.sandbox) und spielt sie wie ein Update ein, nie als root ausgeführt. Ein Update setzt sie mit entwickeln.aufsetzen auf die neue Version; passt das nicht, bleibt die laufende Version; was inzwischen auf main ist, fällt dabei weg. Weg A (eigener Schalter „An GitHub geben“): sudo speech-spark lokal an-github nimmt den Zweig ebenfalls nur als Bündel (entwickeln.an_github), lässt nie .github, Links oder Untermodule durch (entwickeln.pfade_github) und schiebt ihn als root mit einem eigenen Deploy-Schlüssel nur nach opencode/<thema> (entwickeln.ziel_ref: nie main, nie erzwungen), über ssh mit GitHubs festem Hostschlüssel (entwickeln.GH_HOSTKEY); spark-dev bleibt ohne Internet. Ohne Netz wartet der Auftrag. Ein Claude-Thread prüft den Zweig und bringt ihn auf main."
 },
 {
 "lang": "de",
@@ -3709,7 +3709,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "- Auf dem Modell-Rechner einmal sudo ./install.sh --werkstatt (OpenCode mit fester Version und Prüfsumme). - Funktionen → Werkstatt: an und aus, „Jede Nacht testen“ mit der Startstunde. - Zustand → Werkstatt: die vier Aufträge starten, Ergebnisse ansehen, rote Tests noch mal, für Claude kopieren, löschen. - Entwickeln auf dem Pi: auf dem Panel-Rechner einmal sudo ./install.sh --entwickeln, dann Funktionen → Entwickeln auf dem Pi an; einspielen mit sudo speech-spark lokal einspielen (zurueck, verwerfen, status)."
+"text": "- Auf dem Modell-Rechner einmal sudo ./install.sh --werkstatt (OpenCode mit fester Version und Prüfsumme). - Funktionen → Werkstatt: an und aus, „Jede Nacht testen“ mit der Startstunde. - Zustand → Werkstatt: die vier Aufträge starten, Ergebnisse ansehen, rote Tests noch mal, für Claude kopieren, löschen. - Entwickeln auf dem Pi: auf dem Panel-Rechner einmal sudo ./install.sh --entwickeln, dann Funktionen → Entwickeln auf dem Pi an; einspielen mit sudo speech-spark lokal einspielen (zurueck, verwerfen, status). - An GitHub geben: sudo speech-spark entwickeln github-schluessel neu, die Zeile auf GitHub als Deploy-Schlüssel mit Schreibrecht eintragen, main per Ruleset schützen, dann Funktionen → Entwickeln auf dem Pi → An GitHub geben an; weitergeben mit sudo speech-spark lokal an-github <thema>."
 },
 {
 "lang": "de",
@@ -3717,7 +3717,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Was du siehst",
 "title": "Was du siehst",
-"text": "- Zustand → Werkstatt: links der Verlauf, rechts ein Ergebnis mit großen Zahlen, was es heißt (etwa „Was heißt rot?“), den roten Tests nach Bereich, Antwort oder Patch und den nächsten Schritten. - Zustand → Live, Monitoring und die Steuerzentrale: Teil „Werkstatt“ mit Art und Status, nie Inhalte. - Zustand → Live: Teil „Entwickeln“ mit „lokale Änderungen: N“ und dem letzten festen Grund einer Ablehnung; sudo speech-spark lokal status zeigt dasselbe im Terminal."
+"text": "- Zustand → Werkstatt: links der Verlauf, rechts ein Ergebnis mit großen Zahlen, was es heißt (etwa „Was heißt rot?“), den roten Tests nach Bereich, Antwort oder Patch und den nächsten Schritten. - Zustand → Live, Monitoring und die Steuerzentrale: Teil „Werkstatt“ mit Art und Status, nie Inhalte. - Zustand → Live: Teil „Entwickeln“ mit „lokale Änderungen: N“ und dem letzten festen Grund einer Ablehnung; sudo speech-spark lokal status zeigt dasselbe im Terminal. - sudo speech-spark lokal zweige: die an GitHub gegebenen Zweige mit Link und dem Stand der GitHub-Tests; oben auf den Admin-Seiten der Hinweis „Gib den Zweig opencode/<thema> einem Claude-Thread zum Prüfen“."
 },
 {
 "lang": "de",
@@ -3725,7 +3725,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/werkstattseite.py auftrag_geben: Auftrag vom Panel (Schritt 1) - app/panel/werkstattseite.py nacht_art: feste Nachtregel (Schritt 1) - app/werkstatt.py pruefen: feste Regeln eines Auftrags (Schritt 2) - app/werkstatt.py wunsch_nehmen: root nimmt den Wunsch einmal (Schritt 3) - app/werkstatt.py sandbox: Grenzen der Sandbox (Schritt 4) - app/werkstatt.py kopie: Kopie aus dem Klon des Installers (Schritt 5) - app/werkstatt.py git_umgebung: nur dieser Klon gilt als sicher (Schritt 5) - app/werkstatt.py rechte: Rechte von OpenCode (Schritt 7) - app/werkstatt.py testlauf: Selbsttests in Teilen (Schritt 8) - app/werkstatt.py namen_testen: rote Tests einzeln noch mal (Schritt 8) - app/panel/werkstattseite.py nachtest_namen: Namen nur aus dem Ergebnis (Schritt 1) - app/werkstatt.py pruefe_ergebnis: Ergebnis als Daten (Schritt 9) - app/entwickeln.py vorbereiten: lokale Änderungen holen, prüfen, testen (Schritt 10) - app/entwickeln.py pfade_pruefen: nur Dateien, die der Dienstnutzer ausführt (Schritt 10) - app/entwickeln.py sandbox: Grenzen des Schnelltests (Schritt 10) - app/entwickeln.py aufsetzen: lokale Commits auf die neue Version (Schritt 10)"
+"text": "- app/panel/werkstattseite.py auftrag_geben: Auftrag vom Panel (Schritt 1) - app/panel/werkstattseite.py nacht_art: feste Nachtregel (Schritt 1) - app/werkstatt.py pruefen: feste Regeln eines Auftrags (Schritt 2) - app/werkstatt.py wunsch_nehmen: root nimmt den Wunsch einmal (Schritt 3) - app/werkstatt.py sandbox: Grenzen der Sandbox (Schritt 4) - app/werkstatt.py kopie: Kopie aus dem Klon des Installers (Schritt 5) - app/werkstatt.py git_umgebung: nur dieser Klon gilt als sicher (Schritt 5) - app/werkstatt.py rechte: Rechte von OpenCode (Schritt 7) - app/werkstatt.py testlauf: Selbsttests in Teilen (Schritt 8) - app/werkstatt.py namen_testen: rote Tests einzeln noch mal (Schritt 8) - app/panel/werkstattseite.py nachtest_namen: Namen nur aus dem Ergebnis (Schritt 1) - app/werkstatt.py pruefe_ergebnis: Ergebnis als Daten (Schritt 9) - app/entwickeln.py vorbereiten: lokale Änderungen holen, prüfen, testen (Schritt 10) - app/entwickeln.py pfade_pruefen: nur Dateien, die der Dienstnutzer ausführt (Schritt 10) - app/entwickeln.py sandbox: Grenzen des Schnelltests (Schritt 10) - app/entwickeln.py aufsetzen: lokale Commits auf die neue Version (Schritt 10) - app/entwickeln.py an_github: W"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": "eg A: Zweig als Bündel, root schiebt (Schritt 10) - app/entwickeln.py ziel_ref: nur opencode/<thema>, nie main (Schritt 10) - app/entwickeln.py pfade_github: nie .github, kein Link, kein Untermodul (Schritt 10) - app/entwickeln.py GH_HOSTKEY: GitHubs fester Hostschlüssel (Schritt 10)"
 },
 {
 "lang": "de",
@@ -15013,6 +15021,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Zugang",
 "title": "Zugang",
+"text": "- An GitHub geben (Funktionen → Zugang → „An GitHub geben“; baut auf „Entwickeln auf dem Pi“): Weg A: Was du mit OpenCode auf dem Pi gebaut hast, geht als eigener Zweig opencode/<thema> an GitHub, nie an main."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Zugang",
+"title": "Zugang",
 "text": "- Fernzugang zu Servern (Funktionen → Zugang → „Fernzugang zu Servern“): Die Shell eines Servers anderswo (ein VPS, eine NAS bei Freunden, ein Raspberry Pi) direkt im Browser, wie Raspberry Pi Connect, nur ist der Vermittler dein eigener Pi."
 },
 {
@@ -15318,6 +15334,30 @@
 "head": "Entwickeln auf dem Pi mit OpenCode",
 "title": "Entwickeln auf dem Pi mit OpenCode",
 "text": "Eingespielt wird nur, was unter app/panel/, app/tests/ und docs/ liegt, dazu die beiden README und CHANGELOG.md, als normale Dateien: was root ausführt (install.sh, update.sh, app/*.py außerhalb von app/panel, die Paketlisten), kommt nur über GitHub. Ein normales Update verliert lokale Arbeit nie: Es setzt die lokalen Commits auf die neue Version und testet sie; passt etwas nicht oder ist der Schnelltest rot, läuft die bisherige Version weiter, und das Panel zeigt oben den Grund. Den Schlüssel von spark-dev neu machen oder zurückziehen: sudo speech-spark entwickeln schluessel neu|weg; nach einem Wechsel des Modell-Rechners sudo speech-spark entwickeln einrichten. Fehlt die Testumgebung, einmal mit Internet sudo speech-spark lokal testumgebung (danach erneuert sie sich jede Nacht, nur wenn sich die Paketliste ändert). Logs: sudo speech-spark logs entwickeln."
+},
+{
+"lang": "de",
+"src": "installation",
+"file": "Installation im Detail",
+"head": "Weg A: an GitHub geben",
+"title": "Weg A: an GitHub geben",
+"text": "Was nicht über Weg B darf (etwa install.sh oder app/*.py) oder was in die offizielle Version soll, gibt ein Admin als eigenen Zweig opencode/<thema> an GitHub. Dort laufen die vollen Tests, und ein Claude-Thread prüft ihn und bringt ihn auf main. spark-dev bekommt dabei nie Internet: root nimmt den Zweig als Bündel und schiebt ihn mit einem eigenen Deploy-Schlüssel, nie an main und nie mit --force."
+},
+{
+"lang": "de",
+"src": "installation",
+"file": "Installation im Detail",
+"head": "Weg A: an GitHub geben",
+"title": "Weg A: an GitHub geben",
+"text": "1. Schlüssel machen: sudo speech-spark entwickeln github-schluessel neu zeigt eine Zeile, die mit ssh-ed25519 beginnt. Den geheimen Teil (/etc/speech-spark-github-key) liest nur root. 2. Auf GitHub eintragen: im Repository den Reiter „Settings“, links „Deploy keys“, „Add deploy key“. Titel etwa „Spark Pi opencode“, die Zeile einfügen, „Allow write access“ anhaken, „Add key“. Nimm keinen persönlichen Token: der handelt als dein Admin-Konto und käme an der Regel für main vorbei. 3. main schützen (einmal, auf GitHub): Reiter „Settings“, links „Rules“, „Rulesets“, „New ruleset“, „New branch ruleset“. Name „main schützen“, Enforcement status „Active“, bei „Target branches“ „Add target“ und „Include default branch“. Anhaken: „Restrict deletions“, „Restrict updates“, „Block force pushes“. Bei „Bypass list“ „Add bypass“ und „Repository admin“ (dein Konto, damit du und die Claude-Threads weiter auf main pushen). „Create“. Den Deploy-Schlüssel nie auf die Bypass-Liste setzen. 4. Einschalten: als Admin *Funktionen → Entwickeln auf dem Pi → An GitHub geben* an. Nach dem Update auf diese Version einmal sudo ./install.sh --entwickeln, damit der Dienst speech-spark-github und sein Zeitgeber da si"
+},
+{
+"lang": "de",
+"src": "installation",
+"file": "Installation im Detail",
+"head": "Weg A: an GitHub geben",
+"title": "Weg A: an GitHub geben",
+"text": "nd. 5. Weitergeben: sudo speech-spark lokal an-github mein-thema. Ohne Internet wartet der Auftrag und geht alle 15 Minuten von selbst los (--abbrechen verwirft ihn). 6. Übergeben: sudo speech-spark lokal zweige zeigt den Zweig, seinen Link und den Stand der GitHub-Tests. Dann einem Claude-Thread: „Gib den Zweig opencode/mein-thema einem Claude-Thread zum Prüfen“. Ist er auf main, fallen beim nächsten Update eingespielte lokale Commits, die schon drin sind, von selbst weg; im Klon danach git rebase spark/main."
 },
 {
 "lang": "de",
@@ -16597,7 +16637,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Entwickeln auf dem Pi",
 "title": "Entwickeln auf dem Pi",
-"text": "- Wer arbeitet wo: OpenCode (dieselbe Version und SHA-512 wie die Werkstatt, /opt/speech-spark/opencode) läuft im Terminal als Nutzer spark-dev: ohne Passwort (nur SSH-Schlüssel), nicht in sudo, adm, wheel, root oder der Gruppe des Dienstnutzers (install.sh bricht sonst ab), eigenes Zuhause (Modus 700), eigener Klon /home/spark-dev/speech-on-dgx-spark mit dem Zweig lokal, nie /opt/speech-spark/src. Speicher, CPU und Platte unter dem Panel (user-<uid>.slice: höchstens 40 % Speicher, 200 % CPU, niedriges Gewicht). - Netz: nftables speech-spark-entwickeln-fw erlaubt spark-dev nur das LLM-Tor (Port llm.port, auf diesem Rechner oder beim Modell-Rechner mit gepinntem Zertifikat), DNS und die freien Ports der eigenen Tests auf 127.0.0.1; alles andere wird abgewiesen. GitHub kommt erst mit Weg A (Paket 2). - Eigener Schlüssel am LLM-Tor (app/llm_tor.py): spark-dev hat einen eigenen Schlüssel in ~/.config/spark/tor-key (Modus 600); in der Konfiguration steht nur seine SHA-256 (entwickeln.schluessel_sha256, geschrieben nur von sudo speech-spark entwickeln schluessel neu|weg, nie vom Panel), und er gilt nur, solange der Schalter an ist (common.entwickler_hash, beim geteilten Spark synchronisi"
+"text": "- Wer arbeitet wo: OpenCode (dieselbe Version und SHA-512 wie die Werkstatt, /opt/speech-spark/opencode) läuft im Terminal als Nutzer spark-dev: ohne Passwort (nur SSH-Schlüssel), nicht in sudo, adm, wheel, root oder der Gruppe des Dienstnutzers (install.sh bricht sonst ab), eigenes Zuhause (Modus 700), eigener Klon /home/spark-dev/speech-on-dgx-spark mit dem Zweig lokal, nie /opt/speech-spark/src. Speicher, CPU und Platte unter dem Panel (user-<uid>.slice: höchstens 40 % Speicher, 200 % CPU, niedriges Gewicht). - Netz: nftables speech-spark-entwickeln-fw erlaubt spark-dev nur das LLM-Tor (Port llm.port, auf diesem Rechner oder beim Modell-Rechner mit gepinntem Zertifikat), DNS und die freien Ports der eigenen Tests auf 127.0.0.1; alles andere wird abgewiesen, auch mit Weg A: spark-dev bekommt nie Internet, an GitHub schiebt root. - Eigener Schlüssel am LLM-Tor (app/llm_tor.py): spark-dev hat einen eigenen Schlüssel in ~/.config/spark/tor-key (Modus 600); in der Konfiguration steht nur seine SHA-256 (entwickeln.schluessel_sha256, geschrieben nur von sudo speech-spark entwickeln schluessel neu|weg, nie vom Panel), und er gilt nur, solange der Schalter an ist (common.entwickler_hash,"
 },
 {
 "lang": "de",
@@ -16605,7 +16645,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Entwickeln auf dem Pi",
 "title": "Entwickeln auf dem Pi",
-"text": "ert als \"\" bei aus). Damit darf OpenCode nur chatten und die Modelle lesen (nie System One), steht immer ganz hinten (Stufe 0, altert nie nach vorn) und hat ein eigenes Tor mit common.ENTWICKLER_PLAETZE Platz: Gespräche gehen immer vor. Zurückziehen: sudo speech-spark entwickeln schluessel weg. - Weg B, lokal einspielen (app/entwickeln.py, sudo speech-spark lokal einspielen|zurueck|verwerfen|status, im Panel POST /api/admin/entwickeln/einspielen mit frischem Code, zurueck und verwerfen mit Code): root liest den Klon nie; spark-dev schreibt ein Git-Bündel seines Zweigs, root holt es in den Klon des Installers, setzt die Commits in einem Wegwerf-Arbeitsbaum auf die installierte Version (git rebase, ohne Hooks), prüft jeden geänderten Pfad (entwickeln.ERLAUBT: nur app/panel/, app/tests/, docs/, die README und CHANGELOG.md, nur normale Dateien ohne Ausführrecht, höchstens 60 Commits und 300 Dateien) und mit /etc/speech-spark-signers jede Unterschrift. Dann der Schnelltest in der Sandbox speech-spark-lokaltest (entwickeln.sandbox: Nutzer spark-dev, PrivateNetwork, ProtectHome, kein Zugang zu /var/lib/speech-spark, /etc/speech-spark, /root, /home und dem Klon des Installers, 3 GB, 200 % "
+"text": " beim geteilten Spark synchronisiert als \"\" bei aus). Damit darf OpenCode nur chatten und die Modelle lesen (nie System One), steht immer ganz hinten (Stufe 0, altert nie nach vorn) und hat ein eigenes Tor mit common.ENTWICKLER_PLAETZE Platz: Gespräche gehen immer vor. Zurückziehen: sudo speech-spark entwickeln schluessel weg. - Weg B, lokal einspielen (app/entwickeln.py, sudo speech-spark lokal einspielen|zurueck|verwerfen|status, im Panel POST /api/admin/entwickeln/einspielen mit frischem Code, zurueck und verwerfen mit Code): root liest den Klon nie; spark-dev schreibt ein Git-Bündel seines Zweigs, root holt es in den Klon des Installers, setzt die Commits in einem Wegwerf-Arbeitsbaum auf die installierte Version (git rebase, ohne Hooks), prüft jeden geänderten Pfad (entwickeln.ERLAUBT: nur app/panel/, app/tests/, docs/, die README und CHANGELOG.md, nur normale Dateien ohne Ausführrecht, höchstens 60 Commits und 300 Dateien) und mit /etc/speech-spark-signers jede Unterschrift. Dann der Schnelltest in der Sandbox speech-spark-lokaltest (entwickeln.sandbox: Nutzer spark-dev, PrivateNetwork, ProtectHome, kein Zugang zu /var/lib/speech-spark, /etc/speech-spark, /root, /home und dem "
 },
 {
 "lang": "de",
@@ -16613,7 +16653,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Entwickeln auf dem Pi",
 "title": "Entwickeln auf dem Pi",
-"text": "CPU, höchstens 1 Stunde): die Tests der geänderten Dateien, die Wächter-Tests aus tools/vorpush.py und der Rauchtest, ohne Browser. Grün: update.sh spielt ein wie ein Update; die Version zeigt „+lokal“, der Hauptstand bleibt der geprüfte von GitHub. - Nie als root ausgeführt: Lokaler Code läuft nie als root. Der Selbsttest von install.sh (läuft als root) wird bei lokalen Commits übersprungen, der Schnelltest der Sandbox lief dafür; speech-spark-bench (lädt Panel-Module) läuft dann als Dienstnutzer. Lokale Commits gelten nie als geprüfter Code von GitHub: der grüne Lauf und die Signaturprüfung von update.sh bürgen nur für main. - Ein Update verliert nie lokale Arbeit: Mit eingespielten lokalen Commits setzt update.sh sie auf den neuen grünen Stand (entwickeln.aufsetzen; was schon auf main ist, fällt weg) und testet sie. Konflikt oder roter Schnelltest: die laufende Version bleibt, das Update-Fenster nennt den Grund, und oben im Panel steht ein Hinweis (3 Tage oder bis zum nächsten Erfolg). Nicht festgehaltene Änderungen im Klon des Installers legt update.sh vor jedem Zurücksetzen als Patch nach /opt/speech-spark/gesichert/. Zurück geht es mit lokal zurueck (die vorige lokale Fassung"
+"text": "Klon des Installers, 3 GB, 200 % CPU, höchstens 1 Stunde): die Tests der geänderten Dateien, die Wächter-Tests aus tools/vorpush.py und der Rauchtest, ohne Browser. Grün: update.sh spielt ein wie ein Update; die Version zeigt „+lokal“, der Hauptstand bleibt der geprüfte von GitHub. - Nie als root ausgeführt: Lokaler Code läuft nie als root. Der Selbsttest von install.sh (läuft als root) wird bei lokalen Commits übersprungen, der Schnelltest der Sandbox lief dafür; speech-spark-bench (lädt Panel-Module) läuft dann als Dienstnutzer. Lokale Commits gelten nie als geprüfter Code von GitHub: der grüne Lauf und die Signaturprüfung von update.sh bürgen nur für main. - Ein Update verliert nie lokale Arbeit: Mit eingespielten lokalen Commits setzt update.sh sie auf den neuen grünen Stand (entwickeln.aufsetzen; was schon auf main ist, fällt weg) und testet sie. Konflikt oder roter Schnelltest: die laufende Version bleibt, das Update-Fenster nennt den Grund, und oben im Panel steht ein Hinweis (3 Tage oder bis zum nächsten Erfolg). Nicht festgehaltene Änderungen im Klon des Installers legt update.sh vor jedem Zurücksetzen als Patch nach /opt/speech-spark/gesichert/. Zurück geht es mit lokal z"
 },
 {
 "lang": "de",
@@ -16621,7 +16661,15 @@
 "file": "Sicherheit und Betrieb",
 "head": "Entwickeln auf dem Pi",
 "title": "Entwickeln auf dem Pi",
-"text": " auf derselben Version) oder lokal verwerfen (die Commits bleiben im Klon und als refs/spark/lokal-vorher). - Testumgebung: /opt/speech-spark/venv-lokaltest aus app/requirements-panel.lock mit --require-hashes, neu nur, wenn sich die Paketliste ändert (Zeitgeber speech-spark-lokaltest-umgebung, 02:40); ohne Internet bleibt die alte, und ein Schnelltest mit anderer Paketliste lehnt mit „Testumgebung fehlt“ ab. - Überwachung: *Zustand → Live* Kasten „Entwickeln“ („lokale Änderungen: N“, wie viele im Klon warten, der letzte feste Grund einer Ablehnung; nie ein Commit-Text, Pfad oder Testausgabe), Logs nur entwickeln: … mit festen Wörtern und Zahlen (Bereich System), Admin-Protokoll „Lokale Änderungen eingespielt, zurück oder verworfen“. Rate-Limits entwickeln und entwickeln_einspielen. Selbsttest test_entwickeln."
+"text": "urueck (die vorige lokale Fassung auf derselben Version) oder lokal verwerfen (die Commits bleiben im Klon und als refs/spark/lokal-vorher). - Weg A, an GitHub geben (Paket 2, Dominik 2026-11-03; eigener Schalter *Funktionen → Entwickeln auf dem Pi → An GitHub geben*, chat.entwickeln_github, aus; sudo speech-spark lokal an-github [thema], im Panel POST /api/admin/entwickeln/github mit frischem Code): Der Zweig lokal von spark-dev (oder sein Zweig opencode/<thema>, wenn es den im Klon gibt) geht als opencode/<thema> an GitHub, damit ein Claude-Thread ihn prüft und über die Push-Warteschlange auf main bringt. Das Thema kommt nur aus a-z, 0-9 und Bindestrich (entwickeln.thema_pruefen, höchstens 40 Zeichen); geschrieben wird nur refs/heads/opencode/<thema> (entwickeln.ziel_ref), ohne + und ohne --force: einen Zweig mit anderen Commits auf GitHub überschreibt der Spark nie. root nimmt den Zweig wie beim Einspielen nur als Bündel, prüft ihn (entwickeln.pfade_github: nie .git oder .github, kein Link, kein Untermodul, höchstens 60 Commits und 300 Dateien; anders als Weg B dürfen install.sh und app/*.py mit, weil ein Claude-Thread jede Datei prüft und nichts davon hier läuft) und schiebt ih"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Entwickeln auf dem Pi",
+"title": "Entwickeln auf dem Pi",
+"text": "n mit einem eigenen Deploy-Schlüssel (/etc/speech-spark-github-key, ed25519, root 0600; sudo speech-spark entwickeln github-schluessel neu|zeigen|weg) über ssh.github.com:443 mit GitHubs festem Hostschlüssel (entwickeln.GH_HOSTKEY, StrictHostKeyChecking, keine ssh-Einstellung von root, kein Agent). Warum root und kein Token für spark-dev: spark-dev bleibt ganz ohne Internet (keine Lücke in seiner Firewall, keine Adressliste, die sich mit dem DNS ändert); den Schlüssel liest weder spark-dev (also auch kein Modell, das ihn in einen Commit schreiben könnte) noch das Panel; und ein Token des eigenen Kontos handelt als Admin und käme an der Regel für main vorbei, ein Deploy-Schlüssel nicht. Dominik setzt auf GitHub ein Ruleset für main (Restrict updates, Restrict deletions, Block force pushes, Bypass nur Repository admin); der Spark kann das nicht selbst. Ohne Internet wartet der Auftrag (state/github-wunsch, ein Thema) und speech-spark-github.timer versucht es alle 15 Minuten; die Einheit speech-spark-github (root, ProtectSystem=full, PrivateTmp, 512 MB) wartet auch, solange ein Update läuft. Antworten von git werden nur in feste Wörter übersetzt (entwickeln.push_grund: gegeben, wartet"
 },
 {
 "lang": "de",
@@ -20837,7 +20885,15 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A tool wants to the internet: The model called an offered tool that needs a service on the internet. Which tools are offered at all was decided by the rights and the switch already. 2. Kill switch stops the internet?: From stage 1 the 7 tools that go to the internet by themselves rest (notaus.INTERNET_TOOLS); notaus.locked_tools is read again for every call. 3. Fixed address?: Weather, transit and Wikipedia ask a fixed address from the code or the admin settings, never one from outside text. Which modules may connect directly and why is listed in netguard.DIRECT_OK. 4. Through the guard: Pages from search and reMarkable ask at level internet only (netguard.PUBLIC), mail, calendars and contacts at level user. The level is in the code. 5. Address allowed?: netguard.allowed checks every resolved address: no own services, no 169.254, no home network at level internet only. 6. Answer as data: The answer is cut at the limit and goes to the model as data, never as a command. 7. What the Spark sends by itself: Without a tool only fixed ways go out: the Telegram bot API, Apple and browser push to known services and the update check at GitHub, each with a reason in netguard.DIRECT_OK."
+"text": "1. A tool wants to the internet: The model called an offered tool that needs a service on the internet. Which tools are offered at all was decided by the rights and the switch already. 2. Kill switch stops the internet?: From stage 1 the 7 tools that go to the internet by themselves rest (notaus.INTERNET_TOOLS); notaus.locked_tools is read again for every call. 3. Fixed address?: Weather, transit and Wikipedia ask a fixed address from the code or the admin settings, never one from outside text. Which modules may connect directly and why is listed in netguard.DIRECT_OK. 4. Through the guard: Pages from search and reMarkable ask at level internet only (netguard.PUBLIC), mail, calendars and contacts at level user. The level is in the code. 5. Address allowed?: netguard.allowed checks every resolved address: no own services, no 169.254, no home network at level internet only. 6. Answer as data: The answer is cut at the limit and goes to the model as data, never as a command. 7. What the Spark sends by itself: Without a tool only fixed ways go out: the Telegram bot API, Apple and browser push to known services and the update check at GitHub, each with a reason in netguard.DIRECT_OK. Plu"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": "s, only on an admin's command and never from the panel itself: Hand to GitHub (root pushes a branch opencode/… to GitHub over ssh, box Workshop)."
 },
 {
 "lang": "en",
@@ -20997,7 +21053,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 108). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again, and profiles forgets what it had opened of the profiles' sealed files."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 110). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again, and profiles forgets what it had opened of the profiles' sealed files."
 },
 {
 "lang": "en",
@@ -21013,7 +21069,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 47 files in every backup (step 7) - 108 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 47 files in every backup (step 7) - 110 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -21253,7 +21309,15 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "s self-tests like GitHub; whatever turns green on the second try counts as wobbly. Skipped tests (no browser in the copy) count as not run, never as green. For \"Red tests again\" werkstatt.namen_testen runs each named test alone in its own process: green now, still red or not run. 9. Result as data: werkstatt.pruefe_ergebnis takes only known fields, numbers in range and words from fixed lists; a patch over 200000 characters is cut. The page shows everything as text only, with fixed sentences on what the result means and what can come next. 10. The admin decides: The admin hands the patch to a Claude thread or a person; the workshop never installs or pushes anything. Develop on the Pi is different (OpenCode in the panel computer's terminal, user spark-dev): \"sudo speech-spark lokal einspielen\" takes its commits (entwickeln.vorbereiten), allows only files the service user runs (entwickeln.pfade_pruefen), tests them in a sandbox without network (entwickeln.sandbox) and installs them like an update, never run as root. An update puts them on the new version with entwickeln.aufsetzen; when that does not fit, the running version stays."
+"text": "s self-tests like GitHub; whatever turns green on the second try counts as wobbly. Skipped tests (no browser in the copy) count as not run, never as green. For \"Red tests again\" werkstatt.namen_testen runs each named test alone in its own process: green now, still red or not run. 9. Result as data: werkstatt.pruefe_ergebnis takes only known fields, numbers in range and words from fixed lists; a patch over 200000 characters is cut. The page shows everything as text only, with fixed sentences on what the result means and what can come next. 10. The admin decides: The admin hands the patch to a Claude thread or a person; the workshop never installs or pushes anything. Develop on the Pi is different (OpenCode in the panel computer's terminal, user spark-dev): \"sudo speech-spark lokal einspielen\" takes its commits (entwickeln.vorbereiten), allows only files the service user runs (entwickeln.pfade_pruefen), tests them in a sandbox without network (entwickeln.sandbox) and installs them like an update, never run as root. An update puts them on the new version with entwickeln.aufsetzen; when that does not fit, the running version stays; what is on main by then drops out. Way A (its own swit"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": "ch \"Hand to GitHub\"): sudo speech-spark lokal an-github also takes the branch only as a bundle (entwickeln.an_github), never lets .github, links or submodules through (entwickeln.pfade_github) and pushes it as root with a deploy key of its own only to opencode/<thema> (entwickeln.ziel_ref: never main, never forced), over ssh with GitHub's pinned host key (entwickeln.GH_HOSTKEY); spark-dev stays without the internet. Without network the order waits. A Claude thread reviews the branch and brings it onto main."
 },
 {
 "lang": "en",
@@ -21277,7 +21341,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- On the model computer once sudo ./install.sh --werkstatt (OpenCode with a pinned version and checksum). - Features → Workshop: on and off, \"Test every night\" with the start hour. - Status → Workshop: start the four orders, look at results, red tests again, copy for Claude, delete. - Develop on the Pi: on the panel computer once sudo ./install.sh --entwickeln, then Features → Develop on the Pi on; install with sudo speech-spark lokal einspielen (zurueck, verwerfen, status)."
+"text": "- On the model computer once sudo ./install.sh --werkstatt (OpenCode with a pinned version and checksum). - Features → Workshop: on and off, \"Test every night\" with the start hour. - Status → Workshop: start the four orders, look at results, red tests again, copy for Claude, delete. - Develop on the Pi: on the panel computer once sudo ./install.sh --entwickeln, then Features → Develop on the Pi on; install with sudo speech-spark lokal einspielen (zurueck, verwerfen, status). - Hand to GitHub: sudo speech-spark entwickeln github-schluessel neu, add the line on GitHub as a deploy key with write access, protect main with a ruleset, then Features → Develop on the Pi → Hand to GitHub on; hand over with sudo speech-spark lokal an-github <thema>."
 },
 {
 "lang": "en",
@@ -21285,7 +21349,7 @@
 "file": "Architecture and data flow",
 "head": "What you see",
 "title": "What you see",
-"text": "- Status → Workshop: the history on the left, one result on the right with big numbers, what it means (such as \"What does red mean?\"), the red tests by area, the answer or patch and the next steps. - Status → Live, Monitoring and the control centre: part \"Workshop\" with kind and status, never contents. - Status → Live: part \"Entwickeln\" with \"lokale Änderungen: N\" and the last fixed reason of a refusal; sudo speech-spark lokal status shows the same in the terminal."
+"text": "- Status → Workshop: the history on the left, one result on the right with big numbers, what it means (such as \"What does red mean?\"), the red tests by area, the answer or patch and the next steps. - Status → Live, Monitoring and the control centre: part \"Workshop\" with kind and status, never contents. - Status → Live: part \"Entwickeln\" with \"lokale Änderungen: N\" and the last fixed reason of a refusal; sudo speech-spark lokal status shows the same in the terminal. - sudo speech-spark lokal zweige: the branches handed to GitHub with link and the state of GitHub's tests; on top of the admin pages the hint \"Gib den Zweig opencode/<thema> einem Claude-Thread zum Prüfen\"."
 },
 {
 "lang": "en",
@@ -21293,7 +21357,15 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/werkstattseite.py auftrag_geben: order from the panel (step 1) - app/panel/werkstattseite.py nacht_art: fixed night rule (step 1) - app/werkstatt.py pruefen: fixed rules of an order (step 2) - app/werkstatt.py wunsch_nehmen: root takes the wish once (step 3) - app/werkstatt.py sandbox: limits of the sandbox (step 4) - app/werkstatt.py kopie: copy from the installer's clone (step 5) - app/werkstatt.py git_umgebung: only this clone counts as safe (step 5) - app/werkstatt.py rechte: OpenCode's rights (step 7) - app/werkstatt.py testlauf: self-tests in parts (step 8) - app/werkstatt.py namen_testen: red tests alone again (step 8) - app/panel/werkstattseite.py nachtest_namen: names only from the result (step 1) - app/werkstatt.py pruefe_ergebnis: result as data (step 9) - app/entwickeln.py vorbereiten: take, check and test local changes (step 10) - app/entwickeln.py pfade_pruefen: only files the service user runs (step 10) - app/entwickeln.py sandbox: limits of the quick test (step 10) - app/entwickeln.py aufsetzen: local commits onto the new version (step 10)"
+"text": "- app/panel/werkstattseite.py auftrag_geben: order from the panel (step 1) - app/panel/werkstattseite.py nacht_art: fixed night rule (step 1) - app/werkstatt.py pruefen: fixed rules of an order (step 2) - app/werkstatt.py wunsch_nehmen: root takes the wish once (step 3) - app/werkstatt.py sandbox: limits of the sandbox (step 4) - app/werkstatt.py kopie: copy from the installer's clone (step 5) - app/werkstatt.py git_umgebung: only this clone counts as safe (step 5) - app/werkstatt.py rechte: OpenCode's rights (step 7) - app/werkstatt.py testlauf: self-tests in parts (step 8) - app/werkstatt.py namen_testen: red tests alone again (step 8) - app/panel/werkstattseite.py nachtest_namen: names only from the result (step 1) - app/werkstatt.py pruefe_ergebnis: result as data (step 9) - app/entwickeln.py vorbereiten: take, check and test local changes (step 10) - app/entwickeln.py pfade_pruefen: only files the service user runs (step 10) - app/entwickeln.py sandbox: limits of the quick test (step 10) - app/entwickeln.py aufsetzen: local commits onto the new version (step 10) - app/entwickeln.py an_github: way A: branch as a bundle, root pushes (step 10) - app/entwickeln.py ziel_ref: only o"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "In the code",
+"title": "In the code",
+"text": "pencode/<thema>, never main (step 10) - app/entwickeln.py pfade_github: never .github, no link, no submodule (step 10) - app/entwickeln.py GH_HOSTKEY: GitHub's pinned host key (step 10)"
 },
 {
 "lang": "en",
@@ -32245,6 +32317,14 @@
 "file": "Assistant and panel",
 "head": "Access",
 "title": "Access",
+"text": "- Hand to GitHub (Features → Access → \"Hand to GitHub\"; builds on \"Develop on the Pi\"): Way A: what you built with OpenCode on the Pi goes to GitHub as its own branch opencode/<topic>, never to main."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Access",
+"title": "Access",
 "text": "- Remote access to servers (Features → Access → \"Remote access to servers\"): The shell of a server elsewhere (a VPS, a NAS at friends', a Raspberry Pi) right in the browser, like Raspberry Pi Connect, only the relay is your own Pi."
 },
 {
@@ -32526,6 +32606,30 @@
 "head": "Developing on the Pi with OpenCode",
 "title": "Developing on the Pi with OpenCode",
 "text": "Only what lies under app/panel/, app/tests/ and docs/ is installed, plus both READMEs and CHANGELOG.md, as plain files: what root runs (install.sh, update.sh, app/*.py outside app/panel, the package lists) only comes through GitHub. A normal update never loses local work: it puts the local commits on the new version and tests them; if something does not fit or the quick test is red, the running version stays, and the panel shows the reason on top. Make the key of spark-dev new or revoke it: sudo speech-spark entwickeln schluessel neu|weg; after a change of the model computer sudo speech-spark entwickeln einrichten. If the test environment is missing, once with the internet sudo speech-spark lokal testumgebung (afterwards it renews itself every night, only when the package list changes). Logs: sudo speech-spark logs entwickeln."
+},
+{
+"lang": "en",
+"src": "installation",
+"file": "Installation in detail",
+"head": "Way A: hand to GitHub",
+"title": "Way A: hand to GitHub",
+"text": "What way B may not take (such as install.sh or app/*.py), or what should go into the official version, an admin hands to GitHub as a branch of its own, opencode/<thema>. The full tests run there, and a Claude thread reviews it and brings it onto main. spark-dev never gets the internet for this: root takes the branch as a bundle and pushes it with a deploy key of its own, never to main and never with --force."
+},
+{
+"lang": "en",
+"src": "installation",
+"file": "Installation in detail",
+"head": "Way A: hand to GitHub",
+"title": "Way A: hand to GitHub",
+"text": "1. Make the key: sudo speech-spark entwickeln github-schluessel neu shows a line starting with ssh-ed25519. Only root reads the secret part (/etc/speech-spark-github-key). 2. Add it on GitHub: in the repository the tab \"Settings\", on the left \"Deploy keys\", \"Add deploy key\". Title for example \"Spark Pi opencode\", paste the line, tick \"Allow write access\", \"Add key\". Take no personal token: it acts as your admin account and would get past the rule for main. 3. Protect main (once, on GitHub): tab \"Settings\", on the left \"Rules\", \"Rulesets\", \"New ruleset\", \"New branch ruleset\". Name \"protect main\", Enforcement status \"Active\", at \"Target branches\" \"Add target\" and \"Include default branch\". Tick: \"Restrict deletions\", \"Restrict updates\", \"Block force pushes\". At \"Bypass list\" \"Add bypass\" and \"Repository admin\" (your account, so you and the Claude threads keep pushing to main). \"Create\". Never put the deploy key on the bypass list. 4. Switch on: as admin *Features → Develop on the Pi → Hand to GitHub* on. After the update to this version run sudo ./install.sh --entwickeln once, so the service speech-spark-github and its timer are there. 5. Hand over: sudo speech-spark lokal an-github m"
+},
+{
+"lang": "en",
+"src": "installation",
+"file": "Installation in detail",
+"head": "Way A: hand to GitHub",
+"title": "Way A: hand to GitHub",
+"text": "y-topic. Without the internet the order waits and starts by itself every 15 minutes (--abbrechen drops it). 6. Pass it on: sudo speech-spark lokal zweige shows the branch, its link and the state of GitHub's tests. Then to a Claude thread: \"Gib den Zweig opencode/my-topic einem Claude-Thread zum Prüfen\". Once it is on main, the next update drops installed local commits that are part of it by itself; in the clone afterwards git rebase spark/main."
 },
 {
 "lang": "en",
@@ -33733,7 +33837,7 @@
 "file": "Security and operation",
 "head": "Developing on the Pi",
 "title": "Developing on the Pi",
-"text": "- Who works where: OpenCode (the same version and SHA-512 as the workshop, /opt/speech-spark/opencode) runs in the terminal as the user spark-dev: no password (SSH key only), not in sudo, adm, wheel, root or the service user's group (install.sh stops otherwise), its own home (mode 700), its own clone /home/spark-dev/speech-on-dgx-spark with the branch lokal, never /opt/speech-spark/src. Memory, CPU and disk below the panel (user-<uid>.slice: at most 40 % memory, 200 % CPU, low weight). - Network: nftables speech-spark-entwickeln-fw allows spark-dev only the LLM-Tor (port llm.port, on this computer or at the model computer with the pinned certificate), DNS and the free ports of its own tests on 127.0.0.1; everything else is refused. GitHub comes only with way A (package 2). - Its own key at the LLM-Tor (app/llm_tor.py): spark-dev has its own key in ~/.config/spark/tor-key (mode 600); the configuration holds only its SHA-256 (entwickeln.schluessel_sha256, written only by sudo speech-spark entwickeln schluessel neu|weg, never by the panel), and it counts only while the switch is on (common.entwickler_hash, synced as \"\" when off in a split Spark). With it OpenCode may only chat and rea"
+"text": "- Who works where: OpenCode (the same version and SHA-512 as the workshop, /opt/speech-spark/opencode) runs in the terminal as the user spark-dev: no password (SSH key only), not in sudo, adm, wheel, root or the service user's group (install.sh stops otherwise), its own home (mode 700), its own clone /home/spark-dev/speech-on-dgx-spark with the branch lokal, never /opt/speech-spark/src. Memory, CPU and disk below the panel (user-<uid>.slice: at most 40 % memory, 200 % CPU, low weight). - Network: nftables speech-spark-entwickeln-fw allows spark-dev only the LLM-Tor (port llm.port, on this computer or at the model computer with the pinned certificate), DNS and the free ports of its own tests on 127.0.0.1; everything else is refused, with way A too: spark-dev never gets the internet, root pushes to GitHub. - Its own key at the LLM-Tor (app/llm_tor.py): spark-dev has its own key in ~/.config/spark/tor-key (mode 600); the configuration holds only its SHA-256 (entwickeln.schluessel_sha256, written only by sudo speech-spark entwickeln schluessel neu|weg, never by the panel), and it counts only while the switch is on (common.entwickler_hash, synced as \"\" when off in a split Spark). With i"
 },
 {
 "lang": "en",
@@ -33741,7 +33845,7 @@
 "file": "Security and operation",
 "head": "Developing on the Pi",
 "title": "Developing on the Pi",
-"text": "d the models (never System One), always stands last (stage 0, never ages forward) and has a gate of its own with common.ENTWICKLER_PLAETZE slot: conversations always go first. Revoke: sudo speech-spark entwickeln schluessel weg. - Way B, installing locally (app/entwickeln.py, sudo speech-spark lokal einspielen|zurueck|verwerfen|status, in the panel POST /api/admin/entwickeln/einspielen with a fresh code, zurueck and verwerfen with a code): root never reads the clone; spark-dev writes a git bundle of its branch, root fetches it into the installer's clone, puts the commits on the installed version in a throw-away worktree (git rebase, without hooks), checks every changed path (entwickeln.ERLAUBT: only app/panel/, app/tests/, docs/, the READMEs and CHANGELOG.md, only plain files without the execute bit, at most 60 commits and 300 files) and with /etc/speech-spark-signers every signature. Then the quick test in the sandbox speech-spark-lokaltest (entwickeln.sandbox: user spark-dev, PrivateNetwork, ProtectHome, no access to /var/lib/speech-spark, /etc/speech-spark, /root, /home and the installer's clone, 3 GB, 200 % CPU, at most 1 hour): the tests of the changed files, the guard tests f"
+"text": "t OpenCode may only chat and read the models (never System One), always stands last (stage 0, never ages forward) and has a gate of its own with common.ENTWICKLER_PLAETZE slot: conversations always go first. Revoke: sudo speech-spark entwickeln schluessel weg. - Way B, installing locally (app/entwickeln.py, sudo speech-spark lokal einspielen|zurueck|verwerfen|status, in the panel POST /api/admin/entwickeln/einspielen with a fresh code, zurueck and verwerfen with a code): root never reads the clone; spark-dev writes a git bundle of its branch, root fetches it into the installer's clone, puts the commits on the installed version in a throw-away worktree (git rebase, without hooks), checks every changed path (entwickeln.ERLAUBT: only app/panel/, app/tests/, docs/, the READMEs and CHANGELOG.md, only plain files without the execute bit, at most 60 commits and 300 files) and with /etc/speech-spark-signers every signature. Then the quick test in the sandbox speech-spark-lokaltest (entwickeln.sandbox: user spark-dev, PrivateNetwork, ProtectHome, no access to /var/lib/speech-spark, /etc/speech-spark, /root, /home and the installer's clone, 3 GB, 200 % CPU, at most 1 hour): the tests of the "
 },
 {
 "lang": "en",
@@ -33749,7 +33853,7 @@
 "file": "Security and operation",
 "head": "Developing on the Pi",
 "title": "Developing on the Pi",
-"text": "rom tools/vorpush.py and the smoke test, without a browser. Green: update.sh installs like an update; the version shows \"+lokal\", the main state stays the checked one from GitHub. - Never run as root: Local code never runs as root. The self-test of install.sh (runs as root) is skipped with local commits, the sandbox's quick test ran instead; speech-spark-bench (loads panel modules) then runs as the service user. Local commits never count as checked code from GitHub: the green run and the signature check of update.sh vouch only for main. - An update never loses local work: With local commits installed, update.sh puts them on the new green state (entwickeln.aufsetzen; what is already on main drops out) and tests them. Conflict or red quick test: the running version stays, the update window names the reason, and a note shows on top of the panel (3 days or until the next success). Uncommitted changes in the installer's clone are kept by update.sh as a patch in /opt/speech-spark/gesichert/ before any reset. Back with lokal zurueck (the previous local state on the same version) or lokal verwerfen (the commits stay in the clone and as refs/spark/lokal-vorher). - Test environment: /opt/spe"
+"text": "changed files, the guard tests from tools/vorpush.py and the smoke test, without a browser. Green: update.sh installs like an update; the version shows \"+lokal\", the main state stays the checked one from GitHub. - Never run as root: Local code never runs as root. The self-test of install.sh (runs as root) is skipped with local commits, the sandbox's quick test ran instead; speech-spark-bench (loads panel modules) then runs as the service user. Local commits never count as checked code from GitHub: the green run and the signature check of update.sh vouch only for main. - An update never loses local work: With local commits installed, update.sh puts them on the new green state (entwickeln.aufsetzen; what is already on main drops out) and tests them. Conflict or red quick test: the running version stays, the update window names the reason, and a note shows on top of the panel (3 days or until the next success). Uncommitted changes in the installer's clone are kept by update.sh as a patch in /opt/speech-spark/gesichert/ before any reset. Back with lokal zurueck (the previous local state on the same version) or lokal verwerfen (the commits stay in the clone and as refs/spark/lokal-vorhe"
 },
 {
 "lang": "en",
@@ -33757,7 +33861,15 @@
 "file": "Security and operation",
 "head": "Developing on the Pi",
 "title": "Developing on the Pi",
-"text": "ech-spark/venv-lokaltest from app/requirements-panel.lock with --require-hashes, new only when the package list changes (timer speech-spark-lokaltest-umgebung, 02:40); without the internet the old one stays, and a quick test with another package list refuses with \"test environment missing\". - Monitoring: *Status → Live* box \"Entwickeln\" (\"lokale Änderungen: N\", how many wait in the clone, the last fixed reason of a refusal; never a commit text, path or test output), logs only entwickeln: … with fixed words and numbers (area System), admin log \"local changes installed, back or dropped\". Rate limits entwickeln and entwickeln_einspielen. Self-test test_entwickeln."
+"text": "r). - Way A, hand to GitHub (package 2, Dominik 2026-11-03; its own switch *Features → Develop on the Pi → Hand to GitHub*, chat.entwickeln_github, off; sudo speech-spark lokal an-github [thema], in the panel POST /api/admin/entwickeln/github with a fresh code): spark-dev's branch lokal (or its branch opencode/<thema> when the clone has one) goes to GitHub as opencode/<thema>, so a Claude thread reviews it and brings it onto main through the push queue. The topic comes only from a-z, 0-9 and hyphen (entwickeln.thema_pruefen, at most 40 characters); only refs/heads/opencode/<thema> is written (entwickeln.ziel_ref), without + and without --force: the Spark never overwrites a branch with other commits on GitHub. Like installing, root takes the branch only as a bundle, checks it (entwickeln.pfade_github: never .git or .github, no link, no submodule, at most 60 commits and 300 files; unlike way B install.sh and app/*.py may go, because a Claude thread reviews every file and nothing of it runs here) and pushes it with a deploy key of its own (/etc/speech-spark-github-key, ed25519, root 0600; sudo speech-spark entwickeln github-schluessel neu|zeigen|weg) over ssh.github.com:443 with GitHu"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Developing on the Pi",
+"title": "Developing on the Pi",
+"text": "b's pinned host key (entwickeln.GH_HOSTKEY, StrictHostKeyChecking, no ssh settings of root's, no agent). Why root and no token for spark-dev: spark-dev stays fully without the internet (no gap in its firewall, no address list that changes with DNS); neither spark-dev (so no model that could write it into a commit) nor the panel reads the key; and a token of one's own account acts as an admin and would get past the rule for main, a deploy key does not. Dominik sets a ruleset for main on GitHub (Restrict updates, Restrict deletions, Block force pushes, bypass only Repository admin); the Spark cannot do that itself. Without the internet the order waits (state/github-wunsch, one topic) and speech-spark-github.timer tries every 15 minutes; the unit speech-spark-github (root, ProtectSystem=full, PrivateTmp, 512 MB) also waits while an update runs. git's answers are only turned into fixed words (entwickeln.push_grund: gegeben, wartet, schluessel, hostschluessel, abgelehnt, nicht_vorwaerts …), never shown or logged. Afterwards sudo speech-spark lokal zweige and GET /api/admin/entwickeln/github show the branch, its link, the state of GitHub's tests (public API without a key, in the panel th"
 },
 {
 "lang": "en",

@@ -3,12 +3,15 @@ name: Tests
 # Runs the panel's self-tests on every push to main, including the browser test (tests/test_ui_browser.py:
 # every page on a computer and a phone screen, settings search, Ich window). Everything runs against fake
 # services from tests/helpers.py; nothing here talks to a real Spark.
+# Also on the branches opencode/** (Entwickeln auf dem Pi, Weg A: the Pi hands its branch over for a Claude thread
+# to review). update.sh, the panel's update check and tools/vorpush.py only ever look at the runs of main
+# (?branch=main and head_branch == main), and the notes "main rot"/"Wackelnde Tests" below only come from main.
 on:
   workflow_dispatch:
   # every push, not only app/**: update.sh installs only commits whose run here passed, so a change
   # to install.sh or update.sh needs its own green run too
   push:
-    branches: [main]
+    branches: [main, 'opencode/**']
 
 permissions:
   contents: read

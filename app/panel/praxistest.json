@@ -5000,6 +5000,27 @@
 "titel": "SparkHilfe: Programm holen, Dienst-Wächter, Englisch und Begleiter wie vorher",
 "text": "Funktionen: Steuern bei der Spontanhilfe an. Etwa zwei Minuten später holt der Spark SparkHilfe von GitHub: Zustand → Logs (Spontanhilfe) zeigt „spontanhilfe: programm_holen | ok | 1“, Zustand → Dienste „Programm SparkHilfe“ grün; „Steuern anfragen“ zeigt auf /hilfe die Prüfsumme aus dem Release. An einem PC mit englischem Windows fragt das Programm „… would like to control your PC“ (Decline / View only / Allow), an einem ARM-PC lädt /hilfe die ARM64-Datei. Der Spark-Begleiter am selben PC: „Bildschirm zeigen und bedienen“ aus dem Panel fragt, zeigt roten Rahmen und Leiste und bedient wie vorher.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P739",
+"v": 1308,
+"titel": "An GitHub geben: Schlüssel und Schutz für main",
+"text": "Nach dem Update einmal sudo ./install.sh --entwickeln (danach systemctl list-timers zeigt speech-spark-github.timer). sudo speech-spark entwickeln github-schluessel neu zeigt eine Zeile ssh-ed25519 …; ls -l /etc/speech-spark-github-key zeigt root und -rw-------, als spark-dev cat /etc/speech-spark-github-key verweigert. Die Zeile auf GitHub als Deploy-Schlüssel mit „Allow write access“ eintragen und das Ruleset für main anlegen (Anleitung Funktionen → Entwickeln auf dem Pi → An GitHub geben). Danach als Admin Funktionen → Entwickeln auf dem Pi → An GitHub geben an.",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P740",
+"v": 1308,
+"titel": "An GitHub geben: Zweig opencode/…, nie main",
+"text": "Als spark-dev im Klon einen kleinen Commit auf lokal machen. Als Admin sudo speech-spark lokal an-github Praxis Test: Ausgabe „an GitHub gegeben opencode/praxis-test“ und „Gib den Zweig opencode/praxis-test einem Claude-Thread zum Prüfen: https://github.com/…“. Auf GitHub steht der Zweig, „Tests“ läuft dafür; sudo speech-spark lokal zweige zeigt „tests laeuft“, später „gruen“ oder „rot“. Oben auf den Admin-Seiten steht der Hinweis. Ein zweiter Versuch nach git commit --amend im Klon: „Den Zweig gibt es auf GitHub schon mit anderen Commits“, auf GitHub unverändert. Auf GitHub unter den Rulesets steht „main schützen“ als Active, in der Bypass-Liste nur Repository admin, kein Deploy-Schlüssel (nie mit dem Schlüssel auf main ausprobieren). Zustand → Logs (System) zeigt „entwickeln: github gegeben 1 commits“ ohne Commit-Text, nie ein Schlüssel.",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P741",
+"v": 1308,
+"titel": "An GitHub geben: ohne Internet wartet es",
+"text": "Internet des Panel-Rechners trennen (Router oder Kabel), dann sudo speech-spark lokal an-github offline-test: „Wartet auf Internet …“; Zustand → Live, Kasten Entwickeln: „an GitHub zuletzt: wartet“. Internet wieder verbinden: spätestens nach 15 Minuten steht opencode/offline-test auf GitHub, sudo speech-spark logs entwickeln zeigt „entwickeln: github gegeben“. Als spark-dev bleibt curl -sS https://github.com die ganze Zeit gesperrt. Funktionen → Entwickeln auf dem Pi → An GitHub geben aus: sudo speech-spark lokal an-github x sagt „An GitHub geben ist aus“.",
+"thread": "Opencode mit internem LLM auf dem Pi"
 }
 ]
 }
