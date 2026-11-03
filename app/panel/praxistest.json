@@ -4902,6 +4902,27 @@
 "titel": "Fernzugang: An alle senden",
 "text": "Funktionen → Fernzugang zu Servern → An alle senden an. Zwei Linux-Systeme als Reiter öffnen: in der Reiterleiste steht „An alle …“. Anklicken: eine rote Zeile sagt „Eingabe geht an 2 Systeme“ mit beiden Namen. „rm -rf /tmp/test“ eingeben und Enter: die Seite weist es ab (Vorsicht-Liste), nichts kommt in den Shells an. „uptime“ und Enter: die Rückfrage nennt die Zeile und beide Namen, nach OK zeigen beide Shells die Ausgabe, die rote Zeile geht aus. Mit einem Windows-System als drittem Reiter steht es unter „nicht dabei“. Zustand → Logs zeigt „fernzugang: alle | gesendet | 2“ ohne den Befehl. Schalter aus: kein „An alle …“ mehr.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P725",
+"v": 1296,
+"titel": "Fernzugang: Dateien als root (Linux)",
+"text": "Funktionen → Fernzugang zu Servern → Dateien als anderer Benutzer an. Auf einem gekoppelten Linux-Server als root: sudo spark-anker dateien als root. Er meldet „als root, nur lesen“, /etc/sudoers.d/spark-anker hat nur die sftp-server-Zeile mit -R. Im Panel das System anklicken: „Dateien als anderer Benutzer“ zeigt „als root · nur lesen“; „Für dieses System einschalten“ fragt Code oder Passkey. Dann „Dateien als root“: /root lässt sich öffnen, Hochladen ist gesperrt, die rote Zeile sagt „… als root“. Zustand → Logs: „fernzugang: dateien_als | root lesen | 1“ ohne Pfad. Auf dem Server sudo spark-anker dateien aus: die Datei ist weg, im Panel steht wieder „nichts freigegeben“.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P726",
+"v": 1296,
+"titel": "Fernzugang: Dateien als root mit Schreiben",
+"text": "Auf dem Server sudo spark-anker dateien als root --schreiben, im Panel wieder einschalten (die neue Meldung hat den Schalter ausgemacht). „… schreiben (Code/Passkey)“ fragt erst nach und dann Code oder Passkey; eine kleine Datei nach /root hochladen: sie gehört root. Eine neue Sitzung „Dateien als root“ ohne Schreiben: Hochladen wieder gesperrt.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P727",
+"v": 1296,
+"titel": "Fernzugang: freigegebene Ordner unter Windows",
+"text": "Auf einem gekoppelten Windows-PC als Administrator: spark-anker dateien ordner \"C:\\Users\\<Name>\\Documents\". „C:\\Windows“ oder „C:\\“ lehnt er ab, ohne etwas zu ändern. Im Panel einschalten (Code/Passkey), „Dateien in den Ordnern“ öffnet direkt im freigegebenen Ordner; Dateien laden geht. spark-anker dateien aus: der Ordner ist für spark wieder zu.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }

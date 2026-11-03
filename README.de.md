@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.296** Fernzugang: Dateien als anderer Benutzer (eigener Schalter, aus): auf dem Server `sudo spark-anker dateien als root[,anna] [--schreiben]` (sudoers nur für den eigenen sftp-server mit -R, geprüft mit visudo, aus und Entfernen löschen es), im Panel je System einschalten mit Code oder Passkey; „Dateien als root“ über sudo -n, erst nur lesen, Schreiben mit frischem Code je Sitzung; Windows: icacls nur auf genannte Ordner; macOS mit Hinweis auf den Festplattenvollzugriff; iPhone zeigt und schaltet es
 - **V01.1.295** Test-Fix: vier Tests, die auf GitHub im ersten Versuch wackelten: E-Mail und Dokumente erstellen melden sich mit eigenen Profilen an, die Siegel-Tests räumen beiseite gelegte Dateien weg, Funde zählen auch am ersten Ort der Dungeon-Karte nur einmal
 - **V01.1.294** Dungeon-Musik: Vorrat lief beim Start nicht an (Name TAKT doppelt); Wächter für Hintergrund-Läufe beim Start und für doppelte Namen auf Modulebene
 - **V01.1.293** Fernzugang: An alle senden (Mehrere Sitzungen Stufe 4, eigener Schalter, aus): eine rote Zeile über den Terminals schickt eine Zeile an alle verbundenen Shells derselben Art, nie gespiegelte Tasten; Enter fragt jedes Mal mit Zeile und Namen nach; der Spark prüft selbst (eigene Anmeldung, mindestens zwei, eine Art, eine Zeile ohne Steuerzeichen bis 500 Zeichen, nie die Vorsicht-Liste); Log und Live zählen nur; geht nach dem Senden, beim Seitenwechsel und nach 5 Minuten von selbst aus
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.289** Fernzugang: mehrere Sitzungen als Reiter (Stufe 1): jede Shell ein Reiter mit Symbol, Stand und Punkt für neue Ausgabe, + System mit Suche (Strg+Umschalt+O), Wechsel mit Strg+Umschalt+1…9 und ←/→, Assistent und Verlauf je Reiter, Rechtsklick-Menü; bis zu 8 Plätze (Standard 4), voll heißt „n von n Plätzen belegt“ statt still zu schließen; auf anderen Seiten bleiben alle Sitzungen offen, die rote Zeile führt mit Zum Terminal zurück.
 - **V01.1.288** Test-Fix: sechs Tests, die einander störten, räumen auf oder zählen nur das Eigene (Finden-Mail, Sicherung, Listen, Dokumente, Home Assistant live, Karten)
 - **V01.1.287** Mappen: Dokumente, Wissensbuch-Seiten und Notizen zu einem Vorhaben bündeln, je Eintrag aus, kurz oder ganz ans Modell, Gespräch im Assistenten an eine Mappe binden
-- **V01.1.286** Wissenskarte findet Doppelte: dieselbe Person mit Anrede, Titel, anderer Schreibweise oder „Nachname, Vorname“ wird ein Punkt; Ähnliches steht unter „Vielleicht doppelt“ mit „Zusammenführen“ oder „Verschieden“; „Zusammenführen mit …“ ist ein Suchfeld
 
 
 

@@ -19460,6 +19460,36 @@
           }
         }
       }
+    },
+    "Dateien als": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files as"
+          }
+        }
+      }
+    },
+    "Dateien als anderer Benutzer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files as another user"
+          }
+        }
+      }
+    },
+    "lesen und schreiben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "read and write"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

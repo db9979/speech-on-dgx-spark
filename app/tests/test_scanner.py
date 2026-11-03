@@ -72,6 +72,7 @@ OPEN = {
     "/fernzugang/anker": "the spark-anker program for curl … | sudo python3 - einrichten; no secret in it, 404 while Fernzugang is off",
     "/static/xterm/{name}": "page files (xterm.js for Fernzugang → Systeme, pinned in fernzugang.XTERM)",
     "/static/guac/{name}": "page files (guacamole-common-js for Fernzugang → Bildschirm, pinned in fernbild.GUAC)",
+    "/api/fernzugang/anker/dateien": "the anchor reports or removes `dateien als …`/`dateien ordner …`; only with its own device key (Bearer), lockout, 404 while off",
     "/api/fernzugang/anker/bildschirm": "the anchor sets up or removes its screen; only with its own device key (Bearer), lockout, 404 while off",
     "/api/fernzugang/anker/koppeln": "an anchor's first contact; only with a one-time code the admin made (fresh code first), lockout, 404 while off",
     "/koppeln": "the page of a Fernzugang pairing's one-time link (own strict CSP, no data in it, the key behind #), 404 while off",

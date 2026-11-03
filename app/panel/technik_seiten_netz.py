@@ -827,7 +827,7 @@ SEITEN = {
     # ------------------------------------------------------------------ Browser und Handy
     # ------------------------------------------------------------------ Fernzugang (Dominik 2026-10-29 „in Technik → Überblick fehlt die Fernwartung“)
     "fernzugang": {
-        "stand": "439d4ca997",
+        "stand": "4e23090fe3",
         "bezug": {
             "fernzugang.entsperrt_bis": ["s2"], "fernzugang.admin_pair": ["s3"], "fernzugang.link_file": ["s3"], "fernzugang.admin_confirm": ["s3"], "fernzugang.CODE_S": ["s3"], "fernzugang.TICKET_S": ["s4"], "fernzugang.terminal_ws": ["s4"], "fernzugang.hostkey_wrong": ["s5"], "fernzugang.HALTEN_S": ["s6"], "ferndateien.listing": ["s6"], "fernbild.GUACD": ["s6"], "fernbild.FPS": ["s6"], "spontanhilfe.admin_new": ["s7"], "spontanhilfe.NUMMER_S": ["s7"], "fernzugang.notaus_close": ["s8"], "fernzugang.MAX_ANKER": ["s3"], "fernnotiz.fuer_modell": ["s6"], "fernnotiz.FASSUNGEN": ["s6"], "fernordner.view": ["s6"], "fernordner.MAX_ORDNER": ["s6"], "ferngross.upload_piece": ["s6"], "ferngross.TEIL": ["s6"], "fernweb.verbindung": ["s6"], "fernweb.ziel_ok": ["s6"], "fernweb.TOR_PORT": ["s6"], "fernweb.MAX_TUNNEL": ["s6"], "fernweb.MAX_KANAELE": ["s6"],
         },
@@ -901,7 +901,9 @@ SEITEN = {
                "wartet in höchstens {fernzugang.STAU} Stücken auf das Fenster, dann bremst SSH den Server (Gegendruck). "
                "Dateien über SFTP in derselben Verbindung (ferndateien.listing), Laden mit Einmal-Link für "
                "{ferndateien.LINK_S} Sekunden; große Dateien in Teilen von {ferngross.TEIL|mb} MB mit SHA-256 je Stück "
-               "(ferngross.upload_piece). Der Bildschirm geht über guacd nur auf 127.0.0.1 (fernbild.GUACD), höchstens "
+               "(ferngross.upload_piece). Als root oder ein anderer Benutzer nur, wenn der Server selbst es freigab (sudoers nur für "
+               "seinen sftp-server mit -R) und der Admin es je System eingeschaltet hat (fernals.choose); Schreiben mit frischem Code. "
+               "Der Bildschirm geht über guacd nur auf 127.0.0.1 (fernbild.GUACD), höchstens "
                "{fernbild.FPS} Bilder je Sekunde; guacd {fernbild.GUACD_VERSION} baut der Spark selbst aus Apaches Quelltext, "
                "fest mit SHA-256 (fernbild.dienst sagt der Seite, warum er fehlt). Der Assistent (fernzugang.admin_help) fragt nur das eigene Modell und "
                "schlägt vor, getippt wird nie von selbst. Notizen je System liegen versiegelt, "
@@ -918,7 +920,9 @@ SEITEN = {
                "for the window in at most {fernzugang.STAU} pieces, then SSH slows the server (backpressure). "
                "Files through SFTP in the same connection (ferndateien.listing), downloads with a one-time link for "
                "{ferndateien.LINK_S} seconds; big files in pieces of {ferngross.TEIL|mb} MB with a SHA-256 per piece "
-               "(ferngross.upload_piece). The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most "
+               "(ferngross.upload_piece). As root or another user only when the server itself gave it free (sudoers only for "
+               "its sftp-server with -R) and the admin switched it on per system (fernals.choose); writing with a fresh code. "
+               "The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most "
                "{fernbild.FPS} pictures a second; the Spark builds guacd {fernbild.GUACD_VERSION} itself from Apache's source, "
                "pinned with SHA-256 (fernbild.dienst tells the page why it is missing). The assistant (fernzugang.admin_help) asks only the own model and "
                "suggests, nothing is typed by itself. Notes per system are stored sealed, "
@@ -983,6 +987,7 @@ SEITEN = {
             ("fernzugang.terminal_ws", ("das Web-Terminal mit Ticket", "the web terminal with a ticket")),
             ("fernzugang.hostkey_wrong", ("angehefteter Host-Schlüssel", "pinned host key")),
             ("ferndateien.listing", ("Dateien über SFTP", "files through SFTP")),
+            ("fernals.choose", ("Dateien als anderer Benutzer: nur mit beiden Zustimmungen", "files as another user: only with both consents")),
             ("fernbild.GUACD", ("guacd nur auf 127.0.0.1", "guacd on 127.0.0.1 only")),
             ("spontanhilfe.admin_new", ("eine neue Spontanhilfe", "a new spontaneous help")),
             ("fernzugang.notaus_close", ("Notaus schließt jede Leitung", "kill switch closes every line")),
@@ -992,7 +997,7 @@ SEITEN = {
             ("fernweb.ziel_ok", ("Webdienste: wohin ein Tunnel darf", "web services: where a tunnel may go")),
             ("fernweb.verbindung", ("die Tunnel-Tür: Köpfe umgeschrieben, Cookies getrennt", "the tunnel door: heads rewritten, cookies apart")),
         ],
-        "tests": ["test_fernzugang", "test_fernbild", "test_spontanhilfe", "test_ferngross", "test_fernweb"],
+        "tests": ["test_fernzugang", "test_fernbild", "test_spontanhilfe", "test_ferngross", "test_fernweb", "test_fernals"],
         "heute": [],
     },
     "fernserver": {

@@ -808,6 +808,9 @@ FEATURES = (
     F("fernnotizen", "Notizen im Fernzugang", "Notes in remote access", "sec", ("fernzugang_notizen",), parent="fernzugang", guide="fernnotizen"),
     # fernordner.py (Dominik 2026-10-29 09:18 „A“): the paired systems in folders, only an order, admins only
     F("fernordner", "Ordner im Fernzugang", "Folders in remote access", "sec", ("fernzugang_ordner",), parent="fernzugang", guide="fernordner"),
+    # fernals.py (Dominik 2026-11-03 „1“): „Dateien“ as root or another user the server named (sudo spark-anker dateien als …),
+    # or in folders a Windows server gave free; plus a switch per system with a fresh code; read only, writing its own step
+    F("fernals", "Dateien als anderer Benutzer", "Files as another user", "sec", ("fernals",), parent="fernzugang", guide="fernals"),
     F("ferngross", "Große Dateien im Fernzugang", "Big files in remote access", "sec", ("fernzugang_gross",), parent="fernzugang",
       guide="ferngross"),
     # fernweb.py (Dominik 2026-10-30 „1a, 2a“): the web pages of a paired system through its anchor, own origin, admins only

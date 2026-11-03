@@ -263,7 +263,7 @@ WORDS = ("koppeln_code", "koppeln", "koppeln_datei", "bestaetigt", "anker_auf", 
          "gross_auf", "gross_teil", "gross_weiter", "gross_fertig", "gross_ab", "gross_rate", "gross_rest", "gross_stand", "holen",
          "holen_fertig", "nas_liste", "nas_holen", "nas_fertig", "job_ab", "koppeln_link",
          "web_auf", "web_zu", "web_ticket", "web_abgewiesen", "web_dienst", "web_netz", "web_suchen", "web_fp", "web_tor",
-         "web_verbindung", "web_websocket")
+         "web_verbindung", "web_websocket", "dateien_als")
 # „Frag den Assistenten“ beside the terminal (stage 2b, Dominik 2026-10-28): the own language model only (llm.own_tor),
 # no tool, its answer is text for the person; the panel never types it. What goes to the model: the question, the
 # system's name and OS, the last HILFE_BEFEHLE own commands and, only with „Bildschirm mitschicken“, the last
@@ -593,6 +593,7 @@ def counts(now=None):
             "wartet": sum(1 for k in ok if g[k].get("wartet")),
             "abbau": len(g) - len(ok), "hostkey": sum(1 for k in ok if g[k].get("hostkey_falsch")),
             "dateien": sum(1 for s in SITZUNG.values() if s.art == "dateien"),
+            "dateien_als": sum(1 for s in SITZUNG.values() if s.art == "dateien" and getattr(s, "als", "")),
             "bildschirm": sum(1 for s in SITZUNG.values() if s.art == "bildschirm"),
             "gehalten": sum(1 for s in SITZUNG.values() if getattr(s, "browser", 1) is None and getattr(s, "verloren", 0)),
             "uebertragungen": max(0, STATS["uebertragungen"]) + _gross_laufend()}
@@ -646,6 +647,7 @@ def live_sub(d):
     offen = "".join(f" · {x['art']} {x['system']}, {x['admin']}, {x['herkunft']}, {x['min']} min" for x in d.get("offen") or ())
     return (f"{d.get('gekoppelt', 0)} gekoppelt · {d.get('online', 0)} online · {d.get('sitzungen', 0)} Sitzungen"
             + (f" · davon {d['dateien']} Dateien" if d.get("dateien") else "")
+            + (f" ({d['dateien_als']} als anderer Benutzer)" if d.get("dateien_als") else "")
             + (f" · davon {d['bildschirm']} Bildschirm" if d.get("bildschirm") else "")
             + (f" · {d['gehalten']} wartet auf Rückkehr" if d.get("gehalten") else "") + offen
             + (f" · {d['uebertragungen']} Übertragungen" if d.get("uebertragungen") else "")
@@ -726,6 +728,8 @@ class Sitzung:
                                # (files: every request must carry the same)
         self.home = "/"        # files: the remote user's home, where the list starts
         self.sftp = None
+        self.als, self.als_cmd = "", ""   # files as another user (fernals): the user and the exec channel's command
+        self.schreiben = False  # files as another user: writing allowed in this session (fresh code)
         self.bild_port = None  # the screen: the one local port guacd connects to (fernbild.Port)
         self.bild_bytes = 0    # the screen: what went to the page (for the rate at the end, KB/s)
         self.sftp_lock = threading.Lock()   # one SFTP call at a time per session (ferndateien._sftp)
@@ -789,6 +793,11 @@ class Sitzung:
             return "hostkey"
         t.auth_publickey(USER, paramiko.Ed25519Key.from_private_key(io.StringIO(priv)))
         t.set_keepalive(PULS_S)   # SSH's own keepalive through the anchor: a quiet session keeps its line
+        if self.art == "dateien" and self.als_cmd:   # as another user (fernals): sftp-server through sudo -n
+            chan = t.open_session(timeout=SSH_S)
+            chan.exec_command(self.als_cmd)
+            self.transport, self.sftp = t, paramiko.SFTPClient(chan)
+            return ""
         if self.art == "dateien":
             self.transport, self.sftp = t, paramiko.SFTPClient.from_transport(t)
             return ""
@@ -1096,7 +1105,7 @@ REFUSED = {"voll": (429, "Zu viele Sitzungen offen (Funktionen → Fernzugang zu
            "ssh": (502, "SSH-Anmeldung ging nicht (Benutzer spark, Schlüssel des Panels).")}
 
 
-async def aufbauen(gid, art, browser=None, who="admin", uid=None, cols=80, rows=24, login="", conn=None):
+async def aufbauen(gid, art, browser=None, who="admin", uid=None, cols=80, rows=24, login="", conn=None, als=("", "", False)):
     """One SSH connection over the anchor's pipe (the channel, then SSH with the pinned host key and the vault's key):
     (Sitzung, stored system, "") once it stands, registered and counted, else (None, None, reason) with the reason
     as a fixed word („voll“, „offline“, „sshd“, „anker“, „hostkey“ or „ssh_<error>“; REFUSED). A browser (the
@@ -1105,6 +1114,7 @@ async def aufbauen(gid, art, browser=None, who="admin", uid=None, cols=80, rows=
     if why:
         return None, None, why
     s = Sitzung(gid, a, n, browser, who, uid, art)
+    s.als, s.als_cmd, s.schreiben = als
     s.login = login
     if conn is not None:
         _wo(s, conn)
@@ -1901,6 +1911,8 @@ def admin_get(request: Request):
     now = time.time()
     import fernanker
     out["anker_version"] = pv = fernanker.version()
+    import fernals
+    out["als_an"] = als_an = fernals.on(c)
     for gid, x in sorted(_read(now)["geraete"].items(), key=lambda kv: str(kv[1].get("name", "")).lower()):
         a = ANKER.get(gid)
         rows.append({"id": gid, "name": x.get("name", ""), "os": x.get("os", ""), "anker": x.get("anker", ""),
@@ -1912,7 +1924,7 @@ def admin_get(request: Request):
                      "bild": x.get("bild") or "", "bild_anker": fernbild.anchor_ok(x.get("anker")),
                      "web_anker": fernweb.anchor_ok(x.get("anker")), "web": len(x.get("web") or []) if web_an else 0,
                      "sitzungen": sum(1 for s in SITZUNG.values() if s.gid == gid), **fernanker.row(x, pv),
-                     "notiz": notizen and fernnotiz.has(gid)})
+                     "notiz": notizen and fernnotiz.has(gid), **(fernals.row(x) if als_an else {})})
     if ordner_an:                            # folders on: the systems in their order, each with its folder
         v = fernordner.view([r["id"] for r in rows])
         pos = {g: i for i, g in enumerate(v["reihe"])}

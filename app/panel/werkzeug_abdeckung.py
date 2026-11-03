@@ -265,6 +265,7 @@ WITHOUT = {
     "fernbildablage": "fernbild.py: die Zwischenablage nur während „Steuern“ des Admins, nach festen Regeln im Panel; kein Werkzeug",
     "fernzuganghilfe": "fernzugang.py: der Assistent neben dem Terminal antwortet nur mit Text, jeder Befehl wird ein Vorschlag zum Einfügen, Enter drückt der Mensch; kein Werkzeug, er tippt nie",
     "fernordner": "fernordner.py: Ordner ordnen nur die Liste der Systeme für den Admin auf der entsperrten Seite; Rechte bleiben je System, das Modell sieht keine Ordner, kein Werkzeug",
+    "fernals": "fernals.py: Dateien als anderer Benutzer öffnet nur der Admin im eigenen Browser, nach Freigabe am Server und Schalter je System; das Modell bekommt kein Werkzeug",
     "fernnotizen": "fernnotiz.py: Notizen je System schreibt nur der Admin auf der entsperrten Seite; das Modell liest sie nur als Daten mit „Assistent darf lesen“, kein Werkzeug",
     "gehaeuse": "gehaeuse.py: Anzeige und LEDs am Panel-Rechner nach festen Regeln, nur Zahlen und Status, kein Werkzeug",
     "rundlauf": "rundlauf.py: ein fester Probelauf durch Sprechen, Hören und Sprachmodell nach festen Regeln, nur Zahlen, kein Werkzeug",

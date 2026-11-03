@@ -25,7 +25,8 @@ Set up (as root, once):
   more over the same checked connection and compared with the SHA-256 the panel named;
 - the user `spark` (made here when it did not exist) gets the panel's key in ~/.ssh/authorized_keys with
   from="127.0.0.1,::1",restrict,pty: only through the anchor, no forwarding, no agent, a terminal. It has no sudo;
-  whoever wants one adds it here by hand;
+  only `sudo spark-anker dateien als root[,…]` (1.7.0) lets it run the server's own sftp-server as those users, read
+  only unless `--schreiben` (/etc/sudoers.d/spark-anker, checked with visudo; `dateien aus` and removing delete it);
 - the system user `spark-anker` runs the anchor (systemd unit spark-anker, hardened: no new privileges, read-only
   system, no home, only its own folder /var/lib/spark-anker writable);
 - a second unit (spark-anker-abbau.path, root) watches for the panel's „abbauen“: then `spark-anker entfernen` runs.
@@ -129,7 +130,7 @@ try:
 except ImportError:      # Windows: no passwd database (the anchor asks `net user` there)
     pwd = None
 
-VERSION = "1.6.0"
+VERSION = "1.7.0"
 LIB = "/usr/local/lib/spark-anker"
 PROG = LIB + "/spark-anker.py"
 BIN = "/usr/local/bin/spark-anker"
@@ -1290,6 +1291,17 @@ class Ctx:
     def fetch(self, url, cap):
         return fetch_https(url, cap)
 
+    def root_owned(self, path):
+        """A file of root that only root may change, in a folder only root may change (the sudoers rule's program)."""
+        try:
+            for p in (path, os.path.dirname(path)):
+                st = os.stat(self.path(p))
+                if st.st_uid != 0 or st.st_mode & 0o022:
+                    return False
+            return stat.S_ISREG(os.stat(self.path(path)).st_mode)
+        except OSError:
+            return False
+
     def port_open(self):
         try:
             socket.create_connection(SSHD, timeout=3).close()
@@ -2148,6 +2160,7 @@ def cmd_remove(args, root="/", run=run_cmd, tell=True, home=None, ctx=None):
         say(ctx.s.sudo)
         return 1
     conf = load(ctx.root, s) or {}
+    dateien_off(ctx, conf)
     s.stop(ctx, conf)
     for p in remove_paths(ctx.root, s):
         if os.path.islink(p) or os.path.isfile(p):
@@ -2169,6 +2182,155 @@ def cmd_remove(args, root="/", run=run_cmd, tell=True, home=None, ctx=None):
         except (OSError, Fehler):
             say("Panel nicht erreicht; dort „Entfernen“ wählen")
     s.last(ctx, conf)
+    return 0
+
+
+# ---------------------------------------------------------------- files as another user (fernals)
+# `sudo spark-anker dateien als root,anna [--schreiben]`: the panel's „Dateien“ may then run the server's own
+# sftp-server as these users through sudo, and only that: the drop-in names the one program with exactly `-R` (read
+# only), with --schreiben also without arguments; checked with visudo -cf before it counts. Windows: `dateien ordner
+# "C:\…" [--schreiben]` gives spark read (or change) rights on exactly these folders with icacls. `dateien aus`,
+# „Entfernen“ and „abbauen“ take it all away. The panel needs its own switch per system besides (fresh code).
+SUDOERS_D = "/etc/sudoers.d/spark-anker"
+SUDOERS = "/etc/sudoers"
+SFTP_SERVERS = ("/usr/lib/openssh/sftp-server", "/usr/libexec/openssh/sftp-server", "/usr/lib/ssh/sftp-server",
+                "/usr/libexec/sftp-server")
+FILES_USER = re.compile(r"[a-z_][a-z0-9_.\-]{0,31}")
+FILES_MAX = 8
+INCLUDEDIR = re.compile(r"^\s*[#@]includedir\s+(/private)?/etc/sudoers\.d\s*$", re.M)
+WIN_FILES_NO = ("windows", "program files", "program files (x86)", "programdata", "$recycle.bin", "system volume information",
+                "recovery", "boot")
+
+
+def sudoers_text(users, sftp, write):
+    run_as = ",".join(users)
+    lines = ["# spark-anker: Dateien im Panel als andere Benutzer (nur dieses Programm, nur so aufgerufen)",
+             f"Defaults!{sftp} !requiretty, !use_pty, !lecture, env_reset, !log_output",
+             f"{USER} ALL=({run_as}) NOPASSWD: {sftp} -R"]
+    if write:
+        lines.append(f'{USER} ALL=({run_as}) NOPASSWD: {sftp} ""')
+    return "\n".join(lines) + "\n"
+
+
+def sftp_server(ctx):
+    """The server's own sftp-server (sshd -T names it, else the usual places): only a file of root that nobody else
+    may change, nor its folder; else None."""
+    m = re.search(r"^subsystem\s+sftp\s+(\S+)", ctx.out(["sshd", "-T"]) if ctx.s is LINUX else "", re.M | re.I)
+    named = [m.group(1)] if m and m.group(1).startswith("/") else []
+    for p in (*named, *SFTP_SERVERS):
+        if re.fullmatch(r"/(?:[A-Za-z0-9_.\-]+/){1,6}sftp-server", p) and ctx.root_owned(p):
+            return p
+    return None
+
+
+def files_users(ctx, raw):
+    users = [u.strip() for x in raw for u in x.split(",") if u.strip()]
+    if not users or len(users) > FILES_MAX or len(set(users)) != len(users):
+        raise Fehler(f"bitte 1 bis {FILES_MAX} Benutzer nennen, z. B. `dateien als root`. Es wurde nichts geändert.")
+    for u in users:
+        if not FILES_USER.fullmatch(u) or u in (USER, RUNNER, MAC_RUNNER) or ctx.ids(u) is None:
+            raise Fehler(f"den Benutzer „{u}“ gibt es hier nicht (oder er ist spark selbst). Es wurde nichts geändert.")
+    return users
+
+
+def win_files_dirs(ctx, raw):
+    dirs = []
+    for x in raw:
+        p = x.replace("\\", "/").rstrip("/")
+        parts = p.split("/")
+        if not re.fullmatch(r"[A-Za-z]:", parts[0]) or len(parts) < 2 or any(q in ("", ".", "..") for q in parts[1:]) \
+                or parts[1].lower() in WIN_FILES_NO or not os.path.isdir(ctx.path(p)):
+            raise Fehler(f"„{x}“ geht nicht: nur vorhandene Ordner, kein ganzes Laufwerk, kein Systemordner. Es wurde nichts geändert.")
+        dirs.append(p)
+    if not dirs or len(dirs) > FILES_MAX or len(set(d.lower() for d in dirs)) != len(dirs):
+        raise Fehler(f"bitte 1 bis {FILES_MAX} Ordner nennen. Es wurde nichts geändert.")
+    return dirs
+
+
+def dateien_off(ctx, conf):
+    """Everything of `dateien` away again: the drop-in, or the rights on the folders (Windows)."""
+    d = conf.get("dateien") or {}
+    if ctx.s is WIN:
+        for p in d.get("ordner") or ():
+            ctx.run(["icacls", win_native(ctx.path(p)), "/remove:g", USER])
+    else:
+        for p in (SUDOERS_D, SUDOERS_D + ".neu"):
+            with contextlib.suppress(OSError):
+                os.remove(ctx.path(p))
+
+
+def cmd_files(args, run=run_cmd, ctx=None):
+    """`dateien als …` / `dateien ordner …` / `dateien aus`: see above."""
+    ctx = ctx or Ctx(run=run)
+    s = ctx.s
+    if ctx.euid() != 0:
+        say(ctx.s.sudo)
+        return 1
+    conf = load(ctx.root, s)
+    if not conf:
+        say("erst einrichten (der Befehl aus dem Panel unter System koppeln)")
+        return 1
+    if args.was == "aus":
+        dateien_off(ctx, conf)
+        conf.pop("dateien", None)
+        write(ctx.path(s.conf), json.dumps(conf, indent=1), 0o640)
+        with contextlib.suppress(OSError, Fehler):
+            http_call(conf["url"], conf.get("fp") or "", "DELETE", "/api/fernzugang/anker/dateien", None, conf["key"], 10)
+        say("Dateien als anderer Benutzer: aus, nichts davon ist mehr da")
+        return 0
+    write_ok = bool(args.schreiben)
+    if s is WIN:
+        if args.was != "ordner":
+            raise Fehler("unter Windows: `spark-anker dateien ordner \"C:\\Users\\…\" [--schreiben]` (als Administrator)")
+        dirs = win_files_dirs(ctx, args.ziele)
+        dateien_off(ctx, conf)              # what was given before goes first
+        for p in dirs:
+            if ctx.run(["icacls", win_native(ctx.path(p)), "/grant", f"{USER}:(OI)(CI){'M' if write_ok else 'RX'}"]):
+                conf["dateien"] = {"art": "ordner", "ordner": dirs}
+                dateien_off(ctx, conf)
+                conf.pop("dateien", None)
+                raise Fehler("icacls ließ die Rechte nicht setzen. Es wurde alles zurückgenommen.")
+        conf["dateien"] = {"art": "ordner", "ordner": dirs, "schreiben": write_ok}
+        report = {"art": "ordner", "ordner": dirs, "schreiben": write_ok}
+    else:
+        if args.was != "als":
+            raise Fehler("hier: `sudo spark-anker dateien als root[,benutzer] [--schreiben]`")
+        users = files_users(ctx, args.ziele)
+        if not shutil.which("sudo") and ctx.root == "/":
+            raise Fehler("sudo fehlt auf diesem System. Es wurde nichts geändert.")
+        try:
+            with open(ctx.path(SUDOERS)) as f:
+                main_text = f.read()
+        except OSError:
+            main_text = ""
+        if not INCLUDEDIR.search(main_text):
+            raise Fehler("/etc/sudoers liest /etc/sudoers.d nicht (#includedir fehlt). Es wurde nichts geändert.")
+        sftp = sftp_server(ctx)
+        if not sftp:
+            raise Fehler("kein sftp-server von root gefunden (sshd -T, /usr/lib/openssh, /usr/libexec). Es wurde nichts geändert.")
+        new = ctx.path(SUDOERS_D + ".neu")
+        os.makedirs(os.path.dirname(new), exist_ok=True)
+        write(new, sudoers_text(users, sftp, write_ok), 0o440)
+        if ctx.run(["visudo", "-cf", new]):
+            with contextlib.suppress(OSError):
+                os.remove(new)
+            raise Fehler("visudo hat die Regel abgelehnt. Es wurde nichts geändert.")
+        os.replace(new, ctx.path(SUDOERS_D))
+        conf["dateien"] = {"art": "sudo", "benutzer": users, "schreiben": write_ok}
+        report = {"art": "sudo", "benutzer": users, "schreiben": write_ok, "sftp": sftp}
+    write(ctx.path(s.conf), json.dumps(conf, indent=1), 0o640)
+    try:
+        status, _ = http_call(conf["url"], conf.get("fp") or "", "POST", "/api/fernzugang/anker/dateien", report, conf["key"])
+    except (OSError, Fehler):
+        status = 0
+    say("Dateien: " + ("Ordner freigegeben" if s is WIN else "als " + ", ".join(report["benutzer"]))
+        + (", lesen und schreiben" if write_ok else ", nur lesen") + ("" if status == 200 else
+        f" (Panel antwortet {status or 'nicht'}: dort erscheint es beim nächsten `dateien` noch einmal)"))
+    say("Im Panel dazu je System einschalten: Fernzugang → Systeme → Dateien als anderer Benutzer (frischer Code)")
+    if s is MAC:
+        say("macOS: Für Schreibtisch, Dokumente, Mail usw. zusätzlich Systemeinstellungen → Allgemein → Teilen → "
+            "Entfernte Anmeldung (i) → „Vollzugriff auf die Festplatte für entfernte Benutzer erlauben“")
+    say("aus: sudo spark-anker dateien aus")
     return 0
 
 
@@ -2750,6 +2912,10 @@ def main(argv=None, system=None):
     u.add_argument("--vom-anker", action="store_true", help=argparse.SUPPRESS)
     sub.add_parser("einheiten", help=argparse.SUPPRESS)
     sub.add_parser("waechter", help=argparse.SUPPRESS)
+    d = sub.add_parser("dateien", help="Dateien im Panel als root oder andere Benutzer (Windows: freigegebene Ordner)")
+    d.add_argument("was", choices=["als", "ordner", "aus"], help="als BENUTZER[,…] | ordner ORDNER … | aus")
+    d.add_argument("ziele", nargs="*", default=[], help="Benutzer (als, durch Komma getrennt) oder Ordner (Windows)")
+    d.add_argument("--schreiben", action="store_true", help="auch schreiben (sonst nur lesen)")
     b = sub.add_parser("bildschirm", help="den Bildschirm für das Panel einrichten (oder `bildschirm aus`)")
     b.add_argument("aus", nargs="?", default="", choices=["", "aus"], help="aus: alles vom Bildschirm wieder weg")
     h = sub.add_parser("hilfe", help="Spontanhilfe: einmal, in diesem Terminal, ohne sudo (fragt die Nummer)")
@@ -2762,7 +2928,7 @@ def main(argv=None, system=None):
         return 1
     try:
         return {"einrichten": cmd_setup, "entfernen": cmd_remove, "lauf": cmd_run, "zustand": cmd_state,
-                "hilfe": cmd_help, "bildschirm": cmd_screen, "aktualisieren": cmd_upgrade, "einheiten": cmd_units,
+                "hilfe": cmd_help, "bildschirm": cmd_screen, "dateien": cmd_files, "aktualisieren": cmd_upgrade, "einheiten": cmd_units,
                 "waechter": cmd_watch}[args.cmd](args)
     except Fehler as e:
         say(str(e))

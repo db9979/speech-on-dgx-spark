@@ -2032,6 +2032,8 @@ struct FernServer: Identifiable {
     let sitzungen: Int
     let notiz: Bool
     let ordner: String
+    let als: String         // Dateien als anderer Benutzer (fernals.py): what the server gave free, as text ("" = nothing)
+    let alsFrei: Bool       // this system's own switch (on only with a fresh code or passkey)
 }
 
 /// A folder of Fernzugang → Systeme (fernordner.py): only an order; every door stays per system.
@@ -2146,6 +2148,14 @@ struct FernzugangView: View {
                                     LabeledContent("Notiz") { Text(g.notiz ? "📝" : "–") }
                                 }
                             }
+                            if d["als_an"] as? Bool == true {   // Dateien als anderer Benutzer (fernals.py): the server's list, the switch per system
+                                LabeledContent("Dateien als") { Text(verbatim: g.als.isEmpty ? "–" : g.als).lineLimit(2) }
+                                if !g.als.isEmpty {
+                                    Toggle("Dateien als anderer Benutzer", isOn: Binding(get: { g.alsFrei }, set: { v in
+                                        if v { ask = CodeRequest { c in await setAls(g, on: true, code: c) } } else { Task { await setAls(g, on: false, code: nil) } }
+                                    })).disabled(g.wartet)
+                                }
+                            }
                             Toggle("Darf sich verbinden", isOn: Binding(get: { g.erlaubt }, set: { v in Task { await allow(g, v) } })).disabled(g.wartet)
                             Button("Shell oder Dateien im Panel öffnen") { panel() }.disabled(!g.online || g.hostkeyFalsch || !g.erlaubt || g.wartet)
                             if d["webdienste"] as? Bool == true {   // Webdienste (fernweb.py): list and open them in the panel view
@@ -2246,7 +2256,7 @@ struct FernzugangView: View {
                                   stand: x["stand"] as? String ?? "ok", erlaubt: x["erlaubt"] as? Bool ?? true, wartet: x["wartet"] as? Bool ?? false,
                                   hostkeyFalsch: x["hostkey_falsch"] as? Bool ?? false, fp: String((x["fp"] as? String ?? "").prefix(80)),
                                   sitzungen: Self.num(x["sitzungen"]), notiz: x["notiz"] as? Bool ?? false,
-                                  ordner: Self.folderId(x["ordner"]))
+                                  ordner: Self.folderId(x["ordner"]), als: Self.alsText(x["als"]), alsFrei: x["als_frei"] as? Bool ?? false)
             }
             folders = (d["ordner"] as? [[String: Any]] ?? []).prefix(30).compactMap { o in
                 let id = Self.folderId(o["id"])
@@ -2267,6 +2277,23 @@ struct FernzugangView: View {
     private func allow(_ g: FernServer, _ on: Bool) async {
         do { _ = try await AdminSession.shared.call("PUT", "api/admin/fernzugang/geraete/\(g.id)", body: ["erlaubt": on]); error = nil }
         catch { self.error = error.localizedDescription }
+        await load()
+    }
+
+    /// Dateien als anderer Benutzer: the server's report as one line („root, anna · nur lesen“), "" when none
+    static func alsText(_ v: Any?) -> String {
+        guard let a = v as? [String: Any] else { return "" }
+        let wer = ((a["benutzer"] as? [String]) ?? (a["ordner"] as? [String]) ?? []).prefix(8).map { String($0.prefix(80)) }.joined(separator: ", ")
+        if wer.isEmpty { return "" }
+        return wer + " · " + ((a["schreiben"] as? Bool ?? false) ? String(localized: "lesen und schreiben") : String(localized: "nur lesen"))
+    }
+
+    /// the switch per system: on with a fresh code or passkey, off without
+    private func setAls(_ g: FernServer, on: Bool, code: String?) async {
+        do {
+            _ = try await AdminSession.shared.call(on ? "POST" : "DELETE", "api/admin/fernzugang/geraete/\(g.id)/als", body: [:], code: code)
+            error = nil
+        } catch { self.error = error.localizedDescription }
         await load()
     }
 

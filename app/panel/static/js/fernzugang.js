@@ -163,6 +163,7 @@ function fzDetail(){const d=FZ.d,box=$('fzdetail'),g=(d.geraete||[]).find(x=>x.i
   if(d.webdienste&&FZ.web===g.id&&window.fwBlock)box.appendChild(fwBlock(g));
   if(g.hostkey_falsch)box.appendChild(fzEl('div','note err',t('Das System zeigt einen anderen Host-Schlüssel als bei der Kopplung: keine Verbindung. War das eine Neuinstallation, „Entfernen“ und neu koppeln.','The system shows another host key than at pairing: no connection. If it was reinstalled, "Remove" and pair again.')));
   if(g.wartet)box.appendChild(fzWartet(g));
+  if(d.als_an&&!sh.disabled)box.appendChild(fzAlsBlock(g));
   if(g.anker_neu||g.update_stand)box.appendChild(fzAktBlock(g));
   const grid=fzEl('div','fzdgrid'),li=fzEl('div','fzdcol'),re=fzEl('div','fzdcol');grid.append(li,re);box.appendChild(grid);
   const o=(d.offen||[]).filter(x=>x.geraet===g.id);
@@ -720,12 +721,30 @@ async function fzAlleSenden(){const q=$('fzsendezeile');if(!q||!FZ.alle)return;c
   catch(e){const w=String(e.message||'');fzMsg(w.includes('vorsicht')?t('Der Spark hat die Zeile abgewiesen: Vorsicht-Liste.','The Spark refused the line: caution list.'):w.includes('gemischt')?t('Der Spark hat abgewiesen: Systeme verschiedener Art.','The Spark refused: systems of different kinds.'):w,true)}}
 // ---------------------------------------------------------------- the files (SFTP)
 const fzKB=n=>n==null?'':n<1024?n+' B':n<1048576?Math.round(n/1024)+' KB':n<1073741824?(n/1048576).toFixed(1)+' MB':(n/1073741824).toFixed(1)+' GB';
-async function fzDateien(g){if(fzBelegt()){fzMsg(t('Erst die offene Sitzung trennen.','Disconnect the open session first.'),true);return}let d;
-  try{const r=await api('/api/admin/fernzugang/dateien',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({geraet:g.id})});d=await r.json()}catch(e){fzFehler(e);return}
-  FZ.fs={id:d.id,pfad:d.pfad,max:d.max_mb,oben:null};FZ.sitz={name:g.name,seit:Date.now()/1000,max:FZ.d.max,leer:d.leerlauf,art:'dateien'};
-  $('fzmain').hidden=true;$('fzstatus').hidden=true;$('fzfiles').hidden=false;fzBanner();fzMsg('');fzFInfo();fzListe(d.pfad);if(window.fgZeig)fgZeig()}
+// Dateien als anderer Benutzer (fernals.py): what the server gave free (sudo spark-anker dateien als …, Windows: folders)
+// and this system's own switch (a fresh code or passkey); then „Dateien als root“ (read only) and, when the server allowed
+// it, „… schreiben“ (a fresh code every session)
+function fzAlsBlock(g){const w=fzEl('div','fzals'),a=g.als;w.id='fzals';
+  w.appendChild(fzEl('div','fzgrp',t('Dateien als anderer Benutzer','Files as another user')));
+  if(!a){w.appendChild(fzEl('div','fh',t('Der Server hat nichts freigegeben. Dort als root: sudo spark-anker dateien als root (nur lesen; --schreiben auch schreiben). Windows als Administrator: spark-anker dateien ordner "C:\\Users\\…"','The server gave nothing free. There as root: sudo spark-anker dateien als root (read only; --schreiben also write). Windows as administrator: spark-anker dateien ordner "C:\\Users\\…"')));return w}
+  const wer=a.art==='sudo'?t('als ','as ')+a.benutzer.join(', '):t('Ordner: ','Folders: ')+a.ordner.join(', ');
+  w.appendChild(fzEl('div','mut',t('Vom Server freigegeben: ','Given free by the server: ')+wer+' · '+(a.schreiben?t('lesen und schreiben','read and write'):t('nur lesen','read only'))));
+  const row=fzEl('div','row');
+  const sw=fzBtn(g.als_frei?t('Für dieses System ausschalten','Switch off for this system'):t('Für dieses System einschalten (Code/Passkey)','Switch on for this system (code/passkey)'),g.als_frei?'':'p',async()=>{
+    try{await api(`/api/admin/fernzugang/geraete/${g.id}/als`,{method:g.als_frei?'DELETE':'POST'});fzLoad()}catch(e){fzFehler(e)}});sw.id='fzalsschalter';row.appendChild(sw);
+  if(g.als_frei&&a.art==='sudo')for(const u of a.benutzer){row.appendChild(fzBtn(t('Dateien als ','Files as ')+u,'fzk',()=>fzDateien(g,u,false)));
+    if(a.schreiben)row.appendChild(fzBtn(t('… schreiben (Code/Passkey)','… write (code/passkey)'),'',()=>{if(confirm(t(`Dateien als ${u} mit Schreiben öffnen? Alles, was du hochlädst, gehört dann ${u}.`,`Open files as ${u} with writing? Everything you upload then belongs to ${u}.`)))fzDateien(g,u,true)}))}
+  if(g.als_frei&&a.art==='ordner')row.appendChild(fzBtn(t('Dateien in den Ordnern','Files in the folders'),'fzk',()=>fzDateien(g)));
+  w.appendChild(row);return w}
+async function fzDateien(g,als,schreiben){if(fzBelegt()){fzMsg(t('Erst die offene Sitzung trennen.','Disconnect the open session first.'),true);return}let d;
+  try{const r=await api('/api/admin/fernzugang/dateien'+(als&&schreiben?'/schreiben':''),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({geraet:g.id,...(als?{als}:{})})});d=await r.json()}catch(e){fzFehler(e);return}
+  FZ.fs={id:d.id,pfad:d.pfad,max:d.max_mb,oben:null,als:d.als||'spark',schreiben:d.schreiben!==false,ordner:d.ordner||[]};FZ.sitz={name:g.name+(d.als&&d.als!=='spark'?t(' als ',' as ')+d.als:''),seit:Date.now()/1000,max:FZ.d.max,leer:d.leerlauf,art:'dateien'};
+  $('fzmain').hidden=true;$('fzstatus').hidden=true;$('fzfiles').hidden=false;fzBanner();fzMsg('');fzFInfo();fzListe(FZ.fs.ordner[0]||d.pfad);if(window.fgZeig)fgZeig()}
 function fzFInfo(){const dl=$('fzfinfo');dl.textContent='';const s=FZ.sitz||{},fs=FZ.fs||{};
-  for(const [k,v] of [[t('System','System'),s.name||''],[t('Rechte','Permissions'),t('die des Benutzers spark auf dem Server','those of the user spark on the server')],[t('Höchstens','At most'),fs.max+t(' MB je Datei',' MB per file')],
+  const als=fs.als&&fs.als!=='spark'?fs.als:'';
+  $('fzfsend').disabled=$('fzffile').disabled=!fs.schreiben;
+  for(const [k,v] of [[t('System','System'),s.name||''],[t('Rechte','Permissions'),als?(fs.schreiben?t(`die von ${als} (lesen und schreiben)`,`those of ${als} (read and write)`):t(`die von ${als}, nur lesen`,`those of ${als}, read only`)):t('die des Benutzers spark auf dem Server','those of the user spark on the server')],
+    ...(fs.ordner&&fs.ordner.length?[[t('Freigegeben','Given free'),fs.ordner.join(', ')]]:[]),[t('Höchstens','At most'),fs.max+t(' MB je Datei',' MB per file')],
     [t('Leerlauf trennt','Idle ends'),t('nach ','after ')+s.leer+' min'],[t('Aufgezeichnet','Recorded'),t('nur Anzahl und Größe, nie Namen oder Inhalte','only counts and sizes, never names or contents')]])dl.append(fzEl('dt','',k),fzEl('dd','',v));
   $('fzfmax').textContent=t('Höchstens ','At most ')+fs.max+t(' MB. Die Datei landet im gezeigten Ordner; ohne „Ersetzen“ bleibt eine vorhandene Datei, wie sie ist.',' MB. The file lands in the folder shown; without "Replace" an existing file stays as it is.')}
 async function fzListe(p){const fs=FZ.fs;if(!fs)return;let d;

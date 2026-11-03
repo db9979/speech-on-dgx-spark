@@ -3837,7 +3837,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "g genau ein Web-Terminal öffnet (fernzugang.terminal_ws); höchstens 8 Sitzungen zugleich. Jede ist ein Reiter; nebeneinander, 2 × 2 oder als Übersicht zeigt nur die Seite mehrere zugleich, am Panel bleibt jede für sich. „An alle senden“ (fernzugang.admin_alle, eigener Schalter, aus) schreibt eine geprüfte Zeile in mehrere Shells der eigenen Anmeldung. 5. Anderer Host-Schlüssel?: Zeigt der Server einen anderen Host-Schlüssel als beim Koppeln, gibt es keine Verbindung (fernzugang.hostkey_wrong); nach einer Neuinstallation entfernen und neu koppeln. 6. Shell, Dateien, Bildschirm: SSH läuft durch den Kanal des Ankers; reißt das Fenster ab, wartet die Shell 120 Sekunden. Ein Lebenszeichen alle 5 Sekunden misst Laufzeit und Rate; die Ausgabe wartet in höchstens 32 Stücken auf das Fenster, dann bremst SSH den Server (Gegendruck). Dateien über SFTP in derselben Verbindung (ferndateien.listing), Laden mit Einmal-Link für 60 Sekunden; große Dateien in Teilen von 8 MB MB mit SHA-256 je Stück (ferngross.upload_piece). Der Bildschirm geht über guacd nur auf 127.0.0.1 (fernbild.GUACD), höchstens 15 Bilder je Sekunde; guacd 1.6.0 baut der Spark selbst aus Apaches Quelltext, fest mit SHA-256 (fern"
+"text": "g genau ein Web-Terminal öffnet (fernzugang.terminal_ws); höchstens 8 Sitzungen zugleich. Jede ist ein Reiter; nebeneinander, 2 × 2 oder als Übersicht zeigt nur die Seite mehrere zugleich, am Panel bleibt jede für sich. „An alle senden“ (fernzugang.admin_alle, eigener Schalter, aus) schreibt eine geprüfte Zeile in mehrere Shells der eigenen Anmeldung. 5. Anderer Host-Schlüssel?: Zeigt der Server einen anderen Host-Schlüssel als beim Koppeln, gibt es keine Verbindung (fernzugang.hostkey_wrong); nach einer Neuinstallation entfernen und neu koppeln. 6. Shell, Dateien, Bildschirm: SSH läuft durch den Kanal des Ankers; reißt das Fenster ab, wartet die Shell 120 Sekunden. Ein Lebenszeichen alle 5 Sekunden misst Laufzeit und Rate; die Ausgabe wartet in höchstens 32 Stücken auf das Fenster, dann bremst SSH den Server (Gegendruck). Dateien über SFTP in derselben Verbindung (ferndateien.listing), Laden mit Einmal-Link für 60 Sekunden; große Dateien in Teilen von 8 MB MB mit SHA-256 je Stück (ferngross.upload_piece). Als root oder ein anderer Benutzer nur, wenn der Server selbst es freigab (sudoers nur für seinen sftp-server mit -R) und der Admin es je System eingeschaltet hat (fernals.choose"
 },
 {
 "lang": "de",
@@ -3845,7 +3845,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "bild.dienst sagt der Seite, warum er fehlt). Der Assistent (fernzugang.admin_help) fragt nur das eigene Modell und schlägt vor, getippt wird nie von selbst. Notizen je System liegen versiegelt, 10 Fassungen bleiben; das Modell liest sie nur mit Haken (fernnotiz.fuer_modell). Ordner ordnen nur die Liste (fernordner.view), höchstens 30; Rechte bleiben je System. Webdienste kommen über die Tunnel-Tür auf Port 31090, eine eigene Herkunft, nie die des Panels (fernweb.verbindung): ohne Cookies des Panels und ohne Anmeldung, die Cookies jedes Dienstes für sich, einbetten darf nur das Panel. Ziele nur nach festen Regeln (fernweb.ziel_ok), die der Anker selbst noch einmal prüft: 127.0.0.1 dort, private Adressen nur mit „Netz dahinter“, nie die Netze des Spark. Anders als die Shell geht das nicht als SSH Ende zu Ende, sondern durch die TLS-Leitung des Ankers mit angeheftetem Zertifikat; höchstens 4 Tunnel mit je 8 Verbindungen und Gegendruck. 7. Spontanhilfe: Eine Hilfe (spontanhilfe.admin_new) gibt eine Nummer für 10 Minuten, nach 5 falschen ist sie tot. Der Bildschirm geht per WebRTC direkt zwischen den zwei Browsern, von unterwegs über TURN auf tars; das Panel vermittelt nur. 8. Logs und "
+"text": "); Schreiben mit frischem Code. Der Bildschirm geht über guacd nur auf 127.0.0.1 (fernbild.GUACD), höchstens 15 Bilder je Sekunde; guacd 1.6.0 baut der Spark selbst aus Apaches Quelltext, fest mit SHA-256 (fernbild.dienst sagt der Seite, warum er fehlt). Der Assistent (fernzugang.admin_help) fragt nur das eigene Modell und schlägt vor, getippt wird nie von selbst. Notizen je System liegen versiegelt, 10 Fassungen bleiben; das Modell liest sie nur mit Haken (fernnotiz.fuer_modell). Ordner ordnen nur die Liste (fernordner.view), höchstens 30; Rechte bleiben je System. Webdienste kommen über die Tunnel-Tür auf Port 31090, eine eigene Herkunft, nie die des Panels (fernweb.verbindung): ohne Cookies des Panels und ohne Anmeldung, die Cookies jedes Dienstes für sich, einbetten darf nur das Panel. Ziele nur nach festen Regeln (fernweb.ziel_ok), die der Anker selbst noch einmal prüft: 127.0.0.1 dort, private Adressen nur mit „Netz dahinter“, nie die Netze des Spark. Anders als die Shell geht das nicht als SSH Ende zu Ende, sondern durch die TLS-Leitung des Ankers mit angeheftetem Zertifikat; höchstens 4 Tunnel mit je 8 Verbindungen und Gegendruck. 7. Spontanhilfe: Eine Hilfe (spontanhilfe.a"
 },
 {
 "lang": "de",
@@ -3853,7 +3853,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "Verlauf: Logs nur mit festen Wörtern und Zahlen (fernzugang.log), der Verlauf nur Zeit, System, Admin, Art und Dauer (fernzugang.verlauf_add). Der Notaus schließt jede Leitung (fernzugang.notaus_close)."
+"text": "dmin_new) gibt eine Nummer für 10 Minuten, nach 5 falschen ist sie tot. Der Bildschirm geht per WebRTC direkt zwischen den zwei Browsern, von unterwegs über TURN auf tars; das Panel vermittelt nur. 8. Logs und Verlauf: Logs nur mit festen Wörtern und Zahlen (fernzugang.log), der Verlauf nur Zeit, System, Admin, Art und Dauer (fernzugang.verlauf_add). Der Notaus schließt jede Leitung (fernzugang.notaus_close)."
 },
 {
 "lang": "de",
@@ -3893,7 +3893,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/fernzugang.py entsperrt_bis: wie lange die Seite entsperrt ist (Schritt 2) - app/panel/fernzugang.py admin_pair: Koppeln mit Einmal-Code (Schritt 3) - app/panel/fernzugang.py link_file: Windows: die Datei spark-anker-einrichten.cmd mit Einmal-Schlüssel, einmal (Schritt 3) - app/panel/fernzugang.py admin_confirm: neues System erst nach Bestätigung mit Code oder Passkey (Schritt 3) - app/panel/fernzugang.py terminal_ws: das Web-Terminal mit Ticket (Schritt 4) - app/panel/fernzugang.py hostkey_wrong: angehefteter Host-Schlüssel (Schritt 5) - app/panel/ferndateien.py listing: Dateien über SFTP (Schritt 6) - app/panel/fernbild.py GUACD: guacd nur auf 127.0.0.1 (Schritt 6) - app/panel/spontanhilfe.py admin_new: eine neue Spontanhilfe (Schritt 7) - app/panel/fernzugang.py notaus_close: Notaus schließt jede Leitung (Schritt 8) - app/panel/fernnotiz.py fuer_modell: die Notiz nur mit Haken für das Modell (Schritt 6) - app/panel/fernordner.py view: Ordner: nur die Reihenfolge der Liste (Schritt 6) - app/panel/ferngross.py upload_piece: große Datei: ein Stück nur ganz und mit passender SHA-256 (Schritt 6) - app/panel/fernweb.py ziel_ok: Webdienste: wohin ein Tunnel darf (Schritt 6)"
+"text": "- app/panel/fernzugang.py entsperrt_bis: wie lange die Seite entsperrt ist (Schritt 2) - app/panel/fernzugang.py admin_pair: Koppeln mit Einmal-Code (Schritt 3) - app/panel/fernzugang.py link_file: Windows: die Datei spark-anker-einrichten.cmd mit Einmal-Schlüssel, einmal (Schritt 3) - app/panel/fernzugang.py admin_confirm: neues System erst nach Bestätigung mit Code oder Passkey (Schritt 3) - app/panel/fernzugang.py terminal_ws: das Web-Terminal mit Ticket (Schritt 4) - app/panel/fernzugang.py hostkey_wrong: angehefteter Host-Schlüssel (Schritt 5) - app/panel/ferndateien.py listing: Dateien über SFTP (Schritt 6) - app/panel/fernals.py choose: Dateien als anderer Benutzer: nur mit beiden Zustimmungen (Schritt 6) - app/panel/fernbild.py GUACD: guacd nur auf 127.0.0.1 (Schritt 6) - app/panel/spontanhilfe.py admin_new: eine neue Spontanhilfe (Schritt 7) - app/panel/fernzugang.py notaus_close: Notaus schließt jede Leitung (Schritt 8) - app/panel/fernnotiz.py fuer_modell: die Notiz nur mit Haken für das Modell (Schritt 6) - app/panel/fernordner.py view: Ordner: nur die Reihenfolge der Liste (Schritt 6) - app/panel/ferngross.py upload_piece: große Datei: ein Stück nur ganz und mit passen"
 },
 {
 "lang": "de",
@@ -3901,7 +3901,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": " - app/panel/fernweb.py verbindung: die Tunnel-Tür: Köpfe umgeschrieben, Cookies getrennt (Schritt 6)"
+"text": "der SHA-256 (Schritt 6) - app/panel/fernweb.py ziel_ok: Webdienste: wohin ein Tunnel darf (Schritt 6) - app/panel/fernweb.py verbindung: die Tunnel-Tür: Köpfe umgeschrieben, Cookies getrennt (Schritt 6)"
 },
 {
 "lang": "de",
@@ -3909,7 +3909,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_fernzugang, test_fernbild, test_spontanhilfe, test_ferngross, test_fernweb"
+"text": "Selbsttests: test_fernzugang, test_fernbild, test_spontanhilfe, test_ferngross, test_fernweb, test_fernals"
 },
 {
 "lang": "de",
@@ -15021,6 +15021,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Zugang",
 "title": "Zugang",
+"text": "- Dateien als anderer Benutzer (Funktionen → Zugang → „Dateien als anderer Benutzer“; baut auf „Fernzugang zu Servern“): „Dateien“ im Fernzugang als root oder als ein anderer Benutzer, den der Server selbst nennt, statt als spark; unter Windows in Ordnern, die der PC freigibt."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Zugang",
+"title": "Zugang",
 "text": "- Große Dateien im Fernzugang (Funktionen → Zugang → „Große Dateien im Fernzugang“; baut auf „Fernzugang zu Servern“): In „Dateien“ eines gekoppelten Systems drei Wege für große Dateien: „In Teilen hochladen“ schickt 8 MB auf einmal, jedes Stück mit Prüfsumme, mit „Pause“ und „Weiter“ (auch nach „Trennen“, mit derselben Datei); „Per Link holen“ lässt den …"
 },
 {
@@ -21237,7 +21245,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ang.terminal_ws); at most 8 sessions at once. Each one is a tab; side by side, 2 × 2 or as an overview only the page shows several at once, on the panel each stays on its own. „Send to all“ (fernzugang.admin_alle, own switch, off) writes one checked line into several shells of the own login. 5. Another host key?: If the server shows another host key than at pairing, there is no connection (fernzugang.hostkey_wrong); after a reinstall remove and pair again. 6. Shell, files, screen: SSH runs through the anchor's channel; if the window drops, the shell waits 120 seconds. A heartbeat every 5 seconds measures round trip and rate; output waits for the window in at most 32 pieces, then SSH slows the server (backpressure). Files through SFTP in the same connection (ferndateien.listing), downloads with a one-time link for 60 seconds; big files in pieces of 8 MB MB with a SHA-256 per piece (ferngross.upload_piece). The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most 15 pictures a second; the Spark builds guacd 1.6.0 itself from Apache's source, pinned with SHA-256 (fernbild.dienst tells the page why it is missing). The assistant (fernzugang.admin_help) asks only the own"
+"text": "ang.terminal_ws); at most 8 sessions at once. Each one is a tab; side by side, 2 × 2 or as an overview only the page shows several at once, on the panel each stays on its own. „Send to all“ (fernzugang.admin_alle, own switch, off) writes one checked line into several shells of the own login. 5. Another host key?: If the server shows another host key than at pairing, there is no connection (fernzugang.hostkey_wrong); after a reinstall remove and pair again. 6. Shell, files, screen: SSH runs through the anchor's channel; if the window drops, the shell waits 120 seconds. A heartbeat every 5 seconds measures round trip and rate; output waits for the window in at most 32 pieces, then SSH slows the server (backpressure). Files through SFTP in the same connection (ferndateien.listing), downloads with a one-time link for 60 seconds; big files in pieces of 8 MB MB with a SHA-256 per piece (ferngross.upload_piece). As root or another user only when the server itself gave it free (sudoers only for its sftp-server with -R) and the admin switched it on per system (fernals.choose); writing with a fresh code. The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most 15 pictures a "
 },
 {
 "lang": "en",
@@ -21245,7 +21253,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " model and suggests, nothing is typed by itself. Notes per system are stored sealed, 10 versions stay; the model reads them only when ticked (fernnotiz.fuer_modell). Folders only order the list (fernordner.view), at most 30; rights stay per system. Web services come through the tunnel door on port 31090, an origin of its own, never the panel's (fernweb.verbindung): without the panel's cookies and without sign-in, each service's cookies apart, only the panel may embed it. Targets only by fixed rules (fernweb.ziel_ok), which the anchor checks again itself: 127.0.0.1 there, private addresses only with „Netz dahinter“, never the Spark's networks. Unlike the shell this is not SSH end to end but goes through the anchor's TLS line with a pinned certificate; at most 4 tunnels with 8 connections each and backpressure. 7. Spontaneous help: A help (spontanhilfe.admin_new) gives a number for 10 minutes, after 5 wrong ones it is dead. The screen goes by WebRTC directly between the two browsers, on the way through TURN on tars; the panel only connects them. 8. Logs and history: Logs with fixed words and numbers only (fernzugang.log), the history only time, system, admin, kind and duration (fernz"
+"text": "second; the Spark builds guacd 1.6.0 itself from Apache's source, pinned with SHA-256 (fernbild.dienst tells the page why it is missing). The assistant (fernzugang.admin_help) asks only the own model and suggests, nothing is typed by itself. Notes per system are stored sealed, 10 versions stay; the model reads them only when ticked (fernnotiz.fuer_modell). Folders only order the list (fernordner.view), at most 30; rights stay per system. Web services come through the tunnel door on port 31090, an origin of its own, never the panel's (fernweb.verbindung): without the panel's cookies and without sign-in, each service's cookies apart, only the panel may embed it. Targets only by fixed rules (fernweb.ziel_ok), which the anchor checks again itself: 127.0.0.1 there, private addresses only with „Netz dahinter“, never the Spark's networks. Unlike the shell this is not SSH end to end but goes through the anchor's TLS line with a pinned certificate; at most 4 tunnels with 8 connections each and backpressure. 7. Spontaneous help: A help (spontanhilfe.admin_new) gives a number for 10 minutes, after 5 wrong ones it is dead. The screen goes by WebRTC directly between the two browsers, on the way"
 },
 {
 "lang": "en",
@@ -21253,7 +21261,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ugang.verlauf_add). The kill switch closes every line (fernzugang.notaus_close)."
+"text": " through TURN on tars; the panel only connects them. 8. Logs and history: Logs with fixed words and numbers only (fernzugang.log), the history only time, system, admin, kind and duration (fernzugang.verlauf_add). The kill switch closes every line (fernzugang.notaus_close)."
 },
 {
 "lang": "en",
@@ -21293,7 +21301,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/fernzugang.py entsperrt_bis: how long the page is unlocked (step 2) - app/panel/fernzugang.py admin_pair: pairing with a one-time code (step 3) - app/panel/fernzugang.py link_file: Windows: the file spark-anker-einrichten.cmd with a one-time key, once (step 3) - app/panel/fernzugang.py admin_confirm: a new system only after confirming with a code or passkey (step 3) - app/panel/fernzugang.py terminal_ws: the web terminal with a ticket (step 4) - app/panel/fernzugang.py hostkey_wrong: pinned host key (step 5) - app/panel/ferndateien.py listing: files through SFTP (step 6) - app/panel/fernbild.py GUACD: guacd on 127.0.0.1 only (step 6) - app/panel/spontanhilfe.py admin_new: a new spontaneous help (step 7) - app/panel/fernzugang.py notaus_close: kill switch closes every line (step 8) - app/panel/fernnotiz.py fuer_modell: the note for the model only when ticked (step 6) - app/panel/fernordner.py view: folders: only the order of the list (step 6) - app/panel/ferngross.py upload_piece: big file: a piece only whole and with a matching SHA-256 (step 6) - app/panel/fernweb.py ziel_ok: web services: where a tunnel may go (step 6) - app/panel/fernweb.py verbindung: the tunnel door"
+"text": "- app/panel/fernzugang.py entsperrt_bis: how long the page is unlocked (step 2) - app/panel/fernzugang.py admin_pair: pairing with a one-time code (step 3) - app/panel/fernzugang.py link_file: Windows: the file spark-anker-einrichten.cmd with a one-time key, once (step 3) - app/panel/fernzugang.py admin_confirm: a new system only after confirming with a code or passkey (step 3) - app/panel/fernzugang.py terminal_ws: the web terminal with a ticket (step 4) - app/panel/fernzugang.py hostkey_wrong: pinned host key (step 5) - app/panel/ferndateien.py listing: files through SFTP (step 6) - app/panel/fernals.py choose: files as another user: only with both consents (step 6) - app/panel/fernbild.py GUACD: guacd on 127.0.0.1 only (step 6) - app/panel/spontanhilfe.py admin_new: a new spontaneous help (step 7) - app/panel/fernzugang.py notaus_close: kill switch closes every line (step 8) - app/panel/fernnotiz.py fuer_modell: the note for the model only when ticked (step 6) - app/panel/fernordner.py view: folders: only the order of the list (step 6) - app/panel/ferngross.py upload_piece: big file: a piece only whole and with a matching SHA-256 (step 6) - app/panel/fernweb.py ziel_ok: web serv"
 },
 {
 "lang": "en",
@@ -21301,7 +21309,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": ": heads rewritten, cookies apart (step 6)"
+"text": "ices: where a tunnel may go (step 6) - app/panel/fernweb.py verbindung: the tunnel door: heads rewritten, cookies apart (step 6)"
 },
 {
 "lang": "en",
@@ -21309,7 +21317,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_fernzugang, test_fernbild, test_spontanhilfe, test_ferngross, test_fernweb"
+"text": "Self-tests: test_fernzugang, test_fernbild, test_spontanhilfe, test_ferngross, test_fernweb, test_fernals"
 },
 {
 "lang": "en",
@@ -32094,6 +32102,14 @@
 "head": "Access",
 "title": "Access",
 "text": "- Folders in remote access (Features → Access → \"Folders in remote access\"; builds on \"Remote access to servers\"): The systems on the left in folders like in Mail: one level, name and symbol of your choice, collapsible; collapsed, a folder shows \"● online / total\"."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Access",
+"title": "Access",
+"text": "- Files as another user (Features → Access → \"Files as another user\"; builds on \"Remote access to servers\"): \"Files\" in remote access as root or another user the server itself names, instead of spark; on Windows in folders the PC gives free."
 },
 {
 "lang": "en",

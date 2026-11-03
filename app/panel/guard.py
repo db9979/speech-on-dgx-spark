@@ -557,6 +557,7 @@ LIVE_WORDS = {
     "fernzugang_hostkey": ("Wächter", "Host-Schlüssel eines Fern-Servers geändert, keine Verbindung"), "fernzugang_revoked": ("Eingang", "Fern-Server entfernt"),
     "fernzugang_removed": ("Eingang", "Fern-Server hat seinen Anker abgebaut"), "fernzugang_allow": ("Eingang", "Fern-Server zugelassen oder gesperrt"),
     "fernzugang_confirm": ("Eingang", "Fern-Server aus der Windows-Datei bestätigt"),
+    "fernzugang_als": ("Eingang", "Fern-Dateien als anderer Benutzer eingeschaltet"),
     "fernzugang_web_netz": ("Eingang", "Netz hinter einem Fern-Server für Webdienste an- oder abgeschaltet"),
     "fernzugang_alle": ("Eingang", "Eine Zeile an mehrere Fern-Server zugleich gesendet"),
     "verbund_peer_allow": ("Eingang", "Anderen Spark erlaubt"), "verbund_peer_block": ("Eingang", "Anderen Spark gesperrt"),

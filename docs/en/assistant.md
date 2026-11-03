@@ -1874,6 +1874,8 @@ Every function of the Spark with its switch, what it builds on, where you set it
 
 - **Folders in remote access** (Features → Access → "Folders in remote access"; builds on "Remote access to servers"): The systems on the left in folders like in Mail: one level, name and symbol of your choice, collapsible; collapsed, a folder shows "● online / total".
 
+- **Files as another user** (Features → Access → "Files as another user"; builds on "Remote access to servers"): "Files" in remote access as root or another user the server itself names, instead of spark; on Windows in folders the PC gives free.
+
 - **Big files in remote access** (Features → Access → "Big files in remote access"; builds on "Remote access to servers"): In "Files" of a paired system three ways for big files: "Upload in pieces" sends 8 MB at a time, each piece with a checksum, with "Pause" and "Resume" (also after "Disconnect", with the same file); "Fetch by link" lets the server downloa …
 
 - **Web services in remote access** (Features → Access → "Web services in remote access"; builds on "Remote access to servers"): The web pages of a paired system in the browser, without opening anything to the internet there: Grafana, a router's page, Home Assistant or a dashboard that listens only on 127.0.0.1 there.
