@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.311** Redesign Stufe 7: der Dungeon-Master mit eigenem ruhigen Tisch-Ton (warme Flächen und Gold aus den Tokens, hell und dunkel, Serifen nur für die Erzählung, kein Pergament und keine Kapitälchen), Linien-Icons auf Knöpfen, Reitern und der Handy-Leiste am Tisch, „Deine Runden“ und die übrigen Listen des Spiels im Listen-Muster (am Handy keine senkrechten Buchstaben mehr); Wächter Klar7
 - **V01.1.310** Spontanhilfe Steuern, Teil S2d: SparkHilfe für Linux X11 über dieselbe Zeile wie die Shell einmalig (Anker 1.8.0, nie als root); der Befehl ohne Geheimnis, den Einmal-Schlüssel fügt die Person im Terminal ohne Anzeige ein; unter Wayland klar „nur Ansehen“; Frage 1/2/3 im Terminal, roter Rahmen und Leiste als X11-Fenster, Bild als PNG, Eingaben über XTest gegen die festen Listen geprüft
 - **V01.1.309** Entwickeln auf dem Pi, Paket 3 (eigene Unterschalter, nur Admin, aus): die Seite Zustand → Werkstatt → Entwickeln, ein Terminal als spark-dev im Browser und der Code-Auftrag im Chat; das Modell schlägt nur vor, einspielen entscheidest du
 - **V01.1.308** Entwickeln auf dem Pi, Paket 2 (eigener Unterschalter, nur Admin, aus): An GitHub geben schiebt spark-devs Zweig als opencode/<thema> mit dem Deploy-Schlüssel von root (nie main, nie force), GitHub testet ihn, ein Claude-Thread prüft ihn; Updates zählen weiter nur main
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.304** Terminal-Programm (uConsole): F5 Kalender stürzte mit neueren Textual-Versionen ab (eigener Wochenzähler hieß wie Textuals offset), jetzt spark-tui 1.0.4; Wächter gegen eigene Namen, die Textual schon benutzt
 - **V01.1.303** Finden zeigt die Größe des Index in MB oder GB: unter Finden → Einstellungen als Summe, aufgeklappt nach Quellen (geschätzt) und „Dokumente und Wissen“; der Admin sieht sie beim Profil, Live als Summe aller Profile, die iPhone-App unter Finden → Einstellungen; „Index löschen“ gibt den Platz sofort zurück
 - **V01.1.302** Mappen begrenzen die Suche: der Assistent und Finden suchen auf Wunsch nur in einer Mappe, das iPhone zeigt Mappen nativ mit Stufen zum Umschalten
-- **V01.1.301** Redesign Stufe 6: Zustand → Überblick mit ruhigen Kacheln gleicher Höhe (Punkt und Wort, Tabellenziffern), Logs als dichte Tabelle mit fester Zeilenhöhe und Bereichs-Menü, Technik-Bild neutral mit Linien-Icons, Werkstatt im selben Stil; Wächter Klar6
 
 
 

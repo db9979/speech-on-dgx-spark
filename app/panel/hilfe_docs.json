@@ -8285,6 +8285,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
+"text": "KI-Dungeon-Master: ruhiger Tisch-Ton (V01.1.311, Redesign Stufe 7, Plan redesign/plan.md, Dominik 2026-10-29 „wie Empfehlung“): Der Spieltisch sieht jetzt aus wie das übrige Panel mit einem eigenen warmen Ton: Systemschrift, Gold als Akzent (die Welt färbt nur den Akzent, Grund und Flächen sind gleich), Serifen nur für die Erzählung, keine Pergamentkarte, keine Initiale und keine Kapitälchen mehr; Aktionen stehen mit einer Linie statt als Sprechblase. Knöpfe, Reiter und die untere Leiste am Handy haben Linien-Icons statt Emoji (Emoji bleiben im Spieltext). „Deine Runden“ ist eine Liste mit Namen und einer Zeile darunter, am Handy stehen die Knöpfe unter dem Namen, nichts wird mehr gequetscht. Hell oder dunkel folgt wie bisher dem Panel, der Knopf am Tisch merkt sich eine eigene Wahl. Die Absätze unten zum Spieltisch-Thema beschreiben den früheren Stil. Mehr in Technik, Design-System."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
 "text": "KI-Dungeon-Master: Spieltisch-Thema (V01.0.957, Dominik 2026-10-23 „mir gefällt dieses layout ganz gut … können wir das verbessern?“, „ok“ = Empfehlungen 1a bis 5): Der Spieltisch hat ein eigenes Aussehen (seit V01.0.961 die ganze Seite des Spiels, hell oder dunkel, siehe unten): dunkler Grund, Serifenschrift aus dem System (nichts wird nachgeladen), die Erzählung als Pergamentkarte mit Initiale und „Zug n“, Aktionen als Sprechblasen mit dem Avatar in der Farbe des Platzes, Würfe als schmale Zeile, Akt-Zeilen in Gold. Links stehen Heldenkarten aller Spieler mit Lebensbalken, den sechs Werten (mit dem Bonus für Würfe) und Schutz als Gitter, angelegter Ausrüstung als Schildchen und dem Status (hat gehandelt, denkt nach, nicht da), der eigene golden umrandet; die Kopfzeile zeigt den Titel in Kapitälchen und den aktuellen Ort; unter der Erzählung stehen „Warten auf: …“, die Eingabe, das Mikrofon und Handeln. Am Handy kommen Geschichte, Gruppe und eigener Bogen untereinander. Farben je Welt (welten[].farben mit grund, karte, pergament, tinte, gold, nur #rrggbb, geprüft von check_rules): Fantasy Pergament und Gold, Horror Blutrot, Science-Fiction Blau, Piraten Türkis, Eigene Welt Violett"
 },
 {
@@ -25814,6 +25822,14 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "AI Dungeon Master: ideas from a DM prompt (V01.0.956, Dominik 2026-10-23 \"haben wir das in diesem stiel umgesetzt oder können wir ideen daraus ziehen?\", \"alles ja\", Gitea dropped): Advantage and disadvantage: the model may report vorteil or nachteil per check (the situation helps or hinders); the panel then rolls two d20 and takes the higher or the lower, the story shows both rolls (\"Advantage 14/7\"); any other value counts as a plain roll. OOC line: when an action is unclear or no move at all (a meta comment), the model does not narrate it but writes that character a short line in ooc (at most 160 characters, only names of the group, checked like the narration) that only this player sees as \"(OOC: …)\". Length: a narration has at most 900 characters, the opening of a round, a chapter or an act up to 1500 (erz_max). Prompt: the default prompt also asks for senses (smells, light, sounds, feelings) and stays with world, tone and what happened so far; the panel's fixed rules still stand behind it."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "AI Dungeon Master: calm table tone (V01.1.311, redesign stage 7, plan redesign/plan.md, Dominik 2026-10-29 \"as recommended\"): The game table now looks like the rest of the panel with a warm tone of its own: system font, gold as the accent (the world only tints the accent, ground and surfaces are the same), serif only for the narration, no parchment card, no initial and no small caps any more; actions stand with a line instead of a speech bubble. Buttons, tabs and the phone's bottom bar have line icons instead of emoji (emoji stay in the game's text). \"Your rounds\" is a list with the name and one line below, on the phone the buttons stand under the name, nothing is squeezed any more. Light or dark follows the panel as before, the button at the table keeps a choice of its own. The paragraphs below on the table theme describe the earlier style. More in Technical, design system."
 },
 {
 "lang": "en",

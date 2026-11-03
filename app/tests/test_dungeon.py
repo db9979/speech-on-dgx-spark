@@ -11727,7 +11727,7 @@ class Fight(Turns):
         with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
             js = f.read()
         self.assertIn("if(e.art==='schrift')", js)
-        self.assertIn("['schrift','✉'", js)
+        self.assertIn("['schrift','mail'", js)
 
     def test_the_monster_album_knows_more_after_each_stage(self):
         """D&D idea 12 (Monster-Album, switch dungeonalbum): off by default, nothing counted; on, a foe the panel's own fight
@@ -11790,7 +11790,7 @@ class Fight(Turns):
         self.assertEqual(dungeon.view(self.rid, self.gp)["album"], [])
         self.assertGreaterEqual(album.for_live()["eintraege"], 1)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
-            self.assertIn("['album','🐉'", f.read())
+            self.assertIn("['album','image'", f.read())
 
     def test_scars_and_lasting_wounds_with_a_healer(self):
         """D&D idea 8 (Narben, switch dungeonnarben): off by default, no wound; on, standing up again, Gnade or a foe's

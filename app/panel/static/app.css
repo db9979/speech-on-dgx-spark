@@ -2423,7 +2423,7 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dm-d20{flex:none;width:28px;height:28px;display:grid;place-items:center;border-radius:8px;font-weight:700;background:var(--line);font-variant-numeric:tabular-nums}
 .dm-stufe{font-weight:650;color:var(--warnt)}.dm-beute{display:flex;flex-direction:column;gap:4px}
 .dm-beg,.dm-kampf{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border:1px solid var(--t-linie,var(--line));border-radius:14px;background:color-mix(in srgb,var(--t-karte,var(--card)) 90%,transparent);color:var(--t-text,var(--fg))}
-.dm-beg .dm-n,.dm-kampf .dm-n{color:var(--t-gold,var(--acc));font-variant:small-caps;letter-spacing:.08em;font-weight:650}
+.dm-beg .dm-n,.dm-kampf .dm-n{color:var(--t-gold,var(--acc));font:var(--t-cap)}
 .dm-kampf{margin-bottom:8px;position:sticky;top:0;z-index:2;background:var(--t-karte,var(--card))}
 .dm-beg .pill,.dm-kampf .pill{background:transparent;border:1px solid currentColor;font-variant:normal;letter-spacing:0}
 .dm-beg .pill[data-gefahr=leicht],.dm-kampf .pill[data-gefahr=leicht]{color:var(--t-ok,var(--okt))}.dm-beg .pill[data-gefahr=mittel],.dm-kampf .pill[data-gefahr=mittel]{color:var(--t-gold,var(--warnt))}.dm-beg .pill[data-gefahr=schwer],.dm-kampf .pill[data-gefahr=schwer]{color:var(--t-bad,var(--badt))}
@@ -2450,7 +2450,7 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dm-bar em{display:block;height:100%;background:var(--ok)}.dm-bar.low em{background:var(--bad)}.dm-bar.ep em{background:var(--acc)}
 .dm-hostb,.dm-iacts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .dm-side .dm-mek{margin-top:10px}
-.dm-seite{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));width:100%;margin:12px 0 8px;box-sizing:border-box}.dm-seite button{display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 2px;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:12.5px}.dm-seite button span{font-size:17px;line-height:1.1}.dm-seitein>.dmk>.dmk-kopf h5{display:none}.dm-iacts select{max-width:140px}
+.dm-seite{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));width:100%;margin:12px 0 8px;box-sizing:border-box}.dm-seite button{display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 2px;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:12.5px}.dm-seite .ic{width:18px;height:18px;margin-bottom:2px}.dm-seitein>.dmk>.dmk-kopf h5{display:none}.dm-iacts select{max-width:140px}
 .dm-me h4{margin:12px 0 0;font-size:15px}.dm-line{display:flex;justify-content:space-between;font-size:13px;margin-top:6px}
 .dm-werte{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:8px;font-size:13px}.dm-plus{padding:0 6px!important;margin-left:4px;font-size:12px}
 .dm-hint{margin-top:8px;font-size:13px;color:var(--warnt);font-weight:600}
@@ -2509,7 +2509,7 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .dm-tonhier{flex:none}.dm-tonan{animation:dmPuls 1.6s ease-in-out 3}@keyframes dmPuls{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--t-gold,var(--acc)) 35%,transparent)}}@media (prefers-reduced-motion:reduce){.dm-tonan{animation:none}}
 .dm-kamp{display:flex;flex-direction:column;gap:10px;max-width:820px}.dm-k{border:1px solid var(--line);border-radius:12px;padding:10px 12px}
 .dm-k small{display:block}.dm-k .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin-top:8px}
-.dm-bisher{margin:4px 0;font-family:Georgia,serif;overflow-wrap:anywhere}.dm-kedit{width:100%}.dm-check{display:flex;gap:8px;align-items:center}
+.dm-bisher{margin:4px 0;font-family:var(--serif);overflow-wrap:anywhere}.dm-kedit{width:100%}.dm-check{display:flex;gap:8px;align-items:center}
 /* a seat link fills the whole browser, nothing of the assistant behind it (Dominik 2026-10-24 „der spiel gast sollte vom assisten im hintergrund … nichts sehen“) */
 .dgmodal{padding:0;place-items:stretch;align-items:stretch;background:var(--bg);backdrop-filter:none;z-index:150}
 .dgcard{width:100%;max-width:none;min-height:100vh;min-height:100dvh;box-sizing:border-box;margin:0;border:0;border-radius:0;animation:none;padding:14px max(16px,env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
@@ -2517,8 +2517,8 @@ body.dg-offen{overflow:hidden}body.dg-offen #fab{display:none}
 /* the phone at the table (Punkt 10): one pane at a time, a bar of its own at the bottom instead of the panel's */
 .dm-unten{display:none}
 @media (max-width:760px){.dm-tisch .dm-unten{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:45;padding:4px 6px calc(4px + env(safe-area-inset-bottom));background:var(--t-grund,var(--bg));border-top:1px solid var(--t-linie,var(--line))}
-  .dm-unten button{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 0;background:none;border:0;color:var(--t-mut,var(--mut));font:inherit;font-size:11.5px;cursor:pointer;min-width:0}
-  .dm-unten button>span{font-size:20px;line-height:1.2}.dm-unten button.on{color:var(--t-gold,var(--acc));font-weight:600}
+  .dm-unten button{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;height:var(--h-item);padding:0;background:none;border:0;color:var(--t-mut,var(--mut));font:inherit;font-size:11.5px;cursor:pointer;min-width:0}
+  .dm-unten .ic{width:22px;height:22px;margin:2px 0 1px}.dm-unten button.on{color:var(--t-gold,var(--acc));font-weight:600}
   .dm-hneu{position:absolute;top:2px;left:calc(50% + 9px);width:9px;height:9px;border-radius:50%;background:#e5484d}
   .dm.dm-tisch{padding-bottom:calc(var(--dm-uh,56px) + var(--dm-hh,0px) + 12px)}
   .dm-grid[data-dmpane=geschichte]>:not(.dm-story),.dm-grid[data-dmpane=gruppe]>:not(.dm-group,.dm-story),.dm-grid[data-dmpane=held]>:not(.dm-side,.dm-story),.dm-grid[data-dmpane=karte]>:not(.dm-side,.dm-story),.dm-grid[data-dmpane=karte] .dm-side>:not(.dm-seitein){display:none}
@@ -2534,30 +2534,27 @@ body.dg-offen{overflow:hidden}body.dg-offen #fab{display:none}
 /* at the table the assistant's face stays away (Punkt 9): it sat over the field and the side column */
 body:has(#dungeon.on .dm-tisch) #fab,body.dg-offen #fab{display:none!important}
 body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a profile: nothing but the game */.dmadmcard{max-width:900px;width:calc(100vw - 32px)}#dmadmtxt{width:100%;min-height:50vh;font:12.5px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-/* the game's own look (Dominik 2026-10-23 "ok" to 1a-5, then the whole page): dark ground, the narration on parchment
-   with an initial, actions as speech bubbles, hero cards with values; colours per world from the rules (welten[].farben,
-   set as --w-*), the light parchment (.dm-hell) drawn from the same colours */
-.dm.dm-tisch{--w-grund:#17131d;--w-karte:#221c29;--w-pergament:#efe3c4;--w-tinte:#3a2a1a;--w-gold:#d9b25f;
-  --t-grund:var(--w-grund);--t-karte:var(--w-karte);--t-pergament:var(--w-pergament);--t-tinte:var(--w-tinte);--t-gold:var(--w-gold);--t-text:#ece4d3;
-  --t-mut:color-mix(in srgb,var(--t-text) 62%,var(--t-grund));--t-linie:color-mix(in srgb,var(--t-gold) 28%,transparent);
-  --t-feld:color-mix(in srgb,var(--t-karte) 80%,#000);--t-ok:#8fd19e;--t-bad:#f0897d;--t-rot:#f0a49c;--t-schatten:rgba(0,0,0,.35);
-  background:var(--t-grund);color:var(--t-text);border-radius:16px;padding:14px;color-scheme:dark;
-  font-family:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif}
-.dm.dm-tisch.dm-hell{--t-grund:color-mix(in srgb,var(--w-pergament) 55%,#fff);--t-karte:color-mix(in srgb,var(--w-pergament) 22%,#fff);
-  --t-pergament:#fffdf6;--t-text:color-mix(in srgb,var(--w-tinte) 85%,#000);--t-gold:color-mix(in srgb,var(--w-gold) 55%,var(--w-tinte));
-  --t-mut:color-mix(in srgb,var(--t-text) 66%,var(--t-grund));--t-linie:color-mix(in srgb,var(--t-gold) 35%,transparent);
-  --t-feld:#fffdf8;--t-ok:#1f7a3a;--t-bad:#a8322a;--t-rot:#a8322a;--t-schatten:rgba(60,40,10,.16);color-scheme:light}
+/* the game's own look, calm (Redesign Stufe 7, plan redesign/plan.md „eigener Tisch-Ton“): the panel's frame and
+   system font with one warm tone of its own from tokens.css (--tisch-*, light -h and dark -d), the world's colour
+   (welten[].farben gold, set as --w-gold) only as the accent, serif only for the narration; no parchment, no small caps,
+   no gradients. Dark by default, .dm-hell the light table (dmHell: the panel's setting, the button at the table) */
+.dm.dm-tisch{--w-grund:var(--tisch-bg-d);--w-karte:var(--tisch-card-d);--w-pergament:var(--tisch-perg);--w-tinte:var(--tisch-tinte);--w-gold:var(--tisch-acc-d);
+  --t-grund:var(--tisch-bg-d);--t-karte:var(--tisch-card-d);--t-pergament:var(--tisch-card-d);--t-tinte:var(--tisch-fg-d);--t-gold:var(--w-gold);--t-text:var(--tisch-fg-d);
+  --t-mut:var(--tisch-mut-d);--t-linie:var(--tisch-line-d);--t-feld:var(--tisch-field-d);--t-ok:var(--tisch-ok-d);--t-bad:var(--tisch-bad-d);--t-rot:var(--tisch-bad-d);
+  --t-schatten:transparent;background:var(--t-grund);color:var(--t-text);border-radius:var(--r-win);padding:var(--s4);color-scheme:dark;font-family:var(--font)}
+.dm.dm-tisch.dm-hell{--t-grund:var(--tisch-bg-h);--t-karte:var(--tisch-card-h);--t-pergament:var(--tisch-card-h);--t-tinte:var(--tisch-fg-h);
+  --t-gold:color-mix(in srgb,var(--w-gold) 62%,var(--tisch-fg-h));--t-text:var(--tisch-fg-h);--t-mut:var(--tisch-mut-h);--t-linie:var(--tisch-line-h);
+  --t-feld:var(--tisch-field-h);--t-ok:var(--tisch-ok-h);--t-bad:var(--tisch-bad-h);--t-rot:var(--tisch-bad-h);color-scheme:light}
 .dm-tisch .mut,.dm-tisch small.mut{color:var(--t-mut)}
-.dm-tisch h5{color:var(--t-mut);letter-spacing:.18em;font-weight:500}
+.dm-tisch h5{font:var(--t-cap);color:var(--t-mut);letter-spacing:0;text-transform:none}
 .dm-tisch .dm-head{border-bottom:1px solid var(--t-linie);padding-bottom:10px}
-.dm-tisch .dm-head h3{font-variant:small-caps;letter-spacing:.06em;font-size:21px;color:var(--t-gold)}
+.dm-tisch .dm-head h3{font:var(--t-head);color:var(--t-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dm-tisch .dm-htitle{min-width:0}
 /* the head wraps before the title gets narrower than readable (Dominik 2026-10-24 „bei kleinerer auflösung sieht die seite schrecklich aus“) */
 .dm-head{flex-wrap:wrap;row-gap:8px}.dm-head>.dm-htitle{flex:1 1 320px;min-width:min(320px,100%)}.dm-tisch .dm-scene{font-size:14px;color:var(--t-text);font-style:normal}.dm-tisch .dm-scene i{color:var(--t-mut)}
-.dm-tisch button.b{background:transparent;border-color:var(--t-linie);color:var(--t-text);font-family:inherit}
+.dm-tisch button.b{background:color-mix(in srgb,var(--t-text) 7%,transparent);border-color:transparent;color:var(--t-text);font-family:inherit}
 .dm-tisch button.b:hover:not(:disabled){border-color:var(--t-gold)}
-.dm-tisch button.b.p{background:linear-gradient(135deg,var(--t-gold),color-mix(in srgb,var(--t-gold) 70%,#000));color:var(--t-grund);
-  border-color:transparent;box-shadow:none;font-variant:small-caps;letter-spacing:.08em;font-weight:700}
+.dm-tisch button.b.p{background:var(--t-gold);color:var(--t-grund);border-color:transparent;box-shadow:none;font-weight:600}
 .dm-tisch button.b.danger{color:var(--t-rot);border-color:color-mix(in srgb,var(--t-rot) 40%,transparent)}
 .dm-tisch textarea,.dm-tisch input,.dm-tisch select{background:var(--t-feld);color:var(--t-text);
   border:1px solid var(--t-linie);font-family:inherit}
@@ -2569,7 +2566,7 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm-tisch ::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--t-gold) 55%,transparent);border-radius:8px}
 .dm-tisch ::-webkit-scrollbar-button{display:none;height:0;width:0}.dm-tisch .dm-seat.me{border-color:var(--t-gold);box-shadow:0 0 0 1px var(--t-gold) inset}
 .dm-hhead{display:flex;gap:8px;align-items:flex-start}.dm-hhead>div{flex:1;min-width:0}.dm-hhead small{display:block}
-.dm-tisch .dm-hero b{font-variant:small-caps;letter-spacing:.05em;font-size:16px;color:var(--t-gold)}.dm-tisch .dm-hero i{color:var(--t-mut)}
+.dm-tisch .dm-hero b{font:var(--t-head);color:var(--t-text)}.dm-tisch .dm-hero i{color:var(--t-mut)}
 .dm-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:8px}
 .dm-stats span,.dm-stats .dm-erkb{display:flex;flex-direction:column;align-items:center;padding:3px 0;border-radius:7px;background:color-mix(in srgb,var(--t-text,var(--fg)) 7%,transparent)}
 /* a tap explains a value, life, level or worn thing (dungeonfenster.js dmErk*) */
@@ -2761,14 +2758,13 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm-rueck{border:1px solid var(--t-gold,var(--acc));border-radius:10px;padding:10px 12px;margin-bottom:10px;display:flex;flex-direction:column;gap:6px}.dm-rueck h5{margin:0}.dm-rueck p{margin:0;font-style:italic}.dm-rueck .b{align-self:flex-start}
 .dm-tisch .dm-bar{background:color-mix(in srgb,var(--t-text) 14%,transparent)}.dm-tisch .dm-bar em{background:#c85a50}.dm-tisch .dm-bar.ep em{background:var(--t-gold)}
 .dm-tisch .dm-feed{gap:12px;max-height:64vh}
-.dm-tisch .dm-dm{background:linear-gradient(180deg,var(--t-pergament),color-mix(in srgb,var(--t-pergament) 86%,#a07a3c));color:var(--t-tinte);
-  border:0;border-radius:6px;padding:16px 22px;box-shadow:0 6px 22px var(--t-schatten);font-size:17px;line-height:1.6}
-.dm-tisch .dm-dm .dm-n{color:color-mix(in srgb,var(--t-tinte) 60%,var(--t-pergament));letter-spacing:.2em;text-transform:uppercase;font-size:11px;font-weight:500}
-.dm-tisch .dm-dm>p:first-of-type::first-letter{float:left;font-size:3.2em;line-height:.9;padding:4px 8px 0 0;color:#8c2a1c}
-.dm-tisch .dm-npc{border-left-color:color-mix(in srgb,var(--t-tinte) 40%,transparent)}.dm-tisch .dm-npc em{font-variant:small-caps}
+.dm-tisch .dm-dm{background:none;color:var(--t-text);border:0;border-radius:0;padding:2px 0;box-shadow:none}
+.dm-tisch .dm-dm .dm-n{color:var(--t-mut);font:var(--t-cap);letter-spacing:.04em;text-transform:uppercase}
+.dm-tisch .dm-dm :is(p,.dm-npc p){font-family:var(--serif);font-size:17px;line-height:1.6;max-width:68ch}
+.dm-tisch .dm-npc{border-left-color:var(--t-linie)}.dm-tisch .dm-npc em{font-style:normal;font-weight:600;color:var(--t-mut)}
 .dm-tisch .dm-act{display:flex;gap:10px;align-items:flex-start;padding:0}
-.dm-bub{background:var(--t-karte,var(--card));border:1px solid var(--t-linie,var(--line));border-radius:12px;padding:7px 12px;max-width:80%}
-.dm-bub b{display:block;font-variant:small-caps;letter-spacing:.1em;font-size:12px;color:var(--t-gold,var(--acct))}.dm-bub p{margin:2px 0 0}
+.dm-bub{border-left:2px solid var(--t-gold,var(--acc));padding:2px 0 2px 12px;max-width:80%}
+.dm-bub b{display:block;font:var(--t-cap);letter-spacing:.04em;text-transform:uppercase;color:var(--t-mut,var(--mut))}.dm-bub p{margin:2px 0 0}
 .dm-tisch .dm-wurf{align-self:center;border:1px solid var(--t-linie);border-radius:99px;padding:4px 14px;background:color-mix(in srgb,var(--t-karte) 70%,transparent)}
 .dm-tisch .dm-wurf.ok b{color:var(--t-ok)}.dm-tisch .dm-wurf.bad b{color:var(--t-bad)}
 /* a check as a card: what it is for large, who rolls above, the sum below, the result on the right (Dominik 2026-10-24) */
@@ -2795,13 +2791,13 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm-mfeld{display:grid;grid-template-columns:minmax(90px,auto) repeat(var(--n,8),1fr);gap:4px;font-size:12px;margin:8px 0;overflow-x:auto}
 .dm-mfeld b{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dm-mfeld span{text-align:center;border-radius:6px;padding:3px 4px;background:var(--line)}.dm-mfeld span.ok{color:var(--okt)}.dm-mfeld span.warn{color:var(--warnt)}
 @media (max-width:520px){.dm-laut{width:80px}.dm-mfeld{grid-template-columns:70px repeat(var(--n,8),minmax(38px,1fr))}}
-.dm-tisch .dm-akt{background:transparent;border:1px solid var(--t-gold);color:var(--t-gold);font-variant:small-caps;letter-spacing:.1em}
+.dm-tisch .dm-akt{background:transparent;border:1px solid var(--t-linie);color:var(--t-gold)}
 .dm-tisch .dm-ooc{border-color:var(--t-linie)}
 .dm-tisch .dm-story .dm-inp{padding-top:10px;border-top:1px solid var(--t-linie)}
 .dm-wait{display:block;margin-top:6px;color:var(--t-mut,var(--mut))}.dm-wait b{color:var(--t-gold,var(--acct))}
 .dm-tisch .dm-side{border-left:1px solid var(--t-linie);padding-left:14px}
 .dm-tisch .dm-item{background:color-mix(in srgb,var(--t-karte) 85%,transparent);border-top-color:var(--t-linie);border-right-color:var(--t-linie);border-bottom-color:var(--t-linie)}.dm-tisch .dm-item.dm-s0{border-left-color:var(--t-linie)}.dm-tisch .dm-tx,.dm-tisch .dm-txform{border-color:var(--t-linie)}
-.dm-tisch .dm-pl{border-color:var(--t-linie);background:color-mix(in srgb,var(--t-karte) 70%,transparent)}.dm-tisch .dm-pl.voll.dm-s0{border-left-color:var(--t-gold)}.dm-tisch .dm-pl small,.dm-tisch .dm-pl i{color:var(--t-mut)}.dm-fen-kopf h3{color:var(--t-gold,inherit)}
+.dm-tisch .dm-pl{border-color:var(--t-linie);background:color-mix(in srgb,var(--t-karte) 70%,transparent)}.dm-tisch .dm-pl.voll.dm-s0{border-left-color:var(--t-gold)}.dm-tisch .dm-pl small,.dm-tisch .dm-pl i{color:var(--t-mut)}.dm-fen-kopf h3{color:var(--t-text,inherit)}.dm-tisch input[type=range]{accent-color:var(--t-gold)}
 .dm-tisch .pill{background:color-mix(in srgb,var(--t-text) 10%,transparent);color:var(--t-text)}
 .dm-tisch details.dm-plan{border-color:var(--t-linie)}.dm-tisch .dm-plan summary{color:var(--t-gold)}
 .dm-gtop{display:flex;align-items:center;justify-content:space-between;gap:10px}.dm-gtop h5{margin:0}
@@ -2811,18 +2807,22 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm-hpunkte button{width:8px;height:8px;flex:none;padding:0;border-radius:50%;border:0;background:var(--t-linie,var(--line));cursor:pointer}.dm-hpunkte button.on{background:var(--t-gold,var(--acc))}
 .dm-head .dm-ton{margin:0;padding:3px 8px;flex:0 1 auto;min-width:0;flex-wrap:nowrap}.dm-head .dm-tontxt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}.dm-head .dm-tonsp{display:none}.dm-head .dm-laut{width:70px}
 .dm-tisch .dm-seat.dm-ichz{display:flex;align-items:center;gap:8px;padding:8px 12px}.dm-ichz>div{flex:1;min-width:0}.dm-ichz .dm-state{flex:none;margin:0}
-.dm-hell .dm-dm{border:1px solid var(--t-linie)}
 /* the page around the table in the same look: rounds, campaigns, the new round, the heroes and a guest's invitation */
-.dm-tisch h3.sec,.dm-tisch .dm-step{font-variant:small-caps;letter-spacing:.08em;color:var(--t-gold);font-weight:600;margin:18px 0 8px;border:0;padding:0;display:flex;align-items:center;gap:10px}
-.dm-tisch h3.sec::after,.dm-tisch .dm-step::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--t-linie),transparent)}
+.dm-tisch h3.sec,.dm-tisch .dm-step{font:var(--t-head);color:var(--t-text);margin:var(--s6) 0 var(--s2);border:0;padding:0;display:flex;align-items:center;gap:10px}
 .dm-step{font-size:15px}.dm-step span{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;border:1px solid var(--t-gold);font-size:13px;font-variant:normal}
-.dm-tisch label,.dm-tisch .lbl{color:var(--t-mut);font-variant:small-caps;letter-spacing:.06em}.dm-tisch .dm-check{font-variant:normal;letter-spacing:0;color:var(--t-text)}
-.dm-tisch .ic-list{gap:8px;background:none;border:0}.dm-tisch .ic-row{background:var(--t-karte);border:1px solid var(--t-linie);border-radius:12px;color:var(--t-text);gap:10px}
-.dm-tisch .ic-t{color:var(--t-gold);font-variant:small-caps;letter-spacing:.05em;font-size:16px}.dm-tisch .ic-meta{color:var(--t-mut)}
+.dm-tisch label,.dm-tisch .lbl{color:var(--t-mut)}.dm-tisch .dm-check{font-variant:normal;letter-spacing:0;color:var(--t-text)}
+/* the lists of the game (your rounds, stories, kept heroes, hero books) in the list pattern ld- (Redesign Stufe 7): one group
+   with hairlines, the name never wraps letter by letter; where the row gets narrow its buttons go to their own line under
+   the name instead of squeezing it (the phone showed „Deine Runden“ as a column of single letters, plan 0-befund.png) */
+.dm-rl{container:dmrl/inline-size;background:var(--t-karte,var(--card));border:1px solid var(--t-linie,var(--line));border-radius:var(--r-box);padding:var(--s1)}
+.dm-rl .ld-row{flex-wrap:wrap;row-gap:var(--s2);padding:var(--s2)}.dm-rl .ld-row::after{border-color:var(--t-linie,var(--line))}
+.dm-rl .ld-ico{font-size:17px;background:color-mix(in srgb,var(--t-text,var(--fg)) 7%,transparent)}.dm-rl .ld-mid b{color:var(--t-text,var(--fg))}
+.dm-rl .ld-mid small{color:var(--t-mut,var(--mut))}.dm-rl .ld-right{max-width:none;flex-wrap:nowrap}.dm-rl .ld-right .b{white-space:nowrap}
+@container dmrl (max-width:560px){.dm-rl .ld-right{flex:1 0 100%;justify-content:flex-start;flex-wrap:wrap}}
 .dm-tisch .ic-empty,.dm-tisch .ic-note,.dm-tisch .ic-danger,.dm-tisch .dm-k{background:var(--t-karte);border-color:var(--t-linie);color:var(--t-text)}
 .dm-tisch .ic-note span,.dm-tisch .ic-danger span{color:var(--t-mut)}
 .dm-tisch details.adv{border-color:var(--t-linie)}.dm-tisch details.adv summary{color:var(--t-gold)}.dm-tisch .fh{color:var(--t-mut)}
-.dm-tisch .lseg{background:none;border:1px solid var(--t-linie)}.dm-tisch .lseg button{color:var(--t-text);font-family:inherit}.dm-tisch .lseg button.on{background:var(--t-gold);color:var(--t-grund)}
+.dm-tisch .lseg{background:color-mix(in srgb,var(--t-text) 7%,transparent);border:0}.dm-tisch .lseg button{color:var(--t-mut);font-family:inherit}.dm-tisch .lseg button.on{background:var(--t-karte);color:var(--t-text);box-shadow:0 0 0 1px var(--t-linie)}
 .dm-tisch .dm-vslot{border-color:var(--t-linie)}.dm-tisch .dm-vchip{background:var(--t-feld);color:var(--t-text);border-color:var(--t-linie)}.dm-tisch .dm-vchip.on{border-color:var(--t-gold);box-shadow:0 0 0 2px color-mix(in srgb,var(--t-gold) 35%,transparent)}.dm-tisch .dm-vsum{color:var(--t-mut)}
 .dm-top{margin-bottom:4px}.dm-top h3{margin:0}.dm-modus{flex:none}.dm-ic{font-size:24px;line-height:1;flex:none}
 .dm-form{max-width:900px}
@@ -2836,12 +2836,12 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm-gneu{border-style:dashed}.dm-gzeigen{grid-column:1/-1;justify-self:start}
 .dm-card{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid var(--t-linie,var(--line));
   background:var(--t-karte,var(--card));color:var(--t-text,var(--fg));font:inherit;cursor:pointer;min-width:0}
-.dm-card b{font-variant:small-caps;letter-spacing:.03em;color:var(--t-gold,var(--acct));font-size:15px;overflow-wrap:normal;hyphens:auto}
+.dm-card b{color:var(--t-text,var(--fg));font-weight:600;font-size:14px;overflow-wrap:normal;hyphens:auto}
 .dm-kdet{margin-top:10px;padding:12px 14px;border:1px solid var(--t-linie,var(--line));border-radius:12px}.dm-kdet h5{margin:10px 0 4px}
 .dm-chip{display:inline-block;border:1px solid var(--t-linie,var(--line));border-radius:16px;padding:2px 10px;margin:2px 4px 2px 0;font-size:13px}
 /* painted pictures of peoples, classes and powers, a calm colour of their own until painted (Dominik 2026-10-24 „bilder keine icons“) */
-.dm-pic{display:block;position:relative;overflow:hidden;background:#efe3c4 linear-gradient(160deg,#f6ecd2,#e4d3a8);color:#7a6234}
-.dm-pz{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:600 28px/1 Georgia,serif;opacity:.75}
+.dm-pic{display:block;position:relative;overflow:hidden;background:color-mix(in srgb,var(--t-gold,var(--acc)) 12%,var(--t-karte,var(--card)));color:var(--t-gold,var(--acc))}
+.dm-pz{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:600 26px/1 var(--font-display);opacity:.75}
 .dm-pz small{font:500 12px system-ui,sans-serif;opacity:.8}
 .dm-pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 .dm-pcard{position:relative;padding:0!important;overflow:hidden;gap:0}.dm-pcard .dm-pic{width:100%;aspect-ratio:4/3}
@@ -2854,7 +2854,7 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm-pchip.kraft{color:var(--t-gold,var(--acct));border-color:color-mix(in srgb,var(--t-gold,var(--acct)) 45%,transparent)}
 .dm-wcard{position:relative;padding:0!important;overflow:hidden;gap:0}.dm-wcard .dm-wpic{width:100%;aspect-ratio:16/9}.dm-wcard b{padding:7px 10px 0}.dm-wcard small{padding:0 10px 8px}
 .dm-kdet{display:grid;grid-template-columns:minmax(0,200px) minmax(0,1fr);gap:16px}.dm-kdet>.dm-pic.gross{aspect-ratio:3/4;border-radius:10px}
-.dm-kdet-n{font-size:22px;font-variant:small-caps;letter-spacing:.03em;color:var(--t-gold,var(--acct))}.dm-kdet-t{min-width:0}.dm-kdet-t>small{display:block}.dm-kdet-t p{margin:6px 0}
+.dm-kdet-n{font:var(--t-title);color:var(--t-text,var(--fg))}.dm-kdet-t{min-width:0}.dm-kdet-t>small{display:block}.dm-kdet-t p{margin:6px 0}
 .dm-kts{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px}
 .dm-kt{position:relative;display:flex;flex-direction:column;align-items:stretch;text-align:left;padding:0;font:inherit;border-radius:10px;overflow:hidden;border:1px solid var(--t-linie,var(--line));border-top:3px solid var(--dmk);background:var(--t-karte,var(--card));color:inherit;cursor:pointer}
 .dm-kt .dm-pic{aspect-ratio:16/10}.dm-kt b{font-size:13.5px;padding:6px 8px 0;color:var(--t-gold,var(--acct))}.dm-kt small{font-size:12px;color:var(--t-mut,var(--mut));padding:2px 8px 7px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -2877,7 +2877,7 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm-hcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}.dm-tisch .dm-hcard{margin:0;display:flex;flex-direction:column;align-items:stretch;text-align:left;gap:4px}
 .dm-hcard .dm-stats{grid-template-columns:repeat(6,1fr)}.dm-hcard .dm-hostb{margin-top:auto;padding-top:6px;justify-content:flex-start}
 .dm-hdet{margin-top:6px}.dm-hdet>summary{cursor:pointer;font-weight:600;padding:4px 0}.dm-hdet .dm-n{margin:8px 0 4px}.dm-hdet .dm-item{margin:2px 0 6px}
-.dm-invite.dm-tisch{display:flex;flex-direction:column;gap:6px}.dm-invite .dm-gtop{justify-content:flex-end}.dm-invite h2{color:var(--t-gold);font-variant:small-caps;letter-spacing:.06em;margin:0}
+.dm-invite.dm-tisch{display:flex;flex-direction:column;gap:6px}.dm-invite .dm-gtop{justify-content:flex-end}.dm-invite h2{font:var(--t-title);color:var(--t-text);margin:0}
 .dm.dm-tisch.dm-voll{position:fixed;inset:0;z-index:200;margin:0;border-radius:0;overflow:hidden;display:flex;flex-direction:column;padding:12px max(14px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left))}
 .dm-voll .dm-grid{flex:1;min-height:0;align-items:stretch}.dm-voll .dm-col{min-height:0}.dm-voll .dm-group,.dm-voll .dm-side{overflow:auto;overscroll-behavior:contain}.dm-voll .dm-story{display:flex;flex-direction:column}.dm-voll .dm-feed{flex:1;max-height:none}
 /* the table on the phone (Punkte 1, 2, 4 and 5 of the table review of 2026-10-24): the head in one row with „⋯“, one short
@@ -2897,7 +2897,7 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm-mek-schnell,.dm-mek-tasche{display:none}
 .dm-mekt{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--t-linie,var(--line));cursor:pointer}.dm-mekt .dm-ding{width:32px;height:32px;flex:none}
 @media (max-width:760px){.dm-tisch .dm-head{flex-wrap:wrap;gap:6px;padding-bottom:8px}.dm-tisch .dm-head>.dm-htitle{flex:1 1 0;min-width:0}
-  .dm-tisch .dm-head h3{font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dm-tisch .dm-head h3{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dm-tisch .dm-top>.dm-htitle{flex:1 1 100%}
   .dm-tisch .dm-head .dm-hmehr,.dm-tisch .dm-head>.dm-htitle>.dm-scene,.dm-head .dm-lt{display:none}
   .dm-kopfk,.dm-head.auf>.dm-kopfpult{display:inline-flex}
   .dm-head:has(>.dm-kopfk):not(.auf)>:is(.dm-kopfm,.dm-ton,.dm-modus,.dm-full){display:none}

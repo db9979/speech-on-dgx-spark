@@ -322,14 +322,85 @@ class Klar6(unittest.TestCase):
         self.assertIn("background:var(--fill)", "".join(rules(css, ".wkic")))
 
 
+class Klar7(unittest.TestCase):
+    """Redesign Stufe 7 (Dungeon-Master, Tafel redesign/a-rechner-dungeon.png „eigener Tisch-Ton“): the table keeps the
+    panel's frame and system font with one warm tone of its own from tokens.css, light and dark; serif only for the
+    narration, no parchment, no small caps, no gradient on the table; the game's lists in the list pattern ld- (the
+    phone never squeezes a name into a column of letters); line symbols of icons.js on the buttons, tabs and bars of
+    the table, emoji only in what the game and the players write."""
+    PARTS = ("bg", "card", "line", "fg", "mut", "acc", "field", "ok", "bad")
+    # the table's chrome: head, overview head, the phone's bar, the side's tabs and buttons, the hero sheet's tabs
+    CHROME = (("dungeon.js", "const dmModus=", "\n"), ("dungeon.js", "const dmTop=", "\n"), ("dungeon.js", "const dmVollKnopf=", "\n"),
+              ("dungeon.js", "const DMH=", "\n"), ("dungeon.js", "const teile=[['karte'", "if(!teile.length)"),
+              ("dungeon.js", "const tb=[['aus'", "\n"), ("dungeon.js", "dmMorph(w,`<div class=\"dm-head", "${v.ich?dmHilfe()"),
+              ("dungeon.js", "const weiter=leitet?", "const schalt="), ("dungeonfenster.js", "<div class=\"dm-fknoepfe\">", "${dmMekTasche(h)}"),
+              ("dungeonfenster.js", "const dmXKnopf=", "function dmGrenzen"))
+
+    def test_the_table_tone_is_tokens(self):
+        names = token_names()
+        for part in self.PARTS:
+            self.assertIn(f"--tisch-{part}-h", names, part)                    # light
+            self.assertIn(f"--tisch-{part}-d", names, part)                    # dark
+        css = read("app.css")
+        dark, light = "".join(rules(css, ".dm.dm-tisch")), "".join(rules(css, ".dm.dm-tisch.dm-hell"))
+        for body, end in ((dark, "-d"), (light, "-h")):
+            self.assertEqual(hex_colours("a{" + body + "}"), 0)
+            for t in ("grund", "karte", "text", "mut", "linie", "feld"):
+                self.assertRegex(body, rf"--t-{t}:var\(--tisch-[a-z]+{end}\)", t)
+        self.assertIn("font-family:var(--font)", dark)
+        self.assertIn("--t-gold:var(--w-gold)", dark)                          # the world colours only the accent
+
+    def test_serif_only_for_the_narration_and_no_old_ornaments(self):
+        css = re.sub(r"/\*.*?\*/", "", read("app.css"), flags=re.S)
+        serif = {s.strip() for s, b in re.findall(r"([^{}]+)\{([^{}]*)\}", css) if "var(--serif)" in b}
+        self.assertTrue(serif)
+        for sel in serif:
+            self.assertRegex(sel, r"\.dm-(dm|bisher)\b", sel)
+        self.assertNotIn("small-caps", css)
+        for sel, body in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
+            if ".dm-tisch" in sel:
+                self.assertNotIn("gradient", body, sel)
+        self.assertEqual(rules(css, ".dm-tisch .dm-dm>p:first-of-type::first-letter"), [])   # no initial
+        self.assertNotIn("Georgia", "".join(rules(css, ".dm-pz")))
+
+    def test_lists_are_list_and_detail(self):
+        css = read("app.css")
+        for name in ("dungeon.js", "dungeonbuch.js"):
+            self.assertNotRegex(read(os.path.join("js", name)), r"\bic-(row|list|rmid|t|meta)\b", name)
+        js = read(os.path.join("js", "dungeon.js"))
+        rounds = js[js.index("function dmRounds("):js.index("const DMWEG=")]
+        for part in ('<div class="ld-list dm-rl">', '<div class="ld-row">', '<div class="ld-mid"><b>', '<div class="ld-right">'):
+            self.assertIn(part, rounds)
+        self.assertIn("white-space:nowrap", "".join(rules(css, ".ld-mid b")))   # a name is cut, never broken letter by letter
+        self.assertIn("container:dmrl/inline-size", "".join(rules(css, ".dm-rl")))
+        self.assertRegex(css, r"@container dmrl \(max-width:\d+px\)\{\.dm-rl \.ld-right\{flex:1 0 100%")   # buttons under the name
+
+    def test_line_symbols_on_the_table(self):
+        known = icon_names()
+        for name, start, end in self.CHROME:
+            src = read(os.path.join("js", name))
+            i = src.index(start)
+            part = src[i:src.index(end, i + len(start))]
+            self.assertEqual(EMOJI.findall(part), [], f"{name}: {start}")
+            for old in "☾⛶✖⋯←▶":
+                self.assertNotIn(old, part, f"{name}: {start}")
+        js = read(os.path.join("js", "dungeon.js"))
+        bar = js[js.index("const DMH="):js.index("\n", js.index("const DMH="))]
+        for n in re.findall(r"\['[a-z]+','([a-z_]+)'", bar):
+            self.assertIn(n, known, n)
+        self.assertIn("${ic(x[1])}", js)
+        css = read("app.css")
+        self.assertIn("height:var(--h-item)", css[css.index(".dm-unten button{"):css.index("}", css.index(".dm-unten button{"))])   # the bar stands still
+
+
 class Emoji(Ratchet, unittest.TestCase):
     """Emoji as symbols in the user interface (Klar 3): only what people write (chat text, reactions, folder and list
     symbols) and the game stay; the rest of the old list shrinks (setting names with thumbs in index.html, guides.js
     texts, the Dungeon). i18n.js follows the German texts."""
     WHAT = "an emoji as a symbol in the user interface; take a line symbol of icons.js (ic('name'))"
-    ALT = {"app.css": 1, "index.html": 9, "js/dungeon-ton.js": 9, "js/dungeon.js": 256, "js/dungeonbuch.js": 1,
-           "js/dungeonfenster.js": 44, "js/dungeonkarte.js": 23, "js/dungeonwarten.js": 11, "js/fernzugang.js": 2,
-           "js/guides.js": 242, "js/i18n.js": 18}
+    ALT = {"app.css": 1, "index.html": 9, "js/dungeon-ton.js": 9, "js/dungeon.js": 225, "js/dungeonbuch.js": 1,
+           "js/dungeonfenster.js": 38, "js/dungeonkarte.js": 21, "js/dungeonwarten.js": 9, "js/fernzugang.js": 2,
+           "js/guides.js": 240, "js/i18n.js": 18}
 
     def hits(self):
         return {n.replace(os.sep, "/"): c for n in ui_files() if (c := len(EMOJI.findall(read(n))))}
@@ -346,7 +417,7 @@ class OwnSymbols(Ratchet, unittest.TestCase):
 
 class HexColours(Ratchet, unittest.TestCase):
     WHAT = "a fixed hex colour outside tokens.css; take a token (var(--…)) or add one to tokens.css"
-    ALT = {"app.css": 388, "appview.css": 24, "live.css": 18, "spontanhilfe.css": 19, "weiche.css": 2}
+    ALT = {"app.css": 363, "appview.css": 24, "live.css": 18, "spontanhilfe.css": 19, "weiche.css": 2}
 
     def hits(self):
         return {n: c for n in sheets() if n != TOKENS and (c := hex_colours(read(n)))}
@@ -354,7 +425,7 @@ class HexColours(Ratchet, unittest.TestCase):
 
 class FontSizes(Ratchet, unittest.TestCase):
     WHAT = "a font size outside the scale (SCALE); take a size of the scale"
-    ALT = {"app.css": 355, "appview.css": 17, "live.css": 21, "spontanhilfe.css": 5, "technik.css": 2, "weiche.css": 14}
+    ALT = {"app.css": 348, "appview.css": 17, "live.css": 21, "spontanhilfe.css": 5, "technik.css": 2, "weiche.css": 14}
 
     def hits(self):
         return {n: c for n in sheets() if n != TOKENS and (c := off_scale(read(n)))}
