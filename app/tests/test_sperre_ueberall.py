@@ -401,6 +401,7 @@ ADMIN_ON_OK = {
     "weiche_unklar.py:on": "admin only: whether the Weiche page says collecting is on; each turn asks features.allowed (wanted)",
     "werkstattseite.py:_nacht_an": "admin only: the Werkstatt's fixed night rule, no profile part",
     "werkstattseite.py:_an": "admin only: the Werkstatt's sandbox on the model computer, admin-only endpoints, no profile part",
+    "entwickelnseite.py:_an": "admin only: Entwickeln auf dem Pi is spark-dev's terminal and the update of the whole Spark, admin-only endpoints, no profile part",
     "angriffsprobe.py:an": "admin only: the Angriffsprobe asks the model from the Werkstatt page, admin-only endpoints, no profile part",
     "modellseite.py:_an": "Spark-wide model switch, admin-only endpoints (Zustand → Modelle), no profile involved",
     "modellseite.py:_eigen_an": "Spark-wide own models, admin-only endpoints (Zustand → Modelle), no profile involved",

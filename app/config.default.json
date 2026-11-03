@@ -392,6 +392,7 @@
     "modelle_wechseln": false,
     "werkstatt": false,
     "werkstatt_nacht": false,
+    "entwickeln": false,
     "fernzugang": false,
     "fernzugang_hilfe": false,
     "fernzugang_leerlauf_min": 15,
@@ -556,6 +557,9 @@
     "deny": {},
     "face": "robot",
     "face_life": true
+  },
+  "entwickeln": {
+    "schluessel_sha256": ""
   },
   "logs": {
     "max_mb": 500,

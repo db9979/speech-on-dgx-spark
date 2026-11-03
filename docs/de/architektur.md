@@ -118,6 +118,7 @@ flowchart TB
 | `speech-spark-messen-wunsch` | – | Ein Modell messen (Zustand → Modelle „Messen“), nur auf Knopfdruck |
 | `speech-spark-gehaeuse` | – | Gehäuse des Panel-Rechners einrichten (Pironman 5: Lüfter, OLED), nur mit `--gehaeuse` |
 | `speech-spark-werkstatt` | – (die Sandbox fragt nur 127.0.0.1:31006) | Ein Auftrag der Werkstatt (Funktionen → Werkstatt): Testlauf, Code-Messung, Diagnose, Reparatur in der Sandbox `speech-spark-werkstatt-lauf`, nur mit `--werkstatt`; dazu `speech-spark-werkstatt-fw` (die Sandbox erreicht auf 127.0.0.1 nur das LLM-Tor) |
+| `speech-spark-lokaltest-umgebung` | – (holt nur Pakete mit Prüfsumme) | Entwickeln auf dem Pi (`--entwickeln`, Panel-Rechner): Testumgebung des Schnelltests, nachts nur bei neuer Paketliste; der Schnelltest selbst läuft als `speech-spark-lokaltest` ohne Netz; dazu `speech-spark-entwickeln-fw` (der Nutzer `spark-dev` erreicht nur das LLM-Tor 31006) |
 | `speech-spark-schirm` | – (fragt nur 127.0.0.1:31080) | Steuerzentrale als Text auf dem Bildschirm des Panel-Rechners (tty1), nur mit dem Schalter an |
 
 **Modell-Rechner (V01.0.606, Plan „Spark teilen“ Stufe B1):** Das Panel spricht Spracherkennung, Sprachausgabe, Bilder und das LLM-Tor nur über eine Adresse an: `common.model_url(art, pfad)` mit der Einstellung `models.host`. Standard ist `127.0.0.1`, dann läuft alles wie bisher auf einem Spark über `http://127.0.0.1:<port>`. Steht dort ein anderer Rechner (Name oder IP, nie ein Pfad oder `http://`), geht jede Anfrage über `https` und der API-Schlüssel ist Pflicht (`admin.validate`); eine kaputte Angabe bleibt auf dem Spark. Das LLM-Tor auf dem Modell-Rechner bekommt den Schlüssel wie das eigene (`llm.own_tor`), und der Wächter (`netguard.model_addresses`) behandelt die Ports 30000–31099 des Modell-Rechners wie die eigenen: keine MCP-, Kalender- oder Home-Assistant-Adresse kann auf sie zeigen. Eingestellt wird der Modell-Rechner erst mit der geteilten Installation (Stufe B6); das Zertifikat pinnt die Kopplung (B3). Selbsttest `test_modell_rechner`.
@@ -473,6 +474,8 @@ Live-Übersicht, Logs, Wächter, Sicherung, Update, Hilfe und die Admin-Seiten.
 | `app/panel/berater_katalog.py` | Was der Einstellungs-Assistent vorschlagen darf |
 | `app/panel/dateien.py` | Datei-Register: jede Datei des Panels einmal, mit Inhalt, Sicherung und Kopie |
 | `app/panel/dienstwacht.py` | Dienst-Wächter: meldet, wenn ein Dienst fehlt |
+| `app/entwickeln.py` | Entwickeln auf dem Pi: OpenCode für spark-dev, lokale Änderungen prüfen, aufsetzen, im Sandkasten testen, einspielen |
+| `app/panel/entwickelnseite.py` | Entwickeln auf dem Pi im Panel: Stand der lokalen Änderungen, Einspielen wie ein Update, Hinweis bei Ablehnung |
 | `app/panel/faelle.py` | Fälle: jedes Problem wird festgehalten |
 | `app/panel/ghtoken.py` | Lese-Token für GitHub |
 | `app/panel/health.py` | Stabilität: Wächter für hängende Dienste, Echtprüfung |
@@ -757,6 +760,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/dungeon-runden` | KI-Dungeon-Master: eine Datei je Runde mit Plätzen (Hashes der Links), Helden, Aktionen und Erzählung | nur Hashes | nein |
 | `state/dungeon-runden.json` | KI-Dungeon-Master: gemeinsame Werte aller Runden (Bilder des Tages, Daumen je Welt) | – | ja |
 | `state/dungeon-ton` | KI-Dungeon-Master: die vorgelesenen letzten Züge einer Runde (WAV und MP3, höchstens 3 je Runde) | – | nein |
+| `state/entwickeln.json` | Entwickeln auf dem Pi: Anzahl der lokalen Änderungen, kurze Commits, letztes Ergebnis (festes Wort, Namen roter Tests); schreibt root, nie ein Commit-Text | – | nein |
 | `state/esp32.json` | Lautsprecher und Firmware | teils versiegelt | ja |
 | `state/export-tmp` | Alle meine Daten herunterladen: die ZIP bis zum Abholen (einmal, höchstens 10 Minuten) | – | nein |
 | `state/faelle.json` | Fälle | – | ja |
@@ -843,6 +847,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/tipps.json` | Gezeigte Tipps | – | nein |
 | `state/traces.jsonl` | Logs → Anfragen, 48 h | – | nein |
 | `state/umzug-hinweis.json` | Hinweis nach dem Umzug (nur die Zeit) | – | nein |
+| `state/update-lokal` | Wunsch des Panels für lokale Änderungen (einspielen, zurück, verwerfen; ein festes Wort) | – | nein |
 | `state/update-night.json` | Nacht-Update | – | nein |
 | `state/update-progress.json` | Update-Fortschritt | – | nein |
 | `state/update-target` | Gewünschter Update-Stand | – | nein |
@@ -3585,7 +3590,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 105). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 107). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -3596,7 +3601,7 @@ flowchart TD
 #### Zahlen (aus dem Code)
 
 - **47** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
-- **105** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
+- **107** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
 - **8 MB** größte Datei beim Wiederherstellen ([Schritt 9](#kn-state-s9))
 - **12** Zeichen hat das Umzugs-Passwort mindestens ([Schritt 8](#kn-state-s8))
 
@@ -3846,7 +3851,7 @@ Selbsttests: `test_panel`, `test_hardening`, `test_offsite`
 
 ### Werkstatt
 
-Die Werkstatt lässt einen Admin auf dem Modell-Rechner den vollen Testlauf laufen und mit OpenCode den Code messen, ein Problem untersuchen oder eine Reparatur vorschlagen. Alles läuft in einer abgeschotteten Kopie des Codes; heraus kommen nur Zahlen, eine Antwort und ein Patch zum Ansehen. Eingespielt wird nie etwas.
+Die Werkstatt lässt einen Admin auf dem Modell-Rechner den vollen Testlauf laufen und mit OpenCode den Code messen, ein Problem untersuchen oder eine Reparatur vorschlagen. Alles läuft in einer abgeschotteten Kopie des Codes; heraus kommen nur Zahlen, eine Antwort und ein Patch zum Ansehen. Eingespielt wird nie etwas. Daneben Entwickeln auf dem Pi: OpenCode im Terminal des Panel-Rechners (Nutzer spark-dev, eigener Klon); seine lokalen Commits werden geprüft, im Sandkasten schnell getestet und wie ein Update eingespielt, nie als root ausgeführt.
 
 **Warum:** Code, den ein Modell schreibt oder startet, darf nie an die Daten, die Schlüssel oder ins Internet kommen und nie selbst etwas ändern. Deshalb entscheidet das Panel mit festen Regeln, und die Sandbox kann nichts außer ihrer eigenen Kopie.
 
@@ -3889,7 +3894,7 @@ flowchart TD
 7. <a id="kn-werkstatt-s7"></a>**OpenCode mit festen Rechten**: werkstatt.rechte: Diagnose liest nur, Reparatur darf Dateien der Kopie ändern und die Selbsttests starten; kein Web, kein git push, jeder andere Befehl abgelehnt. Das Sprachmodell fragt OpenCode über das LLM-Tor ganz hinten in der Reihe, damit Gespräche vorgehen.
 8. <a id="kn-werkstatt-s8"></a>**Selbsttests**: werkstatt.testlauf lässt die Selbsttests der Kopie laufen wie GitHub; wer beim zweiten Versuch grün wird, zählt als wackelig. Übersprungene Tests (kein Browser in der Kopie) zählen als nicht gelaufen, nie als grün. werkstatt.namen_testen lässt bei „Rote Tests noch mal“ jeden genannten Test einzeln in einem eigenen Prozess laufen: jetzt grün, weiter rot oder nicht gelaufen.
 9. <a id="kn-werkstatt-s9"></a>**Ergebnis als Daten**: werkstatt.pruefe_ergebnis nimmt nur bekannte Felder, Zahlen im Rahmen und Wörter aus festen Listen; ein Patch über 200000 Zeichen wird gekürzt. Die Seite zeigt alles nur als Text, dazu mit festen Sätzen, was das Ergebnis heißt und was als Nächstes geht.
-10. <a id="kn-werkstatt-s10"></a>**Der Admin entscheidet**: Den Patch gibt der Admin einem Claude-Thread oder einem Menschen; die Werkstatt spielt nie etwas ein und pusht nie.
+10. <a id="kn-werkstatt-s10"></a>**Der Admin entscheidet**: Den Patch gibt der Admin einem Claude-Thread oder einem Menschen; die Werkstatt spielt nie etwas ein und pusht nie. Anders bei Entwickeln auf dem Pi (OpenCode im Terminal des Panel-Rechners, Nutzer spark-dev): „sudo speech-spark lokal einspielen“ nimmt dessen Commits (entwickeln.vorbereiten), lässt nur Dateien zu, die der Dienstnutzer ausführt (entwickeln.pfade_pruefen), testet sie im Sandkasten ohne Netz (entwickeln.sandbox) und spielt sie wie ein Update ein, nie als root ausgeführt. Ein Update setzt sie mit entwickeln.aufsetzen auf die neue Version; passt das nicht, bleibt die laufende Version.
 
 **Beispiele:** Testlauf in der Nacht: Grün, rot und wackelig stehen unter Zustand → Werkstatt. · Rote Tests noch mal: Jeder rote Test einzeln: jetzt grün oder weiter rot. · Reparatur vorschlagen: Ein Patch mit Testergebnis zum Ansehen. · Kein eigenes Sprachmodell: Abgelehnt, bevor etwas startet.
 
@@ -3908,11 +3913,13 @@ flowchart TD
 - Auf dem Modell-Rechner einmal sudo ./install.sh --werkstatt (OpenCode mit fester Version und Prüfsumme).
 - Funktionen → Werkstatt: an und aus, „Jede Nacht testen“ mit der Startstunde.
 - Zustand → Werkstatt: die vier Aufträge starten, Ergebnisse ansehen, rote Tests noch mal, für Claude kopieren, löschen.
+- Entwickeln auf dem Pi: auf dem Panel-Rechner einmal sudo ./install.sh --entwickeln, dann Funktionen → Entwickeln auf dem Pi an; einspielen mit sudo speech-spark lokal einspielen (zurueck, verwerfen, status).
 
 #### Was du siehst
 
 - Zustand → Werkstatt: links der Verlauf, rechts ein Ergebnis mit großen Zahlen, was es heißt (etwa „Was heißt rot?“), den roten Tests nach Bereich, Antwort oder Patch und den nächsten Schritten.
 - Zustand → Live, Monitoring und die Steuerzentrale: Teil „Werkstatt“ mit Art und Status, nie Inhalte.
+- Zustand → Live: Teil „Entwickeln“ mit „lokale Änderungen: N“ und dem letzten festen Grund einer Ablehnung; sudo speech-spark lokal status zeigt dasselbe im Terminal.
 
 #### Im Code
 
@@ -3928,8 +3935,12 @@ flowchart TD
 - `app/werkstatt.py` `namen_testen`: rote Tests einzeln noch mal ([Schritt 8](#kn-werkstatt-s8))
 - `app/panel/werkstattseite.py` `nachtest_namen`: Namen nur aus dem Ergebnis ([Schritt 1](#kn-werkstatt-s1))
 - `app/werkstatt.py` `pruefe_ergebnis`: Ergebnis als Daten ([Schritt 9](#kn-werkstatt-s9))
+- `app/entwickeln.py` `vorbereiten`: lokale Änderungen holen, prüfen, testen ([Schritt 10](#kn-werkstatt-s10))
+- `app/entwickeln.py` `pfade_pruefen`: nur Dateien, die der Dienstnutzer ausführt ([Schritt 10](#kn-werkstatt-s10))
+- `app/entwickeln.py` `sandbox`: Grenzen des Schnelltests ([Schritt 10](#kn-werkstatt-s10))
+- `app/entwickeln.py` `aufsetzen`: lokale Commits auf die neue Version ([Schritt 10](#kn-werkstatt-s10))
 
-Selbsttests: `test_werkstatt`
+Selbsttests: `test_werkstatt`, `test_entwickeln`
 
 ### Post und Kontakte
 

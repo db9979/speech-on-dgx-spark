@@ -369,6 +369,8 @@ DATEIEN = [
     state("bench-history.json", "Messungen", "Benchmarks", lokal="Messungen dieses Geräts"),
     state("update-progress.json", "Update-Fortschritt", "Update progress", lokal="Update-Fortschritt"),
     state("update-target", "Gewünschter Update-Stand", "Requested update target", lokal="Update-Auftrag", sonst=True),
+    state("update-lokal", "Wunsch des Panels für lokale Änderungen (einspielen, zurück, verwerfen; ein festes Wort)", "The panel's wish for local changes (install, back, drop; one fixed word)", lokal="wird vom Update sofort gelesen und gelöscht", sonst=True),
+    state("entwickeln.json", "Entwickeln auf dem Pi: Anzahl der lokalen Änderungen, kurze Commits, letztes Ergebnis (festes Wort, Namen roter Tests); schreibt root, nie ein Commit-Text", "Develop on the Pi: number of local changes, short commits, last result (fixed word, names of red tests); written by root, never a commit text", lokal="gilt nur für dieses Gerät, das nächste Einspielen oder sudo speech-spark lokal status schreibt sie neu"),
     state("update-night.json", "Nacht-Update", "Night update", lokal="Nacht-Update", sonst=True),
     state("migrated-chunk10", "Einmalige Umstellung erledigt", "One-time migration done", lokal="Marke einer einmaligen Umstellung", sonst=True),
     # described here, lying elsewhere: the firmware folder next to state/ (technik.SYSTEM lists the path)

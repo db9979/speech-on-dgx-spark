@@ -4923,6 +4923,34 @@
 "titel": "Fernzugang: freigegebene Ordner unter Windows",
 "text": "Auf einem gekoppelten Windows-PC als Administrator: spark-anker dateien ordner \"C:\\Users\\<Name>\\Documents\". „C:\\Windows“ oder „C:\\“ lehnt er ab, ohne etwas zu ändern. Im Panel einschalten (Code/Passkey), „Dateien in den Ordnern“ öffnet direkt im freigegebenen Ordner; Dateien laden geht. spark-anker dateien aus: der Ordner ist für spark wieder zu.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P728",
+"v": 1299,
+"titel": "Entwickeln auf dem Pi: einrichten und OpenCode starten",
+"text": "Auf dem Panel-Rechner (mit Internet) sudo ./install.sh --entwickeln: am Ende keine Warnung zu spark-dev, OpenCode oder Firewall. id spark-dev zeigt keine Gruppe sudo, adm oder speech. Funktionen → Entwickeln auf dem Pi an. Deinen SSH-Schlüssel nach /home/spark-dev/.ssh/authorized_keys legen (Anleitung unter Funktionen → Anleitungen, „Entwickeln auf dem Pi“), dann ssh spark-dev@<Panel-Rechner> und spark-opencode: OpenCode startet im Klon ~/speech-on-dgx-spark auf dem Zweig lokal und antwortet auf „Was macht app/panel/live.py?“. Mit geteiltem Spark (Modell-Rechner anderswo) klappt das genauso über das LLM-Tor des Modell-Rechners (Zertifikat ~/.config/spark/tor.pem; prüfen, dass kein TLS-Fehler kommt).",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P729",
+"v": 1299,
+"titel": "Entwickeln auf dem Pi: nur das LLM-Tor, ganz hinten",
+"text": "Als spark-dev: curl -sS https://github.com bricht ab (Firewall), curl http://127.0.0.1:31080 auch (Panel nicht erreichbar), ls /var/lib/speech-spark verweigert. Während OpenCode eine längere Antwort schreibt, im Assistenten eine Frage stellen: die Antwort kommt ohne spürbare Wartezeit (Entwickler-Anfragen stehen ganz hinten). Funktionen → Entwickeln auf dem Pi aus: OpenCode bekommt sofort „401“; wieder an: es geht wieder. sudo speech-spark entwickeln schluessel neu, danach antwortet OpenCode weiter (neuer Schlüssel in der Datei).",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P730",
+"v": 1299,
+"titel": "Entwickeln auf dem Pi: lokal einspielen, zurück, verwerfen",
+"text": "Als spark-dev im Klon eine kleine Änderung an einem Text in app/panel (etwa ein Satz in docs/de) committen. Als Admin sudo speech-spark lokal einspielen: das Update-Fenster im Panel zeigt „Lokale Änderungen werden geprüft“, nach dem Schnelltest (wenige Minuten, ohne Internet) „Fertig“; Einstellungen → Update zeigt die Version mit „+lokal“. sudo speech-spark lokal status: „lokale aenderungen 1“. Zustand → Live, Kasten Entwickeln: „lokale Änderungen: 1“. Eine Änderung an install.sh committen und einspielen: abgelehnt mit „Datei, die nur über GitHub kommen darf“, die laufende Version bleibt. sudo speech-spark lokal zurueck und danach verwerfen: die Version zeigt wieder kein „+lokal“, der Commit ist im Klon noch da.",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P731",
+"v": 1299,
+"titel": "Entwickeln auf dem Pi: Update mit lokalen Änderungen",
+"text": "Mit eingespielten lokalen Änderungen auf ein neueres grünes main aktualisieren (Einstellungen → Update): das Fenster zeigt „Lokale Änderungen kommen auf die neue Version“, danach läuft die neue Version mit „+lokal“ und die Änderung ist noch da. Eine lokale Änderung, die mit main kollidiert: das Update endet mit „passen nicht auf die neue Version (Konflikt)“, die bisherige Version läuft weiter, oben im Panel steht der Hinweis; Zustand → Logs (System) zeigt „entwickeln: aufsetzen abgelehnt konflikt“ ohne Commit-Text.",
+"thread": "Opencode mit internem LLM auf dem Pi"
 }
 ]
 }

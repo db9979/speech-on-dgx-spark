@@ -81,6 +81,7 @@ The installer keeps its own git checkout in `/opt/speech-spark/src`, so it no lo
 | `--password XYZ` | set the panel password (otherwise one is generated) |
 | `--no-download` | download models on first start instead |
 | `--no-smoke` | skip the round-trip test at the end |
+| `--entwickeln` | panel computer: developing on the Pi with OpenCode (user `spark-dev`, its own clone, see below) |
 | `--uninstall` | same as `./uninstall.sh` (see below) |
 
 Running the script again updates the code and adds what is missing to the Python environments; packages already installed stay as they are. The existing configuration is kept and new settings are added.
@@ -125,6 +126,36 @@ For the screen in Remote access the computer with the panel builds guacd itself 
 ```bash
 sudo ./install.sh --fernbild
 ```
+
+## Developing on the Pi with OpenCode
+
+A guide for beginners: you change the Spark yourself on the panel computer (such as the Raspberry Pi), with OpenCode in the terminal and the Spark's own language model, without a cloud and without GitHub. OpenCode works as its own user `spark-dev` in its own clone; the running Spark, its data and keys stay out of reach. Nothing is installed until an admin wants it, after a quick test and like an update.
+
+1. **Install once** (on the panel computer, needs the internet): `sudo ./install.sh --entwickeln`. This adds the user `spark-dev` (no password, no sudo) with the clone `/home/spark-dev/speech-on-dgx-spark` and the branch `lokal`, downloads OpenCode (version and SHA-512 fixed in `app/werkstatt.py`, the same file as the workshop's) into `/opt/speech-spark/opencode`, writes OpenCode's settings (only the own LLM-Tor, its own key, the rules from `CLAUDE.md` and the guidelines), blocks every network except the LLM-Tor by firewall and builds the quick test's test environment.
+2. **Switch on**: as admin *Features → Develop on the Pi* on. Only then does the key of `spark-dev` work at the LLM-Tor.
+3. **In over SSH**: add your public SSH key for `spark-dev`, then sign in from your computer and start OpenCode.
+4. **Work without the internet**: OpenCode asks only the language model in the home network. Testing works in the clone as on GitHub, only without browser tests. Every finished change is a commit on `lokal`.
+5. **Install**: an admin starts `sudo speech-spark lokal einspielen`. The Spark checks the commits, tests them in a sandbox and installs them like an update; the version then shows "+lokal".
+
+```bash
+# 1. once, on the panel computer
+sudo ./install.sh --entwickeln
+# 3. your SSH key for spark-dev
+sudo install -d -m 700 -o spark-dev -g spark-dev /home/spark-dev/.ssh
+sudo install -m 600 -o spark-dev -g spark-dev ~/.ssh/id_ed25519.pub /home/spark-dev/.ssh/authorized_keys
+# 4. from your computer
+ssh spark-dev@<panel-computer>
+spark-opencode                      # OpenCode in the clone, branch lokal
+cd app && python3 selftest.py discover -s tests -p 'test_live.py'
+git commit -am "My change"
+# 5. as admin on the panel computer
+sudo speech-spark lokal einspielen  # check, quick test, install like an update
+sudo speech-spark lokal status      # local changes, last result
+sudo speech-spark lokal zurueck     # one step back (same version)
+sudo speech-spark lokal verwerfen   # version without local changes (they stay in the clone)
+```
+
+Only what lies under `app/panel/`, `app/tests/` and `docs/` is installed, plus both READMEs and `CHANGELOG.md`, as plain files: what root runs (`install.sh`, `update.sh`, `app/*.py` outside `app/panel`, the package lists) only comes through GitHub. A normal update never loses local work: it puts the local commits on the new version and tests them; if something does not fit or the quick test is red, the running version stays, and the panel shows the reason on top. Make the key of `spark-dev` new or revoke it: `sudo speech-spark entwickeln schluessel neu|weg`; after a change of the model computer `sudo speech-spark entwickeln einrichten`. If the test environment is missing, once with the internet `sudo speech-spark lokal testumgebung` (afterwards it renews itself every night, only when the package list changes). Logs: `sudo speech-spark logs entwickeln`.
 
 ## Uninstalling
 

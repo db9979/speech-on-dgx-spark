@@ -11,6 +11,7 @@
 #   sudo ./install.sh --bild 4b-q8|4b-q4|9b-q8|9b-q4|none   # Bilder malen with FLUX.2 [klein] (optional, default none)
 #   sudo ./install.sh --musik 2b|2b-klein|xl|none   # Musik machen with ACE-Step 1.5 (optional, default none)
 #   sudo ./install.sh --llm [--kolibri]  # vLLM for the own language model (venv-llm; Kolibri-1 needs its own venv)
+#   sudo ./install.sh --entwickeln     # panel computer: OpenCode for the user spark-dev (Entwickeln auf dem Pi)
 #   sudo ./install.sh --local          # APIs only on 127.0.0.1 (default --network: reachable in the LAN)
 #   sudo ./install.sh --yes            # ask nothing; what is not given stays as before (new: complete)
 #   sudo ./install.sh --small          # 0.6B models (least unified memory)
@@ -49,7 +50,7 @@ DEFAULT_REMOTE=https://github.com/db9979/speech-on-dgx-spark
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 SMALL=0; WITH_ASR=1; WITH_TTS=1; PASSWORD=""; DOWNLOAD=1; SMOKE=1; FROM_UPDATE=0; TTS_BACKEND=""; ASR_BACKEND=""
-TEILEN_PICK=0; MODELLE_PICK=""; PANEL_PICK=0; GEHAEUSE_PICK=""; WERKSTATT_PICK=0; FERNBILD_PICK=0
+TEILEN_PICK=0; MODELLE_PICK=""; PANEL_PICK=0; GEHAEUSE_PICK=""; WERKSTATT_PICK=0; FERNBILD_PICK=0; ENTWICKELN_PICK=0
 MODE=""; ASR_PICK=""; TTS_PICK=""; VD_PICK=""; BILD_PICK=""; MUSIK_PICK=""; NET_PICK=""; YES=0; CHOOSE_MODELS=0; LLM_PICK=0; KOLIBRI_PICK=0
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -75,6 +76,7 @@ while [ $# -gt 0 ]; do
     --kolibri) LLM_PICK=1; KOLIBRI_PICK=1 ;;
     --werkstatt) WERKSTATT_PICK=1 ;;      # the Werkstatt: OpenCode and its sandbox (app/werkstatt.py)
     --fernbild) FERNBILD_PICK=1 ;;        # Fernzugang → Bildschirm: guacd on 127.0.0.1 (app/panel/fernbild.py)
+    --entwickeln) ENTWICKELN_PICK=1 ;;    # Entwickeln auf dem Pi: OpenCode for spark-dev, local changes (app/entwickeln.py)
     --local) NET_PICK=local ;;
     --network) NET_PICK=network ;;
     --yes|-y) YES=1 ;;
@@ -734,15 +736,15 @@ fi
 # npm registry, version and SHA-512 pinned in werkstatt.py (OPENCODE_VERSION, OPENCODE_SHA512), checked before it is
 # unpacked, never updated by itself. Its sandbox runs as the user spark-werkstatt with only its own folder writable.
 # Without the option nothing of this is fetched or made; once there, an update keeps it.
-WITH_WERKSTATT=$WERKSTATT_PICK; [ -x "$PREFIX/werkstatt/bin/opencode" ] && WITH_WERKSTATT=1
-[ "$PANEL_ONLY" = 1 ] && WITH_WERKSTATT=0
-if [ "$WITH_WERKSTATT" = 1 ]; then
+# opencode_holen <folder>: the one download of OpenCode (the Werkstatt's and the one for Entwickeln auf dem Pi)
+opencode_holen() {
+  local dir=$1 otmp got
   OC_VERSION=$(sed -n 's/^OPENCODE_VERSION = "\([0-9.]*\)".*$/\1/p' "$INSTALL_FROM/app/werkstatt.py")
-  case "$(uname -m)" in aarch64|arm64) OC_ARCH=arm64 ;; x86_64) OC_ARCH=x64 ;; *) die "Werkstatt: no OpenCode for $(uname -m)" ;; esac
+  case "$(uname -m)" in aarch64|arm64) OC_ARCH=arm64 ;; x86_64) OC_ARCH=x64 ;; *) die "no OpenCode for $(uname -m)" ;; esac
   OC_SHA=$(sed -n "s/^    \"$OC_ARCH\": \"\([A-Za-z0-9+\/=]*\)\",\$/\1/p" "$INSTALL_FROM/app/werkstatt.py")
   [ -n "$OC_VERSION" ] && [ -n "$OC_SHA" ] || die "app/werkstatt.py names no OpenCode version or hash"
-  if [ -L "$PREFIX/werkstatt" ] || [ "$(cat "$PREFIX/werkstatt/.version" 2>/dev/null)" != "$OC_VERSION $OC_ARCH" ] || [ ! -x "$PREFIX/werkstatt/bin/opencode" ]; then
-    say "Werkstatt: OpenCode $OC_VERSION ($OC_ARCH, checked with SHA-512)"
+  if [ -L "$dir" ] || [ "$(cat "$dir/.version" 2>/dev/null)" != "$OC_VERSION $OC_ARCH" ] || [ ! -x "$dir/bin/opencode" ]; then
+    say "OpenCode $OC_VERSION ($OC_ARCH, checked with SHA-512) into $dir"
     otmp=$(mktemp -d)
     curl -fsSL --proto '=https' --max-filesize 300000000 -o "$otmp/oc.tgz" \
       "https://registry.npmjs.org/opencode-linux-$OC_ARCH/-/opencode-linux-$OC_ARCH-$OC_VERSION.tgz" \
@@ -750,11 +752,16 @@ if [ "$WITH_WERKSTATT" = 1 ]; then
     got=$(python3 -c 'import base64, hashlib, sys; print(base64.b64encode(hashlib.sha512(open(sys.argv[1], "rb").read()).digest()).decode())' "$otmp/oc.tgz")
     [ "$got" = "$OC_SHA" ] || { rm -rf -- "$otmp"; die "OpenCode download does not match its SHA-512 (app/werkstatt.py)"; }
     tar -xzf "$otmp/oc.tgz" -C "$otmp" --no-same-owner package/bin/opencode || { rm -rf -- "$otmp"; die "OpenCode package has no binary"; }
-    rm -rf -- "$PREFIX/werkstatt.new"
-    install -d -m 755 "$PREFIX/werkstatt.new/bin" && install -m 755 "$otmp/package/bin/opencode" "$PREFIX/werkstatt.new/bin/opencode"
-    printf '%s\n' "$OC_VERSION $OC_ARCH" >"$PREFIX/werkstatt.new/.version"
-    rm -rf -- "$otmp" "$PREFIX/werkstatt" && mv -- "$PREFIX/werkstatt.new" "$PREFIX/werkstatt"
+    rm -rf -- "$dir.new"
+    install -d -m 755 "$dir.new/bin" && install -m 755 "$otmp/package/bin/opencode" "$dir.new/bin/opencode"
+    printf '%s\n' "$OC_VERSION $OC_ARCH" >"$dir.new/.version"
+    rm -rf -- "$otmp" "$dir" && mv -- "$dir.new" "$dir"
   fi
+}
+WITH_WERKSTATT=$WERKSTATT_PICK; [ -x "$PREFIX/werkstatt/bin/opencode" ] && WITH_WERKSTATT=1
+[ "$PANEL_ONLY" = 1 ] && WITH_WERKSTATT=0
+if [ "$WITH_WERKSTATT" = 1 ]; then
+  opencode_holen "$PREFIX/werkstatt"
   # the sandbox's user (no login, no other groups) and its folder: root owns the base, the user only arbeit/
   id -u spark-werkstatt >/dev/null 2>&1 || useradd --system --user-group --home-dir /var/lib/spark-werkstatt/arbeit \
     --no-create-home --shell /usr/sbin/nologin spark-werkstatt || die "could not add the user spark-werkstatt"
@@ -762,6 +769,15 @@ if [ "$WITH_WERKSTATT" = 1 ]; then
   install -d -m 755 -o root -g root /var/lib/spark-werkstatt
   install -d -m 700 -o spark-werkstatt -g spark-werkstatt /var/lib/spark-werkstatt/arbeit
 fi
+
+# ---------------------------------------------------------------- Entwickeln auf dem Pi (optional, plan opencode-pi)
+# OpenCode for a person on the panel computer (user spark-dev, app/entwickeln.py): the same pinned binary as the
+# Werkstatt's, in its own folder. Only with the web panel here; once set up, an update keeps it. The rest (user, clone,
+# rules, firewall, limits) comes after the switch to the new version, below.
+[ "$ENTWICKELN_PICK" = 1 ] && [ "$MODE" != full ] && die "--entwickeln goes on the panel computer (the one with the web panel)"
+WITH_ENTWICKELN=$ENTWICKELN_PICK; id -u spark-dev >/dev/null 2>&1 && [ -x "$PREFIX/opencode/bin/opencode" ] && WITH_ENTWICKELN=1
+[ "$MODE" = full ] || WITH_ENTWICKELN=0
+[ "$WITH_ENTWICKELN" = 1 ] && opencode_holen "$PREFIX/opencode"
 
 # ---------------------------------------------------------------- Musik machen (optional, plan musik)
 # The engine is acestep.cpp's ace-server, built here once per pinned commit (musikmodell.ACECPP_COMMIT) for the GB10
@@ -966,6 +982,17 @@ if git -C "$PREFIX/src" rev-parse HEAD >/dev/null 2>&1; then
     --arg r "$(git -C "$PREFIX/src" remote get-url origin)" --arg e "vllm $VLLM_VERSION, vllm-omni $VLLM_OMNI_VERSION" \
     --arg v "$(head -1 "$PREFIX/app/VERSION" 2>/dev/null)" \
     '{commit: $c, short: $s, date: $d, subject: $m, remote: $r, branch: "main", engine: $e, version: $v}' >"$PREFIX/VERSION.json"
+  # Entwickeln auf dem Pi (update.sh --lokal, an update with local changes): the main commit stays "commit", so the
+  # update check, the way back and the model computer compare main; the local head and count come next to it, and
+  # the version shows "+lokal" (local commits are never upstream code)
+  lb=${SPEECH_SPARK_LOKAL_BASIS:-}; ln=${SPEECH_SPARK_LOKAL_ANZAHL:-0}
+  if [[ "$lb" =~ ^[0-9a-f]{40}$ ]] && [[ "$ln" =~ ^[0-9]{1,3}$ ]] && [ "$ln" -gt 0 ] && git -C "$PREFIX/src" cat-file -e "$lb^{commit}" 2>/dev/null; then
+    b() { git -C "$PREFIX/src" log -1 --format="$1" "$lb"; }
+    jq --arg c "$lb" --arg s "$(b %h)+lokal" --arg d "$(b %cI)" --arg m "$(b %s) + $ln lokale Änderung(en)" \
+      --arg k "$(g %H)" --argjson n "$ln" \
+      '.commit=$c | .short=$s | .date=$d | .subject=$m | .version=(.version + "+lokal") | .lokal=$n | .lokal_kopf=$k' \
+      "$PREFIX/VERSION.json" >"$PREFIX/VERSION.json.new" && mv -f "$PREFIX/VERSION.json.new" "$PREFIX/VERSION.json"
+  fi
 else
   echo '{"commit": null, "subject": "installed without git"}' >"$PREFIX/VERSION.json"
 fi
@@ -974,6 +1001,11 @@ chmod 644 "$PREFIX/VERSION.json"
 # measuring script: sudo speech-spark-bench
 cat >/usr/local/bin/speech-spark-bench <<EOF
 #!/bin/sh
+# bench.py imports panel modules; with local changes installed (Entwickeln auf dem Pi, VERSION.json "lokal_kopf") the
+# panel's code is not only GitHub's, and root never runs it: the measurement then runs as the service user
+if [ "\$(id -u)" = 0 ] && grep -q '"lokal_kopf"' $PREFIX/VERSION.json 2>/dev/null; then
+  exec runuser -u $SVC_USER -- $PREFIX/venv-panel/bin/python $PREFIX/app/bench.py "\$@"
+fi
 exec $PREFIX/venv-panel/bin/python $PREFIX/app/bench.py "\$@"
 EOF
 chmod 755 /usr/local/bin/speech-spark-bench
@@ -1718,6 +1750,140 @@ RebootWatchdogSec=2min"
 elif [ -e "$WD_CONF" ]; then
   rm -f "$WD_CONF"
   systemctl daemon-reexec || true
+fi
+
+# ---------------------------------------------------------------- Entwickeln auf dem Pi: user, clone, settings, limits
+# A person's account for the terminal (SSH): no password (an SSH key only), no sudo, not in the service user's group,
+# its own home; its own clone of the installed version (never $PREFIX/src, never touched again once there) with the
+# branch "lokal"; OpenCode's settings and rules (app/entwickeln.py einrichten: the repository's own CLAUDE.md and
+# guidelines, one source); its own key for the LLM-Tor; network only to the LLM-Tor (nftables, like the Werkstatt);
+# memory, CPU and disk below the panel's (its user slice); the quick test's environment, refreshed every night.
+if [ "$WITH_ENTWICKELN" = 1 ]; then
+  say "Entwickeln auf dem Pi: user spark-dev, its clone, OpenCode's settings"
+  if ! id -u spark-dev >/dev/null 2>&1; then
+    useradd --create-home --user-group --shell /bin/bash spark-dev || die "could not add the user spark-dev"
+    passwd -l spark-dev >/dev/null 2>&1 || true
+  fi
+  DEV_HOME=$(getent passwd spark-dev | cut -d: -f6)
+  [ "$DEV_HOME" = /home/spark-dev ] && [ ! -L "$DEV_HOME" ] || die "the home of spark-dev is not /home/spark-dev"
+  for grp in sudo adm wheel root "$SVC_USER"; do
+    id -nG spark-dev | tr ' ' '\n' | grep -qxF "$grp" && die "spark-dev must not be in the group $grp"
+  done
+  chmod 700 "$DEV_HOME"
+  dev() { runuser -u spark-dev -- env -i PATH=/usr/bin:/bin LANG=C.UTF-8 HOME="$DEV_HOME" "$@"; }
+  dev git config --global --replace-all safe.directory "$PREFIX/src"
+  dev git config --global user.name >/dev/null || dev git config --global user.name "spark-dev"
+  dev git config --global user.email >/dev/null || dev git config --global user.email "spark-dev@localhost"
+  DEV_KLON="$DEV_HOME/speech-on-dgx-spark"
+  if [ ! -e "$DEV_KLON" ]; then
+    dev git clone --quiet --no-checkout --origin spark "$PREFIX/src" "$DEV_KLON" || die "could not make the clone of spark-dev"
+    dev git -C "$DEV_KLON" remote add origin "$(git -C "$PREFIX/src" remote get-url origin)" || true
+  fi
+  # the remote "spark" is the installer's clone: the installed main and the installed local commits, offline
+  dev git -C "$DEV_KLON" config --replace-all remote.spark.fetch '+refs/remotes/origin/main:refs/remotes/spark/main'
+  dev git -C "$DEV_KLON" config --add remote.spark.fetch '+refs/spark/lokal:refs/remotes/spark/lokal'
+  dev git -C "$DEV_KLON" fetch --quiet spark 2>/dev/null || true
+  if ! dev git -C "$DEV_KLON" rev-parse --verify -q refs/heads/lokal >/dev/null; then
+    dev git -C "$DEV_KLON" switch --quiet -c lokal "$(jq -r '.commit' "$PREFIX/VERSION.json")" || warn "spark-dev's branch lokal not made"
+  fi
+  # its key for the LLM-Tor (only the SHA-256 goes into the config) once, OpenCode's settings on every run
+  [ -s "$DEV_HOME/.config/spark/tor-key" ] || bash "$PREFIX/app/speech-spark.sh" entwickeln schluessel neu >/dev/null \
+    || warn "no key for the LLM-Tor yet: sudo speech-spark entwickeln schluessel neu"
+  bash "$PREFIX/app/speech-spark.sh" entwickeln einrichten >/dev/null || warn "OpenCode's settings not written: sudo speech-spark entwickeln einrichten"
+  cat >/usr/local/bin/spark-opencode <<EOF
+#!/bin/sh
+# Entwickeln auf dem Pi: OpenCode in ~/speech-on-dgx-spark with the Spark's settings (app/entwickeln.py opencode)
+[ "\$(id -un)" = spark-dev ] || { echo "only as spark-dev: ssh spark-dev@<panel computer>" >&2; exit 1; }
+exec /usr/bin/python3 -I $PREFIX/app/entwickeln.py opencode "\$@"
+EOF
+  chmod 755 /usr/local/bin/spark-opencode
+  # network: the LLM-Tor (this computer's loopback, or the model computer's door), DNS, and the free ports of its own
+  # tests on the loopback; never the panel, an engine or anything else (code check 19.10. C7, as the Werkstatt)
+  DEV_LLM=$(cfg_int .llm.port 31006)
+  DEV_HOST=$(cfg '.models.host // "127.0.0.1"')
+  DEV_V4=""; DEV_V6=""
+  case "$DEV_HOST" in 127.0.0.1|localhost|::1|"") ;; *)
+    for a in $(getent ahosts "$DEV_HOST" 2>/dev/null | awk '{print $1}' | sort -u); do
+      if [[ "$a" =~ ^[0-9.]{7,15}$ ]]; then DEV_V4="$DEV_V4${DEV_V4:+, }$a"; elif [[ "$a" =~ ^[0-9a-fA-F:]{2,39}$ ]]; then DEV_V6="$DEV_V6${DEV_V6:+, }$a"; fi
+    done ;;
+  esac
+  {
+    echo "table inet speech_spark_entwickeln"
+    echo "delete table inet speech_spark_entwickeln"
+    echo "table inet speech_spark_entwickeln {"
+    echo "  chain out {"
+    echo "    type filter hook output priority 0; policy accept;"
+    echo "    meta skuid \"spark-dev\" oifname \"lo\" tcp dport { $DEV_LLM, 53, 32768-65535 } accept"
+    echo "    meta skuid \"spark-dev\" udp dport 53 accept"
+    echo "    meta skuid \"spark-dev\" tcp dport 53 accept"
+    if [ -n "$DEV_V4" ]; then echo "    meta skuid \"spark-dev\" ip daddr { $DEV_V4 } tcp dport $DEV_LLM accept"; fi
+    if [ -n "$DEV_V6" ]; then echo "    meta skuid \"spark-dev\" ip6 daddr { $DEV_V6 } tcp dport $DEV_LLM accept"; fi
+    echo "    meta skuid \"spark-dev\" reject"
+    echo "  }"
+    echo "}"
+  } >"$(dirname "$ETC")/speech-spark-entwickeln.nft"
+  chmod 644 "$(dirname "$ETC")/speech-spark-entwickeln.nft"
+  cat >/etc/systemd/system/speech-spark-entwickeln-fw.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: firewall of spark-dev (only the LLM-Tor)
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/nft -f $(dirname "$ETC")/speech-spark-entwickeln.nft
+
+[Install]
+WantedBy=multi-user.target
+EOF
+  command -v nft >/dev/null || apt_wait install -y -q nftables || warn "nftables missing: the network of spark-dev is not limited"
+  # spark-dev's sessions get less than the panel: speech always goes first (guideline part 12)
+  DEV_UID=$(id -u spark-dev)
+  install -d -m 755 "/etc/systemd/system/user-$DEV_UID.slice.d"
+  cat >"/etc/systemd/system/user-$DEV_UID.slice.d/50-speech-spark.conf" <<EOF
+[Slice]
+MemoryHigh=30%
+MemoryMax=40%
+CPUQuota=200%
+CPUWeight=20
+IOWeight=20
+TasksMax=1024
+EOF
+  # the quick test's run folders (root's, one folder per run for spark-dev) and its environment, refreshed at night
+  install -d -m 755 -o root -g root /var/lib/speech-spark-lokaltest
+  cat >/etc/systemd/system/speech-spark-lokaltest-umgebung.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: the quick test's environment for local changes (only when the lock file changed)
+After=network-online.target
+
+[Service]
+LogNamespace=speech-spark
+Type=oneshot
+Nice=19
+IOSchedulingClass=idle
+MemoryMax=1G
+PrivateTmp=yes
+Environment=SPEECH_SPARK_PREFIX=$PREFIX SPEECH_SPARK_ETC=$ETC SPEECH_SPARK_VAR=$VAR
+ExecStart=/bin/bash $PREFIX/app/speech-spark.sh lokal testumgebung --nacht
+TimeoutStartSec=2h
+EOF
+  cat >/etc/systemd/system/speech-spark-lokaltest-umgebung.timer <<EOF
+[Unit]
+Description=Speech on DGX Spark: refresh the quick test's environment every night
+
+[Timer]
+OnCalendar=*-*-* 02:40
+RandomizedDelaySec=20min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+  systemctl daemon-reload
+  systemctl enable speech-spark-entwickeln-fw.service >/dev/null 2>&1 || true
+  systemctl restart speech-spark-entwickeln-fw.service 2>/dev/null || warn "the firewall of spark-dev did not load"
+  systemctl enable --now speech-spark-lokaltest-umgebung.timer >/dev/null 2>&1 || true
+  bash "$PREFIX/app/speech-spark.sh" lokal testumgebung --nacht >/dev/null 2>&1 \
+    || warn "the quick test's environment is not ready yet (sudo speech-spark lokal testumgebung)"
 fi
 
 # ---------------------------------------------------------------- clock (Zeitserver im Heimnetz, Ohne Internet)

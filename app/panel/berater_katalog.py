@@ -116,8 +116,8 @@ NEVER_KEYS = {("chat", k) for k in ("llm_url", "llm_key", "public", "mfa", "repo
                                     "mail_send_voice", "mcp_server_extern", "dev_updates", "telegram_api",
                                     "fernzugang", "fernzugang_hilfe", "spontanhilfe", "fernbild", "fernals",
                                     "fernbild_zwischenablage", "fernzugang_notizen",
-                                    "fernzugang_ordner", "fernzugang_gross", "fernweb", "fernweb_adresse", "fernzugang_alle")} \
-    | {("api", "key"), ("api", "tls_listen"), ("api", "tls_from"), ("panel", "port"), ("panel", "https_port"),
+                                    "fernzugang_ordner", "fernzugang_gross", "fernweb", "fernweb_adresse", "fernzugang_alle", "entwickeln")} \
+    | {("entwickeln", "schluessel_sha256"), ("api", "key"), ("api", "tls_listen"), ("api", "tls_from"), ("panel", "port"), ("panel", "https_port"),
        ("models", "host"), ("models", "cert")}
 
 ARTS = {"weiche", "test", "pflicht", "hinweis", "extra", "pron", "asr", "quality", "value", "switch", "choice", "profile", "umgebung", "issue"}

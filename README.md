@@ -32,6 +32,7 @@ At the end it prints the address, password and API key, then TTS speaks a senten
 | Show addresses and keys | `sudo speech-spark info` |
 | Own language model | `sudo ./install.sh --llm`, then `sudo speech-spark modelle llm uebernehmen` (back: `… zurueck`) |
 | Workshop (test run, code measurement, diagnosis, repair) | on the model computer `sudo ./install.sh --werkstatt`, then *Features → Workshop* |
+| Develop on the Pi (OpenCode with the own language model, install locally) | on the panel computer `sudo ./install.sh --entwickeln`, then *Features → Develop on the Pi*; guide in [Installation](docs/en/installation.md) |
 | Screen in remote access (guacd) | on the computer with the panel `sudo ./install.sh --fernbild`, then *Features → Remote access to servers → Screen* |
 | Move the panel to another computer | `sudo speech-spark umziehen --code`, see [Spark split](docs/en/spark-split.md) |
 | Uninstall | `sudo ./uninstall.sh` (config, models and voices stay; `--purge` removes everything) |
@@ -42,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.299** Develop on the Pi (package 1, switch off): OpenCode with the own language model in the panel computer's terminal as the user spark-dev in its own clone (install.sh --entwickeln), its own revocable key at the LLM-Tor, always last, network only to the LLM-Tor; local commits checked with sudo speech-spark lokal einspielen, quick-tested in a sandbox and installed like an update (+lokal, back, drop), never run as root; an update rebases local changes and never loses them
 - **V01.1.298** RED FIX: the anchor test of "files as another user" rewrote the read-only sudoers dummy, refused on GitHub (not root); now it replaces it (test checked without root file rights)
 - **V01.1.297** Check the log showed an admin profile only "Das gehört zum Notzugang (Panel-Passwort)": checking the chain and the NAS copy now works for every admin (read only), the guard also catches paths with a query
 - **V01.1.296** Remote access: files as another user (own switch, off): on the server `sudo spark-anker dateien als root[,anna] [--schreiben]` (sudoers only for its own sftp-server with -R, checked with visudo, off and Remove delete it), in the panel switched on per system with a code or passkey; "Files as root" through sudo -n, read only at first, writing with a fresh code per session; Windows: icacls only on named folders; macOS with the full disk access hint; the iPhone shows and switches it
@@ -51,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.292** Remote access: split view and overview (several sessions stage 2): from two tabs Single, Side by side, 2 × 2 (from three) and Overview; each terminal fits its pane, only the pane with the blue frame gets keys and assistant, a click or Ctrl+Shift+1…9 moves the focus, dragging a tab onto a pane swaps the system; Show beside it in the right click and Shift+Enter in the picker; the overview shows every session as a tile with the last lines of its screen (browser only), a click brings it up; below 1100 pixels Single only
 - **V01.1.291** Knowledge map faster with more room: 3000 pages, 25,000 connections and 15,000 points per profile; search with the map about five times as fast with 5000 documents, nightly runs in short slices; a deleted point does not come back with another form of address or spelling either
 - **V01.1.290** Redesign stage 4: People and devices, Open and Chats as list and detail (rows of one height, state as a dot with a word, filters as a segment, on a phone the detail as a page of its own)
-- **V01.1.289** Remote access: several sessions as tabs (stage 1): every shell a tab with icon, state and a dot for new output, + System with search (Ctrl+Shift+O), switching with Ctrl+Shift+1…9 and ←/→, assistant and history per tab, a right-click menu; up to 8 places (default 4), full means "n of n places taken" instead of closing silently; on other pages all sessions stay open, the red line leads back with To the terminal.
 
 
 

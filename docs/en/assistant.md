@@ -1856,6 +1856,8 @@ Every function of the Spark with its switch, what it builds on, where you set it
 
 - **Test every night** (Features → Access → "Test every night"; builds on "Workshop"): Once a night the workshop starts the test run by itself (all self-tests as on GitHub, without a language model).
 
+- **Develop on the Pi** (Features → Access → "Develop on the Pi"): You develop the Spark further right on the panel computer: in the terminal (over SSH) OpenCode works with the Spark's own language model, without a cloud.
+
 - **Remote access to servers** (Features → Access → "Remote access to servers"): The shell of a server elsewhere (a VPS, a NAS at friends', a Raspberry Pi) right in the browser, like Raspberry Pi Connect, only the relay is your own Pi.
 
 - **Note on a remote session** (Features → Access → "Note on a remote session"; builds on "Remote access to servers"): When an admin opens the shell of a server from the internet or from a place they never opened it from, all admins get a note on their phone with a fixed text: who, which server, home or internet, never an address.

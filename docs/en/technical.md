@@ -17,6 +17,7 @@
 | Command `speech-spark` | `/usr/local/bin` | |
 | Benchmark `speech-spark-bench` | `/usr/local/bin` | |
 | optional workshop `speech-spark-werkstatt` (on request only, sandbox as the user `spark-werkstatt`, `--werkstatt`) | OpenCode in `/opt/speech-spark/werkstatt`, work folder `/var/lib/spark-werkstatt/arbeit` | |
+| optional Develop on the Pi (panel computer, user `spark-dev`, `--entwickeln`) | OpenCode in `/opt/speech-spark/opencode`, clone `/home/spark-dev/speech-on-dgx-spark`, state `/opt/speech-spark/lokal.json`, test environment `/opt/speech-spark/venv-lokaltest`, test runs `/var/lib/speech-spark-lokaltest`, command `spark-opencode` | |
 | Configuration | `/etc/speech-spark/config.json`, install mode in `mode`, connection details in `connection.txt`, password in `panel.env` (a password changed in the panel is stored as a hash in `/var/lib/speech-spark/state/panel-password` and wins) | |
 | Models, cloned voices | `/var/lib/speech-spark/hf`, `/var/lib/speech-spark/voices` | |
 

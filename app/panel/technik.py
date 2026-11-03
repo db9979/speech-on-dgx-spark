@@ -372,6 +372,7 @@ MODULE = {
     "weiche_abstimmen": ("weiche", "Weiche abstimmen: Wortvorschläge des Sprachmodells, mit festen Regeln an den Alltagssätzen gemessen"),
     "weiche_unklar": ("weiche", "Unklare Fragen anonym: feste Schwärzung (wie Probleme melden), Leck-Prüfung, versiegelt, 7 Tage, nur Admin"),
     "werkstattseite": ("betrieb", "Zustand → Werkstatt: Aufträge anfragen, rote Tests noch mal, Ergebnisse mit nächsten Schritten, feste Nachtregel"),
+    "entwickelnseite": ("betrieb", "Entwickeln auf dem Pi im Panel: Stand der lokalen Änderungen, Einspielen wie ein Update, Hinweis bei Ablehnung"),
     "angriffsprobe": ("betrieb", "Angriffsprobe: wie oft das echte Sprachmodell Befehlen in fremdem Text folgen würde, nur Zahlen, kein Werkzeug läuft"),
     "modellseite": ("betrieb", "Zustand → Modelle: Katalog, Speicher-Budget, Messen, Wechseln und Zurückholen, eigene Modelle hinzufügen und löschen"),
     "technik": ("betrieb", "Diese Seite: Zustand → Technik und die Architektur-Doku"),
@@ -401,6 +402,7 @@ MODULE = {
     "tlstor": ("teilen", "TLS-Tor: Tür des Modell-Rechners für ein Panel auf einem anderen Rechner (TLS 1.3, nur vom Panel-Rechner)"),
     "teilen": ("teilen", "Spark teilen: Firewall-Regeln für die Tür des Modell-Rechners, Fingerabdruck des Zertifikats"),
     "werkstatt": ("betrieb", "Werkstatt: feste Regeln für Aufträge, Sandbox ohne Netz und Daten, OpenCode, Code-Messung mit 10 Reparaturen"),
+    "entwickeln": ("betrieb", "Entwickeln auf dem Pi: OpenCode für spark-dev, lokale Änderungen prüfen, aufsetzen, im Sandkasten testen, einspielen"),
     "tarswart": ("teilen", "Wärter: feste Handgriffe auf dem Modell-Rechner (Zustand, Einheiten starten, GPU) für ein Panel anderswo"),
     "rechner": ("teilen", "Werte eines Rechners: CPU (auch je Dienst), Speicher, Platte, Netz, Temperatur, Strom (für beide Rechner gleich)"),
     "rundlauf": ("betrieb", "Rundlauf-Wächter: alle paar Minuten ein Probelauf durch Sprechen, Hören, Sprachmodell; meldet über den Dienst-Wächter"),
@@ -526,11 +528,13 @@ KNOTEN = {
     "werkstatt": (24, 476, "Werkstatt", "Workshop", "werkstatt.py", "",
                   "Nur für Admins: Testlauf, Code-Messung, Diagnose und Reparatur in einer Sandbox auf dem DGX, ohne Daten und "
                   "Internet; heraus kommen Zahlen und ein Patch zum Ansehen, eingespielt wird nichts. Dazu die Angriffsprobe "
-                  "im Panel: nur Zahlen, kein Werkzeug läuft.",
+                  "im Panel: nur Zahlen, kein Werkzeug läuft. Dazu Entwickeln auf dem Pi: OpenCode im Terminal des "
+                  "Panel-Rechners (spark-dev), lokale Änderungen geprüft und im Sandkasten getestet, dann wie ein Update.",
                   "Admins only: test run, code measurement, diagnosis and repair in a sandbox on the DGX, without data and "
                   "internet; numbers and a patch to look at come out, nothing is installed. Plus the attack probe in the "
-                  "panel: numbers only, no tool runs.",
-                  ["werkstatt.py", "werkstattseite.py", "angriffsprobe.py"]),
+                  "panel: numbers only, no tool runs. And Develop on the Pi: OpenCode in the panel computer's terminal "
+                  "(spark-dev), local changes checked and tested in the sandbox, then installed like an update.",
+                  ["werkstatt.py", "werkstattseite.py", "angriffsprobe.py", "entwickeln.py", "entwickelnseite.py"]),
     "post": (534, 476, "Post und Kontakte", "Mail and contacts", "/caldav · /carddav", "post",
              "Eigene Seiten E-Mail, Kalender, Kontakte; Abruf beim Anbieter über den Wächter, Vorrat versiegelt, "
              "Antwort mit Stand, Kalender- und Kontakte-Apps durch eine eigene Tür.",

@@ -95,7 +95,7 @@ DESK_SKIP = {
     **dict.fromkeys(("follow", "selfecho", "anhalten", "satzende"), _D_VOICE),
     **dict.fromkeys(("toolthink", "routing", "direct", "hoeren", "sofort", "gedkurz", "einordnung", "helfer", "vorrang",
                      "berater", "geraeteupdate", "dienstwacht", "wachposten", "wartung", "notbetriebasr", "gehaeuse",
-                     "schirm", "modellwechsel", "werkstatt"), _D_SPARK),
+                     "schirm", "modellwechsel", "werkstatt", "entwickeln"), _D_SPARK),
     **dict.fromkeys(("history", "teilen", "bilder", "musik", "dungeon", "mystatus", "agent", "chats", "weather",
                      "feeds", "contacts", "transit", "speaker", "verbrauch", "nas"), _D_PANEL),
     **dict.fromkeys(("room", "esp32", "wyoming", "telefon", "telegram", "android", "pebble", "terminal", "mcpserver",
@@ -789,6 +789,9 @@ FEATURES = (
     # sandbox on the model computer (OpenCode, no data, no internet, no push); admins only, the patch goes to a person
     F("werkstatt", "Werkstatt", "Workshop", "sec", ("werkstatt",), guide="werkstatt"),
     F("werkstattnacht", "Jede Nacht testen", "Test every night", "sec", ("werkstatt_nacht",), parent="werkstatt", guide="werkstattnacht"),
+    # entwickeln.py + entwickelnseite.py (plan opencode-pi, package 1): OpenCode with the own language model in the
+    # terminal of the panel computer (user spark-dev, its own clone), local changes installed like an update (Weg B)
+    F("entwickeln", "Entwickeln auf dem Pi", "Develop on the Pi", "sec", ("entwickeln",), guide="entwickeln"),
     # fernzugang.py + anker/spark-anker.py (plan ssh-vermittlung, stage 1): the shell of a server elsewhere in the
     # browser; the server's anchor calls the panel, admins only, no tool for the model
     F("fernzugang", "Fernzugang zu Servern", "Remote access to servers", "sec", ("fernzugang",), guide="fernzugang"),
@@ -917,7 +920,7 @@ DUTY = None
 REVIEW = None
 
 # chat.* switches that are no function a profile uses (how the Spark itself works)
-SPARK_ONLY = {"wachposten", "public", "thinking", "prompt_cache", "answer_check", "answer_check_more", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "angriffsprobe", "weicheabstimmen", "fernzugang", "fernzugangmeldung", "fernzugangalle", "spontanhilfe", "fernzuganghilfe", "fernbild", "fernbildablage", "fernnotizen", "fernordner", "ferngross", "fernweb",
+SPARK_ONLY = {"wachposten", "public", "thinking", "prompt_cache", "answer_check", "answer_check_more", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "entwickeln", "angriffsprobe", "weicheabstimmen", "fernzugang", "fernzugangmeldung", "fernzugangalle", "spontanhilfe", "fernzuganghilfe", "fernbild", "fernbildablage", "fernnotizen", "fernordner", "ferngross", "fernweb",
               "helfer", "helferweiche", "helferdungeon", "helfermail", "helferangriff", "helferkurz"}
 # Everything starts off (Dominik 2026-10-08). The only values shipped on in config.default.json are protection and
 # stability rules and the basic functions the Spark had from the start, each with its reason here (Dominik 2026-10-12,

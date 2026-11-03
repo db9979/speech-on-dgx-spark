@@ -252,6 +252,7 @@ WITHOUT = {
     "wartungauto": "wartung.py: das Panel pausiert selbst, wenn ein Modell neu startet; kein Werkzeug",
     "weicheabstimmen": "weiche_abstimmen.py: nur der Admin auf Funktionen → Weiche; das Modell schlägt Wörter vor, feste Regeln messen, kein Werkzeug",
     "weicheunklar": "weiche_unklar.py: das Panel merkt unklare Fragen anonym für den Admin auf Funktionen → Weiche, kein Werkzeug",
+    "entwickeln": "entwickeln.py: OpenCode nur im Terminal von spark-dev, einspielen nur ein Admin (Kommandozeile oder Panel-Endpunkt); das Modell im Gespräch bekommt kein Werkzeug dafür",
     "werkstattnacht": "werkstattseite.py: feste Nachtregel im Panel (Testlauf, danach Code-Messung), kein Werkzeug",
     "angriffsprobe": "angriffsprobe.py: Knopf auf der Werkstatt-Seite, misst das Sprachmodell, kein Werkzeug",
     "werkstatt": "werkstattseite.py: Aufträge nur vom Admin auf der Seite oder nach der festen Nachtregel; der Agent bekommt kein Werkzeug, das Code laufen lässt",

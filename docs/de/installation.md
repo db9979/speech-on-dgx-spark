@@ -81,6 +81,7 @@ Der Installer legt dafür eine eigene Git-Kopie unter `/opt/speech-spark/src` an
 | `--password XYZ` | Panel-Passwort setzen (sonst wird eins erzeugt) |
 | `--no-download` | Modelle erst beim ersten Start laden |
 | `--no-smoke` | Rundlauf-Test am Ende überspringen |
+| `--entwickeln` | Panel-Rechner: Entwickeln auf dem Pi mit OpenCode (Nutzer `spark-dev`, eigener Klon, siehe unten) |
 | `--uninstall` | wie `./uninstall.sh` (siehe unten) |
 
 Ein erneuter Aufruf aktualisiert den Code und ergänzt in den Python-Umgebungen, was fehlt; schon installierte Pakete bleiben, wie sie sind. Die bestehende Konfiguration bleibt erhalten, neue Einstellungen werden ergänzt.
@@ -125,6 +126,36 @@ Für Fernzugang → Bildschirm baut der Rechner mit dem Panel guacd selbst aus d
 ```bash
 sudo ./install.sh --fernbild
 ```
+
+## Entwickeln auf dem Pi mit OpenCode
+
+Eine Anleitung für Einsteiger: Du änderst den Spark auf dem Panel-Rechner (etwa dem Raspberry Pi) selbst, mit OpenCode im Terminal und dem eigenen Sprachmodell des Sparks, ohne Cloud und ohne GitHub. OpenCode arbeitet als eigener Nutzer `spark-dev` in einem eigenen Klon; der laufende Spark, seine Daten und Schlüssel bleiben unerreichbar. Eingespielt wird erst, wenn ein Admin es will, nach einem Schnelltest und wie ein Update.
+
+1. **Einmal installieren** (auf dem Panel-Rechner, braucht Internet): `sudo ./install.sh --entwickeln`. Das legt den Nutzer `spark-dev` (ohne Passwort, ohne sudo) mit dem Klon `/home/spark-dev/speech-on-dgx-spark` und dem Zweig `lokal` an, lädt OpenCode (Version und SHA-512 fest in `app/werkstatt.py`, dieselbe Datei wie bei der Werkstatt) nach `/opt/speech-spark/opencode`, schreibt die Einstellungen von OpenCode (nur das eigene LLM-Tor, eigener Schlüssel, die Regeln aus `CLAUDE.md` und der Richtlinie), sperrt per Firewall jedes Netz außer dem LLM-Tor und baut die Testumgebung des Schnelltests.
+2. **Einschalten**: als Admin *Funktionen → Entwickeln auf dem Pi* an. Erst dann gilt der Schlüssel von `spark-dev` am LLM-Tor.
+3. **Per SSH hinein**: deinen öffentlichen SSH-Schlüssel für `spark-dev` eintragen, dann von deinem Rechner aus anmelden und OpenCode starten.
+4. **Ohne Internet arbeiten**: OpenCode fragt nur das Sprachmodell im Heimnetz. Testen geht im Klon wie auf GitHub, nur ohne Browser-Tests. Jede fertige Änderung ist ein Commit auf `lokal`.
+5. **Einspielen**: ein Admin startet `sudo speech-spark lokal einspielen`. Der Spark prüft die Commits, testet sie im Sandkasten und spielt sie wie ein Update ein; die Version zeigt dann „+lokal“.
+
+```bash
+# 1. einmal, auf dem Panel-Rechner
+sudo ./install.sh --entwickeln
+# 3. dein SSH-Schlüssel für spark-dev
+sudo install -d -m 700 -o spark-dev -g spark-dev /home/spark-dev/.ssh
+sudo install -m 600 -o spark-dev -g spark-dev ~/.ssh/id_ed25519.pub /home/spark-dev/.ssh/authorized_keys
+# 4. von deinem Rechner aus
+ssh spark-dev@<panel-rechner>
+spark-opencode                      # OpenCode im Klon, Zweig lokal
+cd app && python3 selftest.py discover -s tests -p 'test_live.py'
+git commit -am "Meine Änderung"
+# 5. als Admin auf dem Panel-Rechner
+sudo speech-spark lokal einspielen  # prüfen, Schnelltest, einspielen wie ein Update
+sudo speech-spark lokal status      # lokale Änderungen, letztes Ergebnis
+sudo speech-spark lokal zurueck     # einen Schritt zurück (gleiche Version)
+sudo speech-spark lokal verwerfen   # Version ohne lokale Änderungen (bleiben im Klon)
+```
+
+Eingespielt wird nur, was unter `app/panel/`, `app/tests/` und `docs/` liegt, dazu die beiden README und `CHANGELOG.md`, als normale Dateien: was root ausführt (`install.sh`, `update.sh`, `app/*.py` außerhalb von `app/panel`, die Paketlisten), kommt nur über GitHub. Ein normales Update verliert lokale Arbeit nie: Es setzt die lokalen Commits auf die neue Version und testet sie; passt etwas nicht oder ist der Schnelltest rot, läuft die bisherige Version weiter, und das Panel zeigt oben den Grund. Den Schlüssel von `spark-dev` neu machen oder zurückziehen: `sudo speech-spark entwickeln schluessel neu|weg`; nach einem Wechsel des Modell-Rechners `sudo speech-spark entwickeln einrichten`. Fehlt die Testumgebung, einmal mit Internet `sudo speech-spark lokal testumgebung` (danach erneuert sie sich jede Nacht, nur wenn sich die Paketliste ändert). Logs: `sudo speech-spark logs entwickeln`.
 
 ## Deinstallieren
 

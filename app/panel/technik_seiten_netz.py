@@ -470,7 +470,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Werkstatt
     "werkstatt": {
-        "stand": "5bb801c557",
+        "stand": "30680924d2",
         "bezug": {
             "werkstattseite.auftrag_geben": ["s1"], "werkstattseite.nacht_art": ["s1"], "werkstattseite.NACHT_FENSTER_H": ["s1"],
             "werkstatt.pruefen": ["s2"], "werkstatt.TEXT_MAX": ["s2"],
@@ -480,13 +480,19 @@ SEITEN = {
             "werkstatt.TEILE": ["s8"], "werkstatt.namen_testen": ["s8"], "werkstattseite.nachtest_namen": ["s1"],
             "werkstatt.NAMEN_MAX": ["s2"], "werkstatt.pruefe_ergebnis": ["s9"], "werkstatt.AUFTRAEGE_MAX": ["s9"],
             "werkstatt.PATCH_MAX": ["s9"],
+            "entwickeln.vorbereiten": ["s10"], "entwickeln.pfade_pruefen": ["s10"], "entwickeln.sandbox": ["s10"],
+            "entwickeln.aufsetzen": ["s10"],
         },
         "kurz": ("Die Werkstatt lässt einen Admin auf dem Modell-Rechner den vollen Testlauf laufen und mit OpenCode den Code "
                  "messen, ein Problem untersuchen oder eine Reparatur vorschlagen. Alles läuft in einer abgeschotteten Kopie "
-                 "des Codes; heraus kommen nur Zahlen, eine Antwort und ein Patch zum Ansehen. Eingespielt wird nie etwas.",
+                 "des Codes; heraus kommen nur Zahlen, eine Antwort und ein Patch zum Ansehen. Eingespielt wird nie etwas. "
+                 "Daneben Entwickeln auf dem Pi: OpenCode im Terminal des Panel-Rechners (Nutzer spark-dev, eigener Klon); "
+                 "seine lokalen Commits werden geprüft, im Sandkasten schnell getestet und wie ein Update eingespielt, nie als root ausgeführt.",
                  "The workshop lets an admin run the full test run on the model computer and, with OpenCode, measure the code, "
                  "look into a problem or propose a repair. Everything runs in a sealed-off copy of the code; only numbers, an "
-                 "answer and a patch to look at come out. Nothing is ever installed."),
+                 "answer and a patch to look at come out. Nothing is ever installed. Next to it, Develop on the Pi: OpenCode "
+                 "in the panel computer's terminal (user spark-dev, its own clone); its local commits are checked, quick-tested "
+                 "in a sandbox and installed like an update, never run as root."),
         "warum": ("Code, den ein Modell schreibt oder startet, darf nie an die Daten, die Schlüssel oder ins Internet kommen und "
                   "nie selbst etwas ändern. Deshalb entscheidet das Panel mit festen Regeln, und die Sandbox kann nichts außer "
                   "ihrer eigenen Kopie.",
@@ -579,8 +585,17 @@ SEITEN = {
             S("s10", "ende", ("Der Admin entscheidet", "The admin decides"),
               ("nichts wird eingespielt", "nothing is installed"),
               ("Den Patch gibt der Admin einem Claude-Thread oder einem Menschen; die Werkstatt spielt nie etwas ein und "
-               "pusht nie.",
-               "The admin hands the patch to a Claude thread or a person; the workshop never installs or pushes anything.")),
+               "pusht nie. Anders bei Entwickeln auf dem Pi (OpenCode im Terminal des Panel-Rechners, Nutzer spark-dev): "
+               "„sudo speech-spark lokal einspielen“ nimmt dessen Commits (entwickeln.vorbereiten), lässt nur Dateien zu, "
+               "die der Dienstnutzer ausführt (entwickeln.pfade_pruefen), testet sie im Sandkasten ohne Netz "
+               "(entwickeln.sandbox) und spielt sie wie ein Update ein, nie als root ausgeführt. Ein Update setzt sie mit "
+               "entwickeln.aufsetzen auf die neue Version; passt das nicht, bleibt die laufende Version.",
+               "The admin hands the patch to a Claude thread or a person; the workshop never installs or pushes anything. "
+               "Develop on the Pi is different (OpenCode in the panel computer's terminal, user spark-dev): \"sudo "
+               "speech-spark lokal einspielen\" takes its commits (entwickeln.vorbereiten), allows only files the service "
+               "user runs (entwickeln.pfade_pruefen), tests them in a sandbox without network (entwickeln.sandbox) and "
+               "installs them like an update, never run as root. An update puts them on the new version with "
+               "entwickeln.aufsetzen; when that does not fit, the running version stays.")),
         ],
         "beispiele": [
             (("Testlauf in der Nacht", "Test run at night"), ["s1", "s2", "s3", "s4", "s5", "s6", "s6!", "s8", "s9"],
@@ -608,6 +623,10 @@ SEITEN = {
              "Features → Workshop: on and off, \"Test every night\" with the start hour."),
             ("Zustand → Werkstatt: die vier Aufträge starten, Ergebnisse ansehen, rote Tests noch mal, für Claude kopieren, löschen.",
              "Status → Workshop: start the four orders, look at results, red tests again, copy for Claude, delete."),
+            ("Entwickeln auf dem Pi: auf dem Panel-Rechner einmal sudo ./install.sh --entwickeln, dann Funktionen → Entwickeln "
+             "auf dem Pi an; einspielen mit sudo speech-spark lokal einspielen (zurueck, verwerfen, status).",
+             "Develop on the Pi: on the panel computer once sudo ./install.sh --entwickeln, then Features → Develop on the "
+             "Pi on; install with sudo speech-spark lokal einspielen (zurueck, verwerfen, status)."),
         ],
         "sehen": [
             ("Zustand → Werkstatt: links der Verlauf, rechts ein Ergebnis mit großen Zahlen, was es heißt (etwa „Was heißt "
@@ -616,6 +635,10 @@ SEITEN = {
              "\"What does red mean?\"), the red tests by area, the answer or patch and the next steps."),
             ("Zustand → Live, Monitoring und die Steuerzentrale: Teil „Werkstatt“ mit Art und Status, nie Inhalte.",
              "Status → Live, Monitoring and the control centre: part \"Workshop\" with kind and status, never contents."),
+            ("Zustand → Live: Teil „Entwickeln“ mit „lokale Änderungen: N“ und dem letzten festen Grund einer Ablehnung; "
+             "sudo speech-spark lokal status zeigt dasselbe im Terminal.",
+             "Status → Live: part \"Entwickeln\" with \"lokale Änderungen: N\" and the last fixed reason of a refusal; "
+             "sudo speech-spark lokal status shows the same in the terminal."),
         ],
         "code": [
             ("werkstattseite.auftrag_geben", ("Auftrag vom Panel", "order from the panel")),
@@ -630,8 +653,12 @@ SEITEN = {
             ("werkstatt.namen_testen", ("rote Tests einzeln noch mal", "red tests alone again")),
             ("werkstattseite.nachtest_namen", ("Namen nur aus dem Ergebnis", "names only from the result")),
             ("werkstatt.pruefe_ergebnis", ("Ergebnis als Daten", "result as data")),
+            ("entwickeln.vorbereiten", ("lokale Änderungen holen, prüfen, testen", "take, check and test local changes")),
+            ("entwickeln.pfade_pruefen", ("nur Dateien, die der Dienstnutzer ausführt", "only files the service user runs")),
+            ("entwickeln.sandbox", ("Grenzen des Schnelltests", "limits of the quick test")),
+            ("entwickeln.aufsetzen", ("lokale Commits auf die neue Version", "local commits onto the new version")),
         ],
-        "tests": ["test_werkstatt"],
+        "tests": ["test_werkstatt", "test_entwickeln"],
         "heute": [],
     },
     # ------------------------------------------------------------------ Post, Kalender, Kontakte

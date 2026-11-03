@@ -72,6 +72,7 @@ Go through before every commit. In the answer to Dominik briefly name which poin
 - [ ] root follows no symlinks in folders owned by `speech` (`chown -h`, delete beforehand).
 - [ ] New packages are installed with a fixed version.
 - [ ] Nothing from the configuration ends up unchecked in a root script.
+- [ ] Local code (Develop on the Pi) never runs as root: a file root runs or loads does not belong in `entwickeln.ERLAUBT`, and a root program that loads panel modules runs as the service user while local changes are installed.
 
 ## Connection between two computers (Spark split)
 - [ ] Everything between panel computer and model computer goes through the TLS-Tor (`common.model_url`, TLS 1.3, pinned certificate), never in plain text and never with "accept anything".

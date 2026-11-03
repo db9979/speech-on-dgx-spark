@@ -598,7 +598,8 @@ def validate(new):
     # the model computer and the TLS-Tor (plan Raspberry-Pi split, B1/B2): set only by install.sh and the pairing,
     # never from the panel, so a stolen login can not send speech to another computer; once the models run on
     # another computer the key is a must (the connection is https with the pinned certificate, common.model_url)
-    for sec, keys in (("models", ("host", "cert")), ("api", ("tls_listen", "tls_from"))):
+    # Entwickeln auf dem Pi: the developer key's hash only from `speech-spark entwickeln schluessel` (app/entwickeln.py)
+    for sec, keys in (("models", ("host", "cert")), ("api", ("tls_listen", "tls_from")), ("entwickeln", ("schluessel_sha256",))):
         for k in keys:
             if k in old.get(sec, {}):
                 new[sec][k] = old[sec][k]

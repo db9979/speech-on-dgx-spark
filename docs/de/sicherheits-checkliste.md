@@ -72,6 +72,7 @@ Vor jedem Commit durchgehen. In der Antwort an Dominik kurz nennen, welche Punkt
 - [ ] root folgt keinen Symlinks in Ordnern, die `speech` gehören (`chown -h`, vorher löschen).
 - [ ] Neue Pakete werden mit fester Version installiert.
 - [ ] Nichts aus der Konfiguration landet ungeprüft in einem root-Skript.
+- [ ] Lokaler Code (Entwickeln auf dem Pi) läuft nie als root: eine Datei, die root ausführt oder lädt, gehört nicht in `entwickeln.ERLAUBT`, und ein root-Programm, das Panel-Module lädt, läuft bei lokalen Änderungen als Dienstnutzer.
 
 ## Verbindung zwischen zwei Rechnern (Spark teilen)
 - [ ] Alles zwischen Panel-Rechner und Modell-Rechner geht über das TLS-Tor (`common.model_url`, TLS 1.3, gepinntes Zertifikat), nie im Klartext und nie mit „alles annehmen“.

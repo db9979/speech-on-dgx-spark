@@ -570,7 +570,7 @@ class Update(Base):
             return
         with open(p) as f:
             sh = f.read()
-        self.assertLess(sh.index("speech-spark teilen modelle-update"), sh.index('git reset --hard --quiet "$new"'))
+        self.assertLess(sh.index("speech-spark teilen modelle-update"), sh.index('git reset --hard --quiet "$inst"'))   # $inst: main, or main with the local commits
         with open(os.path.join(helpers.APP, "speech-spark.sh")) as f:
             self.assertIn("modelle-update)", f.read())
 

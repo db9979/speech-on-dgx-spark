@@ -144,6 +144,8 @@ TARGETS = {
     "schirm": ("Steuerzentrale", "Bildschirm am Panel-Rechner", "spark", False),
     # Werkstatt (werkstattseite.py): test runs, code measurement, diagnosis and repairs in the sandbox; kinds and counts
     "werkstatt": ("Werkstatt", "Sandbox · auf dem Modell-Rechner", "spark", False),
+    # Entwickeln auf dem Pi (entwickelnseite.py): local changes of spark-dev, installed like an update; counts and fixed words
+    "entwickeln": ("Entwickeln", "OpenCode · Panel-Rechner · lokale Änderungen", "spark", False),
     # Fernzugang (fernzugang.py): servers elsewhere whose anchor calls the panel; counts and status only, never what runs
     "fernzugang": ("Fernzugang", "Fern-Server · über ihren Anker", "net", False),
     # Spontanhilfe (spontanhilfe.py): a person shares her screen once by WebRTC; kind, count and minutes, never a picture
@@ -1841,6 +1843,13 @@ def snapshot(view="admin", now=None):
     if wks.get("on"):
         used.add("werkstatt")
     try:
+        import entwickelnseite
+        ewk = entwickelnseite.for_live()
+    except Exception:
+        ewk = {"on": False}
+    if ewk.get("on"):
+        used.add("entwickeln")
+    try:
         import fernzugang
         fzg = fernzugang.for_live(now)
     except Exception:
@@ -2021,6 +2030,8 @@ def snapshot(view="admin", now=None):
                         + f" · Lüfter {geh.get('luefter', '?')}" + (" · Neustart nötig" if geh.get("neustart") else ""))
         if x["id"] == "werkstatt" and wks.get("on"):   # Werkstatt: what runs, last night, the measurement (no text, no patch)
             x["sub"] = werkstattseite.live_sub(wks)
+        if x["id"] == "entwickeln" and ewk.get("on"):   # Entwickeln: lokale Änderungen N, waiting in the clone, the last refusal (fixed word)
+            x["sub"] = entwickelnseite.live_sub(ewk)
         if x["id"] == "fernzugang" and fzg.get("on"):   # Fernzugang: paired, online, sessions, waiting for removal (numbers)
             x["sub"] = fernzugang.live_sub(fzg)
         if x["id"] == "spontanhilfe" and shg.get("on"):   # Spontanhilfe: a number, a person waiting, the open help (no name without live_names)

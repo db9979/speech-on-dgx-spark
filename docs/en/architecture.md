@@ -118,6 +118,7 @@ flowchart TB
 | `speech-spark-messen-wunsch` | – | Measure one model (Status → Models "Measure"), only on request |
 | `speech-spark-gehaeuse` | – | Set up the panel computer's case (Pironman 5: fan, OLED), only with `--gehaeuse` |
 | `speech-spark-werkstatt` | – (the sandbox asks only 127.0.0.1:31006) | One order of the workshop (Features → Workshop): test run, code measurement, diagnosis, repair in the sandbox `speech-spark-werkstatt-lauf`, only with `--werkstatt`; plus `speech-spark-werkstatt-fw` (on 127.0.0.1 the sandbox reaches only the LLM-Tor) |
+| `speech-spark-lokaltest-umgebung` | – (fetches only packages with a checksum) | Develop on the Pi (`--entwickeln`, panel computer): the quick test's test environment, at night only for a new package list; the quick test itself runs as `speech-spark-lokaltest` without network; plus `speech-spark-entwickeln-fw` (the user `spark-dev` reaches only the LLM-Tor 31006) |
 | `speech-spark-schirm` | – (asks only 127.0.0.1:31080) | Control centre as text on the panel computer's screen (tty1), only with the switch on |
 
 **Model computer (V01.0.606, plan "Splitting the Spark" stage B1):** the panel reaches speech recognition, speech output, pictures and the LLM-Tor through one address only: `common.model_url(art, path)` with the setting `models.host`. The default is `127.0.0.1`, and then everything runs on one Spark over `http://127.0.0.1:<port>` as before. With another computer there (a name or IP, never a path or `http://`), every request goes over `https` and the API key is a must (`admin.validate`); a broken entry stays on the Spark. The LLM-Tor on the model computer gets the key like the own one (`llm.own_tor`), and the guard (`netguard.model_addresses`) treats the model computer's ports 30000–31099 like its own: no MCP, calendar or Home Assistant address can point at them. The model computer is set only by the split install (stage B6); the pairing pins the certificate (B3). Self-test `test_modell_rechner`.
@@ -473,6 +474,8 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/berater_katalog.py` | The Einstellungs-Assistent's catalog: everything it may ever propose. |
 | `app/panel/dateien.py` | Datei-Register: every file and folder the panel keeps, listed once (Richtlinie Teil 17, Aufräumen Schritt 8). |
 | `app/panel/dienstwacht.py` | Dienst-Wächter: the Spark looks at its services by itself and tells the admins when one is gone and when it is back. |
+| `app/entwickeln.py` | Entwickeln auf dem Pi, Paket 1: OpenCode with the own language model on the panel computer, and Weg B: local changes installed without GitHub. |
+| `app/panel/entwickelnseite.py` | Entwickeln auf dem Pi: the panel's side of app/entwickeln.py, for admins only, default off (admin switch chat.entwickeln). |
 | `app/panel/faelle.py` | Fälle: every problem becomes a case the moment it happens. |
 | `app/panel/ghtoken.py` | A read-only GitHub token for the Spark's own questions to api.github.com (Settings → Update). |
 | `app/panel/health.py` | Stability: a watchdog for hung speech services, a warning before memory runs out, and a live check of the real services (LLM answers, TTS speaks, ASR underst … |
@@ -757,6 +760,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/dungeon-runden` | AI Dungeon Master: one file per round with seats (hashes of the links), heroes, actions and narration | hashes only | no |
 | `state/dungeon-runden.json` | AI Dungeon Master: shared values of all rounds (pictures of the day, thumbs per world) | – | yes |
 | `state/dungeon-ton` | AI Dungeon Master: the last turns of a round read aloud (WAV and MP3, at most 3 per round) | – | no |
+| `state/entwickeln.json` | Develop on the Pi: number of local changes, short commits, last result (fixed word, names of red tests); written by root, never a commit text | – | no |
 | `state/esp32.json` | Speakers and firmware | partly sealed | yes |
 | `state/export-tmp` | Download all my data: the ZIP until it is picked up (once, 10 minutes at most) | – | no |
 | `state/faelle.json` | Cases | – | yes |
@@ -843,6 +847,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/tipps.json` | Tips shown | – | no |
 | `state/traces.jsonl` | Logs → Requests, 48 h | – | no |
 | `state/umzug-hinweis.json` | Hint after the move (time only) | – | no |
+| `state/update-lokal` | The panel's wish for local changes (install, back, drop; one fixed word) | – | no |
 | `state/update-night.json` | Night update | – | no |
 | `state/update-progress.json` | Update progress | – | no |
 | `state/update-target` | Requested update target | – | no |
@@ -3585,7 +3590,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 105). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 107). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3596,7 +3601,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **47** files in every backup ([step 7](#kn-state-s7))
-- **105** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **107** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 
@@ -3846,7 +3851,7 @@ Self-tests: `test_panel`, `test_hardening`, `test_offsite`
 
 ### Workshop
 
-The workshop lets an admin run the full test run on the model computer and, with OpenCode, measure the code, look into a problem or propose a repair. Everything runs in a sealed-off copy of the code; only numbers, an answer and a patch to look at come out. Nothing is ever installed.
+The workshop lets an admin run the full test run on the model computer and, with OpenCode, measure the code, look into a problem or propose a repair. Everything runs in a sealed-off copy of the code; only numbers, an answer and a patch to look at come out. Nothing is ever installed. Next to it, Develop on the Pi: OpenCode in the panel computer's terminal (user spark-dev, its own clone); its local commits are checked, quick-tested in a sandbox and installed like an update, never run as root.
 
 **Why:** Code a model writes or starts must never reach the data, the keys or the internet, and never change anything by itself. So the panel decides by fixed rules, and the sandbox can do nothing but its own copy.
 
@@ -3889,7 +3894,7 @@ flowchart TD
 7. <a id="kn-werkstatt-s7"></a>**OpenCode with fixed rights**: werkstatt.rechte: diagnosis only reads, repair may change files of the copy and start the self-tests; no web, no git push, every other command refused. OpenCode asks the language model through the LLM-Tor at the very back of the line, so conversations go first.
 8. <a id="kn-werkstatt-s8"></a>**Self-tests**: werkstatt.testlauf runs the copy's self-tests like GitHub; whatever turns green on the second try counts as wobbly. Skipped tests (no browser in the copy) count as not run, never as green. For "Red tests again" werkstatt.namen_testen runs each named test alone in its own process: green now, still red or not run.
 9. <a id="kn-werkstatt-s9"></a>**Result as data**: werkstatt.pruefe_ergebnis takes only known fields, numbers in range and words from fixed lists; a patch over 200000 characters is cut. The page shows everything as text only, with fixed sentences on what the result means and what can come next.
-10. <a id="kn-werkstatt-s10"></a>**The admin decides**: The admin hands the patch to a Claude thread or a person; the workshop never installs or pushes anything.
+10. <a id="kn-werkstatt-s10"></a>**The admin decides**: The admin hands the patch to a Claude thread or a person; the workshop never installs or pushes anything. Develop on the Pi is different (OpenCode in the panel computer's terminal, user spark-dev): "sudo speech-spark lokal einspielen" takes its commits (entwickeln.vorbereiten), allows only files the service user runs (entwickeln.pfade_pruefen), tests them in a sandbox without network (entwickeln.sandbox) and installs them like an update, never run as root. An update puts them on the new version with entwickeln.aufsetzen; when that does not fit, the running version stays.
 
 **Examples:** Test run at night: Green, red and wobbly show under Status → Workshop. · Red tests again: Each red test alone: green now or still red. · Propose a repair: A patch with its test result to look at. · No own language model: Refused before anything starts.
 
@@ -3908,11 +3913,13 @@ flowchart TD
 - On the model computer once sudo ./install.sh --werkstatt (OpenCode with a pinned version and checksum).
 - Features → Workshop: on and off, "Test every night" with the start hour.
 - Status → Workshop: start the four orders, look at results, red tests again, copy for Claude, delete.
+- Develop on the Pi: on the panel computer once sudo ./install.sh --entwickeln, then Features → Develop on the Pi on; install with sudo speech-spark lokal einspielen (zurueck, verwerfen, status).
 
 #### What you see
 
 - Status → Workshop: the history on the left, one result on the right with big numbers, what it means (such as "What does red mean?"), the red tests by area, the answer or patch and the next steps.
 - Status → Live, Monitoring and the control centre: part "Workshop" with kind and status, never contents.
+- Status → Live: part "Entwickeln" with "lokale Änderungen: N" and the last fixed reason of a refusal; sudo speech-spark lokal status shows the same in the terminal.
 
 #### In the code
 
@@ -3928,8 +3935,12 @@ flowchart TD
 - `app/werkstatt.py` `namen_testen`: red tests alone again ([step 8](#kn-werkstatt-s8))
 - `app/panel/werkstattseite.py` `nachtest_namen`: names only from the result ([step 1](#kn-werkstatt-s1))
 - `app/werkstatt.py` `pruefe_ergebnis`: result as data ([step 9](#kn-werkstatt-s9))
+- `app/entwickeln.py` `vorbereiten`: take, check and test local changes ([step 10](#kn-werkstatt-s10))
+- `app/entwickeln.py` `pfade_pruefen`: only files the service user runs ([step 10](#kn-werkstatt-s10))
+- `app/entwickeln.py` `sandbox`: limits of the quick test ([step 10](#kn-werkstatt-s10))
+- `app/entwickeln.py` `aufsetzen`: local commits onto the new version ([step 10](#kn-werkstatt-s10))
 
-Self-tests: `test_werkstatt`
+Self-tests: `test_werkstatt`, `test_entwickeln`
 
 ### Mail and contacts
 
