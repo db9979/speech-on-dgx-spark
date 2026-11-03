@@ -582,8 +582,8 @@ ZONEN = {
 }
 # how a device comes in: "lan" directly in the home network, "net" on the way through the reverse proxy or a bot
 REIN = {"geraet": ("lan", "net"), "apps": ("lan", "net"), "lautsprecher": ("lan",), "mcpc": ("lan", "net"), "kanaele": ("net",)}
-# the look of the boxes (Dominik 2026-10-21 „alles“ after „nicht schön“): a colour bar per kind with a legend right of
-# the devices, a symbol before the line of every box, and a tab on a box that only exists in one setup
+# the look of the boxes (Dominik 2026-10-21 „alles“ after „nicht schön“; Klar 6: muted): a thin bar per kind with a legend right of
+# the devices, a symbol (line icon) before the line of every box, and a tab on a box that only exists in one setup
 FARBEN = {"geraet": ("Geräte", "Devices"), "zugang": ("Zugang und Schutz", "Access and protection"),
           "gespraech": ("Gespräch", "Conversation"), "wissen": ("Wissen", "Knowledge"),
           "post": ("Post und Kontakte", "Mail and contacts"), "betrieb": ("Betrieb", "Operation"),
@@ -594,12 +594,13 @@ FARBE = {**dict.fromkeys(("geraet", "apps", "kanaele", "lautsprecher", "mcpc"), 
          "wissen": "wissen", "post": "post", "fernzugang": "zugang", "fernserver": "aussen", "betrieb": "betrieb", "werkstatt": "betrieb",
          **dict.fromkeys(("llm", "asr", "tts", "bild", "teilen"), "modell"),
          **dict.fromkeys(("state", "users", "ablage", "journal"), "speicher"), "aussen": "aussen", "internet": "aussen"}
-SYMBOL = {"geraet": "💻", "apps": "📱", "kanaele": "💬", "lautsprecher": "🔊", "mcpc": "🧩", "middleware": "🚦",
-          "zugang": "🔑", "sicherheit": "🛡️", "waechter": "🧱", "vorbereiten": "📝", "weiche": "🔀", "antwort": "💡",
-          "werkzeuge": "🛠️", "wissen": "📚", "post": "✉️", "betrieb": "📊", "werkstatt": "🧪", "llm": "🧠",
-          "asr": "🎙️", "tts": "🗣️", "bild": "🎨", "teilen": "🔗", "state": "🗄️", "users": "👤", "ablage": "💾",
-          "journal": "📜", "aussen": "🏠", "internet": "🌐",
-          "fernzugang": "⌨️", "fernserver": "🖥️"}
+# the symbol of a box: a line icon of static/js/icons.js by its name (Klar 6, Redesign Stufe 6: no emoji in the picture)
+SYMBOL = {"geraet": "dev", "apps": "mobile", "kanaele": "chats", "lautsprecher": "spk", "mcpc": "box", "middleware": "route",
+          "zugang": "key", "sicherheit": "lock", "waechter": "shield", "vorbereiten": "doc", "weiche": "sync", "antwort": "chat",
+          "werkzeuge": "wrench", "wissen": "book", "post": "mail", "betrieb": "chart", "werkstatt": "checks", "llm": "llm",
+          "asr": "mic", "tts": "vol", "bild": "image", "teilen": "share", "state": "db", "users": "user", "ablage": "arch",
+          "journal": "logs", "aussen": "home", "internet": "globe",
+          "fernzugang": "fern", "fernserver": "cpu"}
 LEGENDE = (892, 18)            # x, y of the legend's first row (14 apart)
 NUR_BEI = {"teilen": ("nur bei Spark teilen", "only with Spark split")}
 # the two doors where the devices' way enters the Spark: kind, German, English, x, y (on the edge of the zone spark)

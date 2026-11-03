@@ -380,5 +380,65 @@ class Browser(unittest.TestCase):
         asyncio.run(go())
 
 
+    def test_status_pages_stand_still(self):
+        """Klar 6 (Redesign Stufe 6): Zustand → Logs is a table with one row height (--h-log, 28 px) under a head that
+        stays; the live refresh puts the same lines in the same places, the open area menu stays open and the window
+        keeps its height. On a phone each line is a row with two levels. The tiles under „Jetzt“ have one height."""
+        import logfilter
+        old = logfilter.read_journal
+        words = ["chat: web search | 5 Treffer | 812 ms", "weiche: tool | websuche | sicher 0.94", "imap: slow | Konto 1 | 4.2 s",
+                 "esp32: not reachable | Küche | 3 Versuche", "telegram: message | 1 Profil | Text"] * 6
+
+        now = time.time()   # once: the refresh reads the same lines again
+
+        def journal(minutes, unit=None):
+            return "".join(time.strftime("%Y-%m-%dT%H:%M:%S+0000", time.gmtime(now - (len(words) - i) * 20))
+                           + f" spark speech-spark[1]: {w}\n" for i, w in enumerate(words))
+        logfilter.read_journal = journal
+
+        async def go():
+            async with async_playwright() as p:
+                for w, h in ((1280, 800), (390, 760)):
+                    br, pg, errors = await self.page(p, w, h)
+                    try:
+                        await pg.evaluate("LG.f=[];LG.tab='diag';goSec('logs')")
+                        await pg.wait_for_function("document.querySelectorAll('#logout .lrow:not(.lhd)').length>=20", timeout=20000)
+                        hs = await pg.evaluate("[...document.querySelectorAll('#logout .lrow:not(.lhd)')].map(r=>Math.round(r.getBoundingClientRect().height))")
+                        self.assertLessEqual(max(hs) - min(hs), 1, (w, hs))
+                        if w > 700:
+                            self.assertTrue(27 <= min(hs) <= 29, hs)
+                            self.assertTrue(await pg.is_visible("#logout .lhd"))
+                            # the menu of areas: every area of logfilter.AREAS and „Alle Bereiche“
+                            self.assertEqual(await pg.evaluate("$('logpicklist').querySelectorAll('input').length"), len(logfilter.AREAS) + 1)
+                        else:
+                            self.assertTrue(36 <= min(hs) <= 56, hs)          # two levels: time and area, then the message
+                            self.assertFalse(await pg.evaluate("document.documentElement.scrollWidth>innerWidth"))
+                        where = "JSON.stringify([...document.querySelectorAll('#logout .lrow')].slice(0,8).map(r=>[r.textContent,Math.round(r.getBoundingClientRect().top)]).concat([$('logout').getBoundingClientRect().height]))"
+                        await pg.evaluate("$('logpick').open=true")
+                        before = await pg.evaluate(where)
+                        await pg.evaluate("loadLogs()")
+                        await pg.wait_for_timeout(400)
+                        self.assertEqual(await pg.evaluate(where), before, w)
+                        self.assertTrue(await pg.evaluate("$('logpick').open"), w)
+                        # „Nur Fehler“ shows only the error lines, each with its dot
+                        await pg.evaluate("$('logpick').open=false;$('logerr').click()")
+                        await pg.wait_for_function("$('logerr').getAttribute('aria-pressed')==='true'", timeout=10000)
+                        await pg.wait_for_function("[...document.querySelectorAll('#logout .lrow:not(.lhd)')].every(r=>r.classList.contains('err'))", timeout=10000)
+                        self.assertTrue(await pg.evaluate("[...document.querySelectorAll('#logout .lrow:not(.lhd)')].every(r=>r.querySelector('.llv i'))"))
+                        await pg.evaluate("$('logerr').click()")
+                        # the tiles of „Jetzt“: one height, at least the tile height of the tokens
+                        await pg.evaluate("goSec('mon')")
+                        await pg.wait_for_function("$('zcards').children.length>=4", timeout=20000)
+                        th = await pg.evaluate("[...document.querySelectorAll('#zcards .zcard')].map(r=>Math.round(r.getBoundingClientRect().height))")
+                        self.assertLessEqual(max(th) - min(th), 1, (w, th))
+                        self.assertGreaterEqual(min(th), 104 if w > 700 else 90, th)
+                        self.assertEqual(errors, [])
+                    finally:
+                        await br.close()
+        try:
+            asyncio.run(go())
+        finally:
+            logfilter.read_journal = old
+
 if __name__ == "__main__":
     unittest.main()

@@ -69,7 +69,7 @@ function zustand(s){if(s)ZLAST=s;s=ZLAST;if(!s)return;
   // the notes above, one tap away (they hold the way to the place each is about)
   if(al.length){const a=document.createElement('a');a.href='#';a.className='wayl';a.textContent=t('Hinweise stehen oben.','Notes are shown above.');
     a.onclick=e=>{e.preventDefault();const f=$('alerts').querySelector('details.afold');if(f)f.open=true;const n=$('alerts').firstElementChild;if(n)sFlash(n)};$('ztext').appendChild(a)}
-  zCards(s);$('zhead').dataset.lvl=lvl;$('zicon').textContent=lvl==='ok'?'✓':'!';$('zgo').hidden=!need.length;
+  zCards(s);$('zhead').dataset.lvl=lvl;$('zicon').textContent='';$('zgo').hidden=!need.length;
   document.querySelectorAll('.hdot').forEach(d=>d.className='hdot '+lvl);
   $('zneed').hidden=!need.length;const L=$('zlist');L.textContent='';
   for(const x of need){const r=document.createElement('div');r.className='zrow';const sp=document.createElement('span');sp.className='pill '+x.lvl;sp.textContent=x.lvl==='bad'?t('Fehler','Error'):t('Offen','Open');
@@ -95,7 +95,7 @@ function zCard(lvl,ic,name,big,unit,small,go,way){const b=way?wayEl('',way):docu
   if(go){b.type='button';b.onclick=go}b.classList.add('zcard');b.dataset.lvl=lvl;
   const hd=document.createElement('span');hd.className='zhd';const bub=document.createElement('span');bub.className='zbub';bub.appendChild(zIco(ic));
   const k=document.createElement('span');k.className='zk';k.textContent=name;hd.append(bub,k);if(go||way)hd.appendChild(zIco('chev','zch'));
-  const v=document.createElement('b');v.textContent=big;if(unit){const u=document.createElement('small');u.className='zu';u.textContent=unit;v.appendChild(u)}b.append(hd,v);
+  const v=document.createElement('b');v.textContent=big;if(big&&!/^[\d–-]/.test(big))v.className='zw';if(unit){const u=document.createElement('small');u.className='zu';u.textContent=unit;v.appendChild(u)}b.append(hd,v);
   if(small){const m=document.createElement('small');m.textContent=small;b.appendChild(m)}return b}
 // the wide „Heute“ tile: answers per hour of the last 24 hours (admin.glance hours, oldest first, the running hour
 // last) as bars, with the hour under every sixth bar; a jump link to the requests like the answers tile

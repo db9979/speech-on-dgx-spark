@@ -28,9 +28,11 @@ function tkSvg(lit,litEdges,dim){const d=TK.d,P=d.pic,[W,H]=P.size,[BW,BH]=P.box
     legend+d.nodes.map(n=>`<g class="tk-node c-${esc(n.farbe)}${n.store?' store':''}${n.nur?' opt':''}${n.id===TK.sel&&TK.view==='bild'?' sel':''}${lit.includes(n.id)?' lit':''}${dim&&!lit.includes(n.id)?' dim':''}" data-tkn="${esc(n.id)}" tabindex="0" role="button" aria-label="${esc(n.name)}">`+
       `<rect x="${n.x}" y="${n.y}" width="${BW}" height="${BH}" rx="${n.store?6:12}"/><rect class="tk-bar" x="${n.x+3}" y="${n.y+9}" width="4" height="${BH-18}" rx="2"/>`+
       tkTexts(n)+tab(n)+`</g>`+pills(n)).join('')+'</svg>'}
-// name, symbol and line of a box; a line with "\n" (Bilder und Musik: four ports) takes two rows under a higher name
+// name, symbol and line of a box; a line with "\n" (Bilder und Musik: four ports) takes two rows under a higher name.
+// The symbol is a line icon of icons.js (technik.SYMBOL names one, Klar 6), drawn as a small SVG inside the picture
+function tkIco(name,x,y){return ic(name,'tk-ico').replace('<svg ',`<svg x="${x}" y="${y}" width="13" height="13" `)}
 function tkTexts(n){const sub=String(n.sub).split('\n'),two=sub.length>1,y0=two?17:22;
-  return`<text x="${n.x+12}" y="${n.y+y0}">${esc(n.name)}</text><text class="tk-sym" x="${n.x+12}" y="${n.y+y0+18}">${esc(n.symbol)}</text>`+
+  return`<text x="${n.x+12}" y="${n.y+y0}">${esc(n.name)}</text>${tkIco(n.symbol,n.x+12,n.y+y0+7)}`+
     sub.map((l,k)=>`<text class="tk-sub" x="${n.x+28}" y="${n.y+y0+17+k*13}">${esc(l)}</text>`).join('')}
 function tkRows(n){return TK.d.storage.filter(r=>tkWriter(r)===n.id)}
 // which box of the picture writes a storage place (for the jump from the list and the count in the detail)

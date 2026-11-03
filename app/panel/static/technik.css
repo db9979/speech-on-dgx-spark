@@ -1,131 +1,131 @@
 /* Zustand → Technik (technik.js): the picture as an SVG across the whole width with the detail below it, steps as
    chips, storage places as "Liste mit Detailbereich" (ld-). „Vollbild“ lays the picture over the whole screen with
    zoom. Colours only from the theme (--acc, --acc2, --line …). Dominik 2026-10-13: „2+3+4“ (layout plan). */
-#tkbox .ltabs{margin:10px 0 12px}
+#tkbox .ltabs{margin:var(--s3) 0;align-self:flex-start;width:max-content}
+/* the page head above names the page (Klar 2): the card does not say it again */
+body:has(#phead:not([hidden])) #tkbox>.ld-head{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 .tk-view{min-width:0}
 .tk-split{display:block}
-.tk-pic{position:relative;overflow-x:auto;border:1px solid var(--line);border-radius:14px;padding:8px;background:var(--card)}
+.tk-pic{position:relative;overflow-x:auto;border:1px solid var(--line);border-radius:var(--r-box);padding:var(--s2);background:var(--card)}
 .tk-svg{display:block;width:100%;min-width:640px;height:auto;margin:0 auto}
 .tk-det{margin-top:12px}
 .tk-top{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;margin:0 0 10px}
-.tk-top>.ld-chips{flex:1;min-width:0;margin:0}.tk-hint{flex:1;min-width:0;font-size:13px}
-.tk-fsbtn{margin-left:auto;font-size:13px;padding:6px 12px;min-height:0;white-space:nowrap}
+.tk-top>.ld-chips{flex:1;min-width:0;margin:0}.tk-hint{flex:1;min-width:0;font:var(--t-sub)}
+.tk-fsbtn{margin-left:auto;padding:4px 12px;min-height:var(--h-ctl);white-space:nowrap}
 /* wide: the picture as large as the screen allows (no higher than the window), the detail as a band below it */
 @container (min-width:900px){.tk-svg{max-height:max(420px,calc(100vh - 250px))}
-  .tk-det{column-count:2;column-gap:32px;border:1px solid var(--line);border-radius:14px;padding:14px 18px}
+  .tk-det{column-count:2;column-gap:var(--s8);border:1px solid var(--line);border-radius:var(--r-box);padding:var(--s4) var(--s5);background:var(--card)}
   .tk-det>*{break-inside:avoid}}
 /* Vollbild: #tkview over the whole window; Einpassen fits the picture, ＋ makes it wider and the picture scrolls */
 html.tk-lock{overflow:hidden}
 #tkbox.tk-full #tkview{position:fixed;inset:0;z-index:80;background:var(--bg);overflow:auto;padding:12px 20px 20px;box-sizing:border-box}
 .tk-fsbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px}
-.tk-fsbar b{flex:1;min-width:0;font-size:15px}
-.tk-fsbar .b{min-height:0;padding:6px 12px}
-.tk-zl{font-size:13px;min-width:74px;text-align:center;font-variant-numeric:tabular-nums}
+.tk-fsbar b{flex:1;min-width:0;font:var(--t-head)}
+.tk-fsbar .b{min-height:var(--h-ctl);padding:4px 12px}
+.tk-zl{font:var(--t-sub);min-width:74px;text-align:center;font-variant-numeric:tabular-nums}
 #tkbox.tk-full .tk-svg{max-height:calc(100vh - 150px)}
 #tkbox.tk-full .tk-zoomed .tk-svg{max-height:none;width:calc(var(--tkz,1)*max(100%,640px))}
 #tkbox.tk-full .tk-det{column-count:1;border:0;padding:0;margin-top:12px}
 @media (min-width:1000px){#tkbox.tk-full .tk-split{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;align-items:start}
   #tkbox.tk-full .tk-det{margin-top:0;position:sticky;top:0}
   #tkbox.tk-full .tk-pic{max-height:calc(100vh - 80px);overflow:auto}}
-/* zones of the overview: amber is the internet (as on the Live page), teal the home network, violet the Spark */
-#tkview{--tk-net:var(--warn);--tk-lan:#0d9488;--tk-spark:var(--acc)}
-.tk-zone rect{fill:color-mix(in srgb,var(--line) 25%,transparent);stroke:var(--mut);stroke-opacity:.5;stroke-dasharray:5 4}
-.tk-zone text{fill:var(--mut);font:600 10.5px var(--font,system-ui);letter-spacing:.07em;text-transform:uppercase}
-.tk-zone.net rect{fill:color-mix(in srgb,var(--tk-net) 9%,transparent);stroke:var(--tk-net);stroke-opacity:.8}
-.tk-zone.lan rect{fill:color-mix(in srgb,var(--tk-lan) 9%,transparent);stroke:var(--tk-lan);stroke-opacity:.8}
-.tk-zone.spark rect{fill:color-mix(in srgb,var(--tk-spark) 5%,transparent);stroke:var(--tk-spark);stroke-opacity:.7;stroke-dasharray:none}
-.tk-zone.panel rect,.tk-zone.modelle rect{fill:none;stroke:var(--tk-spark);stroke-opacity:.6}
-.tk-zone.net text{fill:var(--tk-net)}.tk-zone.lan text{fill:var(--tk-lan)}.tk-zone.spark text,.tk-zone.panel text,.tk-zone.modelle text{fill:var(--tk-spark)}
-.tk-door rect{fill:var(--card);stroke-width:1.4}.tk-door text{font:600 10.5px var(--font,system-ui)}
-.tk-door.lan rect{stroke:var(--tk-lan)}.tk-door.lan text{fill:var(--tk-lan)}.tk-door.net rect{stroke:var(--tk-net)}.tk-door.net text{fill:var(--tk-net)}
-.tk-pill rect{fill:none;stroke-width:1}.tk-pill text{font:600 9.5px var(--font,system-ui);text-anchor:middle}
-.tk-pill.lan rect{stroke:var(--tk-lan)}.tk-pill.lan text{fill:var(--tk-lan)}.tk-pill.net rect{stroke:var(--tk-net)}.tk-pill.net text{fill:var(--tk-net)}
-.tk-node.opt>rect:first-child{stroke-dasharray:5 4}
-.tk-svg .tk-node .tk-tab rect{fill:var(--card);stroke:var(--tk-c);stroke-width:1}.tk-svg .tk-node .tk-tab text{font:600 9px var(--font,system-ui);fill:var(--tk-c);text-anchor:middle}
+/* Klar 6 (Redesign Stufe 6, Tafel redesign/a-rechner-technik.png): the same picture in light and dark from the tokens.
+   Zones as hairline frames with their name in the secondary text colour, neutral boxes with a line symbol (icons.js,
+   technik.SYMBOL), lines in 35 % of the text colour; only the picked box and its ways take the accent. The kind of a
+   box (technik.FARBEN) is a thin bar in a muted token colour, its legend beside the devices. */
+#tkview{--tk-line:color-mix(in srgb,var(--fg) 35%,transparent)}
+.tk-zone rect{fill:none;stroke:var(--line);stroke-width:1}
+.tk-zone text{fill:var(--mut);font:600 11.5px var(--font)}
+.tk-zone.spark rect{fill:color-mix(in srgb,var(--fg) 2.5%,transparent);stroke:var(--line)}
+.tk-zone.panel rect,.tk-zone.modelle rect,.tk-zone.speicher rect{stroke-dasharray:4 4}
+.tk-door rect{fill:var(--card);stroke:var(--line);stroke-width:1}.tk-door text{font:600 11.5px var(--font);fill:var(--mut)}
+.tk-pill rect{fill:none;stroke:var(--line);stroke-width:1}.tk-pill text{font:500 11.5px var(--font);fill:var(--mut);text-anchor:middle}
+.tk-node.opt>rect:first-child{stroke-dasharray:4 4}
+.tk-svg .tk-node .tk-tab rect{fill:var(--card);stroke:var(--line);stroke-width:1}.tk-svg .tk-node .tk-tab text{font:500 11.5px var(--font);fill:var(--mut);text-anchor:middle}
 .tk-svg .tk-node .tk-bar,.tk-svg .tk-legend .tk-bar{fill:var(--tk-c);stroke:none}
-.tk-node .tk-sym{font:11px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
-.tk-legend text{fill:var(--mut);font:600 9.5px var(--font,system-ui)}
-/* one colour per kind (technik.FARBEN); mid tones that read on light and dark */
-.c-geraet{--tk-c:#64748b}.c-zugang{--tk-c:#6366f1}.c-gespraech{--tk-c:#a855f7}.c-wissen{--tk-c:#10b981}.c-post{--tk-c:#f43f5e}
-.c-betrieb{--tk-c:#0ea5e9}.c-modell{--tk-c:#06b6d4}.c-speicher{--tk-c:#d97706}.c-aussen{--tk-c:#94a3b8}
-.tk-edge{stroke:var(--mut);stroke-opacity:.5;stroke-width:1.5;fill:none;stroke-linejoin:round;marker-end:url(#tkah)}
+.tk-node .tk-ico{color:var(--mut);fill:none;stroke:currentColor;stroke-width:var(--ic-stroke);stroke-linecap:round;stroke-linejoin:round}
+.tk-node.sel .tk-ico,.tk-node.lit .tk-ico{color:var(--acc)}
+.tk-legend text{fill:var(--mut);font:500 11.5px var(--font)}
+/* one muted token colour per kind (technik.FARBEN), the same in light and dark */
+.c-geraet{--tk-c:var(--faint)}.c-zugang{--tk-c:var(--acc)}.c-gespraech{--tk-c:var(--acc)}.c-wissen{--tk-c:var(--ok)}.c-post{--tk-c:var(--warn)}
+.c-betrieb{--tk-c:var(--mut)}.c-modell{--tk-c:var(--acc)}.c-speicher{--tk-c:var(--warn)}.c-aussen{--tk-c:var(--faint)}
+.tk-svg .tk-bar{opacity:.55}
+.tk-edge{stroke:var(--tk-line);stroke-width:1.25;fill:none;stroke-linejoin:round;marker-end:url(#tkah)}
 #tkah path{fill:context-stroke}
-.tk-edge.lan{stroke:var(--tk-lan)}.tk-edge.net{stroke:var(--tk-net)}
-.tk-edges.pick .tk-edge:not(.on){stroke-opacity:.16}
-.tk-edge.on{stroke:var(--acc2);stroke-width:2.6;stroke-dasharray:7 5;animation:tkflow 1s linear infinite}
-@keyframes tkflow{to{stroke-dashoffset:-24}}
-@media (prefers-reduced-motion:reduce){.tk-edge.on{animation:none}}
+.tk-edges.pick .tk-edge:not(.on){stroke-opacity:.35}
+.tk-edge.on{stroke:var(--acc);stroke-width:2;stroke-dasharray:6 5;animation:tkflow 1s linear infinite}
+@keyframes tkflow{to{stroke-dashoffset:-22}}
+@media (prefers-reduced-motion:reduce){.tk-edge.on{animation:none;stroke-dasharray:none}}
 .tk-node{cursor:pointer}
-.tk-node rect{fill:var(--card);stroke:var(--line);stroke-width:1.2}
-.tk-node text{fill:var(--fg);font:600 13px var(--font,system-ui)}
-.tk-node .tk-sub{fill:var(--mut);font:11px ui-monospace,SFMono-Regular,Menlo,monospace}
-.tk-node:hover rect,.tk-node:focus-visible rect{stroke:var(--acc)}
+.tk-node rect{fill:var(--card);stroke:var(--line);stroke-width:1}
+.tk-node text{fill:var(--fg);font:600 13px var(--font)}
+.tk-node .tk-sub{fill:var(--mut);font:11px var(--mono)}
+.tk-node:hover rect,.tk-node:focus-visible rect{stroke:color-mix(in srgb,var(--fg) 40%,var(--line))}
 .tk-node:focus{outline:none}
-.tk-node.sel rect{stroke:var(--acc);stroke-width:2.2;fill:color-mix(in srgb,var(--acc) 9%,var(--card))}
-.tk-node.lit rect{stroke:var(--acc2);stroke-width:2.2}
-.tk-node.dim text{opacity:.4}.tk-node.dim rect{stroke-opacity:.5}
-.tk-kind{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--acc)}
+.tk-node.sel>rect:first-child{stroke:var(--acc);stroke-width:2;fill:var(--card)}
+.tk-node.lit>rect:first-child{stroke:var(--acc);stroke-width:1.5}
+.tk-node.dim text,.tk-node.dim .tk-ico{opacity:.45}
+.tk-kind{font:var(--t-cap);color:var(--mut)}
 .tk-det p{margin:0 0 8px}
 .tk-files{display:flex;flex-wrap:wrap;gap:4px 8px;margin:4px 0 8px}
-.tk-mods{margin:6px 0}.tk-mods summary{cursor:pointer;font-weight:600;font-size:13.5px}
-.tk-mod{display:flex;flex-direction:column;gap:1px;padding:5px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.tk-mods{margin:6px 0}.tk-mods summary{cursor:pointer;font-weight:600}
+.tk-mod{display:flex;flex-direction:column;gap:1px;padding:5px 0;border-bottom:1px solid var(--line);font:var(--t-sub)}
 .tk-mod span{color:var(--mut)}
 .tk-steps .ld-chip b{opacity:1;margin:0 2px 0 0}
-.tk-cnt{font-size:12.5px;white-space:nowrap;font-variant-numeric:tabular-nums}
-.tk-gtext{font-size:12.5px;padding:0 8px 4px}
-.tk-ver{font-size:12px;margin-top:10px}
+.tk-cnt{font:var(--t-sub);white-space:nowrap;font-variant-numeric:tabular-nums}
+.tk-gtext{font:var(--t-sub);padding:0 8px 4px}
+.tk-ver{font:var(--t-sub);font-size:12px;margin-top:10px}
 /* phones: a chosen storage place opens as its own page, "Zurück zur Liste" goes back (like ld-sel) */
 @container (max-width:659.98px){#tkbox.tk-sel>:not(#tkview),#tkbox.tk-sel #tkview>:not(.ld-split),#tkbox.tk-sel .ld-list{display:none}}
 /* phones: the steps get the whole row, „Vollbild“ goes below them; in Vollbild the title has its own row */
 @container (max-width:659.98px){.tk-top>.ld-chips{flex-basis:100%}}
 @media (max-width:659.98px){.tk-fsbar b{flex-basis:100%}}
 /* Knoten-Seiten (technik_knoten.py): one box in detail; its way as a column with exits to the right, examples light
-   it step by step (lit/cur/dim), Vollbild shows only the way */
-.kn-head{display:flex;align-items:flex-start;gap:12px;margin:0 0 10px}.kn-t{flex:1;min-width:0}.kn-h{margin:2px 0 4px;font-size:22px}
-.kn-today{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;margin:0 0 12px;font-size:13.5px}
-.kn-tn b{font-size:18px;color:var(--acc);font-variant-numeric:tabular-nums}
-.kn-sec{border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:0 0 12px;background:var(--card)}
-.kn-sec h4{margin:0 0 8px;font-size:15px}.kn-sec p{margin:0 0 8px;line-height:1.5}.kn-sec ul{margin:0;padding-left:20px;line-height:1.5}
+   it step by step (lit/cur/dim), Vollbild shows only the way. Klar 6: groups on hairlines, sizes of the scale, no glow */
+.kn-head{display:flex;align-items:flex-start;gap:12px;margin:0 0 10px}.kn-t{flex:1;min-width:0}.kn-h{margin:2px 0 4px;font:var(--t-title);letter-spacing:var(--track-display)}
+.kn-today{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;margin:0 0 12px;font:var(--t-sub)}
+.kn-tn b{font:var(--t-head);font-weight:700;color:var(--fg);font-variant-numeric:tabular-nums}
+.kn-sec{border:1px solid var(--line);border-radius:var(--r-box);padding:var(--s4);margin:0 0 var(--s3);background:var(--card)}
+.kn-sec h4{margin:0 0 8px;font:var(--t-head)}.kn-sec p{margin:0 0 8px;line-height:1.5}.kn-sec ul{margin:0;padding-left:20px;line-height:1.5}
 .kn-sec li{margin:0 0 4px}.kn-sh{display:flex;align-items:center;gap:8px;margin:0 0 8px}.kn-sh h4{flex:1;margin:0}
-.kn-ex{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 6px}.kn-exl{font-size:13px}
-.kn-cap{min-height:1.4em;font-size:13.5px;margin:0 0 8px}
+.kn-ex{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 6px}.kn-exl{font:var(--t-sub)}
+.kn-cap{min-height:1.4em;font:var(--t-sub);margin:0 0 8px}
 .kn-flow{display:block}
 .kn-pic{padding:6px}
 .tk-svg.kn-svg{min-width:0;max-width:560px}
 @container (min-width:900px){.tk-svg.kn-svg{max-height:none}}
-.kn-steps{margin:12px 0 0;padding-left:24px;font-size:14px;line-height:1.45}.kn-steps li{margin:0 0 7px;break-inside:avoid;border-radius:8px;padding:1px 4px}
+.kn-steps{margin:12px 0 0;padding-left:24px;font:var(--t-body)}.kn-steps li{margin:0 0 7px;break-inside:avoid;border-radius:var(--r-item);padding:1px 4px}
 .kn-steps li::marker{color:var(--acc);font-weight:700}
-.kn-steps li.cur{background:color-mix(in srgb,var(--acc) 14%,transparent)}.kn-steps li.dim{opacity:.55}
+.kn-steps li.cur{background:var(--acc-weak)}.kn-steps li.dim{opacity:.55}
 @container (min-width:900px){.kn-flow{display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);gap:20px;align-items:start}.kn-steps{margin:0}}
-.kn-st polygon,.kn-st rect{fill:var(--card);stroke:var(--line);stroke-width:1.4}
-.kn-frage polygon{fill:color-mix(in srgb,var(--acc) 10%,var(--card));stroke:var(--acc)}
-.kn-start rect,.kn-ende rect{fill:color-mix(in srgb,var(--line) 35%,var(--card))}
-.kn-svg text{fill:var(--fg);font:600 13.5px var(--font,system-ui)}.kn-svg .kn-sub{fill:var(--mut);font:400 11.5px var(--font,system-ui)}
-.kn-svg .kn-lab{fill:var(--mut);font:600 11.5px var(--font,system-ui)}
-.kn-num{fill:var(--acc)}.kn-svg .kn-numt{fill:var(--bg);font:700 11px var(--font,system-ui)}
-.kn-ar{stroke:var(--mut);stroke-width:1.5;fill:none;marker-end:url(#knah)}#knah path{fill:var(--mut)}
+.kn-st polygon,.kn-st rect{fill:var(--card);stroke:var(--line);stroke-width:1.2}
+.kn-frage polygon{fill:var(--card);stroke:color-mix(in srgb,var(--acc) 60%,var(--line))}
+.kn-start rect,.kn-ende rect{fill:var(--side)}
+.kn-svg text{fill:var(--fg);font:600 14px var(--font)}.kn-svg .kn-sub{fill:var(--mut);font:400 11.5px var(--font)}
+.kn-svg .kn-lab{fill:var(--mut);font:600 11.5px var(--font)}
+.kn-num{fill:var(--acc)}.kn-svg .kn-numt{fill:var(--on-acc);font:700 11.5px var(--font)}
+.kn-ar{stroke:color-mix(in srgb,var(--fg) 35%,transparent);stroke-width:1.25;fill:none;marker-end:url(#knah)}#knah path{fill:var(--mut)}
 .kn-ar-stop{stroke:var(--bad)}.kn-ar-ok{stroke:var(--ok)}.kn-ar-zurueck{stroke-dasharray:5 4}
-.kn-side rect{stroke-width:1.4}
-.kn-stop rect{fill:color-mix(in srgb,var(--bad) 13%,var(--card));stroke:var(--bad)}
-.kn-ok rect{fill:color-mix(in srgb,var(--ok) 13%,var(--card));stroke:var(--ok)}
+.kn-side rect{stroke-width:1.2}
+.kn-stop rect{fill:var(--card);stroke:var(--bad)}
+.kn-ok rect{fill:var(--card);stroke:var(--ok)}
 .kn-zurueck rect,.kn-info rect{fill:var(--card);stroke:var(--line);stroke-dasharray:5 4}
 .kn-st.dim,.kn-side.dim{opacity:.35}
-.kn-st.lit polygon,.kn-st.lit rect{stroke:var(--acc2);stroke-width:2.6}
-.kn-st.cur polygon,.kn-st.cur rect,.kn-side.cur rect{stroke-width:3.4;filter:drop-shadow(0 0 6px color-mix(in srgb,var(--acc2) 60%,transparent))}
-.kn-side.lit rect{stroke-width:2.6}
-@media (prefers-reduced-motion:reduce){.kn-st.cur polygon,.kn-st.cur rect,.kn-side.cur rect{filter:none}}
-.kn-tw{overflow-x:auto}.kn-tab{border-collapse:collapse;width:100%;font-size:13.5px}
+.kn-st.lit polygon,.kn-st.lit rect{stroke:var(--acc);stroke-width:2}
+.kn-st.cur polygon,.kn-st.cur rect,.kn-side.cur rect{stroke:var(--acc);stroke-width:2.6;fill:color-mix(in srgb,var(--acc) 8%,var(--card))}
+.kn-side.lit rect{stroke-width:2}
+.kn-tw{overflow-x:auto}.kn-tab{border-collapse:collapse;width:100%;font:var(--t-body)}
 .kn-tab th,.kn-tab td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top}
-.kn-tab th{font-size:12.5px;color:var(--mut);font-weight:600}.kn-tab td.ok{color:var(--ok);font-weight:700}.kn-tab td.bad{color:var(--bad);font-weight:600}
+.kn-tab th{font:var(--t-cap);color:var(--mut)}.kn-tab td.ok{color:var(--okt);font-weight:600}.kn-tab td.bad{color:var(--badt);font-weight:600}
 .kn-two{display:grid;grid-template-columns:minmax(0,1fr);gap:0 12px}
 @container (min-width:900px){.kn-two{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
 .kn-nums{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
-.kn-nums div{border:1px solid var(--line);border-radius:12px;padding:9px 11px}
-.kn-nums b{display:block;font-size:20px;color:var(--acc);overflow-wrap:anywhere}.kn-nums span{font-size:12.5px;color:var(--mut)}
-.kn-code{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:2px 18px;font-size:13.5px}
+.kn-nums div{border:1px solid var(--line);border-radius:var(--r-box);padding:9px 11px}
+.kn-nums b{display:block;font:var(--t-title);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.kn-nums span{font:var(--t-sub);color:var(--mut)}
+.kn-code{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:2px 18px;font:var(--t-body)}
 .kn-code div{display:flex;flex-direction:column;padding:6px 0;border-bottom:1px solid var(--line);min-width:0}
-.kn-code code{overflow-wrap:anywhere}.kn-code span{color:var(--mut);font-size:12.5px}
-.kn-small{font-size:12.5px;margin-top:8px;overflow-wrap:anywhere}
+.kn-code code{overflow-wrap:anywhere;font:var(--t-mono)}.kn-code span{color:var(--mut);font:var(--t-sub)}
+.kn-small{font:var(--t-sub);margin-top:8px;overflow-wrap:anywhere}
 #tkbox.tk-full .kn-svg{max-height:calc(100vh - 170px);max-width:none}
 #tkbox.tk-full .tk-zoomed .kn-svg{width:calc(var(--tkz,1)*min(100%,560px))}
 @media (min-width:1000px){#tkbox.tk-full .kn-flow{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px}}
@@ -133,40 +133,40 @@ html.tk-lock{overflow:hidden}
    numbers and code lines of the marked step are framed too; on a phone the text opens as a card under the bubble */
 .kn-st,.kn-steps li,.kn-nums div[tabindex],.kn-code div[tabindex],.kn-tab tr[data-knr]{cursor:pointer}
 .kn-steps li{border:2px solid transparent}
-.kn-steps li.mk{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 9%,transparent)}
-.kn-steps li.hv:not(.mk){background:color-mix(in srgb,var(--acc) 7%,transparent)}
+.kn-steps li.mk{border-color:var(--acc);background:var(--acc-weak)}
+.kn-steps li.hv:not(.mk){background:var(--sel)}
 .kn-steps li.mdim,.kn-st.mdim,.kn-side.mdim{opacity:.42}
-.kn-st.mk polygon,.kn-st.mk rect{stroke:var(--acc);stroke-width:3.4;fill:color-mix(in srgb,var(--acc) 14%,var(--card))}
-.kn-st.hv:not(.mk) polygon,.kn-st.hv:not(.mk) rect{stroke:var(--acc);stroke-width:2.6}
+.kn-st.mk polygon,.kn-st.mk rect{stroke:var(--acc);stroke-width:2.6;fill:color-mix(in srgb,var(--acc) 10%,var(--card))}
+.kn-st.hv:not(.mk) polygon,.kn-st.hv:not(.mk) rect{stroke:var(--acc);stroke-width:2}
 .kn-st:focus,.kn-st:focus-visible{outline:none}.kn-st:focus-visible polygon,.kn-st:focus-visible rect{stroke:var(--acc);stroke-width:3}
-.kn-nums div.mk,.kn-code div.mk{outline:2px solid var(--acc);outline-offset:2px;border-radius:10px}
-.kn-tab tr.mk td{background:color-mix(in srgb,var(--acc) 9%,transparent)}
-.kn-rel{display:flex;flex-wrap:wrap;gap:5px 6px;align-items:center;margin:7px 0 2px;font-size:12.5px}
-.kn-rel .ld-chip{font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kn-nums div.mk,.kn-code div.mk{outline:2px solid var(--acc);outline-offset:2px;border-radius:var(--r-box)}
+.kn-tab tr.mk td{background:var(--acc-weak)}
+.kn-rel{display:flex;flex-wrap:wrap;gap:5px 6px;align-items:center;margin:7px 0 2px;font:var(--t-sub)}
+.kn-rel .ld-chip{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .kn-pic{position:relative}
-.kn-pop{position:absolute;left:8px;right:8px;z-index:3;background:var(--card);border:2px solid var(--acc);border-radius:12px;
-  padding:10px 34px 10px 12px;font-size:14px;line-height:1.45;box-shadow:0 6px 22px rgba(0,0,0,.18)}
-.kn-popx{position:absolute;top:6px;right:6px;padding:2px 8px;min-height:0}
+.kn-pop{position:absolute;left:8px;right:8px;z-index:3;background:var(--card);border:1px solid var(--line);border-radius:var(--r-win);
+  padding:10px 34px 10px 12px;font:var(--t-body);box-shadow:var(--shadow-pop)}
+.kn-popx{position:absolute;top:6px;right:6px;padding:2px 8px;min-height:var(--h-ctl)}
 @keyframes knblink{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--acc) 40%,transparent)}}
 @keyframes knblinkg{50%{opacity:.3}}
 .blink:not(g){animation:knblink .42s ease-in-out 2}g.blink{animation:knblinkg .42s ease-in-out 2}
 @media (prefers-reduced-motion:reduce){.blink:not(g),g.blink{animation:none}}
 /* the bubble under a clicked line (its bubble is out of sight): small, drawn like in the picture, "Im Ablauf zeigen" */
-.kn-inl{grid-column:1/-1;display:flex;flex-direction:column;gap:8px;margin:8px 0 4px;padding:10px 12px;border:2px solid var(--acc);
-  border-radius:12px;background:color-mix(in srgb,var(--acc) 6%,var(--card));font-size:13.5px;line-height:1.45;align-items:flex-start;color:var(--fg)}
+.kn-inl{grid-column:1/-1;display:flex;flex-direction:column;gap:8px;margin:8px 0 4px;padding:10px 12px;border:1px solid var(--acc);
+  border-radius:var(--r-box);background:var(--card);font:var(--t-body);align-items:flex-start;color:var(--fg)}
 .kn-inl1 p{margin:6px 0 0}
 .kn-mini{position:relative;display:inline-flex;flex-direction:column;align-items:center;min-width:200px;max-width:min(100%,420px);
-  padding:7px 22px 7px 34px;border:2px solid var(--acc);border-radius:8px;background:color-mix(in srgb,var(--acc) 14%,var(--card));text-align:center}
+  padding:7px 22px 7px 34px;border:1px solid var(--acc);border-radius:var(--r-item);background:var(--card);text-align:center}
 .kn-mini-start,.kn-mini-ende{border-radius:22px}
 .kn-mini-frage{border-radius:4px;clip-path:polygon(12px 0,calc(100% - 12px) 0,100% 50%,calc(100% - 12px) 100%,12px 100%,0 50%);border:0;
-  background:color-mix(in srgb,var(--acc) 22%,var(--card))}
+  background:var(--acc-weak)}
 .kn-mini i{position:absolute;left:6px;top:50%;transform:translateY(-50%);width:20px;height:20px;border-radius:50%;background:var(--acc);
-  color:var(--bg);font:700 11px/20px var(--font,system-ui);font-style:normal}
+  color:var(--on-acc);font:700 11.5px/20px var(--font);font-style:normal}
 .kn-mini-frage{padding-left:44px;padding-right:30px}.kn-mini-frage i{left:16px}
-.kn-mini b{font-size:13.5px}.kn-mini small{color:var(--mut);font-size:11.5px}
-.kn-up{align-self:flex-start;font-size:13px}
+.kn-mini b{font:var(--t-body);font-weight:600}.kn-mini small{color:var(--mut);font:var(--t-sub);font-size:11.5px}
+.kn-up{align-self:flex-start;font:var(--t-sub)}
 .kn-inltr td{padding:0 9px 8px;border-bottom:1px solid var(--line)}
-#tkview .kn-inl{padding:10px 12px;border:2px solid var(--acc);border-radius:12px;min-width:0}
+#tkview .kn-inl{padding:10px 12px;border:1px solid var(--acc);border-radius:var(--r-box);min-width:0}
 #tkview .kn-inl .kn-inl1{display:block;padding:0;border:0;border-radius:0}
-#tkview .kn-inl .kn-mini{color:var(--fg);font-size:13.5px}
-#tkview .kn-inl .kn-mini b{display:block;font-size:13.5px;color:var(--fg)}#tkview .kn-inl .kn-mini small{color:var(--mut)}
+#tkview .kn-inl .kn-mini{color:var(--fg);font:var(--t-body)}
+#tkview .kn-inl .kn-mini b{display:block;font:var(--t-body);font-weight:600;color:var(--fg)}#tkview .kn-inl .kn-mini small{color:var(--mut)}

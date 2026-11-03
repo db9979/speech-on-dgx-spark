@@ -1,8 +1,11 @@
-// Zustand → Logs (V01.0.212, "Überblick zuerst"): tiles per area, the newest error with a fixed hint, filter
-// buttons, a tidy list (time, area, message; errors red, repeats ×n, pauses), search in the browser only,
-// live reload, copy for a thread, and the per-area detail switches. Lines are built with textContent only.
-const LAREA={chat:[t('Gespräch','Conversation'),'#6366f1'],search:[t('Websuche','Web search'),'#0ea5e9'],weiche:[t('Weiche','Router'),'#8b5cf6'],
-  ha:['Home Assistant','#f59e0b'],room:[t('Raum','Room'),'#10b981'],esp32:[t('Lautsprecher','Speakers'),'#14b8a6'],watch:[t('Uhr','Watch'),'#ec4899'],telegram:['Telegram','#3b82f6'],mail:['Mail','#64748b'],vorrang:[t('Vorrang','Priority'),'#ef4444'],wissen:[t('Wissen','Knowledge'),'#a16207'],fund:[t('Finden','Find'),'#0f766e'],anfrage:[t('Anfrage','Request'),'#5b5bf0'],speicher:[t('Speicher','Storage'),'#0ea5c6'],gedaechtnis:[t('Gedächtnis','Memory'),'#8b5cf6'],klaeren:[t('Rückfrage','Asking back'),'#8b5cf6'],seite:[t('Seite lädt','Page loading'),'#0d9488'],nachrichten:[t('Nachrichten und Chats','Messages and chats'),'#22c55e'],werkzeug:[t('Werkzeuge','Tools'),'#7c3aed'],listen:[t('Listen, Termine, Erinnerungen','Lists, appointments, reminders'),'#d97706'],mitteilung:[t('Mitteilungen','Notifications'),'#e11d48'],pc:[t('Rechner, eigene Dienste, Dokumente','Computer, own services, documents'),'#475569'],bild:[t('Bilder malen','Painting pictures'),'#db2777'],musik:[t('Musik machen','Making music'),'#9333ea'],dungeon:[t('Dungeon-Master','Dungeon Master'),'#7c2d12'],schwer:[t('Schwere Aufträge','Heavy jobs'),'#b45309'],remarkable:['reMarkable','#57534e'],nas:['NAS','#0d9488'],apps:[t('Apps','Apps'),'#0891b2'],vonselbst:[t('Von selbst','By itself'),'#c026d3'],verbessern:[t('Verbessern','Improve'),'#65a30d'],fernzugang:[t('Fernzugang','Remote access'),'#b91c1c'],spontanhilfe:[t('Spontanhilfe','Spontaneous help'),'#be123c'],system:[t('System und Sicherheit','System and security'),'#dc2626'],ereignis:[t('Ereignisse (wie in Live)','Events (as in Live)'),'#0284c7']};
+// Zustand → Logs (V01.0.212, "Überblick zuerst"): the counts of the window, the newest error with a fixed hint, the
+// areas to show, a tidy list (time, area, message; repeats ×n, pauses), search in the browser only, live reload, copy
+// for a thread, and the per-area detail switches. Lines are built with textContent only. Klar 6 (Redesign Stufe 6,
+// Tafel redesign/a-rechner-logs.png): a dense table with a fixed row height (--h-log), time and message in monospace,
+// the level only as a dot, the areas of logfilter.AREAS as a menu with ticks, newest line on top; nothing jumps when
+// the live refresh comes (the open menu, an opened row and the place in the list stay).
+const LAREA={chat:[t('Gespräch','Conversation')],search:[t('Websuche','Web search')],weiche:[t('Weiche','Router')],
+  ha:['Home Assistant'],room:[t('Raum','Room')],esp32:[t('Lautsprecher','Speakers')],telefon:[t('Telefon','Phone')],watch:[t('Uhr','Watch')],telegram:['Telegram'],mail:['Mail'],vorrang:[t('Vorrang','Priority')],wissen:[t('Wissen','Knowledge')],fund:[t('Finden','Find')],anfrage:[t('Anfrage','Request')],speicher:[t('Speicher','Storage')],gedaechtnis:[t('Gedächtnis','Memory')],klaeren:[t('Rückfrage','Asking back')],seite:[t('Seite lädt','Page loading')],nachrichten:[t('Nachrichten und Chats','Messages and chats')],werkzeug:[t('Werkzeuge','Tools')],listen:[t('Listen, Termine, Erinnerungen','Lists, appointments, reminders')],mitteilung:[t('Mitteilungen','Notifications')],pc:[t('Rechner, eigene Dienste, Dokumente','Computer, own services, documents')],bild:[t('Bilder malen','Painting pictures')],musik:[t('Musik machen','Making music')],dungeon:[t('Dungeon-Master','Dungeon Master')],schwer:[t('Schwere Aufträge','Heavy jobs')],remarkable:['reMarkable'],nas:['NAS'],apps:[t('Apps','Apps')],vonselbst:[t('Von selbst','By itself')],verbessern:[t('Verbessern','Improve')],fernzugang:[t('Fernzugang','Remote access')],spontanhilfe:[t('Spontanhilfe','Spontaneous help')],system:[t('System und Sicherheit','System and security')],ereignis:[t('Ereignisse (wie in Live)','Events (as in Live)')]};
 const LV_AREAS={room:t('Raum-Modus','Room mode'),esp32:t('Lautsprecher','Speakers'),ha:'Home Assistant',chat:t('Gespräch','Conversation')};
 // display only: the same fixed words as the panel uses for the diagnosis tab, for the plain service logs
 const LERR=/error|exception|traceback|failed|broke|refused|timeout|timed out|fehler|not reachable/i,LWARN=/\b(warn\w*|stalled|behind|ignored|asked again|retry|slow)\b/i;
@@ -49,15 +52,27 @@ function lshow(){
   $('logreqtab').hidden=!TRACE_ON;const req=LG.tab==='req';$('logreq').hidden=!req;$('logout').hidden=req;$('loglines').hidden=req;$('logcopy').hidden=req;
   document.querySelectorAll('#logtabs button').forEach(b=>b.classList.toggle('on',b.dataset.lt===LG.tab));
   document.querySelectorAll('#logmin button').forEach(b=>b.classList.toggle('on',+b.dataset.v===LG.min));
-  const diag=LG.tab==='diag';$('logmin').hidden=!(diag||LG.tab==='update'||req);$('logsum').hidden=!diag;$('logchips').hidden=!(diag||req);
-  if(!diag)$('lasterr').hidden=true;if(LG.tab!=='adm')$('logundo').hidden=true;$('logkette').hidden=LG.tab!=='audit';if(LG.tab==='audit')auditChain();$('logsvcbar').hidden=LG.tab!=='svc';$('logsvc').value=LG.svc;$('loglines').value=String(LG.lines);
+  const diag=LG.tab==='diag';$('logmin').hidden=!(diag||LG.tab==='update'||req);$('logsum').hidden=!diag;$('logchips').hidden=!req;$('logpick').hidden=$('logerr').hidden=!diag;if(!diag)$('logpick').open=false;
+  if(!diag)$('lasterr').hidden=true;if(LG.tab!=='adm')$('logundo').hidden=true;$('logkette').hidden=LG.tab!=='audit';if(LG.tab==='audit')auditChain();$('logsvc').hidden=LG.tab!=='svc';$('logsvc').value=LG.svc;$('loglines').value=String(LG.lines);
   $('loglive').classList.toggle('on',LG.live);$('loglive').setAttribute('aria-pressed',LG.live?'true':'false')}
-function ltile(key,label,color,count,spark,sub){
-  const b=el('button','ltile'+(key==='errors'?' err':'')+(LG.f.length===1&&LG.f[0]===key?' on':''));b.type='button';b.style.setProperty('--c',color);
-  b.append(el('span','',label),el('b','',String(count||0)));
-  if(spark){const s=el('div','lspark');const top=Math.max(1,...spark);spark.forEach(v=>{const i=el('i');i.style.height=(3+Math.round(v/top*22))+'px';s.append(i)});b.append(s)}
-  if(sub)b.append(el('div','lsub',sub));
-  b.onclick=()=>{LG.f=[key];lsave();loadLogs().catch(()=>{})};return b}
+// the counts of the window as one line of numbers (tabular digits): errors (a tap shows only them), warnings, lines
+const lnum=n=>Number(n||0).toLocaleString(L==='en'?'en':'de');
+function lsumLine(c){const sum=$('logsum');sum.replaceChildren();
+  const err=el('button','lsn'+(c.errors?' bad':'')+(LG.f.includes('errors')?' on':''));err.type='button';err.append(el('b','',lnum(c.errors)),document.createTextNode(' '+t('Fehler','errors')));
+  err.onclick=()=>lpickErr(!LG.f.includes('errors'));
+  const warn=el('span','lsn');warn.append(el('b','',lnum(c.warnings)),document.createTextNode(' '+t('Warnungen','warnings')));
+  const lines=el('span','lsn');lines.append(el('b','',lnum(c.lines)),document.createTextNode(' '+t('Zeilen in ','lines in ')+(LG.min<60?LG.min+' min':LG.min/60+' h')));
+  sum.append(err,warn,lines)}
+function lpickErr(on){LG.f=on?[...LG.f.filter(x=>x!=='errors'),'errors']:LG.f.filter(x=>x!=='errors');lsave();loadLogs().catch(()=>{})}
+// the areas (logfilter.AREAS, here LAREA) as a menu with ticks: built once, the live refresh only sets ticks and counts
+function lpickBuild(){const box=$('logpicklist');if(box.childElementCount)return;
+  const row=(k,label)=>{const l=el('label','lmi');const c=el('input');c.type='checkbox';c.dataset.k=k;l.append(c,el('span','',label),el('b','lmn'));
+    c.onchange=()=>{LG.f=k?(c.checked?[...LG.f,k]:LG.f.filter(x=>x!==k)):LG.f.filter(x=>x==='errors');lsave();loadLogs().catch(()=>{})};return l};
+  box.append(row('',t('Alle Bereiche','All areas')));for(const [k,v] of Object.entries(LAREA))box.append(row(k,v[0]))}
+function lpickShow(c){lpickBuild();const areas=LG.f.filter(k=>k!=='errors');
+  $('logpickt').textContent=areas.length?t(`Bereiche: ${areas.length}`,`Areas: ${areas.length}`):t('Alle Bereiche','All areas');
+  $('logpicklist').querySelectorAll('input').forEach(i=>{const k=i.dataset.k;i.checked=k?areas.includes(k):!areas.length;const n=k?c[k]:c.lines;i.parentNode.querySelector('.lmn').textContent=n?lnum(n):''});
+  const e=$('logerr'),on=LG.f.includes('errors');e.classList.toggle('on',on);e.setAttribute('aria-pressed',on?'true':'false')}
 let AEX=null;   // the open explanation survives the live refresh (every 10 s) while the newest error keeps its area
 function areaExplain(area){if(AEX&&AEX.area===area)return AEX.w;const w=el('div','rexpl');AEX={area,w};const eb=el('button','b',t('Erklären','Explain'));eb.type='button';w.append(eb);
   eb.onclick=async()=>{eb.disabled=true;try{const d=await (await api('/api/admin/berater/bereich/'+encodeURIComponent(area))).json();w.replaceChildren();
@@ -66,41 +81,40 @@ function areaExplain(area){if(AEX&&AEX.area===area)return AEX.w;const w=el('div'
     catch(e){w.replaceChildren(el('div','lempty',e.message))}};return w}
 function lrender(){
   if(LG.tab==='req'){rrender();return}
-  lshow();const d=LDATA,sum=$('logsum'),chips=$('logchips'),q=$('logq').value.trim().toLowerCase();
-  if(d){const c=d.counts||{};sum.replaceChildren();
-    const ea=Object.entries(d.errors_by_area||{}).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([a,n])=>`${n} ${(LAREA[a]||[a==='other'?t('Sonstiges','other'):a])[0]}`).join(' · ');
-    sum.append(ltile('errors',t('Fehler','Errors'),'#ef4444',c.errors,null,c.errors?ea:t('alles ruhig','all quiet')));
-    Object.keys(LAREA).filter(a=>c[a]).sort((a,b)=>c[b]-c[a]).slice(0,3).forEach(a=>sum.append(ltile(a,LAREA[a][0],LAREA[a][1],c[a],(d.spark||{})[a])));
+  lshow();const d=LDATA,q=$('logq').value.trim().toLowerCase();
+  if(d){const c=d.counts||{};lsumLine(c);lpickShow(c);
     const le=d.last_error,box=$('lasterr');box.hidden=!le;
     if(le){box.replaceChildren(el('b','',t('Letzter Fehler, ','Last error, ')+le.t.slice(0,5)),document.createTextNode(' · '+(LAREA[le.area]?LAREA[le.area][0]+': ':'')+le.msg.replace(/^[a-z0-9_]+:\s*/i,'')));
       if(le.hint)box.append(el('div','lhint',L==='en'?le.hint.en:le.hint.de));
       // „Erklären“ (Einstellungs-Assistent): the error's area in fixed sentences, steps, what could help, „Als Fall aufnehmen“
-      if(d.explain&&!document.body.classList.contains('mgr'))box.append(areaExplain(le.area||'other'))}
-    chips.replaceChildren();
-    [...Object.keys(LAREA),'update','errors'].filter(k=>k!=='update').forEach(k=>{const on=LG.f.includes(k),b=el('button','lchip'+(on?' on':'')+(k==='errors'?' err':''));b.type='button';
-      b.style.setProperty('--c',k==='errors'?'#ef4444':LAREA[k][1]);b.append(el('i'),document.createTextNode(k==='errors'?t('Nur Fehler','Errors only'):LAREA[k][0]));
-      const n=k==='errors'?c.errors:c[k];if(n)b.append(el('b','',String(n)));b.setAttribute('aria-pressed',on?'true':'false');
-      b.onclick=()=>{LG.f=on?LG.f.filter(x=>x!==k):[...LG.f,k];lsave();loadLogs().catch(()=>{})};chips.append(b)});
-    const all=el('button','lchip'+(LG.f.length?'':' on'),t('Alle','All'));all.type='button';all.onclick=()=>{LG.f=[];lsave();loadLogs().catch(()=>{})};chips.prepend(all)}
-  const out=$('logout'),stick=out.scrollTop+out.clientHeight>=out.scrollHeight-30;
-  const rows=q?LROWS.filter(r=>(r.msg+' '+(r.area||'')).toLowerCase().includes(q)):LROWS;
-  out.replaceChildren();let prev=null;const mins=r=>r.t?(+r.t.slice(0,2))*60+ +r.t.slice(3,5):null;
+      if(d.explain&&!document.body.classList.contains('mgr'))box.append(areaExplain(le.area||'other'))}}
+  // newest line on top (Diagnose, Update and the service logs come oldest first; the protocols already newest first);
+  // at the top the list stays at the top, scrolled down it keeps its place (the live refresh waits there anyway)
+  const out=$('logout'),keep=out.scrollTop;
+  const base=q?LROWS.filter(r=>(r.msg+' '+(r.area||'')).toLowerCase().includes(q)):LROWS,rows=['diag','update','svc'].includes(LG.tab)?[...base].reverse():base;
+  out.replaceChildren(lheadRow());let prev=null;const mins=r=>r.t?(+r.t.slice(0,2))*60+ +r.t.slice(3,5):null;
   for(let i=0;i<rows.length;i++){const r=rows[i];
-    const gap=prev&&mins(r)!=null&&mins(prev)!=null?mins(r)-mins(prev):0;if(gap>=2)out.append(el('div','lgap',t(`${gap} min nichts`,`${gap} min quiet`)));
+    const gap=prev&&mins(r)!=null&&mins(prev)!=null?Math.abs(mins(prev)-mins(r)):0;if(gap>=2)out.append(el('div','lgap',t(`${gap} min nichts`,`${gap} min quiet`)));
     let n=1;while(rows[i+1]&&rows[i+1].msg===r.msg&&rows[i+1].area===r.area){n++;i++}
-    const row=el('div','lrow'+(r.level?' '+r.level:''));row.append(el('span','lt',r.t||''));
-    const pre=(r.msg.match(/^([a-z0-9_]+):\s/i)||[])[1],a=LAREA[r.area];
-    const badge=el('span','lbadge',a?a[0]:(pre||'·'));badge.style.setProperty('--c',a?a[1]:'#94a3b8');row.append(badge);
-    const m=el('span','lm');const text=pre?r.msg.slice(pre.length+1).trim():r.msg;
-    if(q){const low=text.toLowerCase();let at=0,k;while((k=low.indexOf(q,at))>=0){m.append(document.createTextNode(text.slice(at,k)),el('mark','',text.slice(k,k+q.length)));at=k+q.length}m.append(document.createTextNode(text.slice(at)))}
-    else m.textContent=text;
-    if(n>1)m.append(' ',el('span','lrep','×'+n));row.append(m);row.title=r.raw;out.append(row);prev=r}
+    out.append(lrowEl(r,q,n));prev=r}
   if(!rows.length)out.append(el('div','lempty',q?t('Nichts gefunden.','Nothing found.'):t('Keine Zeilen in diesem Zeitraum.','No lines in this time range.')));
   const name={diag:LG.f.length?LG.f.map(k=>k==='errors'?t('Fehler','errors'):(LAREA[k]||[k])[0]).join(' + '):t('Alles','Everything'),svc:LG.svc,update:'Update',audit:t('Änderungen','Changes'),adm:t('Admin-Protokoll','Admin log')}[LG.tab];
   const span={10:t('letzte 10 min','last 10 min'),60:t('letzte Stunde','last hour'),120:t('letzte 2 Stunden','last 2 hours'),720:t('letzte 12 Stunden','last 12 hours'),1440:t('letzte 24 Stunden','last 24 hours')}[LG.min];
   $('loghead').textContent=name+(LG.tab==='diag'||LG.tab==='update'?' · '+span:'');
   $('logcount').textContent=q?t(`${rows.length} Treffer`,`${rows.length} hits`):(d?t(`${rows.length} von ${d.found} Zeilen`,`${rows.length} of ${d.found} lines`):t(`${rows.length} Zeilen`,`${rows.length} lines`));
-  if(stick||!out.dataset.seen){out.scrollTop=1e9;out.dataset.seen='1'}}
+  out.scrollTop=out.dataset.seen?keep:0;out.dataset.seen='1'}
+// one row of the table: time, area (a word of LAREA or the line's own prefix), level as a dot, the message on one line
+// (a click shows it whole; the row keeps its height in the list, only the opened one grows)
+const LOPEN=new Set();
+function lheadRow(){const h=el('div','lrow lhd');h.setAttribute('aria-hidden','true');h.append(el('span','lt',t('Zeit','Time')),el('span','lbadge',t('Bereich','Area')),el('span','llv',t('Stufe','Level')),el('span','lm',t('Meldung','Message')));return h}
+function lrowEl(r,q,n){const row=el('div','lrow'+(r.level?' '+r.level:'')+(LOPEN.has(r.raw)?' open':''));row.append(el('span','lt',r.t||''));
+  const pre=(r.msg.match(/^([a-z0-9_]+):\s/i)||[])[1],a=LAREA[r.area];row.append(el('span','lbadge',a?a[0]:(pre||'·')));
+  const lv=el('span','llv');if(r.level){lv.title=r.level==='err'?t('Fehler','Error'):t('Warnung','Warning');lv.setAttribute('aria-label',lv.title);lv.append(el('i'))}row.append(lv);
+  const m=el('span','lm');const text=pre?r.msg.slice(pre.length+1).trim():r.msg;
+  if(q){const low=text.toLowerCase();let at=0,k;while((k=low.indexOf(q,at))>=0){m.append(document.createTextNode(text.slice(at,k)),el('mark','',text.slice(k,k+q.length)));at=k+q.length}m.append(document.createTextNode(text.slice(at)))}
+  else m.textContent=text;
+  if(n>1)m.prepend(el('span','lrep','×'+n),' ');row.append(m);row.title=r.raw;
+  row.onclick=()=>{if(String(window.getSelection()||''))return;row.classList.toggle('open');if(row.classList.contains('open'))LOPEN.add(r.raw);else LOPEN.delete(r.raw)};return row}
 function lcopyText(){const q=$('logq').value.trim().toLowerCase();const rows=q?LROWS.filter(r=>(r.msg).toLowerCase().includes(q)):LROWS;
   return `${$('ver').textContent} · ${LROWS.head||''}${q?' · Suche: '+q:''}\n\`\`\`\n${rows.map(r=>r.raw).join('\n')}\n\`\`\``}
 // ---------------------------------------------------------------- Anfragen (V01.0.262, tracelog.py)
@@ -168,9 +182,7 @@ async function rshowLines(x,box){box.replaceChildren(el('div','lempty',t('Lade �
   try{const d=await (await api('/api/admin/traces/'+encodeURIComponent(x.id))).json();RQ.lines=d.lines||[];RQ.linesFor=x.id;rlinesShow(box)}
   catch(e){box.replaceChildren(el('div','lempty',e.message))}}
 function rlinesShow(box){box.replaceChildren();
-    const out=el('div','lout rlines');for(const r of RQ.lines){const row=el('div','lrow'+(r.level?' '+r.level:''));row.append(el('span','lt',r.t||''));
-      const pre=(r.msg.match(/^([a-z0-9_]+):\s/i)||[])[1],a=LAREA[r.area];const badge=el('span','lbadge',a?a[0]:(pre||'·'));badge.style.setProperty('--c',a?a[1]:'#94a3b8');
-      row.append(badge,el('span','lm',pre?r.msg.slice(pre.length+1).trim():r.msg));row.title=r.raw;out.append(row)}
+    const out=el('div','lout rlines');out.append(lheadRow());for(const r of RQ.lines)out.append(lrowEl(r,'',1));
     if(!RQ.lines.length)out.append(el('div','lempty',t('Keine Logzeilen aus dieser Zeit.','No log lines from this time.')));
     box.append(el('div','rsub',t('Logzeilen aus dieser Zeit (gleichzeitige Anfragen können dazwischen stehen)','Log lines from this time (requests at the same moment may show too)')),out)}
 // an error code of a request as a plain sentence (klartext.CODES, sent with the list); the code stays small beside it
@@ -233,12 +245,15 @@ document.querySelectorAll('#logmin button').forEach(b=>b.onclick=()=>{LG.min=+b.
 $('loglines').onchange=()=>{LG.lines=+$('loglines').value;lsave();loadLogs().catch(()=>{})};
 $('logsvc').onchange=()=>{LG.svc=$('logsvc').value;lsave();loadLogs().catch(()=>{})};
 $('logq').oninput=()=>lrender();
+$('logerr').onclick=()=>lpickErr(!LG.f.includes('errors'));
+document.addEventListener('click',e=>{const m=$('logpick');if(m.open&&!m.contains(e.target))m.open=false});
+$('logpick').addEventListener('keydown',e=>{if(e.key==='Escape'){$('logpick').open=false;$('logpick').querySelector('summary').focus()}});
 $('loglive').onclick=()=>{LG.live=!LG.live;lsave();try{localStorage.setItem('logfollow',LG.live?'1':'0')}catch{}lshow();if(LG.live)loadLogs().catch(()=>{})};
 $('logcopy').onclick=()=>copyString(LG.tab==='req'?rcopyText():lcopyText(),$('logcopy'));
 const _ll=loadLogs;window.loadLogs=async()=>{await _ll();loadVerbose()};
-// live: diagnosis every 10 s, service logs every 3 s; pauses while scrolled up or text is selected
+// live: diagnosis every 10 s, service logs every 3 s; pauses while scrolled down, the area menu is open or text is selected
 setInterval(()=>{if(!LG.live||!$('logs').classList.contains('on')||document.hidden)return;
-  const out=$('logout');if(out.scrollTop+out.clientHeight<out.scrollHeight-30||String(window.getSelection()||''))return;
+  const out=$('logout');if(out.scrollTop>30||$('logpick').open||String(window.getSelection()||''))return;
   if(Date.now()-LAT<(LG.tab==='svc'?3000:10000))return;_ll().catch(()=>{})},1000);
 lshow();
 

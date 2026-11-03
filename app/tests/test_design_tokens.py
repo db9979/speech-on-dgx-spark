@@ -243,6 +243,85 @@ class Klar3(unittest.TestCase):
         self.assertEqual({n: c for n, c in left.items() if c}, {})
 
 
+def rules(css, sel):
+    """The bodies of every rule whose selector list names sel exactly."""
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
+    return [b for s, b in re.findall(r"([^{}]+)\{([^{}]*)\}", css) if sel in [x.strip() for x in s.split(",")]]
+
+
+class Klar6(unittest.TestCase):
+    """Redesign Stufe 6 (Zustand, Technik, Logs, Werkstatt; Tafeln redesign/a-rechner-zustand.png, -logs.png,
+    -technik.png): tiles of one height with the state as a dot and a word, a dense log table with a fixed row height,
+    the areas of logfilter.AREAS as a menu, the Technik picture neutral from the tokens with line symbols; no colour
+    bar, no tinted ground, no gradient, no shadow in the page."""
+
+    def test_zustand_tiles_are_calm(self):
+        css = read("app.css")
+        tile = "".join(rules(css, ".zcard"))
+        for part in ("min-height:var(--h-tile)", "box-shadow:none"):
+            self.assertIn(part, tile)
+        self.assertEqual(rules(css, ".zcard::before"), [])                     # no colour bar on the left
+        self.assertIn("font-variant-numeric:tabular-nums", "".join(rules(css, ".zcard>b")))
+        self.assertIn("border-radius:50%", "".join(rules(css, ".zcard .zhd::after")))   # the state as a dot
+        self.assertNotIn("color-mix", "".join(rules(css, ".zbub")))          # no tinted bubble behind the symbol
+        self.assertNotRegex("".join(rules(css, "#zneed")), r"border-left")
+        for kind in ("ok", "warn", "bad"):
+            self.assertEqual(rules(css, f".zhead[data-lvl={kind}]"), [], kind)  # no tinted ground for the sentence
+            self.assertIn(f"background:var(--{kind})", "".join(rules(css, f".zhead[data-lvl={kind}] .zicon")))
+        self.assertNotIn("border-left:4px", "".join(rules(css, ".zrcard")))
+        self.assertIn("$('zicon').textContent=''", read(os.path.join("js", "admin.js")))
+
+    def test_log_table_is_dense_and_stands_still(self):
+        css, js = read("app.css"), read(os.path.join("js", "logs.js"))
+        row = "".join(rules(css, ".lrow"))
+        self.assertIn("height:var(--h-log)", row)
+        self.assertIn("--h-log:28px", read(TOKENS))
+        self.assertIn("font:var(--t-mono)", "".join(rules(css, ".lout")))
+        self.assertRegex("".join(rules(css, ".lout")), r"(?<![-\w])height:clamp\(")   # one height, whatever comes in
+        self.assertIn("position:sticky", "".join(rules(css, ".lhd")))
+        self.assertIn("border-radius:50%", "".join(rules(css, ".llv i")))      # the level only as a dot
+        for old in (".ltile", ".lspark", ".lrow.warn"):
+            self.assertEqual(rules(css, old), [], old)
+        # the areas: words only (no colour per area), one menu with ticks built once, newest line on top
+        body = js[js.index("const LAREA={"):js.index("};", js.index("const LAREA={"))]
+        self.assertNotRegex(body, r"#[0-9a-fA-F]{3,6}")
+        self.assertIn("function lpickBuild(){const box=$('logpicklist');if(box.childElementCount)return;", js)
+        self.assertIn("[...base].reverse()", js)
+        self.assertIn("if(out.scrollTop>30||$('logpick').open||", js)       # the live refresh waits while you read
+        self.assertNotIn("function ltile(", js)
+
+    def test_log_areas_are_the_journal_areas(self):
+        """The menu of the log page names every area of logfilter.AREAS, and nothing else (one source: a new area there
+        needs its word here)."""
+        import sys
+        sys.path.insert(0, os.path.join(STATIC, ".."))
+        import logfilter
+        js = read(os.path.join("js", "logs.js"))
+        body = js[js.index("const LAREA={"):js.index("};", js.index("const LAREA={"))]
+        self.assertEqual(sorted(re.findall(r"[{,]\s*([a-z0-9_]+):\[", body)), sorted(k for k, _ in logfilter.AREAS))
+
+    def test_technik_picture_is_neutral(self):
+        import sys
+        sys.path.insert(0, os.path.join(STATIC, ".."))
+        import technik
+        known = icon_names()
+        for k, name in technik.SYMBOL.items():
+            self.assertIn(name, known, f"technik.SYMBOL[{k!r}] is no line symbol of icons.js")
+        css, js = read("technik.css"), read(os.path.join("js", "technik.js"))
+        self.assertEqual(hex_colours(css), 0)
+        self.assertNotIn("Emoji", css)                                        # no emoji font for the symbols
+        self.assertIn("tkIco(n.symbol,", js)
+        self.assertNotIn("drop-shadow", css)
+        for sel in (".tk-zone.net rect", ".tk-zone.lan rect"):
+            self.assertEqual(rules(css, sel), [], sel)                        # zones as hairlines, not tinted
+
+    def test_werkstatt_is_calm(self):
+        css = read("app.css")
+        self.assertIn("box-shadow:none", "".join(rules(css, ".wkact")))
+        self.assertNotIn("gradient", "".join(rules(css, ".wkbar i")))
+        self.assertIn("background:var(--fill)", "".join(rules(css, ".wkic")))
+
+
 class Emoji(Ratchet, unittest.TestCase):
     """Emoji as symbols in the user interface (Klar 3): only what people write (chat text, reactions, folder and list
     symbols) and the game stay; the rest of the old list shrinks (setting names with thumbs in index.html, guides.js
@@ -267,7 +346,7 @@ class OwnSymbols(Ratchet, unittest.TestCase):
 
 class HexColours(Ratchet, unittest.TestCase):
     WHAT = "a fixed hex colour outside tokens.css; take a token (var(--…)) or add one to tokens.css"
-    ALT = {"app.css": 400, "appview.css": 24, "live.css": 18, "spontanhilfe.css": 19, "technik.css": 10, "weiche.css": 2}
+    ALT = {"app.css": 388, "appview.css": 24, "live.css": 18, "spontanhilfe.css": 19, "weiche.css": 2}
 
     def hits(self):
         return {n: c for n in sheets() if n != TOKENS and (c := hex_colours(read(n)))}
@@ -275,7 +354,7 @@ class HexColours(Ratchet, unittest.TestCase):
 
 class FontSizes(Ratchet, unittest.TestCase):
     WHAT = "a font size outside the scale (SCALE); take a size of the scale"
-    ALT = {"app.css": 373, "appview.css": 17, "live.css": 21, "spontanhilfe.css": 5, "technik.css": 30, "weiche.css": 14}
+    ALT = {"app.css": 355, "appview.css": 17, "live.css": 21, "spontanhilfe.css": 5, "technik.css": 2, "weiche.css": 14}
 
     def hits(self):
         return {n: c for n in sheets() if n != TOKENS and (c := off_scale(read(n)))}

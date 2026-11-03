@@ -16749,7 +16749,15 @@
 "file": "Sicherheit und Betrieb",
 "head": "Logs",
 "title": "Logs-Seite „Überblick zuerst“",
-"text": "Logs-Seite „Überblick zuerst“ (ab V01.0.212): Reiter Diagnose, Dienste, Update und Änderungen. Unter Diagnose zeigen Kacheln die Fehlerzahl und die drei lebhaftesten Bereiche mit kleinem Verlauf über den Zeitraum (Antippen filtert), darunter der letzte Fehler mit einem festen Hinweis (z. B. HTTP 401 bei Home Assistant → Token abgelaufen). Filterknöpfe mit Trefferzahl: Gespräch, Websuche, Weiche, Home Assistant, Raum, Lautsprecher, Telegram, Mail und „Nur Fehler“. Jede Zeile zeigt Uhrzeit, Bereich und Meldung; Fehler rot, Warnungen gelb (feste Wortliste im Panel), gleiche Zeilen als „×n“, Pausen ab 2 min als Trennlinie. Die Suche läuft nur im Browser über die geladenen Zeilen. „Live“ lädt alle 10 s (Dienste alle 3 s) und pausiert, solange man hochscrollt oder etwas markiert. „Kopieren für Thread“ nimmt Version, Filter und die Rohzeilen im Code-Block mit."
+"text": "Logs-Seite „Überblick zuerst“ (ab V01.0.212): Reiter Diagnose, Dienste, Update und Änderungen. Unter Diagnose zeigen Kacheln die Fehlerzahl und die drei lebhaftesten Bereiche mit kleinem Verlauf über den Zeitraum (Antippen filtert), darunter der letzte Fehler mit einem festen Hinweis (z. B. HTTP 401 bei Home Assistant → Token abgelaufen). Filterknöpfe mit Trefferzahl: Gespräch, Websuche, Weiche, Home Assistant, Raum, Lautsprecher, Telegram, Mail und „Nur Fehler“. Jede Zeile zeigt Uhrzeit, Bereich und Meldung; Fehler rot, Warnungen gelb (feste Wortliste im Panel), gleiche Zeilen als „×n“, Pausen ab 2 min als Trennlinie. Die Suche läuft nur im Browser über die geladenen Zeilen. „Live“ lädt alle 10 s (Dienste alle 3 s) und pausiert, solange man hochscrollt oder etwas markiert. „Kopieren für Thread“ nimmt Version, Filter und die Rohzeilen im Code-Block mit. Seit V01.1.301 (Redesign Stufe 6) zeigt eine Zeile Fehler, Warnungen und Zeilen statt der Kacheln, die Bereiche wählt ein Menü mit Häkchen statt der Filterknöpfe, die Ausgabe ist eine Tabelle mit fester Zeilenhöhe, die Stufe ein Punkt, die neueste Zeile steht oben, und „Live“ pausiert, solange man nach unten scrollt, das Menü offen "
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Logs",
+"title": "Logs-Seite „Überblick zuerst“",
+"text": "ist oder etwas markiert."
 },
 {
 "lang": "de",
@@ -17365,7 +17373,7 @@
 "file": "Technik und Fehlersuche",
 "head": "Aufbau des Chats",
 "title": "Aufbau des Chats",
-"text": "Wie die Teile zusammenspielen, der Weg einer Anfrage und alle Speicherorte stehen in Architektur und Datenfluss und im Panel unter Zustand → Technik. Im Bild hat jeder Kasten links einen Farbstreifen für seine Art (Legende rechts oben: Geräte, Zugang und Schutz, Gespräch, Wissen, Post und Kontakte, Betrieb, Modelle, Speicher, Draußen) und ein Symbol vor seiner Zeile; Pfeile zeigen die Richtung, ein Schild markiert, was es nur bei Spark teilen gibt (V01.0.915, technik.FARBE, SYMBOL, NUR_BEI). test_technik prüft, dass jeder Text in seinen Kasten passt und keine Linie quer durch einen Kasten läuft."
+"text": "Wie die Teile zusammenspielen, der Weg einer Anfrage und alle Speicherorte stehen in Architektur und Datenfluss und im Panel unter Zustand → Technik. Im Bild hat jeder Kasten links einen schmalen Strich für seine Art (Legende rechts oben: Geräte, Zugang und Schutz, Gespräch, Wissen, Post und Kontakte, Betrieb, Modelle, Speicher, Draußen) und ein Linien-Icon aus icons.js vor seiner Zeile (seit V01.1.301, vorher Emoji); Pfeile zeigen die Richtung, ein Schild markiert, was es nur bei Spark teilen gibt (V01.0.915, technik.FARBE, SYMBOL, NUR_BEI). test_technik prüft, dass jeder Text in seinen Kasten passt und keine Linie quer durch einen Kasten läuft."
 },
 {
 "lang": "de",
@@ -33829,7 +33837,7 @@
 "file": "Security and operation",
 "head": "Logs",
 "title": "Logs page \"overview first\"",
-"text": "Logs page \"overview first\" (since V01.0.212): tabs Diagnosis, Services, Update and Changes. Under Diagnosis tiles show the error count and the three busiest areas with a small history over the time range (tap to filter), below the newest error with a fixed hint (e.g. HTTP 401 from Home Assistant → token expired). Filter buttons with counts: conversation, web search, router, Home Assistant, room, speakers, Telegram, mail and \"errors only\". Each line shows time, area and message; errors red, warnings yellow (fixed word list in the panel), repeated lines as \"×n\", pauses from 2 min as a divider. Search runs in the browser over the loaded lines only. \"Live\" reloads every 10 s (services every 3 s) and pauses while you scroll up or select text. \"Copy for thread\" takes version, filter and the raw lines in a code block."
+"text": "Logs page \"overview first\" (since V01.0.212): tabs Diagnosis, Services, Update and Changes. Under Diagnosis tiles show the error count and the three busiest areas with a small history over the time range (tap to filter), below the newest error with a fixed hint (e.g. HTTP 401 from Home Assistant → token expired). Filter buttons with counts: conversation, web search, router, Home Assistant, room, speakers, Telegram, mail and \"errors only\". Each line shows time, area and message; errors red, warnings yellow (fixed word list in the panel), repeated lines as \"×n\", pauses from 2 min as a divider. Search runs in the browser over the loaded lines only. \"Live\" reloads every 10 s (services every 3 s) and pauses while you scroll up or select text. \"Copy for thread\" takes version, filter and the raw lines in a code block. Since V01.1.301 (redesign stage 6) one line shows errors, warnings and lines instead of the tiles, a menu with ticks picks the areas instead of the filter buttons, the output is a table with a fixed row height, the level a dot, the newest line on top, and \"Live\" pauses while you scroll down, the menu is open or text is selected."
 },
 {
 "lang": "en",
@@ -34445,7 +34453,7 @@
 "file": "Technical details and troubleshooting",
 "head": "How the chat is built",
 "title": "How the chat is built",
-"text": "How the parts work together, the way of a request and every storage place are in Architecture and data flow and in the panel under Status → Architecture. In the picture every box has a colour bar on the left for its kind (legend top right: devices, access and protection, conversation, knowledge, mail and contacts, operation, models, storage, outside) and a symbol before its line; arrows show the direction, a tab marks what exists only with the Spark split (V01.0.915, technik.FARBE, SYMBOL, NUR_BEI). test_technik checks that every text fits its box and no line runs across a box."
+"text": "How the parts work together, the way of a request and every storage place are in Architecture and data flow and in the panel under Status → Architecture. In the picture every box has a thin bar on the left for its kind (legend top right: devices, access and protection, conversation, knowledge, mail and contacts, operation, models, storage, outside) and a line icon of icons.js before its line (since V01.1.301, emoji before); arrows show the direction, a tab marks what exists only with the Spark split (V01.0.915, technik.FARBE, SYMBOL, NUR_BEI). test_technik checks that every text fits its box and no line runs across a box."
 },
 {
 "lang": "en",
