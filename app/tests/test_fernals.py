@@ -222,7 +222,8 @@ class Anchor(unittest.TestCase):
     def test_nothing_changes_when_visudo_or_the_system_says_no(self):
         for kind in ("visudo", "include", "user", "spark", "sftp"):
             p, ctx, ran = self.ctx(visudo=1 if kind == "visudo" else 0)
-            if kind == "include":
+            if kind == "include":                 # read-only (0440) for a runner that is not root: replaced, not opened
+                os.remove(ctx.path(p.SUDOERS))
                 p.write(ctx.path(p.SUDOERS), "root ALL=(ALL) ALL\n", 0o440)
             if kind == "sftp":
                 ctx.root_owned = lambda path: False

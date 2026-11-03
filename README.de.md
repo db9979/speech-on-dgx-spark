@@ -42,6 +42,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.298** ROT-FIX: der Anker-Test von „Dateien als anderer Benutzer“ schrieb die nur lesbare sudoers-Attrappe neu, auf GitHub (nicht root) verweigert; jetzt ersetzt er sie (Test geprüft ohne Root-Dateirechte)
 - **V01.1.297** Protokoll prüfen zeigte einem Admin-Profil nur „Das gehört zum Notzugang (Panel-Passwort)“: die Prüfung der Kette und der NAS-Kopie geht jetzt für jeden Admin (nur lesen), Wächter fängt auch Wege mit Abfrage
 - **V01.1.296** Fernzugang: Dateien als anderer Benutzer (eigener Schalter, aus): auf dem Server `sudo spark-anker dateien als root[,anna] [--schreiben]` (sudoers nur für den eigenen sftp-server mit -R, geprüft mit visudo, aus und Entfernen löschen es), im Panel je System einschalten mit Code oder Passkey; „Dateien als root“ über sudo -n, erst nur lesen, Schreiben mit frischem Code je Sitzung; Windows: icacls nur auf genannte Ordner; macOS mit Hinweis auf den Festplattenvollzugriff; iPhone zeigt und schaltet es
 - **V01.1.295** Test-Fix: vier Tests, die auf GitHub im ersten Versuch wackelten: E-Mail und Dokumente erstellen melden sich mit eigenen Profilen an, die Siegel-Tests räumen beiseite gelegte Dateien weg, Funde zählen auch am ersten Ort der Dungeon-Karte nur einmal
@@ -51,7 +52,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.291** Wissenskarte schneller bei mehr Platz: 3000 Seiten, 25 000 Verbindungen und 15 000 Punkte je Profil; Suche mit Karte bei 5000 Dokumenten etwa fünfmal so schnell, nächtliche Läufe in kurzen Scheiben; ein gelöschter Punkt kommt auch mit anderer Anrede oder Schreibweise nicht zurück
 - **V01.1.290** Redesign Stufe 4: Personen und Geräte, Offen und Chats als Liste und Detail (Zeilen fester Höhe, Zustand als Punkt mit Wort, Filter als Segment, am Handy Detail als eigene Seite)
 - **V01.1.289** Fernzugang: mehrere Sitzungen als Reiter (Stufe 1): jede Shell ein Reiter mit Symbol, Stand und Punkt für neue Ausgabe, + System mit Suche (Strg+Umschalt+O), Wechsel mit Strg+Umschalt+1…9 und ←/→, Assistent und Verlauf je Reiter, Rechtsklick-Menü; bis zu 8 Plätze (Standard 4), voll heißt „n von n Plätzen belegt“ statt still zu schließen; auf anderen Seiten bleiben alle Sitzungen offen, die rote Zeile führt mit Zum Terminal zurück.
-- **V01.1.288** Test-Fix: sechs Tests, die einander störten, räumen auf oder zählen nur das Eigene (Finden-Mail, Sicherung, Listen, Dokumente, Home Assistant live, Karten)
 
 
 
