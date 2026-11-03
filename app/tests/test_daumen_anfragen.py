@@ -91,8 +91,8 @@ class Thumb(Base):
         with open(os.path.join(helpers.APP, "panel", "static", "js", "logs.js"), encoding="utf-8") as f:
             js = f.read()
         self.assertIn("function rthumb(", js)                          # 1 list
-        self.assertIn("['gut','👍'", js)                                # 2 filters
-        self.assertIn("['schlecht','👎'", js)
+        self.assertIn("nv('gut'),'up_thumb']", js)                      # 2 filters, with the thumbs of icons.js
+        self.assertIn("nv('schlecht'),'down_thumb']", js)
         self.assertIn("Bewertet nach ${v.after} s", js)                 # 3 detail with reason
         self.assertIn("window.openCase(v.case)", js)                    #   and the jump to the case
         self.assertIn("` · Bewertung ${", js)                          # 4 copy for the thread

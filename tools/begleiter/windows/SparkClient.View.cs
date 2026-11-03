@@ -9,10 +9,7 @@ namespace SparkBegleiter;
 /// <see cref="Look"/> („Bildschirm beschreiben“: der Spark sieht einmal hin) die Frage der Person.</summary>
 internal sealed record ViewAsk(string Id, bool Control, bool Operate = false, string Task = "", bool Look = false);
 
-/// <summary>Eine Eingabe aus dem Panel (fernsicht.py prüft sie, der Begleiter noch einmal). Stufe 3: Kind "step"
-/// mit <see cref="Step"/> (click, double, right, scroll, key, type, ask), Nummer, Grund und Warnung.</summary>
-internal sealed record ViewEvent(string Kind, double X, double Y, string Button, int Dy, string Key, string Text,
-                                 string Step = "", int N = 0, int Of = 0, string Why = "", string Warn = "");
+// ViewEvent (eine Eingabe aus dem Panel) steht im gemeinsamen Kern Sicht.cs.
 
 /// <summary>Rechner fernsteuern, Stufe 2: Bildschirm zeigen und bedienen (fernsicht.py im Panel).</summary>
 internal static partial class SparkClient

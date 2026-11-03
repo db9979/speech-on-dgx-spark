@@ -179,10 +179,9 @@ struct ScreenBoxView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            GradientBar()
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 10) {
-                    FaceView(size: 28)
+                    if FacePref.on { FaceView(size: 28) }
                     Text(verbatim: "Bildschirm fragen")
                         .font(.system(size: 14, weight: .semibold))
                     Spacer()

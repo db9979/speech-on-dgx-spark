@@ -110,6 +110,10 @@ SVC = {
     # minutes away or with a changed host key (no question of its own, one part per server)
     "fernzugang": ("Fern-Server (Fernzugang)", "Remote server (remote access)", "Die Shell dieses Fern-Servers geht gerade nicht; alles andere läuft weiter.",
                    EVERY, "fernzugang"),
+    # Spontanhilfe Steuern (spontansteuern.py, S2b): the program SparkHilfe is in the cache with its SHA-256 (no question of
+    # its own; the cache fills from the CI release once a day)
+    "sparkhilfe": ("Programm SparkHilfe", "Program SparkHilfe",
+                   "Steuern bei der Spontanhilfe geht gerade nicht, das Programm fehlt; Ansehen läuft weiter.", SLOW, "spontanhilfe"),
     # Rundlauf-Wächter (rundlauf.py): its own loop speaks, hears and asks the model; the probe only looks that the loop
     # runs, the step that hakt comes as a warning of its own (warn)
     "rundlauf": ("Rundlauf", "Round trip", "Der Probelauf durch Sprechen, Hören und Sprachmodell kommt nicht durch.", EVERY,
@@ -338,6 +342,13 @@ def active(c=None, cfg=None):
     except Exception:
         pass
     try:
+        import spontansteuern
+        p = spontansteuern.probes()
+        if p:
+            out["sparkhilfe"] = p
+    except Exception:
+        pass
+    try:
         import rundlauf
         if rundlauf.an(c):
             out["rundlauf"] = {"own": {"rundlauf": True}}
@@ -522,6 +533,9 @@ async def probe(sid, key, p, cfg):
         if p.get("fernanker"):  # Fernzugang: the anchor is connected or not long away (fernzugang.anker_ok), no question
             import fernzugang
             return Probe(fernzugang.anker_ok(p["fernanker"]))
+        if p.get("sparkhilfe"):  # Spontanhilfe Steuern: every program in the cache matches its SHA-256 (reads files: a thread)
+            import spontansteuern
+            return Probe(await asyncio.to_thread(spontansteuern.vorhanden))
         if p.get("rundlauf"):  # Rundlauf: its own loop ran lately (rundlauf.lebt), no question of its own
             import rundlauf
             return Probe(rundlauf.lebt())

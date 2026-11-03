@@ -505,6 +505,10 @@ def mailmanage_on(request: Request):
     _gate("mailmanage", "ordering mail is turned off", request)
 
 
+def maillearn_on(request: Request):
+    _gate("maillearn", "learning sorting from corrections is turned off", request)
+
+
 def mailsend_on(request: Request):
     _gate("mailsend", "sending mail is turned off", request)
 

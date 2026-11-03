@@ -243,7 +243,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "3d40cb46e7",
+        "stand": "ac6f4e0801",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -257,13 +257,25 @@ SEITEN = {
             "wissensbuch.SAMPLE": ["s13"], "wissenskarte.view": ["s13"], "wissenskarte.check_edge": ["s13"],
             "wissenskarte.EDGES_PER_DOC": ["s13"], "wissenskarte.VIEW_NODES": ["s13"], "wissenskarte.VIEW_EDGES": ["s13"],
             "wissenskarte.WEG_MOST": ["s13"], "wissenskarte.rund_um": ["s13"], "wissenskarte.weg": ["s13"],
+            "wissenskarte._bau": ["s13"], "wissenskarte._worte_sync": ["s6"], "wissenskarte.BAU_MOST": ["s13"],
+            "wissenskarte.BAU_S": ["s13"], "wissenskarte.NACHT_SCHEIBE": ["s13"], "wissenskarte.NACHT_FRISTEN": ["s13"],
             "wissensbuch.search_pages": ["s13"], "wissensbuch._fts_sync": ["s13"], "wissensbuch.liste": ["s13"], "documents._similar": ["s6"],
             "documents.VEC_BLOCK": ["s6"], "wissenskarte.MAX_EDGES": ["s13"], "wissenskarte.DAY": ["s13"],
             "wissenskarte.check_ent": ["s13"], "wissenskarte.finde_knoten": ["s13"], "wissenskarte.knoten_liste": ["s13"],
-            "wissenskarte.zusammen": ["s13"], "wissenskarte.ENT_PER_DOC": ["s13"], "wissenskarte.MAX_ENT": ["s13"],
+            "wissenskarte.zusammen": ["s13"], "wissenskarte._verbinde": ["s13"], "wissenskarte.erlaubt": ["s13"],
+            "wissenskarte.frist_name": ["s13"], "wissenskarte.nachtpruefung": ["s13"], "wissensbuch.retitle": ["s13"], "wissenskarte.ENT_PER_DOC": ["s13"], "wissenskarte.MAX_ENT": ["s13"],
             "wissenskarte.ENT_DAY": ["s13"], "wissenskarte.ENT_NAME_LEN": ["s13"],
+            "wissensdoppelt.aehnlich": ["s13"], "wissensdoppelt.normalform": ["s13"], "wissensdoppelt.gleich_id": ["s13"],
+            "wissensdoppelt.lauf": ["s13"], "wissensdoppelt.gesperrt": ["s13"], "wissensdoppelt.auswahl": ["s13"], "wissensdoppelt.verschieden": ["s13"],
+            "wissensdoppelt.VERGLEICHE_MOST": ["s13"], "wissensdoppelt.PAARE_MOST": ["s13"], "wissensdoppelt.SCHEIBE_S": ["s13"], "wissensdoppelt.AEHNLICH_MOST": ["s13"],
+            "wissenskarte.knoten_von_dok": ["s13"], "wissenskarte.liste": ["s6"], "wissenskarte.trifft": ["s6"], "documents._karte": ["s6"],
+            "documents.KARTE_WEIGHT": ["s6"], "wissenskarte.KARTE_MOST": ["s6"], "wissenskarte.KARTE_KNOTEN": ["s6"],
+            "regel:Wissenskarte": ["s6"],
             "pdftabellen.read": ["s5"], "documents._rows": ["s5"], "documents.due_tables": ["s5"], "lokal.excerpt": ["s5"],
             "pdftabellen.BUDGET_S": ["s5"], "documents.TABLE": ["s5"], "lokal.MAX_HIT_CHARS": ["s5"],
+            "wissensmessung.lauf": ["s6"], "wissensmessung._synth": ["s6"], "wissensmessung.MESSTEILE": ["s6"],
+            "regel:Mappen": ["s13"], "mappen.plan": ["s13"], "mappen.kontext": ["s13"], "mappen.for_turn": ["s13"],
+            "mappen.MAX_MAPPEN": ["s13"], "mappen.MAX_EINTRAEGE": ["s13"], "mappen.TOKEN": ["s13"],
         },
         "kurz": ("Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente "
                  "jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene "
@@ -279,7 +291,11 @@ SEITEN = {
                  "schlägt das Sprachmodell in ruhigen Minuten Schlagworte vor; fund.pruefe behält nur Kategorien der "
                  "festen Liste und Namen, die wörtlich im Eintrag stehen, verknüpft Personen, Firmen und Orte mit den "
                  "Punkten der Wissenskarte (nur lesend) und lässt weg, was die Person entfernt hat. Ein klarer Treffer "
-                 "kommt als fester Satz des Panels (fund.sofort_satz), nie mit Worten des Modells.",
+                 "kommt als fester Satz des Panels (fund.sofort_satz), nie mit Worten des Modells. Mappen (mappen.py, "
+                 "Tabellen in wissen.db) bündeln eigene Dokumente, Wissensbuch-Seiten und Notizen; ein Gespräch, "
+                 "das die Person auf eine Mappe beschränkt, bekommt deren Einträge nach festen Stufen (mappen.plan: "
+                 "aus nie, kurz nur der Steckbrief, ganz der Text bis zum Budget, der Rest nur über die Suche) als "
+                 "Daten, und die Antwort ist danach gesperrt wie nach jedem Text von außen.",
                  "Knowledge is everything the Spark knows without going to the internet: the uploaded documents of "
                  "each profile (one SQLite file wissen.db per profile), the memory, earlier conversations, the own "
                  "Kiwix archive and created documents. This page shows the way a question finds fitting passages in "
@@ -294,7 +310,11 @@ SEITEN = {
                  "quiet minutes; fund.pruefe keeps only categories of the fixed list and names that stand in the entry "
                  "word for word, links people, companies and places to the points of the knowledge map (read only) "
                  "and leaves out what the person removed. A clear hit comes as the panel's fixed sentence "
-                 "(fund.sofort_satz), never in the model's words."),
+                 "(fund.sofort_satz), never in the model's words. Collections (mappen.py, tables in wissen.db) bundle "
+                 "own documents, knowledge book pages and notes; a conversation the person limits to a collection "
+                 "gets its entries by fixed levels (mappen.plan: off never, short only the document card, whole the "
+                 "text up to the budget, the rest only through the search) as data, and the answer is locked after it "
+                 "like after any outside text."),
         "warum": ("Das Sprachmodell kennt die eigenen Unterlagen nicht. Es bekommt nur die wenigen Stellen, die das "
                   "Panel mit festen Regeln und zwei kleinen Modellen auf dem Prozessor heraussucht, jeweils mit "
                   "Herkunft. Was in einem Dokument steht, ist Text von außen: Daten, nie ein Befehl.",
@@ -353,13 +373,21 @@ SEITEN = {
                "addiert, so steigt eine Stelle, die in beiden Listen weit oben steht. Die Vektoren liegen als "
                "float16 im Speicher (halb so viel wie float32); gerechnet wird blockweise je {documents.VEC_BLOCK} "
                "Stellen in float32, die Rangfolge bleibt gleich. Neu gelesen werden sie nur, wenn sich Stellen oder "
-               "genutzte Dokumente ändern; solange noch Vektoren fehlen, höchstens alle {documents.VEC_CATCHUP_S} Sekunden.",
+               "genutzte Dokumente ändern; solange noch Vektoren fehlen, höchstens alle {documents.VEC_CATCHUP_S} Sekunden. "
+               "Mit „Karte hilft der Suche“ kommt eine dritte Liste aus der Wissenskarte dazu (wissenskarte.liste): "
+               "nennen die Suchwörter einen Punkt (Person, Firma, Ort …), zählen seine Stellen und die seiner Nachbarn, "
+               "höchstens {wissenskarte.KARTE_MOST}, mit dem Gewicht {documents.KARTE_WEIGHT}; eine Stelle nur aus der "
+               "Karte steht so hinter jeder, die Wörter oder Bedeutung fanden. Nur für die eigenen Dokumente.",
                "If the question has a vector, it is compared with every passage's vector. Below 0.75 similarity "
                "nothing counts as related; the best 30 above get a rank too. Both ranks are added, so a passage "
                "high in both lists rises. The vectors are kept in memory as float16 (half of float32); they are "
                "reckoned in float32 block by block, {documents.VEC_BLOCK} passages at a time, so the ranking stays "
                "the same. They are read again only when passages or used documents change; while vectors are still "
-               "missing, at most every {documents.VEC_CATCHUP_S} seconds.")),
+               "missing, at most every {documents.VEC_CATCHUP_S} seconds. With „Map helps the search“ a third list "
+               "from the knowledge map joins (wissenskarte.liste): if the search words name a point (person, company, "
+               "place …), its passages and those of its neighbours count, at most {wissenskarte.KARTE_MOST}, with the "
+               "weight {documents.KARTE_WEIGHT}; a passage only from the map so stands behind every one words or "
+               "meaning found. Only for the own documents.")),
             S("s7", "frage", ("Neueste zuerst?", "Newest first?"),
               ("bei reMarkable-Notizen", "with reMarkable notes"),
               ("Mit „Neueste zuerst“ bekommt eine kürzlich geänderte Stelle einen kleinen Vorsprung, etwa zwei Plätze, "
@@ -447,6 +475,8 @@ SEITEN = {
             [("Kiwix", "Kiwix"), ("archive_search und wikipedia über das eigene Kiwix im Heimnetz", "archive_search and wikipedia via the own Kiwix in the home network"), ("alle Profile, nie Gäste", "all profiles, never guests")],
             [("Erst lokal suchen", "Look locally first"), ("Volltext ohne Warten auf Modelle, vor der ersten Runde", "full text without waiting for models, before the first round"), ("wie die Werkzeuge der Anfrage", "as the request's tools")],
             [("Wissensbuch", "Knowledge book"), ("document_search: passende Seiten vor den Stellen", "document_search: fitting pages before the passages"), ("eigenes Profil, nur eigene Dokumente", "own profile, own documents only")],
+            [("Wissenskarte", "Knowledge map"), ("dritte Trefferliste: Punkte, die die Frage nennt, und ihre Nachbarn", "third list of hits: points the question names and their neighbours"), ("eigenes Profil, nur eigene Dokumente in der Suche", "own profile, own documents in the search only")],
+            [("Mappen", "Collections"), ("vom Panel vor der ersten Runde nach Stufen: kurz, ganz bis zum Budget, sonst Suche", "by the panel before the first round by level: short, whole up to the budget, else search"), ("eigenes Profil, nur eigene Einträge", "own profile, own entries only")],
         ],
         "zahlen": [
             ("{nachsortieren.CANDIDATES}", ("Kandidaten für das Nachsortieren", "candidates for re-ranking"), "nachsortieren.CANDIDATES"),
@@ -467,12 +497,26 @@ SEITEN = {
             ("{wissenskarte.VIEW_NODES}", ("Punkte, die die Karte auf einmal zeigt", "points the map shows at once"), "wissenskarte.VIEW_NODES"),
             ("{wissenskarte.VIEW_EDGES}", ("Verbindungen, die die Karte auf einmal zeigt", "connections the map shows at once"), "wissenskarte.VIEW_EDGES"),
             ("{wissenskarte.WEG_MOST}", ("Schritte, die wissenskarte.weg höchstens sucht", "steps wissenskarte.weg looks for at most"), "wissenskarte.WEG_MOST"),
+            ("{wissenskarte.BAU_MOST}", ("Aufbauten der Karte, die das Panel im Speicher behält", "builds of the map the panel keeps in memory"), "wissenskarte.BAU_MOST"),
+            ("{wissenskarte.BAU_S} s", ("so lange bleibt ein Aufbau höchstens", "a build stays this long at most"), "wissenskarte.BAU_S"),
+            ("{wissenskarte.NACHT_SCHEIBE}", ("Verbindungen je Scheibe der Nachtprüfung", "connections per slice of the nightly check"), "wissenskarte.NACHT_SCHEIBE"),
+            ("{wissenskarte.NACHT_FRISTEN}", ("Fristen ohne Zahl, die eine Scheibe höchstens entfernt", "deadlines without a number one slice removes at most"), "wissenskarte.NACHT_FRISTEN"),
             ("{documents.VEC_BLOCK}", ("Stellen je Block beim Vergleich der Vektoren", "passages per block when comparing vectors"), "documents.VEC_BLOCK"),
             ("{wissenskarte.DAY}", ("Dokumente am Tag für die Wissenskarte (Standard)", "documents a day for the knowledge map (default)"), "wissenskarte.DAY"),
             ("{wissenskarte.ENT_PER_DOC}", ("Personen, Firmen, Orte, Verträge, Konten und Fristen, die ein Dokument bringen darf", "people, companies, places, contracts, accounts and deadlines one document may bring"), "wissenskarte.ENT_PER_DOC"),
             ("{wissenskarte.MAX_ENT}", ("solche Punkte pro Profil", "such points per profile"), "wissenskarte.MAX_ENT"),
             ("{wissenskarte.ENT_NAME_LEN}", ("Zeichen, die der Name eines solchen Punktes höchstens hat", "characters the name of such a point has at most"), "wissenskarte.ENT_NAME_LEN"),
             ("{wissenskarte.ENT_DAY}", ("Dokumente am Tag für diese Punkte (Standard)", "documents a day for these points (default)"), "wissenskarte.ENT_DAY"),
+            ("{wissensdoppelt.VERGLEICHE_MOST}", ("Paare, die ein Lauf der Doppelten je Profil höchstens vergleicht", "pairs one run for doubles compares per profile at most"), "wissensdoppelt.VERGLEICHE_MOST"),
+            ("{wissensdoppelt.PAARE_MOST}", ("offene Vorschläge „Vielleicht doppelt“ je Profil", "open suggestions „Maybe double“ per profile"), "wissensdoppelt.PAARE_MOST"),
+            ("{wissensdoppelt.AEHNLICH_MOST}", ("ähnlichste Punkte oben in „Zusammenführen mit …“", "most similar points on top of „Merge with …“"), "wissensdoppelt.AEHNLICH_MOST"),
+            ("{wissensdoppelt.SCHEIBE_S} s", ("höchstens je Scheibe des ruhigen Laufs der Doppelten", "at most per slice of the quiet run for doubles"), "wissensdoppelt.SCHEIBE_S"),
+            ("{wissenskarte.KARTE_MOST}", ("Stellen, die die Karte der Suche höchstens nennt", "passages the map names to the search at most"), "wissenskarte.KARTE_MOST"),
+            ("{wissenskarte.KARTE_KNOTEN}", ("Punkte, die die Suchwörter höchstens treffen", "points the search words hit at most"), "wissenskarte.KARTE_KNOTEN"),
+            ("{documents.KARTE_WEIGHT}", ("Gewicht der Liste aus der Karte", "weight of the list from the map"), "documents.KARTE_WEIGHT"),
+            ("{mappen.MAX_MAPPEN}", ("Mappen pro Profil", "collections per profile"), "mappen.MAX_MAPPEN"),
+            ("{mappen.MAX_EINTRAEGE}", ("Einträge je Mappe", "entries per collection"), "mappen.MAX_EINTRAEGE"),
+            ("{mappen.TOKEN}", ("Token einer Mappe ans Modell (Standard)", "tokens of a collection to the model (default)"), "mappen.TOKEN"),
         ],
         "einstellen": [
             ("Funktionen → Eigene Dokumente und darunter Bedeutungssuche an: Stellen bekommen einen Bedeutungsvektor "
@@ -497,6 +541,14 @@ SEITEN = {
              "eigene Punkte aus den Dokumenten auf der Karte, dazu wie viele Dokumente am Tag (eigene Grenze).",
              "Features → Own documents → Knowledge book → Knowledge map and below it People, companies and deadlines "
              "on: points of their own from the documents on the map, with how many documents a day (own limit)."),
+            ("Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte → Personen, Firmen und Fristen und darunter "
+             "Karte hilft der Suche an: die Karte als dritte Trefferliste der Dokumentsuche (Standard aus).",
+             "Features → Own documents → Knowledge book → Knowledge map → People, companies and deadlines and below it "
+             "Map helps the search on: the map as third list of hits of the document search (default off)."),
+            ("Funktionen → Eigene Dokumente und darunter Mappen an: die Seite Mappen im Menü, dazu wie viele Token "
+             "eine Mappe dem Modell höchstens gibt.",
+             "Features → Own documents and below it Collections on: the page Collections in the menu, with how many "
+             "tokens a collection gives the model at most."),
         ],
         "sehen": [
             ("Zustand → Logs → Anfragen: der Schritt „Nachsortieren“ mit Zahl der Kandidaten, behaltenen Stellen und "
@@ -586,18 +638,30 @@ SEITEN = {
                  "Browser and app draw the map with their own code from names and kinds, never from SVG, Mermaid or "
                  "DOT of the model. The panel only answers the visible part with at most {wissenskarte.VIEW_NODES} "
                  "points; the export as Mermaid or Graphviz text comes from fixed code with cleaned names."),
-                ("Den sichtbaren Teil wählt SQLite: Verbindungen je Seite und Dokument zählt eine feste Abfrage, und "
-                 "rund um eine Seite läuft WITH RECURSIVE höchstens zwei Schritte über die Verbindungen; UNION nimmt "
-                 "jede Seite je Schritt nur einmal, ein Ring läuft also nie weiter. Nur die gewählten Punkte und "
-                 "höchstens {wissenskarte.VIEW_EDGES} Verbindungen kommen ins Panel. Zwei feste Abfragen mit Werten "
-                 "nur als Parameter, nie aus Text des Modells: wissenskarte.rund_um (Seiten um eine Seite) und "
-                 "wissenskarte.weg (kürzester Weg zwischen zwei Seiten, höchstens {wissenskarte.WEG_MOST} Schritte).",
-                 "SQLite picks the visible part: a fixed query counts the connections per page and document, and "
-                 "around a page WITH RECURSIVE walks at most two steps over the connections; UNION takes each page "
-                 "only once per step, so a ring never runs on. Only the chosen points and at most "
-                 "{wissenskarte.VIEW_EDGES} connections reach the panel. Two fixed queries with values only as "
-                 "parameters, never from the model's text: wissenskarte.rund_um (pages around a page) and "
-                 "wissenskarte.weg (shortest way between two pages, at most {wissenskarte.WEG_MOST} steps)."),
+                ("Den Aufbau der Karte (Namen, Verbindungen je Punkt und Dokument, wer neben wem steht) holt eine "
+                 "feste Abfrage aus SQLite und das Panel behält ihn im Speicher, solange sich nichts ändert: Trigger "
+                 "zählen jede Änderung der Tabellen in wissenskarte.STAND_TABELLEN in wk_stand, höchstens "
+                 "{wissenskarte.BAU_MOST} Aufbauten und {wissenskarte.BAU_S} s lang. Jede Antwort wählt daraus nur "
+                 "ihren Teil, höchstens {wissenskarte.VIEW_EDGES} Verbindungen. Zwei feste Abfragen mit Werten nur "
+                 "als Parameter, nie aus Text des Modells: wissenskarte.rund_um (Punkte um einen Punkt, je Schritt "
+                 "eine Abfrage über die Indizes für den ganzen Ring, jeder Punkt nur einmal, ein Ring läuft also nie "
+                 "weiter) und wissenskarte.weg (kürzester Weg, höchstens {wissenskarte.WEG_MOST} Schritte, von beiden "
+                 "Enden zugleich, endet, sobald sie sich treffen). Die Liste für die Suche findet ihre Punkte über "
+                 "den Wortindex wk_entwort (Trigger merken neue und geänderte Punkte, wissenskarte._worte_sync "
+                 "schreibt sie mit jedem Speichern), nie über alle Punkte. Die Nachtprüfung läuft in Scheiben von "
+                 "{wissenskarte.NACHT_SCHEIBE} Verbindungen und {wissenskarte.NACHT_FRISTEN} Fristen.",
+                 "The build of the map (names, connections per point and document, who stands next to whom) comes "
+                 "from one fixed query in SQLite and the panel keeps it in memory while nothing changes: triggers "
+                 "count every change of the tables in wissenskarte.STAND_TABELLEN in wk_stand, at most "
+                 "{wissenskarte.BAU_MOST} builds for {wissenskarte.BAU_S} s. Each answer only picks its part from it, "
+                 "at most {wissenskarte.VIEW_EDGES} connections. Two fixed queries with values only as parameters, "
+                 "never from the model's text: wissenskarte.rund_um (points around a point, one query over the "
+                 "indexes per step for the whole ring, each point only once, so a ring never runs on) and "
+                 "wissenskarte.weg (shortest way, at most {wissenskarte.WEG_MOST} steps, from both ends at once, "
+                 "ending as soon as they meet). The list for the search finds its points over the word index "
+                 "wk_entwort (triggers mark new and changed points, wissenskarte._worte_sync writes them with every "
+                 "commit), never over all points. The nightly check runs in slices of {wissenskarte.NACHT_SCHEIBE} "
+                 "connections and {wissenskarte.NACHT_FRISTEN} deadlines."),
             ]),
             (("Personen, Firmen und Fristen", "People, companies and deadlines"), [
                 ("Ist der Schalter unter der Wissenskarte an, schlägt das Sprachmodell nach den Verbindungen je Stelle "
@@ -605,7 +669,7 @@ SEITEN = {
                  "Nummer der Stelle. Das Panel behält einen Namen nur nach festen Regeln (wissenskarte.check_ent): die "
                  "Art aus der festen Liste, der Name steht in der Stelle (klein, ohne Akzente, Leerzeichen "
                  "zusammengezogen), 2 bis {wissenskarte.ENT_NAME_LEN} Zeichen ohne Link, Auszeichnung oder Befehl, eine "
-                 "Frist nur mit Datum in der Stelle, ein Konto nur als IBAN oder Nummer; höchstens "
+                 "Frist nur mit Datum oder Zahl mit Zeiteinheit im Namen, ein Konto nur als IBAN oder Nummer; höchstens "
                  "{wissenskarte.ENT_PER_DOC} je Dokument und {wissenskarte.MAX_ENT} je Profil. Verbindungen dieser "
                  "Punkte prüft dieselbe Regel wie die der Seiten.",
                  "When the switch below the knowledge map is on, the language model proposes only JSON per passage of a "
@@ -613,21 +677,100 @@ SEITEN = {
                  "kind and the number of the passage. The panel keeps a name only by fixed rules "
                  "(wissenskarte.check_ent): the kind from the fixed list, the name stands in the passage (lower case, "
                  "without accents, spaces drawn together), 2 to {wissenskarte.ENT_NAME_LEN} characters without link, "
-                 "markup or command, a deadline only with a date in the passage, an account only as IBAN or number; at "
+                 "markup or command, a deadline only with a date or a number with a unit in its name, an account only as IBAN or number; at "
                  "most {wissenskarte.ENT_PER_DOC} per document and {wissenskarte.MAX_ENT} per profile. Connections of "
                  "these points are checked by the same rule as those of the pages."),
                 ("Jeder Punkt hat eine feste Nummer (wk_ent) und seine Stellen (wk_ment: Dokument und Stück). Andere "
                  "Teile lesen nur: wissenskarte.finde_knoten (genau über Name und andere Namen) und "
-                 "wissenskarte.knoten_liste (nach Namen sortiert). Zusammenführen (wissenskarte.zusammen), Umbenennen "
+                 "wissenskarte.knoten_liste (nach Namen sortiert) und wissenskarte.knoten_von_dok (die Punkte eines "
+                 "Dokuments nach Art und Name, höchstens {wissenskarte.LISTE_MOST}). Zusammenführen (wissenskarte.zusammen), Umbenennen "
                  "und Löschen geschehen nur per Klick der Besitzerin oder des Besitzers mit dem Code von „Bestätigen“, "
                  "nie durch das Modell; jede Änderung meldet wissenskarte.GEAENDERT. Geht ein Dokument, gehen seine "
                  "Stellen sofort mit, ein Punkt ohne Stelle verschwindet.",
                  "Every point has a fixed number (wk_ent) and its passages (wk_ment: document and piece). Other parts "
                  "only read: wissenskarte.finde_knoten (exactly by name and other names) and wissenskarte.knoten_liste "
-                 "(sorted by name). Merging (wissenskarte.zusammen), renaming and deleting happen only by the owner's "
+                 "(sorted by name) and wissenskarte.knoten_von_dok (the points of one document by kind and name, at most "
+                 "{wissenskarte.LISTE_MOST}). Merging (wissenskarte.zusammen), renaming and deleting happen only by the owner's "
                  "click with the code of „Confirm“, never by the model; every change reports to "
                  "wissenskarte.GEAENDERT. When a document goes, its passages go with it at once, a point without a "
                  "passage disappears."),
+                ("Seite und Punkt, Typregeln, Fristen: Heißt eine Seite des Wissensbuchs wie ein Punkt der Art person, "
+                 "firma oder ort, sind beide ein Punkt (wk_entpage); die feste Regel wissenskarte._verbinde verbindet sie "
+                 "beim Einlesen der Punkte, nachts und einmal beim Anlegen, nie das Modell. Ihre Verbindungen zählen in "
+                 "view, rund_um, weg und liste als die des Punktes; umbenannt werden beide zusammen "
+                 "(wissensbuch.retitle, der alte Titel bleibt in wb_alttitel, so entsteht beim Einarbeiten keine "
+                 "Doppelseite). Jede Verbindung folgt der Tabelle wissenskarte.TYPEN (erlaubte Arten am Anfang und am "
+                 "Ende, eine Seite zählt als „seite“), eine Frist braucht im Namen ein Datum oder eine Zahl mit "
+                 "Zeiteinheit (wissenskarte.frist_name, Zahlwörter über eine feste Liste). Die Nachtprüfung "
+                 "(wissenskarte.nachtpruefung) entfernt, was vorher gespeichert wurde und dagegen verstößt.",
+                 "Page and point, type rules, deadlines: when a page of the knowledge book has the name of a point of the "
+                 "kind person, firma or ort, both are one point (wk_entpage); the fixed rule wissenskarte._verbinde links "
+                 "them when points are read, at night and once when the table is made, never the model. Their "
+                 "connections count as the point's in view, rund_um, weg and liste; both are renamed together "
+                 "(wissensbuch.retitle, the old title stays in wb_alttitel, so working in makes no double page). Every "
+                 "connection follows the table wissenskarte.TYPEN (allowed kinds at the start and the end, a page counts "
+                 "as „seite“), a deadline needs a date or a number with a unit of time in its name "
+                 "(wissenskarte.frist_name, number words by a fixed list). The nightly check (wissenskarte.nachtpruefung) "
+                 "removes what was stored before and breaks them."),
+                ("Doppelte (wissensdoppelt.py) erkennt nur eine feste Regel, wissensdoppelt.aehnlich, nie das Modell: "
+                 "jeder Name in seiner Normalform je Art (wissensdoppelt.normalform: ß/ss und Umlaute, Satzzeichen, bei "
+                 "Personen ohne Anrede und Titel und „Nachname, Vorname“ umgestellt, bei Firmen ohne Rechtsform und "
+                 "„Firma“, bei Orten „Str.“ als „Straße“). „Gleich“ sind nur Personen mit Vor- und Nachnamen und Orte, "
+                 "die sich allein darin unterscheiden, sowie Konten, Verträge und Fristen mit derselben Normalform; beim "
+                 "Einlesen wird so ein Name ein anderer Name des Punktes (wissensdoppelt.gleich_id), vorhandene führt "
+                 "der ruhige Lauf über wissenskarte.zusammen zusammen (wissensdoppelt.lauf). Ein Vorschlag sind kleine "
+                 "Schreibfehler (Damerau-Levenshtein höchstens 2 ab 6 Buchstaben, 1 bei 4 bis 5), eine Initiale, wenn "
+                 "genau eine Person passt, und eine Firma mit gleichem Kern; verglichen wird nur in Blöcken, höchstens "
+                 "{wissensdoppelt.VERGLEICHE_MOST} Paare je Lauf, höchstens {wissensdoppelt.PAARE_MOST} offene "
+                 "Vorschläge. Der Lauf geht in Scheiben von höchstens {wissensdoppelt.SCHEIBE_S} s, die nächste macht "
+                 "weiter, wo die letzte stand (im Speicher; geänderte Punkte beginnen ihn neu). „Verschieden“ (wissensdoppelt.verschieden) merkt sich die Namen, das Paar kommt nie "
+                 "wieder; ein gelöschter Punkt kommt auch in keiner „gleichen“ Schreibweise zurück "
+                 "(wissensdoppelt.gesperrt). Zusammenführen bleibt der Klick mit Code. „Zusammenführen mit …“ zeigt oben die "
+                 "{wissensdoppelt.AEHNLICH_MOST} ähnlichsten Punkte derselben Art (wissensdoppelt.auswahl), den Rest über "
+                 "die Suche.",
+                 "Doubles (wissensdoppelt.py) are found by one fixed rule only, wissensdoppelt.aehnlich, never by the "
+                 "model: every name in its normal form per kind (wissensdoppelt.normalform: ß/ss and umlauts, signs, "
+                 "people without form of address and title and „last name, first name“ turned round, companies without "
+                 "legal form and „Firma“, places with „Str.“ as „Straße“). „The same“ are only people with first and "
+                 "last name and places that differ in nothing else, and accounts, contracts and deadlines with the same "
+                 "normal form; while reading such a name becomes an other name of the point (wissensdoppelt.gleich_id), "
+                 "the quiet run merges points already there through wissenskarte.zusammen (wissensdoppelt.lauf). A "
+                 "suggestion are small typing errors (Damerau-Levenshtein at most 2 from 6 letters, 1 for 4 to 5), an "
+                 "initial when exactly one person fits, and a company with the same core; compared only in blocks, at "
+                 "most {wissensdoppelt.VERGLEICHE_MOST} pairs per run, at most {wissensdoppelt.PAARE_MOST} open "
+                 "suggestions. The run goes in slices of at most {wissensdoppelt.SCHEIBE_S} s, the next goes on where "
+                 "the last stood (in the memory; changed points start it again). „Different“ (wissensdoppelt.verschieden) keeps the names, the pair never comes back; "
+                 "a deleted point also never comes back in a spelling that is „the same“ (wissensdoppelt.gesperrt); "
+                 "merging stays the click with the code. „Merge with …“ shows the {wissensdoppelt.AEHNLICH_MOST} most "
+                 "similar points of the same kind on top (wissensdoppelt.auswahl), the rest by search."),
+            ]),
+            (("Karte hilft der Suche", "Map helps the search"), [
+                ("wissenskarte.liste(uid, worte, k) gibt Stück-Ids mit Rang ab 1 zurück, nur lesend (SQLite mit mode=ro) "
+                 "und nur für das eigene Profil. Feste Regeln, nie das Modell: Die Suchwörter treffen einen Punkt, wenn "
+                 "sein Name oder ein anderer Name ganz in der Frage steht (verglichen wie wissenskarte.ent_norm) oder "
+                 "ein Wort des Namens ab {wissenskarte.KARTE_WORT} Buchstaben, das keine Zahl und keine Rechtsform ist "
+                 "(wissenskarte.trifft); höchstens {wissenskarte.KARTE_KNOTEN} Punkte. Dazu kommen ihre Nachbarn einen "
+                 "Schritt weit (dieselbe Abfrage wie wissenskarte.rund_um) und von allen die Stellen in genutzten, "
+                 "gelesenen Dokumenten. Eine Stelle mit einem genannten Punkt steht vor einer mit nur Nachbarn, mehr "
+                 "Punkte vor weniger, höchstens {wissenskarte.KARTE_MOST}.",
+                 "wissenskarte.liste(uid, worte, k) returns piece ids with a rank from 1, read only (SQLite with "
+                 "mode=ro) and only for the own profile. Fixed rules, never the model: the search words hit a point when "
+                 "its name or another name stands whole in the question (compared like wissenskarte.ent_norm) or a "
+                 "word of the name with at least {wissenskarte.KARTE_WORT} letters that is no number and no legal form "
+                 "(wissenskarte.trifft); at most {wissenskarte.KARTE_KNOTEN} points. Their neighbours one step away "
+                 "join (the same query as wissenskarte.rund_um), and of all of them the passages in used, read "
+                 "documents. A passage with a named point stands before one with only neighbours, more points before "
+                 "fewer, at most {wissenskarte.KARTE_MOST}."),
+                ("documents.search mischt die Liste wie die anderen mit 60 plus Platz, gewichtet mit "
+                 "{documents.KARTE_WEIGHT}, und nur Stellen, die dieselbe Bedingung der Suche durchlässt "
+                 "(documents._karte). Ein so gefundener Treffer trägt „karte“, unter der Antwort steht „über die "
+                 "Wissenskarte“. Die Suchprüfung misst die Mischung mit der Karte als eigenen Balken. Fällt die Karte "
+                 "aus, sucht die Suche ohne sie weiter und schreibt eine Zeile „wissen: kartensuche fehler“.",
+                 "documents.search mixes the list like the others with 60 plus place, weighed {documents.KARTE_WEIGHT}, "
+                 "and only passages the same condition of the search lets through (documents._karte). A hit found so "
+                 "carries „karte“, below the answer it says „via the knowledge map“. The search check measures the mix "
+                 "with the map as a bar of its own. If the map fails, the search goes on without it and writes a line "
+                 "„wissen: kartensuche fehler“."),
             ]),
             (("Erst lokal suchen", "Look locally first"), [
                 ("Vor der ersten Runde schaut das Panel selbst in Dokumente, Kiwix und frühere Gespräche, gleichzeitig "
@@ -722,6 +865,36 @@ SEITEN = {
                  "{gemerkt.CARD_MAX} facts, {gemerkt.OFFEN_TAGE} days) with „That's right“ and „Undo“; its title names "
                  "only a number, never the fact."),
             ]),
+            (("Wissen messen", "Measuring knowledge"), [
+                ("Zustand → Prüfen → Wissen messen misst Zeiten und Speicher dieser Wege, für den Test mit 5000 "
+                 "Dokumenten: die Vektor-Matrix (float16, MB und Speicher des Prozesses vorher und nachher), die "
+                 "Dokumentsuche mit und ohne Karte, wissensbuch.liste, view, rund_um, weg und wissenskarte.liste, je "
+                 "Median und p95 über {wissensmessung.PROBEN} feste Beispiele aus den eigenen Titeln und Namen, dazu "
+                 "Seiten, Punkte, Verbindungen und Verbindungen je Dokument. Nur Zahlen, nie ein Titel oder Name.",
+                 "Status → Checks → Measure knowledge measures times and memory of these ways, for the test with 5000 "
+                 "documents: the vector matrix (float16, MB and the process's memory before and after), the document "
+                 "search with and without the map, wissensbuch.liste, view, rund_um, weg and wissenskarte.liste, each "
+                 "median and p95 over {wissensmessung.PROBEN} fixed samples from the own titles and names, and pages, "
+                 "points, connections and connections per document. Numbers only, never a title or a name."),
+                ("Gemessen wird in einem eigenen Prozess mit niedriger Priorität (nice und SCHED_IDLE, ein Thread), "
+                 "erst in einer ruhigen Minute, höchstens {wissensmessung.MAX_S} s, einer zur Zeit (wissensmessung.lauf). "
+                 "Spricht jemand, hört er auf. Erfundene Dokumente entstehen aus festem Zufall in einem Wegwerf-Profil "
+                 "unter state/wissensmessung-tmp und sind danach weg; die Grenzen des echten Codes gelten dabei, und der "
+                 "Lauf sagt, wie viel die Dokumente ohne sie gebracht hätten. Ein echtes Profil wird nur gelesen "
+                 "(PRAGMA query_only).",
+                 "It measures in a process of its own with low priority (nice and SCHED_IDLE, one thread), only in a "
+                 "quiet minute, at most {wissensmessung.MAX_S} s, one at a time (wissensmessung.lauf). If somebody "
+                 "speaks, it stops. Made-up documents come from a fixed seed in a throwaway profile under "
+                 "state/wissensmessung-tmp and are gone afterwards; the limits of the real code hold, and the run says "
+                 "how much the documents would have brought without them. A real profile is only read (PRAGMA "
+                 "query_only)."),
+                ("Andere Teile hängen sich als Messteil an (wissensmessung.MESSTEILE: Name und fn(ordner, anzahl), "
+                 "nur Zahlen, nur im Wegwerf-Ordner des Laufs), so Finden mit „fund“ (wissensmessung.teil_fund, "
+                 "fundmessung.teil): versiegelte erfundene Mails und Dokumente, Suchzeiten, Größe von fund.db, RAM.",
+                 "Other parts join as a measuring part (wissensmessung.MESSTEILE: a name and fn(ordner, anzahl), "
+                 "numbers only, only in the run's throwaway folder), so Find with \"fund\" (wissensmessung.teil_fund, "
+                 "fundmessung.teil): sealed made-up mails and documents, search times, the size of fund.db, RAM."),
+            ]),
         ],
         "code": [
             ("wissen.search", ("eigene und geteilte Dokumente, Mischung, Nachsortieren", "own and shared documents, mix, re-ranking")),
@@ -745,24 +918,49 @@ SEITEN = {
             ("wissensbuch.answer_block", ("passende Seiten des Wissensbuchs mit Quellen", "fitting pages of the knowledge book with sources")),
             ("wissenskarte.check_edge", ("feste Regeln für jede vorgeschlagene Verbindung", "fixed rules for every proposed connection")),
             ("wissenskarte.view", ("der sichtbare Teil der Karte", "the visible part of the map")),
-            ("wissenskarte.rund_um", ("Seiten um eine Seite, WITH RECURSIVE", "pages around a page, WITH RECURSIVE")),
-            ("wissenskarte.weg", ("kürzester Weg zwischen zwei Seiten", "shortest way between two pages")),
+            ("wissenskarte.rund_um", ("Punkte um einen Punkt, eine Abfrage je Schritt", "points around a point, one query per step")),
+            ("wissenskarte.weg", ("kürzester Weg, von beiden Enden zugleich", "shortest way, from both ends at once")),
+            ("wissenskarte._bau", ("Aufbau der Karte im Speicher, neu bei jeder Änderung (wk_stand)", "build of the map in memory, new on every change (wk_stand)")),
+            ("wissenskarte._worte_sync", ("Wortindex der Punkte für die Liste der Suche", "word index of the points for the search's list")),
             ("wissenskarte.check_ent", ("feste Regeln für jede Person, Firma, Frist …", "fixed rules for every person, company, deadline …")),
             ("wissenskarte.finde_knoten", ("Punkte genau über Name und andere Namen, nur lesend", "points exactly by name and other names, read only")),
             ("wissenskarte.knoten_liste", ("Punkte einer Art nach Namen, nur lesend", "points of one kind by name, read only")),
-            ("wissenskarte.zusammen", ("zwei Punkte zusammenführen, nur per Klick", "merge two points, only by click")),
+            ("wissenskarte.knoten_von_dok", ("Punkte eines Dokuments nach Art und Name, nur lesend", "points of one document by kind and name, read only")),
+            ("wissenskarte.zusammen", ("zwei Punkte zusammenführen: per Klick oder bei „gleich“ nach fester Regel", "merge two points: by click or by fixed rule when „the same“")),
+            ("wissenskarte._verbinde", ("Seite und Punkt gleichen Namens verbinden, feste Regel", "link a page and a point of the same name, fixed rule")),
+            ("wissenskarte.erlaubt", ("Typregeln je Art der Verbindung (TYPEN)", "type rules per kind of connection (TYPEN)")),
+            ("wissenskarte.frist_name", ("eine Frist nur mit Datum oder Zahl im Namen", "a deadline only with a date or number in its name")),
+            ("wissenskarte.nachtpruefung", ("nachts: verbinden, Verstöße und Fristen ohne Zahl entfernen", "at night: link, remove violations and deadlines without a number")),
+            ("wissensbuch.retitle", ("Seite umbenennen, der alte Titel bleibt", "rename a page, the old title stays")),
+            ("wissensdoppelt.aehnlich", ("gleich, Vorschlag oder nichts: die eine feste Regel für Doppelte", "the same, a suggestion or nothing: the one fixed rule for doubles")),
+            ("wissensdoppelt.normalform", ("ein Name in seiner Normalform je Art", "a name in its normal form per kind")),
+            ("wissensdoppelt.gleich_id", ("beim Einlesen: gleicher Name wird anderer Name", "while reading: the same name becomes an other name")),
+            ("wissensdoppelt.lauf", ("ruhiger Lauf: zusammenführen und Vorschläge in Blöcken, in Scheiben", "quiet run: merge and suggestions in blocks, in slices")),
+            ("wissensdoppelt.auswahl", ("„Zusammenführen mit …“: die ähnlichsten zuerst", "„Merge with …“: the most similar first")),
+            ("wissensdoppelt.verschieden", ("„Verschieden“ gilt für immer", "„Different“ is for good")),
+            ("wissensdoppelt.gesperrt", ("gelöscht bleibt gelöscht, in jeder „gleichen“ Schreibweise", "deleted stays deleted, in every spelling that is „the same“")),
             ("wissensbuch.search_pages", ("passende Seiten über den Suchindex wb_fts", "fitting pages through the search index wb_fts")),
             ("wissensbuch._fts_sync", ("Suchindex der Seiten nachziehen", "bring the pages' search index up to date")),
             ("wissensbuch.liste", ("Seiten-Ids mit Rang für andere Teile, nur lesend", "page ids with rank for other parts, read only")),
+            ("wissenskarte.liste", ("Stück-Ids aus der Karte für die Suche, nur lesend", "piece ids from the map for the search, read only")),
+            ("wissenskarte.trifft", ("trifft ein Suchwort einen Punkt? feste Regel", "does a search word hit a point? fixed rule")),
+            ("documents._karte", ("die Liste der Karte in die Mischung, mit den Filtern der Suche", "the map's list into the mix, with the search's filters")),
+            ("mappen.plan", ("feste Regel der Stufen aus, kurz, ganz und des Budgets", "fixed rule of the levels off, short, whole and the budget")),
+            ("mappen.kontext", ("die Einträge einer Mappe als Datenblock mit Marken [M…]", "a collection's entries as a data block with marks [M…]")),
+            ("mappen.for_turn", ("nur die eigene, freigegebene Mappe; als Text von außen", "only the own, released collection; as outside text")),
             ("documents._similar", ("Ähnlichkeit blockweise in float32", "similarity block by block in float32")),
             ("gedaechtnis.hint_lines", ("Fakten in drei Blöcken", "facts in three blocks")),
             ("profiles._cap", ("Obergrenze: nur alte gelernte Fakten machen Platz", "cap: only old learned facts make room")),
             ("gedaechtnis.slot_of", ("fester Themen-Platz eines Fakts nach festen Mustern", "a fact's fixed topic place by fixed patterns")),
             ("gemerkt.take_back", ("Rückgängig nur bei unverändertem Fakt", "undo only while the fact is unchanged")),
+            ("wissensmessung.lauf", ("eine Messung im eigenen Prozess, bricht bei Sprache ab", "one measurement in its own process, stops on speech")),
+            ("wissensmessung._synth", ("das Wegwerf-Profil aus festem Zufall, mit den Grenzen des Codes", "the throwaway profile from a fixed seed, with the code's limits")),
+            ("wissensmessung.MESSTEILE", ("die Messteile, erweiterbar", "the measuring parts, extensible")),
         ],
-        "tests": ["test_wissen", "test_nachsortieren", "test_abschnitte", "test_lokal", "test_kiwix", "test_gedaechtnis",
+        "tests": ["test_wissen", "test_wissensdoppelt", "test_nachsortieren", "test_abschnitte", "test_lokal", "test_kiwix", "test_gedaechtnis",
                   "test_gedaechtnis_grenze", "test_gemerkt",
-                  "test_suchpruefung", "test_wissensbuch", "test_wissenskarte", "test_wissensknoten"],
+                  "test_suchpruefung", "test_wissensbuch", "test_wissenskarte", "test_wissensknoten", "test_kartensuche",
+                  "test_wissensmessung", "test_wissenstempo"],
         "heute": [],
     },
 

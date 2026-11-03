@@ -34,7 +34,7 @@
 <div id="updtoast" class="updtoast" style="display:none"></div>
 <div id="roomlive" class="roomlive" hidden><i></i><span></span><button class="b" type="button" id="roomlivego">Ansehen</button></div>
 <div id="llmbanner" class="updbanner llmbanner" style="display:none"><span id="llmbtext"></span><button class="b" id="llmbgo" type="button">Ansehen</button></div>
-<div id="updbanner" class="updbanner" style="display:none"><span id="updbtext"></span><button class="b p" id="updbgo" type="button">Zum Update</button><button class="ib" id="updbx" type="button" title="Später">✕</button></div>
+<div id="updbanner" class="updbanner" style="display:none"><span id="updbtext"></span><button class="b p" id="updbgo" type="button">Zum Update</button><button class="ib" id="updbx" type="button" title="Später"><i data-ic="x"></i></button></div>
 <div id="notausband" class="notausband" role="alert" hidden><b id="nbtitle"></b><span id="nbtext"></span><button class="b" id="nbup" type="button" hidden>Stufe erhöhen</button><button class="b nblift" id="nblift" type="button" hidden>Wieder einschalten …</button></div>
 <div id="notausall" class="notausall" hidden><div class="card"><div class="nadot"></div><h2 id="natitle">Notaus</h2><p id="natext"></p><p class="mut" id="nameta"></p>
   <div class="row"><button class="b nared" id="naup" type="button" hidden>Stufe erhöhen</button><button class="b p" id="nalift" type="button" hidden>Wieder einschalten …</button><button class="b" id="nalogin" type="button" hidden>Als Admin anmelden</button></div></div></div>
@@ -60,9 +60,9 @@
 <button class="b" id="logoutbtn" type="button" style="display:none">Abmelden</button>
 </div></div>
 <button class="ib" id="mmenu" type="button" title="Menü" aria-label="Menü"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-<nav><button type="button" class="navfind" id="findbtn" aria-label="Suchen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Suchen …</span><kbd>Strg K</kbd></button><button data-s="chat"><i class="ni" data-ni="chat"></i>Assistent</button><button data-s="chats" hidden><i class="ni" data-ni="chats"></i>Chats <span class="ncnt" id="cxcnt" hidden></span></button><button data-s="cal" hidden><i class="ni" data-ni="cal"></i>Kalender</button><button data-s="post" hidden><i class="ni" data-ni="post"></i>E-Mail</button><button data-s="listen" hidden><i class="ni" data-ni="listen"></i>Listen</button><button data-s="offen" hidden><i class="ni" data-ni="offen"></i>Offen</button><button data-s="kontakte" hidden><i class="ni" data-ni="kontakte"></i>Kontakte</button><button data-s="wbuch" hidden><i class="ni" data-ni="wbuch"></i>Wissensbuch</button><button data-s="finden" hidden><i class="ni" data-ni="finden"></i>Finden</button><button data-s="dungeon" hidden><i class="ni" data-ni="dungeon"></i>Dungeon-Master</button><button type="button" class="navme" id="navme"><i class="ni" data-ni="me"></i>Ich <span class="medot" hidden></span></button><span class="navgrp">Spark verwalten</span><button data-s="mon" class="on"><i class="ni" data-ni="mon"></i>Zustand <span class="hdot" id="hdot"></span></button><button data-s="feat"><i class="ni" data-ni="feat"></i>Funktionen <span class="ncnt" id="featdirty" hidden>1</span></button><button data-s="prof"><i class="ni" data-ni="prof"></i>Personen und Geräte</button><button data-s="fern" hidden><i class="ni" data-ni="fern"></i>Fernzugang</button><button data-s="cfg"><i class="ni" data-ni="cfg"></i>Einstellungen <span class="ncnt" id="dirtycnt" hidden></span><span id="updbadge" class="pill warn" style="display:none">Update</span></button></nav></header>
+<nav><button type="button" class="navfind" id="findbtn" aria-label="Suchen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Suchen …</span><kbd>Strg K</kbd></button><button data-s="chat"><i class="ni" data-ni="chat"></i>Assistent</button><button data-s="chats" hidden><i class="ni" data-ni="chats"></i>Chats <span class="ncnt" id="cxcnt" hidden></span></button><button data-s="cal" hidden><i class="ni" data-ni="cal"></i>Kalender</button><button data-s="post" hidden><i class="ni" data-ni="post"></i>E-Mail</button><button data-s="listen" hidden><i class="ni" data-ni="listen"></i>Listen</button><button data-s="offen" hidden><i class="ni" data-ni="offen"></i>Offen</button><button data-s="kontakte" hidden><i class="ni" data-ni="kontakte"></i>Kontakte</button><button data-s="wbuch" hidden><i class="ni" data-ni="wbuch"></i>Wissensbuch</button><button data-s="finden" hidden><i class="ni" data-ni="finden"></i>Finden</button><button data-s="mappen" hidden><i class="ni" data-ni="mappen"></i>Mappen</button><button data-s="dungeon" hidden><i class="ni" data-ni="dungeon"></i>Dungeon-Master</button><button type="button" class="navme" id="navme"><i class="ni" data-ni="me"></i>Ich <span class="medot" hidden></span></button><span class="navgrp">Spark verwalten</span><button data-s="mon" class="on"><i class="ni" data-ni="mon"></i>Zustand <span class="hdot" id="hdot"></span></button><button data-s="feat"><i class="ni" data-ni="feat"></i>Funktionen <span class="ncnt" id="featdirty" hidden>1</span></button><button data-s="prof"><i class="ni" data-ni="prof"></i>Personen und Geräte</button><button data-s="fern" hidden><i class="ni" data-ni="fern"></i>Fernzugang</button><button data-s="cfg"><i class="ni" data-ni="cfg"></i>Einstellungen <span class="ncnt" id="dirtycnt" hidden></span><span id="updbadge" class="pill warn" style="display:none">Update</span></button></nav></header>
 <main>
-<div class="fztop" id="fztop" hidden><div class="fzbanner" id="fzbanner" role="status" title="Notaus trennt sofort" hidden><span class="fzrec"></span><span class="fzbtext" id="fzbtext"></span><span class="fzbleer" id="fzbleer"></span><span class="fzbleer" id="fzbmess"></span><button class="fzbi" type="button" id="fzbinfo" aria-expanded="false" aria-controls="fzinfopop" title="Diese Sitzung" aria-label="Diese Sitzung" hidden>i</button><span class="fzbfill"></span><button class="fzbtn" type="button" id="fzbtrennen">Trennen</button></div><div class="fzbanner" id="shbanner" role="status" hidden><span class="fzrec"></span><span class="fzbtext" id="shbtext"></span><button class="fzbtn" type="button" id="shbplus" hidden>Verlängern</button><button class="fzbtn" type="button" id="shbende">Beenden</button></div><div class="fzbanner fzwarn" id="fzwieder" role="status" hidden><span class="fzbtext">Verbindung wird wiederhergestellt …</span></div><div class="fzbanner fzwarn" id="fzbald" role="alert" hidden><span class="fzbtext" id="fzbaldtext"></span><span class="fzbfill"></span><button class="fzbtn" type="button" id="fzweiter">Weiterarbeiten</button><button class="fzbtn" type="button" id="fzbaldende">Jetzt beenden</button></div><div class="fzbanner fzwarn" id="fzsperrbald" role="alert" hidden><span class="fzbtext" id="fzsperrtext"></span><span class="fzbfill"></span><button class="fzbtn" type="button" id="fzsperrplus">Verlängern</button></div></div>
+<div class="fztop" id="fztop" hidden><div class="fzbanner" id="fzbanner" role="status" title="Notaus trennt sofort" hidden><span class="fzrec"></span><span class="fzbtext" id="fzbtext"></span><span class="fzbleer" id="fzbleer"></span><span class="fzbleer" id="fzbmess"></span><button class="fzbi" type="button" id="fzbinfo" aria-expanded="false" aria-controls="fzinfopop" title="Diese Sitzung" aria-label="Diese Sitzung" hidden>i</button><span class="fzbfill"></span><button class="fzbtn" type="button" id="fzbhin" hidden>Zum Terminal</button><button class="fzbtn" type="button" id="fzbtrennen">Trennen</button></div><div class="fzbanner" id="shbanner" role="status" hidden><span class="fzrec"></span><span class="fzbtext" id="shbtext"></span><button class="fzbtn" type="button" id="shbplus" hidden>Verlängern</button><button class="fzbtn" type="button" id="shbende">Beenden</button></div><div class="fzbanner fzwarn" id="fzwieder" role="status" hidden><span class="fzbtext">Verbindung wird wiederhergestellt …</span></div><div class="fzbanner fzwarn" id="fzbald" role="alert" hidden><span class="fzbtext" id="fzbaldtext"></span><span class="fzbfill"></span><button class="fzbtn" type="button" id="fzweiter">Weiterarbeiten</button><button class="fzbtn" type="button" id="fzbaldende">Jetzt beenden</button></div><div class="fzbanner fzwarn" id="fzsperrbald" role="alert" hidden><span class="fzbtext" id="fzsperrtext"></span><span class="fzbfill"></span><button class="fzbtn" type="button" id="fzsperrplus">Verlängern</button></div></div>
 <div class="fzinfopop" id="fzinfopop" role="dialog" aria-label="Diese Sitzung" hidden><dl class="fzfacts" id="fzinfo"></dl><div class="row"><button class="b danger" type="button" id="fzalle2">Alle trennen</button><button class="b" type="button" id="fzkeycopy">Ganzen Schlüssel kopieren</button></div></div>
 <div class="ptabs subnav" id="subnav" hidden></div>
 <button class="b cfgback" id="subback" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>Zustand</span></button>
@@ -184,6 +184,9 @@
       <div data-show="chat.knowledge_map" style="margin-left:54px"><label>Karte: Dokumente pro Tag und Profil</label><input class="num" id="chat.knowledge_map_day" type="number" min="5" max="500"><div class="fh">5 bis 500, Standard 200. Ein Schritt nennt nur Verbindungen und ist kurz.</div></div>
       <div class="setrow" data-show="chat.knowledge_map" style="margin-left:54px"><div class="lbl"><b>Personen, Firmen und Fristen</b><span>Personen, Firmen, Orte, Verträge, Konten und Fristen aus Dokumenten als eigene Punkte der Karte, nach festen Regeln geprüft.</span></div><label class="tgl"><input type="checkbox" id="chat.knowledge_ents"><i></i></label></div>
       <div data-show="chat.knowledge_ents" style="margin-left:72px"><label>Punkte: Dokumente pro Tag und Profil</label><input class="num" id="chat.knowledge_ents_day" type="number" min="5" max="500"><div class="fh">5 bis 500, Standard 200. Höchstens 40 Punkte je Dokument und 5000 je Profil.</div></div>
+      <div class="setrow" data-show="chat.knowledge_ents" style="margin-left:72px"><div class="lbl"><b>Karte hilft der Suche</b><span>Die Dokumentsuche findet auch die Stellen der Punkte, die eine Frage nennt, und ihrer Nachbarn; ergänzt die Treffer nur.</span></div><label class="tgl"><input type="checkbox" id="chat.knowledge_search"><i></i></label></div>
+      <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Mappen</b><span>Dokumente, Wissensbuch-Seiten und Notizen zu einem Vorhaben bündeln; je Eintrag aus, kurz oder ganz ans Sprachmodell.</span></div><label class="tgl"><input type="checkbox" id="chat.mappen"><i></i></label></div>
+      <div data-show="chat.mappen" style="margin-left:36px"><label>Mappe: Token ans Modell</label><input class="num" id="chat.mappe_token" type="number" min="4000" max="100000"><div class="fh">4000 bis 100000, Standard 24000. Was nicht ganz hineinpasst, wird nur durchsucht.</div></div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Dokumente erstellen</b><span>Der Spark schreibt auf Bitte Briefe, Präsentationen und Tabellen als Word, PDF, PowerPoint oder Excel; erst die Gliederung, nach deinem Ja.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_make"><i></i></label></div>
       <div class="setrow" data-show="chat.doc_make" style="margin-left:36px"><div class="lbl"><b>Eigene Vorlagen</b><span>Profile laden eigene Word- oder PowerPoint-Vorlagen hoch (ohne Makros, höchstens 10 MB); der Spark füllt sie.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_make_templates"><i></i></label></div>
       <div class="setrow" data-show="chat.doc_make" style="margin-left:36px"><div class="lbl"><b>Bilder aus dem Kiwix</b><span>Titelfolie und „Bild und Text“-Folien bekommen ein Bild aus der Wikipedia im eigenen Kiwix, mit Quelle. Braucht das Kiwix-Archiv.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_make_wikipics"><i></i></label></div>
@@ -282,25 +285,31 @@
         <div class="fh">Testen, untersuchen und reparieren unter Zustand → Werkstatt.</div>
       </div>
       <div class="setrow" data-show="chat.werkstatt" style="margin-left:18px"><div class="lbl"><b>Angriffsprobe</b><span>Kachel „Angriffe prüfen“: misst, wie oft das Sprachmodell Befehlen in fremdem Text folgen würde. Kein Werkzeug läuft, nur Zahlen.</span></div><label class="tgl"><input type="checkbox" id="chat.angriffsprobe"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Entwickeln auf dem Pi</b><span>OpenCode mit dem eigenen Sprachmodell im Terminal des Panel-Rechners; lokale Änderungen kommen nach einem Schnelltest wie ein Update.</span></div><label class="tgl"><input type="checkbox" id="chat.entwickeln"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Fernzugang zu Servern</b><span>Die Shell eines fernen Servers im Browser, über seinen Anker. Nur Admins mit zweitem Schritt; ein Code entsperrt die Seite für eine Weile.</span></div><label class="tgl"><input type="checkbox" id="chat.fernzugang"><i></i></label></div>
       <div data-show="chat.fernzugang" style="margin-left:36px">
         <div class="setrow"><div class="lbl"><b>Assistent im Fernzugang</b><span>„Frag den Assistenten“ und Vorschläge, nur vom eigenen Sprachmodell. Er tippt nie; den Bildschirm sieht er nur, wenn du ihn mitschickst.</span></div><label class="tgl"><input type="checkbox" id="chat.fernzugang_hilfe"><i></i></label></div>
         <div data-show="chat.fernzugang_hilfe" style="margin-left:18px"><label for="chat.fernzugang_ki_zeilen">Zeilen des Bildschirms für den Assistenten</label><input class="num" id="chat.fernzugang_ki_zeilen" type="number" min="20" max="1000"><div class="fh">20 bis 1000, Standard 80. Damit beginnt die Auswahl im Assistenten (80, 300, 1000); höchstens 60 000 Zeichen gehen mit, und nur mit „Bildschirm mitschicken“.</div></div>
         <label for="chat.fernzugang_leerlauf_min">Leerlauf trennt nach (Minuten)</label><input class="num" id="chat.fernzugang_leerlauf_min" type="number" min="1" max="120"><div class="fh">1 bis 120, Standard 15.</div>
-        <label for="chat.fernzugang_sitzungen">Sitzungen gleichzeitig</label><input class="num" id="chat.fernzugang_sitzungen" type="number" min="1" max="4"><div class="fh">1 bis 4, Standard 2.</div>
+        <label for="chat.fernzugang_sitzungen">Sitzungen gleichzeitig</label><input class="num" id="chat.fernzugang_sitzungen" type="number" min="1" max="8"><div class="fh">1 bis 8, Standard 4.</div>
         <div class="setrow"><div class="lbl"><b>Meldung bei Fernsitzung</b><span>Die Admins bekommen eine Mitteilung, wenn eine Shell über das Internet oder von einem neuen Ort geöffnet wird.</span></div><label class="tgl"><input type="checkbox" id="chat.fernzugang_meldung"><i></i></label></div>
+        <div class="setrow"><div class="lbl"><b>An alle senden</b><span>Eine Zeile an mehrere offene Shells derselben Art zugleich, jedes Mal mit Rückfrage. Nie Befehle der Vorsicht-Liste.</span></div><label class="tgl"><input type="checkbox" id="chat.fernzugang_alle"><i></i></label></div>
         <label for="chat.fernzugang_verlauf_tage">Verlauf der Sitzungen behalten (Tage)</label><input class="num" id="chat.fernzugang_verlauf_tage" type="number" min="1" max="365"><div class="fh">1 bis 365, Standard 30. Nur Zeit, System, Admin, Art, Dauer und Zuhause oder Internet.</div>
         <label for="chat.fernzugang_entsperrt_min">Ein Code entsperrt die Seite für (Minuten)</label><input class="num" id="chat.fernzugang_entsperrt_min" type="number" min="5" max="120"><div class="fh">5 bis 120, Standard 60. Nur diese Anmeldung in diesem Browser; Koppeln und Entfernen fragen trotzdem jedes Mal.</div>
         <label for="chat.fernzugang_datei_mb">Größte Datei beim Laden und Hochladen (MB)</label><input class="num" id="chat.fernzugang_datei_mb" type="number" min="1" max="4096"><div class="fh">1 bis 4096, Standard 100.</div>
         <div class="setrow"><div class="lbl"><b>Große Dateien</b><span>In Dateien: große Dateien in Teilen mit Prüfsumme (Pause und Weiter), per Link vom Server geholt oder vom NAS übertragen.</span></div><label class="tgl"><input type="checkbox" id="chat.fernzugang_gross"><i></i></label></div>
         <div data-show="chat.fernzugang_gross" style="margin-left:18px"><label for="chat.fernzugang_gross_mb">Größte große Datei (MB)</label><input class="num" id="chat.fernzugang_gross_mb" type="number" min="1" max="1048576"><div class="fh">1 bis 1048576, Standard 20480 (20 GB). Der Server braucht so viel Platz frei und 64 MB dazu.</div></div>
+        <div class="setrow"><div class="lbl"><b>Dateien als anderer Benutzer</b><span>In Dateien als root oder anderer Benutzer, nur wenn der Server es freigibt und je System mit Code. Erst nur lesen.</span></div><label class="tgl"><input type="checkbox" id="chat.fernals"><i></i></label></div>
         <label for="chat.fernzugang_offline_min">Dienst-Wächter meldet einen Server nach (Minuten offline)</label><input class="num" id="chat.fernzugang_offline_min" type="number" min="5" max="1440"><div class="fh">5 bis 1440, Standard 30.</div>
         <div class="setrow"><div class="lbl"><b>Bildschirm</b><span>Den Bildschirm eines gekoppelten Systems im Browser, über seinen Anker und guacd auf dem Spark. Erst nur ansehen, Steuern mit einem Klick.</span></div><label class="tgl"><input type="checkbox" id="chat.fernbild"><i></i></label></div>
         <div data-show="chat.fernbild" style="margin-left:18px"><div class="setrow"><div class="lbl"><b>Zwischenablage beim Bildschirm</b><span>Text zwischen Browser und System austauschen, nur während „Steuern“. Aus: keine Zwischenablage in beide Richtungen.</span></div><label class="tgl"><input type="checkbox" id="chat.fernbild_zwischenablage"><i></i></label></div></div>
+        <div class="setrow"><div class="lbl"><b>Webdienste</b><span>Webseiten eines gekoppelten Systems (Grafana, Home Assistant) im Browser, durch seinen Anker, auf eigener Adresse. Erst nur 127.0.0.1.</span></div><label class="tgl"><input type="checkbox" id="chat.fernweb"><i></i></label></div>
+        <div data-show="chat.fernweb" style="margin-left:18px"><label for="chat.fernweb_adresse">Tunnel-Adresse von unterwegs</label><input id="chat.fernweb_adresse" placeholder="fernwartung.example.org" autocomplete="off"><div class="fh">Leer = Webdienste nur im Heimnetz (https://&lt;Pi&gt;:31090). Von unterwegs: im Reverse-Proxy der Synology eine Regel für diesen Namen auf den Pi, Port 31090, mit den WebSocket-Kopfzeilen.</div></div>
         <div class="setrow"><div class="lbl"><b>Notizen im Fernzugang</b><span>Je System eine Notiz mit Befehlen zum Einfügen, versiegelt gespeichert. Der Assistent liest sie nur mit „Assistent darf lesen“.</span></div><label class="tgl"><input type="checkbox" id="chat.fernzugang_notizen"><i></i></label></div>
         <div class="setrow"><div class="lbl"><b>Ordner im Fernzugang</b><span>Die Systeme links in Ordnern wie in Mail, mit Ziehen geordnet. Nur Ordnung: Rechte und Entsperren gelten weiter je System.</span></div><label class="tgl"><input type="checkbox" id="chat.fernzugang_ordner"><i></i></label></div>
         <div class="setrow"><div class="lbl"><b>Spontanhilfe</b><span>Einmal helfen: die Person teilt auf /hilfe ihren Bildschirm, ohne Installation. Nur Admins, im Reiter Spontanhilfe der entsperrten Seite.</span></div><label class="tgl"><input type="checkbox" id="chat.spontanhilfe"><i></i></label></div>
         <div data-show="chat.spontanhilfe"><label for="chat.spontanhilfe_max_min">Höchstdauer einer Hilfe (Minuten)</label><input class="num" id="chat.spontanhilfe_max_min" type="number" min="15" max="720"><div class="fh">15 bis 720, Standard 180. Eine Hilfe beginnt mit 60 Minuten, „Verlängern“ gibt je 60 mehr bis hierher.</div></div>
+        <div data-show="chat.spontanhilfe" style="margin-left:18px"><div class="setrow"><div class="lbl"><b>Steuern bei der Spontanhilfe</b><span>Maus und Tastatur bei der Person, über das Programm SparkHilfe, das sie selbst startet und erlaubt.</span></div><label class="tgl"><input type="checkbox" id="chat.spontansteuern"><i></i></label></div></div>
         <div class="fh">Koppeln, die Shell und den Bildschirm öffnen unter Fernzugang → Systeme, helfen unter Fernzugang → Spontanhilfe.</div>
       </div>
       <div class="setrow"><div class="lbl"><b>Einstellungs-Assistent</b><span>Fehler, 👎 und unklare Fragen werden Fälle mit Vorschlägen aus einem festen Katalog. Übernehmen nur du, unter Zustand → Verbessern.</span></div><label class="tgl"><input type="checkbox" id="chat.berater"><i></i></label></div>
@@ -398,6 +407,7 @@
       <div class="setrow" data-show="chat.mail" style="margin-left:18px"><div class="lbl"><b>Postfach aufräumen</b><span>Werbung und Newsletter in eigene Ordner sortieren; nie löschen, nie senden, alles umkehrbar.</span></div><label class="tgl"><input type="checkbox" id="chat.mail_tidy"><i></i></label></div>
       <div class="setrow" data-show="chat.mail" style="margin-left:18px"><div class="lbl"><b>Mails ordnen</b><span>Auf der Seite E-Mail: gelesen oder ungelesen, ins Archiv, in einen eigenen Ordner, gleich wieder zurück.</span></div><label class="tgl"><input type="checkbox" id="chat.mail_manage"><i></i></label></div>
       <div class="setrow" data-show="chat.mail_manage" style="margin-left:36px"><div class="lbl"><b>Mails löschen</b><span>Nur du selbst auf der Seite E-Mail: in den Papierkorb mit Rückgängig, dort endgültig nur nach Rückfrage. Regeln und Assistent nie.</span></div><label class="tgl"><input type="checkbox" id="chat.mail_delete"><i></i></label></div>
+      <div class="setrow" data-show="chat.mail_manage" style="margin-left:36px"><div class="lbl"><b>Sortieren aus Korrekturen lernen</b><span>Eine vom Spark sortierte Mail woanders hingelegt oder nach „Falsch sortiert“: Ausnahme, Pause nach 3 Korrekturen, Karte mit Vorschlag.</span></div><label class="tgl"><input type="checkbox" id="chat.mail_learn"><i></i></label></div>
       <div class="setrow" data-show="chat.mail" style="margin-left:18px"><div class="lbl"><b>Mails senden</b><span>Auf der Seite E-Mail: neue Mail oder Antwort mit drei Vorschlägen, gesendet erst nach der Vorschau. Höchstens 10 Empfänger, 30 Mails am Tag.</span></div><label class="tgl"><input type="checkbox" id="chat.mail_send"><i></i></label></div>
       <div class="setrow" data-show="chat.mail" style="margin-left:18px"><div class="lbl"><b>Einladungen aus Mails</b><span>Eine Einladung (.ics) aus einer Mail mit einem Tipp in den Kalender; mit „Mails senden“ auch die Antwort an den Einladenden.</span></div><label class="tgl"><input type="checkbox" id="chat.mail_invites"><i></i></label></div>
       <div data-show="chat.mail_send" style="margin-left:36px"><label>Senden per Sprache</label><select id="chat.mail_send_voice"><option value="off">Aus</option><option value="answers">nur Antworten auf eine gerade gelesene Mail</option><option value="all">auch neue Mails an Kontakte</option></select><div class="fh">„Antworte ihr per Mail: …“ oder „Schreib eine Mail an Anna: …“. Der Spark liest Empfänger und Text vor, gesendet wird erst nach deinem „Ja“.</div></div>
@@ -908,6 +918,7 @@
       <button class="ib" id="convodel" title="Dieses Gespräch löschen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button></div>
       <div id="guestnote" class="intro sm guestnote" hidden></div>
       <span id="merknote" class="lz-chip merknote" hidden></span>
+      <span id="mpchip" class="lz-chip mpchip" role="status" hidden></span>
       <div id="chatlog"></div>
       <div id="chatpics" class="pics" hidden></div>
       <div class="composer"><button class="ib attach" id="chatpic" type="button" title="Bild anhängen" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 8"/></svg></button><input type="file" id="chatpicfile" accept="image/*" multiple hidden><label for="chattext" class="srl">Frage an den Assistenten</label><textarea id="chattext" rows="1" data-zeilen="6" data-senden="chatsend" placeholder="oder hier tippen, Enter sendet"></textarea><button class="send" id="chatsend" title="Senden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div>
@@ -960,6 +971,9 @@
 <section id="finden"><div class="card" id="fundroot"></div>
     <div id="fundbox" hidden></div>
 </section>
+<section id="mappen"><div class="card" id="mproot"></div>
+    <div id="mpbox" hidden></div>
+</section>
 <section id="dungeon"><div class="card" id="dmroot"></div>
     <div id="dmbox" hidden></div>
 </section>
@@ -978,17 +992,17 @@
       <div class="cx-list" id="cxlist"></div>
     </div>
     <div class="cx-main" id="cxmain">
-      <div class="cx-empty mut" id="cxempty">Wähle einen Chat oder starte mit „＋ Neuer Chat“ einen neuen.</div>
+      <div class="cx-empty ld-empty" id="cxempty"><i data-ic="chats"></i><span>Wähle einen Chat oder starte mit „＋ Neuer Chat“ einen neuen.</span></div>
       <div class="cx-top" id="cxtop" hidden><button class="b cx-back" id="cxback" type="button" aria-label="Zurück zu den Chats">‹</button><button type="button" class="cx-title" id="cxtitle"><b></b><small></small></button><button class="ib cx-call" id="cxcall" type="button" hidden title="Anrufen" aria-label="Anrufen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg></button><button class="ib cx-call" id="cxvideo" type="button" hidden title="Videoanruf" aria-label="Videoanruf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="12" height="12" rx="2"/><path d="M15 10l6-3v10l-6-3"/></svg></button><button class="ib" id="cxinfo" type="button" title="Chat-Info" aria-label="Chat-Info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg></button></div>
       <div class="cx-log" id="cxlog" role="log" aria-live="polite" hidden></div>
       <div class="cx-pane" id="cxpane" hidden></div>
       <div class="cx-why" id="cxwhy" hidden></div>
-      <div class="cx-reply" id="cxreply" hidden><span></span><button type="button" class="ib" id="cxreplyx" aria-label="Antwort abbrechen">✕</button></div>
+      <div class="cx-reply" id="cxreply" hidden><span></span><button type="button" class="ib" id="cxreplyx" aria-label="Antwort abbrechen"><i data-ic="x"></i></button></div>
       <form class="cx-comp" id="cxcomp" hidden><button type="button" class="ib cx-att" id="cxatt" hidden title="Foto oder Datei schicken" aria-label="Foto oder Datei schicken"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5l-8.6 8.6a5 5 0 0 1-7.1-7.1l8.6-8.6a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l7.9-7.9"/></svg></button><input type="file" id="cxfile" hidden accept="image/*,.pdf,.docx,.xlsx,.pptx,.odt,.ods,.odp,.txt,.csv,.md"><label for="cxtext" class="srl">Nachricht</label><textarea id="cxtext" rows="1" data-zeilen="6" data-senden="form" maxlength="4000" placeholder="Nachricht"></textarea><button type="button" class="ib cx-mic" id="cxmic" hidden title="Sprachnachricht aufnehmen" aria-label="Sprachnachricht aufnehmen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button class="send" id="cxsend" type="submit" title="Senden" aria-label="Senden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></form>
       <div class="cx-rec" id="cxrec" hidden><i class="cx-dot"></i><span id="cxrect">0:00</span><span class="mut cx-recmax">höchstens 5 Minuten</span><button type="button" class="b" id="cxrecx">Verwerfen</button><button class="send" id="cxrecgo" type="button" title="Sprachnachricht senden" aria-label="Sprachnachricht senden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div>
     </div>
   </div>
-  <div class="cx-big" id="cxbig" hidden><img id="cxbigimg" alt="Foto"><button type="button" class="ib" id="cxbigx" title="Schließen" aria-label="Schließen">✕</button></div>
+  <div class="cx-big" id="cxbig" hidden><img id="cxbigimg" alt="Foto"><button type="button" class="ib" id="cxbigx" title="Schließen" aria-label="Schließen"><i data-ic="x"></i></button></div>
 </div></section>
 
 <section id="test">
@@ -1033,6 +1047,10 @@
     <div class="intro sm">Wie oft die Dokumentensuche bei den Prüffragen aller Profile die richtige Stelle unter den ersten 5 findet, nach Suchart. Nur Summen, nie eine Frage oder ein Dokument. Schalter unter Funktionen → Eigene Dokumente.</div>
     <div class="row" style="margin-top:12px"><button class="b" id="sprgo">Jetzt prüfen</button><span id="sprgomsg" class="mut"></span></div>
     <div id="sprout"></div></div>
+  <div class="card" id="wmcard"><h2>Wissen messen</h2>
+    <div class="intro sm">Misst Zeiten und Speicher von Dokumentensuche, Wissensbuch und Wissenskarte: mit erfundenen Dokumenten in einem Wegwerf-Profil (zum Beispiel 5000, dazu für Finden 10 versiegelte erfundene Mails je Dokument) oder nur lesend mit den Dokumenten eines Profils. Nur Zahlen, nie ein Titel oder Name. Läuft in einer ruhigen Minute mit niedriger Priorität und hört auf, sobald jemand spricht. Auf der Konsole: <code>sudo speech-spark wissen messen</code></div>
+    <div class="row" style="margin-top:12px"><select id="wmart" aria-label="Was messen"><option value="synth">Erfundene Dokumente</option></select><input id="wmanz" class="num" type="number" min="50" max="20000" step="50" value="5000" aria-label="Dokumente"><button class="b" type="button" id="wmgo">Messen</button><span id="wmmsg" class="mut"></span></div>
+    <div id="wmout"></div></div>
   <div class="two">
     <div class="card"><h2>Spracherkennung testen</h2>
       <label>Audiodatei (wav, mp3, flac, …)</label><input type="file" id="asrfile" accept="audio/*">
@@ -1058,28 +1076,27 @@
 
 
 <section id="prof">
-  <div class="card" id="joinadmin"></div>
-  <div class="card" id="pruefadmin"><h2>Prüfzugang für die iPhone-App</h2></div>
   <div class="pstack">
-    <div class="card pcard"><h2>Profile</h2>
+    <div class="card pcard ld-box" id="pbox"><h2>Profile</h2>
       <div class="intro">Jedes Profil hat ein eigenes Gedächtnis und eigene Gespräche. Ein Browser meldet sich im Gespräch-Reiter mit Name und PIN an; was ein Profil weiß, sieht kein anderes und kein Gast.</div>
-      <div class="row" id="pfilter" style="margin-top:10px;flex-wrap:wrap;gap:6px"></div>
-      <div class="psplit"><div class="plist">
-      <table style="margin-top:10px"><tbody id="proflist"></tbody></table>
+      <div class="ld-tools" id="pfilter"></div>
+      <div class="ld-msg" id="pmsg" aria-live="polite"></div>
+      <div class="ld-split ld-wide"><div class="ld-list"><div id="proflist"></div>
       <div class="pfoot"><div class="row" id="ppager" style="gap:6px;align-items:center"></div>
       <details class="pnew" id="pnew"><summary class="b p">+ Neues Profil</summary>
       <div class="row"><input id="pname" placeholder="Name" maxlength="40" style="flex:1;min-width:120px"><input id="ppin" type="password" placeholder="PIN (mind. 4 Zeichen)" autocomplete="new-password" style="flex:1;min-width:120px"><button class="b p" id="padd">Anlegen</button></div>
       <div class="fh">Ein neues Profil bekommt gleich alles, was im Spark an ist; einzelne Funktionen sperrst du in der Funktion unter „Wer darf es“, alle Sperren stehen unter Personen und Geräte → Gesperrte Funktionen.</div></details></div>
-      <div id="pmsg" style="margin-top:8px"></div>
-      </div><aside class="pside" id="pside" aria-live="polite"></aside></div>
+      </div><div class="ld-detail ld-idle" id="pside" aria-live="polite"></div></div>
     </div>
-    <div class="card"><h2>Geräte</h2>
+    <div class="card ld-box"><h2>Geräte</h2>
       <div class="intro">Eigene Programme und Kurzbefehle bekommen hier einen Geräteschlüssel, das Profil wählst du in der Liste. iPhone-App, Lautsprecher, Pebble-Uhr und Home Assistant richtet jedes Profil selbst unter Ich ein: Sie bleiben fest bei diesem Profil und lassen sich hier nur löschen. Der Schlüssel geht im Header <code>X-Speech-Device</code> an <code>/api/chat</code>.</div>
-      <table style="margin-top:10px"><tbody id="devlist"></tbody></table>
+      <div class="ld-list" id="devlist"></div>
       <details class="pnew" id="dnew"><summary class="b p">+ Neues Gerät</summary>
       <div class="row"><input id="dname" placeholder="z. B. Lautsprecher Küche" maxlength="40" style="flex:1;min-width:140px"><select id="duser" style="flex:1;min-width:120px" aria-label="Profil"></select><button class="b p" id="dadd">Anlegen</button></div></details>
       <div id="dmsg" style="margin-top:8px"></div>
     </div>
+    <div class="card" id="joinadmin"></div>
+    <div class="card" id="pruefadmin"><h2>Prüfzugang für die iPhone-App</h2></div>
     <div class="card" id="blkcard"><h2>Gesperrte Funktionen</h2>
       <div class="mut">Nur die Funktionen, die der Admin für ein Profil gesperrt hat; antippen hebt die Sperre auf. Neue Sperren setzt du in der Funktion selbst unter „Wer darf es“.</div>
       <div id="whobox"></div>
@@ -1161,7 +1178,7 @@
             <div class="shmeta"><div id="shnummerinfo"></div><div><span id="shfehl"></span> · <button class="fzlink shinline" type="button" id="shneunr">Neue Nummer</button></div></div>
             <span class="fzfill"></span><button class="b danger" type="button" id="shweg">Verwerfen</button></div>
           <div class="shabgelaufen" id="shabgelaufen" hidden><b>Abgelaufen</b><span class="fh" id="shabgelaufeninfo"></span><button class="b p" type="button" id="shneunr2">Neue Nummer</button></div>
-          <div id="shwtabsbox"><div class="shwtabs" id="shwtabs" role="tablist" aria-label="Wie die Person kommt"><button type="button" role="tab" class="on" data-w="link" id="shwlink">🔗 Link</button><button type="button" role="tab" data-w="mail" id="shwmail">✉️ E-Mail</button><button type="button" role="tab" data-w="shell" id="shwshell">⌨️ Shell (ohne Bildschirm)</button></div>
+          <div id="shwtabsbox"><div class="shwtabs" id="shwtabs" role="tablist" aria-label="Wie die Person kommt"><button type="button" role="tab" class="on" data-w="link" id="shwlink">Link</button><button type="button" role="tab" data-w="mail" id="shwmail">E-Mail</button><button type="button" role="tab" data-w="shell" id="shwshell">Shell (ohne Bildschirm)</button></div>
           <div class="shweg" id="shplink"><div class="row shnowrap"><code class="shinp" id="shlink"></code><button class="b p" type="button" id="shkopie">Link kopieren</button><button class="b" type="button" id="shteilen">Teilen</button><button class="b" type="button" id="shqr">QR</button></div>
             <div class="fh">Gilt 30 Minuten und einmal. Die Person öffnet den Link, gibt ihren Vornamen ein und klickt „Bildschirm teilen“.</div><div id="shqrbild"></div></div>
           <div class="shweg" id="shpmail" hidden><div id="shmailrow"><div class="row shnowrap"><input id="shan" type="email" maxlength="254" autocomplete="off" placeholder="E-Mail-Adresse der Person" aria-label="E-Mail-Adresse der Person"><button class="b p" type="button" id="shmailgo">Senden</button></div>
@@ -1174,8 +1191,9 @@
         <div class="shwartet" id="shwartet" hidden><b id="shwartetname"></b><div class="fh" id="shwartethin">Nach „Annehmen“ klickt die Person selbst „Bildschirm teilen“.</div>
           <div class="row"><button class="b p" type="button" id="shannehmen">Annehmen</button><button class="b" type="button" id="shablehnen">Ablehnen</button></div></div>
         <div class="shoffen" id="shoffen" hidden>
-          <div class="shvbar"><span class="shpill ok" id="shvstand"></span><span class="fzfill"></span><button class="b" type="button" id="shzeig">Zeigepfeil</button><button class="b" type="button" id="shchatbtn" aria-expanded="false" aria-controls="shchat">Chat</button><button class="b" type="button" id="shvoll">Vollbild</button><button class="b" type="button" id="shplus" hidden>Verlängern (Code)</button><button class="b danger" type="button" id="shende">Beenden</button></div>
-          <div class="shview" id="shview" hidden><video id="shvideo" autoplay playsinline muted></video><div class="shzeigdot" id="shzeigdot" hidden></div><div class="shwarte" id="shviewinfo"></div></div>
+          <div class="shvbar"><span class="shpill ok" id="shvstand"></span><span class="shpill" id="shsstand" hidden></span><span class="fzfill"></span><button class="b" type="button" id="shsfrage" hidden>Steuern anfragen (Code)</button><button class="b" type="button" id="shsmodus" aria-pressed="false" hidden>Steuern</button><button class="b" type="button" id="shzeig">Zeigepfeil</button><button class="b" type="button" id="shchatbtn" aria-expanded="false" aria-controls="shchat">Chat</button><button class="b" type="button" id="shvoll">Vollbild</button><button class="b" type="button" id="shplus" hidden>Verlängern (Code)</button><button class="b danger" type="button" id="shende">Beenden</button></div>
+          <div class="shview" id="shview" hidden><video id="shvideo" autoplay playsinline muted></video><canvas id="shcv" tabindex="0" aria-label="Bildschirm der Person" hidden></canvas><div class="shzeigdot" id="shzeigdot" hidden></div><div class="shwarte" id="shviewinfo"></div></div>
+          <div class="shkeys" id="shkeys" hidden><input id="shstext" maxlength="200" placeholder="Text für den Rechner" autocomplete="off"><button class="b" type="button" id="shstipp">Tippen</button></div>
           <div class="shview shterm" id="shterm" hidden></div>
           <div class="shchat" id="shchat" hidden><div class="shchatlist" id="shchatlist" role="log"></div>
             <div class="row"><input id="shchatin" maxlength="500" autocomplete="off" placeholder="Nachricht" aria-label="Nachricht"><button class="b" type="button" id="shchatgo">Senden</button></div>
@@ -1184,12 +1202,13 @@
       </div>
     </div>
   </div>
-  <div class="card fzweg" id="fzweg" hidden><div><b>Die Shell läuft im eigenen Fenster.</b><div class="fh"><span id="fzwegname"></span> · Schließt du das Fenster, endet die Sitzung.</div></div><div class="row"><button class="b p" type="button" id="fzzurueck">Zurückholen</button><button class="b danger" type="button" id="fzwegstop">Trennen</button></div></div>
+  <div class="card fzweg" id="fzweg" hidden></div>
   <div class="fzview" id="fzview" hidden><div class="fztip" id="fztip" role="tooltip" hidden></div>
     <div class="fzvollbar" id="fzvollbar" role="status"><span class="fzrec"></span><span id="fzvolltext"></span></div>
     <div class="fzvollhint" id="fzvollhint" role="status" hidden>Alle Tasten aktiv · Esc 2 s halten zum Verlassen</div>
     <button class="fzdrawertab" type="button" id="fzdrawertab" aria-expanded="false" aria-controls="fzside" title="Assistent (Strg+Umschalt+Leertaste)" aria-label="Assistent">‹</button>
     <div class="fzleft" id="fzleft">
+      <div class="fzreiter" id="fzreiter" role="tablist" aria-label="Sitzungen" hidden></div>
       <div class="fzthead"><svg class="fzti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M12 15h5"/></svg><b id="fztname"></b><span class="fztart">SSH</span><span class="fztkey" id="fztkey" hidden>Host-Schlüssel ✓</span>
         <span class="fzticons">
           <button class="fzicon" type="button" id="fzmenu" aria-pressed="true" title="Menü ausblenden" aria-label="Menü ausblenden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button>
@@ -1208,7 +1227,7 @@
     </div>
     <div class="fzgriff" id="fzgriff" role="separator" aria-orientation="vertical" aria-controls="fzside" tabindex="0" title="Ziehen ändert die Breite, Doppelklick klappt zu" aria-label="Breite des Assistenten"></div>
     <aside class="fzside" id="fzside">
-      <div class="fzsidetabs" id="fzsidetabs" role="tablist" aria-label="Spalte neben dem Terminal" hidden><button type="button" role="tab" data-w="ki" id="fzseiteki">✦ Assistent</button><button type="button" role="tab" data-w="notiz" id="fzseitenotiz">📝 Notizen</button></div>
+      <div class="fzsidetabs" id="fzsidetabs" role="tablist" aria-label="Spalte neben dem Terminal" hidden><button type="button" role="tab" data-w="ki" id="fzseiteki">✦ Assistent</button><button type="button" role="tab" data-w="notiz" id="fzseitenotiz">Notizen</button></div>
       <div class="fznotizseite" id="fznotizseite" hidden></div>
       <div class="fzhilfe" id="fzhilfe" hidden>
         <div class="fzshead"><b>✦ Assistent</b><button class="fzicon" type="button" id="fzspaltezu" title="Assistent zuklappen" aria-label="Assistent zuklappen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button></div>
@@ -1239,6 +1258,11 @@
     <div class="row fbbar"><button class="b p" type="button" id="fbsteuern" aria-pressed="false">Steuern</button><span class="fh" id="fbstand">Nur ansehen: Maus und Tasten gehen nicht zum System.</span><span class="fzfill"></span><button class="b" type="button" id="fbablage" hidden>Zwischenablage senden</button><span class="fh" id="fbrate" aria-live="off"></span><button class="b" type="button" id="fbvoll">Vollbild</button><button class="b danger" type="button" id="fbtrennen">Trennen</button></div>
     <div class="note" id="fblangsam" hidden>Langsame Verbindung. Über den Proxy der Synology kommen nur etwa 50 bis 70 KB/s an; „Sparsam“ beim Öffnen hilft, von unterwegs ist der direkte https-Zugang deutlich schneller.</div>
     <div class="fbschirm" id="fbschirm" tabindex="0" aria-label="Bildschirm des Systems"></div>
+  </div>
+  <div class="fzweb" id="fzweb" hidden>
+    <div class="row fbbar"><b id="fwname"></b><span class="mut" id="fwsystem"></span><span class="fzfill"></span><span class="fh" id="fwrate" aria-live="off"></span><button class="b" type="button" id="fwtab">Neuer Tab</button><button class="b danger" type="button" id="fwzu">Schließen</button></div>
+    <div class="note" id="fwlangsam" hidden>Langsame Verbindung. Über den Proxy der Synology kommen nur etwa 50 bis 70 KB/s an; im Heimnetz geht der Webdienst direkt zum Spark.</div>
+    <iframe class="fwframe" id="fwframe" title="Webdienst des Systems" referrerpolicy="no-referrer" src="about:blank"></iframe>
   </div>
 </div></section>
 <section id="int">
@@ -1392,7 +1416,7 @@
   <button class="mi" id="milogout" type="button">Abmelden</button>
 </div></div>
 <div id="wizmodal" class="modal" style="display:none"><div class="card modalcard wizcard">
-  <div class="row" style="justify-content:space-between"><span class="mut" id="wizstep"></span><button class="ib" id="wizclose" type="button" title="Schließen">✕</button></div>
+  <div class="row" style="justify-content:space-between"><span class="mut" id="wizstep"></span><button class="ib" id="wizclose" type="button" title="Schließen"><i data-ic="x"></i></button></div>
   <div id="wizbody" class="wizbody"></div>
   <div class="row mefoot"><button class="b" id="wizback" type="button">Zurück</button><span id="wizmsg" class="mut" style="flex:1"></span><button class="b" id="wizskip" type="button">Überspringen</button><button class="b p" id="wiznext" type="button">Weiter</button></div>
 </div></div>
@@ -1566,6 +1590,7 @@
 <div class="an-bar" id="anbar" role="alertdialog" aria-labelledby="anbartext" hidden><span id="anbartext"></span><button type="button" class="an-b an-ok" id="anbargo">Anrufen</button><button type="button" class="an-b" id="anbarno">Nicht jetzt</button></div>
 <div class="an-call" id="ancall" role="dialog" aria-modal="true" aria-labelledby="anname" hidden><video id="anremote" class="an-remote" autoplay playsinline></video><video id="anlocal" class="an-local" autoplay playsinline muted></video><div class="an-info"><b id="anname"></b><span id="anstate" aria-live="polite"></span></div><div class="an-row" id="anincoming" hidden><button type="button" class="an-b an-no" id="anno">Ablehnen</button><button type="button" class="an-b an-ok" id="anok">Annehmen</button><button type="button" class="an-b an-ok" id="anokv" hidden>Mit Video</button></div><div class="an-row" id="anctl" hidden><button type="button" class="an-b" id="anmute" aria-pressed="false">Stumm</button><button type="button" class="an-b" id="ancam" aria-pressed="false" hidden>Kamera aus</button><button type="button" class="an-b an-no" id="anhang">Auflegen</button></div></div>
 <script src="/static/js/i18n.js"></script>
+<script src="/static/js/icons.js"></script>
 <script src="/static/js/werkzeuge.js"></script>
 <script src="/static/js/base.js"></script>
 <script src="/static/js/laden.js"></script>
@@ -1647,9 +1672,11 @@
 <script src="/static/js/bilder.js"></script>
 <script src="/static/js/musik.js"></script>
 <script src="/static/js/suchpruefung.js"></script>
+<script src="/static/js/wissensmessung.js"></script>
 <script src="/static/js/auslassen.js"></script>
 <script src="/static/js/wissensbuch.js"></script>
 <script src="/static/js/finden.js"></script>
+<script src="/static/js/mappen.js"></script>
 <script src="/static/js/dungeonlader.js"></script>
 <script src="/static/js/tipps.js"></script>
 <script src="/static/js/saetze.js"></script>
@@ -1665,6 +1692,7 @@
 <script src="/static/js/werkstatt.js"></script>
 <script src="/static/js/fernzugang.js"></script>
 <script src="/static/js/fernbild.js"></script>
+<script src="/static/js/fernweb.js"></script>
 <script src="/static/js/ferngross.js"></script>
 <script src="/static/js/spontanhilfe.js"></script>
 <script src="/static/js/praxistest.js"></script>

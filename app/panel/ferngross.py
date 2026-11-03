@@ -255,6 +255,9 @@ def _sitzung(request, sid, word):
     if _kind(s) == "windows":
         fernzugang.log(word, "windows", 0)
         raise HTTPException(*SAY["windows"])
+    if s.als:                    # as another user (fernals): big files run their commands as spark, so never there
+        fernzugang.log(word, "als", 0)
+        raise HTTPException(409, "Große Dateien gehen nur als spark (Dateien als anderer Benutzer: nur bis zur normalen Grenze).")
     return s
 
 

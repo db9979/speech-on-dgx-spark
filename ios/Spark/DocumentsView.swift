@@ -1193,6 +1193,9 @@ struct WbPageView: View {
             if Conversation.shared.allowed.areas.contains("wissenskarte") {
                 NavigationLink { WissenskarteView(around: page.id) } label: { Label("Auf der Karte", systemImage: "point.3.connected.trianglepath.dotted") }
             }
+            // renaming a page asks for the code of „Bestätigen“: in the panel (a page with a point: on the map)
+            Text(SparkAPI.way(String(localized: "Seite umbenennen geht im Panel unter Wissensbuch → Seiten, eine Seite mit Punkt unter Wissensbuch → Karte.")))
+                .font(.caption).foregroundStyle(.secondary)
             if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
         }
         .navigationTitle(Text(verbatim: page.title))

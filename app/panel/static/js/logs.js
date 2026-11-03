@@ -106,7 +106,7 @@ function lcopyText(){const q=$('logq').value.trim().toLowerCase();const rows=q?L
 // ---------------------------------------------------------------- Anfragen (V01.0.262, tracelog.py)
 // One request's way: a list with a bead chain per request, then where the time went and the steps as a time line.
 // Only ways, tool names and numbers come from the panel; names only for profiles that allowed it.
-const RK={in:['#64748b','↘'],prep:['#8b5cf6','⚙'],weiche:['#8b5cf6','⑂'],llm:['#5b5bf0','◆'],tool:['#0d9488','⚒'],check:['#16a34a','✓'],asr:['#0ea5c6','◉'],tts:['#e07a10','♪'],ack:['#f59e0b','♫'],err:['#dc2626','✕']};
+const RK={in:['#64748b','inbox'],prep:['#8b5cf6','gear'],weiche:['#8b5cf6','route'],llm:['#5b5bf0','brain'],tool:['#0d9488','wrench'],check:['#16a34a','check'],asr:['#0ea5c6','mic'],tts:['#e07a10','vol'],ack:['#f59e0b','bolt'],err:['#dc2626','x']};   // colour, symbol (icons.js)
 const RCLIENT={web:t('Browser','Browser'),speaker:t('Lautsprecher','Speaker'),watch:t('Uhr','Watch'),siri:'Siri',telegram:'Telegram',app:t('iPhone-App','iPhone app'),car:'CarPlay',mcp:t('Programm (MCP)','Program (MCP)'),ha:'Home Assistant',auto:t('Von selbst','By itself'),desk:'Spark-Begleiter',tui:'Terminal',other:t('Gerät','Device')};
 const RQ={data:null,sel:null,filter:'',lines:null};
 const rsec=ms=>ms==null?'–':ms<1000?`${ms} ms`:(ms/1000).toFixed(1).replace('.',L==='en'?'.':',')+' s';
@@ -116,9 +116,9 @@ const rfirst=x=>x.marks&&x.marks.sound!=null?x.marks.sound:(x.marks||{}).end;
 async function loadReq(){const d=await (await api(`/api/admin/traces?minutes=${LG.min}`)).json();if(LG.tab!=='req')return;
   RQ.data=d;if(RQ.sel&&!d.items.some(x=>x.id===RQ.sel))RQ.sel=null;if(!RQ.sel&&d.items.length&&!PHONE.matches)RQ.sel=d.items[0].id;rrender()}
 function rpill(text,cls){return el('span','rpill'+(cls?' '+cls:''),text)}
-// 👍/👎 of the person for this answer (tracelog.vote): thumb, fixed reason, seconds after the answer, never the note
+// thumbs up or down of the person for this answer (tracelog.vote): thumb, fixed reason, seconds after the answer, never the note
 const rvote=x=>(x.vote||{}).v||'';
-function rthumb(x){const v=rvote(x);if(!v)return null;const s=el('span','rvote '+(v==='gut'?'up':'dn'),v==='gut'?'👍':'👎');s.title=v==='gut'?t('Gut bewertet','Rated good'):t('Schlecht bewertet','Rated bad');s.setAttribute('aria-label',s.title);return s}
+function rthumb(x){const v=rvote(x);if(!v)return null;const s=el('span','rvote '+(v==='gut'?'up':'dn'));s.appendChild(icNode(v==='gut'?'up_thumb':'down_thumb'));s.title=v==='gut'?t('Gut bewertet','Rated good'):t('Schlecht bewertet','Rated bad');s.setAttribute('aria-label',s.title);return s}
 function rreason(x){const g=(x.vote||{}).grund,r=(RQ.data&&RQ.data.reasons||{})[g];return r?t(r[0],r[1]):''}
 function rchain(x){const c=el('span','rchain');let n=0;
   (x.steps||[]).filter(s=>s.k!=='weiche'&&s.k!=='check').forEach(s=>{if(n++)c.append(el('s'));
@@ -156,7 +156,7 @@ function rsteps(x){const list=[...(x.steps||[])].map(s=>({...s}));const m=x.mark
   list.sort((a,b)=>a.a-b.a||(a.k==='mark')-(b.k==='mark'));if(m.end!=null)list.push({k:'mark',c:x.status==='err'?'#dc2626':'#16a34a',n:t('fertig','done'),a:m.end});
   const tl=el('div','rtl');
   for(const s of list){const row=el('div','rst'+(s.k==='mark'?' mark':'')+(s.k==='tool'?' tw':''));row.append(el('span','rat',rsecs(s.a)));
-    const ic=el('span','ric',s.k==='mark'?'':RK[s.k][1]);ic.style.background=s.k==='mark'?s.c:RK[s.k][0];row.append(ic);
+    const dot=el('span','ric');if(s.k!=='mark')dot.appendChild(icNode(RK[s.k][1]));dot.style.background=s.k==='mark'?s.c:RK[s.k][0];row.append(dot);
     const tx=el('div','rtx');const b=el('b','',s.k==='mark'?s.n:rtitle(s));if(s.k==='mark')b.style.color=s.c;tx.append(b);
     if(s.k!=='mark'){const d=rdesc(s);if(d)tx.append(el('div','rd',d))}
     // „Falsch zugeordnet …“ (Funktionen → Weiche): the question is never recorded, the admin types it there again
@@ -183,7 +183,7 @@ function rdetail(x){const box=el('div','rdet');
   sub.append(document.createTextNode(' · '+t(`${rounds} Runde(n) · ${tools} Werkzeug(e)`,`${rounds} round(s) · ${tools} tool(s)`)+(m.sound!=null?' · '+t('erster Ton ','first sound ')+rsecs(m.sound):'')+' · '+t('fertig ','done ')+rsecs(m.end||0)));box.append(sub);
   if((x.errors||[]).length){const eb=el('div','lasterr');for(const c of x.errors){const r=el('div','',t('Fehler: ','Error: ')+rerr(c)+' ');r.append(el('code','lcode',c));eb.append(r)}box.append(eb)}
   if(rvote(x)){const v=x.vote,vb=el('div','rvoted '+(v.v==='gut'?'up':'dn'));const r=rreason(x);
-    vb.append(el('b','',(v.v==='gut'?'👍 ':'👎 ')+t(`Bewertet nach ${v.after} s`,`Rated after ${v.after} s`)+(r?' · '+t('Grund: ','Reason: ')+r:'')));
+    vb.append(icNode(v.v==='gut'?'up_thumb':'down_thumb'),el('b','',' '+t(`Bewertet nach ${v.after} s`,`Rated after ${v.after} s`)+(r?' · '+t('Grund: ','Reason: ')+r:'')));
     if(v.case&&typeof window.openCase==='function'&&!document.body.classList.contains('mgr')){const cb=el('button','mlink',t('Fall öffnen: Zustand → Verbessern','Open case: Status → Improve'));cb.type='button';cb.onclick=()=>window.openCase(v.case);vb.append(document.createTextNode(' '),cb)}
     box.append(vb)}
   const bar=el('div','lbar');const lb=el('button','b',t('Zugehörige Logzeilen','Related log lines'));lb.type='button';const cp=el('button','b',t('Kopieren für Thread','Copy for thread'));cp.type='button';
@@ -195,15 +195,15 @@ function rdetail(x){const box=el('div','rdet');
       const fb=el('button','b',t('Als Fall aufnehmen','Take as a case'));fb.type='button';fb.onclick=async()=>{try{await api('/api/admin/berater/erklaeren/'+encodeURIComponent(x.id)+'/fall',{method:'POST'});fb.textContent=t('Aufgenommen: Zustand → Verbessern','Taken: Status → Improve');fb.disabled=true}catch(e){fb.textContent=e.message}};ex.append(fb)}
       catch(e){ex.replaceChildren(el('div','lempty',e.message))}}}
   box.append(ex);
-  box.append(el('div','rnote',t('🔒 Ohne Frage- und Antworttext: nur Wege, Werkzeugnamen, Zahlen und Zeiten.','🔒 Without question or answer text: only ways, tool names, numbers and times.')+(x.named?'':' '+t('Name nur, wenn das Profil es erlaubt.','Name only when the profile allows it.'))));
+  box.append(el('div','rnote',t('Ohne Frage- und Antworttext: nur Wege, Werkzeugnamen, Zahlen und Zeiten.','Without question or answer text: only ways, tool names, numbers and times.')+(x.named?'':' '+t('Name nur, wenn das Profil es erlaubt.','Name only when the profile allows it.'))));
   box.append(rshares(x),rsteps(x));const lines=el('div','rlinesbox');box.append(lines);lb.onclick=()=>rshowLines(x,lines);if(RQ.lines&&RQ.linesFor===x.id)rlinesShow(lines);return box}
 function rfiltered(){const d=RQ.data;if(!d)return [];const q=$('logq').value.trim().toLowerCase();
   return d.items.filter(x=>(!RQ.filter||(RQ.filter==='gut'||RQ.filter==='schlecht'?rvote(x)===RQ.filter:x.status===RQ.filter))&&(!q||[x.id,x.name,x.device,x.client,x.intent,...(x.steps||[]).map(s=>s.k==='tool'?s.n+' '+wzName(s.n):s.n)].join(' ').toLowerCase().includes(q)))}
 function rrender(){lshow();const d=RQ.data,box=$('logreq'),chips=$('logchips');if(!d)return;
   chips.replaceChildren();const n=k=>d.items.filter(x=>x.status===k).length;
   const nv=k=>d.items.filter(x=>rvote(x)===k).length;
-  [['',t('Alle','All'),'',d.items.length],['err',t('Fehler','Errors'),'#ef4444',n('err')],['slow',t('Langsam','Slow'),'#f59e0b',n('slow')],['gut','👍','#16a34a',nv('gut')],['schlecht','👎','#dc2626',nv('schlecht')]].forEach(([k,label,c,cnt])=>{
-    const b=el('button','lchip'+(RQ.filter===k?' on':''));b.type='button';if(c){b.style.setProperty('--c',c);b.append(el('i'))}b.append(document.createTextNode(label));b.append(el('b','',String(cnt)));
+  [['',t('Alle','All'),'',d.items.length],['err',t('Fehler','Errors'),'#ef4444',n('err')],['slow',t('Langsam','Slow'),'#f59e0b',n('slow')],['gut',t('Gut bewertet','Rated good'),'#16a34a',nv('gut'),'up_thumb'],['schlecht',t('Schlecht bewertet','Rated bad'),'#dc2626',nv('schlecht'),'down_thumb']].forEach(([k,label,c,cnt,sym])=>{
+    const b=el('button','lchip'+(RQ.filter===k?' on':''));b.type='button';if(c){b.style.setProperty('--c',c);b.append(el('i'))}if(sym){b.appendChild(icNode(sym));b.setAttribute('aria-label',label);b.title=label}else b.append(document.createTextNode(label));b.append(el('b','',String(cnt)));
     b.setAttribute('aria-pressed',RQ.filter===k?'true':'false');b.onclick=()=>{RQ.filter=k;rrender()};chips.append(b)});
   // the live refresh (every 10 s) builds the list anew: it keeps where the person had scrolled to (V01.0.387, Dominik
   // 2026-10-11: the list jumped back to the top while picking a request)
@@ -214,7 +214,7 @@ function rrender(){lshow();const d=RQ.data,box=$('logreq'),chips=$('logchips');i
   $('loghead').textContent=t('Anfragen','Requests')+(d.on?'':' · '+t('Aufzeichnung aus','recording off'));
   $('logcount').textContent=t(`${items.length} von ${d.items.length} · höchstens ${d.keep_hours} h`,`${items.length} of ${d.items.length} · at most ${d.keep_hours} h`)}
 function rcopyText(){const x=RQ.data&&RQ.data.items.find(y=>y.id===RQ.sel);if(!x)return '';const m=x.marks||{};
-  const head=`${$('ver').textContent} · Anfrage ${x.id} · ${rtime(x)} · ${RCLIENT[x.client]||x.client} · ${x.intent||'-'}`+(m.ack!=null?` · Rückmeldung ${rsecs(m.ack)}`:'')+(m.sound!=null?` · erster Ton ${rsecs(m.sound)}`:'')+` · fertig ${rsecs(m.end||0)} · ${x.errors.length?x.errors.join(', '):x.status}`+(rvote(x)?` · Bewertung ${x.vote.v==='gut'?'👍':'👎'}`+(rreason(x)?` (${rreason(x)})`:''):'');
+  const head=`${$('ver').textContent} · Anfrage ${x.id} · ${rtime(x)} · ${RCLIENT[x.client]||x.client} · ${x.intent||'-'}`+(m.ack!=null?` · Rückmeldung ${rsecs(m.ack)}`:'')+(m.sound!=null?` · erster Ton ${rsecs(m.sound)}`:'')+` · fertig ${rsecs(m.end||0)} · ${x.errors.length?x.errors.join(', '):x.status}`+(rvote(x)?` · Bewertung ${x.vote.v==='gut'?'gut':'schlecht'}`+(rreason(x)?` (${rreason(x)})`:''):'');
   const rows=[...(x.steps||[])].sort((a,b)=>a.a-b.a).map(s=>`+${(s.a/1000).toFixed(2)} ${rtitle(s)} ${s.d?rsec(s.d):''} (${rdesc(s)})`.replace(' ()',''));
   return `${head}\n\`\`\`\n${rows.join('\n')}\n\`\`\``}
 // detail switches (Ausführlich): admin only, off by default, switch themselves off

@@ -1,0 +1,146 @@
+name: SparkHilfe Windows
+
+# Builds SparkHilfe (tools/sparkhilfe/windows, Spontanhilfe S2b: the small program a person starts once to let the admin
+# control her PC) as self-contained single .exe files for x64 and ARM64, with sparkhilfe.json (version, and per kind
+# name, size, SHA-256). Only on main the second job signs sparkhilfe.json (Ed25519, app/panel/signatur.py, once
+# UPDATE_SIGNING_KEY exists) and publishes everything in the release "sparkhilfe-windows" (replaced in place). The
+# Spark fetches it from there (spontansteuern.fetch: GitHub's download addresses only, signature, size and SHA-256
+# checked) and hands it out only from its cache. The exe files are not code-signed.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, claude/project-thread-34t0d8]   # TEMP branch test
+    paths:
+      - tools/sparkhilfe/**
+      - tools/begleiter/windows/Sicht.cs
+      - tools/begleiter/windows/NativeMethods.cs
+      - tools/begleiter/windows/NativeMethods.Fern.cs
+      - tools/begleiter/windows/Theme.cs
+      - tools/begleiter/windows/UiControls.cs
+      - tools/begleiter/windows/Face.cs
+      - tools/begleiter/windows/ComicFace.cs
+      - tools/begleiter/windows/ComicWomanFace.cs
+      - tools/begleiter/windows/AppIcon.cs
+      - tools/begleiter/windows/Wege.cs
+      - .github/workflows/sparkhilfe-windows.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sparkhilfe-windows
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build x64 and ARM64
+        env:
+          DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+          DOTNET_NOLOGO: '1'
+        run: |
+          $project = 'tools/sparkhilfe/windows/SparkHilfe.csproj'
+          # version from app/VERSION ("V01.1.301" -> "1.1.301")
+          $raw = (Get-Content app/VERSION -Raw).Trim().TrimStart('V')
+          $version = ($raw.Split('.') | ForEach-Object { [int]$_ }) -join '.'
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $files = [ordered]@{}
+          foreach ($arch in 'x64', 'arm64') {
+            dotnet publish $project -c Release -r "win-$arch" --self-contained true `
+              -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
+              -p:Version=$version -o "publish/$arch"
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            $name = "SparkHilfe-windows-$arch.exe"
+            Copy-Item "publish/$arch/SparkHilfe.exe" "dist/$name"
+            $files["windows-$arch"] = [ordered]@{ name = $name; size = (Get-Item "dist/$name").Length;
+                                                   sha256 = (Get-FileHash -Algorithm SHA256 "dist/$name").Hash.ToLower() }
+          }
+          # sparkhilfe.json: what the Spark checks before it keeps a program (spontansteuern.fetch)
+          [ordered]@{ version = $version; files = $files } | ConvertTo-Json -Depth 4 | Set-Content dist/sparkhilfe.json -Encoding utf8NoBOM
+          Get-Content dist/sparkhilfe.json
+          Get-ChildItem dist | Format-Table Name, Length
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: SparkHilfe-windows
+          path: |
+            dist/*.exe
+            dist/sparkhilfe.json
+          if-no-files-found: error
+
+  begleiter:   # TEMP branch test: the Begleiter still builds with the shared core
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Build the Begleiter x64 and ARM64
+        shell: pwsh
+        run: |
+          foreach ($arch in 'x64', 'arm64') {
+            dotnet publish tools/begleiter/windows/SparkBegleiter.csproj -c Release -r "win-$arch" --self-contained true -p:PublishSingleFile=true -o "pub/$arch"
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
+  publish:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    environment: release   # releases and the update signing key only from main
+    permissions:
+      contents: write   # only for the release upload
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      HAS_UPDKEY: ${{ secrets.UPDATE_SIGNING_KEY != '' }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          sparse-checkout: tools
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: SparkHilfe-windows
+          path: dist
+
+      # OPTIONAL: sparkhilfe.json.sig (Ed25519, app/panel/signatur.py); skipped until the secret exists.
+      - name: OPTIONAL sign sparkhilfe.json
+        if: env.HAS_UPDKEY == 'true'
+        env:
+          UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
+        run: bash tools/sign-manifest.sh dist/sparkhilfe.json
+
+      - name: Publish release sparkhilfe-windows
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          tag=sparkhilfe-windows
+          files=(dist/SparkHilfe-windows-x64.exe dist/SparkHilfe-windows-arm64.exe dist/sparkhilfe.json)
+          if [ -f dist/sparkhilfe.json.sig ]; then files+=(dist/sparkhilfe.json.sig); fi
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "${files[@]}" --clobber
+          else
+            notes='SparkHilfe für Windows: das kleine Programm der Spontanhilfe. Die Person lädt es auf der Hilfe-Seite ihres Helfers, startet es einmal und erlaubt dort selbst, ob jemand ihren PC steuern darf. Keine Installation, keine Adminrechte; Schließen beendet alles.
+
+          Nicht zum direkten Herunterladen gedacht: ohne Einmal-Schlüssel im Dateinamen verbindet es sich nirgends hin. Der Spark holt diese Dateien selbst, prüft SHA-256 (und die Signatur, sobald es einen Schlüssel gibt) und gibt sie nur aus seinem Speicher weiter.'
+            gh release create "$tag" "${files[@]}" --title 'SparkHilfe für Windows' --notes "$notes" --target "$GITHUB_SHA"
+          fi

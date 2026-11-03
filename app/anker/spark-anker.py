@@ -25,7 +25,8 @@ Set up (as root, once):
   more over the same checked connection and compared with the SHA-256 the panel named;
 - the user `spark` (made here when it did not exist) gets the panel's key in ~/.ssh/authorized_keys with
   from="127.0.0.1,::1",restrict,pty: only through the anchor, no forwarding, no agent, a terminal. It has no sudo;
-  whoever wants one adds it here by hand;
+  only `sudo spark-anker dateien als root[,…]` (1.7.0) lets it run the server's own sftp-server as those users, read
+  only unless `--schreiben` (/etc/sudoers.d/spark-anker, checked with visudo; `dateien aus` and removing delete it);
 - the system user `spark-anker` runs the anchor (systemd unit spark-anker, hardened: no new privileges, read-only
   system, no home, only its own folder /var/lib/spark-anker writable);
 - a second unit (spark-anker-abbau.path, root) watches for the panel's „abbauen“: then `spark-anker entfernen` runs.
@@ -50,6 +51,14 @@ up what fits, always only on 127.0.0.1 and with a random password the panel make
   asked in the panel for every session and never stored).
 The anchor then opens channels to that one port too (the panel asks with „ziel“: „bild“), never to another address.
 `bildschirm aus` and `entfernen` take it all away again.
+
+Webdienste (1.6.0): the panel asks for a channel „ziel“: „web“ with an IP address and a port; the anchor opens it only
+by its own rules (web_ziel), whatever the panel asks: loopback always, the private ranges only when the panel names
+„Netz dahinter“ for this system, never link-local, multicast, the metadata address or the panel's own address, never
+a name (nothing is resolved). Each such channel has its own flow control (WEB_FENSTER bytes on the way, then „mehr“).
+„ports“ lists the listening TCP ports reached through loopback with program names where this user may see them, and
+whether HTTP, HTTPS or something else answers (ports_report); never an address, a path or content. The panel's key in
+authorized_keys keeps `restrict`: no SSH forwarding is needed for it.
 
 On Windows (10 or 11, 64-bit; stage 5) the panel's file spark-anker-einrichten.cmd (fernwindows.py, as Administrator)
 adds OpenSSH Server when it is missing, unpacks python.org's embeddable Python (PY_EMBED: version and SHA-256, the one
@@ -95,9 +104,11 @@ import hashlib
 import hmac
 import http.client
 import io
+import ipaddress
 import json
 import os
 import platform
+import queue
 import re
 import secrets
 import select
@@ -119,7 +130,7 @@ try:
 except ImportError:      # Windows: no passwd database (the anchor asks `net user` there)
     pwd = None
 
-VERSION = "1.5.0"
+VERSION = "1.7.0"
 LIB = "/usr/local/lib/spark-anker"
 PROG = LIB + "/spark-anker.py"
 BIN = "/usr/local/bin/spark-anker"
@@ -145,6 +156,15 @@ PING_S = 25               # keeps the reverse proxy from closing a quiet connect
 MARK = "spark-fernzugang-"  # the comment of the panel's line in authorized_keys
 BILD_PORT = 5930          # x11vnc and wayvnc: only on 127.0.0.1
 BILD = {"x11vnc": BILD_PORT, "wayvnc": BILD_PORT, "grd": 3389, "mac": 5900}   # the screen's one local port per kind
+# Webdienste (1.6.0): channels „ziel: web“ to one port of a web service, numbered 64 and up (one byte: at most WEB_MAX)
+WEB_MAX = 250
+WEB_ERSTER = 64           # the shells, files and the screen keep 1..63
+WEB_FENSTER = 256 * 1024  # bytes per web channel and direction on the way before the other side says „mehr“
+WEB_MEHR = 64 * 1024      # „mehr“ goes back after this many bytes taken, or when all that waited is written
+WEB_OPEN_S = 5            # connecting to the service at most this long
+WEB_PORTS = 64            # listening ports reported at most („Gefunden“)
+NETZ_PRIVAT = tuple(ipaddress.ip_network(n) for n in ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "fc00::/7"))
+METADATA = ipaddress.ip_address("169.254.169.254")
 BILD_PW = ETC + "/bild.pw"
 BILD_UNITS = ("/etc/systemd/system/spark-anker-bild.socket", "/etc/systemd/system/spark-anker-bild@.service")
 WAYVNC_UNIT = "/etc/systemd/user/spark-anker-wayvnc.service"
@@ -652,6 +672,206 @@ def os_name(s=None):
     return WORD.sub("", name)[:40]
 
 
+def web_ziel(m, peer=""):
+    """(host, port) a web channel may reach, else None: its own rules, whatever the panel asks. Only an IP address
+    (never a name, so nothing is resolved and nothing slips through a DNS answer), port 1 to 65535; loopback always;
+    the private ranges (NETZ_PRIVAT) only with „netz“ (the panel's „Netz dahinter“ for this system); never link-local,
+    multicast, unspecified, reserved, the metadata address 169.254.169.254 or the panel's own address (peer)."""
+    host, port = m.get("host"), m.get("port")
+    if not isinstance(host, str) or len(host) > 45 or not isinstance(port, int) or isinstance(port, bool) \
+            or not 1 <= port <= 65535:
+        return None
+    try:
+        ip = ipaddress.ip_address(host[1:-1] if host.startswith("[") and host.endswith("]") else host)
+    except ValueError:
+        return None
+    if getattr(ip, "ipv4_mapped", None):
+        ip = ip.ipv4_mapped
+    if ip == METADATA or ip.is_link_local or ip.is_multicast or ip.is_unspecified or \
+            (ip.is_reserved and not ip.is_loopback):     # ::1 lies in IPv6's reserved ::/8
+        return None
+    with contextlib.suppress(ValueError):
+        p = ipaddress.ip_address(str(peer or "").split("%")[0]) if peer else None
+        if p is not None and (getattr(p, "ipv4_mapped", None) or p) == ip:
+            return None
+    if ip.is_loopback:
+        return str(ip), port
+    if m.get("netz") is True and any(ip in n for n in NETZ_PRIVAT if n.version == ip.version):
+        return str(ip), port
+    return None
+
+
+def _hex_ip(h):
+    b = bytes.fromhex(h)
+    if len(b) == 4:
+        return socket.inet_ntop(socket.AF_INET, b[::-1])
+    return socket.inet_ntop(socket.AF_INET6, b"".join(b[i:i + 4][::-1] for i in range(0, 16, 4)))
+
+
+def _lokal(host):
+    """A listening address reached through 127.0.0.1 or ::1 (any address, or loopback): the one to probe, else None."""
+    h = host.strip("[]").split("%")[0]
+    if h in ("0.0.0.0", "*") or h.startswith("127.") or h in ("::ffff:127.0.0.1", "::ffff:0.0.0.0"):
+        return "127.0.0.1"
+    if h in ("::", "::1"):
+        return "::1"
+    return None
+
+
+def _listen_linux(root="/"):
+    """{port: (probe host, program)} from /proc/net/tcp{,6} (no program needed, no root: a program name only when this
+    user may see the process)."""
+    out, inodes = {}, {}
+    for name in ("proc/net/tcp", "proc/net/tcp6"):
+        try:
+            with open(os.path.join(root, name)) as f:
+                lines = f.read().splitlines()[1:]
+        except OSError:
+            continue
+        for line in lines:
+            f = line.split()
+            if len(f) < 10 or f[3] != "0A":
+                continue
+            addr, _, port = f[1].partition(":")
+            try:
+                host, port = _lokal(_hex_ip(addr)), int(port, 16)
+            except (ValueError, OSError):
+                continue
+            if host and port not in out:
+                out[port] = (host, "")
+                inodes[f[9]] = port
+    with contextlib.suppress(OSError):
+        for pid in os.listdir(os.path.join(root, "proc")):
+            if not pid.isdigit():
+                continue
+            fds = os.path.join(root, "proc", pid, "fd")
+            try:
+                links = [os.readlink(os.path.join(fds, x)) for x in os.listdir(fds)]
+            except OSError:
+                continue
+            hits = [inodes[x[8:-1]] for x in links if x.startswith("socket:[") and x[8:-1] in inodes]
+            if hits:
+                try:
+                    with open(os.path.join(root, "proc", pid, "comm")) as f:
+                        comm = f.read().strip()
+                except OSError:
+                    comm = ""
+                for port in hits:
+                    out[port] = (out[port][0], comm)
+    return out
+
+
+def _listen_text(text, kind):
+    """{port: (probe host, program)} from `netstat -an -p tcp` (macOS) or `netstat -ano` (Windows; programs from
+    `tasklist`, passed in as {pid: name} under the key "pids")."""
+    out = {}
+    pids = kind.get("pids", {}) if isinstance(kind, dict) else {}
+    win = isinstance(kind, dict)
+    for line in text.splitlines():
+        f = line.split()
+        if win:
+            if len(f) < 5 or f[0] != "TCP" or f[3] != "LISTENING":
+                continue
+            host, _, port = f[1].rpartition(":")
+            prog = pids.get(f[4], "")
+        else:
+            if len(f) < 6 or not f[0].startswith("tcp") or f[5] != "LISTEN":
+                continue
+            host, _, port = f[3].rpartition(".")
+            prog = ""
+        h = _lokal(host)
+        if h and port.isdigit() and int(port) not in out:
+            out[int(port)] = (h, prog)
+    return out
+
+
+def listening(s=None, run=None):
+    """The listening TCP ports of this system reached through loopback, at most WEB_PORTS: [(port, host, program)]."""
+    s = s or Ctx().s
+    run = run or (lambda cmd: subprocess.run(cmd, capture_output=True, text=True, timeout=10).stdout)
+    try:
+        if s is WIN:
+            pids = {}
+            for line in run(["tasklist", "/FO", "CSV", "/NH"]).splitlines():
+                f = [x.strip('"') for x in line.split('","')]
+                if len(f) >= 2 and f[1].isdigit():
+                    pids[f[1]] = f[0]
+            found = _listen_text(run(["netstat", "-ano", "-p", "TCP"]) + "\n" + run(["netstat", "-ano", "-p", "TCPv6"]),
+                                 {"pids": pids})
+        elif s is MAC:
+            found = _listen_text(run(["netstat", "-an", "-p", "tcp"]), "mac")
+        else:
+            found = _listen_linux()
+    except (OSError, subprocess.SubprocessError, ValueError):
+        found = {}
+    return [(p, h, WORD.sub("", prog)[:40]) for p, (h, prog) in sorted(found.items())][:WEB_PORTS]
+
+
+def _server_word(head):
+    """The word of a „Server:“ header (nginx, Caddy …), letters only, as the name when the program is unknown."""
+    m = re.search(rb"\r\nserver:[ \t]*([^\r\n/ ]{1,40})", head, re.I)
+    return WORD.sub("", m.group(1).decode("latin-1"))[:40] if m else ""
+
+
+def port_art(host, port, timeout=0.6):
+    """(„https“, „http“ or „tcp“, the „Server:“ word or ""): what answers there (a server that talks first is no web
+    server; then TLS; then a plain HEAD). Only on this system's own loopback."""
+    def conn():
+        c = socket.create_connection((host, port), timeout=timeout)
+        c.settimeout(timeout)
+        return c
+    head = b"HEAD / HTTP/1.0\r\nHost: " + (b"[::1]" if ":" in host else host.encode()) + b"\r\n\r\n"
+
+    def answer(c):
+        c.sendall(head)
+        got = b""
+        with contextlib.suppress(socket.timeout, OSError, ssl.SSLError):
+            while len(got) < 4096 and b"\r\n\r\n" not in got:
+                part = c.recv(4096)
+                if not part:
+                    break
+                got += part
+        return got
+    try:
+        c = conn()
+    except OSError:
+        return "tcp", ""
+    try:
+        try:
+            if c.recv(1, socket.MSG_PEEK):
+                return "tcp", ""          # SSH, SMTP, a database: it greets first
+        except (socket.timeout, OSError):
+            pass
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        try:
+            with ctx.wrap_socket(c, server_hostname=None) as t:
+                return "https", _server_word(answer(t))
+        except (ssl.SSLError, OSError):
+            pass
+    finally:
+        with contextlib.suppress(OSError):
+            c.close()
+    try:
+        c = conn()
+        got = answer(c)
+        c.close()
+        return ("http", _server_word(got)) if got.startswith(b"HTTP/") else ("tcp", "")
+    except OSError:
+        return "tcp", ""
+
+
+def ports_report(s=None):
+    """„Gefunden“ for the panel: ports, program names (or the „Server:“ word) and the kind only (never an address, a
+    path or content)."""
+    out = []
+    for p, h, prog in listening(s):
+        art, word = port_art(h, p)
+        out.append({"port": p, "prog": prog or word, "art": art})
+    return out
+
+
 class Lauf:
     """One connection to the panel: channels to the own sshd, nothing else. One thread for everything (a TLS socket
     is never read and written from two threads at once)."""
@@ -659,9 +879,17 @@ class Lauf:
     def __init__(self, ws, bild="", conf=None, ctx=None):
         self.ws = ws
         self.bild = bild if bild in BILD else ""   # the screen's kind (`bildschirm`), its one port in BILD
-        self.kanaele = {}      # n -> socket to the own sshd (or the screen's port)
+        self.kanaele = {}      # n -> socket to the own sshd (or the screen's port, or a web service)
+        self.web = {}          # n -> {"raus": bytes the panel has not taken yet, "rein": bytearray to the service,
+                               #       "genommen": written since the last „mehr“} (the Webdienste' own flow control)
         self.conf = conf or {}
         self.ctx = ctx or Ctx()
+        self.antworten = queue.SimpleQueue()   # what a helper thread found („ports“), sent by the one thread
+        self.ports_laeuft = False
+        try:
+            self.peer = ws.sock.getpeername()[0]
+        except (OSError, AttributeError, IndexError, TypeError):
+            self.peer = ""
 
     def _update(self, m):
         """„Aktualisieren“ from the panel: fetch the program from the own panel only (the same checked TLS), check it
@@ -699,6 +927,7 @@ class Lauf:
 
     def _close(self, n, tell):
         s = self.kanaele.pop(n, None)
+        self.web.pop(n, None)
         if s is None:
             return
         try:
@@ -715,7 +944,32 @@ class Lauf:
         if m.get("typ") == "update":
             self.ws.send_json({"typ": "update_stand", "stand": self._update(m)})
             return None
-        if m.get("typ") == "auf" and isinstance(n, int) and 1 <= n < 64 and n not in self.kanaele:
+        if m.get("typ") == "mehr" and isinstance(n, int) and n in self.web and isinstance(m.get("n"), int):
+            w = self.web[n]
+            w["raus"] = max(0, w["raus"] - m["n"])
+            return None
+        if m.get("typ") == "ports":
+            if not self.ports_laeuft:
+                self.ports_laeuft = True
+                threading.Thread(target=self._ports, daemon=True).start()
+            return None
+        if m.get("typ") == "auf" and m.get("ziel") == "web" and isinstance(n, int) and WEB_ERSTER <= n <= WEB_MAX \
+                and n not in self.kanaele:
+            target = web_ziel(m, self.peer)        # its own rules, whatever the panel asked
+            if target is None:
+                self.ws.send_json({"typ": "fehler", "kanal": n, "grund": "ziel"})
+                return None
+            try:
+                s = socket.create_connection(target, timeout=WEB_OPEN_S)
+                s.setblocking(False)
+            except OSError:
+                self.ws.send_json({"typ": "fehler", "kanal": n, "grund": "dienst"})
+                return None
+            self.kanaele[n] = s
+            self.web[n] = {"raus": 0, "rein": bytearray(), "genommen": 0}
+            self.ws.send_json({"typ": "offen", "kanal": n})
+            return None
+        if m.get("typ") == "auf" and isinstance(n, int) and 1 <= n < WEB_ERSTER and n not in self.kanaele:
             target = SSHD
             if m.get("ziel") == "bild":          # the screen: only its one port on 127.0.0.1, only when set up
                 if not self.bild:
@@ -734,9 +988,43 @@ class Lauf:
             self._close(n, False)
         return None
 
+    def _ports(self):
+        try:
+            liste = ports_report(self.ctx.s)
+        except Exception:
+            liste = []
+        self.antworten.put({"typ": "ports", "liste": liste})
+
+    def _web_rein(self, n, data):
+        """Bytes of the panel for a web service: kept in order, written as the service takes them; more than the
+        window at once is a broken panel and closes the channel."""
+        w = self.web[n]
+        w["rein"] += data
+        if len(w["rein"]) > WEB_FENSTER:
+            self._close(n, True)
+            return
+        self._web_schreiben(n)
+
+    def _web_schreiben(self, n):
+        w, s = self.web.get(n), self.kanaele.get(n)
+        if w is None or s is None:
+            return
+        try:
+            k = s.send(w["rein"]) if w["rein"] else 0
+        except (BlockingIOError, InterruptedError):
+            k = 0
+        except OSError:
+            self._close(n, True)
+            return
+        del w["rein"][:k]
+        w["genommen"] += k
+        if w["genommen"] and (w["genommen"] >= WEB_MEHR or not w["rein"]):
+            self.ws.send_json({"typ": "mehr", "kanal": n, "n": w["genommen"]})
+            w["genommen"] = 0
+
     def run(self):
         self.ws.send_json({"typ": "hallo", "os": os_name(), "version": VERSION, "bild": self.bild,
-                           "update": self._stand()})
+                           "update": self._stand(), "web": 1})
         last = time.monotonic()
         try:
             while True:
@@ -747,7 +1035,9 @@ class Lauf:
                     op, data = got
                     if op == 2:
                         s = self.kanaele.get(data[0]) if data else None
-                        if s is not None:
+                        if s is not None and data[0] in self.web:
+                            self._web_rein(data[0], data[1:])
+                        elif s is not None:
                             try:
                                 s.sendall(data[1:])
                             except OSError:
@@ -762,8 +1052,20 @@ class Lauf:
                 if time.monotonic() - last > PING_S:
                     self.ws.send(b"", 9)
                     last = time.monotonic()
+                while True:
+                    try:
+                        self.ws.send_json(self.antworten.get_nowait())
+                        self.ports_laeuft = False
+                    except queue.Empty:
+                        break
                 wait = 0 if self.ws.sock.pending() else 1
-                ready, _, _ = select.select([self.ws.sock, *self.kanaele.values()], [], [], wait)
+                lesen = [v for k, v in self.kanaele.items() if k not in self.web or self.web[k]["raus"] < WEB_FENSTER]
+                schreiben = [self.kanaele[k] for k, w in self.web.items() if w["rein"] and k in self.kanaele]
+                ready, frei, _ = select.select([self.ws.sock, *lesen], schreiben, [], wait)
+                for w in frei:
+                    n = next((k for k, v in self.kanaele.items() if v is w), None)
+                    if n is not None:
+                        self._web_schreiben(n)
                 if self.ws.sock.pending() and self.ws.sock not in ready:
                     ready.append(self.ws.sock)
                 for r in ready:
@@ -776,9 +1078,13 @@ class Lauf:
                         continue
                     try:
                         data = r.recv(CHUNK)
+                    except (BlockingIOError, InterruptedError):
+                        continue
                     except OSError:
                         data = b""
                     if data:
+                        if n in self.web:
+                            self.web[n]["raus"] += len(data)
                         self.ws.send(bytes([n]) + data, 2)
                     else:
                         self._close(n, True)
@@ -984,6 +1290,17 @@ class Ctx:
 
     def fetch(self, url, cap):
         return fetch_https(url, cap)
+
+    def root_owned(self, path):
+        """A file of root that only root may change, in a folder only root may change (the sudoers rule's program)."""
+        try:
+            for p in (path, os.path.dirname(path)):
+                st = os.stat(self.path(p))
+                if st.st_uid != 0 or st.st_mode & 0o022:
+                    return False
+            return stat.S_ISREG(os.stat(self.path(path)).st_mode)
+        except OSError:
+            return False
 
     def port_open(self):
         try:
@@ -1843,6 +2160,7 @@ def cmd_remove(args, root="/", run=run_cmd, tell=True, home=None, ctx=None):
         say(ctx.s.sudo)
         return 1
     conf = load(ctx.root, s) or {}
+    dateien_off(ctx, conf)
     s.stop(ctx, conf)
     for p in remove_paths(ctx.root, s):
         if os.path.islink(p) or os.path.isfile(p):
@@ -1864,6 +2182,155 @@ def cmd_remove(args, root="/", run=run_cmd, tell=True, home=None, ctx=None):
         except (OSError, Fehler):
             say("Panel nicht erreicht; dort „Entfernen“ wählen")
     s.last(ctx, conf)
+    return 0
+
+
+# ---------------------------------------------------------------- files as another user (fernals)
+# `sudo spark-anker dateien als root,anna [--schreiben]`: the panel's „Dateien“ may then run the server's own
+# sftp-server as these users through sudo, and only that: the drop-in names the one program with exactly `-R` (read
+# only), with --schreiben also without arguments; checked with visudo -cf before it counts. Windows: `dateien ordner
+# "C:\…" [--schreiben]` gives spark read (or change) rights on exactly these folders with icacls. `dateien aus`,
+# „Entfernen“ and „abbauen“ take it all away. The panel needs its own switch per system besides (fresh code).
+SUDOERS_D = "/etc/sudoers.d/spark-anker"
+SUDOERS = "/etc/sudoers"
+SFTP_SERVERS = ("/usr/lib/openssh/sftp-server", "/usr/libexec/openssh/sftp-server", "/usr/lib/ssh/sftp-server",
+                "/usr/libexec/sftp-server")
+FILES_USER = re.compile(r"[a-z_][a-z0-9_.\-]{0,31}")
+FILES_MAX = 8
+INCLUDEDIR = re.compile(r"^\s*[#@]includedir\s+(/private)?/etc/sudoers\.d\s*$", re.M)
+WIN_FILES_NO = ("windows", "program files", "program files (x86)", "programdata", "$recycle.bin", "system volume information",
+                "recovery", "boot")
+
+
+def sudoers_text(users, sftp, write):
+    run_as = ",".join(users)
+    lines = ["# spark-anker: Dateien im Panel als andere Benutzer (nur dieses Programm, nur so aufgerufen)",
+             f"Defaults!{sftp} !requiretty, !use_pty, !lecture, env_reset, !log_output",
+             f"{USER} ALL=({run_as}) NOPASSWD: {sftp} -R"]
+    if write:
+        lines.append(f'{USER} ALL=({run_as}) NOPASSWD: {sftp} ""')
+    return "\n".join(lines) + "\n"
+
+
+def sftp_server(ctx):
+    """The server's own sftp-server (sshd -T names it, else the usual places): only a file of root that nobody else
+    may change, nor its folder; else None."""
+    m = re.search(r"^subsystem\s+sftp\s+(\S+)", ctx.out(["sshd", "-T"]) if ctx.s is LINUX else "", re.M | re.I)
+    named = [m.group(1)] if m and m.group(1).startswith("/") else []
+    for p in (*named, *SFTP_SERVERS):
+        if re.fullmatch(r"/(?:[A-Za-z0-9_.\-]+/){1,6}sftp-server", p) and ctx.root_owned(p):
+            return p
+    return None
+
+
+def files_users(ctx, raw):
+    users = [u.strip() for x in raw for u in x.split(",") if u.strip()]
+    if not users or len(users) > FILES_MAX or len(set(users)) != len(users):
+        raise Fehler(f"bitte 1 bis {FILES_MAX} Benutzer nennen, z. B. `dateien als root`. Es wurde nichts geändert.")
+    for u in users:
+        if not FILES_USER.fullmatch(u) or u in (USER, RUNNER, MAC_RUNNER) or ctx.ids(u) is None:
+            raise Fehler(f"den Benutzer „{u}“ gibt es hier nicht (oder er ist spark selbst). Es wurde nichts geändert.")
+    return users
+
+
+def win_files_dirs(ctx, raw):
+    dirs = []
+    for x in raw:
+        p = x.replace("\\", "/").rstrip("/")
+        parts = p.split("/")
+        if not re.fullmatch(r"[A-Za-z]:", parts[0]) or len(parts) < 2 or any(q in ("", ".", "..") for q in parts[1:]) \
+                or parts[1].lower() in WIN_FILES_NO or not os.path.isdir(ctx.path(p)):
+            raise Fehler(f"„{x}“ geht nicht: nur vorhandene Ordner, kein ganzes Laufwerk, kein Systemordner. Es wurde nichts geändert.")
+        dirs.append(p)
+    if not dirs or len(dirs) > FILES_MAX or len(set(d.lower() for d in dirs)) != len(dirs):
+        raise Fehler(f"bitte 1 bis {FILES_MAX} Ordner nennen. Es wurde nichts geändert.")
+    return dirs
+
+
+def dateien_off(ctx, conf):
+    """Everything of `dateien` away again: the drop-in, or the rights on the folders (Windows)."""
+    d = conf.get("dateien") or {}
+    if ctx.s is WIN:
+        for p in d.get("ordner") or ():
+            ctx.run(["icacls", win_native(ctx.path(p)), "/remove:g", USER])
+    else:
+        for p in (SUDOERS_D, SUDOERS_D + ".neu"):
+            with contextlib.suppress(OSError):
+                os.remove(ctx.path(p))
+
+
+def cmd_files(args, run=run_cmd, ctx=None):
+    """`dateien als …` / `dateien ordner …` / `dateien aus`: see above."""
+    ctx = ctx or Ctx(run=run)
+    s = ctx.s
+    if ctx.euid() != 0:
+        say(ctx.s.sudo)
+        return 1
+    conf = load(ctx.root, s)
+    if not conf:
+        say("erst einrichten (der Befehl aus dem Panel unter System koppeln)")
+        return 1
+    if args.was == "aus":
+        dateien_off(ctx, conf)
+        conf.pop("dateien", None)
+        write(ctx.path(s.conf), json.dumps(conf, indent=1), 0o640)
+        with contextlib.suppress(OSError, Fehler):
+            http_call(conf["url"], conf.get("fp") or "", "DELETE", "/api/fernzugang/anker/dateien", None, conf["key"], 10)
+        say("Dateien als anderer Benutzer: aus, nichts davon ist mehr da")
+        return 0
+    write_ok = bool(args.schreiben)
+    if s is WIN:
+        if args.was != "ordner":
+            raise Fehler("unter Windows: `spark-anker dateien ordner \"C:\\Users\\…\" [--schreiben]` (als Administrator)")
+        dirs = win_files_dirs(ctx, args.ziele)
+        dateien_off(ctx, conf)              # what was given before goes first
+        for p in dirs:
+            if ctx.run(["icacls", win_native(ctx.path(p)), "/grant", f"{USER}:(OI)(CI){'M' if write_ok else 'RX'}"]):
+                conf["dateien"] = {"art": "ordner", "ordner": dirs}
+                dateien_off(ctx, conf)
+                conf.pop("dateien", None)
+                raise Fehler("icacls ließ die Rechte nicht setzen. Es wurde alles zurückgenommen.")
+        conf["dateien"] = {"art": "ordner", "ordner": dirs, "schreiben": write_ok}
+        report = {"art": "ordner", "ordner": dirs, "schreiben": write_ok}
+    else:
+        if args.was != "als":
+            raise Fehler("hier: `sudo spark-anker dateien als root[,benutzer] [--schreiben]`")
+        users = files_users(ctx, args.ziele)
+        if not shutil.which("sudo") and ctx.root == "/":
+            raise Fehler("sudo fehlt auf diesem System. Es wurde nichts geändert.")
+        try:
+            with open(ctx.path(SUDOERS)) as f:
+                main_text = f.read()
+        except OSError:
+            main_text = ""
+        if not INCLUDEDIR.search(main_text):
+            raise Fehler("/etc/sudoers liest /etc/sudoers.d nicht (#includedir fehlt). Es wurde nichts geändert.")
+        sftp = sftp_server(ctx)
+        if not sftp:
+            raise Fehler("kein sftp-server von root gefunden (sshd -T, /usr/lib/openssh, /usr/libexec). Es wurde nichts geändert.")
+        new = ctx.path(SUDOERS_D + ".neu")
+        os.makedirs(os.path.dirname(new), exist_ok=True)
+        write(new, sudoers_text(users, sftp, write_ok), 0o440)
+        if ctx.run(["visudo", "-cf", new]):
+            with contextlib.suppress(OSError):
+                os.remove(new)
+            raise Fehler("visudo hat die Regel abgelehnt. Es wurde nichts geändert.")
+        os.replace(new, ctx.path(SUDOERS_D))
+        conf["dateien"] = {"art": "sudo", "benutzer": users, "schreiben": write_ok}
+        report = {"art": "sudo", "benutzer": users, "schreiben": write_ok, "sftp": sftp}
+    write(ctx.path(s.conf), json.dumps(conf, indent=1), 0o640)
+    try:
+        status, _ = http_call(conf["url"], conf.get("fp") or "", "POST", "/api/fernzugang/anker/dateien", report, conf["key"])
+    except (OSError, Fehler):
+        status = 0
+    say("Dateien: " + ("Ordner freigegeben" if s is WIN else "als " + ", ".join(report["benutzer"]))
+        + (", lesen und schreiben" if write_ok else ", nur lesen") + ("" if status == 200 else
+        f" (Panel antwortet {status or 'nicht'}: dort erscheint es beim nächsten `dateien` noch einmal)"))
+    say("Im Panel dazu je System einschalten: Fernzugang → Systeme → Dateien als anderer Benutzer (frischer Code)")
+    if s is MAC:
+        say("macOS: Für Schreibtisch, Dokumente, Mail usw. zusätzlich Systemeinstellungen → Allgemein → Teilen → "
+            "Entfernte Anmeldung (i) → „Vollzugriff auf die Festplatte für entfernte Benutzer erlauben“")
+    say("aus: sudo spark-anker dateien aus")
     return 0
 
 
@@ -2445,6 +2912,10 @@ def main(argv=None, system=None):
     u.add_argument("--vom-anker", action="store_true", help=argparse.SUPPRESS)
     sub.add_parser("einheiten", help=argparse.SUPPRESS)
     sub.add_parser("waechter", help=argparse.SUPPRESS)
+    d = sub.add_parser("dateien", help="Dateien im Panel als root oder andere Benutzer (Windows: freigegebene Ordner)")
+    d.add_argument("was", choices=["als", "ordner", "aus"], help="als BENUTZER[,…] | ordner ORDNER … | aus")
+    d.add_argument("ziele", nargs="*", default=[], help="Benutzer (als, durch Komma getrennt) oder Ordner (Windows)")
+    d.add_argument("--schreiben", action="store_true", help="auch schreiben (sonst nur lesen)")
     b = sub.add_parser("bildschirm", help="den Bildschirm für das Panel einrichten (oder `bildschirm aus`)")
     b.add_argument("aus", nargs="?", default="", choices=["", "aus"], help="aus: alles vom Bildschirm wieder weg")
     h = sub.add_parser("hilfe", help="Spontanhilfe: einmal, in diesem Terminal, ohne sudo (fragt die Nummer)")
@@ -2457,7 +2928,7 @@ def main(argv=None, system=None):
         return 1
     try:
         return {"einrichten": cmd_setup, "entfernen": cmd_remove, "lauf": cmd_run, "zustand": cmd_state,
-                "hilfe": cmd_help, "bildschirm": cmd_screen, "aktualisieren": cmd_upgrade, "einheiten": cmd_units,
+                "hilfe": cmd_help, "bildschirm": cmd_screen, "dateien": cmd_files, "aktualisieren": cmd_upgrade, "einheiten": cmd_units,
                 "waechter": cmd_watch}[args.cmd](args)
     except Fehler as e:
         say(str(e))

@@ -1,7 +1,7 @@
 // Ich → Dokumente → Suchprüfung (suchpruefung.py, plan plaene/suche-schaerfen.md, Stufe 1): test questions with a
 // known right place measure how well the document search finds it; Sammelfragen need several documents at once. Only numbers and the person's own questions;
 // nothing changes by itself. "Richtige Stelle angeben" under an answer fills the form here.
-const SPRMODE=[['wort',['Wörter','Words']],['bedeutung',['Bedeutung','Meaning']],['gemischt',['Gemischt','Mixed']],['nachsortiert',['Nachsortiert','Re-ranked']],['wissensbuch',['Mit Wissensbuch','With knowledge book']]];
+const SPRMODE=[['wort',['Wörter','Words']],['bedeutung',['Bedeutung','Meaning']],['gemischt',['Gemischt','Mixed']],['nachsortiert',['Nachsortiert','Re-ranked']],['wissensbuch',['Mit Wissensbuch','With knowledge book']],['karte',['Mit Wissenskarte','With knowledge map']]];
 const SPRSRC={spark:['vom Spark','by the Spark'],eigen:['eigene','own'],antwort:['aus einer Antwort','from an answer']};
 let SPR=null,SPRPRE=null;
 const sprWhen=s=>s?new Date(s*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{dateStyle:'short',timeStyle:'short'}):'';

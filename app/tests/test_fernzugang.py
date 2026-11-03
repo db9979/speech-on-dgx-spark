@@ -1927,8 +1927,9 @@ class Pieces(Base):
         self.assertTrue(any(k == "fernzugang" and re.match(rx, "fernzugang: koppeln | ok | 1") for k, rx in logfilter.AREAS))
         self.pair("geheimer-server")
         d = fernzugang.for_live()
-        self.assertEqual(set(d), {"on", "gekoppelt", "online", "sitzungen", "wartet", "abbau", "hostkey", "offen", "systeme", "hilfe", "entsperrt", "dateien", "bildschirm", "gehalten", "uebertragungen", "notizen", "ordner"})
-        self.assertTrue(all(isinstance(v, (bool, int)) for k, v in d.items() if k not in ("offen", "systeme")))
+        self.assertEqual(set(d), {"on", "gekoppelt", "online", "sitzungen", "wartet", "abbau", "hostkey", "offen", "systeme", "hilfe", "entsperrt", "dateien", "dateien_als", "bildschirm", "gehalten", "uebertragungen", "notizen", "ordner", "web"})
+        self.assertTrue(all(isinstance(v, (bool, int)) for k, v in d.items() if k not in ("offen", "systeme", "web")))
+        self.assertTrue(all(isinstance(v, int) for v in d["web"].values()), d["web"])   # Webdienste: counts only
         self.assertEqual(d["offen"], [])
         self.assertEqual(d["systeme"], [{"name": "System 1", "online": False}])   # no name without live_names
         sub = fernzugang.live_sub(d)
@@ -1945,9 +1946,9 @@ class Pieces(Base):
         numbers, never a name (standing rule: a change to Live and Monitoring reaches all of them in one commit)."""
         self.pair("geheimer-server")
         st = ADMIN.get("/api/status").json()["fernzugang"]
-        self.assertEqual(st, {"on": True, "gekoppelt": 1, "online": 0, "sitzungen": 0, "wartet": 0, "abbau": 0, "hostkey": 0, "hilfe": 0, "dateien": 0, "bildschirm": 0,
+        self.assertEqual(st, {"on": True, "gekoppelt": 1, "online": 0, "sitzungen": 0, "wartet": 0, "abbau": 0, "hostkey": 0, "hilfe": 0, "dateien": 0, "dateien_als": 0, "bildschirm": 0,
                               "gehalten": 0, "uebertragungen": 0, "offen": [], "systeme": [{"name": "System 1", "online": False}], "entsperrt": 1,
-                              "notizen": 0, "ordner": 0})
+                              "notizen": 0, "ordner": 0, "web": {"tunnel": 0}})
         import steuerzentrale as sz
         from tests.test_steuerzentrale import beispiel
         d = beispiel()
@@ -1984,6 +1985,78 @@ def fake_session(gid, **kw):
     s.__dict__.update(kw)
     fernzugang.SITZUNG[s.id] = s
     return s
+
+
+class SendToAll(Base):
+    """An alle senden (Mehrere Sitzungen Stufe 4, chat.fernzugang_alle, off): the panel decides by fixed rules, never
+    the page alone: switch on, shells of this login only, at least two, one kind of system, one line without control
+    characters, never a line of the Vorsicht list; the line goes with Enter into each shell, the journal counts only."""
+
+    class Chan:
+        def __init__(self):
+            self.got = []
+
+        def sendall(self, data):
+            self.got.append(data)
+
+    def login(self):
+        gid = self.pair()["id"]
+        Ticket.online(self, gid)
+        r = ADMIN.post("/api/admin/fernzugang/sitzung", json={"geraet": gid}, headers=CODE)
+        self.assertEqual(r.status_code, 200, r.text)
+        return gid, next(iter(fernzugang.TICKETS.values()))["login"]
+
+    def shells(self, n=2):
+        gid, login = self.login()
+        out = [fake_session(gid, login=login, chan=self.Chan()) for _ in range(n)]
+        return gid, login, out
+
+    def send(self, zeile, sessions, code=200):
+        r = ADMIN.post("/api/admin/fernzugang/alle", json={"zeile": zeile, "sitzungen": [x.id for x in sessions]})
+        self.assertEqual(r.status_code, code, r.text)
+        return r
+
+    def test_off_by_default_and_refused_when_off(self):
+        with open(os.path.join(helpers.APP, "config.default.json"), encoding="utf-8") as f:
+            self.assertIs(json.load(f)["chat"]["fernzugang_alle"], False)
+        self.assertFalse(fernzugang.alle_on())
+        _, _, sess = self.shells()
+        self.send("uptime", sess, 403)
+        self.assertEqual([x.chan.got for x in sess], [[], []])
+
+    def test_one_line_into_each_shell_of_this_login_and_the_log_counts_only(self):
+        helpers.set_config(fernzugang_alle=True)
+        self.addCleanup(helpers.set_config, fernzugang_alle=False)   # the switch never leaks into later tests
+        gid, login, sess = self.shells(3)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), unittest.mock.patch.object(guard, "log") as ereignis:
+            self.assertEqual(self.send("  uptime  ", sess).json(), {"n": 3})
+        ereignis.assert_any_call("fernzugang_alle", detail="an 3 Systeme")
+        self.assertEqual([x.chan.got for x in sess], [[b"uptime\r"]] * 3)
+        self.assertIn("fernzugang: alle | gesendet | 3", out.getvalue())
+        self.assertNotIn("uptime", out.getvalue())                       # never the line itself
+
+    def test_rules_the_panel_checks_itself(self):
+        helpers.set_config(fernzugang_alle=True)
+        self.addCleanup(helpers.set_config, fernzugang_alle=False)   # the switch never leaks into later tests
+        gid, login, sess = self.shells(2)
+        fremd = fake_session(gid, login="jemand-anders", chan=self.Chan())
+        self.send("uptime", [sess[0], fremd], 404)                          # another login's shell
+        self.send("uptime", [sess[0]], 400)                                 # one is no broadcast
+        self.send("uptime\nrm -rf /", sess, 400)                            # one line only, no control characters
+        self.send("echo \x1b[2J", sess, 400)
+        self.send("x" * (fernzugang.ALLE_ZEICHEN + 1), sess, 400)
+        self.send("rm -rf /tmp/x", sess, 409)                               # the Vorsicht list never goes to all
+        datei = fake_session(gid, login=login, chan=self.Chan(), art="dateien")
+        self.send("uptime", [sess[0], datei], 404)                          # shells only
+        other = self.pair("win-1")["id"]
+        d2 = fernzugang._read()
+        d2["geraete"][other]["os"] = "Windows 11"
+        fernzugang._write(d2)
+        win = fake_session(other, login=login, chan=self.Chan())
+        r = self.send("uptime", [sess[0], win], 409)                        # one kind of system
+        self.assertIn("gemischt", r.text)
+        self.assertEqual([x.chan.got for x in sess + [fremd, datei, win]], [[], [], [], [], []])
 
 
 class _Spy:
@@ -3262,7 +3335,7 @@ class InBrowser(unittest.TestCase):
                 await pg.evaluate("document.querySelectorAll('.modal').forEach(m=>m.style.display='none')")   # kept: the page fills its own
                 shown = "id=>{const e=$(id);return !!e&&!e.hidden&&getComputedStyle(e).display!=='none'&&getComputedStyle($('fztop')).display!=='none'}"
                 # the idle end: what the panel sends ({typ:'bald', s}) counts down; „Weiterarbeiten“ tells the panel
-                await pg.evaluate("window._sent=[];FZ.ws={readyState:1,send:m=>window._sent.push(m),close(){}};fzBald(95)")
+                await pg.evaluate("window._sent=[];FZ.cur={hist:[]};FZ.reiter=[FZ.cur];FZ.ws={readyState:1,send:m=>window._sent.push(m),close(){}};fzBald(95)")
                 self.assertTrue(await pg.evaluate(f"({shown})('fzbald')"))
                 self.assertRegex(await pg.evaluate("$('fzbaldtext').textContent"), r"^Sitzung endet in 1:3[45]$")
                 self.assertEqual(await pg.evaluate("[$('fzweiter').textContent,$('fzbaldende').textContent]"), ["Weiterarbeiten", "Jetzt beenden"])
@@ -3333,7 +3406,7 @@ class InBrowser(unittest.TestCase):
                 await pg.goto(base + "/")
                 await pg.wait_for_function(PAGE_READY, timeout=30000)
                 async with ctx.expect_page() as pop_info:
-                    await pg.evaluate("""FZ.ws={readyState:1,send(){},close(){}};FZ.sid='abcd1234';
+                    await pg.evaluate("""FZ.cur={hist:[]};FZ.reiter=[FZ.cur];FZ.ws={readyState:1,send(){},close(){}};FZ.sid='abcd1234';
                         FZ.sitz={name:'vps-1',gid:'g_0123456789ab',seit:Date.now()/1000,max:2,leer:15};
                         FZ.d={chips:['uptime'],folge:""" + json.dumps([[list(w), list(f)] for w, f in fernzugang.FOLGE]) + """};fzHeraus()""")
                 pop = await pop_info.value
@@ -3497,10 +3570,14 @@ class _ShellPage(Base):
 
     def setUp(self):
         super().setUp()
-        d = self.pair(hostkey=HOST_PUB)
-        self.sshd = _Server(d["pi_key"].split()[1])
+        self.ws, self.sshd = self.anchor_for(self.pair(hostkey=HOST_PUB))
+        self.weitere = []
+
+    def anchor_for(self, d):
+        """A real anchor (its own copy of the program) and SSH test server for the pairing d: (its socket, server)."""
+        sshd = _Server(d["pi_key"].split()[1])
         p = program()
-        p.SSHD = ("127.0.0.1", self.sshd.port)
+        p.SSHD = ("127.0.0.1", sshd.port)
         port = self.port
 
         class Plain(socket.socket):      # the test panel speaks plain http; the anchor asks its TLS socket for pending()
@@ -3513,14 +3590,16 @@ class _ShellPage(Base):
             s.connect(("127.0.0.1", port))
             return s, ""
         p.tls_connect = plain
-        self.ws = p.WS.open(f"https://127.0.0.1:{self.port}", "", "/api/fernzugang/anker", d["key"])
-        threading.Thread(target=p.Lauf(self.ws).run, daemon=True).start()
+        ws = p.WS.open(f"https://127.0.0.1:{self.port}", "", "/api/fernzugang/anker", d["key"])
+        threading.Thread(target=p.Lauf(ws).run, daemon=True).start()
         helpers.until(lambda: d["id"] in fernzugang.ANKER)
         self.assertIn(d["id"], fernzugang.ANKER)
+        return ws, sshd
 
     def tearDown(self):
-        with contextlib.suppress(OSError):
-            self.ws.sock.shutdown(socket.SHUT_RDWR)
+        for ws in [self.ws] + [w for w, _ in self.weitere]:
+            with contextlib.suppress(OSError):
+                ws.sock.shutdown(socket.SHUT_RDWR)
         super().tearDown()
 
     def run_page(self, body, init="", size=(1280, 900)):
@@ -3603,6 +3682,133 @@ class ShellForReal(_ShellPage):
             self.assertEqual(seen, {first})
         self.run_page(body, size=(1500, 900))
 
+    def test_tabs_two_systems_switch_by_keys_and_close_one(self):
+        """Mehrere Sitzungen Stufe 1 (Dominik 2026-10-30 „alle“, mockups mehrere/1): a second system opens as a second tab
+        (picker on Strg+Umschalt+O, search, Enter), each tab its own terminal and session, Strg+Umschalt+1/→ switch
+        before the shell sees the keys, typing goes to the shown tab only, × closes that one and the other comes
+        forward; beyond chat.fernzugang_sitzungen a tab never opens and no old one closes silently."""
+        async def body(ctx, pg):
+            self.weitere.append(self.anchor_for(self.pair(name="vps-2", hostkey=HOST_PUB)))
+            await pg.evaluate("fzLoad()")
+            await pg.wait_for_function("(FZ.d.geraete||[]).length===2", timeout=15000)
+            await pg.click("#fzterm")
+            await pg.keyboard.press("Control+Shift+KeyO")
+            await pg.wait_for_selector("#fzwahl input", timeout=10000)
+            await pg.keyboard.type("vps-2")
+            await pg.keyboard.press("Enter")
+            await pg.wait_for_function("FZ.reiter.length===2&&FZ.cur===FZ.reiter[1]&&FZ.cur.sitz.name==='vps-2'&&FZ.ws&&FZ.ws.readyState===1", timeout=30000)
+            await pg.wait_for_function(self.TEXT + ".includes('hallo vom server')", timeout=30000)
+            self.assertEqual(len(fernzugang.SITZUNG), 2)
+            self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#fzreiter .fzreit')].map(b=>[b.textContent.includes('vps'),b.classList.contains('on')])"),
+                             [[True, False], [True, True]])
+            self.assertEqual(await pg.evaluate("[FZ.reiter[0].box.hidden,FZ.reiter[1].box.hidden]"), [True, False])
+            await pg.keyboard.press("Control+Shift+Digit1")                  # the page's key, not the shell's
+            await pg.wait_for_function("FZ.cur===FZ.reiter[0]", timeout=10000)
+            self.assertEqual(await pg.evaluate("[FZ.reiter[0].box.hidden,FZ.reiter[1].box.hidden]"), [False, True])
+            await pg.keyboard.type("q")
+            await pg.wait_for_function(self.TEXT + ".includes('echo:q')", timeout=30000)
+            await pg.keyboard.press("Control+Shift+ArrowRight")
+            await pg.wait_for_function("FZ.cur===FZ.reiter[1]", timeout=10000)
+            self.assertNotIn("echo:q", await pg.evaluate(self.TEXT))          # typed in tab 1 only
+            # another page: both sessions stay, the red line names both and leads back to the tab shown last
+            await pg.evaluate("goSec('live')")
+            await pg.wait_for_function("!$('fzbhin').hidden", timeout=10000)
+            self.assertIn("2 Fernsitzungen aktiv", await pg.evaluate("$('fzbtext').textContent"))
+            self.assertEqual(len(fernzugang.SITZUNG), 2)
+            await pg.click("#fzbhin")
+            await pg.wait_for_function("!!document.querySelector('section#fern.on')&&$('fzbhin').hidden&&FZ.cur===FZ.reiter[1]&&!$('fzview').hidden", timeout=10000)
+            # full: one place only now, a third open is refused with the count and nothing closes
+            helpers.set_config(fernzugang_sitzungen=1)
+            await pg.evaluate("fzLoad()")
+            await pg.wait_for_function("FZ.d.max===1", timeout=15000)
+            await pg.evaluate("fzOpen({id:'x',name:'vps-3'})")
+            self.assertIn("2 von 1 Plätzen belegt", await pg.evaluate("$('updtoast').textContent"))
+            self.assertEqual(await pg.evaluate("FZ.reiter.length"), 2)
+            await pg.locator("#fzreiter .fzreit").first.locator(".fzreitzu").click()
+            await pg.wait_for_function("FZ.reiter.length===1&&FZ.cur.sitz.name==='vps-2'&&!FZ.cur.box.hidden", timeout=30000)
+            helpers.until(lambda: len(fernzugang.SITZUNG) == 1)
+            self.assertEqual(len(fernzugang.SITZUNG), 1)
+        self.run_page(body)
+
+    def test_split_view_and_overview(self):
+        """Mehrere Sitzungen Stufe 2 (mockups 2-geteilt, 3-kacheln): side by side both terminals show, each sized to its
+        pane, only the framed pane gets the keys; a click moves the focus; the overview shows every session as a tile
+        with its last lines and takes no keys, a click on a tile brings that one up alone; narrow there is only Einzeln."""
+        async def body(ctx, pg):
+            self.weitere.append(self.anchor_for(self.pair(name="vps-2", hostkey=HOST_PUB)))
+            await pg.evaluate("fzLoad()")
+            await pg.wait_for_function("(FZ.d.geraete||[]).length===2", timeout=15000)
+            await pg.evaluate("fzOpen(FZ.d.geraete.find(g=>g.name==='vps-2'))")
+            await pg.wait_for_function("FZ.reiter.length===2&&FZ.reiter.every(S=>S.ws&&S.ws.readyState===1&&S.sid)", timeout=30000)
+            self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#fzreiter .fzansicht [data-a]')].map(b=>b.dataset.a)"),
+                             ["einzeln", "neben", "uebersicht"])                 # 2 × 2 only from three tabs
+            await pg.click("#fzreiter .fzansicht [data-a=neben]")
+            await pg.wait_for_function("$('fzterm').classList.contains('fz2')&&FZ.reiter.every(S=>!S.box.hidden)", timeout=10000)
+            geo = await pg.evaluate("FZ.reiter.map(S=>{const r=S.box.getBoundingClientRect();return [Math.round(r.left),Math.round(r.width),S.term.cols]})")
+            self.assertNotEqual(geo[0][0], geo[1][0])                             # side by side
+            whole = await pg.evaluate("$('fzterm').clientWidth")
+            await pg.wait_for_function("FZ.reiter.every(S=>S.term.cols<" + str(int(whole / 8.6) - 10) + ")", timeout=10000)   # each fits its pane
+            self.assertEqual(await pg.evaluate("FZ.reiter.map(S=>S.box.classList.contains('fokus'))"), [False, True])
+            await pg.keyboard.type("r")
+            await pg.wait_for_function("(()=>{const b=FZ.reiter[1].term.buffer.active;let s='';for(let i=0;i<b.length;i++)s+=b.getLine(i).translateToString(true);return s.includes('echo:r')})()", timeout=30000)
+            await pg.click("#fzterm .fzterm1:not(.fokus)")
+            await pg.wait_for_function("FZ.cur===FZ.reiter[0]&&FZ.reiter[0].box.classList.contains('fokus')&&!FZ.reiter[1].box.hidden", timeout=10000)
+            await pg.keyboard.type("l")
+            await pg.wait_for_function("(()=>{const b=FZ.reiter[0].term.buffer.active;let s='';for(let i=0;i<b.length;i++)s+=b.getLine(i).translateToString(true);return s.includes('echo:l')})()", timeout=30000)
+            self.assertNotIn("echo:l", await pg.evaluate("(()=>{const b=FZ.reiter[1].term.buffer.active;let s='';for(let i=0;i<b.length;i++)s+=b.getLine(i).translateToString(true);return s})()"))
+            # the overview: tiles with the last lines, no terminal takes keys
+            await pg.click("#fzreiter .fzansicht [data-a=uebersicht]")
+            await pg.wait_for_function("document.querySelectorAll('#fzkacheln .fzkachel').length===2&&FZ.reiter.every(S=>S.box.hidden)", timeout=10000)
+            tiles = await pg.evaluate("[...document.querySelectorAll('#fzkacheln .fzkachel')].map(k=>[k.querySelector('b').textContent,k.querySelector('pre').textContent])")
+            self.assertEqual([x[0] for x in tiles], [await pg.evaluate("FZ.reiter[0].sitz.name"), "vps-2"])
+            self.assertIn("echo:r", tiles[1][1])
+            await pg.locator("#fzkacheln .fzkachel").nth(1).click()
+            await pg.wait_for_function("FZ.ansicht==='einzeln'&&FZ.cur===FZ.reiter[1]&&!FZ.reiter[1].box.hidden&&FZ.reiter[0].box.hidden&&!$('fzkacheln')", timeout=10000)
+            # narrow: only Einzeln, the choice stays for the wide window
+            await pg.evaluate("fzAnsicht('neben')")
+            await pg.set_viewport_size({"width": 900, "height": 900})
+            await pg.wait_for_function("fzModus()==='einzeln'&&!$('fzterm').classList.contains('fz2')&&FZ.reiter[0].box.hidden&&!document.querySelector('#fzreiter .fzansicht')", timeout=10000)
+            self.assertEqual(await pg.evaluate("FZ.ansicht"), "neben")
+        self.run_page(body, size=(1500, 900))
+
+    def test_send_to_all_red_line_asks_and_goes_to_both(self):
+        """An alle senden (Stufe 4): only with its switch; the red line names the systems, a line of the Vorsicht list
+        stays in the page, Enter asks with the line and the names, then both shells get it and the line goes off."""
+        async def body(ctx, pg):                                            # no timing assumed (busy test machine)
+            self.weitere.append(self.anchor_for(self.pair(name="vps-2", hostkey=HOST_PUB)))
+            await pg.evaluate("fzLoad()")
+            await pg.wait_for_function("(FZ.d.geraete||[]).length===2", timeout=60000)
+            await pg.evaluate("fzOpen(FZ.d.geraete.find(g=>g.name==='vps-2'))")
+            await pg.wait_for_function("FZ.reiter.length===2&&FZ.reiter.every(S=>S.ws&&S.ws.readyState===1&&S.sid)", timeout=60000)
+            self.assertFalse(await pg.evaluate("!!document.querySelector('#fzreiter .fzallebtn')"))   # switch off: no button
+            helpers.set_config(fernzugang_alle=True)
+            self.addCleanup(helpers.set_config, fernzugang_alle=False)   # the switch never leaks into later tests
+            await pg.evaluate("fzLoad()")
+            await pg.wait_for_function("FZ.d.alle===true", timeout=60000)
+            await pg.evaluate("fzReiterZeigen()")
+            await pg.click("#fzreiter .fzallebtn")
+            await pg.wait_for_function("!$('fzsende').hidden&&document.activeElement===$('fzsendezeile')", timeout=60000)
+            self.assertIn("Eingabe geht an 2 Systeme", await pg.evaluate("$('fzsendekopf').textContent"))
+            asked = []
+
+            async def dialog(d):
+                asked.append(d.message)
+                await d.accept()
+            pg.on("dialog", lambda d: asyncio.ensure_future(dialog(d)))
+            await pg.fill("#fzsendezeile", "rm -rf /tmp/x")
+            await pg.keyboard.press("Enter")
+            await pg.wait_for_function("$('updtoast').textContent.includes('Vorsicht-Liste')", timeout=60000)
+            self.assertEqual(asked, [])                                     # refused before asking
+            await pg.fill("#fzsendezeile", "z")
+            await pg.keyboard.press("Enter")
+            text = "(n=>{const b=FZ.reiter[n].term.buffer.active;let s='';for(let i=0;i<b.length;i++)s+=b.getLine(i).translateToString(true);return s})"
+            await pg.wait_for_function(f"{text}(0).includes('echo:z')&&{text}(1).includes('echo:z')", timeout=60000)
+            self.assertEqual(len(asked), 1)
+            self.assertIn("„z“ an 2 Systeme senden?", asked[0])
+            self.assertIn("vps-2", asked[0])
+            await pg.wait_for_function("$('fzsende').hidden&&!FZ.alle", timeout=60000)      # off after use
+        self.run_page(body, size=(1500, 900))
+
     def test_herausloesen_clicked_shows_the_terminal_in_its_own_window(self):
         """Dominik 2026-10-28 19:56 on his Pi: „Herauslösen“ opened the normal assistant page instead of the terminal.
         The new window must show the terminal over the whole window and get output; the tab before says where it is."""
@@ -3627,7 +3833,7 @@ class ShellForReal(_ShellPage):
             await pop.wait_for_function(self.TEXT + ".includes('echo:u')", timeout=60000)
             # the tab before: „läuft im eigenen Fenster“ with the system's name, the session still one
             await pg.wait_for_function("!$('fzweg').hidden", timeout=60000)
-            self.assertEqual(await pg.evaluate("$('fzwegname').textContent"), "vps-1")
+            self.assertIn("vps-1", await pg.evaluate("$('fzweg').textContent"))
             self.assertTrue(await pg.evaluate("$('fzview').hidden"))
             self.assertEqual(len(fernzugang.SITZUNG), 1)
         self.run_page(body)
@@ -4052,7 +4258,7 @@ class ShellForReal(_ShellPage):
 class NotesForReal(_ShellPage):
     """Notizen in the real page (Dominik 2026-10-29, Bilder 1-detail und 2-terminal): the box under „Angaben“ saves
     while typing, shows the code lines with „Ins Terminal“ (the shell opens, the line is typed in, never Enter),
-    „gehört in den Tresor“ with „Entfernen“, the search finds the note with 📝, and the tab beside the assistant."""
+    „gehört in den Tresor“ with „Entfernen“, the search finds the note with the note symbol, and the tab beside the assistant."""
 
     def setUp(self):
         helpers.set_config(fernzugang_notizen=True)
@@ -4092,13 +4298,13 @@ class NotesForReal(_ShellPage):
             sent = await pg.evaluate("window._fzsent.join('')")
             self.assertIn("uptime", sent)
             self.assertNotRegex(sent, r"[\r\n]")                                # never with Enter
-            # after „Trennen“: the box under „Angaben“, the search finds the note text with 📝 and a snippet
+            # after „Trennen“: the box under „Angaben“, the search finds the note text with the note symbol and a snippet
             await pg.evaluate("fzTrennen()")
             await pg.wait_for_function("!$('fzmain').hidden&&!!document.querySelector('#fzdetail .fznotiz .fznzcode')", timeout=30000)
             await pg.fill("#fzsuche", "opt/shop")
             await pg.wait_for_function("!!document.querySelector('#fzlist .fznzsnip mark')", timeout=30000)
             self.assertEqual(await pg.evaluate("document.querySelector('#fzlist .fznzsnip mark').textContent"), "opt/shop")
-            self.assertIn("📝", await pg.evaluate("$('fzlist').textContent"))
+            self.assertTrue(await pg.evaluate("!!$('fzlist').querySelector('.fznzmark svg.ic')"))
         spy = ("window._fzsent=[];const _s=WebSocket.prototype.send;WebSocket.prototype.send=function(d){"
                "if(typeof d!=='string')window._fzsent.push(new TextDecoder().decode(d));return _s.call(this,d)}")
         self.run_page(body, init=spy)

@@ -3,6 +3,7 @@ and the panel app imported against them. Nothing touches the real installation."
 import asyncio
 import atexit
 import base64
+import contextlib
 import json
 import os
 import queue
@@ -479,7 +480,11 @@ def fake_ha():
     @app.websocket("/api/websocket")
     async def ws(sock: WebSocket):
         """Home Assistant's WebSocket API as hamelden.py uses it: auth, subscribe_entities, then whatever a
-        test puts into HA_WS["push"] (an event dict, or "close")."""
+        test puts into HA_WS["push"] (an event dict, or "close"). Only the newest connection takes from it: a
+        connection an earlier test left open (its client cancelled, this side still waiting) took the test's events
+        and test_hamelden's live note never came (red at V01.1.272); such an old one closes instead."""
+        me = object()
+        HA_WS["conn"] = me
         await sock.accept()
         await sock.send_json({"type": "auth_required", "ha_version": "2026.10.0"})
         m = await sock.receive_json()
@@ -496,6 +501,10 @@ def fake_ha():
             x["entity_id"]: {"s": x["state"], "a": x["attributes"], "c": "", "lc": 0, "lu": 0}
             for x in HA_STATES if x["entity_id"] in ids}}})
         while True:
+            if HA_WS["conn"] is not me:
+                with contextlib.suppress(Exception):    # its client is mostly gone already
+                    await sock.close()
+                return
             try:
                 ev = HA_WS["push"].get_nowait()
             except queue.Empty:
@@ -508,7 +517,17 @@ def fake_ha():
     return app
 
 
-HA_WS = {"push": queue.Queue(), "subs": []}
+HA_WS = {"push": queue.Queue(), "subs": [], "conn": None}
+
+
+def ha_ws_reset():
+    """A fresh start for a test of the live connection: no subscriptions seen, nothing left in the queue."""
+    HA_WS["subs"].clear()
+    while True:
+        try:
+            HA_WS["push"].get_nowait()
+        except queue.Empty:
+            return
 
 
 MAIL_USER, MAIL_PW = "anna@example.de", "app-pass-1234"

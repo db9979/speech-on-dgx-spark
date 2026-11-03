@@ -49,13 +49,18 @@ NAME = re.compile(r"[A-Za-zÀ-ÖØ-öø-ÿ][A-Za-zÀ-ÖØ-öø-ÿ' -]{0,23}")
 ORDNUNG = ("ersten", "zweiten", "dritten", "vierten", "fünften", "sechsten", "siebten", "achten", "neunten", "zehnten",
            "elften", "zwölften")
 
-# the bard's sound per world: fixed English words for the music model (the store's own style words, dungeon_musik)
-STIL_LIED = {"fantasy": "medieval bard song, solo voice with lute, flute and soft frame drum, warm bass, 84 bpm, in D minor",
-             "horror": "dark gothic ballad, solo voice with cello, harp and slow drum, deep bass, 70 bpm, in C minor",
-             "scifi": "space ballad, solo voice with acoustic guitar, warm synth pads and soft drums, bass, 80 bpm, in A minor",
-             "piraten": "sea shanty, solo voice with accordion, fiddle and stomping drums, upright bass, 96 bpm, in E minor"}
-STIL_EIGEN = "storytelling ballad, solo voice with guitar, strings and soft drums, warm bass, 82 bpm, in D minor"
+# the bard's sound per world: fixed English words for the music model as tags (genre, voice and instruments, mood,
+# production; plan dungeon-musik-tuning V1a, Dominik 2026-10-30 „1-8“); tempo (TEMPO_LIED), the world's minor key
+# (dungeon_musik.TONART, one source) and 4/4 go as the song's metadata, what it must not be as its negative prompt
+STIL_LIED = {"fantasy": "medieval bard song, folk ballad, solo voice, lute, flute, soft frame drum, warm bass",
+             "horror": "dark gothic ballad, solo voice, cello, harp, slow drum, deep bass",
+             "scifi": "space ballad, solo voice, acoustic guitar, warm synth pads, soft drums, bass",
+             "piraten": "sea shanty, solo voice, accordion, fiddle, stomping drums, upright bass"}
+STIL_EIGEN = "storytelling ballad, solo voice, guitar, strings, soft drums, warm bass"
+TEMPO_LIED = {"fantasy": 84, "horror": 70, "scifi": 80, "piraten": 96}
+TEMPO_EIGEN = 82
 ENDE_LIED = "verse and chorus, clear expressive German singing, storytelling, warm, soft ending"
+NEGATIV_LIED = "mumbling, shouting, off-key singing, spoken words, hectic, harsh noise"
 
 # the fixed verses (German; only the names and the chapter's number are filled in)
 KEHRREIM = {
@@ -125,6 +130,13 @@ def lyrics(rd, kapitel, seit):
 
 def caption(welt):
     return ", ".join((STIL_LIED.get(welt, STIL_EIGEN), ENDE_LIED))
+
+
+def meta(welt):
+    """The song's metadata (musik_server.metadata): with all of them the engine's planner keeps the caption."""
+    import dungeon_musik
+    return {"bpm": TEMPO_LIED.get(welt, TEMPO_EIGEN), "keyscale": dungeon_musik.TONART.get(welt, dungeon_musik.TONART_EIGEN)[0],
+            "timesignature": "4", "negative": NEGATIV_LIED}
 
 
 # ---------------------------------------------------------------- the store
@@ -229,7 +241,7 @@ async def make_next():
         _tried.add(k)
     rid, kapitel = k
     body = {"caption": caption(job["welt"]), "seconds": job["s"], "lyrics": job["lyrics"], "language": SPRACHE,
-            "seed": secrets.randbelow(2 ** 31), "title": "Heldenlied"}
+            "seed": secrets.randbelow(2 ** 31), "title": "Heldenlied", **meta(job["welt"])}
     import musik
     if musik.model():
         body["variant"] = musik.model()

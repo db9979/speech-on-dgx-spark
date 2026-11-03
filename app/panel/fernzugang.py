@@ -156,7 +156,7 @@ SSH_S = 20              # SSH handshake and login at most this long
 ABBAU_TAGE = 90         # a removed system that never came back is forgotten after this many days
 USER = "spark"          # the user on the remote server (its own, sudo only when the admin adds it there)
 LEERLAUF = (1, 120)     # chat.fernzugang_leerlauf_min, minutes
-SITZUNGEN = (1, 4)      # chat.fernzugang_sitzungen
+SITZUNGEN = (1, 8)      # chat.fernzugang_sitzungen (default 4 in config.default.json)
 OFFLINE = (5, 1440)     # chat.fernzugang_offline_min: the Dienst-Wächter warns after this long offline
 VERLAUF_TAGE = (1, 365)  # chat.fernzugang_verlauf_tage: how long the history keeps a session (default 30)
 ENTSPERRT_MIN = (5, 120)  # chat.fernzugang_entsperrt_min: how long one code unlocks the page (default 60)
@@ -257,11 +257,13 @@ HINWEIS = ((("screen", "-x"), ("Strg+A D = abkoppeln (die Sitzung dort läuft we
 # the journal's words (fernzugang: <word> | ...), one line for every result of every action
 WORDS = ("koppeln_code", "koppeln", "koppeln_datei", "bestaetigt", "anker_auf", "anker_zu", "anker_abgewiesen", "ticket", "sitzung_auf", "sitzung_zu",
          "sitzung_abgewiesen", "hostkey_falsch", "abbauen", "abgebaut", "trennen", "alle_trennen", "erlaubt", "download", "verlauf", "meldung",
-         "hilfe_frage", "hilfe_vorschlag", "hilfe_ziel", "entsperrt", "verlaengert", "gesperrt", "dateien_auf", "dateien_zu",
+         "hilfe_frage", "hilfe_vorschlag", "hilfe_ziel", "alle", "entsperrt", "verlaengert", "gesperrt", "dateien_auf", "dateien_zu",
          "dateien_abgewiesen", "liste", "link", "laden", "hoch", "bild_ticket", "bild_auf", "bild_zu", "bild_rate", "bild_abgewiesen",
          "bild_steuern", "bild_passwort", "bild_guacd", "verbindung", "aktualisieren", "notiz", "ordner",
          "gross_auf", "gross_teil", "gross_weiter", "gross_fertig", "gross_ab", "gross_rate", "gross_rest", "gross_stand", "holen",
-         "holen_fertig", "nas_liste", "nas_holen", "nas_fertig", "job_ab", "koppeln_link")
+         "holen_fertig", "nas_liste", "nas_holen", "nas_fertig", "job_ab", "koppeln_link",
+         "web_auf", "web_zu", "web_ticket", "web_abgewiesen", "web_dienst", "web_netz", "web_suchen", "web_fp", "web_tor",
+         "web_verbindung", "web_websocket", "dateien_als")
 # „Frag den Assistenten“ beside the terminal (stage 2b, Dominik 2026-10-28): the own language model only (llm.own_tor),
 # no tool, its answer is text for the person; the panel never types it. What goes to the model: the question, the
 # system's name and OS, the last HILFE_BEFEHLE own commands and, only with „Bildschirm mitschicken“, the last
@@ -376,6 +378,11 @@ def max_sitzungen(c=None):
 
 def verlauf_s(c=None):
     return 86400 * (_num("fernzugang_verlauf_tage", VERLAUF_TAGE, c) or 30)
+
+
+def alle_on(c=None):
+    """Funktionen → Fernzugang zu Servern → An alle senden (off): one line into several open shells at once."""
+    return features.admin_on("fernzugangalle", c)
 
 
 def meldung_on(c=None):
@@ -586,6 +593,7 @@ def counts(now=None):
             "wartet": sum(1 for k in ok if g[k].get("wartet")),
             "abbau": len(g) - len(ok), "hostkey": sum(1 for k in ok if g[k].get("hostkey_falsch")),
             "dateien": sum(1 for s in SITZUNG.values() if s.art == "dateien"),
+            "dateien_als": sum(1 for s in SITZUNG.values() if s.art == "dateien" and getattr(s, "als", "")),
             "bildschirm": sum(1 for s in SITZUNG.values() if s.art == "bildschirm"),
             "gehalten": sum(1 for s in SITZUNG.values() if getattr(s, "browser", 1) is None and getattr(s, "verloren", 0)),
             "uebertragungen": max(0, STATS["uebertragungen"]) + _gross_laufend()}
@@ -618,7 +626,9 @@ def for_live(now=None):
               "min": int((now - x.seit) // 60)} for x in sorted(SITZUNG.values(), key=lambda x: x.seit)]
     import fernnotiz
     import fernordner
+    import fernweb
     return {"on": True, **counts(now), "hilfe": STATS["hilfe"], "offen": offen, "entsperrt": entsperrt_n(now),
+            "web": fernweb.for_live(now),
             "notizen": fernnotiz.anzahl() if fernnotiz.on() else 0,
             "ordner": fernordner.anzahl() if fernordner.on() else 0,
             "systeme": [{"name": sysname(k), "online": k in ANKER} for k in order]}
@@ -633,9 +643,11 @@ def _live_names():
 
 
 def live_sub(d):
+    import fernweb
     offen = "".join(f" · {x['art']} {x['system']}, {x['admin']}, {x['herkunft']}, {x['min']} min" for x in d.get("offen") or ())
     return (f"{d.get('gekoppelt', 0)} gekoppelt · {d.get('online', 0)} online · {d.get('sitzungen', 0)} Sitzungen"
             + (f" · davon {d['dateien']} Dateien" if d.get("dateien") else "")
+            + (f" ({d['dateien_als']} als anderer Benutzer)" if d.get("dateien_als") else "")
             + (f" · davon {d['bildschirm']} Bildschirm" if d.get("bildschirm") else "")
             + (f" · {d['gehalten']} wartet auf Rückkehr" if d.get("gehalten") else "") + offen
             + (f" · {d['uebertragungen']} Übertragungen" if d.get("uebertragungen") else "")
@@ -645,7 +657,8 @@ def live_sub(d):
             + (f" · {d['hilfe']} Fragen an den Assistenten" if d.get("hilfe") else "")
             + (f" · {d['entsperrt']} entsperrt" if d.get("entsperrt") else "")
             + (f" · {d['notizen']} mit Notiz" if d.get("notizen") else "")
-            + (f" · {d['ordner']} Ordner" if d.get("ordner") else ""))
+            + (f" · {d['ordner']} Ordner" if d.get("ordner") else "")
+            + fernweb.live_sub(d.get("web") or {}))
 
 
 # ---------------------------------------------------------------- Dienst-Wächter
@@ -686,7 +699,8 @@ async def _close_anker(a, code=4000):
 async def close_all(why="alle"):
     """Ends every session and anchor connection (Alle trennen, Notaus). The anchors come back after their pause
     unless the Notaus is on."""
-    n = len(SITZUNG) + len(ANKER)
+    import fernweb
+    n = len(SITZUNG) + len(ANKER) + await fernweb.close_all(why)
     for s in list(SITZUNG.values()):
         await s.end(why)
     for a in list(ANKER.values()):
@@ -714,6 +728,8 @@ class Sitzung:
                                # (files: every request must carry the same)
         self.home = "/"        # files: the remote user's home, where the list starts
         self.sftp = None
+        self.als, self.als_cmd = "", ""   # files as another user (fernals): the user and the exec channel's command
+        self.schreiben = False  # files as another user: writing allowed in this session (fresh code)
         self.bild_port = None  # the screen: the one local port guacd connects to (fernbild.Port)
         self.bild_bytes = 0    # the screen: what went to the page (for the rate at the end, KB/s)
         self.sftp_lock = threading.Lock()   # one SFTP call at a time per session (ferndateien._sftp)
@@ -777,6 +793,11 @@ class Sitzung:
             return "hostkey"
         t.auth_publickey(USER, paramiko.Ed25519Key.from_private_key(io.StringIO(priv)))
         t.set_keepalive(PULS_S)   # SSH's own keepalive through the anchor: a quiet session keeps its line
+        if self.art == "dateien" and self.als_cmd:   # as another user (fernals): sftp-server through sudo -n
+            chan = t.open_session(timeout=SSH_S)
+            chan.exec_command(self.als_cmd)
+            self.transport, self.sftp = t, paramiko.SFTPClient(chan)
+            return ""
         if self.art == "dateien":
             self.transport, self.sftp = t, paramiko.SFTPClient.from_transport(t)
             return ""
@@ -1084,7 +1105,7 @@ REFUSED = {"voll": (429, "Zu viele Sitzungen offen (Funktionen → Fernzugang zu
            "ssh": (502, "SSH-Anmeldung ging nicht (Benutzer spark, Schlüssel des Panels).")}
 
 
-async def aufbauen(gid, art, browser=None, who="admin", uid=None, cols=80, rows=24, login="", conn=None):
+async def aufbauen(gid, art, browser=None, who="admin", uid=None, cols=80, rows=24, login="", conn=None, als=("", "", False)):
     """One SSH connection over the anchor's pipe (the channel, then SSH with the pinned host key and the vault's key):
     (Sitzung, stored system, "") once it stands, registered and counted, else (None, None, reason) with the reason
     as a fixed word („voll“, „offline“, „sshd“, „anker“, „hostkey“ or „ssh_<error>“; REFUSED). A browser (the
@@ -1093,6 +1114,7 @@ async def aufbauen(gid, art, browser=None, who="admin", uid=None, cols=80, rows=
     if why:
         return None, None, why
     s = Sitzung(gid, a, n, browser, who, uid, art)
+    s.als, s.als_cmd, s.schreiben = als
     s.login = login
     if conn is not None:
         _wo(s, conn)
@@ -1407,6 +1429,11 @@ async def _on_anker_text(a, m):
         a.wait[n].set_result(typ == "offen")
     elif typ == "zu" and isinstance(n, int) and n in a.kanaele:
         await a.kanaele[n].end("server")
+    elif typ == "mehr" and isinstance(n, int) and getattr(a.kanaele.get(n), "art", "") == "web":
+        a.kanaele[n].mehr(m.get("n"))          # Webdienste: the anchor took this many bytes (fernweb.Kanal)
+    elif typ == "ports":
+        import fernweb
+        await fernweb.on_ports(a.gid, m)
     elif typ == "hallo":
         os_, ver = str(m.get("os", ""))[:40], str(m.get("version", ""))[:20]
         fields = {k: v for k, v in (("os", os_), ("anker", ver)) if v and WORD.fullmatch(v)}
@@ -1444,8 +1471,11 @@ def _forget(gid, why):
         _write(d)
     import fernnotiz
     import fernordner
+    import fernweb
     fernnotiz.forget(gid)
     fernordner.forget(gid)
+    fernweb.GEFUNDEN.pop(gid, None)
+    fernweb.ende_gid(gid, "abgebaut")
     log("abgebaut", why)
     guard.log("fernzugang_removed", detail="Fern-Server hat seinen Anker abgebaut")
     _live("Fern-Server abgebaut")
@@ -1733,7 +1763,10 @@ def _ende_login(login, why):
 
 
 def sperren_alle(why):
-    """Every unlocked page locked at once (Notaus, logout everywhere); logging out everywhere ends every session."""
+    """Every unlocked page locked at once (Notaus, logout everywhere); logging out everywhere ends every session. The
+    Webdienste live on an unlock: theirs end with it (fernweb.ende_tor)."""
+    import fernweb
+    fernweb.ende_tor(None, "gesperrt" if why != "notaus" else why)
     if why == "abmelden":
         _ende_login(None, why)
     n = len(ENTSPERRT)
@@ -1746,6 +1779,8 @@ def sperren(conn, why):
     """This login's page locked (Sperren, logout); logging out also ends this login's sessions (a held one too)."""
     if why == "abmelden":
         _ende_login(_login(conn), why)
+    import fernweb
+    fernweb.ende_tor(_tor(conn), "gesperrt")
     if ENTSPERRT.pop(_tor(conn), None) is not None:
         log("gesperrt", why, 1)
         return True
@@ -1861,10 +1896,12 @@ def admin_get(request: Request):
            "erklaert": {k: list(v) for k, v in ERKLAERT.items()}, "sudo_tip": list(SUDO_TIP),
            "hinweis": [[list(w), list(x)] for w, x in HINWEIS], "anker": _program(), "code_s": CODE_S, "counts": counts(),
            "notaus": _notaus(), "browser": is_admin_browser(request),
-           "hilfe": hilfe_on(c), "gefahr": {k: [list(g) for g in v] for k, v in GEFAHR.items()}, "ki_zeilen": ki_zeilen(c),
+           "hilfe": hilfe_on(c), "alle": alle_on(c), "alle_zeichen": ALLE_ZEICHEN, "gefahr": {k: [list(g) for g in v] for k, v in GEFAHR.items()}, "ki_zeilen": ki_zeilen(c),
            "ki_zeilen_wahl": sorted(set(KI_ZEILEN_WAHL) | {ki_zeilen(c)}), "ki_zeichen": KI_ZEICHEN, "ziel_min": ZIEL_MIN,
            "hilfe_befehle": HILFE_BEFEHLE, "vorschlag_s": VORSCHLAG_S, "bildschirm": fernbild.admin_on(c), "bild_dienst": fernbild.dienst() if fernbild.admin_on(c) else None,
            "zwischenablage": fernbild.clipboard_on(c), "bild_langsam": fernbild.LANGSAM}
+    import fernweb
+    out["webdienste"] = web_an = fernweb.admin_on(c)
     import fernnotiz
     out["notizen"] = notizen = fernnotiz.on(c)
     out["notiz_max"] = fernnotiz.MAX_BYTES
@@ -1874,6 +1911,8 @@ def admin_get(request: Request):
     now = time.time()
     import fernanker
     out["anker_version"] = pv = fernanker.version()
+    import fernals
+    out["als_an"] = als_an = fernals.on(c)
     for gid, x in sorted(_read(now)["geraete"].items(), key=lambda kv: str(kv[1].get("name", "")).lower()):
         a = ANKER.get(gid)
         rows.append({"id": gid, "name": x.get("name", ""), "os": x.get("os", ""), "anker": x.get("anker", ""),
@@ -1883,8 +1922,9 @@ def admin_get(request: Request):
                      "wartet": bool(x.get("wartet")),
                      "fp": fingerprint(x.get("hostkey", "")), "art": art(x.get("os")),
                      "bild": x.get("bild") or "", "bild_anker": fernbild.anchor_ok(x.get("anker")),
+                     "web_anker": fernweb.anchor_ok(x.get("anker")), "web": len(x.get("web") or []) if web_an else 0,
                      "sitzungen": sum(1 for s in SITZUNG.values() if s.gid == gid), **fernanker.row(x, pv),
-                     "notiz": notizen and fernnotiz.has(gid)})
+                     "notiz": notizen and fernnotiz.has(gid), **(fernals.row(x) if als_an else {})})
     if ordner_an:                            # folders on: the systems in their order, each with its folder
         v = fernordner.view([r["id"] for r in rows])
         pos = {g: i for i, g in enumerate(v["reihe"])}
@@ -1992,6 +2032,60 @@ async def admin_session(request: Request):
                                                        "uid": prof["id"] if prof else None}
     log("ticket", _who(request), 1)
     return {"ticket": t, "gilt_s": TICKET_S}
+
+
+# „An alle senden“ (Mehrere Sitzungen Stufe 4, mockup 4-an-alle; chat.fernzugang_alle, off): one line into the open
+# shells of this login at once, after the page asked each time with the line and the systems. Fixed rules decide here,
+# never the model and never the page alone: shells of this login only, all of one kind of system (art), at least
+# ALLE_MIN, one line without control characters of at most ALLE_ZEICHEN, never a line the rules GEFAHR match. The
+# journal and Live count the systems and never write the line.
+ALLE_ZEICHEN = 500
+ALLE_MIN = 2
+
+
+@router.post("/api/admin/fernzugang/alle", dependencies=[Depends(auth)])
+async def admin_alle(request: Request):
+    _on(request)
+    _second_step(request)
+    _frei(request)
+    guard.limit(request, "fernzugang_alle", admin=True)
+    if not alle_on():
+        log("alle", "aus", 0)
+        raise HTTPException(403, "switched off")
+    body = await json_body(request, MAX_BODY)
+    zeile, ids = body.get("zeile"), body.get("sitzungen")
+    zeile = zeile.strip() if isinstance(zeile, str) else ""
+    if not zeile or len(zeile) > ALLE_ZEICHEN or re.search(r"[\x00-\x1f\x7f]", zeile):
+        log("alle", "zeile", 0)
+        raise HTTPException(400, "one line of text")
+    ids = list(dict.fromkeys(str(x) for x in ids)) if isinstance(ids, list) else []
+    if not ALLE_MIN <= len(ids) <= SITZUNGEN[1]:
+        log("alle", "anzahl", 0)
+        raise HTTPException(400, "two sessions or more")
+    login = _login(request)
+    sess = [SITZUNG.get(i) for i in ids]
+    if any(x is None or x.art != "shell" or x.login != login or x.ende.is_set() or x.chan is None for x in sess):
+        log("alle", "sitzung", 0)
+        raise HTTPException(404, "no such session")
+    g = _read()["geraete"]
+    kinds = {art(g.get(x.gid, {}).get("os")) for x in sess}
+    if len(kinds) != 1:
+        log("alle", "gemischt", 0)
+        raise HTTPException(409, "gemischt")
+    if gefahr(zeile, kinds.pop()):
+        log("alle", "vorsicht", 0)
+        raise HTTPException(409, "vorsicht")
+    data, n = (zeile + "\r").encode(), 0
+    for x in sess:
+        try:
+            await asyncio.to_thread(x.chan.sendall, data)
+        except (OSError, EOFError, AttributeError):
+            continue
+        x.zuletzt = time.time()
+        n += 1
+    log("alle", "gesendet", n)
+    guard.log("fernzugang_alle", detail=f"an {n} Systeme")
+    return {"n": n}
 
 
 @router.post("/api/admin/fernzugang/sitzung/{sid}/fenster", dependencies=[Depends(auth)])
@@ -2179,6 +2273,8 @@ async def admin_remove(gid: str, request: Request):
     import fernordner
     fernnotiz.forget(gid)                    # the page offered to download it first
     fernordner.forget(gid)
+    import fernweb
+    fernweb.ende_gid(gid, "entfernt")
     guard.log("fernzugang_revoked", detail="Fern-Server entfernt")
     a = ANKER.get(gid)
     if a is None:

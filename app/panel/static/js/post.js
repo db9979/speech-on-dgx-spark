@@ -88,7 +88,7 @@ async function postSuggest(id){if(POST.sug[id])return;   // asked once; a failed
 function postSugBox(f){const x=POST.sug[f.reply]||{busy:true};
   const rows=x.items?x.items.map((v,i)=>`<button type="button" class="postsug${f.picked===i?' on':''}" data-g="${i}"><i>${esc(v.label)}</i>${esc(v.text)}</button>`).join('')
     :x.err?`<div class="fh err">${esc(x.err)}</div>`:`<div class="fh">${esc(t('Vorschläge kommen …','Suggestions coming …'))}</div>`;
-  return `<div class="postsugs" role="group" aria-label="${esc(t('Vorschläge vom Spark, nichts wird gesendet','Suggestions of the Spark, nothing is sent'))}"><span class="postsugl">✨ ${esc(t('Vorschläge','Suggestions'))}</span>${rows}</div>`}
+  return `<div class="postsugs" role="group" aria-label="${esc(t('Vorschläge vom Spark, nichts wird gesendet','Suggestions of the Spark, nothing is sent'))}"><span class="postsugl">${ic('spark')} ${esc(t('Vorschläge','Suggestions'))}</span>${rows}</div>`}
 const POST_TONE=[['kuerzer','kürzer','shorter'],['freundlicher','freundlicher','friendlier'],['foermlicher','förmlicher','more formal'],['uebersetzen','auf Englisch','in English']];
 async function postTone(art,box){const f=POST.write,ta=box.querySelector('[data-f=text]'),msg=box.querySelector('.postordmsg');
   if(!(f.text||'').trim())return;box.querySelectorAll('[data-r]').forEach(b=>b.disabled=true);msg.className='postordmsg fh';msg.textContent=t('Einen Moment …','One moment …');
@@ -120,7 +120,7 @@ function postPaint(w){const d=POST.data;w.classList.toggle('ld-sel',!!POST.sel);
     // filters Markiert, Mit Anhang and Ungelesen are mailboxes of the left column, else chips here
     w.innerHTML=`<div class="ld-tools posttools">${ORD_ON?`<button type="button" class="pib postfbtn" data-k="tree" aria-pressed="false" aria-label="${esc(t('Postfächer','Mailboxes'))}" data-tip="${esc(t('Postfächer ein- und ausblenden · O','Show or hide the mailboxes · O'))}">${postIc('side')}</button>`:''}`+
       `<input type="search" data-k="q" placeholder="${esc(t('Suchen, auch von: betreff: hat:anhang','Search, also from: subject: has:attachment'))}" aria-label="${esc(t('Suchen','Search'))}">`+
-      (ORD_ON?'':POST_CHIPS.map(c=>`<button type="button" class="ld-chip" data-chip="${c[0]}" aria-pressed="false">${esc(t(c[2],c[3]))}</button>`).join('')+`<button type="button" class="ld-chip" data-k="unread" aria-pressed="false">${esc(t('Nur ungelesen','Unread only'))}</button>`)+
+      (ORD_ON?'':POST_CHIPS.map(c=>`<button type="button" class="ld-chip" data-chip="${c[0]}" aria-pressed="false">${ic(c[4])} ${esc(t(c[2],c[3]))}</button>`).join('')+`<button type="button" class="ld-chip" data-k="unread" aria-pressed="false">${esc(t('Nur ungelesen','Unread only'))}</button>`)+
       (ORD_ON?`<button type="button" class="b postpickbtn" data-k="pickmode" aria-pressed="false">${esc(t('Auswählen','Select'))}</button>`:'')+
       `<button type="button" class="pib" data-k="again" aria-label="${esc(t('Neu laden','Reload'))}" data-tip="${esc(t('Neu laden','Reload'))}">${postIc('again')}</button>`+
       (SEND_ON?`<button type="button" class="b p postnew" data-k="new" data-tip="${esc(t('Neue Mail · N','New mail · N'))}">${postIc('pen')}<span>${esc(t('Neue Mail','New mail'))}</span></button>`:'')+`</div>`+
@@ -150,7 +150,7 @@ function postPaint(w){const d=POST.data;w.classList.toggle('ld-sel',!!POST.sel);
     return head+`<div class="ld-row${POST.sel===x.id?' on':''}${x.unread?' unread':''}${POST.pick.includes(x.id)?' picked':''}" role="button" tabindex="0" data-id="${esc(x.id)}"${ORD_ON&&postMovable()?' draggable="true"':''}>`+
       (ticks?`<input type="checkbox" class="ld-pick" data-pick="${esc(x.id)}" aria-label="${esc(t('Auswählen','Select'))}"${POST.pick.includes(x.id)?' checked':''}>`:'')+
       `<span class="postdot" aria-label="${esc(x.unread?t('ungelesen','unread'):'')}"></span><span class="postav ${postKc(x.from)}" aria-hidden="true">${esc(postInit(x.from))}</span>`+
-      `<span class="ld-mid"><span class="postl1"><b>${esc(postName(x.from))}</b><span class="ld-right">${x.attach?`<span class="postmk" aria-label="${esc(t('mit Anhang','with attachment'))}">📎</span>`:''}${x.flagged?`<span class="postmk star" aria-label="${esc(t('markiert','flagged'))}">★</span>`:''}<span class="ld-when">${esc(postWhen(x.date))}</span></span></span>`+
+      `<span class="ld-mid"><span class="postl1"><b>${esc(postName(x.from))}</b><span class="ld-right">${x.attach?`<span class="postmk" aria-label="${esc(t('mit Anhang','with attachment'))}">${ic('clip')}</span>`:''}${x.flagged?`<span class="postmk star" aria-label="${esc(t('markiert','flagged'))}">${ic('star')}</span>`:''}<span class="ld-when">${esc(postWhen(x.date))}</span></span></span>`+
       `<small class="postsubj">${esc(x.subject||t('(ohne Betreff)','(no subject)'))}</small>${x.prev?`<small class="postprv">${esc(x.prev)}</small>`:''}`+
       `${fd||many?`<span class="postchips">${fd?`<span class="postfd${fd.urgent?' hot':''}">${esc(FUER_KIND[fd.kind]||fd.kind)}</span>`:''}${many?`<span class="ld-badge off">${esc(d.boxes[x.box]||'')}</span>`:''}</span>`:''}</span></div>`}).join('')
     ||(POST.busy?'':`<div class="ld-empty mut">${esc(POST.box?(postQ()?t('Keine passende Mail in diesem Ordner.','No matching mail in this folder.'):t('Dieser Ordner ist leer.','This folder is empty.'))
@@ -172,22 +172,9 @@ function postHead(d,items){const many=d&&d.boxes&&d.boxes.length>1,u=items.filte
   return `<div class="posthead"><b>${esc(name)}</b><small>${esc(items.length+' '+t('Mails','mails')+(u?' · '+u+' '+t('neu','new'):''))}</small></div>`}
 // the buttons of a message (Dominik 2026-10-20 „1 und 3“): one bar that stays on top while the mail scrolls, symbols in
 // three groups (write · order · rule), each with its name and key on hover; on a phone the five most used sit at the
-// thumb below, ★ and ⋯ on top. Nothing is ever deleted; every move can go back right after.
-const POST_IC={reply:'M9 14L4 9l5-5M4 9h10a6 6 0 0 1 6 6v4',fwd:'M15 14l5-5-5-5M20 9H10a6 6 0 0 0-6 6v4',
-  cal:'M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 10h18M8 3v4M16 3v4M12 13v5M9.5 15.5h5',
-  read:'M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 7l9 6 9-6',
-  star:'M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z',
-  arch:'M3 4h18v5H3zM5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4',
-  move:'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM12 11v5M9.5 13.5L12 16l2.5-2.5',
-  rule:'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1',
-  more:'M5 12h.01M12 12h.01M19 12h.01',back:'M15 18l-6-6 6-6',close:'M6 6l12 12M18 6L6 18',
-  pen:'M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4',
-  folder:'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
-  inbox:'M4 13h4l1.5 3h5L16 13h4M5 5h14l1 8v6H4v-6z',sent:'M4 12l16-8-6 16-3-7z',
-  trash:'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6',junk:'M12 4l9 16H3zM12 10v4M12 17v.5',all:'M4 6h16M4 12h16M4 18h16',
-  side:'M4 5h16v14H4zM9 5v14',again:'M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5',clip:'M20 11l-8.5 8.5a5 5 0 0 1-7-7L13 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L14 7',
-  dot:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z',lock:'M6 11h12v9H6zM8 11V8a4 4 0 0 1 8 0v3'};
-const postIc=k=>`<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${POST_IC[k]}"/></svg>`;
+// thumb below, the star and ⋯ on top. Nothing is ever deleted; every move can go back right after.
+// the symbols come from icons.js (one source)
+const postIc=k=>ic(k,'pic');
 // one symbol button: its name for screen readers and the hover note (with the key when there is one)
 const postIb=(k,data,de,en,key,on)=>{const n=t(de,en);return `<button type="button" class="pib${on?' on':''}" ${data} aria-label="${esc(n)}" data-tip="${esc(n+(key&&!NARROW()?' · '+key:''))}">${postIc(k)}</button>`};
 const postSrc=()=>POST.box?POST.box.folder:'INBOX';
@@ -206,7 +193,7 @@ function postBar(m){const menu=POST.menuAt===POST.sel?POST.menu:'',x=postItems()
   const rule=ord?postIb('rule','data-w="rule"','Regel daraus …','Rule from this …','G'):'';
   const del=ord&&postDeletable()?postIb('trash','data-o="delete"','Löschen (in den Papierkorb)','Delete (into the trash)','Entf')
     :ord&&postInTrash()?postIb('trash','data-o="erase"','Endgültig löschen','Delete for good',''):'';
-  if(NARROW()){   // a phone: back, ★ and ⋯ on top, the five most used at the thumb below
+  if(NARROW()){   // a phone: back, the star and ⋯ on top, the five most used at the thumb below
     const foot=[send?['reply','data-w="reply"','Antworten','Reply']:null,send?['fwd','data-w="fwd"','Weiter','Forward']:null,
       arch?['arch','data-o="archive"','Archiv','Archive']:null,mv?['move','data-o="pick"','Ordner','Folder']:null,
       ord&&postDeletable()?['trash','data-o="delete"','Löschen','Delete']:ord&&postInTrash()?['trash','data-o="erase"','Endgültig','For good']:null,
@@ -324,8 +311,8 @@ function postErase(m,msg){if(!m||!m.mid)return;
 // the list as shown: in a folder the search and „Nur ungelesen“ work on the listing (the inbox asks the server)
 // the server searches (mail._words: von:, betreff:, hat:anhang, ist:markiert); in a folder „Nur ungelesen“ is ist:ungelesen
 function postItems(){return (POST.data&&POST.data.items)||[]}
-const POST_CHIPS=[['flag','ist:markiert','★ Markiert','★ Flagged'],['attach','hat:anhang','📎 Anhang','📎 Attachment']];
-// a filter: ★ Markiert, 📎 Anhang (chips, or the smart mailboxes left) and „Ungelesen“; one at a time from the left column
+const POST_CHIPS=[['flag','ist:markiert','Markiert','Flagged','star'],['attach','hat:anhang','Anhang','Attachment','clip']];
+// a filter: Markiert, Anhang (chips with their symbol, or the smart mailboxes left) and „Ungelesen“; one at a time from the left column
 function postSmart(k,only){if(only){const on=k==='unread'?POST.unread:!!POST.chips[k];POST.chips={};POST.unread=false;if(POST.box){POST.box=null;POST.data=null}if(!on){if(k==='unread')POST.unread=true;else POST.chips[k]=true}}
   else if(k==='unread')POST.unread=!POST.unread;else POST.chips[k]=!POST.chips[k];
   POST.sel=null;POST.msg=null;POST.fsheet=false;postLoad()}
@@ -343,7 +330,7 @@ function postUndo(w){const u=POST.done,box=w.querySelector('.postundo');if(!box)
 function postPickBar(){const accts=[...new Set(POST.pick.map(i=>i.split(':')[0]))],f=accts.length===1?POST.folders[accts[0]]:null,src=postSrc();
   const into=(f&&f.folders||[]).filter(n=>n!==src);if(POST.box)into.unshift('INBOX');
   return `<div class="row postord postpick"><b>${esc(POST.pick.length+' '+t('gewählt','selected'))}</b>`+
-    ['read','unread','flag'].map(a=>`<button class="b" type="button" data-m="${a}">${esc({read:t('Gelesen','Read'),unread:t('Ungelesen','Unread'),flag:t('★ Markieren','★ Flag')}[a])}</button>`).join('')+
+    ['read','unread','flag'].map(a=>`<button class="b" type="button" data-m="${a}">${esc({read:t('Gelesen','Read'),unread:t('Ungelesen','Unread'),flag:t('Markieren','Flag')}[a])}</button>`).join('')+
     (postMovable()?`<button class="b" type="button" data-m="archive">${esc(t('Archivieren','Archive'))}</button>`:'')+
     (postDeletable()?`<button class="b" type="button" data-m="delete">${esc(t('Löschen','Delete'))}</button>`:'')+
     (postMovable()&&accts.length===1?`<select data-m="move" aria-label="${esc(t('Verschieben nach','Move to'))}"><option value="">${esc(t('Verschieben nach …','Move to …'))}</option>${into.map(n=>`<option value="${esc(n)}">${esc(n==='INBOX'?t('Posteingang','Inbox'):n)}</option>`).join('')}</select>`:'')+
@@ -460,7 +447,7 @@ function postDropOn(el,what,into){el.addEventListener('dragover',e=>{if(POST.dra
 // Regel-Vorschlag (mailregeln.learn, Dominik 2026-10-20): after the third move of one sender into one folder
 function postHintHtml(){const h=POST.hint;if(!h)return '';
   return `<div class="note posthint"><span>${esc(t('Mails von '+h.from+' legst du oft in „'+h.folder+'“. Eine Regel dafür anlegen?','You often put mails from '+h.from+' into "'+h.folder+'". Make a rule for it?'))}</span>`+
-    `<span class="row"><button class="b p" type="button" data-h="apply">${esc(t('Regel anlegen und gleich anwenden','Make the rule and apply it now'))}</button><button class="b" type="button" data-h="save">${esc(t('Nur Regel','Rule only'))}</button><button class="b" type="button" data-h="never">${esc(t('Nicht mehr fragen','Do not ask again'))}</button><button class="b" type="button" data-h="no" aria-label="${esc(t('Schließen','Close'))}">✕</button></span></div>`}
+    `<span class="row"><button class="b p" type="button" data-h="apply">${esc(t('Regel anlegen und gleich anwenden','Make the rule and apply it now'))}</button><button class="b" type="button" data-h="save">${esc(t('Nur Regel','Rule only'))}</button><button class="b" type="button" data-h="never">${esc(t('Nicht mehr fragen','Do not ask again'))}</button><button class="b" type="button" data-h="no" aria-label="${esc(t('Schließen','Close'))}">${ic('x')}</button></span></div>`}
 function postHintBind(box){box.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>postHintDo(b.dataset.h))}
 async function postHintDo(k){const h=POST.hint;if(!h)return;POST.hint=null;const J={method:'POST',headers:{'Content-Type':'application/json'}};
   if(k==='no'){postDraw();return}
@@ -506,7 +493,7 @@ function postDrag(r,w){r.ondragstart=e=>{const id=r.dataset.id,ids=POST.pick.inc
 // the compose window (Apple-Stil „3a“): its own window over the page like Apple Mail, the mail it answers stays readable
 // beside it; at the computer it can be moved (by its head) and made small, on a phone it is a sheet over everything.
 // „Senden“ of own words: the Spark checks the mail (send/preview), then it goes after POST_UNDO_MS with „Rückgängig“.
-// Text the Spark wrote (a ✨ suggestion, a ✨ rewrite, a draft from Für dich: f.ai) keeps the preview sheet; only its
+// Text the Spark wrote (a suggestion, a rewrite, a draft from Für dich: f.ai) keeps the preview sheet; only its
 // „Senden“ sends.
 let POST_UNDO_MS=10000;
 function postWriteBox(w){const box=w.querySelector('.postcmp'),f=POST.write,p=POST.prev;if(!box)return;box.hidden=!f;
@@ -539,7 +526,7 @@ function postWriteBox(w){const box=w.querySelector('.postcmp'),f=POST.write,p=PO
       line('subject','Betreff','Subject','<input data-f="subject" maxlength="200">')+
       `<textarea data-f="text" rows="10" maxlength="20000" aria-label="${esc(t('Text','Text'))}" placeholder="${esc(f.forward?t('Deine Zeilen über der weitergeleiteten Mail (darf leer bleiben)','Your lines above the forwarded mail (may stay empty)'):'')}"></textarea>`+
       (f.forward&&POST.msg&&POST.msg.files&&POST.msg.files.length?`<label class="chk"><input type="checkbox" data-f="files"${f.files?' checked':''}> ${esc(t('Anhänge mitschicken','Send the attachments along'))} (${esc(POST.msg.files.join(', '))})</label>`:'')+
-      (f.reply?postSugBox(f)+`<div class="row posttone">${POST_TONE.map(([a,de,en])=>`<button class="ld-chip" type="button" data-r="${a}">✨ ${esc(t(de,en))}</button>`).join('')}</div>`:'')+
+      (f.reply?postSugBox(f)+`<div class="row posttone">${POST_TONE.map(([a,de,en])=>`<button class="ld-chip" type="button" data-r="${a}">${ic('spark')} ${esc(t(de,en))}</button>`).join('')}</div>`:'')+
       `<div class="row postord postsendrow"><button class="b p" type="button" data-s="go">${postIc('sent')}<span>${esc(t('Senden','Send'))}</span></button>`+
       (f.ai?'':`<button class="b" type="button" data-s="later">${esc(t('Später …','Later …'))}</button>`)+
       `<span class="postordmsg fh">${esc(f.ai?t('Mit Text vom Spark: vor dem Senden kommt die Vorschau.','With text from the Spark: the preview comes before sending.'):t('Nach „Senden“ hast du '+Math.round(POST_UNDO_MS/1000)+' s für „Rückgängig“.','After "Send" you have '+Math.round(POST_UNDO_MS/1000)+' s for "Undo".'))}</span></div>`+postLaterPick()+`</div>`;
@@ -556,7 +543,7 @@ function postWriteBox(w){const box=w.querySelector('.postcmp'),f=POST.write,p=PO
   box.querySelector('[data-close]').onclick=()=>postDrop();
   const sm=box.querySelector('[data-c=small]');if(sm)sm.onclick=()=>{POST.cmpSmall=!POST.cmpSmall;postDraw()};
   postCmpMove(box)}
-// a ✨ suggestion tapped: into the text, free to change; text of the Spark keeps the preview sheet (f.ai)
+// a suggestion tapped: into the text, free to change; text of the Spark keeps the preview sheet (f.ai)
 function postSugBind(box,f){box.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{const v=POST.sug[f.reply].items[+b.dataset.g];f.text=v.text;f.picked=+b.dataset.g;f.ai=true;
   box.querySelectorAll('[data-g]').forEach(x=>x.classList.toggle('on',x===b));postDraw();
   const m=box.querySelector('.postordmsg');if(m){m.className='postordmsg fh';m.textContent=t('Mit Text vom Spark: vor dem Senden kommt die Vorschau.','With text from the Spark: the preview comes before sending.')}})}
@@ -717,18 +704,18 @@ function postStatBind(b){const d=b.querySelector('.poststat');if(!d)return;d.ont
 const postRulesDraw=()=>{const b=$('postrules');if(b)postRulesPaint(b)};
 function postRuleWhen(r){const w=r.when,p=[];if(w.from)p.push((w.from.startsWith('@')?t('Absender endet auf ','Sender ends with '):t('Absender ist ','Sender is '))+w.from);
   if(w.subject)p.push(t('Betreff enthält „','Subject contains "')+w.subject+t('“','"'));if(w.to)p.push(t('an ','to ')+w.to);if(w.attach)p.push(t('mit Anhang','with attachment'));return p.join(t(' und ',' and '))}
-function postRuleThen(r){const x=r.then,p=[];if(x.folder)p.push('→ '+x.folder);if(x.read)p.push(t('gelesen','read'));if(x.flag)p.push('★');if(x.quiet)p.push(t('nicht in „Für dich“','not in "For you"'));return p.join(', ')}
+function postRuleThen(r){const x=r.then,p=[];if(x.folder)p.push('→ '+x.folder);if(x.read)p.push(t('gelesen','read'));if(x.flag)p.push(t('markieren','flag'));if(x.quiet)p.push(t('nicht in „Für dich“','not in "For you"'));return p.join(', ')}
 function postRulesPaint(b){const d=RULES.data;
   if(RULES.form){postRuleForm(b);return}
   if(!d){b.innerHTML=RULES.err?`<div class="note warn">${esc(RULES.err)}</div>`:`<div class="ld-empty mut">${esc(t('Lade die Regeln …','Loading the rules …'))}</div>`;return}
-  const rows=d.rules.map((r,i)=>`<div class="ld-row" data-rid="${esc(r.id)}"><span class="ld-mid"><b>${esc(postRuleWhen(r))}</b><small>${esc(postRuleThen(r)+(r.box?' · '+r.box:''))}</small></span>`+
-    `<span class="ld-right"><span class="ld-badge ${r.on===false?'off':'read'}">${esc(r.on===false?t('pausiert','paused'):t('diesen Monat ','this month ')+r.month)}</span>`+
-    `<button class="ld-chip" type="button" data-up="${i}" aria-label="${esc(t('nach oben','up'))}"${i?'':' disabled'}>▲</button><button class="ld-chip" type="button" data-on="${esc(r.id)}">${esc(r.on===false?t('Weiter','Resume'):t('Pause','Pause'))}</button>`+
+  const rows=d.rules.map((r,i)=>`<div class="ld-row" data-rid="${esc(r.id)}"><span class="ld-mid"><b>${esc(postRuleWhen(r))}</b><small>${esc(postRuleThen(r)+(r.box?' · '+r.box:'')+(r.except&&r.except.length&&!d.learn?' · '+t(r.except.length+' Ausnahmen',r.except.length+' exceptions'):''))}</small>${d.learn?postRuleLearnHtml(r):''}</span>`+
+    `<span class="ld-right"><span class="ld-badge ${r.on===false?'off':'read'}">${esc(r.on===false?(r.paused?t('pausiert, oft korrigiert','paused, often corrected'):t('pausiert','paused')):d.learn?t('an','on'):t('diesen Monat ','this month ')+r.month)}</span>`+
+    `<button class="ld-chip" type="button" data-up="${i}" aria-label="${esc(t('nach oben','up'))}"${i?'':' disabled'}>▲</button><button class="ld-chip${r.paused&&r.on===false?' on':''}" type="button" data-on="${esc(r.id)}">${esc(r.on===false?(r.paused?t('Wieder an','On again'):t('Weiter','Resume')):t('Pause','Pause'))}</button>`+
     `<button class="ld-chip" type="button" data-ed="${esc(r.id)}">${esc(t('Ändern','Edit'))}</button><button class="ld-chip" type="button" data-del="${esc(r.id)}">${esc(t('Löschen','Delete'))}</button></span></div>`).join('');
   b.innerHTML=`<div class="ld-tools"><button class="b p" type="button" data-k="new">${esc(t('+ Neue Regel','+ New rule'))}</button></div>`+
     (RULES.msg?`<div class="note">${esc(RULES.msg)}${RULES.undo?` <button class="b" type="button" data-k="undo">${esc(t('Rückgängig','Undo'))}</button>`:''}</div>`:'')+
-    (RULES.err?`<div class="note warn">${esc(RULES.err)}</div>`:'')+postSugHtml(d.suggest||[])+postStatHtml()+
-    `<div class="ld-list">${rows||`<div class="ld-empty mut">${esc(t('Noch keine Regel. Am schnellsten geht es an einer Mail: „⚙ Regel daraus …“.','No rule yet. Quickest from a mail: "⚙ Rule from this …".'))}</div>`}`+
+    (RULES.err?`<div class="note warn">${esc(RULES.err)}</div>`:'')+postSugHtml(d.suggest||[])+(d.learn?postFixHtml(d.fixes||[]):'')+postStatHtml()+
+    `<div class="ld-list">${rows||`<div class="ld-empty mut">${esc(t('Noch keine Regel. Am schnellsten geht es an einer Mail: „Regel daraus …“.','No rule yet. Quickest from a mail: "Rule from this …".'))}</div>`}`+
     (d.tidy&&d.tidy.length?`<div class="ld-grp"><span>${esc(t('Aus „Mails aufräumen“','From "Tidy mails"'))}</span></div>`+d.tidy.map(r=>`<div class="ld-row"><span class="ld-mid"><b>${esc(r.match)}</b><small>${esc(r.keep?t('bleibt im Posteingang','stays in the inbox'):'→ '+r.folder)}</small></span><span class="ld-right"><button class="ld-chip" type="button" data-tdel="${esc(r.id)}">${esc(t('Löschen','Delete'))}</button></span></div>`).join(''):'')+
     `</div><div class="fh">${esc(t('Die erste passende Regel entscheidet (▲ ändert die Reihenfolge). Regeln nehmen neue Mails; gelöscht wird nie eine Mail, nichts kommt in Papierkorb oder Spam.','The first rule that fits decides (▲ changes the order). Rules take new mail; a mail is never deleted, nothing goes into trash or junk.'))}</div>`;
   b.querySelector('[data-k=new]').onclick=()=>{RULES.form={account:(d.accounts[0]||{}).id||'',when:{from:'',subject:'',to:'',attach:false},then:{folder:'',read:false,flag:false,quiet:false}};RULES.test=null;postRulesDraw()};
@@ -743,7 +730,31 @@ function postRulesPaint(b){const d=RULES.data;
   b.querySelectorAll('[data-on]').forEach(x=>x.onclick=()=>{const r=d.rules.find(y=>y.id===x.dataset.on);
     call('/api/profile/mail/rules',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:r.id,account:r.account,when:r.when,then:r.then,on:r.on===false})})});
   b.querySelectorAll('[data-ed]').forEach(x=>x.onclick=()=>{const r=d.rules.find(y=>y.id===x.dataset.ed);RULES.form=JSON.parse(JSON.stringify({id:r.id,account:r.account,when:r.when,then:r.then,on:r.on}));RULES.test=null;postRulesDraw()});
-  b.querySelectorAll('[data-sg]').forEach(x=>x.onclick=()=>postSugDo(d.suggest.find(y=>y.id===x.dataset.sid),x.dataset.sg,call));postStatBind(b)}
+  b.querySelectorAll('[data-sg]').forEach(x=>x.onclick=()=>postSugDo(d.suggest.find(y=>y.id===x.dataset.sid),x.dataset.sg,call));postStatBind(b);
+  // Sortieren aus Korrekturen lernen, Stufe 3: „Rückgängig“ at a correction, „Regel ändern“ opens the form, an exception off the rule
+  b.querySelectorAll('[data-fu]').forEach(x=>x.onclick=()=>call('/api/profile/mail/rules/fixes/'+encodeURIComponent(x.dataset.fu)+'/undo',{method:'POST'}));
+  b.querySelectorAll('[data-fe]').forEach(x=>x.onclick=()=>{const r=d.rules.find(y=>y.id===x.dataset.fe);if(!r)return;RULES.form=JSON.parse(JSON.stringify({id:r.id,account:r.account,when:r.when,then:r.then,on:r.on}));RULES.test=null;postRulesDraw()});
+  b.querySelectorAll('[data-xr]').forEach(x=>x.onclick=()=>{const r=d.rules.find(y=>y.id===x.dataset.xr),a=r&&r.except[+x.dataset.xi];if(!a)return;
+    if(confirm(t('„'+a+'“ ist keine Ausnahme mehr: die Regel nimmt seine neuen Mails wieder. Mails bleiben, wo sie sind.','"'+a+'" is no exception any more: the rule takes its new mails again. Mails stay where they are.')))
+      call('/api/profile/mail/rules/'+encodeURIComponent(r.id)+'/except',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({from:a})})})}
+// Korrekturen (30 Tage) (mailregeln.fix_list, plan mail-lernen 7a): what the person re-sorted after the Spark, with what became
+// of it; „Rückgängig“ takes back the exception or pause it made (never moves a mail), „Regel ändern“ opens the rule
+const postFixFolder=f=>f===''?t('Falsch sortiert','Wrongly sorted'):f.toUpperCase()==='INBOX'?t('Posteingang','Inbox'):f;
+const POST_FIX_STATE={wartet:['wartet','waiting','due'],ausnahme:['Ausnahme gesetzt','exception set','read'],pausiert:['Regel pausiert','rule paused','off'],
+  bleibt:['nicht wieder verschoben','not moved again','read'],zurueck:['zurückgenommen','taken back','off']};
+function postFixHtml(list){if(!list.length)return '';
+  return `<div class="ld-list postfix"><div class="ld-grp"><span>${esc(t('Korrekturen (30 Tage)','Corrections (30 days)'))}</span><span>${list.length}</span></div>`+list.map(x=>{const st=POST_FIX_STATE[x.state]||POST_FIX_STATE.bleibt;
+    return `<div class="ld-row"><span class="ld-mid"><b>${esc(x.from||'–')}</b><small>${esc(postFixFolder(x.von)+' → '+postFixFolder(x.nach)+' · '+
+      (x.by==='tidy'?t('Postfach aufräumen','Inbox tidying')+(x.model?t(' (Modell)',' (model)'):''):x.rule?t('Regel „'+x.rule+'“','Rule "'+x.rule+'"'):t('Regel gelöscht','rule deleted'))+' · '+cxDay(x.t)+(x.box?' · '+x.box:''))}</small></span>`+
+    `<span class="ld-right"><span class="ld-badge ${st[2]}">${esc(t(st[0],st[1]))}</span>`+
+    (x.undo&&x.state!=='wartet'?`<button class="ld-chip" type="button" data-fu="${esc(x.id)}">${esc(t('Rückgängig','Undo'))}</button>`:'')+
+    (x.rid?`<button class="ld-chip" type="button" data-fe="${esc(x.rid)}">${esc(t('Regel ändern','Change the rule'))}</button>`:'')+`</span></div>`}).join('')+'</div>'}
+// per rule: „N genommen · M korrigiert“ (this month's count, corrections of 30 days) with a bar, its exceptions to remove
+function postRuleLearnHtml(r){const n=r.month||0,k=r.fixed||0,ex=r.except||[];
+  return `<small>${esc(t(n+' genommen (Monat) · '+k+' korrigiert (30 Tage)',n+' taken (month) · '+k+' corrected (30 days)'))}</small>`+
+    (n+k?`<span class="poststatbar${r.on===false?' warn':''}" style="width:${Math.round(100*n/(n+k))}%"></span>`:'')+
+    (ex.length?`<details class="postexc"><summary>${esc(t(ex.length+(ex.length>1?' Ausnahmen':' Ausnahme'),ex.length+(ex.length>1?' exceptions':' exception')))}</summary>`+
+      ex.map((a,i)=>`<span class="postexcrow"><span>${esc(a)}</span><button class="ld-chip" type="button" data-xr="${esc(r.id)}" data-xi="${i}" aria-label="${esc(t('Ausnahme entfernen','Remove the exception'))}">${ic('x')}</button></span>`).join('')+'</details>':'')}
 // Regel-Vorschläge aus dem Ablegen (Dominik 2026-10-21 „ok“): what the night found below the KI folder; a rule only after a click
 function postSugHtml(list){if(!list.length)return '';
   return `<div class="ld-list postsug"><div class="ld-grp"><span>${esc(t('Vorschläge aus deinem Ablegen','Suggestions from your filing'))}</span></div>`+list.map(x=>
@@ -773,7 +784,7 @@ function postRuleForm(b){const f=RULES.form,d=RULES.data||{accounts:[]},fo=f.acc
     `<label><input type="checkbox" data-w="attach"> ${esc(t('nur mit Anhang','with attachment only'))}</label>`+
     `<div class="ld-grp"><span>${esc(t('Dann','Then'))}</span></div>`+
     `<label>${esc(t('Verschieben nach','Move to'))}</label><select data-t="folder"${f.account?'':' disabled'}><option value="">${esc(t('– im Posteingang lassen –','– leave in the inbox –'))}</option>${(fo&&fo.folders||[]).map(n=>`<option value="${esc(n)}"${n===f.then.folder?' selected':''}>${esc(n)}</option>`).join('')}</select>`+
-    `<label><input type="checkbox" data-t="read"> ${esc(t('als gelesen markieren','mark as read'))}</label><label><input type="checkbox" data-t="flag"> ${esc(t('★ markieren','★ flag'))}</label><label><input type="checkbox" data-t="quiet"> ${esc(t('nicht in „Für dich“','not in "For you"'))}</label>`+
+    `<label><input type="checkbox" data-t="read"> ${esc(t('als gelesen markieren','mark as read'))}</label><label><input type="checkbox" data-t="flag"> ${esc(t('markieren','flag'))}</label><label><input type="checkbox" data-t="quiet"> ${esc(t('nicht in „Für dich“','not in "For you"'))}</label>`+
     (RULES.test!=null?`<div class="note">${esc(t('Trifft '+RULES.test+' Mails im Posteingang der letzten 90 Tage.','Fits '+RULES.test+' mails in the inbox of the last 90 days.'))}</div>`:'')+
     `<div class="row postord"><button class="b p" type="button" data-s="save">${esc(t('Sichern','Save'))}</button><button class="b" type="button" data-s="test">${esc(t('Probelauf','Dry run'))}</button><button class="b" type="button" data-s="back">${esc(t('Abbrechen','Cancel'))}</button></div><div class="postordmsg fh"></div></div>`;
   const msg=b.querySelector('.postordmsg'),body=()=>({id:f.id||'',account:f.account,when:f.when,then:f.then,on:f.on!==false});
@@ -798,7 +809,7 @@ function postRuleForm(b){const f=RULES.form,d=RULES.data||{accounts:[]},fo=f.acc
       else RULES.err=errSay(r2.status,y.detail,'')}
     else RULES.msg=t('Gesichert. Die Regel nimmt ab jetzt neue Mails.','Saved. The rule takes new mail from now on.');
     await postRulesLoad()}}
-// „⚙ Regel daraus …“ at a mail: the form with this mail's mailbox and sender, on the tab Regeln
+// „Regel daraus …“ at a mail: the form with this mail's mailbox and sender, on the tab Regeln
 // the subject without Re:, AW:, Fwd: … (Dominik 2026-10-20: the rule takes the mail's subject too, free to change)
 const postTopic=(x,n=80)=>(x||'').replace(/^((re|aw|antw|fwd?|wg)\s*:\s*)+/i,'').trim().slice(0,n);
 function postRuleFrom(m){const acct=(POST.sel||'').split(':')[0];RULES.form={account:acct,when:{from:postAddr(m.from).toLowerCase(),subject:postTopic(m.subject),to:'',attach:false},then:{folder:'',read:false,flag:false,quiet:false}};

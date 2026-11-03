@@ -118,6 +118,7 @@ flowchart TB
 | `speech-spark-messen-wunsch` | – | Ein Modell messen (Zustand → Modelle „Messen“), nur auf Knopfdruck |
 | `speech-spark-gehaeuse` | – | Gehäuse des Panel-Rechners einrichten (Pironman 5: Lüfter, OLED), nur mit `--gehaeuse` |
 | `speech-spark-werkstatt` | – (die Sandbox fragt nur 127.0.0.1:31006) | Ein Auftrag der Werkstatt (Funktionen → Werkstatt): Testlauf, Code-Messung, Diagnose, Reparatur in der Sandbox `speech-spark-werkstatt-lauf`, nur mit `--werkstatt`; dazu `speech-spark-werkstatt-fw` (die Sandbox erreicht auf 127.0.0.1 nur das LLM-Tor) |
+| `speech-spark-lokaltest-umgebung` | – (holt nur Pakete mit Prüfsumme) | Entwickeln auf dem Pi (`--entwickeln`, Panel-Rechner): Testumgebung des Schnelltests, nachts nur bei neuer Paketliste; der Schnelltest selbst läuft als `speech-spark-lokaltest` ohne Netz; dazu `speech-spark-entwickeln-fw` (der Nutzer `spark-dev` erreicht nur das LLM-Tor 31006) |
 | `speech-spark-schirm` | – (fragt nur 127.0.0.1:31080) | Steuerzentrale als Text auf dem Bildschirm des Panel-Rechners (tty1), nur mit dem Schalter an |
 
 **Modell-Rechner (V01.0.606, Plan „Spark teilen“ Stufe B1):** Das Panel spricht Spracherkennung, Sprachausgabe, Bilder und das LLM-Tor nur über eine Adresse an: `common.model_url(art, pfad)` mit der Einstellung `models.host`. Standard ist `127.0.0.1`, dann läuft alles wie bisher auf einem Spark über `http://127.0.0.1:<port>`. Steht dort ein anderer Rechner (Name oder IP, nie ein Pfad oder `http://`), geht jede Anfrage über `https` und der API-Schlüssel ist Pflicht (`admin.validate`); eine kaputte Angabe bleibt auf dem Spark. Das LLM-Tor auf dem Modell-Rechner bekommt den Schlüssel wie das eigene (`llm.own_tor`), und der Wächter (`netguard.model_addresses`) behandelt die Ports 30000–31099 des Modell-Rechners wie die eigenen: keine MCP-, Kalender- oder Home-Assistant-Adresse kann auf sie zeigen. Eingestellt wird der Modell-Rechner erst mit der geteilten Installation (Stufe B6); das Zertifikat pinnt die Kopplung (B3). Selbsttest `test_modell_rechner`.
@@ -251,11 +252,13 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/folien.py` | Folientypen und feste Regeln für erstellte Dokumente |
 | `app/panel/fund.py` | Finden: Suchindex über die eigenen Daten, Felder und Schlagworte nach festen Regeln, Blind-Marken je Profil |
 | `app/panel/fundmail.py` | Finden: alle Mails und Anhänge in Scheiben eingelesen, versiegelt (AES-GCM) mit Blind-Marken je Profil |
+| `app/panel/fundmessung.py` | Finden messen: Messteil „fund“ von Wissen messen, versiegelte erfundene Mails im Wegwerf-Ordner |
 | `app/panel/fundquellen.py` | Finden: Termine und Kontakte versiegelt, Gespräche nur Datum und Kanal, Listen, Medien |
 | `app/panel/gedaechtnis.py` | Gedächtnis mit Beleg und Prüfung |
 | `app/panel/gemerkt.py` | Gemerkt-Hinweis: „Gemerkt: …“ mit Rückgängig, Karte für von selbst Gelerntes |
 | `app/panel/kiwix.py` | Eigenes Kiwix als Wissensquelle ohne Internet |
 | `app/panel/lokal.py` | Erst lokal suchen, bevor etwas nach außen geht |
+| `app/panel/mappen.py` | Mappen: Dokumente, Seiten und Notizen bündeln, Kontext-Stufe je Eintrag (aus, kurz, ganz) nach festen Regeln |
 | `app/panel/meinedaten.py` | Alle meine Daten herunterladen: eine ZIP nach frischem Code, einmal abholen |
 | `app/panel/memtidy.py` | Wöchentliches Aufräumen des Gedächtnisses |
 | `app/panel/musik.py` | Musik machen: Wunsch prüfen, Modell wählen, Auftrag, Ablage, Liedkarte, Musik testen je Modell |
@@ -269,7 +272,9 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/wiki.py` | Wikipedia für „Was ist …?“ |
 | `app/panel/wissen.py` | Wissen aus eigenen Uploads: Schalter und Kontingent |
 | `app/panel/wissensbuch.py` | Wissensbuch: Seiten aus eigenen Dokumenten, jeder Satz mit Quelle; Suchindex FTS5, Lesefunktion liste |
-| `app/panel/wissenskarte.py` | Wissenskarte: geprüfte Verbindungen zwischen den Seiten des Wissensbuchs, jede mit Quelle, Ausschnitt per WITH RECURSIVE |
+| `app/panel/wissensdoppelt.py` | Doppelte der Wissenskarte: feste Regeln für gleiche und vielleicht gleiche Punkte, Vorschläge, Verschieden |
+| `app/panel/wissenskarte.py` | Wissenskarte: geprüfte Verbindungen und Punkte aus Dokumenten mit Quelle, Aufbau im Speicher, Wortindex, Suchliste |
+| `app/panel/wissensmessung.py` | Wissen messen: Zeiten und Speicher von Suche, Wissensbuch, Karte und Finden, erfunden oder ein Profil lesend |
 
 ### Anbindungen
 
@@ -320,7 +325,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/dungeon_legenden.py` | Dungeon-Master-Legenden: 20 benannte Einzelstücke je Welt, nur aus Boss, Belohnung oder Truhe, einmal je Kampagne |
 | `app/panel/dungeon_lied.py` | Dungeon-Master: Heldenlied des Barden, am Kapitelende feste Strophen mit Heldennamen, gesungen vom Musikmodell |
 | `app/panel/dungeon_mitkommen.py` | Dungeon-Master: Überreden zum Mitkommen, Haltung und Charisma-Probe des Panels, die Karte nimmt die Person mit |
-| `app/panel/dungeon_musik.py` | KI-Dungeon-Master: Musik je Welt und Stimmung im Voraus (Akt n+1, nachts), Geräusche und Würfel im Browser |
+| `app/panel/dungeon_musik.py` | KI-Dungeon-Master: Musik je Welt und Stimmung (auch Boss) vorab, Tempo/Tonart als Metadaten; Klänge, Würfel im Browser |
 | `app/panel/dungeon_mut.py` | Dungeon-Master-Heldenmut: einmal am Abend neu würfeln oder kritisch treffen, ein zweiter durch 👍 der Mitspieler |
 | `app/panel/dungeon_narben.py` | Dungeon-Master: Narben und bleibende Wunden nach fester W20-Tabelle, ein Heiler in der Siedlung nimmt die Folgen |
 | `app/panel/dungeon_nsc.py` | Dungeon-Master-NSC-Gedächtnis: Karten aus festen Tabellen, Haltung und Beziehungen nach festen Regeln, Chronik und Ruf |
@@ -397,7 +402,7 @@ Die eigenen Seiten E-Mail, Kalender und Kontakte, der Abruf beim Anbieter, der v
 | `app/panel/mailansicht.py` | Mail formatiert (Seite E-Mail, iPhone): HTML bereinigt, Rahmen ohne Skript, Bilder von außen nur per Klick |
 | `app/panel/mailcode.py` | Bestätigungscodes: Code aus neuer Mail als Mitteilung aufs genutzte Gerät, nie Telegram, nie im Log |
 | `app/panel/mailidle.py` | Neue Mails sofort: IMAP IDLE für Profile, die ihre Mails gerade lesen, höchstens 4 Verbindungen |
-| `app/panel/mailregeln.py` | Mail-Regeln: wenn Absender/Betreff, dann Ordner, gelesen, markieren; nie löschen; Vorschläge nachts, Statistik |
+| `app/panel/mailregeln.py` | Mail-Regeln: wenn Absender/Betreff, dann Ordner, gelesen, markieren; nie löschen; kein Ping-Pong; lernt aus Korrekturen |
 | `app/panel/mailstil.py` | Mailstil: lernt aus gesendeten Mails, wie das Profil schreibt, für Mail-Entwürfe |
 | `app/panel/mailvorrat.py` | Mail-Vorrat: neueste Kopfzeilen und Texte versiegelt im Profil, Antwort mit Stand bei Ausfall |
 | `app/panel/postfach.py` | Mails ordnen auf der Seite E-Mail: gelesen, markieren, Archiv, Ordner, Mehrfachauswahl, Löschen in den Papierkorb |
@@ -469,6 +474,8 @@ Live-Übersicht, Logs, Wächter, Sicherung, Update, Hilfe und die Admin-Seiten.
 | `app/panel/berater_katalog.py` | Was der Einstellungs-Assistent vorschlagen darf |
 | `app/panel/dateien.py` | Datei-Register: jede Datei des Panels einmal, mit Inhalt, Sicherung und Kopie |
 | `app/panel/dienstwacht.py` | Dienst-Wächter: meldet, wenn ein Dienst fehlt |
+| `app/entwickeln.py` | Entwickeln auf dem Pi: OpenCode für spark-dev, lokale Änderungen prüfen, aufsetzen, im Sandkasten testen, einspielen |
+| `app/panel/entwickelnseite.py` | Entwickeln auf dem Pi im Panel: Stand der lokalen Änderungen, Einspielen wie ein Update, Hinweis bei Ablehnung |
 | `app/panel/faelle.py` | Fälle: jedes Problem wird festgehalten |
 | `app/panel/ghtoken.py` | Lese-Token für GitHub |
 | `app/panel/health.py` | Stabilität: Wächter für hängende Dienste, Echtprüfung |
@@ -548,15 +555,18 @@ Shell, Dateien und Bildschirm eigener Server über ihren Anker, dazu die Spontan
 
 | Modul | Aufgabe |
 |---|---|
+| `app/panel/fernals.py` | Fernzugang, Dateien als anderer Benutzer: sudo nur für den sftp-server mit -R, Freigabe am Server und je System |
 | `app/panel/fernanker.py` | Fernzugang, Anker aktualisieren: eigener Ed25519-Schlüssel im Tresor, signierte neue Version, nie zurück |
 | `app/panel/fernbild.py` | Fernzugang, Bildschirm: guacd auf 127.0.0.1, VNC oder RDP durch den Anker, erst nur ansehen, höchstens 15 Bilder/s |
 | `app/panel/ferndateien.py` | Fernzugang, Dateien: SFTP in derselben SSH-Verbindung, Liste, Einmal-Link zum Laden, Hochladen mit Größengrenze |
 | `app/panel/ferngross.py` | Fernzugang, große Dateien: in Teilen mit SHA-256, per Link (curl) oder vom NAS, Prüfsumme vor dem Umbenennen |
 | `app/panel/fernnotiz.py` | Fernzugang, Notizen je System: versiegelt, 10 Fassungen, Tresor-Hinweis, Assistent liest nur mit Haken |
 | `app/panel/fernordner.py` | Fernzugang, Ordner: eine Ebene, Name und Symbol, Reihenfolge per Ziehen, nur Ordnung, Rechte je System |
+| `app/panel/fernweb.py` | Fernzugang, Webdienste: eigene Tunnel-Tür (Port 31090), Ziele nach festen Regeln, Cookies je Dienst getrennt |
 | `app/panel/fernwindows.py` | Fernzugang, Windows: spark-anker-einrichten.cmd mit Einmal-Schlüssel, Python mit fester Prüfsumme |
 | `app/panel/fernzugang.py` | Fernzugang: Seite per Code entsperrt, Anker, Einmal-Code, Terminal mit Ticket, Host-Schlüssel fest, Shell gehalten |
 | `app/panel/spontanhilfe.py` | Spontanhilfe: Nummer und Link, Seite /hilfe mit eigener CSP, WebRTC zwischen zwei Browsern, Shell über den Anker |
+| `app/panel/spontansteuern.py` | Spontanhilfe Steuern: Programm SparkHilfe, Einmal-Schlüssel, Bild und Eingaben über das Panel |
 
 ### Spark teilen
 
@@ -621,7 +631,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/zuordnungen.json` | Gemerkte Zuordnungen |  | ganz versiegelt (AES-256-GCM) | ja | Gedächtnis |
 | `users/ID/tasks.json` | Aufgaben |  | – | ja | Aufgaben und Erinnerungen |
 | `users/ID/reminders.json` | Erinnerungen |  | – | ja | Aufgaben und Erinnerungen |
-| `users/ID/wissen.db` | Dokumente: Text, Abschnitte mit Kontextzeile, Suche, Vektoren; Wissensbuch und Wissenskarte mit Personen, Firmen und Fristen (SQLite) |  | – | ja | Dokumente (Text, Suche, Originale) |
+| `users/ID/wissen.db` | Dokumente: Text, Abschnitte mit Kontextzeile, Suche, Vektoren; Wissensbuch und Wissenskarte mit Personen, Firmen und Fristen; Mappen mit Einträgen und Stufen (SQLite) |  | – | ja | Dokumente (Text, Suche, Originale) |
 | `users/ID/docs/files/` | Originale der Uploads |  | – | ja | Dokumente (Text, Suche, Originale) |
 | `users/ID/fund.db` | Finden: Suchindex über die eigenen Daten (Titel, Felder, Schlagworte, eigene Schlagworte, Mails und Anhänge, Termine, Kontakte, Listen, Erinnerungen, Bilder, Lieder; Gespräche nur Datum und Kanal; SQLite) |  | Marken mit eigenem Schlüssel je Profil (HMAC); Mails, Anhänge, Termine und Kontakte: Titel, Auszug, Felder und Schlagworte AES-GCM | ja | Dokumente (Text, Suche, Originale) |
 | `users/ID/suchpruefung.json` | Prüffragen und Läufe der Suchprüfung |  | – | ja | Dokumente (Text, Suche, Originale) |
@@ -660,7 +670,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/dungeon-wappen.json` | KI-Dungeon-Master: Farbe und Zeichen, die du als Gastgeber für das Wappen deiner Gruppe gewählt hast | Zustand | – | ja | – |
 | `users/ID/interessen.json` | Was ich über dich weiß: bestätigte und abgelehnte Interessen mit Thema und Absendern und der letzte Netz-Tipp (kein Betreff, keine Mail) | Einstellungen | ganz versiegelt (AES-256-GCM) | ja | – |
 | `users/ID/mailstil.json` | Mailstil (nur die Zusammenfassung, keine Mail) | Einstellungen | – | ja | – |
-| `users/ID/mail-regeln.json` | Mail-Regeln der Seite E-Mail und Regel-Vorschläge (Absender, Wörter, Ordner; keine Mail) | Einstellungen | – | ja | – |
+| `users/ID/mail-regeln.json` | Mail-Regeln der Seite E-Mail und Regel-Vorschläge (Absender, Wörter, Ordner; keine Mail), dazu 30 Tage die Message-IDs der von Regeln verschobenen Mails und die Korrekturen (Message-ID, Absender, Ordner) | Einstellungen | – | ja | – |
 | `users/ID/mail-spaeter.bin` | Später senden: geplante Mails bis zum Senden, danach einen Tag die Zeile ohne Text | Warteschlange | versiegelt | ja | – |
 | `users/ID/mail-einordnen.bin` | Alle Mails hier einordnen: der letzte Lauf für „Rückgängig“ (Ordner und Message-IDs, keine Mail), 30 Tage | Zustand | versiegelt | ja | – |
 | `users/ID/spark-kalender.json` | Spark-Kalender: Termine der Kalender ohne Konto (nur hier) | Termine | versiegelt | ja | – |
@@ -743,14 +753,15 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/dungeon-geschichten.json` | KI-Dungeon-Master: Geschichten des Admins und der Gastgeber mit Akten, Wendepunkten und Tabus | – | ja |
 | `state/dungeon-klone` | KI-Dungeon-Master: die Stimme jeder Figur als Klon-Vorlage, wenn die Sprachausgabe ein Base-Modell hat (WAV mit dem gesprochenen Satz, höchstens 200, für alle Runden) | – | nein |
 | `state/dungeon-lieder` | KI-Dungeon-Master: Heldenlieder je Runde und Kapitel vom eigenen Musikmodell (MP3 mit den Namen der Helden) | – | nein |
-| `state/dungeon-musik` | KI-Dungeon-Master: Musikstücke je Welt und Stimmung vom eigenen Musikmodell (MP3, für alle Runden, nichts Persönliches) | – | nein |
-| `state/dungeon-musik.json` | KI-Dungeon-Master: Musik vorbereiten an oder aus, Stücke je Welt und Stimmung, Speicherplatz | – | ja |
+| `state/dungeon-musik` | KI-Dungeon-Master: Musikstücke je Welt und Stimmung vom eigenen Musikmodell (MP3, für alle Runden, nichts Persönliches), im Unterordner probe die Proben des Admins (nachts weg) | – | nein |
+| `state/dungeon-musik.json` | KI-Dungeon-Master: Musik vorbereiten an oder aus, Stücke je Welt und Stimmung, Speicherplatz, Qualität, Länge, Lautheit, Klangvorlagen je Welt und Stimmung | – | ja |
 | `state/dungeon-personen.json` | KI-Dungeon-Master: Personen-Katalog mit Karte, Wesen, Rolle, Stimme, Gesicht und Haltung zu den Helden (nur Spieldaten) | – | ja |
 | `state/dungeon-pruefstand.json` | KI-Dungeon-Master: Ergebnis des Balance-Prüfstands (Siege, verlorenes Leben und Runden je Stufe und Gruppengröße, ohne und mit Runen, gegen Herr und Boss) | – | ja |
 | `state/dungeon-regeln.json` | KI-Dungeon-Master: eigene Regeln und Katalog-Einträge des Admins | – | ja |
 | `state/dungeon-runden` | KI-Dungeon-Master: eine Datei je Runde mit Plätzen (Hashes der Links), Helden, Aktionen und Erzählung | nur Hashes | nein |
 | `state/dungeon-runden.json` | KI-Dungeon-Master: gemeinsame Werte aller Runden (Bilder des Tages, Daumen je Welt) | – | ja |
 | `state/dungeon-ton` | KI-Dungeon-Master: die vorgelesenen letzten Züge einer Runde (WAV und MP3, höchstens 3 je Runde) | – | nein |
+| `state/entwickeln.json` | Entwickeln auf dem Pi: Anzahl der lokalen Änderungen, kurze Commits, letztes Ergebnis (festes Wort, Namen roter Tests); schreibt root, nie ein Commit-Text | – | nein |
 | `state/esp32.json` | Lautsprecher und Firmware | teils versiegelt | ja |
 | `state/export-tmp` | Alle meine Daten herunterladen: die ZIP bis zum Abholen (einmal, höchstens 10 Minuten) | – | nein |
 | `state/faelle.json` | Fälle | – | ja |
@@ -763,6 +774,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/gehaeuse-wunsch.json` | Wunsch des Panels für das Gehäuse (einrichten, entfernen, neu starten), Sekunden | – | nein |
 | `state/geraete-updates.json` | Geräte-Updates | – | ja |
 | `state/github-token.json` | GitHub-Lese-Token | versiegelt | ja |
+| `state/guacd-bau.json` | Fernzugang → Bildschirm: wie der letzte Bau von guacd ausging (ok oder ein festes Wort wie laden oder bauen, und wann); schreibt install.sh, das nächste Update ersetzt ihn | – | nein |
 | `state/guard-xff-hinted.json` | Proxy-Hinweis gezeigt | – | nein |
 | `state/guard.json` | Sperren nach Fehlversuchen | – | nein |
 | `state/gut-saetze.json` | Mit 👍 bestätigte Fragen | – | ja |
@@ -793,6 +805,8 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/musik-test-2b-2.mp3` | Probestück 2 mit 2B (Musik testen) | – | nein |
 | `state/musik-test-2b-klein-1.mp3` | Probestück 1 mit 2B klein (Musik testen) | – | nein |
 | `state/musik-test-2b-klein-2.mp3` | Probestück 2 mit 2B klein (Musik testen) | – | nein |
+| `state/musik-test-2b-sft-1.mp3` | Probestück 1 mit 2B SFT (Musik testen, Turbo gegen SFT) | – | nein |
+| `state/musik-test-2b-sft-2.mp3` | Probestück 2 mit 2B SFT (Musik testen, Turbo gegen SFT) | – | nein |
 | `state/musik-test-xl-1.mp3` | Probestück 1 mit XL (Musik testen) | – | nein |
 | `state/musik-test-xl-2.mp3` | Probestück 2 mit XL (Musik testen) | – | nein |
 | `state/musik-test.json` | Letzte Messung (Musik testen) | – | nein |
@@ -828,12 +842,14 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/speech-spark-llm.json` | Zustand der Engine des eigenen Sprachmodells | – | nein |
 | `state/speech-spark-tts-*.json` | Zustand der TTS-Engines | – | nein |
 | `state/speicher-tmp` | Zwischenablage des eigenen Speichers | AES-256-GCM | nein |
+| `state/spontanhilfe-programme` | Spontanhilfe: das Programm SparkHilfe zum Steuern, nur nach Prüfung der SHA-256 aus dem signierten Verzeichnis ausgeliefert | – | nein |
 | `state/spontanhilfe-verlauf.json` | Spontanhilfe: Verlauf der letzten Tage (Zeit, Admin, Art, Dauer, Zuhause oder Internet, verfallene oder gesperrte Nummern), nie der Name der Person, eine Adresse, ein Bild oder der Chat; löschen unter Fernzugang → Spontanhilfe → Verlauf der Spontanhilfe | – | nein |
 | `state/telefon.json` | Telefon: Zugang zur Anlage, Mobilteile | Kennwort versiegelt | ja |
 | `state/telegram.json` | Telegram-Bot | Token versiegelt | ja |
 | `state/tipps.json` | Gezeigte Tipps | – | nein |
 | `state/traces.jsonl` | Logs → Anfragen, 48 h | – | nein |
 | `state/umzug-hinweis.json` | Hinweis nach dem Umzug (nur die Zeit) | – | nein |
+| `state/update-lokal` | Wunsch des Panels für lokale Änderungen (einspielen, zurück, verwerfen; ein festes Wort) | – | nein |
 | `state/update-night.json` | Nacht-Update | – | nein |
 | `state/update-progress.json` | Update-Fortschritt | – | nein |
 | `state/update-target` | Gewünschter Update-Stand | – | nein |
@@ -853,6 +869,8 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/weiche-unklar.json` | Unklare Fragen der Weiche, anonymisiert (höchstens 100, 7 Tage) | versiegelt | nein |
 | `state/werkstatt-wunsch.json` | Wunsch des Panels für den nächsten Auftrag der Werkstatt (Art, Text des Admins), Sekunden | – | nein |
 | `state/werkstatt.json` | Ergebnisse der Werkstatt: letzte 20 Aufträge mit Antwort und Patch, Code-Messung je Sprachmodell, letzter Testlauf | – | nein |
+| `state/wissensmessung-tmp` | Wissen messen: das Wegwerf-Profil eines Laufs, nur während er läuft | – | nein |
+| `state/wissensmessung.json` | Wissen messen: die letzten 10 Läufe, nur Zahlen (Zeiten, Speicher, Anzahlen, Grenzen) | – | nein |
 <!-- /technik:speicher -->
 
 ### Schlüssel und Verschlüsselung
@@ -1037,9 +1055,9 @@ flowchart TD
 4. <a id="kn-apps-s4"></a>**Code gültig?**: Die App schickt den Code. Der Spark prüft das Rate-Limit (10 pro Minute und Adresse), vergleicht den Hash zeitkonstant und löscht den Code beim ersten Treffer. Ein abgelaufener oder schon benutzter Code passt nie. Ist es kein Link-Code, prüft pruefzugang.py einen getippten Prüf-Code für Apples Prüfung (12 Zeichen, 14 Tage, höchstens 5 iPhones, nur bei eingeschaltetem Prüfzugang); falsche Prüf-Codes sperren die Adresse wie falsche PINs.
 5. <a id="kn-apps-s5"></a>**Eigener Geräteschlüssel**: profiles.add_device erzeugt den Schlüssel und speichert nur seinen SHA-256-Hash in profiles.json. Die App bekommt ihn genau einmal und legt ihn im Schlüsselbund ab.
 6. <a id="kn-apps-s6"></a>**Jede Anfrage mit Schlüssel**: profiles.current sucht den Hash des Schlüssels in der Geräteliste. Ein Geräteschlüssel geht vor dem Cookie; das Profil kommt so immer aus dem Schlüssel, nie aus dem, was die App schreibt.
-7. <a id="kn-apps-s7"></a>**Pfad für die App erlaubt?**: Ein App-Schlüssel gilt nur für die 70 Pfade in profiles.APP_PATHS (Chat, Spracherkennung, Gespräche, Erinnerungen, Chats, Anrufe …), ein paar Lese-Muster, die Panel-Bereiche (Admin-Schalter iPhone-App mit Panel) und „Meine Sachen“ (iphone.THINGS, je Teil nur mit der Freigabe seiner eigenen Funktion). Alles andere sieht er ohne Profil.
+7. <a id="kn-apps-s7"></a>**Pfad für die App erlaubt?**: Ein App-Schlüssel gilt nur für die 71 Pfade in profiles.APP_PATHS (Chat, Spracherkennung, Gespräche, Erinnerungen, Chats, Anrufe …), ein paar Lese-Muster, die Panel-Bereiche (Admin-Schalter iPhone-App mit Panel) und „Meine Sachen“ (iphone.THINGS, je Teil nur mit der Freigabe seiner eigenen Funktion). Alles andere sieht er ohne Profil.
 8. <a id="kn-apps-s8"></a>**App gerade aus oder Mein Notaus?**: Ist die App vom Admin aus- oder für das Profil gesperrt, oder hat das Profil Mein Notaus an, gibt es für diese Anfrage kein Profil. Die App bekommt „gerade nicht“ (503), behält ihre Kopplung und geht wieder, sobald der Schalter zurück ist.
-9. <a id="kn-apps-s9"></a>**Wie ein Browser des Profils**: Die App fragt über dieselben Endpunkte wie die Seite, mit denselben Grenzen. Was sie zusätzlich darf (Smart Home, CarPlay, Zuhören, Dokumente, Bilder), sagt ihr der Spark in /api/iphone/hello; die App zeigt es nur an und hält sich daran. Anrufe zwischen Profilen klingeln über einen VoIP-Push von Apple, der nur die zufällige Nummer des Anrufs trägt; wer anruft, fragt die App beim Spark nach. Für private Chats macht die App ihren eigenen Schlüssel im Secure Enclave; der Spark bekommt nur die öffentliche Hälfte. Das Blatt der Android-App über anderen Apps fragt als Gerät „android“, nur solange „Android: Spark als Assistent“ freigegeben ist (android.assist_gate). Ob die App den letzten Stand der Seiten behalten darf, sagt hello mit „keep“ (appmerken.keep); bei Nein löscht sie ihn. Mit „barge_hold“ hält sie die Antwort fürs Ins-Wort-Fallen nur an (zwischenruf.py). Mit „Mitteilung ans genutzte Gerät“ sagen App und Seiten jede Minute nur, ob sie gerade benutzt werden (POST /api/zustellung/da, der Begleiter mit seiner Leerlaufzeit); zustellung.pick schickt eine Mitteilung dann an das Gerät mit der letzten Eingabe der letzten 120 Sekunden, sonst gleich an die Handy-App. Hat niemand sie gesehen, schickt zustellung.follow sie nach 5 Minuten einmal aufs Handy; ein angetippter Hinweis meldet „gesehen“, und mit der Antwort „zu“ räumen Seiten und iPhone Erledigtes weg. Jede Mitteilung bleibt 24 Stunden mit einer zufälligen Nummer auf dem Spark (mitteilungen.keep, nur im Speicher); nur die Nummer geht mit. Wer sie antippt, sieht sie als Karte über dem Gespräch, mit dem einen Knopf, den mitteilungen.ziel nach festen Regeln wählt (Offen, Chat, Mail, Code, Weg); nur das eigene Profil bekommt sie zurück.
+9. <a id="kn-apps-s9"></a>**Wie ein Browser des Profils**: Die App fragt über dieselben Endpunkte wie die Seite, mit denselben Grenzen. Was sie zusätzlich darf (Smart Home, CarPlay, Zuhören, Dokumente, Bilder), sagt ihr der Spark in /api/iphone/hello; die App zeigt es nur an und hält sich daran. Anrufe zwischen Profilen klingeln über einen VoIP-Push von Apple, der nur die zufällige Nummer des Anrufs trägt; wer anruft, fragt die App beim Spark nach. Für private Chats macht die App ihren eigenen Schlüssel im Secure Enclave; der Spark bekommt nur die öffentliche Hälfte. Das Blatt der Android-App über anderen Apps fragt als Gerät „android“, nur solange „Android: Spark als Assistent“ freigegeben ist (android.assist_gate). Ob die App den letzten Stand der Seiten behalten darf, sagt hello mit „keep“ (appmerken.keep); bei Nein löscht sie ihn. Mit „barge_hold“ hält sie die Antwort fürs Ins-Wort-Fallen nur an (zwischenruf.py). Hat das Profil eine Admin-Rolle, die App aber gerade nicht, nennt hello in „admin_why“ den Grund als festes Wort; ist der App-Schlüssel älter als der zweite Schritt, bindet „Mit Code bestätigen“ (POST /api/iphone/admin-step, jedes Mal ein frischer Code oder Passkey) ihn einmal daran. Mit „Mitteilung ans genutzte Gerät“ sagen App und Seiten jede Minute nur, ob sie gerade benutzt werden (POST /api/zustellung/da, der Begleiter mit seiner Leerlaufzeit); zustellung.pick schickt eine Mitteilung dann an das Gerät mit der letzten Eingabe der letzten 120 Sekunden, sonst gleich an die Handy-App. Hat niemand sie gesehen, schickt zustellung.follow sie nach 5 Minuten einmal aufs Handy; ein angetippter Hinweis meldet „gesehen“, und mit der Antwort „zu“ räumen Seiten und iPhone Erledigtes weg. Jede Mitteilung bleibt 24 Stunden mit einer zufälligen Nummer auf dem Spark (mitteilungen.keep, nur im Speicher); nur die Nummer geht mit. Wer sie antippt, sieht sie als Karte über dem Gespräch, mit dem einen Knopf, den mitteilungen.ziel nach festen Regeln wählt (Offen, Chat, Mail, Code, Weg); nur das eigene Profil bekommt sie zurück.
 10. <a id="kn-apps-s10"></a>**Konto, Geräte oder Sicherheit?**: Endpunkte, die Verbindungen, Geräte oder Sicherheit des Profils ändern, nehmen nur die eigene Browser-Anmeldung (core.browser_profile). Einen Geräteschlüssel lehnen sie ab, außer in einem Bereich, den das Profil der App freigegeben hat; Geheimnisse brauchen dort zusätzlich einen frischen Code.
 11. <a id="kn-apps-s11"></a>**Entfernen wirkt sofort**: Wird das iPhone im Panel entfernt, verschwindet der Hash aus der Geräteliste. Die nächste Anfrage der App findet kein Profil mehr.
 
@@ -1062,7 +1080,7 @@ Gilt bei: [Schritt 6](#kn-apps-s6), [Schritt 7](#kn-apps-s7)
 
 - **10** Minuten gilt ein Kopplungs-Code ([Schritt 3](#kn-apps-s3))
 - **5** iPhones pro Profil ([Schritt 2](#kn-apps-s2))
-- **70** feste Pfade für den App-Schlüssel ([Schritt 7](#kn-apps-s7))
+- **71** feste Pfade für den App-Schlüssel ([Schritt 7](#kn-apps-s7))
 - **30** Minuten gilt ein Android-Download-Link ([Schritt 3](#kn-apps-s3))
 - **5** Downloads pro Android-Link ([Schritt 3](#kn-apps-s3))
 - **10** Minuten gilt eine Kopplungszeile fürs Terminal ([Schritt 3](#kn-apps-s3))
@@ -1546,7 +1564,7 @@ flowchart TD
 9. <a id="kn-middleware-s9"></a>**Zu groß?**: Jeder Pfad hat seine Grenze, sonst gilt eine kleine Standardgrenze von zwei MB. Eine zu große Content-Length wird sofort abgelehnt; beim Lesen zählt BodyLimit zusätzlich mit und bricht ab, sobald mehr kommt als erlaubt.
 10. <a id="kn-middleware-s10"></a>**Update läuft?**: Während ein Update läuft, werden Änderungen unter /api/ angehalten. Der Assistent, die Geräte und das Anmelden bleiben offen (update.UNLOCKED).
 11. <a id="kn-middleware-s11"></a>**Endpunkt**: Erst jetzt liest der Endpunkt die Anfrage und prüft selbst Anmeldung, Profil und Rate-Limit (die nächste Station, „Anmeldung, Profil“). Ist der Verbrauchszähler an, merkt sich die Anfrage vorher, für welches Profil sie läuft: was sie die Modelle fragt, zählt für dieses Profil.
-12. <a id="kn-middleware-s12"></a>**Antwort mit Schutz**: Jede Antwort bekommt die Schutz-Kopfzeilen (keine fremden Rahmen, strenge Content-Security-Policy, auf https auch HSTS), unter /api/ „no-store“. Eine Änderung landet mit wer, Pfad und Status im Admin-Protokoll, außer gewöhnlicher Nutzung aus guard.QUIET_WHY. Benutzte Anmeldungen werden erneuert, auf https immer mit Secure.
+12. <a id="kn-middleware-s12"></a>**Antwort mit Schutz**: Jede Antwort bekommt die Schutz-Kopfzeilen (keine fremden Rahmen, strenge Content-Security-Policy, auf https auch HSTS; mit Fernzugang → Systeme, Knopf „Webdienste“ darf die Seite zusätzlich nur die eigene Tunnel-Tür einrahmen, fernweb.frame_src), unter /api/ „no-store“. Eine Änderung landet mit wer, Pfad und Status im Admin-Protokoll, außer gewöhnlicher Nutzung aus guard.QUIET_WHY. Benutzte Anmeldungen werden erneuert, auf https immer mit Secure.
 
 **Beispiele:** Einstellung im Browser zu Hause: Durch: der Endpunkt prüft die Anmeldung, die Änderung steht im Admin-Protokoll. · Fremde Webseite schickt ein Formular: Abgewiesen mit 403, bevor ein Endpunkt etwas tut. · Notaus Stufe 1, App unterwegs: Gesperrt mit 503 und der Stufe; die App zeigt den Notaus. · Großer Upload ohne Anmeldung: Abgewiesen mit 401, kein Byte gelesen.
 
@@ -1646,7 +1664,7 @@ flowchart TD
 5. <a id="kn-sicherheit-s5"></a>**Freigabe und Sperre**: Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten.
 6. <a id="kn-sicherheit-s6"></a>**Fremdes bleibt Daten**: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell (textnorm.defuse: Blockende und die eigenen Marken des Modells wie „<|im_start|>“ oder „<tool_call>“ werden entschärft; das LLM-Tor tut das für jede Nachricht noch einmal, llm_tor.entschaerft). Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt; nach einer Mail sind es 19, dazu gehört alles, was ins Internet fragt (Websuche, Wikipedia, Wetter, Fahrplan), damit kein Suchwort Mail-Inhalt hinausträgt. Ob das hält, prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed). Eine Mail mit HTML zeigt die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick über den Wächter, ein Link erst nach der Frage mit seiner echten Adresse.
 7. <a id="kn-sicherheit-s7"></a>**Sprachmodell schlägt vor**: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht.
-8. <a id="kn-sicherheit-s8"></a>**Ändert es etwas?**: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät, oder dem Ja-Knopf seiner Karte „Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell; ebenso führt nur ihr Klick Punkte der Wissenskarte zusammen, benennt sie um oder löscht sie (mit dem Code von „Bestätigen“). Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut.
+8. <a id="kn-sicherheit-s8"></a>**Ändert es etwas?**: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät, oder dem Ja-Knopf seiner Karte „Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell; ebenso führt nur ihr Klick Punkte der Wissenskarte zusammen, benennt sie um oder löscht sie (mit dem Code von „Bestätigen“); von selbst nur eine feste Regel bei gleichem Namen in anderer Schreibweise (wissensdoppelt.aehnlich), nie das Modell, und nie gegen ihr „Verschieden“. Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut.
 9. <a id="kn-sicherheit-s9"></a>**Antwort prüfen**: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML.
 10. <a id="kn-sicherheit-s10"></a>**Spuren**: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal), Gedächtnis und Gespräche ganz versiegelt im Ordner des Profils (profiles.write_own). Was ein Dienst für ein Profil vorhält (Mail-Vorrat, Mails, Anhänge, Termine und Kontakte in Finden), liegt nur mit AES-GCM versiegelt (vorrat.seal), die Wörter im Suchindex nur als HMAC-Marken mit einem Schlüssel je Profil (vorrat.marke); ohne Schlüssel wird nichts geschrieben. Schlagworte, die das Sprachmodell für Finden vorschlägt, sind Daten: fund.pruefe behält nur Kategorien der festen Liste und Namen, die wörtlich im Eintrag stehen, nie ein Befehlswort.
 
@@ -1726,8 +1744,9 @@ Gilt bei: [Schritt 4](#kn-sicherheit-s4), [Schritt 5](#kn-sicherheit-s5)
 - `app/panel/profiles.py` `_cap`: Obergrenze des Gedächtnisses ohne Datenverlust ([Schritt 8](#kn-sicherheit-s8))
 - `app/panel/gedaechtnis.py` `offer`: Gelerntes ersetzt nie Bestätigtes: nur ein Angebot ([Schritt 8](#kn-sicherheit-s8))
 - `app/panel/gemerkt.py` `take_back`: Rückgängig nur für den eigenen, unveränderten Fakt ([Schritt 8](#kn-sicherheit-s8))
+- `app/panel/wissensdoppelt.py` `aehnlich`: Punkte der Karte von selbst nur nach fester Regel zusammen, nie gegen „Verschieden“ ([Schritt 8](#kn-sicherheit-s8))
 
-Selbsttests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_siegel`, `test_meinedaten`
+Selbsttests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_siegel`, `test_meinedaten`, `test_wissensdoppelt`
 
 ### Anmeldung, Profil
 
@@ -1783,7 +1802,7 @@ flowchart TD
 3. <a id="kn-zugang-s3"></a>**Passwort oder PIN richtig?**: Geprüft wird in einem eigenen Thread. Ein unbekannter Name kostet dieselbe Arbeit wie eine falsche PIN, die Antwort ist dieselbe. Ein Fehlversuch wartet eine Sekunde, zählt für die Sperre und, wenn er von außen kommt, für „Notaus von selbst“.
 4. <a id="kn-zugang-s4"></a>**Zweiter Schritt?**: Hat das Profil (oder der Admin) den zweiten Schritt an und ist der Browser nicht als vertraut eingetragen, kommt als Nächstes der Code aus der App oder ein Passkey. Ein falscher Code zählt wie eine falsche PIN.
 5. <a id="kn-zugang-s5"></a>**Cookie setzen**: Der Zähler der Adresse wird gelöscht; Fehlversuche Fremder für den Namen zählen weiter. Das Profil-Cookie ist signiert und steht in der Liste der angemeldeten Browser; es gilt höchstens 90 Tage ohne Nutzung und wird erneuert, solange es benutzt wird. Das Admin-Cookie ist mit Passwort, einem eigenen Schlüssel dieses Spark und dem zweiten Schritt signiert. War der zweite Schritt dabei (Code, Passkey oder vertrauter Browser), trägt die Sitzung sein Zeichen: nur dann zählt eine Admin-Rolle des Profils, ohne eigene Admin-Anmeldung. Danach liest das Panel Kalender und Mails des Profils im Hintergrund vorab (vorwaermen.py, höchstens alle 600 Sekunden), damit seine Seiten sofort aufgehen.
-6. <a id="kn-zugang-s6"></a>**Profil bestimmen**: Zuerst, was nur das Panel selbst setzt (Telegram, „Spark fragen“ über MCP), dann der Geräteschlüssel (nur sein Hash ist gespeichert), dann das Cookie: Signatur, Alter, Sitzung noch in der Liste und nicht abgemeldet.
+6. <a id="kn-zugang-s6"></a>**Profil bestimmen**: Zuerst, was nur das Panel selbst setzt (Telegram, „Spark fragen“ über MCP), dann der Geräteschlüssel (nur sein Hash ist gespeichert), dann das Cookie: Signatur, Alter, Sitzung noch in der Liste und nicht abgemeldet. Der Schlüssel der eigenen iPhone-App zählt für eine Admin-Rolle nur, wenn er nach dem zweiten Schritt angelegt oder einmal mit Code oder Passkey in der App an ihn gebunden wurde; sonst nennt das Panel den Grund als festes Wort (key_older, no_mfa, not_admin, app_off, notaus).
 7. <a id="kn-zugang-s7"></a>**Schlüssel für diesen Weg frei?**: Ein Schlüssel mit Bereich (App, Uhr, Raum, Home Assistant, Schreibhilfe, Begleiter, Terminal) reicht nur für seine eigenen Pfade und nur, solange Admin und Profil die Funktion anhaben. Ist sie gerade aus oder hat das Profil seinen eigenen Notaus an, antwortet das Panel mit 503 statt 401, damit die App ihre Kopplung behält.
 8. <a id="kn-zugang-s8"></a>**Ohne Profil und Gastzugang aus?**: Ohne Profil kommt nur durch, wer der Admin ist (Cookie oder HTTP Basic, dessen Fehlversuche wie auf der Anmeldeseite zählen), oder wenn der Admin den Assistenten ohne Passwort freigegeben hat. Gäste bekommen dann nur Frage und Antwort.
 9. <a id="kn-zugang-s9"></a>**Zu viele Anfragen?**: Je Profil, sonst je Adresse, zählt das Panel die Anfragen der letzten Minute: im Chat 120 für ein Profil oder den Admin, 30 für einen Gast.
@@ -1801,7 +1820,7 @@ Gilt bei: [Schritt 6](#kn-zugang-s6), [Schritt 7](#kn-zugang-s7)
 |---|---|---|
 | Browser mit Profil | signiertes Cookie, Sitzung in der Liste | alles des Profils |
 | Admin | Passwort-Cookie oder HTTP Basic | Admin-Seiten; HTTP Basic nur ohne zweiten Schritt |
-| Profil mit Admin-Rolle | Cookie mit Zeichen des zweiten Schritts oder App-Schlüssel von danach | Admin-Seiten seiner Rolle; nur „Schutz ändern“ fragt den Code |
+| Profil mit Admin-Rolle | Cookie mit Zeichen des zweiten Schritts; App-Schlüssel von danach oder einmal mit Code in der App bestätigt (sonst ein festes Wort als Grund) | Admin-Seiten seiner Rolle; nur „Schutz ändern“ fragt den Code |
 | Geräteschlüssel ohne Bereich | Hash des Schlüssels | Assistent des Profils, keine Verbindungen oder Sicherheit ändern |
 | Geräteschlüssel mit Bereich | Hash, Pfad, Schalter | nur die Pfade seines Bereichs |
 | Gast | nur mit Assistent ohne Passwort | Frage und Antwort, kein Werkzeug |
@@ -1845,6 +1864,7 @@ Gilt bei: [Schritt 6](#kn-zugang-s6), [Schritt 7](#kn-zugang-s7)
 - `app/panel/account.py` `profile_login`: Anmeldung eines Profils ([Schritt 3](#kn-zugang-s3), [Schritt 5](#kn-zugang-s5))
 - `app/panel/account.py` `second_step`: Code oder Passkey ([Schritt 4](#kn-zugang-s4))
 - `app/panel/core.py` `is_main_admin`: Admin per Cookie oder HTTP Basic ([Schritt 6](#kn-zugang-s6))
+- `app/panel/coadmin.py` `app_why`: warum die eigene iPhone-App gerade kein Admin ist ([Schritt 6](#kn-zugang-s6))
 - `app/panel/profiles.py` `current`: das Profil hinter einer Anfrage ([Schritt 6](#kn-zugang-s6))
 - `app/panel/profiles.py` `_cookie_user`: Cookie prüfen ([Schritt 6](#kn-zugang-s6))
 - `app/panel/core.py` `assistant`: Profil, Gastzugang oder Admin ([Schritt 8](#kn-zugang-s8))
@@ -1907,7 +1927,7 @@ flowchart TD
 2. <a id="kn-vorbereiten-s2"></a>**Verlauf kürzen, Sperre übernehmen**: Der Verlauf wird auf sein Budget gekürzt. Steht eine Antwort aus fremdem Text unter den letzten drei Nachrichten, beginnt dieser Zug gesperrt; ältere werden gar nicht mehr mitgeschickt. Wünscht sich die Person in eigenen Worten ein Lied, bleibt so eine Antwort bis 7 Nachrichten zurück als Daten dabei (Akkorde, Stil). Eine Bildschirm-Beschreibung kommt nur als fester Hinweis mit und sperrt nichts.
 3. <a id="kn-vorbereiten-s3"></a>**Gast oder fremde Stimme?**: Ohne Profil, oder am eigenen Lautsprecher oder Telefon, wenn die Spracherkennung nicht klar die Stimme des Profils gehört hat (am Telefon: und keine Telefon-PIN getippt wurde), gibt es nur Frage und Antwort: kein Werkzeug, kein Gedächtnis, kein Verlauf. Wessen Stimme es war, setzt nur das Panel selbst, nie die Anfrage.
 4. <a id="kn-vorbereiten-s4"></a>**Weiche liest die Frage**: Feste Regeln ordnen die eigene letzte Nachricht einer Gruppe zu. Eine neue eigene Bitte, die nicht auf die Antwort aus fremdem Text zurückzeigt, lässt diese Antwort und ihre Sperre weg. Erkennt keine Regel die Frage, kann das Modell parallel einmal aus einer festen Liste wählen (wenn der Admin das anhat). Eine Folgefrage wie „Und morgen?“ übernimmt die Gruppe der eigenen Frage davor (intent.follow_up); Hinweiswörter geben ihre Gruppen dazu, auch neben der Wahl des Modells. Ein Foto mit Änderungswunsch (bilder.wants_change) ist die Gruppe Bilder, ohne Wahl des Modells.
-5. <a id="kn-vorbereiten-s5"></a>**Systemprompt bauen**: Der Systemprompt des Admins, dazu Länge und Stil des Profils und ein Hinweis je Kanal (Uhr, Siri, Lautsprecher, Telefon, Telegram, App, Browser). Mit „Schneller Antwortbeginn“ geht, was nur für diesen Zug gilt, mit der Frage statt in den Systemprompt, damit der Server ihn aus dem Cache liest. Mit „Großes Gedächtnis kürzen“ stehen bei einem langen Gedächtnis nur die neuesten Fakten fest darin (höchstens 6000 Zeichen), dazu bis zu 5 ältere, die Wörter mit der Frage teilen, nur für diesen Zug (chat.memory_split). Ist das Wissensbuch an und hat Seiten, kommen bis zu 40 Seitentitel dazu, die am besten zur Frage passen, als fremder Text (wissensbuch.hint).
+5. <a id="kn-vorbereiten-s5"></a>**Systemprompt bauen**: Der Systemprompt des Admins, dazu Länge und Stil des Profils und ein Hinweis je Kanal (Uhr, Siri, Lautsprecher, Telefon, Telegram, App, Browser). Mit „Schneller Antwortbeginn“ geht, was nur für diesen Zug gilt, mit der Frage statt in den Systemprompt, damit der Server ihn aus dem Cache liest. Mit „Großes Gedächtnis kürzen“ stehen bei einem langen Gedächtnis nur die neuesten Fakten fest darin (höchstens 6000 Zeichen), dazu bis zu 5 ältere, die Wörter mit der Frage teilen, nur für diesen Zug (chat.memory_split). Ist das Wissensbuch an und hat Seiten, kommen bis zu 40 Seitentitel dazu, die am besten zur Frage passen, als fremder Text (wissensbuch.hint). Hat die Person das Gespräch auf eine ihrer Mappen beschränkt (Feld mappe, eine eigene ID, vom Panel geprüft), kommen deren Einträge nach den festen Stufen aus, kurz und ganz als fremder Text dazu (mappen.for_turn); der Zug ist dann gesperrt wie nach fremdem Text.
 6. <a id="kn-vorbereiten-s6"></a>**Fester Satz?**: Sätze wie „Spark Notaus“, „Problem melden: …“ oder „Das war falsch“ führt das Panel selbst aus, nur aus den eigenen Worten des Profils und nie über MCP. Das Modell sagt nur das Ergebnis und bekommt in diesem Zug kein Werkzeug.
 7. <a id="kn-vorbereiten-s7"></a>**Antwort auf eine Rückfrage?**: Hat das Panel gefragt, welches Gerät gemeint ist, gilt als Antwort ein Knopf, eine Zahl oder der Name, nur im selben Gespräch, vom eigenen Profil und innerhalb von 2 Minuten. „Keins davon“ bringt die ganze Liste, „Nein, den anderen“ korrigiert die letzte Wahl. Das Panel führt die Wahl aus und bietet an, sie sich zu merken; ein „Ja“ dazu zählt 15 Minuten.
 8. <a id="kn-vorbereiten-s8"></a>**Notaus oder Mein Notaus?**: Ab Notaus-Stufe 2 oder mit dem eigenen Notaus des Profils werden alle wartenden Vorschläge verworfen; kein „Ja“ führt etwas aus. Lesen und Antworten gehen weiter.
@@ -1968,7 +1988,7 @@ Selbsttests: `test_klaeren`, `test_features`, `test_notaus`, `test_hardening`, `
 
 ### Weiche
 
-Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und so weiter, heute 24 Gruppen) und grenzt damit die Werkzeuge ein, die das Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen.
+Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und so weiter, heute 25 Gruppen) und grenzt damit die Werkzeuge ein, die das Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen.
 
 **Warum:** Wenige passende Werkzeuge machen das Modell schneller und treffsicherer: es liest weniger und greift seltener daneben. Weil die Weiche nur wegnimmt, was die Rechte und Sperren übrig gelassen haben, kann ein falsch zugeordneter Satz nie mehr erlauben, höchstens ein Werkzeug fehlen lassen.
 
@@ -2045,21 +2065,21 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 
 #### Alltagsquote
 
-- Die Testsätze (189) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
+- Die Testsätze (195) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
 
 #### Werkzeugnamen
 
-- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (93 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.
+- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (96 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.
 
 #### Zahlen (aus dem Code)
 
-- **24** Gruppen der Weiche ([Schritt 4](#kn-weiche-s4), [Schritt 6](#kn-weiche-s6))
+- **25** Gruppen der Weiche ([Schritt 4](#kn-weiche-s4), [Schritt 6](#kn-weiche-s6))
 - **2** Gruppen höchstens, die noch eingrenzen ([Schritt 6](#kn-weiche-s6))
 - **80** Zeichen höchstens für eine Folgefrage ([Schritt 8](#kn-weiche-s8))
 - **4** Sekunden höchstens für die Wahl des Modells ([Schritt 10](#kn-weiche-s10))
 - **300 ms** Wartezeit mit „Schneller Antwortbeginn“ ([Schritt 10](#kn-weiche-s10))
 - **80 %** Standard-Schwelle der Einordnung ([Schritt 10](#kn-weiche-s10))
-- **189** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
+- **195** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
 - **216** Alltagssätze zum Messen ([Schritt 14](#kn-weiche-s14))
 - **20** Versionen für Rückgängig ([Schritt 4](#kn-weiche-s4))
 
@@ -2280,7 +2300,7 @@ Gilt bei: [Schritt 4](#kn-werkzeuge-s4)
 - **3** Gedächtnis-Notizen pro Antwort ([Schritt 1](#kn-werkzeuge-s1))
 - **13** Werkzeuge gesperrt nach fremdem Text ([Schritt 4](#kn-werkzeuge-s4))
 - **7** Werkzeuge ohne Internet bei Notaus ([Schritt 3](#kn-werkzeuge-s3))
-- **93** Werkzeuge mit verständlichem Namen ([Schritt 11](#kn-werkzeuge-s11))
+- **96** Werkzeuge mit verständlichem Namen ([Schritt 11](#kn-werkzeuge-s11))
 
 #### Einstellen
 
@@ -2310,7 +2330,7 @@ Selbsttests: `test_fast_start`, `test_dienstwacht`, `test_taten`, `test_notaus`,
 
 ### Wissen
 
-Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene Kiwix-Archiv und erstellte Dokumente. Die Seite zeigt den Weg, auf dem eine Frage passende Stellen in den Dokumenten findet. Finden (fund.py, eigene Datei fund.db pro Profil) legt darüber einen Index aus Titeln, Feldern und Schlagworten nach festen Regeln und nutzt für den Text dieselbe Suche; Mails und Anhänge (fundmail.py) liest es in ruhigen Minuten in Scheiben ein und hält sie nur versiegelt (AES-GCM) mit ihren Wörtern als HMAC-Marken; Termine und Kontakte (fundquellen.py) ebenso, Gespräche nur mit Datum und Kanal (ihre Wörter sucht recall.liste), Listen, Erinnerungen, Bilder und Lieder wie ihre Quelle. Zeiträume („letzte Woche“, „2023“) rechnet frisch.spanne nach festen Regeln, „vom OP“ sucht den letzten vergangenen Termin im eigenen Kalender (fund.bezug_aus): 14 Tage davor bis 60 danach steht weiter oben, nie eine harte Grenze. Mit „Schlagworte vom Modell“ schlägt das Sprachmodell in ruhigen Minuten Schlagworte vor; fund.pruefe behält nur Kategorien der festen Liste und Namen, die wörtlich im Eintrag stehen, verknüpft Personen, Firmen und Orte mit den Punkten der Wissenskarte (nur lesend) und lässt weg, was die Person entfernt hat. Ein klarer Treffer kommt als fester Satz des Panels (fund.sofort_satz), nie mit Worten des Modells.
+Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene Kiwix-Archiv und erstellte Dokumente. Die Seite zeigt den Weg, auf dem eine Frage passende Stellen in den Dokumenten findet. Finden (fund.py, eigene Datei fund.db pro Profil) legt darüber einen Index aus Titeln, Feldern und Schlagworten nach festen Regeln und nutzt für den Text dieselbe Suche; Mails und Anhänge (fundmail.py) liest es in ruhigen Minuten in Scheiben ein und hält sie nur versiegelt (AES-GCM) mit ihren Wörtern als HMAC-Marken; Termine und Kontakte (fundquellen.py) ebenso, Gespräche nur mit Datum und Kanal (ihre Wörter sucht recall.liste), Listen, Erinnerungen, Bilder und Lieder wie ihre Quelle. Zeiträume („letzte Woche“, „2023“) rechnet frisch.spanne nach festen Regeln, „vom OP“ sucht den letzten vergangenen Termin im eigenen Kalender (fund.bezug_aus): 14 Tage davor bis 60 danach steht weiter oben, nie eine harte Grenze. Mit „Schlagworte vom Modell“ schlägt das Sprachmodell in ruhigen Minuten Schlagworte vor; fund.pruefe behält nur Kategorien der festen Liste und Namen, die wörtlich im Eintrag stehen, verknüpft Personen, Firmen und Orte mit den Punkten der Wissenskarte (nur lesend) und lässt weg, was die Person entfernt hat. Ein klarer Treffer kommt als fester Satz des Panels (fund.sofort_satz), nie mit Worten des Modells. Mappen (mappen.py, Tabellen in wissen.db) bündeln eigene Dokumente, Wissensbuch-Seiten und Notizen; ein Gespräch, das die Person auf eine Mappe beschränkt, bekommt deren Einträge nach festen Stufen (mappen.plan: aus nie, kurz nur der Steckbrief, ganz der Text bis zum Budget, der Rest nur über die Suche) als Daten, und die Antwort ist danach gesperrt wie nach jedem Text von außen.
 
 **Warum:** Das Sprachmodell kennt die eigenen Unterlagen nicht. Es bekommt nur die wenigen Stellen, die das Panel mit festen Regeln und zwei kleinen Modellen auf dem Prozessor heraussucht, jeweils mit Herkunft. Was in einem Dokument steht, ist Text von außen: Daten, nie ein Befehl.
 
@@ -2365,7 +2385,7 @@ flowchart TD
 3. <a id="kn-wissen-s3"></a>**Bedeutungsvektor der Frage**: Mit Bedeutungssuche rechnet ein kleines Vektormodell (eigener Prozess, nur Prozessor) den Vektor der Frage. Es startet nur bei mindestens 8.5 GiB freiem Speicher (auf einem Panel-Rechner 1.5 GiB) und endet nach 10 Minuten ohne Arbeit. Kommt kein Vektor, sucht der Spark nur im Volltext, ohne Fehler.
 4. <a id="kn-wissen-s4"></a>**Eingegrenzt?**: Mit Tags oder Art sucht match_docs zuerst die Dokumente, die alle Tags und die Art tragen. Nur deren Stellen kommen weiter in Frage; passt keines, gibt es keine Treffer.
 5. <a id="kn-wissen-s5"></a>**Volltext: Wörter und Kontextzeile**: Die Frage wird in Suchwörter zerlegt (Füllwörter weg, Endungen grob gekürzt). Gesucht wird in den Wörtern jeder Stelle und in ihrer Kontextzeile (Titel, Art, Überschriften), die nur mit 0.4 zählt. Die besten 30 bekommen einen Rang.
-6. <a id="kn-wissen-s6"></a>**Bedeutung dazumischen**: Hat die Frage einen Vektor, werden die Vektoren aller Stellen verglichen. Unter 0,75 Ähnlichkeit gilt nichts als verwandt; die besten 30 darüber bekommen ebenfalls einen Rang. Beide Ränge werden addiert, so steigt eine Stelle, die in beiden Listen weit oben steht. Die Vektoren liegen als float16 im Speicher (halb so viel wie float32); gerechnet wird blockweise je 4096 Stellen in float32, die Rangfolge bleibt gleich. Neu gelesen werden sie nur, wenn sich Stellen oder genutzte Dokumente ändern; solange noch Vektoren fehlen, höchstens alle 30 Sekunden.
+6. <a id="kn-wissen-s6"></a>**Bedeutung dazumischen**: Hat die Frage einen Vektor, werden die Vektoren aller Stellen verglichen. Unter 0,75 Ähnlichkeit gilt nichts als verwandt; die besten 30 darüber bekommen ebenfalls einen Rang. Beide Ränge werden addiert, so steigt eine Stelle, die in beiden Listen weit oben steht. Die Vektoren liegen als float16 im Speicher (halb so viel wie float32); gerechnet wird blockweise je 4096 Stellen in float32, die Rangfolge bleibt gleich. Neu gelesen werden sie nur, wenn sich Stellen oder genutzte Dokumente ändern; solange noch Vektoren fehlen, höchstens alle 30 Sekunden. Mit „Karte hilft der Suche“ kommt eine dritte Liste aus der Wissenskarte dazu (wissenskarte.liste): nennen die Suchwörter einen Punkt (Person, Firma, Ort …), zählen seine Stellen und die seiner Nachbarn, höchstens 50, mit dem Gewicht 0.5; eine Stelle nur aus der Karte steht so hinter jeder, die Wörter oder Bedeutung fanden. Nur für die eigenen Dokumente.
 7. <a id="kn-wissen-s7"></a>**Neueste zuerst?**: Mit „Neueste zuerst“ bekommt eine kürzlich geänderte Stelle einen kleinen Vorsprung, etwa zwei Plätze, der mit dem Alter kleiner wird. Die Passung bleibt wichtiger; jeder Treffer trägt dann sein Datum.
 8. <a id="kn-wissen-s8"></a>**Geteilte Dokumente der anderen**: Mit „Gemeinsame Dokumente“ läuft dieselbe Suche in den Dateien der anderen Profile, aber nur über Dokumente, die dort „Für alle“ sind oder mit „Teilen mit Profilen“ einzeln mit diesem Profil geteilt (documents.Offer). Ist der Haushaltsordner für das Profil frei, läuft sie auch im Bestand des Haushalts (users/haushalt/). Die Treffer tragen den Namen des Besitzers oder „Haushalt“; alles wird nach Rang sortiert.
 9. <a id="kn-wissen-s9"></a>**Treffer nachsortieren an?**: Ohne Nachsortieren gehen die ersten fünf der Mischung weiter. Mit Nachsortieren reicht die Mischung ihre besten 30 weiter.
@@ -2389,6 +2409,8 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 | Kiwix | archive_search und wikipedia über das eigene Kiwix im Heimnetz | alle Profile, nie Gäste |
 | Erst lokal suchen | Volltext ohne Warten auf Modelle, vor der ersten Runde | wie die Werkzeuge der Anfrage |
 | Wissensbuch | document_search: passende Seiten vor den Stellen | eigenes Profil, nur eigene Dokumente |
+| Wissenskarte | dritte Trefferliste: Punkte, die die Frage nennt, und ihre Nachbarn | eigenes Profil, nur eigene Dokumente in der Suche |
+| Mappen | vom Panel vor der ersten Runde nach Stufen: kurz, ganz bis zum Budget, sonst Suche | eigenes Profil, nur eigene Einträge |
 
 #### Wissensbuch
 
@@ -2404,12 +2426,19 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - Ist die Wissenskarte an, bekommt das Sprachmodell nach dem Wissensbuch dasselbe Dokument noch einmal mit höchstens 12 Seiten, die das Panel auswählt (die Seiten des Dokuments und Seiten, deren Titel es nennt). Das Modell schlägt Verbindungen als JSON vor, jede mit einer Art aus einer festen Liste und der Nummer ihrer Stelle.
 - Das Panel behält eine Verbindung nur, wenn beide Seiten angeboten waren, beide in der Stelle genannt sind, jede Zahl des Zusatzes in der Stelle steht und eine Ursache (führte zu, verursacht, erhöht, senkt) ein Wort des Grundes in der Stelle hat. Höchstens 30 je Dokument; „Stimmt nicht“ bringt dieselbe Verbindung aus demselben Dokument nie wieder.
 - Die Karte zeichnen Browser und App mit eigenem Code aus Namen und Arten, nie aus SVG, Mermaid oder DOT des Modells. Das Panel liefert nur den sichtbaren Teil mit höchstens 150 Punkten; der Export als Mermaid- oder Graphviz-Text entsteht aus festem Code mit gereinigten Namen.
-- Den sichtbaren Teil wählt SQLite: Verbindungen je Seite und Dokument zählt eine feste Abfrage, und rund um eine Seite läuft WITH RECURSIVE höchstens zwei Schritte über die Verbindungen; UNION nimmt jede Seite je Schritt nur einmal, ein Ring läuft also nie weiter. Nur die gewählten Punkte und höchstens 400 Verbindungen kommen ins Panel. Zwei feste Abfragen mit Werten nur als Parameter, nie aus Text des Modells: wissenskarte.rund_um (Seiten um eine Seite) und wissenskarte.weg (kürzester Weg zwischen zwei Seiten, höchstens 4 Schritte).
+- Den Aufbau der Karte (Namen, Verbindungen je Punkt und Dokument, wer neben wem steht) holt eine feste Abfrage aus SQLite und das Panel behält ihn im Speicher, solange sich nichts ändert: Trigger zählen jede Änderung der Tabellen in wissenskarte.STAND_TABELLEN in wk_stand, höchstens 4 Aufbauten und 600 s lang. Jede Antwort wählt daraus nur ihren Teil, höchstens 400 Verbindungen. Zwei feste Abfragen mit Werten nur als Parameter, nie aus Text des Modells: wissenskarte.rund_um (Punkte um einen Punkt, je Schritt eine Abfrage über die Indizes für den ganzen Ring, jeder Punkt nur einmal, ein Ring läuft also nie weiter) und wissenskarte.weg (kürzester Weg, höchstens 4 Schritte, von beiden Enden zugleich, endet, sobald sie sich treffen). Die Liste für die Suche findet ihre Punkte über den Wortindex wk_entwort (Trigger merken neue und geänderte Punkte, wissenskarte._worte_sync schreibt sie mit jedem Speichern), nie über alle Punkte. Die Nachtprüfung läuft in Scheiben von 4000 Verbindungen und 200 Fristen.
 
 #### Personen, Firmen und Fristen
 
-- Ist der Schalter unter der Wissenskarte an, schlägt das Sprachmodell nach den Verbindungen je Stelle eines Dokuments nur JSON vor: Personen, Firmen, Orte, Verträge, Konten und Fristen mit Art und Nummer der Stelle. Das Panel behält einen Namen nur nach festen Regeln (wissenskarte.check_ent): die Art aus der festen Liste, der Name steht in der Stelle (klein, ohne Akzente, Leerzeichen zusammengezogen), 2 bis 80 Zeichen ohne Link, Auszeichnung oder Befehl, eine Frist nur mit Datum in der Stelle, ein Konto nur als IBAN oder Nummer; höchstens 40 je Dokument und 5000 je Profil. Verbindungen dieser Punkte prüft dieselbe Regel wie die der Seiten.
-- Jeder Punkt hat eine feste Nummer (wk_ent) und seine Stellen (wk_ment: Dokument und Stück). Andere Teile lesen nur: wissenskarte.finde_knoten (genau über Name und andere Namen) und wissenskarte.knoten_liste (nach Namen sortiert). Zusammenführen (wissenskarte.zusammen), Umbenennen und Löschen geschehen nur per Klick der Besitzerin oder des Besitzers mit dem Code von „Bestätigen“, nie durch das Modell; jede Änderung meldet wissenskarte.GEAENDERT. Geht ein Dokument, gehen seine Stellen sofort mit, ein Punkt ohne Stelle verschwindet.
+- Ist der Schalter unter der Wissenskarte an, schlägt das Sprachmodell nach den Verbindungen je Stelle eines Dokuments nur JSON vor: Personen, Firmen, Orte, Verträge, Konten und Fristen mit Art und Nummer der Stelle. Das Panel behält einen Namen nur nach festen Regeln (wissenskarte.check_ent): die Art aus der festen Liste, der Name steht in der Stelle (klein, ohne Akzente, Leerzeichen zusammengezogen), 2 bis 80 Zeichen ohne Link, Auszeichnung oder Befehl, eine Frist nur mit Datum oder Zahl mit Zeiteinheit im Namen, ein Konto nur als IBAN oder Nummer; höchstens 40 je Dokument und 15000 je Profil. Verbindungen dieser Punkte prüft dieselbe Regel wie die der Seiten.
+- Jeder Punkt hat eine feste Nummer (wk_ent) und seine Stellen (wk_ment: Dokument und Stück). Andere Teile lesen nur: wissenskarte.finde_knoten (genau über Name und andere Namen) und wissenskarte.knoten_liste (nach Namen sortiert) und wissenskarte.knoten_von_dok (die Punkte eines Dokuments nach Art und Name, höchstens 200). Zusammenführen (wissenskarte.zusammen), Umbenennen und Löschen geschehen nur per Klick der Besitzerin oder des Besitzers mit dem Code von „Bestätigen“, nie durch das Modell; jede Änderung meldet wissenskarte.GEAENDERT. Geht ein Dokument, gehen seine Stellen sofort mit, ein Punkt ohne Stelle verschwindet.
+- Seite und Punkt, Typregeln, Fristen: Heißt eine Seite des Wissensbuchs wie ein Punkt der Art person, firma oder ort, sind beide ein Punkt (wk_entpage); die feste Regel wissenskarte._verbinde verbindet sie beim Einlesen der Punkte, nachts und einmal beim Anlegen, nie das Modell. Ihre Verbindungen zählen in view, rund_um, weg und liste als die des Punktes; umbenannt werden beide zusammen (wissensbuch.retitle, der alte Titel bleibt in wb_alttitel, so entsteht beim Einarbeiten keine Doppelseite). Jede Verbindung folgt der Tabelle wissenskarte.TYPEN (erlaubte Arten am Anfang und am Ende, eine Seite zählt als „seite“), eine Frist braucht im Namen ein Datum oder eine Zahl mit Zeiteinheit (wissenskarte.frist_name, Zahlwörter über eine feste Liste). Die Nachtprüfung (wissenskarte.nachtpruefung) entfernt, was vorher gespeichert wurde und dagegen verstößt.
+- Doppelte (wissensdoppelt.py) erkennt nur eine feste Regel, wissensdoppelt.aehnlich, nie das Modell: jeder Name in seiner Normalform je Art (wissensdoppelt.normalform: ß/ss und Umlaute, Satzzeichen, bei Personen ohne Anrede und Titel und „Nachname, Vorname“ umgestellt, bei Firmen ohne Rechtsform und „Firma“, bei Orten „Str.“ als „Straße“). „Gleich“ sind nur Personen mit Vor- und Nachnamen und Orte, die sich allein darin unterscheiden, sowie Konten, Verträge und Fristen mit derselben Normalform; beim Einlesen wird so ein Name ein anderer Name des Punktes (wissensdoppelt.gleich_id), vorhandene führt der ruhige Lauf über wissenskarte.zusammen zusammen (wissensdoppelt.lauf). Ein Vorschlag sind kleine Schreibfehler (Damerau-Levenshtein höchstens 2 ab 6 Buchstaben, 1 bei 4 bis 5), eine Initiale, wenn genau eine Person passt, und eine Firma mit gleichem Kern; verglichen wird nur in Blöcken, höchstens 200000 Paare je Lauf, höchstens 300 offene Vorschläge. Der Lauf geht in Scheiben von höchstens 0.2 s, die nächste macht weiter, wo die letzte stand (im Speicher; geänderte Punkte beginnen ihn neu). „Verschieden“ (wissensdoppelt.verschieden) merkt sich die Namen, das Paar kommt nie wieder; ein gelöschter Punkt kommt auch in keiner „gleichen“ Schreibweise zurück (wissensdoppelt.gesperrt). Zusammenführen bleibt der Klick mit Code. „Zusammenführen mit …“ zeigt oben die 8 ähnlichsten Punkte derselben Art (wissensdoppelt.auswahl), den Rest über die Suche.
+
+#### Karte hilft der Suche
+
+- wissenskarte.liste(uid, worte, k) gibt Stück-Ids mit Rang ab 1 zurück, nur lesend (SQLite mit mode=ro) und nur für das eigene Profil. Feste Regeln, nie das Modell: Die Suchwörter treffen einen Punkt, wenn sein Name oder ein anderer Name ganz in der Frage steht (verglichen wie wissenskarte.ent_norm) oder ein Wort des Namens ab 4 Buchstaben, das keine Zahl und keine Rechtsform ist (wissenskarte.trifft); höchstens 20 Punkte. Dazu kommen ihre Nachbarn einen Schritt weit (dieselbe Abfrage wie wissenskarte.rund_um) und von allen die Stellen in genutzten, gelesenen Dokumenten. Eine Stelle mit einem genannten Punkt steht vor einer mit nur Nachbarn, mehr Punkte vor weniger, höchstens 50.
+- documents.search mischt die Liste wie die anderen mit 60 plus Platz, gewichtet mit 0.5, und nur Stellen, die dieselbe Bedingung der Suche durchlässt (documents._karte). Ein so gefundener Treffer trägt „karte“, unter der Antwort steht „über die Wissenskarte“. Die Suchprüfung misst die Mischung mit der Karte als eigenen Balken. Fällt die Karte aus, sucht die Suche ohne sie weiter und schreibt eine Zeile „wissen: kartensuche fehler“.
 
 #### Erst lokal suchen
 
@@ -2430,6 +2459,12 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - Feste Themen (gedaechtnis.SLOTS: Wohnort, Arbeitgeber, Beruf, Partner, Kinder, Geburtstag, Ernährung, Haustier, Auto, Namen, Lieblings-…, je mit „wer“) erkennt nur das Panel an festen Mustern (gedaechtnis.slot_of). Je Platz hält ein Fakt den Wert: Gesagtes oder Korrigiertes gibt ihm den neuen Wortlaut, der alte bleibt als frühere Fassung (höchstens 5, Grund „platz“). Ein von selbst gelernter Wert ersetzt nie einen bestätigten: er wartet als Angebot am Fakt mit der Karte „Übernehmen / Verwerfen“. Das Modell bekommt je Platz nur den Wert, der ihn hält, nie frühere Fassungen oder ein Angebot.
 - Gemerkt-Hinweis (gemerkt.py): memory_save schickt Nummer und Stand des Fakts (gemerkt.rev_of) mit, unter der Antwort steht „Gemerkt: …“ mit „Rückgängig“; das Gespräch behält nur die Nummern. Rückgängig (gemerkt.take_back) geht nur, solange der Fakt seitdem unverändert ist: ein neuer Fakt geht, ein fester Platz bekommt seine frühere Fassung zurück. Von selbst Gelerntes wird eine Karte „Gemerkt von selbst“ (bis zu 3 Fakten, 7 Tage) mit „Stimmt“ und „Rückgängig“; ihr Titel nennt nur eine Zahl, nie den Fakt.
 
+#### Wissen messen
+
+- Zustand → Prüfen → Wissen messen misst Zeiten und Speicher dieser Wege, für den Test mit 5000 Dokumenten: die Vektor-Matrix (float16, MB und Speicher des Prozesses vorher und nachher), die Dokumentsuche mit und ohne Karte, wissensbuch.liste, view, rund_um, weg und wissenskarte.liste, je Median und p95 über 20 feste Beispiele aus den eigenen Titeln und Namen, dazu Seiten, Punkte, Verbindungen und Verbindungen je Dokument. Nur Zahlen, nie ein Titel oder Name.
+- Gemessen wird in einem eigenen Prozess mit niedriger Priorität (nice und SCHED_IDLE, ein Thread), erst in einer ruhigen Minute, höchstens 1800 s, einer zur Zeit (wissensmessung.lauf). Spricht jemand, hört er auf. Erfundene Dokumente entstehen aus festem Zufall in einem Wegwerf-Profil unter state/wissensmessung-tmp und sind danach weg; die Grenzen des echten Codes gelten dabei, und der Lauf sagt, wie viel die Dokumente ohne sie gebracht hätten. Ein echtes Profil wird nur gelesen (PRAGMA query_only).
+- Andere Teile hängen sich als Messteil an (wissensmessung.MESSTEILE: Name und fn(ordner, anzahl), nur Zahlen, nur im Wegwerf-Ordner des Laufs), so Finden mit „fund“ (wissensmessung.teil_fund, fundmessung.teil): versiegelte erfundene Mails und Dokumente, Suchzeiten, Größe von fund.db, RAM.
+
 #### Zahlen (aus dem Code)
 
 - **30** Kandidaten für das Nachsortieren ([Schritt 9](#kn-wissen-s9))
@@ -2443,19 +2478,33 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - **2400** Zeichen, bis zu denen eine Tabelle eine Stelle bleibt ([Schritt 5](#kn-wissen-s5))
 - **20 s** längste Zeit je PDF für das Lesen der Tabellen ([Schritt 5](#kn-wissen-s5))
 - **5** Seiten, die ein Dokument im Wissensbuch ändern darf ([Schritt 13](#kn-wissen-s13))
-- **300** Seiten im Wissensbuch pro Profil ([Schritt 13](#kn-wissen-s13))
+- **3000** Seiten im Wissensbuch pro Profil ([Schritt 13](#kn-wissen-s13))
 - **50** Sätze, die das Modell nachts gegen ihre Quelle prüft (Standard) ([Schritt 13](#kn-wissen-s13))
 - **30** Verbindungen, die ein Dokument in die Wissenskarte bringen darf ([Schritt 13](#kn-wissen-s13))
-- **3000** Verbindungen in der Wissenskarte pro Profil ([Schritt 13](#kn-wissen-s13))
+- **25000** Verbindungen in der Wissenskarte pro Profil ([Schritt 13](#kn-wissen-s13))
 - **150** Punkte, die die Karte auf einmal zeigt ([Schritt 13](#kn-wissen-s13))
 - **400** Verbindungen, die die Karte auf einmal zeigt ([Schritt 13](#kn-wissen-s13))
 - **4** Schritte, die wissenskarte.weg höchstens sucht ([Schritt 13](#kn-wissen-s13))
+- **4** Aufbauten der Karte, die das Panel im Speicher behält ([Schritt 13](#kn-wissen-s13))
+- **600 s** so lange bleibt ein Aufbau höchstens ([Schritt 13](#kn-wissen-s13))
+- **4000** Verbindungen je Scheibe der Nachtprüfung ([Schritt 13](#kn-wissen-s13))
+- **200** Fristen ohne Zahl, die eine Scheibe höchstens entfernt ([Schritt 13](#kn-wissen-s13))
 - **4096** Stellen je Block beim Vergleich der Vektoren ([Schritt 6](#kn-wissen-s6))
 - **200** Dokumente am Tag für die Wissenskarte (Standard) ([Schritt 13](#kn-wissen-s13))
 - **40** Personen, Firmen, Orte, Verträge, Konten und Fristen, die ein Dokument bringen darf ([Schritt 13](#kn-wissen-s13))
-- **5000** solche Punkte pro Profil ([Schritt 13](#kn-wissen-s13))
+- **15000** solche Punkte pro Profil ([Schritt 13](#kn-wissen-s13))
 - **80** Zeichen, die der Name eines solchen Punktes höchstens hat ([Schritt 13](#kn-wissen-s13))
 - **200** Dokumente am Tag für diese Punkte (Standard) ([Schritt 13](#kn-wissen-s13))
+- **200000** Paare, die ein Lauf der Doppelten je Profil höchstens vergleicht ([Schritt 13](#kn-wissen-s13))
+- **300** offene Vorschläge „Vielleicht doppelt“ je Profil ([Schritt 13](#kn-wissen-s13))
+- **8** ähnlichste Punkte oben in „Zusammenführen mit …“ ([Schritt 13](#kn-wissen-s13))
+- **0.2 s** höchstens je Scheibe des ruhigen Laufs der Doppelten ([Schritt 13](#kn-wissen-s13))
+- **50** Stellen, die die Karte der Suche höchstens nennt ([Schritt 6](#kn-wissen-s6))
+- **20** Punkte, die die Suchwörter höchstens treffen ([Schritt 6](#kn-wissen-s6))
+- **0.5** Gewicht der Liste aus der Karte ([Schritt 6](#kn-wissen-s6))
+- **50** Mappen pro Profil ([Schritt 13](#kn-wissen-s13))
+- **100** Einträge je Mappe ([Schritt 13](#kn-wissen-s13))
+- **24000** Token einer Mappe ans Modell (Standard) ([Schritt 13](#kn-wissen-s13))
 
 #### Einstellen
 
@@ -2466,6 +2515,8 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - Funktionen → Eigene Dokumente und darunter Wissensbuch an: Seiten aus den eigenen Dokumenten, dazu wie viele Dokumente am Tag.
 - Funktionen → Eigene Dokumente → Wissensbuch und darunter Wissenskarte an: Verbindungen zwischen den Seiten, zu sehen im Menü Wissensbuch auf der Seite Karte, dazu wie viele Dokumente am Tag (eigene Grenze).
 - Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte und darunter Personen, Firmen und Fristen an: eigene Punkte aus den Dokumenten auf der Karte, dazu wie viele Dokumente am Tag (eigene Grenze).
+- Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte → Personen, Firmen und Fristen und darunter Karte hilft der Suche an: die Karte als dritte Trefferliste der Dokumentsuche (Standard aus).
+- Funktionen → Eigene Dokumente und darunter Mappen an: die Seite Mappen im Menü, dazu wie viele Token eine Mappe dem Modell höchstens gibt.
 
 #### Was du siehst
 
@@ -2495,22 +2546,46 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - `app/panel/wissensbuch.py` `answer_block`: passende Seiten des Wissensbuchs mit Quellen ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `check_edge`: feste Regeln für jede vorgeschlagene Verbindung ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `view`: der sichtbare Teil der Karte ([Schritt 13](#kn-wissen-s13))
-- `app/panel/wissenskarte.py` `rund_um`: Seiten um eine Seite, WITH RECURSIVE ([Schritt 13](#kn-wissen-s13))
-- `app/panel/wissenskarte.py` `weg`: kürzester Weg zwischen zwei Seiten ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `rund_um`: Punkte um einen Punkt, eine Abfrage je Schritt ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `weg`: kürzester Weg, von beiden Enden zugleich ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `_bau`: Aufbau der Karte im Speicher, neu bei jeder Änderung (wk_stand) ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `_worte_sync`: Wortindex der Punkte für die Liste der Suche ([Schritt 6](#kn-wissen-s6))
 - `app/panel/wissenskarte.py` `check_ent`: feste Regeln für jede Person, Firma, Frist … ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `finde_knoten`: Punkte genau über Name und andere Namen, nur lesend ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `knoten_liste`: Punkte einer Art nach Namen, nur lesend ([Schritt 13](#kn-wissen-s13))
-- `app/panel/wissenskarte.py` `zusammen`: zwei Punkte zusammenführen, nur per Klick ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `knoten_von_dok`: Punkte eines Dokuments nach Art und Name, nur lesend ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `zusammen`: zwei Punkte zusammenführen: per Klick oder bei „gleich“ nach fester Regel ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `_verbinde`: Seite und Punkt gleichen Namens verbinden, feste Regel ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `erlaubt`: Typregeln je Art der Verbindung (TYPEN) ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `frist_name`: eine Frist nur mit Datum oder Zahl im Namen ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `nachtpruefung`: nachts: verbinden, Verstöße und Fristen ohne Zahl entfernen ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissensbuch.py` `retitle`: Seite umbenennen, der alte Titel bleibt ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `aehnlich`: gleich, Vorschlag oder nichts: die eine feste Regel für Doppelte ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `normalform`: ein Name in seiner Normalform je Art ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `gleich_id`: beim Einlesen: gleicher Name wird anderer Name ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `lauf`: ruhiger Lauf: zusammenführen und Vorschläge in Blöcken, in Scheiben ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `auswahl`: „Zusammenführen mit …“: die ähnlichsten zuerst ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `verschieden`: „Verschieden“ gilt für immer ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `gesperrt`: gelöscht bleibt gelöscht, in jeder „gleichen“ Schreibweise ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `search_pages`: passende Seiten über den Suchindex wb_fts ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `_fts_sync`: Suchindex der Seiten nachziehen ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `liste`: Seiten-Ids mit Rang für andere Teile, nur lesend ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `liste`: Stück-Ids aus der Karte für die Suche, nur lesend ([Schritt 6](#kn-wissen-s6))
+- `app/panel/wissenskarte.py` `trifft`: trifft ein Suchwort einen Punkt? feste Regel ([Schritt 6](#kn-wissen-s6))
+- `app/panel/documents.py` `_karte`: die Liste der Karte in die Mischung, mit den Filtern der Suche ([Schritt 6](#kn-wissen-s6))
+- `app/panel/mappen.py` `plan`: feste Regel der Stufen aus, kurz, ganz und des Budgets ([Schritt 13](#kn-wissen-s13))
+- `app/panel/mappen.py` `kontext`: die Einträge einer Mappe als Datenblock mit Marken [M…] ([Schritt 13](#kn-wissen-s13))
+- `app/panel/mappen.py` `for_turn`: nur die eigene, freigegebene Mappe; als Text von außen ([Schritt 13](#kn-wissen-s13))
 - `app/panel/documents.py` `_similar`: Ähnlichkeit blockweise in float32 ([Schritt 6](#kn-wissen-s6))
 - `app/panel/gedaechtnis.py` `hint_lines`: Fakten in drei Blöcken ([Schritt 13](#kn-wissen-s13))
 - `app/panel/profiles.py` `_cap`: Obergrenze: nur alte gelernte Fakten machen Platz ([Schritt 13](#kn-wissen-s13))
 - `app/panel/gedaechtnis.py` `slot_of`: fester Themen-Platz eines Fakts nach festen Mustern ([Schritt 13](#kn-wissen-s13))
 - `app/panel/gemerkt.py` `take_back`: Rückgängig nur bei unverändertem Fakt ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissensmessung.py` `lauf`: eine Messung im eigenen Prozess, bricht bei Sprache ab ([Schritt 6](#kn-wissen-s6))
+- `app/panel/wissensmessung.py` `_synth`: das Wegwerf-Profil aus festem Zufall, mit den Grenzen des Codes ([Schritt 6](#kn-wissen-s6))
+- `app/panel/wissensmessung.py` `MESSTEILE`: die Messteile, erweiterbar ([Schritt 6](#kn-wissen-s6))
 
-Selbsttests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`
+Selbsttests: `test_wissen`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`, `test_wissenstempo`
 
 ### Wächter
 
@@ -3118,7 +3193,7 @@ flowchart TD
 4. <a id="kn-bild-s4"></a>**Innerhalb der Grenzen?**: Pro Profil gelten Bilder pro Tag (gleitend 24 Stunden), Platz und höchstens 300 Bilder; Lieder: Lieder pro Tag, Platz und längstes Lied (musik.start), je Lied höchstens 10 Fassungen, 10 eigene Dateien am Tag; jede Zahl einer Änderung prüft musik.plan_edit. Admin-Profile haben keine Tageslimits (coadmin.unbegrenzt), Platz und Warteschlange gelten auch für sie. Auf dem ganzen Spark warten höchstens 10 schwere Aufträge, Bilder und Lieder zusammen.
 5. <a id="kn-bild-s5"></a>**Warten auf Pause und Platz**: Der Auftrag läuft im Hintergrund (bilder._work, musik._work): er wartet, bis niemand spricht (vorrang), und stellt sich in die eine Warteschlange für Bilder und Lieder (schwer.run). Die feste Regel schwer.pick nimmt den ältesten; solange die geladene Art noch wartet, kommt sie zuerst, aber höchstens 3-mal hintereinander, während die andere Art wartet. Ist eine andere Art dran, beendet das Panel zuerst das geladene Modell. Wer hinter anderen steht, bekommt einen festen Satz mit Platz und ungefährer Dauer (schwer.hint), die Karte zeigt „Wartet · Platz 2 von 3“. Ein Bild darf höchstens 720 Sekunden brauchen.
 6. <a id="kn-bild-s6"></a>**Modell geladen?**: bild_server.Engine.start nimmt zuerst den einen Platz (bedarf.OnDemand.claim, Sperre bedarf.lock: hält ihn der Musik-Dienst, antwortet er „belegt“) und startet sd-server als eigenen Prozess auf 127.0.0.1, aber nur, wenn genug gemeinsamer Speicher frei ist; sonst bleibt alles andere ungestört. Zu wenig Speicher beendet den Auftrag nicht: er behält seinen Platz und versucht es alle 30 Sekunden neu, höchstens 600 Sekunden lang.
-7. <a id="kn-bild-s7"></a>**Malen**: Die Engine malt das Bild in 4 Schritten in der gewählten Größe; ihre eigene Ausgabe kommt nie ins Journal, weil sie den Prompt nennen würde.
+7. <a id="kn-bild-s7"></a>**Malen**: Die Engine malt das Bild in 4 Schritten in der gewählten Größe; ihre eigene Ausgabe kommt nie ins Journal, weil sie den Prompt nennen würde. Für ein Lied setzt musik_server.request_body jedes Feld selbst; Tempo, Tonart, Takt und einen Negativ-Text nimmt es nur aus festen Werten an (musik_server.metadata). Die Dungeon-Musik gibt alle mit, so schreibt das Planer-Modell ihre Beschreibung nicht um. Eine Qualitätsstufe (Schnell, Gut, Beste) und die Lautheit nennt der Aufrufer nur beim Namen, die Werte stehen in musikmodell.QUALITAET (musik_server.quality); Beste nimmt das SFT-Modell mit 50 Schritten nur, wenn es installiert ist, sonst Gut. Die Zahl des Planers (lm_seed) darf der Aufrufer mitgeben, damit ein Stück sich wiederholen oder abwandeln lässt.
 8. <a id="kn-bild-s8"></a>**Bild unbedenklich?**: bild_server.nsfw_share lässt einen Klassifikator auf der CPU das Bild prüfen. Über 0.5 wird es verworfen; fehlt die Prüfung, zeigt das Panel nichts.
 9. <a id="kn-bild-s9"></a>**Als KI-Bild kennzeichnen**: bild_server.finish kodiert das Bild neu als PNG und schreibt hinein, dass es KI-erzeugt ist, ein geändertes Bild KI-bearbeitet (auch als IPTC-Angabe).
 10. <a id="kn-bild-s10"></a>**Bild abgelegt**: Das Bild kommt mit seinem Auftrag in den Ordner des Profils (bilder.keep), die Karte im Chat und in der iPhone-App zeigt es, auch in einem wieder geöffneten Gespräch; über App oder Telegram kommt ein Push. Nach einer Ruhezeit beendet der Bild-Dienst die Engine und gibt den Speicher frei. Ein Lied liegt als MP3 unter users/ID/musik/ (musik.keep), mit Abspieler im Chat und unter Ich → Musik.
@@ -3179,6 +3254,9 @@ flowchart TD
 - `app/panel/musik.py` `tone`: Schneiden, Tempo, Tonart ohne Modell ([Schritt 1](#kn-bild-s1))
 - `app/panel/musik.py` `upload`: Eigene Datei mit Rechte-Haken ([Schritt 1](#kn-bild-s1))
 - `app/musik_server.py` `edit_body`: Feste Felder für repaint und cover ([Schritt 7](#kn-bild-s7))
+- `app/musik_server.py` `request_body`: Feste Felder für ein neues Lied ([Schritt 7](#kn-bild-s7))
+- `app/musik_server.py` `metadata`: Tempo, Tonart, Takt und Negativ-Text nur aus festen Werten (Dungeon-Musik) ([Schritt 7](#kn-bild-s7))
+- `app/musik_server.py` `quality`: Qualitätsstufe und Lautheit aus festen Werten, Beste nur mit SFT-Modell ([Schritt 7](#kn-bild-s7))
 
 Selbsttests: `test_bilder`, `test_musik`, `test_musik_liedtext`, `test_schwer`
 
@@ -3514,7 +3592,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 100). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 108). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -3525,7 +3603,7 @@ flowchart TD
 #### Zahlen (aus dem Code)
 
 - **47** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
-- **100** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
+- **108** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
 - **8 MB** größte Datei beim Wiederherstellen ([Schritt 9](#kn-state-s9))
 - **12** Zeichen hat das Umzugs-Passwort mindestens ([Schritt 8](#kn-state-s8))
 
@@ -3775,7 +3853,7 @@ Selbsttests: `test_panel`, `test_hardening`, `test_offsite`
 
 ### Werkstatt
 
-Die Werkstatt lässt einen Admin auf dem Modell-Rechner den vollen Testlauf laufen und mit OpenCode den Code messen, ein Problem untersuchen oder eine Reparatur vorschlagen. Alles läuft in einer abgeschotteten Kopie des Codes; heraus kommen nur Zahlen, eine Antwort und ein Patch zum Ansehen. Eingespielt wird nie etwas.
+Die Werkstatt lässt einen Admin auf dem Modell-Rechner den vollen Testlauf laufen und mit OpenCode den Code messen, ein Problem untersuchen oder eine Reparatur vorschlagen. Alles läuft in einer abgeschotteten Kopie des Codes; heraus kommen nur Zahlen, eine Antwort und ein Patch zum Ansehen. Eingespielt wird nie etwas. Daneben Entwickeln auf dem Pi: OpenCode im Terminal des Panel-Rechners (Nutzer spark-dev, eigener Klon); seine lokalen Commits werden geprüft, im Sandkasten schnell getestet und wie ein Update eingespielt, nie als root ausgeführt.
 
 **Warum:** Code, den ein Modell schreibt oder startet, darf nie an die Daten, die Schlüssel oder ins Internet kommen und nie selbst etwas ändern. Deshalb entscheidet das Panel mit festen Regeln, und die Sandbox kann nichts außer ihrer eigenen Kopie.
 
@@ -3818,7 +3896,7 @@ flowchart TD
 7. <a id="kn-werkstatt-s7"></a>**OpenCode mit festen Rechten**: werkstatt.rechte: Diagnose liest nur, Reparatur darf Dateien der Kopie ändern und die Selbsttests starten; kein Web, kein git push, jeder andere Befehl abgelehnt. Das Sprachmodell fragt OpenCode über das LLM-Tor ganz hinten in der Reihe, damit Gespräche vorgehen.
 8. <a id="kn-werkstatt-s8"></a>**Selbsttests**: werkstatt.testlauf lässt die Selbsttests der Kopie laufen wie GitHub; wer beim zweiten Versuch grün wird, zählt als wackelig. Übersprungene Tests (kein Browser in der Kopie) zählen als nicht gelaufen, nie als grün. werkstatt.namen_testen lässt bei „Rote Tests noch mal“ jeden genannten Test einzeln in einem eigenen Prozess laufen: jetzt grün, weiter rot oder nicht gelaufen.
 9. <a id="kn-werkstatt-s9"></a>**Ergebnis als Daten**: werkstatt.pruefe_ergebnis nimmt nur bekannte Felder, Zahlen im Rahmen und Wörter aus festen Listen; ein Patch über 200000 Zeichen wird gekürzt. Die Seite zeigt alles nur als Text, dazu mit festen Sätzen, was das Ergebnis heißt und was als Nächstes geht.
-10. <a id="kn-werkstatt-s10"></a>**Der Admin entscheidet**: Den Patch gibt der Admin einem Claude-Thread oder einem Menschen; die Werkstatt spielt nie etwas ein und pusht nie.
+10. <a id="kn-werkstatt-s10"></a>**Der Admin entscheidet**: Den Patch gibt der Admin einem Claude-Thread oder einem Menschen; die Werkstatt spielt nie etwas ein und pusht nie. Anders bei Entwickeln auf dem Pi (OpenCode im Terminal des Panel-Rechners, Nutzer spark-dev): „sudo speech-spark lokal einspielen“ nimmt dessen Commits (entwickeln.vorbereiten), lässt nur Dateien zu, die der Dienstnutzer ausführt (entwickeln.pfade_pruefen), testet sie im Sandkasten ohne Netz (entwickeln.sandbox) und spielt sie wie ein Update ein, nie als root ausgeführt. Ein Update setzt sie mit entwickeln.aufsetzen auf die neue Version; passt das nicht, bleibt die laufende Version.
 
 **Beispiele:** Testlauf in der Nacht: Grün, rot und wackelig stehen unter Zustand → Werkstatt. · Rote Tests noch mal: Jeder rote Test einzeln: jetzt grün oder weiter rot. · Reparatur vorschlagen: Ein Patch mit Testergebnis zum Ansehen. · Kein eigenes Sprachmodell: Abgelehnt, bevor etwas startet.
 
@@ -3837,11 +3915,13 @@ flowchart TD
 - Auf dem Modell-Rechner einmal sudo ./install.sh --werkstatt (OpenCode mit fester Version und Prüfsumme).
 - Funktionen → Werkstatt: an und aus, „Jede Nacht testen“ mit der Startstunde.
 - Zustand → Werkstatt: die vier Aufträge starten, Ergebnisse ansehen, rote Tests noch mal, für Claude kopieren, löschen.
+- Entwickeln auf dem Pi: auf dem Panel-Rechner einmal sudo ./install.sh --entwickeln, dann Funktionen → Entwickeln auf dem Pi an; einspielen mit sudo speech-spark lokal einspielen (zurueck, verwerfen, status).
 
 #### Was du siehst
 
 - Zustand → Werkstatt: links der Verlauf, rechts ein Ergebnis mit großen Zahlen, was es heißt (etwa „Was heißt rot?“), den roten Tests nach Bereich, Antwort oder Patch und den nächsten Schritten.
 - Zustand → Live, Monitoring und die Steuerzentrale: Teil „Werkstatt“ mit Art und Status, nie Inhalte.
+- Zustand → Live: Teil „Entwickeln“ mit „lokale Änderungen: N“ und dem letzten festen Grund einer Ablehnung; sudo speech-spark lokal status zeigt dasselbe im Terminal.
 
 #### Im Code
 
@@ -3857,8 +3937,12 @@ flowchart TD
 - `app/werkstatt.py` `namen_testen`: rote Tests einzeln noch mal ([Schritt 8](#kn-werkstatt-s8))
 - `app/panel/werkstattseite.py` `nachtest_namen`: Namen nur aus dem Ergebnis ([Schritt 1](#kn-werkstatt-s1))
 - `app/werkstatt.py` `pruefe_ergebnis`: Ergebnis als Daten ([Schritt 9](#kn-werkstatt-s9))
+- `app/entwickeln.py` `vorbereiten`: lokale Änderungen holen, prüfen, testen ([Schritt 10](#kn-werkstatt-s10))
+- `app/entwickeln.py` `pfade_pruefen`: nur Dateien, die der Dienstnutzer ausführt ([Schritt 10](#kn-werkstatt-s10))
+- `app/entwickeln.py` `sandbox`: Grenzen des Schnelltests ([Schritt 10](#kn-werkstatt-s10))
+- `app/entwickeln.py` `aufsetzen`: lokale Commits auf die neue Version ([Schritt 10](#kn-werkstatt-s10))
 
-Selbsttests: `test_werkstatt`
+Selbsttests: `test_werkstatt`, `test_entwickeln`
 
 ### Post und Kontakte
 
@@ -3907,7 +3991,7 @@ flowchart TD
 6. <a id="kn-post-s6"></a>**Vorrat versiegelt**: mailvorrat.keep_heads behält die neuesten Kopfzeilen, dazu die zuletzt gelesenen Texte; vorrat.seal versiegelt sie mit dem Schlüssel des Spark im Ordner des Profils.
 7. <a id="kn-post-s7"></a>**Antwort mit Stand**: Kommt etwas nicht frisch vom Anbieter, sagt frisch.stand mit festem Satz, von wann es ist („Stand gestern 18:00“). Die Seiten zeigen sofort, was da ist, und laden im Hintergrund nach.
 8. <a id="kn-post-s8"></a>**Etwas ändern?**: Lesen ist alles, was ohne weitere Schalter geht. Ein Bestätigungscode aus einer neuen Mail wird mit eigenem Schalter nur eine Mitteilung aufs genutzte Gerät (mailcode.arrived), nie über Telegram, nie im Log.
-9. <a id="kn-post-s9"></a>**Ändern mit Prüfung**: Eine Mail geht erst nach dem Vorschau-Blatt und dem Tipp auf Senden raus (senden.preview, senden.send, höchstens 30 am Tag). „Später senden“ legt sie bis zur Zeit versiegelt ab (senden.later); brach ein Senden ab, geht sie nie ein zweites Mal. „Alle Mails hier einordnen“ (einordnen.start) schlägt erst vor und verschiebt nach festen Regeln erst nach dem Tipp, mit Rückgängig. contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich inzwischen geändert, wird nichts überschrieben.
+9. <a id="kn-post-s9"></a>**Ändern mit Prüfung**: Eine Mail geht erst nach dem Vorschau-Blatt und dem Tipp auf Senden raus (senden.preview, senden.send, höchstens 30 am Tag). „Später senden“ legt sie bis zur Zeit versiegelt ab (senden.later); brach ein Senden ab, geht sie nie ein zweites Mal. „Alle Mails hier einordnen“ (einordnen.start) schlägt erst vor und verschiebt nach festen Regeln erst nach dem Tipp, mit Rückgängig. Was Mail-Regeln und „Postfach aufräumen“ von selbst verschieben, steht 30 Tage mit seiner Message-ID in einer Merkliste (mailregeln.spark_moved); legt die Person so eine Mail woandershin, etwa zurück in den Posteingang, fasst kein Sortierer sie wieder an. Mit „Sortieren aus Korrekturen lernen“ zählt das als Korrektur (mailregeln.correct, auch der Ordner „Falsch sortiert“): der Absender wird Ausnahme der Regel, nach 3 Korrekturen in 30 Tagen pausiert sie, eine Karte fragt; nur Kopfzeilen, die Entscheidung trifft nie das Modell. Hatte das Modell die Mail einsortiert, fragt die Karte „Mails von … immer nach …?“ (eine Regel nur per Knopf), und für „Falsch sortiert“ darf das Modell nur aus Domain und Ordnernamen einen vorhandenen Ordner vorschlagen (mailregeln.model_hint, tidy.suggest_folder; jede andere Antwort wird verworfen). Nach „Regel anlegen“ entscheidet die neue Regel: „Postfach aufräumen“ fragt bei diesem Absender nicht mehr (mailregeln.settle). Unter E-Mail → Regeln stehen die Korrekturen (mailregeln.fix_list) mit „Rückgängig“ (mailregeln.undo_fix nimmt Ausnahme und Pause zurück, verschiebt nie eine Mail). contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich inzwischen geändert, wird nichts überschrieben.
 10. <a id="kn-post-s10"></a>**Tür für Apps**: kalenderserver.login weist fremde Webseiten ab, sperrt falsche Passwörter wie eine PIN, hält Mein Notaus und den Schalter ein und zählt die Lastgrenze. Danach sieht die App nur die Spark-Kalender und das Adressbuch „Auf dem Spark“ des Profils; kontaktserver._write nimmt je Karte eine vCard, höchstens 2000, und schreibt nur mit „Kontakte ändern“.
 11. <a id="kn-post-s11"></a>**Nur eigene Daten**: Kein Profil sieht die Post, Termine oder Kontakte eines anderen, außer einem Kalender, den der Besitzer teilt.
 
@@ -3920,6 +4004,8 @@ flowchart TD
 - **300** Kopfzeilen je Postfach im Vorrat ([Schritt 6](#kn-post-s6))
 - **40** Mailtexte je Profil im Vorrat ([Schritt 6](#kn-post-s6))
 - **30** Mails höchstens am Tag ([Schritt 9](#kn-post-s9))
+- **30 Tage** merkt sich der Spark, was er verschoben hat ([Schritt 9](#kn-post-s9))
+- **3** Korrekturen pausieren eine Regel ([Schritt 9](#kn-post-s9))
 - **2000** Karten im Adressbuch „Auf dem Spark“ ([Schritt 10](#kn-post-s10))
 
 #### Einstellen
@@ -3945,12 +4031,14 @@ flowchart TD
 - `app/panel/senden.py` `send`: senden nach dem Tipp ([Schritt 9](#kn-post-s9))
 - `app/panel/senden.py` `later`: später senden, versiegelt ([Schritt 9](#kn-post-s9))
 - `app/panel/einordnen.py` `start`: einen Ordner einordnen, erst Vorschlag ([Schritt 9](#kn-post-s9))
+- `app/panel/mailregeln.py` `spark_moved`: was der Spark verschoben hat, kein Ping-Pong ([Schritt 9](#kn-post-s9))
+- `app/panel/mailregeln.py` `model_hint`: das Modell schlägt nur einen vorhandenen Ordner vor ([Schritt 9](#kn-post-s9))
 - `app/panel/mailcode.py` `arrived`: Bestätigungscode als Mitteilung ([Schritt 8](#kn-post-s8))
 - `app/panel/contacts.py` `save`: Karte zurück mit If-Match ([Schritt 9](#kn-post-s9))
 - `app/panel/kalenderserver.py` `login`: Tür für Kalender- und Kontakte-Apps ([Schritt 2](#kn-post-s2), [Schritt 10](#kn-post-s10))
 - `app/panel/kontaktserver.py` `_write`: Karte einer Kontakte-App ([Schritt 10](#kn-post-s10))
 
-Selbsttests: `test_mailvorrat`, `test_vorrat`, `test_mails_senden`, `test_kalenderserver`, `test_kontaktserver`, `test_kontakte_seite`, `test_kalenderspiegel`, `test_mailcode`, `test_einordnen`
+Selbsttests: `test_mailvorrat`, `test_vorrat`, `test_mails_senden`, `test_kalenderserver`, `test_kontaktserver`, `test_kontakte_seite`, `test_kalenderspiegel`, `test_mailcode`, `test_einordnen`, `test_mailregeln`, `test_tidy`, `test_mail_lernen`
 
 ### Fernzugang
 
@@ -3986,10 +4074,10 @@ flowchart TD
 1. <a id="kn-fernzugang-s1"></a>**Admin öffnet den Fernzugang**: Funktionen → Fernzugang zu Servern ist standardmäßig aus (fernzugang.admin_on) und nur für Admins mit zweitem Schritt; Gäste und das Sprachmodell erreichen ihn nie.
 2. <a id="kn-fernzugang-s2"></a>**Seite entsperrt?**: Ein Code oder Passkey entsperrt die Seite für 5 bis 120 Minuten, nur für diese Anmeldung (in der eigenen iPhone-App für deren Schlüssel, fernzugang._tor) und vom selben Ort (fernzugang.entsperrt_bis); Sperren, Abmelden und Notaus sperren sofort, ein Neustart auch.
 3. <a id="kn-fernzugang-s3"></a>**Koppeln**: „Koppeln“ fragt den Code jedes Mal neu (fernzugang.admin_pair) und zeigt eine Zeile für den Server mit einem Einmal-Code, 10 Minuten gültig, dazu einen Einmal-Link mit QR-Code, der auf dem neuen System nur diese Zeile zeigt, nie den Code (fernzugang.link_check). Windows: der Link gibt einmal die Datei spark-anker-einrichten.cmd (fernzugang.link_file) mit Einmal-Schlüssel statt Code; das System wartet dann, bis der Admin es mit Code oder Passkey bestätigt (fernzugang.admin_confirm). Höchstens 10 Systeme; jedes bekommt einen eigenen SSH-Schlüssel des Panels, sein Host-Schlüssel wird angeheftet.
-4. <a id="kn-fernzugang-s4"></a>**Ticket für das Fenster**: „Shell“ gibt ein Einmal-Ticket (fernzugang.admin_session), das 30 Sekunden lang genau ein Web-Terminal öffnet (fernzugang.terminal_ws); höchstens 4 Sitzungen zugleich.
+4. <a id="kn-fernzugang-s4"></a>**Ticket für das Fenster**: „Shell“ gibt ein Einmal-Ticket (fernzugang.admin_session), das 30 Sekunden lang genau ein Web-Terminal öffnet (fernzugang.terminal_ws); höchstens 8 Sitzungen zugleich. Jede ist ein Reiter; nebeneinander, 2 × 2 oder als Übersicht zeigt nur die Seite mehrere zugleich, am Panel bleibt jede für sich. „An alle senden“ (fernzugang.admin_alle, eigener Schalter, aus) schreibt eine geprüfte Zeile in mehrere Shells der eigenen Anmeldung.
 5. <a id="kn-fernzugang-s5"></a>**Anderer Host-Schlüssel?**: Zeigt der Server einen anderen Host-Schlüssel als beim Koppeln, gibt es keine Verbindung (fernzugang.hostkey_wrong); nach einer Neuinstallation entfernen und neu koppeln.
-6. <a id="kn-fernzugang-s6"></a>**Shell, Dateien, Bildschirm**: SSH läuft durch den Kanal des Ankers; reißt das Fenster ab, wartet die Shell 120 Sekunden. Ein Lebenszeichen alle 5 Sekunden misst Laufzeit und Rate; die Ausgabe wartet in höchstens 32 Stücken auf das Fenster, dann bremst SSH den Server (Gegendruck). Dateien über SFTP in derselben Verbindung (ferndateien.listing), Laden mit Einmal-Link für 60 Sekunden; große Dateien in Teilen von 8 MB MB mit SHA-256 je Stück (ferngross.upload_piece). Der Bildschirm geht über guacd nur auf 127.0.0.1 (fernbild.GUACD), höchstens 15 Bilder je Sekunde. Der Assistent (fernzugang.admin_help) fragt nur das eigene Modell und schlägt vor, getippt wird nie von selbst. Notizen je System liegen versiegelt, 10 Fassungen bleiben; das Modell liest sie nur mit Haken (fernnotiz.fuer_modell). Ordner ordnen nur die Liste (fernordner.view), höchstens 30; Rechte bleiben je System.
-7. <a id="kn-fernzugang-s7"></a>**Spontanhilfe**: Eine Hilfe (spontanhilfe.admin_new) gibt eine Nummer für 10 Minuten, nach 5 falschen ist sie tot. Der Bildschirm geht per WebRTC direkt zwischen den zwei Browsern, von unterwegs über TURN auf tars; das Panel vermittelt nur.
+6. <a id="kn-fernzugang-s6"></a>**Shell, Dateien, Bildschirm**: SSH läuft durch den Kanal des Ankers; reißt das Fenster ab, wartet die Shell 120 Sekunden. Ein Lebenszeichen alle 5 Sekunden misst Laufzeit und Rate; die Ausgabe wartet in höchstens 32 Stücken auf das Fenster, dann bremst SSH den Server (Gegendruck). Dateien über SFTP in derselben Verbindung (ferndateien.listing), Laden mit Einmal-Link für 60 Sekunden; große Dateien in Teilen von 8 MB MB mit SHA-256 je Stück (ferngross.upload_piece). Als root oder ein anderer Benutzer nur, wenn der Server selbst es freigab (sudoers nur für seinen sftp-server mit -R) und der Admin es je System eingeschaltet hat (fernals.choose); Schreiben mit frischem Code. Der Bildschirm geht über guacd nur auf 127.0.0.1 (fernbild.GUACD), höchstens 15 Bilder je Sekunde; guacd 1.6.0 baut der Spark selbst aus Apaches Quelltext, fest mit SHA-256 (fernbild.dienst sagt der Seite, warum er fehlt). Der Assistent (fernzugang.admin_help) fragt nur das eigene Modell und schlägt vor, getippt wird nie von selbst. Notizen je System liegen versiegelt, 10 Fassungen bleiben; das Modell liest sie nur mit Haken (fernnotiz.fuer_modell). Ordner ordnen nur die Liste (fernordner.view), höchstens 30; Rechte bleiben je System. Webdienste kommen über die Tunnel-Tür auf Port 31090, eine eigene Herkunft, nie die des Panels (fernweb.verbindung): ohne Cookies des Panels und ohne Anmeldung, die Cookies jedes Dienstes für sich, einbetten darf nur das Panel. Ziele nur nach festen Regeln (fernweb.ziel_ok), die der Anker selbst noch einmal prüft: 127.0.0.1 dort, private Adressen nur mit „Netz dahinter“, nie die Netze des Spark. Anders als die Shell geht das nicht als SSH Ende zu Ende, sondern durch die TLS-Leitung des Ankers mit angeheftetem Zertifikat; höchstens 4 Tunnel mit je 8 Verbindungen und Gegendruck.
+7. <a id="kn-fernzugang-s7"></a>**Spontanhilfe**: Eine Hilfe (spontanhilfe.admin_new) gibt eine Nummer für 10 Minuten, nach 5 falschen ist sie tot. Der Bildschirm geht per WebRTC direkt zwischen den zwei Browsern, von unterwegs über TURN auf tars; das Panel vermittelt nur. Steuern (spontansteuern.program_ws) geht über das Programm SparkHilfe mit einem Einmal-Schlüssel für 10 Minuten; Bilder und Eingaben laufen dann durch das Panel.
 8. <a id="kn-fernzugang-s8"></a>**Logs und Verlauf**: Logs nur mit festen Wörtern und Zahlen (fernzugang.log), der Verlauf nur Zeit, System, Admin, Art und Dauer (fernzugang.verlauf_add). Der Notaus schließt jede Leitung (fernzugang.notaus_close).
 
 **Beispiele:** Shell öffnen: Entsperrt, Ticket, Host-Schlüssel passt: die Shell läuft. · Server neu installiert: Anderer Host-Schlüssel: keine Verbindung. · Seite gesperrt: Erst mit Code oder Passkey entsperren.
@@ -4004,11 +4092,14 @@ flowchart TD
 - **10** Fassungen einer Notiz bleiben ([Schritt 6](#kn-fernzugang-s6))
 - **30** Ordner höchstens ([Schritt 6](#kn-fernzugang-s6))
 - **8 MB MB** ist ein Stück einer großen Datei ([Schritt 6](#kn-fernzugang-s6))
+- **4** Webdienste gleichzeitig offen höchstens ([Schritt 6](#kn-fernzugang-s6))
+- **8** Verbindungen je Webdienst zugleich höchstens ([Schritt 6](#kn-fernzugang-s6))
+- **31090** Port der Tunnel-Tür ([Schritt 6](#kn-fernzugang-s6))
 - **10 min** gilt eine Nummer der Spontanhilfe ([Schritt 7](#kn-fernzugang-s7))
 
 #### Einstellen
 
-- Funktionen → Fernzugang zu Servern: einschalten, Systeme koppeln, Bildschirm, Spontanhilfe, Notizen und Ordner.
+- Funktionen → Fernzugang zu Servern: einschalten, Systeme koppeln, Bildschirm, Webdienste, Spontanhilfe, Notizen und Ordner.
 
 #### Was du siehst
 
@@ -4023,14 +4114,18 @@ flowchart TD
 - `app/panel/fernzugang.py` `terminal_ws`: das Web-Terminal mit Ticket ([Schritt 4](#kn-fernzugang-s4))
 - `app/panel/fernzugang.py` `hostkey_wrong`: angehefteter Host-Schlüssel ([Schritt 5](#kn-fernzugang-s5))
 - `app/panel/ferndateien.py` `listing`: Dateien über SFTP ([Schritt 6](#kn-fernzugang-s6))
+- `app/panel/fernals.py` `choose`: Dateien als anderer Benutzer: nur mit beiden Zustimmungen ([Schritt 6](#kn-fernzugang-s6))
 - `app/panel/fernbild.py` `GUACD`: guacd nur auf 127.0.0.1 ([Schritt 6](#kn-fernzugang-s6))
 - `app/panel/spontanhilfe.py` `admin_new`: eine neue Spontanhilfe ([Schritt 7](#kn-fernzugang-s7))
+- `app/panel/spontansteuern.py` `program_ws`: Steuern: der Socket des Programms SparkHilfe ([Schritt 7](#kn-fernzugang-s7))
 - `app/panel/fernzugang.py` `notaus_close`: Notaus schließt jede Leitung ([Schritt 8](#kn-fernzugang-s8))
 - `app/panel/fernnotiz.py` `fuer_modell`: die Notiz nur mit Haken für das Modell ([Schritt 6](#kn-fernzugang-s6))
 - `app/panel/fernordner.py` `view`: Ordner: nur die Reihenfolge der Liste ([Schritt 6](#kn-fernzugang-s6))
 - `app/panel/ferngross.py` `upload_piece`: große Datei: ein Stück nur ganz und mit passender SHA-256 ([Schritt 6](#kn-fernzugang-s6))
+- `app/panel/fernweb.py` `ziel_ok`: Webdienste: wohin ein Tunnel darf ([Schritt 6](#kn-fernzugang-s6))
+- `app/panel/fernweb.py` `verbindung`: die Tunnel-Tür: Köpfe umgeschrieben, Cookies getrennt ([Schritt 6](#kn-fernzugang-s6))
 
-Selbsttests: `test_fernzugang`, `test_fernbild`, `test_spontanhilfe`, `test_ferngross`
+Selbsttests: `test_fernzugang`, `test_fernbild`, `test_spontanhilfe`, `test_ferngross`, `test_fernweb`, `test_fernals`, `test_spontansteuern`
 
 ### Fern-Server
 

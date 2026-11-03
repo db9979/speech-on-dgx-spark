@@ -5,6 +5,8 @@
 #   sudo /opt/speech-spark/src/update.sh --check   # only show what would change
 #   sudo /opt/speech-spark/src/update.sh --to <commit>   # install that version (e.g. go back one)
 #   sudo /opt/speech-spark/src/update.sh --newest  # the newest version even before GitHub's tests passed
+#   sudo /opt/speech-spark/src/update.sh --lokal   # Entwickeln auf dem Pi: install spark-dev's branch "lokal"
+#                                                  # (--lokal-zurueck, --lokal-verwerfen; speech-spark lokal …)
 #
 # Without --to/--newest only versions whose GitHub test run ("Tests") passed are installed: main can
 # carry a red commit for a while when several changes land at once.
@@ -17,6 +19,13 @@
 # /etc/speech-spark stay. If the new version fails before it goes live (downloads, packages,
 # self-test), the running services are left untouched and the clone goes back to the old version.
 # If it fails after that, the previous version is installed again.
+#
+# Local changes are never lost (Entwickeln auf dem Pi, app/entwickeln.py, Dominik 2026-11-03): with local commits
+# installed, an update puts them on the new green main (commits already on main drop out) and quick-tests them in a
+# sandbox; on a conflict or a red test the running version stays and the panel says so. Uncommitted edits in the
+# clone are kept as a patch next to it before anything is reset. Local commits are not upstream code: GitHub's
+# green run and the signature check below vouch only for main; entwickeln.py checks the local ones itself, and the
+# version shows "+lokal". None of them ever runs as root (install.sh's self-test is the sandbox's quick test then).
 set -euo pipefail
 
 SRC=${SPEECH_SPARK_SRC:-/opt/speech-spark/src}
@@ -30,6 +39,8 @@ NEWEST=0
 [ "${1:-}" = --check ] && CHECK=1
 [ "${1:-}" = --newest ] && NEWEST=1
 [ "${1:-}" = --to ] && TARGET=${2:-}
+LOKAL_ART=""   # einspielen | zurueck | verwerfen (the panel's wish or the command line), aufsetzen (an update)
+case "${1:-}" in --lokal) LOKAL_ART=einspielen ;; --lokal-zurueck) LOKAL_ART=zurueck ;; --lokal-verwerfen) LOKAL_ART=verwerfen ;; esac
 STATE=${SPEECH_SPARK_STATE:-/var/lib/speech-spark/state}
 [ "$(id -u)" = 0 ] || { echo "run with sudo" >&2; exit 1; }
 # the state folder belongs to the service user: root reads and writes there only as that user, so a link
@@ -81,6 +92,12 @@ if [ -z "$TARGET" ] && [ -s "$STATE/update-target" ] && [ ! -L "$STATE/update-ta
   FROM_PANEL=1
 fi
 rm -f "$STATE/update-target"
+# the panel's „Lokal einspielen“ (entwickelnseite.py): one fixed word, read as the service user
+if [ -z "$LOKAL_ART" ] && [ -s "$STATE/update-lokal" ] && [ ! -L "$STATE/update-lokal" ]; then
+  LOKAL_ART=$(as_svc head -c 20 -- "$STATE/update-lokal" 2>/dev/null | tr -dc 'a-z' || true)
+  case "$LOKAL_ART" in einspielen|zurueck|verwerfen) TARGET=""; FROM_PANEL=0 ;; *) LOKAL_ART="" ;; esac
+fi
+rm -f "$STATE/update-lokal"
 [ -d "$SRC/.git" ] || { echo "$SRC is not a git clone; run install.sh from a git checkout first" >&2; exit 1; }
 
 cd "$SRC"
@@ -89,6 +106,25 @@ cd "$SRC"
 old=$(jq -r '.commit // empty' "$(dirname "$SRC")/VERSION.json" 2>/dev/null || true)
 git cat-file -e "${old:-x}^{commit}" 2>/dev/null || old=$(git rev-parse HEAD)
 echo "Installed: $(git log -1 --format='%h %cs %s' "$old")"
+# local changes running now (install.sh writes them into VERSION.json): their head stays reachable in this clone
+ENTW="$(dirname "$SRC")/app/entwickeln.py"
+old_kopf=$(jq -r '.lokal_kopf // empty' "$(dirname "$SRC")/VERSION.json" 2>/dev/null | tr -dc '0-9a-f' | head -c 40 || true)
+old_n=$(jq -r '.lokal // 0' "$(dirname "$SRC")/VERSION.json" 2>/dev/null | tr -dc '0-9' | head -c 3 || true)
+{ [ "${#old_kopf}" = 40 ] && [ "${old_n:-0}" -gt 0 ] && git cat-file -e "$old_kopf^{commit}" 2>/dev/null; } || { old_kopf=""; old_n=0; }
+lokal_kopf=""; lokal_n=0; lokal_test=0
+lokal() {  # art [new]: entwickeln.py checks, rebases and quick-tests as root without running any of it; "kopf basis n tests"
+  [ -f "$ENTW" ] || { echo "Lokale Änderungen: Entwickeln auf dem Pi ist nicht installiert; nichts geändert"; return 3; }
+  /usr/bin/python3 -I "$ENTW" vorbereiten "$@"
+}
+if [ -n "$LOKAL_ART" ]; then
+  # Entwickeln auf dem Pi (Weg B): no GitHub; the main commit stays the installed one, the local commits change
+  echo "Local changes ($LOKAL_ART): checking and quick test (no internet needed) ..."
+  step "Lokale Änderungen werden geprüft"
+  out=$(lokal "$LOKAL_ART") || stop_early "$(printf '%s' "$out" | tail -n 1 | head -c 300)"
+  read -r lokal_kopf new lokal_n lokal_test <<<"$out"
+  { [ "${#lokal_kopf}" = 40 ] && [ "$new" = "$old" ] && [[ "$lokal_n" =~ ^[0-9]{1,3}$ ]]; } \
+    || stop_early "Lokale Änderungen: unerwartete Antwort; nichts geändert"
+else
 echo "Fetching $(git remote get-url origin) ($BRANCH) ..."
 git fetch --quiet origin "$BRANCH" || { echo "GitHub not reachable: the new version could not be fetched; nothing changed." >&2
   stop_early "Neue Version konnte nicht geladen werden (GitHub nicht erreichbar); die bisherige Version läuft weiter"; }
@@ -151,6 +187,7 @@ elif ! git merge-base --is-ancestor "$old" "$new"; then
   echo "If that is intended: sudo $0 --to $(git rev-parse --short "$new")" >&2
   stop_early "Der Verlauf auf GitHub wurde umgeschrieben; nichts geändert"
 fi
+fi   # (not for local changes)
 
 # Optional: only signed versions. With $SIGNERS (root's own file in the format of ssh-keygen's
 # allowed signers) the version must be a commit signed with one of those keys.
@@ -172,12 +209,24 @@ else
   echo "Signature check off (no $SIGNERS): only GitHub's https and the green test run vouch for this version."
 fi
 
-if [ "$old" = "$new" ]; then
+if [ "$old" = "$new" ] && [ -z "$LOKAL_ART" ]; then
   echo "Already up to date."
   finish true "Schon aktuell"
   exit 0
 fi
+if [ -z "$LOKAL_ART" ] && [ "$old" != "$new" ] && [ "$old_n" -gt 0 ]; then
+  # the local changes go along onto the new version, quick-tested; never thrown away, never installed red
+  echo "Putting $old_n local change(s) on the new version, then the quick test ..."
+  step "Lokale Änderungen kommen auf die neue Version"
+  LOKAL_ART=aufsetzen
+  out=$(lokal aufsetzen "$new") || stop_early "$(printf '%s' "$out" | tail -n 1 | head -c 300)"
+  read -r lokal_kopf _ lokal_n lokal_test <<<"$out"
+  { [ "${#lokal_kopf}" = 40 ] && [[ "$lokal_n" =~ ^[0-9]{1,3}$ ]]; } || stop_early "Lokale Änderungen: unerwartete Antwort; nichts geändert"
+  [ "$lokal_n" -gt 0 ] || echo "Every local change is part of the new version now: the branch is empty again."
+fi
+inst=$new; [ "$lokal_n" -gt 0 ] && inst=$lokal_kopf   # the commit whose files are installed
 echo "Available: $(git log -1 --format='%h %cs %s' "$new")"
+[ -n "$LOKAL_ART" ] && echo "Local changes on it: $lokal_n (never upstream code; quick test: $lokal_test module(s))"
 echo "Changes:"
 if git merge-base --is-ancestor "$new" "$old"; then
   echo "  (back to an older version; these changes are undone:)"
@@ -194,34 +243,53 @@ echo
 # Spark teilen (plan raspberry-split B5): with the models on another computer that one updates first, by its own
 # rules (the newest version with passed GitHub tests); this computer waits for it, then goes on either way
 mhost=$(jq -r '.models.host // "127.0.0.1"' /etc/speech-spark/config.json 2>/dev/null || echo 127.0.0.1)
-if [ "$CHECK" = 0 ] && [ -n "$mhost" ] && [ "$mhost" != 127.0.0.1 ] && [ "$mhost" != localhost ] && [ "$mhost" != ::1 ]; then
+# (a local install changes only this computer's panel: the model computer stays as it is)
+if [ "$CHECK" = 0 ] && { [ -z "$LOKAL_ART" ] || [ "$LOKAL_ART" = aufsetzen ]; } && [ -n "$mhost" ] && [ "$mhost" != 127.0.0.1 ] && [ "$mhost" != localhost ] && [ "$mhost" != ::1 ]; then
   echo "Updating the model computer first ..."
   step "Modell-Rechner wird zuerst aktualisiert"
   /usr/local/bin/speech-spark teilen modelle-update || echo "The model computer did not update; going on (two versions only give a hint)."
 fi
 echo "Updating ..."
-# the version running now becomes "the previous version" the panel can go back to
-[ -f "$(dirname "$SRC")/VERSION.json" ] && cp "$(dirname "$SRC")/VERSION.json" "$(dirname "$SRC")/VERSION.prev.json.new"
-git reset --hard --quiet "$new"
+# the version running now becomes "the previous version" the panel can go back to (a local install keeps it: its own
+# way back is speech-spark lokal zurueck)
+if [ -z "$LOKAL_ART" ] || [ "$LOKAL_ART" = aufsetzen ]; then
+  [ -f "$(dirname "$SRC")/VERSION.json" ] && cp "$(dirname "$SRC")/VERSION.json" "$(dirname "$SRC")/VERSION.prev.json.new"
+fi
+# uncommitted edits in this clone are never thrown away silently: kept as a patch next to it (root's folder)
+if ! git diff --quiet HEAD -- 2>/dev/null; then
+  keep="$(dirname "$SRC")/gesichert"; install -d -m 700 "$keep"
+  kept="$keep/src-$(date +%Y%m%d-%H%M%S).patch"
+  git diff HEAD -- >"$kept" || true
+  echo "Uncommitted changes in $SRC kept in $kept."
+fi
+git reset --hard --quiet "$inst"
+LOKAL_ENV=()   # local commits: install.sh's self-test would run them as root, the sandbox's quick test ran instead
+[ "$lokal_n" -gt 0 ] && LOKAL_ENV=(SPEECH_SPARK_NO_SELFTEST=1 SPEECH_SPARK_LOKAL_BASIS="$new" SPEECH_SPARK_LOKAL_ANZAHL="$lokal_n")
 SWITCHED="$(dirname "$SRC")/.switched"
 rm -f "$SWITCHED"
-if SPEECH_SPARK_TESTED=$TESTED ./install.sh --no-smoke --update; then
+if env "${LOKAL_ENV[@]}" SPEECH_SPARK_TESTED=$TESTED ./install.sh --no-smoke --update; then
   rm -f "$SWITCHED"
   echo
-  echo "Update finished: $(git log -1 --format='%h %s')"
+  echo "Update finished: $(git log -1 --format='%h %s' "$new")$([ "$lokal_n" -gt 0 ] && echo " +lokal ($lokal_n)")"
   [ -f "$(dirname "$SRC")/VERSION.prev.json.new" ] && mv "$(dirname "$SRC")/VERSION.prev.json.new" "$(dirname "$SRC")/VERSION.prev.json"
+  if [ -n "$LOKAL_ART" ] && [ -f "$ENTW" ]; then
+    /usr/bin/python3 -I "$ENTW" fertig "$LOKAL_ART" "$inst" "$new" "$lokal_n" "${lokal_test:-0}" || echo "Local state not written."
+  fi
   finish true "Fertig"
 else
   rc=$?
   echo
-  git reset --hard --quiet "$old"
+  [ -n "$LOKAL_ART" ] && [ -f "$ENTW" ] && { /usr/bin/python3 -I "$ENTW" fehler "$LOKAL_ART" fehler || true; }
+  git reset --hard --quiet "${old_kopf:-$old}"
+  OLD_ENV=()
+  [ "$old_n" -gt 0 ] && OLD_ENV=(SPEECH_SPARK_LOKAL_BASIS="$old" SPEECH_SPARK_LOKAL_ANZAHL="$old_n")
   rm -f "$(dirname "$SRC")/VERSION.prev.json.new"
   if [ -f "$SWITCHED" ]; then
     # the new code was already live: put the previous version back the same way
     rm -f "$SWITCHED"
     echo "UPDATE FAILED (exit $rc) after the new version went live. Installing the previous version again ..."
     # (an older install.sh does not know newer options; the environment variable it just ignores)
-    if SPEECH_SPARK_NO_SELFTEST=1 ./install.sh --no-smoke --update; then
+    if env "${OLD_ENV[@]}" SPEECH_SPARK_NO_SELFTEST=1 ./install.sh --no-smoke --update; then
       rm -f "$SWITCHED"
       finish false "Update fehlgeschlagen (Fehler $rc); die bisherige Version wurde wieder eingespielt"
     else

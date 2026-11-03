@@ -79,10 +79,12 @@ def audit(limit: int = 300):
     return {"events": guard.read(max(1, min(limit, 2000))), "names": names}
 
 
-@router.get("/api/audit/check", dependencies=[Depends(main_auth)])
+@router.get("/api/audit/check", dependencies=[Depends(auth)])
 async def audit_check(request: Request, nas: int = 0):
     """„Protokoll prüfen“: the change log's chain (guard.verify) and, with nas=1, the newest sealed copy on the NAS
-    against it (offsite.compare_audit). Numbers and file names only."""
+    against it (offsite.compare_audit). Numbers and file names only. Every admin (auth), also an admin profile:
+    it only reads, and the pages show the button to every admin (Dominik 2026-11-03: with main_auth an admin
+    profile got only „Das gehört zum Notzugang“)."""
     guard.limit(request, "offsite", admin=True)
     res = await asyncio.to_thread(guard.verify)
     out = {"chain": res, "nas": None, "nas_error": ""}
@@ -596,7 +598,8 @@ def validate(new):
     # the model computer and the TLS-Tor (plan Raspberry-Pi split, B1/B2): set only by install.sh and the pairing,
     # never from the panel, so a stolen login can not send speech to another computer; once the models run on
     # another computer the key is a must (the connection is https with the pinned certificate, common.model_url)
-    for sec, keys in (("models", ("host", "cert")), ("api", ("tls_listen", "tls_from"))):
+    # Entwickeln auf dem Pi: the developer key's hash only from `speech-spark entwickeln schluessel` (app/entwickeln.py)
+    for sec, keys in (("models", ("host", "cert")), ("api", ("tls_listen", "tls_from")), ("entwickeln", ("schluessel_sha256",))):
         for k in keys:
             if k in old.get(sec, {}):
                 new[sec][k] = old[sec][k]
@@ -657,6 +660,10 @@ def validate(new):
         raise HTTPException(400, why)
     import fernzugang
     why = fernzugang.check(ch)
+    if why:
+        raise HTTPException(400, why)
+    import fernweb
+    why = fernweb.check(ch)
     if why:
         raise HTTPException(400, why)
     import spontanhilfe
@@ -910,6 +917,9 @@ def validate(new):
     d = ch.get("knowledge_ents_day", 200)
     if not isinstance(d, int) or isinstance(d, bool) or not 5 <= d <= 500:
         raise HTTPException(400, "knowledge_ents_day: 5 to 500")
+    d = ch.get("mappe_token", 24000)   # Mappen: tokens of a Mappe to the model (mappen.token_budget)
+    if not isinstance(d, int) or isinstance(d, bool) or not 4000 <= d <= 100000:
+        raise HTTPException(400, "mappe_token: 4000 to 100000")
     d = ch.get("fund_tag_day", 200)   # Finden, Schlagworte vom Modell (fund.tag_day_limit)
     if not isinstance(d, int) or isinstance(d, bool) or not 5 <= d <= 500:
         raise HTTPException(400, "fund_tag_day: 5 to 500")

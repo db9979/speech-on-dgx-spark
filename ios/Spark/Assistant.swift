@@ -38,6 +38,10 @@ final class Conversation: ObservableObject {
         var vg: String?
         /// Gemerkt-Hinweis (gemerkt.py): what memory_save kept in this answer; kept with the message as numbers only
         var mem: [Gemerkt]?
+        /// Finden (fund.py, Stufe E): the card under an answer that searched the own data: its words and, for the
+        /// Sofort-Karte (one hit clearly ahead), the entry's number („Original öffnen“)
+        var fundQ: String?
+        var fundId: Int?
     }
 
     /// one chip „Gemerkt: …“ under an answer: the fact's number and state, its text while known, how it ended
@@ -1020,6 +1024,7 @@ final class Conversation: ObservableObject {
                 case .confirm(let kind, let vg): edit { $0.confirm = kind; $0.confirmVg = vg }
                 case .answers(let x): edit { $0.answers = x }
                 case .wbuch(let id): edit { $0.wbId = id }
+                case .fund(let q, let id): edit { $0.fundQ = q; $0.fundId = id }
                 case .memory(let id, let rev, let text, let undo):
                     edit { $0.mem = Array((($0.mem ?? []) + [Gemerkt(id: id, rev: rev, text: text, undo: undo)]).prefix(3)) }
                 }

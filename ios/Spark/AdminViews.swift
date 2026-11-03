@@ -14,6 +14,10 @@ final class AdminSession: ObservableObject {
     @Published var version = ""
     /// the profile's role on the Spark: "admin", "manager" or "" (none, or resting without the second step)
     @Published private(set) var role = ""
+    /// why this app is not admin right now, a fixed word from the Spark (coadmin.APP_WHY): "key_older" (paired before
+    /// the profile's second step was set up: one code or passkey here binds the key), "no_mfa", "not_admin", "app_off",
+    /// "notaus"; "" when it is admin or the Spark did not say
+    @Published private(set) var why = ""
     private let session: URLSession = {
         let c = URLSessionConfiguration.ephemeral
         c.httpCookieAcceptPolicy = .never
@@ -33,6 +37,34 @@ final class AdminSession: ObservableObject {
         let by = who["admin_by"] as? String ?? ""
         role = ["admin", "manager"].contains(by) ? by : ""
         signedIn = !role.isEmpty
+        why = signedIn ? "" : (who["admin_why"] as? String ?? "")
+    }
+
+    /// „Mit Code bestätigen“: the app was paired before the profile's second step; a fresh code or passkey binds this
+    /// app's key to the second step as it is now (POST /api/iphone/admin-step, asked every time).
+    func prove(code: String) async throws {
+        _ = try await call("POST", "api/iphone/admin-step", body: [:], code: code)
+        await refresh()
+    }
+
+    static let whyWords: Set<String> = ["key_older", "no_mfa", "app_off", "notaus", "not_admin"]
+
+    /// The text for a reason word of the Spark (the word itself never shows).
+    static func whyText(_ why: String) -> String {
+        switch why {
+        case "key_older":
+            return String(localized: "Dieses iPhone wurde gekoppelt, bevor der zweite Anmeldeschritt deines Profils (neu) eingerichtet wurde. Bestätige einmal mit deinem Code oder Passkey, dann ist die App wieder Admin.")
+        case "no_mfa":
+            return String(localized: "Dein Profil hat gerade keinen zweiten Anmeldeschritt. Einrichten unter Ich → Sicherheit, dann ist die App wieder Admin.")
+        case "app_off":
+            return String(localized: "Die iPhone-App ist für dein Profil gerade gesperrt.")
+        case "notaus":
+            return String(localized: "Dein eigener Notaus hält die Admin-Rechte an, bis er aufgehoben ist.")
+        case "not_admin":
+            return String(localized: "Dein Profil hat keine Admin-Rolle.")
+        default:
+            return String(localized: "Admin-Rechte gibt es nur mit dem zweiten Anmeldeschritt deines Profils (Ich → Sicherheit). Das Panel-Passwort (Notzugang) geht nur im Browser.")
+        }
     }
 
     func call(_ method: String, _ path: String, query: [String: String] = [:], body: [String: Any]? = nil,
@@ -74,6 +106,8 @@ final class AdminSession: ObservableObject {
 struct AdminView: View {
     @ObservedObject private var s = AdminSession.shared
     @State private var unlocked = false
+    @State private var ask: CodeRequest?
+    @State private var error: String?
 
     var body: some View {
         Form {
@@ -84,8 +118,13 @@ struct AdminView: View {
             } else if !s.signedIn {
                 Section {
                     Text("Dein Profil ist gerade kein Admin.")
+                    if s.why == "key_older" {
+                        // the second step proven once in this app binds its key (coadmin.prove_app_key)
+                        Button("Mit Code bestätigen") { ask = CodeRequest { c in await prove(code: c) } }
+                    }
+                    if let error { Text(error).foregroundStyle(.red) }
                 } footer: {
-                    Text(SparkAPI.way(String(localized: "Admin-Rechte gibt es nur mit dem zweiten Anmeldeschritt deines Profils (Ich → Sicherheit). Das Panel-Passwort (Notzugang) geht nur im Browser.")))
+                    Text(SparkAPI.way(AdminSession.whyText(s.why)))
                 }
             } else {
                 Section {
@@ -111,8 +150,19 @@ struct AdminView: View {
             }
         }
         .navigationTitle("Spark verwalten")
+        .codeAlert($ask)
         .task {
             if !unlocked { unlocked = await AdminSession.unlock(String(localized: "Spark verwalten")) }
+            await s.refresh()
+        }
+    }
+
+    private func prove(code: String) async {
+        do { try await s.prove(code: code); error = nil }
+        catch {
+            // a refusal names its reason as a fixed word (409): shown in the app's own words, then the page asks again
+            let msg = error.localizedDescription
+            self.error = AdminSession.whyWords.contains(msg) ? nil : msg
             await s.refresh()
         }
     }
@@ -1982,6 +2032,8 @@ struct FernServer: Identifiable {
     let sitzungen: Int
     let notiz: Bool
     let ordner: String
+    let als: String         // Dateien als anderer Benutzer (fernals.py): what the server gave free, as text ("" = nothing)
+    let alsFrei: Bool       // this system's own switch (on only with a fresh code or passkey)
 }
 
 /// A folder of Fernzugang → Systeme (fernordner.py): only an order; every door stays per system.
@@ -2096,8 +2148,19 @@ struct FernzugangView: View {
                                     LabeledContent("Notiz") { Text(g.notiz ? "📝" : "–") }
                                 }
                             }
+                            if d["als_an"] as? Bool == true {   // Dateien als anderer Benutzer (fernals.py): the server's list, the switch per system
+                                LabeledContent("Dateien als") { Text(verbatim: g.als.isEmpty ? "–" : g.als).lineLimit(2) }
+                                if !g.als.isEmpty {
+                                    Toggle("Dateien als anderer Benutzer", isOn: Binding(get: { g.alsFrei }, set: { v in
+                                        if v { ask = CodeRequest { c in await setAls(g, on: true, code: c) } } else { Task { await setAls(g, on: false, code: nil) } }
+                                    })).disabled(g.wartet)
+                                }
+                            }
                             Toggle("Darf sich verbinden", isOn: Binding(get: { g.erlaubt }, set: { v in Task { await allow(g, v) } })).disabled(g.wartet)
                             Button("Shell oder Dateien im Panel öffnen") { panel() }.disabled(!g.online || g.hostkeyFalsch || !g.erlaubt || g.wartet)
+                            if d["webdienste"] as? Bool == true {   // Webdienste (fernweb.py): list and open them in the panel view
+                                Button("Webdienste im Panel öffnen") { panel() }.disabled(!g.online || g.hostkeyFalsch || !g.erlaubt || g.wartet)
+                            }
                             Button("Trennen") { Task { await cut(g) } }.disabled(!g.online && g.sitzungen == 0)
                             Button("Entfernen", role: .destructive) { askRemove = g }
                         }
@@ -2193,7 +2256,7 @@ struct FernzugangView: View {
                                   stand: x["stand"] as? String ?? "ok", erlaubt: x["erlaubt"] as? Bool ?? true, wartet: x["wartet"] as? Bool ?? false,
                                   hostkeyFalsch: x["hostkey_falsch"] as? Bool ?? false, fp: String((x["fp"] as? String ?? "").prefix(80)),
                                   sitzungen: Self.num(x["sitzungen"]), notiz: x["notiz"] as? Bool ?? false,
-                                  ordner: Self.folderId(x["ordner"]))
+                                  ordner: Self.folderId(x["ordner"]), als: Self.alsText(x["als"]), alsFrei: x["als_frei"] as? Bool ?? false)
             }
             folders = (d["ordner"] as? [[String: Any]] ?? []).prefix(30).compactMap { o in
                 let id = Self.folderId(o["id"])
@@ -2214,6 +2277,23 @@ struct FernzugangView: View {
     private func allow(_ g: FernServer, _ on: Bool) async {
         do { _ = try await AdminSession.shared.call("PUT", "api/admin/fernzugang/geraete/\(g.id)", body: ["erlaubt": on]); error = nil }
         catch { self.error = error.localizedDescription }
+        await load()
+    }
+
+    /// Dateien als anderer Benutzer: the server's report as one line („root, anna · nur lesen“), "" when none
+    static func alsText(_ v: Any?) -> String {
+        guard let a = v as? [String: Any] else { return "" }
+        let wer = ((a["benutzer"] as? [String]) ?? (a["ordner"] as? [String]) ?? []).prefix(8).map { String($0.prefix(80)) }.joined(separator: ", ")
+        if wer.isEmpty { return "" }
+        return wer + " · " + ((a["schreiben"] as? Bool ?? false) ? String(localized: "lesen und schreiben") : String(localized: "nur lesen"))
+    }
+
+    /// the switch per system: on with a fresh code or passkey, off without
+    private func setAls(_ g: FernServer, on: Bool, code: String?) async {
+        do {
+            _ = try await AdminSession.shared.call(on ? "POST" : "DELETE", "api/admin/fernzugang/geraete/\(g.id)/als", body: [:], code: code)
+            error = nil
+        } catch { self.error = error.localizedDescription }
         await load()
     }
 

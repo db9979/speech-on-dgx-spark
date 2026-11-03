@@ -49,11 +49,11 @@ function mstilRender(){const d=MSTIL,box=$('mailstil'),E=icEl;if(!box||!d)return
   if(d.running)parts.push(t('lernt gerade …','learning …'));
   else if(has&&d.learned)parts.push(t('gelernt am ','learned on ')+new Date(d.learned*1000).toLocaleDateString(L==='en'?'en-GB':'de-DE')+t(` aus ${d.mails} Mails`,` from ${d.mails} mails`));
   else parts.push(t('noch nicht gelernt','not learned yet'));
-  if(d.state==='fehler')parts.push('⚠ '+(MSTIL_WHY[d.why]||t('Nicht gelernt.','Not learned.')));
+  if(d.state==='fehler')parts.push((MSTIL_WHY[d.why]||t('Nicht gelernt.','Not learned.')));
   const learn=E('button','b p',has?t('Neu lernen','Learn again'):t('Stil lernen','Learn style'));learn.type='button';learn.id='mstillearn';
   learn.disabled=!d.boxes.length||d.running;
   learn.onclick=async()=>{learn.disabled=true;mstilMsg(t('Lese gesendete Mails und lerne … das dauert ein bis zwei Minuten.','Reading sent mails and learning … this takes a minute or two.'));
-    const r=await mstilCall('/learn',{},'POST');if(r)mstilMsg(r.state==='ok'?t('Fertig.','Done.'):'⚠ '+(MSTIL_WHY[r.why]||''),r.state!=='ok');learn.disabled=false};
+    const r=await mstilCall('/learn',{},'POST');if(r)mstilMsg(r.state==='ok'?t('Fertig.','Done.'):(MSTIL_WHY[r.why]||t('Nicht geklappt.','That did not work.')),r.state!=='ok');learn.disabled=false};
   const menu=has?[{label:t('Mailstil löschen','Delete mail style'),danger:true,act:async()=>{if(!confirm(t('Den gelernten Mailstil löschen? Deine eigenen Änderungen gehen mit.','Delete the learned mail style? Your own changes go too.')))return;
     if(await mstilCall('',null,'DELETE'))mstilMsg(t('Gelöscht.','Deleted.'))}}]:[];
   box.appendChild(icCard('mail',t('Mein Mailstil','My mail style'),parts.join(' · '),[learn],menu));

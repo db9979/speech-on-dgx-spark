@@ -398,6 +398,8 @@ def alerts():
     out += offline.alerts()          # the model computer refuses because the clocks are too far apart (Ohne Internet)
     import siegel
     out += siegel.alerts()           # memory or conversations sealed with another key (set aside), or no cryptography
+    import entwickelnseite
+    out += entwickelnseite.alerts()  # local changes refused at an update or an install: the running version stayed
     return out
 
 

@@ -109,6 +109,7 @@ DIRECT_OK = {
     "android": ("fest", "App-Release von GitHub, Datei mit SHA-256 geprüft"),
     "apns": ("fest", "Apple-Push (api.push.apple.com); Notaus-Meldungen laufen selbst darüber"),
     "begleiter": ("fest", "Sprachausgabe auf localhost und Begleiter-Release von GitHub (SHA-256 geprüft)"),
+    "spontansteuern": ("fest", "SparkHilfe-Release von GitHub (Verzeichnis signiert, sobald es einen Schlüssel gibt; jede Datei mit SHA-256 geprüft)"),
     "berater": ("sprachmodell", "Sprachmodell für den Einstellungs-Assistenten"),
     "chat": ("sprachmodell", "Sprachmodell und SearXNG; Seiten aus Suchergebnissen gehen über client()"),
     "rundlauf": ("sprachmodell", "Probelauf: Sprechen, Hören und Sprachmodell über common.model_url und llm.py, wie die Funktionsprüfung"),

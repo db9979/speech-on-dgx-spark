@@ -20,7 +20,7 @@ THREADS = {"auslassen": "auslassen", "loopwacht": "loopwacht", "chats-drop": "au
 # thread names of asyncio.to_thread, ThreadPoolExecutor and AnyIO: work for a request or a page
 HELFER = ("asyncio_", "ThreadPoolExecutor", "AnyIO worker")
 # the panel's own worker processes: module -> part
-PROZESSE = {"docembed": "bedeutungssuche", "nachsortieren": "nachsortieren"}
+PROZESSE = {"docembed": "bedeutungssuche", "nachsortieren": "nachsortieren", "wissensmessung": "wissenmessen"}
 TEILE_MAX = 12
 _alt = {}             # the last measurement: {"t": monotonic, "ticks": {(kind, id): (part, ticks)}}
 

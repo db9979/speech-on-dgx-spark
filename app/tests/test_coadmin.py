@@ -119,6 +119,21 @@ class CoAdmin(unittest.TestCase):
         self.assertEqual(TestClient(panel.app).post("/api/login", json={"password": "secret-admin"},
                                                     headers={profiles.DEVICE_HEADER: "x" * 40}).status_code, 403)
 
+    def test_an_admin_profile_checks_the_change_log(self):
+        """Dominik 2026-11-03: „Protokoll prüfen“ under Zustand → Logs → Änderungen showed an admin profile only
+        „Das gehört zum Notzugang (Panel-Passwort).“ The check only reads: every admin gets the chain, a Verwalter
+        (who does not see the change log) and a guest do not."""
+        c, uid = self.give("KoAudit")
+        r = c.get("/api/audit/check")
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertNotIn("Notzugang", r.text)
+        self.assertIn("ok", r.json()["chain"])
+        self.assertEqual(c.get("/api/audit").status_code, 200)
+        m, _ = self.give("KoAuditV", role="manager")
+        self.assertEqual(m.get("/api/audit/check").status_code, m.get("/api/audit").status_code)
+        self.assertNotEqual(m.get("/api/audit/check").status_code, 200)
+        self.assertEqual(TestClient(panel.app).get("/api/audit/check").status_code, 401)
+
     def test_pages_never_ask_an_admin_profile_for_the_passwords_things(self):
         """Dominik 2026-10-17: GET /api/mfa 403 in the console of an admin profile. Every place in the pages that
         reads what only the panel password may read (main_auth) asks elevated() first; mfa.js gets the path passed in."""
@@ -138,7 +153,8 @@ class CoAdmin(unittest.TestCase):
             with open(os.path.join(js, f), encoding="utf-8") as fh:
                 for n, line in enumerate(fh, 1):
                     for p in paths:
-                        if re.search(r"['\"`]" + re.escape(p) + r"['\"`]", line) and "elevated()" not in line:
+                        # also with a query: '/api/audit/check?nas=1' slipped through (Dominik 2026-11-03)
+                        if re.search(r"['\"`]" + re.escape(p) + r"['\"`?]", line) and "elevated()" not in line:
                             bad.append(f"{f}:{n} {p}")
         self.assertEqual(bad, [])
 
@@ -292,6 +308,71 @@ class CoAdmin(unittest.TestCase):
             did = next(x["id"] for x in profiles._load()["devices"] if x.get("name") == "KoBox")
             self.addCleanup(ADMIN.delete, f"/api/admin/devices/{did}", headers=CODE)
             self.assertEqual(TestClient(panel.app).get("/api/admin/profiles", headers={profiles.DEVICE_HEADER: tok}).status_code, 401)
+        finally:
+            helpers.set_config(iphone=False)
+
+    def test_app_paired_before_the_second_step_proves_it_once(self):
+        """Dominik 2026-10-30: an admin profile's app paired before its second step was set up (or set up again) is not
+        admin; it says why with a fixed word, and a fresh code in the app binds the key to the step as it is now.
+        A new setup ends that again; without a role, with the step off or without a code nothing is given."""
+        import io
+        import contextlib
+        import time
+        helpers.set_config(iphone=True)
+        iphone._pending.clear()
+        real_status = mfa.status
+        self.addCleanup(setattr, mfa, "status", real_status)
+        since = {}
+        mfa.status = lambda who: {"on": who in self.mfa_on, "codes_left": 0, "since": since.get(who)}
+        try:
+            c, uid = self.give("KoAlma")
+            for k in [k for k in guard._rate if k[0] == "pair"]:
+                guard._rate.pop(k, None)
+            key = pair(c).json()["token"]
+            a = TestClient(panel.app)
+            a.headers[profiles.DEVICE_HEADER] = key
+            self.assertEqual(a.get("/api/admin/profiles").status_code, 200)     # paired after the step: admin
+            since[uid] = int(time.time()) + 100                                 # the step set up again after pairing
+            self.gen[uid] = 1
+            self.assertEqual(a.get("/api/admin/profiles").status_code, 401)
+            hello = a.get("/api/iphone/hello").json()
+            self.assertEqual((hello["admin_role"], hello["admin_why"]), ("admin", "key_older"))
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                who = a.get("/api/whoami").json()
+            self.assertEqual((who["admin"], who["admin_why"]), (False, "key_older"))
+            self.assertIn("coadmin: app not admin key_older", out.getvalue())
+            self.assertNotIn("KoAlma", out.getvalue())
+            # no code, a wrong code: nothing given, every outcome in the journal
+            with contextlib.redirect_stdout(out):
+                self.assertEqual(a.post("/api/iphone/admin-step", json={}).status_code, 428)
+                self.assertEqual(a.post("/api/iphone/admin-step", json={}, headers={"X-Speech-Code": "000000"}).status_code, 428)
+            self.assertIn("iphone: admin step code_asked", out.getvalue())
+            self.assertIn("iphone: admin step code_refused", out.getvalue())
+            self.assertEqual(a.get("/api/admin/profiles").status_code, 401)
+            # the code once: admin again in this app, a browser-like protocol line
+            with contextlib.redirect_stdout(out):
+                r = a.post("/api/iphone/admin-step", json={}, headers=CODE)
+            self.assertEqual(r.status_code, 200, r.text)
+            self.assertEqual(r.json()["role"], "admin")
+            self.assertIn("iphone: admin step ok", out.getvalue())
+            self.assertEqual(a.get("/api/admin/profiles").status_code, 200)
+            self.assertEqual(a.get("/api/whoami").json()["admin_why"], "")
+            self.assertEqual(a.get("/api/iphone/hello").json()["admin_why"], "")
+            # a new setup of the second step ends the binding; the step off says no_mfa and gives nothing
+            self.gen[uid] = 2
+            self.assertEqual(a.get("/api/admin/profiles").status_code, 401)
+            self.mfa_on.discard(uid)
+            self.assertEqual(a.post("/api/iphone/admin-step", json={}, headers=CODE).status_code, 409)
+            self.mfa_on.add(uid)
+            # without a role: the code changes nothing
+            _, other = self.give("KoAlmo")       # so KoAlma is not the last admin
+            coadmin.set_role(uid, "")
+            r = a.post("/api/iphone/admin-step", json={}, headers=CODE)
+            self.assertEqual((r.status_code, r.json().get("detail")), (409, "not_admin"))
+            self.assertEqual(a.get("/api/iphone/hello").json()["admin_why"], "")
+            # other device keys and browsers never reach it
+            self.assertEqual(c.post("/api/iphone/admin-step", json={}, headers=CODE).status_code, 403)
         finally:
             helpers.set_config(iphone=False)
 

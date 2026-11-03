@@ -4,6 +4,7 @@
   of that mailbox (never trash, junk, sent or drafts), read, flag, not in Für dich. Anything else is refused.
 - Rules take only mail that came in after the first look; the first rule that fits decides, in the profile's order.
 - Probelauf counts and changes nothing; „auch die vorhandenen“ (with the code) moves, „Rückgängig“ brings them back.
+- No ping-pong (plan mail-lernen 1a + 2a): a mail a rule moved and the person put back stays in the inbox.
 - Off (admin switch) and guests: nothing; the rules of another profile are never touched; logs never carry a
   sender, subject, folder or word of a rule.
 
@@ -108,6 +109,44 @@ class Rules(unittest.TestCase):
         self.assertIn("mail: rules run | 2 taken, 0 errors |", log)
         for word in ("anna", "heise", "Auto", "Newsletter", "Werkstatt"):
             self.assertNotIn(word, log)
+
+    def test_no_ping_pong_a_mail_put_back_stays(self):
+        """Plan mail-lernen 1a + 2a (Dominik 2026-10-30): what a rule moved is remembered by its Message-ID; when the person
+        puts it back into the inbox (new UID, same Message-ID), no rule takes it again, and „auch die vorhandenen“ neither."""
+        rid = self.save({"from": "@autohaus-kehl.de"}, {"folder": "Auto"}).json()["saved"]
+        mailregeln.run(self.uid)                                                            # first look
+        FMB.put("INBOX", helpers.box_mail("Anna <anna@autohaus-kehl.de>", "Termin", "…", mid="<pp-1@x>"))
+        self.assertEqual(mailregeln.run(self.uid)["taken"], 1)
+        moved = mailregeln.load(self.uid)["moved"]
+        self.assertEqual([(x["mid"], x["aid"], x["folder"], x["rid"]) for x in moved], [("<pp-1@x>", self.acct, "Auto", rid)])
+        self.assertEqual(set(moved[0]), {"mid", "aid", "folder", "rid", "t"})               # no sender, no subject
+        back0 = mailregeln.for_live()["back"]
+        FMB.put("INBOX", FMB.boxes["Auto"].pop()["raw"])                                     # the person puts it back
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            for _ in range(2):
+                self.assertEqual(mailregeln.run(self.uid)["taken"], 0)
+            FMB.put("INBOX", FMB.boxes["INBOX"].pop()["raw"])                                # and once more: still stays
+            self.assertEqual(mailregeln.run(self.uid)["taken"], 0)
+        self.assertEqual((FMB.boxes["Auto"], FMB.boxes["INBOX"][-1]["raw"].count(b"pp-1@x")), ([], 1))
+        self.assertIn("mail: rule skip | user_moved | 1 |", out.getvalue())
+        self.assertNotIn("autohaus", out.getvalue())
+        self.assertEqual(mailregeln.for_live()["back"], back0 + 1)                          # counted once
+        r = self.c.post(f"/api/profile/mail/rules/{rid}/apply")                              # the old ones: not this one
+        self.assertEqual((r.status_code, FMB.boxes["Auto"][-1]["raw"].count(b"r-1@x")), (200, 1), r.text)
+        self.assertEqual(r.json()["n"], 1)
+        self.assertEqual(len(mailregeln.load(self.uid)["moved"]), 2)                         # apply remembers too
+        # one list of both sorters: a mail „Postfach aufräumen“ moved counts, „Zurück“ wins
+        st = {"log": [{"id": "a", "aid": self.acct, "mid": "<t-1@x>", "folder": "KI/Werbung"},
+                      {"id": "b", "aid": self.acct, "mid": "<t-2@x>", "folder": "KI/Werbung", "undone": True},
+                      {"id": "c", "aid": "other", "mid": "<t-3@x>", "folder": "KI/Werbung"}]}
+        m = mailregeln.spark_moved(self.uid, self.acct, st=st)
+        self.assertEqual({k: v["by"] for k, v in m.items()}, {"<pp-1@x>": "rule", "<r-1@x>": "rule", "<t-1@x>": "tidy", "<t-2@x>": "tidy"})
+        self.assertTrue(mailregeln.user_moved(m, "<t-1@x>", "INBOX"))
+        self.assertFalse(mailregeln.user_moved(m, "<t-1@x>", "KI/Werbung"))                 # still where the Spark put it
+        self.assertTrue(mailregeln.user_moved(m, "<t-2@x>", "KI/Werbung"))
+        self.assertIsNone(mailregeln.user_moved(m, "<r-2@x>", "INBOX"))
+        self.assertIsNone(mailregeln.user_moved(m, "", "INBOX"))
 
     def test_order_changes_who_decides(self):
         a = self.save({"from": "@autohaus-kehl.de"}, {"folder": "Auto"}).json()["saved"]

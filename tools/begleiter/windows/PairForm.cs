@@ -104,7 +104,9 @@ internal sealed class PairForm : Form
     private void ShowHint(string text, bool warning, bool error = false)
     {
         _hint.Text = text;
-        _hint.ForeColor = error ? Color.Firebrick : warning ? Color.DarkOrange : SystemColors.ControlText;
+        // das Fenster nutzt die Systemfarben (hell); Rot und Gelb als Text-Stufe der Tokens (--badt, --warnt)
+        _hint.ForeColor = SystemInformation.HighContrast ? SystemColors.ControlText
+            : error ? Palette.Light.BadText : warning ? Palette.Light.WarnText : SystemColors.ControlText;
     }
 
     private async Task PairAsync()

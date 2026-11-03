@@ -62,7 +62,7 @@ TOOLS = {
     "mail_read": "mail", "mail_search": "mail", "mail_tidy_overview": "mail", "mail_tidy_propose": "mail",
     "fuer_dich": "mail", "fuer_dich_tun": "mail", "offen_zeigen": "cal",   # Offen lives on the Kalender node
     "contacts_search": "contacts", "remarkable_note": "rm", "remarkable_page": "rm", "remarkable_attachment": "rm", "remarkable_sent": "rm", "remarkable_sheet": "rm", "remarkable_library": "rm", "iphone_action": "push", "weather": "weather",
-    "parcels": "parcels", "transit": "transit", "feeds_news": "feeds", "document_search": "mem", "document_list": "mem", "fund_suche": "mem", "history_search": "mem", "local_search": "mem",
+    "parcels": "parcels", "transit": "transit", "feeds_news": "feeds", "document_search": "mem", "document_list": "mem", "fund_suche": "mem", "mappe_liste": "mem", "mappe_stand": "mem", "mappe_dazu": "mem", "history_search": "mem", "local_search": "mem",
     "memory_forget": "mem", "memory_save": "mem", "reminder_cancel": "mem", "reminder_list": "mem", "reminder_set": "mem",
     "message_announce": "mem", "message_read": "mem", "message_send": "mem", "agent_list": "mem",
     "agent_schedule": "mem", "agent_task": "mem", "routine_save": "mem", "agent_watch": "mem",
@@ -144,6 +144,8 @@ TARGETS = {
     "schirm": ("Steuerzentrale", "Bildschirm am Panel-Rechner", "spark", False),
     # Werkstatt (werkstattseite.py): test runs, code measurement, diagnosis and repairs in the sandbox; kinds and counts
     "werkstatt": ("Werkstatt", "Sandbox · auf dem Modell-Rechner", "spark", False),
+    # Entwickeln auf dem Pi (entwickelnseite.py): local changes of spark-dev, installed like an update; counts and fixed words
+    "entwickeln": ("Entwickeln", "OpenCode · Panel-Rechner · lokale Änderungen", "spark", False),
     # Fernzugang (fernzugang.py): servers elsewhere whose anchor calls the panel; counts and status only, never what runs
     "fernzugang": ("Fernzugang", "Fern-Server · über ihren Anker", "net", False),
     # Spontanhilfe (spontanhilfe.py): a person shares her screen once by WebRTC; kind, count and minutes, never a picture
@@ -182,10 +184,14 @@ TARGETS = {
     "wbuch": ("Wissensbuch", "Seiten aus den eigenen Dokumenten · auf dem Spark", "spark", False),
     # Wissenskarte (wissenskarte.py): shown while it is on, checked connections, discarded ones and documents waiting (numbers only)
     "wkarte": ("Wissenskarte", "Verbindungen zwischen Wissensbuch-Seiten · auf dem Spark", "spark", False),
+    # Wissen messen (wissensmessung.py): shown while a run measures and once there is one; times, memory, counts only
+    "wmessen": ("Wissen messen", "Zeiten und Speicher · auf dem Spark", "spark", False),
     # Finden (fund.py): shown while it is on, entries of the search index, profiles, searches today and the median time,
     # with fundmail.py the mails read today and left to read, with fundquellen.py the entries per further source, with
     # Stufe D the model's tags today and the Sofort-Karten (numbers only)
     "fund": ("Finden", "Suchindex über die eigenen Daten · auf dem Spark", "spark", False),
+    # Mappen (mappen.py): shown while it is on, Mappen and entries of all profiles, conversations bound today (numbers only)
+    "mappen": ("Mappen", "Dokumente, Seiten und Notizen je Vorhaben · auf dem Spark", "spark", False),
     # KI-Dungeon-Master (dungeon.py): shown while it is on, rounds, players, guests, turns, loot and levels today (numbers only)
     "dungeon": ("Dungeon-Master", "Rollenspiel-Runden mit dem eigenen Sprachmodell · auf dem Spark", "spark", False),
     # Teilen mit Profilen (geteilt.py): shown while it is on, single shares and today's changes (numbers only)
@@ -1253,15 +1259,49 @@ def ruhe(targets, busy, now=None):
 
 
 def _dungeon_musik(m):
-    """The Dungeon-Master's music made ahead (dungeon_musik.for_live): pieces, full fields, making, today, marked annoying (numbers only)."""
+    """The Dungeon-Master's music made ahead (dungeon_musik.for_live): pieces, full fields, making, today, marked annoying, outdated, changed sound templates, liked, probes (numbers only)."""
     if not m.get("an") and not m.get("stuecke"):
         return ""
     return (f" · Musik {m.get('stuecke', 0)} Stücke ({m.get('mb', 0)} MB), {m.get('voll', 0)} Felder voll"
             + (", macht ein Stück" if m.get("macht") else "") + (f", {m['wartet']} Felder warten" if m.get("wartet") else "")
             + f", heute {m.get('gemacht', 0)} gemacht, {m.get('weg', 0)} nicht gekommen"
             + (f", {m['markiert']} als nervig markiert" if m.get("markiert") else "")
-            + (f", {m['alt']} im alten Stil" if m.get("alt") else "")
-            + (f", heute {m['nervt']}× Nervt" if m.get("nervt") else ""))
+            + (f", {m['alt']} veraltet" if m.get("alt") else "")
+            + (f", {m['vorlagen']} Klangvorlagen geändert" if m.get("vorlagen") else "")
+            + (f", heute {m['nervt']}× Nervt" if m.get("nervt") else "")
+            + (f", heute {m['gefaellt']}× Gefällt" if m.get("gefaellt") else "")
+            + (f", {m['gemocht']} gemocht" if m.get("gemocht") else "")
+            + (f", {m['proben']} Proben" if m.get("proben") else "") + (", macht eine Probe" if m.get("probe_macht") else "")
+            + (f", heute {m['proben_heute']} Proben gemacht" if m.get("proben_heute") else ""))
+
+
+def _kartennacht(n):
+    """Nachtprüfung der Wissenskarte (wissenskarte.nachtpruefung): connections against the type rules and deadlines
+    without a number taken out since the start (numbers only)."""
+    if not n.get("laeufe"):
+        return ""
+    return f" · nachts {n.get('typ', 0)} Verbindungen gegen Typregeln, {n.get('frist', 0)} Fristen ohne Zahl entfernt"
+
+
+def _kartensuche(s):
+    """Karte hilft der Suche (wissenskarte.liste): on, searches it helped and pieces it named, failures (numbers only)."""
+    if not s.get("on"):
+        return ""
+    return (f" · Suche über die Karte an: {s.get('suchen', 0)} Suchen, {s.get('stellen', 0)} Stellen"
+            + (f", {s['fehler']} Fehler" if s.get("fehler") else ""))
+
+
+def _doppelte():
+    """Doppelte der Wissenskarte (wissensdoppelt.py): open suggestions, merged by itself, „Verschieden“ (numbers only)."""
+    try:
+        import wissensdoppelt
+        d = wissensdoppelt.for_live()
+    except Exception:
+        return ""
+    if not d.get("on"):
+        return ""
+    return (f" · Doppelte: {d.get('offen', 0)} Vorschläge offen, {d.get('auto', 0) + d.get('einlesen', 0)} automatisch "
+            f"zusammengeführt" + (f", {d['verschieden']} verschieden" if d.get("verschieden") else ""))
 
 
 def snapshot(view="admin", now=None):
@@ -1408,6 +1448,20 @@ def snapshot(view="admin", now=None):
         wkk = {"on": False}
     if wkk.get("on"):
         used.add("wkarte")
+    try:
+        import wissensmessung
+        wms = wissensmessung.for_live()
+    except Exception:
+        wms = {"on": False}
+    if wms.get("on"):
+        used.add("wmessen")
+    try:
+        import mappen
+        mpn = mappen.for_live()
+    except Exception:
+        mpn = {"on": False}
+    if mpn.get("on"):
+        used.add("mappen")
     try:
         import fund
         fnd = fund.for_live()
@@ -1789,6 +1843,13 @@ def snapshot(view="admin", now=None):
     if wks.get("on"):
         used.add("werkstatt")
     try:
+        import entwickelnseite
+        ewk = entwickelnseite.for_live()
+    except Exception:
+        ewk = {"on": False}
+    if ewk.get("on"):
+        used.add("entwickeln")
+    try:
         import fernzugang
         fzg = fernzugang.for_live(now)
     except Exception:
@@ -1872,12 +1933,21 @@ def snapshot(view="admin", now=None):
         if x["id"] == "mail" and post_rules.get("rules"):   # Mail-Regeln: rules and what they took today (numbers only)
             x["sub"] += (f" · {post_rules['rules']} Regeln bei {post_rules['profiles']} Profilen"
                          + (f", heute {post_rules['taken']} Mails einsortiert" if post_rules.get("taken") else ""))
+        if x["id"] == "mail" and post_rules.get("back"):   # kein Ping-Pong: mails put back after a rule, left alone (a number)
+            x["sub"] += f" · heute {post_rules['back']} zurückgelegte Mails nicht wieder einsortiert"
         if x["id"] == "mail" and post_rules.get("hints"):   # Regel-Vorschlag: hints shown today (a number)
             x["sub"] += f" · heute {post_rules['hints']} Regel-Vorschläge"
         if x["id"] == "mail" and post_rules.get("stats"):   # Mail-Statistik: looked at today (a number, never who)
             x["sub"] += f" · heute {post_rules['stats']}× Statistik angesehen"
         if x["id"] == "mail" and post_rules.get("night"):   # Regel-Vorschläge aus dem Ablegen: made last night (a number)
             x["sub"] += f" · {post_rules['night']} Vorschläge aus dem Ablegen"
+        if x["id"] == "mail" and post_rules.get("learn"):   # Sortieren aus Korrekturen lernen: corrections today, exceptions, paused (numbers)
+            x["sub"] += (f" · Sortieren aus Korrekturen lernen an: heute {post_rules.get('fixes', 0)} Korrekturen, "
+                         f"{post_rules.get('excepts', 0)} Ausnahmen, {post_rules.get('paused', 0)} Regeln pausiert, "
+                         f"{post_rules.get('undone', 0)} zurückgenommen"
+                         # Vorschlag 6a: corrections of the model's sorting and folders it named on a card today (numbers)
+                         + (f", {post_rules['modelfix']} davon Modell-Einordnungen" if post_rules.get("modelfix") else "")
+                         + (f", {post_rules['modelhint']} Ordner vom Modell vorgeschlagen" if post_rules.get("modelhint") else ""))
         if x["id"] == "mail" and post_view.get("html"):   # Apple-Stil „2a“: mails shown formatted, pictures from outside loaded (numbers)
             x["sub"] += f" · heute {post_view['html']} formatiert gezeigt" + (f", {post_view['bilder']} Bilder von außen geladen" if post_view.get("bilder") else "")
         if x["id"] == "mail" and post_files:     # Anhang laden: attachments fetched today (a number, never which)
@@ -1960,6 +2030,8 @@ def snapshot(view="admin", now=None):
                         + f" · Lüfter {geh.get('luefter', '?')}" + (" · Neustart nötig" if geh.get("neustart") else ""))
         if x["id"] == "werkstatt" and wks.get("on"):   # Werkstatt: what runs, last night, the measurement (no text, no patch)
             x["sub"] = werkstattseite.live_sub(wks)
+        if x["id"] == "entwickeln" and ewk.get("on"):   # Entwickeln: lokale Änderungen N, waiting in the clone, the last refusal (fixed word)
+            x["sub"] = entwickelnseite.live_sub(ewk)
         if x["id"] == "fernzugang" and fzg.get("on"):   # Fernzugang: paired, online, sessions, waiting for removal (numbers)
             x["sub"] = fernzugang.live_sub(fzg)
         if x["id"] == "spontanhilfe" and shg.get("on"):   # Spontanhilfe: a number, a person waiting, the open help (no name without live_names)
@@ -2045,6 +2117,10 @@ def snapshot(view="admin", now=None):
                         + (f" · {wbk['widerspruch']} Widersprüche" if wbk.get("widerspruch") else "")
                         + (f" · {wbk['veraltet']} veraltet?" if wbk.get("veraltet") else "")
                         + (" · arbeitet" if wbk.get("running") else ""))
+        if x["id"] == "mappen":    # Mappen: Mappen, entries, profiles, conversations bound today, refused (numbers only, never a name)
+            x["sub"] = (f"{mpn.get('mappen', 0)} Mappen · {mpn.get('eintraege', 0)} Einträge in {mpn.get('profile', 0)} Profilen"
+                        + f" · heute {mpn.get('chats', 0)} Gespräche mit Mappe"
+                        + (f" · {mpn['abgelehnt']} abgelehnt" if mpn.get("abgelehnt") else ""))
         if x["id"] == "fund":      # Finden: entries, profiles, own tags, searches today, median time (numbers only, never a word)
             x["sub"] = (f"{fnd.get('eintraege', 0)} Einträge in {fnd.get('profile', 0)} Profilen · {fnd.get('hand', 0)} eigene Schlagworte"
                         + f" · heute {fnd.get('suchen', 0)} Suchen"
@@ -2274,8 +2350,14 @@ def snapshot(view="admin", now=None):
             x["sub"] = (f"{wkk.get('verbindungen', 0)} Verbindungen · {wkk.get('punkte', 0)} Punkte · {wkk.get('warten', 0)} Dokumente warten"
                         + f" · {wkk.get('profile', 0)} Profile"
                         + (f" · {sum(kn.values())} Knoten" + (f" ({kinds})" if kinds else "")
-                           + f" · {wkk.get('knoten_warten', 0)} Dokumente warten auf Knoten" if kn else "")
+                           + f" · {wkk.get('knoten_warten', 0)} Dokumente warten auf Knoten"
+                           + f" · {wkk.get('mit_seite', 0)} mit Seite" if kn else "")
+                        + _kartennacht(wkk.get("nacht") or {})
+                        + _kartensuche(wkk.get("suche") or {}) + _doppelte()
                         + (" · arbeitet" if wkk.get("running") else ""))
+        if x["id"] == "wmessen" and wms.get("on"):    # Wissen messen: running or the newest run's numbers, never a title
+            import wissensmessung
+            x["sub"] = wissensmessung.live_sub(wms)
         if x["id"] == "modell" and mr.get("on"):   # Modell-Rechner: reachable, units active, version (no address)
             x["sub"] = (("nicht erreichbar" + (" · Notbetrieb" if mr.get("notbetrieb") else "")) if not mr.get("ok") else
                         f"{mr.get('aktiv', 0)} von {mr.get('n', 0)} Diensten aktiv" + (f" · {mr['version']}" if mr.get("version") else "")
@@ -2340,7 +2422,8 @@ def snapshot(view="admin", now=None):
             "make": make.get("run") or make.get("wait"), "bild": bild.get("run") or bild.get("wait"), "musik": mus.get("run") or mus.get("wait"),
             # Dominik 2026-10-28 „im live log monitoring fehlt die Dungen Master Anzeige“: its box stays out of „+ N bereit“
             # while someone sits at a table, the model narrates, reads aloud or sums up a chapter
-            "dungeon": dgn.get("online") or dgn.get("denkt") or dgn.get("liest") or dgn.get("schreibt")}
+            "dungeon": dgn.get("online") or dgn.get("denkt") or dgn.get("liest") or dgn.get("schreibt"),
+            "wmessen": wms.get("laeuft")}
     ruhe(targets, {k for k, v in work.items() if v} | {h["at"] for h in hs} | {k for k, v in svc.items() if v.get("st") != "ok"}
          | {s["to"] for r in reqs if not r["done"] for s in r["steps"] if s["to"]} | {r["to"] for r in reqs if not r["done"] and r["to"]}, now)
     return {"t": round(now, 1), "view": view, "fade": FADE, "reqs": reqs, "targets": targets, "speaking": speaking,

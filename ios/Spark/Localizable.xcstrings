@@ -18021,6 +18021,16 @@
         }
       }
     },
+    "Webdienste im Panel öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open web services in the panel"
+          }
+        }
+      }
+    },
     "Shell oder Dateien im Panel öffnen": {
       "localizations": {
         "en": {
@@ -18481,6 +18491,16 @@
         }
       }
     },
+    "Seite umbenennen geht im Panel unter Wissensbuch → Seiten, eine Seite mit Punkt unter Wissensbuch → Karte.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renaming a page is in the panel under Knowledge book → Pages, a page with a point under Knowledge book → Map."
+          }
+        }
+      }
+    },
     "Umbenennen und Zusammenführen gehen im Panel unter Wissensbuch → Karte.": {
       "localizations": {
         "en": {
@@ -18631,6 +18651,666 @@
         }
       }
     },
+    "Dieses iPhone wurde gekoppelt, bevor der zweite Anmeldeschritt deines Profils (neu) eingerichtet wurde. Bestätige einmal mit deinem Code oder Passkey, dann ist die App wieder Admin.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This iPhone was paired before your profile's second login step was set up (again). Confirm once with your code or passkey, and the app is admin again."
+          }
+        }
+      }
+    },
+    "Dein Profil hat gerade keinen zweiten Anmeldeschritt. Einrichten unter Ich → Sicherheit, dann ist die App wieder Admin.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your profile has no second login step right now. Set it up under Me → Security, and the app is admin again."
+          }
+        }
+      }
+    },
+    "Die iPhone-App ist für dein Profil gerade gesperrt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The iPhone app is blocked for your profile right now."
+          }
+        }
+      }
+    },
+    "Dein eigener Notaus hält die Admin-Rechte an, bis er aufgehoben ist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your own emergency stop holds the admin rights until it is lifted."
+          }
+        }
+      }
+    },
+    "Dein Profil hat keine Admin-Rolle.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your profile has no admin role."
+          }
+        }
+      }
+    },
+    "Mit Code bestätigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm with code"
+          }
+        }
+      }
+    },
+    "Alle Kategorien": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All categories"
+          }
+        }
+      }
+    },
+    "Alles löschen, auch eigene Schlagworte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete everything, own tags too"
+          }
+        }
+      }
+    },
+    "Behalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep"
+          }
+        }
+      }
+    },
+    "Deine Schlagworte gehen immer vor. ✓ übernimmt eines als deins, × entfernt es für immer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your tags always come first. ✓ keeps one as yours, × removes it for good."
+          }
+        }
+      }
+    },
+    "Den Suchindex löschen? Er baut sich danach von selbst neu auf.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete the search index? It builds itself again afterwards."
+          }
+        }
+      }
+    },
+    "Der Index ist noch leer. Er füllt sich im Hintergrund, alle paar Minuten ein Stück.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The index is still empty. It fills in the background, a part every few minutes."
+          }
+        }
+      }
+    },
+    "Diesen Eintrag gibt es nicht mehr.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This entry is gone."
+          }
+        }
+      }
+    },
+    "Eintrag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entry"
+          }
+        }
+      }
+    },
+    "Entfernt, kommt nicht wieder": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed, does not come back"
+          }
+        }
+      }
+    },
+    "Finden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find"
+          }
+        }
+      }
+    },
+    "Gib Wörter ein oder wähle oben eine Quelle, eine Kategorie oder einen Zeitraum.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type words or choose a source, a category or a period above."
+          }
+        }
+      }
+    },
+    "In Finden ansehen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in Find"
+          }
+        }
+      }
+    },
+    "Index löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete the index"
+          }
+        }
+      }
+    },
+    "Jederzeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Any time"
+          }
+        }
+      }
+    },
+    "Läuft …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Running …"
+          }
+        }
+      }
+    },
+    "Löschen, eigene Schlagworte behalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete, keep own tags"
+          }
+        }
+      }
+    },
+    "Mails, Anhänge, Termine und Kontakte liegen im Index versiegelt, ihre Wörter nur als Marken. Grau: nicht freigegeben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mail, attachments, appointments and contacts lie sealed in the index, their words only as marks. Grey: not released."
+          }
+        }
+      }
+    },
+    "Neu aufbauen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rebuild"
+          }
+        }
+      }
+    },
+    "Neues Schlagwort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New tag"
+          }
+        }
+      }
+    },
+    "Noch keine.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None yet."
+          }
+        }
+      }
+    },
+    "Noch nicht eingelesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not read yet"
+          }
+        }
+      }
+    },
+    "Original öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the original"
+          }
+        }
+      }
+    },
+    "Schlagwort hinzufügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a tag"
+          }
+        }
+      }
+    },
+    "Schlagworte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tags"
+          }
+        }
+      }
+    },
+    "Suchindex": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search index"
+          }
+        }
+      }
+    },
+    "Wörter, Firma, Person, Nummer …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Words, company, person, number …"
+          }
+        }
+      }
+    },
+    "vom Modell": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "by the model"
+          }
+        }
+      }
+    },
+    "Anhang:": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attachment:"
+          }
+        }
+      }
+    },
+    "Betrag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amount"
+          }
+        }
+      }
+    },
+    "Datum": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date"
+          }
+        }
+      }
+    },
+    "Diesen Termin habe ich im Kalender nicht gefunden:": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I found no such appointment in the calendar:"
+          }
+        }
+      }
+    },
+    "Dieses Jahr": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This year"
+          }
+        }
+      }
+    },
+    "Fragen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questions"
+          }
+        }
+      }
+    },
+    "Gelöscht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleted."
+          }
+        }
+      }
+    },
+    "Gespeichert. Deine Schlagworte gehen vor.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved. Your tags come first."
+          }
+        }
+      }
+    },
+    "Größe (KB)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Size (KB)"
+          }
+        }
+      }
+    },
+    "Kanal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Channel"
+          }
+        }
+      }
+    },
+    "Kategorie": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Category"
+          }
+        }
+      }
+    },
+    "Letzte 30 Tage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last 30 days"
+          }
+        }
+      }
+    },
+    "Letztes Jahr": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last year"
+          }
+        }
+      }
+    },
+    "Neu aufgebaut. Deine Schlagworte bleiben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rebuilt. Your tags stay."
+          }
+        }
+      }
+    },
+    "Nummer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Number"
+          }
+        }
+      }
+    },
+    "Person": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Person"
+          }
+        }
+      }
+    },
+    "Regel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rule"
+          }
+        }
+      }
+    },
+    "Schlagwort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tag"
+          }
+        }
+      }
+    },
+    "Steckbrief": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profile card"
+          }
+        }
+      }
+    },
+    "heute": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "today"
+          }
+        }
+      }
+    },
+    "von dir": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "yours"
+          }
+        }
+      }
+    },
+    "Korrekturen (30 Tage)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corrections (30 days)"
+          }
+        }
+      }
+    },
+    "%lld genommen · %lld korrigiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld taken · %lld corrected"
+          }
+        }
+      }
+    },
+    "pausiert · %lld genommen · %lld korrigiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "paused · %lld taken · %lld corrected"
+          }
+        }
+      }
+    },
+    "Wieder an": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On again"
+          }
+        }
+      }
+    },
+    "Ausnahmen der Regeln": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exceptions of the rules"
+          }
+        }
+      }
+    },
+    "Entfernt: die Regel nimmt neue Mails dieses Absenders wieder. Mails bleiben, wo sie sind.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed: the rule takes this sender's new mails again. Mails stay where they are."
+          }
+        }
+      }
+    },
+    "Falsch sortiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wrongly sorted"
+          }
+        }
+      }
+    },
+    "Regel gelöscht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "rule deleted"
+          }
+        }
+      }
+    },
+    "Ausnahme gesetzt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "exception set"
+          }
+        }
+      }
+    },
+    "Regel pausiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "rule paused"
+          }
+        }
+      }
+    },
+    "zurückgenommen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "taken back"
+          }
+        }
+      }
+    },
+    "nicht wieder verschoben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not moved again"
+          }
+        }
+      }
+    },
     "Neu über die Windows-Datei eingerichtet. Nur bestätigen, wenn du das gerade selbst eingerichtet hast und der Host-Schlüssel zu dem passt, den der PC gezeigt hat. Bis dahin geht keine Sitzung.": {
       "localizations": {
         "en": {
@@ -18677,6 +19357,136 @@
           "stringUnit": {
             "state": "translated",
             "value": "Waiting for confirmation"
+          }
+        }
+      }
+    },
+    "mit Anrede oder Titel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "with a title"
+          }
+        }
+      }
+    },
+    "Nachname zuerst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "last name first"
+          }
+        }
+      }
+    },
+    "mit Initiale": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "with an initial"
+          }
+        }
+      }
+    },
+    "andere Rechtsform": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "other legal form"
+          }
+        }
+      }
+    },
+    "fast gleich geschrieben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "spelt almost the same"
+          }
+        }
+      }
+    },
+    "andere Schreibweise": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "other spelling"
+          }
+        }
+      }
+    },
+    "Vielleicht doppelt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maybe double"
+          }
+        }
+      }
+    },
+    "Verschieden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Different"
+          }
+        }
+      }
+    },
+    "Vielleicht derselbe Punkt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maybe the same point"
+          }
+        }
+      }
+    },
+    "Nach links wischen: „Verschieden“, dann fragt der Spark nie wieder. Zusammenführen geht im Panel unter Wissensbuch → Karte.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swipe left: “Different”, then the Spark never asks again. Merging is in the panel under Knowledge book → Map."
+          }
+        }
+      }
+    },
+    "Dateien als": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files as"
+          }
+        }
+      }
+    },
+    "Dateien als anderer Benutzer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files as another user"
+          }
+        }
+      }
+    },
+    "lesen und schreiben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "read and write"
           }
         }
       }

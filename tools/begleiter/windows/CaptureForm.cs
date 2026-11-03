@@ -226,7 +226,7 @@ internal sealed class CaptureForm : ThemedForm
     private void Show(string chips, bool error)
     {
         _chips.Text = chips;
-        _chips.ForeColor = error ? Palette.Hex(0xE5484D) : P.Muted;
+        _chips.ForeColor = error ? Palette.Light.Bad : P.Muted;
         if (IsHandleCreated)
         {
             LayoutContent();
@@ -239,7 +239,7 @@ internal sealed class CaptureForm : ThemedForm
         int pad = S(16);
         int w = S(440);
         int inner = w - (2 * pad);
-        int y = BarHeight + pad;
+        int y = pad;
         int th = Draw.Measure("Ag", F(11f, FontStyle.Bold)).Height;
         _titleBox = new Rectangle(pad, y, inner, th);
         y += th + S(10);

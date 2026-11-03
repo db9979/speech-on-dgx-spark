@@ -50,6 +50,27 @@ LICENSE = "MIT"
 STEPS = 8                  # the turbo models: 8 steps (model card)
 MP3_KBPS = 192
 
+# quality levels (plan dungeon-musik-tuning V6a, Dominik 2026-10-30 „1-8“): fixed engine values, a caller only names
+# the level (musik_server.quality); "schnell" is the engine's own defaults (Musik machen, Musik bearbeiten). No
+# guidance value: acestep.cpp holds the turbo models at 1.0 anyway.
+QUALITAET = {
+    "schnell": {},
+    "gut": {"solver": "dpm3m", "dcw_scaler": 0.1, "lm_temperature": 0.75},
+    "beste": {"solver": "dpm3m", "dcw_scaler": 0.1, "lm_temperature": 0.75, "sft": True},
+}
+QUALITAET_ERSATZ = "gut"   # "beste" without the SFT model
+SFT_STEPS = 50             # the SFT DiT: 50 steps (acestep.cpp README "sft (50 steps, higher quality)")
+# V7a: the SFT DiT 2B (acestep-v15-sft-Q8_0.gguf of the same pinned GGUF repo, acestep.cpp models.sh --sft) comes in
+# as a File with its SHA-256 here once the hash is checked; until then "beste" is "gut" with a hint (sft_installed)
+SFT = None
+# loudness: acestep.cpp's peak_clip (10 its default, 99.999th percentile; 100 clips the top 0.01 %)
+LAUT = {"normal": 10, "lauter": 100}
+
+
+def sft_installed(folder=None):
+    """The SFT DiT is pinned and on disk (the level "beste")."""
+    return SFT is not None and file_size(path(SFT, folder or FOLDER)) == SFT.size
+
 
 def variant(v):
     """A known variant name (anything else from a hand-edited config falls back to the default)."""

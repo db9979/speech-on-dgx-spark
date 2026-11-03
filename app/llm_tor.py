@@ -21,6 +21,10 @@ This service sits on llm.port (31006, on the network like the speech APIs) and a
   llm.helfer_port, no tools, Dominik 2026-10-25): while it is not running it is started in the background and the
   question gets 503 "loading" at once, so the panel asks the language model instead and never waits; it stops after
   llm.helfer_leerlauf_min minutes without a question;
+- the developer key (Entwickeln auf dem Pi, app/entwickeln.py): OpenCode of the user spark-dev asks with its own key,
+  not the shared api.key; only its SHA-256 is known here (entwickeln.schluessel_sha256, "" while the admin switch is
+  off). Such a request may only chat and list the models, is always last in line (stage "hinten", never aged up:
+  speech goes first) and passes a gate of its own with common.ENTWICKLER_PLAETZE slots (entwickler_tor);
 - counts: requests, tokens read and written (numbers only, in memory, on /health for the panel).
 Journal lines start with "llmtor:" and hold only fixed words and numbers, never a prompt or an answer.
 """
@@ -33,14 +37,14 @@ import time
 
 import httpx
 import uvicorn
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
 
 import einordnung
 import modelle
 from textnorm import defuse_marks
-from common import (BodyLimit, GateFull, KeyedCORS, PrioGate, api_key_dependency, api_key_ok, check_memory, inside,
-                    load_config, outside_view, quiet_access_log, stage_of)
+from common import (STAGE_LOW, BodyLimit, GateFull, KeyedCORS, PrioGate, api_key_dependency, api_key_ok, check_memory,
+                    ENTWICKLER_PLAETZE, entwickler_ok, inside, load_config, outside_view, quiet_access_log, stage_of)
 
 UNIT_ENGINE, UNIT_SEHEN, UNIT_HELFER = "speech-spark-llm", "speech-spark-sehen", "speech-spark-helfer"
 TOP_MAX = modelle.LOGPROBS_MAX  # top_logprobs the engine is started with (--max-logprobs)
@@ -209,16 +213,42 @@ def antwort(q, probs):
 # ---------------------------------------------------------------- the service
 app = FastAPI(title="LLM-Tor (DGX Spark)", docs_url=None, redoc_url=None, openapi_url=None)
 app.add_middleware(KeyedCORS)
-app.add_middleware(BodyLimit, default=lambda: int(cfg().get("max_body_mb", 32)) * 1024**2, gate=api_key_ok, gated=("/v1/",))
+
+
+def schluessel_ok(scope):
+    """BodyLimit's gate: the shared key or the developer key."""
+    return api_key_ok(scope) or entwickler_ok(dict(scope.get("headers") or []).get(b"authorization", b""), load_config())
+
+
+app.add_middleware(BodyLimit, default=lambda: int(cfg().get("max_body_mb", 32)) * 1024**2, gate=schluessel_ok, gated=("/v1/",))
 auth = [Depends(api_key_dependency())]
+_api_key = api_key_dependency()
+
+
+def _mit_entwickler(request: Request, authorization: str = Header(None)):
+    """The shared key, or the developer key (marked on the request: last in line, its own gate)."""
+    request.state.entwickler = entwickler_ok(authorization or "", load_config())
+    if not request.state.entwickler:
+        _api_key(request, authorization)
+
+
+auth_entwickler = [Depends(_mit_entwickler)]
 client = httpx.AsyncClient(timeout=httpx.Timeout(900, connect=5))
 started = time.time()
 stats = {"requests": 0, "refused": 0, "failures": 0, "tokens_in": 0, "tokens_out": 0, "systemone": 0, "sehen": 0,
-         "helfer": 0, "helfer_laedt": 0}
+         "helfer": 0, "helfer_laedt": 0, "entwickler": 0, "entwickler_voll": 0}
 canary = {"status": "loading", "ms": None, "t": 0.0}
 sehen = {"used": 0.0, "lock": None}
 helfer = {"used": 0.0, "start": None}
 gate = None
+entwickler_tor = None      # the developer key's own gate (common.ENTWICKLER_PLAETZE slots, no ageing)
+
+
+def _entwickler_gate():
+    global entwickler_tor
+    if entwickler_tor is None:
+        entwickler_tor = PrioGate(ENTWICKLER_PLAETZE, age=0, most=8)
+    return entwickler_tor
 
 
 def aktiv():
@@ -246,15 +276,30 @@ async def _count(data):
 
 
 async def _forward(port, body, request):
-    """Sends the checked body to an engine; streams back piece by piece, counting the usage piece."""
+    """Sends the checked body to an engine; streams back piece by piece, counting the usage piece. A request with the
+    developer key first takes a slot of its own gate, then waits last in line at the engine's gate (never aged up)."""
     global gate
     if gate is None:
         gate = PrioGate(aktiv()[0]["vllm"].get("max_seqs", 8))
+    dev = getattr(request.state, "entwickler", False) is True
+    dgate, dticket = (_entwickler_gate(), None) if dev else (None, None)
     try:
-        ticket = await gate.enter(stage_of(request))
+        if dev:
+            dticket = await dgate.enter(STAGE_LOW, fest=True)
+            stats["entwickler"] += 1
+        ticket = await gate.enter(STAGE_LOW, fest=True) if dev else await gate.enter(stage_of(request))
     except GateFull:
-        print("llmtor: abgelehnt voll", flush=True)
+        if dticket:
+            dgate.leave(dticket)
+        if dev:
+            stats["entwickler_voll"] += 1
+        print("llmtor: abgelehnt voll" + (" entwickler" if dev else ""), flush=True)
         raise HTTPException(503, "busy")
+
+    def frei():
+        gate.leave(ticket)
+        if dticket:
+            dgate.leave(dticket)
     canary["t"] = time.monotonic()
     if not body.get("stream"):
         try:
@@ -264,7 +309,7 @@ async def _forward(port, body, request):
             print("llmtor: fehler engine nicht erreichbar", flush=True)
             raise HTTPException(503, "engine")
         finally:
-            gate.leave(ticket)
+            frei()
         try:
             await _count(r.json())
         except ValueError:
@@ -275,14 +320,14 @@ async def _forward(port, body, request):
     try:
         r = await client.send(client.build_request("POST", _url(port, modelle.CHAT), json=body), stream=True)
     except httpx.HTTPError:
-        gate.leave(ticket)
+        frei()
         stats["failures"] += 1
         print("llmtor: fehler engine nicht erreichbar", flush=True)
         raise HTTPException(503, "engine")
     if r.status_code != 200:            # the engine's own refusal comes back as it is, not as a stream
         content = await r.aread()
         await r.aclose()
-        gate.leave(ticket)
+        frei()
         print(f"llmtor: antwort {r.status_code}", flush=True)
         return Response(content, status_code=r.status_code, media_type="application/json")
 
@@ -301,7 +346,7 @@ async def _forward(port, body, request):
             print("llmtor: fehler beim streamen", flush=True)
         finally:
             await r.aclose()
-            gate.leave(ticket)
+            frei()
     return StreamingResponse(pieces(), media_type="text/event-stream")
 
 
@@ -379,7 +424,7 @@ async def _helfer_bereit(c):
     raise HTTPException(503, "loading")
 
 
-@app.post("/v1/chat/completions", dependencies=auth)
+@app.post("/v1/chat/completions", dependencies=auth_entwickler)
 async def chat(request: Request):
     try:
         body = await request.json()
@@ -449,7 +494,7 @@ async def systemone(request: Request):
                                                        "x-systemone-branches": str(len(questions)), "x-systemone-modell": wer})
 
 
-@app.get("/v1/models", dependencies=auth)
+@app.get("/v1/models", dependencies=auth_entwickler)
 async def models():
     m, served, _ = aktiv()
     data = [{"id": served, "object": "model", "owned_by": "speech-spark"}]

@@ -23,8 +23,8 @@ internal enum PillPlace
 /// </summary>
 internal sealed class FloatingPill : Form
 {
-    private static readonly Color TextColor = Palette.Hex(0xE8EBF2);
-    private static readonly Color MutedText = Palette.Hex(0xC9D0E0);
+    private static readonly Color TextColor = Palette.HudText;
+    private static readonly Color MutedText = Palette.HudMuted;
 
     private readonly System.Windows.Forms.Timer _timer = new() { Interval = 250 };
     private readonly PillPlace _place;
@@ -194,7 +194,7 @@ internal sealed class FloatingPill : Form
             {
                 RectangleF r = RectangleF.Inflate(pill, i * 0.8f, i * 0.8f);
                 r.Offset(0, S(3));
-                using var brush = new SolidBrush(Color.FromArgb((int)(28 * (1f - ((float)i / shadow))) + 4, 0, 0, 0));
+                using var brush = new SolidBrush(Color.FromArgb((int)(28 * (1f - ((float)i / shadow))) + 4, Palette.Shade));
                 using GraphicsPath path = Draw.Round(r, r.Height / 2f);
                 g.FillPath(brush, path);
             }
@@ -202,7 +202,7 @@ internal sealed class FloatingPill : Form
             Color back = _danger ? Palette.Light.Bad : p.HighContrast ? Palette.Light.Visor : p.Visor;
             using (GraphicsPath path = Draw.Round(pill, pill.Height / 2f))
             using (var fill = new SolidBrush(back))
-            using (var border = new Pen(Color.FromArgb(70, 255, 255, 255), 1f))
+            using (var border = new Pen(Color.FromArgb(70, Palette.OnColor), 1f))
             {
                 g.FillPath(fill, path);
                 g.DrawPath(border, path);
@@ -212,8 +212,8 @@ internal sealed class FloatingPill : Form
             float cy = pill.Y + (pill.Height / 2f);
             bool blinkOn = (_tick / 3) % 2 == 0;
             Color dotColor = _danger
-                ? (blinkOn ? Color.White : Color.FromArgb(150, 255, 255, 255))
-                : Palette.DarkTheme.Accent2;
+                ? (blinkOn ? Palette.OnColor : Color.FromArgb(150, Palette.OnColor))
+                : Palette.DarkTheme.Accent;
             using (var dotBrush = new SolidBrush(dotColor))
             {
                 g.FillEllipse(dotBrush, x, cy - (dot / 2f), dot, dot);
@@ -229,7 +229,7 @@ internal sealed class FloatingPill : Form
             if (clock.Length > 0)
             {
                 x += S(8);
-                using var mutedBrush = new SolidBrush(_danger ? Color.White : MutedText);
+                using var mutedBrush = new SolidBrush(_danger ? Palette.OnColor : MutedText);
                 g.DrawString(clock, small, mutedBrush, x, cy - (clockSize.Height / 2f), StringFormat.GenericTypographic);
                 x += clockSize.Width;
             }
@@ -239,12 +239,12 @@ internal sealed class FloatingPill : Form
                 x += gap;
                 var button = new RectangleF(x, pill.Y + S(6), buttonW, pill.Height - S(12));
                 using (GraphicsPath bp = Draw.Round(button, button.Height / 2f))
-                using (var bf = new SolidBrush(Color.FromArgb(_hover ? 90 : 55, 255, 255, 255)))
+                using (var bf = new SolidBrush(Color.FromArgb(_hover ? 90 : 55, Palette.OnColor)))
                 {
                     g.FillPath(bf, bp);
                 }
 
-                using (var bt = new SolidBrush(Color.White))
+                using (var bt = new SolidBrush(Palette.OnColor))
                 {
                     g.DrawString(_button, buttonFont, bt, button.X + ((button.Width - buttonSize.Width) / 2f),
                         cy - (buttonSize.Height / 2f), StringFormat.GenericTypographic);
@@ -277,7 +277,7 @@ internal sealed class FloatingPill : Form
         IntPtr old = IntPtr.Zero;
         try
         {
-            hBitmap = bitmap.GetHbitmap(Color.FromArgb(0));
+            hBitmap = bitmap.GetHbitmap(Color.FromArgb(0, Palette.Shade));
             old = NativeMethods.SelectObject(memDc, hBitmap);
             var size = new NativeMethods.SIZE(bitmap.Width, bitmap.Height);
             var source = new NativeMethods.POINT(0, 0);

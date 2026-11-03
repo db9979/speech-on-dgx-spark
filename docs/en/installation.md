@@ -33,6 +33,7 @@ At the end the addresses, the key and ready-made `curl` examples are printed and
 | `sudo speech-spark notzugang` | locked out: new panel password (shown once), the emergency access's second step off (old file kept as `.bak`), the main admin profile unlinked (roles stay); asks first, noted in the change log, push to the admins. Then `https://…/#admin` without a code, set the second step up again, choose the main admin again |
 | `sudo speech-spark modelle liste` | the model catalog (`app/modelle.json`): models, kind, memory, whether the revision is pinned |
 | `sudo speech-spark modelle messen` | measures the catalog models on this Spark (default: Qwen3.8 27B NVFP4 and Qwen3-VL 8B; `fp8`, `gemma`, `kolibri`, `vl30`, `dspark` on request, `gemma vl30` measures the two fast MoE models, `dspark` Qwen3.8 with the DSpark helper model, `qwen36` Qwen3.6 35B A3B NVFP4 with and without MTP, `qwen36frei` the same without refusals (Heretic), `helfer` the small helper model Qwen3 4B Instruct 2507 FP8, `flash` Qwen3.8 Flash Next in Docker at share 0.70; Kolibri needs `--kolibri` first). Fetches missing models (Qwen3.8 is copied from qwen38's cache and every file checked), stops the running language model (own or qwen38) with a maintenance pause, measures speed, first word cold and warm, prefix cache, 2 and 4 questions at once, one question of about 60,000 tokens, room in the context store, memory, a tool call and test pictures per model and always starts it again. Switches nothing, deletes nothing. Result in *Status → Logs* (area System) or `sudo speech-spark logs messen`. Since V01.0.719 also in the panel: *Status → Models* "Measure" next to the model (with Features → Routing models) |
+| `sudo speech-spark wissen messen [synth [anzahl] [--ohne-grenzen] \| profil <name>] [--json]` | measures times and memory of the document search, the knowledge book, the knowledge map (since V01.1.270) and Find's search index (measuring part "fund", since V01.1.285) in a measuring process of its own at low priority; stops as soon as somebody speaks. Made up (default 5000 documents, for Find also 50,000 sealed mails) in a throwaway folder under `state/wissensmessung-tmp`, deleted again afterwards, or one profile read only. For Find: search time p50/p95, reading in per 1000 mails, size of `fund.db`, RAM; goal on the Pi: 95 % of the searches below 150 ms. Result in the terminal, under *Status → Checks → Measure knowledge*, in *Status → Logs* (area Wissen) and in *Status → Live*, box "Wissen messen" |
 | `sudo speech-spark modelle llm uebernehmen` | moves the chat to the own language model (first `sudo ./install.sh --llm` and one measurement): notes the running qwen38 services and the old address, stops and disables qwen38 (deletes nothing), starts the own model behind the LLM-Tor and checks it (German sentence, tool call, picture, System One). Only then does the chat point at the door; if the check fails, everything goes back by itself |
 | `sudo speech-spark modelle llm zurueck` | own language model off, the noted qwen38 services on again, old address back |
 | `sudo speech-spark modelle qwen38-aufraeumen` | only after a working move and only on your command: shows what qwen38's own uninstall removes, asks, then runs it. Never automatic, not in an update either |
@@ -80,6 +81,7 @@ The installer keeps its own git checkout in `/opt/speech-spark/src`, so it no lo
 | `--password XYZ` | set the panel password (otherwise one is generated) |
 | `--no-download` | download models on first start instead |
 | `--no-smoke` | skip the round-trip test at the end |
+| `--entwickeln` | panel computer: developing on the Pi with OpenCode (user `spark-dev`, its own clone, see below) |
 | `--uninstall` | same as `./uninstall.sh` (see below) |
 
 Running the script again updates the code and adds what is missing to the Python environments; packages already installed stay as they are. The existing configuration is kept and new settings are added.
@@ -119,11 +121,41 @@ sudo ./install.sh --werkstatt
 sudo speech-spark werkstatt status
 ```
 
-For the screen in Remote access the computer with the panel builds guacd itself from Apache's source (since V01.1.265; Debian 12 and 13 and Raspberry Pi OS have no guacd package any more): `app/guacd-bauen.sh` fetches exactly the release in `fernbild.GUACD_VERSION` (guacamole-server 1.6.0, Apache-2.0) only from downloads.apache.org or archive.apache.org, checks it against `fernbild.GUACD_SHA256`, builds it as `nobody` in a fresh folder under `/var/tmp` with VNC and RDP only (FreeRDP 3 where there is one, else 2) and puts the result in `/opt/speech-spark/guacd`. For building it installs `build-essential pkg-config libtool-bin libcairo2-dev libjpeg-dev libpng-dev libwebp-dev uuid-dev libvncserver-dev` and `freerdp3-dev` (or `freerdp2-dev`); that takes about 10 to 15 minutes once on a Raspberry Pi 5, the progress is in the update log. It is built again only when the release changes. It is built with `--fernbild`, on every update once Features → Remote access to servers and Screen under it are on, and while guacd is already there. A failure never stops the update: the panel then says at the Screen button what went wrong ("guacd not installed on the Spark: …"), and the next update tries again. A distribution's guacd unit stays masked; only `speech-spark-guacd` runs, on 127.0.0.1:4822, started by the panel when a screen opens. Switching off uninstalls nothing. Then run `sudo spark-anker bildschirm` once on the system.
+For the screen in Remote access the computer with the panel builds guacd itself from Apache's source (since V01.1.278; Debian 12 and 13 and Raspberry Pi OS have no guacd package any more): `app/guacd-bauen.sh` fetches exactly the release in `fernbild.GUACD_VERSION` (guacamole-server 1.6.0, Apache-2.0) only from downloads.apache.org or archive.apache.org, checks it against `fernbild.GUACD_SHA256`, builds it as `nobody` in a fresh folder under `/var/tmp` with VNC and RDP only (FreeRDP 3 where there is one, else 2) and puts the result in `/opt/speech-spark/guacd`. For building it installs `build-essential pkg-config libtool-bin libcairo2-dev libjpeg-dev libpng-dev libwebp-dev uuid-dev libvncserver-dev` and `freerdp3-dev` (or `freerdp2-dev`); that takes a few minutes once (fetching packages and building; the build itself took about 5 seconds on a 4-core ARM machine in the GitHub test), the progress is in the update log. It is built again only when the release changes. It is built with `--fernbild`, on every update once Features → Remote access to servers and Screen under it are on, and while guacd is already there. A failure never stops the update: the panel then says at the Screen button what went wrong ("guacd not installed on the Spark: …"), and the next update tries again. A distribution's guacd unit stays masked; only `speech-spark-guacd` runs, on 127.0.0.1:4822, started by the panel when a screen opens. Switching off uninstalls nothing. Then run `sudo spark-anker bildschirm` once on the system.
 
 ```bash
 sudo ./install.sh --fernbild
 ```
+
+## Developing on the Pi with OpenCode
+
+A guide for beginners: you change the Spark yourself on the panel computer (such as the Raspberry Pi), with OpenCode in the terminal and the Spark's own language model, without a cloud and without GitHub. OpenCode works as its own user `spark-dev` in its own clone; the running Spark, its data and keys stay out of reach. Nothing is installed until an admin wants it, after a quick test and like an update.
+
+1. **Install once** (on the panel computer, needs the internet): `sudo ./install.sh --entwickeln`. This adds the user `spark-dev` (no password, no sudo) with the clone `/home/spark-dev/speech-on-dgx-spark` and the branch `lokal`, downloads OpenCode (version and SHA-512 fixed in `app/werkstatt.py`, the same file as the workshop's) into `/opt/speech-spark/opencode`, writes OpenCode's settings (only the own LLM-Tor, its own key, the rules from `CLAUDE.md` and the guidelines), blocks every network except the LLM-Tor by firewall and builds the quick test's test environment.
+2. **Switch on**: as admin *Features → Develop on the Pi* on. Only then does the key of `spark-dev` work at the LLM-Tor.
+3. **In over SSH**: add your public SSH key for `spark-dev`, then sign in from your computer and start OpenCode.
+4. **Work without the internet**: OpenCode asks only the language model in the home network. Testing works in the clone as on GitHub, only without browser tests. Every finished change is a commit on `lokal`.
+5. **Install**: an admin starts `sudo speech-spark lokal einspielen`. The Spark checks the commits, tests them in a sandbox and installs them like an update; the version then shows "+lokal".
+
+```bash
+# 1. once, on the panel computer
+sudo ./install.sh --entwickeln
+# 3. your SSH key for spark-dev
+sudo install -d -m 700 -o spark-dev -g spark-dev /home/spark-dev/.ssh
+sudo install -m 600 -o spark-dev -g spark-dev ~/.ssh/id_ed25519.pub /home/spark-dev/.ssh/authorized_keys
+# 4. from your computer
+ssh spark-dev@<panel-computer>
+spark-opencode                      # OpenCode in the clone, branch lokal
+cd app && python3 selftest.py discover -s tests -p 'test_live.py'
+git commit -am "My change"
+# 5. as admin on the panel computer
+sudo speech-spark lokal einspielen  # check, quick test, install like an update
+sudo speech-spark lokal status      # local changes, last result
+sudo speech-spark lokal zurueck     # one step back (same version)
+sudo speech-spark lokal verwerfen   # version without local changes (they stay in the clone)
+```
+
+Only what lies under `app/panel/`, `app/tests/` and `docs/` is installed, plus both READMEs and `CHANGELOG.md`, as plain files: what root runs (`install.sh`, `update.sh`, `app/*.py` outside `app/panel`, the package lists) only comes through GitHub. A normal update never loses local work: it puts the local commits on the new version and tests them; if something does not fit or the quick test is red, the running version stays, and the panel shows the reason on top. Make the key of `spark-dev` new or revoke it: `sudo speech-spark entwickeln schluessel neu|weg`; after a change of the model computer `sudo speech-spark entwickeln einrichten`. If the test environment is missing, once with the internet `sudo speech-spark lokal testumgebung` (afterwards it renews itself every night, only when the package list changes). Logs: `sudo speech-spark logs entwickeln`.
 
 ## Uninstalling
 

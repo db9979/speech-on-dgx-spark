@@ -74,6 +74,7 @@ from core import (  # noqa: E402
     assistant,
     calendar_on,
     calshare_on,
+    maillearn_on,
     mailmanage_on,
     mailsend_on,
     check_password,
@@ -92,16 +93,16 @@ router = APIRouter()
 
 # whoami flag -> function in features.py
 WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speaker", "calendar": "calendar",
-       "homeassistant": "ha", "mail": "mail", "mail_tidy": "tidy", "mail_style": "mailstil", "mail_insight": "fuerdich", "ichweiss": "ichweiss", "share": "teilen", "mail_manage": "mailmanage", "mail_delete": "maildelete", "mail_code": "mailcode", "mail_send": "mailsend", "proactive": "proactive", "room": "room",
+       "homeassistant": "ha", "mail": "mail", "mail_tidy": "tidy", "mail_style": "mailstil", "mail_insight": "fuerdich", "ichweiss": "ichweiss", "share": "teilen", "mail_manage": "mailmanage", "mail_delete": "maildelete", "mail_learn": "maillearn", "mail_code": "mailcode", "mail_send": "mailsend", "proactive": "proactive", "room": "room",
        "room_voices": "roomtv", "room_ha": "roomha", "room_remote": "roomfar", "weather": "weather", "contacts": "contacts",
-       "parcels": "parcels", "telegram": "telegram", "tasks": "tasks", "vorgaenge": "vorgaenge", "knowledge_book": "wissensbuch", "knowledge_map": "wissenskarte", "knowledge_ents": "wissensknoten", "find": "fund", "transit": "transit", "feeds": "feeds",
+       "parcels": "parcels", "telegram": "telegram", "tasks": "tasks", "vorgaenge": "vorgaenge", "knowledge_book": "wissensbuch", "knowledge_map": "wissenskarte", "knowledge_ents": "wissensknoten", "knowledge_search": "kartensuche", "find": "fund", "transit": "transit", "feeds": "feeds",
        "esp32": "esp32", "iphone": "iphone", "iphone_panel": "iphonepanel", "pebble": "pebble", "pebble_chat": "pebblechat", "pebble_reply": "pebbleantwort", "pebble_remote": "pebblefern", "pebble_health": "pebblegesund", "pebble_face": "pebblezifferblatt", "pebble_day": "pebbletag", "pebble_alerts": "pebblemeldung", "pebble_note": "pebblemerken", "pebble_place": "pebbleort", "pebble_follow": "pebblefolge", "pebble_quick": "pebbleschnell", "pebble_remind": "pebbleerinnern", "terminal": "terminal",
        "android": "android", "android_live": "androidlive", "android_update": "androidupdate", "android_assist": "androidassist", "android_lock": "androidlock", "mcp_server": "mcpserver", "my_mcp": "mymcp", "write_help": "schreib", "write_apps": "schreibapps", "desk": "begleiter", "desk_act": "begleitertun", "desk_meeting": "begleitermeeting", "desk_view": "begleiterschirm", "desk_operate": "begleiterbedienen",
        "remarkable": "remarkable", "remarkable_send": "rmsend", "remarkable_fresh": "rmfresh", "remarkable_plus": "rmguide", "remarkable_paper": "rmpapier", "remarkable_tasks": "rmaufgaben", "my_status": "mystatus", "usage_count": "verbrauch", "person_priority": "vorrang",
        "ha_live": "halive", "ha_loud": "haloud", "ha_events": "haevent", "ha_voice_rules": "havoice", "ha_camera": "hacam",
        "systemone_mail": "mailwichtig", "report": "melden", "doc_make": "erstellen", "bilder": "bilder", "bilder_aendern": "bildaendern", "musik": "musik", "musik_bearbeiten": "musikbearbeiten", "dungeon": "dungeon", "storage": "speicher", "nas": "nas", "nasquelle": "nasquelle", "nas_drop": "nasablage", "nas_status": "naszustand", "nas_shared": "nashaushalt",
        "chats": "chats", "chats_groups": "chatgroups", "chats_media": "chatmedia", "chats_invite": "chatinvite", "chats_private": "chatprivate", "chats_verbund": "verbund", "verbund_media": "verbundmedia", "verbund_groups": "verbundgruppen",
-       "chats_calls": "anrufe", "calls_turn": "anrufeturn", "telefon": "telefon", "saetze": "tippssaetze"}
+       "chats_calls": "anrufe", "calls_turn": "anrufeturn", "telefon": "telefon", "saetze": "tippssaetze", "collections": "mappen"}
 
 
 def _fern_admin(request):
@@ -153,6 +154,8 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
     own = prof and not request.headers.get(profiles.DEVICE_HEADER) and coadmin.role(prof["id"])
     return {"admin": bool(main or elev), "admin_by": "main" if main else elev["role"] if elev else "",
             "admin_name": elev["name"] if elev else "",
+            # the own iPhone app with a role that is not admin right now: why, as a fixed word (coadmin.APP_WHY)
+            "admin_why": "" if (main or elev) else coadmin.why_not(request),
             # the profile's own role: Ich → Sicherheit says what it may, or why its rights rest right now
             "admin_role": {"role": own, "mfa": mfa.enabled(prof["id"]), "acts": bool(elev),
                            "main": prof["id"] == coadmin.main_uid()} if own else None,
@@ -373,7 +376,7 @@ async def admin_role_set(uid: str, request: Request):
     return coadmin.listing()
 
 
-def _admin_signed_in(request, uid, name):
+def admin_signed_in(request, uid, name):
     """A profile with a role signed in with its second step: log line and a note to the admin profiles."""
     r = coadmin.acts(uid)
     if not r:
@@ -426,7 +429,7 @@ async def profile_login(request: Request):
     if mfa.enabled(uid):
         profiles.mark_second_step(value, mfa.mark(uid))
     _trust(r, body, uid, request)
-    _admin_signed_in(request, uid, next((u["name"] for u in profiles.names() if u["id"] == uid), name.strip()))
+    admin_signed_in(request, uid, next((u["name"] for u in profiles.names() if u["id"] == uid), name.strip()))
     vorwaermen.ask(uid)   # signed in: read its calendars and mail ahead (vorwaermen.py)
     return r
 
@@ -1595,6 +1598,28 @@ async def profile_mail_rule_apply(request: Request, rid: str, prof=Depends(secre
     """„Auch die vorhandenen“: the rule on the inbox mails it fits now (with the code; „Rückgängig“ brings them back)."""
     guard.limit(request, "postordnen", prof["id"])
     return await _rule(prof, "apply", mailregeln.apply, rid[:20])
+
+
+# Sortieren aus Korrekturen lernen, Stufe 3 (plan mail-lernen 7a): „Korrekturen (30 Tage)“ on the tab Regeln comes with
+# GET /api/profile/mail/rules (fixes, per rule fixed); „Wieder an“ is the rule saved with on (POST /api/profile/mail/rules)
+@router.post("/api/profile/mail/rules/fixes/{fid}/undo",
+             dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on), Depends(maillearn_on)])
+async def profile_mail_rule_fix_undo(request: Request, fid: str, prof=Depends(browser_profile)):
+    """„Rückgängig“ at a correction: the exception and the pause it made go again; no mail moves (mailregeln.undo_fix
+    writes its journal line for every outcome)."""
+    guard.limit(request, "postordnen", prof["id"])
+    await _rule(prof, "correction undo", mailregeln.undo_fix, fid[:20])
+    return mailregeln.public(prof["id"])
+
+
+@router.post("/api/profile/mail/rules/{rid}/except",
+             dependencies=[Depends(assistant), Depends(mail_on), Depends(mailmanage_on), Depends(maillearn_on)])
+async def profile_mail_rule_except(request: Request, rid: str, prof=Depends(browser_profile)):
+    """An exception of the rule removed: {from}; the rule takes this sender's new mail again (mailregeln.drop_except)."""
+    guard.limit(request, "postordnen", prof["id"])
+    b = await json_body(request, 1024)
+    await _rule(prof, "exception", mailregeln.drop_except, rid[:20], str(b.get("from") or "")[:200])
+    return mailregeln.public(prof["id"])
 
 
 async def _einordnen(prof, what, fn, *args):

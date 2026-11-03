@@ -209,14 +209,13 @@ struct AskView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            GradientBar()
             VStack(alignment: .leading, spacing: 10) {
                 ScrollViewReader { proxy in
                     ScrollView {
                         VStack(alignment: .leading, spacing: 10) {
                             if c.entries.isEmpty && c.pending == nil {
                                 HStack(spacing: 10) {
-                                    FaceView(size: 30)
+                                    if FacePref.on { FaceView(size: 30) }
                                     Text(verbatim: "Frag den Spark etwas. Folgefragen kennen den Zusammenhang.")
                                         .foregroundColor(Theme.muted)
                                 }
@@ -238,7 +237,7 @@ struct AskView: View {
                             if let q = c.pending {
                                 own(q)
                                 HStack(alignment: .top, spacing: 8) {
-                                    FaceView(size: 30)
+                                    if FacePref.on { FaceView(size: 30) }
                                     HStack(spacing: 8) {
                                         ProgressView().controlSize(.small)
                                         Text(verbatim: "Spark denkt nach …")
@@ -386,19 +385,19 @@ struct AskView: View {
             Spacer(minLength: 60)
             Text(verbatim: q)
                 .font(.system(size: 13))
-                .foregroundColor(.white)
+                .foregroundColor(Theme.onAccent)
                 .textSelection(.enabled)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
-                .background(BubbleShape(topLeft: 14, topRight: 14, bottomRight: 4, bottomLeft: 14).fill(Theme.diagonal))
+                .background(BubbleShape(topLeft: 14, topRight: 14, bottomRight: 4, bottomLeft: 14).fill(Theme.accent))
         }
     }
 
     /// the Spark's answer: left, soft card with the face
     private func answer(_ a: String, md: String? = nil) -> some View {
         HStack(alignment: .top, spacing: 8) {
-            FaceView(size: 30)
+            if FacePref.on { FaceView(size: 30) }
             (md.map { Text(MdAnswer.styled($0)) } ?? Text(verbatim: a))
                 .font(.system(size: 13))
                 .foregroundColor(Theme.fg)

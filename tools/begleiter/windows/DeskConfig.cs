@@ -110,6 +110,9 @@ internal sealed class DeskConfig
     /// <summary>Antworten vorlesen of the profile (panel): off = Frag Spark never reads answers aloud.</summary>
     public bool Aloud { get; set; } = true;
 
+    /// <summary>Sprung-Link zu Fernzugang in Einstellungen → Übersicht zeigen (config.fern: nur ein Profil mit Admin-Rolle).</summary>
+    public bool Fern { get; set; }
+
     /// <summary>Programme, die der Spark (nach Rückfrage) starten darf – config.act.apps.</summary>
     public List<ActApp> ActApps { get; set; } = new();
 
@@ -207,6 +210,7 @@ internal sealed class DeskConfig
         string? face = Json.Str(json["face"]);
         config.Face = face is "comic" or "comic_woman" ? face : "robot";
         config.Aloud = Json.Bool(json["aloud"]) ?? true;
+        config.Fern = Json.Bool(json["fern"]) ?? false;
 
         if (json["dictate"] is JsonObject dictate)
         {

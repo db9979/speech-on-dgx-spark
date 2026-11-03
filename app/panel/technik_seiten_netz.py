@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "aussen": {
-        "stand": "b71a45f2a2",
+        "stand": "fd0087ae42",
         "bezug": {
             "dienstwacht.TIMEOUT": ["s5"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
             "netguard.client": ["s8", "s9", "s10"], "netguard.IMAP4_SSL": ["s9"],
@@ -470,7 +470,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Werkstatt
     "werkstatt": {
-        "stand": "5bb801c557",
+        "stand": "30680924d2",
         "bezug": {
             "werkstattseite.auftrag_geben": ["s1"], "werkstattseite.nacht_art": ["s1"], "werkstattseite.NACHT_FENSTER_H": ["s1"],
             "werkstatt.pruefen": ["s2"], "werkstatt.TEXT_MAX": ["s2"],
@@ -480,13 +480,19 @@ SEITEN = {
             "werkstatt.TEILE": ["s8"], "werkstatt.namen_testen": ["s8"], "werkstattseite.nachtest_namen": ["s1"],
             "werkstatt.NAMEN_MAX": ["s2"], "werkstatt.pruefe_ergebnis": ["s9"], "werkstatt.AUFTRAEGE_MAX": ["s9"],
             "werkstatt.PATCH_MAX": ["s9"],
+            "entwickeln.vorbereiten": ["s10"], "entwickeln.pfade_pruefen": ["s10"], "entwickeln.sandbox": ["s10"],
+            "entwickeln.aufsetzen": ["s10"],
         },
         "kurz": ("Die Werkstatt lässt einen Admin auf dem Modell-Rechner den vollen Testlauf laufen und mit OpenCode den Code "
                  "messen, ein Problem untersuchen oder eine Reparatur vorschlagen. Alles läuft in einer abgeschotteten Kopie "
-                 "des Codes; heraus kommen nur Zahlen, eine Antwort und ein Patch zum Ansehen. Eingespielt wird nie etwas.",
+                 "des Codes; heraus kommen nur Zahlen, eine Antwort und ein Patch zum Ansehen. Eingespielt wird nie etwas. "
+                 "Daneben Entwickeln auf dem Pi: OpenCode im Terminal des Panel-Rechners (Nutzer spark-dev, eigener Klon); "
+                 "seine lokalen Commits werden geprüft, im Sandkasten schnell getestet und wie ein Update eingespielt, nie als root ausgeführt.",
                  "The workshop lets an admin run the full test run on the model computer and, with OpenCode, measure the code, "
                  "look into a problem or propose a repair. Everything runs in a sealed-off copy of the code; only numbers, an "
-                 "answer and a patch to look at come out. Nothing is ever installed."),
+                 "answer and a patch to look at come out. Nothing is ever installed. Next to it, Develop on the Pi: OpenCode "
+                 "in the panel computer's terminal (user spark-dev, its own clone); its local commits are checked, quick-tested "
+                 "in a sandbox and installed like an update, never run as root."),
         "warum": ("Code, den ein Modell schreibt oder startet, darf nie an die Daten, die Schlüssel oder ins Internet kommen und "
                   "nie selbst etwas ändern. Deshalb entscheidet das Panel mit festen Regeln, und die Sandbox kann nichts außer "
                   "ihrer eigenen Kopie.",
@@ -579,8 +585,17 @@ SEITEN = {
             S("s10", "ende", ("Der Admin entscheidet", "The admin decides"),
               ("nichts wird eingespielt", "nothing is installed"),
               ("Den Patch gibt der Admin einem Claude-Thread oder einem Menschen; die Werkstatt spielt nie etwas ein und "
-               "pusht nie.",
-               "The admin hands the patch to a Claude thread or a person; the workshop never installs or pushes anything.")),
+               "pusht nie. Anders bei Entwickeln auf dem Pi (OpenCode im Terminal des Panel-Rechners, Nutzer spark-dev): "
+               "„sudo speech-spark lokal einspielen“ nimmt dessen Commits (entwickeln.vorbereiten), lässt nur Dateien zu, "
+               "die der Dienstnutzer ausführt (entwickeln.pfade_pruefen), testet sie im Sandkasten ohne Netz "
+               "(entwickeln.sandbox) und spielt sie wie ein Update ein, nie als root ausgeführt. Ein Update setzt sie mit "
+               "entwickeln.aufsetzen auf die neue Version; passt das nicht, bleibt die laufende Version.",
+               "The admin hands the patch to a Claude thread or a person; the workshop never installs or pushes anything. "
+               "Develop on the Pi is different (OpenCode in the panel computer's terminal, user spark-dev): \"sudo "
+               "speech-spark lokal einspielen\" takes its commits (entwickeln.vorbereiten), allows only files the service "
+               "user runs (entwickeln.pfade_pruefen), tests them in a sandbox without network (entwickeln.sandbox) and "
+               "installs them like an update, never run as root. An update puts them on the new version with "
+               "entwickeln.aufsetzen; when that does not fit, the running version stays.")),
         ],
         "beispiele": [
             (("Testlauf in der Nacht", "Test run at night"), ["s1", "s2", "s3", "s4", "s5", "s6", "s6!", "s8", "s9"],
@@ -608,6 +623,10 @@ SEITEN = {
              "Features → Workshop: on and off, \"Test every night\" with the start hour."),
             ("Zustand → Werkstatt: die vier Aufträge starten, Ergebnisse ansehen, rote Tests noch mal, für Claude kopieren, löschen.",
              "Status → Workshop: start the four orders, look at results, red tests again, copy for Claude, delete."),
+            ("Entwickeln auf dem Pi: auf dem Panel-Rechner einmal sudo ./install.sh --entwickeln, dann Funktionen → Entwickeln "
+             "auf dem Pi an; einspielen mit sudo speech-spark lokal einspielen (zurueck, verwerfen, status).",
+             "Develop on the Pi: on the panel computer once sudo ./install.sh --entwickeln, then Features → Develop on the "
+             "Pi on; install with sudo speech-spark lokal einspielen (zurueck, verwerfen, status)."),
         ],
         "sehen": [
             ("Zustand → Werkstatt: links der Verlauf, rechts ein Ergebnis mit großen Zahlen, was es heißt (etwa „Was heißt "
@@ -616,6 +635,10 @@ SEITEN = {
              "\"What does red mean?\"), the red tests by area, the answer or patch and the next steps."),
             ("Zustand → Live, Monitoring und die Steuerzentrale: Teil „Werkstatt“ mit Art und Status, nie Inhalte.",
              "Status → Live, Monitoring and the control centre: part \"Workshop\" with kind and status, never contents."),
+            ("Zustand → Live: Teil „Entwickeln“ mit „lokale Änderungen: N“ und dem letzten festen Grund einer Ablehnung; "
+             "sudo speech-spark lokal status zeigt dasselbe im Terminal.",
+             "Status → Live: part \"Entwickeln\" with \"lokale Änderungen: N\" and the last fixed reason of a refusal; "
+             "sudo speech-spark lokal status shows the same in the terminal."),
         ],
         "code": [
             ("werkstattseite.auftrag_geben", ("Auftrag vom Panel", "order from the panel")),
@@ -630,13 +653,17 @@ SEITEN = {
             ("werkstatt.namen_testen", ("rote Tests einzeln noch mal", "red tests alone again")),
             ("werkstattseite.nachtest_namen", ("Namen nur aus dem Ergebnis", "names only from the result")),
             ("werkstatt.pruefe_ergebnis", ("Ergebnis als Daten", "result as data")),
+            ("entwickeln.vorbereiten", ("lokale Änderungen holen, prüfen, testen", "take, check and test local changes")),
+            ("entwickeln.pfade_pruefen", ("nur Dateien, die der Dienstnutzer ausführt", "only files the service user runs")),
+            ("entwickeln.sandbox", ("Grenzen des Schnelltests", "limits of the quick test")),
+            ("entwickeln.aufsetzen", ("lokale Commits auf die neue Version", "local commits onto the new version")),
         ],
-        "tests": ["test_werkstatt"],
+        "tests": ["test_werkstatt", "test_entwickeln"],
         "heute": [],
     },
     # ------------------------------------------------------------------ Post, Kalender, Kontakte
     "post": {
-        "stand": "7b48661066",
+        "stand": "29c3dd7358",
         "bezug": {
             "kalenderserver.login": ["s2", "s10"], "kontaktserver._write": ["s10"], "kontaktserver.MAX_CARDS": ["s10"],
             "mail.MAX_ACCOUNTS": ["s3"], "mail.lookup": ["s1", "s5", "s7"], "calendars.view": ["s1"],
@@ -644,6 +671,8 @@ SEITEN = {
             "mailvorrat.keep_heads": ["s6"], "mailvorrat.HEADS": ["s6"], "mailvorrat.TEXTS": ["s6"], "vorrat.seal": ["s6"],
             "frisch.stand": ["s7"], "senden.preview": ["s9"], "senden.send": ["s9"], "senden.MAX_DAY": ["s9"],
             "contacts.save": ["s9"], "senden.later": ["s9"], "einordnen.start": ["s9"], "mailcode.arrived": ["s8"],
+            "mailregeln.spark_moved": ["s9"], "tidy.LOG_DAYS": ["s9"], 
+            "mailregeln.FIX_PAUSE": ["s9"], "mailregeln.model_hint": ["s9"],
         },
         "kurz": ("Die Seiten E-Mail, Kalender und Kontakte und der Assistent lesen dieselben Daten: Postfächer per IMAP, "
                  "Kalender und Adressbücher per CalDAV und CardDAV beim Anbieter, dazu die Spark-Kalender und das Adressbuch "
@@ -719,12 +748,32 @@ SEITEN = {
               ("Eine Mail geht erst nach dem Vorschau-Blatt und dem Tipp auf Senden raus (senden.preview, senden.send, "
                "höchstens {senden.MAX_DAY} am Tag). „Später senden“ legt sie bis zur Zeit versiegelt ab (senden.later); "
                "brach ein Senden ab, geht sie nie ein zweites Mal. „Alle Mails hier einordnen“ (einordnen.start) schlägt erst vor "
-               "und verschiebt nach festen Regeln erst nach dem Tipp, mit Rückgängig. contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich "
+               "und verschiebt nach festen Regeln erst nach dem Tipp, mit Rückgängig. Was Mail-Regeln und „Postfach aufräumen“ von selbst "
+               "verschieben, steht {tidy.LOG_DAYS} Tage mit seiner Message-ID in einer Merkliste (mailregeln.spark_moved); legt "
+               "die Person so eine Mail woandershin, etwa zurück in den Posteingang, fasst kein Sortierer sie wieder an. Mit „Sortieren aus "
+               "Korrekturen lernen“ zählt das als Korrektur (mailregeln.correct, auch der Ordner „Falsch sortiert“): der Absender "
+               "wird Ausnahme der Regel, nach {mailregeln.FIX_PAUSE} Korrekturen in {mailregeln.FIX_DAYS} Tagen pausiert sie, "
+               "eine Karte fragt; nur Kopfzeilen, die Entscheidung trifft nie das Modell. Hatte das Modell die Mail einsortiert, fragt "
+               "die Karte „Mails von … immer nach …?“ (eine Regel nur per Knopf), und für „Falsch sortiert“ darf das Modell nur aus "
+               "Domain und Ordnernamen einen vorhandenen Ordner vorschlagen (mailregeln.model_hint, tidy.suggest_folder; jede andere "
+               "Antwort wird verworfen). Nach „Regel anlegen“ entscheidet die neue Regel: „Postfach aufräumen“ fragt bei diesem "
+               "Absender nicht mehr (mailregeln.settle). Unter E-Mail → Regeln stehen die Korrekturen (mailregeln.fix_list) "
+               "mit „Rückgängig“ (mailregeln.undo_fix nimmt Ausnahme und Pause zurück, verschiebt nie eine Mail). contacts.save schreibt eine Karte mit If-Match zurück: hat sie sich "
                "inzwischen geändert, wird nichts überschrieben.",
                "A mail goes out only after the preview sheet and the tap on Send (senden.preview, senden.send, at most "
                "{senden.MAX_DAY} a day). \"Send later\" keeps it sealed until its time (senden.later); if a sending broke "
                "off, it never goes a second time. \"Sort every mail here\" (einordnen.start) proposes first and moves by fixed "
-               "rules only after the tap, with Undo. contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is "
+               "rules only after the tap, with Undo. What the mail rules and \"Inbox tidying\" move by themselves stays {tidy.LOG_DAYS} days "
+               "with its Message-ID on one list (mailregeln.spark_moved); when the person puts such a mail somewhere else, back "
+               "into the inbox for instance, no sorter touches it again. With \"Learn sorting from corrections\" that is a correction "
+               "(mailregeln.correct, also the folder \"Falsch sortiert\"): the sender becomes an exception of the rule, after "
+               "{mailregeln.FIX_PAUSE} corrections in {mailregeln.FIX_DAYS} days it pauses, a card asks; headers only, the model never "
+               "decides. Had the model sorted the mail, the card asks \"Mails from … always to …?\" (a rule only by button), and "
+               "for \"Falsch sortiert\" the model may only suggest a folder there is, from the domain and the folder names "
+               "(mailregeln.model_hint, tidy.suggest_folder; any other answer is dropped). After \"Make the rule\" the new rule decides: "
+               "\"Inbox tidying\" asks no more about this sender (mailregeln.settle). "
+               "Under E-mail → Rules the corrections are listed (mailregeln.fix_list) with \"Undo\" (mailregeln.undo_fix "
+               "takes back exception and pause, never moves a mail). contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is "
                "overwritten."),
               ("ok", ("fertig", "done"), "s11")),
             S("s10", "schritt", ("Tür für Apps", "Door for apps"),
@@ -759,6 +808,8 @@ SEITEN = {
             ("{mailvorrat.HEADS}", ("Kopfzeilen je Postfach im Vorrat", "headers per mailbox in the supply"), "mailvorrat.HEADS"),
             ("{mailvorrat.TEXTS}", ("Mailtexte je Profil im Vorrat", "mail texts per profile in the supply"), "mailvorrat.TEXTS"),
             ("{senden.MAX_DAY}", ("Mails höchstens am Tag", "mails at most a day"), "senden.MAX_DAY"),
+            ("{tidy.LOG_DAYS} Tage", ("merkt sich der Spark, was er verschoben hat", "the Spark remembers what it moved"), "tidy.LOG_DAYS"),
+            ("{mailregeln.FIX_PAUSE}", ("Korrekturen pausieren eine Regel", "corrections pause a rule"), "mailregeln.FIX_PAUSE"),
             ("{kontaktserver.MAX_CARDS}", ("Karten im Adressbuch „Auf dem Spark“", "cards in the address book \"On the Spark\""),
              "kontaktserver.MAX_CARDS"),
         ],
@@ -788,21 +839,24 @@ SEITEN = {
             ("senden.send", ("senden nach dem Tipp", "send after the tap")),
             ("senden.later", ("später senden, versiegelt", "send later, sealed")),
             ("einordnen.start", ("einen Ordner einordnen, erst Vorschlag", "sort a folder, a proposal first")),
+            ("mailregeln.spark_moved", ("was der Spark verschoben hat, kein Ping-Pong", "what the Spark moved, no ping-pong")),
+            ("mailregeln.model_hint", ("das Modell schlägt nur einen vorhandenen Ordner vor", "the model only suggests a folder there is")),
             ("mailcode.arrived", ("Bestätigungscode als Mitteilung", "confirmation code as a note")),
             ("contacts.save", ("Karte zurück mit If-Match", "card back with If-Match")),
             ("kalenderserver.login", ("Tür für Kalender- und Kontakte-Apps", "door for calendar and contacts apps")),
             ("kontaktserver._write", ("Karte einer Kontakte-App", "card from a contacts app")),
         ],
         "tests": ["test_mailvorrat", "test_vorrat", "test_mails_senden", "test_kalenderserver", "test_kontaktserver",
-                  "test_kontakte_seite", "test_kalenderspiegel", "test_mailcode", "test_einordnen"],
+                  "test_kontakte_seite", "test_kalenderspiegel", "test_mailcode", "test_einordnen", "test_mailregeln", "test_tidy",
+                  "test_mail_lernen"],
         "heute": [],
     },
     # ------------------------------------------------------------------ Browser und Handy
     # ------------------------------------------------------------------ Fernzugang (Dominik 2026-10-29 „in Technik → Überblick fehlt die Fernwartung“)
     "fernzugang": {
-        "stand": "cd2eda00d7",
+        "stand": "cd201fac45",
         "bezug": {
-            "fernzugang.entsperrt_bis": ["s2"], "fernzugang.admin_pair": ["s3"], "fernzugang.link_file": ["s3"], "fernzugang.admin_confirm": ["s3"], "fernzugang.CODE_S": ["s3"], "fernzugang.TICKET_S": ["s4"], "fernzugang.terminal_ws": ["s4"], "fernzugang.hostkey_wrong": ["s5"], "fernzugang.HALTEN_S": ["s6"], "ferndateien.listing": ["s6"], "fernbild.GUACD": ["s6"], "fernbild.FPS": ["s6"], "spontanhilfe.admin_new": ["s7"], "spontanhilfe.NUMMER_S": ["s7"], "fernzugang.notaus_close": ["s8"], "fernzugang.MAX_ANKER": ["s3"], "fernnotiz.fuer_modell": ["s6"], "fernnotiz.FASSUNGEN": ["s6"], "fernordner.view": ["s6"], "fernordner.MAX_ORDNER": ["s6"], "ferngross.upload_piece": ["s6"], "ferngross.TEIL": ["s6"],
+            "fernzugang.entsperrt_bis": ["s2"], "fernzugang.admin_pair": ["s3"], "fernzugang.link_file": ["s3"], "fernzugang.admin_confirm": ["s3"], "fernzugang.CODE_S": ["s3"], "fernzugang.TICKET_S": ["s4"], "fernzugang.terminal_ws": ["s4"], "fernzugang.hostkey_wrong": ["s5"], "fernzugang.HALTEN_S": ["s6"], "ferndateien.listing": ["s6"], "fernbild.GUACD": ["s6"], "fernbild.FPS": ["s6"], "spontanhilfe.admin_new": ["s7"], "spontanhilfe.NUMMER_S": ["s7"], "fernzugang.notaus_close": ["s8"], "fernzugang.MAX_ANKER": ["s3"], "fernnotiz.fuer_modell": ["s6"], "fernnotiz.FASSUNGEN": ["s6"], "fernordner.view": ["s6"], "fernordner.MAX_ORDNER": ["s6"], "ferngross.upload_piece": ["s6"], "ferngross.TEIL": ["s6"], "fernweb.verbindung": ["s6"], "fernweb.ziel_ok": ["s6"], "fernweb.TOR_PORT": ["s6"], "fernweb.MAX_TUNNEL": ["s6"], "fernweb.MAX_KANAELE": ["s6"],
         },
         "kurz": ("Der Fernzugang öffnet Shell, Dateien und Bildschirm eines eigenen Servers im Browser, ohne offenen Port "
                  "dort: der Anker auf dem Server verbindet sich selbst zum Panel, das Panel spricht SSH durch diese "
@@ -853,9 +907,13 @@ SEITEN = {
             S("s4", "schritt", ("Ticket für das Fenster", "Ticket for the window"),
               ("{fernzugang.TICKET_S} s, einmal", "{fernzugang.TICKET_S} s, once"),
               ("„Shell“ gibt ein Einmal-Ticket (fernzugang.admin_session), das {fernzugang.TICKET_S} Sekunden lang genau "
-               "ein Web-Terminal öffnet (fernzugang.terminal_ws); höchstens {fernzugang.SITZUNGEN.1} Sitzungen zugleich.",
+               "ein Web-Terminal öffnet (fernzugang.terminal_ws); höchstens {fernzugang.SITZUNGEN.1} Sitzungen zugleich. "
+               "Jede ist ein Reiter; nebeneinander, 2 × 2 oder als Übersicht zeigt nur die Seite mehrere zugleich, am Panel bleibt jede für sich. "
+               "„An alle senden“ (fernzugang.admin_alle, eigener Schalter, aus) schreibt eine geprüfte Zeile in mehrere Shells der eigenen Anmeldung.",
                "„Shell“ hands out a one-time ticket (fernzugang.admin_session) that opens exactly one web terminal for "
-               "{fernzugang.TICKET_S} seconds (fernzugang.terminal_ws); at most {fernzugang.SITZUNGEN.1} sessions at once.")),
+               "{fernzugang.TICKET_S} seconds (fernzugang.terminal_ws); at most {fernzugang.SITZUNGEN.1} sessions at once. "
+               "Each one is a tab; side by side, 2 × 2 or as an overview only the page shows several at once, on the panel each stays on its own. "
+               "„Send to all“ (fernzugang.admin_alle, own switch, off) writes one checked line into several shells of the own login.")),
             S("s5", "frage", ("Anderer Host-Schlüssel?", "Another host key?"),
               ("fernzugang.hostkey_wrong", "fernzugang.hostkey_wrong"),
               ("Zeigt der Server einen anderen Host-Schlüssel als beim Koppeln, gibt es keine Verbindung "
@@ -870,31 +928,51 @@ SEITEN = {
                "wartet in höchstens {fernzugang.STAU} Stücken auf das Fenster, dann bremst SSH den Server (Gegendruck). "
                "Dateien über SFTP in derselben Verbindung (ferndateien.listing), Laden mit Einmal-Link für "
                "{ferndateien.LINK_S} Sekunden; große Dateien in Teilen von {ferngross.TEIL|mb} MB mit SHA-256 je Stück "
-               "(ferngross.upload_piece). Der Bildschirm geht über guacd nur auf 127.0.0.1 (fernbild.GUACD), höchstens "
+               "(ferngross.upload_piece). Als root oder ein anderer Benutzer nur, wenn der Server selbst es freigab (sudoers nur für "
+               "seinen sftp-server mit -R) und der Admin es je System eingeschaltet hat (fernals.choose); Schreiben mit frischem Code. "
+               "Der Bildschirm geht über guacd nur auf 127.0.0.1 (fernbild.GUACD), höchstens "
                "{fernbild.FPS} Bilder je Sekunde; guacd {fernbild.GUACD_VERSION} baut der Spark selbst aus Apaches Quelltext, "
                "fest mit SHA-256 (fernbild.dienst sagt der Seite, warum er fehlt). Der Assistent (fernzugang.admin_help) fragt nur das eigene Modell und "
                "schlägt vor, getippt wird nie von selbst. Notizen je System liegen versiegelt, "
                "{fernnotiz.FASSUNGEN} Fassungen bleiben; das Modell liest sie nur mit Haken (fernnotiz.fuer_modell). Ordner ordnen nur die Liste "
-               "(fernordner.view), höchstens {fernordner.MAX_ORDNER}; Rechte bleiben je System.",
+               "(fernordner.view), höchstens {fernordner.MAX_ORDNER}; Rechte bleiben je System. Webdienste kommen über die "
+               "Tunnel-Tür auf Port {fernweb.TOR_PORT}, eine eigene Herkunft, nie die des Panels (fernweb.verbindung): ohne "
+               "Cookies des Panels und ohne Anmeldung, die Cookies jedes Dienstes für sich, einbetten darf nur das Panel. Ziele nur "
+               "nach festen Regeln (fernweb.ziel_ok), die der Anker selbst noch einmal prüft: 127.0.0.1 dort, private "
+               "Adressen nur mit „Netz dahinter“, nie die Netze des Spark. Anders als die Shell geht das nicht als SSH Ende "
+               "zu Ende, sondern durch die TLS-Leitung des Ankers mit angeheftetem Zertifikat; höchstens {fernweb.MAX_TUNNEL} "
+               "Tunnel mit je {fernweb.MAX_KANAELE} Verbindungen und Gegendruck.",
                "SSH runs through the anchor's channel; if the window drops, the shell waits {fernzugang.HALTEN_S} seconds. "
                "A heartbeat every {fernzugang.MESS_S} seconds measures round trip and rate; output waits "
                "for the window in at most {fernzugang.STAU} pieces, then SSH slows the server (backpressure). "
                "Files through SFTP in the same connection (ferndateien.listing), downloads with a one-time link for "
                "{ferndateien.LINK_S} seconds; big files in pieces of {ferngross.TEIL|mb} MB with a SHA-256 per piece "
-               "(ferngross.upload_piece). The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most "
+               "(ferngross.upload_piece). As root or another user only when the server itself gave it free (sudoers only for "
+               "its sftp-server with -R) and the admin switched it on per system (fernals.choose); writing with a fresh code. "
+               "The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most "
                "{fernbild.FPS} pictures a second; the Spark builds guacd {fernbild.GUACD_VERSION} itself from Apache's source, "
                "pinned with SHA-256 (fernbild.dienst tells the page why it is missing). The assistant (fernzugang.admin_help) asks only the own model and "
                "suggests, nothing is typed by itself. Notes per system are stored sealed, "
                "{fernnotiz.FASSUNGEN} versions stay; the model reads them only when ticked (fernnotiz.fuer_modell). Folders only order the list "
-               "(fernordner.view), at most {fernordner.MAX_ORDNER}; rights stay per system.")),
+               "(fernordner.view), at most {fernordner.MAX_ORDNER}; rights stay per system. Web services come through the "
+               "tunnel door on port {fernweb.TOR_PORT}, an origin of its own, never the panel's (fernweb.verbindung): without "
+               "the panel's cookies and without sign-in, each service's cookies apart, only the panel may embed it. Targets only "
+               "by fixed rules (fernweb.ziel_ok), which the anchor checks again itself: 127.0.0.1 there, private addresses "
+               "only with „Netz dahinter“, never the Spark's networks. Unlike the shell this is not SSH end to end but goes "
+               "through the anchor's TLS line with a pinned certificate; at most {fernweb.MAX_TUNNEL} tunnels with "
+               "{fernweb.MAX_KANAELE} connections each and backpressure.")),
             S("s7", "schritt", ("Spontanhilfe", "Spontaneous help"),
               ("Nummer {spontanhilfe.NUMMER_S|min} min", "number {spontanhilfe.NUMMER_S|min} min"),
               ("Eine Hilfe (spontanhilfe.admin_new) gibt eine Nummer für {spontanhilfe.NUMMER_S|min} Minuten, nach "
                "{spontanhilfe.FEHL} falschen ist sie tot. Der Bildschirm geht per WebRTC direkt zwischen den zwei Browsern, "
-               "von unterwegs über TURN auf tars; das Panel vermittelt nur.",
+               "von unterwegs über TURN auf tars; das Panel vermittelt nur. Steuern (spontansteuern.program_ws) geht über das "
+               "Programm SparkHilfe mit einem Einmal-Schlüssel für {spontansteuern.KEY_S|min} Minuten; Bilder und Eingaben "
+               "laufen dann durch das Panel.",
                "A help (spontanhilfe.admin_new) gives a number for {spontanhilfe.NUMMER_S|min} minutes, after "
                "{spontanhilfe.FEHL} wrong ones it is dead. The screen goes by WebRTC directly between the two browsers, "
-               "on the way through TURN on tars; the panel only connects them.")),
+               "on the way through TURN on tars; the panel only connects them. Control (spontansteuern.program_ws) goes through "
+               "the program SparkHilfe with a one-time key for {spontansteuern.KEY_S|min} minutes; pictures and inputs then "
+               "pass through the panel.")),
             S("s8", "ende", ("Logs und Verlauf", "Logs and history"),
               ("fernzugang.log", "fernzugang.log"),
               ("Logs nur mit festen Wörtern und Zahlen (fernzugang.log), der Verlauf nur Zeit, System, Admin, Art und "
@@ -919,11 +997,14 @@ SEITEN = {
             ("{fernnotiz.FASSUNGEN}", ("Fassungen einer Notiz bleiben", "versions of a note stay"), "fernnotiz.FASSUNGEN"),
             ("{fernordner.MAX_ORDNER}", ("Ordner höchstens", "folders at most"), "fernordner.MAX_ORDNER"),
             ("{ferngross.TEIL|mb} MB", ("ist ein Stück einer großen Datei", "is one piece of a big file"), "ferngross.TEIL"),
+            ("{fernweb.MAX_TUNNEL}", ("Webdienste gleichzeitig offen höchstens", "web services open at once at most"), "fernweb.MAX_TUNNEL"),
+            ("{fernweb.MAX_KANAELE}", ("Verbindungen je Webdienst zugleich höchstens", "connections per web service at once at most"), "fernweb.MAX_KANAELE"),
+            ("{fernweb.TOR_PORT}", ("Port der Tunnel-Tür", "port of the tunnel door"), "fernweb.TOR_PORT"),
             ("{spontanhilfe.NUMMER_S|min} min", ("gilt eine Nummer der Spontanhilfe", "a number of spontaneous help is valid"), "spontanhilfe.NUMMER_S"),
         ],
         "einstellen": [
-            ("Funktionen → Fernzugang zu Servern: einschalten, Systeme koppeln, Bildschirm, Spontanhilfe, Notizen und Ordner.",
-             "Features → Remote access to servers: switch on, pair systems, screen, spontaneous help, notes and folders."),
+            ("Funktionen → Fernzugang zu Servern: einschalten, Systeme koppeln, Bildschirm, Webdienste, Spontanhilfe, Notizen und Ordner.",
+             "Features → Remote access to servers: switch on, pair systems, screen, web services, spontaneous help, notes and folders."),
         ],
         "sehen": [
             ("Zustand → Live: offene Sitzungen und Anker nach Art und Anzahl, nie ein Inhalt.",
@@ -937,14 +1018,18 @@ SEITEN = {
             ("fernzugang.terminal_ws", ("das Web-Terminal mit Ticket", "the web terminal with a ticket")),
             ("fernzugang.hostkey_wrong", ("angehefteter Host-Schlüssel", "pinned host key")),
             ("ferndateien.listing", ("Dateien über SFTP", "files through SFTP")),
+            ("fernals.choose", ("Dateien als anderer Benutzer: nur mit beiden Zustimmungen", "files as another user: only with both consents")),
             ("fernbild.GUACD", ("guacd nur auf 127.0.0.1", "guacd on 127.0.0.1 only")),
             ("spontanhilfe.admin_new", ("eine neue Spontanhilfe", "a new spontaneous help")),
+            ("spontansteuern.program_ws", ("Steuern: der Socket des Programms SparkHilfe", "control: the socket of the program SparkHilfe")),
             ("fernzugang.notaus_close", ("Notaus schließt jede Leitung", "kill switch closes every line")),
             ("fernnotiz.fuer_modell", ("die Notiz nur mit Haken für das Modell", "the note for the model only when ticked")),
             ("fernordner.view", ("Ordner: nur die Reihenfolge der Liste", "folders: only the order of the list")),
             ("ferngross.upload_piece", ("große Datei: ein Stück nur ganz und mit passender SHA-256", "big file: a piece only whole and with a matching SHA-256")),
+            ("fernweb.ziel_ok", ("Webdienste: wohin ein Tunnel darf", "web services: where a tunnel may go")),
+            ("fernweb.verbindung", ("die Tunnel-Tür: Köpfe umgeschrieben, Cookies getrennt", "the tunnel door: heads rewritten, cookies apart")),
         ],
-        "tests": ["test_fernzugang", "test_fernbild", "test_spontanhilfe", "test_ferngross"],
+        "tests": ["test_fernzugang", "test_fernbild", "test_spontanhilfe", "test_ferngross", "test_fernweb", "test_fernals", "test_spontansteuern"],
         "heute": [],
     },
     "fernserver": {

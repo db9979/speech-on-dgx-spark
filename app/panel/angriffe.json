@@ -285,6 +285,7 @@
   "gleicher_weg": {
     "_": "Werkzeug -> ein Werkzeug mit demselben Sperrweg, das in einem Fall oben angegriffen wird (eingang) bzw. Ziel ist (ziel); test_angriffe prüft, dass beide in derselben Sperrliste stehen.",
     "eingang": {
+      "mappe_stand": "tasks_show",
       "document_list": "document_search",
       "home_assistant_history": "home_assistant_todo",
       "mail_tidy_overview": "mail_read",
@@ -298,6 +299,7 @@
       "article_more": "tasks_show"
     },
     "ziel": {
+      "mappe_dazu": "spark_vorschlag",
       "iphone_action": "home_assistant_action",
       "mail_draft": "memory_save",
       "mail_tidy_propose": "memory_save",

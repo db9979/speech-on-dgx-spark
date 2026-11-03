@@ -17,8 +17,10 @@ function empty(){inner.textContent='';const p=document.createElement('div');p.cl
   const s=document.createElement('span');s.textContent=t('Hier stehen dann ihre Erklärung, wer sie nutzen darf, ihre Einstellungen und die Anleitung.','Its explanation, who may use it, its settings and the guide then show here.');
   p.append(b,s);inner.appendChild(p)}
 function head(it){const row=it.firstElementChild,h=document.createElement('div');h.className='fdhead';
+  // the group's line symbol in a box in front of the title (Redesign Stufe 5), the close button draws the symbol „x“
   const top=document.createElement('div');top.className='fdtop';const b=document.createElement('b');b.textContent=nameOf(it);
-  const x=document.createElement('button');x.type='button';x.className='fdx';x.setAttribute('aria-label',t('Schließen','Close'));x.textContent='×';x.onclick=()=>featOpen(it,false);
+  const grp=it.closest('.fgrp'),sym=grp&&window.pageIcon&&pageIcon('g:'+grp.dataset.grp);if(sym){sym.classList.add('fdsym');top.appendChild(sym)}
+  const x=document.createElement('button');x.type='button';x.className='fdx';x.setAttribute('aria-label',t('Schließen','Close'));x.appendChild(icNode('x'));x.onclick=()=>featOpen(it,false);
   top.append(b,x);h.appendChild(top);
   const s=textOf(row.querySelector('.lbl>span'));if(s){const p=document.createElement('p');p.textContent=s;h.appendChild(p)}
   const tags=row.querySelector('.ftags');if(tags)h.appendChild(tags.cloneNode(true));

@@ -395,7 +395,7 @@ class WerRechnet(unittest.TestCase):
         import re
         units = set(re.findall(r"speech-spark-([a-z][a-z0-9-]*)\.service", helpers.repo_file("install.sh")))
         self.assertTrue(units)
-        stumm = {"teilen-fw", "werkstatt-fw"}   # oneshots that only load firewall rules: never takes CPU worth a line
+        stumm = {"teilen-fw", "werkstatt-fw", "entwickeln-fw"}   # oneshots that only load firewall rules: never takes CPU worth a line
         self.assertEqual(units - set(rechnerblick.DIENST_NAMEN) - stumm, set())
         for teil in (*rechenteile.THREADS.values(), *rechenteile.PROZESSE.values(), rechenteile.ANFRAGEN, "weitere", "uebrig"):
             self.assertIn(teil, rechnerblick.TEIL_NAMEN)

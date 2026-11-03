@@ -43,7 +43,7 @@ function tidyRender(){const d=TIDY,box=$('mailtidy'),E=icEl;
   for(const a of d.accounts){const parts=[];
     if(a.mode==='preview'&&a.since)parts.push(t('Vorschau seit ','Preview since ')+tdate(a.since)+(Date.now()/1000-a.since>7*86400?t(' – eine Woche ist um, passt es? Dann „Sicher“.',' – a week is over; if it fits, switch to "Safe".'):''));
     if(a.last_run)parts.push(t('zuletzt ','last ')+tdate(a.last_run));if(a.mode!=='off')parts.push(t(`prüft alle ${d.every} Minuten`,`checks every ${d.every} minutes`));
-    if(a.error)parts.push('⚠ '+a.error);if(a.stopped)parts.push('⚠ '+t('angehalten: ','stopped: ')+a.stopped);
+    if(a.error)parts.push(t('Fehler: ','Error: ')+a.error);if(a.stopped)parts.push(t('angehalten: ','stopped: ')+a.stopped);
     const seg=E('div','ic-seg');seg.setAttribute('role','group');seg.setAttribute('aria-label',t('Aufräumen für ','Tidying for ')+a.name);
     // a visible line under the card says what the chosen mode does; pointing at or focusing a segment shows that one's line
     const say=E('div','fh ic-modesay',tmodeSay(a.mode));say.dataset.modesay=a.id;say.id='tmode-'+a.id;
@@ -53,7 +53,7 @@ function tidyRender(){const d=TIDY,box=$('mailtidy'),E=icEl;
       b.onclick=()=>{if(k!==a.mode)tidyCall('',{accounts:{[a.id]:{mode:k}}},'PUT')};seg.appendChild(b)}
     const run=E('button','b',t('Jetzt prüfen','Check now'));run.type='button';run.dataset.run=a.id;
     run.onclick=async()=>{tidyMsg(t('Prüfe …','Checking …'));const r0=await tidyCall('/run',{aid:a.id});
-      if(r0&&r0.report){const r=r0.report;tidyMsg(r.first?t('Gestartet: ab jetzt werden neue Mails sortiert.','Started: new mail is sorted from now on.'):r.error?'⚠ '+r.error:`${r.new||0} ${t('neu','new')}, ${r.moved||0} ${t('verschoben','moved')}, ${r.preview||0} ${t('in der Vorschau','in the preview')}, ${r.asked||0} ${t('Fragen','questions')}`+(r.waiting?`, ${r.waiting} ${t('warten aufs Modell','wait for the model')}`:''),!!r.error)}};
+      if(r0&&r0.report){const r=r0.report;tidyMsg(r.first?t('Gestartet: ab jetzt werden neue Mails sortiert.','Started: new mail is sorted from now on.'):r.error?t('Fehler: ','Error: ')+r.error:`${r.new||0} ${t('neu','new')}, ${r.moved||0} ${t('verschoben','moved')}, ${r.preview||0} ${t('in der Vorschau','in the preview')}, ${r.asked||0} ${t('Fragen','questions')}`+(r.waiting?`, ${r.waiting} ${t('warten aufs Modell','wait for the model')}`:''),!!r.error)}};
     const card=icCard('mail',a.name,parts.join(' · '),[seg,run],[
       {label:t('Altlasten der letzten 90 Tage ansehen','Look at old mail of the last 90 days'),act:async()=>{tidyMsg(t('Sehe mir die letzten 90 Tage an …','Looking at the last 90 days …'));if(await tidyCall('/backlog',{aid:a.id}))tidyMsg('')}},
       {label:a.drafts?t('Antwort-Entwürfe nicht mehr erlauben','Stop allowing reply drafts'):t('Antwort-Entwürfe erlauben (nie senden)','Allow reply drafts (never sent)'),act:()=>tidyCall('',{accounts:{[a.id]:{drafts:!a.drafts}}},'PUT')}]);card.appendChild(say);box.appendChild(card)}
@@ -99,7 +99,7 @@ function tidyLog(){const d=TIDY,E=icEl;if(!d.log.length)return icEmpty(t('Noch n
     x.undone?[]:[icBtn('back',t('Zurückholen','Bring back'),()=>tidyCall('/undo',{ids:[x.id],protect:confirm(t('Diesen Absender künftig immer im Posteingang lassen?','Always keep this sender in the inbox from now on?'))}))],null,true));
   const w=E('div');w.appendChild(E('div','fh',t('Was der Spark in den letzten 30 Tagen verschoben hat; ↩ holt eine Mail zurück.','What the Spark moved in the last 30 days; ↩ brings a mail back.')));w.appendChild(tidyMore(icList([]),'log',rows,10));return w}
 // the sender rules live with every other mail rule on the tab E-Mail → Regeln (Mailclient Stufe B „3a“): shown and
-// deleted there; new ones come from the questions here or from a mail („⚙ Regel daraus …“)
+// deleted there; new ones come from the questions here or from a mail („Regel daraus …“)
 function tidyRules(){const E=icEl,w=E('div');
   w.appendChild(E('div','fh',t('Alle Regeln stehen jetzt an einem Ort: E-Mail → Regeln. Dort siehst und löschst du auch die Absender-Regeln vom Aufräumen.','All rules are in one place now: E-mail → Rules. There you also see and delete the sender rules of tidying.')));return w}
 function tidyFolders(){const d=TIDY,E=icEl,w=E('div','ic-form');const fpath=n=>(d.root?d.root+'/':'')+n;
@@ -126,4 +126,4 @@ function tidyFolders(){const d=TIDY,E=icEl,w=E('div','ic-form');const fpath=n=>(
   q('#tactsave').onclick=async()=>{const actions={},folders={};w.querySelectorAll('[data-act]').forEach(s=>actions[s.dataset.act]=s.value);w.querySelectorAll('[data-fname]').forEach(i=>folders[i.dataset.fname]=i.value);const r=await tidyCall('',{actions,folders},'PUT');if(r)tidyRenamed(r)};
   return w}
 function tidyRenamed(r){const bad=(r.renamed||[]).filter(x=>!x.ok);
-  tidyMsg(bad.length?bad.map(x=>'⚠ '+x.account+': '+x.error).join(' · ')+t(' – dort bleibt der alte Ordner; neue Mails gehen in den neuen.',' – the old folder stays there; new mail goes to the new one.'):(r.renamed?t('Umbenannt.','Renamed.'):t('Gespeichert.','Saved.')),!!bad.length)}
+  tidyMsg(bad.length?bad.map(x=>x.account+': '+x.error).join(' · ')+t(' – dort bleibt der alte Ordner; neue Mails gehen in den neuen.',' – the old folder stays there; new mail goes to the new one.'):(r.renamed?t('Umbenannt.','Renamed.'):t('Gespeichert.','Saved.')),!!bad.length)}

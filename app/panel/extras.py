@@ -41,8 +41,9 @@ import fuerdich
 import ichweiss
 import vorgaenge
 import fund
+import mappen
 
-SERVICES = [roomfar, weather, contacts, parcels, fuerdich, tasks, transit, feeds, wiki, agent, senden, messages, remarkable, hamelden, hilfe, begleiter, meinmcp, docmake, bilder, musik, tagebuch, zustand_wz, rechnen, rmliste, aendern, nasablage, naszustand, telefon_anruf, rufen, vorgaenge, fund]
+SERVICES = [roomfar, weather, contacts, parcels, fuerdich, tasks, transit, feeds, wiki, agent, senden, messages, remarkable, hamelden, hilfe, begleiter, meinmcp, docmake, bilder, musik, tagebuch, zustand_wz, rechnen, rmliste, aendern, nasablage, naszustand, telefon_anruf, rufen, vorgaenge, fund, mappen]
 
 
 def offer(ctx):

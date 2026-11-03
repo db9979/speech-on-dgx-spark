@@ -47,7 +47,7 @@ function nqBind(box,after,say){if(!NQ)return;
     try{const d=await (await api('/api/profile/nasquelle/tree?nas='+encodeURIComponent(id)+'&path='+encodeURIComponent(p.value.trim()))).json();
       out.textContent='';const pick=(label,path)=>{const x=document.createElement('button');x.type='button';x.className='b';x.textContent=label;x.onclick=()=>{p.value=path;b.click()};out.appendChild(x)};
       const here=d.path==='/'?'':d.path.replace(/\/$/,'');if(here)pick('↑ '+t('nach oben','up'),here.split('/').slice(0,-1).join('/')||'/');
-      d.dirs.forEach(n=>pick('📁 '+n,here+'/'+n));
+      d.dirs.forEach(n=>pick(n+'/',here+'/'+n));
       const m=document.createElement('div');m.className='fh';m.textContent=t(`${d.files} Dateien direkt hier`,`${d.files} files right here`)+(d.more?' · '+t('nur die ersten 500 Ordner','only the first 500 folders'):'');out.appendChild(m)}
     catch(e){out.textContent='';say(e.message,true)}});
   box.querySelectorAll('[data-nqprev]').forEach(b=>b.onclick=async()=>{const id=b.dataset.nqprev,m=q('data-nqprevmsg',id);m.className='fh';m.textContent=t('Zähle, was gelesen würde …','Counting what would be read …');

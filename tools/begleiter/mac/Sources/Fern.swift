@@ -246,7 +246,6 @@ struct ActSettingsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            GradientBar()
             ScrollView {
                 VStack(alignment: .leading, spacing: 8) {
                     SectionLabel(text: "Ohne Rückfrage")

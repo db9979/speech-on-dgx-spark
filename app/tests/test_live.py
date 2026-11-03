@@ -310,25 +310,29 @@ class Live(unittest.TestCase):
         reset()
         set_logs(live=True)
         real = vorrang.speaking
+        mine = ("Dokument lesen", "Sicherung")
+
+        def bg():   # only this test's jobs: work an earlier test left running in the same run shows there too
+            return [(b["job"], b["st"]) for b in live.snapshot()["bg"] if b["job"] in mine]   # (wackelig, 2026-10-29)
         try:
             talk = [True]
             vorrang.speaking = lambda now=None: talk[0]
             seen = []
 
             async def nap(s):
-                seen.append([(b["job"], b["st"]) for b in live.snapshot()["bg"]])
+                seen.append(bg())
                 talk[0] = False
 
             async def work():
-                seen.append([(b["job"], b["st"]) for b in live.snapshot()["bg"]])
+                seen.append(bg())
                 return 7
             self.assertEqual(asyncio.run(vorrang.run("Dokument lesen", work, sleep=nap)), 7)
             self.assertEqual(seen, [[("Dokument lesen", "wait")], [("Dokument lesen", "run")]])
-            self.assertEqual(live.snapshot()["bg"], [])
+            self.assertEqual(bg(), [])
             self.assertTrue(any(e["area"] == "Hintergrund" and e["text"].startswith("Dokument lesen fertig")
                                 for e in live.snapshot()["events"]))
             self.assertEqual(asyncio.run(vorrang.in_thread("Sicherung", lambda: 3)), 3)
-            self.assertEqual(live.snapshot()["bg"], [])
+            self.assertEqual(bg(), [])
         finally:
             vorrang.speaking = real
             set_logs(live=False)

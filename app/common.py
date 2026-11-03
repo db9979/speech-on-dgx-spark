@@ -327,7 +327,7 @@ class PrioGate:
         return len(self.running)
 
     def _rank(self, w, now):
-        return (min(STAGE_HIGH, w[0] + int((now - w[1]) // self.age)) if self.age else w[0], -w[2])
+        return (min(STAGE_HIGH, w[0] + int((now - w[1]) // self.age)) if self.age and not w[5] else w[0], -w[2])
 
     def _grant(self):
         while self.waiting and self._busy() < self.slots:
@@ -340,8 +340,9 @@ class PrioGate:
             self.running[best[4]["id"]] = now
             best[3].set_result(True)
 
-    async def enter(self, stage=STAGE_NORMAL):
-        """Waits for a slot. Returns the ticket: {"id", "waited_ms", "overtook"}; pass it to leave()."""
+    async def enter(self, stage=STAGE_NORMAL, fest=False):
+        """Waits for a slot. Returns the ticket: {"id", "waited_ms", "overtook"}; pass it to leave(). fest: the stage
+        never rises while waiting (the LLM-Tor's developer key stays last, Entwickeln auf dem Pi)."""
         import asyncio
         self.seq += 1
         ticket = {"id": self.seq, "waited_ms": 0, "overtook": 0}
@@ -353,7 +354,8 @@ class PrioGate:
             raise GateFull()
         t0 = self.clock()
         fut = asyncio.get_running_loop().create_future()
-        self.waiting.append([stage if stage in (STAGE_LOW, STAGE_NORMAL, STAGE_HIGH) else STAGE_NORMAL, t0, self.seq, fut, ticket])
+        self.waiting.append([stage if stage in (STAGE_LOW, STAGE_NORMAL, STAGE_HIGH) else STAGE_NORMAL, t0, self.seq, fut, ticket,
+                             fest is True])
         self._grant()
         while not fut.done():   # a slot whose lease ran out frees itself: look again now and then
             try:
@@ -753,7 +755,7 @@ def gpu_stats():
 MODEL_ID = re.compile(r"Qwen/Qwen3-(ASR|TTS|ForcedAligner)-[\w.\-]+")
 # settings of the model side the panel sets and the model computer must know (Spark teilen, B4b): the sections and the
 # keys that stay as each computer's install made them (addresses, ports, backends)
-SYNC_SECTIONS = ("asr", "tts", "memory", "watch", "image", "music")
+SYNC_SECTIONS = ("asr", "tts", "memory", "watch", "image", "music", "entwickeln")
 SYNC_KEEP = {"host", "port", "engine_port", "voicedesign_port", "backend"}
 # which model runs (B4c): the model computer decides (install.sh, Zustand → Modelle, `speech-spark modelle`) and
 # reports it in its status; the panel takes it over, never the other way round
@@ -768,8 +770,38 @@ def _keep(sec):
 
 def model_settings(cfg):
     """The settings the model computer takes from the panel: SYNC_SECTIONS without the install's own keys and
-    without the model choice."""
-    return {sec: {k: v for k, v in (cfg.get(sec) or {}).items() if k not in _keep(sec)} for sec in SYNC_SECTIONS}
+    without the model choice. The developer key's hash goes only while the admin switch is on (entwickler_hash)."""
+    out = {sec: {k: v for k, v in (cfg.get(sec) or {}).items() if k not in _keep(sec)} for sec in SYNC_SECTIONS}
+    if "schluessel_sha256" in out["entwickeln"]:
+        out["entwickeln"]["schluessel_sha256"] = entwickler_hash(cfg)
+    return out
+
+
+# Entwickeln auf dem Pi (app/entwickeln.py): OpenCode of the user spark-dev asks the LLM-Tor with a key of its own.
+# Only its SHA-256 is in the config (entwickeln.schluessel_sha256, written by `speech-spark entwickeln schluessel`);
+# it counts while the admin switch chat.entwickeln is on. On the model computer of a split install the panel's synced
+# value counts as it is (the panel sends "" while the switch is off there).
+ENTWICKLER_PLAETZE = 1     # developer requests at once at the LLM-Tor (its own gate, llm_tor.entwickler_tor)
+
+
+def entwickler_hash(cfg):
+    h = str((cfg.get("entwickeln") or {}).get("schluessel_sha256") or "")
+    if not re.fullmatch(r"[0-9a-f]{64}", h):
+        return ""
+    if not model_side(cfg) and (cfg.get("chat") or {}).get("entwickeln") is not True:
+        return ""
+    return h
+
+
+def entwickler_ok(authorization, cfg):
+    """True when the Authorization header carries the developer key (its SHA-256 compared in constant time)."""
+    import hashlib
+    import hmac
+    h = entwickler_hash(cfg)
+    got = authorization.decode("latin-1") if isinstance(authorization, bytes) else str(authorization or "")
+    if not h or not got.startswith("Bearer ") or len(got) > 200:
+        return False
+    return hmac.compare_digest(hashlib.sha256(got[7:].encode()).hexdigest(), h)
 
 
 def model_settings_hash(cfg):

@@ -7,8 +7,8 @@ const AG_ST={queued:['wartet','waiting'],running:['läuft','running'],done:['fer
 const AG_REP=[['daily','jeden Tag','every day'],['weekdays','werktags','on weekdays'],['weekly','jede Woche','every week'],['monthly','jeden Monat','every month'],['once','einmal','once']];
 const AG_EVERY={daily:['jeden Tag','every day'],weekdays:['werktags','on weekdays'],weekly:['jede Woche','every week'],monthly:['jeden Monat','every month']};
 const AG_DAYS=[['Montag','Monday'],['Dienstag','Tuesday'],['Mittwoch','Wednesday'],['Donnerstag','Thursday'],['Freitag','Friday'],['Samstag','Saturday'],['Sonntag','Sunday']];
-const AG_KIND={watch:['Beobachten','Watching','👁','wa'],plan:['Geplant','Scheduled','⏱','pl'],rem:['Erinnerung','Reminder','⏰','re'],
-  rule:['Smart Home','Smart home','⌂','ru'],mail:['Mail','Mail','✉','ma'],routine:['Ablauf','Routine','▶','ro']};
+const AG_KIND={watch:['Beobachten','Watching','eye','wa'],plan:['Geplant','Scheduled','timer','pl'],rem:['Erinnerung','Reminder','alarm','re'],
+  rule:['Smart Home','Smart home','home','ru'],mail:['Mail','Mail','mail','ma'],routine:['Ablauf','Routine','play','ro']};
 const AG_HIST={neu:['neu gemeldet','new, reported','due'],still:['nichts Neues','nothing new','off'],bericht:['Bericht','report','read'],fehler:['ging nicht','failed','err']};
 const agTime=s=>s?new Date(s*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
 const agHM=ms=>{const d=new Date(ms);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
@@ -29,7 +29,7 @@ function agRows(d){const o=d.own||{},rows=[];
   return rows}
 const agSw=(on,attrs)=>`<label class="tgl" title="${esc(t('Ein oder aus','On or off'))}"><input type="checkbox" ${attrs}${on?' checked':''}><i></i></label>`;
 function agRowHtml(r){const k=AG_KIND[r.k];const sw=['watch','plan','rem','rule'].includes(r.k)?agSw(r.on,`data-agon="${esc(r.k+':'+r.id)}" aria-label="${esc(r.title)}"`):'';
-  return `<div class="ld-row${agSel===r.k+':'+r.id?' on':''}" tabindex="0" role="button" data-agrow="${esc(r.k+':'+r.id)}"><span class="ld-ico ag-${k[3]}" aria-hidden="true">${k[2]}</span>
+  return `<div class="ld-row${agSel===r.k+':'+r.id?' on':''}" tabindex="0" role="button" data-agrow="${esc(r.k+':'+r.id)}"><span class="ld-ico ag-${k[3]}" aria-hidden="true">${ic(k[2])}</span>
     <span class="ld-mid"><b>${esc(r.title)}</b><small>${esc(r.meta)}</small></span><span class="ld-right"><span class="ld-badge ${r.badge[1]}">${esc(r.badge[0])}</span>${sw}</span></div>`}
 function agWhen(p,pre){const rep=p.repeat||'daily';
   return `<div class="row ag-when"><select id="${pre}rep" aria-label="${esc(t('Wie oft','How often'))}">${AG_REP.filter(x=>pre!=='agw'||x[0]!=='once').map(([k,de,en])=>`<option value="${k}"${rep===k?' selected':''}>${esc(t(de,en))}</option>`).join('')}</select>

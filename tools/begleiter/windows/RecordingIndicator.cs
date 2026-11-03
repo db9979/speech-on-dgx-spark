@@ -13,9 +13,9 @@ namespace SparkBegleiter;
 /// </summary>
 internal sealed class RecordingIndicator : Form
 {
-    private static readonly Color TextColor = Palette.Hex(0xE8EBF2);
-    private static readonly Color MutedText = Palette.Hex(0x8B95AB);
-    private static readonly Color ChipLine = Palette.Hex(0x2A3350);
+    private static readonly Color TextColor = Palette.HudText;
+    private static readonly Color MutedText = Palette.HudMuted;
+    private static readonly Color ChipLine = Palette.HudLine;
 
     private readonly System.Windows.Forms.Timer _timer = new() { Interval = 70 };
     private readonly Func<TimeSpan> _elapsed;
@@ -157,7 +157,7 @@ internal sealed class RecordingIndicator : Form
             {
                 RectangleF r = RectangleF.Inflate(pill, i * 0.8f, i * 0.8f);
                 r.Offset(0, S(3));
-                using var brush = new SolidBrush(Color.FromArgb((int)(28 * (1f - ((float)i / shadow))) + 4, 0, 0, 0));
+                using var brush = new SolidBrush(Color.FromArgb((int)(28 * (1f - ((float)i / shadow))) + 4, Palette.Shade));
                 using GraphicsPath path = Draw.Round(r, r.Height / 2f);
                 g.FillPath(brush, path);
             }
@@ -165,7 +165,7 @@ internal sealed class RecordingIndicator : Form
             Color visor = p.HighContrast ? Palette.Light.Visor : p.Visor;
             using (GraphicsPath path = Draw.Round(pill, pill.Height / 2f))
             using (var fill = new SolidBrush(visor))
-            using (var border = new Pen(Color.FromArgb(60, 255, 255, 255), 1f))
+            using (var border = new Pen(Color.FromArgb(60, Palette.OnColor), 1f))
             {
                 g.FillPath(fill, path);
                 g.DrawPath(border, path);
@@ -174,7 +174,7 @@ internal sealed class RecordingIndicator : Form
             float x = pill.X + S(14);
             float cy = pill.Y + (pill.Height / 2f);
             bool blinkOn = _working || (_tick / 7) % 2 == 0;
-            Color dotColor = _working ? Palette.DarkTheme.Accent2 : blinkOn ? Palette.Light.Bad : Palette.Mix(Palette.Light.Bad, visor, 0.55f);
+            Color dotColor = _working ? Palette.DarkTheme.Accent : blinkOn ? Palette.Light.Bad : Palette.Mix(Palette.Light.Bad, visor, 0.55f);
             using (var dotBrush = new SolidBrush(dotColor))
             {
                 g.FillEllipse(dotBrush, x, cy - (dot / 2f), dot, dot);
@@ -196,7 +196,7 @@ internal sealed class RecordingIndicator : Form
                 }
 
                 x += clockSize.Width + gap;
-                using (var barBrush = new SolidBrush(Palette.DarkTheme.Accent2))
+                using (var barBrush = new SolidBrush(Palette.DarkTheme.Accent))
                 {
                     float maxH = S(18);
                     for (int i = 0; i < _bars.Length; i++)
@@ -235,7 +235,7 @@ internal sealed class RecordingIndicator : Form
         IntPtr old = IntPtr.Zero;
         try
         {
-            hBitmap = bitmap.GetHbitmap(Color.FromArgb(0));
+            hBitmap = bitmap.GetHbitmap(Color.FromArgb(0, Palette.Shade));
             old = NativeMethods.SelectObject(memDc, hBitmap);
             var size = new NativeMethods.SIZE(bitmap.Width, bitmap.Height);
             var source = new NativeMethods.POINT(0, 0);

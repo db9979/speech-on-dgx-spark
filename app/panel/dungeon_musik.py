@@ -12,13 +12,23 @@ A store of music for the whole Spark, one field per world and mood (STIMMUNGEN),
   new act adds NEU_JE_AKT new pieces for the act after it, the night fills every field up to the number (and the
   admin's „Musik jetzt vorbereiten“ at once); one piece at a time, only while no other heavy job waits;
 - the theme (Dominik 2026-10-24 „mehr mit den Themen zu tun, gerne mit Trommeln und Bässen“): every world and mood
-  has its own scene and instruments (THEMA), drums and bass with measure, never hectic; a vault of the map has its own
-  mood (gewoelbe), a rest at the campfire too (lager, D&D idea 4, Dominik 2026-10-25 „1-12“); a piece of an older style (STIL_V) plays until its field has new ones and then goes first;
+  has its own character and instruments (THEMA), drums and bass with measure, never hectic; the caption is a list of
+  tags (genre, instruments, mood, production), tempo, key and time signature go as metadata and what a piece must not
+  be as its negative prompt (meta, plan dungeon-musik-tuning V1a, Dominik 2026-10-30 „1-8“); a boss fight has its own
+  mood (boss: a foe with the bestiary's boss mark still stands in the panel's fight, V8a), the fight's pieces until
+  its field has some; a vault of the map has its own
+  mood (gewoelbe), a rest at the campfire too (lager, D&D idea 4, Dominik 2026-10-25 „1-12“); a piece of an older sound (its field's fingerprint, V2a) plays until its field has new ones and then goes first;
 - full: per field marked, then older, then the most played pieces go first, and the store stays within the megabytes;
 - „👎 Nervt“ (Dominik 2026-10-24 „als schlecht oder nervig markieren, auch von Spielern, in der Nacht erneuert“): any
   seat of a running round (a profile or a guest) marks the piece playing; one mark is enough, the piece is never played
   again and its field asks for a new one, the night throws the marked pieces away; the admin's list takes a mark back
-  until then (each seat marks a piece once, own rate limit dungeonnervt, no name is kept: only the number of marks).
+  until then (each seat marks a piece once, own rate limit dungeonnervt, no name is kept: only the number of marks);
+  „👍 Gefällt“ is its counterpart (same rules, own rate limit dungeongefaellt): a liked piece is kept when its field
+  is full and stands first in the table's list (plan dungeon-musik-tuning V5a);
+- a probe (V5a): the admin makes one piece of a field with its current template (30 s or the full length) before the
+  night does, one at a time and PROBE_TAG a day, the voice first; at most PROBE_FELD per field, the night throws them
+  away; „👍 In den Vorrat“ moves a full-length probe into the store as a liked piece, „Variation“ makes another with
+  the same planner seed (lm_seed) and a new seed. Every piece keeps its seed and lm_seed.
 
 Sounds (3a) and the d20 (4a) are made in the browser (dungeon-ton.js, WebAudio, no files); the panel only names them:
 the ambient sound of the place (KLANG, a word list over place and mood), the turn a door was told, the turn of the
@@ -29,19 +39,28 @@ model; without them the table has its sounds and dice and no music. Every seat o
 profile by its login, a guest by its seat code, dungeon._guest); nothing of the store is personal. The journal gets
 fixed words and numbers only („dungeon: musik | …“), Live only counts.
 
-    STATE/dungeon-musik.json          {"an", "stuecke", "mb"}   the admin's settings
-    STATE/dungeon-musik/index.json    {"stuecke": [{id, w, st, s, t, b, n, v, nervt?}]}   the store
+    STATE/dungeon-musik.json          {"an", "stuecke", "mb", "qualitaet", "laenge", "laut", "stil"}   the admin's settings
+    STATE/dungeon-musik/index.json    {"stuecke": [{id, w, st, s, t, b, n, k, seed, lm, nervt?, gut?}]}   the store (k: the sound's fingerprint)
     STATE/dungeon-musik/<id>.mp3      one piece
+    STATE/dungeon-musik/probe/index.json, <pid>.mp3   the admin's probes {"proben": [{id, w, st, s, t, b, k, seed, lm}]}
 
     GET    /api/profile/dungeon/{rid}/musik/{sid}   a piece for a seat of the round (MP3)
     POST   /api/dungeon/musik                        {code, s}: the same for a guest's seat
     POST   /api/profile/dungeon/{rid}/musik/{sid}/nervt   „👎 Nervt“ from a seat of the round
     POST   /api/dungeon/musik/nervt                  {code, s}: the same for a guest's seat
+    POST   /api/profile/dungeon/{rid}/musik/{sid}/gefaellt   „👍 Gefällt“ from a seat of the round
+    POST   /api/dungeon/musik/gefaellt               {code, s}: the same for a guest's seat
     GET    /api/admin/dungeon/musik                  settings, the fields with their counts, Live
-    PUT    /api/admin/dungeon/musik                  {an, stuecke, mb}
+    PUT    /api/admin/dungeon/musik                  {an, stuecke, mb, qualitaet?, laenge?, laut?}
     POST   /api/admin/dungeon/musik/jetzt            fill every field up to the number now
     DELETE /api/admin/dungeon/musik                  delete every piece
     POST   /api/admin/dungeon/musik/{sid}/zurueck    take the marks of a piece back
+    PUT    /api/admin/dungeon/musik/stil             {welt, st, werte}: the template of a field (V2a, fixed lists only)
+    POST   /api/admin/dungeon/musik/paket            {welt, paket}: a fixed package into every mood of a world (V4a)
+    POST   /api/admin/dungeon/musik/probe            {welt, st, laenge: "30"|"voll", von?}: a probe of the field (V5a)
+    POST   /api/admin/dungeon/musik/probe/{pid}/behalten   the probe into the store, liked
+    DELETE /api/admin/dungeon/musik/probe/{pid}      the probe away
+    (GET /api/admin/dungeon/musik/{id} plays a probe as it plays a piece of the store)
 """
 import asyncio
 import hashlib
@@ -65,22 +84,38 @@ router = APIRouter()
 SETTINGS = os.path.join(STATE, "dungeon-musik.json")
 DIR = os.path.join(STATE, "dungeon-musik")
 INDEX = os.path.join(DIR, "index.json")
+PROBEN = os.path.join(DIR, "probe")
+PROBEN_INDEX = os.path.join(PROBEN, "index.json")
+PROBE_ID = re.compile(r"p[0-9a-f]{10}")
+PROBE_FELD = 3             # probes kept per field (the oldest goes)
+PROBE_TAG = 20             # probes a day (LLM10: the admin's button never runs the model without end)
+PROBE_KURZ = 30            # seconds of a short probe
+SEED = 2 ** 31             # seed and lm_seed of the engine (musik_server: -1 <= seed < 2**31)
 
-STIMMUNGEN = ("erkunden", "taverne", "spannung", "kampf", "finale", "sieg", "gewoelbe", "lager")
+STIMMUNGEN = ("erkunden", "taverne", "spannung", "kampf", "finale", "sieg", "gewoelbe", "lager", "boss")
 NAMEN = {"erkunden": ("Erkunden", "Exploring"), "taverne": ("Taverne", "Tavern"), "spannung": ("Spannung", "Tension"),
          "kampf": ("Kampf", "Fight"), "finale": ("Finale", "Finale"), "sieg": ("Sieg", "Victory"),
-         "gewoelbe": ("Gewölbe", "Vault"), "lager": ("Lagerfeuer", "Campfire")}
+         "gewoelbe": ("Gewölbe", "Vault"), "lager": ("Lagerfeuer", "Campfire"), "boss": ("Boss", "Boss")}
+ERSATZ = {"boss": "kampf"}  # a mood without a piece yet plays these (plan dungeon-musik-tuning V8a)
 ZIEL = 12                  # Dominik 1a: pieces per world and mood
 ZIEL_SPANNE = (4, 30)
-MB = 2400                  # the store on the whole Spark (12 × 8 moods × 5 worlds of about 4.5 min at about 1 MB a minute)
+MB = 2400                  # the store on the whole Spark (about 12 × 9 moods × 5 worlds of 4.5 min at about 1 MB a minute)
 MB_JE_MINUTE = 1.0         # an MP3 of the music model (for the admin's hint how much the number needs)
 MB_SPANNE = (100, 5000)
 BEREIT = 2                 # pieces the moods of the current and the next act get first (2a; long pieces, two last a while)
 NEU_JE_AKT = 2             # new pieces every act asks for (2a: no two campaigns sound alike)
 LAENGE = (180, 240, 300, 360)     # seconds of a piece, a seed picks one (Dominik 2026-10-25 „mindestens verdreifachen“)
+# the admin's quality (plan dungeon-musik-tuning V6a): the level the music service makes (musikmodell.QUALITAET holds
+# the engine's values, the panel only names it), the length of a piece and its loudness; Standard as before
+QUALITAETEN = {"schnell": ("Schnell", "Fast"), "gut": ("Gut", "Good"), "beste": ("Beste", "Best")}
+LAENGEN = {"kurz": ((90, 120), ("Kurz", "Short")),            # 1½ to 2 minutes
+           "mittel": ((120, 150, 180), ("Mittel", "Medium")),     # 2 to 3 minutes
+           "lang": (LAENGE, ("Lang", "Long"))}                     # 3 to 6 minutes, as before
+LAUT = {"normal": ("Normal", "Normal"), "lauter": ("Lauter", "Louder")}
+STANDARD = {"qualitaet": "schnell", "laenge": "lang", "laut": "normal"}
 SIEG_S = 30                # a victory is short and plays once
 NACHT = (1, 6)             # local hours the night fills the fields
-TAKT = 10                  # seconds between two looks at the queue
+WARTE_S = 10               # seconds between two looks at the queue
 PAUSE_S = 3600             # after FEHLER_MAX failures in a row the store rests this long
 FEHLER_MAX = 3
 LISTE = 30                 # pieces of one field a seat gets to choose from
@@ -89,104 +124,216 @@ GRUENDE = ("memory", "belegt", "missing", "engine", "dienst", "zeit", "pause")  
 
 # the sound of a world (the admin's own worlds take EIGEN) and of its moods: fixed English words for the music model.
 # Dominik 2026-10-24 "mehr mit den Themen zu tun ... auch gerne mit Trommeln und Bässen" (after 2026-10-23 "nichts
-# nervig und zu schnell"): every world and mood has its own scene and instruments, drums and bass with measure, steady
-# and never hectic (TEMPO at most 110 bpm, a fight included)
-STIL_V = 4                 # the style of the pieces: an older one plays until its field has new ones, then goes first
-STIL = {"fantasy": "medieval fantasy role-playing soundtrack", "horror": "dark gothic horror role-playing soundtrack",
-        "scifi": "science fiction role-playing soundtrack", "piraten": "pirate adventure role-playing soundtrack"}
-EIGEN = "cinematic adventure role-playing soundtrack"
-# (world, mood) -> (the scene, the ways of playing: one is picked per piece); EIGEN_THEMA for the admin's own worlds
+# nervig und zu schnell"): every world and mood has its own instruments and character, drums and bass with measure,
+# steady and never hectic (TEMPO at most 110 bpm, a fight included). Plan dungeon-musik-tuning V1a (Dominik 2026-10-30
+# „1-8“): the caption is a list of tags as ACE-Step 1.5 was trained on (genre, instruments, mood, production), never a
+# sentence and never a negation; tempo, key and time signature go as the song's metadata (meta), so the planner of
+# the engine keeps the caption word for word, and what a piece must not be goes as its negative prompt (NEGATIV).
+STIL = {"fantasy": "medieval fantasy, celtic folk, cinematic", "horror": "dark ambient, gothic horror, cinematic",
+        "scifi": "science fiction, synthwave, cinematic", "piraten": "pirate adventure, sea shanty folk, cinematic"}
+EIGEN = "cinematic adventure, orchestral"
+# (world, mood) -> (the mood's tags, the ways of playing: one is picked per piece); EIGEN_THEMA for the admin's own worlds
 THEMA = {
     "fantasy": {
-        "erkunden": ("wandering through green hills and old forests, wonder", ("harp, flute and soft frame drum, warm bass",
-                     "lute, strings and hand drum, round bass", "celtic whistle, bodhran drum, cello and bass")),
-        "taverne": ("busy medieval tavern, folk dance, mugs on wooden tables", ("lute, fiddle, frame drum and upright bass",
-                    "hurdy-gurdy, bodhran drum and plucked bass", "recorder, tambourine, mandolin and bass")),
-        "spannung": ("dark forest at night, something follows", ("low strings, deep bass drone and soft timpani",
-                     "cello, distant war drum and bass pulse", "dark choir pads, low frame drum and bass")),
-        "kampf": ("sword fight against orcs, battle", ("war drums, deep bass, low brass and strings",
-                  "taiko, timpani, horns and driving bass", "frame drums, cellos staccato and deep bass")),
-        "finale": ("battle against the dragon in the ruined castle", ("choir, war drums, timpani and deep bass",
-                   "full orchestra, big drums and brass, deep bass")),
-        "sieg": ("victory, the heroes return to the village", ("horns, strings, festive drums and bass", "lute, fiddle, drums and bass")),
-        "gewoelbe": ("deep dungeon vault, torches, dripping stone", ("low drums with echo, deep bass drone and dulcimer",
-                     "frame drum in a cave, cello and bass", "distant taiko, harp and dark bass")),
-        "lager": ("campfire under the stars in the wild, rest", ("acoustic guitar, soft flute, gentle hand drum and warm bass",
-                  "lute, harp, brushed frame drum and upright bass")),
+        "erkunden": ("wonder, adventurous, pastoral, open", ("harp, flute, soft frame drum, warm bass",
+                     "lute, strings, hand drum, round bass", "celtic whistle, bodhran drum, cello, bass")),
+        "taverne": ("lively, cheerful, folk dance, rustic", ("lute, fiddle, frame drum, upright bass",
+                    "hurdy-gurdy, bodhran drum, plucked bass", "recorder, tambourine, mandolin, bass")),
+        "spannung": ("mysterious, dark, suspenseful, creeping", ("low strings, deep bass drone, soft timpani",
+                     "cello, distant war drum, bass pulse", "dark choir pads, low frame drum, bass")),
+        "kampf": ("heroic, driving, intense, battle", ("war drums, deep bass, low brass, strings",
+                  "taiko, timpani, horns, driving bass", "frame drums, staccato cellos, deep bass")),
+        "finale": ("epic, triumphant, grand, climactic", ("choir, war drums, timpani, deep bass",
+                   "full orchestra, big drums, brass, deep bass")),
+        "sieg": ("victorious, joyful, festive, warm", ("horns, strings, festive drums, bass", "lute, fiddle, drums, bass")),
+        "gewoelbe": ("dark, cavernous, echoing, ancient", ("low drums with echo, deep bass drone, dulcimer",
+                     "frame drum, cello, bass", "distant taiko, harp, dark bass")),
+        "lager": ("calm, warm, peaceful, starry night", ("acoustic guitar, soft flute, gentle hand drum, warm bass",
+                  "lute, harp, brushed frame drum, upright bass")),
+        "boss": ("epic, menacing, powerful, dramatic", ("low choir, war drums, low brass, deep bass",
+                 "taiko, timpani, horns, string ostinato, deep bass", "dark choir, frame drums, cellos, deep bass")),
     },
     "horror": {
-        "erkunden": ("misty graveyard and abandoned village", ("music box, low piano, soft drum and bass drone",
-                     "cello, soft heartbeat drum and deep bass", "organ pads, bells, slow tom drums and sub bass")),
-        "taverne": ("gloomy inn with whispering guests", ("out of tune piano, accordion, brushed drums and upright bass",
-                    "creaking fiddle, frame drum and bass")),
-        "spannung": ("haunted manor, footsteps in the dark", ("heartbeat bass drum, low strings and drones",
-                     "deep sub bass, ticking percussion and dissonant strings", "low taiko, glass harmonica and bass")),
-        "kampf": ("fight against the creature of the night", ("pounding low drums, distorted bass and harsh strings",
-                  "taiko, organ stabs and deep bass", "metal percussion, cellos and heavy bass")),
-        "finale": ("ritual in the cathedral crypt, the ancient evil rises", ("pipe organ, choir, huge drums and sub bass",
-                   "dark orchestra, timpani and deep bass")),
-        "sieg": ("dawn after the nightmare, relief", ("strings, soft bells, soft drums and warm bass", "piano, cello, soft drums and bass")),
-        "gewoelbe": ("catacombs full of bones, echoing", ("low drums with long echo, deep drones and bass",
-                     "dripping percussion, cello and sub bass")),
-        "lager": ("small fire in a dark forest, the night is quiet for now", ("acoustic guitar, music box, soft drum and warm bass",
-                  "cello, soft piano, gentle hand drum and bass")),
+        "erkunden": ("eerie, melancholic, misty, lonely", ("music box, low piano, soft drum, bass drone",
+                     "cello, soft heartbeat drum, deep bass", "organ pads, bells, slow tom drums, sub bass")),
+        "taverne": ("gloomy, uneasy, whispering, old", ("detuned piano, accordion, brushed drums, upright bass",
+                    "creaking fiddle, frame drum, bass")),
+        "spannung": ("suspenseful, haunted, ominous, creeping", ("heartbeat bass drum, low strings, drones",
+                     "deep sub bass, ticking percussion, dissonant strings", "low taiko, glass harmonica, bass")),
+        "kampf": ("dark, aggressive, intense, battle", ("pounding low drums, distorted bass, harsh strings",
+                  "taiko, organ stabs, deep bass", "metal percussion, cellos, heavy bass")),
+        "finale": ("apocalyptic, ritual, epic, dark", ("pipe organ, choir, huge drums, sub bass",
+                   "dark orchestra, timpani, deep bass")),
+        "sieg": ("relief, dawn, hopeful, tender", ("strings, soft bells, soft drums, warm bass", "piano, cello, soft drums, bass")),
+        "gewoelbe": ("cavernous, dread, echoing, cold", ("low drums with long echo, deep drones, bass",
+                     "dripping percussion, cello, sub bass")),
+        "lager": ("quiet, fragile, uneasy calm, night", ("acoustic guitar, music box, soft drum, warm bass",
+                  "cello, soft piano, gentle hand drum, bass")),
+        "boss": ("menacing, sinister, dread, powerful", ("pipe organ, low choir, pounding drums, sub bass",
+                 "taiko, dissonant strings, low brass, deep bass")),
     },
     "scifi": {
-        "erkunden": ("drifting past an alien planet, space station", ("warm synth pads, soft electronic drums and analog bass",
-                     "arpeggiated synth, light percussion and deep bass", "glassy bells, soft electronic drums and synth bass")),
-        "taverne": ("neon bar on a space port, lounge", ("synth groove, electronic drums and funky bass",
-                    "lounge keys, brushed drums and synth bass")),
-        "spannung": ("dark corridors of a derelict starship", ("deep synth bass, low pulses and metallic percussion",
-                     "drones, ticking electronic drums and sub bass")),
-        "kampf": ("space battle, laser fire", ("hybrid orchestra, electronic drums and heavy synth bass",
-                  "taiko, synth bass and brass", "pounding electronic drums, strings and deep bass")),
-        "finale": ("final battle at the core of the alien mothership", ("hybrid orchestra, choir, huge drums and sub bass",
-                   "synth arpeggios, big drums and deep bass")),
-        "sieg": ("mission complete, the crew celebrates", ("bright synths, drums and warm bass", "strings, pads, soft drums and bass")),
-        "gewoelbe": ("inside an ancient alien vault", ("low electronic drums with echo, deep drones and bass",
-                     "metallic percussion, pads and sub bass")),
-        "lager": ("resting at a camp beside the landing craft, alien night sky", ("warm synth pads, soft electronic drums and round bass",
-                  "soft keys, light percussion and warm synth bass")),
+        "erkunden": ("floating, wonder, spacious, calm", ("warm synth pads, soft electronic drums, analog bass",
+                     "arpeggiated synth, light percussion, deep bass", "glassy bells, soft electronic drums, synth bass")),
+        "taverne": ("groovy, laid-back, neon lounge, cool", ("synth groove, electronic drums, funky bass",
+                    "lounge keys, brushed drums, synth bass")),
+        "spannung": ("dark, tense, mechanical, suspenseful", ("deep synth bass, low pulses, metallic percussion",
+                     "drones, ticking electronic drums, sub bass")),
+        "kampf": ("driving, intense, futuristic, battle", ("hybrid orchestra, electronic drums, heavy synth bass",
+                  "taiko, synth bass, brass", "pounding electronic drums, strings, deep bass")),
+        "finale": ("epic, massive, climactic, futuristic", ("hybrid orchestra, choir, huge drums, sub bass",
+                   "synth arpeggios, big drums, deep bass")),
+        "sieg": ("triumphant, bright, celebratory, warm", ("bright synths, drums, warm bass", "strings, pads, soft drums, bass")),
+        "gewoelbe": ("alien, ancient, echoing, mysterious", ("low electronic drums with echo, deep drones, bass",
+                     "metallic percussion, pads, sub bass")),
+        "lager": ("calm, dreamy, peaceful, night sky", ("warm synth pads, soft electronic drums, round bass",
+                  "soft keys, light percussion, warm synth bass")),
+        "boss": ("menacing, massive, powerful, dark", ("hybrid orchestra, choir, electronic drums, heavy synth bass",
+                 "taiko, brass, synth arpeggios, deep bass")),
     },
     "piraten": {
-        "erkunden": ("sailing on open sea, wind in the sails", ("accordion, fiddle, hand drum and upright bass",
-                     "guitar, tin whistle, frame drum and bass", "concertina, strings, soft drums and bass")),
-        "taverne": ("rowdy harbour tavern, sea shanty", ("accordion, fiddle, stomping drums and bass",
-                    "concertina, banjo, barrel drum and upright bass")),
-        "spannung": ("fog over a hidden reef at night", ("low strings, deep bass and distant drum",
-                     "creaking cello, ocean drum and bass drone")),
-        "kampf": ("pirate ship battle, cannons, boarding", ("barrel drums, war drums, brass and deep bass",
-                  "taiko, fiddle, horns and driving bass", "stomping drums, strings staccato and bass")),
-        "finale": ("duel on the deck in a storm against the pirate king", ("full orchestra, huge drums, choir and deep bass",
-                   "brass, timpani, fiddle and bass")),
-        "sieg": ("treasure found, cheering crew", ("accordion, fiddle, drums and bass", "horns, strings, festive drums and bass")),
-        "gewoelbe": ("treasure cave under the island, dripping water", ("low drums with echo, ocean drum and deep bass",
-                     "cello, steel drum and bass drone")),
-        "lager": ("campfire on a lonely beach, waves at night", ("acoustic guitar, concertina, soft hand drum and upright bass",
-                  "fiddle, guitar, gentle frame drum and bass")),
+        "erkunden": ("adventurous, breezy, free, open sea", ("accordion, fiddle, hand drum, upright bass",
+                     "guitar, tin whistle, frame drum, bass", "concertina, strings, soft drums, bass")),
+        "taverne": ("rowdy, cheerful, stomping, jolly", ("accordion, fiddle, stomping drums, bass",
+                    "concertina, banjo, barrel drum, upright bass")),
+        "spannung": ("foggy, suspenseful, dark, creeping", ("low strings, deep bass, distant drum",
+                     "creaking cello, ocean drum, bass drone")),
+        "kampf": ("swashbuckling, driving, intense, battle", ("barrel drums, war drums, brass, deep bass",
+                  "taiko, fiddle, horns, driving bass", "stomping drums, staccato strings, bass")),
+        "finale": ("epic, stormy, heroic, climactic", ("full orchestra, huge drums, choir, deep bass",
+                   "brass, timpani, fiddle, bass")),
+        "sieg": ("joyful, festive, triumphant, cheering", ("accordion, fiddle, drums, bass", "horns, strings, festive drums, bass")),
+        "gewoelbe": ("mysterious, cavernous, dripping, echoing", ("low drums with echo, ocean drum, deep bass",
+                     "cello, steel drum, bass drone")),
+        "lager": ("calm, warm, gentle waves, night", ("acoustic guitar, concertina, soft hand drum, upright bass",
+                  "fiddle, guitar, gentle frame drum, bass")),
+        "boss": ("menacing, stormy, powerful, dramatic", ("full orchestra, war drums, low choir, deep bass",
+                 "brass, timpani, fiddle, driving bass")),
     },
 }
 EIGEN_THEMA = {
-    "erkunden": ("journey through a wide land", ("strings, flute, hand drum and bass", "guitar, pads, soft drums and bass")),
-    "taverne": ("lively inn, music and laughter", ("fiddle, guitar, frame drum and upright bass",)),
-    "spannung": ("danger ahead, something lurks", ("low strings, deep bass and distant drums",)),
-    "kampf": ("battle", ("war drums, brass, strings and deep bass", "taiko, cellos staccato and bass")),
-    "finale": ("the last great battle", ("full orchestra, choir, huge drums and deep bass",)),
-    "sieg": ("victory", ("horns, strings, festive drums and bass",)),
-    "gewoelbe": ("dark dungeon vault", ("low drums with echo, deep drones and bass",)),
-    "lager": ("campfire at night, rest", ("acoustic guitar, flute, gentle hand drum and warm bass",)),
+    "erkunden": ("adventurous, wide, open", ("strings, flute, hand drum, bass", "guitar, pads, soft drums, bass")),
+    "taverne": ("lively, cheerful, folk dance", ("fiddle, guitar, frame drum, upright bass",)),
+    "spannung": ("suspenseful, dark, creeping", ("low strings, deep bass, distant drums",)),
+    "kampf": ("heroic, driving, battle", ("war drums, brass, strings, deep bass", "taiko, staccato cellos, bass")),
+    "finale": ("epic, grand, climactic", ("full orchestra, choir, huge drums, deep bass",)),
+    "sieg": ("victorious, festive, warm", ("horns, strings, festive drums, bass",)),
+    "gewoelbe": ("dark, cavernous, echoing", ("low drums with echo, deep drones, bass",)),
+    "lager": ("calm, warm, peaceful", ("acoustic guitar, flute, gentle hand drum, warm bass",)),
+    "boss": ("epic, menacing, powerful", ("low choir, war drums, brass, deep bass",)),
 }
-# one tempo per mood and one key per world (minor, the tavern and the victory in its relative major): two pieces of a
-# field share key and tempo, so the crossfade between them is smooth (Dominik 2026-10-25 „smoother Übergang …
-# eventuell gleiche Chord-Progression“); tempo at most 110 bpm, a fight included
-TEMPO = {"erkunden": "75 bpm", "taverne": "96 bpm", "spannung": "72 bpm", "kampf": "100 bpm", "finale": "92 bpm",
-         "sieg": "96 bpm", "gewoelbe": "66 bpm", "lager": "70 bpm"}
-TONART = {"fantasy": ("in D minor", "in F major"), "horror": ("in C minor", "in E flat major"),
-          "scifi": ("in A minor", "in C major"), "piraten": ("in E minor", "in G major")}
-TONART_EIGEN = ("in D minor", "in F major")
+# one tempo and time signature per mood and one key per world (minor, the tavern, the victory and the camp in its
+# relative major, the boss in the minor key a fifth up): two pieces of a field share them, so the crossfade between
+# them is smooth (Dominik 2026-10-25 „smoother Übergang … eventuell gleiche Chord-Progression“); tempo at most 110 bpm,
+# a fight included. The key as acestep.cpp's planner names it („D minor“, „Eb major“: musik_server.KEYSCALE).
+TEMPO = {"erkunden": 75, "taverne": 96, "spannung": 72, "kampf": 100, "finale": 92, "sieg": 96, "gewoelbe": 66,
+         "lager": 70, "boss": 104}
+TAKT = {"taverne": "6", "lager": "3"}      # else 4/4 (musik_server.TIMESIG)
+TONART = {"fantasy": ("D minor", "F major", "A minor"), "horror": ("C minor", "Eb major", "G minor"),
+          "scifi": ("A minor", "C major", "E minor"), "piraten": ("E minor", "G major", "B minor")}
+TONART_EIGEN = ("D minor", "F major", "A minor")
 DUR = ("taverne", "sieg", "lager")
-ENDE = ("instrumental background music for a tabletop role-playing game, steady groove, never hectic, "
-        "soft fade-in intro, long gentle fade-out ending, no sudden changes, no vocals, loops well")
+PRODUKTION = ("instrumental, tabletop role-playing game background music, steady groove, soft fade-in, "
+              "long gentle fade-out, seamless loop, warm balanced mix")
+# what a piece must not be: the planner's negative prompt (lm_negative_prompt), never words in the caption
+NEGATIV = "vocals, singing, spoken words, hectic, frantic, chaotic, abrupt changes, sudden stops"
+NEGATIV_CHOR = "lyrics, spoken words, hectic, frantic, chaotic, abrupt changes, sudden stops"   # a wordless choir sings
+
+# the admin's sound template (plan dungeon-musik-tuning V2a, V3a, V4a; Dominik 2026-10-30 „1-8“): per world and mood
+# only what differs from the standard above (THEMA, TEMPO, TONART, TAKT), from these fixed lists only, never a free
+# text; id -> (German, English, the words for the music model)
+GENRES = {
+    "orchester": ("Orchester-Filmmusik", "Orchestral film score", "orchestral film score, cinematic"),
+    "mittelalter": ("Mittelalter-Folk", "Medieval folk", "medieval folk, renaissance"),
+    "keltisch": ("Keltisch", "Celtic", "celtic folk"),
+    "darkambient": ("Dark Ambient", "Dark ambient", "dark ambient, atmospheric"),
+    "gothic": ("Gothic", "Gothic", "gothic, dark orchestral"),
+    "synthwave": ("Synthwave", "Synthwave", "synthwave, retro electronic"),
+    "chiptune": ("Chiptune/Retro", "Chiptune/retro", "chiptune, retro video game"),
+    "shanty": ("Seemannslied", "Sea shanty", "sea shanty folk"),
+    "tavernfolk": ("Taverne-Folk", "Tavern folk", "tavern folk, acoustic"),
+    "epic": ("Epic Hybrid", "Epic hybrid", "epic hybrid orchestral"),
+    "akustisch": ("Akustisch", "Acoustic", "acoustic, unplugged"),
+    "choral": ("Choral", "Choral", "choral, sacred"),
+    "ambient": ("Ambient", "Ambient", "ambient, calm atmosphere"),
+    "weltmusik": ("Weltmusik", "World music", "world music, ethnic"),
+    "lounge": ("Lounge", "Lounge", "lounge, downtempo"),
+    "minimal": ("Minimal", "Minimal", "minimal, sparse"),
+}
+INSTRUMENTE = {
+    "kriegstrommeln": ("Kriegstrommeln", "War drums", "war drums"), "taiko": ("Taiko", "Taiko", "taiko"),
+    "pauken": ("Pauken", "Timpani", "timpani"), "rahmentrommel": ("Rahmentrommel", "Frame drum", "frame drum"),
+    "handtrommel": ("Handtrommel", "Hand drum", "hand drum"), "bodhran": ("Bodhrán", "Bodhrán", "bodhran drum"),
+    "tamburin": ("Tamburin", "Tambourine", "tambourine"), "elektrodrums": ("Elektro-Schlagzeug", "Electronic drums", "electronic drums"),
+    "kontrabass": ("Kontrabass", "Upright bass", "upright bass"), "tiefbass": ("Tiefer Bass", "Deep bass", "deep bass"),
+    "synthbass": ("Synth-Bass", "Synth bass", "synth bass"), "laute": ("Laute", "Lute", "lute"),
+    "fiedel": ("Fiedel", "Fiddle", "fiddle"), "harfe": ("Harfe", "Harp", "harp"), "floete": ("Flöte", "Flute", "flute"),
+    "whistle": ("Tin Whistle", "Tin whistle", "tin whistle"), "dudelsack": ("Dudelsack", "Bagpipes", "bagpipes"),
+    "drehleier": ("Drehleier", "Hurdy-gurdy", "hurdy-gurdy"), "akkordeon": ("Akkordeon", "Accordion", "accordion"),
+    "konzertina": ("Konzertina", "Concertina", "concertina"), "banjo": ("Banjo", "Banjo", "banjo"),
+    "gitarre": ("Akustikgitarre", "Acoustic guitar", "acoustic guitar"), "mandoline": ("Mandoline", "Mandolin", "mandolin"),
+    "hackbrett": ("Hackbrett", "Dulcimer", "dulcimer"), "streicher": ("Streicher", "Strings", "strings"),
+    "staccato": ("Streicher staccato", "Staccato strings", "staccato strings"), "cello": ("Cello", "Cello", "cello"),
+    "violine": ("Violine", "Violin", "violin"), "hoerner": ("Hörner", "Horns", "horns"),
+    "blech": ("Tiefe Blechbläser", "Low brass", "low brass"), "trompete": ("Trompete", "Trumpet", "trumpet"),
+    "orgel": ("Orgel", "Pipe organ", "pipe organ"), "klavier": ("Klavier", "Piano", "piano"),
+    "spieluhr": ("Spieluhr", "Music box", "music box"), "glocken": ("Glocken", "Bells", "bells"),
+    "chorpads": ("Chorflächen", "Choir pads", "choir pads"), "synthpads": ("Synth-Flächen", "Synth pads", "warm synth pads"),
+    "arpeggio": ("Synth-Arpeggio", "Synth arpeggio", "arpeggiated synth"), "celesta": ("Celesta", "Celesta", "celesta"),
+    "glasharmonika": ("Glasharmonika", "Glass harmonica", "glass harmonica"), "steeldrum": ("Steeldrum", "Steel drum", "steel drum"),
+    "drones": ("Klangteppich", "Drones", "deep drones"),
+}
+CHARAKTER = {
+    "ruhig": ("ruhig", "calm", "calm"), "duester": ("düster", "dark", "dark"), "heroisch": ("heroisch", "heroic", "heroic"),
+    "verspielt": ("verspielt", "playful", "playful"), "bedrohlich": ("bedrohlich", "menacing", "menacing"),
+    "warm": ("warm", "warm", "warm"), "feierlich": ("feierlich", "solemn", "solemn"), "treibend": ("treibend", "driving", "driving"),
+    "geheimnisvoll": ("geheimnisvoll", "mysterious", "mysterious"), "episch": ("episch", "epic", "epic"),
+    "froehlich": ("fröhlich", "cheerful", "cheerful"), "melancholisch": ("melancholisch", "melancholic", "melancholic"),
+    "spannend": ("spannend", "suspenseful", "suspenseful"), "vertraeumt": ("verträumt", "dreamy", "dreamy"),
+}
+_NOTEN = {"C": "C", "C#": "Cis", "D": "D", "Eb": "Es", "E": "E", "F": "F", "F#": "Fis", "G": "G", "Ab": "As", "A": "A",
+          "Bb": "B", "B": "H"}
+TONARTEN = {f"{n} {m}": (f"{de}-{'Dur' if m == 'major' else 'Moll'}", f"{n} {m}") for n, de in _NOTEN.items()
+            for m in ("major", "minor")}   # in acestep.cpp's notation (musik_server.KEYSCALE)
+TAKTE = {"4": "4/4", "3": "3/4", "6": "6/8"}
+GESANG = {"aus": ("Ohne", "None"), "chor": ("Chor ohne Worte", "Wordless choir")}
+CHOR = "wordless choir"     # the words of a choir without lyrics (the lyrics stay [Instrumental])
+INSTR_MAX, ART_MAX = 5, 3
+TEMPO_SPANNE = (50, 140)
+FELDER = ("genre", "instr", "tempo", "tonart", "takt", "art", "gesang")
+# fixed packages (V4a): one click fills every mood of a world; tempo, key and time stay the field's own. Per package
+# the genre and per kind of mood (ROLLE) instruments and character; „standard“ takes every change of the world back
+ROLLE = {"erkunden": "ruhig", "lager": "ruhig", "taverne": "fest", "sieg": "fest", "spannung": "dunkel",
+         "gewoelbe": "dunkel", "kampf": "kampf", "boss": "kampf", "finale": "kampf"}
+ART_ROLLE = {"erkunden": ("geheimnisvoll", "warm"), "lager": ("ruhig", "warm"), "taverne": ("froehlich", "verspielt"),
+             "sieg": ("feierlich", "froehlich"), "spannung": ("spannend", "duester"), "gewoelbe": ("geheimnisvoll", "duester"),
+             "kampf": ("heroisch", "treibend"), "boss": ("bedrohlich", "episch"), "finale": ("episch", "heroisch")}
+PAKETE = {
+    "orchestral": (("Klassisch-orchestral", "Classical orchestral"), "orchester", {
+        "ruhig": ("harfe", "floete", "streicher", "kontrabass", "handtrommel"), "fest": ("hoerner", "streicher", "pauken", "kontrabass"),
+        "dunkel": ("cello", "drones", "pauken", "tiefbass"), "kampf": ("kriegstrommeln", "pauken", "blech", "staccato", "tiefbass")}),
+    "mittelalter": (("Mittelalter-Folk", "Medieval folk"), "mittelalter", {
+        "ruhig": ("laute", "floete", "rahmentrommel", "kontrabass"), "fest": ("laute", "fiedel", "drehleier", "tamburin", "kontrabass"),
+        "dunkel": ("drehleier", "drones", "rahmentrommel", "tiefbass"), "kampf": ("kriegstrommeln", "fiedel", "drehleier", "tiefbass")}),
+    "keltisch": (("Keltisch", "Celtic"), "keltisch", {
+        "ruhig": ("harfe", "whistle", "bodhran", "kontrabass"), "fest": ("fiedel", "whistle", "bodhran", "gitarre", "kontrabass"),
+        "dunkel": ("dudelsack", "drones", "bodhran", "tiefbass"), "kampf": ("dudelsack", "kriegstrommeln", "fiedel", "tiefbass")}),
+    "darkambient": (("Dark Ambient", "Dark ambient"), "darkambient", {
+        "ruhig": ("synthpads", "glocken", "handtrommel", "tiefbass"), "fest": ("klavier", "synthpads", "handtrommel", "tiefbass"),
+        "dunkel": ("drones", "glasharmonika", "taiko", "tiefbass"), "kampf": ("taiko", "drones", "blech", "tiefbass")}),
+    "gothic": (("Gothic-Horror", "Gothic horror"), "gothic", {
+        "ruhig": ("spieluhr", "klavier", "cello", "kontrabass", "handtrommel"), "fest": ("akkordeon", "klavier", "rahmentrommel", "kontrabass"),
+        "dunkel": ("orgel", "chorpads", "cello", "pauken", "tiefbass"), "kampf": ("orgel", "chorpads", "taiko", "staccato", "tiefbass")}),
+    "synth": (("Synth/Retro", "Synth/retro"), "synthwave", {
+        "ruhig": ("synthpads", "arpeggio", "elektrodrums", "synthbass"), "fest": ("arpeggio", "synthpads", "elektrodrums", "synthbass"),
+        "dunkel": ("drones", "synthpads", "elektrodrums", "synthbass"), "kampf": ("arpeggio", "elektrodrums", "taiko", "synthbass")}),
+    "epic": (("Epic Hybrid", "Epic hybrid"), "epic", {
+        "ruhig": ("streicher", "klavier", "synthpads", "tiefbass", "handtrommel"), "fest": ("hoerner", "streicher", "kriegstrommeln", "tiefbass"),
+        "dunkel": ("drones", "staccato", "taiko", "tiefbass"), "kampf": ("taiko", "kriegstrommeln", "blech", "chorpads", "tiefbass")}),
+    "seefahrer": (("Seefahrer-Folk", "Seafarer folk"), "shanty", {
+        "ruhig": ("gitarre", "konzertina", "handtrommel", "kontrabass"), "fest": ("akkordeon", "fiedel", "banjo", "tamburin", "kontrabass"),
+        "dunkel": ("cello", "drones", "rahmentrommel", "tiefbass"), "kampf": ("kriegstrommeln", "fiedel", "hoerner", "tiefbass")}),
+}
 
 # the panel's word lists over the scene, the act and the place (the model's words are data: they only pick one of these)
 _W = lambda s: re.compile(r"(?i)\b(" + s + r")")   # noqa: E731 - a word at its start (German compounds end freely)
@@ -208,9 +355,10 @@ _cache = {"mtime": None, "d": None}
 _want = {}                 # (welt, st) -> {"upto": n, "extra": n}   the queue, in the order asked
 _akte = {}                 # rid -> the act seen last (a new act asks for new pieces)
 _plays = {}                # id -> plays since the index was written last
-_state = {"run": None, "fehler": 0, "ruhe": 0.0, "nacht": ""}
-_day = DayCounter(gemacht=0, weg=0, geholt=0, entfernt=0, nervt=0)
+_state = {"run": None, "fehler": 0, "ruhe": 0.0, "nacht": "", "q": "", "beste_fehlt": False, "probe": None}
+_day = DayCounter(gemacht=0, weg=0, geholt=0, entfernt=0, nervt=0, gefaellt=0, proben=0)
 _gemerkt = {}              # id -> hashes of the seats that marked it (in memory: a seat marks a piece once)
+_gemocht = {}              # id -> hashes of the seats that liked it („👍 Gefällt“, the same once per seat)
 NERVT_MAX = 99             # marks kept per piece
 
 
@@ -218,7 +366,17 @@ NERVT_MAX = 99             # marks kept per piece
 def settings():
     s = read_json(SETTINGS, {})
     s = s if isinstance(s, dict) else {}
-    return {"an": s.get("an") is True, "stuecke": _int(s.get("stuecke"), *ZIEL_SPANNE, ZIEL), "mb": _int(s.get("mb"), *MB_SPANNE, MB)}
+    return {"an": s.get("an") is True, "stuecke": _int(s.get("stuecke"), *ZIEL_SPANNE, ZIEL), "mb": _int(s.get("mb"), *MB_SPANNE, MB),
+            **{k: s.get(k) if s.get(k) in WAHL[k] else v for k, v in STANDARD.items()}}
+
+
+WAHL = {"qualitaet": QUALITAETEN, "laenge": LAENGEN, "laut": LAUT}
+
+
+def quality_now(s, now):
+    """The level a piece is made with: „Beste“ only in the night (NACHT), by day „Gut“ (plan V6a: the SFT model takes
+    50 steps)."""
+    return "gut" if s["qualitaet"] == "beste" and not night(now) else s["qualitaet"]
 
 
 def _int(x, lo, hi, default):
@@ -274,8 +432,9 @@ def spielbar(x):
 
 
 def neu(x):
-    """A piece of the current style (STIL_V); an older one plays until its field has new ones and goes first."""
-    return x.get("v") == STIL_V
+    """A piece of its field's current sound (its fingerprint, fingerprint); an older one plays until its field has
+    new ones and goes first."""
+    return x.get("k") == fingerprint(x["w"], x["st"])
 
 
 def count(d, welt, st):
@@ -285,9 +444,9 @@ def count(d, welt, st):
 
 
 def prune(d, ziel, mb, keep=""):
-    """Inside the lock: each field at most ziel pieces and the store within mb; the most played go first (then the
-    oldest), never keep (the piece just made). Returns the ids taken out."""
-    plays = lambda x: (spielbar(x), neu(x), -(x.get("n", 0) + _plays.get(x["id"], 0)), x.get("t", 0))   # noqa: E731 - marked, older first
+    """Inside the lock: each field at most ziel pieces and the store within mb; marked, older and not liked ones go
+    first, then the most played (then the oldest), never keep (the piece just made). Returns the ids taken out."""
+    plays = lambda x: (spielbar(x), neu(x), bool(x.get("gut")), -(x.get("n", 0) + _plays.get(x["id"], 0)), x.get("t", 0))   # noqa: E731 - marked, older, not liked first
     out = []
     fields = {}
     for x in d["stuecke"]:
@@ -314,10 +473,107 @@ def prune(d, ziel, mb, keep=""):
 
 
 def caption(welt, st, rng):
-    """The words for the music model: only fixed words of this module (never a text of the game)."""
-    szene, wie = THEMA.get(welt, EIGEN_THEMA)[st]
-    tonart = TONART.get(welt, TONART_EIGEN)[1 if st in DUR else 0]
-    return ", ".join((STIL.get(welt, EIGEN), szene, rng.choice(wie), TEMPO[st], tonart, ENDE))
+    """The words for the music model: only fixed words of this module (never a text of the game), as tags: genre,
+    instruments, mood, (a wordless choir,) production; what the admin's template (vorlage) changed from its lists."""
+    v = vorlage(welt, st)
+    art, wie = THEMA.get(welt, EIGEN_THEMA)[st]
+    teile = [GENRES[v["genre"]][2] if v["genre"] else STIL.get(welt, EIGEN),
+             ", ".join(INSTRUMENTE[i][2] for i in v["instr"]) if v["instr"] else rng.choice(wie),
+             ", ".join(CHARAKTER[a][2] for a in v["art"]) if v["art"] else art]
+    return ", ".join(teile + ([CHOR] if v["gesang"] == "chor" else []) + [PRODUKTION])
+
+
+def welt_tonart(welt, st):
+    """The field's standard key: the world's minor, its relative major for DUR, a fifth up for the boss."""
+    return TONART.get(welt, TONART_EIGEN)[1 if st in DUR else 2 if st == "boss" else 0]
+
+
+def meta(welt, st):
+    """The piece's metadata for the engine (musik_server.metadata): tempo, key and time signature of the field (the
+    admin's template or the standard) and the negative prompt; with all of them the engine's planner keeps the
+    caption as it is."""
+    v = vorlage(welt, st)
+    return {"bpm": v["tempo"], "keyscale": welt_tonart(welt, st) if v["tonart"] == "welt" else v["tonart"],
+            "timesignature": v["takt"], "negative": NEGATIV_CHOR if v["gesang"] == "chor" else NEGATIV}
+
+
+# ---------------------------------------------------------------- the admin's sound template (V2a)
+def standard(st):
+    """The standard of a field: "" and [] mean the world's own words (THEMA, STIL)."""
+    return {"genre": "", "instr": [], "tempo": TEMPO[st], "tonart": "welt", "takt": TAKT.get(st, "4"), "art": [], "gesang": "aus"}
+
+
+def pruefen(st, werte):
+    """The admin's values of one field, each checked against its fixed list or range; ValueError(the field) else.
+    Only fields given are returned."""
+    if not isinstance(werte, dict) or set(werte) - set(FELDER):
+        raise ValueError("felder")
+    out = {}
+    for k, x in werte.items():
+        if k == "genre" and (x == "" or x in GENRES):
+            out[k] = x
+        elif k in ("instr", "art") and isinstance(x, list) and len(x) <= (INSTR_MAX if k == "instr" else ART_MAX) \
+                and len(set(x)) == len(x) and all(isinstance(i, str) and i in (INSTRUMENTE if k == "instr" else CHARAKTER) for i in x):
+            out[k] = list(x)
+        elif k == "tempo" and _int(x, *TEMPO_SPANNE, None) is not None:
+            out[k] = x
+        elif k == "tonart" and isinstance(x, str) and (x == "welt" or x in TONARTEN):
+            out[k] = x
+        elif k == "takt" and isinstance(x, str) and x in TAKTE:
+            out[k] = x
+        elif k == "gesang" and isinstance(x, str) and x in GESANG:
+            out[k] = x
+        else:
+            raise ValueError(k)
+    return out
+
+
+_stilcache = {"mtime": None, "stil": {}, "fp": {}}
+
+
+def _stil():
+    """The admin's changes {welt: {st: {feld: wert}}}, read again only when the file changed."""
+    try:
+        st_ = os.stat(SETTINGS)
+        m = (st_.st_mtime_ns, st_.st_size)
+    except OSError:
+        m = None
+    if _stilcache["mtime"] != m or m is None:
+        s = read_json(SETTINGS, {}) if m is not None else {}
+        st = s.get("stil") if isinstance(s, dict) else None
+        _stilcache.update(mtime=m, stil=st if isinstance(st, dict) else {}, fp={})
+    return _stilcache["stil"]
+
+
+def vorlage(welt, st):
+    """The field's template: its standard with the admin's checked changes on top (a broken entry counts as none)."""
+    v = standard(st)
+    w = _stil().get(welt)
+    x = w.get(st) if isinstance(w, dict) else None
+    if isinstance(x, dict):
+        try:
+            v.update(pruefen(st, x))
+        except ValueError:
+            pass
+    return v
+
+
+def geaendert(welt, st):
+    """The fields of the template that differ from the standard."""
+    v, std = vorlage(welt, st), standard(st)
+    return [k for k in FELDER if v[k] != std[k]]
+
+
+def fingerprint(welt, st):
+    """The field's sound in 10 hex digits: its template and the standard words it falls back on. Another one makes
+    every piece of the field „veraltet“: it plays until the field has new ones, the night replaces it."""
+    _stil()
+    fp = _stilcache["fp"]
+    if (welt, st) not in fp:
+        teile = [vorlage(welt, st), THEMA.get(welt, EIGEN_THEMA)[st], STIL.get(welt, EIGEN), welt_tonart(welt, st),
+                 PRODUKTION, NEGATIV, NEGATIV_CHOR, CHOR]
+        fp[(welt, st)] = hashlib.sha256(repr(teile).encode()).hexdigest()[:10]
+    return fp[(welt, st)]
 
 
 # ---------------------------------------------------------------- the mood (panel rules)
@@ -348,11 +604,21 @@ def _im_gewoelbe(rd):
         return False
 
 
+def boss(rd):
+    """A boss fight (plan dungeon-musik-tuning V8a): the panel's fight (dungeon_kampf, rd["kampf"]) has a foe still
+    standing whose bestiary entry carries the boss mark; never the model's words."""
+    k = rd.get("kampf")
+    return isinstance(k, dict) and any(isinstance(g, dict) and g.get("boss") is True and not g.get("aus")
+                                       for g in k.get("gegner") or [])
+
+
 def mood(rd):
-    """The round's mood now: a fight (5b's kampf or the scene's words) > a rest at the campfire > in a vault > a merchant or a settlement > the finale >
-    tension in the scene's words > the act's mood > exploring."""
+    """The round's mood now: a boss fight > a fight (5b's kampf or the scene's words) > a rest at the campfire > in a
+    vault > a merchant or a settlement > the finale > tension in the scene's words > the act's mood > exploring."""
     sz = rd.get("szene") or {}
     text = f"{sz.get('ort') or ''} {sz.get('stimmung') or ''}"
+    if boss(rd):
+        return "boss"
     if rd.get("kampf") or KAMPF.search(text):
         return "kampf"
     if rd.get("rast"):                         # resting at the campfire (D&D idea 4, the main thread sets rd["rast"])
@@ -399,13 +665,13 @@ def want(welt, st, upto=0, extra=0):
 
 
 def ask_round(rid, rd, s=None):
-    """The current mood, the moods of this act and the next one (BEREIT each, the fight and the victory too) and, on
+    """The current mood, the moods of this act and the next one (BEREIT each, the fight, the boss and the victory too) and, on
     a new act, NEU_JE_AKT new pieces for the act after it."""
     s = s or settings()
     welt, plan, i = rd.get("welt"), rd.get("plan"), rd.get("akt", 0)
     now_m = mood(rd)
     nxt = act_mood(plan, i + 1)
-    for m in (now_m, act_mood(plan, i), nxt, "kampf", "sieg", "gewoelbe" if rd.get("karte") else "", "lager" if rd.get("rast") else ""):
+    for m in (now_m, act_mood(plan, i), nxt, "kampf", "boss", "sieg", "gewoelbe" if rd.get("karte") else "", "lager" if rd.get("rast") else ""):
         if m:
             want(welt, m, min(BEREIT, s["stuecke"]))
     seen = _akte.get(rid)
@@ -428,10 +694,14 @@ def for_view(rid, rd, lang="de"):
             return out
         st = ask_round(rid, rd, s)
         d = _read()
-        def pick(m):   # the current style once its field has one, until then the older pieces
-            xs = [x for x in sorted(d["stuecke"], key=lambda x: -x.get("t", 0)) if x["w"] == rd.get("welt") and x["st"] == m and spielbar(x)]
+        def pick(m):   # the current style once its field has one, until then the older pieces; liked ones first
+            xs = [x for x in sorted(d["stuecke"], key=lambda x: (not x.get("gut"), -x.get("t", 0))) if x["w"] == rd.get("welt") and x["st"] == m and spielbar(x)]
             return [x["id"] for x in ([x for x in xs if neu(x)] or xs)][:LISTE]
-        out.update(an=True, st=st, name=NAMEN[st][li], stuecke=pick(st), sieg=pick("sieg"), ziel=s["stuecke"])
+        xs = pick(st)
+        if not xs and st in ERSATZ:   # a boss without its own pieces yet: the fight's (the table plays on as a fight)
+            st = ERSATZ[st]
+            xs = pick(st)
+        out.update(an=True, st=st, name=NAMEN[st][li], stuecke=xs, sieg=pick("sieg"), ziel=s["stuecke"])
         out.update(dungeon_lied.ask_round(rid, rd))   # the bard's song of each chapter (lieder, lied: the newest)
     except Exception as e:   # noqa: BLE001 - the table never fails for its music
         print("dungeon: musik | ansicht fehler", type(e).__name__, flush=True)
@@ -483,7 +753,8 @@ async def render(body, jid):
         if wartung.paused("musik"):
             raise ValueError("pause")
         return await musik.make(body)
-    mp3, _d = await asyncio.wait_for(schwer.run("musik", jid, time.time(), once), musik.JOB_SECONDS + schwer.WAIT_S)
+    mp3, d = await asyncio.wait_for(schwer.run("musik", jid, time.time(), once), musik.JOB_SECONDS + schwer.WAIT_S)
+    _state["q"] = d.get("quality") if isinstance(d, dict) and d.get("quality") in QUALITAETEN else ""
     return mp3
 
 
@@ -492,9 +763,13 @@ async def make(welt, st, rng=None):
     why not (GRUENDE). Never raises."""
     import musik
     rng = rng or random.Random(secrets.randbits(32))
-    secs = SIEG_S if st == "sieg" else rng.choice(LAENGE)
-    body = {"caption": caption(welt, st, rng), "seconds": secs, "lyrics": "", "language": "", "seed": rng.randrange(2 ** 31),
-            "title": f"Dungeon {st}"}
+    s = settings()
+    secs = SIEG_S if st == "sieg" else rng.choice(LAENGEN[s["laenge"]][0])
+    stufe = quality_now(s, time.time())
+    k = fingerprint(welt, st)
+    seed, lm = rng.randrange(SEED), rng.randrange(SEED)
+    body = {"caption": caption(welt, st, rng), "seconds": secs, "lyrics": "", "language": "", "seed": seed, "lm_seed": lm,
+            "title": f"Dungeon {st}", **meta(welt, st), "quality": stufe, "loud": s["laut"]}
     if musik.model():
         body["variant"] = musik.model()
     jid = secrets.token_hex(6)
@@ -502,7 +777,11 @@ async def make(welt, st, rng=None):
     t0 = time.perf_counter()
     why = "ok"
     try:
+        _state["q"] = ""
         mp3 = await render(body, jid)
+        if stufe == "beste":   # the service made „Gut“: the SFT model is not installed (the admin's card says so)
+            _state["beste_fehlt"] = _state["q"] not in ("", "beste")
+        stufe = _state["q"] or stufe
         sid = "m" + secrets.token_hex(5)
 
         def keep():
@@ -515,7 +794,7 @@ async def make(welt, st, rng=None):
                 os.replace(file_of(sid) + ".neu", file_of(sid))
                 d = _read()
                 d = {"stuecke": list(d["stuecke"]) + [{"id": sid, "w": welt, "st": st, "s": secs, "t": int(time.time()),
-                                                       "b": len(mp3), "n": 0, "v": STIL_V}]}
+                                                       "b": len(mp3), "n": 0, "k": k, "seed": seed, "lm": lm}]}
                 gone = prune(d, s["stuecke"], s["mb"], keep=sid)   # a new act's pieces push out the most played
                 _write(d)
                 w = _want.get((welt, st))
@@ -541,7 +820,7 @@ async def make(welt, st, rng=None):
         if _state["fehler"] >= FEHLER_MAX:
             _state.update(ruhe=time.time() + PAUSE_S, fehler=0)
             print(f"dungeon: musik | ruhe | {FEHLER_MAX} fehler | {PAUSE_S // 60} min", flush=True)
-    print(f"dungeon: musik | {why} | {st} | {secs} s | {round((time.perf_counter() - t0) * 1000)} ms", flush=True)
+    print(f"dungeon: musik | {why} | {st} | {secs} s | {stufe} | {round((time.perf_counter() - t0) * 1000)} ms", flush=True)
     return why
 
 
@@ -559,8 +838,9 @@ async def step(now=None):
     if night(now) and _state["nacht"] != day and not notaus.blocks("auto"):
         _state["nacht"] = day
         await asyncio.to_thread(markierte_weg)
-        print(f"dungeon: musik | nacht | {fill_all(s)} felder | {await asyncio.to_thread(_lieder_weg)} lieder weg", flush=True)
-    if _state["run"] or dungeon_lied._state["run"] or now < _state["ruhe"]:
+        print(f"dungeon: musik | nacht | {fill_all(s)} felder | {await asyncio.to_thread(_lieder_weg)} lieder weg"
+              f" | {await asyncio.to_thread(proben_weg)} proben weg", flush=True)
+    if _state["run"] or _state["probe"] or dungeon_lied._state["run"] or now < _state["ruhe"]:
         return "ruht"
     if dungeon_lied.pending():   # a chapter's song goes before the store's pieces (dungeon_lied.py)
         return "wartet" if schwer.offen() else await dungeon_lied.make_next()
@@ -584,7 +864,7 @@ async def loop():
             await step()
         except Exception as e:   # noqa: BLE001 - the loop goes on
             print("dungeon: musik | fehler", type(e).__name__, flush=True)
-        await asyncio.sleep(TAKT)
+        await asyncio.sleep(WARTE_S)
 
 
 def nervt(sid, seat):
@@ -647,6 +927,182 @@ def markierte_weg():
     return len(weg)
 
 
+def gefaellt(sid, seat):
+    """„👍 Gefällt“ from a seat, the counterpart of nervt (only its hash in memory, once per seat): the piece counts as
+    liked, prune keeps it and the table's list has it first. Returns (welt, st, counted) or raises LookupError."""
+    if not isinstance(sid, str) or not ID.fullmatch(sid):
+        print("dungeon: musik | gefaellt abgelehnt | unbekannt", flush=True)
+        raise LookupError("stueck")
+    h = hashlib.sha256(seat.encode()).hexdigest()[:16]
+    with _lock:
+        d = _read()
+        x = next((x for x in d["stuecke"] if x["id"] == sid), None)
+        if not x:
+            print("dungeon: musik | gefaellt abgelehnt | unbekannt", flush=True)
+            raise LookupError("stueck")
+        seen = _gemocht.setdefault(sid, set())
+        if h in seen:
+            print(f"dungeon: musik | gefaellt schon | {x['st']}", flush=True)
+            return x["w"], x["st"], False
+        seen.add(h)
+        _write({"stuecke": [dict(y, gut=min(NERVT_MAX, y.get("gut", 0) + 1)) if y["id"] == sid else y for y in d["stuecke"]]})
+    _day.bump("gefaellt")
+    print(f"dungeon: musik | gefaellt | {x['st']}", flush=True)
+    return x["w"], x["st"], True
+
+
+# ---------------------------------------------------------------- probes (plan V5a)
+def probe_file(pid):
+    return os.path.join(PROBEN, pid + ".mp3")
+
+
+def _proben():
+    """The probes, each with its file; older than a day counts as gone (the night throws them away)."""
+    d = read_json(PROBEN_INDEX, {})
+    xs = d.get("proben") if isinstance(d, dict) else None
+    return [x for x in xs or [] if isinstance(x, dict) and PROBE_ID.fullmatch(str(x.get("id"))) and x.get("st") in STIMMUNGEN
+            and isinstance(x.get("w"), str) and time.time() - x.get("t", 0) < 86400]
+
+
+def _proben_write(xs):
+    os.makedirs(PROBEN, mode=0o700, exist_ok=True)
+    write_json(PROBEN_INDEX, {"proben": xs}, None, 0o600, False, 0o700)
+    keep = {x["id"] + ".mp3" for x in xs} | {"index.json"}
+    for f in os.listdir(PROBEN):
+        if f not in keep and (f.endswith(".mp3") or f.endswith(".neu")):
+            try:
+                os.remove(os.path.join(PROBEN, f))
+            except OSError:
+                pass
+
+
+def proben_weg():
+    """The night: every probe away. Returns how many."""
+    with _lock:
+        n = len(_proben())
+        if n or os.path.isdir(PROBEN):
+            _proben_write([])
+    return n
+
+
+def voll(x):
+    """A probe of the field's full length („👍 In den Vorrat“: a 30 s probe would loop at the table; a victory is short)."""
+    return x["st"] == "sieg" or x["s"] > PROBE_KURZ
+
+
+def probe_geht():
+    """Probes need the game and an installed music model (the admin's own button, Spark-wide like on())."""
+    return features.admin_on("dungeon") and installed()
+
+
+def probe_start(welt, st, laenge, von=None):
+    """Checks a probe and starts it in the background: ValueError(why) for a wrong field (feld), another probe making
+    (belegt), the day's number reached (tag), no music model or game (aus); von: a probe whose lm_seed it keeps
+    (Variation). Returns the seconds."""
+    if welt not in _welten() or st not in STIMMUNGEN or laenge not in ("30", "voll"):
+        raise ValueError("feld")
+    if not probe_geht():
+        raise ValueError("aus")
+    lm = None
+    if von is not None:
+        x = next((x for x in _proben() if x["id"] == von), None) if isinstance(von, str) else None
+        if not x or x["w"] != welt or x["st"] != st:
+            raise ValueError("feld")
+        lm = x.get("lm")
+    if _state["probe"]:
+        raise ValueError("belegt")
+    if _day.counts()["proben"] >= PROBE_TAG:
+        raise ValueError("tag")
+    s = settings()
+    rng = random.Random(secrets.randbits(32))
+    secs = PROBE_KURZ if laenge == "30" or st == "sieg" else rng.choice(LAENGEN[s["laenge"]][0])
+    _state["probe"] = {"w": welt, "st": st}
+    _day.bump("proben")
+    asyncio.get_running_loop().create_task(_probe_make(welt, st, secs, rng, lm))
+    return secs
+
+
+async def _probe_make(welt, st, secs, rng, lm=None):
+    """One probe on the heavy jobs' place (render, the voice first), kept with its seeds; at most PROBE_FELD per
+    field. Never raises; one journal line for every result."""
+    s = settings()
+    stufe = quality_now(s, time.time())
+    k = fingerprint(welt, st)
+    seed, lm = rng.randrange(SEED), (lm if isinstance(lm, int) and 0 <= lm < SEED else rng.randrange(SEED))
+    body = {"caption": caption(welt, st, rng), "seconds": secs, "lyrics": "", "language": "", "seed": seed, "lm_seed": lm,
+            "title": f"Dungeon {st}", **meta(welt, st), "quality": stufe, "loud": s["laut"]}
+    import musik
+    if musik.model():
+        body["variant"] = musik.model()
+    t0 = time.perf_counter()
+    why = "ok"
+    try:
+        mp3 = await render(body, secrets.token_hex(6))
+        stufe = _state["q"] or stufe
+        pid = "p" + secrets.token_hex(5)
+
+        def keep():
+            with _lock:
+                os.makedirs(PROBEN, mode=0o700, exist_ok=True)
+                with open(probe_file(pid) + ".neu", "wb") as f:
+                    f.write(mp3)
+                os.chmod(probe_file(pid) + ".neu", 0o600)
+                os.replace(probe_file(pid) + ".neu", probe_file(pid))
+                xs = _proben() + [{"id": pid, "w": welt, "st": st, "s": secs, "t": int(time.time()), "b": len(mp3), "k": k,
+                                   "seed": seed, "lm": lm, "q": stufe}]
+                feld = sorted((x for x in xs if x["w"] == welt and x["st"] == st), key=lambda x: x["t"])
+                alt = {x["id"] for x in feld[:max(0, len(feld) - PROBE_FELD)]}
+                _proben_write([x for x in xs if x["id"] not in alt])
+        await asyncio.to_thread(keep)
+    except asyncio.TimeoutError:
+        why = "zeit"
+    except ValueError as e:
+        why = str(e) if str(e) in GRUENDE else "dienst"
+    except Exception:   # noqa: BLE001 - every probe ends with a journal line
+        why = "dienst"
+    finally:
+        _state["probe"] = None
+    print(f"dungeon: musik | probe | {why} | {st} | {secs} s | {stufe} | {round((time.perf_counter() - t0) * 1000)} ms", flush=True)
+    return why
+
+
+def probe_keep(pid):
+    """„👍 In den Vorrat“: a full-length probe of the field's current sound into the store, liked (prune keeps it).
+    LookupError for an unknown probe, ValueError("kurz") for a 30 s one, ValueError("veraltet") after the template
+    changed."""
+    with _lock:
+        xs = _proben()
+        x = next((x for x in xs if isinstance(pid, str) and x["id"] == pid), None)
+        if not x or not os.path.exists(probe_file(pid)):
+            raise LookupError("probe")
+        if not voll(x):
+            raise ValueError("kurz")
+        if x["k"] != fingerprint(x["w"], x["st"]):
+            raise ValueError("veraltet")
+        sid = "m" + secrets.token_hex(5)
+        os.makedirs(DIR, mode=0o700, exist_ok=True)
+        os.replace(probe_file(pid), file_of(sid))
+        s = settings()
+        d = _read()
+        d = {"stuecke": list(d["stuecke"]) + [{"id": sid, "w": x["w"], "st": x["st"], "s": x["s"], "t": int(time.time()),
+                                               "b": x["b"], "n": 0, "k": x["k"], "seed": x["seed"], "lm": x["lm"], "gut": 1}]}
+        gone = prune(d, s["stuecke"], s["mb"], keep=sid)
+        _write(d)
+        _proben_write([y for y in xs if y["id"] != pid])
+    if gone:
+        _day.bump("entfernt", len(gone))
+    return x["st"]
+
+
+def probe_del(pid):
+    """The probe away. LookupError for an unknown one."""
+    with _lock:
+        xs = _proben()
+        if not any(isinstance(pid, str) and x["id"] == pid for x in xs):
+            raise LookupError("probe")
+        _proben_write([x for x in xs if x["id"] != pid])
+
+
 def clear():
     """Every piece out (the admin's „Vorrat löschen“). Returns how many."""
     with _lock:
@@ -663,6 +1119,9 @@ def clear():
 def piece(sid, probe=False):
     """The MP3 of a piece of the store (any seat of a running round may hear any piece: nothing of it is personal).
     probe: the admin listens before deciding on a mark (Dominik 2026-10-25), a marked piece too, not counted as played."""
+    if probe and isinstance(sid, str) and PROBE_ID.fullmatch(sid) and any(x["id"] == sid for x in _proben()):
+        with open(probe_file(sid), "rb") as f:   # the admin's probe of a field (V5a)
+            return f.read()
     if not isinstance(sid, str) or not ID.fullmatch(sid) or not any(x["id"] == sid and (probe or spielbar(x)) for x in _read()["stuecke"]):
         raise LookupError("stueck")
     with open(file_of(sid), "rb") as f:
@@ -674,7 +1133,8 @@ def piece(sid, probe=False):
 
 
 def for_live():
-    """Numbers only: pieces, full fields, making or waiting, made/failed/fetched/pruned today."""
+    """Numbers only: pieces, full fields, making or waiting, made/failed/fetched/pruned today, outdated, changed
+    templates, probes (kept, making, today), liked today and liked pieces."""
     s = settings()
     d = _read()
     t = _day.counts()
@@ -682,7 +1142,10 @@ def for_live():
     return {"an": on(s), "stuecke": sum(1 for x in d["stuecke"] if spielbar(x)), "alt": sum(1 for x in d["stuecke"] if not neu(x)), "mb": round(sum(x.get("b", 0) for x in d["stuecke"]) / 1024 / 1024),
             "voll": sum(1 for k in fields if count(d, *k) >= s["stuecke"]), "macht": bool(_state["run"]),
             "wartet": len(_want), "gemacht": t["gemacht"], "weg": t["weg"], "geholt": t["geholt"], "entfernt": t["entfernt"],
-            "markiert": sum(1 for x in d["stuecke"] if not spielbar(x)), "nervt": t["nervt"]}
+            "markiert": sum(1 for x in d["stuecke"] if not spielbar(x)), "nervt": t["nervt"],
+            "vorlagen": sum(1 for w in _stil().values() if isinstance(w, dict) for x in w.values() if isinstance(x, dict) and x),
+            "proben": len(_proben()), "probe_macht": bool(_state["probe"]), "proben_heute": t["proben"], "gefaellt": t["gefaellt"],
+            "gemocht": sum(1 for x in d["stuecke"] if x.get("gut"))}
 
 
 # ---------------------------------------------------------------- routes
@@ -763,6 +1226,40 @@ async def gast_nervt(request: Request):
         raise dungeon._http(e)
 
 
+@router.post("/api/profile/dungeon/{rid}/musik/{sid}/gefaellt", dependencies=[Depends(assistant)])
+async def stueck_gefaellt(rid: str, sid: str, request: Request, prof=Depends(own_profile)):
+    """„👍 Gefällt“ from a profile's seat of a running round."""
+    import dungeon
+    uid = prof["id"]
+    dungeon._need(uid)
+    guard.limit(request, "dungeongefaellt", uid)
+    try:
+        def go():
+            pid = dungeon._seat_uid(rid, uid)
+            _seat_ok(rid, pid)
+            return gefaellt(sid, f"{rid}:{pid}")
+        _w, _st, neu = await asyncio.to_thread(go)
+        return {"ok": True, "neu": neu}
+    except dungeon.KNOWN as e:
+        raise dungeon._http(e)
+
+
+@router.post("/api/dungeon/musik/gefaellt")
+async def gast_gefaellt(request: Request):
+    """{"code", "s"}: „👍 Gefällt“ from a guest's seat (the seat link's door, dungeon._guest)."""
+    import dungeon
+    b, rid, pid = await dungeon._guest(request)
+    guard.limit(request, "dungeongefaellt")
+    try:
+        def go():
+            _seat_ok(rid, pid)
+            return gefaellt(b.get("s"), f"{rid}:{pid}")
+        _w, _st, neu = await asyncio.to_thread(go)
+        return {"ok": True, "neu": neu}
+    except dungeon.KNOWN as e:
+        raise dungeon._http(e)
+
+
 def _short(d, s, welt, st):
     """The field is asked for and still short of pieces (the admin's table shows ⏳)."""
     w = _want.get((welt, st))
@@ -783,8 +1280,159 @@ def admin_view(lang="de"):
             "markiert": [{"id": x["id"], "welt": next((w["name"][li] for w in r["welten"] if w["id"] == x["w"]), x["w"]),
                           "st": NAMEN.get(x["st"], ("", ""))[li], "nervt": x["nervt"], "s": x.get("s", 0)}
                          for x in sorted(d["stuecke"], key=lambda x: -x.get("t", 0)) if not spielbar(x)],
-            "mb_noetig": round(len(r["welten"]) * len(STIMMUNGEN) * s["stuecke"] * sum(LAENGE) / len(LAENGE) / 60 * MB_JE_MINUTE),
+            "mb_noetig": round(len(r["welten"]) * len(STIMMUNGEN) * s["stuecke"] * sum(LAENGEN[s["laenge"]][0]) / len(LAENGEN[s["laenge"]][0]) / 60 * MB_JE_MINUTE),
+            "wahl": {k: [{"id": x, "name": (v[1] if k == "laenge" else v)[li]} for x, v in t.items()] for k, t in WAHL.items()},
+            "beste_fehlt": _state["beste_fehlt"],
+            "klang": klang_view(d, r["welten"], li),
             "live": for_live()}
+
+
+def vorschau(welt, st):
+    """What goes to the music model for the field, as the admin's card shows it (the first way of playing when the
+    instruments are the world's own; tempo, key, time signature and the lyrics as the service sets them)."""
+    m = meta(welt, st)
+    return f"{caption(welt, st, random.Random(0))} · bpm {m['bpm']} · {m['keyscale']} · {TAKTE[m['timesignature']]} · [Instrumental]"
+
+
+def klang_view(d, welten, li):
+    """The tab „Klang“: the fixed lists with their names, the packages and per world and mood the template, its
+    standard, which fields changed, how many pieces are „veraltet“, what goes to the music model and its probes."""
+    nl = lambda t: [{"id": k, "name": v[li]} for k, v in t.items()]   # noqa: E731
+    alt, pr = {}, {}
+    for x in sorted(_proben(), key=lambda x: -x["t"]):
+        pr.setdefault((x["w"], x["st"]), []).append({"id": x["id"], "s": x["s"], "t": x["t"], "q": x.get("q", ""), "voll": voll(x),
+                                                     "veraltet": x["k"] != fingerprint(x["w"], x["st"])})
+    for x in d["stuecke"]:
+        if not neu(x):
+            alt[(x["w"], x["st"])] = alt.get((x["w"], x["st"]), 0) + 1
+    return {"listen": {"genre": nl(GENRES), "instr": nl(INSTRUMENTE), "art": nl(CHARAKTER), "tonart": nl(TONARTEN),
+                       "takt": [{"id": k, "name": v} for k, v in TAKTE.items()], "gesang": nl(GESANG),
+                       "paket": [{"id": k, "name": v[0][li]} for k, v in PAKETE.items()]},
+            "max": {"instr": INSTR_MAX, "art": ART_MAX}, "tempo": TEMPO_SPANNE,
+            "probe": {"macht": _state["probe"], "heute": _day.counts()["proben"], "max": PROBE_TAG, "kurz": PROBE_KURZ,
+                      "geht": probe_geht()},
+            "felder": {w["id"]: {st: {"werte": vorlage(w["id"], st), "standard": standard(st), "geaendert": geaendert(w["id"], st),
+                                      "welt_tonart": TONARTEN[welt_tonart(w["id"], st)][li], "veraltet": alt.get((w["id"], st), 0),
+                                      "vorschau": vorschau(w["id"], st), "proben": pr.get((w["id"], st), [])} for st in STIMMUNGEN} for w in welten}}
+
+
+def _welten():
+    import dungeon
+    return {w["id"] for w in dungeon.rules()["welten"]}
+
+
+def stil_save(welt, st, werte):
+    """The admin's template of one field: only what differs from its standard is kept, {} takes it back. Returns the
+    changed fields; ValueError(the field) for anything outside the lists."""
+    if welt not in _welten() or st not in STIMMUNGEN:
+        raise ValueError("feld")
+    neu_ = pruefen(st, werte)
+    std = standard(st)
+    keep_ = {k: v for k, v in neu_.items() if v != std[k]}
+    with _lock:
+        s = read_json(SETTINGS, {})
+        s = s if isinstance(s, dict) else {}
+        stil = s.get("stil") if isinstance(s.get("stil"), dict) else {}
+        stil = {w: dict(x) for w, x in stil.items() if w in _welten() and isinstance(x, dict)}
+        if keep_:
+            stil.setdefault(welt, {})[st] = keep_
+        else:
+            stil.get(welt, {}).pop(st, None)
+        s["stil"] = {w: x for w, x in stil.items() if x}
+        write_json(SETTINGS, s, 2, 0o600, False, 0o700)
+    return sorted(keep_)
+
+
+def paket(welt, pid):
+    """A package (PAKETE) into every mood of a world, or "standard": every change of the world back. Returns how
+    many fields it set."""
+    if welt not in _welten() or (pid != "standard" and pid not in PAKETE):
+        raise ValueError("paket")
+    n = 0
+    for st in STIMMUNGEN:
+        if pid == "standard":
+            stil_save(welt, st, {})
+        else:
+            _name, genre, rollen = PAKETE[pid]
+            stil_save(welt, st, {"genre": genre, "instr": list(rollen[ROLLE[st]]), "art": list(ART_ROLLE[st])})
+        n += 1
+    return n
+
+
+@router.put("/api/admin/dungeon/musik/stil", dependencies=[Depends(auth)])
+async def admin_stil(request: Request):
+    """{welt, st, werte: {genre?, instr?, tempo?, tonart?, takt?, art?, gesang?}}: the field's template (only values of
+    the fixed lists; {} back to the standard)."""
+    guard.limit(request, "dungeonmusik", admin=True)
+    b = await json_body(request, 4096)
+    welt, st, werte = b.get("welt"), b.get("st"), b.get("werte")
+    try:
+        felder = await asyncio.to_thread(stil_save, welt, st, werte)
+    except ValueError as e:
+        print(f"dungeon: musik | klang abgelehnt | {e if str(e) in FELDER + ('feld', 'felder') else 'wert'}", flush=True)
+        raise HTTPException(400, "felder")
+    print(f"dungeon: musik | klang | gespeichert | {st} | {len(felder)} werte", flush=True)
+    return admin_view("en" if b.get("lang") == "en" else "de")
+
+
+@router.post("/api/admin/dungeon/musik/paket", dependencies=[Depends(auth)])
+async def admin_paket(request: Request):
+    """{welt, paket}: a fixed package into every mood of the world („standard“: all back)."""
+    guard.limit(request, "dungeonmusik", admin=True)
+    b = await json_body(request, 1024)
+    pid = b.get("paket")
+    try:
+        n = await asyncio.to_thread(paket, b.get("welt"), pid)
+    except ValueError:
+        print("dungeon: musik | paket abgelehnt", flush=True)
+        raise HTTPException(400, "paket")
+    print(f"dungeon: musik | paket | {pid} | {n} felder", flush=True)
+    return admin_view("en" if b.get("lang") == "en" else "de")
+
+
+@router.post("/api/admin/dungeon/musik/probe", dependencies=[Depends(auth)])
+async def admin_probe(request: Request):
+    """{welt, st, laenge: "30"|"voll", von?}: a probe of the field with its current template, in the background (one at
+    a time, PROBE_TAG a day, the voice first); von: Variation of that probe (its lm_seed, a new seed)."""
+    guard.limit(request, "dungeonmusik", admin=True)
+    b = await json_body(request, 1024)
+    try:
+        secs = probe_start(b.get("welt"), b.get("st"), b.get("laenge"), b.get("von"))
+    except ValueError as e:
+        why = str(e) if str(e) in ("feld", "aus", "belegt", "tag") else "feld"
+        print(f"dungeon: musik | probe abgelehnt | {why}", flush=True)
+        raise HTTPException({"feld": 400, "aus": 409, "belegt": 409, "tag": 429}[why], why)
+    st = b["st"]   # checked by probe_start (STIMMUNGEN)
+    print(f"dungeon: musik | probe | gestartet | {st} | {secs} s{' | variation' if b.get('von') else ''}", flush=True)
+    return admin_view("en" if b.get("lang") == "en" else "de")
+
+
+@router.post("/api/admin/dungeon/musik/probe/{pid}/behalten", dependencies=[Depends(auth)])
+async def admin_probe_behalten(pid: str, request: Request):
+    """„👍 In den Vorrat“: the full-length probe into the store as a liked piece."""
+    guard.limit(request, "dungeonmusik", admin=True)
+    try:
+        st = await asyncio.to_thread(probe_keep, pid)
+    except LookupError:
+        print("dungeon: musik | probe behalten abgelehnt | unbekannt", flush=True)
+        raise HTTPException(404, "probe")
+    except ValueError as e:
+        print(f"dungeon: musik | probe behalten abgelehnt | {'kurz' if str(e) == 'kurz' else 'veraltet'}", flush=True)
+        raise HTTPException(409, "kurz" if str(e) == "kurz" else "veraltet")
+    print(f"dungeon: musik | probe behalten | {st}", flush=True)
+    return admin_view("en" if request.query_params.get("lang") == "en" else "de")
+
+
+@router.delete("/api/admin/dungeon/musik/probe/{pid}", dependencies=[Depends(auth)])
+async def admin_probe_weg(pid: str, request: Request):
+    guard.limit(request, "dungeonmusik", admin=True)
+    try:
+        await asyncio.to_thread(probe_del, pid)
+    except LookupError:
+        print("dungeon: musik | probe weg abgelehnt | unbekannt", flush=True)
+        raise HTTPException(404, "probe")
+    print("dungeon: musik | probe weg | 1", flush=True)
+    return admin_view("en" if request.query_params.get("lang") == "en" else "de")
 
 
 @router.get("/api/admin/dungeon/musik", dependencies=[Depends(auth)])
@@ -794,14 +1442,21 @@ def admin_show(request: Request):
 
 @router.put("/api/admin/dungeon/musik", dependencies=[Depends(auth)])
 async def admin_save(request: Request):
-    """{an, stuecke, mb}: refused unless every value is within its range."""
+    """{an, stuecke, mb, qualitaet?, laenge?, laut?}: refused unless every value is within its range or list (a
+    choice left out keeps its value)."""
     guard.limit(request, "dungeonmusik", admin=True)
     b = await json_body(request, 1024)
     an, n, mb = b.get("an"), b.get("stuecke"), b.get("mb")
-    if not isinstance(an, bool) or _int(n, *ZIEL_SPANNE, None) is None or _int(mb, *MB_SPANNE, None) is None:
+    old = settings()
+    wahl = {k: b.get(k, old[k]) for k in WAHL}
+    if not isinstance(an, bool) or _int(n, *ZIEL_SPANNE, None) is None or _int(mb, *MB_SPANNE, None) is None \
+            or any(not isinstance(v, str) or v not in WAHL[k] for k, v in wahl.items()):
         print("dungeon: musik | einstellung abgelehnt", flush=True)
-        raise HTTPException(400, f"an: true/false, stuecke: {ZIEL_SPANNE[0]}-{ZIEL_SPANNE[1]}, mb: {MB_SPANNE[0]}-{MB_SPANNE[1]}")
-    await asyncio.to_thread(write_json, SETTINGS, {"an": an, "stuecke": n, "mb": mb}, 2, 0o600, False, 0o700)
+        raise HTTPException(400, f"an: true/false, stuecke: {ZIEL_SPANNE[0]}-{ZIEL_SPANNE[1]}, mb: {MB_SPANNE[0]}-{MB_SPANNE[1]}, "
+                                 + ", ".join(f"{k}: {'/'.join(WAHL[k])}" for k in WAHL))
+    keep = read_json(SETTINGS, {})
+    keep = {k: v for k, v in keep.items() if k not in ("an", "stuecke", "mb", *WAHL)} if isinstance(keep, dict) else {}
+    await asyncio.to_thread(write_json, SETTINGS, {**keep, "an": an, "stuecke": n, "mb": mb, **wahl}, 2, 0o600, False, 0o700)
 
     def shrink():
         with _lock:
@@ -814,7 +1469,8 @@ async def admin_save(request: Request):
     if not an:
         with _lock:
             _want.clear()
-    print(f"dungeon: musik | einstellung | {'an' if an else 'aus'} | {n} stuecke | {mb} mb | {gone} entfernt", flush=True)
+    print(f"dungeon: musik | einstellung | {'an' if an else 'aus'} | {n} stuecke | {mb} mb | {wahl['qualitaet']} | {wahl['laenge']} | "
+          f"{wahl['laut']} | {gone} entfernt", flush=True)
     return admin_view("en" if b.get("lang") == "en" else "de")
 
 

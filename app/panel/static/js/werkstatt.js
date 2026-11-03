@@ -16,12 +16,12 @@ const WK_WARUM={llm:['Das eigene Sprachmodell hat nicht geantwortet. Später noc
   fehler:['Unerwarteter Fehler. Zustand → Logs (System) zeigt „werkstatt:“ mit dem Grund.','Unexpected error. Status → Logs (System) shows "werkstatt:" with the reason.'],
   leer:['OpenCode hat nichts geändert. Das Problem genauer beschreiben (was passiert, was sollte passieren, wo) und noch einmal versuchen.','OpenCode changed nothing. Describe the problem more exactly (what happens, what should happen, where) and try again.']};
 // the four tiles: kind, symbol, title, what it does
-const WK_NEU=[['tests','✓',['Alles testen','Test everything'],['Alle Selbsttests wie auf GitHub · ohne Sprachmodell · etwa 10 min','All self-tests as on GitHub · no language model · about 10 min']],
-  ['diagnose','?',['Problem untersuchen','Look into a problem'],['Du beschreibst, was nicht klappt · liest nur, ändert nichts','You describe what goes wrong · only reads, changes nothing']],
-  ['reparatur','✎',['Reparatur versuchen','Try a repair'],['Ergibt einen Vorschlag zum Ansehen · nichts wird eingespielt','Gives a proposal to look at · nothing is installed']],
-  ['messen','∑',['Sprachmodell messen','Measure the language model'],['10 bekannte Fehler reparieren lassen · etwa 1 Stunde','Let it repair 10 known bugs · about 1 hour']]];
+const WK_NEU=[['tests','check',['Alles testen','Test everything'],['Alle Selbsttests wie auf GitHub · ohne Sprachmodell · etwa 10 min','All self-tests as on GitHub · no language model · about 10 min']],
+  ['diagnose','help',['Problem untersuchen','Look into a problem'],['Du beschreibst, was nicht klappt · liest nur, ändert nichts','You describe what goes wrong · only reads, changes nothing']],
+  ['reparatur','wrench',['Reparatur versuchen','Try a repair'],['Ergibt einen Vorschlag zum Ansehen · nichts wird eingespielt','Gives a proposal to look at · nothing is installed']],
+  ['messen','chart',['Sprachmodell messen','Measure the language model'],['10 bekannte Fehler reparieren lassen · etwa 1 Stunde','Let it repair 10 known bugs · about 1 hour']]];
 // the Angriffsprobe (angriffsprobe.py, own switch): a fifth tile while it is on; its runs come from the panel, not the sandbox
-const WK_PROBE=['probe','⚔',['Angriffe prüfen','Probe attacks'],['Folgt das Sprachmodell Befehlen in fremdem Text? · nur Zahlen · 1 bis 2 min','Does the language model follow orders in outside text? · numbers only · 1 to 2 min']];
+const WK_PROBE=['probe','shield',['Angriffe prüfen','Probe attacks'],['Folgt das Sprachmodell Befehlen in fremdem Text? · nur Zahlen · 1 bis 2 min','Does the language model follow orders in outside text? · numbers only · 1 to 2 min']];
 function wkNeuListe(){return WK.d&&WK.d.probe&&WK.d.probe.an?WK_NEU.concat([WK_PROBE]):WK_NEU}
 function wkEl(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e}
 function wkT(p){return L==='en'?p[1]:p[0]}
@@ -57,7 +57,7 @@ function wkWarum(art){const d=WK.d||{},x=d.arten&&d.arten[art];if(!d.an)return t
   return''}
 function wkTiles(){const w=$('wkacts');w.textContent='';w.classList.toggle('fuenf',wkNeuListe().length===5);
   wkNeuListe().forEach(([art,sym,tit,sub])=>{const b=wkEl('button','wkact'+(WK.neu===art?' on':''));b.type='button';b.dataset.art=art;
-    b.appendChild(wkEl('span','wkic',sym));const m=wkEl('span','wkmid');m.appendChild(wkEl('b','',wkT(tit)));m.appendChild(wkEl('small','',wkT(sub)));b.appendChild(m);
+    const ik=wkEl('span','wkic');ik.appendChild(icNode(sym));b.appendChild(ik);const m=wkEl('span','wkmid');m.appendChild(wkEl('b','',wkT(tit)));m.appendChild(wkEl('small','',wkT(sub)));b.appendChild(m);
     b.onclick=()=>wkNeu(art);w.appendChild(b)})}
 function wkList(){const d=WK.d,box=$('wklist');box.textContent='';
   box.appendChild(wkEl('div','ld-grp',t('Verlauf','History')));

@@ -83,6 +83,7 @@ struct TrayPanel: View {
     @ObservedObject var mic = MicSwitch.shared
     @ObservedObject var agenda = AgendaCenter.shared
     @ObservedObject var lists = ListsCenter.shared
+    @ObservedObject var offen = OffenCenter.shared
     @ObservedObject var post = PostCenter.shared
     @ObservedObject var home = HomeCenter.shared
     @ObservedObject var notes = NotesCenter.shared
@@ -103,7 +104,6 @@ struct TrayPanel: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            GradientBar()
             VStack(alignment: .leading, spacing: 10) {
                 header
                 if !detail.isEmpty {
@@ -189,6 +189,7 @@ struct TrayPanel: View {
             agenda.refreshSoon()
             post.refreshSoon()
             lists.refreshSoon()
+            offen.refreshSoon()
             home.refreshSoon()
         }
         .onChange(of: notes.items.first?.n) { _ in
@@ -214,7 +215,7 @@ struct TrayPanel: View {
     private var openTabs: [PanelTab] {
         PanelTab.allCases.filter { t in
             switch t {
-            case .heute: return model.part("agenda") || model.part("post") || model.part("lists")
+            case .heute: return model.part("agenda") || model.part("post") || model.part("lists") || model.part("offen")
             case .meldungen: return model.part("notes")
             case .rechner: return model.part("home") || !macRows.isEmpty
             }
@@ -252,6 +253,7 @@ struct TrayPanel: View {
             if model.part("agenda") { agendaSection }
             if model.part("post") { postSection }
             if model.part("lists") { listsSection }
+            if model.part("offen") { offenSection }
         case .meldungen:
             notesSection
         case .rechner:
@@ -341,7 +343,7 @@ struct TrayPanel: View {
 
     private var header: some View {
         HStack(spacing: 11) {
-            FaceView(size: 40)
+            if FacePref.on { FaceView(size: 40) }
             VStack(alignment: .leading, spacing: 1) {
                 Text(verbatim: greeting)
                     .font(.system(size: 14, weight: .semibold))
@@ -385,7 +387,7 @@ struct TrayPanel: View {
             }
             if model.part("dictate") {
                 PanelTile(title: dictation.recording ? "Diktat beenden" : "Diktieren",
-                          symbol: dictation.recording ? "stop.circle" : "mic", color: Theme.accent2,
+                          symbol: dictation.recording ? "stop.circle" : "mic", color: Theme.accent,
                           key: model.hotkeyLabel(.dictate), danger: dictation.recording, compact: true) {
                     go { dictation.toggle(.cursor(nil)) }
                 }
@@ -396,7 +398,7 @@ struct TrayPanel: View {
                 }
             }
             if model.part("mail") {
-                PanelTile(title: "Antwort entwerfen", symbol: "envelope", color: Theme.accent2, key: model.hotkeyLabel(.mail), compact: true) {
+                PanelTile(title: "Antwort entwerfen", symbol: "envelope", color: Theme.accent, key: model.hotkeyLabel(.mail), compact: true) {
                     go { MailDraft.start(front: nil) }
                 }
             }
@@ -408,8 +410,13 @@ struct TrayPanel: View {
                 }
             }
             if model.part("capture") {
-                PanelTile(title: "Erfassen", symbol: "plus.circle", color: Theme.accent2, key: model.hotkeyLabel(.capture), compact: true) {
+                PanelTile(title: "Erfassen", symbol: "plus.circle", color: Theme.accent, key: model.hotkeyLabel(.capture), compact: true) {
                     go { CaptureController.open(fromHotkey: false) }
+                }
+            }
+            if model.part("find") {
+                PanelTile(title: "Finden", symbol: "magnifyingglass", color: Theme.accent, key: model.hotkeyLabel(.find), compact: true) {
+                    go { FindController.open(fromHotkey: false) }
                 }
             }
             if model.part("meeting") {
@@ -551,6 +558,45 @@ struct TrayPanel: View {
         }
     }
 
+    /// "Offen": how many Vorgänge wait, the first three cards with their fixed buttons (part offen); a card without a
+    /// button opens Offen in the panel
+    private var offenSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            sectionTitle(offen.n > 0 ? "Offen \(offen.n)" : "Offen")
+            PanelBox {
+                if offen.cards.isEmpty {
+                    PanelRow(title: !offen.problem.isEmpty ? offen.problem : offen.loaded ? "Nichts offen." : "Lädt …",
+                             detail: "", symbol: "tray", verb: "Öffnen") { go { model.openPanel("#me=vgbox") } }
+                }
+                ForEach(Array(offen.cards.enumerated()), id: \.element.id) { i, c in
+                    if i > 0 { RowLine() }
+                    VStack(alignment: .leading, spacing: 4) {
+                        PanelRow(title: c.titel.isEmpty ? c.art : c.titel,
+                                 detail: [c.art, c.zeile].filter { !$0.isEmpty }.joined(separator: " · "),
+                                 symbol: "tray", verb: c.acts.isEmpty ? "Öffnen" : "") { go { model.openPanel("#me=vgbox") } }
+                        if !c.acts.isEmpty {
+                            HStack(spacing: 6) {
+                                ForEach(c.acts, id: \.k) { a in
+                                    Button(a.de) { offen.act(c, a.k) }
+                                        .buttonStyle(SoftButtonStyle())
+                                        .disabled(offen.busy)
+                                }
+                            }
+                            .padding(.leading, 30)
+                            .padding(.bottom, 4)
+                        }
+                    }
+                }
+                if offen.n > offen.cards.count {
+                    RowLine()
+                    PanelRow(title: "Alle \(offen.n) ansehen", symbol: "arrow.up.right.square", verb: "Öffnen") {
+                        go { model.openPanel("#me=vgbox") }
+                    }
+                }
+            }
+        }
+    }
+
     /// "Als Nächstes": the next events and reminders (part agenda), in a box like in the panel
     private var agendaSection: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -669,7 +715,7 @@ struct TrayPanel: View {
                         .opacity(0.8)
                 }
             }
-            .foregroundColor(on ? .white : Theme.fg)
+            .foregroundColor(on ? Theme.onAccent : Theme.fg)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(Capsule().fill(on ? Theme.accent : Theme.soft))
@@ -811,9 +857,9 @@ struct PanelAskField: View {
                 Button(action: speak) {
                     Image(systemName: "mic")
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(Theme.onAccent)
                         .frame(width: 26, height: 26)
-                        .background(RoundedRectangle(cornerRadius: 8).fill(Theme.diagonal))
+                        .background(RoundedRectangle(cornerRadius: 8).fill(Theme.accent))
                         .contentShape(RoundedRectangle(cornerRadius: 8))
                 }
                 .buttonStyle(.plain)

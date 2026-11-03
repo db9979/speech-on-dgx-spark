@@ -59,7 +59,7 @@ function fuerRender(){const d=FUER,box=$('fuerbox'),E=icEl;if(!box||!d)return;bo
     try{await api('/api/profile/fuerdich',{method:'DELETE'})}catch(e){fuerMsg(e.message,true);return}await showFuerDich(true)}}];
   box.appendChild(icCard('mail',t('Für dich','For you'),t(`${urgent.length} brauchen dich · ${rest.length} gut zu wissen`,`${urgent.length} need you · ${rest.length} good to know`),[again],menu));
   const m=E('div','fh');m.id='fuermsg';box.appendChild(m);
-  for(const e of d.errors||[])box.appendChild(E('div','fh err','⚠ '+t('Postfach nicht lesbar: ','Mailbox not readable: ')+e));
+  for(const e of d.errors||[])box.appendChild(E('div','fh err',t('Postfach nicht lesbar: ','Mailbox not readable: ')+e));
   // stage 4 („7a“, „4a“): this month's sum from checked amounts and the tip of the day; the tip's address only as an
   // https link in a new tab without the Spark's address (noreferrer), its title as text
   if(d.month)box.appendChild(E('div','fh',d.month.line));

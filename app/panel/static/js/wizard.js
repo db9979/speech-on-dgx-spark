@@ -42,10 +42,10 @@ async function wizShow(){const s=wiz.steps[wiz.step],b=$('wizbody');wizMsg('');
   if(s==='done'){b.innerHTML=`<h2>${t('Fertig','Done')}</h2><div class="intro">${t('Zum Schluss probiert der Spark einmal alles aus: das Sprachmodell antwortet, die Sprachausgabe spricht, die Spracherkennung versteht es wieder.','Finally the Spark tries everything once: the language model answers, speech output speaks, speech recognition understands it again.')}</div><table><tbody id="wlive"></tbody></table>`;
     $('wlive').innerHTML=`<tr><td class="mut">${t('prüft …','checking …')}</td></tr>`;
     try{const r=await (await api('/api/livecheck',{method:'POST'})).json();
-      $('wlive').innerHTML=(r.steps||[]).map(x=>`<tr><td style="width:40%">${x.ok===true?'✅':x.ok===false?'❌':'➖'} ${esc(LIVE[x.name]||x.name)}</td><td class="mut">${esc(x.detail||'')}</td></tr>`).join('')}catch(e){wizMsg(e.message,true)}}
+      $('wlive').innerHTML=(r.steps||[]).map(x=>`<tr><td style="width:40%">${ic(x.ok===true?'check':x.ok===false?'x':'minus',x.ok===true?'okc':x.ok===false?'badc':'')} ${esc(LIVE[x.name]||x.name)}</td><td class="mut">${esc(x.detail||'')}</td></tr>`).join('')}catch(e){wizMsg(e.message,true)}}
   if($('wllmtest'))$('wllmtest').onclick=async()=>{$('wllmres').textContent=t('prüfe …','testing …');
     try{const r=await (await api('/api/setup/llm-test',jreq('POST',{url:$('wllmurl').value.trim(),key:$('wllmkey').value}))).json();
-      $('wllmres').innerHTML=r.ok?'✅ '+esc(r.models.join(', ')):`<span class="err">${esc(r.error)}</span>`}catch(e){$('wllmres').innerHTML=`<span class="err">${esc(e.message)}</span>`}}}
+      $('wllmres').innerHTML=r.ok?ic('check','okc')+' '+esc(r.models.join(', ')):`<span class="err">${esc(r.error)}</span>`}catch(e){$('wllmres').innerHTML=`<span class="err">${esc(e.message)}</span>`}}}
 async function wizApply(){const s=wiz.steps[wiz.step];
   if(s==='pw'&&$('wpwnew').value){await api('/api/password',jreq('POST',{old:$('wpwold').value,new:$('wpwnew').value}))}
   if(s==='llm'){const url=$('wllmurl').value.trim(),key=$('wllmkey').value;if(url!==wiz.cfg.chat.llm_url||key)await wizSave(c=>{c.chat.llm_url=url;if(key)c.chat.llm_key=key})}

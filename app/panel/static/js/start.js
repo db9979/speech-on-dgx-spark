@@ -54,6 +54,7 @@ async function startPage(){let who=null;try{who=await (await /*raw: the first wh
   if(window.lstStart)lstStart(who);   // Listen (listen.js): the menu entry only for a profile that may use lists
   if(window.wbStart)wbStart(who);   // Wissensbuch (wissensbuch.js): the menu entry only when the admin released it
   if(window.fundStart)fundStart(who);   // Finden (finden.js): the menu entry only when the admin released it
+  if(window.mpStart)mpStart(who);   // Mappen (mappen.js): the menu entry only when the admin released it
   if(window.dmStart)dmStart(who);   // KI-Dungeon-Master (dungeon.js): the menu entry only when the admin released it
   if(window.vgStart)vgStart(who);   // Offen (offen.js): the menu entry, the cards in the conversation and their stream
   if(window.fzStart)fzStart(who);   // Fernzugang (fernzugang.js): the menu entry only for an admin while the switch is on
@@ -89,6 +90,9 @@ async function startPage(){let who=null;try{who=await (await /*raw: the first wh
   // #fund=<id> from Telegram's Sofort-Karte (fund.py): the original of that entry of Finden, as the server gives it
   try{const f=/^#fund=(\d{1,12})$/.exec(location.hash);if(f){history.replaceState(null,'',location.pathname+location.search);
     if(PROFILE&&typeof fundTreffer==='function')fundTreffer(f[1])}}catch{}
+  // #fundq=<words> from the Begleiter's search (Strg+Alt+F, begleiter.py program_find): the page Finden with this search
+  try{const f=/^#fundq=(.{1,600})$/.exec(location.hash);if(f){history.replaceState(null,'',location.pathname+location.search);
+    if(PROFILE&&window.FUND_ON&&typeof fundSuche==='function')fundSuche(decodeURIComponent(f[1]).slice(0,200))}}catch{}
   // #weg=<a way like „Ich → Sicherheit“> from the apps, mails and messages: opens it like a Sprung-Link (way.js)
   try{if(typeof wayHash==='function')wayHash()}catch{}
   // #meldung=<number> from a tapped notification: the note as a card above the conversation (mitteilung.js)

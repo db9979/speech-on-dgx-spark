@@ -417,12 +417,16 @@ class Rekursiv(Base):
             self.assertIsNone(wissenskarte.weg(uid, pid(1), bad), bad)
         with wissenskarte._Db(uid) as con:
             self.assertGreater(con.execute("SELECT COUNT(*) FROM wk_edges").fetchone()[0], 400)
-        for sql in (wissenskarte._COUNTS, wissenskarte._OK, wissenskarte._WALK):
+        for sql in (wissenskarte._COUNTS, wissenskarte._OK, wissenskarte._UM):
             self.assertNotIn("{", sql)
             self.assertNotIn("%", sql)
-        self.assertIn("UNION SELECT", wissenskarte._WALK)                              # UNION, not UNION ALL: no ring runs on
-        self.assertNotIn("UNION ALL", wissenskarte._WALK)
-        self.assertIn("walk.d < ?", wissenskarte._WALK)
+        self.assertEqual(wissenskarte._UM.count("json_each(?)"), 2)                  # the ring of a step is one parameter
+        with wissenskarte._Db(uid) as con:                                            # a step goes over the indexes on a and b
+            for ents in (False, True):
+                plan = " ".join(r[3] for r in con.execute("EXPLAIN QUERY PLAN " + wissenskarte._SQL[ents][2], ("[]", "[]")))
+                self.assertIn("USING INDEX wk_edges_a", plan)
+                self.assertIn("USING INDEX wk_edges_b", plan)
+                self.assertNotIn("SCAN e", plan)
 
 
 if __name__ == "__main__":

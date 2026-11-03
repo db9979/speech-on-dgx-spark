@@ -365,6 +365,10 @@ class Outside(Base):
 
 class LogsAndLive(Base):
     def test_fixed_words_and_numbers_only(self):
+        # Zustand → Live is shared by the whole run: events other tests left there (the Dienst-Wächter's „Archiv
+        # (Kiwix) antwortet nicht“) are not this test's; only what came during it counts (red at V01.1.272)
+        live = getattr(panel, "live", None)
+        before = {(e["t"], e["area"], e["text"]) for e in live.snapshot()["events"]} if live else set()
         self.round()
         FMB.validity = b"9"
         with mock.patch.object(fundmail, "_ruhig", lambda now: False):
@@ -388,7 +392,10 @@ class LogsAndLive(Base):
         text = json.dumps(d)
         for word in SECRETS:
             self.assertNotIn(word, text)
-        snap = json.dumps(panel.live.snapshot() if hasattr(panel, "live") else {}, ensure_ascii=False, default=str)
+        now = live.snapshot() if live else {}
+        if now:
+            now["events"] = [e for e in now["events"] if (e["t"], e["area"], e["text"]) not in before]
+        snap = json.dumps(now, ensure_ascii=False, default=str)
         for word in SECRETS:
             self.assertNotIn(word, snap)
 

@@ -80,6 +80,9 @@ DOC_WORDS = re.compile(r"(?i)\b(\w*dokument\w*|unterlage\w*|\w*vertrag\w*|\w*ver
                        r"\w*bescheid\w*|kündigung\w*|kündigungsfrist\w*|steuer(erklärung|bescheid|unterlagen)?|"
                        r"arztbrief\w*|befund\w*|beleg\w*|quittung\w*|zeugnis\w*|lebenslauf\w*|"
                        r"(meine[nmr]?|in den) (dateien|papiere\w*)|nebenkosten\w*|documents?)\b")
+# Mappen (mappen.py): the word itself, never a Schulmappe or Aktenmappe of someone else's text (the Weiche reads only
+# the person's own message)
+MAPPE_WORDS = re.compile(r"(?i)\b(mappen?|collections?)\b")
 CONTACT_WORDS = re.compile(r"(?i)\b(telefonnummer\w*|handynummer\w*|nummer von|adresse von|kontakt\w*|"
                            r"geburtstag(e|en|s)?|nummer vo[mn]|wo wohnt|anschrift\w*|phone number|contacts?)\b")
 MESSAGE_WORDS = re.compile(r"(?i)\b(nachricht\w*|chat\w*|durchsage\w*|bescheid|richte\w* .{1,40}aus|messages?|"
@@ -217,6 +220,9 @@ GROUPS = {
     # Finden (fund.py, plan such-index): a search verb and a thing of one's own („Such mir die Rechnung von Thomann“,
     # „Wo ist der Vertrag mit der Telekom?“), never the internet or the archive; beside „dokument“ or „mail“ both stay
     "finden": ({"fund_suche"}, fund.FIND_WORDS),
+    # Mappen (mappen.py, plan open-notebook Stufe 1): the own collections by name („Was liegt in der Mappe Garten?“,
+    # „Leg den Mietvertrag in die Mappe Wohnung“); document_search stays anyway (NARROW_KEEP)
+    "mappe": ({"mappe_liste", "mappe_stand", "mappe_dazu"}, MAPPE_WORDS),
     # the own offline archive (Kiwix, V01.0.258): only when the person names it
     "archiv": ({"archive_search", "article_more", "wikipedia"}, dict(chat.NEED_TOOLS)["archive_search"]),
 }
@@ -836,13 +842,14 @@ LABELS = {"smarthome": "Smart Home", "kalender": "Kalender und Briefing", "mail"
           "dokument": "Dokumente", "nachricht": "Nachrichten an andere (Chats)", "agent": "Agenten", "iphone": "iPhone",
           "spark": "Fragen zum Spark", "wikipedia": "Wikipedia", "erstellen": "Dokumente erstellen",
           "bild": "Bilder malen", "musik": "Musik machen", "archiv": "Eigenes Archiv",
-          "feeds": "Reddit und Feeds", "finden": "Finden in allen Daten"}
+          "feeds": "Reddit und Feeds", "finden": "Finden in allen Daten", "mappe": "Mappen"}
 MAX_TEST = 500
 # "Erklären statt Schweigen" (plan „Bedienung gesamt“ B4, V01.0.286): the function behind each group (features.py)
 FEATURE = {"smarthome": "ha", "kalender": "calendar", "mail": "mail", "websuche": "search", "erinnerung": "reminders",
            "liste": "tasks", "wetter": "weather", "bahn": "transit", "paket": "parcels", "kontakt": "contacts",
            "gedaechtnis": "memory", "dokument": "documents", "nachricht": "chats", "agent": "agent",
-           "iphone": "iphone", "wikipedia": "wiki", "archiv": "kiwix", "bild": "bilder", "musik": "musik", "feeds": "feeds"}
+           "iphone": "iphone", "wikipedia": "wiki", "archiv": "kiwix", "bild": "bilder", "musik": "musik", "feeds": "feeds",
+           "mappe": "mappen"}
 
 
 def explain(route, offered, who, stranger, c=None):

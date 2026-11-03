@@ -75,12 +75,7 @@ function konDetail(w){const box=w.querySelector('.kondet'),c=konCard(),f=KON.for
   box.querySelector('[data-k=back]').onclick=()=>{KON.sel='';KON.form=null;KON.msg='';konDraw()};
   if(f)konFormBind(box);else konCardBind(box,c)}
 // the five buttons as line symbols in the accent colour, like the mail buttons (Dominik 2026-10-21: no emoji)
-const KON_IC={sms:'M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z',
-  tel:'M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z',
-  mail:'M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 7l9 6 9-6',
-  event:'M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 10h18M8 3v4M16 3v4',
-  share:'M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v13'};
-const konIc=k=>`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${KON_IC[k]}"/></svg>`;
+const konIc=k=>ic(k,'konic');   // icons.js
 // „Nachricht“ opens the messages app where there is one (phone, tablet, Mac); a Windows or Linux browser has none,
 // there the button copies the number and says so (before, nothing happened)
 const konSms=()=>/iPhone|iPad|Android|Macintosh/.test(navigator.userAgent)||matchMedia('(pointer:coarse)').matches;

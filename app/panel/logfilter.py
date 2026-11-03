@@ -28,7 +28,7 @@ AREAS = (("search", r"^chat: web search"), ("werkzeug", r"^chat: tool "),
          ("weiche", r"^(weiche|systemone|taten):"), ("ha", r"^(homeassistant|hamelden):"),
          ("room", r"^room:"), ("esp32", r"^(esp32|wyoming):"), ("telefon", r"^telefon:"), ("watch", r"^(watch|pebble):"), ("telegram", r"^telegram:"),
          ("mail", r"^(mail|tidy|imap|mailstil|fuerdich|ichweiss)\b"), ("vorrang", r"^(vorrang|hintergrund|sampler|vorwaermen|vorrat):"),
-         ("wissen", r"^(kiwix|lokal|wissen|docembed|documents|docling|auslassen):"), ("fund", r"^fund:"), ("anfrage", r"^anfrage:"),
+         ("wissen", r"^(kiwix|lokal|wissen|docembed|documents|docling|auslassen|mappen):"), ("fund", r"^fund:"), ("anfrage", r"^anfrage:"),
          ("speicher", r"^(speicher|offsite|backup|meinedaten):"), ("nas", r"^(nas|nasquelle|nasablage|naszustand):"), ("gedaechtnis", r"^(gedaechtnis|memtidy|learning|fixes|profiles):"),
          ("nachrichten", r"^(chats|messages|verbund|geteilt):"), ("seite", r"^seite:"), ("klaeren", r"^klaeren:"),
          ("listen", r"^(tasks|reminders|calendar|contacts):"), ("mitteilung", r"^(push|apns):"),
@@ -38,7 +38,7 @@ AREAS = (("search", r"^chat: web search"), ("werkzeug", r"^chat: tool "),
          ("fernzugang", r"^fernzugang:"),
          ("spontanhilfe", r"^spontanhilfe:"),
          ("system", r"^(notaus|notzugang|wartung|guard|audit|coadmin|dienstwacht|watchdog|livecheck|update|geraeteupdate|logs|vault|zustand|"
-                    r"ghtoken|netguard|verbrauch|modelle|llmtor|tlstor|dockertor|teilen|waerter|steuer|notbetrieb|gehaeuse|rechner|schirm|praxistest|rundlauf|werkstatt|wachposten|loopwacht|offline)\b"),
+                    r"ghtoken|netguard|verbrauch|modelle|llmtor|tlstor|dockertor|teilen|waerter|steuer|notbetrieb|gehaeuse|rechner|schirm|praxistest|rundlauf|werkstatt|entwickeln|wachposten|loopwacht|offline)\b"),
          ("ereignis", r"^ereignis:"))
 _AREAS = [(k, re.compile(rx)) for k, rx in AREAS]
 # filter keys the page may send: every area, "errors" (lines at level err) and "update" (the update unit)

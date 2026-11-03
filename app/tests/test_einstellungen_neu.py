@@ -1,5 +1,5 @@
 """Einstellungsseiten neu (plaene/einstellungen-neu.md): one page frame for every settings page. The rows of a section
-sit in one box (.sgrp), short fixed choices are segment buttons, the save bar floats only while something is unsaved,
+sit in one box (.sgrp), short fixed choices are segment buttons, the save bar stands at the bottom with one height,
 and on phones the face no longer covers the switches. Static checks run everywhere, the browser checks where
 Playwright and Chromium exist (container, GitHub "Tests"); no test reads the clock."""
 import asyncio
@@ -30,30 +30,37 @@ class Static(unittest.TestCase):
     def test_every_menu_page_has_its_symbol(self):
         """One style on every page with a second column (Dominik 2026-10-17: „durchgängigen Style verwenden“): each
         page of Zustand, Funktionen and Personen und Geräte has its symbol (seite.js IC 'z:<id>'), each group of
-        Funktionen the symbol of the same group in Ich (MEG)."""
+        Funktionen the symbol of the same group in Ich (MEG); every symbol is a name of icons.js (one source)."""
         base, seite, guides = read("js", "base.js"), read("js", "seite.js"), read("js", "guides.js")
+        icons = read("js", "icons.js")
+        names = set(re.findall(r"^  ([a-z_]+):'", icons, re.M)) | set(re.findall(r"\b([a-z_]+):'[a-z_]+'", icons[icons.index("Object.entries({"):]))
+        for k, n in re.findall(r"'?([a-z:]+)'?:'([a-z_]+)'", seite[seite.index("const IC={"):seite.index("function icon(")]
+                                + seite[seite.index("const MEG={"):seite.index("function featGroupIcons")]):
+            self.assertIn(n, names, f"seite.js {k}: no symbol „{n}“ in icons.js")
         groups = base[base.index("const GROUPS={"):base.index("const lastSec")]
         for g in ("mon", "feat", "prof"):
             body = groups[groups.index(g + ":["):]
             body = body[:body.index("]],") + 2]
             for page in re.findall(r"\['([a-z]+)',t\(", body):
-                self.assertIn(f"'z:{page}':[", seite, f"{g}/{page} without a symbol")
+                self.assertIn(f"'z:{page}':'", seite, f"{g}/{page} without a symbol")
         meg = seite[seite.index("const MEG={"):seite.index("const MEI=")]
         for gid in re.findall(r"\['([a-z]+)','[^']+','[^']+'\]", guides[guides.index("const GGROUPS="):guides.index("const GSECT=")]):
-            self.assertRegex(meg, r"\b" + gid + r":\[", gid)
+            self.assertRegex(meg, r"\b" + gid + r":'", gid)
         self.assertIn("featGroupIcons();", seite)
 
     def test_people_list_is_tidy(self):
-        """Personen und Geräte as a list like the others (Dominik 2026-10-17 „sieht nicht professionell aus“): initials
-        on a colour, counts in words (no „Gerät(e)“), setup as a bar, a chevron with a label instead of „Details“."""
+        """Personen und Geräte as a list like the others (Dominik 2026-10-17 „sieht nicht professionell aus“, since
+        Klar 4 the ld- rows): initials on grey, counts in words (no „Gerät(e)“), the setup still open as a dot with a
+        word, the whole row opens the person; no table and no names as HTML any more."""
         users = read("js", "users.js")
-        rows = users[users.index("$('proflist').innerHTML="):users.index("const pages=")]
-        self.assertIn("pAvatar(u.name)", rows)
-        self.assertIn("pSetup(u.setup)", rows)
-        self.assertIn('class="b pchev"', rows)
-        self.assertIn("aria-label=", rows)
+        rows = users[users.index("function pRow(u)"):users.index("function pOpen(")]
+        self.assertIn("ldAva(u.name)", rows)
+        self.assertIn("ldSt('warn'", rows)
+        self.assertIn("act:()=>pOpen(u.id)", rows)
         self.assertNotIn("Gerät(e)", rows)
-        self.assertIn("pDevIcon(x)", users)
+        self.assertNotIn("$('proflist').innerHTML", users)
+        self.assertNotIn("<tr", users)
+
     def test_frame_only_changes_the_look(self):
         js = read("js", "seite.js")
         # no new requests, no HTML from data: buttons get their text with textContent
@@ -97,7 +104,7 @@ class Static(unittest.TestCase):
         # every page of the menu has its symbol
         js = read("js", "seite.js")
         for p in re.findall(r'<button data-p="(\w+)"', html[html.index('id="cfgnav"'):html.index('id="cfgback"')]):
-            self.assertRegex(js, rf"\b{p}:\[", p)
+            self.assertRegex(js, rf"\b{p}:'[a-z_]+'", p)     # a name of icons.js (test_every_menu_page_has_its_symbol)
 
     def test_feature_groups_match(self):
         # the Funktionen page (guides.js) and the feature register (features.py, Gesperrte Funktionen, the apps) use the
@@ -125,6 +132,218 @@ class Static(unittest.TestCase):
         self.assertEqual({c.rstrip("/") for c in calls}, {"/api/admin/features"})
         self.assertNotRegex(js, r"innerHTML\s*=\s*[^'\"`]")
         self.assertIn("presetMove", read("js", "admin.js"))
+
+
+def rules(css, sel):
+    """The bodies of every rule whose selector list names sel exactly (comments taken out)."""
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
+    return [b for s, b in re.findall(r"([^{}]+)\{([^{}]*)\}", css) if sel in [x.strip() for x in s.split(",")]]
+
+
+class Klar5(unittest.TestCase):
+    """Redesign Stufe 5 (Konfigurationsseiten, Tafel redesign/a-rechner-einstellung.png): grey grouped sections with
+    hairlines, one look for switches, segments and fields, Funktionen as list and detail, a quiet save bar that stands."""
+
+    def test_switch_and_segment_are_quiet(self):
+        """The switch is one colour (no gradient), its knob a token; segments and filters lie on --fill, not as pills."""
+        css = read("app.css")
+        on = rules(css, ".tgl input:checked+i")
+        self.assertTrue(on)
+        self.assertTrue(all("gradient" not in b for b in on), on)
+        self.assertIn("background:var(--on-acc)", "".join(rules(css, ".tgl i::after")))
+        for sel in (".segc", ".ffilt"):
+            self.assertIn("background:var(--fill)", "".join(rules(css, sel)), sel)
+
+    def test_save_bar_stands_and_says_what_changed(self):
+        """The save bar of a settings page always stands at the bottom with one height (nothing jumps when a value
+        changes), a changed row gets a dot instead of moving, no dark floating box any more."""
+        css = read("app.css")
+        bar = "".join(rules(css, "#cfg .pane>.savebar"))
+        for part in ("position:sticky", "min-height:var(--h-bar)", "background:var(--bg)"):
+            self.assertIn(part, bar)
+        self.assertEqual(rules(css, "#cfg .pane>.savebar.dirty"), [])
+        dirty = "".join(rules(css, ".setrow.dirtyrow"))
+        self.assertNotIn("margin-left", dirty)
+        self.assertNotIn("padding-left", dirty)
+
+    def test_list_and_detail_of_functions(self):
+        """Wide, the list of Funktionen has the width --list-w and the open function the rest beside it; the page of
+        settings is one column of at most --detail-max; the groups carry no shadow."""
+        css = read("app.css")
+        self.assertIn("var(--list-w)", "".join(rules(css, "#pane-feat.fsplit")))
+        self.assertIn("var(--detail-max)", "".join(rules(css, "#cfg .pane:not(#pane-feat)")))
+        for sel in (".sgrp", ".fdbody", ".fdin"):
+            self.assertNotRegex("".join(rules(css, sel)), r"box-shadow:(?!none)", sel)
+
+
+class Klar4(unittest.TestCase):
+    """Redesign Stufe 4 (Listen-Seiten, Tafel redesign/a-rechner-funktionen.png): Personen und Geräte, Offen and Chats
+    as list and detail from one set of building blocks (ld- in app.css, ldRow … in ichteile.js): rows of one height
+    with initials or a symbol, the state as a dot with a word, filters as a segment, a quiet empty list with its symbol,
+    placeholders of the row's height while loading; the old classes are gone."""
+
+    def test_rows_have_one_height_and_a_quiet_state(self):
+        css = read("app.css")
+        row = "".join(rules(css, ".ld-row"))
+        self.assertIn("min-height:var(--h-item)", row)
+        self.assertIn("background:var(--acc)", "".join(rules(css, ".ld-row.on")))
+        self.assertIn("background:var(--fill)", "".join(rules(css, ".ld-ico")))
+        self.assertIn("border-radius:50%", "".join(rules(css, ".ld-st::before")))
+        for kind in ("ok", "warn", "bad"):
+            self.assertIn(f"background:var(--{kind})", "".join(rules(css, f".ld-st.{kind}::before")), kind)
+        self.assertIn("min-height:var(--h-item)", "".join(rules(css, ".ld-list .lz-sk .lz-r")))
+        self.assertIn("flex-direction:column", "".join(rules(css, ".ld-empty")))
+        self.assertIn("var(--list-w)", css[css.index(".ld-split.ld-wide"):][:200])
+        # one row, one hairline: no own border per row, no shadow in a list
+        self.assertNotIn("border-bottom:1px", row)
+        self.assertNotRegex("".join(rules(css, ".ld-detail")), r"box-shadow:(?!none)")
+
+    def test_list_pages_use_the_building_blocks(self):
+        js = {n: read("js", n) for n in ("users.js", "offen.js", "chats.js", "ichteile.js")}
+        for name in ("ldRow", "ldSeg", "ldEmpty", "ldSt", "ldAva", "ldIco", "ldInit"):
+            homes = [n for n in os.listdir(os.path.join(STATIC, "js")) if f"window.{name}=" in read("js", n)]
+            self.assertEqual(homes, ["ichteile.js"], name)   # one source
+        for n in ("users.js", "offen.js"):
+            for part in ("ldRow(", "ldSeg(", "ldEmpty("):
+                self.assertIn(part, js[n], (n, part))
+        self.assertNotIn("icChip(", js["offen.js"])          # a segment, no pills
+        self.assertIn("lzSkel(", js["offen.js"])             # placeholders until the first answer
+        self.assertIn('class="ld-row', js["chats.js"])
+        self.assertIn('class="ld-empty"', js["chats.js"])
+        self.assertIn("lzSkel(", js["chats.js"])
+        html = read("index.html")
+        prof = html[html.index('<section id="prof">'):html.index("</section>", html.index('<section id="prof">'))]
+        self.assertNotIn("<table", prof)
+        self.assertIn('class="ld-split ld-wide"', prof)
+
+    def test_old_list_classes_are_gone(self):
+        css = read("app.css")
+        for old in (".cx-row", ".cx-ava", ".cx-mid", ".pchev", ".psetup", ".psbar", ".pcard.split", "#proflist td", ".cic.pav"):
+            self.assertNotIn(old, css, old)
+        for n in ("chats.js", "users.js", "verbund.js"):
+            self.assertNotRegex(read("js", n), r"cx-row|cx-ava|pchev|psetup", n)
+
+
+@unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
+class Lists(unittest.TestCase):
+    """Klar 4 in the browser: the rows stand still and have one height, the open entry sits beside the list on a
+    computer and is a page of its own on a phone, an empty list says one sentence under its symbol."""
+    @classmethod
+    def setUpClass(cls):
+        helpers.start()
+        helpers.set_config(memory=True, reminders=True, vorgaenge=True, chats=True)
+        import chats
+        import profiles
+        import vorgaenge
+        cls.port = helpers._port()
+        helpers.serve_panel(cls, cls.port)
+        for n in ("Listen", "Listenpartner"):
+            try:
+                profiles.add_user(n, "4711")
+            except Exception:
+                pass
+        ids = {x["name"]: x["id"] for x in profiles.names()}
+        me, other = ids["Listen"], ids["Listenpartner"]
+        for u in (me, other):
+            profiles.save_settings(u, dict(profiles.settings(u), chats_on=True))
+        vorgaenge.put(me, "erinnerung", "erinnerung:klar4a", "Erinnerung: Blumen gießen")
+        vorgaenge.put(me, "fuerdich", "fuerdich:klar4b", "Rechnung Stadtwerke", zeile="84,20 €", frist="2099-12-31")
+        vorgaenge.put(me, "vorschlag", "vorschlag:klar4c", "Termin eintragen", zeile="Do 9:00")
+        if not any(d["name"] == "Klar4 Gerät" for d in profiles._load()["devices"]):
+            profiles.add_device("Klar4 Gerät", me)
+        cls.cid = chats.open_one(other, me)
+        asyncio.run(chats.send(other, cls.cid, "Hallo, kommst du heute?"))
+
+    @classmethod
+    def tearDownClass(cls):
+        helpers.set_config(vorgaenge=False, chats=False)   # reminders ship on: left as they are
+
+    async def page(self, p, w, h):
+        exe = chromium()
+        br = await p.chromium.launch(**({"executable_path": exe} if exe else {}))
+        ctx = await br.new_context(viewport={"width": w, "height": h}, locale="de-DE", bypass_csp=True)
+        pg = await ctx.new_page()
+        errors = []
+        pg.on("pageerror", lambda e: errors.append(str(e)))
+        base = f"http://127.0.0.1:{self.port}"
+        await pg.goto(base + "/")
+        self.assertEqual((await pg.request.post(base + "/api/login", data={"password": "secret-admin"})).status, 200)
+        self.assertEqual((await pg.request.post(base + "/api/profile/login", data={"name": "Listen", "pin": "4711"})).status, 200)
+        await pg.goto(base + "/")
+        await pg.wait_for_function("typeof PROFILE!=='undefined'&&!!PROFILE&&PROFILE.name==='Listen'", timeout=20000)
+        await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
+        return br, pg, errors
+
+    HEIGHTS = "(sel=>[...document.querySelectorAll(sel)].filter(r=>r.offsetParent).map(r=>Math.round(r.getBoundingClientRect().height)))"
+
+    async def same_height(self, pg, sel, where):
+        hs = await pg.evaluate(self.HEIGHTS + f"({sel!r})")
+        self.assertTrue(hs, where)
+        self.assertLessEqual(max(hs) - min(hs), 1, (where, hs))
+        self.assertTrue(50 <= min(hs) <= 56, (where, hs))   # --h-item (52 px) with room for fonts
+
+    def test_lists_on_a_computer(self):
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1440, 900)
+                try:
+                    await pg.evaluate("goSec('prof')")
+                    await pg.wait_for_selector("#proflist [data-prow]")
+                    await self.same_height(pg, "#proflist .ld-row", "Personen")
+                    # height budget (Richtlinie „Höhe“): the page around the rows of people and devices stays small,
+                    # whatever the number of profiles other tests made (25 a page)
+                    rows = sum(await pg.evaluate(self.HEIGHTS + "('#proflist .ld-row,#devlist .ld-row')"))
+                    tall = await pg.evaluate("document.documentElement.scrollHeight")
+                    self.assertLess(tall - rows, 1500, f"{tall - rows}px around the rows")
+                    # the place of the detail stands before a person is open: opening one moves nothing
+                    self.assertTrue(await pg.is_visible("#pside .ld-empty svg"))
+                    before = await pg.evaluate("JSON.stringify($('proflist').getBoundingClientRect())")
+                    await pg.evaluate("document.querySelector('#proflist [data-prow]').click()")
+                    await pg.wait_for_selector("#pside #pdetail .pdet")
+                    self.assertEqual(await pg.evaluate("JSON.stringify($('proflist').getBoundingClientRect())"), before)
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#proflist .ld-row.on').length"), 1)
+                    await self.same_height(pg, "#devlist .ld-row", "Geräte")
+                    self.assertLess(await pg.evaluate("document.querySelector('#pbox').getBoundingClientRect().top+scrollY"), 300)   # the list comes first
+                    # Offen: a segment instead of pills, rows of one height, an empty group says so under its symbol
+                    await pg.evaluate("goSec('offen')")
+                    await pg.wait_for_selector("#vgview .ld-row[data-vg]")
+                    self.assertTrue(await pg.is_visible("#vgview .ld-seg"))
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#vgview .ld-chips,#vgview .ic-chip').length"), 0)
+                    await self.same_height(pg, "#vgview .ld-row", "Offen")
+                    self.assertTrue(await pg.evaluate("[...document.querySelectorAll('#vgview .ld-st')].some(s=>s.textContent.includes('fällig'))"))
+                    await pg.evaluate("[...document.querySelectorAll('#vgview .ld-seg button')].find(b=>b.textContent.startsWith('Später')).click()")
+                    await pg.wait_for_selector("#vgview .ld-list .ld-empty svg")
+                    # Chats: the same rows
+                    await pg.evaluate("goSec('chats')")
+                    await pg.wait_for_selector(f"#cxlist .ld-row[data-cx='{self.cid}']")
+                    await self.same_height(pg, "#cxlist .ld-row", "Chats")
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#cxlist .ld-ava').length>0"), True)
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
+        asyncio.run(go())
+
+    def test_lists_on_a_phone(self):
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 390, 844)
+                try:
+                    await pg.evaluate("goSec('offen')")
+                    await pg.wait_for_selector("#vgview .ld-row[data-vg]")
+                    self.assertFalse(await pg.is_visible("#vgview .vgdet"))   # nothing open: only the list
+                    await pg.evaluate("document.querySelector('#vgview .ld-row[data-vg]').click()")
+                    await pg.wait_for_selector("#vgview .vgdet .ld-back", state="visible")
+                    self.assertFalse(await pg.is_visible("#vgview .ld-list"))
+                    await pg.click("#vgview .vgdet .ld-back")
+                    await pg.wait_for_selector("#vgview .ld-list", state="visible")
+                    for sec in ("offen", "prof", "chats"):
+                        await pg.evaluate(f"goSec('{sec}')")
+                        await pg.wait_for_timeout(400)
+                        self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-innerWidth"), 1, sec)
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
+        asyncio.run(go())
 
 
 @unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
@@ -243,6 +462,38 @@ class Frame(unittest.TestCase):
                     self.assertEqual(errors, [])
                 finally:
                     await br.close()
+        asyncio.run(go())
+
+    def test_save_bar_stands_still(self):
+        """Redesign Stufe 5: the save bar of a settings page stands at the bottom with one height before and after a
+        change (it no longer appears as a floating box), says what changed, and the changed row does not move
+        (a dot in front of its title instead of a line that shifted it). Computer and phone."""
+        async def go():
+            async with async_playwright() as p:
+                for w, h in ((1280, 900), (390, 844)):
+                    br, pg, errors = await self.page(p, w, h)
+                    try:
+                        await self.open_pane(pg, "talk")
+                        await pg.wait_for_timeout(400)
+                        sel = await pg.evaluate("(()=>{const s=document.querySelector('#chatdefaults select.segsel');return s&&s.id})()")
+                        self.assertTrue(sel, w)
+                        box = ("(()=>{const b=$('pane-talk').querySelector(':scope>.savebar'),r=document.getElementById('" + sel +
+                               "').closest('.setrow').getBoundingClientRect(),c=b.getBoundingClientRect();"
+                               "return [getComputedStyle(b).position,Math.round(c.height),Math.round(r.left),Math.round(r.width),Math.round(r.height)]})()")
+                        before = await pg.evaluate(box)
+                        self.assertEqual(before[0], "sticky", w)
+                        await pg.evaluate(f"document.getElementById('{sel}').previousElementSibling.querySelector('button:not(.on)').click()")
+                        await pg.wait_for_timeout(100)
+                        after = await pg.evaluate(box)
+                        self.assertEqual(after, before, f"{w}: the bar or the row moved")
+                        self.assertTrue(await pg.is_visible("#pane-talk>.savebar .unsaved"), w)
+                        self.assertTrue(await pg.is_visible("#pane-talk>.savebar .undo"), w)
+                        await pg.evaluate("loadCfg()")
+                        await pg.wait_for_timeout(500)
+                        self.assertEqual((await pg.evaluate(box))[:2], before[:2], f"{w}: the bar after discarding")
+                        self.assertEqual(errors, [])
+                    finally:
+                        await br.close()
         asyncio.run(go())
 
     def test_phone_face_and_title_leave_room(self):
@@ -411,7 +662,7 @@ class Frame(unittest.TestCase):
 
     def test_people_list_and_detail_and_app_tiles(self):
         """Personen und Geräte: wide, the open person sits beside the list (with the space for uploads); narrow it
-        opens below its line. Apps und Schnittstellen: a tile per app, one opens over the full width, the function
+        opens as a page of its own with „‹ Personen“ (Klar 4). Apps und Schnittstellen: a tile per app, one opens over the full width, the function
         tiles show their switch."""
         async def go():
             async with async_playwright() as p:
@@ -419,10 +670,12 @@ class Frame(unittest.TestCase):
                 try:
                     await pg.evaluate("goSec('prof')")
                     await pg.wait_for_selector("#proflist [data-prow]")
-                    self.assertTrue(await pg.evaluate("document.querySelector('#prof .pcard').classList.contains('split')"))
-                    await pg.evaluate("document.querySelector('#proflist [data-prow] td').click()")
+                    await pg.evaluate("document.querySelector('#proflist [data-prow]').click()")
                     await pg.wait_for_selector("#pside #pdetail .pdet")
                     self.assertTrue(await pg.evaluate("!!$('pside').querySelector('#pquota')"))
+                    # beside the list, not below it
+                    side = await pg.evaluate("[$('proflist').getBoundingClientRect().right,$('pside').getBoundingClientRect().left]")
+                    self.assertLessEqual(side[0], side[1])
                     self.assertEqual(await pg.evaluate("document.querySelectorAll('#proflist #pdetail').length"), 0)
                     await pg.evaluate("goSec('apps')")
                     await pg.wait_for_selector(".atile[data-sw] .atstate")
@@ -440,9 +693,13 @@ class Frame(unittest.TestCase):
                 br, pg, errors = await self.page(p, 390, 844)
                 try:
                     await pg.evaluate("goSec('prof')")
-                    await pg.wait_for_selector("#proflist [data-popen]")
-                    await pg.evaluate("document.querySelector('#proflist [data-popen]').click()")
-                    await pg.wait_for_selector("#proflist #pdetail .pdet")
+                    await pg.wait_for_selector("#proflist [data-prow]")
+                    await pg.evaluate("document.querySelector('#proflist [data-prow]').click()")
+                    await pg.wait_for_selector("#pside #pdetail .pdet")
+                    # a phone opens the person as a page: the list goes, „‹ Personen“ brings it back
+                    self.assertFalse(await pg.is_visible("#proflist"))
+                    await pg.click("#pside .ld-back")
+                    await pg.wait_for_selector("#proflist [data-prow]", state="visible")
                     self.assertEqual(errors, [])
                 finally:
                     await br.close()

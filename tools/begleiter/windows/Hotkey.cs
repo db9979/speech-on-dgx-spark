@@ -46,15 +46,19 @@ internal static class Parts
     // Begleiter nachziehen 8a: die Listen (Seite Listen) im Fenster – aus, bis das Panel ihn einschaltet.
     public const string Lists = "lists";
 
+    // Begleiter Paket B: Offen im Fenster (Heute) und Finden (Strg+Alt+F) – aus, bis das Panel sie einschaltet.
+    public const string Offen = "offen";
+    public const string Find = "find";
+
     /// <summary>Alle Teile in der Reihenfolge, in der sie angezeigt werden.</summary>
     public static readonly string[] All =
     {
         Write, Ask, Dictate, Notes, Status, Notaus, Files, Screen, Context, Mail, Folder, Actions, Act, Wake,
-        Speak, Inbox, Agenda, Quiet, Meeting, Home, Daily, Office, View, Post, Capture, Lists,
+        Speak, Inbox, Agenda, Quiet, Meeting, Home, Daily, Office, View, Post, Capture, Lists, Offen, Find,
     };
 
     /// <summary>Teile mit eigenem Tastenkürzel.</summary>
-    public static readonly string[] WithHotkey = { Write, Ask, Dictate, Screen, Mail, Speak, Meeting, Capture };
+    public static readonly string[] WithHotkey = { Write, Ask, Dictate, Screen, Mail, Speak, Meeting, Capture, Find };
 
     public static string Label(string part) => part switch
     {
@@ -84,6 +88,8 @@ internal static class Parts
         Post => "Post im Begleiter",
         Capture => "Schnell erfassen",
         Lists => "Listen im Begleiter",
+        Offen => "Offen im Begleiter",
+        Find => "Finden im Begleiter",
         _ => part,
     };
 }
@@ -122,6 +128,7 @@ internal readonly record struct Hotkey(Keys Modifiers, Keys Key)
         Parts.Speak => new Hotkey(Keys.Control | Keys.Alt, Keys.L),
         Parts.Meeting => new Hotkey(Keys.Control | Keys.Alt, Keys.R),
         Parts.Capture => new Hotkey(Keys.Control | Keys.Alt, Keys.N),
+        Parts.Find => new Hotkey(Keys.Control | Keys.Alt, Keys.F),
         _ => new Hotkey(Keys.Control | Keys.Alt, Keys.S),
     };
 

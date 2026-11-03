@@ -30,7 +30,7 @@ internal enum PanelItemKind
 /// </summary>
 internal enum PanelTab
 {
-    /// <summary>Als Nächstes, Post, Listen.</summary>
+    /// <summary>Als Nächstes, Post, Listen, Offen.</summary>
     Heute,
 
     /// <summary>Meldungen mit ihren Knöpfen, die neueste oben.</summary>
@@ -100,6 +100,12 @@ internal sealed class PanelModel
     /// <summary>Teil "lists": eine Karte je Liste unter „Listen“; <c>null</c> = Abschnitt fehlt.</summary>
     public IReadOnlyList<PanelNote>? Lists { get; init; }
 
+    /// <summary>Teil "offen" (Paket B): die ersten drei offenen Vorgänge mit ihren festen Knöpfen; <c>null</c> = Abschnitt fehlt.</summary>
+    public IReadOnlyList<PanelNote>? Offen { get; init; }
+
+    /// <summary>Wie viele Vorgänge offen sind (Zahl neben „Offen“).</summary>
+    public int OffenCount { get; init; }
+
     /// <summary>Meldungen mit Knöpfen (Teil "actions").</summary>
     public IReadOnlyList<PanelNote> Notes { get; init; } = Array.Empty<PanelNote>();
 
@@ -144,7 +150,7 @@ internal sealed class PanelModel
 /// Begleiter-Fenster beim Linksklick aufs Symbol, an der Taskleiste verankert (Entwurf „Begleiter aufpolieren“ 1a,
 /// Dominik 2026-10-17): oben Farbverlauf und Kopf mit Gesicht, Gruß, Gerät und Zustandspunkt, rechts Einstellungen
 /// und Schließen; darunter der Update-Hinweis, das Fragefeld „Frag Spark …“ und die Befehle als kleine Kacheln.
-/// Darunter drei Reiter (Dominik 2026-10-21 „Begleiter-Fenster ordnen“): „Heute“ (Als Nächstes, Post, Listen),
+/// Darunter drei Reiter (Dominik 2026-10-21 „Begleiter-Fenster ordnen“): „Heute“ (Als Nächstes, Post, Listen, Offen),
 /// „Meldungen“ und „Rechner“ (Zuhause, Dieser Rechner); nur der Reiter rollt, das Fenster ist höchstens so hoch
 /// wie der freie Bildschirm. Unten „Panel öffnen“ und Notaus. Schließt bei Fokusverlust und mit Esc.
 /// </summary>
@@ -160,6 +166,7 @@ internal sealed class TrayPanel : ThemedForm
     private readonly List<Action> _actions = new();
     private readonly CardGroup _notes = new();
     private readonly CardGroup _postCards = new();
+    private readonly CardGroup _offenCards = new();
     private readonly List<SparkButton> _lists = new();
     private readonly List<SparkButton> _home = new();
     private readonly List<Action> _homeActions = new();
@@ -477,18 +484,14 @@ internal sealed class TrayPanel : ThemedForm
         _close.TabIndex = 111;
     }
 
-    /// <summary>Farbe des Kachel-Symbols: je Befehl eine eigene, aus den Panel-Farben gemischt.</summary>
+    /// <summary>Farbe des Kachel-Symbols (Klar 2): Linien-Icon im einen Akzent, nur Mitschreiben in Rot.</summary>
     private static Color? TintFor(Glyph glyph)
     {
         Palette p = Theme.Current;
         return glyph switch
         {
-            Glyph.Mic => p.Accent2,
-            Glyph.Screen => Palette.Mix(p.Accent, p.Accent2, 0.35f),
-            Glyph.Mail => Palette.Mix(p.Accent, p.Accent2, 0.6f),
-            Glyph.Speaker => Palette.Mix(p.Accent2, p.Ok, 0.5f),
             Glyph.Record => p.Bad,
-            _ => null,
+            _ => p.Accent,
         };
     }
 
@@ -496,6 +499,7 @@ internal sealed class TrayPanel : ThemedForm
     {
         BuildCards(_postCards, _model.Post ?? Array.Empty<PanelNote>(), 40);
         BuildLists();
+        BuildCards(_offenCards, _model.Offen ?? Array.Empty<PanelNote>(), 70);
         BuildCards(_notes, _model.Notes, 50);
     }
 
@@ -628,7 +632,7 @@ internal sealed class TrayPanel : ThemedForm
     /// <summary>Hat der Reiter etwas zu zeigen? Reiter ohne Inhalt fehlen in der Leiste.</summary>
     private bool Has(PanelTab tab) => tab switch
     {
-        PanelTab.Heute => _model.Agenda is not null || _postCards.Cards.Count > 0 || _model.Lists is not null,
+        PanelTab.Heute => _model.Agenda is not null || _postCards.Cards.Count > 0 || _model.Lists is not null || _model.Offen is not null,
         PanelTab.Meldungen => _model.NotesOn || _notes.Cards.Count > 0,
         _ => _model.Home is not null || _items.Any(b => b.Kind is ButtonKind.Toggle or ButtonKind.Row),
     };
@@ -711,7 +715,7 @@ internal sealed class TrayPanel : ThemedForm
         width = Math.Max(width, foot + (2 * pad));
         int inner = width - (2 * pad);
 
-        int y = BarHeight + pad;
+        int y = pad;
 
         // Kopf: Gesicht, Gruß, Gerät mit Zustandspunkt; rechts Einstellungen und Schließen
         int face = S(40);
@@ -720,7 +724,7 @@ internal sealed class TrayPanel : ThemedForm
         _close.Bounds = new Rectangle(width - pad + S(4) - icon.Width, y + ((face - icon.Height) / 2), icon.Width, icon.Height);
         _settings.Visible = m.Settings is not null;
         _settings.Bounds = new Rectangle(_close.Left - S(2) - icon.Width, _close.Top, icon.Width, icon.Height);
-        int textX = pad + face + S(11);
+        int textX = pad + Face.Lead(face, S(11));
         int textW = Math.Max(10, (m.Settings is not null ? _settings.Left : _close.Left) - S(6) - textX);
         int titleH = Draw.Measure("Ag", F(11f, FontStyle.Bold)).Height;
         int subH = Draw.Measure("Ag", F(8.5f)).Height;
@@ -913,7 +917,8 @@ internal sealed class TrayPanel : ThemedForm
     /// <summary>Zu welchem Reiter ein Teil auf der Rollfläche gehört.</summary>
     private PanelTab TabOf(Control c)
     {
-        if (c == _agendaMore || c == _postMore || (c is SparkButton b && (_lists.Contains(b) || _postCards.Cards.Any(card => card.Buttons.Contains(b)))))
+        if (c == _agendaMore || c == _postMore || (c is SparkButton b && (_lists.Contains(b) || _postCards.Cards.Any(card => card.Buttons.Contains(b))
+            || _offenCards.Cards.Any(card => card.Buttons.Contains(b)))))
         {
             return PanelTab.Heute;
         }
@@ -946,6 +951,7 @@ internal sealed class TrayPanel : ThemedForm
                 LayoutCards(_postCards, ref y, pad, inner, _postAll ? int.MaxValue : FirstShown);
                 More(_postMore, _postCards.Cards.Count, _postAll, ref y, pad);
                 LayoutLists(ref y, pad, inner);
+                LayoutCards(_offenCards, ref y, pad, inner, int.MaxValue);
                 break;
             case PanelTab.Meldungen:
                 // die Leiste nennt den Reiter schon; ohne Leiste steht die Überschrift da
@@ -1171,7 +1177,7 @@ internal sealed class TrayPanel : ThemedForm
             g.DrawRectangle(pen, 0, 0, ClientSize.Width - 1, ClientSize.Height - 1);
         }
 
-        Face.Draw(g, _face, p);
+        Face.DrawHeader(g, _face, p);
         Draw.Text(g, m.Title, F(11f, FontStyle.Bold), _title, p.Fg);
         if (!_subtitle.IsEmpty)
         {
@@ -1194,8 +1200,8 @@ internal sealed class TrayPanel : ThemedForm
 
         if (!_banner.IsEmpty && m.Update is { } u)
         {
-            Draw.FillRound(g, p.BannerBack, _banner, S(12));
-            Draw.StrokeRound(g, u.Error ? p.Bad : p.BannerLine, _banner, S(12));
+            Draw.FillRound(g, p.BannerBack, _banner, S(Draw.RBox));
+            Draw.StrokeRound(g, u.Error ? p.Bad : p.BannerLine, _banner, S(Draw.RBox));
             Draw.FillRound(g, p.Card, _bannerIcon, S(8));
             float gs = S(16);
             Glyphs.Draw(g, Glyph.Download, new RectangleF(_bannerIcon.X + ((_bannerIcon.Width - gs) / 2f), _bannerIcon.Y + ((_bannerIcon.Height - gs) / 2f), gs, gs), u.Error ? p.Bad : p.Accent);
@@ -1210,7 +1216,7 @@ internal sealed class TrayPanel : ThemedForm
                 if (done > track.Height)
                 {
                     var bar = new Rectangle(track.X, track.Y, done, track.Height);
-                    using Brush brush = Draw.AccentBrush(bar, p, 0f);
+                    using var brush = new SolidBrush(p.Accent);
                     using System.Drawing.Drawing2D.GraphicsPath path = Draw.Round(bar, bar.Height / 2f);
                     g.FillPath(brush, path);
                 }
@@ -1245,6 +1251,7 @@ internal sealed class TrayPanel : ThemedForm
                     PaintBox(g, _listBox, _listLines);
                 }
 
+                PaintCards(g, _offenCards, "Offen", _model.OffenCount);
                 break;
             case PanelTab.Meldungen:
                 PaintCards(g, _notes, "Meldungen", _notes.Cards.Count);
@@ -1397,8 +1404,8 @@ internal sealed class TrayPanel : ThemedForm
         {
             var (card, title, body) = group.Rects[i];
             PanelNote note = group.Cards[i].Note;
-            Draw.FillRound(g, p.Card, card, S(12));
-            Draw.StrokeRound(g, p.Line, card, S(12));
+            Draw.FillRound(g, p.Card, card, S(Draw.RBox));
+            Draw.StrokeRound(g, p.Line, card, S(Draw.RBox));
             Draw.Text(g, note.Title, F(9f, FontStyle.Bold), title, p.Fg);
             if (body.Height > 0)
             {
@@ -1476,7 +1483,7 @@ internal sealed class TrayPanel : ThemedForm
         }
 
         Palette p = P;
-        Draw.StrokeRound(g, p.Line, box, S(12));
+        Draw.StrokeRound(g, p.Line, box, S(Draw.RBox));
         using var pen = new Pen(p.Line);
         foreach (int y in lines)
         {

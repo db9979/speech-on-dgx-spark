@@ -16,7 +16,7 @@ function vbRow(c){const who=c.name||c.addr,sub=c.name?c.addr:'';
     :c.state==='ok'?btn('open',t('Schreiben','Write'))+btn('remove',t('Entfernen','Remove'),'danger')
     :c.state==='out'?btn('remove',t('Zurückziehen','Withdraw'))
     :btn('unblock',t('Entsperren','Unblock'));
-  return `<div class="cx-pp vb-c">${cxAva(c.id,who)}<span class="vb-who"><b>🌐 ${esc(who)}</b><small class="mut">${esc((sub?sub+' · ':'')+t(...VB_STATE[c.state]||['','']))}</small></span><span class="cx-mact">${acts}</span></div>`}
+  return `<div class="cx-pp vb-c">${cxAva(c.id,who)}<span class="vb-who"><b>${ic('globe')} ${esc(who)}</b><small class="mut">${esc((sub?sub+' · ':'')+t(...VB_STATE[c.state]||['','']))}</small></span><span class="cx-mact">${acts}</span></div>`}
 function vbDraw(){const d=VERB.d,p=$('cxpane');if(!d||!p)return;
   const groups=[['in',t('Anfragen an dich','Requests to you')],['ok',t('Kontakte auf anderen Sparks','Contacts on other Sparks')],
     ['out',t('Deine offenen Anfragen','Your open requests')],['block',t('Gesperrt','Blocked')]];

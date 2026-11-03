@@ -10,7 +10,7 @@
 #   speech-spark update [--check]  update to the newest version (like the button in the panel)
 #   speech-spark logs [what] [-n N]  last log lines: asr, tts, asr-engine, tts-engine, tts-design, bild, musik,
 #                                  llm, llmtor, sehen, helfer, tlstor, waerter, notasr, schirm, panel, watch, update, messen, umzug,
-#                                  werkstatt or all (default)
+#                                  werkstatt, entwickeln or all (default)
 #   speech-spark panel enable|disable  add the web panel later, or remove it (its data stays)
 #   speech-spark notzugang [--yes]  locked out: new panel password, its second step and
 #                                  "Benutzer als Admin" off (roles stay), noted and told to the admins
@@ -34,6 +34,11 @@
 #   speech-spark werkstatt tests|messen|diagnose "<text>"|reparatur "<text>"  start one order in the sandbox
 #   speech-spark werkstatt nachtest "<test> …"  only these tests again (the red ones of a test run)
 #   speech-spark werkstatt ergebnis <id>  text and change of one order
+#   speech-spark lokal [status]    Entwickeln auf dem Pi (install.sh --entwickeln): spark-dev's local changes
+#   speech-spark lokal einspielen|zurueck|verwerfen  install them (checked, quick test, like an update), one step back, or without them
+#   speech-spark lokal testumgebung [--nacht]  the quick test's environment (once with the internet; at night only when changed)
+#   speech-spark entwickeln [status]|schluessel neu|weg|einrichten  spark-dev's key for the LLM-Tor, OpenCode's settings
+#   speech-spark wissen messen [synth [anzahl] [--ohne-grenzen] | profil <name>] [--json]  times and memory of search, map and Finden
 set -euo pipefail
 # runuser, nft, systemctl live in /usr/sbin on Debian and Raspberry Pi OS; a caller with PATH=/usr/bin:/bin (teilen.py
 # runs "teilen umzug-einspielen" that way) would not find them
@@ -217,9 +222,10 @@ cmd_logs() {
     asr|tts|asr-engine|tts-engine|tts-design|bild|musik|llm|llmtor|sehen|helfer|panel|watch|update|tlstor|waerter|notasr|schirm) units=(-u "speech-spark-$what") ;;
     messen) units=(-u speech-spark-messen -u speech-spark-messen-wunsch -u speech-spark-messen-engine) ;;
     werkstatt) units=(-u speech-spark-werkstatt -u speech-spark-werkstatt-lauf) ;;
+    entwickeln) units=(-u speech-spark-update -u speech-spark-lokaltest -u speech-spark-lokaltest-umgebung) ;;
     umzug) units=(-u speech-spark-umzug -u speech-spark-llm -u speech-spark-llmtor) ;;
     wechsel) units=(-u speech-spark-wechsel -u speech-spark-llm -u speech-spark-sehen) ;;
-    *) die "logs: asr, tts, asr-engine, tts-engine, tts-design, bild, musik, llm, llmtor, sehen, helfer, tlstor, waerter, notasr, schirm, panel, watch, update, messen, umzug, wechsel, werkstatt or all" ;;
+    *) die "logs: asr, tts, asr-engine, tts-engine, tts-design, bild, musik, llm, llmtor, sehen, helfer, tlstor, waerter, notasr, schirm, panel, watch, update, messen, umzug, wechsel, werkstatt, entwickeln or all" ;;
   esac
   journalctl --namespace=speech-spark "${units[@]}" --no-pager -n "$n"
 }
@@ -1136,6 +1142,63 @@ cmd_werkstatt() {
   esac
 }
 
+# Entwickeln auf dem Pi (app/entwickeln.py, plan opencode-pi, install.sh --entwickeln): spark-dev's branch "lokal"
+# installed like an update (Weg B, no GitHub). The work runs in update.sh through the update unit, like the panel's
+# button: root checks, rebases and quick-tests the commits in a sandbox and never runs any of them itself.
+ENTW_PY() { /usr/bin/python3 -I "$PREFIX/app/entwickeln.py" "$@"; }
+als_dev() { runuser -u spark-dev -- env -i PATH=/usr/bin:/bin LANG=C.UTF-8 HOME=/home/spark-dev /usr/bin/python3 -I "$PREFIX/app/entwickeln.py" "$@"; }
+cmd_lokal() {
+  local art
+  case "${1:-status}" in
+    status) need_root lokal status; ENTW_PY status ;;
+    einspielen|zurueck|verwerfen)
+      need_root lokal "$1"
+      id spark-dev >/dev/null 2>&1 || die "Entwickeln auf dem Pi is not installed: sudo ./install.sh --entwickeln"
+      im_gang speech-spark-update && die "an update is running already: sudo speech-spark logs update"
+      art=$1
+      # the same wish the panel writes (one fixed word, the service user's file): update.sh checks it again
+      printf '%s' "$art" | runuser -u "$(panel_user)" -- tee "$VAR/state/update-lokal" >/dev/null || die "could not write the wish"
+      echo "entwickeln: $art gestartet"
+      cmd_update ;;
+    testumgebung) need_root lokal testumgebung; shift; ENTW_PY testumgebung "$@" ;;
+    *) die "speech-spark lokal [status]|einspielen|zurueck|verwerfen|testumgebung [--nacht]" ;;
+  esac
+}
+
+cmd_entwickeln() {
+  local h
+  need_root entwickeln "$@"
+  id spark-dev >/dev/null 2>&1 || die "Entwickeln auf dem Pi is not installed: sudo ./install.sh --entwickeln"
+  case "${1:-status}" in
+    status) ENTW_PY status ;;
+    schluessel)
+      case "${2:-}" in
+        neu)   # a new key in spark-dev's file (0600); only its SHA-256 goes into the config; the old one stops working
+          h=$(als_dev schluessel-machen | tail -n 1)
+          [[ "$h" =~ ^[0-9a-f]{64}$ ]] || die "no new key made"
+          as_panel_user ../entwickeln.py schluessel-setzen "$h"
+          echo "New key for the LLM-Tor in /home/spark-dev/.config/spark/tor-key (the old one no longer works)." ;;
+        weg)
+          as_panel_user ../entwickeln.py schluessel-setzen weg
+          rm -f /home/spark-dev/.config/spark/tor-key
+          echo "The key of spark-dev no longer works at the LLM-Tor." ;;
+        *) die "speech-spark entwickeln schluessel neu|weg" ;;
+      esac ;;
+    einrichten)   # OpenCode's settings and rules for spark-dev (again after the LLM-Tor or the model computer changed)
+      as_panel_user ../entwickeln.py tor-daten | als_dev einrichten ;;
+    *) die "speech-spark entwickeln [status]|schluessel neu|weg|einrichten" ;;
+  esac
+}
+
+# Wissen messen (app/panel/wissensmessung.py, Wissenskarte Stufe 4): one run as the panel user, numbers only; the
+# measuring process lowers its own priority and stops while somebody speaks (with the part fund: Finden's search index)
+cmd_wissen() {
+  case "${1:-}" in
+    messen) need_root wissen messen; shift; as_panel_user wissensmessung.py cli "$@" ;;
+    *) die "speech-spark wissen messen [synth [anzahl] [--ohne-grenzen] | profil <name>] [--json]" ;;
+  esac
+}
+
 [ -r "$CONFIG" ] || die "cannot read $CONFIG; run with sudo (or install first)"
 case "${1:-}" in
   status) shift; cmd_status ;;
@@ -1154,6 +1217,9 @@ case "${1:-}" in
   zurueckholen) shift; cmd_zurueckholen "$@" ;;
   gehaeuse) shift; cmd_gehaeuse "$@" ;;
   werkstatt) shift; cmd_werkstatt "$@" ;;
-  ""|-h|--help|help) sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//' ;;
+  wissen) shift; cmd_wissen "$@" ;;
+  lokal) shift; cmd_lokal "$@" ;;
+  entwickeln) shift; cmd_entwickeln "$@" ;;
+  ""|-h|--help|help) sed -n '2,41p' "$0" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (see: speech-spark help)" ;;
 esac

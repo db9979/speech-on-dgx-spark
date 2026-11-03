@@ -347,7 +347,7 @@ async function docView(id){if(!docFind(id))await showDocs();if(DOCV.pick)DOCV.pi
   const box=$('docview');box.hidden=false;box.dataset.id=id;box.textContent=t('Lade …','Loading …');
   try{const d=await (await api('/api/profile/wissen/'+encodeURIComponent(id)+'/text')).json();box.textContent='';
     const head=document.createElement('div');head.className='dvhead';const nm=document.createElement('b');nm.textContent=t('Text','Text')+(d.owner?' · '+t('von ','from ')+d.owner:'');head.appendChild(nm);
-    const x=document.createElement('button');x.type='button';x.className='b';x.textContent='✕';x.setAttribute('aria-label',t('Text schließen','Close text'));x.onclick=()=>{box.hidden=true;box.textContent=''};
+    const x=document.createElement('button');x.type='button';x.className='b';x.appendChild(icNode('x'));x.setAttribute('aria-label',t('Text schließen','Close text'));x.onclick=()=>{box.hidden=true;box.textContent=''};
     head.appendChild(x);box.appendChild(head);
     if(d.file&&d.kind==='picture'){const img=document.createElement('img');img.alt='';img.src='/api/profile/wissen/'+encodeURIComponent(id)+'/file?view=1';box.appendChild(img)}
     let page;const show=parts=>{for(const p of parts){if(p.page&&p.page!==page){page=p.page;const h=document.createElement('div');h.className='dvpage';h.textContent=t('Seite ','Page ')+p.page;box.appendChild(h)}
@@ -389,7 +389,7 @@ $('docdetail').onclick=async e=>{const a=e.target.closest('[data-dact]');
 async function docTry(){const q=$('docfind').value.trim();if(!q){$('dochits').innerHTML='';return}
   $('dochits').innerHTML=`<li class="mut">${t('Suche im Inhalt …','Searching the content …')}</li>`;
   try{const r=await (await api('/api/profile/wissen/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q})})).json();
-    $('dochits').innerHTML=`<li class="dhhead"><b>${esc(t('Im Inhalt gefunden','Found in the content'))}</b><button class="b" type="button" data-hitclose="1" aria-label="${esc(t('Treffer schließen','Close hits'))}">✕</button></li>`+
+    $('dochits').innerHTML=`<li class="dhhead"><b>${esc(t('Im Inhalt gefunden','Found in the content'))}</b><button class="b" type="button" data-hitclose="1" aria-label="${esc(t('Treffer schließen','Close hits'))}">${ic('x')}</button></li>`+
       (r.hits.map(h=>`<li class="dhit" data-docview="${esc(h.id)}" role="button" tabindex="0"><span><b>${esc(h.name)}${h.page?' · '+t('Seite ','page ')+h.page:''}</b><br><small>${esc(h.text)}</small></span></li>`).join('')||`<li class="mut">${t('Nichts gefunden.','Nothing found.')}</li>`)}
   catch(x){$('dochits').innerHTML=`<li class="err">${esc(x.message)}</li>`}}
 $('dochits').onclick=e=>{if(e.target.closest('[data-hitclose]')){$('dochits').innerHTML='';return}const h=e.target.closest('[data-docview]');if(h)docView(h.dataset.docview)};
@@ -508,7 +508,7 @@ async function calShareOpen(c){if(!c)return;const sh=Object.assign({},c.shares||
 // Themen fürs Briefing (Dominik 2026-10-19 „8“): chips with ✕, a new one with Enter; saved at once (höchstens drei)
 let CAL_TOPICS=[];
 function calTopics(){const box=$('caltopchips');if(!box)return;
-  box.innerHTML=CAL_TOPICS.map((x,i)=>`<span class="chip hi">${esc(x)}<button type="button" data-rm="${i}" aria-label="${esc(t('Entfernen','Remove'))}">✕</button></span>`).join('')+
+  box.innerHTML=CAL_TOPICS.map((x,i)=>`<span class="chip hi">${esc(x)}<button type="button" data-rm="${i}" aria-label="${esc(t('Entfernen','Remove'))}">${ic('x')}</button></span>`).join('')+
     (CAL_TOPICS.length<3?`<input class="caltopnew" maxlength="80" placeholder="${esc(t('+ Thema, z. B. Wetter Berlin','+ topic, e.g. Weather Berlin'))}" aria-label="${esc(t('Thema hinzufügen','Add a topic'))}">`:'');
   box.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{CAL_TOPICS.splice(Number(b.dataset.rm),1);calTopSave()});
   const n=box.querySelector('.caltopnew');if(n)n.onkeydown=e=>{if(e.key!=='Enter')return;e.preventDefault();const v=n.value.trim();if(!v)return;CAL_TOPICS.push(v);calTopSave(true)}}
@@ -546,7 +546,7 @@ $('calsave').onclick=async()=>{const spark=!!CALKIND[$('calkind').value].spark;c
   calMsg(t('Hinzugefügt. ','Added. ')+(d.check.events.length?t('Die nächsten Termine:','Next appointments:'):t('Keine Termine in den nächsten 14 Tagen.','No appointments in the next 14 days.')),false,d.check.events)};
 $('caltest').onclick=async()=>{calMsg(t('Lese die Kalender …','Reading the calendars …'));
   let d;try{d=await (await api('/api/profile/calendar/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tz:TZ()})})).json()}catch(e){calMsg(e.message,true);return}
-  calMsg(d.events.length?t('Die nächsten Termine:','Next appointments:'):t('Keine Termine in den nächsten 14 Tagen.','No appointments in the next 14 days.'),d.errors.length>0,[...d.events,...d.errors.map(e=>'⚠ '+e)])};
+  calMsg(d.events.length?t('Die nächsten Termine:','Next appointments:'):t('Keine Termine in den nächsten 14 Tagen.','No appointments in the next 14 days.'),d.errors.length>0,[...d.events,...d.errors.map(e=>t('Fehler: ','Error: ')+e)])};
 // E-mail per profile, read only; the password is never sent back.
 const MAILKIND={icloud:t('Benutzer: deine iCloud-Mailadresse. Passwort: ein neues app-spezifisches Passwort von appleid.apple.com.','User: your iCloud mail address. Password: a new app-specific password from appleid.apple.com.'),
   gmail:t('Benutzer: deine Gmail-Adresse. Passwort: ein App-Passwort (Google-Konto → Sicherheit, braucht die Bestätigung in zwei Schritten).','User: your Gmail address. Password: an app password (Google account → Security, needs 2-step verification).'),
@@ -567,7 +567,7 @@ $('mailsave').onclick=async()=>{mailMsg(t('Prüfe das Postfach …','Checking th
   mailMsg(t('Hinzugefügt. ','Added. ')+d.check.unread+t(' ungelesen, ',' unread, ')+d.check.total+t(' Mails in den letzten ',' mails in the last ')+d.check.days+t(' Tagen.',' days.'))};
 $('mailtest').onclick=async()=>{mailMsg(t('Lese die Postfächer …','Reading the mailboxes …'));
   let d;try{d=await (await api('/api/profile/mail/test',{method:'POST'})).json()}catch(e){mailMsg(e.message,true);return}
-  mailMsg('',d.accounts.some(a=>!a.ok),d.accounts.map(a=>a.name+': '+(a.ok?a.unread+t(' ungelesen',' unread'):'⚠ '+a.error)))};
+  mailMsg('',d.accounts.some(a=>!a.ok),d.accounts.map(a=>a.name+': '+(a.ok?a.unread+t(' ungelesen',' unread'):t('Fehler: ','Error: ')+a.error)))};
 // Home Assistant per profile; the token is never sent back, only whether one is stored.
 const haMsg=(x,err)=>{$('hamsg').textContent=x;$('hamsg').className='fh'+(err?' err':'')};
 function haRender(d){$('haurl').value=d.url||'';$('hatoken').value='';$('hanoverify').checked=d.verify===false;$('haagent').value=d.agent||'';
@@ -763,8 +763,8 @@ const SETF=[
   {k:'msg_from',type:'sel',prof:1,need:'chats',l:t('Wer darf mir schreiben','Who may write to me'),h:t('Alle Profile mit Chats, oder nur die, die du darunter auswählst. Gesperrte erreichen dich nie; sie erfahren nicht, dass du sie gesperrt hast.','Every profile with chats, or only the ones you pick below. Blocked ones never reach you; they do not learn that you blocked them.'),o:{all:t('alle Profile mit Chats','every profile with chats'),chosen:t('nur ausgewählte','only picked ones')}},
   {k:'msg_speaker',type:'sel',prof:1,need:'chats',l:t('Neue Nachrichten auf meinem Lautsprecher','New messages on my speaker'),h:t('Dein eigener Lautsprecher sagt neue Chat-Nachrichten: sofort, wenn keine Seite offen ist, sonst beim nächsten Weckwort innerhalb von zwei Stunden. Nie in deiner Ruhezeit, nie aus stummen Chats; aus privaten Chats nur, von wem. Den Text liest er nie ungefragt in den Raum: Mit „auf Wunsch vorlesen“ sagt er „Lies die Nachricht vor“ dazu und liest sie, wenn er deine Stimme erkennt (Sprechererkennung an, Stimme angelernt).','Your own speaker says new chat messages: at once when no page is open, else at the next wake word within two hours. Never in your quiet hours, never from muted chats; from private chats only who. It never reads the text into the room unasked: with "read on request" it adds "say: read the message" and reads it when it recognizes your voice (speaker ID on, voice taught).'),o:{off:t('nichts sagen','say nothing'),hint:t('nur sagen, von wem','say only who wrote'),text:t('von wem, Text auf Wunsch vorlesen','who wrote, read the text on request')}},
   {k:'msg_all',type:'bool',prof:1,need:'chatall',only:'chatall',l:t('Nachricht an alle','Message to everybody'),h:t('Du bist in der festen Gruppe „Alle“ und kannst „Sag allen …“ sagen. Höchstens fünf Nachrichten an alle pro Stunde. Steht von Anfang an an; ausgeschaltet verlässt du die Gruppe.','You are in the fixed group "Alle" (everybody) and can say "Tell everybody …". At most five messages to everybody per hour. On from the start; switched off, you leave the group.')},
-  // Einstellungs-Assistent (faelle.py, berater.py): 👍/👎, the feedback, and for admin profiles its notes and questions
-  {g:t('Verbessern','Improve'),k:'rate_back',type:'bool',prof:1,need:'rateback',l:t('Sagen, wenn es behoben ist','Tell me when it is fixed'),h:t('Hat eine Änderung nach deinem 👎 geholfen, bekommst du einmal einen Hinweis.','When a change after your 👎 helped, you get one note.')},
+  // Einstellungs-Assistent (faelle.py, berater.py): thumbs up and down, the feedback, and for admin profiles its notes and questions
+  {g:t('Verbessern','Improve'),k:'rate_back',type:'bool',prof:1,need:'rateback',l:t('Sagen, wenn es behoben ist','Tell me when it is fixed'),h:t('Hat eine Änderung nach deiner schlechten Bewertung geholfen, bekommst du einmal einen Hinweis.','When a change after your bad rating helped, you get one note.')},
   {k:'berater_note',type:'bool',prof:1,need:'beratnote',only:'berateradmin',l:t('Hinweis bei neuem Vorschlag','Note on a new proposal'),h:t('Gibt es einen neuen Vorschlag unter Zustand → Verbessern, bekommst du einen Hinweis, höchstens drei am Tag.','When there is a new proposal under Status → Improve, you get a note, at most three a day.')},
   // Gesicht (plaene/suche-gesicht.md): the profile's own face on all its devices; "" = the Spark's (Einstellungen → Vorgaben).
   // me: only on the own page, never a preset of the admin (who picks the Spark's face itself)
@@ -900,7 +900,7 @@ $('pushoff').onclick=async()=>{const s=await pushSub();if(s){try{await api('/api
 // ---------------------------------------------------------------- tool log (own turns, a few days)
 async function showToolLog(){const d=await (await api('/api/profile/toollog')).json();$('logdays').textContent=d.days;
   $('loglist').innerHTML=d.items.map(x=>`<li style="display:block"><small class="mut">${esc(new Date(x.t).toLocaleString())}</small><br><b>${esc(x.q)}</b>`+
-    (x.calls.length?x.calls.map(c=>`<details><summary>🔧 ${esc(c.name)} <small class="mut">${esc(c.args)}</small></summary><pre style="white-space:pre-wrap;margin:4px 0">${esc(c.result)}</pre></details>`
+    (x.calls.length?x.calls.map(c=>`<details><summary>${ic('wrench')} ${esc(c.name)} <small class="mut">${esc(c.args)}</small></summary><pre style="white-space:pre-wrap;margin:4px 0">${esc(c.result)}</pre></details>`
       +(c.name==='Korrektur'&&c.args?`<button class="b" type="button" data-qcase="${x.t}">${t('Frage als Testfall an den Admin','Send the question to the admin as a test case')}</button>`:'')).join('')
       :`<div class="mut">${t('kein Werkzeug','no tool')}</div>`)+
     `<div>→ ${esc(x.answer||'–')}</div></li>`).join('')||`<li class="mut">${t('Noch keine Einträge.','No entries yet.')}</li>`}

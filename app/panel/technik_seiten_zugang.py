@@ -185,7 +185,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ middleware (panel.py, notaus.py)
     "middleware": {
-        "stand": "8380709088",
+        "stand": "b0f20679f0",
         "bezug": {
             "panel.slow_reads": ["s2"], "panel.emergency": ["s3", "s4"], "notaus.at_home": ["s5"],
             "panel.sessions": ["s7", "s11", "s12"], "guard.same_origin": ["s7"], "panel._may_upload": ["s8"],
@@ -308,11 +308,13 @@ SEITEN = {
             S("s12", "ende", ("Antwort mit Schutz", "Answer with protection"),
               ("Kopfzeilen · Protokoll · Cookies", "headers · log · cookies"),
               ("Jede Antwort bekommt die Schutz-Kopfzeilen (keine fremden Rahmen, strenge Content-Security-Policy, "
-               "auf https auch HSTS), unter /api/ „no-store“. Eine Änderung landet mit wer, Pfad und Status im "
+               "auf https auch HSTS; mit Fernzugang → Systeme, Knopf „Webdienste“ darf die Seite zusätzlich nur die eigene Tunnel-Tür "
+               "einrahmen, fernweb.frame_src), unter /api/ „no-store“. Eine Änderung landet mit wer, Pfad und Status im "
                "Admin-Protokoll, außer gewöhnlicher Nutzung aus guard.QUIET_WHY. Benutzte Anmeldungen werden "
                "erneuert, auf https immer mit Secure.",
                "Every answer gets the protective headers (no foreign frames, a strict Content-Security-Policy, on "
-               "https also HSTS), under /api/ „no-store“. A change goes into the admin log with who, path and status, "
+               "https also HSTS; with remote access web services the page may also frame only its own tunnel door, "
+               "fernweb.frame_src), under /api/ „no-store“. A change goes into the admin log with who, path and status, "
                "except normal use from guard.QUIET_WHY. Logins in use are renewed, on https always with Secure.")),
         ],
         "beispiele": [
@@ -396,12 +398,12 @@ SEITEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "2676dc187b",
+        "stand": "43ffe4002c",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
             "account.profile_login": ["s3", "s5"], "account.second_step": ["s4"], "core.is_main_admin": ["s6"],
-            "profiles._cookie_user": ["s6"], "features.reason": ["s11"], "regeln": ["s6", "s7"],
+            "profiles._cookie_user": ["s6"], "coadmin.app_why": ["s6"], "features.reason": ["s11"], "regeln": ["s6", "s7"],
             "regel:Gast": ["s8", "s10"],
         },
         "kurz": ("Hier entscheidet das Panel, wer eine Anfrage stellt und was diese Person darf: Anmeldung mit "
@@ -476,9 +478,14 @@ SEITEN = {
               ("profiles.current", "profiles.current"),
               ("Zuerst, was nur das Panel selbst setzt (Telegram, „Spark fragen“ über MCP), dann der Geräteschlüssel "
                "(nur sein Hash ist gespeichert), dann das Cookie: Signatur, Alter, Sitzung noch in der Liste und nicht "
-               "abgemeldet.",
+               "abgemeldet. Der Schlüssel der eigenen iPhone-App zählt für eine Admin-Rolle nur, wenn er nach dem "
+               "zweiten Schritt angelegt oder einmal mit Code oder Passkey in der App an ihn gebunden wurde; sonst "
+               "nennt das Panel den Grund als festes Wort (key_older, no_mfa, not_admin, app_off, notaus).",
                "First what only the panel itself sets (Telegram, „Ask Spark“ over MCP), then the device key (only its "
-               "hash is stored), then the cookie: signature, age, session still in the list and not logged out.")),
+               "hash is stored), then the cookie: signature, age, session still in the list and not logged out. The "
+               "own iPhone app's key counts for an admin role only when it was made after the second step or bound "
+               "to it once with a code or passkey in the app; otherwise the panel names the reason as a fixed word "
+               "(key_older, no_mfa, not_admin, app_off, notaus).")),
             S("s7", "frage", ("Schlüssel für diesen Weg frei?", "Key free for this path?"),
               ("Bereich des Schlüssels", "the key's scope"),
               ("Ein Schlüssel mit Bereich (App, Uhr, Raum, Home Assistant, Schreibhilfe, Begleiter, Terminal) reicht nur für "
@@ -550,7 +557,10 @@ SEITEN = {
             [("Admin", "Admin"), ("Passwort-Cookie oder HTTP Basic", "password cookie or HTTP Basic"),
              ("Admin-Seiten; HTTP Basic nur ohne zweiten Schritt", "admin pages; HTTP Basic only without a second step")],
             [("Profil mit Admin-Rolle", "Profile with an admin role"),
-             ("Cookie mit Zeichen des zweiten Schritts oder App-Schlüssel von danach", "cookie with the second step's mark or an app key made after it"),
+             ("Cookie mit Zeichen des zweiten Schritts; App-Schlüssel von danach oder einmal mit Code in der App bestätigt "
+              "(sonst ein festes Wort als Grund)",
+              "cookie with the second step's mark; an app key made after it or confirmed once with a code in the app "
+              "(otherwise a fixed word as the reason)"),
              ("Admin-Seiten seiner Rolle; nur „Schutz ändern“ fragt den Code", "the admin pages of its role; only „change protection“ asks for the code")],
             [("Geräteschlüssel ohne Bereich", "Device key without scope"), ("Hash des Schlüssels", "hash of the key"),
              ("Assistent des Profils, keine Verbindungen oder Sicherheit ändern", "the profile's assistant, no changes to connections or security")],
@@ -608,6 +618,7 @@ SEITEN = {
             ("account.profile_login", ("Anmeldung eines Profils", "a profile's login")),
             ("account.second_step", ("Code oder Passkey", "code or passkey")),
             ("core.is_main_admin", ("Admin per Cookie oder HTTP Basic", "admin by cookie or HTTP Basic")),
+            ("coadmin.app_why", ("warum die eigene iPhone-App gerade kein Admin ist", "why the own iPhone app is not admin right now")),
             ("profiles.current", ("das Profil hinter einer Anfrage", "the profile behind a request")),
             ("profiles._cookie_user", ("Cookie prüfen", "check a cookie")),
             ("core.assistant", ("Profil, Gastzugang oder Admin", "profile, guest access or admin")),
@@ -621,7 +632,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ sicherheit (the model as a whole)
     "sicherheit": {
-        "stand": "7735496c09",
+        "stand": "d49c6cc859",
         "bezug": {
             "features.blocked": ["s5"], "geteilt.put": ["s5"], "mitschreiblink.find": ["s3", "s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
             "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"],
@@ -737,7 +748,8 @@ SEITEN = {
                "„Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer "
                "Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell; "
                "ebenso führt nur ihr Klick Punkte der Wissenskarte zusammen, benennt sie um oder löscht sie (mit dem Code von "
-               "„Bestätigen“). "
+               "„Bestätigen“); von selbst nur eine feste Regel bei gleichem Namen in anderer Schreibweise "
+               "(wissensdoppelt.aehnlich), nie das Modell, und nie gegen ihr „Verschieden“. "
                "Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft "
                "das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen "
                "würde, öffnet nur die Seite, auf der die Person es selbst tut.",
@@ -746,7 +758,8 @@ SEITEN = {
                "its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only "
                "from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model; "
                "likewise only their click merges, renames or deletes points of the knowledge map (with the code of "
-               "„Confirm“). "
+               "„Confirm“); by itself only a fixed rule for the same name in another spelling (wissensdoppelt.aehnlich), "
+               "never the model, and never against their „Different“. "
                "Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks "
                "every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something "
                "without a proposal only opens the page where the person does it."),
@@ -915,10 +928,11 @@ SEITEN = {
             ("profiles._cap", ("Obergrenze des Gedächtnisses ohne Datenverlust", "the memory's cap without data loss")),
             ("gedaechtnis.offer", ("Gelerntes ersetzt nie Bestätigtes: nur ein Angebot", "learned never replaces confirmed: only an offer")),
             ("gemerkt.take_back", ("Rückgängig nur für den eigenen, unveränderten Fakt", "undo only for the own, unchanged fact")),
+            ("wissensdoppelt.aehnlich", ("Punkte der Karte von selbst nur nach fester Regel zusammen, nie gegen „Verschieden“", "points of the map merged by themselves only by a fixed rule, never against „Different“")),
         ],
         "tests": ["test_hardening", "test_angriffe", "test_gaeste", "test_kontext_trennung", "test_scanner", "test_stufen", "test_notaus",
                   "test_waerter", "test_protokoll", "test_wachposten", "test_markdown", "test_gedaechtnis_grenze", "test_gemerkt", "test_siegel",
-                  "test_meinedaten"],
+                  "test_meinedaten", "test_wissensdoppelt"],
         "heute": [],
     },
 

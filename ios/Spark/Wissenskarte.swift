@@ -19,6 +19,18 @@ struct WkKind: Identifiable, Hashable {
     let count: Int
 }
 
+/// A suggestion of the Spark's fixed rules (wissensdoppelt.py): two points of one kind that may be the same; b would go
+/// into a. Only "Verschieden" is done here, merging stays in the browser (the code of „Bestätigen“ there).
+struct WkPair: Identifiable, Hashable {
+    let a: Int
+    let b: Int
+    let nameA: String
+    let nameB: String
+    let kind: String
+    let reason: String
+    var id: String { String(a) + "-" + String(b) }
+}
+
 /// A connection the panel checked by its fixed rules, with the document and the page it stands on.
 struct WkLine: Identifiable, Hashable {
     let id: Int
@@ -49,6 +61,9 @@ final class WissenskarteModel: ObservableObject {
     /// kind → (German, English) words of the fixed list the Spark sends along
     var words: [String: (String, String)] = [:]
     var entWords: [String: (String, String)] = [:]
+    /// „Vielleicht doppelt“: the open suggestions (at most the first 50) and how many are open
+    @Published var pairs: [WkPair] = []
+    @Published var pairsOpen = 0
 
     /// A point from documents: "k" and its number (never a page: those are 12 of 0-9a-f).
     static func isPoint(_ s: String) -> Bool {
@@ -124,8 +139,43 @@ final class WissenskarteModel: ObservableObject {
             cut = d["cut"] as? Bool ?? false
             waiting = (d["wait"] as? NSNumber)?.intValue ?? 0
             error = nil
+            if d["ents"] as? Bool ?? false { await loadPairs() } else { pairs = []; pairsOpen = 0 }
         } catch { self.error = error.localizedDescription }
         loading = false
+    }
+
+    /// The open suggestions of the Spark's fixed rules; names are text from the documents, shown as plain text only.
+    func loadPairs() async {
+        guard let api = SparkAPI.current else { return }
+        guard let d = try? await api.object("GET", "api/profile/wissenskarte/paare") else { return }
+        pairs = (d["paare"] as? [[String: Any]] ?? []).prefix(50).compactMap { p in
+            guard let a = p["a"] as? [String: Any], let b = p["b"] as? [String: Any],
+                  let ia = (a["id"] as? NSNumber)?.intValue, let ib = (b["id"] as? NSNumber)?.intValue else { return nil }
+            return WkPair(a: ia, b: ib, nameA: String((a["name"] as? String ?? "").prefix(80)),
+                          nameB: String((b["name"] as? String ?? "").prefix(80)), kind: p["art"] as? String ?? "",
+                          reason: p["grund"] as? String ?? "")
+        }
+        pairsOpen = (d["offen"] as? NSNumber)?.intValue ?? pairs.count
+    }
+
+    /// The words for the reason of a suggestion (the same fixed words as in the panel).
+    static func reason(_ r: String) -> String {
+        switch r {
+        case "anrede": return String(localized: "mit Anrede oder Titel")
+        case "reihenfolge": return String(localized: "Nachname zuerst")
+        case "initiale": return String(localized: "mit Initiale")
+        case "rechtsform": return String(localized: "andere Rechtsform")
+        case "tippfehler": return String(localized: "fast gleich geschrieben")
+        default: return String(localized: "andere Schreibweise")
+        }
+    }
+
+    /// „Verschieden“: the two stay apart for good, the Spark never suggests or merges them again.
+    func different(_ p: WkPair) async {
+        guard let api = SparkAPI.current else { return }
+        do { _ = try await api.object("POST", "api/profile/wissenskarte/paare/verschieden", body: ["a": p.a, "b": p.b]); error = nil }
+        catch { self.error = error.localizedDescription }
+        await loadPairs()
     }
 
     /// "Stimmt nicht": the connection goes and never comes back from that document.
@@ -179,6 +229,7 @@ struct WissenskarteView: View {
     var around = ""
     @StateObject private var m = WissenskarteModel()
     @State private var picked: WkPoint?
+    @State private var showPairs = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -218,6 +269,12 @@ struct WissenskarteView: View {
                 if m.cut { Text("Die Karte zeigt nur einen Teil. Tippe auf einen Punkt und dann „In die Mitte“.").font(.caption).foregroundStyle(.secondary).padding(8) }
             }
             if m.waiting > 0 { Text(verbatim: String(localized: "Noch nicht eingearbeitet:") + " " + String(m.waiting)).font(.caption).foregroundStyle(.secondary).padding(8) }
+            if m.pairsOpen > 0 {
+                Button { showPairs = true } label: {
+                    Text(verbatim: String(localized: "Vielleicht doppelt") + " · " + String(m.pairsOpen))
+                }
+                .font(.caption).padding(8)
+            }
         }
         .navigationTitle("Wissenskarte")
         .navigationBarTitleDisplayMode(.inline)
@@ -237,6 +294,10 @@ struct WissenskarteView: View {
         }
         .sheet(item: $picked) { p in
             WkPointSheet(point: p, model: m) { picked = nil }
+                .presentationDetents([.medium, .large])
+        }
+        .sheet(isPresented: $showPairs) {
+            WkPairsSheet(model: m)
                 .presentationDetents([.medium, .large])
         }
         .refreshable { await m.load(m.center, only: m.only) }
@@ -277,6 +338,20 @@ struct WkPointSheet: View {
                     Button("In die Mitte") { close(); Task { await model.load(point.id) } }
                 }
                 if !point.ent.isEmpty {
+                    let own = model.pairs.filter { "k" + String($0.a) == point.id || "k" + String($0.b) == point.id }
+                    if !own.isEmpty {
+                        Section {
+                            ForEach(own) { p in
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(verbatim: "k" + String(p.a) == point.id ? p.nameB : p.nameA)
+                                    Text(verbatim: WissenskarteModel.reason(p.reason)).font(.caption).foregroundStyle(.secondary)
+                                }
+                                .swipeActions(edge: .trailing) {
+                                    Button { Task { await model.different(p) } } label: { Label("Verschieden", systemImage: "xmark") }
+                                }
+                            }
+                        } header: { Text("Vielleicht derselbe Punkt") } footer: { Text(SparkAPI.way(String(localized: "Nach links wischen: „Verschieden“, dann fragt der Spark nie wieder. Zusammenführen geht im Panel unter Wissensbuch → Karte."))) }
+                    }
                     Section {
                         Text(verbatim: model.entWord(point.ent) + " · " + String(point.places) + " " + String(localized: "Stellen in Dokumenten"))
                             .foregroundStyle(WissenskarteModel.color(point.ent))
@@ -289,6 +364,34 @@ struct WkPointSheet: View {
             .confirmationDialog("Diesen Punkt löschen? Aus diesen Dokumenten kommt er nicht wieder.", isPresented: $asking, titleVisibility: .visible) {
                 Button("Löschen", role: .destructive) { close(); Task { await model.delete(point) } }
             }
+        }
+    }
+}
+
+/// „Vielleicht doppelt“: the open suggestions of the Spark's fixed rules; swipe for „Verschieden“ (never again), merging
+/// stays in the browser with the code of „Bestätigen“ (Wissensbuch → Karte), as the hint below says.
+struct WkPairsSheet: View {
+    @ObservedObject var model: WissenskarteModel
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    ForEach(model.pairs) { p in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(verbatim: p.nameA + " · " + p.nameB)
+                            Text(verbatim: model.entWord(p.kind) + " · " + WissenskarteModel.reason(p.reason))
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                        .swipeActions(edge: .trailing) {
+                            Button { Task { await model.different(p) } } label: { Label("Verschieden", systemImage: "xmark") }
+                        }
+                    }
+                } footer: { Text(SparkAPI.way(String(localized: "Nach links wischen: „Verschieden“, dann fragt der Spark nie wieder. Zusammenführen geht im Panel unter Wissensbuch → Karte."))) }
+            }
+            .navigationTitle("Vielleicht doppelt")
+            .navigationBarTitleDisplayMode(.inline)
+            .refreshable { await model.loadPairs() }
         }
     }
 }

@@ -4619,22 +4619,351 @@
 {
 "id": "P684",
 "v": 1263,
+"titel": "Karte hilft der Suche",
+"text": "Voraussetzung: Wissenskarte mit Personen, Firmen und Fristen hat Punkte. A: Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte → Personen, Firmen und Fristen → Karte hilft der Suche an (ab Werk aus). B: Im Gespräch nach einer Firma fragen, die in mehreren Dokumenten steht („Was gibt es zur Hausverwaltung …?“): unter der Antwort steht bei einer Quelle „über die Wissenskarte“. C: Zustand → Logs, Bereich Wissen: „wissen: kartensuche | n von m stellen über die karte“, kein Name. D: Zustand → Live, Kasten Wissenskarte: „Suche über die Karte an: n Suchen, m Stellen“, nur Zahlen. E: Ich → Dokumente → Suchprüfung → Jetzt prüfen: ein Balken „Mit Wissenskarte“ neben „Gemischt“, nicht schlechter. F: Schalter aus: kein „über die Wissenskarte“ mehr, keine Zeile kartensuche.",
+"thread": "Wissenskarte Stufe 2 statt Neo4j"
+},
+{
+"id": "P685",
+"v": 1265,
+"titel": "Mail-Regeln: zurückgelegte Mail bleibt im Posteingang (kein Ping-Pong)",
+"text": "Eine Mail-Regel unter E-Mail → Regeln (Absender → Ordner) anlegen und eine passende Mail schicken: sie landet im Ordner. In Apple Mail (oder auf der Seite E-Mail) dieselbe Mail zurück in den Posteingang ziehen und 10 Minuten warten: sie bleibt im Posteingang, auch nach „auch die vorhandenen“ an der Regel; mit „Postfach aufräumen“ an wird sie auch dort nicht verschoben. Zustand → Logs, Bereich Mail: „mail: rule skip | user_moved | 1“ ohne Absender oder Ordner; Zustand → Live, Post: „heute 1 zurückgelegte Mails nicht wieder einsortiert“.",
+"thread": "Falsch einsortierte Mails lernen lassen"
+},
+{
+"id": "P686",
+"v": 1266,
+"titel": "Spark verwalten: App vor dem zweiten Schritt gekoppelt, einmal mit Code bestätigen",
+"text": "Mit einem Admin-Profil, dessen iPhone-App vor dem (neu eingerichteten) zweiten Schritt gekoppelt wurde: in der App „Spark verwalten“ öffnen, nach Face ID steht „Dein Profil ist gerade kein Admin.“ mit dem Grund „gekoppelt, bevor der zweite Anmeldeschritt … eingerichtet wurde“ und dem Knopf „Mit Code bestätigen“. Ein falscher Code ändert nichts; mit dem richtigen Code (oder Passkey) erscheinen Überblick, Logs und Ändern. Unter Logs → Diagnose (Bereich Apps) stehen „iphone: admin step …“-Zeilen ohne Namen, im Admin-Protokoll „Anmeldung eines Admin-Profils“. Danach den zweiten Schritt im Browser neu einrichten: die App ist wieder kein Admin und fragt erneut.",
+"thread": "Fix Spark verwalten in der iPhone-App"
+},
+{
+"id": "P687",
+"v": 1267,
+"titel": "Finden auf dem iPhone: suchen, Schlagwort ändern, im Panel sichtbar",
+"text": "Mit „Finden in allen Daten“ freigegeben in der iPhone-App Meine Sachen → Finden öffnen: „Rechnung“ suchen, die Chips Quelle, Kategorie und Zeitraum ändern die Treffer. Einen Treffer öffnen: Felder, Schlagworte mit Herkunft, bei einer Mail ihre Anhänge. Ein Schlagwort mit + hinzufügen und eines mit × entfernen; danach im Panel unter Finden derselbe Eintrag mit denselben eigenen Schlagworten. „Original öffnen“ zeigt den Eintrag in der Panel-Ansicht. Sperrt der Admin Finden für das Profil, verschwindet die Zeile Finden.",
+"thread": "Alles schnell finden über einen Index"
+},
+{
+"id": "P688",
+"v": 1267,
+"titel": "Finden: Sofort-Karte im iPhone-Chat und im Begleiter öffnet das Original",
+"text": "Mit nur einer Thomann-Rechnung im Index „Such mir die Rechnung von Thomann“ in der iPhone-App fragen: unter der Antwort „Original öffnen“ (öffnet das Panel in der App bei dieser Rechnung) und „In Finden ansehen“. Dieselbe Frage im Begleiter auf Windows und auf dem Mac: zuerst „Original öffnen“, es öffnet das Panel bei derselben Rechnung, daneben „In Finden ansehen“.",
+"thread": "Alles schnell finden über einen Index"
+},
+{
+"id": "P689",
+"v": 1285,
+"titel": "Finden: Messung auf dem Pi (Teil von Wissen messen)",
+"text": "Auf dem Pi `sudo speech-spark wissen messen synth 5000` (dauert einige Minuten): am Ende steht „wissen: messung teil fund | dokumente 5000 | suche p95 … ms | ram … mb“ und die Zeilen „wissen: messung fund | mails 50000“, „… anhaenge 10000“, „… suche_p95_ms …“, „… db_mb …“. Zustand → Prüfen → Wissen messen zeigt dieselbe Messung mit „Finden: Suche über Mails und Dokumente“ (Median und p95) und „Finden: Mails · Anhänge · Größe des Index“; Zustand → Live, Kasten „Wissen messen“ zählt 4 Teile. `sudo speech-spark finden messen` gibt es nicht mehr. Während der Messung etwas zum Spark sagen: sie hört auf („abgebrochen: jemand hat gesprochen“). Kein Profil hat danach neue Einträge, unter state/wissensmessung-tmp bleibt kein Ordner lauf-… liegen. p95 und die Größe von fund.db bitte zurückmelden.",
+"thread": "Alles schnell finden über einen Index"
+},
+{
+"id": "P690",
+"v": 1268,
+"titel": "Begleiter: Knöpfe „Im Panel“ in den Einstellungen",
+"text": "Am Mac und unter Windows die Einstellungen des Begleiters öffnen, Seite „Übersicht“: unten unter „Im Panel“ stehen „Meine Daten“ und „Gedächtnis“. Ein Klick öffnet das Panel im Browser auf Ich → Sicherheit bei „Meine Daten“ bzw. auf Ich → Gedächtnis. Mit einem Profil ohne Admin-Rolle fehlt „Fernzugang“.",
+"thread": "Begleiter-App auf neuen Stand bringen"
+},
+{
+"id": "P691",
+"v": 1268,
+"titel": "Begleiter: Fernzugang nur für Admins",
+"text": "Fernzugang eingeschaltet, Begleiter mit einem Profil mit Admin-Rolle (zweiter Anmeldeschritt an) gekoppelt: nach dem nächsten Abruf steht unter „Im Panel“ zusätzlich „Fernzugang“ und öffnet Fernzugang → Systeme. Rolle wegnehmen oder Fernzugang ausschalten: der Knopf verschwindet mit dem nächsten Abruf.",
+"thread": "Begleiter-App auf neuen Stand bringen"
+},
+{
+"id": "P692",
+"v": 1268,
+"titel": "Sprung-Links auf Listen, Offen, Finden und Dungeon-Master von draußen",
+"text": "Eine Mitteilung oder Telegram-Nachricht mit einem Weg wie „Finden → Schlagworte“ oder „Listen → Einstellungen“ (z. B. aus einem Hinweis): Antippen in iPhone-App, Android-App, Begleiter oder der Telegram-Knopf „Im Panel öffnen“ führt auf die Seite und den Reiter.",
+"thread": "Begleiter-App auf neuen Stand bringen"
+},
+{
+"id": "P693",
+"v": 1269,
+"titel": "Begleiter: Offen im Reiter Heute",
+"text": "Ich → Begleiter: beim Gerät den Teil „Offen im Begleiter“ einschalten (Alles Offene im Assistenten muss freigegeben sein). Im Begleiter-Fenster unter Heute stehen „Offen“ mit der Zahl und bis zu drei Karten; ein Knopf wie „Erledigt“ oder „Später“ wirkt, die Karte verschwindet auch im Panel unter Offen; eine Karte ohne Knopf öffnet Offen im Panel.",
+"thread": "Begleiter-App auf neuen Stand bringen"
+},
+{
+"id": "P694",
+"v": 1269,
+"titel": "Begleiter: Gemerkt von selbst mit Stimmt und Rückgängig",
+"text": "Eine Meldung „Gemerkt von selbst“ am Rechner: „Stimmt“ bestätigt den Eintrag, „Rückgängig“ nimmt ihn zurück; im Panel unter Offen ist die Karte danach weg.",
+"thread": "Begleiter-App auf neuen Stand bringen"
+},
+{
+"id": "P695",
+"v": 1269,
+"titel": "Begleiter: Finden per Tastenkürzel",
+"text": "Ich → Begleiter: Teil „Finden im Begleiter“ einschalten (Finden in allen Daten muss freigegeben sein). Strg+Alt+F (Mac ⌃⌥F), „Rechnung“ eingeben, Return: Treffer mit Titel und Quelle; ein Klick öffnet den Eintrag im Panel, „In Finden ansehen“ die Seite Finden mit derselben Suche. In Logs → Begleiter steht nur die Zahl der Treffer, nie die Wörter.",
+"thread": "Begleiter-App auf neuen Stand bringen"
+},
+{
+"id": "P696",
+"v": 1270,
+"titel": "5000 Dokumente messen",
+"text": "A: Zustand → Prüfen → Wissen messen: „Erfundene Dokumente“, 5000, Messen (Code nur ohne zweiten Schritt). Der Knopf zeigt „Misst gerade …“, nach einigen Minuten stehen Dokumente, Stücke, Vektor-Matrix in MB, Speicher vorher → nachher, die Zeiten (Median und p95) von Dokumentensuche, Suche mit Karte, Wissensbuch, Karte, Rund um, Weg und Karte-Liste und die drei Grenzen mit jetzt, Bedarf und „voll“ oder „reicht“; nirgends ein Titel oder Name. Die Zahlen bitte an den Thread geben. B: Während einer Messung etwas zum Spark sagen: die Messung hört auf („abgebrochen: jemand hat gesprochen“), die Antwort kommt so schnell wie sonst. C: Dasselbe mit „Profil …“ (eigenes Profil mit vielen Dokumenten): nur Zahlen, die Dokumente bleiben unverändert. D: Zustand → Live, Kasten „Wissen messen“: nur Zahlen. Zustand → Logs, Bereich Wissen: „wissen: messung teil …“ je Teil. Zustand → Überblick → Rechner zeigt „Wissen messen“, solange sie läuft. E: Auf dem Pi in der Konsole: sudo speech-spark wissen messen (und synth 5000 --ohne-grenzen): dieselben Zahlen; ein zweiter Start gleichzeitig sagt „laeuft“.",
+"thread": "Wissenskarte Stufe 2 statt Neo4j"
+},
+{
+"id": "P697",
+"v": 1273,
+"titel": "Wissenskarte: Seite und Punkt als ein Punkt, Typregeln, Fristen",
+"text": "Voraussetzung: Personen, Firmen und Fristen an, ein Dokument mit einer Person, die auch eine Seite im Wissensbuch hat. A: Wissensbuch → Karte: die Person steht nur einmal, eckig, im Detail „mit Seite“ und „Seite öffnen“; ihre Verbindungen und die der Seite hängen am selben Punkt. B: Den Punkt antippen, neuen Namen eintragen, „Umbenennen“ mit Code: Wissensbuch → Seiten zeigt die Seite unter dem neuen Titel mit „Früher: …“. C: Auf der Seite „Neu schreiben“: nach dem nächsten Einarbeiten gibt es die Seite einmal, unter dem neuen Titel, keine zweite unter dem alten. D: Eine Seite ohne Punkt antippen, unten „Seite umbenennen“, neuen Titel, „Umbenennen“ mit Code; eine Seite mit Punkt zeigt stattdessen den Hinweis auf Wissensbuch → Karte. E: Keine Verbindung „arbeitet bei“ zwischen zwei Personen, kein Frist-Punkt ohne Zahl oder Datum (aus „einem Monat“ wird „1 Monat“). F: Am Morgen nach der Nacht in Zustand → Logs, Bereich Wissen: „wissen: wissenskarte geprueft | n verbindungen gegen typregeln | n fristen ohne zahl | n mit seite“, kein Name; Zustand → Live, Kasten Wissenskarte: „n mit Seite“ und was nachts entfernt wurde, nur Zahlen.",
+"thread": "Wissenskarte Stufe 2 statt Neo4j"
+},
+{
+"id": "P698",
+"v": 1274,
+"titel": "Sortieren aus Korrekturen lernen: Ausnahme, Pause und Karte „Wohin gehört diese Mail?“",
+"text": "A: Funktionen → E-Mail lesen → Mails ordnen → Sortieren aus Korrekturen lernen an (ab Werk aus); Alles Offene im Assistenten an. Nach höchstens 5 Minuten gibt es unter dem KI-Ordner den Ordner „Falsch sortiert“. B: Eine Domain-Regel (@firma.de → Ordner X) anlegen, eine Mail von anna@firma.de kommen lassen, sie landet in X. Auf der Seite E-Mail aus X in Ordner Y schieben: sofort unter Offen eine Karte „Regel-Vorschlag: Mails von anna@firma.de – War in „X“, du hast sie nach „Y“ gelegt“ mit „Regel ändern“, „Nur Ausnahme“, „Nicht mehr fragen“; unter E-Mail → Regeln steht an der Regel „1 Ausnahmen“, eine neue Mail von Anna bleibt im Posteingang, eine von bob@firma.de kommt weiter nach X. C: „Regel ändern“: die Regel zeigt → Y, keine Ausnahme mehr. D: Drei Mails verschiedener Absender der Regel umsortieren: die Regel steht auf „pausiert, oft korrigiert“, Karte „Regel pausiert“ mit „Wieder einschalten“. E: In Apple Mail eine von einer Regel einsortierte Mail unter dem KI-Ordner nach „Falsch sortiert“ ziehen; am nächsten Morgen (Nachtlauf 2–5 Uhr) Karte „Wohin gehört diese Mail?“ mit Ordner-Knöpfen, „Posteingang“, „Anderer Ordner …“; ein Ordner-Knopf verschiebt genau diese Mail. Am iPhone unter Offen dieselbe Karte, weitere Knöpfe unter „Mehr“. F: Zustand → Logs, Bereich Mail: „mail: rule correction | folder | 1“, „mail: rule exception | 1“, „mail: rule paused | 3“ ohne Absender oder Ordner; Live, Post: „Sortieren aus Korrekturen lernen an: heute N Korrekturen …“. G: Schalter aus: Umsortieren ändert keine Regel mehr, keine neue Karte.",
+"thread": "Falsch einsortierte Mails lernen lassen"
+},
+{
+"id": "P699",
+"v": 1274,
+"titel": "Korrekturen (30 Tage) unter E-Mail → Regeln: Rückgängig, Ausnahmen, Wieder an, iPhone",
+"text": "A: Wie P698 eingerichtet (Sortieren aus Korrekturen lernen an), eine Domain-Regel @firma.de → Ordner X und zwei Korrekturen (eine Mail von anna@firma.de auf der Seite E-Mail von X nach Y, eine von bob@firma.de in Apple Mail nach „Falsch sortiert“). B: E-Mail → Regeln: Bereich „Korrekturen (30 Tage)“ mit 2 Zeilen, neueste oben: „bob@firma.de – X → Falsch sortiert · Regel „@firma.de“ · Heute“ mit Stand „wartet“ (ohne Rückgängig) und „anna@firma.de – X → Y · …“ mit „Ausnahme gesetzt“, „Rückgängig“ und „Regel ändern“. Die Regel zeigt „N genommen (Monat) · 2 korrigiert (30 Tage)“ mit Balken und darunter „2 Ausnahmen“. C: Bei Anna „Rückgängig“: Stand „zurückgenommen“, Anna verschwindet aus den Ausnahmen, die Mail bleibt in Y. „Regel ändern“ öffnet das Formular der Regel. D: „2 Ausnahmen“ aufklappen, bei Bob ✕ und bestätigen: Bob ist keine Ausnahme mehr. E: Eine dritte Korrektur: die Regel steht auf „pausiert, oft korrigiert“ mit hervorgehobenem „Wieder an“ und orangem Balken; „Rückgängig“ an dieser Korrektur schaltet sie wieder ein (die Karte „Regel pausiert“ ist erledigt). F: iPhone E-Mail → Regeln: dieselbe Liste „Korrekturen (30 Tage)“ mit „Rückgängig“ und „Regel ändern“, je Regel „N genommen · M korrigiert“, Abschnitt „Ausnahmen der Regeln“ mit „Entfernen“, bei pausierter Regel Wischen „Wieder an“; Englisch: „Corrections (30 days)“, „Undo“. Android: dieselbe Panel-Ansicht. G: Zustand → Logs, Bereich Mail: „mail: rule correction undone | 1“, „mail: rule exception removed | 1“, ohne Absender oder Ordner; Live, Post: „… N zurückgenommen“. H: Schalter aus: der Bereich Korrekturen, die Zähler „korrigiert“ und die Ausnahmen zum Entfernen sind weg, die Regel zeigt wieder „diesen Monat N“.",
+"thread": "Falsch einsortierte Mails lernen lassen"
+},
+{
+"id": "P700",
+"v": 1274,
+"titel": "Das Modell schlägt nur vor: Korrektur einer Modell-Einordnung fragt nach einer festen Regel",
+"text": "A: Wie P698 eingerichtet (Sortieren aus Korrekturen lernen an), Postfach aufräumen im Modus „automatisch“, Alles Offene im Assistenten an. B: Eine Mail eines Absenders ohne Regel und ohne Abmelde-Link kommen lassen, die das Modell nach „KI/Werbung“ einsortiert (Protokoll von Postfach aufräumen: „Modell, NN % sicher“). Auf der Seite E-Mail aus KI/Werbung in einen anderen Ordner Y schieben: sofort Karte „Regel-Vorschlag: Mails von …“ mit „Mails von … immer nach „Y“? Das Modell hatte sie nach „KI/Werbung“ sortiert …“ und den Knöpfen „Regel anlegen“, „Nur diese Mail“, „Nie“; unter E-Mail → Regeln ist noch keine neue Regel, bei der Korrektur steht „Postfach aufräumen (Modell)“. C: Eine zweite Mail desselben Absenders kommen lassen: Postfach aufräumen verschiebt sie nicht, sondern fragt (Frage mit „du hast eine Mail dieses Absenders umsortiert“). D: „Regel anlegen“: unter E-Mail → Regeln steht die Regel Absender → Y, die Karte ist erledigt; mit „Nur diese Mail“ bzw. „Nie“ (andere Mail) entsteht keine Regel. E: Eine andere vom Modell einsortierte Mail in Apple Mail nach „KI/Falsch sortiert“ ziehen und den Nachtlauf (2–5 Uhr) abwarten: Karte „Wohin gehört diese Mail?“, wenn das Modell einen vorhandenen Ordner nennt, beginnt die Zeile mit „Vorschlag des Modells: „…“, du entscheidest.“ und der erste Knopf heißt „Nach „…“ (Vorschlag des Modells)“; nichts ist verschoben, bis du tippst; erst danach fragt die Karte nach einer Regel. F: Zustand → Logs, Bereich Mail: „mail: tidy model fix | 1“, „mail: rule card model | asked | 1“, „mail: rule card model | suggested | 1“ oder „| refused“, nie Absender, Domain, Betreff oder Ordner. Live, Post: „…, N davon Modell-Einordnungen, M Ordner vom Modell vorgeschlagen“. G: Schalter aus: keine solche Karte, kein Modellaufruf für Ordner.",
+"thread": "Falsch einsortierte Mails lernen lassen"
+},
+{
+"id": "P701",
+"v": 1275,
+"titel": "Nach „Regel anlegen“ entscheidet die Regel: Postfach aufräumen fragt nicht mehr",
+"text": "A: Wie P700 B bis D: Modell-Einordnung korrigiert, auf der Karte „Regel anlegen“. B: Eine neue Mail desselben Absenders kommen lassen: die Mail-Regel legt sie in den Ordner, „Postfach aufräumen“ stellt keine Frage mehr dazu. Zustand → Logs, Bereich Mail: „mail: rule suggestion taken | card model | 1 settled“ und, wenn Postfach aufräumen sie zuerst sieht, „mail: tidy skip | rule decides | 1“, ohne Absender oder Ordner. C: Die Regel unter E-Mail → Regeln pausieren und eine weitere Mail kommen lassen: Postfach aufräumen fragt wieder.",
+"thread": "Falsch einsortierte Mails lernen lassen"
+},
+{
+"id": "P702",
+"v": 1276,
 "titel": "Fernzugang: Terminal springt nicht",
 "text": "Shell zu einem System öffnen und 2 Minuten ruhig ansehen, dabei ein paar Befehle tippen (etwa screen -ls, dann ls), einmal den Assistenten fragen und von unterwegs über den Proxy verbinden: Terminal und die Zeile Vorschläge bleiben genau an ihrem Platz, keine Zeile geht hoch oder runter, auch nicht, wenn rechts oben „· 12 ms“ wechselt, Vorschläge mit „braucht sudo“ kommen oder nach 15 Sekunden die Liste neu geladen wird. WLAN kurz aus und wieder an: „Verbindung wird wiederhergestellt …“ legt sich über den Kopf des Terminals, das Terminal selbst bleibt stehen.",
 "thread": "Fernzugang zu entfernten Servern bauen"
 },
 {
-"id": "P685",
-"v": 1264,
+"id": "P703",
+"v": 1277,
 "titel": "Fernzugang Windows: Einrichten über die Datei und Bestätigen",
 "text": "Auf einem Windows-PC (10 oder 11, ohne OpenSSH-Server): im Panel Fernzugang → „+ System koppeln“, Windows, Name, „Koppeln (Code)“. A: Das Blatt zeigt nur Einmal-Link und QR-Code, keinen Code und keine Zeile. B: Den Link am PC öffnen, „Datei laden“, spark-anker-einrichten.cmd doppelklicken, „Ja“ (SmartScreen: „Weitere Informationen“, „Trotzdem ausführen“): sie fügt den OpenSSH-Server hinzu, lädt Python, zeigt den Host-Schlüssel und ist danach aus dem Download-Ordner verschwunden. Den Link ein zweites Mal öffnen: „gilt nicht mehr“. C: Im Panel steht das System mit „wartet auf Bestätigung“, Shell und „Darf sich verbinden“ gehen nicht. Host-Schlüssel vergleichen, „Bestätigen (Code/Passkey)“: danach öffnet „Shell“ eine PowerShell als spark, „Dateien“ zeigt C:/Users/spark. D: Dasselbe Bestätigen einmal in der iPhone-App.",
 "thread": "Fernzugang zu entfernten Servern bauen"
 },
 {
-"id": "P686",
-"v": 1264,
+"id": "P704",
+"v": 1277,
 "titel": "Fernzugang Windows: Entfernen stellt alles wieder her",
 "text": "Am Windows-PC aus P674: A: In den Windows-Einstellungen unter Apps „Spark Anker“ deinstallieren (fragt nach Administratorrechten): danach keine Aufgaben SparkAnker in der Aufgabenplanung, kein Benutzer spark, kein Ordner C:\\Program Files\\SparkAnker und C:\\ProgramData\\SparkAnker, der OpenSSH-Server wieder entfernt, im Panel ist das System weg. B: Noch einmal koppeln und diesmal im Panel „Entfernen“: dasselbe Ergebnis innerhalb einer Minute. C: Auf einem PC, auf dem der OpenSSH-Server schon lief: nach dem Entfernen läuft er weiter, seine sshd_config ist wie vorher.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P705",
+"v": 1278,
+"titel": "Bildschirm: guacd kommt mit dem Update",
+"text": "Auf dem Raspberry Pi mit eingeschaltetem Funktionen → Fernzugang zu Servern und darunter Bildschirm: sudo speech-spark update. Im Update-Log steht „guacd-bauen: fetching guacamole-server-1.6.0.tar.gz“, dann „building …“ und nach einigen Minuten „guacd 1.6.0 in /opt/speech-spark/guacd“ (bitte die Zeile „built in … s“ notieren). Danach öffnet „Bildschirm“ bei einem eingerichteten System das Bild. Ein zweites Update baut nicht noch einmal („already there“). systemctl cat speech-spark-guacd zeigt /opt/speech-spark/guacd/sbin/guacd und 127.0.0.1.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P706",
+"v": 1278,
+"titel": "Grauer Knopf sagt warum",
+"text": "Fernzugang → Systeme, den uConsole wählen (Anker 1.4.0, Bildschirm dort noch nicht eingerichtet): unter den Knöpfen steht „Bildschirm: Auf dem System noch nicht eingerichtet: dort „sudo spark-anker bildschirm““ mit Kopieren und In die Shell einfügen; Letzteres öffnet die Shell und setzt den Befehl in die Zeile, ohne Enter. Beim Darüberfahren über den grauen Knopf derselbe Text. Ein System offline: alle drei Knöpfe sagen „Das System ist offline.“ Vor dem ersten Bau (oder wenn er scheiterte) sagt der Bildschirm-Knopf, dass guacd auf dem Spark fehlt und warum.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P707",
+"v": 1279,
+"titel": "Webdienst im Heimnetz öffnen",
+"text": "Funktionen → Fernzugang zu Servern → Webdienste an. Auf dem System mit Anker 1.6.0 (vorher „Aktualisieren“) lauscht ein Webdienst auf 127.0.0.1 (z. B. Grafana auf 3000). Fernzugang → Systeme, das System, „Webdienste“, „Suchen“: der Port steht unter „Gefunden“ mit Programmname und http, ein SSH-Port als „TCP · Stufe 2“. „Übernehmen“, „Speichern“, „Öffnen“: die Seite erscheint im Rahmen mit Leiste (Name, System, Rate). Anmelden dort klappt und bleibt nach „Schließen“ und neuem „Öffnen“ erhalten. „Neuer Tab“ öffnet sie in einem eigenen Tab; die Adresse dort ist https://<Pi>:31090, nie die des Panels.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P708",
+"v": 1279,
+"titel": "Webdienst von unterwegs",
+"text": "Im Reverse-Proxy der Synology eine Regel für den Namen der Tunnel-Adresse (z. B. fernwartung.metaluna9.i234.me) auf den Pi, Port 31090, mit den WebSocket-Kopfzeilen; den Namen unter Funktionen → Fernzugang zu Servern → Webdienste eintragen. Vom Handy über Mobilfunk das Panel öffnen, entsperren und einen Webdienst „Öffnen“: er erscheint unter diesem Namen. Eine Seite mit WebSocket (z. B. Home Assistant) aktualisiert sich live. Ohne Tunnel-Adresse sagt die Seite stattdessen, wie die Regel angelegt wird.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P709",
+"v": 1279,
+"titel": "Webdienste enden sicher",
+"text": "Einen Webdienst öffnen, dann oben „Sperren“: der Rahmen meldet, dass der Fernzugang gesperrt ist, ein Neuladen im eigenen Tab auch. Wieder öffnen und den Notaus drücken: der Webdienst endet sofort. „Netz dahinter“ an (fragt den Code), einen Dienst auf einer privaten Adresse im Netz des Systems anlegen und öffnen; „Netz dahinter“ aus: der Dienst ist weg. Eine Adresse aus dem Netz des Pi lehnt das Panel ab. In Logs → Fernzugang nur feste Wörter und Portnummern, nie eine Adresse oder ein Pfad.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P710",
+"v": 1280,
+"titel": "Dungeon-Musik: fester Grundton und Boss",
+"text": "Voraussetzung: KI-Dungeon-Master an, Musik am Tisch mit „Musik vorbereiten“, Musikmodell installiert. A: Vorher ein altes Kampf- und ein Taverne-Stück der Fantasy-Welt am Tisch anhören (Hörprobe vorher, kurz notieren: Tempo gleichmäßig? Gesang? hektisch?). B: Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch → „Musik jetzt vorbereiten“: die Tabelle hat eine Spalte „Boss“; neue Stücke entstehen nach und nach (alte spielen weiter, bis ihr Feld neue hat). C: Zustand → Logs, Bereich Dungeon-Master: „dungeon: musik | ok | kampf | … s | … ms“ und später „… | boss | …“, keine Beschreibung und kein Text. D: Hörprobe nachher am Tisch, dieselben Felder: zwei Stücke derselben Stimmung haben dasselbe Tempo und dieselbe Tonart, die Überblendung holpert nicht, kein Gesang, nichts Hektisches; Taverne im Dreiertakt-Schwung (6/8), Lagerfeuer im 3/4. E: In einer Runde einen Kampf mit einem Boss aus dem Bestiarium beginnen: ohne Boss-Stück spielt die Kampfmusik und die Leiste zeigt „Kampf“, mit Boss-Stücken „Boss“; fällt der Boss, wechselt sie zu „Kampf“. F: Heldenlied am Kapitelende: deutscher Gesang wie bisher, Tempo ruhig. G: Ich → Musik ein eigenes Lied machen: klingt wie bisher (keine Änderung).",
+"thread": "Dungeon-Musik anpassbar machen"
+},
+{
+"id": "P711",
+"v": 1281,
+"titel": "Dungeon-Musik: Qualität, Länge, Lautheit",
+"text": "Voraussetzung: Musik am Tisch mit „Musik vorbereiten“, Musikmodell installiert. A: Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch: zwei Reiter „Vorrat“ und „Qualität“; im Reiter Qualität stehen Qualität (Schnell, Gut, Beste), Länge (Kurz, Mittel, Lang) und Lautheit (Normal, Lauter), am Handy (390 px) ohne seitliches Rollen. B: Gut, Kurz, Lauter wählen, Speichern, Reiter Vorrat → „Musik jetzt vorbereiten“: Zustand → Logs, Bereich Dungeon-Master: „dungeon: musik | einstellung | … | gut | kurz | lauter | …“ und „dungeon: musik | ok | … | 90 s oder 120 s | gut | … ms“. C: Hörprobe am Tisch: ein Gut-Stück neben einem alten Schnell-Stück derselben Stimmung (klarer, weniger Rauschen?), Lauter deutlich lauter? D: Beste wählen: tagsüber entsteht Gut (Log „| gut |“); nachts ohne SFT-Modell zeigt die Karte „Das genauere Klangmodell (SFT) ist nicht installiert“. E: Ich → Musik ein eigenes Lied machen: wie bisher (Log des Musik-Dienstes „musik: gemacht … schnell …“). F: Zustand → Prüfen → „Musik testen“: ohne SFT-Modell nur die installierten Modelle wie bisher.",
+"thread": "Dungeon-Musik anpassbar machen"
+},
+{
+"id": "P712",
+"v": 1282,
+"titel": "Dungeon-Musik: Klangvorlage je Welt und Stimmung",
+"text": "Voraussetzung: Musik am Tisch mit „Musik vorbereiten“, Musikmodell installiert. A: Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch: drei Reiter „Vorrat“, „Klang“, „Qualität“; im Reiter Klang Welt und Paket oben, links die Stimmungen mit Punkt (alle ○ Standard), rechts Genre, Tonart (mit Welt-Tonart), Takt, Instrumente, Charakter, Tempo, Gesang und „Geht so an das Musikmodell“; kein Textfeld; am Handy (320 und 390 px) ohne seitliches Rollen. B: Fantasy, Kampf: Genre „Epic Hybrid“, 5 Instrumente (ein sechstes lässt sich nicht wählen), Takt 3/4, Tempo 120, Gesang „Chor ohne Worte“, Speichern: Punkt bei Kampf ●, die Vorschau zeigt die Wörter, bpm 120 und 3/4; Hinweis „… Stücke dieses Feldes sind veraltet“, Zustand → Logs: „dungeon: musik | klang | gespeichert | kampf | 5 werte“. C: Live-Übersicht: „… veraltet, 1 Klangvorlagen geändert“. D: Paket „Keltisch“ → „Für alle Stimmungen übernehmen“: alle Stimmungen ●, Log „dungeon: musik | paket | keltisch | 9 felder“. E: Reiter Vorrat → „Musik jetzt vorbereiten“, dann am Tisch einen Kampf hören: klingt nach der Vorlage (Chor ohne Worte, 3/4)? Alte Stücke spielen bis dahin weiter. F: Paket „Standard (alles zurück)“ übernehmen: alle ○, „Auf Standard zurück“ bei einem Feld nimmt nur dieses zurück. G: Android-App und iPhone-App (Sprung-Link) zeigen dieselbe Karte.",
+"thread": "Dungeon-Musik anpassbar machen"
+},
+{
+"id": "P713",
+"v": 1283,
+"titel": "Dungeon-Musik: Probe hören und Gefällt",
+"text": "Voraussetzung: Musikmodell installiert, KI-Dungeon-Master an. A: Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch → Reiter „Klang“, Fantasy, Kampf: Kasten „Probe hören“ mit „30 Sekunden“/„Volle Länge“ und „Probe machen“, darunter „heute 0 von 20“; am Handy (320 und 390 px) ohne seitliches Rollen. B: 30 Sekunden, „Probe machen“: der Knopf ist gesperrt, „Macht gerade eine Probe dieses Feldes …“, nach etwa einer Minute erscheint „Probe 1 · 30 s“ ohne Neuladen; Zustand → Logs: „dungeon: musik | probe | gestartet | kampf | 30 s“ und „dungeon: musik | probe | ok | kampf | 30 s | … ms“. C: ▶ Anhören spielt sie; „In den Vorrat“ ist bei 30 s gesperrt. D: Volle Länge, „Probe machen“, dann bei ihr „Variation“: klingt die Variation verwandt? E: „In den Vorrat“ bei der vollen Probe: Meldung „Im Vorrat, als gemocht“, die Probe ist weg, im Reiter Vorrat zählt das Feld eins mehr; Log „probe behalten | kampf“. F: eine vierte Probe des Feldes: es bleiben drei; „Weg“ entfernt eine. G: Vorlage ändern (Takt 3/4, Speichern): bei alten Proben steht „alte Vorlage“, „In den Vorrat“ ist gesperrt. H: am Tisch während eines Stücks das Herz neben 👎 drücken (Profil und Gast über Platz-Link): Meldung „Gemerkt: das Stück bleibt im Vorrat“, Log „dungeon: musik | gefaellt | …“, ein zweites Mal vom selben Platz „gefaellt schon“. I: Live-Übersicht: „heute 2× Gefällt, 2 gemocht, … Proben“. J: am nächsten Morgen sind die Proben weg (Log „… | n proben weg“).",
+"thread": "Dungeon-Musik anpassbar machen"
+},
+{
+"id": "P714",
+"v": 1284,
+"titel": "Begleiter im Systemstil",
+"text": "Neuen Begleiter-Build am Mac und unter Windows öffnen, hell und dunkel umschalten: Fenster ohne Farbleiste und ohne Verlauf, Grautöne und ein blauer Akzent wie im Panel, Hauptknopf und Schalter einfarbig blau, Kacheln mit Linien-Symbolen; bei hohem Kontrast (Windows) die Systemfarben.",
+"thread": "Begleiter-App auf neuen Stand bringen"
+},
+{
+"id": "P715",
+"v": 1284,
+"titel": "Begleiter: Gesicht nur auf Wunsch",
+"text": "In den Einstellungen des Begleiters, Seite „Übersicht“: „Gesicht in den Fenstern zeigen“ ist aus, Begleiter-Fenster, Frag Spark und Text verbessern zeigen kein Gesicht, die Titel beginnen links. Einschalten: das Gesicht steht wieder im Kopf und neben den Antworten; das Symbol in Menü- oder Taskleiste zeigt es immer.",
+"thread": "Begleiter-App auf neuen Stand bringen"
+},
+{
+"id": "P716",
+"v": 1286,
+"titel": "Wissenskarte: Doppelte erkennen und kürzere Auswahl",
+"text": "A: Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte → Personen, Firmen und Fristen an. B: Ein Dokument hochladen, in dem „Herr Dominik Bornhäuser“, „Bornhäuser, Dominik“, „Dr. Dominik Bornhäuser“, „D. Bornhäuser“, „Müller GmbH“ und „Müller AG“ stehen; nach ruhigen Minuten zeigt Wissensbuch → Karte unter Personen nur einen Punkt „Herr Dominik Bornhäuser“ (die anderen Schreibweisen als andere Namen) und über der Karte „Vielleicht doppelt 2“ (D. Bornhäuser, Müller GmbH/AG). C: „Verschieden“ beim Firmenpaar: das Paar verschwindet und kommt auch nach dem nächsten Lauf nicht wieder. D: „Zusammenführen“ beim Personenpaar: mit Code (wenn der zweite Schritt an ist), danach ein Punkt. E: Einen Punkt antippen: „Zusammenführen mit …“ ist ein Suchfeld, oben die ähnlichsten Punkte derselben Art, beim Tippen höchstens 20 Treffer. F: Zustand → Logs, Bereich Wissen: „wissen: wissenskarte doppelt geprueft | …“ und „doppelt einlesen | 1 knoten | anrede“ ohne Namen; Zustand → Live, Kasten Wissenskarte: „Doppelte: n Vorschläge offen, m automatisch zusammengeführt“. G: iPhone-App, Wissensbuch → Karte: „Vielleicht doppelt“, nach links wischen „Verschieden“.",
+"thread": "Wissenskarte Stufe 2 statt Neo4j"
+},
+{
+"id": "P717",
+"v": 1287,
+"titel": "Mappen: anlegen, füllen, Stufen und Budget",
+"text": "Funktionen → Mappen an. Unter Mappen eine Mappe „Wohnung“ anlegen, mit „+ Dokument“ zwei eigene Dokumente hineinlegen, mit „+ Notiz“ eine Notiz. Je Eintrag aus, kurz und ganz umschalten: der Balken „≈ X von Y Token“ ändert sich, ein großes Dokument auf „ganz“ zeigt „zu groß: nur die passenden Stellen“. × nimmt einen Eintrag heraus, das Dokument bleibt unter Ich → Dokumente. Mappe löschen: die Dokumente bleiben.",
+"thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P718",
+"v": 1287,
+"titel": "Mappen: Im Assistenten fragen",
+"text": "In der Mappe „Im Assistenten fragen“: über dem Gespräch steht der Chip „Mappe „Wohnung““. Eine Frage zu einem Dokument der Mappe beantwortet der Assistent mit [M1]-Verweisen; eine Frage zu etwas, das nicht darin steht, sagt das. × am Chip beendet die Bindung. „Welche Mappen habe ich?“ und „Leg den Mietvertrag in die Mappe Wohnung“ funktionieren im normalen Gespräch; auf dem iPhone öffnet Ich → Mappen die Panel-Ansicht.",
+"thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P719",
+"v": 1289,
+"titel": "Fernzugang: zwei Systeme als Reiter",
+"text": "Fernzugang entsperren, Shell zu System A öffnen, dann „+ System“ (oder Strg+Umschalt+O), System B suchen, Enter: oben stehen zwei Reiter mit Symbol, grünem Punkt und ×, B ist vorn. Strg+Umschalt+1 und Strg+Umschalt+→ wechseln, die Shell bekommt diese Tasten nicht (in beiden kein Zeichen getippt). In A „top“ starten, zu B wechseln: am Reiter A erscheint der blaue Punkt. Rechtsklick auf A: Herauslösen, Neu verbinden, Schließen, Andere trennen. × an A schließt nur A, B bleibt verbunden.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P720",
+"v": 1289,
+"titel": "Fernzugang: Plätze voll und Seitenwechsel",
+"text": "Mit zwei offenen Reitern auf Zustand → Live wechseln: die rote Zeile oben sagt „2 Fernsitzungen aktiv“ mit beiden Namen und hat „Zum Terminal“; der Knopf führt zurück zum zuletzt gezeigten Reiter, beide Shells laufen noch (Ausgabe von top lief weiter). Unter Funktionen → Fernzugang zu Servern „Sitzungen gleichzeitig“ auf 2 stellen und ein drittes System öffnen: es öffnet nicht, die Meldung sagt „2 von 2 Plätzen belegt“, keine alte Sitzung schließt sich. Auf dem iPhone oder einem schmalen Fenster bleiben die Reiter bedienbar.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P721",
+"v": 1291,
+"titel": "Wissen messen nach Grenzen-Erhöhung",
+"text": "A: Zustand → Prüfen → Wissen messen: „Erfundene Dokumente“, 5000, Messen. Die Grenzen zeigen 3000 Seiten, 25 000 Verbindungen und 15 000 Punkte; bei 5000 Dokumenten ist nur noch die Seiten-Grenze ungefähr voll (Bedarf etwa 3000), Verbindungen und Punkte „reicht“. Die Zeiten bitte an den Thread geben: „Suche mit Karte“ soll im p95 deutlich unter 300 ms liegen (vorher auf dem Pi 257 ms mit den alten, kleineren Grenzen), „Karte-Liste“ und „Rund um“ einstellig bis niedrig zweistellig im Median, „Karte“ im Median wenige ms (der erste Aufruf baut die Karte, danach kommt sie aus dem Speicher). B: Wissensbuch → Karte mit vielen Punkten öffnen, einen Punkt antippen, „Weg“ zu einem anderen: die Karte antwortet ohne spürbare Wartezeit; nach dem Einlesen eines neuen Dokuments zeigt sie es beim nächsten Öffnen. C: Am Morgen nach der Nacht in Zustand → Logs, Bereich Wissen: „wissen: wissenskarte geprueft | …“, bei vielen Verbindungen mehrere Zeilen mit „| weiter“ und zuletzt eine ohne; ebenso „wissen: wissenskarte doppelt geprueft | …“ bei vielen Punkten in mehreren Zeilen mit „| weiter“ und zuletzt „| fertig“ oder „| grenze“; Zustand → Logs zeigt keinen Hänger des Panels („loopwacht“). D: Nach dem Update einmal „wissen: wissenskarte wortindex aufgebaut | n punkte“ je Profil, kein Name. E: Auf der Karte eine Person „Herr …“ löschen und ihr Dokument noch einmal einlesen lassen: sie kommt weder als „Nachname, Vorname“ noch mit „Dr.“ oder ohne Anrede zurück; Zustand → Logs zeigt „blocked=…“.",
+"thread": "Wissenskarte Stufe 2 statt Neo4j"
+},
+{
+"id": "P722",
+"v": 1292,
+"titel": "Fernzugang: zwei Systeme nebeneinander",
+"text": "Am großen Bildschirm (mindestens 1100 Pixel breit) zwei Shells als Reiter öffnen, oben rechts „Nebeneinander“: beide Terminals stehen nebeneinander, das mit Fokus ist blau umrandet. In das rechte klicken und „uptime“ tippen: nur dort erscheint es, der Assistent rechts gehört jetzt zu diesem System. Einen dritten Reiter öffnen und „2 × 2“ wählen: drei Felder zeigen je ein System, jedes Terminal füllt sein Feld (top oder htop passt sich an). Einen Reiter auf ein Feld ziehen: das System dort wechselt. Das Fenster schmaler als 1100 Pixel ziehen: nur noch ein System ist zu sehen, breiter wieder geteilt.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P723",
+"v": 1292,
+"titel": "Fernzugang: Übersicht aller Sitzungen",
+"text": "Mit drei offenen Reitern oben rechts „Übersicht“: jede Sitzung ist eine Kachel mit Name, grünem Punkt, „verbunden“ und den letzten Zeilen ihres Bildschirms; läuft in einer „top“, ändern sich die Zeilen etwa alle 2 Sekunden. Tippen ändert nichts in den Shells. Eine Kachel anklicken: das System ist groß zu sehen und hat die Tasten. In der Auswahl (Strg+Umschalt+O) ein System mit Umschalt+Enter öffnen: es steht neben dem bisherigen.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P724",
+"v": 1293,
+"titel": "Fernzugang: An alle senden",
+"text": "Funktionen → Fernzugang zu Servern → An alle senden an. Zwei Linux-Systeme als Reiter öffnen: in der Reiterleiste steht „An alle …“. Anklicken: eine rote Zeile sagt „Eingabe geht an 2 Systeme“ mit beiden Namen. „rm -rf /tmp/test“ eingeben und Enter: die Seite weist es ab (Vorsicht-Liste), nichts kommt in den Shells an. „uptime“ und Enter: die Rückfrage nennt die Zeile und beide Namen, nach OK zeigen beide Shells die Ausgabe, die rote Zeile geht aus. Mit einem Windows-System als drittem Reiter steht es unter „nicht dabei“. Zustand → Logs zeigt „fernzugang: alle | gesendet | 2“ ohne den Befehl. Schalter aus: kein „An alle …“ mehr.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P725",
+"v": 1296,
+"titel": "Fernzugang: Dateien als root (Linux)",
+"text": "Funktionen → Fernzugang zu Servern → Dateien als anderer Benutzer an. Auf einem gekoppelten Linux-Server als root: sudo spark-anker dateien als root. Er meldet „als root, nur lesen“, /etc/sudoers.d/spark-anker hat nur die sftp-server-Zeile mit -R. Im Panel das System anklicken: „Dateien als anderer Benutzer“ zeigt „als root · nur lesen“; „Für dieses System einschalten“ fragt Code oder Passkey. Dann „Dateien als root“: /root lässt sich öffnen, Hochladen ist gesperrt, die rote Zeile sagt „… als root“. Zustand → Logs: „fernzugang: dateien_als | root lesen | 1“ ohne Pfad. Auf dem Server sudo spark-anker dateien aus: die Datei ist weg, im Panel steht wieder „nichts freigegeben“.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P726",
+"v": 1296,
+"titel": "Fernzugang: Dateien als root mit Schreiben",
+"text": "Auf dem Server sudo spark-anker dateien als root --schreiben, im Panel wieder einschalten (die neue Meldung hat den Schalter ausgemacht). „… schreiben (Code/Passkey)“ fragt erst nach und dann Code oder Passkey; eine kleine Datei nach /root hochladen: sie gehört root. Eine neue Sitzung „Dateien als root“ ohne Schreiben: Hochladen wieder gesperrt.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P727",
+"v": 1296,
+"titel": "Fernzugang: freigegebene Ordner unter Windows",
+"text": "Auf einem gekoppelten Windows-PC als Administrator: spark-anker dateien ordner \"C:\\Users\\<Name>\\Documents\". „C:\\Windows“ oder „C:\\“ lehnt er ab, ohne etwas zu ändern. Im Panel einschalten (Code/Passkey), „Dateien in den Ordnern“ öffnet direkt im freigegebenen Ordner; Dateien laden geht. spark-anker dateien aus: der Ordner ist für spark wieder zu.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P728",
+"v": 1299,
+"titel": "Entwickeln auf dem Pi: einrichten und OpenCode starten",
+"text": "Auf dem Panel-Rechner (mit Internet) sudo ./install.sh --entwickeln: am Ende keine Warnung zu spark-dev, OpenCode oder Firewall. id spark-dev zeigt keine Gruppe sudo, adm oder speech. Funktionen → Entwickeln auf dem Pi an. Deinen SSH-Schlüssel nach /home/spark-dev/.ssh/authorized_keys legen (Anleitung unter Funktionen → Anleitungen, „Entwickeln auf dem Pi“), dann ssh spark-dev@<Panel-Rechner> und spark-opencode: OpenCode startet im Klon ~/speech-on-dgx-spark auf dem Zweig lokal und antwortet auf „Was macht app/panel/live.py?“. Mit geteiltem Spark (Modell-Rechner anderswo) klappt das genauso über das LLM-Tor des Modell-Rechners (Zertifikat ~/.config/spark/tor.pem; prüfen, dass kein TLS-Fehler kommt).",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P729",
+"v": 1299,
+"titel": "Entwickeln auf dem Pi: nur das LLM-Tor, ganz hinten",
+"text": "Als spark-dev: curl -sS https://github.com bricht ab (Firewall), curl http://127.0.0.1:31080 auch (Panel nicht erreichbar), ls /var/lib/speech-spark verweigert. Während OpenCode eine längere Antwort schreibt, im Assistenten eine Frage stellen: die Antwort kommt ohne spürbare Wartezeit (Entwickler-Anfragen stehen ganz hinten). Funktionen → Entwickeln auf dem Pi aus: OpenCode bekommt sofort „401“; wieder an: es geht wieder. sudo speech-spark entwickeln schluessel neu, danach antwortet OpenCode weiter (neuer Schlüssel in der Datei).",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P730",
+"v": 1299,
+"titel": "Entwickeln auf dem Pi: lokal einspielen, zurück, verwerfen",
+"text": "Als spark-dev im Klon eine kleine Änderung an einem Text in app/panel (etwa ein Satz in docs/de) committen. Als Admin sudo speech-spark lokal einspielen: das Update-Fenster im Panel zeigt „Lokale Änderungen werden geprüft“, nach dem Schnelltest (wenige Minuten, ohne Internet) „Fertig“; Einstellungen → Update zeigt die Version mit „+lokal“. sudo speech-spark lokal status: „lokale aenderungen 1“. Zustand → Live, Kasten Entwickeln: „lokale Änderungen: 1“. Eine Änderung an install.sh committen und einspielen: abgelehnt mit „Datei, die nur über GitHub kommen darf“, die laufende Version bleibt. sudo speech-spark lokal zurueck und danach verwerfen: die Version zeigt wieder kein „+lokal“, der Commit ist im Klon noch da.",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P731",
+"v": 1299,
+"titel": "Entwickeln auf dem Pi: Update mit lokalen Änderungen",
+"text": "Mit eingespielten lokalen Änderungen auf ein neueres grünes main aktualisieren (Einstellungen → Update): das Fenster zeigt „Lokale Änderungen kommen auf die neue Version“, danach läuft die neue Version mit „+lokal“ und die Änderung ist noch da. Eine lokale Änderung, die mit main kollidiert: das Update endet mit „passen nicht auf die neue Version (Konflikt)“, die bisherige Version läuft weiter, oben im Panel steht der Hinweis; Zustand → Logs (System) zeigt „entwickeln: aufsetzen abgelehnt konflikt“ ohne Commit-Text.",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P732",
+"v": 1300,
+"titel": "Spontanhilfe: Steuern anfragen und ablehnen",
+"text": "Funktionen: Steuern bei der Spontanhilfe an. Eine Spontanhilfe mit Bild öffnen; in der Leiste „Steuern anfragen (Code)“. Ohne Programm im Zwischenspeicher sagt /hilfe „Steuern geht bisher nur unter Windows“ bzw. bietet nichts an; „Nein, nur ansehen“ auf /hilfe zeigt beim Admin „Sie bleibt beim Ansehen“, das Bild läuft weiter. Protokoll: nur steuern_frage, steuern, keine Namen.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P733",
+"v": 1300,
+"titel": "Spontanhilfe: Steuern mit SparkHilfe (sobald S2b da ist)",
+"text": "Nach S2b an einem Windows-PC: /hilfe zeigt „Programm laden“ mit Prüfsumme, die Datei heißt SparkHilfe-<Adresse>-<Schlüssel>.exe. Start, „Erlauben“: roter Rahmen bei ihr, beim Admin das Bild; „Steuern“ in der Leiste, Klicks und Tippen treffen; „Nur ansehen“ gibt zurück. Programm schließen beendet die Hilfe. Dieselbe Datei nach 10 Minuten oder ein zweites Mal: „Bitte neu laden“.",
 "thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]

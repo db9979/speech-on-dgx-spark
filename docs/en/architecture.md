@@ -118,6 +118,7 @@ flowchart TB
 | `speech-spark-messen-wunsch` | – | Measure one model (Status → Models "Measure"), only on request |
 | `speech-spark-gehaeuse` | – | Set up the panel computer's case (Pironman 5: fan, OLED), only with `--gehaeuse` |
 | `speech-spark-werkstatt` | – (the sandbox asks only 127.0.0.1:31006) | One order of the workshop (Features → Workshop): test run, code measurement, diagnosis, repair in the sandbox `speech-spark-werkstatt-lauf`, only with `--werkstatt`; plus `speech-spark-werkstatt-fw` (on 127.0.0.1 the sandbox reaches only the LLM-Tor) |
+| `speech-spark-lokaltest-umgebung` | – (fetches only packages with a checksum) | Develop on the Pi (`--entwickeln`, panel computer): the quick test's test environment, at night only for a new package list; the quick test itself runs as `speech-spark-lokaltest` without network; plus `speech-spark-entwickeln-fw` (the user `spark-dev` reaches only the LLM-Tor 31006) |
 | `speech-spark-schirm` | – (asks only 127.0.0.1:31080) | Control centre as text on the panel computer's screen (tty1), only with the switch on |
 
 **Model computer (V01.0.606, plan "Splitting the Spark" stage B1):** the panel reaches speech recognition, speech output, pictures and the LLM-Tor through one address only: `common.model_url(art, path)` with the setting `models.host`. The default is `127.0.0.1`, and then everything runs on one Spark over `http://127.0.0.1:<port>` as before. With another computer there (a name or IP, never a path or `http://`), every request goes over `https` and the API key is a must (`admin.validate`); a broken entry stays on the Spark. The LLM-Tor on the model computer gets the key like the own one (`llm.own_tor`), and the guard (`netguard.model_addresses`) treats the model computer's ports 30000–31099 like its own: no MCP, calendar or Home Assistant address can point at them. The model computer is set only by the split install (stage B6); the pairing pins the certificate (B3). Self-test `test_modell_rechner`.
@@ -251,11 +252,13 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 | `app/panel/folien.py` | Slide types and the fixed rules for documents the Spark writes. |
 | `app/panel/fund.py` | Finden: one index over the own data, its fields and tags, one list of hits for the page Finden, Strg K and the assistant's tool fund_suche. |
 | `app/panel/fundmail.py` | Finden: Mails und Anhänge: every mail of the profile's mailboxes in the search index of Finden (fund.py), with the text and the fields of its attachments. |
+| `app/panel/fundmessung.py` | Finden messen: how fast the search index stays with many own data, on synthetic data only, in an index of its own that nobody else sees. |
 | `app/panel/fundquellen.py` | Finden, Stufe C: the remaining own sources of the search index of Finden (fund.py): appointments, contacts, conversations, lists, reminders, pictures and songs. |
 | `app/panel/gedaechtnis.py` | Gedächtnis mit Beleg und Prüfung. |
 | `app/panel/gemerkt.py` | Gemerkt-Hinweis: what the Spark keeps about a person is seen at once and can be taken back. |
 | `app/panel/kiwix.py` | The person's own Kiwix (kiwix-serve with ZIM files: Wikipedia, Wikivoyage, handbooks ...) as a knowledge source that works without the internet. |
 | `app/panel/lokal.py` | Erst lokal suchen: before anything goes outside, the panel looks in the person's own sources itself. |
+| `app/panel/mappen.py` | Mappen: a Mappe bundles own documents, Wissensbuch pages and notes for one undertaking; per entry a context level aus / kurz / ganz decides what of it the la … |
 | `app/panel/meinedaten.py` | Alle meine Daten herunterladen: one ZIP with everything a profile keeps on the Spark, for the person herself. |
 | `app/panel/memtidy.py` | Weekly memory cleanup per profile: the language model looks at the remembered facts and proposes which ones to merge (duplicates, the same thing said twice) … |
 | `app/panel/musik.py` | Musik machen: songs from a wish, made on the model computer by ACE-Step 1.5 (musik_server.py, music.port 31004, installed with `install.sh --musik 2b\|xl`). |
@@ -269,7 +272,9 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 | `app/panel/wiki.py` | Wikipedia straight away: for "Was ist ...?" or "Wer war ...?" the panel asks Wikipedia for the best matching article and hands its short intro to the model, … |
 | `app/panel/wissen.py` | Knowledge from one's own uploads. |
 | `app/panel/wissensbuch.py` | Wissensbuch: the language model works each own document once into a few pages ("Auto", "Versicherungen", "Werkstatt Müller"), sentence by sentence and each s … |
+| `app/panel/wissensdoppelt.py` | Doppelte Punkte der Wissenskarte: the people, companies, places, contracts, accounts and deadlines of the documents (wissenskarte.py, wk_ent) come in many sp … |
 | `app/panel/wissenskarte.py` | Wissenskarte: the pages of the Wissensbuch are the points of a map, this module adds the connections between them ("Auto versichert bei HUK", "Parkschaden fü … |
+| `app/panel/wissensmessung.py` | Wissen messen: times and memory of the document search, the Wissensbuch and the Wissenskarte, for the planned test with 5000 documents (Wissenskarte Stufe 2 … |
 
 ### Connections
 
@@ -469,6 +474,8 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/berater_katalog.py` | The Einstellungs-Assistent's catalog: everything it may ever propose. |
 | `app/panel/dateien.py` | Datei-Register: every file and folder the panel keeps, listed once (Richtlinie Teil 17, Aufräumen Schritt 8). |
 | `app/panel/dienstwacht.py` | Dienst-Wächter: the Spark looks at its services by itself and tells the admins when one is gone and when it is back. |
+| `app/entwickeln.py` | Entwickeln auf dem Pi, Paket 1: OpenCode with the own language model on the panel computer, and Weg B: local changes installed without GitHub. |
+| `app/panel/entwickelnseite.py` | Entwickeln auf dem Pi: the panel's side of app/entwickeln.py, for admins only, default off (admin switch chat.entwickeln). |
 | `app/panel/faelle.py` | Fälle: every problem becomes a case the moment it happens. |
 | `app/panel/ghtoken.py` | A read-only GitHub token for the Spark's own questions to api.github.com (Settings → Update). |
 | `app/panel/health.py` | Stability: a watchdog for hung speech services, a warning before memory runs out, and a live check of the real services (LLM answers, TTS speaks, ASR underst … |
@@ -548,15 +555,18 @@ Shell, files and screen of own servers through their anchor, plus spontaneous he
 
 | Module | Task |
 |---|---|
+| `app/panel/fernals.py` | Fernzugang, Dateien als anderer Benutzer: „Dateien“ of a paired server as root or another named user instead of `spark`, or (Windows) in folders given free. |
 | `app/panel/fernanker.py` | Anker-Update: the panel brings its paired anchors to the program it hands out. |
 | `app/panel/fernbild.py` | Fernzugang, Bildschirm: the screen of a paired system in the browser, through the same anchor pipe as its shell. |
 | `app/panel/ferndateien.py` | Fernzugang, Dateien: the files of a paired remote server in the browser over SFTP, inside one SSH connection like the shell's (fernzugang.aufbauen with art " … |
 | `app/panel/ferngross.py` | Fernzugang, große Dateien: three ways for a big file onto a paired server, inside the open „Dateien“ session (ferndateien.py: the same SSH connection, the sa … |
 | `app/panel/fernnotiz.py` | Notizen je System im Fernzugang: one note per paired system, written by the admin, for the admin. |
 | `app/panel/fernordner.py` | Ordner im Fernzugang: the paired systems in folders. |
+| `app/panel/fernweb.py` | Fernzugang, Webdienste: the web pages of a paired system (Grafana, a router page, Home Assistant over there …) in the admin's browser, through the same ancho … |
 | `app/panel/fernwindows.py` | Fernzugang Stufe 5 (Windows): the file spark-anker-einrichten.cmd a pairing's „Einmal-Link“ hands out. |
 | `app/panel/fernzugang.py` | Fernzugang: a server elsewhere (a VPS, a NAS at friends') calls the panel by itself and the admin works in its shell in the browser, like Raspberry Pi Connec … |
 | `app/panel/spontanhilfe.py` | Spontanhilfe: an admin helps a person (family, friends) once at their computer, like TeamViewer QuickSupport. |
+| `app/panel/spontansteuern.py` | Spontanhilfe S2a, Steuern: when looking is not enough, the admin may move the mouse and type at the person's computer. |
 
 ### Spark split
 
@@ -621,7 +631,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/zuordnungen.json` | Remembered matches |  | sealed whole (AES-256-GCM) | yes | Memory |
 | `users/ID/tasks.json` | Tasks |  | – | yes | Tasks and reminders |
 | `users/ID/reminders.json` | Reminders |  | – | yes | Tasks and reminders |
-| `users/ID/wissen.db` | Documents: text, sections with context line, search, vectors; knowledge book and map with people, companies and deadlines (SQLite) |  | – | yes | Documents (text, search, originals) |
+| `users/ID/wissen.db` | Documents: text, sections with context line, search, vectors; knowledge book and map with people, companies and deadlines; collections with entries and levels (SQLite) |  | – | yes | Documents (text, search, originals) |
 | `users/ID/docs/files/` | Originals of uploads |  | – | yes | Documents (text, search, originals) |
 | `users/ID/fund.db` | Find: search index over the own data (titles, fields, tags, own tags, mail and attachments, appointments, contacts, lists, reminders, pictures, songs; conversations only date and channel; SQLite) |  | marks with a key of its own per profile (HMAC); mail, attachments, appointments and contacts: title, excerpt, fields and tags AES-GCM | yes | Documents (text, search, originals) |
 | `users/ID/suchpruefung.json` | Test questions and runs of the search check |  | – | yes | Documents (text, search, originals) |
@@ -660,7 +670,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/dungeon-wappen.json` | AI Dungeon Master: colour and charge you chose as host for your group's arms | State | – | yes | – |
 | `users/ID/interessen.json` | What I know about you: confirmed and refused interests with topic and senders and the last web tip (no subject, never a mail) | Settings | sealed whole (AES-256-GCM) | yes | – |
 | `users/ID/mailstil.json` | Mail style (only the summary, never a mail) | Settings | – | yes | – |
-| `users/ID/mail-regeln.json` | Mail rules of the E-mail page and rule suggestions (senders, words, folders; never a mail) | Settings | – | yes | – |
+| `users/ID/mail-regeln.json` | Mail rules of the E-mail page and rule suggestions (senders, words, folders; never a mail), plus for 30 days the Message-IDs of mails a rule moved and the corrections (Message-ID, sender, folders) | Settings | – | yes | – |
 | `users/ID/mail-spaeter.bin` | Send later: planned mails until they go out, after that for a day the line without text | Queue | sealed | yes | – |
 | `users/ID/mail-einordnen.bin` | Sort every mail here: the last run for "Undo" (folders and Message-IDs, never a mail), 30 days | State | sealed | yes | – |
 | `users/ID/spark-kalender.json` | Spark calendar: appointments of the calendars without an account (only here) | Appointments | sealed | yes | – |
@@ -743,14 +753,15 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/dungeon-geschichten.json` | AI Dungeon Master: the stories of the admin and the hosts with acts, turning points and taboos | – | yes |
 | `state/dungeon-klone` | AI Dungeon Master: every character's voice as clone reference when the speech output has a Base model (WAV with the sentence spoken, at most 200, for all rounds) | – | no |
 | `state/dungeon-lieder` | AI Dungeon Master: hero songs per round and chapter from the own music model (MP3 with the heroes' names) | – | no |
-| `state/dungeon-musik` | AI Dungeon Master: music pieces per world and mood from the own music model (MP3, for every round, nothing personal) | – | no |
-| `state/dungeon-musik.json` | AI Dungeon Master: prepare music on or off, pieces per world and mood, storage | – | yes |
+| `state/dungeon-musik` | AI Dungeon Master: music pieces per world and mood from the own music model (MP3, for every round, nothing personal), in the subfolder probe the admin's probes (gone at night) | – | no |
+| `state/dungeon-musik.json` | AI Dungeon Master: prepare music on or off, pieces per world and mood, storage, quality, length, loudness, sound templates per world and mood | – | yes |
 | `state/dungeon-personen.json` | AI Dungeon Master: people catalog with card, traits, role, voice, face and attitude towards the heroes (game data only) | – | yes |
 | `state/dungeon-pruefstand.json` | AI Dungeon Master: the balance bench's result (wins, life lost and turns per level and group size, without and with runes, against master and boss) | – | yes |
 | `state/dungeon-regeln.json` | AI Dungeon Master: the admin's own rules and catalog entries | – | yes |
 | `state/dungeon-runden` | AI Dungeon Master: one file per round with seats (hashes of the links), heroes, actions and narration | hashes only | no |
 | `state/dungeon-runden.json` | AI Dungeon Master: shared values of all rounds (pictures of the day, thumbs per world) | – | yes |
 | `state/dungeon-ton` | AI Dungeon Master: the last turns of a round read aloud (WAV and MP3, at most 3 per round) | – | no |
+| `state/entwickeln.json` | Develop on the Pi: number of local changes, short commits, last result (fixed word, names of red tests); written by root, never a commit text | – | no |
 | `state/esp32.json` | Speakers and firmware | partly sealed | yes |
 | `state/export-tmp` | Download all my data: the ZIP until it is picked up (once, 10 minutes at most) | – | no |
 | `state/faelle.json` | Cases | – | yes |
@@ -763,6 +774,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/gehaeuse-wunsch.json` | The panel's wish for the case (set up, remove, restart), seconds | – | no |
 | `state/geraete-updates.json` | Device updates | – | yes |
 | `state/github-token.json` | GitHub read token | sealed | yes |
+| `state/guacd-bau.json` | Remote access, screen: how the last build of guacd ended (ok or a fixed word like laden or bauen, and when); install.sh writes it, the next update replaces it | – | no |
 | `state/guard-xff-hinted.json` | Proxy hint shown | – | no |
 | `state/guard.json` | Lockouts | – | no |
 | `state/gut-saetze.json` | Questions confirmed with 👍 | – | yes |
@@ -793,6 +805,8 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/musik-test-2b-2.mp3` | Sample 2 with 2B (Test music) | – | no |
 | `state/musik-test-2b-klein-1.mp3` | Sample 1 with 2B small (Test music) | – | no |
 | `state/musik-test-2b-klein-2.mp3` | Sample 2 with 2B small (Test music) | – | no |
+| `state/musik-test-2b-sft-1.mp3` | Sample 1 with 2B SFT (Test music, turbo against SFT) | – | no |
+| `state/musik-test-2b-sft-2.mp3` | Sample 2 with 2B SFT (Test music, turbo against SFT) | – | no |
 | `state/musik-test-xl-1.mp3` | Sample 1 with XL (Test music) | – | no |
 | `state/musik-test-xl-2.mp3` | Sample 2 with XL (Test music) | – | no |
 | `state/musik-test.json` | Last measurement (Test music) | – | no |
@@ -828,12 +842,14 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/speech-spark-llm.json` | Own language model engine state | – | no |
 | `state/speech-spark-tts-*.json` | TTS engine state | – | no |
 | `state/speicher-tmp` | Own storage staging | AES-256-GCM | no |
+| `state/spontanhilfe-programme` | Spontaneous help: the program SparkHilfe for control, delivered only after checking the SHA-256 from the signed manifest | – | no |
 | `state/spontanhilfe-verlauf.json` | Spontaneous help: history of the last days (time, admin, kind, duration, home or internet, expired or locked numbers), never the person's name, an address, a picture or the chat; delete under Remote access → Spontaneous help → History of spontaneous help | – | no |
 | `state/telefon.json` | Phone: access to the PBX, handsets | password sealed | yes |
 | `state/telegram.json` | Telegram bot | token sealed | yes |
 | `state/tipps.json` | Tips shown | – | no |
 | `state/traces.jsonl` | Logs → Requests, 48 h | – | no |
 | `state/umzug-hinweis.json` | Hint after the move (time only) | – | no |
+| `state/update-lokal` | The panel's wish for local changes (install, back, drop; one fixed word) | – | no |
 | `state/update-night.json` | Night update | – | no |
 | `state/update-progress.json` | Update progress | – | no |
 | `state/update-target` | Requested update target | – | no |
@@ -853,6 +869,8 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/weiche-unklar.json` | Unclear questions of the switch, anonymized (at most 100, 7 days) | sealed | no |
 | `state/werkstatt-wunsch.json` | The panel's wish for the Workshop's next order (kind, the admin's text), seconds | – | no |
 | `state/werkstatt.json` | The Workshop's results: last 20 orders with answer and patch, code measurement per language model, last test run | – | no |
+| `state/wissensmessung-tmp` | Measuring knowledge: a run's throwaway profile, only while it runs | – | no |
+| `state/wissensmessung.json` | Measuring knowledge: the last 10 runs, numbers only (times, memory, counts, limits) | – | no |
 <!-- /technik:speicher -->
 
 ### Keys and encryption
@@ -1037,9 +1055,9 @@ flowchart TD
 4. <a id="kn-apps-s4"></a>**Code valid?**: The app sends the code. The Spark checks the rate limit (10 per minute and address), compares the hash in constant time and deletes the code at the first hit. An expired or used code never fits. If it is no link code, pruefzugang.py checks a typed review code for Apple's review (12 signs, 14 days, at most 5 iPhones, only with the review access on); wrong review codes lock the address like wrong PINs.
 5. <a id="kn-apps-s5"></a>**Own device key**: profiles.add_device makes the key and stores only its SHA-256 hash in profiles.json. The app gets it exactly once and keeps it in the keychain.
 6. <a id="kn-apps-s6"></a>**Every request with the key**: profiles.current looks up the key's hash in the device list. A device key comes before the cookie; the profile always comes from the key, never from what the app writes.
-7. <a id="kn-apps-s7"></a>**Path allowed for the app?**: An app key only works for the 70 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats, calls …), a few read patterns, the panel areas (admin switch iPhone app with panel) and "My things" (iphone.THINGS, each part only with the release of its own function). Everything else it sees without a profile.
+7. <a id="kn-apps-s7"></a>**Path allowed for the app?**: An app key only works for the 71 paths in profiles.APP_PATHS (chat, speech recognition, conversations, reminders, chats, calls …), a few read patterns, the panel areas (admin switch iPhone app with panel) and "My things" (iphone.THINGS, each part only with the release of its own function). Everything else it sees without a profile.
 8. <a id="kn-apps-s8"></a>**App off right now or My kill switch?**: If the app is switched off by the admin or blocked for the profile, or the profile has My kill switch on, this request has no profile. The app gets „not now“ (503), keeps its pairing and works again as soon as the switch is back.
-9. <a id="kn-apps-s9"></a>**Like a browser of the profile**: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries only the call's random number; the app asks the Spark who calls. For private chats the app makes its own key in the Secure Enclave; the Spark only gets the public half. The Android app's sheet over other apps asks as device „android“ only while „Android: Spark as assistant“ is released (android.assist_gate). Whether the app may keep the pages' last state, hello says with „keep“ (appmerken.keep); on no it deletes it. With „barge_hold“ it only pauses the answer for a barge-in (zwischenruf.py). With „Notes to the device in use“ the app and the pages only say every minute whether they are in use right now (POST /api/zustellung/da, the companion with its idle time); zustellung.pick then sends a note to the device with the last input within the last 120 seconds, else to the phone app at once. If nobody saw it, zustellung.follow sends it once to the phone after 5 minutes; a tapped note says „seen“, and with the answer „zu“ pages and the iPhone take done ones away. Every note stays on the Spark for 24 hours with a random number (mitteilungen.keep, in memory only); only the number goes along. Tapped, it shows as a card above the conversation, with the one button mitteilungen.ziel picks by fixed rules (Open, chat, mail, code, way); only the own profile gets it back.
+9. <a id="kn-apps-s9"></a>**Like a browser of the profile**: The app asks through the same endpoints as the page, with the same limits. What it may do on top (smart home, CarPlay, listening, documents, pictures) the Spark tells it in /api/iphone/hello; the app only shows it and follows it. Calls between profiles ring through a VoIP push from Apple that carries only the call's random number; the app asks the Spark who calls. For private chats the app makes its own key in the Secure Enclave; the Spark only gets the public half. The Android app's sheet over other apps asks as device „android“ only while „Android: Spark as assistant“ is released (android.assist_gate). Whether the app may keep the pages' last state, hello says with „keep“ (appmerken.keep); on no it deletes it. With „barge_hold“ it only pauses the answer for a barge-in (zwischenruf.py). If the profile has an admin role but the app has not right now, hello names the reason in „admin_why“ as a fixed word; if the app key is older than the second step, „Confirm with code“ (POST /api/iphone/admin-step, a fresh code or passkey every time) binds it to it once. With „Notes to the device in use“ the app and the pages only say every minute whether they are in use right now (POST /api/zustellung/da, the companion with its idle time); zustellung.pick then sends a note to the device with the last input within the last 120 seconds, else to the phone app at once. If nobody saw it, zustellung.follow sends it once to the phone after 5 minutes; a tapped note says „seen“, and with the answer „zu“ pages and the iPhone take done ones away. Every note stays on the Spark for 24 hours with a random number (mitteilungen.keep, in memory only); only the number goes along. Tapped, it shows as a card above the conversation, with the one button mitteilungen.ziel picks by fixed rules (Open, chat, mail, code, way); only the own profile gets it back.
 10. <a id="kn-apps-s10"></a>**Account, devices or security?**: Endpoints that change the profile's connections, devices or security only take the own browser login (core.browser_profile). They refuse a device key, except in an area the profile opened for the app; secrets need a fresh code there as well.
 11. <a id="kn-apps-s11"></a>**Removing works at once**: When the iPhone is removed in the panel, its hash leaves the device list. The app's next request finds no profile any more.
 
@@ -1062,7 +1080,7 @@ Applies at: [step 6](#kn-apps-s6), [step 7](#kn-apps-s7)
 
 - **10** minutes a pairing code is valid ([step 3](#kn-apps-s3))
 - **5** iPhones per profile ([step 2](#kn-apps-s2))
-- **70** fixed paths for the app key ([step 7](#kn-apps-s7))
+- **71** fixed paths for the app key ([step 7](#kn-apps-s7))
 - **30** minutes an Android download link is valid ([step 3](#kn-apps-s3))
 - **5** downloads per Android link ([step 3](#kn-apps-s3))
 - **10** minutes a terminal pairing line is valid ([step 3](#kn-apps-s3))
@@ -1546,7 +1564,7 @@ flowchart TD
 9. <a id="kn-middleware-s9"></a>**Too large?**: Every path has its limit, else a small default of two MB holds. A Content-Length that is too large is refused at once; while reading, BodyLimit also counts and stops as soon as more arrives than allowed.
 10. <a id="kn-middleware-s10"></a>**Update running?**: While an update runs, changes under /api/ are held. The assistant, the devices and logging in stay open (update.UNLOCKED).
 11. <a id="kn-middleware-s11"></a>**Endpoint**: Only now the endpoint reads the request and checks login, profile and rate limit itself (the next box, „Login, profile“). With the usage counter on, the request first notes which profile it runs for: what it asks the models counts for that profile.
-12. <a id="kn-middleware-s12"></a>**Answer with protection**: Every answer gets the protective headers (no foreign frames, a strict Content-Security-Policy, on https also HSTS), under /api/ „no-store“. A change goes into the admin log with who, path and status, except normal use from guard.QUIET_WHY. Logins in use are renewed, on https always with Secure.
+12. <a id="kn-middleware-s12"></a>**Answer with protection**: Every answer gets the protective headers (no foreign frames, a strict Content-Security-Policy, on https also HSTS; with remote access web services the page may also frame only its own tunnel door, fernweb.frame_src), under /api/ „no-store“. A change goes into the admin log with who, path and status, except normal use from guard.QUIET_WHY. Logins in use are renewed, on https always with Secure.
 
 **Examples:** Setting in the browser at home: Passes: the endpoint checks the login, the change is in the admin log. · Foreign web page sends a form: Refused with 403 before any endpoint acts. · Kill switch stage 1, app on the road: Blocked with 503 and the stage; the app shows the kill switch. · Big upload without login: Refused with 401, not a byte read.
 
@@ -1646,7 +1664,7 @@ flowchart TD
 5. <a id="kn-sicherheit-s5"></a>**Release and block**: Every function is off until the admin releases it; then it counts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool.
 6. <a id="kn-sicherheit-s6"></a>**Outside stays data**: What a tool reads from outside reaches the model as a marked block of data (textnorm.defuse: the block's end and the model's own markers such as „<|im_start|>“ or „<tool_call>“ are defused; the LLM-Tor does it once more for every message, llm_tor.entschaerft). From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory; after a mail it is 19, everything that asks the internet among them (web search, Wikipedia, weather, transit), so no search word carries mail content out. Whether this holds is checked by the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed). A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures from outside only after the own click and through the guard, a link only after the question with its real address.
 7. <a id="kn-sicherheit-s7"></a>**The language model proposes**: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run.
-8. <a id="kn-sicherheit-s8"></a>**Does it change something?**: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model; likewise only their click merges, renames or deletes points of the knowledge map (with the code of „Confirm“). Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it.
+8. <a id="kn-sicherheit-s8"></a>**Does it change something?**: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model; likewise only their click merges, renames or deletes points of the knowledge map (with the code of „Confirm“); by itself only a fixed rule for the same name in another spelling (wissensdoppelt.aehnlich), never the model, and never against their „Different“. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it.
 9. <a id="kn-sicherheit-s9"></a>**Check the answer**: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML.
 10. <a id="kn-sicherheit-s10"></a>**Traces**: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own). What a service keeps for a profile (the mail supply, mail, attachments, appointments and contacts in Find) lies only sealed with AES-GCM (vorrat.seal), the words in the search index only as HMAC marks with a key per profile (vorrat.marke); without a key nothing is written. Tags the language model proposes for Find are data: fund.pruefe keeps only categories of the fixed list and names that stand in the entry word for word, never a command word.
 
@@ -1726,8 +1744,9 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 - `app/panel/profiles.py` `_cap`: the memory's cap without data loss ([step 8](#kn-sicherheit-s8))
 - `app/panel/gedaechtnis.py` `offer`: learned never replaces confirmed: only an offer ([step 8](#kn-sicherheit-s8))
 - `app/panel/gemerkt.py` `take_back`: undo only for the own, unchanged fact ([step 8](#kn-sicherheit-s8))
+- `app/panel/wissensdoppelt.py` `aehnlich`: points of the map merged by themselves only by a fixed rule, never against „Different“ ([step 8](#kn-sicherheit-s8))
 
-Self-tests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_siegel`, `test_meinedaten`
+Self-tests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_siegel`, `test_meinedaten`, `test_wissensdoppelt`
 
 ### Login, profile
 
@@ -1783,7 +1802,7 @@ flowchart TD
 3. <a id="kn-zugang-s3"></a>**Password or PIN right?**: The check runs in its own thread. An unknown name costs the same work as a wrong PIN, the answer is the same. A wrong attempt waits a second, counts for the lock and, when it comes from outside, for „Emergency stop by itself“.
 4. <a id="kn-zugang-s4"></a>**Second step?**: If the profile (or the admin) has the second step on and the browser is not trusted, the code from the app or a passkey comes next. A wrong code counts like a wrong PIN.
 5. <a id="kn-zugang-s5"></a>**Set the cookie**: The address's counter is cleared; strangers' wrong attempts for the name keep counting. The profile cookie is signed and stands in the list of signed-in browsers; it holds at most 90 days without use and is renewed while used. The admin cookie is signed with the password, a key of this Spark only and the second step. When the second step was part of it (code, passkey or a trusted browser) the session carries its mark: only then does a profile's admin role count, without an admin sign-in of its own. Then the panel reads the profile's calendars and mail ahead in the background (vorwaermen.py, at most every 600 seconds), so its pages open at once.
-6. <a id="kn-zugang-s6"></a>**Find the profile**: First what only the panel itself sets (Telegram, „Ask Spark“ over MCP), then the device key (only its hash is stored), then the cookie: signature, age, session still in the list and not logged out.
+6. <a id="kn-zugang-s6"></a>**Find the profile**: First what only the panel itself sets (Telegram, „Ask Spark“ over MCP), then the device key (only its hash is stored), then the cookie: signature, age, session still in the list and not logged out. The own iPhone app's key counts for an admin role only when it was made after the second step or bound to it once with a code or passkey in the app; otherwise the panel names the reason as a fixed word (key_older, no_mfa, not_admin, app_off, notaus).
 7. <a id="kn-zugang-s7"></a>**Key free for this path?**: A key with a scope (app, watch, room, Home Assistant, writing help, companion, terminal) only reaches its own paths and only while the admin and the profile have the function on. If it is off right now or the profile has its own kill switch on, the panel answers 503 instead of 401, so the app keeps its pairing.
 8. <a id="kn-zugang-s8"></a>**No profile and guest access off?**: Without a profile only the admin passes (cookie or HTTP Basic, whose wrong attempts count like on the login page), or anybody when the admin opened the assistant without password. Guests then only get question and answer.
 9. <a id="kn-zugang-s9"></a>**Too many requests?**: Per profile, else per address, the panel counts the requests of the last minute: in the chat 120 for a profile or the admin, 30 for a guest.
@@ -1801,7 +1820,7 @@ Applies at: [step 6](#kn-zugang-s6), [step 7](#kn-zugang-s7)
 |---|---|---|
 | Browser with profile | signed cookie, session in the list | everything of the profile |
 | Admin | password cookie or HTTP Basic | admin pages; HTTP Basic only without a second step |
-| Profile with an admin role | cookie with the second step's mark or an app key made after it | the admin pages of its role; only „change protection“ asks for the code |
+| Profile with an admin role | cookie with the second step's mark; an app key made after it or confirmed once with a code in the app (otherwise a fixed word as the reason) | the admin pages of its role; only „change protection“ asks for the code |
 | Device key without scope | hash of the key | the profile's assistant, no changes to connections or security |
 | Device key with scope | hash, path, switch | only the paths of its scope |
 | Guest | only with assistant without password | question and answer, no tool |
@@ -1845,6 +1864,7 @@ Applies at: [step 6](#kn-zugang-s6), [step 7](#kn-zugang-s7)
 - `app/panel/account.py` `profile_login`: a profile's login ([step 3](#kn-zugang-s3), [step 5](#kn-zugang-s5))
 - `app/panel/account.py` `second_step`: code or passkey ([step 4](#kn-zugang-s4))
 - `app/panel/core.py` `is_main_admin`: admin by cookie or HTTP Basic ([step 6](#kn-zugang-s6))
+- `app/panel/coadmin.py` `app_why`: why the own iPhone app is not admin right now ([step 6](#kn-zugang-s6))
 - `app/panel/profiles.py` `current`: the profile behind a request ([step 6](#kn-zugang-s6))
 - `app/panel/profiles.py` `_cookie_user`: check a cookie ([step 6](#kn-zugang-s6))
 - `app/panel/core.py` `assistant`: profile, guest access or admin ([step 8](#kn-zugang-s8))
@@ -1907,7 +1927,7 @@ flowchart TD
 2. <a id="kn-vorbereiten-s2"></a>**Trim history, carry the lock**: The history is trimmed to its budget. If an answer from outside text is among the last three messages, this turn starts locked; older ones are not sent at all. When the person asks for a song in their own words, such an answer up to 7 messages back stays along as data (chords, style). A screen description only comes along as a fixed note and locks nothing.
 3. <a id="kn-vorbereiten-s3"></a>**Guest or unknown voice?**: Without a profile, or at an own speaker or phone when speech recognition did not clearly hear the profile's voice (on the phone: and no phone PIN was typed), there is only question and answer: no tool, no memory, no history. Whose voice it was only the panel itself sets, never the request.
 4. <a id="kn-vorbereiten-s4"></a>**The switch reads the question**: Fixed rules put the own latest message into a group. A new own request that does not point back at the answer from outside text leaves that answer and its lock out. If no rule knows the question, the model may pick once from a fixed list in parallel (when the admin has that on). A follow-up like „And tomorrow?“ takes the group of the own question before (intent.follow_up); hint words add their groups, also beside the model's pick. A photo with a wish to change it (bilder.wants_change) is the group pictures, without the model's pick.
-5. <a id="kn-vorbereiten-s5"></a>**Build the system prompt**: The admin's system prompt, plus the profile's length and style and a note per channel (watch, Siri, speaker, phone, Telegram, app, browser). With „Fast answer start“ what holds for this turn only goes with the question instead of the system prompt, so the server reads it from its cache. With „Trim a large memory“ a long memory keeps only the newest facts fixed in it (at most 6000 characters), plus up to 5 older ones that share words with the question, for this turn only (chat.memory_split). When the knowledge book is on and has pages, up to 40 page titles that fit the question best come along, as outside text (wissensbuch.hint).
+5. <a id="kn-vorbereiten-s5"></a>**Build the system prompt**: The admin's system prompt, plus the profile's length and style and a note per channel (watch, Siri, speaker, phone, Telegram, app, browser). With „Fast answer start“ what holds for this turn only goes with the question instead of the system prompt, so the server reads it from its cache. With „Trim a large memory“ a long memory keeps only the newest facts fixed in it (at most 6000 characters), plus up to 5 older ones that share words with the question, for this turn only (chat.memory_split). When the knowledge book is on and has pages, up to 40 page titles that fit the question best come along, as outside text (wissensbuch.hint). When the person limited the conversation to one of their collections (field mappe, an own id, checked by the panel), its entries come along by the fixed levels off, short and whole as outside text (mappen.for_turn); the turn is then locked as after outside text.
 6. <a id="kn-vorbereiten-s6"></a>**Fixed sentence?**: Sentences like „Spark Notaus“, „report a problem: …“ or „that was wrong“ the panel carries out itself, only from the profile's own words and never over MCP. The model only says the result and gets no tool in this turn.
 7. <a id="kn-vorbereiten-s7"></a>**Answer to a question back?**: If the panel asked which device is meant, a button, a number or the name counts as the answer, only in the same conversation, from the own profile and within 2 minutes. „None of these“ brings the whole list, „No, the other one“ corrects the last choice. The panel carries out the choice and offers to remember it; a „yes“ to that counts for 15 minutes.
 8. <a id="kn-vorbereiten-s8"></a>**Kill switch or my kill switch?**: From kill switch stage 2 or with the profile's own kill switch every waiting proposal is dropped; no „yes“ carries anything out. Reading and answering go on.
@@ -1968,7 +1988,7 @@ Self-tests: `test_klaeren`, `test_features`, `test_notaus`, `test_hardening`, `t
 
 ### Switch
 
-The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 24 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow.
+The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 25 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow.
 
 **Why:** Few fitting tools make the model faster and more accurate: it reads less and misses less often. Because the switch only takes away from what rights and locks left, a wrongly sorted sentence can never allow more, at most leave a tool out.
 
@@ -2045,21 +2065,21 @@ Applies at: [step 9](#kn-weiche-s9)
 
 #### Everyday score
 
-- The test sentences (189) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
+- The test sentences (195) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
 
 #### Tool names
 
-- Wherever a tool shows, a readable name comes from one table (93 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
+- Wherever a tool shows, a readable name comes from one table (96 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
 
 #### Numbers (from the code)
 
-- **24** groups of the switch ([step 4](#kn-weiche-s4), [step 6](#kn-weiche-s6))
+- **25** groups of the switch ([step 4](#kn-weiche-s4), [step 6](#kn-weiche-s6))
 - **2** groups at most that still narrow ([step 6](#kn-weiche-s6))
 - **80** characters at most for a follow-up ([step 8](#kn-weiche-s8))
 - **4** seconds at most for the model's pick ([step 10](#kn-weiche-s10))
 - **300 ms** waiting with „Fast answer start“ ([step 10](#kn-weiche-s10))
 - **80 %** default threshold of the classification ([step 10](#kn-weiche-s10))
-- **189** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
+- **195** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
 - **216** everyday sentences for measuring ([step 14](#kn-weiche-s14))
 - **20** versions for undo ([step 4](#kn-weiche-s4))
 
@@ -2280,7 +2300,7 @@ Applies at: [step 4](#kn-werkzeuge-s4)
 - **3** memory notes per answer ([step 1](#kn-werkzeuge-s1))
 - **13** tools locked after outside text ([step 4](#kn-werkzeuge-s4))
 - **7** tools without internet with the kill switch ([step 3](#kn-werkzeuge-s3))
-- **93** tools with a readable name ([step 11](#kn-werkzeuge-s11))
+- **96** tools with a readable name ([step 11](#kn-werkzeuge-s11))
 
 #### Settings
 
@@ -2310,7 +2330,7 @@ Self-tests: `test_fast_start`, `test_dienstwacht`, `test_taten`, `test_notaus`, 
 
 ### Knowledge
 
-Knowledge is everything the Spark knows without going to the internet: the uploaded documents of each profile (one SQLite file wissen.db per profile), the memory, earlier conversations, the own Kiwix archive and created documents. This page shows the way a question finds fitting passages in the documents. Find (fund.py, its own file fund.db per profile) adds an index of titles, fields and tags by fixed rules on top and uses the same search for the text; mail and attachments (fundmail.py) it reads in slices in quiet minutes and keeps only sealed (AES-GCM) with their words as HMAC marks; appointments and contacts (fundquellen.py) likewise, conversations only with date and channel (recall.liste searches their words), lists, reminders, pictures and songs like their source. Periods („last week“, „2023“) come from frisch.spanne by fixed rules, „from the surgery“ looks for the last past appointment in the own calendar (fund.bezug_aus): 14 days before to 60 after rank higher, never a hard limit. With „Tags by the model“ the language model proposes tags in quiet minutes; fund.pruefe keeps only categories of the fixed list and names that stand in the entry word for word, links people, companies and places to the points of the knowledge map (read only) and leaves out what the person removed. A clear hit comes as the panel's fixed sentence (fund.sofort_satz), never in the model's words.
+Knowledge is everything the Spark knows without going to the internet: the uploaded documents of each profile (one SQLite file wissen.db per profile), the memory, earlier conversations, the own Kiwix archive and created documents. This page shows the way a question finds fitting passages in the documents. Find (fund.py, its own file fund.db per profile) adds an index of titles, fields and tags by fixed rules on top and uses the same search for the text; mail and attachments (fundmail.py) it reads in slices in quiet minutes and keeps only sealed (AES-GCM) with their words as HMAC marks; appointments and contacts (fundquellen.py) likewise, conversations only with date and channel (recall.liste searches their words), lists, reminders, pictures and songs like their source. Periods („last week“, „2023“) come from frisch.spanne by fixed rules, „from the surgery“ looks for the last past appointment in the own calendar (fund.bezug_aus): 14 days before to 60 after rank higher, never a hard limit. With „Tags by the model“ the language model proposes tags in quiet minutes; fund.pruefe keeps only categories of the fixed list and names that stand in the entry word for word, links people, companies and places to the points of the knowledge map (read only) and leaves out what the person removed. A clear hit comes as the panel's fixed sentence (fund.sofort_satz), never in the model's words. Collections (mappen.py, tables in wissen.db) bundle own documents, knowledge book pages and notes; a conversation the person limits to a collection gets its entries by fixed levels (mappen.plan: off never, short only the document card, whole the text up to the budget, the rest only through the search) as data, and the answer is locked after it like after any outside text.
 
 **Why:** The language model does not know the own papers. It only gets the few passages the panel picks with fixed rules and two small models on the processor, each with its source. What a document says is outside text: data, never a command.
 
@@ -2365,7 +2385,7 @@ flowchart TD
 3. <a id="kn-wissen-s3"></a>**Meaning vector of the question**: With meaning search a small vector model (own process, processor only) computes the question's vector. It starts only with at least 8.5 GiB free memory (on a panel computer 1.5 GiB) and ends after 10 minutes without work. Without a vector the Spark searches full text only, without an error.
 4. <a id="kn-wissen-s4"></a>**Narrowed?**: With tags or kind, match_docs first finds the documents that carry all tags and the kind. Only their passages stay in the race; if none fits, there are no hits.
 5. <a id="kn-wissen-s5"></a>**Full text: words and context line**: The question is split into search words (filler words dropped, endings roughly cut). The search looks in each passage's words and in its context line (title, kind, headings), which counts only 0.4. The best 30 get a rank.
-6. <a id="kn-wissen-s6"></a>**Mix in meaning**: If the question has a vector, it is compared with every passage's vector. Below 0.75 similarity nothing counts as related; the best 30 above get a rank too. Both ranks are added, so a passage high in both lists rises. The vectors are kept in memory as float16 (half of float32); they are reckoned in float32 block by block, 4096 passages at a time, so the ranking stays the same. They are read again only when passages or used documents change; while vectors are still missing, at most every 30 seconds.
+6. <a id="kn-wissen-s6"></a>**Mix in meaning**: If the question has a vector, it is compared with every passage's vector. Below 0.75 similarity nothing counts as related; the best 30 above get a rank too. Both ranks are added, so a passage high in both lists rises. The vectors are kept in memory as float16 (half of float32); they are reckoned in float32 block by block, 4096 passages at a time, so the ranking stays the same. They are read again only when passages or used documents change; while vectors are still missing, at most every 30 seconds. With „Map helps the search“ a third list from the knowledge map joins (wissenskarte.liste): if the search words name a point (person, company, place …), its passages and those of its neighbours count, at most 50, with the weight 0.5; a passage only from the map so stands behind every one words or meaning found. Only for the own documents.
 7. <a id="kn-wissen-s7"></a>**Newest first?**: With „Newest first“ a passage changed lately gets a small lead, about two places, which shrinks with age. Fit stays more important; each hit then carries its date.
 8. <a id="kn-wissen-s8"></a>**Shared documents of the others**: With „Shared documents“ the same search runs in the other profiles' files, but only over documents marked „for everyone“ there or shared singly with this profile through „Sharing with profiles“ (documents.Offer). With the household folder released for the profile it also runs in the household's store (users/haushalt/). The hits carry the owner's name or „Haushalt“; everything is sorted by rank.
 9. <a id="kn-wissen-s9"></a>**Re-rank hits on?**: Without re-ranking the first five of the mix go on. With re-ranking the mix hands over its best 30.
@@ -2389,6 +2409,8 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 | Kiwix | archive_search and wikipedia via the own Kiwix in the home network | all profiles, never guests |
 | Look locally first | full text without waiting for models, before the first round | as the request's tools |
 | Knowledge book | document_search: fitting pages before the passages | own profile, own documents only |
+| Knowledge map | third list of hits: points the question names and their neighbours | own profile, own documents in the search only |
+| Collections | by the panel before the first round by level: short, whole up to the budget, else search | own profile, own entries only |
 
 #### Knowledge book
 
@@ -2404,12 +2426,19 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - When the knowledge map is on, the language model gets the same document again after the knowledge book, with at most 12 pages the panel picks (the document's pages and pages whose title it names). The model proposes connections as JSON, each with a kind from a fixed list and the number of its passage.
 - The panel keeps a connection only when both pages were offered, both are named in the passage, every number of the detail stands in the passage and a cause (led to, causes, raises, lowers) has a word of reason in the passage. At most 30 per document; „Not right“ never brings the same connection back from the same document.
 - Browser and app draw the map with their own code from names and kinds, never from SVG, Mermaid or DOT of the model. The panel only answers the visible part with at most 150 points; the export as Mermaid or Graphviz text comes from fixed code with cleaned names.
-- SQLite picks the visible part: a fixed query counts the connections per page and document, and around a page WITH RECURSIVE walks at most two steps over the connections; UNION takes each page only once per step, so a ring never runs on. Only the chosen points and at most 400 connections reach the panel. Two fixed queries with values only as parameters, never from the model's text: wissenskarte.rund_um (pages around a page) and wissenskarte.weg (shortest way between two pages, at most 4 steps).
+- The build of the map (names, connections per point and document, who stands next to whom) comes from one fixed query in SQLite and the panel keeps it in memory while nothing changes: triggers count every change of the tables in wissenskarte.STAND_TABELLEN in wk_stand, at most 4 builds for 600 s. Each answer only picks its part from it, at most 400 connections. Two fixed queries with values only as parameters, never from the model's text: wissenskarte.rund_um (points around a point, one query over the indexes per step for the whole ring, each point only once, so a ring never runs on) and wissenskarte.weg (shortest way, at most 4 steps, from both ends at once, ending as soon as they meet). The list for the search finds its points over the word index wk_entwort (triggers mark new and changed points, wissenskarte._worte_sync writes them with every commit), never over all points. The nightly check runs in slices of 4000 connections and 200 deadlines.
 
 #### People, companies and deadlines
 
-- When the switch below the knowledge map is on, the language model proposes only JSON per passage of a document after the connections: people, companies, places, contracts, accounts and deadlines with kind and the number of the passage. The panel keeps a name only by fixed rules (wissenskarte.check_ent): the kind from the fixed list, the name stands in the passage (lower case, without accents, spaces drawn together), 2 to 80 characters without link, markup or command, a deadline only with a date in the passage, an account only as IBAN or number; at most 40 per document and 5000 per profile. Connections of these points are checked by the same rule as those of the pages.
-- Every point has a fixed number (wk_ent) and its passages (wk_ment: document and piece). Other parts only read: wissenskarte.finde_knoten (exactly by name and other names) and wissenskarte.knoten_liste (sorted by name). Merging (wissenskarte.zusammen), renaming and deleting happen only by the owner's click with the code of „Confirm“, never by the model; every change reports to wissenskarte.GEAENDERT. When a document goes, its passages go with it at once, a point without a passage disappears.
+- When the switch below the knowledge map is on, the language model proposes only JSON per passage of a document after the connections: people, companies, places, contracts, accounts and deadlines with kind and the number of the passage. The panel keeps a name only by fixed rules (wissenskarte.check_ent): the kind from the fixed list, the name stands in the passage (lower case, without accents, spaces drawn together), 2 to 80 characters without link, markup or command, a deadline only with a date or a number with a unit in its name, an account only as IBAN or number; at most 40 per document and 15000 per profile. Connections of these points are checked by the same rule as those of the pages.
+- Every point has a fixed number (wk_ent) and its passages (wk_ment: document and piece). Other parts only read: wissenskarte.finde_knoten (exactly by name and other names) and wissenskarte.knoten_liste (sorted by name) and wissenskarte.knoten_von_dok (the points of one document by kind and name, at most 200). Merging (wissenskarte.zusammen), renaming and deleting happen only by the owner's click with the code of „Confirm“, never by the model; every change reports to wissenskarte.GEAENDERT. When a document goes, its passages go with it at once, a point without a passage disappears.
+- Page and point, type rules, deadlines: when a page of the knowledge book has the name of a point of the kind person, firma or ort, both are one point (wk_entpage); the fixed rule wissenskarte._verbinde links them when points are read, at night and once when the table is made, never the model. Their connections count as the point's in view, rund_um, weg and liste; both are renamed together (wissensbuch.retitle, the old title stays in wb_alttitel, so working in makes no double page). Every connection follows the table wissenskarte.TYPEN (allowed kinds at the start and the end, a page counts as „seite“), a deadline needs a date or a number with a unit of time in its name (wissenskarte.frist_name, number words by a fixed list). The nightly check (wissenskarte.nachtpruefung) removes what was stored before and breaks them.
+- Doubles (wissensdoppelt.py) are found by one fixed rule only, wissensdoppelt.aehnlich, never by the model: every name in its normal form per kind (wissensdoppelt.normalform: ß/ss and umlauts, signs, people without form of address and title and „last name, first name“ turned round, companies without legal form and „Firma“, places with „Str.“ as „Straße“). „The same“ are only people with first and last name and places that differ in nothing else, and accounts, contracts and deadlines with the same normal form; while reading such a name becomes an other name of the point (wissensdoppelt.gleich_id), the quiet run merges points already there through wissenskarte.zusammen (wissensdoppelt.lauf). A suggestion are small typing errors (Damerau-Levenshtein at most 2 from 6 letters, 1 for 4 to 5), an initial when exactly one person fits, and a company with the same core; compared only in blocks, at most 200000 pairs per run, at most 300 open suggestions. The run goes in slices of at most 0.2 s, the next goes on where the last stood (in the memory; changed points start it again). „Different“ (wissensdoppelt.verschieden) keeps the names, the pair never comes back; a deleted point also never comes back in a spelling that is „the same“ (wissensdoppelt.gesperrt); merging stays the click with the code. „Merge with …“ shows the 8 most similar points of the same kind on top (wissensdoppelt.auswahl), the rest by search.
+
+#### Map helps the search
+
+- wissenskarte.liste(uid, worte, k) returns piece ids with a rank from 1, read only (SQLite with mode=ro) and only for the own profile. Fixed rules, never the model: the search words hit a point when its name or another name stands whole in the question (compared like wissenskarte.ent_norm) or a word of the name with at least 4 letters that is no number and no legal form (wissenskarte.trifft); at most 20 points. Their neighbours one step away join (the same query as wissenskarte.rund_um), and of all of them the passages in used, read documents. A passage with a named point stands before one with only neighbours, more points before fewer, at most 50.
+- documents.search mixes the list like the others with 60 plus place, weighed 0.5, and only passages the same condition of the search lets through (documents._karte). A hit found so carries „karte“, below the answer it says „via the knowledge map“. The search check measures the mix with the map as a bar of its own. If the map fails, the search goes on without it and writes a line „wissen: kartensuche fehler“.
 
 #### Look locally first
 
@@ -2430,6 +2459,12 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - Fixed topics (gedaechtnis.SLOTS: home, employer, job, partner, children, birthday, diet, pet, car, names, favourites, each with „who“) only the panel recognizes by fixed patterns (gedaechtnis.slot_of). Per place one fact holds the value: something said or corrected gives it the new wording, the old one stays as an earlier version (at most 5, reason „platz“). A value learned by itself never replaces a confirmed one: it waits as an offer on the fact with the card „Take it / Discard“. The model gets per place only the value that holds it, never earlier versions or an offer.
 - Remembered note (gemerkt.py): memory_save sends the fact's number and state along (gemerkt.rev_of), under the answer stands „Remembered: …“ with „Undo“; the conversation keeps only the numbers. Undo (gemerkt.take_back) works only while the fact is unchanged since: a new fact goes, a fixed place gets its earlier version back. What was learned by itself becomes a card „Remembered by itself“ (up to 3 facts, 7 days) with „That's right“ and „Undo“; its title names only a number, never the fact.
 
+#### Measuring knowledge
+
+- Status → Checks → Measure knowledge measures times and memory of these ways, for the test with 5000 documents: the vector matrix (float16, MB and the process's memory before and after), the document search with and without the map, wissensbuch.liste, view, rund_um, weg and wissenskarte.liste, each median and p95 over 20 fixed samples from the own titles and names, and pages, points, connections and connections per document. Numbers only, never a title or a name.
+- It measures in a process of its own with low priority (nice and SCHED_IDLE, one thread), only in a quiet minute, at most 1800 s, one at a time (wissensmessung.lauf). If somebody speaks, it stops. Made-up documents come from a fixed seed in a throwaway profile under state/wissensmessung-tmp and are gone afterwards; the limits of the real code hold, and the run says how much the documents would have brought without them. A real profile is only read (PRAGMA query_only).
+- Other parts join as a measuring part (wissensmessung.MESSTEILE: a name and fn(ordner, anzahl), numbers only, only in the run's throwaway folder), so Find with "fund" (wissensmessung.teil_fund, fundmessung.teil): sealed made-up mails and documents, search times, the size of fund.db, RAM.
+
 #### Numbers (from the code)
 
 - **30** candidates for re-ranking ([step 9](#kn-wissen-s9))
@@ -2443,19 +2478,33 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - **2400** characters up to which a table stays one passage ([step 5](#kn-wissen-s5))
 - **20 s** longest time per PDF for reading its tables ([step 5](#kn-wissen-s5))
 - **5** pages one document may change in the knowledge book ([step 13](#kn-wissen-s13))
-- **300** pages in the knowledge book per profile ([step 13](#kn-wissen-s13))
+- **3000** pages in the knowledge book per profile ([step 13](#kn-wissen-s13))
 - **50** sentences the model checks against their source at night (default) ([step 13](#kn-wissen-s13))
 - **30** connections one document may bring into the knowledge map ([step 13](#kn-wissen-s13))
-- **3000** connections in the knowledge map per profile ([step 13](#kn-wissen-s13))
+- **25000** connections in the knowledge map per profile ([step 13](#kn-wissen-s13))
 - **150** points the map shows at once ([step 13](#kn-wissen-s13))
 - **400** connections the map shows at once ([step 13](#kn-wissen-s13))
 - **4** steps wissenskarte.weg looks for at most ([step 13](#kn-wissen-s13))
+- **4** builds of the map the panel keeps in memory ([step 13](#kn-wissen-s13))
+- **600 s** a build stays this long at most ([step 13](#kn-wissen-s13))
+- **4000** connections per slice of the nightly check ([step 13](#kn-wissen-s13))
+- **200** deadlines without a number one slice removes at most ([step 13](#kn-wissen-s13))
 - **4096** passages per block when comparing vectors ([step 6](#kn-wissen-s6))
 - **200** documents a day for the knowledge map (default) ([step 13](#kn-wissen-s13))
 - **40** people, companies, places, contracts, accounts and deadlines one document may bring ([step 13](#kn-wissen-s13))
-- **5000** such points per profile ([step 13](#kn-wissen-s13))
+- **15000** such points per profile ([step 13](#kn-wissen-s13))
 - **80** characters the name of such a point has at most ([step 13](#kn-wissen-s13))
 - **200** documents a day for these points (default) ([step 13](#kn-wissen-s13))
+- **200000** pairs one run for doubles compares per profile at most ([step 13](#kn-wissen-s13))
+- **300** open suggestions „Maybe double“ per profile ([step 13](#kn-wissen-s13))
+- **8** most similar points on top of „Merge with …“ ([step 13](#kn-wissen-s13))
+- **0.2 s** at most per slice of the quiet run for doubles ([step 13](#kn-wissen-s13))
+- **50** passages the map names to the search at most ([step 6](#kn-wissen-s6))
+- **20** points the search words hit at most ([step 6](#kn-wissen-s6))
+- **0.5** weight of the list from the map ([step 6](#kn-wissen-s6))
+- **50** collections per profile ([step 13](#kn-wissen-s13))
+- **100** entries per collection ([step 13](#kn-wissen-s13))
+- **24000** tokens of a collection to the model (default) ([step 13](#kn-wissen-s13))
 
 #### Settings
 
@@ -2466,6 +2515,8 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - Features → Own documents and below it Knowledge book on: pages from the own documents, with how many documents a day.
 - Features → Own documents → Knowledge book and below it Knowledge map on: connections between the pages, shown in the menu Knowledge book on the page Map, with how many documents a day (own limit).
 - Features → Own documents → Knowledge book → Knowledge map and below it People, companies and deadlines on: points of their own from the documents on the map, with how many documents a day (own limit).
+- Features → Own documents → Knowledge book → Knowledge map → People, companies and deadlines and below it Map helps the search on: the map as third list of hits of the document search (default off).
+- Features → Own documents and below it Collections on: the page Collections in the menu, with how many tokens a collection gives the model at most.
 
 #### What you see
 
@@ -2495,22 +2546,46 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/wissensbuch.py` `answer_block`: fitting pages of the knowledge book with sources ([step 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `check_edge`: fixed rules for every proposed connection ([step 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `view`: the visible part of the map ([step 13](#kn-wissen-s13))
-- `app/panel/wissenskarte.py` `rund_um`: pages around a page, WITH RECURSIVE ([step 13](#kn-wissen-s13))
-- `app/panel/wissenskarte.py` `weg`: shortest way between two pages ([step 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `rund_um`: points around a point, one query per step ([step 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `weg`: shortest way, from both ends at once ([step 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `_bau`: build of the map in memory, new on every change (wk_stand) ([step 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `_worte_sync`: word index of the points for the search's list ([step 6](#kn-wissen-s6))
 - `app/panel/wissenskarte.py` `check_ent`: fixed rules for every person, company, deadline … ([step 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `finde_knoten`: points exactly by name and other names, read only ([step 13](#kn-wissen-s13))
 - `app/panel/wissenskarte.py` `knoten_liste`: points of one kind by name, read only ([step 13](#kn-wissen-s13))
-- `app/panel/wissenskarte.py` `zusammen`: merge two points, only by click ([step 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `knoten_von_dok`: points of one document by kind and name, read only ([step 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `zusammen`: merge two points: by click or by fixed rule when „the same“ ([step 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `_verbinde`: link a page and a point of the same name, fixed rule ([step 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `erlaubt`: type rules per kind of connection (TYPEN) ([step 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `frist_name`: a deadline only with a date or number in its name ([step 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `nachtpruefung`: at night: link, remove violations and deadlines without a number ([step 13](#kn-wissen-s13))
+- `app/panel/wissensbuch.py` `retitle`: rename a page, the old title stays ([step 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `aehnlich`: the same, a suggestion or nothing: the one fixed rule for doubles ([step 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `normalform`: a name in its normal form per kind ([step 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `gleich_id`: while reading: the same name becomes an other name ([step 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `lauf`: quiet run: merge and suggestions in blocks, in slices ([step 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `auswahl`: „Merge with …“: the most similar first ([step 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `verschieden`: „Different“ is for good ([step 13](#kn-wissen-s13))
+- `app/panel/wissensdoppelt.py` `gesperrt`: deleted stays deleted, in every spelling that is „the same“ ([step 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `search_pages`: fitting pages through the search index wb_fts ([step 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `_fts_sync`: bring the pages' search index up to date ([step 13](#kn-wissen-s13))
 - `app/panel/wissensbuch.py` `liste`: page ids with rank for other parts, read only ([step 13](#kn-wissen-s13))
+- `app/panel/wissenskarte.py` `liste`: piece ids from the map for the search, read only ([step 6](#kn-wissen-s6))
+- `app/panel/wissenskarte.py` `trifft`: does a search word hit a point? fixed rule ([step 6](#kn-wissen-s6))
+- `app/panel/documents.py` `_karte`: the map's list into the mix, with the search's filters ([step 6](#kn-wissen-s6))
+- `app/panel/mappen.py` `plan`: fixed rule of the levels off, short, whole and the budget ([step 13](#kn-wissen-s13))
+- `app/panel/mappen.py` `kontext`: a collection's entries as a data block with marks [M…] ([step 13](#kn-wissen-s13))
+- `app/panel/mappen.py` `for_turn`: only the own, released collection; as outside text ([step 13](#kn-wissen-s13))
 - `app/panel/documents.py` `_similar`: similarity block by block in float32 ([step 6](#kn-wissen-s6))
 - `app/panel/gedaechtnis.py` `hint_lines`: facts in three blocks ([step 13](#kn-wissen-s13))
 - `app/panel/profiles.py` `_cap`: cap: only old learned facts make room ([step 13](#kn-wissen-s13))
 - `app/panel/gedaechtnis.py` `slot_of`: a fact's fixed topic place by fixed patterns ([step 13](#kn-wissen-s13))
 - `app/panel/gemerkt.py` `take_back`: undo only while the fact is unchanged ([step 13](#kn-wissen-s13))
+- `app/panel/wissensmessung.py` `lauf`: one measurement in its own process, stops on speech ([step 6](#kn-wissen-s6))
+- `app/panel/wissensmessung.py` `_synth`: the throwaway profile from a fixed seed, with the code's limits ([step 6](#kn-wissen-s6))
+- `app/panel/wissensmessung.py` `MESSTEILE`: the measuring parts, extensible ([step 6](#kn-wissen-s6))
 
-Self-tests: `test_wissen`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`
+Self-tests: `test_wissen`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`, `test_wissenstempo`
 
 ### Guard
 
@@ -3118,7 +3193,7 @@ flowchart TD
 4. <a id="kn-bild-s4"></a>**Within the limits?**: Per profile there are pictures per day (rolling 24 hours), space and at most 300 pictures; songs: songs per day, space and the longest song (musik.start), at most 10 versions per song, 10 own files a day; musik.plan_edit checks every number of a change. Admin profiles have no daily limits (coadmin.unbegrenzt); space and the queue hold for them too. On the whole Spark at most 10 heavy jobs wait, pictures and songs together.
 5. <a id="kn-bild-s5"></a>**Wait for a pause and the place**: The job runs in the background (bilder._work, musik._work): it waits until nobody speaks (vorrang) and joins the one queue for pictures and songs (schwer.run). The fixed rule schwer.pick takes the oldest; while the loaded kind still waits it goes first, but at most 3 times in a row while the other kind waits. When another kind is next, the panel first ends the loaded model. Who stands behind others gets a fixed sentence with the place and about how long (schwer.hint), the card shows "Waiting · place 2 of 3". A picture may take at most 720 seconds.
 6. <a id="kn-bild-s6"></a>**Model loaded?**: bild_server.Engine.start first takes the one place (bedarf.OnDemand.claim, lock bedarf.lock: when the music service holds it, it answers "belegt") and starts sd-server as its own process on 127.0.0.1, but only when enough shared memory is free; otherwise everything else stays undisturbed. Too little memory does not end the job: it keeps its place and tries again every 30 seconds, for at most 600 seconds.
-7. <a id="kn-bild-s7"></a>**Paint**: The engine paints the picture in 4 steps at the chosen size; its own output never reaches the journal, because it would name the prompt.
+7. <a id="kn-bild-s7"></a>**Paint**: The engine paints the picture in 4 steps at the chosen size; its own output never reaches the journal, because it would name the prompt. For a song musik_server.request_body sets every field itself; tempo, key, time signature and a negative prompt it takes only from fixed values (musik_server.metadata). The dungeon music gives all of them, so the planner model does not rewrite its caption. A quality level (fast, good, best) and the loudness the caller only names, the values are in musikmodell.QUALITAET (musik_server.quality); best takes the SFT model with 50 steps only when it is installed, else good. The caller may give the planner's number (lm_seed), so a piece can be repeated or varied.
 8. <a id="kn-bild-s8"></a>**Picture harmless?**: bild_server.nsfw_share lets a classifier on the CPU check the picture. Above 0.5 it is discarded; without the check the panel shows nothing.
 9. <a id="kn-bild-s9"></a>**Mark as AI picture**: bild_server.finish re-encodes the picture as PNG and writes into it that it is AI-made, a changed picture AI-edited (also as an IPTC entry).
 10. <a id="kn-bild-s10"></a>**Picture stored**: The picture goes into the profile's folder with its job (bilder.keep), the card in the chat and in the iPhone app shows it, also in a conversation opened again; a push goes out through the app or Telegram. After a quiet time the picture service stops the engine and frees the memory. A song is kept as MP3 under users/ID/musik/ (musik.keep), with a player in the chat and under Me → Music.
@@ -3179,6 +3254,9 @@ flowchart TD
 - `app/panel/musik.py` `tone`: cut, tempo, key without a model ([step 1](#kn-bild-s1))
 - `app/panel/musik.py` `upload`: own file with the rights tick ([step 1](#kn-bild-s1))
 - `app/musik_server.py` `edit_body`: fixed fields for repaint and cover ([step 7](#kn-bild-s7))
+- `app/musik_server.py` `request_body`: fixed fields for a new song ([step 7](#kn-bild-s7))
+- `app/musik_server.py` `metadata`: tempo, key, time signature and negative prompt from fixed values only (dungeon music) ([step 7](#kn-bild-s7))
+- `app/musik_server.py` `quality`: quality level and loudness from fixed values, best only with the SFT model ([step 7](#kn-bild-s7))
 
 Self-tests: `test_bilder`, `test_musik`, `test_musik_liedtext`, `test_schwer`
 
@@ -3514,7 +3592,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 100). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 108). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3525,7 +3603,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **47** files in every backup ([step 7](#kn-state-s7))
-- **100** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **108** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 
@@ -3775,7 +3853,7 @@ Self-tests: `test_panel`, `test_hardening`, `test_offsite`
 
 ### Workshop
 
-The workshop lets an admin run the full test run on the model computer and, with OpenCode, measure the code, look into a problem or propose a repair. Everything runs in a sealed-off copy of the code; only numbers, an answer and a patch to look at come out. Nothing is ever installed.
+The workshop lets an admin run the full test run on the model computer and, with OpenCode, measure the code, look into a problem or propose a repair. Everything runs in a sealed-off copy of the code; only numbers, an answer and a patch to look at come out. Nothing is ever installed. Next to it, Develop on the Pi: OpenCode in the panel computer's terminal (user spark-dev, its own clone); its local commits are checked, quick-tested in a sandbox and installed like an update, never run as root.
 
 **Why:** Code a model writes or starts must never reach the data, the keys or the internet, and never change anything by itself. So the panel decides by fixed rules, and the sandbox can do nothing but its own copy.
 
@@ -3818,7 +3896,7 @@ flowchart TD
 7. <a id="kn-werkstatt-s7"></a>**OpenCode with fixed rights**: werkstatt.rechte: diagnosis only reads, repair may change files of the copy and start the self-tests; no web, no git push, every other command refused. OpenCode asks the language model through the LLM-Tor at the very back of the line, so conversations go first.
 8. <a id="kn-werkstatt-s8"></a>**Self-tests**: werkstatt.testlauf runs the copy's self-tests like GitHub; whatever turns green on the second try counts as wobbly. Skipped tests (no browser in the copy) count as not run, never as green. For "Red tests again" werkstatt.namen_testen runs each named test alone in its own process: green now, still red or not run.
 9. <a id="kn-werkstatt-s9"></a>**Result as data**: werkstatt.pruefe_ergebnis takes only known fields, numbers in range and words from fixed lists; a patch over 200000 characters is cut. The page shows everything as text only, with fixed sentences on what the result means and what can come next.
-10. <a id="kn-werkstatt-s10"></a>**The admin decides**: The admin hands the patch to a Claude thread or a person; the workshop never installs or pushes anything.
+10. <a id="kn-werkstatt-s10"></a>**The admin decides**: The admin hands the patch to a Claude thread or a person; the workshop never installs or pushes anything. Develop on the Pi is different (OpenCode in the panel computer's terminal, user spark-dev): "sudo speech-spark lokal einspielen" takes its commits (entwickeln.vorbereiten), allows only files the service user runs (entwickeln.pfade_pruefen), tests them in a sandbox without network (entwickeln.sandbox) and installs them like an update, never run as root. An update puts them on the new version with entwickeln.aufsetzen; when that does not fit, the running version stays.
 
 **Examples:** Test run at night: Green, red and wobbly show under Status → Workshop. · Red tests again: Each red test alone: green now or still red. · Propose a repair: A patch with its test result to look at. · No own language model: Refused before anything starts.
 
@@ -3837,11 +3915,13 @@ flowchart TD
 - On the model computer once sudo ./install.sh --werkstatt (OpenCode with a pinned version and checksum).
 - Features → Workshop: on and off, "Test every night" with the start hour.
 - Status → Workshop: start the four orders, look at results, red tests again, copy for Claude, delete.
+- Develop on the Pi: on the panel computer once sudo ./install.sh --entwickeln, then Features → Develop on the Pi on; install with sudo speech-spark lokal einspielen (zurueck, verwerfen, status).
 
 #### What you see
 
 - Status → Workshop: the history on the left, one result on the right with big numbers, what it means (such as "What does red mean?"), the red tests by area, the answer or patch and the next steps.
 - Status → Live, Monitoring and the control centre: part "Workshop" with kind and status, never contents.
+- Status → Live: part "Entwickeln" with "lokale Änderungen: N" and the last fixed reason of a refusal; sudo speech-spark lokal status shows the same in the terminal.
 
 #### In the code
 
@@ -3857,8 +3937,12 @@ flowchart TD
 - `app/werkstatt.py` `namen_testen`: red tests alone again ([step 8](#kn-werkstatt-s8))
 - `app/panel/werkstattseite.py` `nachtest_namen`: names only from the result ([step 1](#kn-werkstatt-s1))
 - `app/werkstatt.py` `pruefe_ergebnis`: result as data ([step 9](#kn-werkstatt-s9))
+- `app/entwickeln.py` `vorbereiten`: take, check and test local changes ([step 10](#kn-werkstatt-s10))
+- `app/entwickeln.py` `pfade_pruefen`: only files the service user runs ([step 10](#kn-werkstatt-s10))
+- `app/entwickeln.py` `sandbox`: limits of the quick test ([step 10](#kn-werkstatt-s10))
+- `app/entwickeln.py` `aufsetzen`: local commits onto the new version ([step 10](#kn-werkstatt-s10))
 
-Self-tests: `test_werkstatt`
+Self-tests: `test_werkstatt`, `test_entwickeln`
 
 ### Mail and contacts
 
@@ -3907,7 +3991,7 @@ flowchart TD
 6. <a id="kn-post-s6"></a>**Supply sealed**: mailvorrat.keep_heads keeps the newest headers, plus the texts read last; vorrat.seal seals them with the Spark's key in the profile's folder.
 7. <a id="kn-post-s7"></a>**Answer with its time**: When something is not fresh from the provider, frisch.stand says with a fixed sentence when it is from ("as of yesterday 18:00"). The pages show at once what is there and load the rest behind.
 8. <a id="kn-post-s8"></a>**Change something?**: Reading is all that works without further switches. A confirmation code from a new mail becomes, with a switch of its own, only a note on the device in use (mailcode.arrived), never by Telegram, never in a log.
-9. <a id="kn-post-s9"></a>**Change with a check**: A mail goes out only after the preview sheet and the tap on Send (senden.preview, senden.send, at most 30 a day). "Send later" keeps it sealed until its time (senden.later); if a sending broke off, it never goes a second time. "Sort every mail here" (einordnen.start) proposes first and moves by fixed rules only after the tap, with Undo. contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is overwritten.
+9. <a id="kn-post-s9"></a>**Change with a check**: A mail goes out only after the preview sheet and the tap on Send (senden.preview, senden.send, at most 30 a day). "Send later" keeps it sealed until its time (senden.later); if a sending broke off, it never goes a second time. "Sort every mail here" (einordnen.start) proposes first and moves by fixed rules only after the tap, with Undo. What the mail rules and "Inbox tidying" move by themselves stays 30 days with its Message-ID on one list (mailregeln.spark_moved); when the person puts such a mail somewhere else, back into the inbox for instance, no sorter touches it again. With "Learn sorting from corrections" that is a correction (mailregeln.correct, also the folder "Falsch sortiert"): the sender becomes an exception of the rule, after 3 corrections in 30 days it pauses, a card asks; headers only, the model never decides. Had the model sorted the mail, the card asks "Mails from … always to …?" (a rule only by button), and for "Falsch sortiert" the model may only suggest a folder there is, from the domain and the folder names (mailregeln.model_hint, tidy.suggest_folder; any other answer is dropped). After "Make the rule" the new rule decides: "Inbox tidying" asks no more about this sender (mailregeln.settle). Under E-mail → Rules the corrections are listed (mailregeln.fix_list) with "Undo" (mailregeln.undo_fix takes back exception and pause, never moves a mail). contacts.save writes a card back with If-Match: if it changed meanwhile, nothing is overwritten.
 10. <a id="kn-post-s10"></a>**Door for apps**: kalenderserver.login refuses other sites' web pages, locks wrong passwords like a PIN, keeps My emergency stop and the switch and counts the rate limit. Then the app sees only the profile's Spark calendars and the address book "On the Spark"; kontaktserver._write takes one vCard per card, at most 2000, and writes only with "Edit contacts".
 11. <a id="kn-post-s11"></a>**Own data only**: No profile sees another one's mail, appointments or contacts, except a calendar its owner shares.
 
@@ -3920,6 +4004,8 @@ flowchart TD
 - **300** headers per mailbox in the supply ([step 6](#kn-post-s6))
 - **40** mail texts per profile in the supply ([step 6](#kn-post-s6))
 - **30** mails at most a day ([step 9](#kn-post-s9))
+- **30 Tage** the Spark remembers what it moved ([step 9](#kn-post-s9))
+- **3** corrections pause a rule ([step 9](#kn-post-s9))
 - **2000** cards in the address book "On the Spark" ([step 10](#kn-post-s10))
 
 #### Settings
@@ -3945,12 +4031,14 @@ flowchart TD
 - `app/panel/senden.py` `send`: send after the tap ([step 9](#kn-post-s9))
 - `app/panel/senden.py` `later`: send later, sealed ([step 9](#kn-post-s9))
 - `app/panel/einordnen.py` `start`: sort a folder, a proposal first ([step 9](#kn-post-s9))
+- `app/panel/mailregeln.py` `spark_moved`: what the Spark moved, no ping-pong ([step 9](#kn-post-s9))
+- `app/panel/mailregeln.py` `model_hint`: the model only suggests a folder there is ([step 9](#kn-post-s9))
 - `app/panel/mailcode.py` `arrived`: confirmation code as a note ([step 8](#kn-post-s8))
 - `app/panel/contacts.py` `save`: card back with If-Match ([step 9](#kn-post-s9))
 - `app/panel/kalenderserver.py` `login`: door for calendar and contacts apps ([step 2](#kn-post-s2), [step 10](#kn-post-s10))
 - `app/panel/kontaktserver.py` `_write`: card from a contacts app ([step 10](#kn-post-s10))
 
-Self-tests: `test_mailvorrat`, `test_vorrat`, `test_mails_senden`, `test_kalenderserver`, `test_kontaktserver`, `test_kontakte_seite`, `test_kalenderspiegel`, `test_mailcode`, `test_einordnen`
+Self-tests: `test_mailvorrat`, `test_vorrat`, `test_mails_senden`, `test_kalenderserver`, `test_kontaktserver`, `test_kontakte_seite`, `test_kalenderspiegel`, `test_mailcode`, `test_einordnen`, `test_mailregeln`, `test_tidy`, `test_mail_lernen`
 
 ### Remote access
 
@@ -3986,10 +4074,10 @@ flowchart TD
 1. <a id="kn-fernzugang-s1"></a>**Admin opens remote access**: Features → Remote access to servers is off by default (fernzugang.admin_on) and only for admins with the second step; guests and the language model never reach it.
 2. <a id="kn-fernzugang-s2"></a>**Page unlocked?**: A code or passkey unlocks the page for 5 to 120 minutes, only for this login (in the own iPhone app for its key, fernzugang._tor) and from the same place (fernzugang.entsperrt_bis); locking, logging out and the kill switch lock at once, a restart too.
 3. <a id="kn-fernzugang-s3"></a>**Pairing**: „Pair“ asks for the code every time (fernzugang.admin_pair) and shows one line for the server with a one-time code, valid 10 minutes, plus a one-time link with a QR code that shows only this line on the new system, never the code (fernzugang.link_check). Windows: the link gives the file spark-anker-einrichten.cmd once (fernzugang.link_file) with a one-time key instead of the code; the system then waits until the admin confirms it with a code or passkey (fernzugang.admin_confirm). At most 10 systems; each gets an SSH key of the panel of its own, its host key is pinned.
-4. <a id="kn-fernzugang-s4"></a>**Ticket for the window**: „Shell“ hands out a one-time ticket (fernzugang.admin_session) that opens exactly one web terminal for 30 seconds (fernzugang.terminal_ws); at most 4 sessions at once.
+4. <a id="kn-fernzugang-s4"></a>**Ticket for the window**: „Shell“ hands out a one-time ticket (fernzugang.admin_session) that opens exactly one web terminal for 30 seconds (fernzugang.terminal_ws); at most 8 sessions at once. Each one is a tab; side by side, 2 × 2 or as an overview only the page shows several at once, on the panel each stays on its own. „Send to all“ (fernzugang.admin_alle, own switch, off) writes one checked line into several shells of the own login.
 5. <a id="kn-fernzugang-s5"></a>**Another host key?**: If the server shows another host key than at pairing, there is no connection (fernzugang.hostkey_wrong); after a reinstall remove and pair again.
-6. <a id="kn-fernzugang-s6"></a>**Shell, files, screen**: SSH runs through the anchor's channel; if the window drops, the shell waits 120 seconds. A heartbeat every 5 seconds measures round trip and rate; output waits for the window in at most 32 pieces, then SSH slows the server (backpressure). Files through SFTP in the same connection (ferndateien.listing), downloads with a one-time link for 60 seconds; big files in pieces of 8 MB MB with a SHA-256 per piece (ferngross.upload_piece). The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most 15 pictures a second. The assistant (fernzugang.admin_help) asks only the own model and suggests, nothing is typed by itself. Notes per system are stored sealed, 10 versions stay; the model reads them only when ticked (fernnotiz.fuer_modell). Folders only order the list (fernordner.view), at most 30; rights stay per system.
-7. <a id="kn-fernzugang-s7"></a>**Spontaneous help**: A help (spontanhilfe.admin_new) gives a number for 10 minutes, after 5 wrong ones it is dead. The screen goes by WebRTC directly between the two browsers, on the way through TURN on tars; the panel only connects them.
+6. <a id="kn-fernzugang-s6"></a>**Shell, files, screen**: SSH runs through the anchor's channel; if the window drops, the shell waits 120 seconds. A heartbeat every 5 seconds measures round trip and rate; output waits for the window in at most 32 pieces, then SSH slows the server (backpressure). Files through SFTP in the same connection (ferndateien.listing), downloads with a one-time link for 60 seconds; big files in pieces of 8 MB MB with a SHA-256 per piece (ferngross.upload_piece). As root or another user only when the server itself gave it free (sudoers only for its sftp-server with -R) and the admin switched it on per system (fernals.choose); writing with a fresh code. The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most 15 pictures a second; the Spark builds guacd 1.6.0 itself from Apache's source, pinned with SHA-256 (fernbild.dienst tells the page why it is missing). The assistant (fernzugang.admin_help) asks only the own model and suggests, nothing is typed by itself. Notes per system are stored sealed, 10 versions stay; the model reads them only when ticked (fernnotiz.fuer_modell). Folders only order the list (fernordner.view), at most 30; rights stay per system. Web services come through the tunnel door on port 31090, an origin of its own, never the panel's (fernweb.verbindung): without the panel's cookies and without sign-in, each service's cookies apart, only the panel may embed it. Targets only by fixed rules (fernweb.ziel_ok), which the anchor checks again itself: 127.0.0.1 there, private addresses only with „Netz dahinter“, never the Spark's networks. Unlike the shell this is not SSH end to end but goes through the anchor's TLS line with a pinned certificate; at most 4 tunnels with 8 connections each and backpressure.
+7. <a id="kn-fernzugang-s7"></a>**Spontaneous help**: A help (spontanhilfe.admin_new) gives a number for 10 minutes, after 5 wrong ones it is dead. The screen goes by WebRTC directly between the two browsers, on the way through TURN on tars; the panel only connects them. Control (spontansteuern.program_ws) goes through the program SparkHilfe with a one-time key for 10 minutes; pictures and inputs then pass through the panel.
 8. <a id="kn-fernzugang-s8"></a>**Logs and history**: Logs with fixed words and numbers only (fernzugang.log), the history only time, system, admin, kind and duration (fernzugang.verlauf_add). The kill switch closes every line (fernzugang.notaus_close).
 
 **Examples:** Open a shell: Unlocked, ticket, host key fits: the shell runs. · Server reinstalled: Another host key: no connection. · Page locked: Unlock with a code or passkey first.
@@ -4004,11 +4092,14 @@ flowchart TD
 - **10** versions of a note stay ([step 6](#kn-fernzugang-s6))
 - **30** folders at most ([step 6](#kn-fernzugang-s6))
 - **8 MB MB** is one piece of a big file ([step 6](#kn-fernzugang-s6))
+- **4** web services open at once at most ([step 6](#kn-fernzugang-s6))
+- **8** connections per web service at once at most ([step 6](#kn-fernzugang-s6))
+- **31090** port of the tunnel door ([step 6](#kn-fernzugang-s6))
 - **10 min** a number of spontaneous help is valid ([step 7](#kn-fernzugang-s7))
 
 #### Settings
 
-- Features → Remote access to servers: switch on, pair systems, screen, spontaneous help, notes and folders.
+- Features → Remote access to servers: switch on, pair systems, screen, web services, spontaneous help, notes and folders.
 
 #### What you see
 
@@ -4023,14 +4114,18 @@ flowchart TD
 - `app/panel/fernzugang.py` `terminal_ws`: the web terminal with a ticket ([step 4](#kn-fernzugang-s4))
 - `app/panel/fernzugang.py` `hostkey_wrong`: pinned host key ([step 5](#kn-fernzugang-s5))
 - `app/panel/ferndateien.py` `listing`: files through SFTP ([step 6](#kn-fernzugang-s6))
+- `app/panel/fernals.py` `choose`: files as another user: only with both consents ([step 6](#kn-fernzugang-s6))
 - `app/panel/fernbild.py` `GUACD`: guacd on 127.0.0.1 only ([step 6](#kn-fernzugang-s6))
 - `app/panel/spontanhilfe.py` `admin_new`: a new spontaneous help ([step 7](#kn-fernzugang-s7))
+- `app/panel/spontansteuern.py` `program_ws`: control: the socket of the program SparkHilfe ([step 7](#kn-fernzugang-s7))
 - `app/panel/fernzugang.py` `notaus_close`: kill switch closes every line ([step 8](#kn-fernzugang-s8))
 - `app/panel/fernnotiz.py` `fuer_modell`: the note for the model only when ticked ([step 6](#kn-fernzugang-s6))
 - `app/panel/fernordner.py` `view`: folders: only the order of the list ([step 6](#kn-fernzugang-s6))
 - `app/panel/ferngross.py` `upload_piece`: big file: a piece only whole and with a matching SHA-256 ([step 6](#kn-fernzugang-s6))
+- `app/panel/fernweb.py` `ziel_ok`: web services: where a tunnel may go ([step 6](#kn-fernzugang-s6))
+- `app/panel/fernweb.py` `verbindung`: the tunnel door: heads rewritten, cookies apart ([step 6](#kn-fernzugang-s6))
 
-Self-tests: `test_fernzugang`, `test_fernbild`, `test_spontanhilfe`, `test_ferngross`
+Self-tests: `test_fernzugang`, `test_fernbild`, `test_spontanhilfe`, `test_ferngross`, `test_fernweb`, `test_fernals`, `test_spontansteuern`
 
 ### Remote servers
 

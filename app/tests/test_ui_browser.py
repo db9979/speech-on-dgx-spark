@@ -44,7 +44,12 @@ class BrowserThere(unittest.TestCase):
         for name in sorted(os.listdir(here)):
             if name.startswith("test_") and name.endswith(".py"):
                 with open(os.path.join(here, name), encoding="utf-8") as f:
-                    self.assertNotIn("SPEECH_UI" + "_TESTS", f.read(), name)
+                    text = f.read()
+                self.assertNotIn("SPEECH_UI" + "_TESTS", text, name)
+                # a module that opens the browser skips with browser_ok() (2026-10-29: test_mail_nachladen.Page had
+                # no skip and was red in the Werkstatt copy on the Pi, night run and „Rote Tests noch mal“)
+                if name != "test_ui_browser.py" and re.search(r"Browser\.setUpClass|async_playwright", text):
+                    self.assertIn("browser_ok()", text, name)
 
 
 # what the hands-free test shows when the microphone did not come back
@@ -97,7 +102,10 @@ class Browser(unittest.TestCase):
             await pg.wait_for_timeout(100)
         self.fail(f"never true: {expr}")
 
-    async def page(self, p, width, height, mic=False, csp=False):
+    async def page(self, p, width, height, mic=False, csp=False, who=("Uitest", "4711")):
+        """A browser page signed in as the admin and as the profile who (name, PIN). Uitest is the profile all page
+        tests share, with one budget of every rate limit per minute; a test that asks one endpoint often brings its
+        own profile, else what the tests before it asked takes its budget away (V01.1.295)."""
         exe = chromium()
         args = ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream",
                 "--autoplay-policy=no-user-gesture-required"] if mic else []
@@ -122,11 +130,11 @@ class Browser(unittest.TestCase):
                     raise
                 await pg.wait_for_timeout(500)
         self.assertEqual(r.status, 200)
-        r = await pg.request.post(base + "/api/profile/login", data={"name": "Uitest", "pin": "4711"})
+        r = await pg.request.post(base + "/api/profile/login", data={"name": who[0], "pin": who[1]})
         self.assertEqual(r.status, 200)
         await pg.goto(base + "/")
         # the page knows who is signed in (not a fixed 800 ms: a GitHub runner with the run's 600 profiles is slow)
-        await self.until(pg, "typeof PROFILE!=='undefined'&&!!PROFILE&&PROFILE.name==='Uitest'&&ADMIN===true")
+        await self.until(pg, "typeof PROFILE!=='undefined'&&!!PROFILE&&PROFILE.name===%s&&ADMIN===true" % json.dumps(who[0]))
         await pg.wait_for_timeout(300)
         await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
         # the Dungeon-Master's guide opens once per device as a window over the table (V01.1.004): a fresh test browser
@@ -371,6 +379,8 @@ class Browser(unittest.TestCase):
         import profiles
         import tipps
         uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Uitest")
+        # back as they were afterwards: tasks=False left behind took Listen away from test_listen_page (red at V01.1.272)
+        helpers.keep_chat(self, "spark_help", "feature_tips", "tasks", "routing", "direct_read", "deny")
         helpers.set_config(spark_help=True, feature_tips=True, tasks=False, routing=False, direct_read=False, deny={})
 
         async def go():
@@ -1015,6 +1025,8 @@ class Browser(unittest.TestCase):
         import profiles
         import tasks
         me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
+        helpers.keep_chat(self, "tasks")
+        helpers.set_config(tasks=True)      # its own switch, never what an earlier test left (red at V01.1.272)
         asyncio.run(tasks.add(me, "einkauf", ["2 Milch", "Brot"]))
 
         async def go():
@@ -1425,7 +1437,15 @@ class Browser(unittest.TestCase):
         import profiles
         import push
         helpers.set_config(doc_make=True, deny={})
-        me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
+        # a profile of its own: the card and Ich → Dokumente ask /api/make (rate limit „make“, 60 a minute per profile)
+        # about 18 times, and what the page tests before it asked for the shared Uitest took the rest, so the card
+        # never got its looks (red at V01.1.287)
+        who = ("Doku Dora", "4712")
+        try:
+            profiles.add_user(*who)
+        except Exception:
+            pass   # already there from an earlier run of this test
+        me = next(u for u in profiles._load()["users"] if u["name"] == who[0])["id"]
         real_part, real_push, real_bg = docmake.write_part, push.send, docmake.BACKGROUND
         docmake.BACKGROUND = True      # test_docmake runs its jobs itself; here the panel runs them
 
@@ -1447,12 +1467,12 @@ class Browser(unittest.TestCase):
                     docmake._pending.clear()
                     docmake._jobs.clear()
                     docmake._day.update(day="", n={})
-                    ctx = {"who": {"id": me, "name": "Uitest"}, "own": True, "private": True, "client": "web",
+                    ctx = {"who": {"id": me, "name": who[0]}, "own": True, "private": True, "client": "web",
                            "src": "web:x", "text": "Erstell eine Präsentation über die Pool-Saison", "out": None}
                     await docmake.tool("document_plan", {"kind": "praesentation", "title": "Pool-Saison 2026 mit einem recht langen Titel",
                                                          "sections": ["Rückblick", "Zahlen und Kosten", "Ausblick"]}, ctx)
                     card = _json.dumps(docmake.plan_public(docmake._pending[me]))
-                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    br, pg, errors = await self.page(p, w, h, csp=True, who=who)
                     try:
                         if name == "pc":   # released by the admin: the block is there at once, nothing to switch on
                             await pg.evaluate("openMe('docbox')")
@@ -1551,7 +1571,9 @@ class Browser(unittest.TestCase):
                         await self.until(pg, "document.querySelectorAll('#doclist .ld-badge.off').length===2", 20)
                         await pg.click("#docbulk [data-bulk=use]")
                         await self.until(pg, "document.querySelectorAll('#doclist .ld-badge.off').length===0", 20)
-                        self.assertEqual(len(documents.list_docs(me, used_only=True)), 60)
+                        # only its own 60 count: a document another test left for Uitest made 61 (red at V01.1.272)
+                        used = {d["id"] for d in documents.list_docs(me, used_only=True)}
+                        self.assertEqual(len(used & set(ids)), 60, name)
                         self.assertEqual(errors, [], name)
                     finally:
                         await br.close()
@@ -2648,11 +2670,11 @@ class Browser(unittest.TestCase):
                     self.assertTrue(await pg.evaluate(f"!!document.querySelector('#devlist select[data-dmove=\"{ids['Uiskript']}\"]')"), name)
                     for fixed in ("Uiphone", "Uiuhr"):
                         self.assertFalse(await pg.evaluate(f"!!document.querySelector('[data-dmove=\"{ids[fixed]}\"]')"), name)
-                    rows = await pg.evaluate("""[...document.querySelectorAll('#devlist tr')].filter(r=>/Uiskript|Uiphone|Uiuhr/.test(r.textContent)).map(r=>r.textContent)""")
+                    rows = await pg.evaluate("""[...document.querySelectorAll('#devlist .ld-row')].filter(r=>/Uiskript|Uiphone|Uiuhr/.test(r.textContent)).map(r=>r.textContent)""")
                     self.assertTrue(any("Pebble-Uhr" in r and "fest" in r for r in rows), rows)
                     self.assertTrue(any("iPhone-App" in r and "fest" in r for r in rows), rows)
                     # the profile and the button sit in the middle of their row, like in every other row
-                    off = await pg.evaluate("""[...document.querySelectorAll('#devlist tr')].map(r=>{const c=[...r.children].slice(1).map(td=>{const e=td.firstElementChild;if(!e)return null;const b=e.getBoundingClientRect(),t=td.getBoundingClientRect();return Math.abs((b.top+b.bottom)/2-(t.top+t.bottom)/2)}).filter(x=>x!==null);return Math.max(0,...c)})""")
+                    off = await pg.evaluate("""[...document.querySelectorAll('#devlist .ld-row')].map(r=>{const t=(r.querySelector('.ld-right')||r).getBoundingClientRect();const c=[...r.querySelectorAll('.ld-right>*')].map(e=>{const b=e.getBoundingClientRect();return Math.abs((b.top+b.bottom)/2-(t.top+t.bottom)/2)});return Math.max(0,...c)})""")
                     self.assertLess(max(off), 4, (name, off))
                     await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP), f"geraete-{name}.png"), full_page=False)
                     self.assertEqual(errors, [])
@@ -2962,7 +2984,7 @@ class Browser(unittest.TestCase):
                     helpers.set_config(deny={"weather": [me]})
                     br, pg, errors = await self.page(p, w, h)
                     await pg.evaluate("goSec('prof')")
-                    await pg.wait_for_selector("#proflist tr.pguest")
+                    await pg.wait_for_selector("#proflist .pguest")
                     self.assertFalse(await pg.is_visible("#pname"))
                     await pg.click("#pnew summary")
                     self.assertTrue(await pg.is_visible("#pname"))
@@ -2970,7 +2992,7 @@ class Browser(unittest.TestCase):
                     # at V01.0.721 when the parts were cut anew), so the search brings it up; awaited, not typed, so
                     # no late reload of the list wipes the open detail
                     await pg.evaluate("PL.q='Uitest';PL.page=0;loadProf()")
-                    await pg.click(f"#proflist [data-popen='{me}']")
+                    await pg.click(f"#proflist [data-prow='{me}']")
                     await pg.wait_for_selector("#pdetail .pdet")
                     heads = await pg.evaluate("[...document.querySelectorAll('#pdetail h3.sec')].map(x=>x.textContent)")
                     self.assertEqual(heads, ["Zugang", "Rufname", "Geräte", "Funktionen", "Rechte", "Daten"])
@@ -3535,9 +3557,9 @@ class Browser(unittest.TestCase):
                         await self.until(pg, "!document.querySelector('#aptabs [data-tab=chats]').hidden")
                         await self.until(pg, "!document.querySelector('#aptabs [data-tab=chats] .apcnt').hidden")
                         await pg.click("#aptabs [data-tab=chats]")
-                    await pg.wait_for_selector(f".cx-row[data-cx='{cid}']")
-                    self.assertIn("Chatpartner", await pg.inner_text(f".cx-row[data-cx='{cid}']"))
-                    await pg.click(f".cx-row[data-cx='{cid}']")
+                    await pg.wait_for_selector(f"#cxlist .ld-row[data-cx='{cid}']")
+                    self.assertIn("Chatpartner", await pg.inner_text(f"#cxlist .ld-row[data-cx='{cid}']"))
+                    await pg.click(f"#cxlist .ld-row[data-cx='{cid}']")
                     await pg.wait_for_selector(".cx-msg:not(.mine) .cx-txt")
                     self.assertIn("kommst du heute", await pg.inner_text("#cxlog"))
                     await pg.fill("#cxtext", "Ja, gern!")
@@ -3581,7 +3603,7 @@ class Browser(unittest.TestCase):
             helpers.set_config(chats=False, chats_groups=False)
 
     def test_chat_photo_voice_and_invite(self):
-        """Chats Schritt B (chats.js): with "Fotos, Dateien und Sprache" the composer shows 📎 and 🎤; a photo
+        """Chats Schritt B (chats.js): with "Fotos, Dateien und Sprache" the composer shows the paper clip and the microphone; a photo
         goes up as the raw body and comes back as a preview, a tap opens it large and a tap closes it; with
         "In einen Chat einladen" the new-chat pane offers "Jemanden einladen". Strict CSP, nothing sticks out."""
         import io
@@ -3618,7 +3640,7 @@ class Browser(unittest.TestCase):
                     else:
                         await self.until(pg, "!document.querySelector('#aptabs [data-tab=chats]').hidden")
                         await pg.click("#aptabs [data-tab=chats]")
-                    await pg.click(f".cx-row[data-cx='{cid}']")
+                    await pg.click(f"#cxlist .ld-row[data-cx='{cid}']")
                     await pg.wait_for_selector("#cxatt:not([hidden])")
                     self.assertTrue(await pg.is_visible("#cxmic"))
                     await pg.set_input_files("#cxfile", files=[{"name": "urlaub.jpg", "mimeType": "image/jpeg", "buffer": photo}])
@@ -3649,7 +3671,7 @@ class Browser(unittest.TestCase):
             join._write(jd)
 
     def test_private_chat_end_to_end(self):
-        """Private Chats Schritt C (chatsec.js): "🔒 Privat" beside a person gives this browser its own key and opens
+        """Private Chats Schritt C (chatsec.js): "Privat" (with the lock symbol) beside a person gives this browser its own key and opens
         the private chat; what the page sends the Spark keeps only as a box that the other device (here Python with
         its own key) opens; a box from Python is read in the page; a photo goes encrypted and is shown from a blob
         address; ⓘ shows the same Sicherheitsnummer Python computes. Strict CSP, nothing sticks out."""
@@ -3723,7 +3745,7 @@ class Browser(unittest.TestCase):
                     await self.until(pg, f"!!(CX.S&&(CX.S.contacts||[]).some(x=>x.id=={other['id']!r}))", 20)
                     await pg.click("#cxnew")
                     await pg.click(f"[data-cxn=priv][data-to='{other['id']}']")
-                    await self.until(pg, "$('cxtitle').textContent.includes('🔒')&&!$('cxcomp').hidden")
+                    await self.until(pg, "$('cxtitle').dataset.mk==='private'&&!!$('cxtitle').querySelector('svg.cxmk')&&!$('cxcomp').hidden")
                     cid = chatsec.priv_id(me["id"], other["id"])
                     await pg.fill("#cxtext", "Streng geheim 42")
                     await pg.click("#cxsend")
@@ -3798,7 +3820,7 @@ class Browser(unittest.TestCase):
                 chatsec.forget(u)
 
     def test_a_video_call_between_two_pages(self):
-        """Anrufe (anrufe.js): 🎥 in a chat of two rings the other person's open Chats page, "Mit Video" connects the
+        """Anrufe (anrufe.js): the video button in a chat of two rings the other person's open Chats page, "Mit Video" connects the
         two pages straight (WebRTC, fake camera and microphone, no Vermittler at home), both show the running time,
         hanging up closes both windows and leaves one line "call" in the chat. Strict CSP, nothing sticks out."""
         import anrufe
@@ -3878,7 +3900,7 @@ class Browser(unittest.TestCase):
 
     def test_chat_with_someone_on_another_spark(self):
         """Spark-Verbund V1 (verbund.js): a request from another Spark (played in Python, signed with its own key)
-        shows as "Kontaktanfragen" on top of the list; Annehmen opens the chat with 🌐, a message goes into the
+        shows as "Kontaktanfragen" on top of the list; Annehmen opens the chat with the globe symbol, a message goes into the
         queue for the other Spark. Own address and QR code in the pane. Strict CSP, nothing sticks out at 320 px."""
         import base64
         import json
@@ -3925,7 +3947,7 @@ class Browser(unittest.TestCase):
                     over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                     self.assertLessEqual(over, 1, f"{name}/verbund: {over}px zu breit")
                     await pg.click("[data-vb=ok]")
-                    await self.until(pg, "$('cxtitle').textContent.includes('🌐')&&!$('cxcomp').hidden")
+                    await self.until(pg, "$('cxtitle').dataset.mk==='far'&&!!$('cxtitle').querySelector('svg.cxmk')&&!$('cxcomp').hidden")
                     self.assertTrue(await pg.evaluate("$('cxatt').hidden"))     # text only across Sparks (V1)
                     await pg.fill("#cxtext", "Hallo nach drüben " + name)
                     await pg.click("#cxsend")

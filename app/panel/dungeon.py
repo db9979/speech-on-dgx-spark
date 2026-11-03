@@ -4617,9 +4617,14 @@ def first_find(r, rd, wuerfe, rng=None):
 
 
 def fund_ort(rd):
-    """Where a find counts as made: the map's place, else the scene's place."""
+    """Where a find counts as made: the map's place (the vault's door while inside one), else the scene's place. The
+    map counts its places from 0: the first place is a place too (with `or` it fell through to the scene's name, which
+    the narration sets later, and a second find came at the same place)."""
     k = rd.get("karte") or {}
-    return str(k.get("drin") or k.get("hier") or (rd.get("szene") or {}).get("ort") or "")
+    for at in (k.get("drin"), k.get("hier")):
+        if at is not None and at != "":
+            return str(at)
+    return str((rd.get("szene") or {}).get("ort") or "")
 
 
 def put_find(r, rd, held, i, it, gold, anlass, rng=None, grund="", ort=None):

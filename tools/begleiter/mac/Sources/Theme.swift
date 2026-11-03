@@ -1,8 +1,10 @@
 import AppKit
 import SwiftUI
 
-// Design A ("Spark-Gesicht"): the panel's colours, the face, the gradient, chips and buttons. Every colour follows
-// the system's light/dark appearance (and the stronger lines of "Kontrast erhöhen").
+// "Klar 2 · Systemstil" (Redesign Stufe 9): the panel's colours from app/panel/static/tokens.css (neutral greys, one
+// blue accent, no gradients, no shadows in a window), the face, chips and buttons. Every colour follows the system's
+// light/dark appearance (and the stronger lines of "Kontrast erhöhen"). Every colour of the windows is here
+// (test_design_tokens.Begleiter: equal to the tokens, no colour literal in another file).
 
 extension NSColor {
     convenience init(hex: UInt32, alpha: CGFloat = 1) {
@@ -23,18 +25,23 @@ enum Theme {
         })
     }
 
-    static let bg = c(0xf4f6fb, 0x0b0d14)
-    static let card = c(0xffffff, 0x131722)
-    static let fg = c(0x141824, 0xe8ebf2)
-    static let muted = c(0x5f6b85, 0x8b95ab, contrast: (0x3b4560, 0xb4bccd))
-    static let line = c(0xe3e7f0, 0x242a3a, contrast: (0x5f6b85, 0x8b95ab))
-    static let soft = c(0xf4f6fb, 0x1a1f2d)
-    static let accent = c(0x5b5bf0, 0x8b8cff)
-    static let accent2 = c(0x0ea5c6, 0x22d3ee)
-    static let ok = c(0x16a34a, 0x16a34a)
-    static let warn = c(0xc27803, 0xc27803)
-    static let bad = c(0xdc2626, 0xdc2626)
+    // tokens.css: --bg --card --fg --mut --line --side --acc --ok --warn --bad --visor (light, dark)
+    static let bg = c(0xf5f5f7, 0x161618)
+    static let card = c(0xffffff, 0x242426)
+    static let fg = c(0x1d1d1f, 0xf5f5f7)
+    static let muted = c(0x6e6e73, 0xa1a1a6, contrast: (0x3a3a3c, 0xd1d1d6))
+    static let line = c(0xe2e2e7, 0x38383b, contrast: (0x6e6e73, 0xa1a1a6))
+    static let soft = c(0xefeff2, 0x1f1f21)
+    static let accent = c(0x0071e3, 0x0a84ff)
+    static let ok = c(0x28a745, 0x32d74b)
+    static let warn = c(0xe08600, 0xff9f0a)
+    static let bad = c(0xe5342b, 0xff453a)
     static let visor = c(0x151a2e, 0x070912)
+    /// --on-acc: text on a coloured ground (accent, red), the same in light and dark
+    static let onAccent = c(0xffffff, 0xffffff)
+    /// black for veils and shadows of floating things only (always with opacity)
+    static let shade = c(0x000000, 0x000000)
+    // the face, the diff marks and the coffee pill: own colours, not in the tokens
     static let eye = c(0xbff6ff, 0xbff6ff)
     static let ins = c(0xdcfce7, 0x123524)
     static let insFg = c(0x166534, 0x86efac)
@@ -42,21 +49,18 @@ enum Theme {
     static let delFg = c(0x991b1b, 0xfca5a5)
     static let coffee = c(0xffdd00, 0xffdd00)
     static let coffeeFg = c(0x1f1a00, 0x1f1a00)
-    /// the recording pill's text
-    static let pillFg = c(0xe8ebf2, 0xe8ebf2)
+    /// the floating pills (recording, dictation, reading aloud) always lie on the dark visor: text and line of dark mode
+    static let pillFg = c(0xf5f5f7, 0xf5f5f7)
+    static let pillLine = c(0x38383b, 0x38383b)
 
     static let nsCard = NSColor(name: nil) { ap in
         let m = ap.bestMatch(from: [.aqua, .darkAqua, .accessibilityHighContrastAqua, .accessibilityHighContrastDarkAqua])
-        return NSColor(hex: (m == .darkAqua || m == .accessibilityHighContrastDarkAqua) ? 0x131722 : 0xffffff)
+        return NSColor(hex: (m == .darkAqua || m == .accessibilityHighContrastDarkAqua) ? 0x242426 : 0xffffff)
     }
 
-    static var gradient: LinearGradient {
-        LinearGradient(colors: [accent, accent2], startPoint: .leading, endPoint: .trailing)
-    }
-
-    static var diagonal: LinearGradient {
-        LinearGradient(colors: [accent, accent2], startPoint: .topLeading, endPoint: .bottomTrailing)
-    }
+    /// the red of a running remote control (Fernsicht): bar and frames on the screen, outside SwiftUI
+    static let nsBad = NSColor(hex: 0xe5342b)
+    static let nsOnAccent = NSColor(hex: 0xffffff)
 }
 
 // ------------------------------------------------------------------ the face (viewBox 200 × 200 of the mockup)
@@ -92,7 +96,15 @@ struct FacePart: Shape {
     }
 }
 
-/// The Spark's robot face: gradient head, dark visor, two light eyes and a smile.
+/// The face in the head of the windows and next to answers only on request (Redesign Stufe 9, plan „Comic-Gesicht nur
+/// auf Wunsch“): in den Einstellungen des Programms auf der Seite „Übersicht“ der Schalter „Gesicht in den Fenstern zeigen“, on this Mac only, off by default. The
+/// menu-bar icon and „Über und Update“ show it always.
+enum FacePref {
+    static let key = "showFace"
+    static var on: Bool { UserDefaults.standard.bool(forKey: key) }
+}
+
+/// The Spark's robot face: head in the accent, dark visor, two light eyes and a smile (no gradient, no gloss).
 struct FaceView: View {
     var size: CGFloat = 24
     @ObservedObject private var model = AppModel.shared
@@ -109,13 +121,9 @@ struct FaceView: View {
         let s = size / 200
         return ZStack {
             FacePart(kind: .antenna)
-                .stroke(Theme.diagonal, style: StrokeStyle(lineWidth: max(6 * s, 0.8), lineCap: .round))
-            FacePart(kind: .ball).fill(Theme.accent2)
-            FacePart(kind: .head).fill(Theme.diagonal)
-            FacePart(kind: .head).fill(RadialGradient(
-                gradient: Gradient(stops: [.init(color: Color.white.opacity(0.45), location: 0),
-                                           .init(color: Color.white.opacity(0), location: 0.5)]),
-                center: UnitPoint(x: 0.39, y: 0.34), startRadius: 0, endRadius: size * 0.6))
+                .stroke(Theme.accent, style: StrokeStyle(lineWidth: max(6 * s, 0.8), lineCap: .round))
+            FacePart(kind: .ball).fill(Theme.accent)
+            FacePart(kind: .head).fill(Theme.accent)
             FacePart(kind: .visor).fill(Theme.visor)
             FacePart(kind: .eyes).fill(Theme.eye)
             FacePart(kind: .smile)
@@ -127,13 +135,6 @@ struct FaceView: View {
 }
 
 // ------------------------------------------------------------------ small pieces
-
-/// The 6 px gradient bar on top of every window.
-struct GradientBar: View {
-    var body: some View {
-        Rectangle().fill(Theme.gradient).frame(height: 3)
-    }
-}
 
 /// A key combination as a small chip ("⌥⌘S").
 struct KeyChip: View {
@@ -148,7 +149,7 @@ struct KeyChip: View {
             .foregroundColor(dark ? Theme.eye : Theme.muted)
             .background(RoundedRectangle(cornerRadius: 6).fill(dark ? Color.clear : Theme.soft))
             .overlay(RoundedRectangle(cornerRadius: 6)
-                .stroke(dark ? Color(nsColor: NSColor(hex: 0x2a3350)) : Theme.line, lineWidth: 1))
+                .stroke(dark ? Theme.pillLine : Theme.line, lineWidth: 1))
             .fixedSize()
     }
 }
@@ -189,7 +190,7 @@ struct IconTile: View {
     }
 }
 
-/// Primary: accent gradient, white text.
+/// Primary: the one accent, white text (radius 6 like --r-ctl).
 struct PrimaryButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var enabled
 
@@ -198,12 +199,12 @@ struct PrimaryButtonStyle: ButtonStyle {
             .font(.system(size: 13, weight: .semibold))
             .lineLimit(1)
             .fixedSize(horizontal: true, vertical: false)
-            .foregroundColor(.white)
+            .foregroundColor(Theme.onAccent)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            .background(RoundedRectangle(cornerRadius: 9).fill(Theme.diagonal))
+            .background(RoundedRectangle(cornerRadius: 6).fill(Theme.accent))
             .opacity(enabled ? (configuration.isPressed ? 0.8 : 1) : 0.45)
-            .contentShape(RoundedRectangle(cornerRadius: 9))
+            .contentShape(RoundedRectangle(cornerRadius: 6))
     }
 }
 
@@ -220,10 +221,10 @@ struct SoftButtonStyle: ButtonStyle {
             .foregroundColor(danger ? Theme.bad : Theme.fg)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            .background(RoundedRectangle(cornerRadius: 9).fill(configuration.isPressed ? Theme.soft : Theme.card))
-            .overlay(RoundedRectangle(cornerRadius: 9).stroke(Theme.line, lineWidth: 1))
+            .background(RoundedRectangle(cornerRadius: 6).fill(configuration.isPressed ? Theme.soft : Theme.card))
+            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.line, lineWidth: 1))
             .opacity(enabled ? 1 : 0.45)
-            .contentShape(RoundedRectangle(cornerRadius: 9))
+            .contentShape(RoundedRectangle(cornerRadius: 6))
     }
 }
 
@@ -243,9 +244,9 @@ struct RowButtonStyle: ButtonStyle {
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(RoundedRectangle(cornerRadius: 9)
+                .background(RoundedRectangle(cornerRadius: 8)
                     .fill(enabled && (hover || configuration.isPressed) ? Theme.soft : Color.clear))
-                .contentShape(RoundedRectangle(cornerRadius: 9))
+                .contentShape(RoundedRectangle(cornerRadius: 8))
                 .onHover { hover = $0 }
         }
     }
@@ -261,7 +262,7 @@ struct ChipButton: View {
         Button(action: action) {
             Text(verbatim: title)
                 .font(.system(size: 12))
-                .foregroundColor(selected ? .white : Theme.fg)
+                .foregroundColor(selected ? Theme.onAccent : Theme.fg)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
                 .background(Capsule().fill(selected ? Theme.accent : Theme.card))
@@ -296,7 +297,7 @@ struct CoffeePill: View {
     }
 }
 
-/// A card: rounded 12, line, card colour.
+/// A card: rounded 10 (--r-box), line, card colour.
 struct CardBox<Content: View>: View {
     var padding: CGFloat = 12
     @ViewBuilder let content: () -> Content
@@ -305,8 +306,8 @@ struct CardBox<Content: View>: View {
         VStack(alignment: .leading, spacing: 10) { content() }
             .padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(RoundedRectangle(cornerRadius: 12).fill(Theme.card))
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.line, lineWidth: 1))
+            .background(RoundedRectangle(cornerRadius: 10).fill(Theme.card))
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line, lineWidth: 1))
     }
 }
 
@@ -421,7 +422,7 @@ enum MenuIcon {
         ctx.restoreGraphicsState()
         let tinted = NSImage(size: disc.size, flipped: false) { r in
             symbol.draw(in: r)
-            (coloured ? NSColor(hex: 0xc0392b) : NSColor.black).set()
+            (coloured ? NSColor(hex: 0xe5342b) : NSColor.black).set()
             r.fill(using: .sourceAtop)
             return true
         }
@@ -445,7 +446,7 @@ enum MenuIcon {
             // only the part of the disc outside the cut
             let clip = NSBezierPath(ovalIn: disc)
             clip.addClip()
-            (coloured ? NSColor(hex: 0xc27803) : NSColor.black).setFill()
+            (coloured ? NSColor(hex: 0xe08600) : NSColor.black).setFill()
             crescent.fill()
             ctx.restoreGraphicsState()
         }
@@ -474,13 +475,12 @@ enum MenuIcon {
         smile.lineCapStyle = .round
 
         if coloured {
-            let acc = NSColor(hex: 0x5b5bf0)
-            let acc2 = NSColor(hex: 0x0ea5c6)
+            let acc = NSColor(hex: 0x0071e3)
             acc.setStroke()
             antenna.stroke()
-            acc2.setFill()
+            acc.setFill()
             ball.fill()
-            NSGradient(starting: acc, ending: acc2)?.draw(in: head, angle: 45)
+            head.fill()
             NSColor(hex: 0x151a2e).setFill()
             visor.fill()
             NSColor(hex: 0xbff6ff).setFill()
@@ -510,11 +510,11 @@ enum MenuIcon {
         let color: NSColor?
         switch dot {
         case .plain: color = nil
-        case .ok: color = NSColor(hex: 0x16a34a)
-        case .grey: color = NSColor(hex: 0x8b95ab)
-        case .red: color = NSColor(hex: 0xdc2626)
-        case .accent: color = NSColor(hex: 0x5b5bf0)
-        case .listening: color = NSColor(hex: 0x0ea5c6)
+        case .ok: color = NSColor(hex: 0x28a745)
+        case .grey: color = NSColor(hex: 0xa1a1a6)
+        case .red: color = NSColor(hex: 0xe5342b)
+        case .accent: color = NSColor(hex: 0x0071e3)
+        case .listening: color = NSColor(hex: 0x0071e3)
         }
         if let color {
             let d: CGFloat = 8
@@ -565,18 +565,18 @@ struct SectionLabel: View {
     }
 }
 
-/// The on/off switch: gradient when on, line colour when off, white knob.
+/// The on/off switch: accent when on, line colour when off, white knob with a hairline (no shadow).
 struct SwitchKnob: View {
     let on: Bool
 
     var body: some View {
         ZStack(alignment: on ? .trailing : .leading) {
             Capsule().fill(Theme.line)
-            if on { Capsule().fill(Theme.diagonal) }
+            if on { Capsule().fill(Theme.accent) }
             Circle()
-                .fill(Color.white)
+                .fill(Theme.onAccent)
+                .overlay(Circle().stroke(Theme.shade.opacity(0.12), lineWidth: 0.5))
                 .frame(width: 16, height: 16)
-                .shadow(color: .black.opacity(0.2), radius: 1, y: 0.5)
                 .padding(2)
         }
         .frame(width: 36, height: 20)
@@ -700,7 +700,7 @@ struct PanelRow: View {
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
-            .background(RoundedRectangle(cornerRadius: 9).fill(hover && enabled ? Theme.soft : Color.clear))
+            .background(RoundedRectangle(cornerRadius: 8).fill(hover && enabled ? Theme.soft : Color.clear))
             .opacity(enabled ? 1 : 0.5)
             .contentShape(Rectangle())
         }
@@ -720,8 +720,8 @@ struct PanelBox<Content: View>: View {
         }
         .padding(3)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 12).fill(Theme.card))
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.line, lineWidth: 1))
+        .background(RoundedRectangle(cornerRadius: 10).fill(Theme.card))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line, lineWidth: 1))
     }
 }
 
@@ -763,9 +763,9 @@ struct NavRow: View {
             }
             .padding(.horizontal, 9)
             .padding(.vertical, 7)
-            .background(RoundedRectangle(cornerRadius: 9).fill(selected ? Theme.card : (hover ? Theme.line.opacity(0.5) : Color.clear)))
-            .overlay(RoundedRectangle(cornerRadius: 9).stroke(selected ? Theme.line : Color.clear, lineWidth: 1))
-            .contentShape(RoundedRectangle(cornerRadius: 9))
+            .background(RoundedRectangle(cornerRadius: 8).fill(selected ? Theme.card : (hover ? Theme.line.opacity(0.5) : Color.clear)))
+            .overlay(RoundedRectangle(cornerRadius: 8).stroke(selected ? Theme.line : Color.clear, lineWidth: 1))
+            .contentShape(RoundedRectangle(cornerRadius: 8))
         }
         .buttonStyle(.plain)
         .onHover { hover = $0 }
@@ -799,9 +799,9 @@ struct StatusCard: View {
             Spacer(minLength: 0)
         }
         .padding(12)
-        .background(RoundedRectangle(cornerRadius: 14).fill(color.opacity(0.07))
-            .background(RoundedRectangle(cornerRadius: 14).fill(Theme.card)))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(color.opacity(0.35), lineWidth: 1))
+        .background(RoundedRectangle(cornerRadius: 10).fill(color.opacity(0.07))
+            .background(RoundedRectangle(cornerRadius: 10).fill(Theme.card)))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(color.opacity(0.35), lineWidth: 1))
         .accessibilityElement(children: .combine)
     }
 }

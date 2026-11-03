@@ -4,7 +4,8 @@ Every line carries the SHA-256 of the line before it, also across rotated files;
 in breaks the chain and verify() names the place; lines from before the chain stay readable; rotation keeps at most
 AUDIT_FILES files and drops old ones by age; the pages never see the chain value; the daily check writes one journal
 line and an alert on the admin pages when the chain breaks; the sealed copy on the NAS round-trips and the
-comparison finds a line missing on the Spark; „Protokoll prüfen“ is for the main admin only.
+comparison finds a line missing on the Spark; „Protokoll prüfen“ is for every admin, also an admin profile
+(test_coadmin), never without a login.
 No test depends on the wall clock: times are passed in or taken relative to now.
 """
 import io
@@ -233,7 +234,7 @@ class NasCopy(unittest.TestCase):
 
 
 class Endpoint(unittest.TestCase):
-    def test_only_the_main_admin_checks(self):
+    def test_only_an_admin_checks(self):
         self.assertEqual(TestClient(panel.app).get("/api/audit/check").status_code, 401)
         r = ADMIN.get("/api/audit/check")
         self.assertEqual(r.status_code, 200, r.text)

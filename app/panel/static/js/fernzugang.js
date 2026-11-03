@@ -14,7 +14,15 @@
 // on the right (width dragged and kept in this browser, folds away); the session's facts behind the ⓘ of the red line;
 // the page never scrolls (fzLayout); the panel's menu folds away while a terminal is open (fzMenu). Phone: the
 // assistant is a sheet from below.
-const FZ={d:null,sel:'',tab:'systeme',timer:0,ws:null,term:null,sitz:null,code:null,ctrl:false,alt:false,sid:'',pop:null,weg:null,hist:[],ki:null,vt:0,vlast:0,fs:null,fb:null};
+const FZ={d:null,sel:'',tab:'systeme',timer:0,code:null,ctrl:false,alt:false,vt:0,vlast:0,fs:null,fb:null,reiter:[],cur:null,wege:[],rn:0,ansicht:'einzeln',felder:[]};
+// several shells at once (Reiter, Dominik 2026-10-29 „alle“, Bild 1-reiter): each one a record in FZ.reiter with its
+// terminal in a box of its own, its WebSocket, its line and its assistant history; FZ.ws, FZ.term, FZ.sitz … always
+// mean the active one (FZ.cur), else FZ_LOS (the files and the screen keep using FZ.sitz for the red line)
+const FZ_JE=['ws','term','sitz','sid','fp','mess','lahm','lahmGesagt','grund','zuletzt','pt','wieder','nachher','zeile','buf','hist','ki'];
+const FZ_LOS={ws:null,term:null,sitz:null,sid:'',hist:[],ki:null};
+for(const k of FZ_JE)Object.defineProperty(FZ,k,{get(){return (FZ.cur||FZ_LOS)[k]},set(v){(FZ.cur||FZ_LOS)[k]=v}});
+// something of the Fernzugang is open on this page: the list of systems waits, a file or screen session waits too
+function fzBelegt(){return FZ.reiter.length>0||FZ.wege.length>0||!!FZ.fs||!!FZ.fb}
 // „Dateien“ (ferndateien.py, stage 3): SFTP in the same SSH connection, on the unlocked page; names come as text only,
 // a download goes through a one-time link, an upload as the raw file (at most chat.fernzugang_datei_mb).
 // what the own window takes over from its opener (admin_get): the rules and the assistant's limits
@@ -34,31 +42,29 @@ function fzStand(g){return g.stand==='abbau'?['warn',t('wird beim nächsten Kont
   :g.hostkey_falsch?['bad',t('Host-Schlüssel falsch','host key wrong')]:g.wartet?['warn',t('wartet auf Bestätigung','waiting for confirmation')]:!g.erlaubt?['warn',t('gesperrt','blocked')]
   :g.online?['ok',t('online','online')]:['',t('offline','offline')]}
 // the kind of system as its icon (fixed pictures, never text from outside)
-const FZ_SVG={linux:'<path d="M7 9l3 3-3 3M12 15h5"/>',windows:'<path d="M4 5h7v6H4zM13 5h7v6h-7zM4 13h7v6H4zM13 13h7v6h-7z"/>',
-  macos:'<rect x="5" y="5" width="14" height="10" rx="1.5"/><path d="M3 19h18"/>'};
-function fzIcon(g,gross){const a=FZ_SVG[g.art]?g.art:'linux',s=fzEl('span','fzos '+a+(gross?' gross':''));
-  s.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+FZ_SVG[a]+'</svg>';return s}
+const FZ_OS=new Set(['linux','windows','macos']);
+function fzIcon(g,gross){const a=FZ_OS.has(g.art)?g.art:'linux',s=fzEl('span','fzos '+a+(gross?' gross':''));s.innerHTML=ic(a);return s}
 // what a running shell keeps when the page locks meanwhile: the rules of the chips and the assistant, never the systems
 const FZ_BLEIBT=FZ_MIT.concat(['max','leerlauf']);
 async function fzLoad(){clearTimeout(FZ.timer);const box=$('fzbox');if(!box||document.body.classList.contains('mgr')||FZ_FENSTER)return;
   try{const r=await api('/api/admin/fernzugang');const d=await r.json();
-    if(d.gesperrt&&FZ.d&&(FZ.ws||FZ.weg||FZ.fs||FZ.fb))for(const k of FZ_BLEIBT)if(FZ.d[k]!==undefined)d[k]=FZ.d[k];
+    if(d.gesperrt&&FZ.d&&fzBelegt())for(const k of FZ_BLEIBT)if(FZ.d[k]!==undefined)d[k]=FZ.d[k];
     FZ.d=d;
-    if(FZ.weg&&!d.gesperrt&&!(d.offen||[]).some(x=>x.id===FZ.weg.sid)){FZ.weg=null;FZ.pop=null;FZ.sitz=null;fzBanner();fzWegZeigen()}
+    if(FZ.wege.length&&!d.gesperrt){const n=FZ.wege.length;FZ.wege=FZ.wege.filter(w=>(d.offen||[]).some(x=>x.id===w.sid));if(FZ.wege.length!==n){fzBanner();fzWegZeigen()}}
     if(FZ.fb&&d.gesperrt){fbTrennen(t('Die Seite ist gesperrt: der Bildschirm ist zu.','The page is locked: the screen is closed.'));return}
     if(FZ.fs&&d.gesperrt&&!FZ.fs.laeuft){fzFSchliessen(t('Die Seite ist gesperrt: die Dateien sind zu.','The page is locked: the files are closed.'));return}   // locked: nothing of the server stays shown
     if(FZ.fs&&!FZ.fs.laeuft&&!d.gesperrt&&!(d.offen||[]).some(x=>x.id===FZ.fs.id)){fzFZu(t('Die Dateien-Sitzung ist zu (Leerlauf, Trennen oder Notaus).','The files session is closed (idle, disconnect or emergency stop).'));return}
     fzShow();if(window.shLoad)shLoad()}catch(e){fzMsg(e.message,true)}
-  if(document.querySelector('section#fern.on'))FZ.timer=setTimeout(fzLoad,FZ.ws||FZ.fs||FZ.fb?15000:10000)}
+  if(document.querySelector('section#fern.on'))FZ.timer=setTimeout(fzLoad,fzBelegt()?15000:10000)}
 function fzFehler(e){fzMsg(e.message,true);if(e.status===423)fzLoad()}   // locked meanwhile: the page shows „Entsperren“
 // locked: nothing of the systems stays in the page, not even hidden
 function fzLeeren(){for(const id of ['fzlist','fzdetail','fzjetztlist','fzstatus','fzverlauflist','fzcode','fzflist','fzcrumbs'])$(id).textContent='';
   $('fzdetail').hidden=true;$('fzjetzt').hidden=true;FZ.sel='';FZ.auf=false;FZ.code=null;FZ.ordner='';FZ.neuOrdner=false;FZ.ordnerEdit=false;fzMenuZu();
   for(const id of ['fzkoppelnmodal','fzverlaufmodal'])$(id).style.display='none'}
 // the tabs „Systeme | Spontanhilfe“: only on the unlocked page and only while Spontanhilfe is on; true on its tab
-// something open (a shell, also while it connects or reconnects, its own window, files, a screen): the list, its tabs and
-// the status line above stay away, so nothing above the terminal comes and goes (Dominik 2026-10-30: the shell jumped)
-function fzOffen(){const v=$('fzview');return !!FZ.ws||!!FZ.weg||!!FZ.fs||!!FZ.fb||!!(v&&!v.hidden)}
+// something open (a shell tab, also while it connects or reconnects, its own window, files, a screen): the list, its tabs
+// and the status line above stay away, so nothing above the terminal comes and goes (Dominik 2026-10-30: the shell jumped)
+function fzOffen(){const v=$('fzview');return fzBelegt()||!!(typeof FW!=='undefined'&&FW.tunnel)||!!(v&&!v.hidden)}
 function fzTabs(){const d=FZ.d,h=typeof SH!=='undefined'&&SH.d,busy=fzOffen();
   const zeig=!!(d&&d.on&&!d.gesperrt&&!d.notaus&&!busy&&h&&h.on&&!h.gesperrt&&!h.notaus);
   if(!zeig)FZ.tab='systeme';$('fztabs').hidden=!zeig;
@@ -94,9 +100,9 @@ function fzShow(){const d=FZ.d,box=$('fzmain');if(!d||!box)return;const zu=!!(d.
   const akt=fzAktBereit(gs);$('fzalleakt').hidden=!akt.length;$('fzalleaktn').textContent=akt.length?'('+akt.length+')':'';
   const o=d.offen||[],jl=$('fzjetztlist');$('fzjetzt').hidden=!o.length;jl.textContent='';for(const x of o)jl.appendChild(fzJetztZeile(x,true));
   fzDetail();if($('fzverlaufmodal').style.display==='grid')fzVerlauf();fzSeite()}
-// one system in the list on the left: icon, name (📝 with a note, a tag with a session), the second line, a hit in its note
+// one system in the list on the left: icon, name (the note symbol with a note, a tag with a session), the second line, a hit in its note
 function fzSysZeile(g,tr){const [lvl]=fzStand(g),row=fzEl('button','fzrow'+(g.id===FZ.sel?' on':''));row.type='button';row.dataset.id=g.id;
-      const tx=fzEl('span','fzrtext'),nm=fzEl('span','fzrname');nm.appendChild(fzEl('b','',g.name));if(g.notiz){const n=fzEl('span','fznzmark','📝');n.title=t('hat eine Notiz','has a note');nm.appendChild(n)}if(g.sitzungen)nm.appendChild(fzEl('span','fztag',t('Sitzung','Session')));
+      const tx=fzEl('span','fzrtext'),nm=fzEl('span','fzrname');nm.appendChild(fzEl('b','',g.name));if(g.notiz){const n=fzEl('span','fznzmark');n.appendChild(icNode('note'));n.title=t('hat eine Notiz','has a note');nm.appendChild(n)}if(g.sitzungen)nm.appendChild(fzEl('span','fztag',t('Sitzung','Session')));
       tx.append(nm,fzEl('small','',[g.os,fzWie(g),g.anker_neu?t('Anker: neu ','anchor: new ')+g.anker_neu:''].filter(Boolean).join(' · ')));
       const h=tr[g.id];if(h){const sn=fzEl('small','fznzsnip');sn.append(document.createTextNode(t('Notiz: „','Note: "')+h.vor),fzEl('mark','',h.treffer),document.createTextNode(h.nach+t('“','"')));tx.appendChild(sn)}
       row.append(fzIcon(g),tx,fzEl('span','fzdot '+(g.sitzungen?'bad':lvl)));row.onclick=()=>{FZ.sel=g.id;FZ.ordner='';FZ.auf=true;fzShow()};return row}
@@ -115,11 +121,11 @@ function fzWarum(g,d,c){if(!g.online)return t('Das System ist offline.','The sys
   if(g.stand==='abbau')return t('Das System wird gerade entfernt.','The system is being removed.');
   if(g.wartet)return t('Das System wartet auf deine Bestätigung (siehe unten).','The system waits for your confirmation (see below).');
   if(!g.erlaubt)return t('Das System ist gesperrt.','The system is blocked.');
-  const n=(c&&c.sitzungen)||0,max=d.max||1;if(n>=max)return t(`${n} von ${max} Plätzen belegt.`,`${n} of ${max} places taken.`);
+  const n=(c&&c.sitzungen)||0,max=d.max||1;if(n>=max&&!FZ.reiter.some(S=>S.sitz&&S.sitz.gid===g.id))return t(`${n} von ${max} Plätzen belegt.`,`${n} of ${max} places taken.`);
   return ''}
 function fzBildDienst(d){const x=d&&d.bild_dienst;if(!x||x.da)return '';
   return x.grund?t('Bildschirm-Dienst (guacd) auf dem Spark nicht installiert: ','Screen service (guacd) not installed on the Spark: ')+t(x.grund_de||'',x.grund_en||'')+t('. Das nächste Update versucht es wieder (oder auf dem Spark „sudo speech-spark update“).','. The next update tries again (or "sudo speech-spark update" on the Spark).')
-    :t('Bildschirm-Dienst (guacd) auf dem Spark noch nicht installiert: kommt mit dem nächsten Update (einmal etwa 10 bis 15 Minuten Bauzeit).','Screen service (guacd) not installed on the Spark yet: it comes with the next update (built once, about 10 to 15 minutes).')}
+    :t('Bildschirm-Dienst (guacd) auf dem Spark noch nicht installiert: kommt mit dem nächsten Update (einmal einige Minuten Bauzeit).','Screen service (guacd) not installed on the Spark yet: it comes with the next update (built once, a few minutes).')}
 function fzBildWarum(g,d){if(!d.bildschirm)return {text:t('Der Bildschirm ist ausgeschaltet.','The screen is switched off.')};
   if(g.art==='windows')return {text:t('Den Bildschirm von Windows gibt es noch nicht.','The screen of Windows is not there yet.')};
   if(!g.bild_anker)return {text:t('Anker zu alt für den Bildschirm: erst aktualisieren.','Anchor too old for the screen: update it first.')};
@@ -150,10 +156,14 @@ function fzDetail(){const d=FZ.d,box=$('fzdetail'),g=(d.geraete||[]).find(x=>x.i
   bs.disabled=!!wbs;if(!d.bildschirm)bs.hidden=true;
   for(const [b,w] of [[sh,wsh],[da,wsh],[bs,wbs&&wbs.text]])if(w){b.title=w;b.setAttribute('aria-description',w)}
   const cut=fzBtn(t('Anker trennen','Disconnect anchor'),'fzankercut',async()=>{try{await api(`/api/admin/fernzugang/geraete/${g.id}/trennen`,{method:'POST'});fzMsg(t('Getrennt. Der Anker kommt nach seiner Pause wieder, solange er sich verbinden darf.','Disconnected. The anchor comes back after its pause while it may connect.'));fzLoad()}catch(e){fzFehler(e)}});
-  cut.disabled=!g.online;kn.append(sh,da,bs,fzEl('span','fzfill'),cut);box.appendChild(kn);
+  const wd=fzBtn(t('Webdienste','Web services'),'fzk',()=>{FZ.web=FZ.web===g.id?'':g.id;fzShow()});wd.hidden=!d.webdienste;wd.setAttribute('aria-expanded',FZ.web===g.id?'true':'false');
+  if(!g.web_anker){const w=t('Anker aktualisieren: Webdienste brauchen den Anker 1.6.0 oder neuer.','Update the anchor: web services need anchor 1.6.0 or newer.');wd.title=w;wd.setAttribute('aria-description',w)}
+  cut.disabled=!g.online;kn.append(sh,da,bs,wd,fzEl('span','fzfill'),cut);box.appendChild(kn);
   if(d.bildschirm&&wbs&&!wsh)box.appendChild(fzBildHinweis(g,wbs));
+  if(d.webdienste&&FZ.web===g.id&&window.fwBlock)box.appendChild(fwBlock(g));
   if(g.hostkey_falsch)box.appendChild(fzEl('div','note err',t('Das System zeigt einen anderen Host-Schlüssel als bei der Kopplung: keine Verbindung. War das eine Neuinstallation, „Entfernen“ und neu koppeln.','The system shows another host key than at pairing: no connection. If it was reinstalled, "Remove" and pair again.')));
   if(g.wartet)box.appendChild(fzWartet(g));
+  if(d.als_an&&!sh.disabled)box.appendChild(fzAlsBlock(g));
   if(g.anker_neu||g.update_stand)box.appendChild(fzAktBlock(g));
   const grid=fzEl('div','fzdgrid'),li=fzEl('div','fzdcol'),re=fzEl('div','fzdcol');grid.append(li,re);box.appendChild(grid);
   const o=(d.offen||[]).filter(x=>x.geraet===g.id);
@@ -198,7 +208,7 @@ function fzAktBlock(g){const b=fzEl('div','fzakt');const kopf=fzEl('div','fzaktk
 async function fzAktZeile(g,box,knopf){let d;try{const r=await api('/api/admin/fernzugang/aktualisieren/befehl',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({origin:location.origin})});d=await r.json()}catch(e){fzFehler(e);return}
   knopf.remove();const z=g.art==='macos'&&d.befehl_mac?d.befehl_mac:d.befehl;const pre=fzEl('pre','fzcmd',z);pre.id='fzaktbefehl';box.appendChild(pre);
   const row=fzEl('div','row');row.append(fzBtn(t('Kopieren','Copy'),'',e=>copyString(z,e.target)));
-  const ein=fzBtn(t('In die Shell einfügen','Paste into the shell'),'',()=>{FZ.nachher=z;fzOpen(g)});ein.id='fzakteinf';ein.disabled=!g.online||g.hostkey_falsch||!g.erlaubt||g.wartet;
+  const ein=fzBtn(t('In die Shell einfügen','Paste into the shell'),'',()=>fzNotizTerminal(g.id,z));ein.id='fzakteinf';ein.disabled=!g.online||g.hostkey_falsch||!g.erlaubt||g.wartet;
   ein.title=t('Öffnet eine Shell und schreibt die Zeile hinein; Enter drückst du selbst.','Opens a shell and types the line in; you press Enter yourself.');row.appendChild(ein);box.appendChild(row)}
 async function fzAktualisieren(ids){try{const r=await api('/api/admin/fernzugang/aktualisieren',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({geraete:ids})});const d=await r.json();
     const teile=[[d.gesendet,'gesendet','sent'],[d.aktuell,'schon aktuell','up to date'],[d.alt,'brauchen einmal die Zeile','need the line once'],[d.offline,'offline','offline'],[d.belegt,'mit offener Sitzung','with a session open']]
@@ -268,51 +278,62 @@ function fzProtokoll(){const p=$('fzlog');if(!p)return;p.textContent='fernzugang
 function fzLaden(){if(window.Terminal)return Promise.resolve();
   return new Promise((ok,bad)=>{const l=document.createElement('link');l.rel='stylesheet';l.href='/static/xterm/xterm.css?v='+encodeURIComponent(SPARK_VER);document.head.appendChild(l);
     const s=document.createElement('script');s.src='/static/xterm/xterm.js?v='+encodeURIComponent(SPARK_VER);s.onload=()=>ok();s.onerror=()=>bad(new Error(t('xterm.js fehlt','xterm.js missing')));document.head.appendChild(s)})}
-function fzGroesse(){const el=$('fzterm');const w=Math.max(320,el.clientWidth-16),h=Math.max(200,el.clientHeight-16);
+function fzGroesse(S){const feld=!!(S&&S.box&&fzGeteilt()),el=feld?S.box:$('fzterm');
+  const w=Math.max(feld?160:320,el.clientWidth-(feld?8:16)),h=Math.max(feld?80:200,el.clientHeight-(feld?28:16));
   return [Math.max(20,Math.min(400,Math.floor(w/8.6))),Math.max(5,Math.min(200,Math.floor(h/17.5)))]}
-async function fzOpen(g){if(FZ.ws||FZ.weg||FZ.fs||FZ.fb){fzMsg(t('Erst die offene Sitzung trennen.','Disconnect the open session first.'),true);return}
+async function fzOpen(g,daneben){const da=FZ.reiter.find(S=>S.sitz&&S.sitz.gid===g.id);if(da){fzZeigen();fzReiterWahl(da);return}
+  if(FZ.fs||FZ.fb||FZ.wege.some(w=>w.sitz&&w.sitz.gid===g.id)){fzMsg(t('Erst die offene Sitzung trennen.','Disconnect the open session first.'),true);return}
+  const max=(FZ.d&&FZ.d.max)||1,n=FZ.reiter.length+FZ.wege.length;
+  if(n&&n>=max){fzMsg(t(`${n} von ${max} Plätzen belegt: erst einen Reiter schließen.`,`${n} of ${max} places taken: close a tab first.`),true);return}
   try{await fzLaden()}catch(e){fzMsg(e.message,true);return}
   fzZeigen();const [cols,rows]=fzGroesse();let tk;
   try{const r=await api('/api/admin/fernzugang/sitzung',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({geraet:g.id,cols,rows})});tk=(await r.json()).ticket}
-  catch(e){fzZu(e.message);return}
-  FZ.letzt=g;fzTerm(tk,{name:g.name,gid:g.id,art:g.art||'linux',seit:Date.now()/1000,max:FZ.d.max,leer:FZ.d.leerlauf},cols,rows)}
-// the terminal for one ticket: a new session, or one this window takes over (its own window, or back into the tab)
+  catch(e){if(FZ.reiter.length)fzFehler(e);else fzZu(e.message);return}
+  FZ.letzt=g;if(daneben&&FZ.cur&&fzAnsichtGeht('neben',FZ.reiter.length+1))FZ.daneben=FZ.cur;fzTerm(tk,{name:g.name,gid:g.id,art:g.art||'linux',seit:Date.now()/1000,max:FZ.d.max,leer:FZ.d.leerlauf},cols,rows)}
+// the terminal for one ticket: a new session (a new tab), or one this window takes over (its own window, or back into
+// a tab); its box sits in #fzterm beside the others, only the active one shows
 function fzTerm(tk,sitz,cols,rows){
-  const term=new window.Terminal({cursorBlink:true,fontSize:14,cols,rows,scrollback:2000,theme:{background:'#0b1020'}});
-  $('fzterm').textContent='';term.open($('fzterm'));term.attachCustomKeyEventHandler(fzFang);term.focus();FZ.term=term;
-  FZ.sitz=sitz;FZ.fp='';FZ.mess=null;FZ.lahm=0;FZ.lahmGesagt=false;fzBanner();fzInfo('');fzHilfeNeu();$('fztname').textContent=sitz.name;fzLayout();
+  const box=fzEl('div','fzterm1'),S={n:++FZ.rn,sitz,box,sid:'',fp:'',mess:null,lahm:0,lahmGesagt:false,grund:'',zeile:'',buf:'',hist:[],ki:null,neu:false,nachher:''};
+  $('fzterm').appendChild(box);FZ.reiter.push(S);box.dataset.name=sitz.name;
+  box.addEventListener('pointerdown',()=>{if(S!==FZ.cur&&fzGeteilt())fzReiterWahl(S)});
+  box.ondragover=e=>{if(FZ.zieht&&fzGeteilt())e.preventDefault()};box.ondrop=e=>{e.preventDefault();const z=FZ.zieht;FZ.zieht=null;if(z&&z!==S)fzInsFeld(z,S)};
+  const term=new window.Terminal({cursorBlink:true,fontSize:14,cols,rows,scrollback:2000,theme:{background:'#0b1020'}});S.term=term;
+  term.open(box);term.attachCustomKeyEventHandler(fzFang);fzReiterWahl(S,true);
   term.write(t('Verbinde mit ','Connecting to ')+sitz.name+' …\r\n');const enc=new TextEncoder();
-  term.onData(x=>{const ws=FZ.ws;if(!ws||ws.readyState!==1)return;if(FZ.ctrl&&x.length===1){const c=x.toUpperCase().charCodeAt(0);if(c>=64&&c<96)x=String.fromCharCode(c-64);FZ.ctrl=false;fzKeys()}
-    if(FZ.alt&&x.length===1){x='\x1b'+x;FZ.alt=false;fzKeys()}fzZeile(x);if(FZ.bald)fzBald(0);ws.send(enc.encode(x))});
-  fzVerbinde(tk,term);window.addEventListener('resize',fzResize)}
-// one WebSocket for the terminal (the first, or after a drop with a fresh ticket of the same login): the panel's
+  term.onData(x=>{const ws=S.ws;if(!ws||ws.readyState!==1)return;if(FZ.ctrl&&x.length===1){const c=x.toUpperCase().charCodeAt(0);if(c>=64&&c<96)x=String.fromCharCode(c-64);FZ.ctrl=false;fzKeys()}
+    if(FZ.alt&&x.length===1){x='\x1b'+x;FZ.alt=false;fzKeys()}if(S===FZ.cur)fzZeile(x);if(FZ.bald&&FZ.baldS===S)fzBald(0,S);ws.send(enc.encode(x))});
+  fzVerbinde(tk,S);window.addEventListener('resize',fzResize)}
+// one WebSocket for a tab's terminal (the first, or after a drop with a fresh ticket of the same login): the panel's
 // heartbeat comes every 5 s (answered at once: its round trip and the rate are the panel's measurement, fzMess);
-// nothing for 50 s counts as a dropped line
-function fzVerbinde(tk,term){const ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/api/fernzugang/terminal?t='+encodeURIComponent(tk));
-  ws.binaryType='arraybuffer';FZ.ws=ws;FZ.grund='';FZ.zuletzt=Date.now();clearInterval(FZ.pt);
-  FZ.pt=setInterval(()=>{if(FZ.ws===ws&&ws.readyState===1&&Date.now()-FZ.zuletzt>50000)ws.close(4000)},5000);
-  ws.onmessage=ev=>{FZ.zuletzt=Date.now();if(ev.data instanceof ArrayBuffer){term.write(new Uint8Array(ev.data),()=>{if(FZ.ziel)fzZielTick(false)});return}let m;try{m=JSON.parse(ev.data)}catch{return}
-    if(m.typ==='stand'&&m.stand==='offen'){FZ.sid=m.id||'';FZ.wieder=null;fzWiederZeigen();if(FZ.nachher){const l=FZ.nachher;FZ.nachher='';setTimeout(()=>fzEinfuegen(l),400)}if(m.wieder)term.reset();fzResize();
-      term.write('\x1b[2m'+(m.wieder?t('Wieder verbunden · ','Connected again · '):t('Verbunden · SSH · Host-Schlüssel ','Connected · SSH · host key ')+m.fp+t(' geprüft',' checked')+' ')+'\x1b[0m\r\n');FZ.fp=String(m.fp||'');fzInfo(FZ.fp);fzBanner()}
-    if(m.typ==='bald')fzBald(Number(m.s)||0);
-    if(m.typ==='puls'){if(Number.isInteger(m.t)&&m.t>0)ws.send(JSON.stringify({typ:'pong',t:m.t}));fzMess(m)}
-    if(m.typ==='fehler'||m.typ==='zu')FZ.grund=m.grund;if(m.typ==='weg')FZ.grund='weg'};
-  ws.onclose=()=>{if(FZ.ws!==ws)return;clearInterval(FZ.pt);if(FZ.grund==='weg'){fzWeg();return}
-    if(!FZ.grund&&FZ.sid){fzWieder(term);return}if(FZ_FENSTER){window.close();return}fzZu(fzGrund(FZ.grund))}}
+// nothing for 50 s counts as a dropped line. Output in a tab in the background lights its blue dot (only that, never what)
+function fzVerbinde(tk,S){const term=S.term,an=()=>S===FZ.cur;
+  const ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/api/fernzugang/terminal?t='+encodeURIComponent(tk));
+  ws.binaryType='arraybuffer';S.ws=ws;S.grund='';S.zuletzt=Date.now();clearInterval(S.pt);
+  S.pt=setInterval(()=>{if(S.ws===ws&&ws.readyState===1&&Date.now()-S.zuletzt>50000)ws.close(4000)},5000);
+  ws.onmessage=ev=>{S.zuletzt=Date.now();if(ev.data instanceof ArrayBuffer){term.write(new Uint8Array(ev.data),()=>{if(an()&&FZ.ziel)fzZielTick(false)});if(!fzSichtbar(S)&&!S.neu){S.neu=true;fzReiterZeigen()}return}
+    let m;try{m=JSON.parse(ev.data)}catch{return}
+    if(m.typ==='stand'&&m.stand==='offen'){S.sid=m.id||'';S.wieder=null;if(an())fzWiederZeigen();if(fzImFeld(S))fzResize();if(S.nachher){const l=S.nachher;S.nachher='';setTimeout(()=>{if(an())fzEinfuegen(l)},400)}if(m.wieder)term.reset();
+      term.write('\x1b[2m'+(m.wieder?t('Wieder verbunden · ','Connected again · '):t('Verbunden · SSH · Host-Schlüssel ','Connected · SSH · host key ')+m.fp+t(' geprüft',' checked')+' ')+'\x1b[0m\r\n');S.fp=String(m.fp||'');if(an())fzInfo(S.fp);fzBanner();fzReiterZeigen();fzAlleStand()}
+    if(m.typ==='bald')fzBald(Number(m.s)||0,S);
+    if(m.typ==='puls'){if(Number.isInteger(m.t)&&m.t>0)ws.send(JSON.stringify({typ:'pong',t:m.t}));fzMess(m,S)}
+    if(m.typ==='fehler'||m.typ==='zu')S.grund=m.grund;if(m.typ==='weg')S.grund='weg'};
+  ws.onclose=()=>{if(S.ws!==ws)return;clearInterval(S.pt);if(S.grund==='weg'){fzWeg(S);return}
+    if(!S.grund&&S.sid){fzWieder(S);return}if(FZ_FENSTER){window.close();return}fzZu(fzGrund(S.grund),S)}}
 // the line dropped without a reason from the panel: the panel holds the shell (2 minutes); a fresh ticket of the same
 // login (the page still unlocked) takes it again and the screen comes back; else „Verbindung verloren“
-async function fzWieder(term){const sid=FZ.sid,bis=Date.now()+115000;FZ.wieder={sid};fzWiederZeigen();
-  while(FZ.wieder&&FZ.wieder.sid===sid&&Date.now()<bis){
-    try{const r=await api(`/api/admin/fernzugang/sitzung/${sid}/wieder`,{method:'POST'});const d=await r.json();if(!FZ.wieder)return;fzVerbinde(d.ticket,term);return}
+async function fzWieder(S){const sid=S.sid,bis=Date.now()+115000;S.wieder={sid};if(S===FZ.cur)fzWiederZeigen();fzReiterZeigen();
+  while(S.wieder&&S.wieder.sid===sid&&Date.now()<bis){
+    try{const r=await api(`/api/admin/fernzugang/sitzung/${sid}/wieder`,{method:'POST'});const d=await r.json();if(!S.wieder)return;fzVerbinde(d.ticket,S);return}
     catch(e){if(e.status===404||e.status===423||e.status===503)break}
     await new Promise(ok=>setTimeout(ok,3000))}
-  if(!FZ.wieder||FZ.wieder.sid!==sid)return;FZ.wieder=null;fzWiederZeigen();FZ.ws=null;if(FZ_FENSTER){window.close();return}fzZu(fzGrund('verloren'))}
+  if(!S.wieder||S.wieder.sid!==sid)return;S.wieder=null;if(S===FZ.cur)fzWiederZeigen();S.ws=null;if(FZ_FENSTER){window.close();return}fzZu(fzGrund('verloren'),S)}
 function fzWiederZeigen(){const b=$('fzwieder');if(b){b.hidden=!FZ.wieder;fzTopLine()}}
-// „Sitzung endet in m:ss“ (the panel says so BALD_S before the idle end): any key or „Weiterarbeiten“ counts
-function fzBald(sek){clearInterval(FZ.baldt);FZ.bald=sek>0?Date.now()+sek*1000:0;const b=$('fzbald');if(!b)return;
-  const tick=()=>{const rest=Math.max(0,Math.round((FZ.bald-Date.now())/1000));$('fzbaldtext').textContent=t('Sitzung endet in ','Session ends in ')+Math.floor(rest/60)+':'+String(rest%60).padStart(2,'0')};
+// „Sitzung endet in m:ss“ (the panel says so BALD_S before the idle end of one session): any key in that tab or
+// „Weiterarbeiten“ counts; with several tabs the line names the system
+function fzBald(sek,S){clearInterval(FZ.baldt);S=S||FZ.baldS;FZ.bald=sek>0?Date.now()+sek*1000:0;FZ.baldS=sek>0?S:null;const b=$('fzbald');if(!b)return;
+  const tick=()=>{const rest=Math.max(0,Math.round((FZ.bald-Date.now())/1000));$('fzbaldtext').textContent=(FZ.reiter.length>1&&S&&S.sitz?S.sitz.name+': ':'')+t('Sitzung endet in ','Session ends in ')+Math.floor(rest/60)+':'+String(rest%60).padStart(2,'0')};
   b.hidden=!FZ.bald;fzTopLine();if(FZ.bald){tick();FZ.baldt=setInterval(tick,1000)}}
-function fzWeiter(){if(FZ.ws&&FZ.ws.readyState===1)FZ.ws.send(JSON.stringify({typ:'weiter'}));fzBald(0);if(FZ.term)FZ.term.focus()}
+function fzWeiter(){const S=FZ.baldS||FZ.cur;if(S&&S.ws&&S.ws.readyState===1)S.ws.send(JSON.stringify({typ:'weiter'}));fzBald(0,S);if(FZ.term)FZ.term.focus()}
 // the page's unlock: 2 minutes before its end the line says so, with „Verlängern“ (a fresh code or passkey)
 function fzSperreBald(){clearInterval(FZ.sbt);const b=$('fzsperrbald');if(!b)return;const bis=FZ.d&&!FZ.d.gesperrt&&FZ.d.entsperrt_bis;
   const tick=()=>{const rest=bis?Math.round(bis-Date.now()/1000):0;const an=rest>0&&rest<=120;b.hidden=!an;fzTopLine();
@@ -325,7 +346,8 @@ const FZ_GRUND={leerlauf:['Leerlauf: die Sitzung ist zu.','Idle: the session is 
   verloren:['Verbindung verloren: die Sitzung ist zu.','Connection lost: the session is closed.'],shell:['Die Shell auf dem Server ist zu Ende.','The shell on the server has ended.'],
   browser:['Das Fenster wurde geschlossen.','The window was closed.'],aus:['Der Fernzugang wurde ausgeschaltet.','Remote access was switched off.'],abmelden:['Abgemeldet: die Sitzung ist zu.','Signed out: the session is closed.']};
 function fzGrund(g){return g&&FZ_GRUND[g]?t(...FZ_GRUND[g]):t('Sitzung beendet.','Session ended.')}
-function fzResize(){if(!FZ.term||!FZ.ws||FZ.ws.readyState!==1)return;const [c,r]=fzGroesse();if(c===FZ.term.cols&&r===FZ.term.rows)return;FZ.term.resize(c,r);FZ.ws.send(JSON.stringify({typ:'groesse',cols:c,rows:r}))}
+function fzResize(){for(const S of FZ.reiter){const term=S.term,ws=S.ws;if(!term||!ws||ws.readyState!==1||!fzImFeld(S))continue;
+  const [c,r]=fzGroesse(S);if(c===term.cols&&r===term.rows)continue;term.resize(c,r);ws.send(JSON.stringify({typ:'groesse',cols:c,rows:r}))}}
 function fzTopBar(){let top=0;for(const h of [document.querySelector('header'),$('apbar')]){if(!h)continue;const cs=getComputedStyle(h);
     if((cs.position==='sticky'||cs.position==='fixed')&&cs.display!=='none'&&h.offsetWidth>=document.documentElement.clientWidth-4)top=Math.max(top,h.offsetHeight)}return top}
 addEventListener('resize',()=>{if(FZ.sitz)fzBanner()});
@@ -335,17 +357,25 @@ if(window.ResizeObserver){const ro=new ResizeObserver(()=>{const b=$('fztop');if
 // the slim lines at the top of the content (a remote session, a Spontanhilfe): below the bar that stays on top (the
 // header, or the app view's bar on a phone); one place for both, the second line under the first
 function fzTopLine(){const top=$('fztop');top.hidden=['fzbanner','shbanner','fzwieder','fzbald','fzsperrbald'].every(id=>!$(id)||$(id).hidden);if(!top.hidden)top.style.setProperty('--fzbtop',fzTopBar()+'px')}
-function fzBanner(){const b=$('fzbanner');if(!FZ.sitz){b.hidden=true;document.body.classList.remove('fzaktiv');fzInfoPop(false);fzTopLine();return}b.hidden=false;document.body.classList.add('fzaktiv');fzTopLine();
-  $('fzbtext').textContent=$('fzvolltext').textContent=(FZ.sitz.art==='dateien'?t('Fern-Dateien offen · ','Remote files open · '):FZ.sitz.art==='bildschirm'?t('Fern-Bildschirm offen · ','Remote screen open · '):t('Fernsitzung aktiv · ','Remote session active · '))+FZ.sitz.name+' · '+fzMin(FZ.sitz.seit);b.title=t('Notaus trennt sofort','The emergency stop ends it at once');
-  $('fzbleer').textContent=FZ.sitz.leer?' · '+t('Leerlauf trennt nach ','idle ends after ')+FZ.sitz.leer+' min':'';$('fzbinfo').hidden=!FZ.ws;
+function fzBanner(){const b=$('fzbanner'),alle=FZ.reiter.map(S=>S.sitz).concat(FZ.wege.map(w=>w.sitz)).filter(Boolean),sitz=alle.length===1?alle[0]:FZ.sitz;
+  if(!alle.length&&!sitz){b.hidden=true;document.body.classList.remove('fzaktiv');fzInfoPop(false);fzTopLine();return}b.hidden=false;document.body.classList.add('fzaktiv');fzTopLine();
+  const viele=alle.length>1;$('fzbtrennen').textContent=viele?t('Alle trennen','Disconnect all'):t('Trennen','Disconnect');
+  $('fzbtext').textContent=$('fzvolltext').textContent=viele?t(`${alle.length} Fernsitzungen aktiv · `,`${alle.length} remote sessions active · `)+alle.map(x=>x.name+' '+fzMin(x.seit)).join(' · '):
+    (sitz.art==='dateien'?t('Fern-Dateien offen · ','Remote files open · '):sitz.art==='bildschirm'?t('Fern-Bildschirm offen · ','Remote screen open · '):t('Fernsitzung aktiv · ','Remote session active · '))+sitz.name+' · '+fzMin(sitz.seit);b.title=t('Notaus trennt sofort','The emergency stop ends it at once');
+  fzHin();const leer=(sitz||alle[0]).leer;$('fzbleer').textContent=leer?' · '+t('Leerlauf trennt nach ','idle ends after ')+leer+' min'+(viele?t(', jede Sitzung für sich',', each session on its own'):''):'';$('fzbinfo').hidden=!FZ.ws;
   clearTimeout(FZ.bt);FZ.bt=setTimeout(fzBanner,30000)}
+// „Zum Terminal“ in the red line on every other page while a shell tab is open: back to the tab shown last
+function fzHin(){const b=$('fzbhin');if(b)b.hidden=FZ_FENSTER||!FZ.reiter.length||!!document.querySelector('section#fern.on')}
+// the red line's button: one session as before; several: all of them (asked first)
+function fzBannerTrennen(){const n=FZ.reiter.length+FZ.wege.length;if(n<2){fzTrennen();return}
+  if(!confirm(t(`Alle ${n} Fernsitzungen trennen?`,`Disconnect all ${n} remote sessions?`)))return;for(const S of [...FZ.reiter])fzTrennen(S);for(const w of [...FZ.wege])fzWegTrennen(w)}
 // the line as the panel measured it (numbers only): the round trip quietly in the red line, round trip and rate in
 // „Diese Sitzung“; output that had to wait at a low rate twice in a row: one hint per session to the direct https way
-function fzMess(m){const rtt=Number.isInteger(m.rtt_ms)?m.rtt_ms:null,kb=Number.isInteger(m.kb_s)?m.kb_s:0;FZ.mess={rtt,kb,stau:!!m.stau};
-  const e=$('fzbmess');if(e)e.textContent=rtt===null?'':' · '+rtt+' ms';
-  if(m.stau)FZ.lahm=kb<(Number(m.langsam)||100)?(FZ.lahm||0)+1:0;
-  if(FZ.lahm>=2&&!FZ.lahmGesagt){FZ.lahmGesagt=true;sayToast(t(`Langsame Verbindung (etwa ${kb} KB/s). Über den Proxy der Synology kommen nur etwa 50 bis 70 KB/s an; der direkte https-Zugang ist deutlich schneller, besonders für Bildschirm und große Dateien.`,`Slow connection (about ${kb} KB/s). Through the Synology proxy only about 50 to 70 KB/s arrive; the direct https access is much faster, above all for the screen and big files.`),12000,{})}
-  if($('fzinfopop')&&!$('fzinfopop').hidden)fzInfo(FZ.fp)}
+function fzMess(m,S){S=S||FZ.cur||FZ_LOS;const rtt=Number.isInteger(m.rtt_ms)?m.rtt_ms:null,kb=Number.isInteger(m.kb_s)?m.kb_s:0;S.mess={rtt,kb,stau:!!m.stau};
+  const e=$('fzbmess');if(e&&S===FZ.cur)e.textContent=rtt===null?'':' · '+rtt+' ms';
+  if(m.stau)S.lahm=kb<(Number(m.langsam)||100)?(S.lahm||0)+1:0;
+  if(S.lahm>=2&&!S.lahmGesagt){S.lahmGesagt=true;sayToast(t(`Langsame Verbindung (etwa ${kb} KB/s). Über den Proxy der Synology kommen nur etwa 50 bis 70 KB/s an; der direkte https-Zugang ist deutlich schneller, besonders für Bildschirm und große Dateien.`,`Slow connection (about ${kb} KB/s). Through the Synology proxy only about 50 to 70 KB/s arrive; the direct https access is much faster, above all for the screen and big files.`),12000,{})}
+  if(S===FZ.cur&&$('fzinfopop')&&!$('fzinfopop').hidden)fzInfo(FZ.fp)}
 // „Diese Sitzung“ behind the ⓘ (red line and terminal bar): the host key shortened, whole on hover and „kopieren“
 function fzKurz(fp){fp=String(fp||'');const i=fp.indexOf(':')+1;return fp.length>i+12?fp.slice(0,i+4)+'…'+fp.slice(-6):fp}
 function fzInfo(fp){const dl=$('fzinfo');dl.textContent='';const s=FZ.sitz||{},c=(FZ.d&&FZ.d.counts)||{};
@@ -493,12 +523,13 @@ document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement
   requestAnimationFrame(()=>fzResize())});
 // „Herauslösen“: the panel page in its own window; it asks here for its own ticket (fz-bereit), this tab shows „läuft im
 // eigenen Fenster“ once the server moved the session (weg)
-function fzHeraus(){if(!FZ.ws||!FZ.sid||!FZ.sitz)return;const w=window.open('/#fernfenster','fz'+FZ.sid,'popup,width=1100,height=720');
+function fzHeraus(S){S=S&&S.term?S:FZ.cur;if(!S||!S.ws||!S.sid||!S.sitz)return;const w=window.open('/#fernfenster','fz'+S.sid,'popup,width=1100,height=720');
   if(!w){fzMsg(t('Der Browser hat das Fenster blockiert: Pop-ups für das Panel erlauben.','The browser blocked the window: allow pop-ups for the panel.'),true);return}
-  FZ.pop={w,sid:FZ.sid,sitz:FZ.sitz}}
+  S.pop={w,sid:S.sid,sitz:S.sitz}}
 async function fzFensterTicket(sid,fenster){const r=await api(`/api/admin/fernzugang/sitzung/${sid}/fenster`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fenster})});return (await r.json()).ticket}
 addEventListener('message',async e=>{if(e.origin!==location.origin||!e.data||typeof e.data!=='object')return;
-  if(e.data.typ==='fz-bereit'&&FZ.pop&&e.source===FZ.pop.w){const p=FZ.pop;let tk;try{tk=await fzFensterTicket(p.sid,true)}catch(x){fzMsg(x.message,true);return}
+  const S=e.data.typ==='fz-bereit'?FZ.reiter.find(x=>x.pop&&e.source===x.pop.w):null;
+  if(S){const p=S.pop;let tk;try{tk=await fzFensterTicket(p.sid,true)}catch(x){fzMsg(x.message,true);return}
     const mit={};for(const k of FZ_MIT)mit[k]=FZ.d?FZ.d[k]:undefined;p.w.postMessage({typ:'fz-ticket',ticket:tk,sitz:p.sitz,mit},location.origin)}
   else if(e.data.typ==='fz-ticket'&&FZ_FENSTER&&e.source===window.opener&&!FZ.ws&&typeof e.data.ticket==='string'){
     const mit=e.data.mit||{};FZ.d={chips:Array.isArray(mit.chips)?mit.chips.filter(x=>typeof x==='string'):[],folge:Array.isArray(mit.folge)?mit.folge:[],
@@ -507,29 +538,213 @@ addEventListener('message',async e=>{if(e.origin!==location.origin||!e.data||typ
     try{await fzLaden()}catch(x){fzMsg(x.message,true);return}
     document.title=String(sitz.name||'')+' · '+t('Fernzugang','Remote access');fzChips();const [c,r]=fzGroesse();
     fzTerm(e.data.ticket,{name:String(sitz.name||''),gid:String(sitz.gid||''),art:['windows','macos'].includes(sitz.art)?sitz.art:'linux',seit:Number(sitz.seit)||Date.now()/1000,max:Number(sitz.max)||1,leer:Number(sitz.leer)||15},c,r)}});
-function fzWeg(){const ws=FZ.ws,sitz=FZ.sitz;FZ.ws=null;FZ.grund='';FZ.zeile=FZ.buf='';FZ.hist=[];FZ.ki=null;clearTimeout(FZ.vt);fzZielEnde('');if(FZ.term){FZ.term.dispose();FZ.term=null}window.removeEventListener('resize',fzResize);clearInterval(FZ.pt);fzBald(0);
-  if(FZ_FENSTER){window.close();return}
-  FZ.weg={sid:FZ.sid,sitz};FZ.sitz=sitz;fzBanner();$('fzview').hidden=true;fzVerbergen();fzWegZeigen();if(ws&&ws.readyState<2)ws.close(1000)}
-function fzWegZeigen(){const b=$('fzweg');if(!b)return;b.hidden=!FZ.weg;if(FZ.weg)$('fzwegname').textContent=FZ.weg.sitz?FZ.weg.sitz.name:'';if(!FZ.weg&&FZ.d)fzShow()}
-async function fzZurueck(){const w=FZ.weg;if(!w)return;let tk;try{await fzLaden();tk=await fzFensterTicket(w.sid,false)}catch(e){fzMsg(e.message,true);return}
-  FZ.weg=null;fzWegZeigen();fzZeigen();const [c,r]=fzGroesse();fzTerm(tk,w.sitz,c,r)}
-async function fzWegTrennen(){const w=FZ.weg,p=FZ.pop;if(p&&p.w&&!p.w.closed){p.w.close();return}
-  if(w&&w.sid){try{await api(`/api/admin/fernzugang/sitzung/${w.sid}/trennen`,{method:'POST'})}catch(e){fzMsg(e.message,true)}}FZ.weg=null;FZ.sitz=null;fzBanner();fzWegZeigen();fzLoad()}
-function fzTrennen(){if(FZ.ws){const ws=FZ.ws;FZ.grund='getrennt';if(ws.readyState===1)ws.send(JSON.stringify({typ:'ende'}));ws.close(1000)}else if(FZ.wieder){FZ.wieder=null;fzWiederZeigen();fzZu(fzGrund('getrennt'))}else if(FZ.weg)fzWegTrennen();else if(FZ.fs)fzFSchliessen();else if(FZ.fb)fbTrennen()}
-function fzZu(text){fzNotizSpeichern();const ws=FZ.ws;FZ.ws=null;FZ.nachher='';FZ.grund='';FZ.zeile=FZ.buf='';FZ.hist=[];FZ.ki=null;FZ.wieder=null;fzWiederZeigen();fzBald(0);clearTimeout(FZ.vt);fzZielEnde('');clearInterval(FZ.pt);if(ws&&ws.readyState<2)ws.close(1000);if(FZ.term){FZ.term.dispose();FZ.term=null}FZ.sitz=null;fzBanner();
-  window.removeEventListener('resize',fzResize);$('fzview').hidden=true;$('fzmain').hidden=false;fzVerbergen();if(text)fzNeuKnopf(text);fzLoad()}
+// the server moved a tab's session into its own window: the tab goes, a line „läuft im eigenen Fenster“ stays per session
+function fzWeg(S){const ws=S.ws;S.ws=null;if(FZ_FENSTER){if(S.term)S.term.dispose();window.close();return}
+  FZ.wege.push({sid:S.sid,sitz:S.sitz,pop:S.pop||null});fzZu('',S);fzWegZeigen();if(ws&&ws.readyState<2)ws.close(1000)}
+function fzWegZeigen(){const b=$('fzweg');if(!b)return;b.hidden=!FZ.wege.length;b.textContent='';
+  for(const w of FZ.wege){const z=fzEl('div','fzwegzeile'),txt=fzEl('div');txt.append(fzEl('b','',t('Die Shell läuft im eigenen Fenster.','The shell runs in its own window.')),
+      fzEl('div','fh',(w.sitz?w.sitz.name:'')+' · '+t('Schließt du das Fenster, endet die Sitzung.','Closing the window ends the session.')));
+    const row=fzEl('div','row');row.append(fzBtn(t('Zurückholen','Bring back'),'p',()=>fzZurueck(w)),fzBtn(t('Trennen','Disconnect'),'danger',()=>fzWegTrennen(w)));z.append(txt,row);b.appendChild(z)}
+  if(!FZ.wege.length&&FZ.d)fzShow()}
+async function fzZurueck(w){if(!FZ.wege.includes(w))return;let tk;try{await fzLaden();tk=await fzFensterTicket(w.sid,false)}catch(e){fzMsg(e.message,true);return}
+  FZ.wege=FZ.wege.filter(x=>x!==w);fzWegZeigen();fzZeigen();const [c,r]=fzGroesse();fzTerm(tk,w.sitz,c,r)}
+async function fzWegTrennen(w){if(!FZ.wege.includes(w))return;const p=w.pop;if(p&&p.w&&!p.w.closed){p.w.close();return}
+  try{await api(`/api/admin/fernzugang/sitzung/${w.sid}/trennen`,{method:'POST'})}catch(e){fzMsg(e.message,true)}FZ.wege=FZ.wege.filter(x=>x!==w);fzBanner();fzWegZeigen();fzLoad()}
+// „Trennen“ (a tab's ×, the terminal bar, the red line with one session): that tab; else what else is open
+function fzTrennen(S){S=S&&S.term?S:FZ.cur;
+  if(S&&S.ws){const ws=S.ws;S.grund='getrennt';if(ws.readyState===1)ws.send(JSON.stringify({typ:'ende'}));ws.close(1000)}
+  else if(S&&S.wieder){S.wieder=null;if(S===FZ.cur)fzWiederZeigen();fzZu(fzGrund('getrennt'),S)}
+  else if(FZ.wege.length)fzWegTrennen(FZ.wege[0]);else if(FZ.fs)fzFSchliessen();else if(FZ.fb)fbTrennen()}
+// one tab ended (or none could open): its box goes; the next tab comes forward, and with the last one the list
+function fzZu(text,S){S=S||FZ.cur;const i=S?FZ.reiter.indexOf(S):-1,war=S&&S===FZ.cur;
+  const g=S&&S.sitz?((FZ.d&&FZ.d.geraete)||[]).find(x=>x.id===S.sitz.gid):null,noch=!!(S&&S.nochmal&&g);if(noch)text='';
+  if(S){const ws=S.ws;S.ws=null;S.wieder=null;clearInterval(S.pt);if(ws&&ws.readyState<2)ws.close(1000);if(S.term){S.term.dispose();S.term=null}if(S.box)S.box.remove();if(i>=0)FZ.reiter.splice(i,1);FZ.felder=FZ.felder.filter(x=>x!==S);if(FZ.baldS===S)fzBald(0,S)}
+  if(S&&!war){fzAnsichtMalen();fzReiterZeigen();fzBanner();fzResize()}
+  else if(S&&FZ.reiter.length){fzNotizSpeichern();fzZielEnde('');FZ.cur=null;fzReiterWahl(FZ.reiter[Math.min(Math.max(i,0),FZ.reiter.length-1)])}
+  else if(!FZ.reiter.length){fzNotizSpeichern();FZ.cur=null;FZ_LOS.sitz=null;fzWiederZeigen();fzBald(0);clearTimeout(FZ.vt);fzZielEnde('');fzBanner();fzReiterZeigen();
+    window.removeEventListener('resize',fzResize);$('fzview').hidden=true;$('fzmain').hidden=false;fzVerbergen();fzLoad()}
+  fzAlleStand();if(text)fzNeuKnopf(text,g);if(noch)fzOpen(g)}
 // every end message offers „Neu verbinden“ to the system it was (a new session, a new code only if the page is locked)
-function fzNeuKnopf(text){const g=FZ.letzt;sayToast(text,20000,{bad:true,knopf:g?[t('Neu verbinden','Connect again'),()=>fzOpen(g)]:null,id:'fzwiederneu'})}
+function fzNeuKnopf(text,g){g=g||FZ.letzt;sayToast(text,20000,{bad:true,knopf:g?[t('Neu verbinden','Connect again'),()=>fzOpen(g)]:null,id:'fzwiederneu'})}
 async function fzAlle(){if(!confirm(t('Jede Sitzung und jeden Anker jetzt trennen?','Disconnect every session and anchor now?')))return;
-  try{const r=await api('/api/admin/fernzugang/alle-trennen',{method:'POST'});const d=await r.json();fzMsg(t('Getrennt: ','Disconnected: ')+d.n);if(FZ.ws||FZ.fb)fzTrennen();if(FZ.fs)fzFZu('');fzLoad()}catch(e){fzMsg(e.message,true)}}
+  try{const r=await api('/api/admin/fernzugang/alle-trennen',{method:'POST'});const d=await r.json();fzMsg(t('Getrennt: ','Disconnected: ')+d.n);for(const S of [...FZ.reiter])fzTrennen(S);if(FZ.fb)fbTrennen();if(FZ.fs)fzFZu('');fzLoad()}catch(e){fzMsg(e.message,true)}}
+// ---------------------------------------------------------------- Reiter (several sessions, Bild 1-reiter)
+// a tab per session: the system's icon, its name, a dot (green connected, yellow connecting again), a blue dot when
+// output came in the background (only that it came), × disconnects; „+ System“ opens the chooser (Strg+Umschalt+O);
+// Strg+Umschalt+1…9 and ←/→ change the tab (the page keeps these keys, also in full screen); a tab can be dragged to
+// another place; the right click offers Herauslösen, Neu verbinden, Schließen and Andere trennen
+function fzReiterZeigen(){const bar=$('fzreiter');if(!bar)return;bar.textContent='';bar.hidden=FZ_FENSTER||!FZ.reiter.length;if(bar.hidden)return;
+  FZ.reiter.forEach((S,i)=>{const on=S===FZ.cur,b=fzEl('div','fzreit'+(on?' on':''));b.setAttribute('role','tab');b.setAttribute('aria-selected',String(on));b.tabIndex=on?0:-1;
+    b.title=S.sitz.name+(i<9?' · '+t('Strg+Umschalt+','Ctrl+Shift+')+(i+1):'');b.dataset.n=String(S.n);b.draggable=true;
+    b.append(fzIcon({art:S.sitz.art}),fzEl('span','fzreitname',S.sitz.name),fzEl('span','fzdot '+(S.wieder?'warn':S.sid&&S.ws?'ok':'')));
+    if(S.neu){const p=fzEl('span','fzreitneu');p.title=t('Neue Ausgabe','New output');b.appendChild(p)}
+    const x=fzBtn('×','fzreitzu',e=>{e.stopPropagation();fzTrennen(S)});x.title=t('Trennen','Disconnect');x.setAttribute('aria-label',x.title);x.tabIndex=-1;b.appendChild(x);
+    b.onclick=()=>fzReiterWahl(S);b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fzReiterWahl(S)}else if(e.key==='ContextMenu'||(e.shiftKey&&e.key==='F10')){e.preventDefault();fzReiterMenu(S,b)}};
+    b.oncontextmenu=e=>{e.preventDefault();fzReiterMenu(S,b)};
+    b.ondragstart=e=>{FZ.zieht=S;e.dataTransfer.effectAllowed='move'};b.ondragend=()=>{FZ.zieht=null};
+    b.ondragover=e=>{if(FZ.zieht&&FZ.zieht!==S)e.preventDefault()};
+    b.ondrop=e=>{e.preventDefault();const z=FZ.zieht;FZ.zieht=null;if(!z||z===S)return;const von=FZ.reiter.indexOf(z),nach=FZ.reiter.indexOf(S);FZ.reiter.splice(von,1);FZ.reiter.splice(nach,0,z);fzReiterZeigen()};
+    bar.appendChild(b)});
+  const plus=fzBtn('+ '+t('System','System'),'fzreitplus',fzWahl);plus.title=t('System wählen (Strg+Umschalt+O)','Choose a system (Ctrl+Shift+O)');bar.appendChild(plus);
+  bar.appendChild(fzEl('span','fzreithint',t('Strg+Umschalt+1…9 · ←/→','Ctrl+Shift+1…9 · ←/→')));fzAnsichtKnoepfe(bar);fzAlleKnopf(bar)}
+// a tab comes forward: its box shows, the bar, the line, the chips, the ⓘ and the assistant's answers are its own
+function fzReiterWahl(S,neu,immer){const alt=FZ.cur;if(alt===S&&!neu){if(immer){fzFeldFuer(S,alt);fzAnsichtMalen();fzLayout();requestAnimationFrame(()=>{fzResize();if(S.term&&fzImFeld(S))S.term.focus()})}fzReiterZeigen();return}
+  const a=$('fzantwort');if(alt&&FZ.reiter.includes(alt)){fzNotizSpeichern();if(a){const f=document.createDocumentFragment();while(a.firstChild)f.appendChild(a.firstChild);alt.antwort=f}}
+  if(FZ.ziel)fzZielEnde(t('Ziel angehalten: ein anderer Reiter ist vorn.','Goal stopped: another tab is in front.'));
+  fzFeldFuer(S,alt);FZ.cur=S;S.neu=false;fzAnsichtMalen();$('fztname').textContent=S.sitz.name;
+  if(neu)fzHilfeNeu();else if(a){a.textContent='';if(S.antwort)a.appendChild(S.antwort);S.antwort=null;fzSeiteWahl(FZ.seite)}
+  fzInfo(S.fp||'');const e=$('fzbmess');if(e)e.textContent=S.mess&&S.mess.rtt!==null?' · '+S.mess.rtt+' ms':'';
+  fzWiederZeigen();fzChips();fzBanner();fzReiterZeigen();fzAlleStand();fzLayout();requestAnimationFrame(()=>{fzResize();if(S.term&&S===FZ.cur)S.term.focus()})}
+function fzReiterMenu(S,an){fzMenuZu();const m=fzEl('div','fzomenu');m.id='fzomenu';m.setAttribute('role','menu');m.appendChild(fzEl('div','fzomkopf',S.sitz.name));
+  for(const [txt,fn,geht,cls] of [[t('Daneben anzeigen','Show beside it'),()=>fzDaneben(S),S!==FZ.cur&&fzAnsichtGeht('neben',FZ.reiter.length)],[t('Herauslösen (eigenes Fenster)','Pop out (own window)'),()=>fzHeraus(S),!!(S.ws&&S.sid)],[t('Neu verbinden','Connect again'),()=>{S.nochmal=true;fzTrennen(S)},true],
+    [t('Schließen (trennt)','Close (disconnects)'),()=>fzTrennen(S),true],[t('Andere trennen','Disconnect the others'),()=>{for(const x of FZ.reiter.filter(x=>x!==S))fzTrennen(x)},FZ.reiter.length>1,'fzrot']]){
+    const b=fzEl('button',cls||'',txt);b.type='button';b.setAttribute('role','menuitem');b.disabled=!geht;
+    b.onclick=()=>{fzMenuZu();fn()};m.appendChild(b)}
+  document.body.appendChild(m);const r=an.getBoundingClientRect();m.style.top=Math.min(innerHeight-m.offsetHeight-8,r.bottom+4)+'px';m.style.left=Math.max(8,Math.min(innerWidth-m.offsetWidth-8,r.left))+'px';
+  const f=m.querySelector('button:not([disabled])');if(f)f.focus();
+  setTimeout(()=>{document.addEventListener('pointerdown',fzMenuAussen,true);document.addEventListener('keydown',fzMenuTaste,true)},0)}
+// the chooser (Strg+Umschalt+O, „+ System“): typing searches every paired system; one already open jumps to its tab,
+// one that is not ready is grey with the reason; ↑/↓ and Enter
+function fzWahl(){if(!FZ.d||FZ_FENSTER)return;fzWahlZu();const w=fzEl('div','fzwahl'),q=document.createElement('input'),list=fzEl('div','fzwahlliste'),fuss=fzEl('div','fzwahlfuss');
+  w.id='fzwahl';w.setAttribute('role','dialog');w.setAttribute('aria-label',t('System wählen','Choose a system'));q.type='search';q.placeholder=t('System suchen …','Search a system …');q.setAttribute('aria-label',t('System suchen','Search a system'));
+  let wahl=0,treffer=[];const bereit=g=>g.online&&g.erlaubt&&!g.wartet&&!g.hostkey_falsch&&g.stand!=='abbau';
+  const zeig=()=>{const s=q.value.trim().toLowerCase(),gs=(FZ.d.geraete||[]).filter(g=>!s||(g.name+' '+(g.os||'')).toLowerCase().includes(s));
+    const offen=g=>FZ.reiter.findIndex(S=>S.sitz&&S.sitz.gid===g.id);treffer=gs.sort((a,b)=>(offen(b)>=0)-(offen(a)>=0)||bereit(b)-bereit(a));wahl=Math.min(wahl,Math.max(0,treffer.length-1));list.textContent='';
+    treffer.forEach((g,k)=>{const o=offen(g),z=fzEl('button','fzwahlzeile'+(k===wahl?' on':''));z.type='button';z.disabled=o<0&&!bereit(g);
+      const txt=fzEl('span','fzwahltxt');txt.append(fzEl('b','',g.name),fzEl('small','',[g.os||'',o>=0?t('offen · Reiter ','open · tab ')+(o+1):bereit(g)?t('online','online'):fzWie(g)].filter(Boolean).join(' · ')));
+      z.append(fzIcon(g),txt);z.onclick=e=>{fzWahlZu();fzOpen(g,!!(e&&e.shiftKey))};list.appendChild(z)});
+    if(!treffer.length)list.appendChild(fzEl('div','mut fzleer',t('Kein System passt.','No system matches.')));
+    const max=FZ.d.max||1;fuss.textContent=t('Enter öffnet als Reiter','Enter opens as a tab')+(fzAnsichtGeht('neben',2)?t(', Umschalt+Enter daneben',', Shift+Enter beside it'):'')+' · '+(FZ.reiter.length+FZ.wege.length)+t(' von ',' of ')+max+t(' Plätzen belegt',' places taken')};
+  q.oninput=()=>{wahl=0;zeig()};
+  q.onkeydown=e=>{if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();const n=treffer.length;if(!n)return;do{wahl=(wahl+(e.key==='ArrowDown'?1:-1)+n)%n}while(n>1&&list.children[wahl]&&list.children[wahl].disabled&&treffer.some((g,k)=>k!==wahl&&!list.children[k].disabled));zeig()}
+    else if(e.key==='Enter'){e.preventDefault();const z=list.children[wahl];if(z&&!z.disabled){if(e.shiftKey){const g=treffer[wahl],o=FZ.reiter.find(S=>S.sitz&&S.sitz.gid===g.id);fzWahlZu();if(o)fzDaneben(o);else fzOpen(g,true)}else z.click()}}else if(e.key==='Escape'){e.preventDefault();fzWahlZu()}};
+  w.append(q,list,fuss);document.body.appendChild(w);zeig();q.focus();
+  setTimeout(()=>document.addEventListener('pointerdown',fzWahlAussen,true),0)}
+function fzWahlAussen(e){const w=$('fzwahl');if(w&&!w.contains(e.target))fzWahlZu()}
+function fzWahlZu(){const w=$('fzwahl');if(w){w.remove();if(FZ.term)FZ.term.focus()}document.removeEventListener('pointerdown',fzWahlAussen,true)}
+// the page's own keys for the tabs, before the shell gets them (capture): Strg+Umschalt+1…9, ←/→, O
+document.addEventListener('keydown',e=>{if(!e.ctrlKey||!e.shiftKey||e.altKey||e.metaKey||FZ_FENSTER||!FZ.reiter.length||$('fzview').hidden||!document.querySelector('section#fern.on'))return;
+  const c=e.code||'';let n=-1;
+  if(/^Digit[1-9]$/.test(c))n=Number(c.slice(5))-1;
+  else if(c==='ArrowLeft'||c==='ArrowRight'){const i=FZ.reiter.indexOf(FZ.cur),k=FZ.reiter.length;n=i<0?0:(i+(c==='ArrowLeft'?-1:1)+k)%k}
+  else if(c==='KeyO'){e.preventDefault();e.stopPropagation();fzWahl();return}
+  else return;
+  e.preventDefault();e.stopPropagation();if(!FZ.reiter[n])return;const ganz=fzModus()==='uebersicht';if(ganz)fzAnsicht('einzeln',true);fzReiterWahl(FZ.reiter[n],false,ganz)},true);
+// ---------------------------------------------------------------- Geteilte Ansicht und Übersicht (Stufe 2, Bild 2-geteilt, 3-kacheln)
+// Einzeln, Nebeneinander (2) or 2 × 2 (from 3 tabs): the panes show their tabs at once, each terminal sized to its pane;
+// the focused pane is framed and alone gets the keys, the assistant and the suggestions (a click or Strg+Umschalt+1…9
+// brings a pane forward; a tab not in sight takes the focused pane, a tab dragged onto a pane takes that one).
+// Übersicht: every tab as a tile with the last lines of its screen (read from the terminal in this browser, never
+// sent anywhere), its state and its dot; a click brings it up alone, typing in the tiles goes nowhere. Narrower than
+// 1100 px there is only Einzeln. The choice stays in this browser.
+const FZ_FELDER={neben:2,vier:4},FZ_KACHEL_ZEILEN=12;
+function fzAnsichtGeht(a,n){n=n===undefined?FZ.reiter.length:n;if(a==='einzeln')return true;
+  if(FZ_FENSTER||NARROW()||innerWidth<1100||n<2)return false;return a!=='vier'||n>=3}
+function fzModus(){return fzAnsichtGeht(FZ.ansicht)?FZ.ansicht:'einzeln'}
+function fzGeteilt(){return !!FZ_FELDER[fzModus()]}
+// in a pane (a terminal in sight) / in sight at all (a pane or a tile)
+function fzImFeld(S){const m=fzModus();return m==='uebersicht'?false:FZ_FELDER[m]?FZ.felder.includes(S):S===FZ.cur}
+function fzSichtbar(S){return fzModus()==='uebersicht'||fzImFeld(S)}
+// the panes after a change: the ones still open stay where they are, the focused tab is always in one, the rest fill up
+function fzFelderOrdnen(){const n=FZ_FELDER[fzModus()]||0;if(!n){FZ.felder=[];return}
+  let f=FZ.felder.filter(S=>FZ.reiter.includes(S)).slice(0,n);if(FZ.cur&&!f.includes(FZ.cur)){if(f.length>=n)f[f.length-1]=FZ.cur;else f.push(FZ.cur)}
+  for(const S of FZ.reiter){if(f.length>=n)break;if(!f.includes(S))f.push(S)}FZ.felder=f}
+// a tab comes forward: in a pane already it only takes the focus; else it takes the pane of the tab that had it
+function fzFeldFuer(S,alt){if(FZ.daneben&&FZ.daneben!==S&&FZ.reiter.includes(FZ.daneben)){fzAnsicht('neben',true);FZ.felder=[FZ.daneben,S]}FZ.daneben=null;
+  if(!fzGeteilt()||FZ.felder.includes(S))return;const i=alt?FZ.felder.indexOf(alt):-1;if(i>=0)FZ.felder[i]=S;else FZ.felder.push(S)}
+function fzInsFeld(z,S){const i=FZ.felder.indexOf(S),j=FZ.felder.indexOf(z);if(i<0)return;if(j>=0)FZ.felder[j]=S;FZ.felder[i]=z;fzReiterWahl(z,false,true)}
+function fzDaneben(S){if(!FZ.cur||S===FZ.cur)return;FZ.daneben=FZ.cur;fzReiterWahl(S,false,true)}
+function fzAnsicht(a,still){if(!['einzeln','neben','vier','uebersicht'].includes(a))return;FZ.ansicht=a;try{localStorage.setItem('fzansicht',a)}catch{}
+  if(still)return;fzAnsichtMalen();fzReiterZeigen();fzLayout();requestAnimationFrame(()=>{fzResize();if(FZ.term&&fzImFeld(FZ.cur))FZ.term.focus()})}
+function fzAnsichtStart(){try{const a=localStorage.getItem('fzansicht');if(a)FZ.ansicht=a}catch{}}
+// what shows: the boxes in their panes (their order is the panes'), the focused one framed, or the tiles
+function fzAnsichtMalen(){const tm=$('fzterm');if(!tm)return;fzFelderOrdnen();const m=fzModus(),n=FZ_FELDER[m]||0;
+  tm.classList.toggle('fzgeteilt',!!n);tm.classList.toggle('fz2',n===2);tm.classList.toggle('fz4',n===4);tm.classList.toggle('fzkachelnan',m==='uebersicht');
+  for(const S of FZ.reiter){if(!S.box)continue;const i=FZ.felder.indexOf(S);S.box.hidden=!fzImFeld(S);S.box.style.order=n&&i>=0?String(i):'';S.box.classList.toggle('fokus',!!n&&S===FZ.cur);
+    S.box.setAttribute('aria-current',n&&S===FZ.cur?'true':'false')}
+  clearInterval(FZ.kt);let k=$('fzkacheln');if(m!=='uebersicht'){if(k)k.remove();return}
+  if(!k){k=fzEl('div','fzkacheln');k.id='fzkacheln';k.setAttribute('role','list');tm.appendChild(k)}fzKacheln();FZ.kt=setInterval(fzKacheln,2000)}
+// the last lines of a tab's screen, as this browser's terminal shows them (text only)
+function fzSchnappschuss(S){const b=S.term&&S.term.buffer&&S.term.buffer.active;if(!b)return '';const out=[];
+  const bis=b.baseY+b.cursorY;for(let y=Math.max(0,bis-FZ_KACHEL_ZEILEN+1);y<=bis;y++){const l=b.getLine(y);out.push(l?l.translateToString(true):'')}
+  return out.join('\n')}
+function fzKacheln(){const k=$('fzkacheln');if(!k||fzModus()!=='uebersicht'){clearInterval(FZ.kt);return}k.textContent='';
+  FZ.reiter.forEach((S,i)=>{const b=fzEl('button','fzkachel'+(S===FZ.cur?' on':''));b.type='button';b.setAttribute('role','listitem');b.title=S.sitz.name+(i<9?' · '+t('Strg+Umschalt+','Ctrl+Shift+')+(i+1):'');
+    const kopf=fzEl('span','fzkachelkopf');kopf.append(fzIcon({art:S.sitz.art}),fzEl('b','',S.sitz.name),fzEl('span','fzdot '+(S.wieder?'warn':S.sid&&S.ws?'ok':'')),
+      fzEl('small','',S.wieder?t('wird wiederhergestellt','reconnecting'):S.sid&&S.ws?t('verbunden','connected'):t('verbindet','connecting')));
+    b.append(kopf,fzEl('pre','fzkacheltext',fzSchnappschuss(S)));b.onclick=()=>{fzAnsicht('einzeln',true);fzReiterWahl(S,false,true)};k.appendChild(b)})}
+function fzAnsichtKnoepfe(bar){const g=fzEl('div','fzansicht');g.setAttribute('role','group');g.setAttribute('aria-label',t('Ansicht','View'));
+  const m=fzModus();let eine=false;
+  for(const [a,txt,tip] of [['einzeln',t('Einzeln','Single'),t('Ein System','One system')],['neben',t('Nebeneinander','Side by side'),t('Zwei Systeme nebeneinander','Two systems side by side')],
+    ['vier','2 × 2',t('Vier Systeme (ab 3 Reitern)','Four systems (from 3 tabs)')],['uebersicht',t('Übersicht','Overview'),t('Alle Sitzungen als Kacheln','Every session as a tile')]]){
+    if(a!=='einzeln'&&!fzAnsichtGeht(a))continue;if(a!=='einzeln')eine=true;
+    const b=fzBtn(txt,'fzansichtb'+(m===a?' on':''),()=>fzAnsicht(a));b.dataset.a=a;b.title=tip;b.setAttribute('aria-pressed',m===a?'true':'false');g.appendChild(b)}
+  if(eine)bar.appendChild(g)}
+addEventListener('resize',()=>{if(FZ.reiter.length&&!$('fzview').hidden){const m=fzModus();if(m!==(FZ.gemalt||'')){FZ.gemalt=m;fzAnsichtMalen();fzReiterZeigen();requestAnimationFrame(fzResize)}}});
+// ---------------------------------------------------------------- An alle senden (Stufe 4, Bild 4-an-alle)
+// with Funktionen → Fernzugang zu Servern → An alle senden on (off by default): a red line of its own above the
+// terminals, never the keys mirrored. It names the systems that take part (the connected shells of the same kind of
+// system as the tab in front, at least two) and the ones that do not. Enter asks each time with the line and the names;
+// a line of the Vorsicht list never goes (the page says so, and the panel checks the same rules again). After a send,
+// on another page, after 5 minutes and when fewer than two systems are left it goes off by itself. The assistant
+// never inserts here; nothing of the line is kept or logged.
+const FZ_ALLE_S=300;
+function fzAlleArt(S){return (S&&S.sitz&&S.sitz.art)||'linux'}
+function fzAlleZiele(){const k=fzAlleArt(FZ.cur),bereit=S=>S.ws&&S.ws.readyState===1&&S.sid;
+  return {mit:FZ.reiter.filter(S=>bereit(S)&&fzAlleArt(S)===k),ohne:FZ.reiter.filter(S=>!(bereit(S)&&fzAlleArt(S)===k))}}
+function fzAlleGeht(){return !!(FZ.d&&FZ.d.alle)&&!FZ_FENSTER&&fzAlleZiele().mit.length>=2}
+function fzAlleKnopf(bar){if(!fzAlleGeht())return;const b=fzBtn(t('An alle …','To all …'),'fzallebtn'+(FZ.alle?' on':''),()=>FZ.alle?fzAlleAus():fzAlleAn());
+  b.title=t('Eine Zeile an alle verbundenen Shells dieser Art (jedes Mal mit Rückfrage)','One line to every connected shell of this kind (asked each time)');b.setAttribute('aria-pressed',FZ.alle?'true':'false');bar.appendChild(b)}
+function fzAlleAn(){if(!fzAlleGeht())return;FZ.alle={bis:Date.now()+FZ_ALLE_S*1000};let z=$('fzsende');
+  if(!z){z=fzEl('div','fzalle');z.id='fzsende';z.setAttribute('role','group');z.setAttribute('aria-label',t('An alle senden','Send to all'));
+    const kopf=fzEl('div','fzsendekopf'),q=document.createElement('input'),los=fzBtn(t('Senden …','Send …'),'p',fzAlleSenden),zu=fzBtn('×','fzallezu',fzAlleAus);
+    kopf.id='fzsendekopf';q.id='fzsendezeile';q.type='text';q.autocomplete='off';q.spellcheck=false;q.maxLength=(FZ.d&&FZ.d.alle_zeichen)||500;
+    q.placeholder=t('Eine Zeile für alle, Enter fragt nach','One line for all, Enter asks first');q.setAttribute('aria-label',t('Zeile für alle','Line for all'));
+    zu.title=t('An alle aus','Send to all off');zu.setAttribute('aria-label',zu.title);
+    q.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();fzAlleSenden()}else if(e.key==='Escape'){e.preventDefault();fzAlleAus()}};
+    const reihe=fzEl('div','fzallereihe');reihe.append(q,los,zu);z.append(kopf,reihe);$('fzterm').before(z)}
+  z.hidden=false;fzAlleStand();fzReiterZeigen();fzLayout();$('fzsendezeile').focus();
+  clearInterval(FZ.allet);FZ.allet=setInterval(()=>{if(!FZ.alle)return;if(Date.now()>FZ.alle.bis||!document.querySelector('section#fern.on')||$('fzview').hidden)fzAlleAus()},1000)}
+function fzAlleAus(){FZ.alle=null;clearInterval(FZ.allet);const z=$('fzsende');if(z){z.hidden=true;const q=$('fzsendezeile');if(q)q.value=''}fzReiterZeigen();fzLayout();if(FZ.term&&fzImFeld(FZ.cur))FZ.term.focus()}
+// who takes part, said above the line; fewer than two: off
+function fzAlleStand(){if(!FZ.alle)return;const {mit,ohne}=fzAlleZiele();if(mit.length<2||!(FZ.d&&FZ.d.alle)){fzAlleAus();return}
+  const k=$('fzsendekopf');if(!k)return;k.textContent='';
+  k.append(fzEl('b','',t(`Eingabe geht an ${mit.length} Systeme: `,`Input goes to ${mit.length} systems: `)),fzEl('span','',mit.map(S=>S.sitz.name).join(', ')));
+  if(ohne.length)k.appendChild(fzEl('small','',' · '+t('nicht dabei: ','not included: ')+ohne.map(S=>S.sitz.name+' ('+(S.ws&&S.sid?t('andere Art','other kind'):t('nicht verbunden','not connected'))+')').join(', ')))}
+async function fzAlleSenden(){const q=$('fzsendezeile');if(!q||!FZ.alle)return;const zeile=q.value.trim();if(!zeile)return;
+  if(/[\x00-\x1f\x7f]/.test(zeile)){fzMsg(t('Nur eine Zeile ohne Steuerzeichen.','One line without control characters only.'),true);return}
+  const g=fzGefahr(zeile);if(g){fzMsg(t('Befehle der Vorsicht-Liste gehen nie an alle: ','Commands from the caution list never go to all: ')+g,true);return}
+  const {mit}=fzAlleZiele();if(mit.length<2){fzAlleAus();return}
+  if(!confirm(t(`„${zeile}“ an ${mit.length} Systeme senden?`,`Send "${zeile}" to ${mit.length} systems?`)+'\n\n'+mit.map(S=>'· '+S.sitz.name).join('\n')))return;
+  try{const r=await api('/api/admin/fernzugang/alle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({zeile,sitzungen:mit.map(S=>S.sid)})});const d=await r.json();
+    fzMsg(t(`An ${d.n} Systeme gesendet.`,`Sent to ${d.n} systems.`));fzAlleAus()}
+  catch(e){const w=String(e.message||'');fzMsg(w.includes('vorsicht')?t('Der Spark hat die Zeile abgewiesen: Vorsicht-Liste.','The Spark refused the line: caution list.'):w.includes('gemischt')?t('Der Spark hat abgewiesen: Systeme verschiedener Art.','The Spark refused: systems of different kinds.'):w,true)}}
 // ---------------------------------------------------------------- the files (SFTP)
 const fzKB=n=>n==null?'':n<1024?n+' B':n<1048576?Math.round(n/1024)+' KB':n<1073741824?(n/1048576).toFixed(1)+' MB':(n/1073741824).toFixed(1)+' GB';
-async function fzDateien(g){if(FZ.ws||FZ.weg||FZ.fs||FZ.fb){fzMsg(t('Erst die offene Sitzung trennen.','Disconnect the open session first.'),true);return}let d;
-  try{const r=await api('/api/admin/fernzugang/dateien',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({geraet:g.id})});d=await r.json()}catch(e){fzFehler(e);return}
-  FZ.fs={id:d.id,pfad:d.pfad,max:d.max_mb,oben:null};FZ.sitz={name:g.name,seit:Date.now()/1000,max:FZ.d.max,leer:d.leerlauf,art:'dateien'};
-  $('fzmain').hidden=true;$('fzstatus').hidden=true;$('fzfiles').hidden=false;fzBanner();fzMsg('');fzFInfo();fzListe(d.pfad);if(window.fgZeig)fgZeig()}
+// Dateien als anderer Benutzer (fernals.py): what the server gave free (sudo spark-anker dateien als …, Windows: folders)
+// and this system's own switch (a fresh code or passkey); then „Dateien als root“ (read only) and, when the server allowed
+// it, „… schreiben“ (a fresh code every session)
+function fzAlsBlock(g){const w=fzEl('div','fzals'),a=g.als;w.id='fzals';
+  w.appendChild(fzEl('div','fzgrp',t('Dateien als anderer Benutzer','Files as another user')));
+  if(!a){w.appendChild(fzEl('div','fh',t('Der Server hat nichts freigegeben. Dort als root: sudo spark-anker dateien als root (nur lesen; --schreiben auch schreiben). Windows als Administrator: spark-anker dateien ordner "C:\\Users\\…"','The server gave nothing free. There as root: sudo spark-anker dateien als root (read only; --schreiben also write). Windows as administrator: spark-anker dateien ordner "C:\\Users\\…"')));return w}
+  const wer=a.art==='sudo'?t('als ','as ')+a.benutzer.join(', '):t('Ordner: ','Folders: ')+a.ordner.join(', ');
+  w.appendChild(fzEl('div','mut',t('Vom Server freigegeben: ','Given free by the server: ')+wer+' · '+(a.schreiben?t('lesen und schreiben','read and write'):t('nur lesen','read only'))));
+  const row=fzEl('div','row');
+  const sw=fzBtn(g.als_frei?t('Für dieses System ausschalten','Switch off for this system'):t('Für dieses System einschalten (Code/Passkey)','Switch on for this system (code/passkey)'),g.als_frei?'':'p',async()=>{
+    try{await api(`/api/admin/fernzugang/geraete/${g.id}/als`,{method:g.als_frei?'DELETE':'POST'});fzLoad()}catch(e){fzFehler(e)}});sw.id='fzalsschalter';row.appendChild(sw);
+  if(g.als_frei&&a.art==='sudo')for(const u of a.benutzer){row.appendChild(fzBtn(t('Dateien als ','Files as ')+u,'fzk',()=>fzDateien(g,u,false)));
+    if(a.schreiben)row.appendChild(fzBtn(t('… schreiben (Code/Passkey)','… write (code/passkey)'),'',()=>{if(confirm(t(`Dateien als ${u} mit Schreiben öffnen? Alles, was du hochlädst, gehört dann ${u}.`,`Open files as ${u} with writing? Everything you upload then belongs to ${u}.`)))fzDateien(g,u,true)}))}
+  if(g.als_frei&&a.art==='ordner')row.appendChild(fzBtn(t('Dateien in den Ordnern','Files in the folders'),'fzk',()=>fzDateien(g)));
+  w.appendChild(row);return w}
+async function fzDateien(g,als,schreiben){if(fzBelegt()){fzMsg(t('Erst die offene Sitzung trennen.','Disconnect the open session first.'),true);return}let d;
+  try{const r=await api('/api/admin/fernzugang/dateien'+(als&&schreiben?'/schreiben':''),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({geraet:g.id,...(als?{als}:{})})});d=await r.json()}catch(e){fzFehler(e);return}
+  FZ.fs={id:d.id,pfad:d.pfad,max:d.max_mb,oben:null,als:d.als||'spark',schreiben:d.schreiben!==false,ordner:d.ordner||[]};FZ.sitz={name:g.name+(d.als&&d.als!=='spark'?t(' als ',' as ')+d.als:''),seit:Date.now()/1000,max:FZ.d.max,leer:d.leerlauf,art:'dateien'};
+  $('fzmain').hidden=true;$('fzstatus').hidden=true;$('fzfiles').hidden=false;fzBanner();fzMsg('');fzFInfo();fzListe(FZ.fs.ordner[0]||d.pfad);if(window.fgZeig)fgZeig()}
 function fzFInfo(){const dl=$('fzfinfo');dl.textContent='';const s=FZ.sitz||{},fs=FZ.fs||{};
-  for(const [k,v] of [[t('System','System'),s.name||''],[t('Rechte','Permissions'),t('die des Benutzers spark auf dem Server','those of the user spark on the server')],[t('Höchstens','At most'),fs.max+t(' MB je Datei',' MB per file')],
+  const als=fs.als&&fs.als!=='spark'?fs.als:'';
+  $('fzfsend').disabled=$('fzffile').disabled=!fs.schreiben;
+  for(const [k,v] of [[t('System','System'),s.name||''],[t('Rechte','Permissions'),als?(fs.schreiben?t(`die von ${als} (lesen und schreiben)`,`those of ${als} (read and write)`):t(`die von ${als}, nur lesen`,`those of ${als}, read only`)):t('die des Benutzers spark auf dem Server','those of the user spark on the server')],
+    ...(fs.ordner&&fs.ordner.length?[[t('Freigegeben','Given free'),fs.ordner.join(', ')]]:[]),[t('Höchstens','At most'),fs.max+t(' MB je Datei',' MB per file')],
     [t('Leerlauf trennt','Idle ends'),t('nach ','after ')+s.leer+' min'],[t('Aufgezeichnet','Recorded'),t('nur Anzahl und Größe, nie Namen oder Inhalte','only counts and sizes, never names or contents')]])dl.append(fzEl('dt','',k),fzEl('dd','',v));
   $('fzfmax').textContent=t('Höchstens ','At most ')+fs.max+t(' MB. Die Datei landet im gezeigten Ordner; ohne „Ersetzen“ bleibt eine vorhandene Datei, wie sie ist.',' MB. The file lands in the folder shown; without "Replace" an existing file stays as it is.')}
 async function fzListe(p){const fs=FZ.fs;if(!fs)return;let d;
@@ -561,13 +776,13 @@ async function fzHoch(){const fs=FZ.fs,f=$('fzffile').files[0];if(!fs)return;if(
 async function fzFSchliessen(text){const fs=FZ.fs;if(!fs)return;try{await api(`/api/admin/fernzugang/dateien/${fs.id}`,{method:'DELETE'})}catch{}fzFZu(typeof text==='string'?text:'')}
 function fzFZu(text){if(window.fgZu)fgZu();FZ.fs=null;FZ.sitz=null;fzBanner();$('fzfiles').hidden=true;$('fzflist').textContent='';$('fzmain').hidden=false;if(text)fzMsg(text,true);fzLoad()}
 {const k=$('fzgo');if(k){$('fzheraus').onclick=fzHeraus;$('fzverlaufweg').onclick=fzVerlaufWeg;$('fzfragen').onclick=fzFragen;$('fzzielgo').onclick=fzZielStart;$('fzzielende').onclick=()=>fzZielEnde('');
-  $('fzfrage').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();fzFragen()}};$('fzalletasten').onclick=fzAlleTasten;$('fzdrawertab').onclick=()=>fzLade();$('fzzurueck').onclick=fzZurueck;$('fzwegstop').onclick=fzWegTrennen;
-  if(!(navigator.keyboard&&typeof navigator.keyboard.lock==='function'))$('fzalletasten').title=t('Nur in Chrome oder Edge','Only in Chrome or Edge');k.onclick=fzKoppeln;$('fzalle').onclick=fzAlle;$('fzalleakt').onclick=()=>{const a=fzAktBereit(FZ.d&&FZ.d.geraete);if(a.length&&confirm(t(`${a.length} Anker jetzt aktualisieren? Jeder startet dabei kurz neu.`,`Update ${a.length} anchors now? Each restarts briefly.`)))fzAktualisieren(a.map(g=>g.id))};$('fzbtrennen').onclick=fzTrennen;$('fzweiter').onclick=fzWeiter;$('fzbaldende').onclick=fzTrennen;$('fzsperrplus').onclick=fzEntsperren;$('fzalle2').onclick=fzAlle;
+  $('fzfrage').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();fzFragen()}};$('fzalletasten').onclick=fzAlleTasten;$('fzdrawertab').onclick=()=>fzLade();
+  if(!(navigator.keyboard&&typeof navigator.keyboard.lock==='function'))$('fzalletasten').title=t('Nur in Chrome oder Edge','Only in Chrome or Edge');k.onclick=fzKoppeln;$('fzalle').onclick=fzAlle;$('fzalleakt').onclick=()=>{const a=fzAktBereit(FZ.d&&FZ.d.geraete);if(a.length&&confirm(t(`${a.length} Anker jetzt aktualisieren? Jeder startet dabei kurz neu.`,`Update ${a.length} anchors now? Each restarts briefly.`)))fzAktualisieren(a.map(g=>g.id))};$('fzbtrennen').onclick=fzBannerTrennen;$('fzbhin').onclick=()=>{goSec('fern');if(FZ.cur){fzZeigen();fzReiterWahl(FZ.cur)}};$('fzweiter').onclick=fzWeiter;$('fzbaldende').onclick=()=>fzTrennen(FZ.baldS);$('fzsperrplus').onclick=fzEntsperren;$('fzalle2').onclick=fzAlle;
   $('fzbinfo').onclick=e=>fzInfoPop(undefined,e.currentTarget);$('fzinfobtn').onclick=e=>fzInfoPop(undefined,e.currentTarget);$('fzkeycopy').onclick=e=>{if(FZ.fp)copyString(FZ.fp,e.currentTarget)};
   $('fzmenu').onclick=()=>fzMenu(!FZ.menuAus);$('fzspalte').onclick=()=>fzSpalte($('fzview').classList.contains('fzzu'));$('fztasten').onclick=fzTastenreihe;
-  $('fzspaltezu').onclick=()=>{if(document.fullscreenElement)fzLade(false);else if(NARROW())fzBlatt(false);else fzSpalte(false)};$('fzfragbtn').onclick=()=>fzBlatt(true);fzGriff();fzSpalteStart();
+  $('fzspaltezu').onclick=()=>{if(document.fullscreenElement)fzLade(false);else if(NARROW())fzBlatt(false);else fzSpalte(false)};$('fzfragbtn').onclick=()=>fzBlatt(true);fzGriff();fzSpalteStart();fzAnsichtStart();
   if(window.ResizeObserver){new ResizeObserver(()=>fzResize()).observe($('fzterm'));const ro=new ResizeObserver(()=>{fzLayout();fzSeite()});for(const e of [document.body,...document.body.children])ro.observe(e)}   // a bar or notice above the page comes later: the height follows
-  new MutationObserver(()=>{fzMenu();fzLayout();fzSeite()}).observe($('fern'),{attributes:true,attributeFilter:['class']});addEventListener('resize',()=>{fzLayout();fzSeite()});
+  new MutationObserver(()=>{fzMenu();fzLayout();fzSeite();fzHin()}).observe($('fern'),{attributes:true,attributeFilter:['class']});addEventListener('resize',()=>{fzLayout();fzSeite()});
   $('fzname').onkeydown=e=>{if(e.key==='Enter')fzKoppeln()};fzKeys();
   {const c=$('fzchips');c.addEventListener('scroll',()=>{fzRand();fzTipWeg()},{passive:true});c.addEventListener('wheel',e=>{if(Math.abs(e.deltaY)>Math.abs(e.deltaX)&&c.scrollWidth>c.clientWidth){c.scrollLeft+=e.deltaY;e.preventDefault()}},{passive:false});addEventListener('resize',fzRand)}
   // page layout A: unlock pill, the sheet „System koppeln“, the history of all systems, the search over the list
@@ -638,8 +853,8 @@ function fzNotizBild(text,gid){const f=document.createDocumentFragment();let ul=
   return f}
 // „Ins Terminal“: into the open shell of this system, or a shell opens first; the line is typed in, Enter stays with the person
 function fzNotizTerminal(gid,line){line=String(line).replace(/[\r\n]+/g,' ').trim();if(!line)return;
-  if(FZ.ws&&FZ.sitz&&FZ.sitz.gid===gid&&FZ.ws.readyState===1){fzEinfuegen(line);return}
-  if(FZ.ws||FZ.weg||FZ.fs||FZ.fb){fzMsg(t('Erst die offene Sitzung trennen.','Disconnect the open session first.'),true);return}
+  const da=FZ.reiter.find(S=>S.sitz&&S.sitz.gid===gid);if(da){fzReiterWahl(da);if(FZ.ws&&FZ.ws.readyState===1)fzEinfuegen(line);else FZ.nachher=line;return}
+  if(FZ.fs||FZ.fb){fzMsg(t('Erst die offene Sitzung trennen.','Disconnect the open session first.'),true);return}
   const g=((FZ.d&&FZ.d.geraete)||[]).find(x=>x.id===gid);if(!g)return;
   if(!g.online||g.hostkey_falsch||!g.erlaubt||g.wartet||g.stand==='abbau'){fzMsg(t('Das System ist nicht bereit für eine Shell.','The system is not ready for a shell.'),true);return}
   fzOpen(g).then(()=>{if(FZ.ws&&FZ.sitz&&FZ.sitz.gid===gid)FZ.nachher=line})}
@@ -667,14 +882,14 @@ function fzNotizZeigen(){const n=FZ.notiz,box=FZ.notizEl||(FZ.notizEl=fzEl('div'
       const b=fzEl('button','fzlink',t('Wiederherstellen','Restore'));b.type='button';b.onclick=()=>fzNotizZurueck(f.t);r.appendChild(b);fl.appendChild(r)}
     fl.appendChild(fzEl('div','fh',t('Die letzten 10 Fassungen bleiben erhalten; eine neue beginnt, wenn 10 Minuten nichts gespeichert wurde.','The last 10 versions are kept; a new one starts when nothing was saved for 10 minutes.')));box.appendChild(fl)}}
 function fzNotizKopf(box,n){const k=box.querySelector('.fznzkopf');if(!k)return;k.textContent='';
-  k.append(fzEl('b','','📝 '+t('Notizen','Notes')),fzEl('span','fznzstand'+(n.stand==='fehler'?' bad':''),n.stand==='tippt'?'…':n.stand==='speichert'?t('speichert …','saving …'):n.stand==='fehler'?t('nicht gespeichert','not saved'):n.t?'✓ '+t('gespeichert ','saved ')+fzUhr(n.t):''),fzEl('span','fzfill'));
+  k.append(fzEl('b','',t('Notizen','Notes')),fzEl('span','fznzstand'+(n.stand==='fehler'?' bad':''),n.stand==='tippt'?'…':n.stand==='speichert'?t('speichert …','saving …'):n.stand==='fehler'?t('nicht gespeichert','not saved'):n.t?'✓ '+t('gespeichert ','saved ')+fzUhr(n.t):''),fzEl('span','fzfill'));
   if(n.edit)for(const [l,tip,fn] of [['B',t('Fett','Bold'),()=>fzNotizMark('**','**')],['•',t('Liste','List'),()=>fzNotizZeile('- ')],['</>',t('Code-Block','Code block'),()=>fzNotizMark('```\n','\n```')]]){
     const b=fzEl('button','b fznzt',l);b.type='button';b.title=tip;b.setAttribute('aria-label',tip);b.onmousedown=e=>e.preventDefault();b.onclick=fn;k.appendChild(b)}
   if(n.fassungen&&n.fassungen.length){const f=fzEl('button','b fznzt',t('Fassungen','Versions')+' ('+n.fassungen.length+')');f.type='button';f.setAttribute('aria-expanded',String(!!n.offen));f.onclick=()=>{n.offen=!n.offen;fzNotizZeigen()};k.appendChild(f)}
   const e=fzEl('button','b fznzt'+(n.edit?' p':''),n.edit?t('Fertig','Done'):t('Bearbeiten','Edit'));e.type='button';e.onclick=()=>fzNotizEdit(!n.edit);e.disabled=!n.geladen;k.appendChild(e)}
 function fzNotizWarn(box,n){const w=box.querySelector('.fznzwarn');if(!w)return;w.textContent='';
   for(const x of n.warnungen||[]){const r=fzEl('div','note warn fznzw'),was=FZ_GEHEIM[x.art]||FZ_GEHEIM.token;
-    r.appendChild(document.createTextNode('⚠ '+t(`Zeile ${x.zeile} sieht aus wie ${was[0]}. Das gehört in den Tresor, nicht in die Notiz. `,`Line ${x.zeile} looks like ${was[1]}. That belongs in the vault, not in the note. `)));
+    r.append(icNode('warn'),document.createTextNode(' '+t(`Zeile ${x.zeile} sieht aus wie ${was[0]}. Das gehört in den Tresor, nicht in die Notiz. `,`Line ${x.zeile} looks like ${was[1]}. That belongs in the vault, not in the note. `)));
     const b=fzEl('button','fzlink',t('Entfernen','Remove'));b.type='button';b.onclick=()=>fzNotizWeg(x.zeile);r.appendChild(b);w.appendChild(r)}}
 function fzNotizEdit(on){const n=FZ.notiz;if(!n)return;if(!on)fzNotizSpeichern();n.edit=!!on;fzNotizZeigen();if(on){const ta=$('fznztext');if(ta)ta.focus()}}
 function fzNotizMark(a,b){const ta=$('fznztext'),n=FZ.notiz;if(!ta||!n)return;const s=ta.selectionStart,e=ta.selectionEnd,v=ta.value;

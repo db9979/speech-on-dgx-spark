@@ -142,7 +142,7 @@ class Bodies(Base):
         raw = b"From: anna@example.de\r\nSubject: Hallo\r\n\r\nDer Wagen ist fertig.\r\n"
 
         class S:
-            def __init__(self, acct):
+            def __init__(self, acct, folder="INBOX"):   # the signature of mail._Session
                 sessions.append(acct["id"])
 
             def __enter__(self):

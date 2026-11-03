@@ -57,7 +57,7 @@ function whFlow(){const box=$('whflow'),r=WH.tr;if(!r){box.innerHTML=`<div class
       +(r.ack?li(true,esc(t('Sofort-Satz: ','Instant sentence: ')+'„'+r.ack+'“')):li(false,esc(t('kein Sofort-Satz','no instant sentence')))),'res');
   box.querySelectorAll('.wh-st').forEach(b=>{const k=b.dataset.k;if(k==='grp'&&!r.names.length)b.classList.remove('hit');if(k==='pre'&&pre===t('nichts Besonderes','nothing special'))b.classList.add('pass')});
   $('whwrong').hidden=false}
-function d_locks(r){return WH.d.locks.filter(x=>x.k!=='notaus'||r.notaus>0).map(x=>`<div class="wh-li"><span>🔒 ${esc(x.s)}</span></div>`).join('')
+function d_locks(r){return WH.d.locks.filter(x=>x.k!=='notaus'||r.notaus>0).map(x=>`<div class="wh-li"><span>${ic('lock')} ${esc(x.s)}</span></div>`).join('')
   +(r.refers?`<div class="wh-li y"><span>${esc(t('Eine Sperre aus der Antwort davor bliebe bestehen.','A lock from the answer before would stay.'))}</span></div>`:'')}
 // ---------------------------------------------------------------- the groups, list and details
 function whList(){const d=WH.d,box=$('whlist');const rows=d.groups.slice();rows.push({name:'unklar',label:t('unklar','unclear'),tools:[],own:[],words:[],stats:d.unklar.stats||{}});
@@ -73,7 +73,7 @@ function whAnon(){const F=WH.d.unklar.fragen||{rows:[]},rows=F.rows||[];
   if(!F.on&&!rows.length)return head+`<div class="mut wh-small">${esc(t('Aus. Einschalten unter Funktionen → Gezielte Werkzeugwahl → Unklare Fragen anonym merken.','Off. Switch on under Features → Targeted tool choice → Keep unclear questions anonymously.'))}</div></div>`;
   const ph=q=>esc(q).replace(/\[([A-ZÄÖÜ-]+)\]/g,'<code class="wh-ph">[$1]</code>');
   return head+`<div class="mut wh-small">${esc(t(`${rows.length} gemerkt · ${F.dropped||0} verworfen (die Prüfung fand noch etwas Persönliches) · ohne Profil, Gerät und Uhrzeit`,`${rows.length} kept · ${F.dropped||0} dropped (the check still found something personal) · without profile, device and time`))}${F.on?'':' · '+esc(t('sammeln ist aus','collecting is off'))}</div>`
-    +rows.map(x=>`<div class="wh-uq"><span class="mut">×${x.n}</span><span class="wh-uqt">${ph(x.q)}</span>${x.took?`<span class="wh-tag">${esc(t('Modell nahm: ','model took: ')+whName(x.took))}</span>`:''}<button type="button" class="b" data-wh="uqfix" data-id="${esc(x.id)}">${esc(t('Gehört zu …','Belongs to …'))}</button><button type="button" class="mlink" aria-label="${esc(t('löschen','delete'))}" data-wh="uqdel" data-id="${esc(x.id)}">✕</button></div>`).join('')
+    +rows.map(x=>`<div class="wh-uq"><span class="mut">×${x.n}</span><span class="wh-uqt">${ph(x.q)}</span>${x.took?`<span class="wh-tag">${esc(t('Modell nahm: ','model took: ')+whName(x.took))}</span>`:''}<button type="button" class="b" data-wh="uqfix" data-id="${esc(x.id)}">${esc(t('Gehört zu …','Belongs to …'))}</button><button type="button" class="mlink" aria-label="${esc(t('löschen','delete'))}" data-wh="uqdel" data-id="${esc(x.id)}">${ic('x')}</button></div>`).join('')
     +(rows.length?`<button type="button" class="mlink" data-wh="uqall">${esc(t('Alle löschen','Delete all'))}</button>`:'')+'</div>'}
 async function whAnonDel(id){if(!id&&!confirm(t('Alle unklaren Fragen löschen?','Delete all unclear questions?')))return;
   try{const r=await api('/api/admin/weiche/unklar'+(id?'/'+encodeURIComponent(id):''),{method:'DELETE'});if(!r.ok)throw new Error(String(r.status));
@@ -151,7 +151,7 @@ function whFinds(){const f=WH.d.finden;if(!f||!f.on)return '';const n=x=>(x.name
     +(f.unused.length?`<div class="wh-tool">${esc(f.unused.map(n).join(', '))}</div>`:`<div class="mut wh-small">${esc(t('Jede freigegebene Funktion wurde benutzt.','Every released function was used.'))}</div>`)
     +(f.rows.length?`<table class="wh-tab"><tr><th>${esc(t('Beispielsatz für','Example sentence for'))}</th><th>${esc(t('gezeigt','shown'))}</th><th>${esc(t('getippt','tapped'))}</th></tr>`
       +f.rows.map(r=>`<tr><td>${esc(n(r))}</td><td>${r.shown}</td><td>${r.tap}</td></tr>`).join('')+'</table>':'')}
-function whLocks(){$('whlocks').innerHTML=WH.d.locks.map(x=>`<div class="wh-tool">🔒 ${esc(x.t)}</div>`).join('')+`<div class="mut wh-small">${esc(t('Schutzregeln gelten immer und lassen sich hier nicht abschalten.','Protection rules always apply and cannot be switched off here.'))}</div>`}
+function whLocks(){$('whlocks').innerHTML=WH.d.locks.map(x=>`<div class="wh-tool">${ic('lock')} ${esc(x.t)}</div>`).join('')+`<div class="mut wh-small">${esc(t('Schutzregeln gelten immer und lassen sich hier nicht abschalten.','Protection rules always apply and cannot be switched off here.'))}</div>`}
 function whBar(){const bar=$('whbar');bar.hidden=!whDirty()}
 // ---------------------------------------------------------------- saving
 async function whSave(confirm){const msg=$('whmsg');msg.textContent=t('Prüfe alle Testsätze …','Checking all test sentences …');

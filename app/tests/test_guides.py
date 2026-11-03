@@ -162,7 +162,7 @@ class DesignKlar(unittest.TestCase):
         # (plan assistent-zentrale.md 7a) after Listen, shown only with „Alles Offene im Assistenten“; Kontakte
         # (Apple-Stil 6a) after Offen, shown only with Kontakte; Wissensbuch (plan wissensgraph 2a) after Kontakte;
         # Finden (plan such-index 1a) after the Wissensbuch, shown only with „Finden in allen Daten“
-        self.assertEqual(re.findall(r'data-s="(\w+)"', nav), ["chat", "chats", "cal", "post", "listen", "offen", "kontakte", "wbuch", "finden", "dungeon", "mon", "feat", "prof", "fern", "cfg"])
+        self.assertEqual(re.findall(r'data-s="(\w+)"', nav), ["chat", "chats", "cal", "post", "listen", "offen", "kontakte", "wbuch", "finden", "mappen", "dungeon", "mon", "feat", "prof", "fern", "cfg"])
         self.assertLess(nav.index('id="findbtn"'), nav.index('data-s="chat"'))
         self.assertLess(nav.index('id="navme"'), nav.index("Spark verwalten"))
         self.assertLess(nav.index("Spark verwalten"), nav.index('data-s="mon"'))

@@ -17,7 +17,7 @@ function fbLaden(){if(window.Guacamole)return Promise.resolve();
     s.onload=()=>{delete window.module;window.Guacamole?ok():bad(new Error(t('Der Bildschirm-Baustein fehlt.','The screen component is missing.')))};
     s.onerror=()=>{delete window.module;bad(new Error(t('Der Bildschirm-Baustein fehlt.','The screen component is missing.')))};document.head.appendChild(s)})}
 function fbSparsam(){try{return localStorage.getItem('fbsparsam')==='1'}catch{return false}}
-async function fbOpen(g){if(FZ.ws||FZ.weg||FZ.fs||FZ.fb){fzMsg(t('Erst die offene Sitzung trennen.','Disconnect the open session first.'),true);return}
+async function fbOpen(g){if(fzBelegt()){fzMsg(t('Erst die offene Sitzung trennen.','Disconnect the open session first.'),true);return}
   $('fbsparsam').checked=fbSparsam();$('fbmacrow').hidden=g.bild!=='mac';$('fbmacuser').value='';$('fbmacpw').value='';FB.g=g;
   $('fbname').textContent=g.name;$('fbmodal').style.display='grid';setTimeout(()=>(g.bild==='mac'?$('fbmacuser'):$('fbgo')).focus(),50)}
 function fbModalZu(){$('fbmodal').style.display='none';$('fbmacpw').value=''}

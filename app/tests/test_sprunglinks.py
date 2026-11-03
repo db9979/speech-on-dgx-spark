@@ -214,6 +214,28 @@ class Outside(unittest.TestCase):
         self.assertEqual(wege.find("Ansehen unter E-Mail → Für dich."), "E-Mail → Für dich")
         self.assertEqual(wege.find("Settings under Calendar → Settings."), "Calendar → Settings")
         self.assertEqual(wege.find("Unter Ich → E-Mail."), "Ich → E-Mail")
+        for way in ("Finden → Schlagworte", "Offen → Einstellungen", "Listen → Einstellungen", "Dungeon-Master → Helden",
+                    "Find → Tags", "Open → Settings", "Lists → Settings", "Dungeon Master → Heroes"):
+            self.assertEqual(wege.find(f"Ansehen unter {way}."), way)
+        self.assertEqual(wege.find("Funktionen → KI-Dungeon-Master → Ehrungen"), "Funktionen → KI-Dungeon-Master → Ehrungen")
+
+    def test_the_roots_are_the_panels(self):
+        """wege.py (and through test_apps_use_the_same_rule every app and the Begleiter) knows the same roots as the
+        panel's way.js WAY_ROOTS, among them every page of its own (features.OWN_PAGES): a way that opens in the panel
+        is a link outside it too (Listen, Offen, Finden and Dungeon-Master were missing until V01.1.268)."""
+        import wege
+        js = open(os.path.join(PANEL, "static", "js", "way.js"), encoding="utf-8").read()
+        block = js[js.index("const WAY_ROOTS=["):]
+        block = block[:block.index("]];") + 3]
+        panel = re.findall(r"\['([^']+)','[^']+'\]", block)
+        self.assertGreater(len(panel), 20)
+        self.assertEqual(sorted(wege.ROOTS), sorted(panel))
+        self.assertEqual(len(wege.ROOTS), len(set(wege.ROOTS)))
+        for _, _, de, en in features.OWN_PAGES:
+            self.assertIn(de, wege.ROOTS)
+            self.assertIn(en, wege.ROOTS)
+        rx = re.search(r"const WAY_RX=/\(([^)]+)\)", js).group(1).split("|")
+        self.assertEqual(sorted(rx), sorted(wege.ROOTS), "way.js WAY_RX")
 
     def test_link_only_with_a_plain_address(self):
         import wege

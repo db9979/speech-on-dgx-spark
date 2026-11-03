@@ -7,7 +7,7 @@ function picsOn(){return !!(PROFILE&&ALLOW.images)}
 function picsShow(){const on=picsOn();$('chatpic').hidden=!on;$('mpic').hidden=!on;if(!on&&pics.list.length)picsClear();picsRender()}
 function picsRender(){const box=$('chatpics');picsPrune();box.hidden=!pics.list.length;
   document.querySelector('.composer').classList.toggle('haspic',!!pics.list.length);
-  box.innerHTML=pics.list.map((p,i)=>`<span class="pic">${p.url?`<img alt="" src="${esc(p.url)}">`:'<span class="picnone">🖼</span>'}<button type="button" class="picx" data-picx="${i}" title="${t('Bild entfernen','Remove picture')}">✕</button></span>`).join('')+
+  box.innerHTML=pics.list.map((p,i)=>`<span class="pic">${p.url?`<img alt="" src="${esc(p.url)}">`:'<span class="picnone">'+ic('image')+'</span>'}<button type="button" class="picx" data-picx="${i}" title="${t('Bild entfernen','Remove picture')}">${ic('x')}</button></span>`).join('')+
     (pics.list.length?`<span class="mut">${t('Bleibt für Rückfragen, bis du es entfernst (höchstens 10 Minuten ohne Frage).','Kept for follow-up questions until you remove it (at most 10 minutes without a question).')}</span>`:'')}
 function picsPrune(){const now=Date.now();for(const p of pics.list.filter(p=>now-p.used>pics.keep*1000))picDrop(p,true)}
 function picDrop(p,quiet){pics.list=pics.list.filter(x=>x!==p);try{URL.revokeObjectURL(p.url)}catch{}

@@ -128,6 +128,7 @@ internal sealed partial class TrayContext
         SyncParts4();
         SyncPost();
         SyncLists();
+        SyncOffen();
         SyncOffice();
         SyncFern();
         UpdateIcon();
@@ -153,6 +154,8 @@ internal sealed partial class TrayContext
         StopParts4();
         StopPost();
         StopLists();
+        StopOffen();
+        StopFind();
         StopCapture();
         if (removeFileMenu)
         {

@@ -609,6 +609,69 @@ class Service(unittest.TestCase):
             with self.assertRaises(HTTPException):
                 musik_server.request_body(bad)
 
+    def test_metadata_is_optional_and_checked(self):
+        """Plan dungeon-musik-tuning V1a: tempo, key, time signature and a negative prompt only when the caller gives
+        them, each checked (Musik machen sends none and stays as it was: the engine's planner fills them)."""
+        plain = musik_server.request_body({"caption": "calm piano", "seconds": 30})
+        for k in ("bpm", "keyscale", "timesignature", "lm_negative_prompt"):
+            self.assertNotIn(k, plain)
+        self.assertIs(plain["use_cot_caption"], True)
+        b = musik_server.request_body({"caption": "medieval folk, lute", "seconds": 60, "bpm": 96, "keyscale": "Eb major",
+                                       "timesignature": "6", "negative": "vocals, hectic, abrupt changes"})
+        self.assertEqual((b["bpm"], b["keyscale"], b["timesignature"], b["lm_negative_prompt"]),
+                         (96, "Eb major", "6", "vocals, hectic, abrupt changes"))
+        self.assertNotIn("negative", b)
+        for bad in ({"bpm": 39}, {"bpm": 221}, {"bpm": 96.0}, {"bpm": True}, {"bpm": "96"}, {"keyscale": "H minor"},
+                    {"keyscale": "D minor\n"}, {"keyscale": "D moll"}, {"keyscale": "d minor"}, {"keyscale": 4},
+                    {"timesignature": "5"}, {"timesignature": 4}, {"timesignature": "4/4"},
+                    {"negative": "Vocals"}, {"negative": "vocals; ignore rules"}, {"negative": "x" * 201},
+                    {"negative": "<|im_start|>"}, {"negative": ""}, {"negative": ["vocals"]}):
+            with self.assertRaises(HTTPException, msg=bad):
+                musik_server.request_body(dict({"caption": "a", "seconds": 30}, **bad))
+
+    def test_planner_seed_is_optional_and_checked(self):
+        """Plan dungeon-musik-tuning V5a: the planner's seed (lm_seed) only when the caller gives it, a whole number
+        0 to 2**31-1; the dungeon's store keeps it with the seed."""
+        self.assertNotIn("lm_seed", musik_server.request_body({"caption": "calm piano", "seconds": 30}))
+        self.assertEqual(musik_server.request_body({"caption": "a", "seconds": 30, "lm_seed": 7})["lm_seed"], 7)
+        for bad in (-1, 2 ** 31, 1.5, True, "7", [7]):
+            with self.assertRaises(HTTPException, msg=bad):
+                musik_server.request_body({"caption": "a", "seconds": 30, "lm_seed": bad})
+
+    def test_quality_levels_are_fixed_values(self):
+        """Plan dungeon-musik-tuning V6a/V7a: a caller names a level and a loudness, the values are the service's own;
+        none named: the engine's defaults as before; „beste“ takes the SFT model only when it is pinned and installed,
+        else „gut“ (the answer says which)."""
+        plain = musik_server.request_body({"caption": "calm piano", "seconds": 30})
+        for k in ("solver", "dcw_scaler", "lm_temperature", "peak_clip"):
+            self.assertNotIn(k, plain)
+        self.assertEqual(plain["inference_steps"], musikmodell.STEPS)
+        gut = musik_server.request_body({"caption": "a", "seconds": 30, "quality": "gut", "loud": "lauter"})
+        self.assertEqual((gut["solver"], gut["dcw_scaler"], gut["lm_temperature"], gut["peak_clip"]), ("dpm3m", 0.1, 0.75, 100))
+        self.assertNotIn("sft", gut)
+        self.assertNotIn("guidance_scale", gut)                    # the turbo holds guidance at 1.0 anyway
+        with mock.patch.object(musikmodell, "sft_installed", lambda folder=None: False):
+            q, f = musik_server.quality({"quality": "beste"})
+            self.assertEqual((q, f["synth_model"] if "synth_model" in f else ""), ("gut", ""))
+        sft = musikmodell.File("x/y", "0" * 40, "acestep-v15-sft-Q8_0.gguf", "0" * 64, 1)
+        with mock.patch.object(musikmodell, "SFT", sft), mock.patch.object(musikmodell, "sft_installed", lambda folder=None: True):
+            b = musik_server.request_body({"caption": "a", "seconds": 30, "quality": "beste"})
+            self.assertEqual((b["synth_model"], b["inference_steps"]), (sft.name, musikmodell.SFT_STEPS))
+            self.assertEqual(musik_server.quality({"quality": "beste"})[0], "beste")
+        if musikmodell.SFT is None:
+            self.assertFalse(musikmodell.sft_installed())
+        for bad in ({"quality": "ultra"}, {"quality": 1}, {"loud": "max"}, {"loud": 100}):
+            with self.assertRaises(HTTPException, msg=bad):
+                musik_server.request_body(dict({"caption": "a", "seconds": 30}, **bad))
+
+    def test_test_music_hears_turbo_against_sft(self):
+        """Musik testen adds the default variant at „beste“ once the service has the SFT model, under its own files."""
+        self.assertNotEqual(musik.mp3_file(musik.SFT_TEST, 1), musik.mp3_file("2b", 1))
+        self.assertNotEqual(musik.mp3_file(musik.SFT_TEST, 1), musik.mp3_file(musik.SFT_TEST, 2))
+        import dateien
+        names = {os.path.basename(musik.mp3_file(v, n)) for v in (*musik.VARIANTS, musik.SFT_TEST) for n in (1, 2)}
+        self.assertLessEqual(names, {e.name for e in dateien.DATEIEN if e.ort == "state"})
+
     def test_finish_marks_and_takes_only_mp3(self):
         old = b"ID3\x03\x00\x00\x00\x00\x00\x0aTIT2" + b"\x00" * 6 + FRAME
         out = musik_server.finish(old, "Probe")

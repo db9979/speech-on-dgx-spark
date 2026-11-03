@@ -16,7 +16,7 @@ function tipButtons(x,msg,gone){const row=document.createElement('span');row.cla
   return row}
 // under the answer: one line with the reason and the buttons (chat.js whyNote)
 function tipNote(d,x){const box=document.createElement('div');box.className='tipnote';
-  const why=document.createElement('span');why.textContent='💡 '+((x.why||[])[L==='en'?1:0]||'');box.appendChild(why);
+  const why=document.createElement('span');why.append(icNode('bulb'),' '+((x.why||[])[L==='en'?1:0]||''));box.appendChild(why);
   const msg=document.createElement('small');msg.className='mut';msg.setAttribute('role','status');
   box.appendChild(tipButtons(x,msg));box.appendChild(msg);d.appendChild(box)}
 // the guided setup in the face's window: the guide's steps, the Ich page, "Prüfen" and "Fertig"

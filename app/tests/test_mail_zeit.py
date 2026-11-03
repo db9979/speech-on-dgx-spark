@@ -48,7 +48,7 @@ class MailZeit(unittest.TestCase):
         # every read is another mailbox under the same id: the opened-mail memory (mail._bodies, V01.0.819) would
         # hand back the first one, so it is dropped like after a change of the mailbox settings
         mail._drop("u1")
-        mail._Session = lambda acct: _Box(date)
+        mail._Session = lambda acct, folder="INBOX": _Box(date)   # the signature of mail._Session
         return mail.read("u1", "m1a2b3c4d:5", zone)
 
     def test_utc_header_read_in_berlin_time(self):

@@ -121,7 +121,6 @@ _MERKMAL = {"stoff": {"holz": ("holz", "hölzern", "morsch", "eiche", "eichen", 
                       "braun": ("braun", "brown"), "blond": ("blond", "blonde", "strohblond", "flachsblond")}}
 _FORM = {w: (k, v) for k, vs in _MERKMAL.items() for v, ws in vs.items() for w in ws}
 _ENDUNG = re.compile(r"(e|es|er|en|em|n|s)?$")
-_WORT = re.compile(r"[a-zäöüß]+")
 _SATZ = re.compile(r"[.!?;:]+")
 
 # the model's sampling per job (llm.complete puts the extra keys into the request): a narration a little freer

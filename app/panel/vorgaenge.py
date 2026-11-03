@@ -85,7 +85,8 @@ ARTEN = {
                  "acts": ("oeffnen",)},
 }
 # a source module's own buttons for its kind (a new art in ARTEN, its buttons in AKTIONEN): {"acts": fn(uid, x) -> the
-# buttons its rules allow now, "run": fn(uid, x, name) -> dict for the answer or None}; raising HTTPException refuses.
+# buttons its rules allow now, "run": fn(uid, x, name) -> dict for the answer or None, optional "names": fn(uid, x) ->
+# {button: (de, en)} for buttons that say what they do on this card (a folder's name)}; raising HTTPException refuses.
 # The module registers itself (QUELLEN["regel"] = {...}); act() still checks owner, kind, state, rev and Notaus first.
 QUELLEN = {}
 # how long a card of a kind stays open at most (hours) before it goes as „Abgelaufen“; the others: ALT_TAGE
@@ -347,7 +348,7 @@ def public(uid, x):
     a = ARTEN[x["art"]]
     ok = _allowed_acts(uid, x)
     acts = [k for k in a["acts"] + ("spaeter", "zurueck") if k in ok]
-    names = {k: AKTIONEN[k] for k in acts}
+    names = _names(uid, x, acts)
     if x.get("knopf") in KNOPF:      # a proposal's yes says what it does („Eintragen“, „Senden“)
         names["vs_ja"] = dict(AKTIONEN["vs_ja"], de=KNOPF[x["knopf"]][0][0], en=KNOPF[x["knopf"]][0][1])
     return {"id": x["id"], "art": x["art"], "art_de": a["de"], "art_en": a["en"], "sym": a["sym"],
@@ -360,6 +361,17 @@ def public(uid, x):
             **({"fertig": list(KNOPF[x["knopf"]][1])} if x.get("knopf") in KNOPF else {})}
 
 
+def _names(uid, x, acts):
+    """The buttons' words: AKTIONEN, or the source's own for this card (QUELLEN "names", text only)."""
+    names = {k: AKTIONEN[k] for k in acts}
+    own = QUELLEN.get(x["art"], {}).get("names")
+    if own:
+        for k, (de, en) in (own(uid, x) or {}).items():
+            if k in names:
+                names[k] = dict(names[k], de=_clean(de, 60), en=_clean(en, 60))
+    return names
+
+
 def knoepfe(uid, vid):
     """The buttons a short note may carry (Telegram, Begleiter): the open Vorgang's direct ones and „Später“ with
     „Morgen früh“; the ones that open a page or need the preview (Ja) stay on the card. [] when none."""
@@ -367,8 +379,9 @@ def knoepfe(uid, vid):
     if x is None or x["zustand"] in ("erledigt", "weg") or x["art"] == "vorschlag":
         return []
     ok = _allowed_acts(uid, x)
-    return [(k, AKTIONEN[k]["de"]) for k in ARTEN[x["art"]]["acts"] + ("spaeter",)
-            if k in ok and AKTIONEN[k]["stufe"] == "direkt"]
+    keys = [k for k in ARTEN[x["art"]]["acts"] + ("spaeter",) if k in ok and AKTIONEN[k]["stufe"] == "direkt"]
+    names = _names(uid, x, keys)
+    return [(k, names[k]["de"]) for k in keys]
 
 
 def counts(items):

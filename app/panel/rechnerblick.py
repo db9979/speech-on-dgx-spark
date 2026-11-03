@@ -70,7 +70,9 @@ DIENST_NAMEN = {"asr": ("Spracherkennung", "Speech recognition"), "asr-engine": 
                 "tts-design": ("Stimmen gestalten", "Voice design"), "llm": ("Sprachmodell", "Language model"),
                 "llmtor": ("LLM-Tor", "LLM-Tor"), "sehen": ("Bildverständnis", "Image understanding"),
                 "helfer": ("Hilfsmodell", "Helper model"), "bild": ("Bilder malen", "Painting pictures"), "musik": ("Musik machen", "Making music"),
-                "werkstatt": ("Werkstatt", "Werkstatt"), "waerter": ("Wärter", "Wärter"), "panel": ("Panel", "Panel"),
+                "werkstatt": ("Werkstatt", "Werkstatt"),
+                "lokaltest": ("Schnelltest lokaler Änderungen", "Quick test of local changes"),
+                "lokaltest-umgebung": ("Testumgebung lokaler Änderungen", "Test environment of local changes"), "waerter": ("Wärter", "Wärter"), "panel": ("Panel", "Panel"),
                 "turn": ("Anrufe (TURN)", "Calls (TURN)"), "notasr": ("Notbetrieb-Erkennung", "Emergency recognition"),
                 "gehaeuse": ("Gehäuse", "Case"), "schirm": ("Steuerzentrale", "Control centre"),
                 "guacd": ("Bildschirm (guacd)", "Screen (guacd)"), "tlstor": ("TLS-Tor", "TLS gate"),
@@ -79,7 +81,8 @@ DIENST_NAMEN = {"asr": ("Spracherkennung", "Speech recognition"), "asr-engine": 
                 "docker": ("Modell in Docker", "Model in Docker"), "rest": ("System und Rest", "System and rest")}
 # the parts inside the panel (rechenteile.py); a background job („bg:<job>“) shows its fixed name from the code
 TEIL_NAMEN = {"anfragen": ("Anfragen und Seiten", "Requests and pages"), "bedeutungssuche": ("Bedeutungssuche", "Meaning search"),
-              "nachsortieren": ("Nachsortieren", "Re-ranking"), "auslassen": ("Ordner auslassen", "Leaving out folders"),
+              "nachsortieren": ("Nachsortieren", "Re-ranking"), "wissenmessen": ("Wissen messen", "Measuring knowledge"),
+              "auslassen": ("Ordner auslassen", "Leaving out folders"),
               "loopwacht": ("Hänge-Wächter", "Stall watch"), "aufraeumen": ("Chat löschen", "Deleting a chat"),
               "halive": ("Home Assistant live", "Home Assistant live"),
               "weitere": ("Weitere Threads", "Other threads"), "uebrig": ("Kurze Programme und Rest", "Short programs and rest")}

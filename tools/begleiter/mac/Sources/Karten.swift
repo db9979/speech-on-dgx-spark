@@ -11,6 +11,15 @@ enum AskCards {
     /// the panel pages a way button may open (chat.DESK_GOTO)
     static let pages = ["#me=calbox", "#me=mailbox", "#me=fundbox", "#me=factbox"]
 
+    /// Finden's Sofort-Karte (chat.DESK_ORIGINAL): "Original öffnen" leads to "#fund=" and one entry's number, nothing
+    /// else; the panel checks on opening whether the entry is the profile's own.
+    static func isFund(_ page: String) -> Bool {
+        page.range(of: "^#fund=[0-9]{1,12}$", options: .regularExpression) != nil && page.count <= 18
+    }
+
+    /// whether a way button may open this place: a page of `pages` or an entry of Finden
+    static func allowed(_ page: String) -> Bool { pages.contains(page) || isFund(page) }
+
     struct Button: Identifiable {
         let id = UUID()
         let label: String
@@ -36,7 +45,7 @@ enum AskCards {
                 let label = short(d["label"])
                 let send = short(d["send"])
                 let page = d["open"] as? String
-                let open = page.flatMap { pages.contains($0) ? $0 : nil }
+                let open = page.flatMap { allowed($0) ? $0 : nil }
                 let focus = (d["focus"] as? Bool) == true
                 if label.isEmpty || (send.isEmpty && open == nil && !focus) { continue }
                 buttons.append(Button(label: label, send: send.isEmpty ? nil : send, open: send.isEmpty ? open : nil,

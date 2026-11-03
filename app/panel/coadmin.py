@@ -15,7 +15,9 @@ as long as
   - the browser login was made with that second step (code, passkey or a browser the profile trusts:
     profiles.second_step_of), not with the PIN alone, not by "Am Handy weitermachen", not before the second step
     was set up (the mark is the second step's "since"),
-  - the app key was made after the second step was set up and the profile may use the iPhone app.
+  - the app key was made after the second step was set up, or the profile gave its code or passkey once in that app
+    since (prove_app_key: „Spark verwalten“ → „Mit Code bestätigen“, the key then carries the step's mark), and the
+    profile may use the iPhone app. Why an app is not admin comes back as a fixed word (APP_WHY, why_not).
 Speakers, the watch, Telegram, Siri, MCP and own programs never act as admin; guests never get a role.
 
 One admin profile is the "main" one (Haupt-Admin): its code also counts for the panel password (mfa.OWNER), only
@@ -27,6 +29,7 @@ Every admin request is logged with who did it (by); admin profiles hear of new a
                        (before V01.0.541: "on", "notify", roles owner/coadmin/manager: read as below)
     STATE/ohne-tageslimit.json  {"uids": [...]}  profiles the admin freed from daily limits (unbegrenzt)
 """
+import hmac
 import json
 import os
 import re
@@ -254,14 +257,66 @@ def session(request):
     if via == "b":
         if profiles.second_step_of(raw) != mark:
             return None   # signed in with the PIN alone, by "Am Handy weitermachen" or before the second step
-    else:
-        import iphone
-        import notaus
-        # an app key made before the second step was set up does not count (unknown "since" in very old files: it does)
-        if int(dev.get("created") or 0) < int(mfa.status(uid)["since"] or 0) or not iphone.allowed(uid) or notaus.own(uid):
-            return None
+    elif app_why(uid, dev, mark):
+        return None
     u = next(x for x in d["users"] if x["id"] == uid)
     return {"id": uid, "name": u["name"], "role": entry["role"], "via": via}
+
+
+# Why an admin profile's own iPhone app is not admin right now: fixed words, the app says each in its own text
+# („Spark verwalten“), the journal and whoami carry only the word (V01.1.266, Dominik 2026-10-30).
+APP_WHY = ("not_admin", "no_mfa", "app_off", "notaus", "key_older")
+_why_said = {}   # (device id, word) -> when the journal last had it (one line an hour, not one per request)
+
+
+def key_proved(dev, uid, mark):
+    """The app key counts for the profile's second step as it is now: made after that step was set up (unknown
+    "since" in very old files: it does), or bound to it later with a fresh code or passkey in this very app
+    (prove_app_key; a new setup gives a new mark, so the binding ends with it, like a browser login's)."""
+    if int(dev.get("created") or 0) >= int(mfa.status(uid)["since"] or 0):
+        return True
+    return bool(mark) and hmac.compare_digest(str(dev.get("step") or ""), mark)
+
+
+def app_why(uid, dev, mark=None):
+    """"" when this app key (a device entry with scope "app" of `uid`) acts as admin, else a word of APP_WHY."""
+    import iphone
+    import notaus
+    mark = mfa.mark(uid) if mark is None else mark
+    if not _read()["users"].get(uid) or uid not in profiles.user_ids():
+        return "not_admin"
+    if not mark or not mfa.enabled(uid):
+        return "no_mfa"
+    if not iphone.allowed(uid):
+        return "app_off"
+    if notaus.own(uid):
+        return "notaus"
+    return "" if key_proved(dev, uid, mark) else "key_older"
+
+
+def why_not(request, now=None):
+    """For the own iPhone app that is not admin right now: the word of APP_WHY (whoami gives it to „Spark verwalten“),
+    one journal line an hour per app and word; "" for everything else (the browser shows its own under Ich → Sicherheit)."""
+    if not request.headers.get(profiles.DEVICE_HEADER) or request.scope.get("speech_profile") or request.scope.get("speech_mcp"):
+        return ""
+    d = profiles._load()
+    dev = profiles._device(d, request)
+    if not dev or dev.get("scope") != "app":
+        return ""
+    why = app_why(dev["user"], dev)
+    now = time.time() if now is None else now
+    if why and now - _why_said.get((dev["id"], why), 0) > 3600:
+        if len(_why_said) > 200:
+            _why_said.clear()
+        _why_said[(dev["id"], why)] = now
+        prof = next((u for u in d["users"] if u["id"] == dev["user"]), None)
+        print("coadmin: app not admin", why, "for", profiles.log_name(prof) if prof else "-", flush=True)
+    return why
+
+
+def prove_app_key(uid, dev):
+    """The profile just gave a fresh code or passkey in this app: its key counts for the second step as it is now."""
+    profiles.set_device_step(dev["id"], uid, mfa.mark(uid))
 
 
 def manager_may(request):

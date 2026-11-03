@@ -5,8 +5,8 @@
 // text (textContent), „Zeigen“ sends a point 0..1, nothing is recorded or sent to a model. S3 (art „shell“): the person
 // ran one line in her terminal; after her „j“ her shell comes into an xterm here (bytes, binary), nothing else.
 const SH={d:null,ws:null,pc:null,term:null,timer:0,clock:0,ntick:0,zeig:false,link:'',qr:'',befehl:'',befehlMac:'',gesendet:{},
-  weg:'link',os:'linux',mailEn:false,alle:false,neuId:'',abgelaufen:false,nbis:0,lbis:0,teilt:false};
-const SH_ART={ansehen:['Ansehen','View'],shell:['Shell','Shell'],nummer_verfallen:['Nummer verfallen','Number expired'],nummer_gesperrt:['Nummer gesperrt','Number locked']};
+  weg:'link',os:'linux',mailEn:false,alle:false,neuId:'',abgelaufen:false,nbis:0,lbis:0,teilt:false,st:'',steuern:false,bild:false,zug:0};
+const SH_ART={ansehen:['Ansehen','View'],shell:['Shell','Shell'],steuern:['Ansehen + Steuern','View + control'],nummer_verfallen:['Nummer verfallen','Number expired'],nummer_gesperrt:['Nummer gesperrt','Number locked']};
 function shArt(a){return SH_ART[a]?t(...SH_ART[a]):a}
 // messages come as a short toast (sayToast), never as a line under the page
 function shMsg(text,bad){fzMsg(text,bad)}
@@ -41,6 +41,7 @@ function shShow(){const d=SH.d,box=$('shmain');if(!d||!box)return;const aus=!d.o
   $('shbanner').hidden=!offen;fzTopLine();$('shoffen').hidden=!offen;$('shview').hidden=!offen||shell;$('shterm').hidden=!offen||!shell;
   $('shchatbtn').hidden=shell;if(shell||!offen)$('shchat').hidden=true;shTeiltZeigen();
   if(offen)shUhr(h.bis,h.kann_verlaengern);else clearInterval(SH.clock);
+  shSt();
   shListe();shVerlauf()}
 // viewer controls only while the person really shares (Zeigepfeil, Vollbild); Chat and Beenden while the help is open
 function shTeiltZeigen(){const h=SH.d&&SH.d.hilfe,shell=!!h&&h.art==='shell',an=!!h&&h.stand==='offen'&&!shell&&SH.teilt;
@@ -122,7 +123,7 @@ async function shAnnehmen(){let tk;const h=SH.d&&SH.d.hilfe,shell=!!h&&h.art==='
   try{const r=await api('/api/admin/spontanhilfe/annehmen',{method:'POST'});tk=(await r.json()).ticket}catch(e){shMsg(e.message,true);return}
   const ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/api/spontanhilfe/admin?t='+encodeURIComponent(tk));
   ws.binaryType='arraybuffer';SH.ws=ws;$('shchatlist').textContent='';
-  ws.onmessage=ev=>{if(ev.data instanceof ArrayBuffer){if(SH.term)SH.term.write(new Uint8Array(ev.data));return}let m;try{m=JSON.parse(ev.data)}catch(e){return}shIn(m)};
+  ws.onmessage=ev=>{if(ev.data instanceof ArrayBuffer){if(SH.term)SH.term.write(new Uint8Array(ev.data));else shBild(ev.data);return}let m;try{m=JSON.parse(ev.data)}catch(e){return}shIn(m)};
   ws.onclose=()=>{if(SH.ws===ws){shZu();shLoad()}}}
 function shSend(m){if(SH.ws&&SH.ws.readyState===1)SH.ws.send(JSON.stringify(m))}
 async function shIn(m){
@@ -133,6 +134,7 @@ async function shIn(m){
   else if(m.typ==='teilt'){SH.teilt=!!m.an;shTeiltZeigen();shListe();if(SH.tick)SH.tick()}   // the status line at once, not a second later
   else if(m.typ==='erlaubt'&&SH.term){SH.term.write('\x1b[2m'+t('Erlaubt. Die Shell der Person, mit ihren Rechten; sie sieht alles mit.','Allowed. The person\'s shell, with her rights; she sees everything.')+'\x1b[0m\r\n');shTermGroesse(true);SH.term.focus()}
   else if(m.typ==='zeit'){shUhr(m.bis,true);shLoad()}
+  else if(m.typ==='steuern'){SH.st=String(m.stand||'');if('steuern' in m)SH.steuern=!!m.steuern;if(['no','zu','nein'].includes(SH.st)){SH.steuern=false;SH.bild=false}shSt()}
   else if(m.typ==='hinweis'){SH.kann=m.kann_verlaengern;shMsg(t('Die Hilfe endet in 10 Minuten. „Verlängern“ gibt 60 Minuten mehr.','The help ends in 10 minutes. "Extend" gives 60 more minutes.'))}}
 function shPc(ice){if(SH.pc)return;const pc=new RTCPeerConnection({iceServers:ice});SH.pc=pc;
   pc.onicecandidate=e=>shSend({typ:'ice',c:e.candidate?{candidate:e.candidate.candidate,sdpMid:e.candidate.sdpMid,sdpMLineIndex:e.candidate.sdpMLineIndex}:null});
@@ -148,7 +150,33 @@ function shTermGroesse(force){const term=SH.term,el=$('shterm');if(!term||!el||e
 addEventListener('resize',()=>shTermGroesse(false));
 function shZu(){const ws=SH.ws;SH.ws=null;if(ws)try{ws.close()}catch(e){}if(SH.pc){try{SH.pc.close()}catch(e){}SH.pc=null}
   if(SH.term){try{SH.term.dispose()}catch(e){}SH.term=null;const el=$('shterm');if(el)el.textContent=''}
-  const v=$('shvideo');if(v)v.srcObject=null;clearInterval(SH.clock);SH.zeig=false;SH.teilt=false;const z=$('shzeig');if(z)z.classList.remove('on')}
+  const v=$('shvideo');if(v)v.srcObject=null;clearInterval(SH.clock);SH.zeig=false;SH.teilt=false;const z=$('shzeig');if(z)z.classList.remove('on')
+  SH.st='';SH.steuern=false;SH.bild=false;const cv=$('shcv');if(cv){cv.width=cv.height=0}shSt()}
+// S2 Steuern (spontansteuern.py): „Steuern anfragen“ (fresh code); her program's pictures then come binary on this
+// socket into a canvas over the video, inputs from fernsicht's lists (DV_KEYS, begleiter.js) go back, only while she
+// allowed control and „Steuern“ is pressed; the panel and her program check them again
+const SH_ST={angefragt:['Steuern angefragt – sie lädt das Programm','Control asked – she is loading the program'],programm:['Programm verbunden – sie wird gefragt','Program connected – she is being asked'],
+  view:['Programm: nur ansehen','Program: view only'],control:['Steuern erlaubt','Control allowed'],no:['Steuern abgelehnt','Control declined'],
+  nein:['Sie bleibt beim Ansehen','She stays with viewing'],zu:['Programm geschlossen','Program closed']};
+const SH_TASTE={Enter:'enter',Escape:'escape',Tab:'tab',Backspace:'backspace',Delete:'delete',' ':'space',ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',
+  Home:'home',End:'end',PageUp:'pageup',PageDown:'pagedown',F5:'reload'},SH_STRG={z:'undo',y:'redo',c:'copy',v:'paste',s:'save',f:'find'};
+function shSt(){const d=SH.d||{},h=d.hilfe,an=!!d.steuern_an&&!!h&&h.stand==='offen'&&h.art!=='shell'&&!!SH.ws,s=SH.st;
+  $('shsfrage').hidden=!an||['angefragt','programm','view','control'].includes(s);
+  const m=$('shsmodus');m.hidden=!an||s!=='control';m.setAttribute('aria-pressed',String(SH.steuern));m.textContent=SH.steuern?t('Nur ansehen','View only'):t('Steuern','Control');
+  $('shsstand').hidden=!an||!SH_ST[s];$('shsstand').textContent=SH_ST[s]?t(...SH_ST[s]):'';
+  const bild=an&&SH.bild&&['view','control'].includes(s);$('shcv').hidden=!bild;$('shvideo').hidden=bild;$('shkeys').hidden=!(bild&&SH.steuern)}
+async function shSteuernFragen(){if(!confirm(t('Steuern anfragen? Die Person sieht dann „Programm laden“ und muss im Programm „Erlauben“ klicken.','Ask for control? The person then sees "Load program" and has to click "Allow" in the program.')))return;
+  try{await api('/api/admin/spontanhilfe/steuern',{method:'POST'});SH.st='angefragt';shSt()}catch(e){shMsg(e.message,true)}}
+function shBild(buf){createImageBitmap(new Blob([buf],{type:'image/jpeg'})).then(bm=>{const cv=$('shcv');if(cv.width!==bm.width||cv.height!==bm.height){cv.width=bm.width;cv.height=bm.height}
+  cv.getContext('2d').drawImage(bm,0,0);if(bm.close)bm.close();if(!SH.bild){SH.bild=true;shSt()}}).catch(()=>{})}
+function shEin(e){if(SH.steuern&&e)shSend({typ:'eingabe',events:[e]})}
+// the picture inside the canvas (object-fit: contain): only a point on it counts
+function shPunkt(ev){const cv=$('shcv'),r=cv.getBoundingClientRect();if(!cv.width)return null;
+  const s=Math.min(r.width/cv.width,r.height/cv.height),w=cv.width*s,h=cv.height*s,x=(ev.clientX-r.left-(r.width-w)/2)/w,y=(ev.clientY-r.top-(r.height-h)/2)/h;
+  return x<0||x>1||y<0||y>1?null:{x:+x.toFixed(4),y:+y.toFixed(4)}}
+function shKlick(ev,b){ev.preventDefault();const p=shPunkt(ev);if(p)shEin({t:'click',...p,b})}
+function shTaste(ev){if(!SH.steuern)return;const k=ev.ctrlKey||ev.metaKey?SH_STRG[ev.key.toLowerCase()]:SH_TASTE[ev.key];
+  if(k){ev.preventDefault();shEin({t:'key',k})}else if(ev.key.length===1&&!ev.ctrlKey&&!ev.metaKey&&!ev.altKey){ev.preventDefault();shEin({t:'text',s:ev.key})}}
 function shChat(text,mine){const l=$('shchatlist'),b=fzEl('div','shmsg'+(mine?' mine':''),text);l.appendChild(b);l.scrollTop=l.scrollHeight}
 function shChatSend(){const i=$('shchatin'),s=i.value.trim().slice(0,500);if(!s)return;shSend({typ:'chat',text:s});shChat(s,true);i.value=''}
 function shZeigen(e){if(!SH.zeig)return;const v=$('shvideo'),r=v.getBoundingClientRect();if(!v.videoWidth)return;
@@ -167,6 +195,13 @@ function shZeigen(e){if(!SH.zeig)return;const v=$('shvideo'),r=v.getBoundingClie
   $('shchatbtn').onclick=()=>{const c=$('shchat');c.hidden=!c.hidden;$('shchatbtn').setAttribute('aria-expanded',c.hidden?'false':'true');if(!c.hidden)$('shchatin').focus()};
   $('shvoll').onclick=()=>{const v=$('shview');if(v.requestFullscreen)v.requestFullscreen().catch(()=>{})};
   $('shchatin').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();shChatSend()}};$('shchatgo').onclick=shChatSend;
+  $('shsfrage').onclick=shSteuernFragen;$('shsmodus').onclick=()=>shSend({typ:'modus',modus:SH.steuern?'ansehen':'steuern'});
+  {const cv=$('shcv');cv.onclick=e=>{if(e.detail<2)shKlick(e,'left')};cv.ondblclick=e=>shKlick(e,'double');cv.oncontextmenu=e=>shKlick(e,'right');cv.onkeydown=shTaste;
+    cv.onmousemove=e=>{const n=Date.now();if(!SH.steuern||n-SH.zug<100)return;SH.zug=n;const p=shPunkt(e);if(p)shEin({t:'move',...p})};
+    cv.addEventListener('wheel',e=>{if(!SH.steuern)return;e.preventDefault();shEin({t:'scroll',dy:Math.max(-10,Math.min(10,Math.round(-e.deltaY/40)||(e.deltaY<0?1:-1)))})},{passive:false});
+    const kb=$('shkeys');for(const [k,l] of DV_KEYS){const b=fzEl('button','b',Array.isArray(l)?t(l[0],l[1]):l);b.type='button';b.onclick=()=>shEin({t:'key',k});kb.appendChild(b)}
+    const tipp=()=>{const i=$('shstext');if(i.value){shEin({t:'text',s:i.value.slice(0,200)});i.value=''}};$('shstipp').onclick=tipp;
+    $('shstext').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();tipp()}}}
   $('shverlaufweg').onclick=async()=>{if(!confirm(t('Den ganzen Verlauf der Spontanhilfe löschen?','Delete the whole history of spontaneous help?')))return;
     try{await api('/api/admin/spontanhilfe/verlauf',{method:'DELETE'});shLoad()}catch(e){shMsg(e.message,true)}}}}
 window.shLoad=shLoad;window.shShow=shShow;

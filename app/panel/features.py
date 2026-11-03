@@ -64,6 +64,7 @@ OWN_PAGES = (("calbox", "cal", "Kalender", "Calendar"), ("mailbox", "post", "E-M
              ("taskbox", "listen", "Listen", "Lists"), ("vgbox", "offen", "Offen", "Open"),
              ("conbox", "kontakte", "Kontakte", "Contacts"),
              ("wbbox", "wbuch", "Wissensbuch", "Knowledge book"), ("fundbox", "finden", "Finden", "Find"),
+             ("mpbox", "mappen", "Mappen", "Collections"),
              ("dmbox", "dungeon", "Dungeon-Master", "Dungeon Master"))
 # Ich pages every profile has, whatever is switched on (me.js meAll shows them for every profile too)
 ME_ALWAYS = frozenset(("setbox", "factbox", "logbox", "secbox"))
@@ -72,6 +73,37 @@ APP_SKIP = {"overbox": "the app's own start screen shows the overview",
             "gobox": "first steps in the browser after signing up",
             "loginbox": "the app is signed in by its own key",
             "andbox": "the Android app, not for an iPhone"}
+# Begleiter-Gleichstand (Dominik 2026-10-30, Begleiter Paket A): every function is in the Begleiter on purpose or
+# left out with its reason. DESK: the function → the Begleiter parts (begleiter.PARTS) that carry it; DESK_SKIP: the
+# function → why not. A sub-function follows its parent unless it stands here itself. test_app_gleichstand.Begleiter
+# checks that every function is in exactly one of both and every part belongs to a function.
+DESK = {"begleiter": ("ask", "dictate", "notes", "status", "notaus", "files", "screen", "context", "actions", "act",
+                      "wake", "speak", "inbox", "quiet", "meeting", "daily", "view"),
+        "schreib": ("write", "mail", "office"), "documents": ("folder",), "calendar": ("agenda", "capture"),
+        "reminders": ("capture", "notes"), "vorgaenge": ("actions", "offen"), "tasks": ("lists",), "mail": ("post",),
+        "ha": ("home",), "proactive": ("notes",), "fund": ("find",)}
+_D_PANEL = "stays in the panel: set up, looked at and deleted there"
+_D_LINK = "stays in the panel; the Begleiter's settings (Übersicht) link to its place"
+_D_TALK = "works in every answer, Frag Spark included; nothing of its own on the computer, set up in the panel"
+_D_SPARK = "a setting of the whole Spark for the admin, stays in the panel"
+_D_VOICE = "for speaking in the room (speakers, phone); the Begleiter asks by text, dictation or the wake word"
+_D_DEVICE = "another device with its own app or page"
+DESK_SKIP = {
+    **dict.fromkeys(("search", "wiki", "kiwix", "lokal", "roles", "style", "klaeren", "ablauf", "images", "rechnen",
+                     "hilfe", "verlaufsync", "eingespraech", "offlinelesen", "tagebuch", "sparkzustand",
+                     "rueckgaengig"), _D_TALK),
+    **dict.fromkeys(("follow", "selfecho", "anhalten", "satzende"), _D_VOICE),
+    **dict.fromkeys(("toolthink", "routing", "direct", "hoeren", "sofort", "gedkurz", "einordnung", "helfer", "vorrang",
+                     "berater", "geraeteupdate", "dienstwacht", "wachposten", "wartung", "notbetriebasr", "gehaeuse",
+                     "schirm", "modellwechsel", "werkstatt", "entwickeln"), _D_SPARK),
+    **dict.fromkeys(("history", "teilen", "bilder", "musik", "dungeon", "mystatus", "agent", "chats", "weather",
+                     "feeds", "contacts", "transit", "speaker", "verbrauch", "nas"), _D_PANEL),
+    **dict.fromkeys(("room", "esp32", "wyoming", "telefon", "telegram", "android", "pebble", "terminal", "mcpserver",
+                     "iphone", "appmerken"), _D_DEVICE),
+    "memory": _D_LINK, "mfa": _D_LINK + " (Meine Daten on the Ich page Sicherheit)",
+    "melden": "stays in the panel; the Begleiter's Kopplung page opens it (Problem melden …)",
+    "fernzugang": "an admin page, stays in the panel; the Begleiter's settings (Übersicht) link to it for an admin",
+}
 # Code-Prüfung D8 (one name per thing): an Ich page carries the name of its function, or a word of it, so "Funktionen →
 # Telefon" and "Ich → Telefon" are found as the same thing; these pages are named otherwise, each with its reason
 # (test_namen)
@@ -437,6 +469,13 @@ FEATURES = (
     # and deadlines of the documents as own points of the map; the panel's fixed rules decide, never the model
     F("wissensknoten", "Personen, Firmen und Fristen", "People, companies and deadlines", "data", ("knowledge_ents",),
       parent="wissenskarte", me="wbbox", guide="wissensknoten"),
+    # Karte hilft der Suche (wissenskarte.liste, plan wissensgraph Stufe 3): the points from documents give the document
+    # search a third list of hits (the words name a point, its neighbours, their places); fixed rules, never the model
+    F("kartensuche", "Karte hilft der Suche", "Map helps the search", "data", ("knowledge_search",),
+      parent="wissensknoten", me="wbbox", guide="kartensuche"),
+    # Mappen (mappen.py, plan open-notebook Stufe 1, Dominik 2026-10-30 „1a 2a“): own documents, Wissensbuch pages and
+    # notes bundled per undertaking, a context level per entry; a conversation bound to a Mappe gets its entries as data
+    F("mappen", "Mappen", "Collections", "data", ("mappen",), parent="documents", me="mpbox", guide="mappen"),
     # Finden (fund.py, plan such-index, Stufe A): one index over the own data with fields and tags, the page Finden,
     # Strg K and the tool fund_suche; each source follows its own function (documents, NAS, reMarkable, Wissensbuch)
     F("fund", "Finden in allen Daten", "Find in all data", "data", ("fund",), me="fundbox", guide="fund"),
@@ -570,6 +609,11 @@ FEATURES = (
     # there for good after the page's own question; rules, the model, „Für dich“ and the voice never delete
     F("maildelete", "Mails löschen", "Delete mail", "post", ("mail_delete", "mail_manage", "mail"), parent="mailmanage",
       me="mailbox", guide="maildelete"),
+    # mailregeln.py „Sortieren aus Korrekturen lernen“ (Dominik 2026-10-30, plan mail-lernen 3a 4a 5a): a mail the Spark sorted and
+    # the person put elsewhere (or into „Falsch sortiert“) is a correction; fixed thresholds make an exception, pause a
+    # rule and bring the card „Regel-Vorschlag“; never the model
+    F("maillearn", "Sortieren aus Korrekturen lernen", "Learn sorting from corrections", "post", ("mail_learn", "mail_manage", "mail"),
+      parent="mailmanage", me="mailbox", guide="maillearn"),
     # einladung.py (Dominik 2026-10-21 „ja alles umsetzen 1-6“, Punkt 3): an invitation (.ics) in a mail into a calendar
     # with one tap, Zusagen/Vielleicht/Absagen to the organiser (with „Mails senden“)
     F("einladungen", "Einladungen aus Mails", "Invitations from mail", "post", ("mail_invites", "mail", "calendar"),
@@ -745,13 +789,21 @@ FEATURES = (
     # sandbox on the model computer (OpenCode, no data, no internet, no push); admins only, the patch goes to a person
     F("werkstatt", "Werkstatt", "Workshop", "sec", ("werkstatt",), guide="werkstatt"),
     F("werkstattnacht", "Jede Nacht testen", "Test every night", "sec", ("werkstatt_nacht",), parent="werkstatt", guide="werkstattnacht"),
+    # entwickeln.py + entwickelnseite.py (plan opencode-pi, package 1): OpenCode with the own language model in the
+    # terminal of the panel computer (user spark-dev, its own clone), local changes installed like an update (Weg B)
+    F("entwickeln", "Entwickeln auf dem Pi", "Develop on the Pi", "sec", ("entwickeln",), guide="entwickeln"),
     # fernzugang.py + anker/spark-anker.py (plan ssh-vermittlung, stage 1): the shell of a server elsewhere in the
     # browser; the server's anchor calls the panel, admins only, no tool for the model
     F("fernzugang", "Fernzugang zu Servern", "Remote access to servers", "sec", ("fernzugang",), guide="fernzugang"),
     # a push to the admins when a remote session opens from the internet or a new place (on under the switch)
     F("fernzugangmeldung", "Meldung bei Fernsitzung", "Note on a remote session", "sec", ("fernzugang_meldung",), parent="fernzugang", guide="fernzugangmeldung"),
+    # Mehrere Sitzungen Stufe 4 (Dominik 2026-10-30 „alle“, mockup 4-an-alle): one line into several open shells, off
+    F("fernzugangalle", "An alle senden im Fernzugang", "Send to all in remote access", "sec", ("fernzugang_alle",), parent="fernzugang", guide="fernzugangalle"),
     # spontanhilfe.py (plan spontanhilfe, S1): a person shares her screen once in the browser (/hilfe), admins only
     F("spontanhilfe", "Spontanhilfe", "Spontaneous help", "sec", ("spontanhilfe",), parent="fernzugang", guide="spontanhilfe"),
+    # spontansteuern.py (plan spontanhilfe S2a): the admin moves the mouse and types, through the SparkHilfe program the
+    # person starts herself; three consents (fresh code, her download, her „Erlauben“)
+    F("spontansteuern", "Steuern bei der Spontanhilfe", "Control in spontaneous help", "sec", ("spontansteuern",), parent="spontanhilfe", guide="spontansteuern"),
     # stage 2b: „Frag den Assistenten“ beside the terminal, the own language model only, no tool, admins only
     F("fernzuganghilfe", "Assistent im Fernzugang", "Assistant in remote access", "sec", ("fernzugang_hilfe",), parent="fernzugang", guide="fernzuganghilfe"),
     # fernbild.py (plan ssh-vermittlung stage 4): the screen of a paired system through guacd, admins only, first only watching
@@ -762,8 +814,13 @@ FEATURES = (
     F("fernnotizen", "Notizen im Fernzugang", "Notes in remote access", "sec", ("fernzugang_notizen",), parent="fernzugang", guide="fernnotizen"),
     # fernordner.py (Dominik 2026-10-29 09:18 „A“): the paired systems in folders, only an order, admins only
     F("fernordner", "Ordner im Fernzugang", "Folders in remote access", "sec", ("fernzugang_ordner",), parent="fernzugang", guide="fernordner"),
+    # fernals.py (Dominik 2026-11-03 „1“): „Dateien“ as root or another user the server named (sudo spark-anker dateien als …),
+    # or in folders a Windows server gave free; plus a switch per system with a fresh code; read only, writing its own step
+    F("fernals", "Dateien als anderer Benutzer", "Files as another user", "sec", ("fernals",), parent="fernzugang", guide="fernals"),
     F("ferngross", "Große Dateien im Fernzugang", "Big files in remote access", "sec", ("fernzugang_gross",), parent="fernzugang",
       guide="ferngross"),
+    # fernweb.py (Dominik 2026-10-30 „1a, 2a“): the web pages of a paired system through its anchor, own origin, admins only
+    F("fernweb", "Webdienste im Fernzugang", "Web services in remote access", "sec", ("fernweb",), parent="fernzugang", guide="fernweb"),
     # angriffsprobe.py: how often the real model would follow an order in outside text (numbers only, nothing runs)
     F("angriffsprobe", "Angriffsprobe", "Attack probe", "sec", ("angriffsprobe",), parent="werkstatt", guide="angriffsprobe"),
     # nas.py (plan plaene/synology-bauplan.md): the places of a profile (NAS or cloud connected once), Ich → Speicher
@@ -866,7 +923,7 @@ DUTY = None
 REVIEW = None
 
 # chat.* switches that are no function a profile uses (how the Spark itself works)
-SPARK_ONLY = {"wachposten", "public", "thinking", "prompt_cache", "answer_check", "answer_check_more", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "angriffsprobe", "weicheabstimmen", "fernzugang", "fernzugangmeldung", "spontanhilfe", "fernzuganghilfe", "fernbild", "fernbildablage", "fernnotizen", "fernordner", "ferngross",
+SPARK_ONLY = {"wachposten", "public", "thinking", "prompt_cache", "answer_check", "answer_check_more", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "entwickeln", "angriffsprobe", "weicheabstimmen", "fernzugang", "fernzugangmeldung", "fernzugangalle", "spontanhilfe", "fernzuganghilfe", "fernbild", "fernbildablage", "fernnotizen", "fernordner", "ferngross", "fernweb",
               "helfer", "helferweiche", "helferdungeon", "helfermail", "helferangriff", "helferkurz"}
 # Everything starts off (Dominik 2026-10-08). The only values shipped on in config.default.json are protection and
 # stability rules and the basic functions the Spark had from the start, each with its reason here (Dominik 2026-10-12,

@@ -75,6 +75,21 @@ class Lyrics(unittest.TestCase):
             self.assertIn("German singing", lied.caption(welt))
         self.assertIn(lied.STIL_EIGEN, lied.caption("eigene-welt"))
 
+    def test_tempo_and_key_go_as_metadata(self):
+        """Plan dungeon-musik-tuning V1a: the bard's caption is tags without tempo or key; those go as metadata (the
+        world's minor key of the store, one source) with the negative prompt, values the engine knows."""
+        import dungeon_musik
+        import musik_server
+        for welt in list(lied.STIL_LIED) + ["eigene-welt"]:
+            c, m = lied.caption(welt), lied.meta(welt)
+            self.assertNotRegex(c, r"\d+ ?bpm|\b(major|minor|no|not|never)\b")
+            self.assertEqual(m["keyscale"], dungeon_musik.TONART.get(welt, dungeon_musik.TONART_EIGEN)[0])
+            self.assertTrue(musik_server.KEYSCALE.fullmatch(m["keyscale"]) and m["timesignature"] in musik_server.TIMESIG)
+            self.assertTrue(musik_server.BPM[0] <= m["bpm"] <= musik_server.BPM[1])
+            self.assertTrue(musik_server.NEGATIVE.fullmatch(m["negative"]))
+            req = musik_server.request_body({"caption": c, "seconds": 60, "lyrics": "[verse]\nHört", "language": "de", **m})
+            self.assertEqual(req["lm_negative_prompt"], lied.NEGATIV_LIED)
+
     def test_off_by_default(self):
         import features
         self.assertIn(lied.KEY, features.BY_KEY)

@@ -38,7 +38,7 @@ struct BubbleView: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
-            FaceView(size: 22)
+            if FacePref.on { FaceView(size: 22) }
             Image(systemName: symbol)
                 .foregroundColor(Theme.accent)
                 .padding(.top, 2)
@@ -96,7 +96,7 @@ struct RecordingView: View {
             HStack(spacing: 3) {
                 ForEach(0..<Self.shape.count, id: \.self) { i in
                     RoundedRectangle(cornerRadius: 1.5)
-                        .fill(Theme.accent2)
+                        .fill(Theme.accent)
                         .frame(width: 3, height: barHeight(i))
                 }
             }
@@ -119,7 +119,7 @@ struct RecordingView: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
         .background(Capsule().fill(Theme.visor))
-        .overlay(Capsule().stroke(Color.white.opacity(0.08), lineWidth: 1))
+        .overlay(Capsule().stroke(Theme.onAccent.opacity(0.08), lineWidth: 1))
         .fixedSize()
         .accessibilityElement(children: .contain)
         .accessibilityLabel(Text(verbatim: "Aufnahme läuft"))
@@ -138,10 +138,10 @@ struct PillButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 12, weight: primary ? .semibold : .regular))
-            .foregroundColor(.white)
+            .foregroundColor(Theme.onAccent)
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
-            .background(Capsule().fill(primary ? AnyShapeStyle(Theme.diagonal) : AnyShapeStyle(Color.white.opacity(0.12))))
+            .background(Capsule().fill(primary ? AnyShapeStyle(Theme.accent) : AnyShapeStyle(Theme.onAccent.opacity(0.12))))
             .opacity(configuration.isPressed ? 0.8 : 1)
             .contentShape(Capsule())
     }

@@ -46,7 +46,7 @@ from fastapi.responses import StreamingResponse
 import core
 import fernzugang
 import guard
-from core import auth, json_body
+from core import admin_code_fresh, auth, json_body
 
 router = APIRouter()
 
@@ -146,7 +146,17 @@ def _too_big():
 @router.post("/api/admin/fernzugang/dateien", dependencies=[Depends(auth)])
 async def open_files(request: Request):
     """„Dateien“: on the unlocked page (its code or passkey came first) an SFTP session over the server's anchor,
-    bound to this login."""
+    bound to this login; as another user (fernals) read only."""
+    return await _open(request, False)
+
+
+@router.post("/api/admin/fernzugang/dateien/schreiben", dependencies=[Depends(auth), Depends(admin_code_fresh)])
+async def open_files_writing(request: Request):
+    """„Dateien als <Benutzer> … schreiben“ (fernals): its own step with a fresh code or passkey every session."""
+    return await _open(request, True)
+
+
+async def _open(request, writing):
     fernzugang._on(request)
     fernzugang._second_step(request)
     fernzugang._frei(request)
@@ -156,9 +166,14 @@ async def open_files(request: Request):
     if not fernzugang.GID.fullmatch(gid):
         fernzugang.log("dateien_abgewiesen", "unbekannt", 0)
         raise HTTPException(404, "no such system")
+    import fernals
+    user = str(body.get("als") or "")
+    g = fernzugang._read()["geraete"].get(gid) or {}
+    cmd, write = fernals.choose(g, user, writing)        # as another user (fernals): only what both sides allowed
     prof = core.acting_profile(request)
     s, _g, why = await fernzugang.aufbauen(gid, "dateien", None, fernzugang._who(request), prof["id"] if prof else None,
-                                           login=fernzugang._login(request), conn=request)
+                                           login=fernzugang._login(request), conn=request,
+                                           als=(user if cmd else "", cmd, write))
     if s is None:
         if why in ("voll", "offline"):     # the others are logged where they happen (aufbauen, Sitzung.end)
             fernzugang.log("dateien_abgewiesen", why, 0)
@@ -167,15 +182,24 @@ async def open_files(request: Request):
         home = await _sftp(s, lambda c: c.normalize("."))
     except Exception:
         await s.end("sftp")
+        if s.als:            # sudo -n refused (no rule) or the server's sftp-server did not start
+            fernzugang.log("dateien_als", "sudo", 0)
+            raise HTTPException(502, "Als dieser Benutzer ging es auf dem Server nicht (dort: sudo spark-anker dateien als …).") from None
         fernzugang.log("dateien_abgewiesen", "sftp", 0)
         raise HTTPException(502, "SFTP geht auf dem Server nicht (Subsystem sftp in der sshd_config).") from None
     s.home = home if isinstance(home, str) and home.startswith("/") and not BAD.search(home) else "/"
     s.tasks.append(asyncio.create_task(s._idle()))
-    import ferngross
-    s.tasks.append(asyncio.create_task(ferngross.sweep(s)))   # part files of big transfers left behind there
+    if not s.als:
+        import ferngross
+        s.tasks.append(asyncio.create_task(ferngross.sweep(s)))   # part files of big transfers left behind there
     fernzugang.log("dateien_auf", s.who, len(fernzugang.SITZUNG))
+    if s.als:
+        fernzugang.log("dateien_als", fernals.word(s.als) + (" schreiben" if s.schreiben else " lesen"), 1)
     fernzugang._live("Fern-Dateien geöffnet")
-    return {"id": s.id, "pfad": s.home, "max_mb": _mb(), "leerlauf": fernzugang.leerlauf_s() // 60}
+    a = g.get("als") if isinstance(g.get("als"), dict) else {}
+    start = a.get("ordner") if fernals.on() and g.get("als_frei") and a.get("art") == "ordner" else []
+    return {"id": s.id, "pfad": s.home, "max_mb": _mb(), "leerlauf": fernzugang.leerlauf_s() // 60,
+            "als": s.als or "spark", "schreiben": (not s.als) or s.schreiben, "ordner": ["/" + p for p in start or []]}   # Windows: SFTP names C:/x as /C:/x
 
 
 @router.post("/api/admin/fernzugang/dateien/{sid}/liste", dependencies=[Depends(auth)])
@@ -321,6 +345,9 @@ async def upload(sid: str, request: Request):
     to a hidden part file and renamed when complete. Without x-fz-ersetzen: 1 an existing file stays (409)."""
     s = _session(request, sid, "hoch")
     guard.limit(request, "fernzugang_hoch", admin=True)
+    if s.als and not s.schreiben:      # as another user, read only (and sftp-server -R refuses it there as well)
+        fernzugang.log("hoch", "nur lesen", 0)
+        raise HTTPException(403, "Nur lesen: Schreiben als anderer Benutzer ist ein eigener Schritt mit frischem Code.")
     folder = pfad(unquote(request.headers.get("x-fz-pfad", "")), s.home)
     name = unquote(request.headers.get("x-fz-name", ""))
     replace = request.headers.get("x-fz-ersetzen") == "1"

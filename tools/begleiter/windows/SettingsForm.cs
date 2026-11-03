@@ -39,6 +39,9 @@ internal interface IBegleiterHost
 
     void SetAutoDownload(bool on);
 
+    /// <summary>Gesicht im Kopf der Fenster zeigen (lokal, Standard aus).</summary>
+    void SetShowFace(bool on);
+
     void OpenCoffee();
 
     /// <summary>Teil "folder": der beobachtete Ordner (lokale Einstellung).</summary>
@@ -102,6 +105,19 @@ internal sealed class SettingsForm : ThemedForm
     private readonly SparkButton _partsMore = new(ButtonKind.Link, "Alle zeigen");
     private readonly TLabel _partsHint = new(TextRole.SmallMuted, "Ein- und ausschalten im Panel unter Ich → Begleiter.");
     private bool _partsAll;
+
+    // Sprung-Links ins Panel (Begleiter Paket A, Dominik 2026-10-30): keine eigenen Bildschirme, ein Klick öffnet
+    // <Spark>/#weg=<Weg> im Browser (Wege.cs); Fernzugang nur für ein Profil mit Admin-Rolle (config.fern)
+    public const string WayData = "Ich → Sicherheit → Meine Daten";
+    public const string WayMemory = "Ich → Gedächtnis";
+    public const string WayFern = "Fernzugang → Systeme";
+    private readonly TLabel _linksHeading = new(TextRole.Section, "IM PANEL");
+    private readonly SparkButton _linkData = new(ButtonKind.Secondary, "Meine Daten");
+    private readonly SparkButton _linkMemory = new(ButtonKind.Secondary, "Gedächtnis");
+    private readonly SparkButton _linkFern = new(ButtonKind.Secondary, "Fernzugang");
+    private readonly TLabel _linksHint = new(TextRole.SmallMuted, "Öffnet das Panel im Browser an dieser Stelle.");
+    private readonly ToggleSwitch _showFace = new("Gesicht in den Fenstern zeigen");
+    private bool _updatingFace;
 
     // Tastenkürzel
     private readonly TLabel _hotkeyTitle = new(TextRole.Title, "Tastenkürzel");
@@ -193,7 +209,13 @@ internal sealed class SettingsForm : ThemedForm
         _close.TabIndex = 21;
 
         // Übersicht
-        _pageOverview.Controls.AddRange(new Control[] { _ovTitle, _ovIntro, _ovCard, _partsHeading, _parts, _partsMore, _partsHint });
+        _pageOverview.Controls.AddRange(new Control[] { _ovTitle, _ovIntro, _ovCard, _partsHeading, _parts, _partsMore, _partsHint, _linksHeading, _linkData, _linkMemory, _linkFern, _linksHint, _showFace });
+        _linkData.AccessibleName = "Meine Daten im Panel öffnen";
+        _linkMemory.AccessibleName = "Gedächtnis im Panel öffnen";
+        _linkFern.AccessibleName = "Fernzugang im Panel öffnen";
+        _linkData.Click += (_, _) => Wege.OpenFrom(WayData);
+        _linkMemory.Click += (_, _) => Wege.OpenFrom(WayMemory);
+        _linkFern.Click += (_, _) => Wege.OpenFrom(WayFern);
         _partsMore.Click += (_, _) =>
         {
             _partsAll = !_partsAll;
@@ -261,6 +283,13 @@ internal sealed class SettingsForm : ThemedForm
         _unpair.Click += (_, _) => _host.Unpair(this);
         _check.Click += (_, _) => _host.CheckForUpdates();
         _update.Click += (_, _) => _host.RequestUpdate();
+        _showFace.CheckedChanged += (_, _) =>
+        {
+            if (!_updatingFace)
+            {
+                _host.SetShowFace(_showFace.Checked);
+            }
+        };
         _auto.CheckedChanged += (_, _) =>
         {
             if (!_updatingAuto)
@@ -363,10 +392,10 @@ internal sealed class SettingsForm : ThemedForm
         _sideWidth = side;
 
         // Seitenmenü: Gesicht und „Begleiter“, dann die Punkte; vor „Kopplung“ die Gruppe „Gerät“
-        int sy = BarHeight + S(16);
+        int sy = S(16);
         int face = S(26);
         _sideFace = new Rectangle(S(16), sy, face, face);
-        _sideTitle = new Rectangle(S(16) + face + S(9), sy, side - face - S(41), face);
+        _sideTitle = new Rectangle(S(16) + Face.Lead(face, S(9)), sy, side - Face.Lead(face, S(41)), face);
         sy += face + S(16);
         _navAsk.Visible = _speakShown;
         _navDaily.Visible = _dailyShown;
@@ -390,7 +419,7 @@ internal sealed class SettingsForm : ThemedForm
             sy += h + S(2);
         }
 
-        int top = BarHeight + S(20);
+        int top = S(20);
         int ov = LayoutOverview(inner);
         int ak = LayoutAsk(inner);
         int hk = LayoutHotkeys(inner);
@@ -441,6 +470,26 @@ internal sealed class SettingsForm : ThemedForm
 
         y += S(6);
         y += _partsHint.Fit(0, y, width);
+
+        // Im Panel: Sprung-Links, Fernzugang nur für ein Profil mit Admin-Rolle
+        y += S(20);
+        y += _linksHeading.Fit(S(2), y, width) + S(8);
+        bool fern = _host.Desk?.Fern == true;
+        _linkFern.Visible = fern;
+        int lx = 0;
+        int rowH = 0;
+        foreach (SparkButton link in fern ? new[] { _linkData, _linkMemory, _linkFern } : new[] { _linkData, _linkMemory })
+        {
+            Size size = link.Preferred();
+            link.Bounds = new Rectangle(lx, y, size.Width, size.Height);
+            lx += size.Width + S(8);
+            rowH = Math.Max(rowH, size.Height);
+        }
+
+        y += rowH + S(8);
+        y += _linksHint.Fit(0, y, width);
+        y += S(20);
+        y += _showFace.Fit(0, y, width);
         return y;
     }
 
@@ -569,15 +618,15 @@ internal sealed class SettingsForm : ThemedForm
         Draw.HighQuality(g);
         using (var side = new SolidBrush(P.Soft))
         {
-            g.FillRectangle(side, 0, BarHeight, _sideWidth, ClientSize.Height - BarHeight);
+            g.FillRectangle(side, 0, 0, _sideWidth, ClientSize.Height);
         }
 
         using (var line = new Pen(P.Line))
         {
-            g.DrawLine(line, _sideWidth, BarHeight, _sideWidth, ClientSize.Height);
+            g.DrawLine(line, _sideWidth, 0, _sideWidth, ClientSize.Height);
         }
 
-        Face.Draw(g, _sideFace, P);
+        Face.DrawHeader(g, _sideFace, P);
         Draw.Text(g, "Begleiter", F(10.5f, FontStyle.Bold), _sideTitle, P.Fg);
         Draw.Text(g, "GERÄT", F(7.5f, FontStyle.Bold), _sideGroup, P.Muted);
     }
@@ -612,6 +661,7 @@ internal sealed class SettingsForm : ThemedForm
         }
 
         _panel.Enabled = !string.IsNullOrEmpty(config.Base);
+        _linkData.Enabled = _linkMemory.Enabled = _linkFern.Enabled = !string.IsNullOrEmpty(config.Base);
         _unpair.Enabled = config.IsPaired;
         _repair.Text = config.IsPaired ? "Neu koppeln …" : "Koppeln …";
 
@@ -811,6 +861,9 @@ internal sealed class SettingsForm : ThemedForm
         _updateError.Text = u.Phase == UpdatePhase.Failed && !Updater.IsDevelopment ? u.Error ?? "" : "";
         _check.Enabled = !Updater.IsDevelopment && config.IsPaired && !_host.CheckingForUpdates;
 
+        _updatingFace = true;
+        _showFace.Checked = config.ShowFace;
+        _updatingFace = false;
         _updatingAuto = true;
         _auto.Checked = config.AutoDownloadUpdates;
         _updatingAuto = false;
@@ -906,8 +959,8 @@ internal sealed class SettingsForm : ThemedForm
             Draw.HighQuality(g);
             Color c = PanelModel.StatusColor(_kind, p);
             var r = new RectangleF(0, 0, Width, Height);
-            Draw.FillRound(g, p.HighContrast ? p.Card : Palette.Mix(p.Card, c, 0.07f), r, S(14));
-            Draw.StrokeRound(g, p.HighContrast ? p.Fg : Palette.Mix(p.Line, c, 0.4f), r, S(14));
+            Draw.FillRound(g, p.HighContrast ? p.Card : Palette.Mix(p.Card, c, 0.07f), r, S(Draw.RBox));
+            Draw.StrokeRound(g, p.HighContrast ? p.Fg : Palette.Mix(p.Line, c, 0.4f), r, S(Draw.RBox));
             int d = S(36);
             var circle = new RectangleF(S(14), (Height - d) / 2f, d, d);
             using (var fill = new SolidBrush(p.HighContrast ? p.Card : Palette.Mix(p.Card, c, 0.18f)))
@@ -979,7 +1032,7 @@ internal sealed class SettingsForm : ThemedForm
 
             Draw.HighQuality(g);
             var box = new RectangleF(0, 0, Width, Height);
-            Draw.StrokeRound(g, p.Line, box, S(12));
+            Draw.StrokeRound(g, p.Line, box, S(Draw.RBox));
             Font name = Theme.UiFont(_dpi, 9.5f);
             Font pill = Theme.UiFont(_dpi, 8f, FontStyle.Bold);
             using var line = new Pen(p.Line);

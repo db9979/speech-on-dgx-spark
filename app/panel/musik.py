@@ -1553,9 +1553,17 @@ def _test_file():
     return _state("musik-test.json")
 
 
+# Musik testen also hears turbo against the SFT model (plan dungeon-musik-tuning V7a) once that one is installed (the
+# service's health "sft"): the default variant again at the quality level "beste", under its own name
+SFT_TEST = "2b-sft"
+SFT_NAME = ("2B SFT, 50 Schritte", "2B SFT, 50 steps")
+
+
 def mp3_file(v, n):
     """The MP3 of fixed song n (1 or 2) of variant v, written out in full so the register dateien.py finds each name."""
     first = int(n) == 1
+    if v == SFT_TEST:
+        return _state("musik-test-2b-sft-1.mp3") if first else _state("musik-test-2b-sft-2.mp3")
     if v == "xl":
         return _state("musik-test-xl-1.mp3") if first else _state("musik-test-xl-2.mp3")
     if v == "2b-klein":
@@ -1603,12 +1611,14 @@ async def _measure(variants):
                     row["why"] = "missing"
                 else:
                     body = {k: test[k] for k in ("caption", "seconds", "lyrics", "language", "title")}
-                    body.update(seed=42, variant=v)
+                    body.update(seed=42, variant="2b" if v == SFT_TEST else v)
+                    if v == SFT_TEST:
+                        body["quality"] = "beste"
                     try:
                         mp3, d = await make(body)
                         with open(mp3_file(v, test["n"]), "wb") as f:
                             f.write(mp3)
-                        row.update(ok=True, **{k: d.get(k) for k in ("seconds", "lm_s", "synth_s", "peak_gib", "length_s")})
+                        row.update(ok=True, **{k: d.get(k) for k in ("seconds", "lm_s", "synth_s", "peak_gib", "length_s", "quality")})
                         row["kb"] = len(mp3) // 1024
                     except ValueError as e:
                         row["why"] = str(e) if str(e) in REASONS else "dienst"
@@ -1647,7 +1657,7 @@ def for_live():
 
 def view():
     return {"run": _run["run"], "done": _run["done"], "total": _run["total"], "last": last_test(), "model": model(),
-            "variants": [[k, de, en] for k, (de, en) in VARIANTS.items()],
+            "variants": [[k, de, en] for k, (de, en) in VARIANTS.items()], "sft_test": [SFT_TEST, *SFT_NAME],
             "tests": [{"n": t["n"], "name": {"de": t["name"][0], "en": t["name"][1]}} for t in TESTS]}
 
 
@@ -1662,10 +1672,12 @@ async def musik_test_run(request: Request):
     guard.limit(request, "musiktest", None, True)
     h = await health()
     variants = [v for v in (h.get("installed") or []) if v in VARIANTS] or [h.get("variant") or "2b"]
+    if h.get("sft") is True and "2b" in variants:   # turbo against SFT with the same songs and seed
+        variants.append(SFT_TEST)
     if not _run["run"]:
         _run.update(run=True, done=0, total=len(variants) * len(TESTS), t=time.time())
         print(f"musik: test gestartet {len(variants)} modelle", flush=True)
-        _task[:] = [asyncio.create_task(_measure([v for v in variants if v in VARIANTS]))]
+        _task[:] = [asyncio.create_task(_measure([v for v in variants if v in VARIANTS or v == SFT_TEST]))]
     else:
         print("musik: test laeuft schon", flush=True)
     return dict(view(), health=h)
@@ -1674,7 +1686,7 @@ async def musik_test_run(request: Request):
 @router.get("/api/admin/musik-test/{v}/{n}.mp3", dependencies=[Depends(auth)])
 def musik_test_mp3(v: str, n: int, request: Request):
     guard.limit(request, "musikdatei", None, True)
-    if v not in VARIANTS or n not in [t["n"] for t in TESTS] or not os.path.isfile(mp3_file(v, n)):
+    if (v not in VARIANTS and v != SFT_TEST) or n not in [t["n"] for t in TESTS] or not os.path.isfile(mp3_file(v, n)):
         raise HTTPException(404, "Noch kein Probestück")
     with open(mp3_file(v, n), "rb") as f:
         data = f.read(MAX_MP3 + 1)

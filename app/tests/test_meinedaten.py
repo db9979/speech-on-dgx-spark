@@ -197,6 +197,9 @@ class Zip(Base):
         if os.path.lexists(link):
             os.remove(link)
         os.symlink(profiles._path(uid, "voice.json"), link)
+        # the link goes again when the test ends: a link left in users/ made test_panel's restore refuse the whole
+        # backup („unexpected entry“, red at V01.1.272)
+        self.addCleanup(lambda: os.path.lexists(link) and os.remove(link))
         _, _, _, files = self.fetch(c)
         self.assertNotIn("daten/erstellt/bild.txt", files)
         self.assertNotIn(b"STIMME-LINK", b"".join(files.values()))

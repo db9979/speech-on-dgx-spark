@@ -348,6 +348,7 @@ struct ChatView: View {
                             }
                             if m.role != "user", m.rateId != nil { RateBar(message: m) }
                             if m.role != "user", m.wbId != nil { WbFileButton(message: m) }
+                            if m.role != "user", let q = m.fundQ, talk.allowed.areas.contains("fund") { FundKarte(q: q, id: m.fundId) }
                             if m.role != "user", let mem = m.mem, !mem.isEmpty { GemerktChips(message: m, items: mem) }
                             if m.role != "user", m.id == talk.messages.last?.id, let more = m.more, !more.isEmpty {
                                 MoreRow(kind: m.moreKind ?? "", items: more)

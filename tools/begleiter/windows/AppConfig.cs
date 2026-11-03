@@ -40,6 +40,9 @@ internal sealed class AppConfig
     /// <summary>Updates im Hintergrund laden (installiert wird erst nach Klick). Lokal, Standard an.</summary>
     public bool AutoDownloadUpdates { get; set; } = true;
 
+    /// <summary>Gesicht im Kopf der Fenster zeigen (Redesign Stufe 9). Lokal, Standard aus.</summary>
+    public bool ShowFace { get; set; }
+
     /// <summary>Beobachteter Ordner für den Teil "folder" (lokal); <c>null</c> = %USERPROFILE%\Spark-Wissen.</summary>
     public string? WissenFolder { get; set; }
 

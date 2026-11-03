@@ -565,10 +565,10 @@ internal sealed class MailForm : ThemedForm
         int w = ClientSize.Width;
         int h = ClientSize.Height;
         int inner = w - (2 * pad);
-        int y = BarHeight + pad;
+        int y = pad;
         int face = S(28);
         _face = new Rectangle(pad, y, face, face);
-        _title = new Rectangle(pad + face + S(8), y, inner - face - S(8), face);
+        _title = new Rectangle(pad + Face.Lead(face, S(8)), y, inner - Face.Lead(face, S(8)), face);
         y += face + S(8);
         y += _from.Fit(pad, y, inner) + S(10);
         int chipsH = FlowChips(_ideas.Append(_askIdeas).Concat(_tweaks), pad, y, inner);
@@ -618,7 +618,7 @@ internal sealed class MailForm : ThemedForm
 
     protected override void PaintContent(Graphics g)
     {
-        Face.Draw(g, _face, P);
+        Face.DrawHeader(g, _face, P);
         Draw.Text(g, "Antwort entwerfen", F(10.5f, FontStyle.Bold), _title, P.Fg);
     }
 
