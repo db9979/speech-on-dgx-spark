@@ -4951,6 +4951,20 @@
 "titel": "Entwickeln auf dem Pi: Update mit lokalen Änderungen",
 "text": "Mit eingespielten lokalen Änderungen auf ein neueres grünes main aktualisieren (Einstellungen → Update): das Fenster zeigt „Lokale Änderungen kommen auf die neue Version“, danach läuft die neue Version mit „+lokal“ und die Änderung ist noch da. Eine lokale Änderung, die mit main kollidiert: das Update endet mit „passen nicht auf die neue Version (Konflikt)“, die bisherige Version läuft weiter, oben im Panel steht der Hinweis; Zustand → Logs (System) zeigt „entwickeln: aufsetzen abgelehnt konflikt“ ohne Commit-Text.",
 "thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P732",
+"v": 1300,
+"titel": "Spontanhilfe: Steuern anfragen und ablehnen",
+"text": "Funktionen: Steuern bei der Spontanhilfe an. Eine Spontanhilfe mit Bild öffnen; in der Leiste „Steuern anfragen (Code)“. Ohne Programm im Zwischenspeicher sagt /hilfe „Steuern geht bisher nur unter Windows“ bzw. bietet nichts an; „Nein, nur ansehen“ auf /hilfe zeigt beim Admin „Sie bleibt beim Ansehen“, das Bild läuft weiter. Protokoll: nur steuern_frage, steuern, keine Namen.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P733",
+"v": 1300,
+"titel": "Spontanhilfe: Steuern mit SparkHilfe (sobald S2b da ist)",
+"text": "Nach S2b an einem Windows-PC: /hilfe zeigt „Programm laden“ mit Prüfsumme, die Datei heißt SparkHilfe-<Adresse>-<Schlüssel>.exe. Start, „Erlauben“: roter Rahmen bei ihr, beim Admin das Bild; „Steuern“ in der Leiste, Klicks und Tippen treffen; „Nur ansehen“ gibt zurück. Programm schließen beendet die Hilfe. Dieselbe Datei nach 10 Minuten oder ein zweites Mal: „Bitte neu laden“.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }

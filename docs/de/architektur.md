@@ -566,6 +566,7 @@ Shell, Dateien und Bildschirm eigener Server über ihren Anker, dazu die Spontan
 | `app/panel/fernwindows.py` | Fernzugang, Windows: spark-anker-einrichten.cmd mit Einmal-Schlüssel, Python mit fester Prüfsumme |
 | `app/panel/fernzugang.py` | Fernzugang: Seite per Code entsperrt, Anker, Einmal-Code, Terminal mit Ticket, Host-Schlüssel fest, Shell gehalten |
 | `app/panel/spontanhilfe.py` | Spontanhilfe: Nummer und Link, Seite /hilfe mit eigener CSP, WebRTC zwischen zwei Browsern, Shell über den Anker |
+| `app/panel/spontansteuern.py` | Spontanhilfe Steuern: Programm SparkHilfe, Einmal-Schlüssel, Bild und Eingaben über das Panel |
 
 ### Spark teilen
 
@@ -841,6 +842,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/speech-spark-llm.json` | Zustand der Engine des eigenen Sprachmodells | – | nein |
 | `state/speech-spark-tts-*.json` | Zustand der TTS-Engines | – | nein |
 | `state/speicher-tmp` | Zwischenablage des eigenen Speichers | AES-256-GCM | nein |
+| `state/spontanhilfe-programme` | Spontanhilfe: das Programm SparkHilfe zum Steuern, nur nach Prüfung der SHA-256 aus dem signierten Verzeichnis ausgeliefert | – | nein |
 | `state/spontanhilfe-verlauf.json` | Spontanhilfe: Verlauf der letzten Tage (Zeit, Admin, Art, Dauer, Zuhause oder Internet, verfallene oder gesperrte Nummern), nie der Name der Person, eine Adresse, ein Bild oder der Chat; löschen unter Fernzugang → Spontanhilfe → Verlauf der Spontanhilfe | – | nein |
 | `state/telefon.json` | Telefon: Zugang zur Anlage, Mobilteile | Kennwort versiegelt | ja |
 | `state/telegram.json` | Telegram-Bot | Token versiegelt | ja |
@@ -3590,7 +3592,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 107). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 108). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -3601,7 +3603,7 @@ flowchart TD
 #### Zahlen (aus dem Code)
 
 - **47** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
-- **107** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
+- **108** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
 - **8 MB** größte Datei beim Wiederherstellen ([Schritt 9](#kn-state-s9))
 - **12** Zeichen hat das Umzugs-Passwort mindestens ([Schritt 8](#kn-state-s8))
 
@@ -4075,7 +4077,7 @@ flowchart TD
 4. <a id="kn-fernzugang-s4"></a>**Ticket für das Fenster**: „Shell“ gibt ein Einmal-Ticket (fernzugang.admin_session), das 30 Sekunden lang genau ein Web-Terminal öffnet (fernzugang.terminal_ws); höchstens 8 Sitzungen zugleich. Jede ist ein Reiter; nebeneinander, 2 × 2 oder als Übersicht zeigt nur die Seite mehrere zugleich, am Panel bleibt jede für sich. „An alle senden“ (fernzugang.admin_alle, eigener Schalter, aus) schreibt eine geprüfte Zeile in mehrere Shells der eigenen Anmeldung.
 5. <a id="kn-fernzugang-s5"></a>**Anderer Host-Schlüssel?**: Zeigt der Server einen anderen Host-Schlüssel als beim Koppeln, gibt es keine Verbindung (fernzugang.hostkey_wrong); nach einer Neuinstallation entfernen und neu koppeln.
 6. <a id="kn-fernzugang-s6"></a>**Shell, Dateien, Bildschirm**: SSH läuft durch den Kanal des Ankers; reißt das Fenster ab, wartet die Shell 120 Sekunden. Ein Lebenszeichen alle 5 Sekunden misst Laufzeit und Rate; die Ausgabe wartet in höchstens 32 Stücken auf das Fenster, dann bremst SSH den Server (Gegendruck). Dateien über SFTP in derselben Verbindung (ferndateien.listing), Laden mit Einmal-Link für 60 Sekunden; große Dateien in Teilen von 8 MB MB mit SHA-256 je Stück (ferngross.upload_piece). Als root oder ein anderer Benutzer nur, wenn der Server selbst es freigab (sudoers nur für seinen sftp-server mit -R) und der Admin es je System eingeschaltet hat (fernals.choose); Schreiben mit frischem Code. Der Bildschirm geht über guacd nur auf 127.0.0.1 (fernbild.GUACD), höchstens 15 Bilder je Sekunde; guacd 1.6.0 baut der Spark selbst aus Apaches Quelltext, fest mit SHA-256 (fernbild.dienst sagt der Seite, warum er fehlt). Der Assistent (fernzugang.admin_help) fragt nur das eigene Modell und schlägt vor, getippt wird nie von selbst. Notizen je System liegen versiegelt, 10 Fassungen bleiben; das Modell liest sie nur mit Haken (fernnotiz.fuer_modell). Ordner ordnen nur die Liste (fernordner.view), höchstens 30; Rechte bleiben je System. Webdienste kommen über die Tunnel-Tür auf Port 31090, eine eigene Herkunft, nie die des Panels (fernweb.verbindung): ohne Cookies des Panels und ohne Anmeldung, die Cookies jedes Dienstes für sich, einbetten darf nur das Panel. Ziele nur nach festen Regeln (fernweb.ziel_ok), die der Anker selbst noch einmal prüft: 127.0.0.1 dort, private Adressen nur mit „Netz dahinter“, nie die Netze des Spark. Anders als die Shell geht das nicht als SSH Ende zu Ende, sondern durch die TLS-Leitung des Ankers mit angeheftetem Zertifikat; höchstens 4 Tunnel mit je 8 Verbindungen und Gegendruck.
-7. <a id="kn-fernzugang-s7"></a>**Spontanhilfe**: Eine Hilfe (spontanhilfe.admin_new) gibt eine Nummer für 10 Minuten, nach 5 falschen ist sie tot. Der Bildschirm geht per WebRTC direkt zwischen den zwei Browsern, von unterwegs über TURN auf tars; das Panel vermittelt nur.
+7. <a id="kn-fernzugang-s7"></a>**Spontanhilfe**: Eine Hilfe (spontanhilfe.admin_new) gibt eine Nummer für 10 Minuten, nach 5 falschen ist sie tot. Der Bildschirm geht per WebRTC direkt zwischen den zwei Browsern, von unterwegs über TURN auf tars; das Panel vermittelt nur. Steuern (spontansteuern.program_ws) geht über das Programm SparkHilfe mit einem Einmal-Schlüssel für 10 Minuten; Bilder und Eingaben laufen dann durch das Panel.
 8. <a id="kn-fernzugang-s8"></a>**Logs und Verlauf**: Logs nur mit festen Wörtern und Zahlen (fernzugang.log), der Verlauf nur Zeit, System, Admin, Art und Dauer (fernzugang.verlauf_add). Der Notaus schließt jede Leitung (fernzugang.notaus_close).
 
 **Beispiele:** Shell öffnen: Entsperrt, Ticket, Host-Schlüssel passt: die Shell läuft. · Server neu installiert: Anderer Host-Schlüssel: keine Verbindung. · Seite gesperrt: Erst mit Code oder Passkey entsperren.
@@ -4115,6 +4117,7 @@ flowchart TD
 - `app/panel/fernals.py` `choose`: Dateien als anderer Benutzer: nur mit beiden Zustimmungen ([Schritt 6](#kn-fernzugang-s6))
 - `app/panel/fernbild.py` `GUACD`: guacd nur auf 127.0.0.1 ([Schritt 6](#kn-fernzugang-s6))
 - `app/panel/spontanhilfe.py` `admin_new`: eine neue Spontanhilfe ([Schritt 7](#kn-fernzugang-s7))
+- `app/panel/spontansteuern.py` `program_ws`: Steuern: der Socket des Programms SparkHilfe ([Schritt 7](#kn-fernzugang-s7))
 - `app/panel/fernzugang.py` `notaus_close`: Notaus schließt jede Leitung ([Schritt 8](#kn-fernzugang-s8))
 - `app/panel/fernnotiz.py` `fuer_modell`: die Notiz nur mit Haken für das Modell ([Schritt 6](#kn-fernzugang-s6))
 - `app/panel/fernordner.py` `view`: Ordner: nur die Reihenfolge der Liste ([Schritt 6](#kn-fernzugang-s6))
@@ -4122,7 +4125,7 @@ flowchart TD
 - `app/panel/fernweb.py` `ziel_ok`: Webdienste: wohin ein Tunnel darf ([Schritt 6](#kn-fernzugang-s6))
 - `app/panel/fernweb.py` `verbindung`: die Tunnel-Tür: Köpfe umgeschrieben, Cookies getrennt ([Schritt 6](#kn-fernzugang-s6))
 
-Selbsttests: `test_fernzugang`, `test_fernbild`, `test_spontanhilfe`, `test_ferngross`, `test_fernweb`, `test_fernals`
+Selbsttests: `test_fernzugang`, `test_fernbild`, `test_spontanhilfe`, `test_ferngross`, `test_fernweb`, `test_fernals`, `test_spontansteuern`
 
 ### Fern-Server
 

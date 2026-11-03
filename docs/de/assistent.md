@@ -1866,6 +1866,8 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **Spontanhilfe** (Funktionen → Zugang → „Spontanhilfe“; baut auf „Fernzugang zu Servern“): Einmal helfen, wie TeamViewer QuickSupport: die Person öffnet die Seite /hilfe deines Panels, gibt die 6-stellige Nummer und ihren Vornamen ein und teilt nach deinem Annehmen ihren Bildschirm.
 
+- **Steuern bei der Spontanhilfe** (Funktionen → Zugang → „Steuern bei der Spontanhilfe“; baut auf „Spontanhilfe“): Wenn Ansehen nicht reicht: in einer offenen Spontanhilfe bedienst du Maus und Tastatur bei der Person.
+
 - **Assistent im Fernzugang** (Funktionen → Zugang → „Assistent im Fernzugang“; baut auf „Fernzugang zu Servern“): Neben dem Terminal unter Fernzugang → Systeme steht „Frag den Assistenten“: du fragst etwa „Warum startet nginx nicht?“ und das eigene Sprachmodell antwortet mit Text und Befehlen.
 
 - **Bildschirm im Fernzugang** (Funktionen → Zugang → „Bildschirm im Fernzugang“; baut auf „Fernzugang zu Servern“): Den Bildschirm eines gekoppelten Systems im Browser, unter Fernzugang → Systeme mit „Bildschirm“: Linux mit X11 (x11vnc), GNOME auf Wayland (gnome-remote-desktop) oder andere Wayland-Oberflächen (wayvnc) und macOS (die eingebaute Bildsch …

@@ -1866,6 +1866,8 @@ Every function of the Spark with its switch, what it builds on, where you set it
 
 - **Spontaneous help** (Features → Access → "Spontaneous help"; builds on "Remote access to servers"): Help once, like TeamViewer QuickSupport: the person opens the page /hilfe of your panel, types the 6-digit number and her first name and shares her screen after you accept.
 
+- **Control in spontaneous help** (Features → Access → "Control in spontaneous help"; builds on "Spontaneous help"): When looking is not enough: in an open spontaneous help you use mouse and keyboard at the person's computer.
+
 - **Assistant in remote access** (Features → Access → "Assistant in remote access"; builds on "Remote access to servers"): Beside the terminal under Remote access → Systems there is "Ask the assistant": you ask e.g.
 
 - **Screen in remote access** (Features → Access → "Screen in remote access"; builds on "Remote access to servers"): The screen of a paired system in the browser, under Remote access → Systems with "Screen": Linux with X11 (x11vnc), GNOME on Wayland (gnome-remote-desktop) or other Wayland desktops (wayvnc) and macOS (the built-in screen sharing).

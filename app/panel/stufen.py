@@ -46,6 +46,7 @@ LIST = {
     ("POST", "/api/admin/fernzugang/web/{gid}/netz"): (PROTECT, "Schutz", "Webdienste: „Netz dahinter“ eines Fern-Servers an oder aus", "Web services: a remote server's „network behind it“ on or off"),
     ("POST", "/api/admin/fernzugang/entsperren"): (PROTECT, "Schutz", "Fernzugang entsperren (die Seite für eine Weile, nur diese Anmeldung)", "Unlock remote access (the page for a while, this login only)"),
     ("POST", "/api/admin/spontanhilfe/verlaengern"): (PROTECT, "Schutz", "Spontanhilfe verlängern", "Extend spontaneous help"),
+    ("POST", "/api/admin/spontanhilfe/steuern"): (PROTECT, "Schutz", "Spontanhilfe: Steuern anfragen", "Spontaneous help: ask for control"),
     ("POST", "/api/notaus/mine/off"): (PROTECT, "Schutz", "Eigenen Notaus aufheben", "Lift my own emergency stop"),
     ("POST", "/api/admin/notaus/mine/off"): (PROTECT, "Schutz", "Notaus einer Person aufheben", "Lift a person's emergency stop"),
     ("POST", "/api/admin/notaus/keys"): (PROTECT, "Schutz", "Notaus-Schlüssel für Home Assistant", "Emergency stop key for Home Assistant"),

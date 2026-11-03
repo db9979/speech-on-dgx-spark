@@ -357,6 +357,7 @@ DATEIEN = [
     state("ack", "Sofort-Sätze als Ton", "Instant sentences as sound", lokal="Ton-Cache, entsteht neu"),
     state("android", "Android-App zum Download", "Android app for download", lokal="Download-Cache"),
     state("begleiter", "Begleiter-Updates", "Companion updates", lokal="Download-Cache"),
+    state("spontanhilfe-programme", "Spontanhilfe: das Programm SparkHilfe zum Steuern, nur nach Prüfung der SHA-256 aus dem signierten Verzeichnis ausgeliefert", "Spontaneous help: the program SparkHilfe for control, delivered only after checking the SHA-256 from the signed manifest", lokal="Download-Cache"),
     state("begleiter-inbox", "Vom Handy auf den PC, 24 h", "Phone to PC, 24 h", lokal="Dateien vom Handy, 24 h"),
     state("speicher-tmp", "Zwischenablage des eigenen Speichers", "Own storage staging", lokal="Zwischenablage", schutz=("AES-256-GCM", "AES-256-GCM")),
     state("export-tmp", "Alle meine Daten herunterladen: die ZIP bis zum Abholen (einmal, höchstens 10 Minuten)", "Download all my data: the ZIP until it is picked up (once, 10 minutes at most)",

@@ -105,9 +105,10 @@ NUMMER = re.compile(r"\d{6}")
 LINK = re.compile(r"[A-Za-z0-9_\-]{20,30}")
 SDP = re.compile(r"v=0\r?\n[\x20-\x7e\r\n]*")
 # what each side may send; the panel passes only these, checked for form and size
-KINDS = {"person": {"sdp", "ice", "chat", "teilt", "ende"}, "admin": {"sdp", "ice", "chat", "zeig", "ende"},
+KINDS = {"person": {"sdp", "ice", "chat", "teilt", "steuern_nein", "ende"},
+         "admin": {"sdp", "ice", "chat", "zeig", "modus", "eingabe", "ende"},     # modus, eingabe: S2 (spontansteuern)
          "shell_person": {"erlaubt", "ende"}, "shell_admin": {"groesse", "ende"}}   # S3: the terminal's bytes besides
-ARTEN = {"ansehen": ("Ansehen", "View"), "shell": ("Shell", "Shell")}
+ARTEN = {"ansehen": ("Ansehen", "View"), "shell": ("Shell", "Shell"), "steuern": ("Ansehen + Steuern", "View + control")}
 OS = re.compile(r"[A-Za-z0-9 ._()\-]{1,40}")
 CSP = ("default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self' blob:; "
        "connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'")
@@ -117,7 +118,8 @@ VORLAGEN = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vorlagen") 
 BETREFF = {"de": "{name} möchte dir am Computer helfen", "en": "{name} would like to help you with your computer"}
 FELD = re.compile(r"\{(name|name_s|link|nummer|gueltig|domain|min)\}")
 WORDS = ("nummer_neu", "nummer_falsch", "nummer_tot", "verworfen", "einladung", "wartet", "ticket", "sitzung_auf",
-         "sitzung_zu", "verlaengert", "abgewiesen", "verlauf", "meldung", "erlaubt")
+         "sitzung_zu", "verlaengert", "abgewiesen", "verlauf", "meldung", "erlaubt",
+         "steuern_frage", "programm", "steuern", "steuern_zu")      # the last four: S2 Steuern (spontansteuern.py)
 
 HILFE = {}          # "h" -> the one Hilfe (or nothing)
 TICKETS = {}        # sha256(ticket) -> {"login", "until"}
@@ -185,6 +187,7 @@ class Hilfe:
         self.ende = None              # asyncio.Event, made by the first socket in the panel's loop
         self.grund = ""
         self.eingeladen = {}          # address (lower case) -> {"t": when, "laeuft": sending right now}
+        self.st = None                # S2 Steuern (spontansteuern.Steuern), made when the admin asks
 
     def offen_fuer_nummer(self, now):
         return self.stand == "neu" and (now < self.nummer_bis or now < self.link_bis)
@@ -227,7 +230,9 @@ def for_live(now=None):
         elif h.stand == "offen":
             named = _live_names()
             out["sitzung"] = 1
-            out["offen"] = {"art": ARTEN.get(h.art, ARTEN["ansehen"])[0], "admin": h.admin_name if named else "Admin",
+            st = h.st
+            out["steuern"] = 1 if st is not None and st.steuern else 0
+            out["offen"] = {"art": ARTEN[_art(h)][0], "admin": h.admin_name if named else "Admin",
                             "person": h.name if named else "Person",
                             "herkunft": "Internet" if h.herkunft == "internet" else "Zuhause",
                             "min": int((now - h.seit) // 60), "teilt": h.teilt}
@@ -253,6 +258,11 @@ def _live(text):
         pass
 
 
+def _art(h):
+    """The kind of a help for Live and the history: „Ansehen + Steuern“ once the admin controlled (S2)."""
+    return "steuern" if h.st is not None and h.st.gesteuert else (h.art if h.art in ARTEN else "ansehen")
+
+
 # ---------------------------------------------------------------- history (no name, no content)
 def verlauf_s(c=None):
     import fernzugang
@@ -270,7 +280,7 @@ def verlauf_add(h, now=None):
     now = time.time() if now is None else now
     with _vlock:
         rows = verlauf_read(now)
-        rows.insert(0, {"t": int(h.seit or now), "admin": h.admin_name, "art": h.art,
+        rows.insert(0, {"t": int(h.seit or now), "admin": h.admin_name, "art": _art(h),
                         "min": int((now - h.seit) // 60) if h.seit else 0, "herkunft": h.herkunft,
                         "ende": re.sub(r"[^a-z_]", "", h.grund)[:20]})
         write_json(VERLAUF, {"eintraege": rows[:VERLAUF_MAX]}, mode=0o600)
@@ -295,6 +305,8 @@ async def end(h, why):
     _drop(h)
     if h.ende is not None:
         h.ende.set()
+    import spontansteuern
+    await spontansteuern.close(h, h.grund)     # S2: the program goes with the help, its key is worthless
     for ws in (h.person, h.admin):
         if ws is None:
             continue
@@ -377,8 +389,9 @@ def _view(h, now):
     else:
         out.update(name=h.name, herkunft=h.herkunft, ip=h.ip_kurz)
     if h.stand == "offen":
+        import spontansteuern
         out.update(seit=int(h.seit), bis=int(h.bis), rest=max(0, int(h.bis - now)),
-                   kann_verlaengern=h.bis - h.seit + 1 < max_min() * 60)
+                   kann_verlaengern=h.bis - h.seit + 1 < max_min() * 60, steuern=spontansteuern.view(h))
     return out
 
 
@@ -393,11 +406,12 @@ def admin_get(request: Request):
     if admin_on(c) and fernzugang.entsperrt_bis(request, now) is None:
         return {"on": True, "gesperrt": True, "notaus": _notaus()}   # locked page: nothing of a help or its history
     import anrufe
+    import spontansteuern
     return {"on": admin_on(c), "max_min": max_min(c), "start_min": START_MIN, "plus_min": PLUS_MIN, "hinweis_s": HINWEIS_S,
             "nummer_s": NUMMER_S, "link_s": LINK_S, "turn": anrufe.turn_on(), "hilfe": _view(current(), now),
             "notaus": _notaus(), "mail": _mail_ready(request),
             "verlauf": [{k: x.get(k) for k in ("t", "admin", "art", "min", "herkunft", "ende", "n")} for x in verlauf_read(now)[:200]],
-            "verlauf_tage": verlauf_s(c) // 86400}
+            "verlauf_tage": verlauf_s(c) // 86400, "steuern_an": spontansteuern.admin_on(c)}
 
 
 @router.post("/api/admin/spontanhilfe/neu", dependencies=[Depends(auth)])
@@ -754,6 +768,11 @@ def clean(side, m):
         if not all(isinstance(v, (int, float)) and not isinstance(v, bool) and 0 <= v <= 1 for v in (x, y)):
             return None
         return {"typ": "zeig", "x": round(float(x), 4), "y": round(float(y), 4)}
+    if t in ("modus", "eingabe"):      # S2: the toolbar and the inputs, fernsicht's lists (spontansteuern)
+        import spontansteuern
+        return spontansteuern.clean_admin(m)
+    if t == "steuern_nein":
+        return {"typ": "steuern_nein"}
     if t in ("teilt", "erlaubt"):
         return {"typ": t, "an": m.get("an") is True}
     if t == "groesse":
@@ -818,6 +837,13 @@ async def _relay(h, side, ws):
             return
         if m["typ"] == "teilt":
             h.teilt = m["an"]
+        if m["typ"] in ("modus", "eingabe"):        # S2: to the program, never to the person's page
+            import spontansteuern
+            await spontansteuern.from_admin(h, m)
+            continue
+        if m["typ"] == "steuern_nein":              # S2: „Nein, nur ansehen“ on her page
+            log("steuern", "nein", 0)
+            m = {"typ": "steuern", "stand": "nein"}
         if m["typ"] == "erlaubt":
             if h.stand != "offen" or h.erlaubt:
                 continue

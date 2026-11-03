@@ -801,6 +801,9 @@ FEATURES = (
     F("fernzugangalle", "An alle senden im Fernzugang", "Send to all in remote access", "sec", ("fernzugang_alle",), parent="fernzugang", guide="fernzugangalle"),
     # spontanhilfe.py (plan spontanhilfe, S1): a person shares her screen once in the browser (/hilfe), admins only
     F("spontanhilfe", "Spontanhilfe", "Spontaneous help", "sec", ("spontanhilfe",), parent="fernzugang", guide="spontanhilfe"),
+    # spontansteuern.py (plan spontanhilfe S2a): the admin moves the mouse and types, through the SparkHilfe program the
+    # person starts herself; three consents (fresh code, her download, her „Erlauben“)
+    F("spontansteuern", "Steuern bei der Spontanhilfe", "Control in spontaneous help", "sec", ("spontansteuern",), parent="spontanhilfe", guide="spontansteuern"),
     # stage 2b: „Frag den Assistenten“ beside the terminal, the own language model only, no tool, admins only
     F("fernzuganghilfe", "Assistent im Fernzugang", "Assistant in remote access", "sec", ("fernzugang_hilfe",), parent="fernzugang", guide="fernzuganghilfe"),
     # fernbild.py (plan ssh-vermittlung stage 4): the screen of a paired system through guacd, admins only, first only watching

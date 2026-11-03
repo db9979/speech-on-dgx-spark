@@ -854,7 +854,7 @@ SEITEN = {
     # ------------------------------------------------------------------ Browser und Handy
     # ------------------------------------------------------------------ Fernzugang (Dominik 2026-10-29 „in Technik → Überblick fehlt die Fernwartung“)
     "fernzugang": {
-        "stand": "4e23090fe3",
+        "stand": "cd201fac45",
         "bezug": {
             "fernzugang.entsperrt_bis": ["s2"], "fernzugang.admin_pair": ["s3"], "fernzugang.link_file": ["s3"], "fernzugang.admin_confirm": ["s3"], "fernzugang.CODE_S": ["s3"], "fernzugang.TICKET_S": ["s4"], "fernzugang.terminal_ws": ["s4"], "fernzugang.hostkey_wrong": ["s5"], "fernzugang.HALTEN_S": ["s6"], "ferndateien.listing": ["s6"], "fernbild.GUACD": ["s6"], "fernbild.FPS": ["s6"], "spontanhilfe.admin_new": ["s7"], "spontanhilfe.NUMMER_S": ["s7"], "fernzugang.notaus_close": ["s8"], "fernzugang.MAX_ANKER": ["s3"], "fernnotiz.fuer_modell": ["s6"], "fernnotiz.FASSUNGEN": ["s6"], "fernordner.view": ["s6"], "fernordner.MAX_ORDNER": ["s6"], "ferngross.upload_piece": ["s6"], "ferngross.TEIL": ["s6"], "fernweb.verbindung": ["s6"], "fernweb.ziel_ok": ["s6"], "fernweb.TOR_PORT": ["s6"], "fernweb.MAX_TUNNEL": ["s6"], "fernweb.MAX_KANAELE": ["s6"],
         },
@@ -965,10 +965,14 @@ SEITEN = {
               ("Nummer {spontanhilfe.NUMMER_S|min} min", "number {spontanhilfe.NUMMER_S|min} min"),
               ("Eine Hilfe (spontanhilfe.admin_new) gibt eine Nummer für {spontanhilfe.NUMMER_S|min} Minuten, nach "
                "{spontanhilfe.FEHL} falschen ist sie tot. Der Bildschirm geht per WebRTC direkt zwischen den zwei Browsern, "
-               "von unterwegs über TURN auf tars; das Panel vermittelt nur.",
+               "von unterwegs über TURN auf tars; das Panel vermittelt nur. Steuern (spontansteuern.program_ws) geht über das "
+               "Programm SparkHilfe mit einem Einmal-Schlüssel für {spontansteuern.KEY_S|min} Minuten; Bilder und Eingaben "
+               "laufen dann durch das Panel.",
                "A help (spontanhilfe.admin_new) gives a number for {spontanhilfe.NUMMER_S|min} minutes, after "
                "{spontanhilfe.FEHL} wrong ones it is dead. The screen goes by WebRTC directly between the two browsers, "
-               "on the way through TURN on tars; the panel only connects them.")),
+               "on the way through TURN on tars; the panel only connects them. Control (spontansteuern.program_ws) goes through "
+               "the program SparkHilfe with a one-time key for {spontansteuern.KEY_S|min} minutes; pictures and inputs then "
+               "pass through the panel.")),
             S("s8", "ende", ("Logs und Verlauf", "Logs and history"),
               ("fernzugang.log", "fernzugang.log"),
               ("Logs nur mit festen Wörtern und Zahlen (fernzugang.log), der Verlauf nur Zeit, System, Admin, Art und "
@@ -1017,6 +1021,7 @@ SEITEN = {
             ("fernals.choose", ("Dateien als anderer Benutzer: nur mit beiden Zustimmungen", "files as another user: only with both consents")),
             ("fernbild.GUACD", ("guacd nur auf 127.0.0.1", "guacd on 127.0.0.1 only")),
             ("spontanhilfe.admin_new", ("eine neue Spontanhilfe", "a new spontaneous help")),
+            ("spontansteuern.program_ws", ("Steuern: der Socket des Programms SparkHilfe", "control: the socket of the program SparkHilfe")),
             ("fernzugang.notaus_close", ("Notaus schließt jede Leitung", "kill switch closes every line")),
             ("fernnotiz.fuer_modell", ("die Notiz nur mit Haken für das Modell", "the note for the model only when ticked")),
             ("fernordner.view", ("Ordner: nur die Reihenfolge der Liste", "folders: only the order of the list")),
@@ -1024,7 +1029,7 @@ SEITEN = {
             ("fernweb.ziel_ok", ("Webdienste: wohin ein Tunnel darf", "web services: where a tunnel may go")),
             ("fernweb.verbindung", ("die Tunnel-Tür: Köpfe umgeschrieben, Cookies getrennt", "the tunnel door: heads rewritten, cookies apart")),
         ],
-        "tests": ["test_fernzugang", "test_fernbild", "test_spontanhilfe", "test_ferngross", "test_fernweb", "test_fernals"],
+        "tests": ["test_fernzugang", "test_fernbild", "test_spontanhilfe", "test_ferngross", "test_fernweb", "test_fernals", "test_spontansteuern"],
         "heute": [],
     },
     "fernserver": {
