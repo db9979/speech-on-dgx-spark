@@ -42,6 +42,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.297** Check the log showed an admin profile only "Das gehört zum Notzugang (Panel-Passwort)": checking the chain and the NAS copy now works for every admin (read only), the guard also catches paths with a query
 - **V01.1.296** Remote access: files as another user (own switch, off): on the server `sudo spark-anker dateien als root[,anna] [--schreiben]` (sudoers only for its own sftp-server with -R, checked with visudo, off and Remove delete it), in the panel switched on per system with a code or passkey; "Files as root" through sudo -n, read only at first, writing with a fresh code per session; Windows: icacls only on named folders; macOS with the full disk access hint; the iPhone shows and switches it
 - **V01.1.295** Test fix: four tests that wobbled on GitHub in the first try: E-mail and Create documents sign in with profiles of their own, the seal tests clear files set aside, finds count only once at the first place of the dungeon map too
 - **V01.1.294** Dungeon music: the store did not start with the panel (name TAKT bound twice); guards for background loops at the start and for module-level names bound twice
@@ -51,7 +52,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.290** Redesign stage 4: People and devices, Open and Chats as list and detail (rows of one height, state as a dot with a word, filters as a segment, on a phone the detail as a page of its own)
 - **V01.1.289** Remote access: several sessions as tabs (stage 1): every shell a tab with icon, state and a dot for new output, + System with search (Ctrl+Shift+O), switching with Ctrl+Shift+1…9 and ←/→, assistant and history per tab, a right-click menu; up to 8 places (default 4), full means "n of n places taken" instead of closing silently; on other pages all sessions stay open, the red line leads back with To the terminal.
 - **V01.1.288** Test fix: six tests that got in each other's way clean up or count only their own (Find mail, backup, lists, documents, Home Assistant live, cards)
-- **V01.1.287** Collections: bundle documents, knowledge book pages and notes for one undertaking, per entry off, short or whole to the model, bind a conversation in the assistant to a collection
 
 
 

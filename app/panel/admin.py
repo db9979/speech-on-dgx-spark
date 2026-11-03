@@ -79,10 +79,12 @@ def audit(limit: int = 300):
     return {"events": guard.read(max(1, min(limit, 2000))), "names": names}
 
 
-@router.get("/api/audit/check", dependencies=[Depends(main_auth)])
+@router.get("/api/audit/check", dependencies=[Depends(auth)])
 async def audit_check(request: Request, nas: int = 0):
     """„Protokoll prüfen“: the change log's chain (guard.verify) and, with nas=1, the newest sealed copy on the NAS
-    against it (offsite.compare_audit). Numbers and file names only."""
+    against it (offsite.compare_audit). Numbers and file names only. Every admin (auth), also an admin profile:
+    it only reads, and the pages show the button to every admin (Dominik 2026-11-03: with main_auth an admin
+    profile got only „Das gehört zum Notzugang“)."""
     guard.limit(request, "offsite", admin=True)
     res = await asyncio.to_thread(guard.verify)
     out = {"chain": res, "nas": None, "nas_error": ""}

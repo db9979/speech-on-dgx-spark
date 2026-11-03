@@ -119,6 +119,21 @@ class CoAdmin(unittest.TestCase):
         self.assertEqual(TestClient(panel.app).post("/api/login", json={"password": "secret-admin"},
                                                     headers={profiles.DEVICE_HEADER: "x" * 40}).status_code, 403)
 
+    def test_an_admin_profile_checks_the_change_log(self):
+        """Dominik 2026-11-03: „Protokoll prüfen“ under Zustand → Logs → Änderungen showed an admin profile only
+        „Das gehört zum Notzugang (Panel-Passwort).“ The check only reads: every admin gets the chain, a Verwalter
+        (who does not see the change log) and a guest do not."""
+        c, uid = self.give("KoAudit")
+        r = c.get("/api/audit/check")
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertNotIn("Notzugang", r.text)
+        self.assertIn("ok", r.json()["chain"])
+        self.assertEqual(c.get("/api/audit").status_code, 200)
+        m, _ = self.give("KoAuditV", role="manager")
+        self.assertEqual(m.get("/api/audit/check").status_code, m.get("/api/audit").status_code)
+        self.assertNotEqual(m.get("/api/audit/check").status_code, 200)
+        self.assertEqual(TestClient(panel.app).get("/api/audit/check").status_code, 401)
+
     def test_pages_never_ask_an_admin_profile_for_the_passwords_things(self):
         """Dominik 2026-10-17: GET /api/mfa 403 in the console of an admin profile. Every place in the pages that
         reads what only the panel password may read (main_auth) asks elevated() first; mfa.js gets the path passed in."""
@@ -138,7 +153,8 @@ class CoAdmin(unittest.TestCase):
             with open(os.path.join(js, f), encoding="utf-8") as fh:
                 for n, line in enumerate(fh, 1):
                     for p in paths:
-                        if re.search(r"['\"`]" + re.escape(p) + r"['\"`]", line) and "elevated()" not in line:
+                        # also with a query: '/api/audit/check?nas=1' slipped through (Dominik 2026-11-03)
+                        if re.search(r"['\"`]" + re.escape(p) + r"['\"`?]", line) and "elevated()" not in line:
                             bad.append(f"{f}:{n} {p}")
         self.assertEqual(bad, [])
 
