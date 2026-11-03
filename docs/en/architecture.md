@@ -244,6 +244,7 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 
 | Module | Task |
 |---|---|
+| `app/panel/auswertung.py` | Auswertungen je Dokument: one sheet per own document with fixed kinds, every point with the place in the document it rests on. |
 | `app/panel/bilder.py` | Bilder malen: pictures from a wish, painted on the Spark by FLUX.2 [klein] (bild_server.py on 127.0.0.1, image.port). |
 | `app/panel/docembed.py` | Meaning vectors for the document search. |
 | `app/panel/doclingdienst.py` | Docling-Server anbinden: the admin connects a docling-serve in the home network (Docker on another machine), and uploaded documents are read a second time, b … |
@@ -634,7 +635,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/zuordnungen.json` | Remembered matches |  | sealed whole (AES-256-GCM) | yes | Memory |
 | `users/ID/tasks.json` | Tasks |  | – | yes | Tasks and reminders |
 | `users/ID/reminders.json` | Reminders |  | – | yes | Tasks and reminders |
-| `users/ID/wissen.db` | Documents: text, sections with context line, search, vectors; knowledge book and map with people, companies and deadlines; collections with entries and levels (SQLite) |  | – | yes | Documents (text, search, originals) |
+| `users/ID/wissen.db` | Documents: text, sections with context line, search, vectors; knowledge book and map with people, companies and deadlines; collections with entries and levels; analyses per document with their place (SQLite) |  | – | yes | Documents (text, search, originals) |
 | `users/ID/docs/files/` | Originals of uploads |  | – | yes | Documents (text, search, originals) |
 | `users/ID/fund.db` | Find: search index over the own data (titles, fields, tags, own tags, mail and attachments, appointments, contacts, lists, reminders, pictures, songs; conversations only date and channel; SQLite) |  | marks with a key of its own per profile (HMAC); mail, attachments, appointments and contacts: title, excerpt, fields and tags AES-GCM | yes | Documents (text, search, originals) |
 | `users/ID/suchpruefung.json` | Test questions and runs of the search check |  | – | yes | Documents (text, search, originals) |
@@ -2072,11 +2073,11 @@ Applies at: [step 9](#kn-weiche-s9)
 
 #### Everyday score
 
-- The test sentences (201) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
+- The test sentences (205) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
 
 #### Tool names
 
-- Wherever a tool shows, a readable name comes from one table (97 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
+- Wherever a tool shows, a readable name comes from one table (98 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
 
 #### Numbers (from the code)
 
@@ -2086,7 +2087,7 @@ Applies at: [step 9](#kn-weiche-s9)
 - **4** seconds at most for the model's pick ([step 10](#kn-weiche-s10))
 - **300 ms** waiting with „Fast answer start“ ([step 10](#kn-weiche-s10))
 - **80 %** default threshold of the classification ([step 10](#kn-weiche-s10))
-- **201** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
+- **205** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
 - **216** everyday sentences for measuring ([step 14](#kn-weiche-s14))
 - **20** versions for undo ([step 4](#kn-weiche-s4))
 
@@ -2307,7 +2308,7 @@ Applies at: [step 4](#kn-werkzeuge-s4)
 - **3** memory notes per answer ([step 1](#kn-werkzeuge-s1))
 - **13** tools locked after outside text ([step 4](#kn-werkzeuge-s4))
 - **7** tools without internet with the kill switch ([step 3](#kn-werkzeuge-s3))
-- **97** tools with a readable name ([step 11](#kn-werkzeuge-s11))
+- **98** tools with a readable name ([step 11](#kn-werkzeuge-s11))
 
 #### Settings
 
@@ -2442,6 +2443,11 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - Page and point, type rules, deadlines: when a page of the knowledge book has the name of a point of the kind person, firma or ort, both are one point (wk_entpage); the fixed rule wissenskarte._verbinde links them when points are read, at night and once when the table is made, never the model. Their connections count as the point's in view, rund_um, weg and liste; both are renamed together (wissensbuch.retitle, the old title stays in wb_alttitel, so working in makes no double page). Every connection follows the table wissenskarte.TYPEN (allowed kinds at the start and the end, a page counts as „seite“), a deadline needs a date or a number with a unit of time in its name (wissenskarte.frist_name, number words by a fixed list). The nightly check (wissenskarte.nachtpruefung) removes what was stored before and breaks them.
 - Doubles (wissensdoppelt.py) are found by one fixed rule only, wissensdoppelt.aehnlich, never by the model: every name in its normal form per kind (wissensdoppelt.normalform: ß/ss and umlauts, signs, people without form of address and title and „last name, first name“ turned round, companies without legal form and „Firma“, places with „Str.“ as „Straße“). „The same“ are only people with first and last name and places that differ in nothing else, and accounts, contracts and deadlines with the same normal form; while reading such a name becomes an other name of the point (wissensdoppelt.gleich_id), the quiet run merges points already there through wissenskarte.zusammen (wissensdoppelt.lauf). A suggestion are small typing errors (Damerau-Levenshtein at most 2 from 6 letters, 1 for 4 to 5), an initial when exactly one person fits, and a company with the same core; compared only in blocks, at most 200000 pairs per run, at most 300 open suggestions. The run goes in slices of at most 0.2 s, the next goes on where the last stood (in the memory; changed points start it again). „Different“ (wissensdoppelt.verschieden) keeps the names, the pair never comes back; a deleted point also never comes back in a spelling that is „the same“ (wissensdoppelt.gesperrt); merging stays the click with the code. „Merge with …“ shows the 8 most similar points of the same kind on top (wissensdoppelt.auswahl), the rest by search.
 
+#### Analyses
+
+- The quiet chain (wissen.KETTE, one list for the order) calls auswertung.due_once after the knowledge map and the tags of Find. auswertung.naechster takes first what the person ordered by click, then summary and key points of the newest documents; a long document only after wissen.long_ok. auswertung.stellen cuts the document into passes of at most 12000 characters, at most 5; every pass runs through vorrang.run and stops as soon as somebody speaks (the kind then waits again). At most 100 kinds per profile and day (default), a broken answer at most 3 times.
+- auswertung.pruefe keeps a point of the model only when its place was offered, wissensbuch.check_sentence passes against that place (every number stands there, no links, no markup, no command words) and, for summary and key points, wissensbuch.match finds enough words of the place; a question ends with „?“, its answer is the place itself. Doubles and points marked „not right“ (aw_block) go, at most auswertung.MOST per kind. A document read again (another fingerprint of its pieces) waits again. auswertung.inhalt builds the contents from chunks.part, auswertung.fristen takes the deadline of the profile card and the points of the knowledge map (wissenskarte.knoten_von_dok, read only): both without the model. Model text never goes into the memory, the knowledge book or the search; the tool dokument_auswertung hands it over as outside text.
+
 #### Map helps the search
 
 - wissenskarte.liste(uid, worte, k) returns piece ids with a rank from 1, read only (SQLite with mode=ro) and only for the own profile. Fixed rules, never the model: the search words hit a point when its name or another name stands whole in the question (compared like wissenskarte.ent_norm) or a word of the name with at least 4 letters that is no number and no legal form (wissenskarte.trifft); at most 20 points. Their neighbours one step away join (the same query as wissenskarte.rund_um), and of all of them the passages in used, read documents. A passage with a named point stands before one with only neighbours, more points before fewer, at most 50.
@@ -2512,6 +2518,9 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - **50** collections per profile ([step 13](#kn-wissen-s13))
 - **100** entries per collection ([step 13](#kn-wissen-s13))
 - **24000** tokens of a collection to the model (default) ([step 13](#kn-wissen-s13))
+- **12000** characters of places per pass of an analysis ([step 13](#kn-wissen-s13))
+- **5** passes of a long document at most ([step 13](#kn-wissen-s13))
+- **100** analyses per profile and day (default) ([step 13](#kn-wissen-s13))
 
 #### Settings
 
@@ -2523,6 +2532,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - Features → Own documents → Knowledge book and below it Knowledge map on: connections between the pages, shown in the menu Knowledge book on the page Map, with how many documents a day (own limit).
 - Features → Own documents → Knowledge book → Knowledge map and below it People, companies and deadlines on: points of their own from the documents on the map, with how many documents a day (own limit).
 - Features → Own documents → Knowledge book → Knowledge map → People, companies and deadlines and below it Map helps the search on: the map as third list of hits of the document search (default off).
+- Features → Own documents and below it Analyses on: the sheet Analyses in the details of every own document, with how many analyses a day.
 - Features → Own documents and below it Collections on: the page Collections in the menu, with how many tokens a collection gives the model at most.
 
 #### What you see
@@ -2586,6 +2596,12 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/mappen.py` `fuer_werkzeug`: a collection as the search's filter only from own words or the binding ([step 6](#kn-wissen-s6))
 - `app/panel/mappen.py` `fuer_seite`: a collection as the filter of the page Find, a foreign one finds nothing ([step 6](#kn-wissen-s6))
 - `app/panel/mappen.py` `refs_of`: documents and pages of a collection from mp_eintrag ([step 6](#kn-wissen-s6))
+- `app/panel/wissen.py` `KETTE`: the quiet chain: order of the background work, one list ([step 13](#kn-wissen-s13))
+- `app/panel/auswertung.py` `naechster`: next kind: click first, then newest documents; long ones only after long_ok ([step 13](#kn-wissen-s13))
+- `app/panel/auswertung.py` `machen`: one kind of one document in passes through vorrang.run ([step 13](#kn-wissen-s13))
+- `app/panel/auswertung.py` `pruefe`: fixed rules over the model's points, per place ([step 13](#kn-wissen-s13))
+- `app/panel/auswertung.py` `inhalt`: contents from chunks.part, without the model ([step 13](#kn-wissen-s13))
+- `app/panel/auswertung.py` `fristen`: deadlines from the profile card and the knowledge map, without the model ([step 13](#kn-wissen-s13))
 - `app/panel/documents.py` `_similar`: similarity block by block in float32 ([step 6](#kn-wissen-s6))
 - `app/panel/gedaechtnis.py` `hint_lines`: facts in three blocks ([step 13](#kn-wissen-s13))
 - `app/panel/profiles.py` `_cap`: cap: only old learned facts make room ([step 13](#kn-wissen-s13))
@@ -2595,7 +2611,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/wissensmessung.py` `_synth`: the throwaway profile from a fixed seed, with the code's limits ([step 6](#kn-wissen-s6))
 - `app/panel/wissensmessung.py` `MESSTEILE`: the measuring parts, extensible ([step 6](#kn-wissen-s6))
 
-Self-tests: `test_wissen`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`, `test_wissenstempo`
+Self-tests: `test_wissen`, `test_auswertung`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`, `test_wissenstempo`
 
 ### Guard
 

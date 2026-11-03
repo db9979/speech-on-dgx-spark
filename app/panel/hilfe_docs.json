@@ -1957,7 +1957,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Alltagsquote",
 "title": "Alltagsquote",
-"text": "- Die Testsätze (201) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
+"text": "- Die Testsätze (205) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
 },
 {
 "lang": "de",
@@ -1965,7 +1965,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Werkzeugnamen",
 "title": "Werkzeugnamen",
-"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (97 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
+"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (98 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
 },
 {
 "lang": "de",
@@ -1973,7 +1973,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 26 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 201 eingebaute Testsätze (Schritt 4, Schritt 5) - 216 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
+"text": "- 26 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 205 eingebaute Testsätze (Schritt 4, Schritt 5) - 216 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
 },
 {
 "lang": "de",
@@ -2181,7 +2181,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 4 Aufrufe pro Runde (Schritt 1) - 3 Gedächtnis-Notizen pro Antwort (Schritt 1) - 13 Werkzeuge gesperrt nach fremdem Text (Schritt 4) - 7 Werkzeuge ohne Internet bei Notaus (Schritt 3) - 97 Werkzeuge mit verständlichem Namen (Schritt 11)"
+"text": "- 4 Aufrufe pro Runde (Schritt 1) - 3 Gedächtnis-Notizen pro Antwort (Schritt 1) - 13 Werkzeuge gesperrt nach fremdem Text (Schritt 4) - 7 Werkzeuge ohne Internet bei Notaus (Schritt 3) - 98 Werkzeuge mit verständlichem Namen (Schritt 11)"
 },
 {
 "lang": "de",
@@ -2355,6 +2355,22 @@
 "lang": "de",
 "src": "architektur",
 "file": "Architektur und Datenfluss",
+"head": "Auswertungen",
+"title": "Auswertungen",
+"text": "- Die ruhige Kette (wissen.KETTE, eine Liste für die Reihenfolge) ruft auswertung.due_once nach der Wissenskarte und den Schlagworten von Finden. auswertung.naechster nimmt zuerst, was die Person per Klick bestellt hat, dann Kurzfassung und Kernaussagen der neuesten Dokumente; ein langes Dokument nur nach wissen.long_ok. auswertung.stellen schneidet das Dokument in Durchgänge von höchstens 12000 Zeichen, höchstens 5; jeder Durchgang läuft über vorrang.run und bricht ab, sobald jemand spricht (die Art wartet dann wieder). Höchstens 100 Arten pro Profil und Tag (Standard), eine kaputte Antwort höchstens 3 Mal. - auswertung.pruefe behält einen Punkt des Modells nur, wenn seine Stelle angeboten war, wissensbuch.check_sentence gegen diese Stelle besteht (jede Zahl steht dort, keine Links, kein Markup, keine Befehlswörter) und bei Kurzfassung und Kernaussagen wissensbuch.match genug Wörter der Stelle findet; eine Frage endet mit „?“, ihre Antwort ist die Stelle selbst. Doppelte und Punkte mit „Stimmt nicht“ (aw_block) fallen weg, höchstens auswertung.MOST je Art. Ein neu gelesenes Dokument (anderer Fingerabdruck der Stücke) wartet wieder. auswertung.inhalt baut das Inhaltsverzeichnis aus"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Auswertungen",
+"title": "Auswertungen",
+"text": " chunks.part, auswertung.fristen nimmt die Frist des Steckbriefs und die Punkte der Wissenskarte (wissenskarte.knoten_von_dok, nur lesend): beides ohne Modell. Modelltext geht nie ins Gedächtnis, ins Wissensbuch oder in die Suche; das Werkzeug dokument_auswertung gibt ihn als Text von außen."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
 "head": "Karte hilft der Suche",
 "title": "Karte hilft der Suche",
 "text": "- wissenskarte.liste(uid, worte, k) gibt Stück-Ids mit Rang ab 1 zurück, nur lesend (SQLite mit mode=ro) und nur für das eigene Profil. Feste Regeln, nie das Modell: Die Suchwörter treffen einen Punkt, wenn sein Name oder ein anderer Name ganz in der Frage steht (verglichen wie wissenskarte.ent_norm) oder ein Wort des Namens ab 4 Buchstaben, das keine Zahl und keine Rechtsform ist (wissenskarte.trifft); höchstens 20 Punkte. Dazu kommen ihre Nachbarn einen Schritt weit (dieselbe Abfrage wie wissenskarte.rund_um) und von allen die Stellen in genutzten, gelesenen Dokumenten. Eine Stelle mit einem genannten Punkt steht vor einer mit nur Nachbarn, mehr Punkte vor weniger, höchstens 50. - documents.search mischt die Liste wie die anderen mit 60 plus Platz, gewichtet mit 0.5, und nur Stellen, die dieselbe Bedingung der Suche durchlässt (documents._karte). Ein so gefundener Treffer trägt „karte“, unter der Antwort steht „über die Wissenskarte“. Die Suchprüfung misst die Mischung mit der Karte als eigenen Balken. Fällt die Karte aus, sucht die Suche ohne sie weiter und schreibt eine Zeile „wissen: kartensuche fehler“."
@@ -2429,7 +2445,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "r Mappe ans Modell (Standard) (Schritt 13)"
+"text": "r Mappe ans Modell (Standard) (Schritt 13) - 12000 Zeichen der Stellen je Durchgang einer Auswertung (Schritt 13) - 5 Durchgänge eines langen Dokuments höchstens (Schritt 13) - 100 Auswertungen pro Profil und Tag (Standard) (Schritt 13)"
 },
 {
 "lang": "de",
@@ -2445,7 +2461,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "umente und darunter Mappen an: die Seite Mappen im Menü, dazu wie viele Token eine Mappe dem Modell höchstens gibt."
+"text": "umente und darunter Auswertungen an: das Blatt Auswertungen im Detail jedes eigenen Dokuments, dazu wie viele Auswertungen am Tag. - Funktionen → Eigene Dokumente und darunter Mappen an: die Seite Mappen im Menü, dazu wie viele Token eine Mappe dem Modell höchstens gibt."
 },
 {
 "lang": "de",
@@ -2493,7 +2509,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "chritt 13) - app/panel/mappen.py fuer_werkzeug: Mappe als Filter der Suche nur aus eigenen Worten oder der Bindung (Schritt 6) - app/panel/mappen.py fuer_seite: Mappe als Filter der Seite Finden, fremd findet nichts (Schritt 6) - app/panel/mappen.py refs_of: Dokumente und Seiten einer Mappe aus mp_eintrag (Schritt 6) - app/panel/documents.py _similar: Ähnlichkeit blockweise in float32 (Schritt 6) - app/panel/gedaechtnis.py hint_lines: Fakten in drei Blöcken (Schritt 13) - app/panel/profiles.py _cap: Obergrenze: nur alte gelernte Fakten machen Platz (Schritt 13) - app/panel/gedaechtnis.py slot_of: fester Themen-Platz eines Fakts nach festen Mustern (Schritt 13) - app/panel/gemerkt.py take_back: Rückgängig nur bei unverändertem Fakt (Schritt 13) - app/panel/wissensmessung.py lauf: eine Messung im eigenen Prozess, bricht bei Sprache ab (Schritt 6) - app/panel/wissensmessung.py _synth: das Wegwerf-Profil aus festem Zufall, mit den Grenzen des Codes (Schritt 6) - app/panel/wissensmessung.py MESSTEILE: die Messteile, erweiterbar (Schritt 6)"
+"text": "chritt 13) - app/panel/mappen.py fuer_werkzeug: Mappe als Filter der Suche nur aus eigenen Worten oder der Bindung (Schritt 6) - app/panel/mappen.py fuer_seite: Mappe als Filter der Seite Finden, fremd findet nichts (Schritt 6) - app/panel/mappen.py refs_of: Dokumente und Seiten einer Mappe aus mp_eintrag (Schritt 6) - app/panel/wissen.py KETTE: die ruhige Kette: Reihenfolge der Hintergrundarbeit, eine Liste (Schritt 13) - app/panel/auswertung.py naechster: nächste Art: Klick zuerst, dann neueste Dokumente; lange nur nach long_ok (Schritt 13) - app/panel/auswertung.py machen: eine Art eines Dokuments in Durchgängen über vorrang.run (Schritt 13) - app/panel/auswertung.py pruefe: feste Regeln über die Punkte des Modells, je Stelle (Schritt 13) - app/panel/auswertung.py inhalt: Inhaltsverzeichnis aus chunks.part, ohne Modell (Schritt 13) - app/panel/auswertung.py fristen: Fristen aus Steckbrief und Wissenskarte, ohne Modell (Schritt 13) - app/panel/documents.py _similar: Ähnlichkeit blockweise in float32 (Schritt 6) - app/panel/gedaechtnis.py hint_lines: Fakten in drei Blöcken (Schritt 13) - app/panel/profiles.py _cap: Obergrenze: nur alte gelernte Fakten machen Platz (Schritt 13) - a"
 },
 {
 "lang": "de",
@@ -2501,7 +2517,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_wissen, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung, test_wissenstempo"
+"text": "Selbsttests: test_wissen, test_auswertung, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung, test_wissenstempo"
 },
 {
 "lang": "de",
@@ -5510,6 +5526,30 @@
 "head": "Sprach-Chat",
 "title": "Mappen, Push 1b (V01.1.302, Plan *open-notebook* Stufe 1)",
 "text": "ID findet nichts, nie alles. iPhone nativ: Meine Sachen → Mappen (MappenView.swift): Liste, neue Mappe, Mappe mit Einträgen und Stufe als Segmented Control, „≈ X von Y Token“, Eintrag herausnehmen, Mappe löschen (Rückfrage; die Dokumente bleiben); Dokumente hineinlegen, Notizen und Umbenennen im Panel. Android über die Panel-Ansicht. Begleiter: features.DESK_SKIP. Logs mappen: filter | fund | chat | 1 dokumente 0 seiten | P1, mappen: filter verworfen | dokumente | nicht in den eigenen worten; Live *Mappen* zählt „Suchen in Mappen“. Weiche: drei Sätze in intent_bench.py. Selbsttests tests/test_mappen.py (Klasse Filter)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Auswertungen je Dokument, Push 2a (V01.1.312, Plan *open-notebook* Stufe 2, Dominik: Kurzfassung und Kernaussagen von selbst, der Rest per Klick): Admin-Schalter *Funktionen → Eigene Dokumente → Auswertungen* (chat.doc_auswertung, ab Werk aus; kein Profilschalter, der Admin sperrt einzelne Profile, Gäste nie), darunter *Auswertungen pro Tag und Profil* (chat.doc_auswertung_day, 10 bis 500, Standard 100). Unter Ich → Dokumente hat jedes eigene, gelesene Dokument im Detail das Blatt Auswertungen mit den festen Arten Kurzfassung (höchstens 6 Sätze), Kernaussagen (8), Fragen zum Text (6), Inhaltsverzeichnis, Fristen und Beteiligte. Kurzfassung und Kernaussagen entstehen in ruhigen Minuten von selbst (auswertung.AUTO), die anderen per Klick „Erstellen“ bzw. „Zeigen“. Prüfung: Das Modell bekommt das Dokument in nummerierten Stellen [S1] … und antwortet nur JSON {\"punkte\": [{\"text\", \"quelle\"}]}; auswertung.pruefe behält einen Punkt nur, wenn seine Stelle angeboten war, wissensbuch.check_sentence gegen diese Stelle besteht (Länge, keine Links, kein Markup, keine Befehlswörter, jede Zahl steht in der Stelle) und bei Kurzfassung und Kernaussagen wissensbuch.match genug Wörter der Stelle find"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "et; eine Frage endet mit „?“, ihre Antwort zeigt das Panel als Zitat der Stelle. Doppelte und Punkte mit „Stimmt nicht“ (Tabelle aw_block) fallen weg; verworfene werden gezählt, nie gezeigt. Ohne Modell: das Inhaltsverzeichnis aus den Überschriften der Stücke (chunks.part), Fristen aus der Frist des Steckbriefs und den Punkten der Wissenskarte der Arten Frist und Vertrag, Beteiligte aus Personen, Firmen und Orten (wissenskarte.knoten_von_dok, nur lesend; ihre Stelle über wissenskarte.stands); ohne „Personen, Firmen und Fristen“ zeigt das Blatt nur das Steckbrief-Datum und sagt, was fehlt. Ablauf: Die ruhige Kette ist jetzt eine Liste wissen.KETTE (eine Quelle für die Reihenfolge); auswertung.due_once steht nach der Wissenskarte und fund.schlagworte_due. Eine Art eines Dokuments je Schritt, jeder Durchgang über vorrang.run(\"Auswertung\") (bricht bei Sprache ab, die Art wartet wieder), lange Dokumente in höchstens 5 Durchgängen zu 12 000 Zeichen und erst nach wissen.long_ok; ein neu gelesenes Dokument wartet wieder, eine kaputte Antwort höchstens dreimal. Tabelle aw_ergebnis in der eigenen wissen.db. Werkzeug dokument_auswertung(dokument, art) (lesend, in der Weiche-Gruppe dokument) g"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ibt nur geprüfte Punkte mit Seite als Text von außen. Endpunkte GET /api/profile/wissen/{doc}/auswertung, POST …/auswertung/{art}, DELETE …/auswertung/{art}/{n} mit Anmeldung, eigenem Profil, CSRF, 16 KB und Rate-Limit „auswertung“. Zustand → Live: Kasten Auswertungen (fertig, warten, heute verworfen); Logs Bereich Wissen: „auswertung: fertig | kurz 3 punkte 1 verworfen | …“. Admin-Vorlagen, iPhone nativ und Mappen-Stufe „kurz“ mit Auswertungen folgen in Push 2b."
 },
 {
 "lang": "de",
@@ -13789,6 +13829,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Meine Daten",
 "title": "Meine Daten",
+"text": "- Auswertungen (Funktionen → Meine Daten → „Auswertungen“; baut auf „Eigene Dokumente“; Ich → Dokumente): Jedes eigene Dokument bekommt unter Ich → Dokumente im Detail das Blatt Auswertungen: Kurzfassung und Kernaussagen entstehen von selbst in ruhigen Minuten; Fragen zum Text, Inhaltsverzeichnis, Fristen und Beteiligte erstellst du per Klick."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
 "text": "- Suchprüfung (Funktionen → Meine Daten → „Suchprüfung“; baut auf „Eigene Dokumente“; Ich → Dokumente): Prüffragen mit bekannter richtiger Stelle zeigen, wie oft die Suche in deinen Dokumenten das Richtige findet."
 },
 {
@@ -16317,7 +16365,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Daten auf der Platte und neue Schreibwege",
 "title": "Daten auf der Platte und neue Schreibwege",
-"text": "ter Regel (aus, kurz, ganz, Budget chat.mappe_token), als Text von außen eingepackt; der Zug sperrt ändernde Werkzeuge. Die Mappe eines Gesprächs kommt nur aus der Wahl der Person (eigene ID, geprüft), nie vom Modell; Werkzeuge nennen eine Mappe oder ein Dokument nur, wenn die eigenen Worte sie enthalten. Nur eigene Dokumente und Seiten, nie die eines anderen Profils. Löschen nimmt nur die Zuordnung. Logs und Live nur mit Zahlen. Als Filter der Suche (seit V01.1.302) nimmt das Panel eine Mappe nur aus den eigenen Worten oder der geprüften Bindung des Gesprächs; mit einer Mappe kommen nur ihre Dokumente und Seiten, nie Mails, Termine oder Kontakte, und eine fremde oder unbekannte Mappe findet nichts statt alles. - Vorräte versiegelt (seit V01.0.872/879): Was ein Dienst für ein Profil gelesen hat, liegt als Vorrat versiegelt (vault) im Profil, damit Antworten bei einem Ausfall mit „Stand …“ kommen: Mail-Vorrat (mail-vorrat.bin, Kopfzeilen und bis zu 40 Mailtexte ohne Anhänge), Wetter-, Paket- und Für-dich-Vorrat. Nicht in der Sicherung, „Daten löschen“ entfernt sie. Liste aller Dateien: Architektur → Datenablage. - Unklare Fragen anonym (seit V01.0.927, Schalter „Unklare Fragen anony"
+"text": "ter Regel (aus, kurz, ganz, Budget chat.mappe_token), als Text von außen eingepackt; der Zug sperrt ändernde Werkzeuge. Die Mappe eines Gesprächs kommt nur aus der Wahl der Person (eigene ID, geprüft), nie vom Modell; Werkzeuge nennen eine Mappe oder ein Dokument nur, wenn die eigenen Worte sie enthalten. Nur eigene Dokumente und Seiten, nie die eines anderen Profils. Löschen nimmt nur die Zuordnung. Logs und Live nur mit Zahlen. Als Filter der Suche (seit V01.1.302) nimmt das Panel eine Mappe nur aus den eigenen Worten oder der geprüften Bindung des Gesprächs; mit einer Mappe kommen nur ihre Dokumente und Seiten, nie Mails, Termine oder Kontakte, und eine fremde oder unbekannte Mappe findet nichts statt alles. - Auswertungen (seit V01.1.312, Schalter „Auswertungen“, aus): Tabellen aw_ergebnis und aw_block in der eigenen wissen.db. Modelltext ist Daten: jeder Punkt nur mit seiner Stelle und nach der Zahlenprobe des Panels (auswertung.pruefe), nie ins Gedächtnis, ins Wissensbuch oder in die Suche, ans Modell nur als Text von außen; Fristen und Beteiligte ohne Modell aus Steckbrief und Wissenskarte. Nur in ruhigen Minuten über vorrang.run, Tagesgrenze je Profil, Logs nur mit festen W"
 },
 {
 "lang": "de",
@@ -19733,7 +19781,7 @@
 "file": "Architecture and data flow",
 "head": "Everyday score",
 "title": "Everyday score",
-"text": "- The test sentences (201) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
+"text": "- The test sentences (205) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
 },
 {
 "lang": "en",
@@ -19741,7 +19789,7 @@
 "file": "Architecture and data flow",
 "head": "Tool names",
 "title": "Tool names",
-"text": "- Wherever a tool shows, a readable name comes from one table (97 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
+"text": "- Wherever a tool shows, a readable name comes from one table (98 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
 },
 {
 "lang": "en",
@@ -19749,7 +19797,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 26 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 201 built-in test sentences (step 4, step 5) - 216 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
+"text": "- 26 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 205 built-in test sentences (step 4, step 5) - 216 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
 },
 {
 "lang": "en",
@@ -19957,7 +20005,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 4 calls per round (step 1) - 3 memory notes per answer (step 1) - 13 tools locked after outside text (step 4) - 7 tools without internet with the kill switch (step 3) - 97 tools with a readable name (step 11)"
+"text": "- 4 calls per round (step 1) - 3 memory notes per answer (step 1) - 13 tools locked after outside text (step 4) - 7 tools without internet with the kill switch (step 3) - 98 tools with a readable name (step 11)"
 },
 {
 "lang": "en",
@@ -20123,6 +20171,22 @@
 "lang": "en",
 "src": "architecture",
 "file": "Architecture and data flow",
+"head": "Analyses",
+"title": "Analyses",
+"text": "- The quiet chain (wissen.KETTE, one list for the order) calls auswertung.due_once after the knowledge map and the tags of Find. auswertung.naechster takes first what the person ordered by click, then summary and key points of the newest documents; a long document only after wissen.long_ok. auswertung.stellen cuts the document into passes of at most 12000 characters, at most 5; every pass runs through vorrang.run and stops as soon as somebody speaks (the kind then waits again). At most 100 kinds per profile and day (default), a broken answer at most 3 times. - auswertung.pruefe keeps a point of the model only when its place was offered, wissensbuch.check_sentence passes against that place (every number stands there, no links, no markup, no command words) and, for summary and key points, wissensbuch.match finds enough words of the place; a question ends with „?“, its answer is the place itself. Doubles and points marked „not right“ (aw_block) go, at most auswertung.MOST per kind. A document read again (another fingerprint of its pieces) waits again. auswertung.inhalt builds the contents from chunks.part, auswertung.fristen takes the deadline of the profile card and the points of the"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Analyses",
+"title": "Analyses",
+"text": " knowledge map (wissenskarte.knoten_von_dok, read only): both without the model. Model text never goes into the memory, the knowledge book or the search; the tool dokument_auswertung hands it over as outside text."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
 "head": "Map helps the search",
 "title": "Map helps the search",
 "text": "- wissenskarte.liste(uid, worte, k) returns piece ids with a rank from 1, read only (SQLite with mode=ro) and only for the own profile. Fixed rules, never the model: the search words hit a point when its name or another name stands whole in the question (compared like wissenskarte.ent_norm) or a word of the name with at least 4 letters that is no number and no legal form (wissenskarte.trifft); at most 20 points. Their neighbours one step away join (the same query as wissenskarte.rund_um), and of all of them the passages in used, read documents. A passage with a named point stands before one with only neighbours, more points before fewer, at most 50. - documents.search mixes the list like the others with 60 plus place, weighed 0.5, and only passages the same condition of the search lets through (documents._karte). A hit found so carries „karte“, below the answer it says „via the knowledge map“. The search check measures the mix with the map as a bar of its own. If the map fails, the search goes on without it and writes a line „wissen: kartensuche fehler“."
@@ -20189,7 +20253,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "nightly check (step 13) - 200 deadlines without a number one slice removes at most (step 13) - 4096 passages per block when comparing vectors (step 6) - 200 documents a day for the knowledge map (default) (step 13) - 40 people, companies, places, contracts, accounts and deadlines one document may bring (step 13) - 15000 such points per profile (step 13) - 80 characters the name of such a point has at most (step 13) - 200 documents a day for these points (default) (step 13) - 200000 pairs one run for doubles compares per profile at most (step 13) - 300 open suggestions „Maybe double“ per profile (step 13) - 8 most similar points on top of „Merge with …“ (step 13) - 0.2 s at most per slice of the quiet run for doubles (step 13) - 50 passages the map names to the search at most (step 6) - 20 points the search words hit at most (step 6) - 0.5 weight of the list from the map (step 6) - 50 collections per profile (step 13) - 100 entries per collection (step 13) - 24000 tokens of a collection to the model (default) (step 13)"
+"text": "nightly check (step 13) - 200 deadlines without a number one slice removes at most (step 13) - 4096 passages per block when comparing vectors (step 6) - 200 documents a day for the knowledge map (default) (step 13) - 40 people, companies, places, contracts, accounts and deadlines one document may bring (step 13) - 15000 such points per profile (step 13) - 80 characters the name of such a point has at most (step 13) - 200 documents a day for these points (default) (step 13) - 200000 pairs one run for doubles compares per profile at most (step 13) - 300 open suggestions „Maybe double“ per profile (step 13) - 8 most similar points on top of „Merge with …“ (step 13) - 0.2 s at most per slice of the quiet run for doubles (step 13) - 50 passages the map names to the search at most (step 6) - 20 points the search words hit at most (step 6) - 0.5 weight of the list from the map (step 6) - 50 collections per profile (step 13) - 100 entries per collection (step 13) - 24000 tokens of a collection to the model (default) (step 13) - 12000 characters of places per pass of an analysis (step 13) - 5 passes of a long document at most (step 13) - 100 analyses per profile and day (default) (step 13)"
 },
 {
 "lang": "en",
@@ -20197,7 +20261,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- Features → Own documents and below it Meaning search on: passages get a meaning vector (default off). - Features → Own documents and below it Re-rank hits on: with model size and the longest wait. - Features → Own documents and below it Document card and tags on: search by tags and kind. - Features → Own documents and below it Shared documents on: documents „for everyone“. - Features → Own documents and below it Knowledge book on: pages from the own documents, with how many documents a day. - Features → Own documents → Knowledge book and below it Knowledge map on: connections between the pages, shown in the menu Knowledge book on the page Map, with how many documents a day (own limit). - Features → Own documents → Knowledge book → Knowledge map and below it People, companies and deadlines on: points of their own from the documents on the map, with how many documents a day (own limit). - Features → Own documents → Knowledge book → Knowledge map → People, companies and deadlines and below it Map helps the search on: the map as third list of hits of the document search (default off). - Features → Own documents and below it Collections on: the page Collections in the menu, with how m"
+"text": "- Features → Own documents and below it Meaning search on: passages get a meaning vector (default off). - Features → Own documents and below it Re-rank hits on: with model size and the longest wait. - Features → Own documents and below it Document card and tags on: search by tags and kind. - Features → Own documents and below it Shared documents on: documents „for everyone“. - Features → Own documents and below it Knowledge book on: pages from the own documents, with how many documents a day. - Features → Own documents → Knowledge book and below it Knowledge map on: connections between the pages, shown in the menu Knowledge book on the page Map, with how many documents a day (own limit). - Features → Own documents → Knowledge book → Knowledge map and below it People, companies and deadlines on: points of their own from the documents on the map, with how many documents a day (own limit). - Features → Own documents → Knowledge book → Knowledge map → People, companies and deadlines and below it Map helps the search on: the map as third list of hits of the document search (default off). - Features → Own documents and below it Analyses on: the sheet Analyses in the details of every own "
 },
 {
 "lang": "en",
@@ -20205,7 +20269,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "any tokens a collection gives the model at most."
+"text": "document, with how many analyses a day. - Features → Own documents and below it Collections on: the page Collections in the menu, with how many tokens a collection gives the model at most."
 },
 {
 "lang": "en",
@@ -20253,7 +20317,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "ppen.py refs_of: documents and pages of a collection from mp_eintrag (step 6) - app/panel/documents.py _similar: similarity block by block in float32 (step 6) - app/panel/gedaechtnis.py hint_lines: facts in three blocks (step 13) - app/panel/profiles.py _cap: cap: only old learned facts make room (step 13) - app/panel/gedaechtnis.py slot_of: a fact's fixed topic place by fixed patterns (step 13) - app/panel/gemerkt.py take_back: undo only while the fact is unchanged (step 13) - app/panel/wissensmessung.py lauf: one measurement in its own process, stops on speech (step 6) - app/panel/wissensmessung.py _synth: the throwaway profile from a fixed seed, with the code's limits (step 6) - app/panel/wissensmessung.py MESSTEILE: the measuring parts, extensible (step 6)"
+"text": "ppen.py refs_of: documents and pages of a collection from mp_eintrag (step 6) - app/panel/wissen.py KETTE: the quiet chain: order of the background work, one list (step 13) - app/panel/auswertung.py naechster: next kind: click first, then newest documents; long ones only after long_ok (step 13) - app/panel/auswertung.py machen: one kind of one document in passes through vorrang.run (step 13) - app/panel/auswertung.py pruefe: fixed rules over the model's points, per place (step 13) - app/panel/auswertung.py inhalt: contents from chunks.part, without the model (step 13) - app/panel/auswertung.py fristen: deadlines from the profile card and the knowledge map, without the model (step 13) - app/panel/documents.py _similar: similarity block by block in float32 (step 6) - app/panel/gedaechtnis.py hint_lines: facts in three blocks (step 13) - app/panel/profiles.py _cap: cap: only old learned facts make room (step 13) - app/panel/gedaechtnis.py slot_of: a fact's fixed topic place by fixed patterns (step 13) - app/panel/gemerkt.py take_back: undo only while the fact is unchanged (step 13) - app/panel/wissensmessung.py lauf: one measurement in its own process, stops on speech (step 6) - app/p"
 },
 {
 "lang": "en",
@@ -20261,7 +20325,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_wissen, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung, test_wissenstempo"
+"text": "Self-tests: test_wissen, test_auswertung, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung, test_wissenstempo"
 },
 {
 "lang": "en",
@@ -23166,6 +23230,30 @@
 "head": "Voice chat",
 "title": "Collections, push 1b (V01.1.302, plan *open-notebook* stage 1)",
 "text": "; another profile's or an unknown id finds nothing, never everything. iPhone native: My things → Collections (MappenView.swift): the list, a new collection, a collection with its entries and the level as a segmented control, \"≈ X of Y tokens\", take an entry out, delete a collection (with a question; the documents stay); putting documents in, notes and renaming in the panel. Android through the panel view. Companion: features.DESK_SKIP. Logs mappen: filter | fund | chat | 1 dokumente 0 seiten | P1, mappen: filter verworfen | dokumente | nicht in den eigenen worten; Live *Collections* counts searches within collections. Router: three sentences in intent_bench.py. Self-tests tests/test_mappen.py (class Filter)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Analyses per document, push 2a (V01.1.312, plan *open-notebook* stage 2, Dominik: summary and key points by themselves, the rest per click): admin switch *Features → Own documents → Analyses* (chat.doc_auswertung, off by default; no profile switch, the admin blocks single profiles, guests never), below it *Analyses per day and profile* (chat.doc_auswertung_day, 10 to 500, default 100). Under Me → Documents every own, read document has the sheet Analyses in its details with the fixed kinds summary (at most 6 sentences), key points (8), questions on the text (6), contents, deadlines and people. Summary and key points are made by themselves in quiet minutes (auswertung.AUTO), the others per click \"Make\" or \"Show\". Check: the model gets the document in numbered places [S1] … and answers only JSON {\"punkte\": [{\"text\", \"quelle\"}]}; auswertung.pruefe keeps a point only when its place was offered, wissensbuch.check_sentence passes against that place (length, no links, no markup, no command words, every number stands in the place) and, for summary and key points, wissensbuch.match finds enough words of the place; a question ends with \"?\", its answer the panel shows as a quote of the place. "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Doubles and points marked \"Not right\" (table aw_block) go; dropped ones are counted, never shown. Without the model: the contents from the headings of the pieces (chunks.part), deadlines from the deadline of the profile card and the points of the knowledge map of the kinds deadline and contract, people from people, companies and places (wissenskarte.knoten_von_dok, read only; their place by wissenskarte.stands); without \"People, companies and deadlines\" the sheet shows only the card's date and says what is missing. Run: the quiet chain is now a list wissen.KETTE (one source for the order); auswertung.due_once stands after the knowledge map and fund.schlagworte_due. One kind of one document per step, every pass through vorrang.run(\"Auswertung\") (stops on speech, the kind waits again), long documents in at most 5 passes of 12 000 characters and only after wissen.long_ok; a document read again waits again, a broken answer at most three times. Table aw_ergebnis in the own wissen.db. Tool dokument_auswertung(dokument, art) (read only, in the switch group dokument) hands over only checked points with their page as outside text. Endpoints GET /api/profile/wissen/{doc}/auswertung, POST …/a"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "uswertung/{art}, DELETE …/auswertung/{art}/{n} with login, own profile, CSRF, 16 KB and rate limit \"auswertung\". Status → Live: box Analyses (done, waiting, dropped today); Logs area Wissen: \"auswertung: fertig | kurz 3 punkte 1 verworfen | …\". Admin templates, the native iPhone view and the collection level \"short\" with analyses follow in push 2b."
 },
 {
 "lang": "en",
@@ -31165,6 +31253,14 @@
 "file": "Assistant and panel",
 "head": "My data",
 "title": "My data",
+"text": "- Analyses (Features → My data → \"Analyses\"; builds on \"Own documents\"; Me → Documents): Every own document gets the sheet Analyses in its details under Me → Documents: summary and key points are made by themselves in quiet minutes; questions on the text, contents, deadlines and people you make per click."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
 "text": "- Search check (Features → My data → \"Search check\"; builds on \"Own documents\"; Me → Documents): Test questions with a known right place show how often the search in your documents finds the right thing."
 },
 {
@@ -33621,7 +33717,7 @@
 "file": "Security and operation",
 "head": "Data on the disk and new ways to write",
 "title": "Data on the disk and new ways to write",
-"text": "id, checked), never from the model; tools name a collection or a document only when the own words hold them. Only own documents and pages, never another profile's. Deleting only removes the assignment. Logs and live with numbers only. As the search's filter (since V01.1.302) the panel takes a collection only from the own words or the checked binding of the conversation; with a collection only its documents and pages come, never mail, appointments or contacts, and another profile's or an unknown collection finds nothing rather than everything. - Supplies sealed (since V01.0.872/879): what a service read for a profile lies sealed (vault) in the profile as a supply, so answers come with \"as of …\" during an outage: mail supply (mail-vorrat.bin, headers and up to 40 mail texts without attachments), weather, parcel and for-you supply. Not in the backup, \"Delete data\" removes them. All files: Architecture → data storage. - Unclear questions, anonymous (since V01.0.927, switch \"Keep unclear questions anonymously\" under Features → Targeted tool choice, off; preference per profile under Me → Conversation → Privacy): questions no rule of the switch recognizes are kept only redacted (fixed rul"
+"text": "id, checked), never from the model; tools name a collection or a document only when the own words hold them. Only own documents and pages, never another profile's. Deleting only removes the assignment. Logs and live with numbers only. As the search's filter (since V01.1.302) the panel takes a collection only from the own words or the checked binding of the conversation; with a collection only its documents and pages come, never mail, appointments or contacts, and another profile's or an unknown collection finds nothing rather than everything. - Analyses (since V01.1.312, switch \"Analyses\", off): tables aw_ergebnis and aw_block in the own wissen.db. Model text is data: every point only with its place and after the panel's number check (auswertung.pruefe), never into the memory, the knowledge book or the search, to the model only as outside text; deadlines and people without the model from the profile card and the knowledge map. Only in quiet minutes through vorrang.run, a daily limit per profile, logs with fixed words and numbers only. - Supplies sealed (since V01.0.872/879): what a service read for a profile lies sealed (vault) in the profile as a supply, so answers come with \"as o"
 },
 {
 "lang": "en",

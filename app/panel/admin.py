@@ -922,6 +922,9 @@ def validate(new):
     d = ch.get("mappe_token", 24000)   # Mappen: tokens of a Mappe to the model (mappen.token_budget)
     if not isinstance(d, int) or isinstance(d, bool) or not 4000 <= d <= 100000:
         raise HTTPException(400, "mappe_token: 4000 to 100000")
+    d = ch.get("doc_auswertung_day", 100)   # Auswertungen: kinds per profile and day (auswertung.day_limit)
+    if not isinstance(d, int) or isinstance(d, bool) or not 10 <= d <= 500:
+        raise HTTPException(400, "doc_auswertung_day: 10 to 500")
     d = ch.get("fund_tag_day", 200)   # Finden, Schlagworte vom Modell (fund.tag_day_limit)
     if not isinstance(d, int) or isinstance(d, bool) or not 5 <= d <= 500:
         raise HTTPException(400, "fund_tag_day: 5 to 500")

@@ -66,6 +66,7 @@ AREAS = (
     ("wissen", "Wissen und Suche", "Knowledge and search", ("web_search", "wikipedia", "archive_search",
                                                             "document_search", "document_list", "fund_suche",
                                                             "mappe_liste", "mappe_stand", "mappe_dazu",
+                                                            "dokument_auswertung",
                                                             "history_search")),
     ("machen", "Bilder, Musik und Dokumente", "Pictures, music and documents", ("bild_malen", "musik_machen", "musik_bearbeiten", "document_plan")),
     ("gedaechtnis", "Gedächtnis", "Memory", ("memory_save", "memory_forget", "spark_tagebuch")),

@@ -5063,6 +5063,20 @@
 "titel": "SparkHilfe Linux X11: Befehl, Schlüssel, Frage, Steuern und Wayland",
 "text": "Ein Linux-Rechner mit X11-Sitzung (z. B. Ubuntu mit „Ubuntu auf Xorg“ beim Anmelden), Steuern bei der Spontanhilfe an. Hilfe öffnen, die Person teilt im Browser, „Steuern anfragen“ (Code): auf /hilfe steht „Befehl zeigen“. Klicken: die Zeile curl … | python3 - steuern https://… erscheint ohne Schlüssel darin, dazu „Befehl kopieren“ und „Schlüssel kopieren“. Zeile im Terminal einfügen, Enter: das Terminal fragt nach dem Schlüssel; „Schlüssel kopieren“, einfügen, Enter (nichts wird angezeigt). Erst jetzt erscheint „<Name> (<Adresse>) möchte Ihren Computer steuern“ mit 1/2/3; 3 wählen: roter Rahmen und oben die rote Leiste, im Panel das Bild. In der Leiste „Steuern“: Klick, Text mit Umlauten und €, „Kopieren“ und „Einfügen“ wirken; Super-Taste und Alt+Tab gibt es nicht. Klick auf die Leiste beim Linux-Rechner beendet die Hilfe, im Terminal „die Hilfe ist beendet“; danach tippt die Tastatur wieder normal (auch €). Denselben Befehl noch einmal: „Der Befehl gilt nicht mehr …“. Unter Wayland (Standard-Ubuntu): sofort „Unter Wayland kann Spark-Hilfe noch nicht steuern …“, nichts verbunden. Englische Sitzung (LANG=en_US.UTF-8): alle Texte englisch. Zustand → Logs (Spontanhilfe): „programm | linux | 1“, nie der Schlüssel.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P748",
+"v": 1312,
+"titel": "Auswertungen: Kurzfassung mit Fundstellen",
+"text": "Funktionen → Eigene Dokumente → Auswertungen an. Unter Ich → Dokumente einen Mietvertrag hochladen und eine Minute nichts fragen. Das Dokument öffnen: unten das Blatt Auswertungen; Kurzfassung und Kernaussagen „fertig“, jeder Punkt mit einem Chip „S. 1 · § 2 Miete“. Eine Zahl aus einem Punkt prüfen: der Chip öffnet den Text, die Zahl steht dort. „Fragen zum Text“ → Erstellen: nach der nächsten ruhigen Minute Fragen mit der Stelle als Antwort; „Inhaltsverzeichnis“ → Zeigen: die Überschriften. Zustand → Live, Kasten Auswertungen: Zahlen, nie ein Text.",
+"thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P749",
+"v": 1312,
+"titel": "Auswertungen: Stimmt nicht und Fristen",
+"text": "Bei einer Kernaussage „Stimmt nicht“: sie verschwindet; „Neu erstellen“ und nach der nächsten ruhigen Minute ist sie nicht wieder da. Mit „Personen, Firmen und Fristen“ an: Fristen → Zeigen nennt die Frist des Steckbriefs (mit „Erinnern“, wenn Fristen anbieten an ist) und die Fristen der Wissenskarte mit ihrer Stelle; ohne diesen Schalter nur das Steckbrief-Datum und der Hinweis mit Weg. Im Assistenten: „Was sind die Kernaussagen im Mietvertrag?“ nennt dieselben Punkte mit Seite.",
+"thread": "Ideen aus Open Notebook übernehmen"
 }
 ]
 }

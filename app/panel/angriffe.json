@@ -286,6 +286,7 @@
     "_": "Werkzeug -> ein Werkzeug mit demselben Sperrweg, das in einem Fall oben angegriffen wird (eingang) bzw. Ziel ist (ziel); test_angriffe prüft, dass beide in derselben Sperrliste stehen.",
     "eingang": {
       "mappe_stand": "tasks_show",
+      "dokument_auswertung": "tasks_show",
       "document_list": "document_search",
       "home_assistant_history": "home_assistant_todo",
       "mail_tidy_overview": "mail_read",

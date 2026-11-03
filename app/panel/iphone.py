@@ -108,12 +108,16 @@ AREAS = {
 # admin released for the profile, the app shows. Each path keeps its own checks (EDIT_KEY for changing pictures,
 # DOC_FEATURE switches, the day limits); forgetting everything at once stays in the browser.
 THINGS = {
-    # Dokumente: the list, the switches, "Für alle", tags, read again, deadline reminder, several at once, the
+    # Dokumente: the list, the switches, "Für alle", tags, read again, deadline reminder, Auswertungen, several at once, the
     # content search, delete (own documents only; the list and reading are APP_PATHS/APP_PATTERNS); Ausgelassene
     # Ordner (auslassen.py): the list, letting a folder in again, adding and removing name rules (the folder tree
     # stays in the browser)
     "documents": ((("GET",), r"/api/profile/wissen"), (("PUT",), rf"/api/profile/wissen/{_DOC}"),
                   (("POST",), rf"/api/profile/wissen/{_DOC}/(?:reread|remind)"),
+                  # Auswertungen (auswertung.py): the sheet, "Erstellen", "Stimmt nicht"; each path checks its release
+                  (("GET",), rf"/api/profile/wissen/{_DOC}/auswertung"),
+                  (("POST",), rf"/api/profile/wissen/{_DOC}/auswertung/[a-z]{{4,10}}"),
+                  (("DELETE",), rf"/api/profile/wissen/{_DOC}/auswertung/[a-z]{{4,10}}/[0-9]{{1,3}}"),
                   (("POST",), r"/api/profile/wissen/(?:batch|search)"), (("DELETE",), rf"/api/profile/docs/{_DOC}"),
                   (("GET", "POST", "DELETE"), r"/api/profile/auslassen")),
     # Gedächtnis: look, change the wording, forget one or several, the tidy-up proposal, Feste Themen

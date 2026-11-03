@@ -194,7 +194,7 @@ GROUPS = {
     "paket": ({"parcels", "mail_list", "mail_search"}, PARCEL_WORDS),
     "kontakt": ({"contacts_search", "iphone_action"}, CONTACT_WORDS),
     "gedaechtnis": ({"memory_save", "memory_forget", "history_search"}, MEMORY_WORDS),
-    "dokument": ({"document_search", "document_list"}, DOC_WORDS),
+    "dokument": ({"document_search", "document_list", "dokument_auswertung"}, DOC_WORDS),
     "nachricht": ({"message_send", "message_read", "message_announce"}, MESSAGE_WORDS),
     "agent": ({"agent_list", "agent_task", "agent_schedule", "routine_save", "agent_change", "agent_watch"},
               AGENT_WORDS),

@@ -442,15 +442,51 @@ def long_ok(now):
     return n is None or n["active"] or time.time() - chat._last_chat[0] > LONG_IDLE
 
 
+# The quiet chain (eine Quelle für die Reihenfolge, Plan open-notebook 8.2, abgestimmt mit dem Thread „Wissenskarte"):
+# due_once runs the links in this order; the first one that did something ends the step (its word is returned). A
+# link is "module.function" (looked up when it runs, so the modules load late and tests can replace one); it is
+# called with now and returns a word, None (nothing to do, the next link) or HALT (stop this step, nothing done).
+HALT = object()
+KETTE = (
+    "doclingdienst.due_once",          # the Docling server first: what it reads, the language model need not
+    "wissen.seiten_due",               # one page picture read by the language model (day/night limits)
+    "wissen.steckbrief_due",           # one Steckbrief
+    "wissensbuch.due_once",            # Wissensbuch: one own document worked into the pages
+    "wissenskarte.due_once",           # Wissenskarte: connections, then the points (people, companies, deadlines)
+    "wissensdoppelt.due_once",         # Doppelte der Wissenskarte: fixed rules, no model
+    "fund.schlagworte_due",            # Finden, Stufe D: the model proposes tags for one entry of the index
+    "auswertung.due_once",             # Auswertungen je Dokument: after the points and the tags (Fristen stand there)
+    "wissen.koepfe_due",               # context lines of the pieces: before the vectors, which read them
+    "wissen.tabellen_due",             # tables read row by row (pdftabellen.py)
+    "wissen.vektoren_due",             # meaning vectors, one batch
+    "suchpruefung.due_once",           # Suchprüfung: the night's run, else one test question
+)
+
+
+def _glied(name):
+    import importlib
+    mod, fn = name.rsplit(".", 1)
+    return getattr(importlib.import_module(mod), fn)
+
+
 async def due_once(idle=True, now=None):
-    """One step of background work: one page read, or one batch of vectors. Returns what it did."""
+    """One step of background work: the first link of KETTE that has something to do. Returns what it did."""
     now = now or time.time()
     if not idle or not _chat().get("documents", True):
         docembed.idle_stop(now)
         return None
-    import doclingdienst   # the Docling server first: what it reads, the language model need not (plan docling-anbinden)
-    if await doclingdienst.due_once(now):
-        return "docling"
+    for name in KETTE:
+        got = await _glied(name)(now)
+        if got is HALT:
+            return None
+        if got:
+            return got
+    docembed.idle_stop(now)
+    return None
+
+
+async def seiten_due(now):
+    """KETTE: one page read by the language model (by day DAY_PAGES, in the night window NIGHT_PAGES)."""
     n = night(now)
     at_night = bool(n and n["active"])
     day, key, limit = (n["key"], "night", NIGHT_PAGES) if at_night else (today(now), "vision", DAY_PAGES)
@@ -477,6 +513,11 @@ async def due_once(idle=True, now=None):
         finally:
             _now.clear()
         return "page"
+    return None
+
+
+async def steckbrief_due(now):
+    """KETTE: one Steckbrief, at most BRIEF_DAY per profile and day."""
     for uid in _readers():
         if not on(uid, "brief") or documents.count_today(uid, today(now), key="brief") >= BRIEF_DAY:
             continue
@@ -494,23 +535,11 @@ async def due_once(idle=True, now=None):
             await asyncio.to_thread(documents.set_card, uid, doc, None, True)
             print("wissen: no steckbrief:", type(e).__name__, flush=True)
         return "brief"
-    import wissensbuch      # Wissensbuch (plan wissensbuch): one own document worked into the pages
-    got = await wissensbuch.due_once(now)
-    if got:
-        return got
-    import wissenskarte     # Wissenskarte (plan wissensgraph): the connections between the pages of one document
-    got = await wissenskarte.due_once(now)
-    if got:
-        return got
-    import wissensdoppelt   # Doppelte der Wissenskarte: points "gleich" merged, suggestions found (fixed rules, no model)
-    got = await wissensdoppelt.due_once(now)
-    if got:
-        return got
-    import fund             # Finden, Stufe D (plan such-index): the model proposes tags for one entry of the index
-    got = await fund.schlagworte_due(now)
-    if got:
-        return got
-    # context lines of the pieces (Stufe 2 of plan suche-schaerfen): before the vectors, which read them
+    return None
+
+
+async def koepfe_due(now):
+    """KETTE: context lines of the pieces (Stufe 2 of plan suche-schaerfen) for up to HEADS_STEP documents."""
     for uid in _readers():
         if not _docs_ok(uid) or not await asyncio.to_thread(documents.heads_left, uid):
             continue
@@ -520,7 +549,11 @@ async def due_once(idle=True, now=None):
         import live
         live.bg_done(f"Kontext für {done} Dokumente", True, time.time() - t0)
         return "kopf"
-    # tables read row by row (pdftabellen.py): one kept PDF from before looked at again, read again if it has one
+    return None
+
+
+async def tabellen_due(now):
+    """KETTE: one kept PDF from before looked at again, read again if it has a table (pdftabellen.py)."""
     for uid in _readers():
         if not _docs_ok(uid) or not await asyncio.to_thread(documents.tables_left, uid):
             continue
@@ -531,6 +564,11 @@ async def due_once(idle=True, now=None):
             import live
             live.bg_done("Tabellen neu lesen", True, time.time() - t0)
         return "tabellen"
+    return None
+
+
+async def vektoren_due(now):
+    """KETTE: one batch of meaning vectors; a failed batch ends the step (HALT) like before."""
     for uid in _readers():
         if not on(uid, "semantic") or now < _last["vec_hold"]:
             continue
@@ -544,16 +582,11 @@ async def due_once(idle=True, now=None):
             from common import model_local
             if "free memory" in str(e) and not model_local():   # V01.0.660: on the Pi not again every 20 s
                 _last["vec_hold"] = now + VEC_HOLD_S
-            return None
+            return HALT
         await asyncio.to_thread(documents.set_vectors, uid, [(i, v) for (i, _), v in zip(miss, vecs)])
         _last["vectors"] = time.time()
         _note(uid, "meaning", True, len(vecs), per_day=True)
         return "vectors"
-    import suchpruefung     # Suchprüfung (plan suche-schaerfen): the night's run, else one test question
-    got = await suchpruefung.due_once(now)
-    if got:
-        return got
-    docembed.idle_stop(now)
     return None
 
 
@@ -659,6 +692,7 @@ def info(prof=Depends(own_profile)):
             "reading": {"doc": _now["doc"], "page": _now["page"]} if _now.get("uid") == uid else None,
             "night": dict(night(time.time()) or {}, long=LONG, long_ok=long_ok(time.time())) if _chat().get("doc_night") is True else None,
             "quiet": quiet(),
+            "auswertung": features.allowed("auswertungen", uid),   # the sheet Auswertungen in the details (auswertung.py)
             "types": list(documents.TYPES), "max_mb": pdf_bytes() // 1024**2,
             "other_mb": documents.MAX_OTHER // 1024**2}
 

@@ -454,6 +454,10 @@ FEATURES = (
       me="dmbox", guide="dungeongeben"),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",),
       parent="documents", me="docbox", guide="docbrief"),
+    # Auswertungen je Dokument (auswertung.py, plan open-notebook Stufe 2): Kurzfassung and Kernaussagen by themselves in
+    # quiet minutes, the rest per click; every point with its place, checked by the panel's fixed rules, never the model
+    F("auswertungen", "Auswertungen", "Analyses", "data", ("doc_auswertung",), parent="documents", me="docbox",
+      guide="auswertungen"),
     # Suchprüfung (suchpruefung.py, plan suche-schaerfen, Stufe 1): test questions measure how often the search
     # finds the right passage; the admin's release is enough (no profile switch, Freigabe rule 2026-10-13)
     F("suchpruefung", "Suchprüfung", "Search check", "data", ("search_check",), parent="documents", me="docbox",

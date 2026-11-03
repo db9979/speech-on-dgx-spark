@@ -167,6 +167,11 @@ BENCH = [
     ("Wann läuft meine Kfz-Versicherung ab?", "dokument"),
     ("Wo ist die Anleitung für die Waschmaschine?", "dokument"),
     ("Wann ist die Kündigungsfrist für meinen Handyvertrag?", "dokument"),
+    # Auswertungen (auswertung.py): the analysis of one own document comes with the documents group
+    ("Was sind die Kernaussagen im Mietvertrag?", "dokument"),
+    ("Fass mir den Arbeitsvertrag kurz zusammen", "dokument"),
+    ("Welche Fristen stehen in der Versicherungspolice?", "dokument"),
+    ("Zeig mir das Inhaltsverzeichnis vom Handbuch", "dokument"),
     ("Schreib Anna, dass das Essen fertig ist", "nachricht"),
     ("Schreib Anna, dass ich gleich da bin", "nachricht"),
     ("Sag Lisa, dass das Licht an ist", "nachricht"),
