@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.304** Terminal program (uConsole): F5 calendar crashed with newer Textual versions (the own week counter had Textual's name offset), now spark-tui 1.0.4; guard against own names Textual already uses
 - **V01.1.303** Find shows the size of the index in MB or GB: under Find → Settings as a sum, opened by source (estimated) and "Documents and knowledge"; the admin sees it at the profile, Live as the sum of all profiles, the iPhone app under Find → Settings; "Delete the index" gives the space back at once
 - **V01.1.302** Collections narrow the search: the assistant and Find search only within one collection on request, the iPhone shows collections natively with levels to switch
 - **V01.1.301** Redesign stage 6: the Status overview with calm tiles of one height (dot and word, tabular digits), Logs as a dense table with a fixed row height and an area menu, the Technik picture neutral with line icons, Workshop in the same style; guard Klar6
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.297** Check the log showed an admin profile only "Das gehört zum Notzugang (Panel-Passwort)": checking the chain and the NAS copy now works for every admin (read only), the guard also catches paths with a query
 - **V01.1.296** Remote access: files as another user (own switch, off): on the server `sudo spark-anker dateien als root[,anna] [--schreiben]` (sudoers only for its own sftp-server with -R, checked with visudo, off and Remove delete it), in the panel switched on per system with a code or passkey; "Files as root" through sudo -n, read only at first, writing with a fresh code per session; Windows: icacls only on named folders; macOS with the full disk access hint; the iPhone shows and switches it
 - **V01.1.295** Test fix: four tests that wobbled on GitHub in the first try: E-mail and Create documents sign in with profiles of their own, the seal tests clear files set aside, finds count only once at the first place of the dungeon map too
-- **V01.1.294** Dungeon music: the store did not start with the panel (name TAKT bound twice); guards for background loops at the start and for module-level names bound twice
 
 
 

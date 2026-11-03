@@ -393,5 +393,74 @@ class Program(unittest.TestCase):
         self.assertEqual(p.load()["key"], "sd_x")
 
 
+# Names Textual itself uses on a widget, screen or app (properties, reactives, methods). An own attribute with one of
+# them breaks the window: Week kept its week counter in self.offset, Textual's position, and F5 crashed with
+# newer Textual ("0 is not a tuple", V01.1.304). Read from the source, Textual is not needed.
+TEXTUAL_BASES = {"App", "Screen", "ModalScreen", "Widget", "Static", "Label", "TextArea", "Markdown", "ListView",
+                 "ListItem", "VerticalScroll", "Vertical", "Horizontal", "Footer", "Header", "Input", "Button",
+                 "DataTable", "Log", "RichLog", "Container", "ScrollableContainer"}
+TEXTUAL_NAMES = {
+    "active_bindings", "ancestors", "ancestors_with_self", "animator", "app", "app_focus", "auto_refresh",
+    "background_colors", "children", "classes", "clipboard", "colors", "console_options", "container_size",
+    "container_viewport", "content_offset", "content_region", "content_size", "css_identifier", "css_path_nodes",
+    "css_tree", "current_mode", "debug", "default_screen", "displayed_children", "expand", "first_child",
+    "focus_chain", "focusable", "focused", "gutter", "has_focus", "has_focus_within", "has_parent", "id",
+    "is_attached", "is_container", "is_mounted", "is_running", "is_scrollable", "last_child", "layer", "layers",
+    "layout", "log", "max_scroll_x", "max_scroll_y", "mouse_hover", "name", "offset", "opacity", "outer_size",
+    "parent", "pseudo_classes", "region", "return_code", "return_value", "rich_style", "screen", "screen_stack",
+    "scroll_offset", "scroll_x", "scroll_y", "scrollable_content_region", "selections", "shrink", "siblings",
+    "size", "styles", "task", "text_style", "tree", "virtual_region", "virtual_size", "window_region", "workers",
+    # methods
+    "call_from_thread", "dismiss", "exit", "focus", "mount", "notify", "pop_screen", "post_message",
+    "push_screen", "query", "query_one", "refresh", "remove", "run", "run_worker", "set_interval", "update",
+}
+# settable on purpose (Textual documents them for that)
+TEXTUAL_SETTABLE = {"border_title", "border_subtitle", "title", "sub_title", "disabled", "display", "visible",
+                    "tooltip", "loading", "theme"}
+
+
+def textual_clashes(source):
+    """[(class, name, line)] for each self.NAME = … in a Textual class where NAME is Textual's own."""
+    import ast
+    tree = ast.parse(source)
+    classes = [c for c in ast.walk(tree) if isinstance(c, ast.ClassDef)]
+    textual, grew = set(), True
+    while grew:
+        grew = False
+        for c in classes:
+            bases = {b.id if isinstance(b, ast.Name) else getattr(b, "attr", "") for b in c.bases}
+            if c.name not in textual and bases & (TEXTUAL_BASES | textual):
+                textual.add(c.name)
+                grew = True
+    out = []
+    for c in classes:
+        if c.name not in textual:
+            continue
+        for fn in c.body:
+            if not isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            for node in ast.walk(fn):
+                targets = (node.targets if isinstance(node, ast.Assign) else
+                           [node.target] if isinstance(node, (ast.AugAssign, ast.AnnAssign)) else [])
+                for t in targets:
+                    for e in (t.elts if isinstance(t, ast.Tuple) else [t]):
+                        if (isinstance(e, ast.Attribute) and isinstance(e.value, ast.Name) and e.value.id == "self"
+                                and e.attr in TEXTUAL_NAMES - TEXTUAL_SETTABLE):
+                            out.append((c.name, e.attr, e.lineno))
+    return out
+
+
+class TextualNamesInTheWindow(unittest.TestCase):
+    def test_no_own_attribute_hides_a_textual_one(self):
+        with open(terminal.PROGRAM, encoding="utf-8") as f:
+            self.assertEqual(textual_clashes(f.read()), [])
+
+    def test_the_check_finds_the_old_week_counter(self):
+        old = ("class Week(ModalScreen):\n    def __init__(self):\n        super().__init__()\n        self.offset = 0\n"
+               "class Sub(Week):\n    def go(self):\n        self.size, self.woche = 1, 2\n"
+               "class Plain:\n    def __init__(self):\n        self.offset = 0\n")
+        self.assertEqual([(c, n) for c, n, _ in textual_clashes(old)], [("Week", "offset"), ("Sub", "size")])
+
+
 if __name__ == "__main__":
     unittest.main()

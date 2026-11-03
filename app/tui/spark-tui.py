@@ -33,7 +33,7 @@ import threading
 import time
 import urllib.parse
 
-VERSION = "1.0.3"
+VERSION = "1.0.4"
 HEADER = "X-Speech-Device"
 VENV = os.path.join(os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share"), "spark-tui")   # Textual for the window
 SETUP = "python3 -m venv ~/.local/share/spark-tui && ~/.local/share/spark-tui/bin/pip install textual"
@@ -548,7 +548,7 @@ def run_window(sp, conf, App):
 
         def __init__(self):
             super().__init__()
-            self.offset = 0
+            self.woche = 0   # never self.offset: Widget.offset is Textual's own (position), 0 crashed F5
 
         def compose(self):
             with VerticalScroll(id="jobbox"):
@@ -561,7 +561,7 @@ def run_window(sp, conf, App):
         def load(self):
             def run():
                 try:
-                    start, d = get_week(sp, self.offset)
+                    start, d = get_week(sp, self.woche)
                     text = "\n".join(calendar_lines(d, start))
                 except SparkError as e:
                     text = str(e)
@@ -569,7 +569,7 @@ def run_window(sp, conf, App):
             threading.Thread(target=run, daemon=True).start()
 
         def action_move(self, step):
-            self.offset = self.offset + step if step else 0
+            self.woche = self.woche + step if step else 0
             self.load()
 
     class Ask(ModalScreen):
