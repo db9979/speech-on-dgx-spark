@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.306** RED FIX iPhone build: the index size in Find → Settings read the language through FindenModel.de on the main actor from a nonisolated function (Xcode error); `de` is now `nonisolated` and only reads the device language
 - **V01.1.305** Tests on GitHub faster: six parts instead of four by freshly measured durations (vorpush enters missing modules in dauer.json, a self-test wants every one, "Ergebnis" warns about stale ones), the balance bench computes its tables in four processes with the same result and spreads test by test, Chromium from the cache and one per test class, seven flaky tests and order leaks fixed at their cause
 - **V01.1.304** Terminal program (uConsole): F5 calendar crashed with newer Textual versions (the own week counter had Textual's name offset), now spark-tui 1.0.4; guard against own names Textual already uses
 - **V01.1.303** Find shows the size of the index in MB or GB: under Find → Settings as a sum, opened by source (estimated) and "Documents and knowledge"; the admin sees it at the profile, Live as the sum of all profiles, the iPhone app under Find → Settings; "Delete the index" gives the space back at once
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.299** Develop on the Pi (package 1, switch off): OpenCode with the own language model in the panel computer's terminal as the user spark-dev in its own clone (install.sh --entwickeln), its own revocable key at the LLM-Tor, always last, network only to the LLM-Tor; local commits checked with sudo speech-spark lokal einspielen, quick-tested in a sandbox and installed like an update (+lokal, back, drop), never run as root; an update rebases local changes and never loses them
 - **V01.1.298** RED FIX: the anchor test of "files as another user" rewrote the read-only sudoers dummy, refused on GitHub (not root); now it replaces it (test checked without root file rights)
 - **V01.1.297** Check the log showed an admin profile only "Das gehört zum Notzugang (Panel-Passwort)": checking the chain and the NAS copy now works for every admin (read only), the guard also catches paths with a query
-- **V01.1.296** Remote access: files as another user (own switch, off): on the server `sudo spark-anker dateien als root[,anna] [--schreiben]` (sudoers only for its own sftp-server with -R, checked with visudo, off and Remove delete it), in the panel switched on per system with a code or passkey; "Files as root" through sudo -n, read only at first, writing with a fresh code per session; Windows: icacls only on named folders; macOS with the full disk access hint; the iPhone shows and switches it
 
 
 

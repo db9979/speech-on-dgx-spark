@@ -220,7 +220,7 @@ final class FindenModel: ObservableObject {
     @Published var error: String?
     private var seq = 0
 
-    static var de: Bool { Locale.current.language.languageCode?.identifier == "de" }
+    nonisolated static var de: Bool { Locale.current.language.languageCode?.identifier == "de" }
 
     func sourceName(_ name: String) -> String {
         guard let q = quellen.first(where: { $0.id == name }) else { return name }

@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.306** ROT-FIX iPhone-Build: Indexgröße in Finden → Einstellungen las die Sprache über FindenModel.de vom Main Actor aus einer nicht isolierten Funktion (Xcode-Fehler); `de` ist jetzt `nonisolated`, liest nur die Sprache des Geräts
 - **V01.1.305** Tests auf GitHub schneller: sechs Teile statt vier nach frisch gemessenen Dauern (vorpush trägt fehlende Module in dauer.json ein, ein Selbsttest verlangt jedes, „Ergebnis“ warnt bei veralteten), der Balance-Prüfstand rechnet seine Tabellen in vier Prozessen mit gleichem Ergebnis und verteilt sich Test für Test, Chromium aus dem Cache und eins je Testklasse, sieben wackelnde Tests und Reihenfolge-Lecks an der Ursache repariert
 - **V01.1.304** Terminal-Programm (uConsole): F5 Kalender stürzte mit neueren Textual-Versionen ab (eigener Wochenzähler hieß wie Textuals offset), jetzt spark-tui 1.0.4; Wächter gegen eigene Namen, die Textual schon benutzt
 - **V01.1.303** Finden zeigt die Größe des Index in MB oder GB: unter Finden → Einstellungen als Summe, aufgeklappt nach Quellen (geschätzt) und „Dokumente und Wissen“; der Admin sieht sie beim Profil, Live als Summe aller Profile, die iPhone-App unter Finden → Einstellungen; „Index löschen“ gibt den Platz sofort zurück
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.299** Entwickeln auf dem Pi (Paket 1, Schalter aus): OpenCode mit dem eigenen Sprachmodell im Terminal des Panel-Rechners als Nutzer spark-dev im eigenen Klon (install.sh --entwickeln), eigener widerrufbarer Schlüssel am LLM-Tor ganz hinten, Netz nur zum LLM-Tor; lokale Commits mit sudo speech-spark lokal einspielen geprüft, im Sandkasten schnell getestet und wie ein Update eingespielt (+lokal, zurück, verwerfen), nie als root ausgeführt; ein Update setzt lokale Änderungen auf und verliert sie nie
 - **V01.1.298** ROT-FIX: der Anker-Test von „Dateien als anderer Benutzer“ schrieb die nur lesbare sudoers-Attrappe neu, auf GitHub (nicht root) verweigert; jetzt ersetzt er sie (Test geprüft ohne Root-Dateirechte)
 - **V01.1.297** Protokoll prüfen zeigte einem Admin-Profil nur „Das gehört zum Notzugang (Panel-Passwort)“: die Prüfung der Kette und der NAS-Kopie geht jetzt für jeden Admin (nur lesen), Wächter fängt auch Wege mit Abfrage
-- **V01.1.296** Fernzugang: Dateien als anderer Benutzer (eigener Schalter, aus): auf dem Server `sudo spark-anker dateien als root[,anna] [--schreiben]` (sudoers nur für den eigenen sftp-server mit -R, geprüft mit visudo, aus und Entfernen löschen es), im Panel je System einschalten mit Code oder Passkey; „Dateien als root“ über sudo -n, erst nur lesen, Schreiben mit frischem Code je Sitzung; Windows: icacls nur auf genannte Ordner; macOS mit Hinweis auf den Festplattenvollzugriff; iPhone zeigt und schaltet es
 
 
 

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.1.306** · 2026-11-03 · ROT-FIX iPhone-Build: Indexgröße in Finden → Einstellungen las die Sprache über FindenModel.de vom Main Actor aus einer nicht isolierten Funktion (Xcode-Fehler); `de` ist jetzt `nonisolated`, liest nur die Sprache des Geräts
 - **V01.1.305** · 2026-11-03 · Tests auf GitHub schneller: sechs Teile statt vier nach frisch gemessenen Dauern (vorpush trägt fehlende Module in dauer.json ein, ein Selbsttest verlangt jedes, „Ergebnis“ warnt bei veralteten), der Balance-Prüfstand rechnet seine Tabellen in vier Prozessen mit gleichem Ergebnis und verteilt sich Test für Test, Chromium aus dem Cache und eins je Testklasse, sieben wackelnde Tests und Reihenfolge-Lecks an der Ursache repariert
 - **V01.1.304** · 2026-11-03 · Terminal-Programm (uConsole): F5 Kalender stürzte mit neueren Textual-Versionen ab (eigener Wochenzähler hieß wie Textuals offset), jetzt spark-tui 1.0.4; Wächter gegen eigene Namen, die Textual schon benutzt
 - **V01.1.303** · 2026-11-03 · Finden zeigt die Größe des Index in MB oder GB: unter Finden → Einstellungen als Summe, aufgeklappt nach Quellen (geschätzt) und „Dokumente und Wissen“; der Admin sieht sie beim Profil, Live als Summe aller Profile, die iPhone-App unter Finden → Einstellungen; „Index löschen“ gibt den Platz sofort zurück
