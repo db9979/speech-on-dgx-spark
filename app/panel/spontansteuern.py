@@ -247,20 +247,29 @@ async def check():
     return err
 
 
-async def fetch_loop():
-    """While the switch is on and the Notaus lets the internet through: once a day, after an error within the hour."""
-    import begleiter
+def _may_fetch():
+    """Only while the switch is on and the Notaus lets the internet through."""
     import notaus
+    return admin_on() and not notaus.blocks("internet")
+
+
+def _due(since, now):
+    """The first look FIRST after the switch went on (or the start), then once a day, after an error within the hour."""
+    import begleiter
+    every = begleiter.RETRY if _upd["error"] else begleiter.FETCH_EVERY
+    return now - since >= FIRST and now - _upd["checked"] > every
+
+
+async def fetch_loop():
     since = 0.0
     while True:
         await asyncio.sleep(60)
         try:
-            if not admin_on() or notaus.blocks("internet"):
+            if not _may_fetch():
                 since = 0.0
                 continue
             since = since or time.time()
-            every = begleiter.RETRY if _upd["error"] else begleiter.FETCH_EVERY
-            if time.time() - since >= FIRST and time.time() - _upd["checked"] > every:
+            if _due(since, time.time()):
                 await check()
         except Exception:
             sh.log("programm_holen", "schleife", 0)

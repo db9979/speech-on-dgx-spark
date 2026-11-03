@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using static SparkBegleiter.NativeMethods;
 
 namespace SparkBegleiter;
