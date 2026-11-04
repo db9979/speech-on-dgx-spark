@@ -5112,6 +5112,13 @@
 "titel": "Webdienste: Dienst an eigener Adresse des Systems (Anker 1.9.0)",
 "text": "Auf kleiberit-testserver den Anker aktualisieren (Fernzugang → Systeme, „Aktualisieren“, danach 1.9.0). Webdienste → „Suchen“: 8443 steht da mit „nur 192.168.2.83“ (die feste Adresse des Docker-Dienstes), 22 mit „alle Adressen“. Der gespeicherte Dienst „Monitoring“ https://127.0.0.1:8443 → „Zertifikat prüfen“ zeigt jetzt die SHA-256 (der Anker versucht die eigene Adresse selbst); „Vertrauen“, „Öffnen“ zeigt das Monitoring. „Übernehmen“ bei 8443 legt einen Dienst mit 192.168.2.83 an, „Netz dahinter“ bleibt aus (liegt der Spark selbst in einem Netz 192.168.2.x, bleibt es 127.0.0.1 und der Anker geht selbst dorthin). Einen Dienst auf einem Port anlegen, auf dem nichts lauscht: „Zertifikat prüfen“ sagt „Unter 127.0.0.1:<Port> antwortet nichts. Der Dienst lauscht wohl nur auf einer anderen Adresse – „Suchen“ zeigt sie.“, auf Englisch „Nothing answers at …“. Eine fremde Adresse im Netz des Servers ohne „Netz dahinter“ wird beim Speichern abgelehnt.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P755",
+"v": 1320,
+"titel": "Auswertungen im iPhone",
+"text": "iPhone: Meine Sachen → Dokumente → den Mietvertrag öffnen → Auswertungen. Kurzfassung und Kernaussagen mit „fertig“ und Seite; bei „Fragen zum Text“ Erstellen: „Eingereiht“, nach der nächsten ruhigen Minute (herunterziehen) Fragen mit der Stelle als Antwort. Einen Punkt nach links wischen → Stimmt nicht: er verschwindet und kommt nicht wieder. Bei einer Frist mit vollem Datum Erinnern: „Erinnerung am …“. Auf Englisch gestellt: alle Texte englisch. Admin sperrt Auswertungen: der Eintrag verschwindet.",
+"thread": "Ideen aus Open Notebook übernehmen"
 }
 ]
 }
