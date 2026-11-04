@@ -8,8 +8,18 @@ const FW_GRUND={offline:['Das System ist gerade nicht verbunden.','The system is
   anker_alt:['Anker aktualisieren: Webdienste brauchen den Anker 1.6.0 oder neuer.','Update the anchor: web services need anchor 1.6.0 or newer.'],
   zertifikat:['Erst das Zertifikat des Dienstes prüfen und ihm vertrauen.','Check the service\'s certificate and trust it first.'],
   adresse:['Von unterwegs braucht es eine Tunnel-Adresse: Funktionen → Fernzugang zu Servern.','From outside a tunnel address is needed: Features → Remote access to servers.'],
-  tuer:['Die Tunnel-Tür startet gerade, gleich noch einmal.','The tunnel door is starting, try again in a moment.']};
-function fwGrund(e){const m=String(e&&e.message||'');return FW_GRUND[m]?t(...FW_GRUND[m]):m}
+  tuer:['Die Tunnel-Tür startet gerade, gleich noch einmal.','The tunnel door is starting, try again in a moment.'],
+  ziel_form:['Dieses Ziel geht nicht: ohne „Netz dahinter“ nur 127.0.0.1 und die eigenen Adressen des Systems, die „Suchen“ zeigt; nie eine Adresse aus den Netzen dieses Spark.','This target is not allowed: without "Network behind it" only 127.0.0.1 and the system\'s own addresses that "Search" shows; never an address in this Spark\'s networks.'],
+  ziel_netz:['Ziel nicht mehr erlaubt: „Netz dahinter“ ist aus.','Target no longer allowed: "Network behind it" is off.'],
+  voll:['Zu viele Verbindungen zu diesem System gleichzeitig, gleich noch einmal.','Too many connections to this system at once, try again in a moment.'],
+  anker:['Der Anker hat nicht rechtzeitig geantwortet. Ist das System noch verbunden?','The anchor did not answer in time. Is the system still connected?']};
+// the anchor's fixed words with the service's own address (x: a saved service)
+function fwAdr(x){return x?(String(x.host).includes(':')?'['+x.host+']':x.host)+':'+x.port:''}
+const FW_MIT={dienst:x=>/^(127\.|::1$)/.test(String(x.host))?t(`Unter ${fwAdr(x)} antwortet nichts. Der Dienst lauscht wohl nur auf einer anderen Adresse – „Suchen“ zeigt sie.`+(FW.d&&!FW.d.eigen_anker?' Mit dem Anker 1.9.0 oder neuer versucht er selbst die eigene Adresse, auf der dieser Port lauscht.':''),`Nothing answers at ${fwAdr(x)}. The service probably listens on another address only – "Search" shows it.`+(FW.d&&!FW.d.eigen_anker?' With anchor 1.9.0 or newer it tries the own address this port listens on itself.':'')):t(`Unter ${fwAdr(x)} antwortet nichts. Läuft der Dienst dort?`,`Nothing answers at ${fwAdr(x)}. Is the service running there?`),
+  ziel:x=>t(`Der Anker lässt ${fwAdr(x)} nicht zu: ohne „Netz dahinter“ nur 127.0.0.1 und die eigenen Adressen des Systems.`,`The anchor does not allow ${fwAdr(x)}: without "Network behind it" only 127.0.0.1 and the system's own addresses.`),
+  tls:x=>t(`Unter ${fwAdr(x)} antwortet kein https (TLS). Ist es ein http-Dienst? Dann als http anlegen.`,`No https (TLS) answers at ${fwAdr(x)}. Is it an http service? Then add it as http.`),
+  eigen_weg:x=>t(`${x.host} meldet der Anker gerade nicht als eigene Adresse des Systems (oder er ist älter als 1.9.0). „Suchen“ zeigt die eigenen Adressen.`,`The anchor does not report ${x.host} as one of the system's own addresses right now (or it is older than 1.9.0). "Search" shows the own addresses.`)};
+function fwGrund(e,x){const m=String(e&&e.message||'');return x&&FW_MIT[m]?FW_MIT[m](x):FW_GRUND[m]?t(...FW_GRUND[m]):m}
 function fwZiel(x){const h=x.host.includes(':')?'['+x.host+']':x.host;return `${x.schema}://${h}:${x.port}${x.pfad&&x.pfad!=='/'?x.pfad:''}`}
 async function fwLaden(g){FW.g=g;let d;try{const r=await api(`/api/admin/fernzugang/web/${g.id}`);d=await r.json()}catch(e){fzFehler(e);return}
   FW.d=d;fwZeigen()}
@@ -22,7 +32,7 @@ function fwZeigen(){const box=$('fwblock'),d=FW.d,g=FW.g;if(!box||!d||!g)return;
   const neu=fzBtn(t('+ Dienst','+ Service'),'',()=>{FW.form=FW.form?null:{name:'',schema:'http',host:'127.0.0.1',port:'',pfad:'/'};fwZeigen()});neu.disabled=d.dienste.length>=d.max_dienste;kopf.appendChild(neu);box.appendChild(kopf);
   if(!d.anker_ok)box.appendChild(fzEl('div','note warn',t(...FW_GRUND.anker_alt)));
   if(!d.tor)box.appendChild(fzEl('div','note warn',d.herkunft==='internet'?t('Von unterwegs braucht es eine Tunnel-Adresse: Funktionen → Fernzugang zu Servern. Dann im Reverse-Proxy der Synology eine Regel für diesen Namen auf den Pi, Port '+d.port+', mit den WebSocket-Kopfzeilen.','From outside a tunnel address is needed: Features → Remote access to servers. Then a rule in the Synology reverse proxy for that name to the Pi, port '+d.port+', with the WebSocket headers.'):t('Die Adresse des Panels passt nicht für die Tunnel-Tür.','The panel\'s address does not fit the tunnel door.')));
-  const sw=fzEl('div','setrow'),lb=fzEl('div','lbl');const nb=fzEl('b','',t('Netz dahinter','Network behind it'));if(window.codeLock)codeLock(nb,'protect');lb.append(nb,fzEl('span','',t('Aus: nur 127.0.0.1 dort. An: auch private Adressen im Netz des Systems, nie die Netze dieses Spark. Fragt den Code.','Off: only 127.0.0.1 there. On: also private addresses in the system\'s network, never this Spark\'s networks. Asks for the code.')));
+  const sw=fzEl('div','setrow'),lb=fzEl('div','lbl');const nb=fzEl('b','',t('Netz dahinter','Network behind it'));if(window.codeLock)codeLock(nb,'protect');lb.append(nb,fzEl('span','',t('Aus: nur das System selbst (127.0.0.1 und seine eigenen Adressen). An: auch private Adressen im Netz des Systems, nie die Netze dieses Spark. Fragt den Code.','Off: only the system itself (127.0.0.1 and its own addresses). On: also private addresses in the system\'s network, never this Spark\'s networks. Asks for the code.')));
   const tg=fzEl('label','tgl'),inp=document.createElement('input');inp.type='checkbox';inp.checked=!!d.netz;inp.setAttribute('aria-label',t('Netz dahinter','Network behind it'));tg.append(inp,fzEl('i'));
   inp.onchange=async()=>{try{await api(`/api/admin/fernzugang/web/${g.id}/netz`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({an:inp.checked})});fwLaden(g)}catch(e){inp.checked=!inp.checked;fzFehler(e)}};
   sw.append(lb,tg);box.appendChild(sw);
@@ -31,12 +41,15 @@ function fwZeigen(){const box=$('fwblock'),d=FW.d,g=FW.g;if(!box||!d||!g)return;
   if(!d.dienste.length)list.appendChild(fzEl('div','mut',t('Noch kein Webdienst. „Suchen“ zeigt, was auf dem System lauscht.','No web service yet. "Search" shows what listens on the system.')));
   for(const x of d.dienste)list.appendChild(fwZeile(g,d,x));box.appendChild(list);
   const f=d.gefunden;if(f){box.appendChild(fzEl('div','fzgrp',t('Gefunden','Found')+' · '+fzUhr(f.t)));const gl=fzEl('div','fwliste');
-    if(!f.liste.length)gl.appendChild(fzEl('div','mut',t('Nichts gefunden, das auf 127.0.0.1 lauscht.','Nothing found listening on 127.0.0.1.')));
-    for(const p of f.liste){const r=fzEl('div','fwrow'),txt=fzEl('div','fwtext');txt.append(fzEl('b','',String(p.port)),fzEl('span','mut',[p.prog,p.art==='tcp'?t('TCP · Stufe 2','TCP · stage 2'):p.art].filter(Boolean).join(' · ')));r.appendChild(txt);
-      if(p.art!=='tcp'){const b=fzBtn(t('Übernehmen','Add'),'',()=>{FW.form={name:p.prog||String(p.port),schema:p.art,host:'127.0.0.1',port:String(p.port),pfad:'/'};fwZeigen()});b.disabled=d.dienste.length>=d.max_dienste;r.appendChild(b)}
+    if(!f.liste.length)gl.appendChild(fzEl('div','mut',t('Nichts gefunden, das auf dem System lauscht.','Nothing found listening on the system.')));
+    for(const p of f.liste){const r=fzEl('div','fwrow'),txt=fzEl('div','fwtext');txt.append(fzEl('b','',String(p.port)),fzEl('span','mut',[p.prog,p.art==='tcp'?t('TCP · Stufe 2','TCP · stage 2'):p.art,fwAn(p.an)].filter(Boolean).join(' · ')));r.appendChild(txt);
+      // „Übernehmen“ takes the own address it listens on; one in this Spark's networks stays 127.0.0.1 (the anchor tries it itself)
+      const host=p.an&&p.an!=='alle'&&p.an!=='loopback'&&(d.eigen||[]).includes(p.an)?p.an:'127.0.0.1';
+      if(p.art!=='tcp'){const b=fzBtn(t('Übernehmen','Add'),'',()=>{FW.form={name:p.prog||String(p.port),schema:p.art,host,port:String(p.port),pfad:'/'};fwZeigen()});b.disabled=d.dienste.length>=d.max_dienste;r.appendChild(b)}
       gl.appendChild(r)}
     box.appendChild(gl)}
   box.appendChild(fzEl('div','fh',t(`Höchstens ${d.max_tunnel} Webdienste gleichzeitig offen, einer je Browser; nach 15 Minuten ohne Benutzung, beim Sperren und beim Notaus schließen sie.`,`At most ${d.max_tunnel} web services open at once, one per browser; they close after 15 minutes unused, on lock and on the emergency stop.`)))}
+function fwAn(an){return an==='alle'?t('alle Adressen','all addresses'):an==='loopback'?'127.0.0.1':an?t('nur '+an,'only '+an):''}
 function fwZeile(g,d,x){const r=fzEl('div','fwrow'),txt=fzEl('div','fwtext');txt.append(fzEl('b','',x.name),fzEl('span','mut',fwZiel(x)));r.appendChild(txt);
   const offen=(d.tunnel||[]).some(tu=>tu.dienst===x.id),kein=!d.online||!d.anker_ok||!d.tor;
   if(x.schema==='https'&&!x.fp){const z=fzBtn(t('Zertifikat prüfen','Check certificate'),'',()=>fwZertifikat(g,x));z.disabled=kein;r.appendChild(z)}
@@ -46,18 +59,18 @@ function fwZeile(g,d,x){const r=fzEl('div','fwrow'),txt=fzEl('div','fwtext');txt
 function fwFormular(g,d){const f=FW.form,w=fzEl('div','fwform');const feld=(lab,key,attrs)=>{const l=fzEl('label','',lab),i=document.createElement('input');i.value=f[key];Object.assign(i,attrs||{});i.oninput=()=>{f[key]=i.value};l.appendChild(i);return l};
   const sel=document.createElement('select');for(const s of ['http','https']){const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o)}sel.value=f.schema;sel.onchange=()=>{f.schema=sel.value};
   const sl=fzEl('label','',t('Art','Kind'));sl.appendChild(sel);
-  const host=feld(t('Adresse dort','Address there'),'host',{autocomplete:'off',spellcheck:false});host.querySelector('input').disabled=!d.netz;
+  const host=feld(t('Adresse dort','Address there'),'host',{autocomplete:'off',spellcheck:false});host.querySelector('input').disabled=!d.netz&&!(d.eigen||[]).length;
   w.append(feld(t('Name','Name'),'name',{maxLength:40}),sl,host,feld(t('Port','Port'),'port',{type:'number',min:1,max:65535}),feld(t('Pfad','Path'),'pfad',{maxLength:512,spellcheck:false}));
-  const ok=fzBtn(t('Speichern','Save'),'p',async()=>{try{await api(`/api/admin/fernzugang/web/${g.id}/dienste`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:f.name.trim(),schema:f.schema,host:(d.netz?f.host:'127.0.0.1').trim(),port:Number(f.port),pfad:f.pfad.trim()||'/'})});FW.form=null;fwLaden(g)}catch(e){fzFehler(e)}});
+  const ok=fzBtn(t('Speichern','Save'),'p',async()=>{try{await api(`/api/admin/fernzugang/web/${g.id}/dienste`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:f.name.trim(),schema:f.schema,host:(d.netz||(d.eigen||[]).length?f.host:'127.0.0.1').trim(),port:Number(f.port),pfad:f.pfad.trim()||'/'})});FW.form=null;fwLaden(g)}catch(e){if(e.status===423)fzFehler(e);else fzMsg(fwGrund(e),true)}});
   const ab=fzBtn(t('Abbrechen','Cancel'),'',()=>{FW.form=null;fwZeigen()});const row=fzEl('div','row');row.append(ok,ab);w.appendChild(row);
-  if(!d.netz)w.appendChild(fzEl('div','fh',t('Nur 127.0.0.1 dort, solange „Netz dahinter“ aus ist.','Only 127.0.0.1 there while "Network behind it" is off.')));return w}
+  if(!d.netz)w.appendChild(fzEl('div','fh',(d.eigen||[]).length?t('Solange „Netz dahinter“ aus ist: 127.0.0.1 oder eine eigene Adresse des Systems ('+d.eigen.join(', ')+').','While "Network behind it" is off: 127.0.0.1 or one of the system\'s own addresses ('+d.eigen.join(', ')+').'):t('Nur 127.0.0.1 dort, solange „Netz dahinter“ aus ist.','Only 127.0.0.1 there while "Network behind it" is off.')));return w}
 async function fwSuchen(){const g=FW.g;if(!g)return;fzMsg(t('Der Anker sucht …','The anchor searches …'));try{await api(`/api/admin/fernzugang/web/${g.id}/suchen`,{method:'POST'});fzMsg('');fwLaden(g)}catch(e){fzMsg(fwGrund(e),true)}}
-async function fwZertifikat(g,x){let d;try{const r=await api(`/api/admin/fernzugang/web/${g.id}/dienste/${x.id}/zertifikat`,{method:'POST'});d=await r.json()}catch(e){fzMsg(fwGrund(e),true);return}
+async function fwZertifikat(g,x){let d;try{const r=await api(`/api/admin/fernzugang/web/${g.id}/dienste/${x.id}/zertifikat`,{method:'POST'});d=await r.json()}catch(e){fzMsg(fwGrund(e,x),true);return}
   if(!confirm(t(`Zertifikat von „${x.name}“, SHA-256:\n${d.fp}\n\nStimmt es mit dem auf dem System überein? Dann vertrauen (es wird festgehalten und bei jeder Verbindung geprüft).`,`Certificate of "${x.name}", SHA-256:\n${d.fp}\n\nDoes it match the one on the system? Then trust it (it is pinned and checked on every connection).`)))return;
   try{await api(`/api/admin/fernzugang/web/${g.id}/dienste/${x.id}/vertrauen`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fp:d.fp})});fwLaden(g)}catch(e){fzFehler(e)}}
 async function fwOeffnen(g,x,tab){const w=tab?window.open('about:blank','_blank'):null;let d;
   try{const r=await api('/api/admin/fernzugang/web/oeffnen',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({geraet:g.id,dienst:x.id})});d=await r.json()}
-  catch(e){if(w)w.close();fzMsg(fwGrund(e),true);return}
+  catch(e){if(w)w.close();fzMsg(fwGrund(e,x),true);return}
   if(tab){if(w){w.opener=null;w.location.replace(d.url)}fwLaden(g);return}
   FW.tunnel={id:d.tunnel,name:x.name,system:g.name,g,x};FW.rate=[];$('fwname').textContent=x.name;$('fwsystem').textContent=g.name;$('fwrate').textContent='';$('fwlangsam').hidden=true;
   $('fzmain').hidden=true;$('fzstatus').hidden=true;$('fzweb').hidden=false;const f=$('fwframe');f.src=d.url;

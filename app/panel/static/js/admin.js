@@ -637,7 +637,7 @@ const AUDIT={admin_login:t('Admin angemeldet','admin signed in'),admin_login_fai
   invite_app:t('neue Person über Einladung (iPhone-App)','new person by invitation (iPhone app)'),invite_pin:t('neue PIN über Einladungslink','new PIN through an invitation link'),
   invite_revoked:t('Einladung zurückgezogen','invitation withdrawn'),review_made:t('Prüfzugang erstellt','review access made'),review_used:t('iPhone mit Prüf-Code gekoppelt','iPhone paired with a review code'),review_deleted:t('Prüfzugang gelöscht','review access deleted'),handoff_login:t('Handy über QR-Code angemeldet','phone signed in by QR code'),
   backup:t('Sicherung','backup'),restore:t('Wiederherstellung','restore'),watchdog:t('Wächter','watchdog'),
-  audit_chain_broken:t('Änderungsprotokoll nachträglich verändert','change log changed afterwards'),offsite_log_failed:t('Protokoll-Kopie nicht auf den NAS gekommen','log copy did not reach the NAS')};
+  audit_chain_broken:t('Änderungsprotokoll nachträglich verändert','change log changed afterwards'),chain_break_ack:t('Bruch im Änderungsprotokoll als geprüft bestätigt','break in the change log confirmed as checked'),offsite_log_failed:t('Protokoll-Kopie nicht auf den NAS gekommen','log copy did not reach the NAS')};
 $('tts.model').addEventListener('change',()=>instrHint(true));
 
 
@@ -733,7 +733,7 @@ async function loadSys(check=false){let u;try{u=await (await api('/api/update'+(
   if(u.running){$('updstate').innerHTML=t('<span class="pill warn">Update läuft</span> Die Seite lädt neu, wenn das Panel neu startet.','<span class="pill warn">Update running</span> The page reloads when the panel restarts.');$('updgo').disabled=true;$('updstop').style.display='inline-block';
     if(!updPoll)updPoll=setInterval(()=>{if(!updBusy())loadSys()},3000)}   // the update window shows the progress itself
   else{if(updPoll){clearInterval(updPoll);updPoll=null}$('updstop').style.display='none';
-    $('updstate').innerHTML=r.error?`<span class="err">${esc(r.error)}</span>`:r.behind===0?`<span class="pill ok">${t('aktuell','up to date')}</span>`:
+    $('updstate').innerHTML=r.error?`<span class="err">${esc(t(r.error,r.error_en||r.error))}</span>`:r.behind===0?`<span class="pill ok">${t('aktuell','up to date')}</span>`:
       `<span class="pill warn">${t('Update verfügbar','Update available')}</span> ${r.behind>0?r.behind+t(' Änderung(en)',' change(s)'):''}`+(u.last_result&&u.last_result!=='success'&&u.last_finished?` <span class="err">${t('Letztes Update fehlgeschlagen','Last update failed')} (${esc(u.last_result)}), ${t('siehe Protokoll','see log')}.</span>`:'')
       +(r.head&&r.latest&&r.head!==r.latest?` <span class="mut">${r.head_state==='red'?t('Neuere Änderungen sind auf GitHub durch die Tests gefallen und werden nicht angeboten.','Newer changes failed the tests on GitHub and are not offered.')+(r.red_since?' '+t('Rot seit','Red since')+' '+esc(new Date(r.red_since*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{weekday:'short',hour:'2-digit',minute:'2-digit'}))+'.':''):t('Neuere Änderungen werden auf GitHub noch geprüft und erst danach angeboten.','Newer changes are still being tested on GitHub and are offered once they pass.')}</span>`:'');
     $('updgo').disabled=!(r.behind&&r.behind!==0)}
@@ -1133,6 +1133,7 @@ function alertRow(x){const n=document.createElement('div');n.className='note ano
 // notes only to know (level "info", e.g. open hands-on tests) stand on Zustand only, not above every page (code check 19.10. D12)
 let ALERTS_RAW=[];
 function showAlerts(a){a=a||[];ALERTS_RAW=a;const mon=!!document.querySelector('section#mon.on');if(!mon)a=a.filter(x=>x.level!=='info');
+  if(typeof fzHinweise==='function')fzHinweise(a);   // the remote session's page shows them as a pill in its red line (fernzugang.js)
   const k=JSON.stringify(a);if(k===ALERTS_LAST)return;ALERTS_LAST=k;const box=$('alerts');box.textContent='';
   const bad=a.filter(x=>x.level==='bad'),rest=a.filter(x=>x.level!=='bad');
   for(const x of bad)box.appendChild(alertRow(x));

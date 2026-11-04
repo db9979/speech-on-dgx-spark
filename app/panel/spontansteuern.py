@@ -1,6 +1,6 @@
 """Spontanhilfe S2a, Steuern (plan spontanhilfe/s2-plan.md, Dominik 2026-11-03 „Empfehlung“ = 1a 2a 3a 4a 5a): when
 looking is not enough, the admin may move the mouse and type at the person's computer. Nothing is installed: a small
-program (SparkHilfe, S2b Windows, S2c Mac) runs once from her downloads, asks her itself and is gone when she closes it.
+program (SparkHilfe, S2b Windows) runs once from her downloads, asks her itself and is gone when she closes it.
 
 Three consents, all needed:
 1. the admin asks („Steuern anfragen“, a fresh code or passkey: stufen „Schutz ändern“);
@@ -15,8 +15,7 @@ Three consents, all needed:
     POST   /api/hilfe/programm {tok, art, origin}      the program for her system as a file; X-Spark-Schluessel the
                                                        one-time key, X-Spark-Sha256 its checksum (also on /hilfe);
                                                        art „linux-x11“ (S2d): {befehl, schluessel} the line for
-                                                       her terminal and the key she pastes there; art „mac“
-                                                       (S2c): a zip with the key in the app's name only
+                                                       her terminal and the key she pastes there
     program (no page: any Origin header is refused):
     WS     /api/hilfe/steuern                          first message {"typ": "hallo", "schluessel", "art"}; then
                                                        {"typ": "antwort", "modus": no|view|control}, pictures
@@ -41,36 +40,25 @@ delivery.
 S2b, the program: SparkHilfe for Windows (tools/sparkhilfe/windows, x64 and ARM64, one self-contained file, no setup, no
 admin rights) is built only by CI (.github/workflows/sparkhilfe-windows.yml, actions pinned by SHA) and published with
 sparkhilfe.json (version, per kind name, size, SHA-256; signed with signatur.py once UPDATE_SIGNING_KEY exists) in the
-release „sparkhilfe-windows“ (QUELLEN). While the switch is on and the Notaus lets the internet through, fetch() takes
-every release once a day (after an error within the hour): only GitHub's download addresses (begleiter._download), the
-signature when keys are listed, size and SHA-256 of every file, else nothing is kept; then programme.json names the
-files. The Dienst-Wächter looks whether every program is there with its checksum (probes, vorhanden). Logs:
-„spontanhilfe: programm_holen | <word> | n“, one line per release.
-
-S2c, the Mac: SparkHilfe.app (tools/sparkhilfe/mac, universal arm64 + x86_64, macOS 13+) is built by
-.github/workflows/sparkhilfe-mac.yml and published in „sparkhilfe-mac“ only after Developer ID signing, notarization
-and the stapled ticket (never without: no unsigned Mac program goes out). The Spark keeps the zip only when mac_teile
-finds nothing outside SparkHilfe.app/ and the ticket inside; per help mac_zip packs it anew in memory with the address
-her page is on and a new one-time key in the app's name (SparkHilfe-<host>-<key>.app; the name is not part of the
-signature). The key never stands in a header for the Mac.
+release TAG. While the switch is on and the Notaus lets the internet through, fetch() takes it once a day (after an
+error within the hour): only GitHub's download addresses (begleiter._download), the signature when keys are listed,
+size and SHA-256 of every file, else nothing is kept; then programme.json names the files. The Dienst-Wächter looks
+whether every program is there with its checksum (probes, vorhanden). Logs: „spontanhilfe: programm_holen | <word> | n“.
 """
 import asyncio
 import contextlib
 import hashlib
 import hmac
-import io
 import json
 import os
 import re
 import secrets
-import stat
 import time
 import urllib.parse
-import zipfile
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket
-from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.responses import FileResponse, JSONResponse
 
 import features
 import fernsicht
@@ -84,26 +72,15 @@ router = APIRouter()
 CACHE = os.path.join(STATE, "spontanhilfe-programme")   # programme.json and the files the signed manifest named (S2b)
 KEY_S = 600             # the program's key works this long, once
 FPS = 4                 # pictures a second at most; more are dropped
-ARTEN = {"windows-x64": ".exe", "windows-arm64": ".exe", "mac": ".zip"}   # the program files (S2b Windows, S2c Mac)
-QUELLEN = {"sparkhilfe-windows": ("windows-x64", "windows-arm64"),      # the CI releases and the kinds each one fills
-           "sparkhilfe-mac": ("mac",)}
+ARTEN = {"windows-x64": ".exe", "windows-arm64": ".exe"}   # the program files (S2b); S2c macOS comes later
 ZEILE = "linux-x11"     # S2d: no file, one line for her terminal (the anchor program, fernzugang.command „steuern“)
 BILDER = (b"\xff\xd8\xff", b"\x89PNG\r\n\x1a\n")    # JPEG (Windows) or PNG (Linux X11): nothing else passes
 KEY = re.compile(r"[A-Za-z0-9_\-]{22}")
 SHA = re.compile(r"[0-9a-f]{64}")
 DATEI = re.compile(r"SparkHilfe-[a-z0-9\-]{1,40}\.(?:exe|zip)")
 MODI = ("no", "view", "control")
-MANIFEST = "sparkhilfe.json"   # in every release of QUELLEN
-# S2c, the Mac: the release holds SparkHilfe.app (Developer ID, notarized, ticket stapled) zipped; per help the Spark
-# packs it anew under the name SparkHilfe-<host>-<key>.app (the name is not part of the signature)
-MAC_APP = "SparkHilfe.app/"
-MAC_NEEDS = ("Contents/MacOS/SparkHilfe", "Contents/Info.plist", "Contents/_CodeSignature/CodeResources",
-             "Contents/CodeResources")         # the last one: the stapled notarization ticket
-MAC_MAX = 64 * 1024 * 1024     # the unpacked app at most
-MAC_TEILE = 400                # entries in its zip at most
-# the address in the app's name, as the program reads it (tools/sparkhilfe/mac/Sources/Ziel.swift)
-HOST = re.compile(r"(?=.{1,200}$)[a-z0-9](?:[a-z0-9\-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9\-]{0,61}[a-z0-9])?)*"
-                  r"(?::(?P<port>[0-9]{1,5}))?")
+TAG = "sparkhilfe-windows"     # the release the CI run fills (S2b)
+MANIFEST = "sparkhilfe.json"
 MAX_META = 4096
 FIRST = 120             # the first look this long after the start or after switching on
 _sha = {}               # path -> (mtime, size, sha256): checked again whenever the file changed
@@ -195,75 +172,23 @@ def angebot():
     return out
 
 
-# ---------------------------------------------------------------- S2c: the Mac app, packed anew per help
-def mac_teile(zf):
-    """The entries of a SparkHilfe Mac zip, all checked: only below SparkHilfe.app/, no way out (.., absolute,
-    backslash), no symlink, at most MAC_TEILE entries and MAC_MAX bytes unpacked, the program, its signature and the
-    stapled ticket inside. ValueError otherwise (then nothing is kept or handed out)."""
-    infos, total = zf.infolist(), 0
-    if not 0 < len(infos) <= MAC_TEILE:
-        raise ValueError("zu viele Teile")
-    names = set()
-    for i in infos:
-        n = i.filename
-        parts = n.rstrip("/").split("/")
-        if not n.startswith(MAC_APP) or "\\" in n or "\x00" in n or any(x in ("", ".", "..") for x in parts) \
-                or stat.S_ISLNK(i.external_attr >> 16) or i.flag_bits & 0x1:
-            raise ValueError("Teil außerhalb")
-        total += i.file_size
-        names.add(n)
-    if total > MAC_MAX or not all(MAC_APP + need in names for need in MAC_NEEDS):
-        raise ValueError("unvollständig")
-    return infos
-
-
-def mac_pruefen(path):
-    """mac_teile on a file (when it is fetched; reads only the directory of the zip)."""
-    with zipfile.ZipFile(path) as zf:
-        mac_teile(zf)
-
-
-def mac_zip(path, host, key):
-    """The Mac zip with the app renamed SparkHilfe-<host>-<key>.app (host with „_“ for the port's colon, as the
-    program reads it); modes, times and contents stay, so the signature and the ticket stay valid. In memory only,
-    never on the disk (the key is in the name). Call it in a thread."""
-    app = f"SparkHilfe-{host}-{key}.app/"
-    out = io.BytesIO()
-    total = 0
-    with zipfile.ZipFile(path) as src, zipfile.ZipFile(out, "w") as dst:
-        for i in mac_teile(src):
-            data = src.read(i)
-            total += len(data)
-            if total > MAC_MAX:
-                raise ValueError("zu groß")
-            z = zipfile.ZipInfo(app + i.filename[len(MAC_APP):], date_time=i.date_time)
-            z.create_system, z.external_attr = i.create_system, i.external_attr
-            z.compress_type = zipfile.ZIP_DEFLATED if i.compress_type == zipfile.ZIP_DEFLATED else zipfile.ZIP_STORED
-            dst.writestr(z, data)
-    return out.getvalue()
-
-
 # ---------------------------------------------------------------- S2b: the program from the CI release
 def _repo():
     return load_config().get("chat", {}).get("esp32_repo") or "db9979/speech-on-dgx-spark"
 
 
-async def fetch(c=None, tag="sparkhilfe-windows"):
-    """Takes the newest SparkHilfe build of the release `tag` (QUELLEN) when it is newer than the kept one or a file is
-    missing; every file must match size and SHA-256 of the (signed) sparkhilfe.json, a Mac zip also mac_teile. Returns
-    the version the Spark keeps now for this release."""
+async def fetch(c=None):
+    """Takes the newest SparkHilfe build when it is newer than the kept one or a file is missing; every file must match
+    size and SHA-256 of the (signed) sparkhilfe.json. Returns the version the Spark keeps now."""
     import begleiter
     import geraeteupdate
     import signatur
-    if tag not in QUELLEN:
-        raise ValueError("Unbekanntes Release.")
-    arten = QUELLEN[tag]
     own = c is None
     c = c or httpx.AsyncClient(timeout=300, follow_redirects=True)
     try:
         api = os.environ.get("SPEECH_SPARK_GITHUB_API", "https://api.github.com")
         import ghtoken
-        r = await ghtoken.get(c, f"{api}/repos/{_repo()}/releases/tags/{tag}")
+        r = await ghtoken.get(c, f"{api}/repos/{_repo()}/releases/tags/{TAG}")
         if r.status_code == 404:
             raise begleiter.NotYet("Im Repo gibt es SparkHilfe noch nicht.")
         r.raise_for_status()
@@ -281,10 +206,10 @@ async def fetch(c=None, tag="sparkhilfe-windows"):
             raise ValueError("sparkhilfe.json ist ungültig.")
         clean = {}
         for art, v in files.items():
-            if art not in arten or not isinstance(v, dict):
+            if art not in ARTEN or not isinstance(v, dict):
                 continue
             name, size, sha = str(v.get("name", "")), v.get("size"), str(v.get("sha256", ""))
-            if not (DATEI.fullmatch(name) and name.endswith(ARTEN[art]) and name in assets and isinstance(size, int) and not isinstance(size, bool)
+            if not (DATEI.fullmatch(name) and name in assets and isinstance(size, int) and not isinstance(size, bool)
                     and 0 < size <= begleiter.MAX_FILE and SHA.fullmatch(sha)):
                 raise ValueError("sparkhilfe.json ist ungültig.")
             clean[art] = {"datei": name, "size": size, "sha256": sha, "version": ver}
@@ -292,7 +217,7 @@ async def fetch(c=None, tag="sparkhilfe-windows"):
             raise ValueError("sparkhilfe.json nennt kein Programm.")
         idx = read_json(os.path.join(CACHE, "programme.json"), {})
         idx = idx if isinstance(idx, dict) else {}
-        cur = {k: x for k, x in idx.items() if k in arten and isinstance(x, dict)}
+        cur = {k: x for k, x in idx.items() if k in ARTEN and isinstance(x, dict)}
         have = {k for k in cur if await asyncio.to_thread(programm, k)}
         old_ver = max((str(x.get("version", "")) for x in cur.values()), key=geraeteupdate.vt, default="")
         if have >= set(clean) and old_ver and not geraeteupdate.newer(ver, old_ver):
@@ -304,16 +229,9 @@ async def fetch(c=None, tag="sparkhilfe-windows"):
             if n != v["size"] or not hmac.compare_digest(h, v["sha256"]):
                 os.remove(part)
                 raise ValueError("Prüfsumme passt nicht, nichts übernommen.")
-            if v["datei"].endswith(".zip"):
-                try:
-                    await asyncio.to_thread(mac_pruefen, part)
-                except (ValueError, OSError, zipfile.BadZipFile):
-                    os.remove(part)
-                    raise ValueError("Das Mac-Programm ist nicht vollständig, nichts übernommen.") from None
         for v in clean.values():
             os.replace(os.path.join(CACHE, v["datei"] + ".part"), os.path.join(CACHE, v["datei"]))
-        keep = {k: x for k, x in idx.items() if k in ARTEN and k not in arten and isinstance(x, dict)}
-        write_json(os.path.join(CACHE, "programme.json"), {**keep, **clean}, mode=0o644)
+        write_json(os.path.join(CACHE, "programme.json"), clean, mode=0o644)
         for name in {x.get("datei") for x in cur.values()} - {v["datei"] for v in clean.values()}:
             if isinstance(name, str) and DATEI.fullmatch(name):
                 with contextlib.suppress(OSError):
@@ -326,19 +244,16 @@ async def fetch(c=None, tag="sparkhilfe-windows"):
 
 
 async def check():
-    """One look on GitHub for every release of QUELLEN, a line in the journal for each and one „Von selbst“ job on the
-    Live page."""
+    """One look on GitHub, with a line in the journal and a „Von selbst“ job on the Live page."""
     import begleiter
-    t0, err = time.time(), ""
-    for tag in QUELLEN:
-        word = "ok"
-        try:
-            await fetch(tag=tag)
-        except begleiter.NotYet as e:            # nothing wrong, just nothing to take yet
-            err, word = err or str(e)[:200], "noch nicht"
-        except Exception as e:
-            err, word = err or str(e)[:200] or type(e).__name__, "fehler"
-        sh.log("programm_holen", word, 1 if word == "ok" else 0)
+    t0, err, word = time.time(), "", "ok"
+    try:
+        await fetch()
+    except begleiter.NotYet as e:            # nothing wrong, just nothing to take yet
+        err, word = str(e)[:200], "noch nicht"
+    except Exception as e:
+        err, word = str(e)[:200] or type(e).__name__, "fehler"
+    sh.log("programm_holen", word, 1 if word == "ok" else 0)
     _upd["checked"], _upd["error"] = time.time(), err
     try:
         import live
@@ -425,8 +340,6 @@ async def person_file(request: Request):
     if p is None:
         sh.log("programm", "fehlt", 0)
         raise HTTPException(404, "Für dieses System gibt es das Programm noch nicht. Ansehen läuft weiter.")
-    if art == "mac":
-        return await _mac(request, body, st, p[0])
     key = secrets.token_urlsafe(16)       # 128 bits, 22 characters
     st.key_h, st.key_bis = sh._h(key), time.time() + KEY_S
     sh.log("programm", art.split("-")[0], 1)
@@ -435,41 +348,14 @@ async def person_file(request: Request):
                                  "Content-Disposition": "attachment; filename=\"SparkHilfe" + ARTEN[art] + "\""})
 
 
-def _eigene_adresse(request, body):
-    """The address her page is on, only when it is the Host she reached (S2c, S2d); else ""."""
-    origin = str(body.get("origin") or "")
-    host = (request.headers.get("host") or "").lower()
-    return host if origin and urllib.parse.urlsplit(origin.lower()).netloc == host else ""
-
-
-async def _mac(request, body, st, path):
-    """S2c: the Mac zip with address and a new one-time key in the app's name (packed in memory, never kept; the key
-    is never in a header, a log or an address)."""
-    host = _eigene_adresse(request, body)
-    m = HOST.fullmatch(host) if host else None
-    if m is None or (m.group("port") and not 0 < int(m.group("port")) < 65536):
-        sh.log("programm", "adresse", 0)
-        raise HTTPException(404, "Für dieses System gibt es das Programm gerade nicht. Ansehen läuft weiter.")
-    key = secrets.token_urlsafe(16)       # 128 bits, 22 characters
-    try:
-        data = await asyncio.to_thread(mac_zip, path, host.replace(":", "_"), key)
-    except (ValueError, OSError, zipfile.BadZipFile):
-        sh.log("programm", "fehlt", 0)
-        raise HTTPException(404, "Für dieses System gibt es das Programm noch nicht. Ansehen läuft weiter.") from None
-    st.key_h, st.key_bis = sh._h(key), time.time() + KEY_S
-    sh.log("programm", "mac", 1)
-    return Response(data, media_type="application/zip",
-                    headers={"X-Spark-Sha256": hashlib.sha256(data).hexdigest(), "Cache-Control": "no-store",
-                             "Content-Disposition": "attachment; filename=\"SparkHilfe.zip\""})
-
-
 def _zeile(request, body, st):
     """S2d: the line for her terminal (Linux X11, no secret in it, from the address her page is on: only the Host she
     reached) and a new one-time key she pastes there when the program asks (never kept, never logged, never in an
     address)."""
     import fernzugang
     origin = str(body.get("origin") or "")
-    if not _eigene_adresse(request, body) or not zeile_da():
+    host = (request.headers.get("host") or "").lower()
+    if not origin or urllib.parse.urlsplit(origin.lower()).netloc != host or not zeile_da():
         sh.log("programm", "zeile fehlt", 0)
         raise HTTPException(404, "Für dieses System gibt es den Befehl gerade nicht. Ansehen läuft weiter.")
     key = secrets.token_urlsafe(16)       # 128 bits, 22 characters

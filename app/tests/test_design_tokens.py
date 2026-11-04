@@ -408,7 +408,7 @@ class Emoji(Ratchet, unittest.TestCase):
 
 class OwnSymbols(Ratchet, unittest.TestCase):
     WHAT = "a symbol with its own SVG paths; add it to icons.js and draw it with ic('name') or <i data-ic=\"name\">"
-    ALT = {"index.html": 45}
+    ALT = {"index.html": 43}
 
     def hits(self):
         return {n.replace(os.sep, "/"): c for n in ui_files() if n != os.path.join("js", "icons.js")
@@ -417,7 +417,7 @@ class OwnSymbols(Ratchet, unittest.TestCase):
 
 class HexColours(Ratchet, unittest.TestCase):
     WHAT = "a fixed hex colour outside tokens.css; take a token (var(--…)) or add one to tokens.css"
-    ALT = {"app.css": 363, "live.css": 18, "spontanhilfe.css": 19, "weiche.css": 2}
+    ALT = {"app.css": 357, "live.css": 18, "spontanhilfe.css": 19, "weiche.css": 2}
 
     def hits(self):
         return {n: c for n in sheets() if n != TOKENS and (c := hex_colours(read(n)))}
@@ -425,7 +425,7 @@ class HexColours(Ratchet, unittest.TestCase):
 
 class FontSizes(Ratchet, unittest.TestCase):
     WHAT = "a font size outside the scale (SCALE); take a size of the scale"
-    ALT = {"app.css": 348, "live.css": 21, "spontanhilfe.css": 5, "technik.css": 2, "weiche.css": 14}
+    ALT = {"app.css": 347, "live.css": 21, "spontanhilfe.css": 5, "technik.css": 2, "weiche.css": 14}
 
     def hits(self):
         return {n: c for n in sheets() if n != TOKENS and (c := off_scale(read(n)))}

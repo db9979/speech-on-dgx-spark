@@ -927,9 +927,9 @@ SEITEN = {
     # ------------------------------------------------------------------ Browser und Handy
     # ------------------------------------------------------------------ Fernzugang (Dominik 2026-10-29 „in Technik → Überblick fehlt die Fernwartung“)
     "fernzugang": {
-        "stand": "ec42265853",
+        "stand": "aa5b776a39",
         "bezug": {
-            "fernzugang.entsperrt_bis": ["s2"], "fernzugang.admin_pair": ["s3"], "fernzugang.link_file": ["s3"], "fernzugang.admin_confirm": ["s3"], "fernzugang.CODE_S": ["s3"], "fernzugang.TICKET_S": ["s4"], "fernzugang.terminal_ws": ["s4"], "fernzugang.hostkey_wrong": ["s5"], "fernzugang.HALTEN_S": ["s6"], "ferndateien.listing": ["s6"], "fernbild.GUACD": ["s6"], "fernbild.FPS": ["s6"], "spontanhilfe.admin_new": ["s7"], "spontanhilfe.NUMMER_S": ["s7"], "spontansteuern.fetch": ["s7"], "spontansteuern._zeile": ["s7"], "fernzugang.notaus_close": ["s8"], "fernzugang.MAX_ANKER": ["s3"], "fernnotiz.fuer_modell": ["s6"], "fernnotiz.FASSUNGEN": ["s6"], "fernordner.view": ["s6"], "fernordner.MAX_ORDNER": ["s6"], "ferngross.upload_piece": ["s6"], "ferngross.TEIL": ["s6"], "fernweb.verbindung": ["s6"], "fernweb.ziel_ok": ["s6"], "fernweb.TOR_PORT": ["s6"], "fernweb.MAX_TUNNEL": ["s6"], "fernweb.MAX_KANAELE": ["s6"],
+            "fernzugang.entsperrt_bis": ["s2"], "fernzugang.admin_pair": ["s3"], "fernzugang.link_file": ["s3"], "fernzugang.admin_confirm": ["s3"], "fernzugang.CODE_S": ["s3"], "fernzugang.TICKET_S": ["s4"], "fernzugang.terminal_ws": ["s4"], "fernzugang.hostkey_wrong": ["s5"], "fernzugang.HALTEN_S": ["s6"], "ferndateien.listing": ["s6"], "fernbild.GUACD": ["s6"], "fernbild.FPS": ["s6"], "spontanhilfe.admin_new": ["s7"], "spontanhilfe.NUMMER_S": ["s7"], "spontansteuern.fetch": ["s7"], "spontansteuern._zeile": ["s7"], "fernzugang.notaus_close": ["s8"], "fernzugang.MAX_ANKER": ["s3"], "fernnotiz.fuer_modell": ["s6"], "fernnotiz.FASSUNGEN": ["s6"], "fernordner.view": ["s6"], "fernordner.MAX_ORDNER": ["s6"], "ferngross.upload_piece": ["s6"], "ferngross.TEIL": ["s6"], "fernweb.verbindung": ["s6"], "fernweb.ziel_ok": ["s6"], "fernweb.eigen_von": ["s6"], "fernweb.TOR_PORT": ["s6"], "fernweb.MAX_TUNNEL": ["s6"], "fernweb.MAX_KANAELE": ["s6"],
         },
         "kurz": ("Der Fernzugang öffnet Shell, Dateien und Bildschirm eines eigenen Servers im Browser, ohne offenen Port "
                  "dort: der Anker auf dem Server verbindet sich selbst zum Panel, das Panel spricht SSH durch diese "
@@ -1011,7 +1011,8 @@ SEITEN = {
                "(fernordner.view), höchstens {fernordner.MAX_ORDNER}; Rechte bleiben je System. Webdienste kommen über die "
                "Tunnel-Tür auf Port {fernweb.TOR_PORT}, eine eigene Herkunft, nie die des Panels (fernweb.verbindung): ohne "
                "Cookies des Panels und ohne Anmeldung, die Cookies jedes Dienstes für sich, einbetten darf nur das Panel. Ziele nur "
-               "nach festen Regeln (fernweb.ziel_ok), die der Anker selbst noch einmal prüft: 127.0.0.1 dort, private "
+               "nach festen Regeln (fernweb.ziel_ok), die der Anker selbst noch einmal prüft: 127.0.0.1 dort und die eigenen "
+               "Adressen des Systems, die nur der Anker selbst meldet (fernweb.eigen_von), private "
                "Adressen nur mit „Netz dahinter“, nie die Netze des Spark. Anders als die Shell geht das nicht als SSH Ende "
                "zu Ende, sondern durch die TLS-Leitung des Ankers mit angeheftetem Zertifikat; höchstens {fernweb.MAX_TUNNEL} "
                "Tunnel mit je {fernweb.MAX_KANAELE} Verbindungen und Gegendruck.",
@@ -1030,7 +1031,8 @@ SEITEN = {
                "(fernordner.view), at most {fernordner.MAX_ORDNER}; rights stay per system. Web services come through the "
                "tunnel door on port {fernweb.TOR_PORT}, an origin of its own, never the panel's (fernweb.verbindung): without "
                "the panel's cookies and without sign-in, each service's cookies apart, only the panel may embed it. Targets only "
-               "by fixed rules (fernweb.ziel_ok), which the anchor checks again itself: 127.0.0.1 there, private addresses "
+               "by fixed rules (fernweb.ziel_ok), which the anchor checks again itself: 127.0.0.1 there and the system's own "
+               "addresses that only the anchor itself reports (fernweb.eigen_von), private addresses "
                "only with „Netz dahinter“, never the Spark's networks. Unlike the shell this is not SSH end to end but goes "
                "through the anchor's TLS line with a pinned certificate; at most {fernweb.MAX_TUNNEL} tunnels with "
                "{fernweb.MAX_KANAELE} connections each and backpressure.")),
@@ -1108,6 +1110,7 @@ SEITEN = {
             ("fernordner.view", ("Ordner: nur die Reihenfolge der Liste", "folders: only the order of the list")),
             ("ferngross.upload_piece", ("große Datei: ein Stück nur ganz und mit passender SHA-256", "big file: a piece only whole and with a matching SHA-256")),
             ("fernweb.ziel_ok", ("Webdienste: wohin ein Tunnel darf", "web services: where a tunnel may go")),
+            ("fernweb.eigen_von", ("Webdienste: die eigenen Adressen des Systems, wie sein Anker sie meldet", "web services: the system's own addresses as its anchor reports them")),
             ("fernweb.verbindung", ("die Tunnel-Tür: Köpfe umgeschrieben, Cookies getrennt", "the tunnel door: heads rewritten, cookies apart")),
         ],
         "tests": ["test_fernzugang", "test_fernbild", "test_spontanhilfe", "test_ferngross", "test_fernweb", "test_fernals", "test_spontansteuern", "test_sparkhilfe_linux"],

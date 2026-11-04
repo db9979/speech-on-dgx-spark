@@ -50,7 +50,7 @@ Go through before every commit. In the answer to Dominik briefly name which poin
 - [ ] The checked IP is pinned (no second DNS lookup, so no DNS rebinding gap), and every redirect is checked again.
 - [ ] Credentials go only to the same origin (also for hrefs from PROPFIND), there is never a fallback to http, and TLS verification is on.
 - [ ] `ref_audio` and similar only as `data:` with a size limit, never as a URL.
-- [ ] A tunnel to another computer (Remote access, web services) takes only IP addresses, never a name, and checks the target on both sides by the same fixed rules: the panel (`fernweb.ziel_ok`) and the anchor (`web_ziel`). Loopback there is allowed; private ranges only with an admin switch of their own per system and never in the own networks. Never allowed are link-local, the metadata address, multicast and the panel's own address.
+- [ ] A tunnel to another computer (Remote access, web services) takes only IP addresses, never a name, and checks the target on both sides by the same fixed rules: the panel (`fernweb.ziel_ok`) and the anchor (`web_ziel`). Loopback there is allowed, and the system's own addresses the anchor finds itself (from 1.9.0 on; the panel believes only what the anchor reports, and never in the own networks; when loopback does not answer, only the one own address on which exactly this port listens); private ranges only with an admin switch of their own per system and never in the own networks. Never allowed are link-local, the metadata address, multicast and the panel's own address. The anchor never reports addresses of the network behind it. (V01.1.319: a Docker port on a fixed IP was only reachable with "Network behind it".)
 
 ## Injection
 - [ ] `subprocess` only with list arguments, never `shell=True`, `eval` or `exec`. No `pickle` and no `allow_pickle` on outside data.
@@ -66,7 +66,7 @@ Go through before every commit. In the answer to Dominik briefly name which poin
 - [ ] Own data leaves the Spark as a whole only through "Download all my data" (`meinedaten.py`): every time a fresh code or passkey (without a second step the PIN), only what `export=` in the file register lets in, never secrets, the voiceprint or supplies of foreign servers; picked up once with a 128-bit code of which only the hash is kept, gone after 10 minutes. A new file under `users/<id>/` says with `export=` whether it belongs in.
 - [ ] Logs and error texts contain no tokens. Bot tokens and keys are redacted, so do not output `str(e)` from httpx with a token in the URL.
 - [ ] `/health` and similar open pages show only a status, no error texts and no names.
-- [ ] The change log is written only by `guard.log` (hash chain); nothing writes, shortens or deletes `audit.log` another way.
+- [ ] The change log is written only by `guard.log` (hash chain); nothing writes, shortens or deletes `audit.log` another way. A checked break is confirmed only as a new entry (`guard.ack_break`), never by changing the chain, and only for exactly the line the check reports.
 
 ## root boundary and update
 - [ ] root follows no symlinks in folders owned by `speech` (`chown -h`, delete beforehand).

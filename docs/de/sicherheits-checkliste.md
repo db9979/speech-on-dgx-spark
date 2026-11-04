@@ -50,7 +50,7 @@ Vor jedem Commit durchgehen. In der Antwort an Dominik kurz nennen, welche Punkt
 - [ ] Die geprüfte IP wird festgehalten (kein zweites DNS, also keine DNS-Rebinding-Lücke), und jede Weiterleitung wird neu geprüft.
 - [ ] Zugangsdaten gehen nur an denselben Origin (auch bei hrefs aus PROPFIND), es gibt nie einen Rückfall auf http, und TLS-Prüfung ist an.
 - [ ] `ref_audio` und Ähnliches nur als `data:` mit Größengrenze, nie als URL.
-- [ ] Ein Tunnel zu einem fremden Rechner (Fernzugang → Systeme, Knopf „Webdienste“) nimmt nur IP-Adressen, nie einen Namen, und prüft das Ziel auf beiden Seiten nach denselben festen Regeln: Panel (`fernweb.ziel_ok`) und Anker (`web_ziel`). Erlaubt ist Loopback dort; private Bereiche nur mit eigenem Admin-Schalter je System und nie in den eigenen Netzen. Nie erlaubt sind link-local, Metadaten-Adresse, Multicast und die Adresse des Panels selbst.
+- [ ] Ein Tunnel zu einem fremden Rechner (Fernzugang → Systeme, Knopf „Webdienste“) nimmt nur IP-Adressen, nie einen Namen, und prüft das Ziel auf beiden Seiten nach denselben festen Regeln: Panel (`fernweb.ziel_ok`) und Anker (`web_ziel`). Erlaubt ist Loopback dort und die eigenen Adressen des Systems, die der Anker selbst ermittelt (ab 1.9.0; das Panel glaubt nur, was der Anker meldet, und nie in den eigenen Netzen; antwortet Loopback nicht, nur die eine eigene Adresse, auf der genau dieser Port lauscht); private Bereiche nur mit eigenem Admin-Schalter je System und nie in den eigenen Netzen. Nie erlaubt sind link-local, Metadaten-Adresse, Multicast und die Adresse des Panels selbst. Adressen des Netzes dahinter meldet der Anker nie. (V01.1.319: ein Docker-Port an fester IP war nur mit „Netz dahinter“ erreichbar.)
 
 ## Injektion
 - [ ] `subprocess` nur mit Listen-Argumenten, nie `shell=True`, `eval` oder `exec`. Kein `pickle` und kein `allow_pickle` auf Fremddaten.
@@ -66,7 +66,7 @@ Vor jedem Commit durchgehen. In der Antwort an Dominik kurz nennen, welche Punkt
 - [ ] Eigene Daten verlassen den Spark als Ganzes nur über „Alle meine Daten herunterladen“ (`meinedaten.py`): jedes Mal frischer Code oder Passkey (ohne zweiten Schritt die PIN), nur was `export=` im Datei-Register hineinlässt, nie Geheimnisse, Stimmabdruck oder Vorräte fremder Server; abgeholt einmal mit einem 128-Bit-Code, von dem nur der Hash liegt, nach 10 Minuten weg. Eine neue Datei unter `users/<id>/` sagt mit `export=`, ob sie hineingehört.
 - [ ] Logs und Fehlertexte enthalten keine Tokens. Bot-Tokens und Schlüssel werden geschwärzt, also nicht `str(e)` von httpx mit Token in der URL ausgeben.
 - [ ] `/health` und ähnliche offene Seiten zeigen nur einen Status, keine Fehlertexte und keine Namen.
-- [ ] Das Änderungsprotokoll schreibt nur `guard.log` (Prüfkette); nichts schreibt, kürzt oder löscht `audit.log` anders.
+- [ ] Das Änderungsprotokoll schreibt nur `guard.log` (Prüfkette); nichts schreibt, kürzt oder löscht `audit.log` anders. Ein geprüfter Bruch wird nur als neuer Eintrag bestätigt (`guard.ack_break`), nie durch Ändern der Kette, und nur für genau die Zeile, die die Prüfung meldet.
 
 ## root-Grenze und Update
 - [ ] root folgt keinen Symlinks in Ordnern, die `speech` gehören (`chown -h`, vorher löschen).

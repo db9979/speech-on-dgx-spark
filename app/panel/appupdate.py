@@ -134,7 +134,7 @@ async def app_state(request: Request, prof=Depends(own_profile)):
     newer = bool(remote.get("latest")) and remote.get("behind") not in (0, None)
     return {"installed": app_version(), "latest": remote.get("version") if newer else None,
             "newer": newer, "behind": remote.get("behind") if newer else 0, "changes": _changes(remote) if newer else [],
-            "error": remote.get("error"), "running": running,
+            "error": remote.get("error"), "error_en": remote.get("error_en"), "running": running,
             "progress": {k: p.get(k) for k in ("percent", "text", "done", "ok", "version")} if p else None,
             "start": r["start"], "wait": _wait_left()}
 

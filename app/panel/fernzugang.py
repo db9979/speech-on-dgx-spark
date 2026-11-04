@@ -1426,6 +1426,9 @@ async def anker_ws(ws: WebSocket):
 async def _on_anker_text(a, m):
     typ, n = m.get("typ"), m.get("kanal")
     if typ in ("offen", "fehler") and isinstance(n, int) and n in a.wait and not a.wait[n].done():
+        k = a.kanaele.get(n)
+        if typ == "fehler" and getattr(k, "art", "") == "web":
+            k.abgelehnt = str(m.get("grund") or "")[:10]     # fernweb.kanal_auf takes only its fixed words
         a.wait[n].set_result(typ == "offen")
     elif typ == "zu" and isinstance(n, int) and n in a.kanaele:
         await a.kanaele[n].end("server")
@@ -1439,6 +1442,8 @@ async def _on_anker_text(a, m):
         fields = {k: v for k, v in (("os", os_), ("anker", ver)) if v and WORD.fullmatch(v)}
         if fields:
             await asyncio.to_thread(_update, a.gid, **fields)
+        import fernweb
+        fernweb.melde_eigen(a.gid, fields.get("anker"), m.get("eigen"))   # own addresses (anchor 1.9.0)
         if m.get("update"):
             import fernanker
             await fernanker.on_hello(a.gid, m.get("update"))
@@ -1475,6 +1480,7 @@ def _forget(gid, why):
     fernnotiz.forget(gid)
     fernordner.forget(gid)
     fernweb.GEFUNDEN.pop(gid, None)
+    fernweb.EIGEN.pop(gid, None)
     fernweb.ende_gid(gid, "abgebaut")
     log("abgebaut", why)
     guard.log("fernzugang_removed", detail="Fern-Server hat seinen Anker abgebaut")
@@ -1922,7 +1928,7 @@ def admin_get(request: Request):
                      "erlaubt": x.get("erlaubt", True), "hostkey_falsch": bool(x.get("hostkey_falsch")),
                      "wartet": bool(x.get("wartet")),
                      "fp": fingerprint(x.get("hostkey", "")), "art": art(x.get("os")),
-                     "bild": x.get("bild") or "", "bild_anker": fernbild.anchor_ok(x.get("anker")),
+                     "bild": x.get("bild") or "", "bild_anker": fernbild.anchor_ok(x.get("anker"), x.get("os")),
                      "web_anker": fernweb.anchor_ok(x.get("anker")), "web": len(x.get("web") or []) if web_an else 0,
                      "sitzungen": sum(1 for s in SITZUNG.values() if s.gid == gid), **fernanker.row(x, pv),
                      "notiz": notizen and fernnotiz.has(gid), **(fernals.row(x) if als_an else {})})

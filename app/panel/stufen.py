@@ -38,6 +38,7 @@ LIST = {
     ("PUT", "/api/profile/speaker-code"): (PROTECT, "Schutz", "Codewort am Lautsprecher", "Code word at the speaker"),
     ("PUT", "/api/profile/telefon/pin"): (PROTECT, "Schutz", "Telefon-PIN", "Phone PIN"),
     ("POST", "/api/admin/notaus/off"): (PROTECT, "Schutz", "Notaus aufheben", "Lift the emergency stop"),
+    ("POST", "/api/audit/ack"): (PROTECT, "Schutz", "Bruch im Änderungsprotokoll als geprüft bestätigen", "Confirm a break in the change log as checked"),
     ("POST", "/api/admin/fernzugang/koppeln"): (PROTECT, "Schutz", "Fern-Server koppeln (Code für den Anker)", "Pair a remote server (code for the anchor)"),
     ("DELETE", "/api/admin/fernzugang/geraete/{gid}"): (PROTECT, "Schutz", "Fern-Server entfernen (Anker baut sich ab)", "Remove a remote server (the anchor removes itself)"),
     ("POST", "/api/admin/fernzugang/geraete/{gid}/als"): (PROTECT, "Schutz", "Dateien als anderer Benutzer für ein Fern-System einschalten", "Switch on files as another user for a remote system"),

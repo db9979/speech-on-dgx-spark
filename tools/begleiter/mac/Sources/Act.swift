@@ -200,7 +200,7 @@ final class ActCenter {
             return ActMac.key(k)
         case .type(let t):
             guard Access.trusted else { return needAccess() }
-            Keys.type(t)
+            ActMac.type(t)
             return nil
         case .folder(let f):
             return ActMac.folder(f)

@@ -5098,6 +5098,27 @@
 "titel": "Auswertungen: von selbst, Erinnern und Mappe kurz",
 "text": "Admin: unter Auswertungen bei „Von selbst in ruhigen Minuten“ nur „Kernaussagen“ und „Inhaltsverzeichnis“ wählen, speichern. Ein neues Dokument hochladen: nach einer ruhigen Minute Kernaussagen fertig, Inhaltsverzeichnis ohne Klick da, Kurzfassung nicht. Danach zurück auf Kurzfassung und Kernaussagen. Mit „Personen, Firmen und Fristen“ an und Fristen anbieten an: eine Frist der Wissenskarte mit vollem Datum hat „Erinnern“, die Erinnerung steht in den Erinnerungen; „drei Monate“ hat keinen Knopf. Eine Mappe mit dem Dokument in Stufe „kurz“: der Eintrag nennt „„kurz“ mit Auswertung: Kurzfassung, Kernaussagen“, und eine Frage im Gespräch mit der Mappe nennt Punkte daraus mit Seite.",
 "thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P753",
+"v": 1318,
+"titel": "Fernsitzungs-Seite: eine Leiste, Reiter im Kopf",
+"text": "Fernzugang → Systeme, ein System → Shell, dann mit ＋ ein zweites. Oben steht nur die rote Zeile „Fernsitzung aktiv … · Leerlauf trennt nach … min“ mit Trennen rechts; nach einem frischen Code dort das Schild „Code noch N min“ (keine blaue Leiste), ein Tipp fragt nach und beendet die Bestätigung. Gibt es Hinweise (etwa Qualitätstest), steht „N Hinweise“ in der Zeile; ein Tipp zeigt sie über der Seite, das Terminal bleibt stehen, Esc schließt. Kein Seitenrand, kein Kasten um Terminal und Spalte. Die Reiter stehen im dunklen Kopf mit Punkt, Name, „SSH ✓“ und ×; Strg+Umschalt+1/2 wechselt, Nebeneinander und Übersicht rechts in derselben Zeile. Rechts nur „✦ Assistent | Notizen“ mit ›, kein Kasten Ziel, bis „Als Ziel“ gedrückt ist; darunter Zeilen, Bildschirm, ? und Als Ziel in einer Zeile. Eine andere Seite (Zustand) zeigt Hinweise und blaue Leiste wie vorher. Am Handy: die Zeile bleibt eine Zeile mit Schloss und Minuten und Warnzeichen mit Zahl, nichts ragt über den Rand.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P754",
+"v": 1319,
+"titel": "Webdienste: Dienst an eigener Adresse des Systems (Anker 1.9.0)",
+"text": "Auf kleiberit-testserver den Anker aktualisieren (Fernzugang → Systeme, „Aktualisieren“, danach 1.9.0). Webdienste → „Suchen“: 8443 steht da mit „nur 192.168.2.83“ (die feste Adresse des Docker-Dienstes), 22 mit „alle Adressen“. Der gespeicherte Dienst „Monitoring“ https://127.0.0.1:8443 → „Zertifikat prüfen“ zeigt jetzt die SHA-256 (der Anker versucht die eigene Adresse selbst); „Vertrauen“, „Öffnen“ zeigt das Monitoring. „Übernehmen“ bei 8443 legt einen Dienst mit 192.168.2.83 an, „Netz dahinter“ bleibt aus (liegt der Spark selbst in einem Netz 192.168.2.x, bleibt es 127.0.0.1 und der Anker geht selbst dorthin). Einen Dienst auf einem Port anlegen, auf dem nichts lauscht: „Zertifikat prüfen“ sagt „Unter 127.0.0.1:<Port> antwortet nichts. Der Dienst lauscht wohl nur auf einer anderen Adresse – „Suchen“ zeigt sie.“, auf Englisch „Nothing answers at …“. Eine fremde Adresse im Netz des Servers ohne „Netz dahinter“ wird beim Speichern abgelehnt.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P755",
+"v": 1320,
+"titel": "Bruch im Änderungsprotokoll als geprüft bestätigen",
+"text": "Admin mit zweitem Schritt: unter Zustand → Logs → Änderungen „Protokoll prüfen“. Meldet die Prüfung einen Bruch (etwa nach dem Stromausfall „Kette bricht in audit.log.1, Zeile 1907 … unlesbare Zeile“), steht daneben die Auswahl Stromausfall / Karte voll / Unbekannt und „Bruch als geprüft bestätigen“. Stromausfall wählen, Knopf: der Code wird jedes Mal gefragt. Danach: „Kette sonst heil … Bruch in audit.log.1, Zeile 1907 (…) bestätigt am <heute> (Stromausfall)“, der Hinweis oben auf den Admin-Seiten ist weg, unter Änderungen steht „Bruch im Änderungsprotokoll als geprüft bestätigt“. Zustand → Logs (System und Sicherheit): „audit: ack ok | unlesbar | stromausfall | …“. Ein Verwalter sieht den Knopf nicht und kommt nicht durch.",
+"thread": "Fix Protokoll leer beim Panel-Passwort"
 }
 ]
 }

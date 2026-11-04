@@ -426,6 +426,12 @@ def _last_line(path):
     return lines[-1] if lines else None
 
 
+def _torn_end(fd):
+    """True when the file does not end with a line end (a line torn by a crash, a power cut or a full disk)."""
+    size = os.fstat(fd).st_size
+    return size > 0 and os.pread(fd, 1, size - 1) != b"\n"
+
+
 def _rotate(now):
     """audit.log → .1, .1 → .2 …; drops files beyond AUDIT_FILES and older than AUDIT_DAYS (called under the lock)."""
     for i in range(AUDIT_FILES, 0, -1):
@@ -457,8 +463,20 @@ def log(event, **detail):
                     _rotate(time.time())
                 prev = _last_line(AUDIT) or _last_line(AUDIT + ".1")
                 item["p"] = line_hash(prev) if prev else GENESIS
-                with open(os.open(AUDIT, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600), "a") as f:
-                    f.write(json.dumps(item, ensure_ascii=False) + "\n")
+                # bytes, so a lone surrogate from outside (JSON "\udcff" in a login name) is written escaped and
+                # never keeps the entry out (UnicodeEncodeError); a line torn by a power cut or a full disk stays
+                # a line of its own and this entry starts a new one; fsync: on the Pi's SD card a power cut can
+                # otherwise leave a tail of zero bytes
+                data = json.dumps(item, ensure_ascii=False).encode("utf-8", "backslashreplace") + b"\n"
+                fd = os.open(AUDIT, os.O_RDWR | os.O_CREAT | os.O_APPEND, 0o600)
+                try:
+                    if _torn_end(fd):
+                        data = b"\n" + data
+                    while data:
+                        data = data[os.write(fd, data):]
+                    os.fsync(fd)
+                finally:
+                    os.close(fd)
             finally:
                 if lk is not None:
                     os.close(lk)
@@ -469,12 +487,53 @@ def log(event, **detail):
     wachposten.seen(item)   # the Wachposten's fixed rules (wachposten.py): nothing while it is off, never raises
 
 
+# what kind of break verify() found, fixed words for the pages, the journal and the alert
+BREAK_WORDS = {
+    "unlesbar": ("eine unlesbare Zeile (kein Eintrag, oft beim Schreiben abgebrochen, etwa Stromausfall oder volle "
+                 "Karte, oder von Hand verändert)",
+                 "an unreadable line (no entry; often a write cut off by a power cut or a full disk, or changed by hand)"),
+    "ohne_kette": ("ein Eintrag ohne Kettenwert nach Beginn der Kette (von außen eingefügt)",
+                   "an entry without chain value after the chain began (put in from outside)"),
+    "vorgaenger": ("ein Eintrag, der nicht auf die Zeile davor zeigt (Zeile davor verändert, entfernt oder eingefügt)",
+                   "an entry that does not point at the line before (that line changed, taken out or put in)"),
+}
+
+
+# why an admin confirms a break as checked (chain_break_ack, Dominik 2026-11-04 after a real power cut): fixed words,
+# German and English; the one list for the server, the page (/api/audit/check "reasons") and the docs
+ACK_REASONS = {"stromausfall": ("Stromausfall", "power cut"), "karte_voll": ("Karte voll", "disk full"),
+               "unbekannt": ("Unbekannt", "unknown")}
+ACK_EVENT = "chain_break_ack"
+KEEP_BREAKS = 200   # breaks verify() keeps with their place (every one is counted in "breaks")
+
+
+def _rot(name):
+    """How often a file was rotated: audit.log 0, audit.log.N N (a line keeps its number when its file moves on)."""
+    tail = name.rsplit(".", 1)[-1]
+    return int(tail) if tail.isdigit() else 0
+
+
+def _ack_fits(ack, b):
+    """An acknowledgement holds only for exactly this break: the same kind, line number, SHA-256 of the broken line
+    and of the line before it, in the same file or one it moved on to by rotation. A new or changed line is open."""
+    return (ack.get("kind") == b["kind"] and ack.get("line") == b["line"] and ack.get("sha") == b["sha"]
+            and ack.get("prev") == b["prev"] and isinstance(ack.get("file"), str)
+            and ack["file"].split(".", 2)[:2] == ["audit", "log"] and _rot(ack["file"]) <= _rot(b["file"]))
+
+
 def verify():
     """Walks the whole chain, oldest first. Lines from before the chain (no "p") count as "old" as long as no chained
     line came before them. The first line of the oldest kept file starts the chain (older files went by age).
-    {"ok", "lines", "old", "files", "first", "last", "head", "broken": None | {"file", "line", "t"}}"""
-    out = {"ok": True, "lines": 0, "old": 0, "files": 0, "first": None, "last": None, "head": "", "broken": None}
-    prev, chained = None, False
+    {"ok", "lines", "old", "files", "first", "last", "head", "breaks", "open",
+     "broken": None | {"file", "line", "t", "kind", "before", "after_ok", "sha", "prev"}, "acked": [...]}:
+    ok only when no line breaks; broken is the first break no admin confirmed (ack_break), its kind (BREAK_WORDS),
+    the time of the last readable entry before it (an unreadable line has none of its own: t 0), whether every line
+    after it fits again, and the SHA-256 of the line and of the line before it; acked the confirmed breaks with
+    "ack" {"t", "reason"}. The chain itself is never changed: a confirmation is an entry of its own (ACK_EVENT), and
+    counts only from a line that fits the chain, after the break."""
+    out = {"ok": True, "lines": 0, "old": 0, "files": 0, "first": None, "last": None, "head": "", "breaks": 0,
+           "open": 0, "broken": None, "acked": []}
+    prev, chained, last_t, found, acks = None, False, 0, [], []
     for path in audit_files():
         out["files"] += 1
         try:
@@ -491,18 +550,57 @@ def verify():
                 t = int(item.get("t") or 0)
             except (ValueError, TypeError, AttributeError):
                 p, t, item = None, 0, None
-            bad = item is None or (p is None and chained) or (p is not None and prev is not None and p != line_hash(prev))
-            if bad and out["broken"] is None:
+            kind = ("unlesbar" if item is None else "ohne_kette" if p is None and chained
+                    else "vorgaenger" if p is not None and prev is not None and p != line_hash(prev) else "")
+            if kind:
+                out["breaks"] += 1
                 out["ok"] = False
-                out["broken"] = {"file": os.path.basename(path), "line": no, "t": t}
+                if len(found) < KEEP_BREAKS:
+                    found.append({"file": os.path.basename(path), "line": no, "t": t, "kind": kind,
+                                  "before": last_t or None, "sha": line_hash(line),
+                                  "prev": line_hash(prev) if prev else GENESIS, "n": out["lines"]})
+            elif p is not None and item.get("event") == ACK_EVENT and len(acks) < KEEP_BREAKS:
+                acks.append((out["lines"], item))
             chained = chained or p is not None
             out["old"] += p is None and not chained
             out["lines"] += 1
             out["first"] = out["first"] or t or None
             out["last"] = t or out["last"]
+            last_t = t or last_t
             prev = line
+    last = found[-1]["n"] if found and out["breaks"] == len(found) else None
+    for b in found:
+        n = b.pop("n")
+        a = next((a for m, a in acks if m > n and _ack_fits(a, b)), None)
+        b["after_ok"] = n == last
+        if a:
+            b["ack"] = {"t": int(a.get("t") or 0), "reason": a.get("reason") if a.get("reason") in ACK_REASONS
+                        else "unbekannt"}
+            out["acked"].append(b)
+        else:
+            out["open"] += 1
+            out["broken"] = out["broken"] or b
+    out["open"] += out["breaks"] - len(found)   # beyond KEEP_BREAKS nothing is confirmed
+    out["acked"] = out["acked"][-20:]
     out["head"] = line_hash(prev)[:16] if prev else ""
     return out
+
+
+def ack_break(file, line, sha, reason, by=""):
+    """An admin confirms the break the check reports right now as checked (Dominik 2026-11-04): only the first open
+    break, only when file, line and SHA-256 are exactly what verify() finds here, only with a reason of ACK_REASONS.
+    Writes one new entry (ACK_EVENT) with the place, the hashes, the kind, the reason and who; the chain is never
+    changed or healed. Returns the kind confirmed, or a fixed word why not ("grund", "kein_bruch", "anders")."""
+    if reason not in ACK_REASONS:
+        return False, "grund"
+    b = verify()["broken"]
+    if not b:
+        return False, "kein_bruch"
+    if (b["file"], b["line"], b["sha"]) != (file, line, sha):
+        return False, "anders"
+    log(ACK_EVENT, file=b["file"], line=b["line"], sha=b["sha"], prev=b["prev"], kind=b["kind"], reason=reason, by=by,
+        detail=f"{b['file']} Zeile {b['line']} {b['kind']} {reason}")
+    return True, b["kind"]
 
 
 _chain = {"t": 0, "bad": None}
@@ -513,16 +611,20 @@ def chain_due(now=None):
 
 
 def chain_daily(now=None):
-    """Once a day (and after a start): the chain checked, one journal line with its head (an anchor outside the file),
-    and when it breaks one entry and an alert on the admin pages until it is whole again."""
+    """Once a day (and after a start, and after a break was confirmed): the chain checked, one journal line with its
+    head (an anchor outside the file), and when a break no admin confirmed is there one entry and an alert on the admin
+    pages until it is whole again or confirmed; a confirmed break stays silent, a new or changed one alerts again."""
     _chain["t"] = time.time() if now is None else now
     r = verify()
-    print(f"audit: chain {'ok' if r['ok'] else 'broken'} | {r['lines']} lines {r['files']} files | head {r['head']}",
-          flush=True)
+    b = r["broken"]
+    state = "ok" if r["ok"] else "broken" if b else "confirmed"
+    print(f"audit: chain {state} | {r['lines']} lines {r['files']} files | head {r['head']}"
+          + (f" | break {b['kind']} {r['open']}x open" if b else "")
+          + (f" | {len(r['acked'])} confirmed" if r["acked"] else ""), flush=True)
     was = _chain["bad"]
-    _chain["bad"] = r["broken"]
-    if r["broken"] and r["broken"] != was:
-        log("audit_chain_broken", detail=f"{r['broken']['file']} Zeile {r['broken']['line']}")
+    _chain["bad"] = b
+    if b and (not was or (b["line"], b["sha"]) != (was["line"], was.get("sha"))):
+        log("audit_chain_broken", detail=f"{b['file']} Zeile {b['line']} {b['kind']}")
     return r
 
 
@@ -533,7 +635,9 @@ def alerts():
         return []
     return [{"kind": "audit", "level": "bad", "go": "Zustand → Logs → Änderungen",
              "text": f"Das Änderungsprotokoll wurde nachträglich verändert: die Kette bricht in {b['file']}, Zeile "
-                     f"{b['line']}. Unter Zustand → Logs → Änderungen „Protokoll prüfen“ zeigt mehr."}]
+                     f"{b['line']}, {BREAK_WORDS.get(b.get('kind'), ('',))[0] or 'Art unbekannt'}"
+                     f"{'; danach ist sie wieder heil' if b.get('after_ok') else ''}. "
+                     "Unter Zustand → Logs → Änderungen „Protokoll prüfen“ zeigt mehr."}]
 
 
 # What the audit log notes shows on Zustand → Live under "Ereignisse" (live.py), in fixed words: never who,
@@ -583,6 +687,7 @@ LIVE_WORDS = {
     "offsite_backup": ("Sicherung", "Sicherung nach außen übertragen"), "offsite_failed": ("Sicherung", "Sicherung nach außen fehlgeschlagen"),
     "offsite_log_failed": ("Sicherung", "Kopie des Änderungsprotokolls nicht auf den NAS gekommen"),
     "audit_chain_broken": ("Sicherheit", "Änderungsprotokoll nachträglich verändert"),
+    "chain_break_ack": ("Sicherheit", "Bruch im Änderungsprotokoll als geprüft bestätigt"),
     "rollback": ("Update", "Rückkehr zur vorigen Version gestartet"), "update_from_app": ("Update", "Update aus der App gestartet"),
     "livecheck_failed": ("Dienste", "Funktionsprüfung fehlgeschlagen"), "memory_low": ("Dienste", "Speicher knapp"),
     "room_end": ("Raum-Modus", "Zuhören beendet"), "foreign_page_refused": ("Wächter", "fremde Seite abgewiesen"),

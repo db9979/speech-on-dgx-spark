@@ -49,7 +49,27 @@ enum Access {
     }
 }
 
-// Keys (press, waitForModifiers, type) live in the shared core Sicht.swift.
+/// Key presses for the person (needs Accessibility).
+enum Keys {
+    static func press(_ code: Int, flags: CGEventFlags = .maskCommand) {
+        let src = CGEventSource(stateID: .hidSystemState)
+        guard let down = CGEvent(keyboardEventSource: src, virtualKey: CGKeyCode(code), keyDown: true),
+              let up = CGEvent(keyboardEventSource: src, virtualKey: CGKeyCode(code), keyDown: false) else { return }
+        down.flags = flags
+        up.flags = flags
+        down.post(tap: .cghidEventTap)
+        up.post(tap: .cghidEventTap)
+    }
+
+    /// Waits (at most a second) until ⌥, ⌃ and ⇧ of the hotkey are let go, so they do not mix into ⌘C/⌘V.
+    static func waitForModifiers() async {
+        for _ in 0..<20 {
+            let f = CGEventSource.flagsState(.combinedSessionState)
+            if !f.contains(.maskAlternate) && !f.contains(.maskControl) && !f.contains(.maskShift) { return }
+            try? await Task.sleep(nanoseconds: 50_000_000)
+        }
+    }
+}
 
 /// The clipboard: saved before and restored after every copy/paste of our own. Our temporary entries are marked
 /// transient/concealed (nspasteboard.org), so clipboard managers leave them out of their history.

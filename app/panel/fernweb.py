@@ -3,7 +3,8 @@ Home Assistant over there …) in the admin's browser, through the same anchor a
 internet over there.
 
     browser ──https──► the Tunnel-Tür (this module, port TOR_PORT, own origin) ──WSS of the anchor, channel
-    „ziel: web“──► spark-anker ──TCP──► 127.0.0.1:<port> over there (or, with „Netz dahinter“, a private address)
+    „ziel: web“──► spark-anker ──TCP──► 127.0.0.1:<port> over there (or one of the system's own addresses, or, with
+    „Netz dahinter“, a private address)
 
 The tunnelled pages never come from the panel's own origin: the door listens on its own port (TOR_PORT) with the
 panel's certificate; from the internet under its own name (chat.fernweb_adresse, e.g. fernwartung.example.org,
@@ -15,9 +16,15 @@ Rules (fixed, Sicherheits-Checkliste):
   their own browser only, on the unlocked page (fernzugang._frei) with a second sign-in step; never a guest, never a
   profile part, never a tool of the model: nothing of it reaches a model.
 - Targets (ziel_ok, and the anchor's own web_ziel, both always): only an IP address (never a name: nothing is
-  resolved), loopback always; the private ranges only with the system's admin switch „Netz dahinter“ (web_netz, off),
-  and never an address in one of this Pi's own networks; never link-local, multicast, unspecified, reserved, the
-  metadata address or the panel's own address. The anchor checks the same itself (1.6.0, spark-anker web_ziel).
+  resolved), loopback always; the system's own interface addresses (Dominik 2026-11-04: a Docker port on the server's
+  fixed address, 192.168.2.83:8443, listens there and not on 127.0.0.1) without „Netz dahinter“, but only those the
+  anchor (1.9.0, ANKER_EIGEN) reported in its „hallo“ or „ports“ (EIGEN, memory only) and never in this Pi's own
+  networks: the anchor's own rule is the real one (it looks them up itself); the private ranges only with the system's
+  admin switch „Netz dahinter“ (web_netz, off), and never an address in one of this Pi's own networks; never
+  link-local, multicast, unspecified, reserved, the metadata address or the panel's own address. The anchor checks the
+  same itself (1.6.0, spark-anker web_ziel). An anchor from 1.9.0 on also tries, when nothing answers on 127.0.0.1,
+  the own address on which exactly that port listens; what failed comes back as a fixed word (GRUENDE), which the page
+  turns into a sentence with the service's own address.
 - „Öffnen“ makes a one-time ticket (TICKET_S, bound to the login and its unlock); the door takes it once, sets its
   own cookie (COOKIE: host only, HttpOnly, Secure, SameSite=Strict) for that one tunnel and forgets the ticket. Every
   request after that needs the cookie, the unlock of the login that opened it, the switch and no Notaus.
@@ -72,6 +79,9 @@ router = APIRouter()
 
 TOR_PORT = 31090          # the door's own port (an own origin; the reverse proxy's rule points here)
 ANKER_MIN = (1, 6, 0)     # spark-anker knows „ziel: web“ and „ports“ from this version on
+ANKER_EIGEN = (1, 9, 0)   # from this version on: own addresses (hallo, ports, web_ziel) and the try on the own address
+EIGEN_MAX = 16            # own addresses of a system kept at most (spark-anker EIGEN_MAX)
+GRUENDE = ("ziel", "dienst")   # the anchor's fixed words when it does not open a web channel
 ERSTER, LETZTER = 64, 250  # the channel numbers of the Webdienste (spark-anker WEB_ERSTER, WEB_MAX)
 FENSTER = 256 * 1024      # bytes per channel and direction on the way (spark-anker WEB_FENSTER)
 MEHR = 64 * 1024          # „mehr“ to the anchor after this many bytes taken
@@ -108,7 +118,8 @@ WEG_RAUS = {b"x-frame-options", b"strict-transport-security", b"alt-svc", b"clea
 
 TUNNEL = {}      # tid -> Tunnel (memory only)
 TICKETS = {}     # sha256(ticket) -> {"tid", "bis"}
-GEFUNDEN = {}    # gid -> {"t", "liste"} the last „Gefunden“ (memory only: ports and program names)
+GEFUNDEN = {}    # gid -> {"t", "liste"} the last „Gefunden“ (memory only: ports, program names, where they listen)
+EIGEN = {}       # gid -> (address, …) the system's own addresses, as its anchor (ANKER_EIGEN) reported them (memory only)
 _WARTEN = {}     # gid -> Future of the anchor's „ports“
 _TOR = {"server": None, "loop": None, "fehler": ""}
 
@@ -137,9 +148,36 @@ def check(c):
     return None
 
 
-def anchor_ok(version):
+def anchor_ok(version, mindest=ANKER_MIN):
     m = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", str(version or ""))
-    return bool(m) and tuple(int(x) for x in m.groups()) >= ANKER_MIN
+    return bool(m) and tuple(int(x) for x in m.groups()) >= mindest
+
+
+def eigen_liste(v):
+    """The own addresses an anchor reported, checked: IP addresses only, never loopback, link-local, multicast,
+    unspecified, reserved or the metadata address; at most EIGEN_MAX."""
+    out = []
+    for h in (v if isinstance(v, list) else [])[:EIGEN_MAX]:
+        with contextlib.suppress(ValueError, TypeError):
+            if not isinstance(h, str) or len(h) > 45:
+                continue
+            ip = ipaddress.ip_address(h)
+            if not (ip == METADATA or ip.is_loopback or ip.is_link_local or ip.is_multicast or ip.is_unspecified
+                    or ip.is_reserved) and str(ip) not in out:
+                out.append(str(ip))
+    return tuple(out)
+
+
+def melde_eigen(gid, version, v):
+    """„hallo“ or „ports“ of an anchor: its own addresses, kept only from ANKER_EIGEN on (an older one keeps none)."""
+    if anchor_ok(version, ANKER_EIGEN):
+        EIGEN[gid] = eigen_liste(v)
+    else:
+        EIGEN.pop(gid, None)
+
+
+def eigen_von(gid):
+    return EIGEN.get(gid, ())
 
 
 # ---------------------------------------------------------------- where a tunnel may go
@@ -172,9 +210,10 @@ def eigene_netze():
     return _NETZE["netze"]
 
 
-def ziel_ok(host, port, netz=False, netze=None):
+def ziel_ok(host, port, netz=False, netze=None, eigen=()):
     """(host, port) when the panel lets a tunnel go there (the same rules as spark-anker web_ziel, and never into one
-    of this Pi's own networks), else None. Only an IP address: a name is never resolved."""
+    of this Pi's own networks), else None. Only an IP address: a name is never resolved. eigen: the system's own
+    addresses its anchor reported (eigen_von), allowed without „Netz dahinter“."""
     if not isinstance(host, str) or len(host) > 45 or not isinstance(port, int) or isinstance(port, bool) \
             or not 1 <= port <= 65535:
         return None
@@ -188,7 +227,8 @@ def ziel_ok(host, port, netz=False, netze=None):
         return None
     if ip.is_loopback:
         return str(ip), port
-    if netz is not True or not any(ip in n for n in PRIVAT if n.version == ip.version):
+    own = str(ip) in eigen_liste(list(eigen or ()))
+    if not own and (netz is not True or not any(ip in n for n in PRIVAT if n.version == ip.version)):
         return None
     if any(ip in n for n in (eigene_netze() if netze is None else netze) if n.version == ip.version):
         return None
@@ -200,7 +240,7 @@ def _dienste(x):
     out = []
     for d in (x.get("web") or [])[:MAX_DIENSTE]:
         if isinstance(d, dict) and DID.fullmatch(str(d.get("id") or "")):
-            out.append({k: d.get(k) for k in ("id", "name", "schema", "host", "port", "pfad", "fp")})
+            out.append({k: d.get(k) for k in ("id", "name", "schema", "host", "port", "pfad", "fp", "eigen")})
     return out
 
 
@@ -232,6 +272,7 @@ class Kanal:
         self.genommen = 0                # taken here since the last „mehr“
         self.zu = False
         self.grund = ""
+        self.abgelehnt = ""              # the anchor's word when it did not open it (GRUENDE)
 
     async def from_anker(self, data):
         """Called by fernzugang.anker_ws for every message of this channel: only kept, never awaited on (the pipe
@@ -364,7 +405,7 @@ async def kanal_auf(gid, host, port, netz, tunnel):
     a = fernzugang.ANKER.get(gid)
     if a is None:
         raise ConnectionError("offline")
-    if ziel_ok(host, port, netz) is None:
+    if ziel_ok(host, port, netz, eigen=eigen_von(gid)) is None:
         raise ConnectionError("ziel")
     n = _frei_n(a)
     if n is None:
@@ -382,7 +423,7 @@ async def kanal_auf(gid, host, port, netz, tunnel):
         a.wait.pop(n, None)
     if not ok:
         a.kanaele.pop(n, None)
-        raise ConnectionError("anker" if ok is None else "dienst")
+        raise ConnectionError("anker" if ok is None else (k.abgelehnt if k.abgelehnt in GRUENDE else "dienst"))
     if tunnel is not None:
         tunnel.kanaele.add(k)
     return k
@@ -522,8 +563,11 @@ def live_sub(d):
 
 # ---------------------------------------------------------------- the anchor's „ports“
 async def on_ports(gid, m):
-    """The anchor's answer to „ports“: ports, program names (letters only) and the kind, nothing else."""
-    liste = []
+    """The anchor's answer to „ports“: ports, program names (letters only), the kind and where it listens
+    („loopback“, „alle“ or one of the own addresses it reported with it), nothing else."""
+    if "eigen" in m:          # only an anchor from ANKER_EIGEN on sends them
+        EIGEN[gid] = eigen_liste(m.get("eigen"))
+    eigen, liste = eigen_von(gid), []
     for x in (m.get("liste") or [])[:64] if isinstance(m.get("liste"), list) else []:
         if not isinstance(x, dict):
             continue
@@ -532,6 +576,8 @@ async def on_ports(gid, m):
             continue
         prog = re.sub(r"[^A-Za-z0-9._\- ()/+]", "", str(x.get("prog") or ""))[:40]
         liste.append({"port": p, "prog": prog, "art": x.get("art") if x.get("art") in ("http", "https") else "tcp"})
+        if x.get("an") in ("loopback", "alle") or x.get("an") in eigen:
+            liste[-1]["an"] = x["an"]             # where it listens (anchor 1.9.0): never another address
     GEFUNDEN[gid] = {"t": int(time.time()), "liste": liste}
     fut = _WARTEN.pop(gid, None)
     if fut is not None and not fut.done():
@@ -589,12 +635,14 @@ def admin_get(gid: str, request: Request):
     login = fernzugang._login(request)
     return {"dienste": [{k: v for k, v in d.items()} for d in _dienste(x)], "netz": x.get("web_netz") is True,
             "gefunden": GEFUNDEN.get(gid), "anker_ok": anchor_ok(x.get("anker")), "online": gid in fernzugang.ANKER,
+            "eigen": [h for h in eigen_von(gid) if ziel_ok(h, 1, False, eigen=(h,))],
+            "eigen_anker": anchor_ok(x.get("anker"), ANKER_EIGEN),
             "tor": tor_basis(request, c), "adresse": adresse(c), "herkunft": fernzugang._herkunft(request),
             "port": TOR_PORT, "max_dienste": MAX_DIENSTE, "max_tunnel": MAX_TUNNEL, "tor_laeuft": _TOR["server"] is not None,
             "tunnel": [_tunnel_row(t, now) for t in TUNNEL.values() if t.gid == gid and hmac.compare_digest(t.login, login)]}
 
 
-def _form(body, netz):
+def _form(body, netz, eigen=()):
     name = str(body.get("name") or "").strip()
     schema = body.get("schema") if body.get("schema") in SCHEMA else None
     host = str(body.get("host") or "127.0.0.1").strip()
@@ -606,12 +654,12 @@ def _form(body, netz):
         raise HTTPException(400, "schema: http oder https")
     if not PFAD.fullmatch(pfad) or pfad.startswith("//"):
         raise HTTPException(400, "pfad: beginnt mit /")
-    ok = ziel_ok(host, port, netz)
+    ok = ziel_ok(host, port, netz, eigen=eigen)
     if ok is None:
         log("dienst", "ziel", 0)
-        raise HTTPException(400, "Ziel nicht erlaubt: 127.0.0.1 oder ::1; private Adressen nur mit „Netz dahinter“ "
-                                 "und nie aus den eigenen Netzen des Spark.")
-    return {"name": name, "schema": schema, "host": ok[0], "port": ok[1], "pfad": pfad}
+        raise HTTPException(400, "ziel_form")      # the page says it as a sentence (fernweb.js FW_GRUND)
+    return {"name": name, "schema": schema, "host": ok[0], "port": ok[1], "pfad": pfad,
+            "eigen": ok[0] in eigen}
 
 
 @router.post("/api/admin/fernzugang/web/{gid}/dienste", dependencies=[Depends(auth)])
@@ -619,7 +667,7 @@ async def admin_add(gid: str, request: Request):
     _on(request)
     x = _system(gid)
     body = await json_body(request, fernzugang.MAX_BODY)
-    d = _form(body, x.get("web_netz") is True)
+    d = _form(body, x.get("web_netz") is True, eigen_von(gid))
     dienste = _dienste(x)
     if len(dienste) >= MAX_DIENSTE:
         log("dienst", "voll", 0)
@@ -659,7 +707,8 @@ async def admin_netz(gid: str, request: Request):
     if not an:   # off: the services behind it go, their tunnels end
         for t in [t for t in TUNNEL.values() if t.gid == gid and t.netz]:
             await t.end("netz_aus")
-        dienste = [d for d in dienste if ziel_ok(d.get("host"), d.get("port"), False)]
+        dienste = [d for d in dienste if ziel_ok(d.get("host"), d.get("port"), False,
+                                                 eigen=(d.get("host"),) if d.get("eigen") is True else ())]
     await asyncio.to_thread(fernzugang._update, gid, web_netz=an, web=dienste)
     log("netz", "an" if an else "aus", 1 if an else 0)
     guard.log("fernzugang_web_netz", detail="Netz dahinter " + ("an" if an else "aus"))
@@ -714,9 +763,9 @@ async def admin_cert(gid: str, did: str, request: Request):
     try:
         fp = await _zertifikat(gid, x, d)
     except (ConnectionError, OSError, ssl.SSLError, asyncio.TimeoutError) as e:
-        why = str(e) if isinstance(e, ConnectionError) and str(e) else "tls"
+        why = str(e) if isinstance(e, ConnectionError) and str(e) in ZU else "tls"
         log("fp", why, 0)
-        raise HTTPException(502, f"keine TLS-Verbindung ({why})")
+        raise HTTPException(502, why)        # a fixed word; the page says it as a sentence with the address
     log("fp", "gelesen", 1)
     return {"fp": fp, "gepinnt": d.get("fp") or "", "gleich": bool(d.get("fp")) and hmac.compare_digest(fp, d["fp"])}
 
@@ -759,9 +808,9 @@ async def admin_open(request: Request):
     if not anchor_ok(x.get("anker")):
         log("ticket", "anker alt", 0)
         raise HTTPException(409, "anker_alt")
-    if ziel_ok(d.get("host"), d.get("port"), x.get("web_netz") is True) is None:
+    if ziel_ok(d.get("host"), d.get("port"), x.get("web_netz") is True, eigen=eigen_von(gid)) is None:
         log("ticket", "ziel", 0)
-        raise HTTPException(409, "Ziel nicht mehr erlaubt („Netz dahinter“ ist aus).")
+        raise HTTPException(409, "eigen_weg" if d.get("eigen") is True else "ziel_netz")
     if d["schema"] == "https" and not FP.fullmatch(str(d.get("fp") or "")):
         log("ticket", "zertifikat fehlt", 0)
         raise HTTPException(409, "zertifikat")
@@ -820,7 +869,8 @@ ZU = {"gesperrt": "Der Fernzugang ist gesperrt. Im Panel entsperren und den Webd
       "notaus": "Notaus: der Fernzugang ist gesperrt.", "aus": "Webdienste sind aus.",
       "kein": "Kein offener Webdienst in diesem Browser. Im Panel unter Fernzugang, Webdienste öffnen.",
       "offline": "Das System ist gerade nicht verbunden.", "anker": "Der Anker hat nicht geantwortet.",
-      "dienst": "Auf dem System antwortet dort nichts.", "ziel": "Dieses Ziel ist nicht erlaubt.",
+      "dienst": "Auf dem System antwortet unter dieser Adresse nichts. Im Panel zeigt „Suchen“, wo der Dienst lauscht.",
+      "ziel": "Dieses Ziel ist nicht erlaubt.",
       "zertifikat": "Das Zertifikat des Dienstes hat sich geändert: im Panel neu prüfen.",
       "voll": "Zu viele Verbindungen, gleich noch einmal.", "zu_viel": "Zu viele Anfragen, gleich noch einmal.",
       "zu_gross": "Die Anfrage ist zu groß."}
