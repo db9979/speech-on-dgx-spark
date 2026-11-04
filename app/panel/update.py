@@ -145,6 +145,31 @@ def _remember_failure(data, until, limited):
     return data
 
 
+# why git ls-remote failed, as a fixed word, and what the Update card says then (German, English)
+GIT_FEHLER = {
+    "ohne_git": ("git ist auf diesem Rechner nicht installiert; ohne git kann das Panel nicht nach Updates fragen.",
+                 "git is not installed on this computer; without git the panel cannot look for updates."),
+    "zeit": ("GitHub hat in 30 Sekunden nicht geantwortet. Netz prüfen, dann erneut „Jetzt prüfen“; solange wird nichts installiert.",
+             "GitHub did not answer within 30 seconds. Check the network, then \"Check now\" again; nothing is installed meanwhile."),
+    "arbeitsordner": ("Der Arbeitsordner des Panels fehlt (ein Einspielen brach ab). Panel neu starten: sudo systemctl restart speech-spark-panel",
+                      "The panel's working folder is missing (an install stopped half way). Restart the panel: sudo systemctl restart speech-spark-panel"),
+    "netz": ("GitHub nicht erreichbar (Netz, DNS oder GitHub gestört). Später erneut „Jetzt prüfen“; solange wird nichts installiert.",
+             "GitHub not reachable (network, DNS or GitHub down). \"Check now\" again later; nothing is installed meanwhile."),
+}
+
+
+def git_fehlerart(code, out):
+    """The kind of a failed git ls-remote as a key of GIT_FEHLER, from git's exit code and text (never shown)."""
+    text = str(out or "").lower()
+    if "no such file or directory: 'git'" in text or code == 127:
+        return "ohne_git"
+    if "timed out" in text or "timeout" in text:
+        return "zeit"
+    if "current working directory" in text:
+        return "arbeitsordner"
+    return "netz"
+
+
 async def remote_state(force=False):
     """Newest commit on the remote branch and the commits since the installed one (and, when GitHub was really
     asked, the way and its outcome on Zustand → Live)."""
@@ -167,18 +192,22 @@ async def _remote_state(force=False):
     remote, branch = ver.get("remote"), ver.get("branch", "main")
     data = {"checked": time.time(), "latest": None, "behind": None, "commits": [], "error": None}
     if not remote:
-        data["error"] = "installed without git: run install.sh from a git clone once"
+        data["error"] = "ohne git installiert: install.sh einmal aus einem git-Klon starten"
+        data["error_en"] = "installed without git: run install.sh from a git clone once"
         data["why"] = "ohne_git"
         return data
     # the service account has no usable home: no git config, no credential prompt, a safe HOME
     env = dict(os.environ, GIT_TERMINAL_PROMPT="0", HOME=os.environ.get("SPEECH_SPARK_STATE", "/tmp"),
                GIT_CONFIG_NOSYSTEM="1")
     # up to 30 s over the network: in a worker thread, the panel keeps answering meanwhile
+    # common.run starts git in an existing folder (fester_ordner), never in one an aborted install.sh deleted
     code, out = await asyncio.to_thread(run, ["git", "ls-remote", remote, f"refs/heads/{branch}"], timeout=30, env=env)
     sha = re.search(r"^([0-9a-f]{40})\s+refs/heads/", out or "", re.M)
     if code != 0 or not sha:
-        print(f"update check failed: git ls-remote {remote} -> {code}: {out[-300:]}", flush=True)
-        data["error"] = f"could not reach {remote}: {out[-200:] or 'no answer'}"
+        # fixed words only: git's own text can carry the remote with a token in it, and says nothing to a person
+        art = git_fehlerart(code, out)
+        print(f"update check failed: git ls-remote {art} (exit {int(code) if isinstance(code, int) else 1})", flush=True)
+        data["error"], data["error_en"] = GIT_FEHLER[art]
         data["why"] = "git_ls_remote"
         return data
     data["latest"] = data["head"] = sha.group(1)
@@ -210,16 +239,20 @@ async def _remote_state(force=False):
             green = None
         if not green:
             if limited:
+                um = time.strftime('%H:%M', time.localtime(until))
                 data["error"] = ("GitHub beantwortet gerade keine Abfragen mehr (Grenze von 60 pro Stunde erreicht). "
-                                 f"Nächste Prüfung ab {time.strftime('%H:%M', time.localtime(until))}; "
-                                 "solange wird nichts installiert.")
+                                 f"Nächste Prüfung ab {um}; solange wird nichts installiert.")
+                data["error_en"] = ("GitHub answers no more questions right now (limit of 60 per hour reached). "
+                                    f"Next check from {um}; nothing is installed meanwhile.")
             elif answered:
                 why = "keine_gruenen_tests"
                 data["no_green"] = True
                 data["error"] = ("Auf GitHub hat noch keine Version die Tests bestanden; "
                                  "ohne bestandene Tests wird nichts installiert")
+                data["error_en"] = "No version has passed the tests on GitHub yet; nothing is installed without passed tests"
             else:
                 data["error"] = "GitHub-Testergebnisse nicht abrufbar; ohne sie wird nichts installiert"
+                data["error_en"] = "GitHub's test results not readable; nothing is installed without them"
             data["latest"] = None
             data["why"] = why
             return _remember_failure(data, until, limited)
@@ -251,6 +284,7 @@ async def _remote_state(force=False):
             data["behind"] = -1  # newer version exists, details unknown
     _failed.update(until=0.0, data=None, limited=False)
     _remote_cache.update(time=time.time(), data=data)
+    print(f"update check: ok, {'aktuell' if data['behind'] == 0 else 'neuere getestete Version'}", flush=True)
     return data
 
 

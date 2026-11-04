@@ -676,11 +676,39 @@ def installed_version():
         return {"commit": None, "subject": "unknown"}
 
 
+try:
+    _START_DIR = os.getcwd()   # where this process was started (systemd: WorkingDirectory)
+except OSError:
+    _START_DIR = None
+
+
+def fester_ordner():
+    """An existing working folder for a program this process starts (common.run). install.sh swaps app/ for a new
+    copy and deletes the old one; when a run stops half way (before it restarts the panel), the panel keeps running
+    in the deleted folder, and git refuses to start there ("Unable to read current working directory", V01.1.315:
+    Update → "Jetzt prüfen" broke). Then the process moves back to the folder it was started in (the new copy has
+    the same path), else to /, and says so once in fixed words."""
+    try:
+        return os.getcwd()
+    except OSError:
+        pass
+    for d, wort in ((_START_DIR, "startordner"), ("/", "wurzel")):
+        if d and os.path.isdir(d):
+            try:
+                os.chdir(d)
+                print(f"zustand: arbeitsordner fehlte, jetzt {wort}", flush=True)
+                return d
+            except OSError:
+                continue
+    return "/"
+
+
 def run(cmd, timeout=10, env=None):
-    """A command without a shell: (exit code, stdout+stderr); any failure is (1, its text)."""
+    """A command without a shell: (exit code, stdout+stderr); any failure is (1, its text). It always starts in an
+    existing folder (fester_ordner), never in one an update deleted."""
     import subprocess
     try:
-        p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, env=env)
+        p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, env=env, cwd=fester_ordner())
         return p.returncode, (p.stdout + p.stderr).strip()
     except Exception as e:
         return 1, str(e)
