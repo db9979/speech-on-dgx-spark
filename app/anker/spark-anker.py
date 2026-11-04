@@ -1796,6 +1796,7 @@ TIGHTVNC_MAX = 16 * 1024 * 1024
 WIN_TVNC_REG = r"HKLM\SOFTWARE\TightVNC"
 WIN_TVNC_SERVER = r"SOFTWARE\TightVNC\Server"     # Password and ControlPassword: VNC's fixed-key DES, written by winreg
 WIN_TVNC_SERVICE = "tvnserver"
+WIN_MSI_OK = (0, 1641, 3010)       # msiexec: done, done and restarting, done but a restart is due (/norestart)
 # Authenticode of the MSI: one line „<Status>|<GlavSoft in the signer?>|<signer, printable ASCII only>“ (win_tvnc_sig);
 # the module of Windows PowerShell by its own path: started from PowerShell 7, PSModulePath names 7's module first,
 # which Windows PowerShell cannot load
@@ -2776,19 +2777,21 @@ def cmd_screen(args, run=run_cmd, ctx=None):
     elif art == "tightvnc":
         msi = ctx.path(win_tvnc_msi())
         os.replace(neu, msi)                # kept for `bildschirm aus` (the one before went with bild_off)
-        failed = bool(ctx.run(["msiexec", "/i", win_native(msi), "/quiet", "/norestart", *win_tvnc_props()]))
+        rc = ctx.run(["msiexec", "/i", win_native(msi), "/quiet", "/norestart", *win_tvnc_props()])
+        failed = "" if rc in WIN_MSI_OK else f"msiexec {rc}"
         if not failed:
-            ctx.run(["sc.exe", "stop", WIN_TVNC_SERVICE])
+            ctx.run(["net", "stop", WIN_TVNC_SERVICE])    # waits until it stopped (sc.exe would not)
             try:                            # the panel's password and a random control password nobody keeps
                 ctx.reg_binary(WIN_TVNC_SERVER, "Password", vnc_obfuscate(pw))
                 ctx.reg_binary(WIN_TVNC_SERVER, "ControlPassword", vnc_obfuscate(secrets.token_hex(4)))
             except OSError:
-                failed = True
-            failed = failed or bool(ctx.run(["sc.exe", "start", WIN_TVNC_SERVICE]))
+                failed = "Registry"
+            if not failed and ctx.run(["net", "start", WIN_TVNC_SERVICE]):
+                failed = "Dienst"
         if failed:
             conf["bild"] = art              # half installed: `bildschirm aus` takes it away
             write(ctx.path(s.conf), json.dumps(conf, indent=1), 0o640)
-            raise Fehler("TightVNC ließ sich nicht einrichten. `spark-anker bildschirm aus` (als Administrator) räumt auf.")
+            raise Fehler(f"TightVNC ließ sich nicht einrichten ({failed}). `spark-anker bildschirm aus` (als Administrator) räumt auf.")
     pw = ""
     conf["bild"] = art
     write(ctx.path(s.conf), json.dumps(conf, indent=1), 0o640)

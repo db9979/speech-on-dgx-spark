@@ -526,8 +526,8 @@ class Anchor(unittest.TestCase):
             # the password only from this process into the registry (VNC's DES), with the service stopped before
             self.assertEqual(regs[(p.WIN_TVNC_SERVER, "Password")], p.vnc_obfuscate("Ab3dEf7h"))
             self.assertNotEqual(regs[(p.WIN_TVNC_SERVER, "ControlPassword")], p.vnc_obfuscate("Ab3dEf7h"))
-            order = [c[:2] for c in ran if c[0] in ("msiexec", "sc.exe")]
-            self.assertEqual(order, [["msiexec", "/i"], ["sc.exe", "stop"], ["sc.exe", "start"]])
+            order = [c[:2] for c in ran if c[0] in ("msiexec", "net")]
+            self.assertEqual(order, [["msiexec", "/i"], ["net", "stop"], ["net", "start"]])
             conf = json.loads(open(ctx.path(ctx.s.conf)).read())
             self.assertEqual(conf["bild"], "tightvnc")
             self.assertNotIn("Ab3dEf7h", json.dumps(conf))                            # the password only in the vault

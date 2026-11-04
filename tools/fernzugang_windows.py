@@ -341,6 +341,11 @@ def screen(panel, pf, first):
                                 anker.WIN_TVNC_SIG.format(path=os.path.join(os.environ["SystemRoot"], "System32", "msiexec.exe"))],
                                capture_output=True, text=True, errors="replace")
             print("Signaturprobe msiexec.exe:", d.returncode, d.stdout.strip(), d.stderr.strip()[-1500:], flush=True)
+        print(ps("Get-Service tvnserver -ErrorAction SilentlyContinue | Format-List Name,Status,StartType | Out-String; "
+                 "Get-ItemProperty HKLM:\\SOFTWARE\\TightVNC\\Server -ErrorAction SilentlyContinue | "
+                 "Select-Object LoopbackOnly,AllowLoopback,RfbPort,UseVncAuthentication | Format-List | Out-String; "
+                 "Get-WinEvent -FilterHashtable @{LogName='Application'; ProviderName='MsiInstaller'} -MaxEvents 6 "
+                 "-ErrorAction SilentlyContinue | ForEach-Object { $_.Message } | Out-String -Width 300"), flush=True)
         return False
     check(panel.bild_art == "tightvnc", "der Anker fragt das Panel nach dem Passwort (art tightvnc)")
     check(wait(lambda: ps("(Get-Service tvnserver).Status") == "Running", 60), "der Dienst tvnserver läuft")
