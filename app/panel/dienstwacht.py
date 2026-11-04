@@ -113,7 +113,7 @@ SVC = {
     # Spontanhilfe Steuern (spontansteuern.py, S2b): the program SparkHilfe is in the cache with its SHA-256 (no question of
     # its own; the cache fills from the CI release once a day)
     "sparkhilfe": ("Programm SparkHilfe", "Program SparkHilfe",
-                   "Steuern bei der Spontanhilfe geht gerade nicht, das Programm fehlt; Ansehen läuft weiter.", SLOW, "spontanhilfe"),
+                   "Steuern bei der Spontanhilfe geht gerade nicht, ein Programm fehlt; Ansehen läuft weiter.", SLOW, "spontanhilfe"),
     # Rundlauf-Wächter (rundlauf.py): its own loop speaks, hears and asks the model; the probe only looks that the loop
     # runs, the step that hakt comes as a warning of its own (warn)
     "rundlauf": ("Rundlauf", "Round trip", "Der Probelauf durch Sprechen, Hören und Sprachmodell kommt nicht durch.", EVERY,
@@ -533,9 +533,9 @@ async def probe(sid, key, p, cfg):
         if p.get("fernanker"):  # Fernzugang: the anchor is connected or not long away (fernzugang.anker_ok), no question
             import fernzugang
             return Probe(fernzugang.anker_ok(p["fernanker"]))
-        if p.get("sparkhilfe"):  # Spontanhilfe Steuern: every program in the cache matches its SHA-256 (reads files: a thread)
+        if p.get("sparkhilfe"):  # Spontanhilfe Steuern: every program of this part's release matches its SHA-256 (a thread)
             import spontansteuern
-            return Probe(await asyncio.to_thread(spontansteuern.vorhanden))
+            return Probe(await asyncio.to_thread(spontansteuern.vorhanden, p["sparkhilfe"]))
         if p.get("rundlauf"):  # Rundlauf: its own loop ran lately (rundlauf.lebt), no question of its own
             import rundlauf
             return Probe(rundlauf.lebt())
@@ -777,6 +777,21 @@ def recipients():
     return [u for u in notaus.admin_uids() if features.allowed("dienstwacht", u)]
 
 
+# the Dienst-Wächter's part of a service as a fixed word in its sentence (sparkhilfe: one part per release)
+PART_WORDS = {"sparkhilfe": {"windows": "Windows", "mac": "Mac"}}
+
+
+def impact(sid, e=None):
+    """What does not work while sid is gone: SVC's sentence, for SparkHilfe with the kind that is missing (fixed words)."""
+    words = PART_WORDS.get(sid)
+    parts = (e or {}).get("parts") or {}
+    bad = [w for k, w in (words or {}).items() if parts.get(k) is False]
+    if bad:
+        return (f"Steuern bei der Spontanhilfe geht gerade nicht für {' und '.join(bad)}: das Programm fehlt oder passt "
+                "nicht zur Prüfsumme; Ansehen läuft weiter.")
+    return SVC[sid][2]
+
+
 def _queue_all(item, now):
     import vorgaenge
     q = _read()["queue"]
@@ -786,7 +801,7 @@ def _queue_all(item, now):
         key = "dienst:" + item["s"]     # its card under Offen (admins only): a fixed sentence, closed when fine again
         if item["k"] in ("down", "warn"):
             vorgaenge.put(uid, "dienst", key, SVC[item["s"]][0] + (" ist ausgefallen" if item["k"] == "down" else " meldet ein Problem"),
-                          SVC[item["s"]][2], daten={"weg": "Zustand → Überblick"}, now=now, wieder=True)
+                          impact(item["s"], (_read().get("svc") or {}).get(item["s"])), daten={"weg": "Zustand → Überblick"}, now=now, wieder=True)
         else:
             vorgaenge.done(uid, key, "wieder_da")
 
@@ -836,7 +851,7 @@ def text(items, now, c=None):
             else:
                 n = max(int(i.get("n") or 0) for i in downs)
                 wob = f" Wackelt: {n + 1} Ausfälle in der letzten halben Stunde." if n else ""
-                lines.append(f"{name} antwortet seit {_hm(last['t'])} nicht. {SVC[s][2]}{wob}")
+                lines.append(f"{name} antwortet seit {_hm(last['t'])} nicht. {impact(s, svc.get(s))}{wob}")
             continue
         back.append(s)
         up = last if last["k"] == "up" else {"t": now, "a": last["t"]}
@@ -924,7 +939,7 @@ def alerts(now=None):
     for sid, e in _read()["svc"].items():
         if e.get("st") == "down":
             out.append({"kind": "service", "level": "bad", "go": "Zustand → Dienste",
-                        "text": f"Gerade eingeschränkt: {SVC[sid][0]} antwortet seit {_hm(e.get('since') or 0)} nicht. {SVC[sid][2]}"})
+                        "text": f"Gerade eingeschränkt: {SVC[sid][0]} antwortet seit {_hm(e.get('since') or 0)} nicht. {impact(sid, e)}"})
     try:          # what a service reports by itself and the admins were told of (naszustand.py)
         import naszustand
         if "naszustand" not in _read()["skip"]:

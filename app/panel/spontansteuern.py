@@ -82,11 +82,13 @@ from core import admin_code_fresh, auth, json_body
 router = APIRouter()
 
 CACHE = os.path.join(STATE, "spontanhilfe-programme")   # programme.json and the files the signed manifest named (S2b)
+RELEASES = os.path.join(CACHE, "releases.json")    # per release of QUELLEN what GitHub said last: "da" or "kein_release"
 KEY_S = 600             # the program's key works this long, once
 FPS = 4                 # pictures a second at most; more are dropped
 ARTEN = {"windows-x64": ".exe", "windows-arm64": ".exe", "mac": ".zip"}   # the program files (S2b Windows, S2c Mac)
 QUELLEN = {"sparkhilfe-windows": ("windows-x64", "windows-arm64"),      # the CI releases and the kinds each one fills
            "sparkhilfe-mac": ("mac",)}
+FAMILIE = {"sparkhilfe-windows": "windows", "sparkhilfe-mac": "mac"}    # the Dienst-Wächter's part per release (fixed words)
 ZEILE = "linux-x11"     # S2d: no file, one line for her terminal (the anchor program, fernzugang.command „steuern“)
 BILDER = (b"\xff\xd8\xff", b"\x89PNG\r\n\x1a\n")    # JPEG (Windows) or PNG (Linux X11): nothing else passes
 KEY = re.compile(r"[A-Za-z0-9_\-]{22}")
@@ -168,15 +170,39 @@ def programm(art):
     return (path, x["sha256"]) if hmac.compare_digest(seen[2], x["sha256"]) else None
 
 
-def vorhanden():
-    """For the Dienst-Wächter: every program of ARTEN is in the cache and matches its SHA-256 (reads the files when they
-    changed: call it in a thread)."""
-    return all(programm(art) is not None for art in ARTEN)
+def _releases():
+    d = read_json(RELEASES, {})
+    return d if isinstance(d, dict) else {}
+
+
+def _release_merken(tag, stand):
+    """What the last look on GitHub found for a release: "da" or "kein_release" (written only when it changes)."""
+    if _releases().get(tag) != stand:
+        os.makedirs(CACHE, exist_ok=True)
+        write_json(RELEASES, {**{k: v for k, v in _releases().items() if k in QUELLEN}, tag: stand}, mode=0o644)
+
+
+def erwartet():
+    """The releases the Dienst-Wächter expects: all but one GitHub said it does not have yet (Dominik 2026-11-04: the Mac
+    release waits for the Developer ID, so „das Programm fehlt“ was wrong); one already in the cache stays expected."""
+    idx = read_json(os.path.join(CACHE, "programme.json"), {})
+    idx = idx if isinstance(idx, dict) else {}
+    seen = _releases()
+    return [tag for tag, arten in QUELLEN.items() if seen.get(tag) != "kein_release" or any(a in idx for a in arten)]
+
+
+def vorhanden(familie=True):
+    """For the Dienst-Wächter: every program of this part's release (True: of every expected one) is in the cache and
+    matches its SHA-256; a published but missing or changed file stays an outage (reads the files when they changed:
+    call it in a thread)."""
+    tags = [t for t in erwartet() if familie is True or FAMILIE[t] == familie]
+    return all(programm(art) is not None for t in tags for art in QUELLEN[t])
 
 
 def probes():
-    """The Dienst-Wächter's part while the switch is on (no question of its own, only the cache)."""
-    return {"sparkhilfe": {"sparkhilfe": True}} if admin_on() else {}
+    """The Dienst-Wächter's parts while the switch is on, one per expected release (no question of its own, only the
+    cache): "windows", "mac"."""
+    return {FAMILIE[t]: {"sparkhilfe": FAMILIE[t]} for t in erwartet()} if admin_on() else {}
 
 
 def zeile_da():
@@ -265,8 +291,10 @@ async def fetch(c=None, tag="sparkhilfe-windows"):
         import ghtoken
         r = await ghtoken.get(c, f"{api}/repos/{_repo()}/releases/tags/{tag}")
         if r.status_code == 404:
+            _release_merken(tag, "kein_release")
             raise begleiter.NotYet("Im Repo gibt es SparkHilfe noch nicht.")
         r.raise_for_status()
+        _release_merken(tag, "da")
         assets = {a.get("name"): a.get("browser_download_url", "") for a in r.json().get("assets", [])}
         if MANIFEST not in assets:
             raise begleiter.NotYet("Die Version hat noch kein Verzeichnis.")
@@ -407,7 +435,6 @@ async def person_file(request: Request):
     (the one before stops)."""
     if not admin_on():
         raise HTTPException(404, "Not Found")
-    guard.limit(request, "spontanhilfe_start")
     if sh._notaus(count=True):
         sh.log("abgewiesen", "notaus", 0)
         raise HTTPException(503, "Gerade nicht möglich.")
@@ -417,8 +444,10 @@ async def person_file(request: Request):
     st = getattr(h, "st", None) if h is not None else None
     if h is None or h.stand != "offen" or not h.tok_h or st is None or not st.gefragt or not isinstance(tok, str) \
             or not re.fullmatch(r"[A-Za-z0-9_\-]{30,60}", tok) or not hmac.compare_digest(sh._h(tok), h.tok_h):
+        sh.rate(request, "programm")           # a wrong key: per address
         sh.log("programm", "abgewiesen", 0)
         raise HTTPException(403, "Bitte die Seite neu laden.")
+    sh.rate(request, "programm", h)            # her key was right: per help, not per (proxy) address
     if art == ZEILE:
         return _zeile(request, body, st)
     p = await asyncio.to_thread(programm, art)
@@ -547,11 +576,7 @@ async def program_ws(ws: WebSocket):
         return await sh._refuse(ws, "fremde seite")
     if sh._notaus(count=True):
         return await sh._refuse(ws, "notaus", 4503)
-    try:
-        guard.limit(ws, "spontanhilfe_start")
-    except HTTPException:
-        return await sh._refuse(ws, "gesperrt", 4429)
-    await ws.accept()
+    await ws.accept()                          # the limit after the key (below): one proxy address for all from outside
     try:
         raw = await asyncio.wait_for(ws.receive_text(), sh.HALLO_S)
         m = json.loads(raw) if len(raw) < 512 else {}
@@ -563,6 +588,10 @@ async def program_ws(ws: WebSocket):
     ok = (h is not None and h.stand == "offen" and st is not None and st.key_h and st.programm is None
           and time.time() < st.key_bis and isinstance(key, str) and KEY.fullmatch(key) is not None
           and hmac.compare_digest(sh._h(key), st.key_h))
+    try:
+        sh.rate(ws, "steuern", h if ok else None)   # a right key per help, a wrong one per address
+    except HTTPException:
+        return await _refuse(ws, "gesperrt")
     if not ok:
         sh.log("programm", "schluessel", 0)
         return await _refuse(ws, "schluessel")

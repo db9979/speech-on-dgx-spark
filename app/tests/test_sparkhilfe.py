@@ -120,7 +120,7 @@ class Fetch(_Cache):
         self.assertEqual(ss.angebot(), {"windows-x64": hashlib.sha256(X64).hexdigest(),
                                         "windows-arm64": hashlib.sha256(ARM).hexdigest()})
         self.assertEqual(sorted(os.listdir(ss.CACHE)), ["SparkHilfe-windows-arm64.exe", "SparkHilfe-windows-x64.exe",
-                                                       "programme.json"])
+                                                       "programme.json", "releases.json"])   # and what GitHub has
 
     def test_an_older_release_never_replaces_and_a_missing_file_comes_again(self):
         self.assertEqual(self.fetch(meta("1.1.302")), "1.1.302")
@@ -209,8 +209,10 @@ class Watch(_Cache):
         cfg = load_config()
         self.assertIn("sparkhilfe", dw.active(cfg=cfg))
         self.assertEqual(dw.SVC["sparkhilfe"][4], "spontanhilfe")
-        part = ss.probes()["sparkhilfe"]
-        probe = lambda: asyncio.run(dw.probe("sparkhilfe", "sparkhilfe", part, cfg)).ok
+        self.assertEqual(sorted(ss.probes()), ["mac", "windows"])           # one part per release, both expected at first
+
+        def probe():
+            return all(asyncio.run(dw.probe("sparkhilfe", k, part, cfg)).ok for k, part in ss.probes().items())
         self.assertFalse(probe())                                         # nothing fetched yet
         self.fetch(meta("1.1.301"))
         self.assertFalse(probe())                                         # the Mac program is missing still (S2c)
@@ -220,9 +222,38 @@ class Watch(_Cache):
         with open(os.path.join(ss.CACHE, "SparkHilfe-windows-arm64.exe"), "ab") as f:   # changed afterwards
             f.write(b"evil")
         self.assertFalse(probe())
+        self.assertFalse(asyncio.run(dw.probe("sparkhilfe", "windows", ss.probes()["windows"], cfg)).ok)
+        self.assertTrue(asyncio.run(dw.probe("sparkhilfe", "mac", ss.probes()["mac"], cfg)).ok)
         helpers.set_config(spontansteuern=False)
         self.assertEqual(ss.probes(), {})
         self.assertNotIn("sparkhilfe", dw.active(cfg=load_config()))
+
+
+    def test_a_release_github_does_not_have_yet_is_not_expected(self):
+        """Dominik 2026-11-04: since V01.1.327 the watch said „das Programm fehlt“ because the Mac release waits for the
+        Developer ID. A release GitHub answers 404 for is not expected; a published one with a changed file stays an
+        outage, and the sentence names the kind."""
+        from common import load_config
+        cfg = load_config()
+        self.fetch(meta("1.1.301"))
+        with self.assertRaises(Exception):                                # GitHub: no release sparkhilfe-mac (404)
+            asyncio.run(ss.fetch(github(meta("1.1.301"), files()), tag="sparkhilfe-mac"))
+        self.assertEqual(ss._releases(), {"sparkhilfe-windows": "da", "sparkhilfe-mac": "kein_release"})
+        self.assertEqual(list(ss.probes()), ["windows"])                   # Mac not expected
+        self.assertTrue(asyncio.run(dw.probe("sparkhilfe", "windows", ss.probes()["windows"], cfg)).ok)
+        self.assertTrue(ss.vorhanden())
+        with open(os.path.join(ss.CACHE, "SparkHilfe-windows-x64.exe"), "ab") as f:   # a published file changed
+            f.write(b"evil")
+        self.assertFalse(asyncio.run(dw.probe("sparkhilfe", "windows", ss.probes()["windows"], cfg)).ok)
+        self.assertFalse(ss.vorhanden())
+        text = dw.impact("sparkhilfe", {"parts": {"windows": False}})
+        self.assertIn("für Windows", text)
+        self.assertNotIn("Mac", text)
+        self.assertIn("für Windows und Mac", dw.impact("sparkhilfe", {"parts": {"mac": False, "windows": False}}))
+        self.assertEqual(dw.impact("sparkhilfe", {}), dw.SVC["sparkhilfe"][2])
+        from tests.test_sparkhilfe_mac import fetch_mac                   # the Mac release comes: expected from now on
+        fetch_mac("1.1.302")
+        self.assertEqual(sorted(ss.probes()), ["mac", "windows"])
 
 
 # ---------------------------------------------------------------- the program (its source; built only by CI)

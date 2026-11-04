@@ -146,6 +146,49 @@ class File(_On):
         self.assertIsNone(ss.programm("windows-x64"))
 
 
+class Rate(_On):
+    """Dominik 2026-11-04: „Programm laden“ said „too many requests“. From outside everyone comes through the reverse
+    proxy with one address; the number's limit stays per address, her program door counts per help once her key is
+    right, a wrong key still per address."""
+
+    def test_her_program_door_counts_per_help_not_per_address(self):
+        import guard
+        h, tok = self.open_help()
+        put_program()
+        self.ask()
+        body = {"tok": tok, "art": "windows-x64"}
+        tries = [PERSON.post("/api/hilfe/start", json={"name": "Helga", "nummer": "000000"}).status_code
+                 for _ in range(guard.RATE["spontanhilfe_start"][0] + 1)]        # someone guesses behind the same proxy
+        self.assertEqual(tries[-1], 429)                                        # guessing stays capped
+        wrong = {**body, "tok": tok[:-1] + ("A" if tok[-1] != "A" else "B")}
+        with journal() as j:
+            bad = [PERSON.post("/api/hilfe/programm", json=wrong) for _ in range(guard.RATE["spontanhilfe_programm"][0] + 1)]
+        self.assertEqual([r.status_code for r in bad[:-1]], [403] * guard.RATE["spontanhilfe_programm"][0])
+        self.assertEqual(bad[-1].status_code, 429)                              # wrong keys: per address
+        self.assertIn("spontanhilfe: zu_oft | programm | 0", j.getvalue())
+        ok = [PERSON.post("/api/hilfe/programm", json=body) for _ in range(guard.RATE["spontanhilfe_programm"][1] + 1)]
+        self.assertEqual([r.status_code for r in ok[:-1]], [200] * guard.RATE["spontanhilfe_programm"][1])   # hers
+        self.assertEqual(ok[-1].status_code, 429)                               # but not without end
+        self.assertTrue(1 <= int(ok[-1].headers["retry-after"]) <= 60)
+        # a second help behind the same address (a minute later for the number) has its own budget
+        sh.HILFE.clear()
+        for k in [k for k in guard._rate if k[0] == "spontanhilfe_start"]:
+            guard._rate.pop(k, None)
+        h2, tok2 = self.open_help()
+        self.ask()
+        self.assertNotEqual(h2.id, h.id)
+        self.assertEqual(PERSON.post("/api/hilfe/programm", json={**body, "tok": tok2}).status_code, 200)
+
+    def test_every_429_of_a_door_writes_a_line(self):
+        import guard
+        self.new()
+        with journal() as j:
+            for _ in range(guard.RATE["spontanhilfe_start"][0] + 1):
+                self.start(nummer="000000")
+        self.assertIn("spontanhilfe: zu_oft | start | 0", j.getvalue())
+        self.assertEqual(sh.WORDS.count("zu_oft"), 1)
+
+
 class Messages(unittest.TestCase):
     def test_inputs_only_from_fernsichts_lists(self):
         self.assertIsNone(sh.clean("admin", {"typ": "eingabe", "events": [{"t": "key", "k": "win"}, {"t": "key", "k": "alt+tab"}]}))
@@ -258,6 +301,26 @@ class Program(_On):
         self.assertEqual(hello["keys"], list(fernsicht.KEYS))
         once = self.program(key)                                          # once
         self.assertEqual(self.recv(once), {"typ": "fehler", "grund": "neu laden"})
+
+    def test_wrong_program_keys_capped_per_address_a_right_one_per_help(self):
+        import guard
+        _p, _a, key = self.opened()
+        bad = key[:-1] + ("A" if key[-1] != "A" else "B")
+        for _ in range(guard.RATE["spontanhilfe_steuern"][0]):
+            g = self.program(bad)
+            self.assertEqual(self.recv(g), {"typ": "fehler", "grund": "neu laden"})
+            g.close()
+        with journal() as j:
+            g = self.program(bad)
+            self.assertEqual(self.recv(g), {"typ": "fehler", "grund": "neu laden"})   # the same answer, now capped
+            g.close()
+        for _ in range(100):
+            if "zu_oft | steuern" in j.getvalue():
+                break
+            time.sleep(0.05)
+        self.assertIn("spontanhilfe: zu_oft | steuern | 0", j.getvalue())
+        g = self.program(key)                    # her right key: per help, not per (proxy) address
+        self.assertEqual(self.recv(g)["stand"], "frage")
 
     def test_pictures_and_inputs_pass_only_as_allowed(self):
         with journal() as j:

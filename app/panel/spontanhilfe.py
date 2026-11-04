@@ -120,7 +120,8 @@ FELD = re.compile(r"\{(name|name_s|link|nummer|gueltig|domain|min)\}")
 WORDS = ("nummer_neu", "nummer_falsch", "nummer_tot", "verworfen", "einladung", "wartet", "ticket", "sitzung_auf",
          "sitzung_zu", "verlaengert", "abgewiesen", "verlauf", "meldung", "erlaubt",
          "steuern_frage", "programm", "steuern", "steuern_zu",      # S2 Steuern (spontansteuern.py)
-         "programm_holen")                                          # S2b: the program SparkHilfe from the CI release
+         "programm_holen",                                          # S2b: the program SparkHilfe from the CI release
+         "zu_oft")                                                  # a door of the person said 429 (rate)
 
 HILFE = {}          # "h" -> the one Hilfe (or nothing)
 TICKETS = {}        # sha256(ticket) -> {"login", "until"}
@@ -136,6 +137,18 @@ def log(word, why="", n=1):
 
 def _h(s):
     return hashlib.sha256(s.encode()).hexdigest()
+
+
+def rate(conn, door, h=None):
+    """guard.limit for the person's doors (RATE "spontanhilfe_" + door); a 429 writes „zu_oft | door | 0“. Without h
+    per address: the number and every wrong key (guessing stays capped). With h, only after her key was right: per
+    help (a hash of its id), never per address, since everyone behind one reverse proxy shares one (Dominik 2026-11-04:
+    „Programm laden“ said „too many requests“)."""
+    try:
+        guard.limit(conn, "spontanhilfe_" + door, uid=None if h is None else "hilfe:" + _h("rate|" + h.id)[:16])
+    except HTTPException:
+        log("zu_oft", door, 0)
+        raise
 
 
 # ---------------------------------------------------------------- switch and settings
@@ -678,7 +691,7 @@ async def person_start(request: Request):
     """The number (or the link's key) and a first name: the same answer for every wrong try, whatever the reason."""
     if not admin_on():
         raise HTTPException(404, "Not Found")
-    guard.limit(request, "spontanhilfe_start")
+    rate(request, "start")
     if _notaus(count=True):
         log("abgewiesen", "notaus", 0)
         raise HTTPException(503, "Gerade nicht möglich.")
@@ -918,7 +931,7 @@ async def person_shell(ws: WebSocket):
     if _notaus(count=True):
         return await _refuse(ws, "notaus", 4503)
     try:
-        guard.limit(ws, "spontanhilfe_start")
+        rate(ws, "start")
     except HTTPException:
         return await _refuse(ws, "gesperrt", 4429)
     await ws.accept()

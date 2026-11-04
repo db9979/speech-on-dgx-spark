@@ -398,7 +398,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "4dda493a20",
+        "stand": "f275f71aeb",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -509,9 +509,13 @@ SEITEN = {
             S("s9", "frage", ("Zu viele Anfragen?", "Too many requests?"),
               ("guard.limit", "guard.limit"),
               ("Je Profil, sonst je Adresse, zählt das Panel die Anfragen der letzten Minute: im Chat "
-               "{guard.RATE.chat.1} für ein Profil oder den Admin, {guard.RATE.chat.0} für einen Gast.",
+               "{guard.RATE.chat.1} für ein Profil oder den Admin, {guard.RATE.chat.0} für einen Gast. Ein Weg mit eigenem "
+               "Sitzungsschlüssel (Spontanhilfe) zählt nach dem richtigen Schlüssel je Sitzung, nicht je Adresse: von "
+               "außen haben alle die Adresse des Reverse-Proxys. Retry-After nennt die echten Sekunden bis zum nächsten Versuch.",
                "Per profile, else per address, the panel counts the requests of the last minute: in the chat "
-               "{guard.RATE.chat.1} for a profile or the admin, {guard.RATE.chat.0} for a guest."),
+               "{guard.RATE.chat.1} for a profile or the admin, {guard.RATE.chat.0} for a guest. A way with its own "
+               "session key (spontaneous help) counts per session after the right key, not per address: from outside "
+               "everyone has the reverse proxy's address. Retry-After gives the real seconds until the next try."),
               ("stop", "ja", ("Bitte kurz warten (429)", "Please wait a moment (429)"))),
             S("s10", "frage", ("Gast, alle Plätze belegt?", "Guest, all places taken?"),
               ("guard.Slot", "guard.Slot"),
@@ -632,7 +636,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ sicherheit (the model as a whole)
     "sicherheit": {
-        "stand": "9855f10eb6",
+        "stand": "7b8e384570",
         "bezug": {
             "features.blocked": ["s5"], "geteilt.put": ["s5"], "mitschreiblink.find": ["s3", "s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
             "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"], "sysupdate.wunsch_nehmen": ["s3"],
@@ -680,7 +684,8 @@ SEITEN = {
               ("stop", "nein", ("Gestoppt", "Stopped"))),
             S("s3", "frage", ("Angemeldet und im Rahmen?", "Signed in and within limits?"),
               ("guard.limit, Größe, Herkunft", "guard.limit, size, origin"),
-              ("Größenlimit und Herkunftsprüfung (CSRF) vor dem Lesen, dann Rate-Limit pro Adresse und eine Höchstzahl "
+              ("Größenlimit und Herkunftsprüfung (CSRF) vor dem Lesen, dann Rate-Limit pro Profil oder Adresse (ein Weg mit "
+               "eigenem Sitzungsschlüssel nach dem richtigen Schlüssel je Sitzung, Raten weiter je Adresse) und eine Höchstzahl "
                "gleichzeitiger Anfragen für Modell, Erkennung und Ausgabe (guard.Slot). Geheimnisse, Rollen und Sicherungen "
                "brauchen dazu einen frischen Code oder Passkey (core.confirm_code, {core.CONFIRM_WINDOW|min} Minuten). Ein "
                "ganzer Bereich lässt sich mit einem zweiten Schritt für eine Weile entsperren (Regel „Bereich entsperren“, "
@@ -689,7 +694,8 @@ SEITEN = {
                "Notaus; Koppeln und Entfernen fragen trotzdem jedes Mal. Zu "
                "den Modellen auf tars geht es nur durch das TLS-Tor; Befehle dort prüft der Wärter (tarswart.check: "
                "Unterschrift, Zeit, Einmal-Nummer, einer von {tarswart.COMMANDS|anzahl} festen Befehlen).",
-               "Size limit and origin check (CSRF) before reading, then a rate limit per address and a cap on parallel "
+               "Size limit and origin check (CSRF) before reading, then a rate limit per profile or address (a way with its "
+               "own session key per session after the right key, guessing still per address) and a cap on parallel "
                "requests for the model, recognition and output (guard.Slot). Secrets, roles and backups also need a fresh "
                "code or passkey (core.confirm_code, {core.CONFIRM_WINDOW|min} minutes). A whole area can be unlocked for a "
                "while with a second step (rule \"unlocking an area\", first remote access: {fernzugang.ENTSPERRT_MIN.0} to "

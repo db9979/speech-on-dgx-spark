@@ -20,10 +20,8 @@ from tests.test_aufraeumen import Ratchet
 STATIC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "panel", "static")
 TOKENS = "tokens.css"
 # pages of the panel that bring their own look and do not load app.css, with the reason
-OWN_LOOK = {
-    "spontanhilfe.css": "Hilfe am Bildschirm (/hilfe): public page for a person who is no profile, own small palette, "
-                        "loads neither app.css nor tokens.css",
-}
+# (empty since V01.1.339: the Hilfe am Bildschirm /hilfe loads tokens.css before spontanhilfe.css, still without app.css)
+OWN_LOOK = {}
 # the type scale of „Klar 2“ (plan, Design-System A): 26/22/17/14/12.5/11.5 px and 12 px mono; on the phone 16 px
 # fields (no zoom in iOS Safari) and the 32 px large title
 SCALE = {"11.5px", "12px", "12.5px", "14px", "16px", "17px", "22px", "26px", "32px"}
@@ -417,7 +415,7 @@ class OwnSymbols(Ratchet, unittest.TestCase):
 
 class HexColours(Ratchet, unittest.TestCase):
     WHAT = "a fixed hex colour outside tokens.css; take a token (var(--…)) or add one to tokens.css"
-    ALT = {"app.css": 357, "live.css": 18, "spontanhilfe.css": 19, "weiche.css": 2}
+    ALT = {"app.css": 357, "live.css": 18, "weiche.css": 2}
 
     def hits(self):
         return {n: c for n in sheets() if n != TOKENS and (c := hex_colours(read(n)))}
@@ -425,7 +423,7 @@ class HexColours(Ratchet, unittest.TestCase):
 
 class FontSizes(Ratchet, unittest.TestCase):
     WHAT = "a font size outside the scale (SCALE); take a size of the scale"
-    ALT = {"app.css": 347, "live.css": 21, "spontanhilfe.css": 5, "technik.css": 2, "weiche.css": 14}
+    ALT = {"app.css": 347, "live.css": 21, "technik.css": 2, "weiche.css": 14}
 
     def hits(self):
         return {n: c for n in sheets() if n != TOKENS and (c := off_scale(read(n)))}

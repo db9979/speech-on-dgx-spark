@@ -5240,6 +5240,13 @@
 "titel": "Während der Abschrift sprechen",
 "text": "Eine lange Aufnahme (20 Minuten) hochladen, nachts oder mit „Lange Dokumente nachts lesen“ aus. Während Zustand → Live „Abschrift“ als Hintergrundschritt zeigt, eine Frage sprechen: die Antwort kommt sofort und klingt wie sonst. Zustand → Logs (Wissen): „abschrift: abgebrochen | sprache“; eine Minute später geht es weiter, die Minuten in Ich → Dokumente zählen weiter (kein Stück fehlt, keine doppelten Sätze am Rand). „Abbrechen“ im Detail: „Abgebrochen, die Abschrift bis hier bleibt“.",
 "thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P775",
+"v": 1339,
+"titel": "Spontanhilfe: Programm laden ohne „too many requests“, Anwenderseite neu",
+"text": "Admin mit zweitem Schritt: Fernzugang → Spontanhilfe → „Neue Hilfe“, auf einem Windows-PC von außen (über den Reverse-Proxy) den Link öffnen. Die Seite ist schlicht: oben „Spark Fernhilfe“, „Dominik ist bereit, noch sieht man nichts“, „mit Dominik · endet spätestens in 60 min“ und rechts „Sitzung beenden“. „Bildschirm teilen“: oben roter Punkt „Bildschirm wird geteilt“, links eine kleine Vorschau („ausblenden“ geht, der Kreis von „Zeigen“ erscheint darin). Rechts „Nachrichten“ mit dem Feld oben, jede Nachricht mit Name und Uhrzeit. Admin: „Steuern anfragen (Code)“: links „Anfrage“ mit „Dominik möchte Ihren Computer steuern“, drei Schritten, „Programm laden“ (dunkel), „Nur ansehen lassen“; „Prüfsumme“ klappt die SHA-256 auf. „Programm laden“ mehrmals hintereinander tippen: bis 10 je Minute kommt jedes Mal die Datei, auch wenn eben jemand anderes über den Proxy falsche Nummern getippt hat; danach steht „Bitte einen Moment warten, dann noch einmal tippen (noch N s).“, die Zahl zählt herunter, der Knopf ist solange grau und nennt den Grund, danach geht er wieder. Nie ein englischer Text des Servers. Am Handy: eine Spalte, Nachrichten unter der Anfrage. Zustand → Logs (Fernzugang): „spontanhilfe: zu_oft | programm | 0“. Zustand → Dienste: „Programm SparkHilfe“ ist grün, solange es das Mac-Release noch nicht gibt (nur Windows wird erwartet); fehlt eine Windows-Datei, sagt die Meldung „… geht gerade nicht für Windows …“.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }

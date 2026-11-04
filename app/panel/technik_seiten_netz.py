@@ -940,7 +940,7 @@ SEITEN = {
     # ------------------------------------------------------------------ Browser und Handy
     # ------------------------------------------------------------------ Fernzugang (Dominik 2026-10-29 „in Technik → Überblick fehlt die Fernwartung“)
     "fernzugang": {
-        "stand": "6f90db368c",
+        "stand": "de547b404e",
         "bezug": {
             "fernzugang.entsperrt_bis": ["s2"], "fernzugang.admin_pair": ["s3"], "fernzugang.link_file": ["s3"], "fernzugang.admin_confirm": ["s3"], "fernzugang.CODE_S": ["s3"], "fernzugang.TICKET_S": ["s4"], "fernzugang.terminal_ws": ["s4"], "fernzugang.hostkey_wrong": ["s5"], "fernzugang.HALTEN_S": ["s6"], "ferndateien.listing": ["s6"], "fernbild.GUACD": ["s6"], "fernbild.FPS": ["s6"], "spontanhilfe.admin_new": ["s7"], "spontanhilfe.NUMMER_S": ["s7"], "spontansteuern.fetch": ["s7"], "spontansteuern._zeile": ["s7"], "fernzugang.notaus_close": ["s8"], "fernzugang.MAX_ANKER": ["s3"], "fernnotiz.fuer_modell": ["s6"], "fernnotiz.FASSUNGEN": ["s6"], "fernordner.view": ["s6"], "fernordner.MAX_ORDNER": ["s6"], "ferngross.upload_piece": ["s6"], "ferngross.TEIL": ["s6"], "fernweb.verbindung": ["s6"], "fernweb.ziel_ok": ["s6"], "fernweb.eigen_von": ["s6"], "fernweb.TOR_PORT": ["s6"], "fernweb.MAX_TUNNEL": ["s6"], "fernweb.MAX_KANAELE": ["s6"], "spontansteuern.mac_teile": ["s7"], "spontansteuern.mac_zip": ["s7"],
         },
@@ -1063,7 +1063,10 @@ SEITEN = {
                "(spontansteuern._zeile), den Schlüssel fügt die Person im Terminal ein; das Programm schickt PNG-Bilder. "
                "Am Mac nur mit Developer ID und Notarisierung; der Spark behält die Zip-Datei nur ohne Teile außerhalb der "
                "App und mit Ticket (spontansteuern.mac_teile) und packt sie je Hilfe im Speicher neu, mit Adresse und "
-               "Schlüssel im Namen der App (spontansteuern.mac_zip).",
+               "Schlüssel im Namen der App (spontansteuern.mac_zip). "
+               "Nummer und falsche Schlüssel zählen je Adresse, Datei und Programm erst nach dem richtigen Schlüssel je "
+               "Hilfe (spontanhilfe.rate), weil von außen alle die Adresse des Reverse-Proxys haben. Der Dienst-Wächter "
+               "erwartet nur Releases, die es auf GitHub gibt (spontansteuern.erwartet), einen Teil je Release.",
                "A help (spontanhilfe.admin_new) gives a number for {spontanhilfe.NUMMER_S|min} minutes, after "
                "{spontanhilfe.FEHL} wrong ones it is dead. The screen goes by WebRTC directly between the two browsers, "
                "on the way through TURN on tars; the panel only connects them. Control (spontansteuern.program_ws) goes through "
@@ -1074,7 +1077,10 @@ SEITEN = {
                "(spontansteuern._zeile), the person pastes the key in the terminal; the program sends PNG pictures. "
                "On a Mac only with Developer ID and notarization; the Spark keeps the zip only without parts outside the "
                "app and with the ticket (spontansteuern.mac_teile) and packs it anew in memory for every help, with address "
-               "and key in the app's name (spontansteuern.mac_zip).")),
+               "and key in the app's name (spontansteuern.mac_zip). "
+               "Number and wrong keys count per address, file and program only after the right key per help "
+               "(spontanhilfe.rate), since from outside everyone has the reverse proxy's address. The service watch "
+               "expects only releases GitHub has (spontansteuern.erwartet), one part per release.")),
             S("s8", "ende", ("Logs und Verlauf", "Logs and history"),
               ("fernzugang.log", "fernzugang.log"),
               ("Logs nur mit festen Wörtern und Zahlen (fernzugang.log), der Verlauf nur Zeit, System, Admin, Art und "
