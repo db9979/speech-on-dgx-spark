@@ -5077,6 +5077,13 @@
 "titel": "Auswertungen: Stimmt nicht und Fristen",
 "text": "Bei einer Kernaussage „Stimmt nicht“: sie verschwindet; „Neu erstellen“ und nach der nächsten ruhigen Minute ist sie nicht wieder da. Mit „Personen, Firmen und Fristen“ an: Fristen → Zeigen nennt die Frist des Steckbriefs (mit „Erinnern“, wenn Fristen anbieten an ist) und die Fristen der Wissenskarte mit ihrer Stelle; ohne diesen Schalter nur das Steckbrief-Datum und der Hinweis mit Weg. Im Assistenten: „Was sind die Kernaussagen im Mietvertrag?“ nennt dieselben Punkte mit Seite.",
 "thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P750",
+"v": 1314,
+"titel": "Entwickeln auf dem Pi: Klon von spark-dev mit neuem git",
+"text": "Auf dem Panel-Rechner mit Raspberry Pi OS Trixie (neueres git) sudo ./install.sh --entwickeln: kein „detected dubious ownership“, kein „could not make the clone of spark-dev“. Danach als spark-dev git -C ~/speech-on-dgx-spark branch zeigt lokal, git -C ~/speech-on-dgx-spark log -1 spark/main die installierte Version, git config --global --get-all safe.directory zeigt nichts. sudo ./install.sh --entwickeln ein zweites Mal läuft ohne Fehler durch, ein Commit auf lokal bleibt.",
+"thread": "Opencode mit internem LLM auf dem Pi"
 }
 ]
 }

@@ -1759,8 +1759,8 @@ fi
 
 # ---------------------------------------------------------------- Entwickeln auf dem Pi: user, clone, settings, limits
 # A person's account for the terminal (SSH): no password (an SSH key only), no sudo, not in the service user's group,
-# its own home; its own clone of the installed version (never $PREFIX/src, never touched again once there) with the
-# branch "lokal"; OpenCode's settings and rules (app/entwickeln.py einrichten: the repository's own CLAUDE.md and
+# its own home; its own clone of the installed version (from root's bundle: spark-dev never runs git in $PREFIX/src)
+# with the branch "lokal"; OpenCode's settings and rules (app/entwickeln.py einrichten: the repository's own CLAUDE.md and
 # guidelines, one source); its own key for the LLM-Tor; network only to the LLM-Tor (nftables, like the Werkstatt);
 # memory, CPU and disk below the panel's (its user slice); the quick test's environment, refreshed every night.
 if [ "$WITH_ENTWICKELN" = 1 ]; then
@@ -1776,21 +1776,13 @@ if [ "$WITH_ENTWICKELN" = 1 ]; then
   done
   chmod 700 "$DEV_HOME"
   dev() { runuser -u spark-dev -- env -i PATH=/usr/bin:/bin LANG=C.UTF-8 HOME="$DEV_HOME" "$@"; }
-  dev git config --global --replace-all safe.directory "$PREFIX/src"
+  # never a safe.directory: spark-dev runs no git in $PREFIX/src (root's; newer git stops there with "dubious ownership")
+  dev git config --global --fixed-value --unset-all safe.directory "$PREFIX/src" >/dev/null 2>&1 || true
   dev git config --global user.name >/dev/null || dev git config --global user.name "spark-dev"
   dev git config --global user.email >/dev/null || dev git config --global user.email "spark-dev@localhost"
-  DEV_KLON="$DEV_HOME/speech-on-dgx-spark"
-  if [ ! -e "$DEV_KLON" ]; then
-    dev git clone --quiet --no-checkout --origin spark "$PREFIX/src" "$DEV_KLON" || die "could not make the clone of spark-dev"
-    dev git -C "$DEV_KLON" remote add origin "$(git -C "$PREFIX/src" remote get-url origin)" || true
-  fi
-  # the remote "spark" is the installer's clone: the installed main and the installed local commits, offline
-  dev git -C "$DEV_KLON" config --replace-all remote.spark.fetch '+refs/remotes/origin/main:refs/remotes/spark/main'
-  dev git -C "$DEV_KLON" config --add remote.spark.fetch '+refs/spark/lokal:refs/remotes/spark/lokal'
-  dev git -C "$DEV_KLON" fetch --quiet spark 2>/dev/null || true
-  if ! dev git -C "$DEV_KLON" rev-parse --verify -q refs/heads/lokal >/dev/null; then
-    dev git -C "$DEV_KLON" switch --quiet -c lokal "$(jq -r '.commit' "$PREFIX/VERSION.json")" || warn "spark-dev's branch lokal not made"
-  fi
+  # its clone (~/speech-on-dgx-spark, branch lokal): root writes a bundle of the installed version, spark-dev fetches
+  # from that file (app/entwickeln.py klon_anlegen). Again on every run: a half-made clone is filled, its work stays.
+  SPEECH_SPARK_PREFIX=$PREFIX SPEECH_SPARK_STATE=$VAR/state /usr/bin/python3 -I "$PREFIX/app/entwickeln.py" klon || die "could not make the clone of spark-dev (run sudo ./install.sh --entwickeln again)"
   # its key for the LLM-Tor (only the SHA-256 goes into the config) once, OpenCode's settings on every run
   [ -s "$DEV_HOME/.config/spark/tor-key" ] || bash "$PREFIX/app/speech-spark.sh" entwickeln schluessel neu >/dev/null \
     || warn "no key for the LLM-Tor yet: sudo speech-spark entwickeln schluessel neu"

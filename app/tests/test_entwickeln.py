@@ -699,6 +699,68 @@ class GitHubRegeln(unittest.TestCase):
         self.assertEqual(entwickeln.github_anzeige_lesen(os.path.join(tmp, "fehlt.json")), {"zweige": []})
 
 
+class KlonVonSparkDev(unittest.TestCase):
+    """spark-dev's clone comes from root's bundle: spark-dev never runs git in the installer's clone (root's; newer
+    git stops with "dubious ownership", Dominik's Pi 2026-11-04), and a second run fills a half-made clone."""
+
+    def setUp(self):
+        self.dev, self.git = [], []
+        self.lokal = False
+        for name, wert in (("_als_dev", self.als_dev), ("_git", self.root_git),
+                           ("installiert", mock.Mock(return_value=(A, "", 0)))):
+            p = mock.patch.object(entwickeln, name, wert)
+            p.start()
+            self.addCleanup(p.stop)
+
+    def als_dev(self, *cmd, **kw):
+        self.dev.append(cmd)
+        if "fetch" in cmd:
+            self.assertTrue(os.path.isfile(cmd[cmd.index("--no-tags") + 1]), "spark-dev fetches from root's bundle file")
+        rc = 0 if ("rev-parse" not in cmd or self.lokal) else 1
+        return mock.Mock(returncode=rc, stderr=b"", stdout=b"")
+
+    def root_git(self, *args, **kw):
+        self.git.append(args)
+        if args[:2] == ("remote", "get-url"):
+            return 0, "https://github.com/db9979/speech-on-dgx-spark"
+        if args[0] == "bundle":
+            with open(args[2], "w") as f:
+                f.write("# v2 git bundle\n")
+        return 0, ""
+
+    def test_spark_dev_never_reads_the_installers_clone(self):
+        entwickeln.klon_anlegen()
+        flach = [str(x) for c in self.dev for x in c]
+        self.assertFalse(any(x == entwickeln.QUELLE or x.startswith(entwickeln.QUELLE + "/") for x in flach), flach)
+        self.assertNotIn("clone", flach)
+        self.assertNotIn("safe.directory", flach)
+        bundle, = [a for a in self.git if a[0] == "bundle"]
+        self.assertIn("refs/remotes/origin/main", bundle)
+        self.assertIn(("switch", "--quiet", "-c", entwickeln.ZWEIG, A), [c[3:] for c in self.dev if "switch" in c])
+
+    def test_a_second_run_keeps_spark_devs_branch(self):
+        self.lokal = True
+        entwickeln.klon_anlegen()
+        self.assertFalse([c for c in self.dev if "switch" in c or "reset" in c or "rm" in c], "its work stays")
+        self.assertTrue([c for c in self.dev if c[:2] == ("git", "init")], "git init: a half-made clone is filled again")
+
+    def test_after_an_install_only_the_bundle(self):
+        entwickeln._dev_auffrischen()
+        fetch, = [c for c in self.dev if "fetch" in c]
+        self.assertTrue(fetch[fetch.index("--no-tags") + 1].endswith("spark.bundle"), fetch)
+        self.assertNotIn(entwickeln.QUELLE, fetch)
+
+    def test_install_sh_lets_spark_dev_not_clone_root_s_repository(self):
+        i = helpers.repo_file("install.sh")
+        teil = i[i.index('say "Entwickeln auf dem Pi: user spark-dev'):]
+        teil = teil[:teil.index("\nfi\n")]
+        self.assertNotRegex(teil, r'dev git[^\n]*"\$PREFIX/src"(?! >/dev/null)', "spark-dev runs no git in $PREFIX/src")
+        self.assertNotIn("git clone", teil)
+        self.assertNotIn("--add safe.directory", teil)
+        self.assertNotIn("safe.directory '*'", teil)
+        self.assertIn('/app/entwickeln.py" klon || die', teil)
+
+
 class GitHubGeben(unittest.TestCase):
     """an_github and github_geben with git, runuser and systemctl replaced: what root would run."""
 

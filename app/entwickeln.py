@@ -566,11 +566,60 @@ def _anzeige_schreiben(d):
                    stdout=subprocess.DEVNULL, timeout=30)
 
 
+def _dev_bundle(ziel):
+    """root's side of the way back: the installed main (and the installed local commits) as a bundle file spark-dev
+    may read, and the refspecs that put them under refs/remotes/spark/. spark-dev never runs git in the installer's
+    clone (a repository of root's: newer git stops with "dubious ownership", and spark-dev has no business there)."""
+    refs = [("refs/remotes/origin/main", "refs/remotes/spark/main")]
+    if _git("rev-parse", "--verify", "-q", REF_JETZT)[0] == 0:
+        refs.append((REF_JETZT, "refs/remotes/spark/lokal"))
+    os.chmod(ziel, 0o755)
+    datei = os.path.join(ziel, "spark.bundle")
+    if _git("bundle", "create", datei, *[q for q, _ in refs], timeout=900)[0] != 0:
+        raise Fehler("klon")
+    os.chmod(datei, 0o644)
+    return datei, [f"+{q}:{z}" for q, z in refs]
+
+
 def _dev_auffrischen():
-    """spark-dev's clone learns the installed main and the installed local commits (remote "spark" = the
-    installer's clone, read by spark-dev itself): offline, its own branch untouched."""
-    _als_dev("git", "-C", KLON, "fetch", "--quiet", "spark", "+refs/remotes/origin/main:refs/remotes/spark/main",
-             f"+{REF_JETZT}:refs/remotes/spark/lokal", timeout=600)
+    """spark-dev's clone learns the installed main and the installed local commits from root's bundle (fetched by
+    spark-dev itself): offline, its own branches untouched. False when that did not work."""
+    ziel = tempfile.mkdtemp(prefix="speech-spark-dev-")
+    try:
+        datei, spezen = _dev_bundle(ziel)
+        return _als_dev("git", "-C", KLON, "fetch", "--quiet", "--no-tags", datei, *spezen, timeout=600).returncode == 0
+    except Fehler:
+        return False
+    finally:
+        shutil.rmtree(ziel, ignore_errors=True)
+
+
+def klon_anlegen():
+    """install.sh --entwickeln (root): spark-dev's clone, made by spark-dev itself from root's bundle. Idempotent: an
+    existing clone only learns the installed version, a half-made one (an earlier try that failed) is filled again,
+    spark-dev's own branches and files are never touched. The old remote "spark" (a path to the installer's clone)
+    goes, its refs stay. Fehler("klon") when the clone or its branch could not be made."""
+    try:
+        _klon_machen(installiert()[0])
+    except Fehler:
+        _log("klon fehler")
+        raise
+    _log("klon ok")
+
+
+def _klon_machen(basis):
+    """klon_anlegen's steps (as spark-dev, git's own commands only)."""
+    origin = _git("remote", "get-url", "origin")[1]
+    if _als_dev("git", "init", "--quiet", KLON, timeout=120).returncode != 0:
+        raise Fehler("klon")
+    _als_dev("git", "-C", KLON, "config", "--remove-section", "remote.spark", timeout=60)
+    if origin and _als_dev("git", "-C", KLON, "config", "remote.origin.url", origin, timeout=60).returncode == 0:
+        _als_dev("git", "-C", KLON, "config", "--replace-all", "remote.origin.fetch", "+refs/heads/*:refs/remotes/origin/*", timeout=60)
+    if not _dev_auffrischen():
+        raise Fehler("klon")
+    if _als_dev("git", "-C", KLON, "rev-parse", "--verify", "-q", f"refs/heads/{ZWEIG}", timeout=60).returncode != 0:
+        if _als_dev("git", "-C", KLON, "switch", "--quiet", "-c", ZWEIG, basis, timeout=600).returncode != 0:
+            raise Fehler("klon")
 
 
 def fertig(art, kopf, basis, anzahl, test=None, path=None, now=None):
@@ -1351,6 +1400,12 @@ def cli(args, log=print):
             return 0
         if cmd == "fehler":
             fehler(args[1], args[2])
+            return 0
+        if cmd == "klon":                  # root, install.sh --entwickeln: spark-dev's clone from root's bundle
+            if len(args) != 1 or os.geteuid() != 0:
+                raise ValueError
+            klon_anlegen()
+            log("entwickeln: klon ok")
             return 0
         if cmd == "status":
             d = anzeige(stand_lesen(), anzeige_lesen().get("letzter"), offen_zaehlen(), commits=_jetzt_commits())
