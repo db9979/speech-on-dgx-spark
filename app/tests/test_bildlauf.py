@@ -35,6 +35,7 @@ FENSTER = {
     ".modal": "a window over the page: the one bar while it is open",
     ".ullog": "update progress, follows the newest line",
     ".mdstand": "model install progress, follows the newest line",
+    ".dvdiff": "the whole change of a Code-Auftrag (Zustand → Werkstatt → Entwickeln): long lines keep their columns",
     ".fabtext": "the floating face's bubble",
     ".fabpop": "the floating face's bubble",
     "#chatlog": "the conversation: only it scrolls on the assistant page",

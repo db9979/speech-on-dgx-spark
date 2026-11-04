@@ -1860,9 +1860,13 @@ Every function of the Spark with its switch, what it builds on, where you set it
 
 - **Test every night** (Features → Access → "Test every night"; builds on "Workshop"): Once a night the workshop starts the test run by itself (all self-tests as on GitHub, without a language model).
 
-- **Develop on the Pi** (Features → Access → "Develop on the Pi"): You develop the Spark further right on the panel computer: in the terminal (over SSH) OpenCode works with the Spark's own language model, without a cloud.
+- **Develop on the Pi** (Features → Access → "Develop on the Pi"): You develop the Spark further right on the panel computer: in the terminal (in the browser under Status → Workshop → Develop or over SSH) OpenCode works with the Spark's own language model, without a cloud.
 
 - **Hand to GitHub** (Features → Access → "Hand to GitHub"; builds on "Develop on the Pi"): Way A: what you built with OpenCode on the Pi goes to GitHub as its own branch opencode/<topic>, never to main.
+
+- **Terminal in the browser** (Features → Access → "Terminal in the browser"; builds on "Develop on the Pi"): A shell as spark-dev in the browser, without SSH: Status → Workshop → Develop, tab Terminal.
+
+- **Code order in the chat** (Features → Access → "Code order in the chat"; builds on "Develop on the Pi"): An admin types in the assistant (panel or app) what should change in the Spark, such as "Code order: show the wind direction in the weather too".
 
 - **Remote access to servers** (Features → Access → "Remote access to servers"): The shell of a server elsewhere (a VPS, a NAS at friends', a Raspberry Pi) right in the browser, like Raspberry Pi Connect, only the relay is your own Pi.
 

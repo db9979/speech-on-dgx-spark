@@ -5,6 +5,10 @@ turn becomes a line here. The admin's own sentences (chat.route_tests) come on t
 """
 
 BENCH = [
+    # Code-Auftrag im Chat (codeauftrag.py): an admin's order for OpenCode, never a question about the Spark's settings
+    ("Code-Auftrag: die Begrüßung soll freundlicher klingen", "agent+codeauftrag"),
+    ("Ändere am Code die Begrüßung, sie soll freundlicher klingen", "codeauftrag"),
+    ("Lass OpenCode die Begrüßung im Code freundlicher machen", "codeauftrag"),
     # Dokumente erstellen (V01.0.415, Dominik 11.10.: only text came back): a file wish is the group "erstellen"
     ("Mach eine Präsentation über die der eine Folie.", "erstellen"),
     ("den mauer fall. gerne auch 3 folien", "erstellen"),

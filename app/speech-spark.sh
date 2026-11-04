@@ -1169,6 +1169,7 @@ cmd_lokal() {
       id spark-dev >/dev/null 2>&1 || die "Entwickeln auf dem Pi is not installed: sudo ./install.sh --entwickeln"
       shift; ENTW_PY an-github "$@" ;;
     zweige) need_root lokal zweige; ENTW_PY zweige ;;
+    auftrag) need_root lokal auftrag; ENTW_PY auftrag ;;   # the unit speech-spark-auftrag: the panel's Code-Auftrag wish
     *) die "speech-spark lokal [status]|einspielen|zurueck|verwerfen|testumgebung [--nacht]|an-github [thema|--abbrechen]|zweige" ;;
   esac
 }

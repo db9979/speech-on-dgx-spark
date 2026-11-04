@@ -1899,6 +1899,42 @@ body:has(#phead:not([hidden])) #wkbox>.ld-head{justify-content:flex-end}body:has
 @container (max-width:879.98px){.wkacts,.wkacts.fuenf{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @container (min-width:660px){#wkbox .ld-split:has(>.ld-detail:not([hidden])){grid-template-columns:minmax(240px,320px) minmax(0,1fr)}}
 @container (max-width:659.98px){.wkacts,.wkacts.fuenf{grid-template-columns:minmax(0,1fr)}.wkact{padding:8px 10px;min-height:var(--h-touch)}#wkbox>.ld-head{flex-wrap:wrap;align-items:flex-start}.wknacht{text-align:left;flex-basis:100%}}
+/* Zustand → Werkstatt → Entwickeln (entwickeln.js, plan opencode-pi package 3): the part tabs above the two boxes, the
+   chips (internet, version, switch), three calm tiles of one height, the local commits as rows, the Ablauf in five
+   steps (the one that needs the internet in the accent), the terminal as a dark console beside its session card */
+.werktabs{display:inline-flex;margin:0 0 var(--s3)}#wkbox[hidden],#dvbox[hidden]{display:none}   /* .ld-box would beat [hidden]: only the chosen part shows */
+#dvbox>.dvhead{flex-wrap:wrap}#dvbox>.dvhead .sp{flex:1}
+.dvchips{display:flex;flex-wrap:wrap;gap:var(--s1)}
+.dvchip{display:inline-flex;align-items:center;gap:6px;font:var(--t-sub);padding:2px 10px;border-radius:var(--r-pill);border:1px solid var(--line);background:var(--card);white-space:nowrap}
+.dvchip i{width:7px;height:7px;border-radius:50%;background:var(--faint)}.dvchip.ok i{background:var(--ok)}.dvchip.bad i{background:var(--bad)}
+.dvchip.ver{background:var(--fg);color:var(--bg);border-color:transparent;font-weight:600;font-variant-numeric:tabular-nums}
+.dvsuche{width:100%;margin:0 0 var(--s1)}
+.dvtiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s2);margin:var(--s3) 0}
+.dvtile{border:1px solid var(--line);border-radius:var(--r-box);padding:var(--s3);min-height:var(--h-tile);box-sizing:border-box;box-shadow:none;min-width:0}
+.dvtk{display:block;font:var(--t-cap);color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.dvtw{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;font:var(--t-head);margin:4px 0 2px;font-variant-numeric:tabular-nums}.dvtv{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dvtw i{width:8px;height:8px;border-radius:50%;flex:none;background:var(--faint)}.dvtw.ok i{background:var(--ok)}.dvtw.bad i{background:var(--bad)}.dvtw.warn i{background:var(--warn)}
+.dvtile small{display:block;font:var(--t-sub);color:var(--mut);overflow-wrap:anywhere}.dvtile small.dvtclip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#dvlist .ld-row.on .ld-badge{background:color-mix(in srgb,var(--on-acc) 22%,transparent);color:var(--on-acc)}
+.dvcommits{border:1px solid var(--line);border-radius:var(--r-box);overflow:hidden}
+.dvcommit{display:flex;align-items:center;gap:var(--s3);padding:var(--s2) var(--s3);border-top:1px solid var(--line);min-width:0}.dvcommit:first-child{border-top:0}
+.dvcommit code{font:var(--t-mono);color:var(--mut);flex:none}
+.dvdiff{font:var(--t-mono);background:var(--fill);border:1px solid var(--line);border-radius:var(--r-box);padding:var(--s3);margin:0 0 var(--s3);max-height:420px;overflow:auto;white-space:pre;tab-size:4}.dvthema{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center;margin:var(--s2) 0}.dvthema label{flex-basis:100%}.dvthema input{flex:1 1 200px;width:auto;min-width:0}.dvthema .wkunter{flex-basis:100%}
+.dvablauf{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:var(--s2)}
+.dvschritt{border:1px solid var(--line);border-radius:var(--r-box);padding:var(--s3);min-width:0}.dvschritt.net{border-color:var(--acc)}
+.dvschritt b{display:block;font-weight:600;margin:6px 0 2px}.dvschritt small{display:block;font:var(--t-sub);color:var(--mut)}
+.dvnr{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--ok);color:var(--on-acc);font:var(--t-cap)}.dvschritt.net .dvnr{background:var(--acc)}
+.dvtw-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(240px,300px);gap:var(--s3);align-items:start}
+.dvtermbox{background:var(--term);color:var(--term-fg);border-radius:var(--r-win);overflow:hidden;min-width:0}
+.dvtermkopf{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:var(--s2) var(--s3);border-bottom:1px solid var(--term-line)}
+.dvtchip{font:var(--t-cap);padding:2px 8px;border-radius:var(--r-pill);background:var(--term-line);color:var(--term-fg)}.dvtchip.ok{color:var(--ok)}.dvtchip.llm{color:var(--acc)}
+.dvtort{margin-left:auto;font:var(--t-mono);color:var(--term-mut)}
+.dvxterm{height:clamp(320px,60vh,640px);padding:var(--s2);box-sizing:border-box;overflow:hidden}
+.dvxterm .xterm,.dvxterm .xterm-viewport{background:var(--term)!important}
+.dvtleer{max-width:520px;margin:var(--s8) auto;text-align:center;color:var(--term-fg);font:var(--t-body)}.dvtleer p{margin:0 0 var(--s3)}.dvtleer .dvtgrund{color:var(--term-mut)}
+.dvtcard{margin:0 0 var(--s3)}.dvtcard h3{margin:0 0 var(--s2);font:var(--t-head)}.dvtcard p{margin:0 0 var(--s2);font:var(--t-body)}
+@container (min-width:660px){#dvbox .ld-split:has(>.ld-detail:not([hidden])){grid-template-columns:minmax(240px,340px) minmax(0,1fr)}}
+@container (max-width:879.98px){.dvablauf{grid-template-columns:repeat(2,minmax(0,1fr))}}@container (max-width:759.98px){.dvtw-grid{grid-template-columns:minmax(0,1fr)}}
+@container (max-width:659.98px){.dvtiles,.dvablauf{grid-template-columns:minmax(0,1fr)}.dvtort{margin-left:0;flex-basis:100%}.dvxterm{height:clamp(280px,55vh,520px)}}
 /* Personen und Geräte (Klar 4): profiles and devices are lists of the ld- pattern (users.js); search and sort on top,
    the filter as a segment, below the list the count, pages and „+ Neues Profil“ */
 .pfoot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}

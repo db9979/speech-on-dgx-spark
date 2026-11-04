@@ -403,6 +403,8 @@ ADMIN_ON_OK = {
     "werkstattseite.py:_nacht_an": "admin only: the Werkstatt's fixed night rule, no profile part",
     "werkstattseite.py:_an": "admin only: the Werkstatt's sandbox on the model computer, admin-only endpoints, no profile part",
     "entwickelnseite.py:_github_an": "admin only: An GitHub geben hands spark-dev's branch to GitHub with root's deploy key, admin-only endpoints with a code, no profile part",
+    "codeauftrag.py:an": "admin only: the Code-Auftrag is an admin's tool (offer and start ask features.allowed too); an() is the Spark-wide switch for the background minute, the card and the admin page",
+    "entwickelnseite.py:_terminal_an": "admin only: the terminal in the browser is a shell as spark-dev for an admin with a fresh code, admin-only endpoints, no profile part",
     "entwickelnseite.py:_an": "admin only: Entwickeln auf dem Pi is spark-dev's terminal and the update of the whole Spark, admin-only endpoints, no profile part",
     "angriffsprobe.py:an": "admin only: the Angriffsprobe asks the model from the Werkstatt page, admin-only endpoints, no profile part",
     "modellseite.py:_an": "Spark-wide model switch, admin-only endpoints (Zustand → Modelle), no profile involved",

@@ -42,7 +42,7 @@ NAMES = {
     "agent_list": ("Agenten zeigen", "List agents"), "agent_task": ("Agent beauftragen", "Agent task"),
     "agent_schedule": ("Agent planen", "Schedule agent"), "agent_watch": ("Beobachten anlegen", "Set up watching"), "routine_save": ("Ablauf speichern", "Save routine"),
     "iphone_action": ("iPhone-Aktion", "iPhone action"), "spark_hilfe": ("Spark-Hilfe", "Spark help"),
-    "spark_tagebuch": ("Spark-Tagebuch", "Spark diary"), "spark_zustand": ("Spark-Zustand", "Spark status"),
+    "spark_tagebuch": ("Spark-Tagebuch", "Spark diary"), "spark_zustand": ("Spark-Zustand", "Spark status"), "code_auftrag": ("Code-Auftrag", "Code order"),
     "fund_suche": ("In allen Daten finden", "Find in all data"),
     "mappe_liste": ("Mappen auflisten", "List collections"), "mappe_stand": ("Mappe ansehen", "Show collection"),
     "mappe_dazu": ("In Mappe legen", "Put into collection"),

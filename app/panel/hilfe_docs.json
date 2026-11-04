@@ -1893,7 +1893,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Weiche",
 "title": "Weiche",
-"text": "Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und so weiter, heute 25 Gruppen) und grenzt damit die Werkzeuge ein, die das Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen."
+"text": "Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und so weiter, heute 26 Gruppen) und grenzt damit die Werkzeuge ein, die das Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen."
 },
 {
 "lang": "de",
@@ -1957,7 +1957,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Alltagsquote",
 "title": "Alltagsquote",
-"text": "- Die Testsätze (198) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
+"text": "- Die Testsätze (201) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
 },
 {
 "lang": "de",
@@ -1965,7 +1965,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Werkzeugnamen",
 "title": "Werkzeugnamen",
-"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (96 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
+"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (97 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
 },
 {
 "lang": "de",
@@ -1973,7 +1973,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 25 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 198 eingebaute Testsätze (Schritt 4, Schritt 5) - 216 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
+"text": "- 26 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 201 eingebaute Testsätze (Schritt 4, Schritt 5) - 216 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
 },
 {
 "lang": "de",
@@ -2181,7 +2181,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 4 Aufrufe pro Runde (Schritt 1) - 3 Gedächtnis-Notizen pro Antwort (Schritt 1) - 13 Werkzeuge gesperrt nach fremdem Text (Schritt 4) - 7 Werkzeuge ohne Internet bei Notaus (Schritt 3) - 96 Werkzeuge mit verständlichem Namen (Schritt 11)"
+"text": "- 4 Aufrufe pro Runde (Schritt 1) - 3 Gedächtnis-Notizen pro Antwort (Schritt 1) - 13 Werkzeuge gesperrt nach fremdem Text (Schritt 4) - 7 Werkzeuge ohne Internet bei Notaus (Schritt 3) - 97 Werkzeuge mit verständlichem Namen (Schritt 11)"
 },
 {
 "lang": "de",
@@ -3397,7 +3397,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 110). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, "
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 112). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, "
 },
 {
 "lang": "de",
@@ -3421,7 +3421,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 47 Dateien in jeder Sicherung (Schritt 7) - 110 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 47 Dateien in jeder Sicherung (Schritt 7) - 112 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -3685,7 +3685,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ckeln.sandbox) und spielt sie wie ein Update ein, nie als root ausgeführt. Ein Update setzt sie mit entwickeln.aufsetzen auf die neue Version; passt das nicht, bleibt die laufende Version; was inzwischen auf main ist, fällt dabei weg. Weg A (eigener Schalter „An GitHub geben“): sudo speech-spark lokal an-github nimmt den Zweig ebenfalls nur als Bündel (entwickeln.an_github), lässt nie .github, Links oder Untermodule durch (entwickeln.pfade_github) und schiebt ihn als root mit einem eigenen Deploy-Schlüssel nur nach opencode/<thema> (entwickeln.ziel_ref: nie main, nie erzwungen), über ssh mit GitHubs festem Hostschlüssel (entwickeln.GH_HOSTKEY); spark-dev bleibt ohne Internet. Ohne Netz wartet der Auftrag. Ein Claude-Thread prüft den Zweig und bringt ihn auf main."
+"text": "ckeln.sandbox) und spielt sie wie ein Update ein, nie als root ausgeführt. Ein Update setzt sie mit entwickeln.aufsetzen auf die neue Version; passt das nicht, bleibt die laufende Version; was inzwischen auf main ist, fällt dabei weg. Weg A (eigener Schalter „An GitHub geben“): sudo speech-spark lokal an-github nimmt den Zweig ebenfalls nur als Bündel (entwickeln.an_github), lässt nie .github, Links oder Untermodule durch (entwickeln.pfade_github) und schiebt ihn als root mit einem eigenen Deploy-Schlüssel nur nach opencode/<thema> (entwickeln.ziel_ref: nie main, nie erzwungen), über ssh mit GitHubs festem Hostschlüssel (entwickeln.GH_HOSTKEY); spark-dev bleibt ohne Internet. Ohne Netz wartet der Auftrag. Ein Claude-Thread prüft den Zweig und bringt ihn auf main. Alles das zeigt Zustand → Werkstatt → Entwickeln mit Knöpfen; dort öffnet der Reiter Terminal (eigener Schalter) eine Shell als spark-dev im Browser: Ticket für 30 s nach frischem Code, an Anmeldung und Adresse gebunden; das Panel ruft nur das feste Programm /usr/local/bin/spark-dev-terminal von root ohne Argumente, das als spark-dev in einer abgeschotteten Einheit startet (entwickeln.terminal_befehl); eine Sitzung (entwic"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "kelnseite.Terminal), Ende nach 3600 s ohne Eingabe, nach 28800 s, beim Abmelden und Notaus. Code-Auftrag im Chat (eigener Schalter): codeauftrag.offer bietet das Werkzeug code_auftrag nur einem Admin im getippten Chat von Panel und App (codeauftrag.CLIENTS); das Ziel (höchstens 500 Zeichen) ist für OpenCode nur Daten. root (entwickeln.auftrag_lauf) lässt OpenCode einmal als spark-dev auf einem eigenen Zweig opencode/auftrag-<n> arbeiten (höchstens 1800 s); die Karte zeigt den Vorschlag, einspielen und an GitHub geben gehen nur auf der Seite mit frischem Code."
 },
 {
 "lang": "de",
@@ -3701,7 +3709,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 600 s darf ein Wunsch alt sein (Schritt 3) - 2000 Zeichen höchstens im Auftrag (Schritt 2) - 4 Teile des Testlaufs gleichzeitig (Schritt 8) - 30 Testnamen höchstens je Ergebnis und „noch mal“ (Schritt 2) - 20 Ergebnisse bleiben (Schritt 9) - 200000 Zeichen eines Patches, mehr wird gekürzt (Schritt 9) - 5 h nach der Stunde darf die Nacht starten (Schritt 1)"
+"text": "- 600 s darf ein Wunsch alt sein (Schritt 3) - 2000 Zeichen höchstens im Auftrag (Schritt 2) - 4 Teile des Testlaufs gleichzeitig (Schritt 8) - 30 Testnamen höchstens je Ergebnis und „noch mal“ (Schritt 2) - 20 Ergebnisse bleiben (Schritt 9) - 200000 Zeichen eines Patches, mehr wird gekürzt (Schritt 9) - 5 h nach der Stunde darf die Nacht starten (Schritt 1) - 30 s gilt ein Ticket des Terminals (Schritt 10) - 3600 s ohne Eingabe, dann endet das Terminal (Schritt 10) - 28800 s höchstens dauert eine Sitzung des Terminals (Schritt 10) - 500 Zeichen höchstens im Ziel eines Code-Auftrags (Schritt 10) - 1800 s arbeitet OpenCode höchstens an einem Code-Auftrag (Schritt 10)"
 },
 {
 "lang": "de",
@@ -3709,7 +3717,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "- Auf dem Modell-Rechner einmal sudo ./install.sh --werkstatt (OpenCode mit fester Version und Prüfsumme). - Funktionen → Werkstatt: an und aus, „Jede Nacht testen“ mit der Startstunde. - Zustand → Werkstatt: die vier Aufträge starten, Ergebnisse ansehen, rote Tests noch mal, für Claude kopieren, löschen. - Entwickeln auf dem Pi: auf dem Panel-Rechner einmal sudo ./install.sh --entwickeln, dann Funktionen → Entwickeln auf dem Pi an; einspielen mit sudo speech-spark lokal einspielen (zurueck, verwerfen, status). - An GitHub geben: sudo speech-spark entwickeln github-schluessel neu, die Zeile auf GitHub als Deploy-Schlüssel mit Schreibrecht eintragen, main per Ruleset schützen, dann Funktionen → Entwickeln auf dem Pi → An GitHub geben an; weitergeben mit sudo speech-spark lokal an-github <thema>."
+"text": "- Auf dem Modell-Rechner einmal sudo ./install.sh --werkstatt (OpenCode mit fester Version und Prüfsumme). - Funktionen → Werkstatt: an und aus, „Jede Nacht testen“ mit der Startstunde. - Zustand → Werkstatt: die vier Aufträge starten, Ergebnisse ansehen, rote Tests noch mal, für Claude kopieren, löschen. - Entwickeln auf dem Pi: auf dem Panel-Rechner einmal sudo ./install.sh --entwickeln, dann Funktionen → Entwickeln auf dem Pi an; einspielen unter Zustand → Werkstatt → Entwickeln oder mit sudo speech-spark lokal einspielen (zurueck, verwerfen, status). - Terminal im Browser: Funktionen → Entwickeln auf dem Pi → Terminal im Browser an, dann Zustand → Werkstatt → Entwickeln, Reiter Terminal (frischer Code, zweiter Anmeldeschritt). - An GitHub geben: sudo speech-spark entwickeln github-schluessel neu, die Zeile auf GitHub als Deploy-Schlüssel mit Schreibrecht eintragen, main per Ruleset schützen, dann Funktionen → Entwickeln auf dem Pi → An GitHub geben an; weitergeben mit sudo speech-spark lokal an-github <thema>."
 },
 {
 "lang": "de",
@@ -3717,7 +3725,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Was du siehst",
 "title": "Was du siehst",
-"text": "- Zustand → Werkstatt: links der Verlauf, rechts ein Ergebnis mit großen Zahlen, was es heißt (etwa „Was heißt rot?“), den roten Tests nach Bereich, Antwort oder Patch und den nächsten Schritten. - Zustand → Live, Monitoring und die Steuerzentrale: Teil „Werkstatt“ mit Art und Status, nie Inhalte. - Zustand → Live: Teil „Entwickeln“ mit „lokale Änderungen: N“ und dem letzten festen Grund einer Ablehnung; sudo speech-spark lokal status zeigt dasselbe im Terminal. - sudo speech-spark lokal zweige: die an GitHub gegebenen Zweige mit Link und dem Stand der GitHub-Tests; oben auf den Admin-Seiten der Hinweis „Gib den Zweig opencode/<thema> einem Claude-Thread zum Prüfen“."
+"text": "- Zustand → Werkstatt → Entwickeln: lokale Änderungen mit Commits, Zweige auf GitHub mit Teststand, Einstellungen, der Ablauf und das Terminal; Live zählt offene Terminals, nie Eingaben oder Ausgaben. - Zustand → Werkstatt: links der Verlauf, rechts ein Ergebnis mit großen Zahlen, was es heißt (etwa „Was heißt rot?“), den roten Tests nach Bereich, Antwort oder Patch und den nächsten Schritten. - Zustand → Live, Monitoring und die Steuerzentrale: Teil „Werkstatt“ mit Art und Status, nie Inhalte. - Zustand → Live: Teil „Entwickeln“ mit „lokale Änderungen: N“ und dem letzten festen Grund einer Ablehnung; sudo speech-spark lokal status zeigt dasselbe im Terminal. - sudo speech-spark lokal zweige: die an GitHub gegebenen Zweige mit Link und dem Stand der GitHub-Tests; oben auf den Admin-Seiten der Hinweis „Gib den Zweig opencode/<thema> einem Claude-Thread zum Prüfen“."
 },
 {
 "lang": "de",
@@ -3733,7 +3741,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "eg A: Zweig als Bündel, root schiebt (Schritt 10) - app/entwickeln.py ziel_ref: nur opencode/<thema>, nie main (Schritt 10) - app/entwickeln.py pfade_github: nie .github, kein Link, kein Untermodul (Schritt 10) - app/entwickeln.py GH_HOSTKEY: GitHubs fester Hostschlüssel (Schritt 10)"
+"text": "eg A: Zweig als Bündel, root schiebt (Schritt 10) - app/entwickeln.py ziel_ref: nur opencode/<thema>, nie main (Schritt 10) - app/entwickeln.py pfade_github: nie .github, kein Link, kein Untermodul (Schritt 10) - app/entwickeln.py GH_HOSTKEY: GitHubs fester Hostschlüssel (Schritt 10) - app/entwickeln.py terminal_befehl: Terminal als spark-dev, abgeschottet (Schritt 10) - app/panel/entwickelnseite.py Terminal: eine Sitzung im Browser, Grenzen (Schritt 10) - app/panel/codeauftrag.py offer: Code-Auftrag nur Admin und getippt (Schritt 10) - app/panel/codeauftrag.py CLIENTS: nur Chat von Panel und Apps (Schritt 10) - app/entwickeln.py auftrag_lauf: root: OpenCode einmal auf eigenem Zweig (Schritt 10)"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": "Selbsttests: test_werkstatt, test_entwickeln, test_codeauftrag"
 },
 {
 "lang": "de",
@@ -15013,7 +15029,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Zugang",
 "title": "Zugang",
-"text": "- Entwickeln auf dem Pi (Funktionen → Zugang → „Entwickeln auf dem Pi“): Du entwickelst den Spark direkt auf dem Panel-Rechner weiter: Im Terminal (per SSH) arbeitet OpenCode mit dem eigenen Sprachmodell des Sparks, ohne Cloud."
+"text": "- Entwickeln auf dem Pi (Funktionen → Zugang → „Entwickeln auf dem Pi“): Du entwickelst den Spark direkt auf dem Panel-Rechner weiter: Im Terminal (im Browser unter Zustand → Werkstatt → Entwickeln oder per SSH) arbeitet OpenCode mit dem eigenen Sprachmodell des Sparks, ohne Cloud."
 },
 {
 "lang": "de",
@@ -15022,6 +15038,22 @@
 "head": "Zugang",
 "title": "Zugang",
 "text": "- An GitHub geben (Funktionen → Zugang → „An GitHub geben“; baut auf „Entwickeln auf dem Pi“): Weg A: Was du mit OpenCode auf dem Pi gebaut hast, geht als eigener Zweig opencode/<thema> an GitHub, nie an main."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Zugang",
+"title": "Zugang",
+"text": "- Terminal im Browser (Funktionen → Zugang → „Terminal im Browser“; baut auf „Entwickeln auf dem Pi“): Eine Shell als spark-dev im Browser, ohne SSH: Zustand → Werkstatt → Entwickeln, Reiter Terminal."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Zugang",
+"title": "Zugang",
+"text": "- Code-Auftrag im Chat (Funktionen → Zugang → „Code-Auftrag im Chat“; baut auf „Entwickeln auf dem Pi“): Ein Admin tippt im Assistenten (Panel oder App), was sich am Spark ändern soll, etwa „Code-Auftrag: im Wetter soll auch die Windrichtung stehen“."
 },
 {
 "lang": "de",
@@ -15317,7 +15349,7 @@
 "file": "Installation im Detail",
 "head": "Entwickeln auf dem Pi mit OpenCode",
 "title": "Entwickeln auf dem Pi mit OpenCode",
-"text": "1. Einmal installieren (auf dem Panel-Rechner, braucht Internet): sudo ./install.sh --entwickeln. Das legt den Nutzer spark-dev (ohne Passwort, ohne sudo) mit dem Klon /home/spark-dev/speech-on-dgx-spark und dem Zweig lokal an, lädt OpenCode (Version und SHA-512 fest in app/werkstatt.py, dieselbe Datei wie bei der Werkstatt) nach /opt/speech-spark/opencode, schreibt die Einstellungen von OpenCode (nur das eigene LLM-Tor, eigener Schlüssel, die Regeln aus CLAUDE.md und der Richtlinie), sperrt per Firewall jedes Netz außer dem LLM-Tor und baut die Testumgebung des Schnelltests. 2. Einschalten: als Admin *Funktionen → Entwickeln auf dem Pi* an. Erst dann gilt der Schlüssel von spark-dev am LLM-Tor. 3. Per SSH hinein: deinen öffentlichen SSH-Schlüssel für spark-dev eintragen, dann von deinem Rechner aus anmelden und OpenCode starten. 4. Ohne Internet arbeiten: OpenCode fragt nur das Sprachmodell im Heimnetz. Testen geht im Klon wie auf GitHub, nur ohne Browser-Tests. Jede fertige Änderung ist ein Commit auf lokal. 5. Einspielen: ein Admin startet sudo speech-spark lokal einspielen. Der Spark prüft die Commits, testet sie im Sandkasten und spielt sie wie ein Update ein; die Version zeig"
+"text": "1. Einmal installieren (auf dem Panel-Rechner, braucht Internet): sudo ./install.sh --entwickeln. Das legt den Nutzer spark-dev (ohne Passwort, ohne sudo) mit dem Klon /home/spark-dev/speech-on-dgx-spark und dem Zweig lokal an, lädt OpenCode (Version und SHA-512 fest in app/werkstatt.py, dieselbe Datei wie bei der Werkstatt) nach /opt/speech-spark/opencode, schreibt die Einstellungen von OpenCode (nur das eigene LLM-Tor, eigener Schlüssel, die Regeln aus CLAUDE.md und der Richtlinie), sperrt per Firewall jedes Netz außer dem LLM-Tor und baut die Testumgebung des Schnelltests. 2. Einschalten: als Admin *Funktionen → Entwickeln auf dem Pi* an. Erst dann gilt der Schlüssel von spark-dev am LLM-Tor. 3. Terminal öffnen: am einfachsten im Browser. Als Admin *Funktionen → Entwickeln auf dem Pi → Terminal im Browser* an, dann *Zustand → Werkstatt → Entwickeln*, Reiter *Terminal*, „Terminal öffnen“ und deinen Code eingeben (jedes Mal ein frischer; zweiter Anmeldeschritt nötig). Die Shell läuft als spark-dev im Klon. Wer lieber SSH nimmt: deinen öffentlichen SSH-Schlüssel für spark-dev eintragen und von deinem Rechner aus anmelden (siehe unten). 4. Ohne Internet arbeiten: spark-opencode tipp"
 },
 {
 "lang": "de",
@@ -15325,7 +15357,47 @@
 "file": "Installation im Detail",
 "head": "Entwickeln auf dem Pi mit OpenCode",
 "title": "Entwickeln auf dem Pi mit OpenCode",
-"text": "t dann „+lokal“."
+"text": "en und in eigenen Worten sagen, was sich ändern soll. OpenCode fragt nur das Sprachmodell im Heimnetz und vor jedem Befehl dich. Testen geht im Klon wie auf GitHub, nur ohne Browser-Tests. Jede fertige Änderung ist ein Commit auf lokal. 5. Einspielen: im Reiter *Übersicht* steht der Commit bei „Lokale Änderungen“ mit Titel und Zahl der Dateien; „Lokal einspielen“ (frischer Code) oder sudo speech-spark lokal einspielen. Der Spark prüft die Commits, testet sie im Sandkasten und spielt sie wie ein Update ein; die Version zeigt dann „+lokal“. „Zurück zur alten Version“ und „Verwerfen …“ stehen daneben. 6. Code-Auftrag im Chat (eigener Unterschalter *Funktionen → Entwickeln auf dem Pi → Code-Auftrag im Chat*, aus): Statt selbst im Terminal zu tippen, schreibst du im Chat des Panels oder der App etwa „Code-Auftrag: die Begrüßung soll freundlicher klingen“. OpenCode arbeitet dann einmal als spark-dev auf einem eigenen Zweig opencode/auftrag-<Nummer>, und die Karte „Code-Auftrag (OpenCode)“ zeigt, was herauskam: Ziel, Dateien, die ersten Zeilen der Änderung. Das Modell schlägt nur vor. Einspielen entscheidest du: „Lokal einspielen“ und „An GitHub geben“ öffnen *Zustand → Werkstatt → Entwic"
+},
+{
+"lang": "de",
+"src": "installation",
+"file": "Installation im Detail",
+"head": "Entwickeln auf dem Pi mit OpenCode",
+"title": "Entwickeln auf dem Pi mit OpenCode",
+"text": "keln* (dort die ganze Änderung und ein frischer Code), „Verwerfen“ löscht den Zweig, „Im Terminal weitermachen“ führt zum Reiter *Terminal*. Nur für Admins und nur getippt, nie über Lautsprecher, Auto, Telegram, Begleiter oder für Gäste."
+},
+{
+"lang": "de",
+"src": "installation",
+"file": "Installation im Detail",
+"head": "Entwickeln auf dem Pi mit OpenCode",
+"title": "Entwickeln auf dem Pi mit OpenCode",
+"text": "![Zustand → Werkstatt → Entwickeln: links lokale Änderungen, Zweige auf GitHub und Einstellungen, rechts die Commits mit den Knöpfen](../bilder/de-entwickeln.png)"
+},
+{
+"lang": "de",
+"src": "installation",
+"file": "Installation im Detail",
+"head": "Entwickeln auf dem Pi mit OpenCode",
+"title": "Entwickeln auf dem Pi mit OpenCode",
+"text": "![Reiter Terminal: die Shell als spark-dev im Browser, rechts die Sitzung](../bilder/de-entwickeln-terminal.png)"
+},
+{
+"lang": "de",
+"src": "installation",
+"file": "Installation im Detail",
+"head": "Entwickeln auf dem Pi mit OpenCode",
+"title": "Entwickeln auf dem Pi mit OpenCode",
+"text": "![Code-Auftrag im Chat: die Karte mit Ziel, Stand, geänderten Dateien und Zweig, darunter Lokal einspielen, An GitHub geben, Verwerfen](../bilder/de-code-auftrag-karte.png)"
+},
+{
+"lang": "de",
+"src": "installation",
+"file": "Installation im Detail",
+"head": "Entwickeln auf dem Pi mit OpenCode",
+"title": "Entwickeln auf dem Pi mit OpenCode",
+"text": "![Der Code-Auftrag auf der Seite: links unter Code-Aufträge, rechts die ganze Änderung als Text mit den Knöpfen](../bilder/de-entwickeln-auftrag.png)"
 },
 {
 "lang": "de",
@@ -15357,7 +15429,7 @@
 "file": "Installation im Detail",
 "head": "Weg A: an GitHub geben",
 "title": "Weg A: an GitHub geben",
-"text": "nd. 5. Weitergeben: sudo speech-spark lokal an-github mein-thema. Ohne Internet wartet der Auftrag und geht alle 15 Minuten von selbst los (--abbrechen verwirft ihn). 6. Übergeben: sudo speech-spark lokal zweige zeigt den Zweig, seinen Link und den Stand der GitHub-Tests. Dann einem Claude-Thread: „Gib den Zweig opencode/mein-thema einem Claude-Thread zum Prüfen“. Ist er auf main, fallen beim nächsten Update eingespielte lokale Commits, die schon drin sind, von selbst weg; im Klon danach git rebase spark/main."
+"text": "nd. 5. Weitergeben: *Zustand → Werkstatt → Entwickeln*, „Lokale Änderungen“, „An GitHub geben“ mit einem Thema, oder sudo speech-spark lokal an-github mein-thema. Ohne Internet wartet der Auftrag und geht alle 15 Minuten von selbst los (--abbrechen verwirft ihn). 6. Übergeben: die Seite zeigt den Zweig links unter „Zweige auf GitHub“ mit dem Stand der Tests, rechts mit Link und dem Satz zum Kopieren; sudo speech-spark lokal zweige zeigt den Zweig, seinen Link und den Stand der GitHub-Tests. Dann einem Claude-Thread: „Gib den Zweig opencode/mein-thema einem Claude-Thread zum Prüfen“. Ist er auf main, fallen beim nächsten Update eingespielte lokale Commits, die schon drin sind, von selbst weg; im Klon danach git rebase spark/main."
 },
 {
 "lang": "de",
@@ -19589,7 +19661,7 @@
 "file": "Architecture and data flow",
 "head": "Switch",
 "title": "Switch",
-"text": "The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 25 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow."
+"text": "The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 26 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow."
 },
 {
 "lang": "en",
@@ -19653,7 +19725,7 @@
 "file": "Architecture and data flow",
 "head": "Everyday score",
 "title": "Everyday score",
-"text": "- The test sentences (198) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
+"text": "- The test sentences (201) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
 },
 {
 "lang": "en",
@@ -19661,7 +19733,7 @@
 "file": "Architecture and data flow",
 "head": "Tool names",
 "title": "Tool names",
-"text": "- Wherever a tool shows, a readable name comes from one table (96 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
+"text": "- Wherever a tool shows, a readable name comes from one table (97 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
 },
 {
 "lang": "en",
@@ -19669,7 +19741,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 25 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 198 built-in test sentences (step 4, step 5) - 216 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
+"text": "- 26 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 201 built-in test sentences (step 4, step 5) - 216 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
 },
 {
 "lang": "en",
@@ -19877,7 +19949,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 4 calls per round (step 1) - 3 memory notes per answer (step 1) - 13 tools locked after outside text (step 4) - 7 tools without internet with the kill switch (step 3) - 96 tools with a readable name (step 11)"
+"text": "- 4 calls per round (step 1) - 3 memory notes per answer (step 1) - 13 tools locked after outside text (step 4) - 7 tools without internet with the kill switch (step 3) - 97 tools with a readable name (step 11)"
 },
 {
 "lang": "en",
@@ -21053,7 +21125,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 110). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again, and profiles forgets what it had opened of the profiles' sealed files."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 112). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again, and profiles forgets what it had opened of the profiles' sealed files."
 },
 {
 "lang": "en",
@@ -21069,7 +21141,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 47 files in every backup (step 7) - 110 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 47 files in every backup (step 7) - 112 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -21317,7 +21389,15 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ch \"Hand to GitHub\"): sudo speech-spark lokal an-github also takes the branch only as a bundle (entwickeln.an_github), never lets .github, links or submodules through (entwickeln.pfade_github) and pushes it as root with a deploy key of its own only to opencode/<thema> (entwickeln.ziel_ref: never main, never forced), over ssh with GitHub's pinned host key (entwickeln.GH_HOSTKEY); spark-dev stays without the internet. Without network the order waits. A Claude thread reviews the branch and brings it onto main."
+"text": "ch \"Hand to GitHub\"): sudo speech-spark lokal an-github also takes the branch only as a bundle (entwickeln.an_github), never lets .github, links or submodules through (entwickeln.pfade_github) and pushes it as root with a deploy key of its own only to opencode/<thema> (entwickeln.ziel_ref: never main, never forced), over ssh with GitHub's pinned host key (entwickeln.GH_HOSTKEY); spark-dev stays without the internet. Without network the order waits. A Claude thread reviews the branch and brings it onto main. Status → Workshop → Develop shows all this with buttons; there the tab Terminal (its own switch) opens a shell as spark-dev in the browser: a ticket for 30 s after a fresh code, bound to the sign-in and the address; the panel only runs root's fixed program /usr/local/bin/spark-dev-terminal without arguments, which starts as spark-dev in a sealed unit (entwickeln.terminal_befehl); one session (entwickelnseite.Terminal), it ends after 3600 s without input, after 28800 s, on signing out and on the emergency stop. Code order in the chat (its own switch): codeauftrag.offer offers the tool code_auftrag only to an admin in the typed chat of the panel and the apps (codeauftrag.CLIENTS);"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": " the goal (at most 500 characters) is only data for OpenCode. root (entwickeln.auftrag_lauf) lets OpenCode work once as spark-dev on a branch of its own opencode/auftrag-<n> (at most 1800 s); the card shows the proposal, installing and handing to GitHub only go on the page with a fresh code."
 },
 {
 "lang": "en",
@@ -21333,7 +21413,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 600 s a wish may be old (step 3) - 2000 characters at most in an order (step 2) - 4 parts of the test run at once (step 8) - 30 test names at most per result and \"again\" (step 2) - 20 results are kept (step 9) - 200000 characters of a patch, more is cut (step 9) - 5 h after the hour the night may start (step 1)"
+"text": "- 600 s a wish may be old (step 3) - 2000 characters at most in an order (step 2) - 4 parts of the test run at once (step 8) - 30 test names at most per result and \"again\" (step 2) - 20 results are kept (step 9) - 200000 characters of a patch, more is cut (step 9) - 5 h after the hour the night may start (step 1) - 30 s a ticket of the terminal counts (step 10) - 3600 s without input, then the terminal ends (step 10) - 28800 s a session of the terminal lasts at most (step 10) - 500 characters at most in a code order's goal (step 10) - 1800 s OpenCode works at most on a code order (step 10)"
 },
 {
 "lang": "en",
@@ -21341,7 +21421,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- On the model computer once sudo ./install.sh --werkstatt (OpenCode with a pinned version and checksum). - Features → Workshop: on and off, \"Test every night\" with the start hour. - Status → Workshop: start the four orders, look at results, red tests again, copy for Claude, delete. - Develop on the Pi: on the panel computer once sudo ./install.sh --entwickeln, then Features → Develop on the Pi on; install with sudo speech-spark lokal einspielen (zurueck, verwerfen, status). - Hand to GitHub: sudo speech-spark entwickeln github-schluessel neu, add the line on GitHub as a deploy key with write access, protect main with a ruleset, then Features → Develop on the Pi → Hand to GitHub on; hand over with sudo speech-spark lokal an-github <thema>."
+"text": "- On the model computer once sudo ./install.sh --werkstatt (OpenCode with a pinned version and checksum). - Features → Workshop: on and off, \"Test every night\" with the start hour. - Status → Workshop: start the four orders, look at results, red tests again, copy for Claude, delete. - Develop on the Pi: on the panel computer once sudo ./install.sh --entwickeln, then Features → Develop on the Pi on; install under Status → Workshop → Develop or with sudo speech-spark lokal einspielen (zurueck, verwerfen, status). - Terminal in the browser: Features → Develop on the Pi → Terminal in the browser on, then Status → Workshop → Develop, tab Terminal (fresh code, second sign-in step). - Hand to GitHub: sudo speech-spark entwickeln github-schluessel neu, add the line on GitHub as a deploy key with write access, protect main with a ruleset, then Features → Develop on the Pi → Hand to GitHub on; hand over with sudo speech-spark lokal an-github <thema>."
 },
 {
 "lang": "en",
@@ -21349,7 +21429,7 @@
 "file": "Architecture and data flow",
 "head": "What you see",
 "title": "What you see",
-"text": "- Status → Workshop: the history on the left, one result on the right with big numbers, what it means (such as \"What does red mean?\"), the red tests by area, the answer or patch and the next steps. - Status → Live, Monitoring and the control centre: part \"Workshop\" with kind and status, never contents. - Status → Live: part \"Entwickeln\" with \"lokale Änderungen: N\" and the last fixed reason of a refusal; sudo speech-spark lokal status shows the same in the terminal. - sudo speech-spark lokal zweige: the branches handed to GitHub with link and the state of GitHub's tests; on top of the admin pages the hint \"Gib den Zweig opencode/<thema> einem Claude-Thread zum Prüfen\"."
+"text": "- Status → Workshop → Develop: local changes with commits, branches on GitHub with their test state, settings, the course and the terminal; Live counts open terminals, never input or output. - Status → Workshop: the history on the left, one result on the right with big numbers, what it means (such as \"What does red mean?\"), the red tests by area, the answer or patch and the next steps. - Status → Live, Monitoring and the control centre: part \"Workshop\" with kind and status, never contents. - Status → Live: part \"Entwickeln\" with \"lokale Änderungen: N\" and the last fixed reason of a refusal; sudo speech-spark lokal status shows the same in the terminal. - sudo speech-spark lokal zweige: the branches handed to GitHub with link and the state of GitHub's tests; on top of the admin pages the hint \"Gib den Zweig opencode/<thema> einem Claude-Thread zum Prüfen\"."
 },
 {
 "lang": "en",
@@ -21365,7 +21445,15 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "pencode/<thema>, never main (step 10) - app/entwickeln.py pfade_github: never .github, no link, no submodule (step 10) - app/entwickeln.py GH_HOSTKEY: GitHub's pinned host key (step 10)"
+"text": "pencode/<thema>, never main (step 10) - app/entwickeln.py pfade_github: never .github, no link, no submodule (step 10) - app/entwickeln.py GH_HOSTKEY: GitHub's pinned host key (step 10) - app/entwickeln.py terminal_befehl: terminal as spark-dev, sealed (step 10) - app/panel/entwickelnseite.py Terminal: one session in the browser, limits (step 10) - app/panel/codeauftrag.py offer: code order only admins and typed (step 10) - app/panel/codeauftrag.py CLIENTS: only the chat of panel and apps (step 10) - app/entwickeln.py auftrag_lauf: root: OpenCode once on its own branch (step 10)"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "In the code",
+"title": "In the code",
+"text": "Self-tests: test_werkstatt, test_entwickeln, test_codeauftrag"
 },
 {
 "lang": "en",
@@ -32309,7 +32397,7 @@
 "file": "Assistant and panel",
 "head": "Access",
 "title": "Access",
-"text": "- Develop on the Pi (Features → Access → \"Develop on the Pi\"): You develop the Spark further right on the panel computer: in the terminal (over SSH) OpenCode works with the Spark's own language model, without a cloud."
+"text": "- Develop on the Pi (Features → Access → \"Develop on the Pi\"): You develop the Spark further right on the panel computer: in the terminal (in the browser under Status → Workshop → Develop or over SSH) OpenCode works with the Spark's own language model, without a cloud."
 },
 {
 "lang": "en",
@@ -32318,6 +32406,22 @@
 "head": "Access",
 "title": "Access",
 "text": "- Hand to GitHub (Features → Access → \"Hand to GitHub\"; builds on \"Develop on the Pi\"): Way A: what you built with OpenCode on the Pi goes to GitHub as its own branch opencode/<topic>, never to main."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Access",
+"title": "Access",
+"text": "- Terminal in the browser (Features → Access → \"Terminal in the browser\"; builds on \"Develop on the Pi\"): A shell as spark-dev in the browser, without SSH: Status → Workshop → Develop, tab Terminal."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Access",
+"title": "Access",
+"text": "- Code order in the chat (Features → Access → \"Code order in the chat\"; builds on \"Develop on the Pi\"): An admin types in the assistant (panel or app) what should change in the Spark, such as \"Code order: show the wind direction in the weather too\"."
 },
 {
 "lang": "en",
@@ -32597,7 +32701,55 @@
 "file": "Installation in detail",
 "head": "Developing on the Pi with OpenCode",
 "title": "Developing on the Pi with OpenCode",
-"text": "1. Install once (on the panel computer, needs the internet): sudo ./install.sh --entwickeln. This adds the user spark-dev (no password, no sudo) with the clone /home/spark-dev/speech-on-dgx-spark and the branch lokal, downloads OpenCode (version and SHA-512 fixed in app/werkstatt.py, the same file as the workshop's) into /opt/speech-spark/opencode, writes OpenCode's settings (only the own LLM-Tor, its own key, the rules from CLAUDE.md and the guidelines), blocks every network except the LLM-Tor by firewall and builds the quick test's test environment. 2. Switch on: as admin *Features → Develop on the Pi* on. Only then does the key of spark-dev work at the LLM-Tor. 3. In over SSH: add your public SSH key for spark-dev, then sign in from your computer and start OpenCode. 4. Work without the internet: OpenCode asks only the language model in the home network. Testing works in the clone as on GitHub, only without browser tests. Every finished change is a commit on lokal. 5. Install: an admin starts sudo speech-spark lokal einspielen. The Spark checks the commits, tests them in a sandbox and installs them like an update; the version then shows \"+lokal\"."
+"text": "1. Install once (on the panel computer, needs the internet): sudo ./install.sh --entwickeln. This adds the user spark-dev (no password, no sudo) with the clone /home/spark-dev/speech-on-dgx-spark and the branch lokal, downloads OpenCode (version and SHA-512 fixed in app/werkstatt.py, the same file as the workshop's) into /opt/speech-spark/opencode, writes OpenCode's settings (only the own LLM-Tor, its own key, the rules from CLAUDE.md and the guidelines), blocks every network except the LLM-Tor by firewall and builds the quick test's test environment. 2. Switch on: as admin *Features → Develop on the Pi* on. Only then does the key of spark-dev work at the LLM-Tor. 3. Open the terminal: easiest in the browser. As admin *Features → Develop on the Pi → Terminal in the browser* on, then *Status → Workshop → Develop*, tab *Terminal*, \"Open the terminal\" and enter your code (a fresh one every time; the second sign-in step is needed). The shell runs as spark-dev in the clone. If you prefer SSH: add your public SSH key for spark-dev and sign in from your computer (see below). 4. Work without the internet: type spark-opencode and say in your own words what should change. OpenCode asks only "
+},
+{
+"lang": "en",
+"src": "installation",
+"file": "Installation in detail",
+"head": "Developing on the Pi with OpenCode",
+"title": "Developing on the Pi with OpenCode",
+"text": "the language model in the home network and you before every command. Testing works in the clone as on GitHub, only without browser tests. Every finished change is a commit on lokal. 5. Install: in the tab *Overview* the commit shows under \"Local changes\" with its title and number of files; \"Install locally\" (fresh code) or sudo speech-spark lokal einspielen. The Spark checks the commits, tests them in a sandbox and installs them like an update; the version then shows \"+lokal\". \"Back to the old version\" and \"Drop …\" sit next to it. 6. Code order in the chat (its own sub-switch *Features → Develop on the Pi → Code order in the chat*, off): instead of typing in the terminal yourself, write in the panel's or the app's chat for example \"Code-Auftrag: the greeting should sound friendlier\". OpenCode then works once as spark-dev on its own branch opencode/auftrag-<number>, and the card \"Code-Auftrag (OpenCode)\" shows what came out: goal, files, the first lines of the change. The model only proposes. You decide on installing: \"Install locally\" and \"Hand to GitHub\" open *Status → Workshop → Develop* (the whole change there and a fresh code), \"Drop\" deletes the branch, \"Continue in the termin"
+},
+{
+"lang": "en",
+"src": "installation",
+"file": "Installation in detail",
+"head": "Developing on the Pi with OpenCode",
+"title": "Developing on the Pi with OpenCode",
+"text": "al\" leads to the tab *Terminal*. Admins only and typed only, never over speakers, the car, Telegram, the Begleiter or for guests."
+},
+{
+"lang": "en",
+"src": "installation",
+"file": "Installation in detail",
+"head": "Developing on the Pi with OpenCode",
+"title": "Developing on the Pi with OpenCode",
+"text": "![Status → Workshop → Develop: local changes, branches on GitHub and settings on the left, the commits with the buttons on the right](../bilder/en-entwickeln.png)"
+},
+{
+"lang": "en",
+"src": "installation",
+"file": "Installation in detail",
+"head": "Developing on the Pi with OpenCode",
+"title": "Developing on the Pi with OpenCode",
+"text": "![Tab Terminal: the shell as spark-dev in the browser, the session on the right](../bilder/en-entwickeln-terminal.png)"
+},
+{
+"lang": "en",
+"src": "installation",
+"file": "Installation in detail",
+"head": "Developing on the Pi with OpenCode",
+"title": "Developing on the Pi with OpenCode",
+"text": "![Code order in the chat: the card with goal, state, changed files and branch, below Install locally, Hand to GitHub, Drop](../bilder/en-code-auftrag-karte.png)"
+},
+{
+"lang": "en",
+"src": "installation",
+"file": "Installation in detail",
+"head": "Developing on the Pi with OpenCode",
+"title": "Developing on the Pi with OpenCode",
+"text": "![The code order on the page: on the left under code orders, on the right the whole change as text with the buttons](../bilder/en-entwickeln-auftrag.png)"
 },
 {
 "lang": "en",
@@ -32621,7 +32773,7 @@
 "file": "Installation in detail",
 "head": "Way A: hand to GitHub",
 "title": "Way A: hand to GitHub",
-"text": "1. Make the key: sudo speech-spark entwickeln github-schluessel neu shows a line starting with ssh-ed25519. Only root reads the secret part (/etc/speech-spark-github-key). 2. Add it on GitHub: in the repository the tab \"Settings\", on the left \"Deploy keys\", \"Add deploy key\". Title for example \"Spark Pi opencode\", paste the line, tick \"Allow write access\", \"Add key\". Take no personal token: it acts as your admin account and would get past the rule for main. 3. Protect main (once, on GitHub): tab \"Settings\", on the left \"Rules\", \"Rulesets\", \"New ruleset\", \"New branch ruleset\". Name \"protect main\", Enforcement status \"Active\", at \"Target branches\" \"Add target\" and \"Include default branch\". Tick: \"Restrict deletions\", \"Restrict updates\", \"Block force pushes\". At \"Bypass list\" \"Add bypass\" and \"Repository admin\" (your account, so you and the Claude threads keep pushing to main). \"Create\". Never put the deploy key on the bypass list. 4. Switch on: as admin *Features → Develop on the Pi → Hand to GitHub* on. After the update to this version run sudo ./install.sh --entwickeln once, so the service speech-spark-github and its timer are there. 5. Hand over: sudo speech-spark lokal an-github m"
+"text": "1. Make the key: sudo speech-spark entwickeln github-schluessel neu shows a line starting with ssh-ed25519. Only root reads the secret part (/etc/speech-spark-github-key). 2. Add it on GitHub: in the repository the tab \"Settings\", on the left \"Deploy keys\", \"Add deploy key\". Title for example \"Spark Pi opencode\", paste the line, tick \"Allow write access\", \"Add key\". Take no personal token: it acts as your admin account and would get past the rule for main. 3. Protect main (once, on GitHub): tab \"Settings\", on the left \"Rules\", \"Rulesets\", \"New ruleset\", \"New branch ruleset\". Name \"protect main\", Enforcement status \"Active\", at \"Target branches\" \"Add target\" and \"Include default branch\". Tick: \"Restrict deletions\", \"Restrict updates\", \"Block force pushes\". At \"Bypass list\" \"Add bypass\" and \"Repository admin\" (your account, so you and the Claude threads keep pushing to main). \"Create\". Never put the deploy key on the bypass list. 4. Switch on: as admin *Features → Develop on the Pi → Hand to GitHub* on. After the update to this version run sudo ./install.sh --entwickeln once, so the service speech-spark-github and its timer are there. 5. Hand over: *Status → Workshop → Develop*, \"Loc"
 },
 {
 "lang": "en",
@@ -32629,7 +32781,7 @@
 "file": "Installation in detail",
 "head": "Way A: hand to GitHub",
 "title": "Way A: hand to GitHub",
-"text": "y-topic. Without the internet the order waits and starts by itself every 15 minutes (--abbrechen drops it). 6. Pass it on: sudo speech-spark lokal zweige shows the branch, its link and the state of GitHub's tests. Then to a Claude thread: \"Gib den Zweig opencode/my-topic einem Claude-Thread zum Prüfen\". Once it is on main, the next update drops installed local commits that are part of it by itself; in the clone afterwards git rebase spark/main."
+"text": "al changes\", \"Hand to GitHub\" with a topic, or sudo speech-spark lokal an-github my-topic. Without the internet the order waits and starts by itself every 15 minutes (--abbrechen drops it). 6. Pass it on: the page shows the branch on the left under \"Branches on GitHub\" with the state of the tests, on the right with the link and the sentence to copy; sudo speech-spark lokal zweige shows the branch, its link and the state of GitHub's tests. Then to a Claude thread: \"Gib den Zweig opencode/my-topic einem Claude-Thread zum Prüfen\". Once it is on main, the next update drops installed local commits that are part of it by itself; in the clone afterwards git rebase spark/main."
 },
 {
 "lang": "en",

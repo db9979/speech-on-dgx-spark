@@ -287,6 +287,8 @@
       <div class="setrow" data-show="chat.werkstatt" style="margin-left:18px"><div class="lbl"><b>Angriffsprobe</b><span>Kachel „Angriffe prüfen“: misst, wie oft das Sprachmodell Befehlen in fremdem Text folgen würde. Kein Werkzeug läuft, nur Zahlen.</span></div><label class="tgl"><input type="checkbox" id="chat.angriffsprobe"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Entwickeln auf dem Pi</b><span>OpenCode mit dem eigenen Sprachmodell im Terminal des Panel-Rechners; lokale Änderungen kommen nach einem Schnelltest wie ein Update.</span></div><label class="tgl"><input type="checkbox" id="chat.entwickeln"><i></i></label></div>
       <div class="setrow" data-show="chat.entwickeln" style="margin-left:18px"><div class="lbl"><b>An GitHub geben</b><span>Der Zweig von spark-dev geht als opencode/… an GitHub, nie an main, zum Prüfen durch einen Claude-Thread.</span></div><label class="tgl"><input type="checkbox" id="chat.entwickeln_github"><i></i></label></div>
+      <div class="setrow" data-show="chat.entwickeln" style="margin-left:18px"><div class="lbl"><b>Terminal im Browser</b><span>Eine Shell als spark-dev unter Zustand → Werkstatt → Entwickeln, jede Sitzung mit frischem Code.</span></div><label class="tgl"><input type="checkbox" id="chat.entwickeln_terminal"><i></i></label></div>
+      <div class="setrow" data-show="chat.entwickeln" style="margin-left:18px"><div class="lbl"><b>Code-Auftrag im Chat</b><span>Ein Admin tippt im Assistenten, was sich ändern soll; OpenCode schlägt es auf einem eigenen Zweig vor, einspielen entscheidest du.</span></div><label class="tgl"><input type="checkbox" id="chat.entwickeln_auftrag"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Fernzugang zu Servern</b><span>Die Shell eines fernen Servers im Browser, über seinen Anker. Nur Admins mit zweitem Schritt; ein Code entsperrt die Seite für eine Weile.</span></div><label class="tgl"><input type="checkbox" id="chat.fernzugang"><i></i></label></div>
       <div data-show="chat.fernzugang" style="margin-left:36px">
         <div class="setrow"><div class="lbl"><b>Assistent im Fernzugang</b><span>„Frag den Assistenten“ und Vorschläge, nur vom eigenen Sprachmodell. Er tippt nie; den Bildschirm sieht er nur, wenn du ihn mitschickst.</span></div><label class="tgl"><input type="checkbox" id="chat.fernzugang_hilfe"><i></i></label></div>
@@ -1336,13 +1338,22 @@
 </section>
 
 <section id="live"><div class="lv" id="lvroot"></div></section>
-<section id="werk"><div class="card ld-box ld-frame" id="wkbox">
+<section id="werk"><div class="ltabs werktabs" id="werktabs" role="tablist"><button type="button" data-wt="werk" class="on">Prüfen und reparieren</button><button type="button" data-wt="dev">Entwickeln</button></div>
+<div class="card ld-box ld-frame" id="wkbox">
   <div class="ld-head"><h2>Werkstatt</h2><span class="mut wknacht" id="wknacht"></span></div>
   <div class="pintro">Prüft und repariert eine abgeschottete Kopie des Spark-Codes auf dem Modell-Rechner: ohne deine Daten, ohne Internet. Dein Spark selbst bleibt unberührt, eingespielt wird nie etwas.</div>
   <div class="note" id="wkoff" hidden>Die Werkstatt ist aus. Einschalten unter Funktionen → Werkstatt.</div>
   <div class="wkacts" id="wkacts"></div>
   <div class="ld-split"><div class="ld-list" id="wklist"></div><div class="ld-detail" id="wkdetail" hidden></div></div>
   <div class="mut" id="wkmsg" role="status"></div>
+</div>
+<div class="card ld-box ld-frame" id="dvbox" hidden>
+  <div class="ld-head dvhead"><h2>Entwickeln</h2><div class="lseg" id="dvseg" role="tablist"><button type="button" data-dv="ueber" class="on">Übersicht</button><button type="button" data-dv="term">Terminal</button></div><span class="sp"></span><div class="dvchips" id="dvchips"></div></div>
+  <div class="pintro">Am Code des Sparks arbeiten, auch ohne Internet: OpenCode mit dem eigenen Sprachmodell als Nutzer spark-dev in einem eigenen Klon. Eingespielt wird nur, was du anklickst, nach einem Schnelltest; das Modell schlägt nur vor.</div>
+  <div class="note" id="dvoff" hidden>Entwickeln auf dem Pi ist aus. Einschalten unter Funktionen → Entwickeln auf dem Pi.</div>
+  <div id="dvueber"><div class="ld-split"><div class="ld-list" id="dvlist"></div><div class="ld-detail" id="dvdetail" hidden></div></div></div>
+  <div id="dvterm" hidden></div>
+  <div class="mut ld-msg" id="dvmsg" role="status"></div>
 </div></section>
 <section id="verb"><div class="card ld-box" id="vbbox">
   <div class="ld-head"><h2>Verbessern</h2><button class="b" type="button" id="vbrun">Jetzt nachsehen</button></div>
@@ -1690,6 +1701,7 @@
 <script src="/static/js/verbrauch.js"></script>
 <script src="/static/js/modelle.js"></script>
 <script src="/static/js/werkstatt.js"></script>
+<script src="/static/js/entwickeln.js"></script>
 <script src="/static/js/fernzugang.js"></script>
 <script src="/static/js/fernbild.js"></script>
 <script src="/static/js/fernweb.js"></script>

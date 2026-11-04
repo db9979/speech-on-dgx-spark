@@ -53,6 +53,9 @@
    (test_seitenrahmen) */
 :root{--frame:1800px;--sidecol:220px;--sidegap:24px}
 
+/* the terminal (Zustand → Werkstatt → Entwickeln, Fernzugang): dark in light and dark mode, like a console */
+:root{--term:#0b1020;--term-fg:#e2e8f0;--term-mut:#94a3b8;--term-line:#1e293b}
+
 /* the memory bar's colors per kind, the tiles carry the same one as their legend (Dominik 2026-10-18) */
 :root{--mdf-bild:#ec4899;--mdf-musik:#f59e0b}
 

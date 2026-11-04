@@ -394,6 +394,8 @@
     "werkstatt_nacht": false,
     "entwickeln": false,
     "entwickeln_github": false,
+    "entwickeln_terminal": false,
+    "entwickeln_auftrag": false,
     "fernzugang": false,
     "fernzugang_hilfe": false,
     "fernzugang_leerlauf_min": 15,

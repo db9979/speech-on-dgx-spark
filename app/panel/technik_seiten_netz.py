@@ -474,7 +474,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Werkstatt
     "werkstatt": {
-        "stand": "9929812ff5",
+        "stand": "9a19652fbc",
         "bezug": {
             "werkstattseite.auftrag_geben": ["s1"], "werkstattseite.nacht_art": ["s1"], "werkstattseite.NACHT_FENSTER_H": ["s1"],
             "werkstatt.pruefen": ["s2"], "werkstatt.TEXT_MAX": ["s2"],
@@ -487,6 +487,10 @@ SEITEN = {
             "entwickeln.vorbereiten": ["s10"], "entwickeln.pfade_pruefen": ["s10"], "entwickeln.sandbox": ["s10"],
             "entwickeln.aufsetzen": ["s10"], "entwickeln.an_github": ["s10"], "entwickeln.ziel_ref": ["s10"],
             "entwickeln.pfade_github": ["s10"], "entwickeln.GH_HOSTKEY": ["s10"],
+            "entwickeln.terminal_befehl": ["s10"], "entwickelnseite.Terminal": ["s10"], "entwickelnseite.TICKET_S": ["s10"],
+            "entwickelnseite.LEERLAUF_S": ["s10"], "entwickelnseite.SITZUNG_S": ["s10"],
+            "codeauftrag.offer": ["s10"], "codeauftrag.CLIENTS": ["s10"], "entwickeln.auftrag_lauf": ["s10"],
+            "entwickeln.ZIEL_MAX": ["s10"], "entwickeln.AUFTRAG_S": ["s10"],
         },
         "kurz": ("Die Werkstatt lässt einen Admin auf dem Modell-Rechner den vollen Testlauf laufen und mit OpenCode den Code "
                  "messen, ein Problem untersuchen oder eine Reparatur vorschlagen. Alles läuft in einer abgeschotteten Kopie "
@@ -600,7 +604,17 @@ SEITEN = {
                "durch (entwickeln.pfade_github) und schiebt ihn als root mit einem eigenen Deploy-Schlüssel nur nach "
                "opencode/<thema> (entwickeln.ziel_ref: nie main, nie erzwungen), über ssh mit GitHubs festem Hostschlüssel "
                "(entwickeln.GH_HOSTKEY); spark-dev bleibt ohne Internet. Ohne Netz wartet der Auftrag. Ein Claude-Thread "
-               "prüft den Zweig und bringt ihn auf main.",
+               "prüft den Zweig und bringt ihn auf main. Alles das zeigt Zustand → Werkstatt → Entwickeln mit Knöpfen; "
+               "dort öffnet der Reiter Terminal (eigener Schalter) eine Shell als spark-dev im Browser: Ticket für "
+               "{entwickelnseite.TICKET_S} s nach frischem Code, an Anmeldung und Adresse gebunden; das Panel ruft nur das "
+               "feste Programm /usr/local/bin/spark-dev-terminal von root ohne Argumente, das als spark-dev in einer "
+               "abgeschotteten Einheit startet (entwickeln.terminal_befehl); eine Sitzung (entwickelnseite.Terminal), "
+               "Ende nach {entwickelnseite.LEERLAUF_S} s ohne Eingabe, nach {entwickelnseite.SITZUNG_S} s, beim Abmelden und Notaus. "
+               "Code-Auftrag im Chat (eigener Schalter): codeauftrag.offer bietet das Werkzeug code_auftrag nur einem Admin "
+               "im getippten Chat von Panel und App (codeauftrag.CLIENTS); das Ziel (höchstens {entwickeln.ZIEL_MAX} Zeichen) "
+               "ist für OpenCode nur Daten. root (entwickeln.auftrag_lauf) lässt OpenCode einmal als spark-dev auf einem "
+               "eigenen Zweig opencode/auftrag-<n> arbeiten (höchstens {entwickeln.AUFTRAG_S} s); die Karte zeigt den "
+               "Vorschlag, einspielen und an GitHub geben gehen nur auf der Seite mit frischem Code.",
                "The admin hands the patch to a Claude thread or a person; the workshop never installs or pushes anything. "
                "Develop on the Pi is different (OpenCode in the panel computer's terminal, user spark-dev): \"sudo "
                "speech-spark lokal einspielen\" takes its commits (entwickeln.vorbereiten), allows only files the service "
@@ -612,7 +626,17 @@ SEITEN = {
                "and pushes it as root with a deploy key of its own only to opencode/<thema> (entwickeln.ziel_ref: never "
                "main, never forced), over ssh with GitHub's pinned host key (entwickeln.GH_HOSTKEY); spark-dev stays "
                "without the internet. Without network the order waits. A Claude thread reviews the branch and brings it "
-               "onto main.")),
+               "onto main. Status → Workshop → Develop shows all this with buttons; there the tab Terminal (its own switch) "
+               "opens a shell as spark-dev in the browser: a ticket for {entwickelnseite.TICKET_S} s after a fresh code, bound "
+               "to the sign-in and the address; the panel only runs root's fixed program /usr/local/bin/spark-dev-terminal "
+               "without arguments, which starts as spark-dev in a sealed unit (entwickeln.terminal_befehl); one session "
+               "(entwickelnseite.Terminal), it ends after {entwickelnseite.LEERLAUF_S} s without input, after "
+               "{entwickelnseite.SITZUNG_S} s, on signing out and on the emergency stop. Code order in the chat (its own "
+               "switch): codeauftrag.offer offers the tool code_auftrag only to an admin in the typed chat of the panel "
+               "and the apps (codeauftrag.CLIENTS); the goal (at most {entwickeln.ZIEL_MAX} characters) is only data for "
+               "OpenCode. root (entwickeln.auftrag_lauf) lets OpenCode work once as spark-dev on a branch of its own "
+               "opencode/auftrag-<n> (at most {entwickeln.AUFTRAG_S} s); the card shows the proposal, installing and "
+               "handing to GitHub only go on the page with a fresh code.")),
         ],
         "beispiele": [
             (("Testlauf in der Nacht", "Test run at night"), ["s1", "s2", "s3", "s4", "s5", "s6", "s6!", "s8", "s9"],
@@ -632,6 +656,11 @@ SEITEN = {
             ("{werkstatt.AUFTRAEGE_MAX}", ("Ergebnisse bleiben", "results are kept"), "werkstatt.AUFTRAEGE_MAX"),
             ("{werkstatt.PATCH_MAX}", ("Zeichen eines Patches, mehr wird gekürzt", "characters of a patch, more is cut"), "werkstatt.PATCH_MAX"),
             ("{werkstattseite.NACHT_FENSTER_H} h", ("nach der Stunde darf die Nacht starten", "after the hour the night may start"), "werkstattseite.NACHT_FENSTER_H"),
+            ("{entwickelnseite.TICKET_S} s", ("gilt ein Ticket des Terminals", "a ticket of the terminal counts"), "entwickelnseite.TICKET_S"),
+            ("{entwickelnseite.LEERLAUF_S} s", ("ohne Eingabe, dann endet das Terminal", "without input, then the terminal ends"), "entwickelnseite.LEERLAUF_S"),
+            ("{entwickelnseite.SITZUNG_S} s", ("höchstens dauert eine Sitzung des Terminals", "a session of the terminal lasts at most"), "entwickelnseite.SITZUNG_S"),
+            ("{entwickeln.ZIEL_MAX}", ("Zeichen höchstens im Ziel eines Code-Auftrags", "characters at most in a code order's goal"), "entwickeln.ZIEL_MAX"),
+            ("{entwickeln.AUFTRAG_S} s", ("arbeitet OpenCode höchstens an einem Code-Auftrag", "OpenCode works at most on a code order"), "entwickeln.AUFTRAG_S"),
         ],
         "einstellen": [
             ("Auf dem Modell-Rechner einmal sudo ./install.sh --werkstatt (OpenCode mit fester Version und Prüfsumme).",
@@ -641,9 +670,13 @@ SEITEN = {
             ("Zustand → Werkstatt: die vier Aufträge starten, Ergebnisse ansehen, rote Tests noch mal, für Claude kopieren, löschen.",
              "Status → Workshop: start the four orders, look at results, red tests again, copy for Claude, delete."),
             ("Entwickeln auf dem Pi: auf dem Panel-Rechner einmal sudo ./install.sh --entwickeln, dann Funktionen → Entwickeln "
-             "auf dem Pi an; einspielen mit sudo speech-spark lokal einspielen (zurueck, verwerfen, status).",
+             "auf dem Pi an; einspielen unter Zustand → Werkstatt → Entwickeln oder mit sudo speech-spark lokal einspielen (zurueck, verwerfen, status).",
              "Develop on the Pi: on the panel computer once sudo ./install.sh --entwickeln, then Features → Develop on the "
-             "Pi on; install with sudo speech-spark lokal einspielen (zurueck, verwerfen, status)."),
+             "Pi on; install under Status → Workshop → Develop or with sudo speech-spark lokal einspielen (zurueck, verwerfen, status)."),
+            ("Terminal im Browser: Funktionen → Entwickeln auf dem Pi → Terminal im Browser an, dann Zustand → Werkstatt → "
+             "Entwickeln, Reiter Terminal (frischer Code, zweiter Anmeldeschritt).",
+             "Terminal in the browser: Features → Develop on the Pi → Terminal in the browser on, then Status → Workshop → "
+             "Develop, tab Terminal (fresh code, second sign-in step)."),
             ("An GitHub geben: sudo speech-spark entwickeln github-schluessel neu, die Zeile auf GitHub als Deploy-Schlüssel mit "
              "Schreibrecht eintragen, main per Ruleset schützen, dann Funktionen → Entwickeln auf dem Pi → An GitHub geben an; "
              "weitergeben mit sudo speech-spark lokal an-github <thema>.",
@@ -652,6 +685,10 @@ SEITEN = {
              "with sudo speech-spark lokal an-github <thema>."),
         ],
         "sehen": [
+            ("Zustand → Werkstatt → Entwickeln: lokale Änderungen mit Commits, Zweige auf GitHub mit Teststand, Einstellungen, "
+             "der Ablauf und das Terminal; Live zählt offene Terminals, nie Eingaben oder Ausgaben.",
+             "Status → Workshop → Develop: local changes with commits, branches on GitHub with their test state, settings, the "
+             "course and the terminal; Live counts open terminals, never input or output."),
             ("Zustand → Werkstatt: links der Verlauf, rechts ein Ergebnis mit großen Zahlen, was es heißt (etwa „Was heißt "
              "rot?“), den roten Tests nach Bereich, Antwort oder Patch und den nächsten Schritten.",
              "Status → Workshop: the history on the left, one result on the right with big numbers, what it means (such as "
@@ -688,8 +725,13 @@ SEITEN = {
             ("entwickeln.ziel_ref", ("nur opencode/<thema>, nie main", "only opencode/<thema>, never main")),
             ("entwickeln.pfade_github", ("nie .github, kein Link, kein Untermodul", "never .github, no link, no submodule")),
             ("entwickeln.GH_HOSTKEY", ("GitHubs fester Hostschlüssel", "GitHub's pinned host key")),
+            ("entwickeln.terminal_befehl", ("Terminal als spark-dev, abgeschottet", "terminal as spark-dev, sealed")),
+            ("entwickelnseite.Terminal", ("eine Sitzung im Browser, Grenzen", "one session in the browser, limits")),
+            ("codeauftrag.offer", ("Code-Auftrag nur Admin und getippt", "code order only admins and typed")),
+            ("codeauftrag.CLIENTS", ("nur Chat von Panel und Apps", "only the chat of panel and apps")),
+            ("entwickeln.auftrag_lauf", ("root: OpenCode einmal auf eigenem Zweig", "root: OpenCode once on its own branch")),
         ],
-        "tests": ["test_werkstatt", "test_entwickeln"],
+        "tests": ["test_werkstatt", "test_entwickeln", "test_codeauftrag"],
         "heute": [],
     },
     # ------------------------------------------------------------------ Post, Kalender, Kontakte

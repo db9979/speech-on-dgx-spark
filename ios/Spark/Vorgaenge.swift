@@ -271,7 +271,7 @@ struct VorgangKarte: View {
                 if let m = d["draft"] as? [String: Any] {
                     writing = MailDraft(to: m["to"] as? String ?? "", subject: m["subject"] as? String ?? "", text: m["text"] as? String ?? "")
                 }
-            case "oeffnen":   // stages 3+4: only the place in the panel where it goes on (a fixed way, Sprung-Link)
+            case "oeffnen", "ca_lokal", "ca_github":   // stages 3+4, the Code-Auftrag: only the place in the panel where it goes on (a fixed way, Sprung-Link; there the code is asked)
                 if let w = z["weg"], let u = SparkAPI.wayLink(w) { openURL(u) }
             case "cx_antworten": if let c = z["chat"], !c.isEmpty { chat = ChatStart(id: c) }
             case "ml_lesen":

@@ -26,6 +26,7 @@ KIND = {
     "bild_malen": "bild",
     "musik_machen": "musik",
     "musik_bearbeiten": "musik",
+    "code_auftrag": "aenderung",
     "anruf_planen": "erinnerung",
     "fuer_dich_tun": "erinnerung",
     "mappe_dazu": "aenderung",   # Mappen: a document put into a Mappe (mappen.tool)   # Für dich: erledigt, nicht interessant or a reminder (fuerdich.tool)

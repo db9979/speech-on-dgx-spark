@@ -159,6 +159,9 @@ KARTEN = {
          ("läuft alles, Störung, Ausfall, Sicherung, Backup, Update, welche Version, Notaus, mein Zustand",
           "backup, update, online"),
          (("spark_zustand", "Läuft alles?", "Is everything running?"),)),
+        (("codeauftrag",), ("code_auftrag",), ("Code-Auftrag (nur Admin)", "Code order (admins only)"),
+         ("Code-Auftrag, OpenCode, im Code ändern", "code order, OpenCode"),
+         (("code_auftrag", "Code-Auftrag: im Wetter soll die Windrichtung stehen", "Code order: show the wind direction in the weather"),)),
     ),
 }
 AREA_COLOR = {"alltag": "#1f7a5c", "termine": "#2b5fb8", "nachrichten": "#8a4fb0", "zuhause": "#c0612b",

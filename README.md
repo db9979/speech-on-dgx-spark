@@ -32,7 +32,7 @@ At the end it prints the address, password and API key, then TTS speaks a senten
 | Show addresses and keys | `sudo speech-spark info` |
 | Own language model | `sudo ./install.sh --llm`, then `sudo speech-spark modelle llm uebernehmen` (back: `… zurueck`) |
 | Workshop (test run, code measurement, diagnosis, repair) | on the model computer `sudo ./install.sh --werkstatt`, then *Features → Workshop* |
-| Develop on the Pi (OpenCode with the own language model, install locally) | on the panel computer `sudo ./install.sh --entwickeln`, then *Features → Develop on the Pi*; guide in [Installation](docs/en/installation.md) |
+| Develop on the Pi (OpenCode with the own language model, install locally) | on the panel computer `sudo ./install.sh --entwickeln`, then *Features → Develop on the Pi*; used under *Status → Workshop → Develop* (overview, terminal in the browser, code orders from the chat); guide with pictures in [Installation](docs/en/installation.md#developing-on-the-pi-with-opencode) |
 | Screen in remote access (guacd) | on the computer with the panel `sudo ./install.sh --fernbild`, then *Features → Remote access to servers → Screen* |
 | Move the panel to another computer | `sudo speech-spark umziehen --code`, see [Spark split](docs/en/spark-split.md) |
 | Uninstall | `sudo ./uninstall.sh` (config, models and voices stay; `--purge` removes everything) |
@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.309** Develop on the Pi, package 3 (own sub-switches, admin only, off): the page Status → Workshop → Develop, a terminal as spark-dev in the browser and the code order in the chat; the model only proposes, you decide on installing
 - **V01.1.308** Develop on the Pi, package 2 (own sub-switch, admin only, off): Hand to GitHub pushes spark-dev's branch as opencode/<topic> with root's deploy key (never main, never forced), GitHub tests it, a Claude thread reviews it; updates still only count main
 - **V01.1.307** Spontaneous help control, part S2b: the program SparkHilfe for Windows (x64 and ARM64, one file, no installation or admin rights) reads address and one-time key only from its file name, connects only there (wss, normal TLS checks), shows the helper only after the key was taken and asks "Decline / View only / Allow"; picture, inputs, red frame, bar and question from one core shared with the Begleiter (Sicht.cs), inputs checked in the program too against the fixed lists; only GitHub builds it (own workflow, pinned actions), the Spark fetches it daily with signature, size and SHA-256 checked, service watch "Program SparkHilfe"
 - **V01.1.306** RED FIX iPhone build: the index size in Find → Settings read the language through FindenModel.de on the main actor from a nonisolated function (Xcode error); `de` is now `nonisolated` and only reads the device language
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.302** Collections narrow the search: the assistant and Find search only within one collection on request, the iPhone shows collections natively with levels to switch
 - **V01.1.301** Redesign stage 6: the Status overview with calm tiles of one height (dot and word, tabular digits), Logs as a dense table with a fixed row height and an area menu, the Technik picture neutral with line icons, Workshop in the same style; guard Klar6
 - **V01.1.300** Spontaneous help control, part S2a (plan s2-plan.md, own switch below spontaneous help, off): "Ask for control" with a fresh code, /hilfe loads the program SparkHilfe by POST as a blob with a one-time key in the file name (128 bits, 10 minutes, once), WSS /api/hilfe/steuern without Origin, pictures (JPEG, at most 4 a second) to the admin, inputs only from the lists of fernsicht and only after "Allow" and "Control"; bar Control/View only, Live, log, history, emergency stop; self-tests with a program dummy
-- **V01.1.299** Develop on the Pi (package 1, switch off): OpenCode with the own language model in the panel computer's terminal as the user spark-dev in its own clone (install.sh --entwickeln), its own revocable key at the LLM-Tor, always last, network only to the LLM-Tor; local commits checked with sudo speech-spark lokal einspielen, quick-tested in a sandbox and installed like an update (+lokal, back, drop), never run as root; an update rebases local changes and never loses them
 
 
 

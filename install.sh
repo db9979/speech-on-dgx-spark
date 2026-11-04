@@ -1048,6 +1048,10 @@ fi
   printf ', /usr/bin/systemctl start --no-block speech-spark-wechsel'   # stage E4: takes the panel's checked wish
   printf ', /usr/bin/systemctl start --no-block speech-spark-werkstatt'   # Funktionen → Werkstatt: takes the checked wish
   printf ', /usr/bin/systemctl start --no-block speech-spark-github'   # Entwickeln auf dem Pi → An GitHub geben: the same
+  printf ', /usr/bin/systemctl start --no-block speech-spark-auftrag'   # Entwickeln auf dem Pi → Code-Auftrag im Chat: the same
+  # Entwickeln auf dem Pi → Terminal im Browser: root's fixed program without arguments ("" = none allowed); it checks
+  # the switches itself and starts bash as spark-dev in a unit of its own (app/entwickeln.py terminal_befehl)
+  if [ "$WITH_ENTWICKELN" = 1 ]; then printf ', /usr/local/bin/spark-dev-terminal ""'; fi
   printf ', /usr/bin/systemctl start --no-block speech-spark-messen-wunsch\n'   # Zustand → Modelle „Messen“: the same
 } >/etc/sudoers.d/speech-spark
 chmod 440 /etc/sudoers.d/speech-spark
@@ -1798,6 +1802,16 @@ if [ "$WITH_ENTWICKELN" = 1 ]; then
 exec /usr/bin/python3 -I $PREFIX/app/entwickeln.py opencode "\$@"
 EOF
   chmod 755 /usr/local/bin/spark-opencode
+  # the browser terminal of Zustand → Werkstatt → Entwickeln (panel: entwickelnseite.py): root's, no arguments; the
+  # panel may start only this (its sudoers line above)
+  cat >/usr/local/bin/spark-dev-terminal <<EOF
+#!/bin/sh
+# Entwickeln auf dem Pi: bash as spark-dev for the panel's browser terminal (app/entwickeln.py terminal_befehl)
+[ "\$#" = 0 ] || exit 2
+exec /usr/bin/python3 -I $PREFIX/app/entwickeln.py terminal
+EOF
+  chown root:root /usr/local/bin/spark-dev-terminal
+  chmod 755 /usr/local/bin/spark-dev-terminal
   # network: the LLM-Tor (this computer's loopback, or the model computer's door), DNS, and the free ports of its own
   # tests on the loopback; never the panel, an engine or anything else (code check 19.10. C7, as the Werkstatt)
   DEV_LLM=$(cfg_int .llm.port 31006)
@@ -1898,6 +1912,24 @@ NoNewPrivileges=yes
 Environment=SPEECH_SPARK_PREFIX=$PREFIX SPEECH_SPARK_ETC=$ETC SPEECH_SPARK_VAR=$VAR
 ExecStart=/bin/bash $PREFIX/app/speech-spark.sh lokal an-github --wunsch
 TimeoutStartSec=20min
+EOF
+  # Code-Auftrag im Chat (package 3b): root's oneshot takes the panel's checked wish and runs OpenCode once as
+  # spark-dev in its own unit on a branch opencode/auftrag-<n> of spark-dev's clone (app/entwickeln.py auftrag_lauf)
+  cat >/etc/systemd/system/speech-spark-auftrag.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: a Code-Auftrag from the chat, OpenCode as spark-dev on its own branch
+
+[Service]
+LogNamespace=speech-spark
+Type=oneshot
+Nice=10
+MemoryMax=512M
+PrivateTmp=yes
+ProtectSystem=full
+NoNewPrivileges=yes
+Environment=SPEECH_SPARK_PREFIX=$PREFIX SPEECH_SPARK_ETC=$ETC SPEECH_SPARK_VAR=$VAR
+ExecStart=/bin/bash $PREFIX/app/speech-spark.sh lokal auftrag
+TimeoutStartSec=40min
 EOF
   cat >/etc/systemd/system/speech-spark-github.timer <<EOF
 [Unit]

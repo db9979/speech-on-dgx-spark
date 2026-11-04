@@ -522,7 +522,8 @@ class Seite(unittest.TestCase):
         self.assertEqual(sub, "lokale Änderungen: 2 · 1 im Klon noch nicht eingespielt · zuletzt Update mit lokalen Änderungen abgelehnt: tests")
         a = self.s.alerts(now=1000 + 60)
         self.assertEqual(len(a), 1)
-        self.assertEqual((a[0]["kind"], a[0]["level"], a[0]["go"]), ("entwickeln", "warn", "Einstellungen → Update"))
+        self.assertEqual((a[0]["kind"], a[0]["level"], a[0]["go"]), ("entwickeln", "warn", "Zustand → Werkstatt → Entwickeln"))
+        self.assertIn("Weiter unter Zustand → Werkstatt → Entwickeln", a[0]["text"], "the hint points to the page (package 3)")
         self.assertIn("test_live.A.b", a[0]["text"])
         self.assertNotIn("Commit-Text", json.dumps(a) + sub)
         self.assertEqual(self.s.alerts(now=1000 + self.s.HINWEIS_S + 1), [], "the hint goes after its days")
@@ -1004,7 +1005,7 @@ class GitHubSeite(unittest.TestCase):
         self.assertEqual((v["github"], v["gegeben"]), ("gegeben", 1))
         self.assertIn("an GitHub gegeben: 1", self.s.live_sub(v))
         a = [x for x in self.s.alerts(now=1060) if x["kind"] == "entwickeln_github"]
-        self.assertEqual((a[0]["level"], a[0]["go"]), ("info", "Funktionen → Entwickeln auf dem Pi"))
+        self.assertEqual((a[0]["level"], a[0]["go"]), ("info", "Zustand → Werkstatt → Entwickeln"))
         self.assertIn("Gib den Zweig opencode/x einem Claude-Thread zum Prüfen", a[0]["text"])
         self.assertEqual([x for x in self.s.alerts(now=1000 + self.s.HINWEIS_S + 1) if x["kind"] == "entwickeln_github"], [])
         for zustand, n in (("wartet", 0), ("schluessel", 1)):
@@ -1078,6 +1079,333 @@ class GitHubSkripte(unittest.TestCase):
         top = s.split("set -euo pipefail")[0]
         self.assertIn("speech-spark lokal an-github", top)
         self.assertIn("speech-spark entwickeln github-schluessel", top)
+
+
+# ---------------------------------------------------------------- package 3: the page and its terminal
+class SeiteDrei(unittest.TestCase):
+    """Zustand → Werkstatt → Entwickeln (package 3): the local commits with their titles only on the admin page (never in
+    Live or a hint), every hint points to the page, the root side builds the terminal's unit from fixed values."""
+
+    def test_commit_titles_are_parsed_as_data(self):
+        raw = ("\x1eabc1234\x1fKalender: Begrüßung angepasst\n\n2\t1\tapp/panel/a.py\n5\t0\tdocs/de/b.md\n"
+               "\x1edef5678\x1fHilfe \x1b[31mrot\x07 <b>fett</b>\n-\t-\tapp/panel/static/x.png\n"
+               "\x1exyz\x1fkein Commit\n")
+        c = entwickeln.commits_parsen(raw)
+        self.assertEqual(len(c), 2, "a line without a short commit is dropped")
+        self.assertEqual(c[0], {"kurz": "abc1234", "titel": "Kalender: Begrüßung angepasst", "dateien": 2, "plus": 7, "minus": 1})
+        self.assertNotIn("\x1b", c[1]["titel"])
+        self.assertNotIn("\x07", c[1]["titel"])
+        self.assertEqual(c[1]["dateien"], 1)
+        lang = "".join(f"\x1e{i:07x}\x1f{'x' * 300}\n" for i in range(50))
+        c = entwickeln.commits_parsen(lang)
+        self.assertEqual(len(c), entwickeln.COMMITS_MAX)
+        self.assertEqual(len(c[0]["titel"]), entwickeln.TITEL_MAX)
+
+    def test_the_copy_checks_titles_again_and_live_never_shows_one(self):
+        import entwickelnseite
+        helpers.keep_chat(self, "entwickeln")
+        helpers.set_config(entwickeln=True)
+        tmp = tempfile.mkdtemp(prefix="entwickeln-")
+        self.addCleanup(shutil.rmtree, tmp, True)
+        pfad = os.path.join(tmp, "e.json")
+        d = entwickeln.anzeige({}, None, 0, now=5, commits=[{"kurz": "abc1234", "titel": "Geheimer Titel\x1b", "dateien": 1, "plus": 2, "minus": 3},
+                                                           {"kurz": "nicht-hex", "titel": "x"}, "kaputt"])
+        self.assertEqual(d["commits"], [{"kurz": "abc1234", "titel": "Geheimer Titel", "dateien": 1, "plus": 2, "minus": 3}])
+        d["commits"].append({"kurz": "1234567", "titel": "y" * 500, "dateien": True, "plus": -1, "minus": "9"})
+        with open(pfad, "w") as f:
+            json.dump(d, f)
+        lesen = entwickeln.anzeige_lesen(pfad)
+        self.assertEqual(lesen["commits"][1], {"kurz": "1234567", "titel": "y" * entwickeln.TITEL_MAX, "dateien": 0, "plus": 0, "minus": 0})
+        with mock.patch.object(entwickeln, "ANZEIGE", pfad):
+            v = entwickelnseite.for_live()
+            a = entwickelnseite.alerts(now=10)
+        self.assertNotIn("Geheimer Titel", json.dumps(v) + entwickelnseite.live_sub(v) + json.dumps(a))
+
+    def test_every_hint_points_to_the_page(self):
+        import entwickelnseite
+        self.assertEqual(entwickelnseite.WEG, "Zustand → Werkstatt → Entwickeln")
+        with open(os.path.join(APP, "panel", "entwickelnseite.py"), encoding="utf-8") as f:
+            src = f.read()
+        self.assertNotIn("Weiter mit sudo speech-spark", src, "hints name the page, not only the command line")
+        html = open(os.path.join(APP, "panel", "static", "index.html"), encoding="utf-8").read()
+        werk = html[html.index('<section id="werk">'):html.index("</section>", html.index('<section id="werk">'))]
+        self.assertIn('data-wt="dev">Entwickeln</button>', werk, "the part „Entwickeln“ is a tab of Zustand → Werkstatt")
+        self.assertIn('id="dvbox"', werk)
+        js = open(os.path.join(APP, "panel", "static", "js", "entwickeln.js"), encoding="utf-8").read()
+        self.assertNotRegex(js, r"innerHTML|insertAdjacentHTML|outerHTML|document\.write", "titles and the terminal are data")
+        self.assertIn("fzLaden()", js, "xterm.js of the Fernzugang, one source")
+
+    def test_the_terminal_unit_is_fixed_and_never_root(self):
+        b = entwickeln.terminal_befehl(1234, start="/home/spark-dev/speech-on-dgx-spark")
+        self.assertEqual(b[:3], ["systemd-run", "--quiet", "--pty"])
+        self.assertEqual(b[-2:], ["/bin/bash", "--login"])
+        props = dict(b[i + 1].split("=", 1) for i, x in enumerate(b) if x == "-p")
+        self.assertEqual((props["User"], props["Group"]), ("spark-dev", "spark-dev"))
+        self.assertEqual(props["Slice"], "user-1234.slice", "spark-dev's own limits, below the panel")
+        for k, v in (("NoNewPrivileges", "yes"), ("ProtectSystem", "strict"), ("ReadWritePaths", entwickeln.HOME),
+                     ("CapabilityBoundingSet", ""), ("RuntimeMaxSec", str(entwickeln.TERM_GRENZE_S)), ("PrivateTmp", "yes")):
+            self.assertEqual(props[k], v, k)
+        for weg in ("/var/lib/speech-spark", "/etc/speech-spark", "/root", entwickeln.GH_KEY):
+            self.assertIn("-" + weg, props["InaccessiblePaths"].split())
+        for falsch in (0, -1, True, "1000", None):
+            with self.assertRaises(entwickeln.Fehler):
+                entwickeln.terminal_befehl(falsch)
+        out = io.StringIO()
+        with redirect_stdout(out):
+            self.assertEqual(entwickeln.cli(["terminal", "--extra"]), 2, "never an argument from the caller")
+            if os.geteuid() != 0:
+                self.assertEqual(entwickeln.cli(["terminal"]), 2, "only root, through the wrapper")
+
+    def test_the_installer_gives_the_panel_one_fixed_program(self):
+        i = helpers.repo_file("install.sh")
+        if not i:
+            return
+        sudo = i[:i.index("} >/etc/sudoers.d/speech-spark")]
+        self.assertIn('printf \', /usr/local/bin/spark-dev-terminal ""\'', sudo, "no arguments allowed (\"\")")
+        self.assertEqual(sudo.count("spark-dev-terminal"), 1, "the panel may start it, nothing else of spark-dev")
+        w = i[i.index("cat >/usr/local/bin/spark-dev-terminal <<EOF"):]
+        w = w[:w.index("\nEOF\n")]
+        self.assertIn('[ "\\$#" = 0 ] || exit 2', w)
+        self.assertIn("entwickeln.py terminal", w)
+        self.assertIn("chown root:root /usr/local/bin/spark-dev-terminal", i)
+        self.assertNotRegex(i, r"sudoers[^\n]*spark-dev|spark-dev[^\n]*NOPASSWD")
+
+
+class Terminal(unittest.TestCase):
+    """The terminal as spark-dev in the browser: a sub-switch (off), an admin in the browser with a second step, a fresh
+    code every session, a ticket once in the same login and from the panel's own page, one session at a time, nothing
+    of what runs in the journal or Live; the Notaus and logging out end it. A harmless program stands for root's."""
+
+    CODE = {"x-speech-code": "123456"}
+
+    def setUp(self):
+        from fastapi.testclient import TestClient
+        import entwickelnseite
+        import guard
+        import mfa
+        import panel
+        self.s, self.mfa, self.guard = entwickelnseite, mfa, guard
+        self.real = (mfa.enabled, mfa.verify)
+        self.admin, self.other = TestClient(panel.app), TestClient(panel.app)   # logged in before a code is asked
+        self.anmelden()
+        self.other.post("/api/login", json={"password": "secret-admin"})
+        mfa.enabled = lambda who: who == mfa.ADMIN
+        mfa.verify = lambda who, code: who == mfa.ADMIN and code == "123456"
+        helpers.keep_chat(self, "entwickeln", "entwickeln_terminal")
+        helpers.set_config(entwickeln=True, entwickeln_terminal=True)
+        p = mock.patch.object(entwickelnseite, "BEFEHL", ["cat"])
+        p.start()
+        self.addCleanup(p.stop)
+        self.reset()
+
+    def anmelden(self):
+        an = self.mfa.enabled
+        self.mfa.enabled = self.real[0]
+        self.assertEqual(self.admin.post("/api/login", json={"password": "secret-admin"}).status_code, 200)
+        self.mfa.enabled = an
+
+    def reset(self):
+        self.s.TERM_TICKETS.clear()
+        self.s.TERM.clear()
+        for k in [k for k in self.guard._rate if str(k[0]).startswith("entwickeln")]:
+            self.guard._rate.pop(k, None)
+
+    def tearDown(self):
+        self.mfa.enabled, self.mfa.verify = self.real
+        self.reset()
+
+    def ticket(self, client=None):
+        r = (client or self.admin).post("/api/admin/entwickeln/terminal", json={"cols": 100, "rows": 30}, headers=self.CODE)
+        self.assertEqual(r.status_code, 200, r.text)
+        return r.json()["ticket"]
+
+    def refused(self, client, ticket, origin="http://testserver"):
+        from starlette.websockets import WebSocketDisconnect
+        out = io.StringIO()
+        with redirect_stdout(out), self.assertRaises(WebSocketDisconnect):
+            with client.websocket_connect(f"/api/entwickeln/terminal?t={ticket}", headers={"origin": origin} if origin else {}) as ws:
+                ws.receive_text()
+        return out.getvalue()
+
+    def warten(self, bedingung):
+        import time
+        for _ in range(200):
+            if bedingung():
+                return True
+            time.sleep(0.025)
+        return bedingung()
+
+    def test_off_by_default_admin_only_and_registered(self):
+        import features
+        import stufen
+        with open(os.path.join(APP, "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["entwickeln_terminal"], False)
+        self.assertNotIn("entwickelnterminal", features.DEFAULT_ON)
+        f = {x.key: x for x in features.FEATURES}["entwickelnterminal"]
+        self.assertEqual((f.admin, f.parent), (("entwickeln_terminal",), "entwickeln"))
+        self.assertEqual(stufen.LIST[("POST", "/api/admin/entwickeln/terminal")][0], stufen.PROTECT, "a fresh code every session")
+        from fastapi.testclient import TestClient
+        import panel
+        anon = TestClient(panel.app)
+        self.assertIn(anon.post("/api/admin/entwickeln/terminal", headers=self.CODE).status_code, (401, 403))
+        helpers.set_config(entwickeln_terminal=False)
+        out = io.StringIO()
+        with redirect_stdout(out):
+            self.assertEqual(self.admin.post("/api/admin/entwickeln/terminal", headers=self.CODE).status_code, 409)
+        self.assertIn("entwickeln: terminal abgelehnt aus", out.getvalue())
+        self.assertEqual(self.s.TERM_TICKETS, {})
+
+    def test_fresh_code_and_a_second_step(self):
+        r = self.admin.post("/api/admin/entwickeln/terminal", json={})
+        self.assertNotEqual(r.status_code, 200, "never without the code")
+        self.assertEqual(self.s.TERM_TICKETS, {})
+        self.mfa.enabled = lambda who: False
+        out = io.StringIO()
+        with redirect_stdout(out):
+            r = self.admin.post("/api/admin/entwickeln/terminal", json={}, headers=self.CODE)
+        self.assertEqual(r.status_code, 403, r.text)
+        self.assertIn("terminal abgelehnt zweiter_schritt", out.getvalue())
+
+    def test_ticket_once_bound_to_its_login_and_the_own_page(self):
+        t = self.ticket()
+        self.assertNotIn(t, json.dumps(list(self.s.TERM_TICKETS)), "only its hash is kept")
+        self.assertIn("abgewiesen fremde_seite", self.refused(self.admin, t, "https://evil.example"))
+        self.assertIn("abgewiesen fremde_seite", self.refused(self.admin, t, ""))
+        self.assertIn("abgewiesen ticket", self.refused(self.other, t), "another login of the same admin: no")
+        t = self.ticket()
+        for v in self.s.TERM_TICKETS.values():
+            v["until"] -= self.s.TICKET_S + 1
+        self.assertIn("abgewiesen ticket", self.refused(self.admin, t), "too late")
+        from fastapi.testclient import TestClient
+        import panel
+        self.assertIn("abgewiesen kein_admin", self.refused(TestClient(panel.app), "x" * 43))
+
+    def test_a_session_runs_once_and_ends(self):
+        import entwickelnseite
+        t = self.ticket()
+        out = io.StringIO()
+        with redirect_stdout(out):
+            with self.admin.websocket_connect(f"/api/entwickeln/terminal?t={t}", headers={"origin": "http://testserver"}) as ws:
+                m = json.loads(ws.receive_text())
+                self.assertEqual((m["typ"], m["stand"]), ("stand", "offen"))
+                self.assertEqual(len(entwickelnseite.TERM), 1)
+                self.assertEqual(entwickelnseite.terminal_zahlen()["offen"], 1)
+                ws.send_bytes(b"Geheimbefehl\n")
+                got = b""
+                while b"Geheimbefehl" not in got:
+                    got += ws.receive_bytes()
+                ws.send_text(json.dumps({"typ": "groesse", "cols": 120, "rows": 40}))
+                self.assertEqual(self.admin.post("/api/admin/entwickeln/terminal", json={}, headers=self.CODE).status_code, 429, "one at a time")
+                self.refused(self.admin, "y" * 43)
+                ws.send_text(json.dumps({"typ": "ende"}))
+                zu = None
+                while zu is None:
+                    m = ws.receive()
+                    if m.get("text"):
+                        zu = json.loads(m["text"])
+                self.assertEqual(zu, {"typ": "zu", "grund": "beendet"})
+            self.assertTrue(self.warten(lambda: not entwickelnseite.TERM and "terminal zu" in out.getvalue()))
+        lines = out.getvalue()
+        self.assertIn("entwickeln: terminal auf admin 1", lines)
+        self.assertIn("entwickeln: terminal zu beendet 0", lines)
+        self.assertIn("entwickeln: terminal abgelehnt voll 1", lines)
+        self.assertNotIn("Geheimbefehl", lines, "what runs never reaches the journal")
+
+    def test_notaus_and_logging_out_end_it(self):
+        import asyncio as aio
+        import entwickelnseite
+        for weg in ("notaus", "abmelden"):
+            t = self.ticket()
+            with redirect_stdout(io.StringIO()):
+                with self.admin.websocket_connect(f"/api/entwickeln/terminal?t={t}", headers={"origin": "http://testserver"}) as ws:
+                    ws.receive_text()
+                    s = next(iter(entwickelnseite.TERM.values()))
+                    if weg == "notaus":
+                        aio.run_coroutine_threadsafe(entwickelnseite.notaus_close(), s.loop).result(10)
+                    else:
+                        self.admin.post("/api/logout")
+                    self.assertTrue(self.warten(lambda: not entwickelnseite.TERM), weg)
+                    self.assertEqual(s.grund, weg)
+            self.anmelden()
+        with open(os.path.join(APP, "panel", "notaus.py"), encoding="utf-8") as f:
+            self.assertIn("await entwickelnseite.notaus_close()", f.read())
+
+
+DEMO_SEITE = {"an": True, "anzahl": 2, "offen": 1, "basis": "abcdef1", "kopf": "7be20d4", "vorher": True, "update": False,
+              "letzter": {"art": "einspielen", "ergebnis": "ok", "t": 1762166000, "rot": [], "module": 12},
+              "commits": [{"kurz": "a3f91c2", "titel": "Kalender: Begrüßung angepasst", "dateien": 2, "plus": 7, "minus": 1},
+                          {"kurz": "7be20d4", "titel": "Hilfe Wetter: <b>zwei</b> Tippfehler", "dateien": 1, "plus": 2, "minus": 2}],
+              "version": "V01.1.294+lokal", "internet": "da", "github_an": True, "terminal_an": True, "opencode": True,
+              "opencode_version": "1.18.34", "zweig": "lokal", "terminal": {"offen": 0, "max": 1}, "leerlauf_min": 60}
+DEMO_GITHUB = {"an": True, "wartet": False, "letzter": {"zustand": "gegeben", "t": 1762160000},
+               "zweige": [{"zweig": "opencode/begruessung", "kopf": "a3f91c2", "anzahl": 1, "t": 1762160000, "tests": "gruen",
+                           "link": "https://github.com/x/y/tree/opencode/begruessung"},
+                          {"zweig": "opencode/logzeile-musik", "kopf": "1234567", "anzahl": 3, "t": 1761600000, "tests": "rot", "link": ""}]}
+
+
+class ImBrowser(unittest.TestCase):
+    """Zustand → Werkstatt → Entwickeln in a real browser at 320, 390 and 1280 px: the way opens the part, the tiles,
+    the commits (their titles as text, never as HTML), the buttons with their lock, the Ablauf and the terminal tab;
+    nothing is wider than the screen."""
+
+    @classmethod
+    def setUpClass(cls):
+        from tests.test_ui_browser import browser_ok
+        if not browser_ok():
+            raise unittest.SkipTest("no Playwright/Chromium here")
+        cls.port = helpers._port()
+        helpers.serve_panel(cls, cls.port)
+
+    def test_the_page_at_three_widths(self):
+        from tests.test_ui_browser import PAGE_READY, async_playwright, chromium
+        demo = json.dumps(DEMO_SEITE)
+        gh = json.dumps(DEMO_GITHUB)
+
+        async def go():
+            out = {}
+            async with async_playwright() as p:
+                exe = chromium()
+                br = await p.chromium.launch(**({"executable_path": exe} if exe else {}))
+                base = f"http://127.0.0.1:{self.port}"
+                for w in (320, 390, 1280):
+                    ctx = await br.new_context(viewport={"width": w, "height": 900}, locale="de-DE", bypass_csp=True)
+                    pg = await ctx.new_page()
+                    await pg.goto(base + "/")
+                    await pg.request.post(base + "/api/login", data={"password": "secret-admin"})
+                    await pg.goto(base + "/")
+                    await pg.wait_for_function(PAGE_READY, timeout=30000)
+                    weg = await pg.evaluate("(()=>{const w='Zustand → Werkstatt → Entwickeln',r=wayParse(w,0);return r&&r.end===w.length?r.steps:0})()")
+                    await pg.evaluate("wayGo('Zustand → Werkstatt → Entwickeln')")
+                    await pg.wait_for_function("!document.getElementById('dvbox').hidden&&document.getElementById('werk').classList.contains('on')", timeout=10000)
+                    await pg.wait_for_function("DV.d!==null", timeout=10000)   # the page's own first load is done
+                    r = await pg.evaluate("""([d,g])=>{clearTimeout(DV.timer);DV.d=d;DV.gh=g;DV.sel='lokal';dvShow();
+                        const det=$('dvdetail'),c=[...det.querySelectorAll('.dvcommit b')].map(x=>x.textContent);
+                        return {kacheln:det.querySelectorAll('.dvtile').length,commits:c,fett:det.querySelectorAll('.dvcommit b b').length,
+                          knoepfe:[...det.querySelectorAll('.ld-acts button')].map(b=>[b.textContent,b.disabled,b.classList.contains('needcode2')||b.classList.contains('needcode')]),
+                          schritte:det.querySelectorAll('.dvschritt').length,zeilen:[...$('dvlist').querySelectorAll('.ld-row b')].map(x=>x.textContent),
+                          breit:document.documentElement.scrollWidth-innerWidth,werk:getComputedStyle($('wkbox')).display}}""", [json.loads(demo), json.loads(gh)])
+                    await pg.evaluate("dvAnsicht('term')")
+                    t = await pg.evaluate("""()=>({knopf:[...$('dvxterm').querySelectorAll('button')].map(b=>b.textContent),
+                        karten:$('dvtside').querySelectorAll('.dvtcard').length,breit:document.documentElement.scrollWidth-innerWidth})""")
+                    out[w] = (weg, r, t)
+                    await ctx.close()
+                await br.close()
+            return out
+        out = asyncio.run(go())
+        for w, (weg, r, t) in out.items():
+            self.assertEqual(weg, 2, "both steps after Zustand match, to the end")
+            self.assertEqual(r["kacheln"], 3, w)
+            self.assertEqual(r["commits"], ["Kalender: Begrüßung angepasst", "Hilfe Wetter: <b>zwei</b> Tippfehler"], w)
+            self.assertEqual(r["fett"], 0, "a title is text, never HTML")
+            self.assertEqual([k[0] for k in r["knoepfe"]], ["Lokal einspielen", "An GitHub geben", "Zurück zur alten Version", "Verwerfen …"])
+            self.assertTrue(all(k[2] for i, k in enumerate(r["knoepfe"]) if i != 1), "the buttons with a code show their lock")
+            self.assertEqual(r["schritte"], 5)
+            self.assertIn("opencode/begruessung", r["zeilen"])
+            self.assertLessEqual(r["breit"], 0, f"nothing wider than {w} px")
+            self.assertEqual(r["werk"], "none", "only the chosen part of the Werkstatt shows")
+            self.assertEqual(t["knopf"], ["Terminal öffnen"])
+            self.assertEqual(t["karten"], 2)
+            self.assertLessEqual(t["breit"], 0, f"the terminal tab fits {w} px")
 
 
 if __name__ == "__main__":

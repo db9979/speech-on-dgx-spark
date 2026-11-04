@@ -5021,6 +5021,41 @@
 "titel": "An GitHub geben: ohne Internet wartet es",
 "text": "Internet des Panel-Rechners trennen (Router oder Kabel), dann sudo speech-spark lokal an-github offline-test: „Wartet auf Internet …“; Zustand → Live, Kasten Entwickeln: „an GitHub zuletzt: wartet“. Internet wieder verbinden: spätestens nach 15 Minuten steht opencode/offline-test auf GitHub, sudo speech-spark logs entwickeln zeigt „entwickeln: github gegeben“. Als spark-dev bleibt curl -sS https://github.com die ganze Zeit gesperrt. Funktionen → Entwickeln auf dem Pi → An GitHub geben aus: sudo speech-spark lokal an-github x sagt „An GitHub geben ist aus“.",
 "thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P742",
+"v": 1309,
+"titel": "Entwickeln: die Seite unter Zustand → Werkstatt",
+"text": "Zustand → Werkstatt, oben „Entwickeln“ antippen: links „Lokale Änderungen“ (Zweig lokal mit Zahl der Commits), „Zweige auf GitHub“ mit grün/läuft/rot und „Einstellungen“; rechts die Kacheln Läuft als, Internet, GitHub und die Commits mit Kurz-Hash, Titel und Zahl der Dateien. Einen Commit im Klon mit dem Titel „Test <b>fett</b>“ machen: auf der Seite steht der Titel genau so als Text (nicht fett), in Zustand → Live und Zustand → Logs steht kein Titel. „Lokal einspielen“ fragt nach dem Code und spielt wie sudo speech-spark lokal einspielen ein; die Version zeigt „+lokal“. Auf dem Handy (schmal) erst die Liste, ein Tipp öffnet das Detail mit „‹ Entwickeln“. Der Hinweis oben auf den Admin-Seiten (etwa nach einem abgelehnten Einspielen) führt per Sprung-Link auf diese Seite.",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P743",
+"v": 1309,
+"titel": "Entwickeln: Terminal im Browser",
+"text": "Nach dem Update einmal sudo ./install.sh --entwickeln (danach ls -l /usr/local/bin/spark-dev-terminal zeigt root und -rwxr-xr-x). Funktionen → Entwickeln auf dem Pi → Terminal im Browser an. Zustand → Werkstatt → Entwickeln, Reiter Terminal, „Terminal öffnen“: fragt nach dem Code, dann zeigt whoami „spark-dev“, pwd den Klon, sudo -n true scheitert, ls /var/lib/speech-spark und cat /etc/speech-spark-github-key verweigert, curl -sS https://github.com bricht ab. spark-opencode startet OpenCode und antwortet. Zustand → Live zeigt „Terminal offen: 1“, Logs (System) „entwickeln: terminal auf 1“ ohne Eingaben. Ein zweiter Browser: „Es ist schon ein Terminal offen“. „Sitzung beenden“: Logs „entwickeln: terminal zu beendet“, Live wieder 0.",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P744",
+"v": 1309,
+"titel": "Entwickeln: Terminal endet von selbst",
+"text": "Terminal öffnen, dann im Panel abmelden: die Sitzung endet („zu abmelden“ im Log). Wieder öffnen, Notaus auslösen: die Sitzung endet sofort („zu notaus“), Öffnen geht erst nach dem Aufheben. Wieder öffnen, Funktionen → Entwickeln auf dem Pi → Terminal im Browser aus und speichern: die Sitzung endet („zu aus“), der Reiter zeigt den Hinweis zum Einschalten. Ohne zweiten Anmeldeschritt (Ich → Sicherheit) sagt „Terminal öffnen“, dass er nötig ist. In der iPhone- oder Android-App steht kein Terminal.",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P745",
+"v": 1309,
+"titel": "Code-Auftrag im Chat: Karte mit Vorschlag",
+"text": "Nach dem Update einmal sudo ./install.sh --entwickeln. Funktionen → Entwickeln auf dem Pi → Code-Auftrag im Chat an. Als Admin im Chat des Panels tippen: „Code-Auftrag: die Begrüßung soll freundlicher klingen“. Die Antwort sagt, dass der Auftrag läuft; die Karte „Code-Auftrag (OpenCode)“ zeigt Ziel und „läuft …“ mit dem Hinweis „Das Modell schlägt nur vor. Einspielen entscheidest du.“ Nach einigen Minuten zeigt sie „Vorschlag fertig“, Dateien, Zweig opencode/auftrag-… und die ersten Zeilen der Änderung als Text. Zustand → Werkstatt → Entwickeln zeigt den Auftrag unter „Code-Aufträge“ mit der ganzen Änderung. Zustand → Live zeigt nur „Code-Auftrag läuft“ bzw. die Zahl, Logs (System) nur „entwickeln: auftrag …“ ohne das Ziel.",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P746",
+"v": 1309,
+"titel": "Code-Auftrag: einspielen, verwerfen, nur getippt",
+"text": "Auf der fertigen Karte „Lokal einspielen“ antippen: es öffnet Zustand → Werkstatt → Entwickeln, dort fragt „Lokal einspielen“ nach einem frischen Code, setzt lokal vorwärts und spielt wie ein Update ein (Version „+lokal“). Einen zweiten Auftrag geben und auf der Karte „Verwerfen“ antippen: der Zweig ist weg (git branch im Terminal), die Karte geht zu. „Im Terminal weitermachen“ führt zum Reiter Terminal. Denselben Satz über einen Lautsprecher, Telegram, CarPlay oder als Gast sagen: kein Code-Auftrag, keine Karte. Ein Nicht-Admin bekommt ihn auch getippt nicht. In der iPhone- und Android-App: der getippte Auftrag geht, die Karte öffnet mit „Lokal einspielen“ die Seite. Schalter aus: kein Auftrag mehr.",
+"thread": "Opencode mit internem LLM auf dem Pi"
 }
 ]
 }

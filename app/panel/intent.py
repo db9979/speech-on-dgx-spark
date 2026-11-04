@@ -34,6 +34,7 @@ import guard
 import homeassistant
 import llm
 import zustand_wz
+import codeauftrag
 import fund
 from common import load_config
 from core import auth
@@ -217,6 +218,8 @@ GROUPS = {
     "musik": ({"musik_machen", "musik_bearbeiten"}, musik.GROUP_WORDS),
     # the Spark's own state (zustand_wz.py): services, backup, version, Notaus, Mein Zustand
     "zustand": ({"spark_zustand"}, zustand_wz.WORDS),
+    # Code-Auftrag im Chat (codeauftrag.py): an admin's order for OpenCode; the module offers it only typed and to admins
+    "codeauftrag": ({"code_auftrag"}, codeauftrag.WORDS),
     # Finden (fund.py, plan such-index): a search verb and a thing of one's own („Such mir die Rechnung von Thomann“,
     # „Wo ist der Vertrag mit der Telekom?“), never the internet or the archive; beside „dokument“ or „mail“ both stay
     "finden": ({"fund_suche"}, fund.FIND_WORDS),
@@ -658,6 +661,7 @@ GROUP_SAYS = {
     "iphone": "etwas auf dem iPhone auslösen (Kurzbefehl)",
     "spark": "Fragen zum Spark selbst, seinen Einstellungen und Funktionen",
     "zustand": "ob beim Spark alles läuft, Dienste erreichbar, Sicherung, Version, Update, Notaus, eigener Zustand",
+    "codeauftrag": "den Code des Sparks von OpenCode ändern lassen (Code-Auftrag, nur Admin, getippt)",
 }
 
 

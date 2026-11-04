@@ -47,6 +47,7 @@ TOOLS = {
     "telefonanrufen": ("anruf_planen",),
     "tagebuch": ("spark_tagebuch",),
     "sparkzustand": ("spark_zustand",),
+    "entwickelnauftrag": ("code_auftrag",),
     "rechnen": ("rechnen",),
     # everyday
     "reminders": ("reminder_set", "reminder_list", "reminder_cancel"),
@@ -253,6 +254,7 @@ WITHOUT = {
     "weicheabstimmen": "weiche_abstimmen.py: nur der Admin auf Funktionen → Weiche; das Modell schlägt Wörter vor, feste Regeln messen, kein Werkzeug",
     "weicheunklar": "weiche_unklar.py: das Panel merkt unklare Fragen anonym für den Admin auf Funktionen → Weiche, kein Werkzeug",
     "entwickeln": "entwickeln.py: OpenCode nur im Terminal von spark-dev, einspielen nur ein Admin (Kommandozeile oder Panel-Endpunkt); das Modell im Gespräch bekommt kein Werkzeug dafür",
+    "entwickelnterminal": "entwickelnseite.py: eine Shell als spark-dev nur für einen Admin im Browser mit frischem Code; das Modell im Gespräch bekommt kein Werkzeug dafür und sieht nie, was dort läuft",
     "entwickelngithub": "entwickeln.py an_github: nur ein Admin gibt den Zweig weiter (Kommandozeile oder Panel-Endpunkt mit Code), feste Regeln, kein Werkzeug fürs Modell",
     "werkstattnacht": "werkstattseite.py: feste Nachtregel im Panel (Testlauf, danach Code-Messung), kein Werkzeug",
     "angriffsprobe": "angriffsprobe.py: Knopf auf der Werkstatt-Seite, misst das Sprachmodell, kein Werkzeug",
@@ -373,7 +375,7 @@ PANEL_STEPS = {"local_search"}
 
 # tools a module offers only when the person's own words name it: the Weiche keeps them (extras "keep")
 BY_WORD = {"remarkable_note": "remarkable", "remarkable_sent": "remarkable", "remarkable_page": "remarkable",
-           "remarkable_attachment": "remarkable", "remarkable_library": "rmliste", "remarkable_sheet": "remarkable", "spark_zustand": "zustand_wz", "rechnen": "rechnen",
+           "remarkable_attachment": "remarkable", "remarkable_library": "rmliste", "remarkable_sheet": "remarkable", "spark_zustand": "zustand_wz", "code_auftrag": "codeauftrag", "rechnen": "rechnen",
            "home_rules_list": "hamelden", "home_rule_delete": "hamelden", "speaker_volume": "aendern",
            "proactive_pause": "aendern", "undo_last": "aendern", "nas_ablegen": "nasablage",
            "nas_zustand": "naszustand", "offen_zeigen": "vorgaenge"}
@@ -434,5 +436,6 @@ SENTENCES = {
     "transit": ("Wann fährt die nächste S-Bahn?", "When does the next S-Bahn leave?"),
     "feeds_news": ("Was gibt's Neues auf Reddit?", "What's new on Reddit?"),
     "spark_zustand": ("Wann wurde zuletzt gesichert?", "When was the last backup?"),
+    "code_auftrag": ("Code-Auftrag: im Wetter soll die Windrichtung stehen", "Code order: show the wind direction in the weather"),
     "iphone_action": ("Ruf Mama an", "Call Mum"),
 }

@@ -307,6 +307,7 @@
       "read_page": "wikipedia",
       "transit": "wikipedia",
       "agent_change": "spark_vorschlag",
+      "code_auftrag": "spark_vorschlag",
       "agent_schedule": "spark_vorschlag",
       "agent_task": "spark_vorschlag",
       "agent_watch": "spark_vorschlag",

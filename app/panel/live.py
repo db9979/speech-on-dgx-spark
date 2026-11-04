@@ -89,7 +89,7 @@ TOOLS = {
     # Bilder malen (bilder.py): the picture is painted on the Spark (bild_server.py, 127.0.0.1)
     "bild_malen": "bild", "Bild malen": "bild", "Bild ändern (Panel)": "bild",
     # Musik machen (musik.py): the song is made on the model computer (musik_server.py)
-    "musik_machen": "musik", "Musik machen": "musik", "musik_bearbeiten": "musik", "Musik bearbeiten": "musik",
+    "musik_machen": "musik", "Musik machen": "musik", "code_auftrag": "mem", "Code-Auftrag": "mem", "musik_bearbeiten": "musik", "Musik bearbeiten": "musik",
     # Der Spark ruft an (telefon_anruf.py): planned on the Spark, the call goes through the PBX
     "anruf_planen": "telefon", "Anrufen lassen": "telefon",
     # the job itself (docmake._work): every part written by the language model, then the file built

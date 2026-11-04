@@ -32,7 +32,7 @@ Am Ende stehen Adresse, Passwort und API-Schlüssel auf dem Bildschirm, danach s
 | Adressen und Schlüssel anzeigen | `sudo speech-spark info` |
 | Eigenes Sprachmodell | `sudo ./install.sh --llm`, danach `sudo speech-spark modelle llm uebernehmen` (zurück: `… zurueck`) |
 | Werkstatt (Testlauf, Code-Messung, Diagnose, Reparatur) | auf dem Modell-Rechner `sudo ./install.sh --werkstatt`, dann *Funktionen → Werkstatt* |
-| Entwickeln auf dem Pi (OpenCode mit dem eigenen Sprachmodell, lokal einspielen) | auf dem Panel-Rechner `sudo ./install.sh --entwickeln`, dann *Funktionen → Entwickeln auf dem Pi*; Anleitung in [Installation](docs/de/installation.md) |
+| Entwickeln auf dem Pi (OpenCode mit dem eigenen Sprachmodell, lokal einspielen) | auf dem Panel-Rechner `sudo ./install.sh --entwickeln`, dann *Funktionen → Entwickeln auf dem Pi*; bedient unter *Zustand → Werkstatt → Entwickeln* (Übersicht, Terminal im Browser, Code-Aufträge aus dem Chat); Anleitung mit Bildern in [Installation](docs/de/installation.md#entwickeln-auf-dem-pi-mit-opencode) |
 | Bildschirm im Fernzugang (guacd) | auf dem Rechner mit dem Panel `sudo ./install.sh --fernbild`, dann *Funktionen → Fernzugang zu Servern → Bildschirm* |
 | Portal auf einen anderen Rechner umziehen | `sudo speech-spark umziehen --code`, siehe [Spark teilen](docs/de/spark-teilen.md) |
 | Deinstallieren | `sudo ./uninstall.sh` (Konfiguration, Modelle und Stimmen bleiben; `--purge` löscht alles) |
@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.309** Entwickeln auf dem Pi, Paket 3 (eigene Unterschalter, nur Admin, aus): die Seite Zustand → Werkstatt → Entwickeln, ein Terminal als spark-dev im Browser und der Code-Auftrag im Chat; das Modell schlägt nur vor, einspielen entscheidest du
 - **V01.1.308** Entwickeln auf dem Pi, Paket 2 (eigener Unterschalter, nur Admin, aus): An GitHub geben schiebt spark-devs Zweig als opencode/<thema> mit dem Deploy-Schlüssel von root (nie main, nie force), GitHub testet ihn, ein Claude-Thread prüft ihn; Updates zählen weiter nur main
 - **V01.1.307** Spontanhilfe Steuern, Teil S2b: das Programm SparkHilfe für Windows (x64 und ARM64, eine Datei, ohne Installation und Adminrechte) liest Adresse und Einmal-Schlüssel nur aus seinem Dateinamen, verbindet sich nur dorthin (wss, normale TLS-Prüfung), zeigt den Helfer erst nach angenommenem Schlüssel und fragt „Ablehnen / Nur ansehen / Erlauben“; Bild, Eingaben, roter Rahmen, Leiste und Frage aus einem gemeinsamen Kern mit dem Begleiter (Sicht.cs), Eingaben auch im Programm nur aus den festen Listen; nur GitHub baut es (eigener Workflow, gepinnte Actions), der Spark holt es täglich mit Signatur, Größe und SHA-256 geprüft, Dienst-Wächter „Programm SparkHilfe“
 - **V01.1.306** ROT-FIX iPhone-Build: Indexgröße in Finden → Einstellungen las die Sprache über FindenModel.de vom Main Actor aus einer nicht isolierten Funktion (Xcode-Fehler); `de` ist jetzt `nonisolated`, liest nur die Sprache des Geräts
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.302** Mappen begrenzen die Suche: der Assistent und Finden suchen auf Wunsch nur in einer Mappe, das iPhone zeigt Mappen nativ mit Stufen zum Umschalten
 - **V01.1.301** Redesign Stufe 6: Zustand → Überblick mit ruhigen Kacheln gleicher Höhe (Punkt und Wort, Tabellenziffern), Logs als dichte Tabelle mit fester Zeilenhöhe und Bereichs-Menü, Technik-Bild neutral mit Linien-Icons, Werkstatt im selben Stil; Wächter Klar6
 - **V01.1.300** Spontanhilfe Steuern, Teil S2a (Plan s2-plan.md, eigener Schalter unter der Spontanhilfe, aus): „Steuern anfragen“ mit frischem Code, /hilfe lädt das Programm SparkHilfe per POST als Blob mit Einmal-Schlüssel im Dateinamen (128 Bit, 10 Minuten, einmal), WSS /api/hilfe/steuern ohne Origin, Bilder (JPEG, höchstens 4 je Sekunde) zum Admin, Eingaben nur aus den Listen von fernsicht und nur nach „Erlauben“ und „Steuern“; Leiste Steuern/Nur ansehen, Live, Log, Verlauf, Notaus; Selbsttests mit Programm-Attrappe
-- **V01.1.299** Entwickeln auf dem Pi (Paket 1, Schalter aus): OpenCode mit dem eigenen Sprachmodell im Terminal des Panel-Rechners als Nutzer spark-dev im eigenen Klon (install.sh --entwickeln), eigener widerrufbarer Schlüssel am LLM-Tor ganz hinten, Netz nur zum LLM-Tor; lokale Commits mit sudo speech-spark lokal einspielen geprüft, im Sandkasten schnell getestet und wie ein Update eingespielt (+lokal, zurück, verwerfen), nie als root ausgeführt; ein Update setzt lokale Änderungen auf und verliert sie nie
 
 
 

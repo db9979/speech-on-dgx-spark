@@ -1860,9 +1860,13 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **Jede Nacht testen** (Funktionen → Zugang → „Jede Nacht testen“; baut auf „Werkstatt“): Einmal pro Nacht startet die Werkstatt von selbst den Testlauf (alle Selbsttests wie auf GitHub, ohne Sprachmodell).
 
-- **Entwickeln auf dem Pi** (Funktionen → Zugang → „Entwickeln auf dem Pi“): Du entwickelst den Spark direkt auf dem Panel-Rechner weiter: Im Terminal (per SSH) arbeitet OpenCode mit dem eigenen Sprachmodell des Sparks, ohne Cloud.
+- **Entwickeln auf dem Pi** (Funktionen → Zugang → „Entwickeln auf dem Pi“): Du entwickelst den Spark direkt auf dem Panel-Rechner weiter: Im Terminal (im Browser unter Zustand → Werkstatt → Entwickeln oder per SSH) arbeitet OpenCode mit dem eigenen Sprachmodell des Sparks, ohne Cloud.
 
 - **An GitHub geben** (Funktionen → Zugang → „An GitHub geben“; baut auf „Entwickeln auf dem Pi“): Weg A: Was du mit OpenCode auf dem Pi gebaut hast, geht als eigener Zweig opencode/<thema> an GitHub, nie an main.
+
+- **Terminal im Browser** (Funktionen → Zugang → „Terminal im Browser“; baut auf „Entwickeln auf dem Pi“): Eine Shell als spark-dev im Browser, ohne SSH: Zustand → Werkstatt → Entwickeln, Reiter Terminal.
+
+- **Code-Auftrag im Chat** (Funktionen → Zugang → „Code-Auftrag im Chat“; baut auf „Entwickeln auf dem Pi“): Ein Admin tippt im Assistenten (Panel oder App), was sich am Spark ändern soll, etwa „Code-Auftrag: im Wetter soll auch die Windrichtung stehen“.
 
 - **Fernzugang zu Servern** (Funktionen → Zugang → „Fernzugang zu Servern“): Die Shell eines Servers anderswo (ein VPS, eine NAS bei Freunden, ein Raspberry Pi) direkt im Browser, wie Raspberry Pi Connect, nur ist der Vermittler dein eigener Pi.
 
