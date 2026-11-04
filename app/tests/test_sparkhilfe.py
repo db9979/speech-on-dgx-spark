@@ -47,7 +47,7 @@ def meta(version, x64=X64, arm=ARM):
                                           "windows-arm64": f("SparkHilfe-windows-arm64.exe", arm)}}
 
 
-def github(m, assets, tag=ss.TAG, sig=None):
+def github(m, assets, tag="sparkhilfe-windows", sig=None):
     """A fake GitHub: the release `tag` with sparkhilfe.json (and its .sig) and the files."""
     body = json.dumps(m).encode()
     extra = {ss.MANIFEST: body, **({ss.MANIFEST + ".sig": sig} if sig is not None else {})}
@@ -157,7 +157,7 @@ class Fetch(_Cache):
         os.environ.pop("SPEECH_SPARK_GITHUB_API", None)
 
         def handle(req):
-            if req.url.path.endswith("/releases/tags/" + ss.TAG):
+            if req.url.path.endswith("/releases/tags/sparkhilfe-windows"):
                 return httpx.Response(200, json={"assets": [{"name": ss.MANIFEST,
                                                              "browser_download_url": "https://evil.example/sparkhilfe.json"}]})
             return httpx.Response(200, content=b"{}")
@@ -165,13 +165,13 @@ class Fetch(_Cache):
             asyncio.run(ss.fetch(httpx.AsyncClient(transport=httpx.MockTransport(handle))))
 
     def test_every_result_writes_a_line_with_fixed_words_only(self):
-        async def ok(c=None):
+        async def ok(c=None, tag=None):
             return "1.1.301"
 
-        async def broken(c=None):
+        async def broken(c=None, tag=None):
             raise ValueError("SparkHilfe-windows-x64.exe: Prüfsumme passt nicht, nichts übernommen.")
 
-        async def nothing(c=None):
+        async def nothing(c=None, tag=None):
             import begleiter
             raise begleiter.NotYet("Im Repo gibt es SparkHilfe noch nicht.")
         for fake, line in ((ok, "spontanhilfe: programm_holen | ok | 1"), (nothing, "spontanhilfe: programm_holen | noch nicht | 0"),
@@ -213,6 +213,9 @@ class Watch(_Cache):
         probe = lambda: asyncio.run(dw.probe("sparkhilfe", "sparkhilfe", part, cfg)).ok
         self.assertFalse(probe())                                         # nothing fetched yet
         self.fetch(meta("1.1.301"))
+        self.assertFalse(probe())                                         # the Mac program is missing still (S2c)
+        from tests.test_sparkhilfe_mac import fetch_mac
+        fetch_mac("1.1.301")
         self.assertTrue(probe())
         with open(os.path.join(ss.CACHE, "SparkHilfe-windows-arm64.exe"), "ab") as f:   # changed afterwards
             f.write(b"evil")
@@ -329,9 +332,10 @@ class Workflow(unittest.TestCase):
         self.assertRegex(pub, r"\n    environment: release\b")
         self.assertIn("contents: write", pub)
         self.assertNotIn("contents: write", wf[:wf.index("\n  publish:\n")])
-        self.assertIn("tag=" + ss.TAG, pub)
+        self.assertIn("tag=sparkhilfe-windows", pub)
+        self.assertEqual(ss.QUELLEN["sparkhilfe-windows"], ("windows-x64", "windows-arm64"))
         self.assertIn("dist/" + ss.MANIFEST, wf)
-        for art in ss.ARTEN:
+        for art in ss.QUELLEN["sparkhilfe-windows"]:
             self.assertIn("SparkHilfe-" + art + ".exe", pub)
             self.assertIsNotNone(ss.DATEI.fullmatch("SparkHilfe-" + art + ".exe"))
         self.assertIn('"SparkHilfe Windows"', helpers.repo_file(".github", "workflows", "releases-aufraeumen.yml"))
