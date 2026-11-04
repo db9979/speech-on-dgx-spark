@@ -721,7 +721,8 @@ SEITEN = {
                "{chat.LOCKED_OUTSIDE|anzahl} handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins "
                "Gedächtnis gelernt; nach einer Mail sind es {chat.LOCKED_AFTER_MAIL|anzahl}, dazu gehört alles, was ins Internet "
                "fragt (Websuche, Wikipedia, Wetter, Fahrplan), damit kein Suchwort Mail-Inhalt hinausträgt. Ob das hält, "
-               "prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed). Eine Mail mit "
+               "prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed); ein Tunnel des Fernzugangs nur zu "
+               "Zielen nach fernweb.ziel_ok: dort 127.0.0.1 und die eigenen Adressen des Systems, die sein Anker selbst meldet. Eine Mail mit "
                "HTML zeigt die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter "
                "Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick "
                "über den Wächter, ein Link erst nach der Frage mit seiner echten Adresse.",
@@ -731,7 +732,8 @@ SEITEN = {
                "{chat.LOCKED_OUTSIDE|anzahl} acting tools are locked, in the next turn too, and nothing of it is learned into "
                "memory; after a mail it is {chat.LOCKED_AFTER_MAIL|anzahl}, everything that asks the internet among them (web search, "
                "Wikipedia, weather, transit), so no search word carries mail content out. Whether this holds is checked by "
-               "the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed). A mail with HTML is shown "
+               "the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed); a remote-access tunnel only to "
+               "targets by fernweb.ziel_ok: 127.0.0.1 there and the system's own addresses its anchor reports itself. A mail with HTML is shown "
                "only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame "
                "without script with its own CSP; pictures from outside only after the own click and through the guard, a "
                "link only after the question with its real address.")),

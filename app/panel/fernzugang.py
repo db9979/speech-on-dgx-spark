@@ -1426,6 +1426,9 @@ async def anker_ws(ws: WebSocket):
 async def _on_anker_text(a, m):
     typ, n = m.get("typ"), m.get("kanal")
     if typ in ("offen", "fehler") and isinstance(n, int) and n in a.wait and not a.wait[n].done():
+        k = a.kanaele.get(n)
+        if typ == "fehler" and getattr(k, "art", "") == "web":
+            k.abgelehnt = str(m.get("grund") or "")[:10]     # fernweb.kanal_auf takes only its fixed words
         a.wait[n].set_result(typ == "offen")
     elif typ == "zu" and isinstance(n, int) and n in a.kanaele:
         await a.kanaele[n].end("server")
@@ -1439,6 +1442,8 @@ async def _on_anker_text(a, m):
         fields = {k: v for k, v in (("os", os_), ("anker", ver)) if v and WORD.fullmatch(v)}
         if fields:
             await asyncio.to_thread(_update, a.gid, **fields)
+        import fernweb
+        fernweb.melde_eigen(a.gid, fields.get("anker"), m.get("eigen"))   # own addresses (anchor 1.9.0)
         if m.get("update"):
             import fernanker
             await fernanker.on_hello(a.gid, m.get("update"))
@@ -1475,6 +1480,7 @@ def _forget(gid, why):
     fernnotiz.forget(gid)
     fernordner.forget(gid)
     fernweb.GEFUNDEN.pop(gid, None)
+    fernweb.EIGEN.pop(gid, None)
     fernweb.ende_gid(gid, "abgebaut")
     log("abgebaut", why)
     guard.log("fernzugang_removed", detail="Fern-Server hat seinen Anker abgebaut")

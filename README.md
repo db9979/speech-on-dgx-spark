@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.319** Fix web services in remote access: a service that listens only on the server's own address (such as a Docker port on a fixed IP) now works without "Network behind it"; "Search" shows where each port listens, and the anchor tries the own address itself when nothing answers on 127.0.0.1. Clear error messages instead of "keine TLS-Verbindung". Update the anchor to 1.9.0.
 - **V01.1.318** The remote session page tidied up: one red line with the pills "Code N min" and "N notes" (they open over the page, other pages unchanged), full width, the sessions as tabs in the terminal's dark head, the assistant's column slim with the goal box only while a goal is set.
 - **V01.1.317** Change log: "Check the log" names the kind of break and whether the chain fits again after it; a line torn while writing (power cut) no longer swallows the next entry
 - **V01.1.316** Fix "Check now" under Settings → Update on the Pi: after an install that stopped half way git could not start in the panel's deleted working folder; every program now starts in an existing folder, and the card names the cause in words
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.312** Analyses per document (plan open-notebook, push 2a, switch off): summary and key points in quiet minutes, questions, contents, deadlines and people per click; every point with its place, checked by the panel (every number stands at the place), contents and deadlines without the model; the quiet chain as the list `wissen.KETTE`
 - **V01.1.311** Redesign stage 7: the Dungeon Master with a calm table tone of its own (warm surfaces and gold from the tokens, light and dark, serif only for the narration, no parchment or small caps), line icons on the table's buttons, tabs and phone bar, "Your rounds" and the game's other lists as a list pattern (no more vertical letters on the phone); guard Klar7
 - **V01.1.310** Spontaneous help control, part S2d: SparkHilfe for Linux X11 through the same line as the one-time shell (anchor 1.8.0, never as root); the command without a secret, the person pastes the one-time key in the terminal without it being shown; under Wayland a clear "only viewing"; question 1/2/3 in the terminal, red frame and bar as X11 windows, picture as PNG, inputs through XTest checked against the fixed lists
-- **V01.1.309** Develop on the Pi, package 3 (own sub-switches, admin only, off): the page Status → Workshop → Develop, a terminal as spark-dev in the browser and the code order in the chat; the model only proposes, you decide on installing
 
 
 

@@ -54,11 +54,17 @@ The anchor then opens channels to that one port too (the panel asks with „ziel
 `bildschirm aus` and `entfernen` take it all away again.
 
 Webdienste (1.6.0): the panel asks for a channel „ziel“: „web“ with an IP address and a port; the anchor opens it only
-by its own rules (web_ziel), whatever the panel asks: loopback always, the private ranges only when the panel names
+by its own rules (web_ziel), whatever the panel asks: loopback always, and (1.9.0) this system's own interface
+addresses (eigene_adressen: found here, never told by the panel), the private ranges only when the panel names
 „Netz dahinter“ for this system, never link-local, multicast, the metadata address or the panel's own address, never
-a name (nothing is resolved). Each such channel has its own flow control (WEB_FENSTER bytes on the way, then „mehr“).
-„ports“ lists the listening TCP ports reached through loopback with program names where this user may see them, and
-whether HTTP, HTTPS or something else answers (ports_report); never an address, a path or content. The panel's key in
+a name (nothing is resolved). An own address is the system itself: the kernel delivers it locally, nothing leaves the
+machine (a service on Docker with a fixed address, 192.168.2.83:8443, listens there and not on 127.0.0.1). When
+nothing answers on loopback, the anchor tries the one own address on which exactly this port listens (1.9.0,
+lausch_adresse), never another. Each such channel has its own flow control (WEB_FENSTER bytes on the way, then
+„mehr“). „ports“ lists the listening TCP ports with program names where this user may see them, whether HTTP, HTTPS
+or something else answers, and where each listens: „loopback“, „alle“ or (1.9.0) the own address itself
+(ports_report); never another address, a path or content. The own addresses also go with „hallo“ and „ports“, so the
+panel can check a saved service against them; addresses of the network behind the system never. The panel's key in
 authorized_keys keeps `restrict`: no SSH forwarding is needed for it.
 
 On Windows (10 or 11, 64-bit; stage 5) the panel's file spark-anker-einrichten.cmd (fernwindows.py, as Administrator)
@@ -143,7 +149,7 @@ try:
 except ImportError:      # Windows: no passwd database (the anchor asks `net user` there)
     pwd = None
 
-VERSION = "1.8.0"
+VERSION = "1.9.0"
 LIB = "/usr/local/lib/spark-anker"
 PROG = LIB + "/spark-anker.py"
 BIN = "/usr/local/bin/spark-anker"
@@ -176,6 +182,8 @@ WEB_FENSTER = 256 * 1024  # bytes per web channel and direction on the way befor
 WEB_MEHR = 64 * 1024      # „mehr“ goes back after this many bytes taken, or when all that waited is written
 WEB_OPEN_S = 5            # connecting to the service at most this long
 WEB_PORTS = 64            # listening ports reported at most („Gefunden“)
+EIGEN_MAX = 16            # own addresses reported and allowed at most (1.9.0)
+EIGEN_S = 60              # the own addresses are looked up again after this long
 NETZ_PRIVAT = tuple(ipaddress.ip_network(n) for n in ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "fc00::/7"))
 METADATA = ipaddress.ip_address("169.254.169.254")
 BILD_PW = ETC + "/bild.pw"
@@ -685,9 +693,10 @@ def os_name(s=None):
     return WORD.sub("", name)[:40]
 
 
-def web_ziel(m, peer=""):
+def web_ziel(m, peer="", eigen=()):
     """(host, port) a web channel may reach, else None: its own rules, whatever the panel asks. Only an IP address
     (never a name, so nothing is resolved and nothing slips through a DNS answer), port 1 to 65535; loopback always;
+    this system's own interface addresses (eigen, from eigene_adressen: 1.9.0) always, they are the system itself;
     the private ranges (NETZ_PRIVAT) only with „netz“ (the panel's „Netz dahinter“ for this system); never link-local,
     multicast, unspecified, reserved, the metadata address 169.254.169.254 or the panel's own address (peer)."""
     host, port = m.get("host"), m.get("port")
@@ -709,9 +718,81 @@ def web_ziel(m, peer=""):
             return None
     if ip.is_loopback:
         return str(ip), port
+    if str(ip) in eigen and _eigen_ok(ip):
+        return str(ip), port
     if m.get("netz") is True and any(ip in n for n in NETZ_PRIVAT if n.version == ip.version):
         return str(ip), port
     return None
+
+
+def _eigen_ok(ip):
+    """An address that may count as this system's own (1.9.0): never loopback (that is „loopback“), link-local,
+    multicast, unspecified, reserved or the metadata address."""
+    return not (ip == METADATA or ip.is_loopback or ip.is_link_local or ip.is_multicast or ip.is_unspecified
+                or ip.is_reserved)
+
+
+def _bindet(ip):
+    """True when this system may bind to ip: then it is one of its own interface addresses (macOS, Windows)."""
+    try:
+        with socket.socket(socket.AF_INET6 if ip.version == 6 else socket.AF_INET, socket.SOCK_STREAM) as x:
+            x.bind((str(ip), 0))
+        return True
+    except OSError:
+        return False
+
+
+def eigene_adressen(s=None, run=None, root="/", bindet=_bindet):
+    """This system's own interface addresses (1.9.0), at most EIGEN_MAX, sorted, without loopback and link-local:
+    found here only, never told by the panel, nothing resolved and no extra package. Linux: the kernel's own list
+    (/proc/net/fib_trie „host LOCAL“, /proc/net/if_inet6); macOS (`ifconfig`) and Windows (`ipconfig`): every
+    address in the output that this system may also bind to (a gateway or a DNS server never)."""
+    s = s or Ctx().s
+    found = []
+    if s is MAC or s is WIN:
+        run = run or (lambda cmd: subprocess.run(cmd, capture_output=True, text=True, timeout=10).stdout)
+        try:
+            text = run(["ifconfig"] if s is MAC else ["ipconfig"])
+        except (OSError, subprocess.SubprocessError, ValueError):
+            text = ""
+        for w in re.findall(r"[0-9A-Fa-f.:%]{2,60}", text or "")[:400]:
+            with contextlib.suppress(ValueError):
+                found.append(ipaddress.ip_address(w.split("%")[0]))
+        found = [ip for ip in found if _eigen_ok(ip) and bindet(ip)]
+    else:
+        last = None
+        with contextlib.suppress(OSError):
+            with open(os.path.join(root, "proc/net/fib_trie")) as f:
+                for line in f.read(1 << 20).splitlines():
+                    t = line.strip()
+                    if t.startswith(("|-- ", "+-- ")):
+                        last = t[4:].split(" ")[0]
+                    elif t.startswith("/32 host LOCAL") and last:
+                        with contextlib.suppress(ValueError):
+                            found.append(ipaddress.ip_address(last))
+        with contextlib.suppress(OSError):
+            with open(os.path.join(root, "proc/net/if_inet6")) as f:
+                for line in f.read(1 << 20).splitlines():
+                    h = line.split()[0] if line.split() else ""
+                    with contextlib.suppress(ValueError):
+                        if len(h) == 32:
+                            found.append(ipaddress.IPv6Address(bytes.fromhex(h)))
+        found = [ip for ip in found if _eigen_ok(ip)]
+    out = []
+    for ip in sorted(set(found), key=lambda x: (x.version, int(x))):
+        if str(ip) not in out:
+            out.append(str(ip))
+    return out[:EIGEN_MAX]
+
+
+_EIGEN = {"t": -1e9, "liste": []}
+
+
+def eigene(s=None):
+    """eigene_adressen, kept for EIGEN_S (a web page opens many channels; macOS and Windows ask a program)."""
+    if time.monotonic() - _EIGEN["t"] > EIGEN_S:
+        _EIGEN.update(t=time.monotonic(), liste=eigene_adressen(s))
+    return _EIGEN["liste"]
 
 
 def _hex_ip(h):
@@ -721,19 +802,42 @@ def _hex_ip(h):
     return socket.inet_ntop(socket.AF_INET6, b"".join(b[i:i + 4][::-1] for i in range(0, 16, 4)))
 
 
-def _lokal(host):
-    """A listening address reached through 127.0.0.1 or ::1 (any address, or loopback): the one to probe, else None."""
+RANG = {"alle": 0, "loopback": 1, "eigen": 2}   # a port listening on several: reached through loopback first
+
+
+def _bindung(host):
+    """Where a listening address is reached: („alle“ or „loopback“, the loopback address to probe) or (1.9.0)
+    („eigen“, the address itself, when it may be an own one: listening() keeps it only if it is), else None."""
     h = host.strip("[]").split("%")[0]
-    if h in ("0.0.0.0", "*") or h.startswith("127.") or h in ("::ffff:127.0.0.1", "::ffff:0.0.0.0"):
-        return "127.0.0.1"
-    if h in ("::", "::1"):
-        return "::1"
-    return None
+    if h in ("0.0.0.0", "*", "::ffff:0.0.0.0"):
+        return "alle", "127.0.0.1"
+    if h == "::":
+        return "alle", "::1"
+    try:
+        ip = ipaddress.ip_address(h)
+    except ValueError:
+        return None
+    if getattr(ip, "ipv4_mapped", None):
+        ip = ip.ipv4_mapped
+    if ip.is_loopback:
+        return "loopback", "127.0.0.1" if ip.version == 4 else "::1"
+    return ("eigen", str(ip)) if _eigen_ok(ip) else None
 
 
-def _listen_linux(root="/"):
-    """{port: (probe host, program)} from /proc/net/tcp{,6} (no program needed, no root: a program name only when this
-    user may see the process)."""
+def _merken(out, port, b, prog):
+    """Keeps the best way to a port (RANG) and a program name from any of its sockets."""
+    if b is None:
+        return
+    alt = out.get(port)
+    if alt is None or RANG[b[0]] < RANG[alt[2]]:
+        out[port] = (b[1], prog or (alt[1] if alt else ""), b[0])
+    elif prog and not alt[1]:
+        out[port] = (alt[0], prog, alt[2])
+
+
+def _listen_linux(root="/", namen=True):
+    """{port: (host to reach it, program, „alle“ | „loopback“ | „eigen“)} from /proc/net/tcp{,6} (no program needed,
+    no root: a program name only when this user may see the process, and only with namen)."""
     out, inodes = {}, {}
     for name in ("proc/net/tcp", "proc/net/tcp6"):
         try:
@@ -747,14 +851,14 @@ def _listen_linux(root="/"):
                 continue
             addr, _, port = f[1].partition(":")
             try:
-                host, port = _lokal(_hex_ip(addr)), int(port, 16)
+                b, port = _bindung(_hex_ip(addr)), int(port, 16)
             except (ValueError, OSError):
                 continue
-            if host and port not in out:
-                out[port] = (host, "")
+            if b:
+                _merken(out, port, b, "")
                 inodes[f[9]] = port
     with contextlib.suppress(OSError):
-        for pid in os.listdir(os.path.join(root, "proc")):
+        for pid in os.listdir(os.path.join(root, "proc")) if namen else ():
             if not pid.isdigit():
                 continue
             fds = os.path.join(root, "proc", pid, "fd")
@@ -770,13 +874,14 @@ def _listen_linux(root="/"):
                 except OSError:
                     comm = ""
                 for port in hits:
-                    out[port] = (out[port][0], comm)
+                    if comm:
+                        out[port] = (out[port][0], comm, out[port][2])
     return out
 
 
 def _listen_text(text, kind):
-    """{port: (probe host, program)} from `netstat -an -p tcp` (macOS) or `netstat -ano` (Windows; programs from
-    `tasklist`, passed in as {pid: name} under the key "pids")."""
+    """{port: (host to reach it, program, where)} from `netstat -an -p tcp` (macOS) or `netstat -ano` (Windows;
+    programs from `tasklist`, passed in as {pid: name} under the key "pids")."""
     out = {}
     pids = kind.get("pids", {}) if isinstance(kind, dict) else {}
     win = isinstance(kind, dict)
@@ -792,32 +897,45 @@ def _listen_text(text, kind):
                 continue
             host, _, port = f[3].rpartition(".")
             prog = ""
-        h = _lokal(host)
-        if h and port.isdigit() and int(port) not in out:
-            out[int(port)] = (h, prog)
+        if port.isdigit() and 1 <= int(port) <= 65535:
+            _merken(out, int(port), _bindung(host), prog)
     return out
 
 
-def listening(s=None, run=None):
-    """The listening TCP ports of this system reached through loopback, at most WEB_PORTS: [(port, host, program)]."""
+def _lauscht(s=None, run=None, namen=True):
+    """{port: (host, program, where)} of this system, whatever the platform."""
     s = s or Ctx().s
     run = run or (lambda cmd: subprocess.run(cmd, capture_output=True, text=True, timeout=10).stdout)
     try:
         if s is WIN:
             pids = {}
-            for line in run(["tasklist", "/FO", "CSV", "/NH"]).splitlines():
+            for line in (run(["tasklist", "/FO", "CSV", "/NH"]) if namen else "").splitlines():
                 f = [x.strip('"') for x in line.split('","')]
                 if len(f) >= 2 and f[1].isdigit():
                     pids[f[1]] = f[0]
-            found = _listen_text(run(["netstat", "-ano", "-p", "TCP"]) + "\n" + run(["netstat", "-ano", "-p", "TCPv6"]),
-                                 {"pids": pids})
-        elif s is MAC:
-            found = _listen_text(run(["netstat", "-an", "-p", "tcp"]), "mac")
-        else:
-            found = _listen_linux()
+            return _listen_text(run(["netstat", "-ano", "-p", "TCP"]) + "\n" + run(["netstat", "-ano", "-p", "TCPv6"]),
+                                {"pids": pids})
+        if s is MAC:
+            return _listen_text(run(["netstat", "-an", "-p", "tcp"]), "mac")
+        return _listen_linux(namen=namen)
     except (OSError, subprocess.SubprocessError, ValueError):
-        found = {}
-    return [(p, h, WORD.sub("", prog)[:40]) for p, (h, prog) in sorted(found.items())][:WEB_PORTS]
+        return {}
+
+
+def listening(s=None, run=None, eigen=None):
+    """The listening TCP ports of this system reached through loopback or (1.9.0) on one of its own addresses, at
+    most WEB_PORTS: [(port, host, program, where)]; an address that is not one of the own is left out."""
+    found = _lauscht(s, run)
+    eigen = eigene(s) if eigen is None else eigen
+    return [(p, h, WORD.sub("", prog)[:40], wo) for p, (h, prog, wo) in sorted(found.items())
+            if wo != "eigen" or h in eigen][:WEB_PORTS]
+
+
+def lausch_adresse(port, found, eigen):
+    """The own address on which exactly this port listens (1.9.0, the way when nothing answers on loopback), else
+    None: never another address, never one that is not the system's own."""
+    x = found.get(port)
+    return x[0] if x and x[2] == "eigen" and x[0] in eigen else None
 
 
 def _server_word(head):
@@ -875,13 +993,14 @@ def port_art(host, port, timeout=0.6):
         return "tcp", ""
 
 
-def ports_report(s=None):
-    """„Gefunden“ for the panel: ports, program names (or the „Server:“ word) and the kind only (never an address, a
-    path or content)."""
+def ports_report(s=None, eigen=None):
+    """„Gefunden“ for the panel: ports, program names (or the „Server:“ word), the kind and where it listens
+    („loopback“, „alle“ or, 1.9.0, the own address itself: Dominik 2026-11-04, a Docker port on a fixed address was
+    missing). Never another address (the network behind the system), a path or content."""
     out = []
-    for p, h, prog in listening(s):
+    for p, h, prog, wo in listening(s, eigen=eigen):
         art, word = port_art(h, p)
-        out.append({"port": p, "prog": prog or word, "art": art})
+        out.append({"port": p, "prog": prog or word, "art": art, "an": h if wo == "eigen" else wo})
     return out
 
 
@@ -968,16 +1087,15 @@ class Lauf:
             return None
         if m.get("typ") == "auf" and m.get("ziel") == "web" and isinstance(n, int) and WEB_ERSTER <= n <= WEB_MAX \
                 and n not in self.kanaele:
-            target = web_ziel(m, self.peer)        # its own rules, whatever the panel asked
+            target = web_ziel(m, self.peer, eigene(self.ctx.s))        # its own rules, whatever the panel asked
             if target is None:
                 self.ws.send_json({"typ": "fehler", "kanal": n, "grund": "ziel"})
                 return None
-            try:
-                s = socket.create_connection(target, timeout=WEB_OPEN_S)
-                s.setblocking(False)
-            except OSError:
+            s = self._web_verbinden(target)
+            if s is None:
                 self.ws.send_json({"typ": "fehler", "kanal": n, "grund": "dienst"})
                 return None
+            s.setblocking(False)
             self.kanaele[n] = s
             self.web[n] = {"raus": 0, "rein": bytearray(), "genommen": 0}
             self.ws.send_json({"typ": "offen", "kanal": n})
@@ -1001,12 +1119,32 @@ class Lauf:
             self._close(n, False)
         return None
 
+    def _web_verbinden(self, target, found=None):
+        """The socket to a web service, else None. When nothing answers on loopback (1.9.0): the own address on
+        which exactly this port listens (lausch_adresse), checked by web_ziel again, never another address."""
+        try:
+            return socket.create_connection(target, timeout=WEB_OPEN_S)
+        except OSError:
+            pass
+        if not ipaddress.ip_address(target[0]).is_loopback:
+            return None
+        eigen = eigene(self.ctx.s)
+        alt = lausch_adresse(target[1], _lauscht(self.ctx.s, namen=False) if found is None else found, eigen)
+        if alt is None or web_ziel({"host": alt, "port": target[1]}, self.peer, eigen) is None:
+            return None
+        try:
+            return socket.create_connection((alt, target[1]), timeout=WEB_OPEN_S)
+        except OSError:
+            return None
+
     def _ports(self):
         try:
-            liste = ports_report(self.ctx.s)
+            eigen = eigene_adressen(self.ctx.s)      # fresh: „Suchen“ is when the admin looks
+            _EIGEN.update(t=time.monotonic(), liste=eigen)
+            liste = ports_report(self.ctx.s, eigen)
         except Exception:
-            liste = []
-        self.antworten.put({"typ": "ports", "liste": liste})
+            eigen, liste = [], []
+        self.antworten.put({"typ": "ports", "liste": liste, "eigen": eigen})
 
     def _web_rein(self, n, data):
         """Bytes of the panel for a web service: kept in order, written as the service takes them; more than the
@@ -1037,7 +1175,7 @@ class Lauf:
 
     def run(self):
         self.ws.send_json({"typ": "hallo", "os": os_name(), "version": VERSION, "bild": self.bild,
-                           "update": self._stand(), "web": 1})
+                           "update": self._stand(), "web": 1, "eigen": eigene(self.ctx.s)})
         last = time.monotonic()
         try:
             while True:

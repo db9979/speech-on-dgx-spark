@@ -1,8 +1,10 @@
 """Fernzugang, Webdienste (fernweb.py, anker/spark-anker.py „ziel: web“, Dominik 2026-10-30 „1a, 2a“): one self-test for
 every protection rule. Off by default under the Fernzugang and 404 while off; only an admin in the browser on the
 unlocked page; the targets on both sides (the panel's ziel_ok and the anchor's own web_ziel): loopback always, private
-addresses only with „Netz dahinter“, never this Pi's own networks, link-local, the metadata address, multicast, a name
-or the panel's own address; „Netz dahinter“ asks for the code; an old anchor (before 1.6.0) gets no tunnel and the page
+addresses only with „Netz dahinter“, the system's own addresses without it (anchor 1.9.0: only those its anchor finds
+itself, never this Pi's networks; nothing on 127.0.0.1 → the one own address that port listens on), never this Pi's
+own networks, link-local, the metadata address, multicast, a name or the panel's own address; what failed comes back
+as a fixed word and the page says it as a sentence; „Netz dahinter“ asks for the code; an old anchor (before 1.6.0) gets no tunnel and the page
 says „Anker aktualisieren“; the ticket works once; none of the panel's cookies and no Authorization reach the service,
 each service keeps its own cookies apart; frames only from the panel; at most MAX_TUNNEL tunnels and MAX_KANAELE
 connections each, with flow control; the Notaus, Sperren and the switch end every tunnel and its channels. The whole
@@ -260,7 +262,7 @@ class Ports(unittest.TestCase):
         d = tempfile.mkdtemp()
         import os
         os.makedirs(d + "/proc/net")
-        with open(d + "/proc/net/tcp", "w") as f:   # 127.0.0.1:3000 and 0.0.0.0:22 listen, 10.0.0.5:8080 not reached
+        with open(d + "/proc/net/tcp", "w") as f:   # 127.0.0.1:3000 and 0.0.0.0:22 listen, 10.0.0.5:8080 on an address
             f.write("  sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode\n"
                     "   0: 0100007F:0BB8 00000000:0000 0A 00000000:00000000 00:00000000 00000000  1000        0 111 1\n"
                     "   1: 00000000:0016 00000000:0000 0A 00000000:00000000 00:00000000 00000000     0        0 222 1\n"
@@ -270,7 +272,9 @@ class Ports(unittest.TestCase):
         os.symlink("socket:[111]", d + "/proc/77/fd/3")
         with open(d + "/proc/77/comm", "w") as f:
             f.write("grafana\n")
-        self.assertEqual(p._listen_linux(d), {3000: ("127.0.0.1", "grafana"), 22: ("127.0.0.1", "")})
+        self.assertEqual(p._listen_linux(d), {3000: ("127.0.0.1", "grafana", "loopback"), 22: ("127.0.0.1", "", "alle"),
+                                              8080: ("10.0.0.5", "", "eigen")})
+        self.assertEqual(p._listen_linux(d, namen=False)[3000], ("127.0.0.1", "", "loopback"))   # the quick look
 
     def test_netstat_on_mac_and_windows(self):
         p = program()
@@ -278,11 +282,13 @@ class Ports(unittest.TestCase):
                "tcp4       0      0  127.0.0.1.8080         *.*                    LISTEN     \n"
                "tcp6       0      0  *.5000                 *.*                    LISTEN     \n"
                "tcp4       0      0  192.168.1.4.9000       *.*                    LISTEN     \n")
-        self.assertEqual(p._listen_text(mac, "mac"), {8080: ("127.0.0.1", ""), 5000: ("127.0.0.1", "")})
+        self.assertEqual(p._listen_text(mac, "mac"), {8080: ("127.0.0.1", "", "loopback"), 5000: ("127.0.0.1", "", "alle"),
+                                                      9000: ("192.168.1.4", "", "eigen")})
         win = ("  TCP    0.0.0.0:135            0.0.0.0:0              LISTENING       1044\n"
                "  TCP    [::1]:8443             [::]:0                 LISTENING       2000\n"
                "  TCP    127.0.0.1:5000         127.0.0.1:50000        ESTABLISHED     12\n")
-        self.assertEqual(p._listen_text(win, {"pids": {"1044": "svchost.exe"}}), {135: ("127.0.0.1", "svchost.exe"), 8443: ("::1", "")})
+        self.assertEqual(p._listen_text(win, {"pids": {"1044": "svchost.exe"}}), {135: ("127.0.0.1", "svchost.exe", "alle"),
+                                                                             8443: ("::1", "", "loopback")})
 
     def test_the_kind_of_a_port_http_or_tcp(self):
         import http.server
@@ -663,6 +669,211 @@ class EndToEnd(FwBase):
         with self.assertRaises(OSError):
             socket.create_connection(("127.0.0.1", self.door), timeout=2)
 
+    def test_hallo_brings_the_own_addresses_and_the_words_come_through(self):
+        """Anchor 1.9.0 reports its own addresses with „hallo“; what it refuses comes back as its own fixed word."""
+        p = program()
+        self.assertTrue(helpers.until(lambda: self.gid in fernweb.EIGEN))
+        self.assertEqual(fernweb.eigen_von(self.gid), fernweb.eigen_liste(p.eigene_adressen()))
+        base = f"/api/admin/fernzugang/web/{self.gid}"
+        leer = helpers._port()                     # bound, nobody listens: nothing answers there
+        did = ADMIN.post(base + "/dienste", json={"name": "Leer", "schema": "https", "port": leer}).json()["dienst"]["id"]
+        with journal() as j:
+            r = ADMIN.post(f"{base}/dienste/{did}/zertifikat")
+        self.assertEqual((r.status_code, r.json()["detail"]), (502, "dienst"))
+        self.assertIn("fernzugang: web_fp | dienst | 0", j.getvalue())
+        fernweb.EIGEN[self.gid] = ("192.0.2.83",)  # the panel believes it, the anchor does not: its own rule wins
+        with unittest.mock.patch.object(fernweb, "eigene_netze", lambda: NETZE):
+            r = ADMIN.post(base + "/dienste", json={"name": "Fremd", "schema": "https", "host": "192.0.2.83", "port": 8443})
+            self.assertEqual(r.status_code, 200, r.text)
+            r = ADMIN.post(f"{base}/dienste/{r.json()['dienst']['id']}/zertifikat")
+        self.assertEqual((r.status_code, r.json()["detail"]), (502, "ziel"))
+        r = ADMIN.post(f"{base}/dienste/{self.did}/zertifikat")                    # http: no certificate to look at
+        self.assertEqual(r.status_code, 404)
+        with contextlib.suppress(Exception):
+            helpers._HELD.pop(leer).close()
+
+
+class OwnAddresses(unittest.TestCase):
+    """Dominik 2026-11-04: „Monitoring“ on https://127.0.0.1:8443 said „keine TLS-Verbindung (dienst)“: the service
+    (Docker on a fixed address) listens only on the server's own 192.168.2.83. The system's own addresses count as the
+    system itself, on both sides; foreign private ones still only with „Netz dahinter“."""
+    OWN = ["192.168.2.83", "203.0.113.5", "fd00::83"]
+
+    def test_the_anchor_allows_its_own_addresses_without_netz_and_nothing_else(self):
+        p = program()
+        for host in self.OWN:
+            self.assertEqual(p.web_ziel({"host": host, "port": 8443}, "", self.OWN), (host, 8443), host)
+        for host in ("192.168.2.84", "10.0.0.1", "fd00::84", "8.8.8.8"):          # foreign: still only with netz
+            self.assertIsNone(p.web_ziel({"host": host, "port": 8443}, "", self.OWN), host)
+        self.assertIsNone(p.web_ziel({"host": "192.168.2.83", "port": 8443}))     # not an own one: refused
+        bad = ["169.254.169.254", "169.254.1.1", "fe80::1", "224.0.0.1", "0.0.0.0", "255.255.255.255"]
+        for host in bad:                                                          # never, even when listed as own
+            self.assertIsNone(p.web_ziel({"host": host, "port": 80}, "", bad), host)
+        self.assertIsNone(p.web_ziel({"host": "192.168.2.83", "port": 8443}, "192.168.2.83", self.OWN))  # the panel
+        self.assertIsNone(p.web_ziel({"host": "server.local", "port": 8443}, "", ["server.local"]))       # never a name
+
+    def test_the_panel_allows_reported_own_addresses_never_into_its_networks(self):
+        for host in self.OWN:
+            self.assertEqual(fernweb.ziel_ok(host, 8443, False, NETZE, self.OWN), (host, 8443), host)
+        for host in ("192.168.2.84", "10.0.0.1"):
+            self.assertIsNone(fernweb.ziel_ok(host, 8443, False, NETZE, self.OWN), host)
+        self.assertIsNone(fernweb.ziel_ok("192.168.178.20", 80, False, NETZE, ["192.168.178.20"]))   # the Pi's network
+        for host in ("169.254.169.254", "fe80::1", "224.0.0.1", "0.0.0.0", "localhost"):
+            self.assertIsNone(fernweb.ziel_ok(host, 80, False, NETZE, [host]), host)
+        self.assertEqual(fernweb.eigen_liste(["192.168.2.83", "127.0.0.1", "fe80::1", "169.254.169.254", "x", 7,
+                                              "192.168.2.83", "a" * 50, "fd00::83"]), ("192.168.2.83", "fd00::83"))
+        self.assertEqual(len(fernweb.eigen_liste([f"10.0.0.{i}" for i in range(1, 60)])), fernweb.EIGEN_MAX)
+
+    def test_only_an_anchor_from_1_9_0_reports_them(self):
+        fernweb.melde_eigen("g_000000000009", "1.9.0", ["192.168.2.83", "fe80::1"])
+        self.assertEqual(fernweb.eigen_von("g_000000000009"), ("192.168.2.83",))
+        fernweb.melde_eigen("g_000000000009", "1.8.0", ["192.168.2.83"])         # an older one: none, as before
+        self.assertEqual(fernweb.eigen_von("g_000000000009"), ())
+        self.assertEqual(fernweb.ANKER_EIGEN, (1, 9, 0))
+        self.assertGreaterEqual(tuple(int(x) for x in program().VERSION.split(".")), fernweb.ANKER_EIGEN)
+
+    def test_own_addresses_on_linux_from_the_kernels_list(self):
+        p = program()
+        d = tempfile.mkdtemp()
+        import os
+        os.makedirs(d + "/proc/net")
+        with open(d + "/proc/net/fib_trie", "w") as f:
+            f.write("Main:\n  +-- 0.0.0.0/0 3 0 5\n     |-- 0.0.0.0\n        /0 universe UNICAST\n"
+                    "     +-- 127.0.0.0/8 2 0 2\n        |-- 127.0.0.1\n           /32 host LOCAL\n"
+                    "     +-- 192.168.2.0/24 2 0 2\n        |-- 192.168.2.0\n           /24 link UNICAST\n"
+                    "        |-- 192.168.2.1\n           /32 link UNICAST\n"           # the gateway: not LOCAL
+                    "        |-- 192.168.2.83\n           /32 host LOCAL\n"
+                    "        |-- 192.168.2.255\n           /32 link BROADCAST\n"
+                    "     |-- 172.17.0.1\n        /32 host LOCAL\n"
+                    "Local:\n     |-- 192.168.2.83\n        /32 host LOCAL\n")
+        with open(d + "/proc/net/if_inet6", "w") as f:
+            f.write("00000000000000000000000000000001 01 80 10 80       lo\n"
+                    "fe80000000000000021122fffe334455 02 40 20 80     eth0\n"
+                    "fd000000000000000000000000000083 02 40 00 80     eth0\n")
+        self.assertEqual(p.eigene_adressen(p.LINUX, root=d), ["172.17.0.1", "192.168.2.83", "fd00::83"])
+
+    def test_own_addresses_on_mac_and_windows_only_where_it_binds(self):
+        p = program()
+        ifconfig = ("en0: flags=8863<UP> mtu 1500\n\tinet6 fe80::1c%en0 prefixlen 64\n"
+                    "\tinet 192.168.2.40 netmask 0xffffff00 broadcast 192.168.2.255\n\tinet6 fd00::40 prefixlen 64\n")
+        ipconfig = ("Ethernet-Adapter Ethernet:\n   IPv4-Adresse  . . . . . . . . . . : 192.168.2.41\n"
+                    "   Subnetzmaske  . . . . . . . . . . : 255.255.255.0\n   Standardgateway . . . . . . . . . : 192.168.2.1\n")
+        own = {"192.168.2.40", "fd00::40", "192.168.2.41"}
+        bindet = lambda ip: str(ip) in own                                        # noqa: E731
+        self.assertEqual(p.eigene_adressen(p.MAC, lambda cmd: ifconfig, bindet=bindet), ["192.168.2.40", "fd00::40"])
+        self.assertEqual(p.eigene_adressen(p.WIN, lambda cmd: ipconfig, bindet=bindet), ["192.168.2.41"])
+        self.assertTrue(p._bindet(ipaddress.ip_address("127.0.0.1")))
+        self.assertFalse(p._bindet(ipaddress.ip_address("192.0.2.123")))          # TEST-NET: never an own address
+
+    def test_found_shows_where_it_listens_and_only_own_addresses(self):
+        p = program()
+        found = {22: ("127.0.0.1", "sshd", "alle"), 3000: ("127.0.0.1", "grafana", "loopback"),
+                 8443: ("192.168.2.83", "docker-proxy", "eigen"), 9000: ("10.9.9.9", "x", "eigen")}
+        with unittest.mock.patch.object(p, "_lauscht", lambda s=None, run=None, namen=True: found):
+            got = p.listening(p.LINUX, eigen=["192.168.2.83"])
+            with unittest.mock.patch.object(p, "port_art", lambda h, port: ("https", "")):
+                rep = p.ports_report(p.LINUX, ["192.168.2.83"])
+        self.assertEqual([x[0] for x in got], [22, 3000, 8443])                   # 10.9.9.9 is not an own address
+        self.assertEqual([x["an"] for x in rep], ["alle", "loopback", "192.168.2.83"])
+        self.assertEqual(p.lausch_adresse(8443, found, ["192.168.2.83"]), "192.168.2.83")
+        self.assertIsNone(p.lausch_adresse(9000, found, ["192.168.2.83"]))        # listens, but not on an own one
+        self.assertIsNone(p.lausch_adresse(3000, found, ["192.168.2.83"]))        # on loopback: no other way
+        self.assertIsNone(p.lausch_adresse(4000, found, ["192.168.2.83"]))
+
+        async def go():
+            await fernweb.on_ports("g_00000000000a", {"eigen": ["192.168.2.83"], "liste": [
+                {"port": 8443, "prog": "docker-proxy", "art": "https", "an": "192.168.2.83"},
+                {"port": 9000, "prog": "x", "art": "http", "an": "10.9.9.9"},           # never another address
+                {"port": 22, "prog": "sshd", "art": "tcp", "an": "alle"}]})
+        asyncio.run(go())
+        self.assertEqual([x.get("an") for x in fernweb.GEFUNDEN["g_00000000000a"]["liste"]], ["192.168.2.83", None, "alle"])
+        self.assertEqual(fernweb.eigen_von("g_00000000000a"), ("192.168.2.83",))
+        fernweb.GEFUNDEN.clear()
+        fernweb.EIGEN.clear()
+
+    def test_nothing_on_loopback_then_the_own_address_this_port_listens_on(self):
+        p = program()
+
+        class WS:
+            out = []
+            sock = None
+
+            def send_json(self, d):
+                self.out.append(d)
+        tried = []
+
+        def conn(target, timeout=None):
+            tried.append(target)
+            if target != ("192.168.2.83", 8443):
+                raise ConnectionRefusedError
+            a, b = socket.socketpair()
+            b.close()
+            return a
+        run = p.Lauf(WS(), "")
+        found = {8443: ("192.168.2.83", "", "eigen"), 8444: ("10.9.9.9", "", "eigen")}
+        with unittest.mock.patch.object(p.socket, "create_connection", conn), \
+                unittest.mock.patch.object(p, "eigene", lambda s=None: ["192.168.2.83"]), \
+                unittest.mock.patch.object(p, "_lauscht", lambda s=None, run=None, namen=True: found):
+            run._control({"typ": "auf", "kanal": 70, "ziel": "web", "host": "127.0.0.1", "port": 8443})
+            self.assertEqual(WS.out[-1], {"typ": "offen", "kanal": 70})
+            self.assertEqual(tried, [("127.0.0.1", 8443), ("192.168.2.83", 8443)])
+            tried.clear()
+            run._control({"typ": "auf", "kanal": 71, "ziel": "web", "host": "127.0.0.1", "port": 8444})
+            self.assertEqual(WS.out[-1], {"typ": "fehler", "kanal": 71, "grund": "dienst"})
+            self.assertEqual(tried, [("127.0.0.1", 8444)])                        # 10.9.9.9 is no own address
+            tried.clear()
+            run._control({"typ": "auf", "kanal": 72, "ziel": "web", "host": "127.0.0.1", "port": 9999})
+            self.assertEqual((WS.out[-1]["grund"], tried), ("dienst", [("127.0.0.1", 9999)]))   # listens nowhere
+            tried.clear()
+            run._control({"typ": "auf", "kanal": 73, "ziel": "web", "host": "192.168.2.83", "port": 8444})
+            self.assertEqual((WS.out[-1]["grund"], tried), ("dienst", [("192.168.2.83", 8444)]))  # no detour
+            run._control({"typ": "auf", "kanal": 74, "ziel": "web", "host": "192.168.2.84", "port": 8443})
+            self.assertEqual(WS.out[-1], {"typ": "fehler", "kanal": 74, "grund": "ziel"})
+            run.peer = "192.168.2.83"                                             # never the panel itself
+            tried.clear()
+            run._control({"typ": "auf", "kanal": 75, "ziel": "web", "host": "127.0.0.1", "port": 8443})
+            self.assertEqual((WS.out[-1]["grund"], tried), ("dienst", [("127.0.0.1", 8443)]))
+        run._close(70, False)
+
+    def test_clear_sentences_for_every_word(self):
+        js = pathlib.Path(helpers.APP + "/panel/static/js/fernweb.js").read_text()
+        self.assertIn("Unter ${fwAdr(x)} antwortet nichts. Der Dienst lauscht wohl nur auf einer anderen Adresse – "
+                      "„Suchen“ zeigt sie.", js)
+        self.assertIn("Nothing answers at ${fwAdr(x)}.", js)
+        self.assertNotIn("keine TLS-Verbindung", pathlib.Path(helpers.APP + "/panel/fernweb.py").read_text())
+        for word in (*fernweb.GRUENDE, "offline", "voll", "anker", "tls", "zertifikat", "anker_alt", "ziel_form",
+                     "ziel_netz", "eigen_weg"):
+            self.assertRegex(js, rf"[{{,]\s*{word}:", word)
+
+
+class OwnAddressDoors(FwBase):
+    def test_a_reported_own_address_is_saved_without_netz_and_stays_when_netz_goes_off(self):
+        d = self.system("1.9.0")
+        base = f"/api/admin/fernzugang/web/{d['id']}"
+        body = {"name": "Monitoring", "schema": "https", "host": "192.168.2.83", "port": 8443}
+        with unittest.mock.patch.object(fernweb, "eigene_netze", lambda: NETZE):
+            r = ADMIN.post(base + "/dienste", json=body)
+            self.assertEqual((r.status_code, r.json()["detail"]), (400, "ziel_form"))   # not reported: refused
+            fernweb.melde_eigen(d["id"], "1.9.0", ["192.168.2.83", "192.168.178.7"])
+            self.assertEqual(ADMIN.get(base).json()["eigen"], ["192.168.2.83"])          # never the Pi's network
+            self.assertTrue(ADMIN.get(base).json()["eigen_anker"])
+            r = ADMIN.post(base + "/dienste", json=body)
+            self.assertEqual(r.status_code, 200, r.text)
+            self.assertIs(r.json()["dienst"]["eigen"], True)
+            self.assertEqual(ADMIN.post(base + "/dienste", json={**body, "host": "192.168.2.84"}).json()["detail"], "ziel_form")
+            self.assertEqual(ADMIN.post(base + "/dienste", json={**body, "host": "192.168.178.7"}).status_code, 400)
+            self.assertEqual(ADMIN.post(base + "/netz", json={"an": True}, headers=CODE).status_code, 200)
+            self.assertEqual(ADMIN.post(base + "/netz", json={"an": False}, headers=CODE).status_code, 200)
+            self.assertEqual([x["host"] for x in ADMIN.get(base).json()["dienste"]], ["192.168.2.83"])   # it stays
+            fernweb.melde_eigen(d["id"], "1.8.0", ["192.168.2.83"])                     # rolled back: no longer
+            fernzugang.ANKER[d["id"]] = fernzugang.Anker(None, d["id"])
+            try:
+                r = ADMIN.post("/api/admin/fernzugang/web/oeffnen",
+                               json={"geraet": d["id"], "dienst": ADMIN.get(base).json()["dienste"][0]["id"]}, headers=CODE)
+            finally:
+                fernzugang.ANKER.pop(d["id"], None)
+            self.assertEqual((r.status_code, r.json()["detail"]), (409, "eigen_weg"))
+        fernweb.EIGEN.clear()
 
 class Rules(unittest.TestCase):
     def test_nothing_of_it_reaches_a_model(self):

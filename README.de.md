@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.319** Fix Webdienste im Fernzugang: ein Dienst, der nur an der eigenen Adresse des Servers lauscht (etwa ein Docker-Port an fester IP), geht jetzt ohne „Netz dahinter“; „Suchen“ zeigt, wo jeder Port lauscht, und der Anker versucht die eigene Adresse selbst, wenn unter 127.0.0.1 nichts antwortet. Klare Fehlermeldungen statt „keine TLS-Verbindung“. Den Anker auf 1.9.0 aktualisieren.
 - **V01.1.318** Fernsitzungs-Seite aufgeräumt: eine rote Zeile mit den Schildern „Code noch N min“ und „N Hinweise“ (sie gehen über der Seite auf, andere Seiten unverändert), volle Breite, die Sitzungen als Reiter im dunklen Terminal-Kopf, die Assistent-Spalte schmal mit dem Kasten Ziel nur bei gesetztem Ziel.
 - **V01.1.317** Änderungsprotokoll: „Protokoll prüfen“ nennt die Art des Bruchs und ob die Kette danach heil ist; eine beim Schreiben abgerissene Zeile (Stromausfall) verschluckt den nächsten Eintrag nicht mehr
 - **V01.1.316** Fix „Jetzt prüfen“ unter Einstellungen → Update auf dem Pi: nach einem abgebrochenen Einspielen startete git nicht im gelöschten Arbeitsordner des Panels; jedes Programm startet jetzt in einem vorhandenen Ordner, die Karte nennt die Ursache in Worten
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.312** Auswertungen je Dokument (Plan open-notebook, Push 2a, Schalter aus): Kurzfassung und Kernaussagen in ruhigen Minuten, Fragen, Inhaltsverzeichnis, Fristen und Beteiligte per Klick; jeder Punkt mit Fundstelle, vom Panel geprüft (jede Zahl steht an der Stelle), Inhalt und Fristen ohne Modell; ruhige Kette als Liste `wissen.KETTE`
 - **V01.1.311** Redesign Stufe 7: der Dungeon-Master mit eigenem ruhigen Tisch-Ton (warme Flächen und Gold aus den Tokens, hell und dunkel, Serifen nur für die Erzählung, kein Pergament und keine Kapitälchen), Linien-Icons auf Knöpfen, Reitern und der Handy-Leiste am Tisch, „Deine Runden“ und die übrigen Listen des Spiels im Listen-Muster (am Handy keine senkrechten Buchstaben mehr); Wächter Klar7
 - **V01.1.310** Spontanhilfe Steuern, Teil S2d: SparkHilfe für Linux X11 über dieselbe Zeile wie die Shell einmalig (Anker 1.8.0, nie als root); der Befehl ohne Geheimnis, den Einmal-Schlüssel fügt die Person im Terminal ohne Anzeige ein; unter Wayland klar „nur Ansehen“; Frage 1/2/3 im Terminal, roter Rahmen und Leiste als X11-Fenster, Bild als PNG, Eingaben über XTest gegen die festen Listen geprüft
-- **V01.1.309** Entwickeln auf dem Pi, Paket 3 (eigene Unterschalter, nur Admin, aus): die Seite Zustand → Werkstatt → Entwickeln, ein Terminal als spark-dev im Browser und der Code-Auftrag im Chat; das Modell schlägt nur vor, einspielen entscheidest du
 
 
 
