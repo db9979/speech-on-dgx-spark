@@ -5573,7 +5573,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Auswertungen je Dokument, Push 2b (V01.1.315, Plan *open-notebook* Stufe 2)",
-"text": "enskarte, deren Name ein volles Datum trägt (31.12.2027 oder 2027-12-31), bekommt im Blatt „Erinnern“ (POST /api/profile/wissen/{doc}/auswertung/fristen/{n}/erinnern, Anmeldung, Profilbindung, CSRF, Rate-Limit auswertung); die Erinnerung kommt wie beim Steckbrief sechs Wochen vorher um 9:00 oder am Tag davor und nur, wenn unter Ich → Dokumente die Fristen-Erinnerung an ist. Eine Dauer („drei Monate“) oder ein Datum, das nur in der Nähe steht, bekommt keinen Knopf: das Panel rät nie. Mappen: Die Stufe „kurz“ bringt zum Steckbrief die fertige Kurzfassung, die Kernaussagen und die Vorlagen eines Dokuments mit, jeder Punkt mit Seite, höchstens 1500 Zeichen (auswertung.fuer_mappe, mappen.kurz_text), als Text von außen; der Eintrag in der Mappe nennt, welche dabei sind. Fragen zum Text gehen nicht mit. Live zeigt die Zahl der Vorlagen. Die iPhone-Ansicht folgt als Push 2c."
+"text": "enskarte, deren Name ein volles Datum trägt (31.12.2027 oder 2027-12-31), bekommt im Blatt „Erinnern“ (POST /api/profile/wissen/{doc}/auswertung/fristen/{n}/erinnern, Anmeldung, Profilbindung, CSRF, Rate-Limit auswertung); die Erinnerung kommt wie beim Steckbrief sechs Wochen vorher um 9:00 oder am Tag davor und nur, wenn unter Ich → Dokumente die Fristen-Erinnerung an ist. Eine Dauer („drei Monate“) oder ein Datum, das nur in der Nähe steht, bekommt keinen Knopf: das Panel rät nie. Mappen: Die Stufe „kurz“ bringt zum Steckbrief die fertige Kurzfassung, die Kernaussagen und die Vorlagen eines Dokuments mit, jeder Punkt mit Seite, höchstens 1500 Zeichen (auswertung.fuer_mappe, mappen.kurz_text), als Text von außen; der Eintrag in der Mappe nennt, welche dabei sind. Fragen zum Text gehen nicht mit. Live zeigt die Zahl der Vorlagen. iPhone (Push 2c, V01.1.323): Im Dokument-Detail unter Öffnen führt „Auswertungen“ zum Blatt: jede Art mit Stand, „Erstellen“, „Zeigen“ bzw. „Neu erstellen“, jeder Punkt mit Seite und Überschrift, bei Fragen die Stelle als Antwort, „Stimmt nicht“ per Wischen (der Punkt kommt nicht wieder), „Erinnern“ bei Fristen mit vollem Datum; dieselben Endpunkte wie im "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Auswertungen je Dokument, Push 2b (V01.1.315, Plan *open-notebook* Stufe 2)",
+"text": "Panel (iphone.THINGS[\"documents\"]), Englisch in Localizable.xcstrings. Vorlagen und die Wahl „von selbst“ stellt der Admin im Panel ein; Android zeigt die Panel-Ansicht."
 },
 {
 "lang": "de",
@@ -23413,7 +23421,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Analyses per document, push 2b (V01.1.315, plan *open-notebook* stage 2)",
-"text": ".12.2027 or 2027-12-31) gets \"Remind\" in the sheet (POST /api/profile/wissen/{doc}/auswertung/fristen/{n}/erinnern, sign-in, profile binding, CSRF, rate limit auswertung); the reminder comes as for the profile card six weeks before at 9:00 or the day before, and only while the deadline reminder is on under Me → Documents. A duration (\"three months\") or a date that only stands nearby gets no button: the panel never guesses. Collections: the level \"short\" brings along with the profile card the made summary, key points and templates of a document, every point with its page, at most 1500 characters (auswertung.fuer_mappe, mappen.kurz_text), as outside text; the entry in the collection names which are included. Questions on the text do not go along. Live shows the number of templates. The iPhone view follows as push 2c."
+"text": ".12.2027 or 2027-12-31) gets \"Remind\" in the sheet (POST /api/profile/wissen/{doc}/auswertung/fristen/{n}/erinnern, sign-in, profile binding, CSRF, rate limit auswertung); the reminder comes as for the profile card six weeks before at 9:00 or the day before, and only while the deadline reminder is on under Me → Documents. A duration (\"three months\") or a date that only stands nearby gets no button: the panel never guesses. Collections: the level \"short\" brings along with the profile card the made summary, key points and templates of a document, every point with its page, at most 1500 characters (auswertung.fuer_mappe, mappen.kurz_text), as outside text; the entry in the collection names which are included. Questions on the text do not go along. Live shows the number of templates. iPhone (push 2c, V01.1.323): in the document details under Open, \"Analyses\" leads to the sheet: every kind with its state, \"Make\", \"Show\" or \"Make again\", every point with page and heading, for questions the place as the answer, \"Not right\" by swiping (the point does not come back), \"Remind\" for deadlines with a full date; the same endpoints as in the panel (iphone.THINGS[\"documents\"]), English in Localiza"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Analyses per document, push 2b (V01.1.315, plan *open-notebook* stage 2)",
+"text": "ble.xcstrings. Templates and the choice \"by themselves\" are set by the admin in the panel; Android shows the panel view."
 },
 {
 "lang": "en",

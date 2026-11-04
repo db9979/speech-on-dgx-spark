@@ -5154,6 +5154,13 @@
 "titel": "System-Updates: nachts",
 "text": "Beim Pi „Nachts einspielen (03–05 Uhr)“ an (fragt nach dem Code). Am nächsten Morgen: Zustand → Logs (System) zeigt nach dem Spark-Update der Nacht „systemupdate: einspielen panel gestartet“ und keinen Neustart; die Seite zeigt „Zuletzt eingespielt …“, ein nötiger Neustart wartet auf dich. Firmware (EEPROM) bleibt angeboten.",
 "thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P761",
+"v": 1323,
+"titel": "Auswertungen im iPhone",
+"text": "iPhone: Meine Sachen → Dokumente → den Mietvertrag öffnen → Auswertungen. Kurzfassung und Kernaussagen mit „fertig“ und Seite; bei „Fragen zum Text“ Erstellen: „Eingereiht“, nach der nächsten ruhigen Minute (herunterziehen) Fragen mit der Stelle als Antwort. Einen Punkt nach links wischen → Stimmt nicht: er verschwindet und kommt nicht wieder. Bei einer Frist mit vollem Datum Erinnern: „Erinnerung am …“. Auf Englisch gestellt: alle Texte englisch. Admin sperrt Auswertungen: der Eintrag verschwindet.",
+"thread": "Ideen aus Open Notebook übernehmen"
 }
 ]
 }

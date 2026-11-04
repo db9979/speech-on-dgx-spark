@@ -403,6 +403,7 @@ struct DocDetailView: View {
     @State var doc: SparkDoc
     var changed: () -> Void = {}
     @State private var allow: [String: Bool] = [:]
+    @State private var awOn = false
     @State private var newTag = ""
     @State private var removing = false
     @State private var note: String?
@@ -433,6 +434,9 @@ struct DocDetailView: View {
                 NavigationLink { DocumentView(doc: doc) } label: {
                     Label(doc.file || doc.source == "nas" ? LocalizedStringKey("Original und Text") : LocalizedStringKey("Gelesener Text"),
                           systemImage: "doc.richtext")
+                }
+                if awOn && doc.state == "ready" {
+                    NavigationLink { AuswertungView(doc: doc) } label: { Label("Auswertungen", systemImage: "checklist") }
                 }
             }
             if allow["brief"] == true {
@@ -466,7 +470,10 @@ struct DocDetailView: View {
         .navigationTitle(Text(verbatim: doc.shown))
         .navigationBarTitleDisplayMode(.inline)
         .task {
-            if let w = try? await SparkAPI.current?.object("GET", "api/profile/wissen") { allow = (w["allow"] as? [String: Bool]) ?? [:] }
+            if let w = try? await SparkAPI.current?.object("GET", "api/profile/wissen") {
+                allow = (w["allow"] as? [String: Bool]) ?? [:]
+                awOn = (w["auswertung"] as? Bool) ?? false
+            }
         }
         .confirmationDialog("Dokument löschen?", isPresented: $removing, titleVisibility: .visible) {
             Button("Löschen", role: .destructive) {
@@ -1207,6 +1214,192 @@ struct WbPageView: View {
         do {
             let d = try await api.object("GET", "api/profile/wissensbuch/\(page.id)")
             sentences = (d["saetze"] as? [[String: Any]] ?? []).prefix(300).compactMap(WbSentence.from)
+            error = nil
+        } catch { self.error = error.localizedDescription }
+    }
+}
+
+// ---------------------------------------------------------------- Auswertungen (auswertung.py, plan open-notebook Push 2c)
+/// One point of a kind: the model's checked sentence or the document's own words, with its page and heading. Plain
+/// text only (Text(verbatim:)), nothing in it is a link or a command.
+struct AwPunkt: Identifiable, Hashable {
+    let id: Int
+    let text: String
+    let page: Int
+    let part: String
+    let zitat: String
+    let daten: [String]
+    let steckbrief: Bool
+    let erinnern: String
+
+    init(_ i: Int, _ d: [String: Any]) {
+        id = i
+        text = String((d["text"] as? String ?? "").prefix(400))
+        page = (d["page"] as? NSNumber)?.intValue ?? 0
+        let p = String((d["part"] as? String ?? "").prefix(120))
+        part = p == text ? "" : p
+        zitat = String((d["zitat"] as? String ?? "").prefix(420))
+        daten = ((d["daten"] as? [String]) ?? []).prefix(2).map { String($0.prefix(40)) }
+        steckbrief = (d["art"] as? String) == "steckbrief"
+        let e = d["erinnern"] as? String ?? ""
+        erinnern = e.range(of: "^\\d{4}-\\d{2}-\\d{2}$", options: .regularExpression) != nil ? e : ""
+    }
+
+    var wo: String {
+        [page > 0 ? String(localized: "S. \(page)") : "", part].filter { !$0.isEmpty }.joined(separator: " · ")
+    }
+}
+
+/// One kind of the sheet (fixed or a Vorlage of the admin) with its state and points.
+struct AwArt: Identifiable, Hashable {
+    let art: String
+    let name: String
+    let stand: String
+    let modell: Bool
+    let auto: Bool
+    let at: Date
+    let punkte: [AwPunkt]
+    var id: String { art }
+
+    init?(_ d: [String: Any], en: Bool) {
+        guard let a = d["art"] as? String, a.range(of: "^[a-z0-9]{4,10}$", options: .regularExpression) != nil else { return nil }
+        art = a
+        let n = (d["name"] as? [String]) ?? []
+        name = String(((en ? n.last : n.first) ?? a).prefix(40))
+        let s = d["stand"] as? String ?? ""
+        stand = ["wartet", "ok", "leer", "x"].contains(s) ? s : ""
+        modell = d["modell"] as? Bool ?? false
+        auto = d["auto"] as? Bool ?? false
+        at = Date(timeIntervalSince1970: (d["at"] as? NSNumber)?.doubleValue ?? 0)
+        punkte = ((d["punkte"] as? [[String: Any]]) ?? []).enumerated().map { AwPunkt($0.offset, $0.element) }
+    }
+
+    var standText: String {
+        switch stand {
+        case "ok": return modell ? String(localized: "fertig · \(at.formatted(date: .abbreviated, time: .omitted))") : String(localized: "fertig")
+        case "wartet": return String(localized: "wartet auf ruhige Minuten")
+        case "leer": return String(localized: "nichts Passendes gefunden")
+        case "x": return String(localized: "ging nicht, später noch einmal")
+        default: return auto ? String(localized: "entsteht in ruhigen Minuten") : ""
+        }
+    }
+}
+
+/// Ich → Dokumente → ein Dokument → Auswertungen: the sheet of auswertung.py. Make a kind per tap („Erstellen“),
+/// „Stimmt nicht“ takes a point of the model away for good, „Erinnern“ for a deadline with a full date. The Spark
+/// checked every point with fixed rules; the app only shows them.
+struct AuswertungView: View {
+    let doc: SparkDoc
+    @State private var arten: [AwArt] = []
+    @State private var karte = ""
+    @State private var loaded = false
+    @State private var busy = false
+    @State private var note: String?
+    @State private var error: String?
+    private var en: Bool { Locale.current.language.languageCode?.identifier == "en" }
+    private var base: String { "api/profile/wissen/" + doc.id + "/auswertung" }
+
+    var body: some View {
+        List {
+            Section {
+                Text("Kurzfassung, Kernaussagen, Fragen und die eigenen Arten des Admins schreibt das Sprachmodell, das Panel prüft jeden Punkt: jede Zahl steht an der genannten Stelle im Dokument. Inhaltsverzeichnis, Fristen und Beteiligte kommen ohne Modell aus dem Dokument und der Wissenskarte.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            if !loaded { LadeZeilen(rows: 3) }
+            ForEach(arten) { a in
+                Section {
+                    ForEach(a.punkte) { p in punkt(a, p) }
+                    if a.stand != "wartet" && (a.stand != "ok" || a.modell) {
+                        Button {
+                            Task { await make(a) }
+                        } label: {
+                            Label(a.stand.isEmpty ? (a.modell ? LocalizedStringKey("Erstellen") : LocalizedStringKey("Zeigen")) : LocalizedStringKey("Neu erstellen"),
+                                  systemImage: a.stand.isEmpty ? "plus.circle" : "arrow.clockwise")
+                        }
+                        .disabled(busy)
+                    }
+                } header: {
+                    HStack {
+                        Text(verbatim: a.name)
+                        Spacer()
+                        Text(verbatim: a.standText).textCase(nil)
+                    }
+                }
+            }
+            if !karte.isEmpty && arten.contains(where: { ($0.art == "fristen" || $0.art == "beteiligte") && !$0.stand.isEmpty }) {
+                Text(SparkAPI.way(karte)).font(.caption).foregroundStyle(.secondary)
+            }
+            if let n = note { Text(verbatim: n).foregroundStyle(.secondary) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
+        }
+        .navigationTitle("Auswertungen")
+        .navigationBarTitleDisplayMode(.inline)
+        .refreshable { await load() }
+        .task { await load() }
+    }
+
+    @ViewBuilder private func punkt(_ a: AwArt, _ p: AwPunkt) -> some View {
+        VStack(alignment: .leading, spacing: Theme.s1) {
+            Text(verbatim: a.art == "fristen" && p.steckbrief ? DocRow.day(p.text) : p.text)
+            if a.art == "fragen" && !p.zitat.isEmpty {
+                Text(verbatim: String(localized: "Im Dokument: ") + p.zitat).font(.caption).foregroundStyle(.secondary)
+            }
+            if a.art == "fristen" && !p.daten.isEmpty && p.daten.first != p.text {
+                Text(verbatim: p.daten.joined(separator: ", ")).font(.caption).foregroundStyle(.secondary)
+            }
+            if a.art == "fristen" && p.steckbrief { Text("aus dem Steckbrief").font(.caption).foregroundStyle(.secondary) }
+            if !p.wo.isEmpty { Text(verbatim: p.wo).font(.caption2).foregroundStyle(.secondary) }
+            if a.art == "fristen" && !p.erinnern.isEmpty {
+                Button { Task { await remind(p) } } label: { Label("Erinnern", systemImage: "bell") }
+                    .buttonStyle(.borderless).disabled(busy)
+            }
+        }
+        .swipeActions {
+            if a.modell {
+                Button(role: .destructive) { Task { await wrong(a, p) } } label: { Label("Stimmt nicht", systemImage: "hand.thumbsdown") }
+            }
+        }
+    }
+
+    private func load() async {
+        defer { loaded = true }
+        do {
+            guard let d = try await SparkAPI.current?.object("GET", base) else { return }
+            arten = ((d["arten"] as? [[String: Any]]) ?? []).compactMap { AwArt($0, en: en) }
+            karte = String((d["karte"] as? String ?? "").prefix(400))
+            error = nil
+        } catch { self.error = error.localizedDescription }
+    }
+
+    private func make(_ a: AwArt) async {
+        busy = true
+        defer { busy = false }
+        do {
+            let r = try await SparkAPI.current?.object("POST", base + "/" + a.art, body: [:])
+            note = (r?["stand"] as? String) == "wartet" ? String(localized: "Eingereiht: entsteht in der nächsten ruhigen Minute.") : nil
+            error = nil
+        } catch { self.error = error.localizedDescription }
+        await load()
+    }
+
+    private func wrong(_ a: AwArt, _ p: AwPunkt) async {
+        busy = true
+        defer { busy = false }
+        do {
+            _ = try await SparkAPI.current?.object("DELETE", base + "/" + a.art + "/" + String(p.id))
+            note = String(localized: "Entfernt: dieser Punkt kommt aus diesem Dokument nicht wieder.")
+            error = nil
+        } catch { self.error = error.localizedDescription }
+        await load()
+    }
+
+    private func remind(_ p: AwPunkt) async {
+        busy = true
+        defer { busy = false }
+        do {
+            guard let r = try await SparkAPI.current?.object("POST", base + "/fristen/" + String(p.id) + "/erinnern", body: [:]) else { return }
+            let when = Date(timeIntervalSince1970: ((r["due"] as? NSNumber)?.doubleValue ?? 0) / 1000)
+            note = String(localized: "Erinnerung am \(when.formatted(date: .abbreviated, time: .shortened)).")
             error = nil
         } catch { self.error = error.localizedDescription }
     }

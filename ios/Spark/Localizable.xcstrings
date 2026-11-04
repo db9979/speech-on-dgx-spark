@@ -19710,6 +19710,146 @@
           }
         }
       }
+    },
+    "Auswertungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analyses"
+          }
+        }
+      }
+    },
+    "Zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show"
+          }
+        }
+      }
+    },
+    "Neu erstellen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make again"
+          }
+        }
+      }
+    },
+    "aus dem Steckbrief": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "from the profile card"
+          }
+        }
+      }
+    },
+    "Im Dokument: ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the document: "
+          }
+        }
+      }
+    },
+    "S. %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "p. %lld"
+          }
+        }
+      }
+    },
+    "fertig · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "done · %@"
+          }
+        }
+      }
+    },
+    "wartet auf ruhige Minuten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "waits for quiet minutes"
+          }
+        }
+      }
+    },
+    "nichts Passendes gefunden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nothing fitting found"
+          }
+        }
+      }
+    },
+    "ging nicht, später noch einmal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "did not work, try again later"
+          }
+        }
+      }
+    },
+    "entsteht in ruhigen Minuten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "made in quiet minutes"
+          }
+        }
+      }
+    },
+    "Eingereiht: entsteht in der nächsten ruhigen Minute.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Queued: made in the next quiet minute."
+          }
+        }
+      }
+    },
+    "Entfernt: dieser Punkt kommt aus diesem Dokument nicht wieder.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed: this point does not come back from this document."
+          }
+        }
+      }
+    },
+    "Kurzfassung, Kernaussagen, Fragen und die eigenen Arten des Admins schreibt das Sprachmodell, das Panel prüft jeden Punkt: jede Zahl steht an der genannten Stelle im Dokument. Inhaltsverzeichnis, Fristen und Beteiligte kommen ohne Modell aus dem Dokument und der Wissenskarte.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summary, key points, questions and the admin's own kinds are written by the language model; the panel checks every point: every number stands at the named place in the document. Contents, deadlines and people come without the model from the document and the knowledge map."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
