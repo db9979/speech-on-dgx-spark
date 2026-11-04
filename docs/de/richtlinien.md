@@ -380,6 +380,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
   - Jedes `uses:` ist auf einen 40-stelligen SHA mit `# vN` gepinnt. `contents: write` nur auf Job-Ebene. `persist-credentials: false`.
   - Signierschlüssel und Releases nur mit `environment: release`. Kein `pull_request_target`.
   - (🧪 test_workflows)
+- **macOS-Minuten sparen** (V01.1.332, Dominik 2026-11-04: „ich möchte nichts bei github bezahlen“): Eine macOS-Minute zählt beim privaten Repo zehnfach gegen das Gratis-Kontingent. Kein Mac-Job startet bei einem Push auf einen Zweig (`claude/**`); bei einem Push auf main nur mit `paths:`-Filter. „iPhone app“ baut nur von Hand oder nachts, wenn eine Linux-Prüfung eine iOS-Änderung der letzten 25 Stunden findet; TestFlight folgt nur diesem nächtlichen Lauf, wenn er wirklich gebaut hat. Nach einem Push wird nur „Tests“ bestätigt, ein fehlender Lauf „iPhone app“ ist kein Fehler; wer iOS-Code sofort prüfen will, startet „iPhone app“ von Hand (Actions → iPhone app → Run workflow, auch für einen Zweig). (🧪 test_workflows)
 - **`cancel-in-progress: false`** in `tests.yml` nie wieder auf true setzen. (M [[tests-lauf-nicht-abbrechen]])
 - **Update-Schranke:** tars spielt nur den neuesten main-Commit mit grünem „Tests“-Lauf ein. (🧪 test_hardening)
 - **Releases:** Alte GitHub-Releases immer löschen, nur das neueste pro Reihe behalten. Ein neuer Release-Workflow kommt in die `workflow_run`-Liste von `releases-aufraeumen.yml`. (PA, M [[releases-aufraeumen]]; 🧪 test_releases_aufraeumen)

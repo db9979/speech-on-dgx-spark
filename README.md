@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.332** iPhone build without GitHub costs: the iPhone app builds on GitHub only at night after iOS changes or by hand, TestFlight follows that run
 - **V01.1.331** Find everything fast, step 5: under an answer from own data the panel says where it comes from (kinds and numbers only, „From: 2 mails, 1 appointment“), with „Show in Find“ and, for own-data answers without the web, „Also search the web“ (only the question's own words, never after a mail, for guests or other voices), in the panel and every app
 - **V01.1.330** Find everything fast, steps 3 and 4: the source switch decides by fixed rules and a short hit probe in the own index whether a question belongs to the own data, the web or both (bench 66 of 66); „Look locally first“ then asks every released source including mails and appointments, and for „both“ the panel searches the web itself with the own words before any mail is read
 - **V01.1.329** Find everything fast, steps 1 and 2: source bench (66 sentences, internal/external/both, before 57.6 %, after 83.3 %) and quick fixes: own mails are a normal source, Find stays when narrowing, „according to the offer“ and reading questions like „Did the plumber get back to me?“ stay with the own data
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.325** Fix e-mail: the folders in the "Mailboxes" column sit close again like the side menu and Apple Mail; under Open "Where does this mail belong?" shows the mail itself, "Show in the conversation" opens the right conversation
 - **V01.1.324** Fix repeated name list in the voice chat: when the speech recognition reads its own name list (Names for listening) back out of noise, that text no longer goes to the assistant as a question
 - **V01.1.323** Analyses 2c: the sheet Analyses in the iPhone app too (make, "Not right" by swiping, remind for deadlines, page per point), English in the app
-- **V01.1.322** System updates (switch off, admin only): Status → System updates shows per computer the operating system updates with security and a package list, installs them with a fresh code as a fixed root run only in a pause in speech, a restart only on your word; OpenCode and OSV warnings with a check request, firmware only by hand, at night 03–05 per computer.
 
 
 

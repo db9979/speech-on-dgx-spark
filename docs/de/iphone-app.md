@@ -275,4 +275,4 @@ Schritt für Schritt (TestFlight für dich und die Familie, App Store): [iphone-
 | `GET /api/admin/iphone-update`, `PUT /api/admin/iphone-update/{id}` | Admin: wer Hinweise bekommt und wer starten darf |
 | `GET/PUT/DELETE /api/admin/apns` | Admin: Apple-Schlüssel (PUT und DELETE mit zweitem Schritt) |
 
-Jeder Push, der `ios/` ändert, baut die App auf GitHub für den Simulator (`.github/workflows/ios.yml`), damit Fehler dort auffallen und nicht erst in Xcode.
+GitHub baut die App für den Simulator (`.github/workflows/ios.yml`), damit Fehler dort auffallen und nicht erst in Xcode: einmal in der Nacht (03:17 Uhr, im Sommer 04:17 Uhr), und nur, wenn sich am Tag davor etwas unter `ios/` geändert hat. Eine macOS-Minute zählt bei einem privaten Repo zehnfach gegen das Gratis-Kontingent von GitHub, deshalb baut kein Push mehr (V01.1.332, Dominik 2026-11-04: „ich möchte nichts bei github bezahlen“). Sofort bauen: GitHub → **Actions → iPhone app → Run workflow**, auch für einen Zweig. Ein fehlender Lauf „iPhone app“ nach einem Push ist also kein Fehler.

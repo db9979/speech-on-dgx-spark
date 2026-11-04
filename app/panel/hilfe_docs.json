@@ -16293,7 +16293,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Was der Spark dafür anbietet",
 "title": "Was der Spark dafür anbietet",
-"text": "Jeder Push, der ios/ ändert, baut die App auf GitHub für den Simulator (.github/workflows/ios.yml), damit Fehler dort auffallen und nicht erst in Xcode."
+"text": "GitHub baut die App für den Simulator (.github/workflows/ios.yml), damit Fehler dort auffallen und nicht erst in Xcode: einmal in der Nacht (03:17 Uhr, im Sommer 04:17 Uhr), und nur, wenn sich am Tag davor etwas unter ios/ geändert hat. Eine macOS-Minute zählt bei einem privaten Repo zehnfach gegen das Gratis-Kontingent von GitHub, deshalb baut kein Push mehr (V01.1.332, Dominik 2026-11-04: „ich möchte nichts bei github bezahlen“). Sofort bauen: GitHub → Actions → iPhone app → Run workflow, auch für einen Zweig. Ein fehlender Lauf „iPhone app“ nach einem Push ist also kein Fehler."
 },
 {
 "lang": "de",
@@ -16357,7 +16357,7 @@
 "file": "iPhone-App veröffentlichen",
 "head": "Hochladen per GitHub-Knopf „TestFlight“",
 "title": "Automatisch",
-"text": "Automatisch: Ändert ein Commit auf main etwas unter ios/, startet TestFlight von selbst, sobald „iPhone app“ und „Tests“ grün sind. Höchstens ein Upload pro Stunde. Auf „Tests“ wartet er bis zu 100 Minuten, weil Tests auf main nacheinander laufen (V01.0.965). Kommt in der Wartezeit ein neuerer iOS-Commit, wird nur dieser hochgeladen. Hat ein neuerer Push die Tests des iOS-Commits abgebrochen, geht der neueste main-Stand mit grünen Tests hoch, der den iOS-Commit enthält (V01.0.321). Die Zertifikate, die ein Lauf für sich anlegt, widerruft er am Ende wieder, sonst ist Apples Höchstzahl nach einigen Dutzend Läufen erreicht (\"reached the maximum number of certificates\", V01.0.334). Steht diese Meldung trotzdem im Lauf, unter developer.apple.com → Certificates die alten Einträge widerrufen. Abschalten: GitHub → Settings → Secrets and variables → Actions → Variables → TESTFLIGHT_AUTO = off. Eine andere Bundle-ID als io.github.db9979.speechspark trägst du als Variable APP_BUNDLE_ID ein. Zum Neustarten immer Run workflow nehmen, nicht „Re-run“, denn ein Re-run baut den alten Stand."
+"text": "Automatisch: Hat der nächtliche Lauf „iPhone app“ eine iOS-Änderung vom Vortag gebaut, startet TestFlight von selbst, sobald auch „Tests“ für diesen Stand grün ist; also höchstens ein Upload pro Nacht (V01.1.332, spart macOS-Minuten). Ein von Hand gestarteter Lauf „iPhone app“ lädt nichts hoch. Auf „Tests“ wartet er bis zu 100 Minuten, weil Tests auf main nacheinander laufen (V01.0.965). Hat ein neuerer Push die Tests des iOS-Commits abgebrochen, geht der neueste main-Stand mit grünen Tests hoch, der den iOS-Commit enthält (V01.0.321). Die Zertifikate, die ein Lauf für sich anlegt, widerruft er am Ende wieder, sonst ist Apples Höchstzahl nach einigen Dutzend Läufen erreicht (\"reached the maximum number of certificates\", V01.0.334). Steht diese Meldung trotzdem im Lauf, unter developer.apple.com → Certificates die alten Einträge widerrufen. Abschalten: GitHub → Settings → Secrets and variables → Actions → Variables → TESTFLIGHT_AUTO = off. Eine andere Bundle-ID als io.github.db9979.speechspark trägst du als Variable APP_BUNDLE_ID ein. Zum Neustarten immer Run workflow nehmen, nicht „Re-run“, denn ein Re-run baut den alten Stand."
 },
 {
 "lang": "de",
@@ -33909,7 +33909,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "What the Spark offers for it",
 "title": "What the Spark offers for it",
-"text": "Every push that changes ios/ builds the app on GitHub for the simulator (.github/workflows/ios.yml), so errors show there and not only in Xcode."
+"text": "GitHub builds the app for the simulator (.github/workflows/ios.yml), so errors show there and not only in Xcode: once a night (03:17, in summer 04:17 Berlin time), and only when something under ios/ changed the day before. A macOS minute counts ten times against GitHub's free quota of a private repository, so no push builds any more (V01.1.332, Dominik 2026-11-04: \"I don't want to pay anything at GitHub\"). To build at once: GitHub → Actions → iPhone app → Run workflow, also for a branch. A missing \"iPhone app\" run after a push is therefore no error."
 },
 {
 "lang": "en",
@@ -33973,7 +33973,7 @@
 "file": "Publishing the iPhone app",
 "head": "Upload with the GitHub button \"TestFlight\"",
 "title": "Automatic",
-"text": "Automatic: when a commit on main changes something under ios/, TestFlight starts by itself as soon as \"iPhone app\" and \"Tests\" passed. At most one upload per hour. It waits up to 100 minutes for \"Tests\", because Tests on main run one after another (V01.0.965). If a newer iOS commit comes in the waiting time, only that one is uploaded. If a newer push cancelled the tests of the iOS commit, the newest main commit with passed tests that contains the iOS commit goes up (V01.0.321). The certificates a run makes for itself are revoked again at its end, otherwise Apple's limit is reached after some dozen runs (\"reached the maximum number of certificates\", V01.0.334). If that message still shows in a run, revoke the old entries under developer.apple.com → Certificates. Turn it off: GitHub → Settings → Secrets and variables → Actions → Variables → TESTFLIGHT_AUTO = off. A bundle ID other than io.github.db9979.speechspark goes into the variable APP_BUNDLE_ID. To start again always use Run workflow, not \"Re-run\", because a re-run builds the old commit."
+"text": "Automatic: when the nightly \"iPhone app\" run built an iOS change of the day before, TestFlight starts by itself as soon as \"Tests\" passed for that state too; so at most one upload a night (V01.1.332, saves macOS minutes). An \"iPhone app\" run started by hand uploads nothing. It waits up to 100 minutes for \"Tests\", because Tests on main run one after another (V01.0.965). If a newer push cancelled the tests of the iOS commit, the newest main commit with passed tests that contains the iOS commit goes up (V01.0.321). The certificates a run makes for itself are revoked again at its end, otherwise Apple's limit is reached after some dozen runs (\"reached the maximum number of certificates\", V01.0.334). If that message still shows in a run, revoke the old entries under developer.apple.com → Certificates. Turn it off: GitHub → Settings → Secrets and variables → Actions → Variables → TESTFLIGHT_AUTO = off. A bundle ID other than io.github.db9979.speechspark goes into the variable APP_BUNDLE_ID. To start again always use Run workflow, not \"Re-run\", because a re-run builds the old commit."
 },
 {
 "lang": "en",

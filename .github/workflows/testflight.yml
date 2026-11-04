@@ -2,9 +2,10 @@ name: TestFlight
 
 # Builds the iPhone app in release mode, lets Apple sign it (Xcode's automatic signing with the
 # App Store Connect API key, no certificate files) and uploads it to TestFlight. By hand
-# (Actions → TestFlight → Run workflow) and by itself after a commit on main that changed ios/: once
-# "iPhone app" and "Tests" passed for it, at most one upload per hour; a newer iOS commit in the
-# waiting time replaces the older one. Off with the repository variable TESTFLIGHT_AUTO=off.
+# (Actions → TestFlight → Run workflow) and by itself after the nightly "iPhone app" run that built an
+# iOS change of the last day (only that run, not one started by hand, and not when it skipped the Mac),
+# once "Tests" passed for that commit; at most one upload per hour. Off with the repository variable
+# TESTFLIGHT_AUTO=off.
 # Only for a commit whose "Tests" run passed, like update.sh. If a newer push cancelled that run, the
 # newest main commit with passed Tests goes up instead, but only when it contains the iOS commit.
 # Certificates the run made for itself are revoked at the end, so Apple's limit is never reached.
@@ -37,7 +38,7 @@ jobs:
       cancel-in-progress: ${{ github.event_name == 'workflow_run' }}
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' &&
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'schedule' &&
        github.event.workflow_run.head_branch == 'main' && vars.TESTFLIGHT_AUTO != 'off')
     outputs:
       go: ${{ steps.check.outputs.go }}
@@ -48,10 +49,24 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           AUTO: ${{ github.event_name == 'workflow_run' }}
           SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+          RUN_ID: ${{ github.event.workflow_run.id || '' }}
         run: |
           set -euo pipefail
           api="https://api.github.com/repos/$GITHUB_REPOSITORY/actions"
           get() { curl -fsS -H "Authorization: Bearer $GH_TOKEN" "$api/$1"; }
+          # the nightly "iPhone app" run is green also when it found no iOS change and skipped the Mac:
+          # then there is nothing new to upload
+          if [ "$AUTO" = "true" ]; then
+            case "$RUN_ID" in ""|*[!0-9]*) echo "::error::odd run id"; exit 1;; esac
+            built=$(get "runs/$RUN_ID/jobs" | python3 -c '
+          import json, sys
+          j = [x for x in json.load(sys.stdin).get("jobs") or [] if x.get("name") == "build"]
+          print(j[0].get("conclusion") if j else "none")')
+            if [ "$built" != "success" ]; then
+              echo "No iOS change built tonight ($built), nothing to upload"
+              echo "go=false" >> "$GITHUB_OUTPUT"; exit 0
+            fi
+          fi
           # the Tests run of this commit: by hand it must have passed already, automatically wait for it.
           # Many commits land on main close together and a newer push cancels the older Tests run. A
           # cancelled run is no verdict: then the newest main commit with passed Tests goes up, but only

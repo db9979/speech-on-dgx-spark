@@ -110,6 +110,37 @@ class Workflows(unittest.TestCase):
             self.assertIn("sign-manifest.sh", step, name)
             self.assertIn(manifest, step, name)
 
+    def test_mac_minutes_spared(self):
+        """V01.1.332 (Dominik 2026-11-04 „ich möchte nichts bei github bezahlen“): a macOS minute counts ten times
+        against the free quota of a private repository. No Mac job starts on a push to a branch; the iPhone build runs
+        only by hand or nightly, and then only after a Linux check found an iOS change of the last day; TestFlight
+        follows only that nightly run and only when it really built."""
+        wfs = dict(workflows())
+        for name, text in wfs.items():
+            if "runs-on: macos" not in text:
+                continue
+            on = text.split("\njobs:\n", 1)[0]
+            self.assertNotIn("claude/", on, f"{name}: a Mac build on every branch push")
+            if "\n  push:" in on:
+                self.assertIn("branches: [main]", on, name)
+                self.assertIn("paths:", on, f"{name}: a Mac build on every push to main")
+        ios = wfs["ios.yml"]
+        on = ios.split("\njobs:\n", 1)[0]
+        self.assertNotIn("\n  push:", on)
+        self.assertIn("workflow_dispatch:", on)
+        self.assertRegex(on, r"schedule:\n\s+- cron: \"\d+ \d+ \* \* \*\"")   # at most once a day
+        build = jobs(ios)["build"]
+        self.assertIn("needs: check", build)
+        self.assertIn("if: needs.check.outputs.build == 'true'", build)
+        self.assertIn("runs-on: ubuntu-", jobs(ios)["check"])
+        self.assertIn('git log --since="25 hours ago" --format=%H -- ios .github/workflows/ios.yml', ios)
+        tf = wfs["testflight.yml"]
+        self.assertIn("github.event.workflow_run.event == 'schedule'", tf)
+        self.assertNotIn("github.event.workflow_run.event == 'push'", tf)
+        self.assertIn('runs/$RUN_ID/jobs', tf)
+        self.assertIn('[ "$built" != "success" ]', tf)
+        self.assertNotIn("\n  push:", wfs["screenshots.yml"].split("\njobs:\n", 1)[0])
+
 
 class SignManifest(unittest.TestCase):
     """tools/sign-manifest.sh writes what app/panel/signatur.py accepts (needs OpenSSL 3 here)."""

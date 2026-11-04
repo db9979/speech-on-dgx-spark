@@ -275,4 +275,4 @@ Step by step (TestFlight, App Store): [iphone-publishing.md](iphone-publishing.m
 | `GET /api/admin/iphone-update`, `PUT /api/admin/iphone-update/{id}` | Admin: who gets notes and who may start |
 | `GET/PUT/DELETE /api/admin/apns` | Admin: Apple key (PUT and DELETE with the second step) |
 
-Every push that changes `ios/` builds the app on GitHub for the simulator (`.github/workflows/ios.yml`), so errors show there and not only in Xcode.
+GitHub builds the app for the simulator (`.github/workflows/ios.yml`), so errors show there and not only in Xcode: once a night (03:17, in summer 04:17 Berlin time), and only when something under `ios/` changed the day before. A macOS minute counts ten times against GitHub's free quota of a private repository, so no push builds any more (V01.1.332, Dominik 2026-11-04: "I don't want to pay anything at GitHub"). To build at once: GitHub → **Actions → iPhone app → Run workflow**, also for a branch. A missing "iPhone app" run after a push is therefore no error.
