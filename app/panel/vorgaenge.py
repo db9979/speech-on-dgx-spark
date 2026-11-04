@@ -98,7 +98,7 @@ QUELLEN = {}
 OFFEN_STUNDEN = {"erinnerung": 12, "freigabe": 0.25, "auftrag": 1, "dienst": 24}
 # how a source closed a card (done(wie)): these count as „weg“, every other one as „erledigt“
 WEG_WIE = ("ausblenden", "abgelaufen", "abgelehnt")
-# every button there is; "direkt" runs here at once (Rückgängig with "zurueck"), "seite" only opens the place where
+# every button there is ("verdeckt": allowed but never a button of its own, "ziel": needs the chosen folder); "direkt" runs here at once (Rückgängig with "zurueck"), "seite" only opens the place where
 # the person goes on (the mail page's preview sheet sends, the Kalender's „Eintragen“ saves), nothing runs here
 AKTIONEN = {
     "erledigt": {"de": "Erledigt", "en": "Done", "stufe": "direkt"},
@@ -358,7 +358,7 @@ def group_of(x):
 def public(uid, x):
     a = ARTEN[x["art"]]
     ok = _allowed_acts(uid, x)
-    acts = [k for k in a["acts"] + ("spaeter", "zurueck") if k in ok]
+    acts = [k for k in a["acts"] + ("spaeter", "zurueck") if k in ok and not AKTIONEN[k].get("verdeckt")]
     names = _names(uid, x, acts)
     if x.get("knopf") in KNOPF:      # a proposal's yes says what it does („Eintragen“, „Senden“)
         names["vs_ja"] = dict(AKTIONEN["vs_ja"], de=KNOPF[x["knopf"]][0][0], en=KNOPF[x["knopf"]][0][1])
@@ -460,16 +460,20 @@ def _check(uid, vid, name, rev, wann=""):
     return d, x
 
 
-def act(uid, vid, name, rev=None, wann="", wo="web", now=None):
+def act(uid, vid, name, rev=None, wann="", wo="web", now=None, ziel=""):
     """Runs one button. Returns {"item", "rev", ...}; raises HTTPException with a fixed sentence when it may not.
-    The yes of a proposal (vs_ja) runs in ja(), it waits for the calendar or the outgoing server."""
+    The yes of a proposal (vs_ja) runs in ja(), it waits for the calendar or the outgoing server. ziel: the folder of
+    a button with "ziel" in AKTIONEN (the picker under „Anderer Ordner …“), checked again by the source."""
     d, x = _check(uid, vid, name, rev, wann)
+    if bool(ziel) != bool(AKTIONEN[name].get("ziel")):
+        raise _refuse("ziel", 400, "Welcher Ordner?")
     now = now or time.time()
     where = WO.get(wo, "Rechner")
     if x["art"] == "vorschlag":
         return _vorschlag_act(uid, x, name, where, now)
     extra = (_source_act(uid, x, name) or {}) if x["art"] in ("fuerdich", "besprechung", "nachricht") and name != "spaeter" else \
-        (QUELLEN[x["art"]]["run"](uid, x, name) or {}) if x["art"] in QUELLEN and name not in ("spaeter", "zurueck") else {}
+        (QUELLEN[x["art"]]["run"](uid, x, name, **({"ziel": ziel} if ziel else {})) or {}) \
+        if x["art"] in QUELLEN and name not in ("spaeter", "zurueck") else {}
     if AKTIONEN[name]["stufe"] == "seite":
         print(f"vorgang: knopf {name} seite {x['art']} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
         return dict(extra, item=public(uid, x), rev=d["rev"])
@@ -945,14 +949,15 @@ async def api_stream(request: Request, prof=Depends(own_profile)):
 async def api_act(request: Request, prof=Depends(own_profile)):
     _mine(request, prof, "vorgaengeact")
     b = await json_body(request, 2 * 1024)
-    vid, name, rev, wann = b.get("id"), b.get("act"), b.get("rev"), b.get("wann", "")
+    vid, name, rev, wann, ziel = b.get("id"), b.get("act"), b.get("rev"), b.get("wann", ""), b.get("ziel", "")
     if not isinstance(vid, str) or not ID.fullmatch(vid) or not isinstance(name, str) or \
-            (rev is not None and not isinstance(rev, int)) or not isinstance(wann, str):
+            (rev is not None and not isinstance(rev, int)) or not isinstance(wann, str) or \
+            not isinstance(ziel, str) or len(ziel) > 300:
         print("vorgang: knopf abgelehnt grund=eingabe", flush=True)
         raise HTTPException(400, "id, act, rev")
     if name == "vs_ja":
         return dict(await ja(prof["id"], vid, rev, _where(request, b)), ok=True)
-    return dict(act(prof["id"], vid, name, rev, wann, _where(request, b)), ok=True)
+    return dict(act(prof["id"], vid, name, rev, wann, _where(request, b), ziel=ziel), ok=True)
 
 
 def _where(request, b):

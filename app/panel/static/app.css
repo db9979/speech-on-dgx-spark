@@ -2334,6 +2334,7 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .vk-t{font-size:14.5px}.vk-z{font-size:13.5px;color:color-mix(in srgb,var(--fg) 85%,var(--mut))}
 .vk-f{display:grid;grid-template-columns:70px 1fr;gap:2px 10px;margin:2px 0;font-size:13.5px}.vk-f dt{color:var(--mut)}.vk-f dd{margin:0;overflow-wrap:anywhere}
 .vk-b{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:4px}.vk-b .b{padding:6px 11px;font-size:13px}
+.vgpick{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px}.vgpick select{flex:1 1 220px;max-width:420px}   /* „Anderer Ordner …“: the folders of the mailbox right at the card */
 .vk-sp{margin-left:auto}.vk-pop{top:auto;bottom:38px}
 .vk-fuss{font-size:12px;color:var(--mut)}
 .vk-zu{display:inline-flex;flex-wrap:wrap;gap:8px;align-items:center;border:1px dashed var(--line);border-radius:12px;padding:6px 12px;font-size:13px}

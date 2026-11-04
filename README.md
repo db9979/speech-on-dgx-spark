@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.333** Fix "Where does this mail belong?": "Other folder …" now shows the folder list at the card and moves the mail right there
 - **V01.1.332** iPhone build without GitHub costs: the iPhone app builds on GitHub only at night after iOS changes or by hand, TestFlight follows that run
 - **V01.1.331** Find everything fast, step 5: under an answer from own data the panel says where it comes from (kinds and numbers only, „From: 2 mails, 1 appointment“), with „Show in Find“ and, for own-data answers without the web, „Also search the web“ (only the question's own words, never after a mail, for guests or other voices), in the panel and every app
 - **V01.1.330** Find everything fast, steps 3 and 4: the source switch decides by fixed rules and a short hit probe in the own index whether a question belongs to the own data, the web or both (bench 66 of 66); „Look locally first“ then asks every released source including mails and appointments, and for „both“ the panel searches the web itself with the own words before any mail is read
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.326** Files in remote access: "Refresh" beside the path (also F5/Ctrl+R) and quietly every 15 s without anything jumping; when permissions are missing a hint with the folder and two ways (as root or `setfacl` to copy); the Files page with the same one red bar as the remote session.
 - **V01.1.325** Fix e-mail: the folders in the "Mailboxes" column sit close again like the side menu and Apple Mail; under Open "Where does this mail belong?" shows the mail itself, "Show in the conversation" opens the right conversation
 - **V01.1.324** Fix repeated name list in the voice chat: when the speech recognition reads its own name list (Names for listening) back out of noise, that text no longer goes to the assistant as a question
-- **V01.1.323** Analyses 2c: the sheet Analyses in the iPhone app too (make, "Not right" by swiping, remind for deadlines, page per point), English in the app
 
 
 

@@ -861,6 +861,7 @@ def _card_mail(uid, x):
         src = box.name(wrong_path(tidy.state(uid)))
         if src not in box.boxes:
             return None
+        targets, _ = postfach._targets(box)
         box.select(src)
         hits = box.find_mid(sug["mid"])
     if len(hits) != 1:
@@ -870,7 +871,8 @@ def _card_mail(uid, x):
         return None
     text = r.get("text") or ""
     return {"from": r["from"], "subject": r["subject"], "date": r["date"], "text": text[:CARD_TEXT],
-            "cut": len(text) > CARD_TEXT, "files": len(r.get("files") or [])}
+            "cut": len(text) > CARD_TEXT, "files": len(r.get("files") or []),
+            "ordner": [f for f in list(targets)[:100] if f != src]}   # the picker under „Anderer Ordner …“
 
 
 def _bump(uid, rid, n):
@@ -1189,7 +1191,7 @@ def _card_acts(uid, x):
         return ({"rg_aendern", "rg_ausnahme"} if rule else {"rg_regel"}) | {"rg_nie"}
     if kind == "wohin":
         return {f"rg_w{i + 1}" for i in range(min(len(sug.get("ziele") or []), WOHIN_MAX))} | \
-            {"rg_eingang", "oeffnen", "rg_nur", "rg_ausnahme", "rg_nie"}
+            {"rg_eingang", "oeffnen", "rg_ordner", "rg_nur", "rg_ausnahme", "rg_nie"}
     if kind == "pause":
         return {"oeffnen"} | ({"rg_an"} if rule and rule.get("on") is False else set())
     return {"rg_regel", "rg_nie"} | ({"rg_ablegen"} if sug["inbox"] else set())
@@ -1231,7 +1233,7 @@ def _set_except(uid, rid, sender, on):
     return True
 
 
-def _card_run(uid, x, name):
+def _card_run(uid, x, name, ziel=""):
     """A button of the card: the page's own add/apply/never, or for a correction's card its own small step (each with
     its journal line); the card closes through _cards_done."""
     import vorgaenge
@@ -1245,7 +1247,7 @@ def _card_run(uid, x, name):
     body = {"account": sug["account"], "from": sug["from"], "folder": sug["folder"]}
     try:
         if sug.get("kind"):
-            return _fix_run(uid, sug, name, who)
+            return _fix_run(uid, sug, name, who, ziel)
         if name == "rg_nie":
             never(uid, body)
             return {"text": "Gut, dazu frage ich nicht mehr."}
@@ -1266,7 +1268,7 @@ def _card_run(uid, x, name):
         raise vorgaenge.HTTPException(400, str(e)[:200] if isinstance(e, ValueError) else "Das Postfach war nicht erreichbar.")
 
 
-def _fix_run(uid, sug, name, who):
+def _fix_run(uid, sug, name, who, ziel=""):
     """The buttons of a correction's card (Sortieren aus Korrekturen lernen); the panel's fixed steps, never the model."""
     aid, sender, rid = sug["account"], sug.get("from", ""), sug.get("rid", "")
     if name == "rg_nie":
@@ -1315,12 +1317,14 @@ def _fix_run(uid, sug, name, who):
         _drop(uid, sug["id"], "erledigt")
         return {"text": "Der Absender bleibt eine Ausnahme dieser Regel." if name == "rg_ausnahme"
                 else "Gut, nur diese Mail; für den Absender ändert sich nichts."}
-    if name == "rg_eingang" or name.startswith("rg_w"):
+    if name in ("rg_eingang", "rg_ordner") or name.startswith("rg_w"):
         ziele = sug.get("ziele") or []
         i = int(name[-1]) - 1 if name.startswith("rg_w") else -1
         if i >= len(ziele):
             raise LookupError("Diesen Ordner gibt es auf der Karte nicht mehr.")
-        dst = ziele[i] if i >= 0 else "INBOX"
+        # „Anderer Ordner …“ (Dominik 2026-11-04 „sollte ordnerliste aufgehen wohin verschoben“): the folder picked from
+        # the mailbox's own list; _place checks it is a folder a message may go to
+        dst = ziel if name == "rg_ordner" else ziele[i] if i >= 0 else "INBOX"
         _place(uid, aid, sug["mid"], dst)       # its line: mail: rule card place; refused or failed: _card_run
         _drop(uid, sug["id"], "erledigt")
         correct(uid, aid, [{"mid": sug["mid"], "by": "rule" if rid else "tidy", "rid": rid, "von": sug.get("von", ""),
@@ -1333,7 +1337,7 @@ def _register():
     import vorgaenge
     vorgaenge.ARTEN[CARD] = {"de": "Regel-Vorschlag", "en": "Rule suggestion", "sym": "mail", "mail": True, "dringend": False,
                              "acts": ("rg_ablegen", "rg_regel", "rg_aendern", "rg_w1", "rg_w2", "rg_w3", "rg_eingang", "oeffnen",
-                                      "rg_nur", "rg_ausnahme", "rg_an", "rg_nie")}
+                                      "rg_ordner", "rg_nur", "rg_ausnahme", "rg_an", "rg_nie")}
     vorgaenge.AKTIONEN.update(rg_ablegen={"de": "Regel anlegen und ablegen", "en": "Make the rule and file them", "stufe": "direkt"},
                               rg_regel={"de": "Regel anlegen", "en": "Make the rule", "stufe": "direkt"},
                               rg_nie={"de": "Nicht mehr fragen", "en": "Don't ask again", "stufe": "direkt"},
@@ -1344,6 +1348,7 @@ def _register():
                               rg_w2={"de": "Ordner 2", "en": "Folder 2", "stufe": "direkt"},
                               rg_w3={"de": "Ordner 3", "en": "Folder 3", "stufe": "direkt"},
                               rg_eingang={"de": "Posteingang", "en": "Inbox", "stufe": "direkt"},
+                              rg_ordner={"de": "Hierhin verschieben", "en": "Move here", "stufe": "direkt", "verdeckt": True, "ziel": True},
                               rg_an={"de": "Wieder einschalten", "en": "Switch on again", "stufe": "direkt"})
     vorgaenge.QUELLEN[CARD] = {"acts": _card_acts, "run": _card_run, "names": _card_names,
                                "has_mail": _card_has_mail, "mail": _card_mail}

@@ -51,7 +51,7 @@ function vgCard(x,where){const el=icEl,c=el('div','vk'+(x.dringend?' hot':''));c
   if(x.felder&&x.felder.length){const dl=el('dl','vk-f');for(const [a,b] of x.felder){dl.append(el('dt','',t(a,{Von:'From',Betrag:'Amount'}[a]||a)),el('dd','',b))}c.appendChild(dl)}
   const bar=el('div','vk-b');let first=true;
   for(const a of x.acts.filter(a=>a.k!=='spaeter'&&a.k!=='zurueck')){const b=el('button','b'+(first?' p':''),L==='en'?a.en:a.de);b.type='button';first=false;
-    b.onclick=()=>vgAct(x,a.k,'',b);bar.appendChild(b)}
+    b.onclick=a.k==='oeffnen'&&x.vorschau?()=>vgPick(x,c,b):()=>vgAct(x,a.k,'',b);bar.appendChild(b)}
   if(x.zustand==='spaeter'&&x.acts.some(a=>a.k==='zurueck')){const b=el('button','b',t('Jetzt zeigen','Show now'));b.type='button';b.onclick=()=>vgAct(x,'zurueck','',b);bar.appendChild(b)}
   if(x.acts.some(a=>a.k==='spaeter'))bar.appendChild(vgLater(x));
   c.appendChild(bar);const st=vgState(x);if(st)c.appendChild(el('div','vk-fuss',st));
@@ -64,8 +64,8 @@ function vgLater(x){const el=icEl,w=el('span','vk-sp'),b=el('button','b',t('Spä
   b.onclick=e=>{e.stopPropagation();const open=!pop.hidden;document.querySelectorAll('.ic-pop').forEach(p=>p.hidden=true);pop.hidden=open};
   w.classList.add('ic-menu');w.append(b,pop);return w}
 // one button: the Spark checks and answers with the card as it is now; "seite" opens the place where it goes on
-async function vgAct(x,k,wann,btn){if(btn)btn.disabled=true;VG.msg='';VG.msgOk=false;
-  const {r,d}=await apiTry('/api/profile/vorgaenge/act',xjson('POST',{id:x.id,act:k,rev:x.rev,wann,view:document.body.classList.contains('appview')?'app':undefined}));
+async function vgAct(x,k,wann,btn,ziel){if(btn)btn.disabled=true;VG.msg='';VG.msgOk=false;
+  const {r,d}=await apiTry('/api/profile/vorgaenge/act',xjson('POST',{id:x.id,act:k,rev:x.rev,wann,ziel:ziel||undefined,view:document.body.classList.contains('appview')?'app':undefined}));
   if(btn)btn.disabled=false;
   const det=d&&d.detail;
   if(r.status===409&&det&&det.item){VG.items.set(x.id,det.item);VG.msg=det.text;VG.msgId=x.id;vgPaint();return}
@@ -148,6 +148,16 @@ function vgPage(w){w.classList.toggle('ld-sel',!!VG.sel);
 // zuordnung durchführen zu können“): sender, subject, date and its text, read only, as text (never HTML); asked once
 // per card, a box of fixed height first so nothing jumps
 const VG_MAIL=new Map();
+// „Anderer Ordner …“ on „Wohin gehört diese Mail?“ (Dominik 2026-11-04 „sollte ordnerliste aufgehen wohin verschoben“):
+// the mailbox's folders as a choice right at the card and „Verschieben“; the Spark checks the folder again (rg_ordner)
+async function vgPick(x,c,btn){const old=c.querySelector('.vgpick');if(old){old.remove();return}
+  const w=icEl('div','row vgpick'),s=document.createElement('select');s.setAttribute('aria-label',t('Ordner','Folder'));
+  const go=icEl('button','b p',t('Verschieben','Move'));go.type='button';go.disabled=true;w.append(s,go);btn.closest('.vk-b').after(w);
+  let m=VG_MAIL.get(x.id);if(!m){s.appendChild(new Option(t('Lade die Ordner …','Loading the folders …'),''));
+    const {r,d}=await apiTry('/api/profile/vorgaenge/mail?id='+encodeURIComponent(x.id));if(!r.ok){w.replaceChildren(icEl('div','fh err',errSay(r.status,d&&d.detail,'')));return}
+    m=d;VG_MAIL.set(x.id,m)}
+  s.replaceChildren(new Option(t('Ordner wählen …','Choose a folder …'),''),...(m.ordner||[]).map(f=>new Option(f,f)));
+  s.onchange=()=>{go.disabled=!s.value};go.onclick=()=>s.value&&vgAct(x,'rg_ordner','',go,s.value);s.focus()}
 function vgMailBox(x){const box=icEl('div','vgmail');box.setAttribute('aria-live','polite');
   const fill=m=>{box.textContent='';if(m.err){box.appendChild(icEl('div','mut',m.err));return}
     const dl=icEl('dl','vk-f'),add=(a,b)=>{if(b)dl.append(icEl('dt','',a),icEl('dd','',b))};

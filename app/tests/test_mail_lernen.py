@@ -204,6 +204,8 @@ class Learn(unittest.TestCase):
         self.assertIn("vorgang: mail gezeigt |", out.getvalue())
         self.assertEqual(len(FMB.boxes["KI/Falsch sortiert"]), 1)
         self.assertFalse(FMB.boxes["KI/Falsch sortiert"][0].get("seen"))
+        self.assertIn("Newsletter", m["ordner"])
+        self.assertNotIn("KI/Falsch sortiert", m["ordner"])
         other, _ = profile("Lern Lotte")
         self.assertEqual(other.get("/api/profile/vorgaenge/mail", params={"id": card["id"]}).status_code, 404)   # never another's
         self.assertEqual(self.c.get("/api/profile/vorgaenge/mail", params={"id": "nix"}).status_code, 404)
@@ -217,6 +219,25 @@ class Learn(unittest.TestCase):
         # „Nur diese Mail“ on another one takes the sender's exception back
         self.assertEqual(self.rule_of(rid)["except"], ["rechnung@stadtwerke.de"])
         self.assertTrue(mailregeln._set_except(self.uid, rid, "rechnung@stadtwerke.de", True))
+
+    def test_other_folder_picked_at_the_card(self):
+        """„Anderer Ordner …“ (Dominik 2026-11-04 „sollte ordnerliste aufgehen wohin verschoben“): the folder picked at
+        the card (rg_ordner, never a button of its own); only with a folder, only one a message may go to."""
+        self.rule("@stadtwerke.de", "KI/Strom")
+        self.arrive("Stadtwerke <rechnung@stadtwerke.de>", "<o-1@x>")
+        mailregeln.run(self.uid)
+        FMB.put("KI/Falsch sortiert", FMB.boxes["KI/Strom"].pop()["raw"])
+        mailregeln.suggest(self.uid)
+        (card,) = [x for x in cards(self.uid).values() if x["titel"] == "Wohin gehört diese Mail?"]
+        self.assertNotIn("rg_ordner", [k["k"] for k in vorgaenge.public(self.uid, card)["acts"]])
+        act = lambda **b: self.c.post("/api/profile/vorgaenge/act", json=dict(id=card["id"], act="rg_ordner", **b))
+        self.assertEqual(act().status_code, 400)                                       # no folder: refused
+        self.assertEqual(act(ziel="Sent Messages").status_code, 400)                    # not a folder a mail may go to
+        self.assertEqual(self.c.post("/api/profile/vorgaenge/act", json={"id": card["id"], "act": "rg_nur", "ziel": "Archive"}).status_code, 400)
+        r = act(ziel="Newsletter")
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["text"], "Abgelegt in „Newsletter“.")
+        self.assertEqual((FMB.boxes["KI/Falsch sortiert"], [m["raw"].count(b"o-1@x") for m in FMB.boxes["Newsletter"]]), ([], [1]))
 
     def test_only_this_mail_and_never(self):
         rid = self.rule("@stadtwerke.de", "KI/Strom")

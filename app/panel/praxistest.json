@@ -5209,6 +5209,9 @@
 "titel": "Herkunft unter der Antwort und „Auch im Internet suchen“",
 "text": "Mit beiden Schaltern wie in P767 im Chat fragen: „Was steht in meinen Unterlagen zur Wärmepumpe?“ (ein Dokument und ein Termin mit dem Wort, keine Mail): unter der Antwort steht „Aus: 1 Dokument, 1 Termin“ ohne Titel, dazu „In Finden ansehen“ (öffnet Finden mit „Wärmepumpe“) und „Auch im Internet suchen“. Der Tipp schickt diese Worte; die Antwort hat Web-Quellen, SearXNG bekam genau die Worte der ersten Frage, im Journal „lokal: Klasse extern (Internet-Chip)“; ein zweiter Tipp sucht nicht noch einmal. Mit einer eigenen Mail zur Wärmepumpe: „Aus: 1 Mail“, kein Internet-Knopf. Dasselbe in der iPhone-App (Knopf mit Globus), in der Android-App, im Begleiter (Zeile hinter den Werkzeugen, Karte mit beiden Knöpfen) und in Telegram (Zeile unter der Antwort, Antworttaste). Zustand → Live am Knoten Finden: „Herkunft N-mal, Internet-Chip N angeboten, N genutzt“. Als Gast: weder Zeile noch Knopf.",
 "thread": "Alles schnell finden über einen Index"
+},
+{"id": "P770", "v": 1333, "titel": "Wohin-Karte: Anderer Ordner verschiebt direkt", "text": "Offen → eine Karte „Wohin gehört diese Mail?“ → „Anderer Ordner …“: unter den Knöpfen geht eine Auswahl mit den Ordnern des Postfachs auf (ohne „Falsch sortiert“, ohne Gesendet und Papierkorb), die Seite wechselt nicht. Einen Ordner wählen, „Verschieben“: „Abgelegt in „…““, die Karte ist erledigt, die Mail liegt in E-Mail in diesem Ordner. Ein zweiter Tipp auf „Anderer Ordner …“ klappt die Auswahl wieder zu. Am iPhone springt der Knopf weiter zur Seite E-Mail.",
+"thread": "Fix Ordnerabstände in E-Mail"
 }
 ]
 }
