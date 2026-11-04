@@ -8,6 +8,6 @@ bild: bild_server.py bedarf.py bildmodell.py musikmodell.py common.py llmstart.p
 musik: musik_server.py musikmodell.py bedarf.py bildmodell.py common.py llmstart.py modelle.py modelle.json config.default.json
 llmtor: llm_tor.py einordnung.py textnorm.py llmstart.py modelle.py modelle.json bildmodell.py musikmodell.py common.py config.default.json
 tlstor: tlstor.py common.py llmstart.py modelle.py modelle.json bildmodell.py musikmodell.py config.default.json
-waerter: tarswart.py werkstatt.py rechner.py common.py llmstart.py modelle.py modelle.json bildmodell.py musikmodell.py config.default.json
+waerter: tarswart.py werkstatt.py rechner.py sysupdate.py common.py llmstart.py modelle.py modelle.json bildmodell.py musikmodell.py config.default.json
 notasr: asr_proxy.py common.py parakeet.py smartturn.py llmstart.py modelle.py modelle.json bildmodell.py musikmodell.py config.default.json
 schirm: steuerzentrale.py common.py llmstart.py modelle.py modelle.json bildmodell.py musikmodell.py config.default.json

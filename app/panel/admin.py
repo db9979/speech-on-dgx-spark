@@ -1009,7 +1009,7 @@ SENSITIVE = [("api", "key"), ("chat", "llm_url"), ("chat", "llm_key"), ("chat", 
              ("chat", "mcp_own"), ("chat", "mcp_own_oauth"), ("chat", "report"), ("chat", "report_repo"),
              ("chat", "chats_verbund"), ("chat", "verbund_media"), ("chat", "verbund_groups"), ("chat", "verbund_mode"), ("chat", "verbund_domain"),
              ("chat", "calls_turn"), ("chat", "calls_turn_host"),
-             ("panel", "trusted_proxies"), ("panel", "allow_lan"), ("panel", "notaus_auto"), ("panel", "update_night"), ("panel", "session_days"), ("panel", "trust_days"), ("asr", "model"), ("asr", "aligner_model"),
+             ("panel", "trusted_proxies"), ("panel", "allow_lan"), ("panel", "notaus_auto"), ("panel", "update_night"), ("chat", "system_updates_night_panel"), ("chat", "system_updates_night_models"), ("panel", "session_days"), ("panel", "trust_days"), ("asr", "model"), ("asr", "aligner_model"),
              ("tts", "model"), ("tts", "voicedesign_model")]
 
 

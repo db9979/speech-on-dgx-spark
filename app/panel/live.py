@@ -74,7 +74,7 @@ TOOLS = {
     # notes the Spark sends (push.py) and what it says by itself (proactive.py, live.note)
     "reMarkable": "rm",
     # what the Spark does by itself with services (live.job): update check, backup to the NAS
-    "GitHub": "github", "NAS-Sicherung": "nas", "Feeds": "feeds", "Geräte-Updates": "geraete",
+    "GitHub": "github", "NAS-Sicherung": "nas", "Feeds": "feeds", "Geräte-Updates": "geraete", "System-Updates": "systemupdate",
     "Speicher-Abgleich": "speicher", "Speicher holen": "speicher", "Meine Daten packen": "mem", "Wissensordner-Abgleich": "nasquelle",
     "Ablage-Eingang": "nasablage", "Ablegen": "nasablage", "nas_ablegen": "nasablage", "nas_zustand": "naszustand",
     # Docling-Server (doclingdienst.py): a document read a second time in a quiet moment
@@ -158,6 +158,8 @@ TARGETS = {
     "inet": ("Internet", "erreichbar? zwei feste Adressen", "net", False),
     # firmware and apps for the devices (geraeteupdate.py): shown while that function is on, its line with the counts
     "geraete": ("Geräte-Updates", "Firmware und Apps · GitHub · Internet", "net", False),
+    # System-Updates (systemupdates.py): the operating system of both computers, OSV and OpenCode; counts and fixed words
+    "systemupdate": ("System-Updates", "Betriebssystem beider Rechner · OSV und npm · Internet", "net", False),
     # tools of MCP services (mcp_… of the admin, mcpu_… a profile's own, meinmcp.py); the line under Ereignisse names the service
     "mcp": ("MCP-Dienste", "eigene und angebundene Dienste · Netz", "net", False),
     # Probleme melden (meldung.py): only after the person looked at the preview; the line shows counts, never text
@@ -213,7 +215,7 @@ RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "we
            "github": "Stand und Testergebnis", "nas": "Ablage bestätigt", "speicher": "Ablage bestätigt oder Datei geholt", "nasquelle": "Ordnerliste und Dateien", "nasablage": "Ablage bestätigt oder Datei geholt", "naszustand": "Belegung und Zustand in Zahlen", "docling": "Text des Dokuments", "mcp": "Antwort des Dienstes",
            "issues": "Nummer der Meldung", "make": "Gliederung, Auftrag oder Zustellung", "bild": "Bild (Größe und Sekunden)",
            "musik": "Lied (Länge und Sekunden)",
-           "geraete": "Versionsnummern und geprüfte Dateien", "telefon": "Anruf und Ton",
+           "geraete": "Versionsnummern und geprüfte Dateien", "systemupdate": "Paketzahlen und Kennungen von Warnungen", "telefon": "Anruf und Ton",
            "modell": "Antwort (nur Anzahl der Befehle)"}
 CLIENT = {"web": "Browser", "speaker": "Lautsprecher", "telefon": "Telefon", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
           "app": "iPhone-App", "android": "Android-App", "car": "CarPlay", "mcp": "MCP-Client", "ha": "Home Assistant", "auto": "Von selbst", "desk": "Spark-Begleiter",
@@ -1859,6 +1861,13 @@ def snapshot(view="admin", now=None):
     if ewk.get("on"):
         used.add("entwickeln")
     try:
+        import systemupdates
+        sup = systemupdates.for_live(now)
+    except Exception:
+        sup = {"on": False}
+    if sup.get("on"):
+        used.add("systemupdate")
+    try:
         import fernzugang
         fzg = fernzugang.for_live(now)
     except Exception:
@@ -2039,6 +2048,8 @@ def snapshot(view="admin", now=None):
                         + f" · Lüfter {geh.get('luefter', '?')}" + (" · Neustart nötig" if geh.get("neustart") else ""))
         if x["id"] == "werkstatt" and wks.get("on"):   # Werkstatt: what runs, last night, the measurement (no text, no patch)
             x["sub"] = werkstattseite.live_sub(wks)
+        if x["id"] == "systemupdate" and sup.get("on"):   # System-Updates: per computer counts, running n of m, waiting (no package name)
+            x["sub"] = systemupdates.live_sub(sup) or x["sub"]
         if x["id"] == "entwickeln" and ewk.get("on"):   # Entwickeln: lokale Änderungen N, waiting in the clone, the last refusal (fixed word)
             x["sub"] = entwickelnseite.live_sub(ewk)
         if x["id"] == "fernzugang" and fzg.get("on"):   # Fernzugang: paired, online, sessions, waiting for removal (numbers)

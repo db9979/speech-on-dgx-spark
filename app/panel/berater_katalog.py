@@ -113,7 +113,7 @@ NEVER = (
     ("Updates und Sicherungen", "Updates and backups"),
 )
 NEVER_KEYS = {("chat", k) for k in ("llm_url", "llm_key", "public", "mfa", "report", "report_repo", "mail_send",
-                                    "mail_send_voice", "mcp_server_extern", "dev_updates", "telegram_api",
+                                    "mail_send_voice", "mcp_server_extern", "dev_updates", "system_updates", "system_updates_night_panel", "system_updates_night_models", "telegram_api",
                                     "fernzugang", "fernzugang_hilfe", "spontanhilfe", "spontansteuern", "fernbild", "fernals",
                                     "fernbild_zwischenablage", "fernzugang_notizen",
                                     "fernzugang_ordner", "fernzugang_gross", "fernweb", "fernweb_adresse", "fernzugang_alle", "entwickeln", "entwickeln_github", "entwickeln_terminal", "entwickeln_auftrag")} \

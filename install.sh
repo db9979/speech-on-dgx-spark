@@ -1044,6 +1044,7 @@ fi
   done
   printf ', /usr/bin/systemctl start --no-block speech-spark-update, /usr/bin/systemctl stop speech-spark-update'
   printf ', /usr/bin/systemctl start --no-block speech-spark-gehaeuse'   # B7: the case, from the panel's checked wish
+  printf ', /usr/bin/systemctl start --no-block speech-spark-systemupdate'   # System-Updates: the checked wish (both computers)
   printf ', /usr/bin/systemctl enable --now speech-spark-schirm, /usr/bin/systemctl disable --now speech-spark-schirm, /usr/bin/systemctl start getty@tty1.service'   # B9
   printf ', /usr/bin/systemctl start --no-block speech-spark-wechsel'   # stage E4: takes the panel's checked wish
   printf ', /usr/bin/systemctl start --no-block speech-spark-werkstatt'   # Funktionen → Werkstatt: takes the checked wish
@@ -1584,6 +1585,23 @@ PrivateTmp=yes
 Environment=SPEECH_SPARK_PREFIX=$PREFIX SPEECH_SPARK_ETC=$ETC SPEECH_SPARK_VAR=$VAR
 ExecStart=/bin/bash $PREFIX/app/speech-spark.sh gehaeuse wunsch-intern
 TimeoutStartSec=5min
+UNIT
+# System-Updates (app/sysupdate.py, Dominik 2026-11-04): the operating system of this computer, on both computers. It
+# takes only the wish sysupdate.py checks (pruefen, einspielen, neustart) and runs fixed apt commands from the system's
+# own sources (no new source, never a removal, firmware and drivers held back); a restart only on that wish.
+cat >/etc/systemd/system/speech-spark-systemupdate.service <<UNIT
+[Unit]
+Description=Speech on DGX Spark: System-Updates (check, the fixed apt run, the restart the admin asked for)
+After=network-online.target
+
+[Service]
+LogNamespace=speech-spark
+Type=oneshot
+MemoryMax=1G
+PrivateTmp=yes
+Environment=SPEECH_SPARK_PREFIX=$PREFIX SPEECH_SPARK_ETC=$ETC SPEECH_SPARK_VAR=$VAR
+ExecStart=/bin/bash $PREFIX/app/speech-spark.sh systemupdate wunsch-intern
+TimeoutStartSec=2h
 UNIT
 # Plan raspberry-split B9: the Steuerzentrale as text on the screen (steuerzentrale.py on tty1, no desktop, no sign-in).
 # Only where the panel runs; panel/schirm.py enables and starts it when the admin switches Funktionen → Steuerzentrale

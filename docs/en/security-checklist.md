@@ -125,12 +125,13 @@ Every change is checked not only against the traps above, but also against wheth
 - [ ] New packages with version and hash in the lock; new actions pinned by SHA; adopt Dependabot alerts promptly.
 - [ ] Secrets never in the repo (secret scanning with push protection is on).
 - [ ] Known vulnerabilities in dependencies are checked before a version with new packages is shipped.
+- [ ] What runs as root is a fixed run in a unit of its own, started through a fixed sudoers line; the panel only writes a wish of one fixed word, never a command, name or path. A restart only on the admin's word (system updates).
 
 **Regular review**
 - [ ] Before large versions and at least once a month a sceptical overall review against these standards (as on 08.10. and 11.10.2026). Every finding gets a self-test.
 
 **Not yet met** (brought up to date the next time the place is touched; as of 19.10.2026)
 - Fernet (AES-CBC plus HMAC) in the vault and for move keys: secure, but not AEAD; new parts use AES-GCM, a change only with migration of the existing data.
-- No automatic vulnerability check of the Python packages (e.g. against the OSV database) in "Tests".
+- The check of the Python packages against the OSV database runs in the Spark (Status → System updates, since V01.1.322), not yet in "Tests".
 - Signed device updates are built, but off without a key (`UPDATE_SIGNING_KEY` is still missing).
 - `style-src 'unsafe-inline'` remains because of older Safari versions in the iPhone app.

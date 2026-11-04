@@ -117,6 +117,7 @@ flowchart TB
 | `speech-spark-wechsel` | – | Switch one model (Status → Models), only on request |
 | `speech-spark-messen-wunsch` | – | Measure one model (Status → Models "Measure"), only on request |
 | `speech-spark-gehaeuse` | – | Set up the panel computer's case (Pironman 5: fan, OLED), only with `--gehaeuse` |
+| `speech-spark-systemupdate` | – | System updates: on the panel's (or the Wärter's) wish check the package sources, `apt-get upgrade --no-remove` from the fixed sources, a restart only on the admin's word (both computers) |
 | `speech-spark-werkstatt` | – (the sandbox asks only 127.0.0.1:31006) | One order of the workshop (Features → Workshop): test run, code measurement, diagnosis, repair in the sandbox `speech-spark-werkstatt-lauf`, only with `--werkstatt`; plus `speech-spark-werkstatt-fw` (on 127.0.0.1 the sandbox reaches only the LLM-Tor) |
 | `speech-spark-lokaltest-umgebung` | – (fetches only packages with a checksum) | Develop on the Pi (`--entwickeln`, panel computer): the quick test's test environment, at night only for a new package list; the quick test itself runs as `speech-spark-lokaltest` without network; plus `speech-spark-entwickeln-fw` (the user `spark-dev` reaches only the LLM-Tor 31006) |
 | `speech-spark-auftrag` | – (no network but the LLM-Tor) | Code order in the chat (`--entwickeln`, panel computer): root takes the panel's wish, OpenCode works once as `spark-dev` on its own branch `opencode/auftrag-<n>`, at most 30 minutes; nothing is installed |
@@ -504,6 +505,8 @@ Live overview, logs, watchers, backup, update, help and the admin pages.
 | `app/panel/rundlauf.py` | Rundlauf-Wächter: a real round trip through the models every few minutes, part of the Dienst-Wächter. |
 | `app/panel/speicher.py` | Eigener Speicher. |
 | `app/panel/system.py` | System page: backups, the live check of the real services and the alerts shown on top. |
+| `app/panel/systemupdates.py` | System-Updates. |
+| `app/sysupdate.py` | System-Updates, the part on each computer. |
 | `app/panel/technik.py` | Status → Architecture: how the Spark is built, as a page to click through and as docs/de/architektur.md + docs/en/architecture.md. |
 | `app/panel/technik_knoten.py` | Status → Architecture, Knoten-Seiten: for every box of the picture one page that says exactly how it works: what it does and why, its way as a picture with n … |
 | `app/panel/technik_seiten.py` | Status → Architecture, Knoten-Seiten: the step helper S. |
@@ -853,6 +856,9 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/speicher-tmp` | Own storage staging | AES-256-GCM | no |
 | `state/spontanhilfe-programme` | Spontaneous help: the program SparkHilfe for control, delivered only after checking the SHA-256 from the signed manifest | – | no |
 | `state/spontanhilfe-verlauf.json` | Spontaneous help: history of the last days (time, admin, kind, duration, home or internet, expired or locked numbers), never the person's name, an address, a picture or the chat; delete under Remote access → Spontaneous help → History of spontaneous help | – | no |
+| `state/system-updates-stand.json` | System updates of this computer: available packages (name, old and new version, source), firmware and driver, restart needed, the last run (n of m); written by the unit speech-spark-systemupdate | – | no |
+| `state/system-updates-wunsch.json` | The panel's or the Wärter's wish for system updates (check, install, restart), seconds | – | no |
+| `state/system-updates.json` | System updates: when last checked, waiting runs and restarts for tonight, OSV warnings (package name, version, id), newest OpenCode version, the check request; delete under Status → System updates (check request) | – | no |
 | `state/telefon.json` | Phone: access to the PBX, handsets | password sealed | yes |
 | `state/telegram.json` | Telegram bot | token sealed | yes |
 | `state/tipps.json` | Tips shown | – | no |
@@ -1668,7 +1674,7 @@ flowchart TD
 
 1. <a id="kn-sicherheit-s1"></a>**A question or order comes in**: At home directly, on the way only through the reverse proxy with TLS. Every device has its own key or signs in like the browser. Every way in (panel, device keys, calendar and contacts apps, MCP, other Sparks, Wyoming, phone, Telegram, the anchors and the web terminal of remote access, the spontaneous help page, the pickup link of "Download all my data") stands with its protection in the security docs under "Ways in".
 2. <a id="kn-sicherheit-s2"></a>**Does the kill switch allow it?**: The kill switch has three stages from the outside in: stage 1 closes the internet, stage 2 every action, stage 3 every conversation. No model, mail or document can trigger or lift it.
-3. <a id="kn-sicherheit-s3"></a>**Signed in and within limits?**: Size limit and origin check (CSRF) before reading, then a rate limit per address and a cap on parallel requests for the model, recognition and output (guard.Slot). Secrets, roles and backups also need a fresh code or passkey (core.confirm_code, 10 minutes). A whole area can be unlocked for a while with a second step (rule "unlocking an area", first remote access: 5 to 120 minutes, fernzugang.entsperrt_bis): this login only, from the same place only, locked on Lock, logout and the kill switch; pairing and removing still ask every time. The models on tars are reached only through the TLS-Tor; commands there are checked by the Wärter (tarswart.check: signature, time, one-time number, one of 16 fixed commands).
+3. <a id="kn-sicherheit-s3"></a>**Signed in and within limits?**: Size limit and origin check (CSRF) before reading, then a rate limit per address and a cap on parallel requests for the model, recognition and output (guard.Slot). Secrets, roles and backups also need a fresh code or passkey (core.confirm_code, 10 minutes). A whole area can be unlocked for a while with a second step (rule "unlocking an area", first remote access: 5 to 120 minutes, fernzugang.entsperrt_bis): this login only, from the same place only, locked on Lock, logout and the kill switch; pairing and removing still ask every time. The models on tars are reached only through the TLS-Tor; commands there are checked by the Wärter (tarswart.check: signature, time, one-time number, one of 18 fixed commands).
 4. <a id="kn-sicherheit-s4"></a>**Who asks, surely known?**: The profile comes from the cookie, the app key or a linked account. At a shared speaker the device key is not enough: chat_turn.shared_stranger allows personal things only when the owner's voice is surely recognised in the same recording.
 5. <a id="kn-sicherheit-s5"></a>**Release and block**: Every function is off until the admin releases it; then it counts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool.
 6. <a id="kn-sicherheit-s6"></a>**Outside stays data**: What a tool reads from outside reaches the model as a marked block of data (textnorm.defuse: the block's end and the model's own markers such as „<|im_start|>“ or „<tool_call>“ are defused; the LLM-Tor does it once more for every message, llm_tor.entschaerft). From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory; after a mail it is 19, everything that asks the internet among them (web search, Wikipedia, weather, transit), so no search word carries mail content out. Whether this holds is checked by the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed); a remote-access tunnel only to targets by fernweb.ziel_ok: 127.0.0.1 there and the system's own addresses its anchor reports itself. A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures from outside only after the own click and through the guard, a link only after the question with its real address.
@@ -1700,6 +1706,7 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 - C, the Spark reads outside things: only through the guard, no home network without permission, the checked address pinned; what comes back is data.
 - D, panel to the models: TLS 1.3 with the certificate pinned at the pairing; the models listen on 127.0.0.1 only.
 - E, handles on tars: only fixed commands of the Wärter, signed, with time and one-time number.
+- F, to root: the panel's code never runs as root. System updates only write a wish of one word (3 fixed words, at most 10 minutes old) and start the fixed unit speech-spark-systemupdate; it reads the wish as the service user and installs only apt upgrade from the fixed sources, never a removal, never firmware, a restart only on the admin's word.
 
 #### Caps without data loss
 
@@ -1722,7 +1729,7 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 - **13** tools locked after outside text ([step 6](#kn-sicherheit-s6))
 - **19** tools locked after a mail ([step 6](#kn-sicherheit-s6))
 - **10 min** a right code counts for „Confirm“ ([step 3](#kn-sicherheit-s3))
-- **16** fixed commands of the Wärter on tars ([step 3](#kn-sicherheit-s3))
+- **18** fixed commands of the Wärter on tars ([step 3](#kn-sicherheit-s3))
 - **3** kill switch stages, the last stops every conversation ([step 2](#kn-sicherheit-s2))
 
 #### In the code
@@ -1732,6 +1739,7 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 - `app/panel/guard.py` `Slot`: cap on parallel requests ([step 3](#kn-sicherheit-s3))
 - `app/panel/core.py` `confirm_code`: fresh code or passkey for sensitive ways ([step 3](#kn-sicherheit-s3), [step 8](#kn-sicherheit-s8))
 - `app/tarswart.py` `check`: checks every command to the Wärter ([step 3](#kn-sicherheit-s3))
+- `app/sysupdate.py` `wunsch_nehmen`: the wish to the root unit, checked again as the service user ([step 3](#kn-sicherheit-s3))
 - `app/panel/chat_turn.py` `shared_stranger`: stranger's voice at a shared speaker ([step 4](#kn-sicherheit-s4))
 - `app/panel/features.py` `allowed`: the admin's release, for every profile ([step 5](#kn-sicherheit-s5))
 - `app/panel/mitschreiblink.py` `find`: checks a write link: hash, expiry, release, list ([step 3](#kn-sicherheit-s3), [step 5](#kn-sicherheit-s5))
@@ -1757,7 +1765,7 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 - `app/panel/gemerkt.py` `take_back`: undo only for the own, unchanged fact ([step 8](#kn-sicherheit-s8))
 - `app/panel/wissensdoppelt.py` `aehnlich`: points of the map merged by themselves only by a fixed rule, never against „Different“ ([step 8](#kn-sicherheit-s8))
 
-Self-tests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_siegel`, `test_meinedaten`, `test_wissensdoppelt`
+Self-tests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_siegel`, `test_meinedaten`, `test_wissensdoppelt`, `test_systemupdates`
 
 ### Login, profile
 
@@ -2672,12 +2680,12 @@ flowchart TD
   s12 -.->|redirect| s2
 ```
 
-1. <a id="kn-waechter-s1"></a>**A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 34 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
+1. <a id="kn-waechter-s1"></a>**A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 35 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
 2. <a id="kn-waechter-s2"></a>**Resolve the name once**: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops.
 3. <a id="kn-waechter-s3"></a>**Own service?**: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute). When the models run on another computer (models.host), its addresses count the same (model_addresses).
 4. <a id="kn-waechter-s4"></a>**Internet and kill switch on?**: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows.
 5. <a id="kn-waechter-s5"></a>**Public address?**: A public address is allowed at every level.
-6. <a id="kn-waechter-s6"></a>**Level „internet only“?**: What comes from search results or answers may never go to the home network (chat, feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, verbund).
+6. <a id="kn-waechter-s6"></a>**Level „internet only“?**: What comes from search results or answers may never go to the home network (chat, feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, systemupdates, verbund).
 7. <a id="kn-waechter-s7"></a>**Never allowed?**: Link-local addresses (169.254.x, where cloud metadata answers), multicast, unspecified and reserved addresses are allowed at no level.
 8. <a id="kn-waechter-s8"></a>**Home network allowed?**: Home Assistant and other services in the home network (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) always may. Calendars, contacts, mail and MCP (calendars, contacts, fundmail, mail, mcp, meinmcp, tasks) only when Settings → Security → Allow home network addresses is on.
 9. <a id="kn-waechter-s9"></a>**Connect to exactly this address**: The connection goes to the checked address, not to the name again. A second look-up could answer differently (DNS rebinding). The certificate is still checked for the name.
@@ -2693,7 +2701,7 @@ Applies at: [step 6](#kn-waechter-s6), [step 8](#kn-waechter-s8)
 
 | Level | Who uses it (from the code) | Internet | Home network |
 |---|---|---|---|
-| internet only | chat, feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, verbund | ✓ | ✕ |
+| internet only | chat, feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, systemupdates, verbund | ✓ | ✕ |
 | user | calendars, contacts, fundmail, mail, mcp, meinmcp, tasks | ✓ | only with switch |
 | home | doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite | ✓ | ✓ |
 | by target | anrufe, dienstwacht, halive, nas, nasquelle, offline, speicher, telefon, zertpin | as the target is set | – |
@@ -2834,6 +2842,7 @@ Applies at: [step 4](#kn-betrieb-s4)
 
 #### What you see
 
+- Status → System updates: operating system, OpenCode, Python packages and firmware of both computers; only names, versions and numbers. Installed only with a fresh code, after 120 s without speech.
 - Status → Logs → Requests: the way of every request with tools and times.
 - Status → Logs → Diagnosis: lines by area, errors and warnings, with a fixed hint.
 - Status → Live: running requests, guard decisions and services as a picture.
@@ -2841,6 +2850,7 @@ Applies at: [step 4](#kn-betrieb-s4)
 
 #### In the code
 
+- `app/panel/systemupdates.py` `tick`: system updates: check, start after the pause in speech, the night ([step 5](#kn-betrieb-s5))
 - `app/panel/tracelog.py` `start`: a record when anything is on ([step 1](#kn-betrieb-s1))
 - `app/panel/tracelog.py` `safe`: only numbers and short fixed words ([step 3](#kn-betrieb-s3))
 - `app/panel/tracelog.py` `Rec`: steps, marks, state ([step 3](#kn-betrieb-s3), [step 6](#kn-betrieb-s6))
@@ -3540,7 +3550,7 @@ flowchart TD
 
 - **600 s** a pairing code lives ([step 2](#kn-teilen-s2))
 - **60 s** a command's time may be off ([step 7](#kn-teilen-s7))
-- **16** fixed commands of the Wärter ([step 7](#kn-teilen-s7))
+- **18** fixed commands of the Wärter ([step 7](#kn-teilen-s7))
 - **30 s** without an answer until Notbetrieb ([step 10](#kn-teilen-s8))
 - **80 °C** note, the panel computer is warm ([step 8](#kn-teilen-s9))
 - **10 %** disk free, below it a note ([step 8](#kn-teilen-s9))
@@ -3558,6 +3568,7 @@ flowchart TD
 - Status → Live: box „Model computer“ with reachable, services, version and pause.
 - Status → Summary → Computers: both computers side by side with curves of the last 20 minutes and „Who is computing now“ (services and the panel's parts with their share of the CPU, strip of the last 20 minutes); Live adds the box „Panel computer“, both boxes with „am meisten …“.
 - The screen on the panel computer itself; Status → Live shows in the box „Control centre“ whether it shows right now.
+- Status → System updates: one column per computer; for tars the panel asks through the Wärter's fixed commands systemupdate and systemupdate_tun.
 
 #### In the code
 
@@ -3569,6 +3580,7 @@ flowchart TD
 - `app/panel/steuer.py` `call`: signed command ([step 6](#kn-teilen-s6))
 - `app/tarswart.py` `check`: signature, time, number, command ([step 7](#kn-teilen-s7))
 - `app/tarswart.py` `COMMANDS`: the fixed commands ([step 7](#kn-teilen-s7))
+- `app/tarswart.py` `systemupdate_tun`: system updates on tars: one word as the wish, the fixed root unit ([step 7](#kn-teilen-s7))
 - `app/panel/steuer.py` `weg`: spot Notbetrieb ([step 10](#kn-teilen-s8))
 - `app/rechner.py` `messen`: values of one computer ([step 8](#kn-teilen-s9))
 - `app/panel/rechnerblick.py` `warnungen`: notes by fixed rules ([step 8](#kn-teilen-s9))
@@ -3580,7 +3592,7 @@ flowchart TD
 - `app/panel/schirm.py` `an_jetzt`: dark by the times ([step 9](#kn-teilen-s10))
 - `app/steuerzentrale.py` `schrift`: font by resolution ([step 9](#kn-teilen-s10))
 
-Self-tests: `test_teilen`, `test_umziehen`, `test_rechner`, `test_steuerzentrale`
+Self-tests: `test_teilen`, `test_umziehen`, `test_rechner`, `test_steuerzentrale`, `test_systemupdates`
 
 ### state/
 
@@ -3628,7 +3640,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 48), otherwise the line gives its reason (dateien.STATE_LOCAL, 112). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 48), otherwise the line gives its reason (dateien.STATE_LOCAL, 115). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3639,7 +3651,7 @@ flowchart TD
 #### Numbers (from the code)
 
 - **48** files in every backup ([step 7](#kn-state-s7))
-- **112** files and folders that stay out with a reason ([step 7](#kn-state-s7))
+- **115** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))
 

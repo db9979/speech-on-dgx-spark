@@ -400,6 +400,8 @@ def alerts():
     out += siegel.alerts()           # memory or conversations sealed with another key (set aside), or no cryptography
     import entwickelnseite
     out += entwickelnseite.alerts()  # local changes refused at an update or an install: the running version stayed
+    import systemupdates
+    out += systemupdates.alerts()    # security updates waiting on a computer, a restart needed (System-Updates)
     return out
 
 

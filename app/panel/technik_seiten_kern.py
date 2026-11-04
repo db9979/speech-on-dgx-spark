@@ -1063,12 +1063,12 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Betrieb: Logs und Live
     "betrieb": {
-        "stand": "04582c5bff",
+        "stand": "303238048f",
         "bezug": {
             "dienstwacht.FAIL_N": ["s5"], "dienstwacht.REPEAT": ["s5"], "backup.KEEP": ["s9"],
             "tracelog.safe": ["s3"], "tracelog.Rec": ["s3", "s6"], "tracelog.finish": ["s8", "s9"],
             "tracelog.shown": ["s10"], "live.step": ["s4"], "logfilter.parse": ["s11"],
-            "logfilter.summary": ["s12"], "dienstwacht.round_once": ["s5"], "backup.create": ["s9"],
+            "logfilter.summary": ["s12"], "dienstwacht.round_once": ["s5"], "systemupdates.tick": ["s5"], "backup.create": ["s9"],
             "regeln": ["s4", "s5", "s9"], "regel:Live": ["s4"], "regel:Anfrage-Verlauf": ["s9"],
             "regel:Journal": ["s5"], "regel:Dienst-Wächter": ["s5"], "regel:Sicherungen": ["s9"],
         },
@@ -1214,6 +1214,10 @@ SEITEN = {
              "Settings → Backup: create a backup by hand or restore one."),
         ],
         "sehen": [
+            ("Zustand → System-Updates: Betriebssystem, OpenCode, Python-Pakete und Firmware beider Rechner; nur Namen, "
+             "Versionen und Zahlen. Eingespielt wird nur mit frischem Code, nach {systemupdates.PAUSE_S} s ohne Sprache.",
+             "Status → System updates: operating system, OpenCode, Python packages and firmware of both computers; only "
+             "names, versions and numbers. Installed only with a fresh code, after {systemupdates.PAUSE_S} s without speech."),
             ("Zustand → Logs → Anfragen: der Weg jeder Anfrage mit Werkzeugen und Zeiten.",
              "Status → Logs → Requests: the way of every request with tools and times."),
             ("Zustand → Logs → Diagnose: Zeilen nach Bereich, Fehler und Warnungen, mit festem Hinweis.",
@@ -1256,6 +1260,7 @@ SEITEN = {
             ]),
         ],
         "code": [
+            ("systemupdates.tick", ("System-Updates: prüfen, nach der Sprechpause starten, die Nacht", "system updates: check, start after the pause in speech, the night")),
             ("tracelog.start", ("ein Datensatz, wenn etwas an ist", "a record when anything is on")),
             ("tracelog.safe", ("nur Zahlen und kurze feste Wörter", "only numbers and short fixed words")),
             ("tracelog.Rec", ("Schritte, Marken, Zustand", "steps, marks, state")),

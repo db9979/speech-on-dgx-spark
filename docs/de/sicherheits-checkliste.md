@@ -125,12 +125,13 @@ Jede Änderung wird nicht nur gegen die Fallen oben geprüft, sondern auch dageg
 - [ ] Neue Pakete mit Version und Hash im Lock; neue Actions per SHA gepinnt; Dependabot-Hinweise zeitnah übernehmen.
 - [ ] Geheimnisse nie im Repo (Secret Scanning mit Push-Schutz ist an).
 - [ ] Bekannte Schwachstellen in Abhängigkeiten werden geprüft, bevor eine Version mit neuen Paketen ausgeliefert wird.
+- [ ] Was als root läuft, ist ein fester Ablauf in einer eigenen Unit, gestartet über eine feste sudoers-Zeile; das Panel schreibt nur einen Wunsch aus einem festen Wort, nie einen Befehl, Namen oder Pfad. Ein Neustart nur auf das Wort des Admins (System-Updates).
 
 **Regelmäßige Prüfung**
 - [ ] Vor großen Versionen und mindestens einmal im Monat eine skeptische Gesamtprüfung gegen diese Maßstäbe (wie am 08.10. und 11.10.2026). Jeder Befund bekommt einen Selbsttest.
 
 **Noch nicht erfüllt** (wird beim nächsten Berühren der Stelle nachgezogen; Stand 19.10.2026)
 - Fernet (AES-CBC plus HMAC) im vault und bei Umzugsschlüsseln: sicher, aber kein AEAD; neue Teile nehmen AES-GCM, ein Wechsel nur mit Umzug der vorhandenen Daten.
-- Kein automatischer Schwachstellen-Abgleich der Python-Pakete (z. B. gegen die OSV-Datenbank) in „Tests“.
+- Der Abgleich der Python-Pakete gegen die OSV-Datenbank läuft im Spark (Zustand → System-Updates, seit V01.1.322), noch nicht in „Tests“.
 - Signierte Geräte-Updates sind gebaut, aber ohne Schlüssel aus (`UPDATE_SIGNING_KEY` fehlt noch).
 - `style-src 'unsafe-inline'` bleibt wegen älterer Safari-Versionen in der iPhone-App.

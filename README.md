@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.322** System updates (switch off, admin only): Status → System updates shows per computer the operating system updates with security and a package list, installs them with a fresh code as a fixed root run only in a pause in speech, a restart only on your word; OpenCode and OSV warnings with a check request, firmware only by hand, at night 03–05 per computer.
 - **V01.1.321** Fixes from the Pi log: the Home Assistant live connection reconnects soon after a good connection instead of waiting 900 s for good, with ping and keepalive; suggested answers no longer queue behind background work and say "busy, try again" instead of an error; the daily briefing reads its parts at the same time and gives a short version instead of failing after 200 s; the phone's NAT hint names the second router.
 - **V01.1.320** Change log: a checked break (say after a power cut) can be confirmed as checked under Status → Logs → Changes, with a reason and a fresh code; the chain stays unchanged, the confirmation holds only for exactly that line, a new break reports again
 - **V01.1.319** Fix web services in remote access: a service that listens only on the server's own address (such as a Docker port on a fixed IP) now works without "Network behind it"; "Search" shows where each port listens, and the anchor tries the own address itself when nothing answers on 127.0.0.1. Clear error messages instead of "keine TLS-Verbindung". Update the anchor to 1.9.0.
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.315** Analyses 2b (plan open-notebook): the admin's own kinds as templates, checked like the key points; the admin chooses what is made by itself; "Remind" for deadlines of the knowledge map with a full date; the collection level "short" brings summary and key points with their page
 - **V01.1.314** Fix develop on the Pi: `sudo ./install.sh --entwickeln` stopped with newer git ("dubious ownership"); spark-dev's clone now comes from a bundle root writes, never from root's clone. If it failed: run `sudo ./install.sh --entwickeln` again
 - **V01.1.313** Redesign stage 8: iPhone and Android app in the system style like the panel (one theme from the tokens light and dark, blue accent, state as a dot with its word, SF Symbols instead of emoji in buttons and lists, My things without coloured tiles, Today calm while loading; Android page and hull without a palette of their own, app 1.4.5)
-- **V01.1.312** Analyses per document (plan open-notebook, push 2a, switch off): summary and key points in quiet minutes, questions, contents, deadlines and people per click; every point with its place, checked by the panel (every number stands at the place), contents and deadlines without the model; the quiet chain as the list `wissen.KETTE`
 
 
 

@@ -1573,7 +1573,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": ", fernzugang.entsperrt_bis): nur diese Anmeldung, nur vom selben Ort, gesperrt bei Sperren, Abmelden und Notaus; Koppeln und Entfernen fragen trotzdem jedes Mal. Zu den Modellen auf tars geht es nur durch das TLS-Tor; Befehle dort prüft der Wärter (tarswart.check: Unterschrift, Zeit, Einmal-Nummer, einer von 16 festen Befehlen). 4. Wer fragt, sicher erkannt?: Das Profil kommt aus Cookie, App-Schlüssel oder verknüpftem Konto. Am geteilten Lautsprecher reicht der Geräteschlüssel nicht: chat_turn.shared_stranger gibt Persönliches nur frei, wenn die Inhaberstimme in derselben Aufnahme sicher erkannt ist. 5. Freigabe und Sperre: Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten. 6. Fremdes bleibt Daten: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell (textnorm.defuse: Blockende und die eigenen Marken des Modells wie „<|im_start|>“ oder „<tool_call>“ werden entschärft; das LLM-Tor tut das für jede Nachricht noch einmal, llm_tor.entschaerft). Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und "
+"text": ", fernzugang.entsperrt_bis): nur diese Anmeldung, nur vom selben Ort, gesperrt bei Sperren, Abmelden und Notaus; Koppeln und Entfernen fragen trotzdem jedes Mal. Zu den Modellen auf tars geht es nur durch das TLS-Tor; Befehle dort prüft der Wärter (tarswart.check: Unterschrift, Zeit, Einmal-Nummer, einer von 18 festen Befehlen). 4. Wer fragt, sicher erkannt?: Das Profil kommt aus Cookie, App-Schlüssel oder verknüpftem Konto. Am geteilten Lautsprecher reicht der Geräteschlüssel nicht: chat_turn.shared_stranger gibt Persönliches nur frei, wenn die Inhaberstimme in derselben Aufnahme sicher erkannt ist. 5. Freigabe und Sperre: Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten. 6. Fremdes bleibt Daten: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell (textnorm.defuse: Blockende und die eigenen Marken des Modells wie „<|im_start|>“ oder „<tool_call>“ werden entschärft; das LLM-Tor tut das für jede Nachricht noch einmal, llm_tor.entschaerft). Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und "
 },
 {
 "lang": "de",
@@ -1613,7 +1613,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Die Grenzen",
 "title": "Die Grenzen",
-"text": "- A, von draußen herein: nur über den Reverse-Proxy mit TLS; jeder Endpunkt prüft Anmeldung, Profil, CSRF, Größe und Rate-Limit. - B, Geräte im Heimnetz: ein Schlüssel pro Gerät; am geteilten Lautsprecher zählt zusätzlich die Stimme. - C, der Spark liest Fremdes: nur über den Wächter, kein Heimnetz ohne Erlaubnis, geprüfte Adresse festgehalten; was zurückkommt, ist Daten. - D, Panel zu den Modellen: TLS 1.3 mit beim Koppeln angeheftetem Zertifikat; die Modelle hören nur auf 127.0.0.1. - E, Handgriffe auf tars: nur feste Befehle des Wärters, unterschrieben, mit Zeit und Einmal-Nummer."
+"text": "- A, von draußen herein: nur über den Reverse-Proxy mit TLS; jeder Endpunkt prüft Anmeldung, Profil, CSRF, Größe und Rate-Limit. - B, Geräte im Heimnetz: ein Schlüssel pro Gerät; am geteilten Lautsprecher zählt zusätzlich die Stimme. - C, der Spark liest Fremdes: nur über den Wächter, kein Heimnetz ohne Erlaubnis, geprüfte Adresse festgehalten; was zurückkommt, ist Daten. - D, Panel zu den Modellen: TLS 1.3 mit beim Koppeln angeheftetem Zertifikat; die Modelle hören nur auf 127.0.0.1. - E, Handgriffe auf tars: nur feste Befehle des Wärters, unterschrieben, mit Zeit und Einmal-Nummer. - F, zu root: der Panel-Code läuft nie als root. System-Updates schreiben nur einen Wunsch aus einem Wort (3 feste Wörter, höchstens 10 Minuten alt) und starten die feste Einheit speech-spark-systemupdate; sie liest den Wunsch als Dienstnutzer und spielt nur apt upgrade aus den festen Quellen ein, nie ein Entfernen, nie Firmware, einen Neustart nur auf das Wort des Admins."
 },
 {
 "lang": "de",
@@ -1645,7 +1645,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 13 Werkzeuge nach Text von außen gesperrt (Schritt 6) - 19 Werkzeuge nach einer Mail gesperrt (Schritt 6) - 10 min zählt ein richtiger Code für „Bestätigen“ (Schritt 3) - 16 feste Befehle des Wärters auf tars (Schritt 3) - 3 Notaus-Stufen, die letzte hält jedes Gespräch an (Schritt 2)"
+"text": "- 13 Werkzeuge nach Text von außen gesperrt (Schritt 6) - 19 Werkzeuge nach einer Mail gesperrt (Schritt 6) - 10 min zählt ein richtiger Code für „Bestätigen“ (Schritt 3) - 18 feste Befehle des Wärters auf tars (Schritt 3) - 3 Notaus-Stufen, die letzte hält jedes Gespräch an (Schritt 2)"
 },
 {
 "lang": "de",
@@ -1653,7 +1653,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/notaus.py blocks: ob eine Notaus-Stufe diese Art Arbeit anhält (Schritt 2) - app/panel/guard.py limit: Rate-Limit pro Adresse und Profil (Schritt 3) - app/panel/guard.py Slot: Höchstzahl gleichzeitiger Anfragen (Schritt 3) - app/panel/core.py confirm_code: frischer Code oder Passkey für heikle Wege (Schritt 3, Schritt 8) - app/tarswart.py check: prüft jeden Befehl an den Wärter (Schritt 3) - app/panel/chat_turn.py shared_stranger: fremde Stimme am geteilten Lautsprecher (Schritt 4) - app/panel/features.py allowed: Freigabe des Admins, gilt für jedes Profil (Schritt 5) - app/panel/mitschreiblink.py find: prüft einen Mitschreib-Link: Hash, Ablauf, Freigabe, Liste (Schritt 3, Schritt 5) - app/panel/features.py blocked: Sperre einzelner Profile (Schritt 5) - app/panel/geteilt.py put: Teilen mit einem anderen Profil, zurückziehen wirkt sofort (Schritt 5) - app/panel/chat.py wrap_outside: Text von außen als Datenblock (Schritt 6) - app/textnorm.py defuse: Blockende und Marken des Modells in fremdem Text entschärfen (Schritt 6) - app/llm_tor.py entschaerft: Marken des Modells aus jeder Nachricht nehmen (Schritt 6) - app/panel/mailansicht.py clean: HTML einer Mail nur bereinigt"
+"text": "- app/panel/notaus.py blocks: ob eine Notaus-Stufe diese Art Arbeit anhält (Schritt 2) - app/panel/guard.py limit: Rate-Limit pro Adresse und Profil (Schritt 3) - app/panel/guard.py Slot: Höchstzahl gleichzeitiger Anfragen (Schritt 3) - app/panel/core.py confirm_code: frischer Code oder Passkey für heikle Wege (Schritt 3, Schritt 8) - app/tarswart.py check: prüft jeden Befehl an den Wärter (Schritt 3) - app/sysupdate.py wunsch_nehmen: der Wunsch an die root-Einheit, als Dienstnutzer noch einmal geprüft (Schritt 3) - app/panel/chat_turn.py shared_stranger: fremde Stimme am geteilten Lautsprecher (Schritt 4) - app/panel/features.py allowed: Freigabe des Admins, gilt für jedes Profil (Schritt 5) - app/panel/mitschreiblink.py find: prüft einen Mitschreib-Link: Hash, Ablauf, Freigabe, Liste (Schritt 3, Schritt 5) - app/panel/features.py blocked: Sperre einzelner Profile (Schritt 5) - app/panel/geteilt.py put: Teilen mit einem anderen Profil, zurückziehen wirkt sofort (Schritt 5) - app/panel/chat.py wrap_outside: Text von außen als Datenblock (Schritt 6) - app/textnorm.py defuse: Blockende und Marken des Modells in fremdem Text entschärfen (Schritt 6) - app/llm_tor.py entschaerft: Marken"
 },
 {
 "lang": "de",
@@ -1661,7 +1661,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": ", ohne Skript und ohne Laden von außen (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/guard.py verify: prüft die Kette, bestätigte Brüche nur bei gleicher Zeile und Prüfsumme (Schritt 10) - app/panel/guard.py ack_break: bestätigt nur den Bruch, den die Prüfung gerade meldet (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt ablegen (Schritt 10) - app/panel/profiles.py write_own: Gedächtnis und Gespräche ganz versiegelt (Schritt 10) - app/panel/vorrat.py key: ein Schlüssel je Zweck aus secret.key (Schritt 10) - app/panel/meinedaten.py api_export: eigene Daten nur nach frischem Code, Passkey oder PIN (Schritt 3) - app/panel/meinedaten.py build: die ZIP nur aus dem Datei-Register, ohne Geheimnisse (Schritt 10) - app/panel/profiles.py _cap: Obergrenze des Gedächtnisses ohne Datenverlust (Schritt 8) - app/panel/gedaechtnis.py offer: Gelerntes ersetzt nie Bestätigtes: nur ein Angebot (Sc"
+"text": " des Modells aus jeder Nachricht nehmen (Schritt 6) - app/panel/mailansicht.py clean: HTML einer Mail nur bereinigt, ohne Skript und ohne Laden von außen (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/guard.py verify: prüft die Kette, bestätigte Brüche nur bei gleicher Zeile und Prüfsumme (Schritt 10) - app/panel/guard.py ack_break: bestätigt nur den Bruch, den die Prüfung gerade meldet (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt ablegen (Schritt 10) - app/panel/profiles.py write_own: Gedächtnis und Gespräche ganz versiegelt (Schritt 10) - app/panel/vorrat.py key: ein Schlüssel je Zweck aus secret.key (Schritt 10) - app/panel/meinedaten.py api_export: eigene Daten nur nach frischem Code, Passkey oder PIN (Schritt 3) - app/panel/meinedaten.py build: die ZIP nur aus dem Datei-Register, ohne Geheimnisse (Schritt 10) - app/panel/profiles.py _cap: Obergrenze des Gedächtnisses ohn"
 },
 {
 "lang": "de",
@@ -1669,7 +1669,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "hritt 8) - app/panel/gemerkt.py take_back: Rückgängig nur für den eigenen, unveränderten Fakt (Schritt 8) - app/panel/wissensdoppelt.py aehnlich: Punkte der Karte von selbst nur nach fester Regel zusammen, nie gegen „Verschieden“ (Schritt 8)"
+"text": "e Datenverlust (Schritt 8) - app/panel/gedaechtnis.py offer: Gelerntes ersetzt nie Bestätigtes: nur ein Angebot (Schritt 8) - app/panel/gemerkt.py take_back: Rückgängig nur für den eigenen, unveränderten Fakt (Schritt 8) - app/panel/wissensdoppelt.py aehnlich: Punkte der Karte von selbst nur nach fester Regel zusammen, nie gegen „Verschieden“ (Schritt 8)"
 },
 {
 "lang": "de",
@@ -1677,7 +1677,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_hardening, test_angriffe, test_gaeste, test_kontext_trennung, test_scanner, test_stufen, test_notaus, test_waerter, test_protokoll, test_wachposten, test_markdown, test_gedaechtnis_grenze, test_gemerkt, test_siegel, test_meinedaten, test_wissensdoppelt"
+"text": "Selbsttests: test_hardening, test_angriffe, test_gaeste, test_kontext_trennung, test_scanner, test_stufen, test_notaus, test_waerter, test_protokoll, test_wachposten, test_markdown, test_gedaechtnis_grenze, test_gemerkt, test_siegel, test_meinedaten, test_wissensdoppelt, test_systemupdates"
 },
 {
 "lang": "de",
@@ -2549,7 +2549,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Werkzeug will nach außen: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 34 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig. 2. Name einmal auflösen: resolve() fragt den Namen genau einmal ab. Hat er mehrere Adressen, muss jede erlaubt sein, sonst ist Schluss. 3. Eigener Dienst?: Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu). Laufen die Modelle auf einem anderen Rechner (models.host), gelten seine Adressen genauso (model_addresses). 4. Internet und Notaus an?: Ist die Adresse öffentlich und der Notaus mindestens auf Stufe 1, geht nichts ins Internet, egal welche Stufe das Werkzeug hat. Das Heimnetz bleibt erreichbar, wie die Stufe es erlaubt. 5. Öffentliche Adresse?: Eine öffentliche Adresse ist auf jeder Stufe erlaubt. 6. Stufe „nur Internet“?: Was aus Suchergebnissen oder Antworten kommt, darf nie ins Heimnetz (chat, feeds, geraeteupdate, ghtoken, mai"
+"text": "1. Werkzeug will nach außen: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 35 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig. 2. Name einmal auflösen: resolve() fragt den Namen genau einmal ab. Hat er mehrere Adressen, muss jede erlaubt sein, sonst ist Schluss. 3. Eigener Dienst?: Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu). Laufen die Modelle auf einem anderen Rechner (models.host), gelten seine Adressen genauso (model_addresses). 4. Internet und Notaus an?: Ist die Adresse öffentlich und der Notaus mindestens auf Stufe 1, geht nichts ins Internet, egal welche Stufe das Werkzeug hat. Das Heimnetz bleibt erreichbar, wie die Stufe es erlaubt. 5. Öffentliche Adresse?: Eine öffentliche Adresse ist auf jeder Stufe erlaubt. 6. Stufe „nur Internet“?: Was aus Suchergebnissen oder Antworten kommt, darf nie ins Heimnetz (chat, feeds, geraeteupdate, ghtoken, mai"
 },
 {
 "lang": "de",
@@ -2557,7 +2557,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "lansicht, meldung, modellseite, remarkable, verbund). 7. Nie erlaubt?: Link-lokale Adressen (169.254.x, dort antworten Cloud-Metadaten), Multicast, unbestimmte und reservierte Adressen sind auf keiner Stufe erlaubt. 8. Heimnetz erlaubt?: Home Assistant und andere Dienste im Heimnetz (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) dürfen immer. Kalender, Kontakte, Mail und MCP (calendars, contacts, fundmail, mail, mcp, meinmcp, tasks) nur, wenn unter Einstellungen → Sicherheit → Heimnetz-Adressen erlauben eingeschaltet ist. 9. Verbinden mit genau dieser Adresse: Die Verbindung geht an die geprüfte Adresse, nicht noch einmal an den Namen. Ein zweites Nachschlagen könnte anders antworten (DNS-Rebinding). Das Zertifikat wird trotzdem für den Namen geprüft. 10. Passwort nur zur eigenen Seite: Anmeldedaten gehen nur an die Seite, für die sie eingetragen wurden (gleicher Host oder gleiche Hauptdomain, etwa die CalDAV-Server von icloud.com), nie über http, wenn die Adresse https war. 11. Antwort höchstens 20 MB: Antworten werden bei 20 MB abgeschnitten, auch nach dem Entpacken von gzip, damit eine riesige oder gepackte Antwort den Speicher nicht füllt. 12. Antwort ans Werkz"
+"text": "lansicht, meldung, modellseite, remarkable, systemupdates, verbund). 7. Nie erlaubt?: Link-lokale Adressen (169.254.x, dort antworten Cloud-Metadaten), Multicast, unbestimmte und reservierte Adressen sind auf keiner Stufe erlaubt. 8. Heimnetz erlaubt?: Home Assistant und andere Dienste im Heimnetz (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) dürfen immer. Kalender, Kontakte, Mail und MCP (calendars, contacts, fundmail, mail, mcp, meinmcp, tasks) nur, wenn unter Einstellungen → Sicherheit → Heimnetz-Adressen erlauben eingeschaltet ist. 9. Verbinden mit genau dieser Adresse: Die Verbindung geht an die geprüfte Adresse, nicht noch einmal an den Namen. Ein zweites Nachschlagen könnte anders antworten (DNS-Rebinding). Das Zertifikat wird trotzdem für den Namen geprüft. 10. Passwort nur zur eigenen Seite: Anmeldedaten gehen nur an die Seite, für die sie eingetragen wurden (gleicher Host oder gleiche Hauptdomain, etwa die CalDAV-Server von icloud.com), nie über http, wenn die Adresse https war. 11. Antwort höchstens 20 MB: Antworten werden bei 20 MB abgeschnitten, auch nach dem Entpacken von gzip, damit eine riesige oder gepackte Antwort den Speicher nicht füllt. 12. An"
 },
 {
 "lang": "de",
@@ -2565,7 +2565,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "eug: Das Werkzeug bekommt die Antwort als Daten. Eine Weiterleitung ist eine neue Verbindung und wird genauso geprüft, ab Schritt 2."
+"text": "twort ans Werkzeug: Das Werkzeug bekommt die Antwort als Daten. Eine Weiterleitung ist eine neue Verbindung und wird genauso geprüft, ab Schritt 2."
 },
 {
 "lang": "de",
@@ -2709,7 +2709,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Was du siehst",
 "title": "Was du siehst",
-"text": "- Zustand → Logs → Anfragen: der Weg jeder Anfrage mit Werkzeugen und Zeiten. - Zustand → Logs → Diagnose: Zeilen nach Bereich, Fehler und Warnungen, mit festem Hinweis. - Zustand → Live: laufende Anfragen, Wächter-Entscheidungen und Dienste als Bild. - Zustand → Dienste: was der Dienst-Wächter prüft und die Ausfälle der letzten Tage."
+"text": "- Zustand → System-Updates: Betriebssystem, OpenCode, Python-Pakete und Firmware beider Rechner; nur Namen, Versionen und Zahlen. Eingespielt wird nur mit frischem Code, nach 120 s ohne Sprache. - Zustand → Logs → Anfragen: der Weg jeder Anfrage mit Werkzeugen und Zeiten. - Zustand → Logs → Diagnose: Zeilen nach Bereich, Fehler und Warnungen, mit festem Hinweis. - Zustand → Live: laufende Anfragen, Wächter-Entscheidungen und Dienste als Bild. - Zustand → Dienste: was der Dienst-Wächter prüft und die Ausfälle der letzten Tage."
 },
 {
 "lang": "de",
@@ -2717,7 +2717,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/tracelog.py start: ein Datensatz, wenn etwas an ist (Schritt 1) - app/panel/tracelog.py safe: nur Zahlen und kurze feste Wörter (Schritt 3) - app/panel/tracelog.py Rec: Schritte, Marken, Zustand (Schritt 3, Schritt 6) - app/panel/tracelog.py finish: Journal-Zeile und Anfrage-Verlauf (Schritt 8, Schritt 9) - app/panel/tracelog.py shown: Name nur mit Zustimmung (Schritt 10) - app/panel/live.py step: jeder Schritt auf Zustand → Live (Schritt 4) - app/panel/logfilter.py AREAS: die Bereichswörter des Journals (Schritt 5) - app/panel/logfilter.py parse: Bereich, Stufe, Schwärzen (Schritt 11) - app/panel/logfilter.py summary: Zähler und fester Hinweis (Schritt 12) - app/panel/dienstwacht.py round_once: eine Runde Proben und Meldungen (Schritt 5) - app/panel/backup.py create: eine Sicherung packen (Schritt 9)"
+"text": "- app/panel/systemupdates.py tick: System-Updates: prüfen, nach der Sprechpause starten, die Nacht (Schritt 5) - app/panel/tracelog.py start: ein Datensatz, wenn etwas an ist (Schritt 1) - app/panel/tracelog.py safe: nur Zahlen und kurze feste Wörter (Schritt 3) - app/panel/tracelog.py Rec: Schritte, Marken, Zustand (Schritt 3, Schritt 6) - app/panel/tracelog.py finish: Journal-Zeile und Anfrage-Verlauf (Schritt 8, Schritt 9) - app/panel/tracelog.py shown: Name nur mit Zustimmung (Schritt 10) - app/panel/live.py step: jeder Schritt auf Zustand → Live (Schritt 4) - app/panel/logfilter.py AREAS: die Bereichswörter des Journals (Schritt 5) - app/panel/logfilter.py parse: Bereich, Stufe, Schwärzen (Schritt 11) - app/panel/logfilter.py summary: Zähler und fester Hinweis (Schritt 12) - app/panel/dienstwacht.py round_once: eine Runde Proben und Meldungen (Schritt 5) - app/panel/backup.py create: eine Sicherung packen (Schritt 9)"
 },
 {
 "lang": "de",
@@ -3349,7 +3349,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 600 s lebt ein Kopplungscode (Schritt 2) - 60 s darf die Zeit eines Befehls daneben liegen (Schritt 7) - 16 feste Befehle des Wärters (Schritt 7) - 30 s ohne Antwort bis zum Notbetrieb (Schritt 10) - 80 °C Hinweis, der Panel-Rechner ist warm (Schritt 8) - 10 % Platte frei, darunter ein Hinweis (Schritt 8) - 0.5 GiB Arbeitsspeicher frei am Panel-Rechner, darunter ein Hinweis (Schritt 8) - 5 % CPU, ab der der größte Dienst als „rechnet gerade“ gilt (Schritt 8) - 15 s ohne Frage der Steuerzentrale, dann gilt der Bildschirm als dunkel (Schritt 9)"
+"text": "- 600 s lebt ein Kopplungscode (Schritt 2) - 60 s darf die Zeit eines Befehls daneben liegen (Schritt 7) - 18 feste Befehle des Wärters (Schritt 7) - 30 s ohne Antwort bis zum Notbetrieb (Schritt 10) - 80 °C Hinweis, der Panel-Rechner ist warm (Schritt 8) - 10 % Platte frei, darunter ein Hinweis (Schritt 8) - 0.5 GiB Arbeitsspeicher frei am Panel-Rechner, darunter ein Hinweis (Schritt 8) - 5 % CPU, ab der der größte Dienst als „rechnet gerade“ gilt (Schritt 8) - 15 s ohne Frage der Steuerzentrale, dann gilt der Bildschirm als dunkel (Schritt 9)"
 },
 {
 "lang": "de",
@@ -3365,7 +3365,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Was du siehst",
 "title": "Was du siehst",
-"text": "- Zustand → Live: Kasten „Modell-Rechner“ mit erreichbar, Dienste, Version und Pause. - Zustand → Überblick → Rechner: beide Rechner nebeneinander mit Kurven der letzten 20 Minuten und „Wer rechnet gerade“ (Dienste und Teile des Panels mit ihrem Anteil an der CPU, Streifen der letzten 20 Minuten); Live zeigt dazu den Kasten „Panel-Rechner“, beide Kästen mit „am meisten …“. - Der Bildschirm am Panel-Rechner selbst; Zustand → Live zeigt im Kasten „Steuerzentrale“, ob er gerade zeigt."
+"text": "- Zustand → Live: Kasten „Modell-Rechner“ mit erreichbar, Dienste, Version und Pause. - Zustand → Überblick → Rechner: beide Rechner nebeneinander mit Kurven der letzten 20 Minuten und „Wer rechnet gerade“ (Dienste und Teile des Panels mit ihrem Anteil an der CPU, Streifen der letzten 20 Minuten); Live zeigt dazu den Kasten „Panel-Rechner“, beide Kästen mit „am meisten …“. - Der Bildschirm am Panel-Rechner selbst; Zustand → Live zeigt im Kasten „Steuerzentrale“, ob er gerade zeigt. - Zustand → System-Updates: je Rechner eine Spalte; für tars fragt das Panel über die festen Befehle systemupdate und systemupdate_tun des Wärters."
 },
 {
 "lang": "de",
@@ -3373,7 +3373,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/teilen.py CODE_SECS: Lebensdauer des Codes (Schritt 2) - app/teilen.py schluessel: Schlüssel aus Code und Fingerabdruck (Schritt 3) - app/teilen.py regeln: Firewall nur für den Panel-Rechner (Schritt 4) - app/tlstor.py server_context: TLS 1.3 mit eigenem Zertifikat (Schritt 5) - app/tlstor.py allowed: nur der Panel-Rechner (Schritt 5) - app/panel/steuer.py call: unterschriebener Befehl (Schritt 6) - app/tarswart.py check: Unterschrift, Zeit, Nummer, Befehl (Schritt 7) - app/tarswart.py COMMANDS: die festen Befehle (Schritt 7) - app/panel/steuer.py weg: Notbetrieb erkennen (Schritt 10) - app/rechner.py messen: Werte eines Rechners (Schritt 8) - app/panel/rechnerblick.py warnungen: Hinweise nach festen Regeln (Schritt 8) - app/rechner.py dienste_cpu: CPU je Dienst aus systemd (Schritt 8) - app/panel/rechenteile.py messen: CPU je Teil des Panels (Schritt 8) - app/panel/rechnerblick.py spitze: wer am meisten rechnet (Schritt 8) - app/panel/schirm.py schirm_zustand: nur lokal und mit Schlüssel (Schritt 9) - app/panel/schirm.py abgleich: Dienst folgt dem Schalter (Schritt 9) - app/panel/schirm.py an_jetzt: dunkel nach den Zeiten (Schritt 9) - app/steuerzentrale.py schrift: Schrift "
+"text": "- app/teilen.py CODE_SECS: Lebensdauer des Codes (Schritt 2) - app/teilen.py schluessel: Schlüssel aus Code und Fingerabdruck (Schritt 3) - app/teilen.py regeln: Firewall nur für den Panel-Rechner (Schritt 4) - app/tlstor.py server_context: TLS 1.3 mit eigenem Zertifikat (Schritt 5) - app/tlstor.py allowed: nur der Panel-Rechner (Schritt 5) - app/panel/steuer.py call: unterschriebener Befehl (Schritt 6) - app/tarswart.py check: Unterschrift, Zeit, Nummer, Befehl (Schritt 7) - app/tarswart.py COMMANDS: die festen Befehle (Schritt 7) - app/tarswart.py systemupdate_tun: System-Updates auf tars: ein Wort als Wunsch, die feste root-Einheit (Schritt 7) - app/panel/steuer.py weg: Notbetrieb erkennen (Schritt 10) - app/rechner.py messen: Werte eines Rechners (Schritt 8) - app/panel/rechnerblick.py warnungen: Hinweise nach festen Regeln (Schritt 8) - app/rechner.py dienste_cpu: CPU je Dienst aus systemd (Schritt 8) - app/panel/rechenteile.py messen: CPU je Teil des Panels (Schritt 8) - app/panel/rechnerblick.py spitze: wer am meisten rechnet (Schritt 8) - app/panel/schirm.py schirm_zustand: nur lokal und mit Schlüssel (Schritt 9) - app/panel/schirm.py abgleich: Dienst folgt dem Schalter (Sc"
 },
 {
 "lang": "de",
@@ -3381,7 +3381,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "nach Auflösung (Schritt 9)"
+"text": "hritt 9) - app/panel/schirm.py an_jetzt: dunkel nach den Zeiten (Schritt 9) - app/steuerzentrale.py schrift: Schrift nach Auflösung (Schritt 9)"
 },
 {
 "lang": "de",
@@ -3389,7 +3389,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_teilen, test_umziehen, test_rechner, test_steuerzentrale"
+"text": "Selbsttests: test_teilen, test_umziehen, test_rechner, test_steuerzentrale, test_systemupdates"
 },
 {
 "lang": "de",
@@ -3421,7 +3421,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 48), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 112). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, "
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 48), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 115). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, "
 },
 {
 "lang": "de",
@@ -3445,7 +3445,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 48 Dateien in jeder Sicherung (Schritt 7) - 112 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 48 Dateien in jeder Sicherung (Schritt 7) - 115 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -15077,6 +15077,30 @@
 "file": "Assistent und Oberfläche",
 "head": "Zugang",
 "title": "Zugang",
+"text": "- System-Updates (Funktionen → Zugang → „System-Updates“): Eine Karte unter Zustand → Überblick und die Seite Zustand → System-Updates zeigen für jeden Rechner (Pi mit dem Panel, bei Spark teilen auch tars mit den Modellen): wie viele Betriebssystem-Updates warten, wie viele davon für die Sicher …"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Zugang",
+"title": "Zugang",
+"text": "- System-Updates nachts auf dem Panel-Rechner (Funktionen → Zugang → „System-Updates nachts auf dem Panel-Rechner“; baut auf „System-Updates“): Spielt die Betriebssystem-Updates des Pi von selbst zwischen 03 und 05 Uhr ein, nach dem eigenen Nacht-Update des Spark und nie zur selben Zeit."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Zugang",
+"title": "Zugang",
+"text": "- System-Updates nachts auf dem Modell-Rechner (Funktionen → Zugang → „System-Updates nachts auf dem Modell-Rechner“; baut auf „System-Updates“): Bei Spark teilen: spielt die Betriebssystem-Updates von tars von selbst zwischen 03 und 05 Uhr ein, über den festen Befehl des Wärters."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Zugang",
+"title": "Zugang",
 "text": "- Steuerzentrale am Bildschirm (Funktionen → Zugang → „Steuerzentrale am Bildschirm“): Ein Bildschirm am HDMI-Ausgang des Panel-Rechners zeigt die Steuerzentrale: oben Zustand und Tageszahlen, in der Mitte, welche Anfrage gerade durch welche Stufe läuft und auf welchem Rechner (bei Spark teilen tars und Pi mit CPU, GPU, Sp …"
 },
 {
@@ -16470,6 +16494,38 @@
 "head": "Geräte-Updates und Lieferkette (seit V01.0.407)",
 "title": "Geräte-Updates und Lieferkette (seit V01.0.407)",
 "text": " (Link, anderer Eigentümer, für andere schreibbar), bricht das Update ab, statt die Prüfung still auszulassen. Ohne die Datei sagt das Update-Protokoll „Signature check off“. Einschalten: Commits mit einem SSH-Schlüssel signieren (git config gpg.format ssh, user.signingkey, commit.gpgsign true) und auf dem Spark /etc/speech-spark-signers (root, 644) mit <E-Mail> <öffentlicher Schlüssel> anlegen; danach installiert tars nur noch signierte Commits."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "System-Updates (seit V01.1.322)",
+"title": "System-Updates (seit V01.1.322)",
+"text": "*Funktionen → System-Updates* (aus, nur Admins, nie Gäste, kein Werkzeug für das Sprachmodell; systemupdates.py, sysupdate.py) zeigt unter *Zustand → System-Updates* je Rechner (Pi mit dem Panel, bei Spark teilen auch tars mit den Modellen) die wartenden Betriebssystem-Updates, davon die für die Sicherheit, und jedes Paket als Name alt → neu; dazu das gepinnte OpenCode gegen die neueste Version auf npm, OSV-Warnungen der gepinnten Python-Pakete und Firmware und Treiber (EEPROM, NVIDIA-Treiber, DGX OS). Geprüft wird alle 6 Stunden und mit „Jetzt prüfen“."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "System-Updates (seit V01.1.322)",
+"title": "System-Updates (seit V01.1.322)",
+"text": "- root nur als fester Ablauf: Das Panel schreibt nur einen Wunsch aus einem Wort (pruefen, einspielen, neustart, höchstens 10 Minuten alt) nach STATE/system-updates-wunsch.json und startet die Unit speech-spark-systemupdate (feste sudoers-Zeile systemctl start --no-block speech-spark-systemupdate). Die Unit liest den Wunsch als Dienstnutzer und prüft ihn noch einmal (für den Pi auch, ob der Schalter an ist). Auf tars schreibt ihn nur der Wärter nach einem unterschriebenen Befehl (systemupdate_tun); gelesen wird über systemupdate, und was zurückkommt, prüft das Panel noch einmal Zeichen für Zeichen. - Was eingespielt wird: apt-get upgrade --with-new-pkgs --no-remove, nicht full-upgrade: neue Abhängigkeiten ja, ein Paket entfernen nie, keine neue Quelle. Nur aus den festen Quellen der Familie (Debian und Raspberry Pi auf dem Pi, Ubuntu und NVIDIA DGX auf tars); Pakete anderer Quellen (Docker, PPAs) sowie Firmware, Kernel und Treiber auf tars (nvidia, cuda, linux-image …) und das EEPROM des Pi werden für den Lauf mit apt-mark hold angehalten und danach wieder freigegeben. Ohne Rückfragen (--force-confold, needrestart still), mit nice 19 und ionice idle. - Nie, solange jemand spricht: "
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "System-Updates (seit V01.1.322)",
+"title": "System-Updates (seit V01.1.322)",
+"text": "Der Lauf beginnt erst nach 2 Minuten ohne Sprache; vorher steht „Wartet, Sprache läuft“ mit „Nicht mehr warten“. Nie gleichzeitig mit dem Update des Spark selbst: das nächtliche Spark-Update wartet auf den Lauf, und der Lauf auf das Spark-Update. - Neustart nur auf dein Wort: Braucht der Rechner einen Neustart (/var/run/reboot-required oder ein neuer Kernel, libc6, systemd), zeigt die Seite „Neustart nötig“ mit „Jetzt neu starten“ oder „Heute Nacht“ (beides mit frischem Code). Ohne diese Wahl startet nichts neu, auch nachts nicht. - Nachts: je Rechner der Schalter *System-Updates nachts auf dem Panel-Rechner* bzw. *auf dem Modell-Rechner* (aus, Ändern mit Code): zwischen 03 und 05 Uhr nach dem Spark-Update, nur das Betriebssystem, nie Firmware, nie ein Neustart von selbst. - OpenCode und Python-Pakete: Nach außen gehen nur Paketnamen und Versionen an api.osv.dev und eine Versionsfrage an registry.npmjs.org, beides über den Netz-Wächter (öffentliche Adressen) und nicht, solange der Notaus das Internet sperrt; ohne Internet steht „nicht geprüft, kein Internet“. Zurück kommen nur Kennungen (GHSA-…, PYSEC-…) und eine Versionsnummer. Eingespielt wird davon nie etwas: „Von Claude prüfen "
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "System-Updates (seit V01.1.322)",
+"title": "System-Updates (seit V01.1.322)",
+"text": "lassen“ legt eine Prüfbitte mit festem Text an, die ein Claude-Thread neu pinnt; sie kommt mit dem nächsten Spark-Update. - Firmware von Hand: *Funktionen → Anleitungen → Firmware von Hand* führt durch EEPROM, NVIDIA-Treiber und DGX OS. - Nach dem Update auf V01.1.322 einmal auf jedem Rechner sudo speech-spark update (oder sudo ./install.sh), damit Unit und sudoers-Zeile da sind; bis dahin sagt die Seite „Ließ sich nicht starten“."
 },
 {
 "lang": "de",
@@ -19469,7 +19525,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "tch; pairing and removing still ask every time. The models on tars are reached only through the TLS-Tor; commands there are checked by the Wärter (tarswart.check: signature, time, one-time number, one of 16 fixed commands). 4. Who asks, surely known?: The profile comes from the cookie, the app key or a linked account. At a shared speaker the device key is not enough: chat_turn.shared_stranger allows personal things only when the owner's voice is surely recognised in the same recording. 5. Release and block: Every function is off until the admin releases it; then it counts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool. 6. Outside stays data: What a tool reads from outside reaches the model as a marked block of data (textnorm.defuse: the block's end and the model's own markers such as „<|im_start|>“ or „<tool_call>“ are defused; the LLM-Tor does it once more for every message, llm_tor.entschaerft). From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory; after a mail it is 19, everything that asks the internet among them (web search, Wikipedia, weather, trans"
+"text": "tch; pairing and removing still ask every time. The models on tars are reached only through the TLS-Tor; commands there are checked by the Wärter (tarswart.check: signature, time, one-time number, one of 18 fixed commands). 4. Who asks, surely known?: The profile comes from the cookie, the app key or a linked account. At a shared speaker the device key is not enough: chat_turn.shared_stranger allows personal things only when the owner's voice is surely recognised in the same recording. 5. Release and block: Every function is off until the admin releases it; then it counts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool. 6. Outside stays data: What a tool reads from outside reaches the model as a marked block of data (textnorm.defuse: the block's end and the model's own markers such as „<|im_start|>“ or „<tool_call>“ are defused; the LLM-Tor does it once more for every message, llm_tor.entschaerft). From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory; after a mail it is 19, everything that asks the internet among them (web search, Wikipedia, weather, trans"
 },
 {
 "lang": "en",
@@ -19509,7 +19565,7 @@
 "file": "Architecture and data flow",
 "head": "The borders",
 "title": "The borders",
-"text": "- A, in from outside: only through the reverse proxy with TLS; every endpoint checks sign-in, profile, CSRF, size and rate limit. - B, devices at home: one key per device; at a shared speaker the voice counts as well. - C, the Spark reads outside things: only through the guard, no home network without permission, the checked address pinned; what comes back is data. - D, panel to the models: TLS 1.3 with the certificate pinned at the pairing; the models listen on 127.0.0.1 only. - E, handles on tars: only fixed commands of the Wärter, signed, with time and one-time number."
+"text": "- A, in from outside: only through the reverse proxy with TLS; every endpoint checks sign-in, profile, CSRF, size and rate limit. - B, devices at home: one key per device; at a shared speaker the voice counts as well. - C, the Spark reads outside things: only through the guard, no home network without permission, the checked address pinned; what comes back is data. - D, panel to the models: TLS 1.3 with the certificate pinned at the pairing; the models listen on 127.0.0.1 only. - E, handles on tars: only fixed commands of the Wärter, signed, with time and one-time number. - F, to root: the panel's code never runs as root. System updates only write a wish of one word (3 fixed words, at most 10 minutes old) and start the fixed unit speech-spark-systemupdate; it reads the wish as the service user and installs only apt upgrade from the fixed sources, never a removal, never firmware, a restart only on the admin's word."
 },
 {
 "lang": "en",
@@ -19541,7 +19597,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 13 tools locked after outside text (step 6) - 19 tools locked after a mail (step 6) - 10 min a right code counts for „Confirm“ (step 3) - 16 fixed commands of the Wärter on tars (step 3) - 3 kill switch stages, the last stops every conversation (step 2)"
+"text": "- 13 tools locked after outside text (step 6) - 19 tools locked after a mail (step 6) - 10 min a right code counts for „Confirm“ (step 3) - 18 fixed commands of the Wärter on tars (step 3) - 3 kill switch stages, the last stops every conversation (step 2)"
 },
 {
 "lang": "en",
@@ -19549,7 +19605,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/notaus.py blocks: whether a kill switch stage stops this kind of work (step 2) - app/panel/guard.py limit: rate limit per address and profile (step 3) - app/panel/guard.py Slot: cap on parallel requests (step 3) - app/panel/core.py confirm_code: fresh code or passkey for sensitive ways (step 3, step 8) - app/tarswart.py check: checks every command to the Wärter (step 3) - app/panel/chat_turn.py shared_stranger: stranger's voice at a shared speaker (step 4) - app/panel/features.py allowed: the admin's release, for every profile (step 5) - app/panel/mitschreiblink.py find: checks a write link: hash, expiry, release, list (step 3, step 5) - app/panel/features.py blocked: block of single profiles (step 5) - app/panel/geteilt.py put: share with another profile, taking back works at once (step 5) - app/panel/chat.py wrap_outside: outside text as a block of data (step 6) - app/textnorm.py defuse: defuse the block's end and the model's markers in outside text (step 6) - app/llm_tor.py entschaerft: take the model's markers out of every message (step 6) - app/panel/mailansicht.py clean: a mail's HTML only cleaned, without script and without loads from outside (step 6) - app/panel"
+"text": "- app/panel/notaus.py blocks: whether a kill switch stage stops this kind of work (step 2) - app/panel/guard.py limit: rate limit per address and profile (step 3) - app/panel/guard.py Slot: cap on parallel requests (step 3) - app/panel/core.py confirm_code: fresh code or passkey for sensitive ways (step 3, step 8) - app/tarswart.py check: checks every command to the Wärter (step 3) - app/sysupdate.py wunsch_nehmen: the wish to the root unit, checked again as the service user (step 3) - app/panel/chat_turn.py shared_stranger: stranger's voice at a shared speaker (step 4) - app/panel/features.py allowed: the admin's release, for every profile (step 5) - app/panel/mitschreiblink.py find: checks a write link: hash, expiry, release, list (step 3, step 5) - app/panel/features.py blocked: block of single profiles (step 5) - app/panel/geteilt.py put: share with another profile, taking back works at once (step 5) - app/panel/chat.py wrap_outside: outside text as a block of data (step 6) - app/textnorm.py defuse: defuse the block's end and the model's markers in outside text (step 6) - app/llm_tor.py entschaerft: take the model's markers out of every message (step 6) - app/panel/mailansicht."
 },
 {
 "lang": "en",
@@ -19557,7 +19613,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/guard.py verify: checks the chain, confirmed breaks only for the same line and hash (step 10) - app/panel/guard.py ack_break: confirms only the break the check reports now (step 10) - app/panel/vault.py seal: store secrets sealed (step 10) - app/panel/profiles.py write_own: memory and conversations sealed whole (step 10) - app/panel/vorrat.py key: a key per purpose from secret.key (step 10) - app/panel/meinedaten.py api_export: own data only after a fresh code, passkey or PIN (step 3) - app/panel/meinedaten.py build: the ZIP only from the file register, without secrets (step 10) - app/panel/profiles.py _cap: the memory's cap without data loss (step 8) - app/panel/gedaechtnis.py offer: learned never replaces confirmed: only an offer (step 8) - app/panel/gemerkt.py take_back: undo only for the own, unchanged fact (step 8) - app/panel/wissensdoppelt.py aehnlich: points of the map merged by themsel"
+"text": "py clean: a mail's HTML only cleaned, without script and without loads from outside (step 6) - app/panel/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/guard.py verify: checks the chain, confirmed breaks only for the same line and hash (step 10) - app/panel/guard.py ack_break: confirms only the break the check reports now (step 10) - app/panel/vault.py seal: store secrets sealed (step 10) - app/panel/profiles.py write_own: memory and conversations sealed whole (step 10) - app/panel/vorrat.py key: a key per purpose from secret.key (step 10) - app/panel/meinedaten.py api_export: own data only after a fresh code, passkey or PIN (step 3) - app/panel/meinedaten.py build: the ZIP only from the file register, without secrets (step 10) - app/panel/profiles.py _cap: the memory's cap without data loss (step 8) - app/panel/gedaechtnis.py offer: learned never replaces confirmed: only an offer (step 8) - app/panel/gemerkt.py take_back: undo only for the "
 },
 {
 "lang": "en",
@@ -19565,7 +19621,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "ves only by a fixed rule, never against „Different“ (step 8)"
+"text": "own, unchanged fact (step 8) - app/panel/wissensdoppelt.py aehnlich: points of the map merged by themselves only by a fixed rule, never against „Different“ (step 8)"
 },
 {
 "lang": "en",
@@ -19573,7 +19629,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_hardening, test_angriffe, test_gaeste, test_kontext_trennung, test_scanner, test_stufen, test_notaus, test_waerter, test_protokoll, test_wachposten, test_markdown, test_gedaechtnis_grenze, test_gemerkt, test_siegel, test_meinedaten, test_wissensdoppelt"
+"text": "Self-tests: test_hardening, test_angriffe, test_gaeste, test_kontext_trennung, test_scanner, test_stufen, test_notaus, test_waerter, test_protokoll, test_wachposten, test_markdown, test_gedaechtnis_grenze, test_gemerkt, test_siegel, test_meinedaten, test_wissensdoppelt, test_systemupdates"
 },
 {
 "lang": "en",
@@ -20429,7 +20485,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A tool wants out: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 34 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete. 2. Resolve the name once: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops. 3. Own service?: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute). When the models run on another computer (models.host), its addresses count the same (model_addresses). 4. Internet and kill switch on?: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows. 5. Public address?: A public address is allowed at every level. 6. Level „internet only“?: What comes from search results or answers may never go to the home network (chat, feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, verbu"
+"text": "1. A tool wants out: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 35 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete. 2. Resolve the name once: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops. 3. Own service?: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute). When the models run on another computer (models.host), its addresses count the same (model_addresses). 4. Internet and kill switch on?: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows. 5. Public address?: A public address is allowed at every level. 6. Level „internet only“?: What comes from search results or answers may never go to the home network (chat, feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, syste"
 },
 {
 "lang": "en",
@@ -20437,7 +20493,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "nd). 7. Never allowed?: Link-local addresses (169.254.x, where cloud metadata answers), multicast, unspecified and reserved addresses are allowed at no level. 8. Home network allowed?: Home Assistant and other services in the home network (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) always may. Calendars, contacts, mail and MCP (calendars, contacts, fundmail, mail, mcp, meinmcp, tasks) only when Settings → Security → Allow home network addresses is on. 9. Connect to exactly this address: The connection goes to the checked address, not to the name again. A second look-up could answer differently (DNS rebinding). The certificate is still checked for the name. 10. Password only to its own site: Login data only goes to the site it was entered for (same host or same parent domain, like the CalDAV servers of icloud.com), never over http when the address was https. 11. Answer at most 20 MB: Answers are cut at 20 MB, also after unpacking gzip, so a huge or packed answer cannot fill the memory. 12. Answer to the tool: The tool gets the answer as data. A redirect is a new connection and is checked the same way, from step 2."
+"text": "mupdates, verbund). 7. Never allowed?: Link-local addresses (169.254.x, where cloud metadata answers), multicast, unspecified and reserved addresses are allowed at no level. 8. Home network allowed?: Home Assistant and other services in the home network (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) always may. Calendars, contacts, mail and MCP (calendars, contacts, fundmail, mail, mcp, meinmcp, tasks) only when Settings → Security → Allow home network addresses is on. 9. Connect to exactly this address: The connection goes to the checked address, not to the name again. A second look-up could answer differently (DNS rebinding). The certificate is still checked for the name. 10. Password only to its own site: Login data only goes to the site it was entered for (same host or same parent domain, like the CalDAV servers of icloud.com), never over http when the address was https. 11. Answer at most 20 MB: Answers are cut at 20 MB, also after unpacking gzip, so a huge or packed answer cannot fill the memory. 12. Answer to the tool: The tool gets the answer as data. A redirect is a new connection and is checked the same way, from step 2."
 },
 {
 "lang": "en",
@@ -20581,7 +20637,7 @@
 "file": "Architecture and data flow",
 "head": "What you see",
 "title": "What you see",
-"text": "- Status → Logs → Requests: the way of every request with tools and times. - Status → Logs → Diagnosis: lines by area, errors and warnings, with a fixed hint. - Status → Live: running requests, guard decisions and services as a picture. - Status → Services: what the service watch looks at and the outages of the last days."
+"text": "- Status → System updates: operating system, OpenCode, Python packages and firmware of both computers; only names, versions and numbers. Installed only with a fresh code, after 120 s without speech. - Status → Logs → Requests: the way of every request with tools and times. - Status → Logs → Diagnosis: lines by area, errors and warnings, with a fixed hint. - Status → Live: running requests, guard decisions and services as a picture. - Status → Services: what the service watch looks at and the outages of the last days."
 },
 {
 "lang": "en",
@@ -20589,7 +20645,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/tracelog.py start: a record when anything is on (step 1) - app/panel/tracelog.py safe: only numbers and short fixed words (step 3) - app/panel/tracelog.py Rec: steps, marks, state (step 3, step 6) - app/panel/tracelog.py finish: journal line and request history (step 8, step 9) - app/panel/tracelog.py shown: name only with consent (step 10) - app/panel/live.py step: every step on Status → Live (step 4) - app/panel/logfilter.py AREAS: the journal's area words (step 5) - app/panel/logfilter.py parse: area, level, blacking out (step 11) - app/panel/logfilter.py summary: counts and fixed hint (step 12) - app/panel/dienstwacht.py round_once: one round of probes and notes (step 5) - app/panel/backup.py create: pack one backup (step 9)"
+"text": "- app/panel/systemupdates.py tick: system updates: check, start after the pause in speech, the night (step 5) - app/panel/tracelog.py start: a record when anything is on (step 1) - app/panel/tracelog.py safe: only numbers and short fixed words (step 3) - app/panel/tracelog.py Rec: steps, marks, state (step 3, step 6) - app/panel/tracelog.py finish: journal line and request history (step 8, step 9) - app/panel/tracelog.py shown: name only with consent (step 10) - app/panel/live.py step: every step on Status → Live (step 4) - app/panel/logfilter.py AREAS: the journal's area words (step 5) - app/panel/logfilter.py parse: area, level, blacking out (step 11) - app/panel/logfilter.py summary: counts and fixed hint (step 12) - app/panel/dienstwacht.py round_once: one round of probes and notes (step 5) - app/panel/backup.py create: pack one backup (step 9)"
 },
 {
 "lang": "en",
@@ -21213,7 +21269,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 600 s a pairing code lives (step 2) - 60 s a command's time may be off (step 7) - 16 fixed commands of the Wärter (step 7) - 30 s without an answer until Notbetrieb (step 10) - 80 °C note, the panel computer is warm (step 8) - 10 % disk free, below it a note (step 8) - 0.5 GiB memory free on the panel computer, below it a note (step 8) - 5 % CPU from which the biggest service counts as „computing now“ (step 8) - 15 s without a question from the control centre, then the screen counts as dark (step 9)"
+"text": "- 600 s a pairing code lives (step 2) - 60 s a command's time may be off (step 7) - 18 fixed commands of the Wärter (step 7) - 30 s without an answer until Notbetrieb (step 10) - 80 °C note, the panel computer is warm (step 8) - 10 % disk free, below it a note (step 8) - 0.5 GiB memory free on the panel computer, below it a note (step 8) - 5 % CPU from which the biggest service counts as „computing now“ (step 8) - 15 s without a question from the control centre, then the screen counts as dark (step 9)"
 },
 {
 "lang": "en",
@@ -21229,7 +21285,7 @@
 "file": "Architecture and data flow",
 "head": "What you see",
 "title": "What you see",
-"text": "- Status → Live: box „Model computer“ with reachable, services, version and pause. - Status → Summary → Computers: both computers side by side with curves of the last 20 minutes and „Who is computing now“ (services and the panel's parts with their share of the CPU, strip of the last 20 minutes); Live adds the box „Panel computer“, both boxes with „am meisten …“. - The screen on the panel computer itself; Status → Live shows in the box „Control centre“ whether it shows right now."
+"text": "- Status → Live: box „Model computer“ with reachable, services, version and pause. - Status → Summary → Computers: both computers side by side with curves of the last 20 minutes and „Who is computing now“ (services and the panel's parts with their share of the CPU, strip of the last 20 minutes); Live adds the box „Panel computer“, both boxes with „am meisten …“. - The screen on the panel computer itself; Status → Live shows in the box „Control centre“ whether it shows right now. - Status → System updates: one column per computer; for tars the panel asks through the Wärter's fixed commands systemupdate and systemupdate_tun."
 },
 {
 "lang": "en",
@@ -21237,7 +21293,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/teilen.py CODE_SECS: life of the code (step 2) - app/teilen.py schluessel: key from code and fingerprint (step 3) - app/teilen.py regeln: firewall for the panel computer only (step 4) - app/tlstor.py server_context: TLS 1.3 with its own certificate (step 5) - app/tlstor.py allowed: only the panel computer (step 5) - app/panel/steuer.py call: signed command (step 6) - app/tarswart.py check: signature, time, number, command (step 7) - app/tarswart.py COMMANDS: the fixed commands (step 7) - app/panel/steuer.py weg: spot Notbetrieb (step 10) - app/rechner.py messen: values of one computer (step 8) - app/panel/rechnerblick.py warnungen: notes by fixed rules (step 8) - app/rechner.py dienste_cpu: CPU per service from systemd (step 8) - app/panel/rechenteile.py messen: CPU per part of the panel (step 8) - app/panel/rechnerblick.py spitze: who computes most (step 8) - app/panel/schirm.py schirm_zustand: local only and with a key (step 9) - app/panel/schirm.py abgleich: unit follows the switch (step 9) - app/panel/schirm.py an_jetzt: dark by the times (step 9) - app/steuerzentrale.py schrift: font by resolution (step 9)"
+"text": "- app/teilen.py CODE_SECS: life of the code (step 2) - app/teilen.py schluessel: key from code and fingerprint (step 3) - app/teilen.py regeln: firewall for the panel computer only (step 4) - app/tlstor.py server_context: TLS 1.3 with its own certificate (step 5) - app/tlstor.py allowed: only the panel computer (step 5) - app/panel/steuer.py call: signed command (step 6) - app/tarswart.py check: signature, time, number, command (step 7) - app/tarswart.py COMMANDS: the fixed commands (step 7) - app/tarswart.py systemupdate_tun: system updates on tars: one word as the wish, the fixed root unit (step 7) - app/panel/steuer.py weg: spot Notbetrieb (step 10) - app/rechner.py messen: values of one computer (step 8) - app/panel/rechnerblick.py warnungen: notes by fixed rules (step 8) - app/rechner.py dienste_cpu: CPU per service from systemd (step 8) - app/panel/rechenteile.py messen: CPU per part of the panel (step 8) - app/panel/rechnerblick.py spitze: who computes most (step 8) - app/panel/schirm.py schirm_zustand: local only and with a key (step 9) - app/panel/schirm.py abgleich: unit follows the switch (step 9) - app/panel/schirm.py an_jetzt: dark by the times (step 9) - app/steuerzen"
 },
 {
 "lang": "en",
@@ -21245,7 +21301,15 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_teilen, test_umziehen, test_rechner, test_steuerzentrale"
+"text": "trale.py schrift: font by resolution (step 9)"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "In the code",
+"title": "In the code",
+"text": "Self-tests: test_teilen, test_umziehen, test_rechner, test_steuerzentrale, test_systemupdates"
 },
 {
 "lang": "en",
@@ -21277,7 +21341,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 48), otherwise the line gives its reason (dateien.STATE_LOCAL, 112). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again, and profiles forgets what it had opened of the profiles' sealed files."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 48), otherwise the line gives its reason (dateien.STATE_LOCAL, 115). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again, and profiles forgets what it had opened of the profiles' sealed files."
 },
 {
 "lang": "en",
@@ -21293,7 +21357,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 48 files in every backup (step 7) - 112 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 48 files in every backup (step 7) - 115 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -32573,6 +32637,30 @@
 "file": "Assistant and panel",
 "head": "Access",
 "title": "Access",
+"text": "- System updates (Features → Access → \"System updates\"): A card under Status → Summary and the page Status → System updates show for each computer (the Pi with the panel, with Spark split also tars with the models): how many operating system updates wait, how many of them for security, and eac …"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Access",
+"title": "Access",
+"text": "- System updates at night on the panel computer (Features → Access → \"System updates at night on the panel computer\"; builds on \"System updates\"): Installs the Pi's operating system updates by itself between 03 and 05, after the Spark's own night update and never at the same time."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Access",
+"title": "Access",
+"text": "- System updates at night on the model computer (Features → Access → \"System updates at night on the model computer\"; builds on \"System updates\"): With Spark split: installs tars' operating system updates by itself between 03 and 05, through the Wärter's fixed command."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Access",
+"title": "Access",
 "text": "- Control centre on the screen (Features → Access → \"Control centre on the screen\"): A screen on the panel computer's HDMI output shows the control centre: state and the day's numbers on top, in the middle which request runs through which stage right now and on which computer (with Spark split tars and the Pi with CPU, G …"
 },
 {
@@ -33886,6 +33974,38 @@
 "head": "Device updates and supply chain (since V01.0.407)",
 "title": "Device updates and supply chain (since V01.0.407)",
 "text": "H key (git config gpg.format ssh, user.signingkey, commit.gpgsign true) and create /etc/speech-spark-signers (root, 644) on the Spark with <e-mail> <public key>; from then on tars installs only signed commits."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "System updates (since V01.1.322)",
+"title": "System updates (since V01.1.322)",
+"text": "*Features → System updates* (off, admins only, never guests, no tool for the language model; systemupdates.py, sysupdate.py) shows under *Status → System updates* for each computer (the Pi with the panel, with Spark split also tars with the models) the waiting operating system updates, those for security, and each package as name old → new; also the pinned OpenCode against the newest version on npm, OSV warnings for the pinned Python packages, and firmware and drivers (EEPROM, NVIDIA driver, DGX OS). It checks every 6 hours and with \"Jetzt prüfen\"."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "System updates (since V01.1.322)",
+"title": "System updates (since V01.1.322)",
+"text": "- root only as a fixed run: the panel only writes a wish of one word (pruefen, einspielen, neustart, at most 10 minutes old) to STATE/system-updates-wunsch.json and starts the unit speech-spark-systemupdate (fixed sudoers line systemctl start --no-block speech-spark-systemupdate). The unit reads the wish as the service user and checks it again (for the Pi also whether the switch is on). On tars only the Wärter writes it after a signed command (systemupdate_tun); reading goes through systemupdate, and the panel checks what comes back again character by character. - What is installed: apt-get upgrade --with-new-pkgs --no-remove, not full-upgrade: new dependencies yes, removing a package never, no new source. Only from the family's fixed sources (Debian and Raspberry Pi on the Pi, Ubuntu and NVIDIA DGX on tars); packages of other sources (Docker, PPAs) as well as firmware, kernel and drivers on tars (nvidia, cuda, linux-image …) and the Pi's EEPROM are held with apt-mark hold for the run and let go afterwards. Without questions (--force-confold, needrestart quiet), with nice 19 and ionice idle. - Never while somebody talks: the run begins only after 2 minutes without speech; before th"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "System updates (since V01.1.322)",
+"title": "System updates (since V01.1.322)",
+"text": "at it shows \"Wartet, Sprache läuft\" with \"Nicht mehr warten\". Never at the same time as the Spark's own update: the Spark's night update waits for the run, and the run for the Spark update. - A restart only on your word: when the computer needs a restart (/var/run/reboot-required or a new kernel, libc6, systemd), the page shows \"Neustart nötig\" with \"Jetzt neu starten\" or \"Heute Nacht\" (both with a fresh code). Without that choice nothing restarts, not at night either. - At night: per computer the switch *System updates at night on the panel computer* or *on the model computer* (off, changing needs the code): between 03 and 05 after the Spark update, only the operating system, never firmware, never a restart by itself. - OpenCode and Python packages: only package names and versions go out to api.osv.dev and one version question to registry.npmjs.org, both through the network guard (public addresses) and not while the Notaus blocks the internet; without internet it says \"nicht geprüft, kein Internet\". Only ids (GHSA-…, PYSEC-…) and a version number come back. Nothing of it is ever installed: \"Von Claude prüfen lassen\" makes a check request with a fixed text that a Claude thread pins"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "System updates (since V01.1.322)",
+"title": "System updates (since V01.1.322)",
+"text": " anew; it comes with the next Spark update. - Firmware by hand: *Features → Guides → Firmware by hand* walks through EEPROM, NVIDIA driver and DGX OS. - After updating to V01.1.322 once on each computer sudo speech-spark update (or sudo ./install.sh), so that unit and sudoers line are there; until then the page says \"Ließ sich nicht starten\"."
 },
 {
 "lang": "en",

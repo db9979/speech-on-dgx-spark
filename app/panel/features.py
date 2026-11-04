@@ -94,7 +94,7 @@ DESK_SKIP = {
                      "rueckgaengig"), _D_TALK),
     **dict.fromkeys(("follow", "selfecho", "anhalten", "satzende"), _D_VOICE),
     **dict.fromkeys(("toolthink", "routing", "direct", "hoeren", "sofort", "gedkurz", "einordnung", "helfer", "vorrang",
-                     "berater", "geraeteupdate", "dienstwacht", "wachposten", "wartung", "notbetriebasr", "gehaeuse",
+                     "berater", "geraeteupdate", "dienstwacht", "wachposten", "wartung", "notbetriebasr", "gehaeuse", "systemupdates",
                      "schirm", "modellwechsel", "werkstatt", "entwickeln"), _D_SPARK),
     **dict.fromkeys(("history", "teilen", "bilder", "musik", "dungeon", "mystatus", "agent", "chats", "weather",
                      "feeds", "contacts", "transit", "speaker", "verbrauch", "nas"), _D_PANEL),
@@ -785,6 +785,14 @@ FEATURES = (
     F("notbetriebasr", "Notbetrieb mit Parakeet", "Emergency mode with Parakeet", "sec", ("notbetrieb_asr",), guide="notbetriebasr"),
     # gehaeuse.py: the case of a panel computer (Pironman 5): OLED pages for the admin, status LEDs, fan thresholds
     F("gehaeuse", "Gehäuse", "Case", "sec", ("gehaeuse",), guide="gehaeuse"),
+    # systemupdates.py + ../sysupdate.py (Dominik 2026-11-04 „1a-4a“): the operating system of both computers, OpenCode and
+    # the Python packages (OSV), firmware shown; installed only by the fixed root unit with a fresh code, never while
+    # somebody talks, never a restart without the admin; admins only, no tool for the model
+    F("systemupdates", "System-Updates", "System updates", "sec", ("system_updates",), guide="systemupdates"),
+    F("systemnachtpanel", "System-Updates nachts auf dem Panel-Rechner", "System updates at night on the panel computer", "sec",
+      ("system_updates_night_panel",), parent="systemupdates", guide="systemnachtpanel"),
+    F("systemnachtmodelle", "System-Updates nachts auf dem Modell-Rechner", "System updates at night on the model computer", "sec",
+      ("system_updates_night_models",), parent="systemupdates", guide="systemnachtmodelle"),
     # schirm.py + steuerzentrale.py (B9): the control centre as text on the panel computer's screen (tty1), no desktop
     F("schirm", "Steuerzentrale am Bildschirm", "Control centre on the screen", "sec", ("schirm",), guide="schirm"),
     # modelle.py stage E4: admins switch the model of one kind under Zustand → Modelle (root unit speech-spark-wechsel)
@@ -938,7 +946,7 @@ DUTY = None
 REVIEW = None
 
 # chat.* switches that are no function a profile uses (how the Spark itself works)
-SPARK_ONLY = {"wachposten", "public", "thinking", "prompt_cache", "answer_check", "answer_check_more", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "entwickeln", "entwickelngithub", "entwickelnterminal", "entwickelnauftrag", "angriffsprobe", "weicheabstimmen", "fernzugang", "fernzugangmeldung", "fernzugangalle", "spontanhilfe", "fernzuganghilfe", "fernbild", "fernbildablage", "fernnotizen", "fernordner", "ferngross", "fernweb",
+SPARK_ONLY = {"wachposten", "public", "thinking", "prompt_cache", "answer_check", "answer_check_more", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "systemupdates", "systemnachtpanel", "systemnachtmodelle", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "entwickeln", "entwickelngithub", "entwickelnterminal", "entwickelnauftrag", "angriffsprobe", "weicheabstimmen", "fernzugang", "fernzugangmeldung", "fernzugangalle", "spontanhilfe", "fernzuganghilfe", "fernbild", "fernbildablage", "fernnotizen", "fernordner", "ferngross", "fernweb",
               "helfer", "helferweiche", "helferdungeon", "helfermail", "helferangriff", "helferkurz"}
 # Everything starts off (Dominik 2026-10-08). The only values shipped on in config.default.json are protection and
 # stability rules and the basic functions the Spark had from the start, each with its reason here (Dominik 2026-10-12,

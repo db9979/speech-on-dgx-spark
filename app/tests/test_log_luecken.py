@@ -182,6 +182,7 @@ PRINT_OK = {
 }
 # functions behind a Notaus gate that write no line themselves, each with where its line comes from
 ACTION_OK = {
+    ("systemupdates.py", "overview"): "liest nur, ob der Notaus das Internet sperrt, für „nicht geprüft, kein Internet“; tut nichts",
     ("postfach.py", "_act"): "act schreibt „mail: page <aktion> done|refused|failed“ für jedes Ergebnis",
     ("postfach.py", "_act_many"): "act_many schreibt über _outcome „mail: page many <aktion> done|refused|failed“ für jedes Ergebnis",
     ("postfach.py", "_back_many"): "back_many schreibt über _outcome „mail: page many back done|refused|failed“ für jedes Ergebnis",

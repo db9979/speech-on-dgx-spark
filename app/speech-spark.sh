@@ -42,6 +42,8 @@
 #   speech-spark entwickeln [status]|schluessel neu|weg|einrichten  spark-dev's key for the LLM-Tor, OpenCode's settings
 #   speech-spark entwickeln github-schluessel neu|zeigen|weg  root's deploy key for GitHub (only opencode/ branches)
 #   speech-spark wissen messen [synth [anzahl] [--ohne-grenzen] | profil <name>] [--json]  times and memory of search, map and Finden
+#   speech-spark systemupdate [status]|pruefen  System-Updates: this computer's apt state, or check now (apt update, simulate)
+#   speech-spark systemupdate einspielen|neustart  the fixed apt run of the panel's „Jetzt einspielen“, or the restart it needs
 set -euo pipefail
 # runuser, nft, systemctl live in /usr/sbin on Debian and Raspberry Pi OS; a caller with PATH=/usr/bin:/bin (teilen.py
 # runs "teilen umzug-einspielen" that way) would not find them
@@ -1217,6 +1219,91 @@ cmd_entwickeln() {
   esac
 }
 
+# System-Updates (app/sysupdate.py, Dominik 2026-11-04 „1a 2a 3a 4a“): the operating system of this computer, only in a
+# fixed way. Root runs fixed commands and never parses a line: the raw output goes to sysupdate.py as the panel's user,
+# which keeps names and versions in a fixed character set. The run: only the system's own sources (other origins and
+# firmware or drivers held back for the run, sysupdate.py halten), upgrade with new dependencies but never a removal
+# (--no-remove: apt stops instead), non-interactive, old configuration files kept, at the lowest priority. Never a
+# restart by itself: only the wish neustart (the admin's „Jetzt neu starten“ or „Heute Nacht“) and only when needed.
+SYSUP_NEUSTART=${SPEECH_SPARK_SYSUP_NEUSTART:-/run/speech-spark-systemupdate-neustart}
+SYSUP_LOG=/tmp/speech-spark-systemupdate.log   # PrivateTmp of the unit: gone with it
+sysup_roh() {   # the facts in sections for sysupdate.py stand; $1 = "frisch" asks the sources first (apt-get update)
+  echo "@@sysup apt-update"
+  if [ "${1:-}" != frisch ]; then echo ok
+  elif LC_ALL=C timeout 900 apt-get -q -o DPkg::Lock::Timeout=300 update >/dev/null 2>&1; then echo ok; else echo fehler; fi
+  echo "@@sysup apt"
+  LC_ALL=C apt-get -s -o Debug::NoLocking=1 --no-remove --with-new-pkgs upgrade 2>/dev/null | head -c 2000000 || true
+  echo "@@sysup policy"
+  LC_ALL=C apt-cache policy 2>/dev/null | head -c 500000 || true
+  echo "@@sysup neustart"
+  if [ -e /var/run/reboot-required ] || [ -e "$SYSUP_NEUSTART" ]; then echo ja; else echo nein; fi
+  echo "@@sysup eeprom"
+  if command -v rpi-eeprom-update >/dev/null 2>&1; then LC_ALL=C timeout 60 rpi-eeprom-update 2>&1 | head -c 20000 || true; fi
+  echo "@@sysup nvidia"
+  if command -v nvidia-smi >/dev/null 2>&1; then timeout 30 nvidia-smi --query-gpu=driver_version --format=csv,noheader 2>/dev/null | head -n 1 || true; fi
+  echo "@@sysup dgx"
+  head -c 4000 /etc/dgx-release 2>/dev/null || true
+}
+
+sysup_pruefen() { sysup_roh frisch | as_panel_user ../sysupdate.py stand; }
+
+sysup_einspielen() {
+  local halten=() gehalten=() p rc
+  sysup_pruefen || { echo "systemupdate: einspielen abgelehnt pruefung"; return 1; }
+  mapfile -t halten < <(as_panel_user ../sysupdate.py halten)
+  for p in "${halten[@]}"; do
+    [[ "$p" =~ ^[a-z0-9][a-z0-9+.-]{0,63}$ ]] || { echo "systemupdate: einspielen abgelehnt name"; return 1; }
+  done
+  # held only for this run, and only those that were not held before are let go again
+  for p in "${halten[@]}"; do
+    if [ -z "$(apt-mark showhold "$p" 2>/dev/null)" ] && apt-mark hold "$p" >/dev/null 2>&1; then gehalten+=("$p"); fi
+  done
+  echo "systemupdate: einspielen start ${#halten[@]} gehalten"
+  set +e
+  LC_ALL=C DEBIAN_FRONTEND=noninteractive NEEDRESTART_SUSPEND=1 NEEDRESTART_MODE=l nice -n 19 ionice -c 3 \
+    apt-get -y -q -o DPkg::Lock::Timeout=300 -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold \
+    -o Dpkg::Use-Pty=0 --no-remove --with-new-pkgs upgrade 2>&1 | tee "$SYSUP_LOG" | as_panel_user ../sysupdate.py fortschritt
+  rc=${PIPESTATUS[0]}
+  set -e
+  if [ "${#gehalten[@]}" -gt 0 ]; then apt-mark unhold "${gehalten[@]}" >/dev/null 2>&1 || echo "systemupdate: freigeben fehler"; fi
+  # a new kernel, firmware or C library takes effect only after a restart: the marker says so (gone with the restart)
+  if grep -Eq '^Setting up (linux-image|linux-modules|raspi-firmware|libc6|systemd|dbus)[ :]' "$SYSUP_LOG" 2>/dev/null; then : >"$SYSUP_NEUSTART"; fi
+  rm -f -- "$SYSUP_LOG"
+  as_panel_user ../sysupdate.py ende "$rc"
+  sysup_roh | as_panel_user ../sysupdate.py stand >/dev/null || true
+  [ "$rc" = 0 ]
+}
+
+sysup_neustart() {
+  if [ -e /var/run/reboot-required ] || [ -e "$SYSUP_NEUSTART" ]; then
+    echo "systemupdate: neustart"
+    systemctl reboot
+  else
+    echo "systemupdate: neustart abgelehnt nicht noetig"; return 1
+  fi
+}
+
+cmd_systemupdate() {
+  local w
+  case "${1:-status}" in
+    wunsch-intern)   # only inside speech-spark-systemupdate: the wish, checked again by sysupdate.py
+      [ "${INVOCATION_ID:-}" ] || die "only inside its own unit"
+      w=$(as_panel_user ../sysupdate.py wunsch-nehmen | tail -n 1) || true
+      case "$w" in
+        pruefen) sysup_pruefen >/dev/null ;;
+        einspielen) sysup_einspielen ;;
+        neustart) sysup_neustart ;;
+        *) echo "systemupdate: abgelehnt wunsch"; return 1 ;;
+      esac ;;
+    pruefen) need_root systemupdate pruefen; sysup_pruefen ;;
+    einspielen) need_root systemupdate einspielen; sysup_einspielen ;;
+    neustart) need_root systemupdate neustart; sysup_neustart ;;
+    status) LC_ALL=C apt-get -s -o Debug::NoLocking=1 --no-remove --with-new-pkgs upgrade 2>/dev/null | grep -c '^Inst ' || true
+      { [ -e /var/run/reboot-required ] || [ -e "$SYSUP_NEUSTART" ]; } && echo "Neustart nötig" || true ;;
+    *) die "speech-spark systemupdate [status]|pruefen|einspielen|neustart" ;;
+  esac
+}
+
 # Wissen messen (app/panel/wissensmessung.py, Wissenskarte Stufe 4): one run as the panel user, numbers only; the
 # measuring process lowers its own priority and stops while somebody speaks (with the part fund: Finden's search index)
 cmd_wissen() {
@@ -1245,8 +1332,9 @@ case "${1:-}" in
   gehaeuse) shift; cmd_gehaeuse "$@" ;;
   werkstatt) shift; cmd_werkstatt "$@" ;;
   wissen) shift; cmd_wissen "$@" ;;
+  systemupdate) shift; cmd_systemupdate "$@" ;;
   lokal) shift; cmd_lokal "$@" ;;
   entwickeln) shift; cmd_entwickeln "$@" ;;
-  ""|-h|--help|help) sed -n '2,44p' "$0" | sed 's/^# \{0,1\}//' ;;
+  ""|-h|--help|help) sed -n '2,46p' "$0" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (see: speech-spark help)" ;;
 esac

@@ -29,6 +29,10 @@ a time (at most WINDOW seconds off) and a one-time number (each is taken once).
     werkstatt_auftrag {art, text}   an order with the fixed rules (werkstatt.anfragen), then speech-spark-werkstatt
     werkstatt_eins <id>         one order with its text and patch
     werkstatt_weg <id>          deletes one order
+    systemupdate                System-Updates: this computer's checked state (sysupdate.lesen: package names and
+                                versions in a fixed character set, counts) and whether its root unit runs
+    systemupdate_tun <wort>     System-Updates: one wish of sysupdate.WUENSCHE (pruefen, einspielen, neustart) for the
+                                fixed root unit speech-spark-systemupdate; never a package, a source or a command
 
 Every action writes one log line ("waerter:" with the command and the result word, never content); the reads
 status and modelle only when refused.
@@ -47,6 +51,7 @@ from fastapi.responses import JSONResponse
 import llmstart
 import modelle
 import rechner
+import sysupdate
 import werkstatt
 from common import (CONFIG_PATH, MODEL_LOG_UNITS, ON_DEMAND_UNITS, OWN_LLM_UNITS, UNITS, WAERTER_PORT, BodyLimit, gpu_stats, journal, load_config,
                     WARTUNG_FILE, installed_version, mem_available_gib, model_choice, model_settings_hash, model_settings_take, qwen38_lanes, read_json,
@@ -59,7 +64,8 @@ MAX_SEEN = 5000        # one-time numbers kept (each lives WINDOW * 2 seconds)
 RATE = (40, 10)        # at most 40 requests in 10 seconds (the panel asks for the status every few seconds)
 ACTIONS = ("start", "stop", "restart")
 COMMANDS = ("status", "einheit", "einstellen", "logs", "modelle", "wechseln", "messen", "platz", "eigen_dazu", "eigen_weg",
-            "weiter", "update", "werkstatt", "werkstatt_auftrag", "werkstatt_eins", "werkstatt_weg")
+            "weiter", "update", "werkstatt", "werkstatt_auftrag", "werkstatt_eins", "werkstatt_weg", "systemupdate",
+            "systemupdate_tun")
 UPDATE_UNIT = "speech-spark-update"
 PAUSE_KEYS = ("on", "parts", "since", "until", "channel")   # what the panel needs of the pause (never who)
 WITH_DATA = ("einstellen", "eigen_dazu", "werkstatt_auftrag")
@@ -333,6 +339,28 @@ def werkstatt_weg(aid):
     return {"ok": ok}
 
 
+def _systemupdate_laeuft():
+    return modelle.im_gang(run(["systemctl", "is-active", sysupdate.UNIT])[1])
+
+
+def systemupdate_daten():
+    """Read only, asked by the panel's System-Updates: no line, like status."""
+    return dict(sysupdate.lesen(), unit=_systemupdate_laeuft())
+
+
+def systemupdate_tun(was):
+    """One fixed wish for this computer's root unit; it checks the wish again and runs only fixed commands."""
+    if was not in sysupdate.WUENSCHE:
+        raise ValueError("befehl")
+    if _systemupdate_laeuft() or _update_laeuft():
+        print(f"waerter: systemupdate_tun {was} abgelehnt laeuft", flush=True)
+        return {"ok": False, "fehler": "laeuft"}
+    sysupdate.wunsch(was, "modelle")
+    ok = run(["sudo", "-n", "/usr/bin/systemctl", "start", "--no-block", sysupdate.UNIT], timeout=20)[0] == 0
+    print(f"waerter: systemupdate_tun {was} {'ok' if ok else 'fehler'}", flush=True)
+    return {"ok": ok}
+
+
 def einheit(action, teil):
     if action not in ACTIONS or teil not in UNITS:
         raise ValueError("befehl")
@@ -399,6 +427,8 @@ async def wart(request: Request):
         return JSONResponse(modelle_daten())
     if cmd == "werkstatt":
         return JSONResponse(werkstatt_daten())
+    if cmd == "systemupdate":
+        return JSONResponse(systemupdate_daten())
     try:
         if cmd == "einstellen":
             return JSONResponse(einstellen(daten))
@@ -409,6 +439,8 @@ async def wart(request: Request):
         if cmd in ("werkstatt_eins", "werkstatt_weg"):
             one = werkstatt_eins if cmd == "werkstatt_eins" else werkstatt_weg
             return JSONResponse(one(*args) if len(args) == 1 else one(""))
+        if cmd == "systemupdate_tun":
+            return JSONResponse(systemupdate_tun(*args) if len(args) == 1 else systemupdate_tun(""))
         if cmd == "weiter":
             return JSONResponse(weiter())
         if cmd == "update":

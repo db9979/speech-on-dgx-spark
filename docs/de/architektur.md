@@ -117,6 +117,7 @@ flowchart TB
 | `speech-spark-wechsel` | – | Ein Modell wechseln (Zustand → Modelle), nur auf Knopfdruck |
 | `speech-spark-messen-wunsch` | – | Ein Modell messen (Zustand → Modelle „Messen“), nur auf Knopfdruck |
 | `speech-spark-gehaeuse` | – | Gehäuse des Panel-Rechners einrichten (Pironman 5: Lüfter, OLED), nur mit `--gehaeuse` |
+| `speech-spark-systemupdate` | – | System-Updates: auf Wunsch des Panels (bzw. des Wärters) die Paketquellen prüfen, `apt-get upgrade --no-remove` aus den festen Quellen, Neustart nur auf das Wort des Admins (beide Rechner) |
 | `speech-spark-werkstatt` | – (die Sandbox fragt nur 127.0.0.1:31006) | Ein Auftrag der Werkstatt (Funktionen → Werkstatt): Testlauf, Code-Messung, Diagnose, Reparatur in der Sandbox `speech-spark-werkstatt-lauf`, nur mit `--werkstatt`; dazu `speech-spark-werkstatt-fw` (die Sandbox erreicht auf 127.0.0.1 nur das LLM-Tor) |
 | `speech-spark-lokaltest-umgebung` | – (holt nur Pakete mit Prüfsumme) | Entwickeln auf dem Pi (`--entwickeln`, Panel-Rechner): Testumgebung des Schnelltests, nachts nur bei neuer Paketliste; der Schnelltest selbst läuft als `speech-spark-lokaltest` ohne Netz; dazu `speech-spark-entwickeln-fw` (der Nutzer `spark-dev` erreicht nur das LLM-Tor 31006) |
 | `speech-spark-auftrag` | – (kein Netz außer dem LLM-Tor) | Code-Auftrag im Chat (`--entwickeln`, Panel-Rechner): root nimmt den Wunsch des Panels, OpenCode arbeitet einmal als `spark-dev` auf einem eigenen Zweig `opencode/auftrag-<n>`, höchstens 30 Minuten; eingespielt wird nichts |
@@ -504,6 +505,8 @@ Live-Übersicht, Logs, Wächter, Sicherung, Update, Hilfe und die Admin-Seiten.
 | `app/panel/rundlauf.py` | Rundlauf-Wächter: alle paar Minuten ein Probelauf durch Sprechen, Hören, Sprachmodell; meldet über den Dienst-Wächter |
 | `app/panel/speicher.py` | Kopie meiner Daten pro Profil an einem Speicherort, verschlüsselt |
 | `app/panel/system.py` | Sicherung, Echtprüfung der Dienste, Hinweise oben |
+| `app/panel/systemupdates.py` | System-Updates: Betriebssystem beider Rechner prüfen und fest einspielen, OpenCode und OSV, Firmware nur zeigen |
+| `app/sysupdate.py` | System-Updates je Rechner: Wunsch prüfen, apt-Ausgabe der root-Einheit in Namen und Versionen, Lauf n von m |
 | `app/panel/technik.py` | Diese Seite: Zustand → Technik und die Architektur-Doku |
 | `app/panel/technik_knoten.py` | Knoten-Seiten: jeder Kasten ganz genau, mit Ablauf, Regeln, Zahlen und Code |
 | `app/panel/technik_seiten.py` | Knoten-Seiten: der Baustein S für einen Schritt |
@@ -853,6 +856,9 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/speicher-tmp` | Zwischenablage des eigenen Speichers | AES-256-GCM | nein |
 | `state/spontanhilfe-programme` | Spontanhilfe: das Programm SparkHilfe zum Steuern, nur nach Prüfung der SHA-256 aus dem signierten Verzeichnis ausgeliefert | – | nein |
 | `state/spontanhilfe-verlauf.json` | Spontanhilfe: Verlauf der letzten Tage (Zeit, Admin, Art, Dauer, Zuhause oder Internet, verfallene oder gesperrte Nummern), nie der Name der Person, eine Adresse, ein Bild oder der Chat; löschen unter Fernzugang → Spontanhilfe → Verlauf der Spontanhilfe | – | nein |
+| `state/system-updates-stand.json` | System-Updates dieses Rechners: verfügbare Pakete (Name, alte und neue Version, Quelle), Firmware- und Treiberstand, Neustart nötig, der letzte Lauf (n von m); schreibt die Einheit speech-spark-systemupdate | – | nein |
+| `state/system-updates-wunsch.json` | Wunsch des Panels oder des Wärters für System-Updates (prüfen, einspielen, neu starten), Sekunden | – | nein |
+| `state/system-updates.json` | System-Updates: wann zuletzt geprüft, wartende Läufe und Neustarts für heute Nacht, OSV-Warnungen (Paketname, Version, Kennung), neueste OpenCode-Version, die Prüfbitte; löschen unter Zustand → System-Updates (Prüfbitte) | – | nein |
 | `state/telefon.json` | Telefon: Zugang zur Anlage, Mobilteile | Kennwort versiegelt | ja |
 | `state/telegram.json` | Telegram-Bot | Token versiegelt | ja |
 | `state/tipps.json` | Gezeigte Tipps | – | nein |
@@ -1668,7 +1674,7 @@ flowchart TD
 
 1. <a id="kn-sicherheit-s1"></a>**Frage oder Auftrag kommt herein**: Im Heimnetz direkt, von unterwegs nur über den Reverse-Proxy mit TLS. Jedes Gerät hat seinen eigenen Schlüssel oder meldet sich wie im Browser an. Jeder Weg hinein (Panel, Geräteschlüssel, Kalender- und Kontakte-Apps, MCP, andere Sparks, Wyoming, Telefon, Telegram, die Anker und das Web-Terminal des Fernzugangs, die Seite der Spontanhilfe, der Abhol-Link von „Alle meine Daten herunterladen“) steht mit seinem Schutz in der Sicherheits-Doku unter „Wege hinein“.
 2. <a id="kn-sicherheit-s2"></a>**Lässt der Notaus es zu?**: Der Notaus hat drei Stufen von außen nach innen: Stufe 1 sperrt das Internet, Stufe 2 jede Handlung, Stufe 3 jedes Gespräch. Kein Modell, keine Mail und kein Dokument kann ihn auslösen oder aufheben.
-3. <a id="kn-sicherheit-s3"></a>**Angemeldet und im Rahmen?**: Größenlimit und Herkunftsprüfung (CSRF) vor dem Lesen, dann Rate-Limit pro Adresse und eine Höchstzahl gleichzeitiger Anfragen für Modell, Erkennung und Ausgabe (guard.Slot). Geheimnisse, Rollen und Sicherungen brauchen dazu einen frischen Code oder Passkey (core.confirm_code, 10 Minuten). Ein ganzer Bereich lässt sich mit einem zweiten Schritt für eine Weile entsperren (Regel „Bereich entsperren“, zuerst der Fernzugang: 5 bis 120 Minuten, fernzugang.entsperrt_bis): nur diese Anmeldung, nur vom selben Ort, gesperrt bei Sperren, Abmelden und Notaus; Koppeln und Entfernen fragen trotzdem jedes Mal. Zu den Modellen auf tars geht es nur durch das TLS-Tor; Befehle dort prüft der Wärter (tarswart.check: Unterschrift, Zeit, Einmal-Nummer, einer von 16 festen Befehlen).
+3. <a id="kn-sicherheit-s3"></a>**Angemeldet und im Rahmen?**: Größenlimit und Herkunftsprüfung (CSRF) vor dem Lesen, dann Rate-Limit pro Adresse und eine Höchstzahl gleichzeitiger Anfragen für Modell, Erkennung und Ausgabe (guard.Slot). Geheimnisse, Rollen und Sicherungen brauchen dazu einen frischen Code oder Passkey (core.confirm_code, 10 Minuten). Ein ganzer Bereich lässt sich mit einem zweiten Schritt für eine Weile entsperren (Regel „Bereich entsperren“, zuerst der Fernzugang: 5 bis 120 Minuten, fernzugang.entsperrt_bis): nur diese Anmeldung, nur vom selben Ort, gesperrt bei Sperren, Abmelden und Notaus; Koppeln und Entfernen fragen trotzdem jedes Mal. Zu den Modellen auf tars geht es nur durch das TLS-Tor; Befehle dort prüft der Wärter (tarswart.check: Unterschrift, Zeit, Einmal-Nummer, einer von 18 festen Befehlen).
 4. <a id="kn-sicherheit-s4"></a>**Wer fragt, sicher erkannt?**: Das Profil kommt aus Cookie, App-Schlüssel oder verknüpftem Konto. Am geteilten Lautsprecher reicht der Geräteschlüssel nicht: chat_turn.shared_stranger gibt Persönliches nur frei, wenn die Inhaberstimme in derselben Aufnahme sicher erkannt ist.
 5. <a id="kn-sicherheit-s5"></a>**Freigabe und Sperre**: Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten.
 6. <a id="kn-sicherheit-s6"></a>**Fremdes bleibt Daten**: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell (textnorm.defuse: Blockende und die eigenen Marken des Modells wie „<|im_start|>“ oder „<tool_call>“ werden entschärft; das LLM-Tor tut das für jede Nachricht noch einmal, llm_tor.entschaerft). Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt; nach einer Mail sind es 19, dazu gehört alles, was ins Internet fragt (Websuche, Wikipedia, Wetter, Fahrplan), damit kein Suchwort Mail-Inhalt hinausträgt. Ob das hält, prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed); ein Tunnel des Fernzugangs nur zu Zielen nach fernweb.ziel_ok: dort 127.0.0.1 und die eigenen Adressen des Systems, die sein Anker selbst meldet. Eine Mail mit HTML zeigt die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick über den Wächter, ein Link erst nach der Frage mit seiner echten Adresse.
@@ -1700,6 +1706,7 @@ Gilt bei: [Schritt 4](#kn-sicherheit-s4), [Schritt 5](#kn-sicherheit-s5)
 - C, der Spark liest Fremdes: nur über den Wächter, kein Heimnetz ohne Erlaubnis, geprüfte Adresse festgehalten; was zurückkommt, ist Daten.
 - D, Panel zu den Modellen: TLS 1.3 mit beim Koppeln angeheftetem Zertifikat; die Modelle hören nur auf 127.0.0.1.
 - E, Handgriffe auf tars: nur feste Befehle des Wärters, unterschrieben, mit Zeit und Einmal-Nummer.
+- F, zu root: der Panel-Code läuft nie als root. System-Updates schreiben nur einen Wunsch aus einem Wort (3 feste Wörter, höchstens 10 Minuten alt) und starten die feste Einheit speech-spark-systemupdate; sie liest den Wunsch als Dienstnutzer und spielt nur apt upgrade aus den festen Quellen ein, nie ein Entfernen, nie Firmware, einen Neustart nur auf das Wort des Admins.
 
 #### Obergrenzen ohne Datenverlust
 
@@ -1722,7 +1729,7 @@ Gilt bei: [Schritt 4](#kn-sicherheit-s4), [Schritt 5](#kn-sicherheit-s5)
 - **13** Werkzeuge nach Text von außen gesperrt ([Schritt 6](#kn-sicherheit-s6))
 - **19** Werkzeuge nach einer Mail gesperrt ([Schritt 6](#kn-sicherheit-s6))
 - **10 min** zählt ein richtiger Code für „Bestätigen“ ([Schritt 3](#kn-sicherheit-s3))
-- **16** feste Befehle des Wärters auf tars ([Schritt 3](#kn-sicherheit-s3))
+- **18** feste Befehle des Wärters auf tars ([Schritt 3](#kn-sicherheit-s3))
 - **3** Notaus-Stufen, die letzte hält jedes Gespräch an ([Schritt 2](#kn-sicherheit-s2))
 
 #### Im Code
@@ -1732,6 +1739,7 @@ Gilt bei: [Schritt 4](#kn-sicherheit-s4), [Schritt 5](#kn-sicherheit-s5)
 - `app/panel/guard.py` `Slot`: Höchstzahl gleichzeitiger Anfragen ([Schritt 3](#kn-sicherheit-s3))
 - `app/panel/core.py` `confirm_code`: frischer Code oder Passkey für heikle Wege ([Schritt 3](#kn-sicherheit-s3), [Schritt 8](#kn-sicherheit-s8))
 - `app/tarswart.py` `check`: prüft jeden Befehl an den Wärter ([Schritt 3](#kn-sicherheit-s3))
+- `app/sysupdate.py` `wunsch_nehmen`: der Wunsch an die root-Einheit, als Dienstnutzer noch einmal geprüft ([Schritt 3](#kn-sicherheit-s3))
 - `app/panel/chat_turn.py` `shared_stranger`: fremde Stimme am geteilten Lautsprecher ([Schritt 4](#kn-sicherheit-s4))
 - `app/panel/features.py` `allowed`: Freigabe des Admins, gilt für jedes Profil ([Schritt 5](#kn-sicherheit-s5))
 - `app/panel/mitschreiblink.py` `find`: prüft einen Mitschreib-Link: Hash, Ablauf, Freigabe, Liste ([Schritt 3](#kn-sicherheit-s3), [Schritt 5](#kn-sicherheit-s5))
@@ -1757,7 +1765,7 @@ Gilt bei: [Schritt 4](#kn-sicherheit-s4), [Schritt 5](#kn-sicherheit-s5)
 - `app/panel/gemerkt.py` `take_back`: Rückgängig nur für den eigenen, unveränderten Fakt ([Schritt 8](#kn-sicherheit-s8))
 - `app/panel/wissensdoppelt.py` `aehnlich`: Punkte der Karte von selbst nur nach fester Regel zusammen, nie gegen „Verschieden“ ([Schritt 8](#kn-sicherheit-s8))
 
-Selbsttests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_siegel`, `test_meinedaten`, `test_wissensdoppelt`
+Selbsttests: `test_hardening`, `test_angriffe`, `test_gaeste`, `test_kontext_trennung`, `test_scanner`, `test_stufen`, `test_notaus`, `test_waerter`, `test_protokoll`, `test_wachposten`, `test_markdown`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_siegel`, `test_meinedaten`, `test_wissensdoppelt`, `test_systemupdates`
 
 ### Anmeldung, Profil
 
@@ -2672,12 +2680,12 @@ flowchart TD
   s12 -.->|Weiterleitung| s2
 ```
 
-1. <a id="kn-waechter-s1"></a>**Werkzeug will nach außen**: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 34 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig.
+1. <a id="kn-waechter-s1"></a>**Werkzeug will nach außen**: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 35 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig.
 2. <a id="kn-waechter-s2"></a>**Name einmal auflösen**: resolve() fragt den Namen genau einmal ab. Hat er mehrere Adressen, muss jede erlaubt sein, sonst ist Schluss.
 3. <a id="kn-waechter-s3"></a>**Eigener Dienst?**: Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu). Laufen die Modelle auf einem anderen Rechner (models.host), gelten seine Adressen genauso (model_addresses).
 4. <a id="kn-waechter-s4"></a>**Internet und Notaus an?**: Ist die Adresse öffentlich und der Notaus mindestens auf Stufe 1, geht nichts ins Internet, egal welche Stufe das Werkzeug hat. Das Heimnetz bleibt erreichbar, wie die Stufe es erlaubt.
 5. <a id="kn-waechter-s5"></a>**Öffentliche Adresse?**: Eine öffentliche Adresse ist auf jeder Stufe erlaubt.
-6. <a id="kn-waechter-s6"></a>**Stufe „nur Internet“?**: Was aus Suchergebnissen oder Antworten kommt, darf nie ins Heimnetz (chat, feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, verbund).
+6. <a id="kn-waechter-s6"></a>**Stufe „nur Internet“?**: Was aus Suchergebnissen oder Antworten kommt, darf nie ins Heimnetz (chat, feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, systemupdates, verbund).
 7. <a id="kn-waechter-s7"></a>**Nie erlaubt?**: Link-lokale Adressen (169.254.x, dort antworten Cloud-Metadaten), Multicast, unbestimmte und reservierte Adressen sind auf keiner Stufe erlaubt.
 8. <a id="kn-waechter-s8"></a>**Heimnetz erlaubt?**: Home Assistant und andere Dienste im Heimnetz (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) dürfen immer. Kalender, Kontakte, Mail und MCP (calendars, contacts, fundmail, mail, mcp, meinmcp, tasks) nur, wenn unter Einstellungen → Sicherheit → Heimnetz-Adressen erlauben eingeschaltet ist.
 9. <a id="kn-waechter-s9"></a>**Verbinden mit genau dieser Adresse**: Die Verbindung geht an die geprüfte Adresse, nicht noch einmal an den Namen. Ein zweites Nachschlagen könnte anders antworten (DNS-Rebinding). Das Zertifikat wird trotzdem für den Namen geprüft.
@@ -2693,7 +2701,7 @@ Gilt bei: [Schritt 6](#kn-waechter-s6), [Schritt 8](#kn-waechter-s8)
 
 | Stufe | Wer sie nutzt (aus dem Code) | Internet | Heimnetz |
 |---|---|---|---|
-| nur Internet | chat, feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, verbund | ✓ | ✕ |
+| nur Internet | chat, feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, systemupdates, verbund | ✓ | ✕ |
 | Nutzer | calendars, contacts, fundmail, mail, mcp, meinmcp, tasks | ✓ | nur mit Schalter |
 | Heimnetz | doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite | ✓ | ✓ |
 | je nach Ziel | anrufe, dienstwacht, halive, nas, nasquelle, offline, speicher, telefon, zertpin | wie das Ziel eingestellt ist | – |
@@ -2834,6 +2842,7 @@ Gilt bei: [Schritt 4](#kn-betrieb-s4)
 
 #### Was du siehst
 
+- Zustand → System-Updates: Betriebssystem, OpenCode, Python-Pakete und Firmware beider Rechner; nur Namen, Versionen und Zahlen. Eingespielt wird nur mit frischem Code, nach 120 s ohne Sprache.
 - Zustand → Logs → Anfragen: der Weg jeder Anfrage mit Werkzeugen und Zeiten.
 - Zustand → Logs → Diagnose: Zeilen nach Bereich, Fehler und Warnungen, mit festem Hinweis.
 - Zustand → Live: laufende Anfragen, Wächter-Entscheidungen und Dienste als Bild.
@@ -2841,6 +2850,7 @@ Gilt bei: [Schritt 4](#kn-betrieb-s4)
 
 #### Im Code
 
+- `app/panel/systemupdates.py` `tick`: System-Updates: prüfen, nach der Sprechpause starten, die Nacht ([Schritt 5](#kn-betrieb-s5))
 - `app/panel/tracelog.py` `start`: ein Datensatz, wenn etwas an ist ([Schritt 1](#kn-betrieb-s1))
 - `app/panel/tracelog.py` `safe`: nur Zahlen und kurze feste Wörter ([Schritt 3](#kn-betrieb-s3))
 - `app/panel/tracelog.py` `Rec`: Schritte, Marken, Zustand ([Schritt 3](#kn-betrieb-s3), [Schritt 6](#kn-betrieb-s6))
@@ -3540,7 +3550,7 @@ flowchart TD
 
 - **600 s** lebt ein Kopplungscode ([Schritt 2](#kn-teilen-s2))
 - **60 s** darf die Zeit eines Befehls daneben liegen ([Schritt 7](#kn-teilen-s7))
-- **16** feste Befehle des Wärters ([Schritt 7](#kn-teilen-s7))
+- **18** feste Befehle des Wärters ([Schritt 7](#kn-teilen-s7))
 - **30 s** ohne Antwort bis zum Notbetrieb ([Schritt 10](#kn-teilen-s8))
 - **80 °C** Hinweis, der Panel-Rechner ist warm ([Schritt 8](#kn-teilen-s9))
 - **10 %** Platte frei, darunter ein Hinweis ([Schritt 8](#kn-teilen-s9))
@@ -3558,6 +3568,7 @@ flowchart TD
 - Zustand → Live: Kasten „Modell-Rechner“ mit erreichbar, Dienste, Version und Pause.
 - Zustand → Überblick → Rechner: beide Rechner nebeneinander mit Kurven der letzten 20 Minuten und „Wer rechnet gerade“ (Dienste und Teile des Panels mit ihrem Anteil an der CPU, Streifen der letzten 20 Minuten); Live zeigt dazu den Kasten „Panel-Rechner“, beide Kästen mit „am meisten …“.
 - Der Bildschirm am Panel-Rechner selbst; Zustand → Live zeigt im Kasten „Steuerzentrale“, ob er gerade zeigt.
+- Zustand → System-Updates: je Rechner eine Spalte; für tars fragt das Panel über die festen Befehle systemupdate und systemupdate_tun des Wärters.
 
 #### Im Code
 
@@ -3569,6 +3580,7 @@ flowchart TD
 - `app/panel/steuer.py` `call`: unterschriebener Befehl ([Schritt 6](#kn-teilen-s6))
 - `app/tarswart.py` `check`: Unterschrift, Zeit, Nummer, Befehl ([Schritt 7](#kn-teilen-s7))
 - `app/tarswart.py` `COMMANDS`: die festen Befehle ([Schritt 7](#kn-teilen-s7))
+- `app/tarswart.py` `systemupdate_tun`: System-Updates auf tars: ein Wort als Wunsch, die feste root-Einheit ([Schritt 7](#kn-teilen-s7))
 - `app/panel/steuer.py` `weg`: Notbetrieb erkennen ([Schritt 10](#kn-teilen-s8))
 - `app/rechner.py` `messen`: Werte eines Rechners ([Schritt 8](#kn-teilen-s9))
 - `app/panel/rechnerblick.py` `warnungen`: Hinweise nach festen Regeln ([Schritt 8](#kn-teilen-s9))
@@ -3580,7 +3592,7 @@ flowchart TD
 - `app/panel/schirm.py` `an_jetzt`: dunkel nach den Zeiten ([Schritt 9](#kn-teilen-s10))
 - `app/steuerzentrale.py` `schrift`: Schrift nach Auflösung ([Schritt 9](#kn-teilen-s10))
 
-Selbsttests: `test_teilen`, `test_umziehen`, `test_rechner`, `test_steuerzentrale`
+Selbsttests: `test_teilen`, `test_umziehen`, `test_rechner`, `test_steuerzentrale`, `test_systemupdates`
 
 ### state/
 
@@ -3628,7 +3640,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 48), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 112). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 48), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 115). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -3639,7 +3651,7 @@ flowchart TD
 #### Zahlen (aus dem Code)
 
 - **48** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
-- **112** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
+- **115** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
 - **8 MB** größte Datei beim Wiederherstellen ([Schritt 9](#kn-state-s9))
 - **12** Zeichen hat das Umzugs-Passwort mindestens ([Schritt 8](#kn-state-s8))
 

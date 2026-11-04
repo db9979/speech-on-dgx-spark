@@ -60,6 +60,8 @@ function zustand(s){if(s)ZLAST=s;s=ZLAST;if(!s)return;
   for(const n of unk)if(!aus.includes(n))need.push({lvl:'warn',text:t(`${n} antwortet nicht.`,`${n} does not answer.`),go:'svc',btn:t('Ansehen','View')});
   // red points of "Sicherheit auf einen Blick" (secglance.js): advice, never "something is not running" (code check 19.10. D2)
   if(typeof SECNEED!=='undefined')need.push(...SECNEED.map(x=>({...x,lvl:'warn'})));
+  // security updates and a restart only the admin may start (systemupdates.js)
+  if(window.SUNEED)need.push(...SUNEED);
   const dirty=[...document.querySelectorAll('.pane.dirty')].map(p=>{const b=document.querySelector(`#cfgnav button[data-p="${p.id.slice(5)}"]`);return b?b.firstChild.nodeValue.trim():p.id});
   if(dirty.length)need.push({lvl:'warn',text:t(`Nicht gespeichert: ${dirty.join(', ')}.`,`Not saved: ${dirty.join(', ')}.`),go:'cfg',btn:t('Öffnen','Open')});
   const al=(s.alerts||[]).filter(x=>x.level!=='info'),lvl=bad.length||need.some(x=>x.lvl==='bad')||al.some(x=>x.level==='bad')?'bad':need.length||unk.length||low||al.length?'warn':'ok';
@@ -74,7 +76,7 @@ function zustand(s){if(s)ZLAST=s;s=ZLAST;if(!s)return;
   $('zneed').hidden=!need.length;const L=$('zlist');L.textContent='';
   for(const x of need){const r=document.createElement('div');r.className='zrow';const sp=document.createElement('span');sp.className='pill '+x.lvl;sp.textContent=x.lvl==='bad'?t('Fehler','Error'):t('Offen','Open');
     const tx=document.createElement('span');tx.textContent=x.text;const b=document.createElement('button');b.type='button';b.className='b';b.textContent=x.btn;
-    b.onclick=()=>{if(x.go.startsWith('sec:'))secGo(x.go.slice(4));else if(x.go==='svc')zTech('svc');else if(x.go==='cfg'){const d=document.querySelector('.pane.dirty');goSec(d&&d.id==='pane-feat'?'feat':'cfg');if(d){const nb=document.querySelector(`#cfgnav button[data-p="${d.id.slice(5)}"]`);if(nb)nb.click()}}else goSec(x.go)};
+    b.onclick=()=>{if(x.go.includes('→'))wayGo(x.go);else if(x.go.startsWith('sec:'))secGo(x.go.slice(4));else if(x.go==='svc')zTech('svc');else if(x.go==='cfg'){const d=document.querySelector('.pane.dirty');goSec(d&&d.id==='pane-feat'?'feat':'cfg');if(d){const nb=document.querySelector(`#cfgnav button[data-p="${d.id.slice(5)}"]`);if(nb)nb.click()}}else goSec(x.go)};
     r.append(sp,tx,b);L.appendChild(r)}}
 window.zustand=zustand;
 // Zustand in plain words (plan „Bedienung gesamt“ C3, V01.0.286; tiles since the plan „Zustand-Übersicht“ 1): under
@@ -86,7 +88,7 @@ window.zustand=zustand;
 const zAgo=s=>{if(!s)return t('noch nie','never');const m=Math.round((Date.now()/1e3-s)/60);return m<1?t('gerade eben','just now'):m<90?(L==='en'?m+' min ago':'vor '+m+' Min.'):m<2880?(L==='en'?Math.round(m/60)+' h ago':'vor '+Math.round(m/60)+' Std.'):(L==='en'?Math.round(m/1440)+' days ago':'vor '+Math.round(m/1440)+' Tagen')};
 function zTech(id){const d=$('ztech');d.open=true;const el=id&&$(id);(el?el.closest('.card'):d).scrollIntoView({behavior:'smooth',block:'start'})}
 // line icons (24 grid) of the tiles and of the cards under Zustand; a card without one shows none
-const ZCARD_ICO={zneed:'alert',zroom:'ear',zbg:'user',zsvc:'globe',zoffline:'globe',zwart:'pause',znas:'nas',znaszustand:'nas',znasquelle:'folder',zverbrauch:'bars',zstore:'copy',zdev:'dev',zdocs:'doc'};
+const ZCARD_ICO={zneed:'alert',zroom:'ear',zbg:'user',zsvc:'globe',zoffline:'globe',zwart:'pause',znas:'nas',znaszustand:'nas',znasquelle:'folder',zverbrauch:'bars',zstore:'copy',zdev:'dev',zsysup:'shield',zdocs:'doc'};
 function zIco(name,cls){return icNode(name,cls||'zico')}   // icons.js
 for(const [id,ic] of Object.entries(ZCARD_ICO)){const h=document.querySelector('#'+id+'>h2');if(h){const b=document.createElement('span');b.className='zbub';b.appendChild(zIco(ic));h.prepend(b)}}
 $('zgo').onclick=()=>sFlash($('zneed'));

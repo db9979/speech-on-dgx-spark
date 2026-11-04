@@ -5119,6 +5119,41 @@
 "titel": "Bruch im Änderungsprotokoll als geprüft bestätigen",
 "text": "Admin mit zweitem Schritt: unter Zustand → Logs → Änderungen „Protokoll prüfen“. Meldet die Prüfung einen Bruch (etwa nach dem Stromausfall „Kette bricht in audit.log.1, Zeile 1907 … unlesbare Zeile“), steht daneben die Auswahl Stromausfall / Karte voll / Unbekannt und „Bruch als geprüft bestätigen“. Stromausfall wählen, Knopf: der Code wird jedes Mal gefragt. Danach: „Kette sonst heil … Bruch in audit.log.1, Zeile 1907 (…) bestätigt am <heute> (Stromausfall)“, der Hinweis oben auf den Admin-Seiten ist weg, unter Änderungen steht „Bruch im Änderungsprotokoll als geprüft bestätigt“. Zustand → Logs (System und Sicherheit): „audit: ack ok | unlesbar | stromausfall | …“. Ein Verwalter sieht den Knopf nicht und kommt nicht durch.",
 "thread": "Fix Protokoll leer beim Panel-Passwort"
+},
+{
+"id": "P756",
+"v": 1322,
+"titel": "System-Updates: Karte, Seite und Prüfen",
+"text": "Vorher auf Pi und tars einmal sudo speech-spark update. A: Funktionen → System-Updates an. Zustand → Überblick, unter Bereiche die Karte „System-Updates“ neben Geräte-Updates: je Rechner eine Zeile (Pi (Panel), tars (Modelle)). „Jetzt prüfen“: nach etwa einer Minute stehen Anzahl, davon Sicherheit, „zuletzt geprüft“. Eine Zeile antippen: die Seite Zustand → System-Updates mit „‹ Überblick“, je Rechner eine Spalte mit 1 Betriebssystem, 2 OpenCode und Python-Pakete, 3 Firmware und Treiber, 4 Zeitpunkt; „Pakete (n) · alt → neu“ zeigt Namen und Versionen. Gibt es Sicherheitsupdates, steht oben unter „Braucht dich“ eine Zeile, die hierher springt. Zustand → Live, Kasten System-Updates: nur Zahlen, nie ein Paketname.",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P757",
+"v": 1322,
+"titel": "System-Updates: Einspielen nur in der Sprechpause",
+"text": "Am Lautsprecher oder im Chat etwas fragen und sofort beim Pi „Jetzt einspielen“ → Einspielen (frischer Code): „Wartet, Sprache läuft“ mit „Nicht mehr warten“. Zwei Minuten nichts fragen: es beginnt, „läuft · n von m“ mit Balken, fertige Pakete mit Haken. Am Ende „Zuletzt eingespielt … ohne Fehler“; Docker-Pakete und rpi-eeprom bleiben angeboten (andere Quelle, von Hand). Zustand → Logs (System): „systemupdate: einspielen start …“, „systemupdate: eingespielt n von m“, nie ein Fehlertext von apt.",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P758",
+"v": 1322,
+"titel": "System-Updates: Neustart nur auf dein Wort",
+"text": "Nach einem Lauf mit neuem Kernel steht „Neustart nötig“ mit „Jetzt neu starten“ und „Heute Nacht“; ohne Klick startet nichts neu, auch nicht nach 05 Uhr. „Heute Nacht“ (Code): „heute Nacht, 03–05 Uhr“ mit „Doch nicht“; am nächsten Morgen ist der Pi neu gestartet und der Hinweis weg. Bei tars dasselbe; die Modelle sind dabei einige Minuten weg.",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P759",
+"v": 1322,
+"titel": "System-Updates: OpenCode, OSV und Prüfbitte",
+"text": "Unter 2 steht OpenCode mit der gepinnten Version und, wenn es eine neuere gibt, „neu: …“; Python-Pakete mit „keine Warnung (OSV)“ oder den Paketen mit Kennung (GHSA-…). Notaus Internet: „nicht geprüft, kein Internet“. Bei einer Warnung „Von Claude prüfen lassen“: die Prüfbitte mit festem Text erscheint, „Kopieren“ legt ihn in die Zwischenablage, eingespielt wird nichts. „Löschen“ nimmt sie weg. Unter 3 „Von Hand einspielen“ öffnet Funktionen → Anleitungen → Firmware von Hand.",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P760",
+"v": 1322,
+"titel": "System-Updates: nachts",
+"text": "Beim Pi „Nachts einspielen (03–05 Uhr)“ an (fragt nach dem Code). Am nächsten Morgen: Zustand → Logs (System) zeigt nach dem Spark-Update der Nacht „systemupdate: einspielen panel gestartet“ und keinen Neustart; die Seite zeigt „Zuletzt eingespielt …“, ein nötiger Neustart wartet auf dich. Firmware (EEPROM) bleibt angeboten.",
+"thread": "Opencode mit internem LLM auf dem Pi"
 }
 ]
 }

@@ -1858,6 +1858,12 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **Gehäuse** (Funktionen → Zugang → „Gehäuse“): Steckt der Panel-Rechner in einem SunFounder Pironman 5, steuert der Spark dessen Teile selbst, ohne SunFounders Software: Das kleine Display zeigt dem Admin abwechselnd Zustand und Zahlen (Spark, Dienste und Wartung, Pi, DGX weg oder in …
 
+- **System-Updates** (Funktionen → Zugang → „System-Updates“): Eine Karte unter Zustand → Überblick und die Seite Zustand → System-Updates zeigen für jeden Rechner (Pi mit dem Panel, bei Spark teilen auch tars mit den Modellen): wie viele Betriebssystem-Updates warten, wie viele davon für die Sicher …
+
+- **System-Updates nachts auf dem Panel-Rechner** (Funktionen → Zugang → „System-Updates nachts auf dem Panel-Rechner“; baut auf „System-Updates“): Spielt die Betriebssystem-Updates des Pi von selbst zwischen 03 und 05 Uhr ein, nach dem eigenen Nacht-Update des Spark und nie zur selben Zeit.
+
+- **System-Updates nachts auf dem Modell-Rechner** (Funktionen → Zugang → „System-Updates nachts auf dem Modell-Rechner“; baut auf „System-Updates“): Bei Spark teilen: spielt die Betriebssystem-Updates von tars von selbst zwischen 03 und 05 Uhr ein, über den festen Befehl des Wärters.
+
 - **Steuerzentrale am Bildschirm** (Funktionen → Zugang → „Steuerzentrale am Bildschirm“): Ein Bildschirm am HDMI-Ausgang des Panel-Rechners zeigt die Steuerzentrale: oben Zustand und Tageszahlen, in der Mitte, welche Anfrage gerade durch welche Stufe läuft und auf welchem Rechner (bei Spark teilen tars und Pi mit CPU, GPU, Sp …
 
 - **Modelle wechseln** (Funktionen → Zugang → „Modelle wechseln“): Unter Zustand → Modelle wechselt ein Admin das Modell einer Art: Sprachmodell, Bildverständnis, Spracherkennung, Sprachausgabe oder Bilder malen.

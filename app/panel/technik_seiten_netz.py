@@ -294,10 +294,10 @@ SEITEN = {
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
     },
     "teilen": {
-        "stand": "84addc44c5",
+        "stand": "c930afbbe9",
         "bezug": {
             "teilen.CODE_SECS": ["s2"], "teilen.schluessel": ["s3"], "teilen.regeln": ["s4"], "tlstor.server_context": ["s5"],
-            "tlstor.allowed": ["s5"], "steuer.call": ["s6"], "tarswart.check": ["s7"], "tarswart.COMMANDS": ["s7"],
+            "tlstor.allowed": ["s5"], "steuer.call": ["s6"], "tarswart.check": ["s7"], "tarswart.COMMANDS": ["s7"], "tarswart.systemupdate_tun": ["s7"],
             "steuer.weg": ["s8"], "steuer.GONE": ["s8"], "tarswart.WINDOW": ["s7"],
             "rechner.messen": ["s9"], "rechnerblick.warnungen": ["s9"], "rechnerblick.TEMP_WARN": ["s9"],
             "rechnerblick.PLATTE_MIN_PCT": ["s9"], "rechnerblick.RAM_MIN_GIB": ["s9"],
@@ -448,6 +448,10 @@ SEITEN = {
              "Live adds the box „Panel computer“, both boxes with „am meisten …“."),
             ("Der Bildschirm am Panel-Rechner selbst; Zustand → Live zeigt im Kasten „Steuerzentrale“, ob er gerade zeigt.",
              "The screen on the panel computer itself; Status → Live shows in the box „Control centre“ whether it shows right now."),
+            ("Zustand → System-Updates: je Rechner eine Spalte; für tars fragt das Panel über die festen Befehle "
+             "systemupdate und systemupdate_tun des Wärters.",
+             "Status → System updates: one column per computer; for tars the panel asks through the Wärter's fixed "
+             "commands systemupdate and systemupdate_tun."),
         ],
         "code": [
             ("teilen.CODE_SECS", ("Lebensdauer des Codes", "life of the code")),
@@ -458,6 +462,7 @@ SEITEN = {
             ("steuer.call", ("unterschriebener Befehl", "signed command")),
             ("tarswart.check", ("Unterschrift, Zeit, Nummer, Befehl", "signature, time, number, command")),
             ("tarswart.COMMANDS", ("die festen Befehle", "the fixed commands")),
+            ("tarswart.systemupdate_tun", ("System-Updates auf tars: ein Wort als Wunsch, die feste root-Einheit", "system updates on tars: one word as the wish, the fixed root unit")),
             ("steuer.weg", ("Notbetrieb erkennen", "spot Notbetrieb")),
             ("rechner.messen", ("Werte eines Rechners", "values of one computer")),
             ("rechnerblick.warnungen", ("Hinweise nach festen Regeln", "notes by fixed rules")),
@@ -469,7 +474,7 @@ SEITEN = {
             ("schirm.an_jetzt", ("dunkel nach den Zeiten", "dark by the times")),
             ("steuerzentrale.schrift", ("Schrift nach Auflösung", "font by resolution")),
         ],
-        "tests": ["test_teilen", "test_umziehen", "test_rechner", "test_steuerzentrale"],
+        "tests": ["test_teilen", "test_umziehen", "test_rechner", "test_steuerzentrale", "test_systemupdates"],
         "heute": [],
     },
     # ------------------------------------------------------------------ Werkstatt

@@ -580,6 +580,9 @@ async def night_once(now=None):
         return "talking"
     if await asyncio.to_thread(update_running):
         return "running"
+    import systemupdates
+    if await asyncio.to_thread(systemupdates.laeuft):   # System-Updates of the operating system: never at the same time
+        return "running"
     if 0 <= now - _night["asked"] < NIGHT_RETRY:
         return "retry"
     _night["asked"] = now

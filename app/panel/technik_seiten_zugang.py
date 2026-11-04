@@ -398,7 +398,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "956e286c9a",
+        "stand": "a167f5176a",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -632,10 +632,10 @@ SEITEN = {
 
     # ------------------------------------------------------------------ sicherheit (the model as a whole)
     "sicherheit": {
-        "stand": "5f22835177",
+        "stand": "9855f10eb6",
         "bezug": {
             "features.blocked": ["s5"], "geteilt.put": ["s5"], "mitschreiblink.find": ["s3", "s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
-            "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"],
+            "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"], "sysupdate.wunsch_nehmen": ["s3"],
             "netguard.allowed": ["s6"], "chat.LOCKED_OUTSIDE": ["s6"], "chat.LOCKED_AFTER_MAIL": ["s6"], "mailansicht.clean": ["s6"],
             "textnorm.defuse": ["s6"], "llm_tor.entschaerft": ["s6"], "regeln": ["s4", "s5"], "profiles._cap": ["s8"],
             "gedaechtnis.offer": ["s8"], "gemerkt.take_back": ["s8"], "profiles.write_own": ["s10"],
@@ -854,6 +854,14 @@ SEITEN = {
                  "only."),
                 ("E, Handgriffe auf tars: nur feste Befehle des Wärters, unterschrieben, mit Zeit und Einmal-Nummer.",
                  "E, handles on tars: only fixed commands of the Wärter, signed, with time and one-time number."),
+                ("F, zu root: der Panel-Code läuft nie als root. System-Updates schreiben nur einen Wunsch aus einem Wort "
+                 "({sysupdate.WUENSCHE|anzahl} feste Wörter, höchstens {sysupdate.WUNSCH_S|min} Minuten alt) und starten "
+                 "die feste Einheit speech-spark-systemupdate; sie liest den Wunsch als Dienstnutzer und spielt nur apt "
+                 "upgrade aus den festen Quellen ein, nie ein Entfernen, nie Firmware, einen Neustart nur auf das Wort des Admins.",
+                 "F, to root: the panel's code never runs as root. System updates only write a wish of one word "
+                 "({sysupdate.WUENSCHE|anzahl} fixed words, at most {sysupdate.WUNSCH_S|min} minutes old) and start the "
+                 "fixed unit speech-spark-systemupdate; it reads the wish as the service user and installs only apt upgrade "
+                 "from the fixed sources, never a removal, never firmware, a restart only on the admin's word."),
             ]),
             (("Obergrenzen ohne Datenverlust", "Caps without data loss"), [
                 ("Eine Obergrenze nimmt nie, was die Person gesagt oder bestätigt hat: im Gedächtnis machen über "
@@ -913,6 +921,7 @@ SEITEN = {
             ("guard.Slot", ("Höchstzahl gleichzeitiger Anfragen", "cap on parallel requests")),
             ("core.confirm_code", ("frischer Code oder Passkey für heikle Wege", "fresh code or passkey for sensitive ways")),
             ("tarswart.check", ("prüft jeden Befehl an den Wärter", "checks every command to the Wärter")),
+            ("sysupdate.wunsch_nehmen", ("der Wunsch an die root-Einheit, als Dienstnutzer noch einmal geprüft", "the wish to the root unit, checked again as the service user")),
             ("chat_turn.shared_stranger", ("fremde Stimme am geteilten Lautsprecher", "stranger's voice at a shared speaker")),
             ("features.allowed", ("Freigabe des Admins, gilt für jedes Profil", "the admin's release, for every profile")),
             ("mitschreiblink.find", ("prüft einen Mitschreib-Link: Hash, Ablauf, Freigabe, Liste", "checks a write link: hash, expiry, release, list")),
@@ -940,7 +949,7 @@ SEITEN = {
         ],
         "tests": ["test_hardening", "test_angriffe", "test_gaeste", "test_kontext_trennung", "test_scanner", "test_stufen", "test_notaus",
                   "test_waerter", "test_protokoll", "test_wachposten", "test_markdown", "test_gedaechtnis_grenze", "test_gemerkt", "test_siegel",
-                  "test_meinedaten", "test_wissensdoppelt"],
+                  "test_meinedaten", "test_wissensdoppelt", "test_systemupdates"],
         "heute": [],
     },
 

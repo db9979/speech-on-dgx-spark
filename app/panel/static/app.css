@@ -3386,3 +3386,45 @@ button.fzfname{background:none;border:0;padding:4px 0;color:var(--acc,inherit);c
 .mpbar i{display:block;height:100%;border-radius:99px;background:var(--acc)}
 .mprow .ld-right{gap:6px;display:flex;align-items:center}.mpchip button{margin-left:4px;padding:0 8px}
 .mpedit label{display:block;margin:6px 0}
+/* System-Updates (systemupdates.js): the card under Zustand → Überblick and its page, one column per computer, from the
+   building blocks .zrow/.pill, .dvtiles, .dvcommits, .wkerkl, .setrow (pictures 2026-11-04 „Ok“) */
+#mon .sysup h2,.sucomp .suhd{display:flex;align-items:center;gap:8px}
+.subadge{margin-left:auto;font:var(--t-cap);font-weight:600;white-space:nowrap}
+.sulist,.sulist2{margin-top:4px}
+.sysup .zrow>span:nth-child(2) small,.sucomp .zrow>span:nth-child(2) small,.suneben .zrow>span:nth-child(2) small{display:block;font:var(--t-sub);color:var(--mut);margin-top:1px;overflow-wrap:anywhere}
+.sucomp .zrow small code,.sun small code{font:var(--t-mono);font-size:11.5px}
+#mon .sysup .zrow>.pill,.sucomp .zrow>.pill,.suneben .zrow>.pill{min-width:118px}
+.sutap .zch{width:var(--ic-sm);height:var(--ic-sm);color:var(--faint);flex:none;margin-left:auto}
+.sunb{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font:var(--t-sub);color:var(--mut)}
+body.sudet #phead,body.sudet #mon>:not(#zsudet){display:none!important}
+.sudetail .suback{display:inline-flex;align-items:center;gap:4px;margin:0 0 6px;padding:6px 10px 6px 4px;border:0;background:none;color:var(--acc);font-weight:600}
+.sudetail .suback .ic{width:var(--ic-sm);height:var(--ic-sm)}
+.sudetail .sutitle{font:var(--t-head);margin:0 0 10px}
+.sutop{margin-bottom:12px}
+.sugrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px;align-items:start;margin-bottom:12px}
+.sucomp{margin:0;min-width:0}.suhd h3{margin:0;font:var(--t-head)}
+.sudev{font:var(--t-sub);margin-top:2px}
+.sucomp h3.sec{display:flex;align-items:center;gap:8px;margin-top:20px;font-size:14px}
+.sucomp h3.sec span{margin-left:auto;font:var(--t-sub)}
+.sunum{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--fill);font:var(--t-cap);font-style:normal;color:var(--mut);flex:none}
+.su2{grid-template-columns:repeat(2,minmax(0,1fr));margin:10px 0 8px}.su2 .dvtile{min-height:0}
+details.supk{margin:4px 0 8px}details.supk>summary{cursor:pointer;font:var(--t-sub);font-weight:600;color:var(--acc);padding:4px 0}
+.supk .dvcommits{margin-top:6px}
+.sun{flex:1;min-width:0}.sun b{display:block;font-weight:600;font-size:12.5px;overflow-wrap:anywhere}.sun small{display:block;font:var(--t-sub);color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dvcommit.sumore{font:var(--t-sub);color:var(--mut)}
+.su-act{margin-top:10px;flex-wrap:wrap}
+.sucomp .fh{font-size:12.5px}
+.sumeta{display:flex;gap:6px 14px;flex-wrap:wrap;font:var(--t-sub);color:var(--mut);margin-top:8px}
+.sucomp .setrow{border-bottom:0;padding-bottom:0}
+.suwait::before{background:var(--warn)}
+.suprog{margin:4px 0 0}.suph{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap}
+.subar{height:6px;border-radius:99px;background:var(--fill);margin:8px 0 10px;overflow:hidden}.subar i{display:block;height:100%;background:var(--acc);border-radius:99px}
+.suok{color:var(--okt);width:16px;flex:none;display:inline-grid;place-items:center}.suok .ic{width:14px;height:14px}
+.suspin{width:12px;height:12px;border-radius:50%;border:2px solid var(--acc-weak);border-top-color:var(--acc);flex:none;margin:0 2px;animation:suspin 1s linear infinite}
+@keyframes suspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.suspin{animation:none}}
+.sunow{background:var(--acc-weak)}
+.suask{margin-top:8px;padding:8px 12px;border:1px solid var(--line);border-radius:var(--r-box)}
+.supb{white-space:pre-wrap;overflow-wrap:anywhere;font:var(--t-mono);font-size:11.5px;background:var(--fill);border-radius:var(--r-box);padding:8px 10px;margin:6px 0}
+.sumsg:empty{display:none}.sumsg{margin-top:8px}
+@media (max-width:760px){#mon .sysup .zrow>.pill,.sucomp .zrow>.pill,.suneben .zrow>.pill{min-width:0}.sucomp .zrow,.sysup .zrow{flex-wrap:wrap;gap:2px 12px}.sysup .zrow .zch{display:none}.sucomp h3.sec span{margin-left:0}}

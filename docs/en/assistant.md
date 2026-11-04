@@ -1858,6 +1858,12 @@ Every function of the Spark with its switch, what it builds on, where you set it
 
 - **Case** (Features → Access → "Case"): If the panel computer sits in a SunFounder Pironman 5, the Spark drives its parts itself, without SunFounder's software: the small display shows the admin status and numbers in turn (Spark, services and maintenance, Pi, DGX gone or pause …
 
+- **System updates** (Features → Access → "System updates"): A card under Status → Summary and the page Status → System updates show for each computer (the Pi with the panel, with Spark split also tars with the models): how many operating system updates wait, how many of them for security, and eac …
+
+- **System updates at night on the panel computer** (Features → Access → "System updates at night on the panel computer"; builds on "System updates"): Installs the Pi's operating system updates by itself between 03 and 05, after the Spark's own night update and never at the same time.
+
+- **System updates at night on the model computer** (Features → Access → "System updates at night on the model computer"; builds on "System updates"): With Spark split: installs tars' operating system updates by itself between 03 and 05, through the Wärter's fixed command.
+
 - **Control centre on the screen** (Features → Access → "Control centre on the screen"): A screen on the panel computer's HDMI output shows the control centre: state and the day's numbers on top, in the middle which request runs through which stage right now and on which computer (with Spark split tars and the Pi with CPU, G …
 
 - **Switch models** (Features → Access → "Switch models"): Under Status → Models an admin switches the model of a kind: language model, image understanding, speech recognition, speech output or painting pictures.
