@@ -614,16 +614,16 @@ else
   # with the rest, pip downgraded packaging to 23.2 and broke wheel (packaging>=24), which showed up
   # as "pip's dependency resolver ... dependency conflicts" in every update log. So packaging stays
   # current and rmscene comes in without its dependencies; the first line repairs venvs from .273-.276.
-  if same_pkgs "$PREFIX/venv-panel" "pkgs-r1 legacy-r1"; then
+  if same_pkgs "$PREFIX/venv-panel" "pkgs-r1 legacy-r2"; then
     echo "   venv-panel: packages unchanged, pip skipped"
   else
   [ -x "$PREFIX/venv-panel/bin/pip" ] && "$PREFIX/venv-panel/bin/pip" install -q --no-deps "packaging>=24"
-  make_venv panel fastapi "uvicorn[standard]" python-multipart "httpx[http2]" psutil num2words numpy pypdf icalendar recurring-ical-events cryptography segno sherpa-onnx huggingface_hub "packaging>=24" "pillow==11.3.0" "onnxruntime==1.22.1" "tokenizers==0.22.1" "pypdfium2==4.30.0"   # pictures (images.py), meaning search (docembed.py), scanned pages (documents.py): fixed versions
+  make_venv panel fastapi "uvicorn[standard]" python-multipart "httpx[http2]" psutil num2words numpy "pypdf>=6.21.4" icalendar recurring-ical-events cryptography segno sherpa-onnx huggingface_hub "certifi>=2026.10.18" "filelock>=4.2.1" "packaging>=24" "pillow==13.0.0" "onnxruntime==1.22.1" "tokenizers==0.22.1" "pypdfium2==4.30.0"   # pictures (images.py), meaning search (docembed.py), scanned pages (documents.py): fixed versions
   "$PREFIX/venv-panel/bin/pip" install -q --no-deps "rmscene==0.8.0"   # reMarkable pages (remarkable.py)
   # passkeys (passkey.py): python-fido2 only needs cryptography (above); alone, so its cap on cryptography moves nothing
   "$PREFIX/venv-panel/bin/pip" install -q --no-deps "fido2==2.2.1"
-  # bump legacy-r1 when a package in this branch changes
-  rm -f -- "$PREFIX/venv-panel/.pkgs"; printf '%s\n' "pkgs-r1 legacy-r1" >"$PREFIX/venv-panel/.pkgs"
+  # bump legacy-r2 when a package in this branch changes
+  rm -f -- "$PREFIX/venv-panel/.pkgs"; printf '%s\n' "pkgs-r1 legacy-r2" >"$PREFIX/venv-panel/.pkgs"
   fi
   # Dokumente erstellen (docmake.py): Word, PowerPoint, Excel and PDF packages for an environment made before the lock
   # file, exactly the versions and hashes of requirements-docmake.lock (the same as in requirements-panel.lock),

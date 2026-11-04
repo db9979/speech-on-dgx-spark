@@ -58,10 +58,10 @@ BASIS = os.environ.get("SPEECH_SPARK_WERKSTATT", "/var/lib/spark-werkstatt")
 ARBEIT = os.path.join(BASIS, "arbeit")        # the sandbox's only writable folder (its home, the copies)
 OPENCODE_DIR = os.path.join(PREFIX, "werkstatt")
 OPENCODE = os.path.join(OPENCODE_DIR, "bin", "opencode")
-OPENCODE_VERSION = "1.18.34"                  # published 2026-09-30; a newer one only by a commit with its hash
+OPENCODE_VERSION = "1.19.5"                   # published 2026-10-28; a newer one only by a commit with its hash
 OPENCODE_SHA512 = {   # npm "integrity" of opencode-linux-<arch>@OPENCODE_VERSION (install.sh checks the download)
-    "arm64": "ZSjqcH0MEbAzLEmkRC9Aop1PbWZxe2NuKONAE/x8MRQdjKdOepX7M50UpjbsNoiLMkP584Z98Mg4a42fJhouvA==",
-    "x64": "RTAMjCve4euxP2QKLuvRmdoW5J5DQK1DiZqt+7slfixyjAEi79QC2Df2oYKogibaAI4IEU8uzenoJeEl3k+UEw==",
+    "arm64": "u2HFRI6v1nNMVKiV34An8XrGBxJeZ+RCg2tYu3SqlGODKqKsr5RoEbaX1tnsfGb+rETh9AJVX9kS8dSZXPufsA==",
+    "x64": "i1qh7VooLGML9xX6ud93y0JA8j/1aPeDYRKjsmYXrJX1TjIWHgBBMkEbEJPZthpWbsJg//XfBgR6Kb7+NPaJiQ==",
 }
 QUELLE = os.path.join(PREFIX, "src")          # the installer's own clone: the copy comes from here, never from GitHub
 VENV_PY = os.path.join(PREFIX, "venv-panel", "bin", "python")

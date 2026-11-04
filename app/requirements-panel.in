@@ -9,7 +9,7 @@ httpx[http2]
 psutil
 num2words
 numpy
-pypdf
+pypdf>=6.21.4
 icalendar
 recurring-ical-events
 cryptography
@@ -17,7 +17,10 @@ segno
 sherpa-onnx
 sherpa-onnx-core  # lock only: the x86 wheels of sherpa-onnx need it, the resolver does not see that
 huggingface_hub
-pillow==11.3.0
+# security floors (Prüfbitte System-Updates 2026-11-04), so an environment made before the lock file gets them too
+certifi>=2026.10.18
+filelock>=4.2.1
+pillow==13.0.0
 onnxruntime==1.22.1
 tokenizers==0.22.1
 pypdfium2==4.30.0
@@ -34,6 +37,6 @@ fpdf2==2.8.9
 paramiko==5.0.0
 smbprotocol==1.17.0
 # Synology finden (nasfinden.py): only listens to mDNS announcements in the home network, never scans
-zeroconf==0.148.0
+zeroconf==0.153.0
 # Zustand der NAS (naszustand.py, Synology S6): SNMPv3 with authPriv only (SHA, AES; AES uses cryptography)
 pysnmp==7.1.30
