@@ -2202,6 +2202,9 @@ def snapshot(view="admin", now=None):
                         # Mails und Anhänge (fundmail.py): read today, left to read, the disk below its reserve (numbers)
                         + (f" · Mails: heute {fnd.get('mail_heute', 0)} eingelesen, {fnd.get('mail_rest', 0)} offen" if fnd.get("mail_on") else "")
                         + (" · Platz knapp" if fnd.get("mail_platz") else "")
+                        # Zu Dokumenten übernehmen (fundmail.zu_dokumenten): attachments taken today, already there, refused
+                        + (f" · Anhänge zu Dokumenten heute {fnd.get('dok', 0)}, {fnd.get('dok_doppelt', 0)} schon da, "
+                           f"{fnd.get('dok_nein', 0)} abgelehnt" if any(fnd.get(k) for k in ("dok", "dok_doppelt", "dok_nein")) else "")
                         # Stufe C (fundquellen.py): entries per further source, events („vom OP“) found today (numbers)
                         + "".join(f" · {lbl} {fnd['quellen'][k]}" for k, lbl in (("termin", "Termine"), ("kontakt", "Kontakte"),
                                   ("chat", "Gespräche"), ("liste", "Listen"), ("erinnerung", "Erinnerungen"),

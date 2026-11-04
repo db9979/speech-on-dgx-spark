@@ -10,9 +10,12 @@
 // Stufe C (fundquellen.py): appointments open the calendar on their day, contacts, lists, conversations, reminders,
 // pictures and songs their own page; a period („letzte Woche“) or an event („vom OP“) in the typed words shows as a
 // line with what the panel made of it (deutung: the appointment's day, or that there is none).
-// Stufe E: a mail's attachments listed in its detail („Zu Dokumenten übernehmen“ follows with wissen.aufnehmen).
+// Stufe E: a mail's attachments listed in its detail. „Zu Dokumenten übernehmen“ at an attachment (its own hit and in
+// its mail's list) only where the Spark says so (dokument: both releases, a kind of the documents, at most 10 MB):
+// the Spark fetches the file from the own mailbox itself (fundmail.zu_dokumenten); the answer says „Übernommen“ or
+// „Schon in Dokumenten“ with the way Ich → Dokumente and „Dokument öffnen“ (docView).
 // „Größe des Index“ under Einstellungen (fund.groesse in the answer of stand): the sum, opened the split.
-const FUND={q:'',quelle:'',kat:'',mappe:'',hits:null,sel:0,item:null,stand:null,msg:'',err:false,seq:0,deut:null};
+const FUND={q:'',quelle:'',kat:'',mappe:'',hits:null,sel:0,item:null,stand:null,msg:'',err:false,seq:0,deut:null,dok:null};
 let FUND_ON=false;
 window.fundStart=who=>{FUND_ON=!!(who&&who.profile&&who.find);window.FUND_ON=FUND_ON;
   document.querySelectorAll('nav button[data-s=finden]').forEach(b=>b.hidden=!FUND_ON)};
@@ -75,7 +78,7 @@ function fundPaint(w){w.classList.toggle('ld-sel',!!FUND.item);
   list.querySelectorAll('[data-fundsel]').forEach(r=>{const go=()=>fundPick(r.dataset.fundsel);r.onclick=go;r.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}}});
   fundDetail(w)}
 async function fundPick(id){const {r,d}=await apiTry('/api/profile/fund/eintrag/'+encodeURIComponent(id));
-  if(!r.ok){FUND.item=null;fundSay(errSay(r.status,d.detail,''),true);fundDraw();return}FUND.item=d;fundDraw()}
+  if(!r.ok){FUND.item=null;fundSay(errSay(r.status,d.detail,''),true);fundDraw();return}FUND.item=d;if(FUND.dok&&FUND.dok.von!==d.id)FUND.dok=null;fundDraw()}
 function fundDetail(w){const det=w.querySelector('.funddet'),it=FUND.item;if(!it){det.hidden=true;det.textContent='';return}
   det.hidden=false;const f=it.felder||{};
   det.innerHTML=`<button class="b ld-back" type="button" data-fundback="1">‹ ${esc(OWN_PAGES.fundbox[1])}</button><h3>${esc(it.titel||'?')}</h3>
@@ -89,9 +92,18 @@ function fundDetail(w){const det=w.querySelector('.funddet'),it=FUND.item;if(!it
       <datalist id="fundkatlist">${((FUND.stand&&FUND.stand.kategorien)||[]).map(k=>`<option value="${esc(k.wert)}">`).join('')}${Object.values((FUND.stand&&FUND.stand.knoten)||{}).flat().map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
       <button type="button" class="b" data-fundadd="1">+ ${esc(t('Hinzufügen','Add'))}</button></div>
     ${(it.minus||[]).length?`<div class="mut small">${esc(t('Entfernt (kommt nicht wieder): ','Removed (does not come back): '))}${it.minus.map(x=>esc(x.wert)).join(', ')}</div>`:''}
-    ${(it.anhaenge||[]).length?`<h4>${esc(t('Anhänge','Attachments'))}</h4><ul class="facts fundanh">${it.anhaenge.map(a=>`<li><span>${esc(a.titel||'?')}</span></li>`).join('')}</ul>`:''}
-    <div class="row">${it.weg?`<button type="button" class="b p" data-fundgo="1">${esc(t('Öffnen','Open'))}</button>`:''}</div>
+    ${(it.anhaenge||[]).length?`<h4>${esc(t('Anhänge','Attachments'))}</h4><ul class="facts fundanh">${it.anhaenge.map(a=>`<li><span>${esc(a.titel||'?')}</span>${a.dokument?`<span>${fundDokKnopf(a.id)}</span>`:''}</li>`).join('')}</ul>`:''}
+    <div class="row">${it.weg?`<button type="button" class="b p" data-fundgo="1">${esc(t('Öffnen','Open'))}</button>`:''}${it.dokument?fundDokKnopf(it.id):''}${FUND.dok?`<button type="button" class="b" data-funddocopen="${esc(FUND.dok.id)}">${esc(t('Dokument öffnen','Open the document'))}</button>`:''}</div>
     <div class="fundmsg ${FUND.err?'err':'mut'}" role="status">${esc(FUND.msg)}</div>`}
+// „Zu Dokumenten übernehmen“ (fundmail.zu_dokumenten): the Spark checks entry, kind and size again and fetches the file
+// itself; the answer names the way (way.js links it) and offers the document
+const fundDokKnopf=id=>`<button type="button" class="b" data-funddok="${esc(String(id))}">${esc(t('Zu Dokumenten übernehmen','Add to documents'))}</button>`;
+async function fundDok(id,b){if(b)b.disabled=true;fundSay(t('Übernehme …','Adding …'));
+  const {r,d}=await apiTry('/api/profile/fund/eintrag/'+encodeURIComponent(id)+'/dokument',{method:'POST'});
+  if(!r.ok){FUND.dok=null;fundDraw();fundSay(errSay(r.status,d.detail,''),true);return}
+  FUND.dok={id:String(d.id),von:FUND.item&&FUND.item.id};fundDraw();
+  fundSay(d.doppelt?t('Schon in Dokumenten: unter Ich → Dokumente.','Already in the documents: under Me → Documents.')
+    :t('Übernommen: unter Ich → Dokumente. Der Text wird im Hintergrund gelesen.','Added: under Me → Documents. Its text is read in the background.'))}
 // Stufe C: each source on its own page (the day of an appointment, the card of a contact, the list, the conversation)
 function fundGo(w,it){
   if(w.art==='termin'&&typeof KAL!=='undefined'){KAL.day=new Date((it.wann||0)*1000);icTabSet('cal','show');goSec('cal')}
@@ -115,8 +127,10 @@ async function fundTags(plus,minus){const it=FUND.item;if(!it)return;
   const {r,d}=await apiTry('/api/profile/fund/eintrag/'+encodeURIComponent(it.id)+'/schlagworte',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({plus,minus})});
   if(!r.ok){fundSay(errSay(r.status,d.detail,''),true);return}await fundPick(it.id);fundSay(t('Gespeichert. Deine Schlagworte gehen vor.','Saved. Your tags come first.'))}
 const fundOwn=()=>{const it=FUND.item;return{plus:(it.tags||[]).filter(x=>x.herkunft==='hand').map(x=>({typ:x.typ,wert:x.wert})),minus:(it.minus||[]).slice()}};
-{document.body.addEventListener('click',async e=>{const b=e.target.closest('#fundview [data-fundback],#fundview [data-fundkeep],#fundview [data-fundrm],#fundview [data-fundadd],#fundview [data-fundgo]');if(!b)return;const D=b.dataset,it=FUND.item;
-  if(D.fundback){FUND.item=null;fundDraw();return}
+{document.body.addEventListener('click',async e=>{const b=e.target.closest('#fundview [data-fundback],#fundview [data-fundkeep],#fundview [data-fundrm],#fundview [data-fundadd],#fundview [data-fundgo],#fundview [data-funddok],#fundview [data-funddocopen]');if(!b)return;const D=b.dataset,it=FUND.item;
+  if(D.fundback){FUND.item=null;FUND.dok=null;fundDraw();return}
+  if(D.funddok)return fundDok(D.funddok,b);
+  if(D.funddocopen){if(typeof openMe==='function')await openMe('docbox');if(typeof docView==='function')docView(D.funddocopen);return}
   if(!it)return;const own=fundOwn();
   if(D.fundgo)return fundOriginal(it);
   if(D.fundkeep!==undefined){const x=it.tags[+D.fundkeep];if(!x)return;own.plus.push({typ:x.typ,wert:x.wert});return fundTags(own.plus,own.minus)}

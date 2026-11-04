@@ -1147,6 +1147,7 @@ def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, v
     if not mine or not _exists(uid):
         _note(0, now=now)
         return []
+    dok = frei is None and _fm().dok_frei(uid)   # attachments into the documents (never in the measurement)
     worte = str(worte or "")[:MAX_WORTE]
     q = terms(worte)
     ranks = {}
@@ -1283,7 +1284,8 @@ def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, v
             item["anhaenge"] = []
             for a in inside.get(r["id"], []):
                 at, _, af = klar(uid, a)
-                item["anhaenge"].append({"id": a["id"], "titel": at, "felder": {k: v for k, v in af.items() if k in ("betrag", "nr", "kb")}})
+                item["anhaenge"].append({"id": a["id"], "titel": at, "felder": {k: v for k, v in af.items() if k in ("betrag", "nr", "kb")},
+                                         "dokument": dok and _fm().dok_passt(at, af.get("kb"))})
             items[r["id"]] = item
     best = sorted(items, key=lambda x: (-ranks[x], -items[x]["wann"], x))[:max(1, min(int(anzahl or MAX_SHOW), MAX_SHOW))]
     out = []
@@ -1296,6 +1298,8 @@ def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, v
                "score": round(ranks[iid], 6)}
         if it["anhaenge"]:
             hit["anhaenge"] = it["anhaenge"]
+        if it["quelle"] == "anhang":   # „Zu Dokumenten übernehmen“ by the fixed rule (fundmail.dok_passt)
+            hit["dokument"] = dok and _fm().dok_passt(it["titel"], f.get("kb"))
         out.append(hit)
     _note((time.time() - t0) * 1000, now=now)
     return out
@@ -1375,8 +1379,15 @@ def eintrag(uid, iid):
     out = {"id": item["id"], "quelle": item["quelle"], "ext": item["ext"], "titel": titel, "wann": item["wann"],
            "auszug": auszug, "felder": f, "tags": tags, "minus": [{"typ": t, "wert": w} for t, w in minus],
            "weg": BY_NAME[item["quelle"]].oeffnen(uid, item["ext"])}
+    # „Zu Dokumenten übernehmen“ (fundmail.zu_dokumenten): shown only where the fixed rule lets it through
+    dok = _fm().dok_frei(uid)
+    if item["quelle"] == "anhang":
+        out["dokument"] = dok and _fm().dok_passt(titel, f.get("kb"))
     if kids:
-        out["anhaenge"] = [{"id": k["id"], "titel": klar(uid, k)[0]} for k in kids]
+        out["anhaenge"] = []
+        for k in kids:
+            kt, _, kf = klar(uid, k)
+            out["anhaenge"].append({"id": k["id"], "titel": kt, "dokument": dok and _fm().dok_passt(kt, kf.get("kb"))})
     return out
 
 
@@ -1562,7 +1573,7 @@ def for_live():
              "bezug": _stat["bezug"] if _stat["day"] == _day(time.time()) else 0,
              "bezug_fehlt": _stat["bezug_fehlt"] if _stat["day"] == _day(time.time()) else 0,
              "mail_on": fm["on"], "mail_rest": rest, "mail_heute": fm["heute"], "mail_fehler": fm["fehler"],
-             "mail_platz": fm["platz"],
+             "mail_platz": fm["platz"], "dok": fm["dok"], "dok_doppelt": fm["dok_doppelt"], "dok_nein": fm["dok_nein"],
              # Stufe D: the model's tags today (entries looked at, tags taken, dropped by the rules, broken answers),
              # entries still waiting, Sofort-Karten today, changes of the Wissenskarte's points followed (numbers only)
              "tag_on": tags_on(), "tag_offen": offen_n,
@@ -2179,6 +2190,26 @@ async def tags_route(iid: str, request: Request, prof=Depends(own_profile)):
         raise HTTPException(404, "no such entry")
     print(f"fund: schlagworte | {sum(1 for t in got if t['herkunft'] == 'hand')} eigene | {profiles.log_name(prof)}", flush=True)
     return {"tags": got}
+
+
+@router.post("/api/profile/fund/eintrag/{iid}/dokument", dependencies=[Depends(assistant)])
+async def doc_route(iid: str, request: Request, prof=Depends(browser_profile)):
+    """„Zu Dokumenten übernehmen“ of an attachment hit (fundmail.zu_dokumenten): only the own profile's own entry, in
+    its own browser login or its iPhone app (never a device key, MCP or a guest), fixed rules for kind and size."""
+    import asyncio
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "funddok", uid)
+    await json_body(request, 256)   # no body needed; a big one is refused before it is read
+    fm = _fm()
+    try:
+        got = await asyncio.wait_for(asyncio.to_thread(fm.zu_dokumenten, uid, _iid(iid)), 120)
+    except fm.DokNein as e:
+        raise HTTPException({"aus": 403, "kein": 404, "weg": 404, "postfach": 502, "voll": 503}.get(e.wort, 400), e.satz) from None
+    except asyncio.TimeoutError:
+        print(f"fund: dokument abgelehnt | zu langsam | {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(504, "Das Postfach hat zu lange gebraucht. Bitte gleich noch einmal.") from None
+    return {"ok": True, "id": got["id"], "name": str(got.get("name") or "")[:200], "doppelt": bool(got["doppelt"])}
 
 
 @router.get("/api/profile/fund/stand", dependencies=[Depends(assistant)])

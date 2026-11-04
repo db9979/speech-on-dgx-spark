@@ -5268,6 +5268,13 @@
 "titel": "Notaus: Link wird nicht geholt",
 "text": "Zustand → Notaus Stufe 1 (Außen zu) auslösen. Ich → Dokumente → Link hinzufügen mit einer öffentlichen Adresse: „der Notaus hält das Internet zu“, es entsteht kein Dokument. „Schick https://… aufs reMarkable“ im Chat: die Antwort sagt, dass der Notaus es sperrt. Notaus aufheben, Link noch einmal: jetzt wird er geholt.",
 "thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P779",
+"v": 1341,
+"titel": "Anhang aus Finden zu Dokumenten übernehmen",
+"text": "Admin: Funktionen → Finden in allen Daten → Mails und Anhänge finden und Eigene Dokumente an. Eine Mail mit PDF-Rechnung an dich schicken, nach ein paar Minuten unter Finden nach einem Wort aus dem PDF suchen, den Anhang-Treffer (oder die Mail, dann unter „Anhänge“) öffnen: „Zu Dokumenten übernehmen“ tippen. Es steht „Übernommen: unter Ich → Dokumente …“, der Weg ist ein Link, „Dokument öffnen“ zeigt das neue Dokument mit Quelle „Mail“. Noch einmal tippen: „Schon in Dokumenten“, kein zweites Dokument. Ein Anhang, den die Dokumente nicht lesen (z. B. .zip oder .exe), hat keinen Knopf. Dasselbe in der iPhone-App unter Meine Sachen → Finden. Zustand → Logs (Wissen oder Finden): „fund: dokument | uebernommen“, dann „fund: dokument | doppelt“, nie ein Dateiname; Live im Kasten Finden: „Anhänge zu Dokumenten heute 1, 1 schon da, 0 abgelehnt“.",
+"thread": "Alles schnell finden über einen Index"
 }
 ]
 }

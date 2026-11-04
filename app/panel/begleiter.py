@@ -2516,6 +2516,8 @@ async def program_offen_act(request: Request):
 # ---- find: Finden im Begleiter (Begleiter Paket B): Strg+Alt+F / ⌃⌥F opens a search field; the hits come from
 # fund.suche (the profile's own index, only the sources it may use) as title, source and date; a click opens the
 # panel (#fund=<id> the entry, #fundq=<words> the page Finden with this search). The words never go into a log line.
+# An attachment's „Zu Dokumenten übernehmen“ stays on the page Finden and in the iPhone app (fundmail.zu_dokumenten):
+# the Begleiter shows no buttons at a hit, its click leads into the panel (#fundq=<words> shows the button there).
 FIND_SHOWN = 8
 
 

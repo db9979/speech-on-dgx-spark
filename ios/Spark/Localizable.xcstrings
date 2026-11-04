@@ -19870,6 +19870,36 @@
           }
         }
       }
+    },
+    "Zu Dokumenten übernehmen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to documents"
+          }
+        }
+      }
+    },
+    "Schon in Dokumenten: im Panel unter Ich → Dokumente.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already in the documents: in the panel under Me → Documents."
+          }
+        }
+      }
+    },
+    "Übernommen: im Panel unter Ich → Dokumente. Der Text wird im Hintergrund gelesen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added: in the panel under Me → Documents. Its text is read in the background."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.341** Find: keep an attachment of a mail as an own document with the button "Add to documents", on the page Find and in the iPhone app; only own attachments up to 10 MB of a kind the documents read, the same attachment only once ("Already in the documents").
 - **V01.1.340** Links as documents: up to 10 addresses at once become own documents (public pages only, also after every redirect), "Fetch again" only on a click with ETag and SHA; one fetch helper for every web page, also with the kill switch for the reMarkable
 - **V01.1.339** Fix spontaneous help: "Load program" on /hilfe said "too many requests" behind the reverse proxy; the program door now counts per help after the right key, guessing still per address. The person's page is new and plain: a header with the state and "End session", the request with its steps, a small preview, messages with the field on top, one column on a phone, and only fixed texts (a 429 counts down); the service watch no longer reports SparkHilfe missing while the Mac release does not exist yet
 - **V01.1.338** Security: updated certifi, filelock, Pillow, pyasn1, pypdf and zeroconf to versions without known holes, OpenCode 1.19.5 with its checked hash
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.334** Fix files as another user on Ubuntu 25.10 and newer (sudo-rs): `sudo spark-anker dateien als root` failed at visudo; anchor 1.9.1 writes the rule there without the line sudo-rs does not know. Update the anchor.
 - **V01.1.333** Fix "Where does this mail belong?": "Other folder …" now shows the folder list at the card and moves the mail right there
 - **V01.1.332** iPhone build without GitHub costs: the iPhone app builds on GitHub only at night after iOS changes or by hand, TestFlight follows that run
-- **V01.1.331** Find everything fast, step 5: under an answer from own data the panel says where it comes from (kinds and numbers only, „From: 2 mails, 1 appointment“), with „Show in Find“ and, for own-data answers without the web, „Also search the web“ (only the question's own words, never after a mail, for guests or other voices), in the panel and every app
 
 
 

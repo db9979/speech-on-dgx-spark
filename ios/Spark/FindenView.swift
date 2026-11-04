@@ -130,10 +130,12 @@ struct FundFeld: Hashable {
     let v: String
 }
 
-/// An attachment of a mail (its own entry in the index).
+/// An attachment of a mail (its own entry in the index); dokument: the Spark offers „Zu Dokumenten übernehmen“ for it
+/// (both releases, a kind of the documents, at most 10 MB: its fixed rule, never decided here).
 struct FundAnhang: Identifiable, Hashable {
     let id: Int
     let titel: String
+    var dokument = false
 }
 
 /// One entry with every field, the origin of each tag, what the owner removed for good and a mail's attachments.
@@ -147,6 +149,8 @@ struct FundEintrag {
     let tags: [FundTag]
     let minus: [FundTag]
     let anhaenge: [FundAnhang]
+    /// an attachment entry the Spark lets into the documents (fundmail.dok_passt)
+    let dokument: Bool
 
     /// the fields in a fixed order (the same as the panel's page)
     static let feldOrder = ["absender", "an", "betrag", "nr", "datum", "name", "kb", "ort", "kalender", "firma", "kanal",
@@ -174,8 +178,9 @@ struct FundEintrag {
         }
         anhaenge = (d["anhaenge"] as? [[String: Any]] ?? []).prefix(20).compactMap { a -> FundAnhang? in
             guard let n = (a["id"] as? NSNumber)?.intValue, n > 0 else { return nil }
-            return FundAnhang(id: n, titel: String((a["titel"] as? String ?? "").prefix(120)))
+            return FundAnhang(id: n, titel: String((a["titel"] as? String ?? "").prefix(120)), dokument: a["dokument"] as? Bool ?? false)
         }
+        dokument = d["dokument"] as? Bool ?? false
     }
 
     static func feldName(_ k: String) -> String {
@@ -344,6 +349,26 @@ final class FindenModel: ObservableObject {
             self.error = error.localizedDescription
             return false
         }
+    }
+
+    /// „Zu Dokumenten übernehmen“ of an attachment: the Spark checks entry, kind and size again and fetches the file from
+    /// the own mailbox itself. true: it was in the documents already (doppelt), false: taken now, nil: refused.
+    func toDocuments(_ id: Int) async -> Bool? {
+        guard let api = SparkAPI.current else { return nil }
+        do {
+            let d = try await api.object("POST", "api/profile/fund/eintrag/" + String(id) + "/dokument", timeout: 150)
+            error = nil
+            return d["doppelt"] as? Bool ?? false
+        } catch {
+            self.error = error.localizedDescription
+            return nil
+        }
+    }
+
+    /// what the app says after it, with the way into the panel as a link (SparkAPI.way)
+    nonisolated static func docNote(_ doppelt: Bool) -> String {
+        doppelt ? String(localized: "Schon in Dokumenten: im Panel unter Ich → Dokumente.")
+            : String(localized: "Übernommen: im Panel unter Ich → Dokumente. Der Text wird im Hintergrund gelesen.")
     }
 
     func rebuild() async -> Int? {
@@ -538,6 +563,7 @@ struct FundDetailView: View {
     @State private var note: String?
     @State private var busy = false
     @State private var original: PanelPlace?
+    @State private var docNote: String?
 
     var body: some View {
         List {
@@ -559,6 +585,7 @@ struct FundDetailView: View {
                     if let url = SparkAPI.fundLink(e.id) {
                         Button { original = PanelPlace(url: url) } label: { Label("Original öffnen", systemImage: "arrow.up.forward.square") }
                     }
+                    if e.dokument { docButton(e.id) }
                 }
                 Section {
                     if e.tags.isEmpty { Text("Noch keine.").foregroundStyle(.secondary) }
@@ -597,7 +624,12 @@ struct FundDetailView: View {
                 }
                 if !e.anhaenge.isEmpty {
                     Section("Anhänge") {
-                        ForEach(e.anhaenge) { a in Text(verbatim: a.titel.isEmpty ? "?" : a.titel) }
+                        ForEach(e.anhaenge) { a in
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(verbatim: a.titel.isEmpty ? "?" : a.titel)
+                                if a.dokument { docButton(a.id).font(.footnote) }
+                            }
+                        }
                     }
                 }
             } else if loaded {
@@ -606,6 +638,7 @@ struct FundDetailView: View {
                 LadeZeilen(rows: 4)
             }
             if let n = note { Text(verbatim: n).foregroundStyle(.secondary) }
+            if let n = docNote { Text(SparkAPI.way(n)).foregroundStyle(.secondary) }
             if let err = model.error { Text(SparkAPI.way(err)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle("Eintrag")
@@ -617,6 +650,19 @@ struct FundDetailView: View {
     private func reload() async {
         e = await model.entry(id)
         loaded = true
+    }
+
+    private func docButton(_ aid: Int) -> some View {
+        Button {
+            Task {
+                busy = true
+                defer { busy = false }
+                docNote = nil
+                if let doppelt = await model.toDocuments(aid) { docNote = FindenModel.docNote(doppelt) }
+            }
+        } label: { Label("Zu Dokumenten übernehmen", systemImage: "doc.badge.plus") }
+        .buttonStyle(.borderless)
+        .disabled(busy)
     }
 
     private func own(_ x: FundEintrag) -> ([[String: String]], [[String: String]]) {

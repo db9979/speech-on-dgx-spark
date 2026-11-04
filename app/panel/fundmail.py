@@ -467,8 +467,114 @@ def weg(uid, ext):
     return out
 
 
+# ---------------------------------------------------------------- „Zu Dokumenten übernehmen“ (plan Stufe B)
+# An attachment hit of the own mailbox becomes a document of the profile on the person's click (page Finden, the
+# iPhone app): no switch of its own, it follows „Mails und Anhänge finden“ and Eigene Dokumente. Fixed rules decide,
+# never the model: only an attachment entry of this profile's index (fund.eintrag: its sources, its own mailboxes),
+# a kind from documents.TYPES, at most ANHANG_MAX bytes (by its size in the index before, by its bytes after the
+# fetch), the same file name in the mailbox as in the index. The panel fetches the bytes itself from the own mailbox
+# (mail.file_of: EXAMINE, BODY.PEEK, netguard.IMAP4_SSL) and hands them to wissen.aufnehmen (source "mail", herkunft
+# "mail:" + the entry's key: mailbox id, the folder's mark, UID, number; never a text of the mail). What came in once
+# comes in once (doppelt). The file stays data: documents reads it like an upload, OCR for a scan included.
+DOK_SAETZE = {
+    "aus": "Zu Dokumenten übernehmen ist für dich gerade nicht frei.",
+    "kein": "Diesen Anhang gibt es in deinem Index nicht.",
+    "art": "Diese Art Datei nehmen die Dokumente nicht auf.",
+    "groesse": f"Der Anhang ist größer als {ANHANG_MAX // (1024 * 1024)} MB.",
+    "weg": "Diesen Anhang gibt es im Postfach nicht mehr.",
+    "postfach": "Das Postfach war nicht erreichbar. Bitte gleich noch einmal.",
+    "voll": "Gerade warten schon viele Dokumente. Bitte später noch einmal.",
+    "dokumente": "Die Dokumente nehmen gerade nichts an.",
+}
+_dok = DayCounter(uebernommen=0, doppelt=0, abgelehnt=0)
+
+
+def dok_frei(uid):
+    """May this profile take attachments into its documents (both releases; never a guest)."""
+    return bool(uid) and features.allowed("fundmail", uid) and features.allowed("documents", uid)
+
+
+def dok_art(name):
+    """A file name whose ending is a kind the documents read (documents.TYPES)."""
+    import documents
+    name = str(name or "")
+    return "." in name and "." + name.rsplit(".", 1)[-1].lower() in documents.TYPES
+
+
+def dok_passt(name, kb):
+    """The fixed rule for the button: a kind the documents read and at most ANHANG_MAX by the size in the index."""
+    return dok_art(name) and isinstance(kb, int) and 0 < kb <= ANHANG_MAX // 1024
+
+
+class DokNein(Exception):
+    """A refusal with its fixed word (DOK_SAETZE) or the documents' own sentence."""
+    def __init__(self, wort, satz=None):
+        super().__init__(wort)
+        self.wort, self.satz = wort, satz or DOK_SAETZE[wort]
+
+
+def zu_dokumenten(uid, iid):
+    """„Zu Dokumenten übernehmen“ of attachment entry iid: wissen.aufnehmen's dict ({"id", "name", "doppelt", ...}).
+    Raises DokNein with the fixed word; every outcome writes one line (fund: dokument …)."""
+    import documents
+    import wissen
+    who = profiles.log_name(profiles.by_id(uid))
+    try:
+        got = _zu_dokumenten(uid, iid, documents, wissen)
+    except DokNein as e:
+        _dok.bump("abgelehnt")
+        fund._live["d"] = None
+        print(f"fund: dokument abgelehnt | {e.wort} | {who}", flush=True)
+        raise
+    _dok.bump("doppelt" if got["doppelt"] else "uebernommen")
+    fund._live["d"] = None
+    print(f"fund: dokument | {'doppelt' if got['doppelt'] else 'uebernommen'} | {who}", flush=True)
+    return got
+
+
+def _zu_dokumenten(uid, iid, documents, wissen):
+    if not dok_frei(uid):   # the release that is missing, with its way (features.missing_text)
+        raise DokNein("aus", features.missing_text("fundmail" if not features.allowed("fundmail", uid) else "documents", uid)
+                      or None)
+    e = fund.eintrag(uid, iid)   # only an entry of this profile's index, its sources and own mailboxes
+    if not e or e["quelle"] != "anhang":
+        raise DokNein("kein")
+    w = e.get("weg") or {}
+    parts = str(e["ext"]).split(":")
+    if w.get("art") != "anhang" or len(parts) != 4:
+        raise DokNein("kein")
+    name = str(e["titel"] or "")
+    if not dok_passt(name, (e.get("felder") or {}).get("kb")):
+        raise DokNein("groesse" if dok_art(name) else "art")
+    herkunft = "mail:" + e["ext"]
+    had = documents.by_origin(uid, "mail", herkunft)
+    if had:   # in the documents already: no mailbox asked again
+        d = next((x for x in documents.list_docs(uid) if x["id"] == had), None)
+        return {"id": had, "name": d["name"] if d else "", "doppelt": True}
+    try:
+        f = mail.file_of(uid, f"{parts[0]}:{parts[2]}", w.get("folder") or "INBOX", int(parts[3]))
+    except ValueError:
+        raise DokNein("weg") from None
+    except (OSError, imaplib.IMAP4.error, EOFError):
+        raise DokNein("postfach") from None
+    if f is None or f[0] != name:   # gone, or another file at this place: never a stranger's file under this name
+        raise DokNein("weg")
+    data = f[1] or b""
+    if not dok_art(f[0]):
+        raise DokNein("art")
+    if not 0 < len(data) <= ANHANG_MAX:
+        raise DokNein("groesse")
+    try:
+        return wissen.aufnehmen(uid, name, data, "mail", herkunft)
+    except documents.QueueFull:
+        raise DokNein("voll") from None
+    except ValueError as x:   # the documents' own sentence (second step first, blocked, space full)
+        raise DokNein("dokumente", str(x)[:200]) from None
+
+
 def for_live():
-    """Live: the switch, mails and attachments read today, rounds that failed, the disk below the reserve (numbers)."""
-    c = _count.counts()
+    """Live: the switch, mails and attachments read today, rounds that failed, the disk below the reserve, attachments
+    taken into the documents today (numbers)."""
+    c, d = _count.counts(), _dok.counts()
     return {"on": features.admin_on("fundmail"), "heute": c["mails"], "anhaenge": c["anhaenge"], "fehler": c["fehler"],
-            "platz": bool(knapp)}
+            "platz": bool(knapp), "dok": d["uebernommen"], "dok_doppelt": d["doppelt"], "dok_nein": d["abgelehnt"]}

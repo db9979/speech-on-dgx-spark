@@ -2494,6 +2494,10 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 
 - doklink.pruefe checks every address by fixed rules before anything is fetched: http or https, a host, no login data, port 80 or 443, no IP or name of the home network; at most 10 at once and 30 waiting per profile. doklink.eins fetches one after another only through netguard.hole_oeffentlich (kill switch first, public also after every redirect, size, time, content type and first bytes) and hands it to wissen.aufnehmen: the same rules as an upload, origin „link:“ with the SHA-256 of the address, the same address only once. „Fetch again“ only on a click (doklink.neu_abrufen): a conditional request with ETag; 304 or the same SHA-256 means unchanged, else documents.renew reads the new bytes into the same document. The page content is outside text.
 
+#### Attachment to documents
+
+- „Add to documents“ at an attachment hit of Find only by fixed rules: fundmail.dok_passt shows the button only for a kind from documents.TYPES up to 10485760 bytes by the size in the index. fundmail.zu_dokumenten takes only an attachment entry of the own index (fund.eintrag: own sources and mailboxes); if it is in the documents already with the origin „mail:“ + the entry key, it answers „Already in the documents“ without asking the mailbox. Otherwise it fetches the bytes itself through mail.file_of (EXAMINE, PEEK), requires the same file name as in the index and at most the same size and hands the file to wissen.aufnehmen (source „mail“): the same rules as an upload. The file is outside text.
+
 #### Map helps the search
 
 - wissenskarte.liste(uid, worte, k) returns piece ids with a rank from 1, read only (SQLite with mode=ro) and only for the own profile. Fixed rules, never the model: the search words hit a point when its name or another name stands whole in the question (compared like wissenskarte.ent_norm) or a word of the name with at least 4 letters that is no number and no legal form (wissenskarte.trifft); at most 20 points. Their neighbours one step away join (the same query as wissenskarte.rund_um), and of all of them the passages in used, read documents. A passage with a named point stands before one with only neighbours, more points before fewer, at most 50.
@@ -2678,6 +2682,9 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/doklink.py` `eins`: fetch one address and take it in as a document ([step 13](#kn-wissen-s13))
 - `app/panel/doklink.py` `neu_abrufen`: fetch again: ETag, SHA-256, else read again ([step 13](#kn-wissen-s13))
 - `app/panel/wissen.py` `aufnehmen`: one way in for things that are no upload ([step 13](#kn-wissen-s13))
+- `app/panel/fundmail.py` `dok_passt`: button at an attachment: kind and size by a fixed rule ([step 13](#kn-wissen-s13))
+- `app/panel/fundmail.py` `dok_art`: a kind from documents.TYPES by the ending ([step 13](#kn-wissen-s13))
+- `app/panel/fundmail.py` `zu_dokumenten`: an attachment from the own mailbox as a document ([step 13](#kn-wissen-s13))
 - `app/panel/documents.py` `renew`: the same document from new bytes ([step 13](#kn-wissen-s13))
 - `app/common.py` `signed_low`: background with the key is no speech ([step 13](#kn-wissen-s13))
 - `app/panel/documents.py` `_similar`: similarity block by block in float32 ([step 6](#kn-wissen-s6))

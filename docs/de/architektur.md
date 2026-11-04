@@ -2494,6 +2494,10 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 
 - doklink.pruefe prüft jede Adresse nach festen Regeln, bevor etwas geholt wird: http oder https, ein Host, keine Zugangsdaten, Port 80 oder 443, keine IP und kein Name des Heimnetzes; höchstens 10 auf einmal und 30 wartend je Profil. doklink.eins holt eine nach der anderen nur über netguard.hole_oeffentlich (Notaus zuerst, öffentlich auch nach jeder Weiterleitung, Größe, Zeit, Inhaltstyp und erste Bytes) und gibt sie an wissen.aufnehmen: dieselben Regeln wie ein Upload, Herkunft „link:“ mit der SHA-256 der Adresse, dieselbe Adresse nur einmal. „Neu abrufen“ nur per Klick (doklink.neu_abrufen): bedingter Abruf mit ETag; 304 oder dieselbe SHA-256 heißt unverändert, sonst liest documents.renew die neuen Bytes in dasselbe Dokument. Der Seiteninhalt ist Text von außen.
 
+#### Anhang zu Dokumenten
+
+- „Zu Dokumenten übernehmen“ an einem Anhang-Treffer von Finden nur nach festen Regeln: fundmail.dok_passt zeigt den Knopf nur für eine Art aus documents.TYPES bis 10485760 Bytes nach der Größe im Index. fundmail.zu_dokumenten nimmt nur einen Anhang-Eintrag des eigenen Index (fund.eintrag: eigene Quellen und Postfächer); liegt er mit Herkunft „mail:“ + Eintragsschlüssel schon in den Dokumenten, antwortet es „Schon in Dokumenten“, ohne das Postfach zu fragen. Sonst holt es die Bytes selbst über mail.file_of (EXAMINE, PEEK), verlangt denselben Dateinamen wie im Index und höchstens dieselbe Größe und gibt die Datei an wissen.aufnehmen (Quelle „mail“): dieselben Regeln wie ein Upload. Die Datei ist Text von außen.
+
 #### Karte hilft der Suche
 
 - wissenskarte.liste(uid, worte, k) gibt Stück-Ids mit Rang ab 1 zurück, nur lesend (SQLite mit mode=ro) und nur für das eigene Profil. Feste Regeln, nie das Modell: Die Suchwörter treffen einen Punkt, wenn sein Name oder ein anderer Name ganz in der Frage steht (verglichen wie wissenskarte.ent_norm) oder ein Wort des Namens ab 4 Buchstaben, das keine Zahl und keine Rechtsform ist (wissenskarte.trifft); höchstens 20 Punkte. Dazu kommen ihre Nachbarn einen Schritt weit (dieselbe Abfrage wie wissenskarte.rund_um) und von allen die Stellen in genutzten, gelesenen Dokumenten. Eine Stelle mit einem genannten Punkt steht vor einer mit nur Nachbarn, mehr Punkte vor weniger, höchstens 50.
@@ -2678,6 +2682,9 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - `app/panel/doklink.py` `eins`: eine Adresse holen und als Dokument aufnehmen ([Schritt 13](#kn-wissen-s13))
 - `app/panel/doklink.py` `neu_abrufen`: Neu abrufen: ETag, SHA-256, sonst neu lesen ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissen.py` `aufnehmen`: ein Weg hinein für Dinge, die kein Upload sind ([Schritt 13](#kn-wissen-s13))
+- `app/panel/fundmail.py` `dok_passt`: Knopf am Anhang: Art und Größe nach fester Regel ([Schritt 13](#kn-wissen-s13))
+- `app/panel/fundmail.py` `dok_art`: Art aus documents.TYPES nach der Endung ([Schritt 13](#kn-wissen-s13))
+- `app/panel/fundmail.py` `zu_dokumenten`: Anhang aus dem eigenen Postfach als Dokument ([Schritt 13](#kn-wissen-s13))
 - `app/panel/documents.py` `renew`: dasselbe Dokument aus neuen Bytes ([Schritt 13](#kn-wissen-s13))
 - `app/common.py` `signed_low`: Hintergrund mit Schlüssel ist keine Sprache ([Schritt 13](#kn-wissen-s13))
 - `app/panel/documents.py` `_similar`: Ähnlichkeit blockweise in float32 ([Schritt 6](#kn-wissen-s6))

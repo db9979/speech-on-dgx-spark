@@ -243,7 +243,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "7ad670fb7e",
+        "stand": "401ba6c890",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -287,6 +287,7 @@ SEITEN = {
             "abschrift.PIECE": ["s13"], "abschrift.OVERLAP": ["s13"], "abschrift.WAIT_MOST": ["s13"],
             "documents.stelle": ["s13"], "common.signed_low": ["s13"],
             "doklink.pruefe": ["s13"], "doklink.eins": ["s13"], "doklink.neu_abrufen": ["s13"], "wissen.aufnehmen": ["s13"],
+            "fundmail.dok_passt": ["s13"], "fundmail.dok_art": ["s13"], "fundmail.zu_dokumenten": ["s13"],
             "documents.renew": ["s13"], "doklink.MAX_AUF_EINMAL": ["s13"], "doklink.MAX_WARTEN": ["s13"],
         },
         "kurz": ("Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente "
@@ -891,6 +892,24 @@ SEITEN = {
                  "same SHA-256 means unchanged, else documents.renew reads the new bytes into the same document. The "
                  "page content is outside text."),
             ]),
+            (("Anhang zu Dokumenten", "Attachment to documents"), [
+                ("„Zu Dokumenten übernehmen“ an einem Anhang-Treffer von Finden nur nach festen Regeln: "
+                 "fundmail.dok_passt zeigt den Knopf nur für eine Art aus documents.TYPES bis "
+                 "{fundmail.ANHANG_MAX} Bytes nach der Größe im Index. fundmail.zu_dokumenten nimmt nur einen "
+                 "Anhang-Eintrag des eigenen Index (fund.eintrag: eigene Quellen und Postfächer); liegt er mit "
+                 "Herkunft „mail:“ + Eintragsschlüssel schon in den Dokumenten, antwortet es „Schon in Dokumenten“, "
+                 "ohne das Postfach zu fragen. Sonst holt es die Bytes selbst über mail.file_of (EXAMINE, PEEK), "
+                 "verlangt denselben Dateinamen wie im Index und höchstens dieselbe Größe und gibt die Datei an "
+                 "wissen.aufnehmen (Quelle „mail“): dieselben Regeln wie ein Upload. Die Datei ist Text von außen.",
+                 "„Add to documents“ at an attachment hit of Find only by fixed rules: fundmail.dok_passt shows the "
+                 "button only for a kind from documents.TYPES up to {fundmail.ANHANG_MAX} bytes by the size in the "
+                 "index. fundmail.zu_dokumenten takes only an attachment entry of the own index (fund.eintrag: own "
+                 "sources and mailboxes); if it is in the documents already with the origin „mail:“ + the entry key, "
+                 "it answers „Already in the documents“ without asking the mailbox. Otherwise it fetches the bytes "
+                 "itself through mail.file_of (EXAMINE, PEEK), requires the same file name as in the index and at "
+                 "most the same size and hands the file to wissen.aufnehmen (source „mail“): the same rules as an "
+                 "upload. The file is outside text."),
+            ]),
             (("Karte hilft der Suche", "Map helps the search"), [
                 ("wissenskarte.liste(uid, worte, k) gibt Stück-Ids mit Rang ab 1 zurück, nur lesend (SQLite mit mode=ro) "
                  "und nur für das eigene Profil. Feste Regeln, nie das Modell: Die Suchwörter treffen einen Punkt, wenn "
@@ -1160,6 +1179,9 @@ SEITEN = {
             ("doklink.eins", ("eine Adresse holen und als Dokument aufnehmen", "fetch one address and take it in as a document")),
             ("doklink.neu_abrufen", ("Neu abrufen: ETag, SHA-256, sonst neu lesen", "fetch again: ETag, SHA-256, else read again")),
             ("wissen.aufnehmen", ("ein Weg hinein für Dinge, die kein Upload sind", "one way in for things that are no upload")),
+            ("fundmail.dok_passt", ("Knopf am Anhang: Art und Größe nach fester Regel", "button at an attachment: kind and size by a fixed rule")),
+            ("fundmail.dok_art", ("Art aus documents.TYPES nach der Endung", "a kind from documents.TYPES by the ending")),
+            ("fundmail.zu_dokumenten", ("Anhang aus dem eigenen Postfach als Dokument", "an attachment from the own mailbox as a document")),
             ("documents.renew", ("dasselbe Dokument aus neuen Bytes", "the same document from new bytes")),
             ("common.signed_low", ("Hintergrund mit Schlüssel ist keine Sprache", "background with the key is no speech")),
             ("documents._similar", ("Ähnlichkeit blockweise in float32", "similarity block by block in float32")),

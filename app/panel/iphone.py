@@ -146,7 +146,9 @@ THINGS = {
     # Finden (fund.py): search, one entry, own tags, the state, build anew and delete the index (with or without the
     # own tags); every path checks the release of Finden again
     "fund": ((("POST",), r"/api/profile/fund/(?:suche|neu)"), (("GET",), r"/api/profile/fund/(?:stand|eintrag/[0-9]{1,12})"),
-             (("PUT",), r"/api/profile/fund/eintrag/[0-9]{1,12}/schlagworte"), (("DELETE",), r"/api/profile/fund")),
+             (("PUT",), r"/api/profile/fund/eintrag/[0-9]{1,12}/schlagworte"), (("DELETE",), r"/api/profile/fund"),
+             # „Zu Dokumenten übernehmen“ of an attachment (fundmail.zu_dokumenten): checks both releases again
+             (("POST",), r"/api/profile/fund/eintrag/[0-9]{1,12}/dokument")),
     # Mappen (mappen.py): the list, one Mappe, new, rename, delete (only the assignment), entries in and out with their
     # level, a note; every path checks the release of Mappen again (deleting also while blocked: own data)
     "mappen": ((("GET", "POST"), r"/api/profile/mappen"), (("GET", "PUT", "DELETE"), r"/api/profile/mappen/[0-9a-f]{12}"),

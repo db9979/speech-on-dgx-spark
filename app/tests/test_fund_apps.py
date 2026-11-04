@@ -95,20 +95,24 @@ class Anhaenge(Base):
         self.assertEqual([a["titel"] for a in it["anhaenge"]][:1], ["Beleg-Quokka.pdf"])
         self.assertIn(aid, [a["id"] for a in it["anhaenge"]])
         self.assertLessEqual(len(it["anhaenge"]), fund.ANHANG_MOST)
-        self.assertTrue(all(set(a) == {"id", "titel"} for a in it["anhaenge"]))
+        # names, and whether „Zu Dokumenten übernehmen“ is offered (fundmail.dok_passt; test_fund_dokument)
+        self.assertTrue(all(set(a) == {"id", "titel", "dokument"} for a in it["anhaenge"]))
         self.assertNotIn("zu_dokumenten", it)
         att = self.c.get(f"/api/profile/fund/eintrag/{aid}").json()
         self.assertNotIn("anhaenge", att)                                        # an attachment has none of its own
         cb, _ = profile("Fundapp Bert")
         self.assertEqual(cb.get(f"/api/profile/fund/eintrag/{mid}").status_code, 404)   # never another profile's
 
-    def test_no_way_into_the_documents_yet(self):
+    def test_only_the_one_way_into_the_documents(self):
+        """„Zu Dokumenten übernehmen“ has one path (…/dokument, test_fund_dokument); no other one exists."""
         aid, _ = self.attachment()
         before = len(documents.list_docs(self.uid))
         self.assertIn(self.c.post(f"/api/profile/fund/eintrag/{aid}/zu-dokumenten").status_code, (404, 405))
         self.assertEqual(len(documents.list_docs(self.uid)), before)
         self.assertFalse(any(re.compile(p).fullmatch(f"/api/profile/fund/eintrag/{aid}/zu-dokumenten")
                              for _, p in iphone.THINGS["fund"]))
+        self.assertTrue(any(re.compile(p).fullmatch(f"/api/profile/fund/eintrag/{aid}/dokument")
+                            for _, p in iphone.THINGS["fund"]))
 
 
 class Begleiter(unittest.TestCase):
