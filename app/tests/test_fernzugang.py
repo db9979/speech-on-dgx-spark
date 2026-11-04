@@ -3553,6 +3553,61 @@ class InBrowser(unittest.TestCase):
         asyncio.run(go())
 
 
+class SessionPageLayout(unittest.TestCase):
+    """Die Fernsitzungs-Seite (Dominik 2026-11-04, Vorschläge 1 bis 4, Bild ssh-vermittlung/seite/fernsitzung-vorschlag.png):
+    one slim red line with the code and the notes as pills (a warning is one tap away, never gone, and only on this
+    page), the sessions as tabs in the terminal's dark head, the column with one row of tabs and the fold button, the
+    goal box only while a goal is set, the options in one row under the question."""
+
+    @staticmethod
+    def read(*parts):
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "panel", "static", *parts), encoding="utf-8") as f:
+            return f.read()
+
+    def test_the_markup(self):
+        html = self.read("index.html")
+        bar = html[html.index('id="fzbanner"'):html.index('id="shbanner"')]
+        for ident in ('id="fzbcode"', 'id="fzbhinw"', 'aria-controls="alerts"', 'id="fzbtrennen"'):
+            self.assertIn(ident, bar)
+        head = html[html.index('<div class="fzthead">'):html.index('<div class="fzterm" id="fzterm">')]
+        self.assertIn('id="fzreiter"', head)                       # the tabs in the dark head, the tools in the same row
+        self.assertIn('class="fzticons"', head)
+        self.assertEqual(html.count('id="fzreiter"'), 1)
+        self.assertNotIn("fzshead", html)                          # no second head „✦ Assistent ›“
+        kopf = html[html.index('<div class="fzsidekopf">'):html.index('id="fznotizseite"')]
+        self.assertIn('id="fzsidetabs"', kopf)
+        self.assertIn('id="fzspaltezu"', kopf)
+        opt = html[html.index('<div class="fzkiopt">'):]
+        opt = opt[:opt.index("</div>")]
+        for ident in ('id="fzzeilen"', 'id="fzschirm"', 'id="fzgekuerzt"', 'class="fzq"', 'id="fzzielgo"'):
+            self.assertIn(ident, opt)
+        self.assertIn("Er tippt nie", opt)                          # the sentence as the „?“, not as text below
+        self.assertNotIn("fzkurz", html)
+
+    def test_the_rules(self):
+        css = re.sub(r"/\*.*?\*/", "", self.read("app.css"), flags=re.S)
+        self.assertIn(".fzziel[hidden]{display:none}", css)        # the goal box only while a goal is set
+        self.assertIn(".fzkiopt [hidden]{display:none}", css)     # „gekürzt“ only when cut
+        self.assertIn("body.fzterminal .fzbschild:not([hidden]){display:inline-flex}", css)   # pills only on this page
+        self.assertIn(".fzbschild{display:none;", css)
+        self.assertIn("body.fzterminal #confbar,body.fzterminal:not(.fzhinauf) #alerts{display:none}", css)
+        self.assertIn("body.fzterminal.fzhinauf #alerts{position:fixed;", css)   # opened over the page: nothing moves
+        self.assertIn("body.fzterminal main{max-width:none;", css)
+        self.assertIn("body.fzterminal #fzbox.fzoffen{border:0;", css)
+        self.assertIn(".fzthead{flex:none;display:flex;align-items:flex-end;gap:8px;height:36px;", css)   # one height
+        js = self.read("js", "fernzugang.js")
+        self.assertIn("const FZ_SPALTE=[280,520,330];", js)
+        self.assertNotIn("||340", js)
+        # the notes reach the pill on every round, also when they did not change; the code pill ends like „Beenden“
+        alerts = self.read("js", "admin.js")
+        body = alerts[alerts.index("function showAlerts"):]
+        self.assertLess(body.index("fzHinweise(a)"), body.index("if(k===ALERTS_LAST)return"))
+        mfa = self.read("js", "mfa.js")
+        self.assertIn("end.onclick=confirmEnd;", mfa)
+        self.assertIn("&&typeof confirmEnd==='function')confirmEnd()", js)
+        self.assertIn("if(!on)fzHinweiseAuf(false)", js)            # another page: the notes stand where they were
+
+
 class _ShellPage(Base):
     """The whole way in a real browser: the real page as the admin, a real anchor (plain socket to the test panel) and
     the SSH test server; the buttons themselves are clicked."""
@@ -3671,6 +3726,9 @@ class ShellForReal(_ShellPage):
                 "const w=FZ.ws;FZ.ws=null;fzShow();FZ.ws=w",                  # a list refresh while it reconnects
                 "$('fzwieder').hidden=false;fzTopLine()",
                 "$('fzwieder').hidden=true;fzTopLine();fzLoad()",
+                "showAlerts([{level:'bad',text:'Das Änderungsprotokoll wurde nachträglich verändert.'},{level:'warn',text:'Qualitätstest: 1 Frage neu kaputt.'}]);confirmShow(Date.now()/1000+300)",
+                "fzHinweiseAuf(true)",
+                "fzHinweiseAuf(false);showAlerts([]);confirmShow(0)",
             ]
             for i in range(44):
                 await pg.evaluate(steps[i % len(steps)])
@@ -3681,6 +3739,81 @@ class ShellForReal(_ShellPage):
                 seen.add(await pg.evaluate(box))
             self.assertEqual(seen, {first})
         self.run_page(body, size=(1500, 900))
+
+    def test_one_bar_tabs_in_the_head_and_the_slim_column(self):
+        """Dominik 2026-11-04 (Vorschläge 1 bis 4): on the session's page the blue code bar and the notes above the page
+        are pills in the red line; the notes open over the page and the terminal keeps its box; the code pill ends the
+        confirmation after a question; no page margin, no outer box; the tab with „SSH ✓“ in the dark head; the column
+        330 px with one row of tabs and the goal box only while a goal is set. Another page shows its bars as before."""
+        helpers.set_config(fernzugang_hilfe=True)
+
+        async def body(ctx, pg):
+            await pg.evaluate("try{localStorage.removeItem('fzcol')}catch{};fzSpalteStart()")
+            await pg.evaluate("""showAlerts([{level:'bad',text:'Das Änderungsprotokoll wurde nachträglich verändert.',go:'Zustand → Logs → Änderungen'},
+                {level:'warn',text:'Qualitätstest: 1 Frage neu kaputt.',go:'Zustand → Prüfen → Qualitätstest'}]);confirmShow(Date.now()/1000+540)""")
+            await pg.wait_for_timeout(1200)
+            box = "(()=>{const r=$('fzterm').getBoundingClientRect();return [Math.round(r.top),Math.round(r.height),Math.round(r.width)]})()"
+            first = await pg.evaluate(box)
+            seen = await pg.evaluate("""(()=>{const vis=e=>!!e&&getComputedStyle(e).display!=='none'&&!e.hidden;
+                const tab=document.querySelector('#fzreiter .fzreit.on');
+                return {confbar:vis($('confbar')),alerts:vis($('alerts')),code:vis($('fzbcode')),codet:$('fzbcodet').textContent,
+                  hinw:vis($('fzbhinw')),n:$('fzbhinwn').textContent,bad:$('fzbhinw').classList.contains('bad'),
+                  inhead:!!$('fzreiter').closest('.fzthead'),tab:tab?tab.textContent:'',ssh:!!(tab&&tab.querySelector('.fzreitssh .fzok')),
+                  side:Math.round($('fzside').getBoundingClientRect().width),ziel:vis($('fzziel')),zu:!!$('fzspaltezu').closest('.fzsidekopf'),
+                  boxborder:getComputedStyle($('fzbox')).borderTopWidth,left:Math.round($('fzview').getBoundingClientRect().left),
+                  right:Math.round(innerWidth-$('fzview').getBoundingClientRect().right),fab:document.body.classList.contains('fzohnemenu')?getComputedStyle($('fab')).display:'none',wide:document.documentElement.scrollWidth-innerWidth}})()""")
+            self.assertEqual([seen["confbar"], seen["alerts"], seen["code"], seen["hinw"], seen["n"], seen["bad"]],
+                             [False, False, True, True, "2", True], seen)
+            self.assertRegex(seen["codet"], r"^(9|10) min$")
+            self.assertTrue(seen["inhead"] and seen["ssh"] and seen["zu"], seen)
+            self.assertIn("SSH", seen["tab"])
+            self.assertEqual((seen["side"], seen["ziel"], seen["boxborder"], seen["wide"]), (330, False, "0px", 0), seen)
+            self.assertLessEqual(seen["left"], 16, seen)                       # no page margin, no outer box
+            self.assertEqual(seen["fab"], "none", seen)                        # „Frag Spark“ goes with the folded menu, never over the line
+            self.assertLessEqual(seen["right"], 16, seen)
+            # the notes over the page, the terminal stays where it is; Esc closes them
+            await pg.click("#fzbhinw")
+            await pg.wait_for_function("document.body.classList.contains('fzhinauf')&&getComputedStyle($('alerts')).position==='fixed'", timeout=10000)
+            self.assertIn("Änderungsprotokoll", await pg.evaluate("$('alerts').textContent"))
+            self.assertEqual(await pg.evaluate("$('fzbhinw').getAttribute('aria-expanded')"), "true")
+            self.assertEqual(await pg.evaluate(box), first)
+            await pg.keyboard.press("Escape")
+            await pg.wait_for_function("!document.body.classList.contains('fzhinauf')&&getComputedStyle($('alerts')).display==='none'", timeout=10000)
+            self.assertEqual(await pg.evaluate(box), first)
+            # the code pill asks, then ends the confirmation like „Beenden“ in the blue bar
+            asked = []
+
+            async def dialog(d):
+                asked.append(d.message)
+                await d.accept()
+            pg.on("dialog", lambda d: asyncio.ensure_future(dialog(d)))
+            await pg.click("#fzbcode")
+            await pg.wait_for_function("$('fzbcode').hidden&&!$('confbar')", timeout=10000)
+            self.assertTrue(asked and "Code-Bestätigung" in asked[0], asked)
+            # a goal shows its box, ending it hides it again
+            await pg.evaluate("$('fzschirm').checked=true;$('fzfrage').value='Platz schaffen';FZ.ziel=null")
+            await pg.evaluate("FZ.ziel={text:'x',last:'',zeiten:[],ctl:null,t:null,wartet:false};$('fzziel').hidden=false;fzZielEnde('')")
+            self.assertFalse(await pg.evaluate("getComputedStyle($('fzziel')).display!=='none'"))
+            # another page: the notes stand above it as before, no pills there
+            await pg.evaluate("showAlerts([{level:'bad',text:'Das Änderungsprotokoll wurde nachträglich verändert.'}]);goSec('feat')")
+            await pg.wait_for_function("!document.body.classList.contains('fzterminal')", timeout=10000)
+            self.assertEqual(await pg.evaluate("[getComputedStyle($('alerts')).display!=='none',getComputedStyle($('fzbhinw')).display]"), [True, "none"])
+        self.run_page(body, size=(1500, 900))
+
+    def test_the_bar_and_the_head_on_a_phone(self):
+        """The same page at 390 px: the line stays one line (pills short: lock and minutes, warning and number), the tab
+        and the tools in one dark row, nothing wider than the phone."""
+        async def body(ctx, pg):
+            await pg.evaluate("showAlerts([{level:'warn',text:'Qualitätstest: 1 Frage neu kaputt.'}]);confirmShow(Date.now()/1000+540)")
+            await pg.wait_for_timeout(800)
+            r = await pg.evaluate("""(()=>{const b=$('fzbanner').getBoundingClientRect(),h=document.querySelector('.fzthead').getBoundingClientRect();
+                return {bh:b.height,hh:Math.round(h.height),wide:document.documentElement.scrollWidth-innerWidth,
+                  pills:[...document.querySelectorAll('#fzbanner .fzbschild')].map(e=>getComputedStyle(e).display!=='none'),
+                  word:getComputedStyle(document.querySelector('#fzbhinw .fzblang')).display,tab:!!document.querySelector('.fzthead #fzreiter .fzreit.on'),
+                  trennen:(()=>{const t=$('fzbtrennen').getBoundingClientRect();return t.right<=innerWidth&&t.width>0})()}})()""")
+            self.assertLessEqual(r["bh"], 40, r)
+            self.assertEqual((r["hh"], r["wide"], r["pills"], r["word"], r["tab"], r["trennen"]), (36, 0, [True, True], "none", True, True), r)
+        self.run_page(body, size=(390, 800))
 
     def test_tabs_two_systems_switch_by_keys_and_close_one(self):
         """Mehrere Sitzungen Stufe 1 (Dominik 2026-10-30 „alle“, mockups mehrere/1): a second system opens as a second tab
@@ -3904,7 +4037,7 @@ class ShellForReal(_ShellPage):
     def test_layout_a_never_scrolls_and_the_menu_and_column_give_way(self):
         """Dominik 2026-10-28 20:07 (layout A): with a session open the page never scrolls at 1440 × 900 and 1920 × 1080;
         the panel's menu is folded away while the terminal is open (the terminal grows), „Menü ausblenden“ brings it
-        back and the choice stays; the column is 340 px, its width dragged between 280 and 520 px and kept, a double
+        back and the choice stays; the column is 330 px (Dominik 2026-11-04, was 340), its width dragged between 280 and 520 px and kept, a double
         click folds it (the terminal grows); the session's facts behind the ⓘ, the host key shortened."""
         self.layout_a((1440, 900))
 
@@ -3922,7 +4055,7 @@ class ShellForReal(_ShellPage):
             self.assertLessEqual(a["scroll"], 0, a)                          # the page never scrolls
             self.assertLessEqual(a["wide"], 0, a)
             self.assertFalse(a["menu"], a)                                   # the menu folded away
-            self.assertEqual(round(a["side"]), 340, a)
+            self.assertEqual(round(a["side"]), 330, a)
             self.assertGreater(a["th"], size[1] * 0.6, a)                    # the terminal takes the height
             self.assertGreater(a["cols"], 90 if size[0] == 1440 else 140, a)
             await pg.click("#fzmenu")                                        # the menu back: the terminal narrower
@@ -3941,8 +4074,8 @@ class ShellForReal(_ShellPage):
             await pg.mouse.move(x - 100, y, steps=5)
             await pg.mouse.up()
             w = await pg.evaluate("$('fzside').getBoundingClientRect().width")
-            self.assertEqual(round(w), 440)
-            self.assertEqual(await pg.evaluate("localStorage.getItem('fzcol')"), "440")
+            self.assertEqual(round(w), 430)                                   # 330 at first (Dominik 2026-11-04) + 100
+            self.assertEqual(await pg.evaluate("localStorage.getItem('fzcol')"), "430")
             await pg.mouse.move(x - 100, y)
             await pg.mouse.down()
             await pg.mouse.move(x - 600, y, steps=5)
@@ -4276,7 +4409,8 @@ class NotesForReal(_ShellPage):
         async def body(ctx, pg):
             # the shell is open (run_page): the column beside the terminal shows the note (the assistant is off here)
             await pg.wait_for_function("!$('fznotizseite').hidden&&!!$('fznotizseite').querySelector('.fznotiz')&&FZ.notiz&&FZ.notiz.geladen", timeout=30000)
-            self.assertTrue(await pg.evaluate("$('fzview').classList.contains('fzki')&&$('fzsidetabs').hidden"))
+            # the column's one row of tabs shows only the tab that is there (Notizen) and the fold button (2026-11-04)
+            self.assertTrue(await pg.evaluate("$('fzview').classList.contains('fzki')&&$('fzseiteki').hidden&&!$('fzseitenotiz').hidden&&!$('fzspaltezu').hidden"))
             box = "#fznotizseite .fznotiz"
             await pg.locator(box + " button", has_text="Bearbeiten").click()
             await pg.fill("#fznztext", "# Testserver\n- App unter /opt/shop <img src=x onerror=window.boom=1>\n```\nuptime\n```\npw: Sommer2026")

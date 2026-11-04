@@ -1133,6 +1133,7 @@ function alertRow(x){const n=document.createElement('div');n.className='note ano
 // notes only to know (level "info", e.g. open hands-on tests) stand on Zustand only, not above every page (code check 19.10. D12)
 let ALERTS_RAW=[];
 function showAlerts(a){a=a||[];ALERTS_RAW=a;const mon=!!document.querySelector('section#mon.on');if(!mon)a=a.filter(x=>x.level!=='info');
+  if(typeof fzHinweise==='function')fzHinweise(a);   // the remote session's page shows them as a pill in its red line (fernzugang.js)
   const k=JSON.stringify(a);if(k===ALERTS_LAST)return;ALERTS_LAST=k;const box=$('alerts');box.textContent='';
   const bad=a.filter(x=>x.level==='bad'),rest=a.filter(x=>x.level!=='bad');
   for(const x of bad)box.appendChild(alertRow(x));

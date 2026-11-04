@@ -1880,7 +1880,7 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **Meldung bei Fernsitzung** (Funktionen → Zugang → „Meldung bei Fernsitzung“; baut auf „Fernzugang zu Servern“): Öffnet ein Admin die Shell eines Servers aus dem Internet oder von einem Ort, von dem er sie noch nie geöffnet hat, bekommen alle Admins eine Mitteilung aufs Handy mit festem Text: wer, welcher Server, Zuhause oder Internet, nie eine Adr …
 
-- **An alle senden im Fernzugang** (Funktionen → Zugang → „An alle senden im Fernzugang“; baut auf „Fernzugang zu Servern“): Mit zwei oder mehr verbundenen Shells derselben Art (etwa alles Linux) steht in der Reiterleiste „An alle …“.
+- **An alle senden im Fernzugang** (Funktionen → Zugang → „An alle senden im Fernzugang“; baut auf „Fernzugang zu Servern“): Mit zwei oder mehr verbundenen Shells derselben Art (etwa alles Linux) steht im Kopf des Terminals „An alle …“.
 
 - **Spontanhilfe** (Funktionen → Zugang → „Spontanhilfe“; baut auf „Fernzugang zu Servern“): Einmal helfen, wie TeamViewer QuickSupport: die Person öffnet die Seite /hilfe deines Panels, gibt die 6-stellige Nummer und ihren Vornamen ein und teilt nach deinem Annehmen ihren Bildschirm.
 

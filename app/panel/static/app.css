@@ -3111,19 +3111,33 @@ body.fzterminal .fztop{height:30px}   /* with a terminal open more lines (reconn
 .fzbanner .fzbi{flex:none;width:18px;height:18px;padding:0;border-radius:50%;border:1.5px solid #fff;background:transparent;color:var(--on-acc);font:700 11px/1 Georgia,serif;cursor:pointer}.fzbanner .fzbi[hidden]{display:none}
 .fzbanner .fzbtn{flex:none;font:inherit;font-size:12px;line-height:20px;padding:0 8px;border-radius:6px;border:1px solid #fff;background:transparent;color:var(--on-acc);cursor:pointer}.fzbanner .fzbtn:hover{background:#fff;color:var(--bad)}
 .fzbanner.fzwarn{background:#b45309}.fzbanner.fzwarn .fzbtn:hover{color:#b45309}   /* reconnecting, ending soon: amber, not the red of a live session */
+/* the remote session's own page (Dominik 2026-11-04, Vorschläge 1 und 2): the red line is the only bar there. The blue
+   „Code bestätigt …“ becomes the pill „Code noch N min“ (a tap ends it, asked first), the notes above every page the pill
+   „N Hinweise“ that opens them over the page (a warning stays one tap away, never gone); no page margin, no outer box.
+   Other pages keep their bars as they are. */
+.fzbschild{display:none;flex:none;align-items:center;gap:4px;height:20px;padding:0 8px;border:0;border-radius:var(--r-pill);background:var(--fill);color:var(--on-acc);font:inherit;font-size:12px;cursor:pointer}
+.fzbschild .ic{width:var(--ic-sm);height:var(--ic-sm)}.fzbschild:hover,.fzbschild[aria-expanded="true"]{background:var(--on-acc);color:var(--bad)}.fzbschild.bad{outline:1.5px solid var(--on-acc)}
+body.fzterminal .fzbschild:not([hidden]){display:inline-flex}
+body.fzterminal #confbar,body.fzterminal:not(.fzhinauf) #alerts{display:none}
+body.fzterminal.fzhinauf #alerts{position:fixed;z-index:9600;width:min(720px,calc(100vw - 16px));max-height:60vh;overflow:auto;box-sizing:border-box;padding:8px 8px 2px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-win);box-shadow:var(--shadow-pop)}
+body.fzterminal main{max-width:none;padding-top:8px;padding-left:8px;padding-right:8px}
+body.fzterminal #fzbox.fzoffen{border:0;border-radius:0;background:none;padding:0;box-shadow:none;overflow:visible}
 .fzinfopop{position:fixed;z-index:9600;width:min(360px,calc(100vw - 16px));box-sizing:border-box;padding:10px 12px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
 .fzinfopop[hidden]{display:none}.fzinfopop .fzfacts{margin:0 0 8px}.fzinfopop .row{gap:8px;flex-wrap:wrap}.fzok{color:var(--ok);font-weight:600}
 .fzrec{width:10px;height:10px;border-radius:50%;background:#fff;flex:none}
 /* the terminal (layout A): terminal with its icon bar, one row of chips below it, the assistant as a column on the right
    (width dragged 280–520 px and kept, folds away); the height from fzLayout, so the page itself never scrolls */
-#fzbox.fzoffen>.ld-head{display:none}#fzbox.fzoffen{padding-top:8px;padding-bottom:8px}
+#fzbox.fzoffen>.ld-head{display:none}
 .fzview{display:grid;grid-template-columns:minmax(0,1fr) 10px var(--fzcol,340px);grid-template-rows:minmax(0,1fr);height:var(--fzh,70vh);min-height:260px;margin:0}
 .fzview.fzzu,.fzview:not(.fzki){grid-template-columns:minmax(0,1fr)}
 .fzview.fzzu .fzside,.fzview.fzzu .fzgriff,.fzview:not(.fzki) .fzside,.fzview:not(.fzki) .fzgriff,.fzview:not(.fzki) #fzspalte,.fzview:not(.fzki) .fzfragbtn{display:none}
 .fzleft{display:flex;flex-direction:column;min-width:0;min-height:0}
-.fzthead{flex:none;display:flex;align-items:center;gap:8px;height:36px;padding:0 6px 0 12px;background:#0b1020;color:#e2e8f0;border-radius:12px 12px 0 0;border-bottom:1px solid #1e293b;font-size:13px;white-space:nowrap;overflow:hidden}
-.fzthead .fzti{width:16px;height:16px;flex:none;color:#94a3b8}.fzthead b{min-width:0;overflow:hidden;text-overflow:ellipsis}.fztart{color:#94a3b8}.fztkey{color:#4ade80}.fztkey[hidden]{display:none}
-.fzticons{margin-left:auto;display:flex;gap:2px;flex:none}
+/* the terminal's dark head (Dominik 2026-11-04, Vorschlag 3): the sessions as browser tabs in it (dot, name, „SSH ✓“, ×,
+   ＋ at the end), the view buttons and the tool icons on the right of the same row; one height, so nothing below moves */
+.fzthead{flex:none;display:flex;align-items:flex-end;gap:8px;height:36px;padding:0 6px 0 4px;background:var(--term-line);color:var(--term-fg);border-radius:var(--r-win) var(--r-win) 0 0;font-size:12.5px;white-space:nowrap;overflow:hidden}
+.fztone{flex:0 1 auto;min-width:0;display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:var(--r-item) var(--r-item) 0 0;background:var(--term)}.fzreiter:not([hidden])~.fztone{display:none}
+.fztone b{min-width:0;overflow:hidden;text-overflow:ellipsis}.fztart{color:var(--term-mut)}.fztkey{color:var(--ok);margin-left:-3px}.fztkey[hidden]{display:none}
+.fzticons{margin-left:auto;align-self:center;display:flex;gap:2px;flex:none}
 .fzicon{display:inline-grid;place-items:center;width:30px;height:30px;padding:0;border:0;border-radius:7px;background:transparent;color:inherit;cursor:pointer}
 .fzicon svg{width:18px;height:18px}.fzicon:hover:not(:disabled){background:rgba(148,163,184,.18)}.fzicon:disabled{opacity:.35;cursor:default}
 .fzicon[aria-pressed="true"],.fzicon[aria-expanded="true"]{background:rgba(129,140,248,.25);color:#c7d2fe}
@@ -3143,7 +3157,8 @@ body.fzterminal .fztop{height:30px}   /* with a terminal open more lines (reconn
 .fzside{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
 .fzhilfe{display:flex;flex-direction:column;flex:1;min-height:0}.fzhilfe[hidden]{display:none}
 /* Notizen je System (fernnotiz.py): the box under „Angaben“ and the tab beside the assistant */
-.fzsidetabs{flex:none;display:flex;border-bottom:1px solid var(--line)}.fzsidetabs[hidden]{display:none}
+.fzsidekopf{flex:none;display:flex;align-items:center;gap:2px;padding-right:4px;border-bottom:1px solid var(--line)}
+.fzsidetabs{flex:1;min-width:0;display:flex}.fzsidetabs button[hidden]{display:none}
 .fzsidetabs button{flex:1;background:none;border:0;border-bottom:2px solid transparent;padding:9px 6px;color:var(--mut);font:inherit;cursor:pointer}
 .fzsidetabs button.on{color:var(--acc);border-bottom-color:var(--acc);font-weight:600}
 .fznotizseite{flex:1;min-height:0;overflow:auto;padding:10px 12px}.fznotizseite[hidden]{display:none}.fznotizseite .fznotiz{border:0;padding:0;margin:0}
@@ -3188,23 +3203,29 @@ body.fzterminal .fztop{height:30px}   /* with a terminal open more lines (reconn
 .fzokarte:hover{background:color-mix(in srgb,var(--line) 30%,transparent)}
 .fzkordner{display:flex;align-items:center;gap:8px}
 .fznzsnip{display:block;color:var(--mut)}.fznzsnip mark{background:#fde68a;color:#111;border-radius:3px;padding:0 2px}
-.fzshead{flex:none;display:flex;align-items:center;gap:8px;padding:6px 6px 6px 12px;border-bottom:1px solid var(--line)}.fzshead b{flex:1}
 .fzfrageform{flex:none;display:flex;gap:6px;align-items:flex-end;padding:8px 10px 0;border-top:1px solid var(--line)}.fzfrageform textarea{flex:1;min-width:0;resize:none}
 .fzsend{flex:none;display:grid;place-items:center;width:34px;height:34px;padding:0;border:0;border-radius:50%;background:var(--acc);color:var(--on-acc);cursor:pointer}.fzsend svg{width:18px;height:18px}
-.fzchk{display:flex;gap:6px;align-items:center;margin:6px 10px 0}.fzkurz{margin:4px 10px 8px}
+.fzchk{display:flex;gap:6px;align-items:center;margin:6px 10px 0}
+/* under the question one compact row (Vorschlag 4): Zeilen, Bildschirm, the „?“ (he never types) and „Als Ziel →“ */
+.fzkiopt{flex:none;display:flex;align-items:center;gap:6px;min-width:0;padding:6px 10px 8px;font-size:12.5px;color:var(--mut);white-space:nowrap}
+.fzkiopt select{flex:none;width:auto;padding:2px 6px;font-size:12.5px}.fzkiopt [hidden]{display:none}.fzkichk{display:flex;align-items:center;gap:4px;color:var(--fg);cursor:pointer}.fzkichk input{margin:0}
+.fzzielbtn{flex:none;display:inline-flex;align-items:center;gap:4px;padding:2px 0;border:0;background:none;color:var(--acc);font:inherit;font-weight:600;cursor:pointer}.fzzielbtn .ic{width:var(--ic-sm);height:var(--ic-sm)}
 .fzantwort{flex:1;min-height:0;overflow:auto;padding:10px 12px;white-space:pre-wrap;overflow-wrap:anywhere}.fzantwort pre{margin:6px 0 2px;padding:6px 8px;border-radius:6px;background:#0b1020;color:#e6e9f2;white-space:pre-wrap}
 .fzantwort .fzchip{margin:4px 0}
 .fzvorsicht{color:var(--on-acc);background:var(--bad);border-radius:4px;padding:0 5px;font-size:.8em;font-weight:600;margin-right:6px}.fzchip.fzgefahr{border-color:var(--bad)}.fzchip.scharf{outline:2px solid var(--bad)}
 .fzkeys{display:none;gap:6px}.fzkeys .b.on{background:var(--acc);color:var(--on-acc)}.fzfragbtn{display:none}
 /* the panel's menu folds away while a terminal is open (Dominik 2026-10-28 20:07, „Menü ausblenden“, kept per browser) */
 @media (min-width:761px){body.adm.fzohnemenu{padding-left:0}body.adm.fzohnemenu header{display:none}
+  /* „Frag Spark“ sits beside „Spark“ in the menu: with the menu folded away it would lie over the red line, so it goes
+     with the menu (the assistant has its column beside the terminal; „Menü einblenden“ brings both back) */
+  body.adm.fzohnemenu:not(.hilfeon):not(.guest):not(.inchat):not(.appview) #fab{display:none!important}
   body.fzterminal main{padding-bottom:8px!important}body.fzterminal #credit{display:none}}   /* over the general 110 px foot of admin pages */
 /* phone: terminal, one row of chips to swipe, the key row and „Frag den Assistenten“, which opens a sheet from below */
 @media (max-width:760px){.fzview,.fzview.fzzu{grid-template-columns:minmax(0,1fr)}.fzgriff,#fzmenu,.fzthead .fzbreit{display:none!important}.fzthead .fzschmal{display:inline-grid}
   .fzkeys{display:flex;flex:none;flex-wrap:nowrap;overflow-x:auto;margin-top:6px;scrollbar-width:none}.fzkeys .b{flex:none;min-width:40px;padding:6px 8px}.fzview.fzohnetasten .fzkeys{display:none}
   .fzview.fzki .fzfragbtn{display:block;flex:none;margin-top:6px;padding:9px 14px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--mut);font:inherit;text-align:left;cursor:pointer}
   .fzview.fzki .fzside,.fzview.fzki.fzzu .fzside{display:flex;position:fixed;left:0;right:0;bottom:0;height:min(70vh,560px);z-index:9500;border-radius:16px 16px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.3);transform:translateY(105%);visibility:hidden;transition:transform .2s}
-  #fzbox.fzoffen{padding:6px}  .fzview.fzblatt .fzside{transform:none;visibility:visible}.fzbanner .fzbleer{display:none}}
+  .fzview.fzblatt .fzside{transform:none;visibility:visible}.fzbanner .fzbleer,.fzbanner .fzblang{display:none}}
 .fzview[hidden],.fzdetail[hidden],.fzfiles[hidden],.fzbild[hidden],.fzweb[hidden]{display:none}
 .fzq{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--line);font-size:11px;font-weight:600;color:var(--mut);cursor:help;vertical-align:middle}
 .fzchip .fzinfo{font-size:11px;color:var(--mut);border:1px solid var(--line);border-radius:6px;padding:0 5px;margin-right:6px}
@@ -3232,15 +3253,15 @@ html.fzvoll,html.fzvoll body{overflow:hidden}html.fzvoll,html:has(body.fztermina
 /* „Herauslösen“ (#fernfenster): the panel page in its own window: the same order (line, terminal, chips, column), no menu */
 .fzweg{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-color:var(--bad)}.fzweg[hidden]{display:none}
 /* Fernzugang: several sessions as tabs above the terminal (Mehrere Sitzungen Stufe 1) */
-.fzreiter{flex:none;display:flex;align-items:center;gap:4px;min-height:34px;padding:0 0 6px;overflow-x:auto;scrollbar-width:thin}.fzreiter[hidden]{display:none}
-.fzreit{flex:none;display:flex;align-items:center;gap:6px;max-width:220px;height:30px;padding:0 4px 0 10px;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--fill);color:var(--mut);font-size:12.5px;cursor:pointer;user-select:none}
-.fzreit:hover,.fzreit:focus-visible{color:var(--fg)}.fzreit.on{background:var(--card);color:var(--fg);border-color:var(--acc);box-shadow:inset 0 -2px 0 var(--acc)}
+.fzreiter{flex:1 1 auto;min-width:0;display:flex;align-items:flex-end;gap:6px;height:100%}.fzreiter[hidden]{display:none}
+.fzreitliste{position:relative;flex:0 1 auto;min-width:0;display:flex;align-items:flex-end;gap:2px;height:100%;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}.fzreitliste::-webkit-scrollbar{display:none}
+.fzreit{flex:0 1 auto;display:flex;align-items:center;gap:6px;min-width:96px;max-width:240px;height:32px;box-sizing:border-box;padding:0 4px 0 12px;border-radius:var(--r-item) var(--r-item) 0 0;background:transparent;color:var(--term-mut);cursor:pointer;user-select:none}
+.fzreit:hover,.fzreit:focus-visible{color:var(--term-fg)}.fzreit.on{background:var(--term);color:var(--term-fg);font-weight:600}
 .fzreitname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.fzreitssh{flex:none;color:var(--term-mut);font-weight:400}.fzreitssh .fzok{color:var(--ok);margin-left:2px}
 .fzreitneu{width:7px;height:7px;border-radius:50%;background:var(--acc);flex:none}
-.fzreitzu{border:0;background:none;color:inherit;font:inherit;width:22px;height:22px;padding:0;border-radius:6px;cursor:pointer;line-height:1}.fzreitzu:hover{background:color-mix(in srgb,var(--line) 60%,transparent)}
-.fzreitplus{flex:none;height:30px;padding:0 10px;border:1px dashed var(--line);border-radius:var(--r-ctl);background:none;color:var(--mut);font:inherit;font-size:12.5px;cursor:pointer}.fzreitplus:hover{color:var(--fg);border-color:var(--acc)}
-.fzreithint{margin-left:auto;padding-left:8px;color:var(--mut);font-size:11.5px;white-space:nowrap}
-@media (max-width:700px){.fzreithint{display:none}}
+.fzreitzu{flex:none;display:inline-grid;place-items:center;border:0;background:none;color:inherit;width:22px;height:22px;padding:0;border-radius:var(--r-ctl);cursor:pointer}.fzreitzu .ic{width:var(--ic-sm);height:var(--ic-sm)}.fzreitzu:hover{background:var(--fill)}
+.fzreitplus{flex:none;align-self:center;width:28px;height:28px}
 .fzterm1{height:100%}.fzterm1[hidden]{display:none}
 .fzterm.fzgeteilt{display:grid;gap:6px;padding:6px}.fzterm.fz2{grid-template-columns:1fr 1fr;grid-template-rows:1fr}.fzterm.fz4{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
 .fzgeteilt .fzterm1{position:relative;min-width:0;min-height:0;height:auto;padding:22px 4px 4px;border:1px solid var(--line);border-radius:var(--r-item);box-sizing:border-box;overflow:hidden}
@@ -3255,8 +3276,10 @@ html.fzvoll,html.fzvoll body{overflow:hidden}html.fzvoll,html:has(body.fztermina
 .fzalle{flex:none;display:flex;flex-direction:column;gap:6px;margin:0 0 6px;padding:8px 10px;border:1px solid var(--bad);border-radius:var(--r-item);background:color-mix(in srgb,var(--bad) 10%,var(--card));color:var(--fg);font-size:12.5px}.fzalle[hidden]{display:none}
 .fzsendekopf b{color:var(--badt)}.fzsendekopf small{color:var(--mut);font-size:12px}
 .fzallereihe{display:flex;gap:6px;align-items:center}.fzallereihe input{flex:1;min-width:0;font-family:var(--mono)}
-.fzallebtn{flex:none;height:28px;padding:0 10px;font-size:12px;margin-left:8px}.fzallebtn.on{border-color:var(--bad);color:var(--badt)}
-.fzansicht{flex:none;display:flex;gap:2px;margin-left:8px}.fzansicht .b{height:28px;padding:0 8px;font-size:12px}.fzansicht .b.on{border-color:var(--acc);color:var(--fg)}
+.fzallebtn{flex:none;align-self:center;height:26px;padding:0 10px;font-size:12px}.fzallebtn.on{border-color:var(--bad);color:var(--badt)}
+.fzansicht{flex:none;align-self:center;display:flex;gap:2px;margin-left:auto}.fzansicht .b{height:26px;padding:0 8px;font-size:12px}.fzansicht .b.on{border-color:var(--acc);color:var(--fg)}
+.fzthead .fzansicht .b,.fzthead .fzallebtn{min-height:0;background:transparent;border:1px solid transparent;color:var(--term-mut)}.fzthead .fzansicht .b:hover{color:var(--term-fg)}
+.fzthead .fzansicht .b.on{border-color:var(--acc);color:var(--term-fg)}.fzthead .fzallebtn{border-color:var(--term-mut)}.fzthead .fzallebtn.on{border-color:var(--bad);color:var(--term-fg)}
 .fzview:fullscreen .fzreiter{display:none}
 .fzwahl{position:fixed;z-index:1000;top:12vh;left:50%;transform:translateX(-50%);width:min(460px,calc(100vw - 32px));max-height:70vh;display:flex;flex-direction:column;gap:6px;padding:8px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-box);box-shadow:var(--shadow-pop)}
 .fzwahl input{width:100%;box-sizing:border-box}
@@ -3273,8 +3296,8 @@ body.fzfenster main>section{display:none!important}body.fzfenster main>section#f
 body.fzfenster #fzview{position:fixed;inset:0;z-index:9000;height:auto;background:var(--bg);padding:38px 8px 8px;margin:0;overflow:hidden}
 body.fzfenster #fzheraus,body.fzfenster #fzmenu{display:none}
 /* Fernzugang, Dateien (ferndateien.py): breadcrumbs, one row per entry, names as text only */
-.fzziel{border:1px solid var(--acc);border-radius:10px;padding:8px;margin:0 0 8px;display:flex;flex-direction:column;gap:6px}.fzzielkopf{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.fzzieltext{flex:1;min-width:0;overflow-wrap:anywhere}
-.fzzielrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}.fzzielrow select{width:auto}.fzzielgrund{font-size:12.5px;color:var(--mut)}
+.fzziel[hidden]{display:none}.fzziel{border:1px solid var(--acc);border-radius:10px;padding:8px;margin:0 0 8px;display:flex;flex-direction:column;gap:6px}.fzzielkopf{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.fzzieltext{flex:1;min-width:0;overflow-wrap:anywhere}
+.fzzielgrund{font-size:12.5px;color:var(--mut)}
 .fzfiles{margin-top:8px}.fzfbar{align-items:center;flex-wrap:wrap}.fzcrumbs{display:flex;flex-wrap:wrap;gap:2px;min-width:0}
 .fzcrumb{padding:4px 8px;min-height:32px;font:12.5px ui-monospace,Menlo,Consolas,monospace;overflow-wrap:anywhere}
 .fzfcols{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:10px;margin-top:8px}

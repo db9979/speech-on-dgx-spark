@@ -15157,7 +15157,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Zugang",
 "title": "Zugang",
-"text": "- An alle senden im Fernzugang (Funktionen → Zugang → „An alle senden im Fernzugang“; baut auf „Fernzugang zu Servern“): Mit zwei oder mehr verbundenen Shells derselben Art (etwa alles Linux) steht in der Reiterleiste „An alle …“."
+"text": "- An alle senden im Fernzugang (Funktionen → Zugang → „An alle senden im Fernzugang“; baut auf „Fernzugang zu Servern“): Mit zwei oder mehr verbundenen Shells derselben Art (etwa alles Linux) steht im Kopf des Terminals „An alle …“."
 },
 {
 "lang": "de",
@@ -32637,7 +32637,7 @@
 "file": "Assistant and panel",
 "head": "Access",
 "title": "Access",
-"text": "- Send to all in remote access (Features → Access → \"Send to all in remote access\"; builds on \"Remote access to servers\"): With two or more connected shells of the same kind (say all Linux) the tab bar shows \"To all …\"."
+"text": "- Send to all in remote access (Features → Access → \"Send to all in remote access\"; builds on \"Remote access to servers\"): With two or more connected shells of the same kind (say all Linux) the head of the terminal shows \"To all …\"."
 },
 {
 "lang": "en",

@@ -5098,6 +5098,13 @@
 "titel": "Auswertungen: von selbst, Erinnern und Mappe kurz",
 "text": "Admin: unter Auswertungen bei „Von selbst in ruhigen Minuten“ nur „Kernaussagen“ und „Inhaltsverzeichnis“ wählen, speichern. Ein neues Dokument hochladen: nach einer ruhigen Minute Kernaussagen fertig, Inhaltsverzeichnis ohne Klick da, Kurzfassung nicht. Danach zurück auf Kurzfassung und Kernaussagen. Mit „Personen, Firmen und Fristen“ an und Fristen anbieten an: eine Frist der Wissenskarte mit vollem Datum hat „Erinnern“, die Erinnerung steht in den Erinnerungen; „drei Monate“ hat keinen Knopf. Eine Mappe mit dem Dokument in Stufe „kurz“: der Eintrag nennt „„kurz“ mit Auswertung: Kurzfassung, Kernaussagen“, und eine Frage im Gespräch mit der Mappe nennt Punkte daraus mit Seite.",
 "thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P753",
+"v": 1318,
+"titel": "Fernsitzungs-Seite: eine Leiste, Reiter im Kopf",
+"text": "Fernzugang → Systeme, ein System → Shell, dann mit ＋ ein zweites. Oben steht nur die rote Zeile „Fernsitzung aktiv … · Leerlauf trennt nach … min“ mit Trennen rechts; nach einem frischen Code dort das Schild „Code noch N min“ (keine blaue Leiste), ein Tipp fragt nach und beendet die Bestätigung. Gibt es Hinweise (etwa Qualitätstest), steht „N Hinweise“ in der Zeile; ein Tipp zeigt sie über der Seite, das Terminal bleibt stehen, Esc schließt. Kein Seitenrand, kein Kasten um Terminal und Spalte. Die Reiter stehen im dunklen Kopf mit Punkt, Name, „SSH ✓“ und ×; Strg+Umschalt+1/2 wechselt, Nebeneinander und Übersicht rechts in derselben Zeile. Rechts nur „✦ Assistent | Notizen“ mit ›, kein Kasten Ziel, bis „Als Ziel“ gedrückt ist; darunter Zeilen, Bildschirm, ? und Als Ziel in einer Zeile. Eine andere Seite (Zustand) zeigt Hinweise und blaue Leiste wie vorher. Am Handy: die Zeile bleibt eine Zeile mit Schloss und Minuten und Warnzeichen mit Zahl, nichts ragt über den Rand.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }

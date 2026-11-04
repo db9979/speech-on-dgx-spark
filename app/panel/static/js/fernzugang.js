@@ -28,7 +28,7 @@ function fzBelegt(){return FZ.reiter.length>0||FZ.wege.length>0||!!FZ.fs||!!FZ.f
 // what the own window takes over from its opener (admin_get): the rules and the assistant's limits
 const FZ_MIT=['chips','folge','erklaert','sudo_tip','hinweis','hilfe','gefahr','ki_zeilen','ki_zeilen_wahl','ki_zeichen','ziel_min','hilfe_befehle','vorschlag_s','notizen','notiz_max'];
 const FZ_FENSTER=location.hash==='#fernfenster'&&!!window.opener;
-const FZ_SPALTE=[280,520];   // the assistant's column: its width in pixels, dragged between these
+const FZ_SPALTE=[280,520,330];   // the assistant's column: its width in pixels, dragged between the first two, the third at first
 function fzEl(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e}
 function fzBtn(txt,cls,fn){const b=fzEl('button','b'+(cls?' '+cls:''),txt);b.type='button';b.onclick=fn;return b}
 function fzZeit(s){if(!s)return'–';const d=new Date(s*1000),h=new Date();
@@ -364,6 +364,24 @@ function fzBanner(){const b=$('fzbanner'),alle=FZ.reiter.map(S=>S.sitz).concat(F
     (sitz.art==='dateien'?t('Fern-Dateien offen · ','Remote files open · '):sitz.art==='bildschirm'?t('Fern-Bildschirm offen · ','Remote screen open · '):t('Fernsitzung aktiv · ','Remote session active · '))+sitz.name+' · '+fzMin(sitz.seit);b.title=t('Notaus trennt sofort','The emergency stop ends it at once');
   fzHin();const leer=(sitz||alle[0]).leer;$('fzbleer').textContent=leer?' · '+t('Leerlauf trennt nach ','idle ends after ')+leer+' min'+(viele?t(', jede Sitzung für sich',', each session on its own'):''):'';$('fzbinfo').hidden=!FZ.ws;
   clearTimeout(FZ.bt);FZ.bt=setTimeout(fzBanner,30000)}
+// the session's own page (body.fzterminal): the red line is its only bar (Dominik 2026-11-04, Vorschlag 1). The blue
+// „Code bestätigt …“ (mfa.js confirmShow) shows there as the pill „Code noch N min“; a tap ends it after a question
+// (confirmEnd, the same as „Beenden“ in the blue bar). The notes above every page (admin.js showAlerts) show as the pill
+// „N Hinweise“; a tap opens them over the page, so the terminal never moves; a warning is one tap away, never gone.
+function fzCodeSchild(){const b=$('fzbcode');if(!b)return;const bis=typeof CONF_UNTIL==='number'?CONF_UNTIL*1000:0,left=Math.ceil((bis-Date.now())/60000);
+  b.hidden=!$('confbar')||left<=0;if(b.hidden)return;$('fzbcodet').textContent=left+' min';
+  b.title=t(`Code bestätigt: wichtige Änderungen noch ${left} min ohne neuen Code. Tippen beendet das.`,`Code confirmed: important changes need no new code for ${left} more min. Tap to end it.`);b.setAttribute('aria-label',b.title)}
+function fzCodeEnde(){if(confirm(t('Die Code-Bestätigung jetzt beenden? Wichtige Änderungen fragen dann wieder nach einem Code.','End the code confirmation now? Important changes ask for a code again.'))&&typeof confirmEnd==='function')confirmEnd()}
+function fzHinweise(a){const b=$('fzbhinw');if(!b)return;a=a||[];const n=a.length;b.hidden=!n;b.classList.toggle('bad',a.some(x=>x.level==='bad'));
+  if(!n){fzHinweiseAuf(false);return}$('fzbhinwn').textContent=String(n);$('fzbhinwt').textContent=' '+(n===1?t('Hinweis','note'):t('Hinweise','notes'));
+  b.title=a.map(x=>x.text).join('\n');b.setAttribute('aria-label',n+' '+t('Hinweise oben auf jeder Seite, Tippen zeigt sie','notes from the top of every page, tap to show them'))}
+function fzHinweiseAuf(open){const b=$('fzbhinw'),box=$('alerts');if(!b||!box)return;open=open===undefined?!document.body.classList.contains('fzhinauf'):!!open;
+  if(open&&(b.hidden||!document.body.classList.contains('fzterminal')))open=false;document.body.classList.toggle('fzhinauf',open);b.setAttribute('aria-expanded',String(open));
+  if(!open){box.style.removeProperty('top');box.style.removeProperty('left');return}
+  const r=b.getBoundingClientRect(),w=box.offsetWidth;
+  box.style.top=Math.round(r.bottom+6)+'px';box.style.left=Math.round(Math.max(8,Math.min(innerWidth-w-8,r.left-20)))+'px'}
+document.addEventListener('click',e=>{if(document.body.classList.contains('fzhinauf')&&!e.target.closest('#alerts,#fzbhinw'))fzHinweiseAuf(false)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('fzhinauf'))fzHinweiseAuf(false)});
 // „Zum Terminal“ in the red line on every other page while a shell tab is open: back to the tab shown last
 function fzHin(){const b=$('fzbhin');if(b)b.hidden=FZ_FENSTER||!FZ.reiter.length||!!document.querySelector('section#fern.on')}
 // the red line's button: one session as before; several: all of them (asked first)
@@ -456,17 +474,17 @@ async function fzHilfe(art,body,signal){const r=await api('/api/admin/fernzugang
 // quiet) the screen goes to the own model again, only with „Bildschirm mitschicken“, and one chip with its reason comes
 // back. Never Enter; a dangerous one stays red with its second tap. One request at a time (a new one cancels the old),
 // the same screen not twice, at most ziel_min a minute; „Fertig“ or „Ziel beenden“ end it.
-function fzZielStart(){const q=$('fzfrage').value.trim();if(!q||!FZ.sid)return;if(!$('fzschirm').checked){$('fzzielstand').textContent='';fzMsg(t('Das Ziel braucht „Bildschirm mitschicken“.','The goal needs "Send the screen along".'),true);$('fzschirm').focus();return}
-  fzZielEnde('');FZ.ziel={text:q,last:'',zeiten:[],ctl:null,t:null,wartet:true};$('fzfrage').value='';$('fzfrage').focus();$('fzziel').hidden=false;$('fzzieltext').textContent=q;
+function fzZielStart(){const q=$('fzfrage').value.trim();if(!q||!FZ.sid)return;if(!$('fzschirm').checked){$('fzzielstand').textContent='';fzMsg(t('Das Ziel braucht den Bildschirm: Häkchen bei „Bildschirm“.','The goal needs the screen: tick "Screen".'),true);$('fzschirm').focus();return}
+  fzZielEnde('');FZ.ziel={text:q,last:'',zeiten:[],ctl:null,t:null,wartet:true};$('fzfrage').value='';$('fzfrage').focus();$('fzziel').hidden=false;$('fzzieltext').textContent=q;$('fzzielende').textContent=t('Ziel beenden','End the goal');
   $('fzzielchip').textContent='';fzZielStand(t('Schaut auf den Bildschirm …','Looking at the screen …'));fzZielSchritt()}
 function fzZielStand(x){$('fzzielstand').textContent=x}
 function fzZielEnde(x){const z=FZ.ziel;FZ.ziel=null;if(z){clearTimeout(z.t);if(z.ctl)z.ctl.abort()}const b=$('fzziel');if(!b)return;
-  if(x){fzZielStand(x);$('fzzielchip').textContent=''}else b.hidden=true}
+  if(x){fzZielStand(x);$('fzzielchip').textContent='';$('fzzielende').textContent=t('Ausblenden','Hide')}else b.hidden=true}
 // called on every piece of output and after Enter: a command counts as ended with the prompt back or 1.5 s quiet
 function fzZielTick(enter){const z=FZ.ziel;if(!z)return;if(enter)z.wartet=true;if(!z.wartet)return;clearTimeout(z.t);
   let prompt=false;try{const b=FZ.term.buffer.active,l=b.getLine(b.baseY+b.cursorY);prompt=/[$#%>]\s*$/.test(l?l.translateToString(true):'')}catch{}
   z.t=setTimeout(fzZielSchritt,prompt&&!enter?300:1500)}
-async function fzZielSchritt(){const z=FZ.ziel;if(!z||!FZ.sid)return;if(!$('fzschirm').checked){fzZielEnde(t('Ziel angehalten: „Bildschirm mitschicken“ ist aus.','Goal paused: "Send the screen along" is off.'));return}
+async function fzZielSchritt(){const z=FZ.ziel;if(!z||!FZ.sid)return;if(!$('fzschirm').checked){fzZielEnde(t('Ziel angehalten: „Bildschirm“ ist aus.','Goal paused: "Screen" is off.'));return}
   const scr=fzSchirm();if(!scr||scr===z.last)return;
   const now=Date.now();z.zeiten=z.zeiten.filter(x=>now-x<60000);const most=(FZ.d&&FZ.d.ziel_min)||6;
   if(z.zeiten.length>=most){clearTimeout(z.t);z.t=setTimeout(fzZielSchritt,60000-(now-z.zeiten[0])+50);fzZielStand(t('Wartet kurz (höchstens ','Waiting a moment (at most ')+most+t(' Schritte je Minute) …',' steps a minute) …'));return}
@@ -569,24 +587,28 @@ function fzNeuKnopf(text,g){g=g||FZ.letzt;sayToast(text,20000,{bad:true,knopf:g?
 async function fzAlle(){if(!confirm(t('Jede Sitzung und jeden Anker jetzt trennen?','Disconnect every session and anchor now?')))return;
   try{const r=await api('/api/admin/fernzugang/alle-trennen',{method:'POST'});const d=await r.json();fzMsg(t('Getrennt: ','Disconnected: ')+d.n);for(const S of [...FZ.reiter])fzTrennen(S);if(FZ.fb)fbTrennen();if(FZ.fs)fzFZu('');fzLoad()}catch(e){fzMsg(e.message,true)}}
 // ---------------------------------------------------------------- Reiter (several sessions, Bild 1-reiter)
-// a tab per session: the system's icon, its name, a dot (green connected, yellow connecting again), a blue dot when
-// output came in the background (only that it came), × disconnects; „+ System“ opens the chooser (Strg+Umschalt+O);
+// a tab per session, as a browser tab in the terminal's dark head (Dominik 2026-11-04): a dot (green connected, yellow
+// connecting again), its name, „SSH ✓“ once the host key is checked, a blue dot when output came in the background (only
+// that it came), × disconnects; ＋ at the end opens the chooser (Strg+Umschalt+O);
 // Strg+Umschalt+1…9 and ←/→ change the tab (the page keeps these keys, also in full screen); a tab can be dragged to
 // another place; the right click offers Herauslösen, Neu verbinden, Schließen and Andere trennen
 function fzReiterZeigen(){const bar=$('fzreiter');if(!bar)return;bar.textContent='';bar.hidden=FZ_FENSTER||!FZ.reiter.length;if(bar.hidden)return;
+  const liste=fzEl('div','fzreitliste');
   FZ.reiter.forEach((S,i)=>{const on=S===FZ.cur,b=fzEl('div','fzreit'+(on?' on':''));b.setAttribute('role','tab');b.setAttribute('aria-selected',String(on));b.tabIndex=on?0:-1;
-    b.title=S.sitz.name+(i<9?' · '+t('Strg+Umschalt+','Ctrl+Shift+')+(i+1):'');b.dataset.n=String(S.n);b.draggable=true;
-    b.append(fzIcon({art:S.sitz.art}),fzEl('span','fzreitname',S.sitz.name),fzEl('span','fzdot '+(S.wieder?'warn':S.sid&&S.ws?'ok':'')));
+    b.title=S.sitz.name+(i<9?' · '+t('Strg+Umschalt+','Ctrl+Shift+')+(i+1):'')+' · '+t('Strg+Umschalt+←/→ wechselt','Ctrl+Shift+←/→ switches');b.dataset.n=String(S.n);b.draggable=true;
+    const ssh=fzEl('span','fzreitssh','SSH');if(S.fp){const k=fzEl('span','fzok','✓');k.title=t('Host-Schlüssel geprüft: ','Host key checked: ')+S.fp;ssh.appendChild(k)}
+    b.append(fzEl('span','fzdot '+(S.wieder?'warn':S.sid&&S.ws?'ok':'')),fzEl('span','fzreitname',S.sitz.name),ssh);
     if(S.neu){const p=fzEl('span','fzreitneu');p.title=t('Neue Ausgabe','New output');b.appendChild(p)}
-    const x=fzBtn('×','fzreitzu',e=>{e.stopPropagation();fzTrennen(S)});x.title=t('Trennen','Disconnect');x.setAttribute('aria-label',x.title);x.tabIndex=-1;b.appendChild(x);
+    const x=fzEl('button','fzreitzu');x.type='button';x.appendChild(icNode('x'));x.onclick=e=>{e.stopPropagation();fzTrennen(S)};x.title=t('Trennen','Disconnect');x.setAttribute('aria-label',x.title);x.tabIndex=-1;b.appendChild(x);
     b.onclick=()=>fzReiterWahl(S);b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fzReiterWahl(S)}else if(e.key==='ContextMenu'||(e.shiftKey&&e.key==='F10')){e.preventDefault();fzReiterMenu(S,b)}};
     b.oncontextmenu=e=>{e.preventDefault();fzReiterMenu(S,b)};
     b.ondragstart=e=>{FZ.zieht=S;e.dataTransfer.effectAllowed='move'};b.ondragend=()=>{FZ.zieht=null};
     b.ondragover=e=>{if(FZ.zieht&&FZ.zieht!==S)e.preventDefault()};
     b.ondrop=e=>{e.preventDefault();const z=FZ.zieht;FZ.zieht=null;if(!z||z===S)return;const von=FZ.reiter.indexOf(z),nach=FZ.reiter.indexOf(S);FZ.reiter.splice(von,1);FZ.reiter.splice(nach,0,z);fzReiterZeigen()};
-    bar.appendChild(b)});
-  const plus=fzBtn('+ '+t('System','System'),'fzreitplus',fzWahl);plus.title=t('System wählen (Strg+Umschalt+O)','Choose a system (Ctrl+Shift+O)');bar.appendChild(plus);
-  bar.appendChild(fzEl('span','fzreithint',t('Strg+Umschalt+1…9 · ←/→','Ctrl+Shift+1…9 · ←/→')));fzAnsichtKnoepfe(bar);fzAlleKnopf(bar)}
+    liste.appendChild(b)});
+  const plus=fzEl('button','fzicon fzreitplus');plus.type='button';plus.appendChild(icNode('plus'));plus.onclick=fzWahl;plus.title=t('Neues System (Strg+Umschalt+O)','New system (Ctrl+Shift+O)');plus.setAttribute('aria-label',plus.title);
+  liste.appendChild(plus);bar.appendChild(liste);fzAnsichtKnoepfe(bar);fzAlleKnopf(bar);
+  const vorn=liste.querySelector('.fzreit.on');if(vorn){const l=vorn.offsetLeft,r=l+vorn.offsetWidth;if(r>liste.clientWidth)liste.scrollLeft=r-liste.clientWidth}}   // the tab in front stays in sight, the page never scrolls for it
 // a tab comes forward: its box shows, the bar, the line, the chips, the ⓘ and the assistant's answers are its own
 function fzReiterWahl(S,neu,immer){const alt=FZ.cur;if(alt===S&&!neu){if(immer){fzFeldFuer(S,alt);fzAnsichtMalen();fzLayout();requestAnimationFrame(()=>{fzResize();if(S.term&&fzImFeld(S))S.term.focus()})}fzReiterZeigen();return}
   const a=$('fzantwort');if(alt&&FZ.reiter.includes(alt)){fzNotizSpeichern();if(a){const f=document.createDocumentFragment();while(a.firstChild)f.appendChild(a.firstChild);alt.antwort=f}}
@@ -777,7 +799,7 @@ async function fzFSchliessen(text){const fs=FZ.fs;if(!fs)return;try{await api(`/
 function fzFZu(text){if(window.fgZu)fgZu();FZ.fs=null;FZ.sitz=null;fzBanner();$('fzfiles').hidden=true;$('fzflist').textContent='';$('fzmain').hidden=false;if(text)fzMsg(text,true);fzLoad()}
 {const k=$('fzgo');if(k){$('fzheraus').onclick=fzHeraus;$('fzverlaufweg').onclick=fzVerlaufWeg;$('fzfragen').onclick=fzFragen;$('fzzielgo').onclick=fzZielStart;$('fzzielende').onclick=()=>fzZielEnde('');
   $('fzfrage').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();fzFragen()}};$('fzalletasten').onclick=fzAlleTasten;$('fzdrawertab').onclick=()=>fzLade();
-  if(!(navigator.keyboard&&typeof navigator.keyboard.lock==='function'))$('fzalletasten').title=t('Nur in Chrome oder Edge','Only in Chrome or Edge');k.onclick=fzKoppeln;$('fzalle').onclick=fzAlle;$('fzalleakt').onclick=()=>{const a=fzAktBereit(FZ.d&&FZ.d.geraete);if(a.length&&confirm(t(`${a.length} Anker jetzt aktualisieren? Jeder startet dabei kurz neu.`,`Update ${a.length} anchors now? Each restarts briefly.`)))fzAktualisieren(a.map(g=>g.id))};$('fzbtrennen').onclick=fzBannerTrennen;$('fzbhin').onclick=()=>{goSec('fern');if(FZ.cur){fzZeigen();fzReiterWahl(FZ.cur)}};$('fzweiter').onclick=fzWeiter;$('fzbaldende').onclick=()=>fzTrennen(FZ.baldS);$('fzsperrplus').onclick=fzEntsperren;$('fzalle2').onclick=fzAlle;
+  if(!(navigator.keyboard&&typeof navigator.keyboard.lock==='function'))$('fzalletasten').title=t('Nur in Chrome oder Edge','Only in Chrome or Edge');k.onclick=fzKoppeln;$('fzalle').onclick=fzAlle;$('fzalleakt').onclick=()=>{const a=fzAktBereit(FZ.d&&FZ.d.geraete);if(a.length&&confirm(t(`${a.length} Anker jetzt aktualisieren? Jeder startet dabei kurz neu.`,`Update ${a.length} anchors now? Each restarts briefly.`)))fzAktualisieren(a.map(g=>g.id))};$('fzbtrennen').onclick=fzBannerTrennen;$('fzbcode').onclick=fzCodeEnde;$('fzbhinw').onclick=()=>fzHinweiseAuf();$('fzbhin').onclick=()=>{goSec('fern');if(FZ.cur){fzZeigen();fzReiterWahl(FZ.cur)}};$('fzweiter').onclick=fzWeiter;$('fzbaldende').onclick=()=>fzTrennen(FZ.baldS);$('fzsperrplus').onclick=fzEntsperren;$('fzalle2').onclick=fzAlle;
   $('fzbinfo').onclick=e=>fzInfoPop(undefined,e.currentTarget);$('fzinfobtn').onclick=e=>fzInfoPop(undefined,e.currentTarget);$('fzkeycopy').onclick=e=>{if(FZ.fp)copyString(FZ.fp,e.currentTarget)};
   $('fzmenu').onclick=()=>fzMenu(!FZ.menuAus);$('fzspalte').onclick=()=>fzSpalte($('fzview').classList.contains('fzzu'));$('fztasten').onclick=fzTastenreihe;
   $('fzspaltezu').onclick=()=>{if(document.fullscreenElement)fzLade(false);else if(NARROW())fzBlatt(false);else fzSpalte(false)};$('fzfragbtn').onclick=()=>fzBlatt(true);fzGriff();fzSpalteStart();fzAnsichtStart();
@@ -807,11 +829,11 @@ function fzSeite(){const s=$('fzsplit');if(!s)return;if(NARROW()||$('fzmain').hi
   const over=document.documentElement.scrollHeight-innerHeight;if(over>0)s.style.setProperty('--fzsh',Math.max(360,h-over)+'px')}
 function fzMenuWahl(){try{return localStorage.getItem('fzmenu')!=='zeigen'}catch{return true}}
 function fzMenu(aus){if(aus!==undefined){FZ.menuAus=!!aus;try{localStorage.setItem('fzmenu',aus?'aus':'zeigen')}catch{}}else if(FZ.menuAus===undefined)FZ.menuAus=fzMenuWahl();
-  const v=$('fzview'),on=!FZ_FENSTER&&!!v&&!v.hidden&&!!document.querySelector('section#fern.on');document.body.classList.toggle('fzohnemenu',on&&FZ.menuAus);document.body.classList.toggle('fzterminal',on);
+  const v=$('fzview'),on=!FZ_FENSTER&&!!v&&!v.hidden&&!!document.querySelector('section#fern.on');document.body.classList.toggle('fzohnemenu',on&&FZ.menuAus);document.body.classList.toggle('fzterminal',on);if(!on)fzHinweiseAuf(false);fzCodeSchild();
   const b=$('fzmenu');if(b){const l=FZ.menuAus?t('Menü einblenden','Show the menu'):t('Menü ausblenden','Hide the menu');b.title=l;b.setAttribute('aria-label',l);b.setAttribute('aria-pressed',FZ.menuAus?'true':'false')}
   if(aus!==undefined)fzLayout()}
 // the assistant's column: open or folded (kept), its width dragged between 280 and 520 px (kept), a double click folds it
-function fzSpalteStart(){let w=340,zu=false;try{w=Number(localStorage.getItem('fzcol'))||340;zu=localStorage.getItem('fzspalte')==='zu'}catch{}
+function fzSpalteStart(){let w=FZ_SPALTE[2],zu=false;try{w=Number(localStorage.getItem('fzcol'))||FZ_SPALTE[2];zu=localStorage.getItem('fzspalte')==='zu'}catch{}
   fzBreite(w,false);fzSpalte(!zu,false)}
 function fzBreite(w,keep){w=Math.round(Math.max(FZ_SPALTE[0],Math.min(FZ_SPALTE[1],w)));$('fzview').style.setProperty('--fzcol',w+'px');FZ.col=w;
   const g=$('fzgriff');g.setAttribute('aria-valuenow',String(w));g.setAttribute('aria-valuemin',String(FZ_SPALTE[0]));g.setAttribute('aria-valuemax',String(FZ_SPALTE[1]));
@@ -820,11 +842,11 @@ function fzSpalte(open,keep){const v=$('fzview');v.classList.toggle('fzzu',!open
   if(keep!==false){try{localStorage.setItem('fzspalte',open?'auf':'zu')}catch{}}
   requestAnimationFrame(()=>{fzResize();if(!open&&FZ.term)FZ.term.focus()})}
 function fzGriff(){const g=$('fzgriff');let x0=0,w0=0;
-  g.onpointerdown=e=>{e.preventDefault();x0=e.clientX;w0=FZ.col||340;g.setPointerCapture(e.pointerId);g.classList.add('zieht')};
+  g.onpointerdown=e=>{e.preventDefault();x0=e.clientX;w0=FZ.col||FZ_SPALTE[2];g.setPointerCapture(e.pointerId);g.classList.add('zieht')};
   g.onpointermove=e=>{if(!g.classList.contains('zieht'))return;fzBreite(w0+(x0-e.clientX),false)};
   g.onpointerup=g.onpointercancel=e=>{if(!g.classList.contains('zieht'))return;g.classList.remove('zieht');fzBreite(FZ.col,true);fzResize()};
   g.ondblclick=()=>fzSpalte(false);
-  g.onkeydown=e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();fzBreite((FZ.col||340)+(e.key==='ArrowLeft'?20:-20))}else if(e.key==='Enter'){e.preventDefault();fzSpalte(false)}}}
+  g.onkeydown=e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();fzBreite((FZ.col||FZ_SPALTE[2])+(e.key==='ArrowLeft'?20:-20))}else if(e.key==='Enter'){e.preventDefault();fzSpalte(false)}}}
 // the phone: the assistant as a sheet from below; „Einfügen“ closes it and the terminal has the focus
 function fzBlatt(open){const v=$('fzview');if(!v)return;v.classList.toggle('fzblatt',!!open&&v.classList.contains('fzki'));$('fzfragbtn').setAttribute('aria-expanded',open?'true':'false');
   if(open)setTimeout(()=>$('fzfrage').focus(),220);else if(FZ.term&&NARROW())FZ.term.focus()}
@@ -912,7 +934,7 @@ async function fzNotizZurueck(tt){const n=FZ.notiz;if(!n)return;await fzNotizSpe
 function fzNotizLadenDatei(g){const a=document.createElement('a');a.href=`/api/admin/fernzugang/notiz/${g.id}/laden`;a.download='';document.body.appendChild(a);a.click();a.remove()}
 // the column beside the terminal: tabs „Assistent“ and „Notizen“ when both are there, else the one that is
 function fzSeiteWahl(w){const ki=!!(FZ.d&&FZ.d.hilfe),no=fzNotizAn()&&!!(FZ.sitz&&FZ.sitz.gid);FZ.seite=w==='notiz'&&no?'notiz':ki?'ki':no?'notiz':'ki';
-  $('fzsidetabs').hidden=!(ki&&no);for(const b of $('fzsidetabs').querySelectorAll('button')){const on=b.dataset.w===FZ.seite;b.classList.toggle('on',on);b.setAttribute('aria-selected',String(on))}
+  for(const b of $('fzsidetabs').querySelectorAll('button')){const on=b.dataset.w===FZ.seite;b.hidden=b.dataset.w==='ki'?!ki:!no;b.classList.toggle('on',on);b.setAttribute('aria-selected',String(on));b.tabIndex=on?0:-1}
   $('fzhilfe').hidden=!ki||FZ.seite!=='ki';const p=$('fznotizseite');p.hidden=!no||FZ.seite!=='notiz';
   if(!p.hidden){const el=fzNotizFuer(FZ.sitz.gid);if(el&&el.parentNode!==p){p.textContent='';p.appendChild(el)}}}
 // the search finds note text too: a snippet per system, asked once the typing pauses
