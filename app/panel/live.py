@@ -62,7 +62,7 @@ TOOLS = {
     "mail_read": "mail", "mail_search": "mail", "mail_tidy_overview": "mail", "mail_tidy_propose": "mail",
     "fuer_dich": "mail", "fuer_dich_tun": "mail", "offen_zeigen": "cal",   # Offen lives on the Kalender node
     "contacts_search": "contacts", "remarkable_note": "rm", "remarkable_page": "rm", "remarkable_attachment": "rm", "remarkable_sent": "rm", "remarkable_sheet": "rm", "remarkable_library": "rm", "iphone_action": "push", "weather": "weather",
-    "parcels": "parcels", "transit": "transit", "feeds_news": "feeds", "document_search": "mem", "document_list": "mem", "fund_suche": "mem", "mappe_liste": "mem", "mappe_stand": "mem", "mappe_dazu": "mem", "dokument_auswertung": "mem", "history_search": "mem", "local_search": "mem",
+    "parcels": "parcels", "transit": "transit", "feeds_news": "feeds", "document_search": "mem", "document_list": "mem", "fund_suche": "mem", "mappe_liste": "mem", "mappe_stand": "mem", "mappe_dazu": "mem", "link_als_dokument": "links", "dokument_auswertung": "mem", "history_search": "mem", "local_search": "mem",
     "memory_forget": "mem", "memory_save": "mem", "reminder_cancel": "mem", "reminder_list": "mem", "reminder_set": "mem",
     "message_announce": "mem", "message_read": "mem", "message_send": "mem", "agent_list": "mem",
     "agent_schedule": "mem", "agent_task": "mem", "routine_save": "mem", "agent_watch": "mem",
@@ -200,6 +200,9 @@ TARGETS = {
     # Aufnahmen abschreiben (abschrift.py): shown while it is on, recordings waiting and minutes left of all profiles,
     # today's pieces and minutes, stops for speech, a missing speech recognition (numbers only, never a name)
     "abschrift": ("Aufnahmen abschreiben", "Ton und Video über die eigene Spracherkennung · auf dem Spark", "spark", False),
+    # Links als Dokument (doklink.py): shown while it is on, addresses waiting and link documents of all profiles,
+    # today's fetches with size and time, unchanged, refused (numbers only, never an address); the tool's target
+    "links": ("Links", "Öffentliche Seiten und Dateien als Dokument · Internet", "net", False),
     # KI-Dungeon-Master (dungeon.py): shown while it is on, rounds, players, guests, turns, loot and levels today (numbers only)
     "dungeon": ("Dungeon-Master", "Rollenspiel-Runden mit dem eigenen Sprachmodell · auf dem Spark", "spark", False),
     # Teilen mit Profilen (geteilt.py): shown while it is on, single shares and today's changes (numbers only)
@@ -218,7 +221,7 @@ RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "we
            "android": "liegt bereit", "desk": "liegt bereit", "page": "liegt bereit",
            "github": "Stand und Testergebnis", "nas": "Ablage bestätigt", "speicher": "Ablage bestätigt oder Datei geholt", "nasquelle": "Ordnerliste und Dateien", "nasablage": "Ablage bestätigt oder Datei geholt", "naszustand": "Belegung und Zustand in Zahlen", "docling": "Text des Dokuments", "mcp": "Antwort des Dienstes",
            "issues": "Nummer der Meldung", "make": "Gliederung, Auftrag oder Zustellung", "bild": "Bild (Größe und Sekunden)",
-           "musik": "Lied (Länge und Sekunden)",
+           "musik": "Lied (Länge und Sekunden)", "links": "Dokument (Art und Größe)",
            "geraete": "Versionsnummern und geprüfte Dateien", "systemupdate": "Paketzahlen und Kennungen von Warnungen", "telefon": "Anruf und Ton",
            "modell": "Antwort (nur Anzahl der Befehle)"}
 CLIENT = {"web": "Browser", "speaker": "Lautsprecher", "telefon": "Telefon", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
@@ -1485,6 +1488,13 @@ def snapshot(view="admin", now=None):
     if abn.get("on"):
         used.add("abschrift")
     try:
+        import doklink
+        dln = doklink.for_live(now)
+    except Exception:
+        dln = {"on": False}
+    if dln.get("on"):
+        used.add("links")
+    try:
         import fund
         fnd = fund.for_live()
     except Exception:
@@ -2153,6 +2163,14 @@ def snapshot(view="admin", now=None):
                         + (f" · {wbk['widerspruch']} Widersprüche" if wbk.get("widerspruch") else "")
                         + (f" · {wbk['veraltet']} veraltet?" if wbk.get("veraltet") else "")
                         + (" · arbeitet" if wbk.get("running") else ""))
+        if x["id"] == "links":   # Links als Dokument: waiting, documents, today's fetches, size, time (numbers only, never an address)
+            x["sub"] = (f"{dln.get('warten', 0)} warten · {dln.get('dokumente', 0)} Link-Dokumente"
+                        + f" · heute {dln.get('geholt', 0)} geholt, {dln.get('neu', 0)} neu gelesen, {dln.get('gleich', 0)} unverändert"
+                        + (f" · {dln.get('kb', 0)} kB in {round(dln.get('ms', 0) / 1000)} s" if dln.get("kb") else "")
+                        + (" · holt" if dln.get("laeuft") else "")
+                        + (f" · {dln['fehler']} Fehler" if dln.get("fehler") else "")
+                        + (f" · {dln['abgelehnt']} abgelehnt" if dln.get("abgelehnt") else "")
+                        + (f" · {dln['grenze']}× Tagesgrenze" if dln.get("grenze") else ""))
         if x["id"] == "abschrift":   # Aufnahmen abschreiben: waiting, minutes left, today's pieces (numbers only, never a name)
             x["sub"] = (f"Hintergrund: {abn.get('warten', 0)} Aufnahme{'' if abn.get('warten', 0) == 1 else 'n'} · {abn.get('minuten', 0)} min offen"
                         + f" · heute {abn.get('stuecke', 0)} Stücke, {abn.get('heute_min', 0)} min"

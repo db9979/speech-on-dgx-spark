@@ -961,7 +961,8 @@ def validate(new):
     d = ch.get("mappe_token", 24000)   # Mappen: tokens of a Mappe to the model (mappen.token_budget)
     if not isinstance(d, int) or isinstance(d, bool) or not 4000 <= d <= 100000:
         raise HTTPException(400, "mappe_token: 4000 to 100000")
-    for k, lo, hi in (("doc_audio_mb", 10, 1000), ("doc_audio_min", 5, 600), ("doc_audio_day_min", 10, 1440)):
+    for k, lo, hi in (("doc_link_mb", 1, 100), ("doc_link_day", 5, 500),   # Links als Dokument (doklink.GRENZEN)
+                      ("doc_audio_mb", 10, 1000), ("doc_audio_min", 5, 600), ("doc_audio_day_min", 10, 1440)):
         d = ch.get(k)   # Aufnahmen abschreiben: size, length, minutes per profile and day (abschrift.grenze)
         if d is not None and (not isinstance(d, int) or isinstance(d, bool) or not lo <= d <= hi):
             raise HTTPException(400, f"{k}: {lo} to {hi}")

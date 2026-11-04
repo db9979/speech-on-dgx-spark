@@ -5247,6 +5247,27 @@
 "titel": "Spontanhilfe: Programm laden ohne „too many requests“, Anwenderseite neu",
 "text": "Admin mit zweitem Schritt: Fernzugang → Spontanhilfe → „Neue Hilfe“, auf einem Windows-PC von außen (über den Reverse-Proxy) den Link öffnen. Die Seite ist schlicht: oben „Spark Fernhilfe“, „Dominik ist bereit, noch sieht man nichts“, „mit Dominik · endet spätestens in 60 min“ und rechts „Sitzung beenden“. „Bildschirm teilen“: oben roter Punkt „Bildschirm wird geteilt“, links eine kleine Vorschau („ausblenden“ geht, der Kreis von „Zeigen“ erscheint darin). Rechts „Nachrichten“ mit dem Feld oben, jede Nachricht mit Name und Uhrzeit. Admin: „Steuern anfragen (Code)“: links „Anfrage“ mit „Dominik möchte Ihren Computer steuern“, drei Schritten, „Programm laden“ (dunkel), „Nur ansehen lassen“; „Prüfsumme“ klappt die SHA-256 auf. „Programm laden“ mehrmals hintereinander tippen: bis 10 je Minute kommt jedes Mal die Datei, auch wenn eben jemand anderes über den Proxy falsche Nummern getippt hat; danach steht „Bitte einen Moment warten, dann noch einmal tippen (noch N s).“, die Zahl zählt herunter, der Knopf ist solange grau und nennt den Grund, danach geht er wieder. Nie ein englischer Text des Servers. Am Handy: eine Spalte, Nachrichten unter der Anfrage. Zustand → Logs (Fernzugang): „spontanhilfe: zu_oft | programm | 0“. Zustand → Dienste: „Programm SparkHilfe“ ist grün, solange es das Mac-Release noch nicht gibt (nur Windows wird erwartet); fehlt eine Windows-Datei, sagt die Meldung „… geht gerade nicht für Windows …“.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P776",
+"v": 1340,
+"titel": "Drei Links auf einmal, einer privat",
+"text": "Admin: Funktionen → Eigene Dokumente → Links als Dokument an. Ich → Dokumente → Link hinzufügen: drei Adressen untereinander, eine öffentliche Seite (ein Artikel), ein öffentliches PDF und die Adresse des eigenen Routers (z. B. http://192.168.178.1/). Holen: „2 von 3 angenommen · 192.168.178.1: keine öffentliche Adresse“. Nach ein paar Sekunden stehen zwei neue Dokumente mit Quelle „Link“ in der Liste, der Artikel mit seinem Titel; im Detail Adresse und „Geholt“. Zustand → Logs (Wissen): „doklink: geholt | html … kb“, nie eine Adresse.",
+"thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P777",
+"v": 1340,
+"titel": "Neu abrufen ohne Änderung",
+"text": "Im Detail eines Link-Dokuments „Neu abrufen“: oben steht „Neu abrufen: unverändert“, das Dokument bleibt dasselbe (gleiche Abschnitte). Im Chat „Speicher https://… als Dokument“ mit einer neuen Adresse: die Antwort sagt, dass die Seite jetzt ein Dokument ist; dieselbe Adresse noch einmal: „liegt schon in den Dokumenten“.",
+"thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P778",
+"v": 1340,
+"titel": "Notaus: Link wird nicht geholt",
+"text": "Zustand → Notaus Stufe 1 (Außen zu) auslösen. Ich → Dokumente → Link hinzufügen mit einer öffentlichen Adresse: „der Notaus hält das Internet zu“, es entsteht kein Dokument. „Schick https://… aufs reMarkable“ im Chat: die Antwort sagt, dass der Notaus es sperrt. Notaus aufheben, Link noch einmal: jetzt wird er geholt.",
+"thread": "Ideen aus Open Notebook übernehmen"
 }
 ]
 }

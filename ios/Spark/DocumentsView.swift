@@ -366,6 +366,7 @@ struct DocRow: View {
         case "nas": String(localized: "Wissensordner")
         case "eingang": String(localized: "NAS-Eingang")
         case "audio": String(localized: "Aufnahme")
+        case "link": String(localized: "Link")   // Links als Dokument (doklink.py); adding and "Neu abrufen" in the panel view
         default: String(localized: "Hochgeladen")
         }
     }

@@ -301,6 +301,7 @@
     },
     "ziel": {
       "mappe_dazu": "spark_vorschlag",
+      "link_als_dokument": "wikipedia",
       "iphone_action": "home_assistant_action",
       "mail_draft": "memory_save",
       "mail_tidy_propose": "memory_save",

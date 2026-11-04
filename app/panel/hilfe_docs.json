@@ -1589,7 +1589,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "e Nachricht noch einmal, llm_tor.entschaerft). Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt; nach einer Mail sind es 19, dazu gehört alles, was ins Internet fragt (Websuche, Wikipedia, Wetter, Fahrplan), damit kein Suchwort Mail-Inhalt hinausträgt. Ob das hält, prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed); ein Tunnel des Fernzugangs nur zu Zielen nach fernweb.ziel_ok: dort 127.0.0.1 und die eigenen Adressen des Systems, die sein Anker selbst meldet. Eine Mail mit HTML zeigt die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick über den Wächter, ein Link erst nach der Frage mit seiner echten Adresse. 7. Sprachmodell schlägt vor: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht. 8. Ändert es etwas?: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, A"
+"text": "e Nachricht noch einmal, llm_tor.entschaerft). Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt; nach einer Mail sind es 20, dazu gehört alles, was ins Internet fragt (Websuche, Wikipedia, Wetter, Fahrplan), damit kein Suchwort Mail-Inhalt hinausträgt. Ob das hält, prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed); eine Seite oder Datei holt nur netguard.hole_oeffentlich (Notaus zuerst, nur öffentlich auch nach jeder Weiterleitung, Größe, Zeit, Inhaltstyp), Links als Dokument nimmt eine Adresse nur aus den eigenen Worten der Person (doklink.eigene), und die Seite wird ein Dokument wie jedes: Daten; ein Tunnel des Fernzugangs nur zu Zielen nach fernweb.ziel_ok: dort 127.0.0.1 und die eigenen Adressen des Systems, die sein Anker selbst meldet. Eine Mail mit HTML zeigt die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick über den Wächter, ein Link erst nach der Frag"
 },
 {
 "lang": "de",
@@ -1597,7 +1597,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "nruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät, oder dem Ja-Knopf seiner Karte „Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell; ebenso führt nur ihr Klick Punkte der Wissenskarte zusammen, benennt sie um oder löscht sie (mit dem Code von „Bestätigen“); von selbst nur eine feste Regel bei gleichem Namen in anderer Schreibweise (wissensdoppelt.aehnlich), nie das Modell, und nie gegen ihr „Verschieden“. Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs nur mit "
+"text": "e mit seiner echten Adresse. 7. Sprachmodell schlägt vor: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht. 8. Ändert es etwas?: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät, oder dem Ja-Knopf seiner Karte „Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell; ebenso führt nur ihr Klick Punkte der Wissenskarte zusammen, benennt sie um oder löscht sie (mit dem Code von „Bestätigen“); von selbst nur eine feste Regel bei gleichem Namen in anderer Schreibweise (wissensdoppelt.aehnlich), nie das Modell, und nie gegen ihr „Verschieden“. Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person"
 },
 {
 "lang": "de",
@@ -1605,7 +1605,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette (guard.verify prüft sie täglich); einen Bruch, den ein Admin geprüft hat, bestätigt er mit frischem Code und einem Grund der festen Liste (guard.ack_break): ein neuer Eintrag, die Kette bleibt, und nur genau diese Zeile gilt als geprüft. Der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal), Gedächtnis und Gespräche ganz versiegelt im Ordner des Profils (profiles.write_own). Was ein Dienst für ein Profil vorhält (Mail-Vorrat, Mails, Anhänge, Termine und Kontakte in Finden), liegt nur mit AES-GCM versiegelt (vorrat.seal), die Wörter im Suchindex nur als HMAC-Marken mit einem Schlüssel je Profil (vorrat.marke); ohne Schlüssel wird nichts geschrieben. Schlagworte, die das Sprachmodell für Finden vorschlägt, sind Daten: fund.pruefe behält nur Kategorien der festen Liste und Namen, die wörtlich im Eintrag stehen, nie ein Befehlswort."
+"text": " es selbst tut. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette (guard.verify prüft sie täglich); einen Bruch, den ein Admin geprüft hat, bestätigt er mit frischem Code und einem Grund der festen Liste (guard.ack_break): ein neuer Eintrag, die Kette bleibt, und nur genau diese Zeile gilt als geprüft. Der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal), Gedächtnis und Gespräche ganz versiegelt im Ordner des Profils (profiles.write_own). Was ein Dienst für ein Profil vorhält (Mail-Vorrat, Mails, Anhänge, Termine und Kontakte in Finden), liegt nur mit AES-GCM versiegelt (vorrat.seal), die Wörter im Suchindex nur als HMAC-Marken mit einem Schlüssel je Profil (vorrat.marke); ohne Schlüssel wird nichts geschrieben. Schlagworte, die das Sprachmodell für Finden vorschlägt, sind Daten: fund.pruefe behält nur Kategorien "
 },
 {
 "lang": "de",
@@ -1653,7 +1653,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 13 Werkzeuge nach Text von außen gesperrt (Schritt 6) - 19 Werkzeuge nach einer Mail gesperrt (Schritt 6) - 10 min zählt ein richtiger Code für „Bestätigen“ (Schritt 3) - 18 feste Befehle des Wärters auf tars (Schritt 3) - 3 Notaus-Stufen, die letzte hält jedes Gespräch an (Schritt 2)"
+"text": "- 13 Werkzeuge nach Text von außen gesperrt (Schritt 6) - 20 Werkzeuge nach einer Mail gesperrt (Schritt 6) - 10 min zählt ein richtiger Code für „Bestätigen“ (Schritt 3) - 18 feste Befehle des Wärters auf tars (Schritt 3) - 3 Notaus-Stufen, die letzte hält jedes Gespräch an (Schritt 2)"
 },
 {
 "lang": "de",
@@ -1669,7 +1669,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": " des Modells aus jeder Nachricht nehmen (Schritt 6) - app/panel/mailansicht.py clean: HTML einer Mail nur bereinigt, ohne Skript und ohne Laden von außen (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/guard.py verify: prüft die Kette, bestätigte Brüche nur bei gleicher Zeile und Prüfsumme (Schritt 10) - app/panel/guard.py ack_break: bestätigt nur den Bruch, den die Prüfung gerade meldet (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt ablegen (Schritt 10) - app/panel/profiles.py write_own: Gedächtnis und Gespräche ganz versiegelt (Schritt 10) - app/panel/vorrat.py key: ein Schlüssel je Zweck aus secret.key (Schritt 10) - app/panel/meinedaten.py api_export: eigene Daten nur nach frischem Code, Passkey oder PIN (Schritt 3) - app/panel/meinedaten.py build: die ZIP nur aus dem Datei-Register, ohne Geheimnisse (Schritt 10) - app/panel/profiles.py _cap: Obergrenze des Gedächtnisses ohn"
+"text": " des Modells aus jeder Nachricht nehmen (Schritt 6) - app/panel/mailansicht.py clean: HTML einer Mail nur bereinigt, ohne Skript und ohne Laden von außen (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/netguard.py hole_oeffentlich: der eine Abruf einer öffentlichen Seite oder Datei: Notaus zuerst, nur öffentlich (Schritt 6) - app/panel/doklink.py eigene: Adressen fürs Werkzeug nur aus den eigenen Worten (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/guard.py verify: prüft die Kette, bestätigte Brüche nur bei gleicher Zeile und Prüfsumme (Schritt 10) - app/panel/guard.py ack_break: bestätigt nur den Bruch, den die Prüfung gerade meldet (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt ablegen (Schritt 10) - app/panel/profiles.py write_own: Gedächtnis und Gespräche ganz versiegelt (Schritt 10) - app/panel/vorrat.py key: ein Schlüssel je Zweck aus secret.key (Schritt 10) - app/panel/meinedaten.py api_export"
 },
 {
 "lang": "de",
@@ -1677,7 +1677,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "e Datenverlust (Schritt 8) - app/panel/gedaechtnis.py offer: Gelerntes ersetzt nie Bestätigtes: nur ein Angebot (Schritt 8) - app/panel/gemerkt.py take_back: Rückgängig nur für den eigenen, unveränderten Fakt (Schritt 8) - app/panel/wissensdoppelt.py aehnlich: Punkte der Karte von selbst nur nach fester Regel zusammen, nie gegen „Verschieden“ (Schritt 8)"
+"text": ": eigene Daten nur nach frischem Code, Passkey oder PIN (Schritt 3) - app/panel/meinedaten.py build: die ZIP nur aus dem Datei-Register, ohne Geheimnisse (Schritt 10) - app/panel/profiles.py _cap: Obergrenze des Gedächtnisses ohne Datenverlust (Schritt 8) - app/panel/gedaechtnis.py offer: Gelerntes ersetzt nie Bestätigtes: nur ein Angebot (Schritt 8) - app/panel/gemerkt.py take_back: Rückgängig nur für den eigenen, unveränderten Fakt (Schritt 8) - app/panel/wissensdoppelt.py aehnlich: Punkte der Karte von selbst nur nach fester Regel zusammen, nie gegen „Verschieden“ (Schritt 8)"
 },
 {
 "lang": "de",
@@ -1909,7 +1909,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Weiche",
 "title": "Weiche",
-"text": "Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und so weiter, heute 26 Gruppen) und grenzt damit die Werkzeuge ein, die das Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen."
+"text": "Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und so weiter, heute 27 Gruppen) und grenzt damit die Werkzeuge ein, die das Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen."
 },
 {
 "lang": "de",
@@ -1973,7 +1973,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Alltagsquote",
 "title": "Alltagsquote",
-"text": "- Die Testsätze (218) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
+"text": "- Die Testsätze (225) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
 },
 {
 "lang": "de",
@@ -1997,7 +1997,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Werkzeugnamen",
 "title": "Werkzeugnamen",
-"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (98 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
+"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (99 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
 },
 {
 "lang": "de",
@@ -2005,7 +2005,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 26 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 218 eingebaute Testsätze (Schritt 4, Schritt 5) - 216 Alltagssätze zum Messen (Schritt 14) - 66 Sätze der Quellen-Messbank (Schritt 14) - 150 ms höchstens für die Treffer-Probe der Quellen-Weiche (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
+"text": "- 27 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 225 eingebaute Testsätze (Schritt 4, Schritt 5) - 216 Alltagssätze zum Messen (Schritt 14) - 66 Sätze der Quellen-Messbank (Schritt 14) - 150 ms höchstens für die Treffer-Probe der Quellen-Weiche (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
 },
 {
 "lang": "de",
@@ -2221,7 +2221,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 4 Aufrufe pro Runde (Schritt 1) - 3 Gedächtnis-Notizen pro Antwort (Schritt 1) - 13 Werkzeuge gesperrt nach fremdem Text (Schritt 4) - 7 Werkzeuge ohne Internet bei Notaus (Schritt 3) - 98 Werkzeuge mit verständlichem Namen (Schritt 11)"
+"text": "- 4 Aufrufe pro Runde (Schritt 1) - 3 Gedächtnis-Notizen pro Antwort (Schritt 1) - 13 Werkzeuge gesperrt nach fremdem Text (Schritt 4) - 8 Werkzeuge ohne Internet bei Notaus (Schritt 3) - 99 Werkzeuge mit verständlichem Namen (Schritt 11)"
 },
 {
 "lang": "de",
@@ -2419,6 +2419,14 @@
 "lang": "de",
 "src": "architektur",
 "file": "Architektur und Datenfluss",
+"head": "Links als Dokument",
+"title": "Links als Dokument",
+"text": "- doklink.pruefe prüft jede Adresse nach festen Regeln, bevor etwas geholt wird: http oder https, ein Host, keine Zugangsdaten, Port 80 oder 443, keine IP und kein Name des Heimnetzes; höchstens 10 auf einmal und 30 wartend je Profil. doklink.eins holt eine nach der anderen nur über netguard.hole_oeffentlich (Notaus zuerst, öffentlich auch nach jeder Weiterleitung, Größe, Zeit, Inhaltstyp und erste Bytes) und gibt sie an wissen.aufnehmen: dieselben Regeln wie ein Upload, Herkunft „link:“ mit der SHA-256 der Adresse, dieselbe Adresse nur einmal. „Neu abrufen“ nur per Klick (doklink.neu_abrufen): bedingter Abruf mit ETag; 304 oder dieselbe SHA-256 heißt unverändert, sonst liest documents.renew die neuen Bytes in dasselbe Dokument. Der Seiteninhalt ist Text von außen."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
 "head": "Karte hilft der Suche",
 "title": "Karte hilft der Suche",
 "text": "- wissenskarte.liste(uid, worte, k) gibt Stück-Ids mit Rang ab 1 zurück, nur lesend (SQLite mit mode=ro) und nur für das eigene Profil. Feste Regeln, nie das Modell: Die Suchwörter treffen einen Punkt, wenn sein Name oder ein anderer Name ganz in der Frage steht (verglichen wie wissenskarte.ent_norm) oder ein Wort des Namens ab 4 Buchstaben, das keine Zahl und keine Rechtsform ist (wissenskarte.trifft); höchstens 20 Punkte. Dazu kommen ihre Nachbarn einen Schritt weit (dieselbe Abfrage wie wissenskarte.rund_um) und von allen die Stellen in genutzten, gelesenen Dokumenten. Eine Stelle mit einem genannten Punkt steht vor einer mit nur Nachbarn, mehr Punkte vor weniger, höchstens 50. - documents.search mischt die Liste wie die anderen mit 60 plus Platz, gewichtet mit 0.5, und nur Stellen, die dieselbe Bedingung der Suche durchlässt (documents._karte). Ein so gefundener Treffer trägt „karte“, unter der Antwort steht „über die Wissenskarte“. Die Suchprüfung misst die Mischung mit der Karte als eigenen Balken. Fällt die Karte aus, sucht die Suche ohne sie weiter und schreibt eine Zeile „wissen: kartensuche fehler“."
@@ -2509,7 +2517,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "50 Mappen pro Profil (Schritt 13) - 100 Einträge je Mappe (Schritt 13) - 24000 Token einer Mappe ans Modell (Standard) (Schritt 13) - 12000 Zeichen der Stellen je Durchgang einer Auswertung (Schritt 13) - 5 Durchgänge eines langen Dokuments höchstens (Schritt 13) - 100 Auswertungen pro Profil und Tag (Standard) (Schritt 13) - 10 eigene Arten (Vorlagen) des Admins höchstens (Schritt 13) - 400 Zeichen eines Auftrags einer Vorlage höchstens (Schritt 13) - 30 Sekunden je Stück einer Aufnahme (Schritt 13) - 1 Sekunden Überlappung vor einem Stück (Schritt 13) - 5 Aufnahmen je Profil, die auf ihre Abschrift warten, höchstens (Schritt 13)"
+"text": "50 Mappen pro Profil (Schritt 13) - 100 Einträge je Mappe (Schritt 13) - 24000 Token einer Mappe ans Modell (Standard) (Schritt 13) - 12000 Zeichen der Stellen je Durchgang einer Auswertung (Schritt 13) - 5 Durchgänge eines langen Dokuments höchstens (Schritt 13) - 100 Auswertungen pro Profil und Tag (Standard) (Schritt 13) - 10 eigene Arten (Vorlagen) des Admins höchstens (Schritt 13) - 400 Zeichen eines Auftrags einer Vorlage höchstens (Schritt 13) - 30 Sekunden je Stück einer Aufnahme (Schritt 13) - 1 Sekunden Überlappung vor einem Stück (Schritt 13) - 5 Aufnahmen je Profil, die auf ihre Abschrift warten, höchstens (Schritt 13) - 10 Adressen auf einmal bei Links als Dokument (Schritt 13) - 30 Adressen je Profil, die auf ihren Abruf warten, höchstens (Schritt 13)"
 },
 {
 "lang": "de",
@@ -2525,7 +2533,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "umente und darunter Auswertungen an: das Blatt Auswertungen im Detail jedes eigenen Dokuments, dazu wie viele Auswertungen am Tag. - Funktionen → Eigene Dokumente und darunter Aufnahmen abschreiben an: Ton- und Videodateien unter Ich → Dokumente, dazu Größe, Länge und Minuten am Tag. - Funktionen → Eigene Dokumente und darunter Mappen an: die Seite Mappen im Menü, dazu wie viele Token eine Mappe dem Modell höchstens gibt."
+"text": "umente und darunter Auswertungen an: das Blatt Auswertungen im Detail jedes eigenen Dokuments, dazu wie viele Auswertungen am Tag. - Funktionen → Eigene Dokumente und darunter Aufnahmen abschreiben an: Ton- und Videodateien unter Ich → Dokumente, dazu Größe, Länge und Minuten am Tag. - Funktionen → Eigene Dokumente und darunter Links als Dokument an: „Link hinzufügen“ unter Ich → Dokumente, dazu Größe je Seite und Abrufe am Tag. - Funktionen → Eigene Dokumente und darunter Mappen an: die Seite Mappen im Menü, dazu wie viele Token eine Mappe dem Modell höchstens gibt."
 },
 {
 "lang": "de",
@@ -2581,7 +2589,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_wissen, test_auswertung, test_abschrift, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung, test_wissenstempo"
+"text": "Selbsttests: test_wissen, test_auswertung, test_abschrift, test_doklink, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung, test_wissenstempo"
 },
 {
 "lang": "de",
@@ -2605,7 +2613,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Werkzeug will nach außen: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 35 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig. 2. Name einmal auflösen: resolve() fragt den Namen genau einmal ab. Hat er mehrere Adressen, muss jede erlaubt sein, sonst ist Schluss. 3. Eigener Dienst?: Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu). Laufen die Modelle auf einem anderen Rechner (models.host), gelten seine Adressen genauso (model_addresses). 4. Internet und Notaus an?: Ist die Adresse öffentlich und der Notaus mindestens auf Stufe 1, geht nichts ins Internet, egal welche Stufe das Werkzeug hat. Das Heimnetz bleibt erreichbar, wie die Stufe es erlaubt. 5. Öffentliche Adresse?: Eine öffentliche Adresse ist auf jeder Stufe erlaubt. 6. Stufe „nur Internet“?: Was aus Suchergebnissen oder Antworten kommt, darf nie ins Heimnetz (chat, feeds, geraeteupdate, ghtoken, mai"
+"text": "1. Werkzeug will nach außen: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 34 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig. 2. Name einmal auflösen: resolve() fragt den Namen genau einmal ab. Hat er mehrere Adressen, muss jede erlaubt sein, sonst ist Schluss. 3. Eigener Dienst?: Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu). Laufen die Modelle auf einem anderen Rechner (models.host), gelten seine Adressen genauso (model_addresses). 4. Internet und Notaus an?: Ist die Adresse öffentlich und der Notaus mindestens auf Stufe 1, geht nichts ins Internet, egal welche Stufe das Werkzeug hat. Das Heimnetz bleibt erreichbar, wie die Stufe es erlaubt. 5. Öffentliche Adresse?: Eine öffentliche Adresse ist auf jeder Stufe erlaubt. 6. Stufe „nur Internet“?: Was aus Suchergebnissen oder Antworten kommt, darf nie ins Heimnetz (feeds, geraeteupdate, ghtoken, mailansic"
 },
 {
 "lang": "de",
@@ -2613,7 +2621,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "lansicht, meldung, modellseite, remarkable, systemupdates, verbund). 7. Nie erlaubt?: Link-lokale Adressen (169.254.x, dort antworten Cloud-Metadaten), Multicast, unbestimmte und reservierte Adressen sind auf keiner Stufe erlaubt. 8. Heimnetz erlaubt?: Home Assistant und andere Dienste im Heimnetz (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) dürfen immer. Kalender, Kontakte, Mail und MCP (calendars, contacts, fundmail, mail, mcp, meinmcp, tasks) nur, wenn unter Einstellungen → Sicherheit → Heimnetz-Adressen erlauben eingeschaltet ist. 9. Verbinden mit genau dieser Adresse: Die Verbindung geht an die geprüfte Adresse, nicht noch einmal an den Namen. Ein zweites Nachschlagen könnte anders antworten (DNS-Rebinding). Das Zertifikat wird trotzdem für den Namen geprüft. 10. Passwort nur zur eigenen Seite: Anmeldedaten gehen nur an die Seite, für die sie eingetragen wurden (gleicher Host oder gleiche Hauptdomain, etwa die CalDAV-Server von icloud.com), nie über http, wenn die Adresse https war. 11. Antwort höchstens 20 MB: Antworten werden bei 20 MB abgeschnitten, auch nach dem Entpacken von gzip, damit eine riesige oder gepackte Antwort den Speicher nicht füllt. 12. An"
+"text": "ht, meldung, modellseite, remarkable, systemupdates, verbund). 7. Nie erlaubt?: Link-lokale Adressen (169.254.x, dort antworten Cloud-Metadaten), Multicast, unbestimmte und reservierte Adressen sind auf keiner Stufe erlaubt. 8. Heimnetz erlaubt?: Home Assistant und andere Dienste im Heimnetz (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) dürfen immer. Kalender, Kontakte, Mail und MCP (calendars, contacts, fundmail, mail, mcp, meinmcp, tasks) nur, wenn unter Einstellungen → Sicherheit → Heimnetz-Adressen erlauben eingeschaltet ist. 9. Verbinden mit genau dieser Adresse: Die Verbindung geht an die geprüfte Adresse, nicht noch einmal an den Namen. Ein zweites Nachschlagen könnte anders antworten (DNS-Rebinding). Das Zertifikat wird trotzdem für den Namen geprüft. 10. Passwort nur zur eigenen Seite: Anmeldedaten gehen nur an die Seite, für die sie eingetragen wurden (gleicher Host oder gleiche Hauptdomain, etwa die CalDAV-Server von icloud.com), nie über http, wenn die Adresse https war. 11. Antwort höchstens 20 MB: Antworten werden bei 20 MB abgeschnitten, auch nach dem Entpacken von gzip, damit eine riesige oder gepackte Antwort den Speicher nicht füllt. 12. Antwort "
 },
 {
 "lang": "de",
@@ -2621,7 +2629,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "twort ans Werkzeug: Das Werkzeug bekommt die Antwort als Daten. Eine Weiterleitung ist eine neue Verbindung und wird genauso geprüft, ab Schritt 2."
+"text": "ans Werkzeug: Das Werkzeug bekommt die Antwort als Daten. Eine Weiterleitung ist eine neue Verbindung und wird genauso geprüft, ab Schritt 2."
 },
 {
 "lang": "de",
@@ -2630,6 +2638,14 @@
 "head": "Ablauf",
 "title": "Beispiele",
 "text": "Beispiele: Webseite aus der Suche: Erlaubt: verbunden mit der geprüften öffentlichen Adresse. · Home Assistant im Heimnetz: Erlaubt: die Stufe Heimnetz darf ins Heimnetz. · Kalender im Heimnetz, Schalter aus: Gesperrt: Heimnetz-Adressen sind für Nutzer-Dienste aus. · Link auf Cloud-Metadaten: Gesperrt: eine Seite aus der Suche darf nie ins Heimnetz, 169.254 nie. · Notaus an, Wetter abfragen: Gesperrt: bei Notaus geht nichts ins Internet."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ein Abruf für Seiten und Dateien",
+"title": "Ein Abruf für Seiten und Dateien",
+"text": "- Eine Seite oder Datei von einer Adresse holt nur netguard.hole_oeffentlich: die Seiten aus Suchergebnissen (chat.page_text), die Webseite aufs reMarkable (über page_text) und Links als Dokument. Zuerst der Notaus, dann vor jeder Anfrage netguard.oeffentlich (http oder https, keine Zugangsdaten, jede Adresse des Namens öffentlich) und an der Verbindung noch einmal die Stufe nur Internet; höchstens 4 Weiterleitungen, jede neu geprüft, ein fester Browser-Name, Inhaltstyp aus einer festen Liste, Größe und Zeit für alles zusammen. Eine Ablehnung ist ein festes Wort (netguard.WORTE)."
 },
 {
 "lang": "de",
@@ -2645,7 +2661,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 20 MB größte Antwort (Schritt 11) - 30000–31099, 31443 gesperrte eigene Ports (Schritt 3) - 15 Sperren in 10 Minuten bis Notaus Stufe 1 (wenn an) (Schritt 4) - 1 Notaus-Stufe ohne Internet (Schritt 4)"
+"text": "- 20 MB größte Antwort (Schritt 11) - 4 Weiterleitungen je Abruf, jede neu geprüft (Schritt 12) - 30000–31099, 31443 gesperrte eigene Ports (Schritt 3) - 15 Sperren in 10 Minuten bis Notaus Stufe 1 (wenn an) (Schritt 4) - 1 Notaus-Stufe ohne Internet (Schritt 4)"
 },
 {
 "lang": "de",
@@ -2669,7 +2685,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/netguard.py allowed: die Regel: nichts oder der Grund (Schritt 3, Schritt 7, Schritt 8) - app/panel/netguard.py resolve: einmal auflösen, jede Adresse prüfen, Live melden (Schritt 2) - app/panel/netguard.py client: der Zugang nach außen für Werkzeuge (Schritt 1) - app/panel/netguard.py _Transport: Passwort-Schutz, Größengrenze, Ergebnis für Mein Zustand (Schritt 10, Schritt 11) - app/panel/netguard.py _Capped: schneidet die Antwort ab, auch entpackt (Schritt 11) - app/panel/netguard.py same_site: gleiche Seite für Anmeldedaten (Schritt 10) - app/panel/netguard.py own_addresses: alle Adressen dieser Maschine (Schritt 3) - app/panel/netguard.py model_addresses: die Adressen des Modell-Rechners, wenn er ein anderer ist (Schritt 3) - app/panel/netguard.py IMAP4_SSL: Mail über die geprüfte Adresse (Schritt 9) - app/panel/notaus.py watch: zählt Sperren für Notaus von selbst (Schritt 2) - app/panel/live.py outgoing: zeigt jede Entscheidung auf Live (Schritt 2)"
+"text": "- app/panel/netguard.py allowed: die Regel: nichts oder der Grund (Schritt 3, Schritt 7, Schritt 8) - app/panel/netguard.py resolve: einmal auflösen, jede Adresse prüfen, Live melden (Schritt 2) - app/panel/netguard.py client: der Zugang nach außen für Werkzeuge (Schritt 1) - app/panel/netguard.py hole_oeffentlich: der eine Abruf einer öffentlichen Seite oder Datei (Schritt 1, Schritt 12) - app/panel/netguard.py oeffentlich: Vorprüfung jeder Anfrage: nur öffentlich, ohne Zugangsdaten (Schritt 6) - app/panel/netguard.py _Transport: Passwort-Schutz, Größengrenze, Ergebnis für Mein Zustand (Schritt 10, Schritt 11) - app/panel/netguard.py _Capped: schneidet die Antwort ab, auch entpackt (Schritt 11) - app/panel/netguard.py same_site: gleiche Seite für Anmeldedaten (Schritt 10) - app/panel/netguard.py own_addresses: alle Adressen dieser Maschine (Schritt 3) - app/panel/netguard.py model_addresses: die Adressen des Modell-Rechners, wenn er ein anderer ist (Schritt 3) - app/panel/netguard.py IMAP4_SSL: Mail über die geprüfte Adresse (Schritt 9) - app/panel/notaus.py watch: zählt Sperren für Notaus von selbst (Schritt 2) - app/panel/live.py outgoing: zeigt jede Entscheidung auf Live (Schri"
 },
 {
 "lang": "de",
@@ -2677,7 +2693,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_hardening, test_notaus, test_waechter_umgehung"
+"text": "tt 2)"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": "Selbsttests: test_hardening, test_notaus, test_waechter_umgehung, test_doklink"
 },
 {
 "lang": "de",
@@ -3221,7 +3245,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Modell ruft ein Werkzeug: Das Modell nennt ein Werkzeug und Angaben dazu. Wer fragt, steht schon fest (Anmeldung); die Zugangsdaten des Dienstes liegen versiegelt beim Profil und gehen nie ans Modell. 2. In dieser Runde angeboten?: Nur Werkzeuge, die diese Runde angeboten hat, laufen. Ein anderer Name wird nicht ausgeführt. 3. Notaus hält es an?: Der Notaus wird bei jedem Aufruf neu gelesen. Ab Stufe 1 sind die 7 Werkzeuge gesperrt, die selbst ins Internet gehen (Websuche, Wetter, Fahrplan, Wikipedia, Pakete, Seiten lesen); ab Stufe 2 oder mit „Mein Notaus“ jedes Werkzeug, das etwas ändert. 4. Schon Text von außen gelesen?: Hat die Antwort schon Mails, Webseiten, Kalender, Dokumente oder ein Archiv gelesen, darf sie nichts mehr schalten, merken oder eintragen. Die Person muss das in einer neuen Nachricht selbst sagen. 5. Dienst als weg bekannt?: Sieht der Dienst-Wächter den Dienst dieses Werkzeugs als weg (und ist der Hinweis an), antwortet das Werkzeug sofort mit einem festen Satz, statt zu warten. Die Websuche versucht dann das eigene Kiwix. 6. Fester eigener Weg?: Das Sprachmodell, SearXNG an der eingetragenen Adresse, Wetter, Fahrplan, Wikipedia und feste Dienste wie Apple-P"
+"text": "1. Modell ruft ein Werkzeug: Das Modell nennt ein Werkzeug und Angaben dazu. Wer fragt, steht schon fest (Anmeldung); die Zugangsdaten des Dienstes liegen versiegelt beim Profil und gehen nie ans Modell. 2. In dieser Runde angeboten?: Nur Werkzeuge, die diese Runde angeboten hat, laufen. Ein anderer Name wird nicht ausgeführt. 3. Notaus hält es an?: Der Notaus wird bei jedem Aufruf neu gelesen. Ab Stufe 1 sind die 8 Werkzeuge gesperrt, die selbst ins Internet gehen (Websuche, Wetter, Fahrplan, Wikipedia, Pakete, Seiten lesen); ab Stufe 2 oder mit „Mein Notaus“ jedes Werkzeug, das etwas ändert. 4. Schon Text von außen gelesen?: Hat die Antwort schon Mails, Webseiten, Kalender, Dokumente oder ein Archiv gelesen, darf sie nichts mehr schalten, merken oder eintragen. Die Person muss das in einer neuen Nachricht selbst sagen. 5. Dienst als weg bekannt?: Sieht der Dienst-Wächter den Dienst dieses Werkzeugs als weg (und ist der Hinweis an), antwortet das Werkzeug sofort mit einem festen Satz, statt zu warten. Die Websuche versucht dann das eigene Kiwix. 6. Fester eigener Weg?: Das Sprachmodell, SearXNG an der eingetragenen Adresse, Wetter, Fahrplan, Wikipedia und feste Dienste wie Apple-P"
 },
 {
 "lang": "de",
@@ -3253,7 +3277,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 20 MB größte Antwort über den Wächter (Schritt 10) - 2 MB größte Antwort eines MCP-Dienstes (Schritt 10) - 7 Werkzeuge, die ab Notaus-Stufe 1 ruhen (Schritt 3) - 5 s längste Probe des Dienst-Wächters (Schritt 5)"
+"text": "- 20 MB größte Antwort über den Wächter (Schritt 10) - 2 MB größte Antwort eines MCP-Dienstes (Schritt 10) - 8 Werkzeuge, die ab Notaus-Stufe 1 ruhen (Schritt 3) - 5 s längste Probe des Dienst-Wächters (Schritt 5)"
 },
 {
 "lang": "de",
@@ -3309,7 +3333,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Werkzeug will ins Internet: Das Modell hat ein angebotenes Werkzeug gerufen, das einen Dienst im Internet braucht. Welche Werkzeuge überhaupt angeboten werden, haben Rechte und Weiche schon entschieden. 2. Notaus hält das Internet an?: Ab Stufe 1 ruhen die 7 Werkzeuge, die selbst ins Internet gehen (notaus.INTERNET_TOOLS); notaus.locked_tools wird bei jedem Aufruf neu gelesen. 3. Feste Adresse?: Wetter, Fahrplan und Wikipedia fragen eine feste Adresse aus dem Code oder den Admin-Einstellungen, nie eine aus fremdem Text. Welche Module direkt verbinden dürfen und warum, steht in netguard.DIRECT_OK. 4. Über den Wächter: Seiten aus der Suche und reMarkable fragen mit Stufe nur Internet (netguard.PUBLIC), Mail, Kalender und Kontakte mit Stufe Nutzer. Die Stufe steht im Code. 5. Adresse erlaubt?: netguard.allowed prüft jede aufgelöste Adresse: keine eigenen Dienste, kein 169.254, kein Heimnetz auf Stufe nur Internet. 6. Antwort als Daten: Die Antwort wird an der Grenze abgeschnitten und geht als Daten ans Modell, nie als Befehl. 7. Was der Spark selbst schickt: Ohne Werkzeug gehen nur feste Wege hinaus: die Telegram-Bot-API, Apple- und Browser-Push an bekannte Dienste und die Update-P"
+"text": "1. Werkzeug will ins Internet: Das Modell hat ein angebotenes Werkzeug gerufen, das einen Dienst im Internet braucht. Welche Werkzeuge überhaupt angeboten werden, haben Rechte und Weiche schon entschieden. 2. Notaus hält das Internet an?: Ab Stufe 1 ruhen die 8 Werkzeuge, die selbst ins Internet gehen (notaus.INTERNET_TOOLS); notaus.locked_tools wird bei jedem Aufruf neu gelesen. 3. Feste Adresse?: Wetter, Fahrplan und Wikipedia fragen eine feste Adresse aus dem Code oder den Admin-Einstellungen, nie eine aus fremdem Text. Welche Module direkt verbinden dürfen und warum, steht in netguard.DIRECT_OK. 4. Über den Wächter: Seiten aus der Suche, Links als Dokument und reMarkable fragen mit Stufe nur Internet (netguard.PUBLIC), Seiten und Dateien von einer Adresse dabei nur über netguard.hole_oeffentlich; Mail, Kalender und Kontakte mit Stufe Nutzer. Die Stufe steht im Code. 5. Adresse erlaubt?: netguard.allowed prüft jede aufgelöste Adresse: keine eigenen Dienste, kein 169.254, kein Heimnetz auf Stufe nur Internet. 6. Antwort als Daten: Die Antwort wird an der Grenze abgeschnitten und geht als Daten ans Modell, nie als Befehl. 7. Was der Spark selbst schickt: Ohne Werkzeug gehen nur fe"
 },
 {
 "lang": "de",
@@ -3317,7 +3341,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "rüfung bei GitHub, jede mit Grund in netguard.DIRECT_OK. Dazu, nur auf Befehl eines Admins und nie aus dem Panel selbst: An GitHub geben (root schiebt einen Zweig opencode/… per ssh an GitHub, Kasten Werkstatt)."
+"text": "ste Wege hinaus: die Telegram-Bot-API, Apple- und Browser-Push an bekannte Dienste und die Update-Prüfung bei GitHub, jede mit Grund in netguard.DIRECT_OK. Dazu, nur auf Befehl eines Admins und nie aus dem Panel selbst: An GitHub geben (root schiebt einen Zweig opencode/… per ssh an GitHub, Kasten Werkstatt)."
 },
 {
 "lang": "de",
@@ -3333,7 +3357,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 7 Werkzeuge, die selbst ins Internet gehen (Schritt 2) - 20 MB größte Antwort über den Wächter (Schritt 6)"
+"text": "- 8 Werkzeuge, die selbst ins Internet gehen (Schritt 2) - 20 MB größte Antwort über den Wächter (Schritt 6)"
 },
 {
 "lang": "de",
@@ -5694,6 +5718,38 @@
 "head": "Sprach-Chat",
 "title": "Aufnahmen abschreiben, Push 3a (V01.1.336, Plan *open-notebook* Stufe 3)",
 "text": "sttests tests/test_abschrift.py."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Links als Dokument, Push 4 (V01.1.340, Plan *open-notebook* Stufe 4)",
+"text": "Links als Dokument, Push 4 (V01.1.340, Plan *open-notebook* Stufe 4): Admin-Schalter *Funktionen → Eigene Dokumente → Links als Dokument* (chat.doc_link, ab Werk aus; kein Profilschalter, der Admin sperrt einzelne Profile, Gäste nie), darunter *Größte Seite oder Datei (MB)* (chat.doc_link_mb, 1 bis 100, Standard 20) und *Abrufe pro Tag und Profil* (chat.doc_link_day, 5 bis 500, Standard 50, „Neu abrufen“ eingeschlossen). Unter Ich → Dokumente → *Link hinzufügen* gibt man bis zu 10 Adressen auf einmal ein (eine je Zeile), die Seite schickt sie an POST /api/profile/docs/link (neues Modul doklink.py, Anmeldung, eigenes Profil, CSRF, Größenlimit 32 KB vor dem Lesen, Rate-Limit „doklink“). Feste Regeln vor dem Abruf (doklink.pruefe): http oder https, ein Host, keine Zugangsdaten (user:pass@ → abgelehnt), Port 80 oder 443, höchstens 2000 Zeichen, keine IP-Adresse und kein Name des Heimnetzes (localhost, .local, fritz.box …); jede Adresse bekommt ein festes Wort zurück (angenommen, privat, zugang, port, doppelt …). Angenommene warten in der Tabelle dl_link in wissen.db (höchstens 30 je Profil), ein Lauf holt sie eine nach der anderen, ohne Modell. Ein Abruf-Helfer: netguard.hole_oeffentli"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Links als Dokument, Push 4 (V01.1.340, Plan *open-notebook* Stufe 4)",
+"text": "ch holt jede Seite oder Datei von einer Adresse, auch die Seiten aus Suchergebnissen (chat.page_text) und die Webseite aufs reMarkable (rmplus.web_page über page_text, die dabei den bisher fehlenden Notaus-Check bekam): zuerst der Notaus, vor jeder Anfrage netguard.oeffentlich (jede Adresse des Namens öffentlich), an der Verbindung noch einmal die Stufe *nur Internet*, höchstens 4 Weiterleitungen, jede neu geprüft, ein fester Browser-Name, Inhaltstyp aus einer festen Liste (HTML, PDF, Text, Markdown, DOCX, ODT; bei PDF, DOCX und ODT auch die ersten Bytes), Größe und 30 Sekunden für alles. Als Dokument: wissen.aufnehmen(uid, name, data, source, herkunft) nimmt die Seite mit allen Regeln eines Uploads auf (zweiter Anmeldeschritt, Sperre des Admins, Speicherplatz, Höchstzahl, Warteschlange) und merkt die Herkunft (link: mit der SHA-256 der Adresse); dieselbe Adresse kommt nur einmal. HTML geht als <Titel>.html in documents.add (Überschriften und Tabellen bleiben, mit Docling-Server wie jede HTML-Datei). Derselbe Helfer nimmt später auch „Zu Dokumenten übernehmen“ aus dem Such-Index auf. Neu abrufen nur per Klick im Detail eines Link-Dokuments (POST /api/profile/wissen/{doc}/abrufen): "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Links als Dokument, Push 4 (V01.1.340, Plan *open-notebook* Stufe 4)",
+"text": "bedingter Abruf mit If-None-Match/If-Modified-Since; 304 oder dieselbe SHA-256 heißt „unverändert“, sonst liest documents.renew die neuen Bytes in dasselbe Dokument (Wissensbuch und Auswertungen sehen den neuen Text von selbst). Wartende oder gescheiterte Adressen nimmt das ✕ wieder heraus (DELETE /api/profile/docs/link/{id}). Werkzeug link_als_dokument: nur angeboten, wenn eine Adresse in der eigenen Nachricht steht (Weiche-Gruppe „Links als Dokument“: Adresse und ein Wort wie „speicher“, „übernimm“, „als Dokument“; „aufs reMarkable“ bleibt beim reMarkable), nimmt nur Adressen, die wörtlich in der Nachricht der Person stehen, höchstens 10, ist nach Text von außen gesperrt und gehört zu den Internet-Werkzeugen des Notaus. Der Seiteninhalt ist Text von außen: was eine Seite sagt, ist nie eine Anweisung. Zustand → Live: Kasten *Links* (wartend, Link-Dokumente, heute geholt, neu gelesen, unverändert, kB und Sekunden, nie eine Adresse); Logs Bereich Wissen: doklink: geholt | html 182 kb, doklink: unveraendert, doklink: abgelehnt | privat, doklink: grenze | 50. iPhone: Meine Sachen → Dokumente in der Panel-Ansicht (iphone.THINGS[\"documents\"]); Android über die Panel-Ansicht. Selbsttests"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Links als Dokument, Push 4 (V01.1.340, Plan *open-notebook* Stufe 4)",
+"text": " tests/test_doklink.py."
 },
 {
 "lang": "de",
@@ -14077,6 +14133,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Meine Daten",
 "title": "Meine Daten",
+"text": "- Links als Dokument (Funktionen → Meine Daten → „Links als Dokument“; baut auf „Eigene Dokumente“; Ich → Dokumente): Unter Ich → Dokumente → „Link hinzufügen“ gibst du bis zu 10 Adressen auf einmal ein (eine je Zeile), oder du sagst dem Assistenten „Speicher https://… als Dokument“."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
 "text": "- Suchprüfung (Funktionen → Meine Daten → „Suchprüfung“; baut auf „Eigene Dokumente“; Ich → Dokumente): Prüffragen mit bekannter richtiger Stelle zeigen, wie oft die Suche in deinen Dokumenten das Richtige findet."
 },
 {
@@ -19741,7 +19805,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ter a mail it is 19, everything that asks the internet among them (web search, Wikipedia, weather, transit), so no search word carries mail content out. Whether this holds is checked by the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed); a remote-access tunnel only to targets by fernweb.ziel_ok: 127.0.0.1 there and the system's own addresses its anchor reports itself. A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures from outside only after the own click and through the guard, a link only after the question with its real address. 7. The language model proposes: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run. 8. Does it change something?: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes"
+"text": "ter a mail it is 20, everything that asks the internet among them (web search, Wikipedia, weather, transit), so no search word carries mail content out. Whether this holds is checked by the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed); a page or file is fetched only by netguard.hole_oeffentlich (kill switch first, public only also after every redirect, size, time, content type), links as documents take an address only from the person's own words (doklink.eigene), and the page becomes a document like any: data; a remote-access tunnel only to targets by fernweb.ziel_ok: 127.0.0.1 there and the system's own addresses its anchor reports itself. A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures from outside only after the own click and through the guard, a link only after the question with its real address. 7. The language model proposes: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not"
 },
 {
 "lang": "en",
@@ -19749,7 +19813,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model; likewise only their click merges, renames or deletes points of the knowledge map (with the code of „Confirm“); by itself only a fixed rule for the same name in another spelling (wissensdoppelt.aehnlich), never the model, and never against their „Different“. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it. 9. Check the answer: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML. 10. Traces: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain (guard.verify checks it daily); a break an admin has checked is confirmed with a fresh code and a reason of t"
+"text": " run. 8. Does it change something?: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model; likewise only their click merges, renames or deletes points of the knowledge map (with the code of „Confirm“); by itself only a fixed rule for the same name in another spelling (wissensdoppelt.aehnlich), never the model, and never against their „Different“. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it. 9. Check the answer: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). Th"
 },
 {
 "lang": "en",
@@ -19757,7 +19821,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "he fixed list (guard.ack_break): a new entry, the chain stays, and only exactly that line counts as checked. The Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own). What a service keeps for a profile (the mail supply, mail, attachments, appointments and contacts in Find) lies only sealed with AES-GCM (vorrat.seal), the words in the search index only as HMAC marks with a key per profile (vorrat.marke); without a key nothing is written. Tags the language model proposes for Find are data: fund.pruefe keeps only categories of the fixed list and names that stand in the entry word for word, never a command word."
+"text": "e pages never show model text as HTML. 10. Traces: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain (guard.verify checks it daily); a break an admin has checked is confirmed with a fresh code and a reason of the fixed list (guard.ack_break): a new entry, the chain stays, and only exactly that line counts as checked. The Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own). What a service keeps for a profile (the mail supply, mail, attachments, appointments and contacts in Find) lies only sealed with AES-GCM (vorrat.seal), the words in the search index only as HMAC marks with a key per profile (vorrat.marke); without a key nothing is written. Tags the language model proposes for Find are data: fund.pruefe keeps only categories of the fixed list and names that stand in the entry word for word, never a command word."
 },
 {
 "lang": "en",
@@ -19805,7 +19869,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 13 tools locked after outside text (step 6) - 19 tools locked after a mail (step 6) - 10 min a right code counts for „Confirm“ (step 3) - 18 fixed commands of the Wärter on tars (step 3) - 3 kill switch stages, the last stops every conversation (step 2)"
+"text": "- 13 tools locked after outside text (step 6) - 20 tools locked after a mail (step 6) - 10 min a right code counts for „Confirm“ (step 3) - 18 fixed commands of the Wärter on tars (step 3) - 3 kill switch stages, the last stops every conversation (step 2)"
 },
 {
 "lang": "en",
@@ -19821,7 +19885,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "py clean: a mail's HTML only cleaned, without script and without loads from outside (step 6) - app/panel/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/guard.py verify: checks the chain, confirmed breaks only for the same line and hash (step 10) - app/panel/guard.py ack_break: confirms only the break the check reports now (step 10) - app/panel/vault.py seal: store secrets sealed (step 10) - app/panel/profiles.py write_own: memory and conversations sealed whole (step 10) - app/panel/vorrat.py key: a key per purpose from secret.key (step 10) - app/panel/meinedaten.py api_export: own data only after a fresh code, passkey or PIN (step 3) - app/panel/meinedaten.py build: the ZIP only from the file register, without secrets (step 10) - app/panel/profiles.py _cap: the memory's cap without data loss (step 8) - app/panel/gedaechtnis.py offer: learned never replaces confirmed: only an offer (step 8) - app/panel/gemerkt.py take_back: undo only for the "
+"text": "py clean: a mail's HTML only cleaned, without script and without loads from outside (step 6) - app/panel/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/netguard.py hole_oeffentlich: the one fetch of a public page or file: kill switch first, public only (step 6) - app/panel/doklink.py eigene: addresses for the tool only from the own words (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/guard.py verify: checks the chain, confirmed breaks only for the same line and hash (step 10) - app/panel/guard.py ack_break: confirms only the break the check reports now (step 10) - app/panel/vault.py seal: store secrets sealed (step 10) - app/panel/profiles.py write_own: memory and conversations sealed whole (step 10) - app/panel/vorrat.py key: a key per purpose from secret.key (step 10) - app/panel/meinedaten.py api_export: own data only after a fresh code, passkey or PIN (step 3) - app/panel/meinedaten.py build: the ZIP only from the file register, without secrets (step 10) - app/pa"
 },
 {
 "lang": "en",
@@ -19829,7 +19893,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "own, unchanged fact (step 8) - app/panel/wissensdoppelt.py aehnlich: points of the map merged by themselves only by a fixed rule, never against „Different“ (step 8)"
+"text": "nel/profiles.py _cap: the memory's cap without data loss (step 8) - app/panel/gedaechtnis.py offer: learned never replaces confirmed: only an offer (step 8) - app/panel/gemerkt.py take_back: undo only for the own, unchanged fact (step 8) - app/panel/wissensdoppelt.py aehnlich: points of the map merged by themselves only by a fixed rule, never against „Different“ (step 8)"
 },
 {
 "lang": "en",
@@ -20061,7 +20125,7 @@
 "file": "Architecture and data flow",
 "head": "Switch",
 "title": "Switch",
-"text": "The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 26 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow."
+"text": "The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 27 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow."
 },
 {
 "lang": "en",
@@ -20125,7 +20189,7 @@
 "file": "Architecture and data flow",
 "head": "Everyday score",
 "title": "Everyday score",
-"text": "- The test sentences (218) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
+"text": "- The test sentences (225) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
 },
 {
 "lang": "en",
@@ -20149,7 +20213,7 @@
 "file": "Architecture and data flow",
 "head": "Tool names",
 "title": "Tool names",
-"text": "- Wherever a tool shows, a readable name comes from one table (98 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
+"text": "- Wherever a tool shows, a readable name comes from one table (99 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
 },
 {
 "lang": "en",
@@ -20157,7 +20221,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 26 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 218 built-in test sentences (step 4, step 5) - 216 everyday sentences for measuring (step 14) - 66 sentences of the source bench (step 14) - 150 ms at most for the source switch's hit probe (step 14) - 20 versions for undo (step 4)"
+"text": "- 27 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 225 built-in test sentences (step 4, step 5) - 216 everyday sentences for measuring (step 14) - 66 sentences of the source bench (step 14) - 150 ms at most for the source switch's hit probe (step 14) - 20 versions for undo (step 4)"
 },
 {
 "lang": "en",
@@ -20373,7 +20437,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 4 calls per round (step 1) - 3 memory notes per answer (step 1) - 13 tools locked after outside text (step 4) - 7 tools without internet with the kill switch (step 3) - 98 tools with a readable name (step 11)"
+"text": "- 4 calls per round (step 1) - 3 memory notes per answer (step 1) - 13 tools locked after outside text (step 4) - 8 tools without internet with the kill switch (step 3) - 99 tools with a readable name (step 11)"
 },
 {
 "lang": "en",
@@ -20563,6 +20627,14 @@
 "lang": "en",
 "src": "architecture",
 "file": "Architecture and data flow",
+"head": "Links as documents",
+"title": "Links as documents",
+"text": "- doklink.pruefe checks every address by fixed rules before anything is fetched: http or https, a host, no login data, port 80 or 443, no IP or name of the home network; at most 10 at once and 30 waiting per profile. doklink.eins fetches one after another only through netguard.hole_oeffentlich (kill switch first, public also after every redirect, size, time, content type and first bytes) and hands it to wissen.aufnehmen: the same rules as an upload, origin „link:“ with the SHA-256 of the address, the same address only once. „Fetch again“ only on a click (doklink.neu_abrufen): a conditional request with ETag; 304 or the same SHA-256 means unchanged, else documents.renew reads the new bytes into the same document. The page content is outside text."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
 "head": "Map helps the search",
 "title": "Map helps the search",
 "text": "- wissenskarte.liste(uid, worte, k) returns piece ids with a rank from 1, read only (SQLite with mode=ro) and only for the own profile. Fixed rules, never the model: the search words hit a point when its name or another name stands whole in the question (compared like wissenskarte.ent_norm) or a word of the name with at least 4 letters that is no number and no legal form (wissenskarte.trifft); at most 20 points. Their neighbours one step away join (the same query as wissenskarte.rund_um), and of all of them the passages in used, read documents. A passage with a named point stands before one with only neighbours, more points before fewer, at most 50. - documents.search mixes the list like the others with 60 plus place, weighed 0.5, and only passages the same condition of the search lets through (documents._karte). A hit found so carries „karte“, below the answer it says „via the knowledge map“. The search check measures the mix with the map as a bar of its own. If the map fails, the search goes on without it and writes a line „wissen: kartensuche fehler“."
@@ -20653,7 +20725,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "a long document at most (step 13) - 100 analyses per profile and day (default) (step 13) - 10 own kinds (templates) of the admin at most (step 13) - 400 characters of a template's task at most (step 13) - 30 seconds per piece of a recording (step 13) - 1 seconds of overlap in front of a piece (step 13) - 5 recordings per profile waiting for their transcription at most (step 13)"
+"text": "a long document at most (step 13) - 100 analyses per profile and day (default) (step 13) - 10 own kinds (templates) of the admin at most (step 13) - 400 characters of a template's task at most (step 13) - 30 seconds per piece of a recording (step 13) - 1 seconds of overlap in front of a piece (step 13) - 5 recordings per profile waiting for their transcription at most (step 13) - 10 addresses at once for links as documents (step 13) - 30 addresses per profile waiting to be fetched at most (step 13)"
 },
 {
 "lang": "en",
@@ -20669,7 +20741,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "document, with how many analyses a day. - Features → Own documents and below it Transcribe recordings on: audio and video files under Me → Documents, with size, length and minutes a day. - Features → Own documents and below it Collections on: the page Collections in the menu, with how many tokens a collection gives the model at most."
+"text": "document, with how many analyses a day. - Features → Own documents and below it Transcribe recordings on: audio and video files under Me → Documents, with size, length and minutes a day. - Features → Own documents and below it Links as documents on: „Add link“ under Me → Documents, with size per page and fetches a day. - Features → Own documents and below it Collections on: the page Collections in the menu, with how many tokens a collection gives the model at most."
 },
 {
 "lang": "en",
@@ -20725,7 +20797,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_wissen, test_auswertung, test_abschrift, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung, test_wissenstempo"
+"text": "Self-tests: test_wissen, test_auswertung, test_abschrift, test_doklink, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung, test_wissenstempo"
 },
 {
 "lang": "en",
@@ -20749,7 +20821,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A tool wants out: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 35 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete. 2. Resolve the name once: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops. 3. Own service?: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute). When the models run on another computer (models.host), its addresses count the same (model_addresses). 4. Internet and kill switch on?: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows. 5. Public address?: A public address is allowed at every level. 6. Level „internet only“?: What comes from search results or answers may never go to the home network (chat, feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, syste"
+"text": "1. A tool wants out: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 34 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete. 2. Resolve the name once: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops. 3. Own service?: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute). When the models run on another computer (models.host), its addresses count the same (model_addresses). 4. Internet and kill switch on?: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows. 5. Public address?: A public address is allowed at every level. 6. Level „internet only“?: What comes from search results or answers may never go to the home network (feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, systemupdat"
 },
 {
 "lang": "en",
@@ -20757,7 +20829,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "mupdates, verbund). 7. Never allowed?: Link-local addresses (169.254.x, where cloud metadata answers), multicast, unspecified and reserved addresses are allowed at no level. 8. Home network allowed?: Home Assistant and other services in the home network (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) always may. Calendars, contacts, mail and MCP (calendars, contacts, fundmail, mail, mcp, meinmcp, tasks) only when Settings → Security → Allow home network addresses is on. 9. Connect to exactly this address: The connection goes to the checked address, not to the name again. A second look-up could answer differently (DNS rebinding). The certificate is still checked for the name. 10. Password only to its own site: Login data only goes to the site it was entered for (same host or same parent domain, like the CalDAV servers of icloud.com), never over http when the address was https. 11. Answer at most 20 MB: Answers are cut at 20 MB, also after unpacking gzip, so a huge or packed answer cannot fill the memory. 12. Answer to the tool: The tool gets the answer as data. A redirect is a new connection and is checked the same way, from step 2."
+"text": "es, verbund). 7. Never allowed?: Link-local addresses (169.254.x, where cloud metadata answers), multicast, unspecified and reserved addresses are allowed at no level. 8. Home network allowed?: Home Assistant and other services in the home network (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) always may. Calendars, contacts, mail and MCP (calendars, contacts, fundmail, mail, mcp, meinmcp, tasks) only when Settings → Security → Allow home network addresses is on. 9. Connect to exactly this address: The connection goes to the checked address, not to the name again. A second look-up could answer differently (DNS rebinding). The certificate is still checked for the name. 10. Password only to its own site: Login data only goes to the site it was entered for (same host or same parent domain, like the CalDAV servers of icloud.com), never over http when the address was https. 11. Answer at most 20 MB: Answers are cut at 20 MB, also after unpacking gzip, so a huge or packed answer cannot fill the memory. 12. Answer to the tool: The tool gets the answer as data. A redirect is a new connection and is checked the same way, from step 2."
 },
 {
 "lang": "en",
@@ -20766,6 +20838,14 @@
 "head": "Way",
 "title": "Examples",
 "text": "Examples: Web page from search: Allowed: connected to the checked public address. · Home Assistant at home: Allowed: the level home may go to the home network. · Calendar at home, switch off: Blocked: home network addresses are off for user services. · Link to cloud metadata: Blocked: a page from search never goes home, 169.254 never. · Kill switch on, ask weather: Blocked: with the kill switch nothing goes to the internet."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "One fetch for pages and files",
+"title": "One fetch for pages and files",
+"text": "- A page or file from an address is fetched only by netguard.hole_oeffentlich: the pages of search results (chat.page_text), the web page to the reMarkable (through page_text) and links as documents. First the kill switch, then before every request netguard.oeffentlich (http or https, no login data, every address of the name public) and at the connection once more the level internet only; at most 4 redirects, each checked again, a fixed browser name, content type from a fixed list, size and time for all of it. A refusal is a fixed word (netguard.WORTE)."
 },
 {
 "lang": "en",
@@ -20781,7 +20861,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 20 MB largest answer (step 11) - 30000–31099, 31443 closed own ports (step 3) - 15 blocks in 10 minutes until kill switch stage 1 (if on) (step 4) - 1 kill switch stage without internet (step 4)"
+"text": "- 20 MB largest answer (step 11) - 4 redirects per fetch, each checked again (step 12) - 30000–31099, 31443 closed own ports (step 3) - 15 blocks in 10 minutes until kill switch stage 1 (if on) (step 4) - 1 kill switch stage without internet (step 4)"
 },
 {
 "lang": "en",
@@ -20805,7 +20885,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/netguard.py allowed: the rule: nothing or the reason (step 3, step 7, step 8) - app/panel/netguard.py resolve: resolve once, check every address, tell Live (step 2) - app/panel/netguard.py client: the way out for tools (step 1) - app/panel/netguard.py _Transport: password guard, size limit, result for My status (step 10, step 11) - app/panel/netguard.py _Capped: cuts the answer, also unpacked (step 11) - app/panel/netguard.py same_site: same site for login data (step 10) - app/panel/netguard.py own_addresses: every address of this machine (step 3) - app/panel/netguard.py model_addresses: the model computer's addresses when it is another one (step 3) - app/panel/netguard.py IMAP4_SSL: mail over the checked address (step 9) - app/panel/notaus.py watch: counts blocks for the automatic kill switch (step 2) - app/panel/live.py outgoing: shows each decision on Live (step 2)"
+"text": "- app/panel/netguard.py allowed: the rule: nothing or the reason (step 3, step 7, step 8) - app/panel/netguard.py resolve: resolve once, check every address, tell Live (step 2) - app/panel/netguard.py client: the way out for tools (step 1) - app/panel/netguard.py hole_oeffentlich: the one fetch of a public page or file (step 1, step 12) - app/panel/netguard.py oeffentlich: check before every request: public only, no login data (step 6) - app/panel/netguard.py _Transport: password guard, size limit, result for My status (step 10, step 11) - app/panel/netguard.py _Capped: cuts the answer, also unpacked (step 11) - app/panel/netguard.py same_site: same site for login data (step 10) - app/panel/netguard.py own_addresses: every address of this machine (step 3) - app/panel/netguard.py model_addresses: the model computer's addresses when it is another one (step 3) - app/panel/netguard.py IMAP4_SSL: mail over the checked address (step 9) - app/panel/notaus.py watch: counts blocks for the automatic kill switch (step 2) - app/panel/live.py outgoing: shows each decision on Live (step 2)"
 },
 {
 "lang": "en",
@@ -20813,7 +20893,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_hardening, test_notaus, test_waechter_umgehung"
+"text": "Self-tests: test_hardening, test_notaus, test_waechter_umgehung, test_doklink"
 },
 {
 "lang": "en",
@@ -21349,7 +21429,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. Model calls a tool: The model names a tool and details. Who asks is already known (login); the service's login data lies sealed with the profile and never goes to the model. 2. Offered in this round?: Only tools this round offered run. Another name is not run. 3. Kill switch holds it?: The kill switch is read again for every call. From stage 1 the 7 tools that go to the internet by themselves are locked (web search, weather, transit, Wikipedia, parcels, reading pages); from stage 2 or with „My kill switch“ every tool that changes something. 4. Outside text read already?: If the answer already read mail, web pages, calendar, documents or an archive, it may no longer switch, save or enter anything. The person has to say so in a new message. 5. Service known to be gone?: If the service watch sees this tool's service as gone (and the note is on), the tool answers at once with a fixed sentence instead of waiting. The web search then tries the own Kiwix. 6. Fixed own way?: The language model, SearXNG at the entered address, weather, transit, Wikipedia and fixed services like Apple push go directly, without the guard. Which modules may do that and why is listed in netguard.DIRECT_OK; a"
+"text": "1. Model calls a tool: The model names a tool and details. Who asks is already known (login); the service's login data lies sealed with the profile and never goes to the model. 2. Offered in this round?: Only tools this round offered run. Another name is not run. 3. Kill switch holds it?: The kill switch is read again for every call. From stage 1 the 8 tools that go to the internet by themselves are locked (web search, weather, transit, Wikipedia, parcels, reading pages); from stage 2 or with „My kill switch“ every tool that changes something. 4. Outside text read already?: If the answer already read mail, web pages, calendar, documents or an archive, it may no longer switch, save or enter anything. The person has to say so in a new message. 5. Service known to be gone?: If the service watch sees this tool's service as gone (and the note is on), the tool answers at once with a fixed sentence instead of waiting. The web search then tries the own Kiwix. 6. Fixed own way?: The language model, SearXNG at the entered address, weather, transit, Wikipedia and fixed services like Apple push go directly, without the guard. Which modules may do that and why is listed in netguard.DIRECT_OK; a"
 },
 {
 "lang": "en",
@@ -21381,7 +21461,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 20 MB largest answer through the guard (step 10) - 2 MB largest answer of an MCP service (step 10) - 7 tools that rest from kill switch stage 1 (step 3) - 5 s longest probe of the service watch (step 5)"
+"text": "- 20 MB largest answer through the guard (step 10) - 2 MB largest answer of an MCP service (step 10) - 8 tools that rest from kill switch stage 1 (step 3) - 5 s longest probe of the service watch (step 5)"
 },
 {
 "lang": "en",
@@ -21437,7 +21517,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A tool wants to the internet: The model called an offered tool that needs a service on the internet. Which tools are offered at all was decided by the rights and the switch already. 2. Kill switch stops the internet?: From stage 1 the 7 tools that go to the internet by themselves rest (notaus.INTERNET_TOOLS); notaus.locked_tools is read again for every call. 3. Fixed address?: Weather, transit and Wikipedia ask a fixed address from the code or the admin settings, never one from outside text. Which modules may connect directly and why is listed in netguard.DIRECT_OK. 4. Through the guard: Pages from search and reMarkable ask at level internet only (netguard.PUBLIC), mail, calendars and contacts at level user. The level is in the code. 5. Address allowed?: netguard.allowed checks every resolved address: no own services, no 169.254, no home network at level internet only. 6. Answer as data: The answer is cut at the limit and goes to the model as data, never as a command. 7. What the Spark sends by itself: Without a tool only fixed ways go out: the Telegram bot API, Apple and browser push to known services and the update check at GitHub, each with a reason in netguard.DIRECT_OK. Plu"
+"text": "1. A tool wants to the internet: The model called an offered tool that needs a service on the internet. Which tools are offered at all was decided by the rights and the switch already. 2. Kill switch stops the internet?: From stage 1 the 8 tools that go to the internet by themselves rest (notaus.INTERNET_TOOLS); notaus.locked_tools is read again for every call. 3. Fixed address?: Weather, transit and Wikipedia ask a fixed address from the code or the admin settings, never one from outside text. Which modules may connect directly and why is listed in netguard.DIRECT_OK. 4. Through the guard: Pages from search, links as documents and reMarkable ask at level internet only (netguard.PUBLIC), pages and files from an address only through netguard.hole_oeffentlich; mail, calendars and contacts at level user. The level is in the code. 5. Address allowed?: netguard.allowed checks every resolved address: no own services, no 169.254, no home network at level internet only. 6. Answer as data: The answer is cut at the limit and goes to the model as data, never as a command. 7. What the Spark sends by itself: Without a tool only fixed ways go out: the Telegram bot API, Apple and browser push to "
 },
 {
 "lang": "en",
@@ -21445,7 +21525,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "s, only on an admin's command and never from the panel itself: Hand to GitHub (root pushes a branch opencode/… to GitHub over ssh, box Workshop)."
+"text": "known services and the update check at GitHub, each with a reason in netguard.DIRECT_OK. Plus, only on an admin's command and never from the panel itself: Hand to GitHub (root pushes a branch opencode/… to GitHub over ssh, box Workshop)."
 },
 {
 "lang": "en",
@@ -21461,7 +21541,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 7 tools that go to the internet by themselves (step 2) - 20 MB largest answer through the guard (step 6)"
+"text": "- 8 tools that go to the internet by themselves (step 2) - 20 MB largest answer through the guard (step 6)"
 },
 {
 "lang": "en",
@@ -23734,6 +23814,30 @@
 "head": "Voice chat",
 "title": "Transcribe recordings, push 3a (V01.1.336, plan *open-notebook* stage 3)",
 "text": "he background would have held itself and every other background job for 20 seconds per piece. Now a request with the stage \"hinten\" and the valid priority key from this computer stays unmarked (common.signed_low); without the key, with a wrong key or from another computer it counts as before. Real speech always marks and cancels the transcription at once (self-tests test_vorrang). When the panel runs on its own computer (Pi) the speech service does not know the key: the transcription then runs at the normal stage. Status → Live: box *Transcribe recordings* (\"Hintergrund: 1 Aufnahme · 82 min offen · heute 24 Stücke\"), the background step is called \"Abschrift\"; Logs area Wissen: abschrift: stueck | 30 s 412 zeichen, abschrift: fertig | 94 min 189 stuecke | tonspur ja, abschrift: asr fehlt, abschrift: grenze | 240 min, abschrift: abgebrochen | sprache. iPhone: My things → Documents shows \"transcribing\", uploading, listening and stopping in the panel view (iphone.THINGS[\"documents\"]); Android through the panel view. Self-tests tests/test_abschrift.py."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Links as documents, push 4 (V01.1.340, plan *open-notebook* stage 4)",
+"text": "Links as documents, push 4 (V01.1.340, plan *open-notebook* stage 4): admin switch *Features → Own documents → Links as documents* (chat.doc_link, off by default; no profile switch, the admin blocks single profiles, guests never), below it *Largest page or file (MB)* (chat.doc_link_mb, 1 to 100, default 20) and *Fetches per day and profile* (chat.doc_link_day, 5 to 500, default 50, \"Fetch again\" included). Under Me → Documents → *Add link* one enters up to 10 addresses at once (one per line), the page sends them to POST /api/profile/docs/link (new module doklink.py, login, own profile, CSRF, size limit 32 KB before reading, rate limit \"doklink\"). Fixed rules before the fetch (doklink.pruefe): http or https, a host, no login data (user:pass@ → refused), port 80 or 443, at most 2000 signs, no IP address and no name of the home network (localhost, .local, fritz.box …); every address gets a fixed word back (accepted, private, login data, port, duplicate …). Accepted ones wait in the table dl_link in wissen.db (at most 30 per profile), one runner fetches them one after another, without a model. One fetch helper: netguard.hole_oeffentlich fetches every page or file from an address, also "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Links as documents, push 4 (V01.1.340, plan *open-notebook* stage 4)",
+"text": "the pages of search results (chat.page_text) and the web page to the reMarkable (rmplus.web_page through page_text, which got the missing kill switch check on the way): first the kill switch, before every request netguard.oeffentlich (every address of the name public), at the connection once more the level *internet only*, at most 4 redirects, each checked again, a fixed browser name, content type from a fixed list (HTML, PDF, text, Markdown, DOCX, ODT; for PDF, DOCX and ODT also the first bytes), size and 30 seconds for all of it. As a document: wissen.aufnehmen(uid, name, data, source, herkunft) takes the page in with every rule of an upload (second login step, the admin's block, storage room, the most documents, the queue) and notes the origin (link: with the SHA-256 of the address); the same address comes in once. HTML goes as <title>.html into documents.add (headings and tables stay, with a Docling server like every HTML file). The same helper later takes \"Add to documents\" from the search index too. Fetch again only on a click in the details of a link document (POST /api/profile/wissen/{doc}/abrufen): a conditional request with If-None-Match/If-Modified-Since; 304 or the same"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Links as documents, push 4 (V01.1.340, plan *open-notebook* stage 4)",
+"text": " SHA-256 means \"unchanged\", else documents.renew reads the new bytes into the same document (knowledge book and analyses see the new text by themselves). The ✕ takes waiting or failed addresses out again (DELETE /api/profile/docs/link/{id}). Tool link_als_dokument: only offered when an address stands in the own message (Weiche group \"Links as documents\": an address and a word like \"save\", \"store\", \"as a document\"; \"to the reMarkable\" stays with the reMarkable), takes only addresses that stand word for word in the person's message, at most 10, is locked after outside text and belongs to the kill switch's internet tools. The page content is outside text: what a page says is never an instruction. Status → Live: box *Links* (waiting, link documents, fetched today, read again, unchanged, kB and seconds, never an address); logs area knowledge: doklink: geholt | html 182 kb, doklink: unveraendert, doklink: abgelehnt | privat, doklink: grenze | 50. iPhone: My things → Documents in the panel view (iphone.THINGS[\"documents\"]); Android through the panel view. Self-tests tests/test_doklink.py."
 },
 {
 "lang": "en",
@@ -31814,6 +31918,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Transcribe recordings (Features → My data → \"Transcribe recordings\"; builds on \"Own documents\"; Me → Documents): Audio and video files (mp3, m4a, aac, wav, ogg, opus, flac, webm, mp4, mov, mkv) are uploaded under Me → Documents like a PDF."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Links as documents (Features → My data → \"Links as documents\"; builds on \"Own documents\"; Me → Documents): Under Me → Documents → \"Add link\" you enter up to 10 addresses at once (one per line), or you tell the assistant \"Save https://… as a document\"."
 },
 {
 "lang": "en",

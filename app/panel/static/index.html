@@ -200,6 +200,9 @@
       <div data-show="chat.doc_audio" style="margin-left:36px"><label>Größte Aufnahme (MB)</label><input class="num" id="chat.doc_audio_mb" type="number" min="10" max="1000"><div class="fh">10 bis 1000, Standard 300. Größere Dateien lehnt der Spark ab, bevor er sie liest.</div>
         <label>Längste Aufnahme (Minuten)</label><input class="num" id="chat.doc_audio_min" type="number" min="5" max="600"><div class="fh">5 bis 600, Standard 180. Die Länge prüft der Spark beim Hochladen.</div>
         <label>Minuten Abschrift pro Tag und Profil</label><input class="num" id="chat.doc_audio_day_min" type="number" min="10" max="1440"><div class="fh">10 bis 1440, Standard 240. Aufnahmen über 20 Minuten mit „Lange Dokumente nachts lesen“ nur nachts.</div></div>
+      <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Links als Dokument</b><span>Öffentliche Seiten und Dateien hinter Adressen werden Dokumente, bis zu 10 auf einmal; „Neu abrufen“ nur per Klick.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_link"><i></i></label></div>
+      <div data-show="chat.doc_link" style="margin-left:36px"><label>Größte Seite oder Datei (MB)</label><input class="num" id="chat.doc_link_mb" type="number" min="1" max="100"><div class="fh">1 bis 100, Standard 20. Größeres bricht der Spark beim Holen ab.</div>
+        <label>Abrufe pro Tag und Profil</label><input class="num" id="chat.doc_link_day" type="number" min="5" max="500"><div class="fh">5 bis 500, Standard 50, „Neu abrufen“ eingeschlossen.</div></div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Mappen</b><span>Dokumente, Wissensbuch-Seiten und Notizen zu einem Vorhaben bündeln; je Eintrag aus, kurz oder ganz ans Sprachmodell.</span></div><label class="tgl"><input type="checkbox" id="chat.mappen"><i></i></label></div>
       <div data-show="chat.mappen" style="margin-left:36px"><label>Mappe: Token ans Modell</label><input class="num" id="chat.mappe_token" type="number" min="4000" max="100000"><div class="fh">4000 bis 100000, Standard 24000. Was nicht ganz hineinpasst, wird nur durchsucht.</div></div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Dokumente erstellen</b><span>Der Spark schreibt auf Bitte Briefe, Präsentationen und Tabellen als Word, PDF, PowerPoint oder Excel; erst die Gliederung, nach deinem Ja.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_make"><i></i></label></div>
@@ -1536,6 +1539,7 @@
       <div class="ld-split"><div id="doclist" class="ld-list"></div><div id="docdetail" class="ld-detail" hidden><div id="docdinfo"></div><div id="docaw" hidden></div><div id="docview" class="docview" hidden></div></div></div>
       <div id="docbulk" class="ld-bulk" hidden></div>
       <div id="mkbox" class="mkbox" hidden></div>
+      <details class="docopts" id="lkdbox" hidden><summary>Link hinzufügen</summary><div id="lkdin"></div></details>
       <details class="docopts" id="sprbox" hidden><summary>Suchprüfung</summary><div id="sprin"></div></details>
       <details class="docopts" id="auslbox" hidden><summary>Ausgelassene Ordner</summary><div id="auslin"></div></details>
       <details class="docopts" id="docopts"><summary>Einstellungen für Dokumente</summary><div class="intro">PDF bis 100 MB (der Admin kann mehr erlauben); Word, Excel, PowerPoint, OpenDocument, Text, Markdown, HTML, CSV oder E-Mail (.eml) je bis 20 MB. Der Assistent sucht darin, wenn eine Frage dazu passt. Nur du kannst sie nutzen, außer du gibst ein Dokument „Für alle“ frei.</div><div id="docsw"></div><div class="mut" id="docuse"></div></details></div>
@@ -1700,6 +1704,7 @@
 <script src="/static/js/bilder.js"></script>
 <script src="/static/js/musik.js"></script>
 <script src="/static/js/suchpruefung.js"></script>
+<script src="/static/js/doklink.js"></script>
 <script src="/static/js/wissensmessung.js"></script>
 <script src="/static/js/auslassen.js"></script>
 <script src="/static/js/wissensbuch.js"></script>

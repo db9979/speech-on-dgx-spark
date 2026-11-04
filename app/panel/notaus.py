@@ -69,7 +69,7 @@ KINDS = (("aussen", "Zugriffe von außen (Internet, Proxy, MCP von außen)", "Ac
 
 # Tools the model may not use from a stage on (chat_tools / chat_turn): stage 1 the ones that go to the internet
 # by themselves (fixed services, not through netguard), stage 2 every tool that changes something.
-INTERNET_TOOLS = {"web_search", "weather", "transit", "wikipedia", "article_more", "parcels", "read_page"}
+INTERNET_TOOLS = {"web_search", "weather", "transit", "wikipedia", "article_more", "parcels", "read_page", "link_als_dokument"}
 # the to-do change of Home Assistant is decided in chat_tools (the same tool also reads)
 BLOCKED = ("Not done: the Notaus (emergency stop) is on and holds this off. Tell the user exactly that in one "
            "sentence: the Notaus blocks it until an admin switches it off. Do not try again, do not offer a workaround.")

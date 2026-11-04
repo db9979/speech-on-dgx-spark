@@ -141,6 +141,7 @@ MODULE = {
     "wissensdoppelt": ("wissen", "Doppelte der Wissenskarte: feste Regeln für gleiche und vielleicht gleiche Punkte, Vorschläge, Verschieden"),
     "mappen": ("wissen", "Mappen: Dokumente, Seiten und Notizen bündeln, Kontext-Stufe je Eintrag (aus, kurz, ganz) nach festen Regeln"),
     "auswertung": ("wissen", "Auswertungen je Dokument: Punkte vom Modell mit Zahlenprobe je Stelle; Inhalt, Fristen, Beteiligte fest"),
+    "doklink": ("wissen", "Links als Dokument: öffentliche Seiten und Dateien über netguard.hole_oeffentlich, Neu abrufen mit ETag und SHA"),
     "abschrift": ("wissen", "Aufnahmen abschreiben: Ton und Video in Stücken von 30 s durch die eigene Spracherkennung, Zeit als Stelle"),
     "fund": ("wissen", "Finden: Suchindex über die eigenen Daten, Felder und Schlagworte nach festen Regeln, Blind-Marken je Profil"),
     "fundmail": ("wissen", "Finden: alle Mails und Anhänge in Scheiben eingelesen, versiegelt (AES-GCM) mit Blind-Marken je Profil"),

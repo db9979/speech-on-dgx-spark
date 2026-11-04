@@ -243,7 +243,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "29cbe47e81",
+        "stand": "7ad670fb7e",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -286,6 +286,8 @@ SEITEN = {
             "abschrift.fits": ["s13"], "abschrift.schneiden": ["s13"], "abschrift.aufnehmen": ["s13"],
             "abschrift.PIECE": ["s13"], "abschrift.OVERLAP": ["s13"], "abschrift.WAIT_MOST": ["s13"],
             "documents.stelle": ["s13"], "common.signed_low": ["s13"],
+            "doklink.pruefe": ["s13"], "doklink.eins": ["s13"], "doklink.neu_abrufen": ["s13"], "wissen.aufnehmen": ["s13"],
+            "documents.renew": ["s13"], "doklink.MAX_AUF_EINMAL": ["s13"], "doklink.MAX_WARTEN": ["s13"],
         },
         "kurz": ("Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente "
                  "jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene "
@@ -550,6 +552,8 @@ SEITEN = {
             ("{abschrift.PIECE}", ("Sekunden je Stück einer Aufnahme", "seconds per piece of a recording"), "abschrift.PIECE"),
             ("{abschrift.OVERLAP}", ("Sekunden Überlappung vor einem Stück", "seconds of overlap in front of a piece"), "abschrift.OVERLAP"),
             ("{abschrift.WAIT_MOST}", ("Aufnahmen je Profil, die auf ihre Abschrift warten, höchstens", "recordings per profile waiting for their transcription at most"), "abschrift.WAIT_MOST"),
+            ("{doklink.MAX_AUF_EINMAL}", ("Adressen auf einmal bei Links als Dokument", "addresses at once for links as documents"), "doklink.MAX_AUF_EINMAL"),
+            ("{doklink.MAX_WARTEN}", ("Adressen je Profil, die auf ihren Abruf warten, höchstens", "addresses per profile waiting to be fetched at most"), "doklink.MAX_WARTEN"),
         ],
         "einstellen": [
             ("Funktionen → Eigene Dokumente und darunter Bedeutungssuche an: Stellen bekommen einen Bedeutungsvektor "
@@ -586,6 +590,10 @@ SEITEN = {
              "Dokumente, dazu Größe, Länge und Minuten am Tag.",
              "Features → Own documents and below it Transcribe recordings on: audio and video files under Me → "
              "Documents, with size, length and minutes a day."),
+            ("Funktionen → Eigene Dokumente und darunter Links als Dokument an: „Link hinzufügen“ unter Ich → "
+             "Dokumente, dazu Größe je Seite und Abrufe am Tag.",
+             "Features → Own documents and below it Links as documents on: „Add link“ under Me → Documents, with "
+             "size per page and fetches a day."),
             ("Funktionen → Eigene Dokumente und darunter Mappen an: die Seite Mappen im Menü, dazu wie viele Token "
              "eine Mappe dem Modell höchstens gibt.",
              "Features → Own documents and below it Collections on: the page Collections in the menu, with how many "
@@ -863,6 +871,26 @@ SEITEN = {
                  "heard twice at the edge. A piece's page is its start second; documents.stelle makes „bei 12:30“ of "
                  "it, wissen.where „Aufnahme: …, bei 12:30“. The transcript is outside text."),
             ]),
+            (("Links als Dokument", "Links as documents"), [
+                ("doklink.pruefe prüft jede Adresse nach festen Regeln, bevor etwas geholt wird: http oder https, ein "
+                 "Host, keine Zugangsdaten, Port 80 oder 443, keine IP und kein Name des Heimnetzes; höchstens "
+                 "{doklink.MAX_AUF_EINMAL} auf einmal und {doklink.MAX_WARTEN} wartend je Profil. doklink.eins holt "
+                 "eine nach der anderen nur über netguard.hole_oeffentlich (Notaus zuerst, öffentlich auch nach jeder "
+                 "Weiterleitung, Größe, Zeit, Inhaltstyp und erste Bytes) und gibt sie an wissen.aufnehmen: dieselben "
+                 "Regeln wie ein Upload, Herkunft „link:“ mit der SHA-256 der Adresse, dieselbe Adresse nur einmal. "
+                 "„Neu abrufen“ nur per Klick (doklink.neu_abrufen): bedingter Abruf mit ETag; 304 oder dieselbe "
+                 "SHA-256 heißt unverändert, sonst liest documents.renew die neuen Bytes in dasselbe Dokument. Der "
+                 "Seiteninhalt ist Text von außen.",
+                 "doklink.pruefe checks every address by fixed rules before anything is fetched: http or https, a "
+                 "host, no login data, port 80 or 443, no IP or name of the home network; at most "
+                 "{doklink.MAX_AUF_EINMAL} at once and {doklink.MAX_WARTEN} waiting per profile. doklink.eins fetches "
+                 "one after another only through netguard.hole_oeffentlich (kill switch first, public also after "
+                 "every redirect, size, time, content type and first bytes) and hands it to wissen.aufnehmen: the "
+                 "same rules as an upload, origin „link:“ with the SHA-256 of the address, the same address only once. "
+                 "„Fetch again“ only on a click (doklink.neu_abrufen): a conditional request with ETag; 304 or the "
+                 "same SHA-256 means unchanged, else documents.renew reads the new bytes into the same document. The "
+                 "page content is outside text."),
+            ]),
             (("Karte hilft der Suche", "Map helps the search"), [
                 ("wissenskarte.liste(uid, worte, k) gibt Stück-Ids mit Rang ab 1 zurück, nur lesend (SQLite mit mode=ro) "
                  "und nur für das eigene Profil. Feste Regeln, nie das Modell: Die Suchwörter treffen einen Punkt, wenn "
@@ -1128,6 +1156,11 @@ SEITEN = {
             ("abschrift.trim_edge", ("doppelte Wörter am Rand nach fester Regel", "doubled words at the edge by a fixed rule")),
             ("abschrift.due_once", ("ruhige Kette: Grenzen, lange nur nach long_ok", "quiet chain: limits, long ones only after long_ok")),
             ("documents.stelle", ("„Seite 3“ oder „bei 12:30“", "„Seite 3“ or „bei 12:30“")),
+            ("doklink.pruefe", ("Adresse nach festen Regeln, bevor etwas geholt wird", "an address by fixed rules before anything is fetched")),
+            ("doklink.eins", ("eine Adresse holen und als Dokument aufnehmen", "fetch one address and take it in as a document")),
+            ("doklink.neu_abrufen", ("Neu abrufen: ETag, SHA-256, sonst neu lesen", "fetch again: ETag, SHA-256, else read again")),
+            ("wissen.aufnehmen", ("ein Weg hinein für Dinge, die kein Upload sind", "one way in for things that are no upload")),
+            ("documents.renew", ("dasselbe Dokument aus neuen Bytes", "the same document from new bytes")),
             ("common.signed_low", ("Hintergrund mit Schlüssel ist keine Sprache", "background with the key is no speech")),
             ("documents._similar", ("Ähnlichkeit blockweise in float32", "similarity block by block in float32")),
             ("gedaechtnis.hint_lines", ("Fakten in drei Blöcken", "facts in three blocks")),
@@ -1138,7 +1171,7 @@ SEITEN = {
             ("wissensmessung._synth", ("das Wegwerf-Profil aus festem Zufall, mit den Grenzen des Codes", "the throwaway profile from a fixed seed, with the code's limits")),
             ("wissensmessung.MESSTEILE", ("die Messteile, erweiterbar", "the measuring parts, extensible")),
         ],
-        "tests": ["test_wissen", "test_auswertung", "test_abschrift", "test_wissensdoppelt", "test_nachsortieren", "test_abschnitte", "test_lokal", "test_kiwix", "test_gedaechtnis",
+        "tests": ["test_wissen", "test_auswertung", "test_abschrift", "test_doklink", "test_wissensdoppelt", "test_nachsortieren", "test_abschnitte", "test_lokal", "test_kiwix", "test_gedaechtnis",
                   "test_gedaechtnis_grenze", "test_gemerkt",
                   "test_suchpruefung", "test_wissensbuch", "test_wissenskarte", "test_wissensknoten", "test_kartensuche",
                   "test_wissensmessung", "test_wissenstempo"],

@@ -254,6 +254,7 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/docmake.py` | Dokumente erstellen: Aufträge, Vorlagen, Ablage |
 | `app/panel/docrender.py` | Baut die Dateien (Word, PDF, PowerPoint, Excel) mit festem Code |
 | `app/panel/documents.py` | Dokumente pro Profil in wissen.db: Text, Abschnitte mit Kontextzeile, Suche, Vektoren als float16 |
+| `app/panel/doklink.py` | Links als Dokument: öffentliche Seiten und Dateien über netguard.hole_oeffentlich, Neu abrufen mit ETag und SHA |
 | `app/panel/embed_worker.py` | Das Vektormodell im eigenen Prozess |
 | `app/panel/folien.py` | Folientypen und feste Regeln für erstellte Dokumente |
 | `app/panel/fund.py` | Finden: Suchindex über die eigenen Daten, Felder und Schlagworte nach festen Regeln, Blind-Marken je Profil |
@@ -641,7 +642,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/zuordnungen.json` | Gemerkte Zuordnungen |  | ganz versiegelt (AES-256-GCM) | ja | Gedächtnis |
 | `users/ID/tasks.json` | Aufgaben |  | – | ja | Aufgaben und Erinnerungen |
 | `users/ID/reminders.json` | Erinnerungen |  | – | ja | Aufgaben und Erinnerungen |
-| `users/ID/wissen.db` | Dokumente: Text, Abschnitte mit Kontextzeile, Suche, Vektoren; Wissensbuch und Wissenskarte mit Personen, Firmen und Fristen; Mappen mit Einträgen und Stufen; Auswertungen je Dokument mit Fundstelle (SQLite) |  | – | ja | Dokumente (Text, Suche, Originale) |
+| `users/ID/wissen.db` | Dokumente: Text, Abschnitte mit Kontextzeile, Suche, Vektoren; Wissensbuch und Wissenskarte mit Personen, Firmen und Fristen; Mappen mit Einträgen und Stufen; Auswertungen je Dokument mit Fundstelle; Links als Dokument mit Adresse, ETag und SHA (SQLite) |  | – | ja | Dokumente (Text, Suche, Originale) |
 | `users/ID/docs/files/` | Originale der Uploads (bei Aufnahmen nur die Tonspur) |  | – | ja | Dokumente (Text, Suche, Originale) |
 | `users/ID/fund.db` | Finden: Suchindex über die eigenen Daten (Titel, Felder, Schlagworte, eigene Schlagworte, Mails und Anhänge, Termine, Kontakte, Listen, Erinnerungen, Bilder, Lieder; Gespräche nur Datum und Kanal; SQLite) |  | Marken mit eigenem Schlüssel je Profil (HMAC); Mails, Anhänge, Termine und Kontakte: Titel, Auszug, Felder und Schlagworte AES-GCM | ja | Dokumente (Text, Suche, Originale) |
 | `users/ID/suchpruefung.json` | Prüffragen und Läufe der Suchprüfung |  | – | ja | Dokumente (Text, Suche, Originale) |
@@ -1681,7 +1682,7 @@ flowchart TD
 3. <a id="kn-sicherheit-s3"></a>**Angemeldet und im Rahmen?**: Größenlimit und Herkunftsprüfung (CSRF) vor dem Lesen, dann Rate-Limit pro Profil oder Adresse (ein Weg mit eigenem Sitzungsschlüssel nach dem richtigen Schlüssel je Sitzung, Raten weiter je Adresse) und eine Höchstzahl gleichzeitiger Anfragen für Modell, Erkennung und Ausgabe (guard.Slot). Geheimnisse, Rollen und Sicherungen brauchen dazu einen frischen Code oder Passkey (core.confirm_code, 10 Minuten). Ein ganzer Bereich lässt sich mit einem zweiten Schritt für eine Weile entsperren (Regel „Bereich entsperren“, zuerst der Fernzugang: 5 bis 120 Minuten, fernzugang.entsperrt_bis): nur diese Anmeldung, nur vom selben Ort, gesperrt bei Sperren, Abmelden und Notaus; Koppeln und Entfernen fragen trotzdem jedes Mal. Zu den Modellen auf tars geht es nur durch das TLS-Tor; Befehle dort prüft der Wärter (tarswart.check: Unterschrift, Zeit, Einmal-Nummer, einer von 18 festen Befehlen).
 4. <a id="kn-sicherheit-s4"></a>**Wer fragt, sicher erkannt?**: Das Profil kommt aus Cookie, App-Schlüssel oder verknüpftem Konto. Am geteilten Lautsprecher reicht der Geräteschlüssel nicht: chat_turn.shared_stranger gibt Persönliches nur frei, wenn die Inhaberstimme in derselben Aufnahme sicher erkannt ist.
 5. <a id="kn-sicherheit-s5"></a>**Freigabe und Sperre**: Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten.
-6. <a id="kn-sicherheit-s6"></a>**Fremdes bleibt Daten**: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell (textnorm.defuse: Blockende und die eigenen Marken des Modells wie „<|im_start|>“ oder „<tool_call>“ werden entschärft; das LLM-Tor tut das für jede Nachricht noch einmal, llm_tor.entschaerft). Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt; nach einer Mail sind es 19, dazu gehört alles, was ins Internet fragt (Websuche, Wikipedia, Wetter, Fahrplan), damit kein Suchwort Mail-Inhalt hinausträgt. Ob das hält, prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed); ein Tunnel des Fernzugangs nur zu Zielen nach fernweb.ziel_ok: dort 127.0.0.1 und die eigenen Adressen des Systems, die sein Anker selbst meldet. Eine Mail mit HTML zeigt die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick über den Wächter, ein Link erst nach der Frage mit seiner echten Adresse.
+6. <a id="kn-sicherheit-s6"></a>**Fremdes bleibt Daten**: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell (textnorm.defuse: Blockende und die eigenen Marken des Modells wie „<|im_start|>“ oder „<tool_call>“ werden entschärft; das LLM-Tor tut das für jede Nachricht noch einmal, llm_tor.entschaerft). Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt; nach einer Mail sind es 20, dazu gehört alles, was ins Internet fragt (Websuche, Wikipedia, Wetter, Fahrplan), damit kein Suchwort Mail-Inhalt hinausträgt. Ob das hält, prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed); eine Seite oder Datei holt nur netguard.hole_oeffentlich (Notaus zuerst, nur öffentlich auch nach jeder Weiterleitung, Größe, Zeit, Inhaltstyp), Links als Dokument nimmt eine Adresse nur aus den eigenen Worten der Person (doklink.eigene), und die Seite wird ein Dokument wie jedes: Daten; ein Tunnel des Fernzugangs nur zu Zielen nach fernweb.ziel_ok: dort 127.0.0.1 und die eigenen Adressen des Systems, die sein Anker selbst meldet. Eine Mail mit HTML zeigt die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick über den Wächter, ein Link erst nach der Frage mit seiner echten Adresse.
 7. <a id="kn-sicherheit-s7"></a>**Sprachmodell schlägt vor**: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht.
 8. <a id="kn-sicherheit-s8"></a>**Ändert es etwas?**: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät, oder dem Ja-Knopf seiner Karte „Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell; ebenso führt nur ihr Klick Punkte der Wissenskarte zusammen, benennt sie um oder löscht sie (mit dem Code von „Bestätigen“); von selbst nur eine feste Regel bei gleichem Namen in anderer Schreibweise (wissensdoppelt.aehnlich), nie das Modell, und nie gegen ihr „Verschieden“. Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut.
 9. <a id="kn-sicherheit-s9"></a>**Antwort prüfen**: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML.
@@ -1731,7 +1732,7 @@ Gilt bei: [Schritt 4](#kn-sicherheit-s4), [Schritt 5](#kn-sicherheit-s5)
 #### Zahlen (aus dem Code)
 
 - **13** Werkzeuge nach Text von außen gesperrt ([Schritt 6](#kn-sicherheit-s6))
-- **19** Werkzeuge nach einer Mail gesperrt ([Schritt 6](#kn-sicherheit-s6))
+- **20** Werkzeuge nach einer Mail gesperrt ([Schritt 6](#kn-sicherheit-s6))
 - **10 min** zählt ein richtiger Code für „Bestätigen“ ([Schritt 3](#kn-sicherheit-s3))
 - **18** feste Befehle des Wärters auf tars ([Schritt 3](#kn-sicherheit-s3))
 - **3** Notaus-Stufen, die letzte hält jedes Gespräch an ([Schritt 2](#kn-sicherheit-s2))
@@ -1754,6 +1755,8 @@ Gilt bei: [Schritt 4](#kn-sicherheit-s4), [Schritt 5](#kn-sicherheit-s5)
 - `app/llm_tor.py` `entschaerft`: Marken des Modells aus jeder Nachricht nehmen ([Schritt 6](#kn-sicherheit-s6))
 - `app/panel/mailansicht.py` `clean`: HTML einer Mail nur bereinigt, ohne Skript und ohne Laden von außen ([Schritt 6](#kn-sicherheit-s6))
 - `app/panel/netguard.py` `allowed`: ob eine Verbindung nach außen sein darf ([Schritt 6](#kn-sicherheit-s6))
+- `app/panel/netguard.py` `hole_oeffentlich`: der eine Abruf einer öffentlichen Seite oder Datei: Notaus zuerst, nur öffentlich ([Schritt 6](#kn-sicherheit-s6))
+- `app/panel/doklink.py` `eigene`: Adressen fürs Werkzeug nur aus den eigenen Worten ([Schritt 6](#kn-sicherheit-s6))
 - `app/panel/answercheck.py` `unsupported`: Zahl ohne Quelle fällt heraus ([Schritt 9](#kn-sicherheit-s9))
 - `app/textnorm.py` `hide_secrets`: Geheimnisse werden nie gesprochen ([Schritt 9](#kn-sicherheit-s9))
 - `app/panel/guard.py` `log`: Änderungsprotokoll mit Prüfkette ([Schritt 10](#kn-sicherheit-s10))
@@ -2011,7 +2014,7 @@ Selbsttests: `test_klaeren`, `test_features`, `test_notaus`, `test_hardening`, `
 
 ### Weiche
 
-Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und so weiter, heute 26 Gruppen) und grenzt damit die Werkzeuge ein, die das Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen.
+Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und so weiter, heute 27 Gruppen) und grenzt damit die Werkzeuge ein, die das Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen.
 
 **Warum:** Wenige passende Werkzeuge machen das Modell schneller und treffsicherer: es liest weniger und greift seltener daneben. Weil die Weiche nur wegnimmt, was die Rechte und Sperren übrig gelassen haben, kann ein falsch zugeordneter Satz nie mehr erlauben, höchstens ein Werkzeug fehlen lassen.
 
@@ -2088,7 +2091,7 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 
 #### Alltagsquote
 
-- Die Testsätze (218) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
+- Die Testsätze (225) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
 
 #### Quellen-Messbank
 
@@ -2100,17 +2103,17 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 
 #### Werkzeugnamen
 
-- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (98 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.
+- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (99 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.
 
 #### Zahlen (aus dem Code)
 
-- **26** Gruppen der Weiche ([Schritt 4](#kn-weiche-s4), [Schritt 6](#kn-weiche-s6))
+- **27** Gruppen der Weiche ([Schritt 4](#kn-weiche-s4), [Schritt 6](#kn-weiche-s6))
 - **2** Gruppen höchstens, die noch eingrenzen ([Schritt 6](#kn-weiche-s6))
 - **80** Zeichen höchstens für eine Folgefrage ([Schritt 8](#kn-weiche-s8))
 - **4** Sekunden höchstens für die Wahl des Modells ([Schritt 10](#kn-weiche-s10))
 - **300 ms** Wartezeit mit „Schneller Antwortbeginn“ ([Schritt 10](#kn-weiche-s10))
 - **80 %** Standard-Schwelle der Einordnung ([Schritt 10](#kn-weiche-s10))
-- **218** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
+- **225** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
 - **216** Alltagssätze zum Messen ([Schritt 14](#kn-weiche-s14))
 - **66** Sätze der Quellen-Messbank ([Schritt 14](#kn-weiche-s14))
 - **150** ms höchstens für die Treffer-Probe der Quellen-Weiche ([Schritt 14](#kn-weiche-s14))
@@ -2333,7 +2336,7 @@ Gilt bei: [Schritt 4](#kn-werkzeuge-s4)
 | fremder Text gelesen | 13 ändernde Werkzeuge und die der Erweiterungen |
 | Mail gelesen | dazu Websuche und neue Termine |
 | eigene Dokumente gelesen | Websuche (bei Erst lokal nur eigene Worte) |
-| Notaus Stufe 1 | 7 Werkzeuge, die selbst ins Internet gehen |
+| Notaus Stufe 1 | 8 Werkzeuge, die selbst ins Internet gehen |
 | Notaus Stufe 2 oder eigener Notaus | jedes Werkzeug, das etwas ändert |
 
 #### Zahlen (aus dem Code)
@@ -2341,8 +2344,8 @@ Gilt bei: [Schritt 4](#kn-werkzeuge-s4)
 - **4** Aufrufe pro Runde ([Schritt 1](#kn-werkzeuge-s1))
 - **3** Gedächtnis-Notizen pro Antwort ([Schritt 1](#kn-werkzeuge-s1))
 - **13** Werkzeuge gesperrt nach fremdem Text ([Schritt 4](#kn-werkzeuge-s4))
-- **7** Werkzeuge ohne Internet bei Notaus ([Schritt 3](#kn-werkzeuge-s3))
-- **98** Werkzeuge mit verständlichem Namen ([Schritt 11](#kn-werkzeuge-s11))
+- **8** Werkzeuge ohne Internet bei Notaus ([Schritt 3](#kn-werkzeuge-s3))
+- **99** Werkzeuge mit verständlichem Namen ([Schritt 11](#kn-werkzeuge-s11))
 
 #### Einstellen
 
@@ -2487,6 +2490,10 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 
 - abschrift.aufnehmen nimmt eine Ton- oder Videodatei nur, wenn ihr Inhalt nach den ersten Bytes zur Endung passt (abschrift.fits), kopiert sie in Teilen mit ihrer Grenze unter die Dokument-ID (0600) und liest die Länge mit ffprobe; höchstens 5 warten je Profil. In der ruhigen Kette nach den Seitenbildern schneidet abschrift.schneiden mit ffmpeg (nur die lokale Datei, feste Argumente) ein Stück von 30 s, ab dem zweiten mit 1 s davor, und abschrift.stueck schickt es über vorrang.run an die eigene Spracherkennung, mit der Stufe „hinten“ und dem Vorrang-Schlüssel: common.signed_low lässt nur so eine Anfrage unmarkiert, echte Sprache bricht das Stück ab, und es kommt in der nächsten Pause noch einmal. abschrift.trim_edge nimmt die doppelt gehörten Wörter am Rand heraus. Die Seite eines Stücks ist seine Startsekunde; documents.stelle macht daraus „bei 12:30“, wissen.where „Aufnahme: …, bei 12:30“. Die Abschrift ist Text von außen.
 
+#### Links als Dokument
+
+- doklink.pruefe prüft jede Adresse nach festen Regeln, bevor etwas geholt wird: http oder https, ein Host, keine Zugangsdaten, Port 80 oder 443, keine IP und kein Name des Heimnetzes; höchstens 10 auf einmal und 30 wartend je Profil. doklink.eins holt eine nach der anderen nur über netguard.hole_oeffentlich (Notaus zuerst, öffentlich auch nach jeder Weiterleitung, Größe, Zeit, Inhaltstyp und erste Bytes) und gibt sie an wissen.aufnehmen: dieselben Regeln wie ein Upload, Herkunft „link:“ mit der SHA-256 der Adresse, dieselbe Adresse nur einmal. „Neu abrufen“ nur per Klick (doklink.neu_abrufen): bedingter Abruf mit ETag; 304 oder dieselbe SHA-256 heißt unverändert, sonst liest documents.renew die neuen Bytes in dasselbe Dokument. Der Seiteninhalt ist Text von außen.
+
 #### Karte hilft der Suche
 
 - wissenskarte.liste(uid, worte, k) gibt Stück-Ids mit Rang ab 1 zurück, nur lesend (SQLite mit mode=ro) und nur für das eigene Profil. Feste Regeln, nie das Modell: Die Suchwörter treffen einen Punkt, wenn sein Name oder ein anderer Name ganz in der Frage steht (verglichen wie wissenskarte.ent_norm) oder ein Wort des Namens ab 4 Buchstaben, das keine Zahl und keine Rechtsform ist (wissenskarte.trifft); höchstens 20 Punkte. Dazu kommen ihre Nachbarn einen Schritt weit (dieselbe Abfrage wie wissenskarte.rund_um) und von allen die Stellen in genutzten, gelesenen Dokumenten. Eine Stelle mit einem genannten Punkt steht vor einer mit nur Nachbarn, mehr Punkte vor weniger, höchstens 50.
@@ -2567,6 +2574,8 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - **30** Sekunden je Stück einer Aufnahme ([Schritt 13](#kn-wissen-s13))
 - **1** Sekunden Überlappung vor einem Stück ([Schritt 13](#kn-wissen-s13))
 - **5** Aufnahmen je Profil, die auf ihre Abschrift warten, höchstens ([Schritt 13](#kn-wissen-s13))
+- **10** Adressen auf einmal bei Links als Dokument ([Schritt 13](#kn-wissen-s13))
+- **30** Adressen je Profil, die auf ihren Abruf warten, höchstens ([Schritt 13](#kn-wissen-s13))
 
 #### Einstellen
 
@@ -2580,6 +2589,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte → Personen, Firmen und Fristen und darunter Karte hilft der Suche an: die Karte als dritte Trefferliste der Dokumentsuche (Standard aus).
 - Funktionen → Eigene Dokumente und darunter Auswertungen an: das Blatt Auswertungen im Detail jedes eigenen Dokuments, dazu wie viele Auswertungen am Tag.
 - Funktionen → Eigene Dokumente und darunter Aufnahmen abschreiben an: Ton- und Videodateien unter Ich → Dokumente, dazu Größe, Länge und Minuten am Tag.
+- Funktionen → Eigene Dokumente und darunter Links als Dokument an: „Link hinzufügen“ unter Ich → Dokumente, dazu Größe je Seite und Abrufe am Tag.
 - Funktionen → Eigene Dokumente und darunter Mappen an: die Seite Mappen im Menü, dazu wie viele Token eine Mappe dem Modell höchstens gibt.
 
 #### Was du siehst
@@ -2664,6 +2674,11 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - `app/panel/abschrift.py` `trim_edge`: doppelte Wörter am Rand nach fester Regel ([Schritt 13](#kn-wissen-s13))
 - `app/panel/abschrift.py` `due_once`: ruhige Kette: Grenzen, lange nur nach long_ok ([Schritt 13](#kn-wissen-s13))
 - `app/panel/documents.py` `stelle`: „Seite 3“ oder „bei 12:30“ ([Schritt 13](#kn-wissen-s13))
+- `app/panel/doklink.py` `pruefe`: Adresse nach festen Regeln, bevor etwas geholt wird ([Schritt 13](#kn-wissen-s13))
+- `app/panel/doklink.py` `eins`: eine Adresse holen und als Dokument aufnehmen ([Schritt 13](#kn-wissen-s13))
+- `app/panel/doklink.py` `neu_abrufen`: Neu abrufen: ETag, SHA-256, sonst neu lesen ([Schritt 13](#kn-wissen-s13))
+- `app/panel/wissen.py` `aufnehmen`: ein Weg hinein für Dinge, die kein Upload sind ([Schritt 13](#kn-wissen-s13))
+- `app/panel/documents.py` `renew`: dasselbe Dokument aus neuen Bytes ([Schritt 13](#kn-wissen-s13))
 - `app/common.py` `signed_low`: Hintergrund mit Schlüssel ist keine Sprache ([Schritt 13](#kn-wissen-s13))
 - `app/panel/documents.py` `_similar`: Ähnlichkeit blockweise in float32 ([Schritt 6](#kn-wissen-s6))
 - `app/panel/gedaechtnis.py` `hint_lines`: Fakten in drei Blöcken ([Schritt 13](#kn-wissen-s13))
@@ -2674,7 +2689,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - `app/panel/wissensmessung.py` `_synth`: das Wegwerf-Profil aus festem Zufall, mit den Grenzen des Codes ([Schritt 6](#kn-wissen-s6))
 - `app/panel/wissensmessung.py` `MESSTEILE`: die Messteile, erweiterbar ([Schritt 6](#kn-wissen-s6))
 
-Selbsttests: `test_wissen`, `test_auswertung`, `test_abschrift`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`, `test_wissenstempo`
+Selbsttests: `test_wissen`, `test_auswertung`, `test_abschrift`, `test_doklink`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`, `test_wissenstempo`
 
 ### Wächter
 
@@ -2725,12 +2740,12 @@ flowchart TD
   s12 -.->|Weiterleitung| s2
 ```
 
-1. <a id="kn-waechter-s1"></a>**Werkzeug will nach außen**: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 35 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig.
+1. <a id="kn-waechter-s1"></a>**Werkzeug will nach außen**: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 34 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig.
 2. <a id="kn-waechter-s2"></a>**Name einmal auflösen**: resolve() fragt den Namen genau einmal ab. Hat er mehrere Adressen, muss jede erlaubt sein, sonst ist Schluss.
 3. <a id="kn-waechter-s3"></a>**Eigener Dienst?**: Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu). Laufen die Modelle auf einem anderen Rechner (models.host), gelten seine Adressen genauso (model_addresses).
 4. <a id="kn-waechter-s4"></a>**Internet und Notaus an?**: Ist die Adresse öffentlich und der Notaus mindestens auf Stufe 1, geht nichts ins Internet, egal welche Stufe das Werkzeug hat. Das Heimnetz bleibt erreichbar, wie die Stufe es erlaubt.
 5. <a id="kn-waechter-s5"></a>**Öffentliche Adresse?**: Eine öffentliche Adresse ist auf jeder Stufe erlaubt.
-6. <a id="kn-waechter-s6"></a>**Stufe „nur Internet“?**: Was aus Suchergebnissen oder Antworten kommt, darf nie ins Heimnetz (chat, feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, systemupdates, verbund).
+6. <a id="kn-waechter-s6"></a>**Stufe „nur Internet“?**: Was aus Suchergebnissen oder Antworten kommt, darf nie ins Heimnetz (feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, systemupdates, verbund).
 7. <a id="kn-waechter-s7"></a>**Nie erlaubt?**: Link-lokale Adressen (169.254.x, dort antworten Cloud-Metadaten), Multicast, unbestimmte und reservierte Adressen sind auf keiner Stufe erlaubt.
 8. <a id="kn-waechter-s8"></a>**Heimnetz erlaubt?**: Home Assistant und andere Dienste im Heimnetz (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) dürfen immer. Kalender, Kontakte, Mail und MCP (calendars, contacts, fundmail, mail, mcp, meinmcp, tasks) nur, wenn unter Einstellungen → Sicherheit → Heimnetz-Adressen erlauben eingeschaltet ist.
 9. <a id="kn-waechter-s9"></a>**Verbinden mit genau dieser Adresse**: Die Verbindung geht an die geprüfte Adresse, nicht noch einmal an den Namen. Ein zweites Nachschlagen könnte anders antworten (DNS-Rebinding). Das Zertifikat wird trotzdem für den Namen geprüft.
@@ -2746,11 +2761,15 @@ Gilt bei: [Schritt 6](#kn-waechter-s6), [Schritt 8](#kn-waechter-s8)
 
 | Stufe | Wer sie nutzt (aus dem Code) | Internet | Heimnetz |
 |---|---|---|---|
-| nur Internet | chat, feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, systemupdates, verbund | ✓ | ✕ |
+| nur Internet | feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, systemupdates, verbund | ✓ | ✕ |
 | Nutzer | calendars, contacts, fundmail, mail, mcp, meinmcp, tasks | ✓ | nur mit Schalter |
 | Heimnetz | doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite | ✓ | ✓ |
 | je nach Ziel | anrufe, dienstwacht, halive, nas, nasquelle, offline, speicher, telefon, zertpin | wie das Ziel eingestellt ist | – |
 | immer | alle | ✕ bei Notaus | ✕ eigene Dienste, 169.254, Multicast |
+
+#### Ein Abruf für Seiten und Dateien
+
+- Eine Seite oder Datei von einer Adresse holt nur netguard.hole_oeffentlich: die Seiten aus Suchergebnissen (chat.page_text), die Webseite aufs reMarkable (über page_text) und Links als Dokument. Zuerst der Notaus, dann vor jeder Anfrage netguard.oeffentlich (http oder https, keine Zugangsdaten, jede Adresse des Namens öffentlich) und an der Verbindung noch einmal die Stufe nur Internet; höchstens 4 Weiterleitungen, jede neu geprüft, ein fester Browser-Name, Inhaltstyp aus einer festen Liste, Größe und Zeit für alles zusammen. Eine Ablehnung ist ein festes Wort (netguard.WORTE).
 
 #### Wenn gesperrt
 
@@ -2760,6 +2779,7 @@ Gilt bei: [Schritt 6](#kn-waechter-s6), [Schritt 8](#kn-waechter-s8)
 #### Zahlen (aus dem Code)
 
 - **20 MB** größte Antwort ([Schritt 11](#kn-waechter-s11))
+- **4** Weiterleitungen je Abruf, jede neu geprüft ([Schritt 12](#kn-waechter-s12))
 - **30000–31099, 31443** gesperrte eigene Ports ([Schritt 3](#kn-waechter-s3))
 - **15** Sperren in 10 Minuten bis Notaus Stufe 1 (wenn an) ([Schritt 4](#kn-waechter-s4))
 - **1** Notaus-Stufe ohne Internet ([Schritt 4](#kn-waechter-s4))
@@ -2779,6 +2799,8 @@ Gilt bei: [Schritt 6](#kn-waechter-s6), [Schritt 8](#kn-waechter-s8)
 - `app/panel/netguard.py` `allowed`: die Regel: nichts oder der Grund ([Schritt 3](#kn-waechter-s3), [Schritt 7](#kn-waechter-s7), [Schritt 8](#kn-waechter-s8))
 - `app/panel/netguard.py` `resolve`: einmal auflösen, jede Adresse prüfen, Live melden ([Schritt 2](#kn-waechter-s2))
 - `app/panel/netguard.py` `client`: der Zugang nach außen für Werkzeuge ([Schritt 1](#kn-waechter-s1))
+- `app/panel/netguard.py` `hole_oeffentlich`: der eine Abruf einer öffentlichen Seite oder Datei ([Schritt 1](#kn-waechter-s1), [Schritt 12](#kn-waechter-s12))
+- `app/panel/netguard.py` `oeffentlich`: Vorprüfung jeder Anfrage: nur öffentlich, ohne Zugangsdaten ([Schritt 6](#kn-waechter-s6))
 - `app/panel/netguard.py` `_Transport`: Passwort-Schutz, Größengrenze, Ergebnis für Mein Zustand ([Schritt 10](#kn-waechter-s10), [Schritt 11](#kn-waechter-s11))
 - `app/panel/netguard.py` `_Capped`: schneidet die Antwort ab, auch entpackt ([Schritt 11](#kn-waechter-s11))
 - `app/panel/netguard.py` `same_site`: gleiche Seite für Anmeldedaten ([Schritt 10](#kn-waechter-s10))
@@ -2788,7 +2810,7 @@ Gilt bei: [Schritt 6](#kn-waechter-s6), [Schritt 8](#kn-waechter-s8)
 - `app/panel/notaus.py` `watch`: zählt Sperren für Notaus von selbst ([Schritt 2](#kn-waechter-s2))
 - `app/panel/live.py` `outgoing`: zeigt jede Entscheidung auf Live ([Schritt 2](#kn-waechter-s2))
 
-Selbsttests: `test_hardening`, `test_notaus`, `test_waechter_umgehung`
+Selbsttests: `test_hardening`, `test_notaus`, `test_waechter_umgehung`, `test_doklink`
 
 ### Logs und Live
 
@@ -3401,7 +3423,7 @@ flowchart TD
 
 1. <a id="kn-aussen-s1"></a>**Modell ruft ein Werkzeug**: Das Modell nennt ein Werkzeug und Angaben dazu. Wer fragt, steht schon fest (Anmeldung); die Zugangsdaten des Dienstes liegen versiegelt beim Profil und gehen nie ans Modell.
 2. <a id="kn-aussen-s2"></a>**In dieser Runde angeboten?**: Nur Werkzeuge, die diese Runde angeboten hat, laufen. Ein anderer Name wird nicht ausgeführt.
-3. <a id="kn-aussen-s3"></a>**Notaus hält es an?**: Der Notaus wird bei jedem Aufruf neu gelesen. Ab Stufe 1 sind die 7 Werkzeuge gesperrt, die selbst ins Internet gehen (Websuche, Wetter, Fahrplan, Wikipedia, Pakete, Seiten lesen); ab Stufe 2 oder mit „Mein Notaus“ jedes Werkzeug, das etwas ändert.
+3. <a id="kn-aussen-s3"></a>**Notaus hält es an?**: Der Notaus wird bei jedem Aufruf neu gelesen. Ab Stufe 1 sind die 8 Werkzeuge gesperrt, die selbst ins Internet gehen (Websuche, Wetter, Fahrplan, Wikipedia, Pakete, Seiten lesen); ab Stufe 2 oder mit „Mein Notaus“ jedes Werkzeug, das etwas ändert.
 4. <a id="kn-aussen-s4"></a>**Schon Text von außen gelesen?**: Hat die Antwort schon Mails, Webseiten, Kalender, Dokumente oder ein Archiv gelesen, darf sie nichts mehr schalten, merken oder eintragen. Die Person muss das in einer neuen Nachricht selbst sagen.
 5. <a id="kn-aussen-s5"></a>**Dienst als weg bekannt?**: Sieht der Dienst-Wächter den Dienst dieses Werkzeugs als weg (und ist der Hinweis an), antwortet das Werkzeug sofort mit einem festen Satz, statt zu warten. Die Websuche versucht dann das eigene Kiwix.
 6. <a id="kn-aussen-s6"></a>**Fester eigener Weg?**: Das Sprachmodell, SearXNG an der eingetragenen Adresse, Wetter, Fahrplan, Wikipedia und feste Dienste wie Apple-Push laufen direkt, ohne Wächter. Welche Module das dürfen und warum, steht in netguard.DIRECT_OK; ein Selbsttest meldet jedes Modul, das direkt verbindet und dort fehlt. Fragt die Person nach Heutigem oder den letzten Tagen (feste Wörter, frisch.zeitraum), sucht SearXNG nur in diesem Zeitraum (bei Nachrichten auch in seiner Kategorie News); jeder Treffer trägt sein Datum, ältere fallen weg. Die eigene Websuche des Panels bei „beides“ (Erst lokal) geht denselben Weg (chat.web_search_own), nur mit den eigenen Worten der Frage und nie bei Notaus oder ausgefallenem Dienst.
@@ -3434,7 +3456,7 @@ Gilt bei: [Schritt 7](#kn-aussen-s7), [Schritt 8](#kn-aussen-s8)
 
 - **20 MB** größte Antwort über den Wächter ([Schritt 10](#kn-aussen-s10))
 - **2 MB** größte Antwort eines MCP-Dienstes ([Schritt 10](#kn-aussen-s10))
-- **7** Werkzeuge, die ab Notaus-Stufe 1 ruhen ([Schritt 3](#kn-aussen-s3))
+- **8** Werkzeuge, die ab Notaus-Stufe 1 ruhen ([Schritt 3](#kn-aussen-s3))
 - **5 s** längste Probe des Dienst-Wächters ([Schritt 5](#kn-aussen-s5))
 
 #### Einstellen
@@ -3496,9 +3518,9 @@ flowchart TD
 ```
 
 1. <a id="kn-internet-s1"></a>**Werkzeug will ins Internet**: Das Modell hat ein angebotenes Werkzeug gerufen, das einen Dienst im Internet braucht. Welche Werkzeuge überhaupt angeboten werden, haben Rechte und Weiche schon entschieden.
-2. <a id="kn-internet-s2"></a>**Notaus hält das Internet an?**: Ab Stufe 1 ruhen die 7 Werkzeuge, die selbst ins Internet gehen (notaus.INTERNET_TOOLS); notaus.locked_tools wird bei jedem Aufruf neu gelesen.
+2. <a id="kn-internet-s2"></a>**Notaus hält das Internet an?**: Ab Stufe 1 ruhen die 8 Werkzeuge, die selbst ins Internet gehen (notaus.INTERNET_TOOLS); notaus.locked_tools wird bei jedem Aufruf neu gelesen.
 3. <a id="kn-internet-s3"></a>**Feste Adresse?**: Wetter, Fahrplan und Wikipedia fragen eine feste Adresse aus dem Code oder den Admin-Einstellungen, nie eine aus fremdem Text. Welche Module direkt verbinden dürfen und warum, steht in netguard.DIRECT_OK.
-4. <a id="kn-internet-s4"></a>**Über den Wächter**: Seiten aus der Suche und reMarkable fragen mit Stufe nur Internet (netguard.PUBLIC), Mail, Kalender und Kontakte mit Stufe Nutzer. Die Stufe steht im Code.
+4. <a id="kn-internet-s4"></a>**Über den Wächter**: Seiten aus der Suche, Links als Dokument und reMarkable fragen mit Stufe nur Internet (netguard.PUBLIC), Seiten und Dateien von einer Adresse dabei nur über netguard.hole_oeffentlich; Mail, Kalender und Kontakte mit Stufe Nutzer. Die Stufe steht im Code.
 5. <a id="kn-internet-s5"></a>**Adresse erlaubt?**: netguard.allowed prüft jede aufgelöste Adresse: keine eigenen Dienste, kein 169.254, kein Heimnetz auf Stufe nur Internet.
 6. <a id="kn-internet-s6"></a>**Antwort als Daten**: Die Antwort wird an der Grenze abgeschnitten und geht als Daten ans Modell, nie als Befehl.
 7. <a id="kn-internet-s7"></a>**Was der Spark selbst schickt**: Ohne Werkzeug gehen nur feste Wege hinaus: die Telegram-Bot-API, Apple- und Browser-Push an bekannte Dienste und die Update-Prüfung bei GitHub, jede mit Grund in netguard.DIRECT_OK. Dazu, nur auf Befehl eines Admins und nie aus dem Panel selbst: An GitHub geben (root schiebt einen Zweig opencode/… per ssh an GitHub, Kasten Werkstatt).
@@ -3512,6 +3534,7 @@ Gilt bei: [Schritt 4](#kn-internet-s4), [Schritt 5](#kn-internet-s5)
 | Dienst | Weg |
 |---|---|
 | Seiten aus der Suche | Wächter, nur Internet |
+| Links als Dokument | Wächter, nur Internet, nur Adressen der Person |
 | Mail, Kalender, Kontakte | Wächter, Stufe Nutzer |
 | reMarkable | Wächter, nur erlaubte Hosts |
 | Wetter, Fahrplan, Wikipedia | feste Adresse |
@@ -3521,7 +3544,7 @@ Gilt bei: [Schritt 4](#kn-internet-s4), [Schritt 5](#kn-internet-s5)
 
 #### Zahlen (aus dem Code)
 
-- **7** Werkzeuge, die selbst ins Internet gehen ([Schritt 2](#kn-internet-s2))
+- **8** Werkzeuge, die selbst ins Internet gehen ([Schritt 2](#kn-internet-s2))
 - **20 MB** größte Antwort über den Wächter ([Schritt 6](#kn-internet-s6))
 
 #### Einstellen

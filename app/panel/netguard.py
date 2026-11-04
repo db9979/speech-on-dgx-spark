@@ -16,6 +16,12 @@ redirect is a new connection and checked the same way. Answers are cut at max_by
 unpacking gzip, so a huge or packed answer cannot fill the memory. Login data (Authorization) only
 goes to the site it was entered for (same host or same parent domain, e.g. the caldav servers of
 icloud.com), never over plain http when the address was https.
+
+hole_oeffentlich is the one way to fetch a page or file from a public address (search result pages chat.page_text,
+the reMarkable's web page rmplus.web_page through it, Links als Dokument doklink.py): the Notaus first, every hop
+checked before it is asked (oeffentlich) and at the connection (PUBLIC), at most WEITER redirects, a fixed
+User-Agent, the content type from a fixed list, max_bytes and a time limit for all of it; a refusal is AbrufFehler
+with a fixed word (WORTE).
 """
 import asyncio
 import contextvars
@@ -25,6 +31,7 @@ import re
 import smtplib
 import socket
 import zlib
+from typing import NamedTuple
 from urllib.parse import urlsplit
 
 import httpcore
@@ -399,3 +406,105 @@ class SMTP_SSL(smtplib.SMTP_SSL):
         ip = resolve(host, port, USER)
         sock = socket.create_connection((ip, port), timeout, self.source_address)
         return self.context.wrap_socket(sock, server_hostname=host)
+
+
+# ---------------------------------------------------------------- one fetch from a public address
+WEITER = 4                 # redirects followed at most, each one checked again
+AGENT = "Mozilla/5.0 (speech-on-dgx-spark)"
+HTML = ("text/html", "application/xhtml+xml")
+# the fixed words of a refusal (journal lines, Ich → Dokumente): notaus, privat (not a public address, also after a
+# redirect or the name lookup), adresse (no http(s), login data in it, no host), groesse, art (content type not
+# asked for), status (no 200/304), weiter (too many redirects), zeit, netz
+WORTE = ("notaus", "privat", "adresse", "groesse", "art", "status", "weiter", "zeit", "netz")
+
+
+class AbrufFehler(ValueError):
+    def __init__(self, wort):
+        super().__init__(wort)
+        self.wort = wort if wort in WORTE else "netz"
+
+
+class Abruf(NamedTuple):
+    data: bytes           # empty for 304
+    art: str              # the content type without parameters, lower case ("" for 304)
+    charset: str
+    final_url: str        # after the redirects
+    etag: str
+    lastmod: str
+    status: int           # 200, or 304 for a conditional request that found the page unchanged
+
+
+def oeffentlich(url):
+    """True when the address is http(s) without login data and its host resolves only to public addresses (checked
+    before each request: pages never reach the Spark itself, the home network or the router; the connection checks
+    the same again, resolve())."""
+    try:
+        u = urlsplit(url)
+        if u.scheme not in ("http", "https") or not u.hostname or u.username is not None or u.password is not None:
+            return False
+        infos = socket.getaddrinfo(u.hostname, u.port or (443 if u.scheme == "https" else 80))
+        return bool(infos) and all(ipaddress.ip_address(i[4][0].split("%")[0]).is_global for i in infos)
+    except (OSError, ValueError, UnicodeError):
+        return False
+
+
+def als_text(got):
+    """The fetched bytes as text in their charset (utf-8 when it is missing or unknown)."""
+    try:
+        return got.data.decode(got.charset or "utf-8", errors="replace")
+    except LookupError:
+        return got.data.decode("utf-8", errors="replace")
+
+
+async def hole_oeffentlich(url, max_bytes, sekunden, arten, headers=None, abschneiden=False):
+    """GET one public address (Abruf). arten: the content types allowed (HTML, or the kinds a caller reads);
+    headers: extra request headers (If-None-Match, If-Modified-Since); abschneiden: an answer longer than max_bytes
+    is cut there instead of refused (pages of search results). Raises AbrufFehler with a fixed word."""
+    import notaus
+    if notaus.refuse("internet"):
+        raise AbrufFehler("notaus")
+    want = {"User-Agent": AGENT, **{k: v for k, v in (headers or {}).items() if v}}
+
+    async def fetch():
+        target = url
+        for _ in range(WEITER + 1):
+            u = urlsplit(target)
+            if u.scheme not in ("http", "https") or not u.hostname or u.username is not None or u.password is not None:
+                raise AbrufFehler("adresse")
+            if not await asyncio.to_thread(oeffentlich, target):
+                raise AbrufFehler("privat")
+            async with client(PUBLIC, max_bytes=max_bytes * 2 if abschneiden else max_bytes) as pc, \
+                    pc.stream("GET", target, timeout=sekunden, follow_redirects=False, headers=want) as r:
+                if r.is_redirect and r.headers.get("location"):
+                    target = str(r.url.join(r.headers["location"]))
+                    continue
+                if r.status_code == 304:
+                    return Abruf(b"", "", "", str(r.url), r.headers.get("etag", ""), r.headers.get("last-modified", ""), 304)
+                if r.status_code != 200:
+                    raise AbrufFehler("status")
+                art = r.headers.get("content-type", "").split(";")[0].strip().lower()
+                if art not in arten:
+                    raise AbrufFehler("art")
+                raw = bytearray()
+                async for chunk in r.aiter_bytes():
+                    raw += chunk
+                    if len(raw) > max_bytes:
+                        if abschneiden:
+                            del raw[max_bytes:]
+                            break
+                        raise AbrufFehler("groesse")
+                return Abruf(bytes(raw), art, r.encoding or "", str(r.url), r.headers.get("etag", "")[:200],
+                             r.headers.get("last-modified", "")[:100], 200)
+        raise AbrufFehler("weiter")
+    try:
+        return await asyncio.wait_for(fetch(), sekunden)
+    except AbrufFehler:
+        raise
+    except Blocked as e:
+        raise AbrufFehler("notaus" if "Notaus" in str(e) else "privat") from None
+    except TooLarge:
+        raise AbrufFehler("groesse") from None
+    except (asyncio.TimeoutError, httpx.TimeoutException):
+        raise AbrufFehler("zeit") from None
+    except (httpx.HTTPError, OSError, ValueError):
+        raise AbrufFehler("netz") from None

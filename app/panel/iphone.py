@@ -108,7 +108,7 @@ AREAS = {
 # admin released for the profile, the app shows. Each path keeps its own checks (EDIT_KEY for changing pictures,
 # DOC_FEATURE switches, the day limits); forgetting everything at once stays in the browser.
 THINGS = {
-    # Dokumente: the list, the switches, "Für alle", tags, read again, deadline reminder, Auswertungen, recordings, several at once, the
+    # Dokumente: the list, the switches, "Für alle", tags, read again, deadline reminder, Auswertungen, recordings, links, several at once, the
     # content search, delete (own documents only; the list and reading are APP_PATHS/APP_PATTERNS); Ausgelassene
     # Ordner (auslassen.py): the list, letting a folder in again, adding and removing name rules (the folder tree
     # stays in the browser)
@@ -121,6 +121,9 @@ THINGS = {
                   (("POST",), rf"/api/profile/wissen/{_DOC}/auswertung/fristen/[0-9]{{1,3}}/erinnern"),
                   # Aufnahmen abschreiben (abschrift.py): upload a recording, "Abbrechen"; each checks its release
                   (("POST",), r"/api/profile/docs/audio"), (("POST",), rf"/api/profile/wissen/{_DOC}/abschrift/stop"),
+                  # Links als Dokument (doklink.py): addresses in, "Neu abrufen", a waiting address out; each checks its release
+                  (("POST",), r"/api/profile/docs/link"), (("POST",), rf"/api/profile/wissen/{_DOC}/abrufen"),
+                  (("DELETE",), r"/api/profile/docs/link/[0-9a-f]{12}"),
                   (("POST",), r"/api/profile/wissen/(?:batch|search)"), (("DELETE",), rf"/api/profile/docs/{_DOC}"),
                   (("GET", "POST", "DELETE"), r"/api/profile/auslassen")),
     # Gedächtnis: look, change the wording, forget one or several, the tidy-up proposal, Feste Themen

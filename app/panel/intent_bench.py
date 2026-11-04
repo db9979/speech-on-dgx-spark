@@ -77,6 +77,15 @@ BENCH = [
     ("Such in der Mappe Wohnung nach der Kaution", "mappe"),
     ("Finde in der Mappe Wohnung die Rechnung", "finden+mappe"),
     ("Search the collection Flat for the deposit", "mappe"),
+    # Links als Dokument (doklink.py, plan open-notebook Stufe 4): an address and a word of keeping it; „aufs reMarkable“
+    # stays the reMarkable, an address alone is no wish to keep it
+    ("Speicher https://example.org/artikel als Dokument", "doklink"),
+    ("Übernimm https://heise.de/news/artikel in meine Dokumente", "doklink"),
+    ("Leg https://a.example/b.pdf und https://c.example zu meinen Dokumenten", "doklink"),
+    ("Save https://example.org/article as a document", "doklink"),
+    ("Store https://example.org/manual.pdf in my documents", "doklink"),
+    ("Schick https://example.org/artikel aufs reMarkable", ""),
+    ("Was steht auf https://example.org?", ""),
     # the own Kiwix archive (V01.0.264): mein, dein, im Archiv, never the uploaded documents
     ("Schaue in deinem Archiv nach, was du über Albert Einstein", "archiv"),
     ("Schau in meinem Archiv nach Sauerteig", "archiv"),

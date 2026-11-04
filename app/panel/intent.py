@@ -84,6 +84,11 @@ DOC_WORDS = re.compile(r"(?i)\b(\w*dokument\w*|unterlage\w*|\w*vertrag\w*|\w*ver
 # Mappen (mappen.py): the word itself, never a Schulmappe or Aktenmappe of someone else's text (the Weiche reads only
 # the person's own message)
 MAPPE_WORDS = re.compile(r"(?i)\b(mappen?|collections?)\b")
+# Links als Dokument (doklink.py): an address in the person's own message and a word of keeping it as a document
+# („Speicher https://… als Dokument“, „Übernimm den Link in meine Dokumente“); „aufs reMarkable“ stays rmweb (route)
+_DOKLINK = (r"(speicher\w*|abspeicher\w*|übernimm|übernehm\w*|als dokumente?|in meine dokumente|zu (meinen |den )?dokumenten|"
+            r"save|store|as (a )?documents?|to my documents|into my documents)")
+DOKLINK_WORDS = re.compile(r"(?is)\b" + _DOKLINK + r"\b(?=.*https?://)|https?://\S+(?=.*\b" + _DOKLINK + r"\b)")
 CONTACT_WORDS = re.compile(r"(?i)\b(telefonnummer\w*|handynummer\w*|nummer von|adresse von|kontakt\w*|"
                            r"geburtstag(e|en|s)?|nummer vo[mn]|wo wohnt|anschrift\w*|phone number|contacts?)\b")
 MESSAGE_WORDS = re.compile(r"(?i)\b(nachricht\w*|chat\w*|durchsage\w*|bescheid|richte\w* .{1,40}aus|messages?|"
@@ -253,6 +258,9 @@ GROUPS = {
     # Mappen (mappen.py, plan open-notebook Stufe 1): the own collections by name („Was liegt in der Mappe Garten?“,
     # „Leg den Mietvertrag in die Mappe Wohnung“); document_search stays anyway (NARROW_KEEP)
     "mappe": ({"mappe_liste", "mappe_stand", "mappe_dazu"}, MAPPE_WORDS),
+    # Links als Dokument (doklink.py, plan open-notebook Stufe 4): an address and a word of keeping it; the module
+    # offers the tool only when the address stands in the person's own message
+    "doklink": ({"link_als_dokument"}, DOKLINK_WORDS),
     # the own offline archive (Kiwix, V01.0.258): only when the person names it
     "archiv": ({"archive_search", "article_more", "wikipedia"}, dict(chat.NEED_TOOLS)["archive_search"]),
 }
@@ -396,6 +404,15 @@ def classify(text, extra_words="", group_words="", not_words=""):
     if "feeds" in why:
         for name in ("websuche", "mail", "nachricht"):
             why.pop(name, None)
+    # „Schick https://… aufs reMarkable“ is the reMarkable's web page (rmplus), never a document of the Spark; a page to
+    # keep is not a web search either
+    if "doklink" in why:
+        if re.search(r"(?i)re\s?markable", text):
+            why.pop("doklink")
+        else:   # a fixed word, never the address itself (the Weiche's lines and Live show it)
+            why["doklink"] = "Link speichern"
+            why.pop("websuche", None)
+            why.pop("dokument", None)
     # "Schreib einen Brief wegen der Heizung" is a file about the heating, not switching it
     if "erstellen" in why and "smarthome" in why and not homeassistant.is_command(text):
         why.pop("smarthome")
@@ -903,14 +920,15 @@ LABELS = {"smarthome": "Smart Home", "kalender": "Kalender und Briefing", "mail"
           "dokument": "Dokumente", "nachricht": "Nachrichten an andere (Chats)", "agent": "Agenten", "iphone": "iPhone",
           "spark": "Fragen zum Spark", "wikipedia": "Wikipedia", "erstellen": "Dokumente erstellen",
           "bild": "Bilder malen", "musik": "Musik machen", "archiv": "Eigenes Archiv",
-          "feeds": "Reddit und Feeds", "finden": "Finden in allen Daten", "mappe": "Mappen"}
+          "feeds": "Reddit und Feeds", "finden": "Finden in allen Daten", "mappe": "Mappen",
+          "doklink": "Links als Dokument"}
 MAX_TEST = 500
 # "Erklären statt Schweigen" (plan „Bedienung gesamt“ B4, V01.0.286): the function behind each group (features.py)
 FEATURE = {"smarthome": "ha", "kalender": "calendar", "mail": "mail", "websuche": "search", "erinnerung": "reminders",
            "liste": "tasks", "wetter": "weather", "bahn": "transit", "paket": "parcels", "kontakt": "contacts",
            "gedaechtnis": "memory", "dokument": "documents", "nachricht": "chats", "agent": "agent",
            "iphone": "iphone", "wikipedia": "wiki", "archiv": "kiwix", "bild": "bilder", "musik": "musik", "feeds": "feeds",
-           "mappe": "mappen"}
+           "mappe": "mappen", "doklink": "doclink"}
 
 
 def explain(route, offered, who, stranger, c=None):

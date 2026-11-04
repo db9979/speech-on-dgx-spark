@@ -4,12 +4,13 @@ from technik_seiten import S
 
 SEITEN = {
     "waechter": {
-        "stand": "0e36dcde85",
+        "stand": "8b56db8950",
         "bezug": {
             "notaus.AUTO": ["s4"], "netguard.allowed": ["s3", "s7", "s8"], "netguard.resolve": ["s2"],
             "netguard._Transport": ["s10", "s11"], "netguard._Capped": ["s11"], "netguard.same_site": ["s10"],
             "netguard.own_addresses": ["s3"], "netguard.model_addresses": ["s3"], "netguard.IMAP4_SSL": ["s9"], "notaus.watch": ["s2"],
             "live.outgoing": ["s2"], "regeln": ["s6", "s8"], "regel:immer": ["s3", "s4", "s7"],
+            "netguard.hole_oeffentlich": ["s1", "s12"], "netguard.oeffentlich": ["s6"], "netguard.WEITER": ["s12"],
         },
         "kurz": ("Der Wächter entscheidet bei jeder Verbindung, die ein Werkzeug nach außen aufbaut, ob sie sein darf: "
                  "Webseiten aus der Suche, Kalender, Kontakte, Mail, Home Assistant, NAS und MCP-Dienste. "
@@ -130,6 +131,7 @@ SEITEN = {
         ],
         "zahlen": [
             ("{netguard.MAX_BYTES|mb}", ("größte Antwort", "largest answer"), "netguard.MAX_BYTES"),
+            ("{netguard.WEITER}", ("Weiterleitungen je Abruf, jede neu geprüft", "redirects per fetch, each checked again"), "netguard.WEITER"),
             ("{netguard.OWN_PORTS|bereiche}", ("gesperrte eigene Ports", "closed own ports"), "netguard.OWN_PORTS"),
             ("{notaus.AUTO.netguard.0}", ("Sperren in {notaus.AUTO.netguard.1|min} Minuten bis Notaus Stufe 1 (wenn an)",
                                           "blocks in {notaus.AUTO.netguard.1|min} minutes until kill switch stage 1 (if on)"), "notaus.AUTO"),
@@ -154,6 +156,21 @@ SEITEN = {
              "Me → My status: whether an own service (calendar, mail) answers or refused the login."),
         ],
         "mehr": [
+            (("Ein Abruf für Seiten und Dateien", "One fetch for pages and files"), [
+                ("Eine Seite oder Datei von einer Adresse holt nur netguard.hole_oeffentlich: die Seiten aus "
+                 "Suchergebnissen (chat.page_text), die Webseite aufs reMarkable (über page_text) und Links als "
+                 "Dokument. Zuerst der Notaus, dann vor jeder Anfrage netguard.oeffentlich (http oder https, keine "
+                 "Zugangsdaten, jede Adresse des Namens öffentlich) und an der Verbindung noch einmal die Stufe nur "
+                 "Internet; höchstens {netguard.WEITER} Weiterleitungen, jede neu geprüft, ein fester Browser-Name, "
+                 "Inhaltstyp aus einer festen Liste, Größe und Zeit für alles zusammen. Eine Ablehnung ist ein festes "
+                 "Wort (netguard.WORTE).",
+                 "A page or file from an address is fetched only by netguard.hole_oeffentlich: the pages of search "
+                 "results (chat.page_text), the web page to the reMarkable (through page_text) and links as "
+                 "documents. First the kill switch, then before every request netguard.oeffentlich (http or https, no "
+                 "login data, every address of the name public) and at the connection once more the level internet "
+                 "only; at most {netguard.WEITER} redirects, each checked again, a fixed browser name, content type "
+                 "from a fixed list, size and time for all of it. A refusal is a fixed word (netguard.WORTE)."),
+            ]),
             (("Wenn gesperrt", "When blocked"), [
                 ("Das Werkzeug bekommt statt einer Antwort den Fehler Blocked mit dem Grund; es kommt keine Verbindung zustande.",
                  "Instead of an answer the tool gets the error Blocked with the reason; no connection is made."),
@@ -169,6 +186,8 @@ SEITEN = {
             ("netguard.allowed", ("die Regel: nichts oder der Grund", "the rule: nothing or the reason")),
             ("netguard.resolve", ("einmal auflösen, jede Adresse prüfen, Live melden", "resolve once, check every address, tell Live")),
             ("netguard.client", ("der Zugang nach außen für Werkzeuge", "the way out for tools")),
+            ("netguard.hole_oeffentlich", ("der eine Abruf einer öffentlichen Seite oder Datei", "the one fetch of a public page or file")),
+            ("netguard.oeffentlich", ("Vorprüfung jeder Anfrage: nur öffentlich, ohne Zugangsdaten", "check before every request: public only, no login data")),
             ("netguard._Transport", ("Passwort-Schutz, Größengrenze, Ergebnis für Mein Zustand", "password guard, size limit, result for My status")),
             ("netguard._Capped", ("schneidet die Antwort ab, auch entpackt", "cuts the answer, also unpacked")),
             ("netguard.same_site", ("gleiche Seite für Anmeldedaten", "same site for login data")),
@@ -179,7 +198,7 @@ SEITEN = {
             ("notaus.watch", ("zählt Sperren für Notaus von selbst", "counts blocks for the automatic kill switch")),
             ("live.outgoing", ("zeigt jede Entscheidung auf Live", "shows each decision on Live")),
         ],
-        "tests": ["test_hardening", "test_notaus", "test_waechter_umgehung"],
+        "tests": ["test_hardening", "test_notaus", "test_waechter_umgehung", "test_doklink"],
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked")),
                   ("guard_cut", ("zu groß, abgebrochen", "too large, stopped"))],
     },
@@ -398,7 +417,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "f275f71aeb",
+        "stand": "8deae30041",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -636,12 +655,13 @@ SEITEN = {
 
     # ------------------------------------------------------------------ sicherheit (the model as a whole)
     "sicherheit": {
-        "stand": "7b8e384570",
+        "stand": "42268d12ce",
         "bezug": {
             "features.blocked": ["s5"], "geteilt.put": ["s5"], "mitschreiblink.find": ["s3", "s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
             "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"], "sysupdate.wunsch_nehmen": ["s3"],
             "netguard.allowed": ["s6"], "chat.LOCKED_OUTSIDE": ["s6"], "chat.LOCKED_AFTER_MAIL": ["s6"], "mailansicht.clean": ["s6"],
             "textnorm.defuse": ["s6"], "llm_tor.entschaerft": ["s6"], "regeln": ["s4", "s5"], "profiles._cap": ["s8"],
+            "netguard.hole_oeffentlich": ["s6"], "doklink.eigene": ["s6"],
             "gedaechtnis.offer": ["s8"], "gemerkt.take_back": ["s8"], "profiles.write_own": ["s10"],
             "vorrat.key": ["s10"], "meinedaten.build": ["s10"], "meinedaten.api_export": ["s3"],
         },
@@ -727,7 +747,10 @@ SEITEN = {
                "{chat.LOCKED_OUTSIDE|anzahl} handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins "
                "Gedächtnis gelernt; nach einer Mail sind es {chat.LOCKED_AFTER_MAIL|anzahl}, dazu gehört alles, was ins Internet "
                "fragt (Websuche, Wikipedia, Wetter, Fahrplan), damit kein Suchwort Mail-Inhalt hinausträgt. Ob das hält, "
-               "prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed); ein Tunnel des Fernzugangs nur zu "
+               "prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed); "
+               "eine Seite oder Datei holt nur netguard.hole_oeffentlich (Notaus zuerst, nur öffentlich auch nach jeder "
+               "Weiterleitung, Größe, Zeit, Inhaltstyp), Links als Dokument nimmt eine Adresse nur aus den eigenen "
+               "Worten der Person (doklink.eigene), und die Seite wird ein Dokument wie jedes: Daten; ein Tunnel des Fernzugangs nur zu "
                "Zielen nach fernweb.ziel_ok: dort 127.0.0.1 und die eigenen Adressen des Systems, die sein Anker selbst meldet. Eine Mail mit "
                "HTML zeigt die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter "
                "Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick "
@@ -738,7 +761,10 @@ SEITEN = {
                "{chat.LOCKED_OUTSIDE|anzahl} acting tools are locked, in the next turn too, and nothing of it is learned into "
                "memory; after a mail it is {chat.LOCKED_AFTER_MAIL|anzahl}, everything that asks the internet among them (web search, "
                "Wikipedia, weather, transit), so no search word carries mail content out. Whether this holds is checked by "
-               "the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed); a remote-access tunnel only to "
+               "the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed); "
+               "a page or file is fetched only by netguard.hole_oeffentlich (kill switch first, public only also after "
+               "every redirect, size, time, content type), links as documents take an address only from the person's "
+               "own words (doklink.eigene), and the page becomes a document like any: data; a remote-access tunnel only to "
                "targets by fernweb.ziel_ok: 127.0.0.1 there and the system's own addresses its anchor reports itself. A mail with HTML is shown "
                "only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame "
                "without script with its own CSP; pictures from outside only after the own click and through the guard, a "
@@ -938,6 +964,8 @@ SEITEN = {
             ("llm_tor.entschaerft", ("Marken des Modells aus jeder Nachricht nehmen", "take the model's markers out of every message")),
             ("mailansicht.clean", ("HTML einer Mail nur bereinigt, ohne Skript und ohne Laden von außen", "a mail's HTML only cleaned, without script and without loads from outside")),
             ("netguard.allowed", ("ob eine Verbindung nach außen sein darf", "whether a connection out may happen")),
+            ("netguard.hole_oeffentlich", ("der eine Abruf einer öffentlichen Seite oder Datei: Notaus zuerst, nur öffentlich", "the one fetch of a public page or file: kill switch first, public only")),
+            ("doklink.eigene", ("Adressen fürs Werkzeug nur aus den eigenen Worten", "addresses for the tool only from the own words")),
             ("answercheck.unsupported", ("Zahl ohne Quelle fällt heraus", "a figure without a source is dropped")),
             ("textnorm.hide_secrets", ("Geheimnisse werden nie gesprochen", "secrets are never spoken")),
             ("guard.log", ("Änderungsprotokoll mit Prüfkette", "change log with its chain")),

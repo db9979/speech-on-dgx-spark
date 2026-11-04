@@ -254,6 +254,7 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 | `app/panel/docmake.py` | Dokumente erstellen: the Spark writes letters, reports, minutes, notes, presentations and tables for a profile, as Word, PowerPoint, Excel, PDF, Markdown, te … |
 | `app/panel/docrender.py` | Dokumente erstellen: the files themselves, built by fixed code. |
 | `app/panel/documents.py` | Documents per profile: text extraction, chunking and search. |
+| `app/panel/doklink.py` | Links als Dokument: a public web page or file behind an address becomes a document. |
 | `app/panel/embed_worker.py` | The embedding model in its own process (started by docembed.py with python -I as `embed_worker.py embed REPO COMMIT`, never by hand; repository and pinned co … |
 | `app/panel/folien.py` | Slide types and the fixed rules for documents the Spark writes. |
 | `app/panel/fund.py` | Finden: one index over the own data, its fields and tags, one list of hits for the page Finden, Strg K and the assistant's tool fund_suche. |
@@ -641,7 +642,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/zuordnungen.json` | Remembered matches |  | sealed whole (AES-256-GCM) | yes | Memory |
 | `users/ID/tasks.json` | Tasks |  | – | yes | Tasks and reminders |
 | `users/ID/reminders.json` | Reminders |  | – | yes | Tasks and reminders |
-| `users/ID/wissen.db` | Documents: text, sections with context line, search, vectors; knowledge book and map with people, companies and deadlines; collections with entries and levels; analyses per document with their place (SQLite) |  | – | yes | Documents (text, search, originals) |
+| `users/ID/wissen.db` | Documents: text, sections with context line, search, vectors; knowledge book and map with people, companies and deadlines; collections with entries and levels; analyses per document with their place; links as documents with address, ETag and SHA (SQLite) |  | – | yes | Documents (text, search, originals) |
 | `users/ID/docs/files/` | Originals of uploads (of recordings only the sound track) |  | – | yes | Documents (text, search, originals) |
 | `users/ID/fund.db` | Find: search index over the own data (titles, fields, tags, own tags, mail and attachments, appointments, contacts, lists, reminders, pictures, songs; conversations only date and channel; SQLite) |  | marks with a key of its own per profile (HMAC); mail, attachments, appointments and contacts: title, excerpt, fields and tags AES-GCM | yes | Documents (text, search, originals) |
 | `users/ID/suchpruefung.json` | Test questions and runs of the search check |  | – | yes | Documents (text, search, originals) |
@@ -1681,7 +1682,7 @@ flowchart TD
 3. <a id="kn-sicherheit-s3"></a>**Signed in and within limits?**: Size limit and origin check (CSRF) before reading, then a rate limit per profile or address (a way with its own session key per session after the right key, guessing still per address) and a cap on parallel requests for the model, recognition and output (guard.Slot). Secrets, roles and backups also need a fresh code or passkey (core.confirm_code, 10 minutes). A whole area can be unlocked for a while with a second step (rule "unlocking an area", first remote access: 5 to 120 minutes, fernzugang.entsperrt_bis): this login only, from the same place only, locked on Lock, logout and the kill switch; pairing and removing still ask every time. The models on tars are reached only through the TLS-Tor; commands there are checked by the Wärter (tarswart.check: signature, time, one-time number, one of 18 fixed commands).
 4. <a id="kn-sicherheit-s4"></a>**Who asks, surely known?**: The profile comes from the cookie, the app key or a linked account. At a shared speaker the device key is not enough: chat_turn.shared_stranger allows personal things only when the owner's voice is surely recognised in the same recording.
 5. <a id="kn-sicherheit-s5"></a>**Release and block**: Every function is off until the admin releases it; then it counts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool.
-6. <a id="kn-sicherheit-s6"></a>**Outside stays data**: What a tool reads from outside reaches the model as a marked block of data (textnorm.defuse: the block's end and the model's own markers such as „<|im_start|>“ or „<tool_call>“ are defused; the LLM-Tor does it once more for every message, llm_tor.entschaerft). From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory; after a mail it is 19, everything that asks the internet among them (web search, Wikipedia, weather, transit), so no search word carries mail content out. Whether this holds is checked by the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed); a remote-access tunnel only to targets by fernweb.ziel_ok: 127.0.0.1 there and the system's own addresses its anchor reports itself. A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures from outside only after the own click and through the guard, a link only after the question with its real address.
+6. <a id="kn-sicherheit-s6"></a>**Outside stays data**: What a tool reads from outside reaches the model as a marked block of data (textnorm.defuse: the block's end and the model's own markers such as „<|im_start|>“ or „<tool_call>“ are defused; the LLM-Tor does it once more for every message, llm_tor.entschaerft). From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory; after a mail it is 20, everything that asks the internet among them (web search, Wikipedia, weather, transit), so no search word carries mail content out. Whether this holds is checked by the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed); a page or file is fetched only by netguard.hole_oeffentlich (kill switch first, public only also after every redirect, size, time, content type), links as documents take an address only from the person's own words (doklink.eigene), and the page becomes a document like any: data; a remote-access tunnel only to targets by fernweb.ziel_ok: 127.0.0.1 there and the system's own addresses its anchor reports itself. A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures from outside only after the own click and through the guard, a link only after the question with its real address.
 7. <a id="kn-sicherheit-s7"></a>**The language model proposes**: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run.
 8. <a id="kn-sicherheit-s8"></a>**Does it change something?**: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model; likewise only their click merges, renames or deletes points of the knowledge map (with the code of „Confirm“); by itself only a fixed rule for the same name in another spelling (wissensdoppelt.aehnlich), never the model, and never against their „Different“. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it.
 9. <a id="kn-sicherheit-s9"></a>**Check the answer**: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML.
@@ -1731,7 +1732,7 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 #### Numbers (from the code)
 
 - **13** tools locked after outside text ([step 6](#kn-sicherheit-s6))
-- **19** tools locked after a mail ([step 6](#kn-sicherheit-s6))
+- **20** tools locked after a mail ([step 6](#kn-sicherheit-s6))
 - **10 min** a right code counts for „Confirm“ ([step 3](#kn-sicherheit-s3))
 - **18** fixed commands of the Wärter on tars ([step 3](#kn-sicherheit-s3))
 - **3** kill switch stages, the last stops every conversation ([step 2](#kn-sicherheit-s2))
@@ -1754,6 +1755,8 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 - `app/llm_tor.py` `entschaerft`: take the model's markers out of every message ([step 6](#kn-sicherheit-s6))
 - `app/panel/mailansicht.py` `clean`: a mail's HTML only cleaned, without script and without loads from outside ([step 6](#kn-sicherheit-s6))
 - `app/panel/netguard.py` `allowed`: whether a connection out may happen ([step 6](#kn-sicherheit-s6))
+- `app/panel/netguard.py` `hole_oeffentlich`: the one fetch of a public page or file: kill switch first, public only ([step 6](#kn-sicherheit-s6))
+- `app/panel/doklink.py` `eigene`: addresses for the tool only from the own words ([step 6](#kn-sicherheit-s6))
 - `app/panel/answercheck.py` `unsupported`: a figure without a source is dropped ([step 9](#kn-sicherheit-s9))
 - `app/textnorm.py` `hide_secrets`: secrets are never spoken ([step 9](#kn-sicherheit-s9))
 - `app/panel/guard.py` `log`: change log with its chain ([step 10](#kn-sicherheit-s10))
@@ -2011,7 +2014,7 @@ Self-tests: `test_klaeren`, `test_features`, `test_notaus`, `test_hardening`, `t
 
 ### Switch
 
-The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 26 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow.
+The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 27 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow.
 
 **Why:** Few fitting tools make the model faster and more accurate: it reads less and misses less often. Because the switch only takes away from what rights and locks left, a wrongly sorted sentence can never allow more, at most leave a tool out.
 
@@ -2088,7 +2091,7 @@ Applies at: [step 9](#kn-weiche-s9)
 
 #### Everyday score
 
-- The test sentences (218) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
+- The test sentences (225) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
 
 #### Source bench
 
@@ -2100,17 +2103,17 @@ Applies at: [step 9](#kn-weiche-s9)
 
 #### Tool names
 
-- Wherever a tool shows, a readable name comes from one table (98 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
+- Wherever a tool shows, a readable name comes from one table (99 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
 
 #### Numbers (from the code)
 
-- **26** groups of the switch ([step 4](#kn-weiche-s4), [step 6](#kn-weiche-s6))
+- **27** groups of the switch ([step 4](#kn-weiche-s4), [step 6](#kn-weiche-s6))
 - **2** groups at most that still narrow ([step 6](#kn-weiche-s6))
 - **80** characters at most for a follow-up ([step 8](#kn-weiche-s8))
 - **4** seconds at most for the model's pick ([step 10](#kn-weiche-s10))
 - **300 ms** waiting with „Fast answer start“ ([step 10](#kn-weiche-s10))
 - **80 %** default threshold of the classification ([step 10](#kn-weiche-s10))
-- **218** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
+- **225** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
 - **216** everyday sentences for measuring ([step 14](#kn-weiche-s14))
 - **66** sentences of the source bench ([step 14](#kn-weiche-s14))
 - **150** ms at most for the source switch's hit probe ([step 14](#kn-weiche-s14))
@@ -2333,7 +2336,7 @@ Applies at: [step 4](#kn-werkzeuge-s4)
 | outside text read | 13 changing tools and those of extensions |
 | mail read | also web search and new appointments |
 | own documents read | web search (with local first only own words) |
-| kill switch stage 1 | 7 tools that go to the internet themselves |
+| kill switch stage 1 | 8 tools that go to the internet themselves |
 | kill switch stage 2 or own kill switch | every tool that changes something |
 
 #### Numbers (from the code)
@@ -2341,8 +2344,8 @@ Applies at: [step 4](#kn-werkzeuge-s4)
 - **4** calls per round ([step 1](#kn-werkzeuge-s1))
 - **3** memory notes per answer ([step 1](#kn-werkzeuge-s1))
 - **13** tools locked after outside text ([step 4](#kn-werkzeuge-s4))
-- **7** tools without internet with the kill switch ([step 3](#kn-werkzeuge-s3))
-- **98** tools with a readable name ([step 11](#kn-werkzeuge-s11))
+- **8** tools without internet with the kill switch ([step 3](#kn-werkzeuge-s3))
+- **99** tools with a readable name ([step 11](#kn-werkzeuge-s11))
 
 #### Settings
 
@@ -2487,6 +2490,10 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 
 - abschrift.aufnehmen takes an audio or video file only when its content fits its ending by its first bytes (abschrift.fits), copies it in parts with its limit under the document id (0600) and reads the length with ffprobe; at most 5 wait per profile. In the quiet chain after the page pictures abschrift.schneiden cuts with ffmpeg (only the local file, fixed arguments) a piece of 30 s, from the second one with 1 s in front, and abschrift.stueck sends it through vorrang.run to the own speech recognition, with the stage „hinten“ and the priority key: common.signed_low leaves only such a request unmarked, real speech cancels the piece and it comes again in the next pause. abschrift.trim_edge takes out the words heard twice at the edge. A piece's page is its start second; documents.stelle makes „bei 12:30“ of it, wissen.where „Aufnahme: …, bei 12:30“. The transcript is outside text.
 
+#### Links as documents
+
+- doklink.pruefe checks every address by fixed rules before anything is fetched: http or https, a host, no login data, port 80 or 443, no IP or name of the home network; at most 10 at once and 30 waiting per profile. doklink.eins fetches one after another only through netguard.hole_oeffentlich (kill switch first, public also after every redirect, size, time, content type and first bytes) and hands it to wissen.aufnehmen: the same rules as an upload, origin „link:“ with the SHA-256 of the address, the same address only once. „Fetch again“ only on a click (doklink.neu_abrufen): a conditional request with ETag; 304 or the same SHA-256 means unchanged, else documents.renew reads the new bytes into the same document. The page content is outside text.
+
 #### Map helps the search
 
 - wissenskarte.liste(uid, worte, k) returns piece ids with a rank from 1, read only (SQLite with mode=ro) and only for the own profile. Fixed rules, never the model: the search words hit a point when its name or another name stands whole in the question (compared like wissenskarte.ent_norm) or a word of the name with at least 4 letters that is no number and no legal form (wissenskarte.trifft); at most 20 points. Their neighbours one step away join (the same query as wissenskarte.rund_um), and of all of them the passages in used, read documents. A passage with a named point stands before one with only neighbours, more points before fewer, at most 50.
@@ -2567,6 +2574,8 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - **30** seconds per piece of a recording ([step 13](#kn-wissen-s13))
 - **1** seconds of overlap in front of a piece ([step 13](#kn-wissen-s13))
 - **5** recordings per profile waiting for their transcription at most ([step 13](#kn-wissen-s13))
+- **10** addresses at once for links as documents ([step 13](#kn-wissen-s13))
+- **30** addresses per profile waiting to be fetched at most ([step 13](#kn-wissen-s13))
 
 #### Settings
 
@@ -2580,6 +2589,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - Features → Own documents → Knowledge book → Knowledge map → People, companies and deadlines and below it Map helps the search on: the map as third list of hits of the document search (default off).
 - Features → Own documents and below it Analyses on: the sheet Analyses in the details of every own document, with how many analyses a day.
 - Features → Own documents and below it Transcribe recordings on: audio and video files under Me → Documents, with size, length and minutes a day.
+- Features → Own documents and below it Links as documents on: „Add link“ under Me → Documents, with size per page and fetches a day.
 - Features → Own documents and below it Collections on: the page Collections in the menu, with how many tokens a collection gives the model at most.
 
 #### What you see
@@ -2664,6 +2674,11 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/abschrift.py` `trim_edge`: doubled words at the edge by a fixed rule ([step 13](#kn-wissen-s13))
 - `app/panel/abschrift.py` `due_once`: quiet chain: limits, long ones only after long_ok ([step 13](#kn-wissen-s13))
 - `app/panel/documents.py` `stelle`: „Seite 3“ or „bei 12:30“ ([step 13](#kn-wissen-s13))
+- `app/panel/doklink.py` `pruefe`: an address by fixed rules before anything is fetched ([step 13](#kn-wissen-s13))
+- `app/panel/doklink.py` `eins`: fetch one address and take it in as a document ([step 13](#kn-wissen-s13))
+- `app/panel/doklink.py` `neu_abrufen`: fetch again: ETag, SHA-256, else read again ([step 13](#kn-wissen-s13))
+- `app/panel/wissen.py` `aufnehmen`: one way in for things that are no upload ([step 13](#kn-wissen-s13))
+- `app/panel/documents.py` `renew`: the same document from new bytes ([step 13](#kn-wissen-s13))
 - `app/common.py` `signed_low`: background with the key is no speech ([step 13](#kn-wissen-s13))
 - `app/panel/documents.py` `_similar`: similarity block by block in float32 ([step 6](#kn-wissen-s6))
 - `app/panel/gedaechtnis.py` `hint_lines`: facts in three blocks ([step 13](#kn-wissen-s13))
@@ -2674,7 +2689,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/wissensmessung.py` `_synth`: the throwaway profile from a fixed seed, with the code's limits ([step 6](#kn-wissen-s6))
 - `app/panel/wissensmessung.py` `MESSTEILE`: the measuring parts, extensible ([step 6](#kn-wissen-s6))
 
-Self-tests: `test_wissen`, `test_auswertung`, `test_abschrift`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`, `test_wissenstempo`
+Self-tests: `test_wissen`, `test_auswertung`, `test_abschrift`, `test_doklink`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`, `test_wissenstempo`
 
 ### Guard
 
@@ -2725,12 +2740,12 @@ flowchart TD
   s12 -.->|redirect| s2
 ```
 
-1. <a id="kn-waechter-s1"></a>**A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 35 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
+1. <a id="kn-waechter-s1"></a>**A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 34 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
 2. <a id="kn-waechter-s2"></a>**Resolve the name once**: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops.
 3. <a id="kn-waechter-s3"></a>**Own service?**: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute). When the models run on another computer (models.host), its addresses count the same (model_addresses).
 4. <a id="kn-waechter-s4"></a>**Internet and kill switch on?**: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows.
 5. <a id="kn-waechter-s5"></a>**Public address?**: A public address is allowed at every level.
-6. <a id="kn-waechter-s6"></a>**Level „internet only“?**: What comes from search results or answers may never go to the home network (chat, feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, systemupdates, verbund).
+6. <a id="kn-waechter-s6"></a>**Level „internet only“?**: What comes from search results or answers may never go to the home network (feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, systemupdates, verbund).
 7. <a id="kn-waechter-s7"></a>**Never allowed?**: Link-local addresses (169.254.x, where cloud metadata answers), multicast, unspecified and reserved addresses are allowed at no level.
 8. <a id="kn-waechter-s8"></a>**Home network allowed?**: Home Assistant and other services in the home network (doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite) always may. Calendars, contacts, mail and MCP (calendars, contacts, fundmail, mail, mcp, meinmcp, tasks) only when Settings → Security → Allow home network addresses is on.
 9. <a id="kn-waechter-s9"></a>**Connect to exactly this address**: The connection goes to the checked address, not to the name again. A second look-up could answer differently (DNS rebinding). The certificate is still checked for the name.
@@ -2746,11 +2761,15 @@ Applies at: [step 6](#kn-waechter-s6), [step 8](#kn-waechter-s8)
 
 | Level | Who uses it (from the code) | Internet | Home network |
 |---|---|---|---|
-| internet only | chat, feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, systemupdates, verbund | ✓ | ✕ |
+| internet only | feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, systemupdates, verbund | ✓ | ✕ |
 | user | calendars, contacts, fundmail, mail, mcp, meinmcp, tasks | ✓ | only with switch |
 | home | doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite | ✓ | ✓ |
 | by target | anrufe, dienstwacht, halive, nas, nasquelle, offline, speicher, telefon, zertpin | as the target is set | – |
 | always | all | ✕ with kill switch | ✕ own services, 169.254, multicast |
+
+#### One fetch for pages and files
+
+- A page or file from an address is fetched only by netguard.hole_oeffentlich: the pages of search results (chat.page_text), the web page to the reMarkable (through page_text) and links as documents. First the kill switch, then before every request netguard.oeffentlich (http or https, no login data, every address of the name public) and at the connection once more the level internet only; at most 4 redirects, each checked again, a fixed browser name, content type from a fixed list, size and time for all of it. A refusal is a fixed word (netguard.WORTE).
 
 #### When blocked
 
@@ -2760,6 +2779,7 @@ Applies at: [step 6](#kn-waechter-s6), [step 8](#kn-waechter-s8)
 #### Numbers (from the code)
 
 - **20 MB** largest answer ([step 11](#kn-waechter-s11))
+- **4** redirects per fetch, each checked again ([step 12](#kn-waechter-s12))
 - **30000–31099, 31443** closed own ports ([step 3](#kn-waechter-s3))
 - **15** blocks in 10 minutes until kill switch stage 1 (if on) ([step 4](#kn-waechter-s4))
 - **1** kill switch stage without internet ([step 4](#kn-waechter-s4))
@@ -2779,6 +2799,8 @@ Applies at: [step 6](#kn-waechter-s6), [step 8](#kn-waechter-s8)
 - `app/panel/netguard.py` `allowed`: the rule: nothing or the reason ([step 3](#kn-waechter-s3), [step 7](#kn-waechter-s7), [step 8](#kn-waechter-s8))
 - `app/panel/netguard.py` `resolve`: resolve once, check every address, tell Live ([step 2](#kn-waechter-s2))
 - `app/panel/netguard.py` `client`: the way out for tools ([step 1](#kn-waechter-s1))
+- `app/panel/netguard.py` `hole_oeffentlich`: the one fetch of a public page or file ([step 1](#kn-waechter-s1), [step 12](#kn-waechter-s12))
+- `app/panel/netguard.py` `oeffentlich`: check before every request: public only, no login data ([step 6](#kn-waechter-s6))
 - `app/panel/netguard.py` `_Transport`: password guard, size limit, result for My status ([step 10](#kn-waechter-s10), [step 11](#kn-waechter-s11))
 - `app/panel/netguard.py` `_Capped`: cuts the answer, also unpacked ([step 11](#kn-waechter-s11))
 - `app/panel/netguard.py` `same_site`: same site for login data ([step 10](#kn-waechter-s10))
@@ -2788,7 +2810,7 @@ Applies at: [step 6](#kn-waechter-s6), [step 8](#kn-waechter-s8)
 - `app/panel/notaus.py` `watch`: counts blocks for the automatic kill switch ([step 2](#kn-waechter-s2))
 - `app/panel/live.py` `outgoing`: shows each decision on Live ([step 2](#kn-waechter-s2))
 
-Self-tests: `test_hardening`, `test_notaus`, `test_waechter_umgehung`
+Self-tests: `test_hardening`, `test_notaus`, `test_waechter_umgehung`, `test_doklink`
 
 ### Logs and live
 
@@ -3401,7 +3423,7 @@ flowchart TD
 
 1. <a id="kn-aussen-s1"></a>**Model calls a tool**: The model names a tool and details. Who asks is already known (login); the service's login data lies sealed with the profile and never goes to the model.
 2. <a id="kn-aussen-s2"></a>**Offered in this round?**: Only tools this round offered run. Another name is not run.
-3. <a id="kn-aussen-s3"></a>**Kill switch holds it?**: The kill switch is read again for every call. From stage 1 the 7 tools that go to the internet by themselves are locked (web search, weather, transit, Wikipedia, parcels, reading pages); from stage 2 or with „My kill switch“ every tool that changes something.
+3. <a id="kn-aussen-s3"></a>**Kill switch holds it?**: The kill switch is read again for every call. From stage 1 the 8 tools that go to the internet by themselves are locked (web search, weather, transit, Wikipedia, parcels, reading pages); from stage 2 or with „My kill switch“ every tool that changes something.
 4. <a id="kn-aussen-s4"></a>**Outside text read already?**: If the answer already read mail, web pages, calendar, documents or an archive, it may no longer switch, save or enter anything. The person has to say so in a new message.
 5. <a id="kn-aussen-s5"></a>**Service known to be gone?**: If the service watch sees this tool's service as gone (and the note is on), the tool answers at once with a fixed sentence instead of waiting. The web search then tries the own Kiwix.
 6. <a id="kn-aussen-s6"></a>**Fixed own way?**: The language model, SearXNG at the entered address, weather, transit, Wikipedia and fixed services like Apple push go directly, without the guard. Which modules may do that and why is listed in netguard.DIRECT_OK; a self-test reports every module that connects directly and is missing there. When the person asks for today or the last days (fixed words, frisch.zeitraum), SearXNG searches only that period (for news also its news category); every hit carries its date, older ones are dropped. The panel's own web search for „both“ (local first) goes the same way (chat.web_search_own), only with the question's own words and never with the kill switch or a service gone.
@@ -3434,7 +3456,7 @@ Applies at: [step 7](#kn-aussen-s7), [step 8](#kn-aussen-s8)
 
 - **20 MB** largest answer through the guard ([step 10](#kn-aussen-s10))
 - **2 MB** largest answer of an MCP service ([step 10](#kn-aussen-s10))
-- **7** tools that rest from kill switch stage 1 ([step 3](#kn-aussen-s3))
+- **8** tools that rest from kill switch stage 1 ([step 3](#kn-aussen-s3))
 - **5 s** longest probe of the service watch ([step 5](#kn-aussen-s5))
 
 #### Settings
@@ -3496,9 +3518,9 @@ flowchart TD
 ```
 
 1. <a id="kn-internet-s1"></a>**A tool wants to the internet**: The model called an offered tool that needs a service on the internet. Which tools are offered at all was decided by the rights and the switch already.
-2. <a id="kn-internet-s2"></a>**Kill switch stops the internet?**: From stage 1 the 7 tools that go to the internet by themselves rest (notaus.INTERNET_TOOLS); notaus.locked_tools is read again for every call.
+2. <a id="kn-internet-s2"></a>**Kill switch stops the internet?**: From stage 1 the 8 tools that go to the internet by themselves rest (notaus.INTERNET_TOOLS); notaus.locked_tools is read again for every call.
 3. <a id="kn-internet-s3"></a>**Fixed address?**: Weather, transit and Wikipedia ask a fixed address from the code or the admin settings, never one from outside text. Which modules may connect directly and why is listed in netguard.DIRECT_OK.
-4. <a id="kn-internet-s4"></a>**Through the guard**: Pages from search and reMarkable ask at level internet only (netguard.PUBLIC), mail, calendars and contacts at level user. The level is in the code.
+4. <a id="kn-internet-s4"></a>**Through the guard**: Pages from search, links as documents and reMarkable ask at level internet only (netguard.PUBLIC), pages and files from an address only through netguard.hole_oeffentlich; mail, calendars and contacts at level user. The level is in the code.
 5. <a id="kn-internet-s5"></a>**Address allowed?**: netguard.allowed checks every resolved address: no own services, no 169.254, no home network at level internet only.
 6. <a id="kn-internet-s6"></a>**Answer as data**: The answer is cut at the limit and goes to the model as data, never as a command.
 7. <a id="kn-internet-s7"></a>**What the Spark sends by itself**: Without a tool only fixed ways go out: the Telegram bot API, Apple and browser push to known services and the update check at GitHub, each with a reason in netguard.DIRECT_OK. Plus, only on an admin's command and never from the panel itself: Hand to GitHub (root pushes a branch opencode/… to GitHub over ssh, box Workshop).
@@ -3512,6 +3534,7 @@ Applies at: [step 4](#kn-internet-s4), [step 5](#kn-internet-s5)
 | Service | Way |
 |---|---|
 | Pages from search | guard, internet only |
+| Links as documents | guard, internet only, only the person's addresses |
 | Mail, calendars, contacts | guard, level user |
 | reMarkable | guard, allowed hosts only |
 | Weather, transit, Wikipedia | fixed address |
@@ -3521,7 +3544,7 @@ Applies at: [step 4](#kn-internet-s4), [step 5](#kn-internet-s5)
 
 #### Numbers (from the code)
 
-- **7** tools that go to the internet by themselves ([step 2](#kn-internet-s2))
+- **8** tools that go to the internet by themselves ([step 2](#kn-internet-s2))
 - **20 MB** largest answer through the guard ([step 6](#kn-internet-s6))
 
 #### Settings

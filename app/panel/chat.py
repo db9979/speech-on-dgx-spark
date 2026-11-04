@@ -1201,22 +1201,6 @@ class _PageText(html.parser.HTMLParser):
             self.parts.append(data.strip())
 
 
-async def public_url(url):
-    """True when the address is http(s) and its host resolves only to public addresses: pages from
-    search results never reach the Spark itself, the home network or the router."""
-    import ipaddress
-    import socket
-    from urllib.parse import urlsplit
-    try:
-        u = urlsplit(url)
-        if u.scheme not in ("http", "https") or not u.hostname:
-            return False
-        infos = await asyncio.to_thread(socket.getaddrinfo, u.hostname, u.port or (443 if u.scheme == "https" else 80))
-        return bool(infos) and all(ipaddress.ip_address(i[4][0].split("%")[0]).is_global for i in infos)
-    except (OSError, ValueError):
-        return False
-
-
 # Schnellere Websuche (chat.search_fast, plan genauer-und-schneller, 7): each page gets PAGE_SECONDS on its own (what is
 # not there by then stays the short snippet of the search), the page brings the parts that fit the question best
 # instead of its beginning, the same search within SEARCH_CACHE seconds comes from memory (never from disk, at most
@@ -1255,36 +1239,19 @@ def best_parts(text, query, limit):
 
 
 async def page_text(c, url, limit=3000, seconds=8, query=None):
-    """Readable text of a result page: public addresses only (each redirect checked again, and the
-    connection goes to the checked address, see netguard), at most 1.5 MB and `seconds` (8) in all.
-    With a query (Schnellere Websuche) the parts that fit it best, else the beginning."""
-    async def fetch():
-        target = url
-        for _ in range(4):
-            if not await public_url(target):
-                return ""
-            async with netguard.client(netguard.PUBLIC, max_bytes=3_000_000) as pc, \
-                    pc.stream("GET", target, timeout=6, follow_redirects=False,
-                              headers={"User-Agent": "Mozilla/5.0 (speech-on-dgx-spark)"}) as r:
-                if r.is_redirect and r.headers.get("location"):
-                    target = str(r.url.join(r.headers["location"]))
-                    continue
-                if r.status_code != 200 or "html" not in r.headers.get("content-type", ""):
-                    return ""
-                raw = b""
-                async for chunk in r.aiter_bytes():
-                    raw += chunk
-                    if len(raw) > 1_500_000:
-                        break
-                p = _PageText()
-                p.feed(raw.decode(r.encoding or "utf-8", errors="replace"))
-                text = re.sub(r"\s+", " ", " ".join(p.parts))
-                return best_parts(text[:PAGE_READ], query, limit) if query else text[:limit]
-        return ""
+    """Readable text of a result page through netguard.hole_oeffentlich (public addresses only, each redirect checked
+    again, the Notaus first), HTML only, cut at 1.5 MB, `seconds` (8) in all. With a query (Schnellere Websuche) the
+    parts that fit it best, else the beginning; "" when it cannot be read."""
     try:
-        return await asyncio.wait_for(fetch(), seconds)
-    except Exception:
+        got = await netguard.hole_oeffentlich(url, 1_500_000, seconds, netguard.HTML, abschneiden=True)
+        if got.status != 200:
+            return ""
+        p = _PageText()
+        p.feed(netguard.als_text(got))
+    except Exception:   # noqa: BLE001  (a page that cannot be read is no page: the search goes on without it)
         return ""
+    text = re.sub(r"\s+", " ", " ".join(p.parts))
+    return best_parts(text[:PAGE_READ], query, limit) if query else text[:limit]
 
 
 class _SearxResults(html.parser.HTMLParser):

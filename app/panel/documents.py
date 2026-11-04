@@ -1028,6 +1028,16 @@ def set_place(uid, doc_id, origin, place):
         con.execute("UPDATE docs SET origin=?, place=? WHERE id=?", (str(origin)[:60], str(place)[:500], doc_id))
 
 
+def by_origin(uid, source, origin):
+    """The id of the document of this source with this origin (wissen.aufnehmen: the same thing comes in once), or None."""
+    if not origin or not os.path.exists(db_path(uid)):
+        return None
+    with _Db(uid, keep=True) as con:
+        r = con.execute("SELECT id FROM docs WHERE source=? AND origin=? ORDER BY created LIMIT 1",
+                        (source, str(origin)[:60])).fetchone()
+    return r[0] if r else None
+
+
 def count_source(uid, source):
     if not os.path.exists(db_path(uid)):
         return 0
@@ -1060,8 +1070,41 @@ def reread(uid, doc_id, pictures=False, docling=False):
     path, name, _ = got
     with open(path, "rb") as f:
         data = f.read(MAX_PDF + 1)
+    return _read_again(uid, doc_id, name, data, pictures, docling)
+
+
+def renew(uid, doc_id, data, pictures=False, docling=False, keep=0):
+    """Links als Dokument (doklink.py, "Neu abrufen"): a document read again from new bytes of the same kind, like
+    reread (same id, place, "use", "Für alle"); a kept original is replaced while it fits keep, else it goes.
+    Returns like add, None when the document is gone."""
+    if not re.fullmatch(r"[0-9a-f]{12}", doc_id or ""):
+        return None
     with _Db(uid) as con:
-        r = con.execute("SELECT name, kind FROM docs WHERE id=?", (doc_id,)).fetchone()
+        r = con.execute("SELECT name, file FROM docs WHERE id=?", (doc_id,)).fetchone()
+        if not r:
+            return None
+        if r["file"] and re.fullmatch(r"[0-9a-f]{12}\.[a-z]{2,4}", r["file"]):
+            path = os.path.join(_files(uid), r["file"])
+            old = os.path.getsize(path) if os.path.isfile(path) else 0
+            if keep and usage(uid) - old + len(data) <= keep:
+                tmp = path + ".neu"
+                with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "wb") as f:
+                    f.write(data)
+                os.replace(tmp, path)
+            else:
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
+                con.execute("UPDATE docs SET file='' WHERE id=?", (doc_id,))
+        con.execute("UPDATE docs SET size=? WHERE id=?", (len(data), doc_id))
+    return _read_again(uid, doc_id, r["name"], data, pictures, docling)
+
+
+def _read_again(uid, doc_id, name, data, pictures, docling):
+    """reread and renew: pieces, meaning vectors and waiting pages of one document replaced by a new reading."""
+    with _Db(uid) as con:
+        r = con.execute("SELECT name, kind, file FROM docs WHERE id=?", (doc_id,)).fetchone()
     if not r:
         return None
     docling = bool(docling) and os.path.splitext(name.lower())[1] in DOCLING_TYPES
@@ -1081,7 +1124,7 @@ def reread(uid, doc_id, pictures=False, docling=False):
             con.execute("INSERT INTO pages (doc, page, jpeg) VALUES (?,?,?)", (doc_id, page, jpeg))
         set_heads(con, doc_id)
     return {"id": doc_id, "name": r["name"], "chunks": len(parts), "state": state,
-            "todo": len(todo), "kind": kind, "file": True, "docling": bool(docling)}
+            "todo": len(todo), "kind": kind, "file": bool(r["file"]), "docling": bool(docling)}
 
 
 class Offer(NamedTuple):

@@ -383,11 +383,14 @@ async def inbox_add(uid, title, text):
 # ---------------------------------------------------------------- 6 a web page, a mail attachment
 async def web_page(uid, url, title=""):
     from chat import page_text
+    import notaus
     url = str(url or "").strip()[:2000]
     if not re.match(r"https?://", url):
         return "Bitte eine vollständige Adresse mit https:// nennen."
-    async with httpx.AsyncClient() as c:
-        text = await page_text(c, url, limit=remarkable.MAX_SEND)
+    if notaus.refuse("internet"):   # the page comes from the internet: the Notaus holds it off (netguard.hole_oeffentlich)
+        print("remarkable: seite abgelehnt | notaus", flush=True)
+        return notaus.BLOCKED
+    text = await page_text(None, url, limit=remarkable.MAX_SEND)
     if len(text) < 200:
         return "Die Seite ließ sich nicht lesen (nicht öffentlich, kein HTML oder zu wenig Text)."
     title = remarkable._clean(title, 80) or re.sub(r"^https?://(www\.)?", "", url)[:60]

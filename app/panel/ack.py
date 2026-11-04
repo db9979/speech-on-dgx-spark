@@ -145,6 +145,13 @@ PHRASES = {
               ("Okay, ich kümmere mich um die Mappe.", "Okay, seeing to the collection."),
               ("Einen Augenblick, ich sortiere das ein.", "Just a second, filing that."),
               ("Mal sehen, was in deinen Mappen steckt.", "Let's see what your collections hold.")),
+    # Links als Dokument (doklink.py): a page fetched and kept as an own document
+    "doklink": (("Ich hole die Seite.", "Fetching the page."),
+                ("Moment, ich lege den Link ab.", "One moment, filing the link."),
+                ("Gleich, ich speichere die Seite.", "Hang on, saving the page."),
+                ("Okay, ich hole das für deine Dokumente.", "Okay, getting that for your documents."),
+                ("Einen Augenblick, die Seite kommt.", "Just a second, the page is coming."),
+                ("Mal sehen, ob die Seite antwortet.", "Let's see whether the page answers.")),
     "dokument": (("Ich schau in deinen Dokumenten nach.", "Let me check your documents."),
                  ("Moment, ich schau in die Dokumente.", "One moment, looking at your documents."),
                  ("Ich blätter kurz durch deine Unterlagen.", "Let me leaf through your papers."),

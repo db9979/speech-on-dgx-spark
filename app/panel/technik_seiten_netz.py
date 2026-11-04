@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "aussen": {
-        "stand": "b547d12137",
+        "stand": "380fbd10fc",
         "bezug": {
             "dienstwacht.TIMEOUT": ["s5"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
             "netguard.client": ["s8", "s9", "s10"], "netguard.IMAP4_SSL": ["s9"],
@@ -193,7 +193,7 @@ SEITEN = {
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
     },
     "internet": {
-        "stand": "7f5c23d78b",
+        "stand": "f14d2ded02",
         "bezug": {
             "regeln": ["s3", "s4"], "regel:Seiten aus der Suche": ["s4", "s5"], "regel:Mail, Kalender, Kontakte": ["s4", "s5"],
             "regel:reMarkable": ["s4", "s5"], "regel:Wetter, Fahrplan, Wikipedia": ["s3"], "regel:Telegram": ["s7"],
@@ -232,9 +232,11 @@ SEITEN = {
               ("ok", "ja", "s6")),
             S("s4", "schritt", ("Über den Wächter", "Through the guard"),
               ("netguard.client mit fester Stufe", "netguard.client with a fixed level"),
-              ("Seiten aus der Suche und reMarkable fragen mit Stufe nur Internet (netguard.PUBLIC), Mail, Kalender und "
+              ("Seiten aus der Suche, Links als Dokument und reMarkable fragen mit Stufe nur Internet (netguard.PUBLIC), "
+               "Seiten und Dateien von einer Adresse dabei nur über netguard.hole_oeffentlich; Mail, Kalender und "
                "Kontakte mit Stufe Nutzer. Die Stufe steht im Code.",
-               "Pages from search and reMarkable ask at level internet only (netguard.PUBLIC), mail, calendars and "
+               "Pages from search, links as documents and reMarkable ask at level internet only (netguard.PUBLIC), "
+               "pages and files from an address only through netguard.hole_oeffentlich; mail, calendars and "
                "contacts at level user. The level is in the code.")),
             S("s5", "frage", ("Adresse erlaubt?", "Address allowed?"),
               ("Kasten Wächter", "box Guard"),
@@ -269,6 +271,7 @@ SEITEN = {
         "regeln": [
             [("Dienst", "Service"), ("Weg", "Way")],
             [("Seiten aus der Suche", "Pages from search"), ("Wächter, nur Internet", "guard, internet only")],
+            [("Links als Dokument", "Links as documents"), ("Wächter, nur Internet, nur Adressen der Person", "guard, internet only, only the person's addresses")],
             [("Mail, Kalender, Kontakte", "Mail, calendars, contacts"), ("Wächter, Stufe Nutzer", "guard, level user")],
             [("reMarkable", "reMarkable"), ("Wächter, nur erlaubte Hosts", "guard, allowed hosts only")],
             [("Wetter, Fahrplan, Wikipedia", "Weather, transit, Wikipedia"), ("feste Adresse", "fixed address")],

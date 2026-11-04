@@ -197,6 +197,33 @@ def add(uid, name, data, text=None, source="upload"):
         raise
 
 
+# Zu Dokumenten übernehmen (one way in for things that are not an upload): Links als Dokument (doklink.py, source
+# "link"), later an attachment from a mail (source "mail", Such-Index Stufe B) and a recording behind a link. herkunft
+# is the caller's fixed key of where it came from (at most 60 signs, e.g. "link:" + SHA-256 of the address, never a
+# text from outside); the same source and herkunft come in once.
+HERKUNFT = re.compile(r"[a-z]{2,12}:[0-9A-Za-z_.:-]{1,47}")
+
+
+def aufnehmen(uid, name, data, source, herkunft):
+    """Makes one thing a document of the profile, with every rule of an upload (wissen.add: the second login step,
+    the admin's block, the quota for documents and kept originals, MAX_DOCS, the waiting queue), and marks where it came
+    from (docs.origin). name: a file name whose ending says the kind (".html", ".pdf", ".txt" ...: documents.TYPES);
+    data: its bytes (outside text: stored as data, never an instruction). Returns documents.add's dict with "doppelt":
+    False, or {"id", "name", "doppelt": True} when a document of this source and herkunft is already there (nothing
+    is read or stored again). Raises ValueError with a sentence for the person (documents.QueueFull too)."""
+    if not re.fullmatch(r"[a-z]{2,12}", str(source or "")) or source in ("nas", "audio", "remarkable"):
+        raise ValueError("source")
+    if not HERKUNFT.fullmatch(str(herkunft or "")):
+        raise ValueError("herkunft")
+    had = documents.by_origin(uid, source, herkunft)
+    if had:
+        d = next((x for x in documents.list_docs(uid) if x["id"] == had), None)
+        return {"id": had, "name": d["name"] if d else "", "doppelt": True}
+    got = add(uid, name, data, source=source)
+    documents.set_place(uid, got["id"], herkunft, "")
+    return dict(got, doppelt=False)
+
+
 def _sharers(uid):
     """The other profiles that offer documents to this one: to everyone ("Für alle", when this profile may see them),
     single documents to this profile (Teilen, geteilt.py) and the Haushaltsordner (nasquelle.HAUS, S5) when the
@@ -698,6 +725,7 @@ def info(prof=Depends(own_profile)):
             "quiet": quiet(),
             "auswertung": features.allowed("auswertungen", uid),   # the sheet Auswertungen in the details (auswertung.py)
             "audio": _audio(uid),                                  # Aufnahmen abschreiben (abschrift.py): limits, progress
+            "link": _link(uid),                                    # Links als Dokument (doklink.py): limits, the list
             "types": list(documents.TYPES), "max_mb": pdf_bytes() // 1024**2,
             "other_mb": documents.MAX_OTHER // 1024**2}
 
@@ -705,6 +733,11 @@ def info(prof=Depends(own_profile)):
 def _audio(uid):
     import abschrift
     return abschrift.info(uid)
+
+
+def _link(uid):
+    import doklink
+    return doklink.info(uid)
 
 
 @router.put("/api/profile/wissen/{doc_id}", dependencies=[Depends(assistant)])
