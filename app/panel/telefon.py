@@ -576,7 +576,9 @@ class Agent(asyncio.DatagramProtocol):
         m = re.search(r";\s*rport=(\d{1,5})", via)
         port = int(m.group(1)) if m and 0 < int(m.group(1)) < 65536 else self.port
         self.nat = (ip, port)
-        print(f"telefon: nat zwischen spark und anlage, anlage sieht port {port}", flush=True)
+        if _nat_said.get("at") != (ip, port):   # once per address and port while the panel runs, not at every new sign-in
+            _nat_said["at"] = (ip, port)
+            print(f"telefon: nat zwischen spark und anlage, anlage sieht port {port}", flush=True)
         return True
 
     # ------------------------------------------------------------ requests from the PBX
@@ -1673,6 +1675,7 @@ class Call:
 
 # ---------------------------------------------------------------- running it
 _agent = {"a": None, "key": None, "next": 0.0}
+_nat_said = {}           # "at": the (router address, port) the journal named last (Agent._learn_nat)
 
 
 def _key(z, s):

@@ -369,8 +369,12 @@ class Calls(unittest.TestCase):
         async def body(a, pbx, port):
             regs = [m for m in pbx.got if m and m.method == "REGISTER"]
             return a.reg, a.me(), [r.get("contact") for r in regs], bool(a.nat[0])
+        telefon._nat_said.clear()
         with mock.patch.object(Pbx, "received", "127.0.0.9"), _quiet() as log:
             reg, me, contacts, nat = self.run_with_pbx(body)
+            again = self.run_with_pbx(body)   # a new sign-in (restart, „Verbindung prüfen“): learned again, said once
+        self.assertTrue(again[3])
+        self.assertEqual(log.text.count("telefon: nat zwischen spark und anlage"), 1)
         self.assertTrue(reg["ok"])
         self.assertEqual(me, ("127.0.0.9", 40600))
         self.assertTrue(nat)

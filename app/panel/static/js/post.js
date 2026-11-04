@@ -87,7 +87,7 @@ async function postSuggest(id){if(POST.sug[id])return;   // asked once; a failed
   if(POST.write&&POST.write.reply===id&&!POST.prev)postDraw()}
 function postSugBox(f){const x=POST.sug[f.reply]||{busy:true};
   const rows=x.items?x.items.map((v,i)=>`<button type="button" class="postsug${f.picked===i?' on':''}" data-g="${i}"><i>${esc(v.label)}</i>${esc(v.text)}</button>`).join('')
-    :x.err?`<div class="fh err">${esc(x.err)}</div>`:`<div class="fh">${esc(t('Vorschläge kommen …','Suggestions coming …'))}</div>`;
+    :x.err?`<div class="fh err">${esc(x.err)} <button type="button" class="b" data-sugagain="1">${esc(t('Noch einmal','Try again'))}</button></div>`:`<div class="fh">${esc(t('Vorschläge kommen …','Suggestions coming …'))}</div>`;
   return `<div class="postsugs" role="group" aria-label="${esc(t('Vorschläge vom Spark, nichts wird gesendet','Suggestions of the Spark, nothing is sent'))}"><span class="postsugl">${ic('spark')} ${esc(t('Vorschläge','Suggestions'))}</span>${rows}</div>`}
 const POST_TONE=[['kuerzer','kürzer','shorter'],['freundlicher','freundlicher','friendlier'],['foermlicher','förmlicher','more formal'],['uebersetzen','auf Englisch','in English']];
 async function postTone(art,box){const f=POST.write,ta=box.querySelector('[data-f=text]'),msg=box.querySelector('.postordmsg');
@@ -544,7 +544,9 @@ function postWriteBox(w){const box=w.querySelector('.postcmp'),f=POST.write,p=PO
   const sm=box.querySelector('[data-c=small]');if(sm)sm.onclick=()=>{POST.cmpSmall=!POST.cmpSmall;postDraw()};
   postCmpMove(box)}
 // a suggestion tapped: into the text, free to change; text of the Spark keeps the preview sheet (f.ai)
-function postSugBind(box,f){box.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{const v=POST.sug[f.reply].items[+b.dataset.g];f.text=v.text;f.picked=+b.dataset.g;f.ai=true;
+// busy or too slow (503 with plain words, antwortvorschlag.Busy): asked again only by this button, never by a redraw
+function postSugBind(box,f){const ag=box.querySelector('[data-sugagain]');if(ag)ag.onclick=()=>{delete POST.sug[f.reply];postDraw();postSuggest(f.reply)};
+  box.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{const v=POST.sug[f.reply].items[+b.dataset.g];f.text=v.text;f.picked=+b.dataset.g;f.ai=true;
   box.querySelectorAll('[data-g]').forEach(x=>x.classList.toggle('on',x===b));postDraw();
   const m=box.querySelector('.postordmsg');if(m){m.className='postordmsg fh';m.textContent=t('Mit Text vom Spark: vor dem Senden kommt die Vorschau.','With text from the Spark: the preview comes before sending.')}})}
 // moving the window by its head (the computer); where it stands is kept while the page is open

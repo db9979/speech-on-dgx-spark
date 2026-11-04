@@ -6,6 +6,9 @@ when „Antworten“ opens, changed freely and by „kürzer“, „freundlicher
   answer is only taken as text (at most three, cleaned, cut, no doubles).
 - The same mail asked twice (prepared while open, then „Antworten“) asks the model once, kept KEEP_SECONDS.
 - Nothing is sent; the journal has numbers and log_name only; Live numbers only.
+- Asked in the foreground (never queued behind the background work, 2026-11-04 502 after 90 s), still after speech
+  and never in a Wartungspause, at most RUNNING_MAX at once; busy or too slow is Busy with a fixed word: the page
+  gets 503 with plain words and Retry-After, never 502 (two 502 in a row show the band „Spark nicht erreichbar“).
 
 The fake language model of helpers; mail.show replaced by a fixed mail; times passed in.
 """
@@ -99,6 +102,83 @@ class Suggest(Base):
             asyncio.run(av.suggest(uid, "a1:8", now=1.0))
         self.log = out.getvalue()
         self.assertIn("mail: suggestions failed (LookupError) | Profil", self.log)
+
+
+class Busy(Base):
+    def setUp(self):
+        super().setUp()
+        import vorrang
+        import wartung
+        self.kept = (av.llm.complete, av.SECONDS, av.QUIET_MAX, vorrang.quiet, wartung.paused)
+
+    def tearDown(self):
+        import vorrang
+        import wartung
+        av.llm.complete, av.SECONDS, av.QUIET_MAX, vorrang.quiet, wartung.paused = self.kept
+        av._asking[0] = 0
+        super().tearDown()
+
+    def busy(self, uid):
+        out = io.StringIO()
+        with self.assertRaises(av.Busy) as cm, contextlib.redirect_stdout(out):
+            asyncio.run(av.suggest(uid, "a1:7", now=1.0))
+        self.log = out.getvalue()
+        return cm.exception.why
+
+    def test_foreground_not_behind_the_background_work(self):
+        _, uid = profile("Vorschlag Vorne")
+        got = {}
+
+        async def complete(*a, **k):
+            got.update(k)
+            return '[{"richtung": "Ja", "text": "Gern."}]'
+        av.llm.complete = complete
+        self.assertEqual(self.ask(uid)[0], [{"label": "Ja", "text": "Gern."}])
+        self.assertIs(got["speech_first"], False)
+
+    def test_too_slow_is_busy_not_an_error_page(self):
+        _, uid = profile("Vorschlag Langsam")
+
+        async def complete(*a, **k):
+            await asyncio.sleep(5)
+        av.llm.complete, av.SECONDS = complete, 0.05
+        n = av.for_live()["failed"]
+        self.assertEqual(self.busy(uid), "langsam")
+        self.assertRegex(self.log, r"^mail: suggestions failed \(TimeoutError\) \| \d+ s \| Profil [0-9a-f]+\n$")
+        self.assertEqual(av.for_live()["failed"], n + 1)
+        self.assertEqual(av._asking[0], 0)        # the place is free again
+
+    def test_at_most_running_max_then_busy_at_once(self):
+        _, uid = profile("Vorschlag Voll")
+        n = len(helpers.LLM_CALLS)
+        av._asking[0] = av.RUNNING_MAX
+        self.assertEqual(self.busy(uid), "belegt")
+        self.assertRegex(self.log, r"^mail: suggestions busy \(belegt\) \| 2 running \| Profil [0-9a-f]+\n$")
+        self.assertEqual(len(helpers.LLM_CALLS), n)
+
+    def test_speech_first_and_wartung(self):
+        import vorrang
+        import wartung
+        _, uid = profile("Vorschlag Still")
+
+        async def never(job, *a, **k):
+            await asyncio.sleep(5)
+        vorrang.quiet, av.QUIET_MAX = never, 0.05
+        self.assertEqual(self.busy(uid), "gespraech")
+        self.assertIn("mail: suggestions busy (gespraech) |", self.log)
+        wartung.paused = lambda part: part == "llm"
+        self.assertEqual(self.busy(uid), "wartung")
+        self.assertIn("mail: suggestions busy (wartung) |", self.log)
+
+    def test_the_page_gets_503_with_plain_words(self):
+        c, _ = profile("Vorschlag Seite")
+        av._asking[0] = av.RUNNING_MAX
+        r = c.post("/api/profile/mail/suggest", json={"id": "a1:7"})
+        self.assertEqual(r.status_code, 503, r.text)
+        self.assertEqual(r.headers.get("retry-after"), str(av.RETRY_AFTER))
+        self.assertEqual(r.json()["detail"], av.BUSY["belegt"][0])
+        r = c.post("/api/write/suggest", json={"mail": "Kommst du morgen?"})
+        self.assertIn(r.status_code, (403, 503), r.text)
 
 
 class Api(Base):

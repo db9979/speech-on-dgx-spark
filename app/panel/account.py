@@ -1736,6 +1736,8 @@ async def profile_mail_suggest(request: Request, prof=Depends(browser_profile)):
         raise HTTPException(404, "Diese Mail gibt es nicht mehr.")
     except ValueError:
         raise HTTPException(400, "Unbekannte Mail.")
+    except antwortvorschlag.Busy as e:   # busy or too slow: plain words and „Noch einmal“ on the page, never 502
+        raise HTTPException(503, e.text, headers={"Retry-After": str(antwortvorschlag.RETRY_AFTER)})
     except (asyncio.TimeoutError, httpx.HTTPError, KeyError):
         raise HTTPException(502, "Das Sprachmodell hat gerade keine Vorschläge geliefert.")
     except (OSError, imaplib.IMAP4.error):

@@ -497,6 +497,8 @@ async def write_suggest(request: Request):
         raise HTTPException(423, "Notaus: gerade antwortet der Spark nicht")
     except ValueError as e:
         raise HTTPException(400, str(e)[:200])
+    except antwortvorschlag.Busy as e:
+        raise HTTPException(503, e.text, headers={"Retry-After": str(antwortvorschlag.RETRY_AFTER)})
     except (asyncio.TimeoutError, httpx.HTTPError, KeyError, RuntimeError):
         raise HTTPException(502, "Das Sprachmodell hat gerade keine Vorschläge geliefert.")
     _live(f"Antwortvorschläge ({where})")

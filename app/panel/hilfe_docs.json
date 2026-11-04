@@ -4885,7 +4885,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Fehlersuche am Telefon (V01.0.712)",
-"text": "200 OK ohne, nimmt der Spark die aus der 183."
+"text": "200 OK ohne, nimmt der Spark die aus der 183. Die Zeile telefon: nat zwischen spark und anlage, anlage sieht port 31060 ist ein Hinweis, kein Fehler, und steht seit V01.1.321 einmal je Adresse und Panel-Start (vorher bei jeder neuen Anmeldung, auch nach „Verbindung prüfen“). Gemeint ist der zweite Router zwischen Spark und Anlage (zum Beispiel die UniFi-Box hinter der FRITZ!Box), nicht die FRITZ!Box selbst: dort UDP 31060 und 31062-31069 an den Spark weiterleiten und SIP-ALG ausschalten; einfacher ist, den Spark ins selbe Netz wie die Anlage zu stellen."
 },
 {
 "lang": "de",
@@ -9765,7 +9765,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Tagesbriefing als Mitteilung",
-"text": "Tagesbriefing als Mitteilung (nur Profile): Darunter stellt jedes Profil unter „Tagesbriefing als Mitteilung“ eine Uhrzeit ein. Dann kommt jeden Morgen zu dieser Zeit ein kurzes Briefing (Termine, Erinnerungen, ungelesene Mails, eigene Themen) auf alle Geräte des Profils mit eingeschalteten Mitteilungen und steht danach auch im Verlauf. „Aus“ schaltet es ab."
+"text": "Tagesbriefing als Mitteilung (nur Profile): Darunter stellt jedes Profil unter „Tagesbriefing als Mitteilung“ eine Uhrzeit ein. Dann kommt jeden Morgen zu dieser Zeit ein kurzes Briefing (Termine, Erinnerungen, ungelesene Mails, eigene Themen) auf alle Geräte des Profils mit eingeschalteten Mitteilungen und steht danach auch im Verlauf. „Aus“ schaltet es ab. Teile gleichzeitig (V01.1.321): Kalender, Themen der Websuche, Wetter und die anderen kleinen Dienste und die Postfächer werden gleichzeitig gelesen, jeder Teil höchstens 25 Sekunden (chat.BRIEF_PART_S, die kleinen Dienste je 20 Sekunden, extras.PART_S); ein Teil, der nicht rechtzeitig kommt, fehlt im Briefing, das Log nennt ihn mit festem Wort (briefing: part slow | kalender | 25 s, auch thema, extras, mail). Das Sprachmodell hat 90 Sekunden (chat.BRIEF_LLM_S); ist es zu langsam oder nicht da, kommt eine Kurzfassung aus dem, was das Panel selbst gelesen hat (Termine des Tages, Erinnerungen, welche Teile fehlten; Log briefing: model slow, short version), statt eines Fehlers. Der Tagesstart des Begleiters wartet höchstens 125 Sekunden (chat.BRIEF_MOST, vorher 200 Sekunden und dann ein Fehler)."
 },
 {
 "lang": "de",
@@ -9901,7 +9901,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Antwortvorschläge (V01.0.837, Dominik 2026-10-19 „1a 2a 3a 4a 5b“)",
-"text": "Antwortvorschläge (V01.0.837, Dominik 2026-10-19 „1a 2a 3a 4a 5b“): Wer auf der Seite E-Mail oder in der iPhone-App auf eine Mail antwortet, findet drei kurze Antworten in verschiedene Richtungen (z. B. Zusagen, Absagen, Rückfrage), in Sprache und Anrede der Mail, unterschrieben mit dem Profilnamen. Der Spark bereitet sie schon vor, während die Mail offen ist, und hält sie 15 Minuten im Speicher (nie auf der Platte); „Antworten“ findet sie daher meist sofort. Ein Tippen setzt einen Vorschlag in den Text, dort bleibt er frei änderbar; „kürzer“, „freundlicher“, „förmlicher“ und „auf Englisch“ formen den Text mit den Aufgaben der Schreibhilfe um. Gesendet wird weiter nur mit „Senden“ in der Vorschau. Die Vorschläge gehören zu „Mails senden“ (kein eigener Schalter). Nur das eigene Sprachmodell liest die Mail, hinter der Sprache zurück; die Mail ist Daten, nie Befehl (zwischen festen Marken, die Antwort wird nur als Text übernommen, höchstens drei, gekürzt). Das Log schreibt „mail: suggestions | 3 in 2.1 s“ bzw. „mail: rewrite kuerzer“, Zustand → Live beim Kasten E-Mail die Zahl von heute."
+"text": "Antwortvorschläge (V01.0.837, Dominik 2026-10-19 „1a 2a 3a 4a 5b“): Wer auf der Seite E-Mail oder in der iPhone-App auf eine Mail antwortet, findet drei kurze Antworten in verschiedene Richtungen (z. B. Zusagen, Absagen, Rückfrage), in Sprache und Anrede der Mail, unterschrieben mit dem Profilnamen. Der Spark bereitet sie schon vor, während die Mail offen ist, und hält sie 15 Minuten im Speicher (nie auf der Platte); „Antworten“ findet sie daher meist sofort. Ein Tippen setzt einen Vorschlag in den Text, dort bleibt er frei änderbar; „kürzer“, „freundlicher“, „förmlicher“ und „auf Englisch“ formen den Text mit den Aufgaben der Schreibhilfe um. Gesendet wird weiter nur mit „Senden“ in der Vorschau. Die Vorschläge gehören zu „Mails senden“ (kein eigener Schalter). Nur das eigene Sprachmodell liest die Mail, hinter der Sprache zurück; die Mail ist Daten, nie Befehl (zwischen festen Marken, die Antwort wird nur als Text übernommen, höchstens drei, gekürzt). Das Log schreibt „mail: suggestions | 3 in 2.1 s“ bzw. „mail: rewrite kuerzer“, Zustand → Live beim Kasten E-Mail die Zahl von heute. Im Vordergrund (V01.1.321): Die Vorschläge fragen das Sprachmodell jetzt wie die Schreibhilfe dire"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Antwortvorschläge (V01.0.837, Dominik 2026-10-19 „1a 2a 3a 4a 5b“)",
+"text": "kt und warten nicht mehr in der einen Reihe der Hintergrundarbeit hinter Mail-Regeln, „gelesen“-Läufen und dem Briefing (dort liefen die 90 Sekunden ab, die Seite bekam 502). Die Sprache geht weiter vor (höchstens 20 Sekunden Warten), ebenso eine Antwort mit Vorrang; in einer Wartungspause kommt ihr fester Satz; höchstens zwei Vorschläge gleichzeitig auf dem ganzen Spark. Ist das Modell ausgelastet oder zu langsam, antwortet der Spark mit 503 und einem Satz in Worten (statt 502, das zweimal hintereinander das Band „Spark nicht erreichbar“ zeigt), und unter den Vorschlägen steht „Noch einmal“. Log: mail: suggestions busy (belegt|gespraech|wartung) bzw. mail: suggestions failed (TimeoutError) | 90 s."
 },
 {
 "lang": "de",
@@ -9949,7 +9957,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "s auf der Platte. Zustand → Live: beim Kalender „Vorrat: heute n Runden, m Dienste aufgefrischt“, bei Home Assistant „live: n Verbindungen, heute m Änderungen“, bei Wetter und Pakete „versiegelt bei n Profilen“; das Log schreibt „vorrat: kept fresh“ und „homeassistant: live connected | n entities“ nur mit Zahlen und dem Profil als Kürzel."
+"text": "s auf der Platte. Zustand → Live: beim Kalender „Vorrat: heute n Runden, m Dienste aufgefrischt“, bei Home Assistant „live: n Verbindungen, heute m Änderungen“, bei Wetter und Pakete „versiegelt bei n Profilen“; das Log schreibt „vorrat: kept fresh“ und „homeassistant: live connected | n entities“ nur mit Zahlen und dem Profil als Kürzel. Live-Verbindung bleibt stabil (V01.1.321): Bisher setzte nur eine gewollt beendete Sitzung die Wartezeit zurück; nach fünf Abbrüchen wartete jeder weitere 900 Sekunden. Jetzt gilt eine Verbindung, deren Kopie 5 Minuten stand, als gut: bricht sie ab, verbindet der Spark nach 10 Sekunden neu und die Verdopplung (60 bis 900 Sekunden) beginnt von vorn. Ein WebSocket-Ping alle 20 Sekunden (Antwort binnen 30) und TCP-Keepalive halten Proxys und Router (Synology-Reverse-Proxy, NAT) davon ab, die ruhige Leitung zu schließen. Das Log nennt Schließcode und Dauer als Zahlen: homeassistant: live lost (ConnectionClosedError) | code 1006 | up 812 s | retry in 10 s (1006: ohne Abschied getrennt, meist ein Proxy; dann im Reverse Proxy der Synology die Benutzerdefinierte Kopfzeile „WebSocket“ anlegen). Unter Zustand → Logs steht dazu ein fester Hinweis."
 },
 {
 "lang": "de",
@@ -22677,7 +22685,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Troubleshooting the phone (V01.0.712)",
-"text": " from the 183."
+"text": " from the 183. The line telefon: nat zwischen spark und anlage, anlage sieht port 31060 is a hint, not an error, and since V01.1.321 comes once per address and panel start (before at every new sign-in, also after \"Check connection\"). It means the second router between the Spark and the PBX (for example the UniFi box behind the FRITZ!Box), not the FRITZ!Box itself: forward UDP 31060 and 31062-31069 to the Spark there and switch SIP ALG off; simpler is to put the Spark into the same network as the PBX."
 },
 {
 "lang": "en",
@@ -27357,7 +27365,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Daily briefing as a notification",
-"text": "Daily briefing as a notification (profiles only): below that, each profile sets a time under \"Tagesbriefing als Mitteilung\" (daily briefing as notification). Every morning at that time a short briefing (appointments, reminders, unread mail, your topics) then goes to all devices of the profile with notifications on, and it is also kept in the history. \"Aus\" (off) turns it off."
+"text": "Daily briefing as a notification (profiles only): below that, each profile sets a time under \"Tagesbriefing als Mitteilung\" (daily briefing as notification). Every morning at that time a short briefing (appointments, reminders, unread mail, your topics) then goes to all devices of the profile with notifications on, and it is also kept in the history. \"Aus\" (off) turns it off. Parts at the same time (V01.1.321): calendar, web search topics, weather and the other small services and the mailboxes are read at the same time, each part at most 25 seconds (chat.BRIEF_PART_S, the small services 20 seconds each, extras.PART_S); a part that does not come in time is left out, the log names it with a fixed word (briefing: part slow | kalender | 25 s, also thema, extras, mail). The language model has 90 seconds (chat.BRIEF_LLM_S); is it too slow or not there, a short version from what the panel read itself comes instead of an error (the day's appointments, reminders, which parts were missing; log briefing: model slow, short version). The Begleiter's Tagesstart waits at most 125 seconds (chat.BRIEF_MOST, before 200 seconds and then an error)."
 },
 {
 "lang": "en",
@@ -27493,7 +27501,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Suggested answers (V01.0.837, Dominik 2026-10-19 \"1a 2a 3a 4a 5b\")",
-"text": "Suggested answers (V01.0.837, Dominik 2026-10-19 \"1a 2a 3a 4a 5b\"): whoever answers a mail on the E-mail page or in the iPhone app finds three short answers in different directions (e.g. accept, decline, ask back), in the mail's language and form of address, signed with the profile's name. The Spark prepares them while the mail is open and keeps them 15 minutes in memory (never on the disk), so \"Reply\" mostly finds them at once. A tap puts a suggestion into the text, where it stays free to change; \"shorter\", \"friendlier\", \"more formal\" and \"in English\" rework the text with the Schreibhilfe's tasks. It is still sent only with \"Send\" in the preview. The suggestions belong to \"Send mail\" (no own switch). Only the own language model reads the mail, behind speech; the mail is data, never a command (between fixed marks, the answer is only taken as text, at most three, cut). The log writes \"mail: suggestions | 3 in 2.1 s\" or \"mail: rewrite kuerzer\", Status → Live shows today's number at the E-mail box."
+"text": "Suggested answers (V01.0.837, Dominik 2026-10-19 \"1a 2a 3a 4a 5b\"): whoever answers a mail on the E-mail page or in the iPhone app finds three short answers in different directions (e.g. accept, decline, ask back), in the mail's language and form of address, signed with the profile's name. The Spark prepares them while the mail is open and keeps them 15 minutes in memory (never on the disk), so \"Reply\" mostly finds them at once. A tap puts a suggestion into the text, where it stays free to change; \"shorter\", \"friendlier\", \"more formal\" and \"in English\" rework the text with the Schreibhilfe's tasks. It is still sent only with \"Send\" in the preview. The suggestions belong to \"Send mail\" (no own switch). Only the own language model reads the mail, behind speech; the mail is data, never a command (between fixed marks, the answer is only taken as text, at most three, cut). The log writes \"mail: suggestions | 3 in 2.1 s\" or \"mail: rewrite kuerzer\", Status → Live shows today's number at the E-mail box. In the foreground (V01.1.321): the suggestions now ask the language model directly like the writing help and no longer wait in the one line of background work behind mail rules, \"gelesen\" r"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Suggested answers (V01.0.837, Dominik 2026-10-19 \"1a 2a 3a 4a 5b\")",
+"text": "uns and the briefing (there the 90 seconds ran out and the page got 502). Speech still goes first (at most 20 seconds of waiting), so does an answer with priority; during a maintenance pause its fixed sentence comes; at most two suggestions at the same time on the whole Spark. When the model is busy or too slow the Spark answers 503 with a sentence in words (instead of 502, which twice in a row shows the band \"Spark not reachable\"), and \"Try again\" stands below the suggestions. Log: mail: suggestions busy (belegt|gespraech|wartung) or mail: suggestions failed (TimeoutError) | 90 s."
 },
 {
 "lang": "en",
@@ -27541,7 +27557,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": " at Weather and Parcels \"versiegelt bei n Profilen\" (sealed for n profiles); the log writes \"vorrat: kept fresh\" and \"homeassistant: live connected | n entities\" with numbers and the profile as a short name only."
+"text": " at Weather and Parcels \"versiegelt bei n Profilen\" (sealed for n profiles); the log writes \"vorrat: kept fresh\" and \"homeassistant: live connected | n entities\" with numbers and the profile as a short name only. The live connection stays up (V01.1.321): until now only a session ended on purpose reset the wait; after five breaks every further one waited 900 seconds. Now a connection whose copy stood for 5 minutes counts as good: when it breaks, the Spark connects again after 10 seconds and the doubling (60 to 900 seconds) starts anew. A WebSocket ping every 20 seconds (answer within 30) and TCP keepalive keep proxies and routers (Synology reverse proxy, NAT) from closing the quiet line. The log names the close code and the time up as numbers: homeassistant: live lost (ConnectionClosedError) | code 1006 | up 812 s | retry in 10 s (1006: cut without a goodbye, mostly a proxy; then add the custom header \"WebSocket\" in the Synology's reverse proxy). Status → Logs shows a fixed hint for it."
 },
 {
 "lang": "en",

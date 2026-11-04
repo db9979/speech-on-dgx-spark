@@ -1532,9 +1532,55 @@ BRIEF_MD_SYSTEM = (BRIEF_SYSTEM.replace("in ganzen Sätzen ohne Listen, Markdown
                      "Bereiche ohne Inhalt lässt du weg.")
 
 
+BRIEF_PART_S = 25     # seconds one part of the briefing may take (calendar, a topic, the extras, the mailboxes)
+BRIEF_LLM_S = 90      # seconds for the model's text (with its turn behind the other background work)
+BRIEF_MOST = BRIEF_PART_S + BRIEF_LLM_S + 10   # the Begleiter's Tagesstart waits at most this long
+BRIEF_SLOW = {"kalender": ("Kalender", "calendar"), "thema": ("Themen", "topics"), "extras": ("Wetter und Pakete", "weather and parcels"),
+              "mail": ("Mails", "mail")}   # fixed words of the parts that came too late (journal and the short version)
+
+
+async def _brief_part(word, job, slow):
+    """One part of the briefing within BRIEF_PART_S: its result, an Exception, or None when it came too late (the
+    fixed word goes to slow and into the journal; the briefing goes on without it)."""
+    try:
+        return await asyncio.wait_for(job, BRIEF_PART_S)
+    except asyncio.TimeoutError:
+        slow.append(word)
+        print(f"briefing: part slow | {word} | {BRIEF_PART_S} s", flush=True)
+        return None
+    except notaus.NotausAktiv:
+        raise
+    except Exception as e:
+        print(f"briefing: part failed | {word} ({type(e).__name__})", flush=True)
+        return e
+
+
+def brief_short(evs, pend, slow, zone, now, markdown=False):
+    """The briefing without the model (it was too slow or not there): the day's appointments and reminders the
+    panel read itself, in fixed sentences, and which parts came too late. Never empty."""
+    def clean(v):
+        return re.sub(r"[\x00-\x1f\x7f]", " ", str(v or "")).strip()[:160]
+    out = ["Guten Morgen. Die Zusammenfassung kam gerade nicht rechtzeitig, hier das Wichtigste:"]
+    left = [x for x in evs or [] if x["allday"] or x["end"] > now]
+    if evs is not None:
+        rows = [clean(calendars.line(x)) for x in left[:8]]
+        out.append(("**Termine**\n" + "\n".join("- " + r for r in rows)) if markdown and rows
+                   else ("Termine: " + "; ".join(rows) + ".") if rows else "Heute stehen keine Termine mehr an.")
+    if pend:
+        rows = [f"{datetime.datetime.fromtimestamp(x['due'] / 1000, zone):%H:%M} {clean(x['text'])}" for x in pend[:8]]
+        out.append(("**Erinnerungen**\n" + "\n".join("- " + r for r in rows)) if markdown else "Erinnerungen: " + "; ".join(rows) + ".")
+    if slow:
+        out.append("Nicht rechtzeitig: " + ", ".join(BRIEF_SLOW[w][0] for w in dict.fromkeys(slow)) + ".")
+    return "\n\n".join(out)
+
+
 async def morning_briefing(uid, tz="", markdown=False):
     """The text of a profile's daily briefing (calendar, reminders, mail, topics) for a push message; markdown:
-    sorted with Markdown lists for the chat history (BRIEF_MD_SYSTEM)."""
+    sorted with Markdown lists for the chat history (BRIEF_MD_SYSTEM).
+    2026-11-04 (Tagesstart „fertig 200.0 s | error“): the parts are read at the same time, each within BRIEF_PART_S
+    (one that is late is left out, journal „briefing: part slow | <word>“), the model gets BRIEF_LLM_S; is it too slow
+    or not there, the short version of the panel's own reading (brief_short) comes instead of an error."""
+    t0 = time.time()
     cfg = load_config()
     ccfg = cfg.get("chat", {})   # with the shipped defaults (common.load_config)
     prof = profiles.by_id(uid)
@@ -1544,34 +1590,49 @@ async def morning_briefing(uid, tz="", markdown=False):
     tomorrow = today + datetime.timedelta(days=1)
     parts = [now_line(tz).split(" Nutze")[0], f"Name: {prof['name'] if prof else ''}"]
     cal = calendars.get(uid) if features.allowed("calendar", uid, ccfg) else {"calendars": [], "topics": []}
-    async with httpx.AsyncClient(timeout=httpx.Timeout(120, connect=5)) as c:
+    slow, evs = [], None
+    pend = [x for x in profiles.reminders(uid) if x["due"] < tomorrow.timestamp() * 1000] \
+        if features.allowed("reminders", uid, ccfg) else []
+    async with httpx.AsyncClient(timeout=httpx.Timeout(BRIEF_PART_S, connect=5)) as c:
+        quick = dict(ccfg, search_pages=0, search_results=3)
+        topics = cal.get("topics", [])[:4] if ccfg.get("search_url") and features.allowed("search", uid, ccfg) else []
+        with_mail = bool(features.allowed("mail", uid, ccfg) and mail.get(uid)["accounts"])
+
+        async def nothing():
+            return None
+        jobs = [_brief_part("kalender", calendars.events(uid, today, tomorrow, zone), slow) if cal["calendars"] else nothing(),
+                _brief_part("extras", extras.briefing(uid, zone), slow),
+                _brief_part("mail", asyncio.to_thread(mail.briefing, uid), slow) if with_mail else nothing()]
+        jobs += [_brief_part("thema", web_search(c, quick, q, "day", True, True), slow) for q in topics]
+        got = await asyncio.gather(*jobs)
+        rc, rx, rm, rt = got[0], got[1], got[2], got[3:]
         if cal["calendars"]:
-            try:
-                evs, errors = await calendars.events(uid, today, tomorrow, zone)
+            if isinstance(rc, tuple):
+                evs, errors = rc
                 parts.append("Today's appointments:\n" + ("\n".join(calendars.line(x, now) for x in evs) or "none"))
                 parts += [f"Calendar '{n}' could not be read." for n, _ in errors]
-            except Exception as e:
-                parts.append(f"Calendar not reachable: {type(e).__name__}")
+            else:
+                parts.append("Calendar not reachable: " + ("too slow" if rc is None else type(rc).__name__))
         if features.allowed("reminders", uid, ccfg):
-            pend = [x for x in profiles.reminders(uid) if x["due"] < tomorrow.timestamp() * 1000]
             parts.append("Reminders today:\n" + ("\n".join(
                 f"{datetime.datetime.fromtimestamp(x['due'] / 1000, zone):%H:%M} {x['text']}" for x in pend) or "none"))
-        if ccfg.get("search_url") and features.allowed("search", uid, ccfg):
-            quick = dict(ccfg, search_pages=0, search_results=3)
-            for q in cal.get("topics", [])[:4]:
-                try:
-                    parts.append(f"Topic '{q}':\n{(await web_search(c, quick, q, 'day', True, True))[0][:2000]}")
-                except Exception:
-                    pass
-        parts += [x for _, x in await extras.briefing(uid, zone)]
-        if features.allowed("mail", uid, ccfg) and mail.get(uid)["accounts"]:   # last: nothing after it acts on its text
-            try:
-                parts.append(await asyncio.to_thread(mail.briefing, uid))
-            except Exception:
-                pass
-        return await llm.complete(BRIEF_MD_SYSTEM if markdown else BRIEF_SYSTEM, "\n\n".join(parts)[:20000],
-                                  "Tagesüberblick", 500, temperature=0.2, who=uid, ccfg=ccfg, c=c,
-                                  thinking=None if ccfg.get("thinking") else False)
+        for q, r in zip(topics, rt):
+            if isinstance(r, tuple):
+                parts.append(f"Topic '{q}':\n{r[0][:2000]}")
+        parts += [x for _, x in rx] if isinstance(rx, list) else []
+        if isinstance(rm, str):   # last: nothing after it acts on its text
+            parts.append(rm)
+        try:
+            text = await asyncio.wait_for(
+                llm.complete(BRIEF_MD_SYSTEM if markdown else BRIEF_SYSTEM, "\n\n".join(parts)[:20000],
+                             "Tagesüberblick", 500, temperature=0.2, who=uid, ccfg=ccfg, timeout=BRIEF_LLM_S,
+                             thinking=None if ccfg.get("thinking") else False), BRIEF_LLM_S)
+        except (asyncio.TimeoutError, httpx.HTTPError, vorrang.Busy, ValueError, KeyError) as e:
+            why = "slow" if isinstance(e, (asyncio.TimeoutError, httpx.TimeoutException)) else f"failed ({type(e).__name__})"
+            print(f"briefing: model {why}, short version | {len(slow)} parts late | {time.time() - t0:.0f} s", flush=True)
+            return brief_short(evs, pend, slow, zone, now, markdown)
+    print(f"briefing: ready | {len(slow)} parts late | {time.time() - t0:.0f} s", flush=True)
+    return text
 
 
 async def briefing_checked(uid, tz="", markdown=True):

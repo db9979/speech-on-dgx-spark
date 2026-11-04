@@ -361,7 +361,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/feeds.py` | Reddit und Feeds: eigener Reddit-Posteingang, Subreddits und RSS, nur lesen |
 | `app/panel/fuerdich.py` | Für dich: findet Rechnungen, Verträge, Bestellungen, Angebote, offene Antworten, Phishing; letzte Lesung versiegelt |
 | `app/panel/geteilt.py` | Teilen mit Profilen: Dokumente an einzelne Profile, Ich → Geteilt, zurückziehen sofort |
-| `app/panel/halive.py` | Home Assistant live: hält für aktive Profile eine Kopie aller Zustände über eine WebSocket-Verbindung |
+| `app/panel/halive.py` | Home Assistant live: Kopie aller Zustände über eine WebSocket-Verbindung (Ping, Keepalive, bald neu verbunden) |
 | `app/panel/hamelden.py` | Home Assistant meldet Ereignisse an den Spark |
 | `app/panel/homeassistant.py` | Home Assistant pro Profil |
 | `app/panel/ichweiss.py` | Was ich über dich weiß: Interessen als Themen mit Beleg, Wiederkehrendes, Woche, Monat, ein Netz-Tipp am Tag |
@@ -391,7 +391,7 @@ Die eigenen Seiten E-Mail, Kalender und Kontakte, der Abruf beim Anbieter, der v
 
 | Modul | Aufgabe |
 |---|---|
-| `app/panel/antwortvorschlag.py` | Antwortvorschläge beim Antworten auf eine Mail: drei Richtungen, umformen, nur im Speicher |
+| `app/panel/antwortvorschlag.py` | Antwortvorschläge zu einer Mail: drei Richtungen, umformen, nur im Speicher; ausgelastet: 503 und „Noch einmal“ |
 | `app/panel/calendars.py` | Kalender und Tagesbriefing, einzelne Kalender mit anderen Profilen geteilt |
 | `app/panel/contacts.py` | Kontakte per CardDAV: Seite Kontakte wie Apple, ändern nur mit Schalter, zurück mit ETag |
 | `app/panel/einladung.py` | Einladungen aus Mails: eine .ics-Einladung mit einem Tipp in den Kalender, Antwort an den Einladenden |

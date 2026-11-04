@@ -54,6 +54,12 @@ ACCESS = re.compile(r'^INFO:\s+\S+ - "[A-Z]+ \S+ HTTP/[\d.]+" (\d{3})\b')
 HINTS = (
     ("ha", r"\b401\b|Unauthorized", "Home-Assistant-Token abgelaufen oder falsch: Ich → Smart Home.",
      "Home Assistant token expired or wrong: Me → Smart home."),
+    ("ha", r"live lost", "Die Live-Verbindung zu Home Assistant bricht ab; Abfragen und Schalten gehen solange über "
+     "HTTP weiter. „code 1006“ heißt: ohne Abschied getrennt, meist ein Reverse Proxy (Synology: Benutzerdefinierte "
+     "Kopfzeile „WebSocket“) oder ein Neustart von Home Assistant. Adresse unter Ich → Smart Home prüfen.",
+     "The live connection to Home Assistant breaks off; questions and switching go on over HTTP meanwhile. "
+     "\"code 1006\" means: cut without a goodbye, mostly a reverse proxy (Synology: custom header \"WebSocket\") or a "
+     "restart of Home Assistant. Check the address under Me → Smart home."),
     ("room", r"tv check", "Fernseher-Abfrage in Home Assistant klappt nicht: ist Home Assistant erreichbar?",
      "TV check in Home Assistant fails: can the Spark reach Home Assistant?"),
     (None, r"(?i)tts.*(timeout|broke)|(timeout|broke).*tts", "Sprachausgabe hängt oder ist ausgelastet: Zustand → Überblick, TTS-Engine.",
@@ -86,6 +92,13 @@ HINTS = (
      "versucht denselben Eintrag später noch einmal, höchstens zweimal. Läuft das Sprachmodell (Zustand → Prüfen)?",
      "The language model gave no readable tags: Find tries the same entry again later, at most twice. Is the language "
      "model running (Status → Checks)?"),
+    ("nachrichten", r"call relay refused \| why home address", "Die Adresse von außen für Anrufe von unterwegs "
+     "liefert im Heimnetz eine Heimnetz-Adresse (ein lokaler DNS-Eintrag im Router oder auf der NAS). Unter Funktionen → "
+     "Mein Tag → Anrufe von unterwegs einen Namen eintragen, der auch im Heimnetz die öffentliche IPv4-Adresse liefert, "
+     "oder den lokalen Eintrag entfernen.",
+     "The address from outside for calls when away gives a home address inside the home network (a local DNS entry "
+     "in the router or on the NAS). Under Features → My day → Calls when away enter a name that gives the public IPv4 "
+     "address also at home, or remove the local entry."),
     ("telegram", r".", "Telegram klappt nicht: Bot unter Funktionen → Telegram prüfen.",
      "Telegram fails: check the bot under Features → Telegram."),
 )

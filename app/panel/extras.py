@@ -9,6 +9,8 @@ no to a proposal the module made (optional). ctx: {"who", "own", "tz", "private"
 also gets "text" (the person's latest message), answer() also "ha", "ha_code", "ha_code_ok" (the smart
 home this turn may switch, see chat_turn); "private" is False over Telegram unless the profile allowed it.
 """
+import asyncio
+
 import agent
 import begleiter
 import contacts
@@ -90,20 +92,23 @@ async def answer(ctx, text):
     return None
 
 
+PART_S = 20   # seconds one service may take for its part of the daily briefing
+
+
 async def briefing(uid, zone=None, private=True):
-    """[(service name, text)] for the daily briefing (without private=False only the weather)."""
-    out = []
-    for m in SERVICES if private else [weather]:
-        if not hasattr(m, "briefing"):   # optional, like answer(): roomfar has none (journal "roomfar: briefing AttributeError")
-            continue
+    """[(service name, text)] for the daily briefing (without private=False only the weather). The services are asked
+    at the same time, each within PART_S (2026-11-04: one after the other, one slow service held up the whole
+    Tagesstart); one that fails or is late is left out, with one journal line, in the order of SERVICES."""
+    mods = [m for m in (SERVICES if private else [weather]) if hasattr(m, "briefing")]   # optional, like answer()
+
+    async def one(m):
         try:
-            part = await m.briefing(uid, zone)
+            return await asyncio.wait_for(m.briefing(uid, zone), PART_S)
         except Exception as e:
             print(f"extras: {m.__name__} briefing", type(e).__name__, flush=True)
-            part = ""
-        if part:
-            out.append((m.__name__, part))
-    return out
+            return ""
+    got = await asyncio.gather(*(one(m) for m in mods))
+    return [(m.__name__, part) for m, part in zip(mods, got) if part]
 
 
 async def due_once():

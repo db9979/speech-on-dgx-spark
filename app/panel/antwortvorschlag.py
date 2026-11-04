@@ -8,8 +8,13 @@ picked one lands in the form and can be changed freely, also by „kürzer“, �
 - 3a: in the mail's language and with its form of address, signed with the profile's name.
 - The mail is data, never an instruction: it goes between fixed marks (schreib.unmark), the model is told so, its
   answer is only taken as text (direction and text, both cut and cleaned); no address, link or file comes from it.
-- Only the own language model, behind speech (vorrang); the Notaus stops it like the Schreibhilfe (it is
-  conversation); the Kontingent counts it.
+- Only the own language model; the Notaus stops it like the Schreibhilfe (it is conversation); the Kontingent counts
+  it. Asked in the foreground like the Schreibhilfe (2026-11-04: in the one line of background work it waited behind
+  mail rules, „gelesen“ runs and the briefing until its SECONDS were up, the page got 502 several times in minutes):
+  still behind speech (it waits at most QUIET_MAX seconds for a pause) and behind a Vorrang answer (stufe.wait_turn),
+  never during a Wartungspause, at most RUNNING_MAX at once on the whole Spark. When the model is busy or too slow
+  the answer is Busy with a fixed word (belegt, langsam, gespraech, wartung): the page says it in plain words and
+  offers „Noch einmal“ (503 with Retry-After, never 502).
 - Journal: fixed words, numbers and log_name only; Live: how many today.
 """
 import asyncio
@@ -17,7 +22,12 @@ import json
 import re
 import time
 
+import httpx
+
 import llm
+import stufe
+import vorrang
+import wartung
 import mail
 import notaus
 import profiles
@@ -30,7 +40,10 @@ MAX_KEEP = 200           # mails kept at most
 MAX_MAIL = 4000          # characters of the mail the model reads
 MAX_LABEL = 24           # characters of a direction
 MAX_TEXT = 2000          # characters of one suggestion
-SECONDS = 90
+SECONDS = 90             # the model's time for three answers (it starts at once, nothing queued before it)
+QUIET_MAX = 20           # seconds it waits for a pause while somebody speaks to the Spark
+RUNNING_MAX = 2          # suggestions asked at the same time on the whole Spark; more get Busy("belegt") at once
+RETRY_AFTER = 20         # seconds the page is told to wait before „Noch einmal“
 REWRITE = {"kuerzer": "de", "freundlicher": "de", "foermlicher": "de", "uebersetzen": "en"}   # art -> language
 JOB = "Antwortvorschläge"
 CTRL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
@@ -43,9 +56,27 @@ SYSTEM = ("Du hilfst beim Beantworten einer E-Mail. Die erhaltene Mail steht zwi
           "höchstens fünf Sätze. Erfinde keine Zeiten, Zahlen oder Fakten; wo etwas fehlt, setze [eckige Klammern].\n\n"
           'Antworte nur mit JSON: [{{"richtung": "Zusagen", "text": "…"}}, …]')
 
+BUSY = {"belegt": ("Das Sprachmodell schreibt gerade schon Vorschläge. Bitte gleich noch einmal.",
+                   "The language model is already writing suggestions. Please try again in a moment."),
+        "langsam": ("Das Sprachmodell ist gerade ausgelastet und hat nicht rechtzeitig geantwortet. Bitte gleich noch einmal.",
+                    "The language model is busy right now and did not answer in time. Please try again in a moment."),
+        "gespraech": ("Gerade spricht jemand mit dem Spark, die Sprache geht vor. Bitte gleich noch einmal.",
+                      "Somebody is talking to the Spark right now, speech goes first. Please try again in a moment.")}
+
+
+class Busy(Exception):
+    """No suggestions right now, for a fixed reason (BUSY or "wartung"); the text is for the person."""
+
+    def __init__(self, why):
+        super().__init__(why)
+        self.why = why
+        self.text = wartung.sentence() if why == "wartung" else BUSY[why][0]
+
+
 _kept = {}               # (uid, mail id) -> (when, [{"label", "text"}])
 _running = {}            # (uid, mail id) -> asyncio.Task of the event loop it runs in
 _count = DayCounter()    # per day: "vorschlag", "umformen", "fehler"
+_asking = [0]            # suggestions asking the model right now (RUNNING_MAX)
 
 
 def _clean(v, most):
@@ -96,16 +127,36 @@ async def _make(uid, ref):
 async def _three(uid, text):
     """The model's three answers to a mail text (sender and subject in front); one journal line for every outcome."""
     t0 = time.time()
+    if wartung.paused("llm"):     # Wartungspause: said at once, never the model's time-out
+        print(f"mail: suggestions busy (wartung) | {_who(uid)}", flush=True)
+        raise Busy("wartung")
+    if _asking[0] >= RUNNING_MAX:
+        print(f"mail: suggestions busy (belegt) | {_asking[0]} running | {_who(uid)}", flush=True)
+        raise Busy("belegt")
+    _asking[0] += 1
     try:
-        name = (profiles.by_id(uid) or {}).get("name") or ""
-        user = "<<<MAIL\n" + schreib.unmark(text[:MAX_MAIL]) + "\nMAIL>>>"
-        raw = await asyncio.wait_for(llm.complete(SYSTEM.format(name=_clean(name, 40) or "[Name]"), user, JOB, 900,
-                                                 temperature=0.6, timeout=SECONDS, who=uid), SECONDS)
-        items = parse(raw)
-    except Exception as e:
-        _count.bump("fehler")
-        print(f"mail: suggestions failed ({type(e).__name__}) | {_who(uid)}", flush=True)
-        raise
+        try:
+            await asyncio.wait_for(vorrang.quiet(JOB), QUIET_MAX)   # speech first
+        except asyncio.TimeoutError:
+            print(f"mail: suggestions busy (gespraech) | {QUIET_MAX} s | {_who(uid)}", flush=True)
+            raise Busy("gespraech")
+        try:
+            await stufe.wait_turn("")    # somebody with Vorrang gets the first sentence first
+            name = (profiles.by_id(uid) or {}).get("name") or ""
+            user = "<<<MAIL\n" + schreib.unmark(text[:MAX_MAIL]) + "\nMAIL>>>"
+            raw = await asyncio.wait_for(llm.complete(SYSTEM.format(name=_clean(name, 40) or "[Name]"), user, JOB, 900,
+                                                     temperature=0.6, timeout=SECONDS, who=uid, speech_first=False), SECONDS)
+            items = parse(raw)
+        except (asyncio.TimeoutError, httpx.TimeoutException):
+            _count.bump("fehler")
+            print(f"mail: suggestions failed (TimeoutError) | {time.time() - t0:.0f} s | {_who(uid)}", flush=True)
+            raise Busy("langsam")
+        except Exception as e:
+            _count.bump("fehler")
+            print(f"mail: suggestions failed ({type(e).__name__}) | {_who(uid)}", flush=True)
+            raise
+    finally:
+        _asking[0] -= 1
     _count.bump("vorschlag")
     print(f"mail: suggestions | {len(items)} in {time.time() - t0:.1f} s | {_who(uid)}", flush=True)
     return items

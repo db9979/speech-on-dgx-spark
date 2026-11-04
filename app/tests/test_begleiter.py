@@ -1581,6 +1581,132 @@ class Seven(unittest.TestCase):
             self.assertIn("{id:'begleitermeeting',grp:'go',sw:'chat.desk_meeting'", fh.read())
 
 
+class TagesstartTeile(unittest.TestCase):
+    """Pi log 2026-11-04 „Tagesstart oder Feierabend | daily_briefing nicht ok | fertig 200.0 s“, „morning TimeoutError“:
+    the parts of the briefing are read at the same time, each within chat.BRIEF_PART_S; a late part is left out with
+    a fixed word in the journal, a slow model gives the short version of the panel's own reading, never an error."""
+
+    def setUp(self):
+        import calendars
+        import chat
+        import features
+        import llm
+        import mail
+        self.chat = chat
+        self.saved = [(chat, "BRIEF_PART_S"), (chat, "BRIEF_LLM_S"), (calendars, "get"), (calendars, "events"),
+                      (extras, "briefing"), (llm, "complete"), (features, "allowed"), (mail, "get"),
+                      (profiles, "reminders"), (extras, "PART_S")]
+        self.saved = [(m, n, getattr(m, n)) for m, n in self.saved]
+        chat.BRIEF_PART_S, chat.BRIEF_LLM_S = 0.2, 0.2
+        zone = chat.user_zone("Europe/Berlin")
+        soon = datetime.datetime.now(zone) + datetime.timedelta(hours=1)
+        self.ev = {"start": soon, "end": soon + datetime.timedelta(minutes=30), "allday": False, "title": "Zahnarzt",
+                   "location": ""}
+        calendars.get = lambda uid: {"calendars": [{"name": "k"}], "topics": []}
+        features.allowed = lambda *a, **k: True
+        mail.get = lambda uid: {"accounts": [{"name": "m"}]}
+        mail_briefing = mail.briefing
+        self.saved.append((mail, "briefing", mail_briefing))
+        mail.briefing = lambda uid: "Unread e-mails: none."
+        profiles.reminders = lambda uid: [{"due": (time.time() + 600) * 1000, "text": "Blumen gießen"}]
+
+        async def weather(uid, zone=None, private=True):
+            return [("weather", "Wetter: sonnig")]
+        extras.briefing = weather
+        self.asked = []
+
+    def tearDown(self):
+        for m, n, v in self.saved:
+            setattr(m, n, v)
+
+    def run_brief(self):
+        import contextlib
+        import io
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            text = asyncio.run(self.chat.morning_briefing("u-tag", "Europe/Berlin", markdown=True))
+        return text, out.getvalue()
+
+    def test_a_slow_part_is_left_out_the_rest_comes(self):
+        import calendars
+        import llm
+
+        async def slow(*a, **k):
+            await asyncio.sleep(5)
+        calendars.events = slow
+
+        async def complete(system, user, *a, **k):
+            self.asked.append(user)
+            return "Guten Morgen."
+        llm.complete = complete
+        t0 = time.monotonic()
+        text, log = self.run_brief()
+        self.assertLess(time.monotonic() - t0, 3)            # never the 5 s of the slow part
+        self.assertEqual(text, "Guten Morgen.")
+        self.assertIn("briefing: part slow | kalender | 0.2 s", log)
+        self.assertRegex(log, r"briefing: ready \| 1 parts late \| \d+ s")
+        self.assertIn("Calendar not reachable: too slow", self.asked[0])
+        self.assertIn("Wetter: sonnig", self.asked[0])
+        self.assertTrue(self.asked[0].rstrip().endswith("Unread e-mails: none."))   # the mail stays last
+
+    def test_a_slow_model_gives_the_short_version(self):
+        import calendars
+        import llm
+
+        async def events(*a, **k):
+            return [self.ev], []
+        calendars.events = events
+
+        async def complete(*a, **k):
+            await asyncio.sleep(5)
+        llm.complete = complete
+        text, log = self.run_brief()
+        self.assertIn("briefing: model slow, short version | 0 parts late |", log)
+        self.assertIn("**Termine**", text)
+        self.assertIn("Zahnarzt", text)
+        self.assertIn("Blumen gießen", text)
+
+    def test_short_version_fixed_sentences(self):
+        zone = self.chat.user_zone("Europe/Berlin")
+        now = datetime.datetime(2026, 11, 4, 12, 0, tzinfo=zone)
+        over = dict(self.ev, start=now - datetime.timedelta(hours=2), end=now - datetime.timedelta(hours=1), title="Vorbei")
+        later = dict(self.ev, start=now + datetime.timedelta(hours=2), end=now + datetime.timedelta(hours=3), title="Arzt\x07")
+        text = self.chat.brief_short([over, later], [], ["mail", "kalender", "mail"], zone, now)
+        self.assertNotIn("Vorbei", text)
+        self.assertIn("Arzt", text)
+        self.assertNotIn("\x07", text)
+        self.assertTrue(text.endswith("Nicht rechtzeitig: Mails, Kalender."))
+        self.assertIn("Heute stehen keine Termine mehr an.", self.chat.brief_short([], [], [], zone, now))
+        self.assertNotIn("Termine", self.chat.brief_short(None, [], [], zone, now))   # no calendar: nothing said
+
+    def test_extras_at_the_same_time_each_within_its_time(self):
+        import contextlib
+        import io
+        import types
+        extras.briefing = self.saved[4][2]
+        extras.PART_S = 0.2
+
+        async def fast(uid, zone=None):
+            return "schnell"
+
+        async def slow(uid, zone=None):
+            await asyncio.sleep(5)
+        mods = [types.SimpleNamespace(__name__="a", briefing=slow), types.SimpleNamespace(__name__="b", briefing=fast),
+                types.SimpleNamespace(__name__="c")]
+        out = io.StringIO()
+        with unittest.mock.patch.object(extras, "SERVICES", mods), contextlib.redirect_stdout(out):
+            t0 = time.monotonic()
+            got = asyncio.run(extras.briefing("u", None))
+        self.assertLess(time.monotonic() - t0, 3)
+        self.assertEqual(got, [("b", "schnell")])
+        self.assertIn("extras: a briefing TimeoutError", out.getvalue())
+
+    def test_the_begleiter_waits_less_than_before(self):
+        self.assertLess(self.chat.BRIEF_MOST, 200)
+        with open(os.path.join(helpers.APP, "panel", "begleiter.py"), encoding="utf-8") as fh:
+            self.assertIn("chat.BRIEF_MOST", fh.read())
+
+
 class LogQuiet(unittest.TestCase):
     """Dominik's log 2026-10-11: an old release without begleiter.json is no error, and an unreadable recording
     no "Task exception was never retrieved"."""

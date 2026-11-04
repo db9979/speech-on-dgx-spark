@@ -25,8 +25,8 @@ const TEL_SAY={zugang:['Benutzername oder Kennwort falsch. Bitte in der Telefona
   port:['Der Telefon-Port 31060 ist auf diesem Rechner schon belegt.','The phone port 31060 is already in use on this computer.'],
   ok:['Angemeldet.','Signed in.']};
 // a router translates between the Spark and the system (telefon.Agent.nat): calls and sound need two port forwards there
-const TEL_NAT=()=>t('Zwischen Spark und Anlage übersetzt ein Router die Adresse (NAT). Dort UDP 31060 und 31062-31069 an diesen Rechner weiterleiten, sonst kommen Anrufe und Ton nicht an.',
-  'A router translates the address between the Spark and the system (NAT). Forward UDP 31060 and 31062-31069 to this computer there, else calls and sound do not get through.');
+const TEL_NAT=()=>t('Zwischen Spark und Anlage übersetzt ein zweiter Router die Adresse (NAT), zum Beispiel eine UniFi-Box hinter der FRITZ!Box. In diesem Router (nicht in der Anlage) UDP 31060 und 31062-31069 an diesen Rechner weiterleiten und SIP-ALG ausschalten, sonst kommen Anrufe und Ton nach einer Weile nicht mehr an. Einfacher: den Spark ins selbe Netz wie die Anlage stellen.',
+  'A second router translates the address between the Spark and the system (NAT), for example a UniFi box behind the FRITZ!Box. In that router (not in the system) forward UDP 31060 and 31062-31069 to this computer and switch SIP ALG off, else calls and sound stop getting through after a while. Simpler: put the Spark into the same network as the system.');
 const telSay=(why,text)=>TEL_SAY[why]?t(TEL_SAY[why][0],TEL_SAY[why][1]):(text||why||'');
 function telNums(d){const opts=sel=>`<option value="">${esc(t('Gemeinsames Telefon','Shared phone'))}</option>`+(d.profile||[]).map(p=>`<option value="${esc(p.id)}"${p.id===sel?' selected':''}>${esc(p.name)}</option>`).join('');
   const row=(nr,sel,known,name)=>`<div class="rowin" data-nr="${esc(nr)}" style="margin-top:4px"><b style="min-width:5em">${esc(nr)}</b><select data-nodirty="1">${opts(sel)}</select>`

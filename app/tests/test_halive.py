@@ -5,6 +5,9 @@
 - Only profiles the admin released Home Assistant for, never while Mein Notaus holds them, at most MAX_OPEN.
 - The address goes through netguard (HOME); a refused address opens no socket.
 - What Home Assistant sends is data: only results of get_states and state_changed events change the copy, capped.
+- A lost connection: the wait doubles only while connections break soon; one that stayed up STABLE seconds is tried
+  again after SOON and the doubling starts anew (2026-11-04: it stayed at BACKOFF_MAX for good). The journal names
+  the close code as a number and the seconds it was up; the line has a ping and TCP keepalive.
 
 A small WebSocket server on 127.0.0.1 plays Home Assistant; no wall clock decides a result.
 """
@@ -60,6 +63,71 @@ class Apply(unittest.TestCase):
             self.assertEqual(len(store), 2)
         finally:
             halive.MAX_ENTITIES = old
+
+
+class Backoff(unittest.TestCase):
+    def test_short_lived_doubles_a_good_one_starts_anew(self):
+        self.assertEqual(halive.backoff(60, 0), (60, 120))
+        self.assertEqual(halive.backoff(480, 20), (480, 900))
+        self.assertEqual(halive.backoff(900, halive.STABLE - 1), (900, 900))
+        self.assertEqual(halive.backoff(900, halive.STABLE), (halive.SOON, halive.BACKOFF))
+
+    def test_close_code_is_a_number(self):
+        from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
+        from websockets.frames import Close
+        self.assertEqual(halive.close_code(ConnectionClosedError(None, None)), 1006)
+        self.assertEqual(halive.close_code(ConnectionClosedOK(Close(1001, "bye"), None)), 1001)
+        self.assertEqual(halive.close_code(TimeoutError()), 0)
+
+    def test_the_loop_resets_after_a_good_connection(self):
+        """A fake session and a fake clock: three short ones double, a long one waits SOON, then 60 again."""
+        import contextlib
+        import io
+        from websockets.exceptions import ConnectionClosedError
+        ups = [0, 30, 10, 900, 5]
+        clock = [1000.0]
+        w = halive._Live("u-back", {"url": "http://ha", "token": "t"})
+        w.clock = lambda: clock[0]
+
+        def session(name):
+            up = ups.pop(0)
+            if up:
+                w.since = clock[0]
+                clock[0] += up
+            raise ConnectionClosedError(None, None)
+        waits = []
+
+        def wait(secs):
+            waits.append(secs)
+            return not ups
+        w._session, w._halt.wait = session, wait
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            w.run()
+        self.assertEqual(waits, [60, 120, 240, halive.SOON, 60])
+        self.assertIn(f"homeassistant: live lost (ConnectionClosedError) | code 1006 | up 900 s | retry in {halive.SOON} s |",
+                      out.getvalue())
+        self.assertIn("| up 0 s | retry in 60 s |", out.getvalue())
+
+    def test_heartbeat_and_keepalive(self):
+        import socket
+        from unittest import mock
+        got = {}
+
+        def fake_connect(url, **kw):
+            got.update(kw)
+            return "ws"
+        sock = mock.MagicMock()
+        old = netguard.resolve
+        netguard.resolve = lambda host, port, level: "127.0.0.1"
+        try:
+            with mock.patch("websockets.sync.client.connect", fake_connect), \
+                    mock.patch("socket.create_connection", return_value=sock):
+                halive._Live("u1", {"url": "http://ha.example:8123", "token": "t"})._connect()
+        finally:
+            netguard.resolve = old
+        self.assertEqual((got["ping_interval"], got["ping_timeout"]), (halive.PING, halive.PING_WAIT))
+        sock.setsockopt.assert_any_call(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 
 
 class Wanted(unittest.TestCase):

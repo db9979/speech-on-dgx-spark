@@ -3182,7 +3182,9 @@ async def program_daily(request: Request, kind: str = "morning"):
         import chat
         try:
             with _step("tool", "daily_briefing"):
-                md = await asyncio.wait_for(chat.morning_briefing(uid, profiles.settings(uid).get("tz", ""), markdown=True), 200)
+                # parts within chat.BRIEF_PART_S, the model within BRIEF_LLM_S, else the short version (2026-11-04: 200 s, then 502)
+                md = await asyncio.wait_for(chat.morning_briefing(uid, profiles.settings(uid).get("tz", ""), markdown=True),
+                                            chat.BRIEF_MOST)
         except notaus.NotausAktiv:
             raise
         except Exception as e:
