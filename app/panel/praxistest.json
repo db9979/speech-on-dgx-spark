@@ -5167,6 +5167,13 @@
 },
 {"id": "P763", "v": 1325, "titel": "E-Mail: Ordner eng, Wohin-Karte mit Mail", "text": "Seite E-Mail mit offener Spalte „Postfächer“: die Ordner stehen eng untereinander wie im Seitenmenü (am Rechner etwa 30 px je Zeile, auf dem Handy im Fenster eine Fingerhöhe); Mail-Liste und andere Listen sehen aus wie vorher. Dann Offen → eine Karte „Wohin gehört diese Mail?“ antippen: unter den Knöpfen stehen Von, Betreff, Datum und der Text der Mail, nichts springt beim Laden; die Mail bleibt in „Falsch sortiert“ und ungelesen. Die Kartenzeile beginnt mit „Der Spark hatte sie in … sortiert“. „Im Gespräch zeigen“ (nur an Karten, die ins Gespräch kamen) öffnet das Gespräch dieses Tages und hebt die Karte kurz blau hervor. Zustand → Logs (Assistent): „vorgang: mail gezeigt | …“.",
 "thread": "Fix Ordnerabstände in E-Mail"
+},
+{
+"id": "P764",
+"v": 1326,
+"titel": "Dateien: Ordner aktualisieren, Rechte-Hinweis, eine Leiste",
+"text": "Voraussetzung: P628. A: Fernzugang → Systeme entsperren, ein System, „Dateien“: oben nur die rote Zeile „Fern-Dateien offen …“ (mit frischem Code das Schild „Code noch N min“, Hinweise als Schild „N Hinweise“, ein Tipp legt sie über die Seite), kein äußerer Kasten. B: Rechts neben dem Pfad „↻ Aktualisieren“. In der Shell desselben Servers (zweiter Browser-Tab) im gezeigten Ordner „touch neu.txt“: spätestens nach 15 s steht neu.txt in der Liste, kurz farbig markiert; vorher weit nach unten gerollt: die Liste springt nicht, ein fokussierter „Laden“-Knopf bleibt fokussiert. C: F5 und Strg+R lesen nur den Ordner neu, die Seite lädt nicht neu. D: Tab wechseln, 1 Minute warten: Zustand → Logs → Fernzugang zeigt in der Zeit kein „liste | still“; zurück: sofort eine. E: WLAN aus: unter der Pfad-Zeile ruhig „Nicht aktualisiert: … Nächster Versuch in 30 s“, dann 60, 120; WLAN an: verschwindet von selbst. F: Leerlauf auf 2 min stellen, nur zusehen: die Sitzung schließt trotzdem nach 2 min. G: In einen Ordner ohne Schreibrecht für spark (etwa /opt/ki-lab/cache/win/eingang) hochladen: Hinweis „Schreiben in /opt/… darf der Benutzer spark auf dem Server nicht“ mit (1) „Als root hochladen“ (wenn freigegeben) bzw. Weg zu Funktionen → Fernzugang zu Servern → Dateien als anderer Benutzer und „sudo spark-anker dateien als root --schreiben“, (2) „command -v setfacl >/dev/null || sudo apt install -y acl; sudo setfacl -m u:spark:rwx /opt/…“ mit Kopieren und In die Shell einfügen (fragt, schließt die Dateien, Zeile steht in der Shell, Enter selbst); danach geht das Hochladen. H: Zustand → Logs → Fernzugang: nirgends ein Ordnername.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }

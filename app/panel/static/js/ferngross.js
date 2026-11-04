@@ -45,13 +45,14 @@ function fgListe(){const list=$('fzgjoblist');list.textContent='';let langsam=fa
     if(j.stand==='laeuft'&&j.kb_s<FG.langsam&&j.bytes>0)langsam=true;
     if(j.stand==='laeuft')r.appendChild(fzBtn(t('Abbrechen','Cancel'),'danger',()=>fgJobStop(j.id)));
     if(j.stand==='fertig'&&!FG.fertig.has(j.id)){FG.fertig.add(j.id);if(FZ.fs)fzListe(FZ.fs.pfad)}
+    if(j.stand==='fehler'&&j.grund==='verboten'&&!FG.fertig.has(j.id)){FG.fertig.add(j.id);if(FZ.fs)fzRechte('schreiben',j.ordner||FZ.fs.pfad)}   // the server refused writing there: the hint with the ways out
     list.appendChild(r)}
   $('fzgjobs').hidden=!list.childNodes.length;$('fzglangsam').hidden=!langsam}
 // 1. in pieces
 async function fgHoch(){const f=$('fzgfile').files[0];if(!FZ.fs)return;if(!f){$('fzgfile').click();return}
   if(!(window.crypto&&crypto.subtle)){fzMsg(t('Dieser Browser rechnet hier keine Prüfsumme (nur über https).','This browser computes no checksum here (https only).'),true);return}
   if(f.size>FG.max*1048576){fzMsg(t('Größer als ','Larger than ')+fzKB(FG.max*1048576)+'.',true);return}
-  let d;try{d=await fgPost('/hoch',{pfad:FZ.fs.pfad,name:f.name,groesse:f.size,ersetzen:$('fzgreplace').checked})}catch(e){fzMsg(e.message,true);return}
+  const pfad=FZ.fs.pfad;let d;try{d=await fgPost('/hoch',{pfad,name:f.name,groesse:f.size,ersetzen:$('fzgreplace').checked})}catch(e){if(!fzRechteFehler(e,'schreiben',pfad))fzMsg(e.message,true);return}
   FG.files[d.id]=f;FG.ups[d.id]={id:d.id,name:f.name,groesse:f.size,offset:0,lauf:false};$('fzgfile').value='';fgLauf(d.id)}
 async function fgWeiter(id){const u=FG.ups[id];if(!u)return;let f=FG.files[id];
   if(!f){f=await fgWaehle();if(!f)return;if(f.name!==u.name||f.size!==u.groesse){fzMsg(t('Das ist nicht dieselbe Datei (Name und Größe).','That is not the same file (name and size).'),true);return}FG.files[id]=f}
@@ -66,7 +67,7 @@ async function fgLauf(id){const u=FG.ups[id],f=FG.files[id];if(!u||!f||u.lauf)re
       if(r&&(r.status===409||r.status===422)&&fehl<3){fehl++;try{const d=await fgPost(`/hoch/${id}/weiter`);u.offset=d.offset}catch{}continue}
       if(!r&&fehl<5){fehl++;await new Promise(ok=>setTimeout(ok,2000*fehl));continue}
       let text=t('Die Verbindung ist weg: „Weiter“ geht am letzten ganzen Stück weiter.','The connection is gone: "Resume" goes on at the last whole piece.');
-      if(r){try{text=errSay(r.status,(await r.json()).detail)}catch{}}fzMsg(text,true);u.pause=true}
+      let roh='';if(r){try{roh=(await r.json()).detail;text=errSay(r.status,roh)}catch{}}if(!fzRechteFehler({status:r&&r.status,detail:roh},'schreiben',FZ.fs.pfad))fzMsg(text,true);u.pause=true}
     if(u.offset>=u.groesse&&!u.pause){const d=await fgPost(`/hoch/${id}/fertig`);delete FG.ups[id];delete FG.files[id];fzMsg(t('Alles da, der Server prüft die Prüfsumme …','All there, the server checks the checksum …'));
       FG.jobs.push({id:d.id,art:'hoch',name:u.name,stand:'pruefen',bytes:u.groesse,groesse:u.groesse,kb_s:0,sha256:''})}}
   catch(e){fzMsg(e.message,true)}
@@ -79,9 +80,9 @@ async function fgHolen(){if(!FZ.fs)return;const url=$('fzglink').value.trim(),na
   if(!/^https:\/\//.test(url)){fzMsg(t('Nur eine https-Adresse.','An https address only.'),true);return}
   if(!name){fzMsg(t('Erst einen Namen für die Datei.','A name for the file first.'),true);return}
   if(sha&&!/^[0-9a-f]{64}$/.test(sha)){fzMsg(t('Die Prüfsumme hat 64 Zeichen 0-9 a-f.','The checksum has 64 characters 0-9 a-f.'),true);return}
-  const b=$('fzglgo');b.disabled=true;
-  try{await fgPost('/holen',{url,name,sha256:sha,pfad:FZ.fs.pfad,ersetzen:$('fzgreplace').checked});$('fzglink').value=$('fzglname').value=$('fzglsha').value='';delete $('fzglname').dataset.selbst;fzMsg(t('Der Server holt die Datei …','The server fetches the file …'))}
-  catch(e){fzMsg(e.message,true)}finally{b.disabled=false;fgZeig()}}
+  const b=$('fzglgo'),pfad=FZ.fs.pfad;b.disabled=true;
+  try{await fgPost('/holen',{url,name,sha256:sha,pfad,ersetzen:$('fzgreplace').checked});$('fzglink').value=$('fzglname').value=$('fzglsha').value='';delete $('fzglname').dataset.selbst;fzMsg(t('Der Server holt die Datei …','The server fetches the file …'))}
+  catch(e){if(!fzRechteFehler(e,'schreiben',pfad))fzMsg(e.message,true)}finally{b.disabled=false;fgZeig()}}
 // 3. from the NAS
 async function fgNasListe(p){const nas=$('fzgnas').value,list=$('fzgnaslist'),cr=$('fzgnaspfad');list.textContent='';cr.textContent='';if(!nas||!FZ.fs)return;let d;
   try{d=await fgPost('/nas/liste',{nas,pfad:p})}catch(e){list.appendChild(fzEl('div','err small',e.message));return}
@@ -91,9 +92,9 @@ async function fgNasListe(p){const nas=$('fzgnas').value,list=$('fzgnaslist'),cr
   for(const x of d.dateien){const r=fzEl('div','fzfrow'),b=fzBtn(t('Übertragen','Transfer'),'',()=>fgNas(x.name));b.disabled=x.groesse>FG.max*1048576;
     r.append(fzEl('span','fzfart file','·'),fzEl('span','fzfname',x.name),fzEl('span','mut small',fzKB(x.groesse)),fzEl('span'),b);list.appendChild(r)}
   if(!d.ordner.length&&!d.dateien.length)list.appendChild(fzEl('div','mut',t('Der Ordner ist leer.','The folder is empty.')))}
-async function fgNas(name){if(!FZ.fs)return;
-  try{await fgPost('/nas',{nas:FG.nas,datei:FG.nasPfad+'/'+name,pfad:FZ.fs.pfad,name,ersetzen:$('fzgreplace').checked});fzMsg(t('Die Datei geht vom NAS zum Server …','The file goes from the NAS to the server …'))}
-  catch(e){fzMsg(e.message,true)}fgZeig()}
+async function fgNas(name){if(!FZ.fs)return;const pfad=FZ.fs.pfad;
+  try{await fgPost('/nas',{nas:FG.nas,datei:FG.nasPfad+'/'+name,pfad,name,ersetzen:$('fzgreplace').checked});fzMsg(t('Die Datei geht vom NAS zum Server …','The file goes from the NAS to the server …'))}
+  catch(e){if(!fzRechteFehler(e,'schreiben',pfad))fzMsg(e.message,true)}fgZeig()}
 async function fgJobStop(id){try{await api(`${fgBase()}/job/${id}`,{method:'DELETE'})}catch(e){fzMsg(e.message,true)}fgZeig()}
 function fgZu(){clearTimeout(FG.t);for(const u of Object.values(FG.ups))u.pause=true;FG.jobs=[];FG.fertig.clear();const l=$('fzgjoblist');if(l)l.textContent='';const n=$('fzgnaslist');if(n)n.textContent=''}
 {const k=$('fzgsend');if(k){k.onclick=fgHoch;$('fzglgo').onclick=fgHolen;$('fzglink').oninput=fgLinkName;$('fzglname').oninput=e=>{e.target.dataset.selbst=e.target.value?'1':''};

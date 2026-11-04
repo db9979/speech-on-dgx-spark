@@ -3593,7 +3593,7 @@ class SessionPageLayout(unittest.TestCase):
         self.assertIn("body.fzterminal #confbar,body.fzterminal:not(.fzhinauf) #alerts{display:none}", css)
         self.assertIn("body.fzterminal.fzhinauf #alerts{position:fixed;", css)   # opened over the page: nothing moves
         self.assertIn("body.fzterminal main{max-width:none;", css)
-        self.assertIn("body.fzterminal #fzbox.fzoffen{border:0;", css)
+        self.assertIn("body.fzterminal #fzbox{border:0;", css)          # the session's page and the files' page
         self.assertIn(".fzthead{flex:none;display:flex;align-items:flex-end;gap:8px;height:36px;", css)   # one height
         js = self.read("js", "fernzugang.js")
         self.assertIn("const FZ_SPALTE=[280,520,330];", js)
@@ -3605,7 +3605,55 @@ class SessionPageLayout(unittest.TestCase):
         mfa = self.read("js", "mfa.js")
         self.assertIn("end.onclick=confirmEnd;", mfa)
         self.assertIn("&&typeof confirmEnd==='function')confirmEnd()", js)
-        self.assertIn("if(!on)fzHinweiseAuf(false)", js)            # another page: the notes stand where they were
+        self.assertIn("if(!seite)fzHinweiseAuf(false)", js)         # another page: the notes stand where they were
+
+
+class FilesRefreshRules(unittest.TestCase):
+    """Dateien (Dominik 2026-11-04 „Aktualisierung des Ordners wäre noch cool“ and 11:03 „Das darf der Benutzer spark …“):
+    „Aktualisieren“ in the line with the path, the quiet beat far below the rate limit and paused for a hidden tab, the
+    hint „Rechte“ only for the server's own refusal, and the files' page with the same one bar as the session's."""
+
+    read = staticmethod(SessionPageLayout.read)
+
+    def test_the_markup_and_the_beat(self):
+        html = self.read("index.html")
+        bar = html[html.index('class="row fzfbar"'):html.index('class="fzfcols"')]
+        for ident in ('id="fzfup"', 'id="fzcrumbs"', 'id="fzfstand"', 'aria-live="polite"', 'id="fzfneu"', '<i data-ic="refresh"></i> Aktualisieren', 'id="fzfrechte"'):
+            self.assertIn(ident, bar)
+        js = self.read("js", "fernzugang.js")
+        beat, most = (int(x) for x in re.search(r"const FZ_FRISCH=\[(\d+),(\d+)\];", js).groups())
+        self.assertEqual((beat, most), (15000, 120000))
+        import guard
+        self.assertLess(60000 / beat * 2, guard.RATE["fernzugang_dateien"][1])   # with room for clicks and downloads
+        body = js[js.index("function fzFrischTakt"):js.index("function fzFrischWieder")]
+        self.assertIn("if(!fzFSicht())return;", body)                  # a hidden tab or another page asks nothing
+        self.assertIn("if(fs.laeuft||fs.liest){fzFrischPlan();return}", body)
+        self.assertIn("document.visibilityState!=='hidden'", js)
+        self.assertIn("document.addEventListener('visibilitychange',fzFrischWieder)", js)
+        self.assertIn("fs.warte=Math.min(FZ_FRISCH[1],(fs.warte||FZ_FRISCH[0])*2)", js)
+        self.assertIn("e.preventDefault();fzListe(FZ.fs.pfad)", js)    # F5 / Strg+R: only the folder
+
+    def test_the_refusal_is_one_sentence_in_one_place(self):
+        import ferndateien
+        gross = self.read("js", "ferngross.js")
+        de, en = re.search(r"verboten:\['([^']+)','([^']+)'\]", gross).groups()
+        self.assertEqual(de, ferndateien.SAY["verboten"][1])            # the page knows the refusal by this sentence
+        js = self.read("js", "fernzugang.js")
+        self.assertIn("e.status===403&&typeof FG_GRUND==='object'&&e.detail===FG_GRUND.verboten[0]", js)
+        self.assertEqual(js.count("function fzQuote"), 1)
+        self.assertNotIn("const fzQuote", js)
+        for word in ("fzRechteFehler(e,'lesen',p)", "fzRechteFehler(e,'laden',p)", "fzRechteFehler(e,'schreiben',fs.pfad)"):
+            self.assertIn(word, js)
+        for word in ("fzRechteFehler(e,'schreiben',pfad)", "fzRechte('schreiben',j.ordner||FZ.fs.pfad)"):
+            self.assertIn(word, gross)
+
+    def test_the_files_page_has_the_one_bar(self):
+        js = self.read("js", "fernzugang.js")
+        self.assertIn("on=hier&&!!v&&!v.hidden,seite=on||hier&&!!f&&!f.hidden", js)
+        self.assertIn("document.body.classList.toggle('fzterminal',seite)", js)
+        self.assertIn("document.body.classList.toggle('fzohnemenu',on&&FZ.menuAus)", js)   # the menu folds only beside a terminal
+        css = re.sub(r"/\*.*?\*/", "", self.read("app.css"), flags=re.S)
+        self.assertIn("body.fzterminal #fzbox{border:0;", css)
 
 
 class _ShellPage(Base):
@@ -4444,6 +4492,167 @@ class NotesForReal(_ShellPage):
         self.run_page(body, init=spy)
 
 
+class FilesPageForReal(_ShellPage):
+    """The files' page in a real browser (the files' answers stand in for the server, so the rows can change at will):
+    Dominik 2026-11-04 „Aktualisierung des Ordners“ and 11:03 (the hint „Rechte“, the one bar)."""
+
+    ROWS = [{"name": f"a{i}", "art": "dir", "groesse": None, "zeit": 1760000000 + i} for i in range(10)] + \
+        [{"name": f"f{i:02d}", "art": "file", "groesse": 100 + i, "zeit": 1760000100 + i} for i in range(60)]
+
+    def run_files(self, body):
+        st = {"n": 0, "still": [], "rows": [dict(x) for x in self.ROWS], "aus": False}
+
+        async def outer(ctx, pg):
+            async def opened(route):
+                await route.fulfill(status=200, content_type="application/json", body=json.dumps(
+                    {"id": "s1", "pfad": "/home/spark", "max_mb": 100, "leerlauf": 15, "als": "spark", "schreiben": True, "ordner": []}))
+
+            async def liste(route):
+                st["n"] += 1
+                if st["aus"]:
+                    await route.abort()
+                    return
+                st["still"].append(json.loads(route.request.post_data or "{}").get("still") is True)
+                await route.fulfill(status=200, content_type="application/json", body=json.dumps(
+                    {"pfad": "/home/spark", "oben": "/home", "eintraege": st["rows"], "mehr": False, "max_mb": 100}))
+
+            async def refused(route):
+                await route.fulfill(status=403, content_type="application/json", body=json.dumps({"detail": "Das darf der Benutzer spark auf dem Server nicht."}))
+
+            async def closed(route):
+                await route.fulfill(status=200, content_type="application/json", body="{}")
+
+            async def no_big(route):
+                await route.fulfill(status=404, content_type="application/json", body=json.dumps({"detail": "off"}))
+            async def overview(route):      # the panel's own list: it knows the stand-in files session as open
+                r = await route.fetch()
+                d = await r.json()
+                if not d.get("gesperrt"):
+                    d["offen"] = (d.get("offen") or []) + [{"id": "s1", "art": "Dateien", "geraet": d["geraete"][0]["id"] if d.get("geraete") else ""}]
+                await route.fulfill(response=r, body=json.dumps(d))
+            await ctx.route("**/api/admin/fernzugang", overview)
+            await ctx.route("**/api/admin/fernzugang/dateien", opened)
+            await ctx.route("**/api/admin/fernzugang/dateien/s1/liste", liste)
+            await ctx.route("**/api/admin/fernzugang/dateien/s1/hoch", refused)
+            await ctx.route("**/api/admin/fernzugang/dateien/s1", closed)
+            await ctx.route("**/api/admin/fernzugang/gross/**", no_big)
+            await pg.click("#fzentsperren")
+            await pg.wait_for_function("FZ.d&&!FZ.d.gesperrt&&(FZ.d.geraete||[]).length===1", timeout=15000)
+            await pg.evaluate("FZ_FRISCH[0]=500;FZ_FRISCH[1]=2000;window.__bleibt=1;fzDateien(FZ.d.geraete[0])")
+            await pg.wait_for_function("$('fzflist').querySelectorAll('.fzfrow').length===70", timeout=15000)
+            await body(pg, st)
+        ShellForReal.run_seite(self, outer, size=(1440, 900))
+
+    async def until(self, pg, fn, what, timeout=10):
+        for _ in range(int(timeout * 10)):
+            if fn():
+                return
+            await pg.wait_for_timeout(100)
+        self.fail(what)
+
+    def test_the_folder_refreshes_quietly_and_nothing_jumps(self):
+        """Every beat reads the shown folder again (`still`); the same folder is merged: unchanged rows stay the same
+        elements, the focus stays, the row at the top of the view stays where it was although a folder came in above
+        it, a changed row is replaced, a gone one leaves, a new one is marked. A hidden tab and an upload running ask
+        nothing; coming back reads at once. Offline: one calm line with the reason, the pause doubles up to its most,
+        and it goes on by itself. F5 and Strg+R read only the folder; the page stays."""
+        async def body(pg, st):
+            await self.until(pg, lambda: any(st["still"]), "no quiet re-read")
+            pos = await pg.evaluate("""(()=>{const l=$('fzflist');l.scrollTop=600;for(const r of l.children)r.__alt=1;
+                document.querySelector('[data-k="f/f30"] button').focus();
+                const a=[...l.children].find(r=>r.offsetTop+r.offsetHeight>l.scrollTop);return [a.dataset.k,a.offsetTop-l.scrollTop]})()""")
+            rows = [dict(x) for x in self.ROWS if x["name"] != "f59"]
+            rows.insert(1, {"name": "a00-neu", "art": "dir", "groesse": None, "zeit": 1760000500})
+            next(x for x in rows if x["name"] == "f05")["groesse"] = 999
+            st["rows"] = rows
+            await pg.wait_for_function("!!document.querySelector('[data-k=\"d/a00-neu\"]')", timeout=10000)
+            seen = await pg.evaluate(f"""(()=>{{const l=$('fzflist'),q=k=>document.querySelector('[data-k="'+k+'"]'),a=q({json.dumps(pos[0])});
+                return {{neu:q('d/a00-neu').classList.contains('fzfneu'),f05:!!q('f/f05').__alt,f10:!!q('f/f10').__alt,f59:!!q('f/f59'),
+                  y:a.offsetTop-l.scrollTop,fokus:document.activeElement===q('f/f30').querySelector('button')&&!!q('f/f30').__alt,
+                  n:l.querySelectorAll('.fzfrow').length,order:[...l.children].slice(0,3).map(r=>r.dataset.k),groesse:q('f/f05').textContent}}}})()""")
+            self.assertEqual((seen["neu"], seen["f05"], seen["f10"], seen["f59"], seen["fokus"], seen["n"]), (True, False, True, False, True, 70), seen)
+            self.assertLessEqual(abs(seen["y"] - pos[1]), 1, (seen, pos))
+            self.assertEqual(seen["order"], ["d/a0", "d/a00-neu", "d/a1"])
+            self.assertIn("999 B", seen["groesse"])
+            # a hidden tab asks nothing, coming back reads at once
+            await pg.evaluate("window.__vis='hidden';Object.defineProperty(document,'visibilityState',{configurable:true,get:()=>window.__vis});document.dispatchEvent(new Event('visibilitychange'))")
+            await pg.wait_for_timeout(800)
+            n = st["n"]
+            await pg.wait_for_timeout(2000)
+            self.assertEqual(st["n"], n)
+            await pg.evaluate("window.__vis='visible';document.dispatchEvent(new Event('visibilitychange'))")
+            await self.until(pg, lambda: st["n"] > n, "no read on coming back", timeout=2)
+            # an upload running: no beat
+            await pg.evaluate("FZ.fs.laeuft=true")
+            await pg.wait_for_timeout(800)
+            n = st["n"]
+            await pg.wait_for_timeout(1500)
+            self.assertEqual(st["n"], n)
+            await pg.evaluate("FZ.fs.laeuft=false")
+            # offline: a calm line, the pause doubles up to its most and stays there; back online it clears itself
+            st["aus"] = True
+            await pg.wait_for_function("$('fzfstand').textContent.includes('Nicht aktualisiert')", timeout=10000)
+            self.assertIn("keine Verbindung zum Spark", await pg.evaluate("$('fzfstand').textContent"))
+            await pg.wait_for_function("FZ.fs&&FZ.fs.warte===2000", timeout=10000)
+            await pg.wait_for_timeout(2500)
+            self.assertEqual(await pg.evaluate("FZ.fs.warte"), 2000)
+            self.assertEqual(await pg.evaluate("$('fzflist').querySelectorAll('.fzfrow').length"), 70)   # the list stays
+            st["aus"] = False
+            await pg.wait_for_function("FZ.fs.warte===0&&$('fzfstand').textContent===''", timeout=10000)
+            # F5 and Strg+R: the folder, never the page
+            for key in ("F5", "Control+KeyR"):
+                n = len(st["still"])
+                await pg.keyboard.press(key)
+                await self.until(pg, lambda: st["still"][n:].count(False) >= 1, "no read on " + key, timeout=5)
+            self.assertEqual(await pg.evaluate("window.__bleibt"), 1)
+            await pg.click("#fzfneu")
+            n = len(st["still"])
+            await pg.click("#fzfneu")
+            await self.until(pg, lambda: False in st["still"][n:], "no read on Aktualisieren", timeout=5)
+            # closed: no beat any more
+            await pg.evaluate("fzFSchliessen()")
+            await pg.wait_for_function("!FZ.fs&&$('fzfiles').hidden", timeout=10000)
+            await pg.wait_for_timeout(600)
+            n = st["n"]
+            await pg.wait_for_timeout(1500)
+            self.assertEqual(st["n"], n)
+        self.run_files(body)
+
+    def test_the_hint_rechte_and_the_one_bar(self):
+        """The server refuses writing: the hint names what and where (from the own request) and two ways out, with the
+        line for the server to copy or insert (setfacl, on Ubuntu with the package acl first, the folder quoted); as root
+        a button only when the server gave it. Another 403 stays a plain message. The files' page has the one bar."""
+        async def body(pg, st):
+            await pg.set_input_files("#fzffile", files=[{"name": "x.bin", "mimeType": "application/octet-stream", "buffer": b"abc"}])
+            await pg.click("#fzfsend")
+            await pg.wait_for_function("!$('fzfrechte').hidden", timeout=10000)
+            text = await pg.evaluate("$('fzfrechte').textContent")
+            for part in ("Schreiben in /home/spark darf der Benutzer spark auf dem Server nicht.", "sudo setfacl -m u:spark:rwx /home/spark",
+                         "sudo spark-anker dateien als root --schreiben", "Kopieren", "In die Shell einfügen"):
+                self.assertIn(part, text)
+            self.assertEqual(await pg.evaluate("$('fzfrechte').querySelector('a.wayl').dataset.way"), "Funktionen → Fernzugang zu Servern → Dateien als anderer Benutzer")
+            text = await pg.evaluate("FZ.d.geraete[0].os='Ubuntu 26.04';fzRechte('schreiben',\"/opt/ki lab/it's\");$('fzfrechte').textContent")
+            self.assertIn("command -v setfacl >/dev/null || sudo apt install -y acl; sudo setfacl -m u:spark:rwx '/opt/ki lab/it'\\''s'", text)
+            text = await pg.evaluate("""(()=>{const g=FZ.d.geraete[0];FZ.d.als_an=true;g.als={art:'sudo',benutzer:['root'],schreiben:true};g.als_frei=true;
+                fzRechte('schreiben','/opt/x');return $('fzfrechte').textContent})()""")
+            self.assertIn("Als root hochladen (Code/Passkey)", text)
+            text = await pg.evaluate("FZ.d.geraete[0].als_frei=false;fzRechte('lesen','/root');$('fzfrechte').textContent")
+            self.assertIn("Für dieses System einschalten", text)
+            self.assertIn("setfacl -m u:spark:rx /root", text)
+            self.assertFalse(await pg.evaluate("fzRechteFehler({status:403,detail:'Nur lesen: Schreiben als anderer Benutzer ist ein eigener Schritt mit frischem Code.'},'schreiben','/x')"))
+            # the one bar: the notes as a pill, no outer box, no page margin
+            await pg.evaluate("showAlerts([{level:'bad',text:'Das Änderungsprotokoll wurde nachträglich verändert.'},{level:'warn',text:'Qualitätstest: 1 Frage neu kaputt.'}])")
+            await pg.wait_for_timeout(500)
+            bar = await pg.evaluate("""(()=>({t:document.body.classList.contains('fzterminal'),alerts:getComputedStyle($('alerts')).display,
+                hinw:getComputedStyle($('fzbhinw')).display!=='none',n:$('fzbhinwn').textContent,border:getComputedStyle($('fzbox')).borderTopWidth,
+                left:Math.round($('fzfiles').getBoundingClientRect().left),wide:document.documentElement.scrollWidth-innerWidth,
+                menu:document.body.classList.contains('fzohnemenu')}))()""")
+            self.assertEqual((bar["t"], bar["alerts"], bar["hinw"], bar["n"], bar["border"], bar["wide"], bar["menu"]), (True, "none", True, "2", "0px", 0, False), bar)
+            await pg.evaluate("fzFSchliessen()")
+            await pg.wait_for_function("!document.body.classList.contains('fzterminal')", timeout=10000)
+        self.run_files(body)
+
+
 class Files(Base):
     """The doors of „Dateien“ without a server: off, admins in the browser, the unlocked page, paths and names, the
     link."""
@@ -4692,6 +4901,14 @@ class FilesEndToEnd(_FilesBase, EndToEnd):
             self.assertEqual(r.json()["oben"], "/home")
             self.assertEqual(self.http.post(f"/api/admin/fernzugang/dateien/{sid}/liste", json={"pfad": "/geschuetzt"}).status_code, 403)
             self.assertEqual(self.http.post(f"/api/admin/fernzugang/dateien/{sid}/liste", json={"pfad": "/gibtsnicht"}).status_code, 404)
+            # the page's quiet re-read (Ordner aktualisieren): the same answer, but no use of the session, so idle still ends it
+            sitz = fernzugang.SITZUNG[sid]
+            sitz.zuletzt = vorher = time.time() - 60                    # a minute ago: far inside the idle time
+            r = self.http.post(f"/api/admin/fernzugang/dateien/{sid}/liste", json={"pfad": "/home/spark", "still": True})
+            self.assertEqual([x["name"] for x in r.json()["eintraege"]], ["unter", "notiz.txt"])
+            self.assertEqual(sitz.zuletzt, vorher)
+            self.assertEqual(self.http.post(f"/api/admin/fernzugang/dateien/{sid}/liste", json={"pfad": "/home/spark", "still": "1"}).status_code, 200)
+            self.assertGreater(sitz.zuletzt, vorher)                    # only a real true is quiet; any other read is use
             # the one-time link: the file once, then never again
             r = self.http.post(f"/api/admin/fernzugang/dateien/{sid}/link", json={"pfad": "/home/spark/notiz.txt"})
             self.assertEqual(r.status_code, 200, r.text)
@@ -4727,7 +4944,7 @@ class FilesEndToEnd(_FilesBase, EndToEnd):
             self.assertEqual(fernzugang.ENTSPERRT, {})          # the Notaus locked every page too
             self.assertIn(self.http.post(f"/api/admin/fernzugang/dateien/{sid}/liste", json={"pfad": ""}).status_code, (423, 503))
         out = j.getvalue()
-        for line in ("fernzugang: dateien_auf | admin | 1", "fernzugang: liste | ok | 2", "fernzugang: liste | verboten | 0",
+        for line in ("fernzugang: dateien_auf | admin | 1", "fernzugang: liste | ok | 2", "fernzugang: liste | still | 2", "fernzugang: liste | verboten | 0",
                      "fernzugang: liste | fehlt | 0", "fernzugang: link | ok | 1", "fernzugang: laden | ok | 0",
                      "fernzugang: laden | link | 0", "fernzugang: hoch | ok | 0", "fernzugang: hoch | gibt es schon | 0",
                      "fernzugang: hoch | name ungueltig | 0", "fernzugang: hoch | zu gross | 1024", "fernzugang: dateien_zu | notaus | 0"):

@@ -7,7 +7,8 @@ Rules (fixed, Sicherheits-Checkliste):
   Verwalter, guests, a device key or the model; the switch chat.fernzugang and the Notaus as for the shell. „Dateien“
   works only on the unlocked page (fernzugang._frei, rule „Bereich entsperren“: its code or passkey came first; locked
   every door but closing answers 423) and opens one session bound to that login (only the hash of its cookies), counted with the shell sessions (chat.fernzugang_sitzungen); idle ends it
-  (chat.fernzugang_leerlauf_min).
+  (chat.fernzugang_leerlauf_min). The page's own quiet re-read of the shown folder (Dominik 2026-11-04 „Aktualisierung
+  des Ordners“: every 15 s while it is shown, `still`) never counts as use: idle ends the session all the same.
 - What the remote user `spark` may do there is what counts: the panel reads and writes only with that user's own
   permissions on the server. A path is a plain absolute path (no control characters, at most PATH_MAX), made normal
   with posixpath; a name for an upload is one part (no „/“, not „.“ or „..“). Nothing the server says is a command:
@@ -23,7 +24,8 @@ Rules (fixed, Sicherheits-Checkliste):
 
     admin in the browser (core.auth + fernzugang.is_admin_browser):
     POST   /api/admin/fernzugang/dateien {geraet}             -> {"id", "pfad", "max_mb", "leerlauf"} (unlocked page)
-    POST   /api/admin/fernzugang/dateien/{sid}/liste {pfad}   -> {"pfad", "oben", "eintraege", "mehr", "max_mb"}
+    POST   /api/admin/fernzugang/dateien/{sid}/liste {pfad, still?} -> {"pfad", "oben", "eintraege", "mehr", "max_mb"}
+                                                              (still: the page's own re-read, not counted as use)
     POST   /api/admin/fernzugang/dateien/{sid}/link {pfad}    -> {"url", "gilt_s"} (a one-time download link)
     POST   /api/admin/fernzugang/dateien/{sid}/hoch           raw body; headers x-fz-pfad, x-fz-name, x-fz-ersetzen
     DELETE /api/admin/fernzugang/dateien/{sid}                ends the session
@@ -98,9 +100,10 @@ def _mb():
 
 
 # ---------------------------------------------------------------- the session
-def _session(request, sid, word, frei=True):
+def _session(request, sid, word, frei=True, use=True):
     """The file session of this login, else 404/403/423/503 (switch, admin in the browser, the unlocked page, Notaus,
-    the same login). Closing it works on the locked page too, like disconnecting the own shell."""
+    the same login). Closing it works on the locked page too, like disconnecting the own shell. use=False: the caller
+    decides whether this counts against the idle time (the quiet re-read does not)."""
     if not fernzugang.admin_on():
         raise HTTPException(404, "Fernzugang ist aus (Funktionen → Fernzugang zu Servern)")
     fernzugang._browser(request)
@@ -113,7 +116,8 @@ def _session(request, sid, word, frei=True):
     if s is None or s.art != "dateien" or s.ende.is_set() or not hmac.compare_digest(s.login, fernzugang._login(request)):
         fernzugang.log(word, "keine sitzung", 0)
         raise HTTPException(404, "no such session")
-    s.zuletzt = time.time()
+    if use:
+        s.zuletzt = time.time()
     return s
 
 
@@ -204,10 +208,15 @@ async def _open(request, writing):
 
 @router.post("/api/admin/fernzugang/dateien/{sid}/liste", dependencies=[Depends(auth)])
 async def listing(sid: str, request: Request):
-    """One folder: names, kinds, sizes and times as text, folders first; at most LIST_MAX entries."""
-    s = _session(request, sid, "liste")
+    """One folder: names, kinds, sizes and times as text, folders first; at most LIST_MAX entries. `still`: the page
+    reads the shown folder again by itself (every 15 s at most, far below the rate limit); that is no use of the
+    session, so idle still ends it, and its journal line says „still“."""
+    s = _session(request, sid, "liste", use=False)
     guard.limit(request, "fernzugang_dateien", admin=True)
     body = await json_body(request, PATH_MAX + 256)
+    still = body.get("still") is True
+    if not still:
+        s.zuletzt = time.time()
     p = pfad(body.get("pfad"), s.home)
     if p is None:
         fernzugang.log("liste", "pfad ungueltig", 0)
@@ -232,7 +241,7 @@ async def listing(sid: str, request: Request):
                      "groesse": int(a.st_size or 0) if art in ("file", "linkfile") else None,
                      "zeit": int(a.st_mtime or 0) or None})
     rows.sort(key=lambda r: (r["art"] not in ("dir", "linkdir"), r["name"].lower()))
-    fernzugang.log("liste", "ok", len(rows))
+    fernzugang.log("liste", "still" if still else "ok", len(rows))
     return {"pfad": p, "oben": posixpath.dirname(p) if p != "/" else None, "eintraege": rows[:LIST_MAX],
             "mehr": len(rows) > LIST_MAX, "max_mb": _mb()}
 

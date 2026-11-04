@@ -932,7 +932,7 @@ SEITEN = {
     # ------------------------------------------------------------------ Browser und Handy
     # ------------------------------------------------------------------ Fernzugang (Dominik 2026-10-29 „in Technik → Überblick fehlt die Fernwartung“)
     "fernzugang": {
-        "stand": "aa5b776a39",
+        "stand": "144d750b4c",
         "bezug": {
             "fernzugang.entsperrt_bis": ["s2"], "fernzugang.admin_pair": ["s3"], "fernzugang.link_file": ["s3"], "fernzugang.admin_confirm": ["s3"], "fernzugang.CODE_S": ["s3"], "fernzugang.TICKET_S": ["s4"], "fernzugang.terminal_ws": ["s4"], "fernzugang.hostkey_wrong": ["s5"], "fernzugang.HALTEN_S": ["s6"], "ferndateien.listing": ["s6"], "fernbild.GUACD": ["s6"], "fernbild.FPS": ["s6"], "spontanhilfe.admin_new": ["s7"], "spontanhilfe.NUMMER_S": ["s7"], "spontansteuern.fetch": ["s7"], "spontansteuern._zeile": ["s7"], "fernzugang.notaus_close": ["s8"], "fernzugang.MAX_ANKER": ["s3"], "fernnotiz.fuer_modell": ["s6"], "fernnotiz.FASSUNGEN": ["s6"], "fernordner.view": ["s6"], "fernordner.MAX_ORDNER": ["s6"], "ferngross.upload_piece": ["s6"], "ferngross.TEIL": ["s6"], "fernweb.verbindung": ["s6"], "fernweb.ziel_ok": ["s6"], "fernweb.eigen_von": ["s6"], "fernweb.TOR_PORT": ["s6"], "fernweb.MAX_TUNNEL": ["s6"], "fernweb.MAX_KANAELE": ["s6"],
         },
@@ -1004,7 +1004,8 @@ SEITEN = {
               ("SSH läuft durch den Kanal des Ankers; reißt das Fenster ab, wartet die Shell {fernzugang.HALTEN_S} Sekunden. "
                "Ein Lebenszeichen alle {fernzugang.MESS_S} Sekunden misst Laufzeit und Rate; die Ausgabe "
                "wartet in höchstens {fernzugang.STAU} Stücken auf das Fenster, dann bremst SSH den Server (Gegendruck). "
-               "Dateien über SFTP in derselben Verbindung (ferndateien.listing), Laden mit Einmal-Link für "
+               "Dateien über SFTP in derselben Verbindung (ferndateien.listing; die Seite liest den gezeigten Ordner still im Takt neu, "
+               "das zählt nie als Nutzung, der Leerlauf trennt trotzdem), Laden mit Einmal-Link für "
                "{ferndateien.LINK_S} Sekunden; große Dateien in Teilen von {ferngross.TEIL|mb} MB mit SHA-256 je Stück "
                "(ferngross.upload_piece). Als root oder ein anderer Benutzer nur, wenn der Server selbst es freigab (sudoers nur für "
                "seinen sftp-server mit -R) und der Admin es je System eingeschaltet hat (fernals.choose); Schreiben mit frischem Code. "
@@ -1024,7 +1025,8 @@ SEITEN = {
                "SSH runs through the anchor's channel; if the window drops, the shell waits {fernzugang.HALTEN_S} seconds. "
                "A heartbeat every {fernzugang.MESS_S} seconds measures round trip and rate; output waits "
                "for the window in at most {fernzugang.STAU} pieces, then SSH slows the server (backpressure). "
-               "Files through SFTP in the same connection (ferndateien.listing), downloads with a one-time link for "
+               "Files through SFTP in the same connection (ferndateien.listing; the page quietly reads the shown folder again on a beat, "
+               "which never counts as use, so idle ends it all the same), downloads with a one-time link for "
                "{ferndateien.LINK_S} seconds; big files in pieces of {ferngross.TEIL|mb} MB with a SHA-256 per piece "
                "(ferngross.upload_piece). As root or another user only when the server itself gave it free (sudoers only for "
                "its sftp-server with -R) and the admin switched it on per system (fernals.choose); writing with a fresh code. "

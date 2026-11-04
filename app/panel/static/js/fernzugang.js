@@ -758,10 +758,13 @@ function fzAlsBlock(g){const w=fzEl('div','fzals'),a=g.als;w.id='fzals';
     if(a.schreiben)row.appendChild(fzBtn(t('… schreiben (Code/Passkey)','… write (code/passkey)'),'',()=>{if(confirm(t(`Dateien als ${u} mit Schreiben öffnen? Alles, was du hochlädst, gehört dann ${u}.`,`Open files as ${u} with writing? Everything you upload then belongs to ${u}.`)))fzDateien(g,u,true)}))}
   if(g.als_frei&&a.art==='ordner')row.appendChild(fzBtn(t('Dateien in den Ordnern','Files in the folders'),'fzk',()=>fzDateien(g)));
   w.appendChild(row);return w}
-async function fzDateien(g,als,schreiben){if(fzBelegt()){fzMsg(t('Erst die offene Sitzung trennen.','Disconnect the open session first.'),true);return}let d;
+// start: the folder to show first; alt: the open files session this one takes over (the hint „Als root …“): the new one
+// opens first, only then the old one closes, so a cancelled code keeps the old one
+async function fzDateien(g,als,schreiben,start,alt){if(fzBelegt()&&!(alt&&alt===FZ.fs)){fzMsg(t('Erst die offene Sitzung trennen.','Disconnect the open session first.'),true);return}let d;
   try{const r=await api('/api/admin/fernzugang/dateien'+(als&&schreiben?'/schreiben':''),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({geraet:g.id,...(als?{als}:{})})});d=await r.json()}catch(e){fzFehler(e);return}
-  FZ.fs={id:d.id,pfad:d.pfad,max:d.max_mb,oben:null,als:d.als||'spark',schreiben:d.schreiben!==false,ordner:d.ordner||[]};FZ.sitz={name:g.name+(d.als&&d.als!=='spark'?t(' als ',' as ')+d.als:''),seit:Date.now()/1000,max:FZ.d.max,leer:d.leerlauf,art:'dateien'};
-  $('fzmain').hidden=true;$('fzstatus').hidden=true;$('fzfiles').hidden=false;fzBanner();fzMsg('');fzFInfo();fzListe(FZ.fs.ordner[0]||d.pfad);if(window.fgZeig)fgZeig()}
+  if(alt){try{await api(`/api/admin/fernzugang/dateien/${alt.id}`,{method:'DELETE'})}catch{}clearTimeout(FZ.ft)}
+  FZ.fs={id:d.id,gid:g.id,pfad:d.pfad,max:d.max_mb,oben:null,als:d.als||'spark',schreiben:d.schreiben!==false,ordner:d.ordner||[],nr:0};fzRechteZu();FZ.sitz={name:g.name+(d.als&&d.als!=='spark'?t(' als ',' as ')+d.als:''),seit:Date.now()/1000,max:FZ.d.max,leer:d.leerlauf,art:'dateien'};
+  $('fzmain').hidden=true;$('fzstatus').hidden=true;$('fzfiles').hidden=false;fzBanner();fzMsg('');fzFInfo();fzMenu();fzListe(start||FZ.fs.ordner[0]||d.pfad);if(window.fgZeig)fgZeig()}
 function fzFInfo(){const dl=$('fzfinfo');dl.textContent='';const s=FZ.sitz||{},fs=FZ.fs||{};
   const als=fs.als&&fs.als!=='spark'?fs.als:'';
   $('fzfsend').disabled=$('fzffile').disabled=!fs.schreiben;
@@ -769,34 +772,113 @@ function fzFInfo(){const dl=$('fzfinfo');dl.textContent='';const s=FZ.sitz||{},f
     ...(fs.ordner&&fs.ordner.length?[[t('Freigegeben','Given free'),fs.ordner.join(', ')]]:[]),[t('Höchstens','At most'),fs.max+t(' MB je Datei',' MB per file')],
     [t('Leerlauf trennt','Idle ends'),t('nach ','after ')+s.leer+' min'],[t('Aufgezeichnet','Recorded'),t('nur Anzahl und Größe, nie Namen oder Inhalte','only counts and sizes, never names or contents')]])dl.append(fzEl('dt','',k),fzEl('dd','',v));
   $('fzfmax').textContent=t('Höchstens ','At most ')+fs.max+t(' MB. Die Datei landet im gezeigten Ordner; ohne „Ersetzen“ bleibt eine vorhandene Datei, wie sie ist.',' MB. The file lands in the folder shown; without "Replace" an existing file stays as it is.')}
-async function fzListe(p){const fs=FZ.fs;if(!fs)return;let d;
-  try{const r=await api(`/api/admin/fernzugang/dateien/${fs.id}/liste`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pfad:p})});d=await r.json()}
-  catch(e){if(e.status===404&&/session/.test(e.detail||'')||e.status===503){fzFZu(t('Die Dateien-Sitzung ist zu.','The files session is closed.'));return}fzMsg(e.message,true);return}
-  fs.pfad=d.pfad;fs.oben=d.oben;fzMsg('');
-  const cr=$('fzcrumbs');cr.textContent='';let acc='';const parts=d.pfad.split('/').filter(Boolean);
-  cr.appendChild(fzBtn('/','fzcrumb',()=>fzListe('/')));
-  for(const x of parts){acc+='/'+x;const to=acc;cr.appendChild(fzBtn(x,'fzcrumb',()=>fzListe(to)))}
-  $('fzfup').disabled=!d.oben;
-  const list=$('fzflist');list.textContent='';
+// Ordner aktualisieren (Dominik 2026-11-04 „Aktualisierung des Ordners wäre noch cool“): „Aktualisieren“ in the line with
+// the path, F5 or Strg+R on this page and, quietly, every FZ_FRISCH[0] ms while the folder is shown and the tab is
+// visible (`still`: the panel does not count it as use, idle ends the session all the same). The same folder is merged
+// row by row: unchanged rows stay as they are (focus, scroll position), changed ones are replaced in place, new ones
+// are marked for a moment. Errors stand quietly in one line with the reason; the next try waits twice as long, at most
+// FZ_FRISCH[1] ms. A hidden tab or another page asks nothing and reads once on coming back; an upload running skips a beat.
+const FZ_FRISCH=[15000,120000];
+const fzFKey=x=>(x.art==='dir'||x.art==='linkdir'?'d/':'f/')+x.name,fzFSig=x=>[x.art,x.groesse,x.zeit].join('|');
+function fzFZeile(x,pfad){const fs=FZ.fs,row=fzEl('div','fzfrow'),dir=x.art==='dir'||x.art==='linkdir',file=x.art==='file'||x.art==='linkfile';
+  row.dataset.k=fzFKey(x);row.dataset.s=fzFSig(x);
+  const nm=dir?fzBtn(x.name+'/','fzfname',()=>fzListe((pfad==='/'?'':pfad)+'/'+x.name)):fzEl('span','fzfname',x.name);
+  if(x.art.startsWith('link'))nm.appendChild(fzEl('small','mut',' →'));
+  row.append(fzEl('span','fzfart '+(dir?'dir':file?'file':'other'),dir?'▸':file?'·':'?'),nm,fzEl('span','mut small',file?fzKB(x.groesse):''),fzEl('span','mut small',x.zeit?fzZeit(x.zeit):''));
+  if(file){const b=fzBtn(t('Laden','Download'),'',()=>fzLaden1((pfad==='/'?'':pfad)+'/'+x.name));b.disabled=x.groesse>fs.max*1048576;row.appendChild(b)}else row.appendChild(fzEl('span'));
+  return row}
+// the rows of d into the list: a new folder from the top, the same folder merged (nothing jumps)
+function fzFListe(d,gleich){const list=$('fzflist');
+  if(!gleich){list.textContent='';list.scrollTop=0}
+  for(const e of [...list.children])if(!e.classList.contains('fzfrow'))e.remove();   // „leer“, „mehr als 1000“: added again below
+  const alt=new Map([...list.children].map(r=>[r.dataset.k,r])),fe=document.activeElement&&list.contains(document.activeElement)?document.activeElement:null,fokus=fe&&fe.closest('.fzfrow');
+  const anker=[...list.children].find(r=>r.offsetTop+r.offsetHeight>list.scrollTop),ankerK=anker&&anker.dataset.k,ankerY=anker?anker.offsetTop-list.scrollTop:0;
+  const rows=d.eintraege.map(x=>{const k=fzFKey(x),r=alt.get(k);if(r&&r.dataset.s===fzFSig(x)){alt.delete(k);return r}
+    const n=fzFZeile(x,d.pfad);if(r){alt.delete(k);if(r===fokus)FZ.fs.fokus=k;r.replaceWith(n)}else if(gleich){n.classList.add('fzfneu');setTimeout(()=>n.classList.remove('fzfneu'),4000)}return n});
+  for(const r of alt.values())r.remove();
+  rows.forEach((r,i)=>{if(list.children[i]!==r)list.insertBefore(r,list.children[i]||null)});
+  if(FZ.fs.fokus){const r=rows.find(x=>x.dataset.k===FZ.fs.fokus);FZ.fs.fokus='';const b=r&&r.querySelector('button');if(b)b.focus({preventScroll:true})}
+  else if(fe&&fe!==document.activeElement&&list.contains(fe))fe.focus({preventScroll:true});   // a moved row keeps its focus
+  if(gleich&&ankerK){const r=rows.find(x=>x.dataset.k===ankerK);if(r)list.scrollTop=r.offsetTop-ankerY}
   if(!d.eintraege.length)list.appendChild(fzEl('div','mut',t('Der Ordner ist leer.','The folder is empty.')));
-  for(const x of d.eintraege){const row=fzEl('div','fzfrow'),dir=x.art==='dir'||x.art==='linkdir',file=x.art==='file'||x.art==='linkfile';
-    const nm=dir?fzBtn(x.name+'/','fzfname',()=>fzListe((d.pfad==='/'?'':d.pfad)+'/'+x.name)):fzEl('span','fzfname',x.name);
-    if(x.art.startsWith('link'))nm.appendChild(fzEl('small','mut',' →'));
-    row.append(fzEl('span','fzfart '+(dir?'dir':file?'file':'other'),dir?'▸':file?'·':'?'),nm,fzEl('span','mut small',file?fzKB(x.groesse):''),fzEl('span','mut small',x.zeit?fzZeit(x.zeit):''));
-    if(file){const b=fzBtn(t('Laden','Download'),'',()=>fzLaden1((d.pfad==='/'?'':d.pfad)+'/'+x.name));b.disabled=x.groesse>fs.max*1048576;row.appendChild(b)}else row.appendChild(fzEl('span'));
-    list.appendChild(row)}
   if(d.mehr)list.appendChild(fzEl('div','fh',t('Mehr als 1000 Einträge: nur die ersten werden gezeigt.','More than 1000 entries: only the first are shown.')))}
+function fzFSicht(){return !!FZ.fs&&!$('fzfiles').hidden&&document.visibilityState!=='hidden'&&!!document.querySelector('section#fern.on')}
+function fzFrischPlan(ms){clearTimeout(FZ.ft);FZ.ft=0;if(FZ.fs)FZ.ft=setTimeout(fzFrischTakt,ms||FZ.fs.warte||FZ_FRISCH[0])}
+function fzFrischTakt(){FZ.ft=0;const fs=FZ.fs;if(!fs)return;if(!fzFSicht())return;   // hidden: asks nothing; fzFrischWieder reads on coming back
+  if(fs.laeuft||fs.liest){fzFrischPlan();return}fzListe(fs.pfad,{still:true})}
+function fzFrischWieder(){if(FZ.fs&&!FZ.ft&&!FZ.fs.liest&&fzFSicht())fzListe(FZ.fs.pfad,{still:true})}
+function fzFrischStand(text){const e=$('fzfstand');if(e)e.textContent=text||''}
+async function fzListe(p,o){const fs=FZ.fs;if(!fs)return;o=o||{};const nr=++fs.nr;let d;fs.liest=true;
+  try{const r=await api(`/api/admin/fernzugang/dateien/${fs.id}/liste`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(o.still?{pfad:p,still:true}:{pfad:p})});d=await r.json()}
+  catch(e){if(FZ.fs!==fs)return;fs.liest=false;if(e.status===404&&/session/.test(e.detail||'')||e.status===503){fzFZu(t('Die Dateien-Sitzung ist zu.','The files session is closed.'));return}
+    if(nr!==fs.nr)return;
+    if(o.still){fs.warte=Math.min(FZ_FRISCH[1],(fs.warte||FZ_FRISCH[0])*2);
+      fzFrischStand(t('Nicht aktualisiert: ','Not refreshed: ')+(e.status?e.message:t('keine Verbindung zum Spark.','no connection to the Spark.'))+' '+t(`Nächster Versuch in ${Math.round(fs.warte/1000)} s.`,`Next try in ${Math.round(fs.warte/1000)} s.`));fzFrischPlan();return}
+    if(!fzRechteFehler(e,'lesen',p))fzMsg(e.message,true);fzFrischPlan();return}
+  if(FZ.fs!==fs)return;fs.liest=false;if(nr!==fs.nr)return;
+  const gleich=d.pfad===fs.gezeigt;if(o.still&&!gleich){fzFrischPlan();return}   // moved on meanwhile: that answer is old
+  fs.pfad=d.pfad;fs.oben=d.oben;fs.gezeigt=d.pfad;fs.warte=0;fzFrischStand('');if(!o.still)fzMsg('');
+  if(!gleich){fzRechteZu();const cr=$('fzcrumbs');cr.textContent='';let acc='';const parts=d.pfad.split('/').filter(Boolean);
+    cr.appendChild(fzBtn('/','fzcrumb',()=>fzListe('/')));
+    for(const x of parts){acc+='/'+x;const to=acc;cr.appendChild(fzBtn(x,'fzcrumb',()=>fzListe(to)))}}
+  $('fzfup').disabled=!d.oben;fzFListe(d,gleich);fzFrischPlan()}
+// Rechte-Hinweis (Dominik 2026-11-04 11:03, Bild „Das darf der Benutzer spark auf dem Server nicht“): what did not work,
+// in which folder (from the own request, shown only, never logged), and two ways out: (1) as root (fernals.py): the
+// button when the server gave it, else the way to the switch and the line for the server; (2) give the user the
+// rights there (a line to copy or to put into the shell, never with Enter). Only for the server's own refusal.
+function fzRechteFehler(e,was,pfad){if(!(e&&e.status===403&&typeof FG_GRUND==='object'&&e.detail===FG_GRUND.verboten[0]))return false;fzRechte(was,pfad);return true}
+function fzRechteZu(){const b=$('fzfrechte');if(b){b.hidden=true;b.textContent=''}}
+// setfacl is not there on every Linux (Ubuntu without the package acl): the line installs it first where the system's
+// name tells the package manager; otherwise the sentence names the package
+const FZ_ACL=[[/ubuntu|debian|raspbian|mint|pop|elementary|kali/i,'sudo apt install -y acl'],[/fedora|rhel|red hat|centos|rocky|alma|oracle|amazon/i,'sudo dnf install -y acl'],
+  [/suse/i,'sudo zypper install -y acl'],[/arch|manjaro|endeavour/i,'sudo pacman -S --noconfirm acl']];
+const fzAcl=g=>((FZ_ACL.find(([re])=>re.test((g&&g.os)||''))||[])[1])||'';
+function fzRechteZeile(g,u,was,pfad,datei){const w=g&&g.art==='windows';
+  if(w){const p=pfad.replace(/^\/([A-Za-z]:)/,'$1').replace(/\//g,'\\');return `icacls "${p}" /grant ${u}:${datei?'':'(OI)(CI)'}${was==='schreiben'?'M':'RX'}`}
+  if(g&&g.art==='macos')return `sudo chmod +a "${u} allow ${was==='schreiben'?'list,search,add_file,add_subdirectory,delete_child,read,write':'list,search,read'}" ${fzQuote(pfad)}`;
+  const acl=fzAcl(g),z=`sudo setfacl -m u:${u}:${was==='schreiben'?(datei?'rw':'rwx'):(datei?'r':'rx')} ${fzQuote(pfad)}`;
+  return acl?`command -v setfacl >/dev/null || ${acl}; ${z}`:z}
+function fzRechteBefehl(g,z){const r=fzEl('div','row fzfbefehl');r.append(fzEl('code','fzcmd',z));
+  const k=fzBtn(t('Kopieren','Copy'),'',()=>copyString(z,k)),e=fzBtn(t('In die Shell einfügen','Insert into the shell'),'',async()=>{
+    if(!confirm(t('Die Dateien schließen und die Shell öffnen? Der Befehl steht dann in der Zeile, Enter drückst du selbst.','Close the files and open the shell? The command is then in the line; you press Enter yourself.')))return;
+    await fzFSchliessen('');fzNotizTerminal(g.id,z)});
+  e.title=t('Setzt den Befehl in die Zeile, Enter drückst du selbst.','Puts the command in the line; you press Enter yourself.');e.disabled=!g||!g.online;r.append(k,e);return r}
+function fzRechte(was,pfad){const fs=FZ.fs,box=$('fzfrechte');if(!fs||!box)return;const g=((FZ.d&&FZ.d.geraete)||[]).find(x=>x.id===fs.gid),u=fs.als||'spark';
+  const datei=was==='laden',art=datei?'lesen':was,ordner=datei?pfad.replace(/\/[^/]*$/,'')||'/':pfad;box.textContent='';box.hidden=false;
+  const kopf=fzEl('div','fzfrkopf');kopf.append(fzEl('b','',art==='schreiben'?t(`Schreiben in ${ordner} darf der Benutzer ${u} auf dem Server nicht.`,`The user ${u} may not write to ${ordner} on the server.`)
+    :datei?t(`Lesen von ${pfad} darf der Benutzer ${u} auf dem Server nicht.`,`The user ${u} may not read ${pfad} on the server.`):t(`Lesen in ${ordner} darf der Benutzer ${u} auf dem Server nicht.`,`The user ${u} may not read ${ordner} on the server.`)),
+    fzBtn(t('Schließen','Close'),'fzfrweg',fzRechteZu));box.appendChild(kopf);
+  box.appendChild(fzEl('div','fh',t('Das ist kein Fehler des Spark: der Server entscheidet mit den Rechten des Benutzers. Zwei Wege:','This is no error of the Spark: the server decides by the user\'s permissions. Two ways:')));
+  const ol=fzEl('ol','fzfrwege');box.appendChild(ol);
+  // 1. as root (Dateien als anderer Benutzer)
+  const eins=fzEl('li');ol.appendChild(eins);const a=g&&g.als,root=!!a&&a.art==='sudo'&&(a.benutzer||[]).includes('root'),schreibt=art!=='schreiben'||!!(a&&a.schreiben);
+  if(u==='root'){eins.append(t('Die Sitzung läuft schon als root: dann fehlt dem Ordner selbst etwas (nur lesbar eingehängt, gesperrt).','The session runs as root already: then the folder itself lacks something (mounted read only, locked).'))}
+  else if(g&&g.art==='windows'){eins.append(t('Den Ordner auf dem PC freigeben, als Administrator: ','Give the folder free on the PC, as administrator: '));eins.appendChild(fzRechteBefehl(g,`spark-anker dateien ordner "${ordner.replace(/^\/([A-Za-z]:)/,'$1').replace(/\//g,'\\')}"`))}
+  else if(FZ.d&&FZ.d.als_an&&g&&root&&schreibt&&g.als_frei){const l=art==='schreiben'?t('Als root hochladen (Code/Passkey)','Upload as root (code/passkey)'):t('Als root ansehen','View as root');
+    eins.append(t('Dateien als root öffnen, im selben Ordner: ','Open the files as root, in the same folder: '),fzBtn(l,'p',()=>{
+      if(art==='schreiben'&&!confirm(t('Dateien als root mit Schreiben öffnen? Alles, was du hochlädst, gehört dann root.','Open files as root with writing? Everything you upload then belongs to root.')))return;
+      fzDateien(g,'root',art==='schreiben',ordner,fs)}))}
+  else if(FZ.d&&FZ.d.als_an&&g&&root&&schreibt){eins.append(t('Der Server erlaubt Dateien als root; für dieses System noch aus: ','The server allows files as root; still off for this system: '),fzBtn(t('Für dieses System einschalten (Code/Passkey)','Switch on for this system (code/passkey)'),'',async()=>{
+      try{await api(`/api/admin/fernzugang/geraete/${g.id}/als`,{method:'POST'});g.als_frei=true;fzRechte(was,pfad)}catch(e){fzFehler(e)}}))}
+  else{const cmd='sudo spark-anker dateien als root'+(art==='schreiben'?' --schreiben':'');
+    if(!(FZ.d&&FZ.d.als_an)){eins.append(t('Dateien als root: erst einschalten unter ','Files as root: switch it on first under '),wayEl(t('Funktionen → Fernzugang zu Servern → Dateien als anderer Benutzer','Features → Remote access to servers → Files as another user'),'Funktionen → Fernzugang zu Servern → Dateien als anderer Benutzer'),t(', dann auf dem Server:',', then on the server:'))}
+    else eins.append(t('Dateien als root: auf dem Server freigeben, dann hier neu öffnen:','Files as root: give it free on the server, then open again here:'));
+    eins.appendChild(fzRechteBefehl(g,cmd))}
+  // 2. the rights for the user there
+  const zwei=fzEl('li');ol.appendChild(zwei);
+  zwei.append(t(`Auf dem Server dem Benutzer ${u} die Rechte geben`,`On the server give the user ${u} the permissions`)+(g&&g.art==='windows'?t(' (als Administrator):',' (as administrator):'):g&&g.art==='macos'||fzAcl(g)?':':t(' (braucht das Paket acl, etwa „sudo apt install acl“):',' (needs the package acl, for example "sudo apt install acl"):')));
+  zwei.appendChild(fzRechteBefehl(g,fzRechteZeile(g,u,art,datei?pfad:ordner,datei)))}
 async function fzLaden1(p){const fs=FZ.fs;if(!fs)return;
   try{const r=await api(`/api/admin/fernzugang/dateien/${fs.id}/link`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pfad:p})});const d=await r.json();
-    const a=document.createElement('a');a.href=d.url;a.rel='noopener';document.body.appendChild(a);a.click();a.remove();fzMsg(t('Download startet …','Download starting …'))}catch(e){fzMsg(e.message,true)}}
+    const a=document.createElement('a');a.href=d.url;a.rel='noopener';document.body.appendChild(a);a.click();a.remove();fzMsg(t('Download startet …','Download starting …'))}catch(e){if(!fzRechteFehler(e,'laden',p))fzMsg(e.message,true)}}
 async function fzHoch(){const fs=FZ.fs,f=$('fzffile').files[0];if(!fs)return;if(!f){$('fzffile').click();return}
   if(f.size>fs.max*1048576){fzMsg(t('Größer als ','Larger than ')+fs.max+' MB.',true);return}
   const b=$('fzfsend');b.disabled=true;fzMsg(t('Lädt hoch … ','Uploading … ')+fzKB(f.size));FZ.fs.laeuft=true;
   try{await api(`/api/admin/fernzugang/dateien/${fs.id}/hoch`,{method:'POST',headers:{'Content-Type':'application/octet-stream','X-Fz-Pfad':encodeURIComponent(fs.pfad),
       'X-Fz-Name':encodeURIComponent(f.name),'X-Fz-Ersetzen':$('fzfreplace').checked?'1':'0'},body:f});
-    fzMsg(t('Hochgeladen: ','Uploaded: ')+fzKB(f.size));$('fzffile').value='';fzListe(fs.pfad)}catch(e){fzMsg(e.message,true)}finally{b.disabled=false;if(FZ.fs)FZ.fs.laeuft=false}}
+    fzMsg(t('Hochgeladen: ','Uploaded: ')+fzKB(f.size));$('fzffile').value='';fzListe(fs.pfad)}catch(e){if(!fzRechteFehler(e,'schreiben',fs.pfad))fzMsg(e.message,true)}finally{b.disabled=false;if(FZ.fs)FZ.fs.laeuft=false}}
 async function fzFSchliessen(text){const fs=FZ.fs;if(!fs)return;try{await api(`/api/admin/fernzugang/dateien/${fs.id}`,{method:'DELETE'})}catch{}fzFZu(typeof text==='string'?text:'')}
-function fzFZu(text){if(window.fgZu)fgZu();FZ.fs=null;FZ.sitz=null;fzBanner();$('fzfiles').hidden=true;$('fzflist').textContent='';$('fzmain').hidden=false;if(text)fzMsg(text,true);fzLoad()}
+function fzFZu(text){if(window.fgZu)fgZu();clearTimeout(FZ.ft);FZ.ft=0;FZ.fs=null;FZ.sitz=null;fzBanner();$('fzfiles').hidden=true;$('fzflist').textContent='';fzRechteZu();fzFrischStand('');$('fzmain').hidden=false;fzMenu();if(text)fzMsg(text,true);fzLoad()}
 {const k=$('fzgo');if(k){$('fzheraus').onclick=fzHeraus;$('fzverlaufweg').onclick=fzVerlaufWeg;$('fzfragen').onclick=fzFragen;$('fzzielgo').onclick=fzZielStart;$('fzzielende').onclick=()=>fzZielEnde('');
   $('fzfrage').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();fzFragen()}};$('fzalletasten').onclick=fzAlleTasten;$('fzdrawertab').onclick=()=>fzLade();
   if(!(navigator.keyboard&&typeof navigator.keyboard.lock==='function'))$('fzalletasten').title=t('Nur in Chrome oder Edge','Only in Chrome or Edge');k.onclick=fzKoppeln;$('fzalle').onclick=fzAlle;$('fzalleakt').onclick=()=>{const a=fzAktBereit(FZ.d&&FZ.d.geraete);if(a.length&&confirm(t(`${a.length} Anker jetzt aktualisieren? Jeder startet dabei kurz neu.`,`Update ${a.length} anchors now? Each restarts briefly.`)))fzAktualisieren(a.map(g=>g.id))};$('fzbtrennen').onclick=fzBannerTrennen;$('fzbcode').onclick=fzCodeEnde;$('fzbhinw').onclick=()=>fzHinweiseAuf();$('fzbhin').onclick=()=>{goSec('fern');if(FZ.cur){fzZeigen();fzReiterWahl(FZ.cur)}};$('fzweiter').onclick=fzWeiter;$('fzbaldende').onclick=()=>fzTrennen(FZ.baldS);$('fzsperrplus').onclick=fzEntsperren;$('fzalle2').onclick=fzAlle;
@@ -804,11 +886,15 @@ function fzFZu(text){if(window.fgZu)fgZu();FZ.fs=null;FZ.sitz=null;fzBanner();$(
   $('fzmenu').onclick=()=>fzMenu(!FZ.menuAus);$('fzspalte').onclick=()=>fzSpalte($('fzview').classList.contains('fzzu'));$('fztasten').onclick=fzTastenreihe;
   $('fzspaltezu').onclick=()=>{if(document.fullscreenElement)fzLade(false);else if(NARROW())fzBlatt(false);else fzSpalte(false)};$('fzfragbtn').onclick=()=>fzBlatt(true);fzGriff();fzSpalteStart();fzAnsichtStart();
   if(window.ResizeObserver){new ResizeObserver(()=>fzResize()).observe($('fzterm'));const ro=new ResizeObserver(()=>{fzLayout();fzSeite()});for(const e of [document.body,...document.body.children])ro.observe(e)}   // a bar or notice above the page comes later: the height follows
-  new MutationObserver(()=>{fzMenu();fzLayout();fzSeite();fzHin()}).observe($('fern'),{attributes:true,attributeFilter:['class']});addEventListener('resize',()=>{fzLayout();fzSeite()});
+  new MutationObserver(()=>{fzMenu();fzLayout();fzSeite();fzHin();fzFrischWieder()}).observe($('fern'),{attributes:true,attributeFilter:['class']});addEventListener('resize',()=>{fzLayout();fzSeite()});
   $('fzname').onkeydown=e=>{if(e.key==='Enter')fzKoppeln()};fzKeys();
   {const c=$('fzchips');c.addEventListener('scroll',()=>{fzRand();fzTipWeg()},{passive:true});c.addEventListener('wheel',e=>{if(Math.abs(e.deltaY)>Math.abs(e.deltaX)&&c.scrollWidth>c.clientWidth){c.scrollLeft+=e.deltaY;e.preventDefault()}},{passive:false});addEventListener('resize',fzRand)}
   // page layout A: unlock pill, the sheet „System koppeln“, the history of all systems, the search over the list
-  $('fzfup').onclick=()=>{if(FZ.fs&&FZ.fs.oben)fzListe(FZ.fs.oben)};$('fzfsend').onclick=fzHoch;$('fzfstop').onclick=fzFSchliessen;
+  $('fzfup').onclick=()=>{if(FZ.fs&&FZ.fs.oben)fzListe(FZ.fs.oben)};$('fzfneu').onclick=()=>{if(FZ.fs)fzListe(FZ.fs.pfad)};
+  document.addEventListener('visibilitychange',fzFrischWieder);
+  // F5 / Strg+R on the files' page: only the folder, not the whole page
+  document.addEventListener('keydown',e=>{if(!fzFSicht()||e.altKey||e.shiftKey||!(e.key==='F5'&&!e.ctrlKey&&!e.metaKey||(e.ctrlKey||e.metaKey)&&(e.key==='r'||e.key==='R')))return;
+    e.preventDefault();fzListe(FZ.fs.pfad)});$('fzfsend').onclick=fzHoch;$('fzfstop').onclick=fzFSchliessen;
   for(const b of $('fztabs').querySelectorAll('button'))b.onclick=()=>fzTab(b.dataset.tab);$('fzentsperren').onclick=fzEntsperren;$('fzverl').onclick=fzEntsperren;$('fzsperren').onclick=fzSperren;
   $('fzneu').onclick=fzKoppelnAuf;$('fzneu2').onclick=fzKoppelnAuf;$('fzkzu').onclick=()=>{$('fzkoppelnmodal').style.display='none'};$('fzvzu').onclick=()=>{$('fzverlaufmodal').style.display='none'};
   $('fzallev').onclick=()=>fzVerlaufZeigen('');$('fzsuche').oninput=fzSucheNotiz;for(const b of $('fzsidetabs').querySelectorAll('button'))b.onclick=()=>fzSeiteWahl(b.dataset.w);FZ.os='linux';for(const b of $('fzos').querySelectorAll('button'))b.onclick=()=>fzOsWahl(b.dataset.os);
@@ -829,7 +915,8 @@ function fzSeite(){const s=$('fzsplit');if(!s)return;if(NARROW()||$('fzmain').hi
   const over=document.documentElement.scrollHeight-innerHeight;if(over>0)s.style.setProperty('--fzsh',Math.max(360,h-over)+'px')}
 function fzMenuWahl(){try{return localStorage.getItem('fzmenu')!=='zeigen'}catch{return true}}
 function fzMenu(aus){if(aus!==undefined){FZ.menuAus=!!aus;try{localStorage.setItem('fzmenu',aus?'aus':'zeigen')}catch{}}else if(FZ.menuAus===undefined)FZ.menuAus=fzMenuWahl();
-  const v=$('fzview'),on=!FZ_FENSTER&&!!v&&!v.hidden&&!!document.querySelector('section#fern.on');document.body.classList.toggle('fzohnemenu',on&&FZ.menuAus);document.body.classList.toggle('fzterminal',on);if(!on)fzHinweiseAuf(false);fzCodeSchild();
+  const v=$('fzview'),f=$('fzfiles'),hier=!FZ_FENSTER&&!!document.querySelector('section#fern.on'),on=hier&&!!v&&!v.hidden,seite=on||hier&&!!f&&!f.hidden;   // the files' page has the same one bar (Dominik 2026-11-04 11:03)
+  document.body.classList.toggle('fzohnemenu',on&&FZ.menuAus);document.body.classList.toggle('fzterminal',seite);if(!seite)fzHinweiseAuf(false);fzCodeSchild();
   const b=$('fzmenu');if(b){const l=FZ.menuAus?t('Menü einblenden','Show the menu'):t('Menü ausblenden','Hide the menu');b.title=l;b.setAttribute('aria-label',l);b.setAttribute('aria-pressed',FZ.menuAus?'true':'false')}
   if(aus!==undefined)fzLayout()}
 // the assistant's column: open or folded (kept), its width dragged between 280 and 520 px (kept), a double click folds it

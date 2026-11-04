@@ -3126,7 +3126,7 @@ body.fzterminal .fzbschild:not([hidden]){display:inline-flex}
 body.fzterminal #confbar,body.fzterminal:not(.fzhinauf) #alerts{display:none}
 body.fzterminal.fzhinauf #alerts{position:fixed;z-index:9600;width:min(720px,calc(100vw - 16px));max-height:60vh;overflow:auto;box-sizing:border-box;padding:8px 8px 2px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-win);box-shadow:var(--shadow-pop)}
 body.fzterminal main{max-width:none;padding-top:8px;padding-left:8px;padding-right:8px}
-body.fzterminal #fzbox.fzoffen{border:0;border-radius:0;background:none;padding:0;box-shadow:none;overflow:visible}
+body.fzterminal #fzbox{border:0;border-radius:0;background:none;padding:0;box-shadow:none;overflow:visible}
 .fzinfopop{position:fixed;z-index:9600;width:min(360px,calc(100vw - 16px));box-sizing:border-box;padding:10px 12px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
 .fzinfopop[hidden]{display:none}.fzinfopop .fzfacts{margin:0 0 8px}.fzinfopop .row{gap:8px;flex-wrap:wrap}.fzok{color:var(--ok);font-weight:600}
 .fzrec{width:10px;height:10px;border-radius:50%;background:#fff;flex:none}
@@ -3303,7 +3303,16 @@ body.fzfenster #fzheraus,body.fzfenster #fzmenu{display:none}
 /* Fernzugang, Dateien (ferndateien.py): breadcrumbs, one row per entry, names as text only */
 .fzziel[hidden]{display:none}.fzziel{border:1px solid var(--acc);border-radius:10px;padding:8px;margin:0 0 8px;display:flex;flex-direction:column;gap:6px}.fzzielkopf{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.fzzieltext{flex:1;min-width:0;overflow-wrap:anywhere}
 .fzzielgrund{font-size:12.5px;color:var(--mut)}
-.fzfiles{margin-top:8px}.fzfbar{align-items:center;flex-wrap:wrap}.fzcrumbs{display:flex;flex-wrap:wrap;gap:2px;min-width:0}
+.fzfiles{margin-top:8px}.fzfbar{align-items:center;flex-wrap:wrap}.fzfbar .fzfill{flex:1}.fzfbar #fzfneu{display:inline-flex;align-items:center;gap:6px}
+/* Ordner aktualisieren: a calm line with the reason when a quiet re-read failed; a new entry is marked for a moment
+   (colour only, nothing moves; without motion it simply stands marked until the class goes) */
+.fzfstand{color:var(--mut)}.fzfstand:empty{display:none}
+.fzfrow.fzfneu{animation:fzfneu 4s ease-out}@keyframes fzfneu{from{background:var(--acc-weak)}to{background:transparent}}
+@media (prefers-reduced-motion:reduce){.fzfrow.fzfneu{animation:none;background:var(--sel)}}
+/* the hint „Rechte“: what the server refused where, and the two ways out (a command to copy or to insert) */
+.fzfrechte{margin:8px 0}.fzfrechte[hidden]{display:none}.fzfrkopf{display:flex;align-items:flex-start;gap:8px}.fzfrkopf b{flex:1;overflow-wrap:anywhere}
+.fzfrwege{margin:6px 0 0;padding-left:20px}.fzfrwege li{margin:4px 0}.fzfbefehl{gap:6px;flex-wrap:wrap;align-items:center;margin-top:4px}
+.fzfbefehl .fzcmd{flex:1 1 260px;min-width:0;margin:0;padding:4px 8px}.fzcrumbs{display:flex;flex-wrap:wrap;gap:2px;min-width:0}
 .fzcrumb{padding:4px 8px;min-height:32px;font:12.5px ui-monospace,Menlo,Consolas,monospace;overflow-wrap:anywhere}
 .fzfcols{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:10px;margin-top:8px}
 .fzflist{margin:0;padding:6px 10px;max-height:65vh;overflow:auto}

@@ -490,6 +490,7 @@ class Job:
 
     def public(self):
         return {"id": self.id, "art": self.art, "name": ferndateien._shown(self.name), "stand": self.stand,
+                "ordner": self.ordner,   # the own request's folder (a checked plain path), for the page's hint „Rechte“ only
                 "grund": self.grund, "text": SAY.get(self.grund, (0, ""))[1] if self.grund else "",
                 "bytes": self.bytes, "groesse": self.groesse, "kb_s": self.kb_s(), "sha256": self.summe}
 
