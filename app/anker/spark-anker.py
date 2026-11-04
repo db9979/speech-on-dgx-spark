@@ -2578,6 +2578,7 @@ def cmd_files(args, run=run_cmd, ctx=None):
         rc, said = visudo_text(ctx, new)
         if rc and not rs and "configuration option" in said:    # sudo-rs that did not say so: once more without
             rs = True
+            os.remove(new)                  # 0o440: not writable again for a user other than root (the self-tests)
             write(new, sudoers_text(users, sftp, write_ok, rs), 0o440)
             rc, said = visudo_text(ctx, new)
         if rc:

@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.337** ROT-FIX: Selbsttest zu sudo-rs lief nur als root; die Probedatei wird jetzt vor dem zweiten Versuch gelöscht
 - **V01.1.336** Ton und Video als Quelle: Aufnahmen unter Ich → Dokumente hochladen, die eigene Spracherkennung schreibt sie in ruhigen Minuten ab, jede Stelle mit ihrer Zeit („bei 12:30“) und ▶ zum Anhören; Hintergrund-Abschrift bremst nichts mehr aus, echte Sprache bleibt vorn
 - **V01.1.335** Bildschirm im Fernzugang jetzt auch unter Windows: TightVNC, vom Anker 1.10.0 aus der offiziellen, gepinnten und signierten Datei eingerichtet, nur auf 127.0.0.1, Passwort nie auf einer Befehlszeile; „bildschirm aus“ oder Entfernen deinstalliert es wieder
 - **V01.1.334** Fix Dateien als anderer Benutzer auf Ubuntu 25.10 und neuer (sudo-rs): `sudo spark-anker dateien als root` scheiterte an visudo; der Anker 1.9.1 schreibt dort die Regel ohne die Zeile, die sudo-rs nicht kennt. Den Anker aktualisieren.
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.330** Alles schnell finden, Schritte 3 und 4: die Quellen-Weiche entscheidet mit festen Regeln und einer kurzen Treffer-Probe im eigenen Index, ob eine Frage in die eigenen Daten, ins Web oder in beides gehört (Messbank 66 von 66); „Erst lokal“ fragt dann alle freigegebenen Quellen samt Mails und Terminen, bei „beides“ sucht das Panel selbst mit den eigenen Worten im Web, bevor eine Mail gelesen ist
 - **V01.1.329** Alles schnell finden, Schritte 1 und 2: Quellen-Messbank (66 Sätze, intern/extern/beides, vorher 57,6 %, nachher 83,3 %) und Sofort-Korrekturen: eigene Mails sind eine normale Quelle, Finden bleibt beim Eingrenzen, „laut Angebot“ und Lesefragen wie „Hat sich der Klempner gemeldet?“ bleiben bei den eigenen Daten
 - **V01.1.328** Entwickeln: das Terminal im Browser ist kompakt (eine Leiste mit Hinweisen und Code als Knöpfe, Terminal bis zum Fensterrand, Vollbild, Tastenreihe am Handy) und startet OpenCode sofort; danach bleibt die Shell, `opencode` startet es neu.
-- **V01.1.327** Spontanhilfe Steuern, Teil S2c: SparkHilfe für den Mac (Apple-Chip und Intel, macOS 13+), nur von GitHub gebaut, mit Developer ID signiert, notarisiert und Ticket angeheftet, ohne diese Schlüssel nichts veröffentlicht; der Spark behält die Zip-Datei nur ohne Teile außerhalb der App und mit Ticket und packt sie je Hilfe im Speicher neu mit Adresse und Einmal-Schlüssel im Namen der App (nie in Kopf, Log oder Platte); das Programm führt erst zu den Freigaben Bildschirmaufnahme und Bedienungshilfen, verbindet nur zur eigenen Adresse (wss, ohne Origin und Cookies), zeigt den Helfer erst nach angenommenem Schlüssel, Ablehnen vorgewählt und nach 60 s; Bild, Tasten, Eingaben, Rahmen, Leiste und Frage aus einem mit dem Begleiter geteilten Kern (Sicht.swift)
 
 
 

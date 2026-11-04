@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.337** RED FIX: the sudo-rs self-test only passed as root; the trial file is now removed before the second try
 - **V01.1.336** Audio and video as a source: upload recordings under Me → Documents, the own speech recognition transcribes them in quiet minutes, every place with its time ("bei 12:30") and ▶ to listen; background transcription no longer holds anything up, real speech stays first
 - **V01.1.335** Remote access screen now on Windows too: TightVNC, set up by anchor 1.10.0 from the official, pinned and signed file, only on 127.0.0.1, the password never on a command line; "bildschirm aus" or removing uninstalls it again
 - **V01.1.334** Fix files as another user on Ubuntu 25.10 and newer (sudo-rs): `sudo spark-anker dateien als root` failed at visudo; anchor 1.9.1 writes the rule there without the line sudo-rs does not know. Update the anchor.
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.330** Find everything fast, steps 3 and 4: the source switch decides by fixed rules and a short hit probe in the own index whether a question belongs to the own data, the web or both (bench 66 of 66); „Look locally first“ then asks every released source including mails and appointments, and for „both“ the panel searches the web itself with the own words before any mail is read
 - **V01.1.329** Find everything fast, steps 1 and 2: source bench (66 sentences, internal/external/both, before 57.6 %, after 83.3 %) and quick fixes: own mails are a normal source, Find stays when narrowing, „according to the offer“ and reading questions like „Did the plumber get back to me?“ stay with the own data
 - **V01.1.328** Develop: the terminal in the browser is compact (one bar with the notes and the code as buttons, terminal to the window's edge, full screen, a row of keys on the phone) and starts OpenCode at once; then the shell stays, `opencode` starts it again.
-- **V01.1.327** Spontaneous help control, part S2c: SparkHilfe for the Mac (Apple chips and Intel, macOS 13+), built only by GitHub, signed with the Developer ID, notarized and ticket stapled, nothing published without these keys; the Spark keeps the zip only without parts outside the app and with the ticket and packs it anew in memory per help with address and one-time key in the app's name; the program first leads to the permissions Screen Recording and Accessibility, connects only to its own address (wss, no Origin, no cookies), shows the helper only after the key was taken, Decline preselected and after 60 s; picture, keys, inputs, frame, bar and question from a core shared with the Begleiter (Sicht.swift)
 
 
 
