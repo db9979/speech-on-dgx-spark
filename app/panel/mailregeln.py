@@ -838,6 +838,41 @@ def _place(uid, aid, mid, dst):
     mail.changed(uid, "", "back")
 
 
+CARD_TEXT = 2000         # characters of a mail's own text shown under „Wohin gehört diese Mail?“ (Offen, the detail)
+
+
+def _card_has_mail(uid, x):
+    """Whether the card can show its mail (Dominik 2026-11-04 „inhalt der mail sehen“): a „Wohin …?“ with its Message-ID."""
+    sug = _card_sug(uid, x) or {}
+    return sug.get("kind") == "wohin" and bool(sug.get("mid")) and features.allowed("mailmanage", uid)
+
+
+def _card_mail(uid, x):
+    """The mail of a „Wohin gehört diese Mail?“ card, read only (EXAMINE, PEEK; it stays unread): sender, subject, date
+    and its text as plain text (mail.show: no HTML, no pictures from outside), at most CARD_TEXT characters. Found by its
+    Message-ID in „Falsch sortiert“; None when the card has none or the mail is not there any more. Outside text is
+    data, shown as text only."""
+    import postfach
+    if not _card_has_mail(uid, x):
+        return None
+    sug = _card_sug(uid, x)
+    acct = postfach._acct(uid, sug["account"])
+    with tidy.Box(acct) as box:
+        src = box.name(wrong_path(tidy.state(uid)))
+        if src not in box.boxes:
+            return None
+        box.select(src)
+        hits = box.find_mid(sug["mid"])
+    if len(hits) != 1:
+        return None
+    r = mail.show(uid, f"{sug['account']}:{hits[0]}", src)
+    if r is None:
+        return None
+    text = r.get("text") or ""
+    return {"from": r["from"], "subject": r["subject"], "date": r["date"], "text": text[:CARD_TEXT],
+            "cut": len(text) > CARD_TEXT, "files": len(r.get("files") or [])}
+
+
 def _bump(uid, rid, n):
     with _lock:
         d = load(uid)
@@ -1108,7 +1143,8 @@ def _card(uid, x, say=True):
     elif kind == "wohin":
         titel = "Wohin gehört diese Mail?"
         zeile = ((f"Vorschlag des Modells: „{x['rat']}“, du entscheidest. " if x.get("rat") else "")
-                 + f"Von {x['from']}, der Spark hatte sie in „{x['von']}“ sortiert; du hast sie nach „Falsch sortiert“ gelegt.")
+                 + f"Der Spark hatte sie in „{x['von']}“ sortiert, du hast sie nach „Falsch sortiert“ gelegt. "   # the folders first:
+                 f"Von {x['from']}.")    # the line is cut at its end (vorgaenge.MAX_TEXT), a long address goes last
     elif kind == "pause":
         r = next((y for y in load(uid)["rules"] if y["id"] == x.get("rid")), None)
         titel = f"Regel pausiert: {_rule_words(r) if r else '…'}"
@@ -1309,7 +1345,8 @@ def _register():
                               rg_w3={"de": "Ordner 3", "en": "Folder 3", "stufe": "direkt"},
                               rg_eingang={"de": "Posteingang", "en": "Inbox", "stufe": "direkt"},
                               rg_an={"de": "Wieder einschalten", "en": "Switch on again", "stufe": "direkt"})
-    vorgaenge.QUELLEN[CARD] = {"acts": _card_acts, "run": _card_run, "names": _card_names}
+    vorgaenge.QUELLEN[CARD] = {"acts": _card_acts, "run": _card_run, "names": _card_names,
+                               "has_mail": _card_has_mail, "mail": _card_mail}
     vorgaenge.OFFEN_STUNDEN[CARD] = SUGGEST_KEEP * 24
 
 

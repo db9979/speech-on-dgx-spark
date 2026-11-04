@@ -405,6 +405,9 @@ class Page(unittest.TestCase):
                     self.assertEqual(await pg.evaluate("document.querySelectorAll('#postview .ld-list [data-id]').length"), 2)
                     self.assertLess(await pg.evaluate("document.querySelector('#postview .postfold').getBoundingClientRect().right"),
                                     await pg.evaluate("document.querySelector('#postview .ld-list').getBoundingClientRect().left"))
+                    # compact folder rows like the side menu and Apple Mail (Dominik 2026-11-04 „Abstände viel zu groß“), not 52 px each
+                    hs = await pg.evaluate("[...document.querySelectorAll('#postview .postfl .ld-row')].map(r=>r.getBoundingClientRect().height)")
+                    self.assertTrue(hs and max(hs) <= 38, hs)
                     # a smart mailbox: „Ungelesen“ lists only the unread one, a second tap shows all again
                     await pg.click("#postview .postfold [data-smart=unread]")
                     await b.until(pg, "!POST.busy&&POST.unread&&!!POST.data&&POST.data.items.length===1")

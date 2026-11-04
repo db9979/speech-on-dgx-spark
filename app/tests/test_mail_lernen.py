@@ -189,6 +189,24 @@ class Learn(unittest.TestCase):
                                 ("rg_nur", "Nur diese Mail"), ("rg_ausnahme", "Absender als Ausnahme"), ("rg_nie", "Nicht mehr fragen"),
                                 ("spaeter", "Später")])
         self.assertEqual(self.c.get("/api/profile/mail/rules").json()["suggest"], [])     # not a suggestion of the page
+        # the folders first, the long sender address last: the line is cut at its end (Dominik 2026-11-04)
+        self.assertTrue(card["zeile"].startswith("Der Spark hatte sie in „KI/Strom“ sortiert"), card["zeile"])
+        # the card's mail for the detail under Offen (Dominik 2026-11-04 „inhalt der mail sehen“): read only, as text,
+        # only for the own open card; it stays in „Falsch sortiert“ and unread
+        self.assertTrue(vorgaenge.public(self.uid, card)["vorschau"])
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            r = self.c.get("/api/profile/vorgaenge/mail", params={"id": card["id"]})
+        self.assertEqual(r.status_code, 200, r.text)
+        m = r.json()
+        self.assertEqual((m["subject"], m["text"].strip(), m["cut"]), ("Post", "…", False), m)
+        self.assertIn("rechnung@stadtwerke.de", m["from"])
+        self.assertIn("vorgang: mail gezeigt |", out.getvalue())
+        self.assertEqual(len(FMB.boxes["KI/Falsch sortiert"]), 1)
+        self.assertFalse(FMB.boxes["KI/Falsch sortiert"][0].get("seen"))
+        other, _ = profile("Lern Lotte")
+        self.assertEqual(other.get("/api/profile/vorgaenge/mail", params={"id": card["id"]}).status_code, 404)   # never another's
+        self.assertEqual(self.c.get("/api/profile/vorgaenge/mail", params={"id": "nix"}).status_code, 404)
         res = vorgaenge.act(self.uid, card["id"], "rg_w1")
         self.assertEqual(res["text"], "Abgelegt in „KI/Rechnungen“.")
         self.assertEqual((FMB.boxes["KI/Falsch sortiert"], [m["raw"].count(b"w-1@x") for m in FMB.boxes["KI/Rechnungen"]]), ([], [1]))

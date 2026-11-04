@@ -21,6 +21,7 @@ runs. Titles and lines are the panel's words; a sender or subject from a mail is
     GET  /api/profile/vorgaenge?seit=<rev>   the changed ones (all without seit), with "rev" and the counts
     DELETE /api/profile/vorgaenge?nur=erledigt  the done ones (or all) of this profile away
     GET  /api/profile/vorgaenge/stream       {"type": "vorgang", "rev": n, "neu": bool, "weg": bool}: never text
+    GET  /api/profile/vorgaenge/mail?id=<v…>  the card's mail, read only (Regel-Vorschlag „Wohin …?“), for the detail
     POST /api/profile/vorgaenge/act          {"id", "act", "rev", "wann"?}: one button (vs_ja: {"text", "gelungen"})
 
 Kept in users/<id>/vorgaenge.json: the open ones, the ones for later and the done ones of the last ERLEDIGT_TAGE days.
@@ -28,7 +29,9 @@ Off until the admin switches chat.vorgaenge on (needs chat.reminders); then for 
 block; guests never. A card goes into today's main conversation (verlauf.main_today) as an assistant message with
 "vg", so every device shows it where the conversation is, and an old conversation shows today's state.
 """
+import asyncio
 import datetime
+import imaplib
 import os
 import re
 import secrets
@@ -86,7 +89,9 @@ ARTEN = {
 }
 # a source module's own buttons for its kind (a new art in ARTEN, its buttons in AKTIONEN): {"acts": fn(uid, x) -> the
 # buttons its rules allow now, "run": fn(uid, x, name) -> dict for the answer or None, optional "names": fn(uid, x) ->
-# {button: (de, en)} for buttons that say what they do on this card (a folder's name)}; raising HTTPException refuses.
+# {button: (de, en)} for buttons that say what they do on this card (a folder's name), optional "has_mail": fn(uid, x)
+# -> bool and "mail": fn(uid, x) -> {from, subject, date, text, cut, files} or None: the card's mail, read only, for
+# the detail under Offen (GET /api/profile/vorgaenge/mail)}; raising HTTPException refuses.
 # The module registers itself (QUELLEN["regel"] = {...}); act() still checks owner, kind, state, rev and Notaus first.
 QUELLEN = {}
 # how long a card of a kind stays open at most (hours) before it goes as „Abgelaufen“; the others: ALT_TAGE
@@ -259,6 +264,12 @@ def card_message(uid, x):
     msg = {"role": "assistant", "content": text, "vg": x["id"], **({"mail": True} if ARTEN[x["art"]]["mail"] else {})}
     profiles.append_convo(uid, cid, title, [msg])
 
+    def fn(d):      # „Im Gespräch zeigen“ (Offen) opens exactly this conversation, only for a card that was said
+        y = next((y for y in d["items"] if y["id"] == x["id"]), None)
+        if y is not None:
+            y["gespraech"] = str(cid)[:80]
+    _mut(uid, fn)
+
 
 def say(uid, vid):
     """The card of one Vorgang into today's main conversation (Von selbst said it)."""
@@ -357,7 +368,9 @@ def public(uid, x):
             "spaeter_bis": x.get("spaeter_bis", 0), "t": x["t"], "ge": x["ge"], "wie": x.get("wie", ""),
             "wo": x.get("wo", ""), "rev": x.get("rev", 0), "daten": x.get("daten", {}),
             "acts": [{"k": k, "de": names[k]["de"], "en": names[k]["en"], "stufe": names[k]["stufe"]} for k in acts],
-            "zugestellt": x.get("zugestellt", []),
+            "zugestellt": x.get("zugestellt", []), "gespraech": x.get("gespraech", ""),
+            "vorschau": bool(x["zustand"] not in ("erledigt", "weg") and QUELLEN.get(x["art"], {}).get("has_mail")
+                             and QUELLEN[x["art"]]["has_mail"](uid, x)),
             **({"fertig": list(KNOPF[x["knopf"]][1])} if x.get("knopf") in KNOPF else {})}
 
 
@@ -946,6 +959,32 @@ def _where(request, b):
     if profiles.key_scope(request) == "app":
         return "app"
     return "phone" if b.get("view") == "app" else "web"
+
+
+@router.get("/api/profile/vorgaenge/mail", dependencies=[Depends(assistant)])
+async def api_mail(request: Request, id: str = "", prof=Depends(own_profile)):
+    """The mail of one card (QUELLEN "mail"), read only, for the detail under Offen (Dominik 2026-11-04 „inhalt der mail
+    sehen um eine genaue neue zuordnung durchführen zu können“): only the own Vorgang, only while it is open."""
+    _mine(request, prof)
+    who = profiles.log_name(prof)
+    x = next((y for y in _load(prof["id"])["items"] if y["id"] == id), None) if ID.fullmatch(id or "") else None
+    fn = QUELLEN.get(x["art"], {}).get("mail") if x else None
+    if not fn or x["zustand"] in ("erledigt", "weg"):
+        print(f"vorgang: mail abgelehnt grund=karte | {who}", flush=True)
+        raise HTTPException(404, "Zu dieser Karte gibt es keine Mail.")
+    try:
+        r = await asyncio.wait_for(asyncio.to_thread(fn, prof["id"], x), 45)
+    except asyncio.TimeoutError:
+        print(f"vorgang: mail zu langsam | {who}", flush=True)
+        raise HTTPException(504, "Das Postfach hat zu lange gebraucht. Bitte gleich noch einmal.")
+    except (OSError, ValueError, LookupError, imaplib.IMAP4.error):
+        print(f"vorgang: mail nicht lesbar | {who}", flush=True)
+        raise HTTPException(502, "Das Postfach war nicht erreichbar.")
+    if r is None:
+        print(f"vorgang: mail fehlt | {who}", flush=True)
+        raise HTTPException(404, "Die Mail liegt nicht mehr in „Falsch sortiert“.")
+    print(f"vorgang: mail gezeigt | {who}", flush=True)
+    return r
 
 
 @router.post("/api/profile/vorgaenge/seen", dependencies=[Depends(assistant)])

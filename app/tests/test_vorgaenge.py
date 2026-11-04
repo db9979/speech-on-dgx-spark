@@ -109,6 +109,11 @@ class Vorgaenge(unittest.TestCase):
         msgs = [m for m in cards_in_convos(uid) if m["vg"] == vid]
         self.assertEqual(len(msgs), 1)                                 # the card once, as the panel's sentence
         self.assertEqual((msgs[0]["role"], msgs[0]["content"]), ("assistant", "Erinnerung: Ofen aus"))
+        # „Im Gespräch zeigen“ (Dominik 2026-11-04 „klappt nicht wirklich“): the card knows exactly its conversation
+        self.assertIn(x["gespraech"], [c["id"] for c in profiles.convos(uid) if any(m.get("vg") == vid for m in c["msgs"])])
+        self.assertFalse(x["vorschau"])
+        silent, _ = vorgaenge.put(uid, "erinnerung", "erinnerung:stumm", "Erinnerung: still")
+        self.assertEqual(vorgaenge.public(uid, silent)["gespraech"], "")     # never said: no link
         # the same key never makes a second one
         y, new = vorgaenge.put(uid, "erinnerung", "erinnerung:" + rid, "Erinnerung: Ofen aus")
         self.assertEqual((y["id"], new), (vid, False))

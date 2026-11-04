@@ -2158,7 +2158,7 @@ body.adm .post .postfoot{bottom:calc(59px + env(safe-area-inset-bottom))}
 .post .postfold[hidden]{display:none}
 .post .postfold{background:var(--card);border:1px solid var(--line);border-radius:14px;min-width:0}
 .post .postfold .posthead{border-radius:14px 14px 0 0}
-.post .postfl{padding:0 6px 8px}.post .postfl .ld-row{border-bottom:0;padding:7px 8px}.post .postfl .ld-grp{padding:12px 8px 4px}
+.post .postfl{padding:0 6px 8px}.post .postfl .ld-row{border-bottom:0;min-height:var(--h-nav);padding:3px 8px;gap:8px}   /* compact like the side menu and Apple Mail (Dominik 2026-11-04 „Abstände viel zu groß“), not the 52 px of a list row */.post .postfl .ld-grp{padding:12px 8px 4px}
 .post .postfi{flex:none;width:22px;display:grid;place-items:center;color:var(--mut)}.post .postfi svg{width:18px;height:18px}
 .post .postfl .ld-row.on{background:var(--sel);color:var(--fg)}.post .postfl .ld-row::after{border-bottom:0}   /* the folders: a grey choice like the side menu */
 .post .postfl .ld-row.on .postfi,.post .postfl .ld-row.on b{color:var(--acc)}
@@ -2173,6 +2173,7 @@ body.adm .post .postfoot{bottom:calc(59px + env(safe-area-inset-bottom))}
 }
 @container (max-width:899.98px){
   .post .ld-list>.posthead{position:static;background:none;padding:0 8px}
+  .post .postfl .ld-row{min-height:var(--h-touch);padding:4px 8px}   /* the sheet on a phone: one finger high, no more */
   .post .postfold{position:fixed;top:0;right:0;bottom:0;width:min(300px,86vw);z-index:70;border-radius:16px 0 0 16px;box-shadow:-12px 0 40px rgba(20,24,36,.2);overflow-y:auto;overscroll-behavior:contain}
 }
 /* Apple-Stil Stufe 1 (Dominik 2026-10-20 „1a 2a 3a“): one quiet bar, rows like Apple Mail (sender and time, subject, two
@@ -2322,6 +2323,10 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .vgs-h,.vgs-r{display:flex;gap:8px;align-items:center;width:100%;border:0;background:none;color:var(--fg);font:inherit;font-size:13.5px;padding:6px 8px;cursor:pointer;text-align:left;border-radius:8px}
 .vgs-h:hover,.vgs-r:hover{background:color-mix(in srgb,var(--line) 50%,transparent)}.vgs-c{margin-left:auto;color:var(--mut)}
 .vgs-r span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.vgstrip .ic-lnk{margin:2px 8px 6px}
+/* the card's mail under „Wohin gehört diese Mail?“ (Dominik 2026-11-04): a quiet box, the text as text, shown in full (at most 2000 characters) */
+.vgdet .vgmail{margin:10px 0;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-item);background:var(--fill);min-height:72px}
+.vgdet .vgmail .vk-f{margin:0 0 8px}.vgdet .vgmtext{white-space:pre-wrap;overflow-wrap:anywhere;font:var(--t-sub);color:var(--fg)}
+#chatlog .vgmsg.vgflash .bubble{outline:2px solid var(--acc);outline-offset:2px;transition:outline-color .4s}
 .vgdet .vk{box-shadow:none;border:0;padding:0 0 10px;border-bottom:1px solid var(--line);border-radius:0}.vgdet .vg-facts{margin:10px 0}
 /* Kontakte wie Apple Kontakte (kontakte.js, Apple-Stil „6a“): the list with its letter bar at the right edge, the card
    with the round initials and the five buttons, the form with − per field and „+ hinzufügen“ per kind */

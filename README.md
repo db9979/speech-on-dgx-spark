@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.325** Fix e-mail: the folders in the "Mailboxes" column sit close again like the side menu and Apple Mail; under Open "Where does this mail belong?" shows the mail itself, "Show in the conversation" opens the right conversation
 - **V01.1.324** Fix repeated name list in the voice chat: when the speech recognition reads its own name list (Names for listening) back out of noise, that text no longer goes to the assistant as a question
 - **V01.1.323** Analyses 2c: the sheet Analyses in the iPhone app too (make, "Not right" by swiping, remind for deadlines, page per point), English in the app
 - **V01.1.322** System updates (switch off, admin only): Status → System updates shows per computer the operating system updates with security and a package list, installs them with a fresh code as a fixed root run only in a pause in speech, a restart only on your word; OpenCode and OSV warnings with a check request, firmware only by hand, at night 03–05 per computer.
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.318** The remote session page tidied up: one red line with the pills "Code N min" and "N notes" (they open over the page, other pages unchanged), full width, the sessions as tabs in the terminal's dark head, the assistant's column slim with the goal box only while a goal is set.
 - **V01.1.317** Change log: "Check the log" names the kind of break and whether the chain fits again after it; a line torn while writing (power cut) no longer swallows the next entry
 - **V01.1.316** Fix "Check now" under Settings → Update on the Pi: after an install that stopped half way git could not start in the panel's deleted working folder; every program now starts in an existing folder, and the card names the cause in words
-- **V01.1.315** Analyses 2b (plan open-notebook): the admin's own kinds as templates, checked like the key points; the admin chooses what is made by itself; "Remind" for deadlines of the knowledge map with a full date; the collection level "short" brings summary and key points with their page
 
 
 

@@ -5161,6 +5161,12 @@
 "titel": "Auswertungen im iPhone",
 "text": "iPhone: Meine Sachen → Dokumente → den Mietvertrag öffnen → Auswertungen. Kurzfassung und Kernaussagen mit „fertig“ und Seite; bei „Fragen zum Text“ Erstellen: „Eingereiht“, nach der nächsten ruhigen Minute (herunterziehen) Fragen mit der Stelle als Antwort. Einen Punkt nach links wischen → Stimmt nicht: er verschwindet und kommt nicht wieder. Bei einer Frist mit vollem Datum Erinnern: „Erinnerung am …“. Auf Englisch gestellt: alle Texte englisch. Admin sperrt Auswertungen: der Eintrag verschwindet.",
 "thread": "Ideen aus Open Notebook übernehmen"
+},
+{"id": "P762", "v": 1324, "titel": "E-Mail: Ordner eng, Wohin-Karte mit Mail", "text": "Seite E-Mail mit offener Spalte „Postfächer“: die Ordner stehen eng untereinander wie im Seitenmenü (am Rechner etwa 30 px je Zeile, auf dem Handy im Fenster eine Fingerhöhe); Mail-Liste und andere Listen sehen aus wie vorher. Dann Offen → eine Karte „Wohin gehört diese Mail?“ antippen: unter den Knöpfen stehen Von, Betreff, Datum und der Text der Mail, nichts springt beim Laden; die Mail bleibt in „Falsch sortiert“ und ungelesen. Die Kartenzeile beginnt mit „Der Spark hatte sie in … sortiert“. „Im Gespräch zeigen“ (nur an Karten, die ins Gespräch kamen) öffnet das Gespräch dieses Tages und hebt die Karte kurz blau hervor. Zustand → Logs (Assistent): „vorgang: mail gezeigt | …“.",
+"thread": "Fix Ordnerabstände in E-Mail"
+},
+{"id": "P763", "v": 1325, "titel": "E-Mail: Ordner eng, Wohin-Karte mit Mail", "text": "Seite E-Mail mit offener Spalte „Postfächer“: die Ordner stehen eng untereinander wie im Seitenmenü (am Rechner etwa 30 px je Zeile, auf dem Handy im Fenster eine Fingerhöhe); Mail-Liste und andere Listen sehen aus wie vorher. Dann Offen → eine Karte „Wohin gehört diese Mail?“ antippen: unter den Knöpfen stehen Von, Betreff, Datum und der Text der Mail, nichts springt beim Laden; die Mail bleibt in „Falsch sortiert“ und ungelesen. Die Kartenzeile beginnt mit „Der Spark hatte sie in … sortiert“. „Im Gespräch zeigen“ (nur an Karten, die ins Gespräch kamen) öffnet das Gespräch dieses Tages und hebt die Karte kurz blau hervor. Zustand → Logs (Assistent): „vorgang: mail gezeigt | …“.",
+"thread": "Fix Ordnerabstände in E-Mail"
 }
 ]
 }

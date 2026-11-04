@@ -138,8 +138,28 @@ function vgPage(w){w.classList.toggle('ld-sel',!!VG.sel);
   const dl=icEl('dl','vk-f vg-facts'),add=(a,b)=>{if(b)dl.append(icEl('dt','',a),icEl('dd','',b))};
   add(t('Seit','Since'),vgWhen(x.t));add(t('Zustand','State'),{offen:t('offen','open'),gesehen:t('gesehen','seen'),spaeter:t('später','later'),erledigt:t('erledigt','done'),weg:t('weg','gone')}[x.zustand]);
   add(t('Gesehen','Seen'),x.zustand==='gesehen'?t('auf einem Gerät','on one device'):'');det.appendChild(dl);
-  const ch=icLink(t('Im Gespräch zeigen','Show in the conversation'),()=>{goSec('chat');setTimeout(()=>{const m=document.querySelector('#chatlog .vgmsg[data-vg="'+x.id+'"]');if(m)m.scrollIntoView({block:'center'})},200)});
-  det.appendChild(ch)}
+  if(x.vorschau)det.appendChild(vgMailBox(x));
+  // „Im Gespräch zeigen“ (Dominik 2026-11-04 „klappt nicht wirklich“): only for a card that went into a conversation,
+  // that conversation opened (not just the current one), the card waited for and marked briefly
+  if(x.gespraech&&typeof openConvo==='function')det.appendChild(icLink(t('Im Gespräch zeigen','Show in the conversation'),()=>{openConvo(x.gespraech,true);goSec('chat');
+    let n=0;const look=()=>{const m=document.querySelector('#chatlog .vgmsg[data-vg="'+x.id+'"]');
+      if(m){m.scrollIntoView({block:'center'});m.classList.add('vgflash');setTimeout(()=>m.classList.remove('vgflash'),1600)}else if(++n<30)setTimeout(look,100)};look()}))}
+// the card's mail under „Wohin gehört diese Mail?“ (Dominik 2026-11-04 „inhalt der mail sehen um eine genaue neue
+// zuordnung durchführen zu können“): sender, subject, date and its text, read only, as text (never HTML); asked once
+// per card, a box of fixed height first so nothing jumps
+const VG_MAIL=new Map();
+function vgMailBox(x){const box=icEl('div','vgmail');box.setAttribute('aria-live','polite');
+  const fill=m=>{box.textContent='';if(m.err){box.appendChild(icEl('div','mut',m.err));return}
+    const dl=icEl('dl','vk-f'),add=(a,b)=>{if(b)dl.append(icEl('dt','',a),icEl('dd','',b))};
+    add(t('Von','From'),m.from);add(t('Betreff','Subject'),m.subject||t('(ohne Betreff)','(no subject)'));
+    add(t('Datum','Date'),m.date?new Date(m.date*1000).toLocaleString(kalLoc(),{dateStyle:'medium',timeStyle:'short'}):'');
+    add(t('Anhänge','Attachments'),m.files?String(m.files):'');box.appendChild(dl);
+    box.appendChild(icEl('div','vgmtext',(m.text||t('(kein Text)','(no text)'))+(m.cut?' …':'')))};
+  const have=VG_MAIL.get(x.id);
+  if(have)fill(have);else{box.appendChild(icEl('div','mut',t('Lade die Mail …','Loading the mail …')));
+    apiTry('/api/profile/vorgaenge/mail?id='+encodeURIComponent(x.id)).then(({r,d})=>{const m=r.ok?d:{err:errSay(r.status,d&&d.detail,'')};
+      if(r.ok)VG_MAIL.set(x.id,m);fill(m)})}
+  return box}
 // „Einstellungen“: what lands here and taking the done ones (or all) away; the switch itself is the admin's
 async function vgSettings(b){b.textContent='';const c=VG.counts;
   b.appendChild(icEl('div','intro',t('Was dich braucht, kommt als Karte ins Gespräch des Tages: dringende Funde aus „Für dich“ (Rechnung, Vertrag, Antwort, Verdacht) und Erinnerungen, die geklingelt haben, dazu Vorschläge des Assistenten, die auf dein Ja warten (Termin, Mail, Aufräumen). Jede Karte hat feste Knöpfe; „Später“ legt sie hierher, sie kommt zur gewählten Zeit wieder. Erledigt ist auf jedem Gerät erledigt.',
