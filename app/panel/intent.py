@@ -129,6 +129,33 @@ SEARCH_WORDS = re.compile(chat.NEED_SEARCH.pattern + r"|(?i:\b(dax|aktie\w*|bör
                           r"öffnungszeit\w*|(hat|haben) .{1,30}\b(geöffnet|offen)|was kostet|wie viel kostet|streik\w*)\b)")
 # „Was kostet ein neues iPhone?“ asks the web for a price, „Streik bei der Bahn“ is news, not a connection
 PRICE_NEWS = re.compile(r"(?i)\b(was kostet|wie viel kostet|streik\w*)\b")
+# „Was kostet die Wärmepumpe laut Angebot?“ (plan such-index/zuverlaessig.md, step 2): the price in an own offer, invoice
+# or contract, never the web; lokal.classify counts it as an own source too
+OWN_PAPER = re.compile(r"(?i)\blaut (dem |der |meinem |meiner |unserem |unserer )?(\w*angebot\w*|\w*rechnung\w*|"
+                       r"\w*vertrag\w*|\w*verträge\w*|kostenvoranschlag\w*|auftragsbestätigung\w*|bestellung\w*|police\w*)\b")
+# „Was hat mir Thomann wegen der Lieferung geschrieben?“: a parcel word with the person's own mail is the mail, not
+# the tracking
+PARCEL_MAIL = re.compile(r"(?i)\b(mir|uns)\b.{0,60}\b(geschrieben|gemailt|geantwortet|zurückgeschrieben)\b")
+# Lesefragen nach eigenen Daten ohne Suchverb (step 2, kept narrow; step 3 brings the Quellen-Weiche), only when no other
+# group but smart home matched. Someone named wrote or answered to the person: the group „mail“ (fund_suche stays beside
+# it, NARROW_KEEP; the hint words stay too, so messages between the household keep their tools) …
+OWN_WROTE = re.compile(r"(?i)\b((hat|haben|hatte|hatten) (mir|uns)\b.{1,60}\b(geschrieben|gemailt|geantwortet|"
+                       r"zurückgeschrieben)|(was|wann|wie|warum) (hat|haben|hatte|hatten) .{1,40}\b(mir|uns) "
+                       r"(geschrieben|gemailt|geantwortet|zurückgeschrieben)|"
+                       r"(did|has|have) .{1,30}\b(write|written|wrote|e-?mailed|replied) (to )?(me|us)|"
+                       r"what did .{1,30}\b(write|e-?mail)( to)? (me|us))\b")
+# … someone got back, wrote about a thing, or the person ordered, booked or paid something: the group „finden“
+OWN_READ = re.compile(r"(?i)\b((hat|haben|hatte) sich (der|die|das|mein\w*|unser\w*) .{1,60}\b(gemeldet|zurückgemeldet)|"
+                      r"was (schreibt|schrieb|schreiben|schrieben) (der|die|das|mein\w*|unser\w*) \w+ "
+                      r"(zu[mr]?|wegen|über|bezüglich)|"
+                      r"(was|wann) (hat|haben|hatte|hatten) (der|die|das|mein\w*|unser\w*) \w+ (zu[mr]?|wegen|über|bezüglich)\b"
+                      r".{1,40}\b(geschrieben|geantwortet|gemailt)|"
+                      r"(hab|habe|hatte|haben|hatten) (ich|wir)\b.{0,40}\b(bestellt|gebucht|bezahlt|überwiesen)|"
+                      r"(did|has|have) .{1,30}\b(got|get|gotten) back to (me|us))\b")
+# „Hat mir jemand geschrieben?“ names nobody: the hint words decide as before (mail or a message in the household)
+VAGUE = re.compile(r"(?i)\b(jemand|irgendwer|irgendjemand|wer|niemand|anyone|anybody|someone|somebody|who)\b")
+# a newspaper or a broadcaster „schreibt“ the news (the web), never the own mail
+PRESS = re.compile(r"(?i)\b(zeitung\w*|presse|medien|spiegel|faz|taz|bild-?zeitung|tagesschau|süddeutsche|welt|focus)\b")
 # „Ruf mich um acht an“, „Kannst du mich morgen anrufen?“: the Spark calls the person (telefon_anruf.py), not the iPhone
 CALL_ME = re.compile(r"(?i)\b(ruf\w* mich\b.{0,40}\ban|mich\b.{0,40}\banrufen)\b")
 # „Mach mir eine Liste der Hauptstädte als Excel“: a file with a list in it, not the own shopping or task list
@@ -232,8 +259,11 @@ GROUPS = {
 INTENT_NAMES = [n for n in GROUPS if n not in ("wikipedia", "archiv")]   # the model's pick (ask_model) never narrows to it
 # always kept when the tools are narrowed: noting something the person says about themselves, and the
 # own documents (offered only when the profile has some; V01.0.244: "Wann läuft meine Versicherung ab?"
-# or a question the rules file under another group may well be answered from them)
-NARROW_KEEP = {"memory_save", "document_search", "pc_action", "pc_send", "pc_look"}
+# or a question the rules file under another group may well be answered from them); Finden over every own source
+# (fund_suche, plan such-index/zuverlaessig.md step 2: „Was ist der Stand bei meiner Steuererklärung?“ lost the mails
+# from the tax office). Each only when offered: fund.offer gives it only to the own profile in the own browser or
+# with the owner's voice, never to a guest, a stranger's voice or an MCP client.
+NARROW_KEEP = {"memory_save", "document_search", "fund_suche", "pc_action", "pc_send", "pc_look"}
 # chat.route_model "lean": a question no rule recognizes gets only these (of those offered). A short
 # tool list makes the model read far less before its first word; the rule groups keep everything else.
 LEAN = {"web_search", "wikipedia", "archive_search", "article_more", "history_search"} | NARROW_KEEP
@@ -352,9 +382,15 @@ def classify(text, extra_words="", group_words="", not_words=""):
     # a list entry names "Liste"; the reminder words "erinner" also come in "Erinnerung an die Liste"
     if "liste" in why and "smarthome" in why and not homeassistant.is_command(text):
         why.pop("smarthome")
-    # a parcel question is about parcels, not about the mail it is read from
+    # a parcel question is about parcels, not about the mail it is read from; with the person's own mail words
+    # („mir geschrieben“) it is that mail (plan such-index/zuverlaessig.md, step 2)
     if "paket" in why:
-        why.pop("mail", None)
+        m = PARCEL_MAIL.search(text)
+        if m:
+            why.pop("paket")
+            why["mail"] = m.group(2)
+        else:
+            why.pop("mail", None)
     # „Was gibt's Neues auf Reddit?“ and „Nachrichten in meinem Reddit-Posteingang“ are the own feeds, not the web,
     # the mailbox or messages between the people of this Spark
     if "feeds" in why:
@@ -404,6 +440,11 @@ def classify(text, extra_words="", group_words="", not_words=""):
             why.pop(name, None)
         if COMPARE.search(text):
             why.pop("wetter", None)
+    # „Was kostet die Wärmepumpe laut Angebot?“: the price in an own paper, never the web search
+    if "websuche" in why and OWN_PAPER.search(text) and not chat.NEED_SEARCH.search(text):
+        why.pop("websuche")
+        if not why:
+            why["finden"] = OWN_PAPER.search(text).group(0)[:40]
     if "websuche" in why and PRICE_NEWS.search(text):
         for name in ("iphone", "bahn"):
             why.pop(name, None)
@@ -424,6 +465,22 @@ def classify(text, extra_words="", group_words="", not_words=""):
                 why.pop("dokument")
     except ImportError:
         pass
+    # Lesefragen nach eigenen Daten („Hat mir die Bank geschrieben?“, „Hat sich der Klempner gemeldet?“): only when no
+    # other group but smart home matched; never with a newspaper, the web or the archive („Was schreibt die Zeitung
+    # zur Wahl?“). Smart home goes unless the sentence is a command; the hint words stay beside it.
+    read = None
+    if not set(why) - {"smarthome"} and not PRESS.search(text) and not fund.FIND_NOT.search(text) \
+            and not chat.NEED_SEARCH.search(text):
+        m = OWN_WROTE.search(text)
+        if m and not VAGUE.search(text):
+            read = "mail"
+        else:
+            m = OWN_READ.search(text)
+            read = "finden" if m else None
+        if read:
+            why[read] = m.group(0).strip()[:40]
+            if not homeassistant.is_command(text):
+                why.pop("smarthome", None)
     # Finden: beside „dokument“ and „mail“ both groups stay (document_search stays anyway, NARROW_KEEP); a third group
     # would make it unclear, so then „dokument“ goes („Wo ist die Mail vom Vermieter mit der Nebenkostenabrechnung?“)
     if "finden" in why and len(why) > MAX_MIXED:
@@ -432,7 +489,7 @@ def classify(text, extra_words="", group_words="", not_words=""):
     for name, rx in own_route_words(not_words).items():
         if name in why and rx.search(text):
             why.pop(name)
-    return Route(list(why), why, {} if why else hints_of(text))
+    return Route(list(why), why, {} if why and not read else hints_of(text))
 
 
 def hints_of(text):

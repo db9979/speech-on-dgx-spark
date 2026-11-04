@@ -238,12 +238,14 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)
     "weiche": {
-        "stand": "36c3501f70",
+        "stand": "fca1692d25",
         "bezug": {
             "intent.GROUPS": ["s4", "s6"], "intent_bench.BENCH": ["s4", "s5"], "intent_alltag.ALLTAG": ["s14"],
             "weiche.KEEP_VERSIONS": ["s4"], "intent.Route": ["s6"], "intent.follow_up": ["s8"],
             "intent.ask_model": ["s10"], "intent.pick_in_time": ["s10"], "intent.lean": ["s12"],
             "weiche.count": ["s14"], "weiche_unklar.anon": ["s14"], "weiche.trace": ["s14"], "intent_alltag.measure": ["s14"], "regeln": ["s9"],
+            "intent.OWN_WROTE": ["s5"], "intent.OWN_READ": ["s5"], "intent.OWN_PAPER": ["s5"], "intent.PARCEL_MAIL": ["s5"],
+            "intent.NARROW_KEEP": ["s11"], "quellen_bench.BENCH": ["s14"], "quellen_bench.measure": ["s14"],
             "regel:Modell ordnet ein": ["s10"], "regel:Knapp": ["s12"],
             "regel:Einordnung mit Wahrscheinlichkeit": ["s10"],
         },
@@ -303,14 +305,23 @@ SEITEN = {
             S("s5", "schritt", ("Vorrang zwischen Gruppen", "Priority between groups"),
               ("feste Regeln · dann „Nicht bei“", "fixed rules · then „Not with“"),
               ("Treffen mehrere Gruppen, räumen feste Regeln auf: Wetter, Liste, Nachricht, Dokument und „Dokument "
-               "erstellen“ gehen vor Smart Home, wenn kein Schaltbefehl dabei ist; Pakete vor Mail; „Habe ich neue "
+               "erstellen“ gehen vor Smart Home, wenn kein Schaltbefehl dabei ist; Pakete vor Mail, außer jemand hat "
+               "„mir geschrieben“ (dann Mail); ein Preis „laut Angebot, Rechnung oder Vertrag“ ist eine eigene Unterlage, "
+               "nie die Websuche; eine Lesefrage nach eigenen Daten ohne Suchwort ohne andere Gruppe wird „mail“ "
+               "(„Hat mir die Bank geschrieben?“, nur mit genanntem Absender) oder „finden“ („Hat sich der Klempner "
+               "gemeldet?“, „Was hatte ich bestellt?“), nie bei Zeitung, Web oder Archiv; „Habe ich neue "
                "Nachrichten?“ ist eine Nachricht, „Was gibt es in den Nachrichten?“ die Websuche; ein Auftrag, der "
                "regelmäßig wiederkommt oder etwas beobachtet, ist ein Agent; eine Frage zu Sprache oder Natur oder "
                "nach einem Unterschied ist nie ein Gerät; ein Preis oder Streik ist die Websuche, nicht iPhone oder "
                "Bahn; „Ruf mich an“ ist der Rückruf des Spark, nicht das iPhone; „Liste der …“ in einer Datei ist "
                "nicht die eigene Liste. Zuletzt nehmen die „Nicht bei“-Wörter des Admins Gruppen wieder heraus.",
                "When several groups match, fixed rules tidy up: weather, list, message, document and „create "
-               "document“ come before smart home when there is no switching command; parcels before mail; „Do I have "
+               "document“ come before smart home when there is no switching command; parcels before mail, unless "
+               "someone „wrote to me“ (then mail); a price „according to the offer, invoice or contract“ is an own "
+               "paper, never the web search; a reading question about the own data without a search word and without "
+               "another group becomes „mail“ („Did the bank write to me?“, only with a named sender) or „finden“ "
+               "(„Did the plumber get back to me?“, „What did I order?“), never with a newspaper, the web or the "
+               "archive; „Do I have "
                "new messages?“ is a message, „What is in the news?“ the web search; a job that comes back regularly "
                "or watches something is an agent; a question about language, nature or a difference is never a "
                "device; a price or a strike is the web search, not the iPhone or the train; „Call me“ is the Spark "
@@ -378,12 +389,12 @@ SEITEN = {
             S("s11", "schritt", ("Eingrenzen", "Narrow"),
               ("intent.narrow · nie mehr als vorher", "intent.narrow · never more than before"),
               ("Bei einer klaren Gruppe bleiben ihre Werkzeuge, dazu immer {intent.NARROW_KEEP|anzahl} feste "
-               "(sich etwas merken, eigene Dokumente, PC), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des "
+               "(sich etwas merken, eigene Dokumente, Finden in allen eigenen Daten, PC), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des "
                "Admins für diese Gruppe (höchstens {intent.MAX_EXTRA}) und was die eigenen Worte ausdrücklich "
                "nennen („aufs reMarkable“). Alles nur, soweit schon angeboten. Ist von der Gruppe nichts angeboten "
                "oder steht die Gruppe auf „nicht eingrenzen“, bleiben alle.",
                "With a clear group its tools stay, plus always {intent.NARROW_KEEP|anzahl} fixed ones (remembering "
-               "something, own documents, PC), the hints' tools, the admin's extra tools for this group (at most "
+               "something, own documents, Find in all own data, PC), the hints' tools, the admin's extra tools for this group (at most "
                "{intent.MAX_EXTRA}) and what the own words name explicitly („onto the reMarkable“). All only as far "
                "as already offered. If nothing of the group is offered or the group is set to „do not narrow“, all "
                "stay.")),
@@ -461,6 +472,7 @@ SEITEN = {
             ("{systemone.ROUTE_MIN|prozent}", ("Standard-Schwelle der Einordnung", "default threshold of the classification"), "systemone.ROUTE_MIN"),
             ("{intent_bench.BENCH|anzahl}", ("eingebaute Testsätze", "built-in test sentences"), "intent_bench.BENCH"),
             ("{intent_alltag.ALLTAG|anzahl}", ("Alltagssätze zum Messen", "everyday sentences for measuring"), "intent_alltag.ALLTAG"),
+            ("{quellen_bench.BENCH|anzahl}", ("Sätze der Quellen-Messbank", "sentences of the source bench"), "quellen_bench.BENCH"),
             ("{weiche.KEEP_VERSIONS}", ("Versionen für Rückgängig", "versions for undo"), "weiche.KEEP_VERSIONS"),
         ],
         "einstellen": [
@@ -512,6 +524,18 @@ SEITEN = {
                  "many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus "
                  "protected going down or wrong going up."),
             ]),
+            (("Quellen-Messbank", "Source bench"), [
+                ("Die Quellen-Messbank ({quellen_bench.BENCH|anzahl} Sätze, deutsch und englisch) prüft für Lese- und "
+                 "Wissensfragen, ob der heutige Weg (Weiche, Eingrenzen, „Erst lokal“) intern, extern oder beides "
+                 "entscheidet und ob die nötigen eigenen Quellen erreichbar sind: Mail, Anhang, Dokument, Termin, "
+                 "Kontakt, Gespräch, Liste, Wissensbuch, Web. Gemessen mit allen Schaltern frei, ohne Daten, Uhr und "
+                 "Modell. Ein Selbsttest hält die Untergrenze; sie sinkt nie.",
+                 "The source bench ({quellen_bench.BENCH|anzahl} sentences, German and English) checks for reading and "
+                 "knowledge questions whether today's way (switch, narrowing, „Local first“) decides internal, "
+                 "external or both and whether the needed own sources are reachable: mail, attachment, document, "
+                 "appointment, contact, conversation, list, knowledge book, web. Measured with every switch released, "
+                 "without data, clock or model. A self-test holds the floor; it never goes down."),
+            ]),
             (("Werkzeugnamen", "Tool names"), [
                 ("Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle "
                  "({werkzeuge.NAMES|anzahl} Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.",
@@ -533,8 +557,14 @@ SEITEN = {
             ("weiche_unklar.anon", ("unklare Fragen geschwärzt", "unclear questions redacted")),
             ("weiche.trace", ("Satz ausprobieren", "try a sentence")),
             ("intent_alltag.measure", ("Alltagsquote", "everyday score")),
+            ("quellen_bench.measure", ("Quellen-Messbank", "source bench")),
+            ("intent.OWN_WROTE", ("Lesefrage: jemand hat mir geschrieben → mail", "reading question: someone wrote to me → mail")),
+            ("intent.OWN_READ", ("Lesefrage nach eigenen Daten → finden", "reading question about the own data → finden")),
+            ("intent.OWN_PAPER", ("Preis laut eigener Unterlage, nie das Web", "price according to an own paper, never the web")),
+            ("intent.PARCEL_MAIL", ("Paketwort mit eigener Mail → mail", "parcel word with the own mail → mail")),
+            ("intent.NARROW_KEEP", ("bleibt immer beim Eingrenzen", "always kept when narrowing")),
         ],
-        "tests": ["test_intent", "test_intent_alltag", "test_weiche", "test_weiche_unklar", "test_werkzeuge", "test_systemone"],
+        "tests": ["test_intent", "test_intent_alltag", "test_quellen_bench", "test_weiche", "test_weiche_unklar", "test_werkzeuge", "test_systemone"],
         "heute": [],
     },
     "antwort": {

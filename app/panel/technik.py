@@ -125,6 +125,7 @@ MODULE = {
     "intent": ("weiche", "Die Weiche: feste Regeln für die eigene letzte Nachricht"),
     "intent_bench": ("weiche", "Testsätze der Weiche"),
     "intent_alltag": ("weiche", "Alltagssätze der Weiche: nur zum Messen"),
+    "quellen_bench": ("weiche", "Quellen-Messbank: intern, extern oder beides und die erreichbaren eigenen Quellen, nur zum Messen"),
     "weiche": ("weiche", "Seite Funktionen → Weiche und ihre Statistik"),
     "werkzeuge": ("weiche", "Verständliche Namen aller Werkzeuge"),
     "werkzeug_abdeckung": ("weiche", "Welche Funktion das Modell mit welchem Werkzeug erreicht (Regel 29)"),

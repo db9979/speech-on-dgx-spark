@@ -233,6 +233,7 @@ Feste Regeln, welche Werkzeuge das Modell für eine Frage sieht. Gibt nie mehr f
 | `app/panel/intent.py` | Die Weiche: feste Regeln für die eigene letzte Nachricht |
 | `app/panel/intent_alltag.py` | Alltagssätze der Weiche: nur zum Messen |
 | `app/panel/intent_bench.py` | Testsätze der Weiche |
+| `app/panel/quellen_bench.py` | Quellen-Messbank: intern, extern oder beides und die erreichbaren eigenen Quellen, nur zum Messen |
 | `app/panel/weiche.py` | Seite Funktionen → Weiche und ihre Statistik |
 | `app/panel/weiche_abstimmen.py` | Weiche abstimmen: Wortvorschläge des Sprachmodells, mit festen Regeln an den Alltagssätzen gemessen |
 | `app/panel/weiche_unklar.py` | Unklare Fragen anonym: feste Schwärzung (wie Probleme melden), Leck-Prüfung, versiegelt, 7 Tage, nur Admin |
@@ -2058,13 +2059,13 @@ flowchart TD
 2. <a id="kn-weiche-s2"></a>**Nur Plaudern?**: Ist der ganze Satz ein Gruß oder Dank, heißt die Gruppe „plaudern“. Die Antwort bekommt dann gar kein Werkzeug.
 3. <a id="kn-weiche-s3"></a>**Frage zum Spark?**: „Wie verbinde ich Home Assistant?“ oder „Schalte die Websuche ein“ fragen nach dem Spark selbst, nicht nach einem Gerät oder einer Suche: Gruppe „spark“. Eine Frage zu Wörtern oder Sprachen zählt nie dazu, ebenso wenig „Was kannst du mir über die Frauenkirche erzählen?“: Das fragt nach dem Ding, außer es ist der Spark oder eine seiner Funktionen (hilfe.ABOUT). Wurde auf einer Seite des Panels „Frag Spark“ benutzt, gilt dieselbe Gruppe nach fester Regel über den Ort der Frage.
 4. <a id="kn-weiche-s4"></a>**Wörter je Gruppe**: Jede Gruppe hat ihre eingebaute Wortliste (Licht, Termin, Postfach, Schirm …). Ein Schaltwort ohne Gerät („Alles aus“) zählt nur als ganzer Befehl. Die Pflicht-Wörter des Admins und seine eigenen Wörter je Gruppe (höchstens 20, nur ganze Wörter) finden eine Gruppe zusätzlich, ersetzen aber nichts.
-5. <a id="kn-weiche-s5"></a>**Vorrang zwischen Gruppen**: Treffen mehrere Gruppen, räumen feste Regeln auf: Wetter, Liste, Nachricht, Dokument und „Dokument erstellen“ gehen vor Smart Home, wenn kein Schaltbefehl dabei ist; Pakete vor Mail; „Habe ich neue Nachrichten?“ ist eine Nachricht, „Was gibt es in den Nachrichten?“ die Websuche; ein Auftrag, der regelmäßig wiederkommt oder etwas beobachtet, ist ein Agent; eine Frage zu Sprache oder Natur oder nach einem Unterschied ist nie ein Gerät; ein Preis oder Streik ist die Websuche, nicht iPhone oder Bahn; „Ruf mich an“ ist der Rückruf des Spark, nicht das iPhone; „Liste der …“ in einer Datei ist nicht die eigene Liste. Zuletzt nehmen die „Nicht bei“-Wörter des Admins Gruppen wieder heraus.
+5. <a id="kn-weiche-s5"></a>**Vorrang zwischen Gruppen**: Treffen mehrere Gruppen, räumen feste Regeln auf: Wetter, Liste, Nachricht, Dokument und „Dokument erstellen“ gehen vor Smart Home, wenn kein Schaltbefehl dabei ist; Pakete vor Mail, außer jemand hat „mir geschrieben“ (dann Mail); ein Preis „laut Angebot, Rechnung oder Vertrag“ ist eine eigene Unterlage, nie die Websuche; eine Lesefrage nach eigenen Daten ohne Suchwort ohne andere Gruppe wird „mail“ („Hat mir die Bank geschrieben?“, nur mit genanntem Absender) oder „finden“ („Hat sich der Klempner gemeldet?“, „Was hatte ich bestellt?“), nie bei Zeitung, Web oder Archiv; „Habe ich neue Nachrichten?“ ist eine Nachricht, „Was gibt es in den Nachrichten?“ die Websuche; ein Auftrag, der regelmäßig wiederkommt oder etwas beobachtet, ist ein Agent; eine Frage zu Sprache oder Natur oder nach einem Unterschied ist nie ein Gerät; ein Preis oder Streik ist die Websuche, nicht iPhone oder Bahn; „Ruf mich an“ ist der Rückruf des Spark, nicht das iPhone; „Liste der …“ in einer Datei ist nicht die eigene Liste. Zuletzt nehmen die „Nicht bei“-Wörter des Admins Gruppen wieder heraus.
 6. <a id="kn-weiche-s6"></a>**Gruppe erkannt?**: Eine Gruppe oder höchstens 2 gelten als klar und grenzen ein. Mehr Gruppen auf einmal sind nicht klar genug: dann bleiben alle Werkzeuge. Kommt „finden“ (eigene Daten suchen) mit zu vielen Gruppen, fällt zuerst „dokument“ weg, denn Finden sucht auch in den Dokumenten.
 7. <a id="kn-weiche-s7"></a>**Hinweiswörter merken**: Erkennt keine Regel eine Gruppe sicher, sucht die Weiche schwächere Hinweiswörter: „gießen“ deutet aufs Wetter, „Freitag“ auf den Kalender. Ein Hinweis grenzt nie ein; er sorgt nur dafür, dass die Werkzeuge seiner Gruppe bleiben, wenn später eingegrenzt wird.
 8. <a id="kn-weiche-s8"></a>**Folgefrage?**: Ist die Nachricht kurz (höchstens 80 Zeichen), zeigt zurück („und“, „das“, „es“) und hatte die eigene Frage direkt davor eine klare Gruppe, gilt diese Gruppe wieder. Es zählt nur die eigene Frage, nie die Antwort. Im Journal steht „weiche: Folgefrage“. Ebenso ein schlichtes „Ja“/„Nein“ oder ein Knopf der Rückfrage-Karte auf die Frage der Antwort davor (ablauf.was_asked, zehn Minuten, dasselbe Gespräch): „weiche: Antwort auf Rückfrage“.
 9. <a id="kn-weiche-s9"></a>**Gezielte Werkzeugwahl an?**: Nur mit diesem Schalter grenzt die Weiche ein, und nicht bei einem Bild oder einem direkten Smart-Home-Befehl. Ohne ihn bleibt die Gruppe nur für Journal und Statistik; das Modell sieht alle Werkzeuge, die die Rechte erlauben.
 10. <a id="kn-weiche-s10"></a>**Modell ordnet ein?**: Hat keine Regel eine Gruppe gefunden und steht „Fragen, die keine Regel erkennt“ auf „Modell“, wählt das Sprachmodell einmal eine Gruppe aus der festen Liste (nur JSON, nur die eigene Nachricht). Die Frage läuft schon ab dem Beginn der Vorbereitung nebenher; gewartet wird höchstens 4 Sekunden, mit „Schneller Antwortbeginn“ nur 300 ms nach der Vorbereitung. Mit der Einordnung mit Wahrscheinlichkeit zählt die Wahl erst ab der Schwelle (Standard 80 %); mit Funktionen → Hilfsmodell → Für die Weiche fragt sie erst das kleine Hilfsmodell, lädt es noch oder ist es unsicher, sofort das große, die Schwelle bleibt dieselbe. Die Hinweis-Gruppen bleiben neben der Wahl. In einer Wartungspause des Sprachmodells wird es nicht gefragt.
-11. <a id="kn-weiche-s11"></a>**Eingrenzen**: Bei einer klaren Gruppe bleiben ihre Werkzeuge, dazu immer 5 feste (sich etwas merken, eigene Dokumente, PC), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des Admins für diese Gruppe (höchstens 6) und was die eigenen Worte ausdrücklich nennen („aufs reMarkable“). Alles nur, soweit schon angeboten. Ist von der Gruppe nichts angeboten oder steht die Gruppe auf „nicht eingrenzen“, bleiben alle.
+11. <a id="kn-weiche-s11"></a>**Eingrenzen**: Bei einer klaren Gruppe bleiben ihre Werkzeuge, dazu immer 6 feste (sich etwas merken, eigene Dokumente, Finden in allen eigenen Daten, PC), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des Admins für diese Gruppe (höchstens 6) und was die eigenen Worte ausdrücklich nennen („aufs reMarkable“). Alles nur, soweit schon angeboten. Ist von der Gruppe nichts angeboten oder steht die Gruppe auf „nicht eingrenzen“, bleiben alle.
 12. <a id="kn-weiche-s12"></a>**Knapp?**: Bleibt die Frage ohne Gruppe, steht die Einstellung auf „Knapp“ und verlangt kein Pflicht-Wort ein Werkzeug, bekommt das Modell nur die kurze Liste: Websuche, Wikipedia, Archiv, frühere Gespräche, die festen Werkzeuge und die Werkzeuge der Hinweis-Gruppen. Es liest weniger und beginnt früher.
 13. <a id="kn-weiche-s13"></a>**Erstes Werkzeug festlegen**: Eine einzige klare Gruppe, ein Pflicht-Werkzeug und nur dieses aus der Gruppe angeboten: die erste Runde muss genau dieses rufen („Wie wird das Wetter?“). Ein kurzer, eindeutiger Lesesatz („Wie ist das Wetter heute?“) wird mit „Eindeutiges direkt abrufen“ vom Panel selbst abgerufen, für morgen und übermorgen mit dem Datum, das das Panel ausrechnet.
 14. <a id="kn-weiche-s14"></a>**Journal und Zählung**: Jeder Zug schreibt eine Zeile „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; ein Grundwort steht nur da, wenn es noch in der Nachricht steht. Gezählt werden je Tag und Gruppe nur Anzahlen (8 Tage), nie ein Wort der Frage. Mit „Unklare Fragen anonym merken“ kommt eine unklare Frage eines Profils (nie eines Gastes, nie mit dem Codewort) zusätzlich geschwärzt auf die Weiche-Seite: feste Regeln wie bei „Probleme melden“, Kontaktnamen und jede Zahl werden Platzhalter, eine zweite Prüfung verwirft, was noch persönlich wirkt (weiche_unklar.anon); ohne Profil, Gerät und Uhrzeit, versiegelt, höchstens 100 Sätze, 7 Tage. Dann geht die Liste an die Antwort.
@@ -2084,7 +2085,11 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 
 #### Alltagsquote
 
-- Die Testsätze (205) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
+- Die Testsätze (218) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
+
+#### Quellen-Messbank
+
+- Die Quellen-Messbank (66 Sätze, deutsch und englisch) prüft für Lese- und Wissensfragen, ob der heutige Weg (Weiche, Eingrenzen, „Erst lokal“) intern, extern oder beides entscheidet und ob die nötigen eigenen Quellen erreichbar sind: Mail, Anhang, Dokument, Termin, Kontakt, Gespräch, Liste, Wissensbuch, Web. Gemessen mit allen Schaltern frei, ohne Daten, Uhr und Modell. Ein Selbsttest hält die Untergrenze; sie sinkt nie.
 
 #### Werkzeugnamen
 
@@ -2098,8 +2103,9 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 - **4** Sekunden höchstens für die Wahl des Modells ([Schritt 10](#kn-weiche-s10))
 - **300 ms** Wartezeit mit „Schneller Antwortbeginn“ ([Schritt 10](#kn-weiche-s10))
 - **80 %** Standard-Schwelle der Einordnung ([Schritt 10](#kn-weiche-s10))
-- **205** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
+- **218** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
 - **216** Alltagssätze zum Messen ([Schritt 14](#kn-weiche-s14))
+- **66** Sätze der Quellen-Messbank ([Schritt 14](#kn-weiche-s14))
 - **20** Versionen für Rückgängig ([Schritt 4](#kn-weiche-s4))
 
 #### Einstellen
@@ -2131,8 +2137,14 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 - `app/panel/weiche_unklar.py` `anon`: unklare Fragen geschwärzt ([Schritt 14](#kn-weiche-s14))
 - `app/panel/weiche.py` `trace`: Satz ausprobieren ([Schritt 14](#kn-weiche-s14))
 - `app/panel/intent_alltag.py` `measure`: Alltagsquote ([Schritt 14](#kn-weiche-s14))
+- `app/panel/quellen_bench.py` `measure`: Quellen-Messbank ([Schritt 14](#kn-weiche-s14))
+- `app/panel/intent.py` `OWN_WROTE`: Lesefrage: jemand hat mir geschrieben → mail ([Schritt 5](#kn-weiche-s5))
+- `app/panel/intent.py` `OWN_READ`: Lesefrage nach eigenen Daten → finden ([Schritt 5](#kn-weiche-s5))
+- `app/panel/intent.py` `OWN_PAPER`: Preis laut eigener Unterlage, nie das Web ([Schritt 5](#kn-weiche-s5))
+- `app/panel/intent.py` `PARCEL_MAIL`: Paketwort mit eigener Mail → mail ([Schritt 5](#kn-weiche-s5))
+- `app/panel/intent.py` `NARROW_KEEP`: bleibt immer beim Eingrenzen ([Schritt 11](#kn-weiche-s11))
 
-Selbsttests: `test_intent`, `test_intent_alltag`, `test_weiche`, `test_weiche_unklar`, `test_werkzeuge`, `test_systemone`
+Selbsttests: `test_intent`, `test_intent_alltag`, `test_quellen_bench`, `test_weiche`, `test_weiche_unklar`, `test_werkzeuge`, `test_systemone`
 
 ### Antwort bauen
 

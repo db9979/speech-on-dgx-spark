@@ -84,6 +84,12 @@ EXTERN = re.compile(r"(?i)\b(aktuell\w*|neueste\w*|neuste\w*|heute|heutige\w*|ge
                     r"umfrage\w*|öffnungszeit\w*|geöffnet|stau\w*|verkehrslage|20[2-9]\d|latest|today|yesterday|"
                     r"current\w*|price\w*)\b")
 EXTERN_GROUPS = {"websuche", "wetter", "bahn", "paket"}
+# a parcel of one's own order („meine Bestellung“, „was ich bestellt habe“) reads the own mails: not outside by itself
+# (plan such-index/zuverlaessig.md, step 2)
+PARCEL_OWN = re.compile(r"(?i)\b((mein|meine|meinen|meiner|unser|unsere|unseren)\s\S*bestellung\w*|"
+                        r"(ich|wir)\b.{0,40}\bbestellt|bestellt (hab|habe|hatte|haben|hatten)\b)")
+# groups that read the person's own data: a word like „heute“ there („Welche Mails kamen heute?“) is no outside question
+OWN_GROUPS = {"mail", "kalender", "kontakt", "finden", "liste", "gedaechtnis", "nachricht", "mappe"}
 LOCAL_ONLY = ("Der Nutzer fragt nach seinen eigenen Quellen: such nur dort (Dokumente, Archiv, frühere Gespräche). "
               "Ins Internet gehst du in dieser Antwort nicht. Steht dort nichts, sag das; will er im Web suchen, "
               "soll er es in einer neuen Nachricht sagen.")
@@ -215,11 +221,16 @@ def classify(text, route, tool_words=""):
         return "", "Antwort auf Rückfrage"
     if chat.needed(text, {"web_search"}, tool_words):
         return "extern", "Websuche verlangt"
-    if LOCAL.search(text):
+    import intent
+    if LOCAL.search(text) or intent.OWN_PAPER.search(text):
         return "lokal", "eigene Quelle genannt"
     groups = set(route.names) & EXTERN_GROUPS
+    if "paket" in groups and PARCEL_OWN.search(text):
+        groups.discard("paket")
     if groups:
         return "extern", "+".join(sorted(groups))
+    if set(route.names) & OWN_GROUPS:
+        return "", route.label()
     if EXTERN.search(text):
         return "extern", "Aktuelles"
     if route.names and not set(route.names) <= {"dokument", "wikipedia"}:

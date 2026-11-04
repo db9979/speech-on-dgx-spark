@@ -233,6 +233,7 @@ Fixed rules for which tools the model sees for a question. Never gives more than
 | `app/panel/intent.py` | The switch ("Weiche"): what the person asks for in their own latest message, by fixed rules. |
 | `app/panel/intent_alltag.py` | The Weiche's everyday check: sentences as people say them, never used to set the rules up. |
 | `app/panel/intent_bench.py` | The Weiche's test bench (intent.py): sentence -> expected group ("" = no rule fits, "+" = two at once). |
+| `app/panel/quellen_bench.py` | The source bench: does a question go to the own data, to the outside world or to both, and can it reach the right own sources? |
 | `app/panel/weiche.py` | Features → Routing: the switch of intent.py, shown and set up in the panel. |
 | `app/panel/weiche_abstimmen.py` | Features → Routing → „Weiche abstimmen“: the language model proposes words for the groups, the panel measures every word with fixed rules and keeps only thos … |
 | `app/panel/weiche_unklar.py` | Features → Routing → unklar: unclear questions, anonymized. |
@@ -2058,13 +2059,13 @@ flowchart TD
 2. <a id="kn-weiche-s2"></a>**Only small talk?**: If the whole sentence is a greeting or thanks, the group is „plaudern“ (small talk). The answer then gets no tool at all.
 3. <a id="kn-weiche-s3"></a>**Question about the Spark?**: „How do I connect Home Assistant?“ or „Switch on web search“ ask about the Spark itself, not about a device or a search: group „spark“. A question about words or languages never counts, nor does „What can you tell me about the Frauenkirche?“: it asks about the thing, unless that is the Spark or one of its functions (hilfe.ABOUT). When „Ask Spark“ was used on a page of the panel, the same group holds by a fixed rule about where it was asked.
 4. <a id="kn-weiche-s4"></a>**Words per group**: Each group has its built-in word list (light, appointment, mailbox, umbrella …). A switching word without a device („all off“) only counts as a whole command. The admin's must words and own words per group (at most 20, whole words only) find a group as well, but replace nothing.
-5. <a id="kn-weiche-s5"></a>**Priority between groups**: When several groups match, fixed rules tidy up: weather, list, message, document and „create document“ come before smart home when there is no switching command; parcels before mail; „Do I have new messages?“ is a message, „What is in the news?“ the web search; a job that comes back regularly or watches something is an agent; a question about language, nature or a difference is never a device; a price or a strike is the web search, not the iPhone or the train; „Call me“ is the Spark calling back, not the iPhone; „a list of …“ in a file is not the own list. Last, the admin's „Not with“ words take groups out again.
+5. <a id="kn-weiche-s5"></a>**Priority between groups**: When several groups match, fixed rules tidy up: weather, list, message, document and „create document“ come before smart home when there is no switching command; parcels before mail, unless someone „wrote to me“ (then mail); a price „according to the offer, invoice or contract“ is an own paper, never the web search; a reading question about the own data without a search word and without another group becomes „mail“ („Did the bank write to me?“, only with a named sender) or „finden“ („Did the plumber get back to me?“, „What did I order?“), never with a newspaper, the web or the archive; „Do I have new messages?“ is a message, „What is in the news?“ the web search; a job that comes back regularly or watches something is an agent; a question about language, nature or a difference is never a device; a price or a strike is the web search, not the iPhone or the train; „Call me“ is the Spark calling back, not the iPhone; „a list of …“ in a file is not the own list. Last, the admin's „Not with“ words take groups out again.
 6. <a id="kn-weiche-s6"></a>**Group recognized?**: One group or at most 2 count as clear and narrow. More groups at once are not clear enough: then every tool stays. When „finden“ (searching the own data) comes with too many groups, „dokument“ goes first, since Find searches the documents too.
 7. <a id="kn-weiche-s7"></a>**Note hint words**: If no rule recognizes a group for sure, the switch looks for weaker hint words: „water the plants“ points to the weather, „Friday“ to the calendar. A hint never narrows; it only makes sure its group's tools stay when something narrows later.
 8. <a id="kn-weiche-s8"></a>**Follow-up?**: If the message is short (at most 80 characters), points back („and“, „that“, „it“) and the own question just before had a clear group, that group holds again. Only the own question counts, never the answer. The journal says „weiche: Folgefrage“. So does a plain „yes“/„no“ or a button of the question card to the question of the answer before (ablauf.was_asked, ten minutes, same conversation): „weiche: Antwort auf Rückfrage“.
 9. <a id="kn-weiche-s9"></a>**Targeted tool choice on?**: Only with this switch does the switch narrow, and not with a picture or a direct smart home command. Without it the group only goes to the journal and statistics; the model sees every tool the rights allow.
 10. <a id="kn-weiche-s10"></a>**Model sorts?**: If no rule found a group and „Questions no rule recognizes“ is set to the model, the language model picks one group from the fixed list once (JSON only, only the own message). The question already runs beside the preparation from its start; the wait is at most 4 seconds, with „Fast answer start“ only 300 ms after the preparation. With classification with probabilities the pick only counts from the threshold (default 80 %); with Features → Helper model → For routing it asks the small helper model first, and while that is loading or unsure the big one at once, with the same threshold. The hint groups stay beside the pick. During a maintenance pause of the language model it is not asked.
-11. <a id="kn-weiche-s11"></a>**Narrow**: With a clear group its tools stay, plus always 5 fixed ones (remembering something, own documents, PC), the hints' tools, the admin's extra tools for this group (at most 6) and what the own words name explicitly („onto the reMarkable“). All only as far as already offered. If nothing of the group is offered or the group is set to „do not narrow“, all stay.
+11. <a id="kn-weiche-s11"></a>**Narrow**: With a clear group its tools stay, plus always 6 fixed ones (remembering something, own documents, Find in all own data, PC), the hints' tools, the admin's extra tools for this group (at most 6) and what the own words name explicitly („onto the reMarkable“). All only as far as already offered. If nothing of the group is offered or the group is set to „do not narrow“, all stay.
 12. <a id="kn-weiche-s12"></a>**Lean?**: If the question stays without a group, the setting is „Lean“ and no must word requires a tool, the model only gets the short list: web search, Wikipedia, archive, earlier conversations, the fixed tools and the tools of the hint groups. It reads less and starts sooner.
 13. <a id="kn-weiche-s13"></a>**Fix the first tool**: One single clear group, one required tool and only that one of the group offered: the first round must call exactly that one („What will the weather be?“). A short, clear reading sentence („What is the weather today?“) is fetched by the panel itself with „Fetch clear questions directly“, for tomorrow and the day after with the date the panel works out.
 14. <a id="kn-weiche-s14"></a>**Journal and count**: Every turn writes a line „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; a reason word only shows when it is still in the message. Per day and group only counts are kept (8 days), never a word of the question. With „Keep unclear questions anonymously“ an unclear question of a profile (never a guest, never with the code word) also goes redacted onto the switch page: fixed rules as in „Report a problem“, contact names and every number become placeholders, a second check drops what still looks personal (weiche_unklar.anon); without profile, device and time, sealed, at most 100 sentences, 7 days. Then the list goes to the answer.
@@ -2084,7 +2085,11 @@ Applies at: [step 9](#kn-weiche-s9)
 
 #### Everyday score
 
-- The test sentences (205) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
+- The test sentences (218) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
+
+#### Source bench
+
+- The source bench (66 sentences, German and English) checks for reading and knowledge questions whether today's way (switch, narrowing, „Local first“) decides internal, external or both and whether the needed own sources are reachable: mail, attachment, document, appointment, contact, conversation, list, knowledge book, web. Measured with every switch released, without data, clock or model. A self-test holds the floor; it never goes down.
 
 #### Tool names
 
@@ -2098,8 +2103,9 @@ Applies at: [step 9](#kn-weiche-s9)
 - **4** seconds at most for the model's pick ([step 10](#kn-weiche-s10))
 - **300 ms** waiting with „Fast answer start“ ([step 10](#kn-weiche-s10))
 - **80 %** default threshold of the classification ([step 10](#kn-weiche-s10))
-- **205** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
+- **218** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
 - **216** everyday sentences for measuring ([step 14](#kn-weiche-s14))
+- **66** sentences of the source bench ([step 14](#kn-weiche-s14))
 - **20** versions for undo ([step 4](#kn-weiche-s4))
 
 #### Settings
@@ -2131,8 +2137,14 @@ Applies at: [step 9](#kn-weiche-s9)
 - `app/panel/weiche_unklar.py` `anon`: unclear questions redacted ([step 14](#kn-weiche-s14))
 - `app/panel/weiche.py` `trace`: try a sentence ([step 14](#kn-weiche-s14))
 - `app/panel/intent_alltag.py` `measure`: everyday score ([step 14](#kn-weiche-s14))
+- `app/panel/quellen_bench.py` `measure`: source bench ([step 14](#kn-weiche-s14))
+- `app/panel/intent.py` `OWN_WROTE`: reading question: someone wrote to me → mail ([step 5](#kn-weiche-s5))
+- `app/panel/intent.py` `OWN_READ`: reading question about the own data → finden ([step 5](#kn-weiche-s5))
+- `app/panel/intent.py` `OWN_PAPER`: price according to an own paper, never the web ([step 5](#kn-weiche-s5))
+- `app/panel/intent.py` `PARCEL_MAIL`: parcel word with the own mail → mail ([step 5](#kn-weiche-s5))
+- `app/panel/intent.py` `NARROW_KEEP`: always kept when narrowing ([step 11](#kn-weiche-s11))
 
-Self-tests: `test_intent`, `test_intent_alltag`, `test_weiche`, `test_weiche_unklar`, `test_werkzeuge`, `test_systemone`
+Self-tests: `test_intent`, `test_intent_alltag`, `test_quellen_bench`, `test_weiche`, `test_weiche_unklar`, `test_werkzeuge`, `test_systemone`
 
 ### Build answer
 

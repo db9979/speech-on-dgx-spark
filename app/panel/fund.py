@@ -1936,7 +1936,8 @@ TOOL = {"type": "function", "function": {
         "mappe": {"type": "string", "description": "only within this Mappe (collection) of the user, its name as the user said it"},
         "anzahl": {"type": "integer", "minimum": 1, "maximum": TOOL_MOST}}, "required": ["worte"]}}}
 HINT = ("Sucht der Nutzer etwas Eigenes (eine Rechnung, einen Vertrag, ein Dokument, eine Mail, eine Seite im Wissensbuch, "
-        "einen alten Termin, ein früheres Gespräch, eine Liste), ruf fund_suche mit seinen Worten. Zeitraum und „vom …“ "
+        "einen alten Termin, ein früheres Gespräch, eine Liste) oder fragt er nach seinen eigenen Dingen, auch ohne "
+        "Suchwort („Was hat mir … geschrieben?“, „Hat sich … gemeldet?“), ruf fund_suche mit seinen Worten. Zeitraum und „vom …“ "
         "(ein Termin) liest das Panel selbst aus seinen Worten. Antworte nur aus den Treffern und nenne Quelle und Datum.")
 
 

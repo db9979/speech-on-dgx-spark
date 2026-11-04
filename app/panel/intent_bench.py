@@ -165,6 +165,21 @@ BENCH = [
     ("Such in meinen Unterlagen nach der Versicherung", "dokument+finden"),
     ("Wie hoch war die Stromrechnung?", "dokument"),
     ("Wann läuft meine Kfz-Versicherung ab?", "dokument"),
+    # Quellen-Messbank, step 2 (plan such-index/zuverlaessig.md): reading questions about the own data without a search
+    # verb, a parcel word with the own mail, a price in an own paper; fund_suche stays beside every group (NARROW_KEEP)
+    ("Was hat mir Thomann wegen der Lieferung geschrieben?", "mail"),
+    ("Hat mir der Vermieter zurückgeschrieben?", "mail"),
+    ("What did Thomann write to me?", "mail"),
+    ("Hat sich der Klempner wegen dem Angebot gemeldet?", "finden"),
+    ("Hat sich der Vermieter wegen der Heizung gemeldet?", "finden"),
+    ("Was hatte ich bei Thomann bestellt?", "finden"),
+    ("Did the plumber get back to me?", "finden"),
+    ("Was kostet die Wärmepumpe laut Angebot?", "finden"),
+    ("Wie viel kostet die Reparatur laut Rechnung?", "dokument"),
+    ("Was schreibt die Hausverwaltung zur Nebenkostenabrechnung?", "dokument"),
+    ("Hat mir irgendwer geschrieben?", ""),
+    ("Was schreibt die Zeitung zur Wahl?", ""),
+    ("Was kostet ein iPhone 17?", "websuche"),
     ("Wo ist die Anleitung für die Waschmaschine?", "dokument"),
     ("Wann ist die Kündigungsfrist für meinen Handyvertrag?", "dokument"),
     # Auswertungen (auswertung.py): the analysis of one own document comes with the documents group

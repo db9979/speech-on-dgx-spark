@@ -1925,7 +1925,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ang zwischen Gruppen: Treffen mehrere Gruppen, räumen feste Regeln auf: Wetter, Liste, Nachricht, Dokument und „Dokument erstellen“ gehen vor Smart Home, wenn kein Schaltbefehl dabei ist; Pakete vor Mail; „Habe ich neue Nachrichten?“ ist eine Nachricht, „Was gibt es in den Nachrichten?“ die Websuche; ein Auftrag, der regelmäßig wiederkommt oder etwas beobachtet, ist ein Agent; eine Frage zu Sprache oder Natur oder nach einem Unterschied ist nie ein Gerät; ein Preis oder Streik ist die Websuche, nicht iPhone oder Bahn; „Ruf mich an“ ist der Rückruf des Spark, nicht das iPhone; „Liste der …“ in einer Datei ist nicht die eigene Liste. Zuletzt nehmen die „Nicht bei“-Wörter des Admins Gruppen wieder heraus. 6. Gruppe erkannt?: Eine Gruppe oder höchstens 2 gelten als klar und grenzen ein. Mehr Gruppen auf einmal sind nicht klar genug: dann bleiben alle Werkzeuge. Kommt „finden“ (eigene Daten suchen) mit zu vielen Gruppen, fällt zuerst „dokument“ weg, denn Finden sucht auch in den Dokumenten. 7. Hinweiswörter merken: Erkennt keine Regel eine Gruppe sicher, sucht die Weiche schwächere Hinweiswörter: „gießen“ deutet aufs Wetter, „Freitag“ auf den Kalender. Ein Hinweis grenzt nie ein; er sor"
+"text": "ang zwischen Gruppen: Treffen mehrere Gruppen, räumen feste Regeln auf: Wetter, Liste, Nachricht, Dokument und „Dokument erstellen“ gehen vor Smart Home, wenn kein Schaltbefehl dabei ist; Pakete vor Mail, außer jemand hat „mir geschrieben“ (dann Mail); ein Preis „laut Angebot, Rechnung oder Vertrag“ ist eine eigene Unterlage, nie die Websuche; eine Lesefrage nach eigenen Daten ohne Suchwort ohne andere Gruppe wird „mail“ („Hat mir die Bank geschrieben?“, nur mit genanntem Absender) oder „finden“ („Hat sich der Klempner gemeldet?“, „Was hatte ich bestellt?“), nie bei Zeitung, Web oder Archiv; „Habe ich neue Nachrichten?“ ist eine Nachricht, „Was gibt es in den Nachrichten?“ die Websuche; ein Auftrag, der regelmäßig wiederkommt oder etwas beobachtet, ist ein Agent; eine Frage zu Sprache oder Natur oder nach einem Unterschied ist nie ein Gerät; ein Preis oder Streik ist die Websuche, nicht iPhone oder Bahn; „Ruf mich an“ ist der Rückruf des Spark, nicht das iPhone; „Liste der …“ in einer Datei ist nicht die eigene Liste. Zuletzt nehmen die „Nicht bei“-Wörter des Admins Gruppen wieder heraus. 6. Gruppe erkannt?: Eine Gruppe oder höchstens 2 gelten als klar und grenzen ein. Mehr Gruppen"
 },
 {
 "lang": "de",
@@ -1933,7 +1933,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "gt nur dafür, dass die Werkzeuge seiner Gruppe bleiben, wenn später eingegrenzt wird. 8. Folgefrage?: Ist die Nachricht kurz (höchstens 80 Zeichen), zeigt zurück („und“, „das“, „es“) und hatte die eigene Frage direkt davor eine klare Gruppe, gilt diese Gruppe wieder. Es zählt nur die eigene Frage, nie die Antwort. Im Journal steht „weiche: Folgefrage“. Ebenso ein schlichtes „Ja“/„Nein“ oder ein Knopf der Rückfrage-Karte auf die Frage der Antwort davor (ablauf.was_asked, zehn Minuten, dasselbe Gespräch): „weiche: Antwort auf Rückfrage“. 9. Gezielte Werkzeugwahl an?: Nur mit diesem Schalter grenzt die Weiche ein, und nicht bei einem Bild oder einem direkten Smart-Home-Befehl. Ohne ihn bleibt die Gruppe nur für Journal und Statistik; das Modell sieht alle Werkzeuge, die die Rechte erlauben. 10. Modell ordnet ein?: Hat keine Regel eine Gruppe gefunden und steht „Fragen, die keine Regel erkennt“ auf „Modell“, wählt das Sprachmodell einmal eine Gruppe aus der festen Liste (nur JSON, nur die eigene Nachricht). Die Frage läuft schon ab dem Beginn der Vorbereitung nebenher; gewartet wird höchstens 4 Sekunden, mit „Schneller Antwortbeginn“ nur 300 ms nach der Vorbereitung. Mit der Einordnung"
+"text": " auf einmal sind nicht klar genug: dann bleiben alle Werkzeuge. Kommt „finden“ (eigene Daten suchen) mit zu vielen Gruppen, fällt zuerst „dokument“ weg, denn Finden sucht auch in den Dokumenten. 7. Hinweiswörter merken: Erkennt keine Regel eine Gruppe sicher, sucht die Weiche schwächere Hinweiswörter: „gießen“ deutet aufs Wetter, „Freitag“ auf den Kalender. Ein Hinweis grenzt nie ein; er sorgt nur dafür, dass die Werkzeuge seiner Gruppe bleiben, wenn später eingegrenzt wird. 8. Folgefrage?: Ist die Nachricht kurz (höchstens 80 Zeichen), zeigt zurück („und“, „das“, „es“) und hatte die eigene Frage direkt davor eine klare Gruppe, gilt diese Gruppe wieder. Es zählt nur die eigene Frage, nie die Antwort. Im Journal steht „weiche: Folgefrage“. Ebenso ein schlichtes „Ja“/„Nein“ oder ein Knopf der Rückfrage-Karte auf die Frage der Antwort davor (ablauf.was_asked, zehn Minuten, dasselbe Gespräch): „weiche: Antwort auf Rückfrage“. 9. Gezielte Werkzeugwahl an?: Nur mit diesem Schalter grenzt die Weiche ein, und nicht bei einem Bild oder einem direkten Smart-Home-Befehl. Ohne ihn bleibt die Gruppe nur für Journal und Statistik; das Modell sieht alle Werkzeuge, die die Rechte erlauben. 10. Mod"
 },
 {
 "lang": "de",
@@ -1941,7 +1941,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " mit Wahrscheinlichkeit zählt die Wahl erst ab der Schwelle (Standard 80 %); mit Funktionen → Hilfsmodell → Für die Weiche fragt sie erst das kleine Hilfsmodell, lädt es noch oder ist es unsicher, sofort das große, die Schwelle bleibt dieselbe. Die Hinweis-Gruppen bleiben neben der Wahl. In einer Wartungspause des Sprachmodells wird es nicht gefragt. 11. Eingrenzen: Bei einer klaren Gruppe bleiben ihre Werkzeuge, dazu immer 5 feste (sich etwas merken, eigene Dokumente, PC), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des Admins für diese Gruppe (höchstens 6) und was die eigenen Worte ausdrücklich nennen („aufs reMarkable“). Alles nur, soweit schon angeboten. Ist von der Gruppe nichts angeboten oder steht die Gruppe auf „nicht eingrenzen“, bleiben alle. 12. Knapp?: Bleibt die Frage ohne Gruppe, steht die Einstellung auf „Knapp“ und verlangt kein Pflicht-Wort ein Werkzeug, bekommt das Modell nur die kurze Liste: Websuche, Wikipedia, Archiv, frühere Gespräche, die festen Werkzeuge und die Werkzeuge der Hinweis-Gruppen. Es liest weniger und beginnt früher. 13. Erstes Werkzeug festlegen: Eine einzige klare Gruppe, ein Pflicht-Werkzeug und nur dieses aus der Gruppe angeboten: "
+"text": "ell ordnet ein?: Hat keine Regel eine Gruppe gefunden und steht „Fragen, die keine Regel erkennt“ auf „Modell“, wählt das Sprachmodell einmal eine Gruppe aus der festen Liste (nur JSON, nur die eigene Nachricht). Die Frage läuft schon ab dem Beginn der Vorbereitung nebenher; gewartet wird höchstens 4 Sekunden, mit „Schneller Antwortbeginn“ nur 300 ms nach der Vorbereitung. Mit der Einordnung mit Wahrscheinlichkeit zählt die Wahl erst ab der Schwelle (Standard 80 %); mit Funktionen → Hilfsmodell → Für die Weiche fragt sie erst das kleine Hilfsmodell, lädt es noch oder ist es unsicher, sofort das große, die Schwelle bleibt dieselbe. Die Hinweis-Gruppen bleiben neben der Wahl. In einer Wartungspause des Sprachmodells wird es nicht gefragt. 11. Eingrenzen: Bei einer klaren Gruppe bleiben ihre Werkzeuge, dazu immer 6 feste (sich etwas merken, eigene Dokumente, Finden in allen eigenen Daten, PC), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des Admins für diese Gruppe (höchstens 6) und was die eigenen Worte ausdrücklich nennen („aufs reMarkable“). Alles nur, soweit schon angeboten. Ist von der Gruppe nichts angeboten oder steht die Gruppe auf „nicht eingrenzen“, bleiben alle. 1"
 },
 {
 "lang": "de",
@@ -1949,7 +1949,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "die erste Runde muss genau dieses rufen („Wie wird das Wetter?“). Ein kurzer, eindeutiger Lesesatz („Wie ist das Wetter heute?“) wird mit „Eindeutiges direkt abrufen“ vom Panel selbst abgerufen, für morgen und übermorgen mit dem Datum, das das Panel ausrechnet. 14. Journal und Zählung: Jeder Zug schreibt eine Zeile „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; ein Grundwort steht nur da, wenn es noch in der Nachricht steht. Gezählt werden je Tag und Gruppe nur Anzahlen (8 Tage), nie ein Wort der Frage. Mit „Unklare Fragen anonym merken“ kommt eine unklare Frage eines Profils (nie eines Gastes, nie mit dem Codewort) zusätzlich geschwärzt auf die Weiche-Seite: feste Regeln wie bei „Probleme melden“, Kontaktnamen und jede Zahl werden Platzhalter, eine zweite Prüfung verwirft, was noch persönlich wirkt (weiche_unklar.anon); ohne Profil, Gerät und Uhrzeit, versiegelt, höchstens 100 Sätze, 7 Tage. Dann geht die Liste an die Antwort."
+"text": "2. Knapp?: Bleibt die Frage ohne Gruppe, steht die Einstellung auf „Knapp“ und verlangt kein Pflicht-Wort ein Werkzeug, bekommt das Modell nur die kurze Liste: Websuche, Wikipedia, Archiv, frühere Gespräche, die festen Werkzeuge und die Werkzeuge der Hinweis-Gruppen. Es liest weniger und beginnt früher. 13. Erstes Werkzeug festlegen: Eine einzige klare Gruppe, ein Pflicht-Werkzeug und nur dieses aus der Gruppe angeboten: die erste Runde muss genau dieses rufen („Wie wird das Wetter?“). Ein kurzer, eindeutiger Lesesatz („Wie ist das Wetter heute?“) wird mit „Eindeutiges direkt abrufen“ vom Panel selbst abgerufen, für morgen und übermorgen mit dem Datum, das das Panel ausrechnet. 14. Journal und Zählung: Jeder Zug schreibt eine Zeile „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; ein Grundwort steht nur da, wenn es noch in der Nachricht steht. Gezählt werden je Tag und Gruppe nur Anzahlen (8 Tage), nie ein Wort der Frage. Mit „Unklare Fragen anonym merken“ kommt eine unklare Frage eines Profils (nie eines Gastes, nie mit dem Codewort) zusätzlich geschwärzt auf die Weiche-Seite: feste Regeln wie bei „Probleme melden“, Kontak"
 },
 {
 "lang": "de",
@@ -1965,7 +1965,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Alltagsquote",
 "title": "Alltagsquote",
-"text": "- Die Testsätze (205) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
+"text": "- Die Testsätze (218) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Quellen-Messbank",
+"title": "Quellen-Messbank",
+"text": "- Die Quellen-Messbank (66 Sätze, deutsch und englisch) prüft für Lese- und Wissensfragen, ob der heutige Weg (Weiche, Eingrenzen, „Erst lokal“) intern, extern oder beides entscheidet und ob die nötigen eigenen Quellen erreichbar sind: Mail, Anhang, Dokument, Termin, Kontakt, Gespräch, Liste, Wissensbuch, Web. Gemessen mit allen Schaltern frei, ohne Daten, Uhr und Modell. Ein Selbsttest hält die Untergrenze; sie sinkt nie."
 },
 {
 "lang": "de",
@@ -1981,7 +1989,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 26 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 205 eingebaute Testsätze (Schritt 4, Schritt 5) - 216 Alltagssätze zum Messen (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
+"text": "- 26 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 218 eingebaute Testsätze (Schritt 4, Schritt 5) - 216 Alltagssätze zum Messen (Schritt 14) - 66 Sätze der Quellen-Messbank (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
 },
 {
 "lang": "de",
@@ -2005,7 +2013,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/intent.py classify: Gruppen nach festen Wörtern und Vorrang (Schritt 1) - app/panel/intent.py Route: Gruppe, Grund, Hinweise; wann klar (Schritt 6) - app/panel/intent.py hints_of: Hinweiswörter (Schritt 7) - app/panel/intent.py follow_up: Folgefrage (Schritt 8) - app/panel/intent.py ask_model: Wahl des Modells aus fester Liste (Schritt 10) - app/panel/intent.py pick_in_time: auf die Wahl warten oder abbrechen (Schritt 10) - app/panel/intent.py narrow: Werkzeuge eingrenzen (Schritt 11) - app/panel/intent.py lean: kurze Liste bei „Knapp“ (Schritt 12) - app/panel/intent.py forced: Pflicht für die erste Runde (Schritt 13) - app/panel/weiche.py count: Statistik ohne Inhalt (Schritt 14) - app/panel/weiche_unklar.py anon: unklare Fragen geschwärzt (Schritt 14) - app/panel/weiche.py trace: Satz ausprobieren (Schritt 14) - app/panel/intent_alltag.py measure: Alltagsquote (Schritt 14)"
+"text": "- app/panel/intent.py classify: Gruppen nach festen Wörtern und Vorrang (Schritt 1) - app/panel/intent.py Route: Gruppe, Grund, Hinweise; wann klar (Schritt 6) - app/panel/intent.py hints_of: Hinweiswörter (Schritt 7) - app/panel/intent.py follow_up: Folgefrage (Schritt 8) - app/panel/intent.py ask_model: Wahl des Modells aus fester Liste (Schritt 10) - app/panel/intent.py pick_in_time: auf die Wahl warten oder abbrechen (Schritt 10) - app/panel/intent.py narrow: Werkzeuge eingrenzen (Schritt 11) - app/panel/intent.py lean: kurze Liste bei „Knapp“ (Schritt 12) - app/panel/intent.py forced: Pflicht für die erste Runde (Schritt 13) - app/panel/weiche.py count: Statistik ohne Inhalt (Schritt 14) - app/panel/weiche_unklar.py anon: unklare Fragen geschwärzt (Schritt 14) - app/panel/weiche.py trace: Satz ausprobieren (Schritt 14) - app/panel/intent_alltag.py measure: Alltagsquote (Schritt 14) - app/panel/quellen_bench.py measure: Quellen-Messbank (Schritt 14) - app/panel/intent.py OWN_WROTE: Lesefrage: jemand hat mir geschrieben → mail (Schritt 5) - app/panel/intent.py OWN_READ: Lesefrage nach eigenen Daten → finden (Schritt 5) - app/panel/intent.py OWN_PAPER: Preis laut eigener Unterlag"
 },
 {
 "lang": "de",
@@ -2013,7 +2021,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_intent, test_intent_alltag, test_weiche, test_weiche_unklar, test_werkzeuge, test_systemone"
+"text": "e, nie das Web (Schritt 5) - app/panel/intent.py PARCEL_MAIL: Paketwort mit eigener Mail → mail (Schritt 5) - app/panel/intent.py NARROW_KEEP: bleibt immer beim Eingrenzen (Schritt 11)"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": "Selbsttests: test_intent, test_intent_alltag, test_quellen_bench, test_weiche, test_weiche_unklar, test_werkzeuge, test_systemone"
 },
 {
 "lang": "de",
@@ -11972,6 +11988,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Quellen-Messbank und Sofort-Korrekturen (V01.1.329, Plan *such-index/zuverlaessig.md* Schritte 1 und 2, Dominik 2026-11-04): keine neuen Schalter. Messbank app/panel/quellen_bench.py: 66 Sätze (deutsch und englisch, mit Fallen wie „Wie geht mein iPhone in den Flugmodus?“ und Fragen zu eigenen Daten ohne Besitzwort) mit erwarteter Klasse (intern, extern, beides) und den nötigen Quellen (Mail, Anhang, Dokument, Termin, Kontakt, Gespräch, Liste, Wissensbuch, Web). measure() bildet den heutigen Weg nach (Weiche, Eingrenzen über alle Werkzeuge, „Erst lokal“, alle Schalter frei) und zählt, wie oft Klasse und Quellen stimmen; test_quellen_bench hält die Untergrenze, sie sinkt nie. Vorher 38 von 66 (57,6 %, intern 11/34, extern 16/17, beides 11/15, 3 Mail-Fragen nach außen), nachher 55 von 66 (83,3 %, intern 28/34, extern 16/17, beides 11/15, 1 Mail-Frage nach außen). Korrekturen: Der Hinweis an das Modell zu den Mails sagt nicht mehr „nur, wenn nach Mails gefragt“: eigene Mails sind eine normale Quelle für Fragen nach eigenen Dingen; der Dokumenten-Hinweis nennt Finden für eigene Dinge neben document_search für den Wortlaut. fund_suche bleibt beim Eingrenzen immer erhalten, wenn es angebo"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ten ist (intent.NARROW_KEEP; nur eigenes Profil, eigener Browser oder Inhaberstimme, nie Gäste, fremde Stimmen oder MCP). Ein Paketwort mit eigener Mail („Was hat mir Thomann wegen der Lieferung geschrieben?“) ist die Mail; mit eigener Bestellung („meine Bestellung“) gilt es für „Erst lokal“ nicht mehr als Frage nach draußen. „Was kostet … laut Angebot, Rechnung oder Vertrag“ ist eine eigene Unterlage, nie die Websuche. Lesefragen ohne Suchwort ohne andere Gruppe: „Hat mir die Bank geschrieben?“ (genannter Absender) wird „mail“, „Hat sich der Klempner gemeldet?“ und „Was hatte ich bei Thomann bestellt?“ werden „finden“, nie bei Zeitung, Web oder Archiv; „Hat mir jemand geschrieben?“ bleibt bei den Hinweiswörtern. Eine Frage mit einer Gruppe eigener Daten (Mail, Kalender, Kontakt, Finden …) zählt bei „Erst lokal“ nicht mehr wegen „heute“ als Frage nach draußen. Mails bleiben fremder Text (eingepackt, Mail-Sperre unverändert). Die große Entscheidung intern/extern/beides kommt mit der Quellen-Weiche (Schritt 3)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Hilfe zum Spark (V01.0.326, standardmäßig aus)",
 "text": "Hilfe zum Spark (V01.0.326, standardmäßig aus): Fragen zum Spark selbst („Wie bekomme ich schnellere Antworten?“, „Was macht dieser Schalter?“, „Was sollte ich hier noch einstellen?“) beantwortet der Assistent mit dem Werkzeug spark_hilfe aus dem, was mit dem Panel kommt: den Anleitungen, den Schaltern mit ihren Sätzen, den eigenen Einstellungen unter Ich, festen Empfehlungen und den Absätzen dieser Doku (app/panel/hilfe_docs.json, python3 app/panel/hilfe.py --docs schreibt sie neu; ein Selbsttest hält sie gleich). Gesucht wird mit festen Regeln auf dem Spark, nichts verlässt das Haus. Zu jedem Treffer kommen der Weg im Panel und, wie es bei dir steht (an, aus und warum). Jede Anmeldung bekommt nur, was ihre Rechte erlauben: Spark-Einstellungen, der Stand der Spark-Schalter, „Sicherheit auf einen Blick“ und die Doku zum Betrieb nur für Admins (ein Verwalter nur die Funktionsschalter); normale Profile bekommen die Anleitungen ohne die Admin-Schritte und nur ihre eigenen Einstellungen; Gäste nichts. Die Treffer gehen als Daten ans Modell, nie als Anweisung; Schlüssel, PINs und Namen anderer Profile kommen nie vor. Mit „Einstellungen vorschlagen“ (spark_vorschlag) zeigt der Assistent "
 },
@@ -19893,7 +19925,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "st, message, document and „create document“ come before smart home when there is no switching command; parcels before mail; „Do I have new messages?“ is a message, „What is in the news?“ the web search; a job that comes back regularly or watches something is an agent; a question about language, nature or a difference is never a device; a price or a strike is the web search, not the iPhone or the train; „Call me“ is the Spark calling back, not the iPhone; „a list of …“ in a file is not the own list. Last, the admin's „Not with“ words take groups out again. 6. Group recognized?: One group or at most 2 count as clear and narrow. More groups at once are not clear enough: then every tool stays. When „finden“ (searching the own data) comes with too many groups, „dokument“ goes first, since Find searches the documents too. 7. Note hint words: If no rule recognizes a group for sure, the switch looks for weaker hint words: „water the plants“ points to the weather, „Friday“ to the calendar. A hint never narrows; it only makes sure its group's tools stay when something narrows later. 8. Follow-up?: If the message is short (at most 80 characters), points back („and“, „that“, „it“) and the own "
+"text": "st, message, document and „create document“ come before smart home when there is no switching command; parcels before mail, unless someone „wrote to me“ (then mail); a price „according to the offer, invoice or contract“ is an own paper, never the web search; a reading question about the own data without a search word and without another group becomes „mail“ („Did the bank write to me?“, only with a named sender) or „finden“ („Did the plumber get back to me?“, „What did I order?“), never with a newspaper, the web or the archive; „Do I have new messages?“ is a message, „What is in the news?“ the web search; a job that comes back regularly or watches something is an agent; a question about language, nature or a difference is never a device; a price or a strike is the web search, not the iPhone or the train; „Call me“ is the Spark calling back, not the iPhone; „a list of …“ in a file is not the own list. Last, the admin's „Not with“ words take groups out again. 6. Group recognized?: One group or at most 2 count as clear and narrow. More groups at once are not clear enough: then every tool stays. When „finden“ (searching the own data) comes with too many groups, „dokument“ goes first, s"
 },
 {
 "lang": "en",
@@ -19901,7 +19933,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "question just before had a clear group, that group holds again. Only the own question counts, never the answer. The journal says „weiche: Folgefrage“. So does a plain „yes“/„no“ or a button of the question card to the question of the answer before (ablauf.was_asked, ten minutes, same conversation): „weiche: Antwort auf Rückfrage“. 9. Targeted tool choice on?: Only with this switch does the switch narrow, and not with a picture or a direct smart home command. Without it the group only goes to the journal and statistics; the model sees every tool the rights allow. 10. Model sorts?: If no rule found a group and „Questions no rule recognizes“ is set to the model, the language model picks one group from the fixed list once (JSON only, only the own message). The question already runs beside the preparation from its start; the wait is at most 4 seconds, with „Fast answer start“ only 300 ms after the preparation. With classification with probabilities the pick only counts from the threshold (default 80 %); with Features → Helper model → For routing it asks the small helper model first, and while that is loading or unsure the big one at once, with the same threshold. The hint groups stay be"
+"text": "ince Find searches the documents too. 7. Note hint words: If no rule recognizes a group for sure, the switch looks for weaker hint words: „water the plants“ points to the weather, „Friday“ to the calendar. A hint never narrows; it only makes sure its group's tools stay when something narrows later. 8. Follow-up?: If the message is short (at most 80 characters), points back („and“, „that“, „it“) and the own question just before had a clear group, that group holds again. Only the own question counts, never the answer. The journal says „weiche: Folgefrage“. So does a plain „yes“/„no“ or a button of the question card to the question of the answer before (ablauf.was_asked, ten minutes, same conversation): „weiche: Antwort auf Rückfrage“. 9. Targeted tool choice on?: Only with this switch does the switch narrow, and not with a picture or a direct smart home command. Without it the group only goes to the journal and statistics; the model sees every tool the rights allow. 10. Model sorts?: If no rule found a group and „Questions no rule recognizes“ is set to the model, the language model picks one group from the fixed list once (JSON only, only the own message). The question already runs b"
 },
 {
 "lang": "en",
@@ -19909,7 +19941,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "side the pick. During a maintenance pause of the language model it is not asked. 11. Narrow: With a clear group its tools stay, plus always 5 fixed ones (remembering something, own documents, PC), the hints' tools, the admin's extra tools for this group (at most 6) and what the own words name explicitly („onto the reMarkable“). All only as far as already offered. If nothing of the group is offered or the group is set to „do not narrow“, all stay. 12. Lean?: If the question stays without a group, the setting is „Lean“ and no must word requires a tool, the model only gets the short list: web search, Wikipedia, archive, earlier conversations, the fixed tools and the tools of the hint groups. It reads less and starts sooner. 13. Fix the first tool: One single clear group, one required tool and only that one of the group offered: the first round must call exactly that one („What will the weather be?“). A short, clear reading sentence („What is the weather today?“) is fetched by the panel itself with „Fetch clear questions directly“, for tomorrow and the day after with the date the panel works out. 14. Journal and count: Every turn writes a line „weiche: Absicht … | Grund … | Hinweis … |"
+"text": "eside the preparation from its start; the wait is at most 4 seconds, with „Fast answer start“ only 300 ms after the preparation. With classification with probabilities the pick only counts from the threshold (default 80 %); with Features → Helper model → For routing it asks the small helper model first, and while that is loading or unsure the big one at once, with the same threshold. The hint groups stay beside the pick. During a maintenance pause of the language model it is not asked. 11. Narrow: With a clear group its tools stay, plus always 6 fixed ones (remembering something, own documents, Find in all own data, PC), the hints' tools, the admin's extra tools for this group (at most 6) and what the own words name explicitly („onto the reMarkable“). All only as far as already offered. If nothing of the group is offered or the group is set to „do not narrow“, all stay. 12. Lean?: If the question stays without a group, the setting is „Lean“ and no must word requires a tool, the model only gets the short list: web search, Wikipedia, archive, earlier conversations, the fixed tools and the tools of the hint groups. It reads less and starts sooner. 13. Fix the first tool: One single cl"
 },
 {
 "lang": "en",
@@ -19917,7 +19949,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; a reason word only shows when it is still in the message. Per day and group only counts are kept (8 days), never a word of the question. With „Keep unclear questions anonymously“ an unclear question of a profile (never a guest, never with the code word) also goes redacted onto the switch page: fixed rules as in „Report a problem“, contact names and every number become placeholders, a second check drops what still looks personal (weiche_unklar.anon); without profile, device and time, sealed, at most 100 sentences, 7 days. Then the list goes to the answer."
+"text": "ear group, one required tool and only that one of the group offered: the first round must call exactly that one („What will the weather be?“). A short, clear reading sentence („What is the weather today?“) is fetched by the panel itself with „Fetch clear questions directly“, for tomorrow and the day after with the date the panel works out. 14. Journal and count: Every turn writes a line „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht … | gesperrt … | eingrenzen an/aus“; a reason word only shows when it is still in the message. Per day and group only counts are kept (8 days), never a word of the question. With „Keep unclear questions anonymously“ an unclear question of a profile (never a guest, never with the code word) also goes redacted onto the switch page: fixed rules as in „Report a problem“, contact names and every number become placeholders, a second check drops what still looks personal (weiche_unklar.anon); without profile, device and time, sealed, at most 100 sentences, 7 days. Then the list goes to the answer."
 },
 {
 "lang": "en",
@@ -19933,7 +19965,15 @@
 "file": "Architecture and data flow",
 "head": "Everyday score",
 "title": "Everyday score",
-"text": "- The test sentences (205) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
+"text": "- The test sentences (218) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Source bench",
+"title": "Source bench",
+"text": "- The source bench (66 sentences, German and English) checks for reading and knowledge questions whether today's way (switch, narrowing, „Local first“) decides internal, external or both and whether the needed own sources are reachable: mail, attachment, document, appointment, contact, conversation, list, knowledge book, web. Measured with every switch released, without data, clock or model. A self-test holds the floor; it never goes down."
 },
 {
 "lang": "en",
@@ -19949,7 +19989,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 26 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 205 built-in test sentences (step 4, step 5) - 216 everyday sentences for measuring (step 14) - 20 versions for undo (step 4)"
+"text": "- 26 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 218 built-in test sentences (step 4, step 5) - 216 everyday sentences for measuring (step 14) - 66 sentences of the source bench (step 14) - 20 versions for undo (step 4)"
 },
 {
 "lang": "en",
@@ -19973,7 +20013,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/intent.py classify: groups by fixed words and priority (step 1) - app/panel/intent.py Route: group, reason, hints; when clear (step 6) - app/panel/intent.py hints_of: hint words (step 7) - app/panel/intent.py follow_up: follow-up (step 8) - app/panel/intent.py ask_model: the model's pick from a fixed list (step 10) - app/panel/intent.py pick_in_time: wait for the pick or stop it (step 10) - app/panel/intent.py narrow: narrow the tools (step 11) - app/panel/intent.py lean: short list with „Lean“ (step 12) - app/panel/intent.py forced: required first tool (step 13) - app/panel/weiche.py count: statistics without content (step 14) - app/panel/weiche_unklar.py anon: unclear questions redacted (step 14) - app/panel/weiche.py trace: try a sentence (step 14) - app/panel/intent_alltag.py measure: everyday score (step 14)"
+"text": "- app/panel/intent.py classify: groups by fixed words and priority (step 1) - app/panel/intent.py Route: group, reason, hints; when clear (step 6) - app/panel/intent.py hints_of: hint words (step 7) - app/panel/intent.py follow_up: follow-up (step 8) - app/panel/intent.py ask_model: the model's pick from a fixed list (step 10) - app/panel/intent.py pick_in_time: wait for the pick or stop it (step 10) - app/panel/intent.py narrow: narrow the tools (step 11) - app/panel/intent.py lean: short list with „Lean“ (step 12) - app/panel/intent.py forced: required first tool (step 13) - app/panel/weiche.py count: statistics without content (step 14) - app/panel/weiche_unklar.py anon: unclear questions redacted (step 14) - app/panel/weiche.py trace: try a sentence (step 14) - app/panel/intent_alltag.py measure: everyday score (step 14) - app/panel/quellen_bench.py measure: source bench (step 14) - app/panel/intent.py OWN_WROTE: reading question: someone wrote to me → mail (step 5) - app/panel/intent.py OWN_READ: reading question about the own data → finden (step 5) - app/panel/intent.py OWN_PAPER: price according to an own paper, never the web (step 5) - app/panel/intent.py PARCEL_MAIL: parce"
 },
 {
 "lang": "en",
@@ -19981,7 +20021,15 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_intent, test_intent_alltag, test_weiche, test_weiche_unklar, test_werkzeuge, test_systemone"
+"text": "l word with the own mail → mail (step 5) - app/panel/intent.py NARROW_KEEP: always kept when narrowing (step 11)"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "In the code",
+"title": "In the code",
+"text": "Self-tests: test_intent, test_intent_alltag, test_quellen_bench, test_weiche, test_weiche_unklar, test_werkzeuge, test_systemone"
 },
 {
 "lang": "en",
@@ -29566,6 +29614,22 @@
 "head": "Voice chat",
 "title": "Switch check (October 2026)",
 "text": "Switch check (October 2026): „Terminal“ no longer counts as an appointment. A price or a strike goes to the web search, „Call me“ to the Spark calling back, „a list of …“ in a file stays with „Create documents“, „difference between …“ is knowledge. The everyday sentences now also measure the telephone, chats, pictures, the state and the tools a module offers only by their own word (volume, undo, pause notes, NAS, reMarkable): such a sentence counts as right when the module's fixed word rule matches. A photo with a wish to change it („Remove the beard“) shows under Logs → Requests as the group pictures („Foto ändern“), no longer as „unclear“; the model does not have to pick. Learning: when no rule recognizes a question and the model then calls a tool of one group, the switch counts that group and the fixed hint word that named it (never a word of the question, 7 days). A hint word that led to the same group at least three times is offered under Features → Routing, „Statistics“, as a word of that group; when the admin takes it over, „Check and save“ with all test sentences and Undo applies as always. The switch never changes its rules by itself."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Source bench and quick fixes (V01.1.329, plan *such-index/zuverlaessig.md* steps 1 and 2, Dominik 2026-11-04): no new switches. Bench app/panel/quellen_bench.py: 66 sentences (German and English, with traps like „How do I put my iPhone into flight mode?“ and questions about own data without a word of ownership) with the expected class (internal, external, both) and the sources needed (mail, attachment, document, appointment, contact, conversation, list, knowledge book, web). measure() follows today's way (switch, narrowing over every tool, „Local first“, every switch released) and counts how often class and sources are right; test_quellen_bench holds the floor, it never goes down. Before 38 of 66 (57.6 %, internal 11/34, external 16/17, both 11/15, 3 mail questions sent outside), after 55 of 66 (83.3 %, internal 28/34, external 16/17, both 11/15, 1 mail question sent outside). Fixes: the hint to the model about mails no longer says „only when asked for mails“: own mails are a normal source for questions about own things; the documents hint names Find for own things beside document_search for the wording. fund_suche always stays when narrowing if it is offered (intent.NARROW_KEEP; o"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "nly the own profile, the own browser or the owner's voice, never guests, strangers' voices or MCP). A parcel word with the own mail („What did Thomann write to me about the delivery?“) is the mail; with an own order („my order“) it no longer counts as a question outside for „Local first“. „What does … cost according to the offer, invoice or contract“ is an own paper, never the web search. Reading questions without a search word and without another group: „Did the bank write to me?“ (a named sender) becomes „mail“, „Did the plumber get back to me?“ and „What did I order from Thomann?“ become „finden“, never with a newspaper, the web or the archive; „Did anyone write to me?“ stays with the hint words. A question with a group of own data (mail, calendar, contact, Find …) no longer counts as a question outside for „Local first“ because of „today“. Mails stay outside text (wrapped, mail lock unchanged). The big decision internal/external/both comes with the source switch (step 3)."
 },
 {
 "lang": "en",
