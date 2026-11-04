@@ -5534,6 +5534,10 @@ async def hear(rid, wav, pid=None):
     except Exception:
         print("dungeon: hoeren | ausfall", flush=True)
         raise HTTPException(502, "Die Spracherkennung hat nicht geantwortet.")
+    import stille
+    if stille.context_echo(text, ctx):   # the table's names read back from noise: nothing goes into the field
+        print("dungeon: hoeren | echo", flush=True)
+        return {"text": ""}
     _day.bump("gehoert")
     if worte:
         _day.bump("hoer_namen")

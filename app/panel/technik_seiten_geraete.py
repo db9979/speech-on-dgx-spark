@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "geraet": {
-        "stand": "a46623603b",
+        "stand": "976c2ffe3b",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "zwischenruf.decide": ["s5"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -68,13 +68,13 @@ SEITEN = {
                "how much of it is voice and whose voice it is.")),
             S("s5", "frage", ("Stille, eigene oder fremde Stimme?", "Silence, own or foreign voice?"),
               ("stille · echo · fremdstimme", "stille · echo · fremdstimme"),
-              ("Feste Regeln, kein Modell: ein „Ja“ aus Stille oder einem Klick (stille.check), die eigene Stimme des "
+              ("Feste Regeln, kein Modell: ein „Ja“ aus Stille oder einem Klick und die zurückgelesene Namensliste (stille.check), die eigene Stimme des "
                "Spark von einem anderen Gerät (echo.check) und bei selbst geöffnetem Mikrofon eine fremde Stimme, etwa "
                "vom Fernseher (fremdstimme.check), sind keine Frage. Die Antwort ist dann leerer Text mit dem Grund. Hat "
                "die Seite oder die iPhone-App die Antwort fürs Ins-Wort-Fallen nur angehalten (hold), sagt zwischenruf.decide mit festen "
                "Wörtern dazu: weiter (nichts, Überhörtes, „mhm“), stopp („Stopp“) oder frage (alles andere); ohne "
                "Entscheidung nach {zwischenruf.HOLD_MAX} s spielt sie weiter.",
-               "Fixed rules, no model: a „yes“ out of silence or a click (stille.check), the Spark's own voice from "
+               "Fixed rules, no model: a „yes“ out of silence or a click and the name list read back (stille.check), the Spark's own voice from "
                "another device (echo.check) and, with a microphone the page opened itself, a foreign voice like the TV "
                "(fremdstimme.check) are no question. The answer is then empty text with the reason. When the page or the iPhone "
                "app only paused the answer for a barge-in (hold), zwischenruf.decide adds with fixed words: on (nothing, ignored, "

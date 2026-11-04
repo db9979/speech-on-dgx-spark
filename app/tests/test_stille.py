@@ -110,6 +110,24 @@ class Rule(unittest.TestCase):
         for text in ("Ja, mach das", "Licht an", "Stopp", "ja nein"):
             self.assertIsNone(stille.check(text, 0.15), text)
 
+    def test_the_hint_list_read_back_is_no_question(self):
+        # Dominik 2026-11-04: from noise the recognition wrote its own hint list (Namen fürs Hören) as the text
+        ctx = ("Hey Spark. db, sb, Hans, Cornelia, Dominik, Sandra, Energie, Kameras, Pool, Schlafzimmer, Wohnzimmer, "
+               "Pool Light 1, Pool Pump 1, Pool Pump 2, Pool Waterfall, Garten Leuchte, Küche Sirene, Jäger Mandy, Wunder.")
+        for text in ("Db, sb, Hans, Cornelia, Dominik, Sandra, Energie, Kameras, Pool, Schlafzimmer, Wohnzimmer, Pool Light 1, "
+                     "Pool Pump 1, Pool Pump 2, Pool Waterfall, Garten Leuchte, Küche Sirene, Jäger",   # cut off mid-name
+                     "db, sb, Hans.", "Pool Pump 1, Pool Pump 2, Pool Waterfall, Garten Leuchte, Wund",
+                     "Pool Pump Pool Light Pool Waterfall Garten Leuchte"):
+            self.assertTrue(stille.context_echo(text, ctx), text)
+            self.assertEqual(stille.check(text, 1.5, ctx), "context echo", text)
+        for text in ("Schalte Pool Pump 1 und Pool Light 1 ein", "Wie warm ist der Pool?", "Ruf Hans an",
+                     "Hans, Cornelia und Sandra kommen heute zum Essen in den Garten", "Kameras"):
+            self.assertFalse(stille.context_echo(text, ctx), text)
+            self.assertIsNone(stille.check(text, 1.5, ctx), text)
+        # without a hint text nothing is an echo
+        self.assertFalse(stille.context_echo("db, sb, Hans, Cornelia", ""))
+        self.assertIsNone(stille.check("db, sb, Hans, Cornelia", 1.5))
+
     def test_unreadable_audio_only_checks_the_text(self):
         self.assertIsNone(stille.check("Ja.", None))
         self.assertEqual(stille.check("Untertitel im Auftrag des ZDF", None), "silence phrase")
@@ -144,6 +162,22 @@ class Endpoint(unittest.TestCase):
         self.assertEqual(out, {"text": "", "ignored": "silence"})
         self.assertEqual(self.heard("Okay.", recording(0.12))["ignored"], "too short")
         self.assertEqual(self.heard("Untertitel im Auftrag des ZDF, 2020", recording(1.2))["ignored"], "silence phrase")
+
+    def test_hint_list_read_back_never_reaches_the_assistant(self):
+        profile("Hansi")
+        profile("Cornelia")
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            c = json.load(f)
+        old = dict(c.get("chat") or {})
+        c.setdefault("chat", {})["hoer_namen"] = True
+        helpers.write_config(c)
+        try:
+            out = self.heard("Stella, Hansi, Cornelia.", recording(1.2))
+            self.assertEqual(out, {"text": "", "ignored": "context echo"})
+            self.assertEqual(self.heard("Wie spät ist es?", recording(0.9))["text"], "Wie spät ist es?")
+        finally:
+            c["chat"] = old
+            helpers.write_config(c)
 
     def test_real_words_still_count(self):
         self.assertEqual(self.heard("Ja.", recording(0.35))["text"], "Ja.")

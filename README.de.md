@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.324** Fix wiederholte Namensliste im Sprach-Chat: liest die Spracherkennung aus Rauschen ihre eigene Namensliste (Namen fürs Hören) zurück, geht dieser Text nicht mehr als Frage an den Assistenten
 - **V01.1.323** Auswertungen 2c: das Blatt Auswertungen auch im iPhone (Erstellen, Stimmt nicht per Wischen, Erinnern bei Fristen, Seite je Punkt), Englisch in der App
 - **V01.1.322** System-Updates (Schalter aus, nur Admin): Zustand → System-Updates zeigt je Rechner Betriebssystem-Updates mit Sicherheit und Paketliste, spielt sie mit frischem Code als festen root-Ablauf nur in einer Sprechpause ein, Neustart nur auf dein Wort; OpenCode und OSV-Warnungen mit Prüfbitte, Firmware nur von Hand, nachts 03–05 Uhr je Rechner.
 - **V01.1.321** Fixes aus dem Pi-Log: die Live-Verbindung zu Home Assistant verbindet nach einer guten Verbindung bald neu statt für immer 900 s zu warten, mit Ping und Keepalive; Antwortvorschläge warten nicht mehr hinter der Hintergrundarbeit und sagen „ausgelastet, noch einmal“ statt eines Fehlers; der Tagesüberblick liest seine Teile gleichzeitig und gibt eine Kurzfassung statt nach 200 s zu scheitern; der NAT-Hinweis am Telefon nennt den zweiten Router.
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.317** Änderungsprotokoll: „Protokoll prüfen“ nennt die Art des Bruchs und ob die Kette danach heil ist; eine beim Schreiben abgerissene Zeile (Stromausfall) verschluckt den nächsten Eintrag nicht mehr
 - **V01.1.316** Fix „Jetzt prüfen“ unter Einstellungen → Update auf dem Pi: nach einem abgebrochenen Einspielen startete git nicht im gelöschten Arbeitsordner des Panels; jedes Programm startet jetzt in einem vorhandenen Ordner, die Karte nennt die Ursache in Worten
 - **V01.1.315** Auswertungen 2b (Plan open-notebook): eigene Arten des Admins als Vorlagen, gleich geprüft wie die Kernaussagen; der Admin wählt, was von selbst entsteht; „Erinnern“ für Fristen der Wissenskarte mit vollem Datum; Mappen-Stufe „kurz“ bringt Kurzfassung und Kernaussagen mit Seite mit
-- **V01.1.314** Fix Entwickeln auf dem Pi: `sudo ./install.sh --entwickeln` brach mit neuerem git ab („dubious ownership“); der Klon von spark-dev kommt jetzt aus einem Bündel von root, nie aus dem Klon von root. Fehlgeschlagen: einfach `sudo ./install.sh --entwickeln` noch einmal
 
 
 

@@ -1374,7 +1374,7 @@ async def _test_asr(request, file, language, wake, room, opened="", heard=None):
         except ValueError:
             got = {}
         got = got if isinstance(got, dict) else {}
-        why = stille.check(str(got.get("text") or ""), await quiet)
+        why = stille.check(str(got.get("text") or ""), await quiet, form.get("prompt") or "")
         if why:
             for task in (spk, rv, fv):
                 if task is not None:

@@ -553,14 +553,20 @@ def _asr_form(cfg):
 
 async def transcribe(pcm: bytes) -> str:
     from core import api_headers
+    import stille
     pcm = louder(pcm)
     cfg = load_config()
+    form = _asr_form(cfg)
     async with httpx.AsyncClient(timeout=120) as c:
         r = await c.post(model_url("asr", "/v1/audio/transcriptions", cfg),
-                         files={"file": ("speaker.wav", wav16k(pcm))}, data=_asr_form(cfg), headers=api_headers())
+                         files={"file": ("speaker.wav", wav16k(pcm))}, data=form, headers=api_headers())
     verbrauch.heard("Lautsprecher", r)
     r.raise_for_status()
-    return str(r.json().get("text", "")).strip()
+    text = str(r.json().get("text", "")).strip()
+    if stille.context_echo(text, form.get("prompt")):   # the hint list read back from noise is no question
+        stille.note("context echo", "speaker")
+        return ""
+    return text
 
 
 SENTENCE_END = re.compile(r"[.!?…:;]\s|\n")

@@ -11,6 +11,11 @@ A fixed rule here decides from the recording itself, before the text counts:
    noise (subtitle credits, "Danke fürs Zuschauen") → no question. Nobody asks the Spark that.
 3. A lone short word ("Ja", "Okay", "Danke", "Hm") from a recording with less than FILLER_VOICED
    seconds of voice → no question. A spoken "Ja" is longer than that, so a real yes still counts.
+4. The recognition's own hint text read back: with Namen fürs Hören (hoerwoerter.py) the recognition gets a
+   list of names ("db, sb, Hans, …, Pool Pump 1, …"); from noise or a quiet room it sometimes writes that list
+   back as the text (Dominik 2026-11-04: the list arrived eight times as his question). A text that is mostly
+   names of that list (at least ECHO_ITEMS of them, ECHO_SHARE of its parts) → no question. A sentence that
+   names one or two devices ("Schalte Pool Pump 1 und Pool Light 1 ein") still counts.
 
 Only numbers about loudness are computed, the audio is not kept. Applies to every caller of
 /api/test/asr (app, browser, guests): the decision leaks nothing about anybody."""
@@ -32,6 +37,10 @@ SILENCE_PHRASES = (
     r"untertitel(ung)? (im auftrag|des|der|von)\b.*", r"(vielen )?dank (fürs|für's|für das) zus(c)?hauen",
     r"copyright\b.*", r".*amara\.org.*", r"thanks? (you )?for watching", r"please subscribe\b.*", r"subtitles? by\b.*",
 )
+ECHO_ITEMS = 3             # names of the hint list a read-back has at least
+ECHO_SHARE = 0.6           # share of the text's parts that are names of the hint list
+ECHO_WORDS = 8             # a read-back without commas: at least this many words ...
+ECHO_WORD_SHARE = 0.9      # ... nearly all of them words of the hint list
 _PHRASE = re.compile(r"^(?:%s)$" % "|".join(SILENCE_PHRASES), re.I)
 _NOISE = re.compile(r"^\W*[\[(*♪]+\s*(musik|music|stille|silence|applaus|applause|lachen|laughter|geräusche?|noise)?\s*[\])*♪]+\W*$", re.I)
 
@@ -57,9 +66,27 @@ def lone_filler(text):
     return 0 < len(w) <= 2 and len(set(w)) == 1 and w[0] in FILLERS
 
 
-def check(text, voiced):
-    """Why this recording is no question ("silence", "silence phrase", "too short"), or None.
-    voiced=None (unreadable audio) only checks the text."""
+def _items(text):
+    return [x for x in (" ".join(re.findall(r"[\wäöüß'\-]+", p.lower())) for p in re.split(r"[,;.\n]", str(text or ""))) if x]
+
+
+def context_echo(text, ctx):
+    """The text is the recognition's hint list (ctx) read back, or a cut-off piece of it."""
+    if not ctx or not text:
+        return False
+    known = set(_items(ctx))
+    parts = _items(text)
+    hits = sum(1 for p in parts if p in known)
+    if hits >= ECHO_ITEMS and hits >= ECHO_SHARE * len(parts):
+        return True
+    vocab = {w for k in known for w in k.split()}
+    words = " ".join(parts).split()
+    return len(words) >= ECHO_WORDS and sum(1 for w in words if w in vocab) >= ECHO_WORD_SHARE * len(words)
+
+
+def check(text, voiced, ctx=""):
+    """Why this recording is no question ("silence", "silence phrase", "too short", "context echo"), or None.
+    voiced=None (unreadable audio) only checks the text; ctx is the hint text the recognition got."""
     if voiced is not None and voiced < MIN_VOICED:
         return "silence"
     t = str(text or "").strip()
@@ -67,6 +94,8 @@ def check(text, voiced):
         return None
     if _PHRASE.match(_plain(t)) or _NOISE.match(t):
         return "silence phrase"
+    if context_echo(t, ctx):
+        return "context echo"
     if voiced is not None and voiced < FILLER_VOICED and lone_filler(t):
         return "too short"
     return None

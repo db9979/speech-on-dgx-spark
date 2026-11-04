@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "asr": {
-        "stand": "a3f935c195",
+        "stand": "a220a1da57",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "common.NOTASR_PORT": ["s9"], "common.NOTASR_IDLE": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],
@@ -111,11 +111,13 @@ SEITEN = {
                "without one.")),
             S("s10", "frage", ("Stille, Füllwort oder Echo?", "Silence, filler or echo?"),
               ("feste Regeln, kein Modell", "fixed rules, no model"),
-              ("stille.check verwirft Text aus fast stummen Aufnahmen und ein einzelnes „Ja“ oder „Okay“ mit zu "
-               "wenig Stimme. Für Profile prüft echo.check, ob der Text die eigene Stimme des Spark von einem anderen "
+              ("stille.check verwirft Text aus fast stummen Aufnahmen, ein einzelnes „Ja“ oder „Okay“ mit zu "
+               "wenig Stimme und die zurückgelesene Namensliste von „Namen fürs Hören“ (stille.context_echo, ab "
+               "{stille.ECHO_ITEMS} Namen der Liste). Für Profile prüft echo.check, ob der Text die eigene Stimme des Spark von einem anderen "
                "Gerät ist, und fremdstimme, ob ein von selbst geöffnetes Mikrofon eine fremde Stimme hörte.",
                "stille.check drops text from almost silent recordings and a lone „Yes“ or „Okay“ with too little "
-               "voice. For profiles echo.check looks whether the text is the Spark's own voice from another device, "
+               "voice and the name list of „Names for listening“ read back as text (stille.context_echo, from "
+               "{stille.ECHO_ITEMS} names of the list). For profiles echo.check looks whether the text is the Spark's own voice from another device, "
                "and fremdstimme whether a microphone that opened by itself heard an unknown voice."),
               ("stop", "ja", ("Leerer Text, nicht als Frage", "Empty text, no question"))),
             S("s11", "frage", ("Stimme erkannt?", "Voice recognized?"),
