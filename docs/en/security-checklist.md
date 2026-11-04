@@ -10,6 +10,7 @@ Go through before every commit. In the answer to Dominik briefly name which poin
 - [ ] If the address changes, the token must be entered again.
 - [ ] State changes only via POST/PUT/DELETE, never via GET. (`?take=true`)
 - [ ] Guests only get questions and answers: no tools, no personal data, no actions and no error texts, only error codes.
+- [ ] What the panel itself looks up in own data before the answer (the source switch's hit probe, „Look locally first“) runs only for the own profile in the own browser or with the owner's voice, never for guests, strangers' voices, Telegram without personal data or MCP; a collection of the conversation holds there too. (V01.1.330, 🧪 test_quellen)
 - [ ] An unknown recognised voice only gets non-personal tools. This also holds for parts a tool reads out along the way (briefing with reminders, Spark diary): personal parts only with `private_ok` or `ctx["own"]` and `ctx["private"]`. (Review 2026-10-14, 🧪 test_kontext_trennung)
 - [ ] Shared devices (speakers in the room): the device key alone does not count as the owner. Personal things only when speaker recognition reliably recognises the owner's voice in the same recording; otherwise guest rights, and earlier history does not carry over. Whose voice it was is set only by the panel (request scope), never by the request. (V01.0.226: an unknown voice got the owner's mails.)
 - [ ] Spoken code word (speaker, V01.0.297): only for a voice that is already almost certainly the owner, never for an unknown one; a code word of its own, not the smart-home code word; the sentence containing it never goes to the model, into history, diagnostics, display or log; lockout after failed attempts with a notification.
@@ -25,6 +26,7 @@ Go through before every commit. In the answer to Dominik briefly name which poin
 - [ ] Upper limit for jobs, tool calls per round, searches per answer and memory entries.
 - [ ] Caches have an expiry date and a maximum size, and the key contains no times accurate to the second.
 - [ ] Heavy synchronous work (RRULE expansion, large regex, ffmpeg) runs via `to_thread` with a time and quantity budget, never in the event loop. (A `FREQ=SECONDLY` appointment froze the panel.)
+- [ ] A search an answer waits for (the source switch's hit probe) runs in a thread of its own with a fixed budget (`quellen.PROBE_MS`) and at most `quellen.PROBE_BUSY` at the same time; another one does not queue, it goes on without a result. (V01.1.330, 🧪 test_quellen.Probe)
 - [ ] New systemd units have `MemoryMax=` and `PrivateTmp=yes`.
 
 ## Outside text (prompt injection)
@@ -32,6 +34,7 @@ Go through before every commit. In the answer to Dominik briefly name which poin
 - [ ] Outside text is wrapped as data for the model (`chat.wrap_outside`, `mail._wrap`), and delimiters inside it are defused, the model's own markers too (`<|im_start|>`, `<tool_call>`: `textnorm.defuse`; the LLM-Tor takes them out of every message).
 - [ ] A new way in for outside text and a new tool with an effect stand in `app/panel/angriffe.json` (a case, `gleicher_weg` or `anderswo` with a reason); `test_angriffe` attacks them with an obeying model. (attack self-test 2026-10-21)
 - [ ] After mail nothing goes to the internet that takes the model's words along (web search, Wikipedia, weather, transit): a new internet tool goes into `notaus.INTERNET_TOOLS`. (Until 2026-10-21 only the web search was blocked.)
+- [ ] When the panel itself searches the web while it reads own data („Look locally first“ for „both“), it takes only the question's own words (`lokal.own_words`) and starts the search before anything of the own data is read; mail or attachment hits in the quick look lock the answer like a read mail (`LOCKED_AFTER_MAIL`). Never with the kill switch or after an answer from mail. (V01.1.330, 🧪 test_quellen.Look, test_quellen.Turn)
 - [ ] A new reading tool goes into `READS_OUTSIDE`. A state made of words (Home Assistant, a sensor with text) counts as outside, short ones too. (Until 2026-10-21 a 37-character order in a text sensor saved a note.)
 - [ ] After outside text, switching, memory, reminders, suggestions and drafts are blocked, and that also in the next turn. (The "outside" mark got lost in the next turn.)
 - [ ] Answers from outside text are marked (`outside` event) and never learned into memory.

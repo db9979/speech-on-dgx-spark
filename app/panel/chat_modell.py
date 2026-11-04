@@ -174,28 +174,36 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
             import lokal
             t_lk = time.time()
             found = await local_task
+            turn.web_vorab = found.get("web")   # the own words were searched already: web_search takes it again
             if tr:   # Logs → Anfragen: one step, the numbers only
                 tr.step("tool", "Erst lokal (Panel)", t_lk, time.time(), hits=len(found["hits"]), docs=found["n"].get("docs"),
-                        archive=found["n"].get("kiwix"), history=found["n"].get("history"), late=len(found["late"]), ms=found["ms"],
-                        panel=True)
+                        fund=found["n"].get("fund"), web=found["n"].get("web"), archive=found["n"].get("kiwix"),
+                        history=found["n"].get("history"), mail=int(bool(found.get("mail"))), late=len(found["late"]),
+                        ms=found["ms"], panel=True)
             trace["calls"].append({"name": "Erst lokal (Panel)", "args": ", ".join(lokal.LABELS[k] for k in found["n"]),
                                    "result": f"{len(found['hits'])} Treffer in {found['ms']} ms"})
-            if found["hits"]:
+            if found["hits"] or found.get("web"):
                 msgs += [{"role": "assistant", "content": None, "tool_calls": [{"id": "lk0", "type": "function",
                           "function": {"name": "local_search",
                                        "arguments": json.dumps({"query": messages[-1]["content"][:200]})}}]},
-                         {"role": "tool", "tool_call_id": "lk0",
-                          "content": lokal.HEAD + "\n" + chat.wrap_outside(lokal.block(found["hits"]))}]
-                if not st["outside"]:
+                         {"role": "tool", "tool_call_id": "lk0", "content": lokal.message(found)}]
+                if found.get("mail"):   # a mail or attachment among the hits: locked like a read mail
+                    if not st["mail"]:
+                        st["mail"] = True
+                        await out.put({"type": "mail"})
+                elif not st["outside"]:
                     st["outside"] = True
                     await out.put({"type": "outside"})
-                if any(h["src"] == "docs" for h in found["hits"]):
+                st["outside"] = True
+                if any(h["src"] == "docs" or h.get("quelle") in ("dokument", "nas", "remarkable") for h in found["hits"]):
                     st["docs"] = True
                 arch = [h for h in found["hits"] if h.get("source")]
                 if arch:     # an archive article stands under the answer like a web page, with its book's date
                     await out.put({"type": "sources", "items": [h["source"] for h in arch]})
                     for h in arch:   # an old book gets its date said (frisch.nachsatz)
                         frisch.note_archive(h.get("date"), getattr(turn, "vorrat", None))
+                if found.get("web") and found["web"].get("sources"):   # the panel's own web search, under the answer
+                    await out.put({"type": "sources", "items": found["web"]["sources"]})
         direct = getattr(turn, "direct", None)
         if direct and direct not in locked(st):
             # "Eindeutiges direkt abrufen": the panel calls the one tool the question names (intent.DIRECT), the

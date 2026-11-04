@@ -10,6 +10,7 @@ Vor jedem Commit durchgehen. In der Antwort an Dominik kurz nennen, welche Punkt
 - [ ] Ändert sich die Adresse, muss das Token neu eingegeben werden.
 - [ ] Zustandsänderungen nur per POST/PUT/DELETE, nie per GET. (`?take=true`)
 - [ ] Gäste bekommen nur Frage und Antwort: keine Werkzeuge, keine persönlichen Daten, keine Aktionen und keine Fehlertexte, nur Fehlercodes.
+- [ ] Was das Panel vor der Antwort selbst in eigenen Daten nachsieht (Treffer-Probe der Quellen-Weiche, „Erst lokal“), läuft nur für das eigene Profil im eigenen Browser oder mit Inhaberstimme, nie für Gäste, fremde Stimmen, Telegram ohne persönliche Daten oder MCP; eine Mappe des Gesprächs gilt auch dort. (V01.1.330, 🧪 test_quellen)
 - [ ] Eine fremde erkannte Stimme bekommt nur nicht-persönliche Werkzeuge. Das gilt auch für Teile, die ein Werkzeug nebenbei vorliest (Briefing mit Erinnerungen, Spark-Tagebuch): persönliche Teile nur mit `private_ok` bzw. `ctx["own"]` und `ctx["private"]`. (Prüfung 2026-10-14, 🧪 test_kontext_trennung)
 - [ ] Geteilte Geräte (Lautsprecher im Raum): Der Geräteschlüssel allein zählt nicht als Inhaber. Persönliches nur, wenn die Sprechererkennung in derselben Aufnahme die Inhaberstimme sicher erkennt; sonst Gastrechte, früherer Verlauf geht nicht mit. Wessen Stimme es war, setzt nur das Panel (Request-Scope), nie die Anfrage. (V01.0.226: fremde Stimme bekam die Mails des Inhabers.)
 - [ ] Gesprochenes Codewort (Lautsprecher, V01.0.297): nur für eine Stimme, die schon fast sicher der Inhaber ist, nie für eine fremde; eigenes Codewort, nicht das Smart-Home-Codewort; der Satz damit geht nie ans Modell, in Verlauf, Diagnose, Anzeige oder Log; Sperre nach Fehlversuchen mit Mitteilung.
@@ -25,6 +26,7 @@ Vor jedem Commit durchgehen. In der Antwort an Dominik kurz nennen, welche Punkt
 - [ ] Obergrenze für Jobs, Werkzeugaufrufe pro Runde, Suchen pro Antwort und Speicher-Einträge.
 - [ ] Caches haben ein Ablaufdatum und eine Maximalgröße, und der Schlüssel enthält keine sekundengenauen Zeiten.
 - [ ] Schwere synchrone Arbeit (RRULE-Expansion, große Regex, ffmpeg) läuft per `to_thread` mit Zeit- und Mengenbudget, nie im Event-Loop. (Ein `FREQ=SECONDLY`-Termin hat das Panel eingefroren.)
+- [ ] Eine Suche, auf die eine Antwort wartet (Treffer-Probe der Quellen-Weiche), läuft in einem eigenen Thread mit festem Budget (`quellen.PROBE_MS`) und höchstens `quellen.PROBE_BUSY` gleichzeitig; eine weitere wartet nicht in einer Schlange, sondern geht ohne Ergebnis weiter. (V01.1.330, 🧪 test_quellen.Probe)
 - [ ] Neue systemd-Units haben `MemoryMax=` und `PrivateTmp=yes`.
 
 ## Fremder Text (Prompt-Injection)
@@ -32,6 +34,7 @@ Vor jedem Commit durchgehen. In der Antwort an Dominik kurz nennen, welche Punkt
 - [ ] Fremder Text wird beim Modell als Daten eingepackt (`chat.wrap_outside`, `mail._wrap`), und Trennzeichen darin werden entschärft, auch die eigenen Marken des Modells (`<|im_start|>`, `<tool_call>`: `textnorm.defuse`; das LLM-Tor nimmt sie aus jeder Nachricht).
 - [ ] Ein neuer Eingang für fremden Text und ein neues Werkzeug mit Wirkung stehen in `app/panel/angriffe.json` (Fall, `gleicher_weg` oder `anderswo` mit Grund); `test_angriffe` greift sie mit einem gehorsamen Modell an. (Angriffs-Selbsttest 2026-10-21)
 - [ ] Nach Mail geht nichts ins Internet, das Wörter des Modells mitnimmt (Websuche, Wikipedia, Wetter, Fahrplan): ein neues Internet-Werkzeug kommt nach `notaus.INTERNET_TOOLS`. (Bis 2026-10-21 war nur die Websuche gesperrt.)
+- [ ] Sucht das Panel selbst im Web, während es eigene Daten liest („Erst lokal“ bei „beides“), nimmt es nur die eigenen Worte der Frage (`lokal.own_words`) und startet die Suche, bevor etwas aus den eigenen Daten gelesen ist; Mail- oder Anhang-Treffer im kurzen Blick sperren die Antwort wie eine gelesene Mail (`LOCKED_AFTER_MAIL`). Nie bei Notaus oder nach einer Antwort aus Mail. (V01.1.330, 🧪 test_quellen.Look, test_quellen.Turn)
 - [ ] Ein neues lesendes Werkzeug kommt nach `READS_OUTSIDE`. Ein Zustand aus Wörtern (Home Assistant, ein Sensor mit Text) zählt als fremd, auch kurz. (Ein 37 Zeichen langer Befehl in einem Text-Sensor speicherte bis 2026-10-21 eine Notiz.)
 - [ ] Nach fremdem Text sind Schalten, Gedächtnis, Erinnerungen, Vorschläge und Entwürfe gesperrt, und zwar auch im nächsten Zug. (Das „Fremd“-Kennzeichen ging beim nächsten Zug verloren.)
 - [ ] Antworten aus fremdem Text werden markiert (`outside`-Event) und nie ins Gedächtnis gelernt.

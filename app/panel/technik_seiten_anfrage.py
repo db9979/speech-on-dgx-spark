@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "vorbereiten": {
-        "stand": "83fd2769cf",
+        "stand": "394a82cb9f",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -155,13 +155,15 @@ SEITEN = {
             S("s12", "schritt", ("Weiche grenzt ein", "The switch narrows"),
               ("intent.narrow · nie mehr als die Rechte", "intent.narrow · never more than the rights"),
               ("Mit „Gezielte Werkzeugwahl“ bleibt nur die Gruppe der Frage übrig. Danach entscheidet das Panel, ob "
-               "erst lokal gesucht wird (nie bei einem schlichten „Ja“ oder „Nein“ und nie, wenn es in diesem Zug schon "
+               "erst lokal gesucht wird (die Quellen-Weiche sagt intern, extern oder beides, nur für das eigene Profil; "
+               "nie bei einem schlichten „Ja“ oder „Nein“ und nie, wenn es in diesem Zug schon "
                "etwas bestätigt ausgeführt hat), ob es ein eindeutiges Abrufen selbst macht und welches Werkzeug die erste "
                "Runde rufen muss. Mit „Schneller Antwortbeginn“ bekommt eine erkannte Gruppe immer dieselbe Liste in "
                "derselben Reihenfolge, so hält der Server je Gruppe einen Anfang im Cache; nur eine unklare Frage sieht "
                "die volle Liste.",
                "With „Targeted tool choice“ only the question's group stays. Then the panel decides whether to search "
-               "locally first (never for a plain „yes“ or „no“ and never when it already carried out something confirmed "
+               "locally first (the source switch says internal, external or both, only for the own profile; never for "
+               "a plain „yes“ or „no“ and never when it already carried out something confirmed "
                "in this turn), whether it does a clear fetch itself and which tool the first round must call. With „Fast "
                "answer start“ a recognized group always gets the same list in the same order, so the server keeps one "
                "start per group in its cache; only an unclear question sees the full list.")),
@@ -238,7 +240,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)
     "weiche": {
-        "stand": "fca1692d25",
+        "stand": "b6a5d4d024",
         "bezug": {
             "intent.GROUPS": ["s4", "s6"], "intent_bench.BENCH": ["s4", "s5"], "intent_alltag.ALLTAG": ["s14"],
             "weiche.KEEP_VERSIONS": ["s4"], "intent.Route": ["s6"], "intent.follow_up": ["s8"],
@@ -246,6 +248,7 @@ SEITEN = {
             "weiche.count": ["s14"], "weiche_unklar.anon": ["s14"], "weiche.trace": ["s14"], "intent_alltag.measure": ["s14"], "regeln": ["s9"],
             "intent.OWN_WROTE": ["s5"], "intent.OWN_READ": ["s5"], "intent.OWN_PAPER": ["s5"], "intent.PARCEL_MAIL": ["s5"],
             "intent.NARROW_KEEP": ["s11"], "quellen_bench.BENCH": ["s14"], "quellen_bench.measure": ["s14"],
+            "quellen.klasse": ["s14"], "quellen.PROBE_MS": ["s14"], "quellen.blick": ["s14"],
             "regel:Modell ordnet ein": ["s10"], "regel:Knapp": ["s12"],
             "regel:Einordnung mit Wahrscheinlichkeit": ["s10"],
         },
@@ -473,6 +476,7 @@ SEITEN = {
             ("{intent_bench.BENCH|anzahl}", ("eingebaute Testsätze", "built-in test sentences"), "intent_bench.BENCH"),
             ("{intent_alltag.ALLTAG|anzahl}", ("Alltagssätze zum Messen", "everyday sentences for measuring"), "intent_alltag.ALLTAG"),
             ("{quellen_bench.BENCH|anzahl}", ("Sätze der Quellen-Messbank", "sentences of the source bench"), "quellen_bench.BENCH"),
+            ("{quellen.PROBE_MS}", ("ms höchstens für die Treffer-Probe der Quellen-Weiche", "ms at most for the source switch's hit probe"), "quellen.PROBE_MS"),
             ("{weiche.KEEP_VERSIONS}", ("Versionen für Rückgängig", "versions for undo"), "weiche.KEEP_VERSIONS"),
         ],
         "einstellen": [
@@ -536,6 +540,28 @@ SEITEN = {
                  "appointment, contact, conversation, list, knowledge book, web. Measured with every switch released, "
                  "without data, clock or model. A self-test holds the floor; it never goes down."),
             ]),
+            (("Quellen-Weiche (zweite Stufe)", "Source switch (second stage)"), [
+                ("Die Weiche hier ist die erste Stufe: sie bestimmt, was eine Handlung braucht. Für eine Wissens- oder "
+                 "Lesefrage entscheidet danach die Quellen-Weiche (quellen.klasse) mit festen Regeln, nie das Modell: "
+                 "intern (eigene Daten), extern (Welt) oder beides. Eigene Quelle genannt, eine Gruppe der eigenen "
+                 "Daten oder ein Besitzwort mit eigenen Daten heißt intern; Aktuelles und Welt (Wetter, Preise, "
+                 "Nachrichten, Ämter) extern; zeitloses Wissen und Wie-Fragen zum eigenen Gerät beides. Sonst prüft "
+                 "eine Treffer-Probe im eigenen Finden-Index (höchstens {quellen.PROBE_MS} ms, im eigenen Thread, nur "
+                 "für das eigene Profil, nie für Gäste, fremde Stimmen oder MCP): starke Treffer intern, schwache "
+                 "beides, keine extern. Ohne Finden bleibt es wie vorher. „Erst lokal“ fragt bei intern und beides "
+                 "alle freigegebenen Quellen (quellen.blick); bei beides sucht das Panel selbst mit den eigenen "
+                 "Worten im Web, bevor eine Mail gelesen ist. Die Messbank misst beide Stufen zusammen.",
+                 "The switch here is the first stage: it decides what an action needs. For a knowledge or reading "
+                 "question the source switch (quellen.klasse) then decides by fixed rules, never the model: internal "
+                 "(own data), external (the world) or both. An own source named, a group of the own data or a word "
+                 "of ownership with own data means internal; current things and the world (weather, prices, news, "
+                 "offices) external; timeless knowledge and how-to questions about the own device both. Otherwise a "
+                 "hit probe in the own Find index decides (at most {quellen.PROBE_MS} ms, in a thread of its own, "
+                 "only for the own profile, never for guests, other voices or MCP): strong hits internal, weak ones "
+                 "both, none external. Without Find it stays as before. „Local first“ asks every released source for "
+                 "internal and both (quellen.blick); for both the panel searches the web itself with the own words, "
+                 "before any mail is read. The bench measures both stages together."),
+            ]),
             (("Werkzeugnamen", "Tool names"), [
                 ("Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle "
                  "({werkzeuge.NAMES|anzahl} Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.",
@@ -563,12 +589,14 @@ SEITEN = {
             ("intent.OWN_PAPER", ("Preis laut eigener Unterlage, nie das Web", "price according to an own paper, never the web")),
             ("intent.PARCEL_MAIL", ("Paketwort mit eigener Mail → mail", "parcel word with the own mail → mail")),
             ("intent.NARROW_KEEP", ("bleibt immer beim Eingrenzen", "always kept when narrowing")),
+            ("quellen.klasse", ("zweite Stufe: intern, extern oder beides", "second stage: internal, external or both")),
+            ("quellen.blick", ("die Quellen des kurzen Blicks je Klasse", "the quick look's sources per class")),
         ],
-        "tests": ["test_intent", "test_intent_alltag", "test_quellen_bench", "test_weiche", "test_weiche_unklar", "test_werkzeuge", "test_systemone"],
+        "tests": ["test_intent", "test_intent_alltag", "test_quellen_bench", "test_quellen", "test_weiche", "test_weiche_unklar", "test_werkzeuge", "test_systemone"],
         "heute": [],
     },
     "antwort": {
-        "stand": "a8d814f290",
+        "stand": "d136bbd14d",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -619,12 +647,16 @@ SEITEN = {
               ("Smart Home, Erst lokal, direkter Abruf", "smart home, local first, direct fetch"),
               ("Hat die Vorbereitung entschieden, dass das Panel selbst handelt (ein Schaltbefehl, Zustände lesen, "
                "„Erst lokal suchen“, ein eindeutiger Lesewunsch), läuft das jetzt. Das Ergebnis geht wie ein "
-               "Werkzeug-Ergebnis an das Modell, fremder Text eingepackt als Daten. Ein Artikel aus dem eigenen "
-               "Kiwix steht danach als Quelle unter der Antwort, mit Buch und dessen Stand.",
+               "Werkzeug-Ergebnis an das Modell, fremder Text eingepackt als Daten; „Erst lokal“ bringt die besten "
+               "Treffer aller freigegebenen Quellen mit Quelle und Datum, bei beides dazu die Websuche des Panels mit "
+               "den eigenen Worten, und eine Mail darunter sperrt die Antwort wie eine gelesene Mail. Ein Artikel aus "
+               "dem eigenen Kiwix und die Seiten der Websuche stehen danach als Quelle unter der Antwort.",
                "When the preparation decided that the panel acts itself (a switch command, reading states, „search "
                "locally first“, a clear reading request), it runs now. The result goes to the model like a tool "
-               "result, outside text wrapped as data. An article from the own Kiwix then stands as a source under the "
-               "answer, with its book and the book's date.")),
+               "result, outside text wrapped as data; „local first“ brings the best hits of every released source with "
+               "source and date, for both also the panel's web search with the own words, and a mail among them locks "
+               "the answer like a read mail. An article from the own Kiwix and the pages of the web search then stand "
+               "as sources under the answer.")),
             S("s4", "schritt", ("Runde vorbereiten", "Prepare a round"),
               ("höchstens vier Werkzeug-Runden", "at most four tool rounds"),
               ("Angeboten wird die Liste ohne gesperrte, wegen Fehlern gestoppte oder zu oft genutzte Werkzeuge. "
@@ -834,7 +866,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "b9684e68aa",
+        "stand": "b90d9c8013",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_AFTER_MAIL": ["s4"],
@@ -885,12 +917,16 @@ SEITEN = {
               ("Hat diese Antwort schon Text von draußen gelesen, darf nichts mehr das Zuhause, das Gedächtnis, "
                "Termine oder Erinnerungen ändern. Nach einer Mail ist auch alles zu, was ins Internet fragt (Websuche, "
                "Wikipedia, Wetter, Fahrplan), nach eigenen Dokumenten die Websuche "
-               "ebenfalls (außer bei „Erst lokal suchen“, dann nur mit den eigenen Worten der Frage). Ein Lied, das die "
+               "ebenfalls (außer bei „Erst lokal suchen“, dann nur mit den eigenen Worten der Frage; hat das Panel sie "
+               "vorab schon gesucht, kommt dieses Ergebnis). Eine Mail unter den Treffern von „Erst lokal“ sperrt wie "
+               "eine gelesene Mail. Ein Lied, das die "
                "Person selbst wünscht, bleibt nach Text von außen offen (own), nach Mail nicht.",
                "When this answer already read text from outside, nothing may change the home, the memory, "
                "appointments or reminders any more. After a mail everything that asks the internet is closed too (web "
                "search, Wikipedia, weather, transit), after own documents the web search "
-               "(except with „search locally first“, then only with the question's own words). A song the person asks "
+               "(except with „search locally first“, then only with the question's own words; when the panel searched "
+               "them before, that result comes). A mail among the hits of „local first“ locks like a read mail. A song "
+               "the person asks "
                "for stays open after outside text (own), not after mail."),
               ("stop", "ja", ("Gesperrt (fremder Text)", "Blocked (outside text)"))),
             S("s5", "frage", ("Dienst gerade weg?", "Service gone right now?"),

@@ -1,7 +1,9 @@
-"""Quellen-Messbank (plan such-index/zuverlaessig.md, steps 1 and 2): intern, extern or beides, and the own sources a
-question can reach on today's decision path (intent.classify, intent.narrow, lokal.classify).
+"""Quellen-Messbank (plan such-index/zuverlaessig.md, steps 1 to 4): intern, extern or beides, and the own sources a
+question can reach on the decision path (intent.classify, intent.narrow, quellen.klasse with the stand-in index,
+quellen.blick).
 
-- FLOOR holds the score after step 2 and is never lowered; step 3 (the Quellen-Weiche) raises it to at least 90 %.
+- FLOOR holds the score after step 3 (at least 90 %, Dominik 2026-11-04) and is never lowered; no question about own
+  mails goes outside (MAX_MAIL_EXTERN 0).
 - Mails are a normal own source: chat.MAIL_HINT no longer holds them back, the documents hint names Finden beside
   document_search, and fund_suche stays when the Weiche narrows (only where it was offered).
 - Guests, a stranger's voice, a shared speaker and MCP clients never get fund_suche, narrowed or not.
@@ -21,13 +23,15 @@ import features  # noqa: E402
 import fund  # noqa: E402
 import intent  # noqa: E402
 import lokal  # noqa: E402
+import quellen  # noqa: E402
 import quellen_bench as qb  # noqa: E402
 
 # measured 04.11.2026 on 66 sentences: before step 2 (V01.1.317) 38 right (57.6 %), class 43, mail out 3;
-# after step 2 (V01.1.329) 55 right (83.3 %), class 55, mail out 1. Raise when the rules get better, never lower.
-FLOOR = 55              # right: class and every needed source
-FLOOR_CLASS = 55        # right class
-MAX_MAIL_EXTERN = 1     # questions about own mails sent outside (goal 0)
+# after step 2 (V01.1.329) 55 right (83.3 %), class 55, mail out 1; after steps 3 and 4 (V01.1.330) 66 right (100 %),
+# class 66, mail out 0. Raise when the rules get better, never lower.
+FLOOR = 66              # right: class and every needed source
+FLOOR_CLASS = 66        # right class
+MAX_MAIL_EXTERN = 0     # questions about own mails sent outside
 PROBES = ("Was hat mir Thomann wegen der Lieferung geschrieben?", "Was kostet die Wärmepumpe laut Angebot?",
           "Hat sich der Klempner wegen dem Angebot gemeldet?", "Wie hieß nochmal das Hotel in Lissabon?",
           "Wer ist Bundeskanzler?", "Wie funktioniert eine Wärmepumpe?", "Such die Mail von Thomann")
@@ -75,11 +79,27 @@ class Bench(unittest.TestCase):
         m = qb.measure(rows)
         self.assertEqual((m["n"], m["richtig"], m["klasse"]), (3, 2, 2), m["rows"])
         self.assertEqual(m["rows"][0]["got"], "handlung")
-        # a narrowing that drops Finden loses the mails of a document question (the state before step 2)
-        cut = lambda route, tools, ccfg=None: [t for t in intent.narrow(route, tools, ccfg)   # noqa: E731
-                                               if t["function"]["name"] != "fund_suche"]
-        m = qb.measure(rows[1:2], narrow=cut)
-        self.assertEqual((m["richtig"], m["klasse"], m["rows"][0]["fehlt"]), (0, 1, ["mail"]))
+        # the probe decides a question no rule knows: the stand-in index has the hotel, an empty one sends it out
+        rows = [("Wie hieß nochmal das Hotel in Lissabon?", "intern", "mail")]
+        self.assertEqual(qb.measure(rows)["richtig"], 1)
+        m = qb.measure(rows, probe=lambda worte: [])
+        self.assertEqual((m["richtig"], m["rows"][0]["got"], m["rows"][0]["gruende"]), (0, "extern", "Probe leer"))
+        # without the quick look's Finden the mail of a document question is out of reach (the state before step 4)
+        was = dict(qb.LOOK_SOURCES)
+        try:
+            qb.LOOK_SOURCES.pop("fund_suche")
+            cut = lambda route, tools, ccfg=None: [t for t in intent.narrow(route, tools, ccfg)   # noqa: E731
+                                                   if t["function"]["name"] != "fund_suche"]
+            m = qb.measure([("Wann läuft meine Kfz-Versicherung ab?", "intern", "dokument+mail")], narrow=cut)
+            self.assertEqual((m["richtig"], m["klasse"], m["rows"][0]["fehlt"]), (0, 1, ["mail"]))
+        finally:
+            qb.LOOK_SOURCES.clear()
+            qb.LOOK_SOURCES.update(was)
+
+    def test_the_quick_look_reaches_every_released_source(self):
+        """Step 4: intern and beides look in every source Finden has, the documents and the conversations."""
+        self.assertEqual(qb.LOOK_SOURCES["fund_suche"], set(qb.SOURCES) - {"web"})
+        self.assertEqual(set(qb.LOOK_SOURCES), {lokal.SOURCES[k] for k in ("fund", "docs", "history")})
 
 
 class Fixes(unittest.TestCase):
@@ -142,11 +162,11 @@ class Fixes(unittest.TestCase):
                         ("Was schreibt die Zeitung zur Wahl?", ""),                     # a newspaper, never own data
                         ("Mach das Licht an, hat mir Tom geschrieben", "smarthome+mail")):
             self.assertEqual("+".join(intent.classify(q).names), want, q)
-        for q, want in (("Wann kommt meine Amazon-Bestellung?", ""), ("Wo ist mein Paket?", "extern"),
-                        ("Was kostet die Wärmepumpe laut Angebot?", "lokal"), ("Was kostet ein iPhone 17?", "extern"),
-                        ("Welche Mails kamen heute vom Finanzamt?", ""), ("Was steht heute an?", ""),
+        for q, want in (("Wann kommt meine Amazon-Bestellung?", "intern"), ("Wo ist mein Paket?", "extern"),
+                        ("Was kostet die Wärmepumpe laut Angebot?", "intern"), ("Was kostet ein iPhone 17?", "extern"),
+                        ("Welche Mails kamen heute vom Finanzamt?", "intern"), ("Was steht heute an?", "intern"),
                         ("Was gibt es heute für Nachrichten?", "extern")):
-            self.assertEqual(lokal.classify(q, intent.classify(q))[0], want, q)
+            self.assertEqual(quellen.klasse(q, None, {"route": intent.classify(q)})[0], want, q)
 
 
 if __name__ == "__main__":

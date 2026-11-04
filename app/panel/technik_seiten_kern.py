@@ -243,13 +243,13 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "e17af39b05",
+        "stand": "bc65b28cb6",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
             "docembed._call": ["s3"], "nachsortieren.rank": ["s10"], "wissen.recent_window": ["s11"], "frisch.spanne": ["s11"],
             "fund.pruefe": ["s13"], "fund.sofort_satz": ["s13"], "fund.klar_vorn": ["s13"],
-            "wissen.where": ["s13"], "lokal.look": ["s5"], "gedaechtnis.hint_lines": ["s13"], "profiles._cap": ["s13"],
+            "wissen.where": ["s13"], "lokal.look": ["s5"], "lokal.message": ["s5"], "quellen.blick": ["s5"], "lokal.MAX_WEB_CHARS": ["s5"], "gedaechtnis.hint_lines": ["s13"], "profiles._cap": ["s13"],
             "gedaechtnis.slot_of": ["s13"], "gemerkt.take_back": ["s13"],
             "regeln": ["s1", "s8"], "regel:Geteilte Dokumente": ["s8"], "regel:Gedächtnis": ["s13"],
             "regel:Erst lokal suchen": ["s5"], "regel:Wissensbuch": ["s13"], "wissensbuch.answer_block": ["s13"],
@@ -507,6 +507,7 @@ SEITEN = {
             ("{docembed.MIN_FREE_PANEL_GIB} GiB", ("dasselbe auf einem Panel-Rechner (Spark teilen)", "the same on a panel computer (Spark teilen)"), "docembed.MIN_FREE_PANEL_GIB"),
             ("{lokal.MAX_HITS}", ("Treffer höchstens bei „Erst lokal suchen“", "hits at most with „Look locally first“"), "lokal.MAX_HITS"),
             ("{lokal.MAX_HIT_CHARS}", ("Zeichen je Treffer bei „Erst lokal suchen“, um die Suchwörter", "characters per hit with „Look locally first“, around the search words"), "lokal.MAX_HIT_CHARS"),
+            ("{lokal.MAX_WEB_CHARS}", ("Zeichen höchstens aus der Websuche des Panels bei „Erst lokal suchen“", "characters at most from the panel's web search with „Look locally first“"), "lokal.MAX_WEB_CHARS"),
             ("{documents.TABLE}", ("Zeichen, bis zu denen eine Tabelle eine Stelle bleibt", "characters up to which a table stays one passage"), "documents.TABLE"),
             ("{pdftabellen.BUDGET_S} s", ("längste Zeit je PDF für das Lesen der Tabellen", "longest time per PDF for reading its tables"), "pdftabellen.BUDGET_S"),
             ("{wissensbuch.PAGES_PER_DOC}", ("Seiten, die ein Dokument im Wissensbuch ändern darf", "pages one document may change in the knowledge book"), "wissensbuch.PAGES_PER_DOC"),
@@ -857,12 +858,28 @@ SEITEN = {
                  "„wissen: kartensuche fehler“."),
             ]),
             (("Erst lokal suchen", "Look locally first"), [
-                ("Vor der ersten Runde schaut das Panel selbst in Dokumente, Kiwix und frühere Gespräche, gleichzeitig "
-                 "und nur kurz. Die Bedeutungssuche fährt nur mit, wenn ihr Modell schon läuft und frei ist; es wird "
-                 "dafür nicht geweckt.",
-                 "Before the first round the panel itself looks in documents, Kiwix and earlier conversations, at the "
-                 "same time and only briefly. Meaning search only rides along when its model already runs and is free; "
-                 "it is not woken for it."),
+                ("Vor der ersten Runde schaut das Panel selbst nach, gleichzeitig und nur kurz. Welche Fragen das sind, "
+                 "entscheidet die Quellen-Weiche (Seite Weiche): bei intern und beides fragt es über Finden alle "
+                 "freigegebenen Quellen (Mails und Anhänge, Termine, Kontakte, Dokumente, NAS, reMarkable, Gespräche, "
+                 "Listen, Wissensbuch; eine Mappe des Gesprächs gilt auch hier), dazu die Dokumente mit ihrer "
+                 "Stelle und die früheren Gespräche, bei beides auch das Kiwix (quellen.blick). Höchstens "
+                 "{lokal.MAX_HITS} Treffer gehen quellenübergreifend mit Quelle und Datum als fremder Text ans Modell "
+                 "(lokal.message); eine Mail darunter sperrt die Antwort wie eine gelesene Mail. Bei beides sucht das "
+                 "Panel selbst mit den eigenen Worten der Frage im Web (höchstens {lokal.MAX_WEB_CHARS} Zeichen), "
+                 "gestartet, bevor etwas aus den eigenen Daten gelesen ist. Ohne Finden bleibt es bei Dokumenten, "
+                 "Kiwix und früheren Gesprächen. Die Bedeutungssuche fährt nur mit, wenn ihr Modell schon läuft und "
+                 "frei ist; es wird dafür nicht geweckt.",
+                 "Before the first round the panel itself looks, at the same time and only briefly. Which questions "
+                 "those are, the source switch decides (page Routing): for internal and both it asks every released "
+                 "source through Find (mails and attachments, appointments, contacts, documents, NAS, reMarkable, "
+                 "conversations, lists, knowledge book; a collection of the conversation holds here too), plus the "
+                 "documents with their passage and the earlier conversations, for both also the Kiwix (quellen.blick). "
+                 "At most {lokal.MAX_HITS} hits across the sources go to the model with source and date as outside "
+                 "text (lokal.message); a mail among them locks the answer like a read mail. For both the panel "
+                 "searches the web itself with the own words of the question (at most {lokal.MAX_WEB_CHARS} "
+                 "characters), started before anything of the own data is read. Without Find it stays with documents, "
+                 "Kiwix and earlier conversations. Meaning search only rides along when its model already runs and is "
+                 "free; it is not woken for it."),
                 ("Eine Stelle zählt nur, wenn sie mindestens {lokal.COVER} der Suchwörter enthält (ein langes Wort darf um "
                  "ein bis zwei Buchstaben vertippt sein, lokal.same). Was zu spät kommt, "
                  "wird nicht abgewartet. Das Kiwix hat eine eigene Zeitgrenze (Standard {lokal.DEFAULT_KIWIX_MS} ms, "
@@ -995,6 +1012,8 @@ SEITEN = {
             ("fund.sofort_satz", ("Sofort-Karte: fester Satz des Panels", "Sofort-Karte: the panel's fixed sentence")),
             ("wissen.where", ("Herkunft einer Stelle für das Modell", "source of a passage for the model")),
             ("lokal.look", ("der kurze Blick vor der Antwort", "the quick look before the answer")),
+            ("lokal.message", ("Treffer und Web als fremder Text ans Modell", "hits and web as outside text to the model")),
+            ("quellen.blick", ("welche Quellen je Klasse der Quellen-Weiche", "which sources per class of the source switch")),
             ("lokal.excerpt", ("das Stück einer Stelle mit den Suchwörtern", "the part of a passage with the search words")),
             ("pdftabellen.read", ("Tabellen in PDFs zeilenweise lesen", "read tables in PDFs row by row")),
             ("documents._rows", ("lange Tabellen nur zwischen Zeilen teilen", "cut long tables only between rows")),

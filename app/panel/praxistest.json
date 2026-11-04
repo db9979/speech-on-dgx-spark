@@ -5188,6 +5188,20 @@
 "titel": "Entwickeln: Terminal kompakt, OpenCode sofort",
 "text": "Am Rechner (1440 × 900) Zustand → Werkstatt → Entwickeln, Reiter Terminal, „Terminal öffnen“ mit Code: OpenCode startet sofort, das Terminal reicht bis an den unteren Fensterrand, die Seite scrollt nicht. Oben nur eine Leiste: OpenCode · eigenes Modell, Rechner, Zweig, Leerlauf; stehen Hinweise an, steht dort „N Hinweise“ (rot bei einem dringenden) statt der Banner, ein Klick zeigt sie mit „Ansehen“; der Code steht als „Code N min“. „Fertig?“ zeigt die Angaben und „Kein sudo hier“. ⤢ zeigt nur das Terminal im Vollbild. OpenCode mit ctrl+c beenden: die Shell bleibt mit „OpenCode ist zu. Neu starten: opencode“; opencode startet es wieder, sudo sagt nein. Eine andere Seite öffnen: die Hinweise stehen wieder oben. Am Handy: erst in der Übersicht einen Eintrag öffnen, dann Reiter Terminal: das Terminal ist da, mit Tastenreihe Esc Tab Strg Alt und Pfeilen. Per SSH als spark-dev: opencode startet OpenCode, die Anmeldung bleibt eine normale Shell.",
 "thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P767",
+"v": 1330,
+"titel": "Quellen-Weiche: intern, extern oder beides",
+"text": "Admin: Funktionen → Websuche → Erst lokal suchen an, Funktionen → Finden in allen Daten an (mit Mails und Anhängen). Zustand → Prüfen → „Erst lokal testen“ als Profil im Browser: „Wer ist Bundeskanzler?“ zeigt extern (Aktuelles), „Wie funktioniert eine Wärmepumpe?“ beides (zeitlos), „Was hat mir die Hausverwaltung geschrieben?“ intern (eigene Daten), ein eigener Begriff aus dem Index („Wie hieß nochmal das Hotel in …?“) intern mit „Treffer-Probe: N Treffer in N ms“ (unter 150 ms), ein unbekannter Begriff extern (Probe leer). „Wie geht mein iPhone in den Flugmodus?“ zeigt beides. Logs → Bereich „Wissen“: eine Zeile „lokal: Klasse … (…) | Probe … Treffer … ms“ ohne Wörter der Frage. Ohne Finden zeigt dieselbe Frage „ohne Probe“.",
+"thread": "Alles schnell finden über einen Index"
+},
+{
+"id": "P768",
+"v": 1330,
+"titel": "Erst lokal: alle Quellen, Web nur mit eigenen Worten",
+"text": "Mit beiden Schaltern wie in P767 im Chat fragen: „Was schreibt die Hausverwaltung zur Nebenkostenabrechnung?“: die Antwort nennt die Mail mit Datum, Logs → Anfragen zeigt „Erst lokal (Panel)“ mit Finden und mail 1, Zustand → Live am Knoten Finden „Quellen-Weiche heute … intern“. Danach „Wie funktioniert eine Wärmepumpe?“: unter der Antwort stehen Web-Quellen, im Journal „Web 1“; die Suche in SearXNG trägt genau die Worte der Frage. Mit einer eigenen Mail, die das Wort Wärmepumpe enthält: die Antwort ist als Antwort aus Mail markiert, eine weitere Websuche in dieser Antwort gibt es nicht. Als Gast und mit fremder Stimme am Lautsprecher: keine Treffer aus eigenen Daten, keine Probe.",
+"thread": "Alles schnell finden über einen Index"
 }
 ]
 }

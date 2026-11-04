@@ -1409,6 +1409,13 @@ async def web_search(c, ccfg, query, period="", news=False, topic=False):
     return text, [dict(x) for x in sources]
 
 
+async def web_search_own(ccfg, query, period="", news=False):
+    """web_search for the panel's own search with the person's own words (lokal.look for "beides", plan
+    such-index/zuverlaessig.md step 4), with a client of its own: it starts before the answer's client exists."""
+    async with httpx.AsyncClient(timeout=httpx.Timeout(10, connect=3)) as c:
+        return await web_search(c, ccfg, query, period, news)
+
+
 WEEKDAYS = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
 MONTHS = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September",
           "Oktober", "November", "Dezember"]

@@ -2,31 +2,39 @@
 the person's own sources itself. Off until the admin allows it (chat.local_first); then
 on for every profile unless the admin blocks one (Personen und Geräte → Gesperrte Funktionen). Guests never (they have no own sources).
 
-A fixed rule (classify) sorts the person's own latest message, never the model:
-- "extern": asks for the web in so many words, weather, trains, parcels, news, prices, anything current.
-  Nothing changes, no delay.
-- "lokal": names an own source ("in meinen Unterlagen", "im Archiv", "haben wir besprochen"). The web search
-  is left out of this answer; the person can ask for it in a new message.
-- "wissen": any other question with words to look up. The quick look (run) asks the own and shared documents
-  (full text; meaning search only when that model already runs and is free), the own Kiwix and the earlier
-  conversations at the same time, for at most chat.local_first_ms (200 to 1500, default 400); the Kiwix has its
-  own limit chat.local_first_kiwix_ms (200 to 2000, default 900), a big archive often needs longer than the own
-  documents (Dominik 2026-10-21). What is not back by its limit is not waited for. Good hits (at most MAX_HITS, MAX_HIT_CHARS each;
-  from a document the part around the question's words, from a table its head and the fitting rows: excerpt) go to the model in the
-  first round as a tool result, wrapped as outside text: data, never an instruction, and the answer is
-  locked like one made from a web page (no switching, saving, reminders).
-- "": anything else (switching, lists, mail, small talk ...). Nothing changes.
+Which of the person's questions get a quick look is decided by the Quellen-Weiche (quellen.klasse, plan
+such-index/zuverlaessig.md, step 3), by fixed rules on the person's own words, never the model:
+- "extern": the web, weather, trains, parcels, news, prices, anything current. Nothing changes, no delay.
+- "intern": the own data. With Finden released (source "fund") the quick look (run) asks every own source at the
+  same time (step 4): Finden's index over mails and attachments, appointments, contacts, documents, NAS, reMarkable,
+  conversations, lists and the Wissensbuch (fund.suche with the profile's releases and a Mappe bound to the
+  conversation), the own and shared documents (full text; meaning search only when that model already runs and
+  is free) and the earlier conversations, for at most chat.local_first_ms (200 to 1500, default 400). An own
+  source named in so many words („in meinen Unterlagen“, „laut Angebot“) also leaves the web out of this answer.
+- "beides": the same quick look plus the own Kiwix (its own limit chat.local_first_kiwix_ms, 200 to 2000, default
+  900, Dominik 2026-10-21) and the panel's own web search with the person's own words of this message (own_words),
+  started before anything of the own data is read: no mail text can reach the web.
+- "": anything else (switching, small talk, a plain yes ...). Nothing changes.
+Without Finden it stays as before step 3: documents, Kiwix and conversations for a question to look up, no web
+search by the panel. What is not back by its limit is not waited for. Good hits (at most MAX_HITS across the
+sources, round by round, each with its source and date, MAX_HIT_CHARS each; from a document the part around the
+question's words, from a table its head and the fitting rows: excerpt) go to the model in the first round as one
+tool result, wrapped as outside text: data, never an instruction, and the answer is locked like one made from a web
+page (no switching, saving, reminders); a mail or attachment among them locks it like a read mail
+(chat.LOCKED_AFTER_MAIL: nothing more to the internet).
 
 Which sources a person gets is exactly what the tools of this turn offer (document_search, archive_search,
-history_search, and fund_suche for Finden's clear sources since its Stufe D): a voice that is not the owner's, Telegram without personal data, a guest get none of them.
+history_search, fund_suche, web_search): a voice that is not the owner's, Telegram without personal data, MCP and a
+guest get none of them.
 
 Web after documents: an answer that read the person's documents normally cannot search the web (a document
 could carry its text away in a query). With this switch on the search stays possible, but the panel sends the
-person's own words of this message (own_words), never what the model writes (chat_tools.py). After e-mail
-the web stays locked as before.
+person's own words of this message (own_words), never what the model writes (chat_tools.py); when the panel already
+searched them for "beides", that result is used again. After e-mail the web stays locked as before.
 
 Journal (Zustand -> Logs, area "Wissen"): one "lokal:" line per question with the class, hits per source, the
-time and what happens next; never the question or what was found.
+time and what happens next ("lokal: Klasse intern (Probe stark) | Probe 3 Treffer 42 ms | …"); never the question or
+what was found.
 """
 import asyncio
 import re
@@ -49,17 +57,18 @@ MS_RANGE = (200, 1500)
 DEFAULT_MS = 400
 KIWIX_RANGE = (200, 2000)
 DEFAULT_KIWIX_MS = 900
-MAX_HITS = 3
+MAX_HITS = 5                # across all sources (plan such-index/zuverlaessig.md, step 4)
+MAX_WEB_CHARS = 2000        # of the panel's own web search with the own words ("beides")
 MAX_HIT_CHARS = 500
 COVER = 0.6                 # share of the question's words a passage must contain
 PREFIX = 4                  # letters of a long word kept when the title lookup completes it (variants)
 MAX_VARIANTS = 3            # further title lookups per book when the whole question found no title
 MAX_TEST = 500
-# "fund": Finden's index (fund.py, Stufe D), only its clear sources without an index of their own here (Wissensbuch,
-# lists, reminders, pictures, songs: fund.LOKAL); documents and conversations come through their own source, mail,
-# appointments and contacts never in the quick look (sealed, and a stranger's mail is no answer to a knowledge question)
+# "fund": Finden's index (fund.py) over every source the profile released (mails and attachments, appointments,
+# contacts, documents, NAS, reMarkable, conversations, lists, Wissensbuch …), since step 4 of plan such-index; "web":
+# the panel's own web search with the own words (quellen.blick adds it for "beides", never a tool of its own here)
 SOURCES = {"docs": "document_search", "kiwix": "archive_search", "history": "history_search", "fund": "fund_suche"}
-LABELS = {"docs": "Dokumente", "kiwix": "Archiv", "history": "Verlauf", "fund": "Finden"}
+LABELS = {"docs": "Dokumente", "kiwix": "Archiv", "history": "Verlauf", "fund": "Finden", "web": "Web"}
 
 # words that only ask, they say nothing about what is asked for ("Wie hoch ist die Zugspitze?" -> zugspitze)
 _ASK = """wer wen wem wessen was wie wo woher wohin wann warum wieso weshalb welche welcher welches welchen welchem
@@ -69,36 +78,20 @@ weißt weisst kennst über ueber mir mich uns dir dich hoch lang groß gross alt
 schnell heißt heisst bedeutet bedeutung ich du mein meine meinen meinem meiner dein deine unser unsere man macht mache machen funktioniert funktionieren
 geht gehen gut beste besten richtig dauert einfach steht stehen stand the what who how where when why which does did tell me about explain
 zur zum alles alle etwas mitteilen mitteile erzählst schau schaue nachschauen nachsehen such suche informationen info infos
-details archiv kiwix dokumenten unterlagen"""
+details archiv kiwix dokumenten unterlagen weiß weiss hieß hiess nochmal wegen beim vom von sich show from get back"""
 ASK_WORDS = set(documents._terms(_ASK)) | set(_ASK.split())
-# the person names an own source: then only there
-LOCAL = re.compile(r"(?i)\b(mein\w* (dokument\w*|unterlage\w*|datei\w*|pdfs?|papier\w*|vertr[aä]g\w*|rechnung\w*|"
-                   r"versicherung\w*|brief\w*|notiz\w*|ordner\w*|archiv\w*|aufzeichnung\w*)|in den (dokumenten|unterlagen)|"
-                   r"hochgeladen\w*|kiwix|offline-?archiv\w*|im archiv|nachschlagewerk\w*|"
-                   r"(haben|hatten) wir .{0,40}(gesprochen|geredet|besprochen)|hast du (mir )?(gesagt|erzählt)|"
-                   r"letzte[ns]? mal|neulich|weißt du noch|weisst du noch)\b")
-# clearly outside: current things the own sources cannot know
-EXTERN = re.compile(r"(?i)\b(aktuell\w*|neueste\w*|neuste\w*|heute|heutige\w*|gestern|morgen|übermorgen|gerade|derzeit|"
-                    r"zurzeit|momentan|diese[nrms]? (woche|monat|jahr)|letzte[nrms]? (woche|monat|nacht)|live|"
-                    r"nachrichten|news|schlagzeile\w*|preis\w*|kostet|kurs\w*|aktie\w*|börse\w*|bitcoin|wahl\w*|"
-                    r"umfrage\w*|öffnungszeit\w*|geöffnet|stau\w*|verkehrslage|20[2-9]\d|latest|today|yesterday|"
-                    r"current\w*|price\w*)\b")
-EXTERN_GROUPS = {"websuche", "wetter", "bahn", "paket"}
-# a parcel of one's own order („meine Bestellung“, „was ich bestellt habe“) reads the own mails: not outside by itself
-# (plan such-index/zuverlaessig.md, step 2)
-PARCEL_OWN = re.compile(r"(?i)\b((mein|meine|meinen|meiner|unser|unsere|unseren)\s\S*bestellung\w*|"
-                        r"(ich|wir)\b.{0,40}\bbestellt|bestellt (hab|habe|hatte|haben|hatten)\b)")
-# groups that read the person's own data: a word like „heute“ there („Welche Mails kamen heute?“) is no outside question
-OWN_GROUPS = {"mail", "kalender", "kontakt", "finden", "liste", "gedaechtnis", "nachricht", "mappe"}
-LOCAL_ONLY = ("Der Nutzer fragt nach seinen eigenen Quellen: such nur dort (Dokumente, Archiv, frühere Gespräche). "
-              "Ins Internet gehst du in dieser Antwort nicht. Steht dort nichts, sag das; will er im Web suchen, "
-              "soll er es in einer neuen Nachricht sagen.")
-HEAD = ("Vor jeder Suche draußen hat das Panel in den eigenen Quellen nachgesehen (eigene Unterlagen, eigenes "
-        "Kiwix-Archiv, frühere Gespräche). Beantwortet das die Frage, antworte daraus und sag am Anfang in einem "
-        "halben Satz, woher es stammt („In deinen Unterlagen …“, „Laut deinem Archiv …“, „Wir hatten am … darüber "
+LOCAL_ONLY = ("Der Nutzer fragt nach seinen eigenen Quellen: such nur dort (eigene Daten, Dokumente, Archiv, frühere "
+              "Gespräche). Ins Internet gehst du in dieser Antwort nicht. Steht dort nichts, sag das; will er im Web "
+              "suchen, soll er es in einer neuen Nachricht sagen.")
+HEAD = ("Vor jeder Suche draußen hat das Panel in den eigenen Quellen nachgesehen (eigene Mails und Anhänge, Termine, "
+        "Kontakte, Unterlagen, Listen, Wissensbuch, eigenes Kiwix-Archiv, frühere Gespräche, soweit freigegeben). "
+        "Beantwortet das die Frage, antworte daraus und sag am Anfang in einem halben Satz, woher es stammt („In "
+        "deinen Unterlagen …“, „In der Mail vom … schreibt …“, „Laut deinem Archiv …“, „Wir hatten am … darüber "
         "gesprochen …“). Passt es nicht zur Frage, nenne es nicht. Reicht es nicht und web_search ist angeboten, "
         "suche im Web und sag kurz, dass lokal nichts Passendes war. Zeitlose Allgemeinfragen darfst du aus eigenem "
         "Wissen beantworten. Mit article_more liest du einen Archiv-Artikel weiter.")
+WEB_HEAD = ("Dazu hat das Panel mit den eigenen Worten der Frage im Web gesucht (Ergebnis unten, mit Quellen). Nimm "
+            "eigene Daten und Web zusammen und sag, was woher stammt.")
 
 
 def ccfg():
@@ -207,39 +200,6 @@ def variants(text):
     return [q for q in dict.fromkeys(out) if q][:MAX_VARIANTS]
 
 
-# a short answer to the assistant's question before („Ja“, „Nein danke“, ablauf.short_reply) is never a knowledge
-# question of its own (V01.0.804: „Ja“ to a proposed appointment looked up old conversations, the answer spoke of those)
-def classify(text, route, tool_words=""):
-    """(class, reason): "extern", "lokal", "wissen" or "" (see the module doc). Only the person's own words;
-    the reason names a rule, never words of the question."""
-    import ablauf
-    import chat
-    text = str(text or "")[:2000]
-    if not text.strip() or chat.SMALLTALK.fullmatch(text):
-        return "", "Plaudern"
-    if ablauf.short_reply(text):   # „Ja“ to a question before: nothing to look up
-        return "", "Antwort auf Rückfrage"
-    if chat.needed(text, {"web_search"}, tool_words):
-        return "extern", "Websuche verlangt"
-    import intent
-    if LOCAL.search(text) or intent.OWN_PAPER.search(text):
-        return "lokal", "eigene Quelle genannt"
-    groups = set(route.names) & EXTERN_GROUPS
-    if "paket" in groups and PARCEL_OWN.search(text):
-        groups.discard("paket")
-    if groups:
-        return "extern", "+".join(sorted(groups))
-    if set(route.names) & OWN_GROUPS:
-        return "", route.label()
-    if EXTERN.search(text):
-        return "extern", "Aktuelles"
-    if route.names and not set(route.names) <= {"dokument", "wikipedia"}:
-        return "", route.label()
-    if not terms(text):
-        return "", "keine Suchwörter"
-    return "wissen", "Wissensfrage"
-
-
 def sources(offered):
     """The sources this turn may look in: exactly the ones whose tools it offers."""
     return [k for k, tool in SOURCES.items() if tool in offered]
@@ -302,11 +262,12 @@ def _hits(text, words):
 
 
 # ---------------------------------------------------------------- the sources
-async def _docs(uid, q, words):
+async def _docs(uid, q, words, nur=None):
     import docembed
     import wissen
     semantic = bool(docembed.status().get("running")) and not docembed._busy()
-    hits = await wissen.search(uid, q, k=MAX_HITS, semantic=semantic, keep=False)   # rides along, no keep-awake
+    hits = await wissen.search(uid, q, k=MAX_HITS, semantic=semantic, keep=False,    # rides along, no keep-awake
+                               only=set(nur[0]) if nur is not None else None)       # a Mappe: only its documents
     return [{"src": "docs", "title": "Unterlagen: " + wissen.where(h), "text": excerpt(h["text"], words)}
             for h in hits if cover(words, h["name"] + " " + h["text"]) >= COVER]
 
@@ -350,14 +311,38 @@ async def _kiwix(q, words):
              "date": b.get("date", "")}]
 
 
-def _fund(uid, q, words):
+def fund_text(h):
+    """A Finden hit as one text for comparing with the question's words: title, excerpt, fields, attachments, tags."""
+    parts = [h.get("titel") or "", h.get("auszug") or ""]
+    parts += [str(v) for v in (h.get("felder") or {}).values() if isinstance(v, (str, int, float))]
+    parts += [str(a.get("titel") or "") for a in h.get("anhaenge") or []]
+    parts += [str(t.get("wert") or "") for t in h.get("tags") or []]
+    return " ".join(parts)
+
+
+def _fund(uid, q, words, nur=None):
+    """Finden over every source this profile released (fund.quellen_fuer); a Mappe bound to the conversation: only its
+    entries. Each hit with its source and date (fund._line); a mail or attachment is marked "mail"."""
     import fund
+    now = time.time()
+    hits = fund.suche(uid, q, anzahl=MAX_HITS, nur=nur)
+    return [{"src": "fund", "quelle": h["quelle"], "mail": h["quelle"] in fund.MAIL_Q,
+             "title": f"Finden: {fund.BY_NAME[h['quelle']].de}", "text": _cut(fund._line(h, now))}
+            for h in hits if cover(words, fund_text(h)) >= COVER]
+
+
+async def _web(ccfg, query, text):
+    """The panel's own web search with the person's own words ("beides"): one hit with the result and its sources."""
+    import chat
+    import dienstwacht
     import frisch
-    hits = fund.suche(uid, q, anzahl=MAX_HITS, quellen=fund.LOKAL)
-    return [{"src": "fund", "title": f"Finden: {fund.BY_NAME[h['quelle']].de} „{_cut(h['titel'], 80)}“"
-             + (f", {frisch.stand(h['wann']).split(',')[0]}" if h.get("wann") else ""),
-             "text": _cut(h.get("auszug") or h["titel"])}
-            for h in hits if cover(words, h["titel"] + " " + (h.get("auszug") or "")) >= COVER]
+    try:
+        result, items = await chat.web_search_own(ccfg, query, frisch.zeitraum(text, query), frisch.news(text, query))
+    except Exception:
+        dienstwacht.saw("web")   # like the tool: the service watch hears of it
+        raise
+    return [{"src": "web", "title": "Websuche mit den eigenen Worten der Frage", "text": _cut(result, MAX_WEB_CHARS),
+             "sources": items}]
 
 
 def _quiet(task):
@@ -366,29 +351,40 @@ def _quiet(task):
         task.exception()
 
 
-async def look(uid, text, srcs, ms, skip=None):
-    """The quick look: {"hits", "n", "late", "err", "ms"}. ms: one limit or (own sources, Kiwix) as budget()
-    gives them; never longer than the larger one (late sources are not waited for; they end on their own timeouts
-    and are dropped)."""
+# documents and conversations also come through Finden: a hit there is left out when their own source found something
+_DOC_Q = ("dokument", "nas", "remarkable")
+
+
+async def look(uid, text, srcs, ms, skip=None, nur=None, ccfg=None):
+    """The quick look: {"hits", "web", "n", "late", "err", "ms", "mail"}. ms: one limit or (own sources, Kiwix and
+    web) as budget() gives them; never longer than the larger one (late sources are not waited for; they end on
+    their own timeouts and are dropped). "web" (with ccfg) searches the person's own words of this message, fixed
+    and started before any own source is read, so nothing found here can go into it. nur: a Mappe (documents,
+    Wissensbuch pages)."""
     ms, kms = ms if isinstance(ms, tuple) else (ms, ms)
     t0 = time.monotonic()
+    web_q = own_words(text)          # the person's own words, before anything is read
+    text = str(text or "").replace("[Codewort]", " ")   # the code word's place holder is no word to look up
     words, q = terms(text), query(text)
-    out = {"hits": [], "n": {}, "late": [], "err": [], "ms": 0}
+    out = {"hits": [], "web": None, "n": {}, "late": [], "err": [], "ms": 0, "mail": False}
     jobs = {}
+    if "web" in srcs and web_q and ccfg is not None:
+        jobs["web"] = asyncio.ensure_future(_web(ccfg, web_q, text))
     if words:
         if "docs" in srcs:
-            jobs["docs"] = asyncio.ensure_future(_docs(uid, q, words))
+            jobs["docs"] = asyncio.ensure_future(_docs(uid, q, words, nur))
         if "history" in srcs:
             jobs["history"] = asyncio.ensure_future(asyncio.to_thread(_history, uid, words, skip))
         if "kiwix" in srcs:
             jobs["kiwix"] = asyncio.ensure_future(_kiwix(q, words))
         if "fund" in srcs:
-            jobs["fund"] = asyncio.ensure_future(asyncio.to_thread(_fund, uid, q, words))
-    own = [j for k, j in jobs.items() if k != "kiwix"]
+            jobs["fund"] = asyncio.ensure_future(asyncio.to_thread(_fund, uid, q, words, nur))
+    own = [j for k, j in jobs.items() if k not in ("kiwix", "web")]
     if own:
         await asyncio.wait(own, timeout=ms / 1000)
-    if "kiwix" in jobs:     # its own limit, counted from the start like the others
-        await asyncio.wait([jobs["kiwix"]], timeout=max(0.0, kms / 1000 - (time.monotonic() - t0)))
+    far = [jobs[k] for k in ("kiwix", "web") if k in jobs]
+    if far:     # their own limit, counted from the start like the others
+        await asyncio.wait(far, timeout=max(0.0, kms / 1000 - (time.monotonic() - t0)))
     found = {}
     for k, job in jobs.items():
         if not job.done():
@@ -400,34 +396,52 @@ async def look(uid, text, srcs, ms, skip=None):
         else:
             found[k] = job.result()
             out["n"][k] = len(found[k])
-    out["hits"] = (found.get("docs", [])[:2] + found.get("fund", [])[:1] + found.get("kiwix", [])[:1]
-                   + found.get("history", [])[:1])[:MAX_HITS]
+    fh = found.get("fund", [])
+    if found.get("docs"):
+        fh = [h for h in fh if h["quelle"] not in _DOC_Q]
+    if found.get("history"):
+        fh = [h for h in fh if h["quelle"] != "chat"]
+    # across the sources, round by round: Finden's best, a passage of the documents, a conversation, the archive
+    lists = [fh, found.get("docs", []), found.get("history", []), found.get("kiwix", [])]
+    for i in range(MAX_HITS):
+        out["hits"] += [x[i] for x in lists if len(x) > i]
+    out["hits"] = out["hits"][:MAX_HITS]
+    out["web"] = (found.get("web") or [None])[0]
+    out["mail"] = any(h.get("mail") for h in out["hits"])
     out["ms"] = int((time.monotonic() - t0) * 1000)
     return out
 
 
-def log_line(kind, why, srcs, res=None):
-    """One journal line (area "Wissen"): class, hits per source, time, what happens next. Never the question."""
+NEXT = {"intern": "eigene Quellen", "beides": "eigene Quellen und Web mit eigenen Worten", "extern": "direkt, kein Vorlauf"}
+
+
+def log_line(kind, why, srcs, res=None, info=None):
+    """One journal line (area "Wissen"): class and its reasons (fixed words, quellen.GRUENDE), the probe's hits and
+    time, hits per source, time, what happens next. Never the question."""
+    why = "+".join(why) if isinstance(why, (list, tuple)) else str(why or "")
     head = f"lokal: Klasse {kind or 'keine'} ({why})"
+    if info and "ms" in info:
+        head += f" | Probe {info.get('probe', 0)} Treffer {info['ms']} ms"
     if res is None:
-        nxt = ("nur eigene Quellen, Web in dieser Antwort aus" if kind == "lokal" else
-               "direkt, kein Vorlauf" if kind == "extern" else "kein Vorlauf (keine eigene Quelle)" if kind == "wissen"
+        nxt = ("nur eigene Quellen, Web in dieser Antwort aus" if "eigene Quelle" in why else
+               "direkt, kein Vorlauf" if kind == "extern" else "kein Vorlauf (keine eigene Quelle)" if kind
                else "unverändert")
         return f"{head} | weiter: {nxt}"
     counts = ", ".join(f"{LABELS[k]} " + (str(res['n'][k]) if k in res["n"] else "zu langsam" if k in res["late"]
-                                           else "Fehler") for k in SOURCES if k in srcs)
-    nxt = "Treffer an das Modell" if res["hits"] else "lokal nichts, Modell entscheidet (eigenes Wissen oder Web)"
+                                           else "Fehler") for k in LABELS if k in srcs)
+    nxt = ("Treffer an das Modell" + (", Mail gelesen" if res.get("mail") else "") if res["hits"] or res.get("web")
+           else "lokal nichts, Modell entscheidet (eigenes Wissen oder Web)")
     return f"{head} | {counts} | {res['ms']} ms | weiter: {nxt}"
 
 
-async def run(uid, text, srcs, ms, skip=None):
+async def run(uid, text, srcs, ms, skip=None, kind="beides", why=("ohne Probe",), info=None, nur=None, ccfg=None):
     """look() for a chat turn, with its journal line; never raises."""
     try:
-        res = await look(uid, text, srcs, ms, skip)
+        res = await look(uid, text, srcs, ms, skip, nur, ccfg)
     except Exception as e:      # a source broke in an unexpected way: the answer goes on as without it
         print("lokal: Vorlauf fehlgeschlagen:", type(e).__name__, flush=True)
-        return {"hits": [], "n": {}, "late": [], "err": list(srcs), "ms": 0}
-    print(log_line("wissen", "Wissensfrage", srcs, res), flush=True)
+        return {"hits": [], "web": None, "n": {}, "late": [], "err": list(srcs), "ms": 0, "mail": False}
+    print(log_line(kind, why, srcs, res, info), flush=True)
     return res
 
 
@@ -437,23 +451,34 @@ def block(hits):
                        for h in hits)
 
 
+def message(found):
+    """The tool result for the model: HEAD, and the own hits and the web's result, wrapped as outside text."""
+    import chat
+    parts = [block(found["hits"])] if found["hits"] else []
+    if found.get("web"):
+        parts.append(block([found["web"]]))
+    return HEAD + ("\n" + WEB_HEAD if found.get("web") else "") + "\n" + chat.wrap_outside("\n\n".join(parts))
+
+
 # ---------------------------------------------------------------- "Erst lokal testen" (Zustand -> Prüfen)
 @router.post("/api/admin/lokal/test", dependencies=[Depends(auth)])
 async def lokal_test(request: Request):
-    """One sentence through the rule and the quick look: class, sources, hits (titles only) and times. Looks in
-    the documents and conversations of the profile signed in in this browser, if any, and in the Kiwix when the
-    admin set it up. Nothing stored, nothing logged."""
+    """One sentence through the Quellen-Weiche and the quick look: class, reasons, the probe, sources, hits (titles
+    only) and times. Looks in the own data of the profile signed in in this browser, if any (Finden with its
+    releases, documents, conversations), and in the Kiwix when the admin set it up; never in the web (nothing goes
+    out from a test). Nothing stored, nothing logged."""
     guard.limit(request, "lokal", admin=True)
     body = await request.json()
     text = body.get("text") if isinstance(body, dict) else None
     if not isinstance(text, str) or not text.strip() or len(text) > MAX_TEST:
         raise HTTPException(400, f"text: 1 bis {MAX_TEST} Zeichen")
     import intent
+    import quellen
     import wissen
     cfg = ccfg()
-    kind, why = classify(text, intent.classify_cfg(text, cfg),
-                         cfg.get("tool_words", ""))
     who = profiles.current(request)
+    ctx = {"route": intent.classify_cfg(text, cfg), "tool_words": cfg.get("tool_words", ""), "eigen": bool(who)}
+    kind, why = await asyncio.to_thread(quellen.klasse, text, who["id"] if who else None, ctx)
     srcs = []
     if who and cfg.get("documents", True) and (documents.count_docs(who["id"], used_only=True) or wissen.shared_list(who["id"])):
         srcs.append("docs")
@@ -461,10 +486,15 @@ async def lokal_test(request: Request):
         srcs.append("kiwix")
     if who and cfg.get("memory", True) and cfg.get("history", True):
         srcs.append("history")
+    if who and features.allowed("fund", who["id"]):
+        srcs.append("fund")
+    srcs = quellen.blick(kind, why, srcs, False)
     lim = budget(cfg)
+    info = ctx.get("info") or {}
     out = {"kind": kind, "why": why, "words": query(text).split(), "profile": who["name"] if who else "", "sources": srcs,
-           "ms": 0, "n": {}, "late": [], "err": [], "hits": [], "budget": lim[0], "kiwix_budget": lim[1]}
-    if kind == "wissen" and srcs:
+           "probe": info.get("probe"), "probe_ms": info.get("ms"), "ms": 0, "n": {}, "late": [], "err": [], "hits": [],
+           "budget": lim[0], "kiwix_budget": lim[1]}
+    if srcs:
         res = await look(who["id"] if who else None, text, srcs, lim)
         out.update(ms=res["ms"], n=res["n"], late=res["late"], err=res["err"],
                    hits=[{"src": h["src"], "title": h["title"], "chars": len(h["text"])} for h in res["hits"]])

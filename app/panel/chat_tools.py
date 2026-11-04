@@ -92,6 +92,11 @@ async def run(t, name, args, st):
             print("lokal: weiter ins Web (lokal nicht genug)", flush=True)
         if not query:
             return "No query given."
+        vorab = getattr(t, "web_vorab", None)
+        if vorab and t.web_own and query == t.web_own:
+            # the panel searched exactly these own words before the answer ("beides", lokal.look): the same result
+            print("lokal: weiter ins Web, Ergebnis der Suche vorab", flush=True)
+            return vorab["text"]
         await t.out.put({"type": "search", "query": query})
         if st["first"]:  # something to hear while the search runs
             st["first"] = False

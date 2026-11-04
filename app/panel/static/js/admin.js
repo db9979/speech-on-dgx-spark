@@ -879,16 +879,17 @@ $('kxgo').onclick=async()=>{$('kxgomsg').textContent=t('Prüfe …','Checking �
     const known=Object.fromEntries(d.books.map(b=>[b.id,b]));line((d.picked?t('Durchsucht:','Searched:'):t('Keine Auswahl, durchsucht:','No choice, searched:'))+' '+((d.chosen||[]).map(id=>known[id]?known[id].title+(known[id].lang?' ('+known[id].lang+')':''):id).join(', ')||t('nichts','nothing')),'mut');
     if((d.missing||[]).length)line(t(`Nicht mehr im Kiwix und übersprungen: ${d.missing.join(', ')}. Unter „Bücher auswählen“ neu wählen.`,`No longer in the Kiwix and skipped: ${d.missing.join(', ')}. Pick again under "Choose books".`),'err')}
   catch(e){$('kxgomsg').textContent=e.message}};
-// "Erst lokal suchen" (lokal.py): one sentence through the rule and the quick look (built with textContent only)
-const LKKIND={wissen:t('Wissensfrage: erst lokal nachsehen','Knowledge question: look locally first'),lokal:t('Eigene Quelle genannt: nur lokal, kein Web','Own source named: local only, no web'),
+// "Erst lokal suchen" (lokal.py, Quellen-Weiche quellen.py): one sentence through the rules and the quick look (built with textContent only)
+const LKKIND={intern:t('Intern: in den eigenen Daten nachsehen','Internal: look in the own data'),beides:t('Beides: eigene Daten und das Web mit den eigenen Worten','Both: the own data and the web with the own words'),
   extern:t('Klar extern: direkt hinaus, kein Vorlauf','Clearly outside: straight out, no local look'),'':t('Kein Fall für die lokale Suche','Not a case for the local look')};
-const LKSRC={docs:t('Dokumente','Documents'),kiwix:t('Kiwix-Archiv','Kiwix archive'),history:t('Frühere Gespräche','Earlier conversations')};
+const LKSRC={docs:t('Dokumente','Documents'),kiwix:t('Kiwix-Archiv','Kiwix archive'),history:t('Frühere Gespräche','Earlier conversations'),fund:t('Finden (alle freigegebenen Quellen)','Find (all released sources)'),web:t('Web','Web')};
 if($('lkgo'))$('lkgo').onclick=async()=>{const text=$('lktext').value.trim();if(!text)return;$('lkgo').disabled=true;const out=$('lkout');out.textContent='';
   const line=(txt,cls)=>{const x=document.createElement('div');if(cls)x.className=cls;x.textContent=txt;out.appendChild(x)};
   try{const r=await (await api('/api/admin/lokal/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})})).json();
-    line(`${LKKIND[r.kind]??r.kind} (${r.why})`);
+    line(`${LKKIND[r.kind]??r.kind} (${[].concat(r.why||[]).join(', ')})`);
+    if(r.probe_ms!=null)line(t(`Treffer-Probe: ${r.probe} Treffer in ${r.probe_ms} ms`,`Hit probe: ${r.probe} hits in ${r.probe_ms} ms`),'mut');
     if(r.words&&r.words.length)line(t('Suchwörter: ','Search words: ')+r.words.join(', '),'mut');
-    if(r.kind==='wissen'){
+    if(r.kind==='intern'||r.kind==='beides'){
       if(!r.sources.length)line(t('Keine eigene Quelle: kein Profil angemeldet und kein Kiwix eingerichtet.','No own source: no profile signed in and no Kiwix set up.'),'mut');
       r.sources.forEach(k=>line(`${LKSRC[k]||k}: `+(k in r.n?t(`${r.n[k]} Treffer`,`${r.n[k]} hits`):r.late.includes(k)?t(`zu langsam (über ${k==='kiwix'?r.kiwix_budget:r.budget} ms)`,`too slow (over ${k==='kiwix'?r.kiwix_budget:r.budget} ms)`):t('nicht erreichbar','not reachable'))));
       if(r.sources.length){const most=r.sources.includes('kiwix')?Math.max(r.budget,r.kiwix_budget):r.budget;line(t(`Zusammen ${r.ms} ms von höchstens ${most} ms.`,`Together ${r.ms} ms of at most ${most} ms.`),'mut')}

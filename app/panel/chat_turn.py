@@ -904,26 +904,50 @@ async def prepare(request):
             tools = intent.lean(route, tools, ex.get("keep", set()))
     if pick_task and not pick_task.done():   # not needed in this turn (no tools, a picture, a direct command)
         pick_task.cancel()
-    # "Erst lokal suchen" (lokal.py): the own sources before anything outside, by a fixed rule on the person's
-    # own words. A knowledge question gets a quick look in exactly the sources this turn offers (tools before
-    # narrowing: the same rights), started here and waited for in chat._answer (at most chat.local_first_ms);
-    # naming an own source leaves the web out of this answer; anything current goes out as before.
+    # "Erst lokal suchen" (lokal.py) with the Quellen-Weiche (quellen.py, plan such-index/zuverlaessig.md, steps 3 and
+    # 4): the second stage decides by fixed rules on the person's own words whether a question to know or read
+    # something goes to the own data (intern), the world (extern) or both; the probe in Finden's index runs in a
+    # thread of its own (quellen.PROBE_MS), only for the own profile. intern and beides get a quick look in exactly
+    # the sources this turn offers (tools before narrowing: the same rights), started here and waited for in
+    # chat._answer (at most chat.local_first_ms); beides also searches the web with the person's own words, started
+    # before anything of the own data is read; naming an own source leaves the web out of this answer.
     local_task, web_own = None, ""
     import lokal
-    if lokal.on(ccfg, who) and own_browser and private_ok and messages[-1]["role"] == "user" and tools and not cal_note \
-            and not pics and not role_cmd and not room_far and not ha_direct and not ha_wait:
+    if lokal.on(ccfg, who) and own_browser and private_ok and not mcp and messages[-1]["role"] == "user" and tools \
+            and not cal_note and not pics and not role_cmd and not room_far and not ha_direct and not ha_wait:
+        import quellen
         lk_text = messages[-1]["content"]
-        lk_kind, lk_why = lokal.classify(lk_text, route, ccfg.get("tool_words", ""))
-        lk_src = lokal.sources(offered_all)
+        lk_nur = None
+        if mp:   # the Mappe bound to this conversation: the probe and the look only in its entries
+            import mappen
+            lk_nur = (await asyncio.to_thread(mappen.fuer_werkzeug, who, None, lk_text, mp.get("id")))[0]
+        lk_ctx = {"route": route, "tool_words": ccfg.get("tool_words", ""), "eigen": True, "nur": lk_nur}
+        lk_kind, lk_why = await asyncio.to_thread(quellen.klasse, lk_text, who["id"], lk_ctx)
+        quellen.note(lk_kind, lk_ctx.get("info"))
+        # the panel's own web search only where the person may search the web in this turn: offered, no answer from
+        # mail carried along, not held by the Notaus, its service not known to be gone (dienstwacht)
+        import dienstwacht
+        import notaus
+        web_ok = "web_search" in offered_all and carry != "mail" and "web_search" not in notaus.locked_tools(
+            notaus.level(), ex["changes"], bool(who and notaus.own(who["id"]))) \
+            and not dienstwacht.tool_down("web_search", who["id"])
+        lk_src = quellen.blick(lk_kind, lk_why, lokal.sources(offered_all), web_ok)
         web_own = lokal.own_words(lk_text)
-        if lk_kind == "lokal" and any(t["function"]["name"] == "web_search" for t in tools):
+        if "eigene Quelle" in lk_why and any(t["function"]["name"] == "web_search" for t in tools):
             tools = [t for t in tools if t["function"]["name"] != "web_search"]
             system = per_turn(system, lokal.LOCAL_ONLY)
-        if lk_kind == "wissen" and lk_src:
-            local_task = asyncio.create_task(lokal.run(who["id"], lk_text, lk_src, lokal.budget(ccfg),
-                                                       body.get("convo") if isinstance(body.get("convo"), str) else None))
+            lk_src = [k for k in lk_src if k != "web"]
+        # a short plain reading question the panel fetches itself (intent.direct) needs no look before it
+        if lk_src and features.allowed("direct", who["id"], ccfg) and intent.direct(
+                lk_text, {t["function"]["name"] for t in tools}):
+            lk_src = []
+        if lk_src:
+            local_task = asyncio.create_task(lokal.run(
+                who["id"], lk_text, lk_src, lokal.budget(ccfg),
+                body.get("convo") if isinstance(body.get("convo"), str) else None, lk_kind, lk_why, lk_ctx.get("info"),
+                lk_nur, ccfg))
         else:
-            print(lokal.log_line(lk_kind, lk_why, lk_src), flush=True)
+            print(lokal.log_line(lk_kind, lk_why, lk_src, info=lk_ctx.get("info")), flush=True)
     # "... und leg es aufs reMarkable" (remarkable.py): the panel puts this answer there afterwards, by a fixed rule
     # on the person's own words; the model only writes the answer
     import remarkable

@@ -226,6 +226,7 @@
 "test_protokoll": 0.7,
 "test_pruefung": 0.7,
 "test_pruefzugang": 1.5,
+"test_quellen": 2.9,
 "test_quellen_bench": 10.0,
 "test_rauchtest": 1.8,
 "test_rechnen": 0.5,

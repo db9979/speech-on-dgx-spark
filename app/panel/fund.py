@@ -415,9 +415,6 @@ QUELLE_WORTE = {"dokument": r"dokument\w*|unterlage\w*|datei\w*|pdf", "nas": r"n
                 "bild": r"bild\w*|foto\w*|picture\w*|photo\w*", "musik": r"lied\w*|song\w*|musik\w*|music\b"}
 MAIL_Q = ("mail", "anhang")   # the sealed mail sources: their rows go with their mailbox (ext starts with its id)
 SEALED_C = ("termin", "kontakt")   # sealed sources of Stufe C, written by fund.runde through put_sealed
-# „Erst lokal“ (lokal.py, Stufe D): the clear sources without an index of their own in the quick look (documents and
-# conversations come through lokal's own sources; mail, appointments and contacts never there)
-LOKAL = ("wissensbuch", "liste", "erinnerung", "bild", "musik")
 
 
 def _fm():
@@ -1134,7 +1131,7 @@ def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, v
     (a mail also "anhaenge": the attachments that matched, one card with them). Only the profile's own index and the
     sources it may use; never another profile's (its file, its marks). bezug: an event word from the person's own words
     (bezug_aus): with an appointment of the own calendar, entries of its window get a bonus; `info` (a dict) learns
-    {"bezug": word, "termin": unix time or None}. quellen: only these sources (lokal: fund.LOKAL). frei: (sources,
+    {"bezug": word, "termin": unix time or None}. quellen: only these sources. frei: (sources,
     mailbox ids, calendar ids) given instead of the profile's releases, only for the measurement on its own
     throw-away index (fundmessung.py), never from a request. nur: (document ids, Wissensbuch page ids) of a Mappe
     (mappen.fuer_werkzeug / fuer_seite): only these, every other source falls away."""

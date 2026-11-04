@@ -4,12 +4,12 @@ from technik_seiten import S
 
 SEITEN = {
     "aussen": {
-        "stand": "8e8b4c5ddd",
+        "stand": "a4ce762411",
         "bezug": {
             "dienstwacht.TIMEOUT": ["s5"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
             "netguard.client": ["s8", "s9", "s10"], "netguard.IMAP4_SSL": ["s9"],
             "homeassistant._client": ["s7", "s9"], "mcp._client": ["s7", "s9", "s10"],
-            "chat.web_search": ["s6", "s9"], "regeln": ["s7", "s8"], "regel:SearXNG": ["s6"],
+            "chat.web_search": ["s6", "s9"], "chat.web_search_own": ["s6"], "regeln": ["s7", "s8"], "regel:SearXNG": ["s6"],
             "regel:Wetter, Fahrplan, Wikipedia": ["s6"], "regel:Sprachmodell": ["s6"],
         },
         "kurz": ("Dienste im Heimnetz sind, was der Spark im eigenen Netz fragt: Home Assistant, NAS, Kiwix, SearXNG und "
@@ -70,12 +70,16 @@ SEITEN = {
                "wie Apple-Push laufen direkt, ohne Wächter. Welche Module das dürfen und warum, steht in "
                "netguard.DIRECT_OK; ein Selbsttest meldet jedes Modul, das direkt verbindet und dort fehlt. Fragt die "
                "Person nach Heutigem oder den letzten Tagen (feste Wörter, frisch.zeitraum), sucht SearXNG nur in diesem "
-               "Zeitraum (bei Nachrichten auch in seiner Kategorie News); jeder Treffer trägt sein Datum, ältere fallen weg.",
+               "Zeitraum (bei Nachrichten auch in seiner Kategorie News); jeder Treffer trägt sein Datum, ältere fallen weg. "
+               "Die eigene Websuche des Panels bei „beides“ (Erst lokal) geht denselben Weg (chat.web_search_own), nur "
+               "mit den eigenen Worten der Frage und nie bei Notaus oder ausgefallenem Dienst.",
                "The language model, SearXNG at the entered address, weather, transit, Wikipedia and fixed services "
                "like Apple push go directly, without the guard. Which modules may do that and why is listed in "
                "netguard.DIRECT_OK; a self-test reports every module that connects directly and is missing there. When "
                "the person asks for today or the last days (fixed words, frisch.zeitraum), SearXNG searches only that "
-               "period (for news also its news category); every hit carries its date, older ones are dropped."),
+               "period (for news also its news category); every hit carries its date, older ones are dropped. The "
+               "panel's own web search for „both“ (local first) goes the same way (chat.web_search_own), only with the "
+               "question's own words and never with the kill switch or a service gone."),
               ("ok", "ja", "s9")),
             S("s7", "schritt", ("Stufe des Dienstes", "Level of the service"),
               ("Heimnetz · Nutzer · nur Internet", "home · user · internet only"),
@@ -182,6 +186,7 @@ SEITEN = {
             ("homeassistant._client", ("Home Assistant mit Stufe Heimnetz", "Home Assistant at level home")),
             ("mcp._client", ("MCP-Server mit Stufe Nutzer", "MCP server at level user")),
             ("chat.web_search", ("SearXNG direkt", "SearXNG directly")),
+            ("chat.web_search_own", ("eigene Websuche des Panels bei „beides“", "the panel's own web search for „both“")),
         ],
         "tests": ["test_waechter_umgehung", "test_notaus", "test_sperre_ueberall", "test_dienstwacht", "test_kiwix",
                   "test_meinmcp", "test_remarkable"],

@@ -1,22 +1,22 @@
-"""The source bench (plan such-index/zuverlaessig.md, step 1): does a question go to the own data, to the outside world
-or to both, and can it reach the right own sources?
+"""The source bench (plan such-index/zuverlaessig.md, steps 1 and 3): does a question go to the own data, to the outside
+world or to both, and can it reach the right own sources?
 
 Each line: sentence -> expected class and the sources it needs ("+" between them):
     intern   only the person's own data (mail, anhang, dokument, termin, kontakt, chat, liste, wissensbuch)
     extern   only the world outside (web: web search, weather, transit, Wikipedia, archive)
-    beides   own data and the world (a timeless knowledge question: the quick look, then the web as an offer)
+    beides   own data and the world (a timeless knowledge question: the quick look and the web with the own words)
 
-measure() runs every sentence through today's decision path, with every switch released for the own profile in the
-own browser (Finden with mails, appointments and contacts, „Erst lokal“, the Weiche narrowing, chat.route_model "off"):
-    1. intent.classify (the Weiche's groups),
+measure() runs every sentence through the decision path, with every switch released for the own profile in the own
+browser (Finden with mails, appointments and contacts, „Erst lokal“, the Weiche narrowing, chat.route_model "off"):
+    1. intent.classify (the Weiche's groups, the first stage),
     2. intent.narrow over every tool a profile can be offered (ALL_TOOLS),
-    3. lokal.classify (extern / lokal / wissen / nothing),
-and derives from it, by fixed rules (klasse(), quellen()):
-    the class the panel decides   lokal "extern" -> extern; "lokal" -> intern; no group -> beides (the model picks);
-                                  groups of the own data only -> intern; of the world only -> extern; both -> beides;
-                                  only actions (smart home, iPhone, Spark …) -> "handlung" (never right here)
-    the sources it can reach      the tools left after narrowing (TOOL_SOURCES), the quick look's own sources with
-                                  lokal "wissen"; a mail tool only counts while chat.MAIL_HINT does not hold mails back
+    3. quellen.klasse (the Quellen-Weiche, the second stage) with a stand-in index for its probe (ATTRAPPE: a few
+       entries of a made-up household, never real data), quellen.blick for the quick look's sources,
+and counts:
+    the class the panel decides   quellen.klasse; "" (an action, small talk) -> "handlung" (never right here)
+    the sources it can reach      the tools left after narrowing (TOOL_SOURCES), the quick look's sources for intern
+                                  and beides (LOOK_SOURCES), the panel's own web search for beides; a mail tool only
+                                  counts while chat.MAIL_HINT does not hold mails back
 A sentence is right when the class is the expected one and every expected source is reachable.
 
 tests/test_quellen_bench.py holds the floor (FLOOR, never lowered). Rules may be improved because of a group of misses
@@ -99,10 +99,17 @@ BENCH = [
 ]
 CLASSES = ("intern", "extern", "beides")
 SOURCES = ("mail", "anhang", "dokument", "termin", "kontakt", "chat", "liste", "wissensbuch", "web")
-# the Weiche's groups by what they read; the rest are actions („handlung“: smart home, iPhone, Spark, pictures …)
-OWN_GROUPS = {"mail", "kalender", "kontakt", "dokument", "finden", "liste", "gedaechtnis", "nachricht", "mappe",
-              "erinnerung", "paket", "erstellen", "agent"}
-WORLD_GROUPS = {"websuche", "wetter", "bahn", "feeds", "wikipedia", "archiv", "paket"}
+# the probe's stand-in index: a made-up household's entries as Finden would return them (no real data, no file)
+ATTRAPPE = (
+    {"quelle": "mail", "titel": "Projekt X: Zeitplan und nächste Schritte", "auszug": "Meilensteine bis Dezember",
+     "felder": {"absender": "Team Projekt X"}},
+    {"quelle": "mail", "titel": "Buchungsbestätigung Hotel Miradouro Lissabon", "auszug": "Ihre Reservierung für zwei Nächte",
+     "felder": {"absender": "Hotel Miradouro"}},
+    {"quelle": "mail", "titel": "Nebenkostenabrechnung 2025", "auszug": "Abrechnung für die Wohnung",
+     "felder": {"absender": "Hausverwaltung Berger"}},
+    {"quelle": "anhang", "titel": "Rechnung 2026-0815", "auszug": "Gitarrensaiten und Kabel",
+     "felder": {"absender": "Thomann", "betrag": "48,90 €"}},
+)
 # which source a tool reaches (fund_suche: Finden with every source released)
 TOOL_SOURCES = {
     "fund_suche": {"mail", "anhang", "dokument", "termin", "kontakt", "chat", "liste", "wissensbuch"},
@@ -117,8 +124,10 @@ TOOL_SOURCES = {
     "article_more": {"web"}, "feeds_news": {"web"},
 }
 MAIL_TOOLS = {"mail_list", "mail_search", "mail_read", "fuer_dich"}
-# the quick look of „Erst lokal“ (lokal.look) with lokal "wissen": documents, earlier conversations and fund.LOKAL
-LOOK_SOURCES = {"document_search": {"dokument"}, "history_search": {"chat"}, "fund_suche": {"wissensbuch", "liste"}}
+# the quick look of „Erst lokal“ (lokal.look) for intern and beides, by the source it asks: Finden over every released
+# source (step 4), the documents, the earlier conversations; beides also the panel's web search with the own words
+LOOK_SOURCES = {"fund_suche": {"mail", "anhang", "dokument", "termin", "kontakt", "chat", "liste", "wissensbuch"},
+                "document_search": {"dokument"}, "history_search": {"chat"}}
 # chat.MAIL_HINT before V01.1.329 told the model to use the mailbox only when asked for mails
 MAIL_ONLY_WORDS = "nur, wenn der Nutzer nach Mails fragt"
 
@@ -136,26 +145,16 @@ def _wanted(spec):
     return {s for s in str(spec).split("+") if s}
 
 
-def klasse(route, kind):
-    """The class the panel decides (see the module doc)."""
-    if kind == "extern":
-        return "extern"
-    if kind == "lokal":
-        return "intern"
-    names = set(route.names) - {"plaudern"}
-    if not names:
-        return "beides"
-    world = names & (WORLD_GROUPS - {"paket"})   # a parcel question lokal did not send out reads the own mails
-    own = names & OWN_GROUPS
-    if world and own:
-        return "beides"
-    if world:
-        return "extern"
-    return "intern" if own else "handlung"
+def attrappe(worte):
+    """The probe on ATTRAPPE: the entries that share a word with the question's words (like Finden's OR search)."""
+    import lokal
+    q = set(lokal.terms(worte))
+    return [dict(h) for h in ATTRAPPE if q & set(lokal.terms(lokal.fund_text(h)))][:3]
 
 
-def quellen(route, kind, tools):
-    """The sources the turn can reach with the tools left after narrowing."""
+def quellen(route, kind, tools, look=(), web=False):
+    """The sources the turn can reach: the tools left after narrowing, the quick look's sources (look: tool names) and
+    the panel's own web search (web)."""
     import chat
     names = {t["function"]["name"] for t in tools}
     held_back = MAIL_ONLY_WORDS in chat.MAIL_HINT and "mail" not in route.names
@@ -164,26 +163,31 @@ def quellen(route, kind, tools):
         if n in MAIL_TOOLS and held_back:
             continue
         out |= TOOL_SOURCES.get(n, set())
-    if kind == "wissen":
-        for n, src in LOOK_SOURCES.items():
-            if n in names:
-                out |= src
+    if kind in ("intern", "beides"):
+        for n in look:
+            out |= LOOK_SOURCES.get(n, set())
+    if web:
+        out.add("web")
     return out
 
 
-def judge(text, classify=None, narrow=None, lokal_classify=None):
-    """One sentence through today's decision path: {"route", "kind", "klasse", "quellen"}."""
+def judge(text, classify=None, narrow=None, probe=None):
+    """One sentence through the decision path: {"route", "kind", "klasse", "quellen", "gruende"}."""
     import intent
     import lokal
+    import quellen as qw
     classify = classify or intent.classify
     narrow = narrow or intent.narrow
-    lokal_classify = lokal_classify or lokal.classify
     route = classify(text)
-    tools = narrow(route, all_tools(), {})
-    kind, _ = lokal_classify(text, route)
-    if kind == "lokal":
+    offered = all_tools()
+    tools = narrow(route, offered, {})
+    kind, why = qw.klasse(text, "bench", {"route": route, "probe": probe or attrappe})
+    if "eigene Quelle" in why:
         tools = [t for t in tools if t["function"]["name"] != "web_search"]
-    return {"route": route.label(), "kind": kind or "-", "klasse": klasse(route, kind), "quellen": quellen(route, kind, tools)}
+    srcs = qw.blick(kind, why, lokal.sources({t["function"]["name"] for t in offered}), "eigene Quelle" not in why)
+    look = {lokal.SOURCES[k] for k in srcs if k in lokal.SOURCES}
+    return {"route": route.label(), "kind": kind or "-", "klasse": kind or "handlung", "gruende": why,
+            "quellen": quellen(route, kind, tools, look, "web" in srcs)}
 
 
 def measure(rows=None, **kw):
@@ -208,7 +212,7 @@ def measure(rows=None, **kw):
             out["mail_extern"] += 1
         if not ok:
             out["rows"].append({"q": q, "want": want, "got": got["klasse"], "fehlt": fehlt, "route": got["route"],
-                                "lokal": got["kind"]})
+                                "gruende": "+".join(got["gruende"])})
     out["quote"] = round(100 * out["richtig"] / out["n"], 1) if out["n"] else 0.0
     out["klasse_quote"] = round(100 * out["klasse"] / out["n"], 1) if out["n"] else 0.0
     return out
@@ -219,6 +223,6 @@ def report(m):
     out = [f"{m['richtig']}/{m['n']} richtig ({m['quote']} %), Klasse {m['klasse']}/{m['n']} ({m['klasse_quote']} %), "
            f"Mail nach extern {m['mail_extern']}"]
     out += [f"{c}: {v['richtig']}/{v['n']} richtig, Klasse {v['klasse']}/{v['n']}" for c, v in m["je"].items()]
-    out += [f"- {r['q']} | erwartet {r['want']}, bekommt {r['got']} ({r['route']}, lokal {r['lokal']})"
+    out += [f"- {r['q']} | erwartet {r['want']}, bekommt {r['got']} ({r['route']}, {r['gruende']})"
             + (f", fehlt {'+'.join(r['fehlt'])}" if r["fehlt"] else "") for r in m["rows"]]
     return out

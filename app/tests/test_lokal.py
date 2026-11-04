@@ -1,8 +1,9 @@
 """Erst lokal suchen (lokal.py), V01.0.264.
 
-A fixed rule sorts the person's own words (extern / lokal / wissen); a knowledge question gets a quick look in
-the own documents, the own Kiwix and the earlier conversations, never longer than the time limit, and only in
-the sources the turn offers anyway. What it finds goes to the model as outside text (locks like a web page);
+The Quellen-Weiche (quellen.klasse) sorts the person's own words (intern / extern / beides); without Finden a question
+to look up gets a quick look in the own documents, the own Kiwix and the earlier conversations as before step 3 of
+plan such-index (Finden and the panel's own web search: test_quellen.py), never longer than the time limit, and only
+in the sources the turn offers anyway. What it finds goes to the model as outside text (locks like a web page);
 after a document the web search sends only the person's own words. Off without the admin's switch, off for a
 profile the admin blocked, never guests.
 The journal line never holds the question.
@@ -26,6 +27,7 @@ import kiwix  # noqa: E402
 import logfilter  # noqa: E402
 import lokal  # noqa: E402
 import profiles  # noqa: E402
+import quellen  # noqa: E402
 from fastapi import FastAPI, Response  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -126,17 +128,17 @@ def system_of(call):
 
 class Rule(unittest.TestCase):
     def cls(self, text):
-        return lokal.classify(text, intent.classify(text))[0]
+        return quellen.klasse(text, None, {"route": intent.classify(text)})[0]   # no probe: as before step 3
 
     def test_classes(self):
-        for text, want in (("Wer war Albert Einstein?", "wissen"), ("Wie hoch ist die Zugspitze?", "wissen"),
-                           ("Erklär mir Photosynthese", "wissen"), ("Wie macht man Sauerteig mit Roggenmehl?", "wissen"),
+        for text, want in (("Wer war Albert Einstein?", "beides"), ("Wie hoch ist die Zugspitze?", "beides"),
+                           ("Erklär mir Photosynthese", "beides"), ("Wie macht man Sauerteig mit Roggenmehl?", "beides"),
                            ("Wie wird das Wetter morgen?", "extern"), ("Was gibt es heute für Nachrichten?", "extern"),
                            ("Was kostet ein Bitcoin?", "extern"), ("Such im Internet nach Sauerteig", "extern"),
                            ("Wann fährt die nächste Bahn nach Karlsruhe?", "extern"),
-                           ("Was steht in meinen Unterlagen zur Versicherung?", "lokal"),
-                           ("Schau in meinem Archiv nach Sauerteig", "lokal"),
-                           ("Worüber haben wir letztes Mal gesprochen?", "lokal"),
+                           ("Was steht in meinen Unterlagen zur Versicherung?", "intern"),
+                           ("Schau in meinem Archiv nach Sauerteig", "intern"),
+                           ("Worüber haben wir letztes Mal gesprochen?", "intern"),
                            ("Mach das Licht im Wohnzimmer an", ""), ("Danke", ""), ("Setz Milch auf die Einkaufsliste", "")):
             self.assertEqual(self.cls(text), want, text)
 
@@ -144,7 +146,7 @@ class Rule(unittest.TestCase):
         # V01.0.803: „Ja“ to a proposed appointment searched old conversations, the answer spoke of those
         for text in ("Ja", "ja gerne", "Okay", "Nein", "Nein danke", "Yes", "no thanks"):
             self.assertEqual(self.cls(text), "", text)
-        self.assertEqual(self.cls("Ja, wie heißt der Hund von Oma?"), "wissen")
+        self.assertEqual(self.cls("Ja, wie heißt der Hund von Oma?"), "beides")
 
     def test_words_and_titles(self):
         self.assertEqual(lokal.terms("Wie hoch ist die Zugspitze?"), ["zugspitz"])
@@ -182,7 +184,7 @@ class Rule(unittest.TestCase):
         self.assertEqual(lokal.budget({"local_first_ms": 9999, "local_first_kiwix_ms": 1}),
                          (lokal.DEFAULT_MS, lokal.DEFAULT_KIWIX_MS))
         self.assertEqual(lokal.budget({"local_first_ms": 300, "local_first_kiwix_ms": 1200}), (300, 1200))
-        row = logfilter.parse("lokal: Klasse wissen (Wissensfrage) | Dokumente 1 | 80 ms | weiter: Treffer an das Modell")
+        row = logfilter.parse("lokal: Klasse beides (zeitlos) | Dokumente 1 | 80 ms | weiter: Treffer an das Modell")
         self.assertEqual(row["area"], "wissen")
 
 
@@ -243,7 +245,7 @@ class Turn(unittest.TestCase):
         self.assertIn("web_search", offered(first))                         # still possible, but ...
         self.assertEqual(SEARCHES, ["Wie macht man Sauerteig mit Roggenmehl?"])   # ... only the person's words
         log = out.getvalue()
-        self.assertIn("lokal: Klasse wissen (Wissensfrage) | Dokumente 1", log)
+        self.assertIn("lokal: Klasse beides (zeitlos) | Dokumente 1", log)
         self.assertIn("mit den eigenen Worten der Frage", log)
         self.assertNotIn("Roggenmehl", "\n".join(x for x in log.splitlines() if x.startswith("lokal:")))
 
@@ -344,7 +346,7 @@ class Turn(unittest.TestCase):
         res = asyncio.run(lokal.look(None, "Wer war Albert Einstein?", ["kiwix"], 200))
         self.assertLess(time.monotonic() - t0, 2.0)
         self.assertEqual((res["late"], res["hits"]), (["kiwix"], []))
-        self.assertIn("Archiv zu langsam", lokal.log_line("wissen", "Wissensfrage", ["kiwix"], res))
+        self.assertIn("Archiv zu langsam", lokal.log_line("beides", ["zeitlos"], ["kiwix"], res))
 
     def test_the_archive_has_its_own_limit(self):
         helpers.set_config(kiwix=True, kiwix_url=f"http://127.0.0.1:{KIWIX_PORT}", kiwix_books=[])
@@ -359,7 +361,8 @@ class Turn(unittest.TestCase):
         r = ADMIN.post("/api/admin/lokal/test", json={"text": "Was gibt es heute für Nachrichten?"})
         self.assertEqual((r.status_code, r.json()["kind"]), (200, "extern"))
         r = ADMIN.post("/api/admin/lokal/test", json={"text": "Wer war Albert Einstein?"})
-        self.assertEqual((r.json()["kind"], r.json()["words"], r.json()["hits"]), ("wissen", ["Albert", "Einstein"], []))
+        self.assertEqual((r.json()["kind"], r.json()["words"], r.json()["hits"]), ("beides", ["Albert", "Einstein"], []))
+        self.assertEqual(r.json()["why"], ["zeitlos"])
         self.assertEqual(ADMIN.post("/api/admin/lokal/test", json={"text": "x" * 501}).status_code, 400)
         self.assertIn(TestClient(panel.app).post("/api/admin/lokal/test", json={"text": "Hallo"}).status_code, (401, 403))
         c = profile("Lokal7")

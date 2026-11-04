@@ -154,6 +154,7 @@ MODULE = {
     "recall": ("wissen", "Suche in früheren Gesprächen, gelernte Fakten"),
     "memtidy": ("wissen", "Wöchentliches Aufräumen des Gedächtnisses"),
     "lokal": ("wissen", "Erst lokal suchen, bevor etwas nach außen geht"),
+    "quellen": ("wissen", "Quellen-Weiche: intern, extern oder beides nach festen Regeln, Treffer-Probe im eigenen Index"),
     "kiwix": ("wissen", "Eigenes Kiwix als Wissensquelle ohne Internet"),
     "wiki": ("wissen", "Wikipedia für „Was ist …?“"),
     "docmake": ("wissen", "Dokumente erstellen: Aufträge, Vorlagen, Ablage"),

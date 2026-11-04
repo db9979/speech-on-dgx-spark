@@ -190,7 +190,8 @@ TARGETS = {
     "wmessen": ("Wissen messen", "Zeiten und Speicher · auf dem Spark", "spark", False),
     # Finden (fund.py): shown while it is on, entries of the search index, profiles, searches today and the median time,
     # with fundmail.py the mails read today and left to read, with fundquellen.py the entries per further source, with
-    # Stufe D the model's tags today and the Sofort-Karten, the size of the index over all profiles (numbers only)
+    # Stufe D the model's tags today and the Sofort-Karten, the size of the index over all profiles, the Quellen-Weiche's
+    # classes today and its probe's median time (numbers only)
     "fund": ("Finden", "Suchindex über die eigenen Daten · auf dem Spark", "spark", False),
     # Mappen (mappen.py): shown while it is on, Mappen and entries of all profiles, conversations bound today (numbers only)
     "mappen": ("Mappen", "Dokumente, Seiten und Notizen je Vorhaben · auf dem Spark", "spark", False),
@@ -1478,6 +1479,11 @@ def snapshot(view="admin", now=None):
         fnd = fund.for_live()
     except Exception:
         fnd = {"on": False}
+    try:
+        import quellen
+        qw = quellen.for_live()
+    except Exception:
+        qw = {"intern": 0, "extern": 0, "beides": 0, "probe": 0, "ms": None}
     if fnd.get("on"):
         used.add("fund")
     try:
@@ -2172,6 +2178,10 @@ def snapshot(view="admin", now=None):
                            f"{fnd.get('tag_weg', 0)} verworfen, {fnd.get('tag_offen', 0)} offen" if fnd.get("tag_on") else "")
                         + (f", {fnd['tag_fehler']} Fehler" if fnd.get("tag_on") and fnd.get("tag_fehler") else "")
                         + (f" · Sofort-Karten heute {fnd['sofort']}" if fnd.get("sofort") else "")
+                        # Quellen-Weiche (quellen.py): today's classes and the probe's median time (numbers only)
+                        + (f" · Quellen-Weiche heute {qw['intern']} intern, {qw['extern']} extern, {qw['beides']} beides"
+                           + (f", Probe {qw['probe']}-mal, Median {qw['ms']} ms" if qw.get("probe") else "")
+                           if qw["intern"] or qw["extern"] or qw["beides"] else "")
                         + (" · liest ein" if fnd.get("running") else ""))
         if x["id"] == "dungeon":   # Dungeon-Master: rounds, players and guests, turns, loot, levels, campaigns, read aloud and spoken today, stories with acts moved on and proposals, markets, purchases and sales, pictures painted, discarded and on their way, game dates and notes sent, music pieces made ahead, world truths, summaries, rewrites and thumbs, rounds waiting and table talk lines (numbers only, never a name or a text)
             x["sub"] = (f"{dgn.get('runden', 0)} Runden · {dgn.get('spieler', 0)} Spieler, {dgn.get('online', 0)} da, {dgn.get('gaeste', 0)} Gäste"
