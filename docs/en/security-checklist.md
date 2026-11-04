@@ -66,7 +66,7 @@ Go through before every commit. In the answer to Dominik briefly name which poin
 - [ ] Own data leaves the Spark as a whole only through "Download all my data" (`meinedaten.py`): every time a fresh code or passkey (without a second step the PIN), only what `export=` in the file register lets in, never secrets, the voiceprint or supplies of foreign servers; picked up once with a 128-bit code of which only the hash is kept, gone after 10 minutes. A new file under `users/<id>/` says with `export=` whether it belongs in.
 - [ ] Logs and error texts contain no tokens. Bot tokens and keys are redacted, so do not output `str(e)` from httpx with a token in the URL.
 - [ ] `/health` and similar open pages show only a status, no error texts and no names.
-- [ ] The change log is written only by `guard.log` (hash chain); nothing writes, shortens or deletes `audit.log` another way.
+- [ ] The change log is written only by `guard.log` (hash chain); nothing writes, shortens or deletes `audit.log` another way. A checked break is confirmed only as a new entry (`guard.ack_break`), never by changing the chain, and only for exactly the line the check reports.
 
 ## root boundary and update
 - [ ] root follows no symlinks in folders owned by `speech` (`chown -h`, delete beforehand).

@@ -955,7 +955,7 @@ details.ztech{margin-top:4px}details.ztech>summary{cursor:pointer;font:var(--t-b
 @media (max-width:760px){.zcards,.zcards.z5{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}.zcards.z5>*{grid-column:auto}.zcards.z5>:last-child{grid-column:1/-1}.zrechner{grid-template-columns:1fr}.zcard>b{font:var(--t-head);font-weight:700}.zgo{display:none}.zcard{padding:var(--s3)}
   .zch{display:none}#zneed .zrow>span:nth-child(2){hyphens:auto;overflow-wrap:anywhere}}
 /* Rückgängig above the admin log (C5, V01.0.286) */
-.lundo{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:0 0 10px;background:var(--card)}.lundo .zrow span{font-size:13.5px}
+.lundo{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:0 0 10px;background:var(--card)}.lundo .lack{display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap;margin-top:var(--s2)}.lundo .zrow span{font-size:13.5px}
 /* Notaus (notaus.js, plan plaene/notaus.md): red button, band on every page, the whole page in stage 3 or from outside */
 .b.notausbtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:none;color:var(--badt);border:1px solid color-mix(in srgb,var(--bad) 45%,transparent);font-weight:600;padding:4px 10px;order:1}
 .b.notausbtn[hidden]{display:none}.b.notausbtn:hover{background:color-mix(in srgb,var(--bad) 10%,transparent);border-color:var(--bad)}

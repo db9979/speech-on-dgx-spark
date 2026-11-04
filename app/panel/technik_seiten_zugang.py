@@ -632,7 +632,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ sicherheit (the model as a whole)
     "sicherheit": {
-        "stand": "5886396a50",
+        "stand": "5f22835177",
         "bezug": {
             "features.blocked": ["s5"], "geteilt.put": ["s5"], "mitschreiblink.find": ["s3", "s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
             "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"],
@@ -776,14 +776,18 @@ SEITEN = {
             S("s10", "ende", ("Spuren", "Traces"),
               ("guard.log, Wachposten", "guard.log, Wachposten"),
               ("Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer "
-               "SHA-256-Kette; der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault "
+               "SHA-256-Kette (guard.verify prüft sie täglich); einen Bruch, den ein Admin geprüft hat, bestätigt er mit "
+               "frischem Code und einem Grund der festen Liste (guard.ack_break): ein neuer Eintrag, die Kette bleibt, "
+               "und nur genau diese Zeile gilt als geprüft. Der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault "
                "(vault.seal), Gedächtnis und Gespräche ganz versiegelt im Ordner des Profils (profiles.write_own). Was ein Dienst für ein "
                "Profil vorhält (Mail-Vorrat, Mails, Anhänge, Termine und Kontakte in Finden), liegt nur mit AES-GCM versiegelt (vorrat.seal), "
                "die Wörter im Suchindex nur als HMAC-Marken mit einem Schlüssel je Profil (vorrat.marke); ohne Schlüssel "
                "wird nichts geschrieben. Schlagworte, die das Sprachmodell für Finden vorschlägt, sind Daten: fund.pruefe "
                "behält nur Kategorien der festen Liste und Namen, die wörtlich im Eintrag stehen, nie ein Befehlswort.",
                "Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a "
-               "SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault "
+               "SHA-256 chain (guard.verify checks it daily); a break an admin has checked is confirmed with a fresh code "
+               "and a reason of the fixed list (guard.ack_break): a new entry, the chain stays, and only exactly that "
+               "line counts as checked. The Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault "
                "(vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own). What a service keeps for a "
                "profile (the mail supply, mail, attachments, appointments and contacts in Find) lies only sealed with AES-GCM (vorrat.seal), the words "
                "in the search index only as HMAC marks with a key per profile (vorrat.marke); without a key nothing is written. "
@@ -922,6 +926,8 @@ SEITEN = {
             ("answercheck.unsupported", ("Zahl ohne Quelle fällt heraus", "a figure without a source is dropped")),
             ("textnorm.hide_secrets", ("Geheimnisse werden nie gesprochen", "secrets are never spoken")),
             ("guard.log", ("Änderungsprotokoll mit Prüfkette", "change log with its chain")),
+            ("guard.verify", ("prüft die Kette, bestätigte Brüche nur bei gleicher Zeile und Prüfsumme", "checks the chain, confirmed breaks only for the same line and hash")),
+            ("guard.ack_break", ("bestätigt nur den Bruch, den die Prüfung gerade meldet", "confirms only the break the check reports now")),
             ("vault.seal", ("Geheimnisse versiegelt ablegen", "store secrets sealed")),
             ("profiles.write_own", ("Gedächtnis und Gespräche ganz versiegelt", "memory and conversations sealed whole")),
             ("vorrat.key", ("ein Schlüssel je Zweck aus secret.key", "a key per purpose from secret.key")),

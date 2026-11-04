@@ -1589,7 +1589,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": ", oder dem Ja-Knopf seiner Karte „Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell; ebenso führt nur ihr Klick Punkte der Wissenskarte zusammen, benennt sie um oder löscht sie (mit dem Code von „Bestätigen“); von selbst nur eine feste Regel bei gleichem Namen in anderer Schreibweise (wissensdoppelt.aehnlich), nie das Modell, und nie gegen ihr „Verschieden“. Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette; der Wachpost"
+"text": ", oder dem Ja-Knopf seiner Karte „Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell; ebenso führt nur ihr Klick Punkte der Wissenskarte zusammen, benennt sie um oder löscht sie (mit dem Code von „Bestätigen“); von selbst nur eine feste Regel bei gleichem Namen in anderer Schreibweise (wissensdoppelt.aehnlich), nie das Modell, und nie gegen ihr „Verschieden“. Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette (guard.verify"
 },
 {
 "lang": "de",
@@ -1597,7 +1597,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "en meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal), Gedächtnis und Gespräche ganz versiegelt im Ordner des Profils (profiles.write_own). Was ein Dienst für ein Profil vorhält (Mail-Vorrat, Mails, Anhänge, Termine und Kontakte in Finden), liegt nur mit AES-GCM versiegelt (vorrat.seal), die Wörter im Suchindex nur als HMAC-Marken mit einem Schlüssel je Profil (vorrat.marke); ohne Schlüssel wird nichts geschrieben. Schlagworte, die das Sprachmodell für Finden vorschlägt, sind Daten: fund.pruefe behält nur Kategorien der festen Liste und Namen, die wörtlich im Eintrag stehen, nie ein Befehlswort."
+"text": " prüft sie täglich); einen Bruch, den ein Admin geprüft hat, bestätigt er mit frischem Code und einem Grund der festen Liste (guard.ack_break): ein neuer Eintrag, die Kette bleibt, und nur genau diese Zeile gilt als geprüft. Der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal), Gedächtnis und Gespräche ganz versiegelt im Ordner des Profils (profiles.write_own). Was ein Dienst für ein Profil vorhält (Mail-Vorrat, Mails, Anhänge, Termine und Kontakte in Finden), liegt nur mit AES-GCM versiegelt (vorrat.seal), die Wörter im Suchindex nur als HMAC-Marken mit einem Schlüssel je Profil (vorrat.marke); ohne Schlüssel wird nichts geschrieben. Schlagworte, die das Sprachmodell für Finden vorschlägt, sind Daten: fund.pruefe behält nur Kategorien der festen Liste und Namen, die wörtlich im Eintrag stehen, nie ein Befehlswort."
 },
 {
 "lang": "de",
@@ -1661,7 +1661,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": ", ohne Skript und ohne Laden von außen (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt ablegen (Schritt 10) - app/panel/profiles.py write_own: Gedächtnis und Gespräche ganz versiegelt (Schritt 10) - app/panel/vorrat.py key: ein Schlüssel je Zweck aus secret.key (Schritt 10) - app/panel/meinedaten.py api_export: eigene Daten nur nach frischem Code, Passkey oder PIN (Schritt 3) - app/panel/meinedaten.py build: die ZIP nur aus dem Datei-Register, ohne Geheimnisse (Schritt 10) - app/panel/profiles.py _cap: Obergrenze des Gedächtnisses ohne Datenverlust (Schritt 8) - app/panel/gedaechtnis.py offer: Gelerntes ersetzt nie Bestätigtes: nur ein Angebot (Schritt 8) - app/panel/gemerkt.py take_back: Rückgängig nur für den eigenen, unveränderten Fakt (Schritt 8) - app/panel/wissensdoppelt.py aehnlich: Punkte der Karte von selbst nur nach fester Regel zusammen, nie gege"
+"text": ", ohne Skript und ohne Laden von außen (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/guard.py verify: prüft die Kette, bestätigte Brüche nur bei gleicher Zeile und Prüfsumme (Schritt 10) - app/panel/guard.py ack_break: bestätigt nur den Bruch, den die Prüfung gerade meldet (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt ablegen (Schritt 10) - app/panel/profiles.py write_own: Gedächtnis und Gespräche ganz versiegelt (Schritt 10) - app/panel/vorrat.py key: ein Schlüssel je Zweck aus secret.key (Schritt 10) - app/panel/meinedaten.py api_export: eigene Daten nur nach frischem Code, Passkey oder PIN (Schritt 3) - app/panel/meinedaten.py build: die ZIP nur aus dem Datei-Register, ohne Geheimnisse (Schritt 10) - app/panel/profiles.py _cap: Obergrenze des Gedächtnisses ohne Datenverlust (Schritt 8) - app/panel/gedaechtnis.py offer: Gelerntes ersetzt nie Bestätigtes: nur ein Angebot (Sc"
 },
 {
 "lang": "de",
@@ -1669,7 +1669,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "n „Verschieden“ (Schritt 8)"
+"text": "hritt 8) - app/panel/gemerkt.py take_back: Rückgängig nur für den eigenen, unveränderten Fakt (Schritt 8) - app/panel/wissensdoppelt.py aehnlich: Punkte der Karte von selbst nur nach fester Regel zusammen, nie gegen „Verschieden“ (Schritt 8)"
 },
 {
 "lang": "de",
@@ -19477,7 +19477,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "son deletes mail (into the trash, for good only after a question), never the model; likewise only their click merges, renames or deletes points of the knowledge map (with the code of „Confirm“); by itself only a fixed rule for the same name in another spelling (wissensdoppelt.aehnlich), never the model, and never against their „Different“. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it. 9. Check the answer: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML. 10. Traces: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain; the Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own). What a service keeps for a"
+"text": "son deletes mail (into the trash, for good only after a question), never the model; likewise only their click merges, renames or deletes points of the knowledge map (with the code of „Confirm“); by itself only a fixed rule for the same name in another spelling (wissensdoppelt.aehnlich), never the model, and never against their „Different“. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it. 9. Check the answer: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML. 10. Traces: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain (guard.verify checks it daily); a break an admin has checked is confirmed with a fresh code and a reason of the fixed list (guard.ack_break): a new entry, the chain stays, and only exactly that line counts as chec"
 },
 {
 "lang": "en",
@@ -19485,7 +19485,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " profile (the mail supply, mail, attachments, appointments and contacts in Find) lies only sealed with AES-GCM (vorrat.seal), the words in the search index only as HMAC marks with a key per profile (vorrat.marke); without a key nothing is written. Tags the language model proposes for Find are data: fund.pruefe keeps only categories of the fixed list and names that stand in the entry word for word, never a command word."
+"text": "ked. The Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own). What a service keeps for a profile (the mail supply, mail, attachments, appointments and contacts in Find) lies only sealed with AES-GCM (vorrat.seal), the words in the search index only as HMAC marks with a key per profile (vorrat.marke); without a key nothing is written. Tags the language model proposes for Find are data: fund.pruefe keeps only categories of the fixed list and names that stand in the entry word for word, never a command word."
 },
 {
 "lang": "en",
@@ -19549,7 +19549,15 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/vault.py seal: store secrets sealed (step 10) - app/panel/profiles.py write_own: memory and conversations sealed whole (step 10) - app/panel/vorrat.py key: a key per purpose from secret.key (step 10) - app/panel/meinedaten.py api_export: own data only after a fresh code, passkey or PIN (step 3) - app/panel/meinedaten.py build: the ZIP only from the file register, without secrets (step 10) - app/panel/profiles.py _cap: the memory's cap without data loss (step 8) - app/panel/gedaechtnis.py offer: learned never replaces confirmed: only an offer (step 8) - app/panel/gemerkt.py take_back: undo only for the own, unchanged fact (step 8) - app/panel/wissensdoppelt.py aehnlich: points of the map merged by themselves only by a fixed rule, never against „Different“ (step 8)"
+"text": "/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/guard.py verify: checks the chain, confirmed breaks only for the same line and hash (step 10) - app/panel/guard.py ack_break: confirms only the break the check reports now (step 10) - app/panel/vault.py seal: store secrets sealed (step 10) - app/panel/profiles.py write_own: memory and conversations sealed whole (step 10) - app/panel/vorrat.py key: a key per purpose from secret.key (step 10) - app/panel/meinedaten.py api_export: own data only after a fresh code, passkey or PIN (step 3) - app/panel/meinedaten.py build: the ZIP only from the file register, without secrets (step 10) - app/panel/profiles.py _cap: the memory's cap without data loss (step 8) - app/panel/gedaechtnis.py offer: learned never replaces confirmed: only an offer (step 8) - app/panel/gemerkt.py take_back: undo only for the own, unchanged fact (step 8) - app/panel/wissensdoppelt.py aehnlich: points of the map merged by themsel"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "In the code",
+"title": "In the code",
+"text": "ves only by a fixed rule, never against „Different“ (step 8)"
 },
 {
 "lang": "en",

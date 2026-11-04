@@ -26,17 +26,37 @@ async function auditRows(){const d=await (await api('/api/audit?limit=500')).jso
 // of its own, then the time of the entry before it; the number of breaks, and whether the chain fits again after it
 function chainBreak(c,day){const b=c.broken,say=b.say||[],when=b.t?day(b.t):t('nach ','after ')+day(b.before);
   let s=t(`Kette bricht in ${b.file}, Zeile ${b.line} (${when}): ${say[0]||'Art unbekannt'}.`,`Chain breaks in ${b.file}, line ${b.line} (${when}): ${say[1]||'kind unknown'}.`);
-  if(c.breaks>1)s+=t(` ${c.breaks} Bruchstellen.`,` ${c.breaks} breaks.`);
+  if(c.breaks>1)s+=c.open<c.breaks?t(` ${c.breaks} Bruchstellen, ${c.open} offen.`,` ${c.breaks} breaks, ${c.open} open.`):t(` ${c.breaks} Bruchstellen.`,` ${c.breaks} breaks.`);
   if(b.after_ok)s+=t(' Danach ist die Kette wieder heil.',' After it the chain is whole again.');
   return s}
+// breaks an admin confirmed as checked (guard.verify "acked", reason from guard.ACK_REASONS): the kind stays named
+function chainAcked(c,day){let s='';for(const b of c.acked||[]){const say=b.say||[],why=b.ack.say||[];
+  s+=t(` Bruch in ${b.file}, Zeile ${b.line} (${say[0]||'Art unbekannt'}) bestätigt am ${day(b.ack.t)} (${why[0]||''}).`,
+    ` Break in ${b.file}, line ${b.line} (${say[1]||'kind unknown'}) confirmed as checked on ${day(b.ack.t)} (${why[1]||''}).`)}
+  return s}
+// „Bruch als geprüft bestätigen“ next to an open break: a reason of the fixed list (d.reasons), then the server checks
+// that file, line and hash are still the break it finds (POST /api/audit/ack, a fresh code: stufen.LIST)
+function chainAck(box,d,show){const old=box.querySelector('.lack');if(old)old.remove();const b=d.chain.broken;if(!b||!d.reasons)return;
+  const row=el('div','lack'),sel=el('select','lsel'),msg=el('span','lsub');sel.setAttribute('aria-label',t('Grund','Reason'));
+  for(const [k,de,en] of d.reasons){const o=el('option','',t(de,en));o.value=k;sel.append(o)}
+  const go=el('button','b',t('Bruch als geprüft bestätigen','Confirm the break as checked'));go.type='button';
+  if(typeof codeLock==='function')codeLock(go,'protect');
+  go.onclick=async()=>{go.disabled=true;msg.textContent='';
+    try{const n=await (await api('/api/audit/ack',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({file:b.file,line:b.line,sha:b.sha,reason:sel.value})})).json();show(Object.assign({},d,n))}
+    catch(e){go.disabled=false;msg.textContent=e.message}};
+  row.append(sel,go,msg);box.append(row)}
 // „Protokoll prüfen“ : the chain of the change log and the sealed copy on the NAS (guard.verify, offsite.compare_audit)
 function auditChain(){const box=$('logkette');if(!box||box.childElementCount)return;
   const b=el('button','b',t('Protokoll prüfen','Check the log'));b.type='button';const out=el('span','lsub',t('Prüft die Kette aller Einträge und vergleicht mit der Kopie auf dem NAS.','Checks the chain of all entries and compares with the copy on the NAS.'));
+  const show=d=>{out.textContent=chainSay(d);chainAck(box,d,show)};
   box.append(b,out);b.onclick=async()=>{b.disabled=true;out.textContent=t('prüft …','checking …');
-    try{out.textContent=chainSay(await (await api('/api/audit/check?nas=1')).json())}catch(e){out.textContent=e.message}finally{b.disabled=false}}}
+    try{show(await (await api('/api/audit/check?nas=1')).json())}catch(e){out.textContent=e.message}finally{b.disabled=false}}}
 function chainSay(d){const c=d.chain,n=d.nas,day=x=>x?new Date(x*1000).toLocaleDateString():'–';
   let s=c.ok?t(`Kette heil: ${c.lines} Einträge seit ${day(c.first)}.`,`Chain whole: ${c.lines} entries since ${day(c.first)}.`)
-    :chainBreak(c,day);
+    :c.broken?chainBreak(c,day)
+    :t(`Kette sonst heil: ${c.lines} Einträge seit ${day(c.first)}, jede Bruchstelle geprüft.`,`Chain otherwise whole: ${c.lines} entries since ${day(c.first)}, every break checked.`);
+  s+=chainAcked(c,day);
   if(c.old)s+=t(` ${c.old} ältere Einträge ohne Kette.`,` ${c.old} older entries without chain.`);
   if(n)s+=n.missing?t(` NAS-Kopie: ${n.missing} von ${n.lines} Einträgen fehlen hier oder sind verändert.`,` NAS copy: ${n.missing} of ${n.lines} entries are missing here or changed.`)
     :t(` NAS-Kopie stimmt (${n.lines} Einträge).`,` NAS copy matches (${n.lines} entries).`);

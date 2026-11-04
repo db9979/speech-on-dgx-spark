@@ -66,7 +66,7 @@ Vor jedem Commit durchgehen. In der Antwort an Dominik kurz nennen, welche Punkt
 - [ ] Eigene Daten verlassen den Spark als Ganzes nur über „Alle meine Daten herunterladen“ (`meinedaten.py`): jedes Mal frischer Code oder Passkey (ohne zweiten Schritt die PIN), nur was `export=` im Datei-Register hineinlässt, nie Geheimnisse, Stimmabdruck oder Vorräte fremder Server; abgeholt einmal mit einem 128-Bit-Code, von dem nur der Hash liegt, nach 10 Minuten weg. Eine neue Datei unter `users/<id>/` sagt mit `export=`, ob sie hineingehört.
 - [ ] Logs und Fehlertexte enthalten keine Tokens. Bot-Tokens und Schlüssel werden geschwärzt, also nicht `str(e)` von httpx mit Token in der URL ausgeben.
 - [ ] `/health` und ähnliche offene Seiten zeigen nur einen Status, keine Fehlertexte und keine Namen.
-- [ ] Das Änderungsprotokoll schreibt nur `guard.log` (Prüfkette); nichts schreibt, kürzt oder löscht `audit.log` anders.
+- [ ] Das Änderungsprotokoll schreibt nur `guard.log` (Prüfkette); nichts schreibt, kürzt oder löscht `audit.log` anders. Ein geprüfter Bruch wird nur als neuer Eintrag bestätigt (`guard.ack_break`), nie durch Ändern der Kette, und nur für genau die Zeile, die die Prüfung meldet.
 
 ## root-Grenze und Update
 - [ ] root folgt keinen Symlinks in Ordnern, die `speech` gehören (`chown -h`, vorher löschen).

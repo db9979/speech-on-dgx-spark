@@ -79,6 +79,19 @@ def audit(limit: int = 300):
     return {"events": guard.read(max(1, min(limit, 2000))), "names": names}
 
 
+_ACK_REASONS = [[k, de, en] for k, (de, en) in guard.ACK_REASONS.items()]
+
+
+def _chain_words(res):
+    """The kind of every break in fixed words (guard.BREAK_WORDS), German and English, and of a confirmed one its
+    reason (guard.ACK_REASONS)."""
+    for b in ([res["broken"]] if res.get("broken") else []) + res.get("acked", []):
+        b["say"] = list(guard.BREAK_WORDS.get(b["kind"], ("", "")))
+        if b.get("ack"):
+            b["ack"]["say"] = list(guard.ACK_REASONS[b["ack"]["reason"]])
+    return res
+
+
 @router.get("/api/audit/check", dependencies=[Depends(auth)])
 async def audit_check(request: Request, nas: int = 0):
     """„Protokoll prüfen“: the change log's chain (guard.verify) and, with nas=1, the newest sealed copy on the NAS
@@ -86,10 +99,9 @@ async def audit_check(request: Request, nas: int = 0):
     it only reads, and the pages show the button to every admin (Dominik 2026-11-03: with main_auth an admin
     profile got only „Das gehört zum Notzugang“)."""
     guard.limit(request, "offsite", admin=True)
-    res = await asyncio.to_thread(guard.verify)
-    if res["broken"]:   # the kind of break in fixed words (guard.BREAK_WORDS), German and English
-        res["broken"]["say"] = list(guard.BREAK_WORDS.get(res["broken"]["kind"], ("", "")))
-    out = {"chain": res, "nas": None, "nas_error": ""}
+    res = _chain_words(await asyncio.to_thread(guard.verify))
+    out = {"chain": res, "nas": None, "nas_error": "", "reasons": _ACK_REASONS}
+    state = "ok" if res["ok"] else "broken" if res.get("broken") else "confirmed"
     if nas:
         import offsite
         import zertpin
@@ -97,11 +109,36 @@ async def audit_check(request: Request, nas: int = 0):
             out["nas"] = await offsite.compare_audit()
         except Exception as e:   # noqa: BLE001 - shown as a fixed word, the chain result stands on its own
             out["nas_error"] = "zertifikat" if zertpin.problem(e) else type(e).__name__
-        print(f"audit: check | chain {'ok' if res['ok'] else 'broken'} | nas "
+        print(f"audit: check | chain {state} | nas "
               f"{'none' if out['nas'] is None else out['nas']['missing']} missing", flush=True)
     else:
-        print(f"audit: check | chain {'ok' if res['ok'] else 'broken'}", flush=True)
+        print(f"audit: check | chain {state}", flush=True)
     return out
+
+
+@router.post("/api/audit/ack", dependencies=[Depends(auth), Depends(admin_code_fresh)])
+async def audit_ack(request: Request):
+    """„Bruch als geprüft bestätigen“ (Dominik 2026-11-04, after a real power cut): {"file", "line", "sha", "reason"}.
+    Only an admin (auth: the panel password or an admin profile; never a Verwalter, whose MANAGER list lacks it, nor a
+    guest), with a fresh code (stufen.LIST, Schutz ändern: it silences an alarm). The server checks that exactly this
+    is the break the check finds now (guard.ack_break); the chain is never changed, a new entry says it was checked."""
+    guard.limit(request, "offsite", admin=True)
+    d = await json_body(request, 512)
+    f, line, sha, reason = d.get("file"), d.get("line"), d.get("sha"), d.get("reason")
+    if not (isinstance(f, str) and len(f) <= 20 and isinstance(line, int) and not isinstance(line, bool)
+            and 0 < line < 10_000_000 and isinstance(sha, str) and re.fullmatch(r"[0-9a-f]{64}", sha)
+            and isinstance(reason, str)):
+        print("audit: ack refused | form", flush=True)
+        raise HTTPException(400, "file, line, sha and reason")
+    prof = acting_profile(request)
+    ok, word = await asyncio.to_thread(guard.ack_break, f, line, sha, reason, prof["id"] if prof else "main")
+    if not ok:
+        print(f"audit: ack refused | {word}", flush=True)
+        raise HTTPException(400 if word == "grund" else 409, {"grund": "reason not in the list",
+                            "kein_bruch": "no open break", "anders": "the break changed, check again"}[word])
+    print(f"audit: ack ok | {word} | {reason} | {profiles.log_name(prof) if prof else 'main'}", flush=True)
+    res = await asyncio.to_thread(guard.chain_daily)
+    return {"chain": _chain_words(res), "reasons": _ACK_REASONS}
 
 
 @router.get("/api/admin/wyoming/suggest", dependencies=[Depends(auth)])

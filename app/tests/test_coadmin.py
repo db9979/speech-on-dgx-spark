@@ -134,6 +134,18 @@ class CoAdmin(unittest.TestCase):
         self.assertNotEqual(m.get("/api/audit/check").status_code, 200)
         self.assertEqual(TestClient(panel.app).get("/api/audit/check").status_code, 401)
 
+    def test_only_an_admin_with_a_fresh_code_confirms_a_break_in_the_change_log(self):
+        """Dominik 2026-11-04 („Bruch als geprüft bestätigen“): an admin profile, with its code every time (Schutz
+        ändern: it silences an alarm); a Verwalter and a guest never."""
+        body = {"file": "audit.log", "line": 1, "sha": "0" * 64, "reason": "stromausfall"}
+        c, uid = self.give("KoAck")
+        self.assertEqual(c.post("/api/audit/ack", json=body).status_code, 428)
+        r = c.post("/api/audit/ack", json=body, headers=CODE)
+        self.assertEqual(r.status_code, 409, r.text)      # past the login and the code: no such break here
+        m, _ = self.give("KoAckV", role="manager")
+        self.assertEqual(m.post("/api/audit/ack", json=body, headers=CODE).status_code, 403)
+        self.assertEqual(TestClient(panel.app).post("/api/audit/ack", json=body).status_code, 401)
+
     def test_pages_never_ask_an_admin_profile_for_the_passwords_things(self):
         """Dominik 2026-10-17: GET /api/mfa 403 in the console of an admin profile. Every place in the pages that
         reads what only the panel password may read (main_auth) asks elevated() first; mfa.js gets the path passed in."""
