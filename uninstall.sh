@@ -43,6 +43,9 @@ nft delete table inet speech_spark_teilen 2>/dev/null || true
 rm -f /etc/speech-spark-teilen.nft
 systemctl reset-failed 'speech-spark-*' 2>/dev/null || true
 rm -f /etc/sudoers.d/speech-spark /usr/local/bin/speech-spark-bench /usr/local/bin/speech-spark /etc/systemd/journald@speech-spark.conf
+# Entwickeln auf dem Pi: its programs; `opencode` only when it is ours (install.sh never wrote over a foreign one)
+rm -f /usr/local/bin/spark-dev-terminal /usr/local/bin/spark-opencode
+if grep -qxF "# Speech on DGX Spark: opencode = spark-opencode" /usr/local/bin/opencode 2>/dev/null; then rm -f /usr/local/bin/opencode; fi
 if [ -e /etc/systemd/system.conf.d/speech-spark-watchdog.conf ]; then   # the Pi's hardware watchdog (install.sh "5a")
   rm -f /etc/systemd/system.conf.d/speech-spark-watchdog.conf
   systemctl daemon-reexec || true

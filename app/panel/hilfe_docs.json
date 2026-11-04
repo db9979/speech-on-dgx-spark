@@ -3717,7 +3717,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ckeln.sandbox) und spielt sie wie ein Update ein, nie als root ausgeführt. Ein Update setzt sie mit entwickeln.aufsetzen auf die neue Version; passt das nicht, bleibt die laufende Version; was inzwischen auf main ist, fällt dabei weg. Weg A (eigener Schalter „An GitHub geben“): sudo speech-spark lokal an-github nimmt den Zweig ebenfalls nur als Bündel (entwickeln.an_github), lässt nie .github, Links oder Untermodule durch (entwickeln.pfade_github) und schiebt ihn als root mit einem eigenen Deploy-Schlüssel nur nach opencode/<thema> (entwickeln.ziel_ref: nie main, nie erzwungen), über ssh mit GitHubs festem Hostschlüssel (entwickeln.GH_HOSTKEY); spark-dev bleibt ohne Internet. Ohne Netz wartet der Auftrag. Ein Claude-Thread prüft den Zweig und bringt ihn auf main. Alles das zeigt Zustand → Werkstatt → Entwickeln mit Knöpfen; dort öffnet der Reiter Terminal (eigener Schalter) eine Shell als spark-dev im Browser: Ticket für 30 s nach frischem Code, an Anmeldung und Adresse gebunden; das Panel ruft nur das feste Programm /usr/local/bin/spark-dev-terminal von root ohne Argumente, das als spark-dev in einer abgeschotteten Einheit startet (entwickeln.terminal_befehl); eine Sitzung (entwic"
+"text": "ckeln.sandbox) und spielt sie wie ein Update ein, nie als root ausgeführt. Ein Update setzt sie mit entwickeln.aufsetzen auf die neue Version; passt das nicht, bleibt die laufende Version; was inzwischen auf main ist, fällt dabei weg. Weg A (eigener Schalter „An GitHub geben“): sudo speech-spark lokal an-github nimmt den Zweig ebenfalls nur als Bündel (entwickeln.an_github), lässt nie .github, Links oder Untermodule durch (entwickeln.pfade_github) und schiebt ihn als root mit einem eigenen Deploy-Schlüssel nur nach opencode/<thema> (entwickeln.ziel_ref: nie main, nie erzwungen), über ssh mit GitHubs festem Hostschlüssel (entwickeln.GH_HOSTKEY); spark-dev bleibt ohne Internet. Ohne Netz wartet der Auftrag. Ein Claude-Thread prüft den Zweig und bringt ihn auf main. Alles das zeigt Zustand → Werkstatt → Entwickeln mit Knöpfen; dort öffnet der Reiter Terminal (eigener Schalter) eine Shell als spark-dev im Browser: Ticket für 30 s nach frischem Code, an Anmeldung und Adresse gebunden; das Panel ruft nur das feste Programm /usr/local/bin/spark-dev-terminal von root ohne Argumente, das als spark-dev in einer abgeschotteten Einheit startet (entwickeln.terminal_befehl) und dort sofort OpenC"
 },
 {
 "lang": "de",
@@ -3725,7 +3725,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "kelnseite.Terminal), Ende nach 3600 s ohne Eingabe, nach 28800 s, beim Abmelden und Notaus. Code-Auftrag im Chat (eigener Schalter): codeauftrag.offer bietet das Werkzeug code_auftrag nur einem Admin im getippten Chat von Panel und App (codeauftrag.CLIENTS); das Ziel (höchstens 500 Zeichen) ist für OpenCode nur Daten. root (entwickeln.auftrag_lauf) lässt OpenCode einmal als spark-dev auf einem eigenen Zweig opencode/auftrag-<n> arbeiten (höchstens 1800 s); die Karte zeigt den Vorschlag, einspielen und an GitHub geben gehen nur auf der Seite mit frischem Code."
+"text": "ode öffnet, ein festes Skript ohne Eingabe von außen (entwickeln.TERM_START); nach OpenCode bleibt eine Shell; eine Sitzung (entwickelnseite.Terminal), Ende nach 3600 s ohne Eingabe, nach 28800 s, beim Abmelden und Notaus. Code-Auftrag im Chat (eigener Schalter): codeauftrag.offer bietet das Werkzeug code_auftrag nur einem Admin im getippten Chat von Panel und App (codeauftrag.CLIENTS); das Ziel (höchstens 500 Zeichen) ist für OpenCode nur Daten. root (entwickeln.auftrag_lauf) lässt OpenCode einmal als spark-dev auf einem eigenen Zweig opencode/auftrag-<n> arbeiten (höchstens 1800 s); die Karte zeigt den Vorschlag, einspielen und an GitHub geben gehen nur auf der Seite mit frischem Code."
 },
 {
 "lang": "de",
@@ -15485,7 +15485,7 @@
 "file": "Installation im Detail",
 "head": "Entwickeln auf dem Pi mit OpenCode",
 "title": "Entwickeln auf dem Pi mit OpenCode",
-"text": "1. Einmal installieren (auf dem Panel-Rechner, braucht Internet): sudo ./install.sh --entwickeln. Das legt den Nutzer spark-dev (ohne Passwort, ohne sudo) mit dem Klon /home/spark-dev/speech-on-dgx-spark und dem Zweig lokal an, lädt OpenCode (Version und SHA-512 fest in app/werkstatt.py, dieselbe Datei wie bei der Werkstatt) nach /opt/speech-spark/opencode, schreibt die Einstellungen von OpenCode (nur das eigene LLM-Tor, eigener Schlüssel, die Regeln aus CLAUDE.md und der Richtlinie), sperrt per Firewall jedes Netz außer dem LLM-Tor und baut die Testumgebung des Schnelltests. 2. Einschalten: als Admin *Funktionen → Entwickeln auf dem Pi* an. Erst dann gilt der Schlüssel von spark-dev am LLM-Tor. 3. Terminal öffnen: am einfachsten im Browser. Als Admin *Funktionen → Entwickeln auf dem Pi → Terminal im Browser* an, dann *Zustand → Werkstatt → Entwickeln*, Reiter *Terminal*, „Terminal öffnen“ und deinen Code eingeben (jedes Mal ein frischer; zweiter Anmeldeschritt nötig). Die Shell läuft als spark-dev im Klon. Wer lieber SSH nimmt: deinen öffentlichen SSH-Schlüssel für spark-dev eintragen und von deinem Rechner aus anmelden (siehe unten). 4. Ohne Internet arbeiten: spark-opencode tipp"
+"text": "1. Einmal installieren (auf dem Panel-Rechner, braucht Internet): sudo ./install.sh --entwickeln. Das legt den Nutzer spark-dev (ohne Passwort, ohne sudo) mit dem Klon /home/spark-dev/speech-on-dgx-spark und dem Zweig lokal an, lädt OpenCode (Version und SHA-512 fest in app/werkstatt.py, dieselbe Datei wie bei der Werkstatt) nach /opt/speech-spark/opencode, schreibt die Einstellungen von OpenCode (nur das eigene LLM-Tor, eigener Schlüssel, die Regeln aus CLAUDE.md und der Richtlinie), sperrt per Firewall jedes Netz außer dem LLM-Tor und baut die Testumgebung des Schnelltests. 2. Einschalten: als Admin *Funktionen → Entwickeln auf dem Pi* an. Erst dann gilt der Schlüssel von spark-dev am LLM-Tor. 3. Terminal öffnen: am einfachsten im Browser. Als Admin *Funktionen → Entwickeln auf dem Pi → Terminal im Browser* an, dann *Zustand → Werkstatt → Entwickeln*, Reiter *Terminal*, „Terminal öffnen“ und deinen Code eingeben (jedes Mal ein frischer; zweiter Anmeldeschritt nötig). Die Shell läuft als spark-dev im Klon. Wer lieber SSH nimmt: deinen öffentlichen SSH-Schlüssel für spark-dev eintragen und von deinem Rechner aus anmelden (siehe unten). 4. Ohne Internet arbeiten: Im Browser-Terminal"
 },
 {
 "lang": "de",
@@ -15493,7 +15493,7 @@
 "file": "Installation im Detail",
 "head": "Entwickeln auf dem Pi mit OpenCode",
 "title": "Entwickeln auf dem Pi mit OpenCode",
-"text": "en und in eigenen Worten sagen, was sich ändern soll. OpenCode fragt nur das Sprachmodell im Heimnetz und vor jedem Befehl dich. Testen geht im Klon wie auf GitHub, nur ohne Browser-Tests. Jede fertige Änderung ist ein Commit auf lokal. 5. Einspielen: im Reiter *Übersicht* steht der Commit bei „Lokale Änderungen“ mit Titel und Zahl der Dateien; „Lokal einspielen“ (frischer Code) oder sudo speech-spark lokal einspielen. Der Spark prüft die Commits, testet sie im Sandkasten und spielt sie wie ein Update ein; die Version zeigt dann „+lokal“. „Zurück zur alten Version“ und „Verwerfen …“ stehen daneben. 6. Code-Auftrag im Chat (eigener Unterschalter *Funktionen → Entwickeln auf dem Pi → Code-Auftrag im Chat*, aus): Statt selbst im Terminal zu tippen, schreibst du im Chat des Panels oder der App etwa „Code-Auftrag: die Begrüßung soll freundlicher klingen“. OpenCode arbeitet dann einmal als spark-dev auf einem eigenen Zweig opencode/auftrag-<Nummer>, und die Karte „Code-Auftrag (OpenCode)“ zeigt, was herauskam: Ziel, Dateien, die ersten Zeilen der Änderung. Das Modell schlägt nur vor. Einspielen entscheidest du: „Lokal einspielen“ und „An GitHub geben“ öffnen *Zustand → Werkstatt → Entwic"
+"text": " läuft OpenCode sofort (seit V01.1.328); beendet (ctrl+c) bleibt die Shell, opencode (oder spark-opencode) startet es neu. In eigenen Worten sagen, was sich ändern soll. sudo geht dort nicht: Update und Installation als dein Admin-Nutzer per SSH oder unter *Fernzugang*. OpenCode fragt nur das Sprachmodell im Heimnetz und vor jedem Befehl dich. Testen geht im Klon wie auf GitHub, nur ohne Browser-Tests. Jede fertige Änderung ist ein Commit auf lokal. 5. Einspielen: im Reiter *Übersicht* steht der Commit bei „Lokale Änderungen“ mit Titel und Zahl der Dateien; „Lokal einspielen“ (frischer Code) oder sudo speech-spark lokal einspielen. Der Spark prüft die Commits, testet sie im Sandkasten und spielt sie wie ein Update ein; die Version zeigt dann „+lokal“. „Zurück zur alten Version“ und „Verwerfen …“ stehen daneben. 6. Code-Auftrag im Chat (eigener Unterschalter *Funktionen → Entwickeln auf dem Pi → Code-Auftrag im Chat*, aus): Statt selbst im Terminal zu tippen, schreibst du im Chat des Panels oder der App etwa „Code-Auftrag: die Begrüßung soll freundlicher klingen“. OpenCode arbeitet dann einmal als spark-dev auf einem eigenen Zweig opencode/auftrag-<Nummer>, und die Karte „Code-Auftr"
 },
 {
 "lang": "de",
@@ -15501,7 +15501,7 @@
 "file": "Installation im Detail",
 "head": "Entwickeln auf dem Pi mit OpenCode",
 "title": "Entwickeln auf dem Pi mit OpenCode",
-"text": "keln* (dort die ganze Änderung und ein frischer Code), „Verwerfen“ löscht den Zweig, „Im Terminal weitermachen“ führt zum Reiter *Terminal*. Nur für Admins und nur getippt, nie über Lautsprecher, Auto, Telegram, Begleiter oder für Gäste."
+"text": "ag (OpenCode)“ zeigt, was herauskam: Ziel, Dateien, die ersten Zeilen der Änderung. Das Modell schlägt nur vor. Einspielen entscheidest du: „Lokal einspielen“ und „An GitHub geben“ öffnen *Zustand → Werkstatt → Entwickeln* (dort die ganze Änderung und ein frischer Code), „Verwerfen“ löscht den Zweig, „Im Terminal weitermachen“ führt zum Reiter *Terminal*. Nur für Admins und nur getippt, nie über Lautsprecher, Auto, Telegram, Begleiter oder für Gäste."
 },
 {
 "lang": "de",
@@ -15517,7 +15517,7 @@
 "file": "Installation im Detail",
 "head": "Entwickeln auf dem Pi mit OpenCode",
 "title": "Entwickeln auf dem Pi mit OpenCode",
-"text": "![Reiter Terminal: die Shell als spark-dev im Browser, rechts die Sitzung](../bilder/de-entwickeln-terminal.png)"
+"text": "![Reiter Terminal: OpenCode als spark-dev im Browser, darüber eine Leiste mit Sitzung, Hinweisen, Code und Fertig?](../bilder/de-entwickeln-terminal.png)"
 },
 {
 "lang": "de",
@@ -21629,7 +21629,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ch \"Hand to GitHub\"): sudo speech-spark lokal an-github also takes the branch only as a bundle (entwickeln.an_github), never lets .github, links or submodules through (entwickeln.pfade_github) and pushes it as root with a deploy key of its own only to opencode/<thema> (entwickeln.ziel_ref: never main, never forced), over ssh with GitHub's pinned host key (entwickeln.GH_HOSTKEY); spark-dev stays without the internet. Without network the order waits. A Claude thread reviews the branch and brings it onto main. Status → Workshop → Develop shows all this with buttons; there the tab Terminal (its own switch) opens a shell as spark-dev in the browser: a ticket for 30 s after a fresh code, bound to the sign-in and the address; the panel only runs root's fixed program /usr/local/bin/spark-dev-terminal without arguments, which starts as spark-dev in a sealed unit (entwickeln.terminal_befehl); one session (entwickelnseite.Terminal), it ends after 3600 s without input, after 28800 s, on signing out and on the emergency stop. Code order in the chat (its own switch): codeauftrag.offer offers the tool code_auftrag only to an admin in the typed chat of the panel and the apps (codeauftrag.CLIENTS);"
+"text": "ch \"Hand to GitHub\"): sudo speech-spark lokal an-github also takes the branch only as a bundle (entwickeln.an_github), never lets .github, links or submodules through (entwickeln.pfade_github) and pushes it as root with a deploy key of its own only to opencode/<thema> (entwickeln.ziel_ref: never main, never forced), over ssh with GitHub's pinned host key (entwickeln.GH_HOSTKEY); spark-dev stays without the internet. Without network the order waits. A Claude thread reviews the branch and brings it onto main. Status → Workshop → Develop shows all this with buttons; there the tab Terminal (its own switch) opens a shell as spark-dev in the browser: a ticket for 30 s after a fresh code, bound to the sign-in and the address; the panel only runs root's fixed program /usr/local/bin/spark-dev-terminal without arguments, which starts as spark-dev in a sealed unit (entwickeln.terminal_befehl) and opens OpenCode there at once, a fixed script with nothing from outside (entwickeln.TERM_START); after OpenCode a shell stays; one session (entwickelnseite.Terminal), it ends after 3600 s without input, after 28800 s, on signing out and on the emergency stop. Code order in the chat (its own switch): c"
 },
 {
 "lang": "en",
@@ -21637,7 +21637,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " the goal (at most 500 characters) is only data for OpenCode. root (entwickeln.auftrag_lauf) lets OpenCode work once as spark-dev on a branch of its own opencode/auftrag-<n> (at most 1800 s); the card shows the proposal, installing and handing to GitHub only go on the page with a fresh code."
+"text": "odeauftrag.offer offers the tool code_auftrag only to an admin in the typed chat of the panel and the apps (codeauftrag.CLIENTS); the goal (at most 500 characters) is only data for OpenCode. root (entwickeln.auftrag_lauf) lets OpenCode work once as spark-dev on a branch of its own opencode/auftrag-<n> (at most 1800 s); the card shows the proposal, installing and handing to GitHub only go on the page with a fresh code."
 },
 {
 "lang": "en",
@@ -33045,7 +33045,7 @@
 "file": "Installation in detail",
 "head": "Developing on the Pi with OpenCode",
 "title": "Developing on the Pi with OpenCode",
-"text": "1. Install once (on the panel computer, needs the internet): sudo ./install.sh --entwickeln. This adds the user spark-dev (no password, no sudo) with the clone /home/spark-dev/speech-on-dgx-spark and the branch lokal, downloads OpenCode (version and SHA-512 fixed in app/werkstatt.py, the same file as the workshop's) into /opt/speech-spark/opencode, writes OpenCode's settings (only the own LLM-Tor, its own key, the rules from CLAUDE.md and the guidelines), blocks every network except the LLM-Tor by firewall and builds the quick test's test environment. 2. Switch on: as admin *Features → Develop on the Pi* on. Only then does the key of spark-dev work at the LLM-Tor. 3. Open the terminal: easiest in the browser. As admin *Features → Develop on the Pi → Terminal in the browser* on, then *Status → Workshop → Develop*, tab *Terminal*, \"Open the terminal\" and enter your code (a fresh one every time; the second sign-in step is needed). The shell runs as spark-dev in the clone. If you prefer SSH: add your public SSH key for spark-dev and sign in from your computer (see below). 4. Work without the internet: type spark-opencode and say in your own words what should change. OpenCode asks only "
+"text": "1. Install once (on the panel computer, needs the internet): sudo ./install.sh --entwickeln. This adds the user spark-dev (no password, no sudo) with the clone /home/spark-dev/speech-on-dgx-spark and the branch lokal, downloads OpenCode (version and SHA-512 fixed in app/werkstatt.py, the same file as the workshop's) into /opt/speech-spark/opencode, writes OpenCode's settings (only the own LLM-Tor, its own key, the rules from CLAUDE.md and the guidelines), blocks every network except the LLM-Tor by firewall and builds the quick test's test environment. 2. Switch on: as admin *Features → Develop on the Pi* on. Only then does the key of spark-dev work at the LLM-Tor. 3. Open the terminal: easiest in the browser. As admin *Features → Develop on the Pi → Terminal in the browser* on, then *Status → Workshop → Develop*, tab *Terminal*, \"Open the terminal\" and enter your code (a fresh one every time; the second sign-in step is needed). The shell runs as spark-dev in the clone. If you prefer SSH: add your public SSH key for spark-dev and sign in from your computer (see below). 4. Work without the internet: in the browser terminal OpenCode runs at once (since V01.1.328); quit (ctrl+c), the s"
 },
 {
 "lang": "en",
@@ -33053,7 +33053,7 @@
 "file": "Installation in detail",
 "head": "Developing on the Pi with OpenCode",
 "title": "Developing on the Pi with OpenCode",
-"text": "the language model in the home network and you before every command. Testing works in the clone as on GitHub, only without browser tests. Every finished change is a commit on lokal. 5. Install: in the tab *Overview* the commit shows under \"Local changes\" with its title and number of files; \"Install locally\" (fresh code) or sudo speech-spark lokal einspielen. The Spark checks the commits, tests them in a sandbox and installs them like an update; the version then shows \"+lokal\". \"Back to the old version\" and \"Drop …\" sit next to it. 6. Code order in the chat (its own sub-switch *Features → Develop on the Pi → Code order in the chat*, off): instead of typing in the terminal yourself, write in the panel's or the app's chat for example \"Code-Auftrag: the greeting should sound friendlier\". OpenCode then works once as spark-dev on its own branch opencode/auftrag-<number>, and the card \"Code-Auftrag (OpenCode)\" shows what came out: goal, files, the first lines of the change. The model only proposes. You decide on installing: \"Install locally\" and \"Hand to GitHub\" open *Status → Workshop → Develop* (the whole change there and a fresh code), \"Drop\" deletes the branch, \"Continue in the termin"
+"text": "hell stays, opencode (or spark-opencode) starts it again. Say in your own words what should change. sudo does not work there: updates and installing as your admin user over SSH or under *Remote access*. OpenCode asks only the language model in the home network and you before every command. Testing works in the clone as on GitHub, only without browser tests. Every finished change is a commit on lokal. 5. Install: in the tab *Overview* the commit shows under \"Local changes\" with its title and number of files; \"Install locally\" (fresh code) or sudo speech-spark lokal einspielen. The Spark checks the commits, tests them in a sandbox and installs them like an update; the version then shows \"+lokal\". \"Back to the old version\" and \"Drop …\" sit next to it. 6. Code order in the chat (its own sub-switch *Features → Develop on the Pi → Code order in the chat*, off): instead of typing in the terminal yourself, write in the panel's or the app's chat for example \"Code-Auftrag: the greeting should sound friendlier\". OpenCode then works once as spark-dev on its own branch opencode/auftrag-<number>, and the card \"Code-Auftrag (OpenCode)\" shows what came out: goal, files, the first lines of the chan"
 },
 {
 "lang": "en",
@@ -33061,7 +33061,7 @@
 "file": "Installation in detail",
 "head": "Developing on the Pi with OpenCode",
 "title": "Developing on the Pi with OpenCode",
-"text": "al\" leads to the tab *Terminal*. Admins only and typed only, never over speakers, the car, Telegram, the Begleiter or for guests."
+"text": "ge. The model only proposes. You decide on installing: \"Install locally\" and \"Hand to GitHub\" open *Status → Workshop → Develop* (the whole change there and a fresh code), \"Drop\" deletes the branch, \"Continue in the terminal\" leads to the tab *Terminal*. Admins only and typed only, never over speakers, the car, Telegram, the Begleiter or for guests."
 },
 {
 "lang": "en",
@@ -33077,7 +33077,7 @@
 "file": "Installation in detail",
 "head": "Developing on the Pi with OpenCode",
 "title": "Developing on the Pi with OpenCode",
-"text": "![Tab Terminal: the shell as spark-dev in the browser, the session on the right](../bilder/en-entwickeln-terminal.png)"
+"text": "![Tab Terminal: OpenCode as spark-dev in the browser, above it one bar with session, notes, code and Done?](../bilder/en-entwickeln-terminal.png)"
 },
 {
 "lang": "en",

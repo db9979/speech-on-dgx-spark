@@ -1200,7 +1200,8 @@ class SeiteDrei(unittest.TestCase):
     def test_the_terminal_unit_is_fixed_and_never_root(self):
         b = entwickeln.terminal_befehl(1234, start="/home/spark-dev/speech-on-dgx-spark")
         self.assertEqual(b[:3], ["systemd-run", "--quiet", "--pty"])
-        self.assertEqual(b[-2:], ["/bin/bash", "--login"])
+        self.assertEqual(b[-4:-1], ["/bin/bash", "--login", "-c"])
+        self.assertIs(b[-1], entwickeln.TERM_START, "a fixed script of root's code, nothing from the caller")
         props = dict(b[i + 1].split("=", 1) for i, x in enumerate(b) if x == "-p")
         self.assertEqual((props["User"], props["Group"]), ("spark-dev", "spark-dev"))
         self.assertEqual(props["Slice"], "user-1234.slice", "spark-dev's own limits, below the panel")
@@ -1217,6 +1218,43 @@ class SeiteDrei(unittest.TestCase):
             self.assertEqual(entwickeln.cli(["terminal", "--extra"]), 2, "never an argument from the caller")
             if os.geteuid() != 0:
                 self.assertEqual(entwickeln.cli(["terminal"]), 2, "only root, through the wrapper")
+
+    def test_opencode_starts_at_once_then_the_shell(self):
+        """Dominik 2026-11-04 „können wir opencode direkt beim öffnen starten lassen?“: the browser terminal starts
+        spark-opencode, quitting it leaves a login shell with two fixed hints (start again with opencode, no sudo
+        here); an INT that kills OpenCode does not end the session. The script is a constant: no placeholder, no
+        expansion, no way for the panel, the browser or the configuration into it."""
+        s = entwickeln.TERM_START
+        self.assertTrue(s.startswith("trap : INT; " + entwickeln.OPENCODE_WRAPPER + "; trap - INT; "), s)
+        self.assertTrue(s.endswith("exec /bin/bash --login"), s)
+        self.assertEqual(entwickeln.OPENCODE_WRAPPER, "/usr/local/bin/spark-opencode")
+        for z in entwickeln.TERM_HINWEISE:
+            self.assertIn(f"echo '{z}'; ", s)
+            self.assertNotRegex(z, r"['$`\\{}]", "nothing the shell would expand or quote")
+        self.assertIn("Neu starten: opencode", entwickeln.TERM_HINWEISE[0])
+        self.assertIn("Kein sudo hier", entwickeln.TERM_HINWEISE[1])
+        self.assertNotIn("{", entwickeln.terminal_befehl.__doc__ or "")
+        import subprocess
+        if shutil.which("bash"):   # the script as bash reads it: the hints come out unchanged after OpenCode
+            r = subprocess.run(["bash", "-n", "-c", s], capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, r.stderr)
+
+    def test_the_installer_gives_spark_dev_the_command_opencode(self):
+        """Dominik 2026-11-04 typed `opencode` and got „command not found“: install.sh writes /usr/local/bin/opencode,
+        which only runs spark-opencode (its checks stay in one place), and never over an opencode that was there
+        before; uninstall.sh takes it away only when it is ours."""
+        i = helpers.repo_file("install.sh")
+        if not i:
+            return
+        w = i[i.index("OC_MARK="):]
+        w = w[:w.index("\n  fi\n")]
+        self.assertIn('OC_MARK="# Speech on DGX Spark: opencode = spark-opencode"', w)
+        self.assertIn('if [ ! -e /usr/local/bin/opencode ] || grep -qxF "$OC_MARK" /usr/local/bin/opencode', w)
+        self.assertIn("exec /usr/local/bin/spark-opencode \"$@\"", w)
+        self.assertIn("chown root:root /usr/local/bin/opencode", w)
+        self.assertIn("warn ", w, "a foreign opencode stays and is named")
+        u = helpers.repo_file("uninstall.sh")
+        self.assertIn('if grep -qxF "# Speech on DGX Spark: opencode = spark-opencode" /usr/local/bin/opencode', u)
 
     def test_the_installer_gives_the_panel_one_fixed_program(self):
         i = helpers.repo_file("install.sh")
@@ -1448,7 +1486,8 @@ class ImBrowser(unittest.TestCase):
                           breit:document.documentElement.scrollWidth-innerWidth,werk:getComputedStyle($('wkbox')).display}}""", [json.loads(demo), json.loads(gh)])
                     await pg.evaluate("dvAnsicht('term')")
                     t = await pg.evaluate("""()=>({knopf:[...$('dvxterm').querySelectorAll('button')].map(b=>b.textContent),
-                        karten:$('dvtside').querySelectorAll('.dvtcard').length,breit:document.documentElement.scrollWidth-innerWidth})""")
+                        leiste:!!document.querySelector('#dvtermbox>.dvleiste #dvfertig'),seite:document.querySelectorAll('.dvtcard,#dvtside').length,
+                        zeigt:$('dvxterm').offsetHeight,ldsel:$('dvbox').classList.contains('ld-sel'),breit:document.documentElement.scrollWidth-innerWidth})""")
                     out[w] = (weg, r, t)
                     await ctx.close()
                 await br.close()
@@ -1466,8 +1505,190 @@ class ImBrowser(unittest.TestCase):
             self.assertLessEqual(r["breit"], 0, f"nothing wider than {w} px")
             self.assertEqual(r["werk"], "none", "only the chosen part of the Werkstatt shows")
             self.assertEqual(t["knopf"], ["Terminal öffnen"])
-            self.assertEqual(t["karten"], 2)
+            self.assertTrue(t["leiste"], "one bar is the terminal's head, „Fertig?“ in it (Dominik 2026-11-04)")
+            self.assertEqual(t["seite"], 0, "no side column beside the terminal any more")
+            self.assertFalse(t["ldsel"], "on the phone .ld-sel of the Übersicht hid the whole terminal tab")
+            self.assertGreater(t["zeigt"], 200, w)
             self.assertLessEqual(t["breit"], 0, f"the terminal tab fits {w} px")
+
+
+class TerminalKompakt(unittest.TestCase):
+    """Dominik 2026-11-04 („nimmt alles zu viel Platz ein“, „opencode direkt beim öffnen starten“): with a terminal
+    open at 1440 × 900 the page never scrolls, the terminal reaches to the window's foot (with headroom) and takes most
+    of its height; the alerts and the code bar stand as pills of the terminal's bar (their popover lists the same rows,
+    „Ansehen“ jumps), the page head and the side column are gone, „Fertig?“ holds the facts and the hint without sudo,
+    full screen gives the box alone the screen; leaving the page brings the alerts back. On the phone the tab shows
+    even after a detail was open, with a row of keys. A harmless program stands for root's (it prints the first line
+    and echoes the keys)."""
+
+    CODE = "123456"
+
+    @classmethod
+    def setUpClass(cls):
+        from tests.test_ui_browser import browser_ok
+        if not browser_ok():
+            raise unittest.SkipTest("no Playwright/Chromium here")
+        cls.port = helpers._port()
+        helpers.serve_panel(cls, cls.port)
+
+    def setUp(self):
+        import entwickelnseite
+        import mfa
+        self.s, self.mfa = entwickelnseite, mfa
+        self.real = (mfa.enabled, mfa.verify)
+        helpers.keep_chat(self, "entwickeln", "entwickeln_terminal")
+        helpers.set_config(entwickeln=True, entwickeln_terminal=True)
+        p = mock.patch.object(entwickelnseite, "BEFEHL", ["sh", "-c", "echo opencode-erste-zeile; exec cat"])
+        p.start()
+        self.addCleanup(p.stop)
+        self.s.TERM_TICKETS.clear()
+
+    def tearDown(self):
+        self.mfa.enabled, self.mfa.verify = self.real
+        self.s.terminal_ende(None, "beendet")
+        self.s.TERM_TICKETS.clear()
+
+    LOOK = """(()=>{const d=document.documentElement,b=$('dvtermbox').getBoundingClientRect(),x=$('dvxterm').getBoundingClientRect(),
+        vis=id=>{const e=$(id);return !!e&&getComputedStyle(e).display!=='none'&&e.offsetHeight>0},r=$('dvxterm').querySelector('.xterm-rows>div');
+        return {scroll:d.scrollHeight-innerHeight,wide:d.scrollWidth-innerWidth,bottom:b.bottom,H:innerHeight,xh:x.height,
+          gefuellt:DV.term&&r?DV.term.rows*r.getBoundingClientRect().height:0,alerts:vis('alerts'),conf:vis('confbar'),kopf:vis('phead'),
+          pills:[...$('dvlpills').querySelectorAll('.lpill')].map(p=>[p.querySelector('.lplang').textContent,p.className]),
+          code:CONF_UNTIL*1000>Date.now(),name:$('dvlname').textContent,leiste:document.body.classList.contains('mitleiste'),seite:document.querySelectorAll('.dvtcard,#dvtside').length}})()"""
+
+    def test_the_terminal_fills_the_window_and_the_bar_holds_the_rest(self):
+        from tests.test_ui_browser import PAGE_READY, async_playwright, chromium
+        test = self
+
+        async def go():
+            async with async_playwright() as p:
+                exe = chromium()
+                br = await p.chromium.launch(**({"executable_path": exe} if exe else {}))
+                base = f"http://127.0.0.1:{self.port}"
+                ctx = await br.new_context(viewport={"width": 1440, "height": 900}, locale="de-DE", bypass_csp=True)
+                pg = await ctx.new_page()
+                await pg.route("**/api/setup", lambda route: route.fulfill(json={"done": True})
+                               if route.request.method == "GET" else route.continue_())   # no first-start window over it
+                hinweise = [{"kind": "audit_chain", "level": "bad", "text": "Das Änderungsprotokoll wurde nachträglich verändert.", "go": "Zustand → Logs → Änderungen"},
+                            {"kind": "quality", "level": "warn", "text": "Qualitätstest: 1 Frage(n) neu kaputt.", "go": "Zustand → Prüfen → Qualitätstest"}]
+
+                async def mit_hinweisen(route):   # every refresh brings the two alerts, from the first on: off Zustand the page asks only every 30 s, so a refresh in flight must not wipe them
+                    r = await route.fetch()
+                    try:
+                        d = await r.json()
+                    except Exception:
+                        return await route.fulfill(response=r)
+                    if isinstance(d, dict):
+                        d["alerts"] = hinweise
+                    await route.fulfill(response=r, json=d)
+                await pg.route("**/api/status*", mit_hinweisen)
+                await pg.goto(base + "/")
+                await pg.request.post(base + "/api/login", data={"password": "secret-admin"})
+                await pg.goto(base + "/")
+                await pg.wait_for_function(PAGE_READY, timeout=30000)
+                test.mfa.enabled = lambda who: who == test.mfa.ADMIN    # the second step is on, this code counts
+                test.mfa.verify = lambda who, code: who == test.mfa.ADMIN and code == test.CODE
+
+                async def mit_code(route):
+                    await route.continue_(headers={**route.request.headers, "x-speech-code": test.CODE})
+                await pg.route("**/api/admin/entwickeln/terminal", mit_code)
+                await pg.evaluate("wayGo('Zustand → Werkstatt → Entwickeln')")
+                await pg.wait_for_function("DV.d!==null&&!$('dvbox').hidden", timeout=10000)
+                await pg.evaluate("""clearTimeout(DV.timer);dvAnsicht('term');confirmShow(Math.floor(Date.now()/1000)+600)""")
+                await pg.evaluate("h=>showAlerts(h)", hinweise)
+                await pg.evaluate("dvTermAuf(document.createElement('button'))")
+                await pg.wait_for_function("DV.ws&&DV.ws.readyState===1", timeout=15000)
+                await pg.wait_for_function("""(()=>{const b=DV.term.buffer.active;for(let i=0;i<b.length;i++){const l=b.getLine(i);
+                    if(l&&l.translateToString().includes('opencode-erste-zeile'))return true}return false})()""", timeout=15000)
+                await pg.wait_for_function("document.documentElement.scrollHeight<=innerHeight", timeout=5000)
+                await pg.wait_for_timeout(300)
+                a = await pg.evaluate(test.LOOK)
+                erste = await pg.evaluate("(()=>{const b=DV.term.buffer.active,o=[];for(let i=0;i<b.length;i++){const l=b.getLine(i);if(l)o.push(l.translateToString().trim())}return o.filter(Boolean)})()")
+                await pg.wait_for_function("!!document.querySelector('#dvlpills .lpill.bad')", timeout=10000)
+                await pg.click("#dvlpills .lpill.bad")
+                pop = await pg.evaluate("(()=>{const p=document.querySelector('#dvtermbox>.lpop');return p?[p.querySelectorAll('.note.anote').length,[...p.querySelectorAll('button')].map(b=>b.textContent)]:null})()")
+                await pg.keyboard.press("Escape")
+                zu = await pg.evaluate("!document.querySelector('.lpop')")
+                await pg.click("#dvfertig")
+                fertig = await pg.evaluate("(()=>{const p=document.querySelector('#dvtermbox>.lpop');return p?[p.textContent,!!p.querySelector('a.wayl')]:null})()")
+                await pg.click("#dvfertig")
+                voll = None
+                if await pg.evaluate("document.fullscreenEnabled&&!$('dvvoll').hidden"):
+                    await pg.click("#dvvoll")
+                    await pg.wait_for_function("document.fullscreenElement===$('dvtermbox')", timeout=10000)
+                    await pg.wait_for_timeout(300)
+                    voll = await pg.evaluate("[$('dvxterm').getBoundingClientRect().height,innerHeight,$('dvtermbox').getBoundingClientRect().bottom]")
+                    await pg.evaluate("document.exitFullscreen()")
+                    await pg.wait_for_function("!document.fullscreenElement", timeout=10000)
+                await pg.evaluate("goSec('mon')")
+                await pg.wait_for_timeout(200)
+                weg = await pg.evaluate("[document.body.classList.contains('mitleiste'),getComputedStyle($('alerts')).display]")
+                await br.close()
+                return a, erste, pop, zu, fertig, voll, weg
+        a, erste, pop, zu, fertig, voll, weg = asyncio.run(go())
+        self.assertLessEqual(a["scroll"], 0, a)                                   # the page never scrolls
+        self.assertLessEqual(a["wide"], 0, a)
+        self.assertLessEqual(a["bottom"], a["H"] - 4, a)                          # to the foot, with headroom
+        self.assertGreaterEqual(a["bottom"], a["H"] - 40, a)                      # and not short of it
+        self.assertGreater(a["xh"], a["H"] * 0.7, a)                              # the terminal takes the height
+        self.assertGreater(a["gefuellt"], a["xh"] - 60, a)                        # its rows fill the box
+        self.assertEqual((a["alerts"], a["conf"], a["kopf"]), (False, False, False), a)
+        self.assertTrue(a["leiste"], a)
+        self.assertEqual(a["seite"], 0, a)
+        self.assertEqual(a["name"], "OpenCode · eigenes ModellOpenCode", a)       # long and short label, CSS picks
+        self.assertEqual([x[0] for x in a["pills"]][-1], "2 Hinweise", a)
+        self.assertIn("bad", a["pills"][-1][1], "a „bad“ alert makes the pill red")
+        if a["code"]:                                                             # the code still counts: its pill first
+            self.assertRegex(a["pills"][0][0], r"^Code \d+ min$", a)
+        self.assertEqual(len(a["pills"]), 2 if a["code"] else 1, a)
+        self.assertIn("opencode-erste-zeile", erste, "what root's program prints (OpenCode at once)")
+        self.assertIn("OpenCode startet … (beenden mit ctrl+c, dann Shell; neu starten: opencode)", erste)
+        self.assertEqual(pop, [2, ["Ansehen", "Ansehen"]], "the same rows as above the page, „Ansehen“ jumps")
+        self.assertTrue(zu, "Esc closes the popover")
+        self.assertIn("Kein sudo hier", fertig[0])
+        self.assertIn("opencode", fertig[0])
+        self.assertTrue(fertig[1], "Fernzugang is a jump link")
+        if voll:
+            self.assertGreater(voll[0], voll[1] - 60, voll)                       # full screen: the box alone
+        self.assertEqual(weg, [False, "block"], "another page: the alerts back above it")
+
+    def test_on_the_phone_the_tab_shows_after_a_detail(self):
+        from tests.test_ui_browser import PAGE_READY, async_playwright, chromium
+        demo = json.dumps(DEMO_SEITE)
+
+        async def go():
+            async with async_playwright() as p:
+                exe = chromium()
+                br = await p.chromium.launch(**({"executable_path": exe} if exe else {}))
+                base = f"http://127.0.0.1:{self.port}"
+                ctx = await br.new_context(viewport={"width": 390, "height": 844}, locale="de-DE", bypass_csp=True, is_mobile=True, has_touch=True)
+                pg = await ctx.new_page()
+                await pg.route("**/api/setup", lambda route: route.fulfill(json={"done": True})
+                               if route.request.method == "GET" else route.continue_())   # no first-start window over it
+                await pg.goto(base + "/")
+                await pg.request.post(base + "/api/login", data={"password": "secret-admin"})
+                await pg.goto(base + "/")
+                await pg.wait_for_function(PAGE_READY, timeout=30000)
+                await pg.evaluate("wayGo('Zustand → Werkstatt → Entwickeln')")
+                await pg.wait_for_function("DV.d!==null&&!$('dvbox').hidden", timeout=10000)
+                await pg.evaluate("d=>{clearTimeout(DV.timer);DV.d=d;DV.sel='lokal';dvAnsicht('ueber')}", json.loads(demo))
+                vorher = await pg.evaluate("$('dvbox').classList.contains('ld-sel')")
+                await pg.evaluate("dvAnsicht('term')")
+                await pg.wait_for_timeout(200)
+                r = await pg.evaluate("""(()=>({ldsel:$('dvbox').classList.contains('ld-sel'),h:$('dvxterm').offsetHeight,leiste:$('dvtermbox').offsetHeight,
+                    knopf:[...$('dvxterm').querySelectorAll('button')].map(b=>b.textContent),scroll:document.documentElement.scrollHeight-innerHeight,
+                    wide:document.documentElement.scrollWidth-innerWidth}))()""")
+                await pg.evaluate("dvAnsicht('ueber')")
+                zurueck = await pg.evaluate("$('dvbox').classList.contains('ld-sel')")
+                await br.close()
+                return vorher, r, zurueck
+        vorher, r, zurueck = asyncio.run(go())
+        self.assertTrue(vorher, "the detail was open in the Übersicht")
+        self.assertFalse(r["ldsel"], r)
+        self.assertGreater(r["h"], 240, r)
+        self.assertEqual(r["knopf"], ["Terminal öffnen"], r)
+        self.assertLessEqual(r["scroll"], 0, r)
+        self.assertLessEqual(r["wide"], 0, r)
+        self.assertTrue(zurueck, "back in the Übersicht the detail page again")
 
 
 if __name__ == "__main__":

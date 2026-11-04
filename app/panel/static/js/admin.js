@@ -1134,7 +1134,7 @@ function alertRow(x){const n=document.createElement('div');n.className='note ano
   return n}
 // notes only to know (level "info", e.g. open hands-on tests) stand on Zustand only, not above every page (code check 19.10. D12)
 let ALERTS_RAW=[];
-function showAlerts(a){a=a||[];ALERTS_RAW=a;const mon=!!document.querySelector('section#mon.on');if(!mon)a=a.filter(x=>x.level!=='info');
+function showAlerts(a){a=a||[];ALERTS_RAW=a;leisteDinge();const mon=!!document.querySelector('section#mon.on');if(!mon)a=a.filter(x=>x.level!=='info');
   if(typeof fzHinweise==='function')fzHinweise(a);   // the remote session's page shows them as a pill in its red line (fernzugang.js)
   const k=JSON.stringify(a);if(k===ALERTS_LAST)return;ALERTS_LAST=k;const box=$('alerts');box.textContent='';
   const bad=a.filter(x=>x.level==='bad'),rest=a.filter(x=>x.level!=='bad');
@@ -1148,6 +1148,34 @@ function showAlerts(a){a=a||[];ALERTS_RAW=a;const mon=!!document.querySelector('
   for(const x of rest)d.appendChild(alertRow(x));
   d.ontoggle=()=>{try{localStorage.setItem('alertsopen',d.open?'1':'0')}catch{}};
   box.appendChild(d)}
+// A page with its own bar (Zustand → Werkstatt → Entwickeln → Terminal, Dominik 2026-11-04 „nimmt alles zu viel Platz
+// ein“): body.mitleiste hides the alerts, the code bar and the page head above it, and the bar carries both as small
+// pills (leisteSetzen with the pills' box): „Code 10 min“ and „2 Hinweise“ (red with a "bad" one). Their popover
+// (leistePop) shows the same rows (alertRow, „Ansehen“ jumps) and „Beenden“ of the code: one source for every page
+// with such a bar. Drawn again only when the alerts or the minutes changed.
+let LEISTE=null,LEISTE_LAST='';
+function leisteSetzen(box){box=box||null;if(box!==LEISTE){LEISTE=box;LEISTE_LAST='';leistePop()}document.body.classList.toggle('mitleiste',!!box);leisteDinge()}
+function leistePill(icn,lang,kurz,cls){const b=document.createElement('button');b.type='button';b.className='lpill'+(cls?' '+cls:'');b.appendChild(icNode(icn));
+  const l=document.createElement('span');l.className='lplang';l.textContent=lang;const k=document.createElement('span');k.className='lpkurz';k.textContent=kurz;b.append(l,k);return b}
+function leisteDinge(){const box=LEISTE;if(!box||!box.isConnected)return;
+  const a=(ALERTS_RAW||[]).filter(x=>x.level!=='info'),left=typeof CONF_UNTIL==='number'?Math.ceil((CONF_UNTIL*1000-Date.now())/60000):0;
+  const k=JSON.stringify([a,left>0?left:0,L]);if(k===LEISTE_LAST)return;LEISTE_LAST=k;box.textContent='';
+  if(left>0){const b=leistePill('lock',t(`Code ${left} min`,`Code ${left} min`),left+' min','');
+    b.title=confText(left);
+    b.onclick=()=>leistePop(b,p=>{const z=document.createElement('p');z.textContent=b.title;const e=document.createElement('button');e.type='button';e.className='b';e.textContent=t('Beenden','End');
+      e.onclick=()=>{leistePop();confirmEnd()};p.append(z,e)});box.appendChild(b)}
+  if(a.length){const w=a.length===1?t('1 Hinweis','1 note'):a.length+' '+t('Hinweise','notes'),b=leistePill('warn',w,String(a.length),a.some(x=>x.level==='bad')?'bad':'warn');
+    b.title=w;b.onclick=()=>leistePop(b,p=>{const h=document.createElement('h4');h.textContent=w;p.appendChild(h);for(const x of a)p.appendChild(alertRow(x))});box.appendChild(b)}}
+// the popover under a pill of the bar: inside the bar's box (also in its full screen), closed by a click outside, Esc
+// or the same pill; leistePop() closes it
+let LPOP=null;
+function leistePop(btn,fill){const was=LPOP;if(LPOP){LPOP.p.remove();LPOP.btn.setAttribute('aria-expanded','false');LPOP=null}
+  if(!btn||(was&&was.btn===btn))return;const host=btn.closest('[data-lpop]')||document.body,p=document.createElement('div');p.className='lpop';p.setAttribute('role','dialog');
+  fill(p);host.appendChild(p);const hb=host.getBoundingClientRect(),r=btn.getBoundingClientRect(),w=Math.min(p.offsetWidth,hb.width-16);
+  p.style.top=Math.round(r.bottom-hb.top+6)+'px';p.style.left=Math.round(Math.max(8,Math.min(hb.width-w-8,r.right-hb.left-w)))+'px';
+  btn.setAttribute('aria-expanded','true');LPOP={p,btn}}
+document.addEventListener('click',e=>{if(LPOP&&!LPOP.p.contains(e.target)&&!LPOP.btn.contains(e.target))leistePop()},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&LPOP){leistePop();e.stopPropagation()}},true);
 // ---------------------------------------------------------------- does the language model see pictures? (images.py)
 function visionShow(r){if(!r){$('visionmsg').textContent=t('Noch nicht geprüft.','Not checked yet.');return}
   const when=new Date(r.t*1000).toLocaleString([], {dateStyle:'short',timeStyle:'short'});

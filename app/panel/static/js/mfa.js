@@ -59,15 +59,16 @@ function trustUi(who){const d=who.trust_days||60;
   document.body.classList.toggle('cfree',!!who.confirm_free);
   confirmShow(who.confirm_until||0)}
 let CONF_UNTIL=0,CONF_T=null;
+function confText(left){return t(`Code bestätigt: wichtige Änderungen noch ${left} min ohne neuen Code.`,`Code confirmed: important changes need no new code for ${left} more min.`)}
 function confirmShow(until){CONF_UNTIL=until||0;let bar=$('confbar');
-  if(CONF_UNTIL*1000<=Date.now()){if(bar)bar.remove();clearInterval(CONF_T);CONF_T=null;if(typeof fzCodeSchild==='function')fzCodeSchild();return}
+  if(CONF_UNTIL*1000<=Date.now()){if(bar)bar.remove();clearInterval(CONF_T);CONF_T=null;if(typeof fzCodeSchild==='function')fzCodeSchild();if(window.leisteDinge)leisteDinge();return}
   if(!bar){bar=document.createElement('div');bar.id='confbar';bar.className='updbanner';const sp=document.createElement('span');sp.id='conftext';
     const end=document.createElement('button');end.type='button';end.className='b';end.textContent=t('Beenden','End');
     end.onclick=confirmEnd;
     bar.append(sp,end);$('updbanner').before(bar)}
   const tick=()=>{const left=Math.ceil((CONF_UNTIL*1000-Date.now())/60000);if(left<=0)return confirmShow(0);
-    $('conftext').textContent=t(`Code bestätigt: wichtige Änderungen noch ${left} min ohne neuen Code.`,`Code confirmed: important changes need no new code for ${left} more min.`);   // on the remote session's page the same as a pill in its red line (fernzugang.js)
-    if(typeof fzCodeSchild==='function')fzCodeSchild()};
+    $('conftext').textContent=confText(left);   // on the remote session's page the same as a pill in its red line (fernzugang.js)
+    if(typeof fzCodeSchild==='function')fzCodeSchild();if(window.leisteDinge)leisteDinge()};
   tick();clearInterval(CONF_T);CONF_T=setInterval(tick,20e3)}
 async function confirmEnd(){try{await api('/api/confirm/end',{method:'POST'})}catch{}confirmShow(0)}
 async function confirmRefresh(){try{const w=await (await /*raw: called from inside api() after a code, kept out of it*/fetch('/api/whoami',{cache:'no-store'})).json();confirmShow(w.confirm_until||0)}catch{}}

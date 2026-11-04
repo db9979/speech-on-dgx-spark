@@ -1812,6 +1812,16 @@ if [ "$WITH_ENTWICKELN" = 1 ]; then
 exec /usr/bin/python3 -I $PREFIX/app/entwickeln.py opencode "\$@"
 EOF
   chmod 755 /usr/local/bin/spark-opencode
+  # `opencode` for spark-dev (Dominik 2026-11-04: typed it, „command not found“): the same program, no copy of its
+  # checks; never over an opencode the computer had before (only a file with this marker is ours)
+  OC_MARK="# Speech on DGX Spark: opencode = spark-opencode"
+  if [ ! -e /usr/local/bin/opencode ] || grep -qxF "$OC_MARK" /usr/local/bin/opencode 2>/dev/null; then
+    printf '#!/bin/sh\n%s\nexec /usr/local/bin/spark-opencode "$@"\n' "$OC_MARK" >/usr/local/bin/opencode
+    chown root:root /usr/local/bin/opencode
+    chmod 755 /usr/local/bin/opencode
+  else
+    warn "/usr/local/bin/opencode is not ours: left as it is (spark-dev starts OpenCode with spark-opencode)"
+  fi
   # the browser terminal of Zustand → Werkstatt → Entwickeln (panel: entwickelnseite.py): root's, no arguments; the
   # panel may start only this (its sudoers line above)
   cat >/usr/local/bin/spark-dev-terminal <<EOF

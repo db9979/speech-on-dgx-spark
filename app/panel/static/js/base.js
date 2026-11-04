@@ -170,6 +170,7 @@ function setHtml(el,h){if(el&&el._h!==h){el.innerHTML=h;el._h=h}}
 const lzb=(box,load,o)=>window.ladeBox?ladeBox(box,load,o):load();
 const LZ_CFG={skel:false,stale:false,top:true};
 function showSec(s){const sec=s==='feat'?'cfg':s;document.querySelectorAll('section').forEach(x=>x.classList.toggle('on',x.id===sec));
+  if(window.leisteSetzen)leisteSetzen(null);   // a page's own bar (admin.js) only while that page is open; it sets it again
   if(typeof showAlerts==='function')showAlerts(ALERTS_RAW);
   document.body.classList.toggle('inchat',s==='chat');if(s!=='tech'&&window.tkFull)tkFull(false);document.body.classList.toggle('inchats',s==='chats');
   const cw=document.querySelector('.cfgwrap');cw.classList.toggle('featmode',s==='feat');

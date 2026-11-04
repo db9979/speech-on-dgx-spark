@@ -370,7 +370,7 @@ function fzBanner(){const b=$('fzbanner'),alle=FZ.reiter.map(S=>S.sitz).concat(F
 // „N Hinweise“; a tap opens them over the page, so the terminal never moves; a warning is one tap away, never gone.
 function fzCodeSchild(){const b=$('fzbcode');if(!b)return;const bis=typeof CONF_UNTIL==='number'?CONF_UNTIL*1000:0,left=Math.ceil((bis-Date.now())/60000);
   b.hidden=!$('confbar')||left<=0;if(b.hidden)return;$('fzbcodet').textContent=left+' min';
-  b.title=t(`Code bestätigt: wichtige Änderungen noch ${left} min ohne neuen Code. Tippen beendet das.`,`Code confirmed: important changes need no new code for ${left} more min. Tap to end it.`);b.setAttribute('aria-label',b.title)}
+  b.title=confText(left)+t(' Tippen beendet das.',' Tap to end it.');b.setAttribute('aria-label',b.title)}
 function fzCodeEnde(){if(confirm(t('Die Code-Bestätigung jetzt beenden? Wichtige Änderungen fragen dann wieder nach einem Code.','End the code confirmation now? Important changes ask for a code again.'))&&typeof confirmEnd==='function')confirmEnd()}
 function fzHinweise(a){const b=$('fzbhinw');if(!b)return;a=a||[];const n=a.length;b.hidden=!n;b.classList.toggle('bad',a.some(x=>x.level==='bad'));
   if(!n){fzHinweiseAuf(false);return}$('fzbhinwn').textContent=String(n);$('fzbhinwt').textContent=' '+(n===1?t('Hinweis','note'):t('Hinweise','notes'));

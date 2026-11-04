@@ -134,13 +134,13 @@ Eine Anleitung für Einsteiger: Du änderst den Spark auf dem Panel-Rechner (etw
 1. **Einmal installieren** (auf dem Panel-Rechner, braucht Internet): `sudo ./install.sh --entwickeln`. Das legt den Nutzer `spark-dev` (ohne Passwort, ohne sudo) mit dem Klon `/home/spark-dev/speech-on-dgx-spark` und dem Zweig `lokal` an, lädt OpenCode (Version und SHA-512 fest in `app/werkstatt.py`, dieselbe Datei wie bei der Werkstatt) nach `/opt/speech-spark/opencode`, schreibt die Einstellungen von OpenCode (nur das eigene LLM-Tor, eigener Schlüssel, die Regeln aus `CLAUDE.md` und der Richtlinie), sperrt per Firewall jedes Netz außer dem LLM-Tor und baut die Testumgebung des Schnelltests.
 2. **Einschalten**: als Admin *Funktionen → Entwickeln auf dem Pi* an. Erst dann gilt der Schlüssel von `spark-dev` am LLM-Tor.
 3. **Terminal öffnen**: am einfachsten im Browser. Als Admin *Funktionen → Entwickeln auf dem Pi → Terminal im Browser* an, dann *Zustand → Werkstatt → Entwickeln*, Reiter *Terminal*, „Terminal öffnen“ und deinen Code eingeben (jedes Mal ein frischer; zweiter Anmeldeschritt nötig). Die Shell läuft als `spark-dev` im Klon. Wer lieber SSH nimmt: deinen öffentlichen SSH-Schlüssel für `spark-dev` eintragen und von deinem Rechner aus anmelden (siehe unten).
-4. **Ohne Internet arbeiten**: `spark-opencode` tippen und in eigenen Worten sagen, was sich ändern soll. OpenCode fragt nur das Sprachmodell im Heimnetz und vor jedem Befehl dich. Testen geht im Klon wie auf GitHub, nur ohne Browser-Tests. Jede fertige Änderung ist ein Commit auf `lokal`.
+4. **Ohne Internet arbeiten**: Im Browser-Terminal läuft OpenCode sofort (seit V01.1.328); beendet (ctrl+c) bleibt die Shell, `opencode` (oder `spark-opencode`) startet es neu. In eigenen Worten sagen, was sich ändern soll. `sudo` geht dort nicht: Update und Installation als dein Admin-Nutzer per SSH oder unter *Fernzugang*. OpenCode fragt nur das Sprachmodell im Heimnetz und vor jedem Befehl dich. Testen geht im Klon wie auf GitHub, nur ohne Browser-Tests. Jede fertige Änderung ist ein Commit auf `lokal`.
 5. **Einspielen**: im Reiter *Übersicht* steht der Commit bei „Lokale Änderungen“ mit Titel und Zahl der Dateien; „Lokal einspielen“ (frischer Code) oder `sudo speech-spark lokal einspielen`. Der Spark prüft die Commits, testet sie im Sandkasten und spielt sie wie ein Update ein; die Version zeigt dann „+lokal“. „Zurück zur alten Version“ und „Verwerfen …“ stehen daneben.
 6. **Code-Auftrag im Chat** (eigener Unterschalter *Funktionen → Entwickeln auf dem Pi → Code-Auftrag im Chat*, aus): Statt selbst im Terminal zu tippen, schreibst du im Chat des Panels oder der App etwa „Code-Auftrag: die Begrüßung soll freundlicher klingen“. OpenCode arbeitet dann einmal als `spark-dev` auf einem eigenen Zweig `opencode/auftrag-<Nummer>`, und die Karte „Code-Auftrag (OpenCode)“ zeigt, was herauskam: Ziel, Dateien, die ersten Zeilen der Änderung. Das Modell schlägt nur vor. Einspielen entscheidest du: „Lokal einspielen“ und „An GitHub geben“ öffnen *Zustand → Werkstatt → Entwickeln* (dort die ganze Änderung und ein frischer Code), „Verwerfen“ löscht den Zweig, „Im Terminal weitermachen“ führt zum Reiter *Terminal*. Nur für Admins und nur getippt, nie über Lautsprecher, Auto, Telegram, Begleiter oder für Gäste.
 
 [![Zustand → Werkstatt → Entwickeln: links lokale Änderungen, Zweige auf GitHub und Einstellungen, rechts die Commits mit den Knöpfen](../bilder/de-entwickeln.png)](../bilder/de-entwickeln.png)
 
-[![Reiter Terminal: die Shell als spark-dev im Browser, rechts die Sitzung](../bilder/de-entwickeln-terminal.png)](../bilder/de-entwickeln-terminal.png)
+[![Reiter Terminal: OpenCode als spark-dev im Browser, darüber eine Leiste mit Sitzung, Hinweisen, Code und Fertig?](../bilder/de-entwickeln-terminal.png)](../bilder/de-entwickeln-terminal.png)
 
 [![Code-Auftrag im Chat: die Karte mit Ziel, Stand, geänderten Dateien und Zweig, darunter Lokal einspielen, An GitHub geben, Verwerfen](../bilder/de-code-auftrag-karte.png)](../bilder/de-code-auftrag-karte.png)
 
@@ -154,7 +154,7 @@ sudo install -d -m 700 -o spark-dev -g spark-dev /home/spark-dev/.ssh
 sudo install -m 600 -o spark-dev -g spark-dev ~/.ssh/id_ed25519.pub /home/spark-dev/.ssh/authorized_keys
 # 4. von deinem Rechner aus
 ssh spark-dev@<panel-rechner>
-spark-opencode                      # OpenCode im Klon, Zweig lokal
+opencode                            # OpenCode im Klon, Zweig lokal (= spark-opencode)
 cd app && python3 selftest.py discover -s tests -p 'test_live.py'
 git commit -am "Meine Änderung"
 # 5. als Admin auf dem Panel-Rechner (oder Knöpfe unter Zustand → Werkstatt → Entwickeln)

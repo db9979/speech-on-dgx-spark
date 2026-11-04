@@ -1057,6 +1057,15 @@ def status_text(d, opencode=None, klon=None):
 # user slice (less than the panel), no new privileges, no access to the Spark's state, settings or root's home, a
 # fixed longest time. The firewall of spark-dev holds there as in an SSH session.
 TERM_WRAPPER = "/usr/local/bin/spark-dev-terminal"
+OPENCODE_WRAPPER = "/usr/local/bin/spark-opencode"   # spark-dev's OpenCode with the Spark's settings (install.sh)
+# The browser terminal starts OpenCode at once (Dominik 2026-11-04 „können wir opencode direkt beim öffnen starten
+# lassen?“): a fixed script of root's code, nothing from the panel, the browser or the configuration in it. Quitting
+# OpenCode (ctrl+c, /exit) leaves a shell with two fixed hints; an INT that kills OpenCode does not end the session
+# (`trap :` is reset in the child, so OpenCode still gets its ctrl+c). SSH logins of spark-dev stay a plain shell.
+TERM_HINWEISE = ("OpenCode ist zu. Neu starten: opencode (oder spark-opencode)",
+                 "Kein sudo hier: Update und Installation als dein Admin-Nutzer per SSH oder im Panel unter Fernzugang.")
+TERM_START = ("trap : INT; " + OPENCODE_WRAPPER + "; trap - INT; echo; "
+              + "".join(f"echo '{z}'; " for z in TERM_HINWEISE) + "exec /bin/bash --login")
 TERM_UNIT = "speech-spark-devterm"
 TERM_GRENZE_S = 8 * 3600     # a terminal session lasts this long at most (the panel ends it earlier when idle)
 COMMITS_MAX = 20             # commits the page shows with their titles
@@ -1090,7 +1099,7 @@ def terminal_befehl(uid, start=None):
     out += _dev_einheit(uid, ordner, TERM_GRENZE_S)
     for k, v in (("HOME", HOME), ("TERM", "xterm-256color"), ("LANG", "C.UTF-8"), ("PATH", "/usr/local/bin:/usr/bin:/bin")):
         out.append(f"--setenv={k}={v}")
-    return out + ["/bin/bash", "--login"]
+    return out + ["/bin/bash", "--login", "-c", TERM_START]
 
 
 def commits_parsen(text):

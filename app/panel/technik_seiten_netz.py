@@ -479,7 +479,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Werkstatt
     "werkstatt": {
-        "stand": "9a19652fbc",
+        "stand": "31de0d9508",
         "bezug": {
             "werkstattseite.auftrag_geben": ["s1"], "werkstattseite.nacht_art": ["s1"], "werkstattseite.NACHT_FENSTER_H": ["s1"],
             "werkstatt.pruefen": ["s2"], "werkstatt.TEXT_MAX": ["s2"],
@@ -613,7 +613,8 @@ SEITEN = {
                "dort öffnet der Reiter Terminal (eigener Schalter) eine Shell als spark-dev im Browser: Ticket für "
                "{entwickelnseite.TICKET_S} s nach frischem Code, an Anmeldung und Adresse gebunden; das Panel ruft nur das "
                "feste Programm /usr/local/bin/spark-dev-terminal von root ohne Argumente, das als spark-dev in einer "
-               "abgeschotteten Einheit startet (entwickeln.terminal_befehl); eine Sitzung (entwickelnseite.Terminal), "
+               "abgeschotteten Einheit startet (entwickeln.terminal_befehl) und dort sofort OpenCode öffnet, ein festes "
+               "Skript ohne Eingabe von außen (entwickeln.TERM_START); nach OpenCode bleibt eine Shell; eine Sitzung (entwickelnseite.Terminal), "
                "Ende nach {entwickelnseite.LEERLAUF_S} s ohne Eingabe, nach {entwickelnseite.SITZUNG_S} s, beim Abmelden und Notaus. "
                "Code-Auftrag im Chat (eigener Schalter): codeauftrag.offer bietet das Werkzeug code_auftrag nur einem Admin "
                "im getippten Chat von Panel und App (codeauftrag.CLIENTS); das Ziel (höchstens {entwickeln.ZIEL_MAX} Zeichen) "
@@ -634,7 +635,9 @@ SEITEN = {
                "onto main. Status → Workshop → Develop shows all this with buttons; there the tab Terminal (its own switch) "
                "opens a shell as spark-dev in the browser: a ticket for {entwickelnseite.TICKET_S} s after a fresh code, bound "
                "to the sign-in and the address; the panel only runs root's fixed program /usr/local/bin/spark-dev-terminal "
-               "without arguments, which starts as spark-dev in a sealed unit (entwickeln.terminal_befehl); one session "
+               "without arguments, which starts as spark-dev in a sealed unit (entwickeln.terminal_befehl) and opens "
+               "OpenCode there at once, a fixed script with nothing from outside (entwickeln.TERM_START); after OpenCode a "
+               "shell stays; one session "
                "(entwickelnseite.Terminal), it ends after {entwickelnseite.LEERLAUF_S} s without input, after "
                "{entwickelnseite.SITZUNG_S} s, on signing out and on the emergency stop. Code order in the chat (its own "
                "switch): codeauftrag.offer offers the tool code_auftrag only to an admin in the typed chat of the panel "

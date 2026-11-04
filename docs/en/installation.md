@@ -134,13 +134,13 @@ A guide for beginners: you change the Spark yourself on the panel computer (such
 1. **Install once** (on the panel computer, needs the internet): `sudo ./install.sh --entwickeln`. This adds the user `spark-dev` (no password, no sudo) with the clone `/home/spark-dev/speech-on-dgx-spark` and the branch `lokal`, downloads OpenCode (version and SHA-512 fixed in `app/werkstatt.py`, the same file as the workshop's) into `/opt/speech-spark/opencode`, writes OpenCode's settings (only the own LLM-Tor, its own key, the rules from `CLAUDE.md` and the guidelines), blocks every network except the LLM-Tor by firewall and builds the quick test's test environment.
 2. **Switch on**: as admin *Features → Develop on the Pi* on. Only then does the key of `spark-dev` work at the LLM-Tor.
 3. **Open the terminal**: easiest in the browser. As admin *Features → Develop on the Pi → Terminal in the browser* on, then *Status → Workshop → Develop*, tab *Terminal*, "Open the terminal" and enter your code (a fresh one every time; the second sign-in step is needed). The shell runs as `spark-dev` in the clone. If you prefer SSH: add your public SSH key for `spark-dev` and sign in from your computer (see below).
-4. **Work without the internet**: type `spark-opencode` and say in your own words what should change. OpenCode asks only the language model in the home network and you before every command. Testing works in the clone as on GitHub, only without browser tests. Every finished change is a commit on `lokal`.
+4. **Work without the internet**: in the browser terminal OpenCode runs at once (since V01.1.328); quit (ctrl+c), the shell stays, `opencode` (or `spark-opencode`) starts it again. Say in your own words what should change. `sudo` does not work there: updates and installing as your admin user over SSH or under *Remote access*. OpenCode asks only the language model in the home network and you before every command. Testing works in the clone as on GitHub, only without browser tests. Every finished change is a commit on `lokal`.
 5. **Install**: in the tab *Overview* the commit shows under "Local changes" with its title and number of files; "Install locally" (fresh code) or `sudo speech-spark lokal einspielen`. The Spark checks the commits, tests them in a sandbox and installs them like an update; the version then shows "+lokal". "Back to the old version" and "Drop …" sit next to it.
 6. **Code order in the chat** (its own sub-switch *Features → Develop on the Pi → Code order in the chat*, off): instead of typing in the terminal yourself, write in the panel's or the app's chat for example "Code-Auftrag: the greeting should sound friendlier". OpenCode then works once as `spark-dev` on its own branch `opencode/auftrag-<number>`, and the card "Code-Auftrag (OpenCode)" shows what came out: goal, files, the first lines of the change. The model only proposes. You decide on installing: "Install locally" and "Hand to GitHub" open *Status → Workshop → Develop* (the whole change there and a fresh code), "Drop" deletes the branch, "Continue in the terminal" leads to the tab *Terminal*. Admins only and typed only, never over speakers, the car, Telegram, the Begleiter or for guests.
 
 [![Status → Workshop → Develop: local changes, branches on GitHub and settings on the left, the commits with the buttons on the right](../bilder/en-entwickeln.png)](../bilder/en-entwickeln.png)
 
-[![Tab Terminal: the shell as spark-dev in the browser, the session on the right](../bilder/en-entwickeln-terminal.png)](../bilder/en-entwickeln-terminal.png)
+[![Tab Terminal: OpenCode as spark-dev in the browser, above it one bar with session, notes, code and Done?](../bilder/en-entwickeln-terminal.png)](../bilder/en-entwickeln-terminal.png)
 
 [![Code order in the chat: the card with goal, state, changed files and branch, below Install locally, Hand to GitHub, Drop](../bilder/en-code-auftrag-karte.png)](../bilder/en-code-auftrag-karte.png)
 
@@ -154,7 +154,7 @@ sudo install -d -m 700 -o spark-dev -g spark-dev /home/spark-dev/.ssh
 sudo install -m 600 -o spark-dev -g spark-dev ~/.ssh/id_ed25519.pub /home/spark-dev/.ssh/authorized_keys
 # 4. from your computer
 ssh spark-dev@<panel-computer>
-spark-opencode                      # OpenCode in the clone, branch lokal
+opencode                            # OpenCode in the clone, branch lokal (= spark-opencode)
 cd app && python3 selftest.py discover -s tests -p 'test_live.py'
 git commit -am "My change"
 # 5. as admin on the panel computer (or the buttons under Status → Workshop → Develop)

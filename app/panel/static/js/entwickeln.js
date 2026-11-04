@@ -4,7 +4,7 @@
 // (Lokal einspielen, An GitHub geben, Zurück, Verwerfen: the server asks the code and update.sh checks everything
 // again) and the Ablauf. Terminal: a shell as spark-dev (own sub-switch, a fresh code each session) with xterm.js of
 // the Fernzugang (fzLaden, one source). Commit titles and the terminal are data from spark-dev: textContent only.
-const DV={d:null,gh:null,ca:null,sel:'lokal',such:'',timer:0,ansicht:'ueber',term:null,ws:null,grund:'',thema:false};
+const DV={d:null,gh:null,ca:null,sel:'lokal',such:'',timer:0,ansicht:'ueber',term:null,ws:null,grund:'',thema:false,ctrl:false,alt:false};
 function dvEl(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;return e}
 function dvT(p){return L==='en'?p[1]:p[0]}
 function dvBtn(txt,cls,fn){const b=dvEl('button','b'+(cls?' '+cls:''),txt);b.type='button';b.onclick=fn;return b}
@@ -25,12 +25,18 @@ const DV_ABLAUF=[[['Auftrag','Order'],['im Terminal mit OpenCode','in the termin
   [['An GitHub geben','Hand to GitHub'],['Zweig opencode/…, Claude prüft, dann main','branch opencode/…, Claude reviews, then main']]];
 function werkTab(k,still){document.querySelectorAll('#werktabs button').forEach(b=>b.classList.toggle('on',b.dataset.wt===k));
   $('wkbox').hidden=k!=='werk';$('dvbox').hidden=k!=='dev';if(!still)try{localStorage.setItem('werktab',k)}catch{}
+  if(k!=='dev'&&window.leisteSetzen)leisteSetzen(null);
   if(k==='dev')dvLoad();else if(window.wkLoad)wkLoad()}
 function dvOpen(){let k='werk';try{k=localStorage.getItem('werktab')||'werk'}catch{}werkTab(k==='dev'?'dev':'werk',true)}
 document.querySelectorAll('#werktabs button').forEach(b=>b.onclick=()=>werkTab(b.dataset.wt));
 document.querySelectorAll('#dvseg button').forEach(b=>b.onclick=()=>dvAnsicht(b.dataset.dv));
+// ⓘ beside the title: the page's sentence (.pintro) as its title; in the terminal, where the sentence is folded away, a click shows it
+$('dvinfo').onclick=()=>{const b=$('dvbox'),an=!b.classList.contains('dvintro');b.classList.toggle('dvintro',an);$('dvinfo').setAttribute('aria-expanded',an?'true':'false');dvHoehe();dvGroesseSenden()};
+$('dvinfo').title=document.querySelector('#dvbox>.pintro').textContent;
 function dvAnsicht(k){DV.ansicht=k;document.querySelectorAll('#dvseg button').forEach(b=>b.classList.toggle('on',b.dataset.dv===k));
-  $('dvueber').hidden=k!=='ueber';$('dvterm').hidden=k!=='term';if(DV.d)dvShow();else if(k==='term')dvTermSeite();if(k==='term'&&DV.term)setTimeout(dvGroesseSenden,50)}
+  $('dvueber').hidden=k!=='ueber';$('dvterm').hidden=k!=='term';$('dvbox').classList.toggle('dvtermansicht',k==='term');
+  $('dvbox').classList.toggle('ld-sel',k==='ueber'&&!$('dvdetail').hidden);   // on the phone .ld-sel would hide the terminal (Dominik 2026-11-04)
+  if(DV.d)dvShow();else if(k==='term')dvTermSeite();if(k!=='term'&&window.leisteSetzen)leisteSetzen(null);if(k==='term'&&DV.term)setTimeout(dvGroesseSenden,50)}
 async function dvLoad(){clearTimeout(DV.timer);const box=$('dvbox');if(!box||document.body.classList.contains('mgr'))return;
   if(box.offsetParent){try{const d=await (await api('/api/admin/entwickeln')).json();
       DV.gh=d.an&&d.github_an?await (await api('/api/admin/entwickeln/github')).json():null;
@@ -183,33 +189,64 @@ async function dvCa(art,x,btn){const frage={lokal:t('Diesen Vorschlag auf lokal 
     $('dvmsg').textContent=art==='lokal'?t('Gestartet: Fortschritt unter Einstellungen → Update.','Started: progress under Settings → Update.'):t('Wird verworfen.','Being dropped.');dvLoad()}
   catch(e){$('dvmsg').textContent=e.message;btn.disabled=false}}
 // ---------------------------------------------------------------- the terminal (entwickelnseite.terminal_ws)
-function dvTermSeite(){const box=$('dvterm'),d=DV.d||{};if(!box)return;
-  if(!box.firstChild){const w=dvEl('div','dvtw-grid'),links=dvEl('div','dvtermbox'),kopf=dvEl('div','dvtermkopf');
-    ['Pi','spark-dev',t('eigenes Modell','own model')].forEach((x,i)=>kopf.appendChild(dvEl('span','dvtchip'+(i===1?' ok':i===2?' llm':''),x)));
-    kopf.appendChild(dvEl('span','dvtort','~/speech-on-dgx-spark · '+t('Zweig ','branch ')+(d.zweig||'lokal')));links.appendChild(kopf);
-    const x=dvEl('div','dvxterm');x.id='dvxterm';links.appendChild(x);w.appendChild(links);
-    const rechts=dvEl('div','dvtside');rechts.id='dvtside';w.appendChild(rechts);box.appendChild(w);addEventListener('resize',dvGroesseSenden)}
-  if(!DV.term)dvTermLeer();dvTermSide()}
+// Compact (Dominik 2026-11-04 „nimmt alles zu viel Platz ein“): one bar is the terminal's head: what runs and where,
+// the pills of the page's alerts and code (leisteSetzen, admin.js), „Fertig?“ (a popover with the session's facts),
+// full screen and „Sitzung beenden“. The terminal fills the window's remaining height (dvHoehe) and OpenCode starts in
+// it at once (entwickeln.TERM_START); quitting OpenCode leaves the shell. On the phone a row of keys (FZ_KEYS).
+function dvTermSeite(){const box=$('dvterm');if(!box)return;
+  if(!box.firstChild){const tb=dvEl('div','dvtermbox');tb.id='dvtermbox';tb.dataset.lpop='1';const bar=dvEl('div','dvleiste');
+    const nm=dvEl('span','dvlname');nm.id='dvlname';const fakt=dvEl('span','dvlfakt');fakt.id='dvlfakt';const pills=dvEl('span','dvlpills');pills.id='dvlpills';
+    const fertig=dvEl('button','lpill',t('Fertig?','Done?'));fertig.type='button';fertig.id='dvfertig';fertig.setAttribute('aria-haspopup','dialog');fertig.onclick=()=>leistePop(fertig,dvFertig);
+    const voll=dvEl('button','dvlknopf');voll.type='button';voll.id='dvvoll';voll.appendChild(icNode('expand'));voll.onclick=dvVoll;
+    const ende=dvEl('button','dvlende');ende.type='button';ende.id='dvende';ende.onclick=dvTermBeenden;
+    bar.append(nm,fakt,pills,fertig,voll,ende);const x=dvEl('div','dvxterm');x.id='dvxterm';const k=dvEl('div','dvtasten');k.id='dvtasten';
+    tb.append(bar,x,k);box.appendChild(tb);addEventListener('resize',()=>{dvHoehe();dvGroesseSenden()});document.addEventListener('fullscreenchange',dvVollGeaendert)}
+  if(!DV.term)dvTermLeer();dvLeiste()}
+function dvLeiste(){const d=DV.d||{};if(!$('dvlname'))return;
+  leisteSetzen(!$('dvterm').hidden&&!$('dvbox').hidden&&document.querySelector('section#werk.on')?$('dvlpills'):null);
+  $('dvlname').textContent='';const pk=dvEl('i');pk.classList.toggle('an',!!DV.term);$('dvlname').append(pk,DV.term?dvEl('span','lplang',t('OpenCode · eigenes Modell','OpenCode · own model')):'Terminal',DV.term?dvEl('span','lpkurz','OpenCode'):'');
+  $('dvlfakt').textContent=[t('Panel-Rechner','panel computer'),'spark-dev',t('Zweig ','branch ')+(d.zweig||'lokal')+(d.offen?' · '+d.offen+t(' neu',' new'):''),t('Modell Stufe hinten','model stage last'),t('Leerlauf ','idle ')+(d.leerlauf_min||60)+' min'].join(' · ');
+  const offen=!DV.term&&d.terminal&&d.terminal.offen;$('dvende').hidden=!DV.term&&!offen;const el=$('dvende'),lang=offen?t('Offene Sitzung beenden','End the open session'):t('Sitzung beenden','End the session');el.textContent='';el.append(dvEl('span','lplang',lang),dvEl('span','lpkurz',t('Ende','End')));el.title=lang;
+  const v=t('Vollbild','Full screen');$('dvvoll').hidden=!DV.term||!document.fullscreenEnabled||NARROW();$('dvvoll').title=v;$('dvvoll').setAttribute('aria-label',v);
+  $('dvinfo').title=document.querySelector('#dvbox>.pintro').textContent;dvTasten();dvHoehe()}
+// „Fertig?“: what to do next and where this shell stands (the old side column), the hint without sudo
+function dvFertig(p){const d=DV.d||{};p.appendChild(dvEl('h4','',t('Fertig?','Done?')));
+  p.appendChild(dvEl('p','',t('Committe in OpenCode oder mit git commit. Danach steht der Commit im Reiter Übersicht bei den lokalen Änderungen, mit „Lokal einspielen“.','Commit in OpenCode or with git commit. Then the commit shows in the tab Overview with the local changes, with "Install locally".')));
+  const dl=dvEl('dl','ld-facts');[[t('Rechner','Computer'),t('Panel-Rechner','panel computer')],[t('Nutzer','User'),t('spark-dev, nie der Panel-Nutzer','spark-dev, never the panel user')],[t('Ordner','Folder'),'~/speech-on-dgx-spark'],
+    [t('Zweig','Branch'),d.zweig||'lokal'],[t('Modell','Model'),t('eigenes Sprachmodell · Stufe hinten','own language model · stage last')],[t('Netz','Network'),t('nur LLM-Tor','LLM-Tor only')],
+    [t('Befehle','Commands'),t('OpenCode fragt vorher','OpenCode asks first')],[t('Neu starten','Start again'),'opencode']].forEach(([k,v])=>{dl.appendChild(dvEl('dt','',k));dl.appendChild(dvEl('dd','',v))});
+  p.appendChild(dl);const s=dvEl('p','mut',t('Kein sudo hier: Update und Installation als dein Admin-Nutzer per SSH oder unter ','No sudo here: updates and installing as your admin user over SSH or under '));
+  s.appendChild(wayEl(t('Fernzugang','Remote access'),t('Fernzugang','Remote access')));s.appendChild(document.createTextNode(t('. Kein Zugriff auf Tresor, Profile und /var/lib/speech-spark; der Assistent sieht nie, was hier läuft.','. No access to the vault, profiles and /var/lib/speech-spark; the assistant never sees what runs here.')));p.appendChild(s)}
+// the terminal as high as the window allows (like the Fernzugang's fzLayout): the page itself never scrolls
+function dvHoehe(){const x=$('dvxterm');if(!x)return;if($('dvterm').hidden||!document.querySelector('section#werk.on')){x.style.removeProperty('--dvh');return}
+  if(document.fullscreenElement===$('dvtermbox')){x.style.setProperty('--dvh',Math.max(200,innerHeight-x.getBoundingClientRect().top-$('dvtasten').offsetHeight)+'px');return}
+  const unten=NARROW()?(($('aptabs')&&$('aptabs').offsetHeight)||0)+8:12,min=NARROW()?240:300;document.documentElement.style.setProperty('--leiste-unten',unten+'px');
+  let h=Math.max(min,Math.floor(innerHeight-x.getBoundingClientRect().top-$('dvtasten').offsetHeight-unten));x.style.setProperty('--dvh',h+'px');
+  const over=document.documentElement.scrollHeight-innerHeight;if(over>0){h=Math.max(min,h-over);x.style.setProperty('--dvh',h+'px')}}
+// full screen: the terminal box alone (Esc stays with OpenCode where the browser lets the page keep it)
+async function dvVoll(){const b=$('dvtermbox');try{if(document.fullscreenElement){await document.exitFullscreen();return}await b.requestFullscreen();
+  if(navigator.keyboard&&navigator.keyboard.lock)navigator.keyboard.lock(['Escape']).catch(()=>{})}catch(e){$('dvmsg').textContent=e.message}}
+function dvVollGeaendert(){const an=document.fullscreenElement===$('dvtermbox'),v=an?t('Vollbild beenden','Leave full screen'):t('Vollbild','Full screen');
+  if(!an&&navigator.keyboard&&navigator.keyboard.unlock)navigator.keyboard.unlock();$('dvvoll').textContent='';$('dvvoll').appendChild(icNode(an?'x':'expand'));$('dvvoll').title=v;$('dvvoll').setAttribute('aria-label',v);
+  setTimeout(()=>{dvHoehe();dvGroesseSenden();DV.term&&DV.term.focus()},60)}
+// the phone's keys: Esc, Tab, Strg, Alt and the arrows of the Fernzugang (FZ_KEYS, one source)
+function dvTasten(){const w=$('dvtasten');if(!w)return;w.textContent='';w.hidden=!DV.term||!NARROW();if(w.hidden)return;
+  for(const [l,seq] of FZ_KEYS.slice(0,8)){const b=dvEl('button','b'+((l==='Strg'&&DV.ctrl)||(l==='Alt'&&DV.alt)?' on':''),l==='Strg'?t('Strg','Ctrl'):l);b.type='button';
+    b.onclick=()=>{if(l==='Strg')DV.ctrl=!DV.ctrl;else if(l==='Alt')DV.alt=!DV.alt;else if(DV.ws&&DV.ws.readyState===1)DV.ws.send(new TextEncoder().encode(seq));
+      if(l==='Strg'||l==='Alt')dvTasten();DV.term&&DV.term.focus()};w.appendChild(b)}}
 function dvTermLeer(){const x=$('dvxterm'),d=DV.d||{};x.textContent='';const m=dvEl('div','dvtleer');
   if(!d.an||!d.terminal_an){m.appendChild(dvEl('p','',!d.an?t('Entwickeln auf dem Pi ist aus. Einschalten unter Funktionen → Entwickeln auf dem Pi.','Develop on the Pi is off. Switch it on under Features → Develop on the Pi.')
-      :t('Terminal im Browser ist aus. Einschalten unter Funktionen → Entwickeln auf dem Pi → Terminal im Browser. Per SSH geht es auch so: ssh spark-dev@<Panel-Rechner>, dann spark-opencode.','Terminal in the browser is off. Switch it on under Features → Develop on the Pi → Terminal in the browser. Over SSH it works anyway: ssh spark-dev@<panel computer>, then spark-opencode.')))}
+      :t('Terminal im Browser ist aus. Einschalten unter Funktionen → Entwickeln auf dem Pi → Terminal im Browser. Per SSH geht es auch so: ssh spark-dev@<Panel-Rechner>, dann opencode.','Terminal in the browser is off. Switch it on under Features → Develop on the Pi → Terminal in the browser. Over SSH it works anyway: ssh spark-dev@<panel computer>, then opencode.')))}
   else{if(DV.grund)m.appendChild(dvEl('p','dvtgrund',dvT(DV_ENDE[DV.grund]||DV_ENDE.fenster)));
-    m.appendChild(dvEl('p','',t('Eine Shell als spark-dev im eigenen Klon. Dort startet der Befehl spark-opencode OpenCode mit dem eigenen Sprachmodell. Jede Sitzung fragt nach deinem Code.','A shell as spark-dev in its own clone. There the command spark-opencode starts OpenCode with the own language model. Every session asks for your code.')));
+    m.appendChild(dvEl('p','',t('OpenCode startet sofort, mit dem eigenen Sprachmodell als spark-dev im eigenen Klon. Beendest du es, bleibt eine Shell; opencode startet es neu. Jede Sitzung fragt nach deinem Code.','OpenCode starts at once, with the own language model as spark-dev in its own clone. When you quit it, a shell stays; opencode starts it again. Every session asks for your code.')));
     const b=dvBtn(t('Terminal öffnen','Open the terminal'),'p',()=>dvTermAuf(b));codeLock(b,'protect');m.appendChild(b)}
   x.appendChild(m)}
-function dvTermSide(){const s=$('dvtside'),d=DV.d||{};if(!s)return;s.textContent='';const c=dvEl('div','card dvtcard');c.appendChild(dvEl('h3','',t('Sitzung','Session')));
-  const dl=dvEl('dl','ld-facts');[[t('Rechner','Computer'),t('Panel-Rechner','panel computer')],[t('Nutzer','User'),t('spark-dev, nie der Panel-Nutzer','spark-dev, never the panel user')],[t('Ordner','Folder'),'~/speech-on-dgx-spark'],
-    [t('Zweig','Branch'),(d.zweig||'lokal')+(d.offen?' · '+d.offen+t(' neu',' new'):'')],[t('Modell','Model'),t('eigenes Sprachmodell · Stufe hinten','own language model · stage last')],
-    [t('Netz','Network'),t('nur LLM-Tor','LLM-Tor only')],[t('Befehle','Commands'),t('OpenCode fragt vorher','OpenCode asks first')],[t('Leerlauf','Idle'),(d.leerlauf_min||60)+' min']].forEach(([k,v])=>{dl.appendChild(dvEl('dt','',k));dl.appendChild(dvEl('dd','',v))});
-  c.appendChild(dl);const acts=dvEl('div','ld-acts');
-  if(DV.term)acts.appendChild(dvBtn(t('Sitzung beenden','End the session'),'danger',dvTermBeenden));
-  else if(d.terminal&&d.terminal.offen)acts.appendChild(dvBtn(t('Offene Sitzung beenden','End the open session'),'danger',dvTermBeenden));
-  c.appendChild(acts);s.appendChild(c);
-  const f=dvEl('div','card dvtcard');f.appendChild(dvEl('h3','',t('Fertig?','Done?')));
-  f.appendChild(dvEl('p','',t('Committe in OpenCode oder mit git commit. Danach steht der Commit im Reiter Übersicht bei den lokalen Änderungen, mit „Lokal einspielen“.','Commit in OpenCode or with git commit. Then the commit shows in the tab Overview with the local changes, with "Install locally".')));
-  f.appendChild(dvEl('p','mut',t('Kein Zugriff auf Tresor, Profile und /var/lib/speech-spark. Der Assistent sieht nie, was hier läuft.','No access to the vault, profiles and /var/lib/speech-spark. The assistant never sees what runs here.')));s.appendChild(f)}
-function dvGroesse(){const el=$('dvxterm');const w=Math.max(320,el.clientWidth-16),h=Math.max(240,el.clientHeight-16);return [Math.max(20,Math.min(400,Math.floor(w/7.9))),Math.max(5,Math.min(200,Math.floor(h/16.5)))]}
-function dvGroesseSenden(){if(!DV.term||$('dvterm').hidden)return;const [c,r]=dvGroesse();if(c===DV.term.cols&&r===DV.term.rows)return;DV.term.resize(c,r);
+function dvGroesse(){const el=$('dvxterm');const w=Math.max(320,el.clientWidth-16),h=Math.max(200,el.clientHeight-16);return [Math.max(20,Math.min(400,Math.floor(w/7.9))),Math.max(5,Math.min(200,Math.floor(h/16.5)))]}
+// after xterm drew: its real cell size, so the rows fill the box to its foot
+function dvZellen(){const sc=DV.term&&$('dvxterm').querySelector('.xterm-screen'),r=sc&&$('dvxterm').querySelector('.xterm-rows>div');if(!r||!DV.term.cols)return null;
+  const cw=sc.getBoundingClientRect().width/DV.term.cols,ch=r.getBoundingClientRect().height,el=$('dvxterm');if(!(cw>0&&ch>0))return null;
+  return [Math.max(20,Math.min(400,Math.floor((el.clientWidth-16)/cw))),Math.max(5,Math.min(200,Math.floor((el.clientHeight-16)/ch)))]}
+function dvGroesseSenden(){if(!DV.term||$('dvterm').hidden)return;const [c,r]=dvZellen()||dvGroesse();if(c===DV.term.cols&&r===DV.term.rows)return;DV.term.resize(c,r);
   if(DV.ws&&DV.ws.readyState===1)DV.ws.send(JSON.stringify({typ:'groesse',cols:c,rows:r}))}
 async function dvTermAuf(btn){if(DV.ws)return;btn.disabled=true;$('dvmsg').textContent='';
   try{await fzLaden()}catch(e){$('dvmsg').textContent=e.message;btn.disabled=false;return}
@@ -219,13 +256,15 @@ async function dvTermAuf(btn){if(DV.ws)return;btn.disabled=true;$('dvmsg').textC
   const x=$('dvxterm');x.textContent='';DV.grund='';const bg=getComputedStyle(document.documentElement).getPropertyValue('--term').trim();
   const term=new window.Terminal({cursorBlink:true,fontSize:13,cols,rows,scrollback:3000,theme:bg?{background:bg}:undefined});DV.term=term;term.open(x);term.focus();
   const ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/api/entwickeln/terminal?t='+encodeURIComponent(tk));ws.binaryType='arraybuffer';DV.ws=ws;
-  const enc=new TextEncoder();term.onData(s=>{if(ws.readyState===1)ws.send(enc.encode(s))});
+  const enc=new TextEncoder();term.onData(s=>{if(ws.readyState!==1)return;if(DV.ctrl&&s.length===1){const c=s.toUpperCase().charCodeAt(0);if(c>=64&&c<96)s=String.fromCharCode(c-64);DV.ctrl=false;dvTasten()}
+    if(DV.alt&&s.length===1){s='\x1b'+s;DV.alt=false;dvTasten()}ws.send(enc.encode(s))});
   ws.onmessage=ev=>{if(ev.data instanceof ArrayBuffer){term.write(new Uint8Array(ev.data));return}let m;try{m=JSON.parse(ev.data)}catch{return}
-    if(m.typ==='stand')term.write('\x1b[2m'+t('Verbunden als spark-dev · endet nach ','Connected as spark-dev · ends after ')+m.leerlauf+t(' min Leerlauf',' min idle')+'\x1b[0m\r\n');
+    if(m.typ==='stand'){term.write('\x1b[2m'+t('Verbunden als spark-dev · endet nach ','Connected as spark-dev · ends after ')+m.leerlauf+t(' min Leerlauf',' min idle')+'\x1b[0m\r\n'+
+      t('OpenCode startet … (beenden mit ctrl+c, dann Shell; neu starten: opencode)','OpenCode starts … (quit with ctrl+c, then a shell; start again: opencode)')+'\r\n');dvGroesseSenden()}
     if(m.typ==='zu')DV.grund=String(m.grund||'')};
   ws.onclose=ev=>{if(DV.ws!==ws)return;if(!DV.grund)DV.grund=ev.code===4429?'voll':ev.code===4502?'start':ev.code===4503?'notaus':ev.code===4404?'aus':ev.code===4403?'ticket':'fenster';dvTermZu()};
-  dvTermSide()}
-function dvTermZu(){if(DV.term){DV.term.dispose();DV.term=null}DV.ws=null;dvTermLeer();dvTermSide();dvLoad()}
+  dvLeiste();setTimeout(dvGroesseSenden,80)}
+function dvTermZu(){if(DV.term){DV.term.dispose();DV.term=null}DV.ws=null;DV.ctrl=DV.alt=false;if(document.fullscreenElement===$('dvtermbox'))document.exitFullscreen().catch(()=>{});dvTermLeer();dvLeiste();dvLoad()}
 async function dvTermBeenden(){if(DV.ws&&DV.ws.readyState===1){DV.grund='beendet';DV.ws.send(JSON.stringify({typ:'ende'}));DV.ws.close(1000);return}
   try{await api('/api/admin/entwickeln/terminal/beenden',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});dvLoad()}catch(e){$('dvmsg').textContent=e.message}}
 window.dvOpen=dvOpen;window.dvLoad=dvLoad;
