@@ -5119,6 +5119,13 @@
 "titel": "Bruch im Änderungsprotokoll als geprüft bestätigen",
 "text": "Admin mit zweitem Schritt: unter Zustand → Logs → Änderungen „Protokoll prüfen“. Meldet die Prüfung einen Bruch (etwa nach dem Stromausfall „Kette bricht in audit.log.1, Zeile 1907 … unlesbare Zeile“), steht daneben die Auswahl Stromausfall / Karte voll / Unbekannt und „Bruch als geprüft bestätigen“. Stromausfall wählen, Knopf: der Code wird jedes Mal gefragt. Danach: „Kette sonst heil … Bruch in audit.log.1, Zeile 1907 (…) bestätigt am <heute> (Stromausfall)“, der Hinweis oben auf den Admin-Seiten ist weg, unter Änderungen steht „Bruch im Änderungsprotokoll als geprüft bestätigt“. Zustand → Logs (System und Sicherheit): „audit: ack ok | unlesbar | stromausfall | …“. Ein Verwalter sieht den Knopf nicht und kommt nicht durch.",
 "thread": "Fix Protokoll leer beim Panel-Passwort"
+},
+{
+"id": "P756",
+"v": 1321,
+"titel": "Bildschirm unter Windows mit TightVNC (Anker 1.10.0)",
+"text": "Auf dem Windows-PC den Anker aktualisieren (Fernzugang → Systeme, „Aktualisieren“, danach 1.10.0). Fernzugang → Systeme, den PC wählen: unter den Knöpfen steht „Auf dem PC noch nicht eingerichtet …“ mit dem Befehl und nur „Kopieren“. Auf dem PC die Eingabeaufforderung als Administrator öffnen, \"C:\\Program Files\\SparkAnker\\spark-anker.cmd\" bildschirm eingeben: es endet mit „Bildschirm eingerichtet: TightVNC als Dienst, nur 127.0.0.1:5930“. In PowerShell: Get-NetTCPConnection -LocalPort 5930 -State Listen zeigt nur 127.0.0.1, kein Port 5800, keine neue Firewall-Regel für TightVNC. Im Panel „Bildschirm“: der Bildschirm des PCs erscheint ohne Passwortfrage, „Steuern“ bewegt die Maus. Ein zweites Mal „bildschirm“ richtet es neu ein (kein Abbruch). „… spark-anker.cmd bildschirm aus“: TightVNC ist unter Einstellungen → Apps weg, der Knopf sagt wieder „noch nicht eingerichtet“. Auf einem PC mit eigenem TightVNC bricht „bildschirm“ ab und ändert nichts.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }

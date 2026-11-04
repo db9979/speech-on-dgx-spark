@@ -1796,8 +1796,11 @@ TIGHTVNC_MAX = 16 * 1024 * 1024
 WIN_TVNC_REG = r"HKLM\SOFTWARE\TightVNC"
 WIN_TVNC_SERVER = r"SOFTWARE\TightVNC\Server"     # Password and ControlPassword: VNC's fixed-key DES, written by winreg
 WIN_TVNC_SERVICE = "tvnserver"
-# Authenticode of the MSI: one line „<Status>|<GlavSoft in the signer?>|<signer, printable ASCII only>“ (win_tvnc_sig)
-WIN_TVNC_SIG = ("$s = Get-AuthenticodeSignature -LiteralPath '{path}'; $n = [string]$s.SignerCertificate.Subject; "
+# Authenticode of the MSI: one line „<Status>|<GlavSoft in the signer?>|<signer, printable ASCII only>“ (win_tvnc_sig);
+# the module of Windows PowerShell by its own path: started from PowerShell 7, PSModulePath names 7's module first,
+# which Windows PowerShell cannot load
+WIN_TVNC_SIG = ("Import-Module ($env:SystemRoot + '\\System32\\WindowsPowerShell\\v1.0\\Modules\\Microsoft.PowerShell.Security"
+                "\\Microsoft.PowerShell.Security.psd1'); $s = Get-AuthenticodeSignature -LiteralPath '{path}'; $n = [string]$s.SignerCertificate.Subject; "
                 "Write-Output (\"$($s.Status)|$($n -match 'GlavSoft')|\" + ($n -replace '[^ -~]', '?'))")
 WIN_SIG_STATUS = ("Valid", "UnknownError", "NotSigned", "HashMismatch", "NotTrusted", "NotSupportedFileFormat", "Incompatible")
 
