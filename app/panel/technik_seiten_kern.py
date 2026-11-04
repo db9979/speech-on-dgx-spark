@@ -243,7 +243,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "ac6f4e0801",
+        "stand": "e17af39b05",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -276,6 +276,12 @@ SEITEN = {
             "wissensmessung.lauf": ["s6"], "wissensmessung._synth": ["s6"], "wissensmessung.MESSTEILE": ["s6"],
             "regel:Mappen": ["s13"], "mappen.plan": ["s13"], "mappen.kontext": ["s13"], "mappen.for_turn": ["s13"],
             "mappen.MAX_MAPPEN": ["s13"], "mappen.MAX_EINTRAEGE": ["s13"], "mappen.TOKEN": ["s13"],
+            "mappen.fuer_werkzeug": ["s6"], "mappen.fuer_seite": ["s6"], "mappen.refs_of": ["s6"],
+            "auswertung.pruefe": ["s13"], "auswertung.machen": ["s13"], "auswertung.naechster": ["s13"],
+            "auswertung.inhalt": ["s13"], "auswertung.fristen": ["s13"], "auswertung.TEXT_CHARS": ["s13"],
+            "auswertung.PASSES": ["s13"], "auswertung.DAY": ["s13"], "wissen.KETTE": ["s13"],
+            "auswertung.check_vorlage": ["s13"], "auswertung.auto_arten": ["s13"], "auswertung.frist_tag": ["s13"],
+            "auswertung.fuer_mappe": ["s13"], "auswertung.VORLAGEN_MOST": ["s13"], "auswertung.AUFTRAG_LEN": ["s13"],
         },
         "kurz": ("Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente "
                  "jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene "
@@ -291,11 +297,18 @@ SEITEN = {
                  "schlägt das Sprachmodell in ruhigen Minuten Schlagworte vor; fund.pruefe behält nur Kategorien der "
                  "festen Liste und Namen, die wörtlich im Eintrag stehen, verknüpft Personen, Firmen und Orte mit den "
                  "Punkten der Wissenskarte (nur lesend) und lässt weg, was die Person entfernt hat. Ein klarer Treffer "
-                 "kommt als fester Satz des Panels (fund.sofort_satz), nie mit Worten des Modells. Mappen (mappen.py, "
+                 "kommt als fester Satz des Panels (fund.sofort_satz), nie mit Worten des Modells. Die Größe des "
+                 "Index (fund.groesse: fund.db und wissen.db samt -wal und -shm, nach Quellen geschätzt, nur Zahlen, "
+                 "{fund.GROESSE_CACHE} s gehalten) zeigen Finden → Einstellungen, der Admin beim Profil und Live. Mappen (mappen.py, "
                  "Tabellen in wissen.db) bündeln eigene Dokumente, Wissensbuch-Seiten und Notizen; ein Gespräch, "
                  "das die Person auf eine Mappe beschränkt, bekommt deren Einträge nach festen Stufen (mappen.plan: "
                  "aus nie, kurz nur der Steckbrief, ganz der Text bis zum Budget, der Rest nur über die Suche) als "
-                 "Daten, und die Antwort ist danach gesperrt wie nach jedem Text von außen.",
+                 "Daten, und die Antwort ist danach gesperrt wie nach jedem Text von außen. Eine Mappe begrenzt auch "
+                 "die Suche: document_search und fund_suche nehmen sie nur aus den eigenen Worten der Nachricht oder "
+                 "aus der Bindung des Gesprächs (mappen.fuer_werkzeug) und suchen dann nur in ihren Einträgen auf "
+                 "„ganz“; die Seite Finden filtert mit allen Einträgen der Mappe (mappen.fuer_seite). Gefiltert wird "
+                 "über die Zuordnung mp_eintrag, nie über Schlagworte; mit einer Mappe fallen Mails, Termine und "
+                 "Kontakte weg, eine fremde oder unbekannte Mappe findet nichts.",
                  "Knowledge is everything the Spark knows without going to the internet: the uploaded documents of "
                  "each profile (one SQLite file wissen.db per profile), the memory, earlier conversations, the own "
                  "Kiwix archive and created documents. This page shows the way a question finds fitting passages in "
@@ -310,11 +323,18 @@ SEITEN = {
                  "quiet minutes; fund.pruefe keeps only categories of the fixed list and names that stand in the entry "
                  "word for word, links people, companies and places to the points of the knowledge map (read only) "
                  "and leaves out what the person removed. A clear hit comes as the panel's fixed sentence "
-                 "(fund.sofort_satz), never in the model's words. Collections (mappen.py, tables in wissen.db) bundle "
+                 "(fund.sofort_satz), never in the model's words. The size of the index (fund.groesse: fund.db and "
+                 "wissen.db with -wal and -shm, estimated by source, numbers only, kept {fund.GROESSE_CACHE} s) is "
+                 "shown by Find → Settings, the admin at the profile and Live. Collections (mappen.py, tables in wissen.db) bundle "
                  "own documents, knowledge book pages and notes; a conversation the person limits to a collection "
                  "gets its entries by fixed levels (mappen.plan: off never, short only the document card, whole the "
                  "text up to the budget, the rest only through the search) as data, and the answer is locked after it "
-                 "like after any outside text."),
+                 "like after any outside text. A collection also narrows the search: document_search and fund_suche "
+                 "take it only from the person's own words of the message or from the conversation's binding "
+                 "(mappen.fuer_werkzeug) and then search only its entries set to whole; the page Find filters with "
+                 "every entry of the collection (mappen.fuer_seite). The filter goes over the assignment mp_eintrag, "
+                 "never over tags; with a collection mail, appointments and contacts fall away, another profile's or "
+                 "an unknown collection finds nothing."),
         "warum": ("Das Sprachmodell kennt die eigenen Unterlagen nicht. Es bekommt nur die wenigen Stellen, die das "
                   "Panel mit festen Regeln und zwei kleinen Modellen auf dem Prozessor heraussucht, jeweils mit "
                   "Herkunft. Was in einem Dokument steht, ist Text von außen: Daten, nie ein Befehl.",
@@ -517,6 +537,11 @@ SEITEN = {
             ("{mappen.MAX_MAPPEN}", ("Mappen pro Profil", "collections per profile"), "mappen.MAX_MAPPEN"),
             ("{mappen.MAX_EINTRAEGE}", ("Einträge je Mappe", "entries per collection"), "mappen.MAX_EINTRAEGE"),
             ("{mappen.TOKEN}", ("Token einer Mappe ans Modell (Standard)", "tokens of a collection to the model (default)"), "mappen.TOKEN"),
+            ("{auswertung.TEXT_CHARS}", ("Zeichen der Stellen je Durchgang einer Auswertung", "characters of places per pass of an analysis"), "auswertung.TEXT_CHARS"),
+            ("{auswertung.PASSES}", ("Durchgänge eines langen Dokuments höchstens", "passes of a long document at most"), "auswertung.PASSES"),
+            ("{auswertung.DAY}", ("Auswertungen pro Profil und Tag (Standard)", "analyses per profile and day (default)"), "auswertung.DAY"),
+            ("{auswertung.VORLAGEN_MOST}", ("eigene Arten (Vorlagen) des Admins höchstens", "own kinds (templates) of the admin at most"), "auswertung.VORLAGEN_MOST"),
+            ("{auswertung.AUFTRAG_LEN}", ("Zeichen eines Auftrags einer Vorlage höchstens", "characters of a template's task at most"), "auswertung.AUFTRAG_LEN"),
         ],
         "einstellen": [
             ("Funktionen → Eigene Dokumente und darunter Bedeutungssuche an: Stellen bekommen einen Bedeutungsvektor "
@@ -545,6 +570,10 @@ SEITEN = {
              "Karte hilft der Suche an: die Karte als dritte Trefferliste der Dokumentsuche (Standard aus).",
              "Features → Own documents → Knowledge book → Knowledge map → People, companies and deadlines and below it "
              "Map helps the search on: the map as third list of hits of the document search (default off)."),
+            ("Funktionen → Eigene Dokumente und darunter Auswertungen an: das Blatt Auswertungen im Detail jedes "
+             "eigenen Dokuments, dazu wie viele Auswertungen am Tag.",
+             "Features → Own documents and below it Analyses on: the sheet Analyses in the details of every own "
+             "document, with how many analyses a day."),
             ("Funktionen → Eigene Dokumente und darunter Mappen an: die Seite Mappen im Menü, dazu wie viele Token "
              "eine Mappe dem Modell höchstens gibt.",
              "Features → Own documents and below it Collections on: the page Collections in the menu, with how many "
@@ -743,6 +772,61 @@ SEITEN = {
                  "a deleted point also never comes back in a spelling that is „the same“ (wissensdoppelt.gesperrt); "
                  "merging stays the click with the code. „Merge with …“ shows the {wissensdoppelt.AEHNLICH_MOST} most "
                  "similar points of the same kind on top (wissensdoppelt.auswahl), the rest by search."),
+            ]),
+            (("Auswertungen", "Analyses"), [
+                ("Die ruhige Kette (wissen.KETTE, eine Liste für die Reihenfolge) ruft auswertung.due_once nach der "
+                 "Wissenskarte und den Schlagworten von Finden. auswertung.naechster nimmt zuerst, was die Person per "
+                 "Klick bestellt hat, dann Kurzfassung und Kernaussagen der neuesten Dokumente; ein langes Dokument "
+                 "nur nach wissen.long_ok. auswertung.stellen schneidet das Dokument in Durchgänge von höchstens "
+                 "{auswertung.TEXT_CHARS} Zeichen, höchstens {auswertung.PASSES}; jeder Durchgang läuft über "
+                 "vorrang.run und bricht ab, sobald jemand spricht (die Art wartet dann wieder). Höchstens "
+                 "{auswertung.DAY} Arten pro Profil und Tag (Standard), eine kaputte Antwort höchstens "
+                 "{auswertung.VERSUCHE} Mal.",
+                 "The quiet chain (wissen.KETTE, one list for the order) calls auswertung.due_once after the "
+                 "knowledge map and the tags of Find. auswertung.naechster takes first what the person ordered by "
+                 "click, then summary and key points of the newest documents; a long document only after "
+                 "wissen.long_ok. auswertung.stellen cuts the document into passes of at most "
+                 "{auswertung.TEXT_CHARS} characters, at most {auswertung.PASSES}; every pass runs through "
+                 "vorrang.run and stops as soon as somebody speaks (the kind then waits again). At most "
+                 "{auswertung.DAY} kinds per profile and day (default), a broken answer at most "
+                 "{auswertung.VERSUCHE} times."),
+                ("auswertung.pruefe behält einen Punkt des Modells nur, wenn seine Stelle angeboten war, "
+                 "wissensbuch.check_sentence gegen diese Stelle besteht (jede Zahl steht dort, keine Links, kein "
+                 "Markup, keine Befehlswörter) und bei Kurzfassung und Kernaussagen wissensbuch.match genug Wörter der "
+                 "Stelle findet; eine Frage endet mit „?“, ihre Antwort ist die Stelle selbst. Doppelte und Punkte mit "
+                 "„Stimmt nicht“ (aw_block) fallen weg, höchstens auswertung.MOST je Art. Ein neu gelesenes Dokument "
+                 "(anderer Fingerabdruck der Stücke) wartet wieder. auswertung.inhalt baut das Inhaltsverzeichnis aus "
+                 "chunks.part, auswertung.fristen nimmt die Frist des Steckbriefs und die Punkte der Wissenskarte "
+                 "(wissenskarte.knoten_von_dok, nur lesend): beides ohne Modell. Modelltext geht nie ins Gedächtnis, "
+                 "ins Wissensbuch oder in die Suche; das Werkzeug dokument_auswertung gibt ihn als Text von außen.",
+                 "auswertung.pruefe keeps a point of the model only when its place was offered, "
+                 "wissensbuch.check_sentence passes against that place (every number stands there, no links, no "
+                 "markup, no command words) and, for summary and key points, wissensbuch.match finds enough words of "
+                 "the place; a question ends with „?“, its answer is the place itself. Doubles and points marked "
+                 "„not right“ (aw_block) go, at most auswertung.MOST per kind. A document read again (another "
+                 "fingerprint of its pieces) waits again. auswertung.inhalt builds the contents from chunks.part, "
+                 "auswertung.fristen takes the deadline of the profile card and the points of the knowledge map "
+                 "(wissenskarte.knoten_von_dok, read only): both without the model. Model text never goes into the "
+                 "memory, the knowledge book or the search; the tool dokument_auswertung hands it over as outside "
+                 "text."),
+                ("Eigene Arten des Admins (Vorlagen, höchstens {auswertung.VORLAGEN_MOST}) liegen in "
+                 "STATE/auswertung-vorlagen.json; auswertung.check_vorlage lässt Name und Auftrag (höchstens "
+                 "{auswertung.AUFTRAG_LEN} Zeichen) nur ohne Links, Markup und Befehlswörter durch, auch beim Lesen. "
+                 "Der Auftrag steht als zitiertes Thema im festen Rahmen des Prompts, die Antwort geht durch dieselbe "
+                 "Prüfung wie die Kernaussagen. auswertung.auto_arten nimmt chat.doc_auswertung_auto (Standard "
+                 "Kurzfassung und Kernaussagen) und die Vorlagen mit „von selbst“. auswertung.frist_tag liest ein "
+                 "volles Datum nur aus dem Namen einer Frist der Wissenskarte, nie aus der Umgebung, und bietet "
+                 "„Erinnern“ wie beim Steckbrief. auswertung.fuer_mappe gibt einer Mappe in der Stufe „kurz“ "
+                 "Kurzfassung, Kernaussagen und Vorlagen mit Seite mit, als Daten.",
+                 "The admin's own kinds (templates, at most {auswertung.VORLAGEN_MOST}) lie in "
+                 "STATE/auswertung-vorlagen.json; auswertung.check_vorlage lets name and task (at most "
+                 "{auswertung.AUFTRAG_LEN} characters) through only without links, markup and command words, also "
+                 "when reading. The task stands as a quoted topic in the fixed frame of the prompt, the answer goes "
+                 "through the same check as the key points. auswertung.auto_arten takes chat.doc_auswertung_auto "
+                 "(default summary and key points) and the templates with „by itself“. auswertung.frist_tag reads a "
+                 "full date only from the name of a deadline of the knowledge map, never from around it, and offers "
+                 "„Remind“ as for the profile card. auswertung.fuer_mappe gives a collection at the level „short“ "
+                 "the summary, key points and templates with their page, as data."),
             ]),
             (("Karte hilft der Suche", "Map helps the search"), [
                 ("wissenskarte.liste(uid, worte, k) gibt Stück-Ids mit Rang ab 1 zurück, nur lesend (SQLite mit mode=ro) "
@@ -948,6 +1032,19 @@ SEITEN = {
             ("mappen.plan", ("feste Regel der Stufen aus, kurz, ganz und des Budgets", "fixed rule of the levels off, short, whole and the budget")),
             ("mappen.kontext", ("die Einträge einer Mappe als Datenblock mit Marken [M…]", "a collection's entries as a data block with marks [M…]")),
             ("mappen.for_turn", ("nur die eigene, freigegebene Mappe; als Text von außen", "only the own, released collection; as outside text")),
+            ("mappen.fuer_werkzeug", ("Mappe als Filter der Suche nur aus eigenen Worten oder der Bindung", "a collection as the search's filter only from own words or the binding")),
+            ("mappen.fuer_seite", ("Mappe als Filter der Seite Finden, fremd findet nichts", "a collection as the filter of the page Find, a foreign one finds nothing")),
+            ("mappen.refs_of", ("Dokumente und Seiten einer Mappe aus mp_eintrag", "documents and pages of a collection from mp_eintrag")),
+            ("wissen.KETTE", ("die ruhige Kette: Reihenfolge der Hintergrundarbeit, eine Liste", "the quiet chain: order of the background work, one list")),
+            ("auswertung.naechster", ("nächste Art: Klick zuerst, dann neueste Dokumente; lange nur nach long_ok", "next kind: click first, then newest documents; long ones only after long_ok")),
+            ("auswertung.machen", ("eine Art eines Dokuments in Durchgängen über vorrang.run", "one kind of one document in passes through vorrang.run")),
+            ("auswertung.pruefe", ("feste Regeln über die Punkte des Modells, je Stelle", "fixed rules over the model's points, per place")),
+            ("auswertung.inhalt", ("Inhaltsverzeichnis aus chunks.part, ohne Modell", "contents from chunks.part, without the model")),
+            ("auswertung.fristen", ("Fristen aus Steckbrief und Wissenskarte, ohne Modell", "deadlines from the profile card and the knowledge map, without the model")),
+            ("auswertung.check_vorlage", ("Vorlage des Admins: Name und Auftrag nach festen Regeln", "the admin's template: name and task by fixed rules")),
+            ("auswertung.auto_arten", ("welche Arten von selbst entstehen", "which kinds are made by themselves")),
+            ("auswertung.frist_tag", ("volles Datum nur aus dem Namen einer Frist, sonst kein Erinnern", "a full date only from a deadline's name, else no reminder")),
+            ("auswertung.fuer_mappe", ("Auswertungen für die Mappen-Stufe kurz, mit Seite", "analyses for the collection level short, with page")),
             ("documents._similar", ("Ähnlichkeit blockweise in float32", "similarity block by block in float32")),
             ("gedaechtnis.hint_lines", ("Fakten in drei Blöcken", "facts in three blocks")),
             ("profiles._cap", ("Obergrenze: nur alte gelernte Fakten machen Platz", "cap: only old learned facts make room")),
@@ -957,7 +1054,7 @@ SEITEN = {
             ("wissensmessung._synth", ("das Wegwerf-Profil aus festem Zufall, mit den Grenzen des Codes", "the throwaway profile from a fixed seed, with the code's limits")),
             ("wissensmessung.MESSTEILE", ("die Messteile, erweiterbar", "the measuring parts, extensible")),
         ],
-        "tests": ["test_wissen", "test_wissensdoppelt", "test_nachsortieren", "test_abschnitte", "test_lokal", "test_kiwix", "test_gedaechtnis",
+        "tests": ["test_wissen", "test_auswertung", "test_wissensdoppelt", "test_nachsortieren", "test_abschnitte", "test_lokal", "test_kiwix", "test_gedaechtnis",
                   "test_gedaechtnis_grenze", "test_gemerkt",
                   "test_suchpruefung", "test_wissensbuch", "test_wissenskarte", "test_wissensknoten", "test_kartensuche",
                   "test_wissensmessung", "test_wissenstempo"],

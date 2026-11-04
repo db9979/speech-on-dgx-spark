@@ -72,7 +72,7 @@ DIENST_NAMEN = {"asr": ("Spracherkennung", "Speech recognition"), "asr-engine": 
                 "helfer": ("Hilfsmodell", "Helper model"), "bild": ("Bilder malen", "Painting pictures"), "musik": ("Musik machen", "Making music"),
                 "werkstatt": ("Werkstatt", "Werkstatt"),
                 "lokaltest": ("Schnelltest lokaler Änderungen", "Quick test of local changes"),
-                "lokaltest-umgebung": ("Testumgebung lokaler Änderungen", "Test environment of local changes"), "waerter": ("Wärter", "Wärter"), "panel": ("Panel", "Panel"),
+                "lokaltest-umgebung": ("Testumgebung lokaler Änderungen", "Test environment of local changes"), "github": ("An GitHub geben", "Hand to GitHub"), "auftrag": ("Code-Auftrag (OpenCode)", "Code order (OpenCode)"), "waerter": ("Wärter", "Wärter"), "panel": ("Panel", "Panel"),
                 "turn": ("Anrufe (TURN)", "Calls (TURN)"), "notasr": ("Notbetrieb-Erkennung", "Emergency recognition"),
                 "gehaeuse": ("Gehäuse", "Case"), "schirm": ("Steuerzentrale", "Control centre"),
                 "guacd": ("Bildschirm (guacd)", "Screen (guacd)"), "tlstor": ("TLS-Tor", "TLS gate"),

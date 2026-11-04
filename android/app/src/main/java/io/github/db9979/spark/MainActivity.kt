@@ -403,7 +403,7 @@ class MainActivity : Activity() {
         box.orientation = LinearLayout.HORIZONTAL
         box.gravity = Gravity.CENTER_VERTICAL
         box.setPadding(dp(14), dp(8), dp(6), dp(8))
-        box.setBackgroundColor(Color.rgb(29, 78, 216))
+        box.setBackgroundColor(getColor(R.color.acc))
         stripText = TextView(this)
         stripText.setTextColor(Color.WHITE)
         stripText.textSize = 14f
@@ -521,10 +521,10 @@ class MainActivity : Activity() {
         val box = LinearLayout(this)
         box.orientation = LinearLayout.VERTICAL
         box.gravity = Gravity.CENTER
-        box.setBackgroundColor(Color.rgb(29, 43, 83))
+        box.setBackgroundColor(getColor(R.color.icon_bg))
         box.isClickable = true
         coverText = TextView(this)
-        coverText.text = "🔒 Spark"
+        coverText.text = "Spark"
         coverText.textSize = 18f
         coverText.setTextColor(Color.WHITE)
         coverText.gravity = Gravity.CENTER
@@ -544,28 +544,26 @@ class MainActivity : Activity() {
     private fun unlock() {
         if (unlocking) return
         unlocking = true
-        coverText.text = "🔒 Spark"
+        coverText.text = "Spark"
         Lock.ask(this, {
             unlocking = false
             cover.visibility = View.GONE
             store.leftAt = System.currentTimeMillis()
         }, { why ->
             unlocking = false
-            coverText.text = "🔒 $why"
+            coverText.text = "$why"
         })
     }
 
     // ------------------------------------------------------------ the address screen
     private fun makeSetup(): LinearLayout {
-        val dark = (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
-            android.content.res.Configuration.UI_MODE_NIGHT_YES
-        val fg = if (dark) Color.WHITE else Color.BLACK
+        val fg = getColor(R.color.fg)
         val box = LinearLayout(this)
         box.orientation = LinearLayout.VERTICAL
         box.gravity = Gravity.CENTER_VERTICAL
         val pad = (24 * resources.displayMetrics.density).toInt()
         box.setPadding(pad, pad, pad, pad)
-        box.setBackgroundColor(if (dark) Color.BLACK else Color.rgb(242, 242, 247))
+        box.setBackgroundColor(getColor(R.color.bg))
         val title = TextView(this)
         title.text = "Spark"
         title.textSize = 34f
@@ -573,7 +571,7 @@ class MainActivity : Activity() {
         title.typeface = android.graphics.Typeface.DEFAULT_BOLD
         hint = TextView(this)
         hint.textSize = 16f
-        hint.setTextColor(if (dark) Color.LTGRAY else Color.DKGRAY)
+        hint.setTextColor(getColor(R.color.mut))
         address = EditText(this)
         address.hint = "https://speech.example.de"
         address.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
@@ -596,12 +594,10 @@ class MainActivity : Activity() {
 
     /** „Spark startet neu …“ over the page while it comes back (see onReceivedError) */
     private fun makeWait(): LinearLayout {
-        val dark = (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
-            android.content.res.Configuration.UI_MODE_NIGHT_YES
         val box = LinearLayout(this)
         box.orientation = LinearLayout.VERTICAL
         box.gravity = Gravity.CENTER
-        box.setBackgroundColor(if (dark) Color.BLACK else Color.rgb(242, 242, 247))
+        box.setBackgroundColor(getColor(R.color.bg))
         box.isClickable = true
         val p = (24 * resources.displayMetrics.density).toInt()
         box.setPadding(p, p, p, p)
@@ -611,7 +607,7 @@ class MainActivity : Activity() {
         t.text = "Spark startet neu … Die Seite kommt gleich wieder."
         t.textSize = 16f
         t.gravity = Gravity.CENTER
-        t.setTextColor(if (dark) Color.LTGRAY else Color.DKGRAY)
+        t.setTextColor(getColor(R.color.mut))
         t.setPadding(0, p / 2, 0, p / 2)
         box.addView(t)
         waitText = t

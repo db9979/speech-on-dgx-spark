@@ -270,7 +270,7 @@ class Devices(Base):
 
 
 class Live(Base):
-    def wait(self, check, steps=150):
+    def wait(self, check, steps=1000):    # 20 s: a GitHub runner late in a part is slow
         async def go():
             for _ in range(steps):
                 if check():

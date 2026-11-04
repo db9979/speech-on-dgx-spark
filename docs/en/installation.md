@@ -133,14 +133,23 @@ A guide for beginners: you change the Spark yourself on the panel computer (such
 
 1. **Install once** (on the panel computer, needs the internet): `sudo ./install.sh --entwickeln`. This adds the user `spark-dev` (no password, no sudo) with the clone `/home/spark-dev/speech-on-dgx-spark` and the branch `lokal`, downloads OpenCode (version and SHA-512 fixed in `app/werkstatt.py`, the same file as the workshop's) into `/opt/speech-spark/opencode`, writes OpenCode's settings (only the own LLM-Tor, its own key, the rules from `CLAUDE.md` and the guidelines), blocks every network except the LLM-Tor by firewall and builds the quick test's test environment.
 2. **Switch on**: as admin *Features → Develop on the Pi* on. Only then does the key of `spark-dev` work at the LLM-Tor.
-3. **In over SSH**: add your public SSH key for `spark-dev`, then sign in from your computer and start OpenCode.
-4. **Work without the internet**: OpenCode asks only the language model in the home network. Testing works in the clone as on GitHub, only without browser tests. Every finished change is a commit on `lokal`.
-5. **Install**: an admin starts `sudo speech-spark lokal einspielen`. The Spark checks the commits, tests them in a sandbox and installs them like an update; the version then shows "+lokal".
+3. **Open the terminal**: easiest in the browser. As admin *Features → Develop on the Pi → Terminal in the browser* on, then *Status → Workshop → Develop*, tab *Terminal*, "Open the terminal" and enter your code (a fresh one every time; the second sign-in step is needed). The shell runs as `spark-dev` in the clone. If you prefer SSH: add your public SSH key for `spark-dev` and sign in from your computer (see below).
+4. **Work without the internet**: type `spark-opencode` and say in your own words what should change. OpenCode asks only the language model in the home network and you before every command. Testing works in the clone as on GitHub, only without browser tests. Every finished change is a commit on `lokal`.
+5. **Install**: in the tab *Overview* the commit shows under "Local changes" with its title and number of files; "Install locally" (fresh code) or `sudo speech-spark lokal einspielen`. The Spark checks the commits, tests them in a sandbox and installs them like an update; the version then shows "+lokal". "Back to the old version" and "Drop …" sit next to it.
+6. **Code order in the chat** (its own sub-switch *Features → Develop on the Pi → Code order in the chat*, off): instead of typing in the terminal yourself, write in the panel's or the app's chat for example "Code-Auftrag: the greeting should sound friendlier". OpenCode then works once as `spark-dev` on its own branch `opencode/auftrag-<number>`, and the card "Code-Auftrag (OpenCode)" shows what came out: goal, files, the first lines of the change. The model only proposes. You decide on installing: "Install locally" and "Hand to GitHub" open *Status → Workshop → Develop* (the whole change there and a fresh code), "Drop" deletes the branch, "Continue in the terminal" leads to the tab *Terminal*. Admins only and typed only, never over speakers, the car, Telegram, the Begleiter or for guests.
+
+[![Status → Workshop → Develop: local changes, branches on GitHub and settings on the left, the commits with the buttons on the right](../bilder/en-entwickeln.png)](../bilder/en-entwickeln.png)
+
+[![Tab Terminal: the shell as spark-dev in the browser, the session on the right](../bilder/en-entwickeln-terminal.png)](../bilder/en-entwickeln-terminal.png)
+
+[![Code order in the chat: the card with goal, state, changed files and branch, below Install locally, Hand to GitHub, Drop](../bilder/en-code-auftrag-karte.png)](../bilder/en-code-auftrag-karte.png)
+
+[![The code order on the page: on the left under code orders, on the right the whole change as text with the buttons](../bilder/en-entwickeln-auftrag.png)](../bilder/en-entwickeln-auftrag.png)
 
 ```bash
 # 1. once, on the panel computer
 sudo ./install.sh --entwickeln
-# 3. your SSH key for spark-dev
+# 3. instead of the terminal in the browser: your SSH key for spark-dev
 sudo install -d -m 700 -o spark-dev -g spark-dev /home/spark-dev/.ssh
 sudo install -m 600 -o spark-dev -g spark-dev ~/.ssh/id_ed25519.pub /home/spark-dev/.ssh/authorized_keys
 # 4. from your computer
@@ -148,14 +157,32 @@ ssh spark-dev@<panel-computer>
 spark-opencode                      # OpenCode in the clone, branch lokal
 cd app && python3 selftest.py discover -s tests -p 'test_live.py'
 git commit -am "My change"
-# 5. as admin on the panel computer
+# 5. as admin on the panel computer (or the buttons under Status → Workshop → Develop)
 sudo speech-spark lokal einspielen  # check, quick test, install like an update
 sudo speech-spark lokal status      # local changes, last result
 sudo speech-spark lokal zurueck     # one step back (same version)
 sudo speech-spark lokal verwerfen   # version without local changes (they stay in the clone)
 ```
 
-Only what lies under `app/panel/`, `app/tests/` and `docs/` is installed, plus both READMEs and `CHANGELOG.md`, as plain files: what root runs (`install.sh`, `update.sh`, `app/*.py` outside `app/panel`, the package lists) only comes through GitHub. A normal update never loses local work: it puts the local commits on the new version and tests them; if something does not fit or the quick test is red, the running version stays, and the panel shows the reason on top. Make the key of `spark-dev` new or revoke it: `sudo speech-spark entwickeln schluessel neu|weg`; after a change of the model computer `sudo speech-spark entwickeln einrichten`. If the test environment is missing, once with the internet `sudo speech-spark lokal testumgebung` (afterwards it renews itself every night, only when the package list changes). Logs: `sudo speech-spark logs entwickeln`.
+Only what lies under `app/panel/`, `app/tests/` and `docs/` is installed, plus both READMEs and `CHANGELOG.md`, as plain files: what root runs (`install.sh`, `update.sh`, `app/*.py` outside `app/panel`, the package lists) only comes through GitHub. A normal update never loses local work: it puts the local commits on the new version and tests them; if something does not fit or the quick test is red, the running version stays, and the panel shows the reason on top. Make the key of `spark-dev` new or revoke it: `sudo speech-spark entwickeln schluessel neu|weg`; after a change of the model computer `sudo speech-spark entwickeln einrichten`. If the test environment is missing, once with the internet `sudo speech-spark lokal testumgebung` (afterwards it renews itself every night, only when the package list changes). Logs: `sudo speech-spark logs entwickeln`. `spark-dev` makes its clone itself from a bundle root writes of the installed version; `spark-dev` never reads the clone in `/opt/speech-spark/src` (newer git stops there with "dubious ownership"). If the clone failed ("could not make the clone of spark-dev"), simply run `sudo ./install.sh --entwickeln` again: a half-made clone is filled, `spark-dev`'s work stays.
+
+### Way A: hand to GitHub
+
+What way B may not take (such as `install.sh` or `app/*.py`), or what should go into the official version, an admin hands to GitHub as a branch of its own, `opencode/<thema>`. The full tests run there, and a Claude thread reviews it and brings it onto main. `spark-dev` never gets the internet for this: root takes the branch as a bundle and pushes it with a deploy key of its own, never to main and never with `--force`.
+
+1. **Make the key**: `sudo speech-spark entwickeln github-schluessel neu` shows a line starting with `ssh-ed25519`. Only root reads the secret part (`/etc/speech-spark-github-key`).
+2. **Add it on GitHub**: in the repository the tab "Settings", on the left "Deploy keys", "Add deploy key". Title for example "Spark Pi opencode", paste the line, tick **"Allow write access"**, "Add key". Take no personal token: it acts as your admin account and would get past the rule for main.
+3. **Protect main** (once, on GitHub): tab "Settings", on the left "Rules", "Rulesets", "New ruleset", "New branch ruleset". Name "protect main", Enforcement status "Active", at "Target branches" "Add target" and "Include default branch". Tick: "Restrict deletions", "Restrict updates", "Block force pushes". At "Bypass list" "Add bypass" and "Repository admin" (your account, so you and the Claude threads keep pushing to main). "Create". Never put the deploy key on the bypass list.
+4. **Switch on**: as admin *Features → Develop on the Pi → Hand to GitHub* on. After the update to this version run `sudo ./install.sh --entwickeln` once, so the service `speech-spark-github` and its timer are there.
+5. **Hand over**: *Status → Workshop → Develop*, "Local changes", "Hand to GitHub" with a topic, or `sudo speech-spark lokal an-github my-topic`. Without the internet the order waits and starts by itself every 15 minutes (`--abbrechen` drops it).
+6. **Pass it on**: the page shows the branch on the left under "Branches on GitHub" with the state of the tests, on the right with the link and the sentence to copy; `sudo speech-spark lokal zweige` shows the branch, its link and the state of GitHub's tests. Then to a Claude thread: "Gib den Zweig opencode/my-topic einem Claude-Thread zum Prüfen". Once it is on main, the next update drops installed local commits that are part of it by itself; in the clone afterwards `git rebase spark/main`.
+
+```bash
+sudo speech-spark entwickeln github-schluessel neu   # 1. add the line as a deploy key with write access
+sudo speech-spark lokal an-github my-topic            # 5. to GitHub as opencode/my-topic
+sudo speech-spark lokal zweige                        # 6. branches, links, GitHub tests (gruen, laeuft, rot)
+sudo speech-spark entwickeln github-schluessel weg    # revoke the key (delete it on GitHub too)
+```
 
 ## Uninstalling
 

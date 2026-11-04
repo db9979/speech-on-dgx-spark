@@ -4,8 +4,9 @@ language model gets when a conversation is bound to the Mappe. Later the core of
 name, goal and symbol today, nothing more).
 
 Fixed rules of the panel, never the model:
-- aus: nothing goes to the model; kurz: the document's Steckbrief line (wissen.card_line), for a page its title and
-  KURZ_SAETZE sentences; ganz: the whole text while the sum fits the budget (chat.mappe_token tokens, characters /
+- aus: nothing goes to the model; kurz: the document's Steckbrief line (wissen.card_line) and, while the Auswertungen
+  are released, its made Kurzfassung, Kernaussagen and Vorlagen with their pages (auswertung.fuer_mappe, Push 2b,
+  model text checked by the panel, as data), for a page its title and KURZ_SAETZE sentences; ganz: the whole text while the sum fits the budget (chat.mappe_token tokens, characters /
   verbrauch.CHARS_PER_TOKEN), else the best pieces of the full-text search over those documents for this question.
   Order: every kurz entry first, then ganz in the Mappe's order.
 - Everything goes as data (chat.wrap_outside) and marks the turn like outside text (chat_turn: carry "outside"):
@@ -61,7 +62,7 @@ CREATE TABLE IF NOT EXISTS mp_eintrag (mappe TEXT NOT NULL, art TEXT NOT NULL, r
 """
 HINT = ("Der Nutzer hat dieses Gespräch auf eine seiner Mappen beschränkt. Antworte aus den Einträgen der Mappe unten "
         "und nenne bei jeder Aussage den Eintrag [M…] mit Namen und Seite. Steht etwas nicht darin, sag das.")
-_day = DayCounter(chats=0, abgelehnt=0)
+_day = DayCounter(chats=0, abgelehnt=0, filter=0)
 _live = {"at": 0.0, "data": None}
 LIVE_EVERY = 60          # seconds the sums over all profiles stay remembered for the Live page
 
@@ -138,11 +139,30 @@ def _pages(con, ids):
     return out
 
 
+def _aw_text(aw):
+    """The Auswertungen of one document for the level kurz: kind by kind, each point with its page, cut at
+    auswertung.MAPPE_ZEICHEN characters (whole points only)."""
+    import auswertung
+    out, used = [], 0
+    for a in aw or ():
+        bits = []
+        for p in a["punkte"]:
+            s = _clean(p["text"], 400) + (f" (S. {p['page']})" if p.get("page") else "")
+            if used + len(s) > auswertung.MAPPE_ZEICHEN:
+                break
+            bits.append(s)
+            used += len(s) + 1
+        if bits:
+            out.append(_clean(a["name"][0], 40) + ": " + " ".join(bits))
+    return (" Auswertung (vom Modell geschrieben, vom Panel geprüft): " + " · ".join(out)) if out else ""
+
+
 def kurz_text(e):
-    """What the level kurz hands over: the Steckbrief line of a document, title and a few sentences of a page."""
+    """What the level kurz hands over: the Steckbrief line of a document with its Auswertungen, title and a few
+    sentences of a page."""
     if e["art"] == "dok":
         import wissen
-        return wissen.card_line(e["info"])
+        return wissen.card_line(e["info"]) + _aw_text(e["info"].get("auswertung"))
     p = e["info"]
     return "„" + _clean(p["title"], 80) + "“: " + " ".join(p["saetze"][:KURZ_SAETZE])
 
@@ -155,11 +175,16 @@ def _rows(con, mid):
     return con.execute("SELECT * FROM mp_eintrag WHERE mappe=? ORDER BY pos, added, ref", (mid,)).fetchall()
 
 
-def _entries(con, mid, page_ok):
+def _entries(con, mid, page_ok, aw_ok=False):
     """The entries of a Mappe with what they are, in order; entries whose document or page is gone are dropped here
-    (a page deleted in the Wissensbuch, a document missed by documents.GONE). page_ok: Wissensbuch released."""
+    (a page deleted in the Wissensbuch, a document missed by documents.GONE). page_ok: Wissensbuch released;
+    aw_ok: Auswertungen released (their made kinds go with the level kurz)."""
     rows = _rows(con, mid)
     docs = _docs(con, [r["ref"] for r in rows if r["art"] == "dok"])
+    if aw_ok and docs:
+        import auswertung
+        for d, aw in auswertung.fuer_mappe(con, list(docs)).items():
+            docs[d]["auswertung"] = aw
     pages = _pages(con, [r["ref"] for r in rows if r["art"] == "seite"])
     out, gone = [], []
     for r in rows:
@@ -338,7 +363,8 @@ def _short(e):
     i = e["info"]
     if e["art"] == "dok":
         return {"titel": i.get("title") or i["name"], "datei": i["name"], "art": i.get("art") or "", "quelle": i["source"] or "",
-                "frist": i.get("due") or "", "seiten": i.get("pages") or 0}
+                "frist": i.get("due") or "", "seiten": i.get("pages") or 0,
+                "auswertungen": [a["name"] for a in i.get("auswertung") or ()]}
     return {"titel": i["title"], "art": i["art"], "saetze": len(i["saetze"])}
 
 
@@ -346,12 +372,12 @@ def mappe(uid, mid):
     """One Mappe with its entries, levels and the count of what goes to the model (characters and ≈ tokens)."""
     if not _exists(uid):
         return None
-    page_ok = features.allowed("wissensbuch", uid)
+    page_ok, aw_ok = features.allowed("wissensbuch", uid), features.allowed("auswertungen", uid)
     with _Db(uid) as con:
         r = _get(con, mid)
         if not r:
             return None
-        entries = _entries(con, mid, page_ok)
+        entries = _entries(con, mid, page_ok, aw_ok)
     budget = zeichen_budget()
     how, used = plan(entries, budget)
     out = [dict(_short(e), art_eintrag=e["art"], ref=e["ref"], stufe=e["stufe"], grau=e["grau"],
@@ -365,16 +391,18 @@ def mappe(uid, mid):
             "max_eintraege": MAX_EINTRAEGE}
 
 
-def docs_of(uid, mid, stufen=("ganz",)):
-    """The document ids of a Mappe at these levels (for the filters of later pushes: document_search, fund_suche)."""
+def refs_of(uid, mid, stufen=("ganz",)):
+    """(document ids, Wissensbuch page ids) of a Mappe at these levels, from mp_eintrag only (never fund_tag: a Mappe
+    is the person's assignment, no tag). The filters of document_search and fund_suche (stufen ganz) and of the
+    page Finden (every level)."""
     if not _exists(uid):
-        return set()
+        return set(), set()
     with _Db(uid) as con:
         if not _get(con, mid):
-            return set()
+            return set(), set()
         q = ",".join("?" * len(stufen))
-        return {r[0] for r in con.execute(f"SELECT ref FROM mp_eintrag WHERE mappe=? AND art='dok' AND stufe IN ({q})",
-                                          (mid, *stufen))}
+        rows = con.execute(f"SELECT art, ref FROM mp_eintrag WHERE mappe=? AND stufe IN ({q})", (mid, *stufen)).fetchall()
+    return {r["ref"] for r in rows if r["art"] == "dok"}, {r["ref"] for r in rows if r["art"] == "seite"}
 
 
 def by_name(uid, text):
@@ -388,16 +416,79 @@ def by_name(uid, text):
     return best
 
 
+def _said_ok(m, said):
+    """The model's name of a Mappe fits the one the person's own words hold (or it named none)."""
+    return bool(m) and (_norm(said) in ("", _norm(m["name"])) or _norm(m["name"]) in _norm(said))
+
+
+SUCH_STUFEN = ("ganz",)   # the levels document_search and fund_suche search in (plan 1.4: kurz and aus are not searched)
+
+
+def fuer_werkzeug(who, said, own, bound, wo="fund"):
+    """The filter of document_search and fund_suche (wo: "dokumente" / "fund") by the panel's fixed rule, never the
+    model's: the Mappe the tool names only when the person's own words of this message hold its name, else the Mappe
+    the conversation is bound to (bound: its id, chosen by the person, checked again here). Returns ((document ids,
+    page ids), the fixed sentence for the model) or (None, "") for a search without a Mappe."""
+    uid = (who or {}).get("id")
+    if not uid or not (said or bound):
+        return None, ""
+    if not features.allowed("mappen", uid):
+        print(f"mappen: filter verworfen | {wo} | aus", flush=True)
+        return None, ""
+    m, how = None, ""
+    if said:
+        m = by_name(uid, own)
+        if _said_ok(m, said):
+            how = "worte"
+        else:
+            m = None
+            _day.today()["abgelehnt"] += 1
+            print(f"mappen: filter verworfen | {wo} | nicht in den eigenen worten |", profiles.log_name(who), flush=True)
+    if not m and bound and ID.fullmatch(str(bound)):
+        m = next((x for x in liste(uid) if x["id"] == bound), None)
+        how = "chat" if m else ""
+    if not m:
+        if bound:
+            print(f"mappen: filter verworfen | {wo} | fremd |", profiles.log_name(who), flush=True)
+        return None, ""
+    docs, pages = refs_of(uid, m["id"], SUCH_STUFEN)
+    if not features.allowed("wissensbuch", uid):
+        pages = set()
+    _day.today()["filter"] += 1
+    print(f"mappen: filter | {wo} | {how} | {len(docs)} dokumente {len(pages)} seiten |", profiles.log_name(who), flush=True)
+    name = _clean(m["name"], NAME_LEN)
+    if not docs and not pages:
+        return (docs, pages), (f"In der Mappe „{name}“ steht kein Eintrag auf der Stufe ganz; durchsucht werden nur solche. "
+                               "Sag das kurz.\n")
+    return (docs, pages), f"Gesucht nur in der Mappe „{name}“ ({len(docs) + len(pages)} Einträge auf der Stufe ganz).\n"
+
+
+def fuer_seite(prof, mid):
+    """The filter of the page Finden (body "mappe", an own id): every entry of the Mappe whatever its level (the
+    person looks herself, nothing goes to the model). Another profile's or an unknown id finds nothing, never all."""
+    uid = prof["id"]
+    if not features.allowed("mappen", uid):
+        print("mappen: filter verworfen | seite | aus", flush=True)
+        return set(), set()
+    if not ID.fullmatch(str(mid or "")):
+        print("mappen: filter verworfen | seite | fremd |", profiles.log_name(prof), flush=True)
+        return set(), set()
+    docs, pages = refs_of(uid, mid, STUFEN)
+    _day.today()["filter"] += 1
+    print(f"mappen: filter | seite | {len(docs)} dokumente {len(pages)} seiten |", profiles.log_name(prof), flush=True)
+    return docs, pages if features.allowed("wissensbuch", uid) else set()
+
+
 # ---------------------------------------------------------------- the conversation bound to a Mappe
 def kontext(uid, mid, query):
     """{"text", "eintraege", "kurz", "ganz", "suche", "zeichen", "token"} for one turn, or None (no such Mappe).
     The text is the Mappe's data block for the model: entries by the fixed rule of plan(), each with its mark [M…]."""
-    page_ok = features.allowed("wissensbuch", uid)
+    page_ok, aw_ok = features.allowed("wissensbuch", uid), features.allowed("auswertungen", uid)
     with _Db(uid) as con:
         r = _get(con, mid)
         if not r:
             return None
-        entries = _entries(con, mid, page_ok)
+        entries = _entries(con, mid, page_ok, aw_ok)
     budget = zeichen_budget()
     how, used = plan(entries, budget)
     lines, mark, rest = [], {}, []
@@ -454,7 +545,7 @@ def for_turn(who, mid, text):
     _day.today()["chats"] += 1
     print(f"mappen: chat | {got['eintraege']} eintraege | {got['kurz']} kurz {got['ganz']} ganz {got['suche']} suche "
           f"{got['stellen']} stellen | {got['token']} token |", profiles.log_name(who), flush=True)
-    return dict(got, text=HINT + "\n" + chat.wrap_outside(got["text"]))
+    return dict(got, id=mid, text=HINT + "\n" + chat.wrap_outside(got["text"]))
 
 
 # ---------------------------------------------------------------- documents that went
@@ -479,7 +570,7 @@ if forget not in documents.GONE:
 
 # ---------------------------------------------------------------- Live (numbers only)
 def for_live(now=None):
-    """{"on", "mappen", "eintraege", "profile", "chats", "abgelehnt"}: sums over all profiles, remembered LIVE_EVERY s."""
+    """{"on", "mappen", "eintraege", "profile", "chats", "abgelehnt", "filter"}: sums over all profiles, remembered LIVE_EVERY s."""
     now = time.time() if now is None else now
     if not admin_on():
         return {"on": False}
@@ -499,7 +590,7 @@ def for_live(now=None):
             m, e, p = m + a, e + b, p + (1 if a else 0)
         _live.update(at=now, data={"mappen": m, "eintraege": e, "profile": p})
     d = _day.today(now)
-    return dict(_live["data"], on=True, chats=d["chats"], abgelehnt=d["abgelehnt"])
+    return dict(_live["data"], on=True, chats=d["chats"], abgelehnt=d["abgelehnt"], filter=d["filter"])
 
 
 # ---------------------------------------------------------------- tools for the model
@@ -570,7 +661,7 @@ async def tool(name, args, ctx):
         return "Mappen des Nutzers:\n" + "\n".join(f"- {m['name']}: {m['n']} Einträge" for m in got)
     # a Mappe only from the person's own words of this message, never from the model's or a document's
     m = await asyncio.to_thread(by_name, uid, own)
-    if not m or _norm(args.get("mappe")) not in ("", _norm(m["name"])) and _norm(m["name"]) not in _norm(args.get("mappe")):
+    if not _said_ok(m, args.get("mappe")):
         _day.today()["abgelehnt"] += 1
         print(f"mappen: {name} abgelehnt | nicht in den eigenen worten |", profiles.log_name(who), flush=True)
         return "Not done: Nenne den Namen der Mappe in deiner Nachricht."

@@ -13,7 +13,14 @@ const L={titel:['Hilfe am Bildschirm','Screen help'],intro:['Geben Sie die Numme
   zu:['Die Hilfe ist beendet','The help has ended'],zutext:['Es bleibt nichts zurück. Sie können dieses Fenster schließen.','Nothing is left behind. You can close this window.'],
   name:['Ihr Vorname','Your first name'],nummer:['Nummer','Number'],msg:['Nachricht schreiben …','Write a message …'],
   laden:['Programm laden','Load program'],nein:['Nein, nur ansehen','No, view only'],
-  nurwin:['Steuern geht bisher nur unter Windows. Ansehen läuft weiter.','Control works only on Windows so far. Viewing goes on.'],
+  nurwin:['Steuern geht bisher nur unter Windows, macOS und Linux (X11). Ansehen läuft weiter.','Control works only on Windows, macOS and Linux (X11) so far. Viewing goes on.'],
+  fehlt:['Für dieses System gibt es das Programm gerade nicht. Ansehen läuft weiter.','There is no program for this system right now. Viewing goes on.'],
+  startmac:['Die Datei SparkHilfe aus den Downloads öffnen (Safari packt sie selbst aus) und das Programm „SparkHilfe-…“ öffnen; beim ersten Mal fragt macOS, ob Sie es öffnen möchten: „Öffnen“. SparkHilfe führt Sie dann zu den Freigaben „Bildschirmaufnahme“ und „Bedienungshilfen“ und fragt Sie, bevor jemand steuern darf.','Open the file SparkHilfe from your downloads (Safari unpacks it by itself) and open the program "SparkHilfe-…"; the first time macOS asks whether you want to open it: "Open". SparkHilfe then leads you to the permissions "Screen Recording" and "Accessibility" and asks you before anyone may control.'],
+  apple:['Von Apple beglaubigt (notarisiert); macOS prüft das beim Öffnen.','Notarized by Apple; macOS checks this when it opens.'],
+  zeilelad:['Befehl zeigen','Show command'],kopieren:['Befehl kopieren','Copy command'],schluessel:['Schlüssel kopieren','Copy key'],
+  kopiert:['Kopiert. Jetzt im Terminal einfügen (Strg+Umschalt+V) und Enter drücken.','Copied. Now paste it into the terminal (Ctrl+Shift+V) and press Enter.'],
+  sohne:['Kopieren geht hier nicht; den Schlüssel bitte abtippen:','Copying does not work here; please type the key:'],
+  linux:['1. Den Befehl kopieren, in ein Terminal einfügen (Strg+Umschalt+V) und Enter drücken. 2. Fragt das Terminal nach dem Schlüssel: „Schlüssel kopieren“, dort einfügen und Enter. Er gilt einmal und 10 Minuten. Das Programm fragt Sie, bevor jemand steuern darf. Unter Wayland geht nur Ansehen.','1. Copy the command, paste it into a terminal (Ctrl+Shift+V) and press Enter. 2. When the terminal asks for the key: "Copy key", paste it there and press Enter. It works once and for 10 minutes. The program asks you before anyone may control. Under Wayland only viewing works.'],
   start:['Die Datei SparkHilfe aus den Downloads starten. Windows warnt vielleicht einmal („Weitere Informationen“ → „Trotzdem ausführen“). Das Programm fragt Sie, bevor jemand steuern darf.','Start the file SparkHilfe from your downloads. Windows may warn once ("More info" → "Run anyway"). The program asks you before anyone may control.'],
   verbunden:['Das Programm ist verbunden und fragt Sie.','The program is connected and asks you.'],
   aktiv:['Steuerung erlaubt. Beenden im Programm oder hier.','Control allowed. End in the program or here.'],
@@ -28,7 +35,7 @@ $('name').placeholder=tr('name');$('name').setAttribute('aria-label',tr('name'))
 let link='';const h=location.hash.slice(1);
 if(/^[A-Za-z0-9_-]{20,30}$/.test(h)){link=h;$('nummer').hidden=true;$('linkda').hidden=false}
 if(location.hash)history.replaceState(null,'',location.pathname);
-const S={ws:null,pc:null,stream:null,admin:'',bis:0,clock:0,tok:'',art:''};
+const S={ws:null,pc:null,stream:null,admin:'',bis:0,clock:0,tok:'',art:'',key:''};
 const show=id=>['s-start','s-warten','s-offen','s-zu'].forEach(x=>$(x).hidden=x!==id);
 $('name').focus();
 $('f-start').onsubmit=async e=>{e.preventDefault();$('fehler').textContent='';
@@ -54,29 +61,45 @@ async function onMsg(m){
   else if(m.typ==='zeit'){S.bis=m.bis;bar(!!S.stream)}
   else if(m.typ==='steuern')steuern(m)}
 // S2 Steuern (spontansteuern.py): only after the admin asked; the program comes as a blob by POST with her session key,
-// its one-time key goes only into the file name (never into an address); the program asks her once more
-async function osArt(){if(!/Windows/i.test(navigator.userAgent||''))return '';
+// its one-time key goes only into the file name (never into an address); the program asks her once more.
+// S2d Linux X11: no file, one line for her terminal (the key only in its variable SPARKHILFE_SCHLUESSEL)
+// S2c Mac: a zip the Spark packs per help; the key only in the app's name inside (an iPad says "Macintosh" too: touch)
+async function osArt(){const ua=navigator.userAgent||'';
+  if(/Linux/i.test(ua)&&!/Android|CrOS/i.test(ua))return 'linux-x11';
+  if(/Macintosh/i.test(ua))return (navigator.maxTouchPoints||0)>1?'':'mac';
+  if(!/Windows/i.test(ua))return '';
   try{const d=navigator.userAgentData&&await navigator.userAgentData.getHighEntropyValues(['architecture']);if(d&&d.architecture==='arm')return 'windows-arm64'}catch(e){}
   return 'windows-x64'}
 function stText(k){$('steuern').hidden=false;$('steuerntext').textContent=tr(k)}
 async function steuern(m){const box=$('steuern');
-  if(m.stand==='angefragt'){S.art=await osArt();const sha=String(((m.programme||{})[S.art])||'').replace(/[^0-9a-f]/g,'');
-    $('laden').hidden=$('nein').hidden=!sha;$('pruef').textContent=sha?tr('pruef')+sha:'';box.hidden=false;
-    $('steuerntext').textContent=sha?(EN?`${S.admin} would like to control your computer. Load the small program and start it; it asks you once more.`:`${S.admin} möchte Ihren Computer steuern. Das kleine Programm laden und starten; es fragt Sie noch einmal.`):tr('nurwin')}
-  else if(m.stand==='programm'){$('laden').hidden=$('nein').hidden=true;stText('verbunden')}
+  if(m.stand==='angefragt'){S.art=await osArt();const lin=S.art==='linux-x11',mac=S.art==='mac',sha=lin?'':String(((m.programme||{})[S.art])||'').replace(/[^0-9a-f]/g,''),da=lin?m.zeile===true:!!sha;
+    $('laden').hidden=$('nein').hidden=!da;$('laden').textContent=tr(lin?'zeilelad':'laden');$('pruef').textContent=mac&&da?tr('apple'):sha?tr('pruef')+sha:'';zeileWeg();box.hidden=false;
+    $('steuerntext').textContent=!da?tr(S.art?'fehlt':'nurwin'):lin?(EN?`${S.admin} would like to control your computer. Show the command and run it in a terminal; the program asks you once more.`:`${S.admin} möchte Ihren Computer steuern. Den Befehl zeigen und im Terminal ausführen; das Programm fragt Sie noch einmal.`):(EN?`${S.admin} would like to control your computer. Load the small program and start it; it asks you once more.`:`${S.admin} möchte Ihren Computer steuern. Das kleine Programm laden und starten; es fragt Sie noch einmal.`)}
+  else if(m.stand==='programm'){$('laden').hidden=$('nein').hidden=true;zeileWeg();stText('verbunden')}
   else if(m.stand==='control')stText('aktiv');
   else if(m.stand==='view')stText('nuran');
-  else{$('laden').hidden=$('nein').hidden=true;$('pruef').textContent='';stText('ohne')}}
-async function laden(){let r;
-  try{r=await /*raw: the person's page loads without base.js*/fetch('/api/hilfe/programm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tok:S.tok,art:S.art}),credentials:'omit'})}
+  else{$('laden').hidden=$('nein').hidden=true;$('pruef').textContent='';zeileWeg();stText('ohne')}}
+function zeileWeg(){$('zeile').textContent=$('skey').textContent='';S.key='';$('zeile').hidden=$('kopieren').hidden=$('kopkey').hidden=$('skey').hidden=true}
+async function laden(){let r;const lin=S.art==='linux-x11',mac=S.art==='mac';
+  try{r=await /*raw: the person's page loads without base.js*/fetch('/api/hilfe/programm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(lin||mac?{tok:S.tok,art:S.art,origin:location.origin}:{tok:S.tok,art:S.art}),credentials:'omit'})}
   catch(e){$('steuerntext').textContent=EN?'No connection.':'Keine Verbindung.';return}
   if(!r.ok){let d={};try{d=await r.json()}catch(x){}$('steuerntext').textContent=r.status===403?tr('neu'):String(d.detail||r.status);return}
+  if(lin){let d={};try{d=await r.json()}catch(x){}const b=String(d.befehl||''),k=String(d.schluessel||'');
+    if(!/^curl [\x20-\x7e]{10,600}$/.test(b)||!/^[A-Za-z0-9_-]{22}$/.test(k)){$('steuerntext').textContent=tr('neu');return}
+    S.key=k;$('zeile').textContent=b;$('zeile').hidden=$('kopieren').hidden=$('kopkey').hidden=false;$('steuerntext').textContent=tr('linux');return}
+  if(mac){const url=URL.createObjectURL(await r.blob()),a=document.createElement('a');   // the key is inside, in the app's name
+    a.href=url;a.download='SparkHilfe.zip';document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),60000);$('steuerntext').textContent=tr('startmac');return}
   const key=r.headers.get('X-Spark-Schluessel')||'';if(!/^[A-Za-z0-9_-]{22}$/.test(key)){$('steuerntext').textContent=tr('neu');return}
   const url=URL.createObjectURL(await r.blob()),a=document.createElement('a');
   a.href=url;a.download='SparkHilfe-'+location.host.replace(/[^A-Za-z0-9.-]/g,'_')+'-'+key+'.exe';document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),60000);$('steuerntext').textContent=tr('start')}
 $('laden').onclick=laden;
-$('nein').onclick=()=>{send({typ:'steuern_nein'});$('laden').hidden=$('nein').hidden=true;$('pruef').textContent='';stText('ohne')};
+$('kopieren').onclick=async()=>{try{await navigator.clipboard.writeText($('zeile').textContent);$('steuerntext').textContent=tr('kopiert')}catch(e){}};
+// the key only to the clipboard (shown only when copying does not work); never in an address, never in the line
+$('kopkey').onclick=async()=>{if(!S.key)return;try{await navigator.clipboard.writeText(S.key);$('steuerntext').textContent=tr('kopiert')}
+  catch(e){$('steuerntext').textContent=tr('sohne');$('skey').textContent=S.key;$('skey').hidden=false}};
+$('nein').onclick=()=>{send({typ:'steuern_nein'});$('laden').hidden=$('nein').hidden=true;$('pruef').textContent='';zeileWeg();stText('ohne')};
 function bar(sieht){$('bartext').textContent=sieht?(EN?`${S.admin} sees your screen`:`${S.admin} sieht Ihren Bildschirm`):(EN?`${S.admin} is ready. Nothing is seen yet.`:`${S.admin} ist bereit. Noch sieht man nichts.`);
   clearInterval(S.clock);const tick=()=>{const m=Math.max(0,Math.ceil((S.bis-Date.now()/1000)/60));$('baruhr').textContent=EN?`ends after ${m} min at the latest`:`endet spätestens in ${m} min`};tick();S.clock=setInterval(tick,15000)}
 function pc(ice){if(S.pc)return;const p=new RTCPeerConnection({iceServers:ice});S.pc=p;

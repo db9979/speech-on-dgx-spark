@@ -280,12 +280,19 @@ async def login(request: Request):
 
 def _fern_sperren(request=None):
     """Logging out locks an unlocked Fernzugang page (fernzugang.ENTSPERRT, rule „Bereich entsperren“) and ends the
-    login's remote sessions, a held one too (fernzugang.HALTEN_S)."""
+    login's remote sessions, a held one too (fernzugang.HALTEN_S); it also ends the login's terminal as spark-dev
+    (entwickelnseite.terminal_ende)."""
     try:
         import fernzugang
         fernzugang.sperren(request, "abmelden") if request is not None else fernzugang.sperren_alle("abmelden")
     except Exception as e:
         print("fernzugang: gesperrt | fehler " + type(e).__name__[:20] + " | 0", flush=True)
+    try:   # the terminal as spark-dev (Entwickeln auf dem Pi) of this login, or every one
+        import entwickelnseite
+        import fernzugang
+        entwickelnseite.terminal_ende(fernzugang._login(request) if request is not None else None, "abmelden")
+    except Exception as e:
+        print("entwickeln: terminal abmelden fehler " + type(e).__name__[:20], flush=True)
 
 
 @router.post("/api/logout")

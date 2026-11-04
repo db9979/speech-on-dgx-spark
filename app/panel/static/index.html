@@ -74,7 +74,7 @@
     <div class="mut" style="margin-top:6px">Nur Art und Anzahl seit dem Auslösen, nie Inhalte.</div></div>
   <div class="card znotaus" id="znmine" hidden><h2>Mein Notaus von Profilen</h2><div class="mut">Diese Profile haben nur ihren eigenen Teil stillgelegt. Aufheben kann das Profil selbst mit PIN, oder du hier.</div><div id="znmrows"></div>
     <div class="row" id="znmpwbox" hidden style="margin-top:6px"><input type="password" id="znmpw" autocomplete="current-password" placeholder="Panel-Passwort" aria-label="Panel-Passwort"></div><span id="znmmsg" class="fh"></span></div>
-  <div class="card zhead" id="zhead"><span class="zicon" id="zicon"></span><div class="zht"><b id="ztitle">Zustand wird geladen …</b><div class="mut" id="ztext"></div><div class="zmeta" id="zmeta"></div></div><button class="b zgo" id="zgo" type="button" hidden>Zum offenen Punkt</button></div>
+  <div class="card zhead" id="zhead"><span class="zicon" id="zicon" aria-hidden="true"></span><div class="zht"><b id="ztitle">Zustand wird geladen …</b><div class="mut" id="ztext"></div><div class="zmeta" id="zmeta"></div></div><button class="b zgo" id="zgo" type="button" hidden>Zum offenen Punkt</button></div>
   <div class="card zneed" id="zneed" hidden><h2>Braucht dich</h2><div id="zlist"></div></div>
   <h3 class="zsec">Jetzt</h3>
   <div class="zcards" id="zcards"></div>
@@ -185,6 +185,10 @@
       <div class="setrow" data-show="chat.knowledge_map" style="margin-left:54px"><div class="lbl"><b>Personen, Firmen und Fristen</b><span>Personen, Firmen, Orte, Verträge, Konten und Fristen aus Dokumenten als eigene Punkte der Karte, nach festen Regeln geprüft.</span></div><label class="tgl"><input type="checkbox" id="chat.knowledge_ents"><i></i></label></div>
       <div data-show="chat.knowledge_ents" style="margin-left:72px"><label>Punkte: Dokumente pro Tag und Profil</label><input class="num" id="chat.knowledge_ents_day" type="number" min="5" max="500"><div class="fh">5 bis 500, Standard 200. Höchstens 40 Punkte je Dokument und 5000 je Profil.</div></div>
       <div class="setrow" data-show="chat.knowledge_ents" style="margin-left:72px"><div class="lbl"><b>Karte hilft der Suche</b><span>Die Dokumentsuche findet auch die Stellen der Punkte, die eine Frage nennt, und ihrer Nachbarn; ergänzt die Treffer nur.</span></div><label class="tgl"><input type="checkbox" id="chat.knowledge_search"><i></i></label></div>
+      <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Auswertungen</b><span>Kurzfassung und Kernaussagen je Dokument in ruhigen Minuten, der Rest per Klick; jeder Punkt mit Fundstelle und Zahlenprobe.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_auswertung"><i></i></label></div>
+      <div data-show="chat.doc_auswertung" style="margin-left:36px"><label>Auswertungen pro Tag und Profil</label><input class="num" id="chat.doc_auswertung_day" type="number" min="10" max="500"><div class="fh">10 bis 500, Standard 100. Eine Auswertung ist eine Art eines Dokuments; lange Dokumente höchstens fünf Durchgänge.</div>
+        <label>Von selbst in ruhigen Minuten</label><input type="hidden" id="chat.doc_auswertung_auto" data-list="1"><div id="awauto" class="row"></div><div class="fh">Antippen wählt, welche Arten von selbst entstehen; Standard Kurzfassung und Kernaussagen. Die übrigen erstellt das Profil per Klick. Danach speichern.</div>
+        <label>Vorlagen: eigene Arten</label><div id="awvorl" data-nodirty="1"></div><div class="fh">Höchstens 10. Name und Auftrag, z. B. „Risiken“ mit „die Risiken und Pflichten für den Mieter“. Der Auftrag ist nur Thema für das Modell, keine Regel: das Panel prüft die Ausgabe wie bei den Kernaussagen, ohne Links und Befehlswörter.</div></div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Mappen</b><span>Dokumente, Wissensbuch-Seiten und Notizen zu einem Vorhaben bündeln; je Eintrag aus, kurz oder ganz ans Sprachmodell.</span></div><label class="tgl"><input type="checkbox" id="chat.mappen"><i></i></label></div>
       <div data-show="chat.mappen" style="margin-left:36px"><label>Mappe: Token ans Modell</label><input class="num" id="chat.mappe_token" type="number" min="4000" max="100000"><div class="fh">4000 bis 100000, Standard 24000. Was nicht ganz hineinpasst, wird nur durchsucht.</div></div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Dokumente erstellen</b><span>Der Spark schreibt auf Bitte Briefe, Präsentationen und Tabellen als Word, PDF, PowerPoint oder Excel; erst die Gliederung, nach deinem Ja.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_make"><i></i></label></div>
@@ -286,6 +290,9 @@
       </div>
       <div class="setrow" data-show="chat.werkstatt" style="margin-left:18px"><div class="lbl"><b>Angriffsprobe</b><span>Kachel „Angriffe prüfen“: misst, wie oft das Sprachmodell Befehlen in fremdem Text folgen würde. Kein Werkzeug läuft, nur Zahlen.</span></div><label class="tgl"><input type="checkbox" id="chat.angriffsprobe"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Entwickeln auf dem Pi</b><span>OpenCode mit dem eigenen Sprachmodell im Terminal des Panel-Rechners; lokale Änderungen kommen nach einem Schnelltest wie ein Update.</span></div><label class="tgl"><input type="checkbox" id="chat.entwickeln"><i></i></label></div>
+      <div class="setrow" data-show="chat.entwickeln" style="margin-left:18px"><div class="lbl"><b>An GitHub geben</b><span>Der Zweig von spark-dev geht als opencode/… an GitHub, nie an main, zum Prüfen durch einen Claude-Thread.</span></div><label class="tgl"><input type="checkbox" id="chat.entwickeln_github"><i></i></label></div>
+      <div class="setrow" data-show="chat.entwickeln" style="margin-left:18px"><div class="lbl"><b>Terminal im Browser</b><span>Eine Shell als spark-dev unter Zustand → Werkstatt → Entwickeln, jede Sitzung mit frischem Code.</span></div><label class="tgl"><input type="checkbox" id="chat.entwickeln_terminal"><i></i></label></div>
+      <div class="setrow" data-show="chat.entwickeln" style="margin-left:18px"><div class="lbl"><b>Code-Auftrag im Chat</b><span>Ein Admin tippt im Assistenten, was sich ändern soll; OpenCode schlägt es auf einem eigenen Zweig vor, einspielen entscheidest du.</span></div><label class="tgl"><input type="checkbox" id="chat.entwickeln_auftrag"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Fernzugang zu Servern</b><span>Die Shell eines fernen Servers im Browser, über seinen Anker. Nur Admins mit zweitem Schritt; ein Code entsperrt die Seite für eine Weile.</span></div><label class="tgl"><input type="checkbox" id="chat.fernzugang"><i></i></label></div>
       <div data-show="chat.fernzugang" style="margin-left:36px">
         <div class="setrow"><div class="lbl"><b>Assistent im Fernzugang</b><span>„Frag den Assistenten“ und Vorschläge, nur vom eigenen Sprachmodell. Er tippt nie; den Bildschirm sieht er nur, wenn du ihn mitschickst.</span></div><label class="tgl"><input type="checkbox" id="chat.fernzugang_hilfe"><i></i></label></div>
@@ -1335,13 +1342,22 @@
 </section>
 
 <section id="live"><div class="lv" id="lvroot"></div></section>
-<section id="werk"><div class="card ld-box ld-frame" id="wkbox">
+<section id="werk"><div class="ltabs werktabs" id="werktabs" role="tablist"><button type="button" data-wt="werk" class="on">Prüfen und reparieren</button><button type="button" data-wt="dev">Entwickeln</button></div>
+<div class="card ld-box ld-frame" id="wkbox">
   <div class="ld-head"><h2>Werkstatt</h2><span class="mut wknacht" id="wknacht"></span></div>
   <div class="pintro">Prüft und repariert eine abgeschottete Kopie des Spark-Codes auf dem Modell-Rechner: ohne deine Daten, ohne Internet. Dein Spark selbst bleibt unberührt, eingespielt wird nie etwas.</div>
   <div class="note" id="wkoff" hidden>Die Werkstatt ist aus. Einschalten unter Funktionen → Werkstatt.</div>
   <div class="wkacts" id="wkacts"></div>
   <div class="ld-split"><div class="ld-list" id="wklist"></div><div class="ld-detail" id="wkdetail" hidden></div></div>
   <div class="mut" id="wkmsg" role="status"></div>
+</div>
+<div class="card ld-box ld-frame" id="dvbox" hidden>
+  <div class="ld-head dvhead"><h2>Entwickeln</h2><div class="lseg" id="dvseg" role="tablist"><button type="button" data-dv="ueber" class="on">Übersicht</button><button type="button" data-dv="term">Terminal</button></div><span class="sp"></span><div class="dvchips" id="dvchips"></div></div>
+  <div class="pintro">Am Code des Sparks arbeiten, auch ohne Internet: OpenCode mit dem eigenen Sprachmodell als Nutzer spark-dev in einem eigenen Klon. Eingespielt wird nur, was du anklickst, nach einem Schnelltest; das Modell schlägt nur vor.</div>
+  <div class="note" id="dvoff" hidden>Entwickeln auf dem Pi ist aus. Einschalten unter Funktionen → Entwickeln auf dem Pi.</div>
+  <div id="dvueber"><div class="ld-split"><div class="ld-list" id="dvlist"></div><div class="ld-detail" id="dvdetail" hidden></div></div></div>
+  <div id="dvterm" hidden></div>
+  <div class="mut ld-msg" id="dvmsg" role="status"></div>
 </div></section>
 <section id="verb"><div class="card ld-box" id="vbbox">
   <div class="ld-head"><h2>Verbessern</h2><button class="b" type="button" id="vbrun">Jetzt nachsehen</button></div>
@@ -1380,12 +1396,11 @@
   <div class="card lcard">
     <div class="lbar"><div class="ltabs" id="logtabs" role="tablist"><button type="button" data-lt="diag" class="on">Diagnose</button><button type="button" data-lt="req" id="logreqtab" hidden>Anfragen</button><button type="button" data-lt="svc">Dienste</button><button type="button" data-lt="update">Update-Verlauf</button><button type="button" data-lt="audit" class="mainonly">Änderungen</button><button type="button" data-lt="adm">Admin-Protokoll</button></div>
       <span class="sp"></span><div class="lseg" id="logmin"><button type="button" data-v="10">10 min</button><button type="button" data-v="60" class="on">1 h</button><button type="button" data-v="120">2 h</button><button type="button" data-v="720">12 h</button><button type="button" data-v="1440">24 h</button></div></div>
+    <div class="lbar ltools"><details class="lmenu" id="logpick"><summary class="b"><i data-ic="flag"></i><span id="logpickt">Bereiche</span></summary><div class="lmenu-pop" id="logpicklist" role="group" aria-label="Bereiche"></div></details><button type="button" class="b ltog" id="logerr" aria-pressed="false">Nur Fehler</button><select id="logsvc" class="lsel" aria-label="Dienst" hidden><option value="asr">ASR</option><option value="tts">TTS</option><option value="asr-engine">ASR-Engine</option><option value="tts-engine">TTS-Engine</option><option value="tts-design">VoiceDesign-Engine</option><option value="llmtor">LLM-Tor</option><option value="llm">LLM-Engine</option><option value="sehen">Bildverständnis</option><option value="wechsel">Modellwechsel</option><option value="panel">Panel</option></select><input id="logq" class="lsearch" type="search" placeholder="In der Ausgabe suchen …" autocomplete="off" aria-label="In der Ausgabe suchen"><select id="loglines" class="lsel" aria-label="Zeilen"><option value="30">30 Zeilen</option><option value="100" selected>100 Zeilen</option><option value="300">300 Zeilen</option><option value="1000">1000 Zeilen</option></select>
+      <span class="sp"></span><button type="button" class="llive on" id="loglive" title="Alle paar Sekunden neu laden; pausiert, solange du nach unten scrollst oder etwas markierst"><i></i>Live</button><button type="button" class="b" id="logrp" data-on="rpOpen" hidden>Meldungen</button><button type="button" class="b" id="logcopy">Kopieren für Thread</button></div>
     <div class="lsum" id="logsum"></div>
     <div class="lasterr" id="lasterr" hidden></div>
     <div class="lchips" id="logchips"></div>
-    <div class="lbar" id="logsvcbar" hidden><select id="logsvc" class="lsel"><option value="asr">ASR</option><option value="tts">TTS</option><option value="asr-engine">ASR-Engine</option><option value="tts-engine">TTS-Engine</option><option value="tts-design">VoiceDesign-Engine</option><option value="llmtor">LLM-Tor</option><option value="llm">LLM-Engine</option><option value="sehen">Bildverständnis</option><option value="wechsel">Modellwechsel</option><option value="panel">Panel</option></select></div>
-    <div class="lbar"><input id="logq" class="lsearch" type="search" placeholder="In der Ausgabe suchen …" autocomplete="off"><select id="loglines" class="lsel"><option value="30">30 Zeilen</option><option value="100" selected>100 Zeilen</option><option value="300">300 Zeilen</option><option value="1000">1000 Zeilen</option></select>
-      <span class="sp"></span><button type="button" class="llive on" id="loglive" title="Alle paar Sekunden neu laden; pausiert, solange du hochscrollst oder etwas markierst"><i></i>Live</button><button type="button" class="b" id="logrp" data-on="rpOpen" hidden>Meldungen</button><button type="button" class="b" id="logcopy">Kopieren für Thread</button></div>
     <div class="lhead"><span id="loghead"></span><span id="logcount"></span></div>
     <div class="lundo" id="logundo" hidden></div>
     <div class="lundo" id="logkette" hidden></div>
@@ -1507,7 +1522,7 @@
       <div class="ld-chips" id="docchips" hidden></div>
       <div id="docmsg" class="docmsg" aria-live="polite"></div>
       <ul class="facts dochits" id="dochits"></ul>
-      <div class="ld-split"><div id="doclist" class="ld-list"></div><div id="docdetail" class="ld-detail" hidden><div id="docdinfo"></div><div id="docview" class="docview" hidden></div></div></div>
+      <div class="ld-split"><div id="doclist" class="ld-list"></div><div id="docdetail" class="ld-detail" hidden><div id="docdinfo"></div><div id="docaw" hidden></div><div id="docview" class="docview" hidden></div></div></div>
       <div id="docbulk" class="ld-bulk" hidden></div>
       <div id="mkbox" class="mkbox" hidden></div>
       <details class="docopts" id="sprbox" hidden><summary>Suchprüfung</summary><div id="sprin"></div></details>
@@ -1608,6 +1623,7 @@
 <script src="/static/js/reminders.js"></script>
 <script src="/static/js/phone.js"></script>
 <script src="/static/js/me.js"></script>
+<script src="/static/js/auswertung.js"></script>
 <script src="/static/js/tidy.js"></script>
 <script src="/static/js/mailstil.js"></script>
 <script src="/static/js/fuerdich.js"></script>
@@ -1690,6 +1706,7 @@
 <script src="/static/js/verbrauch.js"></script>
 <script src="/static/js/modelle.js"></script>
 <script src="/static/js/werkstatt.js"></script>
+<script src="/static/js/entwickeln.js"></script>
 <script src="/static/js/fernzugang.js"></script>
 <script src="/static/js/fernbild.js"></script>
 <script src="/static/js/fernweb.js"></script>

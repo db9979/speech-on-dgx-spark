@@ -605,7 +605,7 @@ struct ChatsView: View {
         NavigationStack(path: $path) {
             List {
                 if let nk = newDevice { transfer(nk) }
-                if let n = shareNote { Text(verbatim: "🔒 " + n).foregroundStyle(.secondary) }
+                if let n = shareNote { Label { Text(verbatim: n) } icon: { Image(systemName: "lock") }.foregroundStyle(.secondary) }
                 if let k = m.keptAt { StandNote(at: k, loading: m.loading).listRowSeparator(.hidden) }
                 if m.loading && m.keptAt == nil {
                     LadeZeilen()
@@ -638,7 +638,7 @@ struct ChatsView: View {
                     }
                 }
                 if let n = note { Text(verbatim: n).foregroundStyle(.secondary) }
-                if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+                if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             }
             .navigationTitle("Chats")
             .navigationBarTitleDisplayMode(.inline)
@@ -777,8 +777,11 @@ struct ChatsView: View {
 
     @ViewBuilder private func transfer(_ nk: OwnKey) -> some View {
         Section {
-            Text(verbatim: "🔒 " + String(localized: "Neues Gerät") + ": " + PrivateInfo.kindName(nk.kind) + ", "
-                 + Date(timeIntervalSince1970: TimeInterval(nk.t)).formatted(date: .abbreviated, time: .shortened)).font(.headline)
+            Label {
+                Text(verbatim: String(localized: "Neues Gerät") + ": " + PrivateInfo.kindName(nk.kind) + ", "
+                     + Date(timeIntervalSince1970: TimeInterval(nk.t)).formatted(date: .abbreviated, time: .shortened))
+            } icon: { Image(systemName: "lock") }
+            .font(.headline)
             Text("Verlauf deiner privaten Chats dorthin übertragen? Nur wenn dort derselbe Code steht: \(ChatSec.code(nk.pub))")
                 .font(.subheadline)
             HStack {
@@ -823,7 +826,11 @@ private struct ChatRow: View {
                 .foregroundStyle(.secondary)
                 .frame(width: 36)
             VStack(alignment: .leading, spacing: 2) {
-                Text(verbatim: (c.priv ? "🔒 " : "") + (c.far ? "🌐 " : "") + c.title).font(.headline).lineLimit(1)
+                HStack(spacing: 4) {
+                    if c.priv { Image(systemName: "lock.fill").font(.caption).foregroundStyle(.secondary) }
+                    if c.far { Image(systemName: "globe").font(.caption).foregroundStyle(.secondary) }
+                    Text(verbatim: c.title).font(.headline).lineLimit(1)
+                }
                 Text(verbatim: c.preview).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
             }
             Spacer(minLength: 4)
@@ -837,9 +844,9 @@ private struct ChatRow: View {
                     if c.muted { Image(systemName: "bell.slash").font(.caption).foregroundStyle(.secondary) }
                     if c.unread > 0 {
                         Text(verbatim: c.unread > 99 ? "99+" : String(c.unread))
-                            .font(.caption.bold()).foregroundStyle(.white)
+                            .font(.caption.bold()).foregroundStyle(Theme.onAccent)
                             .padding(.horizontal, 7).padding(.vertical, 2)
-                            .background(Capsule().fill(c.muted ? Color.gray : Color.accentColor))
+                            .background(Capsule().fill(c.muted ? Theme.faint : Color.accentColor))
                     }
                 }
             }
@@ -898,7 +905,7 @@ private struct NewGroupView: View {
                 } footer: {
                     Text("Du bist Admin der Gruppe. Dabei sein kann nur, wer Nachrichten von dir annimmt.")
                 }
-                if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+                if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             }
             .navigationTitle("Neue Gruppe")
             .navigationBarTitleDisplayMode(.inline)
@@ -1223,7 +1230,7 @@ struct ChatThreadView: View {
                                 .font(.footnote).disabled(m.busy).padding(.top, 6)
                         }
                         if m.page.vanish > 0 {
-                            Text(verbatim: "⏱ " + String(localized: "Nachrichten verschwinden") + " " + ChatChoice.vanishText(m.page.vanish))
+                            Label(String(localized: "Nachrichten verschwinden") + " " + ChatChoice.vanishText(m.page.vanish), systemImage: "timer")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                         if lines.isEmpty && !m.loaded {
@@ -1258,7 +1265,7 @@ struct ChatThreadView: View {
                 .onAppear { if let last = lines.last?.id { proxy.scrollTo(last, anchor: .bottom) } }
             }
             if let e = m.error {
-                Text(SparkAPI.way(e)).font(.footnote).foregroundStyle(.red).padding(.horizontal).padding(.vertical, 4)
+                Text(SparkAPI.way(e)).font(.footnote).foregroundStyle(Theme.badText).padding(.horizontal).padding(.vertical, 4)
             }
             if let c = m.historyCode {
                 Text("Ältere Nachrichten liegen auf deinen anderen Geräten. Öffne Chats auf einem davon und tippe „Übertragen“, wenn dort derselbe Code steht: \(c)")
@@ -1491,7 +1498,7 @@ private struct ChatInfoView: View {
                                 if manage && !x.me {
                                     Button("Entfernen", role: .destructive) { asking = .remove(x) }
                                     if !x.admin && !x.id.hasPrefix("r_") {
-                                        Button("Zum Admin") { Task { _ = await m.members(admin: [x.id]) } }.tint(.blue)
+                                        Button("Zum Admin") { Task { _ = await m.members(admin: [x.id]) } }.tint(Theme.accent)
                                     }
                                 }
                             }
@@ -1516,7 +1523,7 @@ private struct ChatInfoView: View {
                     }
                 }
                 if let n = note { Text(verbatim: n).foregroundStyle(.secondary) }
-                if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+                if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             }
             .navigationTitle("Chat-Infos")
             .navigationBarTitleDisplayMode(.inline)
@@ -1622,7 +1629,7 @@ private struct PrivateInfo: View {
             if !number.isEmpty {
                 Text(verbatim: number).font(.system(.body, design: .monospaced)).textSelection(.enabled)
                 if seen {
-                    Label("Verglichen. Ändert sich ein Schlüssel, fragt die App neu.", systemImage: "checkmark.seal").foregroundStyle(.green)
+                    Label("Verglichen. Ändert sich ein Schlüssel, fragt die App neu.", systemImage: "checkmark.seal").foregroundStyle(Theme.ok)
                 } else {
                     Button("Ist bei uns beiden gleich") {
                         UserDefaults.standard.set(number, forKey: ChatSec.seenKey(m.id))
@@ -1631,7 +1638,7 @@ private struct PrivateInfo: View {
                 }
             }
         } header: {
-            Text("🔒 Ende-zu-Ende")
+            Label("Ende-zu-Ende", systemImage: "lock")
         }
         Section {
             ForEach(own) { k in
@@ -1651,7 +1658,7 @@ private struct PrivateInfo: View {
                     }
                 }
             }
-            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         } header: {
             Text("Deine Geräte")
         } footer: {
@@ -1764,14 +1771,14 @@ private struct ChatBubble: View {
                 }
             }
             HStack(spacing: 4) {
-                if l.spoken { Text(verbatim: "🎙").accessibilityLabel(Text("über den Assistenten")) }
+                if l.spoken { Image(systemName: "mic").accessibilityLabel(Text("über den Assistenten")) }
                 if l.edited { Text("bearbeitet") }
                 Text(l.date, format: .dateTime.hour().minute())
                 if l.mine && l.fail {
-                    Text(verbatim: "⚠").foregroundStyle(.orange)
+                    Image(systemName: "exclamationmark.triangle").foregroundStyle(Theme.warnText)
                         .accessibilityLabel(Text("nicht zugestellt: der andere Spark war 7 Tage nicht erreichbar"))
                 } else if l.mine && !l.tick.isEmpty {
-                    Text(verbatim: l.tick == "sent" ? "✓" : "✓✓").foregroundStyle(l.tick == "read" ? Color.blue : Color.secondary)
+                    Text(verbatim: l.tick == "sent" ? "✓" : "✓✓").foregroundStyle(l.tick == "read" ? Theme.accent : Color.secondary)
                         .accessibilityLabel(l.tick == "read" ? Text("gelesen") : l.tick == "got" ? Text("zugestellt") : Text("gesendet"))
                 }
             }
@@ -1842,10 +1849,10 @@ private struct ChatPhoto: View {
             }
         } label: {
             Group {
-                if let thumb { Image(uiImage: thumb).resizable().scaledToFit() } else { Color.gray.opacity(0.2) }
+                if let thumb { Image(uiImage: thumb).resizable().scaledToFit() } else { Theme.faint.opacity(0.2) }
             }
             .frame(width: min(220, 220 * w / max(w, h)), height: min(220, 220 * h / max(w, h)))
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .clipShape(RoundedRectangle(cornerRadius: Theme.rBox))
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Foto groß zeigen")
@@ -1854,10 +1861,10 @@ private struct ChatPhoto: View {
         }
         .fullScreenCover(isPresented: $showing) {
             ZStack(alignment: .topTrailing) {
-                Color.black.ignoresSafeArea()
+                Theme.shade.ignoresSafeArea()
                 if let img = big ?? thumb { Image(uiImage: img).resizable().scaledToFit().frame(maxWidth: .infinity, maxHeight: .infinity) }
                 Button { showing = false } label: {
-                    Image(systemName: "xmark.circle.fill").font(.largeTitle).foregroundStyle(.white.opacity(0.8)).padding()
+                    Image(systemName: "xmark.circle.fill").font(.largeTitle).foregroundStyle(Theme.onAccent.opacity(0.8)).padding()
                 }
                 .accessibilityLabel("Schließen")
             }

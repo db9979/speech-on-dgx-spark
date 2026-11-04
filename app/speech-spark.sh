@@ -37,7 +37,10 @@
 #   speech-spark lokal [status]    Entwickeln auf dem Pi (install.sh --entwickeln): spark-dev's local changes
 #   speech-spark lokal einspielen|zurueck|verwerfen  install them (checked, quick test, like an update), one step back, or without them
 #   speech-spark lokal testumgebung [--nacht]  the quick test's environment (once with the internet; at night only when changed)
+#   speech-spark lokal an-github [thema] [--abbrechen]  Weg A: spark-dev's branch to GitHub as opencode/<thema> (never main)
+#   speech-spark lokal zweige      the branches handed to GitHub, their GitHub tests and links
 #   speech-spark entwickeln [status]|schluessel neu|weg|einrichten  spark-dev's key for the LLM-Tor, OpenCode's settings
+#   speech-spark entwickeln github-schluessel neu|zeigen|weg  root's deploy key for GitHub (only opencode/ branches)
 #   speech-spark wissen messen [synth [anzahl] [--ohne-grenzen] | profil <name>] [--json]  times and memory of search, map and Finden
 set -euo pipefail
 # runuser, nft, systemctl live in /usr/sbin on Debian and Raspberry Pi OS; a caller with PATH=/usr/bin:/bin (teilen.py
@@ -222,7 +225,7 @@ cmd_logs() {
     asr|tts|asr-engine|tts-engine|tts-design|bild|musik|llm|llmtor|sehen|helfer|panel|watch|update|tlstor|waerter|notasr|schirm) units=(-u "speech-spark-$what") ;;
     messen) units=(-u speech-spark-messen -u speech-spark-messen-wunsch -u speech-spark-messen-engine) ;;
     werkstatt) units=(-u speech-spark-werkstatt -u speech-spark-werkstatt-lauf) ;;
-    entwickeln) units=(-u speech-spark-update -u speech-spark-lokaltest -u speech-spark-lokaltest-umgebung) ;;
+    entwickeln) units=(-u speech-spark-update -u speech-spark-lokaltest -u speech-spark-lokaltest-umgebung -u speech-spark-github) ;;
     umzug) units=(-u speech-spark-umzug -u speech-spark-llm -u speech-spark-llmtor) ;;
     wechsel) units=(-u speech-spark-wechsel -u speech-spark-llm -u speech-spark-sehen) ;;
     *) die "logs: asr, tts, asr-engine, tts-engine, tts-design, bild, musik, llm, llmtor, sehen, helfer, tlstor, waerter, notasr, schirm, panel, watch, update, messen, umzug, wechsel, werkstatt, entwickeln or all" ;;
@@ -1161,7 +1164,13 @@ cmd_lokal() {
       echo "entwickeln: $art gestartet"
       cmd_update ;;
     testumgebung) need_root lokal testumgebung; shift; ENTW_PY testumgebung "$@" ;;
-    *) die "speech-spark lokal [status]|einspielen|zurueck|verwerfen|testumgebung [--nacht]" ;;
+    an-github)   # Weg A: root takes the branch as a bundle and pushes it as opencode/<thema>; offline it waits (timer)
+      need_root lokal an-github
+      id spark-dev >/dev/null 2>&1 || die "Entwickeln auf dem Pi is not installed: sudo ./install.sh --entwickeln"
+      shift; ENTW_PY an-github "$@" ;;
+    zweige) need_root lokal zweige; ENTW_PY zweige ;;
+    auftrag) need_root lokal auftrag; ENTW_PY auftrag ;;   # the unit speech-spark-auftrag: the panel's Code-Auftrag wish
+    *) die "speech-spark lokal [status]|einspielen|zurueck|verwerfen|testumgebung [--nacht]|an-github [thema|--abbrechen]|zweige" ;;
   esac
 }
 
@@ -1186,7 +1195,25 @@ cmd_entwickeln() {
       esac ;;
     einrichten)   # OpenCode's settings and rules for spark-dev (again after the LLM-Tor or the model computer changed)
       as_panel_user ../entwickeln.py tor-daten | als_dev einrichten ;;
-    *) die "speech-spark entwickeln [status]|schluessel neu|weg|einrichten" ;;
+    github-schluessel)
+      # Weg A: a deploy key of its own (ed25519), root's only (spark-dev and the panel never read it); GitHub's ruleset
+      # on main holds for a deploy key, while a token of an admin's account would pass it
+      local gk=/etc/speech-spark-github-key
+      case "${2:-}" in
+        neu)
+          [ -L "$gk" ] || [ -L "$gk.pub" ] && die "$gk is a link"
+          rm -f -- "$gk" "$gk.pub"
+          ( umask 077; ssh-keygen -q -t ed25519 -N "" -C "spark-dev@$(hostname -s) (Speech on DGX Spark, opencode/ only)" -f "$gk" ) \
+            || die "no key made (ssh-keygen missing?)"
+          chown root:root "$gk" "$gk.pub"; chmod 600 "$gk"; chmod 644 "$gk.pub"
+          echo "entwickeln: github-schluessel neu"
+          echo "Add this as a deploy key with write access (GitHub → the repository → Settings → Deploy keys → Add deploy key):"
+          cat "$gk.pub" ;;
+        zeigen) [ -f "$gk.pub" ] && [ ! -L "$gk.pub" ] || die "no key yet: sudo speech-spark entwickeln github-schluessel neu"; cat "$gk.pub" ;;
+        weg) rm -f -- "$gk" "$gk.pub"; echo "entwickeln: github-schluessel weg (also delete it on GitHub under Deploy keys)" ;;
+        *) die "speech-spark entwickeln github-schluessel neu|zeigen|weg" ;;
+      esac ;;
+    *) die "speech-spark entwickeln [status]|schluessel neu|weg|einrichten|github-schluessel neu|zeigen|weg" ;;
   esac
 }
 
@@ -1220,6 +1247,6 @@ case "${1:-}" in
   wissen) shift; cmd_wissen "$@" ;;
   lokal) shift; cmd_lokal "$@" ;;
   entwickeln) shift; cmd_entwickeln "$@" ;;
-  ""|-h|--help|help) sed -n '2,41p' "$0" | sed 's/^# \{0,1\}//' ;;
+  ""|-h|--help|help) sed -n '2,44p' "$0" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (see: speech-spark help)" ;;
 esac

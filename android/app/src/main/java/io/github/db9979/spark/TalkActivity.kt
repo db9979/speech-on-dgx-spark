@@ -129,7 +129,7 @@ class TalkActivity : Activity(), Talk.Ui {
     // ------------------------------------------------------------ Talk.Ui
     override fun state(s: Talk.State) {
         face.state = s
-        mic.text = if (s == Talk.State.REST) "🎤 Sprechen" else "■ Stopp"
+        mic.text = if (s == Talk.State.REST) "Sprechen" else "■ Stopp"
     }
 
     override fun status(text: String) { status.text = text }
@@ -144,10 +144,9 @@ class TalkActivity : Activity(), Talk.Ui {
     private fun dp(n: Int) = (n * resources.displayMetrics.density).toInt()
 
     private fun build(): View {
-        val dark = (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
-            android.content.res.Configuration.UI_MODE_NIGHT_YES
-        val fg = if (dark) Color.WHITE else Color.rgb(29, 35, 48)
-        val soft = if (dark) Color.LTGRAY else Color.rgb(85, 85, 102)
+        val fg = getColor(R.color.fg)
+        val soft = getColor(R.color.mut)
+        val card = getColor(R.color.card)
         val root = FrameLayout(this)
         root.setBackgroundColor(Color.argb(110, 0, 0, 0))
         root.setOnClickListener { finish() }
@@ -157,7 +156,7 @@ class TalkActivity : Activity(), Talk.Ui {
         sheet.isClickable = true   // taps on the sheet do not close it
         sheet.setPadding(dp(18), dp(16), dp(18), dp(18))
         sheet.background = GradientDrawable().apply {
-            setColor(if (dark) Color.rgb(28, 30, 36) else Color.WHITE)
+            setColor(card)
             cornerRadii = FloatArray(8) { i -> if (i < 4) dp(24).toFloat() else 0f }
         }
         face = FaceView(this)
@@ -195,7 +194,7 @@ class TalkActivity : Activity(), Talk.Ui {
         row.addView(go, LinearLayout.LayoutParams(dp(56), -2))
         sheet.addView(row, lp(10))
         val buttons = LinearLayout(this)
-        mic = Button(this).apply { text = "🎤 Sprechen"; isAllCaps = false; setOnClickListener { toggle() } }
+        mic = Button(this).apply { text = "Sprechen"; isAllCaps = false; setOnClickListener { toggle() } }
         val whole = Button(this).apply { text = "⤢ Ganze App"; isAllCaps = false; setOnClickListener { app(null) } }
         buttons.addView(mic, LinearLayout.LayoutParams(0, -2, 1f))
         buttons.addView(whole, LinearLayout.LayoutParams(0, -2, 1f))

@@ -73,6 +73,9 @@ Vor jedem Commit durchgehen. In der Antwort an Dominik kurz nennen, welche Punkt
 - [ ] Neue Pakete werden mit fester Version installiert.
 - [ ] Nichts aus der Konfiguration landet ungeprüft in einem root-Skript.
 - [ ] Lokaler Code (Entwickeln auf dem Pi) läuft nie als root: eine Datei, die root ausführt oder lädt, gehört nicht in `entwickeln.ERLAUBT`, und ein root-Programm, das Panel-Module lädt, läuft bei lokalen Änderungen als Dienstnutzer.
+- [ ] Code, der an GitHub geht (An GitHub geben), schreibt nur `opencode/<thema>` und nie `.github`; der Schlüssel dafür ist ein Deploy-Schlüssel, den nur root liest (kein Token eines Admin-Kontos, das an der Regel für main vorbeikäme), und was GitHub für Zweige testet, zählt nie für das Update.
+- [ ] Eine Shell als anderer Nutzer (Terminal im Browser): nur über eine sudo-Zeile auf ein festes root-Programm ohne Argumente (`""`), das die Schalter selbst prüft und in einer abgeschotteten Einheit startet; WebSocket mit Einmal-Ticket nach frischem Code, Origin, Admin-Browser, Notaus, Sitzungs- und Zeitgrenzen; Tasten und Ausgabe nie im Protokoll.
+- [ ] Ein Werkzeug, das Code ändern lässt (Code-Auftrag): nur getippt, nur ein Admin, nach Text von außen gesperrt; Ziel als Daten mit Höchstlänge und Zaun; nur ein Wunsch mit festen Feldern, root prüft ihn; Ergebnis nur als Text und Vorschlag auf eigenem Zweig, einspielen nur mit frischem Code; Logs ohne Ziel und Änderung.
 
 ## Verbindung zwischen zwei Rechnern (Spark teilen)
 - [ ] Alles zwischen Panel-Rechner und Modell-Rechner geht über das TLS-Tor (`common.model_url`, TLS 1.3, gepinntes Zertifikat), nie im Klartext und nie mit „alles annehmen“.

@@ -66,11 +66,12 @@ AREAS = (
     ("wissen", "Wissen und Suche", "Knowledge and search", ("web_search", "wikipedia", "archive_search",
                                                             "document_search", "document_list", "fund_suche",
                                                             "mappe_liste", "mappe_stand", "mappe_dazu",
+                                                            "dokument_auswertung",
                                                             "history_search")),
     ("machen", "Bilder, Musik und Dokumente", "Pictures, music and documents", ("bild_malen", "musik_machen", "musik_bearbeiten", "document_plan")),
     ("gedaechtnis", "Gedächtnis", "Memory", ("memory_save", "memory_forget", "spark_tagebuch")),
     ("auftraege", "Aufträge", "Jobs", ("agent_list", "agent_schedule", "agent_watch", "agent_change")),
-    ("spark", "Spark", "Spark", ("spark_hilfe", "spark_vorschlag", "spark_zustand")),
+    ("spark", "Spark", "Spark", ("spark_hilfe", "spark_vorschlag", "spark_zustand", "code_auftrag")),
 )
 AREA_OF = {t: a for a, _, _, ts in AREAS for t in ts}
 
@@ -139,7 +140,7 @@ VOICE = {"reminder_set", "reminder_list", "anruf_planen", "weather", "transit", 
 HELP_START = ("Wo stelle ich die Stimme ein?", "Where do I set the voice?")
 # never as a first example in an empty chat: they need something from before (plan 2)
 NOT_START = {"reminder_cancel", "tasks_change", "memory_forget", "calendar_change", "agent_change", "spark_vorschlag",
-             "spark_hilfe", "iphone_action"}
+             "spark_hilfe", "iphone_action", "code_auftrag"}
 # set up by the profile itself: the tool works only once it is connected (tipps.py's own checks)
 READY = {"calendar_events": "cal", "calendar_add": "cal", "calendar_change": "cal", "daily_briefing": "cal",
          "mail_list": "mail", "mail_read": "mail", "mail_search": "mail", "mail_draft": "mail", "mail_tidy_overview": "mail"}

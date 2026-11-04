@@ -10,13 +10,15 @@ Runs the tests like `python -m unittest`. When a few of them fail, exactly those
 - more than MAX_RETRY failures are not a wobble but a real break: no second try, red at once.
 Nothing is skipped and no test changes: the second try runs the very same test.
 
-    python selftest.py discover -s tests --part 2/4    (GitHub "Tests": four parts at the same time, V01.0.502)
-    python selftest.py --sum <folder> 4                 (GitHub "Tests", job "Ergebnis": the parts together)
+    python selftest.py discover -s tests --part 2/6    (GitHub "Tests": six parts at the same time, V01.0.502/V01.1.305)
+    python selftest.py --sum <folder> 6                 (GitHub "Tests", job "Ergebnis": the parts together)
+    python selftest.py discover -s tests -p test_x.py --part 1/1   (tools/vorpush.py: one module, timed by unit)
 
 With --part K/N only the K-th of N parts runs. The parts are cut from the same discovery by test module (a class
 with entries per test in tests/dauer.json test by test), so together they hold every test exactly once (parts()).
 The durations in tests/dauer.json only decide which part a unit goes to; one missing there counts NEW_UNIT
-seconds. Each part writes what failed the first time to $SELFTEST_REPORT; --sum adds the parts up, so the rule
+seconds (tools/vorpush.py enters a new module, --sum warns about a stale unit, test_selftest_runner wants every
+module there). Each part writes what failed the first time to $SELFTEST_REPORT; --sum adds the parts up, so the rule
 "more than MAX_RETRY failures is red" holds for the whole run, not per part. With $SELFTEST_NOTE --sum also writes
 which tests stayed red and which passed only the second time; GitHub opens the issue "main rot" with it (closed
 again by the next green run) and counts the wobbly ones on the issue "Wackelnde Tests" (V01.0.820).
@@ -32,6 +34,7 @@ import unittest
 MAX_RETRY = 5          # more failures than this: something is really broken, no second try
 WARN = "WARNUNG erst im zweiten Versuch grün"
 NEW_UNIT = 10          # seconds a unit not yet in tests/dauer.json counts for when the parts are cut
+STALE_S = 60           # a unit measured this many seconds (and twice) off its entry in tests/dauer.json is stale
 
 
 def _top(argv):
@@ -115,11 +118,31 @@ def _durations(top):
         return {}
 
 
+def write_durations(path, durations):
+    """tests/dauer.json as it is kept: one unit a line, sorted."""
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(dict(sorted(durations.items())), f, indent=0, ensure_ascii=False)
+        f.write("\n")
+
+
 def _split(durations):
     """Classes cut test by test: those with "module.Class.test" entries in dauer.json (one class alone would
     otherwise be longer than a whole part, like the browser test). Each part starts such a class anew; the rest of
     its module stays one unit."""
     return {k.rsplit(".", 1)[0] for k in durations if k.count(".") == 2}
+
+
+def stale(durations, measured):
+    """The units whose entry in tests/dauer.json no longer fits what was measured: {unit: measured seconds} for one
+    without an entry and for one STALE_S seconds and more than twice off (test_dungeon_pruefstand had none and took
+    24 min, V01.1.188-.211: one part ran 40 min while the others took 12). GitHub warns about them (--sum),
+    tools/vorpush.py names them (and enters a module that has no entry yet)."""
+    out = {}
+    for k, v in measured.items():
+        old = durations.get(k)
+        if old is None or (abs(v - old) >= STALE_S and not old / 2 <= v <= old * 2):
+            out[k] = round(v, 1)
+    return out
 
 
 def parts(keys, n, durations):
@@ -166,13 +189,15 @@ def _report(names, result, red=None):
 
 def run_part(argv, k, n):
     """Runs part k of n of the discovery in argv; returns the result like unittest.main."""
-    start, top = "tests", None
+    start, top, pattern = "tests", None, "test*.py"
     for i, a in enumerate(argv):
         if a in ("-s", "--start-directory") and i + 1 < len(argv):
             start = argv[i + 1]
         if a in ("-t", "--top-level-directory") and i + 1 < len(argv):
             top = argv[i + 1]
-    suite = unittest.defaultTestLoader.discover(start, top_level_dir=top)
+        if a in ("-p", "--pattern") and i + 1 < len(argv):
+            pattern = argv[i + 1]
+    suite = unittest.defaultTestLoader.discover(start, pattern=pattern, top_level_dir=top)
     durations = _durations(os.path.abspath(start))
     split = _split(durations)
     units = _units(suite, split)
@@ -202,12 +227,17 @@ def total(folder, n):
         dur.update(part)
         print(f"selftest: part {k}/{n} took {sum(part.values()):.0f} s for {data.get('ran', 0)} tests", flush=True)
     print(f"selftest: {ran} tests in {n} parts, {len(names)} failed the first time", flush=True)
+    here = _durations(os.path.join(os.path.dirname(os.path.abspath(__file__)), "tests"))
+    for k, v in sorted(stale(here, dur).items()):
+        if here and (k in here or v >= STALE_S):
+            line = f"tests/dauer.json is stale for {k}: {here.get(k, 'none')} there, {v:.0f} s measured"
+            print(line, flush=True)
+            if os.environ.get("GITHUB_ACTIONS") == "true":
+                print(f"::warning title=dauer.json::{line}", flush=True)
     out = os.environ.get("SELFTEST_DAUER")
     if out and dur:
         # measured on GitHub: copied to tests/dauer.json when the parts drift apart
-        with open(out, "w", encoding="utf-8") as f:
-            json.dump(dict(sorted(dur.items())), f, indent=0, ensure_ascii=False)
-            f.write("\n")
+        write_durations(out, dur)
     _note(red if len(names) <= MAX_RETRY else names, wobbly)
     if ran <= 0:
         return 1

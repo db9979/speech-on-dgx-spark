@@ -118,7 +118,7 @@ struct ProfileView: View {
             } else {
                 if let k = m.keptAt { StandNote(at: k, loading: m.error == nil).listRowBackground(Color.clear) }
                 if let e = m.error {
-                    Section { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+                    Section { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
                 }
                 voice
                 answers
@@ -232,7 +232,7 @@ struct ProfileView: View {
     private func right(_ title: LocalizedStringKey, _ key: String) -> some View {
         LabeledContent(title) {
             Image(systemName: m.rights[key] == true ? "checkmark.circle.fill" : "xmark.circle")
-                .foregroundStyle(m.rights[key] == true ? .green : .secondary)
+                .foregroundStyle(m.rights[key] == true ? Theme.ok : .secondary)
         }
     }
 }

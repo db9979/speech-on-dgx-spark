@@ -682,11 +682,11 @@ struct CallView: View {
 
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            Theme.shade.ignoresSafeArea()
             if c.video, let r = c.remoteVideo {
                 VideoView(track: r, fill: true).ignoresSafeArea()
             } else {
-                Image(systemName: "person.crop.circle.fill").font(.system(size: 110)).foregroundStyle(.white.opacity(0.5))
+                Image(systemName: "person.crop.circle.fill").font(.system(size: 110)).foregroundStyle(Theme.onAccent.opacity(0.5))
             }
             VStack {
                 HStack(alignment: .top) {
@@ -699,14 +699,14 @@ struct CallView: View {
                             Label("Ende-zu-Ende verschlüsselt", systemImage: "lock.fill").font(.caption).opacity(0.8)
                         }
                     }
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.onAccent)
                     .shadow(radius: 3)
                     Spacer()
                     if c.video, let l = c.localVideo, !c.cameraOff {
                         VideoView(track: l, fill: true)
                             .frame(width: 96, height: 144)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(.white, lineWidth: 2))
+                            .clipShape(RoundedRectangle(cornerRadius: Theme.rBox))
+                            .overlay(RoundedRectangle(cornerRadius: Theme.rBox).stroke(Theme.onAccent, lineWidth: 2))
                     }
                 }
                 .padding()
@@ -719,8 +719,8 @@ struct CallView: View {
                     }
                     button(c.speaker ? "speaker.wave.3.fill" : "speaker.fill", "Lautsprecher", on: c.speaker) { c.toggleSpeaker() }
                     Button { c.hangUp() } label: {
-                        Image(systemName: "phone.down.fill").font(.title2).foregroundStyle(.white)
-                            .frame(width: 64, height: 64).background(Circle().fill(.red))
+                        Image(systemName: "phone.down.fill").font(.title2).foregroundStyle(Theme.onAccent)
+                            .frame(width: 64, height: 64).background(Circle().fill(Theme.bad))
                     }
                     .accessibilityLabel("Auflegen")
                 }
@@ -745,8 +745,8 @@ struct CallView: View {
 
     private func button(_ icon: String, _ label: LocalizedStringKey, on: Bool, _ act: @escaping () -> Void) -> some View {
         Button(action: act) {
-            Image(systemName: icon).font(.title3).foregroundStyle(on ? .black : .white)
-                .frame(width: 56, height: 56).background(Circle().fill(on ? Color.white : Color.white.opacity(0.22)))
+            Image(systemName: icon).font(.title3).foregroundStyle(on ? Theme.shade : Theme.onAccent)
+                .frame(width: 56, height: 56).background(Circle().fill(on ? Theme.onAccent : Theme.onAccent.opacity(0.22)))
         }
         .accessibilityLabel(Text(label))
     }

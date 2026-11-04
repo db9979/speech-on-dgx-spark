@@ -183,19 +183,19 @@ struct VorgangKarte: View {
         VStack(alignment: .leading, spacing: 6) {
             if x.done {
                 HStack {
-                    Image(systemName: "checkmark.circle").foregroundStyle(.green)
+                    Image(systemName: "checkmark.circle").foregroundStyle(Theme.ok)
                     Text(verbatim: x.title).lineLimit(1)
                     Spacer()
                     if x.has("zurueck") { Button("Zurückholen") { run("zurueck") }.font(.footnote) }
                 }
                 Text(verbatim: vorgangState(x)).font(.caption).foregroundStyle(.secondary)
-                if let n = note { Text(verbatim: n.0).font(.caption).foregroundStyle(n.1 ? Color.secondary : Color.red) }
+                if let n = note { Text(verbatim: n.0).font(.caption).foregroundStyle(n.1 ? Color.secondary : Theme.bad) }
             } else {
                 HStack(spacing: 6) {
                     Image(systemName: vorgangSymbol(x.sym)).foregroundStyle(.tint)
                     Text(verbatim: x.artName.uppercased()).font(.caption).foregroundStyle(.secondary)
                     Spacer()
-                    if !x.due.isEmpty { Text(verbatim: x.due).font(.caption).foregroundStyle(.orange) }
+                    if !x.due.isEmpty { Text(verbatim: x.due).font(.caption).foregroundStyle(Theme.warnText) }
                 }
                 Text(verbatim: x.title).font(.headline)
                 if !x.line.isEmpty { Text(verbatim: x.line).font(.subheadline).foregroundStyle(.secondary) }
@@ -232,8 +232,8 @@ struct VorgangKarte: View {
             }
         }
         .padding(12)
-        .background(RoundedRectangle(cornerRadius: 14).fill(Color(.secondarySystemBackground)))
-        .overlay(alignment: .leading) { if x.urgent && !x.done { Rectangle().fill(.orange).frame(width: 3).clipShape(Capsule()) } }
+        .background(RoundedRectangle(cornerRadius: Theme.rBox).fill(Color(.secondarySystemBackground)))
+        .overlay(alignment: .leading) { if x.urgent && !x.done { Rectangle().fill(Theme.warn).frame(width: 3).clipShape(Capsule()) } }
         .sheet(item: $writing) { d in MailWrite(draft: d) }
         .sheet(item: $chat) { c in ChatsView(start: c.id) }
         .sheet(item: $reading) { m in NavigationStack { MailView(item: m, box: "", folder: nil, post: PostModel()) } }
@@ -271,7 +271,7 @@ struct VorgangKarte: View {
                 if let m = d["draft"] as? [String: Any] {
                     writing = MailDraft(to: m["to"] as? String ?? "", subject: m["subject"] as? String ?? "", text: m["text"] as? String ?? "")
                 }
-            case "oeffnen":   // stages 3+4: only the place in the panel where it goes on (a fixed way, Sprung-Link)
+            case "oeffnen", "ca_lokal", "ca_github":   // stages 3+4, the Code-Auftrag: only the place in the panel where it goes on (a fixed way, Sprung-Link; there the code is asked)
                 if let w = z["weg"], let u = SparkAPI.wayLink(w) { openURL(u) }
             case "cx_antworten": if let c = z["chat"], !c.isEmpty { chat = ChatStart(id: c) }
             case "ml_lesen":
@@ -337,7 +337,7 @@ struct OffenView: View {
                     .foregroundStyle(.secondary)
             }
             ForEach(xs) { x in VorgangKarte(x: x).listRowInsets(EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)) }
-            if let e = store.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = store.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             Section {
                 Button("Erledigte entfernen") { Task { await store.drop(onlyDone: true) } }
                 Button("Alles löschen", role: .destructive) { asking = true }
@@ -448,7 +448,7 @@ struct MitteilungKarte: View {
             }
         }
         .padding(12)
-        .background(RoundedRectangle(cornerRadius: 14).fill(Color(.secondarySystemBackground)))
+        .background(RoundedRectangle(cornerRadius: Theme.rBox).fill(Color(.secondarySystemBackground)))
         .overlay(alignment: .leading) { Rectangle().fill(.tint).frame(width: 3).clipShape(Capsule()) }
         .onAppear { if x.art == "vorgang" { store.want(x.vg) } }
         // a tap on „Du bist dran“ opens that table at once (Punkt 7 of the table review of 2026-10-24)

@@ -163,7 +163,7 @@ struct ListenView: View {
                 Section("Meine Listen") { ForEach(m.lists.filter(\.mine)) { row($0) } }
                 Section("Mit mir geteilt") { ForEach(shared) { row($0) } }
             }
-            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle("Listen")
         .toolbar {
@@ -261,9 +261,9 @@ struct ListeView: View {
                         }
                     }
                 }
-                if !l.error.isEmpty { Text(verbatim: l.error).foregroundStyle(.red) }
+                if !l.error.isEmpty { Text(verbatim: l.error).foregroundStyle(Theme.badText) }
             }
-            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle(Text(verbatim: l.map { $0.icon + " " + $0.name } ?? ""))
         .toolbar {
@@ -331,7 +331,7 @@ struct ListeView: View {
                     Text(verbatim: line(x)).foregroundStyle(.primary)
                     if !x.due.isEmpty {
                         Text(verbatim: x.due).font(.caption.weight(.semibold))
-                            .foregroundStyle(x.late ? AnyShapeStyle(.red) : AnyShapeStyle(.tint))
+                            .foregroundStyle(x.late ? AnyShapeStyle(Theme.bad) : AnyShapeStyle(.tint))
                     }
                     let w = who(x.by, x.at, x.src)
                     if !w.isEmpty { Text(verbatim: w).font(.caption).foregroundStyle(.secondary) }
@@ -358,7 +358,7 @@ struct ListeTeilenView: View {
         Form {
             if m.sharing { people(l) }
             if m.linking { ListeLinkSection(id: id) }
-            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle(Text(verbatim: l.map { $0.icon + " " + $0.name } ?? ""))
         .navigationBarTitleDisplayMode(.inline)
@@ -428,7 +428,7 @@ struct ListeLinkSection: View {
             }
             Toggle("darf die Liste sehen", isOn: $see)
             Button("Link erstellen") { Task { await call("POST", path, ["days": days, "see": see, "base": Self.base()]) } }
-            if let error { Text(SparkAPI.way(error)).foregroundStyle(.red) }
+            if let error { Text(SparkAPI.way(error)).foregroundStyle(Theme.badText) }
         } header: {
             Text("Link für Leute ohne Profil")
         } footer: {

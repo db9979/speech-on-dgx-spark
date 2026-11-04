@@ -5,6 +5,10 @@ turn becomes a line here. The admin's own sentences (chat.route_tests) come on t
 """
 
 BENCH = [
+    # Code-Auftrag im Chat (codeauftrag.py): an admin's order for OpenCode, never a question about the Spark's settings
+    ("Code-Auftrag: die Begrüßung soll freundlicher klingen", "agent+codeauftrag"),
+    ("Ändere am Code die Begrüßung, sie soll freundlicher klingen", "codeauftrag"),
+    ("Lass OpenCode die Begrüßung im Code freundlicher machen", "codeauftrag"),
     # Dokumente erstellen (V01.0.415, Dominik 11.10.: only text came back): a file wish is the group "erstellen"
     ("Mach eine Präsentation über die der eine Folie.", "erstellen"),
     ("den mauer fall. gerne auch 3 folien", "erstellen"),
@@ -69,6 +73,10 @@ BENCH = [
     ("Leg den Mietvertrag in die Mappe Wohnung", "dokument+mappe"),
     ("Which collections do I have?", "mappe"),
     ("Put the lease into the collection Flat", "mappe"),
+    # Push 1b: a search within a Mappe keeps document_search (NARROW_KEEP), a finding word also fund_suche
+    ("Such in der Mappe Wohnung nach der Kaution", "mappe"),
+    ("Finde in der Mappe Wohnung die Rechnung", "finden+mappe"),
+    ("Search the collection Flat for the deposit", "mappe"),
     # the own Kiwix archive (V01.0.264): mein, dein, im Archiv, never the uploaded documents
     ("Schaue in deinem Archiv nach, was du über Albert Einstein", "archiv"),
     ("Schau in meinem Archiv nach Sauerteig", "archiv"),
@@ -159,6 +167,11 @@ BENCH = [
     ("Wann läuft meine Kfz-Versicherung ab?", "dokument"),
     ("Wo ist die Anleitung für die Waschmaschine?", "dokument"),
     ("Wann ist die Kündigungsfrist für meinen Handyvertrag?", "dokument"),
+    # Auswertungen (auswertung.py): the analysis of one own document comes with the documents group
+    ("Was sind die Kernaussagen im Mietvertrag?", "dokument"),
+    ("Fass mir den Arbeitsvertrag kurz zusammen", "dokument"),
+    ("Welche Fristen stehen in der Versicherungspolice?", "dokument"),
+    ("Zeig mir das Inhaltsverzeichnis vom Handbuch", "dokument"),
     ("Schreib Anna, dass das Essen fertig ist", "nachricht"),
     ("Schreib Anna, dass ich gleich da bin", "nachricht"),
     ("Sag Lisa, dass das Licht an ist", "nachricht"),

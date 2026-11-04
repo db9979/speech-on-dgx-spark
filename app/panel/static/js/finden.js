@@ -11,7 +11,8 @@
 // pictures and songs their own page; a period („letzte Woche“) or an event („vom OP“) in the typed words shows as a
 // line with what the panel made of it (deutung: the appointment's day, or that there is none).
 // Stufe E: a mail's attachments listed in its detail („Zu Dokumenten übernehmen“ follows with wissen.aufnehmen).
-const FUND={q:'',quelle:'',kat:'',hits:null,sel:0,item:null,stand:null,msg:'',err:false,seq:0,deut:null};
+// „Größe des Index“ under Einstellungen (fund.groesse in the answer of stand): the sum, opened the split.
+const FUND={q:'',quelle:'',kat:'',mappe:'',hits:null,sel:0,item:null,stand:null,msg:'',err:false,seq:0,deut:null};
 let FUND_ON=false;
 window.fundStart=who=>{FUND_ON=!!(who&&who.profile&&who.find);window.FUND_ON=FUND_ON;
   document.querySelectorAll('nav button[data-s=finden]').forEach(b=>b.hidden=!FUND_ON)};
@@ -44,8 +45,8 @@ function fundSay(x,err){FUND.msg=String(x||'').slice(0,300);FUND.err=!!err;docum
 function fundBody(){const w=document.createElement('div');w.className='ld-box ld-frame fund';w.id='fundview';fundPaint(w);return w}
 function fundWorteBody(){const w=document.createElement('div');w.className='ld-box fund';w.id='fundworte';fundWorte(w);return w}
 function fundDraw(){const w=$('fundview');if(w)fundPaint(w);const v=$('fundworte');if(v)fundWorte(v);const b=$('fundset');if(b)fundSettingsPaint(b)}
-async function fundRun(){const seq=++FUND.seq;const body={worte:FUND.q.trim()};if(FUND.quelle)body.quelle=FUND.quelle;if(FUND.kat)body.kategorie=FUND.kat;
-  if(!body.worte&&!body.quelle&&!body.kategorie){FUND.hits=null;fundDraw();return}
+async function fundRun(){const seq=++FUND.seq;const body={worte:FUND.q.trim()};if(FUND.quelle)body.quelle=FUND.quelle;if(FUND.kat)body.kategorie=FUND.kat;if(FUND.mappe)body.mappe=FUND.mappe;
+  if(!body.worte&&!body.quelle&&!body.kategorie&&!body.mappe){FUND.hits=null;fundDraw();return}
   const {r,d}=await apiTry('/api/profile/fund/suche',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(seq!==FUND.seq)return;
   if(r.ok){FUND.hits=d.treffer||[];FUND.deut=d.deutung||null;FUND.msg='';FUND.err=false}else{FUND.hits=[];FUND.deut=null;FUND.msg=errSay(r.status,d.detail,'');FUND.err=true}fundDraw()}
 const fundSrc=n=>{const q=((FUND.stand&&FUND.stand.quellen)||[]).find(x=>x.name===n);return q?t(q.de,q.en):n};
@@ -58,7 +59,7 @@ function fundPaint(w){w.classList.toggle('ld-sel',!!FUND.item);
   const srcs=((S&&S.quellen)||[]).filter(q=>q.an),kats=((S&&S.kategorien)||[]);
   list.innerHTML=`<div class="ld-tools"><input type="search" class="fundq" maxlength="200" placeholder="${esc(t('Wörter, Firma, Person, Nummer …','Words, company, person, number …'))}" aria-label="${esc(t('In meinen Daten finden','Find in my data'))}" value="${esc(FUND.q)}"></div>
     <div class="row"><select class="fundsrc" aria-label="${esc(t('Quelle','Source'))}"><option value="">${esc(t('Alle Quellen','All sources'))}</option>${srcs.map(q=>`<option value="${esc(q.name)}"${q.name===FUND.quelle?' selected':''}>${esc(t(q.de,q.en))}</option>`).join('')}</select>
-    <select class="fundkat" aria-label="${esc(t('Kategorie','Category'))}"><option value="">${esc(t('Alle Kategorien','All categories'))}</option>${kats.map(k=>`<option value="${esc(k.wert)}"${k.wert===FUND.kat?' selected':''}>${esc(k.wert)}</option>`).join('')}</select></div>
+    <select class="fundkat" aria-label="${esc(t('Kategorie','Category'))}"><option value="">${esc(t('Alle Kategorien','All categories'))}</option>${kats.map(k=>`<option value="${esc(k.wert)}"${k.wert===FUND.kat?' selected':''}>${esc(k.wert)}</option>`).join('')}</select>${window.mpFundWahl?mpFundWahl(FUND.mappe):''}</div>
     ${FUND.hits!==null?fundDeut():''}
     ${S&&!S.eintraege?`<div class="ld-empty mut">${esc(t('Der Index ist noch leer. Er füllt sich im Hintergrund, alle paar Minuten ein Stück.','The index is still empty. It fills in the background, a part every few minutes.'))}</div>`:''}
     ${FUND.hits===null?(S&&S.eintraege?`<div class="ld-empty mut">${esc(t(`${S.eintraege} Einträge im Index. Gib Wörter ein oder wähle eine Kategorie.`,`${S.eintraege} entries in the index. Type words or choose a category.`))}</div>`:'')
@@ -70,6 +71,7 @@ function fundPaint(w){w.classList.toggle('ld-sel',!!FUND.item);
   qi.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();clearTimeout(tm);fundRun()}};
   list.querySelector('.fundsrc').onchange=e=>{FUND.quelle=e.target.value;fundRun()};
   list.querySelector('.fundkat').onchange=e=>{FUND.kat=e.target.value;fundRun()};
+  const fm=list.querySelector('.fundmappe');if(fm)fm.onchange=e=>{FUND.mappe=e.target.value;fundRun()};
   list.querySelectorAll('[data-fundsel]').forEach(r=>{const go=()=>fundPick(r.dataset.fundsel);r.onclick=go;r.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}}});
   fundDetail(w)}
 async function fundPick(id){const {r,d}=await apiTry('/api/profile/fund/eintrag/'+encodeURIComponent(id));
@@ -139,6 +141,15 @@ function fundWorte(w){const S=FUND.stand;if(!S){w.innerHTML=`<div class="mut">${
     if(b.dataset.fundmok!==undefined)plus.push({typ:x.typ,wert:x.wert});else minus.push({typ:x.typ,wert:x.wert});
     const s=await apiTry('/api/profile/fund/eintrag/'+encodeURIComponent(x.id)+'/schlagworte',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({plus,minus})});
     if(!s.r.ok){fundSay(errSay(s.r.status,s.d.detail,''),true);return}fundSay(b.dataset.fundmok!==undefined?t('Übernommen. Es gilt jetzt als deins.','Kept. It counts as yours now.'):t('Entfernt. Das Modell schlägt es hier nie wieder vor.','Removed. The model never proposes it here again.'));fundStand()})}
+// the size of the index (fund.groesse, numbers in bytes): the sum, opened the split by source (an estimate) and the
+// file of Dokumente und Wissen; sizeText (base.js) is the one way to write a size
+const fundGr=n=>sizeText(n)||'0 MB';
+function fundGroesse(g){if(!g)return '';
+  return `<details class="fundgr"><summary>${esc(t('Größe des Index','Size of the index'))}: <b>${esc(fundGr(g.summe))}</b></summary>
+    <ul class="facts small"><li><span>${esc(t('Finden','Find'))}</span><b>${esc(fundGr(g.index))}</b></li>
+      ${(g.teile||[]).map(x=>`<li><span>· ${esc(fundSrc(x.name))}</span><b>${esc(fundGr(x.bytes))}</b></li>`).join('')}
+      <li><span>${esc(t('Dokumente und Wissen','Documents and knowledge'))}</span><b>${esc(fundGr(g.wissen))}</b></li></ul>
+    ${g.geschaetzt&&(g.teile||[]).length?`<div class="mut small">${esc(t('Die Aufteilung nach Quellen ist geschätzt, die Summen sind die Größe der Dateien.','The split by source is an estimate, the sums are the size of the files.'))}</div>`:''}</details>`}
 function fundSettings(b){let s=$('fundset');if(!s){b.textContent='';s=document.createElement('div');s.id='fundset';s.className='card';b.appendChild(s)}fundSettingsPaint(s)}
 function fundSettingsPaint(s){const S=FUND.stand;if(!S){s.innerHTML=`<div class="fundmsg ${FUND.err?'err':'mut'}" role="status">${esc(FUND.msg||t('Lade …','Loading …'))}</div>`;return}
   s.innerHTML=`<h3>${esc(t('Suchindex','Search index'))}</h3>
@@ -146,6 +157,7 @@ function fundSettingsPaint(s){const S=FUND.stand;if(!S){s.innerHTML=`<div class=
     <ul class="facts">${(S.quellen||[]).map(q=>`<li><span>${esc(t(q.de,q.en))}${q.an?'':` <small class="mut">${esc(t('nicht freigegeben','not released'))}</small>`}</span><b>${q.n}${q.stand?' · '+esc(q.stand):''}</b></li>`).join('')}
       <li><span>${esc(t('Noch nicht eingelesen','Not read yet'))}</span><b>${S.rueckstand}</b></li>
       ${(S.quellen||[]).some(q=>q.name==='mail'&&q.an)?`<li><span>${esc(t('Mails noch nicht eingelesen','Mails not read yet'))}</span><b>${S.mail_rest||0}</b></li>`:''}</ul>
+    ${fundGroesse(S.groesse)}
     ${S.platz?`<div class="err">${esc(t('Platz knapp: Das Einlesen der Mails hält an, bis auf dem Spark wieder genug Speicher frei ist.','Space low: reading mail stops until enough storage is free on the Spark again.'))}</div>`:''}
     <div class="row"><button type="button" class="b" data-fundnew="1"${S.laeuft?' disabled':''}>${esc(S.laeuft?t('Läuft …','Running …'):t('Neu aufbauen','Rebuild'))}</button>
       <button type="button" class="b" data-funddel="1">${esc(t('Index löschen','Delete the index'))}</button></div>

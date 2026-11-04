@@ -343,6 +343,7 @@ class IPhone(unittest.TestCase):
 
     def test_lists_reach_the_app_only_with_its_switch(self):
         a = profile("Ilsa")
+        helpers.keep_chat(self, "tasks")
         helpers.set_config(tasks=True)
         try:
             h = {"X-Speech-Device": pair(a).json()["token"]}

@@ -151,7 +151,7 @@ struct KontakteView: View {
         let letters = groups.keys.sorted { $0 == "#" ? false : $1 == "#" ? true : $0 < $1 }
         ScrollViewReader { proxy in
             List {
-                if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+                if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
                 if !m.loading && m.cards.isEmpty {
                     Text(SparkAPI.way(String(localized: "Noch keine Kontakte. Ein Adressbuch kommt im Browser unter Kontakte → Einstellungen dazu."))).foregroundStyle(.secondary)
                 }
@@ -289,7 +289,7 @@ struct KontaktDetail: View {
                 Section {
                     LabeledContent("Adressbuch", value: m.book(c.book))
                 }
-                if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+                if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             }
             .navigationTitle(Text(verbatim: c.name))
             .navigationBarTitleDisplayMode(.inline)
@@ -337,7 +337,7 @@ struct KontaktDetail: View {
             Text(label).font(.caption2)
         }
         .frame(width: 58, height: 52)
-        .background(RoundedRectangle(cornerRadius: 12).fill(Color.accentColor.opacity(0.12)))
+        .background(RoundedRectangle(cornerRadius: Theme.rBox).fill(Color.accentColor.opacity(0.12)))
     }
 
     static func birthday(_ s: String) -> String {
@@ -493,7 +493,7 @@ struct KontaktForm: View {
                     TextField("Geburtstag (JJJJ-MM-TT)", text: $draft.bday).keyboardType(.numbersAndPunctuation)
                     TextField("Notiz", text: $draft.note, axis: .vertical).lineLimit(2...6)
                 }
-                if let error { Text(SparkAPI.way(error)).foregroundStyle(.red) }
+                if let error { Text(SparkAPI.way(error)).foregroundStyle(Theme.badText) }
                 if draft.card != nil {
                     Section { Button("Kontakt löschen", role: .destructive) { asking = true } }
                 }

@@ -508,7 +508,13 @@ def fake_ha():
             try:
                 ev = HA_WS["push"].get_nowait()
             except queue.Empty:
-                await asyncio.sleep(0.02)
+                # a connection that went away ends here: before, it kept taking the next test's events from the queue
+                # (test_hamelden Live lost its motion on GitHub, green only the second time)
+                try:
+                    if (await asyncio.wait_for(sock.receive(), 0.02)).get("type") == "websocket.disconnect":
+                        return
+                except asyncio.TimeoutError:
+                    pass
                 continue
             if ev == "close":
                 await sock.close()
@@ -1085,8 +1091,11 @@ def declared(src):
 async def dm_pane(pg, name):
     """The Dungeon-Master's table on the phone (V01.1.006) shows one pane at a time: the bar at the bottom opens
     geschichte, gruppe, held or karte; on a wide screen all stand and nothing is clicked."""
-    if await pg.evaluate("(()=>{const e=document.querySelector('#dmview .dm-unten');return !!e&&e.getClientRects().length>0})()"):
+    # the phone by the page's own rule (dmHandy), not by whether the bar already stands: on a slow runner late in a
+    # part the bar came after the check, nothing was clicked and the story lay over the map (V01.1.305)
+    if await pg.evaluate("typeof dmHandy==='function'?dmHandy():!!document.querySelector('#dmview .dm-unten')"):
         await pg.click(f"#dmview .dm-unten [data-dmh={name}]")
+        await pg.wait_for_function(f"DMA.handy==='{name}'&&!!document.querySelector('#dmview .dm-unten [data-dmh={name}].on')")
 
 
 async def dm_kopf(pg, box="#dmview"):

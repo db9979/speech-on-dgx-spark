@@ -248,7 +248,9 @@ class Lists(unittest.TestCase):
             profiles.save_settings(u, dict(profiles.settings(u), chats_on=True))
         vorgaenge.put(me, "erinnerung", "erinnerung:klar4a", "Erinnerung: Blumen gießen")
         vorgaenge.put(me, "fuerdich", "fuerdich:klar4b", "Rechnung Stadtwerke", zeile="84,20 €", frist="2099-12-31")
-        vorgaenge.put(me, "vorschlag", "vorschlag:klar4c", "Termin eintragen", zeile="Do 9:00")
+        # a proposal's key as vorgaenge builds it ("vorschlag:NAME:T"): "vorschlag:klar4c" alone broke sweep() for
+        # every later test of the part that called vorgaenge.due() (test_gemerkt, test_vorgaenge, V01.1.305)
+        vorgaenge.put(me, "vorschlag", "vorschlag:klar4c:0", "Termin eintragen", zeile="Do 9:00")
         if not any(d["name"] == "Klar4 Gerät" for d in profiles._load()["devices"]):
             profiles.add_device("Klar4 Gerät", me)
         cls.cid = chats.open_one(other, me)
@@ -302,6 +304,10 @@ class Lists(unittest.TestCase):
                     await pg.wait_for_selector("#pside #pdetail .pdet")
                     self.assertEqual(await pg.evaluate("JSON.stringify($('proflist').getBoundingClientRect())"), before)
                     self.assertEqual(await pg.evaluate("document.querySelectorAll('#proflist .ld-row.on').length"), 1)
+                    # the devices of the profiles shown (25 a page): with the profiles earlier tests of the part made,
+                    # "Listen" and its device stood on a later page and the list was empty (V01.1.305)
+                    await pg.evaluate("PL.q='Listen';PL.page=0;loadProf()")
+                    await pg.wait_for_selector("#devlist .ld-row")
                     await self.same_height(pg, "#devlist .ld-row", "Geräte")
                     self.assertLess(await pg.evaluate("document.querySelector('#pbox').getBoundingClientRect().top+scrollY"), 300)   # the list comes first
                     # Offen: a segment instead of pills, rows of one height, an empty group says so under its symbol

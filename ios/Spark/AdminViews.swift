@@ -122,7 +122,7 @@ struct AdminView: View {
                         // the second step proven once in this app binds its key (coadmin.prove_app_key)
                         Button("Mit Code bestätigen") { ask = CodeRequest { c in await prove(code: c) } }
                     }
-                    if let error { Text(error).foregroundStyle(.red) }
+                    if let error { Text(error).foregroundStyle(Theme.badText) }
                 } footer: {
                     Text(SparkAPI.way(AdminSession.whyText(s.why)))
                 }
@@ -201,7 +201,7 @@ struct StatusView: View {
             Label {
                 Text(verbatim: a["text"] as? String ?? "").lineLimit(2)
             } icon: {
-                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(a["level"] as? String == "bad" ? .red : .orange)
+                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(a["level"] as? String == "bad" ? Theme.bad : Theme.warn)
             }
         }
     }
@@ -213,11 +213,11 @@ struct StatusView: View {
             // one line with the count, folded by default and remembered on this device
             let bad = alerts.filter { $0["level"] as? String == "bad" }, rest = alerts.filter { $0["level"] as? String != "bad" }
             Section("Braucht dich") {
-                if alerts.isEmpty { Label("Alles in Ordnung", systemImage: "checkmark.circle").foregroundStyle(.green) }
+                if alerts.isEmpty { Label("Alles in Ordnung", systemImage: "checkmark.circle").foregroundStyle(Theme.ok) }
                 alertRows(bad)
                 if rest.count > 1 {
                     DisclosureGroup(isExpanded: $alertsOpen) { alertRows(rest) } label: {
-                        Label("\(rest.count) Hinweise", systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                        Label("\(rest.count) Hinweise", systemImage: "exclamationmark.triangle.fill").foregroundStyle(Theme.warn)
                     }
                 } else { alertRows(rest) }
             }
@@ -274,11 +274,11 @@ struct StatusView: View {
                     LabeledContent("Zustand") {
                         Text(rd["stoerung"] is [String: Any] ? String(localized: "Störung") : last.isEmpty ? String(localized: "noch kein Lauf")
                              : bad.isEmpty ? String(localized: "kommt durch") : String(localized: "ein Fehler"))
-                            .foregroundStyle(rd["stoerung"] is [String: Any] ? .red : bad.isEmpty ? .green : .orange)
+                            .foregroundStyle(rd["stoerung"] is [String: Any] ? Theme.bad : bad.isEmpty ? Theme.ok : Theme.warn)
                     }
                     ForEach([("tts", String(localized: "Sprechen")), ("asr", String(localized: "Hören")), ("llm", String(localized: "Sprachmodell"))], id: \.0) { k, name in
                         LabeledContent(name) {
-                            Text(verbatim: bad == k ? String(localized: "Fehler") : Self.ms(ms[k])).foregroundStyle(bad == k ? .red : .primary)
+                            Text(verbatim: bad == k ? String(localized: "Fehler") : Self.ms(ms[k])).foregroundStyle(bad == k ? Theme.bad : .primary)
                         }
                     }
                     LabeledContent("Ganzer Weg") { Text(verbatim: bad.isEmpty ? Self.ms(ms["ganz"]) : "–") }
@@ -291,19 +291,19 @@ struct StatusView: View {
                     LabeledContent("Gekoppelt") { Text(verbatim: Self.num(fz["gekoppelt"] ?? 0)) }
                     LabeledContent("Online") { Text(verbatim: Self.num(fz["online"] ?? 0)) }
                     LabeledContent("Offene Sitzungen") {
-                        Text(verbatim: Self.num(fz["sitzungen"] ?? 0)).foregroundStyle((fz["sitzungen"] as? Int ?? 0) > 0 ? .red : .primary)
+                        Text(verbatim: Self.num(fz["sitzungen"] ?? 0)).foregroundStyle((fz["sitzungen"] as? Int ?? 0) > 0 ? Theme.bad : .primary)
                     }
                     if (fz["dateien"] as? Int ?? 0) > 0 { LabeledContent("Davon Dateien") { Text(verbatim: Self.num(fz["dateien"] ?? 0)) } }
                     if (fz["uebertragungen"] as? Int ?? 0) > 0 { LabeledContent("Übertragungen") { Text(verbatim: Self.num(fz["uebertragungen"] ?? 0)) } }
                     if (fz["abbau"] as? Int ?? 0) > 0 { LabeledContent("Warten auf Abbau") { Text(verbatim: Self.num(fz["abbau"] ?? 0)) } }
-                    if (fz["wartet"] as? Int ?? 0) > 0 { LabeledContent("Warten auf Bestätigung") { Text(verbatim: Self.num(fz["wartet"] ?? 0)).foregroundStyle(.orange) } }
+                    if (fz["wartet"] as? Int ?? 0) > 0 { LabeledContent("Warten auf Bestätigung") { Text(verbatim: Self.num(fz["wartet"] ?? 0)).foregroundStyle(Theme.warnText) } }
                     if (fz["hostkey"] as? Int ?? 0) > 0 {
-                        LabeledContent("Host-Schlüssel falsch") { Text(verbatim: Self.num(fz["hostkey"] ?? 0)).foregroundStyle(.red) }
+                        LabeledContent("Host-Schlüssel falsch") { Text(verbatim: Self.num(fz["hostkey"] ?? 0)).foregroundStyle(Theme.badText) }
                     }
                     // per open session: kind, system, admin (names only with the panel's live_names), Zuhause or Internet, minutes
                     ForEach(Array((fz["offen"] as? [[String: Any]] ?? []).enumerated()), id: \.offset) { _, o in
                         LabeledContent {
-                            Text(verbatim: "\(o["admin"] as? String ?? "Admin") · \(o["herkunft"] as? String ?? "") · \(Self.num(o["min"] ?? 0)) min").foregroundStyle(.red)
+                            Text(verbatim: "\(o["admin"] as? String ?? "Admin") · \(o["herkunft"] as? String ?? "") · \(Self.num(o["min"] ?? 0)) min").foregroundStyle(Theme.badText)
                         } label: {
                             Text(verbatim: "\(o["art"] as? String ?? "Shell") · \(o["system"] as? String ?? "")")
                         }
@@ -334,13 +334,13 @@ struct StatusView: View {
                 LabeledContent { Text(verbatim: Self.num(g["answers"] ?? 0)) } label: { Label("Antworten", systemImage: "bubble.left") }
                 if g["first_sound"] is NSNumber {
                     LabeledContent {
-                        Text(verbatim: Self.num(g["first_sound"]) + " s").foregroundStyle(g["slower"] as? Bool == true ? .orange : .primary)
+                        Text(verbatim: Self.num(g["first_sound"]) + " s").foregroundStyle(g["slower"] as? Bool == true ? Theme.warn : .primary)
                     } label: { Label("Erster Ton", systemImage: "timer") }
                 }
                 if let sp = g["speakers"] as? [String: Any] {
                     let on = (sp["online"] as? NSNumber)?.intValue ?? 0, known = (sp["known"] as? NSNumber)?.intValue ?? 0
                     LabeledContent {
-                        Text(verbatim: "\(on) / \(known)").foregroundStyle(on < known ? .orange : .green)
+                        Text(verbatim: "\(on) / \(known)").foregroundStyle(on < known ? Theme.warn : Theme.ok)
                     } label: { Label("Lautsprecher online", systemImage: "hifispeaker") }
                 }
                 if let held = ((g["background"] as? [String: Any])?["held"] as? NSNumber)?.intValue, held > 0 {
@@ -352,7 +352,7 @@ struct StatusView: View {
                     LabeledContent(name) { Text(verbatim: state).foregroundStyle(Self.color(state)) }
                 }
             }
-            if let e = miss.text { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = miss.text { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle("Überblick")
         .refreshable { await load() }
@@ -453,7 +453,7 @@ struct StatusView: View {
     }
 
     static func stufeFarbe(_ c: [String: Any]) -> Color {
-        ["ok": .green, "warn": .orange, "bad": .red][c["stufe"] as? String ?? ""] ?? .primary
+        ["ok": Theme.ok, "warn": Theme.warn, "bad": Theme.bad][c["stufe"] as? String ?? ""] ?? .primary
     }
 
     /// "9 / 9 bereit": the computer's services that run or rest ready for a job ("bereit", rechnerblick.ABRUF)
@@ -464,7 +464,7 @@ struct StatusView: View {
     }
 
     static func color(_ state: String) -> Color {
-        ["active": .green, "bereit": .green, "activating": .orange, "failed": .red, "inactive": .secondary][state] ?? .primary
+        ["active": Theme.ok, "bereit": Theme.ok, "activating": Theme.warn, "failed": Theme.bad, "inactive": .secondary][state] ?? .primary
     }
 
     /// (name, state) of the speech services, their engines and the language model units
@@ -509,7 +509,7 @@ struct ModelsView: View {
         let eigene = an && w["eigene"] as? Bool == true
         let arten = (d["arten"] as? [[String: Any]] ?? []).filter { !($0["modelle"] as? [[String: Any]] ?? []).isEmpty }
         List {
-            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             if let st = w["start"] as? [String: Any] { startSection(st) }
             if misst {
                 VStack(alignment: .leading, spacing: 6) {
@@ -595,7 +595,7 @@ struct ModelsView: View {
                             } label: {
                                 VStack(alignment: .leading) {
                                     Text(verbatim: m["name"] as? String ?? "")
-                                    if m["aktiv"] as? Bool == true { Text("läuft").font(.caption).foregroundStyle(.green) }
+                                    if m["aktiv"] as? Bool == true { Text("läuft").font(.caption).foregroundStyle(Theme.okText) }
                                     if let t = Self.mess(m["messung"]) { Text(verbatim: t).font(.caption).foregroundStyle(.secondary) }
                                     if !laeuft && m["messbar"] as? Bool == true {
                                         Button("Messen") {
@@ -664,7 +664,7 @@ struct ModelsView: View {
                 let zustand = z["zustand"] as? String ?? "offen"
                 HStack {
                     Image(systemName: zustand == "ok" ? "checkmark.circle.fill" : zustand == "jetzt" ? "circle.dotted" : "circle")
-                        .foregroundStyle(zustand == "ok" ? Color.green : zustand == "jetzt" ? Color.accentColor : Color.secondary)
+                        .foregroundStyle(zustand == "ok" ? Theme.ok : zustand == "jetzt" ? Color.accentColor : Color.secondary)
                     Text(verbatim: z["name"] as? String ?? "")
                     Spacer()
                     Text(verbatim: z["zeit"] as? String ?? "").font(.caption).foregroundStyle(.secondary)
@@ -767,11 +767,11 @@ struct ModelsView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(verbatim: m["name"] as? String ?? "")
                         Text(verbatim: Self.kurz(m)).font(.caption).foregroundStyle(.secondary)
-                        if m["gewerblich"] as? Bool == false { Text("nur privat").font(.caption).foregroundStyle(.orange) }
+                        if m["gewerblich"] as? Bool == false { Text("nur privat").font(.caption).foregroundStyle(Theme.warnText) }
                     }
                     Spacer()
                     if m["aktiv"] as? Bool == true {
-                        Text("läuft").font(.caption).foregroundStyle(.green)
+                        Text("läuft").font(.caption).foregroundStyle(Theme.okText)
                     } else if m["waehlbar"] as? Bool == true {
                         Button("Wechseln") { ask = ["art": art, "id": m["id"] as? String ?? "", "name": m["name"] as? String ?? ""] }
                             .buttonStyle(.bordered).font(.caption)
@@ -838,7 +838,7 @@ struct ModelsView: View {
         let rgb: [String: (Double, Double, Double)] = ["llm": (0.36, 0.42, 0.94), "sehen": (0.66, 0.33, 0.97), "asr": (0.06, 0.73, 0.51),
                                                        "tts": (0.02, 0.71, 0.83), "bild": (0.93, 0.28, 0.6), "musik": (0.96, 0.62, 0.04),
                                                        "klein": (0.52, 0.8, 0.09)]
-        guard let c = rgb[art] else { return .gray }
+        guard let c = rgb[art] else { return Theme.faint }
         return Color(red: c.0, green: c.1, blue: c.2)
     }
 
@@ -852,7 +852,7 @@ struct ModelsView: View {
         let geteilt = platz.count > 1
         let farben = platz.map { farbe($0["art"] as? String ?? "").opacity(0.4) }
         var seg = teile.filter { $0["betrieb"] as? String == "resident" }.map(teil)
-            + [(AnyShapeStyle(Color.gray), num(b["system"])), (AnyShapeStyle(Color.gray.opacity(0.5)), num(b["reserve"]))]
+            + [(AnyShapeStyle(Theme.faint), num(b["system"])), (AnyShapeStyle(Theme.faint.opacity(0.5)), num(b["reserve"]))]
             + teile.filter { $0["betrieb"] as? String != "resident" && !(geteilt && einPlatz.contains($0["art"] as? String ?? "")) }.map(teil)
         if geteilt { seg.append((AnyShapeStyle(LinearGradient(colors: farben, startPoint: .leading, endPoint: .trailing)), platz.map { num($0["gib"]) }.max() ?? 0)) }
         let skala = max(ges, seg.reduce(0) { $0 + $1.1 })
@@ -904,20 +904,20 @@ struct PraxisView: View {
 
     var body: some View {
         List {
-            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             let all = d["punkte"] as? [[String: Any]] ?? []
             let open = all.filter { ($0["alt"] as? Bool) != true && (($0["stand"] as? String ?? "").isEmpty || $0["stand"] as? String == "problem") }
             Section {
                 ForEach(Array(open.enumerated()), id: \.offset) { _, p in
                     VStack(alignment: .leading, spacing: 6) {
                         Text(verbatim: p["titel"] as? String ?? "").font(.headline)
-                        if p["stand"] as? String == "problem" { Text("Problem").font(.caption).foregroundStyle(.red) }
+                        if p["stand"] as? String == "problem" { Text("Problem").font(.caption).foregroundStyle(Theme.badText) }
                         Text(SparkAPI.way(p["text"] as? String ?? "")).font(.subheadline)
                         Text(verbatim: (p["id"] as? String ?? "") + " · V01.0." + String(format: "%03d", (p["v"] as? Int) ?? 0)).font(.caption).foregroundStyle(.secondary)
                         HStack {
-                            Button("Klappt") { Task { await mark(p, "ok") } }.buttonStyle(.bordered).tint(.green)
+                            Button("Klappt") { Task { await mark(p, "ok") } }.buttonStyle(.bordered).tint(Theme.ok)
                             if p["stand"] as? String != "problem" {
-                                Button("Problem") { Task { await mark(p, "problem") } }.buttonStyle(.bordered).tint(.red)
+                                Button("Problem") { Task { await mark(p, "problem") } }.buttonStyle(.bordered).tint(Theme.bad)
                                 Button("Später") { Task { await mark(p, "spaeter") } }.buttonStyle(.bordered)
                             }
                         }
@@ -953,7 +953,7 @@ struct WerkstattView: View {
 
     var body: some View {
         List {
-            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             if d["an"] as? Bool == false {
                 Text(SparkAPI.way(String(localized: "Die Werkstatt ist aus. Einschalten unter Funktionen → Werkstatt."))).foregroundStyle(.secondary)
             } else {
@@ -979,7 +979,7 @@ struct WerkstattView: View {
                     ForEach(Array(runs.enumerated()), id: \.offset) { _, p in
                         NavigationLink(destination: AngriffsprobeView(p: p, tarnungen: probe["tarnungen"] as? [String: Any] ?? [:], changed: { await load() })) {
                             LabeledContent {
-                                Text(verbatim: "\(Self.num(p["gehorcht"])) / \(Self.num(p["von"]))").foregroundStyle(Self.num(p["gehorcht"]) > 0 ? .orange : .secondary)
+                                Text(verbatim: "\(Self.num(p["gehorcht"])) / \(Self.num(p["von"]))").foregroundStyle(Self.num(p["gehorcht"]) > 0 ? Theme.warn : .secondary)
                             } label: {
                                 VStack(alignment: .leading) {
                                     Text("Angriffsprobe")
@@ -1051,7 +1051,7 @@ struct WerkstattView: View {
         return art == "reparatur" ? String(localized: "Vorschlag") : String(localized: "Antwort")
     }
     static func color(_ a: [String: Any]) -> Color {
-        failed(a) || num((a["tests"] as? [String: Any])?["rot"]) > 0 ? .red : .secondary
+        failed(a) || num((a["tests"] as? [String: Any])?["rot"]) > 0 ? Theme.bad : .secondary
     }
 }
 
@@ -1068,7 +1068,7 @@ struct WerkstattEinsView: View {
 
     var body: some View {
         List {
-            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             let ts = a["tests"] as? [String: Any] ?? [:]
             let rot = WerkstattView.num(ts["rot"])
             let namen = ts["rot_namen"] as? [String] ?? []
@@ -1077,8 +1077,8 @@ struct WerkstattEinsView: View {
                 Text(verbatim: WerkstattView.art(a["art"], arten) + " · " + WerkstattView.when(a["zeit"])).font(.headline)
                 if let v = a["version"] as? String, !v.isEmpty { LabeledContent("Version") { Text(verbatim: v) } }
                 if art == "tests" || art == "nachtest" {
-                    LabeledContent("grün") { Text(verbatim: "\(WerkstattView.num(ts["gruen"]))").foregroundStyle(.green) }
-                    LabeledContent("rot") { Text(verbatim: "\(rot)").foregroundStyle(rot > 0 ? .red : .secondary) }
+                    LabeledContent("grün") { Text(verbatim: "\(WerkstattView.num(ts["gruen"]))").foregroundStyle(Theme.okText) }
+                    LabeledContent("rot") { Text(verbatim: "\(rot)").foregroundStyle(rot > 0 ? Theme.bad : .secondary) }
                     LabeledContent("wackelig") { Text(verbatim: "\(WerkstattView.num(ts["wackelig"]))") }
                     if WerkstattView.num(ts["nicht_gelaufen"]) > 0 {
                         LabeledContent("nicht gelaufen") { Text(verbatim: "\(WerkstattView.num(ts["nicht_gelaufen"]))").foregroundStyle(.secondary) }
@@ -1142,7 +1142,7 @@ struct AngriffsprobeView: View {
 
     var body: some View {
         List {
-            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             Section {
                 Text(verbatim: WerkstattView.when(p["zeit"])).font(.headline)
                 if let m = p["modell"] as? String, !m.isEmpty { LabeledContent("Sprachmodell") { Text(verbatim: m) } }
@@ -1185,7 +1185,7 @@ struct UsageView: View {
 
     var body: some View {
         List {
-            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             if d["on"] as? Bool == false {
                 Text(SparkAPI.way(String(localized: "Der Verbrauchszähler ist aus. Einschalten unter Funktionen → Verbrauchszähler."))).foregroundStyle(.secondary)
             } else {
@@ -1304,7 +1304,7 @@ struct QuotaEditView: View {
 
     var body: some View {
         Form {
-            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             Section {
                 ForEach(zeiten, id: \.self) { z in
                     LabeledContent {
@@ -1369,13 +1369,13 @@ struct WartungView: View {
 
     var body: some View {
         Form {
-            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             if d["on"] as? Bool == false {
                 Section { Text(SparkAPI.way(String(localized: "Die Wartungspause ist aus. Einschalten unter Funktionen → Wartungspause."))) }
             } else if d["paused"] as? Bool == true {
                 Section {
                     Label { Text(verbatim: names(d["parts"] as? [String] ?? [])) } icon: {
-                        Image(systemName: "pause.circle.fill").foregroundStyle(d["overdue"] as? Bool == true ? .orange : .blue)
+                        Image(systemName: "pause.circle.fill").foregroundStyle(d["overdue"] as? Bool == true ? Theme.warn : Theme.accent)
                     }
                     if d["overdue"] as? Bool == true {
                         Text("Zeit um, wartet auf Antwort")
@@ -1481,7 +1481,7 @@ struct LogsView: View {
                 } label: { Label(copied ? LocalizedStringKey("Kopiert") : LocalizedStringKey("Kopieren für Thread"), systemImage: "doc.on.doc") }
                 ShareLink(item: copyText()) { Label("Teilen", systemImage: "square.and.arrow.up") }
             }
-            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             if let l = last {
                 Section("Letzter Fehler") {
                     Text(verbatim: (l["t"] as? String ?? "") + " · " + (l["msg"] as? String ?? "")).font(.footnote)
@@ -1498,7 +1498,7 @@ struct LogsView: View {
                             .font(.caption2).foregroundStyle(.secondary)
                         // log lines are plain text, never links or commands
                         Text(verbatim: r["msg"] as? String ?? "").font(.caption.monospaced())
-                            .foregroundStyle(r["level"] as? String == "err" ? .red : r["level"] as? String == "warn" ? .orange : .primary)
+                            .foregroundStyle(r["level"] as? String == "err" ? Theme.bad : r["level"] as? String == "warn" ? Theme.warn : .primary)
                     }
                 }
             } header: { Text(verbatim: head) }
@@ -1549,7 +1549,7 @@ struct ChecksView: View {
 
     var body: some View {
         List {
-            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             Section {
                 let steps = live["steps"] as? [[String: Any]] ?? []
                 ForEach(Array(steps.enumerated()), id: \.offset) { _, s in
@@ -1558,7 +1558,7 @@ struct ChecksView: View {
                     } label: {
                         Label((s["name"] as? String ?? "").uppercased(),
                               systemImage: s["ok"] as? Bool == true ? "checkmark.circle.fill" : "xmark.circle.fill")
-                            .foregroundStyle(s["ok"] as? Bool == true ? .green : .red)
+                            .foregroundStyle(s["ok"] as? Bool == true ? Theme.ok : Theme.bad)
                     }
                 }
                 Button("Jetzt prüfen") { Task { await run("api/livecheck", timeout: 200) } }
@@ -1577,11 +1577,11 @@ struct ChecksView: View {
                     if let t = (r["verdict"] as? [String: Any])?["title"] as? [String: Any] {
                         Text(verbatim: (Locale.current.language.languageCode?.identifier == "de" ? t["de"] : t["en"]) as? String ?? "")
                     }
-                    if let e = r["error"] as? String { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+                    if let e = r["error"] as? String { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
                 }
                 Button("Vorrang prüfen") { Task { await run("api/vorrang") } }.disabled(vorrang["running"] as? Bool == true)
             } header: { Text("Vorrang für Sprache") } footer: { Text("Dauert etwa eine Minute.") }
-            if let e = miss.text { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = miss.text { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle("Prüfen")
         .refreshable { await load() }
@@ -1640,7 +1640,7 @@ struct FeaturesView: View {
 
     var body: some View {
         Form {
-            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             if !grund.off.isEmpty || grund.ask { grundSection }
             ForEach(groups) { g in
                 let keys = g.keys.filter { on[$0] != nil }
@@ -1663,7 +1663,7 @@ struct FeaturesView: View {
             if grund.basis.contains("chat." + key) {
                 VStack(alignment: .leading) {
                     Text(verbatim: names[key] ?? key)
-                    Text("Empfohlen").font(.caption).foregroundStyle(.green)
+                    Text("Empfohlen").font(.caption).foregroundStyle(Theme.okText)
                 }
             } else {
                 Text(verbatim: names[key] ?? key)
@@ -1756,7 +1756,7 @@ struct AdminProfilesView: View {
 
     var body: some View {
         Form {
-            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             if let n = note { Text(verbatim: n).foregroundStyle(.secondary) }
             Section {
                 ForEach(users) { u in
@@ -1829,7 +1829,7 @@ struct AdminProfileView: View {
 
     var body: some View {
         Form {
-            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             if let n = note { Text(verbatim: n).foregroundStyle(.secondary) }
             if !role.isEmpty {
                 LabeledContent("Admin-Rechte") { Text(role == "owner" ? String(localized: "Haupt-Admin") : role == "manager" ? String(localized: "Verwalter") : String(localized: "Mit-Admin")) }
@@ -1963,7 +1963,7 @@ struct BackupsView: View {
 
     var body: some View {
         Form {
-            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             Section {
                 Button { Task { await create() } } label: { if busy { ProgressView() } else { Text("Jetzt sichern") } }.disabled(busy)
             } footer: { Text("Zurückspielen und Herunterladen gehen im Browser.") }
@@ -2062,7 +2062,7 @@ struct FernzugangView: View {
 
     var body: some View {
         List {
-            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             if let n = note { Text(verbatim: n).foregroundStyle(.secondary) }
             if !loaded { LadeZeilen(rows: 3) }
             if loaded && d["on"] as? Bool == false {
@@ -2070,7 +2070,7 @@ struct FernzugangView: View {
             } else if loaded && d["gesperrt"] as? Bool == true {
                 // locked: nothing about the systems, only „Entsperren“ (and „Alle trennen“, which only takes away)
                 if d["notaus"] as? Bool == true {
-                    Text("Notaus: der Fernzugang ist gesperrt, bis der Notaus aufgehoben ist.").foregroundStyle(.red)
+                    Text("Notaus: der Fernzugang ist gesperrt, bis der Notaus aufgehoben ist.").foregroundStyle(Theme.badText)
                 }
                 Section {
                     Label("Fernzugang gesperrt", systemImage: "lock.fill")
@@ -2090,13 +2090,13 @@ struct FernzugangView: View {
                     }
                 }
                 if d["notaus"] as? Bool == true {
-                    Text("Notaus: der Fernzugang ist gesperrt, bis der Notaus aufgehoben ist.").foregroundStyle(.red)
+                    Text("Notaus: der Fernzugang ist gesperrt, bis der Notaus aufgehoben ist.").foregroundStyle(Theme.badText)
                 }
                 let c = d["counts"] as? [String: Any] ?? [:]
                 Section {
                     LabeledContent("Systeme verbunden") { Text(verbatim: "\(Self.num(c["online"])) / \(Self.num(c["gekoppelt"]))") }
                     LabeledContent("Offene Sitzungen") {
-                        Text(verbatim: "\(Self.num(c["sitzungen"])) / \(Self.num(d["max"]))").foregroundStyle(Self.num(c["sitzungen"]) > 0 ? .red : .primary)
+                        Text(verbatim: "\(Self.num(c["sitzungen"])) / \(Self.num(d["max"]))").foregroundStyle(Self.num(c["sitzungen"]) > 0 ? Theme.bad : .primary)
                     }
                     LabeledContent("Leerlauf trennt") { Text(verbatim: "\(Self.num(d["leerlauf"])) min") }
                 } footer: {
@@ -2133,19 +2133,19 @@ struct FernzugangView: View {
                         if !g.fp.isEmpty {
                             LabeledContent("Host-Schlüssel") { Text(verbatim: g.fp).font(.caption).lineLimit(1).truncationMode(.middle) }
                         }
-                        if g.sitzungen > 0 { LabeledContent("Offene Sitzungen") { Text(verbatim: "\(g.sitzungen)").foregroundStyle(.red) } }
+                        if g.sitzungen > 0 { LabeledContent("Offene Sitzungen") { Text(verbatim: "\(g.sitzungen)").foregroundStyle(Theme.badText) } }
                         if g.hostkeyFalsch {
-                            Text("Der Server zeigt einen anderen Host-Schlüssel als bei der Kopplung: keine Verbindung. War das eine Neuinstallation, „Entfernen“ und neu koppeln.").foregroundStyle(.red)
+                            Text("Der Server zeigt einen anderen Host-Schlüssel als bei der Kopplung: keine Verbindung. War das eine Neuinstallation, „Entfernen“ und neu koppeln.").foregroundStyle(Theme.badText)
                         }
                         if g.wartet && g.stand != "abbau" {
                             Text("Neu über die Windows-Datei eingerichtet. Nur bestätigen, wenn du das gerade selbst eingerichtet hast und der Host-Schlüssel zu dem passt, den der PC gezeigt hat. Bis dahin geht keine Sitzung.")
-                                .foregroundStyle(.orange)
+                                .foregroundStyle(Theme.warn)
                             Button("Bestätigen (Code/Passkey)") { ask = CodeRequest { c in await confirm(g, code: c) } }
                         }
                         if g.stand != "abbau" {
                             if d["notizen"] as? Bool == true {
                                 NavigationLink { FernNotizView(server: g) } label: {
-                                    LabeledContent("Notiz") { Text(g.notiz ? "📝" : "–") }
+                                    LabeledContent("Notiz") { Image(systemName: g.notiz ? "note.text" : "minus").foregroundStyle(.secondary) }
                                 }
                             }
                             if d["als_an"] as? Bool == true {   // Dateien als anderer Benutzer (fernals.py): the server's list, the switch per system
@@ -2241,7 +2241,7 @@ struct FernzugangView: View {
         g.stand == "abbau" ? "wird abgebaut" : g.hostkeyFalsch ? "Host-Schlüssel falsch" : g.wartet ? "wartet auf Bestätigung" : !g.erlaubt ? "gesperrt" : g.online ? "online" : "offline"
     }
     static func color(_ g: FernServer) -> Color {
-        g.hostkeyFalsch ? .red : g.stand == "abbau" || !g.erlaubt || g.wartet ? .orange : g.online ? .green : .secondary
+        g.hostkeyFalsch ? Theme.bad : g.stand == "abbau" || !g.erlaubt || g.wartet ? Theme.warn : g.online ? Theme.ok : .secondary
     }
 
     private func load() async {
@@ -2368,7 +2368,7 @@ struct FernOrdnerView: View {
 
     var body: some View {
         List {
-            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             Section {
                 ForEach(folders) { o in
                     Button {
@@ -2472,7 +2472,7 @@ struct FernNotizView: View {
 
     var body: some View {
         Form {
-            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             if let n = note { Text(verbatim: n).foregroundStyle(.secondary) }
             if !loaded { LadeZeilen(rows: 3) } else {
                 Section {
@@ -2486,7 +2486,7 @@ struct FernNotizView: View {
                 }
                 ForEach(warn, id: \.line) { w in
                     Section {
-                        Text("Zeile \(w.line) sieht aus wie ein Passwort, ein Schlüssel oder ein Token. Das gehört in den Tresor, nicht in die Notiz.").foregroundStyle(.orange)
+                        Text("Zeile \(w.line) sieht aus wie ein Passwort, ein Schlüssel oder ein Token. Das gehört in den Tresor, nicht in die Notiz.").foregroundStyle(Theme.warnText)
                         Button("Zeile entfernen") { removeLine(w.line) }
                     }
                 }

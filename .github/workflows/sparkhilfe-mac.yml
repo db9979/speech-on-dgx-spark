@@ -1,0 +1,210 @@
+name: SparkHilfe Mac
+
+# Builds SparkHilfe for the Mac (tools/sparkhilfe/mac, Spontanhilfe S2c: the small program a person opens once to let
+# the admin control her Mac) as a universal app (arm64 + x86_64, macOS 13+) with the Xcode command line tools only,
+# with the core shared with the Begleiter (tools/begleiter/mac/Sources/Sicht.swift), and runs the self-test of its
+# rules (names, inputs, texts, no Origin header). Only on main the second job signs it with the Developer ID (hardened
+# runtime), notarizes it with notarytool, staples the ticket, writes sparkhilfe.json (version, name, size, SHA-256),
+# signs that (Ed25519, app/panel/signatur.py, once UPDATE_SIGNING_KEY exists) and publishes everything in the release
+# "sparkhilfe-mac" (replaced in place). Without the secrets MAC_DEVID_P12, MAC_DEVID_P12_PASSWORD, ASC_KEY_ID,
+# ASC_ISSUER_ID and ASC_KEY the job stops before anything is published: no unsigned Mac program goes out. The Spark
+# fetches it from there (spontansteuern.fetch: GitHub's download addresses only, signature, size, SHA-256 and the
+# ticket inside checked) and packs it per help with the key in the app's name.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, claude/project-thread-34t0d8]   # TEMP probe
+    paths:
+      - tools/sparkhilfe/mac/**
+      - tools/begleiter/mac/Sources/Sicht.swift
+      - tools/begleiter/mac/Sources/Theme.swift
+      - .github/workflows/sparkhilfe-mac.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sparkhilfe-mac
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - name: Self-test of the program's rules
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          tools/sparkhilfe/mac/build.sh pruefung
+          tools/sparkhilfe/mac/build-pruefung/pruefung
+          # the connection as the program opens it: no Origin, no Cookie (the panel refuses any Origin)
+          port=47811
+          heads="$RUNNER_TEMP/kopf.txt"
+          python3 -I tools/sparkhilfe/mac/Pruefung/kopf.py "$port" "$heads" &
+          listener=$!
+          for _ in $(seq 1 50); do nc -z 127.0.0.1 "$port" 2>/dev/null && break; sleep 0.2; done
+          tools/sparkhilfe/mac/build-pruefung/pruefung kopf "ws://127.0.0.1:$port/api/hilfe/steuern"
+          wait "$listener"
+          cat "$heads"; echo
+          grep -qi '^upgrade: websocket' "$heads" || { echo "::error::no WebSocket request seen"; exit 1; }
+          if grep -qiE '^(origin|cookie):' "$heads"; then echo "::error::SparkHilfe sends Origin or Cookie"; exit 1; fi
+
+      - name: TEMP the Begleiter still builds with the shared core
+        run: tools/begleiter/mac/build.sh
+
+      - name: Build (universal, ad-hoc signed)
+        run: |
+          set -euo pipefail
+          tools/sparkhilfe/mac/build.sh
+          app=tools/sparkhilfe/mac/build/SparkHilfe.app
+          archs=$(lipo -archs "$app/Contents/MacOS/SparkHilfe")
+          echo "$archs"
+          [[ " $archs " == *" arm64 "* && " $archs " == *" x86_64 "* ]] || { echo "::error::not universal"; exit 1; }
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$app/Contents/Info.plist"
+          mkdir -p dist
+          # modes stay inside the zip (the artifact itself would lose them)
+          ditto -c -k --norsrc --keepParent "$app" dist/SparkHilfe-ungeprueft.zip
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: SparkHilfe-mac-build
+          path: dist/SparkHilfe-ungeprueft.zip
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    environment: release   # the Developer ID, the notarization key and releases only from main
+    permissions:
+      contents: write   # only for the release upload
+    runs-on: macos-15
+    timeout-minutes: 60
+    env:
+      HAS_DEVID: ${{ secrets.MAC_DEVID_P12 != '' && secrets.MAC_DEVID_P12_PASSWORD != '' && secrets.ASC_KEY_ID != '' && secrets.ASC_ISSUER_ID != '' && secrets.ASC_KEY != '' }}
+      HAS_UPDKEY: ${{ secrets.UPDATE_SIGNING_KEY != '' }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /app/VERSION
+            /ios/ci/
+            /tools/
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: SparkHilfe-mac-build
+          path: build
+
+      # REQUIRED: without Developer ID and notarization nothing is published (macOS 15 opens no unnotarized app)
+      - name: No Developer ID, no Mac program
+        if: env.HAS_DEVID != 'true'
+        run: |
+          echo "::error::MAC_DEVID_P12, MAC_DEVID_P12_PASSWORD, ASC_KEY_ID, ASC_ISSUER_ID or ASC_KEY missing: SparkHilfe for the Mac is not published"
+          exit 1
+
+      - name: Developer ID signing, notarization and ticket
+        env:
+          MAC_DEVID_P12: ${{ secrets.MAC_DEVID_P12 }}
+          MAC_DEVID_P12_PASSWORD: ${{ secrets.MAC_DEVID_P12_PASSWORD }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY: ${{ secrets.ASC_KEY }}
+        run: |
+          set -euo pipefail
+          umask 077
+          ditto -x -k build/SparkHilfe-ungeprueft.zip build
+          app=build/SparkHilfe.app
+          kc="$RUNNER_TEMP/devid.keychain-db"
+          p12="$RUNNER_TEMP/devid.p12"
+          p8="$RUNNER_TEMP/AuthKey.p8"
+          trap 'security delete-keychain "$kc" >/dev/null 2>&1 || true; rm -f "$p12" "$p8"' EXIT
+          printf '%s' "$MAC_DEVID_P12" | base64 --decode > "$p12"
+          pw=$(openssl rand -hex 16)
+          security create-keychain -p "$pw" "$kc"
+          security set-keychain-settings -lut 3600 "$kc"
+          security unlock-keychain -p "$pw" "$kc"
+          security import "$p12" -k "$kc" -P "$MAC_DEVID_P12_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$pw" "$kc" >/dev/null
+          security list-keychains -d user -s "$kc" $(security list-keychains -d user | tr -d '"')
+          identity=$(security find-identity -v -p codesigning "$kc" | sed -n 's/.*"\(Developer ID Application: [^"]*\)".*/\1/p' | head -n 1)
+          if [ -z "$identity" ]; then echo "::error::No 'Developer ID Application' identity in MAC_DEVID_P12"; exit 1; fi
+          # hardened runtime, no entitlements: screen pictures and inputs need only the person's two permissions
+          codesign --force --timestamp --options runtime --sign "$identity" "$app"
+          codesign --verify --strict --verbose=2 "$app"
+          python3 -I ios/ci/asc_key.py pem "$p8"
+          ditto -c -k --norsrc --keepParent "$app" "$RUNNER_TEMP/notarize.zip"
+          xcrun notarytool submit "$RUNNER_TEMP/notarize.zip" \
+            --key "$p8" --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER_ID" --wait --timeout 45m
+          xcrun stapler staple "$app"
+          xcrun stapler validate "$app"
+          spctl --assess --type execute --verbose "$app"
+          test -f "$app/Contents/CodeResources" || { echo "::error::no stapled ticket in the app"; exit 1; }
+
+      - name: Zip and sparkhilfe.json
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          ditto -c -k --norsrc --keepParent build/SparkHilfe.app dist/SparkHilfe-mac.zip
+          # the same checks the Spark makes before it keeps the zip (spontansteuern.mac_teile), then the manifest
+          python3 -I - <<'PY'
+          import hashlib, json, os, stat, zipfile
+          f = "dist/SparkHilfe-mac.zip"
+          with zipfile.ZipFile(f) as z:
+              names = set()
+              for i in z.infolist():
+                  assert i.filename.startswith("SparkHilfe.app/") and ".." not in i.filename.split("/"), i.filename
+                  assert not stat.S_ISLNK(i.external_attr >> 16), i.filename
+                  names.add(i.filename)
+              for need in ("Contents/MacOS/SparkHilfe", "Contents/Info.plist", "Contents/_CodeSignature/CodeResources",
+                           "Contents/CodeResources"):
+                  assert "SparkHilfe.app/" + need in names, need
+          raw = open("app/VERSION").read().strip().lstrip("V")
+          version = ".".join(str(int(x)) for x in raw.split("."))
+          files = {"mac": {"name": os.path.basename(f), "size": os.path.getsize(f),
+                           "sha256": hashlib.sha256(open(f, "rb").read()).hexdigest()}}
+          json.dump({"version": version, "files": files}, open("dist/sparkhilfe.json", "w"), indent=1)
+          PY
+          cat dist/sparkhilfe.json
+          ls -l dist
+
+      # OPTIONAL: sparkhilfe.json.sig (Ed25519, app/panel/signatur.py); skipped until the secret exists.
+      # macOS' own openssl is LibreSSL: the runner's Homebrew OpenSSL 3 signs.
+      - name: OPTIONAL sign sparkhilfe.json
+        if: env.HAS_UPDKEY == 'true'
+        env:
+          UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
+        run: OPENSSL="$(brew --prefix openssl@3)/bin/openssl" tools/sign-manifest.sh dist/sparkhilfe.json
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: SparkHilfe-mac
+          path: |
+            dist/SparkHilfe-mac.zip
+            dist/sparkhilfe.json
+            dist/sparkhilfe.json.sig
+          if-no-files-found: error
+
+      - name: Publish release sparkhilfe-mac
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          tag=sparkhilfe-mac
+          files=(dist/SparkHilfe-mac.zip dist/sparkhilfe.json)
+          if [ -f dist/sparkhilfe.json.sig ]; then files+=(dist/sparkhilfe.json.sig); fi
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "${files[@]}" --clobber
+          else
+            notes='SparkHilfe für den Mac (macOS 13 oder neuer, Apple-Chip und Intel): das kleine Programm der Spontanhilfe. Die Person lädt es auf der Hilfe-Seite ihres Helfers, öffnet es einmal, gibt die Freigaben Bildschirmaufnahme und Bedienungshilfen und erlaubt dort selbst, ob jemand ihren Mac steuern darf. Keine Installation; Beenden schließt alles. Mit Developer ID signiert und von Apple notarisiert.
+
+          Nicht zum direkten Herunterladen gedacht: ohne Einmal-Schlüssel im Namen der App verbindet es sich nirgends hin. Der Spark holt diese Dateien selbst, prüft SHA-256 (und die Signatur, sobald es einen Schlüssel gibt) und packt das Programm je Hilfe neu.'
+            gh release create "$tag" "${files[@]}" --title 'SparkHilfe für den Mac' --notes "$notes" --target "$GITHUB_SHA"
+          fi

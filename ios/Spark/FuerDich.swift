@@ -167,8 +167,8 @@ struct FuerDichView: View {
                     }
                 }
             }
-            if !m.errors.isEmpty { Text("Postfach nicht lesbar: \(m.errors.joined(separator: ", "))").foregroundStyle(.red) }
-            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if !m.errors.isEmpty { Text("Postfach nicht lesbar: \(m.errors.joined(separator: ", "))").foregroundStyle(Theme.badText) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle("Für dich")
         .navigationBarTitleDisplayMode(.inline)
@@ -208,7 +208,7 @@ struct FuerDichView: View {
 
     private func row(_ x: FuerItem) -> some View {
         HStack(alignment: .top, spacing: 12) {
-            Image(systemName: x.icon).foregroundStyle(x.urgent ? AnyShapeStyle(Color.orange) : AnyShapeStyle(.tint)).frame(width: 24)
+            Image(systemName: x.icon).foregroundStyle(x.urgent ? AnyShapeStyle(Theme.warn) : AnyShapeStyle(.tint)).frame(width: 24)
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: x.title).font(.headline)
                 if !x.line.isEmpty { Text(verbatim: x.line).font(.subheadline).foregroundStyle(.secondary) }
@@ -235,11 +235,11 @@ struct FuerDichView: View {
             }
         }
         .swipeActions(edge: .trailing) {
-            Button { Task { await m.mark(x, "done") } } label: { Label("Erledigt", systemImage: "checkmark") }.tint(.green)
+            Button { Task { await m.mark(x, "done") } } label: { Label("Erledigt", systemImage: "checkmark") }.tint(Theme.ok)
             Button { Task { await m.mark(x, "no") } } label: {
                 x.kind == "verdacht" ? Label("Ist echt", systemImage: "hand.thumbsup") : Label("Nicht interessant", systemImage: "xmark")
             }
-            .tint(.gray)
+            .tint(Theme.faint)
         }
     }
 }

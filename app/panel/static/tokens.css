@@ -26,6 +26,15 @@
   --shadow-pop:0 0 0 .5px rgba(255,255,255,.1),0 8px 28px rgba(0,0,0,.5);--visor:#070912;color-scheme:dark;--okt:#32d74b;--warnt:#ffb340;--badt:#ff6961;--acct:#4da3ff}
 :root[data-theme=light]{color-scheme:light}
 
+/* Spieltisch (Dungeon-Master, Redesign Stufe 7): der eine eigene Ton, warm und ruhig, mit dem Akzent Gold. Beide Sätze
+   stehen hier, weil der Tisch hell oder dunkel unabhängig vom Panel sein kann (Knopf am Tisch, .dm-hell); app.css liest sie
+   als --t-* im Block .dm.dm-tisch. Die Welt einer Runde färbt nur den Akzent (welten[].farben gold). -h hell, -d dunkel. */
+:root{--tisch-bg-h:#f7f3ec;--tisch-card-h:#fffdf8;--tisch-line-h:#e4dccd;--tisch-fg-h:#2b2620;--tisch-mut-h:#6e665a;--tisch-acc-h:#9a6b1f;
+  --tisch-field-h:#fff;--tisch-ok-h:#1f7a35;--tisch-bad-h:#b0352b;
+  --tisch-bg-d:#141312;--tisch-card-d:#1d1b19;--tisch-line-d:#34312d;--tisch-fg-d:#efe9df;--tisch-mut-d:#a69d90;--tisch-acc-d:#d4a95a;
+  --tisch-field-d:#181715;--tisch-ok-d:#8fd19e;--tisch-bad-d:#f0897d;
+  --tisch-perg:#efe3c4;--tisch-tinte:#3a2a1a}
+
 /* Schrift: System (SF Pro, Segoe UI Variable, Roboto; Inter nur Ersatz), nichts wird geladen. Sieben Stufen:
    großer Titel 26, Titel 22, Überschrift 17, Text 14, Neben 12,5, Klein 11,5 und Mono 12 (test_design_tokens SCALE) */
 :root{--font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",Roboto,"Helvetica Neue",Inter,system-ui,sans-serif;
@@ -52,6 +61,9 @@
    Personen und Geräte, Einstellungen and Ich use the same width and the same menu column, so nothing jumps when switching
    (test_seitenrahmen) */
 :root{--frame:1800px;--sidecol:220px;--sidegap:24px}
+
+/* the terminal (Zustand → Werkstatt → Entwickeln, Fernzugang): dark in light and dark mode, like a console */
+:root{--term:#0b1020;--term-fg:#e2e8f0;--term-mut:#94a3b8;--term-line:#1e293b}
 
 /* the memory bar's colors per kind, the tiles carry the same one as their legend (Dominik 2026-10-18) */
 :root{--mdf-bild:#ec4899;--mdf-musik:#f59e0b}

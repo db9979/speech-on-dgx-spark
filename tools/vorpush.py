@@ -23,8 +23,12 @@ What it does, in this order, and it stops loudly at the first problem:
 4. The tests: every test module except SLOW (since V01.0.820: picking by file name missed test_mail_zeit and
    test_hilfe_quality, which import the changed module, and main went red for .808-.817). A module in SLOW runs
    when a changed file is one of its own (test_<name>.py, a file it names, or a file under SLOW_WHEN).
-   Each module runs as `selftest.py discover -s tests -p test_NAME.py` (a red test gets its second try there).
-Exit code 0 only when everything is green. It changes nothing but the generated docs, its own venv and the missing system packages (1b.).
+   Each module runs as `selftest.py discover -s tests -p test_NAME.py --part 1/1` (a red test gets its second try
+   there; the part measures each unit like GitHub does).
+5. app/tests/dauer.json: a test module without an entry gets the time measured in 4. (keep_durations), so GitHub's
+   parts stay even; the file is named to go into the same commit. Entries far off are only named.
+Exit code 0 only when everything is green. It changes nothing but the generated docs, dauer.json, its own venv and
+the missing system packages (1b.).
 """
 import hashlib
 import json
@@ -32,6 +36,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
@@ -265,10 +270,52 @@ def regen_docs(py):
         print("vorpush: docs current", flush=True)
 
 
-def run_one(py, name):
-    r = subprocess.run([py, "selftest.py", "discover", "-s", "tests", "-p", name + ".py"], cwd=APP,
-                       capture_output=True, text=True)
-    return name, r.returncode, (r.stdout + r.stderr)[-4000:]
+def run_one(py, name, tmp):
+    """One module as one part of one (--part 1/1: timed by unit like a GitHub part, $SELFTEST_REPORT)."""
+    report = os.path.join(tmp, name + ".json")
+    r = subprocess.run([py, "selftest.py", "discover", "-s", "tests", "-p", name + ".py", "--part", "1/1"], cwd=APP,
+                       capture_output=True, text=True, env=dict(os.environ, SELFTEST_REPORT=report))
+    try:
+        with open(report, encoding="utf-8") as f:
+            dur = {str(k): float(v) for k, v in (json.load(f).get("dauer") or {}).items()}
+    except (OSError, ValueError, AttributeError):
+        dur = {}
+    return name, r.returncode, (r.stdout + r.stderr)[-4000:], dur
+
+
+def _dauer():
+    sys.path.insert(0, APP)
+    import selftest
+    mods = {n[:-3] for n in os.listdir(TESTS) if n.startswith("test_") and n.endswith(".py")}
+    return selftest, os.path.join(TESTS, "dauer.json"), selftest._durations(TESTS), mods
+
+
+def new_modules():
+    """Before the tests: a test module without an entry in tests/dauer.json gets selftest.NEW_UNIT for now
+    (test_selftest_runner wants every module there); keep_durations puts the measured time in after the run."""
+    selftest, path, have, mods = _dauer()
+    fresh = sorted(m for m in mods if not any(k.split(".", 1)[0] == m for k in have))
+    if fresh:
+        selftest.write_durations(path, {**have, **{m: float(selftest.NEW_UNIT) for m in fresh}})
+    return fresh
+
+
+def keep_durations(measured, fresh=()):
+    """5. tests/dauer.json follows what ran (guideline part 10): a module just added (fresh) gets the time measured
+    here, the entry of a test module that is gone goes. GitHub cuts its parts by this file; test_dungeon_pruefstand
+    had no entry and one part took 40 min instead of 12 (V01.1.188-.211). An entry that is there stays: this machine
+    is not GitHub's runner and skips the browser tests where Chromium is missing, so a unit far off it
+    (selftest.stale) is only named; GitHub's job "Ergebnis" warns with its own numbers. Returns the units written."""
+    selftest, path, have, mods = _dauer()
+    new = {k: round(v, 1) for k, v in measured.items() if k.split(".", 1)[0] in fresh}
+    gone = [k for k in have if k.split(".", 1)[0] not in mods]
+    off = sorted(k for k in selftest.stale(have, measured) if k not in new)
+    if off:
+        print("vorpush: far off its entry in app/tests/dauer.json here (GitHub's \"Ergebnis\" decides): " + ", ".join(off),
+              flush=True)
+    if new or gone:
+        selftest.write_durations(path, {**{k: v for k, v in have.items() if k not in gone}, **new})
+    return sorted(new) + sorted(gone)
 
 
 def main(argv):
@@ -303,13 +350,18 @@ def main(argv):
     system_packages()
     py = venv_python(True)   # many modules besides test_ui_browser open pages in Chromium
     regen_docs(py)
-    red = []
-    with ThreadPoolExecutor(max_workers=jobs) as pool:
-        for name, code, tail in pool.map(lambda n: run_one(py, n), names):
+    fresh = new_modules()
+    red, measured = [], {}
+    with tempfile.TemporaryDirectory() as tmp, ThreadPoolExecutor(max_workers=jobs) as pool:
+        for name, code, tail, dur in pool.map(lambda n: run_one(py, n, tmp), names):
             print("vorpush: %s %s" % ("green" if code == 0 else "RED", name), flush=True)
+            measured.update(dur)
             if code:
                 red.append(name)
                 print(tail, flush=True)
+    written = sorted(set(keep_durations(measured, fresh)) | set(fresh))
+    if written:
+        print("vorpush: app/tests/dauer.json measured anew, commit with it: " + ", ".join(written), flush=True)
     if red:
         stop("red: " + " ".join(red) + " (do not push; fix or take the line out of the queue)")
     print("vorpush: all green, %d modules" % len(names), flush=True)

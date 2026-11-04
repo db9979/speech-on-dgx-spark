@@ -54,30 +54,6 @@ enum ActMac {
         return nil
     }
 
-    /// types the text into the front window (Unicode, a line break is Return)
-    static func type(_ text: String) {
-        let src = CGEventSource(stateID: .hidSystemState)
-        for (i, line) in text.components(separatedBy: "\n").enumerated() {
-            if i > 0 { Keys.press(kVK_Return, flags: []) }
-            var chunk: [UniChar] = []
-            func flush() {
-                guard !chunk.isEmpty,
-                      let down = CGEvent(keyboardEventSource: src, virtualKey: 0, keyDown: true),
-                      let up = CGEvent(keyboardEventSource: src, virtualKey: 0, keyDown: false) else { return }
-                down.keyboardSetUnicodeString(stringLength: chunk.count, unicodeString: chunk)
-                up.keyboardSetUnicodeString(stringLength: chunk.count, unicodeString: chunk)
-                down.post(tap: .cghidEventTap)
-                up.post(tap: .cghidEventTap)
-                chunk = []
-            }
-            for u in line.utf16 where u >= 32 {
-                chunk.append(u)
-                if chunk.count >= 16 { flush() }
-            }
-            flush()
-        }
-    }
-
     static func folder(_ which: String) -> String? {
         let fm = FileManager.default
         let url: URL?

@@ -117,6 +117,7 @@ async function profDetail(id,keep){keep=keep||(window.lzKeep&&$('pdetail')?lzKee
     ${u.setup&&u.setup.total?setRow(joinSetupLine(u.setup),esc(u.setup.open.length?t('Offen: ','Open: ')+u.setup.open.join(', '):t('Alles eingerichtet.','Everything set up.')),u.setup.open.length?pbtn('premind',t('Erinnern','Remind')):''):''}
     ${rights}
     ${h3(t('Daten','Data'))}
+    ${u.index?setRow(esc(t('Größe des Index','Size of the index'))+': '+esc(sizeText(u.index.summe)||'0 MB'),esc(t(`Finden ${sizeText(u.index.index)||'0 MB'} · Dokumente und Wissen ${sizeText(u.index.wissen)||'0 MB'}. Nur die Größe der Dateien, nie ein Inhalt.`,`Find ${sizeText(u.index.index)||'0 MB'} · documents and knowledge ${sizeText(u.index.wissen)||'0 MB'}. Only the size of the files, never content.`)),''):''}
     ${setRow(esc(t('Profil löschen','Delete profile')),esc(t('Mit Gedächtnis, Gesprächen und Geräten. Geht nicht rückgängig.','With memory, conversations and devices. Cannot be undone.')),pbtn('pdel',t('Löschen','Delete')))}</div>`;if(keep)keep();
   const ok=m=>{$('pmsg').textContent=m},again=()=>profDetail(id);
   $('ppinlink').onclick=()=>joinPinLink(id,u.name,$('ppinout'));

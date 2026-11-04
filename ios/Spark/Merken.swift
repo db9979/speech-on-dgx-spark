@@ -202,7 +202,7 @@ struct LadeZeilen: View {
         VStack(alignment: .leading, spacing: 14) {
             if waited >= 1 { LadeNote(text: waited >= 8 ? String(localized: "Das dauert länger als sonst …") : String(localized: "Verbinde mit dem Spark …")) }
             ForEach(0..<rows, id: \.self) { i in
-                RoundedRectangle(cornerRadius: 6).fill(Color.secondary.opacity(0.15))
+                RoundedRectangle(cornerRadius: Theme.rCtl).fill(Color.secondary.opacity(0.15))
                     .frame(width: CGFloat([0.6, 1, 0.8, 0.5, 0.95, 0.7][i % 6]) * 300, height: 14)
             }
         }
@@ -226,8 +226,8 @@ struct LadeNote: View {
 
     var body: some View {
         Text(verbatim: text).font(.caption).padding(.horizontal, 10).padding(.vertical, 3)
-            .background(Capsule().fill(Color.yellow.opacity(0.18)))
-            .overlay(Capsule().stroke(Color.yellow.opacity(0.5)))
+            .background(Capsule().fill(Theme.warn.opacity(0.18)))
+            .overlay(Capsule().stroke(Theme.warn.opacity(0.5)))
             .frame(maxWidth: .infinity)
     }
 }

@@ -100,7 +100,7 @@ class Workflows(unittest.TestCase):
         """Paket 4 (M8): manifests are signed only when UPDATE_SIGNING_KEY exists, and the .sig goes out with them."""
         wfs = dict(workflows())
         for name, manifest in (("firmware.yml", "release/manifest.json"), ("begleiter-windows.yml", "dist/begleiter.json"),
-                               ("begleiter-mac.yml", "dist/begleiter.json")):
+                               ("begleiter-mac.yml", "dist/begleiter.json"), ("sparkhilfe-windows.yml", "dist/sparkhilfe.json")):
             text = wfs[name]
             self.assertIn("HAS_UPDKEY: ${{ secrets.UPDATE_SIGNING_KEY != '' }}", text, name)
             step = text[text.index("OPTIONAL sign"):]

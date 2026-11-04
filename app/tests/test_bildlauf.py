@@ -35,6 +35,7 @@ FENSTER = {
     ".modal": "a window over the page: the one bar while it is open",
     ".ullog": "update progress, follows the newest line",
     ".mdstand": "model install progress, follows the newest line",
+    ".dvdiff": "the whole change of a Code-Auftrag (Zustand → Werkstatt → Entwickeln): long lines keep their columns",
     ".fabtext": "the floating face's bubble",
     ".fabpop": "the floating face's bubble",
     "#chatlog": "the conversation: only it scrolls on the assistant page",
@@ -44,7 +45,8 @@ FENSTER = {
     ".wizbody": "the first-start window",
     ".sres": "search suggestions under the field",
     "body.adm header": "the side menu beside the page",
-    ".lout": "the log window, follows the newest line",
+    ".lout": "the log window (one height, Klar 6), the newest line on top",
+    ".lmenu-pop": "the menu of log areas (Zustand → Logs), a floating list of ticks",
     ".rlist": "the request list beside one request (Zustand → Logs), refreshed every 10 s",
     ".fpal .fres": "the command search (Strg K)",
     "body.hilfeon .fabpop": "the floating face's bubble",
@@ -142,7 +144,7 @@ for(const e of document.querySelectorAll('body *')){if(modal&&!modal.contains(e)
   const over=e.scrollHeight-e.clientHeight;let up=e.parentElement;while(up&&up!==document.documentElement&&!scrolls(up))up=up.parentElement;
   out.push({el:name(e),over,bar,scroll:over>1,inside:up?(up===document.documentElement?(scrolls(up)?'html':''):name(up)):''})}
 return {boxes:out,page:modal?(getComputedStyle(document.documentElement).overflowY==='hidden'||!scrolls(document.documentElement)):true}})()"""
-ALLOWED_INSIDE = re.compile(r"^(pre|div\.lout|div\.rlist|div\.ullog|div\.mdstand|div\.wkpatch|div#chatlog|div\.cx-|div\.ld-detail|div\.fdin|div#fabtext|div#fabpop)")
+ALLOWED_INSIDE = re.compile(r"^(pre|div\.lout|div#logpicklist|div\.rlist|div\.ullog|div\.mdstand|div\.wkpatch|div#chatlog|div\.cx-|div\.ld-detail|div\.fdin|div#fabtext|div#fabpop)")
 
 
 @unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")

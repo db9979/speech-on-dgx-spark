@@ -126,7 +126,7 @@ class Guideline(unittest.TestCase):
         self.assertEqual(bad, [], "use helpers.keep_chat(self, …) in setUp")
 
     def test_a_profile_name_belongs_to_one_test_file(self):
-        """Test modules share one panel and one state folder per run (GitHub runs them in four parts, the order
+        """Test modules share one panel and one state folder per run (GitHub runs them in parts, the order
         follows the measured times): a profile two files create meets the other file's PIN, documents or facts.
         test_panel's Isolation, Gaps and HomeAssistant failed on GitHub for that (2026-10-16, "Anna", "Doris",
         "Ina"). A name passed to a helper that creates a profile (also through another helper, self.on → profile)

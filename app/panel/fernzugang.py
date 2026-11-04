@@ -1837,7 +1837,8 @@ def command(origin, art="einrichten"):
     """The one line to paste on the server, from the address the admin's browser is on (terminal.setup_base, one
     rule for both): an outside address with a certificate of an authority as it is; the panel at home with its own
     certificate pinned (curl by the public key, the anchor by the certificate's SHA-256). The code is never in it.
-    art „hilfe“ (Spontanhilfe S3): the same program once in the person's terminal, without sudo, never a number in it."""
+    art „hilfe“ (Spontanhilfe S3): the same program once in the person's terminal, without sudo, never a number in it;
+    art „steuern“ (Spontanhilfe S2d, Linux X11) the same, the one-time key typed on her terminal, never in the line."""
     import terminal
     try:
         base = terminal.setup_base(origin, load_config("panel"))
@@ -1846,7 +1847,7 @@ def command(origin, art="einrichten"):
     if not base:
         return None
     url, fp = base
-    py = "python3" if art == "hilfe" else "sudo python3"
+    py = "python3" if art in ("hilfe", "steuern") else "sudo python3"
     # „aktualisieren“: the anchor takes the panel's address and certificate from its own pairing, never from the line
     tail = "aktualisieren" if art == "aktualisieren" else f"{art} {url}" + (f" --fp {fp}" if fp else "")
     if not fp:

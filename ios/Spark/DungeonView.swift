@@ -184,7 +184,7 @@ struct DungeonView: View {
                                 Text("Der Dungeon-Master schreibt die Zusammenfassung …").font(.footnote).foregroundStyle(.secondary)
                             } else if !k.bisher.isEmpty {
                                 Text(verbatim: k.bisher).font(.footnote)
-                                if k.entwurf { Text("Entwurf").font(.caption).foregroundStyle(.orange) }
+                                if k.entwurf { Text("Entwurf").font(.caption).foregroundStyle(Theme.warnText) }
                             }
                             if !k.wer.isEmpty { Text(verbatim: k.wer).font(.caption).foregroundStyle(.secondary) }
                         }

@@ -4965,6 +4965,139 @@
 "titel": "Spontanhilfe: Steuern mit SparkHilfe (sobald S2b da ist)",
 "text": "Nach S2b an einem Windows-PC: /hilfe zeigt „Programm laden“ mit Prüfsumme, die Datei heißt SparkHilfe-<Adresse>-<Schlüssel>.exe. Start, „Erlauben“: roter Rahmen bei ihr, beim Admin das Bild; „Steuern“ in der Leiste, Klicks und Tippen treffen; „Nur ansehen“ gibt zurück. Programm schließen beendet die Hilfe. Dieselbe Datei nach 10 Minuten oder ein zweites Mal: „Bitte neu laden“.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P734",
+"v": 1302,
+"titel": "Mappen: Suche nur in der Mappe",
+"text": "Mappe „Wohnung“ mit dem Mietvertrag auf „ganz“ und der Hausordnung auf „kurz“; ein drittes Dokument mit denselben Wörtern liegt nicht darin. „Im Assistenten fragen“, dann „Such nach der Lindenstraße“: die Fundstellen kommen nur aus dem Mietvertrag, nie aus dem dritten Dokument und nie aus Mails, Terminen oder Kontakten. Mietvertrag auf „aus“ stellen und dieselbe Frage: die Antwort sagt, dass in der Mappe nichts auf „ganz“ steht. Ohne Bindung: „Such in der Mappe Wohnung nach der Kaution“ sucht ebenso nur dort. Zustand → Logs, Bereich Wissen: „mappen: filter | dokumente | chat | 1 dokumente 0 seiten“ ohne Namen; Zustand → Live, Kasten Mappen: „n Suchen in Mappen“.",
+"thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P735",
+"v": 1302,
+"titel": "Mappen: Wähler in Finden",
+"text": "Funktionen → Finden in allen Daten und Mappen an. Unter Finden steht neben Quelle und Kategorie „Alle Mappen“; „Wohnung“ wählen: ohne Wörter zeigt die Liste genau die Dokumente der Mappe (jede Stufe), mit „Lindenstraße“ nur die passenden davon, keine Mail, kein Termin, kein Kontakt. Zurück auf „Alle Mappen“: wieder alle Treffer. Mappen für das Profil sperren: der Wähler verschwindet.",
+"thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P736",
+"v": 1302,
+"titel": "Mappen: iPhone nativ",
+"text": "iPhone-App, Meine Sachen → Mappen: die Liste wie im Panel, „+“ legt eine Mappe an. Eine Mappe antippen: Einträge mit aus/kurz/ganz als Segmented Control und „≈ X von Y Token“; eine Stufe ändern, im Panel unter Mappen neu laden: dieselbe Stufe und derselbe Balken. Nach links wischen nimmt einen Eintrag heraus (das Dokument bleibt); „Mappe löschen“ fragt nach und nimmt nur die Zuordnung. Englische Sprache: alle Texte englisch. Android: Ich → Mappen öffnet die Panel-Ansicht.",
+"thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P737",
+"v": 1303,
+"titel": "Finden: Größe des Index in MB oder GB",
+"text": "Finden in allen Daten an, ein Profil mit Dokumenten (und Mails, falls „Mails und Anhänge finden“ an). P: Finden → Einstellungen: unter den Quellen steht „Größe des Index: … MB“ (ab 1 GB „1,2 GB“, englisch „1.2 GB“). Aufklappen: „Finden“ mit derselben Größe wie users/<id>/fund.db samt -wal und -shm (auf dem Spark mit ls -l vergleichen), darunter je Quelle ein Anteil (geschätzt, zusammen genau Finden) und „Dokumente und Wissen“ (wissen.db). Finden → Einstellungen → Index löschen: nach dem Neuladen ist „Finden“ kleiner. iPhone-App: Finden → Einstellungen zeigt dieselbe Zahl, aufklappbar; Android über die Panel-Ansicht. A: Personen und Geräte → das Profil → Abschnitt Daten: „Größe des Index: …“ mit Finden und Dokumente und Wissen, nur Zahlen. Zustand → Live, Kasten Finden: „Index … (Finden …, Dokumente und Wissen …)“ als Summe aller Profile, nie ein Name. Ein anderes Profil sieht in seinen Einstellungen nur seine eigene Größe; ein Gast sieht Finden gar nicht.",
+"thread": "Alles schnell finden über einen Index"
+},
+{
+"id": "P738",
+"v": 1307,
+"titel": "SparkHilfe: Programm holen, Dienst-Wächter, Englisch und Begleiter wie vorher",
+"text": "Funktionen: Steuern bei der Spontanhilfe an. Etwa zwei Minuten später holt der Spark SparkHilfe von GitHub: Zustand → Logs (Spontanhilfe) zeigt „spontanhilfe: programm_holen | ok | 1“, Zustand → Dienste „Programm SparkHilfe“ grün; „Steuern anfragen“ zeigt auf /hilfe die Prüfsumme aus dem Release. An einem PC mit englischem Windows fragt das Programm „… would like to control your PC“ (Decline / View only / Allow), an einem ARM-PC lädt /hilfe die ARM64-Datei. Der Spark-Begleiter am selben PC: „Bildschirm zeigen und bedienen“ aus dem Panel fragt, zeigt roten Rahmen und Leiste und bedient wie vorher.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P739",
+"v": 1308,
+"titel": "An GitHub geben: Schlüssel und Schutz für main",
+"text": "Nach dem Update einmal sudo ./install.sh --entwickeln (danach systemctl list-timers zeigt speech-spark-github.timer). sudo speech-spark entwickeln github-schluessel neu zeigt eine Zeile ssh-ed25519 …; ls -l /etc/speech-spark-github-key zeigt root und -rw-------, als spark-dev cat /etc/speech-spark-github-key verweigert. Die Zeile auf GitHub als Deploy-Schlüssel mit „Allow write access“ eintragen und das Ruleset für main anlegen (Anleitung Funktionen → Entwickeln auf dem Pi → An GitHub geben). Danach als Admin Funktionen → Entwickeln auf dem Pi → An GitHub geben an.",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P740",
+"v": 1308,
+"titel": "An GitHub geben: Zweig opencode/…, nie main",
+"text": "Als spark-dev im Klon einen kleinen Commit auf lokal machen. Als Admin sudo speech-spark lokal an-github Praxis Test: Ausgabe „an GitHub gegeben opencode/praxis-test“ und „Gib den Zweig opencode/praxis-test einem Claude-Thread zum Prüfen: https://github.com/…“. Auf GitHub steht der Zweig, „Tests“ läuft dafür; sudo speech-spark lokal zweige zeigt „tests laeuft“, später „gruen“ oder „rot“. Oben auf den Admin-Seiten steht der Hinweis. Ein zweiter Versuch nach git commit --amend im Klon: „Den Zweig gibt es auf GitHub schon mit anderen Commits“, auf GitHub unverändert. Auf GitHub unter den Rulesets steht „main schützen“ als Active, in der Bypass-Liste nur Repository admin, kein Deploy-Schlüssel (nie mit dem Schlüssel auf main ausprobieren). Zustand → Logs (System) zeigt „entwickeln: github gegeben 1 commits“ ohne Commit-Text, nie ein Schlüssel.",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P741",
+"v": 1308,
+"titel": "An GitHub geben: ohne Internet wartet es",
+"text": "Internet des Panel-Rechners trennen (Router oder Kabel), dann sudo speech-spark lokal an-github offline-test: „Wartet auf Internet …“; Zustand → Live, Kasten Entwickeln: „an GitHub zuletzt: wartet“. Internet wieder verbinden: spätestens nach 15 Minuten steht opencode/offline-test auf GitHub, sudo speech-spark logs entwickeln zeigt „entwickeln: github gegeben“. Als spark-dev bleibt curl -sS https://github.com die ganze Zeit gesperrt. Funktionen → Entwickeln auf dem Pi → An GitHub geben aus: sudo speech-spark lokal an-github x sagt „An GitHub geben ist aus“.",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P742",
+"v": 1309,
+"titel": "Entwickeln: die Seite unter Zustand → Werkstatt",
+"text": "Zustand → Werkstatt, oben „Entwickeln“ antippen: links „Lokale Änderungen“ (Zweig lokal mit Zahl der Commits), „Zweige auf GitHub“ mit grün/läuft/rot und „Einstellungen“; rechts die Kacheln Läuft als, Internet, GitHub und die Commits mit Kurz-Hash, Titel und Zahl der Dateien. Einen Commit im Klon mit dem Titel „Test <b>fett</b>“ machen: auf der Seite steht der Titel genau so als Text (nicht fett), in Zustand → Live und Zustand → Logs steht kein Titel. „Lokal einspielen“ fragt nach dem Code und spielt wie sudo speech-spark lokal einspielen ein; die Version zeigt „+lokal“. Auf dem Handy (schmal) erst die Liste, ein Tipp öffnet das Detail mit „‹ Entwickeln“. Der Hinweis oben auf den Admin-Seiten (etwa nach einem abgelehnten Einspielen) führt per Sprung-Link auf diese Seite.",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P743",
+"v": 1309,
+"titel": "Entwickeln: Terminal im Browser",
+"text": "Nach dem Update einmal sudo ./install.sh --entwickeln (danach ls -l /usr/local/bin/spark-dev-terminal zeigt root und -rwxr-xr-x). Funktionen → Entwickeln auf dem Pi → Terminal im Browser an. Zustand → Werkstatt → Entwickeln, Reiter Terminal, „Terminal öffnen“: fragt nach dem Code, dann zeigt whoami „spark-dev“, pwd den Klon, sudo -n true scheitert, ls /var/lib/speech-spark und cat /etc/speech-spark-github-key verweigert, curl -sS https://github.com bricht ab. spark-opencode startet OpenCode und antwortet. Zustand → Live zeigt „Terminal offen: 1“, Logs (System) „entwickeln: terminal auf 1“ ohne Eingaben. Ein zweiter Browser: „Es ist schon ein Terminal offen“. „Sitzung beenden“: Logs „entwickeln: terminal zu beendet“, Live wieder 0.",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P744",
+"v": 1309,
+"titel": "Entwickeln: Terminal endet von selbst",
+"text": "Terminal öffnen, dann im Panel abmelden: die Sitzung endet („zu abmelden“ im Log). Wieder öffnen, Notaus auslösen: die Sitzung endet sofort („zu notaus“), Öffnen geht erst nach dem Aufheben. Wieder öffnen, Funktionen → Entwickeln auf dem Pi → Terminal im Browser aus und speichern: die Sitzung endet („zu aus“), der Reiter zeigt den Hinweis zum Einschalten. Ohne zweiten Anmeldeschritt (Ich → Sicherheit) sagt „Terminal öffnen“, dass er nötig ist. In der iPhone- oder Android-App steht kein Terminal.",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P745",
+"v": 1309,
+"titel": "Code-Auftrag im Chat: Karte mit Vorschlag",
+"text": "Nach dem Update einmal sudo ./install.sh --entwickeln. Funktionen → Entwickeln auf dem Pi → Code-Auftrag im Chat an. Als Admin im Chat des Panels tippen: „Code-Auftrag: die Begrüßung soll freundlicher klingen“. Die Antwort sagt, dass der Auftrag läuft; die Karte „Code-Auftrag (OpenCode)“ zeigt Ziel und „läuft …“ mit dem Hinweis „Das Modell schlägt nur vor. Einspielen entscheidest du.“ Nach einigen Minuten zeigt sie „Vorschlag fertig“, Dateien, Zweig opencode/auftrag-… und die ersten Zeilen der Änderung als Text. Zustand → Werkstatt → Entwickeln zeigt den Auftrag unter „Code-Aufträge“ mit der ganzen Änderung. Zustand → Live zeigt nur „Code-Auftrag läuft“ bzw. die Zahl, Logs (System) nur „entwickeln: auftrag …“ ohne das Ziel.",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P746",
+"v": 1309,
+"titel": "Code-Auftrag: einspielen, verwerfen, nur getippt",
+"text": "Auf der fertigen Karte „Lokal einspielen“ antippen: es öffnet Zustand → Werkstatt → Entwickeln, dort fragt „Lokal einspielen“ nach einem frischen Code, setzt lokal vorwärts und spielt wie ein Update ein (Version „+lokal“). Einen zweiten Auftrag geben und auf der Karte „Verwerfen“ antippen: der Zweig ist weg (git branch im Terminal), die Karte geht zu. „Im Terminal weitermachen“ führt zum Reiter Terminal. Denselben Satz über einen Lautsprecher, Telegram, CarPlay oder als Gast sagen: kein Code-Auftrag, keine Karte. Ein Nicht-Admin bekommt ihn auch getippt nicht. In der iPhone- und Android-App: der getippte Auftrag geht, die Karte öffnet mit „Lokal einspielen“ die Seite. Schalter aus: kein Auftrag mehr.",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P747",
+"v": 1310,
+"titel": "SparkHilfe Linux X11: Befehl, Schlüssel, Frage, Steuern und Wayland",
+"text": "Ein Linux-Rechner mit X11-Sitzung (z. B. Ubuntu mit „Ubuntu auf Xorg“ beim Anmelden), Steuern bei der Spontanhilfe an. Hilfe öffnen, die Person teilt im Browser, „Steuern anfragen“ (Code): auf /hilfe steht „Befehl zeigen“. Klicken: die Zeile curl … | python3 - steuern https://… erscheint ohne Schlüssel darin, dazu „Befehl kopieren“ und „Schlüssel kopieren“. Zeile im Terminal einfügen, Enter: das Terminal fragt nach dem Schlüssel; „Schlüssel kopieren“, einfügen, Enter (nichts wird angezeigt). Erst jetzt erscheint „<Name> (<Adresse>) möchte Ihren Computer steuern“ mit 1/2/3; 3 wählen: roter Rahmen und oben die rote Leiste, im Panel das Bild. In der Leiste „Steuern“: Klick, Text mit Umlauten und €, „Kopieren“ und „Einfügen“ wirken; Super-Taste und Alt+Tab gibt es nicht. Klick auf die Leiste beim Linux-Rechner beendet die Hilfe, im Terminal „die Hilfe ist beendet“; danach tippt die Tastatur wieder normal (auch €). Denselben Befehl noch einmal: „Der Befehl gilt nicht mehr …“. Unter Wayland (Standard-Ubuntu): sofort „Unter Wayland kann Spark-Hilfe noch nicht steuern …“, nichts verbunden. Englische Sitzung (LANG=en_US.UTF-8): alle Texte englisch. Zustand → Logs (Spontanhilfe): „programm | linux | 1“, nie der Schlüssel.",
+"thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P748",
+"v": 1312,
+"titel": "Auswertungen: Kurzfassung mit Fundstellen",
+"text": "Funktionen → Eigene Dokumente → Auswertungen an. Unter Ich → Dokumente einen Mietvertrag hochladen und eine Minute nichts fragen. Das Dokument öffnen: unten das Blatt Auswertungen; Kurzfassung und Kernaussagen „fertig“, jeder Punkt mit einem Chip „S. 1 · § 2 Miete“. Eine Zahl aus einem Punkt prüfen: der Chip öffnet den Text, die Zahl steht dort. „Fragen zum Text“ → Erstellen: nach der nächsten ruhigen Minute Fragen mit der Stelle als Antwort; „Inhaltsverzeichnis“ → Zeigen: die Überschriften. Zustand → Live, Kasten Auswertungen: Zahlen, nie ein Text.",
+"thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P749",
+"v": 1312,
+"titel": "Auswertungen: Stimmt nicht und Fristen",
+"text": "Bei einer Kernaussage „Stimmt nicht“: sie verschwindet; „Neu erstellen“ und nach der nächsten ruhigen Minute ist sie nicht wieder da. Mit „Personen, Firmen und Fristen“ an: Fristen → Zeigen nennt die Frist des Steckbriefs (mit „Erinnern“, wenn Fristen anbieten an ist) und die Fristen der Wissenskarte mit ihrer Stelle; ohne diesen Schalter nur das Steckbrief-Datum und der Hinweis mit Weg. Im Assistenten: „Was sind die Kernaussagen im Mietvertrag?“ nennt dieselben Punkte mit Seite.",
+"thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P750",
+"v": 1314,
+"titel": "Entwickeln auf dem Pi: Klon von spark-dev mit neuem git",
+"text": "Auf dem Panel-Rechner mit Raspberry Pi OS Trixie (neueres git) sudo ./install.sh --entwickeln: kein „detected dubious ownership“, kein „could not make the clone of spark-dev“. Danach als spark-dev git -C ~/speech-on-dgx-spark branch zeigt lokal, git -C ~/speech-on-dgx-spark log -1 spark/main die installierte Version, git config --global --get-all safe.directory zeigt nichts. sudo ./install.sh --entwickeln ein zweites Mal läuft ohne Fehler durch, ein Commit auf lokal bleibt.",
+"thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P751",
+"v": 1315,
+"titel": "Auswertungen: eigene Vorlage „Risiken“",
+"text": "Admin: Funktionen → Eigene Dokumente → Auswertungen → Vorlagen: „Neue Vorlage“, Name „Risiken“ / „Risks“, Auftrag „die Risiken und Pflichten für den Mieter“, Vorlagen speichern. Ein Auftrag mit Link oder „Ignoriere …“ wird abgelehnt und nichts ändert sich. Unter Ich → Dokumente den Mietvertrag öffnen: im Blatt Auswertungen steht „Risiken“ → Erstellen; nach der nächsten ruhigen Minute Punkte mit Fundstelle, jede Zahl steht im Dokument. Zustand → Logs: „auswertung: erstellen | vorlage wartet“, nie der Name. Vorlage wieder löschen: die Art verschwindet aus dem Blatt.",
+"thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P752",
+"v": 1315,
+"titel": "Auswertungen: von selbst, Erinnern und Mappe kurz",
+"text": "Admin: unter Auswertungen bei „Von selbst in ruhigen Minuten“ nur „Kernaussagen“ und „Inhaltsverzeichnis“ wählen, speichern. Ein neues Dokument hochladen: nach einer ruhigen Minute Kernaussagen fertig, Inhaltsverzeichnis ohne Klick da, Kurzfassung nicht. Danach zurück auf Kurzfassung und Kernaussagen. Mit „Personen, Firmen und Fristen“ an und Fristen anbieten an: eine Frist der Wissenskarte mit vollem Datum hat „Erinnern“, die Erinnerung steht in den Erinnerungen; „drei Monate“ hat keinen Knopf. Eine Mappe mit dem Dokument in Stufe „kurz“: der Eintrag nennt „„kurz“ mit Auswertung: Kurzfassung, Kernaussagen“, und eine Frage im Gespräch mit der Mappe nennt Punkte daraus mit Seite.",
+"thread": "Ideen aus Open Notebook übernehmen"
 }
 ]
 }

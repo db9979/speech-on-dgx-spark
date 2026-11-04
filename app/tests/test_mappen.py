@@ -12,9 +12,11 @@ from tests import helpers
 
 helpers.start()
 import chat  # noqa: E402
+import contacts  # noqa: E402
 import documents  # noqa: E402
 import extras  # noqa: E402
 import features  # noqa: E402
+import fund  # noqa: E402
 import intent  # noqa: E402
 import live  # noqa: E402
 import mappen  # noqa: E402
@@ -235,7 +237,7 @@ class Rules(Base):
             out = run(mappen.tool("mappe_dazu", {"mappe": "Urlaub", "dokument": "Hotelbuchung"},
                                   {"who": who, "private": True, "text": "Leg die Hotelbuchung in die Mappe Urlaub"}))
             self.assertTrue(out.startswith("Erledigt"), out)
-            self.assertEqual(mappen.docs_of(uid, mid, ("kurz",)), {doc})
+            self.assertEqual(mappen.refs_of(uid, mid, ("kurz",)), ({doc}, set()))
             out = run(mappen.tool("mappe_stand", {"mappe": "Urlaub"}, {"who": who, "private": True, "text": "Was liegt in der Mappe Urlaub?"}))
             self.assertIn("Hotel", out)
             out = run(mappen.tool("mappe_liste", {}, {"who": who, "private": True, "text": "Welche Mappen habe ich?"}))
@@ -246,10 +248,12 @@ class Rules(Base):
         self.assertTrue(all(line.startswith("mappen:") for line in log.splitlines()), log)
 
     def test_weiche(self):
-        for text in ("Was liegt in der Mappe Urlaub?", "Welche Mappen habe ich?", "Leg den Mietvertrag in die Mappe Wohnung"):
+        for text in ("Was liegt in der Mappe Urlaub?", "Welche Mappen habe ich?", "Leg den Mietvertrag in die Mappe Wohnung",
+                     "Such in der Mappe Wohnung nach der Kaution", "Finde in der Mappe Wohnung die Rechnung"):
             self.assertIn("mappe", intent.classify(text).names, text)
         for text in ("Wie wird das Wetter?", "Such im Internet nach Hotels"):
             self.assertNotIn("mappe", intent.classify(text).names, text)
+        self.assertIn("finden", intent.classify("Finde in der Mappe Wohnung die Rechnung").names)   # fund_suche stays
 
 
 class Chat(Base):
@@ -291,6 +295,121 @@ class Chat(Base):
         with quiet():
             c.post("/api/chat", json={"messages": [{"role": "user", "content": "Hallo"}], "mappe": "f" * 12})
         self.assertNotIn(mappen.HINT, helpers.LLM_CALLS[0]["messages"][0]["content"])
+
+
+class Filter(Base):
+    """Push 1b: a Mappe narrows document_search, fund_suche and the page Finden, by the panel's fixed rule."""
+    def setUp(self):
+        super().setUp()
+        helpers.keep_chat(self, "fund", "fund_termine", "fund_kontakte", "contacts", "calendar")
+        helpers.set_config(fund=True, fund_termine=True, fund_kontakte=True, contacts=True, calendar=True)
+        fund._live.update(at=0.0, d=None)
+        fund._last.clear()
+
+    def setup_mappe(self, name):
+        c, uid = self.fresh(name)
+        with quiet():
+            fund.leeren(uid, hand=True)
+        contacts._save(uid, cards=[])
+        mid = c.post("/api/profile/mappen", json={"name": "Wohnung"}).json()["id"]
+        inside = self.doc(uid, "Mietvertrag.txt", LEASE)
+        short = self.doc(uid, "Hausordnung.txt", "Hausordnung Lindenstraße: Ruhe ab 22 Uhr.")
+        outside = self.doc(uid, "Brief.txt", "Ein Brief an die Nachbarn in der Lindenstraße wegen des Gartens.")
+        c.post(f"/api/profile/mappen/{mid}/eintrag", json={"art": "dok", "ref": inside, "stufe": "ganz"})
+        c.post(f"/api/profile/mappen/{mid}/eintrag", json={"art": "dok", "ref": short, "stufe": "kurz"})
+        # a contact and an appointment with the same word: never found within a Mappe
+        contacts._save(uid, cards=[{"id": "k1", "name": "Lindenstraße Hausverwaltung", "org": "Lindenstraße GmbH", "nick": "",
+                                    "title": "", "phones": [], "emails": [], "addrs": []}])
+        self.addCleanup(lambda: contacts._save(uid, cards=[]))
+        with quiet():
+            fund.runde(uid, NOW)
+        return c, uid, mid, inside, short, outside
+
+    def test_fund_suche_only_the_mappe_never_mail_termin_kontakt(self):
+        c, uid, mid, inside, short, outside = self.setup_mappe("Mappefund")
+        alle = fund.suche(uid, "Lindenstraße", now=NOW)
+        self.assertIn("kontakt", {h["quelle"] for h in alle})            # without a Mappe the contact is found
+        self.assertTrue({inside, short, outside} <= {h["ext"] for h in alle})
+        who = {"id": uid, "name": "Mappefund"}
+        buf = io.StringIO()
+        with quiet(buf):
+            nur, note = mappen.fuer_werkzeug(who, "Wohnung", "Such in der Mappe Wohnung nach der Lindenstraße", None)
+        self.assertEqual(nur, ({inside}, set()))                          # the tools search only the level ganz
+        self.assertIn("Mappe „Wohnung“", note)
+        got = fund.suche(uid, "Lindenstraße", now=NOW, nur=nur)
+        self.assertEqual([h["ext"] for h in got], [inside])
+        for q in ("mail", "anhang", "termin", "kontakt", "chat", "liste"):
+            self.assertEqual(fund.suche(uid, "Lindenstraße", quelle=q, now=NOW, nur=nur), [], q)
+            self.assertEqual(fund.suche(uid, "", quelle=q, now=NOW, nur=nur), [], q)
+        # the page Finden: every level of the own Mappe; another profile's or an unknown Mappe finds nothing, never all
+        d = c.post("/api/profile/fund/suche", json={"worte": "Lindenstraße", "mappe": mid}).json()
+        self.assertEqual({h["ext"] for h in d["treffer"]}, {inside, short})
+        d = c.post("/api/profile/fund/suche", json={"worte": "", "mappe": mid}).json()
+        self.assertEqual({h["ext"] for h in d["treffer"]}, {inside, short})
+        for bad in ("f" * 12, "kaputt", "../x"):
+            d = c.post("/api/profile/fund/suche", json={"worte": "Lindenstraße", "mappe": bad}).json()
+            self.assertEqual(d["treffer"], [], bad)
+        b, ub = self.fresh("Mappefundb")
+        d = b.post("/api/profile/fund/suche", json={"worte": "Lindenstraße", "mappe": mid}).json()
+        self.assertEqual(d["treffer"], [])
+        helpers.set_config(mappen=False)       # Mappen off: the filter finds nothing rather than everything
+        d = c.post("/api/profile/fund/suche", json={"worte": "Lindenstraße", "mappe": mid}).json()
+        self.assertEqual(d["treffer"], [])
+        self.assertNotIn("Lindenstra", buf.getvalue())
+        self.assertNotIn("Wohnung", buf.getvalue())
+
+    def test_the_mappe_only_from_own_words_or_the_bound_conversation(self):
+        c, uid, mid, inside, short, outside = self.setup_mappe("Mappeworte")
+        who = {"id": uid, "name": "Mappeworte"}
+        buf = io.StringIO()
+        with quiet(buf):
+            # the model names a Mappe the person did not say: dropped and counted, the search runs without
+            before = mappen._day.today()["abgelehnt"]
+            self.assertEqual(mappen.fuer_werkzeug(who, "Wohnung", "Wo steht die Lindenstraße?", None), (None, ""))
+            self.assertEqual(mappen._day.today()["abgelehnt"], before + 1)
+            # the conversation bound to the Mappe (an own id): its entries at the level ganz
+            self.assertEqual(mappen.fuer_werkzeug(who, None, "Wo steht die Lindenstraße?", mid)[0], ({inside}, set()))
+            self.assertEqual(mappen.fuer_werkzeug(who, "Urlaub", "Wo steht die Lindenstraße?", mid)[0], ({inside}, set()))
+            # another profile's id is never found
+            b, ub = self.fresh("Mappeworteb")
+            self.assertEqual(mappen.fuer_werkzeug({"id": ub, "name": "Mappeworteb"}, None, "x", mid), (None, ""))
+            # nothing at the level ganz: a fixed sentence, no hit
+            c.put(f"/api/profile/mappen/{mid}/eintrag", json={"art": "dok", "ref": inside, "stufe": "aus"})
+            nur, note = mappen.fuer_werkzeug(who, None, "x", mid)
+            self.assertEqual(nur, (set(), set()))
+            self.assertIn("Stufe ganz", note)
+            self.assertEqual(fund.suche(uid, "Lindenstraße", now=NOW, nur=nur), [])
+            helpers.set_config(mappen=False)
+            self.assertEqual(mappen.fuer_werkzeug(who, "Wohnung", "in der Mappe Wohnung", mid), (None, ""))
+        log = buf.getvalue()
+        self.assertIn("mappen: filter verworfen | fund | nicht in den eigenen worten", log)
+        self.assertIn("mappen: filter | fund | chat | 1 dokumente 0 seiten", log)
+        self.assertIn("mappen: filter verworfen | fund | fremd", log)
+        self.assertIn("mappen: filter verworfen | fund | aus", log)
+        for word in ("Wohnung", "Urlaub", "Lindenstra"):
+            self.assertNotIn(word, log)
+
+    def test_document_search_in_the_bound_conversation(self):
+        c, uid, mid, inside, short, outside = self.setup_mappe("Mappedoks")
+        helpers.LLM_CALLS.clear()
+        with quiet():
+            r = c.post("/api/chat", json={"messages": [{"role": "user", "content":
+                                                        'TOOL document_search {"query": "Lindenstraße"}'}], "mappe": mid})
+        self.assertEqual(r.status_code, 200, r.text)
+        result = [m for call in helpers.LLM_CALLS for m in call["messages"] if m.get("role") == "tool"]
+        self.assertTrue(result)
+        text = result[-1]["content"]
+        self.assertIn("Gesucht nur in der Mappe", text)
+        self.assertIn("980 Euro", text)
+        self.assertNotIn("Nachbarn", text)      # the letter outside the Mappe
+        self.assertNotIn("22 Uhr", text)        # the entry at the level kurz is not searched
+        # without the Mappe the same search finds the letter too
+        helpers.LLM_CALLS.clear()
+        with quiet():
+            c.post("/api/chat", json={"messages": [{"role": "user", "content": 'TOOL document_search {"query": "Lindenstraße"}'}]})
+        text = [m for call in helpers.LLM_CALLS for m in call["messages"] if m.get("role") == "tool"][-1]["content"]
+        self.assertNotIn("Gesucht nur in der Mappe", text)
+        self.assertIn("Nachbarn", text)
 
 
 class Live(Base):

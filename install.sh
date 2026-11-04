@@ -1047,6 +1047,11 @@ fi
   printf ', /usr/bin/systemctl enable --now speech-spark-schirm, /usr/bin/systemctl disable --now speech-spark-schirm, /usr/bin/systemctl start getty@tty1.service'   # B9
   printf ', /usr/bin/systemctl start --no-block speech-spark-wechsel'   # stage E4: takes the panel's checked wish
   printf ', /usr/bin/systemctl start --no-block speech-spark-werkstatt'   # Funktionen → Werkstatt: takes the checked wish
+  printf ', /usr/bin/systemctl start --no-block speech-spark-github'   # Entwickeln auf dem Pi → An GitHub geben: the same
+  printf ', /usr/bin/systemctl start --no-block speech-spark-auftrag'   # Entwickeln auf dem Pi → Code-Auftrag im Chat: the same
+  # Entwickeln auf dem Pi → Terminal im Browser: root's fixed program without arguments ("" = none allowed); it checks
+  # the switches itself and starts bash as spark-dev in a unit of its own (app/entwickeln.py terminal_befehl)
+  if [ "$WITH_ENTWICKELN" = 1 ]; then printf ', /usr/local/bin/spark-dev-terminal ""'; fi
   printf ', /usr/bin/systemctl start --no-block speech-spark-messen-wunsch\n'   # Zustand → Modelle „Messen“: the same
 } >/etc/sudoers.d/speech-spark
 chmod 440 /etc/sudoers.d/speech-spark
@@ -1754,8 +1759,8 @@ fi
 
 # ---------------------------------------------------------------- Entwickeln auf dem Pi: user, clone, settings, limits
 # A person's account for the terminal (SSH): no password (an SSH key only), no sudo, not in the service user's group,
-# its own home; its own clone of the installed version (never $PREFIX/src, never touched again once there) with the
-# branch "lokal"; OpenCode's settings and rules (app/entwickeln.py einrichten: the repository's own CLAUDE.md and
+# its own home; its own clone of the installed version (from root's bundle: spark-dev never runs git in $PREFIX/src)
+# with the branch "lokal"; OpenCode's settings and rules (app/entwickeln.py einrichten: the repository's own CLAUDE.md and
 # guidelines, one source); its own key for the LLM-Tor; network only to the LLM-Tor (nftables, like the Werkstatt);
 # memory, CPU and disk below the panel's (its user slice); the quick test's environment, refreshed every night.
 if [ "$WITH_ENTWICKELN" = 1 ]; then
@@ -1771,21 +1776,13 @@ if [ "$WITH_ENTWICKELN" = 1 ]; then
   done
   chmod 700 "$DEV_HOME"
   dev() { runuser -u spark-dev -- env -i PATH=/usr/bin:/bin LANG=C.UTF-8 HOME="$DEV_HOME" "$@"; }
-  dev git config --global --replace-all safe.directory "$PREFIX/src"
+  # never a safe.directory: spark-dev runs no git in $PREFIX/src (root's; newer git stops there with "dubious ownership")
+  dev git config --global --fixed-value --unset-all safe.directory "$PREFIX/src" >/dev/null 2>&1 || true
   dev git config --global user.name >/dev/null || dev git config --global user.name "spark-dev"
   dev git config --global user.email >/dev/null || dev git config --global user.email "spark-dev@localhost"
-  DEV_KLON="$DEV_HOME/speech-on-dgx-spark"
-  if [ ! -e "$DEV_KLON" ]; then
-    dev git clone --quiet --no-checkout --origin spark "$PREFIX/src" "$DEV_KLON" || die "could not make the clone of spark-dev"
-    dev git -C "$DEV_KLON" remote add origin "$(git -C "$PREFIX/src" remote get-url origin)" || true
-  fi
-  # the remote "spark" is the installer's clone: the installed main and the installed local commits, offline
-  dev git -C "$DEV_KLON" config --replace-all remote.spark.fetch '+refs/remotes/origin/main:refs/remotes/spark/main'
-  dev git -C "$DEV_KLON" config --add remote.spark.fetch '+refs/spark/lokal:refs/remotes/spark/lokal'
-  dev git -C "$DEV_KLON" fetch --quiet spark 2>/dev/null || true
-  if ! dev git -C "$DEV_KLON" rev-parse --verify -q refs/heads/lokal >/dev/null; then
-    dev git -C "$DEV_KLON" switch --quiet -c lokal "$(jq -r '.commit' "$PREFIX/VERSION.json")" || warn "spark-dev's branch lokal not made"
-  fi
+  # its clone (~/speech-on-dgx-spark, branch lokal): root writes a bundle of the installed version, spark-dev fetches
+  # from that file (app/entwickeln.py klon_anlegen). Again on every run: a half-made clone is filled, its work stays.
+  SPEECH_SPARK_PREFIX=$PREFIX SPEECH_SPARK_STATE=$VAR/state /usr/bin/python3 -I "$PREFIX/app/entwickeln.py" klon || die "could not make the clone of spark-dev (run sudo ./install.sh --entwickeln again)"
   # its key for the LLM-Tor (only the SHA-256 goes into the config) once, OpenCode's settings on every run
   [ -s "$DEV_HOME/.config/spark/tor-key" ] || bash "$PREFIX/app/speech-spark.sh" entwickeln schluessel neu >/dev/null \
     || warn "no key for the LLM-Tor yet: sudo speech-spark entwickeln schluessel neu"
@@ -1797,6 +1794,16 @@ if [ "$WITH_ENTWICKELN" = 1 ]; then
 exec /usr/bin/python3 -I $PREFIX/app/entwickeln.py opencode "\$@"
 EOF
   chmod 755 /usr/local/bin/spark-opencode
+  # the browser terminal of Zustand → Werkstatt → Entwickeln (panel: entwickelnseite.py): root's, no arguments; the
+  # panel may start only this (its sudoers line above)
+  cat >/usr/local/bin/spark-dev-terminal <<EOF
+#!/bin/sh
+# Entwickeln auf dem Pi: bash as spark-dev for the panel's browser terminal (app/entwickeln.py terminal_befehl)
+[ "\$#" = 0 ] || exit 2
+exec /usr/bin/python3 -I $PREFIX/app/entwickeln.py terminal
+EOF
+  chown root:root /usr/local/bin/spark-dev-terminal
+  chmod 755 /usr/local/bin/spark-dev-terminal
   # network: the LLM-Tor (this computer's loopback, or the model computer's door), DNS, and the free ports of its own
   # tests on the loopback; never the panel, an engine or anything else (code check 19.10. C7, as the Werkstatt)
   DEV_LLM=$(cfg_int .llm.port 31006)
@@ -1878,7 +1885,59 @@ Persistent=true
 [Install]
 WantedBy=timers.target
 EOF
+  # Weg A (An GitHub geben): root's oneshot pushes spark-dev's branch as opencode/<thema> with root's deploy key
+  # (app/entwickeln.py an_github); the panel starts it after writing its wish, the timer tries a waiting wish again
+  # every 15 minutes (offline). spark-dev's firewall above stays closed: it never talks to GitHub itself.
+  cat >/etc/systemd/system/speech-spark-github.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: hand spark-dev's branch to GitHub (opencode/ only, never main)
+After=network-online.target
+
+[Service]
+LogNamespace=speech-spark
+Type=oneshot
+Nice=10
+MemoryMax=512M
+PrivateTmp=yes
+ProtectSystem=full
+NoNewPrivileges=yes
+Environment=SPEECH_SPARK_PREFIX=$PREFIX SPEECH_SPARK_ETC=$ETC SPEECH_SPARK_VAR=$VAR
+ExecStart=/bin/bash $PREFIX/app/speech-spark.sh lokal an-github --wunsch
+TimeoutStartSec=20min
+EOF
+  # Code-Auftrag im Chat (package 3b): root's oneshot takes the panel's checked wish and runs OpenCode once as
+  # spark-dev in its own unit on a branch opencode/auftrag-<n> of spark-dev's clone (app/entwickeln.py auftrag_lauf)
+  cat >/etc/systemd/system/speech-spark-auftrag.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: a Code-Auftrag from the chat, OpenCode as spark-dev on its own branch
+
+[Service]
+LogNamespace=speech-spark
+Type=oneshot
+Nice=10
+MemoryMax=512M
+PrivateTmp=yes
+ProtectSystem=full
+NoNewPrivileges=yes
+Environment=SPEECH_SPARK_PREFIX=$PREFIX SPEECH_SPARK_ETC=$ETC SPEECH_SPARK_VAR=$VAR
+ExecStart=/bin/bash $PREFIX/app/speech-spark.sh lokal auftrag
+TimeoutStartSec=40min
+EOF
+  cat >/etc/systemd/system/speech-spark-github.timer <<EOF
+[Unit]
+Description=Speech on DGX Spark: a branch waiting for the internet goes to GitHub as soon as it answers
+
+[Timer]
+OnCalendar=*:0/15
+RandomizedDelaySec=60
+Persistent=false
+
+[Install]
+WantedBy=timers.target
+EOF
+  command -v ssh >/dev/null || apt_wait install -y -q openssh-client || warn "ssh missing: An GitHub geben does not work"
   systemctl daemon-reload
+  systemctl enable --now speech-spark-github.timer >/dev/null 2>&1 || true
   systemctl enable speech-spark-entwickeln-fw.service >/dev/null 2>&1 || true
   systemctl restart speech-spark-entwickeln-fw.service 2>/dev/null || warn "the firewall of spark-dev did not load"
   systemctl enable --now speech-spark-lokaltest-umgebung.timer >/dev/null 2>&1 || true

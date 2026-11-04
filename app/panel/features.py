@@ -103,6 +103,8 @@ DESK_SKIP = {
     "memory": _D_LINK, "mfa": _D_LINK + " (Meine Daten on the Ich page Sicherheit)",
     "melden": "stays in the panel; the Begleiter's Kopplung page opens it (Problem melden …)",
     "fernzugang": "an admin page, stays in the panel; the Begleiter's settings (Übersicht) link to it for an admin",
+    "mappen": "set up, looked at and deleted on the panel's page Mappen and in the iPhone app; its tools and the Mappe "
+              "filter of document_search and fund_suche work in Frag Spark like in every answer",
 }
 # Code-Prüfung D8 (one name per thing): an Ich page carries the name of its function, or a word of it, so "Funktionen →
 # Telefon" and "Ich → Telefon" are found as the same thing; these pages are named otherwise, each with its reason
@@ -452,6 +454,10 @@ FEATURES = (
       me="dmbox", guide="dungeongeben"),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",),
       parent="documents", me="docbox", guide="docbrief"),
+    # Auswertungen je Dokument (auswertung.py, plan open-notebook Stufe 2): Kurzfassung and Kernaussagen by themselves in
+    # quiet minutes, the rest per click; every point with its place, checked by the panel's fixed rules, never the model
+    F("auswertungen", "Auswertungen", "Analyses", "data", ("doc_auswertung",), parent="documents", me="docbox",
+      guide="auswertungen"),
     # Suchprüfung (suchpruefung.py, plan suche-schaerfen, Stufe 1): test questions measure how often the search
     # finds the right passage; the admin's release is enough (no profile switch, Freigabe rule 2026-10-13)
     F("suchpruefung", "Suchprüfung", "Search check", "data", ("search_check",), parent="documents", me="docbox",
@@ -792,6 +798,15 @@ FEATURES = (
     # entwickeln.py + entwickelnseite.py (plan opencode-pi, package 1): OpenCode with the own language model in the
     # terminal of the panel computer (user spark-dev, its own clone), local changes installed like an update (Weg B)
     F("entwickeln", "Entwickeln auf dem Pi", "Develop on the Pi", "sec", ("entwickeln",), guide="entwickeln"),
+    # entwickeln.py an_github (package 2, Weg A): spark-dev's branch to GitHub as opencode/<thema> for a Claude thread
+    # to review; root pushes it with its own deploy key, never main, never forced; spark-dev stays off the internet
+    F("entwickelngithub", "An GitHub geben", "Hand to GitHub", "sec", ("entwickeln_github",), parent="entwickeln", guide="entwickelngithub"),
+    # entwickelnseite.py (package 3): a shell as spark-dev in the browser under Zustand → Werkstatt → Entwickeln, a fresh
+    # code every session; root's fixed program starts it in a unit of its own, never as the panel's user or root
+    F("entwickelnterminal", "Terminal im Browser", "Terminal in the browser", "sec", ("entwickeln_terminal",), parent="entwickeln", guide="entwickelnterminal"),
+    # codeauftrag.py (package 3b): an admin types a code order in the panel's or the app's chat; OpenCode works on it once
+    # as spark-dev on its own branch, the card shows the change; installing stays the admin's step with a fresh code
+    F("entwickelnauftrag", "Code-Auftrag im Chat", "Code order in the chat", "sec", ("entwickeln_auftrag",), parent="entwickeln", guide="entwickelnauftrag"),
     # fernzugang.py + anker/spark-anker.py (plan ssh-vermittlung, stage 1): the shell of a server elsewhere in the
     # browser; the server's anchor calls the panel, admins only, no tool for the model
     F("fernzugang", "Fernzugang zu Servern", "Remote access to servers", "sec", ("fernzugang",), guide="fernzugang"),
@@ -923,7 +938,7 @@ DUTY = None
 REVIEW = None
 
 # chat.* switches that are no function a profile uses (how the Spark itself works)
-SPARK_ONLY = {"wachposten", "public", "thinking", "prompt_cache", "answer_check", "answer_check_more", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "entwickeln", "angriffsprobe", "weicheabstimmen", "fernzugang", "fernzugangmeldung", "fernzugangalle", "spontanhilfe", "fernzuganghilfe", "fernbild", "fernbildablage", "fernnotizen", "fernordner", "ferngross", "fernweb",
+SPARK_ONLY = {"wachposten", "public", "thinking", "prompt_cache", "answer_check", "answer_check_more", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "entwickeln", "entwickelngithub", "entwickelnterminal", "entwickelnauftrag", "angriffsprobe", "weicheabstimmen", "fernzugang", "fernzugangmeldung", "fernzugangalle", "spontanhilfe", "fernzuganghilfe", "fernbild", "fernbildablage", "fernnotizen", "fernordner", "ferngross", "fernweb",
               "helfer", "helferweiche", "helferdungeon", "helfermail", "helferangriff", "helferkurz"}
 # Everything starts off (Dominik 2026-10-08). The only values shipped on in config.default.json are protection and
 # stability rules and the basic functions the Spark had from the start, each with its reason here (Dominik 2026-10-12,

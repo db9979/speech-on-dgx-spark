@@ -9,7 +9,7 @@ name: SparkHilfe Windows
 on:
   workflow_dispatch:
   push:
-    branches: [main, claude/project-thread-34t0d8]   # TEMP branch test
+    branches: [main]
     paths:
       - tools/sparkhilfe/**
       - tools/begleiter/windows/Sicht.cs
@@ -80,24 +80,6 @@ jobs:
             dist/*.exe
             dist/sparkhilfe.json
           if-no-files-found: error
-
-  begleiter:   # TEMP branch test: the Begleiter still builds with the shared core
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
-        with:
-          persist-credentials: false
-      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
-        with:
-          dotnet-version: 8.0.x
-      - name: Build the Begleiter x64 and ARM64
-        shell: pwsh
-        run: |
-          foreach ($arch in 'x64', 'arm64') {
-            dotnet publish tools/begleiter/windows/SparkBegleiter.csproj -c Release -r "win-$arch" --self-contained true -p:PublishSingleFile=true -o "pub/$arch"
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          }
 
   publish:
     needs: build

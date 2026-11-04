@@ -114,6 +114,8 @@ TEXT_RULES = 30_000      # characters of a document the rules read for amount an
 ROUND_S = 300            # a round per profile at most every five minutes
 AUSZUG = 300
 LIVE_CACHE = 10
+GROESSE_CACHE = 60       # seconds the sizes of the index files are kept (Finden → Einstellungen, Admin, Live)
+GROESSE_ZEILE = 64       # bytes a row costs besides its text when fund.db is split by source (an estimate)
 # Stufe D: tags proposed by the model (schlagworte_due, pruefe), the points of the Wissenskarte, the Sofort-Karte
 KNOTEN_TYPEN = tuple(t for t in TYPEN if t in wissenskarte.ENT_ARTEN)   # tags that can be a point of the Wissenskarte
 TAG_DAY = 200            # entries per profile and day the model looks at (chat.fund_tag_day, 5 to 500)
@@ -134,6 +136,7 @@ _running = set()         # profiles whose round runs now
 _last = {}               # uid -> (when the last round ran, the stamp of its sources)
 _mehr = set()            # profiles whose last round stopped at its budget: the next one runs whatever the stamp
 _live = {"at": 0.0, "d": None}
+_groesse_da = {}         # uid -> (when, the sizes of groesse)
 _stat = {"day": "", "suchen": 0, "ms": [], "verworfen": 0, "fehler": 0, "runden": 0, "bezug": 0, "bezug_fehlt": 0,
          "tag_heute": 0, "tag_ok": 0, "tag_weg": 0, "tag_fehler": 0, "sofort": 0, "knoten": 0}
 _stat_lock = threading.Lock()
@@ -800,9 +803,25 @@ def leeren(uid, hand=False):
             con.execute(f"DELETE FROM {t}")
         if hand:
             con.execute("DELETE FROM fund_hand")
+    _klein(uid)
     _last.pop(uid, None)
+    _groesse_da.pop(uid, None)
     _live["d"] = None
     return n
+
+
+def _klein(uid):
+    """After emptying: the file gives its pages back (VACUUM, then the WAL truncated), so the size shown goes down."""
+    with _lock(uid):
+        try:
+            con = sqlite3.connect(db_path(uid), timeout=15, isolation_level=None)
+            try:
+                con.execute("VACUUM")
+                con.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+            finally:
+                con.close()
+        except sqlite3.Error:
+            print("fund: verkleinern fehler", flush=True)
 
 
 # ---------------------------------------------------------------- the Wissenskarte's points (S3, Stufe D)
@@ -1110,14 +1129,15 @@ class _Erlaubt:
 
 
 def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, von=None, bis=None, anzahl=MAX_SHOW,
-          now=None, bezug=None, info=None, quellen=None, frei=None):
+          now=None, bezug=None, info=None, quellen=None, frei=None, nur=None):
     """The hits of this profile: [{"id", "quelle", "ext", "titel", "wann", "auszug", "felder", "tags", "weg", "score"}]
     (a mail also "anhaenge": the attachments that matched, one card with them). Only the profile's own index and the
     sources it may use; never another profile's (its file, its marks). bezug: an event word from the person's own words
     (bezug_aus): with an appointment of the own calendar, entries of its window get a bonus; `info` (a dict) learns
     {"bezug": word, "termin": unix time or None}. quellen: only these sources (lokal: fund.LOKAL). frei: (sources,
     mailbox ids, calendar ids) given instead of the profile's releases, only for the measurement on its own
-    throw-away index (fundmessung.py), never from a request."""
+    throw-away index (fundmessung.py), never from a request. nur: (document ids, Wissensbuch page ids) of a Mappe
+    (mappen.fuer_werkzeug / fuer_seite): only these, every other source falls away."""
     t0 = time.time()
     now = time.time() if now is None else now
     mine = {q.name: q for q in quellen_fuer(uid)} if frei is None else {n: BY_NAME[n] for n in frei[0] if n in BY_NAME}
@@ -1125,6 +1145,8 @@ def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, v
         mine = {k: v for k, v in mine.items() if k == quelle}
     if quellen is not None:
         mine = {k: v for k, v in mine.items() if k in quellen}
+    if nur is not None:   # a Mappe (mappen.py): only its documents and Wissensbuch pages
+        mine = {k: v for k, v in mine.items() if k in ("dokument", "nas", "remarkable", "wissensbuch")}
     if not mine or not _exists(uid):
         _note(0, now=now)
         return []
@@ -1152,6 +1174,12 @@ def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, v
                     got |= _klar_absender(con, wert)
                     got |= _blind_from(con, uid, wert)
                 ok_ids = got if ok_ids is None else ok_ids & got
+        if nur is not None:   # the entries of the Mappe, by their keys in the index (mp_eintrag, never fund_tag)
+            dn = [n for n in ("dokument", "nas", "remarkable") if n in mine]
+            got = set(_ext_ids(con, dn, nur[0]).values()) if dn and nur[0] else set()
+            if nur[1] and "wissensbuch" in mine:
+                got |= set(_ext_ids(con, ["wissensbuch"], nur[1]).values())
+            ok_ids = got if ok_ids is None else ok_ids & got
         cond, args = ["quelle IN (%s)" % ",".join("?" * len(mine))], list(mine)
         if konten is not None:
             cond.append("(quelle NOT IN ('mail','anhang') OR substr(ext, 1, instr(ext, ':') - 1) IN (%s))"
@@ -1196,7 +1224,7 @@ def suche(uid, worte="", quelle=None, kategorie=None, firma=None, person=None, v
         dq = [n for n in ("dokument", "nas", "remarkable") if n in mine]
         if q and dq:
             seen, i = set(), 0
-            dh = documents.search(uid, worte, k=MAX_HITS)
+            dh = documents.search(uid, worte, k=MAX_HITS, only_docs=set(nur[0]) if nur is not None else None)
             ext_id = _ext_ids(con, dq, [h["id"] for h in dh], pairs=True)
             allowed_ids.vorab(ext_id.get((_doc_source({"source": h.get("source")}), h["id"])) for h in dh)
             for h in dh:
@@ -1416,7 +1444,87 @@ def stand(uid, now=None):
                          "stand": frisch.stand(last[q.name], now) if last.get(q.name) else ""} for q in QUELLEN],
             "rueckstand": max(0, docs - have_docs),
             "kategorien": [{"wert": k, "n": kat.get(k, 0), "bereich": k in BEREICHE} for k in KATEGORIEN],
-            "typen": [{"typ": k, "de": v[0], "en": v[1]} for k, v in TYP_WORT.items()]}
+            "typen": [{"typ": k, "de": v[0], "en": v[1]} for k, v in TYP_WORT.items()],
+            "groesse": groesse(uid)}
+
+
+# ---------------------------------------------------------------- the size of the index (Dominik 2026-11-03)
+def _datei(path):
+    """Bytes of an SQLite file with its -wal and -shm (0 for what is not there)."""
+    n = 0
+    for p in (path, path + "-wal", path + "-shm"):
+        try:
+            n += os.path.getsize(p)
+        except OSError:
+            pass
+    return n
+
+
+def dateien(uid):
+    """(fund.db, wissen.db) of a profile in bytes, each with -wal and -shm: only os.stat, nothing opened."""
+    return _datei(db_path(uid)), _datei(documents.db_path(uid))
+
+
+def _gewichte(uid):
+    """fund.db by source, the weights of the estimate: per source its rows weighed by the bytes of their own text, the
+    words or marks of its rows (fund_fts, fund_blind) and GROESSE_ZEILE each. Read only, without the profile's lock
+    (WAL: a round that writes is never waited for); as the last connection it leaves no -wal or -shm behind."""
+    if not _exists(uid):
+        return {}
+    try:
+        con = sqlite3.connect(db_path(uid), timeout=5)
+        try:
+            rows = con.execute(
+                "SELECT i.quelle, COUNT(*) * ? + COALESCE(SUM(LENGTH(CAST(i.titel AS BLOB)) + LENGTH(CAST(i.auszug AS BLOB)) "
+                "+ LENGTH(CAST(i.felder AS BLOB)) + LENGTH(CAST(i.ext AS BLOB)) + LENGTH(CAST(i.stand AS BLOB)) "
+                "+ COALESCE(LENGTH(CAST(f.c0 AS BLOB)), 0) + COALESCE(LENGTH(CAST(b.c0 AS BLOB)), 0)), 0) "
+                "FROM fund_item i LEFT JOIN fund_fts_content f ON f.id = i.id LEFT JOIN fund_blind_content b ON b.id = i.id "
+                "GROUP BY i.quelle", (GROESSE_ZEILE,)).fetchall()
+        finally:
+            con.close()
+    except sqlite3.Error:
+        return {}
+    return {str(q): int(w or 0) for q, w in rows if w}
+
+
+def _anteile(weights, total):
+    """total split by the weights; the parts add up to total exactly (the rest of the division to the largest)."""
+    alle = sum(weights.values())
+    if not alle or not total:
+        return []
+    teile = {q: total * w // alle for q, w in weights.items()}
+    gross = max(teile, key=lambda q: (teile[q], q))
+    teile[gross] += total - sum(teile.values())
+    return [{"name": q, "bytes": n} for q, n in sorted(teile.items(), key=lambda x: (-x[1], x[0]))]
+
+
+def _groesse(uid):
+    weights = _gewichte(uid)   # first, so the files are measured as that read left them
+    f, w = dateien(uid)
+    return {"index": f, "teile": _anteile(weights, f), "geschaetzt": True, "wissen": w, "summe": f + w}
+
+
+def groesse(uid, now=None):
+    """The size of a profile's index, numbers in bytes only (the one source for Finden → Einstellungen, the admin's
+    profile page, Live and the apps): index = fund.db with -wal and -shm, teile = that split by source (an estimate,
+    geschaetzt), wissen = wissen.db with -wal and -shm (Dokumente und Wissen: text, vectors, Wissensbuch, Wissenskarte),
+    summe = both. Kept GROESSE_CACHE seconds; it reads the files, so the routes call it in a thread."""
+    now = time.time() if now is None else now
+    hit = _groesse_da.get(uid)
+    if hit and 0 <= now - hit[0] < GROESSE_CACHE:
+        return hit[1]
+    d = _groesse(uid)
+    _groesse_da[uid] = (now, d)
+    return d
+
+
+def groesse_text(n, en=False):
+    """Live's words for a size (the panel's sizeText in base.js): MB below 1 GB, else GB with one decimal."""
+    n = int(n or 0)
+    if n >= 1_000_000_000:
+        v = f"{n / 1e9:.1f}"
+        return (v if en else v.replace(".", ",")) + " GB"
+    return f"{max(1, round(n / 1e6)) if n else 0} MB"
 
 
 def _rest(con):
@@ -1446,9 +1554,12 @@ def for_live():
             if features.allowed("fundschlagworte", uid):
                 offen_n += _offen(con)
     fm = _fm().for_live()
+    # the size of the index over all profiles (fund.db and wissen.db with -wal and -shm, os.stat only, never a name)
+    groessen = [dateien(u) for u in profiles.user_ids()]
     with _stat_lock:
         ms = int(statistics.median(_stat["ms"])) if _stat["ms"] else None
         d = {"on": True, "eintraege": items, "profile": profs, "quellen": per, "hand": hand_n,
+             "bytes_index": sum(g[0] for g in groessen), "bytes_wissen": sum(g[1] for g in groessen),
              "suchen": _stat["suchen"] if _stat["day"] == _day(time.time()) else 0, "ms": ms,
              "verworfen": _stat["verworfen"], "fehler": _stat["fehler"], "runden": _stat["runden"],
              "bezug": _stat["bezug"] if _stat["day"] == _day(time.time()) else 0,
@@ -1822,6 +1933,7 @@ TOOL = {"type": "function", "function": {
         "quelle": {"type": "string", "enum": [q.name for q in QUELLEN]},
         "kategorie": {"type": "string", "enum": list(KATEGORIEN)},
         "firma": {"type": "string"}, "person": {"type": "string"},
+        "mappe": {"type": "string", "description": "only within this Mappe (collection) of the user, its name as the user said it"},
         "anzahl": {"type": "integer", "minimum": 1, "maximum": TOOL_MOST}}, "required": ["worte"]}}}
 HINT = ("Sucht der Nutzer etwas Eigenes (eine Rechnung, einen Vertrag, ein Dokument, eine Mail, eine Seite im Wissensbuch, "
         "einen alten Termin, ein früheres Gespräch, eine Liste), ruf fund_suche mit seinen Worten. Zeitraum und „vom …“ "
@@ -1940,7 +2052,9 @@ async def tool(name, args, ctx):
         n = TOOL_MOST
     t0 = time.time()
     info = {}
-    hits = await asyncio.to_thread(suche, uid, worte, anzahl=n, bezug=bz[0] if bz else None, info=info, **flt)
+    import mappen
+    nur, mnote = await asyncio.to_thread(mappen.fuer_werkzeug, who, args.get("mappe"), own, ctx.get("mappe"))
+    hits = await asyncio.to_thread(suche, uid, worte, anzahl=n, bezug=bz[0] if bz else None, info=info, nur=nur, **flt)
     ms = int((time.time() - t0) * 1000)
     if dropped:
         _note(verworfen=dropped)
@@ -1961,8 +2075,8 @@ async def tool(name, args, ctx):
     elif hits and callable(fest):
         print(f"fund: sofort | nicht klar | {len(hits)} treffer an das modell", flush=True)
     if not hits:
-        return satz + "Keine Treffer in den eigenen Daten (Finden). Sag das kurz; erfinde nichts."
-    return satz + "Treffer in den eigenen Daten (Finden), neueste Daten zuerst nach Passung:\n" + \
+        return mnote + satz + "Keine Treffer in den eigenen Daten (Finden). Sag das kurz; erfinde nichts."
+    return mnote + satz + "Treffer in den eigenen Daten (Finden), neueste Daten zuerst nach Passung:\n" + \
         "\n".join(f"{i + 1}. {_line(h, now)}" for i, h in enumerate(hits))
 
 
@@ -2008,6 +2122,8 @@ async def search_route(request: Request, prof=Depends(own_profile)):
     _need(uid)
     guard.limit(request, "fund", uid)
     body = await json_body(request, 4096)
+    import mappen
+    nur = await asyncio.to_thread(mappen.fuer_seite, prof, body.get("mappe")) if body.get("mappe") else None
     quelle = body.get("quelle") if body.get("quelle") in BY_NAME else None
     kat = body.get("kategorie") if body.get("kategorie") in KATEGORIEN else None
     von = body.get("von") if _ts(body.get("von")) is not None else None
@@ -2024,7 +2140,7 @@ async def search_route(request: Request, prof=Depends(own_profile)):
     info = {}
     t0 = time.time()
     hits = await asyncio.to_thread(suche, uid, rest, quelle, kat, None, None, von, bis, MAX_SHOW, None,
-                                   bz[0] if bz else None, info)
+                                   bz[0] if bz else None, info, nur=nur)
     deutung = {}
     if zr:
         deutung.update(von=zr["von"], bis=zr.get("bis", ""))

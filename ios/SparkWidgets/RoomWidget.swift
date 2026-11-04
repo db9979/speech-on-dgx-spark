@@ -69,7 +69,7 @@ struct RoomView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Image(systemName: entry.rooms.isEmpty ? "ear" : "ear.badge.waveform")
                     .font(.title2.weight(.semibold))
-                    .foregroundStyle(entry.rooms.isEmpty ? Color.secondary : Color.green)
+                    .foregroundStyle(entry.rooms.isEmpty ? Color.secondary : Theme.ok)
                 Text(title).font(.headline).lineLimit(2).minimumScaleFactor(0.8)
                 if let until {
                     Text("bis \(until, style: .time)").font(.subheadline).foregroundStyle(.secondary)
@@ -77,7 +77,7 @@ struct RoomView: View {
                     Button(intent: EndRoomsIntent()) {
                         Label("Beenden", systemImage: "stop.fill").font(.caption.weight(.semibold))
                     }
-                    .tint(.red)
+                    .tint(Theme.bad)
                 } else if !entry.known {
                     Text("Im Panel unter Ich → iPhone-App einschalten").font(.caption).foregroundStyle(.secondary)
                 }
@@ -106,14 +106,14 @@ struct RoomActivityWidget: Widget {
         ActivityConfiguration(for: RoomActivityAttributes.self) { context in
             RoomLockView(state: context.state, stale: context.isStale)
                 .padding()
-                .activityBackgroundTint(Color.black.opacity(0.6))
-                .activitySystemActionForegroundColor(.white)
+                .activityBackgroundTint(Theme.shade.opacity(0.6))
+                .activitySystemActionForegroundColor(Theme.onAccent)
                 .widgetURL(roomsURL)
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     Label(RoomLive.label(context.state.names, count: context.state.count), systemImage: "ear.badge.waveform")
-                        .font(.headline).foregroundStyle(.green).lineLimit(1)
+                        .font(.headline).foregroundStyle(Theme.ok).lineLimit(1)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     RoomCountdown(until: context.state.until, stale: context.isStale)
@@ -122,14 +122,14 @@ struct RoomActivityWidget: Widget {
                     Button(intent: EndRoomsIntent()) {
                         Label("Raum-Modus beenden", systemImage: "stop.fill")
                     }
-                    .tint(.red)
+                    .tint(Theme.bad)
                 }
             } compactLeading: {
-                Image(systemName: "ear.badge.waveform").foregroundStyle(.green)
+                Image(systemName: "ear.badge.waveform").foregroundStyle(Theme.ok)
             } compactTrailing: {
                 RoomCountdown(until: context.state.until, stale: context.isStale).frame(maxWidth: 52)
             } minimal: {
-                Image(systemName: "ear.badge.waveform").foregroundStyle(.green)
+                Image(systemName: "ear.badge.waveform").foregroundStyle(Theme.ok)
             }
             .widgetURL(roomsURL)
         }
@@ -155,21 +155,21 @@ struct RoomLockView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: "ear.badge.waveform").font(.title2).foregroundStyle(.green)
+            Image(systemName: "ear.badge.waveform").font(.title2).foregroundStyle(Theme.ok)
             VStack(alignment: .leading, spacing: 2) {
                 Text(RoomLive.listening(state.names, count: state.count))
-                    .font(.headline).foregroundStyle(.white).lineLimit(1)
+                    .font(.headline).foregroundStyle(Theme.onAccent).lineLimit(1)
                 HStack(spacing: 4) {
                     Text("bis \(state.until, style: .time) ·")
                     RoomCountdown(until: state.until, stale: stale)
                 }
-                .font(.subheadline).foregroundStyle(.white.opacity(0.8))
+                .font(.subheadline).foregroundStyle(Theme.onAccent.opacity(0.8))
             }
             Spacer(minLength: 8)
             Button(intent: EndRoomsIntent()) {
                 Text("Beenden").font(.subheadline.weight(.semibold))
             }
-            .tint(.red)
+            .tint(Theme.bad)
         }
     }
 }

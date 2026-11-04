@@ -69,7 +69,7 @@ function zustand(s){if(s)ZLAST=s;s=ZLAST;if(!s)return;
   // the notes above, one tap away (they hold the way to the place each is about)
   if(al.length){const a=document.createElement('a');a.href='#';a.className='wayl';a.textContent=t('Hinweise stehen oben.','Notes are shown above.');
     a.onclick=e=>{e.preventDefault();const f=$('alerts').querySelector('details.afold');if(f)f.open=true;const n=$('alerts').firstElementChild;if(n)sFlash(n)};$('ztext').appendChild(a)}
-  zCards(s);$('zhead').dataset.lvl=lvl;$('zicon').textContent=lvl==='ok'?'✓':'!';$('zgo').hidden=!need.length;
+  zCards(s);$('zhead').dataset.lvl=lvl;$('zicon').textContent='';$('zgo').hidden=!need.length;
   document.querySelectorAll('.hdot').forEach(d=>d.className='hdot '+lvl);
   $('zneed').hidden=!need.length;const L=$('zlist');L.textContent='';
   for(const x of need){const r=document.createElement('div');r.className='zrow';const sp=document.createElement('span');sp.className='pill '+x.lvl;sp.textContent=x.lvl==='bad'?t('Fehler','Error'):t('Offen','Open');
@@ -95,7 +95,7 @@ function zCard(lvl,ic,name,big,unit,small,go,way){const b=way?wayEl('',way):docu
   if(go){b.type='button';b.onclick=go}b.classList.add('zcard');b.dataset.lvl=lvl;
   const hd=document.createElement('span');hd.className='zhd';const bub=document.createElement('span');bub.className='zbub';bub.appendChild(zIco(ic));
   const k=document.createElement('span');k.className='zk';k.textContent=name;hd.append(bub,k);if(go||way)hd.appendChild(zIco('chev','zch'));
-  const v=document.createElement('b');v.textContent=big;if(unit){const u=document.createElement('small');u.className='zu';u.textContent=unit;v.appendChild(u)}b.append(hd,v);
+  const v=document.createElement('b');v.textContent=big;if(big&&!/^[\d–-]/.test(big))v.className='zw';if(unit){const u=document.createElement('small');u.className='zu';u.textContent=unit;v.appendChild(u)}b.append(hd,v);
   if(small){const m=document.createElement('small');m.textContent=small;b.appendChild(m)}return b}
 // the wide „Heute“ tile: answers per hour of the last 24 hours (admin.glance hours, oldest first, the running hour
 // last) as bars, with the hour under every sixth bar; a jump link to the requests like the answers tile
@@ -385,7 +385,7 @@ async function loadCfg(){CFG=await (await api('/api/config')).json();
   for(const[sec,o]of Object.entries(CFG))for(const[k,v]of Object.entries(o)){const el=$(sec+'.'+k);if(!el)continue;
     if(el.type==='checkbox')el.checked=v;else{if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value==v))el.add(new Option(v));el.value=Array.isArray(v)?v.join(', '):v}};instrHint();ttsVoiceOpts();try{kxChips()}catch{};
   await setReady();getDefaults=await renderSet($('chatdefaults'),{...SDEF,...(CFG.chat.defaults||{})},null);if(window.faceTiles)faceTiles($('pane-talk'));if(typeof presetMove==='function')presetMove();
-  asrRec();cfgDeps();if(typeof guidesCount==='function')guidesCount();if(typeof tgAdmin==='function')tgAdmin();visionLoad();satzendeLoad();bildTestLoad();musikModelLoad();dlLoad();if(typeof nzLoad==='function')nzLoad();if(typeof gehLoad==='function')gehLoad();if(typeof telLoad==='function')telLoad();if(typeof apnsAdmin==='function')apnsAdmin();if(typeof iupdAdmin==='function')iupdAdmin();if(typeof coadmAdmin==='function')coadmAdmin();if(typeof espAdmin==='function')espAdmin();if(typeof andAdmin==='function')andAdmin();if(typeof deskAdmin==='function')deskAdmin();if(typeof agentAdmin==='function')agentAdmin();if(typeof vbAdmin==='function')vbAdmin();document.querySelectorAll('.pane').forEach(p=>markDirty(p,false));document.querySelectorAll('.savemsg').forEach(m=>m.textContent='');glance();glanceLoad();llmModels()}
+  asrRec();cfgDeps();if(typeof guidesCount==='function')guidesCount();if(typeof tgAdmin==='function')tgAdmin();visionLoad();satzendeLoad();bildTestLoad();musikModelLoad();dlLoad();if(typeof nzLoad==='function')nzLoad();if(typeof awAdminLoad==='function')awAdminLoad();if(typeof gehLoad==='function')gehLoad();if(typeof telLoad==='function')telLoad();if(typeof apnsAdmin==='function')apnsAdmin();if(typeof iupdAdmin==='function')iupdAdmin();if(typeof coadmAdmin==='function')coadmAdmin();if(typeof espAdmin==='function')espAdmin();if(typeof andAdmin==='function')andAdmin();if(typeof deskAdmin==='function')deskAdmin();if(typeof agentAdmin==='function')agentAdmin();if(typeof vbAdmin==='function')vbAdmin();document.querySelectorAll('.pane').forEach(p=>markDirty(p,false));document.querySelectorAll('.savemsg').forEach(m=>m.textContent='');glance();glanceLoad();llmModels()}
 let getDefaults=null;
 // Sprachmodell (V01.0.292): a choice of the models the configured server reports (/api/admin/llm-models). The text
 // field chat.llm_model stays what is saved; the list only fills it. Without a list (server down, no address) or
@@ -817,9 +817,8 @@ let KXLN=null;try{KXLN=new Intl.DisplayNames([L==='en'?'en':'de'],{type:'languag
 const kxLang=c=>!c?t('ohne Sprache','no language'):c==='mul'?t('mehrsprachig','multilingual'):(()=>{try{const n=KXLN&&KXLN.of(c);return n&&n!==c?n:c}catch{return c}})();
 const KXG={wikipedia:'Wikipedia',wiktionary:'Wiktionary',wikivoyage:'Wikivoyage',wikibooks:'Wikibooks',wikiquote:'Wikiquote',wikisource:'Wikisource',wikiversity:'Wikiversity',wikinews:'Wikinews',ted:'TED',phet:'PhET',stack_exchange:'Stack Exchange',stackexchange:'Stack Exchange',gutenberg:'Gutenberg',devdocs:'Docs',vikidia:'Vikidia',wikihow:'wikiHow',other:t('Sonstiges','Other')};
 const kxGrp=g=>KXG[g]||(g?g.charAt(0).toUpperCase()+g.slice(1).replace(/_/g,' '):t('Sonstiges','Other'));
-const kxSize=n=>!n?'':n>=1e9?(n/1e9).toFixed(1).replace('.',L==='en'?'.':',')+' GB':Math.max(1,Math.round(n/1e6))+' MB';
 const kxNum=n=>n?n.toLocaleString(L==='en'?'en':'de')+' '+t('Artikel','articles'):'';
-const kxMeta=b=>[kxLang(b.lang),b.flavour,kxNum(b.count),kxSize(b.size),b.date].filter(Boolean).join(' · ');
+const kxMeta=b=>[kxLang(b.lang),b.flavour,kxNum(b.count),sizeText(b.size),b.date].filter(Boolean).join(' · ');
 function kxChips(){const box=$('kxsel'),sel=kxSel(),known=Object.fromEntries((KX.books||[]).map(b=>[b.key||kxKey(b.id),b]));box.textContent='';
   if(!sel.length){const m=document.createElement('span');m.className='mut';m.textContent=t('Keine Auswahl: deutsche und englische Wikipedia.','No choice: German and English Wikipedia.');box.appendChild(m);return}
   // one question asks at most kiwix.MAX_SEARCH_BOOKS (KX.most from the check): the German Wikipedia, the books that

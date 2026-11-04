@@ -12,6 +12,7 @@ import UniformTypeIdentifiers
 // No ⌘-Tab, no ⌘-Space, no free key combination.
 // Stufe 3 (bedienen.py, "operate"): nobody watches; the Spark hands one step at a time ("step"), each shown here
 // with its target marked and done only after „Erlauben“. Our own windows are left out of the pictures.
+// Picture, keys, inputs, frame, bar and question come from the core Sicht.swift (shared with SparkHilfe).
 // „Bildschirm beschreiben“ ("look"): asked like the rest; the panel takes one picture and ends the session.
 
 struct ViewAsk: Equatable {
@@ -34,53 +35,6 @@ struct ViewAsk: Equatable {
             return ViewAsk(id: id, control: want == "control" || want == "operate", operate: want == "operate", task: task,
                            look: want == "look")
         }
-    }
-}
-
-/// The keys a viewer may press (fernsicht.KEYS in the panel).
-enum ViewKeys {
-    static let keys: [String: (code: Int, flags: CGEventFlags)] = [
-        "enter": (kVK_Return, []), "escape": (kVK_Escape, []), "tab": (kVK_Tab, []), "backspace": (kVK_Delete, []),
-        "delete": (kVK_ForwardDelete, []), "space": (kVK_Space, []), "up": (kVK_UpArrow, []), "down": (kVK_DownArrow, []),
-        "left": (kVK_LeftArrow, []), "right": (kVK_RightArrow, []), "home": (kVK_Home, []), "end": (kVK_End, []),
-        "pageup": (kVK_PageUp, []), "pagedown": (kVK_PageDown, []),
-        "undo": (kVK_ANSI_Z, .maskCommand), "redo": (kVK_ANSI_Z, [.maskCommand, .maskShift]),
-        "copy": (kVK_ANSI_C, .maskCommand), "paste": (kVK_ANSI_V, .maskCommand), "save": (kVK_ANSI_S, .maskCommand),
-        "reload": (kVK_ANSI_R, .maskCommand), "find": (kVK_ANSI_F, .maskCommand),
-    ]
-}
-
-/// One picture of the main display as JPEG, at most 1600 pixels on the longer side.
-enum ViewShot {
-    static func take() -> (data: Data, width: Int, height: Int)? {
-        let fm = FileManager.default
-        let dir = fm.temporaryDirectory.appendingPathComponent("spark-schirm-" + UUID().uuidString, isDirectory: true)
-        guard (try? fm.createDirectory(at: dir, withIntermediateDirectories: false,
-                                       attributes: [.posixPermissions: 0o700])) != nil else { return nil }
-        defer { try? fm.removeItem(at: dir) }
-        let file = dir.appendingPathComponent("schirm.jpg")
-        let p = Process()
-        p.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
-        p.arguments = ["-x", "-m", "-t", "jpg", file.path]
-        p.standardInput = FileHandle.nullDevice
-        p.standardOutput = FileHandle.nullDevice
-        p.standardError = FileHandle.nullDevice
-        do {
-            try p.run()
-        } catch {
-            return nil
-        }
-        p.waitUntilExit()
-        guard p.terminationStatus == 0, let src = CGImageSourceCreateWithURL(file as CFURL, nil) else { return nil }
-        let opts: [CFString: Any] = [kCGImageSourceCreateThumbnailFromImageAlways: true,
-                                     kCGImageSourceThumbnailMaxPixelSize: 1600,
-                                     kCGImageSourceCreateThumbnailWithTransform: true]
-        guard let img = CGImageSourceCreateThumbnailAtIndex(src, 0, opts as CFDictionary) else { return nil }
-        let out = NSMutableData()
-        guard let dst = CGImageDestinationCreateWithData(out, UTType.jpeg.identifier as CFString, 1, nil) else { return nil }
-        CGImageDestinationAddImage(dst, img, [kCGImageDestinationLossyCompressionQuality: 0.6] as CFDictionary)
-        guard CGImageDestinationFinalize(dst) else { return nil }
-        return (out as Data, img.width, img.height)
     }
 }
 
@@ -131,53 +85,40 @@ final class ViewCenter {
 
     /// "no", "view" or "control"; "Ablehnen" is the first button, so Return alone shows nothing
     private func consent(_ ask: ViewAsk) -> String {
-        NSApp.activate(ignoringOtherApps: true)
-        let a = NSAlert()
-        a.alertStyle = .warning
+        let message: String, info: String
         if ask.operate {
-            a.messageText = "Spark möchte an diesem Mac deinen Auftrag Schritt für Schritt erledigen: „\(ask.task)“"
-            a.informativeText = """
+            message = "Spark möchte an diesem Mac deinen Auftrag Schritt für Schritt erledigen: „\(ask.task)“"
+            info = """
                 Nur, wenn du das gerade selbst gesagt hast. Jeden Schritt zeigt der Begleiter mit markiertem Ziel und \
                 fragt; „Stopp“ beendet es sofort. Der Spark sieht dafür den Bildschirm, gespeichert wird nichts.
 
                 Ohne Antwort gilt nach 60 Sekunden „Ablehnen“.
                 """
         } else if ask.look {
-            a.messageText = "Spark möchte einmal auf diesen Bildschirm sehen, um deine Frage zu beantworten: „\(ask.task)“"
-            a.informativeText = """
+            message = "Spark möchte einmal auf diesen Bildschirm sehen, um deine Frage zu beantworten: „\(ask.task)“"
+            info = """
                 Nur, wenn du das gerade selbst gefragt hast. Der Spark nimmt ein einziges Bild auf und beschreibt es dir; \
                 gespeichert wird nichts, auch nicht im Verlauf.
 
                 Ohne Antwort gilt nach 60 Sekunden „Ablehnen“.
                 """
         } else {
-            a.messageText = ask.control
+            message = ask.control
                 ? "Dein Profil möchte diesen Bildschirm vom Handy oder Panel aus ansehen und bedienen."
                 : "Dein Profil möchte diesen Bildschirm vom Handy oder Panel aus ansehen."
-            a.informativeText = """
+            info = """
                 Nur, wenn du das gerade selbst angestoßen hast. Solange es läuft, siehst du einen roten Rahmen und oben \
                 „Beenden“. Es wird nichts aufgezeichnet.
 
                 Ohne Antwort gilt nach 60 Sekunden „Ablehnen“.
                 """
         }
-        a.addButton(withTitle: "Ablehnen")
-        if ask.operate || ask.look {
-            a.addButton(withTitle: "Erlauben")
-        } else {
-            a.addButton(withTitle: "Nur ansehen")
-            if ask.control { a.addButton(withTitle: "Erlauben") }
-        }
-        a.window.level = .floating
-        let timer = Timer(timeInterval: ActCenter.timeout, repeats: false) { _ in
-            NSApp.abortModal()
-        }
-        RunLoop.main.add(timer, forMode: .modalPanel)
-        let r = a.runModal()
-        timer.invalidate()
-        var mode = ask.look ? (r == .alertSecondButtonReturn ? "view" : "no")
-            : ask.operate ? (r == .alertSecondButtonReturn ? "control" : "no")
-            : r == .alertSecondButtonReturn ? "view" : (r == .alertThirdButtonReturn && ask.control ? "control" : "no")
+        let buttons = ask.operate || ask.look ? ["Ablehnen", "Erlauben"]
+            : ask.control ? ["Ablehnen", "Nur ansehen", "Erlauben"] : ["Ablehnen", "Nur ansehen"]
+        let r = ViewAlert.ask(message: message, info: info, buttons: buttons, timeout: ActCenter.timeout)
+        var mode = ask.look ? (r == 1 ? "view" : "no")
+            : ask.operate ? (r == 1 ? "control" : "no")
+            : r == 1 ? "view" : (r == 2 && ask.control ? "control" : "no")
         if mode != "no" && !CGPreflightScreenCaptureAccess() {
             _ = CGRequestScreenCaptureAccess()
             HUD.show("Bildschirm zeigen braucht die Freigabe „Bildschirmaufnahme“; danach den Begleiter neu starten.",
@@ -205,6 +146,7 @@ final class ViewSession: NSObject {
     private let display = CGMainDisplayID()
     private var tasks: [Task<Void, Never>] = []
     private var windows: [NSWindow] = []
+    private var marks: ViewMarks?
     private var stopped = false
 
     init(id: String, control: Bool, client: SparkClient, task: String? = nil) {
@@ -215,7 +157,10 @@ final class ViewSession: NSObject {
     }
 
     func start() {
-        showMarks()
+        marks = ViewMarks(display: display,
+                          text: task.map { "Spark bedient deinen Mac: " + String($0.prefix(60)) }
+                              ?? (control ? "Spark: dein Bildschirm wird gezeigt und bedient" : "Spark: dein Bildschirm wird gezeigt"),
+                          end: "Beenden") { [weak self] in self?.stop(tell: true) }
         tasks.append(Task { @MainActor in await self.frames() })
         if control {
             tasks.append(Task { @MainActor in await self.inputs() })
@@ -229,15 +174,13 @@ final class ViewSession: NSObject {
         tasks = []
         windows.forEach { $0.orderOut(nil) }
         windows = []
+        marks?.close()
+        marks = nil
         if tell {
             let client = client, id = id
             Task { @MainActor in _ = try? await client.postJSON("api/desk/view/end", ["id": id], timeout: 20) }
         }
         ViewCenter.shared.ended(self)
-    }
-
-    @objc private func endClicked() {
-        stop(tell: true)
     }
 
     /// part off, key gone or a Notaus: stop at once instead of trying again
@@ -381,12 +324,9 @@ final class ViewSession: NSObject {
 
     /// "done", "skip" or "stop"; "Stopp" is the first button, so Return alone does nothing
     private func confirm(_ e: [String: Any], kind: String, n: Int) -> String {
-        NSApp.activate(ignoringOtherApps: true)
         let why = DeskConfig.plain(e["why"] as? String ?? "", max: 160)
         let warn = DeskConfig.plain(e["warn"] as? String ?? "", max: 160)
         let of = max(n, (e["of"] as? NSNumber)?.intValue ?? n)
-        let a = NSAlert()
-        a.alertStyle = .warning
         let what: String
         switch kind {
         case "ask": what = why
@@ -398,25 +338,11 @@ final class ViewSession: NSObject {
         case "type": what = "Tippt: „\(DeskConfig.plain(e["s"] as? String ?? "", max: 200))“ – " + why
         default: what = why
         }
-        a.messageText = kind == "ask" ? "Spark fragt nach" : "Spark, Schritt \(n) von \(of)"
-        a.informativeText = what + (warn.isEmpty ? "" : "\n\n⚠️ " + warn) + "\n\nOhne Antwort gilt nach 60 Sekunden „Stopp“."
-        a.addButton(withTitle: "Stopp")
-        if kind == "ask" {
-            a.addButton(withTitle: "Nein")
-            a.addButton(withTitle: "Weiter")
-        } else {
-            a.addButton(withTitle: "Überspringen")
-            a.addButton(withTitle: "Erlauben")
-        }
-        a.window.level = .screenSaver
-        a.window.sharingType = .none
-        let timer = Timer(timeInterval: ActCenter.timeout, repeats: false) { _ in
-            NSApp.abortModal()
-        }
-        RunLoop.main.add(timer, forMode: .modalPanel)
-        let r = a.runModal()
-        timer.invalidate()
-        return r == .alertThirdButtonReturn ? "done" : r == .alertSecondButtonReturn ? "skip" : "stop"
+        let r = ViewAlert.ask(message: kind == "ask" ? "Spark fragt nach" : "Spark, Schritt \(n) von \(of)",
+                              info: what + (warn.isEmpty ? "" : "\n\n⚠️ " + warn) + "\n\nOhne Antwort gilt nach 60 Sekunden „Stopp“.",
+                              buttons: kind == "ask" ? ["Stopp", "Nein", "Weiter"] : ["Stopp", "Überspringen", "Erlauben"],
+                              timeout: ActCenter.timeout, hidden: true, level: .screenSaver)
+        return r == 2 ? "done" : r == 1 ? "skip" : "stop"
     }
 
     /// a red ring around the click's target (CG coordinates, top left), left out of the pictures
@@ -443,110 +369,11 @@ final class ViewSession: NSObject {
     }
 
     private func point(_ e: [String: Any]) -> CGPoint? {
-        guard let x = (e["x"] as? NSNumber)?.doubleValue, let y = (e["y"] as? NSNumber)?.doubleValue,
-              (0...1).contains(x), (0...1).contains(y) else { return nil }
-        let b = CGDisplayBounds(display)
-        return CGPoint(x: b.minX + x * (b.width - 1), y: b.minY + y * (b.height - 1))
+        ViewInput.point(e, display: display)
     }
 
-    /// one input; anything unknown or outside the picture is skipped
+    /// one input (the core checks and skips anything unknown)
     private func apply(_ e: [String: Any]) {
-        guard Access.trusted else { return }
-        switch e["t"] as? String {
-        case "move":
-            if let p = point(e) { post(.mouseMoved, p, .left) }
-        case "click":
-            if let p = point(e) { click(p, e["b"] as? String ?? "left") }
-        case "scroll":
-            if let dy = (e["dy"] as? NSNumber)?.intValue, (-10...10).contains(dy), dy != 0 {
-                CGEvent(scrollWheelEvent2Source: nil, units: .line, wheelCount: 1, wheel1: Int32(dy), wheel2: 0, wheel3: 0)?
-                    .post(tap: .cghidEventTap)
-            }
-        case "key":
-            if let k = ViewKeys.keys[e["k"] as? String ?? ""] { Keys.press(k.code, flags: k.flags) }
-        case "text":
-            if let s = e["s"] as? String, (1...200).contains(s.count) { ActMac.type(s) }
-        default:
-            break
-        }
-    }
-
-    private func post(_ type: CGEventType, _ p: CGPoint, _ button: CGMouseButton, clicks: Int64 = 1) {
-        guard let ev = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: p, mouseButton: button) else { return }
-        ev.setIntegerValueField(.mouseEventClickState, value: clicks)
-        ev.post(tap: .cghidEventTap)
-    }
-
-    private func click(_ p: CGPoint, _ button: String) {
-        if button == "right" {
-            post(.rightMouseDown, p, .right)
-            post(.rightMouseUp, p, .right)
-            return
-        }
-        post(.mouseMoved, p, .left)
-        post(.leftMouseDown, p, .left)
-        post(.leftMouseUp, p, .left)
-        if button == "double" {
-            post(.leftMouseDown, p, .left, clicks: 2)
-            post(.leftMouseUp, p, .left, clicks: 2)
-        }
-    }
-
-    /// the red frame around the main display (clicks go through) and the bar with „Beenden“ on top
-    private func showMarks() {
-        let key = NSDeviceDescriptionKey("NSScreenNumber")
-        guard let screen = NSScreen.screens.first(where: { ($0.deviceDescription[key] as? NSNumber)?.uint32Value == display })
-                ?? NSScreen.main else { return }
-        let frame = screen.frame
-        let border = NSWindow(contentRect: frame, styleMask: .borderless, backing: .buffered, defer: false)
-        border.isReleasedWhenClosed = false
-        border.isOpaque = false
-        border.backgroundColor = .clear
-        border.ignoresMouseEvents = true
-        border.level = .screenSaver
-        border.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
-        border.sharingType = .none            // our own windows stay out of the pictures
-        let edge = NSView(frame: NSRect(origin: .zero, size: frame.size))
-        edge.wantsLayer = true
-        edge.layer?.borderColor = Theme.nsBad.cgColor
-        edge.layer?.borderWidth = 4
-        border.contentView = edge
-        border.orderFrontRegardless()
-        windows.append(border)
-
-        let bar = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 420, height: 40),
-                          styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
-        bar.isReleasedWhenClosed = false
-        bar.level = .screenSaver
-        bar.isFloatingPanel = true
-        bar.hidesOnDeactivate = false
-        bar.collectionBehavior = [.canJoinAllSpaces, .stationary]
-        bar.sharingType = .none
-        bar.backgroundColor = Theme.nsBad
-        let label = NSTextField(labelWithString: task.map { "Spark bedient deinen Mac: " + String($0.prefix(60)) }
-                                ?? (control ? "Spark: dein Bildschirm wird gezeigt und bedient" : "Spark: dein Bildschirm wird gezeigt"))
-        label.textColor = Theme.nsOnAccent
-        label.font = .boldSystemFont(ofSize: 13)
-        let button = NSButton(title: "Beenden", target: self, action: #selector(endClicked))
-        button.bezelStyle = .rounded
-        let stack = NSStackView(views: [label, button])
-        stack.orientation = .horizontal
-        stack.spacing = 12
-        stack.edgeInsets = NSEdgeInsets(top: 8, left: 14, bottom: 8, right: 10)
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        let content = NSView()
-        bar.contentView = content
-        content.addSubview(stack)
-        NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: content.leadingAnchor),
-            stack.trailingAnchor.constraint(equalTo: content.trailingAnchor),
-            stack.topAnchor.constraint(equalTo: content.topAnchor),
-            stack.bottomAnchor.constraint(equalTo: content.bottomAnchor),
-        ])
-        let size = stack.fittingSize
-        bar.setFrame(NSRect(x: frame.midX - size.width / 2, y: frame.maxY - size.height - 40,
-                            width: size.width, height: size.height), display: true)
-        bar.orderFrontRegardless()
-        windows.append(bar)
+        ViewInput.apply(e, display: display)
     }
 }

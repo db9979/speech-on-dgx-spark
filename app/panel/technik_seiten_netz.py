@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "aussen": {
-        "stand": "fd0087ae42",
+        "stand": "8e8b4c5ddd",
         "bezug": {
             "dienstwacht.TIMEOUT": ["s5"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
             "netguard.client": ["s8", "s9", "s10"], "netguard.IMAP4_SSL": ["s9"],
@@ -188,7 +188,7 @@ SEITEN = {
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
     },
     "internet": {
-        "stand": "40ecf5dc08",
+        "stand": "7ea5781469",
         "bezug": {
             "regeln": ["s3", "s4"], "regel:Seiten aus der Suche": ["s4", "s5"], "regel:Mail, Kalender, Kontakte": ["s4", "s5"],
             "regel:reMarkable": ["s4", "s5"], "regel:Wetter, Fahrplan, Wikipedia": ["s3"], "regel:Telegram": ["s7"],
@@ -245,9 +245,13 @@ SEITEN = {
             S("s7", "schritt", ("Was der Spark selbst schickt", "What the Spark sends by itself"),
               ("Telegram, Push, Update", "Telegram, push, update"),
               ("Ohne Werkzeug gehen nur feste Wege hinaus: die Telegram-Bot-API, Apple- und Browser-Push an bekannte "
-               "Dienste und die Update-Prüfung bei GitHub, jede mit Grund in netguard.DIRECT_OK.",
+               "Dienste und die Update-Prüfung bei GitHub, jede mit Grund in netguard.DIRECT_OK. Dazu, nur auf Befehl "
+               "eines Admins und nie aus dem Panel selbst: An GitHub geben (root schiebt einen Zweig opencode/… per ssh "
+               "an GitHub, Kasten Werkstatt).",
                "Without a tool only fixed ways go out: the Telegram bot API, Apple and browser push to known services "
-               "and the update check at GitHub, each with a reason in netguard.DIRECT_OK.")),
+               "and the update check at GitHub, each with a reason in netguard.DIRECT_OK. Plus, only on an admin's "
+               "command and never from the panel itself: Hand to GitHub (root pushes a branch opencode/… to GitHub over "
+               "ssh, box Workshop).")),
         ],
         "beispiele": [
             (("Seite aus der Suche lesen", "Read a page from search"), ["s1", "s2", "s3", "s4", "s5", "s6"],
@@ -470,7 +474,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Werkstatt
     "werkstatt": {
-        "stand": "30680924d2",
+        "stand": "9a19652fbc",
         "bezug": {
             "werkstattseite.auftrag_geben": ["s1"], "werkstattseite.nacht_art": ["s1"], "werkstattseite.NACHT_FENSTER_H": ["s1"],
             "werkstatt.pruefen": ["s2"], "werkstatt.TEXT_MAX": ["s2"],
@@ -481,7 +485,12 @@ SEITEN = {
             "werkstatt.NAMEN_MAX": ["s2"], "werkstatt.pruefe_ergebnis": ["s9"], "werkstatt.AUFTRAEGE_MAX": ["s9"],
             "werkstatt.PATCH_MAX": ["s9"],
             "entwickeln.vorbereiten": ["s10"], "entwickeln.pfade_pruefen": ["s10"], "entwickeln.sandbox": ["s10"],
-            "entwickeln.aufsetzen": ["s10"],
+            "entwickeln.aufsetzen": ["s10"], "entwickeln.an_github": ["s10"], "entwickeln.ziel_ref": ["s10"],
+            "entwickeln.pfade_github": ["s10"], "entwickeln.GH_HOSTKEY": ["s10"],
+            "entwickeln.terminal_befehl": ["s10"], "entwickelnseite.Terminal": ["s10"], "entwickelnseite.TICKET_S": ["s10"],
+            "entwickelnseite.LEERLAUF_S": ["s10"], "entwickelnseite.SITZUNG_S": ["s10"],
+            "codeauftrag.offer": ["s10"], "codeauftrag.CLIENTS": ["s10"], "entwickeln.auftrag_lauf": ["s10"],
+            "entwickeln.ZIEL_MAX": ["s10"], "entwickeln.AUFTRAG_S": ["s10"],
         },
         "kurz": ("Die Werkstatt lässt einen Admin auf dem Modell-Rechner den vollen Testlauf laufen und mit OpenCode den Code "
                  "messen, ein Problem untersuchen oder eine Reparatur vorschlagen. Alles läuft in einer abgeschotteten Kopie "
@@ -589,13 +598,45 @@ SEITEN = {
                "„sudo speech-spark lokal einspielen“ nimmt dessen Commits (entwickeln.vorbereiten), lässt nur Dateien zu, "
                "die der Dienstnutzer ausführt (entwickeln.pfade_pruefen), testet sie im Sandkasten ohne Netz "
                "(entwickeln.sandbox) und spielt sie wie ein Update ein, nie als root ausgeführt. Ein Update setzt sie mit "
-               "entwickeln.aufsetzen auf die neue Version; passt das nicht, bleibt die laufende Version.",
+               "entwickeln.aufsetzen auf die neue Version; passt das nicht, bleibt die laufende Version; was inzwischen auf "
+               "main ist, fällt dabei weg. Weg A (eigener Schalter „An GitHub geben“): sudo speech-spark lokal an-github "
+               "nimmt den Zweig ebenfalls nur als Bündel (entwickeln.an_github), lässt nie .github, Links oder Untermodule "
+               "durch (entwickeln.pfade_github) und schiebt ihn als root mit einem eigenen Deploy-Schlüssel nur nach "
+               "opencode/<thema> (entwickeln.ziel_ref: nie main, nie erzwungen), über ssh mit GitHubs festem Hostschlüssel "
+               "(entwickeln.GH_HOSTKEY); spark-dev bleibt ohne Internet. Ohne Netz wartet der Auftrag. Ein Claude-Thread "
+               "prüft den Zweig und bringt ihn auf main. Alles das zeigt Zustand → Werkstatt → Entwickeln mit Knöpfen; "
+               "dort öffnet der Reiter Terminal (eigener Schalter) eine Shell als spark-dev im Browser: Ticket für "
+               "{entwickelnseite.TICKET_S} s nach frischem Code, an Anmeldung und Adresse gebunden; das Panel ruft nur das "
+               "feste Programm /usr/local/bin/spark-dev-terminal von root ohne Argumente, das als spark-dev in einer "
+               "abgeschotteten Einheit startet (entwickeln.terminal_befehl); eine Sitzung (entwickelnseite.Terminal), "
+               "Ende nach {entwickelnseite.LEERLAUF_S} s ohne Eingabe, nach {entwickelnseite.SITZUNG_S} s, beim Abmelden und Notaus. "
+               "Code-Auftrag im Chat (eigener Schalter): codeauftrag.offer bietet das Werkzeug code_auftrag nur einem Admin "
+               "im getippten Chat von Panel und App (codeauftrag.CLIENTS); das Ziel (höchstens {entwickeln.ZIEL_MAX} Zeichen) "
+               "ist für OpenCode nur Daten. root (entwickeln.auftrag_lauf) lässt OpenCode einmal als spark-dev auf einem "
+               "eigenen Zweig opencode/auftrag-<n> arbeiten (höchstens {entwickeln.AUFTRAG_S} s); die Karte zeigt den "
+               "Vorschlag, einspielen und an GitHub geben gehen nur auf der Seite mit frischem Code.",
                "The admin hands the patch to a Claude thread or a person; the workshop never installs or pushes anything. "
                "Develop on the Pi is different (OpenCode in the panel computer's terminal, user spark-dev): \"sudo "
                "speech-spark lokal einspielen\" takes its commits (entwickeln.vorbereiten), allows only files the service "
                "user runs (entwickeln.pfade_pruefen), tests them in a sandbox without network (entwickeln.sandbox) and "
                "installs them like an update, never run as root. An update puts them on the new version with "
-               "entwickeln.aufsetzen; when that does not fit, the running version stays.")),
+               "entwickeln.aufsetzen; when that does not fit, the running version stays; what is on main by then drops "
+               "out. Way A (its own switch \"Hand to GitHub\"): sudo speech-spark lokal an-github also takes the branch only "
+               "as a bundle (entwickeln.an_github), never lets .github, links or submodules through (entwickeln.pfade_github) "
+               "and pushes it as root with a deploy key of its own only to opencode/<thema> (entwickeln.ziel_ref: never "
+               "main, never forced), over ssh with GitHub's pinned host key (entwickeln.GH_HOSTKEY); spark-dev stays "
+               "without the internet. Without network the order waits. A Claude thread reviews the branch and brings it "
+               "onto main. Status → Workshop → Develop shows all this with buttons; there the tab Terminal (its own switch) "
+               "opens a shell as spark-dev in the browser: a ticket for {entwickelnseite.TICKET_S} s after a fresh code, bound "
+               "to the sign-in and the address; the panel only runs root's fixed program /usr/local/bin/spark-dev-terminal "
+               "without arguments, which starts as spark-dev in a sealed unit (entwickeln.terminal_befehl); one session "
+               "(entwickelnseite.Terminal), it ends after {entwickelnseite.LEERLAUF_S} s without input, after "
+               "{entwickelnseite.SITZUNG_S} s, on signing out and on the emergency stop. Code order in the chat (its own "
+               "switch): codeauftrag.offer offers the tool code_auftrag only to an admin in the typed chat of the panel "
+               "and the apps (codeauftrag.CLIENTS); the goal (at most {entwickeln.ZIEL_MAX} characters) is only data for "
+               "OpenCode. root (entwickeln.auftrag_lauf) lets OpenCode work once as spark-dev on a branch of its own "
+               "opencode/auftrag-<n> (at most {entwickeln.AUFTRAG_S} s); the card shows the proposal, installing and "
+               "handing to GitHub only go on the page with a fresh code.")),
         ],
         "beispiele": [
             (("Testlauf in der Nacht", "Test run at night"), ["s1", "s2", "s3", "s4", "s5", "s6", "s6!", "s8", "s9"],
@@ -615,6 +656,11 @@ SEITEN = {
             ("{werkstatt.AUFTRAEGE_MAX}", ("Ergebnisse bleiben", "results are kept"), "werkstatt.AUFTRAEGE_MAX"),
             ("{werkstatt.PATCH_MAX}", ("Zeichen eines Patches, mehr wird gekürzt", "characters of a patch, more is cut"), "werkstatt.PATCH_MAX"),
             ("{werkstattseite.NACHT_FENSTER_H} h", ("nach der Stunde darf die Nacht starten", "after the hour the night may start"), "werkstattseite.NACHT_FENSTER_H"),
+            ("{entwickelnseite.TICKET_S} s", ("gilt ein Ticket des Terminals", "a ticket of the terminal counts"), "entwickelnseite.TICKET_S"),
+            ("{entwickelnseite.LEERLAUF_S} s", ("ohne Eingabe, dann endet das Terminal", "without input, then the terminal ends"), "entwickelnseite.LEERLAUF_S"),
+            ("{entwickelnseite.SITZUNG_S} s", ("höchstens dauert eine Sitzung des Terminals", "a session of the terminal lasts at most"), "entwickelnseite.SITZUNG_S"),
+            ("{entwickeln.ZIEL_MAX}", ("Zeichen höchstens im Ziel eines Code-Auftrags", "characters at most in a code order's goal"), "entwickeln.ZIEL_MAX"),
+            ("{entwickeln.AUFTRAG_S} s", ("arbeitet OpenCode höchstens an einem Code-Auftrag", "OpenCode works at most on a code order"), "entwickeln.AUFTRAG_S"),
         ],
         "einstellen": [
             ("Auf dem Modell-Rechner einmal sudo ./install.sh --werkstatt (OpenCode mit fester Version und Prüfsumme).",
@@ -624,11 +670,25 @@ SEITEN = {
             ("Zustand → Werkstatt: die vier Aufträge starten, Ergebnisse ansehen, rote Tests noch mal, für Claude kopieren, löschen.",
              "Status → Workshop: start the four orders, look at results, red tests again, copy for Claude, delete."),
             ("Entwickeln auf dem Pi: auf dem Panel-Rechner einmal sudo ./install.sh --entwickeln, dann Funktionen → Entwickeln "
-             "auf dem Pi an; einspielen mit sudo speech-spark lokal einspielen (zurueck, verwerfen, status).",
+             "auf dem Pi an; einspielen unter Zustand → Werkstatt → Entwickeln oder mit sudo speech-spark lokal einspielen (zurueck, verwerfen, status).",
              "Develop on the Pi: on the panel computer once sudo ./install.sh --entwickeln, then Features → Develop on the "
-             "Pi on; install with sudo speech-spark lokal einspielen (zurueck, verwerfen, status)."),
+             "Pi on; install under Status → Workshop → Develop or with sudo speech-spark lokal einspielen (zurueck, verwerfen, status)."),
+            ("Terminal im Browser: Funktionen → Entwickeln auf dem Pi → Terminal im Browser an, dann Zustand → Werkstatt → "
+             "Entwickeln, Reiter Terminal (frischer Code, zweiter Anmeldeschritt).",
+             "Terminal in the browser: Features → Develop on the Pi → Terminal in the browser on, then Status → Workshop → "
+             "Develop, tab Terminal (fresh code, second sign-in step)."),
+            ("An GitHub geben: sudo speech-spark entwickeln github-schluessel neu, die Zeile auf GitHub als Deploy-Schlüssel mit "
+             "Schreibrecht eintragen, main per Ruleset schützen, dann Funktionen → Entwickeln auf dem Pi → An GitHub geben an; "
+             "weitergeben mit sudo speech-spark lokal an-github <thema>.",
+             "Hand to GitHub: sudo speech-spark entwickeln github-schluessel neu, add the line on GitHub as a deploy key with "
+             "write access, protect main with a ruleset, then Features → Develop on the Pi → Hand to GitHub on; hand over "
+             "with sudo speech-spark lokal an-github <thema>."),
         ],
         "sehen": [
+            ("Zustand → Werkstatt → Entwickeln: lokale Änderungen mit Commits, Zweige auf GitHub mit Teststand, Einstellungen, "
+             "der Ablauf und das Terminal; Live zählt offene Terminals, nie Eingaben oder Ausgaben.",
+             "Status → Workshop → Develop: local changes with commits, branches on GitHub with their test state, settings, the "
+             "course and the terminal; Live counts open terminals, never input or output."),
             ("Zustand → Werkstatt: links der Verlauf, rechts ein Ergebnis mit großen Zahlen, was es heißt (etwa „Was heißt "
              "rot?“), den roten Tests nach Bereich, Antwort oder Patch und den nächsten Schritten.",
              "Status → Workshop: the history on the left, one result on the right with big numbers, what it means (such as "
@@ -639,6 +699,10 @@ SEITEN = {
              "sudo speech-spark lokal status zeigt dasselbe im Terminal.",
              "Status → Live: part \"Entwickeln\" with \"lokale Änderungen: N\" and the last fixed reason of a refusal; "
              "sudo speech-spark lokal status shows the same in the terminal."),
+            ("sudo speech-spark lokal zweige: die an GitHub gegebenen Zweige mit Link und dem Stand der GitHub-Tests; oben "
+             "auf den Admin-Seiten der Hinweis „Gib den Zweig opencode/<thema> einem Claude-Thread zum Prüfen“.",
+             "sudo speech-spark lokal zweige: the branches handed to GitHub with link and the state of GitHub's tests; on top "
+             "of the admin pages the hint \"Gib den Zweig opencode/<thema> einem Claude-Thread zum Prüfen\"."),
         ],
         "code": [
             ("werkstattseite.auftrag_geben", ("Auftrag vom Panel", "order from the panel")),
@@ -657,8 +721,17 @@ SEITEN = {
             ("entwickeln.pfade_pruefen", ("nur Dateien, die der Dienstnutzer ausführt", "only files the service user runs")),
             ("entwickeln.sandbox", ("Grenzen des Schnelltests", "limits of the quick test")),
             ("entwickeln.aufsetzen", ("lokale Commits auf die neue Version", "local commits onto the new version")),
+            ("entwickeln.an_github", ("Weg A: Zweig als Bündel, root schiebt", "way A: branch as a bundle, root pushes")),
+            ("entwickeln.ziel_ref", ("nur opencode/<thema>, nie main", "only opencode/<thema>, never main")),
+            ("entwickeln.pfade_github", ("nie .github, kein Link, kein Untermodul", "never .github, no link, no submodule")),
+            ("entwickeln.GH_HOSTKEY", ("GitHubs fester Hostschlüssel", "GitHub's pinned host key")),
+            ("entwickeln.terminal_befehl", ("Terminal als spark-dev, abgeschottet", "terminal as spark-dev, sealed")),
+            ("entwickelnseite.Terminal", ("eine Sitzung im Browser, Grenzen", "one session in the browser, limits")),
+            ("codeauftrag.offer", ("Code-Auftrag nur Admin und getippt", "code order only admins and typed")),
+            ("codeauftrag.CLIENTS", ("nur Chat von Panel und Apps", "only the chat of panel and apps")),
+            ("entwickeln.auftrag_lauf", ("root: OpenCode einmal auf eigenem Zweig", "root: OpenCode once on its own branch")),
         ],
-        "tests": ["test_werkstatt", "test_entwickeln"],
+        "tests": ["test_werkstatt", "test_entwickeln", "test_codeauftrag"],
         "heute": [],
     },
     # ------------------------------------------------------------------ Post, Kalender, Kontakte
@@ -854,9 +927,9 @@ SEITEN = {
     # ------------------------------------------------------------------ Browser und Handy
     # ------------------------------------------------------------------ Fernzugang (Dominik 2026-10-29 „in Technik → Überblick fehlt die Fernwartung“)
     "fernzugang": {
-        "stand": "cd201fac45",
+        "stand": "ec42265853",
         "bezug": {
-            "fernzugang.entsperrt_bis": ["s2"], "fernzugang.admin_pair": ["s3"], "fernzugang.link_file": ["s3"], "fernzugang.admin_confirm": ["s3"], "fernzugang.CODE_S": ["s3"], "fernzugang.TICKET_S": ["s4"], "fernzugang.terminal_ws": ["s4"], "fernzugang.hostkey_wrong": ["s5"], "fernzugang.HALTEN_S": ["s6"], "ferndateien.listing": ["s6"], "fernbild.GUACD": ["s6"], "fernbild.FPS": ["s6"], "spontanhilfe.admin_new": ["s7"], "spontanhilfe.NUMMER_S": ["s7"], "fernzugang.notaus_close": ["s8"], "fernzugang.MAX_ANKER": ["s3"], "fernnotiz.fuer_modell": ["s6"], "fernnotiz.FASSUNGEN": ["s6"], "fernordner.view": ["s6"], "fernordner.MAX_ORDNER": ["s6"], "ferngross.upload_piece": ["s6"], "ferngross.TEIL": ["s6"], "fernweb.verbindung": ["s6"], "fernweb.ziel_ok": ["s6"], "fernweb.TOR_PORT": ["s6"], "fernweb.MAX_TUNNEL": ["s6"], "fernweb.MAX_KANAELE": ["s6"],
+            "fernzugang.entsperrt_bis": ["s2"], "fernzugang.admin_pair": ["s3"], "fernzugang.link_file": ["s3"], "fernzugang.admin_confirm": ["s3"], "fernzugang.CODE_S": ["s3"], "fernzugang.TICKET_S": ["s4"], "fernzugang.terminal_ws": ["s4"], "fernzugang.hostkey_wrong": ["s5"], "fernzugang.HALTEN_S": ["s6"], "ferndateien.listing": ["s6"], "fernbild.GUACD": ["s6"], "fernbild.FPS": ["s6"], "spontanhilfe.admin_new": ["s7"], "spontanhilfe.NUMMER_S": ["s7"], "spontansteuern.fetch": ["s7"], "spontansteuern._zeile": ["s7"], "fernzugang.notaus_close": ["s8"], "fernzugang.MAX_ANKER": ["s3"], "fernnotiz.fuer_modell": ["s6"], "fernnotiz.FASSUNGEN": ["s6"], "fernordner.view": ["s6"], "fernordner.MAX_ORDNER": ["s6"], "ferngross.upload_piece": ["s6"], "ferngross.TEIL": ["s6"], "fernweb.verbindung": ["s6"], "fernweb.ziel_ok": ["s6"], "fernweb.TOR_PORT": ["s6"], "fernweb.MAX_TUNNEL": ["s6"], "fernweb.MAX_KANAELE": ["s6"],
         },
         "kurz": ("Der Fernzugang öffnet Shell, Dateien und Bildschirm eines eigenen Servers im Browser, ohne offenen Port "
                  "dort: der Anker auf dem Server verbindet sich selbst zum Panel, das Panel spricht SSH durch diese "
@@ -967,12 +1040,18 @@ SEITEN = {
                "{spontanhilfe.FEHL} falschen ist sie tot. Der Bildschirm geht per WebRTC direkt zwischen den zwei Browsern, "
                "von unterwegs über TURN auf tars; das Panel vermittelt nur. Steuern (spontansteuern.program_ws) geht über das "
                "Programm SparkHilfe mit einem Einmal-Schlüssel für {spontansteuern.KEY_S|min} Minuten; Bilder und Eingaben "
-               "laufen dann durch das Panel.",
+               "laufen dann durch das Panel. Das Programm baut nur GitHub; der Spark holt es täglich aus dem Release "
+               "(spontansteuern.fetch), nur mit passender Signatur, Größe und SHA-256, und gibt es nur aus seinem Speicher weiter. "
+               "Unter Linux X11 gibt es keine Datei: die Seite zeigt die Zeile des Ankers ohne Geheimnis "
+               "(spontansteuern._zeile), den Schlüssel fügt die Person im Terminal ein; das Programm schickt PNG-Bilder.",
                "A help (spontanhilfe.admin_new) gives a number for {spontanhilfe.NUMMER_S|min} minutes, after "
                "{spontanhilfe.FEHL} wrong ones it is dead. The screen goes by WebRTC directly between the two browsers, "
                "on the way through TURN on tars; the panel only connects them. Control (spontansteuern.program_ws) goes through "
                "the program SparkHilfe with a one-time key for {spontansteuern.KEY_S|min} minutes; pictures and inputs then "
-               "pass through the panel.")),
+               "pass through the panel. Only GitHub builds the program; the Spark fetches it daily from the release "
+               "(spontansteuern.fetch), only with a matching signature, size and SHA-256, and hands it out only from its store. "
+               "On Linux X11 there is no file: the page shows the anchor's line without a secret "
+               "(spontansteuern._zeile), the person pastes the key in the terminal; the program sends PNG pictures.")),
             S("s8", "ende", ("Logs und Verlauf", "Logs and history"),
               ("fernzugang.log", "fernzugang.log"),
               ("Logs nur mit festen Wörtern und Zahlen (fernzugang.log), der Verlauf nur Zeit, System, Admin, Art und "
@@ -1022,6 +1101,8 @@ SEITEN = {
             ("fernbild.GUACD", ("guacd nur auf 127.0.0.1", "guacd on 127.0.0.1 only")),
             ("spontanhilfe.admin_new", ("eine neue Spontanhilfe", "a new spontaneous help")),
             ("spontansteuern.program_ws", ("Steuern: der Socket des Programms SparkHilfe", "control: the socket of the program SparkHilfe")),
+            ("spontansteuern.fetch", ("SparkHilfe aus dem Release: Signatur, Größe und SHA-256 geprüft", "SparkHilfe from the release: signature, size and SHA-256 checked")),
+            ("spontansteuern._zeile", ("Linux X11: die Zeile ohne Geheimnis, der Schlüssel getrennt", "Linux X11: the line without a secret, the key apart")),
             ("fernzugang.notaus_close", ("Notaus schließt jede Leitung", "kill switch closes every line")),
             ("fernnotiz.fuer_modell", ("die Notiz nur mit Haken für das Modell", "the note for the model only when ticked")),
             ("fernordner.view", ("Ordner: nur die Reihenfolge der Liste", "folders: only the order of the list")),
@@ -1029,11 +1110,11 @@ SEITEN = {
             ("fernweb.ziel_ok", ("Webdienste: wohin ein Tunnel darf", "web services: where a tunnel may go")),
             ("fernweb.verbindung", ("die Tunnel-Tür: Köpfe umgeschrieben, Cookies getrennt", "the tunnel door: heads rewritten, cookies apart")),
         ],
-        "tests": ["test_fernzugang", "test_fernbild", "test_spontanhilfe", "test_ferngross", "test_fernweb", "test_fernals", "test_spontansteuern"],
+        "tests": ["test_fernzugang", "test_fernbild", "test_spontanhilfe", "test_ferngross", "test_fernweb", "test_fernals", "test_spontansteuern", "test_sparkhilfe_linux"],
         "heute": [],
     },
     "fernserver": {
-        "stand": "63b29291b1",
+        "stand": "df68ee7357",
         "bezug": {
             "fernzugang.command": ["s1"], "fernzugang.anker_pair": ["s2"], "fernzugang.by_key": ["s3"], "fernzugang.anker_ws": ["s3"], "fernzugang.PULS_S": ["s4"], "fernzugang.MAX_MSG": ["s4"], "fernzugang.anker_removed": ["s6"], "fernzugang.ABBAU_TAGE": ["s6"], "fernanker.admin_update": ["s7"], "fernanker.stand": ["s7"],
         },
@@ -1049,9 +1130,11 @@ SEITEN = {
             S("s1", "start", ("Eine Zeile auf dem Server", "One line on the server"),
               ("curl … | sudo python3 -", "curl … | sudo python3 -"),
               ("Die Seite zeigt eine Zeile aus der Adresse, auf der der Browser ist (fernzugang.command); sie lädt den "
-               "Anker vom eigenen Panel und richtet ihn als eigenen Systemdienst ein.",
+               "Anker vom eigenen Panel und richtet ihn als eigenen Systemdienst ein. Dieselbe Zeile ohne sudo dient der "
+               "Spontanhilfe einmal (hilfe, steuern) und richtet nichts ein.",
                "The page shows one line from the address the browser is on (fernzugang.command); it loads the anchor "
-               "from the own panel and sets it up as a system service of its own.")),
+               "from the own panel and sets it up as a system service of its own. The same line without sudo serves the "
+               "spontaneous help once (hilfe, steuern) and sets nothing up.")),
             S("s2", "schritt", ("Koppeln mit dem Einmal-Code", "Pairing with the one-time code"),
               ("fernzugang.anker_pair", "fernzugang.anker_pair"),
               ("Der Anker meldet sich einmal mit dem Code (fernzugang.anker_pair) und bekommt seinen Geräteschlüssel; das "

@@ -288,6 +288,7 @@ function docBulk(){const box=$('docbulk'),pk=DOCV.pick;box.hidden=!pk;if(!pk){bo
 // every refresh (not while someone types the tags); the text view below it stays
 function docDetail(){const box=$('docdetail'),d=DOCV.pick?null:docFind(DOCV.sel);
   $('docbox').classList.toggle('ld-sel',!!d);box.hidden=!d;
+  if(typeof awShow==='function')awShow(d);   // the sheet Auswertungen (auswertung.js)
   if(!d){$('docdinfo').innerHTML='';$('docview').hidden=true;$('docview').textContent='';return}
   const info=$('docdinfo'),a=document.activeElement;
   if(info.dataset.id===d.id&&info.contains(a)&&a.id==='doctagin')return;

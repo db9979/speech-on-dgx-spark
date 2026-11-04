@@ -200,9 +200,11 @@ def admin_profile(uid: str, request: Request):
     devs = [dict(x, speaker=x["id"] in spk, room=x["id"] in listening) for x in profiles.own_devices(uid)]
     on, of = features.count(uid)
     me = acting_profile(request)
+    import fund
     out = dict(u, **_profile_extra(uid), last=profiles.last_use(uid, last), devices=devs,
                facts=len(profiles.memory(uid)), sessions=profiles.sessions(uid), trusted=mfa.list_trusted(uid),
-               features={"on": on, "of": of}, main=not me or me["role"] == "admin", owner=not me)
+               features={"on": on, "of": of}, main=not me or me["role"] == "admin", owner=not me,
+               index=fund.groesse(uid))   # the size of its index in bytes (Finden and Dokumente und Wissen), numbers only
     if not me or coadmin.role(me["id"]) != "manager":
         out["rights"] = _rights(uid)
     return out
@@ -920,6 +922,13 @@ def validate(new):
     d = ch.get("mappe_token", 24000)   # Mappen: tokens of a Mappe to the model (mappen.token_budget)
     if not isinstance(d, int) or isinstance(d, bool) or not 4000 <= d <= 100000:
         raise HTTPException(400, "mappe_token: 4000 to 100000")
+    d = ch.get("doc_auswertung_day", 100)   # Auswertungen: kinds per profile and day (auswertung.day_limit)
+    if not isinstance(d, int) or isinstance(d, bool) or not 10 <= d <= 500:
+        raise HTTPException(400, "doc_auswertung_day: 10 to 500")
+    import auswertung
+    d = ch.get("doc_auswertung_auto", list(auswertung.AUTO))   # Auswertungen: the fixed kinds made by themselves
+    if not isinstance(d, list) or len(d) > len(auswertung.ARTEN) or any(x not in auswertung.ARTEN for x in d):
+        raise HTTPException(400, "doc_auswertung_auto: " + ", ".join(auswertung.ARTEN))
     d = ch.get("fund_tag_day", 200)   # Finden, Schlagworte vom Modell (fund.tag_day_limit)
     if not isinstance(d, int) or isinstance(d, bool) or not 5 <= d <= 500:
         raise HTTPException(400, "fund_tag_day: 5 to 500")

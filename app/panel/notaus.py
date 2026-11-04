@@ -468,6 +468,11 @@ async def after_change(old, new, by, channel):
         except Exception as e:
             print("notaus: fernzugang", type(e).__name__, flush=True)
         try:
+            import entwickelnseite
+            await entwickelnseite.notaus_close()   # the terminal as spark-dev ends, no ticket stays
+        except Exception as e:
+            print("notaus: entwickeln", type(e).__name__, flush=True)
+        try:
             import spontanhilfe
             await spontanhilfe.notaus_close()   # the help ends, number and link stop
         except Exception as e:

@@ -34,6 +34,7 @@ import guard
 import homeassistant
 import llm
 import zustand_wz
+import codeauftrag
 import fund
 from common import load_config
 from core import auth
@@ -193,7 +194,7 @@ GROUPS = {
     "paket": ({"parcels", "mail_list", "mail_search"}, PARCEL_WORDS),
     "kontakt": ({"contacts_search", "iphone_action"}, CONTACT_WORDS),
     "gedaechtnis": ({"memory_save", "memory_forget", "history_search"}, MEMORY_WORDS),
-    "dokument": ({"document_search", "document_list"}, DOC_WORDS),
+    "dokument": ({"document_search", "document_list", "dokument_auswertung"}, DOC_WORDS),
     "nachricht": ({"message_send", "message_read", "message_announce"}, MESSAGE_WORDS),
     "agent": ({"agent_list", "agent_task", "agent_schedule", "routine_save", "agent_change", "agent_watch"},
               AGENT_WORDS),
@@ -217,6 +218,8 @@ GROUPS = {
     "musik": ({"musik_machen", "musik_bearbeiten"}, musik.GROUP_WORDS),
     # the Spark's own state (zustand_wz.py): services, backup, version, Notaus, Mein Zustand
     "zustand": ({"spark_zustand"}, zustand_wz.WORDS),
+    # Code-Auftrag im Chat (codeauftrag.py): an admin's order for OpenCode; the module offers it only typed and to admins
+    "codeauftrag": ({"code_auftrag"}, codeauftrag.WORDS),
     # Finden (fund.py, plan such-index): a search verb and a thing of one's own („Such mir die Rechnung von Thomann“,
     # „Wo ist der Vertrag mit der Telekom?“), never the internet or the archive; beside „dokument“ or „mail“ both stay
     "finden": ({"fund_suche"}, fund.FIND_WORDS),
@@ -658,6 +661,7 @@ GROUP_SAYS = {
     "iphone": "etwas auf dem iPhone auslösen (Kurzbefehl)",
     "spark": "Fragen zum Spark selbst, seinen Einstellungen und Funktionen",
     "zustand": "ob beim Spark alles läuft, Dienste erreichbar, Sicherung, Version, Update, Notaus, eigener Zustand",
+    "codeauftrag": "den Code des Sparks von OpenCode ändern lassen (Code-Auftrag, nur Admin, getippt)",
 }
 
 

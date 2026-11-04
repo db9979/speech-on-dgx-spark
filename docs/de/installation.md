@@ -133,14 +133,23 @@ Eine Anleitung für Einsteiger: Du änderst den Spark auf dem Panel-Rechner (etw
 
 1. **Einmal installieren** (auf dem Panel-Rechner, braucht Internet): `sudo ./install.sh --entwickeln`. Das legt den Nutzer `spark-dev` (ohne Passwort, ohne sudo) mit dem Klon `/home/spark-dev/speech-on-dgx-spark` und dem Zweig `lokal` an, lädt OpenCode (Version und SHA-512 fest in `app/werkstatt.py`, dieselbe Datei wie bei der Werkstatt) nach `/opt/speech-spark/opencode`, schreibt die Einstellungen von OpenCode (nur das eigene LLM-Tor, eigener Schlüssel, die Regeln aus `CLAUDE.md` und der Richtlinie), sperrt per Firewall jedes Netz außer dem LLM-Tor und baut die Testumgebung des Schnelltests.
 2. **Einschalten**: als Admin *Funktionen → Entwickeln auf dem Pi* an. Erst dann gilt der Schlüssel von `spark-dev` am LLM-Tor.
-3. **Per SSH hinein**: deinen öffentlichen SSH-Schlüssel für `spark-dev` eintragen, dann von deinem Rechner aus anmelden und OpenCode starten.
-4. **Ohne Internet arbeiten**: OpenCode fragt nur das Sprachmodell im Heimnetz. Testen geht im Klon wie auf GitHub, nur ohne Browser-Tests. Jede fertige Änderung ist ein Commit auf `lokal`.
-5. **Einspielen**: ein Admin startet `sudo speech-spark lokal einspielen`. Der Spark prüft die Commits, testet sie im Sandkasten und spielt sie wie ein Update ein; die Version zeigt dann „+lokal“.
+3. **Terminal öffnen**: am einfachsten im Browser. Als Admin *Funktionen → Entwickeln auf dem Pi → Terminal im Browser* an, dann *Zustand → Werkstatt → Entwickeln*, Reiter *Terminal*, „Terminal öffnen“ und deinen Code eingeben (jedes Mal ein frischer; zweiter Anmeldeschritt nötig). Die Shell läuft als `spark-dev` im Klon. Wer lieber SSH nimmt: deinen öffentlichen SSH-Schlüssel für `spark-dev` eintragen und von deinem Rechner aus anmelden (siehe unten).
+4. **Ohne Internet arbeiten**: `spark-opencode` tippen und in eigenen Worten sagen, was sich ändern soll. OpenCode fragt nur das Sprachmodell im Heimnetz und vor jedem Befehl dich. Testen geht im Klon wie auf GitHub, nur ohne Browser-Tests. Jede fertige Änderung ist ein Commit auf `lokal`.
+5. **Einspielen**: im Reiter *Übersicht* steht der Commit bei „Lokale Änderungen“ mit Titel und Zahl der Dateien; „Lokal einspielen“ (frischer Code) oder `sudo speech-spark lokal einspielen`. Der Spark prüft die Commits, testet sie im Sandkasten und spielt sie wie ein Update ein; die Version zeigt dann „+lokal“. „Zurück zur alten Version“ und „Verwerfen …“ stehen daneben.
+6. **Code-Auftrag im Chat** (eigener Unterschalter *Funktionen → Entwickeln auf dem Pi → Code-Auftrag im Chat*, aus): Statt selbst im Terminal zu tippen, schreibst du im Chat des Panels oder der App etwa „Code-Auftrag: die Begrüßung soll freundlicher klingen“. OpenCode arbeitet dann einmal als `spark-dev` auf einem eigenen Zweig `opencode/auftrag-<Nummer>`, und die Karte „Code-Auftrag (OpenCode)“ zeigt, was herauskam: Ziel, Dateien, die ersten Zeilen der Änderung. Das Modell schlägt nur vor. Einspielen entscheidest du: „Lokal einspielen“ und „An GitHub geben“ öffnen *Zustand → Werkstatt → Entwickeln* (dort die ganze Änderung und ein frischer Code), „Verwerfen“ löscht den Zweig, „Im Terminal weitermachen“ führt zum Reiter *Terminal*. Nur für Admins und nur getippt, nie über Lautsprecher, Auto, Telegram, Begleiter oder für Gäste.
+
+[![Zustand → Werkstatt → Entwickeln: links lokale Änderungen, Zweige auf GitHub und Einstellungen, rechts die Commits mit den Knöpfen](../bilder/de-entwickeln.png)](../bilder/de-entwickeln.png)
+
+[![Reiter Terminal: die Shell als spark-dev im Browser, rechts die Sitzung](../bilder/de-entwickeln-terminal.png)](../bilder/de-entwickeln-terminal.png)
+
+[![Code-Auftrag im Chat: die Karte mit Ziel, Stand, geänderten Dateien und Zweig, darunter Lokal einspielen, An GitHub geben, Verwerfen](../bilder/de-code-auftrag-karte.png)](../bilder/de-code-auftrag-karte.png)
+
+[![Der Code-Auftrag auf der Seite: links unter Code-Aufträge, rechts die ganze Änderung als Text mit den Knöpfen](../bilder/de-entwickeln-auftrag.png)](../bilder/de-entwickeln-auftrag.png)
 
 ```bash
 # 1. einmal, auf dem Panel-Rechner
 sudo ./install.sh --entwickeln
-# 3. dein SSH-Schlüssel für spark-dev
+# 3. statt des Terminals im Browser: dein SSH-Schlüssel für spark-dev
 sudo install -d -m 700 -o spark-dev -g spark-dev /home/spark-dev/.ssh
 sudo install -m 600 -o spark-dev -g spark-dev ~/.ssh/id_ed25519.pub /home/spark-dev/.ssh/authorized_keys
 # 4. von deinem Rechner aus
@@ -148,14 +157,32 @@ ssh spark-dev@<panel-rechner>
 spark-opencode                      # OpenCode im Klon, Zweig lokal
 cd app && python3 selftest.py discover -s tests -p 'test_live.py'
 git commit -am "Meine Änderung"
-# 5. als Admin auf dem Panel-Rechner
+# 5. als Admin auf dem Panel-Rechner (oder Knöpfe unter Zustand → Werkstatt → Entwickeln)
 sudo speech-spark lokal einspielen  # prüfen, Schnelltest, einspielen wie ein Update
 sudo speech-spark lokal status      # lokale Änderungen, letztes Ergebnis
 sudo speech-spark lokal zurueck     # einen Schritt zurück (gleiche Version)
 sudo speech-spark lokal verwerfen   # Version ohne lokale Änderungen (bleiben im Klon)
 ```
 
-Eingespielt wird nur, was unter `app/panel/`, `app/tests/` und `docs/` liegt, dazu die beiden README und `CHANGELOG.md`, als normale Dateien: was root ausführt (`install.sh`, `update.sh`, `app/*.py` außerhalb von `app/panel`, die Paketlisten), kommt nur über GitHub. Ein normales Update verliert lokale Arbeit nie: Es setzt die lokalen Commits auf die neue Version und testet sie; passt etwas nicht oder ist der Schnelltest rot, läuft die bisherige Version weiter, und das Panel zeigt oben den Grund. Den Schlüssel von `spark-dev` neu machen oder zurückziehen: `sudo speech-spark entwickeln schluessel neu|weg`; nach einem Wechsel des Modell-Rechners `sudo speech-spark entwickeln einrichten`. Fehlt die Testumgebung, einmal mit Internet `sudo speech-spark lokal testumgebung` (danach erneuert sie sich jede Nacht, nur wenn sich die Paketliste ändert). Logs: `sudo speech-spark logs entwickeln`.
+Eingespielt wird nur, was unter `app/panel/`, `app/tests/` und `docs/` liegt, dazu die beiden README und `CHANGELOG.md`, als normale Dateien: was root ausführt (`install.sh`, `update.sh`, `app/*.py` außerhalb von `app/panel`, die Paketlisten), kommt nur über GitHub. Ein normales Update verliert lokale Arbeit nie: Es setzt die lokalen Commits auf die neue Version und testet sie; passt etwas nicht oder ist der Schnelltest rot, läuft die bisherige Version weiter, und das Panel zeigt oben den Grund. Den Schlüssel von `spark-dev` neu machen oder zurückziehen: `sudo speech-spark entwickeln schluessel neu|weg`; nach einem Wechsel des Modell-Rechners `sudo speech-spark entwickeln einrichten`. Fehlt die Testumgebung, einmal mit Internet `sudo speech-spark lokal testumgebung` (danach erneuert sie sich jede Nacht, nur wenn sich die Paketliste ändert). Logs: `sudo speech-spark logs entwickeln`. Den Klon von `spark-dev` macht `spark-dev` selbst aus einem Bündel, das root von der installierten Version schreibt; `spark-dev` liest den Klon unter `/opt/speech-spark/src` nie (neueres git bricht dort mit „dubious ownership“ ab). Ist der Klon fehlgeschlagen („could not make the clone of spark-dev“), einfach `sudo ./install.sh --entwickeln` noch einmal: ein halb angelegter Klon wird aufgefüllt, Arbeit von `spark-dev` bleibt.
+
+### Weg A: an GitHub geben
+
+Was nicht über Weg B darf (etwa `install.sh` oder `app/*.py`) oder was in die offizielle Version soll, gibt ein Admin als eigenen Zweig `opencode/<thema>` an GitHub. Dort laufen die vollen Tests, und ein Claude-Thread prüft ihn und bringt ihn auf main. `spark-dev` bekommt dabei nie Internet: root nimmt den Zweig als Bündel und schiebt ihn mit einem eigenen Deploy-Schlüssel, nie an main und nie mit `--force`.
+
+1. **Schlüssel machen**: `sudo speech-spark entwickeln github-schluessel neu` zeigt eine Zeile, die mit `ssh-ed25519` beginnt. Den geheimen Teil (`/etc/speech-spark-github-key`) liest nur root.
+2. **Auf GitHub eintragen**: im Repository den Reiter „Settings“, links „Deploy keys“, „Add deploy key“. Titel etwa „Spark Pi opencode“, die Zeile einfügen, **„Allow write access“** anhaken, „Add key“. Nimm keinen persönlichen Token: der handelt als dein Admin-Konto und käme an der Regel für main vorbei.
+3. **main schützen** (einmal, auf GitHub): Reiter „Settings“, links „Rules“, „Rulesets“, „New ruleset“, „New branch ruleset“. Name „main schützen“, Enforcement status „Active“, bei „Target branches“ „Add target“ und „Include default branch“. Anhaken: „Restrict deletions“, „Restrict updates“, „Block force pushes“. Bei „Bypass list“ „Add bypass“ und „Repository admin“ (dein Konto, damit du und die Claude-Threads weiter auf main pushen). „Create“. Den Deploy-Schlüssel nie auf die Bypass-Liste setzen.
+4. **Einschalten**: als Admin *Funktionen → Entwickeln auf dem Pi → An GitHub geben* an. Nach dem Update auf diese Version einmal `sudo ./install.sh --entwickeln`, damit der Dienst `speech-spark-github` und sein Zeitgeber da sind.
+5. **Weitergeben**: *Zustand → Werkstatt → Entwickeln*, „Lokale Änderungen“, „An GitHub geben“ mit einem Thema, oder `sudo speech-spark lokal an-github mein-thema`. Ohne Internet wartet der Auftrag und geht alle 15 Minuten von selbst los (`--abbrechen` verwirft ihn).
+6. **Übergeben**: die Seite zeigt den Zweig links unter „Zweige auf GitHub“ mit dem Stand der Tests, rechts mit Link und dem Satz zum Kopieren; `sudo speech-spark lokal zweige` zeigt den Zweig, seinen Link und den Stand der GitHub-Tests. Dann einem Claude-Thread: „Gib den Zweig opencode/mein-thema einem Claude-Thread zum Prüfen“. Ist er auf main, fallen beim nächsten Update eingespielte lokale Commits, die schon drin sind, von selbst weg; im Klon danach `git rebase spark/main`.
+
+```bash
+sudo speech-spark entwickeln github-schluessel neu   # 1. Zeile als Deploy-Schlüssel mit Schreibrecht eintragen
+sudo speech-spark lokal an-github mein-thema          # 5. als opencode/mein-thema an GitHub
+sudo speech-spark lokal zweige                        # 6. Zweige, Links, GitHub-Tests (gruen, laeuft, rot)
+sudo speech-spark entwickeln github-schluessel weg    # Schlüssel zurückziehen (auch auf GitHub löschen)
+```
 
 ## Deinstallieren
 

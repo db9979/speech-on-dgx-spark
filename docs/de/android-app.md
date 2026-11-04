@@ -65,6 +65,8 @@ Die App ist eine schlanke Hülle um die Spark-Seite: Sie zeigt den Spark so, wie
   und wie viele Handys aktuell sind (aus der Kennung „SparkAndroid/x.y.z“ ihrer Anfragen, nur im Speicher, 14 Tage);
   Live zählt „Android aktuell/alle“. Eine neue Version eines Profils steht als Zeile `android: app version … -> …` im Log.
 
+**Aussehen (App 1.4.5, V01.1.313, Redesign Stufe 8):** Die Seite in der App nimmt die Farben, Schriftgrößen und Radien des Panels aus `tokens.css` (`appview.css` hat keine eigene Palette mehr): hell #F5F5F7, dunkel #161618 statt Schwarz, ein blauer Akzent, die eigene Frage in Blau, der Zustand unter Verwalten als Punkt mit Wort statt getönter Box. Statusleiste, Ladebalken, Adress- und Warte-Bildschirm, das Blatt des Assistenten und das Widget nehmen dieselben Werte (`values/themes.xml`, dunkel `values-night`); „Sprechen“ und der Sperr-Bildschirm ohne Emoji.
+
 ## Einrichten
 
 1. **Signierschlüssel (einmal, Admin):** Auf dem Spark (oder einem Mac) im Terminal

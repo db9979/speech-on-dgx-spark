@@ -243,14 +243,164 @@ class Klar3(unittest.TestCase):
         self.assertEqual({n: c for n, c in left.items() if c}, {})
 
 
+def rules(css, sel):
+    """The bodies of every rule whose selector list names sel exactly."""
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
+    return [b for s, b in re.findall(r"([^{}]+)\{([^{}]*)\}", css) if sel in [x.strip() for x in s.split(",")]]
+
+
+class Klar6(unittest.TestCase):
+    """Redesign Stufe 6 (Zustand, Technik, Logs, Werkstatt; Tafeln redesign/a-rechner-zustand.png, -logs.png,
+    -technik.png): tiles of one height with the state as a dot and a word, a dense log table with a fixed row height,
+    the areas of logfilter.AREAS as a menu, the Technik picture neutral from the tokens with line symbols; no colour
+    bar, no tinted ground, no gradient, no shadow in the page."""
+
+    def test_zustand_tiles_are_calm(self):
+        css = read("app.css")
+        tile = "".join(rules(css, ".zcard"))
+        for part in ("min-height:var(--h-tile)", "box-shadow:none"):
+            self.assertIn(part, tile)
+        self.assertEqual(rules(css, ".zcard::before"), [])                     # no colour bar on the left
+        self.assertIn("font-variant-numeric:tabular-nums", "".join(rules(css, ".zcard>b")))
+        self.assertIn("border-radius:50%", "".join(rules(css, ".zcard .zhd::after")))   # the state as a dot
+        self.assertNotIn("color-mix", "".join(rules(css, ".zbub")))          # no tinted bubble behind the symbol
+        self.assertNotRegex("".join(rules(css, "#zneed")), r"border-left")
+        for kind in ("ok", "warn", "bad"):
+            self.assertEqual(rules(css, f".zhead[data-lvl={kind}]"), [], kind)  # no tinted ground for the sentence
+            self.assertIn(f"background:var(--{kind})", "".join(rules(css, f".zhead[data-lvl={kind}] .zicon")))
+        self.assertNotIn("border-left:4px", "".join(rules(css, ".zrcard")))
+        self.assertIn("$('zicon').textContent=''", read(os.path.join("js", "admin.js")))
+
+    def test_log_table_is_dense_and_stands_still(self):
+        css, js = read("app.css"), read(os.path.join("js", "logs.js"))
+        row = "".join(rules(css, ".lrow"))
+        self.assertIn("height:var(--h-log)", row)
+        self.assertIn("--h-log:28px", read(TOKENS))
+        self.assertIn("font:var(--t-mono)", "".join(rules(css, ".lout")))
+        self.assertRegex("".join(rules(css, ".lout")), r"(?<![-\w])height:clamp\(")   # one height, whatever comes in
+        self.assertIn("position:sticky", "".join(rules(css, ".lhd")))
+        self.assertIn("border-radius:50%", "".join(rules(css, ".llv i")))      # the level only as a dot
+        for old in (".ltile", ".lspark", ".lrow.warn"):
+            self.assertEqual(rules(css, old), [], old)
+        # the areas: words only (no colour per area), one menu with ticks built once, newest line on top
+        body = js[js.index("const LAREA={"):js.index("};", js.index("const LAREA={"))]
+        self.assertNotRegex(body, r"#[0-9a-fA-F]{3,6}")
+        self.assertIn("function lpickBuild(){const box=$('logpicklist');if(box.childElementCount)return;", js)
+        self.assertIn("[...base].reverse()", js)
+        self.assertIn("if(out.scrollTop>30||$('logpick').open||", js)       # the live refresh waits while you read
+        self.assertNotIn("function ltile(", js)
+
+    def test_log_areas_are_the_journal_areas(self):
+        """The menu of the log page names every area of logfilter.AREAS, and nothing else (one source: a new area there
+        needs its word here)."""
+        import sys
+        sys.path.insert(0, os.path.join(STATIC, ".."))
+        import logfilter
+        js = read(os.path.join("js", "logs.js"))
+        body = js[js.index("const LAREA={"):js.index("};", js.index("const LAREA={"))]
+        self.assertEqual(sorted(re.findall(r"[{,]\s*([a-z0-9_]+):\[", body)), sorted(k for k, _ in logfilter.AREAS))
+
+    def test_technik_picture_is_neutral(self):
+        import sys
+        sys.path.insert(0, os.path.join(STATIC, ".."))
+        import technik
+        known = icon_names()
+        for k, name in technik.SYMBOL.items():
+            self.assertIn(name, known, f"technik.SYMBOL[{k!r}] is no line symbol of icons.js")
+        css, js = read("technik.css"), read(os.path.join("js", "technik.js"))
+        self.assertEqual(hex_colours(css), 0)
+        self.assertNotIn("Emoji", css)                                        # no emoji font for the symbols
+        self.assertIn("tkIco(n.symbol,", js)
+        self.assertNotIn("drop-shadow", css)
+        for sel in (".tk-zone.net rect", ".tk-zone.lan rect"):
+            self.assertEqual(rules(css, sel), [], sel)                        # zones as hairlines, not tinted
+
+    def test_werkstatt_is_calm(self):
+        css = read("app.css")
+        self.assertIn("box-shadow:none", "".join(rules(css, ".wkact")))
+        self.assertNotIn("gradient", "".join(rules(css, ".wkbar i")))
+        self.assertIn("background:var(--fill)", "".join(rules(css, ".wkic")))
+
+
+class Klar7(unittest.TestCase):
+    """Redesign Stufe 7 (Dungeon-Master, Tafel redesign/a-rechner-dungeon.png „eigener Tisch-Ton“): the table keeps the
+    panel's frame and system font with one warm tone of its own from tokens.css, light and dark; serif only for the
+    narration, no parchment, no small caps, no gradient on the table; the game's lists in the list pattern ld- (the
+    phone never squeezes a name into a column of letters); line symbols of icons.js on the buttons, tabs and bars of
+    the table, emoji only in what the game and the players write."""
+    PARTS = ("bg", "card", "line", "fg", "mut", "acc", "field", "ok", "bad")
+    # the table's chrome: head, overview head, the phone's bar, the side's tabs and buttons, the hero sheet's tabs
+    CHROME = (("dungeon.js", "const dmModus=", "\n"), ("dungeon.js", "const dmTop=", "\n"), ("dungeon.js", "const dmVollKnopf=", "\n"),
+              ("dungeon.js", "const DMH=", "\n"), ("dungeon.js", "const teile=[['karte'", "if(!teile.length)"),
+              ("dungeon.js", "const tb=[['aus'", "\n"), ("dungeon.js", "dmMorph(w,`<div class=\"dm-head", "${v.ich?dmHilfe()"),
+              ("dungeon.js", "const weiter=leitet?", "const schalt="), ("dungeonfenster.js", "<div class=\"dm-fknoepfe\">", "${dmMekTasche(h)}"),
+              ("dungeonfenster.js", "const dmXKnopf=", "function dmGrenzen"))
+
+    def test_the_table_tone_is_tokens(self):
+        names = token_names()
+        for part in self.PARTS:
+            self.assertIn(f"--tisch-{part}-h", names, part)                    # light
+            self.assertIn(f"--tisch-{part}-d", names, part)                    # dark
+        css = read("app.css")
+        dark, light = "".join(rules(css, ".dm.dm-tisch")), "".join(rules(css, ".dm.dm-tisch.dm-hell"))
+        for body, end in ((dark, "-d"), (light, "-h")):
+            self.assertEqual(hex_colours("a{" + body + "}"), 0)
+            for t in ("grund", "karte", "text", "mut", "linie", "feld"):
+                self.assertRegex(body, rf"--t-{t}:var\(--tisch-[a-z]+{end}\)", t)
+        self.assertIn("font-family:var(--font)", dark)
+        self.assertIn("--t-gold:var(--w-gold)", dark)                          # the world colours only the accent
+
+    def test_serif_only_for_the_narration_and_no_old_ornaments(self):
+        css = re.sub(r"/\*.*?\*/", "", read("app.css"), flags=re.S)
+        serif = {s.strip() for s, b in re.findall(r"([^{}]+)\{([^{}]*)\}", css) if "var(--serif)" in b}
+        self.assertTrue(serif)
+        for sel in serif:
+            self.assertRegex(sel, r"\.dm-(dm|bisher)\b", sel)
+        self.assertNotIn("small-caps", css)
+        for sel, body in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
+            if ".dm-tisch" in sel:
+                self.assertNotIn("gradient", body, sel)
+        self.assertEqual(rules(css, ".dm-tisch .dm-dm>p:first-of-type::first-letter"), [])   # no initial
+        self.assertNotIn("Georgia", "".join(rules(css, ".dm-pz")))
+
+    def test_lists_are_list_and_detail(self):
+        css = read("app.css")
+        for name in ("dungeon.js", "dungeonbuch.js"):
+            self.assertNotRegex(read(os.path.join("js", name)), r"\bic-(row|list|rmid|t|meta)\b", name)
+        js = read(os.path.join("js", "dungeon.js"))
+        rounds = js[js.index("function dmRounds("):js.index("const DMWEG=")]
+        for part in ('<div class="ld-list dm-rl">', '<div class="ld-row">', '<div class="ld-mid"><b>', '<div class="ld-right">'):
+            self.assertIn(part, rounds)
+        self.assertIn("white-space:nowrap", "".join(rules(css, ".ld-mid b")))   # a name is cut, never broken letter by letter
+        self.assertIn("container:dmrl/inline-size", "".join(rules(css, ".dm-rl")))
+        self.assertRegex(css, r"@container dmrl \(max-width:\d+px\)\{\.dm-rl \.ld-right\{flex:1 0 100%")   # buttons under the name
+
+    def test_line_symbols_on_the_table(self):
+        known = icon_names()
+        for name, start, end in self.CHROME:
+            src = read(os.path.join("js", name))
+            i = src.index(start)
+            part = src[i:src.index(end, i + len(start))]
+            self.assertEqual(EMOJI.findall(part), [], f"{name}: {start}")
+            for old in "☾⛶✖⋯←▶":
+                self.assertNotIn(old, part, f"{name}: {start}")
+        js = read(os.path.join("js", "dungeon.js"))
+        bar = js[js.index("const DMH="):js.index("\n", js.index("const DMH="))]
+        for n in re.findall(r"\['[a-z]+','([a-z_]+)'", bar):
+            self.assertIn(n, known, n)
+        self.assertIn("${ic(x[1])}", js)
+        css = read("app.css")
+        self.assertIn("height:var(--h-item)", css[css.index(".dm-unten button{"):css.index("}", css.index(".dm-unten button{"))])   # the bar stands still
+
+
 class Emoji(Ratchet, unittest.TestCase):
     """Emoji as symbols in the user interface (Klar 3): only what people write (chat text, reactions, folder and list
     symbols) and the game stay; the rest of the old list shrinks (setting names with thumbs in index.html, guides.js
     texts, the Dungeon). i18n.js follows the German texts."""
     WHAT = "an emoji as a symbol in the user interface; take a line symbol of icons.js (ic('name'))"
-    ALT = {"app.css": 1, "index.html": 9, "js/dungeon-ton.js": 9, "js/dungeon.js": 256, "js/dungeonbuch.js": 1,
-           "js/dungeonfenster.js": 44, "js/dungeonkarte.js": 23, "js/dungeonwarten.js": 11, "js/fernzugang.js": 2,
-           "js/guides.js": 242, "js/i18n.js": 18}
+    ALT = {"app.css": 1, "index.html": 9, "js/dungeon-ton.js": 9, "js/dungeon.js": 225, "js/dungeonbuch.js": 1,
+           "js/dungeonfenster.js": 38, "js/dungeonkarte.js": 21, "js/dungeonwarten.js": 9, "js/fernzugang.js": 2,
+           "js/guides.js": 240, "js/i18n.js": 18}
 
     def hits(self):
         return {n.replace(os.sep, "/"): c for n in ui_files() if (c := len(EMOJI.findall(read(n))))}
@@ -267,7 +417,7 @@ class OwnSymbols(Ratchet, unittest.TestCase):
 
 class HexColours(Ratchet, unittest.TestCase):
     WHAT = "a fixed hex colour outside tokens.css; take a token (var(--…)) or add one to tokens.css"
-    ALT = {"app.css": 400, "appview.css": 24, "live.css": 18, "spontanhilfe.css": 19, "technik.css": 10, "weiche.css": 2}
+    ALT = {"app.css": 363, "live.css": 18, "spontanhilfe.css": 19, "weiche.css": 2}
 
     def hits(self):
         return {n: c for n in sheets() if n != TOKENS and (c := hex_colours(read(n)))}
@@ -275,7 +425,7 @@ class HexColours(Ratchet, unittest.TestCase):
 
 class FontSizes(Ratchet, unittest.TestCase):
     WHAT = "a font size outside the scale (SCALE); take a size of the scale"
-    ALT = {"app.css": 373, "appview.css": 17, "live.css": 21, "spontanhilfe.css": 5, "technik.css": 30, "weiche.css": 14}
+    ALT = {"app.css": 348, "live.css": 21, "spontanhilfe.css": 5, "technik.css": 2, "weiche.css": 14}
 
     def hits(self):
         return {n: c for n in sheets() if n != TOKENS and (c := off_scale(read(n)))}
@@ -306,6 +456,12 @@ GRADIENT = re.compile(r"LinearGradient|RadialGradient|AngularGradient|NSGradient
                       r"|GradientBar|\.shadow\(")
 
 
+def swift_theme(src):
+    """{name: (light, dark)} of a Swift Theme (companion on the Mac, iPhone app): `static let name = c(0x…, 0x…)`."""
+    return {n: (a.lower(), b.lower()) for n, a, b in
+            re.findall(r"static let (\w+) = c\(0x([0-9a-fA-F]{6}), 0x([0-9a-fA-F]{6})", src)}
+
+
 def token_values():
     """{name: (light, dark)} of the plain colour tokens (#rgb or #rrggbb) as six lower-case hex digits."""
     css = read(TOKENS)
@@ -315,7 +471,7 @@ def token_values():
         for k, v in re.findall(r"--([\w-]+):#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})(?![0-9a-fA-F])", block):
             out[k] = (v if len(v) == 6 else "".join(c * 2 for c in v)).lower()
         return out
-    light = plain(re.search(r":root\{([^}]*)\}", css).group(1))
+    light = plain(" ".join(re.findall(r":root\{([^}]*)\}", css)))   # every plain :root block (colours, table, map …)
     dark = plain(re.search(r":root\[data-theme=dark\]\{([^}]*)\}", css).group(1))
     return {k: (v, dark.get(k, v)) for k, v in light.items()}
 
@@ -341,8 +497,7 @@ class Begleiter(unittest.TestCase):
     def test_mac_theme_is_the_tokens(self):
         tok = token_values()
         theme = self.src("mac", "Sources", "Theme.swift")
-        got = {n: (a.lower(), b.lower()) for n, a, b in
-               re.findall(r"static let (\w+) = c\(0x([0-9a-fA-F]{6}), 0x([0-9a-fA-F]{6})", theme)}
+        got = swift_theme(theme)
         for name, token in MAC_TOKENS.items():
             self.assertEqual(got.get(name), tok[token], f"Theme.{name} != --{token}")
         self.assertIn("0x242426 : 0xffffff", theme)                                     # nsCard = --card
@@ -399,3 +554,129 @@ class Begleiter(unittest.TestCase):
                 self.assertIn("if FacePref.on { FaceView(", line, name)
         self.assertIn("@AppStorage(FacePref.key) private var showFace = false", mac["SettingsView.swift"])
         self.assertIn('SwitchRow(title: "Gesicht in den Fenstern zeigen"', mac["SettingsView.swift"])
+
+
+# ---------------------------------------------------------------- the apps (Redesign Stufe 8, Klar 8)
+ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
+IOS = os.path.join(ROOT, "ios")
+ANDROID_RES = os.path.join(ROOT, "android", "app", "src", "main", "res")
+ANDROID_SRC = os.path.join(ROOT, "android", "app", "src", "main", "java", "io", "github", "db9979", "spark")
+# the iPhone app's Theme (ios/Shared/Theme.swift) carries the companion's names and a few more
+IOS_TOKENS = dict(MAC_TOKENS, faint="faint", okText="okt", warnText="warnt", badText="badt", onAccent="on-acc",
+                  wkPerson="wk-person", wkFirma="wk-firma", wkOrt="wk-ort", wkVertrag="wk-vertrag", wkKonto="wk-konto",
+                  wkFrist="wk-frist")
+# drawn pictures with their own colours (the faces) and the theme itself
+APP_PICTURES = {"ComicFace.swift", "Face.swift", "Theme.swift", "FaceView.kt"}
+# a colour written in place in Swift: Color(red: …), Color.red, an implicit .red, a hex number
+IOS_LITERAL = re.compile(r"\b(?:UI)?Color\((?:red|white|hue|displayP3Red)\b"
+                         r"|\b(?:UI)?Color\.(?:white|black|red|green|blue|gray|grey|yellow|orange|pink|purple|cyan|mint|teal|indigo"
+                         r"|brown|darkGray|lightGray)\b"
+                         r"|(?<![\w)\]\"])\.(?:red|green|blue|orange|yellow|pink|purple|indigo|teal|mint|cyan|gray|brown|white|black"
+                         r"|system(?:Red|Green|Blue|Orange|Yellow|Pink|Purple|Teal|Indigo|Mint|Cyan|Brown))\b|0x[0-9a-fA-F]{6}\b")
+# a colour written in place in Kotlin
+KT_LITERAL = re.compile(r"\bColor\.(?:rgb|argb|parseColor)\(|\bColor\.(?:WHITE|BLACK|LTGRAY|DKGRAY|GRAY|RED|GREEN|BLUE|YELLOW)\b")
+
+
+def app_sources():
+    """(display name, text) of the app sources: every Swift file of the iPhone app and its extensions, every Kotlin file
+    of the Android app; comment lines taken out (they may name an emoji or a colour)."""
+    paths = sorted(os.path.join(d, n) for d in [os.path.join(IOS, x) for x in sorted(os.listdir(IOS))] if os.path.isdir(d)
+                   for n in os.listdir(d) if n.endswith(".swift"))
+    paths += sorted(os.path.join(ANDROID_SRC, n) for n in os.listdir(ANDROID_SRC) if n.endswith(".kt"))
+    for path in paths:
+        if os.path.basename(path) in APP_PICTURES:
+            continue
+        with open(path, encoding="utf-8") as f:
+            code = "\n".join(re.sub(r"\s//\s.*$", "", l) for l in f.read().splitlines() if not l.lstrip().startswith("//"))
+        yield os.path.relpath(path, ROOT).replace(os.sep, "/"), code
+
+
+class AppsHere(unittest.TestCase):
+    def setUp(self):
+        if not (os.path.isdir(IOS) and os.path.isdir(ANDROID_SRC)):
+            self.skipTest("only app/ copied")
+
+    def src(self, *path):
+        with open(os.path.join(ROOT, *path), encoding="utf-8") as f:
+            return f.read()
+
+
+class Apps(AppsHere):
+    """Redesign Stufe 8 (Klar 8, Dominik 2026-10-29 „wie Empfehlung“): the iPhone app and the Android app in „Klar 2 ·
+    Systemstil“. The iPhone app has one Theme (ios/Shared/Theme.swift) with the token colours (light and dark), the
+    spacing and the radii, AccentColor is --acc; the Android hull (status bar, loading bar, address and wait screens,
+    widget) reads its colours from values/themes.xml and values-night, which hold the tokens; appview.css (the panel in
+    the Android app) has no palette of its own. Colours written in place and emoji used as symbols only shrink."""
+
+    def test_iphone_theme_is_the_tokens(self):
+        tok = token_values()
+        theme = self.src("ios", "Shared", "Theme.swift")
+        got = swift_theme(theme)
+        for name, token in IOS_TOKENS.items():
+            self.assertEqual(got.get(name), tok[token], f"Theme.{name} != --{token}")
+        self.assertEqual(sorted(set(got) - set(IOS_TOKENS)), ["shade"])                 # black for a call or photo
+        sizes = dict(re.findall(r"--([\w-]+):(\d+)px", read(TOKENS)))
+        own = re.findall(r"static let (\w+): CGFloat = (\d+)\b", theme)
+        self.assertGreaterEqual(len(own), 10)
+        for name, value in own:
+            token = re.sub(r"(?<=[a-z])(?=[A-Z])", "-", name).lower()                   # rBox -> r-box, hTouch -> h-touch
+            self.assertEqual(sizes.get(token), value, f"Theme.{name} != --{token}")
+
+    def test_iphone_accent_is_the_token(self):
+        import json
+        acc = token_values()["acc"]
+        sets = json.loads(self.src("ios", "Spark", "Assets.xcassets", "AccentColor.colorset", "Contents.json"))["colors"]
+        got = {}
+        for c in sets:
+            comp = c["color"]["components"]
+            dark = any(a.get("value") == "dark" for a in c.get("appearances", []))
+            got["dark" if dark else "light"] = "".join("%02x" % int(comp[k], 16) for k in ("red", "green", "blue"))
+        self.assertEqual((got.get("light"), got.get("dark")), acc)
+
+    def test_android_hull_is_the_tokens(self):
+        tok = token_values()
+        for folder, i in (("values", 0), ("values-night", 1)):
+            xml = self.src("android", "app", "src", "main", "res", folder, "themes.xml")
+            got = dict(re.findall(r'<color name="(\w+)">#([0-9a-fA-F]{6})</color>', xml))
+            for name, token in (("bg", "bg"), ("card", "card"), ("fg", "fg"), ("mut", "mut"), ("acc", "acc")):
+                self.assertEqual(got.get(name, "").lower(), tok[token][i], f"{folder} {name} != --{token}")
+            self.assertIn('<item name="android:colorAccent">@color/acc</item>', xml)
+            self.assertIn('<item name="android:statusBarColor">@color/bg</item>', xml)
+        for name in ("widget.xml",):
+            self.assertNotIn("#", self.src("android", "app", "src", "main", "res", "layout", name), name)
+        for name in ("widget_bg.xml", "widget_mic_bg.xml", "ic_mic_dark.xml"):
+            self.assertNotRegex(self.src("android", "app", "src", "main", "res", "drawable", name), r'color="#', name)
+
+    def test_the_panel_in_the_app_has_no_palette(self):
+        css = read("appview.css")
+        self.assertNotRegex(css, r"--ap\w*\s*:", "appview.css takes the tokens, no colours of its own")
+        self.assertEqual((hex_colours(css), off_scale(css)), (0, 0))
+        self.assertIn("font-family:var(--font)", css)
+
+
+class AppColours(Ratchet, AppsHere):
+    WHAT = "a colour written in place in an app; take Theme (ios/Shared/Theme.swift) or @color/… (themes.xml)"
+    ALT = {"android/app/src/main/java/io/github/db9979/spark/MainActivity.kt": 3,
+           "android/app/src/main/java/io/github/db9979/spark/TalkActivity.kt": 1,
+           "ios/Spark/AdminViews.swift": 1, "ios/Spark/DocumentsView.swift": 9, "ios/Spark/KalenderPost.swift": 7}
+
+    def hits(self):
+        out = {}
+        for name, code in app_sources():
+            n = len((KT_LITERAL if name.endswith(".kt") else IOS_LITERAL).findall(code))
+            if n:
+                out[name] = n
+        return out
+
+
+class AppEmoji(Ratchet, AppsHere):
+    WHAT = "an emoji as a symbol in an app; take an SF Symbol (Image(systemName:)) or a plain word"
+    # what stays for now (2026-11-04): the folder symbols people choose (AdminViews, like the panel), the one-line
+    # previews of chat messages and calls (ChatsView, ChatSec, Assistant, Demo), the game (DungeonView), the lock in the
+    # code prompt's title (AreaViews), the mail chip (KalenderPost) and the shopping widget; this list only gets shorter
+    ALT = {"ios/Spark/AdminViews.swift": 4, "ios/Spark/AreaViews.swift": 3, "ios/Spark/Assistant.swift": 2,
+           "ios/Spark/ChatSec.swift": 1, "ios/Spark/ChatsView.swift": 17, "ios/Spark/Demo.swift": 1,
+           "ios/Spark/DungeonView.swift": 2, "ios/Spark/KalenderPost.swift": 1, "ios/SparkWidgets/SparkWidgets.swift": 3}
+
+    def hits(self):
+        return {name: n for name, code in app_sources() if (n := len(EMOJI.findall(code)))}

@@ -139,6 +139,7 @@ MODULE = {
     "wissenskarte": ("wissen", "Wissenskarte: geprüfte Verbindungen und Punkte aus Dokumenten mit Quelle, Aufbau im Speicher, Wortindex, Suchliste"),
     "wissensdoppelt": ("wissen", "Doppelte der Wissenskarte: feste Regeln für gleiche und vielleicht gleiche Punkte, Vorschläge, Verschieden"),
     "mappen": ("wissen", "Mappen: Dokumente, Seiten und Notizen bündeln, Kontext-Stufe je Eintrag (aus, kurz, ganz) nach festen Regeln"),
+    "auswertung": ("wissen", "Auswertungen je Dokument: Punkte vom Modell mit Zahlenprobe je Stelle; Inhalt, Fristen, Beteiligte fest"),
     "fund": ("wissen", "Finden: Suchindex über die eigenen Daten, Felder und Schlagworte nach festen Regeln, Blind-Marken je Profil"),
     "fundmail": ("wissen", "Finden: alle Mails und Anhänge in Scheiben eingelesen, versiegelt (AES-GCM) mit Blind-Marken je Profil"),
     "fundquellen": ("wissen", "Finden: Termine und Kontakte versiegelt, Gespräche nur Datum und Kanal, Listen, Medien"),
@@ -277,6 +278,7 @@ MODULE = {
     "rmliste": ("dienste", "Werkzeug: was auf dem reMarkable liegt und welche Aufgaben dort stehen"),
     "aendern": ("dienste", "Ändern per Sprache: Lautstärke, Termine und anderes nach „Ja“"),
     "zustand_wz": ("dienste", "Werkzeug: Zustand des Spark per Sprache („Läuft alles?“)"),
+    "codeauftrag": ("betrieb", "Werkzeug: Code-Auftrag eines Admins für OpenCode, Karte mit dem Vorschlag, nichts eingespielt"),
     "rechnen": ("gespraech", "Rechnen mit festem Werkzeug: eigener Parser statt eval, Datumsrechnung, Nachrechnen in Antworten"),
     "rmplus": ("dienste", "Mehr mit dem reMarkable: Senden, Ordner, Abgleich"),
     "rmpapier": ("dienste", "Gestaltete Blätter fürs reMarkable"),
@@ -372,7 +374,7 @@ MODULE = {
     "weiche_abstimmen": ("weiche", "Weiche abstimmen: Wortvorschläge des Sprachmodells, mit festen Regeln an den Alltagssätzen gemessen"),
     "weiche_unklar": ("weiche", "Unklare Fragen anonym: feste Schwärzung (wie Probleme melden), Leck-Prüfung, versiegelt, 7 Tage, nur Admin"),
     "werkstattseite": ("betrieb", "Zustand → Werkstatt: Aufträge anfragen, rote Tests noch mal, Ergebnisse mit nächsten Schritten, feste Nachtregel"),
-    "entwickelnseite": ("betrieb", "Entwickeln auf dem Pi im Panel: Stand der lokalen Änderungen, Einspielen wie ein Update, Hinweis bei Ablehnung"),
+    "entwickelnseite": ("betrieb", "Entwickeln auf dem Pi im Panel: Seite mit lokalen Änderungen, Einspielen, Zweigen an GitHub, Terminal im Browser"),
     "angriffsprobe": ("betrieb", "Angriffsprobe: wie oft das echte Sprachmodell Befehlen in fremdem Text folgen würde, nur Zahlen, kein Werkzeug läuft"),
     "modellseite": ("betrieb", "Zustand → Modelle: Katalog, Speicher-Budget, Messen, Wechseln und Zurückholen, eigene Modelle hinzufügen und löschen"),
     "technik": ("betrieb", "Diese Seite: Zustand → Technik und die Architektur-Doku"),
@@ -402,7 +404,7 @@ MODULE = {
     "tlstor": ("teilen", "TLS-Tor: Tür des Modell-Rechners für ein Panel auf einem anderen Rechner (TLS 1.3, nur vom Panel-Rechner)"),
     "teilen": ("teilen", "Spark teilen: Firewall-Regeln für die Tür des Modell-Rechners, Fingerabdruck des Zertifikats"),
     "werkstatt": ("betrieb", "Werkstatt: feste Regeln für Aufträge, Sandbox ohne Netz und Daten, OpenCode, Code-Messung mit 10 Reparaturen"),
-    "entwickeln": ("betrieb", "Entwickeln auf dem Pi: OpenCode für spark-dev, lokale Änderungen prüfen, aufsetzen, im Sandkasten testen, einspielen"),
+    "entwickeln": ("betrieb", "Entwickeln auf dem Pi: OpenCode für spark-dev, lokal prüfen, testen, einspielen; Zweig an GitHub; Terminal-Einheit"),
     "tarswart": ("teilen", "Wärter: feste Handgriffe auf dem Modell-Rechner (Zustand, Einheiten starten, GPU) für ein Panel anderswo"),
     "rechner": ("teilen", "Werte eines Rechners: CPU (auch je Dienst), Speicher, Platte, Netz, Temperatur, Strom (für beide Rechner gleich)"),
     "rundlauf": ("betrieb", "Rundlauf-Wächter: alle paar Minuten ein Probelauf durch Sprechen, Hören, Sprachmodell; meldet über den Dienst-Wächter"),
@@ -410,7 +412,7 @@ MODULE = {
     "fernzugang": ("fern", "Fernzugang: Seite per Code entsperrt, Anker, Einmal-Code, Terminal mit Ticket, Host-Schlüssel fest, Shell gehalten"),
     "ferngross": ("fern", "Fernzugang, große Dateien: in Teilen mit SHA-256, per Link (curl) oder vom NAS, Prüfsumme vor dem Umbenennen"),
     "fernweb": ("fern", "Fernzugang, Webdienste: eigene Tunnel-Tür (Port 31090), Ziele nach festen Regeln, Cookies je Dienst getrennt"),
-    "spontansteuern": ("fern", "Spontanhilfe Steuern: Programm SparkHilfe, Einmal-Schlüssel, Bild und Eingaben über das Panel"),
+    "spontansteuern": ("fern", "Spontanhilfe Steuern: SparkHilfe (Windows, Linux X11 per Anker-Zeile), Einmal-Schlüssel, Bild und Eingaben"),
     "fernals": ("fern", "Fernzugang, Dateien als anderer Benutzer: sudo nur für den sftp-server mit -R, Freigabe am Server und je System"),
     "fernbild": ("fern", "Fernzugang, Bildschirm: guacd auf 127.0.0.1, VNC oder RDP durch den Anker, erst nur ansehen, höchstens 15 Bilder/s"),
     "fernanker": ("fern", "Fernzugang, Anker aktualisieren: eigener Ed25519-Schlüssel im Tresor, signierte neue Version, nie zurück"),
@@ -530,11 +532,13 @@ KNOTEN = {
                   "Nur für Admins: Testlauf, Code-Messung, Diagnose und Reparatur in einer Sandbox auf dem DGX, ohne Daten und "
                   "Internet; heraus kommen Zahlen und ein Patch zum Ansehen, eingespielt wird nichts. Dazu die Angriffsprobe "
                   "im Panel: nur Zahlen, kein Werkzeug läuft. Dazu Entwickeln auf dem Pi: OpenCode im Terminal des "
-                  "Panel-Rechners (spark-dev), lokale Änderungen geprüft und im Sandkasten getestet, dann wie ein Update.",
+                  "Panel-Rechners (spark-dev), lokale Änderungen geprüft und im Sandkasten getestet, dann wie ein Update; bedient "
+                  "unter Zustand → Werkstatt → Entwickeln, mit Terminal im Browser.",
                   "Admins only: test run, code measurement, diagnosis and repair in a sandbox on the DGX, without data and "
                   "internet; numbers and a patch to look at come out, nothing is installed. Plus the attack probe in the "
                   "panel: numbers only, no tool runs. And Develop on the Pi: OpenCode in the panel computer's terminal "
-                  "(spark-dev), local changes checked and tested in the sandbox, then installed like an update.",
+                  "(spark-dev), local changes checked and tested in the sandbox, then installed like an update; used under "
+                  "Status → Workshop → Develop, with a terminal in the browser.",
                   ["werkstatt.py", "werkstattseite.py", "angriffsprobe.py", "entwickeln.py", "entwickelnseite.py"]),
     "post": (534, 476, "Post und Kontakte", "Mail and contacts", "/caldav · /carddav", "post",
              "Eigene Seiten E-Mail, Kalender, Kontakte; Abruf beim Anbieter über den Wächter, Vorrat versiegelt, "
@@ -582,8 +586,8 @@ ZONEN = {
 }
 # how a device comes in: "lan" directly in the home network, "net" on the way through the reverse proxy or a bot
 REIN = {"geraet": ("lan", "net"), "apps": ("lan", "net"), "lautsprecher": ("lan",), "mcpc": ("lan", "net"), "kanaele": ("net",)}
-# the look of the boxes (Dominik 2026-10-21 „alles“ after „nicht schön“): a colour bar per kind with a legend right of
-# the devices, a symbol before the line of every box, and a tab on a box that only exists in one setup
+# the look of the boxes (Dominik 2026-10-21 „alles“ after „nicht schön“; Klar 6: muted): a thin bar per kind with a legend right of
+# the devices, a symbol (line icon) before the line of every box, and a tab on a box that only exists in one setup
 FARBEN = {"geraet": ("Geräte", "Devices"), "zugang": ("Zugang und Schutz", "Access and protection"),
           "gespraech": ("Gespräch", "Conversation"), "wissen": ("Wissen", "Knowledge"),
           "post": ("Post und Kontakte", "Mail and contacts"), "betrieb": ("Betrieb", "Operation"),
@@ -594,12 +598,13 @@ FARBE = {**dict.fromkeys(("geraet", "apps", "kanaele", "lautsprecher", "mcpc"), 
          "wissen": "wissen", "post": "post", "fernzugang": "zugang", "fernserver": "aussen", "betrieb": "betrieb", "werkstatt": "betrieb",
          **dict.fromkeys(("llm", "asr", "tts", "bild", "teilen"), "modell"),
          **dict.fromkeys(("state", "users", "ablage", "journal"), "speicher"), "aussen": "aussen", "internet": "aussen"}
-SYMBOL = {"geraet": "💻", "apps": "📱", "kanaele": "💬", "lautsprecher": "🔊", "mcpc": "🧩", "middleware": "🚦",
-          "zugang": "🔑", "sicherheit": "🛡️", "waechter": "🧱", "vorbereiten": "📝", "weiche": "🔀", "antwort": "💡",
-          "werkzeuge": "🛠️", "wissen": "📚", "post": "✉️", "betrieb": "📊", "werkstatt": "🧪", "llm": "🧠",
-          "asr": "🎙️", "tts": "🗣️", "bild": "🎨", "teilen": "🔗", "state": "🗄️", "users": "👤", "ablage": "💾",
-          "journal": "📜", "aussen": "🏠", "internet": "🌐",
-          "fernzugang": "⌨️", "fernserver": "🖥️"}
+# the symbol of a box: a line icon of static/js/icons.js by its name (Klar 6, Redesign Stufe 6: no emoji in the picture)
+SYMBOL = {"geraet": "dev", "apps": "mobile", "kanaele": "chats", "lautsprecher": "spk", "mcpc": "box", "middleware": "route",
+          "zugang": "key", "sicherheit": "lock", "waechter": "shield", "vorbereiten": "doc", "weiche": "sync", "antwort": "chat",
+          "werkzeuge": "wrench", "wissen": "book", "post": "mail", "betrieb": "chart", "werkstatt": "checks", "llm": "llm",
+          "asr": "mic", "tts": "vol", "bild": "image", "teilen": "share", "state": "db", "users": "user", "ablage": "arch",
+          "journal": "logs", "aussen": "home", "internet": "globe",
+          "fernzugang": "fern", "fernserver": "cpu"}
 LEGENDE = (892, 18)            # x, y of the legend's first row (14 apart)
 NUR_BEI = {"teilen": ("nur bei Spark teilen", "only with Spark split")}
 # the two doors where the devices' way enters the Spark: kind, German, English, x, y (on the edge of the zone spark)

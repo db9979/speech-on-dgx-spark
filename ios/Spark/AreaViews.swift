@@ -261,7 +261,7 @@ struct VoiceView: View {
                 }
             }
             if let n = m.note { Text(verbatim: n).foregroundStyle(.secondary) }
-            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle("Stimme einlernen")
         .task { await m.load() }
@@ -417,7 +417,7 @@ struct AutoView: View {
 
     var body: some View {
         Form {
-            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             if let s = m.sample { Section { Text(verbatim: s) } header: { Text("Antwort des Spark") } }
             Section {
                 if m.services["wx_on"] == false {
@@ -485,7 +485,7 @@ struct AutoView: View {
                     ForEach(m.tasks) { t in
                         Toggle(isOn: Binding(get: { !t.paused }, set: { _ in Task { await m.toggle(t) } })) {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(verbatim: (t.watch ? "🔔 " : "🗓 ") + t.title).lineLimit(2)
+                                Label { Text(verbatim: t.title).lineLimit(2) } icon: { Image(systemName: t.watch ? "bell" : "calendar") }
                                 Text(verbatim: t.text).font(.caption).foregroundStyle(.secondary).lineLimit(2)
                             }
                         }
@@ -541,7 +541,7 @@ struct JobView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 Text(verbatim: job.task).font(.headline)
-                if !job.error.isEmpty { Text(verbatim: job.error).foregroundStyle(.red) }
+                if !job.error.isEmpty { Text(verbatim: job.error).foregroundStyle(Theme.badText) }
                 if !todo.isEmpty {
                     Text("Plan: \(todo.filter { $0.done }.count) von \(todo.count) erledigt").font(.caption).foregroundStyle(.secondary)
                     ForEach(Array(todo.enumerated()), id: \.offset) { _, x in
@@ -566,7 +566,7 @@ struct JobView: View {
                         Text("Gib hier nie Passwörter, PINs oder Codes ein. Ohne Antwort macht der Auftrag nach 10 Minuten weiter.")
                             .font(.caption).foregroundStyle(.secondary)
                     }
-                    .padding(10).background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                    .padding(10).background(.thinMaterial, in: RoundedRectangle(cornerRadius: Theme.rBox))
                 }
                 if running && notes.count < 3 {
                     HStack {
@@ -582,7 +582,7 @@ struct JobView: View {
                         Text("Vorschlag:").font(.subheadline.bold())
                         Text(verbatim: p.text)
                         if p.outside {
-                            Text("Stammt aus einem Auftrag, der Text von außen gelesen hat. Prüf ihn, bevor du Ja sagst.").font(.caption).foregroundStyle(.orange)
+                            Text("Stammt aus einem Auftrag, der Text von außen gelesen hat. Prüf ihn, bevor du Ja sagst.").font(.caption).foregroundStyle(Theme.warnText)
                         }
                         if p.open {
                             HStack {
@@ -595,9 +595,9 @@ struct JobView: View {
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                     }
-                    .padding(10).background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                    .padding(10).background(.thinMaterial, in: RoundedRectangle(cornerRadius: Theme.rBox))
                 }
-                if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+                if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             }
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -752,7 +752,7 @@ struct SecurityView: View {
 
     var body: some View {
         Form {
-            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             if let n = m.note { Text(verbatim: n).foregroundStyle(.secondary) }
             Section {
                 LabeledContent("Zweiter Schritt", value: m.mfaOn ? String(localized: "an") : String(localized: "aus"))
@@ -930,7 +930,7 @@ struct AccountsView: View {
 
     var body: some View {
         Form {
-            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             if let n = m.note { Text(verbatim: n).foregroundStyle(.secondary) }
             list("E-Mail", m.mail, "mail", "api/profile/mail")
             list("Kalender", m.calendars, "calendar", "api/profile/calendar")
@@ -1108,7 +1108,7 @@ struct AccountForm: View {
                     Text("Der Spark prüft die Verbindung, speichert das Passwort verschlüsselt und gibt es nie wieder heraus. Das iPhone behält es nicht. Bestätigt wird mit dem Code aus der Authenticator-App.")
                 }
             }
-            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle(Self.title(kind))
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { secret = ""; dismiss() } } }
@@ -1212,7 +1212,7 @@ struct NotausSection: View {
             Button(role: .destructive) {
                 Task { await refresh(); ask = whole || mineOff; if !ask { note = said } }
             } label: {
-                Label("Notaus", systemImage: "exclamationmark.octagon.fill").foregroundStyle(.red)
+                Label("Notaus", systemImage: "exclamationmark.octagon.fill").foregroundStyle(Theme.bad)
             }
             .disabled(busy)
             if let note { Text(SparkAPI.way(note)) }

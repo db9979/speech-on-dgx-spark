@@ -171,7 +171,7 @@ struct DocumentsView: View {
             } else {
                 Text("Noch kein Abgleich mit dem reMarkable")
             }
-            if m.rmError { Text(SparkAPI.way(String(localized: "Der letzte Abgleich hatte einen Fehler (Ich → reMarkable)."))).foregroundStyle(.red) }
+            if m.rmError { Text(SparkAPI.way(String(localized: "Der letzte Abgleich hatte einen Fehler (Ich → reMarkable)."))).foregroundStyle(Theme.bad) }
         }
         .font(.caption).foregroundStyle(.secondary)
     }
@@ -235,7 +235,7 @@ struct DocumentsView: View {
             if !m.loading && !m.off && !m.docs.isEmpty && shown.isEmpty {
                 Text("Kein Dokument passt zum Filter.").foregroundStyle(.secondary)
             }
-            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             if let n = m.note { Text(verbatim: n).foregroundStyle(.secondary) }
             if !m.off && !m.loading {
                 Section {
@@ -271,10 +271,10 @@ struct DocumentsView: View {
                     let n = m.docs.filter { f.has($0) }.count
                     if f == .all || n > 0 {
                         Button { filter = f } label: {
-                            HStack(spacing: 4) { Text(f.name); Text(verbatim: String(n)).foregroundStyle(filter == f ? .white : .secondary) }
+                            HStack(spacing: 4) { Text(f.name); Text(verbatim: String(n)).foregroundStyle(filter == f ? Theme.onAccent : .secondary) }
                                 .font(.footnote).padding(.horizontal, 10).padding(.vertical, 6)
                                 .background(filter == f ? Color.accentColor : Color(.secondarySystemGroupedBackground), in: Capsule())
-                                .foregroundStyle(filter == f ? .white : .primary)
+                                .foregroundStyle(filter == f ? Theme.onAccent : .primary)
                         }
                         .buttonStyle(.borderless)   // each chip on its own in the List row
                     }
@@ -338,8 +338,7 @@ struct DocRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: ThingsView.docIcon(doc)).foregroundStyle(.white).frame(width: 30, height: 30)
-                .background(doc.source == "remarkable" ? Color.purple : Color.blue, in: RoundedRectangle(cornerRadius: 7))
+            Image(systemName: ThingsView.docIcon(doc)).foregroundStyle(Theme.accent).frame(width: 30, height: 30)
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: doc.shown).lineLimit(1)
                 Text(verbatim: sub).font(.caption).foregroundStyle(.secondary).lineLimit(1)
@@ -372,17 +371,17 @@ struct DocRow: View {
 
     @ViewBuilder private var mark: some View {
         if !doc.due.isEmpty && doc.due >= ThingsView.today {
-            badge(Text("Frist \(Self.day(doc.due))"), .red)
+            badge(Text("Frist \(Self.day(doc.due))"), Theme.bad)
         } else if doc.state == "error" {
-            badge(Text("nicht lesbar"), .red)
+            badge(Text("nicht lesbar"), Theme.bad)
         } else if doc.todo > 0 && doc.pages > 0 {
-            badge(Text(verbatim: "\(doc.pages - doc.todo)/\(doc.pages)"), .blue)
+            badge(Text(verbatim: "\(doc.pages - doc.todo)/\(doc.pages)"), Theme.accent)
         } else if doc.todo > 0 || doc.state == "reading" {
-            badge(Text("wird gelesen"), .blue)
+            badge(Text("wird gelesen"), Theme.accent)
         } else if doc.shared {
-            badge(Text("für alle"), .green)
+            badge(Text("für alle"), Theme.ok)
         } else if !doc.use {
-            badge(Text("Suche aus"), .gray)
+            badge(Text("Suche aus"), Theme.faint)
         }
     }
 
@@ -425,8 +424,8 @@ struct DocDetailView: View {
                     }
                     .font(.caption).foregroundStyle(.secondary)
                     if !doc.brief.isEmpty { Text(verbatim: doc.brief).font(.callout) }
-                    if !doc.due.isEmpty { Label { Text("Frist \(DocRow.day(doc.due))") } icon: { Image(systemName: "calendar.badge.exclamationmark") }.foregroundStyle(.red) }
-                    if doc.state == "error" && !doc.note.isEmpty { Text(SparkAPI.way(doc.note)).foregroundStyle(.red).font(.caption) }
+                    if !doc.due.isEmpty { Label { Text("Frist \(DocRow.day(doc.due))") } icon: { Image(systemName: "calendar.badge.exclamationmark") }.foregroundStyle(Theme.bad) }
+                    if doc.state == "error" && !doc.note.isEmpty { Text(SparkAPI.way(doc.note)).foregroundStyle(Theme.badText).font(.caption) }
                     if doc.title != "" && doc.title != doc.name { Text(verbatim: doc.name).font(.caption2).foregroundStyle(.secondary) }
                 }
             }
@@ -462,7 +461,7 @@ struct DocDetailView: View {
                 Button(role: .destructive) { removing = true } label: { Label("Löschen", systemImage: "trash") }
             }
             if let n = note { Text(verbatim: n).foregroundStyle(.secondary) }
-            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle(Text(verbatim: doc.shown))
         .navigationBarTitleDisplayMode(.inline)
@@ -574,7 +573,7 @@ struct DocSwitchesView: View {
                 ForEach(Self.rows, id: \.0) { r in
                     LabeledContent {
                         Image(systemName: allow[r.0] == true ? "checkmark.circle.fill" : "xmark.circle")
-                            .foregroundStyle(allow[r.0] == true ? .green : .secondary)
+                            .foregroundStyle(allow[r.0] == true ? Theme.ok : .secondary)
                     } label: {
                         Text(r.1)
                         Text(r.2)
@@ -585,7 +584,7 @@ struct DocSwitchesView: View {
                     Text(SparkAPI.way(String(localized: "Der Admin hat das noch nicht freigegeben (Funktionen → Eigene Dokumente). Was er freigibt, gilt sofort für dich.")))
                 }
             }
-            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle("Schalter für Dokumente")
         .task { await load() }
@@ -671,7 +670,7 @@ struct LeftOutView: View {
                 Section { Text(verbatim: always.joined(separator: " · ")).foregroundStyle(.secondary) } header: { Text("Immer ausgelassen") }
             }
             if let n = note { Text(verbatim: n).foregroundStyle(.secondary) }
-            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle("Ausgelassene Ordner")
         .task { await load() }
@@ -762,7 +761,7 @@ struct DocumentView: View {
     private var textView: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 12) {
-                if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+                if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
                 if let t = text {
                     if t.parts.isEmpty {
                         Text(doc.todo > 0 ? "Der Spark liest das Dokument noch." : "Kein Text gespeichert.")
@@ -886,7 +885,7 @@ struct MadeDocsView: View {
                     }
                 }
             }
-            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle("Vom Spark erstellt")
         .refreshable { await m.load() }
@@ -949,7 +948,7 @@ struct MadeDocView: View {
             } else {
                 VStack(spacing: 12) {
                     PeekView(doc: doc, big: true).padding()
-                    if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+                    if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
                     Spacer()
                 }
             }
@@ -1122,7 +1121,7 @@ struct WissensbuchView: View {
                                     Text(verbatim: String(p.count))
                                 } label: {
                                     Text(verbatim: p.title)
-                                    if p.contradictions > 0 { Text("Widerspruch").foregroundStyle(.orange) }
+                                    if p.contradictions > 0 { Text("Widerspruch").foregroundStyle(Theme.warnText) }
                                 }
                             }
                         }
@@ -1133,7 +1132,7 @@ struct WissensbuchView: View {
                 Text("Noch keine Seiten. Sie entstehen nur, wenn niemand mit dem Spark spricht.").foregroundStyle(.secondary)
             }
             if m.waiting > 0 { Text(verbatim: String(localized: "Noch nicht eingearbeitet:") + " " + String(m.waiting)).foregroundStyle(.secondary) }
-            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             if !m.pages.isEmpty {
                 Section {
                     if let file {
@@ -1181,8 +1180,8 @@ struct WbPageView: View {
             ForEach(sentences) { s in
                 VStack(alignment: .leading, spacing: 4) {
                     WbSentenceText(s: s)
-                    if s.contradiction { Text("Widerspruch").font(.caption).foregroundStyle(.orange) }
-                    if s.stale { Text("Veraltet?").font(.caption).foregroundStyle(.orange) }
+                    if s.contradiction { Text("Widerspruch").font(.caption).foregroundStyle(Theme.warnText) }
+                    if s.stale { Text("Veraltet?").font(.caption).foregroundStyle(Theme.warnText) }
                 }
                 .swipeActions(edge: .trailing) {
                     Button(role: .destructive) { Task { await model.sentence(s.id, "weg"); await load() } } label: {
@@ -1196,7 +1195,7 @@ struct WbPageView: View {
             // renaming a page asks for the code of „Bestätigen“: in the panel (a page with a point: on the map)
             Text(SparkAPI.way(String(localized: "Seite umbenennen geht im Panel unter Wissensbuch → Seiten, eine Seite mit Punkt unter Wissensbuch → Karte.")))
                 .font(.caption).foregroundStyle(.secondary)
-            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle(Text(verbatim: page.title))
         .navigationBarTitleDisplayMode(.inline)

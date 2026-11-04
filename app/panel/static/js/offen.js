@@ -80,7 +80,7 @@ function vgGo(x,k,d){const z=x.daten||{};
   else if(k==='fd_cancel'&&window.postFromFuer&&d.draft)postFromFuer('',d.draft)
   else if(k==='vs_aendern'&&d.event&&typeof fuerEvent==='function'&&typeof KAL!=='undefined')fuerEvent({event:d.event})   // the Kalender's form, filled
   else if(k==='vs_aendern'&&d.draft&&window.postFromFuer)postFromFuer('',d.draft)   // the writing window, filled; only its sheet sends
-  else if(k==='oeffnen'&&z.weg)wayGo(z.weg)   // stages 3+4: only the place where it goes on (a fixed way of the panel)
+  else if((k==='oeffnen'||k==='ca_lokal'||k==='ca_github')&&z.weg)wayGo(z.weg)   // stages 3+4 and the Code-Auftrag: only the place where it goes on (a fixed way of the panel; there the code is asked)
   else if(k==='cx_antworten'&&z.chat&&typeof cxOpen==='function'){goSec('chats');cxOpen(z.chat)}
   else if(k==='ml_lesen'&&z.ref&&typeof postRead==='function'){icTabSet('post','show');goSec('post');postRead(z.ref)}}
 // ---------------------------------------------------------------- in the conversation (chat.js openConvo)

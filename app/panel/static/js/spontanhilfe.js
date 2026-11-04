@@ -167,7 +167,7 @@ function shSt(){const d=SH.d||{},h=d.hilfe,an=!!d.steuern_an&&!!h&&h.stand==='of
   const bild=an&&SH.bild&&['view','control'].includes(s);$('shcv').hidden=!bild;$('shvideo').hidden=bild;$('shkeys').hidden=!(bild&&SH.steuern)}
 async function shSteuernFragen(){if(!confirm(t('Steuern anfragen? Die Person sieht dann „Programm laden“ und muss im Programm „Erlauben“ klicken.','Ask for control? The person then sees "Load program" and has to click "Allow" in the program.')))return;
   try{await api('/api/admin/spontanhilfe/steuern',{method:'POST'});SH.st='angefragt';shSt()}catch(e){shMsg(e.message,true)}}
-function shBild(buf){createImageBitmap(new Blob([buf],{type:'image/jpeg'})).then(bm=>{const cv=$('shcv');if(cv.width!==bm.width||cv.height!==bm.height){cv.width=bm.width;cv.height=bm.height}
+function shBild(buf){createImageBitmap(new Blob([buf],{type:new Uint8Array(buf,0,1)[0]===0x89?'image/png':'image/jpeg'})).then(bm=>{const cv=$('shcv');if(cv.width!==bm.width||cv.height!==bm.height){cv.width=bm.width;cv.height=bm.height}
   cv.getContext('2d').drawImage(bm,0,0);if(bm.close)bm.close();if(!SH.bild){SH.bild=true;shSt()}}).catch(()=>{})}
 function shEin(e){if(SH.steuern&&e)shSend({typ:'eingabe',events:[e]})}
 // the picture inside the canvas (object-fit: contain): only a point on it counts

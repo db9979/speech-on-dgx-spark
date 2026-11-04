@@ -78,7 +78,6 @@ struct ThingHit: Identifiable {
     let title: String
     let kind: LocalizedStringKey
     let icon: String
-    let tint: Color
     let when: Date
     var doc: SparkDoc?
     var made: MadeDoc?
@@ -87,23 +86,23 @@ struct ThingHit: Identifiable {
     var fact: Fact?
 
     init(doc: SparkDoc) {
-        id = "d" + doc.id; title = doc.shown; kind = "Dokument"; icon = ThingsView.docIcon(doc); tint = .blue
+        id = "d" + doc.id; title = doc.shown; kind = "Dokument"; icon = ThingsView.docIcon(doc)
         when = doc.when; self.doc = doc
     }
     init(made: MadeDoc) {
-        id = "m" + made.id; title = made.title; kind = "Vom Spark erstellt"; icon = "wand.and.stars"; tint = .indigo
+        id = "m" + made.id; title = made.title; kind = "Vom Spark erstellt"; icon = "wand.and.stars"
         when = made.updated; self.made = made
     }
     init(picture: Picture) {
         id = "p" + picture.id; title = picture.wish.isEmpty ? String(localized: "Bild") : picture.wish; kind = "Bild"
-        icon = "photo"; tint = .orange; when = picture.created; self.picture = picture
+        icon = "photo"; when = picture.created; self.picture = picture
     }
     init(song: Song) {
-        id = "s" + song.id; title = song.title; kind = "Musik"; icon = "music.note"; tint = .pink; when = song.created
+        id = "s" + song.id; title = song.title; kind = "Musik"; icon = "music.note"; when = song.created
         self.song = song
     }
     init(fact: Fact) {
-        id = "f" + fact.id; title = fact.text; kind = "Gedächtnis"; icon = "brain"; tint = .green; when = fact.created
+        id = "f" + fact.id; title = fact.text; kind = "Gedächtnis"; icon = "brain"; when = fact.created
         self.fact = fact
     }
 
@@ -147,7 +146,7 @@ struct ThingsView: View {
 
     /// whether the profile has any part of Meine Sachen (the button beside the conversation and the row in Einstellungen)
     static func any(_ a: Allowed) -> Bool {
-        a.make || !a.areas.isDisjoint(with: ["documents", "bilder", "musik", "memory", "calendar", "mail", "tasks", "vorgaenge", "contacts", "fund"])
+        a.make || !a.areas.isDisjoint(with: ["documents", "bilder", "musik", "memory", "calendar", "mail", "tasks", "vorgaenge", "contacts", "fund", "mappen"])
     }
 
     private var a: Allowed { talk.allowed }
@@ -155,6 +154,7 @@ struct ThingsView: View {
         !a.areas.contains("documents") && !a.make && !a.areas.contains("bilder") && !a.areas.contains("musik")
             && !a.areas.contains("memory") && !a.areas.contains("calendar") && !a.areas.contains("mail")
             && !a.areas.contains("tasks") && !a.areas.contains("vorgaenge") && !a.areas.contains("contacts") && !a.areas.contains("fund")
+            && !a.areas.contains("mappen")
     }
 
     var body: some View {
@@ -168,7 +168,7 @@ struct ThingsView: View {
                 // Kalender, E-Mail (KalenderPost.swift), Listen (ListenView.swift), Offen (Vorgaenge.swift), Kontakte, Dungeon-Master: pages of their
                 // own, like in the panel's menu
                 if a.areas.contains("calendar") || a.areas.contains("mail") || a.areas.contains("tasks") || a.areas.contains("vorgaenge")
-                    || a.areas.contains("contacts") || a.areas.contains("dungeon") || a.areas.contains("fund") {
+                    || a.areas.contains("contacts") || a.areas.contains("dungeon") || a.areas.contains("fund") || a.areas.contains("mappen") {
                     Section {
                         if a.areas.contains("calendar") {
                             NavigationLink { KalenderView() } label: { Label("Kalender", systemImage: "calendar") }
@@ -188,6 +188,9 @@ struct ThingsView: View {
                         if a.areas.contains("fund") {   // Finden in allen Daten (FindenView.swift, fund.py)
                             NavigationLink { FindenView() } label: { Label("Finden", systemImage: "magnifyingglass") }
                         }
+                        if a.areas.contains("mappen") {   // Mappen (MappenView.swift, mappen.py)
+                            NavigationLink { MappenView() } label: { Label("Mappen", systemImage: "folder") }
+                        }
                         if a.areas.contains("dungeon") {   // KI-Dungeon-Master (DungeonView.swift)
                             NavigationLink { DungeonView() } label: { Label("Dungeon-Master", systemImage: "die.face.5") }
                         }
@@ -196,20 +199,20 @@ struct ThingsView: View {
                 Section {
                     LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
                         if a.areas.contains("documents") {
-                            tile(.documents, "Dokumente", "doc.text", .blue, m.count("documents", m.docs.count), docNote)
+                            tile(.documents, "Dokumente", "doc.text", m.count("documents", m.docs.count), docNote)
                         }
                         if a.make {
-                            tile(.made, "Vom Spark erstellt", "wand.and.stars", .indigo, m.count("made", m.made.count),
+                            tile(.made, "Vom Spark erstellt", "wand.and.stars", m.count("made", m.made.count),
                                  m.made.first.map { Text($0.updated, format: .relative(presentation: .named)) })
                         }
                         if a.areas.contains("bilder") {
-                            tile(.pictures, "Bilder", "photo.on.rectangle", .orange, m.count("bilder", m.pictures.count), nil)
+                            tile(.pictures, "Bilder", "photo.on.rectangle", m.count("bilder", m.pictures.count), nil)
                         }
                         if a.areas.contains("musik") {
-                            tile(.music, "Musik", "music.note", .pink, m.count("musik", m.songs.count), m.songs.first.map { Text(verbatim: $0.title) })
+                            tile(.music, "Musik", "music.note", m.count("musik", m.songs.count), m.songs.first.map { Text(verbatim: $0.title) })
                         }
                         if a.areas.contains("memory") {
-                            tile(.memory, "Gedächtnis", "brain", .green, m.count("memory", m.facts.count), m.tidy ? Text("Vorschläge zum Aufräumen") : nil)
+                            tile(.memory, "Gedächtnis", "brain", m.count("memory", m.facts.count), m.tidy ? Text("Vorschläge zum Aufräumen") : nil)
                         }
                     }
                     .listRowInsets(EdgeInsets())
@@ -225,7 +228,7 @@ struct ThingsView: View {
                     }
                 }
             }
-            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle("Meine Sachen")
         .searchable(text: $search, prompt: Text("In allem suchen"))
@@ -253,28 +256,27 @@ struct ThingsView: View {
         return f.string(from: Date())
     }
 
-    private func tile(_ part: ThingPart, _ name: LocalizedStringKey, _ icon: String, _ tint: Color, _ count: Int,
+    private func tile(_ part: ThingPart, _ name: LocalizedStringKey, _ icon: String, _ count: Int,
                       _ note: Text?) -> some View {
         Button { open = part } label: {
             VStack(alignment: .leading, spacing: 4) {
-                Image(systemName: icon).font(.title3).foregroundStyle(.white)
-                    .frame(width: 34, height: 34).background(tint, in: RoundedRectangle(cornerRadius: 8))
+                Image(systemName: icon).font(.title3).foregroundStyle(Theme.accent)
+                    .frame(width: 34, height: 34, alignment: .leading)
                 Text(verbatim: String(count)).font(.title.bold()).foregroundStyle(.primary)
                 Text(name).font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
                 (note ?? Text(verbatim: " ")).font(.caption).foregroundStyle(.secondary).lineLimit(1)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(12)
-            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
-            .contentShape(RoundedRectangle(cornerRadius: 14))
+            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: Theme.rBox))
+            .contentShape(RoundedRectangle(cornerRadius: Theme.rBox))
         }
         .buttonStyle(.borderless)
     }
 
     private func row(_ h: ThingHit) -> some View {
         HStack(spacing: 10) {
-            Image(systemName: h.icon).foregroundStyle(.white).frame(width: 28, height: 28)
-                .background(h.tint, in: RoundedRectangle(cornerRadius: 7))
+            Image(systemName: h.icon).foregroundStyle(Theme.accent).frame(width: 28, height: 28)
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: h.title).lineLimit(1)
                 HStack(spacing: 4) {
@@ -527,7 +529,7 @@ struct PicturesView: View {
                         .disabled(wish.trimmingCharacters(in: .whitespaces).count < 3)
                 }
                 if m.painting > 0 { Label("Wird gemalt …", systemImage: "paintbrush").font(.footnote).foregroundStyle(.secondary) }
-                if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red).font(.footnote) }
+                if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText).font(.footnote) }
                 if !m.loading && m.pics.isEmpty { Text("Noch keine Bilder.").foregroundStyle(.secondary) }
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 3)], spacing: 3) {
                     ForEach(shown) { p in
@@ -567,12 +569,12 @@ struct PictureView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 if let image {
-                    Image(uiImage: image).resizable().scaledToFit().clipShape(RoundedRectangle(cornerRadius: 8))
+                    Image(uiImage: image).resizable().scaledToFit().clipShape(RoundedRectangle(cornerRadius: Theme.rItem))
                 } else { ProgressView().frame(maxWidth: .infinity, minHeight: 200) }
                 // the person's own wish: plain text, nothing in it is a link or a command
                 if !picture.wish.isEmpty { Text(verbatim: picture.wish) }
                 Text(picture.created, format: .dateTime.day().month().year().hour().minute()).font(.caption).foregroundStyle(.secondary)
-                if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+                if let e = error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
             }
             .padding()
         }
@@ -734,7 +736,7 @@ struct SongsView: View {
                         .listRowBackground(s.id == start ? Color.accentColor.opacity(0.08) : nil)
                         .swipeActions { Button(role: .destructive) { removing = s } label: { Label("Löschen", systemImage: "trash") } }
                         .swipeActions(edge: .leading) {
-                            if m.editing != nil { Button { changing = s } label: { Label("Bearbeiten", systemImage: "slider.horizontal.3") }.tint(.pink) }
+                            if m.editing != nil { Button { changing = s } label: { Label("Bearbeiten", systemImage: "slider.horizontal.3") }.tint(Theme.accent) }
                         }
                         .contextMenu {
                             if m.editing != nil {
@@ -747,7 +749,7 @@ struct SongsView: View {
                     }
                 }
             }
-            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle("Musik")
         .toolbar {
@@ -913,7 +915,7 @@ struct SongEditView: View {
                                 Text(a.1).font(.subheadline.weight(art == a.0 ? .semibold : .regular))
                                     .padding(.horizontal, 12).padding(.vertical, 7)
                                     .background(Capsule().fill(art == a.0 ? Color.accentColor : Color.secondary.opacity(0.12)))
-                                    .foregroundStyle(art == a.0 ? Color.white : Color.primary)
+                                    .foregroundStyle(art == a.0 ? Theme.onAccent : Color.primary)
                             }
                             .buttonStyle(.plain)
                             .accessibilityAddTraits(art == a.0 ? .isSelected : [])
@@ -980,7 +982,7 @@ struct SongEditView: View {
                 }
                 if model { Stepper(value: $many, in: 1...3) { Text("\(many) Vorschläge") } }
             } footer: { Text("Teile außerhalb des Bereichs bleiben im Originalklang. Jede Änderung ist eine neue Fassung, das Original bleibt.") }
-            if let error { Text(SparkAPI.way(error)).foregroundStyle(.red) }
+            if let error { Text(SparkAPI.way(error)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle("Bearbeiten")
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } } }
@@ -1102,13 +1104,13 @@ struct MemoryView: View {
                     .tag(f.id)
                     .swipeActions {
                         Button(role: .destructive) { Task { await m.run { try await $0.forget(f.id) } } } label: { Label("Löschen", systemImage: "trash") }
-                        Button { text = f.text; editing = f } label: { Label("Ändern", systemImage: "pencil") }.tint(.blue)
+                        Button { text = f.text; editing = f } label: { Label("Ändern", systemImage: "pencil") }.tint(Theme.accent)
                     }
                 }
             } header: {
                 // „N von 200“, yellow from 180 (the panel's numbers): over it only old learned entries make room
                 Text("\(m.facts.count) von \(m.limit)")
-                    .foregroundStyle(m.facts.count >= m.limit ? .red : m.facts.count >= m.warnAt ? .orange : .secondary)
+                    .foregroundStyle(m.facts.count >= m.limit ? Theme.bad : m.facts.count >= m.warnAt ? Theme.warn : .secondary)
             } footer: {
                 if m.tidy == nil && !m.facts.isEmpty {
                     Button { Task { await m.tidyStep("check") } } label: {
@@ -1117,7 +1119,7 @@ struct MemoryView: View {
                     .disabled(m.asking)
                 }
             }
-            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
         .environment(\.editMode, $edit)
         .navigationTitle("Gedächtnis")

@@ -231,7 +231,7 @@ struct IchWeissView: View {
             case .recurring: recurringTab
             case .week: weekTab
             }
-            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle("Was ich über dich weiß")
         .navigationBarTitleDisplayMode(.inline)
@@ -269,7 +269,7 @@ struct IchWeissView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
                             Text(verbatim: x.label).font(.headline)
-                            if x.unclear { Text("Thema unklar").font(.caption2).foregroundStyle(.orange) }
+                            if x.unclear { Text("Thema unklar").font(.caption2).foregroundStyle(Theme.warnText) }
                         }
                         Text("Beleg: \(x.why)").font(.caption).foregroundStyle(.secondary)
                         if !x.unclear && !x.senders.isEmpty {
@@ -330,7 +330,7 @@ struct IchWeissView: View {
                             if x.web { Text("Netz-Tipps").font(.caption2).foregroundStyle(.tint) }
                         }
                         if x.old {
-                            Text("alter Absender, Thema fehlt").font(.caption).foregroundStyle(.orange)
+                            Text("alter Absender, Thema fehlt").font(.caption).foregroundStyle(Theme.warnText)
                         } else if !x.senders.isEmpty {
                             Text(verbatim: x.senders.joined(separator: ", ")).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                         }

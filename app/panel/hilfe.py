@@ -257,10 +257,10 @@ FAQ = (
       "does not fit the address (an IP instead of the name), \"Check certificate\" shows its fingerprint; if it matches the "
       "one in the NAS, \"Trust this certificate\". \"Security at a glance\" under "
       "Settings → Security warns when the backup is missing or old.")),
-    ("logs", "admin", "logs", ("Logs ansehen", "Zustand → Logs zeigt das Protokoll des Spark. Die Filter-Knöpfe grenzen ein "
-     "(z. B. Diagnose, Anfragen); „Kopieren für Thread“ gibt einen Auszug ohne Geheimnisse zum Weitergeben. Logs → Anfragen zeigt "
+    ("logs", "admin", "logs", ("Logs ansehen", "Zustand → Logs zeigt das Protokoll des Spark als Tabelle, die neueste Zeile oben. Reiter und "
+     "„Bereiche“ grenzen ein (z. B. Diagnose, Anfragen, nur Fehler); „Kopieren für Thread“ gibt einen Auszug ohne Geheimnisse zum Weitergeben. Logs → Anfragen zeigt "
      "jede Anfrage mit Weiche, Werkzeugen und Zeiten, wenn „Anfragen verfolgen“ an ist."),
-     ("Viewing logs", "Status → Logs shows the Spark's log. The filter buttons narrow it down (e.g. diagnosis, requests); "
+     ("Viewing logs", "Status → Logs shows the Spark's log as a table, the newest line on top. Tabs and \"Areas\" narrow it down (e.g. diagnosis, requests, errors only); "
       "\"Copy for thread\" gives an excerpt without secrets. Logs → Requests shows each request with the switch, tools and "
       "times when \"Trace requests\" is on.")),
     ("meinnotaus", "profile", "me/secbox", ("Mein Notaus", "Unter Ich → Sicherheit → Mein Notaus legt jedes Profil nur sich "

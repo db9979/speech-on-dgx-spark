@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Spark" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:colorPrimary">#2f6fed</item>
-        <item name="android:colorAccent">#2f6fed</item>
+        <item name="android:colorPrimary">@color/acc</item>
+        <item name="android:colorAccent">@color/acc</item>
         <item name="android:windowBackground">@color/bg</item>
         <item name="android:statusBarColor">@color/bg</item>
         <item name="android:navigationBarColor">@color/bg</item>
@@ -19,6 +19,12 @@
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">false</item>
     </style>
-    <color name="bg">#f2f2f7</color>
+    <!-- Klar 2 (Redesign Stufe 8): the colours of the hull (status bar, loading bar, address and wait screens, widget)
+         are the panel's tokens (app/panel/static/tokens.css, light here, dark in values-night); test_design_tokens.Apps -->
+    <color name="bg">#f5f5f7</color>
+    <color name="card">#ffffff</color>
+    <color name="fg">#1d1d1f</color>
+    <color name="mut">#6e6e73</color>
+    <color name="acc">#0071e3</color>
     <color name="icon_bg">#1d2b53</color>
 </resources>
