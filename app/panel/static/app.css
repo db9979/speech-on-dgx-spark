@@ -1282,7 +1282,7 @@ select.segsel{display:none!important}
   .sgrp{padding:0 var(--s3);border-radius:var(--r-box)}
   .setrow.dirtyrow::before{left:-9px}
   #cfg .pane>.savebar{bottom:env(safe-area-inset-bottom);padding:var(--s2) 0}
-  body.appview #cfg .pane>.savebar{bottom:calc(59px + env(safe-area-inset-bottom));background:var(--apbg,var(--bg))}
+  body.appview #cfg .pane>.savebar{bottom:calc(59px + env(safe-area-inset-bottom));background:var(--bg)}
   .segc button{min-height:30px;padding:4px 10px}
 }
 .setrow .ctl>input:not(.num):not([type=checkbox]){flex:1 1 auto;min-width:0}

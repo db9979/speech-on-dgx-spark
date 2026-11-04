@@ -12,8 +12,14 @@ struct TodayView: View {
         NavigationStack {
             List {
                 if let error {
-                    Text(error).foregroundStyle(.red)
-                } else if loaded && cards.isEmpty {
+                    Text(error).foregroundStyle(Theme.badText)
+                } else if !loaded {
+                    // calm while loading (Klar 2): three rows of the same height as placeholders, nothing jumps in
+                    ForEach(0..<3, id: \.self) { _ in
+                        row("calendar", String(localized: "Termine"), "00:00", String(localized: "Heute und morgen frei"))
+                            .redacted(reason: .placeholder)
+                    }
+                } else if cards.isEmpty {
                     Text("Hier erscheint, was heute dran ist, sobald der Admin Kalender, Erinnerungen, Chats oder Dokumente für dich einschaltet.")
                         .foregroundStyle(.secondary)
                 }
@@ -61,7 +67,7 @@ struct TodayView: View {
                 }
             }
             .navigationTitle("Heute")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { dismiss() } } }
             .refreshable { await load() }
             .task { await load() }

@@ -174,16 +174,16 @@ struct MyStatusView: View {
     }
 
     private func dot(_ state: String) -> some View {
-        Circle().fill(Self.color(state)).frame(width: 10, height: 10)
+        StatusDot(color: Self.color(state))
     }
 
     static func color(_ state: String) -> Color {
         switch state {
-        case "run": return .teal
-        case "wait": return .orange
-        case "ok": return .green
-        case "bad": return .red
-        default: return .gray
+        case "run": return Theme.accent
+        case "wait": return Theme.warn
+        case "ok": return Theme.ok
+        case "bad": return Theme.bad
+        default: return Theme.faint
         }
     }
 

@@ -28,7 +28,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Spark"
-            android:textColor="#1d2330"
+            android:textColor="@color/fg"
             android:textSize="15sp"
             android:textStyle="bold" />
 
@@ -37,7 +37,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:maxLines="2"
-            android:textColor="#445066"
+            android:textColor="@color/mut"
             android:textSize="13sp" />
 
         <TextView
@@ -45,7 +45,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:maxLines="1"
-            android:textColor="#2d6cdf"
+            android:textColor="@color/acc"
             android:textSize="13sp"
             android:visibility="gone" />
     </LinearLayout>

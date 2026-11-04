@@ -76,7 +76,7 @@ struct JoinView: View {
                     }
                 }
                 if let p = problem {
-                    Section { Text(verbatim: p).foregroundStyle(.red) }
+                    Section { Text(verbatim: p).foregroundStyle(Theme.badText) }
                 }
             }
             .navigationTitle("Einladung")
@@ -177,7 +177,7 @@ struct PairView: View {
                     Section { ProgressView("Kopple …") }
                 }
                 if let m = app.message {
-                    Section { Text(m).foregroundStyle(.red) }
+                    Section { Text(m).foregroundStyle(Theme.badText) }
                 }
             }
             .navigationTitle("Spark koppeln")
@@ -239,8 +239,8 @@ struct ChatView: View {
                                 .overlay(alignment: .topTrailing) {
                                     if chats.unread > 0 {
                                         Text(verbatim: chats.unread > 9 ? "9+" : String(chats.unread))
-                                            .font(.system(size: 10, weight: .bold)).foregroundStyle(.white)
-                                            .padding(3).background(Circle().fill(.red)).offset(x: 8, y: -8)
+                                            .font(.system(size: 10, weight: .bold)).foregroundStyle(Theme.onAccent)
+                                            .padding(3).background(Circle().fill(Theme.bad)).offset(x: 8, y: -8)
                                     }
                                 }
                         }
@@ -365,7 +365,7 @@ struct ChatView: View {
                 }
             }
             if let e = talk.error {
-                Text(e).font(.footnote).foregroundStyle(.red).padding(.horizontal)
+                Text(e).font(.footnote).foregroundStyle(Theme.badText).padding(.horizontal)
             } else if let n = talk.notice {
                 Text(n).font(.footnote).foregroundStyle(.secondary).padding(.horizontal)
             }
@@ -472,7 +472,7 @@ struct GrossAnsicht: View {
                     .font(.body)
                     .onChange(of: text) { if limit > 0 && text.count > limit { text = String(text.prefix(limit)) } }
                 if limit > 0 && Double(text.count) >= Double(limit) * 0.8 {
-                    Text(verbatim: "\(text.count) / \(limit)").font(.caption).foregroundStyle(.orange)
+                    Text(verbatim: "\(text.count) / \(limit)").font(.caption).foregroundStyle(Theme.warnText)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }
@@ -499,7 +499,10 @@ struct OfflineBanner: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Label("Spark nicht erreichbar", systemImage: "wifi.exclamationmark").font(.subheadline.bold())
+            HStack(spacing: 8) {
+                StatusDot(color: Theme.warn)
+                Text("Spark nicht erreichbar").font(.subheadline.bold())
+            }
             if talk.certBad { Text(verbatim: NetWatch.certificateText()).font(.footnote) }
             if talk.outbox.isEmpty {
                 Text("Geschriebene Fragen gehen raus, sobald er wieder da ist.").font(.footnote)
@@ -518,8 +521,8 @@ struct OfflineBanner: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(10)
-        .background(Color.orange.opacity(0.18))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .background(Theme.soft)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.rBox))
         .padding(.horizontal)
         .padding(.top, 6)
     }
@@ -535,7 +538,7 @@ struct RoomBanner: View {
         let rooms = talk.rooms
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
-                Circle().fill(Color.green).frame(width: 9, height: 9)
+                StatusDot(color: Theme.ok)
                 if rooms.count == 1, let r = rooms.first {
                     Text("\(RoomLive.listening([r.name])) bis \(r.until, style: .time)").font(.subheadline.bold()).lineLimit(1)
                 } else {
@@ -565,8 +568,8 @@ struct RoomBanner: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(10)
-        .background(Color.green.opacity(0.16))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .background(Theme.soft)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.rBox))
         .padding(.horizontal)
         .padding(.top, 6)
     }
@@ -708,11 +711,11 @@ struct StandView: View {
                         .lineLimit(4)
                         .padding(.horizontal)
                 }
-                Text(talk.error ?? talk.status).font(.footnote).foregroundStyle(talk.error == nil ? Color.secondary : Color.red)
+                Text(talk.error ?? talk.status).font(.footnote).foregroundStyle(talk.error == nil ? Color.secondary : Theme.bad)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.black)
-            .foregroundStyle(.white)
+            .background(Theme.shade)
+            .foregroundStyle(Theme.onAccent)
             .opacity(night && talk.phase == .waiting ? 0.35 : 1)
             .environment(\.colorScheme, .dark)
         }
@@ -774,8 +777,8 @@ struct Bubble: View {
             }
                 .padding(10)
                 .background(mine ? Color.accentColor.opacity(0.85) : Color(.secondarySystemBackground))
-                .foregroundStyle(mine ? .white : .primary)
-                .clipShape(RoundedRectangle(cornerRadius: 14))
+                .foregroundStyle(mine ? Theme.onAccent : .primary)
+                .clipShape(RoundedRectangle(cornerRadius: Theme.rBox))
                 .contextMenu {
                     if !message.text.isEmpty {
                         Button { UIPasteboard.general.string = copyText } label: { Label("Kopieren", systemImage: "doc.on.doc") }
@@ -801,7 +804,7 @@ struct PictureCard: View {
             if let image {
                 Image(uiImage: image).resizable().scaledToFit()
                     .frame(maxWidth: 420, maxHeight: 420, alignment: .leading)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.rBox))
                     .accessibilityLabel("Gemaltes Bild")
                     .contextMenu {
                         ShareLink(item: Image(uiImage: image), preview: SharePreview("Bild", image: Image(uiImage: image))) {
@@ -878,8 +881,10 @@ struct StepsFold: View {
         DisclosureGroup {
             VStack(alignment: .leading, spacing: 2) {
                 ForEach(Array(steps.enumerated()), id: \.offset) { _, x in
-                    Text(verbatim: (x.ok ? "✓ " : "⚠ ") + x.name + " · " + Self.seconds(x.ms))
-                        .foregroundStyle(x.ok ? Color.green : Color.orange)
+                    Label { Text(verbatim: x.name + " · " + Self.seconds(x.ms)) } icon: {
+                        Image(systemName: x.ok ? "checkmark" : "exclamationmark.triangle")
+                    }
+                    .foregroundStyle(x.ok ? Theme.okText : Theme.warnText)
                 }
             }
             .font(.caption)
@@ -909,8 +914,8 @@ struct ConfirmCard: View {
             .disabled(sent)
         }
         .padding(10)
-        .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.orange, lineWidth: 1.5))
+        .background(Theme.soft, in: RoundedRectangle(cornerRadius: Theme.rBox))
+        .overlay(RoundedRectangle(cornerRadius: Theme.rBox).stroke(Theme.line, lineWidth: 1))
     }
 }
 
@@ -954,7 +959,7 @@ struct GemerktChips: View {
                     }
                 }
                 .padding(.vertical, 4).padding(.horizontal, 10)
-                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.secondary.opacity(0.3), lineWidth: 1))
+                .overlay(RoundedRectangle(cornerRadius: Theme.rBox).stroke(Color.secondary.opacity(0.3), lineWidth: 1))
             }
         }
         .buttonStyle(.borderless)
@@ -992,11 +997,11 @@ struct RateBar: View {
     var body: some View {
         HStack(spacing: 14) {
             Button { Task { await Conversation.shared.rate(message.id, good: true) } } label: {
-                Text(verbatim: "👍").opacity(message.rated == false ? 0.4 : 1)
+                Image(systemName: message.rated == true ? "hand.thumbsup.fill" : "hand.thumbsup").opacity(message.rated == false ? 0.4 : 1)
             }
             .accessibilityLabel("Gute Antwort")
             Button { sheet = true } label: {
-                Text(verbatim: "👎").opacity(message.rated == true ? 0.4 : 1)
+                Image(systemName: message.rated == false ? "hand.thumbsdown.fill" : "hand.thumbsdown").opacity(message.rated == true ? 0.4 : 1)
             }
             .accessibilityLabel("Schlechte Antwort")
             Spacer()
@@ -1063,11 +1068,11 @@ struct MicButton: View {
         Button(action: action) {
             ZStack {
                 Circle()
-                    .fill(phase == .listening ? Color.red : Color.accentColor)
+                    .fill(phase == .listening ? Theme.bad : Color.accentColor)
                     .frame(width: 84, height: 84)
                     .scaleEffect(1 + CGFloat(level) * 0.25)
                     .animation(.easeOut(duration: 0.1), value: level)
-                Image(systemName: icon).font(.system(size: 34, weight: .semibold)).foregroundStyle(.white)
+                Image(systemName: icon).font(.system(size: 34, weight: .semibold)).foregroundStyle(Theme.onAccent)
             }
         }
         .accessibilityLabel(phase == .idle || phase == .waiting ? "Sprechen" : "Anhalten")

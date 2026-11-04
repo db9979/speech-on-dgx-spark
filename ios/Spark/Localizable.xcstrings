@@ -9641,12 +9641,12 @@
         }
       }
     },
-    "🔒 Ende-zu-Ende": {
+    "Ende-zu-Ende": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "🔒 End-to-end"
+            "value": "End-to-end"
           }
         }
       }

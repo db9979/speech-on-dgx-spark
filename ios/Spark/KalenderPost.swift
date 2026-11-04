@@ -458,12 +458,12 @@ struct KalenderView: View {
                 Section("Schnell eintragen") { QuickAdd(text: "") { token, title in m.saved(token, String(localized: "Eingetragen: \(title)")) } }
             }
             if !m.v.errors.isEmpty {
-                Text("Nicht erreicht: \(m.v.errors.joined(separator: ", "))").foregroundStyle(.red)
+                Text("Nicht erreicht: \(m.v.errors.joined(separator: ", "))").foregroundStyle(Theme.badText)
             }
             if !m.v.notes.isEmpty {
-                Text("Nicht gespeichert, der Kalender hat abgelehnt: \(m.v.notes.joined(separator: ", "))").foregroundStyle(.red)
+                Text("Nicht gespeichert, der Kalender hat abgelehnt: \(m.v.notes.joined(separator: ", "))").foregroundStyle(Theme.badText)
             }
-            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
         // a swipe sideways turns the day (Apple Kalender); up and down still scrolls
         .simultaneousGesture(DragGesture(minimumDistance: 40).onEnded { g in
@@ -550,8 +550,8 @@ struct WeekStrip: View {
                         Text(d, format: .dateTime.day())
                             .font(.body.weight(on ? .semibold : .regular))
                             .frame(width: 34, height: 34)
-                            .background(Circle().fill(on ? (today ? Color.red : Color.primary) : Color.clear))
-                            .foregroundStyle(on ? Color(.systemBackground) : (today ? Color.red : Color.primary))
+                            .background(Circle().fill(on ? (today ? Theme.bad : Color.primary) : Color.clear))
+                            .foregroundStyle(on ? Color(.systemBackground) : (today ? Theme.bad : Color.primary))
                         Circle().fill(m.events(on: d).isEmpty ? Color.clear : Color.secondary).frame(width: 5, height: 5)
                     }
                     .frame(maxWidth: .infinity)
@@ -602,7 +602,7 @@ struct QuickAdd: View {
             Button("Eintragen") { Task { await save(f) } }.disabled(busy)
         }
         if done { Text("Eingetragen.").foregroundStyle(.secondary) }
-        if let error { Text(SparkAPI.way(error)).foregroundStyle(.red) }
+        if let error { Text(SparkAPI.way(error)).foregroundStyle(Theme.badText) }
     }
 
     /// the start (and end) the Spark understood, in this iPhone's words
@@ -705,7 +705,7 @@ struct KalenderDetail: View {
                 } else {
                     Section { Label { Text(Self.readOnly(e.why)) } icon: { Image(systemName: "lock") }.foregroundStyle(.secondary) }
                 }
-                if let error { Text(SparkAPI.way(error)).foregroundStyle(.red) }
+                if let error { Text(SparkAPI.way(error)).foregroundStyle(Theme.badText) }
             }
             .navigationTitle("Termin")
             .navigationBarTitleDisplayMode(.inline)
@@ -865,7 +865,7 @@ struct KalenderForm: View {
                     TextField("Notiz", text: $note, axis: .vertical).lineLimit(3...10)
                     TextField("Link", text: $link).textInputAutocapitalization(.never).keyboardType(.URL)
                 }
-                if let error { Text(SparkAPI.way(error)).foregroundStyle(.red) }
+                if let error { Text(SparkAPI.way(error)).foregroundStyle(Theme.badText) }
             }
             .navigationTitle(event == nil ? Text("Neuer Termin") : Text("Termin bearbeiten"))
             .navigationBarTitleDisplayMode(.inline)
@@ -1212,13 +1212,13 @@ struct PostView: View {
                                 Button(role: .destructive) { Task { await m.act(x, "delete") } } label: { Label("Löschen", systemImage: "trash") }
                             }
                             if manage && m.folder?.movable ?? true {
-                                Button { Task { await m.act(x, "archive") } } label: { Label("Archivieren", systemImage: "archivebox") }.tint(.blue)
+                                Button { Task { await m.act(x, "archive") } } label: { Label("Archivieren", systemImage: "archivebox") }.tint(Theme.accent)
                             }
                             if manage {
                                 Button { Task { await m.act(x, x.flagged ? "unflag" : "flag") } } label: {
                                     x.flagged ? Label("Markierung weg", systemImage: "star.slash") : Label("Markieren", systemImage: "star")
                                 }
-                                .tint(.yellow)
+                                .tint(Theme.warn)
                             }
                         }
                         .swipeActions(edge: .leading) {
@@ -1226,7 +1226,7 @@ struct PostView: View {
                                 Button { Task { await m.act(x, x.unread ? "read" : "unread") } } label: {
                                     x.unread ? Label("Gelesen", systemImage: "envelope.open") : Label("Ungelesen", systemImage: "envelope.badge")
                                 }
-                                .tint(.orange)
+                                .tint(Theme.warn)
                             }
                         }
                     }
@@ -1254,9 +1254,9 @@ struct PostView: View {
                 .listRowBackground(Color.clear)
                 .onAppear { if m.moreFail == nil { Task { await m.older() } } }
             }
-            if !m.moreErr.isEmpty { Text("Ältere Mails nicht erreicht: \(m.moreErr.joined(separator: ", "))").foregroundStyle(.red) }
-            if !m.errors.isEmpty { Text("Nicht erreicht: \(m.errors.joined(separator: ", "))").foregroundStyle(.red) }
-            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if !m.moreErr.isEmpty { Text("Ältere Mails nicht erreicht: \(m.moreErr.joined(separator: ", "))").foregroundStyle(Theme.badText) }
+            if !m.errors.isEmpty { Text("Nicht erreicht: \(m.errors.joined(separator: ", "))").foregroundStyle(Theme.badText) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle(m.folder.map { Text(verbatim: $0.title) } ?? Text("E-Mail"))
         .environment(\.editMode, .constant(picking ? .active : .inactive))
@@ -1378,7 +1378,7 @@ struct PostView: View {
     private func row(_ x: MailItem) -> some View {
         HStack(alignment: .top, spacing: 8) {
             Circle().fill(x.unread ? Color.accentColor : .clear).frame(width: 8, height: 8).padding(.top, 14)
-            Text(verbatim: Self.initials(x.from)).font(.caption.weight(.semibold)).foregroundStyle(.white)
+            Text(verbatim: Self.initials(x.from)).font(.caption.weight(.semibold)).foregroundStyle(Theme.onAccent)
                 .frame(width: 32, height: 32).background(Circle().fill(KalenderView.tint(x.from.unicodeScalars.reduce(0) { $0 &+ Int($1.value) })))
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
@@ -1386,7 +1386,7 @@ struct PostView: View {
                     Text(verbatim: Self.name(x.from)).fontWeight(x.unread ? .semibold : .regular).lineLimit(1)
                     Spacer()
                     if x.attach { Image(systemName: "paperclip").font(.caption).foregroundStyle(.secondary).accessibilityLabel("mit Anhang") }
-                    if x.flagged { Image(systemName: "star.fill").font(.caption).foregroundStyle(.yellow).accessibilityLabel("markiert") }
+                    if x.flagged { Image(systemName: "star.fill").font(.caption).foregroundStyle(Theme.warn).accessibilityLabel("markiert") }
                     Text(x.date, format: Calendar.current.isDateInToday(x.date) ? Date.FormatStyle.dateTime.hour().minute() : Date.FormatStyle.dateTime.day().month())
                         .font(.caption).foregroundStyle(.secondary)
                 }
@@ -1443,13 +1443,13 @@ struct MailFolders: View {
                 if sort.shown { MailSortRow(run: sort, act: { k in if k == "go" || k == "back" { sortAsk = k } else { Task { await sortCall(k) } } }) }
                 ForEach(accounts) { a in
                     Section {
-                        if a.error { Text("Dieses Postfach war nicht erreichbar.").foregroundStyle(.red) }
+                        if a.error { Text("Dieses Postfach war nicht erreichbar.").foregroundStyle(Theme.badText) }
                         ForEach(a.folders) { f in
                             Button { if f.role != "group" { pick(f) } } label: { row(f) }
                                 .swipeActions(edge: .trailing) {
                                     if f.own {
                                         Button(role: .destructive) { removing = f } label: { Label("Entfernen", systemImage: "trash") }
-                                        Button { name = f.title; naming = (f.account, "", f.name) } label: { Label("Umbenennen", systemImage: "pencil") }.tint(.blue)
+                                        Button { name = f.title; naming = (f.account, "", f.name) } label: { Label("Umbenennen", systemImage: "pencil") }.tint(Theme.accent)
                                     }
                                 }
                                 // like Apple Mail (Dominik 2026-10-21 „besser integriert“): long press, each with its symbol
@@ -1482,7 +1482,7 @@ struct MailFolders: View {
                         Text("Lange drücken: alle Mails eines Ordners nach deinen Regeln einordnen. Eigene Ordner: wischen oder lange drücken zum Umbenennen oder Entfernen (nur leere). Ein Ordner mit Mails bleibt stehen.")
                     }
                 }
-                if let error { Text(SparkAPI.way(error)).foregroundStyle(.red) }
+                if let error { Text(SparkAPI.way(error)).foregroundStyle(Theme.badText) }
             }
             .overlay { if loading && accounts.isEmpty { LadeZeilen(rows: 6).padding() } }
             .navigationTitle("Ordner")
@@ -1822,7 +1822,7 @@ struct MailRules: View {
                                 HStack {
                                     Text(verbatim: x.from.isEmpty ? "–" : x.from).lineLimit(1)
                                     Spacer()
-                                    Text(x.stateKey).font(.caption2).foregroundStyle(x.state == "wartet" ? Color.orange : Color.secondary)
+                                    Text(x.stateKey).font(.caption2).foregroundStyle(x.state == "wartet" ? Theme.warn : Color.secondary)
                                 }
                                 Text(verbatim: x.line).font(.caption).foregroundStyle(.secondary)
                                 HStack {
@@ -1847,9 +1847,9 @@ struct MailRules: View {
                                 Text(verbatim: r.then + (r.box.isEmpty ? "" : " · " + r.box)).font(.caption).foregroundStyle(.secondary)
                                 if learn {
                                     Text(r.on ? LocalizedStringKey("\(r.month) genommen · \(r.fixed) korrigiert") : LocalizedStringKey("pausiert · \(r.month) genommen · \(r.fixed) korrigiert"))
-                                        .font(.caption2).foregroundStyle(r.on ? Color.secondary : Color.orange)
+                                        .font(.caption2).foregroundStyle(r.on ? Color.secondary : Theme.warn)
                                     if r.month + r.fixed > 0 {
-                                        ProgressView(value: Double(r.month), total: Double(r.month + r.fixed)).tint(r.on ? Color.green : Color.orange)
+                                        ProgressView(value: Double(r.month), total: Double(r.month + r.fixed)).tint(r.on ? Theme.ok : Theme.warn)
                                     }
                                 } else {
                                     Text(r.on ? LocalizedStringKey("Diesen Monat \(r.month)") : LocalizedStringKey("pausiert")).font(.caption2).foregroundStyle(.secondary)
@@ -1861,7 +1861,7 @@ struct MailRules: View {
                             Button(r.on ? LocalizedStringKey("Pause") : (r.paused ? LocalizedStringKey("Wieder an") : LocalizedStringKey("Weiter"))) {
                                 var x = r; x.on.toggle(); Task { await call("POST", "api/profile/mail/rules", x.body) }
                             }
-                            .tint(.orange)
+                            .tint(Theme.warn)
                         }
                         .swipeActions(edge: .leading) {
                             if r.id != rules.first?.id {
@@ -1870,7 +1870,7 @@ struct MailRules: View {
                                     if let i = ids.firstIndex(of: r.id), i > 0 { ids.swapAt(i, i - 1) }
                                     Task { await call("POST", "api/profile/mail/rules/order", ["ids": ids]) }
                                 }
-                                .tint(.blue)
+                                .tint(Theme.accent)
                             }
                         }
                     }
@@ -1937,7 +1937,7 @@ struct MailRules: View {
                         }
                     }
                 }
-                if let error { Text(SparkAPI.way(error)).foregroundStyle(.red) }
+                if let error { Text(SparkAPI.way(error)).foregroundStyle(Theme.badText) }
             }
             .overlay { if loading && rules.isEmpty { LadeZeilen(rows: 4).padding() } }
             .navigationTitle("Regeln")
@@ -2198,7 +2198,7 @@ struct MailRuleForm: View {
                         Button("Fertig") { done(String(localized: "Einsortiert: \(a.n) Mails.")) }
                     }
                 }
-                if let error { Text(SparkAPI.way(error)).foregroundStyle(.red) }
+                if let error { Text(SparkAPI.way(error)).foregroundStyle(Theme.badText) }
             }
             .navigationTitle(rule.id.isEmpty ? "Neue Regel" : "Regel ändern")
             .navigationBarTitleDisplayMode(.inline)
@@ -2325,7 +2325,7 @@ struct MailView: View {
                 Section {
                     // the head like Apple Mail: the sender's circle, name and time, address and to whom, the subject big
                     HStack(alignment: .top, spacing: 12) {
-                        Text(verbatim: PostView.initials(m.from)).font(.headline).foregroundStyle(.white)
+                        Text(verbatim: PostView.initials(m.from)).font(.headline).foregroundStyle(Theme.onAccent)
                             .frame(width: 44, height: 44).background(Circle().fill(KalenderView.tint(m.from.unicodeScalars.reduce(0) { $0 &+ Int($1.value) })))
                             .accessibilityHidden(true)
                         VStack(alignment: .leading, spacing: 2) {
@@ -2404,7 +2404,7 @@ struct MailView: View {
                 LadeZeilen(rows: 4)
             }
             if let note { Text(note).foregroundStyle(.secondary) }
-            if let error { Text(SparkAPI.way(error)).foregroundStyle(.red) }
+            if let error { Text(SparkAPI.way(error)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle("Mail")
         .navigationBarTitleDisplayMode(.inline)
@@ -2837,7 +2837,7 @@ struct MailWrite: View {
                         }
                     }
                 }
-                if let error { Text(SparkAPI.way(error)).foregroundStyle(.red) }
+                if let error { Text(SparkAPI.way(error)).foregroundStyle(Theme.badText) }
             }
             .navigationTitle(!draft.reply.isEmpty ? Text("Antworten") : !draft.forward.isEmpty ? Text("Weiterleiten") : Text("Neue Mail"))
             .navigationBarTitleDisplayMode(.inline)

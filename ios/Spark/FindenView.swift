@@ -454,7 +454,7 @@ struct FindenView: View {
             ForEach(m.hits) { h in
                 NavigationLink { FundDetailView(id: h.id, model: m) } label: { FundZeile(hit: h, source: m.sourceName(h.quelle)) }
             }
-            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle("Finden")
         .searchable(text: $q, prompt: Text("Wörter, Firma, Person, Nummer …"))
@@ -606,7 +606,7 @@ struct FundDetailView: View {
                 LadeZeilen(rows: 4)
             }
             if let n = note { Text(verbatim: n).foregroundStyle(.secondary) }
-            if let err = model.error { Text(SparkAPI.way(err)).foregroundStyle(.red) }
+            if let err = model.error { Text(SparkAPI.way(err)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle("Eintrag")
         .navigationBarTitleDisplayMode(.inline)
@@ -715,7 +715,7 @@ struct FundStandView: View {
                 Button("Index löschen", role: .destructive) { asking = true }.disabled(busy)
             }
             if let n = note { Text(verbatim: n).foregroundStyle(.secondary) }
-            if let err = model.error { Text(SparkAPI.way(err)).foregroundStyle(.red) }
+            if let err = model.error { Text(SparkAPI.way(err)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle("Einstellungen")
         .navigationBarTitleDisplayMode(.inline)

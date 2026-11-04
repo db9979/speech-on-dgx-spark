@@ -51,6 +51,14 @@
 "lang": "de",
 "src": "android-app",
 "file": "Android-App „Spark“ (APK, ohne Store)",
+"head": "Android-App „Spark“ (APK, ohne Store)",
+"title": "Aussehen (App 1.4.5, V01.1.313, Redesign Stufe 8)",
+"text": "Aussehen (App 1.4.5, V01.1.313, Redesign Stufe 8): Die Seite in der App nimmt die Farben, Schriftgrößen und Radien des Panels aus tokens.css (appview.css hat keine eigene Palette mehr): hell #F5F5F7, dunkel #161618 statt Schwarz, ein blauer Akzent, die eigene Frage in Blau, der Zustand unter Verwalten als Punkt mit Wort statt getönter Box. Statusleiste, Ladebalken, Adress- und Warte-Bildschirm, das Blatt des Assistenten und das Widget nehmen dieselben Werte (values/themes.xml, dunkel values-night); „Sprechen“ und der Sperr-Bildschirm ohne Emoji."
+},
+{
+"lang": "de",
+"src": "android-app",
+"file": "Android-App „Spark“ (APK, ohne Store)",
 "head": "Einrichten",
 "title": "Einrichten",
 "text": "1. Signierschlüssel (einmal, Admin): Auf dem Spark (oder einem Mac) im Terminal bash /opt/speech-spark/src/tools/android-schluessel.sh ausführen (ohne sudo, braucht nur openssl). Es legt ~/spark-android.p12 und ~/spark-android.pass an und zeigt zwei Werte. Im GitHub-Repo unter Settings → Secrets and variables → Actions → „New repository secret“ beide anlegen: ANDROID_KEYSTORE_PASSWORD und ANDROID_KEYSTORE (die lange Zeile). Die beiden Dateien gut aufheben: Ohne denselben Schlüssel lassen sich spätere Versionen nicht über die alte installieren. 2. App bauen: Actions → „Android app“ → Run workflow. Sie erscheint als Release android-v1.0.0 mit spark.apk, spark.apk.sha256 und android.json. 3. Spark: Funktionen → Android-App an, speichern, „App jetzt holen“ (sonst holt er sie einmal am Tag). Er prüft Größe und SHA-256 und behält sie unter STATE/android. 4. Profil: Ich → Android-App → „Download-Link holen“, den QR-Code mit der Kamera des Android-Handys scannen, die APK installieren (das Handy fragt einmal, ob der Browser Apps installieren darf). Der Link gilt 30 Minuten. 5. In der App: Adresse des Spark eintragen (https mit echtem Zertifikat, z. B. der Reverse Proxy), dann wie im Browser"
@@ -15603,6 +15611,14 @@
 "lang": "de",
 "src": "iphone-app",
 "file": "iPhone-App „Spark“",
+"head": "Benutzen",
+"title": "Aussehen (V01.1.313, Redesign Stufe 8)",
+"text": "Aussehen (V01.1.313, Redesign Stufe 8): Die App sieht aus wie das Panel in „Klar 2 · Systemstil“ und folgt Hell/Dunkel des iPhones. Ein blauer Akzent (hell #0071E3, dunkel #0A84FF), Grün, Gelb und Rot nur für Zustand, als Punkt mit Wort (z. B. „Spark nicht erreichbar“ und der Raum-Modus über dem Gespräch, der Stand unter Mein Status); Fehlertexte in der dunkleren Textstufe. Symbole sind SF Symbols statt Emoji: Daumen unter einer Antwort, Schritte einer Antwort, Aufgaben unter Erinnerungen, Schloss und Weltkugel in der Chat-Liste, Häkchen und Warnung an Nachrichten; Meine Sachen und die Dokumentenliste zeigen Linien-Symbole im Akzent statt bunter Kacheln. Heute hat einen großen Titel und zeigt beim Laden drei ruhige Platzhalter-Zeilen statt nachspringender Zeilen. Emoji bleiben in dem, was Menschen schreiben, in Ordner-Zeichen, in den Kurzzeilen der Chat-Liste und im Spiel."
+},
+{
+"lang": "de",
+"src": "iphone-app",
+"file": "iPhone-App „Spark“",
 "head": "Schnellstart, Verlauf, Fotos, ohne Netz",
 "title": "Schnellstart, Verlauf, Fotos, ohne Netz",
 "text": "- Schnellstart: „Spark zuhören“ öffnet die App und sie hört sofort zu. Auf dem Action-Button: iPhone-Einstellungen → Action-Button → Kurzbefehl → „Spark zuhören“. Im Kontrollzentrum (ab iOS 18) über „Steuerelement hinzufügen“, auf dem Sperrbildschirm als Widget. Per Siri: „Hey Siri, Spark zuhören“. - Verlauf: Das Uhr-Symbol oben links zeigt deine früheren Gespräche, dieselbe Liste wie das Protokoll im Panel. Antippen setzt das Gespräch fort. Gespräche aus der App landen auch dort. Löschen geht nur im Panel. - Heute (seit V01.0.286): Die Sonne oben rechts zeigt, was heute dran ist, wie *Ich → Überblick* im Panel: nächste Termine von heute und morgen, offene Erinnerungen, ungelesene Nachrichten, Dokumente, gemerkte Fakten. Nur Karten der Funktionen, die dein Profil nutzen darf; zum Aktualisieren nach unten ziehen. - Foto oder Dokument fragen: Die Büroklammer neben dem Eingabefeld: Foto aufnehmen, Foto auswählen oder Dokument (PDF, Text, Bild). Das iPhone liest den Text selbst, auch von gescannten Seiten. An den Spark geht nur der Text. Der Anhang gilt für das Gespräch, bis du ihn mit ✕ entfernst. Fotos ansehen lassen: Ist unter Ich → iPhone-App „Fotos aus der App ansehen lassen“ an ("
@@ -17902,6 +17918,14 @@
 "head": "Android app \"Spark\" (APK, no store)",
 "title": "Android app \"Spark\" (APK, no store)",
 "text": "the address screen comes back, \"Adresse ändern\" works any time). A notification, sharing or the assistant button no longer reload the open page: the page only jumps to the place. - Last state at once (from 1.4.1, V01.0.748, function \"Apps keep the last state\"): nothing stays blank on the first load: after a second \"Verbinde mit dem Spark …\" (connecting), after 8 seconds \"Das dauert länger als sonst …\" (takes longer), when the Spark cannot be reached \"Noch einmal\" (try again) and \"Adresse ändern\". Then the page in the app shows the conversations (the 20 newest with 50 messages each), the chat list and the own settings of last time at once, above the conversation with \"As of 16:05 · refreshing …\" until the Spark has answered. When the app comes to the front it fetches settings and chats once in the background (at most every 5 minutes). When the start or a list needs more than 2 seconds, Status → Logs (area Apps) shows app: langsam <page> <ms> ms android. - Calls by the assistant (from 1.4.2, V01.0.803, function \"Calls by the assistant\"): saying \"Call Sabine\" to the app's assistant and then \"Yes\" opens the app with \"Sabine anrufen? · Anrufen\". \"Call Mum by phone\" looks Mum up in the p"
+},
+{
+"lang": "en",
+"src": "android-app",
+"file": "Android app \"Spark\" (APK, no store)",
+"head": "Android app \"Spark\" (APK, no store)",
+"title": "Look (app 1.4.5, V01.1.313, redesign stage 8)",
+"text": "Look (app 1.4.5, V01.1.313, redesign stage 8): The page in the app takes the panel's colours, font sizes and radii from tokens.css (appview.css has no palette of its own any more): light #F5F5F7, dark #161618 instead of black, one blue accent, your own question in blue, the state under Manage as a dot with its word instead of a tinted box. Status bar, loading bar, address and wait screens, the assistant's sheet and the widget take the same values (values/themes.xml, dark values-night); \"Sprechen\" and the lock screen without emoji."
 },
 {
 "lang": "en",
@@ -32990,6 +33014,14 @@
 "head": "Using it",
 "title": "Using it",
 "text": "Routes and calls: \"Navigiere zur Arbeit\" or \"Ruf Anna an\". The app asks every time (\"Open route to …?\", \"Call Anna (number)?\"). Only \"Ja\" (tapped or said) opens Maps or calls. Contacts are searched only on the iPhone; the number does not go to the Spark."
+},
+{
+"lang": "en",
+"src": "iphone-app",
+"file": "iPhone app \"Spark\"",
+"head": "Using it",
+"title": "Look (V01.1.313, redesign stage 8)",
+"text": "Look (V01.1.313, redesign stage 8): The app looks like the panel in \"Klar 2 · system style\" and follows the iPhone's light/dark setting. One blue accent (light #0071E3, dark #0A84FF), green, yellow and red only for a state, as a dot with its word (for example \"Spark not reachable\" and the room mode above the conversation, the state under My status); error texts in the darker text shade. Symbols are SF Symbols instead of emoji: thumbs under an answer, the steps of an answer, the tasks under Reminders, lock and globe in the chat list, tick and warning at messages; My things and the document list show line symbols in the accent instead of coloured tiles. Today has a large title and shows three calm placeholder rows while loading instead of rows that jump in. Emoji stay in what people write, in folder signs, in the short lines of the chat list and in the game."
 },
 {
 "lang": "en",

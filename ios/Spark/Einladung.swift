@@ -67,7 +67,7 @@ struct EinladungSection: View {
                 }
                 if let note { Text(verbatim: note).font(.footnote).foregroundStyle(.secondary) }
             } else if let error {
-                Text(verbatim: error).foregroundStyle(.red).font(.subheadline)
+                Text(verbatim: error).foregroundStyle(Theme.badText).font(.subheadline)
             } else {
                 ProgressView()
             }

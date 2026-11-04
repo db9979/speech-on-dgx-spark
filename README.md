@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.313** Redesign stage 8: iPhone and Android app in the system style like the panel (one theme from the tokens light and dark, blue accent, state as a dot with its word, SF Symbols instead of emoji in buttons and lists, My things without coloured tiles, Today calm while loading; Android page and hull without a palette of their own, app 1.4.5)
 - **V01.1.312** Analyses per document (plan open-notebook, push 2a, switch off): summary and key points in quiet minutes, questions, contents, deadlines and people per click; every point with its place, checked by the panel (every number stands at the place), contents and deadlines without the model; the quiet chain as the list `wissen.KETTE`
 - **V01.1.311** Redesign stage 7: the Dungeon Master with a calm table tone of its own (warm surfaces and gold from the tokens, light and dark, serif only for the narration, no parchment or small caps), line icons on the table's buttons, tabs and phone bar, "Your rounds" and the game's other lists as a list pattern (no more vertical letters on the phone); guard Klar7
 - **V01.1.310** Spontaneous help control, part S2d: SparkHilfe for Linux X11 through the same line as the one-time shell (anchor 1.8.0, never as root); the command without a secret, the person pastes the one-time key in the terminal without it being shown; under Wayland a clear "only viewing"; question 1/2/3 in the terminal, red frame and bar as X11 windows, picture as PNG, inputs through XTest checked against the fixed lists
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.306** RED FIX iPhone build: the index size in Find → Settings read the language through FindenModel.de on the main actor from a nonisolated function (Xcode error); `de` is now `nonisolated` and only reads the device language
 - **V01.1.305** Tests on GitHub faster: six parts instead of four by freshly measured durations (vorpush enters missing modules in dauer.json, a self-test wants every one, "Ergebnis" warns about stale ones), the balance bench computes its tables in four processes with the same result and spreads test by test, Chromium from the cache and one per test class, seven flaky tests and order leaks fixed at their cause
 - **V01.1.304** Terminal program (uConsole): F5 calendar crashed with newer Textual versions (the own week counter had Textual's name offset), now spark-tui 1.0.4; guard against own names Textual already uses
-- **V01.1.303** Find shows the size of the index in MB or GB: under Find → Settings as a sum, opened by source (estimated) and "Documents and knowledge"; the admin sees it at the profile, Live as the sum of all profiles, the iPhone app under Find → Settings; "Delete the index" gives the space back at once
 
 
 

@@ -64,6 +64,8 @@ since V01.0.296) and adds only what a page cannot do:
   and how many phones are up to date (from the "SparkAndroid/x.y.z" tag of their requests, in memory only, 14 days);
   Live counts "Android current/all". A new version of a profile shows as a line `android: app version … -> …` in the log.
 
+**Look (app 1.4.5, V01.1.313, redesign stage 8):** The page in the app takes the panel's colours, font sizes and radii from `tokens.css` (`appview.css` has no palette of its own any more): light #F5F5F7, dark #161618 instead of black, one blue accent, your own question in blue, the state under Manage as a dot with its word instead of a tinted box. Status bar, loading bar, address and wait screens, the assistant's sheet and the widget take the same values (`values/themes.xml`, dark `values-night`); "Sprechen" and the lock screen without emoji.
+
 ## Setup
 
 1. **Signing key (once, admin):** on the Spark (or a Mac) run `bash /opt/speech-spark/src/tools/android-schluessel.sh`

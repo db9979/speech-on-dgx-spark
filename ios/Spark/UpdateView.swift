@@ -104,7 +104,7 @@ struct UpdateView: View {
                 ProgressView()
             } else {
                 if let e = m.error {
-                    Section { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+                    Section { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
                 }
                 Section {
                     LabeledContent("Installiert") { Text(verbatim: m.state.installed) }
@@ -113,7 +113,7 @@ struct UpdateView: View {
                     } else if let e = m.state.error {
                         Text(SparkAPI.way(e)).font(.footnote).foregroundStyle(.secondary)
                     } else if !m.state.running && !m.following {
-                        Label("Der Spark ist aktuell.", systemImage: "checkmark.circle").foregroundStyle(.green)
+                        Label("Der Spark ist aktuell.", systemImage: "checkmark.circle").foregroundStyle(Theme.ok)
                     }
                 }
                 if m.state.running || m.following {

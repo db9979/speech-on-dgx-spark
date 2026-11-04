@@ -203,7 +203,7 @@ struct MappenView: View {
                 Text(SparkAPI.way(String(localized: "Dokumente hineinlegen, Notizen und Umbenennen gehen im Panel unter Mappen.")))
                     .font(.caption).foregroundStyle(.secondary)
             }
-            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle("Mappen")
         .toolbar {
@@ -254,7 +254,7 @@ struct MappeDetailView: View {
             } else if !loaded {
                 LadeZeilen(rows: 3)
             }
-            if let e = model.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
+            if let e = model.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle(Text(verbatim: mappe.name))
         .refreshable { await load() }

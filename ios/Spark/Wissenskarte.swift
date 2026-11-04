@@ -86,12 +86,12 @@ final class WissenskarteModel: ObservableObject {
     /// The colour of a kind of point from documents (the same as in the panel); pages keep the plain look.
     static func color(_ ent: String) -> Color {
         switch ent {
-        case "person": return .pink
-        case "firma": return .blue
-        case "ort": return .orange
-        case "vertrag": return .purple
-        case "konto": return .green
-        case "frist": return .red
+        case "person": return Theme.wkPerson
+        case "firma": return Theme.wkFirma
+        case "ort": return Theme.wkOrt
+        case "vertrag": return Theme.wkVertrag
+        case "konto": return Theme.wkKonto
+        case "frist": return Theme.wkFrist
         default: return Color.secondary
         }
     }
@@ -233,7 +233,7 @@ struct WissenskarteView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red).padding() }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText).padding() }
             if m.loading {
                 ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if m.points.isEmpty {
@@ -249,7 +249,7 @@ struct WissenskarteView: View {
                                 var path = Path()
                                 path.move(to: a)
                                 path.addLine(to: b)
-                                ctx.stroke(path, with: .color(l.cause ? .red : .secondary.opacity(0.6)),
+                                ctx.stroke(path, with: .color(l.cause ? Theme.bad : .secondary.opacity(0.6)),
                                            style: StrokeStyle(lineWidth: l.cause ? 2 : 1.2, dash: l.cause ? [6, 4] : []))
                             }
                         }
@@ -323,7 +323,7 @@ struct WkPointSheet: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(verbatim: (l.a == point.id ? "" : other + " ") + model.word(l.kind) + (l.a == point.id ? " " + other : " " + point.title)
                                  + (l.detail.isEmpty ? "" : " · " + l.detail))
-                                .foregroundStyle(l.cause ? .red : .primary)
+                                .foregroundStyle(l.cause ? Theme.bad : .primary)
                             Text(verbatim: l.page.map { l.source + " · " + String(localized: "S.") + " " + String($0) } ?? l.source)
                                 .font(.caption).foregroundStyle(.secondary)
                         }

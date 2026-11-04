@@ -58,6 +58,8 @@ In der App unter **Einstellungen (Zahnrad)**:
 
 Route und Anrufe: „Navigiere zur Arbeit“ oder „Ruf Anna an“. Die App fragt jedes Mal „Route nach … öffnen?“ oder „Anna anrufen (Nummer)?“. Erst „Ja“ (getippt oder gesagt) öffnet Karten oder ruft an. Kontakte sucht nur das iPhone; die Nummer geht nicht an den Spark. Gibt es mehrere passende Kontakte, fragt die App nach dem ganzen Namen.
 
+**Aussehen (V01.1.313, Redesign Stufe 8):** Die App sieht aus wie das Panel in „Klar 2 · Systemstil“ und folgt Hell/Dunkel des iPhones. Ein blauer Akzent (hell #0071E3, dunkel #0A84FF), Grün, Gelb und Rot nur für Zustand, als Punkt mit Wort (z. B. „Spark nicht erreichbar“ und der Raum-Modus über dem Gespräch, der Stand unter Mein Status); Fehlertexte in der dunkleren Textstufe. Symbole sind SF Symbols statt Emoji: Daumen unter einer Antwort, Schritte einer Antwort, Aufgaben unter Erinnerungen, Schloss und Weltkugel in der Chat-Liste, Häkchen und Warnung an Nachrichten; Meine Sachen und die Dokumentenliste zeigen Linien-Symbole im Akzent statt bunter Kacheln. Heute hat einen großen Titel und zeigt beim Laden drei ruhige Platzhalter-Zeilen statt nachspringender Zeilen. Emoji bleiben in dem, was Menschen schreiben, in Ordner-Zeichen, in den Kurzzeilen der Chat-Liste und im Spiel.
+
 ## Schnellstart, Verlauf, Fotos, ohne Netz
 
 - **Schnellstart:** „Spark zuhören“ öffnet die App und sie hört sofort zu. Auf dem Action-Button: iPhone-Einstellungen → Action-Button → Kurzbefehl → „Spark zuhören“. Im Kontrollzentrum (ab iOS 18) über „Steuerelement hinzufügen“, auf dem Sperrbildschirm als Widget. Per Siri: „Hey Siri, Spark zuhören“.

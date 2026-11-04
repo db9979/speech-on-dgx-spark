@@ -232,7 +232,7 @@ struct ShareView: View {
                     }
                 }
                 if let n = m.notice { Section { Text(verbatim: n) } }
-                if let e = m.error { Section { Text(verbatim: e).foregroundStyle(.red) } }
+                if let e = m.error { Section { Text(verbatim: e).foregroundStyle(Theme.badText) } }
             }
             .navigationTitle("An Spark")
             .navigationBarTitleDisplayMode(.inline)
@@ -246,10 +246,10 @@ struct ShareView: View {
         for (op, text) in diff {
             var piece = AttributedString(text)
             if op == "-" {
-                piece[AttributeScopes.SwiftUIAttributes.ForegroundColorAttribute.self] = Color.red
+                piece[AttributeScopes.SwiftUIAttributes.ForegroundColorAttribute.self] = Theme.bad
                 piece[AttributeScopes.SwiftUIAttributes.StrikethroughStyleAttribute.self] = Text.LineStyle.single
             } else if op == "+" {
-                piece[AttributeScopes.SwiftUIAttributes.ForegroundColorAttribute.self] = Color.green
+                piece[AttributeScopes.SwiftUIAttributes.ForegroundColorAttribute.self] = Theme.ok
             }
             out += piece
         }

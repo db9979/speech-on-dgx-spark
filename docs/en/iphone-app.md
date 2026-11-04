@@ -58,6 +58,8 @@ In the app under **Settings (gear)**:
 
 Routes and calls: "Navigiere zur Arbeit" or "Ruf Anna an". The app asks every time ("Open route to …?", "Call Anna (number)?"). Only "Ja" (tapped or said) opens Maps or calls. Contacts are searched only on the iPhone; the number does not go to the Spark.
 
+**Look (V01.1.313, redesign stage 8):** The app looks like the panel in "Klar 2 · system style" and follows the iPhone's light/dark setting. One blue accent (light #0071E3, dark #0A84FF), green, yellow and red only for a state, as a dot with its word (for example "Spark not reachable" and the room mode above the conversation, the state under My status); error texts in the darker text shade. Symbols are SF Symbols instead of emoji: thumbs under an answer, the steps of an answer, the tasks under Reminders, lock and globe in the chat list, tick and warning at messages; My things and the document list show line symbols in the accent instead of coloured tiles. Today has a large title and shows three calm placeholder rows while loading instead of rows that jump in. Emoji stay in what people write, in folder signs, in the short lines of the chat list and in the game.
+
 ## Quick start, history, photos, offline
 
 - **Quick start:** "Talk to Spark" opens the app and it listens at once. On the Action button: iPhone Settings → Action Button → Shortcut → "Talk to Spark". In Control Center (iOS 18 and later) via "Add a Control", on the lock screen as a widget. With Siri: "Hey Siri, Start Spark".

@@ -43,7 +43,7 @@ struct ReportView: View {
                     Text(verbatim: preview).font(.caption.monospaced()).textSelection(.enabled)
                     if !leaks.isEmpty {
                         Text(verbatim: String(localized: "Die Prüfung hat noch etwas gefunden: ") + leaks.joined(separator: ", "))
-                            .foregroundStyle(.red)
+                            .foregroundStyle(Theme.bad)
                     }
                 }
                 if !lines.isEmpty {
