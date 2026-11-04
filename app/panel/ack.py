@@ -344,9 +344,12 @@ def chunks(pcm):
         yield base64.b64encode(pcm[i:i + CHUNK]).decode()
 
 
-def group_of(route_names, direct=None, local=False):
+def group_of(route_names, direct=None, local=False, web=False):
     """Which sentences fit this turn (fixed rules): the one Weiche group, else "lokal" for a "Erst lokal" look,
-    else None (small talk, a smart home command, several groups at once, nothing recognised)."""
+    else None (small talk, a smart home command, several groups at once, nothing recognised). web: „Auch im Internet
+    suchen“ (lokal.web_chip), the panel searches the web with the question's own words: "websuche"."""
+    if web:
+        return "websuche"
     names = [n for n in (route_names or []) if n not in NO_ACK]
     if direct in ("weather",):
         return "wetter"

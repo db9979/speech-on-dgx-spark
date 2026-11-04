@@ -2097,7 +2097,8 @@ async def _answer(request, turn):
             ack.lang_of(guess_language(messages[-1]["content"]) == "English")
         route = getattr(turn, "route", None)
         names = route.names if route else []
-        grp = ack.group_of(names, getattr(turn, "direct", None), bool(getattr(turn, "local_task", None)))
+        grp = ack.group_of(names, getattr(turn, "direct", None), bool(getattr(turn, "local_task", None)),
+                           bool(getattr(turn, "web_tap", "") and getattr(turn, "local_task", None)))
         if grp:
             text = ack.pick(grp, who["id"], ack_lang == "English",
                             ack.recorded(tts_body, ack_lang))
@@ -2684,7 +2685,7 @@ async def text_ask(request, prof, body, who="siri"):
                 error = "Der Spark konnte gerade nicht antworten."
             elif ev.get("type") == "step" and len(steps) < 40:
                 steps.append(ev)
-            elif ev.get("type") in ("confirm", "choice", "goto") and len(cards) < 6:
+            elif ev.get("type") in ("confirm", "choice", "goto", "herkunft") and len(cards) < 6:
                 cards.append(ev)
             elif ev.get("type") == "memory" and ev.get("action") == "saved" and ev.get("id") and len(mems) < 3:
                 mems.append(ev)   # Gemerkt-Hinweis (gemerkt.py): the Begleiter's card „Gemerkt: …“
@@ -2736,7 +2737,9 @@ def desk_cards(steps, cards, mems=(), undo=False):
     or an entry of Finden (DESK_ORIGINAL, the Sofort-Karte); "focus" puts the cursor in the field. Nothing on a card comes from the model but the parts of „A oder B?“
     (ablauf.asks: the answer's own words, never after mail or outside text). mems: what memory_save kept in this answer
     (Gemerkt-Hinweis, gemerkt.note): a card „Gemerkt: …“ with „Rückgängig“ (sends „Mach das rückgängig“, so the
-    undo asks for its yes like a typed one; only with undo on) and „Gedächtnis ansehen“."""
+    undo asks for its yes like a typed one; only with undo on) and „Gedächtnis ansehen“. A "herkunft" event (lokal.herkunft,
+    plan such-index step 5): the Herkunft line („Aus: 2 Mails, 1 Termin“) after "steps", and a card with „Auch im
+    Internet suchen“ (sends its fixed words, lokal.web_chip) when offered and „In Finden ansehen“."""
     out = {}
     if steps:
         names = []
@@ -2747,7 +2750,7 @@ def desk_cards(steps, cards, mems=(), undo=False):
         sec = sum(int(ev.get("ms") or 0) for ev in steps) / 1000
         out["steps"] = (f"{len(steps)} Werkzeug{'' if len(steps) == 1 else 'e'} benutzt · " + f"{sec:.1f}".replace(".", ",")
                         + " s" + (": " + ", ".join(names[:4]) if names else ""))
-    shown, goto, original = [], [], ""
+    shown, goto, original, herk = [], [], "", None
     for ev in cards:
         if ev.get("type") == "confirm":
             shown.append({"title": str(ev.get("de") or "Vorschlag")[:30] + " wartet auf dein Ja",
@@ -2760,10 +2763,22 @@ def desk_cards(steps, cards, mems=(), undo=False):
                 if ev.get("free"):
                     buttons.append({"label": str(ev["free"])[:30], "focus": True})
                 shown.append({"title": "", "buttons": buttons})
+        elif ev.get("type") == "herkunft":
+            herk = ev
         elif ev.get("type") == "goto" and ev.get("to") in DESK_GOTO and ev["to"] not in goto:
             goto.append(ev["to"])
             if ev["to"] == "fund" and re.fullmatch(r"[0-9]{1,12}", str(ev.get("id") or "")):
                 original = str(ev["id"])   # the Sofort-Karte: only an entry's number, the Spark checks it again on opening
+    if herk:   # Herkunft (lokal.herkunft): the line as the title, the web chip sends its fixed words, Finden beside it
+        buttons = ([{"label": str(herk["web"][0])[:30], "send": str(herk["web"][0])[:30], "main": True}]
+                   if isinstance(herk.get("web"), list) and herk["web"] else [])
+        if "fund" in goto and not original:
+            goto.remove("fund")
+            buttons.append({"label": DESK_GOTO["fund"][0], "open": DESK_GOTO["fund"][1]})
+        if buttons:
+            shown.append({"title": "", "buttons": buttons})
+        if herk.get("de"):   # the line itself where every Begleiter shows fixed words already, after the tools
+            out["steps"] = ((out["steps"] + " · ") if out.get("steps") else "") + str(herk["de"])[:120]
     if goto:
         buttons = [{"label": DESK_GOTO[k][0], "open": DESK_GOTO[k][1]} for k in goto]
         if original:

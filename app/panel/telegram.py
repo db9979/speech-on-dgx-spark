@@ -244,7 +244,7 @@ async def ask(uid, text, pictures=None):
     async def receive():
         return {"type": "http.request", "body": data, "more_body": False}
     response = await chat.chat(Request(scope, receive))
-    answer, error, from_mail, from_outside = "", "", False, False
+    answer, error, from_mail, from_outside, herkunft = "", "", False, False, ""
     async for chunk in response.body_iterator:
         for line in (chunk.decode() if isinstance(chunk, bytes) else chunk).split("\n"):
             if not line.startswith("data:"):
@@ -270,6 +270,13 @@ async def ask(uid, text, pictures=None):
                 got = fund_key(ev)
                 if got:
                     _keys[uid] = got
+            elif ev.get("type") == "herkunft":
+                # Herkunft (lokal.herkunft): the line in fixed words under the answer; „Auch im Internet suchen“ as a
+                # one-time reply key that sends its words like a typed answer (lokal.web_chip), nothing new to trust
+                herkunft = str(ev.get("de") or "")[:120]
+                if isinstance(ev.get("web"), list) and ev["web"] and uid not in _keys:
+                    _keys[uid] = {"keyboard": [[{"text": str(ev["web"][0])[:40]}]], "one_time_keyboard": True,
+                                  "resize_keyboard": True}
             elif ev.get("type") == "more" and uid not in _keys:   # a question of the panel's own goes first
                 _keys[uid] = more_keys(ev)
                 _offered[uid] = {str((x.get("text") or [""])[0])[:60]: x.get("tool") for x in (ev.get("items") or [])
@@ -291,7 +298,7 @@ async def ask(uid, text, pictures=None):
         await asyncio.to_thread(verlauf.keep, uid, "tg-" + day, "Telegram " + local.strftime("%d.%m."), local, "telegram", msgs[-2:])
     except Exception as e:
         print("telegram: convo", type(e).__name__, flush=True)
-    return answer
+    return answer + ("\n\n" + herkunft if herkunft and not error else "")   # shown, never kept in the history
 
 
 def _ffmpeg(args, data):

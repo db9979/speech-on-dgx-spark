@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "vorbereiten": {
-        "stand": "394a82cb9f",
+        "stand": "b76178ce06",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -156,13 +156,15 @@ SEITEN = {
               ("intent.narrow · nie mehr als die Rechte", "intent.narrow · never more than the rights"),
               ("Mit „Gezielte Werkzeugwahl“ bleibt nur die Gruppe der Frage übrig. Danach entscheidet das Panel, ob "
                "erst lokal gesucht wird (die Quellen-Weiche sagt intern, extern oder beides, nur für das eigene Profil; "
+               "„Auch im Internet suchen“ nimmt die gemerkten eigenen Worte der Frage davor und sucht nur damit im Web; "
                "nie bei einem schlichten „Ja“ oder „Nein“ und nie, wenn es in diesem Zug schon "
                "etwas bestätigt ausgeführt hat), ob es ein eindeutiges Abrufen selbst macht und welches Werkzeug die erste "
                "Runde rufen muss. Mit „Schneller Antwortbeginn“ bekommt eine erkannte Gruppe immer dieselbe Liste in "
                "derselben Reihenfolge, so hält der Server je Gruppe einen Anfang im Cache; nur eine unklare Frage sieht "
                "die volle Liste.",
                "With „Targeted tool choice“ only the question's group stays. Then the panel decides whether to search "
-               "locally first (the source switch says internal, external or both, only for the own profile; never for "
+               "locally first (the source switch says internal, external or both, only for the own profile; „Also "
+               "search the web“ takes the kept own words of the question before and searches only those on the web; never for "
                "a plain „yes“ or „no“ and never when it already carried out something confirmed "
                "in this turn), whether it does a clear fetch itself and which tool the first round must call. With „Fast "
                "answer start“ a recognized group always gets the same list in the same order, so the server keeps one "
@@ -596,9 +598,9 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "d136bbd14d",
+        "stand": "561874ce83",
         "bezug": {
-            "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_ton.speech_out": ["s8"],
+            "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_modell.herkunft_und_chip": ["s3"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
             "chat.loop_count": ["s11"], "answercheck.known": ["s6"], "answercheck.unsupported": ["s6"],
             "answercheck.fresh": ["s6"], "rechnen.fix": ["s6"],
@@ -650,13 +652,16 @@ SEITEN = {
                "Werkzeug-Ergebnis an das Modell, fremder Text eingepackt als Daten; „Erst lokal“ bringt die besten "
                "Treffer aller freigegebenen Quellen mit Quelle und Datum, bei beides dazu die Websuche des Panels mit "
                "den eigenen Worten, und eine Mail darunter sperrt die Antwort wie eine gelesene Mail. Ein Artikel aus "
-               "dem eigenen Kiwix und die Seiten der Websuche stehen danach als Quelle unter der Antwort.",
+               "dem eigenen Kiwix und die Seiten der Websuche stehen danach als Quelle unter der Antwort; am Ende "
+               "zählt das Panel die Herkunft („Aus: 2 Mails, 1 Termin“) und bietet bei intern ohne Web „Auch im "
+               "Internet suchen“ an (chat_modell.herkunft_und_chip).",
                "When the preparation decided that the panel acts itself (a switch command, reading states, „search "
                "locally first“, a clear reading request), it runs now. The result goes to the model like a tool "
                "result, outside text wrapped as data; „local first“ brings the best hits of every released source with "
                "source and date, for both also the panel's web search with the own words, and a mail among them locks "
                "the answer like a read mail. An article from the own Kiwix and the pages of the web search then stand "
-               "as sources under the answer.")),
+               "as sources under the answer; at the end the panel counts the origin („From: 2 mails, 1 appointment“) "
+               "and for internal without the web offers „Also search the web“ (chat_modell.herkunft_und_chip).")),
             S("s4", "schritt", ("Runde vorbereiten", "Prepare a round"),
               ("höchstens vier Werkzeug-Runden", "at most four tool rounds"),
               ("Angeboten wird die Liste ohne gesperrte, wegen Fehlern gestoppte oder zu oft genutzte Werkzeuge. "
@@ -847,6 +852,7 @@ SEITEN = {
             ("chat._answer", ("führt Modellseite, Sprachausgabe und Ereignisse zu einem Strom zusammen", "joins model side, speech output and events into one stream")),
             ("chat_ton.speech_out", ("Sätze an die Sprachausgabe, Ton als Strom", "sentences to the speech output, sound as a stream")),
             ("chat_modell.model_turn", ("Runden mit dem Modell, Werkzeuge, Prüfungen", "rounds with the model, tools, checks")),
+            ("chat_modell.herkunft_und_chip", ("Herkunftszeile und „Auch im Internet suchen“ unter der Antwort", "line of origin and „Also search the web“ under the answer")),
             ("chat.split_sentences", ("schneidet fertige Sätze ab", "cuts finished sentences off")),
             ("chat.said_key", ("erkennt einen schon gesagten Satz", "spots a sentence already said")),
             ("chat.no_code", ("Codeblöcke nur zeigen, nie sprechen", "code blocks only shown, never spoken")),
@@ -866,7 +872,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "b90d9c8013",
+        "stand": "183a1a112d",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_AFTER_MAIL": ["s4"],

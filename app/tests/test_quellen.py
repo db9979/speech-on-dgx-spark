@@ -10,6 +10,9 @@ and 4).
 - beides: the panel searches the web itself with the person's own words, started before any own data is read; no
   word of a mail ever reaches the web, and the model's own web search after it stays locked.
 - The journal line holds fixed words and numbers only.
+- Step 5: the Herkunft line under the answer holds kinds and numbers of the hits only, built by the panel; the chip
+  „Auch im Internet suchen“ searches only the question's own words, once, on the same device, never after a mail
+  hit, for guests, another voice or at the Notaus.
 No test depends on the clock of the day; a few measure durations with wide margins.
 """
 import asyncio
@@ -360,6 +363,146 @@ class Turn(unittest.TestCase):
         self.assertEqual(calls, [(xid, True)])
 
 
+class Herkunft(unittest.TestCase):
+    """Step 5: the line under the answer comes from the panel (kinds and numbers of the hits), never a word of a hit."""
+
+    def test_kinds_and_numbers_only(self):
+        found = {"hits": [{"src": "fund", "quelle": "mail", "title": SECRET, "text": SECRET},
+                          {"src": "fund", "quelle": "mail", "title": SECRET, "text": SECRET},
+                          {"src": "fund", "quelle": "termin", "title": SECRET, "text": SECRET},
+                          {"src": "docs", "title": "Unterlagen: " + SECRET, "text": SECRET}], "web": None}
+        got = lokal.herkunft(found)
+        self.assertEqual(got["de"], "Aus: 2 Mails, 1 Termin, 1 Dokument")
+        self.assertEqual(got["en"], "From: 2 mails, 1 appointment, 1 document")
+        self.assertNotIn("Zebrafink", str(got))
+        self.assertEqual(lokal.herkunft(found, web=True)["de"], "Aus: 2 Mails, 1 Termin, 1 Dokument, Internet")
+        self.assertIsNone(lokal.herkunft({"hits": [], "web": {"text": "x"}}))     # only own hits make a line
+
+    def test_every_source_has_its_kind(self):
+        for q in fund.QUELLEN:
+            self.assertIn(lokal.ART_OF.get(q.name, q.name), lokal.ARTEN, q.name)
+        for k in set(lokal.SOURCES) - {"fund"}:
+            self.assertIn(lokal.ART_OF.get(k, k), lokal.ARTEN, k)
+
+    def test_offer_only_for_the_next_message_on_this_device(self):
+        lokal.web_offer("u1", "web:c1", "Was steht in meinen Unterlagen? [Codewort]", now=100.0)
+        self.assertEqual(lokal.web_pop("u1", "web:c2", now=101.0), "")               # another conversation
+        self.assertEqual(lokal.web_pop("u2", "web:c1", now=101.0), "")               # another profile
+        self.assertEqual(lokal.web_pop("u1", "web:c1", now=101.0), "Was steht in meinen Unterlagen?")
+        self.assertEqual(lokal.web_pop("u1", "web:c1", now=102.0), "")               # once
+        lokal.web_offer("u1", "web:c1", "Was steht da?", now=100.0)
+        self.assertEqual(lokal.web_pop("u1", "web:c1", now=100.0 + lokal.WEB_TTL + 1), "")   # 15 minutes
+        lokal.web_offer("u1", "web:c1", "Was steht da?", now=100.0)
+        lokal.web_offer("u1", "web:c1", None, now=101.0)                              # a new answer without the chip
+        self.assertEqual(lokal.web_pop("u1", "web:c1", now=102.0), "")
+        self.assertTrue(lokal.web_chip("Auch im Internet suchen") and lokal.web_chip("also search the web."))
+        self.assertFalse(lokal.web_chip("Auch im Internet suchen nach " + SECRET))
+
+
+DOC_HIT = dict(MAIL_HIT, id=2, quelle="dokument", titel="Wärmepumpe Handbuch", felder={})
+CAL_HIT = dict(MAIL_HIT, id=3, quelle="termin", titel="Wärmepumpe Wartung", felder={})
+OWN_Q = "Was steht in meinen Unterlagen zur Wärmepumpe?"
+
+
+class Chip(unittest.TestCase):
+    """„Auch im Internet suchen“ under an answer of the class intern: the web with the question's own words only, never
+    after mail, for guests, another voice or at the Notaus; „In Finden ansehen“ and the Herkunft line beside it."""
+    setUp, tearDown, ask = Turn.setUp, Turn.tearDown, Turn.ask
+
+    def herk(self, ev):
+        return next((e for e in ev if e.get("type") == "herkunft"), None)
+
+    def tap(self, c, ev, **body):
+        said = "".join(e.get("delta", "") for e in ev if e.get("type") == "text") or "Hallo."
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            r = c.post("/api/chat", json=dict({"messages": [{"role": "user", "content": OWN_Q},
+                                                            {"role": "assistant", "content": said},
+                                                            {"role": "user", "content": lokal.WEB_CHIP[0]}],
+                                               "convo": "neu"}, **body))
+            self.assertEqual(r.status_code, 200, r.text)
+            return helpers.events(r), out.getvalue()
+
+    def test_chip_searches_only_the_own_words(self):
+        c, uid = profile("Quellchip")
+        with mock.patch.object(fund, "suche", lambda u, worte="", **kw: [dict(DOC_HIT), dict(CAL_HIT)]):
+            ev, log = self.ask(c, OWN_Q)
+        h = self.herk(ev)
+        self.assertEqual(h["de"], "Aus: 1 Dokument, 1 Termin")
+        self.assertEqual(h["web"], list(lokal.WEB_CHIP))
+        self.assertNotIn("Zebrafink", str(h))
+        self.assertIn({"type": "goto", "to": "fund", "q": lokal.query(OWN_Q)}, ev)    # „In Finden ansehen“
+        self.assertEqual(SEARCHES, [])                                                # nothing went out yet
+        self.assertIn("lokal: Herkunft 2 Treffer | Internet-Chip angeboten", log)
+        with mock.patch.object(fund, "suche", side_effect=AssertionError("the own data were looked at before")):
+            ev2, log2 = self.tap(c, ev)
+        self.assertEqual(SEARCHES, [lokal.own_words(OWN_Q)])                         # the question's own words only
+        self.assertFalse(any("Zebrafink" in q for q in SEARCHES))
+        self.assertIn("lokal: Klasse extern (Internet-Chip) |", log2)
+        self.assertIsNone(self.herk(ev2))                                             # no chip under the chip's answer
+        SEARCHES.clear()
+        self.tap(c, ev)                                                               # once only
+        self.assertEqual(SEARCHES, [])
+
+    def test_never_after_a_mail_hit(self):
+        c, uid = profile("Quellchipmail")
+        with mock.patch.object(fund, "suche", lambda u, worte="", **kw: [dict(MAIL_HIT, titel="Wärmepumpe Angebot")]):
+            ev, log = self.ask(c, OWN_Q)
+        self.assertIn({"type": "mail"}, ev)
+        h = self.herk(ev)
+        self.assertEqual(h["de"], "Aus: 1 Mail")
+        self.assertNotIn("web", h)                                                    # chat.LOCKED_AFTER_MAIL holds
+        self.assertIn("kein Internet-Chip", log)
+        with mock.patch.object(fund, "suche", lambda u, worte="", **kw: []):
+            self.tap(c, ev)
+        self.assertEqual(SEARCHES, [])
+        self.assertTrue({"web_search"} <= chat.LOCKED_AFTER_MAIL)
+
+    def test_never_for_guests_or_another_voice(self):
+        x, xid = profile("Quellchipx")
+        y, yid = profile("Quellchipy")
+        helpers.set_config(speaker_id=True)
+        with mock.patch.object(fund, "suche", lambda u, worte="", **kw: [dict(DOC_HIT)]):
+            ev, _ = self.ask(x, OWN_Q)
+            self.assertIn("web", self.herk(ev))
+            self.tap(x, ev, speaker=speakers.token(yid, xid))                         # her voice at his browser
+            self.assertEqual(SEARCHES, [])
+            ev, _ = self.ask(x, OWN_Q)
+            helpers.set_config(public=True)
+            try:
+                guest_ev, _ = self.tap(TestClient(panel.app), ev)                    # a guest
+            finally:
+                helpers.set_config(public=False)
+        self.assertEqual(SEARCHES, [])
+        self.assertIsNone(self.herk(guest_ev))
+
+    def test_not_at_the_notaus(self):
+        """Stage 1 holds everything that goes to the internet (notaus.INTERNET_TOOLS): the chip is neither offered nor
+        taken (the stage itself is stood in for here, its gate on outside requests is test_app_notaus's)."""
+        held = set(notaus.INTERNET_TOOLS)
+        stage = lambda held_=0, changes=(), mine=False: held   # noqa: E731
+        c, uid = profile("Quellchipnot")
+        with mock.patch.object(fund, "suche", lambda u, worte="", **kw: [dict(DOC_HIT)]):
+            with mock.patch.object(notaus, "locked_tools", stage):
+                ev, log = self.ask(c, OWN_Q)
+            self.assertNotIn("web", self.herk(ev))                                    # not offered at the Notaus
+            ev, _ = self.ask(c, OWN_Q)
+            self.assertIn("web", self.herk(ev))
+            with mock.patch.object(notaus, "locked_tools", stage):
+                _, log = self.tap(c, ev)                                              # switched on meanwhile
+        self.assertEqual(SEARCHES, [])
+        self.assertIn("lokal: Internet-Chip abgelehnt (Websuche gesperrt)", log)
+
+    def test_the_begleiter_and_telegram_cards(self):
+        cards = chat.desk_cards([], [{"type": "goto", "to": "fund", "q": "x"},
+                                     {"type": "herkunft", "de": "Aus: 1 Dokument", "en": "From: 1 document",
+                                      "web": list(lokal.WEB_CHIP)}])
+        self.assertEqual(cards["steps"], "Aus: 1 Dokument")
+        self.assertEqual([b["label"] for b in cards["cards"][0]["buttons"]], [lokal.WEB_CHIP[0], chat.DESK_GOTO["fund"][0]])
+        self.assertEqual(cards["cards"][0]["buttons"][0]["send"], lokal.WEB_CHIP[0])
+        self.assertEqual(len(cards["cards"]), 1)
+
+
 class Live(unittest.TestCase):
     def test_numbers_only(self):
         quellen.note("intern", {"probe": 2, "ms": 30}, now=NOW)
@@ -368,6 +511,8 @@ class Live(unittest.TestCase):
         self.assertGreaterEqual(got["intern"], 1)
         self.assertGreaterEqual(got["beides"], 1)
         self.assertIsInstance(got["ms"], int)
+        quellen.note("chip", now=NOW)
+        self.assertGreaterEqual(quellen.for_live(now=NOW)["chip"], 1)
         self.assertTrue(all(isinstance(v, int) for v in got.values()))
 
 

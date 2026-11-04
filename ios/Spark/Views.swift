@@ -349,6 +349,9 @@ struct ChatView: View {
                             if m.role != "user", m.rateId != nil { RateBar(message: m) }
                             if m.role != "user", m.wbId != nil { WbFileButton(message: m) }
                             if m.role != "user", let q = m.fundQ, talk.allowed.areas.contains("fund") { FundKarte(q: q, id: m.fundId) }
+                            if m.role != "user", m.herkunft != nil || m.webChip != nil {
+                                HerkunftZeile(line: m.herkunft, chip: m.id == talk.messages.last?.id ? m.webChip : nil)
+                            }
                             if m.role != "user", let mem = m.mem, !mem.isEmpty { GemerktChips(message: m, items: mem) }
                             if m.role != "user", m.id == talk.messages.last?.id, let more = m.more, !more.isEmpty {
                                 MoreRow(kind: m.moreKind ?? "", items: more)
@@ -863,6 +866,28 @@ struct MoreRow: View {
                         .clipShape(Capsule())
                     }
                 }
+            }
+        }
+        .padding(.leading, 6)
+    }
+}
+
+/// Herkunft under an answer from the own data (lokal.herkunft): „Aus: 2 Mails, 1 Termin“, kinds and numbers in the
+/// Spark's fixed words, never a title. The chip „Auch im Internet suchen“ sends its words like a typed answer; the Spark
+/// then searches the web with the question's own words it kept (never after mail, for guests or another voice).
+struct HerkunftZeile: View {
+    let line: String?
+    let chip: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if let line { Text(verbatim: line).font(.caption).foregroundStyle(.secondary) }
+            if let chip {
+                Button { Conversation.shared.write(chip) } label: {
+                    Label { Text(verbatim: chip) } icon: { Image(systemName: "globe") }.font(.footnote)
+                }
+                .buttonStyle(.bordered)
+                .clipShape(Capsule())
             }
         }
         .padding(.leading, 6)

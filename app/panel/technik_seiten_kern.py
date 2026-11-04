@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "llm": {
-        "stand": "4369c7ec11",
+        "stand": "603ee718fb",
         "bezug": {
             "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "llm.model": ["s3"], "llm.url": ["s1"], "llm.complete": ["s1"],
             "chat.sampling": ["s4"], "chat.first_within": ["s8"], "chat.ContextFull": ["s7"],
@@ -243,13 +243,13 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "bc65b28cb6",
+        "stand": "01d24ff992",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
             "docembed._call": ["s3"], "nachsortieren.rank": ["s10"], "wissen.recent_window": ["s11"], "frisch.spanne": ["s11"],
             "fund.pruefe": ["s13"], "fund.sofort_satz": ["s13"], "fund.klar_vorn": ["s13"],
-            "wissen.where": ["s13"], "lokal.look": ["s5"], "lokal.message": ["s5"], "quellen.blick": ["s5"], "lokal.MAX_WEB_CHARS": ["s5"], "gedaechtnis.hint_lines": ["s13"], "profiles._cap": ["s13"],
+            "wissen.where": ["s13"], "lokal.look": ["s5"], "lokal.message": ["s5"], "quellen.blick": ["s5"], "lokal.herkunft": ["s5"], "lokal.web_offer": ["s5"], "lokal.MAX_WEB_CHARS": ["s5"], "gedaechtnis.hint_lines": ["s13"], "profiles._cap": ["s13"],
             "gedaechtnis.slot_of": ["s13"], "gemerkt.take_back": ["s13"],
             "regeln": ["s1", "s8"], "regel:Geteilte Dokumente": ["s8"], "regel:Gedächtnis": ["s13"],
             "regel:Erst lokal suchen": ["s5"], "regel:Wissensbuch": ["s13"], "wissensbuch.answer_block": ["s13"],
@@ -880,6 +880,27 @@ SEITEN = {
                  "characters), started before anything of the own data is read. Without Find it stays with documents, "
                  "Kiwix and earlier conversations. Meaning search only rides along when its model already runs and is "
                  "free; it is not woken for it."),
+                ("Unter der Antwort steht dann eine Herkunftszeile, die das Panel aus den Treffern zählt, nie das "
+                 "Modell: nur Arten und Anzahlen („Aus: 2 Mails, 1 Dokument, 1 Termin“, „, Internet“ wenn das Web dabei "
+                 "war; lokal.herkunft), nie ein Titel oder ein Wort daraus. Mit Treffern aus Finden kommt „In Finden "
+                 "ansehen“ mit den Suchwörtern der Frage. War die Klasse intern und ging die Antwort nicht ins Web, "
+                 "bietet das Panel „Auch im Internet suchen“ an (lokal.web_offer): es merkt sich nur die eigenen Worte "
+                 "der Frage, für die nächste Nachricht auf demselben Gerät und höchstens {lokal.WEB_TTL} Sekunden; jede "
+                 "neue Nachricht nimmt das Angebot weg. Der Knopf schickt seine festen Worte wie eine getippte Antwort "
+                 "(Panel, iPhone, Android, Begleiter, Telegram), das Panel sucht dann genau diese eigenen Worte im Web "
+                 "und sieht die eigenen Daten nicht noch einmal an. Nie nach einer Mail (unter den Treffern oder von "
+                 "einem Werkzeug gelesen), beim Notaus, ohne Websuche für diese Antwort, für Gäste, fremde Stimmen "
+                 "oder MCP.",
+                 "Under the answer the panel then puts a line of origin it counts from the hits, never the model: only "
+                 "kinds and numbers („From: 2 mails, 1 document, 1 appointment“, „, the web“ when the web was part of "
+                 "it; lokal.herkunft), never a title or a word of them. With hits from Find comes „Show in Find“ with "
+                 "the question's search words. Was the class internal and did the answer not go to the web, the panel "
+                 "offers „Also search the web“ (lokal.web_offer): it keeps only the own words of the question, for the "
+                 "next message on the same device and at most {lokal.WEB_TTL} seconds; every new message takes the "
+                 "offer away. The button sends its fixed words like a typed answer (panel, iPhone, Android, Begleiter, "
+                 "Telegram); the panel then searches exactly these own words on the web and does not look at the own "
+                 "data again. Never after a mail (among the hits or read by a tool), at the emergency stop, without "
+                 "web search for this answer, for guests, other voices or MCP."),
                 ("Eine Stelle zählt nur, wenn sie mindestens {lokal.COVER} der Suchwörter enthält (ein langes Wort darf um "
                  "ein bis zwei Buchstaben vertippt sein, lokal.same). Was zu spät kommt, "
                  "wird nicht abgewartet. Das Kiwix hat eine eigene Zeitgrenze (Standard {lokal.DEFAULT_KIWIX_MS} ms, "
@@ -1013,6 +1034,8 @@ SEITEN = {
             ("wissen.where", ("Herkunft einer Stelle für das Modell", "source of a passage for the model")),
             ("lokal.look", ("der kurze Blick vor der Antwort", "the quick look before the answer")),
             ("lokal.message", ("Treffer und Web als fremder Text ans Modell", "hits and web as outside text to the model")),
+            ("lokal.herkunft", ("Herkunftszeile: nur Arten und Anzahlen", "line of origin: kinds and numbers only")),
+            ("lokal.web_offer", ("„Auch im Internet suchen“: nur die eigenen Worte, einmal", "„Also search the web“: own words only, once")),
             ("quellen.blick", ("welche Quellen je Klasse der Quellen-Weiche", "which sources per class of the source switch")),
             ("lokal.excerpt", ("das Stück einer Stelle mit den Suchwörtern", "the part of a passage with the search words")),
             ("pdftabellen.read", ("Tabellen in PDFs zeilenweise lesen", "read tables in PDFs row by row")),

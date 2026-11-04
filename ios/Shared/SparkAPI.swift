@@ -29,6 +29,8 @@ enum ChatEvent {
     case wbuch(String)      // "Ins Wissensbuch" may go under this answer (wissensbuch.keep_offer): the id the Spark kept it by
     case memory(id: String, rev: String, text: String, undo: Bool)   // Gemerkt-Hinweis (gemerkt.py): what memory_save kept
     case fund(q: String, id: Int?)   // Finden (fund.py): the card „In Finden ansehen“, with the Sofort-Karte the entry's number
+    case herkunft(line: String, web: String?)   // Herkunft (lokal.herkunft): „Aus: 2 Mails, 1 Termin“ in fixed words, and
+                                                // the chip „Auch im Internet suchen“ (its words, sent like a typed answer)
 }
 
 /// One tool of an answer (ablauf.py): only its readable name, whether it worked and its time, never what it found.
@@ -1004,6 +1006,15 @@ struct SparkAPI {
                             let q = String((ev["q"] as? String ?? "").prefix(120))
                             let n = (ev["id"] as? NSNumber)?.intValue
                             cont.yield(.fund(q: q, id: n.flatMap { (1...999_999_999_999).contains($0) ? $0 : nil }))
+                        case "herkunft":
+                            // kinds and numbers in the Spark's fixed words (plain text, short); the chip's words are sent
+                            // back like a typed answer, the Spark searches only the question's own words it kept
+                            let de = Locale.preferredLanguages.first?.hasPrefix("de") ?? true
+                            let line = String(((de ? ev["de"] : ev["en"]) as? String ?? "").prefix(120))
+                            let chip = (ev["web"] as? [String]).flatMap { $0.count == 2 ? String((de ? $0[0] : $0[1]).prefix(40)) : nil }
+                            if !line.isEmpty || chip?.isEmpty == false {
+                                cont.yield(.herkunft(line: line, web: chip?.isEmpty == false ? chip : nil))
+                            }
                         case "wbuch":
                             // only the 16 hex digits the Spark kept the answer by; the click names nothing else
                             if let id = ev["id"] as? String, id.count == 16,

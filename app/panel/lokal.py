@@ -32,12 +32,19 @@ could carry its text away in a query). With this switch on the search stays poss
 person's own words of this message (own_words), never what the model writes (chat_tools.py); when the panel already
 searched them for "beides", that result is used again. After e-mail the web stays locked as before.
 
+Herkunft and „Auch im Internet suchen“ (step 5): under an answer with own hits the panel writes where it comes from,
+counted from the hits' sources (herkunft: kinds and numbers only), and for the class intern without the web it keeps
+the question's own words for the next message on the same device (web_offer); the chip's fixed words (web_chip) then
+search exactly those on the web (chat_turn.prepare, chat_modell.herkunft_und_chip). Never after mail, at the Notaus,
+for guests, another voice or MCP.
+
 Journal (Zustand -> Logs, area "Wissen"): one "lokal:" line per question with the class, hits per source, the
 time and what happens next ("lokal: Klasse intern (Probe stark) | Probe 3 Treffer 42 ms | …"); never the question or
 what was found.
 """
 import asyncio
 import re
+import threading
 import time
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -90,6 +97,8 @@ HEAD = ("Vor jeder Suche draußen hat das Panel in den eigenen Quellen nachgeseh
         "gesprochen …“). Passt es nicht zur Frage, nenne es nicht. Reicht es nicht und web_search ist angeboten, "
         "suche im Web und sag kurz, dass lokal nichts Passendes war. Zeitlose Allgemeinfragen darfst du aus eigenem "
         "Wissen beantworten. Mit article_more liest du einen Archiv-Artikel weiter.")
+WEB_ONLY_HEAD = ("Der Nutzer hat „Auch im Internet suchen“ gewählt: Das Panel hat mit seinen eigenen Worten der Frage "
+                 "im Web gesucht (Ergebnis unten, mit Quellen). Antworte daraus und sag, was woher stammt.")
 WEB_HEAD = ("Dazu hat das Panel mit den eigenen Worten der Frage im Web gesucht (Ergebnis unten, mit Quellen). Nimm "
             "eigene Daten und Web zusammen und sag, was woher stammt.")
 
@@ -366,7 +375,7 @@ async def look(uid, text, srcs, ms, skip=None, nur=None, ccfg=None):
     web_q = own_words(text)          # the person's own words, before anything is read
     text = str(text or "").replace("[Codewort]", " ")   # the code word's place holder is no word to look up
     words, q = terms(text), query(text)
-    out = {"hits": [], "web": None, "n": {}, "late": [], "err": [], "ms": 0, "mail": False}
+    out = {"hits": [], "web": None, "n": {}, "late": [], "err": [], "ms": 0, "mail": False, "nur_web": list(srcs) == ["web"]}
     jobs = {}
     if "web" in srcs and web_q and ccfg is not None:
         jobs["web"] = asyncio.ensure_future(_web(ccfg, web_q, text))
@@ -457,7 +466,86 @@ def message(found):
     parts = [block(found["hits"])] if found["hits"] else []
     if found.get("web"):
         parts.append(block([found["web"]]))
+    if found.get("nur_web"):   # „Auch im Internet suchen“: the web only, the own data were looked at the turn before
+        return WEB_ONLY_HEAD + "\n" + chat.wrap_outside("\n\n".join(parts))
     return HEAD + ("\n" + WEB_HEAD if found.get("web") else "") + "\n" + chat.wrap_outside("\n\n".join(parts))
+
+
+# ---------------------------------------------------------------- Herkunft und „Auch im Internet suchen“ (step 5)
+# what a hit is, by its source (lokal's own sources and Finden's, fund.QUELLEN): (one, more) in German and English.
+# Every source of Finden is here or in ART_OF (test_quellen.Herkunft), so a new source cannot be left out.
+ARTEN = {"mail": ("Mail", "Mails", "mail", "mails"), "anhang": ("Anhang", "Anhänge", "attachment", "attachments"),
+         "dokument": ("Dokument", "Dokumente", "document", "documents"),
+         "termin": ("Termin", "Termine", "appointment", "appointments"),
+         "kontakt": ("Kontakt", "Kontakte", "contact", "contacts"),
+         "chat": ("Gespräch", "Gespräche", "conversation", "conversations"),
+         "liste": ("Liste", "Listen", "list", "lists"), "erinnerung": ("Erinnerung", "Erinnerungen", "reminder", "reminders"),
+         "wissensbuch": ("Wissensbuch-Seite", "Wissensbuch-Seiten", "knowledge book page", "knowledge book pages"),
+         "bild": ("Bild", "Bilder", "picture", "pictures"), "musik": ("Lied", "Lieder", "song", "songs"),
+         "archiv": ("Archiv-Artikel", "Archiv-Artikel", "archive article", "archive articles")}
+ART_OF = {"docs": "dokument", "history": "chat", "kiwix": "archiv", "nas": "dokument", "remarkable": "dokument"}
+WEB_WORD = ("Internet", "the web")
+# the chip's words; sent like a typed answer (panel, apps, Begleiter, Telegram), a typed one counts the same
+WEB_CHIP = ("Auch im Internet suchen", "Also search the web")
+WEB_TTL = 900               # the offer holds 15 minutes, and only for the very next message on the same device
+MAX_OFFERS = 500
+_offers = {}                # (profile id, device "client:convo") -> (the question's own words, monotonic time)
+_offers_lock = threading.Lock()
+
+
+def art(h):
+    """The kind of one hit (a key of ARTEN): a hit of Finden by its source, the others by theirs."""
+    k = h.get("quelle") if h.get("src") == "fund" else h.get("src")
+    return ART_OF.get(k, k)
+
+
+def herkunft(found, web=False):
+    """The line under an answer the quick look found own hits for: only kinds and numbers, built by the panel from the
+    hits' sources, never by the model and never with a title or a word of what was found. web: the web was searched in
+    this answer too (the panel's own search or the model's). {"de", "en", "arten": [[kind, n], …]} or None."""
+    n = {}
+    for h in (found or {}).get("hits") or []:
+        k = art(h)
+        if k in ARTEN:
+            n[k] = n.get(k, 0) + 1
+    if not n:
+        return None
+    de = [f"{c} {ARTEN[k][0 if c == 1 else 1]}" for k, c in n.items()]
+    en = [f"{c} {ARTEN[k][2 if c == 1 else 3]}" for k, c in n.items()]
+    if web or (found or {}).get("web"):
+        de.append(WEB_WORD[0])
+        en.append(WEB_WORD[1])
+    return {"de": "Aus: " + ", ".join(de), "en": "From: " + ", ".join(en), "arten": [[k, c] for k, c in n.items()]}
+
+
+def web_chip(text):
+    """The person asks for the offered web search in the chip's words (also typed, either language)."""
+    s = re.sub(r"[^\w ]", "", str(text or "").lower()).strip()
+    return s in {w.lower() for w in WEB_CHIP}
+
+
+def web_offer(uid, src, text, now=None):
+    """Keep „Auch im Internet suchen“ for the next message of this profile on this device: only the person's own
+    words of the question (own_words), never a word of what was found. text None: nothing offered (any older offer of
+    this device goes)."""
+    now = time.monotonic() if now is None else now
+    with _offers_lock:
+        _offers.pop((uid, src), None)
+        words = own_words(text) if text else ""
+        if words:
+            if len(_offers) >= MAX_OFFERS:
+                for k in [k for k, v in _offers.items() if now - v[1] > WEB_TTL] or list(_offers)[:MAX_OFFERS // 10]:
+                    _offers.pop(k, None)
+            _offers[(uid, src)] = (words, now)
+        return bool(words)
+
+
+def web_pop(uid, src, now=None):
+    """The offer of this device, taken away at every new message (used or not): the question's own words or ""."""
+    now = time.monotonic() if now is None else now
+    with _offers_lock:
+        got = _offers.pop((uid, src), None)
+    return got[0] if got and now - got[1] <= WEB_TTL else ""
 
 
 # ---------------------------------------------------------------- "Erst lokal testen" (Zustand -> Prüfen)

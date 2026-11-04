@@ -123,13 +123,10 @@ TOOL_SOURCES = {
     "web_search": {"web"}, "weather": {"web"}, "transit": {"web"}, "wikipedia": {"web"}, "archive_search": {"web"},
     "article_more": {"web"}, "feeds_news": {"web"},
 }
-MAIL_TOOLS = {"mail_list", "mail_search", "mail_read", "fuer_dich"}
 # the quick look of „Erst lokal“ (lokal.look) for intern and beides, by the source it asks: Finden over every released
 # source (step 4), the documents, the earlier conversations; beides also the panel's web search with the own words
 LOOK_SOURCES = {"fund_suche": {"mail", "anhang", "dokument", "termin", "kontakt", "chat", "liste", "wissensbuch"},
                 "document_search": {"dokument"}, "history_search": {"chat"}}
-# chat.MAIL_HINT before V01.1.329 told the model to use the mailbox only when asked for mails
-MAIL_ONLY_WORDS = "nur, wenn der Nutzer nach Mails fragt"
 
 
 def all_tools():
@@ -152,16 +149,12 @@ def attrappe(worte):
     return [dict(h) for h in ATTRAPPE if q & set(lokal.terms(lokal.fund_text(h)))][:3]
 
 
-def quellen(route, kind, tools, look=(), web=False):
+def quellen(kind, tools, look=(), web=False):
     """The sources the turn can reach: the tools left after narrowing, the quick look's sources (look: tool names) and
     the panel's own web search (web)."""
-    import chat
     names = {t["function"]["name"] for t in tools}
-    held_back = MAIL_ONLY_WORDS in chat.MAIL_HINT and "mail" not in route.names
     out = set()
     for n in names:
-        if n in MAIL_TOOLS and held_back:
-            continue
         out |= TOOL_SOURCES.get(n, set())
     if kind in ("intern", "beides"):
         for n in look:
@@ -187,7 +180,7 @@ def judge(text, classify=None, narrow=None, probe=None):
     srcs = qw.blick(kind, why, lokal.sources({t["function"]["name"] for t in offered}), "eigene Quelle" not in why)
     look = {lokal.SOURCES[k] for k in srcs if k in lokal.SOURCES}
     return {"route": route.label(), "kind": kind or "-", "klasse": kind or "handlung", "gruende": why,
-            "quellen": quellen(route, kind, tools, look, "web" in srcs)}
+            "quellen": quellen(kind, tools, look, "web" in srcs)}
 
 
 def measure(rows=None, **kw):

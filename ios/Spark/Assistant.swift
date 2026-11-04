@@ -42,6 +42,10 @@ final class Conversation: ObservableObject {
         /// Sofort-Karte (one hit clearly ahead), the entry's number („Original öffnen“)
         var fundQ: String?
         var fundId: Int?
+        /// Herkunft (lokal.herkunft): „Aus: 2 Mails, 1 Termin“, kinds and numbers only, and the chip „Auch im Internet
+        /// suchen“ (its words) under an answer only from the own data
+        var herkunft: String?
+        var webChip: String?
     }
 
     /// one chip „Gemerkt: …“ under an answer: the fact's number and state, its text while known, how it ended
@@ -1025,6 +1029,7 @@ final class Conversation: ObservableObject {
                 case .answers(let x): edit { $0.answers = x }
                 case .wbuch(let id): edit { $0.wbId = id }
                 case .fund(let q, let id): edit { $0.fundQ = q; $0.fundId = id }
+                case .herkunft(let line, let web): edit { $0.herkunft = line.isEmpty ? nil : line; $0.webChip = web }
                 case .memory(let id, let rev, let text, let undo):
                     edit { $0.mem = Array((($0.mem ?? []) + [Gemerkt(id: id, rev: rev, text: text, undo: undo)]).prefix(3)) }
                 }

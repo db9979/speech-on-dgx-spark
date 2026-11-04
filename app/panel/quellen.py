@@ -47,7 +47,8 @@ STRONG_WORDS = 2           # words of the question a strong hit holds (unless it
 CLASSES = ("intern", "extern", "beides")
 GRUENDE = ("Plaudern", "Antwort auf Rückfrage", "Websuche verlangt", "eigene Quelle", "Welt", "Neuigkeiten",
            "Handlung", "keine Frage", "eigene Daten", "Besitz", "Unterlage", "Aktuelles", "zeitlos", "Gerät",
-           "keine Suchwörter", "Probe stark", "Probe schwach", "Probe leer", "Probe zu langsam", "ohne Probe")
+           "keine Suchwörter", "Probe stark", "Probe schwach", "Probe leer", "Probe zu langsam", "ohne Probe",
+           "Internet-Chip")
 # the source named in so many words: then only there (the web is left out of this answer, lokal.LOCAL_ONLY)
 LOCAL = re.compile(r"(?i)\b(mein\w* (dokument\w*|unterlage\w*|datei\w*|pdfs?|papier\w*|vertr[aä]g\w*|rechnung\w*|"
                    r"versicherung\w*|brief\w*|notiz\w*|ordner\w*|archiv\w*|aufzeichnung\w*)|in den (dokumenten|unterlagen)|"
@@ -102,6 +103,8 @@ _busy = threading.BoundedSemaphore(PROBE_BUSY)
 _pool = ThreadPoolExecutor(max_workers=PROBE_BUSY, thread_name_prefix="quellen-probe")
 _stat_lock = threading.Lock()
 _stat = {"day": "", "intern": 0, "extern": 0, "beides": 0, "probe": 0, "ms": []}
+# Live (step 5): today's Herkunft lines under answers, „Auch im Internet suchen“ offered and tapped (numbers only)
+ZAEHLER = ("herkunft", "chip", "chip_genutzt")
 
 
 def _fund_probe(uid, text, nur):
@@ -246,23 +249,25 @@ def blick(kind, why, srcs, web_ok):
 
 
 def note(kind, info=None, now=None):
-    """Live: today's classes and the probe's time (numbers only)."""
+    """Live: today's classes and the probe's time, or one of ZAEHLER (numbers only)."""
     day = time.strftime("%Y-%m-%d", time.localtime(time.time() if now is None else now))
     with _stat_lock:
         if _stat["day"] != day:
-            _stat.update(day=day, intern=0, extern=0, beides=0, probe=0, ms=[])
-        if kind in CLASSES:
-            _stat[kind] += 1
+            _stat.update(day=day, intern=0, extern=0, beides=0, probe=0, ms=[], **{k: 0 for k in ZAEHLER})
+        if kind in CLASSES or kind in ZAEHLER:
+            _stat[kind] = _stat.get(kind, 0) + 1
         if info and "ms" in info:
             _stat["probe"] += 1
             _stat["ms"] = (_stat["ms"] + [int(info["ms"])])[-200:]
 
 
 def for_live(now=None):
-    """{"intern", "extern", "beides", "probe", "ms"} of today (ms: the probe's median, or None)."""
+    """{"intern", "extern", "beides", "probe", "ms", "herkunft", "chip", "chip_genutzt"} of today (ms: the probe's
+    median, or None)."""
     day = time.strftime("%Y-%m-%d", time.localtime(time.time() if now is None else now))
     with _stat_lock:
         if _stat["day"] != day:
-            return {"intern": 0, "extern": 0, "beides": 0, "probe": 0, "ms": None}
+            return {"intern": 0, "extern": 0, "beides": 0, "probe": 0, "ms": None} | {k: 0 for k in ZAEHLER}
         ms = sorted(_stat["ms"])
-        return {k: _stat[k] for k in ("intern", "extern", "beides", "probe")} | {"ms": ms[len(ms) // 2] if ms else None}
+        return {k: _stat[k] for k in ("intern", "extern", "beides", "probe")} | {"ms": ms[len(ms) // 2] if ms else None} \
+            | {k: _stat.get(k, 0) for k in ZAEHLER}

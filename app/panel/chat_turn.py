@@ -171,6 +171,18 @@ async def prepare(request):
     # With the admin's chat.routing on (released for the profile), it narrows the tools (further down)
     # and a new request of the person's own that does not point back at an answer made from outside
     # text leaves that answer out, and with it its lock ("Setz das auf die Liste" keeps it locked).
+    # „Auch im Internet suchen“ (lokal.web_offer, plan such-index/zuverlaessig.md step 5): the chip under an answer from
+    # the own data sends its fixed words; the panel takes the question's own words it kept for this profile and device
+    # (only for the very next message, every message takes the offer away) and searches the web with exactly those,
+    # never a word of what was found. The offer is never kept after mail, for guests, another voice or MCP.
+    import lokal
+    web_tap = ""
+    if me0 and messages[-1]["role"] == "user":
+        web_tap = lokal.web_pop(me0["id"], f"{body.get('client') or 'web'}:"
+                                           f"{body.get('convo') if isinstance(body.get('convo'), str) else ''}")
+        web_tap = web_tap if web_tap and not guest and lokal.web_chip(messages[-1]["content"]) else ""
+        if web_tap:
+            messages[-1] = dict(messages[-1], content=web_tap)
     import intent   # (needs chat fully loaded: its word lists)
     ask0 = messages[-1]["content"] if messages[-1]["role"] == "user" else ""
     route = intent.classify_cfg(ask0, ccfg)
@@ -911,8 +923,10 @@ async def prepare(request):
     # the sources this turn offers (tools before narrowing: the same rights), started here and waited for in
     # chat._answer (at most chat.local_first_ms); beides also searches the web with the person's own words, started
     # before anything of the own data is read; naming an own source leaves the web out of this answer.
-    local_task, web_own = None, ""
-    import lokal
+    local_task, web_own, lk_kind, web_ok = None, "", "", False
+    if web_tap and not (lokal.on(ccfg, who) and own_browser and private_ok and not mcp and tools):
+        print("lokal: Internet-Chip abgelehnt (nicht erlaubt)", flush=True)
+        web_tap = ""
     if lokal.on(ccfg, who) and own_browser and private_ok and not mcp and messages[-1]["role"] == "user" and tools \
             and not cal_note and not pics and not role_cmd and not room_far and not ha_direct and not ha_wait:
         import quellen
@@ -922,8 +936,12 @@ async def prepare(request):
             import mappen
             lk_nur = (await asyncio.to_thread(mappen.fuer_werkzeug, who, None, lk_text, mp.get("id")))[0]
         lk_ctx = {"route": route, "tool_words": ccfg.get("tool_words", ""), "eigen": True, "nur": lk_nur}
-        lk_kind, lk_why = await asyncio.to_thread(quellen.klasse, lk_text, who["id"], lk_ctx)
-        quellen.note(lk_kind, lk_ctx.get("info"))
+        if web_tap:   # „Auch im Internet suchen“: no second look in the own data, the turn before had it
+            lk_kind, lk_why = "extern", ["Internet-Chip"]
+            quellen.note("chip_genutzt")
+        else:
+            lk_kind, lk_why = await asyncio.to_thread(quellen.klasse, lk_text, who["id"], lk_ctx)
+            quellen.note(lk_kind, lk_ctx.get("info"))
         # the panel's own web search only where the person may search the web in this turn: offered, no answer from
         # mail carried along, not held by the Notaus, its service not known to be gone (dienstwacht)
         import dienstwacht
@@ -933,12 +951,16 @@ async def prepare(request):
             and not dienstwacht.tool_down("web_search", who["id"])
         lk_src = quellen.blick(lk_kind, lk_why, lokal.sources(offered_all), web_ok)
         web_own = lokal.own_words(lk_text)
+        if web_tap:   # the web only, with the own words of the question kept with the offer
+            lk_src = ["web"] if web_ok else []
+            if not web_ok:   # Notaus, the service gone, the web not released, an answer from mail carried along
+                print("lokal: Internet-Chip abgelehnt (Websuche gesperrt)", flush=True)
         if "eigene Quelle" in lk_why and any(t["function"]["name"] == "web_search" for t in tools):
             tools = [t for t in tools if t["function"]["name"] != "web_search"]
             system = per_turn(system, lokal.LOCAL_ONLY)
             lk_src = [k for k in lk_src if k != "web"]
         # a short plain reading question the panel fetches itself (intent.direct) needs no look before it
-        if lk_src and features.allowed("direct", who["id"], ccfg) and intent.direct(
+        if lk_src and not web_tap and features.allowed("direct", who["id"], ccfg) and intent.direct(
                 lk_text, {t["function"]["name"] for t in tools}):
             lk_src = []
         if lk_src:

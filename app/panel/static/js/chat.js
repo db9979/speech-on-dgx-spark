@@ -272,7 +272,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   const el=chatLog('assistant','');$('fabtext').textContent='';
   // shown formatted while it streams (md.js), at most once per frame; the small answer line gets the plain text
   let drawn=null,frame=0;const draw=()=>{frame=0;md.render(el,drawn);$('fabtext').textContent=md.plain(drawn);$('chatlog').scrollTop=1e9};
-  const show=(x,now)=>{drawn=x;if(now){if(frame)cancelAnimationFrame(frame);draw()}else if(!frame)frame=requestAnimationFrame(draw)};let full='',llmS=null,audioS=null,ackS=null,err='';const searches=[],sources=[],mems=[],gms=[],docs=[],drefs=[],hcards=[],mkcards=[],chcards=[],blcards=[],steps=[],confirms=[],gotos=[];let rateId='',wbId='',more=null;const moreTool=typeof moreTake==='function'?moreTake(text):undefined;if(typeof moreStartGone==='function')moreStartGone();
+  const show=(x,now)=>{drawn=x;if(now){if(frame)cancelAnimationFrame(frame);draw()}else if(!frame)frame=requestAnimationFrame(draw)};let full='',llmS=null,audioS=null,ackS=null,err='';const searches=[],sources=[],mems=[],gms=[],docs=[],drefs=[],hcards=[],mkcards=[],chcards=[],blcards=[],steps=[],confirms=[],gotos=[];let rateId='',wbId='',more=null,herk=null;const moreTool=typeof moreTake==='function'?moreTake(text):undefined;if(typeof moreStartGone==='function')moreStartGone();
   const ctrl=new AbortController();chat.ctrl=ctrl;chat.said='';chat.firstPlay=null;chat.gaps=[];chat.blocks=[];chat.t0b=null;chat.stalls=0;chat.pieceStart=true;setTalk();chatSay(t('Antwort kommt …','Answer coming …'));
   try{const r=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
       body:JSON.stringify({speak:voiceOn()?undefined:false,messages:chat.msgs.slice(-20).map(m=>({role:m.role,content:m.content,...(m.mail?{mail:true}:{}),...(m.outside?{outside:true}:{}),...(m.screen?{screen:true}:{})})),tab:TAB,tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),voice:PROFILE&&S.voice||undefined,speed:S.speed,length:S.length,convo:chat.cid||undefined,speaker:spk&&spk.token||undefined,images:pids.length?pids:undefined,page:typeof hilfeNow==='function'?hilfeNow():undefined,focus:typeof hilfeFocusTake==='function'?hilfeFocusTake():undefined,view:document.body.classList.contains('appview')?'app':undefined,more:moreTool,mappe:window.MP_CHAT&&MP_CHAT.id||undefined})});
@@ -311,6 +311,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
         else if(ev.type==='anruf'){if(window.anFromAssistant)setTimeout(()=>anFromAssistant(ev),1500)}   // Anrufe per Assistent (rufen.py): after the yes
         else if(ev.type==='waehlen'){const n=String(ev.number||'');   // „übers Telefon“: only inside the Android app, the phone app dials after a tap
           if(/SparkAndroid\//.test(navigator.userAgent)&&/^\+?[0-9][0-9 \/()\-]{2,28}$/.test(n))location.href='tel:'+n.replace(/[^0-9+]/g,'')}
+        else if(ev.type==='herkunft'){herk=ev}   // Herkunft (lokal.herkunft): kinds and numbers only, and maybe the chip „Auch im Internet suchen“
         else if(ev.type==='rate'){rateId=ev.id}
         else if(ev.type==='wbuch'){wbId=ev.id}
         else if(ev.type==='more'){more=ev}   // the panel's sentences under the answer (saetze.js)   // thumbs for this answer (faelle.py, bewerten.js)
@@ -337,6 +338,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   if(!err)for(const c of chcards)el.appendChild(choiceCard(c));
   if(!err&&!foreign)for(const c of confirms)el.appendChild(c.vg&&window.vgAttach?vgAttach(c.vg,confirmCard(c)):confirmCard(c));   // Alles Offene: the proposal's card
   if(!err&&!foreign&&full.trim()){const g=gotoCard(gotos);if(g)el.appendChild(g)}
+  if(herk&&!err&&!foreign&&full.trim())el.appendChild(herkunftRow(herk));
   if(rateId&&full.trim()&&!err&&typeof rateBar==='function')el.appendChild(rateBar(rateId));
   if(more&&full.trim()&&!err&&!foreign&&typeof moreRow==='function')el.appendChild(moreRow(more));
   if(typeof hilfeFabCards==='function')hilfeFabCards(hcards);
@@ -384,6 +386,15 @@ function gotoCard(list){const row=document.createElement('div');row.className='c
       if(/^\d{1,12}$/.test(String(c.id||''))&&typeof fundTreffer==='function'){btn(t('Original öffnen','Open the original'),()=>fundTreffer(c.id));row.lastChild.classList.add('on')}
       btn(t('In Finden ansehen','Show in Find'),()=>fundSuche(c.q.slice(0,200)));row.lastChild.dataset.fund='1'}}
   return row.children.length?row:null}
+// Herkunft under an answer of the own data (lokal.herkunft, plan such-index step 5): „Aus: 2 Mails, 1 Termin“, kinds and
+// numbers the panel counted, never a title; the chip sends its fixed words like a typed answer, the panel then searches
+// the web with the question's own words it kept (lokal.web_offer), never after mail, for guests or another voice
+function herkunftRow(h){const d=document.createElement('div');const line=L==='en'?h.en:h.de;
+  if(line){const p=document.createElement('div');p.className='mem';p.textContent=line;d.appendChild(p)}
+  const w=Array.isArray(h.web)?String(h.web[L==='en'?1:0]||''):'';
+  if(w){const row=document.createElement('div');row.className='choice';const b=document.createElement('button');b.type='button';b.className='b chb';
+    b.textContent=w;b.onclick=()=>{if(chat.ctrl)return;b.disabled=true;b.classList.add('on');ask(w)};row.appendChild(b);d.appendChild(row)}
+  return d}
 function confirmCard(c){const d=document.createElement('div');d.className='confirmc';const h=document.createElement('b');
   h.textContent=t('Wartet auf dein Ja: ','Waiting for your yes: ')+(L==='en'?c.en:c.de);d.appendChild(h);const row=document.createElement('div');row.className='choice';
   const btn=(label,word,cls)=>{const b=document.createElement('button');b.type='button';b.className='b chb'+cls;b.textContent=label;

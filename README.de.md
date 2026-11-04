@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.331** Alles schnell finden, Schritt 5: unter einer Antwort aus eigenen Daten sagt das Panel, woher sie stammt (nur Arten und Anzahlen, „Aus: 2 Mails, 1 Termin“), mit „In Finden ansehen“ und bei Antworten nur aus eigenen Daten „Auch im Internet suchen“ (nur die eigenen Worte der Frage, nie nach einer Mail, für Gäste oder fremde Stimmen), im Panel und in allen Apps
 - **V01.1.330** Alles schnell finden, Schritte 3 und 4: die Quellen-Weiche entscheidet mit festen Regeln und einer kurzen Treffer-Probe im eigenen Index, ob eine Frage in die eigenen Daten, ins Web oder in beides gehört (Messbank 66 von 66); „Erst lokal“ fragt dann alle freigegebenen Quellen samt Mails und Terminen, bei „beides“ sucht das Panel selbst mit den eigenen Worten im Web, bevor eine Mail gelesen ist
 - **V01.1.329** Alles schnell finden, Schritte 1 und 2: Quellen-Messbank (66 Sätze, intern/extern/beides, vorher 57,6 %, nachher 83,3 %) und Sofort-Korrekturen: eigene Mails sind eine normale Quelle, Finden bleibt beim Eingrenzen, „laut Angebot“ und Lesefragen wie „Hat sich der Klempner gemeldet?“ bleiben bei den eigenen Daten
 - **V01.1.328** Entwickeln: das Terminal im Browser ist kompakt (eine Leiste mit Hinweisen und Code als Knöpfe, Terminal bis zum Fensterrand, Vollbild, Tastenreihe am Handy) und startet OpenCode sofort; danach bleibt die Shell, `opencode` startet es neu.
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.324** Fix wiederholte Namensliste im Sprach-Chat: liest die Spracherkennung aus Rauschen ihre eigene Namensliste (Namen fürs Hören) zurück, geht dieser Text nicht mehr als Frage an den Assistenten
 - **V01.1.323** Auswertungen 2c: das Blatt Auswertungen auch im iPhone (Erstellen, Stimmt nicht per Wischen, Erinnern bei Fristen, Seite je Punkt), Englisch in der App
 - **V01.1.322** System-Updates (Schalter aus, nur Admin): Zustand → System-Updates zeigt je Rechner Betriebssystem-Updates mit Sicherheit und Paketliste, spielt sie mit frischem Code als festen root-Ablauf nur in einer Sprechpause ein, Neustart nur auf dein Wort; OpenCode und OSV-Warnungen mit Prüfbitte, Firmware nur von Hand, nachts 03–05 Uhr je Rechner.
-- **V01.1.321** Fixes aus dem Pi-Log: die Live-Verbindung zu Home Assistant verbindet nach einer guten Verbindung bald neu statt für immer 900 s zu warten, mit Ping und Keepalive; Antwortvorschläge warten nicht mehr hinter der Hintergrundarbeit und sagen „ausgelastet, noch einmal“ statt eines Fehlers; der Tagesüberblick liest seine Teile gleichzeitig und gibt eine Kurzfassung statt nach 200 s zu scheitern; der NAT-Hinweis am Telefon nennt den zweiten Router.
 
 
 

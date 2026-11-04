@@ -39,6 +39,33 @@ async def llm_start_satz(en):
         return ""
 
 
+async def herkunft_und_chip(turn, found, st, searches, trace, out, who, src, messages):
+    """Under an answer of the quick look (plan such-index/zuverlaessig.md step 5), by fixed rules of the panel, never
+    the model: the Herkunft line („Aus: 2 Mails, 1 Termin, Internet“, lokal.herkunft: kinds and numbers only) and, for
+    an answer of the class intern that did not go to the web, the chip „Auch im Internet suchen“ (lokal.web_offer:
+    kept for the next message of this device, with the question's own words only). Never after mail (a mail among
+    the hits or read by a tool: chat.LOCKED_AFTER_MAIL), at the Notaus, without the web for this turn (turn.web_ok:
+    offered, service there, no answer from mail carried along) or for the chip's own answer."""
+    import lokal
+    import notaus
+    import quellen
+    web = bool(searches or (found or {}).get("web"))
+    line = lokal.herkunft(found, web)
+    chip = bool(getattr(turn, "lk_kind", "") == "intern" and getattr(turn, "web_ok", False) and not getattr(turn, "web_tap", "")
+                and not web and not st["mail"] and not (found or {}).get("mail") and trace["said"].strip()
+                and "web_search" not in notaus.locked_tools(notaus.level(), set(), bool(notaus.own(who["id"]))))
+    chip = lokal.web_offer(who["id"], src, messages[-1]["content"] if chip else None)
+    if line:
+        quellen.note("herkunft")
+    if chip:
+        quellen.note("chip")
+    print("lokal: Herkunft " + (str(sum(n for _, n in line["arten"])) + " Treffer" if line else "keine")
+          + (" | Internet-Chip angeboten" if chip else " | kein Internet-Chip"), flush=True)
+    if line or chip:
+        await out.put(dict({"type": "herkunft", "de": line["de"] if line else "", "en": line["en"] if line else ""},
+                           **({"web": list(lokal.WEB_CHIP)} if chip else {})))
+
+
 async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, ex, fix_fix, fix_prev, fixed=None, ha, ha_direct, ha_read, known,
                      lheaders, llm_round, locked, messages, need, out, own_browser, run_tool, said_before, search, sentences,
                      settle, small, speak, src, t0, think_tools, tm, tool_temp, tools, tr, trace, turn, vip, who):
@@ -169,11 +196,11 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
             if homeassistant.free_text(ha_read) and not st["outside"]:
                 st["outside"] = True
                 await out.put({"type": "outside"})
-        local_task = getattr(turn, "local_task", None)
+        local_task, lk_found = getattr(turn, "local_task", None), None
         if local_task:   # "Erst lokal suchen" (lokal.py): what the quick look found goes in as data
             import lokal
             t_lk = time.time()
-            found = await local_task
+            found = lk_found = await local_task
             turn.web_vorab = found.get("web")   # the own words were searched already: web_search takes it again
             if tr:   # Logs → Anfragen: one step, the numbers only
                 tr.step("tool", "Erst lokal (Panel)", t_lk, time.time(), hits=len(found["hits"]), docs=found["n"].get("docs"),
@@ -204,6 +231,9 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
                         frisch.note_archive(h.get("date"), getattr(turn, "vorrat", None))
                 if found.get("web") and found["web"].get("sources"):   # the panel's own web search, under the answer
                     await out.put({"type": "sources", "items": found["web"]["sources"]})
+                if any(h["src"] == "fund" for h in found["hits"]):
+                    # „In Finden ansehen“ (step 5): the way to the page Finden with the question's own search words
+                    await out.put({"type": "goto", "to": "fund", "q": lokal.query(messages[-1]["content"])[:120]})
         direct = getattr(turn, "direct", None)
         if direct and direct not in locked(st):
             # "Eindeutiges direkt abrufen": the panel calls the one tool the question names (intent.DIRECT), the
@@ -530,6 +560,8 @@ async def model_turn(*, acked, body, c, came_from, carry, ccfg, cfg, check_on, e
                 await out.put({"type": "text", "delta": " " + tip})
                 trace["said"] += " " + tip
                 await sentences.put(tip)
+        if who and local_task:
+            await herkunft_und_chip(turn, lk_found, st, searches, trace, out, who, src, messages)
         zeit = verbrauch.warn(who["id"]) if who else ""
         if zeit:   # Kontingent (verbrauch.py): one fixed sentence under the answer, once per period
             note = verbrauch.warn_text(zeit, chat.guess_language(messages[-1]["content"]) == "English")

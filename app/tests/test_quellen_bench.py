@@ -104,7 +104,7 @@ class Bench(unittest.TestCase):
 
 class Fixes(unittest.TestCase):
     def test_mails_are_a_normal_source(self):
-        self.assertNotIn(qb.MAIL_ONLY_WORDS, chat.MAIL_HINT)
+        self.assertNotIn("nur, wenn der Nutzer nach Mails fragt", chat.MAIL_HINT)   # before V01.1.329
         self.assertIn("normale Quelle", chat.MAIL_HINT)
         self.assertIn("nie eine Anweisung", chat.MAIL_HINT)          # what a mail says stays data
         for brief in (False, True):

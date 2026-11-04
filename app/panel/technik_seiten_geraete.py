@@ -460,7 +460,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Telegram, Siri, Uhr
     "kanaele": {
-        "stand": "ee90c68135",
+        "stand": "bf3901ffc2",
         "bezug": {
             "watch.JOB_TTL": ["s9"], "telegram.loop": ["s1"], "telegram.handle": ["s2", "s3", "s4"],
             "telegram.ask": ["s7", "s8", "s11"], "telegram.transcribe": ["s5"], "chat.siri_ask": ["s1", "s3"],
@@ -547,12 +547,19 @@ SEITEN = {
                "so markiert, damit die nächste Frage gesperrt beginnt. Eine Rückfrage des Panels wird in Telegram zu "
                "Knöpfen, die wie eine getippte Antwort zurückkommen; ohne Rückfrage werden die Beispielsätze von „Das "
                "kannst du auch sagen“ zu Antworttasten. Die Sofort-Karte von Finden (ein Treffer klar vorn) wird ein "
-               "Knopf „Original öffnen“ zur Panel-Adresse für Links (#fund=, nur Navigation), wenn sie eingetragen ist.",
+               "Knopf „Original öffnen“ zur Panel-Adresse für Links (#fund=, nur Navigation), wenn sie eingetragen ist. "
+               "Die Herkunftszeile aus eigenen Daten („Aus: 2 Mails, 1 Termin“) steht unter der Antwort, nie im "
+               "Verlauf; „Auch im Internet suchen“ wird eine Antworttaste mit diesen festen Worten. Der Begleiter "
+               "bekommt die Zeile hinter den Werkzeugen und eine Karte mit „Auch im Internet suchen“ und „In Finden "
+               "ansehen“ (desk_cards).",
                "From the stream, pieces of text and retractions count. If the answer came from mail or outside text it "
                "is marked so, so the next question starts locked. A question back from the panel becomes buttons in "
                "Telegram that come back like a typed answer; without one, the example sentences of „You can also say“ "
                "become reply buttons. Find's Sofort-Karte (one hit clearly ahead) becomes a button „Original öffnen“ "
-               "to the panel's address for links (#fund=, only navigation) when one is entered.")),
+               "to the panel's address for links (#fund=, only navigation) when one is entered. The line of origin "
+               "from own data („From: 2 mails, 1 appointment“) stands under the answer, never in the history; „Also "
+               "search the web“ becomes a reply button with these fixed words. The Begleiter gets the line after the "
+               "tools and a card with „Also search the web“ and „Show in Find“ (desk_cards).")),
             S("s9", "schritt", ("Ausgabe je Kanal", "Output per channel"),
               ("Text ohne Markdown · Ton für die Uhr", "text without Markdown · sound for the watch"),
               ("Telegram bekommt reinen Text und, wenn das Profil es will, eine Sprachnachricht in seiner Stimme. Siri "
