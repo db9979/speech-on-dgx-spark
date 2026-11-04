@@ -336,6 +336,11 @@ def screen(panel, pf, first):
         check(not tvnc_there() and not panel.bild_art, "dann ist nichts eingerichtet und das Panel nicht gefragt")
         return False
     if not check("Bildschirm eingerichtet: TightVNC" in r.stdout, f"TightVNC {anker.TIGHTVNC['version']} eingerichtet (Prüfsumme und Signatur)"):
+        if "Signatur" in r.stdout:            # the same check on a file Windows signed itself, with its errors
+            d = subprocess.run([anker.WIN_PS, "-NoProfile", "-NonInteractive", "-Command",
+                                anker.WIN_TVNC_SIG.format(path=os.path.join(os.environ["SystemRoot"], "System32", "msiexec.exe"))],
+                               capture_output=True, text=True, errors="replace")
+            print("Signaturprobe msiexec.exe:", d.returncode, d.stdout.strip(), d.stderr.strip()[-1500:], flush=True)
         return False
     check(panel.bild_art == "tightvnc", "der Anker fragt das Panel nach dem Passwort (art tightvnc)")
     check(wait(lambda: ps("(Get-Service tvnserver).Status") == "Running", 60), "der Dienst tvnserver läuft")

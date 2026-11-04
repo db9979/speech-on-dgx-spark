@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.321** Remote access screen now on Windows too: TightVNC, set up by anchor 1.10.0 from the official, pinned and signed file, only on 127.0.0.1, the password never on a command line; "bildschirm aus" or removing uninstalls it again
 - **V01.1.320** Change log: a checked break (say after a power cut) can be confirmed as checked under Status → Logs → Changes, with a reason and a fresh code; the chain stays unchanged, the confirmation holds only for exactly that line, a new break reports again
 - **V01.1.319** Fix web services in remote access: a service that listens only on the server's own address (such as a Docker port on a fixed IP) now works without "Network behind it"; "Search" shows where each port listens, and the anchor tries the own address itself when nothing answers on 127.0.0.1. Clear error messages instead of "keine TLS-Verbindung". Update the anchor to 1.9.0.
 - **V01.1.318** The remote session page tidied up: one red line with the pills "Code N min" and "N notes" (they open over the page, other pages unchanged), full width, the sessions as tabs in the terminal's dark head, the assistant's column slim with the goal box only while a goal is set.
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.314** Fix develop on the Pi: `sudo ./install.sh --entwickeln` stopped with newer git ("dubious ownership"); spark-dev's clone now comes from a bundle root writes, never from root's clone. If it failed: run `sudo ./install.sh --entwickeln` again
 - **V01.1.313** Redesign stage 8: iPhone and Android app in the system style like the panel (one theme from the tokens light and dark, blue accent, state as a dot with its word, SF Symbols instead of emoji in buttons and lists, My things without coloured tiles, Today calm while loading; Android page and hull without a palette of their own, app 1.4.5)
 - **V01.1.312** Analyses per document (plan open-notebook, push 2a, switch off): summary and key points in quiet minutes, questions, contents, deadlines and people per click; every point with its place, checked by the panel (every number stands at the place), contents and deadlines without the model; the quiet chain as the list `wissen.KETTE`
-- **V01.1.311** Redesign stage 7: the Dungeon Master with a calm table tone of its own (warm surfaces and gold from the tokens, light and dark, serif only for the narration, no parchment or small caps), line icons on the table's buttons, tabs and phone bar, "Your rounds" and the game's other lists as a list pattern (no more vertical letters on the phone); guard Klar7
 
 
 
