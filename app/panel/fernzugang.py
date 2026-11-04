@@ -1928,7 +1928,7 @@ def admin_get(request: Request):
                      "erlaubt": x.get("erlaubt", True), "hostkey_falsch": bool(x.get("hostkey_falsch")),
                      "wartet": bool(x.get("wartet")),
                      "fp": fingerprint(x.get("hostkey", "")), "art": art(x.get("os")),
-                     "bild": x.get("bild") or "", "bild_anker": fernbild.anchor_ok(x.get("anker")),
+                     "bild": x.get("bild") or "", "bild_anker": fernbild.anchor_ok(x.get("anker"), x.get("os")),
                      "web_anker": fernweb.anchor_ok(x.get("anker")), "web": len(x.get("web") or []) if web_an else 0,
                      "sitzungen": sum(1 for s in SITZUNG.values() if s.gid == gid), **fernanker.row(x, pv),
                      "notiz": notizen and fernnotiz.has(gid), **(fernals.row(x) if als_an else {})})

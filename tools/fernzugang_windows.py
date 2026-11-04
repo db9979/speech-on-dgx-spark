@@ -2,8 +2,12 @@
 the panel's own file spark-anker-einrichten.cmd (fernwindows.cmd_file) sets up the anchor for real, a small stand-in
 panel here (TLS with its own certificate pinned, the anchor's three doors, its WebSocket) pairs it with the file's
 one-time key, a real SSH session goes through the anchor to the user spark (PowerShell, SFTP), sshd listens only on
-127.0.0.1; then „abbauen“ from the panel and the watcher removes everything again: tasks, user, settings, program,
-its Python, the entry in Apps, sshd as before.
+127.0.0.1; the screen (stage 5b): `spark-anker.cmd bildschirm` loads TightVNC's pinned MSI from tightvnc.com, the
+service listens only on 127.0.0.1:5930, the panel's password works through the anchor's channel „bild“ (VNC
+authentication) and a wrong one does not, `bildschirm aus` (first run) or removing (second run) uninstalls it; when
+tightvnc.com cannot be reached from the runner, that part says so and checks that nothing was installed. Then
+„abbauen“ from the panel and the watcher removes everything again: tasks, user, settings, program, its Python, the
+entry in Apps, TightVNC, sshd as before.
 
     python tools/fernzugang_windows.py        (needs: cryptography, paramiko; Administrator; internet for python.org)
 
@@ -29,9 +33,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.join(os.path.dirname(HERE), "app")
 sys.path.insert(0, os.path.join(APP, "panel"))
 import fernwindows  # noqa: E402
+import importlib.util  # noqa: E402
 
 PROGRAM = os.path.join(APP, "anker", "spark-anker.py")
 GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+BILD_KANAL = 2
 FAILED = []
 
 
@@ -80,6 +86,8 @@ class Panel:
         self.hello = None
         self.events = {"offen": threading.Event(), "hallo": threading.Event()}
         self.inbox = []                      # binary data of channel 1
+        self.bild_in = bytearray()           # binary data of channel BILD_KANAL (the screen)
+        self.bild_pw, self.bild_art, self.bild_weg = "", "", False
         self.lock = threading.Lock()
         with open(PROGRAM, "rb") as f:
             self.prog = f.read()
@@ -133,6 +141,13 @@ class Panel:
             return 200, json.dumps({"id": "g_000000000001", "key": self.device, "user": "spark",
                                     "pi_key": self.login_pub + " spark-fernzugang-g_000000000001",
                                     "anker_sha256": hashlib.sha256(self.prog).hexdigest(), "wartet": True}).encode()
+        if path == "/api/fernzugang/anker/bildschirm" and h.get("authorization") == f"Bearer {self.device}":
+            if method == "DELETE":
+                self.bild_weg, self.bild_pw = True, ""
+                return 200, b"{}"
+            self.bild_art = str(json.loads(body or b"{}").get("art") or "")
+            self.bild_pw = "".join(secrets.choice("ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789") for _ in range(8))
+            return 200, json.dumps({"passwort": self.bild_pw, "benutzer": ""}).encode()
         if method == "POST" and path == "/api/fernzugang/anker/abgebaut":
             self.removed = h.get("authorization") == f"Bearer {self.device}"
             return 200, b"{}"
@@ -167,9 +182,13 @@ class Panel:
                 elif op == 2 and data[:1] == b"\x01":
                     with self.lock:
                         self.inbox.append(data[1:])
+                elif op == 2 and data[:1] == bytes([BILD_KANAL]):
+                    with self.lock:
+                        self.bild_in += data[1:]
                 elif op == 8:
                     break
-        self.ws = None
+        if self.ws and self.ws[0] is c:      # a restarted anchor (`bildschirm`) may be connected anew already
+            self.ws = None
 
     def send(self, data, op):
         c, lock = self.ws
@@ -252,6 +271,105 @@ def reg_there(key):
         return False
 
 
+def anchor_module():
+    spec = importlib.util.spec_from_file_location("spark_anker", PROGRAM)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def bild_read(panel, n, seconds=20):
+    end = time.monotonic() + seconds
+    while time.monotonic() < end:
+        with panel.lock:
+            if len(panel.bild_in) >= n:
+                out = bytes(panel.bild_in[:n])
+                del panel.bild_in[:n]
+                return out
+        time.sleep(0.05)
+    return b""
+
+
+def vnc_login(panel, anker, pw):
+    """RFB 3.8 through the anchor's channel „bild“: the security types and the result of VNC authentication with pw."""
+    with panel.lock:
+        panel.bild_in.clear()
+    panel.events["offen"].clear()
+    panel.send(json.dumps({"typ": "auf", "kanal": BILD_KANAL, "ziel": "bild"}).encode(), 1)
+    if not panel.events["offen"].wait(20):
+        return None, None
+    try:
+        version = bild_read(panel, 12)
+        if not version.startswith(b"RFB "):
+            return version, None
+        panel.send(bytes([BILD_KANAL]) + b"RFB 003.008\n", 2)
+        n = bild_read(panel, 1)
+        types = bild_read(panel, n[0]) if n and n[0] else b""
+        if 2 not in types:
+            return types, None
+        panel.send(bytes([BILD_KANAL, 2]), 2)
+        challenge = bild_read(panel, 16)
+        key = bytes(int(f"{b:08b}"[::-1], 2) for b in pw.encode("ascii")[:8].ljust(8, b"\0"))
+        panel.send(bytes([BILD_KANAL]) + anker.des_block(key, challenge[:8]) + anker.des_block(key, challenge[8:]), 2)
+        result = bild_read(panel, 4)
+        return types, (struct.unpack("!I", result)[0] if len(result) == 4 else None)
+    finally:
+        panel.send(json.dumps({"typ": "zu", "kanal": BILD_KANAL}).encode(), 1)
+        time.sleep(1)
+
+
+def tvnc_there():
+    return bool(ps("(Get-Service tvnserver -ErrorAction SilentlyContinue).Name")) or reg_there(r"SOFTWARE\TightVNC")
+
+
+def screen(panel, pf, first):
+    """Stage 5b on this Windows: TightVNC set up through spark-anker.cmd, used through the anchor, then away again
+    (first run: `bildschirm aus`; second run: it stays for removing). False when it could not be tried at all."""
+    anker = anchor_module()
+    cmd = os.path.join(pf, "SparkAnker", "spark-anker.cmd")
+    check(not tvnc_there(), "vorher kein TightVNC auf dem Runner")
+    panel.events["hallo"].clear()
+    r = subprocess.run([cmd, "bildschirm"], stdin=subprocess.DEVNULL, capture_output=True, text=True, errors="replace", timeout=900)
+    print(r.stdout[-3000:], r.stderr[-2000:], sep="\n", flush=True)
+    if "nicht von tightvnc.com laden" in r.stdout + r.stderr:      # the runner could not reach tightvnc.com
+        print(f"übersprungen: TightVNC {anker.TIGHTVNC['version']} ließ sich von hier nicht laden", flush=True)
+        check(not tvnc_there() and not panel.bild_art, "dann ist nichts eingerichtet und das Panel nicht gefragt")
+        return False
+    if not check("Bildschirm eingerichtet: TightVNC" in r.stdout, f"TightVNC {anker.TIGHTVNC['version']} eingerichtet (Prüfsumme und Signatur)"):
+        return False
+    check(panel.bild_art == "tightvnc", "der Anker fragt das Panel nach dem Passwort (art tightvnc)")
+    check(wait(lambda: ps("(Get-Service tvnserver).Status") == "Running", 60), "der Dienst tvnserver läuft")
+    wait(lambda: bool(ps("Get-NetTCPConnection -LocalPort 5930 -State Listen -ErrorAction SilentlyContinue | ForEach-Object LocalAddress")), 60)
+    listen = ps("Get-NetTCPConnection -LocalPort 5930 -State Listen -ErrorAction SilentlyContinue | ForEach-Object LocalAddress")
+    check(bool(listen) and all(a == "127.0.0.1" for a in listen.split()), f"TightVNC hört nur auf 127.0.0.1:5930 ({listen})")
+    web = ps("Get-NetTCPConnection -LocalPort 5800 -State Listen -ErrorAction SilentlyContinue | ForEach-Object LocalAddress")
+    check(not web, "kein Web-Viewer auf 5800")
+    try:
+        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\TightVNC\Server") as k:
+            stored = winreg.QueryValueEx(k, "Password")[0]
+            loop = winreg.QueryValueEx(k, "LoopbackOnly")[0]
+    except OSError:
+        stored, loop = b"", None
+    check(stored == anker.vnc_obfuscate(panel.bild_pw), "das Passwort des Panels steht in der Registry (VNC-Format)")
+    check(loop == 1, "LoopbackOnly = 1")
+    check(panel.bild_pw not in r.stdout + r.stderr, "das Passwort steht nicht in der Ausgabe")
+    check(wait(lambda: panel.events["hallo"].is_set() and (panel.hello or {}).get("bild") == "tightvnc", 120),
+          "der Anker meldet sich neu mit bild tightvnc")
+    types, ok = vnc_login(panel, anker, panel.bild_pw)
+    check(types is not None and 2 in types and 1 not in types, f"TightVNC verlangt VNC-Anmeldung ({list(types or b'')})")
+    check(ok == 0, "Anmeldung mit dem Passwort des Panels durch den Kanal „bild“ des Ankers")
+    _, bad = vnc_login(panel, anker, "Falsch99")
+    check(bad not in (0, None), "ein falsches Passwort kommt nicht hinein")
+    if first:
+        r = subprocess.run([cmd, "bildschirm", "aus"], stdin=subprocess.DEVNULL, capture_output=True, text=True, errors="replace", timeout=600)
+        print(r.stdout[-2000:], r.stderr[-1000:], sep="\n", flush=True)
+        check("Bildschirm aus" in r.stdout, "`bildschirm aus` läuft")
+        check(wait(lambda: not tvnc_there(), 120, 2), "TightVNC ist deinstalliert, Dienst und Einstellungen weg")
+        check(not os.path.exists(os.path.join(pf, "SparkAnker", "tightvnc.msi")), "die MSI-Datei ist weg")
+        check(panel.bild_weg, "das Panel hört davon (DELETE)")
+    return True
+
+
 def main():
     import paramiko
     pf, pd = os.environ["ProgramFiles"], os.environ["ProgramData"]
@@ -327,6 +445,7 @@ def main():
     sftp.putfo(io.BytesIO(b"hallo"), home.rstrip("/") + "/probe.txt")
     check(sftp.stat(home.rstrip("/") + "/probe.txt").st_size == 5, "hochladen geht")
     t.close()
+    tried = screen(panel, pf, sshd_before != "Running")
     sid = ps("(Get-LocalUser -Name spark).SID.Value")
     # „abbauen“ from the panel: the anchor leaves the flag, the watcher (SYSTEM) removes everything
     panel.send(json.dumps({"typ": "abbauen"}).encode(), 1)
@@ -339,6 +458,8 @@ def main():
                  f"Get-ChildItem -Recurse -Name '{pf}\\SparkAnker' | Select-Object -First 10"), flush=True)
     check(not os.path.exists(os.path.join(pd, "SparkAnker")), "Einstellungen und Schlüssel sind weg")
     check(not reg_there(r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\SparkAnker"), "kein Eintrag mehr unter Apps")
+    if tried:
+        check(not tvnc_there(), "TightVNC ist nach dem Entfernen weg")
     check(subprocess.run(["net", "user", "spark"], capture_output=True).returncode != 0, "der Benutzer spark ist weg")
     prof = home.strip("/").replace("/", "\\")
     # Windows keeps the profile of an SSH user loaded until the next start: then its own task removes it at the start

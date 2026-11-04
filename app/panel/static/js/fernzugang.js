@@ -126,14 +126,17 @@ function fzWarum(g,d,c){if(!g.online)return t('Das System ist offline.','The sys
 function fzBildDienst(d){const x=d&&d.bild_dienst;if(!x||x.da)return '';
   return x.grund?t('Bildschirm-Dienst (guacd) auf dem Spark nicht installiert: ','Screen service (guacd) not installed on the Spark: ')+t(x.grund_de||'',x.grund_en||'')+t('. Das nächste Update versucht es wieder (oder auf dem Spark „sudo speech-spark update“).','. The next update tries again (or "sudo speech-spark update" on the Spark).')
     :t('Bildschirm-Dienst (guacd) auf dem Spark noch nicht installiert: kommt mit dem nächsten Update (einmal einige Minuten Bauzeit).','Screen service (guacd) not installed on the Spark yet: it comes with the next update (built once, a few minutes).')}
+const FZ_WIN_BILD='"C:\\Program Files\\SparkAnker\\spark-anker.cmd" bildschirm';
 function fzBildWarum(g,d){if(!d.bildschirm)return {text:t('Der Bildschirm ist ausgeschaltet.','The screen is switched off.')};
-  if(g.art==='windows')return {text:t('Den Bildschirm von Windows gibt es noch nicht.','The screen of Windows is not there yet.')};
   if(!g.bild_anker)return {text:t('Anker zu alt für den Bildschirm: erst aktualisieren.','Anchor too old for the screen: update it first.')};
+  // Windows (5b): TightVNC, set up by an Administrator on the PC itself; the shell there is spark's, never an Administrator's
+  if(!g.bild&&g.art==='windows')return {text:t('Auf dem PC noch nicht eingerichtet: dort die Eingabeaufforderung als Administrator öffnen und eingeben:','Not set up on the PC yet: open the Command Prompt as Administrator there and type:'),cmd:FZ_WIN_BILD,nurKopieren:true};
   if(!g.bild)return {text:t('Auf dem System noch nicht eingerichtet: dort „sudo spark-anker bildschirm“.','Not set up on the system yet: run "sudo spark-anker bildschirm" there.'),cmd:'sudo spark-anker bildschirm'};
   const sp=fzBildDienst(d);return sp?{text:sp}:null}
 function fzBildHinweis(g,w){const z=fzEl('div','fh fzwarum');z.append(fzEl('span','',t('Bildschirm: ','Screen: ')+w.text));
-  if(w.cmd){const k=fzBtn(t('Kopieren','Copy'),'',()=>copyString(w.cmd,k)),e=fzBtn(t('In die Shell einfügen','Insert into the shell'),'',()=>fzNotizTerminal(g.id,w.cmd));
-    e.title=t('Setzt den Befehl in die Zeile, Enter drückst du selbst.','Puts the command in the line; you press Enter yourself.');z.append(' ',k,' ',e)}
+  if(w.cmd){const k=fzBtn(t('Kopieren','Copy'),'',()=>copyString(w.cmd,k));if(w.nurKopieren)z.append(' ',fzEl('code','',w.cmd));z.append(' ',k);
+    if(!w.nurKopieren){const e=fzBtn(t('In die Shell einfügen','Insert into the shell'),'',()=>fzNotizTerminal(g.id,w.cmd));
+      e.title=t('Setzt den Befehl in die Zeile, Enter drückst du selbst.','Puts the command in the line; you press Enter yourself.');z.append(' ',e)}}
   return z}
 function fzArt(a){return a==='shell'?t('Shell','Shell'):a==='bildschirm'?t('Bildschirm','Screen'):a==='dateien'?t('Dateien','Files'):a}
 function fzJetztZeile(x,mitSystem){const d=FZ.d,name=((d.geraete||[]).find(g=>g.id===x.geraet)||{}).name||'';
