@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.327** Spontanhilfe Steuern, Teil S2c: SparkHilfe für den Mac (Apple-Chip und Intel, macOS 13+), nur von GitHub gebaut, mit Developer ID signiert, notarisiert und Ticket angeheftet, ohne diese Schlüssel nichts veröffentlicht; der Spark behält die Zip-Datei nur ohne Teile außerhalb der App und mit Ticket und packt sie je Hilfe im Speicher neu mit Adresse und Einmal-Schlüssel im Namen der App (nie in Kopf, Log oder Platte); das Programm führt erst zu den Freigaben Bildschirmaufnahme und Bedienungshilfen, verbindet nur zur eigenen Adresse (wss, ohne Origin und Cookies), zeigt den Helfer erst nach angenommenem Schlüssel, Ablehnen vorgewählt und nach 60 s; Bild, Tasten, Eingaben, Rahmen, Leiste und Frage aus einem mit dem Begleiter geteilten Kern (Sicht.swift)
 - **V01.1.326** Dateien im Fernzugang: „Aktualisieren“ neben dem Pfad (auch F5/Strg+R) und still alle 15 s, ohne dass etwas springt; bei fehlenden Rechten ein Hinweis mit Ordner und zwei Wegen (als root oder `setfacl` zum Kopieren); die Dateien-Seite mit derselben einen roten Leiste wie die Fernsitzung.
 - **V01.1.325** Fix E-Mail: die Ordner in der Spalte „Postfächer“ stehen wieder eng wie im Seitenmenü und in Apple Mail; unter Offen zeigt „Wohin gehört diese Mail?“ die Mail selbst, „Im Gespräch zeigen“ öffnet das richtige Gespräch
 - **V01.1.324** Fix wiederholte Namensliste im Sprach-Chat: liest die Spracherkennung aus Rauschen ihre eigene Namensliste (Namen fürs Hören) zurück, geht dieser Text nicht mehr als Frage an den Assistenten
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.320** Änderungsprotokoll: ein geprüfter Bruch (etwa nach einem Stromausfall) lässt sich unter Zustand → Logs → Änderungen als geprüft bestätigen, mit Grund und frischem Code; die Kette bleibt unverändert, die Bestätigung gilt nur für genau diese Zeile, ein neuer Bruch meldet sich wieder
 - **V01.1.319** Fix Webdienste im Fernzugang: ein Dienst, der nur an der eigenen Adresse des Servers lauscht (etwa ein Docker-Port an fester IP), geht jetzt ohne „Netz dahinter“; „Suchen“ zeigt, wo jeder Port lauscht, und der Anker versucht die eigene Adresse selbst, wenn unter 127.0.0.1 nichts antwortet. Klare Fehlermeldungen statt „keine TLS-Verbindung“. Den Anker auf 1.9.0 aktualisieren.
 - **V01.1.318** Fernsitzungs-Seite aufgeräumt: eine rote Zeile mit den Schildern „Code noch N min“ und „N Hinweise“ (sie gehen über der Seite auf, andere Seiten unverändert), volle Breite, die Sitzungen als Reiter im dunklen Terminal-Kopf, die Assistent-Spalte schmal mit dem Kasten Ziel nur bei gesetztem Ziel.
-- **V01.1.317** Änderungsprotokoll: „Protokoll prüfen“ nennt die Art des Bruchs und ob die Kette danach heil ist; eine beim Schreiben abgerissene Zeile (Stromausfall) verschluckt den nächsten Eintrag nicht mehr
 
 
 
