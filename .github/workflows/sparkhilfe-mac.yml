@@ -32,7 +32,7 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -67,7 +67,7 @@ jobs:
           # modes stay inside the zip (the artifact itself would lose them)
           ditto -c -k --norsrc --keepParent "$app" dist/SparkHilfe-ungeprueft.zip
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: SparkHilfe-mac-build
           path: dist/SparkHilfe-ungeprueft.zip
@@ -85,7 +85,7 @@ jobs:
       HAS_DEVID: ${{ secrets.MAC_DEVID_P12 != '' && secrets.MAC_DEVID_P12_PASSWORD != '' && secrets.ASC_KEY_ID != '' && secrets.ASC_ISSUER_ID != '' && secrets.ASC_KEY != '' }}
       HAS_UPDKEY: ${{ secrets.UPDATE_SIGNING_KEY != '' }}
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           sparse-checkout-cone-mode: false
@@ -94,7 +94,7 @@ jobs:
             /ios/ci/
             /tools/
 
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: SparkHilfe-mac-build
           path: build
@@ -179,7 +179,7 @@ jobs:
           UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
         run: OPENSSL="$(brew --prefix openssl@3)/bin/openssl" tools/sign-manifest.sh dist/sparkhilfe.json
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: SparkHilfe-mac
           path: |
