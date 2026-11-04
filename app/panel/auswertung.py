@@ -17,6 +17,15 @@ What the model does and what not (fixed rules of the panel, never the model):
   a fixed rule; never a model pass over model text. Only after wissen.long_ok.
 - Model text never goes into the memory, the Wissensbuch or the search index; the tool hands it over as outside data.
 
+Push 2b: the admin's own kinds (Vorlagen, at most VORLAGEN_MOST, in STATE/auswertung-vorlagen.json through
+common.STATE, dateien.py): a name and a task text of at most AUFTRAG_LEN characters without links, markup or command
+words. The task text is data for the model inside the fixed frame of PROMPT, never an order to the panel; the answer
+goes through the same pruefe as the key points. The admin chooses which kinds come by themselves
+(chat.doc_auswertung_auto, Dominik: Kurzfassung and Kernaussagen; a Vorlage by its own flag "auto"); the rest per click.
+A Mappe entry of the level „kurz" carries the made kinds of MAPPE_ARTEN and of the Vorlagen (fuer_mappe), as data with
+their page. Deadlines of the Wissenskarte with a full date get „Erinnern" (erinnern, the same reminder as the
+Steckbrief's deadline, wissen.remind_at).
+
 Quiet chain: due_once is a link of wissen.KETTE after the Wissenskarte and fund.schlagworte_due; one kind of one
 document per step, through vorrang.run("Auswertung") (cancelled when speech starts, waits again), at most
 chat.doc_auswertung_day kinds per profile and day (documents.count_today key "auswertung").
@@ -28,6 +37,9 @@ Tables in users/<id>/wissen.db (dateien.py), next to the documents:
     GET    /api/profile/wissen/{doc}/auswertung            every kind with its state and points
     POST   /api/profile/wissen/{doc}/auswertung/{art}      make (again): queued, a fixed kind at once
     DELETE /api/profile/wissen/{doc}/auswertung/{art}/{n}  "Stimmt nicht" for one point of a model kind
+    POST   /api/profile/wissen/{doc}/auswertung/fristen/{n}/erinnern   reminder for deadline n with a full date
+    GET    /api/admin/auswertung                           Vorlagen, the kinds by themselves, sums (numbers only)
+    PUT    /api/admin/auswertung/vorlagen                  the admin saves the Vorlagen (checked, at most 10)
 
 Off until the admin allows it (Funktionen → Eigene Dokumente → Auswertungen), then for every profile the admin did not
 block; guests never. Journal: „auswertung: …" (logfilter area wissen), fixed words and numbers only.
@@ -46,17 +58,26 @@ import features
 import guard
 import llm
 import profiles
-from common import DayCounter, load_config
-from core import assistant, json_body, own_profile
+from common import STATE, DayCounter, load_config, read_json, write_json
+from core import assistant, auth, json_body, own_profile
 
 router = APIRouter()
 ARTEN = ("kurz", "kern", "fragen", "inhalt", "fristen", "beteiligte")
 MODELL = ("kurz", "kern", "fragen")          # kinds the language model writes
-AUTO = ("kurz", "kern")                       # kinds made by themselves in quiet minutes (Dominik); the rest per click
+AUTO = ("kurz", "kern")      # kinds by themselves when chat.doc_auswertung_auto is broken (config.default.json holds it)
+MAPPE_ARTEN = ("kurz", "kern")                # fixed kinds a Mappe entry of the level kurz carries (and every Vorlage)
 NAMEN = {"kurz": ("Kurzfassung", "Summary"), "kern": ("Kernaussagen", "Key points"),
          "fragen": ("Fragen zum Text", "Questions on the text"), "inhalt": ("Inhaltsverzeichnis", "Contents"),
          "fristen": ("Fristen", "Deadlines"), "beteiligte": ("Beteiligte", "People and companies")}
 MOST = {"kurz": 6, "kern": 8, "fragen": 6, "inhalt": 60, "fristen": 20, "beteiligte": 30}
+VORLAGE_MOST = 8         # points of one Vorlage
+VORLAGEN = os.path.join(STATE, "auswertung-vorlagen.json")
+VORLAGEN_MOST = 10
+AUFTRAG_MIN, AUFTRAG_LEN = 8, 400
+VNAME_LEN = 40
+VID = re.compile(r"v[0-9a-f]{6}")             # the kind of a Vorlage in aw_ergebnis.art and in the paths
+ADMIN_BODY = 32 * 1024
+MAPPE_ZEICHEN = 1500     # characters of Auswertungen one Mappe entry of the level kurz carries at most
 STAENDE = ("wartet", "ok", "leer", "x")
 TEXT_CHARS = 12_000      # characters of places in one pass
 PASSES = 5               # passes of a long document at most (its first PASSES * TEXT_CHARS characters)
@@ -118,6 +139,94 @@ class _Db(documents._Db):
         return con
 
 
+def auto_arten():
+    """The kinds made by themselves: chat.doc_auswertung_auto (fixed kinds; a broken value: AUTO) and every Vorlage
+    with "auto". A fixed kind without the model (inhalt, fristen, beteiligte) is then shown without a click."""
+    v = _chat().get("doc_auswertung_auto", list(AUTO))
+    fest = [a for a in v if a in ARTEN] if isinstance(v, list) and all(isinstance(a, str) for a in v) else list(AUTO)
+    return tuple(dict.fromkeys(fest)) + tuple(x["id"] for x in vorlagen() if x["auto"])
+
+
+# ---------------------------------------------------------------- the admin's Vorlagen
+def check_vorlage(x):
+    """One Vorlage after the fixed rules: ({id, name_de, name_en, auftrag, auto}, "") or (None, reason). A new one
+    (no id) gets its id from save_vorlagen. The task text is one line of AUFTRAG_MIN to AUFTRAG_LEN characters
+    without links, markup or command words (wissensbuch._BAD, _COMMAND): data for the model, never an order."""
+    import wissensbuch
+    if not isinstance(x, dict):
+        return None, "form"
+    one = lambda v: re.sub(r"\s+", " ", str(v if isinstance(v, str) else "")).strip()  # noqa: E731
+    vid = x.get("id") or ""
+    if vid and (not isinstance(vid, str) or not VID.fullmatch(vid)):
+        return None, "id"
+    de, en, auftrag = one(x.get("name_de")), one(x.get("name_en")), one(x.get("auftrag"))
+    en = en or de
+    for name in (de, en):
+        if not 2 <= len(name) <= VNAME_LEN or wissensbuch._BAD.search(name) or wissensbuch._COMMAND.search(name) \
+                or not re.search(r"[^\W\d_]", name):
+            return None, "name"
+    if not AUFTRAG_MIN <= len(auftrag) <= AUFTRAG_LEN:
+        return None, "laenge"
+    if wissensbuch._BAD.search(auftrag) or wissensbuch._COMMAND.search(auftrag):
+        return None, "auftrag"
+    if not isinstance(x.get("auto", False), bool):
+        return None, "auto"
+    return {"id": vid, "name_de": de, "name_en": en, "auftrag": auftrag, "auto": x.get("auto", False)}, ""
+
+
+def vorlagen():
+    """The admin's Vorlagen as stored, each checked again on reading (a hand-edited file never brings in more)."""
+    raw = read_json(VORLAGEN, [])
+    out, seen = [], set()
+    for x in raw[:VORLAGEN_MOST]:
+        v, _ = check_vorlage(x)
+        if v and v["id"] and v["id"] not in seen:
+            seen.add(v["id"])
+            out.append(v)
+    return out
+
+
+def _vorlage(art):
+    return next((x for x in vorlagen() if x["id"] == art), None) if VID.fullmatch(str(art or "")) else None
+
+
+def save_vorlagen(items):
+    """The admin's list: ([Vorlagen], []) stored, or (None, [reasons]) and nothing changed."""
+    if not isinstance(items, list):
+        return None, ["vorlagen: Liste"]
+    if len(items) > VORLAGEN_MOST:
+        return None, [f"höchstens {VORLAGEN_MOST} Vorlagen"]
+    import secrets
+    out, errs, seen = [], [], set()
+    for i, x in enumerate(items, 1):
+        v, why = check_vorlage(x)
+        if not v:
+            errs.append(f"Vorlage {i}: {why}")
+            continue
+        while not v["id"] or v["id"] in seen:
+            v["id"] = "v" + secrets.token_hex(3)
+        seen.add(v["id"])
+        out.append(v)
+    if errs:
+        return None, errs
+    write_json(VORLAGEN, out, 2, 0o600, False, 0o700)
+    return out, []
+
+
+def model_kind(art):
+    """A kind the language model writes: kurz, kern, fragen or an existing Vorlage."""
+    return art in MODELL or _vorlage(art) is not None
+
+
+def most_of(art):
+    return MOST.get(art, VORLAGE_MOST)
+
+
+def name_of(art):
+    v = _vorlage(art)
+    return (v["name_de"], v["name_en"]) if v else NAMEN.get(art, (art, art))
+
+
 def _exists(uid):
     return bool(uid) and os.path.exists(documents.db_path(uid))
 
@@ -163,7 +272,7 @@ def pruefe(art, got, offen, blocked=(), most=None):
     """The fixed rules over the model's answer for one pass. offen: [(number, n, page, part, text)] the places offered.
     Returns ([{"text", "chunk", "page", "part"}], number dropped)."""
     import wissensbuch
-    most = MOST[art] if most is None else most
+    most = most_of(art) if most is None else most
     raw = got.get("punkte") if isinstance(got, dict) else None
     if not isinstance(raw, list):
         return [], 0
@@ -252,22 +361,25 @@ def _ready_docs(con):
 
 def _queue(con, now):
     """Brings the table up to date by the fixed rules: every own ready document in the search gets a row "wartet"
-    for each kind of AUTO; a row of a document read again (other sig) waits again; rows of documents gone go."""
+    for each model kind of auto_arten(); a row of a document read again (other sig) waits again; rows of documents
+    gone and of Vorlagen the admin deleted go."""
     docs = _ready_docs(con)
+    vids = [x["id"] for x in vorlagen()]
+    kinds, auto = MODELL + tuple(vids), auto_arten()
     have = {(r["doc"], r["art"]): r for r in con.execute("SELECT doc, art, stand, sig FROM aw_ergebnis")}
     for (d, a), r in have.items():
-        if d not in docs:
+        if d not in docs or (VID.fullmatch(a) and a not in vids):
             con.execute("DELETE FROM aw_ergebnis WHERE doc=? AND art=?", (d, a))
     for d, r in docs.items():
         sig = None
-        for a in ARTEN:
+        for a in ARTEN + tuple(vids):
             row = have.get((d, a))
             if row is None:
-                if a in AUTO and r["use"]:
+                if a in auto and a in kinds and r["use"]:
                     con.execute("INSERT OR IGNORE INTO aw_ergebnis (doc, art, stand, at) VALUES (?, ?, 'wartet', ?)",
                                 (d, a, int(now)))
                 continue
-            if a in MODELL and row["stand"] in ("ok", "leer", "x") and row["sig"]:
+            if a in kinds and row["stand"] in ("ok", "leer", "x") and row["sig"]:
                 sig = sig or _sig(con, d)
                 if row["sig"] != sig:
                     con.execute("UPDATE aw_ergebnis SET stand='wartet', versuche=0 WHERE doc=? AND art=?", (d, a))
@@ -276,11 +388,12 @@ def _queue(con, now):
 def naechster(uid, now, lang_ok=True):
     """(doc, art, passes) of the next kind to make for this profile, or None: clicked ones first, then the newest
     document; a long document (more than one pass) only when lang_ok (wissen.long_ok)."""
+    kinds = MODELL + tuple(x["id"] for x in vorlagen())
     with _Db(uid) as con:
         _queue(con, now)
         rows = con.execute("SELECT e.doc, e.art FROM aw_ergebnis e JOIN docs d ON d.id=e.doc WHERE e.stand='wartet' "
-                           "AND e.art IN ('kurz', 'kern', 'fragen') ORDER BY e.klick DESC, d.created DESC, e.doc, "
-                           "e.art").fetchall()
+                           f"AND e.art IN ({','.join('?' * len(kinds))}) ORDER BY e.klick DESC, d.created DESC, e.doc, "
+                           "e.art", kinds).fetchall()
         # without lang_ok only documents that fit one pass (measured in SQL, the text is read only for the one taken)
         if not lang_ok and rows:
             size = {r[0]: r[1] for r in con.execute("SELECT doc, SUM(LENGTH(text)) FROM chunks WHERE doc IN (SELECT doc "
@@ -314,15 +427,34 @@ def _blocked(uid, doc, art):
         return {r[0] for r in con.execute("SELECT norm FROM aw_block WHERE doc=? AND art=?", (doc, art))}
 
 
+def auftrag_of(art, n):
+    """The task of one kind in the fixed frame: a fixed kind's own words, or the admin's task text of a Vorlage
+    quoted as its topic (data for the model, the frame and the answer's form stay the panel's)."""
+    if art in AUFTRAG:
+        return AUFTRAG[art].format(n=n)
+    v = _vorlage(art)
+    if not v:
+        raise ValueError("no such Vorlage")
+    q = re.sub(r"[„“\"]", "'", v["auftrag"])
+    return (f"Der Admin hat diese Art der Auswertung vorgegeben, als Thema: „{q}“. Nenne dazu höchstens {n} Punkte "
+            "aus dem Dokument, je Punkt ein kurzer, sachlicher Satz aus genau einer Stelle. Steht nichts dazu im "
+            "Dokument, antworte mit leerer Liste.")
+
+
 async def ask_model(art, text, n):
     """The language model's answer for one pass (tests replace this): the parsed JSON object."""
     import chat
-    out = await llm.complete(PROMPT.format(auftrag=AUFTRAG[art].format(n=n)), chat.wrap_outside(text), "Auswertung", 1200,
+    out = await llm.complete(PROMPT.format(auftrag=auftrag_of(art, n)), chat.wrap_outside(text), "Auswertung", 1200,
                              temperature=0, timeout=READ_TIMEOUT, ccfg=_chat(), stream=False)
     m = re.search(r"\{.*\}", out, re.S)
     if not m:
         raise ValueError("no JSON in the answer")
     return json.loads(m[0])
+
+
+def _log_art(art):
+    """A kind for the journal: the fixed word, "vorlage" for one of the admin's (never its name)."""
+    return art if art in ARTEN else "vorlage"
 
 
 async def machen(uid, doc, art, parts, now=None):
@@ -331,7 +463,8 @@ async def machen(uid, doc, art, parts, now=None):
     import vorrang
     import wissensbuch
     blocked = await asyncio.to_thread(_blocked, uid, doc, art)
-    per = max(1, MOST[art] // len(parts)) if parts else MOST[art]
+    top = most_of(art)
+    per = max(1, top // len(parts)) if parts else top
     punkte, weg = [], 0
     who = _who(uid)
     try:
@@ -339,19 +472,19 @@ async def machen(uid, doc, art, parts, now=None):
             text = "\n\n".join(f"[S{k}] {t}" for k, _, _, _, t in offen)
             got = await vorrang.run("Auswertung", lambda text=text: ask_model(art, text, per), retries=0)
             keep, w = pruefe(art, got, offen, blocked | {wissensbuch.norm(p["text"]) for p in punkte},
-                             min(per, MOST[art] - len(punkte)))
+                             min(per, top - len(punkte)))
             punkte += keep
             weg += w
-            if len(punkte) >= MOST[art]:
+            if len(punkte) >= top:
                 break
     except vorrang.Busy:
         _day.today()["abgebrochen"] += 1
-        print(f"auswertung: abgebrochen | sprache | {art} | {who}", flush=True)
+        print(f"auswertung: abgebrochen | sprache | {_log_art(art)} | {who}", flush=True)
         return "abgebrochen"
     except Exception as e:   # noqa: BLE001  a broken answer: tried again later, at most VERSUCHE times
         await asyncio.to_thread(_store, uid, doc, art, "wartet", failed=True, now=now)
         _day.today()["fehler"] += 1
-        print(f"auswertung: fehler | {art} | {type(e).__name__} | {who}", flush=True)
+        print(f"auswertung: fehler | {_log_art(art)} | {type(e).__name__} | {who}", flush=True)
         return "fehler"
     stand = "ok" if punkte else "leer"
     await asyncio.to_thread(_store, uid, doc, art, stand, punkte, now=now)
@@ -359,10 +492,10 @@ async def machen(uid, doc, art, parts, now=None):
     d["verworfen"] += weg
     if punkte:
         d["fertig"] += 1
-        print(f"auswertung: fertig | {art} {len(punkte)} punkte {weg} verworfen | {len(parts)} durchgaenge | {who}", flush=True)
+        print(f"auswertung: fertig | {_log_art(art)} {len(punkte)} punkte {weg} verworfen | {len(parts)} durchgaenge | {who}", flush=True)
         return "fertig"
     d["leer"] += 1
-    print(f"auswertung: leer | {art} | {weg} verworfen | {who}", flush=True)
+    print(f"auswertung: leer | {_log_art(art)} | {weg} verworfen | {who}", flush=True)
     return "leer"
 
 
@@ -394,7 +527,7 @@ async def due_once(now=None):
         t0 = time.time()
         if not parts:
             await asyncio.to_thread(_store, uid, doc, art, "leer", [], now=now)
-            print(f"auswertung: leer | {art} | kein text | {_who(uid)}", flush=True)
+            print(f"auswertung: leer | {_log_art(art)} | kein text | {_who(uid)}", flush=True)
             return "auswertung"
         got = await machen(uid, doc, art, parts, now)
         import live
@@ -421,8 +554,9 @@ def _zitat(uid, doc, n):
     return t if len(t) <= ZITAT else t[:ZITAT].rsplit(" ", 1)[0] + " …"
 
 
-def blatt(uid, doc):
-    """{"doc", "arten": [{"art", "name", "stand", "punkte", "at", "auto", "modell"}]} of one own document, or None."""
+def blatt(uid, doc, now=None):
+    """{"doc", "arten": [{"art", "name", "stand", "punkte", "at", "auto", "modell", "vorlage"}], "karte"} of one own
+    document, or None. A deadline of the Wissenskarte with a full date ahead gets "erinnern": its day (frist_tag)."""
     if not ID.fullmatch(str(doc or "")) or not _exists(uid):
         return None
     with _Db(uid) as con:
@@ -430,12 +564,13 @@ def blatt(uid, doc):
         if not card:
             return None
         rows = {r["art"]: r for r in con.execute("SELECT * FROM aw_ergebnis WHERE doc=?", (doc,))}
-    out = []
-    for a in ARTEN:
+    out, auto, vids = [], auto_arten(), [x["id"] for x in vorlagen()]
+    for a in ARTEN + tuple(vids):
         r = rows.get(a)
-        x = {"art": a, "name": list(NAMEN[a]), "auto": a in AUTO, "modell": a in MODELL,
+        modell = a in MODELL or a in vids
+        x = {"art": a, "name": list(name_of(a)), "auto": a in auto, "modell": modell, "vorlage": a in vids,
              "stand": r["stand"] if r and r["stand"] in STAENDE else None, "at": r["at"] if r else 0, "punkte": []}
-        if r and a in MODELL and r["stand"] == "ok":
+        if r and modell and r["stand"] == "ok":
             try:
                 x["punkte"] = [p for p in json.loads(r["punkte"] or "[]") if isinstance(p, dict)]
             except ValueError:
@@ -443,10 +578,15 @@ def blatt(uid, doc):
             if a == "fragen":                # the answer is the place itself, never model text
                 for p in x["punkte"]:
                     p["zitat"] = _zitat(uid, doc, p.get("chunk"))
-        elif r and a not in MODELL:          # the fixed kinds are views, built anew from their source each time
+        elif not modell and (r or a in auto):    # the fixed kinds are views, built anew from their source each time
             x["punkte"] = inhalt(uid, doc) if a == "inhalt" else fristen(uid, doc, card) if a == "fristen" \
                 else beteiligte(uid, doc)
             x["stand"], x["at"] = ("ok" if x["punkte"] else "leer"), int(time.time())
+            if a == "fristen":
+                for p in x["punkte"]:
+                    day = frist_tag(p, now)
+                    if day:
+                        p["erinnern"] = day
         out.append(x)
     hint = ""
     if not features.allowed("wissensknoten", uid):
@@ -456,24 +596,96 @@ def blatt(uid, doc):
 
 def bitte(uid, doc, art, now=None):
     """The owner's click "Erstellen": a model kind waits (first in line), a fixed kind is shown from now on.
-    Returns the new state, or None (no such own document)."""
-    if not ID.fullmatch(str(doc or "")) or art not in ARTEN or not _exists(uid):
+    Returns the new state, or None (no such own document or kind)."""
+    if not ID.fullmatch(str(doc or "")) or not (art in ARTEN or _vorlage(art)) or not _exists(uid):
         return None
     now = int(now or time.time())
+    modell = model_kind(art)
     with _Db(uid) as con:
         if not con.execute("SELECT 1 FROM docs WHERE id=?", (doc,)).fetchone():
             return None
-        stand = "wartet" if art in MODELL else "ok"
+        stand = "wartet" if modell else "ok"
         con.execute("INSERT INTO aw_ergebnis (doc, art, stand, at, klick) VALUES (?, ?, ?, ?, ?) ON CONFLICT(doc, art) "
                     "DO UPDATE SET stand=excluded.stand, versuche=0, klick=excluded.klick, at=excluded.at",
-                    (doc, art, stand, now, now if art in MODELL else 0))
+                    (doc, art, stand, now, now if modell else 0))
     return stand
+
+
+# ---------------------------------------------------------------- Erinnern for a deadline of the Wissenskarte
+_TAG = (re.compile(r"(?<!\d)(\d{1,2})\.\s?(\d{1,2})\.\s?((?:19|20)\d\d)(?!\d)"),
+        re.compile(r"(?<!\d)((?:19|20)\d\d)-(\d{2})-(\d{2})(?!\d)"))
+
+
+def frist_tag(p, now=None):
+    """The day "YYYY-MM-DD" of a deadline of the Wissenskarte (art frist or vertrag) by a fixed rule: the first full
+    date (31.12.2026, 2026-12-31) in its own name, while a reminder is still ahead (wissen.remind_at); else "". A
+    duration („3 Monate"), a date without year or a date that only stands nearby in its place (the start of a
+    contract next to its notice period) gets nothing: no guessing."""
+    import wissen
+    if not isinstance(p, dict) or p.get("art") not in ("frist", "vertrag"):
+        return ""
+    for text in (p.get("text"),):
+        for i, rx in enumerate(_TAG):
+            for m in rx.finditer(str(text or "")):
+                d, mo, y = (m[1], m[2], m[3]) if i == 0 else (m[3], m[2], m[1])
+                try:
+                    day = datetime.date(int(y), int(mo), int(d)).isoformat()
+                except ValueError:
+                    continue
+                return day if wissen.remind_at(day, time.time() if now is None else now) else ""
+    return ""
+
+
+def erinnern(uid, doc, n, now=None):
+    """"Erinnern" for deadline n of the sheet: the reminder before its day as for the Steckbrief's deadline (6 weeks
+    before at 9:00, or the day before). Returns the reminder, or a fixed word why not ("kein dokument", "kein tag",
+    "aus")."""
+    import wissen
+    if not wissen.due_on(uid):
+        return "aus"
+    got = blatt(uid, doc, now)
+    if not got:
+        return "kein dokument"
+    pts = next(a for a in got["arten"] if a["art"] == "fristen")["punkte"]
+    if not 0 <= n < len(pts) or not pts[n].get("erinnern"):
+        return "kein tag"
+    day = pts[n]["erinnern"]
+    with documents._Db(uid, keep=True) as con:
+        card = _card(con, doc)
+    title = re.sub(r"[\x00-\x1f<>„“\"]", "", str(card.get("title") or card["name"]))[:80]
+    when = wissen.remind_at(day, time.time() if now is None else now)
+    return profiles.add_reminder(uid, f"Frist: {title} ({day})", int(when * 1000))
+
+
+# ---------------------------------------------------------------- what a Mappe entry of the level kurz carries
+def fuer_mappe(con, ids):
+    """{doc: [{"art", "name", "punkte": [{"text", "page"}]}]}: the made kinds of MAPPE_ARTEN and of the Vorlagen of
+    these documents, in a fixed order (mappen.kurz_text puts them after the Steckbrief, as data with their page).
+    con: an open wissen.db of the profile (the caller checked the release)."""
+    ids = [d for d in ids if ID.fullmatch(str(d))]
+    if not ids or not con.execute("SELECT 1 FROM sqlite_master WHERE name='aw_ergebnis'").fetchone():
+        return {}
+    kinds = MAPPE_ARTEN + tuple(x["id"] for x in vorlagen())
+    q, k = ",".join("?" * len(ids)), ",".join("?" * len(kinds))
+    out = {}
+    for r in con.execute(f"SELECT doc, art, punkte FROM aw_ergebnis WHERE stand='ok' AND doc IN ({q}) AND art IN ({k})",
+                         (*ids, *kinds)).fetchall():
+        try:
+            pts = [{"text": str(p.get("text") or ""), "page": p.get("page") if isinstance(p.get("page"), int) else None}
+                   for p in json.loads(r["punkte"] or "[]") if isinstance(p, dict) and p.get("text")]
+        except ValueError:
+            continue
+        if pts:
+            out.setdefault(r["doc"], []).append({"art": r["art"], "name": list(name_of(r["art"])), "punkte": pts})
+    for v in out.values():
+        v.sort(key=lambda x: kinds.index(x["art"]))
+    return out
 
 
 def stimmt_nicht(uid, doc, art, n):
     """"Stimmt nicht" for point n of a model kind: it goes and never comes back from this document (aw_block)."""
     import wissensbuch
-    if not ID.fullmatch(str(doc or "")) or art not in MODELL or not _exists(uid):
+    if not ID.fullmatch(str(doc or "")) or not model_kind(art) or not _exists(uid):
         return False
     with _Db(uid) as con:
         r = con.execute("SELECT punkte FROM aw_ergebnis WHERE doc=? AND art=? AND stand='ok'", (doc, art)).fetchone()
@@ -537,7 +749,7 @@ def for_live(now=None):
                 continue
         _live.update(at=now, data={"fertig_alle": ok, "warten": warten})
     d = _day.today(now)
-    return dict(_live["data"], on=True, fertig=d["fertig"], verworfen=d["verworfen"], abgebrochen=d["abgebrochen"],
+    return dict(_live["data"], on=True, vorlagen=len(vorlagen()), fertig=d["fertig"], verworfen=d["verworfen"], abgebrochen=d["abgebrochen"],
                 fehler=d["fehler"], grenze=d["grenze"])
 
 
@@ -636,8 +848,8 @@ def _doc(doc):
 
 
 def _art(art):
-    if art not in ARTEN:
-        raise HTTPException(400, "art: " + ", ".join(ARTEN))
+    if art not in ARTEN and not _vorlage(art):
+        raise HTTPException(400, "art: " + ", ".join(ARTEN) + " or a Vorlage")
     return art
 
 
@@ -660,9 +872,9 @@ async def make_route(doc: str, art: str, request: Request, prof=Depends(own_prof
     await json_body(request, BODY, lenient=True)
     got = await asyncio.to_thread(bitte, uid, _doc(doc), _art(art))
     if not got:
-        print(f"auswertung: erstellen abgelehnt | kein dokument | {art} |", profiles.log_name(prof), flush=True)
+        print(f"auswertung: erstellen abgelehnt | kein dokument | {_log_art(art)} |", profiles.log_name(prof), flush=True)
         raise HTTPException(404, "no such document")
-    print(f"auswertung: erstellen | {art} {got} |", profiles.log_name(prof), flush=True)
+    print(f"auswertung: erstellen | {_log_art(art)} {got} |", profiles.log_name(prof), flush=True)
     return {"ok": True, "stand": got}
 
 
@@ -671,12 +883,57 @@ async def wrong_route(doc: str, art: str, n: int, request: Request, prof=Depends
     """"Stimmt nicht": also while the admin blocked the Auswertungen (own data can always go)."""
     uid = prof["id"]
     guard.limit(request, "auswertung", uid)
-    if _art(art) not in MODELL:
+    if not model_kind(_art(art)):
         print(f"auswertung: stimmt nicht abgelehnt | feste art | {art} |", profiles.log_name(prof), flush=True)
-        raise HTTPException(400, "Only for points of the model (kurz, kern, fragen).")
+        raise HTTPException(400, "Only for points of the model (kurz, kern, fragen, Vorlagen).")
     ok = await asyncio.to_thread(stimmt_nicht, uid, _doc(doc), art, n)
     if not ok:
-        print(f"auswertung: stimmt nicht abgelehnt | kein punkt | {art} |", profiles.log_name(prof), flush=True)
+        print(f"auswertung: stimmt nicht abgelehnt | kein punkt | {_log_art(art)} |", profiles.log_name(prof), flush=True)
         raise HTTPException(404, "no such point")
-    print(f"auswertung: stimmt nicht | {art} 1 |", profiles.log_name(prof), flush=True)
+    print(f"auswertung: stimmt nicht | {_log_art(art)} 1 |", profiles.log_name(prof), flush=True)
     return {"ok": True}
+
+
+@router.post("/api/profile/wissen/{doc}/auswertung/fristen/{n}/erinnern", dependencies=[Depends(assistant)])
+async def remind_route(doc: str, n: int, request: Request, prof=Depends(own_profile)):
+    """"Erinnern" for a deadline of the Wissenskarte with a full date (the panel reads the day by a fixed rule; the
+    owner's click sets it, never the assistant from outside text)."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "auswertung", uid)
+    await json_body(request, BODY, lenient=True)
+    got = await asyncio.to_thread(erinnern, uid, _doc(doc), n)
+    if not isinstance(got, dict):
+        print(f"auswertung: erinnern abgelehnt | {got} |", profiles.log_name(prof), flush=True)
+        if got == "aus":
+            raise HTTPException(403, "deadline reminders are off (Ich → Dokumente)")
+        raise HTTPException(404, "no such document" if got == "kein dokument" else "no full date ahead for this deadline")
+    print("auswertung: erinnern | frist 1 |", profiles.log_name(prof), flush=True)
+    return {"ok": True, "due": got["due"]}
+
+
+# ---------------------------------------------------------------- the admin: Vorlagen and the kinds by themselves
+def admin_view():
+    """The admin's page: the Vorlagen, the fixed kinds with their names and which come by themselves, sums."""
+    return {"vorlagen": vorlagen(), "most": VORLAGEN_MOST, "auftrag_len": AUFTRAG_LEN, "name_len": VNAME_LEN,
+            "arten": [{"art": a, "name": list(NAMEN[a]), "modell": a in MODELL} for a in ARTEN],
+            "auto": [a for a in auto_arten() if a in ARTEN], "live": for_live()}
+
+
+@router.get("/api/admin/auswertung", dependencies=[Depends(auth)])
+async def admin_get(request: Request):
+    guard.limit(request, "auswertung", None, True)
+    return await asyncio.to_thread(admin_view)
+
+
+@router.put("/api/admin/auswertung/vorlagen", dependencies=[Depends(auth)])
+async def admin_put(request: Request):
+    """{"vorlagen": [{id?, name_de, name_en, auftrag, auto}]}: stored only when every one passes check_vorlage."""
+    guard.limit(request, "auswertung", None, True)
+    b = await json_body(request, ADMIN_BODY)
+    got, errs = await asyncio.to_thread(save_vorlagen, b.get("vorlagen") if isinstance(b, dict) else None)
+    if errs:
+        print(f"auswertung: vorlagen abgelehnt | {len(errs)} fehler", flush=True)
+        raise HTTPException(422, errs[:VORLAGEN_MOST])
+    print(f"auswertung: vorlagen gespeichert | {len(got)} vorlagen {sum(1 for x in got if x['auto'])} von selbst", flush=True)
+    return await asyncio.to_thread(admin_view)

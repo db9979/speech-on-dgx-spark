@@ -235,6 +235,7 @@ DATEIEN = [
     state("quality-history.json", "Verlauf der Qualitätstests", "Quality test history", sicherung="json"),
     state("setup.json", "Einrichtungs-Assistent erledigt", "Setup wizard done", sicherung="json"),  # first-start wizard done
     state("doc-quotas.json", "Dokument-Kontingente", "Document quotas", sicherung="json"),  # the admin's own document space per profile (wissen.py)
+    state("auswertung-vorlagen.json", "Auswertungen: eigene Arten des Admins (Name, Auftrag, von selbst)", "Analyses: the admin's own kinds (name, task, by themselves)", sicherung="json"),  # Funktionen → Eigene Dokumente → Auswertungen → Vorlagen (auswertung.py)
     state("admins.json", "Profile als Admins", "Profiles as admins", sicherung="json"),  # profiles as admins: roles and the main admin profile (coadmin.py)
     state("ohne-tageslimit.json", "Profile ohne Tageslimit", "Profiles without daily limit", sicherung="json"),  # profiles the admin freed from daily limits (coadmin.py)
     state("features-seen.json", "Wann Funktionen frei wurden", "When functions were released", sicherung="json"),  # when each function was first on („neu freigegeben“ in tipps.py, features.py)

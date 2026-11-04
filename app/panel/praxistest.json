@@ -5084,6 +5084,20 @@
 "titel": "Entwickeln auf dem Pi: Klon von spark-dev mit neuem git",
 "text": "Auf dem Panel-Rechner mit Raspberry Pi OS Trixie (neueres git) sudo ./install.sh --entwickeln: kein „detected dubious ownership“, kein „could not make the clone of spark-dev“. Danach als spark-dev git -C ~/speech-on-dgx-spark branch zeigt lokal, git -C ~/speech-on-dgx-spark log -1 spark/main die installierte Version, git config --global --get-all safe.directory zeigt nichts. sudo ./install.sh --entwickeln ein zweites Mal läuft ohne Fehler durch, ein Commit auf lokal bleibt.",
 "thread": "Opencode mit internem LLM auf dem Pi"
+},
+{
+"id": "P751",
+"v": 1315,
+"titel": "Auswertungen: eigene Vorlage „Risiken“",
+"text": "Admin: Funktionen → Eigene Dokumente → Auswertungen → Vorlagen: „Neue Vorlage“, Name „Risiken“ / „Risks“, Auftrag „die Risiken und Pflichten für den Mieter“, Vorlagen speichern. Ein Auftrag mit Link oder „Ignoriere …“ wird abgelehnt und nichts ändert sich. Unter Ich → Dokumente den Mietvertrag öffnen: im Blatt Auswertungen steht „Risiken“ → Erstellen; nach der nächsten ruhigen Minute Punkte mit Fundstelle, jede Zahl steht im Dokument. Zustand → Logs: „auswertung: erstellen | vorlage wartet“, nie der Name. Vorlage wieder löschen: die Art verschwindet aus dem Blatt.",
+"thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P752",
+"v": 1315,
+"titel": "Auswertungen: von selbst, Erinnern und Mappe kurz",
+"text": "Admin: unter Auswertungen bei „Von selbst in ruhigen Minuten“ nur „Kernaussagen“ und „Inhaltsverzeichnis“ wählen, speichern. Ein neues Dokument hochladen: nach einer ruhigen Minute Kernaussagen fertig, Inhaltsverzeichnis ohne Klick da, Kurzfassung nicht. Danach zurück auf Kurzfassung und Kernaussagen. Mit „Personen, Firmen und Fristen“ an und Fristen anbieten an: eine Frist der Wissenskarte mit vollem Datum hat „Erinnern“, die Erinnerung steht in den Erinnerungen; „drei Monate“ hat keinen Knopf. Eine Mappe mit dem Dokument in Stufe „kurz“: der Eintrag nennt „„kurz“ mit Auswertung: Kurzfassung, Kernaussagen“, und eine Frage im Gespräch mit der Mappe nennt Punkte daraus mit Seite.",
+"thread": "Ideen aus Open Notebook übernehmen"
 }
 ]
 }

@@ -730,6 +730,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/apns.json` | Apple-Push-Schlüssel | Schlüssel versiegelt | ja |
 | `state/audit.log` | Änderungsprotokoll mit Prüfkette, je Datei 1 MB, ein Jahr (audit.log.1 …) | Prüfkette (SHA-256) | nein |
 | `state/audit.log.lock` | Schreibsperre des Änderungsprotokolls (leer) | – | nein |
+| `state/auswertung-vorlagen.json` | Auswertungen: eigene Arten des Admins (Name, Auftrag, von selbst) | – | ja |
 | `state/bedarf.lock` | Sperre: nur ein Modell bei Bedarf zur Zeit (Bild oder Musik) | – | nein |
 | `state/begleiter` | Begleiter-Updates | – | nein |
 | `state/begleiter-inbox` | Vom Handy auf den PC, 24 h | – | nein |
@@ -2447,6 +2448,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 
 - Die ruhige Kette (wissen.KETTE, eine Liste für die Reihenfolge) ruft auswertung.due_once nach der Wissenskarte und den Schlagworten von Finden. auswertung.naechster nimmt zuerst, was die Person per Klick bestellt hat, dann Kurzfassung und Kernaussagen der neuesten Dokumente; ein langes Dokument nur nach wissen.long_ok. auswertung.stellen schneidet das Dokument in Durchgänge von höchstens 12000 Zeichen, höchstens 5; jeder Durchgang läuft über vorrang.run und bricht ab, sobald jemand spricht (die Art wartet dann wieder). Höchstens 100 Arten pro Profil und Tag (Standard), eine kaputte Antwort höchstens 3 Mal.
 - auswertung.pruefe behält einen Punkt des Modells nur, wenn seine Stelle angeboten war, wissensbuch.check_sentence gegen diese Stelle besteht (jede Zahl steht dort, keine Links, kein Markup, keine Befehlswörter) und bei Kurzfassung und Kernaussagen wissensbuch.match genug Wörter der Stelle findet; eine Frage endet mit „?“, ihre Antwort ist die Stelle selbst. Doppelte und Punkte mit „Stimmt nicht“ (aw_block) fallen weg, höchstens auswertung.MOST je Art. Ein neu gelesenes Dokument (anderer Fingerabdruck der Stücke) wartet wieder. auswertung.inhalt baut das Inhaltsverzeichnis aus chunks.part, auswertung.fristen nimmt die Frist des Steckbriefs und die Punkte der Wissenskarte (wissenskarte.knoten_von_dok, nur lesend): beides ohne Modell. Modelltext geht nie ins Gedächtnis, ins Wissensbuch oder in die Suche; das Werkzeug dokument_auswertung gibt ihn als Text von außen.
+- Eigene Arten des Admins (Vorlagen, höchstens 10) liegen in STATE/auswertung-vorlagen.json; auswertung.check_vorlage lässt Name und Auftrag (höchstens 400 Zeichen) nur ohne Links, Markup und Befehlswörter durch, auch beim Lesen. Der Auftrag steht als zitiertes Thema im festen Rahmen des Prompts, die Antwort geht durch dieselbe Prüfung wie die Kernaussagen. auswertung.auto_arten nimmt chat.doc_auswertung_auto (Standard Kurzfassung und Kernaussagen) und die Vorlagen mit „von selbst“. auswertung.frist_tag liest ein volles Datum nur aus dem Namen einer Frist der Wissenskarte, nie aus der Umgebung, und bietet „Erinnern“ wie beim Steckbrief. auswertung.fuer_mappe gibt einer Mappe in der Stufe „kurz“ Kurzfassung, Kernaussagen und Vorlagen mit Seite mit, als Daten.
 
 #### Karte hilft der Suche
 
@@ -2521,6 +2523,8 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - **12000** Zeichen der Stellen je Durchgang einer Auswertung ([Schritt 13](#kn-wissen-s13))
 - **5** Durchgänge eines langen Dokuments höchstens ([Schritt 13](#kn-wissen-s13))
 - **100** Auswertungen pro Profil und Tag (Standard) ([Schritt 13](#kn-wissen-s13))
+- **10** eigene Arten (Vorlagen) des Admins höchstens ([Schritt 13](#kn-wissen-s13))
+- **400** Zeichen eines Auftrags einer Vorlage höchstens ([Schritt 13](#kn-wissen-s13))
 
 #### Einstellen
 
@@ -2602,6 +2606,10 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - `app/panel/auswertung.py` `pruefe`: feste Regeln über die Punkte des Modells, je Stelle ([Schritt 13](#kn-wissen-s13))
 - `app/panel/auswertung.py` `inhalt`: Inhaltsverzeichnis aus chunks.part, ohne Modell ([Schritt 13](#kn-wissen-s13))
 - `app/panel/auswertung.py` `fristen`: Fristen aus Steckbrief und Wissenskarte, ohne Modell ([Schritt 13](#kn-wissen-s13))
+- `app/panel/auswertung.py` `check_vorlage`: Vorlage des Admins: Name und Auftrag nach festen Regeln ([Schritt 13](#kn-wissen-s13))
+- `app/panel/auswertung.py` `auto_arten`: welche Arten von selbst entstehen ([Schritt 13](#kn-wissen-s13))
+- `app/panel/auswertung.py` `frist_tag`: volles Datum nur aus dem Namen einer Frist, sonst kein Erinnern ([Schritt 13](#kn-wissen-s13))
+- `app/panel/auswertung.py` `fuer_mappe`: Auswertungen für die Mappen-Stufe kurz, mit Seite ([Schritt 13](#kn-wissen-s13))
 - `app/panel/documents.py` `_similar`: Ähnlichkeit blockweise in float32 ([Schritt 6](#kn-wissen-s6))
 - `app/panel/gedaechtnis.py` `hint_lines`: Fakten in drei Blöcken ([Schritt 13](#kn-wissen-s13))
 - `app/panel/profiles.py` `_cap`: Obergrenze: nur alte gelernte Fakten machen Platz ([Schritt 13](#kn-wissen-s13))
@@ -3618,7 +3626,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 47), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 112). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 48), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 112). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -3628,7 +3636,7 @@ flowchart TD
 
 #### Zahlen (aus dem Code)
 
-- **47** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
+- **48** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
 - **112** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
 - **8 MB** größte Datei beim Wiederherstellen ([Schritt 9](#kn-state-s9))
 - **12** Zeichen hat das Umzugs-Passwort mindestens ([Schritt 8](#kn-state-s8))

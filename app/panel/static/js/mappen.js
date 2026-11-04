@@ -56,6 +56,7 @@ function mpEntry(e){const lvl=MP_LEVEL.map(([k,l])=>`<button type="button" class
     :t(`Wissensbuch · ${e.saetze} Sätze`,`Knowledge book · ${e.saetze} sentences`);
   return `<div class="ld-row mprow" data-mpart="${esc(e.art_eintrag)}" data-mpref="${esc(e.ref)}"><span class="ld-ico mpico" aria-hidden="true">${e.art_eintrag==='dok'?(e.quelle==='notiz'?'N':'D'):'S'}</span>
     <span class="ld-mid">${e.art_eintrag==='dok'?`<b><a href="#" data-mpdoc="${esc(e.ref)}">${esc(e.titel)}</a></b>`:`<b>${esc(e.titel)}</b>`}<small>${esc(what)}</small>
+    ${(e.auswertungen||[]).length?`<small>${esc(t('„kurz“ mit Auswertung: ','"short" with analysis: ')+e.auswertungen.map(n=>t(n[0],n[1])).join(', '))}</small>`:''}
     <small>${esc(e.grau?t('Wissensbuch gesperrt: geht nicht mit','Knowledge book blocked: does not go'):t(...(MP_GOES[e.geht]||MP_GOES.aus))+' · '+tok)}</small></span>
     <span class="ld-right"><span class="segc" role="group" aria-label="${esc(t('Wie viel geht an das Modell','How much goes to the model'))}">${lvl}</span><button type="button" class="b" data-mpweg="1" title="${esc(t('Aus der Mappe nehmen (das Dokument bleibt)','Take out of the collection (the document stays)'))}" aria-label="${esc(t('Aus der Mappe nehmen','Take out of the collection'))}">${ic('x')}</button></span></div>`}
 function mpDetail(w){const det=w.querySelector('.mpdet'),o=MP.one;if(!MP.sel||!o){det.hidden=true;det.textContent='';return}
@@ -106,7 +107,7 @@ async function mpAddBox(box){if(!MP.add||!box)return;const o=MP.one,have=new Set
     mpSay(t(`${r.d.dazu} in die Mappe gelegt.`,`${r.d.dazu} put into the collection.`))}}
 function mpSettings(b){const D=MP.list;b.innerHTML=`<div class="card"><h3>${esc(t('So arbeitet eine Mappe','How a collection works'))}</h3>
   <ul class="facts small"><li><span>${esc(t('aus: geht nicht an das Modell','off: does not go to the model'))}</span></li>
-  <li><span>${esc(t('kurz: nur der Steckbrief des Dokuments oder Titel und erste Sätze der Seite','short: only the profile card of the document or the title and first sentences of the page'))}</span></li>
+  <li><span>${esc(t('kurz: nur der Steckbrief des Dokuments (mit seiner Kurzfassung und seinen Kernaussagen, wenn Auswertungen an sind) oder Titel und erste Sätze der Seite','short: only the profile card of the document (with its summary and key points while analyses are on) or the title and first sentences of the page'))}</span></li>
   <li><span>${esc(t('ganz: der ganze Text, solange er ins Budget passt; sonst nur die Stellen, die zur Frage passen','whole: the whole text while it fits the budget; else only the parts that fit the question'))}</span></li>
   <li><span>${esc(t('Budget je Frage','Budget per question'))}</span><b>${esc(D?t(`≈ ${mpNum(D.budget)} Token`,`≈ ${mpNum(D.budget)} tokens`):'')}</b></li></ul>
   <div class="mut">${esc(t('Das Budget stellt der Admin ein. Eine Mappe zu löschen nimmt nur die Zuordnung weg, nie ein Dokument. Sperrt der Admin Mappen für dich, löschst du alle unter Ich mit „Daten löschen“.','The admin sets the budget. Deleting a collection only removes the assignment, never a document. When the admin blocks collections for you, you delete all of them under Me with "Delete data".'))}</div></div>`}

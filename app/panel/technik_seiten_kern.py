@@ -243,7 +243,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "d061dddd45",
+        "stand": "e17af39b05",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -280,6 +280,8 @@ SEITEN = {
             "auswertung.pruefe": ["s13"], "auswertung.machen": ["s13"], "auswertung.naechster": ["s13"],
             "auswertung.inhalt": ["s13"], "auswertung.fristen": ["s13"], "auswertung.TEXT_CHARS": ["s13"],
             "auswertung.PASSES": ["s13"], "auswertung.DAY": ["s13"], "wissen.KETTE": ["s13"],
+            "auswertung.check_vorlage": ["s13"], "auswertung.auto_arten": ["s13"], "auswertung.frist_tag": ["s13"],
+            "auswertung.fuer_mappe": ["s13"], "auswertung.VORLAGEN_MOST": ["s13"], "auswertung.AUFTRAG_LEN": ["s13"],
         },
         "kurz": ("Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente "
                  "jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene "
@@ -538,6 +540,8 @@ SEITEN = {
             ("{auswertung.TEXT_CHARS}", ("Zeichen der Stellen je Durchgang einer Auswertung", "characters of places per pass of an analysis"), "auswertung.TEXT_CHARS"),
             ("{auswertung.PASSES}", ("Durchgänge eines langen Dokuments höchstens", "passes of a long document at most"), "auswertung.PASSES"),
             ("{auswertung.DAY}", ("Auswertungen pro Profil und Tag (Standard)", "analyses per profile and day (default)"), "auswertung.DAY"),
+            ("{auswertung.VORLAGEN_MOST}", ("eigene Arten (Vorlagen) des Admins höchstens", "own kinds (templates) of the admin at most"), "auswertung.VORLAGEN_MOST"),
+            ("{auswertung.AUFTRAG_LEN}", ("Zeichen eines Auftrags einer Vorlage höchstens", "characters of a template's task at most"), "auswertung.AUFTRAG_LEN"),
         ],
         "einstellen": [
             ("Funktionen → Eigene Dokumente und darunter Bedeutungssuche an: Stellen bekommen einen Bedeutungsvektor "
@@ -805,6 +809,24 @@ SEITEN = {
                  "(wissenskarte.knoten_von_dok, read only): both without the model. Model text never goes into the "
                  "memory, the knowledge book or the search; the tool dokument_auswertung hands it over as outside "
                  "text."),
+                ("Eigene Arten des Admins (Vorlagen, höchstens {auswertung.VORLAGEN_MOST}) liegen in "
+                 "STATE/auswertung-vorlagen.json; auswertung.check_vorlage lässt Name und Auftrag (höchstens "
+                 "{auswertung.AUFTRAG_LEN} Zeichen) nur ohne Links, Markup und Befehlswörter durch, auch beim Lesen. "
+                 "Der Auftrag steht als zitiertes Thema im festen Rahmen des Prompts, die Antwort geht durch dieselbe "
+                 "Prüfung wie die Kernaussagen. auswertung.auto_arten nimmt chat.doc_auswertung_auto (Standard "
+                 "Kurzfassung und Kernaussagen) und die Vorlagen mit „von selbst“. auswertung.frist_tag liest ein "
+                 "volles Datum nur aus dem Namen einer Frist der Wissenskarte, nie aus der Umgebung, und bietet "
+                 "„Erinnern“ wie beim Steckbrief. auswertung.fuer_mappe gibt einer Mappe in der Stufe „kurz“ "
+                 "Kurzfassung, Kernaussagen und Vorlagen mit Seite mit, als Daten.",
+                 "The admin's own kinds (templates, at most {auswertung.VORLAGEN_MOST}) lie in "
+                 "STATE/auswertung-vorlagen.json; auswertung.check_vorlage lets name and task (at most "
+                 "{auswertung.AUFTRAG_LEN} characters) through only without links, markup and command words, also "
+                 "when reading. The task stands as a quoted topic in the fixed frame of the prompt, the answer goes "
+                 "through the same check as the key points. auswertung.auto_arten takes chat.doc_auswertung_auto "
+                 "(default summary and key points) and the templates with „by itself“. auswertung.frist_tag reads a "
+                 "full date only from the name of a deadline of the knowledge map, never from around it, and offers "
+                 "„Remind“ as for the profile card. auswertung.fuer_mappe gives a collection at the level „short“ "
+                 "the summary, key points and templates with their page, as data."),
             ]),
             (("Karte hilft der Suche", "Map helps the search"), [
                 ("wissenskarte.liste(uid, worte, k) gibt Stück-Ids mit Rang ab 1 zurück, nur lesend (SQLite mit mode=ro) "
@@ -1019,6 +1041,10 @@ SEITEN = {
             ("auswertung.pruefe", ("feste Regeln über die Punkte des Modells, je Stelle", "fixed rules over the model's points, per place")),
             ("auswertung.inhalt", ("Inhaltsverzeichnis aus chunks.part, ohne Modell", "contents from chunks.part, without the model")),
             ("auswertung.fristen", ("Fristen aus Steckbrief und Wissenskarte, ohne Modell", "deadlines from the profile card and the knowledge map, without the model")),
+            ("auswertung.check_vorlage", ("Vorlage des Admins: Name und Auftrag nach festen Regeln", "the admin's template: name and task by fixed rules")),
+            ("auswertung.auto_arten", ("welche Arten von selbst entstehen", "which kinds are made by themselves")),
+            ("auswertung.frist_tag", ("volles Datum nur aus dem Namen einer Frist, sonst kein Erinnern", "a full date only from a deadline's name, else no reminder")),
+            ("auswertung.fuer_mappe", ("Auswertungen für die Mappen-Stufe kurz, mit Seite", "analyses for the collection level short, with page")),
             ("documents._similar", ("Ähnlichkeit blockweise in float32", "similarity block by block in float32")),
             ("gedaechtnis.hint_lines", ("Fakten in drei Blöcken", "facts in three blocks")),
             ("profiles._cap", ("Obergrenze: nur alte gelernte Fakten machen Platz", "cap: only old learned facts make room")),

@@ -281,6 +281,7 @@
     "fund": false,
     "mappen": false,
     "doc_auswertung": false,
+    "doc_auswertung_auto": ["kurz", "kern"],
     "doc_auswertung_day": 100,
     "mappe_token": 24000,
     "fund_mail": false,

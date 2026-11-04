@@ -925,6 +925,10 @@ def validate(new):
     d = ch.get("doc_auswertung_day", 100)   # Auswertungen: kinds per profile and day (auswertung.day_limit)
     if not isinstance(d, int) or isinstance(d, bool) or not 10 <= d <= 500:
         raise HTTPException(400, "doc_auswertung_day: 10 to 500")
+    import auswertung
+    d = ch.get("doc_auswertung_auto", list(auswertung.AUTO))   # Auswertungen: the fixed kinds made by themselves
+    if not isinstance(d, list) or len(d) > len(auswertung.ARTEN) or any(x not in auswertung.ARTEN for x in d):
+        raise HTTPException(400, "doc_auswertung_auto: " + ", ".join(auswertung.ARTEN))
     d = ch.get("fund_tag_day", 200)   # Finden, Schlagworte vom Modell (fund.tag_day_limit)
     if not isinstance(d, int) or isinstance(d, bool) or not 5 <= d <= 500:
         raise HTTPException(400, "fund_tag_day: 5 to 500")

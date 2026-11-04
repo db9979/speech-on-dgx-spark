@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.315** Analyses 2b (plan open-notebook): the admin's own kinds as templates, checked like the key points; the admin chooses what is made by itself; "Remind" for deadlines of the knowledge map with a full date; the collection level "short" brings summary and key points with their page
 - **V01.1.314** Fix develop on the Pi: `sudo ./install.sh --entwickeln` stopped with newer git ("dubious ownership"); spark-dev's clone now comes from a bundle root writes, never from root's clone. If it failed: run `sudo ./install.sh --entwickeln` again
 - **V01.1.313** Redesign stage 8: iPhone and Android app in the system style like the panel (one theme from the tokens light and dark, blue accent, state as a dot with its word, SF Symbols instead of emoji in buttons and lists, My things without coloured tiles, Today calm while loading; Android page and hull without a palette of their own, app 1.4.5)
 - **V01.1.312** Analyses per document (plan open-notebook, push 2a, switch off): summary and key points in quiet minutes, questions, contents, deadlines and people per click; every point with its place, checked by the panel (every number stands at the place), contents and deadlines without the model; the quiet chain as the list `wissen.KETTE`
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.308** Develop on the Pi, package 2 (own sub-switch, admin only, off): Hand to GitHub pushes spark-dev's branch as opencode/<topic> with root's deploy key (never main, never forced), GitHub tests it, a Claude thread reviews it; updates still only count main
 - **V01.1.307** Spontaneous help control, part S2b: the program SparkHilfe for Windows (x64 and ARM64, one file, no installation or admin rights) reads address and one-time key only from its file name, connects only there (wss, normal TLS checks), shows the helper only after the key was taken and asks "Decline / View only / Allow"; picture, inputs, red frame, bar and question from one core shared with the Begleiter (Sicht.cs), inputs checked in the program too against the fixed lists; only GitHub builds it (own workflow, pinned actions), the Spark fetches it daily with signature, size and SHA-256 checked, service watch "Program SparkHilfe"
 - **V01.1.306** RED FIX iPhone build: the index size in Find → Settings read the language through FindenModel.de on the main actor from a nonisolated function (Xcode error); `de` is now `nonisolated` and only reads the device language
-- **V01.1.305** Tests on GitHub faster: six parts instead of four by freshly measured durations (vorpush enters missing modules in dauer.json, a self-test wants every one, "Ergebnis" warns about stale ones), the balance bench computes its tables in four processes with the same result and spreads test by test, Chromium from the cache and one per test class, seven flaky tests and order leaks fixed at their cause
 
 
 

@@ -4,8 +4,9 @@ language model gets when a conversation is bound to the Mappe. Later the core of
 name, goal and symbol today, nothing more).
 
 Fixed rules of the panel, never the model:
-- aus: nothing goes to the model; kurz: the document's Steckbrief line (wissen.card_line), for a page its title and
-  KURZ_SAETZE sentences; ganz: the whole text while the sum fits the budget (chat.mappe_token tokens, characters /
+- aus: nothing goes to the model; kurz: the document's Steckbrief line (wissen.card_line) and, while the Auswertungen
+  are released, its made Kurzfassung, Kernaussagen and Vorlagen with their pages (auswertung.fuer_mappe, Push 2b,
+  model text checked by the panel, as data), for a page its title and KURZ_SAETZE sentences; ganz: the whole text while the sum fits the budget (chat.mappe_token tokens, characters /
   verbrauch.CHARS_PER_TOKEN), else the best pieces of the full-text search over those documents for this question.
   Order: every kurz entry first, then ganz in the Mappe's order.
 - Everything goes as data (chat.wrap_outside) and marks the turn like outside text (chat_turn: carry "outside"):
@@ -138,11 +139,30 @@ def _pages(con, ids):
     return out
 
 
+def _aw_text(aw):
+    """The Auswertungen of one document for the level kurz: kind by kind, each point with its page, cut at
+    auswertung.MAPPE_ZEICHEN characters (whole points only)."""
+    import auswertung
+    out, used = [], 0
+    for a in aw or ():
+        bits = []
+        for p in a["punkte"]:
+            s = _clean(p["text"], 400) + (f" (S. {p['page']})" if p.get("page") else "")
+            if used + len(s) > auswertung.MAPPE_ZEICHEN:
+                break
+            bits.append(s)
+            used += len(s) + 1
+        if bits:
+            out.append(_clean(a["name"][0], 40) + ": " + " ".join(bits))
+    return (" Auswertung (vom Modell geschrieben, vom Panel geprüft): " + " · ".join(out)) if out else ""
+
+
 def kurz_text(e):
-    """What the level kurz hands over: the Steckbrief line of a document, title and a few sentences of a page."""
+    """What the level kurz hands over: the Steckbrief line of a document with its Auswertungen, title and a few
+    sentences of a page."""
     if e["art"] == "dok":
         import wissen
-        return wissen.card_line(e["info"])
+        return wissen.card_line(e["info"]) + _aw_text(e["info"].get("auswertung"))
     p = e["info"]
     return "„" + _clean(p["title"], 80) + "“: " + " ".join(p["saetze"][:KURZ_SAETZE])
 
@@ -155,11 +175,16 @@ def _rows(con, mid):
     return con.execute("SELECT * FROM mp_eintrag WHERE mappe=? ORDER BY pos, added, ref", (mid,)).fetchall()
 
 
-def _entries(con, mid, page_ok):
+def _entries(con, mid, page_ok, aw_ok=False):
     """The entries of a Mappe with what they are, in order; entries whose document or page is gone are dropped here
-    (a page deleted in the Wissensbuch, a document missed by documents.GONE). page_ok: Wissensbuch released."""
+    (a page deleted in the Wissensbuch, a document missed by documents.GONE). page_ok: Wissensbuch released;
+    aw_ok: Auswertungen released (their made kinds go with the level kurz)."""
     rows = _rows(con, mid)
     docs = _docs(con, [r["ref"] for r in rows if r["art"] == "dok"])
+    if aw_ok and docs:
+        import auswertung
+        for d, aw in auswertung.fuer_mappe(con, list(docs)).items():
+            docs[d]["auswertung"] = aw
     pages = _pages(con, [r["ref"] for r in rows if r["art"] == "seite"])
     out, gone = [], []
     for r in rows:
@@ -338,7 +363,8 @@ def _short(e):
     i = e["info"]
     if e["art"] == "dok":
         return {"titel": i.get("title") or i["name"], "datei": i["name"], "art": i.get("art") or "", "quelle": i["source"] or "",
-                "frist": i.get("due") or "", "seiten": i.get("pages") or 0}
+                "frist": i.get("due") or "", "seiten": i.get("pages") or 0,
+                "auswertungen": [a["name"] for a in i.get("auswertung") or ()]}
     return {"titel": i["title"], "art": i["art"], "saetze": len(i["saetze"])}
 
 
@@ -346,12 +372,12 @@ def mappe(uid, mid):
     """One Mappe with its entries, levels and the count of what goes to the model (characters and ≈ tokens)."""
     if not _exists(uid):
         return None
-    page_ok = features.allowed("wissensbuch", uid)
+    page_ok, aw_ok = features.allowed("wissensbuch", uid), features.allowed("auswertungen", uid)
     with _Db(uid) as con:
         r = _get(con, mid)
         if not r:
             return None
-        entries = _entries(con, mid, page_ok)
+        entries = _entries(con, mid, page_ok, aw_ok)
     budget = zeichen_budget()
     how, used = plan(entries, budget)
     out = [dict(_short(e), art_eintrag=e["art"], ref=e["ref"], stufe=e["stufe"], grau=e["grau"],
@@ -457,12 +483,12 @@ def fuer_seite(prof, mid):
 def kontext(uid, mid, query):
     """{"text", "eintraege", "kurz", "ganz", "suche", "zeichen", "token"} for one turn, or None (no such Mappe).
     The text is the Mappe's data block for the model: entries by the fixed rule of plan(), each with its mark [M…]."""
-    page_ok = features.allowed("wissensbuch", uid)
+    page_ok, aw_ok = features.allowed("wissensbuch", uid), features.allowed("auswertungen", uid)
     with _Db(uid) as con:
         r = _get(con, mid)
         if not r:
             return None
-        entries = _entries(con, mid, page_ok)
+        entries = _entries(con, mid, page_ok, aw_ok)
     budget = zeichen_budget()
     how, used = plan(entries, budget)
     lines, mark, rest = [], {}, []

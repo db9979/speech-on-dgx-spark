@@ -2126,12 +2126,13 @@ def snapshot(view="admin", now=None):
                         + (f" · {wbk['widerspruch']} Widersprüche" if wbk.get("widerspruch") else "")
                         + (f" · {wbk['veraltet']} veraltet?" if wbk.get("veraltet") else "")
                         + (" · arbeitet" if wbk.get("running") else ""))
-        if x["id"] == "auswertung":   # Auswertungen: made and waiting kinds, today's made, dropped, cancelled (numbers only, never a text)
+        if x["id"] == "auswertung":   # Auswertungen: made and waiting kinds, today's made, dropped, cancelled, the admin's Vorlagen (numbers only, never a text or name)
             x["sub"] = (f"{awn.get('fertig_alle', 0)} fertig · {awn.get('warten', 0)} warten"
                         + f" · heute {awn.get('fertig', 0)} erstellt, {awn.get('verworfen', 0)} Punkte verworfen"
                         + (f" · {awn['abgebrochen']} abgebrochen (Sprache)" if awn.get("abgebrochen") else "")
                         + (f" · {awn['fehler']} Fehler" if awn.get("fehler") else "")
-                        + (f" · {awn['grenze']} an der Tagesgrenze" if awn.get("grenze") else ""))
+                        + (f" · {awn['grenze']} an der Tagesgrenze" if awn.get("grenze") else "")
+                        + (f" · {awn['vorlagen']} eigene Vorlagen" if awn.get("vorlagen") else ""))
         if x["id"] == "mappen":    # Mappen: Mappen, entries, profiles, conversations bound today, searches within a Mappe, refused (numbers only, never a name)
             x["sub"] = (f"{mpn.get('mappen', 0)} Mappen · {mpn.get('eintraege', 0)} Einträge in {mpn.get('profile', 0)} Profilen"
                         + f" · heute {mpn.get('chats', 0)} Gespräche mit Mappe"

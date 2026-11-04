@@ -730,6 +730,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/apns.json` | Apple push key | key sealed | yes |
 | `state/audit.log` | Change log with hash chain, 1 MB per file, one year (audit.log.1 …) | hash chain (SHA-256) | no |
 | `state/audit.log.lock` | Write lock of the change log (empty) | – | no |
+| `state/auswertung-vorlagen.json` | Analyses: the admin's own kinds (name, task, by themselves) | – | yes |
 | `state/bedarf.lock` | Lock: only one model on demand at a time (pictures or music) | – | no |
 | `state/begleiter` | Companion updates | – | no |
 | `state/begleiter-inbox` | Phone to PC, 24 h | – | no |
@@ -2447,6 +2448,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 
 - The quiet chain (wissen.KETTE, one list for the order) calls auswertung.due_once after the knowledge map and the tags of Find. auswertung.naechster takes first what the person ordered by click, then summary and key points of the newest documents; a long document only after wissen.long_ok. auswertung.stellen cuts the document into passes of at most 12000 characters, at most 5; every pass runs through vorrang.run and stops as soon as somebody speaks (the kind then waits again). At most 100 kinds per profile and day (default), a broken answer at most 3 times.
 - auswertung.pruefe keeps a point of the model only when its place was offered, wissensbuch.check_sentence passes against that place (every number stands there, no links, no markup, no command words) and, for summary and key points, wissensbuch.match finds enough words of the place; a question ends with „?“, its answer is the place itself. Doubles and points marked „not right“ (aw_block) go, at most auswertung.MOST per kind. A document read again (another fingerprint of its pieces) waits again. auswertung.inhalt builds the contents from chunks.part, auswertung.fristen takes the deadline of the profile card and the points of the knowledge map (wissenskarte.knoten_von_dok, read only): both without the model. Model text never goes into the memory, the knowledge book or the search; the tool dokument_auswertung hands it over as outside text.
+- The admin's own kinds (templates, at most 10) lie in STATE/auswertung-vorlagen.json; auswertung.check_vorlage lets name and task (at most 400 characters) through only without links, markup and command words, also when reading. The task stands as a quoted topic in the fixed frame of the prompt, the answer goes through the same check as the key points. auswertung.auto_arten takes chat.doc_auswertung_auto (default summary and key points) and the templates with „by itself“. auswertung.frist_tag reads a full date only from the name of a deadline of the knowledge map, never from around it, and offers „Remind“ as for the profile card. auswertung.fuer_mappe gives a collection at the level „short“ the summary, key points and templates with their page, as data.
 
 #### Map helps the search
 
@@ -2521,6 +2523,8 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - **12000** characters of places per pass of an analysis ([step 13](#kn-wissen-s13))
 - **5** passes of a long document at most ([step 13](#kn-wissen-s13))
 - **100** analyses per profile and day (default) ([step 13](#kn-wissen-s13))
+- **10** own kinds (templates) of the admin at most ([step 13](#kn-wissen-s13))
+- **400** characters of a template's task at most ([step 13](#kn-wissen-s13))
 
 #### Settings
 
@@ -2602,6 +2606,10 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/auswertung.py` `pruefe`: fixed rules over the model's points, per place ([step 13](#kn-wissen-s13))
 - `app/panel/auswertung.py` `inhalt`: contents from chunks.part, without the model ([step 13](#kn-wissen-s13))
 - `app/panel/auswertung.py` `fristen`: deadlines from the profile card and the knowledge map, without the model ([step 13](#kn-wissen-s13))
+- `app/panel/auswertung.py` `check_vorlage`: the admin's template: name and task by fixed rules ([step 13](#kn-wissen-s13))
+- `app/panel/auswertung.py` `auto_arten`: which kinds are made by themselves ([step 13](#kn-wissen-s13))
+- `app/panel/auswertung.py` `frist_tag`: a full date only from a deadline's name, else no reminder ([step 13](#kn-wissen-s13))
+- `app/panel/auswertung.py` `fuer_mappe`: analyses for the collection level short, with page ([step 13](#kn-wissen-s13))
 - `app/panel/documents.py` `_similar`: similarity block by block in float32 ([step 6](#kn-wissen-s6))
 - `app/panel/gedaechtnis.py` `hint_lines`: facts in three blocks ([step 13](#kn-wissen-s13))
 - `app/panel/profiles.py` `_cap`: cap: only old learned facts make room ([step 13](#kn-wissen-s13))
@@ -3618,7 +3626,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 47), otherwise the line gives its reason (dateien.STATE_LOCAL, 112). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 48), otherwise the line gives its reason (dateien.STATE_LOCAL, 112). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3628,7 +3636,7 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **47** files in every backup ([step 7](#kn-state-s7))
+- **48** files in every backup ([step 7](#kn-state-s7))
 - **112** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))

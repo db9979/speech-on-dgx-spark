@@ -116,8 +116,9 @@ THINGS = {
                   (("POST",), rf"/api/profile/wissen/{_DOC}/(?:reread|remind)"),
                   # Auswertungen (auswertung.py): the sheet, "Erstellen", "Stimmt nicht"; each path checks its release
                   (("GET",), rf"/api/profile/wissen/{_DOC}/auswertung"),
-                  (("POST",), rf"/api/profile/wissen/{_DOC}/auswertung/[a-z]{{4,10}}"),
-                  (("DELETE",), rf"/api/profile/wissen/{_DOC}/auswertung/[a-z]{{4,10}}/[0-9]{{1,3}}"),
+                  (("POST",), rf"/api/profile/wissen/{_DOC}/auswertung/[a-z0-9]{{4,10}}"),
+                  (("DELETE",), rf"/api/profile/wissen/{_DOC}/auswertung/[a-z0-9]{{4,10}}/[0-9]{{1,3}}"),
+                  (("POST",), rf"/api/profile/wissen/{_DOC}/auswertung/fristen/[0-9]{{1,3}}/erinnern"),
                   (("POST",), r"/api/profile/wissen/(?:batch|search)"), (("DELETE",), rf"/api/profile/docs/{_DOC}"),
                   (("GET", "POST", "DELETE"), r"/api/profile/auslassen")),
     # Gedächtnis: look, change the wording, forget one or several, the tidy-up proposal, Feste Themen
