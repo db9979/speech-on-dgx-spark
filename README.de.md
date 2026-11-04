@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.335** Bildschirm im Fernzugang jetzt auch unter Windows: TightVNC, vom Anker 1.10.0 aus der offiziellen, gepinnten und signierten Datei eingerichtet, nur auf 127.0.0.1, Passwort nie auf einer Befehlszeile; „bildschirm aus“ oder Entfernen deinstalliert es wieder
 - **V01.1.334** Fix Dateien als anderer Benutzer auf Ubuntu 25.10 und neuer (sudo-rs): `sudo spark-anker dateien als root` scheiterte an visudo; der Anker 1.9.1 schreibt dort die Regel ohne die Zeile, die sudo-rs nicht kennt. Den Anker aktualisieren.
 - **V01.1.333** Fix „Wohin gehört diese Mail?“: „Anderer Ordner …“ zeigt jetzt die Ordnerliste an der Karte und verschiebt die Mail direkt
 - **V01.1.332** iPhone-Build ohne GitHub-Kosten: die iPhone-App baut auf GitHub nur noch nachts bei iOS-Änderungen oder von Hand, TestFlight folgt diesem Lauf
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.328** Entwickeln: das Terminal im Browser ist kompakt (eine Leiste mit Hinweisen und Code als Knöpfe, Terminal bis zum Fensterrand, Vollbild, Tastenreihe am Handy) und startet OpenCode sofort; danach bleibt die Shell, `opencode` startet es neu.
 - **V01.1.327** Spontanhilfe Steuern, Teil S2c: SparkHilfe für den Mac (Apple-Chip und Intel, macOS 13+), nur von GitHub gebaut, mit Developer ID signiert, notarisiert und Ticket angeheftet, ohne diese Schlüssel nichts veröffentlicht; der Spark behält die Zip-Datei nur ohne Teile außerhalb der App und mit Ticket und packt sie je Hilfe im Speicher neu mit Adresse und Einmal-Schlüssel im Namen der App (nie in Kopf, Log oder Platte); das Programm führt erst zu den Freigaben Bildschirmaufnahme und Bedienungshilfen, verbindet nur zur eigenen Adresse (wss, ohne Origin und Cookies), zeigt den Helfer erst nach angenommenem Schlüssel, Ablehnen vorgewählt und nach 60 s; Bild, Tasten, Eingaben, Rahmen, Leiste und Frage aus einem mit dem Begleiter geteilten Kern (Sicht.swift)
 - **V01.1.326** Dateien im Fernzugang: „Aktualisieren“ neben dem Pfad (auch F5/Strg+R) und still alle 15 s, ohne dass etwas springt; bei fehlenden Rechten ein Hinweis mit Ordner und zwei Wegen (als root oder `setfacl` zum Kopieren); die Dateien-Seite mit derselben einen roten Leiste wie die Fernsitzung.
-- **V01.1.325** Fix E-Mail: die Ordner in der Spalte „Postfächer“ stehen wieder eng wie im Seitenmenü und in Apple Mail; unter Offen zeigt „Wohin gehört diese Mail?“ die Mail selbst, „Im Gespräch zeigen“ öffnet das richtige Gespräch
 
 
 

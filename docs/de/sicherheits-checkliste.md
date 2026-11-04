@@ -105,6 +105,8 @@ Jede Änderung wird nicht nur gegen die Fallen oben geprüft, sondern auch dageg
 
 **Kryptografie**
 - [ ] Nur geprüfte Bibliotheken (`hashlib`, `secrets`, `hmac`, `cryptography`), nie eigene Verfahren. Zufall nur aus `secrets`.
+  - Einzige Ausnahme (V01.1.335, Fernzugang Stufe 5b): das feste DES, mit dem TightVNC sein Passwort in der Registry ablegt (`spark-anker` `des_block`, `vnc_obfuscate`, geprüft gegen bekannte Werte). Es ist ein Dateiformat, kein Schutz und wird nie für Geheimhaltung benutzt; geschützt ist der Bildschirm durch 127.0.0.1, die TLS-Leitung des Ankers und den Tresor.
+- [ ] Fremde Programme, die ein Anker lädt (Python unter Windows, TightVNC), nur von der Seite des Herausgebers über https, mit fester Version und SHA-256 im Anker (ein leerer Pin bricht ab); wo es geht, zusätzlich die Signatur des Herausgebers (TightVNC: Authenticode von GlavSoft). Geheimnisse nie auf einer Befehlszeile (msiexec), sondern aus dem eigenen Prozess.
 - [ ] Neue Verschlüsselung nur mit AEAD (AES-256-GCM oder ChaCha20-Poly1305), eigener Schlüssel pro Zweck, Nonce nie doppelt.
 - [ ] Neue Passwort-Ableitung mit scrypt oder Argon2id; PBKDF2-SHA256 nur mit mindestens der aktuellen OWASP-Rundenzahl.
 - [ ] Signaturen mit Ed25519; Prüfungen scheitern geschlossen.

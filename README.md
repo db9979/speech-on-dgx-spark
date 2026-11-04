@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.335** Remote access screen now on Windows too: TightVNC, set up by anchor 1.10.0 from the official, pinned and signed file, only on 127.0.0.1, the password never on a command line; "bildschirm aus" or removing uninstalls it again
 - **V01.1.334** Fix files as another user on Ubuntu 25.10 and newer (sudo-rs): `sudo spark-anker dateien als root` failed at visudo; anchor 1.9.1 writes the rule there without the line sudo-rs does not know. Update the anchor.
 - **V01.1.333** Fix "Where does this mail belong?": "Other folder …" now shows the folder list at the card and moves the mail right there
 - **V01.1.332** iPhone build without GitHub costs: the iPhone app builds on GitHub only at night after iOS changes or by hand, TestFlight follows that run
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.328** Develop: the terminal in the browser is compact (one bar with the notes and the code as buttons, terminal to the window's edge, full screen, a row of keys on the phone) and starts OpenCode at once; then the shell stays, `opencode` starts it again.
 - **V01.1.327** Spontaneous help control, part S2c: SparkHilfe for the Mac (Apple chips and Intel, macOS 13+), built only by GitHub, signed with the Developer ID, notarized and ticket stapled, nothing published without these keys; the Spark keeps the zip only without parts outside the app and with the ticket and packs it anew in memory per help with address and one-time key in the app's name; the program first leads to the permissions Screen Recording and Accessibility, connects only to its own address (wss, no Origin, no cookies), shows the helper only after the key was taken, Decline preselected and after 60 s; picture, keys, inputs, frame, bar and question from a core shared with the Begleiter (Sicht.swift)
 - **V01.1.326** Files in remote access: "Refresh" beside the path (also F5/Ctrl+R) and quietly every 15 s without anything jumping; when permissions are missing a hint with the folder and two ways (as root or `setfacl` to copy); the Files page with the same one red bar as the remote session.
-- **V01.1.325** Fix e-mail: the folders in the "Mailboxes" column sit close again like the side menu and Apple Mail; under Open "Where does this mail belong?" shows the mail itself, "Show in the conversation" opens the right conversation
 
 
 

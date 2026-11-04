@@ -10,7 +10,7 @@ protocol with guacd and with the browser (guacamole-common-js 1.5.0, Apache-2.0,
                                                                           screen port over there (spark-anker BILD)
 
 On the system `sudo spark-anker bildschirm` sets it up (X11: x11vnc on demand; GNOME on Wayland: gnome-remote-desktop
-as RDP; other Wayland: wayvnc; macOS: the built-in Bildschirmfreigabe), always on 127.0.0.1 there; it asks this panel
+as RDP; other Wayland: wayvnc; macOS: the built-in Bildschirmfreigabe; Windows: TightVNC, pinned), always on 127.0.0.1 there; it asks this panel
 for a random password (POST /api/fernzugang/anker/bildschirm), which only the vault keeps. On a Mac the macOS user and
 password are typed in the panel for every session, kept only in the one ticket and in guacd's connection, never stored,
 never logged.
@@ -88,7 +88,8 @@ GUAC_VERSION = "1.5.0"  # guacamole-common-js, vendored in static/guac (Apache-2
 GUAC = {"guacamole-common.min.js": "f543f240fee1f04653a5921aa1398eb5c680e8760cb3ddf0a9ee5f8c1963774e",
         "LICENSE": "3c7f148c26065e0a581b5dda114e68e16243bf5ae0b4f6209749a0e3373201d5"}
 ANKER_MIN = (1, 2, 0)   # spark-anker knows „ziel: bild“ from this version on
-ARTEN = {"x11vnc": "vnc", "wayvnc": "vnc", "mac": "vnc", "grd": "rdp"}   # what the anchor set up -> guacd's protocol
+ANKER_WIN = (1, 10, 0)  # on Windows from this version on (stage 5b: TightVNC)
+ARTEN = {"x11vnc": "vnc", "wayvnc": "vnc", "mac": "vnc", "grd": "rdp", "tightvnc": "vnc"}   # what the anchor set up -> guacd's protocol
 RDP_USER = "spark-bild"
 MAX_IN = 16 * 1024      # one message of the browser
 MAX_ELEMENT = 8 * 1024 * 1024   # one element of guacd's output (a picture's piece) at most
@@ -133,10 +134,10 @@ def clipboard_on(c=None):
     return features.admin_on("fernbildablage", c)
 
 
-def anchor_ok(version):
-    """The anchor knows the screen's channel (ANKER_MIN)."""
+def anchor_ok(version, os_=""):
+    """The anchor knows the screen's channel (ANKER_MIN; on Windows ANKER_WIN)."""
     m = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", str(version or ""))
-    return bool(m) and tuple(int(x) for x in m.groups()) >= ANKER_MIN
+    return bool(m) and tuple(int(x) for x in m.groups()) >= (ANKER_WIN if fernzugang.art(os_) == "windows" else ANKER_MIN)
 
 
 # ---------------------------------------------------------------- the Guacamole protocol
@@ -367,7 +368,7 @@ async def admin_screen(request: Request):
     if art not in ARTEN:
         log("ticket", "nicht eingerichtet", 0)
         raise HTTPException(409, "Auf dem System ist der Bildschirm nicht eingerichtet: dort `sudo spark-anker bildschirm`.")
-    if not anchor_ok(x.get("anker")):
+    if not anchor_ok(x.get("anker"), x.get("os")):
         log("ticket", "anker alt", 0)
         raise HTTPException(409, "Der Anker ist zu alt für den Bildschirm: den Befehl `bildschirm` aus dem Panel dort noch einmal.")
     if len(fernzugang.SITZUNG) >= fernzugang.max_sitzungen():
@@ -581,7 +582,11 @@ async def anchor_screen(request: Request):
     art = str(body.get("art") or "")
     if art not in ARTEN:
         log("passwort", "art", 0)
-        raise HTTPException(400, "art: x11vnc, wayvnc, grd or mac")
+        raise HTTPException(400, "art: x11vnc, wayvnc, grd, mac or tightvnc")
+    x = (await asyncio.to_thread(fernzugang._read))["geraete"].get(gid) or {}
+    if (art == "tightvnc") != (fernzugang.art(x.get("os")) == "windows"):     # TightVNC only on Windows, nothing else there
+        log("passwort", "art system", 0)
+        raise HTTPException(400, "art does not fit the system")
     alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789"
     pw = "" if art == "mac" else "".join(secrets.choice(alphabet) for _ in range(24 if art == "grd" else 8))
     sealed = vault.seal(pw) if pw else ""

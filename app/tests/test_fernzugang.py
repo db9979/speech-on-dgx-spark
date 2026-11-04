@@ -1428,13 +1428,13 @@ class WindowsAnchor(unittest.TestCase):
         with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
             p.main(["einrichten", "https://spark.example.org", "--token", "T" * 32], system="Windows")   # never as argument
 
-    def test_the_screen_and_the_shell_help_are_not_yet_there(self):
+    def test_the_shell_help_is_not_yet_there(self):
         p = program()
         ran = []
         p.cmd_screen = lambda *a, **k: ran.append("screen")
         p.cmd_help = lambda *a, **k: ran.append("help")
         p.cmd_setup = lambda *a, **k: ran.append("setup") or 0
-        for argv, want in ((["bildschirm"], "Bildschirm unter Windows"), (["hilfe", "https://spark.example.org"], "Spontanhilfe in der Shell")):
+        for argv, want in ((["hilfe", "https://spark.example.org"], "Spontanhilfe in der Shell"),):
             out = io.StringIO()
             with contextlib.redirect_stdout(out):
                 self.assertEqual(p.main(argv, system="Windows"), 1)
@@ -3040,6 +3040,14 @@ class InBrowser(unittest.TestCase):
                 self.assertIn("Auf dem System noch nicht eingerichtet", r["warum"])
                 self.assertEqual(r["tasten"], ["Kopieren", "In die Shell einfügen"])
                 self.assertEqual([k[1] for k in r["knoepfe"] if k[0] in ("Shell", "Dateien")], [False, False])
+                # Windows (5b): the command for an Administrator's Command Prompt, only to copy (the shell is spark's)
+                r = await pg.evaluate(show, [{**g, "art": "windows", "os": "Windows 11 Pro", "anker": "1.10.0"}, da, 0])
+                self.assertIn("als Administrator", r["warum"])
+                self.assertIn('"C:\\Program Files\\SparkAnker\\spark-anker.cmd" bildschirm', r["warum"])
+                self.assertNotIn("sudo", r["warum"])
+                self.assertEqual(r["tasten"], ["Kopieren"])
+                r = await pg.evaluate(show, [{**g, "art": "windows", "bild": "tightvnc"}, da, 0])
+                self.assertEqual(r["warum"], "")
                 r = await pg.evaluate(show, [{**g, "bild": "x11vnc", "bild_anker": False}, da, 0])
                 self.assertIn("Anker zu alt", r["warum"])
                 self.assertEqual(r["tasten"], [])

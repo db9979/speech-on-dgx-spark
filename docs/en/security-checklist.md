@@ -105,6 +105,8 @@ Every change is checked not only against the traps above, but also against wheth
 
 **Cryptography**
 - [ ] Only proven libraries (`hashlib`, `secrets`, `hmac`, `cryptography`), never home-made schemes. Randomness only from `secrets`.
+  - The one exception (V01.1.335, remote access stage 5b): the fixed DES TightVNC stores its password with in the registry (`spark-anker` `des_block`, `vnc_obfuscate`, checked against known values). It is a file format, no protection, and never used for secrecy; the screen is protected by 127.0.0.1, the anchor's TLS line and the vault.
+- [ ] Programs of others an anchor loads (Python on Windows, TightVNC) only from the publisher's site over https, with fixed version and SHA-256 in the anchor (an empty pin stops); where possible also the publisher's signature (TightVNC: GlavSoft's Authenticode). Secrets never on a command line (msiexec), but from the own process.
 - [ ] New encryption only with AEAD (AES-256-GCM or ChaCha20-Poly1305), a key of its own per purpose, nonce never reused.
 - [ ] New password derivation with scrypt or Argon2id; PBKDF2-SHA256 only with at least the current OWASP iteration count.
 - [ ] Signatures with Ed25519; checks fail closed.

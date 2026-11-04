@@ -9,6 +9,7 @@ the panel's sockets on one uvicorn with TLS, guacd, x11vnc on an Xvfb display. N
 import asyncio
 import contextlib
 import hashlib
+import io
 import json
 import os
 import re
@@ -123,6 +124,9 @@ class Protocol(unittest.TestCase):
         self.assertTrue(fernbild.anchor_ok("1.10.0"))
         self.assertFalse(fernbild.anchor_ok("1.1.9"))
         self.assertFalse(fernbild.anchor_ok(""))
+        self.assertFalse(fernbild.anchor_ok("1.9.0", "Windows 11 Pro"))          # Windows: TightVNC from 1.10.0 on
+        self.assertTrue(fernbild.anchor_ok("1.10.0", "Windows 11 Pro"))
+        self.assertTrue(fernbild.anchor_ok("1.9.0", "Debian 13"))
 
 
 class Door(FbBase):
@@ -197,6 +201,15 @@ class Door(FbBase):
                                 headers={"Authorization": "Bearer " + d["key"]}).json()["passwort"], r"^[A-Za-z0-9]{8}$")
         self.assertEqual(c.delete("/api/fernzugang/anker/bildschirm", headers={"Authorization": "Bearer " + d["key"]}).status_code, 200)
         self.assertIsNone(fernzugang._read()["geraete"][d["id"]].get("bild"))
+        # TightVNC only from a Windows anchor, and a Windows anchor only TightVNC
+        auth = {"Authorization": "Bearer " + d["key"]}
+        self.assertEqual(c.post("/api/fernzugang/anker/bildschirm", json={"art": "tightvnc"}, headers=auth).status_code, 400)
+        fernzugang._update(d["id"], os="Windows 11 Pro")
+        self.assertEqual(c.post("/api/fernzugang/anker/bildschirm", json={"art": "x11vnc"}, headers=auth).status_code, 400)
+        r = c.post("/api/fernzugang/anker/bildschirm", json={"art": "tightvnc"}, headers=auth)
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertRegex(r.json()["passwort"], r"^[A-Za-z0-9]{8}$")                 # VNC keeps 8 characters
+        self.assertEqual(fernzugang._read()["geraete"][d["id"]]["bild"], "tightvnc")
 
 
 def _beside_app(rel):
@@ -411,6 +424,166 @@ class Anchor(unittest.TestCase):
         self.assertIn(["grdctl", "--system", "rdp", "disable"], ran)
         self.assertIn(["systemctl", "disable", "--now", "gnome-remote-desktop.service"], ran)
         shutil.rmtree(root, ignore_errors=True)
+
+    def test_windows_tightvnc_only_pinned_only_on_127_0_0_1_and_aus_uninstalls_it(self):
+        p = program()
+        root = tempfile.mkdtemp(prefix="anker-tvnc-")
+        ran, calls, fetched = [], [], []
+        there = {"tvnc": False, "sig": 0}
+
+        def run(c):
+            ran.append(c)
+            if c[:2] == ["reg", "query"] and c[2] == p.WIN_TVNC_REG:
+                return 0 if there["tvnc"] else 1
+            return 0
+
+        def out(c):
+            ran.append(c)
+            if c[0] == p.WIN_PS and "Get-AuthenticodeSignature" in c[-1]:
+                return {0: "Valid|True|CN=GlavSoft LLC.", 1: "NotSigned|False|", 2: "Valid|False|CN=Someone Else"}[there["sig"]]
+            return ""
+        ctx = p.Ctx(system="Windows", root=root, run=run)
+        ctx.out = out
+        ctx.euid = lambda: 0
+        regs = {}
+        ctx.reg_binary = lambda key, name, data: regs.__setitem__((key, name), data)
+        msi = b"MSI-of-TightVNC"
+        ctx.fetch = lambda url, cap: fetched.append(url) or msi
+        p.write(ctx.path(ctx.s.conf), json.dumps({"url": "https://s.example.org", "fp": "", "id": "g_1", "key": "fz_k"}), 0o640)
+        neu, kept = ctx.path(p.win_tvnc_msi(neu=True)), ctx.path(p.win_tvnc_msi())
+        screen = lambda aus="": p.cmd_screen(types.SimpleNamespace(aus=aus), ctx=ctx)   # noqa: E731
+
+        def http(base, fp, method, path, body=None, key=None, timeout=20):
+            calls.append((method, path, body))
+            return 200, json.dumps({"passwort": "Ab3dEf7h"}).encode()
+        with unittest.mock.patch.object(p, "http_call", http), unittest.mock.patch.object(p, "win_arch", lambda: "amd64"):
+            # no pin: fails closed, nothing fetched, the panel never asked, nothing installed
+            with unittest.mock.patch.dict(p.TIGHTVNC, {"amd64": ""}), self.assertRaises(p.Fehler) as e:
+                screen()
+            self.assertIn("Prüfsumme fehlt", str(e.exception))
+            self.assertEqual((fetched, calls), ([], []))
+            pin = hashlib.sha256(msi).hexdigest()
+            with unittest.mock.patch.dict(p.TIGHTVNC, {"amd64": hashlib.sha256(b"other").hexdigest()}), self.assertRaises(p.Fehler) as e:
+                screen()                                                              # another file than pinned
+            self.assertIn("Prüfsumme", str(e.exception))
+            self.assertEqual(calls, [])
+            with unittest.mock.patch.object(ctx, "fetch", lambda url, cap: b""), unittest.mock.patch.dict(p.TIGHTVNC, {"amd64": pin}), \
+                    self.assertRaises(p.Fehler) as e:
+                screen()                                                              # tightvnc.com not reached
+            self.assertIn("nicht von tightvnc.com laden", str(e.exception))
+            there["sig"] = 1                                                          # the right bytes, but no valid signature
+            with unittest.mock.patch.dict(p.TIGHTVNC, {"amd64": pin}), self.assertRaises(p.Fehler) as e:
+                screen()
+            self.assertIn("Signatur", str(e.exception))
+            self.assertIn("NotSigned", str(e.exception))
+            self.assertFalse(os.path.exists(neu))
+            there["sig"] = 2                                                          # validly signed, but by someone else
+            with unittest.mock.patch.dict(p.TIGHTVNC, {"amd64": pin}), self.assertRaises(p.Fehler) as e:
+                screen()
+            self.assertIn("Herausgeber CN=Someone Else", str(e.exception))
+            self.assertFalse(os.path.exists(neu))
+            there["sig"] = 0
+            there["tvnc"] = True                                                      # someone's own TightVNC: untouched
+            with unittest.mock.patch.dict(p.TIGHTVNC, {"amd64": pin}), self.assertRaises(p.Fehler) as e:
+                screen()
+            self.assertIn("fremde Einrichtung", str(e.exception))
+            there["tvnc"] = False
+            with unittest.mock.patch.object(p, "win_arch", lambda: "arm64"), unittest.mock.patch.dict(p.TIGHTVNC, {"amd64": pin}), \
+                    self.assertRaises(p.Fehler):
+                screen()
+            self.assertFalse(any(c[0] == "msiexec" for c in ran))
+            self.assertEqual(calls, [])
+            self.assertFalse(os.path.exists(neu) or os.path.exists(kept))
+            # the panel says no: the fetched MSI goes again, nothing changed
+            with unittest.mock.patch.object(p, "http_call", lambda *a, **k: (404, b"{}")), \
+                    unittest.mock.patch.dict(p.TIGHTVNC, {"amd64": pin}), self.assertRaises(p.Fehler):
+                screen()
+            self.assertFalse(os.path.exists(neu) or any(c[0] == "msiexec" for c in ran))
+            with unittest.mock.patch.dict(p.TIGHTVNC, {"amd64": pin}), contextlib.redirect_stdout(io.StringIO()) as out:
+                self.assertEqual(screen(), 0)
+            self.assertIn("spark-anker.cmd\" bildschirm aus (als Administrator)", out.getvalue())
+            self.assertNotIn("sudo", out.getvalue())
+            self.assertEqual(fetched[-1], p.TIGHTVNC_URL.format(v=p.TIGHTVNC["version"]))
+            self.assertTrue(fetched[-1].startswith("https://www.tightvnc.com/"))
+            sig = [c for c in ran if c[0] == p.WIN_PS and "Get-AuthenticodeSignature" in c[-1]][-1][-1]
+            self.assertIn("GlavSoft", sig)
+            self.assertIn("Get-AuthenticodeSignature -LiteralPath", sig)
+            for line, want in (("Valid|True|CN=GlavSoft LLC.", ""), ("UnknownError|True|CN=GlavSoft", "UnknownError"),
+                               ("HashMismatch|True|", "HashMismatch"), ("", "keine Antwort"), ("Gut|True|x", "keine Antwort"),
+                               ("Valid|False|CN=\u041e\u041e\u041e X", "Herausgeber CN=??? X")):
+                with unittest.mock.patch.object(ctx, "out", lambda c, line=line: line):
+                    self.assertEqual(p.win_tvnc_sig(ctx, neu), want)
+            self.assertEqual(calls[-1], ("POST", "/api/fernzugang/anker/bildschirm", {"art": "tightvnc"}))
+            inst = [c for c in ran if c[:2] == ["msiexec", "/i"]][-1]
+            for want in ("VALUE_OF_LOOPBACKONLY=1", "VALUE_OF_ALLOWLOOPBACK=1", "VALUE_OF_RFBPORT=5930",
+                         "VALUE_OF_ACCEPTHTTPCONNECTIONS=0", "SERVER_ADD_FIREWALL_EXCEPTION=0", "SERVER_ALLOW_SAS=0",
+                         "VALUE_OF_USEVNCAUTHENTICATION=1", "ADDLOCAL=Server"):
+                self.assertIn(want, inst)
+            self.assertEqual(inst[2], p.win_native(kept))
+            self.assertTrue(os.path.exists(kept) and not os.path.exists(neu))       # kept for uninstalling
+            # never the password in any argument of any command (msiexec, sc.exe, reg, PowerShell)
+            self.assertFalse(any("Ab3dEf7h" in x or "PASSWORD=" in x.replace("AUTHENTICATION", "") for c in ran for x in c))
+            # the password only from this process into the registry (VNC's DES), with the service stopped before
+            self.assertEqual(regs[(p.WIN_TVNC_SERVER, "Password")], p.vnc_obfuscate("Ab3dEf7h"))
+            self.assertNotEqual(regs[(p.WIN_TVNC_SERVER, "ControlPassword")], p.vnc_obfuscate("Ab3dEf7h"))
+            order = [c[:2] for c in ran if c[0] in ("msiexec", "net")]
+            self.assertEqual(order, [["msiexec", "/i"], ["net", "stop"], ["net", "start"]])
+            conf = json.loads(open(ctx.path(ctx.s.conf)).read())
+            self.assertEqual(conf["bild"], "tightvnc")
+            self.assertNotIn("Ab3dEf7h", json.dumps(conf))                            # the password only in the vault
+            self.assertEqual(p.BILD["tightvnc"], p.BILD_PORT)
+            # its own TightVNC again (a new anchor, a new version): the old one goes with its own MSI, then the new
+            there["tvnc"] = True
+            ran.clear()
+            with unittest.mock.patch.dict(p.TIGHTVNC, {"amd64": pin}), contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(screen(), 0)
+            self.assertEqual([c[:2] for c in ran if c[0] == "msiexec"], [["msiexec", "/x"], ["msiexec", "/i"]])
+            self.assertTrue(os.path.exists(kept) and not os.path.exists(neu))
+            ran.clear()
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(screen("aus"), 0)
+        self.assertTrue(any(c[:2] == ["msiexec", "/x"] for c in ran))
+        self.assertIn(["reg", "delete", p.WIN_TVNC_REG, "/f"], ran)
+        self.assertFalse(os.path.exists(kept))
+        self.assertNotIn("bild", json.loads(open(ctx.path(ctx.s.conf)).read()))
+        self.assertEqual(calls[-1][:2], ("DELETE", "/api/fernzugang/anker/bildschirm"))
+        self.assertEqual(fernbild.ARTEN["tightvnc"], "vnc")
+        shutil.rmtree(root, ignore_errors=True)
+
+    def test_removing_on_windows_uninstalls_tightvnc_too(self):
+        p = program()
+        ran = []
+        ctx = p.Ctx(system="Windows", root=tempfile.mkdtemp(prefix="anker-tvnc-weg-"), run=lambda c: ran.append(c) or 0)
+        p.win_stop(ctx, {"bild": "tightvnc"})
+        self.assertTrue(any(c[:2] == ["msiexec", "/x"] for c in ran))
+        self.assertIn(["reg", "delete", p.WIN_TVNC_REG, "/f"], ran)
+        ran.clear()
+        p.win_stop(ctx, {})
+        self.assertFalse(any(c[0] in ("msiexec", "reg") for c in ran))             # no TightVNC of the anchor: nothing
+        shutil.rmtree(ctx.root, ignore_errors=True)
+
+    def test_tightvnc_pinned_to_the_checked_release(self):
+        """Dominik 2026-11-04: 2.8.90, loaded from tightvnc.com himself, signature „OOO GlavSoft“ valid, this SHA-256."""
+        p = program()
+        self.assertEqual(p.TIGHTVNC, {"version": "2.8.90",
+                                      "amd64": "9693cb4cdc2e7e482e8e3f5890415b57ef87de3369fa5c337db516218a1170ce"})
+        self.assertEqual(p.TIGHTVNC_URL.format(v=p.TIGHTVNC["version"]),
+                         "https://www.tightvnc.com/download/2.8.90/tightvnc-2.8.90-gpl-setup-64bit.msi")
+        self.assertRegex(p.TIGHTVNC["amd64"], r"^[0-9a-f]{64}$")
+        self.assertLessEqual(p.TIGHTVNC_MAX, 16 * 1024 * 1024)
+        self.assertGreaterEqual(tuple(int(x) for x in p.VERSION.split(".")), fernbild.ANKER_WIN)
+        # only 127.0.0.1 and never a password on msiexec's line
+        props = p.win_tvnc_props()
+        self.assertIn("VALUE_OF_LOOPBACKONLY=1", props)
+        self.assertIn(f"VALUE_OF_RFBPORT={p.BILD_PORT}", props)
+        self.assertFalse([x for x in props if "PASSWORD" in x.replace("AUTHENTICATION", "")])
+        self.assertNotIn(("Windows", "bildschirm"), p.NOT_YET)
+
+    def test_vnc_password_obfuscation_matches_the_known_values(self):
+        p = program()
+        self.assertEqual(p.des_block(bytes.fromhex("133457799BBCDFF1"), bytes.fromhex("0123456789ABCDEF")).hex(), "85e813540f0ab405")
+        self.assertEqual(p.vnc_obfuscate("password").hex(), "dbd83cfd727a1458")      # what vncpasswd writes
+        self.assertEqual(p.vnc_obfuscate("Ab3dEf7hXYZ"), p.vnc_obfuscate("Ab3dEf7h"))  # VNC keeps 8 characters
 
 
 def _free(port):

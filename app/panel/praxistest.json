@@ -5219,6 +5219,13 @@
 "titel": "Dateien als root unter sudo-rs (Ubuntu 26.04, Anker 1.9.1)",
 "text": "Auf dem Ubuntu-26.04-System den Anker auf 1.9.1 aktualisieren (Fernzugang → Systeme, „Aktualisieren“). Dort sudo spark-anker dateien als root --schreiben: kein „visudo hat die Regel abgelehnt“ mehr, sudo cat /etc/sudoers.d/spark-anker zeigt nur die zwei Zeilen mit NOPASSWD (keine Defaults-Zeile), sudo visudo -c meldet alles OK. Im Panel „Dateien als anderer Benutzer“ für das System einschalten, Dateien als root öffnen: /root wird gelistet, eine Datei hochladen und wieder herunterladen kommt gleich an (SHA-256 wie vorher). Auf einem System mit klassischem sudo (Ubuntu 24.04) bleibt die Defaults-Zeile in der Datei.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P772",
+"v": 1335,
+"titel": "Bildschirm unter Windows mit TightVNC (Anker 1.10.0)",
+"text": "Auf dem Windows-PC den Anker aktualisieren (Fernzugang → Systeme, „Aktualisieren“, danach 1.10.0). Fernzugang → Systeme, den PC wählen: unter den Knöpfen steht „Auf dem PC noch nicht eingerichtet …“ mit dem Befehl und nur „Kopieren“. Auf dem PC die Eingabeaufforderung als Administrator öffnen, \"C:\\Program Files\\SparkAnker\\spark-anker.cmd\" bildschirm eingeben: es endet mit „Bildschirm eingerichtet: TightVNC als Dienst, nur 127.0.0.1:5930“. In PowerShell: Get-NetTCPConnection -LocalPort 5930 -State Listen zeigt nur 127.0.0.1, kein Port 5800, keine neue Firewall-Regel für TightVNC. Im Panel „Bildschirm“: der Bildschirm des PCs erscheint ohne Passwortfrage, „Steuern“ bewegt die Maus. Ein zweites Mal „bildschirm“ richtet es neu ein (kein Abbruch). „… spark-anker.cmd bildschirm aus“: TightVNC ist unter Einstellungen → Apps weg, der Knopf sagt wieder „noch nicht eingerichtet“. Auf einem PC mit eigenem TightVNC bricht „bildschirm“ ab und ändert nichts.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }

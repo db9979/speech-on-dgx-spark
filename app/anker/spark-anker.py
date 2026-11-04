@@ -10,6 +10,7 @@ and Windows (stage 5: the panel's file spark-anker-einrichten.cmd starts it, see
     curl -fsSL https://<panel>/fernzugang/anker | python3 - steuern https://<panel>         Spontanhilfe S2d: control (X11)
     curl -fsSL https://<panel>/fernzugang/anker | sudo python3 - bildschirm                 the screen too (stage 4)
     sudo spark-anker bildschirm aus                                                         the screen off again
+    "C:\\Program Files\\SparkAnker\\spark-anker.cmd" bildschirm [aus]                       Windows (Administrator, 5b)
     curl -fsSL https://<panel>/fernzugang/anker | sudo python3 - aktualisieren              this program anew (no code)
 
 It calls the panel by itself (WebSocket over TLS, the panel's normal https address, no port opened here; paired at
@@ -81,7 +82,12 @@ task SparkAnker (this program as LOCAL SERVICE) and SparkAnker-Waechter (SYSTEM:
 the root units); „Spark Anker“ under Settings, Apps to remove it. Removing puts sshd, its shell and firewall rule back
 as they were and takes user, tasks, settings, program and its Python away (the folder with the running Python, and the
 profile of spark Windows holds after an SSH session, through a one-off SYSTEM task: right after this process, else at
-the next start). Not yet on Windows: `bildschirm`, `hilfe` and `steuern`.
+the next start). `bildschirm` (stage 5b, 1.10.0, Administrator) installs TightVNC's server from its official MSI
+(TIGHTVNC: version and SHA-256 pinned, an empty pin refuses; then its Authenticode signature by GlavSoft), as a
+service only on 127.0.0.1:5930 (loopback only, no firewall rule, no web viewer), the panel's password written by this
+process into the registry in VNC's format while the service is stopped, never on a command line; it refuses when a
+TightVNC of someone else is there, and `bildschirm aus` or removing uninstalls it with its settings. Not yet on
+Windows: `hilfe` and `steuern`.
 
 Spontanhilfe S3 (`hilfe`, never as root, nothing set up): the person types the number and her first name on this
 terminal, the program opens WSS /api/hilfe/shell (no key, no Origin) and waits. When the admin accepts, it asks once
@@ -150,7 +156,7 @@ try:
 except ImportError:      # Windows: no passwd database (the anchor asks `net user` there)
     pwd = None
 
-VERSION = "1.9.1"
+VERSION = "1.10.0"
 LIB = "/usr/local/lib/spark-anker"
 PROG = LIB + "/spark-anker.py"
 BIN = "/usr/local/bin/spark-anker"
@@ -175,7 +181,7 @@ CHUNK = 32 * 1024
 PING_S = 25               # keeps the reverse proxy from closing a quiet connection
 MARK = "spark-fernzugang-"  # the comment of the panel's line in authorized_keys
 BILD_PORT = 5930          # x11vnc and wayvnc: only on 127.0.0.1
-BILD = {"x11vnc": BILD_PORT, "wayvnc": BILD_PORT, "grd": 3389, "mac": 5900}   # the screen's one local port per kind
+BILD = {"x11vnc": BILD_PORT, "wayvnc": BILD_PORT, "grd": 3389, "mac": 5900, "tightvnc": BILD_PORT}   # the screen's one local port per kind
 # Webdienste (1.6.0): channels „ziel: web“ to one port of a web service, numbered 64 and up (one byte: at most WEB_MAX)
 WEB_MAX = 250
 WEB_ERSTER = 64           # the shells, files and the screen keep 1..63
@@ -1464,6 +1470,12 @@ class Ctx:
         except OSError:
             return False
 
+    def reg_binary(self, key, name, data):
+        """A REG_BINARY value under HKLM written from this process (never on a command line)."""
+        import winreg
+        with winreg.CreateKeyEx(winreg.HKEY_LOCAL_MACHINE, key, 0, winreg.KEY_SET_VALUE | winreg.KEY_WOW64_64KEY) as k:
+            winreg.SetValueEx(k, name, 0, winreg.REG_BINARY, data)
+
     def port_open(self):
         try:
             socket.create_connection(SSHD, timeout=3).close()
@@ -1782,6 +1794,77 @@ PY_EMBED = {"version": "3.13.16", "amd64": "97dae5274cc54867065e8d5a3226e48c3501
             "arm64": "790d097697a2020477549a6764d89d22194c88d6e42caebcb2db63791e004c94"}
 PY_EMBED_URL = "https://www.python.org/ftp/python/{v}/python-{v}-embed-{arch}.zip"
 PY_EMBED_MAX = 64 * 1024 * 1024
+# The screen on Windows (stage 5b): TightVNC's server (GPL-2.0, tightvnc.com), its official MSI fetched only by
+# `bildschirm`, never part of this program; version and SHA-256 pinned here (the one source). An empty pin fails
+# closed: nothing is fetched or changed until a person checked the file's SHA-256 against the publisher and set it
+# (2.8.90: Dominik 2026-11-04, loaded from tightvnc.com himself, signature „OOO GlavSoft“ valid). On top the MSI's
+# Authenticode signature must be valid and by GlavSoft (WIN_TVNC_SIG), checked by Windows before msiexec sees it.
+# Only 127.0.0.1:BILD_PORT (loopback only, no firewall rule, no web viewer); VNC passwords are cut at 8 characters by
+# the protocol, acceptable only because nothing outside this computer can reach the port.
+TIGHTVNC = {"version": "2.8.90", "amd64": "9693cb4cdc2e7e482e8e3f5890415b57ef87de3369fa5c337db516218a1170ce"}
+TIGHTVNC_URL = "https://www.tightvnc.com/download/{v}/tightvnc-{v}-gpl-setup-64bit.msi"
+TIGHTVNC_MAX = 16 * 1024 * 1024
+WIN_TVNC_REG = r"HKLM\SOFTWARE\TightVNC"
+WIN_TVNC_SERVER = r"SOFTWARE\TightVNC\Server"     # Password and ControlPassword: VNC's fixed-key DES, written by winreg
+WIN_TVNC_SERVICE = "tvnserver"
+WIN_MSI_OK = (0, 1641, 3010)       # msiexec: done, done and restarting, done but a restart is due (/norestart)
+# Authenticode of the MSI: one line „<Status>|<GlavSoft in the signer?>|<signer, printable ASCII only>“ (win_tvnc_sig);
+# the module of Windows PowerShell by its own path: started from PowerShell 7, PSModulePath names 7's module first,
+# which Windows PowerShell cannot load
+WIN_TVNC_SIG = ("Import-Module ($env:SystemRoot + '\\System32\\WindowsPowerShell\\v1.0\\Modules\\Microsoft.PowerShell.Security"
+                "\\Microsoft.PowerShell.Security.psd1'); $s = Get-AuthenticodeSignature -LiteralPath '{path}'; $n = [string]$s.SignerCertificate.Subject; "
+                "Write-Output (\"$($s.Status)|$($n -match 'GlavSoft')|\" + ($n -replace '[^ -~]', '?'))")
+WIN_SIG_STATUS = ("Valid", "UnknownError", "NotSigned", "HashMismatch", "NotTrusted", "NotSupportedFileFormat", "Incompatible")
+
+
+# DES of one block, only for VNC's fixed-key password obfuscation (the format TightVNC reads), never for secrecy.
+_DES_PC1 = (57,49,41,33,25,17,9,1,58,50,42,34,26,18,10,2,59,51,43,35,27,19,11,3,60,52,44,36,63,55,47,39,31,23,15,7,62,54,46,38,30,22,14,6,61,53,45,37,29,21,13,5,28,20,12,4)
+_DES_PC2 = (14,17,11,24,1,5,3,28,15,6,21,10,23,19,12,4,26,8,16,7,27,20,13,2,41,52,31,37,47,55,30,40,51,45,33,48,44,49,39,56,34,53,46,42,50,36,29,32)
+_DES_SH = (1,1,2,2,2,2,2,2,1,2,2,2,2,2,2,1)
+_DES_IP = (58,50,42,34,26,18,10,2,60,52,44,36,28,20,12,4,62,54,46,38,30,22,14,6,64,56,48,40,32,24,16,8,57,49,41,33,25,17,9,1,59,51,43,35,27,19,11,3,61,53,45,37,29,21,13,5,63,55,47,39,31,23,15,7)
+_DES_FP = (40,8,48,16,56,24,64,32,39,7,47,15,55,23,63,31,38,6,46,14,54,22,62,30,37,5,45,13,53,21,61,29,36,4,44,12,52,20,60,28,35,3,43,11,51,19,59,27,34,2,42,10,50,18,58,26,33,1,41,9,49,17,57,25)
+_DES_E = (32,1,2,3,4,5,4,5,6,7,8,9,8,9,10,11,12,13,12,13,14,15,16,17,16,17,18,19,20,21,20,21,22,23,24,25,24,25,26,27,28,29,28,29,30,31,32,1)
+_DES_P = (16,7,20,21,29,12,28,17,1,15,23,26,5,18,31,10,2,8,24,14,32,27,3,9,19,13,30,6,22,11,4,25)
+_DES_S = (
+ (14,4,13,1,2,15,11,8,3,10,6,12,5,9,0,7,0,15,7,4,14,2,13,1,10,6,12,11,9,5,3,8,4,1,14,8,13,6,2,11,15,12,9,7,3,10,5,0,15,12,8,2,4,9,1,7,5,11,3,14,10,0,6,13),
+ (15,1,8,14,6,11,3,4,9,7,2,13,12,0,5,10,3,13,4,7,15,2,8,14,12,0,1,10,6,9,11,5,0,14,7,11,10,4,13,1,5,8,12,6,9,3,2,15,13,8,10,1,3,15,4,2,11,6,7,12,0,5,14,9),
+ (10,0,9,14,6,3,15,5,1,13,12,7,11,4,2,8,13,7,0,9,3,4,6,10,2,8,5,14,12,11,15,1,13,6,4,9,8,15,3,0,11,1,2,12,5,10,14,7,1,10,13,0,6,9,8,7,4,15,14,3,11,5,2,12),
+ (7,13,14,3,0,6,9,10,1,2,8,5,11,12,4,15,13,8,11,5,6,15,0,3,4,7,2,12,1,10,14,9,10,6,9,0,12,11,7,13,15,1,3,14,5,2,8,4,3,15,0,6,10,1,13,8,9,4,5,11,12,7,2,14),
+ (2,12,4,1,7,10,11,6,8,5,3,15,13,0,14,9,14,11,2,12,4,7,13,1,5,0,15,10,3,9,8,6,4,2,1,11,10,13,7,8,15,9,12,5,6,3,0,14,11,8,12,7,1,14,2,13,6,15,0,9,10,4,5,3),
+ (12,1,10,15,9,2,6,8,0,13,3,4,14,7,5,11,10,15,4,2,7,12,9,5,6,1,13,14,0,11,3,8,9,14,15,5,2,8,12,3,7,0,4,10,1,13,11,6,4,3,2,12,9,5,15,10,11,14,1,7,6,0,8,13),
+ (4,11,2,14,15,0,8,13,3,12,9,7,5,10,6,1,13,0,11,7,4,9,1,10,14,3,5,12,2,15,8,6,1,4,11,13,12,3,7,14,10,15,6,8,0,5,9,2,6,11,13,8,1,4,10,7,9,5,0,15,14,2,3,12),
+ (13,2,8,4,6,15,11,1,10,9,3,14,5,0,12,7,1,15,13,8,10,3,7,4,12,5,6,11,0,14,9,2,7,11,4,1,9,12,14,2,0,6,10,13,15,3,5,8,2,1,14,7,4,10,8,13,15,12,9,0,3,5,6,11))
+
+
+def _des_perm(v, table, width):
+    return sum(((v >> (width - t)) & 1) << (len(table) - 1 - i) for i, t in enumerate(table))
+
+
+def des_block(key, block):
+    """DES (ECB, one 8-byte block): only for VNC's fixed-key password obfuscation, never for secrecy."""
+    k = _des_perm(int.from_bytes(key, "big"), _DES_PC1, 64)
+    c, d, subs = k >> 28, k & 0xFFFFFFF, []
+    for s in _DES_SH:
+        c = ((c << s) | (c >> (28 - s))) & 0xFFFFFFF
+        d = ((d << s) | (d >> (28 - s))) & 0xFFFFFFF
+        subs.append(_des_perm((c << 28) | d, _DES_PC2, 56))
+    v = _des_perm(int.from_bytes(block, "big"), _DES_IP, 64)
+    l, r = v >> 32, v & 0xFFFFFFFF
+    for sk in subs:
+        x, f = _des_perm(r, _DES_E, 32) ^ sk, 0
+        for i in range(8):
+            six = (x >> (42 - 6 * i)) & 0x3F
+            f = (f << 4) | _DES_S[i][((six & 0x20) >> 4 | (six & 1)) * 16 + ((six >> 1) & 0xF)]
+        l, r = r, l ^ _des_perm(f, _DES_P, 32)
+    return _des_perm((r << 32) | l, _DES_FP, 64).to_bytes(8, "big")
+
+
+VNC_DES_KEY = bytes(int(f"{b:08b}"[::-1], 2) for b in (23, 82, 107, 6, 35, 78, 88, 7))
+
+
+def vnc_obfuscate(pw):
+    return des_block(VNC_DES_KEY, pw.encode("ascii")[:8].ljust(8, b"\0"))
+
 
 
 def py_embed(prog):
@@ -2041,6 +2124,7 @@ def win_start(ctx, runner):
 def win_stop(ctx, conf):
     ctx.run(["schtasks", "/end", "/tn", WIN_TASK])
     ctx.run(["schtasks", "/delete", "/tn", WIN_TASK, "/f"])      # the watcher goes last (win_last): it may be the one removing
+    bild_off(ctx, conf)                     # TightVNC (5b) with its MSI, before the program's folder goes
 
 
 def win_after(ctx, conf, home_gone):
@@ -2541,9 +2625,80 @@ def linux_bild_art(ctx):
     return ("grd" if "gnome" in desk else "wayvnc"), user
 
 
+def win_tvnc_msi(neu=False):
+    """The MSI kept for uninstalling; neu: the one just fetched, until the one before is uninstalled with its own."""
+    return WIN_LIB + ("/tightvnc-neu.msi" if neu else "/tightvnc.msi")
+
+
+def win_tvnc_props():
+    """msiexec's properties for TightVNC's server: a service with VNC authentication but no password yet (it refuses
+    everyone until the anchor writes one), only 127.0.0.1:BILD_PORT, no web viewer, no firewall rule, no Strg+Alt+Entf
+    from outside. Never a password on this command line."""
+    v = {"USEVNCAUTHENTICATION": 1, "USECONTROLAUTHENTICATION": 1, "ALLOWLOOPBACK": 1, "LOOPBACKONLY": 1, "RFBPORT": BILD_PORT, "ACCEPTHTTPCONNECTIONS": 0,
+         "RUNCONTROLINTERFACE": 0}
+    props = ["ADDLOCAL=Server", "SERVER_REGISTER_AS_SERVICE=1", "SERVER_ADD_FIREWALL_EXCEPTION=0", "SERVER_ALLOW_SAS=0"]
+    for k, x in v.items():
+        props += [f"SET_{k}=1", f"VALUE_OF_{k}={x}"]
+    return props
+
+
+def win_tvnc_fetch(ctx, conf):
+    """TightVNC's MSI checked against TIGHTVNC (amd64 only) and its Authenticode signature (WIN_TVNC_SIG): the path
+    where it lies (win_tvnc_msi(neu=True)), else a Fehler and nothing changed. A TightVNC this anchor did not set up
+    stays untouched; its own (conf „bild“) is set up anew."""
+    if win_arch() != "amd64":
+        raise Fehler("TightVNC gibt es nur für 64-Bit-Windows auf Intel/AMD, nicht für ARM. Es wurde nichts geändert.")
+    pin = str(TIGHTVNC.get("amd64") or "")
+    if not FP.fullmatch(pin) or not VER.fullmatch(str(TIGHTVNC.get("version") or "")):
+        raise Fehler("TightVNC ist in diesem Anker noch nicht freigegeben (Prüfsumme fehlt). Es wurde nichts geändert.")
+    if conf.get("bild") != "tightvnc" and not ctx.run(["reg", "query", WIN_TVNC_REG]):
+        raise Fehler("TightVNC ist auf diesem PC schon eingerichtet; der Anker ändert keine fremde Einrichtung. "
+                     "Es wurde nichts geändert.")
+    try:
+        data = ctx.fetch(TIGHTVNC_URL.format(v=TIGHTVNC["version"]), TIGHTVNC_MAX)
+    except (OSError, Fehler, ssl.SSLError, http.client.HTTPException):
+        data = b""
+    if not data:
+        raise Fehler("TightVNC ließ sich nicht von tightvnc.com laden. Es wurde nichts geändert.")
+    if not hmac.compare_digest(hashlib.sha256(data).hexdigest(), pin):
+        raise Fehler(f"Die Prüfsumme von TightVNC {TIGHTVNC['version']} stimmt nicht (eine andere Datei als freigegeben). "
+                     "Es wurde nichts geändert.")
+    path = ctx.path(win_tvnc_msi(neu=True))
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "wb") as f:
+        f.write(data)
+    why = win_tvnc_sig(ctx, path)
+    if why:
+        with contextlib.suppress(OSError):
+            os.remove(path)
+        raise Fehler(f"Die Signatur von TightVNC (GlavSoft) ist nicht gültig ({why}). Es wurde nichts geändert.")
+    return path
+
+
+def win_tvnc_sig(ctx, path):
+    """'' when Windows finds the MSI's Authenticode signature valid and by GlavSoft, else a short reason (a status
+    word of WIN_SIG_STATUS, or the signer cut to 80 printable characters)."""
+    if "'" in path:
+        return "Pfad"
+    line = ctx.out([WIN_PS, "-NoProfile", "-NonInteractive", "-Command", WIN_TVNC_SIG.format(path=win_native(path))])
+    status, glav, signer = (line.strip().split("|", 2) + ["", ""])[:3]
+    if status not in WIN_SIG_STATUS:
+        return "keine Antwort"
+    if status != "Valid":
+        return status
+    return "" if glav == "True" else "Herausgeber " + re.sub(r"[^ -~]", "?", signer)[:80]
+
+
 def bild_off(ctx, conf):
-    """Everything of the screen away again (`bildschirm aus`, `entfernen`): units, files, GNOME's RDP as it was."""
+    """Everything of the screen away again (`bildschirm aus`, `entfernen`): units, files, GNOME's RDP as it was,
+    TightVNC uninstalled with its settings."""
     art = conf.get("bild")
+    if art == "tightvnc":
+        msi = ctx.path(win_tvnc_msi())
+        ctx.run(["msiexec", "/x", win_native(msi), "/quiet", "/norestart"])
+        ctx.run(["reg", "delete", WIN_TVNC_REG, "/f"])
+        with contextlib.suppress(OSError):
+            os.remove(msi)
     if art == "x11vnc":
         ctx.run(["systemctl", "disable", "--now", "spark-anker-bild.socket"])
     if art == "wayvnc":
@@ -2589,21 +2744,31 @@ def cmd_screen(args, run=run_cmd, ctx=None):
         _restart_anchor(ctx)
         say("Bildschirm aus: nichts davon ist mehr da")
         return 0
+    neu = ""
     if s is MAC:
         art, user = "mac", ""
         if ctx.run(["/bin/launchctl", "print", "system/com.apple.screensharing"]):
             raise Fehler("die Bildschirmfreigabe ist aus. Systemeinstellungen → Allgemein → Teilen → „Bildschirmfreigabe“ "
                          "einschalten, dann den Befehl noch einmal. Es wurde nichts geändert.")
+    elif s is WIN:
+        art, user = "tightvnc", ""
+        neu = win_tvnc_fetch(ctx, conf)     # before the panel is asked: a failed download changes nothing
     else:
         art, user = linux_bild_art(ctx)
-    status, raw = http_call(conf["url"], conf.get("fp") or "", "POST", "/api/fernzugang/anker/bildschirm", {"art": art}, conf["key"])
-    if status != 200:
-        raise Fehler({404: "Bildschirm im Panel ist aus (Funktionen → Fernzugang zu Servern → Bildschirm)",
-                      403: "das Panel kennt diesen Anker nicht mehr"}.get(status, f"Panel antwortet {status}"))
-    d = json.loads(raw)
-    pw = str(d.get("passwort") or "")
-    if art != "mac" and not re.fullmatch(r"[A-Za-z0-9]{8,64}", pw):
-        raise Fehler("das Panel gab kein Passwort")
+    try:
+        status, raw = http_call(conf["url"], conf.get("fp") or "", "POST", "/api/fernzugang/anker/bildschirm", {"art": art}, conf["key"])
+        if status != 200:
+            raise Fehler({404: "Bildschirm im Panel ist aus (Funktionen → Fernzugang zu Servern → Bildschirm)",
+                          403: "das Panel kennt diesen Anker nicht mehr"}.get(status, f"Panel antwortet {status}"))
+        d = json.loads(raw)
+        pw = str(d.get("passwort") or "")
+        if art != "mac" and not re.fullmatch(r"[A-Za-z0-9]{8,64}", pw):
+            raise Fehler("das Panel gab kein Passwort")
+    except BaseException:
+        if neu:                             # the fetched MSI goes again: nothing changed
+            with contextlib.suppress(OSError):
+                os.remove(neu)
+        raise
     bild_off(ctx, conf)                     # a kind set up before goes first
     if art == "x11vnc":
         if not shutil.which("x11vnc") and ctx.root == "/" and ctx.run(["apt-get", "install", "-y", "-q", "x11vnc"]):
@@ -2643,6 +2808,24 @@ def cmd_screen(args, run=run_cmd, ctx=None):
                     ["systemctl", "enable", "--now", "gnome-remote-desktop.service"]):
             if ctx.run(cmd):
                 raise Fehler(f"`{cmd[0]} {' '.join(cmd[1:4])}` ging nicht. `sudo spark-anker bildschirm aus` räumt auf.")
+    elif art == "tightvnc":
+        msi = ctx.path(win_tvnc_msi())
+        os.replace(neu, msi)                # kept for `bildschirm aus` (the one before went with bild_off)
+        rc = ctx.run(["msiexec", "/i", win_native(msi), "/quiet", "/norestart", *win_tvnc_props()])
+        failed = "" if rc in WIN_MSI_OK else f"msiexec {rc}"
+        if not failed:
+            ctx.run(["net", "stop", WIN_TVNC_SERVICE])    # waits until it stopped (sc.exe would not)
+            try:                            # the panel's password and a random control password nobody keeps
+                ctx.reg_binary(WIN_TVNC_SERVER, "Password", vnc_obfuscate(pw))
+                ctx.reg_binary(WIN_TVNC_SERVER, "ControlPassword", vnc_obfuscate(secrets.token_hex(4)))
+            except OSError:
+                failed = "Registry"
+            if not failed and ctx.run(["net", "start", WIN_TVNC_SERVICE]):
+                failed = "Dienst"
+        if failed:
+            conf["bild"] = art              # half installed: `bildschirm aus` takes it away
+            write(ctx.path(s.conf), json.dumps(conf, indent=1), 0o640)
+            raise Fehler(f"TightVNC ließ sich nicht einrichten ({failed}). `spark-anker bildschirm aus` (als Administrator) räumt auf.")
     pw = ""
     conf["bild"] = art
     write(ctx.path(s.conf), json.dumps(conf, indent=1), 0o640)
@@ -2650,8 +2833,10 @@ def cmd_screen(args, run=run_cmd, ctx=None):
     say({"x11vnc": "Bildschirm eingerichtet: x11vnc startet nur, wenn das Panel den Bildschirm öffnet (127.0.0.1:5930)",
          "wayvnc": f"Bildschirm eingerichtet: wayvnc in der Sitzung von {user} (127.0.0.1:5930), ab der nächsten Anmeldung",
          "grd": "Bildschirm eingerichtet: GNOME-Remotedesktop (RDP) mit eigenem Zertifikat und Passwort aus dem Panel",
-         "mac": "Bildschirm eingerichtet: die Bildschirmfreigabe von macOS; Benutzer und Passwort fragt das Panel jedes Mal"}[art])
-    say("aus: sudo spark-anker bildschirm aus")
+         "mac": "Bildschirm eingerichtet: die Bildschirmfreigabe von macOS; Benutzer und Passwort fragt das Panel jedes Mal",
+         "tightvnc": "Bildschirm eingerichtet: TightVNC als Dienst, nur 127.0.0.1:5930, Passwort aus dem Panel"}[art])
+    say("aus: " + (f'"{win_native(WIN_LIB)}\\spark-anker.cmd" bildschirm aus (als Administrator)' if s is WIN
+                   else "sudo spark-anker bildschirm aus"))
     return 0
 
 
@@ -3803,7 +3988,6 @@ def cmd_control(args, tty=None, screen=None, env=None):
 
 # What the anchor does not do on a system (yet): a fixed sentence and nothing done, never half a setup.
 NOT_YET = {
-    ("Windows", "bildschirm"): "Den Bildschirm unter Windows richtet der Anker noch nicht ein (eine spätere Stufe). Es wurde nichts eingerichtet.",
     ("Windows", "hilfe"): "Die Spontanhilfe in der Shell gibt es unter Windows noch nicht; „Bildschirm teilen“ auf der Hilfe-Seite geht. Es wurde nichts verbunden.",
     ("Windows", "steuern"): "Unter Windows steuert das Programm SparkHilfe von der Hilfe-Seite, nicht diese Zeile. Es wurde nichts verbunden.",
     ("Darwin", "steuern"): "Steuern am Mac gibt es noch nicht (erst mit Notarisierung); „Bildschirm teilen“ auf der Hilfe-Seite geht. Es wurde nichts verbunden.",
