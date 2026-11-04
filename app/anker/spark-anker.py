@@ -27,7 +27,8 @@ Set up (as root, once):
 - the user `spark` (made here when it did not exist) gets the panel's key in ~/.ssh/authorized_keys with
   from="127.0.0.1,::1",restrict,pty: only through the anchor, no forwarding, no agent, a terminal. It has no sudo;
   only `sudo spark-anker dateien als root[,…]` (1.7.0) lets it run the server's own sftp-server as those users, read
-  only unless `--schreiben` (/etc/sudoers.d/spark-anker, checked with visudo; `dateien aus` and removing delete it);
+  only unless `--schreiben` (/etc/sudoers.d/spark-anker, checked with visudo; under sudo-rs, 1.9.1, without its
+  Defaults line, which sudo-rs rejects and does not need; `dateien aus` and removing delete it);
 - the system user `spark-anker` runs the anchor (systemd unit spark-anker, hardened: no new privileges, read-only
   system, no home, only its own folder /var/lib/spark-anker writable);
 - a second unit (spark-anker-abbau.path, root) watches for the panel's „abbauen“: then `spark-anker entfernen` runs.
@@ -149,7 +150,7 @@ try:
 except ImportError:      # Windows: no passwd database (the anchor asks `net user` there)
     pwd = None
 
-VERSION = "1.9.0"
+VERSION = "1.9.1"
 LIB = "/usr/local/lib/spark-anker"
 PROG = LIB + "/spark-anker.py"
 BIN = "/usr/local/bin/spark-anker"
@@ -1410,6 +1411,16 @@ class Ctx:
     def path(self, p):
         return here(self.root, p)
 
+    def check(self, cmd):
+        """(return code, stdout and stderr) of a checking command (visudo -cf); the self-tests' run gives the code only."""
+        if self.run is not run_cmd:
+            return self.run(cmd), ""
+        try:
+            r = subprocess.run(cmd, check=False, capture_output=True, text=True, timeout=30)
+        except (OSError, subprocess.SubprocessError):
+            return 1, ""
+        return r.returncode, (r.stdout or "") + "\n" + (r.stderr or "")
+
     def out(self, cmd):
         """A command's output (empty when it fails); only for reading (dscl -list, reg query, sc qc)."""
         r = subprocess.run(cmd, check=False, capture_output=True, text=True)
@@ -2353,14 +2364,31 @@ WIN_FILES_NO = ("windows", "program files", "program files (x86)", "programdata"
                 "recovery", "boot")
 
 
-def sudoers_text(users, sftp, write):
+def sudoers_text(users, sftp, write, rs=False):
+    """The drop-in. rs (sudo-rs, Ubuntu 25.10 and newer, 1.9.1): without the Defaults line, which its visudo rejects
+    („expected configuration option“); sudo-rs needs none of it: it never asks for a TTY, opens a pty only when it
+    runs on a terminal (the panel's exec channel has none, so sftp-server's binary protocol passes unchanged), always
+    does env_reset, has no lecture with NOPASSWD and no I/O log."""
     run_as = ",".join(users)
-    lines = ["# spark-anker: Dateien im Panel als andere Benutzer (nur dieses Programm, nur so aufgerufen)",
-             f"Defaults!{sftp} !requiretty, !use_pty, !lecture, env_reset, !log_output",
-             f"{USER} ALL=({run_as}) NOPASSWD: {sftp} -R"]
+    lines = ["# spark-anker: Dateien im Panel als andere Benutzer (nur dieses Programm, nur so aufgerufen)"]
+    if not rs:
+        lines.append(f"Defaults!{sftp} !requiretty, !use_pty, !lecture, env_reset, !log_output")
+    lines.append(f"{USER} ALL=({run_as}) NOPASSWD: {sftp} -R")
     if write:
         lines.append(f'{USER} ALL=({run_as}) NOPASSWD: {sftp} ""')
     return "\n".join(lines) + "\n"
+
+
+def sudo_rs(ctx):
+    """True when sudo here is sudo-rs (`sudo --version` says so; Ubuntu 25.10 and newer)."""
+    return "sudo-rs" in ctx.out(["sudo", "--version"]).lower()
+
+
+def visudo_text(ctx, path):
+    """(0 when visudo -cf takes it, else its code, the first line of what it said: at most 120 printable characters)."""
+    rc, said = ctx.check(["visudo", "-cf", path])
+    first = next((ln.strip() for ln in said.splitlines() if ln.strip()), "")
+    return rc, re.sub(r"[^\x20-\x7e\u00c0-\u017f]", "", first)[:120]
 
 
 def sftp_server(ctx):
@@ -2461,11 +2489,17 @@ def cmd_files(args, run=run_cmd, ctx=None):
             raise Fehler("kein sftp-server von root gefunden (sshd -T, /usr/lib/openssh, /usr/libexec). Es wurde nichts geändert.")
         new = ctx.path(SUDOERS_D + ".neu")
         os.makedirs(os.path.dirname(new), exist_ok=True)
-        write(new, sudoers_text(users, sftp, write_ok), 0o440)
-        if ctx.run(["visudo", "-cf", new]):
+        rs = sudo_rs(ctx)
+        write(new, sudoers_text(users, sftp, write_ok, rs), 0o440)
+        rc, said = visudo_text(ctx, new)
+        if rc and not rs and "configuration option" in said:    # sudo-rs that did not say so: once more without
+            rs = True
+            write(new, sudoers_text(users, sftp, write_ok, rs), 0o440)
+            rc, said = visudo_text(ctx, new)
+        if rc:
             with contextlib.suppress(OSError):
                 os.remove(new)
-            raise Fehler("visudo hat die Regel abgelehnt. Es wurde nichts geändert.")
+            raise Fehler("visudo hat die Regel abgelehnt" + (f" („{said}“)" if said else "") + ". Es wurde nichts geändert.")
         os.replace(new, ctx.path(SUDOERS_D))
         conf["dateien"] = {"art": "sudo", "benutzer": users, "schreiben": write_ok}
         report = {"art": "sudo", "benutzer": users, "schreiben": write_ok, "sftp": sftp}

@@ -233,6 +233,46 @@ class Anchor(unittest.TestCase):
             self.assertFalse(os.path.exists(ctx.path(p.SUDOERS_D)), kind)
             self.assertFalse(os.path.exists(ctx.path(p.SUDOERS_D + ".neu")), kind)
 
+    def test_sudo_rs_gets_the_rule_without_the_defaults_line(self):
+        """Ubuntu 25.10 and newer (sudo-rs, Dominik 2026-11-04 on 26.04: „visudo hat die Regel abgelehnt“): its visudo
+        rejects the Defaults line, the command lines it takes; still checked with visudo -cf before it counts."""
+        p, ctx, ran = self.ctx()
+        sshd = ctx.out("x")
+        ctx.out = lambda cmd: "sudo-rs 0.2.2\n" if cmd[:2] == ["sudo", "--version"] else sshd
+        rc, _ = self.run_files(p, ctx, "als", ["root"], schreiben=True)
+        self.assertEqual(rc, 0)
+        with open(ctx.path(p.SUDOERS_D)) as f:
+            text = f.read()
+        self.assertNotIn("Defaults", text)
+        self.assertEqual([ln for ln in text.splitlines() if not ln.startswith("#")],
+                         [f"spark ALL=(root) NOPASSWD: {SFTP} -R", f'spark ALL=(root) NOPASSWD: {SFTP} ""'])
+        self.assertTrue(any(c[:2] == ["visudo", "-cf"] for c in ran))
+        self.assertIn("Defaults!", p.sudoers_text(["root"], SFTP, False))          # the classic sudo keeps it
+        self.assertNotIn("Defaults", p.sudoers_text(["root"], SFTP, False, rs=True))
+
+    def test_a_sudo_rs_that_does_not_say_so_gets_a_second_try_and_a_refusal_shows_visudos_line(self):
+        p, ctx, ran = self.ctx()
+        seen = []
+
+        def check(cmd):
+            with open(cmd[2]) as f:
+                seen.append("Defaults" in f.read())
+            return (1, "syntax error: expected configuration option\nvisudo: invalid sudoers file") if seen[-1] else (0, "")
+        ctx.check = check
+        rc, _ = self.run_files(p, ctx, "als", ["root"])
+        self.assertEqual((rc, seen), (0, [True, False]))
+        with open(ctx.path(p.SUDOERS_D)) as f:
+            self.assertNotIn("Defaults", f.read())
+        p, ctx, ran = self.ctx()
+        ctx.check = lambda cmd: (1, "\n>>> /etc/sudoers.d/spark-anker.neu: syntax error near line 3 <<<\x1b[0m\n")
+        with self.assertRaises(p.Fehler) as e:
+            self.run_files(p, ctx, "als", ["root"])
+        self.assertIn("visudo hat die Regel abgelehnt („>>> /etc/sudoers.d/spark-anker.neu: syntax error near line 3 <<<", str(e.exception))
+        self.assertNotIn("\x1b", str(e.exception))
+        self.assertFalse(os.path.exists(ctx.path(p.SUDOERS_D)))
+        self.assertFalse(os.path.exists(ctx.path(p.SUDOERS_D + ".neu")))
+        self.assertEqual(p.visudo_text(types.SimpleNamespace(check=lambda c: (1, "x" * 500)), "/f"), (1, "x" * 120))
+
     def test_entfernen_takes_the_drop_in_away(self):
         p, ctx, ran = self.ctx()
         self.run_files(p, ctx, "als", ["root"])

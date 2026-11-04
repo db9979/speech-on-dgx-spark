@@ -5212,6 +5212,13 @@
 },
 {"id": "P770", "v": 1333, "titel": "Wohin-Karte: Anderer Ordner verschiebt direkt", "text": "Offen → eine Karte „Wohin gehört diese Mail?“ → „Anderer Ordner …“: unter den Knöpfen geht eine Auswahl mit den Ordnern des Postfachs auf (ohne „Falsch sortiert“, ohne Gesendet und Papierkorb), die Seite wechselt nicht. Einen Ordner wählen, „Verschieben“: „Abgelegt in „…““, die Karte ist erledigt, die Mail liegt in E-Mail in diesem Ordner. Ein zweiter Tipp auf „Anderer Ordner …“ klappt die Auswahl wieder zu. Am iPhone springt der Knopf weiter zur Seite E-Mail.",
 "thread": "Fix Ordnerabstände in E-Mail"
+},
+{
+"id": "P771",
+"v": 1334,
+"titel": "Dateien als root unter sudo-rs (Ubuntu 26.04, Anker 1.9.1)",
+"text": "Auf dem Ubuntu-26.04-System den Anker auf 1.9.1 aktualisieren (Fernzugang → Systeme, „Aktualisieren“). Dort sudo spark-anker dateien als root --schreiben: kein „visudo hat die Regel abgelehnt“ mehr, sudo cat /etc/sudoers.d/spark-anker zeigt nur die zwei Zeilen mit NOPASSWD (keine Defaults-Zeile), sudo visudo -c meldet alles OK. Im Panel „Dateien als anderer Benutzer“ für das System einschalten, Dateien als root öffnen: /root wird gelistet, eine Datei hochladen und wieder herunterladen kommt gleich an (SHA-256 wie vorher). Auf einem System mit klassischem sudo (Ubuntu 24.04) bleibt die Defaults-Zeile in der Datei.",
+"thread": "Fernzugang zu entfernten Servern bauen"
 }
 ]
 }
