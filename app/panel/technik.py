@@ -411,7 +411,7 @@ MODULE = {
     "fernzugang": ("fern", "Fernzugang: Seite per Code entsperrt, Anker, Einmal-Code, Terminal mit Ticket, Host-Schlüssel fest, Shell gehalten"),
     "ferngross": ("fern", "Fernzugang, große Dateien: in Teilen mit SHA-256, per Link (curl) oder vom NAS, Prüfsumme vor dem Umbenennen"),
     "fernweb": ("fern", "Fernzugang, Webdienste: eigene Tunnel-Tür (Port 31090), Ziele nach festen Regeln, Cookies je Dienst getrennt"),
-    "spontansteuern": ("fern", "Spontanhilfe Steuern: Programm SparkHilfe, Einmal-Schlüssel, Bild und Eingaben über das Panel"),
+    "spontansteuern": ("fern", "Spontanhilfe Steuern: SparkHilfe (Windows, Linux X11 per Anker-Zeile), Einmal-Schlüssel, Bild und Eingaben"),
     "fernals": ("fern", "Fernzugang, Dateien als anderer Benutzer: sudo nur für den sftp-server mit -R, Freigabe am Server und je System"),
     "fernbild": ("fern", "Fernzugang, Bildschirm: guacd auf 127.0.0.1, VNC oder RDP durch den Anker, erst nur ansehen, höchstens 15 Bilder/s"),
     "fernanker": ("fern", "Fernzugang, Anker aktualisieren: eigener Ed25519-Schlüssel im Tresor, signierte neue Version, nie zurück"),

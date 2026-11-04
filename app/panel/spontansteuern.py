@@ -12,12 +12,14 @@ Three consents, all needed:
     admin (core.auth, the browser only, the unlocked Fernzugang page, a fresh code):
     POST   /api/admin/spontanhilfe/steuern             ask for control in the open help
     person (no login, her session key from /api/hilfe/start):
-    POST   /api/hilfe/programm {tok, art}              the program for her system as a file; X-Spark-Schluessel the
-                                                       one-time key, X-Spark-Sha256 its checksum (also on /hilfe)
+    POST   /api/hilfe/programm {tok, art, origin}      the program for her system as a file; X-Spark-Schluessel the
+                                                       one-time key, X-Spark-Sha256 its checksum (also on /hilfe);
+                                                       art „linux-x11“ (S2d): {befehl, schluessel} the line for
+                                                       her terminal and the key she pastes there
     program (no page: any Origin header is refused):
     WS     /api/hilfe/steuern                          first message {"typ": "hallo", "schluessel", "art"}; then
-                                                       {"typ": "antwort", "modus": no|view|control}, JPEG pictures
-                                                       (binary, at most FPS a second, fernsicht.MAX_FRAME each) to the
+                                                       {"typ": "antwort", "modus": no|view|control}, pictures
+                                                       (JPEG or PNG, at most FPS a second, fernsicht.MAX_FRAME each) to the
                                                        admin's socket, inputs from it back (fernsicht.clean_events)
 
 Rules: off by default (chat.spontansteuern, Funktionen → Fernzugang zu Servern → Steuern bei der Spontanhilfe, under the
@@ -27,6 +29,11 @@ the program learns the helper's name only after the key was taken. Inputs only f
 and the admin's toolbar says „Steuern“. The picture lives only in memory on its way through (no recording, nothing
 to a model). One help at a time, its clock (chat.spontanhilfe_max_min) and the Notaus end the program too and make
 key and file worthless. Logs: „spontanhilfe: steuern_frage|programm|steuern|steuern_zu | <word> | n“, fixed words.
+S2d, Linux X11: no file; after the ask her page gets one line for her terminal (POST /api/hilfe/programm with art
+„linux-x11“ and the address her page is on, only the panel's own): the anchor program the panel serves itself
+(fernzugang.command „steuern“, the same TLS check or pin as the Spontanhilfe shell; no secret in the line) and the
+one-time key, which she pastes on her terminal when the program asks (echo off; never an argument, an address or a
+variable). It speaks the same socket and sends PNG pictures (BILDER: JPEG or PNG only).
 The program files come only from the cache CACHE that the signed manifest filled, checked by SHA-256 before every
 delivery.
 
@@ -47,10 +54,11 @@ import os
 import re
 import secrets
 import time
+import urllib.parse
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 import features
 import fernsicht
@@ -64,7 +72,9 @@ router = APIRouter()
 CACHE = os.path.join(STATE, "spontanhilfe-programme")   # programme.json and the files the signed manifest named (S2b)
 KEY_S = 600             # the program's key works this long, once
 FPS = 4                 # pictures a second at most; more are dropped
-ARTEN = {"windows-x64": ".exe", "windows-arm64": ".exe"}   # S2c macOS and S2d Linux come later
+ARTEN = {"windows-x64": ".exe", "windows-arm64": ".exe"}   # the program files (S2b); S2c macOS comes later
+ZEILE = "linux-x11"     # S2d: no file, one line for her terminal (the anchor program, fernzugang.command „steuern“)
+BILDER = (b"\xff\xd8\xff", b"\x89PNG\r\n\x1a\n")    # JPEG (Windows) or PNG (Linux X11): nothing else passes
 KEY = re.compile(r"[A-Za-z0-9_\-]{22}")
 SHA = re.compile(r"[0-9a-f]{64}")
 DATEI = re.compile(r"SparkHilfe-[a-z0-9\-]{1,40}\.(?:exe|zip)")
@@ -144,6 +154,12 @@ def vorhanden():
 def probes():
     """The Dienst-Wächter's part while the switch is on (no question of its own, only the cache)."""
     return {"sparkhilfe": {"sparkhilfe": True}} if admin_on() else {}
+
+
+def zeile_da():
+    """S2d: the line for Linux X11 can be offered (the anchor program the panel serves is there)."""
+    import fernzugang
+    return os.path.isfile(fernzugang.PROGRAM)
 
 
 def angebot():
@@ -295,7 +311,7 @@ async def admin_ask(request: Request):
     progs = angebot()
     sh.log("steuern_frage", "admin", len(progs))
     sh._live("Spontanhilfe: Steuern angefragt")
-    await sh._send(h.person, {"typ": "steuern", "stand": "angefragt", "programme": progs})
+    await sh._send(h.person, {"typ": "steuern", "stand": "angefragt", "programme": progs, "zeile": zeile_da()})
     return {"programme": sorted(progs)}
 
 
@@ -318,6 +334,8 @@ async def person_file(request: Request):
             or not re.fullmatch(r"[A-Za-z0-9_\-]{30,60}", tok) or not hmac.compare_digest(sh._h(tok), h.tok_h):
         sh.log("programm", "abgewiesen", 0)
         raise HTTPException(403, "Bitte die Seite neu laden.")
+    if art == ZEILE:
+        return _zeile(request, body, st)
     p = await asyncio.to_thread(programm, art)
     if p is None:
         sh.log("programm", "fehlt", 0)
@@ -328,6 +346,29 @@ async def person_file(request: Request):
     return FileResponse(p[0], media_type="application/octet-stream",
                         headers={"X-Spark-Schluessel": key, "X-Spark-Sha256": p[1], "Cache-Control": "no-store",
                                  "Content-Disposition": "attachment; filename=\"SparkHilfe" + ARTEN[art] + "\""})
+
+
+def _zeile(request, body, st):
+    """S2d: the line for her terminal (Linux X11, no secret in it, from the address her page is on: only the Host she
+    reached) and a new one-time key she pastes there when the program asks (never kept, never logged, never in an
+    address)."""
+    import fernzugang
+    origin = str(body.get("origin") or "")
+    host = (request.headers.get("host") or "").lower()
+    if not origin or urllib.parse.urlsplit(origin.lower()).netloc != host or not zeile_da():
+        sh.log("programm", "zeile fehlt", 0)
+        raise HTTPException(404, "Für dieses System gibt es den Befehl gerade nicht. Ansehen läuft weiter.")
+    key = secrets.token_urlsafe(16)       # 128 bits, 22 characters
+    try:
+        line = fernzugang.command(origin, art="steuern")
+    except HTTPException:
+        line = None
+    if not line:
+        sh.log("programm", "zeile fehlt", 0)
+        raise HTTPException(404, "Für dieses System gibt es den Befehl gerade nicht. Ansehen läuft weiter.")
+    st.key_h, st.key_bis = sh._h(key), time.time() + KEY_S
+    sh.log("programm", "linux", 1)
+    return JSONResponse({"befehl": line["befehl"], "schluessel": key}, headers={"Cache-Control": "no-store"})
 
 
 # ---------------------------------------------------------------- the program's socket
@@ -433,7 +474,7 @@ async def _program_loop(h, st, ws):
             break
         data, raw = got.get("bytes"), got.get("text")
         if data is not None:
-            if len(data) > fernsicht.MAX_FRAME or data[:3] != b"\xff\xd8\xff":
+            if len(data) > fernsicht.MAX_FRAME or not data.startswith(BILDER):
                 sh.log("abgewiesen", "bild", 0)
                 why = "bild"
                 break

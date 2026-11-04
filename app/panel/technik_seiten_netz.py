@@ -927,9 +927,9 @@ SEITEN = {
     # ------------------------------------------------------------------ Browser und Handy
     # ------------------------------------------------------------------ Fernzugang (Dominik 2026-10-29 „in Technik → Überblick fehlt die Fernwartung“)
     "fernzugang": {
-        "stand": "82ce3f63ca",
+        "stand": "ec42265853",
         "bezug": {
-            "fernzugang.entsperrt_bis": ["s2"], "fernzugang.admin_pair": ["s3"], "fernzugang.link_file": ["s3"], "fernzugang.admin_confirm": ["s3"], "fernzugang.CODE_S": ["s3"], "fernzugang.TICKET_S": ["s4"], "fernzugang.terminal_ws": ["s4"], "fernzugang.hostkey_wrong": ["s5"], "fernzugang.HALTEN_S": ["s6"], "ferndateien.listing": ["s6"], "fernbild.GUACD": ["s6"], "fernbild.FPS": ["s6"], "spontanhilfe.admin_new": ["s7"], "spontanhilfe.NUMMER_S": ["s7"], "spontansteuern.fetch": ["s7"], "fernzugang.notaus_close": ["s8"], "fernzugang.MAX_ANKER": ["s3"], "fernnotiz.fuer_modell": ["s6"], "fernnotiz.FASSUNGEN": ["s6"], "fernordner.view": ["s6"], "fernordner.MAX_ORDNER": ["s6"], "ferngross.upload_piece": ["s6"], "ferngross.TEIL": ["s6"], "fernweb.verbindung": ["s6"], "fernweb.ziel_ok": ["s6"], "fernweb.TOR_PORT": ["s6"], "fernweb.MAX_TUNNEL": ["s6"], "fernweb.MAX_KANAELE": ["s6"],
+            "fernzugang.entsperrt_bis": ["s2"], "fernzugang.admin_pair": ["s3"], "fernzugang.link_file": ["s3"], "fernzugang.admin_confirm": ["s3"], "fernzugang.CODE_S": ["s3"], "fernzugang.TICKET_S": ["s4"], "fernzugang.terminal_ws": ["s4"], "fernzugang.hostkey_wrong": ["s5"], "fernzugang.HALTEN_S": ["s6"], "ferndateien.listing": ["s6"], "fernbild.GUACD": ["s6"], "fernbild.FPS": ["s6"], "spontanhilfe.admin_new": ["s7"], "spontanhilfe.NUMMER_S": ["s7"], "spontansteuern.fetch": ["s7"], "spontansteuern._zeile": ["s7"], "fernzugang.notaus_close": ["s8"], "fernzugang.MAX_ANKER": ["s3"], "fernnotiz.fuer_modell": ["s6"], "fernnotiz.FASSUNGEN": ["s6"], "fernordner.view": ["s6"], "fernordner.MAX_ORDNER": ["s6"], "ferngross.upload_piece": ["s6"], "ferngross.TEIL": ["s6"], "fernweb.verbindung": ["s6"], "fernweb.ziel_ok": ["s6"], "fernweb.TOR_PORT": ["s6"], "fernweb.MAX_TUNNEL": ["s6"], "fernweb.MAX_KANAELE": ["s6"],
         },
         "kurz": ("Der Fernzugang öffnet Shell, Dateien und Bildschirm eines eigenen Servers im Browser, ohne offenen Port "
                  "dort: der Anker auf dem Server verbindet sich selbst zum Panel, das Panel spricht SSH durch diese "
@@ -1041,13 +1041,17 @@ SEITEN = {
                "von unterwegs über TURN auf tars; das Panel vermittelt nur. Steuern (spontansteuern.program_ws) geht über das "
                "Programm SparkHilfe mit einem Einmal-Schlüssel für {spontansteuern.KEY_S|min} Minuten; Bilder und Eingaben "
                "laufen dann durch das Panel. Das Programm baut nur GitHub; der Spark holt es täglich aus dem Release "
-               "(spontansteuern.fetch), nur mit passender Signatur, Größe und SHA-256, und gibt es nur aus seinem Speicher weiter.",
+               "(spontansteuern.fetch), nur mit passender Signatur, Größe und SHA-256, und gibt es nur aus seinem Speicher weiter. "
+               "Unter Linux X11 gibt es keine Datei: die Seite zeigt die Zeile des Ankers ohne Geheimnis "
+               "(spontansteuern._zeile), den Schlüssel fügt die Person im Terminal ein; das Programm schickt PNG-Bilder.",
                "A help (spontanhilfe.admin_new) gives a number for {spontanhilfe.NUMMER_S|min} minutes, after "
                "{spontanhilfe.FEHL} wrong ones it is dead. The screen goes by WebRTC directly between the two browsers, "
                "on the way through TURN on tars; the panel only connects them. Control (spontansteuern.program_ws) goes through "
                "the program SparkHilfe with a one-time key for {spontansteuern.KEY_S|min} minutes; pictures and inputs then "
                "pass through the panel. Only GitHub builds the program; the Spark fetches it daily from the release "
-               "(spontansteuern.fetch), only with a matching signature, size and SHA-256, and hands it out only from its store.")),
+               "(spontansteuern.fetch), only with a matching signature, size and SHA-256, and hands it out only from its store. "
+               "On Linux X11 there is no file: the page shows the anchor's line without a secret "
+               "(spontansteuern._zeile), the person pastes the key in the terminal; the program sends PNG pictures.")),
             S("s8", "ende", ("Logs und Verlauf", "Logs and history"),
               ("fernzugang.log", "fernzugang.log"),
               ("Logs nur mit festen Wörtern und Zahlen (fernzugang.log), der Verlauf nur Zeit, System, Admin, Art und "
@@ -1098,6 +1102,7 @@ SEITEN = {
             ("spontanhilfe.admin_new", ("eine neue Spontanhilfe", "a new spontaneous help")),
             ("spontansteuern.program_ws", ("Steuern: der Socket des Programms SparkHilfe", "control: the socket of the program SparkHilfe")),
             ("spontansteuern.fetch", ("SparkHilfe aus dem Release: Signatur, Größe und SHA-256 geprüft", "SparkHilfe from the release: signature, size and SHA-256 checked")),
+            ("spontansteuern._zeile", ("Linux X11: die Zeile ohne Geheimnis, der Schlüssel getrennt", "Linux X11: the line without a secret, the key apart")),
             ("fernzugang.notaus_close", ("Notaus schließt jede Leitung", "kill switch closes every line")),
             ("fernnotiz.fuer_modell", ("die Notiz nur mit Haken für das Modell", "the note for the model only when ticked")),
             ("fernordner.view", ("Ordner: nur die Reihenfolge der Liste", "folders: only the order of the list")),
@@ -1105,11 +1110,11 @@ SEITEN = {
             ("fernweb.ziel_ok", ("Webdienste: wohin ein Tunnel darf", "web services: where a tunnel may go")),
             ("fernweb.verbindung", ("die Tunnel-Tür: Köpfe umgeschrieben, Cookies getrennt", "the tunnel door: heads rewritten, cookies apart")),
         ],
-        "tests": ["test_fernzugang", "test_fernbild", "test_spontanhilfe", "test_ferngross", "test_fernweb", "test_fernals", "test_spontansteuern"],
+        "tests": ["test_fernzugang", "test_fernbild", "test_spontanhilfe", "test_ferngross", "test_fernweb", "test_fernals", "test_spontansteuern", "test_sparkhilfe_linux"],
         "heute": [],
     },
     "fernserver": {
-        "stand": "63b29291b1",
+        "stand": "df68ee7357",
         "bezug": {
             "fernzugang.command": ["s1"], "fernzugang.anker_pair": ["s2"], "fernzugang.by_key": ["s3"], "fernzugang.anker_ws": ["s3"], "fernzugang.PULS_S": ["s4"], "fernzugang.MAX_MSG": ["s4"], "fernzugang.anker_removed": ["s6"], "fernzugang.ABBAU_TAGE": ["s6"], "fernanker.admin_update": ["s7"], "fernanker.stand": ["s7"],
         },
@@ -1125,9 +1130,11 @@ SEITEN = {
             S("s1", "start", ("Eine Zeile auf dem Server", "One line on the server"),
               ("curl … | sudo python3 -", "curl … | sudo python3 -"),
               ("Die Seite zeigt eine Zeile aus der Adresse, auf der der Browser ist (fernzugang.command); sie lädt den "
-               "Anker vom eigenen Panel und richtet ihn als eigenen Systemdienst ein.",
+               "Anker vom eigenen Panel und richtet ihn als eigenen Systemdienst ein. Dieselbe Zeile ohne sudo dient der "
+               "Spontanhilfe einmal (hilfe, steuern) und richtet nichts ein.",
                "The page shows one line from the address the browser is on (fernzugang.command); it loads the anchor "
-               "from the own panel and sets it up as a system service of its own.")),
+               "from the own panel and sets it up as a system service of its own. The same line without sudo serves the "
+               "spontaneous help once (hilfe, steuern) and sets nothing up.")),
             S("s2", "schritt", ("Koppeln mit dem Einmal-Code", "Pairing with the one-time code"),
               ("fernzugang.anker_pair", "fernzugang.anker_pair"),
               ("Der Anker meldet sich einmal mit dem Code (fernzugang.anker_pair) und bekommt seinen Geräteschlüssel; das "

@@ -3901,7 +3901,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "dmin_new) gibt eine Nummer für 10 Minuten, nach 5 falschen ist sie tot. Der Bildschirm geht per WebRTC direkt zwischen den zwei Browsern, von unterwegs über TURN auf tars; das Panel vermittelt nur. Steuern (spontansteuern.program_ws) geht über das Programm SparkHilfe mit einem Einmal-Schlüssel für 10 Minuten; Bilder und Eingaben laufen dann durch das Panel. Das Programm baut nur GitHub; der Spark holt es täglich aus dem Release (spontansteuern.fetch), nur mit passender Signatur, Größe und SHA-256, und gibt es nur aus seinem Speicher weiter. 8. Logs und Verlauf: Logs nur mit festen Wörtern und Zahlen (fernzugang.log), der Verlauf nur Zeit, System, Admin, Art und Dauer (fernzugang.verlauf_add). Der Notaus schließt jede Leitung (fernzugang.notaus_close)."
+"text": "dmin_new) gibt eine Nummer für 10 Minuten, nach 5 falschen ist sie tot. Der Bildschirm geht per WebRTC direkt zwischen den zwei Browsern, von unterwegs über TURN auf tars; das Panel vermittelt nur. Steuern (spontansteuern.program_ws) geht über das Programm SparkHilfe mit einem Einmal-Schlüssel für 10 Minuten; Bilder und Eingaben laufen dann durch das Panel. Das Programm baut nur GitHub; der Spark holt es täglich aus dem Release (spontansteuern.fetch), nur mit passender Signatur, Größe und SHA-256, und gibt es nur aus seinem Speicher weiter. Unter Linux X11 gibt es keine Datei: die Seite zeigt die Zeile des Ankers ohne Geheimnis (spontansteuern._zeile), den Schlüssel fügt die Person im Terminal ein; das Programm schickt PNG-Bilder. 8. Logs und Verlauf: Logs nur mit festen Wörtern und Zahlen (fernzugang.log), der Verlauf nur Zeit, System, Admin, Art und Dauer (fernzugang.verlauf_add). Der Notaus schließt jede Leitung (fernzugang.notaus_close)."
 },
 {
 "lang": "de",
@@ -3941,7 +3941,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/fernzugang.py entsperrt_bis: wie lange die Seite entsperrt ist (Schritt 2) - app/panel/fernzugang.py admin_pair: Koppeln mit Einmal-Code (Schritt 3) - app/panel/fernzugang.py link_file: Windows: die Datei spark-anker-einrichten.cmd mit Einmal-Schlüssel, einmal (Schritt 3) - app/panel/fernzugang.py admin_confirm: neues System erst nach Bestätigung mit Code oder Passkey (Schritt 3) - app/panel/fernzugang.py terminal_ws: das Web-Terminal mit Ticket (Schritt 4) - app/panel/fernzugang.py hostkey_wrong: angehefteter Host-Schlüssel (Schritt 5) - app/panel/ferndateien.py listing: Dateien über SFTP (Schritt 6) - app/panel/fernals.py choose: Dateien als anderer Benutzer: nur mit beiden Zustimmungen (Schritt 6) - app/panel/fernbild.py GUACD: guacd nur auf 127.0.0.1 (Schritt 6) - app/panel/spontanhilfe.py admin_new: eine neue Spontanhilfe (Schritt 7) - app/panel/spontansteuern.py program_ws: Steuern: der Socket des Programms SparkHilfe (Schritt 7) - app/panel/spontansteuern.py fetch: SparkHilfe aus dem Release: Signatur, Größe und SHA-256 geprüft (Schritt 7) - app/panel/fernzugang.py notaus_close: Notaus schließt jede Leitung (Schritt 8) - app/panel/fernnotiz.py fuer_modell: die No"
+"text": "- app/panel/fernzugang.py entsperrt_bis: wie lange die Seite entsperrt ist (Schritt 2) - app/panel/fernzugang.py admin_pair: Koppeln mit Einmal-Code (Schritt 3) - app/panel/fernzugang.py link_file: Windows: die Datei spark-anker-einrichten.cmd mit Einmal-Schlüssel, einmal (Schritt 3) - app/panel/fernzugang.py admin_confirm: neues System erst nach Bestätigung mit Code oder Passkey (Schritt 3) - app/panel/fernzugang.py terminal_ws: das Web-Terminal mit Ticket (Schritt 4) - app/panel/fernzugang.py hostkey_wrong: angehefteter Host-Schlüssel (Schritt 5) - app/panel/ferndateien.py listing: Dateien über SFTP (Schritt 6) - app/panel/fernals.py choose: Dateien als anderer Benutzer: nur mit beiden Zustimmungen (Schritt 6) - app/panel/fernbild.py GUACD: guacd nur auf 127.0.0.1 (Schritt 6) - app/panel/spontanhilfe.py admin_new: eine neue Spontanhilfe (Schritt 7) - app/panel/spontansteuern.py program_ws: Steuern: der Socket des Programms SparkHilfe (Schritt 7) - app/panel/spontansteuern.py fetch: SparkHilfe aus dem Release: Signatur, Größe und SHA-256 geprüft (Schritt 7) - app/panel/spontansteuern.py _zeile: Linux X11: die Zeile ohne Geheimnis, der Schlüssel getrennt (Schritt 7) - app/panel/fer"
 },
 {
 "lang": "de",
@@ -3949,7 +3949,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "tiz nur mit Haken für das Modell (Schritt 6) - app/panel/fernordner.py view: Ordner: nur die Reihenfolge der Liste (Schritt 6) - app/panel/ferngross.py upload_piece: große Datei: ein Stück nur ganz und mit passender SHA-256 (Schritt 6) - app/panel/fernweb.py ziel_ok: Webdienste: wohin ein Tunnel darf (Schritt 6) - app/panel/fernweb.py verbindung: die Tunnel-Tür: Köpfe umgeschrieben, Cookies getrennt (Schritt 6)"
+"text": "nzugang.py notaus_close: Notaus schließt jede Leitung (Schritt 8) - app/panel/fernnotiz.py fuer_modell: die Notiz nur mit Haken für das Modell (Schritt 6) - app/panel/fernordner.py view: Ordner: nur die Reihenfolge der Liste (Schritt 6) - app/panel/ferngross.py upload_piece: große Datei: ein Stück nur ganz und mit passender SHA-256 (Schritt 6) - app/panel/fernweb.py ziel_ok: Webdienste: wohin ein Tunnel darf (Schritt 6) - app/panel/fernweb.py verbindung: die Tunnel-Tür: Köpfe umgeschrieben, Cookies getrennt (Schritt 6)"
 },
 {
 "lang": "de",
@@ -3957,7 +3957,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_fernzugang, test_fernbild, test_spontanhilfe, test_ferngross, test_fernweb, test_fernals, test_spontansteuern"
+"text": "Selbsttests: test_fernzugang, test_fernbild, test_spontanhilfe, test_ferngross, test_fernweb, test_fernals, test_spontansteuern, test_sparkhilfe_linux"
 },
 {
 "lang": "de",
@@ -3981,7 +3981,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Eine Zeile auf dem Server: Die Seite zeigt eine Zeile aus der Adresse, auf der der Browser ist (fernzugang.command); sie lädt den Anker vom eigenen Panel und richtet ihn als eigenen Systemdienst ein. 2. Koppeln mit dem Einmal-Code: Der Anker meldet sich einmal mit dem Code (fernzugang.anker_pair) und bekommt seinen Geräteschlüssel; das Panel behält davon nur den SHA-256, dazu Host-Schlüssel und Name. Im Heimnetz nennt das Panel dazu seine eigene Adresse dort mit der SHA-256 seines Zertifikats; der Anker versucht sie zuerst. 3. Schlüssel bekannt?: Jede Verbindung des Ankers (fernzugang.anker_ws) zeigt den Geräteschlüssel; unbekannt oder entfernt heißt abgewiesen (fernzugang.by_key), mit Rate-Limit. 4. Leitung nach draußen: Der Anker hält eine WebSocket-Leitung mit TLS zum Panel, direkt im Heimnetz oder über den Reverse-Proxy, mit Lebenszeichen alle 20 Sekunden; jede Nachricht höchstens 65536 Bytes. 5. Kanal zum eigenen SSH: Nur auf Bitte des Panels öffnet der Anker einen Kanal zu seinem sshd auf 127.0.0.1 (binnen 15 Sekunden); angemeldet wird als Benutzer spark nur mit dem Schlüssel des Panels, sudo nur, wenn der Admin es dort einträgt. 6. Aktualisieren: „Aktualisieren“ schickt e"
+"text": "1. Eine Zeile auf dem Server: Die Seite zeigt eine Zeile aus der Adresse, auf der der Browser ist (fernzugang.command); sie lädt den Anker vom eigenen Panel und richtet ihn als eigenen Systemdienst ein. Dieselbe Zeile ohne sudo dient der Spontanhilfe einmal (hilfe, steuern) und richtet nichts ein. 2. Koppeln mit dem Einmal-Code: Der Anker meldet sich einmal mit dem Code (fernzugang.anker_pair) und bekommt seinen Geräteschlüssel; das Panel behält davon nur den SHA-256, dazu Host-Schlüssel und Name. Im Heimnetz nennt das Panel dazu seine eigene Adresse dort mit der SHA-256 seines Zertifikats; der Anker versucht sie zuerst. 3. Schlüssel bekannt?: Jede Verbindung des Ankers (fernzugang.anker_ws) zeigt den Geräteschlüssel; unbekannt oder entfernt heißt abgewiesen (fernzugang.by_key), mit Rate-Limit. 4. Leitung nach draußen: Der Anker hält eine WebSocket-Leitung mit TLS zum Panel, direkt im Heimnetz oder über den Reverse-Proxy, mit Lebenszeichen alle 20 Sekunden; jede Nachricht höchstens 65536 Bytes. 5. Kanal zum eigenen SSH: Nur auf Bitte des Panels öffnet der Anker einen Kanal zu seinem sshd auf 127.0.0.1 (binnen 15 Sekunden); angemeldet wird als Benutzer spark nur mit dem Schlüssel de"
 },
 {
 "lang": "de",
@@ -3989,7 +3989,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "inem Anker ab 1.3.0, der online und ohne offene Sitzung ist, die neue Version über seinen Kanal (fernanker.admin_update), nie einen Schritt zurück. Der Anker lädt das Programm nur vom eigenen Panel und prüft SHA-256 und die Unterschrift mit dem beim Koppeln angehefteten Schlüssel (fernanker.stand); erreicht die neue Version das Panel nicht, geht er zur alten zurück. Ältere Anker bekommen eine Zeile zum Einfügen. 7. Entfernen: „Entfernen“ lässt den Anker sich selbst abbauen und meldet es (fernzugang.anker_removed); ein entfernter, der nie wiederkommt, ist nach 90 Tagen vergessen."
+"text": "s Panels, sudo nur, wenn der Admin es dort einträgt. 6. Aktualisieren: „Aktualisieren“ schickt einem Anker ab 1.3.0, der online und ohne offene Sitzung ist, die neue Version über seinen Kanal (fernanker.admin_update), nie einen Schritt zurück. Der Anker lädt das Programm nur vom eigenen Panel und prüft SHA-256 und die Unterschrift mit dem beim Koppeln angehefteten Schlüssel (fernanker.stand); erreicht die neue Version das Panel nicht, geht er zur alten zurück. Ältere Anker bekommen eine Zeile zum Einfügen. 7. Entfernen: „Entfernen“ lässt den Anker sich selbst abbauen und meldet es (fernzugang.anker_removed); ein entfernter, der nie wiederkommt, ist nach 90 Tagen vergessen."
 },
 {
 "lang": "de",
@@ -21589,7 +21589,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " through TURN on tars; the panel only connects them. Control (spontansteuern.program_ws) goes through the program SparkHilfe with a one-time key for 10 minutes; pictures and inputs then pass through the panel. Only GitHub builds the program; the Spark fetches it daily from the release (spontansteuern.fetch), only with a matching signature, size and SHA-256, and hands it out only from its store. 8. Logs and history: Logs with fixed words and numbers only (fernzugang.log), the history only time, system, admin, kind and duration (fernzugang.verlauf_add). The kill switch closes every line (fernzugang.notaus_close)."
+"text": " through TURN on tars; the panel only connects them. Control (spontansteuern.program_ws) goes through the program SparkHilfe with a one-time key for 10 minutes; pictures and inputs then pass through the panel. Only GitHub builds the program; the Spark fetches it daily from the release (spontansteuern.fetch), only with a matching signature, size and SHA-256, and hands it out only from its store. On Linux X11 there is no file: the page shows the anchor's line without a secret (spontansteuern._zeile), the person pastes the key in the terminal; the program sends PNG pictures. 8. Logs and history: Logs with fixed words and numbers only (fernzugang.log), the history only time, system, admin, kind and duration (fernzugang.verlauf_add). The kill switch closes every line (fernzugang.notaus_close)."
 },
 {
 "lang": "en",
@@ -21629,7 +21629,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/fernzugang.py entsperrt_bis: how long the page is unlocked (step 2) - app/panel/fernzugang.py admin_pair: pairing with a one-time code (step 3) - app/panel/fernzugang.py link_file: Windows: the file spark-anker-einrichten.cmd with a one-time key, once (step 3) - app/panel/fernzugang.py admin_confirm: a new system only after confirming with a code or passkey (step 3) - app/panel/fernzugang.py terminal_ws: the web terminal with a ticket (step 4) - app/panel/fernzugang.py hostkey_wrong: pinned host key (step 5) - app/panel/ferndateien.py listing: files through SFTP (step 6) - app/panel/fernals.py choose: files as another user: only with both consents (step 6) - app/panel/fernbild.py GUACD: guacd on 127.0.0.1 only (step 6) - app/panel/spontanhilfe.py admin_new: a new spontaneous help (step 7) - app/panel/spontansteuern.py program_ws: control: the socket of the program SparkHilfe (step 7) - app/panel/spontansteuern.py fetch: SparkHilfe from the release: signature, size and SHA-256 checked (step 7) - app/panel/fernzugang.py notaus_close: kill switch closes every line (step 8) - app/panel/fernnotiz.py fuer_modell: the note for the model only when ticked (step 6) - app/panel/fe"
+"text": "- app/panel/fernzugang.py entsperrt_bis: how long the page is unlocked (step 2) - app/panel/fernzugang.py admin_pair: pairing with a one-time code (step 3) - app/panel/fernzugang.py link_file: Windows: the file spark-anker-einrichten.cmd with a one-time key, once (step 3) - app/panel/fernzugang.py admin_confirm: a new system only after confirming with a code or passkey (step 3) - app/panel/fernzugang.py terminal_ws: the web terminal with a ticket (step 4) - app/panel/fernzugang.py hostkey_wrong: pinned host key (step 5) - app/panel/ferndateien.py listing: files through SFTP (step 6) - app/panel/fernals.py choose: files as another user: only with both consents (step 6) - app/panel/fernbild.py GUACD: guacd on 127.0.0.1 only (step 6) - app/panel/spontanhilfe.py admin_new: a new spontaneous help (step 7) - app/panel/spontansteuern.py program_ws: control: the socket of the program SparkHilfe (step 7) - app/panel/spontansteuern.py fetch: SparkHilfe from the release: signature, size and SHA-256 checked (step 7) - app/panel/spontansteuern.py _zeile: Linux X11: the line without a secret, the key apart (step 7) - app/panel/fernzugang.py notaus_close: kill switch closes every line (step 8) - "
 },
 {
 "lang": "en",
@@ -21637,7 +21637,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "rnordner.py view: folders: only the order of the list (step 6) - app/panel/ferngross.py upload_piece: big file: a piece only whole and with a matching SHA-256 (step 6) - app/panel/fernweb.py ziel_ok: web services: where a tunnel may go (step 6) - app/panel/fernweb.py verbindung: the tunnel door: heads rewritten, cookies apart (step 6)"
+"text": "app/panel/fernnotiz.py fuer_modell: the note for the model only when ticked (step 6) - app/panel/fernordner.py view: folders: only the order of the list (step 6) - app/panel/ferngross.py upload_piece: big file: a piece only whole and with a matching SHA-256 (step 6) - app/panel/fernweb.py ziel_ok: web services: where a tunnel may go (step 6) - app/panel/fernweb.py verbindung: the tunnel door: heads rewritten, cookies apart (step 6)"
 },
 {
 "lang": "en",
@@ -21645,7 +21645,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_fernzugang, test_fernbild, test_spontanhilfe, test_ferngross, test_fernweb, test_fernals, test_spontansteuern"
+"text": "Self-tests: test_fernzugang, test_fernbild, test_spontanhilfe, test_ferngross, test_fernweb, test_fernals, test_spontansteuern, test_sparkhilfe_linux"
 },
 {
 "lang": "en",
@@ -21669,7 +21669,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. One line on the server: The page shows one line from the address the browser is on (fernzugang.command); it loads the anchor from the own panel and sets it up as a system service of its own. 2. Pairing with the one-time code: The anchor signs in once with the code (fernzugang.anker_pair) and gets its device key; the panel keeps only its SHA-256, plus host key and name. At home the panel also names its own address there with the SHA-256 of its certificate; the anchor tries it first. 3. Key known?: Every connection of the anchor (fernzugang.anker_ws) shows the device key; unknown or removed means refused (fernzugang.by_key), with a rate limit. 4. Line going out: The anchor keeps a WebSocket line with TLS to the panel, directly at home or through the reverse proxy, with a heartbeat every 20 seconds; every message at most 65536 bytes. 5. Channel to its own SSH: Only when the panel asks does the anchor open a channel to its sshd on 127.0.0.1 (within 15 seconds); the login is user spark with the panel's key only, sudo only when the admin adds it there. 6. Update: „Update“ sends an anchor from 1.3.0 that is online and has no open session the new version over its channel (fernanker.admi"
+"text": "1. One line on the server: The page shows one line from the address the browser is on (fernzugang.command); it loads the anchor from the own panel and sets it up as a system service of its own. The same line without sudo serves the spontaneous help once (hilfe, steuern) and sets nothing up. 2. Pairing with the one-time code: The anchor signs in once with the code (fernzugang.anker_pair) and gets its device key; the panel keeps only its SHA-256, plus host key and name. At home the panel also names its own address there with the SHA-256 of its certificate; the anchor tries it first. 3. Key known?: Every connection of the anchor (fernzugang.anker_ws) shows the device key; unknown or removed means refused (fernzugang.by_key), with a rate limit. 4. Line going out: The anchor keeps a WebSocket line with TLS to the panel, directly at home or through the reverse proxy, with a heartbeat every 20 seconds; every message at most 65536 bytes. 5. Channel to its own SSH: Only when the panel asks does the anchor open a channel to its sshd on 127.0.0.1 (within 15 seconds); the login is user spark with the panel's key only, sudo only when the admin adds it there. 6. Update: „Update“ sends an anchor "
 },
 {
 "lang": "en",
@@ -21677,7 +21677,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "n_update), never a step back. The anchor loads the program from its own panel only and checks SHA-256 and the signature with the key pinned at pairing (fernanker.stand); if the new version does not reach the panel, it goes back to the old one. Older anchors get a line to paste. 7. Remove: „Remove“ lets the anchor take itself down and report it (fernzugang.anker_removed); a removed one that never comes back is forgotten after 90 days."
+"text": "from 1.3.0 that is online and has no open session the new version over its channel (fernanker.admin_update), never a step back. The anchor loads the program from its own panel only and checks SHA-256 and the signature with the key pinned at pairing (fernanker.stand); if the new version does not reach the panel, it goes back to the old one. Older anchors get a line to paste. 7. Remove: „Remove“ lets the anchor take itself down and report it (fernzugang.anker_removed); a removed one that never comes back is forgotten after 90 days."
 },
 {
 "lang": "en",

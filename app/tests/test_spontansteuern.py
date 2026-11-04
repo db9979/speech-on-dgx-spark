@@ -2,7 +2,7 @@
 with a program dummy instead of SparkHilfe. Off by default and 404 while off, under the Spontanhilfe switch; asking
 needs a fresh code and an open help with a picture; the file only after the ask, only with her session key, only when
 its SHA-256 matches; the key 128 bits, once, KEY_S seconds, only its hash kept, the same answer for every wrong one;
-the program's socket refuses any Origin and learns the helper's name only after the key; pictures only JPEG, at most
+the program's socket refuses any Origin and learns the helper's name only after the key; pictures only JPEG (or PNG, S2d), at most
 FPS a second, only after her answer; inputs only from fernsicht's lists and only while she allowed control and the
 admin pressed „Steuern“; „Ablehnen“ leaves the help, closing the allowed program ends it, the end of the help closes
 the program; logs in fixed words, Live and the history without content. No test depends on the time of day."""
@@ -99,7 +99,7 @@ class Door(_On):
             r, sent = self.ask()
         self.assertEqual(r.status_code, 200, r.text)
         self.assertEqual(sent, [{"typ": "steuern", "stand": "angefragt",
-                                 "programme": {"windows-x64": hashlib.sha256(EXE).hexdigest()}}])
+                                 "programme": {"windows-x64": hashlib.sha256(EXE).hexdigest()}, "zeile": True}])
         self.assertIn("spontanhilfe: steuern_frage | admin | 1", j.getvalue())
         fernzugang.ENTSPERRT.clear()
         self.assertEqual(self.ask()[0].status_code, 423)                    # only on the unlocked page

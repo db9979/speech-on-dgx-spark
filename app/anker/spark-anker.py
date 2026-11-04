@@ -7,6 +7,7 @@ and Windows (stage 5: the panel's file spark-anker-einrichten.cmd starts it, see
     curl -fsSL https://<panel>/fernzugang/anker | sudo python3 - entfernen                  the same without the program
     spark-anker zustand                                                                     set up? which panel?
     curl -fsSL https://<panel>/fernzugang/anker | python3 - hilfe https://<panel>           Spontanhilfe (S3): once
+    curl -fsSL https://<panel>/fernzugang/anker | python3 - steuern https://<panel>         Spontanhilfe S2d: control (X11)
     curl -fsSL https://<panel>/fernzugang/anker | sudo python3 - bildschirm                 the screen too (stage 4)
     sudo spark-anker bildschirm aus                                                         the screen off again
     curl -fsSL https://<panel>/fernzugang/anker | sudo python3 - aktualisieren              this program anew (no code)
@@ -73,13 +74,25 @@ task SparkAnker (this program as LOCAL SERVICE) and SparkAnker-Waechter (SYSTEM:
 the root units); „Spark Anker“ under Settings, Apps to remove it. Removing puts sshd, its shell and firewall rule back
 as they were and takes user, tasks, settings, program and its Python away (the folder with the running Python, and the
 profile of spark Windows holds after an SSH session, through a one-off SYSTEM task: right after this process, else at
-the next start). Not yet on Windows: `bildschirm` and `hilfe`.
+the next start). Not yet on Windows: `bildschirm`, `hilfe` and `steuern`.
 
 Spontanhilfe S3 (`hilfe`, never as root, nothing set up): the person types the number and her first name on this
 terminal, the program opens WSS /api/hilfe/shell (no key, no Origin) and waits. When the admin accepts, it asks once
 more („j“); only then her own shell runs in a PTY with her rights, its output goes to the panel and to this terminal,
 the admin's keys (and hers) into it. Strg+C, „Beenden“ in the panel, the session clock or the Notaus end it: the shell
 gets SIGHUP, the terminal is as it was, and nothing is left behind (no file, no user, no service).
+
+Spontanhilfe S2d (`steuern`, 1.8.0, never as root, nothing set up): SparkHilfe for Linux X11. The person's help page
+shows the line only after the admin asked for control, and „Schlüssel kopieren“: the one-time key (128 bits,
+10 minutes, once) is pasted on this terminal with echo off, like the pairing code never an argument, an address or a
+variable (of the session's variables only SITZUNG is read: language and screen). Under Wayland, without DISPLAY or
+without XTest it says so in one sentence before it asks anything and connects nothing („nur Ansehen“). It opens WSS /api/hilfe/steuern (no Origin, the same TLS check or pin as above), sends the key first and
+learns the helper's name only when the panel took it; then it asks on this terminal (1 Ablehnen, 2 Nur ansehen,
+3 Erlauben; no answer in FRAGE_S: Ablehnen). Allowed: a red frame and a bar at the top (X11 windows; a click on the
+bar, Strg+C or „b“ ends), the whole screen as PNG (XGetImage, every k-th pixel up to BILD_BREITE, zlib, at most
+BILD_MAX bytes, about 2 a second, an unchanged one only every BILD_NOCHMAL_S), and the admin's inputs through XTest,
+checked here once more against the fixed lists (X_KEYS, X_BUTTONS, text, a point 0..1) and used only after
+„Erlauben“ while the admin's toolbar says „Steuern“. Closing ends everything; nothing is written anywhere.
 
 Updating (since 1.3.0): „Aktualisieren“ in the panel sends the new version, its SHA-256 and an Ed25519 signature of
 both over the channel. The anchor fetches the program only from its own panel (the same checked or pinned TLS), checks
@@ -130,7 +143,7 @@ try:
 except ImportError:      # Windows: no passwd database (the anchor asks `net user` there)
     pwd = None
 
-VERSION = "1.7.0"
+VERSION = "1.8.0"
 LIB = "/usr/local/lib/spark-anker"
 PROG = LIB + "/spark-anker.py"
 BIN = "/usr/local/bin/spark-anker"
@@ -2666,6 +2679,26 @@ class Tty:
         data, self.buf = self.buf, b""
         return data
 
+    def secret(self, prompt):
+        """One line typed or pasted without echo (the S2d key); the terminal as it was afterwards."""
+        old = None
+        try:
+            import termios
+            old = termios.tcgetattr(self.rfd)
+            quiet = list(old)
+            quiet[3] &= ~termios.ECHO
+            termios.tcsetattr(self.rfd, termios.TCSANOW, quiet)
+        except Exception:       # no terminal (a pipe in the tests): read as it is
+            old = None
+        try:
+            return self.ask(prompt)
+        finally:
+            if old is not None:
+                import termios
+                with contextlib.suppress(Exception):
+                    termios.tcsetattr(self.rfd, termios.TCSADRAIN, old)
+            self.write("\r\n")
+
     def quiet(self):
         try:
             import termios
@@ -2884,10 +2917,724 @@ def cmd_help(args, tty=None, shell=None):
             t.restore()
 
 
+# ---------------------------------------------------------------- Spontanhilfe S2d: SparkHilfe for Linux X11 (`steuern`)
+STEUERN_PFAD = "/api/hilfe/steuern"
+SCHLUESSEL = re.compile(r"[A-Za-z0-9_\-]{22}")
+_CTRL, _SHIFT = 0xFFE3, 0xFFE1
+# fernsicht's lists (KEYS, BUTTONS): the panel checks every input, this program again; the same names, X keysyms here.
+# No Super (Windows) key, no Alt+Tab, no free combinations.
+X_KEYS = {"enter": (0xFF0D,), "escape": (0xFF1B,), "tab": (0xFF09,), "backspace": (0xFF08,), "delete": (0xFFFF,),
+          "space": (0x20,), "up": (0xFF52,), "down": (0xFF54,), "left": (0xFF51,), "right": (0xFF53,),
+          "home": (0xFF50,), "end": (0xFF57,), "pageup": (0xFF55,), "pagedown": (0xFF56,), "undo": (_CTRL, 0x7A),
+          "redo": (_CTRL, _SHIFT, 0x7A), "copy": (_CTRL, 0x63), "paste": (_CTRL, 0x76), "save": (_CTRL, 0x73),
+          "reload": (0xFFC2,), "find": (_CTRL, 0x66)}
+X_BUTTONS = ("left", "right", "double")
+BILD_MAX = 700 * 1024      # fernsicht.MAX_FRAME: no picture is bigger
+BILD_BREITE = 1600         # wider screens are made smaller (every k-th pixel)
+BILD_S = 0.5               # about 2 pictures a second (the panel takes 4 at most)
+BILD_NOCHMAL_S = 5         # the same picture again after this long, so the admin's page knows it is alive
+EVENTS_MAX = 40            # fernsicht.MAX_EVENTS
+TEXT_MAX = 200             # fernsicht.TEXT_MAX
+FRAGE_S = 60               # no answer in the terminal: „Ablehnen“
+HALLO_WARTE_S = 20         # the panel answers the key this fast
+ENDE_WORTE = ("b", "q", "beenden", "ende", "end", "quit")
+TEXTE = {
+    "schluessel": ("Spark-Hilfe: Schlüssel von der Hilfe-Seite („Schlüssel kopieren“) hier einfügen und Enter "
+                   "(wird nicht angezeigt): ",
+                   "Spark help: paste the key from the help page (\"Copy key\") here and press Enter (not shown): "),
+    "kein_tty": ("Kein Terminal für den Schlüssel: den Befehl in einem Terminal-Fenster einfügen. Es wurde nichts "
+                 "verbunden.",
+                 "No terminal for the key: paste the command into a terminal window. Nothing was connected."),
+    "verbinde": ("Spark-Hilfe: verbinde mit {host} …", "Spark help: connecting to {host} …"),
+    "root": ("Spark-Hilfe nie als root: den Befehl ohne sudo nehmen. Es wurde nichts verbunden.",
+             "Spark help never as root: use the command without sudo. Nothing was connected."),
+    "neu_laden": ("Der Befehl gilt nicht mehr (schon benutzt, abgelaufen oder die Hilfe ist zu). Bitte auf der "
+                  "Hilfe-Seite einen neuen holen. Es wurde nichts verbunden.",
+                  "This command is no longer valid (used, expired or the help is over). Please get a new one on the "
+                  "help page. Nothing was connected."),
+    "wayland": ("Unter Wayland kann Spark-Hilfe noch nicht steuern: nur Ansehen geht („Bildschirm teilen“ auf der "
+                "Hilfe-Seite). Es wurde nichts verbunden.",
+                "Spark help cannot control under Wayland yet: only viewing works (\"Share screen\" on the help page). "
+                "Nothing was connected."),
+    "kein_x": ("Kein X11-Bildschirm gefunden (DISPLAY fehlt): den Befehl im Terminal der grafischen Sitzung einfügen. "
+               "Es wurde nichts verbunden.",
+               "No X11 screen found (DISPLAY is missing): paste the command into a terminal of the graphical session. "
+               "Nothing was connected."),
+    "lib_fehlt": ("Auf diesem Rechner fehlt {lib} (X11 mit XTest): Steuern geht hier nicht, nur Ansehen. Es wurde "
+                  "nichts verbunden.",
+                  "{lib} is missing on this computer (X11 with XTest): control does not work here, only viewing. "
+                  "Nothing was connected."),
+    "format": ("Dieser Bildschirm hat ein Farbformat, das Spark-Hilfe nicht liest: nur Ansehen geht. Es wurde nichts "
+               "verbunden.",
+               "This screen has a colour format Spark help cannot read: only viewing works. Nothing was connected."),
+    "frage": ("\r\nSpark-Hilfe: {admin} ({host}) möchte Ihren Computer steuern, also Maus und Tastatur bedienen. Sie "
+              "sehen alles mit; ein Klick auf die Leiste oben oder Strg+C beendet sofort.\r\n"
+              "  1  Ablehnen\r\n  2  Nur ansehen\r\n  3  Erlauben\r\n"
+              "Ohne Antwort gilt in {s} s „Ablehnen“. Ihre Wahl (1, 2 oder 3): ",
+              "\r\nSpark help: {admin} ({host}) would like to control your computer, using mouse and keyboard. You see "
+              "everything; a click on the bar at the top or Ctrl+C ends at once.\r\n"
+              "  1  Decline\r\n  2  View only\r\n  3  Allow\r\n"
+              "Without an answer \"Decline\" applies in {s} s. Your choice (1, 2 or 3): "),
+    "nochmal": ("Bitte 1, 2 oder 3: ", "Please 1, 2 or 3: "),
+    "abgelehnt": ("Spark-Hilfe: abgelehnt. Es bleibt nichts zurück.", "Spark help: declined. Nothing is left behind."),
+    "laeuft_ansehen": ("Spark-Hilfe: {admin} sieht jetzt Ihren Bildschirm, steuert aber nicht. Beenden: Klick auf die "
+                       "Leiste oben, Strg+C oder „b“ und Enter.",
+                       "Spark help: {admin} now sees your screen but does not control. End: a click on the bar at the "
+                       "top, Ctrl+C or \"b\" and Enter."),
+    "laeuft_erlaubt": ("Spark-Hilfe: {admin} sieht Ihren Bildschirm und darf steuern. Beenden: Klick auf die Leiste "
+                       "oben, Strg+C oder „b“ und Enter.",
+                       "Spark help: {admin} sees your screen and may control. End: a click on the bar at the top, "
+                       "Ctrl+C or \"b\" and Enter."),
+    "leiste_ansehen": ("Spark-Hilfe: {admin} sieht Ihren Bildschirm  ·  hier klicken: Beenden",
+                       "Spark help: {admin} sees your screen  ·  click here: End"),
+    "leiste_erlaubt": ("Spark-Hilfe: {admin} darf steuern, gerade nur ansehen  ·  hier klicken: Beenden",
+                       "Spark help: {admin} may control, viewing for now  ·  click here: End"),
+    "leiste_aktiv": ("Steuerung aktiv: {admin}  ·  hier klicken: Beenden",
+                     "Control active: {admin}  ·  click here: End"),
+    "aktiv": ("Spark-Hilfe: {admin} steuert jetzt.", "Spark help: {admin} is controlling now."),
+    "aus": ("Spark-Hilfe: {admin} sieht nur noch zu.", "Spark help: {admin} only watches now."),
+    "beendet": ("Spark-Hilfe: die Hilfe ist beendet. Es bleibt nichts zurück.",
+                "Spark help: the help has ended. Nothing is left behind."),
+    "zu": ("Spark-Hilfe: die Verbindung ist zu. Es bleibt nichts zurück.",
+           "Spark help: the connection is closed. Nothing is left behind."),
+}
+
+
+SITZUNG = ("LC_ALL", "LC_MESSAGES", "LANG", "DISPLAY", "WAYLAND_DISPLAY", "XDG_SESSION_TYPE")
+
+
+def sitzung():
+    """Only these names of the session's variables (language and screen): nothing else is read, never a key."""
+    return {k: os.getenv(k, "") for k in SITZUNG}
+
+
+def deutsch(env=None):
+    """German when the session speaks German (LC_ALL, LC_MESSAGES, LANG; nothing set: German), else English."""
+    env = sitzung() if env is None else env
+    for k in ("LC_ALL", "LC_MESSAGES", "LANG"):
+        v = str(env.get(k) or "")
+        if v:
+            return v.lower().startswith("de")
+    return True
+
+
+def T(key, env=None, **kw):
+    """One fixed text of the program in the session's language; {admin} and {host} only from cleaned values."""
+    return TEXTE[key][0 if deutsch(env) else 1].format(**kw)
+
+
+def helfer_name(raw):
+    """The helper's name from the panel: letters, digits, space, . ' - only (no control or direction characters)."""
+    return re.sub(r"[^\w .'\-]", "", str(raw or ""))[:40].strip() or "Admin"
+
+
+def pruefe_eingaben(raw):
+    """The admin's inputs, checked once more here like fernsicht.clean_events: anything else is dropped."""
+    out = []
+    for e in raw[:EVENTS_MAX] if isinstance(raw, list) else []:
+        if not isinstance(e, dict):
+            continue
+        kind = e.get("t")
+        if kind in ("move", "click"):
+            x, y = e.get("x"), e.get("y")
+            if not all(isinstance(v, (int, float)) and not isinstance(v, bool) and 0 <= v <= 1 for v in (x, y)):
+                continue
+            ev = {"t": kind, "x": float(x), "y": float(y)}
+            if kind == "click":
+                if e.get("b", "left") not in X_BUTTONS:
+                    continue
+                ev["b"] = e.get("b", "left")
+            out.append(ev)
+        elif kind == "scroll":
+            dy = e.get("dy")
+            if isinstance(dy, int) and not isinstance(dy, bool) and dy:
+                out.append({"t": "scroll", "dy": max(-10, min(10, dy))})
+        elif kind == "key" and e.get("k") in X_KEYS:
+            out.append({"t": "key", "k": e["k"]})
+        elif kind == "text" and isinstance(e.get("s"), str):
+            s = "".join(c for c in e["s"] if c == "\n" or c.isprintable())[:TEXT_MAX]
+            if s:
+                out.append({"t": "text", "s": s})
+    return out
+
+
+def keysym(ch):
+    """The X keysym of one character (Latin-1 as itself, the rest as Unicode keysym, a line break as Return)."""
+    o = ord(ch)
+    if ch == "\n":
+        return 0xFF0D
+    return o if 0x20 <= o <= 0x7E or 0xA0 <= o <= 0xFF else 0x01000000 | o
+
+
+_TIEF = bytes(b & 0xF0 for b in range(256))      # only the upper 4 bits of a colour: much smaller, still readable
+
+
+def bild_png(raw, w, h, bpl, order, k=1, tief=False):
+    """A PNG (8 bit RGB, no filter) of a 32-bit-per-pixel screen picture, only every k-th pixel and line; order is
+    „bgrx“ (LSBFirst) or „xrgb“ (MSBFirst). Only the standard library: slices and zlib."""
+    import zlib
+    r, g, b = (2, 1, 0) if order == "bgrx" else (1, 2, 3)
+    ow, oh, step = (w + k - 1) // k, (h + k - 1) // k, 4 * k
+    line = bytearray(1 + 3 * ow)
+    rows = bytearray()
+    for y in range(0, h, k):
+        row = raw[y * bpl:y * bpl + 4 * w]
+        line[1::3], line[2::3], line[3::3] = row[r::step], row[g::step], row[b::step]
+        rows += line
+    data = bytes(rows)
+    if tief:
+        data = data.translate(_TIEF)        # the filter bytes stay 0 (0 & 0xF0)
+
+    def chunk(kind, body):
+        return struct.pack("!I", len(body)) + kind + body + struct.pack("!I", zlib.crc32(kind + body) & 0xFFFFFFFF)
+    return (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack("!IIBBBBB", ow, oh, 8, 2, 0, 0, 0))
+            + chunk(b"IDAT", zlib.compress(data, 6)) + chunk(b"IEND", b""))
+
+
+def bild_klein(raw, w, h, bpl, order, breite=BILD_BREITE, cap=BILD_MAX):
+    """The picture as a PNG of at most cap bytes: smaller and with fewer colours step by step, else None."""
+    k = max(1, -(-w // breite))
+    for kk, tief in ((k, False), (k, True), (2 * k, True), (3 * k, True)):
+        png = bild_png(raw, w, h, bpl, order, kk, tief)
+        if len(png) <= cap:
+            return png
+    return None
+
+
+def x11_open(env=None):
+    """The X11 screen of this session, or one clear sentence why not (Wayland, no DISPLAY, no XTest)."""
+    import ctypes
+    import ctypes.util
+    env = sitzung() if env is None else env
+    if str(env.get("XDG_SESSION_TYPE") or "").lower() == "wayland" or env.get("WAYLAND_DISPLAY"):
+        raise Fehler(T("wayland", env))
+    if not env.get("DISPLAY"):
+        raise Fehler(T("kein_x", env))
+    libs = []
+    for name, so in (("X11", "libX11.so.6"), ("Xtst", "libXtst.so.6")):
+        try:
+            libs.append(ctypes.CDLL(ctypes.util.find_library(name) or so))
+        except OSError:
+            raise Fehler(T("lib_fehlt", env, lib=so))
+    return X11(ctypes, libs[0], libs[1], env)
+
+
+class X11:
+    """Xlib and XTest through ctypes: the picture of the whole screen (XGetImage), mouse and keys (XTest), the red frame
+    and the bar (override-redirect windows; a click on the bar ends). One thread; nothing is changed that is not put
+    back (a borrowed key for unusual characters gets its empty mapping again)."""
+
+    RAND = 4
+    ROT = 0xD32F2F
+    LEISTE_BG, LEISTE_FG = 0x8E1B1B, 0xFFFFFF
+
+    def __init__(self, ct, xl, xt, env=None):
+        c = self.c = ct
+        self.xl, self.xt, self.env = xl, xt, env
+
+        class XImage(c.Structure):
+            _fields_ = [("width", c.c_int), ("height", c.c_int), ("xoffset", c.c_int), ("format", c.c_int),
+                        ("data", c.c_void_p), ("byte_order", c.c_int), ("bitmap_unit", c.c_int),
+                        ("bitmap_bit_order", c.c_int), ("bitmap_pad", c.c_int), ("depth", c.c_int),
+                        ("bytes_per_line", c.c_int), ("bits_per_pixel", c.c_int), ("red_mask", c.c_ulong),
+                        ("green_mask", c.c_ulong), ("blue_mask", c.c_ulong), ("obdata", c.c_void_p),
+                        ("create_image", c.c_void_p), ("destroy_image", c.CFUNCTYPE(c.c_int, c.c_void_p)),
+                        ("get_pixel", c.c_void_p), ("put_pixel", c.c_void_p), ("sub_image", c.c_void_p),
+                        ("add_pixel", c.c_void_p)]
+
+        class XSetWindowAttributes(c.Structure):
+            _fields_ = [("background_pixmap", c.c_ulong), ("background_pixel", c.c_ulong),
+                        ("border_pixmap", c.c_ulong), ("border_pixel", c.c_ulong), ("bit_gravity", c.c_int),
+                        ("win_gravity", c.c_int), ("backing_store", c.c_int), ("backing_planes", c.c_ulong),
+                        ("backing_pixel", c.c_ulong), ("save_under", c.c_int), ("event_mask", c.c_long),
+                        ("do_not_propagate_mask", c.c_long), ("override_redirect", c.c_int),
+                        ("colormap", c.c_ulong), ("cursor", c.c_ulong)]
+
+        class XCharStruct(c.Structure):
+            _fields_ = [("lbearing", c.c_short), ("rbearing", c.c_short), ("width", c.c_short),
+                        ("ascent", c.c_short), ("descent", c.c_short), ("attributes", c.c_ushort)]
+
+        class XFontStruct(c.Structure):
+            _fields_ = [("ext_data", c.c_void_p), ("fid", c.c_ulong), ("direction", c.c_uint),
+                        ("min_char_or_byte2", c.c_uint), ("max_char_or_byte2", c.c_uint), ("min_byte1", c.c_uint),
+                        ("max_byte1", c.c_uint), ("all_chars_exist", c.c_int), ("default_char", c.c_uint),
+                        ("n_properties", c.c_int), ("properties", c.c_void_p), ("min_bounds", XCharStruct),
+                        ("max_bounds", XCharStruct), ("per_char", c.c_void_p), ("ascent", c.c_int),
+                        ("descent", c.c_int)]
+        self.XImage, self.XSWA, self.XFont = XImage, XSetWindowAttributes, XFontStruct
+        P, U, I = c.c_void_p, c.c_ulong, c.c_int
+        sig = {"XOpenDisplay": (P, [c.c_char_p]), "XDefaultScreen": (I, [P]), "XRootWindow": (U, [P, I]),
+               "XDisplayWidth": (I, [P, I]), "XDisplayHeight": (I, [P, I]), "XConnectionNumber": (I, [P]),
+               "XGetImage": (c.POINTER(XImage), [P, U, I, I, c.c_uint, c.c_uint, U, I]),
+               "XKeysymToKeycode": (c.c_ubyte, [P, U]), "XkbKeycodeToKeysym": (U, [P, c.c_ubyte, I, I]),
+               "XDisplayKeycodes": (I, [P, c.POINTER(I), c.POINTER(I)]),
+               "XGetKeyboardMapping": (c.POINTER(U), [P, c.c_ubyte, I, c.POINTER(I)]),
+               "XChangeKeyboardMapping": (I, [P, I, I, c.POINTER(U), I]), "XFree": (I, [P]), "XFlush": (I, [P]),
+               "XSync": (I, [P, I]), "XPending": (I, [P]), "XNextEvent": (I, [P, P]),
+               "XCreateWindow": (U, [P, U, I, I, c.c_uint, c.c_uint, c.c_uint, I, c.c_uint, P, U,
+                                     c.POINTER(XSetWindowAttributes)]),
+               "XMapRaised": (I, [P, U]), "XRaiseWindow": (I, [P, U]), "XDestroyWindow": (I, [P, U]),
+               "XStoreName": (I, [P, U, c.c_char_p]), "XCreateGC": (P, [P, U, U, P]), "XFreeGC": (I, [P, P]),
+               "XSetForeground": (I, [P, P, U]), "XSetFont": (I, [P, P, U]), "XClearWindow": (I, [P, U]),
+               "XDrawString": (I, [P, U, P, I, I, c.c_char_p, I]), "XLoadQueryFont": (c.POINTER(XFontStruct), [P, c.c_char_p]),
+               "XFreeFont": (I, [P, c.POINTER(XFontStruct)]), "XTextWidth": (I, [c.POINTER(XFontStruct), c.c_char_p, I]),
+               "XFillRectangle": (I, [P, U, P, I, I, c.c_uint, c.c_uint]), "XCloseDisplay": (I, [P]),
+               "XSetErrorHandler": (P, [P])}
+        for name, (res, args) in sig.items():
+            f = getattr(xl, name)
+            f.restype, f.argtypes = res, args
+        for name, args in (("XTestQueryExtension", [P, c.POINTER(I), c.POINTER(I), c.POINTER(I), c.POINTER(I)]),
+                           ("XTestFakeMotionEvent", [P, I, I, I, U]), ("XTestFakeButtonEvent", [P, c.c_uint, I, U]),
+                           ("XTestFakeKeyEvent", [P, c.c_uint, I, U])):
+            f = getattr(xt, name)
+            f.restype, f.argtypes = I, args
+        # an X error (a window gone, a picture not readable) must not end the process with Xlib's default handler
+        self.fehler = 0
+
+        def on_error(_dpy, _ev):
+            self.fehler += 1
+            return 0
+        self._on_error = c.CFUNCTYPE(I, P, P)(on_error)
+        xl.XSetErrorHandler(c.cast(self._on_error, P))
+        self.dpy = xl.XOpenDisplay(None)
+        if not self.dpy:
+            raise Fehler(T("kein_x", env))
+        n = [I() for _ in range(4)]
+        if not xt.XTestQueryExtension(self.dpy, *[c.byref(v) for v in n]):
+            xl.XCloseDisplay(self.dpy)
+            self.dpy = None
+            raise Fehler(T("lib_fehlt", env, lib="XTest"))
+        self.scr = xl.XDefaultScreen(self.dpy)
+        self.root = xl.XRootWindow(self.dpy, self.scr)
+        self.w, self.h = xl.XDisplayWidth(self.dpy, self.scr), xl.XDisplayHeight(self.dpy, self.scr)
+        self.order = None
+        self.fenster, self.leiste, self.gc, self.font, self.text = [], 0, None, None, b""
+        self.leiste_bx = (0, 0)
+        self.spare, self.spare_sym = 0, 0
+        try:
+            self.grab()        # reads the format once: nothing is connected for a screen it cannot read
+        except Fehler:
+            self.close()
+            raise
+
+    def fileno(self):
+        return self.xl.XConnectionNumber(self.dpy)
+
+    # -- the picture
+    def grab(self):
+        """(width, height, bytes per line, order, bytes) of the whole screen now; Fehler for an unknown format."""
+        c, xl = self.c, self.xl
+        p = xl.XGetImage(self.dpy, self.root, 0, 0, self.w, self.h, 0xFFFFFFFF, 2)   # AllPlanes, ZPixmap
+        if not p:
+            raise Fehler(T("format", self.env))
+        try:
+            im = p.contents
+            ok = (im.bits_per_pixel == 32 and im.red_mask == 0xFF0000 and im.green_mask == 0xFF00
+                  and im.blue_mask == 0xFF and im.data)
+            if not ok:
+                raise Fehler(T("format", self.env))
+            order = "bgrx" if im.byte_order == 0 else "xrgb"     # LSBFirst / MSBFirst
+            raw = c.string_at(im.data, im.bytes_per_line * im.height)
+            return im.width, im.height, im.bytes_per_line, order, raw
+        finally:
+            p.contents.destroy_image(c.cast(p, c.c_void_p))
+
+    # -- inputs (XTest)
+    def _kc(self, ks):
+        return int(self.xl.XKeysymToKeycode(self.dpy, ks) or 0)
+
+    def _key(self, kc, down):
+        self.xt.XTestFakeKeyEvent(self.dpy, kc, 1 if down else 0, 0)
+
+    def move(self, x, y):
+        self.xt.XTestFakeMotionEvent(self.dpy, self.scr, int(x), int(y), 0)
+
+    def button(self, n, down):
+        self.xt.XTestFakeButtonEvent(self.dpy, n, 1 if down else 0, 0)
+
+    def chord(self, syms):
+        kcs = [self._kc(s) for s in syms]
+        if not all(kcs):
+            return
+        for kc in kcs:
+            self._key(kc, True)
+        for kc in reversed(kcs):
+            self._key(kc, False)
+
+    def _borrow(self, ks):
+        """A key without a mapping lends itself to one unusual character (put back in close)."""
+        c, xl = self.c, self.xl
+        if not self.spare:
+            lo, hi, per = c.c_int(), c.c_int(), c.c_int()
+            xl.XDisplayKeycodes(self.dpy, c.byref(lo), c.byref(hi))
+            m = xl.XGetKeyboardMapping(self.dpy, lo.value, hi.value - lo.value + 1, c.byref(per))
+            if not m:
+                return 0
+            try:
+                for kc in range(hi.value, lo.value - 1, -1):
+                    i = (kc - lo.value) * per.value
+                    if all(m[i + j] == 0 for j in range(per.value)):
+                        self.spare = kc
+                        break
+            finally:
+                xl.XFree(c.cast(m, c.c_void_p))
+            if not self.spare:
+                return 0
+        if self.spare_sym != ks:
+            syms = (c.c_ulong * 1)(ks)
+            xl.XChangeKeyboardMapping(self.dpy, self.spare, 1, syms, 1)
+            xl.XSync(self.dpy, 0)
+            time.sleep(0.02)                 # the programs take the new mapping (MappingNotify)
+            self.spare_sym = ks
+        return self.spare
+
+    def type_char(self, ch):
+        ks = keysym(ch)
+        kc, shift = self._kc(ks), False
+        if kc:
+            if int(self.xl.XkbKeycodeToKeysym(self.dpy, kc, 0, 0)) == ks:
+                pass
+            elif int(self.xl.XkbKeycodeToKeysym(self.dpy, kc, 0, 1)) == ks:
+                shift = True
+            else:
+                kc = 0
+        if not kc:
+            kc = self._borrow(ks)
+        if not kc:
+            return
+        sk = self._kc(_SHIFT) if shift else 0
+        if sk:
+            self._key(sk, True)
+        self._key(kc, True)
+        self._key(kc, False)
+        if sk:
+            self._key(sk, False)
+
+    def flush(self):
+        self.xl.XFlush(self.dpy)
+
+    # -- the red frame and the bar
+    def _window(self, x, y, w, h, bg, events=0):
+        a = self.XSWA()
+        a.background_pixel, a.override_redirect, a.event_mask = bg, 1, events
+        win = self.xl.XCreateWindow(self.dpy, self.root, x, y, max(1, w), max(1, h), 0, 0, 1, None,
+                                    (1 << 1) | (1 << 9) | (1 << 11), self.c.byref(a))   # CWBackPixel, CWOverrideRedirect, CWEventMask
+        self.xl.XStoreName(self.dpy, win, b"Spark-Hilfe")
+        self.xl.XMapRaised(self.dpy, win)
+        return win
+
+    def show(self, text):
+        xl, r, w, h = self.xl, self.RAND, self.w, self.h
+        for x, y, ww, hh in ((0, 0, w, r), (0, h - r, w, r), (0, 0, r, h), (w - r, 0, r, h)):
+            self.fenster.append(self._window(x, y, ww, hh, self.ROT))
+        for name in (b"-*-dejavu sans-bold-r-normal--16-*-*-*-*-*-iso8859-1",
+                     b"-misc-fixed-bold-r-normal--18-*-*-*-*-*-iso8859-1", b"fixed"):
+            f = xl.XLoadQueryFont(self.dpy, name)
+            if f:
+                self.font = f
+                break
+        self.say(text)
+
+    def say(self, text):
+        xl = self.xl
+        self.text = text.encode("latin-1", "replace")
+        tw = xl.XTextWidth(self.font, self.text, len(self.text)) if self.font else 8 * len(self.text)
+        asc = self.font.contents.ascent if self.font else 12
+        desc = self.font.contents.descent if self.font else 4
+        bw, bh = min(self.w - 2 * self.RAND, tw + 32), asc + desc + 14
+        if self.leiste:
+            xl.XDestroyWindow(self.dpy, self.leiste)
+        self.leiste = self._window((self.w - bw) // 2, self.RAND, bw, bh, self.LEISTE_BG, (1 << 2) | (1 << 15))   # ButtonPress, Exposure
+        if self.gc is None:
+            self.gc = xl.XCreateGC(self.dpy, self.leiste, 0, None)
+            if self.font:
+                xl.XSetFont(self.dpy, self.gc, self.font.contents.fid)
+        self.leiste_bx = (16, 7 + asc)
+        self._draw()
+
+    def _draw(self):
+        if self.leiste and self.gc:
+            self.xl.XClearWindow(self.dpy, self.leiste)
+            self.xl.XSetForeground(self.dpy, self.gc, self.LEISTE_FG)
+            self.xl.XDrawString(self.dpy, self.leiste, self.gc, self.leiste_bx[0], self.leiste_bx[1], self.text,
+                                len(self.text))
+            self.flush()
+
+    def events(self):
+        """„ende“ for a click on the bar (or the frame); the bar is drawn again when it was covered."""
+        out = []
+        buf = (self.c.c_long * 24)()
+        while self.xl.XPending(self.dpy):
+            self.xl.XNextEvent(self.dpy, buf)
+            kind = self.c.c_int.from_buffer(buf).value
+            if kind == 4:            # ButtonPress
+                out.append("ende")
+            elif kind == 12:         # Expose
+                self._draw()
+        for win in self.fenster + ([self.leiste] if self.leiste else []):
+            self.xl.XRaiseWindow(self.dpy, win)
+        return out
+
+    def close(self):
+        xl, c = self.xl, self.c
+        if not self.dpy:
+            return
+        with contextlib.suppress(Exception):
+            if self.spare and self.spare_sym:
+                xl.XChangeKeyboardMapping(self.dpy, self.spare, 1, (c.c_ulong * 1)(0), 1)
+            for win in self.fenster + ([self.leiste] if self.leiste else []):
+                xl.XDestroyWindow(self.dpy, win)
+            if self.gc:
+                xl.XFreeGC(self.dpy, self.gc)
+            if self.font:
+                xl.XFreeFont(self.dpy, self.font)
+            xl.XSync(self.dpy, 0)
+        xl.XCloseDisplay(self.dpy)
+        self.dpy, self.fenster, self.leiste = None, [], 0
+
+
+class Steuern:
+    """One control session of SparkHilfe on Linux X11: the panel's socket, the person's terminal, the screen. One
+    thread for everything, like Hilfe. The helper's name is known only after the panel took the key."""
+
+    def __init__(self, ws, tty, screen, host, env=None):
+        self.ws, self.tty, self.screen, self.host, self.env = ws, tty, screen, host, env
+        self.admin, self.mode, self.steuern, self.offen, self.angenommen = "Admin", "", False, True, False
+        self.last = time.monotonic()
+
+    def _t(self, key, **kw):
+        return T(key, self.env, admin=self.admin, host=self.host, **kw)
+
+    def _say(self, key):
+        self.tty.write("\r\n" + self._t(key) + "\r\n")
+
+    def _ping(self):
+        if time.monotonic() - self.last > PING_S:
+            self.ws.send(b"", 9)
+            self.last = time.monotonic()
+
+    def _messages(self):
+        """The panel's whole text messages read so far (pictures never come this way)."""
+        out = []
+        while True:
+            got = self.ws.frame()
+            if got is None:
+                return out
+            op, data = got
+            if op != 1:
+                continue
+            try:
+                m = json.loads(data.decode())
+            except ValueError:
+                continue
+            if isinstance(m, dict):
+                out.append(m)
+
+    def _wait(self, fds, seconds):
+        ready, _, _ = select.select(fds, [], [], 0 if self.ws.sock.pending() else max(0.0, seconds))
+        if self.ws.sock.pending() and self.ws.sock not in ready:
+            ready.append(self.ws.sock)
+        if self.ws.sock in ready and not self.ws.feed():
+            raise EOFError
+        return ready
+
+    def _first(self):
+        end = time.monotonic() + HALLO_WARTE_S
+        while time.monotonic() < end:
+            for m in self._messages():
+                return m
+            self._wait([self.ws.sock], end - time.monotonic())
+        return {}
+
+    def _ask(self):
+        """Her answer in the terminal: no | view | control (no answer in FRAGE_S: no)."""
+        self.tty.buf = b""
+        self.tty.write(self._t("frage", s=FRAGE_S))
+        end = time.monotonic() + FRAGE_S
+        while time.monotonic() < end:
+            for m in self._messages():
+                if m.get("typ") in ("fehler", "stand") and (m.get("typ") == "fehler" or m.get("stand") == "zu"):
+                    raise EOFError
+            ready = self._wait([self.ws.sock, self.tty.rfd], min(1.0, end - time.monotonic()))
+            if self.tty.rfd in ready:
+                self.tty.feed()
+                ln = self.tty.line()
+                if ln is None:
+                    continue
+                w = ln.strip().lower()
+                if w in ("1", "ablehnen", "decline", "nein", "no", "n"):
+                    return "no"
+                if w in ("2", "ansehen", "nur ansehen", "view", "view only"):
+                    return "view"
+                if w in ("3", "erlauben", "allow", "ja", "yes", "j", "y"):
+                    return "control"
+                self.tty.write(self._t("nochmal"))
+            self._ping()
+        return "no"
+
+    def _bar(self):
+        key = "leiste_aktiv" if self.steuern else "leiste_erlaubt" if self.mode == "control" else "leiste_ansehen"
+        self.screen.say(self._t(key))
+
+    def _point(self, e):
+        return round(e["x"] * (self.screen.w - 1)), round(e["y"] * (self.screen.h - 1))
+
+    def apply(self, events):
+        """Checked inputs to the screen, only while she allowed control and the admin's toolbar says „Steuern“."""
+        if not (self.mode == "control" and self.steuern):
+            return 0
+        s, n = self.screen, 0
+        for e in pruefe_eingaben(events):
+            t = e["t"]
+            if t == "move":
+                s.move(*self._point(e))
+            elif t == "click":
+                s.move(*self._point(e))
+                b = 3 if e["b"] == "right" else 1
+                for _ in range(2 if e["b"] == "double" else 1):
+                    s.button(b, True)
+                    s.button(b, False)
+            elif t == "scroll":
+                b = 4 if e["dy"] > 0 else 5
+                for _ in range(abs(e["dy"])):
+                    s.button(b, True)
+                    s.button(b, False)
+            elif t == "key":
+                s.chord(X_KEYS[e["k"]])
+            elif t == "text":
+                for ch in e["s"]:
+                    s.type_char(ch)
+            n += 1
+        s.flush()
+        return n
+
+    def _control(self, m):
+        """A message of the panel; True when the help is over."""
+        t = m.get("typ")
+        if t == "fehler" or (t == "stand" and m.get("stand") == "zu"):
+            self._say("beendet")
+            return True
+        if t == "modus":
+            an = self.mode == "control" and m.get("steuern") is True
+            if an != self.steuern:
+                self.steuern = an
+                self._say("aktiv" if an else "aus")
+                self._bar()
+        elif t == "eingabe":
+            self.apply(m.get("events"))
+        return False
+
+    def _picture(self, state):
+        w, h, bpl, order, raw = self.screen.grab()
+        now = time.monotonic()
+        mark = hashlib.blake2b(raw, digest_size=16).digest()
+        if mark == state.get("mark") and now - state.get("sent", 0) < BILD_NOCHMAL_S:
+            return None
+        png = bild_klein(raw, w, h, bpl, order)
+        if png is not None:
+            state.update(mark=mark, sent=now)
+        return png
+
+    def run(self, key):
+        self.ws.send_json({"typ": "hallo", "schluessel": key, "art": "linux-x11"})
+        key = None
+        try:
+            m = self._first()
+            if m.get("typ") != "stand" or m.get("stand") != "frage":
+                raise Fehler(self._t("neu_laden"))
+            self.admin = helfer_name(m.get("admin"))     # only now: the panel took the key
+            self.angenommen = True
+            self.mode = self._ask()
+            self.ws.send_json({"typ": "antwort", "modus": self.mode})
+            if self.mode == "no":
+                self._say("abgelehnt")
+                return 0
+            self._say("laeuft_erlaubt" if self.mode == "control" else "laeuft_ansehen")
+            self.screen.show(self._t("leiste_erlaubt" if self.mode == "control" else "leiste_ansehen"))
+            state, nxt = {}, 0.0
+            while True:
+                for m in self._messages():
+                    if self._control(m):
+                        self.offen = False
+                        return 0
+                if "ende" in self.screen.events():
+                    self._say("beendet")
+                    return 0
+                now = time.monotonic()
+                if now >= nxt:
+                    png = self._picture(state)
+                    if png is not None:
+                        self.ws.send(png, 2)
+                    nxt = now + BILD_S
+                self._ping()
+                fds = [self.ws.sock, self.tty.rfd] + ([self.screen.fileno()] if self.screen.fileno() is not None else [])
+                ready = self._wait(fds, min(BILD_S, max(0.0, nxt - time.monotonic())))
+                if self.tty.rfd in ready:
+                    self.tty.feed()
+                    ln = self.tty.line()
+                    if ln is not None and ln.strip().lower() in ENDE_WORTE:
+                        self._say("beendet")
+                        return 0
+        except KeyboardInterrupt:
+            self._say("beendet")
+            return 0
+        except EOFError:
+            self.offen = False
+            if not self.angenommen:
+                raise Fehler(self._t("neu_laden"))
+            self._say("zu")
+            return 0
+        finally:
+            if self.offen:
+                with contextlib.suppress(OSError, Fehler):
+                    self.ws.send_json({"typ": "ende"})
+            self.ws.close()
+
+
+def cmd_control(args, tty=None, screen=None, env=None):
+    """`steuern adresse [--fp]` (the line from the person's help page): SparkHilfe for Linux X11, once, never as root,
+    nothing set up. The one-time key is pasted on this terminal (echo off), like the pairing code never an argument,
+    an address or a variable."""
+    env = sitzung() if env is None else env
+    if as_root():
+        raise Fehler(T("root", env))
+    base = base_url(args.adresse)
+    fp = (args.fp or "").lower()
+    if fp and not FP.fullmatch(fp):
+        raise Fehler("--fp: der SHA-256 aus dem Befehl des Panels (64 Zeichen 0-9 a-f)")
+    s = screen or x11_open(env)          # Wayland, no X11, no XTest: one clear sentence, nothing connected
+    t = None
+    try:
+        try:
+            t = tty or Tty.open()
+        except OSError:
+            raise Fehler(T("kein_tty", env))
+        key = t.secret(T("schluessel", env)).replace(" ", "")
+        if not SCHLUESSEL.fullmatch(key):
+            raise Fehler(T("neu_laden", env))
+        host = urllib.parse.urlsplit(base).hostname or ""
+        t.write(T("verbinde", env, host=host) + "\r\n")
+        try:
+            ws = WS.open(base, fp, STEUERN_PFAD, "")
+        except Fehler as e:
+            if str(e).startswith("Panel antwortet"):
+                raise Fehler(T("neu_laden", env))
+            raise
+        return Steuern(ws, t, s, host, env).run(key)
+    finally:
+        s.close()
+        if t is not None and tty is None:
+            t.close()
+        elif t is not None:
+            t.restore()
+
+
 # What the anchor does not do on a system (yet): a fixed sentence and nothing done, never half a setup.
 NOT_YET = {
     ("Windows", "bildschirm"): "Den Bildschirm unter Windows richtet der Anker noch nicht ein (eine spätere Stufe). Es wurde nichts eingerichtet.",
     ("Windows", "hilfe"): "Die Spontanhilfe in der Shell gibt es unter Windows noch nicht; „Bildschirm teilen“ auf der Hilfe-Seite geht. Es wurde nichts verbunden.",
+    ("Windows", "steuern"): "Unter Windows steuert das Programm SparkHilfe von der Hilfe-Seite, nicht diese Zeile. Es wurde nichts verbunden.",
+    ("Darwin", "steuern"): "Steuern am Mac gibt es noch nicht (erst mit Notarisierung); „Bildschirm teilen“ auf der Hilfe-Seite geht. Es wurde nichts verbunden.",
 }
 
 
@@ -2921,6 +3668,9 @@ def main(argv=None, system=None):
     h = sub.add_parser("hilfe", help="Spontanhilfe: einmal, in diesem Terminal, ohne sudo (fragt die Nummer)")
     h.add_argument("adresse", help="https-Adresse des Panels")
     h.add_argument("--fp", default="", help="SHA-256 des Panel-Zertifikats (steht im Befehl aus dem Panel)")
+    st = sub.add_parser("steuern", help="Spontanhilfe: Steuern unter Linux X11, einmal, ohne sudo (fragt den Schlüssel)")
+    st.add_argument("adresse", help="https-Adresse des Panels")
+    st.add_argument("--fp", default="", help="SHA-256 des Panel-Zertifikats (steht im Befehl aus dem Panel)")
     args = p.parse_args(argv)
     stop = not_yet(args.cmd, system)
     if stop:
@@ -2928,14 +3678,14 @@ def main(argv=None, system=None):
         return 1
     try:
         return {"einrichten": cmd_setup, "entfernen": cmd_remove, "lauf": cmd_run, "zustand": cmd_state,
-                "hilfe": cmd_help, "bildschirm": cmd_screen, "dateien": cmd_files, "aktualisieren": cmd_upgrade, "einheiten": cmd_units,
+                "hilfe": cmd_help, "steuern": cmd_control, "bildschirm": cmd_screen, "dateien": cmd_files, "aktualisieren": cmd_upgrade, "einheiten": cmd_units,
                 "waechter": cmd_watch}[args.cmd](args)
     except Fehler as e:
         say(str(e))
         return 1
     except (KeyboardInterrupt, EOFError):
         say("abgebrochen. " + ("Es wurde nichts eingerichtet." if args.cmd == "einrichten" else
-                               "Es wurde nichts verbunden." if args.cmd == "hilfe" else ""))
+                               "Es wurde nichts verbunden." if args.cmd in ("hilfe", "steuern") else ""))
         return 1
     except ssl.SSLCertVerificationError:
         say(CERT_FEHLER)
