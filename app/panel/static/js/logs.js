@@ -22,6 +22,13 @@ async function auditRows(){const d=await (await api('/api/audit?limit=500')).jso
     const what=e.event==='change'?`${e.method} ${e.path} → ${e.status}`:(AUDIT[e.event]||e.event)+(e.locked?t(` – gesperrt für ${e.locked} s`,` – locked for ${e.locked} s`):'')+(e.detail?' – '+e.detail:'');
     const msg=`${who?who+': ':''}${what}`+(e.ip?`  (${e.ip})`:'');
     return {t:dt.toTimeString().slice(0,8),area:'',level:/fail|locked|refused/.test(e.event)?'warn':'',msg,raw:`${dt.toLocaleString()}  ${msg}`}})}
+// the first break in the fixed words of guard.BREAK_WORDS (broken.say: German, English); an unreadable line has no time
+// of its own, then the time of the entry before it; the number of breaks, and whether the chain fits again after it
+function chainBreak(c,day){const b=c.broken,say=b.say||[],when=b.t?day(b.t):t('nach ','after ')+day(b.before);
+  let s=t(`Kette bricht in ${b.file}, Zeile ${b.line} (${when}): ${say[0]||'Art unbekannt'}.`,`Chain breaks in ${b.file}, line ${b.line} (${when}): ${say[1]||'kind unknown'}.`);
+  if(c.breaks>1)s+=t(` ${c.breaks} Bruchstellen.`,` ${c.breaks} breaks.`);
+  if(b.after_ok)s+=t(' Danach ist die Kette wieder heil.',' After it the chain is whole again.');
+  return s}
 // „Protokoll prüfen“ : the chain of the change log and the sealed copy on the NAS (guard.verify, offsite.compare_audit)
 function auditChain(){const box=$('logkette');if(!box||box.childElementCount)return;
   const b=el('button','b',t('Protokoll prüfen','Check the log'));b.type='button';const out=el('span','lsub',t('Prüft die Kette aller Einträge und vergleicht mit der Kopie auf dem NAS.','Checks the chain of all entries and compares with the copy on the NAS.'));
@@ -29,7 +36,7 @@ function auditChain(){const box=$('logkette');if(!box||box.childElementCount)ret
     try{out.textContent=chainSay(await (await api('/api/audit/check?nas=1')).json())}catch(e){out.textContent=e.message}finally{b.disabled=false}}}
 function chainSay(d){const c=d.chain,n=d.nas,day=x=>x?new Date(x*1000).toLocaleDateString():'–';
   let s=c.ok?t(`Kette heil: ${c.lines} Einträge seit ${day(c.first)}.`,`Chain whole: ${c.lines} entries since ${day(c.first)}.`)
-    :t(`Kette bricht in ${c.broken.file}, Zeile ${c.broken.line} (${day(c.broken.t)}): danach wurde etwas verändert.`,`Chain breaks in ${c.broken.file}, line ${c.broken.line} (${day(c.broken.t)}): something was changed from there.`);
+    :chainBreak(c,day);
   if(c.old)s+=t(` ${c.old} ältere Einträge ohne Kette.`,` ${c.old} older entries without chain.`);
   if(n)s+=n.missing?t(` NAS-Kopie: ${n.missing} von ${n.lines} Einträgen fehlen hier oder sind verändert.`,` NAS copy: ${n.missing} of ${n.lines} entries are missing here or changed.`)
     :t(` NAS-Kopie stimmt (${n.lines} Einträge).`,` NAS copy matches (${n.lines} entries).`);

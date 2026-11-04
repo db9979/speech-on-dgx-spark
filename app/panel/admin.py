@@ -87,6 +87,8 @@ async def audit_check(request: Request, nas: int = 0):
     profile got only „Das gehört zum Notzugang“)."""
     guard.limit(request, "offsite", admin=True)
     res = await asyncio.to_thread(guard.verify)
+    if res["broken"]:   # the kind of break in fixed words (guard.BREAK_WORDS), German and English
+        res["broken"]["say"] = list(guard.BREAK_WORDS.get(res["broken"]["kind"], ("", "")))
     out = {"chain": res, "nas": None, "nas_error": ""}
     if nas:
         import offsite

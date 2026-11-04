@@ -4,7 +4,9 @@ Every line carries the SHA-256 of the line before it, also across rotated files;
 in breaks the chain and verify() names the place; lines from before the chain stay readable; rotation keeps at most
 AUDIT_FILES files and drops old ones by age; the pages never see the chain value; the daily check writes one journal
 line and an alert on the admin pages when the chain breaks; the sealed copy on the NAS round-trips and the
-comparison finds a line missing on the Spark; „Protokoll prüfen“ is for every admin, also an admin profile
+comparison finds a line missing on the Spark; a break names its kind (unreadable, without chain, wrong predecessor)
+and the time before it, a line torn by a power cut stays a line of its own and a lone surrogate keeps no entry out; the page shows the kind in those words, the time before an unreadable
+line, the number of breaks and whether the chain is whole after it; „Protokoll prüfen“ is for every admin, also an admin profile
 (test_coadmin), never without a login.
 No test depends on the wall clock: times are passed in or taken relative to now.
 """
@@ -81,6 +83,53 @@ class Chain(unittest.TestCase):
         self.assertEqual(guard.verify()["broken"]["line"], 4, "a line without chain after the chain began")
         self.write(got[:3] + [b"not json"] + got[3:])
         self.assertFalse(guard.verify()["ok"])
+
+    def test_a_changed_line_and_a_torn_line_say_their_kind(self):
+        for i in range(5):
+            guard.log("config_switch", detail=f"n{i}")
+        got = self.lines()
+        before = json.loads(got[1])["t"]
+        self.write(got[:2] + [got[2][:20]] + got[3:])   # torn, also unreadable: no time of its own
+        r = guard.verify()
+        self.assertEqual((r["broken"]["line"], r["broken"]["kind"], r["broken"]["t"]), (3, "unlesbar", 0))
+        self.assertEqual(r["broken"]["before"], before, "the time of the last readable entry before it")
+        self.assertEqual(r["breaks"], 2, "the line after it points at the whole line")
+        self.assertFalse(r["broken"]["after_ok"])
+        self.write(got[:2] + [got[2].replace(b"n2", b"xx")] + got[3:])
+        r = guard.verify()
+        self.assertEqual((r["broken"]["line"], r["broken"]["kind"], r["breaks"]), (4, "vorgaenger", 1))
+        self.assertTrue(r["broken"]["after_ok"])
+        self.write(got[:2] + [json.dumps({"t": 5, "event": "backup"}).encode()] + got[2:])
+        self.assertEqual(guard.verify()["broken"]["kind"], "ohne_kette")
+        self.assertEqual(set(guard.BREAK_WORDS), {"unlesbar", "ohne_kette", "vorgaenger"})
+
+    def test_a_line_torn_by_a_power_cut_stays_its_own_line(self):
+        """A write cut off (power cut, full disk) leaves a line without its end: the next entry must not be glued
+        onto it (that entry was lost and the break hid it); the torn line itself still breaks the chain."""
+        for i in range(3):
+            guard.log("config_switch", detail=f"n{i}")
+        with open(self.audit, "ab") as f:
+            f.write(b'{"t": 17, "event": "config_sw')          # cut off mid-line
+        guard.log("config_switch", detail="danach")
+        guard.log("config_switch", detail="weiter")
+        got = self.lines()
+        self.assertEqual(len(got), 6)
+        self.assertEqual(json.loads(got[4])["detail"], "danach", "the entry after the torn line stands on its own")
+        r = guard.verify()
+        self.assertFalse(r["ok"], "a torn line is never taken as whole")
+        self.assertEqual((r["broken"]["line"], r["broken"]["kind"], r["breaks"]), (4, "unlesbar", 1))
+        self.assertTrue(r["broken"]["after_ok"], "the chain fits again from the next entry on")
+        guard.chain_daily(1_000_000)
+        self.assertIn("unlesbare Zeile", guard.alerts()[0]["text"])
+        self.assertIn("danach ist sie wieder heil", guard.alerts()[0]["text"])
+
+    def test_a_lone_surrogate_from_outside_keeps_no_entry_out(self):
+        name = json.loads('"\\udcff Gast"')      # what a JSON body can hold
+        guard.log("profile_login_failed", name=name)
+        got = self.lines()
+        self.assertEqual(len(got), 1)
+        self.assertEqual(json.loads(got[0])["name"], name)
+        self.assertTrue(guard.verify()["ok"])
 
     def test_a_lock_file_that_cannot_be_opened_keeps_no_entry_out(self):
         with mock.patch.object(guard, "AUDIT_LOCK", os.path.join(self.dir, "fehlt", "audit.log.lock")):
@@ -241,6 +290,22 @@ class Endpoint(unittest.TestCase):
         d = r.json()
         self.assertIn("ok", d["chain"])
         self.assertIsNone(d["nas"])
+
+    def test_a_break_comes_with_its_kind_in_fixed_words(self):
+        broken = {"ok": False, "lines": 3, "old": 0, "files": 1, "first": 1, "last": 3, "head": "", "breaks": 1,
+                  "broken": {"file": "audit.log", "line": 2, "t": 0, "kind": "unlesbar", "before": 1, "after_ok": True}}
+        with mock.patch.object(guard, "verify", return_value=broken):
+            d = ADMIN.get("/api/audit/check").json()
+        self.assertEqual(d["chain"]["broken"]["say"], list(guard.BREAK_WORDS["unlesbar"]))
+
+    def test_the_page_says_the_kind_and_the_time_before_a_break(self):
+        js = open(os.path.join(os.path.dirname(__file__), "..", "panel", "static", "js", "logs.js"),
+                  encoding="utf-8").read()
+        body = js[js.index("function chainBreak("):js.index("function chainSay(")]
+        for need in ("b.say", "say[0]", "say[1]", "b.before", "c.breaks", "b.after_ok"):
+            self.assertIn(need, body)
+        self.assertIn("chainBreak(c,day)", js[js.index("function chainSay("):])
+        self.assertNotIn("danach wurde etwas verändert", js)
 
     def test_without_a_nas_copy_the_answer_says_so(self):
         with mock.patch.object(offsite, "_read", return_value={}):
