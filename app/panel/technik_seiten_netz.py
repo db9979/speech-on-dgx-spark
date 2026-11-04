@@ -1005,7 +1005,7 @@ SEITEN = {
                "seinen sftp-server mit -R) und der Admin es je System eingeschaltet hat (fernals.choose); Schreiben mit frischem Code. "
                "Der Bildschirm geht über guacd nur auf 127.0.0.1 (fernbild.GUACD), höchstens "
                "{fernbild.FPS} Bilder je Sekunde; guacd {fernbild.GUACD_VERSION} baut der Spark selbst aus Apaches Quelltext, "
-               "fest mit SHA-256 (fernbild.dienst sagt der Seite, warum er fehlt). Der Assistent (fernzugang.admin_help) fragt nur das eigene Modell und "
+               "fest mit SHA-256 (fernbild.dienst sagt der Seite, warum er fehlt). Unter Windows richtet der Anker ab 1.10.0 (fernbild.ANKER_WIN) TightVNC nur auf 127.0.0.1 ein, gepinnt mit SHA-256 und Signatur; das Panel nimmt diese Art nur von einem Windows-Anker (fernbild.anchor_screen). Der Assistent (fernzugang.admin_help) fragt nur das eigene Modell und "
                "schlägt vor, getippt wird nie von selbst. Notizen je System liegen versiegelt, "
                "{fernnotiz.FASSUNGEN} Fassungen bleiben; das Modell liest sie nur mit Haken (fernnotiz.fuer_modell). Ordner ordnen nur die Liste "
                "(fernordner.view), höchstens {fernordner.MAX_ORDNER}; Rechte bleiben je System. Webdienste kommen über die "
@@ -1025,7 +1025,7 @@ SEITEN = {
                "its sftp-server with -R) and the admin switched it on per system (fernals.choose); writing with a fresh code. "
                "The screen goes through guacd on 127.0.0.1 only (fernbild.GUACD), at most "
                "{fernbild.FPS} pictures a second; the Spark builds guacd {fernbild.GUACD_VERSION} itself from Apache's source, "
-               "pinned with SHA-256 (fernbild.dienst tells the page why it is missing). The assistant (fernzugang.admin_help) asks only the own model and "
+               "pinned with SHA-256 (fernbild.dienst tells the page why it is missing). On Windows the anchor from 1.10.0 on (fernbild.ANKER_WIN) sets up TightVNC on 127.0.0.1 only, pinned with SHA-256 and signature; the panel takes that kind only from a Windows anchor (fernbild.anchor_screen). The assistant (fernzugang.admin_help) asks only the own model and "
                "suggests, nothing is typed by itself. Notes per system are stored sealed, "
                "{fernnotiz.FASSUNGEN} versions stay; the model reads them only when ticked (fernnotiz.fuer_modell). Folders only order the list "
                "(fernordner.view), at most {fernordner.MAX_ORDNER}; rights stay per system. Web services come through the "
@@ -1101,6 +1101,7 @@ SEITEN = {
             ("ferndateien.listing", ("Dateien über SFTP", "files through SFTP")),
             ("fernals.choose", ("Dateien als anderer Benutzer: nur mit beiden Zustimmungen", "files as another user: only with both consents")),
             ("fernbild.GUACD", ("guacd nur auf 127.0.0.1", "guacd on 127.0.0.1 only")),
+            ("fernbild.anchor_screen", ("Bildschirm-Passwort an den Anker, TightVNC nur für Windows", "the screen password for the anchor, TightVNC only for Windows")),
             ("spontanhilfe.admin_new", ("eine neue Spontanhilfe", "a new spontaneous help")),
             ("spontansteuern.program_ws", ("Steuern: der Socket des Programms SparkHilfe", "control: the socket of the program SparkHilfe")),
             ("spontansteuern.fetch", ("SparkHilfe aus dem Release: Signatur, Größe und SHA-256 geprüft", "SparkHilfe from the release: signature, size and SHA-256 checked")),

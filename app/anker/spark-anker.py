@@ -1796,8 +1796,10 @@ TIGHTVNC_MAX = 16 * 1024 * 1024
 WIN_TVNC_REG = r"HKLM\SOFTWARE\TightVNC"
 WIN_TVNC_SERVER = r"SOFTWARE\TightVNC\Server"     # Password and ControlPassword: VNC's fixed-key DES, written by winreg
 WIN_TVNC_SERVICE = "tvnserver"
-WIN_TVNC_SIG = ("$s = Get-AuthenticodeSignature -LiteralPath '{path}'; "
-                "if ($s.Status -ne 'Valid' -or $s.SignerCertificate.Subject -notmatch 'GlavSoft') {{ exit 1 }}")
+# Authenticode of the MSI: one line „<Status>|<GlavSoft in the signer?>|<signer, printable ASCII only>“ (win_tvnc_sig)
+WIN_TVNC_SIG = ("$s = Get-AuthenticodeSignature -LiteralPath '{path}'; $n = [string]$s.SignerCertificate.Subject; "
+                "Write-Output (\"$($s.Status)|$($n -match 'GlavSoft')|\" + ($n -replace '[^ -~]', '?'))")
+WIN_SIG_STATUS = ("Valid", "UnknownError", "NotSigned", "HashMismatch", "NotTrusted", "NotSupportedFileFormat", "Incompatible")
 
 
 # DES of one block, only for VNC's fixed-key password obfuscation (the format TightVNC reads), never for secrecy.
@@ -2627,11 +2629,26 @@ def win_tvnc_fetch(ctx, conf):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "wb") as f:
         f.write(data)
-    if "'" in path or win_ps(ctx, WIN_TVNC_SIG.format(path=win_native(path))):
+    why = win_tvnc_sig(ctx, path)
+    if why:
         with contextlib.suppress(OSError):
             os.remove(path)
-        raise Fehler("Die Signatur von TightVNC (GlavSoft) ist nicht gültig. Es wurde nichts geändert.")
+        raise Fehler(f"Die Signatur von TightVNC (GlavSoft) ist nicht gültig ({why}). Es wurde nichts geändert.")
     return path
+
+
+def win_tvnc_sig(ctx, path):
+    """'' when Windows finds the MSI's Authenticode signature valid and by GlavSoft, else a short reason (a status
+    word of WIN_SIG_STATUS, or the signer cut to 80 printable characters)."""
+    if "'" in path:
+        return "Pfad"
+    line = ctx.out([WIN_PS, "-NoProfile", "-NonInteractive", "-Command", WIN_TVNC_SIG.format(path=win_native(path))])
+    status, glav, signer = (line.strip().split("|", 2) + ["", ""])[:3]
+    if status not in WIN_SIG_STATUS:
+        return "keine Antwort"
+    if status != "Valid":
+        return status
+    return "" if glav == "True" else "Herausgeber " + re.sub(r"[^ -~]", "?", signer)[:80]
 
 
 def bild_off(ctx, conf):
