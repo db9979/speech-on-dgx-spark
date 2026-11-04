@@ -435,10 +435,15 @@ class Anchor(unittest.TestCase):
             ran.append(c)
             if c[:2] == ["reg", "query"] and c[2] == p.WIN_TVNC_REG:
                 return 0 if there["tvnc"] else 1
-            if c[0] == p.WIN_PS and "Get-AuthenticodeSignature" in c[-1]:
-                return there["sig"]
             return 0
+
+        def out(c):
+            ran.append(c)
+            if c[0] == p.WIN_PS and "Get-AuthenticodeSignature" in c[-1]:
+                return {0: "Valid|True|CN=GlavSoft LLC.", 1: "NotSigned|False|", 2: "Valid|False|CN=Someone Else"}[there["sig"]]
+            return ""
         ctx = p.Ctx(system="Windows", root=root, run=run)
+        ctx.out = out
         ctx.euid = lambda: 0
         regs = {}
         ctx.reg_binary = lambda key, name, data: regs.__setitem__((key, name), data)
@@ -470,6 +475,12 @@ class Anchor(unittest.TestCase):
             with unittest.mock.patch.dict(p.TIGHTVNC, {"amd64": pin}), self.assertRaises(p.Fehler) as e:
                 screen()
             self.assertIn("Signatur", str(e.exception))
+            self.assertIn("NotSigned", str(e.exception))
+            self.assertFalse(os.path.exists(neu))
+            there["sig"] = 2                                                          # validly signed, but by someone else
+            with unittest.mock.patch.dict(p.TIGHTVNC, {"amd64": pin}), self.assertRaises(p.Fehler) as e:
+                screen()
+            self.assertIn("Herausgeber CN=Someone Else", str(e.exception))
             self.assertFalse(os.path.exists(neu))
             there["sig"] = 0
             there["tvnc"] = True                                                      # someone's own TightVNC: untouched
@@ -496,7 +507,12 @@ class Anchor(unittest.TestCase):
             self.assertTrue(fetched[-1].startswith("https://www.tightvnc.com/"))
             sig = [c for c in ran if c[0] == p.WIN_PS and "Get-AuthenticodeSignature" in c[-1]][-1][-1]
             self.assertIn("GlavSoft", sig)
-            self.assertIn("'Valid'", sig)
+            self.assertIn("Get-AuthenticodeSignature -LiteralPath", sig)
+            for line, want in (("Valid|True|CN=GlavSoft LLC.", ""), ("UnknownError|True|CN=GlavSoft", "UnknownError"),
+                               ("HashMismatch|True|", "HashMismatch"), ("", "keine Antwort"), ("Gut|True|x", "keine Antwort"),
+                               ("Valid|False|CN=\u041e\u041e\u041e X", "Herausgeber CN=??? X")):
+                with unittest.mock.patch.object(ctx, "out", lambda c, line=line: line):
+                    self.assertEqual(p.win_tvnc_sig(ctx, neu), want)
             self.assertEqual(calls[-1], ("POST", "/api/fernzugang/anker/bildschirm", {"art": "tightvnc"}))
             inst = [c for c in ran if c[:2] == ["msiexec", "/i"]][-1]
             for want in ("VALUE_OF_LOOPBACKONLY=1", "VALUE_OF_ALLOWLOOPBACK=1", "VALUE_OF_RFBPORT=5930",
