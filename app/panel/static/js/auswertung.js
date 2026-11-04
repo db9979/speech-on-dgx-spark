@@ -9,7 +9,7 @@ const AW={doc:'',data:null,seq:0,msg:'',timer:null};
 const AW_STAND={wartet:['wartet auf ruhige Minuten','waits for quiet minutes'],leer:['nichts Passendes gefunden','nothing fitting found'],
   x:['ging nicht, später noch einmal','did not work, try again later']};
 const awUrl=(doc,x)=>'/api/profile/wissen/'+encodeURIComponent(doc)+'/auswertung'+(x||'');
-function awWhere(p){return [p.page?t('S. ','p. ')+p.page:'',p.part&&p.part!==p.text?p.part:''].filter(Boolean).join(' · ')}
+function awWhere(p){return [p.at?t(p.at,p.at.replace(/^bei /,'at ')):p.page?t('S. ','p. ')+p.page:'',p.part&&p.part!==p.text?p.part:''].filter(Boolean).join(' · ')}
 function awState(a){if(a.stand==='ok')return t('fertig','done')+(a.at&&a.modell?' · '+docDate(a.at):'');
   if(a.stand&&AW_STAND[a.stand])return t(...AW_STAND[a.stand]);
   return a.auto?t('entsteht in ruhigen Minuten','made in quiet minutes'):''}
@@ -22,7 +22,7 @@ function awPoint(a,p,i,d){const w=awWhere(p),today=docToday();
     `<button class="b" type="button" data-docremind="${esc(d.id)}">${esc(t('Erinnern','Remind'))}</button>`
     :a.art==='fristen'&&p.erinnern&&due?`<button class="b" type="button" data-awremind="${i}" title="${esc(t('Erinnerung sechs Wochen vor dem ','Reminder six weeks before ')+docDay(p.erinnern)+t(' (oder am Tag davor)',' (or the day before)'))}">${esc(t('Erinnern','Remind'))}</button>`:'';
   return `<div class="ld-row" data-awi="${i}"><span class="ld-mid"><b>${esc(a.art==='fristen'&&p.art==='steckbrief'?docDay(p.text):p.text)}</b>${extra}</span>`+
-    `<span class="ld-right">${w?`<button type="button" class="ld-chip" data-awgo="${esc(String(p.page||''))}" title="${esc(t('Stelle im Text zeigen','Show the place in the text'))}">${esc(w)}</button>`:''}`+
+    `<span class="ld-right">${w?`<button type="button" class="ld-chip" data-awgo="${esc(String(p.page||''))}"${p.at?` data-awat="${esc(p.at)}"`:''} title="${esc(t('Stelle im Text zeigen','Show the place in the text'))}">${esc(w)}</button>`:''}`+
     remind+(a.modell?`<button type="button" class="b" data-awno="${esc(a.art)}" data-awn="${i}">${esc(t('Stimmt nicht','Not right'))}</button>`:'')+`</span></div>`}
 function awKind(a,d){const st=awState(a),can=!a.stand||a.stand==='ok'||a.stand==='leer'||a.stand==='x';
   const btn=a.stand==='wartet'?'':`<button type="button" class="b${a.stand?'':' p'}" data-awmake="${esc(a.art)}">${esc(a.stand?t('Neu erstellen','Make again'):a.modell?t('Erstellen','Make'):t('Zeigen','Show'))}</button>`;
@@ -61,8 +61,8 @@ if($('docaw'))$('docaw').addEventListener('click',async e=>{const d=docFind(AW.d
     AW.msg=r.ok?t('Erinnerung angelegt für ','Reminder set for ')+new Date(x.due).toLocaleString(L==='en'?'en-GB':'de-DE',{dateStyle:'medium',timeStyle:'short'}):errSay(r.status,x.detail,'');
     awPaint(d);return}
   const go=e.target.closest('[data-awgo]');
-  if(go){await docView(d.id);const pg=go.dataset.awgo;if(!pg)return;
-    const h=[...document.querySelectorAll('#docview .dvpage')].find(x=>x.textContent===t('Seite ','Page ')+pg);if(h)h.scrollIntoView({block:'start'})}});
+  if(go){await docView(d.id);const pg=go.dataset.awgo;if(!pg&&!go.dataset.awat)return;
+    const at=go.dataset.awat,h=[...document.querySelectorAll('#docview .dvpage')].find(x=>x.textContent===(at||t('Seite ','Page ')+pg));if(h)h.scrollIntoView({block:'start'})}});
 
 // Admin (Funktionen → Eigene Dokumente → Auswertungen): the kinds by themselves fill the hidden list field (saved with
 // the other settings); the Vorlagen are saved on their own (PUT /api/admin/auswertung/vorlagen, checked there).

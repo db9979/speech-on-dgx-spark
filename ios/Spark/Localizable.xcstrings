@@ -19850,6 +19850,26 @@
           }
         }
       }
+    },
+    "Aufnahme": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recording"
+          }
+        }
+      }
+    },
+    "hört ab": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "transcribing"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

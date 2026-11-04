@@ -243,7 +243,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "01d24ff992",
+        "stand": "29cbe47e81",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -282,6 +282,10 @@ SEITEN = {
             "auswertung.PASSES": ["s13"], "auswertung.DAY": ["s13"], "wissen.KETTE": ["s13"],
             "auswertung.check_vorlage": ["s13"], "auswertung.auto_arten": ["s13"], "auswertung.frist_tag": ["s13"],
             "auswertung.fuer_mappe": ["s13"], "auswertung.VORLAGEN_MOST": ["s13"], "auswertung.AUFTRAG_LEN": ["s13"],
+            "abschrift.due_once": ["s13"], "abschrift.stueck": ["s13"], "abschrift.trim_edge": ["s13"],
+            "abschrift.fits": ["s13"], "abschrift.schneiden": ["s13"], "abschrift.aufnehmen": ["s13"],
+            "abschrift.PIECE": ["s13"], "abschrift.OVERLAP": ["s13"], "abschrift.WAIT_MOST": ["s13"],
+            "documents.stelle": ["s13"], "common.signed_low": ["s13"],
         },
         "kurz": ("Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente "
                  "jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene "
@@ -543,6 +547,9 @@ SEITEN = {
             ("{auswertung.DAY}", ("Auswertungen pro Profil und Tag (Standard)", "analyses per profile and day (default)"), "auswertung.DAY"),
             ("{auswertung.VORLAGEN_MOST}", ("eigene Arten (Vorlagen) des Admins höchstens", "own kinds (templates) of the admin at most"), "auswertung.VORLAGEN_MOST"),
             ("{auswertung.AUFTRAG_LEN}", ("Zeichen eines Auftrags einer Vorlage höchstens", "characters of a template's task at most"), "auswertung.AUFTRAG_LEN"),
+            ("{abschrift.PIECE}", ("Sekunden je Stück einer Aufnahme", "seconds per piece of a recording"), "abschrift.PIECE"),
+            ("{abschrift.OVERLAP}", ("Sekunden Überlappung vor einem Stück", "seconds of overlap in front of a piece"), "abschrift.OVERLAP"),
+            ("{abschrift.WAIT_MOST}", ("Aufnahmen je Profil, die auf ihre Abschrift warten, höchstens", "recordings per profile waiting for their transcription at most"), "abschrift.WAIT_MOST"),
         ],
         "einstellen": [
             ("Funktionen → Eigene Dokumente und darunter Bedeutungssuche an: Stellen bekommen einen Bedeutungsvektor "
@@ -575,6 +582,10 @@ SEITEN = {
              "eigenen Dokuments, dazu wie viele Auswertungen am Tag.",
              "Features → Own documents and below it Analyses on: the sheet Analyses in the details of every own "
              "document, with how many analyses a day."),
+            ("Funktionen → Eigene Dokumente und darunter Aufnahmen abschreiben an: Ton- und Videodateien unter Ich → "
+             "Dokumente, dazu Größe, Länge und Minuten am Tag.",
+             "Features → Own documents and below it Transcribe recordings on: audio and video files under Me → "
+             "Documents, with size, length and minutes a day."),
             ("Funktionen → Eigene Dokumente und darunter Mappen an: die Seite Mappen im Menü, dazu wie viele Token "
              "eine Mappe dem Modell höchstens gibt.",
              "Features → Own documents and below it Collections on: the page Collections in the menu, with how many "
@@ -828,6 +839,29 @@ SEITEN = {
                  "full date only from the name of a deadline of the knowledge map, never from around it, and offers "
                  "„Remind“ as for the profile card. auswertung.fuer_mappe gives a collection at the level „short“ "
                  "the summary, key points and templates with their page, as data."),
+            ]),
+            (("Aufnahmen abschreiben", "Transcribing recordings"), [
+                ("abschrift.aufnehmen nimmt eine Ton- oder Videodatei nur, wenn ihr Inhalt nach den ersten Bytes zur "
+                 "Endung passt (abschrift.fits), kopiert sie in Teilen mit ihrer Grenze unter die Dokument-ID (0600) "
+                 "und liest die Länge mit ffprobe; höchstens {abschrift.WAIT_MOST} warten je Profil. In der ruhigen "
+                 "Kette nach den Seitenbildern schneidet abschrift.schneiden mit ffmpeg (nur die lokale Datei, feste "
+                 "Argumente) ein Stück von {abschrift.PIECE} s, ab dem zweiten mit {abschrift.OVERLAP} s davor, und "
+                 "abschrift.stueck schickt es über vorrang.run an die eigene Spracherkennung, mit der Stufe „hinten“ "
+                 "und dem Vorrang-Schlüssel: common.signed_low lässt nur so eine Anfrage unmarkiert, echte Sprache "
+                 "bricht das Stück ab, und es kommt in der nächsten Pause noch einmal. abschrift.trim_edge nimmt die "
+                 "doppelt gehörten Wörter am Rand heraus. Die Seite eines Stücks ist seine Startsekunde; "
+                 "documents.stelle macht daraus „bei 12:30“, wissen.where „Aufnahme: …, bei 12:30“. Die Abschrift "
+                 "ist Text von außen.",
+                 "abschrift.aufnehmen takes an audio or video file only when its content fits its ending by its first "
+                 "bytes (abschrift.fits), copies it in parts with its limit under the document id (0600) and reads "
+                 "the length with ffprobe; at most {abschrift.WAIT_MOST} wait per profile. In the quiet chain after "
+                 "the page pictures abschrift.schneiden cuts with ffmpeg (only the local file, fixed arguments) a "
+                 "piece of {abschrift.PIECE} s, from the second one with {abschrift.OVERLAP} s in front, and "
+                 "abschrift.stueck sends it through vorrang.run to the own speech recognition, with the stage "
+                 "„hinten“ and the priority key: common.signed_low leaves only such a request unmarked, real speech "
+                 "cancels the piece and it comes again in the next pause. abschrift.trim_edge takes out the words "
+                 "heard twice at the edge. A piece's page is its start second; documents.stelle makes „bei 12:30“ of "
+                 "it, wissen.where „Aufnahme: …, bei 12:30“. The transcript is outside text."),
             ]),
             (("Karte hilft der Suche", "Map helps the search"), [
                 ("wissenskarte.liste(uid, worte, k) gibt Stück-Ids mit Rang ab 1 zurück, nur lesend (SQLite mit mode=ro) "
@@ -1087,6 +1121,14 @@ SEITEN = {
             ("auswertung.auto_arten", ("welche Arten von selbst entstehen", "which kinds are made by themselves")),
             ("auswertung.frist_tag", ("volles Datum nur aus dem Namen einer Frist, sonst kein Erinnern", "a full date only from a deadline's name, else no reminder")),
             ("auswertung.fuer_mappe", ("Auswertungen für die Mappen-Stufe kurz, mit Seite", "analyses for the collection level short, with page")),
+            ("abschrift.fits", ("Inhalt passt zur Endung (erste Bytes)", "content fits the ending (first bytes)")),
+            ("abschrift.aufnehmen", ("Aufnahme prüfen und unter der Dokument-ID ablegen", "check a recording and keep it under the document id")),
+            ("abschrift.schneiden", ("ffmpeg: ein Stück als 16-kHz-WAV, nur lokal", "ffmpeg: one piece as 16 kHz WAV, local only")),
+            ("abschrift.stueck", ("ein Stück über vorrang.run an die Spracherkennung", "one piece through vorrang.run to the speech recognition")),
+            ("abschrift.trim_edge", ("doppelte Wörter am Rand nach fester Regel", "doubled words at the edge by a fixed rule")),
+            ("abschrift.due_once", ("ruhige Kette: Grenzen, lange nur nach long_ok", "quiet chain: limits, long ones only after long_ok")),
+            ("documents.stelle", ("„Seite 3“ oder „bei 12:30“", "„Seite 3“ or „bei 12:30“")),
+            ("common.signed_low", ("Hintergrund mit Schlüssel ist keine Sprache", "background with the key is no speech")),
             ("documents._similar", ("Ähnlichkeit blockweise in float32", "similarity block by block in float32")),
             ("gedaechtnis.hint_lines", ("Fakten in drei Blöcken", "facts in three blocks")),
             ("profiles._cap", ("Obergrenze: nur alte gelernte Fakten machen Platz", "cap: only old learned facts make room")),
@@ -1096,7 +1138,7 @@ SEITEN = {
             ("wissensmessung._synth", ("das Wegwerf-Profil aus festem Zufall, mit den Grenzen des Codes", "the throwaway profile from a fixed seed, with the code's limits")),
             ("wissensmessung.MESSTEILE", ("die Messteile, erweiterbar", "the measuring parts, extensible")),
         ],
-        "tests": ["test_wissen", "test_auswertung", "test_wissensdoppelt", "test_nachsortieren", "test_abschnitte", "test_lokal", "test_kiwix", "test_gedaechtnis",
+        "tests": ["test_wissen", "test_auswertung", "test_abschrift", "test_wissensdoppelt", "test_nachsortieren", "test_abschnitte", "test_lokal", "test_kiwix", "test_gedaechtnis",
                   "test_gedaechtnis_grenze", "test_gemerkt",
                   "test_suchpruefung", "test_wissensbuch", "test_wissenskarte", "test_wissensknoten", "test_kartensuche",
                   "test_wissensmessung", "test_wissenstempo"],

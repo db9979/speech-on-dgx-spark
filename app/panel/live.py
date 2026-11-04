@@ -197,6 +197,9 @@ TARGETS = {
     "mappen": ("Mappen", "Dokumente, Seiten und Notizen je Vorhaben · auf dem Spark", "spark", False),
     # Auswertungen (auswertung.py): shown while it is on, made and waiting kinds of all profiles, today's dropped points
     "auswertung": ("Auswertungen", "Kurzfassung und Kernaussagen je Dokument · auf dem Spark", "spark", False),
+    # Aufnahmen abschreiben (abschrift.py): shown while it is on, recordings waiting and minutes left of all profiles,
+    # today's pieces and minutes, stops for speech, a missing speech recognition (numbers only, never a name)
+    "abschrift": ("Aufnahmen abschreiben", "Ton und Video über die eigene Spracherkennung · auf dem Spark", "spark", False),
     # KI-Dungeon-Master (dungeon.py): shown while it is on, rounds, players, guests, turns, loot and levels today (numbers only)
     "dungeon": ("Dungeon-Master", "Rollenspiel-Runden mit dem eigenen Sprachmodell · auf dem Spark", "spark", False),
     # Teilen mit Profilen (geteilt.py): shown while it is on, single shares and today's changes (numbers only)
@@ -1475,6 +1478,13 @@ def snapshot(view="admin", now=None):
     if awn.get("on"):
         used.add("auswertung")
     try:
+        import abschrift
+        abn = abschrift.for_live(now)
+    except Exception:
+        abn = {"on": False}
+    if abn.get("on"):
+        used.add("abschrift")
+    try:
         import fund
         fnd = fund.for_live()
     except Exception:
@@ -2143,6 +2153,14 @@ def snapshot(view="admin", now=None):
                         + (f" · {wbk['widerspruch']} Widersprüche" if wbk.get("widerspruch") else "")
                         + (f" · {wbk['veraltet']} veraltet?" if wbk.get("veraltet") else "")
                         + (" · arbeitet" if wbk.get("running") else ""))
+        if x["id"] == "abschrift":   # Aufnahmen abschreiben: waiting, minutes left, today's pieces (numbers only, never a name)
+            x["sub"] = (f"Hintergrund: {abn.get('warten', 0)} Aufnahme{'' if abn.get('warten', 0) == 1 else 'n'} · {abn.get('minuten', 0)} min offen"
+                        + f" · heute {abn.get('stuecke', 0)} Stücke, {abn.get('heute_min', 0)} min"
+                        + (" · schreibt ab" if abn.get("laeuft") else "")
+                        + (f" · {abn['abgebrochen']} abgebrochen (Sprache)" if abn.get("abgebrochen") else "")
+                        + (f" · Spracherkennung fehlte {abn['asr']}×" if abn.get("asr") else "")
+                        + (f" · {abn['fehler']} Fehler" if abn.get("fehler") else "")
+                        + (f" · {abn['grenze']} an der Tagesgrenze" if abn.get("grenze") else ""))
         if x["id"] == "auswertung":   # Auswertungen: made and waiting kinds, today's made, dropped, cancelled, the admin's Vorlagen (numbers only, never a text or name)
             x["sub"] = (f"{awn.get('fertig_alle', 0)} fertig · {awn.get('warten', 0)} warten"
                         + f" · heute {awn.get('fertig', 0)} erstellt, {awn.get('verworfen', 0)} Punkte verworfen"

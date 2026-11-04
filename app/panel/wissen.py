@@ -353,7 +353,10 @@ def where(h):
     # Wissensordner (nasquelle.py): "NAS · Ordner/Datei", the folder cut hard (outside text)
     place = re.sub(r"\s+", " ", re.sub(r"<<<|>>>|[\[\]„“\"\n\r\t]", "", str(h.get("place") or ""))).strip().strip("/")[-80:]
     nas = "NAS · " + (place + "/" if place else "") if h.get("source") == "nas" else ""
-    return (("reMarkable: " if h.get("source") == "remarkable" else nas) + h["name"] + (f", Seite {h['page']}" if h.get("page") else "")
+    # Aufnahmen abschreiben (abschrift.py): "Aufnahme: Vortrag, bei 12:30", the page of a piece is its start second
+    head = "reMarkable: " if h.get("source") == "remarkable" else "Aufnahme: " if h.get("source") == "audio" else nas
+    at = documents.stelle(h.get("page"), h.get("source"))
+    return (head + h["name"] + (f", {at}" if at else "")
             + (f", Abschnitt {part}" if part else "")
             + (f", geteilt von {h['owner']}" if h.get("owner") else "") + (f", geändert am {when}" if when else ""))
 
@@ -450,6 +453,7 @@ HALT = object()
 KETTE = (
     "doclingdienst.due_once",          # the Docling server first: what it reads, the language model need not
     "wissen.seiten_due",               # one page picture read by the language model (day/night limits)
+    "abschrift.due_once",              # Aufnahmen abschreiben: one piece of 30 s through the own speech recognition
     "wissen.steckbrief_due",           # one Steckbrief
     "wissensbuch.due_once",            # Wissensbuch: one own document worked into the pages
     "wissenskarte.due_once",           # Wissenskarte: connections, then the points (people, companies, deadlines)
@@ -693,8 +697,14 @@ def info(prof=Depends(own_profile)):
             "night": dict(night(time.time()) or {}, long=LONG, long_ok=long_ok(time.time())) if _chat().get("doc_night") is True else None,
             "quiet": quiet(),
             "auswertung": features.allowed("auswertungen", uid),   # the sheet Auswertungen in the details (auswertung.py)
+            "audio": _audio(uid),                                  # Aufnahmen abschreiben (abschrift.py): limits, progress
             "types": list(documents.TYPES), "max_mb": pdf_bytes() // 1024**2,
             "other_mb": documents.MAX_OTHER // 1024**2}
+
+
+def _audio(uid):
+    import abschrift
+    return abschrift.info(uid)
 
 
 @router.put("/api/profile/wissen/{doc_id}", dependencies=[Depends(assistant)])
@@ -735,7 +745,7 @@ def reader(request: Request, prof=Depends(own_profile)):
 
 # shown in the browser only what cannot run anything: pictures the Spark wrote itself (JPEG) and PDFs
 # (the browser's own viewer); everything else, HTML and SVG above all, only as a download
-INLINE = ("image/jpeg", "application/pdf")
+INLINE = ("image/jpeg", "application/pdf", "audio/ogg")   # audio/ogg: the sound track the Spark wrote (abschrift.py)
 
 
 @router.get("/api/profile/wissen/{doc_id}/file", dependencies=[Depends(assistant)])
@@ -915,7 +925,9 @@ async def try_search(request: Request, prof=Depends(browser_profile)):
     if not q:
         raise HTTPException(400, "q is required")
     hits = await search(prof["id"], q)
-    return {"hits": [{"id": h["id"], "name": h["name"], "page": h["page"], "text": h["text"][:500]} for h in hits],
+    # at: the place in words ("Seite 3", "bei 12:30" in a recording, documents.stelle), audio: plays there
+    return {"hits": [{"id": h["id"], "name": h["name"], "page": h["page"], "text": h["text"][:500],
+                      "at": documents.stelle(h.get("page"), h.get("source")), "audio": h.get("source") == "audio"} for h in hits],
             "meaning": on(prof["id"], "semantic")}
 
 

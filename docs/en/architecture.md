@@ -246,6 +246,7 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 
 | Module | Task |
 |---|---|
+| `app/panel/abschrift.py` | Aufnahmen abschreiben: audio and video files become documents. |
 | `app/panel/auswertung.py` | Auswertungen je Dokument: one sheet per own document with fixed kinds, every point with the place in the document it rests on. |
 | `app/panel/bilder.py` | Bilder malen: pictures from a wish, painted on the Spark by FLUX.2 [klein] (bild_server.py on 127.0.0.1, image.port). |
 | `app/panel/docembed.py` | Meaning vectors for the document search. |
@@ -641,7 +642,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/tasks.json` | Tasks |  | – | yes | Tasks and reminders |
 | `users/ID/reminders.json` | Reminders |  | – | yes | Tasks and reminders |
 | `users/ID/wissen.db` | Documents: text, sections with context line, search, vectors; knowledge book and map with people, companies and deadlines; collections with entries and levels; analyses per document with their place (SQLite) |  | – | yes | Documents (text, search, originals) |
-| `users/ID/docs/files/` | Originals of uploads |  | – | yes | Documents (text, search, originals) |
+| `users/ID/docs/files/` | Originals of uploads (of recordings only the sound track) |  | – | yes | Documents (text, search, originals) |
 | `users/ID/fund.db` | Find: search index over the own data (titles, fields, tags, own tags, mail and attachments, appointments, contacts, lists, reminders, pictures, songs; conversations only date and channel; SQLite) |  | marks with a key of its own per profile (HMAC); mail, attachments, appointments and contacts: title, excerpt, fields and tags AES-GCM | yes | Documents (text, search, originals) |
 | `users/ID/suchpruefung.json` | Test questions and runs of the search check |  | – | yes | Documents (text, search, originals) |
 | `users/ID/erstellt/` | Created documents |  | – | yes | Created documents |
@@ -717,6 +718,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/tagebuch.json` | Spark diary | State | sealed whole (AES-256-GCM) | yes | – |
 | `users/ID/gesundheit.json` | Steps, pulse and sleep from the Pebble watch (30 days) | Health | sealed | yes | – |
 | `users/ID/docling-wait` | Files until Docling has read them | Queue | – | yes | – |
+| `users/ID/docs/audio-wait/` | Recordings until the speech recognition has transcribed them | Queue | – | yes | – |
 | `users/ID/mfa.json` | Profile's second step | Key | sealed | yes | – |
 | `users/ID/memory-tidy.json` | Tidy proposal | Queue | – | yes | – |
 | `users/ID/memory-tidy-checked` | Last tidy check | State | – | yes | – |
@@ -2481,6 +2483,10 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - auswertung.pruefe keeps a point of the model only when its place was offered, wissensbuch.check_sentence passes against that place (every number stands there, no links, no markup, no command words) and, for summary and key points, wissensbuch.match finds enough words of the place; a question ends with „?“, its answer is the place itself. Doubles and points marked „not right“ (aw_block) go, at most auswertung.MOST per kind. A document read again (another fingerprint of its pieces) waits again. auswertung.inhalt builds the contents from chunks.part, auswertung.fristen takes the deadline of the profile card and the points of the knowledge map (wissenskarte.knoten_von_dok, read only): both without the model. Model text never goes into the memory, the knowledge book or the search; the tool dokument_auswertung hands it over as outside text.
 - The admin's own kinds (templates, at most 10) lie in STATE/auswertung-vorlagen.json; auswertung.check_vorlage lets name and task (at most 400 characters) through only without links, markup and command words, also when reading. The task stands as a quoted topic in the fixed frame of the prompt, the answer goes through the same check as the key points. auswertung.auto_arten takes chat.doc_auswertung_auto (default summary and key points) and the templates with „by itself“. auswertung.frist_tag reads a full date only from the name of a deadline of the knowledge map, never from around it, and offers „Remind“ as for the profile card. auswertung.fuer_mappe gives a collection at the level „short“ the summary, key points and templates with their page, as data.
 
+#### Transcribing recordings
+
+- abschrift.aufnehmen takes an audio or video file only when its content fits its ending by its first bytes (abschrift.fits), copies it in parts with its limit under the document id (0600) and reads the length with ffprobe; at most 5 wait per profile. In the quiet chain after the page pictures abschrift.schneiden cuts with ffmpeg (only the local file, fixed arguments) a piece of 30 s, from the second one with 1 s in front, and abschrift.stueck sends it through vorrang.run to the own speech recognition, with the stage „hinten“ and the priority key: common.signed_low leaves only such a request unmarked, real speech cancels the piece and it comes again in the next pause. abschrift.trim_edge takes out the words heard twice at the edge. A piece's page is its start second; documents.stelle makes „bei 12:30“ of it, wissen.where „Aufnahme: …, bei 12:30“. The transcript is outside text.
+
 #### Map helps the search
 
 - wissenskarte.liste(uid, worte, k) returns piece ids with a rank from 1, read only (SQLite with mode=ro) and only for the own profile. Fixed rules, never the model: the search words hit a point when its name or another name stands whole in the question (compared like wissenskarte.ent_norm) or a word of the name with at least 4 letters that is no number and no legal form (wissenskarte.trifft); at most 20 points. Their neighbours one step away join (the same query as wissenskarte.rund_um), and of all of them the passages in used, read documents. A passage with a named point stands before one with only neighbours, more points before fewer, at most 50.
@@ -2558,6 +2564,9 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - **100** analyses per profile and day (default) ([step 13](#kn-wissen-s13))
 - **10** own kinds (templates) of the admin at most ([step 13](#kn-wissen-s13))
 - **400** characters of a template's task at most ([step 13](#kn-wissen-s13))
+- **30** seconds per piece of a recording ([step 13](#kn-wissen-s13))
+- **1** seconds of overlap in front of a piece ([step 13](#kn-wissen-s13))
+- **5** recordings per profile waiting for their transcription at most ([step 13](#kn-wissen-s13))
 
 #### Settings
 
@@ -2570,6 +2579,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - Features → Own documents → Knowledge book → Knowledge map and below it People, companies and deadlines on: points of their own from the documents on the map, with how many documents a day (own limit).
 - Features → Own documents → Knowledge book → Knowledge map → People, companies and deadlines and below it Map helps the search on: the map as third list of hits of the document search (default off).
 - Features → Own documents and below it Analyses on: the sheet Analyses in the details of every own document, with how many analyses a day.
+- Features → Own documents and below it Transcribe recordings on: audio and video files under Me → Documents, with size, length and minutes a day.
 - Features → Own documents and below it Collections on: the page Collections in the menu, with how many tokens a collection gives the model at most.
 
 #### What you see
@@ -2647,6 +2657,14 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/auswertung.py` `auto_arten`: which kinds are made by themselves ([step 13](#kn-wissen-s13))
 - `app/panel/auswertung.py` `frist_tag`: a full date only from a deadline's name, else no reminder ([step 13](#kn-wissen-s13))
 - `app/panel/auswertung.py` `fuer_mappe`: analyses for the collection level short, with page ([step 13](#kn-wissen-s13))
+- `app/panel/abschrift.py` `fits`: content fits the ending (first bytes) ([step 13](#kn-wissen-s13))
+- `app/panel/abschrift.py` `aufnehmen`: check a recording and keep it under the document id ([step 13](#kn-wissen-s13))
+- `app/panel/abschrift.py` `schneiden`: ffmpeg: one piece as 16 kHz WAV, local only ([step 13](#kn-wissen-s13))
+- `app/panel/abschrift.py` `stueck`: one piece through vorrang.run to the speech recognition ([step 13](#kn-wissen-s13))
+- `app/panel/abschrift.py` `trim_edge`: doubled words at the edge by a fixed rule ([step 13](#kn-wissen-s13))
+- `app/panel/abschrift.py` `due_once`: quiet chain: limits, long ones only after long_ok ([step 13](#kn-wissen-s13))
+- `app/panel/documents.py` `stelle`: „Seite 3“ or „bei 12:30“ ([step 13](#kn-wissen-s13))
+- `app/common.py` `signed_low`: background with the key is no speech ([step 13](#kn-wissen-s13))
 - `app/panel/documents.py` `_similar`: similarity block by block in float32 ([step 6](#kn-wissen-s6))
 - `app/panel/gedaechtnis.py` `hint_lines`: facts in three blocks ([step 13](#kn-wissen-s13))
 - `app/panel/profiles.py` `_cap`: cap: only old learned facts make room ([step 13](#kn-wissen-s13))
@@ -2656,7 +2674,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/wissensmessung.py` `_synth`: the throwaway profile from a fixed seed, with the code's limits ([step 6](#kn-wissen-s6))
 - `app/panel/wissensmessung.py` `MESSTEILE`: the measuring parts, extensible ([step 6](#kn-wissen-s6))
 
-Self-tests: `test_wissen`, `test_auswertung`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`, `test_wissenstempo`
+Self-tests: `test_wissen`, `test_auswertung`, `test_abschrift`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`, `test_wissenstempo`
 
 ### Guard
 
@@ -3062,7 +3080,7 @@ flowchart TD
 1. <a id="kn-asr-s1"></a>**A recording arrives**: The browser sends the recording to the panel. Each caller may only so often per minute (profile 240), guests share 3 places at once.
 2. <a id="kn-asr-s2"></a>**At most 50 MB**: read_audio reads the recording in pieces and stops at 50 MB. Only a signed-in profile may send a wake word; it then goes to the model as a hint. With „Names for listening“ hoerwoerter.prompt adds the names of the profiles and the profile's contacts, rooms and devices (at most 100, shared speakers only profile names). While the profile plays the Dungeon Master in the car, the round's names come first (dungeon_auto.words), never anything from its hidden truth.
 3. <a id="kn-asr-s3"></a>**Alongside on the CPU**: While the GPU recognizes, the CPU already runs speaker identification (when on and a profile asks), the room voice, the check for an unknown voice and the measure of how much of the recording is really voice. At a speaking pause with „Turn end by tone“ satzende.start also asks Smart Turn on the model computer (asr_proxy.turn), only for a number to measure.
-4. <a id="kn-asr-s4"></a>**To the ASR service**: The panel sends the recording with the API key to the proxy. stufe.asr_level adds the profile's stage, but not at a shared speaker. Only the panel can set a stage: with the key from vorrang-key and only from this machine, else it is normal.
+4. <a id="kn-asr-s4"></a>**To the ASR service**: The panel sends the recording with the API key to the proxy. stufe.asr_level adds the profile's stage, but not at a shared speaker. Only the panel can set a stage: with the key from vorrang-key and only from this machine, else it is normal. A transcription in the background (abschrift.py) sends the stage last with the key: it waits behind every person and does not count as speech (common.signed_low), real speech cancels it.
 5. <a id="kn-asr-s5"></a>**Key and size fine?**: BodyLimit refuses requests that are too large or lack the right key before anything is read. Without a key set, only this machine itself may ask.
 6. <a id="kn-asr-s6"></a>**Engine ready?**: engine_status asks the engine's /health. If it does not answer, the proxy reads its state and that of the systemd unit and names the reason.
 7. <a id="kn-asr-s7"></a>**Wait by priority**: PrioGate lets as many recordings through as the engine takes at once (engine_max_seqs). The others wait by stage, then by arrival. Whoever waits moves up a stage every four seconds; a running request is never stopped.

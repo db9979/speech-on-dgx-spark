@@ -218,13 +218,18 @@ def speech_mark(now=None, path=None, end=False):
 
 class SpeechMark:
     """ASGI middleware: speech_mark() while a speech request (POST /v1/audio/...) runs, also on every
-    piece of a streamed answer, and once more at its end."""
+    piece of a streamed answer, and once more at its end. Not for the panel's own background work (Abschrift,
+    plan open-notebook Fund 0.1): a request with the stage "hinten" AND the valid key (signed_low) is no speech, else
+    a transcription in the background would hold itself and every other background job. Without the key nothing
+    changes: going down alone is open to any local caller, staying unmarked only to the panel."""
 
     def __init__(self, app, paths=("/v1/audio/",)):
         self.app, self.paths = app, tuple(paths)
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http" or scope.get("method") != "POST" or not scope.get("path", "").startswith(self.paths):
+            return await self.app(scope, receive, send)
+        if signed_low(scope):
             return await self.app(scope, receive, send)
         speech_mark()
 
@@ -280,24 +285,37 @@ def stage_key(create=False):
     return ""
 
 
-def stage_of(request):
-    """The stage of a request to a speech service: what the panel says, last for any local caller that asks, else normal."""
+def _stage(get, host):
+    """(stage, signed): the stage a request asks for and whether it came from this machine with the panel's key."""
     import hmac
     import ipaddress
-    h = request.headers
-    got = h.get(STAGE_HEADER, "")
+    got = get(STAGE_HEADER, "")
     if got not in ("0", "2"):
-        return STAGE_NORMAL
+        return STAGE_NORMAL, False
     try:
-        local = ipaddress.ip_address(request.client.host if request.client else "").is_loopback
+        local = ipaddress.ip_address(host or "").is_loopback
     except ValueError:
         local = False
-    if local and got == "0":
-        return STAGE_LOW
     key = stage_key()
-    if not local or not key or not hmac.compare_digest(h.get(STAGE_KEY_HEADER, "").encode(), key.encode()):
-        return STAGE_NORMAL
-    return int(got)
+    signed = local and bool(key) and hmac.compare_digest(get(STAGE_KEY_HEADER, "").encode(), key.encode())
+    if local and got == "0":
+        return STAGE_LOW, signed
+    return (int(got), True) if signed else (STAGE_NORMAL, False)
+
+
+def stage_of(request):
+    """The stage of a request to a speech service: what the panel says, last for any local caller that asks, else normal."""
+    return _stage(request.headers.get, request.client.host if request.client else "")[0]
+
+
+def signed_low(scope):
+    """An ASGI request with the stage "hinten" and the panel's valid key from this machine (SpeechMark leaves it unmarked)."""
+    heads = {}
+    for k, v in scope.get("headers") or ():
+        heads.setdefault(k.decode("latin-1").lower(), v.decode("latin-1"))
+    client = scope.get("client") or ("", 0)
+    stage, signed = _stage(lambda k, d="": heads.get(k, d), client[0] if client else "")
+    return stage == STAGE_LOW and signed
 
 
 class GateFull(Exception):

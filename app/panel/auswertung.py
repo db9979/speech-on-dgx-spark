@@ -539,7 +539,7 @@ async def due_once(now=None):
 # ---------------------------------------------------------------- reading
 def _card(con, doc):
     r = con.execute("SELECT * FROM docs WHERE id=?", (doc,)).fetchone()
-    return (documents.card(r) | {"name": r["name"], "state": r["state"]}) if r else None
+    return (documents.card(r) | {"name": r["name"], "state": r["state"], "kind": r["kind"]}) if r else None
 
 
 ZITAT = 400              # characters of the place shown as the answer to a question
@@ -587,6 +587,10 @@ def blatt(uid, doc, now=None):
                     day = frist_tag(p, now)
                     if day:
                         p["erinnern"] = day
+        if card.get("kind") == "audio":      # a recording (abschrift.py): the place is its time, "bei 12:30"
+            for p in x["punkte"]:
+                if isinstance(p.get("page"), int):
+                    p["at"] = documents.stelle(p["page"], "audio")
         out.append(x)
     hint = ""
     if not features.allowed("wissensknoten", uid):
@@ -795,7 +799,7 @@ def _doc_by_name(uid, said):
 
 
 def _where(p):
-    bits = ([f"Seite {p['page']}"] if p.get("page") else []) + ([p["part"]] if p.get("part") and p["part"] != p["text"] else [])
+    bits = ([p["at"]] if p.get("at") else [f"Seite {p['page']}"] if p.get("page") else []) + ([p["part"]] if p.get("part") and p["part"] != p["text"] else [])
     return f" ({', '.join(bits)})" if bits else ""
 
 

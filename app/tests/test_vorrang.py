@@ -176,6 +176,47 @@ class Services(Base):
         c.post("/v1/audio/speech")
         self.assertTrue(vorrang.speaking())
 
+    def test_background_asr_with_the_key_marks_no_speech_without_it_does(self):
+        # Fund 0.1 (plan open-notebook, Abschrift): the panel's own background requests ("hinten" with the key from this
+        # machine) are no speech; without the key, with a wrong one or from elsewhere every request still counts
+        a = self.app().app
+        saved = common._stage_key[0]
+        common._stage_key[0] = "k" * 64
+        self.addCleanup(common._stage_key.__setitem__, 0, saved)
+        here = TestClient(a, client=("127.0.0.1", 50000))
+        signed = {common.STAGE_HEADER: "0", common.STAGE_KEY_HEADER: "k" * 64}
+        here.post("/v1/audio/speech", headers=signed)
+        self.assertFalse(vorrang.speaking())
+        for client, h in ((here, {common.STAGE_HEADER: "0"}), (here, {common.STAGE_HEADER: "0", common.STAGE_KEY_HEADER: "x" * 64}),
+                          (here, {common.STAGE_HEADER: "2", common.STAGE_KEY_HEADER: "k" * 64}),
+                          (TestClient(a, client=("192.168.1.20", 50000)), signed), (here, {})):
+            if os.path.exists(vorrang.MARK):
+                os.utime(vorrang.MARK, (0, 0))
+            common._speech_marked[0] = 0.0
+            client.post("/v1/audio/speech", headers=h)
+            self.assertTrue(vorrang.speaking(), h)
+        self.assertEqual(common.stage_of(type("R", (), {"headers": signed, "client": type("C", (), {"host": "127.0.0.1"})})()),
+                         common.STAGE_LOW)
+
+    def test_real_speech_always_stops_background_asr(self):
+        # while a background piece is heard (unmarked), a person's request marks speech and cancels it at once
+        a = self.app().app
+        here = TestClient(a, client=("127.0.0.1", 50000))
+        started = asyncio.Event()
+
+        async def piece():
+            started.set()
+            await asyncio.sleep(5)
+            return "zu spät"
+
+        async def go():
+            job = asyncio.ensure_future(vorrang.run("Abschrift", piece, retries=0))
+            await started.wait()
+            await asyncio.to_thread(here.post, "/v1/audio/speech")      # a person speaks: no stage, no key
+            with self.assertRaises(vorrang.Busy):
+                await job
+        asyncio.run(go())
+
     def test_every_speech_service_has_the_mark_inside_the_key_check(self):
         for name in ("tts_proxy.py", "tts_server.py", "asr_proxy.py", "asr_server.py"):
             src = _read(os.path.join(helpers.APP, name))

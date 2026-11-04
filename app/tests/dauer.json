@@ -1,6 +1,7 @@
 {
 "test_ablauf": 0.6,
 "test_abschnitte": 0.2,
+"test_abschrift": 3.1,
 "test_ack": 0.9,
 "test_aendern": 0.6,
 "test_agent": 5.4,

@@ -499,6 +499,7 @@ ADMIN_ON_OK = {
     "wissensbuch.py:admin_on": "Spark switch for the background step, Live and the admin page; per profile wissensbuch.allowed",
     "fundmail.py:for_live": "Live only: whether the Spark offers „Mails und Anhänge finden“ at all (numbers); each profile's round asks features.allowed(\"fundmail\", uid)",
     "mappen.py:admin_on": "Spark switch for the Live page only; per profile features.allowed(\"mappen\", uid)",
+    "abschrift.py:admin_on": "Spark switch for the quiet step and the Live page; per profile features.allowed(\"docaudio\", uid)",
     "auswertung.py:admin_on": "Spark switch for the quiet step and the Live page; per profile features.allowed(\"auswertungen\", uid)",
     "fund.py:on": "Spark switch for the background rounds, Live and the admin page; per profile features.allowed(\"fund\", uid)",
     "fund.py:tags_on": "Spark switch for the model's background tags and Live; per profile features.allowed(\"fundschlagworte\", uid)",

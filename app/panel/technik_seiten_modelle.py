@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "asr": {
-        "stand": "a220a1da57",
+        "stand": "6d8bca6788",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "common.NOTASR_PORT": ["s9"], "common.NOTASR_IDLE": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],
@@ -59,10 +59,14 @@ SEITEN = {
               ("mit API-Schlüssel und Stufe", "with API key and stage"),
               ("Das Panel schickt die Aufnahme mit dem API-Schlüssel an den Proxy. stufe.asr_level legt die Stufe des "
                "Profils bei, an einem geteilten Lautsprecher aber nicht. Nur das Panel kann eine Stufe setzen: mit "
-               "dem Schlüssel aus vorrang-key und nur von dieser Maschine, sonst gilt normal.",
+               "dem Schlüssel aus vorrang-key und nur von dieser Maschine, sonst gilt normal. Eine Abschrift im "
+               "Hintergrund (abschrift.py) schickt die Stufe hinten mit dem Schlüssel: sie wartet hinter jeder Person "
+               "und zählt nicht als Sprache (common.signed_low), echte Sprache bricht sie ab.",
                "The panel sends the recording with the API key to the proxy. stufe.asr_level adds the profile's "
                "stage, but not at a shared speaker. Only the panel can set a stage: with the key from vorrang-key and "
-               "only from this machine, else it is normal.")),
+               "only from this machine, else it is normal. A transcription in the background (abschrift.py) sends "
+               "the stage last with the key: it waits behind every person and does not count as speech "
+               "(common.signed_low), real speech cancels it.")),
             S("s5", "frage", ("Schlüssel und Größe in Ordnung?", "Key and size fine?"),
               ("bevor ein Byte gelesen wird", "before a byte is read"),
               ("BodyLimit lehnt zu große Anfragen und solche ohne den richtigen Schlüssel ab, bevor etwas gelesen "

@@ -458,6 +458,10 @@ FEATURES = (
     # quiet minutes, the rest per click; every point with its place, checked by the panel's fixed rules, never the model
     F("auswertungen", "Auswertungen", "Analyses", "data", ("doc_auswertung",), parent="documents", me="docbox",
       guide="auswertungen"),
+    # Aufnahmen abschreiben (abschrift.py, plan open-notebook Stufe 3a): recordings uploaded under Ich → Dokumente are
+    # transcribed by the own speech recognition in quiet minutes, 30 s at a time; the transcript is outside text
+    F("docaudio", "Aufnahmen abschreiben", "Transcribe recordings", "data", ("doc_audio",), parent="documents",
+      me="docbox", guide="docaudio"),
     # Suchprüfung (suchpruefung.py, plan suche-schaerfen, Stufe 1): test questions measure how often the search
     # finds the right passage; the admin's release is enough (no profile switch, Freigabe rule 2026-10-13)
     F("suchpruefung", "Suchprüfung", "Search check", "data", ("search_check",), parent="documents", me="docbox",

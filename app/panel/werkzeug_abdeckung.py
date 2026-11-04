@@ -29,6 +29,7 @@ TOOLS = {
     "fund": ("fund_suche",),
     "mappen": ("mappe_liste", "mappe_stand", "mappe_dazu"),
     "auswertungen": ("dokument_auswertung",),
+    "docaudio": ("document_search",),
     "docshared": ("document_search",),
     "docbrief": ("document_search",),
     "remarkable": ("document_search", "remarkable_library"),

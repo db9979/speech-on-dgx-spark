@@ -83,7 +83,7 @@ DATEIEN = [
            "Shared: which documents with which profiles, since when; when Me → Shared was last open", art="Einstellungen", export=JA),
     profil("reminders.json", "Erinnerungen", "Reminders", bereich="alltag"),
     profil("wissen.db", "Dokumente: Text, Abschnitte mit Kontextzeile, Suche, Vektoren; Wissensbuch und Wissenskarte mit Personen, Firmen und Fristen; Mappen mit Einträgen und Stufen; Auswertungen je Dokument mit Fundstelle (SQLite)", "Documents: text, sections with context line, search, vectors; knowledge book and map with people, companies and deadlines; collections with entries and levels; analyses per document with their place (SQLite)", bereich="dokumente"),
-    profil("docs/files/", "Originale der Uploads", "Originals of uploads", bereich="dokumente"),
+    profil("docs/files/", "Originale der Uploads (bei Aufnahmen nur die Tonspur)", "Originals of uploads (of recordings only the sound track)", bereich="dokumente"),
     profil("fund.db", "Finden: Suchindex über die eigenen Daten (Titel, Felder, Schlagworte, eigene Schlagworte, Mails und Anhänge, "
            "Termine, Kontakte, Listen, Erinnerungen, Bilder, Lieder; Gespräche nur Datum und Kanal; SQLite)",
            "Find: search index over the own data (titles, fields, tags, own tags, mail and attachments, appointments, contacts, "
@@ -192,6 +192,7 @@ DATEIEN = [
     profil("gesundheit.json", "Schritte, Puls und Schlaf von der Pebble-Uhr (30 Tage)", "Steps, pulse and sleep from the Pebble watch (30 days)",
            art="Gesundheit", schutz=("versiegelt", "sealed"), export=JA),
     profil("docling-wait", "Dateien, bis Docling sie gelesen hat", "Files until Docling has read them", art="Warteschlange"),
+    profil("docs/audio-wait/", "Aufnahmen, bis die Spracherkennung sie abgeschrieben hat", "Recordings until the speech recognition has transcribed them", art="Warteschlange"),
     # users/<id>/: written through their own helper, not through profiles._path (never copied)
     profil("mfa.json", "Zweiter Schritt des Profils", "Profile's second step", art="Schlüssel", helfer=True, schutz=("versiegelt", "sealed")),
     profil("memory-tidy.json", "Aufräum-Vorschlag", "Tidy proposal", art="Warteschlange", helfer=True),

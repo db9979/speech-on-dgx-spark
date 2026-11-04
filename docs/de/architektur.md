@@ -246,6 +246,7 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 
 | Modul | Aufgabe |
 |---|---|
+| `app/panel/abschrift.py` | Aufnahmen abschreiben: Ton und Video in Stücken von 30 s durch die eigene Spracherkennung, Zeit als Stelle |
 | `app/panel/auswertung.py` | Auswertungen je Dokument: Punkte vom Modell mit Zahlenprobe je Stelle; Inhalt, Fristen, Beteiligte fest |
 | `app/panel/bilder.py` | Bilder malen: Wunsch prüfen, Auftrag, Ablage, Bildkarte |
 | `app/panel/docembed.py` | Bedeutungsvektoren für die Dokumentsuche |
@@ -641,7 +642,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/tasks.json` | Aufgaben |  | – | ja | Aufgaben und Erinnerungen |
 | `users/ID/reminders.json` | Erinnerungen |  | – | ja | Aufgaben und Erinnerungen |
 | `users/ID/wissen.db` | Dokumente: Text, Abschnitte mit Kontextzeile, Suche, Vektoren; Wissensbuch und Wissenskarte mit Personen, Firmen und Fristen; Mappen mit Einträgen und Stufen; Auswertungen je Dokument mit Fundstelle (SQLite) |  | – | ja | Dokumente (Text, Suche, Originale) |
-| `users/ID/docs/files/` | Originale der Uploads |  | – | ja | Dokumente (Text, Suche, Originale) |
+| `users/ID/docs/files/` | Originale der Uploads (bei Aufnahmen nur die Tonspur) |  | – | ja | Dokumente (Text, Suche, Originale) |
 | `users/ID/fund.db` | Finden: Suchindex über die eigenen Daten (Titel, Felder, Schlagworte, eigene Schlagworte, Mails und Anhänge, Termine, Kontakte, Listen, Erinnerungen, Bilder, Lieder; Gespräche nur Datum und Kanal; SQLite) |  | Marken mit eigenem Schlüssel je Profil (HMAC); Mails, Anhänge, Termine und Kontakte: Titel, Auszug, Felder und Schlagworte AES-GCM | ja | Dokumente (Text, Suche, Originale) |
 | `users/ID/suchpruefung.json` | Prüffragen und Läufe der Suchprüfung |  | – | ja | Dokumente (Text, Suche, Originale) |
 | `users/ID/erstellt/` | Erstellte Dokumente |  | – | ja | Erstellte Dokumente |
@@ -717,6 +718,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/tagebuch.json` | Spark-Tagebuch | Zustand | ganz versiegelt (AES-256-GCM) | ja | – |
 | `users/ID/gesundheit.json` | Schritte, Puls und Schlaf von der Pebble-Uhr (30 Tage) | Gesundheit | versiegelt | ja | – |
 | `users/ID/docling-wait` | Dateien, bis Docling sie gelesen hat | Warteschlange | – | ja | – |
+| `users/ID/docs/audio-wait/` | Aufnahmen, bis die Spracherkennung sie abgeschrieben hat | Warteschlange | – | ja | – |
 | `users/ID/mfa.json` | Zweiter Schritt des Profils | Schlüssel | versiegelt | ja | – |
 | `users/ID/memory-tidy.json` | Aufräum-Vorschlag | Warteschlange | – | ja | – |
 | `users/ID/memory-tidy-checked` | Letzte Aufräum-Prüfung | Zustand | – | ja | – |
@@ -2481,6 +2483,10 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - auswertung.pruefe behält einen Punkt des Modells nur, wenn seine Stelle angeboten war, wissensbuch.check_sentence gegen diese Stelle besteht (jede Zahl steht dort, keine Links, kein Markup, keine Befehlswörter) und bei Kurzfassung und Kernaussagen wissensbuch.match genug Wörter der Stelle findet; eine Frage endet mit „?“, ihre Antwort ist die Stelle selbst. Doppelte und Punkte mit „Stimmt nicht“ (aw_block) fallen weg, höchstens auswertung.MOST je Art. Ein neu gelesenes Dokument (anderer Fingerabdruck der Stücke) wartet wieder. auswertung.inhalt baut das Inhaltsverzeichnis aus chunks.part, auswertung.fristen nimmt die Frist des Steckbriefs und die Punkte der Wissenskarte (wissenskarte.knoten_von_dok, nur lesend): beides ohne Modell. Modelltext geht nie ins Gedächtnis, ins Wissensbuch oder in die Suche; das Werkzeug dokument_auswertung gibt ihn als Text von außen.
 - Eigene Arten des Admins (Vorlagen, höchstens 10) liegen in STATE/auswertung-vorlagen.json; auswertung.check_vorlage lässt Name und Auftrag (höchstens 400 Zeichen) nur ohne Links, Markup und Befehlswörter durch, auch beim Lesen. Der Auftrag steht als zitiertes Thema im festen Rahmen des Prompts, die Antwort geht durch dieselbe Prüfung wie die Kernaussagen. auswertung.auto_arten nimmt chat.doc_auswertung_auto (Standard Kurzfassung und Kernaussagen) und die Vorlagen mit „von selbst“. auswertung.frist_tag liest ein volles Datum nur aus dem Namen einer Frist der Wissenskarte, nie aus der Umgebung, und bietet „Erinnern“ wie beim Steckbrief. auswertung.fuer_mappe gibt einer Mappe in der Stufe „kurz“ Kurzfassung, Kernaussagen und Vorlagen mit Seite mit, als Daten.
 
+#### Aufnahmen abschreiben
+
+- abschrift.aufnehmen nimmt eine Ton- oder Videodatei nur, wenn ihr Inhalt nach den ersten Bytes zur Endung passt (abschrift.fits), kopiert sie in Teilen mit ihrer Grenze unter die Dokument-ID (0600) und liest die Länge mit ffprobe; höchstens 5 warten je Profil. In der ruhigen Kette nach den Seitenbildern schneidet abschrift.schneiden mit ffmpeg (nur die lokale Datei, feste Argumente) ein Stück von 30 s, ab dem zweiten mit 1 s davor, und abschrift.stueck schickt es über vorrang.run an die eigene Spracherkennung, mit der Stufe „hinten“ und dem Vorrang-Schlüssel: common.signed_low lässt nur so eine Anfrage unmarkiert, echte Sprache bricht das Stück ab, und es kommt in der nächsten Pause noch einmal. abschrift.trim_edge nimmt die doppelt gehörten Wörter am Rand heraus. Die Seite eines Stücks ist seine Startsekunde; documents.stelle macht daraus „bei 12:30“, wissen.where „Aufnahme: …, bei 12:30“. Die Abschrift ist Text von außen.
+
 #### Karte hilft der Suche
 
 - wissenskarte.liste(uid, worte, k) gibt Stück-Ids mit Rang ab 1 zurück, nur lesend (SQLite mit mode=ro) und nur für das eigene Profil. Feste Regeln, nie das Modell: Die Suchwörter treffen einen Punkt, wenn sein Name oder ein anderer Name ganz in der Frage steht (verglichen wie wissenskarte.ent_norm) oder ein Wort des Namens ab 4 Buchstaben, das keine Zahl und keine Rechtsform ist (wissenskarte.trifft); höchstens 20 Punkte. Dazu kommen ihre Nachbarn einen Schritt weit (dieselbe Abfrage wie wissenskarte.rund_um) und von allen die Stellen in genutzten, gelesenen Dokumenten. Eine Stelle mit einem genannten Punkt steht vor einer mit nur Nachbarn, mehr Punkte vor weniger, höchstens 50.
@@ -2558,6 +2564,9 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - **100** Auswertungen pro Profil und Tag (Standard) ([Schritt 13](#kn-wissen-s13))
 - **10** eigene Arten (Vorlagen) des Admins höchstens ([Schritt 13](#kn-wissen-s13))
 - **400** Zeichen eines Auftrags einer Vorlage höchstens ([Schritt 13](#kn-wissen-s13))
+- **30** Sekunden je Stück einer Aufnahme ([Schritt 13](#kn-wissen-s13))
+- **1** Sekunden Überlappung vor einem Stück ([Schritt 13](#kn-wissen-s13))
+- **5** Aufnahmen je Profil, die auf ihre Abschrift warten, höchstens ([Schritt 13](#kn-wissen-s13))
 
 #### Einstellen
 
@@ -2570,6 +2579,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte und darunter Personen, Firmen und Fristen an: eigene Punkte aus den Dokumenten auf der Karte, dazu wie viele Dokumente am Tag (eigene Grenze).
 - Funktionen → Eigene Dokumente → Wissensbuch → Wissenskarte → Personen, Firmen und Fristen und darunter Karte hilft der Suche an: die Karte als dritte Trefferliste der Dokumentsuche (Standard aus).
 - Funktionen → Eigene Dokumente und darunter Auswertungen an: das Blatt Auswertungen im Detail jedes eigenen Dokuments, dazu wie viele Auswertungen am Tag.
+- Funktionen → Eigene Dokumente und darunter Aufnahmen abschreiben an: Ton- und Videodateien unter Ich → Dokumente, dazu Größe, Länge und Minuten am Tag.
 - Funktionen → Eigene Dokumente und darunter Mappen an: die Seite Mappen im Menü, dazu wie viele Token eine Mappe dem Modell höchstens gibt.
 
 #### Was du siehst
@@ -2647,6 +2657,14 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - `app/panel/auswertung.py` `auto_arten`: welche Arten von selbst entstehen ([Schritt 13](#kn-wissen-s13))
 - `app/panel/auswertung.py` `frist_tag`: volles Datum nur aus dem Namen einer Frist, sonst kein Erinnern ([Schritt 13](#kn-wissen-s13))
 - `app/panel/auswertung.py` `fuer_mappe`: Auswertungen für die Mappen-Stufe kurz, mit Seite ([Schritt 13](#kn-wissen-s13))
+- `app/panel/abschrift.py` `fits`: Inhalt passt zur Endung (erste Bytes) ([Schritt 13](#kn-wissen-s13))
+- `app/panel/abschrift.py` `aufnehmen`: Aufnahme prüfen und unter der Dokument-ID ablegen ([Schritt 13](#kn-wissen-s13))
+- `app/panel/abschrift.py` `schneiden`: ffmpeg: ein Stück als 16-kHz-WAV, nur lokal ([Schritt 13](#kn-wissen-s13))
+- `app/panel/abschrift.py` `stueck`: ein Stück über vorrang.run an die Spracherkennung ([Schritt 13](#kn-wissen-s13))
+- `app/panel/abschrift.py` `trim_edge`: doppelte Wörter am Rand nach fester Regel ([Schritt 13](#kn-wissen-s13))
+- `app/panel/abschrift.py` `due_once`: ruhige Kette: Grenzen, lange nur nach long_ok ([Schritt 13](#kn-wissen-s13))
+- `app/panel/documents.py` `stelle`: „Seite 3“ oder „bei 12:30“ ([Schritt 13](#kn-wissen-s13))
+- `app/common.py` `signed_low`: Hintergrund mit Schlüssel ist keine Sprache ([Schritt 13](#kn-wissen-s13))
 - `app/panel/documents.py` `_similar`: Ähnlichkeit blockweise in float32 ([Schritt 6](#kn-wissen-s6))
 - `app/panel/gedaechtnis.py` `hint_lines`: Fakten in drei Blöcken ([Schritt 13](#kn-wissen-s13))
 - `app/panel/profiles.py` `_cap`: Obergrenze: nur alte gelernte Fakten machen Platz ([Schritt 13](#kn-wissen-s13))
@@ -2656,7 +2674,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - `app/panel/wissensmessung.py` `_synth`: das Wegwerf-Profil aus festem Zufall, mit den Grenzen des Codes ([Schritt 6](#kn-wissen-s6))
 - `app/panel/wissensmessung.py` `MESSTEILE`: die Messteile, erweiterbar ([Schritt 6](#kn-wissen-s6))
 
-Selbsttests: `test_wissen`, `test_auswertung`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`, `test_wissenstempo`
+Selbsttests: `test_wissen`, `test_auswertung`, `test_abschrift`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`, `test_wissenstempo`
 
 ### Wächter
 
@@ -3062,7 +3080,7 @@ flowchart TD
 1. <a id="kn-asr-s1"></a>**Aufnahme kommt an**: Der Browser schickt die Aufnahme ans Panel. Jeder Anrufer darf nur so oft pro Minute (Profil 240), Gäste teilen sich 3 Plätze gleichzeitig.
 2. <a id="kn-asr-s2"></a>**Höchstens 50 MB**: read_audio liest die Aufnahme in Stücken und bricht bei 50 MB ab. Ein Weckwort darf nur ein angemeldetes Profil mitschicken; es geht dann als Hinweis an das Modell. Mit „Namen fürs Hören“ legt hoerwoerter.prompt die Namen der Profile, Kontakte, Räume und Geräte des Profils bei (höchstens 100, geteilte Lautsprecher nur Profilnamen). Spielt das Profil gerade den Dungeon-Master im Auto, stehen die Namen der Runde vorne (dungeon_auto.words), nie etwas aus ihrer verborgenen Wahrheit.
 3. <a id="kn-asr-s3"></a>**Nebenbei auf dem Prozessor**: Während die Grafikkarte erkennt, laufen auf dem Prozessor schon die Sprechererkennung (wenn an und ein Profil fragt), die Raum-Stimme, die Prüfung auf eine fremde Stimme und die Messung, wie viel der Aufnahme wirklich Stimme ist. Bei einer Sprechpause mit „Satzende am Tonfall“ fragt satzende.start nebenbei Smart Turn auf dem Modell-Rechner (asr_proxy.turn), nur für eine Zahl zur Messung.
-4. <a id="kn-asr-s4"></a>**An den ASR-Dienst**: Das Panel schickt die Aufnahme mit dem API-Schlüssel an den Proxy. stufe.asr_level legt die Stufe des Profils bei, an einem geteilten Lautsprecher aber nicht. Nur das Panel kann eine Stufe setzen: mit dem Schlüssel aus vorrang-key und nur von dieser Maschine, sonst gilt normal.
+4. <a id="kn-asr-s4"></a>**An den ASR-Dienst**: Das Panel schickt die Aufnahme mit dem API-Schlüssel an den Proxy. stufe.asr_level legt die Stufe des Profils bei, an einem geteilten Lautsprecher aber nicht. Nur das Panel kann eine Stufe setzen: mit dem Schlüssel aus vorrang-key und nur von dieser Maschine, sonst gilt normal. Eine Abschrift im Hintergrund (abschrift.py) schickt die Stufe hinten mit dem Schlüssel: sie wartet hinter jeder Person und zählt nicht als Sprache (common.signed_low), echte Sprache bricht sie ab.
 5. <a id="kn-asr-s5"></a>**Schlüssel und Größe in Ordnung?**: BodyLimit lehnt zu große Anfragen und solche ohne den richtigen Schlüssel ab, bevor etwas gelesen wird. Ohne eingetragenen Schlüssel darf nur diese Maschine selbst fragen.
 6. <a id="kn-asr-s6"></a>**Engine bereit?**: engine_status fragt /health der Engine. Antwortet sie nicht, liest der Proxy ihren Zustand und den der systemd-Einheit und nennt den Grund.
 7. <a id="kn-asr-s7"></a>**Warten nach Vorrang**: PrioGate lässt so viele Aufnahmen durch, wie die Engine gleichzeitig nimmt (engine_max_seqs). Die anderen warten nach Stufe, dann nach Ankunft. Wer wartet, rückt alle vier Sekunden eine Stufe auf; eine laufende Anfrage wird nie unterbrochen.

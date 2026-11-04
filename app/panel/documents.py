@@ -55,7 +55,7 @@ TYPES = (".pdf", ".txt", ".md", ".docx", ".html", ".htm", ".csv", ".xlsx", ".ppt
 SIDE = 1600                    # longest side of a page picture for the language model (small print stays readable)
 DB = "wissen.db"
 CTYPE = {".pdf": "application/pdf", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
-         ".webp": "image/webp"}
+         ".webp": "image/webp", ".ogg": "audio/ogg"}     # .ogg: the kept sound track of a recording (abschrift.py)
 _locks = {}                    # uid -> RLock: one profile's work never waits for another's (code check 19.10. B2)
 _locks_guard = threading.Lock()
 _vcache = {}                   # uid -> (stamp, built at, ids, float16 matrix: half the memory of float32)
@@ -77,7 +77,10 @@ NEW_COLUMNS = (("shared", "INTEGER DEFAULT 0"), ("title", "TEXT DEFAULT ''"), ("
                # Wissensordner (nasquelle.py): "<folder id>:<path hash>" and the folder at the place it lies in
                ("origin", "TEXT DEFAULT ''"), ("place", "TEXT DEFAULT ''"),
                # tables read row by row (pdftabellen.py, 2026-10-23): the reading of a PDF (0 = from before, due_tables)
-               ("tablev", "INTEGER DEFAULT 0"))
+               ("tablev", "INTEGER DEFAULT 0"),
+               # Aufnahmen abschreiben (abschrift.py, plan open-notebook 3a): length of a recording and the second the
+               # transcription has reached (kind 'audio', state 'hoeren' until it is through)
+               ("secs", "INTEGER DEFAULT 0"), ("heard", "INTEGER DEFAULT 0"))
 # when a piece / page last changed (reMarkable: the page's own time, else the document's); 0 = the document's time
 # part: the headings the piece stands under (NULL = not known yet, from before V01.0.519); head: the context line
 # (title, kind, part) that the word search weighs lower (ftshead) and the meaning search reads with the piece
@@ -131,6 +134,11 @@ def _files(uid):
 def _wait_dir(uid):
     """Files waiting for the Docling server when the original is not kept (doclingdienst.py)."""
     return profiles._path(uid, "docling-wait")
+
+
+def audio_dir(uid):
+    """Recordings waiting for their transcription (abschrift.py); gone once it is through or the document is."""
+    return os.path.join(_dir(uid), "audio-wait")
 
 
 def db_path(uid):
@@ -672,7 +680,8 @@ def _row(r, todo, pieces, novec):
     n = pieces.get(r["id"], 0)
     return {"id": r["id"], "name": r["name"], "size": r["size"], "created": r["created"], "changed": r["changed"] or 0, "chunks": n,
             "kind": r["kind"], "state": r["state"], "note": r["note"], "pages": r["pages"], "todo": todo.get(r["id"], 0),
-            "vecs": n - novec.get(r["id"], 0), "use": bool(r["use"]), "shared": bool(r["shared"]), "file": bool(r["file"]), "source": r["source"],
+            "vecs": n - novec.get(r["id"], 0), "use": bool(r["use"]),
+            **({"secs": r["secs"] or 0, "heard": r["heard"] or 0} if r["kind"] == "audio" else {}), "shared": bool(r["shared"]), "file": bool(r["file"]), "source": r["source"],
             **({"place": r["place"]} if r["source"] == "nas" or r["source"] == "begleiter" and r["place"] else {}), **card(r)}
 
 
@@ -906,6 +915,13 @@ def _read(name, data, text=None, pictures=False, cleaned=False, later=False):
     return parts, todo, kind, "; ".join(notes)
 
 
+def file_name(name, default, path=True):
+    """A document's name as it is shown: no control signs, no markup signs, at most 120 characters (path: only the
+    last part of an uploaded file's path)."""
+    name = str(name or default)
+    return re.sub(r"[\x00-\x1f\x7f<>\"\\]", "", os.path.basename(name) if path else name)[:120].strip() or default
+
+
 def add(uid, name, data, text=None, pictures=False, keep=0, source="upload", most=MAX_FILE, docling=False, limit=None):
     """Stores a document. text: already read elsewhere (the iPhone app reads PDFs and scans itself;
     data is then only its size). pictures: photos and scanned pages may wait for the language model.
@@ -914,7 +930,7 @@ def add(uid, name, data, text=None, pictures=False, keep=0, source="upload", mos
     place (source "nas", nasquelle.py) count only against their own limit, the others against MAX_DOCS."""
     if len(data) > most:
         raise ValueError(f"file is larger than {most // 1024**2} MB")
-    name = re.sub(r"[\x00-\x1f\x7f<>\"\\]", "", os.path.basename(str(name or "document")))[:120].strip() or "document"
+    name = file_name(name, "document")
     ext = os.path.splitext(name.lower())[1]
     if text is None and ext != ".pdf" and len(data) > MAX_OTHER:
         raise ValueError(f"file is larger than {MAX_OTHER // 1024**2} MB (only PDFs may be bigger)")
@@ -1162,13 +1178,27 @@ def original(uid, doc_id):
     return path, name, CTYPE.get(ext, "application/octet-stream")
 
 
+def zeit(secs):
+    """A place in a recording (abschrift.py: a piece's page is its start second) as 12:30 or 1:02:30."""
+    secs = max(0, int(secs or 0))
+    h, m, x = secs // 3600, secs // 60 % 60, secs % 60
+    return f"{h}:{m:02d}:{x:02d}" if h else f"{m:02d}:{x:02d}"
+
+
+def stelle(page, source):
+    """Where a piece stands, in words: "bei 12:30" in a recording, else "Seite 3" ('' without a page)."""
+    if source == "audio":
+        return "bei " + zeit(page)
+    return f"Seite {page}" if page else ""
+
+
 def text_of(uid, doc_id, most=200_000, start=0):
     """{"name", "kind", "parts": [{"page", "text"}]} of a document for reading it again (pieces without
     their overlap is not worth the effort: they are shown one after another), or None."""
     if not re.fullmatch(r"[0-9a-f]{12}", doc_id):
         return None
     with _Db(uid) as con:
-        d = con.execute("SELECT name, kind, state, file FROM docs WHERE id=?", (doc_id,)).fetchone()
+        d = con.execute("SELECT name, kind, state, file, source FROM docs WHERE id=?", (doc_id,)).fetchone()
         if not d:
             return None
         rows = con.execute("SELECT page, text FROM chunks WHERE doc=? ORDER BY COALESCE(page, 0), n LIMIT -1 OFFSET ?",
@@ -1177,7 +1207,7 @@ def text_of(uid, doc_id, most=200_000, start=0):
     for r in rows:
         if size > most:
             break
-        parts.append({"page": r["page"], "text": r["text"]})
+        parts.append({"page": r["page"], "text": r["text"], **({"at": stelle(r["page"], "audio")} if d["kind"] == "audio" else {})})
         size += len(r["text"])
     more = len(parts) < len(rows)
     # the view shows a part at a time ("Weiterlesen", V01.0.243); search always uses the whole text
@@ -1207,7 +1237,7 @@ def notebook_put(uid, doc_id, name, pages, note="", source="remarkable", changed
     (page number, text, JPEG or None[, when the page last changed]); a JPEG waits for the language model, its
     text comes on top of the page's own text. changed: when the notebook last changed (0 = now). doc_id None: a new document. Returns (doc id, pages that could not wait, as the
     queue was full; they are left out and tried again with the next comparison)."""
-    name = re.sub(r"[\x00-\x1f\x7f<>\"\\]", "", str(name or "Notizbuch"))[:120].strip() or "Notizbuch"
+    name = file_name(name, "Notizbuch", path=False)
     with _Db(uid) as con:
         if doc_id and not con.execute("SELECT 1 FROM docs WHERE id=?", (doc_id,)).fetchone():
             doc_id = None
@@ -1250,9 +1280,100 @@ def notebook_put(uid, doc_id, name, pages, note="", source="remarkable", changed
     return doc_id, left
 
 
+# ---------------------------------------------------------------- recordings (abschrift.py, plan open-notebook 3a)
+# A recording is a document of kind 'audio' and source 'audio'; while it is transcribed its state is 'hoeren', secs its
+# length and heard the second the transcription reached. Every piece of 30 seconds becomes pieces with its start second
+# as the page (stelle shows "bei 12:30"); the file waits in audio_dir until the end.
+def audio_new(uid, doc_id, name, size, secs):
+    """A new recording waiting for its transcription (doc_id from abschrift.py, the file is already in audio_dir)."""
+    with _Db(uid) as con:
+        if con.execute("SELECT COUNT(*) FROM docs WHERE source<>'nas'").fetchone()[0] >= MAX_DOCS:
+            raise ValueError(f"at most {MAX_DOCS} documents per profile")
+        con.execute("INSERT INTO docs (id, name, size, created, kind, state, note, pages, file, source, secs, heard, tablev) "
+                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                    (doc_id, file_name(name, "Aufnahme"), int(size), int(time.time()), "audio", "hoeren", "", 0, "",
+                     "audio", int(secs), 0, TABLEV))
+
+
+def audio_next(uid, most_secs=None):
+    """(doc id, length, second reached) of the oldest recording still to transcribe, or None. most_secs: only
+    recordings at most this long (short ones by day, wissen.long_ok)."""
+    if not os.path.exists(db_path(uid)):
+        return None
+    with _Db(uid) as con:
+        r = con.execute("SELECT id, secs, heard FROM docs WHERE kind='audio' AND state='hoeren' "
+                        + ("AND secs<=? " if most_secs else "") + "ORDER BY created, id LIMIT 1",
+                        (most_secs,) if most_secs else ()).fetchone()
+    return tuple(r) if r else None
+
+
+def audio_last(uid, doc_id):
+    """The text of the newest piece of a recording (the words at the edge of the next piece are compared with it)."""
+    with _Db(uid) as con:
+        r = con.execute("SELECT text FROM chunks WHERE doc=? ORDER BY n DESC LIMIT 1", (doc_id,)).fetchone()
+    return r[0] if r else ""
+
+
+def audio_piece(uid, doc_id, start, text, heard):
+    """One transcribed piece: its text as pieces with the start second as page, and how far the transcription is.
+    False when the recording is gone or no longer being transcribed (deleted, stopped meanwhile)."""
+    with _Db(uid) as con:
+        if not con.execute("SELECT 1 FROM docs WHERE id=? AND kind='audio' AND state='hoeren'", (doc_id,)).fetchone():
+            return False
+        n = con.execute("SELECT COALESCE(MAX(n), -1) FROM chunks WHERE doc=?", (doc_id,)).fetchone()[0]
+        for c, part in pieces(_clean_text(text or "")):
+            n += 1
+            _put_chunk(con, doc_id, n, int(start), c, part=part)
+        con.execute("UPDATE docs SET heard=? WHERE id=?", (int(heard), doc_id))
+    return True
+
+
+def audio_done(uid, doc_id, file="", note=""):
+    """The transcription is through: ready with text (else 'error'), the kept sound track if any."""
+    with _Db(uid) as con:
+        if not con.execute("SELECT 1 FROM docs WHERE id=? AND kind='audio'", (doc_id,)).fetchone():
+            return False
+        has = con.execute("SELECT 1 FROM chunks WHERE doc=?", (doc_id,)).fetchone()
+        con.execute("UPDATE docs SET state=?, file=?, heard=secs WHERE id=?", ("ready" if has else "error", file, doc_id))
+        if note:
+            _add_note(con, doc_id, note)
+        set_heads(con, doc_id)
+    return True
+
+
+def audio_stop(uid, doc_id):
+    """"Abbrechen": a recording still being transcribed keeps what is written ("ready"), without any text it goes.
+    Returns "stopped", "deleted" or None (no such recording being transcribed)."""
+    if not re.fullmatch(r"[0-9a-f]{12}", doc_id or "") or not os.path.exists(db_path(uid)):
+        return None
+    with _Db(uid) as con:
+        r = con.execute("SELECT heard FROM docs WHERE id=? AND kind='audio' AND state='hoeren'", (doc_id,)).fetchone()
+        if not r:
+            return None
+        has = con.execute("SELECT 1 FROM chunks WHERE doc=?", (doc_id,)).fetchone()
+        if has:
+            con.execute("UPDATE docs SET state='ready' WHERE id=?", (doc_id,))
+            _add_note(con, doc_id, "Abschrift abgebrochen bei " + zeit(r[0]))
+            set_heads(con, doc_id)
+    _drop_wait(uid, doc_id)
+    if not has:
+        delete(uid, doc_id)
+        return "deleted"
+    return "stopped"
+
+
+def audio_waiting(uid):
+    """(recordings being transcribed, seconds still to transcribe) of this profile (never creates a database)."""
+    if not os.path.exists(db_path(uid)):
+        return 0, 0
+    with _Db(uid, keep=True) as con:
+        r = con.execute("SELECT COUNT(*), COALESCE(SUM(secs-heard), 0) FROM docs WHERE kind='audio' AND state='hoeren'").fetchone()
+    return int(r[0]), int(r[1])
+
+
 # ---------------------------------------------------------------- the Docling server (doclingdienst.py)
-def _wait_files(uid, doc_id):
-    d = _wait_dir(uid)
+def _wait_files(uid, doc_id, where=None):
+    d = where or _wait_dir(uid)
     try:
         return [os.path.join(d, f) for f in os.listdir(d) if f.split(".")[0] == doc_id]
     except OSError:
@@ -1260,7 +1381,7 @@ def _wait_files(uid, doc_id):
 
 
 def _drop_wait(uid, doc_id):
-    for p in _wait_files(uid, doc_id):
+    for p in _wait_files(uid, doc_id) + _wait_files(uid, doc_id, audio_dir(uid)):
         try:
             os.remove(p)
         except OSError:

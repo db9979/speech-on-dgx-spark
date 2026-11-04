@@ -106,7 +106,7 @@ enum DocFilter: String, CaseIterable, Identifiable {
         switch self {
         case .all: true
         case .due: !d.due.isEmpty && d.due >= ThingsView.today
-        case .reading: d.todo > 0 || d.state == "reading"
+        case .reading: d.todo > 0 || d.state == "reading" || d.state == "hoeren"
         case .shared: d.shared
         case .unused: !d.use
         case .broken: d.state == "error"
@@ -365,6 +365,7 @@ struct DocRow: View {
         case "spark": String(localized: "Vom Spark erstellt")
         case "nas": String(localized: "Wissensordner")
         case "eingang": String(localized: "NAS-Eingang")
+        case "audio": String(localized: "Aufnahme")
         default: String(localized: "Hochgeladen")
         }
     }
@@ -378,6 +379,9 @@ struct DocRow: View {
             badge(Text(verbatim: "\(doc.pages - doc.todo)/\(doc.pages)"), Theme.accent)
         } else if doc.todo > 0 || doc.state == "reading" {
             badge(Text("wird gelesen"), Theme.accent)
+        } else if doc.state == "hoeren" {
+            // a recording being transcribed (abschrift.py); "Abbrechen" and listening are in the panel view
+            badge(Text("hört ab"), Theme.accent)
         } else if doc.shared {
             badge(Text("für alle"), Theme.ok)
         } else if !doc.use {

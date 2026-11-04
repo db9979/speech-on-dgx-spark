@@ -143,7 +143,7 @@ const docSize=n=>n<1048576?Math.max(1,Math.round(n/1024))+' KB':(n/1048576).toFi
 // and „Mit Docling lesen“ (the files leave the Spark, a preference that starts on) stay a choice of the profile.
 const DOCSW=[['due',t('Fristen anbieten','Offer deadlines'),t('Hat ein Dokument eine Frist, gibt es den Knopf „Erinnern“. Eine Erinnerung entsteht nur auf deinen Klick.','When a document has a deadline there is a "Remind" button. A reminder is only set on your click.')],
   ['docling',t('Mit Docling lesen','Read with Docling'),t('Der Docling-Server im Heimnetz liest deine Dateien in Pausen ein zweites Mal, mit Tabellen und Scans. Aus: Sie bleiben auf dem Spark.','The Docling server in the home network reads your files a second time in quiet moments, with tables and scans. Off: they stay on the Spark.')]];
-const DOCSRC={upload:t('Hochgeladen','Uploaded'),app:t('iPhone-App','iPhone app'),begleiter:t('Begleiter','Companion'),remarkable:'reMarkable',agent:t('Aufträge','Jobs'),spark:t('Vom Spark erstellt','Made by the Spark'),nas:t('Wissensordner','Knowledge folder'),eingang:t('NAS-Eingang','NAS inbox'),other:t('Von anderen','From others')};
+const DOCSRC={upload:t('Hochgeladen','Uploaded'),app:t('iPhone-App','iPhone app'),begleiter:t('Begleiter','Companion'),remarkable:'reMarkable',agent:t('Aufträge','Jobs'),spark:t('Vom Spark erstellt','Made by the Spark'),nas:t('Wissensordner','Knowledge folder'),eingang:t('NAS-Eingang','NAS inbox'),audio:t('Aufnahme','Recording'),other:t('Von anderen','From others')};
 const DOCSORT=[['new',t('Neueste zuerst','Newest first')],['name',t('Name A–Z','Name A–Z')],['due',t('Frist zuerst','Deadline first')],['size',t('Größte zuerst','Largest first')]];
 const DOCCHIP=[['',t('Alle','All')],['due',t('Frist offen','Deadline open')],['reading',t('Wird gelesen','Being read')],['error',t('Nicht lesbar','Not readable')],['shared',t('Für alle','For everyone')],['off',t('Suche aus','Search off')]];
 const DOCPAGE=50;
@@ -169,11 +169,23 @@ const docDayS=s=>!s||s.length===7?docDay(s):s.slice(0,4)===docToday().slice(0,4)
 // a notebook (reMarkable) by its last change on the device, every other document by when it was added (Dominik 2026-10-22 „1a“)
 const docWhen=d=>d.changed||d.created||0;
 const docDate=s=>s?new Date(s*1000).toLocaleDateString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}):'';
-const docIco=d=>d.kind==='notebook'?['nb','NB']:d.kind==='picture'||/\.(jpe?g|png|webp)$/i.test(d.name)?['img',t('BILD','IMG')]:/\.pdf$/i.test(d.name)?['pdf','PDF']:
+const docIco=d=>d.kind==='audio'?['aud',ic('wave')]:d.kind==='notebook'?['nb','NB']:d.kind==='picture'||/\.(jpe?g|png|webp)$/i.test(d.name)?['img',t('BILD','IMG')]:/\.pdf$/i.test(d.name)?['pdf','PDF']:
   /\.(docx|odt)$/i.test(d.name)?['doc','DOC']:/\.(xlsx|ods|csv)$/i.test(d.name)?['tab',t('TAB','TAB')]:/\.(pptx|odp)$/i.test(d.name)?['doc','PPT']:['txt','TXT'];
 // progress of one document (V01.0.232): pages read of all pages, then pieces with a meaning, and why it
 // waits (switch off, daily limit, someone is talking, the model waits for memory). [text, percent or null]
+// a recording still being transcribed (abschrift.py): minutes of minutes, and why it waits
+const docMin=s=>Math.round((s||0)/60);
+function docHear(d){const A=DOCINFO&&DOCINFO.audio||{},pct=d.secs?Math.round(100*d.heard/d.secs):0;let why;
+  if(!A.on)why=t('wartet, „Aufnahmen abschreiben“ ist aus','waiting, "Transcribe recordings" is off');
+  else if(A.now===d.id)why=t('schreibt gerade ab','transcribing now');
+  else if(!A.asr)why=t('wartet, die Spracherkennung fehlt gerade','waiting, the speech recognition is missing right now');
+  else if(!A.long_ok&&d.secs>A.long_min*60)why=t('lange Aufnahme, wird nachts abgeschrieben','long recording, transcribed at night');
+  else if(A.today_min>=A.day_min)why=t('Tagesgrenze erreicht, geht morgen weiter','daily limit reached, continues tomorrow');
+  else if(!DOCINFO.quiet)why=t('wartet auf eine ruhige Minute','waits for a quiet minute');
+  else why=t('ist gleich dran','next in line');
+  return [t(`${docMin(d.heard)} von ${docMin(d.secs)} Minuten abgeschrieben`,`${docMin(d.heard)} of ${docMin(d.secs)} minutes transcribed`)+' · '+why,pct]}
 function docState(d){const I=DOCINFO,pics=I&&I.allow.pictures,mean=I&&I.vectors&&I.allow.semantic;
+  if(d.state==='hoeren')return docHear(d);
   if(d.state==='reading'){const done=d.pages-d.todo,pct=d.pages?Math.round(100*done/d.pages):0;let why;
     if(!pics)why=t('wartet, „Bilder und Scans lesen“ ist aus','waiting, "Read pictures and scans" is off');
     else if(I.reading&&I.reading.doc===d.id)why=t(`liest gerade Seite ${I.reading.page}`,`reading page ${I.reading.page} now`);
@@ -191,7 +203,7 @@ function docState(d){const I=DOCINFO,pics=I&&I.allow.pictures,mean=I&&I.vectors&
 // while something is still being read, the list refreshes itself as long as it is on screen
 let docTimer=null;
 function docAgain(l){clearTimeout(docTimer);const I=DOCINFO;
-  const busy=l.some(d=>d.state==='reading'||(I&&I.vectors&&I.allow.semantic&&d.chunks&&d.vecs<d.chunks));
+  const busy=l.some(d=>d.state==='reading'||d.state==='hoeren'||(I&&I.vectors&&I.allow.semantic&&d.chunks&&d.vecs<d.chunks));
   if(busy)docTimer=setTimeout(()=>{const box=$('docbox');if(box&&box.offsetParent!==null&&!document.hidden)showDocs();else docAgain(l)},10e3)}
 async function showDocs(){if(!DOCS_ON){$('docbox').style.display='none';return}$('docbox').style.display='';
   const l=await (await api('/api/profile/docs')).json();
@@ -212,7 +224,7 @@ async function showDocs(){if(!DOCS_ON){$('docbox').style.display='none';return}$
   if(I&&I.heads_left)bits.push(t(`Zusammenhang der Abschnitte: ${I.heads_left} Dokumente warten auf eine ruhige Minute`,`Context of the sections: ${I.heads_left} documents wait for a quiet minute`));
   $('docuse').textContent=bits.join(' · ');docAgain(l);
   const pics=I&&I.allow.pictures;
-  $('docfile').accept='.pdf,.txt,.md,.docx,.html,.htm,.csv,.xlsx,.pptx,.odt,.ods,.odp,.eml'+(pics?',.jpg,.jpeg,.png,.webp':'');
+  $('docfile').accept='.pdf,.txt,.md,.docx,.html,.htm,.csv,.xlsx,.pptx,.odt,.ods,.odp,.eml'+(pics?',.jpg,.jpeg,.png,.webp':'')+(I&&I.audio&&I.audio.on?','+I.audio.types.join(','):'');
   docRender()}
 // source reMarkable picked: when the Spark last compared with the account and how many pages it read anew
 function docRmLine(){const r=DOCINFO&&DOCINFO.remarkable;if(DOCV.src!=='remarkable'||!r)return '';
@@ -221,7 +233,7 @@ function docRmLine(){const r=DOCINFO&&DOCINFO.remarkable;if(DOCV.src!=='remarkab
     day=c.toDateString()===new Date().toDateString()?hm:docDate(r.at)+' '+hm;
   return ' · '+t(`Letzter Abgleich ${day} · ${r.pages} Seiten neu`,`Last comparison ${day} · ${r.pages} pages new`)+(r.error?' · '+t('mit Fehler','with an error'):'')}
 // a quick filter: does document d belong to it
-function docChipOk(d,c,today){return !c||(c==='due'?docDue(d,today):c==='reading'?d.state==='reading':c==='error'?d.state==='error':c==='shared'?!d.owner&&d.shared:c==='off'?!d.owner&&d.use===false:true)}
+function docChipOk(d,c,today){return !c||(c==='due'?docDue(d,today):c==='reading'?d.state==='reading'||d.state==='hoeren':c==='error'?d.state==='error':c==='shared'?!d.owner&&d.shared:c==='off'?!d.owner&&d.use===false:true)}
 function docMatch(d,q){return !q||[d.title,d.name,d.sender,d.art,d.ref,d.owner,...(d.tags||[])].some(x=>x&&String(x).toLowerCase().includes(q))}
 function docSorted(l,today){const by=DOCV.sort,n=(a,b)=>docTitle(a).localeCompare(docTitle(b),L==='en'?'en':'de',{sensitivity:'base'});
   return l.slice().sort(by==='name'?n:by==='size'?(a,b)=>(b.size||0)-(a.size||0)||n(a,b):
@@ -234,6 +246,7 @@ function docGroup(d,now){if(d.owner)return t('Von anderen freigegeben','Shared b
   return c.getFullYear()===n.getFullYear()?c.toLocaleDateString(L==='en'?'en-GB':'de-DE',{month:'long'}):String(c.getFullYear())}
 function docBadges(d,today){const b=[];
   if(d.state==='reading')b.push(`<span class="ld-badge read">${esc(t('liest ','reading ')+(d.pages-d.todo)+'/'+d.pages)}</span>`);
+  if(d.state==='hoeren')b.push(`<span class="ld-badge read">${esc(t('hört ab ','transcribing ')+docMin(d.heard)+'/'+docMin(d.secs)+' min')}</span>`);
   if(d.state==='error')b.push(`<span class="ld-badge err">${esc(t('nicht lesbar','not readable'))}</span>`);
   if(docDue(d,today))b.push(`<span class="ld-badge due">${esc(t('Frist ','due ')+docDayS(d.due))}</span>`);
   if(!d.owner&&d.shared)b.push(`<span class="ld-badge sh">${esc(t('für alle','for everyone'))}</span>`);
@@ -292,12 +305,13 @@ function docDetail(){const box=$('docdetail'),d=DOCV.pick?null:docFind(DOCV.sel)
   if(!d){$('docdinfo').innerHTML='';$('docview').hidden=true;$('docview').textContent='';return}
   const info=$('docdinfo'),a=document.activeElement;
   if(info.dataset.id===d.id&&info.contains(a)&&a.id==='doctagin')return;
+  const au=$('docaudio');if(info.dataset.id===d.id&&au&&!au.paused)return;   // a recording playing keeps its player
   info.dataset.id=d.id;
   const brief=docBrief(),own=!d.owner,today=docToday(),[st,pct]=own?docState(d):['',null];
   const meta=[[t('Datei','File'),d.name],brief&&[t('Art','Kind'),d.art],brief&&[t('Absender','Sender'),d.sender],brief&&[t('Datum','Date'),docDay(d.date)],
     brief&&[t('Frist','Deadline'),docDay(d.due)],brief&&[t('Nummer','Number'),d.ref],[t('Quelle','Source'),d.owner?t('von ','from ')+d.owner:d.place?(d.source==='nas'?t('Wissensordner','Knowledge folder')+' · NAS · ':DOCSRC[docSrc(d)]+' · ')+d.place:DOCSRC[docSrc(d)]],
     own&&[t('Hinzugefügt','Added'),docDate(d.created)],own&&d.changed&&[t('Geändert','Changed'),docDate(d.changed)],own&&[t('Größe','Size'),docSize(d.size||0)],own&&[t('Zustand','State'),st]].filter(x=>x&&x[1]);
-  const pdf=/\.pdf$/i.test(d.name),pic=d.kind==='picture',href='/api/profile/wissen/'+encodeURIComponent(d.id)+'/file'+(pdf||pic?'?view=1':'');
+  const pdf=/\.pdf$/i.test(d.name),pic=d.kind==='picture',aud=d.kind==='audio',href='/api/profile/wissen/'+encodeURIComponent(d.id)+'/file'+(pdf||pic||aud?'?view=1':'');
   info.innerHTML=`<button class="b ld-back" type="button" data-dact="back">‹ ${esc(t('Zurück zur Liste','Back to the list'))}</button>`+
     `<h3>${esc(docTitle(d))}</h3><dl class="ld-facts">${meta.map(([k,v])=>`<dt>${esc(k)}</dt><dd${k===t('Frist','Deadline')&&docDue(d,today)?' class="due"':''}>${esc(v)}</dd>`).join('')}</dl>`+
     (pct===null?'':`<span class="qbar docbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></span>`)+
@@ -306,13 +320,19 @@ function docDetail(){const box=$('docdetail'),d=DOCV.pick?null:docFind(DOCV.sel)
     (own&&brief&&d.state==='ready'?`<div class="dtagedit"><input id="doctagin" maxlength="250" value="${esc((d.tags||[]).join(', '))}" placeholder="${esc(t('Tags mit Komma; leer = die automatischen','Tags with commas; empty = the automatic ones'))}" aria-label="${esc(t('Eigene Tags','Own tags'))}"><button class="b" type="button" data-dact="tags">${esc(t('Speichern','Save'))}</button></div>`:'')+
     (own?`<div class="ld-sw"><span>${esc(t('Der Assistent sucht darin','The assistant searches it'))}</span><label class="tgl"><input type="checkbox" data-docuse="${esc(d.id)}"${d.use?' checked':''}><i></i></label></div>`:'')+
     (own&&docShareOn()&&!docTeil()&&d.state==='ready'?`<div class="ld-sw"><span>${esc(t('Für alle','For everyone'))}<small class="mut"> · ${esc(t('alle Profile mit „Gemeinsame Dokumente“ finden und öffnen es','every profile with "Shared documents" finds and opens it'))}</small></span><label class="tgl"><input type="checkbox" data-docshare="${esc(d.id)}"${d.shared?' checked':''}><i></i></label></div>`:'')+
-    `<div class="ld-acts">`+(d.file?`<a class="b p" href="${esc(href)}"${pdf?' target="_blank"':''} rel="noopener">${esc(pdf?t('PDF öffnen','Open PDF'):pic?t('Bild öffnen','Open picture'):t('Original herunterladen','Download original'))}</a>`:'')+
+    `<div class="ld-acts">`+(d.file&&aud?`<button class="b p" type="button" data-dplay="0">${ic('play')} ${esc(t('Anhören','Listen'))}</button>`:
+      d.file?`<a class="b p" href="${esc(href)}"${pdf?' target="_blank"':''} rel="noopener">${esc(pdf?t('PDF öffnen','Open PDF'):pic?t('Bild öffnen','Open picture'):t('Original herunterladen','Download original'))}</a>`:'')+
+    (own&&d.state==='hoeren'?`<button class="b" type="button" data-dact="stop" title="${esc(t('Abschrift beenden; was schon abgeschrieben ist, bleibt','Stop the transcription; what is written stays'))}">${esc(t('Abbrechen','Stop'))}</button>`:'')+
     `<button class="b" type="button" data-dact="view">${esc(t('Text lesen','Read text'))}</button>`+
     (own&&docTeil()&&d.state==='ready'&&d.use?`<button class="b" type="button" data-dact="teilen" title="${esc(t('Mit anderen Profilen teilen','Share with other profiles'))}">${esc(t('Teilen','Share'))}${d.shared||(DOCINFO&&DOCINFO.teil||[]).includes(d.id)?' · '+esc(t('geteilt','shared')):''}</button>`:'')+
     (own&&brief&&DOCINFO.on.due&&docDue(d,today)?`<button class="b" type="button" data-docremind="${esc(d.id)}" title="${esc(t('Erinnerung sechs Wochen vor der Frist (oder am Tag davor)','Reminder six weeks before the deadline (or the day before)'))}">${esc(t('Erinnern','Remind'))}</button>`:'')+
-    (own&&d.file&&d.state!=='reading'?`<button class="b" type="button" data-docreread="${esc(d.id)}" title="${esc(t('Aus dem aufbewahrten Original neu einlesen','Read again from the kept original'))}">${esc(t('Neu einlesen','Read again'))}</button>`:'')+
+    (own&&d.file&&!aud&&d.state!=='reading'?`<button class="b" type="button" data-docreread="${esc(d.id)}" title="${esc(t('Aus dem aufbewahrten Original neu einlesen','Read again from the kept original'))}">${esc(t('Neu einlesen','Read again'))}</button>`:'')+
     (own?`<button class="b danger" type="button" data-docdel="${esc(d.id)}" data-name="${esc(d.name)}"${d.source==='nas'?' data-nas="1"':''}>${esc(d.source==='nas'?t('Nicht mehr finden','Stop finding'):t('Löschen','Delete'))}</button>`:'')+`</div>`+
-    (own&&!d.file?`<p class="mut ld-note">${esc(t('Original nicht aufbewahrt: Zum Neu-Einlesen die Datei neu hochladen.','Original not kept: to read it again, upload the file again.'))}</p>`:'')}
+    (own&&!d.file&&!aud?`<p class="mut ld-note">${esc(t('Original nicht aufbewahrt: Zum Neu-Einlesen die Datei neu hochladen.','Original not kept: to read it again, upload the file again.'))}</p>`:'')+
+    (d.file&&aud?`<audio id="docaudio" controls preload="none" src="${esc(href)}" hidden></audio>`:'')}
+// a recording with its kept sound track: play from a second (the start of a piece, "bei 12:30")
+function docPlay(secs){const a=$('docaudio');if(!a)return;a.hidden=false;
+  const go=()=>{try{a.currentTime=secs}catch{}a.play().catch(()=>{})};if(a.readyState>0)go();else{a.preload='auto';a.addEventListener('loadedmetadata',go,{once:true});a.load()}}
 function docOpen(id){DOCV.sel=id;const v=$('docview');if(v.dataset.id!==id){v.hidden=true;v.textContent=''}docRender();
   if($('docbox').classList.contains('ld-sel'))$('docdetail').scrollIntoView({block:'nearest'})}
 const docErr=x=>{$('docmsg').innerHTML=`<span class="err">${esc(x.message)}</span>`};
@@ -351,7 +371,9 @@ async function docView(id){if(!docFind(id))await showDocs();if(DOCV.pick)DOCV.pi
     const x=document.createElement('button');x.type='button';x.className='b';x.appendChild(icNode('x'));x.setAttribute('aria-label',t('Text schließen','Close text'));x.onclick=()=>{box.hidden=true;box.textContent=''};
     head.appendChild(x);box.appendChild(head);
     if(d.file&&d.kind==='picture'){const img=document.createElement('img');img.alt='';img.src='/api/profile/wissen/'+encodeURIComponent(id)+'/file?view=1';box.appendChild(img)}
-    let page;const show=parts=>{for(const p of parts){if(p.page&&p.page!==page){page=p.page;const h=document.createElement('div');h.className='dvpage';h.textContent=t('Seite ','Page ')+p.page;box.appendChild(h)}
+    let page;const show=parts=>{for(const p of parts){if(p.at&&p.page!==page){page=p.page;const h=document.createElement('div');h.className='dvpage';h.textContent=p.at;
+        if(d.file){const pl=document.createElement('button');pl.type='button';pl.className='b';pl.appendChild(icNode('play'));pl.setAttribute('aria-label',t('Hier anhören','Listen here'));pl.dataset.dplay=String(p.page);h.appendChild(pl)}box.appendChild(h)}
+      else if(!p.at&&p.page&&p.page!==page){page=p.page;const h=document.createElement('div');h.className='dvpage';h.textContent=t('Seite ','Page ')+p.page;box.appendChild(h)}
       const tx=document.createElement('p');tx.className='dvtext';tx.textContent=p.text;box.appendChild(tx)}};show(d.parts);
     if(d.related&&d.related.length){const r=document.createElement('div');r.className='dvrel';const h=document.createElement('small');h.className='mut';h.textContent=t('Dazu gehören: ','Belongs with: ');r.appendChild(h);
       for(const x of d.related){const b=document.createElement('button');b.type='button';b.className='dtag';b.textContent=x.title||x.name;
@@ -373,6 +395,11 @@ async function docTagsSave(){const id=DOCV.sel,list=$('doctagin').value.split(',
   catch(x){docErr(x)}$('doctagin').blur();showDocs()}
 $('docdetail').onkeydown=e=>{if(e.target.id==='doctagin'&&e.key==='Enter'){e.preventDefault();docTagsSave()}};
 $('docdetail').onclick=async e=>{const a=e.target.closest('[data-dact]');
+  const pl=e.target.closest('[data-dplay]');if(pl){docPlay(+pl.dataset.dplay||0);return}
+  if(a&&a.dataset.dact==='stop'){if(!confirm(t('Abschrift beenden? Was schon abgeschrieben ist, bleibt; ohne Text geht die Aufnahme.','Stop the transcription? What is written stays; without any text the recording goes.')))return;
+    try{const r=await (await api('/api/profile/wissen/'+encodeURIComponent(DOCV.sel)+'/abschrift/stop',{method:'POST'})).json();if(r.removed)DOCV.sel='';
+      $('docmsg').textContent=r.removed?t('Abgebrochen, die Aufnahme ist weg.','Stopped, the recording is gone.'):t('Abgebrochen, die Abschrift bis hier bleibt.','Stopped, the transcript up to here stays.')}
+    catch(x){docErr(x)}showDocs();return}
   if(a){const k=a.dataset.dact;if(k==='back'){DOCV.sel='';docRender();$('doclist').scrollIntoView({block:'nearest'})}else if(k==='view')docView(DOCV.sel);else if(k==='teilen')shareOpen('doc',DOCV.sel);else if(k==='tags')docTagsSave();return}
   const c=e.target.closest('[data-doctag]');if(c){DOCV.tag=DOCV.tag.toLowerCase()===c.dataset.doctag.toLowerCase()?'':c.dataset.doctag;DOCV.max=DOCPAGE;docRender();return}
   const rm=e.target.closest('[data-docremind]');
@@ -391,7 +418,7 @@ async function docTry(){const q=$('docfind').value.trim();if(!q){$('dochits').in
   $('dochits').innerHTML=`<li class="mut">${t('Suche im Inhalt …','Searching the content …')}</li>`;
   try{const r=await (await api('/api/profile/wissen/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q})})).json();
     $('dochits').innerHTML=`<li class="dhhead"><b>${esc(t('Im Inhalt gefunden','Found in the content'))}</b><button class="b" type="button" data-hitclose="1" aria-label="${esc(t('Treffer schließen','Close hits'))}">${ic('x')}</button></li>`+
-      (r.hits.map(h=>`<li class="dhit" data-docview="${esc(h.id)}" role="button" tabindex="0"><span><b>${esc(h.name)}${h.page?' · '+t('Seite ','page ')+h.page:''}</b><br><small>${esc(h.text)}</small></span></li>`).join('')||`<li class="mut">${t('Nichts gefunden.','Nothing found.')}</li>`)}
+      (r.hits.map(h=>`<li class="dhit" data-docview="${esc(h.id)}" role="button" tabindex="0"><span><b>${esc(h.name)}${h.at?' · '+esc(h.audio?t(h.at,h.at.replace(/^bei /,'at ')):t(h.at,h.at.replace(/^Seite /,'page '))):''}</b><br><small>${esc(h.text)}</small></span></li>`).join('')||`<li class="mut">${t('Nichts gefunden.','Nothing found.')}</li>`)}
   catch(x){$('dochits').innerHTML=`<li class="err">${esc(x.message)}</li>`}}
 $('dochits').onclick=e=>{if(e.target.closest('[data-hitclose]')){$('dochits').innerHTML='';return}const h=e.target.closest('[data-docview]');if(h)docView(h.dataset.docview)};
 $('dochits').onkeydown=e=>{const h=e.target.closest('[data-docview]');if(h&&e.key==='Enter')docView(h.dataset.docview)};
@@ -615,11 +642,12 @@ $('voicego').onclick=async()=>{if(enr.i<0){
 $('voicedel').onclick=async()=>{if(!confirm(t('Gespeicherte Stimme löschen?','Delete the stored voice?')))return;await api('/api/profile/voice',{method:'DELETE'});showVoice()};
 $('docadd').onclick=()=>$('docfile').click();
 $('docfile').onchange=async()=>{const files=[...$('docfile').files];$('docfile').value='';
-  for(const f of files){const most=/\.pdf$/i.test(f.name)?(DOCINFO&&DOCINFO.max_mb||100):(DOCINFO&&DOCINFO.other_mb||20);
+  const A=DOCINFO&&DOCINFO.audio||{},isAud=f=>!!A.on&&(A.types||[]).some(x=>f.name.toLowerCase().endsWith(x));
+  for(const f of files){const most=isAud(f)?A.mb:/\.pdf$/i.test(f.name)?(DOCINFO&&DOCINFO.max_mb||100):(DOCINFO&&DOCINFO.other_mb||20);
     if(f.size>most*1048576){$('docmsg').innerHTML=`<span class="err">${esc(f.name)}: ${t(`größer als ${most} MB`,`larger than ${most} MB`)}</span>`;continue}
     $('docmsg').textContent=t('Lade hoch: ','Uploading: ')+f.name+' …';
-    try{const fd=new FormData();fd.append('file',f,f.name);const r=await (await api('/api/profile/docs',{method:'POST',body:fd})).json();
-      $('docmsg').textContent=(r.state==='reading'?t('Wird gelesen: ','Being read: '):t('Hinzugefügt: ','Added: '))+r.name}
+    try{const fd=new FormData();fd.append('file',f,f.name);const r=await (await api(isAud(f)?'/api/profile/docs/audio':'/api/profile/docs',{method:'POST',body:fd})).json();
+      $('docmsg').textContent=(r.state==='hoeren'?t(`Wird abgeschrieben (${docMin(r.secs)} min): `,`Being transcribed (${docMin(r.secs)} min): `):r.state==='reading'?t('Wird gelesen: ','Being read: '):t('Hinzugefügt: ','Added: '))+r.name}
     catch(e){$('docmsg').innerHTML=`<span class="err">${esc(f.name)}: ${esc(e.message)}</span>`;}}
   showDocs()};
 function showTidy(p){const b=$('tidybox');if(!p||!(p.merge.length+p.drop.length)){b.style.display='none';b.innerHTML='';return}

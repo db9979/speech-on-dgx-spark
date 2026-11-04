@@ -2411,6 +2411,14 @@
 "lang": "de",
 "src": "architektur",
 "file": "Architektur und Datenfluss",
+"head": "Aufnahmen abschreiben",
+"title": "Aufnahmen abschreiben",
+"text": "- abschrift.aufnehmen nimmt eine Ton- oder Videodatei nur, wenn ihr Inhalt nach den ersten Bytes zur Endung passt (abschrift.fits), kopiert sie in Teilen mit ihrer Grenze unter die Dokument-ID (0600) und liest die Länge mit ffprobe; höchstens 5 warten je Profil. In der ruhigen Kette nach den Seitenbildern schneidet abschrift.schneiden mit ffmpeg (nur die lokale Datei, feste Argumente) ein Stück von 30 s, ab dem zweiten mit 1 s davor, und abschrift.stueck schickt es über vorrang.run an die eigene Spracherkennung, mit der Stufe „hinten“ und dem Vorrang-Schlüssel: common.signed_low lässt nur so eine Anfrage unmarkiert, echte Sprache bricht das Stück ab, und es kommt in der nächsten Pause noch einmal. abschrift.trim_edge nimmt die doppelt gehörten Wörter am Rand heraus. Die Seite eines Stücks ist seine Startsekunde; documents.stelle macht daraus „bei 12:30“, wissen.where „Aufnahme: …, bei 12:30“. Die Abschrift ist Text von außen."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
 "head": "Karte hilft der Suche",
 "title": "Karte hilft der Suche",
 "text": "- wissenskarte.liste(uid, worte, k) gibt Stück-Ids mit Rang ab 1 zurück, nur lesend (SQLite mit mode=ro) und nur für das eigene Profil. Feste Regeln, nie das Modell: Die Suchwörter treffen einen Punkt, wenn sein Name oder ein anderer Name ganz in der Frage steht (verglichen wie wissenskarte.ent_norm) oder ein Wort des Namens ab 4 Buchstaben, das keine Zahl und keine Rechtsform ist (wissenskarte.trifft); höchstens 20 Punkte. Dazu kommen ihre Nachbarn einen Schritt weit (dieselbe Abfrage wie wissenskarte.rund_um) und von allen die Stellen in genutzten, gelesenen Dokumenten. Eine Stelle mit einem genannten Punkt steht vor einer mit nur Nachbarn, mehr Punkte vor weniger, höchstens 50. - documents.search mischt die Liste wie die anderen mit 60 plus Platz, gewichtet mit 0.5, und nur Stellen, die dieselbe Bedingung der Suche durchlässt (documents._karte). Ein so gefundener Treffer trägt „karte“, unter der Antwort steht „über die Wissenskarte“. Die Suchprüfung misst die Mischung mit der Karte als eigenen Balken. Fällt die Karte aus, sucht die Suche ohne sie weiter und schreibt eine Zeile „wissen: kartensuche fehler“."
@@ -2501,7 +2509,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "50 Mappen pro Profil (Schritt 13) - 100 Einträge je Mappe (Schritt 13) - 24000 Token einer Mappe ans Modell (Standard) (Schritt 13) - 12000 Zeichen der Stellen je Durchgang einer Auswertung (Schritt 13) - 5 Durchgänge eines langen Dokuments höchstens (Schritt 13) - 100 Auswertungen pro Profil und Tag (Standard) (Schritt 13) - 10 eigene Arten (Vorlagen) des Admins höchstens (Schritt 13) - 400 Zeichen eines Auftrags einer Vorlage höchstens (Schritt 13)"
+"text": "50 Mappen pro Profil (Schritt 13) - 100 Einträge je Mappe (Schritt 13) - 24000 Token einer Mappe ans Modell (Standard) (Schritt 13) - 12000 Zeichen der Stellen je Durchgang einer Auswertung (Schritt 13) - 5 Durchgänge eines langen Dokuments höchstens (Schritt 13) - 100 Auswertungen pro Profil und Tag (Standard) (Schritt 13) - 10 eigene Arten (Vorlagen) des Admins höchstens (Schritt 13) - 400 Zeichen eines Auftrags einer Vorlage höchstens (Schritt 13) - 30 Sekunden je Stück einer Aufnahme (Schritt 13) - 1 Sekunden Überlappung vor einem Stück (Schritt 13) - 5 Aufnahmen je Profil, die auf ihre Abschrift warten, höchstens (Schritt 13)"
 },
 {
 "lang": "de",
@@ -2517,7 +2525,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "umente und darunter Auswertungen an: das Blatt Auswertungen im Detail jedes eigenen Dokuments, dazu wie viele Auswertungen am Tag. - Funktionen → Eigene Dokumente und darunter Mappen an: die Seite Mappen im Menü, dazu wie viele Token eine Mappe dem Modell höchstens gibt."
+"text": "umente und darunter Auswertungen an: das Blatt Auswertungen im Detail jedes eigenen Dokuments, dazu wie viele Auswertungen am Tag. - Funktionen → Eigene Dokumente und darunter Aufnahmen abschreiben an: Ton- und Videodateien unter Ich → Dokumente, dazu Größe, Länge und Minuten am Tag. - Funktionen → Eigene Dokumente und darunter Mappen an: die Seite Mappen im Menü, dazu wie viele Token eine Mappe dem Modell höchstens gibt."
 },
 {
 "lang": "de",
@@ -2573,7 +2581,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_wissen, test_auswertung, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung, test_wissenstempo"
+"text": "Selbsttests: test_wissen, test_auswertung, test_abschrift, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung, test_wissenstempo"
 },
 {
 "lang": "de",
@@ -2909,7 +2917,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "e Stufe des Profils bei, an einem geteilten Lautsprecher aber nicht. Nur das Panel kann eine Stufe setzen: mit dem Schlüssel aus vorrang-key und nur von dieser Maschine, sonst gilt normal. 5. Schlüssel und Größe in Ordnung?: BodyLimit lehnt zu große Anfragen und solche ohne den richtigen Schlüssel ab, bevor etwas gelesen wird. Ohne eingetragenen Schlüssel darf nur diese Maschine selbst fragen. 6. Engine bereit?: engine_status fragt /health der Engine. Antwortet sie nicht, liest der Proxy ihren Zustand und den der systemd-Einheit und nennt den Grund. 7. Warten nach Vorrang: PrioGate lässt so viele Aufnahmen durch, wie die Engine gleichzeitig nimmt (engine_max_seqs). Die anderen warten nach Stufe, dann nach Ankunft. Wer wartet, rückt alle vier Sekunden eine Stufe auf; eine laufende Anfrage wird nie unterbrochen. 8. Abtastrate erlaubt?: audio_rate_ok liest die Abtastrate aus dem Kopf der Datei (WAV, FLAC, Ogg, WebM) oder fragt ffprobe. Ein Kopf mit erfundener Rate würde beim Umrechnen den Speicher füllen. 9. Erkennen: Mit Qwen3-ASR geht die Aufnahme an die vLLM-Engine, die nur auf dieser Maschine lauscht; nur prompt, temperature und stream reichen durch, dazu die Kontextwörter aus den"
+"text": "e Stufe des Profils bei, an einem geteilten Lautsprecher aber nicht. Nur das Panel kann eine Stufe setzen: mit dem Schlüssel aus vorrang-key und nur von dieser Maschine, sonst gilt normal. Eine Abschrift im Hintergrund (abschrift.py) schickt die Stufe hinten mit dem Schlüssel: sie wartet hinter jeder Person und zählt nicht als Sprache (common.signed_low), echte Sprache bricht sie ab. 5. Schlüssel und Größe in Ordnung?: BodyLimit lehnt zu große Anfragen und solche ohne den richtigen Schlüssel ab, bevor etwas gelesen wird. Ohne eingetragenen Schlüssel darf nur diese Maschine selbst fragen. 6. Engine bereit?: engine_status fragt /health der Engine. Antwortet sie nicht, liest der Proxy ihren Zustand und den der systemd-Einheit und nennt den Grund. 7. Warten nach Vorrang: PrioGate lässt so viele Aufnahmen durch, wie die Engine gleichzeitig nimmt (engine_max_seqs). Die anderen warten nach Stufe, dann nach Ankunft. Wer wartet, rückt alle vier Sekunden eine Stufe auf; eine laufende Anfrage wird nie unterbrochen. 8. Abtastrate erlaubt?: audio_rate_ok liest die Abtastrate aus dem Kopf der Datei (WAV, FLAC, Ogg, WebM) oder fragt ffprobe. Ein Kopf mit erfundener Rate würde beim Umrechnen den S"
 },
 {
 "lang": "de",
@@ -2917,7 +2925,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " Einstellungen. Mit Parakeet erkennt der Proxy selbst auf dem Prozessor, in Stücken von höchstens 90 Sekunden, die an einer leisen Stelle geschnitten werden. Im Notbetrieb mit Parakeet (Panel-Rechner, Modell-Rechner weg) führt common.model_url die Aufnahme zu speech-spark-notasr auf Port 31009, nur für den Rechner selbst: derselbe Proxy mit Parakeet, geladen bei der ersten Aufnahme, entladen nach 10 Minuten ohne eine. 10. Stille, Füllwort oder Echo?: stille.check verwirft Text aus fast stummen Aufnahmen, ein einzelnes „Ja“ oder „Okay“ mit zu wenig Stimme und die zurückgelesene Namensliste von „Namen fürs Hören“ (stille.context_echo, ab 3 Namen der Liste). Für Profile prüft echo.check, ob der Text die eigene Stimme des Spark von einem anderen Gerät ist, und fremdstimme, ob ein von selbst geöffnetes Mikrofon eine fremde Stimme hörte. 11. Stimme erkannt?: speakers.identify vergleicht die Aufnahme mit jedem eingelernten Stimmabdruck. Nur ein klarer Treffer (über der Schwelle der gewählten Strenge und deutlich vor dem Zweiten) zählt. Live zeigt nur „Stimme erkannt“, nie wessen. 12. Text zurück: Der Text geht an das Gerät, das daraus die Frage an den Chat macht. Bei einem Fehler bekommt "
+"text": "peicher füllen. 9. Erkennen: Mit Qwen3-ASR geht die Aufnahme an die vLLM-Engine, die nur auf dieser Maschine lauscht; nur prompt, temperature und stream reichen durch, dazu die Kontextwörter aus den Einstellungen. Mit Parakeet erkennt der Proxy selbst auf dem Prozessor, in Stücken von höchstens 90 Sekunden, die an einer leisen Stelle geschnitten werden. Im Notbetrieb mit Parakeet (Panel-Rechner, Modell-Rechner weg) führt common.model_url die Aufnahme zu speech-spark-notasr auf Port 31009, nur für den Rechner selbst: derselbe Proxy mit Parakeet, geladen bei der ersten Aufnahme, entladen nach 10 Minuten ohne eine. 10. Stille, Füllwort oder Echo?: stille.check verwirft Text aus fast stummen Aufnahmen, ein einzelnes „Ja“ oder „Okay“ mit zu wenig Stimme und die zurückgelesene Namensliste von „Namen fürs Hören“ (stille.context_echo, ab 3 Namen der Liste). Für Profile prüft echo.check, ob der Text die eigene Stimme des Spark von einem anderen Gerät ist, und fremdstimme, ob ein von selbst geöffnetes Mikrofon eine fremde Stimme hörte. 11. Stimme erkannt?: speakers.identify vergleicht die Aufnahme mit jedem eingelernten Stimmabdruck. Nur ein klarer Treffer (über der Schwelle der gewählten St"
 },
 {
 "lang": "de",
@@ -2925,7 +2933,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ein Gast nur einen festen Code, nie den Text des Dienstes."
+"text": "renge und deutlich vor dem Zweiten) zählt. Live zeigt nur „Stimme erkannt“, nie wessen. 12. Text zurück: Der Text geht an das Gerät, das daraus die Frage an den Chat macht. Bei einem Fehler bekommt ein Gast nur einen festen Code, nie den Text des Dienstes."
 },
 {
 "lang": "de",
@@ -5646,6 +5654,46 @@
 "head": "Sprach-Chat",
 "title": "Auswertungen je Dokument, Push 2b (V01.1.315, Plan *open-notebook* Stufe 2)",
 "text": "Panel (iphone.THINGS[\"documents\"]), Englisch in Localizable.xcstrings. Vorlagen und die Wahl „von selbst“ stellt der Admin im Panel ein; Android zeigt die Panel-Ansicht."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Aufnahmen abschreiben, Push 3a (V01.1.336, Plan *open-notebook* Stufe 3)",
+"text": "Aufnahmen abschreiben, Push 3a (V01.1.336, Plan *open-notebook* Stufe 3): Admin-Schalter *Funktionen → Eigene Dokumente → Aufnahmen abschreiben* (chat.doc_audio, ab Werk aus; kein Profilschalter, der Admin sperrt einzelne Profile, Gäste nie), darunter *Größte Aufnahme (MB)* (chat.doc_audio_mb, 10 bis 1000, Standard 300), *Längste Aufnahme (Minuten)* (chat.doc_audio_min, 5 bis 600, Standard 180) und *Minuten Abschrift pro Tag und Profil* (chat.doc_audio_day_min, 10 bis 1440, Standard 240). Unter Ich → Dokumente nimmt „Hinzufügen“ dann Ton- und Videodateien (mp3, m4a, aac, wav, ogg, opus, flac, webm, mp4, mov, mkv) an; die Seite schickt sie an POST /api/profile/docs/audio (neues Modul abschrift.py, Anmeldung, eigenes Profil, CSRF, Größenlimit vor dem Lesen über BodyLimit, Rate-Limit „docaudio“). Prüfung beim Hochladen: Der Inhalt muss nach seinen ersten Bytes zur Endung passen (abschrift.fits: RIFF/WAVE, OggS, fLaC, Matroska, ftyp, ADTS, MPEG/ID3), die Datei wird in Teilen mit ihrer Grenze kopiert, nie ganz in den Speicher, und liegt als users/<id>/docs/audio-wait/<dokument-id>.<endung> (0600, nie unter dem hochgeladenen Namen); ffprobe liest die Länge, eine Datei ohne Tonspur oder ü"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Aufnahmen abschreiben, Push 3a (V01.1.336, Plan *open-notebook* Stufe 3)",
+"text": "ber der Grenze geht sofort wieder. Höchstens 5 Aufnahmen warten je Profil. Das Dokument hat die Art audio, die Quelle audio und den Zustand hoeren, die Zeile zeigt ein Wellen-Symbol, „12 von 94 Minuten abgeschrieben“ mit dem Grund des Wartens und im Detail „Abbrechen“ (POST /api/profile/wissen/{doc}/abschrift/stop: was abgeschrieben ist, bleibt; ohne Text geht das Dokument). Abschrift: abschrift.due_once steht in wissen.KETTE nach den Seitenbildern und vor dem Steckbrief, läuft also nur in ruhigen Minuten. Je Schritt schneidet ffmpeg ein Stück von 30 Sekunden (ab dem zweiten mit 1 Sekunde Überlappung davor) als 16 kHz Mono-WAV, nur aus der lokalen Datei (-protocol_whitelist file,pipe, feste Argumente, ohne Shell), und die eigene Spracherkennung schreibt es über vorrang.run(\"Abschrift\") ab: Spricht jemand, wird das Stück abgebrochen und in der nächsten Pause noch einmal gehört. Die Anfrage trägt stufe.headers(\"hinten\"); mit dem Vorrang-Schlüssel wartet sie im Sprachdienst hinter jeder Person und zählt nicht als Sprache (siehe unten). Die Wörter, die die Überlappung doppelt gehört hat, nimmt abschrift.trim_edge nach fester Regel heraus. Aufnahmen über 20 Minuten nur nach wissen.long_"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Aufnahmen abschreiben, Push 3a (V01.1.336, Plan *open-notebook* Stufe 3)",
+"text": "ok (mit „Lange Dokumente nachts lesen“ nachts oder nach einer halben Stunde ohne Frage), höchstens die Minuten pro Tag (documents.count_today, Schlüssel abschrift); sieht der Dienst-Wächter die Spracherkennung weg (dienstwacht.down(\"asr\")) oder scheitert eine Anfrage, wartet die Abschrift 5 Minuten, ein Stück, das dreimal abgelehnt wird, fällt weg. Zeit als Fundstelle: Jedes Stück wird Abschnitte des Dokuments mit seiner Startsekunde als Seite; documents.stelle sagt dazu „bei 12:30“, wissen.where gibt dem Modell „Aufnahme: Vortrag, bei 12:30“, Textansicht, Treffer der Inhaltssuche und Auswertungen zeigen die Zeit. Am Ende bleibt mit *Originale aufbewahren* nur die Tonspur (Opus 32 kbit/s mono als docs/files/<id>.ogg, innerhalb des Speicherplatzes), ein Klick auf ▶ spielt sie an der Stelle (Range-Antworten, wie Safari sie braucht); ohne den Schalter wird die Datei gelöscht. Danach läuft alles wie bei jedem Dokument: Steckbrief, Auswertungen, Bedeutungssuche, Mappen. Sprecher trennt die Abschrift nicht. Die Abschrift ist Text von außen: was in einer Aufnahme gesagt wird, ist Daten, nie eine Anweisung, und geht nie ins Gedächtnis. YouTube-Links kommen erst mit Push 3b. Vorrang bleibt "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Aufnahmen abschreiben, Push 3a (V01.1.336, Plan *open-notebook* Stufe 3)",
+"text": "beim Menschen (common.SpeechMark, Fund 0.1 des Plans): Bisher galt jede POST an /v1/audio/… als „es wird gesprochen“; eine Abschrift im Hintergrund hätte sich und jede andere Hintergrundarbeit 20 Sekunden je Stück angehalten. Jetzt bleibt eine Anfrage mit der Stufe „hinten“ und dem gültigen Vorrang-Schlüssel von diesem Rechner unmarkiert (common.signed_low); ohne Schlüssel, mit falschem Schlüssel oder von einem anderen Rechner zählt sie wie bisher. Echte Sprache markiert immer und bricht die Abschrift sofort ab (Selbsttests test_vorrang). Läuft das Panel auf einem eigenen Rechner (Pi), kennt der Sprachdienst den Schlüssel nicht: die Abschrift läuft dann mit normaler Stufe. Zustand → Live: Kasten *Aufnahmen abschreiben* („Hintergrund: 1 Aufnahme · 82 min offen · heute 24 Stücke“), der Hintergrundschritt heißt „Abschrift“; Logs Bereich Wissen: abschrift: stueck | 30 s 412 zeichen, abschrift: fertig | 94 min 189 stuecke | tonspur ja, abschrift: asr fehlt, abschrift: grenze | 240 min, abschrift: abgebrochen | sprache. iPhone: Meine Sachen → Dokumente zeigt „hört ab“, Hochladen, Anhören und Abbrechen in der Panel-Ansicht (iphone.THINGS[\"documents\"]); Android über die Panel-Ansicht. Selb"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Aufnahmen abschreiben, Push 3a (V01.1.336, Plan *open-notebook* Stufe 3)",
+"text": "sttests tests/test_abschrift.py."
 },
 {
 "lang": "de",
@@ -14021,6 +14069,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Meine Daten",
 "title": "Meine Daten",
+"text": "- Aufnahmen abschreiben (Funktionen → Meine Daten → „Aufnahmen abschreiben“; baut auf „Eigene Dokumente“; Ich → Dokumente): Ton- und Videodateien (mp3, m4a, aac, wav, ogg, opus, flac, webm, mp4, mov, mkv) lädst du unter Ich → Dokumente hoch wie ein PDF."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
 "text": "- Suchprüfung (Funktionen → Meine Daten → „Suchprüfung“; baut auf „Eigene Dokumente“; Ich → Dokumente): Prüffragen mit bekannter richtiger Stelle zeigen, wie oft die Suche in deinen Dokumenten das Richtige findet."
 },
 {
@@ -20491,6 +20547,14 @@
 "lang": "en",
 "src": "architecture",
 "file": "Architecture and data flow",
+"head": "Transcribing recordings",
+"title": "Transcribing recordings",
+"text": "- abschrift.aufnehmen takes an audio or video file only when its content fits its ending by its first bytes (abschrift.fits), copies it in parts with its limit under the document id (0600) and reads the length with ffprobe; at most 5 wait per profile. In the quiet chain after the page pictures abschrift.schneiden cuts with ffmpeg (only the local file, fixed arguments) a piece of 30 s, from the second one with 1 s in front, and abschrift.stueck sends it through vorrang.run to the own speech recognition, with the stage „hinten“ and the priority key: common.signed_low leaves only such a request unmarked, real speech cancels the piece and it comes again in the next pause. abschrift.trim_edge takes out the words heard twice at the edge. A piece's page is its start second; documents.stelle makes „bei 12:30“ of it, wissen.where „Aufnahme: …, bei 12:30“. The transcript is outside text."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
 "head": "Map helps the search",
 "title": "Map helps the search",
 "text": "- wissenskarte.liste(uid, worte, k) returns piece ids with a rank from 1, read only (SQLite with mode=ro) and only for the own profile. Fixed rules, never the model: the search words hit a point when its name or another name stands whole in the question (compared like wissenskarte.ent_norm) or a word of the name with at least 4 letters that is no number and no legal form (wissenskarte.trifft); at most 20 points. Their neighbours one step away join (the same query as wissenskarte.rund_um), and of all of them the passages in used, read documents. A passage with a named point stands before one with only neighbours, more points before fewer, at most 50. - documents.search mixes the list like the others with 60 plus place, weighed 0.5, and only passages the same condition of the search lets through (documents._karte). A hit found so carries „karte“, below the answer it says „via the knowledge map“. The search check measures the mix with the map as a bar of its own. If the map fails, the search goes on without it and writes a line „wissen: kartensuche fehler“."
@@ -20581,7 +20645,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "a long document at most (step 13) - 100 analyses per profile and day (default) (step 13) - 10 own kinds (templates) of the admin at most (step 13) - 400 characters of a template's task at most (step 13)"
+"text": "a long document at most (step 13) - 100 analyses per profile and day (default) (step 13) - 10 own kinds (templates) of the admin at most (step 13) - 400 characters of a template's task at most (step 13) - 30 seconds per piece of a recording (step 13) - 1 seconds of overlap in front of a piece (step 13) - 5 recordings per profile waiting for their transcription at most (step 13)"
 },
 {
 "lang": "en",
@@ -20597,7 +20661,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "document, with how many analyses a day. - Features → Own documents and below it Collections on: the page Collections in the menu, with how many tokens a collection gives the model at most."
+"text": "document, with how many analyses a day. - Features → Own documents and below it Transcribe recordings on: audio and video files under Me → Documents, with size, length and minutes a day. - Features → Own documents and below it Collections on: the page Collections in the menu, with how many tokens a collection gives the model at most."
 },
 {
 "lang": "en",
@@ -20653,7 +20717,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_wissen, test_auswertung, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung, test_wissenstempo"
+"text": "Self-tests: test_wissen, test_auswertung, test_abschrift, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung, test_wissenstempo"
 },
 {
 "lang": "en",
@@ -20981,7 +21045,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "a stage: with the key from vorrang-key and only from this machine, else it is normal. 5. Key and size fine?: BodyLimit refuses requests that are too large or lack the right key before anything is read. Without a key set, only this machine itself may ask. 6. Engine ready?: engine_status asks the engine's /health. If it does not answer, the proxy reads its state and that of the systemd unit and names the reason. 7. Wait by priority: PrioGate lets as many recordings through as the engine takes at once (engine_max_seqs). The others wait by stage, then by arrival. Whoever waits moves up a stage every four seconds; a running request is never stopped. 8. Sample rate allowed?: audio_rate_ok reads the sample rate from the file's header (WAV, FLAC, Ogg, WebM) or asks ffprobe. A header with a made-up rate would fill the memory when it is converted. 9. Recognize: With Qwen3-ASR the recording goes to the vLLM engine, which listens on this machine only; only prompt, temperature and stream pass through, plus the context words from the settings. With Parakeet the proxy recognizes itself on the CPU, in pieces of at most 90 seconds cut at a quiet spot. In emergency mode with Parakeet (panel computer"
+"text": "a stage: with the key from vorrang-key and only from this machine, else it is normal. A transcription in the background (abschrift.py) sends the stage last with the key: it waits behind every person and does not count as speech (common.signed_low), real speech cancels it. 5. Key and size fine?: BodyLimit refuses requests that are too large or lack the right key before anything is read. Without a key set, only this machine itself may ask. 6. Engine ready?: engine_status asks the engine's /health. If it does not answer, the proxy reads its state and that of the systemd unit and names the reason. 7. Wait by priority: PrioGate lets as many recordings through as the engine takes at once (engine_max_seqs). The others wait by stage, then by arrival. Whoever waits moves up a stage every four seconds; a running request is never stopped. 8. Sample rate allowed?: audio_rate_ok reads the sample rate from the file's header (WAV, FLAC, Ogg, WebM) or asks ffprobe. A header with a made-up rate would fill the memory when it is converted. 9. Recognize: With Qwen3-ASR the recording goes to the vLLM engine, which listens on this machine only; only prompt, temperature and stream pass through, plus the "
 },
 {
 "lang": "en",
@@ -20989,7 +21053,15 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": ", model computer gone) common.model_url takes the recording to speech-spark-notasr on port 31009, only for the computer itself: the same proxy with Parakeet, loaded at the first recording, unloaded after 10 minutes without one. 10. Silence, filler or echo?: stille.check drops text from almost silent recordings and a lone „Yes“ or „Okay“ with too little voice and the name list of „Names for listening“ read back as text (stille.context_echo, from 3 names of the list). For profiles echo.check looks whether the text is the Spark's own voice from another device, and fremdstimme whether a microphone that opened by itself heard an unknown voice. 11. Voice recognized?: speakers.identify compares the recording with every taught voiceprint. Only a clear match (above the threshold of the chosen strictness and clearly ahead of the runner-up) counts. Live shows only „voice recognized“, never whose. 12. Text back: The text goes to the device, which turns it into the question to the chat. On an error a guest gets only a fixed code, never the service's text."
+"text": "context words from the settings. With Parakeet the proxy recognizes itself on the CPU, in pieces of at most 90 seconds cut at a quiet spot. In emergency mode with Parakeet (panel computer, model computer gone) common.model_url takes the recording to speech-spark-notasr on port 31009, only for the computer itself: the same proxy with Parakeet, loaded at the first recording, unloaded after 10 minutes without one. 10. Silence, filler or echo?: stille.check drops text from almost silent recordings and a lone „Yes“ or „Okay“ with too little voice and the name list of „Names for listening“ read back as text (stille.context_echo, from 3 names of the list). For profiles echo.check looks whether the text is the Spark's own voice from another device, and fremdstimme whether a microphone that opened by itself heard an unknown voice. 11. Voice recognized?: speakers.identify compares the recording with every taught voiceprint. Only a clear match (above the threshold of the chosen strictness and clearly ahead of the runner-up) counts. Live shows only „voice recognized“, never whose. 12. Text back: The text goes to the device, which turns it into the question to the chat. On an error a guest gets"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": " only a fixed code, never the service's text."
 },
 {
 "lang": "en",
@@ -23622,6 +23694,38 @@
 "head": "Voice chat",
 "title": "Analyses per document, push 2b (V01.1.315, plan *open-notebook* stage 2)",
 "text": "ble.xcstrings. Templates and the choice \"by themselves\" are set by the admin in the panel; Android shows the panel view."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Transcribe recordings, push 3a (V01.1.336, plan *open-notebook* stage 3)",
+"text": "Transcribe recordings, push 3a (V01.1.336, plan *open-notebook* stage 3): admin switch *Features → Own documents → Transcribe recordings* (chat.doc_audio, off by default; no profile switch, the admin blocks single profiles, guests never), below it *Largest recording (MB)* (chat.doc_audio_mb, 10 to 1000, default 300), *Longest recording (minutes)* (chat.doc_audio_min, 5 to 600, default 180) and *Minutes of transcription per day and profile* (chat.doc_audio_day_min, 10 to 1440, default 240). Under Me → Documents \"Add\" then takes audio and video files (mp3, m4a, aac, wav, ogg, opus, flac, webm, mp4, mov, mkv); the page sends them to POST /api/profile/docs/audio (new module abschrift.py, login, own profile, CSRF, size limit before reading through BodyLimit, rate limit \"docaudio\"). Check on upload: the content must fit its ending by its first bytes (abschrift.fits: RIFF/WAVE, OggS, fLaC, Matroska, ftyp, ADTS, MPEG/ID3), the file is copied in parts with its limit, never all into memory, and lies as users/<id>/docs/audio-wait/<document id>.<ending> (0600, never under the uploaded name); ffprobe reads the length, a file without a sound track or over the limit goes at once. At most 5 record"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Transcribe recordings, push 3a (V01.1.336, plan *open-notebook* stage 3)",
+"text": "ings wait per profile. The document has the kind audio, the source audio and the state hoeren; the row shows a wave symbol, \"12 of 94 minutes transcribed\" with the reason it waits, and in the details \"Stop\" (POST /api/profile/wissen/{doc}/abschrift/stop: what is written stays; without any text the document goes). Transcription: abschrift.due_once stands in wissen.KETTE after the page pictures and before the profile card, so it only runs in quiet minutes. Per step ffmpeg cuts a piece of 30 seconds (from the second one on with 1 second of overlap in front) as 16 kHz mono WAV, only from the local file (-protocol_whitelist file,pipe, fixed arguments, no shell), and the own speech recognition writes it down through vorrang.run(\"Abschrift\"): when somebody speaks the piece is cancelled and heard again in the next pause. The request carries stufe.headers(\"hinten\"); with the priority key it waits in the speech service behind every person and does not count as speech (see below). The words the overlap heard twice are taken out by abschrift.trim_edge with a fixed rule. Recordings over 20 minutes only after wissen.long_ok (with \"Read long documents at night\" at night or after half an hour with"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Transcribe recordings, push 3a (V01.1.336, plan *open-notebook* stage 3)",
+"text": "out a question), at most the minutes per day (documents.count_today, key abschrift); when the service watch sees the speech recognition gone (dienstwacht.down(\"asr\")) or a request fails the transcription waits 5 minutes, a piece refused three times is left out. Time as the place: every piece becomes sections of the document with its start second as the page; documents.stelle says \"bei 12:30\", wissen.where gives the model \"Aufnahme: talk, bei 12:30\", the text view, hits of the content search and analyses show the time. At the end *Keep originals* keeps only the sound track (Opus 32 kbit/s mono as docs/files/<id>.ogg, within the space), a click on ▶ plays it at the place (range answers as Safari needs them); without that switch the file is deleted. After that everything works as with any document: card, analyses, meaning search, collections. The transcript does not tell speakers apart. It is outside text: what is said in a recording is data, never an instruction, and never goes into the memory. YouTube links come with push 3b. Priority stays with people (common.SpeechMark, finding 0.1 of the plan): until now every POST to /v1/audio/… counted as \"somebody speaks\"; a transcription in t"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Transcribe recordings, push 3a (V01.1.336, plan *open-notebook* stage 3)",
+"text": "he background would have held itself and every other background job for 20 seconds per piece. Now a request with the stage \"hinten\" and the valid priority key from this computer stays unmarked (common.signed_low); without the key, with a wrong key or from another computer it counts as before. Real speech always marks and cancels the transcription at once (self-tests test_vorrang). When the panel runs on its own computer (Pi) the speech service does not know the key: the transcription then runs at the normal stage. Status → Live: box *Transcribe recordings* (\"Hintergrund: 1 Aufnahme · 82 min offen · heute 24 Stücke\"), the background step is called \"Abschrift\"; Logs area Wissen: abschrift: stueck | 30 s 412 zeichen, abschrift: fertig | 94 min 189 stuecke | tonspur ja, abschrift: asr fehlt, abschrift: grenze | 240 min, abschrift: abgebrochen | sprache. iPhone: My things → Documents shows \"transcribing\", uploading, listening and stopping in the panel view (iphone.THINGS[\"documents\"]); Android through the panel view. Self-tests tests/test_abschrift.py."
 },
 {
 "lang": "en",
@@ -31694,6 +31798,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Analyses (Features → My data → \"Analyses\"; builds on \"Own documents\"; Me → Documents): Every own document gets the sheet Analyses in its details under Me → Documents: summary and key points are made by themselves in quiet minutes; questions on the text, contents, deadlines and people you make per click."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Transcribe recordings (Features → My data → \"Transcribe recordings\"; builds on \"Own documents\"; Me → Documents): Audio and video files (mp3, m4a, aac, wav, ogg, opus, flac, webm, mp4, mov, mkv) are uploaded under Me → Documents like a PDF."
 },
 {
 "lang": "en",

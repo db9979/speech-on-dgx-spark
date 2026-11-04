@@ -5226,6 +5226,20 @@
 "titel": "Bildschirm unter Windows mit TightVNC (Anker 1.10.0)",
 "text": "Auf dem Windows-PC den Anker aktualisieren (Fernzugang → Systeme, „Aktualisieren“, danach 1.10.0). Fernzugang → Systeme, den PC wählen: unter den Knöpfen steht „Auf dem PC noch nicht eingerichtet …“ mit dem Befehl und nur „Kopieren“. Auf dem PC die Eingabeaufforderung als Administrator öffnen, \"C:\\Program Files\\SparkAnker\\spark-anker.cmd\" bildschirm eingeben: es endet mit „Bildschirm eingerichtet: TightVNC als Dienst, nur 127.0.0.1:5930“. In PowerShell: Get-NetTCPConnection -LocalPort 5930 -State Listen zeigt nur 127.0.0.1, kein Port 5800, keine neue Firewall-Regel für TightVNC. Im Panel „Bildschirm“: der Bildschirm des PCs erscheint ohne Passwortfrage, „Steuern“ bewegt die Maus. Ein zweites Mal „bildschirm“ richtet es neu ein (kein Abbruch). „… spark-anker.cmd bildschirm aus“: TightVNC ist unter Einstellungen → Apps weg, der Knopf sagt wieder „noch nicht eingerichtet“. Auf einem PC mit eigenem TightVNC bricht „bildschirm“ ab und ändert nichts.",
 "thread": "Fernzugang zu entfernten Servern bauen"
+},
+{
+"id": "P773",
+"v": 1336,
+"titel": "Sprachmemo hochladen, Frage mit Zeit",
+"text": "Admin: Funktionen → Eigene Dokumente → Aufnahmen abschreiben an, dazu Originale aufbewahren. Ich → Dokumente → Hinzufügen: ein Sprachmemo von etwa 5 Minuten (m4a vom iPhone). Die Zeile zeigt das Wellen-Symbol und „0 von 5 Minuten abgeschrieben · wartet auf eine ruhige Minute“; nach einigen ruhigen Minuten „Abschnitte“. Text lesen: Abschnitte mit „bei 00:00“, „bei 00:30“ … und ▶. Frage im Chat nach etwas aus der Mitte: die Antwort nennt die Aufnahme „bei 02:30“ (ungefähr). ▶ an dieser Stelle spielt dort. Eine PDF-Datei, umbenannt in .mp3: abgelehnt, „passt nicht zur Endung“.",
+"thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P774",
+"v": 1336,
+"titel": "Während der Abschrift sprechen",
+"text": "Eine lange Aufnahme (20 Minuten) hochladen, nachts oder mit „Lange Dokumente nachts lesen“ aus. Während Zustand → Live „Abschrift“ als Hintergrundschritt zeigt, eine Frage sprechen: die Antwort kommt sofort und klingt wie sonst. Zustand → Logs (Wissen): „abschrift: abgebrochen | sprache“; eine Minute später geht es weiter, die Minuten in Ich → Dokumente zählen weiter (kein Stück fehlt, keine doppelten Sätze am Rand). „Abbrechen“ im Detail: „Abgebrochen, die Abschrift bis hier bleibt“.",
+"thread": "Ideen aus Open Notebook übernehmen"
 }
 ]
 }
