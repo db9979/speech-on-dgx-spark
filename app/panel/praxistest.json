@@ -5331,6 +5331,13 @@
 "titel": "Sprachmodell per API (eigener Schlüssel)",
 "text": "Admin: Funktionen → Sprachmodell per API an. Als Profil Ich → Sprachmodell per API → „＋ Schlüssel anlegen“, Name „Test“, nur Heimnetz, Code eingeben: der Schlüssel sk-spark-… erscheint einmal. Am Rechner im Heimnetz: curl http://<Pi-IP>:31080/v1/chat/completions -H \"Authorization: Bearer <Schlüssel>\" -H \"Content-Type: application/json\" -d '{\"model\":\"x\",\"messages\":[{\"role\":\"user\",\"content\":\"Sag Hallo\"}]}' antwortet; mit \"stream\":true kommen Stücke. Dieselbe Anfrage über den Reverse-Proxy: 403 „nur im Heimnetz“. Ein Bild in der Nachricht: 400 nur_text. Zustand → Live, Kasten „Sprachmodell per API“: Schlüssel 1, Antworten und Tokens heute; Zustand → Logs (Rechner, eigene Dienste, Dokumente): „llmapi: antwort | … | 12 in 3 aus … ms“, nie eine Frage. Admin: Funktionen → Sprachmodell per API von außen an, zweiter Schritt im Profil an, Schlüssel „auch von außen“ mit frischem Code: über https://<proxy>/v1 geht es. Als Profil ohne Admin-Rolle nach 20 Anfragen in einer Minute: 429; als Admin keine Grenze. Löschen: der Schlüssel gilt sofort nicht mehr.",
 "thread": "LLM von außen per API-Key nutzen"
+},
+{
+"id": "P788",
+"v": 1348,
+"titel": "Link hinzufügen oben neben Hinzufügen",
+"text": "Funktionen → Eigene Dokumente → Links als Dokument einschalten. Ich → Dokumente: oben rechts steht „Link hinzufügen“ mit Ketten-Symbol direkt links neben „＋ Hinzufügen“, auf dem Handy (390 px) beide in einer Zeile, die Zahlen darüber nicht abgeschnitten, nichts läuft seitlich hinaus. Ein Klick öffnet das Adressfeld unter der Kopfzeile, ein zweiter schließt es; eine Adresse holen klappt wie bisher. Weiter unten steht kein aufklappbares „Link hinzufügen“ mehr. Schalter aus: der Knopf ist weg. Auf English heißt er „Add link“.",
+"thread": "Ideen aus Open Notebook übernehmen"
 }
 ]
 }

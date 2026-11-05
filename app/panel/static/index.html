@@ -1543,7 +1543,8 @@
       <div id="maptools" class="ic-tools"></div><div id="maplist"></div><div id="mapmsg" class="mut" aria-live="polite"></div></div>
     <div class="ic-danger"><div class="ic-mid"><b>Alles vergessen</b><span>Löscht alles, was sich der Assistent über dich gemerkt hat. Lässt sich nicht rückgängig machen.</span></div><button class="b ic-red" id="factclear" type="button">Alles vergessen …</button></div></div>
     <div id="docbox" class="ptab ld-box">
-      <div class="ld-head"><span class="dcount"><span id="doccount"></span><span id="docspace" class="docspace" hidden><span id="docspacet"></span><span class="qbar docbar"><i></i></span></span></span><button class="b p" id="docadd" type="button">＋ Hinzufügen</button></div>
+      <div class="ld-head" style="flex-wrap:wrap"><span class="dcount"><span id="doccount"></span><span id="docspace" class="docspace" hidden><span id="docspacet"></span><span class="qbar docbar"><i></i></span></span></span><span class="row" style="flex:none;gap:var(--s2);margin-left:auto"><button class="b" id="lkdadd" type="button" hidden aria-expanded="false" aria-controls="lkdbox"><i data-ic="link"></i> Link hinzufügen</button><button class="b p" id="docadd" type="button">＋ Hinzufügen</button></span></div>
+      <div id="lkdbox" class="ld-detail" hidden><div id="lkdin"></div></div>
       <div class="ld-tools" id="doctools"><input id="docfind" type="search" maxlength="300" placeholder="Suchen: Name, Absender, Tag; Enter auch im Inhalt" aria-label="Dokumente durchsuchen" autocomplete="off"><select id="docsrc" aria-label="Quelle"></select><select id="docsort" aria-label="Sortierung"></select><button class="b" id="docpick" type="button">Auswählen</button><input type="file" id="docfile" multiple accept=".pdf,.txt,.md,.docx,.html,.htm,.csv,.xlsx,.pptx,.odt,.ods,.odp,.eml" style="display:none"></div>
       <div class="ld-chips" id="docchips" hidden></div>
       <div id="docmsg" class="docmsg" aria-live="polite"></div>
@@ -1551,7 +1552,6 @@
       <div class="ld-split"><div id="doclist" class="ld-list"></div><div id="docdetail" class="ld-detail" hidden><div id="docdinfo"></div><div id="docaw" hidden></div><div id="docview" class="docview" hidden></div></div></div>
       <div id="docbulk" class="ld-bulk" hidden></div>
       <div id="mkbox" class="mkbox" hidden></div>
-      <details class="docopts" id="lkdbox" hidden><summary>Link hinzufügen</summary><div id="lkdin"></div></details>
       <details class="docopts" id="sprbox" hidden><summary>Suchprüfung</summary><div id="sprin"></div></details>
       <details class="docopts" id="auslbox" hidden><summary>Ausgelassene Ordner</summary><div id="auslin"></div></details>
       <details class="docopts" id="docopts"><summary>Einstellungen für Dokumente</summary><div class="intro">PDF bis 100 MB (der Admin kann mehr erlauben); Word, Excel, PowerPoint, OpenDocument, Text, Markdown, HTML, CSV oder E-Mail (.eml) je bis 20 MB. Der Assistent sucht darin, wenn eine Frage dazu passt. Nur du kannst sie nutzen, außer du gibst ein Dokument „Für alle“ frei.</div><div id="docsw"></div><div class="mut" id="docuse"></div></details></div>

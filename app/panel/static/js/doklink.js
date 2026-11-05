@@ -1,5 +1,6 @@
-// Links als Dokument (doklink.py, plan open-notebook Stufe 4): „Link hinzufügen“ under Ich → Dokumente takes up to ten
-// addresses (one per line); the Spark fetches each public page or file and keeps it as a document. Waiting and failed
+// Links als Dokument (doklink.py, plan open-notebook Stufe 4): the button „Link hinzufügen“ at the top of Ich → Dokumente,
+// beside „＋ Hinzufügen“ and only while the switch is on (Dominik 2026-11-05: below it was hidden), opens the box under
+// the head; it takes up to ten addresses (one per line); the Spark fetches each public page or file and keeps it as a document. Waiting and failed
 // addresses stand below with their state in fixed words; „Neu abrufen“ in the details of a link document asks the page
 // again, only on the click. Addresses are the person's own text: only through esc(), never markup.
 const LKD_WORT={angenommen:['angenommen','accepted'],wartet:['wird geholt','being fetched'],ok:['ist ein Dokument','is a document'],
@@ -22,10 +23,10 @@ const lkdWort=w=>LKD_WORT[w]?t(...LKD_WORT[w]):w;
 const lkdInfo=()=>DOCINFO&&DOCINFO.link&&DOCINFO.link.on?DOCINFO.link:null;
 // the link of a document (Ich → Dokumente details: address, fetched, „Neu abrufen“)
 function lkdOf(id){const L=lkdInfo();return L?(L.links||[]).find(x=>x.doc===id)||null:null}
-let lkdTimer=null;
-function lkdShow(){const box=$('lkdbox');if(!box)return;clearTimeout(lkdTimer);const L=lkdInfo();
-  if(!L){box.hidden=true;return}box.hidden=false;
-  const open=(L.links||[]).filter(x=>!x.doc),Y=L.yt&&L.yt.on?L.yt:null;
+let lkdTimer=null,lkdOpen=false;
+function lkdShow(){const box=$('lkdbox'),btn=$('lkdadd');if(!box||!btn)return;clearTimeout(lkdTimer);const L=lkdInfo();
+  btn.hidden=!L;btn.setAttribute('aria-expanded',String(!!L&&lkdOpen));box.hidden=!L||!lkdOpen;if(!L)return;
+  const open=(L.links||[]).filter(x=>!x.doc),Y=L.yt&&L.yt.on?L.yt:null,typed=$('lkdurls')?$('lkdurls').value:'';
   $('lkdin').innerHTML=`<p class="fh">${esc(t(`Bis zu ${L.max} Adressen, eine je Zeile. Nur öffentliche Seiten und Dateien (HTML, PDF, Text, Word, ODT) bis ${L.mb} MB; heute ${L.today} von ${L.day} Abrufen.`,
       `Up to ${L.max} addresses, one per line. Public pages and files only (HTML, PDF, text, Word, ODT) up to ${L.mb} MB; ${L.today} of ${L.day} fetches today.`))}</p>`+
     (Y?`<p class="fh">${esc(Y.da?t(`YouTube-Links: nur die Tonspur wird geholt und abgeschrieben, bis ${Y.min} Minuten und ${Y.mb} MB.`,`YouTube links: only the sound track is fetched and transcribed, up to ${Y.min} minutes and ${Y.mb} MB.`):lkdWort('ytdlp'))}</p>`:'')+
@@ -34,6 +35,7 @@ function lkdShow(){const box=$('lkdbox');if(!box)return;clearTimeout(lkdTimer);c
     `<div id="lkdmsg" class="mut" aria-live="polite"></div>`+
     (open.length?`<div class="ld-list">`+open.map(x=>`<div class="ld-row"><span class="ld-mid"><b>${esc(x.url)}</b><small>${esc(lkdWort(x.stand==='wartet'?'wartet':x.fehler||x.stand))}</small></span>`+
       `<span class="ld-right"><button class="b" type="button" data-lkddrop="${esc(x.id)}" aria-label="${esc(t('Aus der Liste nehmen','Take out of the list'))}">${ic('x')}</button></span></div>`).join('')+`</div>`:'');
+  $('lkdurls').value=typed;   // a refresh while waiting keeps what the person typed
   if(open.some(x=>x.stand==='wartet'))lkdTimer=setTimeout(()=>{if(box.offsetParent!==null&&!document.hidden&&typeof showDocs==='function')showDocs()},5000)}
 async function lkdGo(){const urls=$('lkdurls').value.split(/\s+/).map(x=>x.trim()).filter(Boolean),L=lkdInfo();if(!urls.length||!L)return;
   if(urls.length>L.max){$('lkdmsg').innerHTML=`<span class="err">${esc(t(`Höchstens ${L.max} Adressen auf einmal.`,`At most ${L.max} addresses at once.`))}</span>`;return}
@@ -50,6 +52,7 @@ async function lkdAgain(doc){try{const r=await (await api('/api/profile/wissen/'
   catch(x){$('docmsg').innerHTML=`<span class="err">${esc(x.message)}</span>`}
   if(typeof showDocs==='function')showDocs()}
 document.addEventListener('click',async e=>{if(e.target.closest('#lkdgo')){lkdGo();return}
+  if(e.target.closest('#lkdadd')){lkdOpen=!lkdOpen;lkdShow();if(lkdOpen&&$('lkdurls'))$('lkdurls').focus();return}
   const d=e.target.closest('[data-lkddrop]');if(!d)return;
   try{await api('/api/profile/docs/link/'+encodeURIComponent(d.dataset.lkddrop),{method:'DELETE'})}catch(x){$('lkdmsg').innerHTML=`<span class="err">${esc(x.message)}</span>`}
   if(typeof showDocs==='function')showDocs()});

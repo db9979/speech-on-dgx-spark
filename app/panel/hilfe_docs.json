@@ -5941,7 +5941,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Links als Dokument, Push 4 (V01.1.340, Plan *open-notebook* Stufe 4)",
-"text": "Links als Dokument, Push 4 (V01.1.340, Plan *open-notebook* Stufe 4): Admin-Schalter *Funktionen → Eigene Dokumente → Links als Dokument* (chat.doc_link, ab Werk aus; kein Profilschalter, der Admin sperrt einzelne Profile, Gäste nie), darunter *Größte Seite oder Datei (MB)* (chat.doc_link_mb, 1 bis 100, Standard 20) und *Abrufe pro Tag und Profil* (chat.doc_link_day, 5 bis 500, Standard 50, „Neu abrufen“ eingeschlossen). Unter Ich → Dokumente → *Link hinzufügen* gibt man bis zu 10 Adressen auf einmal ein (eine je Zeile), die Seite schickt sie an POST /api/profile/docs/link (neues Modul doklink.py, Anmeldung, eigenes Profil, CSRF, Größenlimit 32 KB vor dem Lesen, Rate-Limit „doklink“). Feste Regeln vor dem Abruf (doklink.pruefe): http oder https, ein Host, keine Zugangsdaten (user:pass@ → abgelehnt), Port 80 oder 443, höchstens 2000 Zeichen, keine IP-Adresse und kein Name des Heimnetzes (localhost, .local, fritz.box …); jede Adresse bekommt ein festes Wort zurück (angenommen, privat, zugang, port, doppelt …). Angenommene warten in der Tabelle dl_link in wissen.db (höchstens 30 je Profil), ein Lauf holt sie eine nach der anderen, ohne Modell. Ein Abruf-Helfer: netguard.hole_oeffentli"
+"text": "Links als Dokument, Push 4 (V01.1.340, Plan *open-notebook* Stufe 4): Admin-Schalter *Funktionen → Eigene Dokumente → Links als Dokument* (chat.doc_link, ab Werk aus; kein Profilschalter, der Admin sperrt einzelne Profile, Gäste nie), darunter *Größte Seite oder Datei (MB)* (chat.doc_link_mb, 1 bis 100, Standard 20) und *Abrufe pro Tag und Profil* (chat.doc_link_day, 5 bis 500, Standard 50, „Neu abrufen“ eingeschlossen). Unter Ich → Dokumente → *Link hinzufügen* (seit V01.1.348 oben direkt neben *＋ Hinzufügen*, nur bei freigegebenem Schalter; der Knopf öffnet das Feld unter der Kopfzeile) gibt man bis zu 10 Adressen auf einmal ein (eine je Zeile), die Seite schickt sie an POST /api/profile/docs/link (neues Modul doklink.py, Anmeldung, eigenes Profil, CSRF, Größenlimit 32 KB vor dem Lesen, Rate-Limit „doklink“). Feste Regeln vor dem Abruf (doklink.pruefe): http oder https, ein Host, keine Zugangsdaten (user:pass@ → abgelehnt), Port 80 oder 443, höchstens 2000 Zeichen, keine IP-Adresse und kein Name des Heimnetzes (localhost, .local, fritz.box …); jede Adresse bekommt ein festes Wort zurück (angenommen, privat, zugang, port, doppelt …). Angenommene warten in der Tabelle dl_link in wi"
 },
 {
 "lang": "de",
@@ -5949,7 +5949,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Links als Dokument, Push 4 (V01.1.340, Plan *open-notebook* Stufe 4)",
-"text": "ch holt jede Seite oder Datei von einer Adresse, auch die Seiten aus Suchergebnissen (chat.page_text) und die Webseite aufs reMarkable (rmplus.web_page über page_text, die dabei den bisher fehlenden Notaus-Check bekam): zuerst der Notaus, vor jeder Anfrage netguard.oeffentlich (jede Adresse des Namens öffentlich), an der Verbindung noch einmal die Stufe *nur Internet*, höchstens 4 Weiterleitungen, jede neu geprüft, ein fester Browser-Name, Inhaltstyp aus einer festen Liste (HTML, PDF, Text, Markdown, DOCX, ODT; bei PDF, DOCX und ODT auch die ersten Bytes), Größe und 30 Sekunden für alles. Als Dokument: wissen.aufnehmen(uid, name, data, source, herkunft) nimmt die Seite mit allen Regeln eines Uploads auf (zweiter Anmeldeschritt, Sperre des Admins, Speicherplatz, Höchstzahl, Warteschlange) und merkt die Herkunft (link: mit der SHA-256 der Adresse); dieselbe Adresse kommt nur einmal. HTML geht als <Titel>.html in documents.add (Überschriften und Tabellen bleiben, mit Docling-Server wie jede HTML-Datei). Derselbe Helfer nimmt später auch „Zu Dokumenten übernehmen“ aus dem Such-Index auf. Neu abrufen nur per Klick im Detail eines Link-Dokuments (POST /api/profile/wissen/{doc}/abrufen): "
+"text": "ssen.db (höchstens 30 je Profil), ein Lauf holt sie eine nach der anderen, ohne Modell. Ein Abruf-Helfer: netguard.hole_oeffentlich holt jede Seite oder Datei von einer Adresse, auch die Seiten aus Suchergebnissen (chat.page_text) und die Webseite aufs reMarkable (rmplus.web_page über page_text, die dabei den bisher fehlenden Notaus-Check bekam): zuerst der Notaus, vor jeder Anfrage netguard.oeffentlich (jede Adresse des Namens öffentlich), an der Verbindung noch einmal die Stufe *nur Internet*, höchstens 4 Weiterleitungen, jede neu geprüft, ein fester Browser-Name, Inhaltstyp aus einer festen Liste (HTML, PDF, Text, Markdown, DOCX, ODT; bei PDF, DOCX und ODT auch die ersten Bytes), Größe und 30 Sekunden für alles. Als Dokument: wissen.aufnehmen(uid, name, data, source, herkunft) nimmt die Seite mit allen Regeln eines Uploads auf (zweiter Anmeldeschritt, Sperre des Admins, Speicherplatz, Höchstzahl, Warteschlange) und merkt die Herkunft (link: mit der SHA-256 der Adresse); dieselbe Adresse kommt nur einmal. HTML geht als <Titel>.html in documents.add (Überschriften und Tabellen bleiben, mit Docling-Server wie jede HTML-Datei). Derselbe Helfer nimmt später auch „Zu Dokumenten überne"
 },
 {
 "lang": "de",
@@ -5957,7 +5957,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Links als Dokument, Push 4 (V01.1.340, Plan *open-notebook* Stufe 4)",
-"text": "bedingter Abruf mit If-None-Match/If-Modified-Since; 304 oder dieselbe SHA-256 heißt „unverändert“, sonst liest documents.renew die neuen Bytes in dasselbe Dokument (Wissensbuch und Auswertungen sehen den neuen Text von selbst). Wartende oder gescheiterte Adressen nimmt das ✕ wieder heraus (DELETE /api/profile/docs/link/{id}). Werkzeug link_als_dokument: nur angeboten, wenn eine Adresse in der eigenen Nachricht steht (Weiche-Gruppe „Links als Dokument“: Adresse und ein Wort wie „speicher“, „übernimm“, „als Dokument“; „aufs reMarkable“ bleibt beim reMarkable), nimmt nur Adressen, die wörtlich in der Nachricht der Person stehen, höchstens 10, ist nach Text von außen gesperrt und gehört zu den Internet-Werkzeugen des Notaus. Der Seiteninhalt ist Text von außen: was eine Seite sagt, ist nie eine Anweisung. Zustand → Live: Kasten *Links* (wartend, Link-Dokumente, heute geholt, neu gelesen, unverändert, kB und Sekunden, nie eine Adresse); Logs Bereich Wissen: doklink: geholt | html 182 kb, doklink: unveraendert, doklink: abgelehnt | privat, doklink: grenze | 50. iPhone: Meine Sachen → Dokumente in der Panel-Ansicht (iphone.THINGS[\"documents\"]); Android über die Panel-Ansicht. Selbsttests"
+"text": "hmen“ aus dem Such-Index auf. Neu abrufen nur per Klick im Detail eines Link-Dokuments (POST /api/profile/wissen/{doc}/abrufen): bedingter Abruf mit If-None-Match/If-Modified-Since; 304 oder dieselbe SHA-256 heißt „unverändert“, sonst liest documents.renew die neuen Bytes in dasselbe Dokument (Wissensbuch und Auswertungen sehen den neuen Text von selbst). Wartende oder gescheiterte Adressen nimmt das ✕ wieder heraus (DELETE /api/profile/docs/link/{id}). Werkzeug link_als_dokument: nur angeboten, wenn eine Adresse in der eigenen Nachricht steht (Weiche-Gruppe „Links als Dokument“: Adresse und ein Wort wie „speicher“, „übernimm“, „als Dokument“; „aufs reMarkable“ bleibt beim reMarkable), nimmt nur Adressen, die wörtlich in der Nachricht der Person stehen, höchstens 10, ist nach Text von außen gesperrt und gehört zu den Internet-Werkzeugen des Notaus. Der Seiteninhalt ist Text von außen: was eine Seite sagt, ist nie eine Anweisung. Zustand → Live: Kasten *Links* (wartend, Link-Dokumente, heute geholt, neu gelesen, unverändert, kB und Sekunden, nie eine Adresse); Logs Bereich Wissen: doklink: geholt | html 182 kb, doklink: unveraendert, doklink: abgelehnt | privat, doklink: grenze | 50"
 },
 {
 "lang": "de",
@@ -5965,7 +5965,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Links als Dokument, Push 4 (V01.1.340, Plan *open-notebook* Stufe 4)",
-"text": " tests/test_doklink.py."
+"text": ". iPhone: Meine Sachen → Dokumente in der Panel-Ansicht (iphone.THINGS[\"documents\"]); Android über die Panel-Ansicht. Selbsttests tests/test_doklink.py."
 },
 {
 "lang": "de",
@@ -14365,7 +14365,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Meine Daten",
 "title": "Meine Daten",
-"text": "- Links als Dokument (Funktionen → Meine Daten → „Links als Dokument“; baut auf „Eigene Dokumente“; Ich → Dokumente): Unter Ich → Dokumente → „Link hinzufügen“ gibst du bis zu 10 Adressen auf einmal ein (eine je Zeile), oder du sagst dem Assistenten „Speicher https://… als Dokument“."
+"text": "- Links als Dokument (Funktionen → Meine Daten → „Links als Dokument“; baut auf „Eigene Dokumente“; Ich → Dokumente): Unter Ich → Dokumente → „Link hinzufügen“ (oben neben „＋ Hinzufügen“) gibst du bis zu 10 Adressen auf einmal ein (eine je Zeile), oder du sagst dem Assistenten „Speicher https://… als Dokument“."
 },
 {
 "lang": "de",
@@ -24309,7 +24309,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Links as documents, push 4 (V01.1.340, plan *open-notebook* stage 4)",
-"text": "Links as documents, push 4 (V01.1.340, plan *open-notebook* stage 4): admin switch *Features → Own documents → Links as documents* (chat.doc_link, off by default; no profile switch, the admin blocks single profiles, guests never), below it *Largest page or file (MB)* (chat.doc_link_mb, 1 to 100, default 20) and *Fetches per day and profile* (chat.doc_link_day, 5 to 500, default 50, \"Fetch again\" included). Under Me → Documents → *Add link* one enters up to 10 addresses at once (one per line), the page sends them to POST /api/profile/docs/link (new module doklink.py, login, own profile, CSRF, size limit 32 KB before reading, rate limit \"doklink\"). Fixed rules before the fetch (doklink.pruefe): http or https, a host, no login data (user:pass@ → refused), port 80 or 443, at most 2000 signs, no IP address and no name of the home network (localhost, .local, fritz.box …); every address gets a fixed word back (accepted, private, login data, port, duplicate …). Accepted ones wait in the table dl_link in wissen.db (at most 30 per profile), one runner fetches them one after another, without a model. One fetch helper: netguard.hole_oeffentlich fetches every page or file from an address, also "
+"text": "Links as documents, push 4 (V01.1.340, plan *open-notebook* stage 4): admin switch *Features → Own documents → Links as documents* (chat.doc_link, off by default; no profile switch, the admin blocks single profiles, guests never), below it *Largest page or file (MB)* (chat.doc_link_mb, 1 to 100, default 20) and *Fetches per day and profile* (chat.doc_link_day, 5 to 500, default 50, \"Fetch again\" included). Under Me → Documents → *Add link* (since V01.1.348 at the top right beside *＋ Add*, only while the switch is released; the button opens the field below the head) one enters up to 10 addresses at once (one per line), the page sends them to POST /api/profile/docs/link (new module doklink.py, login, own profile, CSRF, size limit 32 KB before reading, rate limit \"doklink\"). Fixed rules before the fetch (doklink.pruefe): http or https, a host, no login data (user:pass@ → refused), port 80 or 443, at most 2000 signs, no IP address and no name of the home network (localhost, .local, fritz.box …); every address gets a fixed word back (accepted, private, login data, port, duplicate …). Accepted ones wait in the table dl_link in wissen.db (at most 30 per profile), one runner fetches them o"
 },
 {
 "lang": "en",
@@ -24317,7 +24317,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Links as documents, push 4 (V01.1.340, plan *open-notebook* stage 4)",
-"text": "the pages of search results (chat.page_text) and the web page to the reMarkable (rmplus.web_page through page_text, which got the missing kill switch check on the way): first the kill switch, before every request netguard.oeffentlich (every address of the name public), at the connection once more the level *internet only*, at most 4 redirects, each checked again, a fixed browser name, content type from a fixed list (HTML, PDF, text, Markdown, DOCX, ODT; for PDF, DOCX and ODT also the first bytes), size and 30 seconds for all of it. As a document: wissen.aufnehmen(uid, name, data, source, herkunft) takes the page in with every rule of an upload (second login step, the admin's block, storage room, the most documents, the queue) and notes the origin (link: with the SHA-256 of the address); the same address comes in once. HTML goes as <title>.html into documents.add (headings and tables stay, with a Docling server like every HTML file). The same helper later takes \"Add to documents\" from the search index too. Fetch again only on a click in the details of a link document (POST /api/profile/wissen/{doc}/abrufen): a conditional request with If-None-Match/If-Modified-Since; 304 or the same"
+"text": "ne after another, without a model. One fetch helper: netguard.hole_oeffentlich fetches every page or file from an address, also the pages of search results (chat.page_text) and the web page to the reMarkable (rmplus.web_page through page_text, which got the missing kill switch check on the way): first the kill switch, before every request netguard.oeffentlich (every address of the name public), at the connection once more the level *internet only*, at most 4 redirects, each checked again, a fixed browser name, content type from a fixed list (HTML, PDF, text, Markdown, DOCX, ODT; for PDF, DOCX and ODT also the first bytes), size and 30 seconds for all of it. As a document: wissen.aufnehmen(uid, name, data, source, herkunft) takes the page in with every rule of an upload (second login step, the admin's block, storage room, the most documents, the queue) and notes the origin (link: with the SHA-256 of the address); the same address comes in once. HTML goes as <title>.html into documents.add (headings and tables stay, with a Docling server like every HTML file). The same helper later takes \"Add to documents\" from the search index too. Fetch again only on a click in the details of a lin"
 },
 {
 "lang": "en",
@@ -24325,7 +24325,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Links as documents, push 4 (V01.1.340, plan *open-notebook* stage 4)",
-"text": " SHA-256 means \"unchanged\", else documents.renew reads the new bytes into the same document (knowledge book and analyses see the new text by themselves). The ✕ takes waiting or failed addresses out again (DELETE /api/profile/docs/link/{id}). Tool link_als_dokument: only offered when an address stands in the own message (Weiche group \"Links as documents\": an address and a word like \"save\", \"store\", \"as a document\"; \"to the reMarkable\" stays with the reMarkable), takes only addresses that stand word for word in the person's message, at most 10, is locked after outside text and belongs to the kill switch's internet tools. The page content is outside text: what a page says is never an instruction. Status → Live: box *Links* (waiting, link documents, fetched today, read again, unchanged, kB and seconds, never an address); logs area knowledge: doklink: geholt | html 182 kb, doklink: unveraendert, doklink: abgelehnt | privat, doklink: grenze | 50. iPhone: My things → Documents in the panel view (iphone.THINGS[\"documents\"]); Android through the panel view. Self-tests tests/test_doklink.py."
+"text": "k document (POST /api/profile/wissen/{doc}/abrufen): a conditional request with If-None-Match/If-Modified-Since; 304 or the same SHA-256 means \"unchanged\", else documents.renew reads the new bytes into the same document (knowledge book and analyses see the new text by themselves). The ✕ takes waiting or failed addresses out again (DELETE /api/profile/docs/link/{id}). Tool link_als_dokument: only offered when an address stands in the own message (Weiche group \"Links as documents\": an address and a word like \"save\", \"store\", \"as a document\"; \"to the reMarkable\" stays with the reMarkable), takes only addresses that stand word for word in the person's message, at most 10, is locked after outside text and belongs to the kill switch's internet tools. The page content is outside text: what a page says is never an instruction. Status → Live: box *Links* (waiting, link documents, fetched today, read again, unchanged, kB and seconds, never an address); logs area knowledge: doklink: geholt | html 182 kb, doklink: unveraendert, doklink: abgelehnt | privat, doklink: grenze | 50. iPhone: My things → Documents in the panel view (iphone.THINGS[\"documents\"]); Android through the panel view. Self-te"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Links as documents, push 4 (V01.1.340, plan *open-notebook* stage 4)",
+"text": "sts tests/test_doklink.py."
 },
 {
 "lang": "en",
@@ -32429,7 +32437,7 @@
 "file": "Assistant and panel",
 "head": "My data",
 "title": "My data",
-"text": "- Links as documents (Features → My data → \"Links as documents\"; builds on \"Own documents\"; Me → Documents): Under Me → Documents → \"Add link\" you enter up to 10 addresses at once (one per line), or you tell the assistant \"Save https://… as a document\"."
+"text": "- Links as documents (Features → My data → \"Links as documents\"; builds on \"Own documents\"; Me → Documents): Under Me → Documents → \"Add link\" (at the top beside \"＋ Add\") you enter up to 10 addresses at once (one per line), or you tell the assistant \"Save https://… as a document\"."
 },
 {
 "lang": "en",

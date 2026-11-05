@@ -1640,6 +1640,61 @@ class Browser(unittest.TestCase):
             for i in ids:
                 documents.delete(me, i)
 
+    def test_link_button_beside_add(self):
+        """Links als Dokument (doklink.js, Dominik 2026-11-05: „sonst sehr versteckt“): „Link hinzufügen“ stands at the
+        top of Ich → Dokumente right beside „＋ Hinzufügen“, on one line with it also on the phone, only while the
+        switch is on, and opens the box for the addresses; the old fold further down is gone. With documents, so the
+        numbers beside the buttons are there too and must not be cut off."""
+        import documents
+        import profiles
+        me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
+        ids = [documents.add(me, f"Linkknopf{i}.txt", b"x", text=f"Ein Text Nummer {i} fuer den Knopf. " * 3)["id"]
+               for i in range(3)]
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    for on in (False, True):
+                        helpers.set_config(documents=True, doc_link=on, deny={})
+                        br, pg, errors = await self.page(p, w, h, csp=True)
+                        try:
+                            await pg.evaluate("openMe('docbox')")
+                            await pg.wait_for_selector("#docadd", state="visible", timeout=20000)
+                            await self.loaded(pg)
+                            self.assertEqual(await pg.locator("details#lkdbox, #docbox details summary:text('Link hinzufügen')").count(), 0)
+                            if not on:
+                                self.assertFalse(await pg.is_visible("#lkdadd"), name)
+                                self.assertFalse(await pg.is_visible("#lkdbox"), name)
+                                continue
+                            await pg.wait_for_selector("#lkdadd", state="visible", timeout=20000)
+                            a, b = await pg.locator("#lkdadd").bounding_box(), await pg.locator("#docadd").bounding_box()
+                            self.assertLess(abs(a["y"] - b["y"]), 2, f"{name}: nicht in einer Zeile")
+                            self.assertLessEqual(b["x"] + b["width"], w, f"{name}: läuft rechts hinaus")
+                            self.assertTrue(await pg.evaluate("(e=>e.scrollWidth<=e.clientWidth+1)(document.querySelector('#docbox .dcount'))"),
+                                            f"{name}: die Zahlen links sind abgeschnitten")
+                            self.assertLess(a["x"] + a["width"], b["x"] + 1, f"{name}: nicht links daneben")
+                            self.assertLess(b["x"] - (a["x"] + a["width"]), 20, f"{name}: nicht direkt daneben")
+                            self.assertTrue(await pg.evaluate("!!document.querySelector('#lkdadd svg')"), "Linien-Icon")
+                            self.assertFalse(await pg.is_visible("#lkdbox"))
+                            await pg.click("#lkdadd")
+                            await pg.wait_for_selector("#lkdurls", state="visible", timeout=5000)
+                            self.assertEqual(await pg.get_attribute("#lkdadd", "aria-expanded"), "true")
+                            over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                            self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
+                            if os.environ.get("SPEECH_SPARK_SHOT"):
+                                await pg.screenshot(path=os.environ["SPEECH_SPARK_SHOT"] + f"-{name}.png")
+                            await pg.click("#lkdadd")
+                            self.assertFalse(await pg.is_visible("#lkdbox"))
+                            self.assertEqual(errors, [], name)
+                        finally:
+                            await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            helpers.set_config(doc_link=False)
+            for i in ids:
+                documents.delete(me, i)
+
     def test_begleiter_page(self):
         """Ich → Begleiter (begleiter.js): a setup line, and the parts of a paired device saved centrally; on a
         computer and a phone, with the strict CSP, without sideways scrolling."""

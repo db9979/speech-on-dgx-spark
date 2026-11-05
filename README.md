@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.348** Me → Documents: "Add link" now stands at the top right beside "＋ Add" (only while Links as documents is released), on one line on the phone too; the hidden spot further down is gone.
 - **V01.1.347** RED FIX: the self-test of the language model by API now puts the model address back after itself
 - **V01.1.346** Language model by API: own programs use the Spark's language model OpenAI-compatible at /v1 with a key of their profile (Me → Language model by API), text only, home network or with its own switch also from outside; limits per key, admins unlimited
 - **V01.1.345** Make an audio overview now: the admin can have one made at once or pull a waiting one forward, without quiet minutes and the day limit, also in the iPhone app; real speech still goes first
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.341** Find: keep an attachment of a mail as an own document with the button "Add to documents", on the page Find and in the iPhone app; only own attachments up to 10 MB of a kind the documents read, the same attachment only once ("Already in the documents").
 - **V01.1.340** Links as documents: up to 10 addresses at once become own documents (public pages only, also after every redirect), "Fetch again" only on a click with ETag and SHA; one fetch helper for every web page, also with the kill switch for the reMarkable
 - **V01.1.339** Fix spontaneous help: "Load program" on /hilfe said "too many requests" behind the reverse proxy; the program door now counts per help after the right key, guessing still per address. The person's page is new and plain: a header with the state and "End session", the request with its steps, a small preview, messages with the field on top, one column on a phone, and only fixed texts (a 429 counts down); the service watch no longer reports SparkHilfe missing while the Mac release does not exist yet
-- **V01.1.338** Security: updated certifi, filelock, Pillow, pyasn1, pypdf and zeroconf to versions without known holes, OpenCode 1.19.5 with its checked hash
 
 
 
