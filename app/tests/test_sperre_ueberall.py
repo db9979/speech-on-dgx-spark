@@ -500,6 +500,7 @@ ADMIN_ON_OK = {
     "fundmail.py:for_live": "Live only: whether the Spark offers „Mails und Anhänge finden“ at all (numbers); each profile's round asks features.allowed(\"fundmail\", uid)",
     "mappen.py:admin_on": "Spark switch for the Live page only; per profile features.allowed(\"mappen\", uid)",
     "doklink.py:admin_on": "Spark switch for the runner, the minute loop and the Live page; per profile features.allowed(\"doclink\", uid)",
+    "hoerstueck.py:admin_on": "Spark switch for the quiet step and the Live page; per profile features.allowed(\"hoerstueck\", uid)",
     "abschrift.py:admin_on": "Spark switch for the quiet step and the Live page; per profile features.allowed(\"docaudio\", uid)",
     "ytquelle.py:for_live": "the Live page only (numbers of all profiles); per profile features.allowed(\"docyoutube\", uid) in doklink and ytquelle.info",
     "auswertung.py:admin_on": "Spark switch for the quiet step and the Live page; per profile features.allowed(\"auswertungen\", uid)",

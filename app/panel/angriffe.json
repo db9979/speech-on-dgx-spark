@@ -300,7 +300,7 @@
       "article_more": "tasks_show"
     },
     "ziel": {
-      "mappe_dazu": "spark_vorschlag",
+      "mappe_dazu": "spark_vorschlag", "hoerstueck_machen": "spark_vorschlag",
       "link_als_dokument": "wikipedia",
       "iphone_action": "home_assistant_action",
       "mail_draft": "memory_save",

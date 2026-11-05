@@ -495,6 +495,11 @@ FEATURES = (
     # Mappen (mappen.py, plan open-notebook Stufe 1, Dominik 2026-10-30 „1a 2a“): own documents, Wissensbuch pages and
     # notes bundled per undertaking, a context level per entry; a conversation bound to a Mappe gets its entries as data
     F("mappen", "Mappen", "Collections", "data", ("mappen",), parent="documents", me="mpbox", guide="mappen"),
+    # Hörstück aus einer Mappe (hoerstueck.py, plan open-notebook Stufe 5, Push 5a; Dominik: drei feste Stimmen, die der
+    # Admin wählt): a talk of two or three voices about one Mappe, the model writes only a script, the panel checks every
+    # line by fixed rules and the speech output reads it line by line in quiet minutes
+    F("hoerstueck", "Hörstück aus einer Mappe", "Audio overview", "data", ("hoerstueck",), parent="mappen", me="mpbox",
+      guide="hoerstueck"),
     # Finden (fund.py, plan such-index, Stufe A): one index over the own data with fields and tags, the page Finden,
     # Strg K and the tool fund_suche; each source follows its own function (documents, NAS, reMarkable, Wissensbuch)
     F("fund", "Finden in allen Daten", "Find in all data", "data", ("fund",), me="fundbox", guide="fund"),

@@ -5282,6 +5282,20 @@
 "titel": "YouTube-Link wird abgeschrieben",
 "text": "Auf dem Panel-Rechner einmal sudo ./install.sh --youtube (das Log sagt „yt-dlp for YouTube-Links abschreiben (pinned with SHA-256)“). Funktionen → Eigene Dokumente → Aufnahmen abschreiben → YouTube-Links abschreiben an (Links als Dokument muss an sein). Ich → Dokumente → Link hinzufügen: unter dem Feld steht „YouTube-Links: nur die Tonspur wird geholt und abgeschrieben, bis 180 Minuten und 300 MB.“ Einen YouTube-Link eines Vortrags von etwa 10 Minuten eintragen, Holen. Nach etwa einer Minute steht ein neues Dokument „Titel · Kanal“ mit Quelle „Aufnahme“ in der Liste, die Zeile zeigt „0 von 10 Minuten“ und schreibt in ruhigen Minuten ab; danach findet eine Frage dazu die Stelle „bei 02:10“. Derselbe Link als youtu.be-Adresse noch einmal: „liegt schon in den Dokumenten oder wartet“. Ein Livestream-Link: „Livestreams und Premieren holt der Spark nicht“. Zustand → Live, Kasten Links: „YouTube: heute 1 Tonspuren …“; Zustand → Logs (Wissen): „ytquelle: geholt | 10 min … kb“, nie eine Adresse oder ein Titel. Ohne yt-dlp (vor dem install) sagt die Zeile „yt-dlp ist auf dem Panel-Rechner nicht installiert (sudo ./install.sh --youtube …)“.",
 "thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P781",
+"v": 1343,
+"titel": "Hörstück aus einer Mappe: 5 Minuten, 2 Stimmen",
+"text": "Funktionen → Eigene Dokumente → Mappen → Hörstück aus einer Mappe an; darunter die drei Stimmen wählen (oder Standardstimme lassen) und speichern. Eine Mappe mit zwei oder drei Dokumenten auf kurz oder ganz öffnen: unten steht Hörstück. 5 min und 2 Stimmen, „Erstellen“: die Zeile sagt „wartet“, nach einer ruhigen Minute „spricht · 0 von N Zeilen“ mit Balken, dann zählt sie hoch. Fertig: Player abspielen, A und B klingen verschieden, Einleitung und Schluss sind die festen Sätze. Im Drehbuch eine Fundstelle antippen: das Dokument öffnet sich, die Zahl der Zeile steht dort. „Herunterladen“ liefert eine .ogg-Datei. Zustand → Live, Kasten Hörstück: nur Zahlen. Ich → Dokumente: kein neues Dokument.",
+"thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P782",
+"v": 1343,
+"titel": "Hörstück: Sprache hat Vorrang",
+"text": "Während ein Hörstück „spricht“ mit dem Spark reden (Assistent oder Lautsprecher): die Antwort kommt sofort, die Zahl der gesprochenen Zeilen bleibt stehen und läuft eine Minute nach dem Gespräch weiter. Im Assistenten „Mach ein Hörstück aus der Mappe <Name>“: eingereiht, die Liste zeigt es. Die Mappe löschen: ihre Hörstücke sind weg, die Dokumente bleiben.",
+"thread": "Ideen aus Open Notebook übernehmen"
 }
 ]
 }

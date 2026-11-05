@@ -487,6 +487,7 @@ KETTE = (
     "wissensdoppelt.due_once",         # Doppelte der Wissenskarte: fixed rules, no model
     "fund.schlagworte_due",            # Finden, Stufe D: the model proposes tags for one entry of the index
     "auswertung.due_once",             # Auswertungen je Dokument: after the points and the tags (Fristen stand there)
+    "hoerstueck.due_once",             # Hörstück aus einer Mappe: the script, then one line spoken per step (tonteile)
     "wissen.koepfe_due",               # context lines of the pieces: before the vectors, which read them
     "wissen.tabellen_due",             # tables read row by row (pdftabellen.py)
     "wissen.vektoren_due",             # meaning vectors, one batch

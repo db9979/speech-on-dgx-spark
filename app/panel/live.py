@@ -62,7 +62,7 @@ TOOLS = {
     "mail_read": "mail", "mail_search": "mail", "mail_tidy_overview": "mail", "mail_tidy_propose": "mail",
     "fuer_dich": "mail", "fuer_dich_tun": "mail", "offen_zeigen": "cal",   # Offen lives on the Kalender node
     "contacts_search": "contacts", "remarkable_note": "rm", "remarkable_page": "rm", "remarkable_attachment": "rm", "remarkable_sent": "rm", "remarkable_sheet": "rm", "remarkable_library": "rm", "iphone_action": "push", "weather": "weather",
-    "parcels": "parcels", "transit": "transit", "feeds_news": "feeds", "document_search": "mem", "document_list": "mem", "fund_suche": "mem", "mappe_liste": "mem", "mappe_stand": "mem", "mappe_dazu": "mem", "link_als_dokument": "links", "dokument_auswertung": "mem", "history_search": "mem", "local_search": "mem",
+    "parcels": "parcels", "transit": "transit", "feeds_news": "feeds", "document_search": "mem", "document_list": "mem", "fund_suche": "mem", "mappe_liste": "mem", "mappe_stand": "mem", "mappe_dazu": "mem", "hoerstueck_machen": "mem", "link_als_dokument": "links", "dokument_auswertung": "mem", "history_search": "mem", "local_search": "mem",
     "memory_forget": "mem", "memory_save": "mem", "reminder_cancel": "mem", "reminder_list": "mem", "reminder_set": "mem",
     "message_announce": "mem", "message_read": "mem", "message_send": "mem", "agent_list": "mem",
     "agent_schedule": "mem", "agent_task": "mem", "routine_save": "mem", "agent_watch": "mem",
@@ -197,6 +197,9 @@ TARGETS = {
     "mappen": ("Mappen", "Dokumente, Seiten und Notizen je Vorhaben · auf dem Spark", "spark", False),
     # Auswertungen (auswertung.py): shown while it is on, made and waiting kinds of all profiles, today's dropped points
     "auswertung": ("Auswertungen", "Kurzfassung und Kernaussagen je Dokument · auf dem Spark", "spark", False),
+    # Hörstück aus einer Mappe (hoerstueck.py): shown while it is on, Hörstücke of all profiles, waiting and speaking,
+    # lines left, today's scripts, lines spoken, dropped, stops for speech, a missing speech output (numbers only)
+    "hoerstueck": ("Hörstück", "Gespräch aus einer Mappe über die eigene Sprachausgabe · auf dem Spark", "spark", False),
     # Aufnahmen abschreiben (abschrift.py): shown while it is on, recordings waiting and minutes left of all profiles,
     # today's pieces and minutes, stops for speech, a missing speech recognition (numbers only, never a name)
     "abschrift": ("Aufnahmen abschreiben", "Ton und Video über die eigene Spracherkennung · auf dem Spark", "spark", False),
@@ -1481,6 +1484,13 @@ def snapshot(view="admin", now=None):
     if awn.get("on"):
         used.add("auswertung")
     try:
+        import hoerstueck
+        hsn = hoerstueck.for_live(now)
+    except Exception:
+        hsn = {"on": False}
+    if hsn.get("on"):
+        used.add("hoerstueck")
+    try:
         import abschrift
         abn = abschrift.for_live(now)
     except Exception:
@@ -2182,6 +2192,17 @@ def snapshot(view="admin", now=None):
                             + (" · holt" if ytn.get("laeuft") else "")
                             + (f", {ytn['abgelehnt']} abgelehnt" if ytn.get("abgelehnt") else "")
                             + (f", {ytn['host']}× fremder Host gesperrt" if ytn.get("host") else "")) if ytn.get("on") else ""))
+        if x["id"] == "hoerstueck":   # Hörstück: kept, waiting, speaking, lines left, today's work (numbers only, never a title or text)
+            x["sub"] = (f"{hsn.get('stuecke', 0)} Hörstücke · Hintergrund: {hsn.get('warten', 0)} warten, {hsn.get('sprechen', 0)} sprechen"
+                        + f" ({hsn.get('zeilen_offen', 0)} Zeilen offen)"
+                        + f" · heute {hsn.get('neu', 0)} neu, {hsn.get('drehbuch', 0)} Drehbücher, {hsn.get('zeilen', 0)} Zeilen gesprochen,"
+                        + f" {hsn.get('fertig', 0)} fertig, {hsn.get('verworfen', 0)} Zeilen verworfen"
+                        + (" · schreibt das Drehbuch" if hsn.get("laeuft") == "drehbuch" else " · spricht" if hsn.get("laeuft") else "")
+                        + (f" · {hsn['leer']} ohne genug Zeilen" if hsn.get("leer") else "")
+                        + (f" · {hsn['abgebrochen']} abgebrochen (Sprache)" if hsn.get("abgebrochen") else "")
+                        + (f" · Sprachausgabe fehlte {hsn['tts']}×" if hsn.get("tts") else "")
+                        + (f" · {hsn['fehler']} Fehler" if hsn.get("fehler") else "")
+                        + (f" · {hsn['grenze']} an der Tagesgrenze" if hsn.get("grenze") else ""))
         if x["id"] == "abschrift":   # Aufnahmen abschreiben: waiting, minutes left, today's pieces (numbers only, never a name)
             x["sub"] = (f"Hintergrund: {abn.get('warten', 0)} Aufnahme{'' if abn.get('warten', 0) == 1 else 'n'} · {abn.get('minuten', 0)} min offen"
                         + f" · heute {abn.get('stuecke', 0)} Stücke, {abn.get('heute_min', 0)} min"

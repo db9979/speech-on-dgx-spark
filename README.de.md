@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.343** Hörstück aus einer Mappe: in einer Mappe ein Gespräch aus 2 oder 3 Stimmen zum Anhören (5, 10 oder 20 Minuten); das Modell schreibt nur ein Drehbuch, das Panel prüft jede Zeile (Fundstelle, Zahlenprobe, feste Sprecher), gesprochen wird Zeile für Zeile in ruhigen Minuten; der Admin wählt die drei Stimmen
 - **V01.1.342** YouTube-Links abschreiben: ein YouTube-Link unter „Link hinzufügen“ wird abgeschrieben, nur die Tonspur über das festgelegte yt-dlp (Version und SHA-256 fest, eigene venv mit `sudo ./install.sh --youtube`), sein ganzer Verkehr nur über einen netguard-Proxy mit fester Host-Liste; danach wie eine Aufnahme mit Zeitmarken (Schalter aus)
 - **V01.1.341** Finden: Anhänge aus Mails per Knopf „Zu Dokumenten übernehmen“ als eigenes Dokument ablegen, auf der Seite Finden und in der iPhone-App; nur eigene Anhänge bis 10 MB in einer Art, die die Dokumente lesen, derselbe Anhang nur einmal („Schon in Dokumenten“).
 - **V01.1.340** Links als Dokument: bis zu 10 Adressen auf einmal werden eigene Dokumente (nur öffentliche Seiten, auch nach jeder Weiterleitung), „Neu abrufen“ nur per Klick mit ETag und SHA; ein Abruf-Helfer für alle Webseiten, auch mit Notaus fürs reMarkable
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.336** Ton und Video als Quelle: Aufnahmen unter Ich → Dokumente hochladen, die eigene Spracherkennung schreibt sie in ruhigen Minuten ab, jede Stelle mit ihrer Zeit („bei 12:30“) und ▶ zum Anhören; Hintergrund-Abschrift bremst nichts mehr aus, echte Sprache bleibt vorn
 - **V01.1.335** Bildschirm im Fernzugang jetzt auch unter Windows: TightVNC, vom Anker 1.10.0 aus der offiziellen, gepinnten und signierten Datei eingerichtet, nur auf 127.0.0.1, Passwort nie auf einer Befehlszeile; „bildschirm aus“ oder Entfernen deinstalliert es wieder
 - **V01.1.334** Fix Dateien als anderer Benutzer auf Ubuntu 25.10 und neuer (sudo-rs): `sudo spark-anker dateien als root` scheiterte an visudo; der Anker 1.9.1 schreibt dort die Regel ohne die Zeile, die sudo-rs nicht kennt. Den Anker aktualisieren.
-- **V01.1.333** Fix „Wohin gehört diese Mail?“: „Anderer Ordner …“ zeigt jetzt die Ordnerliste an der Karte und verschiebt die Mail direkt
 
 
 

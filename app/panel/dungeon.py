@@ -183,6 +183,7 @@ import guard
 import mfa
 import profiles
 import textnorm
+import tonteile
 from common import STATE, DayCounter, load_config, model_url, no_think, read_json, write_json
 from core import assistant, auth, browser_profile, json_body, main_loop, own_profile, spawn
 
@@ -229,7 +230,6 @@ TON_ZUEGE = 3             # turns read aloud a round keeps
 TON_ZEICHEN = 1800        # characters of one turn read aloud
 SAGT_MAX = 200            # characters of one hero's spoken line (what stands in quotes in the action)
 KLANG = re.compile(r"[A-Za-zÄÖÜäöüß0-9 ,.\-]{3,80}")   # a hero's voice described in words (VoiceDesign), nothing else
-TTS_NICHT = re.compile(r"TTS engine (loading|stopped|error|blocked)|TTS (busy)")   # why the speech output said 503
 TTS_AUS = ("loading", "stopped", "error", "blocked")      # the VoiceDesign engine is not up: the fixed voice stands in
 STIMMEN_S = 600           # seconds the speech output's voice list is kept before it is asked again
 DESIGN_NEU_S = 30         # while VoiceDesign is not up: the catalog asks again after this many seconds (design_up)
@@ -5037,28 +5037,8 @@ def voices(r):
 async def ask_tts(text, voice, klang="", ref=None):
     """One part spoken by the Spark's speech output as 16-bit mono PCM; with klang a voice made from that description
     (VoiceDesign) instead of a named one, with ref (data URL, words) the Base model clones that recording (tests
-    replace this)."""
-    import httpx
-    from core import api_headers
-    cfg = load_config()
-    body = {"input": text, "response_format": "pcm"}
-    if ref:
-        body.update(ref_audio=ref[0], ref_text=ref[1])
-    elif klang:
-        body.update(task_type="VoiceDesign", instructions=klang)
-    elif voice:
-        body["voice"] = voice
-    out = bytearray()
-    async with httpx.AsyncClient(timeout=httpx.Timeout(DM_S * 2, connect=5)) as c:
-        async with c.stream("POST", model_url("tts", "/v1/audio/speech", cfg), json=body, headers=api_headers()) as r:
-            if r.status_code != 200:
-                m = TTS_NICHT.search((await r.aread())[:400].decode("utf-8", "replace"))
-                raise RuntimeError(f"tts {r.status_code}" + (f" {m.group(1) or m.group(2)}" if m else ""))
-            async for part in r.aiter_bytes():
-                out += part
-                if len(out) > TON_BYTES:
-                    raise RuntimeError("tts")
-    return bytes(out)
+    replace this). The one helper is tonteile.sprich (plan open-notebook 5.3), in the foreground as before."""
+    return await tonteile.sprich(text, voice, klang, ref=ref, frist=DM_S * 2, grenze=TON_BYTES)
 
 
 async def spoken(text, voice, klang, s, ref=None):

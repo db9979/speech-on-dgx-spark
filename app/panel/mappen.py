@@ -297,6 +297,8 @@ def loeschen(uid, mid):
             return False
         con.execute("DELETE FROM mp_eintrag WHERE mappe=?", (mid,))
         con.execute("DELETE FROM mp_mappe WHERE id=?", (mid,))
+    import hoerstueck      # its Hörstücke are made of it and go with it (never a document)
+    hoerstueck.mappe_weg(uid, mid)
     return True
 
 
@@ -388,7 +390,7 @@ def mappe(uid, mid):
             "eintraege": out, "zeichen": used, "token": token_of(used), "budget": token_budget(),
             "summe": {"kurz": count("kurz"), "ganz": count("ganz"), "suche": count("suche"), "aus": count("aus"),
                       "voll": count("voll"), "wollen_ganz": sum(1 for x in out if x["stufe"] == "ganz" and not x["grau"])},
-            "max_eintraege": MAX_EINTRAEGE}
+            "max_eintraege": MAX_EINTRAEGE, "hoerstueck": features.allowed("hoerstueck", uid)}
 
 
 def refs_of(uid, mid, stufen=("ganz",)):
@@ -876,13 +878,15 @@ def _own_count(uid):
 
 
 def _own_clear(uid):
-    """Ich → Daten löschen while the admin blocked Mappen: every Mappe and assignment, never a document."""
+    """Ich → Daten löschen while the admin blocked Mappen: every Mappe, assignment and Hörstück, never a document."""
     if not _exists(uid):
         return
     with _Db(uid) as con:
         n = con.execute("DELETE FROM mp_mappe").rowcount
         con.execute("DELETE FROM mp_eintrag")
     print(f"mappen: geloescht | {n} | daten loeschen", flush=True)
+    import hoerstueck      # its Hörstücke are made of the Mappen and go with them
+    hoerstueck.alle_weg(uid)
 
 
 features.OWN["mappen"] = (_own_count, _own_clear)

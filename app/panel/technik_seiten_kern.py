@@ -243,7 +243,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "c0b67a0ada",
+        "stand": "eb9d4aedd0",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -285,6 +285,10 @@ SEITEN = {
             "abschrift.due_once": ["s13"], "abschrift.stueck": ["s13"], "abschrift.trim_edge": ["s13"],
             "abschrift.fits": ["s13"], "abschrift.schneiden": ["s13"], "abschrift.aufnehmen": ["s13"],
             "abschrift.PIECE": ["s13"], "abschrift.OVERLAP": ["s13"], "abschrift.WAIT_MOST": ["s13"],
+            "hoerstueck.pruefe": ["s13"], "hoerstueck.stellen": ["s13"], "hoerstueck.due_once": ["s13"],
+            "hoerstueck.zeile": ["s13"], "hoerstueck.ueberleitung_ok": ["s13"], "hoerstueck.zusammen": ["s13"],
+            "hoerstueck.ZEILEN_MIN": ["s13"], "hoerstueck.UEBER_ANTEIL": ["s13"], "hoerstueck.STELLEN_ZEICHEN": ["s13"],
+            "hoerstueck.GESPEICHERT_MAX": ["s13"], "tonteile.sprich": ["s13"],
             "documents.stelle": ["s13"], "common.signed_low": ["s13"],
             "doklink.pruefe": ["s13"], "doklink.eins": ["s13"], "doklink.neu_abrufen": ["s13"], "wissen.aufnehmen": ["s13"],
             "fundmail.dok_passt": ["s13"], "fundmail.dok_art": ["s13"], "fundmail.zu_dokumenten": ["s13"],
@@ -554,6 +558,10 @@ SEITEN = {
             ("{abschrift.PIECE}", ("Sekunden je Stück einer Aufnahme", "seconds per piece of a recording"), "abschrift.PIECE"),
             ("{abschrift.OVERLAP}", ("Sekunden Überlappung vor einem Stück", "seconds of overlap in front of a piece"), "abschrift.OVERLAP"),
             ("{abschrift.WAIT_MOST}", ("Aufnahmen je Profil, die auf ihre Abschrift warten, höchstens", "recordings per profile waiting for their transcription at most"), "abschrift.WAIT_MOST"),
+            ("{hoerstueck.STELLEN_ZEICHEN}", ("Zeichen an Stellen, die ein Hörstück dem Modell gibt, höchstens", "characters of places an audio overview gives the model at most"), "hoerstueck.STELLEN_ZEICHEN"),
+            ("{hoerstueck.ZEILEN_MIN}", ("geprüfte Zeilen, ohne die kein Hörstück entsteht", "checked lines without which no audio overview is made"), "hoerstueck.ZEILEN_MIN"),
+            ("{hoerstueck.UEBER_ANTEIL}", ("Anteil der Überleitungen an den Zeilen höchstens", "share of transitions among the lines at most"), "hoerstueck.UEBER_ANTEIL"),
+            ("{hoerstueck.GESPEICHERT_MAX}", ("Hörstücke je Profil höchstens", "audio overviews per profile at most"), "hoerstueck.GESPEICHERT_MAX"),
             ("{doklink.MAX_AUF_EINMAL}", ("Adressen auf einmal bei Links als Dokument", "addresses at once for links as documents"), "doklink.MAX_AUF_EINMAL"),
             ("{doklink.MAX_WARTEN}", ("Adressen je Profil, die auf ihren Abruf warten, höchstens", "addresses per profile waiting to be fetched at most"), "doklink.MAX_WARTEN"),
         ],
@@ -600,6 +608,10 @@ SEITEN = {
              "eine Mappe dem Modell höchstens gibt.",
              "Features → Own documents and below it Collections on: the page Collections in the menu, with how many "
              "tokens a collection gives the model at most."),
+            ("Funktionen → Eigene Dokumente → Mappen und darunter Hörstück aus einer Mappe an: der Teil Hörstück in "
+             "jeder Mappe, dazu wie viele am Tag und die drei Stimmen.",
+             "Features → Own documents → Collections and below it Audio overview on: the part Audio overview in "
+             "every collection, with how many a day and the three voices."),
         ],
         "sehen": [
             ("Zustand → Logs → Anfragen: der Schritt „Nachsortieren“ mit Zahl der Kandidaten, behaltenen Stellen und "
@@ -872,6 +884,32 @@ SEITEN = {
                  "cancels the piece and it comes again in the next pause. abschrift.trim_edge takes out the words "
                  "heard twice at the edge. A piece's page is its start second; documents.stelle makes „bei 12:30“ of "
                  "it, wissen.where „Aufnahme: …, bei 12:30“. The transcript is outside text."),
+            ]),
+            (("Hörstück aus einer Mappe", "Audio overview of a collection"), [
+                ("hoerstueck.stellen gibt dem Modell nur Stücke der Originale aus den Dokumenten der Mappe auf kurz "
+                 "und ganz, höchstens {hoerstueck.STELLEN_ZEICHEN} Zeichen, im Wechsel aus jedem Dokument; nie Seiten "
+                 "des Wissensbuchs und nie Text der Auswertungen (Modelltext ist nie Quelle für Modelltext). Das Modell "
+                 "liefert nur ein Drehbuch als JSON; hoerstueck.pruefe behält eine Zeile nur nach festen Regeln: "
+                 "Sprecher A, B oder C (mit zwei Stimmen A und B), eine Aussage nur mit angebotener Stelle und "
+                 "wissensbuch.check_sentence gegen sie, eine Überleitung nur ohne Ziffer und aus der festen Wortliste "
+                 "(hoerstueck.ueberleitung_ok), Überleitungen höchstens {hoerstueck.UEBER_ANTEIL} der Zeilen, Länge der "
+                 "Wahl; unter {hoerstueck.ZEILEN_MIN} Zeilen entsteht keins. In der ruhigen Kette nach den "
+                 "Auswertungen spricht hoerstueck.zeile je Schritt genau eine Zeile über tonteile.sprich mit Stufe "
+                 "„hinten“ und Vorrang-Schlüssel (common.signed_low), durch vorrang.run: echte Sprache bricht ab, die "
+                 "Zeile kommt wieder. hoerstueck.zusammen setzt die Teile mit Pausen zusammen, ffmpeg schreibt Opus. "
+                 "Höchstens {hoerstueck.GESPEICHERT_MAX} je Profil; ein Hörstück wird nie ein Dokument.",
+                 "hoerstueck.stellen gives the model only pieces of the originals from the collection's documents on "
+                 "short and whole, at most {hoerstueck.STELLEN_ZEICHEN} characters, in turns from each document; never "
+                 "knowledge book pages and never analysis text (model text is never a source of model text). The model "
+                 "only delivers a script as JSON; hoerstueck.pruefe keeps a line only by fixed rules: speaker A, B or C "
+                 "(with two voices A and B), a statement only with an offered place and wissensbuch.check_sentence "
+                 "against it, a transition only without a digit and from the fixed word list "
+                 "(hoerstueck.ueberleitung_ok), transitions at most {hoerstueck.UEBER_ANTEIL} of the lines, the "
+                 "chosen length; below {hoerstueck.ZEILEN_MIN} lines none is made. In the quiet chain after the "
+                 "analyses hoerstueck.zeile speaks exactly one line per step through tonteile.sprich with the stage "
+                 "„last“ and the priority key (common.signed_low), through vorrang.run: real speech cancels, the line "
+                 "comes again. hoerstueck.zusammen puts the parts together with pauses, ffmpeg writes Opus. At most "
+                 "{hoerstueck.GESPEICHERT_MAX} per profile; an audio overview never becomes a document."),
             ]),
             (("Links als Dokument", "Links as documents"), [
                 ("doklink.pruefe prüft jede Adresse nach festen Regeln, bevor etwas geholt wird: http oder https, ein "
@@ -1194,6 +1232,13 @@ SEITEN = {
             ("abschrift.trim_edge", ("doppelte Wörter am Rand nach fester Regel", "doubled words at the edge by a fixed rule")),
             ("abschrift.due_once", ("ruhige Kette: Grenzen, lange nur nach long_ok", "quiet chain: limits, long ones only after long_ok")),
             ("documents.stelle", ("„Seite 3“ oder „bei 12:30“", "„Seite 3“ or „bei 12:30“")),
+            ("hoerstueck.stellen", ("Stellen aus den Originalen der Mappe, im Wechsel", "places from the collection's originals, in turns")),
+            ("hoerstueck.pruefe", ("Drehbuch nach festen Regeln: Sprecher, Stelle, Zahl, Überleitung, Länge", "script by fixed rules: speaker, place, number, transition, length")),
+            ("hoerstueck.ueberleitung_ok", ("Überleitung ohne Ziffer, nur feste Wörter", "transition without a digit, fixed words only")),
+            ("hoerstueck.zeile", ("eine Zeile über tonteile.sprich, Stufe hinten", "one line through tonteile.sprich, stage last")),
+            ("hoerstueck.zusammen", ("Teile mit Pausen, ffmpeg zu Opus", "parts with pauses, ffmpeg to Opus")),
+            ("hoerstueck.due_once", ("ruhige Kette: erst Drehbuch, dann je Schritt eine Zeile", "quiet chain: first the script, then one line per step")),
+            ("tonteile.sprich", ("der eine Helfer für einen gesprochenen Teil", "the one helper for a spoken part")),
             ("doklink.pruefe", ("Adresse nach festen Regeln, bevor etwas geholt wird", "an address by fixed rules before anything is fetched")),
             ("doklink.eins", ("eine Adresse holen und als Dokument aufnehmen", "fetch one address and take it in as a document")),
             ("doklink.neu_abrufen", ("Neu abrufen: ETag, SHA-256, sonst neu lesen", "fetch again: ETag, SHA-256, else read again")),
@@ -1214,7 +1259,7 @@ SEITEN = {
             ("wissensmessung._synth", ("das Wegwerf-Profil aus festem Zufall, mit den Grenzen des Codes", "the throwaway profile from a fixed seed, with the code's limits")),
             ("wissensmessung.MESSTEILE", ("die Messteile, erweiterbar", "the measuring parts, extensible")),
         ],
-        "tests": ["test_wissen", "test_auswertung", "test_abschrift", "test_doklink", "test_ytquelle", "test_wissensdoppelt", "test_nachsortieren", "test_abschnitte", "test_lokal", "test_kiwix", "test_gedaechtnis",
+        "tests": ["test_wissen", "test_auswertung", "test_abschrift", "test_hoerstueck", "test_doklink", "test_ytquelle", "test_wissensdoppelt", "test_nachsortieren", "test_abschnitte", "test_lokal", "test_kiwix", "test_gedaechtnis",
                   "test_gedaechtnis_grenze", "test_gemerkt",
                   "test_suchpruefung", "test_wissensbuch", "test_wissenskarte", "test_wissensknoten", "test_kartensuche",
                   "test_wissensmessung", "test_wissenstempo"],

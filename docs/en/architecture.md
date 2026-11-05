@@ -264,6 +264,7 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 | `app/panel/fundquellen.py` | Finden, Stufe C: the remaining own sources of the search index of Finden (fund.py): appointments, contacts, conversations, lists, reminders, pictures and songs. |
 | `app/panel/gedaechtnis.py` | Gedächtnis mit Beleg und Prüfung. |
 | `app/panel/gemerkt.py` | Gemerkt-Hinweis: what the Spark keeps about a person is seen at once and can be taken back. |
+| `app/panel/hoerstueck.py` | Hörstück aus einer Mappe: a conversation of two or three voices about one own Mappe, to listen to (5, 10 or 20 minutes). |
 | `app/panel/kiwix.py` | The person's own Kiwix (kiwix-serve with ZIM files: Wikipedia, Wikivoyage, handbooks ...) as a knowledge source that works without the internet. |
 | `app/panel/lokal.py` | Erst lokal suchen: before anything goes outside, the panel looks in the person's own sources itself. |
 | `app/panel/mappen.py` | Mappen: a Mappe bundles own documents, Wissensbuch pages and notes for one undertaking; per entry a context level aus / kurz / ganz decides what of it the la … |
@@ -278,6 +279,7 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 | `app/panel/suchpruefung.py` | Suchprüfung: how often does the document search find the right passage? |
 | `app/panel/symbole.py` | Symbols for slides and documents. |
 | `app/panel/tagebuch.py` | Spark-Tagebuch: what the Spark itself did for a profile. |
+| `app/panel/tonteile.py` | Tonteile: the one helper that has the Spark's own speech output speak one part. |
 | `app/panel/wiki.py` | Wikipedia straight away: for "Was ist ...?" or "Wer war ...?" the panel asks Wikipedia for the best matching article and hands its short intro to the model, … |
 | `app/panel/wissen.py` | Knowledge from one's own uploads. |
 | `app/panel/wissensbuch.py` | Wissensbuch: the language model works each own document once into a few pages ("Auto", "Versicherungen", "Werkstatt Müller"), sentence by sentence and each s … |
@@ -644,7 +646,8 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/zuordnungen.json` | Remembered matches |  | sealed whole (AES-256-GCM) | yes | Memory |
 | `users/ID/tasks.json` | Tasks |  | – | yes | Tasks and reminders |
 | `users/ID/reminders.json` | Reminders |  | – | yes | Tasks and reminders |
-| `users/ID/wissen.db` | Documents: text, sections with context line, search, vectors; knowledge book and map with people, companies and deadlines; collections with entries and levels; analyses per document with their place; links as documents with address, ETag and SHA (SQLite) |  | – | yes | Documents (text, search, originals) |
+| `users/ID/wissen.db` | Documents: text, sections with context line, search, vectors; knowledge book and map with people, companies and deadlines; collections with entries and levels; analyses per document with their place; links as documents with address, ETag and SHA; audio overviews with their checked script and progress (SQLite) |  | – | yes | Documents (text, search, originals) |
+| `users/ID/hoerstuecke/` | Audio overviews of collections: one Opus file each, while it is spoken a folder with its lines as WAV |  | – | yes | Documents (text, search, originals) |
 | `users/ID/docs/files/` | Originals of uploads (of recordings only the sound track) |  | – | yes | Documents (text, search, originals) |
 | `users/ID/fund.db` | Find: search index over the own data (titles, fields, tags, own tags, mail and attachments, appointments, contacts, lists, reminders, pictures, songs; conversations only date and channel; SQLite) |  | marks with a key of its own per profile (HMAC); mail, attachments, appointments and contacts: title, excerpt, fields and tags AES-GCM | yes | Documents (text, search, originals) |
 | `users/ID/suchpruefung.json` | Test questions and runs of the search check |  | – | yes | Documents (text, search, originals) |
@@ -2018,7 +2021,7 @@ Self-tests: `test_klaeren`, `test_features`, `test_notaus`, `test_hardening`, `t
 
 ### Switch
 
-The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 27 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow.
+The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 28 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow.
 
 **Why:** Few fitting tools make the model faster and more accurate: it reads less and misses less often. Because the switch only takes away from what rights and locks left, a wrongly sorted sentence can never allow more, at most leave a tool out.
 
@@ -2095,7 +2098,7 @@ Applies at: [step 9](#kn-weiche-s9)
 
 #### Everyday score
 
-- The test sentences (228) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
+- The test sentences (232) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
 
 #### Source bench
 
@@ -2107,17 +2110,17 @@ Applies at: [step 9](#kn-weiche-s9)
 
 #### Tool names
 
-- Wherever a tool shows, a readable name comes from one table (99 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
+- Wherever a tool shows, a readable name comes from one table (100 tools), for example „Mailbox overview“ instead of mail_tidy_overview.
 
 #### Numbers (from the code)
 
-- **27** groups of the switch ([step 4](#kn-weiche-s4), [step 6](#kn-weiche-s6))
+- **28** groups of the switch ([step 4](#kn-weiche-s4), [step 6](#kn-weiche-s6))
 - **2** groups at most that still narrow ([step 6](#kn-weiche-s6))
 - **80** characters at most for a follow-up ([step 8](#kn-weiche-s8))
 - **4** seconds at most for the model's pick ([step 10](#kn-weiche-s10))
 - **300 ms** waiting with „Fast answer start“ ([step 10](#kn-weiche-s10))
 - **80 %** default threshold of the classification ([step 10](#kn-weiche-s10))
-- **228** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
+- **232** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
 - **216** everyday sentences for measuring ([step 14](#kn-weiche-s14))
 - **66** sentences of the source bench ([step 14](#kn-weiche-s14))
 - **150** ms at most for the source switch's hit probe ([step 14](#kn-weiche-s14))
@@ -2349,7 +2352,7 @@ Applies at: [step 4](#kn-werkzeuge-s4)
 - **3** memory notes per answer ([step 1](#kn-werkzeuge-s1))
 - **13** tools locked after outside text ([step 4](#kn-werkzeuge-s4))
 - **8** tools without internet with the kill switch ([step 3](#kn-werkzeuge-s3))
-- **99** tools with a readable name ([step 11](#kn-werkzeuge-s11))
+- **100** tools with a readable name ([step 11](#kn-werkzeuge-s11))
 
 #### Settings
 
@@ -2494,6 +2497,10 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 
 - abschrift.aufnehmen takes an audio or video file only when its content fits its ending by its first bytes (abschrift.fits), copies it in parts with its limit under the document id (0600) and reads the length with ffprobe; at most 5 wait per profile. In the quiet chain after the page pictures abschrift.schneiden cuts with ffmpeg (only the local file, fixed arguments) a piece of 30 s, from the second one with 1 s in front, and abschrift.stueck sends it through vorrang.run to the own speech recognition, with the stage „hinten“ and the priority key: common.signed_low leaves only such a request unmarked, real speech cancels the piece and it comes again in the next pause. abschrift.trim_edge takes out the words heard twice at the edge. A piece's page is its start second; documents.stelle makes „bei 12:30“ of it, wissen.where „Aufnahme: …, bei 12:30“. The transcript is outside text.
 
+#### Audio overview of a collection
+
+- hoerstueck.stellen gives the model only pieces of the originals from the collection's documents on short and whole, at most 16000 characters, in turns from each document; never knowledge book pages and never analysis text (model text is never a source of model text). The model only delivers a script as JSON; hoerstueck.pruefe keeps a line only by fixed rules: speaker A, B or C (with two voices A and B), a statement only with an offered place and wissensbuch.check_sentence against it, a transition only without a digit and from the fixed word list (hoerstueck.ueberleitung_ok), transitions at most 0.3 of the lines, the chosen length; below 10 lines none is made. In the quiet chain after the analyses hoerstueck.zeile speaks exactly one line per step through tonteile.sprich with the stage „last“ and the priority key (common.signed_low), through vorrang.run: real speech cancels, the line comes again. hoerstueck.zusammen puts the parts together with pauses, ffmpeg writes Opus. At most 10 per profile; an audio overview never becomes a document.
+
 #### Links as documents
 
 - doklink.pruefe checks every address by fixed rules before anything is fetched: http or https, a host, no login data, port 80 or 443, no IP or name of the home network; at most 10 at once and 30 waiting per profile. doklink.eins fetches one after another only through netguard.hole_oeffentlich (kill switch first, public also after every redirect, size, time, content type and first bytes) and hands it to wissen.aufnehmen: the same rules as an upload, origin „link:“ with the SHA-256 of the address, the same address only once. „Fetch again“ only on a click (doklink.neu_abrufen): a conditional request with ETag; 304 or the same SHA-256 means unchanged, else documents.renew reads the new bytes into the same document. The page content is outside text.
@@ -2586,6 +2593,10 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - **30** seconds per piece of a recording ([step 13](#kn-wissen-s13))
 - **1** seconds of overlap in front of a piece ([step 13](#kn-wissen-s13))
 - **5** recordings per profile waiting for their transcription at most ([step 13](#kn-wissen-s13))
+- **16000** characters of places an audio overview gives the model at most ([step 13](#kn-wissen-s13))
+- **10** checked lines without which no audio overview is made ([step 13](#kn-wissen-s13))
+- **0.3** share of transitions among the lines at most ([step 13](#kn-wissen-s13))
+- **10** audio overviews per profile at most ([step 13](#kn-wissen-s13))
 - **10** addresses at once for links as documents ([step 13](#kn-wissen-s13))
 - **30** addresses per profile waiting to be fetched at most ([step 13](#kn-wissen-s13))
 
@@ -2603,6 +2614,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - Features → Own documents and below it Transcribe recordings on: audio and video files under Me → Documents, with size, length and minutes a day.
 - Features → Own documents and below it Links as documents on: „Add link“ under Me → Documents, with size per page and fetches a day.
 - Features → Own documents and below it Collections on: the page Collections in the menu, with how many tokens a collection gives the model at most.
+- Features → Own documents → Collections and below it Audio overview on: the part Audio overview in every collection, with how many a day and the three voices.
 
 #### What you see
 
@@ -2686,6 +2698,13 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/abschrift.py` `trim_edge`: doubled words at the edge by a fixed rule ([step 13](#kn-wissen-s13))
 - `app/panel/abschrift.py` `due_once`: quiet chain: limits, long ones only after long_ok ([step 13](#kn-wissen-s13))
 - `app/panel/documents.py` `stelle`: „Seite 3“ or „bei 12:30“ ([step 13](#kn-wissen-s13))
+- `app/panel/hoerstueck.py` `stellen`: places from the collection's originals, in turns ([step 13](#kn-wissen-s13))
+- `app/panel/hoerstueck.py` `pruefe`: script by fixed rules: speaker, place, number, transition, length ([step 13](#kn-wissen-s13))
+- `app/panel/hoerstueck.py` `ueberleitung_ok`: transition without a digit, fixed words only ([step 13](#kn-wissen-s13))
+- `app/panel/hoerstueck.py` `zeile`: one line through tonteile.sprich, stage last ([step 13](#kn-wissen-s13))
+- `app/panel/hoerstueck.py` `zusammen`: parts with pauses, ffmpeg to Opus ([step 13](#kn-wissen-s13))
+- `app/panel/hoerstueck.py` `due_once`: quiet chain: first the script, then one line per step ([step 13](#kn-wissen-s13))
+- `app/panel/tonteile.py` `sprich`: the one helper for a spoken part ([step 13](#kn-wissen-s13))
 - `app/panel/doklink.py` `pruefe`: an address by fixed rules before anything is fetched ([step 13](#kn-wissen-s13))
 - `app/panel/doklink.py` `eins`: fetch one address and take it in as a document ([step 13](#kn-wissen-s13))
 - `app/panel/doklink.py` `neu_abrufen`: fetch again: ETag, SHA-256, else read again ([step 13](#kn-wissen-s13))
@@ -2706,7 +2725,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/wissensmessung.py` `_synth`: the throwaway profile from a fixed seed, with the code's limits ([step 6](#kn-wissen-s6))
 - `app/panel/wissensmessung.py` `MESSTEILE`: the measuring parts, extensible ([step 6](#kn-wissen-s6))
 
-Self-tests: `test_wissen`, `test_auswertung`, `test_abschrift`, `test_doklink`, `test_ytquelle`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`, `test_wissenstempo`
+Self-tests: `test_wissen`, `test_auswertung`, `test_abschrift`, `test_hoerstueck`, `test_doklink`, `test_ytquelle`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`, `test_wissenstempo`
 
 ### Guard
 
@@ -3225,7 +3244,7 @@ flowchart TD
   s10 -->|queue full| s10x
 ```
 
-1. <a id="kn-tts-s1"></a>**A sentence to speak**: The panel sends every sentence of an answer with the API key and the profile's stage to the TTS service. Other programs may do so too with the API key.
+1. <a id="kn-tts-s1"></a>**A sentence to speak**: The panel sends every sentence of an answer with the API key and the profile's stage to the TTS service. Other programs may do so too with the API key. Parts the panel has spoken itself (reading aloud in the Dungeon, lines of an audio overview) go through the one helper tonteile.sprich; an audio overview in the background with the stage last and the key, so it never counts as speech (common.signed_low) and waits behind every person.
 2. <a id="kn-tts-s2"></a>**Key and size fine?**: BodyLimit refuses requests that are too large or lack the right key before anything is read.
 3. <a id="kn-tts-s3"></a>**Text valid?**: The text must not be empty and may have at most 20000 characters. check_reference takes a reference voice only as an embedded data:audio address, never as a link: the engine would otherwise fetch a link itself from the home network.
 4. <a id="kn-tts-s4"></a>**Engine ready?**: A VoiceDesign request goes to the second engine when it is on; everything else to the main engine. engine_status asks its /health and otherwise names the reason.
@@ -3262,6 +3281,7 @@ flowchart TD
 #### In the code
 
 - `app/tts_proxy.py` `speech`: the way of a sentence through the proxy ([step 1](#kn-tts-s1))
+- `app/panel/tonteile.py` `sprich`: the one helper the panel itself has a part spoken with ([step 1](#kn-tts-s1))
 - `app/tts_proxy.py` `check_reference`: reference only embedded ([step 8](#kn-tts-s8))
 - `app/tts_proxy.py` `engine_status`: ready, loading, error or off ([step 4](#kn-tts-s4))
 - `app/tts_proxy.py` `apply_clone`: cloned voice from voices/ ([step 8](#kn-tts-s8))
@@ -3822,7 +3842,7 @@ flowchart TD
 3. <a id="kn-users-s3"></a>**A secret in it?**: Passwords of mail, calendar and storage places, tokens of Home Assistant and MCP and the own storage key are sealed with the Spark's key. The voiceprint (voice.json) is biometric and is sealed whole; an older open file is sealed the first time it is read. Memory and conversations (9 files, siegel= in the file register) lie sealed whole: AES-256-GCM with a key of their own from secret.key, the profile and the file name as associated data, so readable neither in another profile nor under another name. siegel.migrate seals older open files once, after a backup „vor-siegel“.
 4. <a id="kn-users-s4"></a>**Write for the service only**: profiles._write creates the folder so that only the service looks into it, writes a temporary file only the service can read and swaps it in one step.
 5. <a id="kn-users-s4b"></a>**Does the sealed file open?**: Only profiles.read_own and write_own read and write these files. If one does not open (another key, another profile, changed on the disk), it is set aside once (name.unlesbar), never overwritten, and the profile starts empty. The admin sees a hint; after the move backup „Read in again“ under Me → Memory brings it back.
-6. <a id="kn-users-s5"></a>**Every file sorted**: Every file name has exactly one line in the file register dateien.py: with an area (dateien.AREAS, may go to the own storage) or with its kind (dateien.LOCAL, stays on the Spark: keys, accounts, settings, voiceprint, queues). speicher.py takes both lists from there. test_technik checks every name the code writes. The same register says with export= what „Download all my data“ (meinedaten.build, Me → Security → My data) puts into the ZIP (33 entries, sealed ones opened through read_own) and why the rest stays out.
+6. <a id="kn-users-s5"></a>**Every file sorted**: Every file name has exactly one line in the file register dateien.py: with an area (dateien.AREAS, may go to the own storage) or with its kind (dateien.LOCAL, stays on the Spark: keys, accounts, settings, voiceprint, queues). speicher.py takes both lists from there. test_technik checks every name the code writes. The same register says with export= what „Download all my data“ (meinedaten.build, Me → Security → My data) puts into the ZIP (34 entries, sealed ones opened through read_own) and why the rest stays out.
 7. <a id="kn-users-s6"></a>**Own storage set up?**: Only when the admin allowed the own storage and the profile has a target with at least one area (at most 2 targets).
 8. <a id="kn-users-s7"></a>**Only changes of the chosen areas**: local_files takes only files of the chosen areas: real files, no links, at most 5000. copy_once sends only what changed since the last run, at most 2048 MB per run; the next run goes on.
 9. <a id="kn-users-s8"></a>**Encrypted, names random**: seal_file encrypts every file in numbered pieces with a key of its own per object (derived from the profile's storage key and the object's name). The names on the target are random; the target sees only noise.

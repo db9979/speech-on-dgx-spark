@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "asr": {
-        "stand": "0be291d594",
+        "stand": "f3c4b09b6a",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "common.NOTASR_PORT": ["s9"], "common.NOTASR_IDLE": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],
@@ -205,13 +205,14 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Sprachausgabe
     "tts": {
-        "stand": "059ba5b299",
+        "stand": "ad82c44ede",
         "bezug": {
             "textnorm.NUMBER_MODES": ["s7"], "tts_proxy.speech": ["s1"], "tts_proxy.check_reference": ["s8"],
             "tts_proxy.engine_status": ["s4"], "tts_proxy.apply_clone": ["s8"], "textnorm.speech_markdown": ["s5"],
             "textnorm.hide_secrets": ["s5"], "textnorm.clean_text": ["s6"], "textnorm.guess_language": ["s7"],
             "textnorm.speak_numbers": ["s7"], "common.PrioGate": ["s10"], "kurzref.cut_at": ["s8"],
             "kurzref.keep_words": ["s8"], "tts_proxy.shorten": ["s8"], "kurzref.MIN_S": ["s8"], "kurzref.SLACK_S": ["s8"],
+            "tonteile.sprich": ["s1"],
         },
         "kurz": ("Die Sprachausgabe macht aus Text Ton. Der TTS-Dienst nimmt einen Satz an, räumt ihn auf, verdeckt "
                  "Geheimnisse, wählt Sprache und Stimme und gibt ihn an die Engine (Qwen3-TTS über vllm-omni), die nur "
@@ -229,9 +230,15 @@ SEITEN = {
             S("s1", "start", ("Satz zum Sprechen", "A sentence to speak"),
               ("POST /v1/audio/speech", "POST /v1/audio/speech"),
               ("Das Panel schickt jeden Satz einer Antwort mit dem API-Schlüssel und der Stufe des Profils an den "
-               "TTS-Dienst. Andere Programme dürfen das mit dem API-Schlüssel auch.",
+               "TTS-Dienst. Andere Programme dürfen das mit dem API-Schlüssel auch. Teile, die das Panel selbst "
+               "sprechen lässt (Vorlesen im Dungeon, Zeilen eines Hörstücks), gehen über den einen Helfer "
+               "tonteile.sprich; ein Hörstück im Hintergrund mit der Stufe hinten und dem Schlüssel, so zählt es nie "
+               "als Sprache (common.signed_low) und wartet hinter jeder Person.",
                "The panel sends every sentence of an answer with the API key and the profile's stage to the TTS "
-               "service. Other programs may do so too with the API key.")),
+               "service. Other programs may do so too with the API key. Parts the panel has spoken itself (reading "
+               "aloud in the Dungeon, lines of an audio overview) go through the one helper tonteile.sprich; an audio "
+               "overview in the background with the stage last and the key, so it never counts as speech "
+               "(common.signed_low) and waits behind every person.")),
             S("s2", "frage", ("Schlüssel und Größe in Ordnung?", "Key and size fine?"),
               ("bevor ein Byte gelesen wird", "before a byte is read"),
               ("BodyLimit lehnt zu große Anfragen und solche ohne den richtigen Schlüssel ab, bevor etwas gelesen "
@@ -376,6 +383,7 @@ SEITEN = {
         ],
         "code": [
             ("tts_proxy.speech", ("der Weg eines Satzes durch den Proxy", "the way of a sentence through the proxy")),
+            ("tonteile.sprich", ("der eine Helfer, mit dem das Panel selbst einen Teil sprechen lässt", "the one helper the panel itself has a part spoken with")),
             ("tts_proxy.check_reference", ("Vorlage nur eingebettet", "reference only embedded")),
             ("tts_proxy.engine_status", ("bereit, lädt, Fehler oder aus", "ready, loading, error or off")),
             ("tts_proxy.apply_clone", ("geklonte Stimme aus voices/", "cloned voice from voices/")),

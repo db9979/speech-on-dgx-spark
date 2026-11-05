@@ -65,7 +65,7 @@ AREAS = (
                                     "camera_describe")),
     ("wissen", "Wissen und Suche", "Knowledge and search", ("web_search", "wikipedia", "archive_search",
                                                             "document_search", "document_list", "fund_suche",
-                                                            "mappe_liste", "mappe_stand", "mappe_dazu", "link_als_dokument",
+                                                            "mappe_liste", "mappe_stand", "mappe_dazu", "hoerstueck_machen", "link_als_dokument",
                                                             "dokument_auswertung",
                                                             "history_search")),
     ("machen", "Bilder, Musik und Dokumente", "Pictures, music and documents", ("bild_malen", "musik_machen", "musik_bearbeiten", "document_plan")),

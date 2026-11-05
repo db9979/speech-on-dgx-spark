@@ -77,7 +77,7 @@ function mpDetail(w){const det=w.querySelector('.mpdet'),o=MP.one;if(!MP.sel||!o
   const f=det.querySelector('.mpedit');if(f)f.onsubmit=async e=>{e.preventDefault();const v=Object.fromEntries(new FormData(f));
     const r=await apiTry(mpUrl(o.id),xjson('PUT',{name:v.name,ziel:v.ziel,symbol:v.symbol}));if(!r.r.ok){mpSay(r.d.detail,true);return}
     MP.edit=false;if(bound)MP_CHAT.name=String(v.name||'').trim();mpChip();await mpLoad()};
-  mpAddBox(det.querySelector('.mpaddbox'))}
+  mpAddBox(det.querySelector('.mpaddbox'));if(typeof hsShow==='function')hsShow(det,o)}   // the part Hörstück (hoerstueck.js)
 // what can go in: the own documents (GET /api/profile/docs) and the own Wissensbuch pages, without those already in it
 async function mpAddBox(box){if(!MP.add||!box)return;const o=MP.one,have=new Set(o.eintraege.map(e=>e.art_eintrag+':'+e.ref));
   if(MP.add==='notiz'){box.innerHTML=`<form class="mpnote"><input type="text" name="titel" maxlength="80" placeholder="${esc(t('Titel der Notiz','Title of the note'))}" aria-label="${esc(t('Titel der Notiz','Title of the note'))}">

@@ -77,6 +77,11 @@ BENCH = [
     ("Such in der Mappe Wohnung nach der Kaution", "mappe"),
     ("Finde in der Mappe Wohnung die Rechnung", "finden+mappe"),
     ("Search the collection Flat for the deposit", "mappe"),
+    # Hörstück aus einer Mappe (hoerstueck.py): a talk to listen to, beside the Mappe it names
+    ("Mach ein Hörstück aus der Mappe Wohnung", "hoerstueck+mappe"),
+    ("Mach mir einen Podcast aus der Mappe Wärmepumpe", "hoerstueck+mappe"),
+    ("Ich hätte die Mappe Hochzeit gern zum Anhören", "hoerstueck+mappe"),
+    ("Make an audio overview of the collection Flat", "hoerstueck+mappe"),
     # Links als Dokument (doklink.py, plan open-notebook Stufe 4): an address and a word of keeping it; „aufs reMarkable“
     # stays the reMarkable, an address alone is no wish to keep it
     ("Speicher https://example.org/artikel als Dokument", "doklink"),

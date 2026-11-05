@@ -973,6 +973,14 @@ def validate(new):
     d = ch.get("doc_auswertung_auto", list(auswertung.AUTO))   # Auswertungen: the fixed kinds made by themselves
     if not isinstance(d, list) or len(d) > len(auswertung.ARTEN) or any(x not in auswertung.ARTEN for x in d):
         raise HTTPException(400, "doc_auswertung_auto: " + ", ".join(auswertung.ARTEN))
+    import hoerstueck
+    d = ch.get("hoerstueck_day", hoerstueck.DAY)   # Hörstück: new ones per profile and day (hoerstueck.day_limit)
+    if not isinstance(d, int) or isinstance(d, bool) or not hoerstueck.DAY_MIN <= d <= hoerstueck.DAY_MAX:
+        raise HTTPException(400, f"hoerstueck_day: {hoerstueck.DAY_MIN} to {hoerstueck.DAY_MAX}")
+    d = ch.get("hoerstueck_stimmen", [])   # Hörstück: the admin's voices for A, B, C ("-" the standard voice)
+    if not isinstance(d, list) or len(d) > len(hoerstueck.SPRECHER) \
+            or any(not isinstance(x, str) or not (x == "-" or hoerstueck.VOICE.fullmatch(x)) for x in d):
+        raise HTTPException(400, "hoerstueck_stimmen: up to 3 voice names or -")
     d = ch.get("fund_tag_day", 200)   # Finden, Schlagworte vom Modell (fund.tag_day_limit)
     if not isinstance(d, int) or isinstance(d, bool) or not 5 <= d <= 500:
         raise HTTPException(400, "fund_tag_day: 5 to 500")

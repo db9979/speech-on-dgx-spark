@@ -84,6 +84,8 @@ DOC_WORDS = re.compile(r"(?i)\b(\w*dokument\w*|unterlage\w*|\w*vertrag\w*|\w*ver
 # Mappen (mappen.py): the word itself, never a Schulmappe or Aktenmappe of someone else's text (the Weiche reads only
 # the person's own message)
 MAPPE_WORDS = re.compile(r"(?i)\b(mappen?|collections?)\b")
+# Hörstück aus einer Mappe (hoerstueck.py, plan open-notebook Stufe 5): a talk to listen to made from a Mappe
+HOERSTUECK_WORDS = re.compile(r"(?i)\b(hörstück\w*|hoerstueck\w*|podcasts?|zum anhören|audio overviews?)\b")
 # Links als Dokument (doklink.py): an address in the person's own message and a word of keeping it as a document
 # („Speicher https://… als Dokument“, „Übernimm den Link in meine Dokumente“); „aufs reMarkable“ stays rmweb (route);
 # a YouTube link to write down („Mach eine Abschrift von https://youtu.be/…“, ytquelle.py) goes the same way
@@ -260,6 +262,9 @@ GROUPS = {
     # Mappen (mappen.py, plan open-notebook Stufe 1): the own collections by name („Was liegt in der Mappe Garten?“,
     # „Leg den Mietvertrag in die Mappe Wohnung“); document_search stays anyway (NARROW_KEEP)
     "mappe": ({"mappe_liste", "mappe_stand", "mappe_dazu"}, MAPPE_WORDS),
+    # Hörstück (hoerstueck.py, plan open-notebook Stufe 5): „Mach ein Hörstück aus der Mappe Wohnung“; the Mappe only
+    # from the person's own words (hoerstueck.tool), beside „mappe“ both stay
+    "hoerstueck": ({"hoerstueck_machen"}, HOERSTUECK_WORDS),
     # Links als Dokument (doklink.py, plan open-notebook Stufe 4): an address and a word of keeping it; the module
     # offers the tool only when the address stands in the person's own message
     "doklink": ({"link_als_dokument"}, DOKLINK_WORDS),

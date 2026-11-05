@@ -46,6 +46,7 @@ NAMES = {
     "fund_suche": ("In allen Daten finden", "Find in all data"),
     "mappe_liste": ("Mappen auflisten", "List collections"), "mappe_stand": ("Mappe ansehen", "Show collection"),
     "mappe_dazu": ("In Mappe legen", "Put into collection"),
+    "hoerstueck_machen": ("Hörstück machen", "Make audio overview"),
     "link_als_dokument": ("Link als Dokument", "Link as document"),
     "dokument_auswertung": ("Auswertung eines Dokuments", "Analysis of a document"),
     "rechnen": ("Rechnen", "Calculate"),

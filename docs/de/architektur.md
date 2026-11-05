@@ -264,6 +264,7 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/fundquellen.py` | Finden: Termine und Kontakte versiegelt, Gespräche nur Datum und Kanal, Listen, Medien |
 | `app/panel/gedaechtnis.py` | Gedächtnis mit Beleg und Prüfung |
 | `app/panel/gemerkt.py` | Gemerkt-Hinweis: „Gemerkt: …“ mit Rückgängig, Karte für von selbst Gelerntes |
+| `app/panel/hoerstueck.py` | Hörstück aus einer Mappe: Drehbuch nur als JSON, jede Zeile fest geprüft, Zeile für Zeile gesprochen |
 | `app/panel/kiwix.py` | Eigenes Kiwix als Wissensquelle ohne Internet |
 | `app/panel/lokal.py` | Erst lokal suchen, bevor etwas nach außen geht |
 | `app/panel/mappen.py` | Mappen: Dokumente, Seiten und Notizen bündeln, Kontext-Stufe je Eintrag (aus, kurz, ganz) nach festen Regeln |
@@ -278,6 +279,7 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/suchpruefung.py` | Suchprüfung: Prüffragen messen, wie gut die Dokumentensuche trifft |
 | `app/panel/symbole.py` | Feste Symbole für Folien und Dokumente |
 | `app/panel/tagebuch.py` | Spark-Tagebuch: was der Spark selbst getan hat |
+| `app/panel/tonteile.py` | Tonteile: der eine Helfer, der einen Teil von der eigenen Sprachausgabe sprechen lässt |
 | `app/panel/wiki.py` | Wikipedia für „Was ist …?“ |
 | `app/panel/wissen.py` | Wissen aus eigenen Uploads: Schalter und Kontingent |
 | `app/panel/wissensbuch.py` | Wissensbuch: Seiten aus eigenen Dokumenten, jeder Satz mit Quelle; Suchindex FTS5, Lesefunktion liste |
@@ -644,7 +646,8 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/zuordnungen.json` | Gemerkte Zuordnungen |  | ganz versiegelt (AES-256-GCM) | ja | Gedächtnis |
 | `users/ID/tasks.json` | Aufgaben |  | – | ja | Aufgaben und Erinnerungen |
 | `users/ID/reminders.json` | Erinnerungen |  | – | ja | Aufgaben und Erinnerungen |
-| `users/ID/wissen.db` | Dokumente: Text, Abschnitte mit Kontextzeile, Suche, Vektoren; Wissensbuch und Wissenskarte mit Personen, Firmen und Fristen; Mappen mit Einträgen und Stufen; Auswertungen je Dokument mit Fundstelle; Links als Dokument mit Adresse, ETag und SHA (SQLite) |  | – | ja | Dokumente (Text, Suche, Originale) |
+| `users/ID/wissen.db` | Dokumente: Text, Abschnitte mit Kontextzeile, Suche, Vektoren; Wissensbuch und Wissenskarte mit Personen, Firmen und Fristen; Mappen mit Einträgen und Stufen; Auswertungen je Dokument mit Fundstelle; Links als Dokument mit Adresse, ETag und SHA; Hörstücke mit geprüftem Drehbuch und Fortschritt (SQLite) |  | – | ja | Dokumente (Text, Suche, Originale) |
+| `users/ID/hoerstuecke/` | Hörstücke aus Mappen: je Stück eine Opus-Datei, solange es gesprochen wird ein Ordner mit den Zeilen als WAV |  | – | ja | Dokumente (Text, Suche, Originale) |
 | `users/ID/docs/files/` | Originale der Uploads (bei Aufnahmen nur die Tonspur) |  | – | ja | Dokumente (Text, Suche, Originale) |
 | `users/ID/fund.db` | Finden: Suchindex über die eigenen Daten (Titel, Felder, Schlagworte, eigene Schlagworte, Mails und Anhänge, Termine, Kontakte, Listen, Erinnerungen, Bilder, Lieder; Gespräche nur Datum und Kanal; SQLite) |  | Marken mit eigenem Schlüssel je Profil (HMAC); Mails, Anhänge, Termine und Kontakte: Titel, Auszug, Felder und Schlagworte AES-GCM | ja | Dokumente (Text, Suche, Originale) |
 | `users/ID/suchpruefung.json` | Prüffragen und Läufe der Suchprüfung |  | – | ja | Dokumente (Text, Suche, Originale) |
@@ -2018,7 +2021,7 @@ Selbsttests: `test_klaeren`, `test_features`, `test_notaus`, `test_hardening`, `
 
 ### Weiche
 
-Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und so weiter, heute 27 Gruppen) und grenzt damit die Werkzeuge ein, die das Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen.
+Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und so weiter, heute 28 Gruppen) und grenzt damit die Werkzeuge ein, die das Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen.
 
 **Warum:** Wenige passende Werkzeuge machen das Modell schneller und treffsicherer: es liest weniger und greift seltener daneben. Weil die Weiche nur wegnimmt, was die Rechte und Sperren übrig gelassen haben, kann ein falsch zugeordneter Satz nie mehr erlauben, höchstens ein Werkzeug fehlen lassen.
 
@@ -2095,7 +2098,7 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 
 #### Alltagsquote
 
-- Die Testsätze (228) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
+- Die Testsätze (232) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
 
 #### Quellen-Messbank
 
@@ -2107,17 +2110,17 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 
 #### Werkzeugnamen
 
-- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (99 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.
+- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (100 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview.
 
 #### Zahlen (aus dem Code)
 
-- **27** Gruppen der Weiche ([Schritt 4](#kn-weiche-s4), [Schritt 6](#kn-weiche-s6))
+- **28** Gruppen der Weiche ([Schritt 4](#kn-weiche-s4), [Schritt 6](#kn-weiche-s6))
 - **2** Gruppen höchstens, die noch eingrenzen ([Schritt 6](#kn-weiche-s6))
 - **80** Zeichen höchstens für eine Folgefrage ([Schritt 8](#kn-weiche-s8))
 - **4** Sekunden höchstens für die Wahl des Modells ([Schritt 10](#kn-weiche-s10))
 - **300 ms** Wartezeit mit „Schneller Antwortbeginn“ ([Schritt 10](#kn-weiche-s10))
 - **80 %** Standard-Schwelle der Einordnung ([Schritt 10](#kn-weiche-s10))
-- **228** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
+- **232** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
 - **216** Alltagssätze zum Messen ([Schritt 14](#kn-weiche-s14))
 - **66** Sätze der Quellen-Messbank ([Schritt 14](#kn-weiche-s14))
 - **150** ms höchstens für die Treffer-Probe der Quellen-Weiche ([Schritt 14](#kn-weiche-s14))
@@ -2349,7 +2352,7 @@ Gilt bei: [Schritt 4](#kn-werkzeuge-s4)
 - **3** Gedächtnis-Notizen pro Antwort ([Schritt 1](#kn-werkzeuge-s1))
 - **13** Werkzeuge gesperrt nach fremdem Text ([Schritt 4](#kn-werkzeuge-s4))
 - **8** Werkzeuge ohne Internet bei Notaus ([Schritt 3](#kn-werkzeuge-s3))
-- **99** Werkzeuge mit verständlichem Namen ([Schritt 11](#kn-werkzeuge-s11))
+- **100** Werkzeuge mit verständlichem Namen ([Schritt 11](#kn-werkzeuge-s11))
 
 #### Einstellen
 
@@ -2494,6 +2497,10 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 
 - abschrift.aufnehmen nimmt eine Ton- oder Videodatei nur, wenn ihr Inhalt nach den ersten Bytes zur Endung passt (abschrift.fits), kopiert sie in Teilen mit ihrer Grenze unter die Dokument-ID (0600) und liest die Länge mit ffprobe; höchstens 5 warten je Profil. In der ruhigen Kette nach den Seitenbildern schneidet abschrift.schneiden mit ffmpeg (nur die lokale Datei, feste Argumente) ein Stück von 30 s, ab dem zweiten mit 1 s davor, und abschrift.stueck schickt es über vorrang.run an die eigene Spracherkennung, mit der Stufe „hinten“ und dem Vorrang-Schlüssel: common.signed_low lässt nur so eine Anfrage unmarkiert, echte Sprache bricht das Stück ab, und es kommt in der nächsten Pause noch einmal. abschrift.trim_edge nimmt die doppelt gehörten Wörter am Rand heraus. Die Seite eines Stücks ist seine Startsekunde; documents.stelle macht daraus „bei 12:30“, wissen.where „Aufnahme: …, bei 12:30“. Die Abschrift ist Text von außen.
 
+#### Hörstück aus einer Mappe
+
+- hoerstueck.stellen gibt dem Modell nur Stücke der Originale aus den Dokumenten der Mappe auf kurz und ganz, höchstens 16000 Zeichen, im Wechsel aus jedem Dokument; nie Seiten des Wissensbuchs und nie Text der Auswertungen (Modelltext ist nie Quelle für Modelltext). Das Modell liefert nur ein Drehbuch als JSON; hoerstueck.pruefe behält eine Zeile nur nach festen Regeln: Sprecher A, B oder C (mit zwei Stimmen A und B), eine Aussage nur mit angebotener Stelle und wissensbuch.check_sentence gegen sie, eine Überleitung nur ohne Ziffer und aus der festen Wortliste (hoerstueck.ueberleitung_ok), Überleitungen höchstens 0.3 der Zeilen, Länge der Wahl; unter 10 Zeilen entsteht keins. In der ruhigen Kette nach den Auswertungen spricht hoerstueck.zeile je Schritt genau eine Zeile über tonteile.sprich mit Stufe „hinten“ und Vorrang-Schlüssel (common.signed_low), durch vorrang.run: echte Sprache bricht ab, die Zeile kommt wieder. hoerstueck.zusammen setzt die Teile mit Pausen zusammen, ffmpeg schreibt Opus. Höchstens 10 je Profil; ein Hörstück wird nie ein Dokument.
+
 #### Links als Dokument
 
 - doklink.pruefe prüft jede Adresse nach festen Regeln, bevor etwas geholt wird: http oder https, ein Host, keine Zugangsdaten, Port 80 oder 443, keine IP und kein Name des Heimnetzes; höchstens 10 auf einmal und 30 wartend je Profil. doklink.eins holt eine nach der anderen nur über netguard.hole_oeffentlich (Notaus zuerst, öffentlich auch nach jeder Weiterleitung, Größe, Zeit, Inhaltstyp und erste Bytes) und gibt sie an wissen.aufnehmen: dieselben Regeln wie ein Upload, Herkunft „link:“ mit der SHA-256 der Adresse, dieselbe Adresse nur einmal. „Neu abrufen“ nur per Klick (doklink.neu_abrufen): bedingter Abruf mit ETag; 304 oder dieselbe SHA-256 heißt unverändert, sonst liest documents.renew die neuen Bytes in dasselbe Dokument. Der Seiteninhalt ist Text von außen.
@@ -2586,6 +2593,10 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - **30** Sekunden je Stück einer Aufnahme ([Schritt 13](#kn-wissen-s13))
 - **1** Sekunden Überlappung vor einem Stück ([Schritt 13](#kn-wissen-s13))
 - **5** Aufnahmen je Profil, die auf ihre Abschrift warten, höchstens ([Schritt 13](#kn-wissen-s13))
+- **16000** Zeichen an Stellen, die ein Hörstück dem Modell gibt, höchstens ([Schritt 13](#kn-wissen-s13))
+- **10** geprüfte Zeilen, ohne die kein Hörstück entsteht ([Schritt 13](#kn-wissen-s13))
+- **0.3** Anteil der Überleitungen an den Zeilen höchstens ([Schritt 13](#kn-wissen-s13))
+- **10** Hörstücke je Profil höchstens ([Schritt 13](#kn-wissen-s13))
 - **10** Adressen auf einmal bei Links als Dokument ([Schritt 13](#kn-wissen-s13))
 - **30** Adressen je Profil, die auf ihren Abruf warten, höchstens ([Schritt 13](#kn-wissen-s13))
 
@@ -2603,6 +2614,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - Funktionen → Eigene Dokumente und darunter Aufnahmen abschreiben an: Ton- und Videodateien unter Ich → Dokumente, dazu Größe, Länge und Minuten am Tag.
 - Funktionen → Eigene Dokumente und darunter Links als Dokument an: „Link hinzufügen“ unter Ich → Dokumente, dazu Größe je Seite und Abrufe am Tag.
 - Funktionen → Eigene Dokumente und darunter Mappen an: die Seite Mappen im Menü, dazu wie viele Token eine Mappe dem Modell höchstens gibt.
+- Funktionen → Eigene Dokumente → Mappen und darunter Hörstück aus einer Mappe an: der Teil Hörstück in jeder Mappe, dazu wie viele am Tag und die drei Stimmen.
 
 #### Was du siehst
 
@@ -2686,6 +2698,13 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - `app/panel/abschrift.py` `trim_edge`: doppelte Wörter am Rand nach fester Regel ([Schritt 13](#kn-wissen-s13))
 - `app/panel/abschrift.py` `due_once`: ruhige Kette: Grenzen, lange nur nach long_ok ([Schritt 13](#kn-wissen-s13))
 - `app/panel/documents.py` `stelle`: „Seite 3“ oder „bei 12:30“ ([Schritt 13](#kn-wissen-s13))
+- `app/panel/hoerstueck.py` `stellen`: Stellen aus den Originalen der Mappe, im Wechsel ([Schritt 13](#kn-wissen-s13))
+- `app/panel/hoerstueck.py` `pruefe`: Drehbuch nach festen Regeln: Sprecher, Stelle, Zahl, Überleitung, Länge ([Schritt 13](#kn-wissen-s13))
+- `app/panel/hoerstueck.py` `ueberleitung_ok`: Überleitung ohne Ziffer, nur feste Wörter ([Schritt 13](#kn-wissen-s13))
+- `app/panel/hoerstueck.py` `zeile`: eine Zeile über tonteile.sprich, Stufe hinten ([Schritt 13](#kn-wissen-s13))
+- `app/panel/hoerstueck.py` `zusammen`: Teile mit Pausen, ffmpeg zu Opus ([Schritt 13](#kn-wissen-s13))
+- `app/panel/hoerstueck.py` `due_once`: ruhige Kette: erst Drehbuch, dann je Schritt eine Zeile ([Schritt 13](#kn-wissen-s13))
+- `app/panel/tonteile.py` `sprich`: der eine Helfer für einen gesprochenen Teil ([Schritt 13](#kn-wissen-s13))
 - `app/panel/doklink.py` `pruefe`: Adresse nach festen Regeln, bevor etwas geholt wird ([Schritt 13](#kn-wissen-s13))
 - `app/panel/doklink.py` `eins`: eine Adresse holen und als Dokument aufnehmen ([Schritt 13](#kn-wissen-s13))
 - `app/panel/doklink.py` `neu_abrufen`: Neu abrufen: ETag, SHA-256, sonst neu lesen ([Schritt 13](#kn-wissen-s13))
@@ -2706,7 +2725,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - `app/panel/wissensmessung.py` `_synth`: das Wegwerf-Profil aus festem Zufall, mit den Grenzen des Codes ([Schritt 6](#kn-wissen-s6))
 - `app/panel/wissensmessung.py` `MESSTEILE`: die Messteile, erweiterbar ([Schritt 6](#kn-wissen-s6))
 
-Selbsttests: `test_wissen`, `test_auswertung`, `test_abschrift`, `test_doklink`, `test_ytquelle`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`, `test_wissenstempo`
+Selbsttests: `test_wissen`, `test_auswertung`, `test_abschrift`, `test_hoerstueck`, `test_doklink`, `test_ytquelle`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`, `test_wissenstempo`
 
 ### Wächter
 
@@ -3225,7 +3244,7 @@ flowchart TD
   s10 -->|Schlange voll| s10x
 ```
 
-1. <a id="kn-tts-s1"></a>**Satz zum Sprechen**: Das Panel schickt jeden Satz einer Antwort mit dem API-Schlüssel und der Stufe des Profils an den TTS-Dienst. Andere Programme dürfen das mit dem API-Schlüssel auch.
+1. <a id="kn-tts-s1"></a>**Satz zum Sprechen**: Das Panel schickt jeden Satz einer Antwort mit dem API-Schlüssel und der Stufe des Profils an den TTS-Dienst. Andere Programme dürfen das mit dem API-Schlüssel auch. Teile, die das Panel selbst sprechen lässt (Vorlesen im Dungeon, Zeilen eines Hörstücks), gehen über den einen Helfer tonteile.sprich; ein Hörstück im Hintergrund mit der Stufe hinten und dem Schlüssel, so zählt es nie als Sprache (common.signed_low) und wartet hinter jeder Person.
 2. <a id="kn-tts-s2"></a>**Schlüssel und Größe in Ordnung?**: BodyLimit lehnt zu große Anfragen und solche ohne den richtigen Schlüssel ab, bevor etwas gelesen wird.
 3. <a id="kn-tts-s3"></a>**Text gültig?**: Der Text darf nicht leer sein und höchstens 20000 Zeichen haben. Eine Vorlage-Stimme nimmt check_reference nur als eingebettete data:audio-Adresse an, nie als Link: die Engine würde einen Link sonst selbst aus dem Heimnetz holen.
 4. <a id="kn-tts-s4"></a>**Engine bereit?**: Eine VoiceDesign-Anfrage geht an die zweite Engine, wenn sie eingeschaltet ist; alles andere an die Haupt-Engine. engine_status fragt deren /health und nennt sonst den Grund.
@@ -3262,6 +3281,7 @@ flowchart TD
 #### Im Code
 
 - `app/tts_proxy.py` `speech`: der Weg eines Satzes durch den Proxy ([Schritt 1](#kn-tts-s1))
+- `app/panel/tonteile.py` `sprich`: der eine Helfer, mit dem das Panel selbst einen Teil sprechen lässt ([Schritt 1](#kn-tts-s1))
 - `app/tts_proxy.py` `check_reference`: Vorlage nur eingebettet ([Schritt 8](#kn-tts-s8))
 - `app/tts_proxy.py` `engine_status`: bereit, lädt, Fehler oder aus ([Schritt 4](#kn-tts-s4))
 - `app/tts_proxy.py` `apply_clone`: geklonte Stimme aus voices/ ([Schritt 8](#kn-tts-s8))
@@ -3822,7 +3842,7 @@ flowchart TD
 3. <a id="kn-users-s3"></a>**Ein Geheimnis dabei?**: Passwörter von Mail, Kalender und Speicherorten, Tokens von Home Assistant und MCP und der Schlüssel des eigenen Speichers werden mit dem Schlüssel des Spark versiegelt. Der Stimmabdruck (voice.json) ist biometrisch und wird ganz versiegelt; eine ältere offene Datei wird beim ersten Lesen versiegelt. Gedächtnis und Gespräche (9 Dateien, siegel= im Datei-Register) liegen ganz versiegelt: AES-256-GCM mit einem eigenen Schlüssel aus secret.key, Profil und Dateiname als Zusatzdaten, also weder in einem anderen Profil noch unter einem anderen Namen lesbar. Ältere offene Dateien versiegelt siegel.migrate einmal, nach einer Sicherung „vor-siegel“.
 4. <a id="kn-users-s4"></a>**Schreiben nur für den Dienst**: profiles._write legt den Ordner so an, dass nur der Dienst hineinsieht, schreibt eine Zwischendatei, die nur der Dienst lesen kann, und tauscht sie in einem Schritt aus.
 5. <a id="kn-users-s4b"></a>**Öffnet die versiegelte Datei?**: Diese Dateien liest und schreibt nur profiles.read_own und write_own. Öffnet eine nicht (fremder Schlüssel, anderes Profil, auf der Platte geändert), wird sie einmal beiseitegelegt (Name.unlesbar), nie überschrieben, und das Profil beginnt leer. Der Admin sieht einen Hinweis; nach der Umzugs-Sicherung holt „Wieder einlesen“ unter Ich → Gedächtnis sie zurück.
-6. <a id="kn-users-s5"></a>**Jede Datei einsortiert**: Jeder Dateiname hat genau eine Zeile im Datei-Register dateien.py: mit einem Bereich (dateien.AREAS, darf auf den eigenen Speicher) oder mit seiner Art (dateien.LOCAL, bleibt auf dem Spark: Schlüssel, Zugänge, Einstellungen, Stimmabdruck, Warteschlangen). speicher.py nimmt beide Listen von dort. test_technik prüft jeden Namen, den der Code schreibt. Dasselbe Register sagt mit export=, was „Alle meine Daten herunterladen“ (meinedaten.build, Ich → Sicherheit → Meine Daten) in die ZIP legt (33 Einträge, Versiegeltes geöffnet über read_own) und warum der Rest draußen bleibt.
+6. <a id="kn-users-s5"></a>**Jede Datei einsortiert**: Jeder Dateiname hat genau eine Zeile im Datei-Register dateien.py: mit einem Bereich (dateien.AREAS, darf auf den eigenen Speicher) oder mit seiner Art (dateien.LOCAL, bleibt auf dem Spark: Schlüssel, Zugänge, Einstellungen, Stimmabdruck, Warteschlangen). speicher.py nimmt beide Listen von dort. test_technik prüft jeden Namen, den der Code schreibt. Dasselbe Register sagt mit export=, was „Alle meine Daten herunterladen“ (meinedaten.build, Ich → Sicherheit → Meine Daten) in die ZIP legt (34 Einträge, Versiegeltes geöffnet über read_own) und warum der Rest draußen bleibt.
 7. <a id="kn-users-s6"></a>**Eigener Speicher eingerichtet?**: Nur wenn der Admin den eigenen Speicher freigegeben hat und das Profil ein Ziel mit mindestens einem Bereich hat (höchstens 2 Ziele).
 8. <a id="kn-users-s7"></a>**Nur Geändertes der gewählten Bereiche**: local_files nimmt nur Dateien der gewählten Bereiche: echte Dateien, keine Links, höchstens 5000 Stück. copy_once schickt nur, was sich seit dem letzten Lauf geändert hat, höchstens 2048 MB pro Lauf; der nächste Lauf macht weiter.
 9. <a id="kn-users-s8"></a>**Verschlüsselt, Namen zufällig**: seal_file verschlüsselt jede Datei in nummerierten Stücken mit einem eigenen Schlüssel je Objekt (abgeleitet aus dem Speicher-Schlüssel des Profils und dem Objektnamen). Die Namen auf dem Ziel sind zufällig; das Ziel sieht nur Rauschen.

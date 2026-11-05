@@ -1909,7 +1909,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Weiche",
 "title": "Weiche",
-"text": "Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und so weiter, heute 27 Gruppen) und grenzt damit die Werkzeuge ein, die das Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen."
+"text": "Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und so weiter, heute 28 Gruppen) und grenzt damit die Werkzeuge ein, die das Sprachmodell in diesem Zug sieht. Sie arbeitet mit festen Wortlisten; das Modell darf höchstens einmal aus einer festen Liste wählen, wenn keine Regel passt, und auch das kann nur eingrenzen."
 },
 {
 "lang": "de",
@@ -1973,7 +1973,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Alltagsquote",
 "title": "Alltagsquote",
-"text": "- Die Testsätze (228) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
+"text": "- Die Testsätze (232) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
 },
 {
 "lang": "de",
@@ -1997,7 +1997,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Werkzeugnamen",
 "title": "Werkzeugnamen",
-"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (99 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
+"text": "- Überall, wo ein Werkzeug sichtbar wird, steht ein lesbarer Name aus einer Tabelle (100 Werkzeuge), zum Beispiel „Postfach-Überblick“ statt mail_tidy_overview."
 },
 {
 "lang": "de",
@@ -2005,7 +2005,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 27 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 228 eingebaute Testsätze (Schritt 4, Schritt 5) - 216 Alltagssätze zum Messen (Schritt 14) - 66 Sätze der Quellen-Messbank (Schritt 14) - 150 ms höchstens für die Treffer-Probe der Quellen-Weiche (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
+"text": "- 28 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 232 eingebaute Testsätze (Schritt 4, Schritt 5) - 216 Alltagssätze zum Messen (Schritt 14) - 66 Sätze der Quellen-Messbank (Schritt 14) - 150 ms höchstens für die Treffer-Probe der Quellen-Weiche (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
 },
 {
 "lang": "de",
@@ -2221,7 +2221,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 4 Aufrufe pro Runde (Schritt 1) - 3 Gedächtnis-Notizen pro Antwort (Schritt 1) - 13 Werkzeuge gesperrt nach fremdem Text (Schritt 4) - 8 Werkzeuge ohne Internet bei Notaus (Schritt 3) - 99 Werkzeuge mit verständlichem Namen (Schritt 11)"
+"text": "- 4 Aufrufe pro Runde (Schritt 1) - 3 Gedächtnis-Notizen pro Antwort (Schritt 1) - 13 Werkzeuge gesperrt nach fremdem Text (Schritt 4) - 8 Werkzeuge ohne Internet bei Notaus (Schritt 3) - 100 Werkzeuge mit verständlichem Namen (Schritt 11)"
 },
 {
 "lang": "de",
@@ -2419,6 +2419,14 @@
 "lang": "de",
 "src": "architektur",
 "file": "Architektur und Datenfluss",
+"head": "Hörstück aus einer Mappe",
+"title": "Hörstück aus einer Mappe",
+"text": "- hoerstueck.stellen gibt dem Modell nur Stücke der Originale aus den Dokumenten der Mappe auf kurz und ganz, höchstens 16000 Zeichen, im Wechsel aus jedem Dokument; nie Seiten des Wissensbuchs und nie Text der Auswertungen (Modelltext ist nie Quelle für Modelltext). Das Modell liefert nur ein Drehbuch als JSON; hoerstueck.pruefe behält eine Zeile nur nach festen Regeln: Sprecher A, B oder C (mit zwei Stimmen A und B), eine Aussage nur mit angebotener Stelle und wissensbuch.check_sentence gegen sie, eine Überleitung nur ohne Ziffer und aus der festen Wortliste (hoerstueck.ueberleitung_ok), Überleitungen höchstens 0.3 der Zeilen, Länge der Wahl; unter 10 Zeilen entsteht keins. In der ruhigen Kette nach den Auswertungen spricht hoerstueck.zeile je Schritt genau eine Zeile über tonteile.sprich mit Stufe „hinten“ und Vorrang-Schlüssel (common.signed_low), durch vorrang.run: echte Sprache bricht ab, die Zeile kommt wieder. hoerstueck.zusammen setzt die Teile mit Pausen zusammen, ffmpeg schreibt Opus. Höchstens 10 je Profil; ein Hörstück wird nie ein Dokument."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
 "head": "Links als Dokument",
 "title": "Links als Dokument",
 "text": "- doklink.pruefe prüft jede Adresse nach festen Regeln, bevor etwas geholt wird: http oder https, ein Host, keine Zugangsdaten, Port 80 oder 443, keine IP und kein Name des Heimnetzes; höchstens 10 auf einmal und 30 wartend je Profil. doklink.eins holt eine nach der anderen nur über netguard.hole_oeffentlich (Notaus zuerst, öffentlich auch nach jeder Weiterleitung, Größe, Zeit, Inhaltstyp und erste Bytes) und gibt sie an wissen.aufnehmen: dieselben Regeln wie ein Upload, Herkunft „link:“ mit der SHA-256 der Adresse, dieselbe Adresse nur einmal. „Neu abrufen“ nur per Klick (doklink.neu_abrufen): bedingter Abruf mit ETag; 304 oder dieselbe SHA-256 heißt unverändert, sonst liest documents.renew die neuen Bytes in dasselbe Dokument. Der Seiteninhalt ist Text von außen."
@@ -2533,7 +2541,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "50 Mappen pro Profil (Schritt 13) - 100 Einträge je Mappe (Schritt 13) - 24000 Token einer Mappe ans Modell (Standard) (Schritt 13) - 12000 Zeichen der Stellen je Durchgang einer Auswertung (Schritt 13) - 5 Durchgänge eines langen Dokuments höchstens (Schritt 13) - 100 Auswertungen pro Profil und Tag (Standard) (Schritt 13) - 10 eigene Arten (Vorlagen) des Admins höchstens (Schritt 13) - 400 Zeichen eines Auftrags einer Vorlage höchstens (Schritt 13) - 30 Sekunden je Stück einer Aufnahme (Schritt 13) - 1 Sekunden Überlappung vor einem Stück (Schritt 13) - 5 Aufnahmen je Profil, die auf ihre Abschrift warten, höchstens (Schritt 13) - 10 Adressen auf einmal bei Links als Dokument (Schritt 13) - 30 Adressen je Profil, die auf ihren Abruf warten, höchstens (Schritt 13)"
+"text": "50 Mappen pro Profil (Schritt 13) - 100 Einträge je Mappe (Schritt 13) - 24000 Token einer Mappe ans Modell (Standard) (Schritt 13) - 12000 Zeichen der Stellen je Durchgang einer Auswertung (Schritt 13) - 5 Durchgänge eines langen Dokuments höchstens (Schritt 13) - 100 Auswertungen pro Profil und Tag (Standard) (Schritt 13) - 10 eigene Arten (Vorlagen) des Admins höchstens (Schritt 13) - 400 Zeichen eines Auftrags einer Vorlage höchstens (Schritt 13) - 30 Sekunden je Stück einer Aufnahme (Schritt 13) - 1 Sekunden Überlappung vor einem Stück (Schritt 13) - 5 Aufnahmen je Profil, die auf ihre Abschrift warten, höchstens (Schritt 13) - 16000 Zeichen an Stellen, die ein Hörstück dem Modell gibt, höchstens (Schritt 13) - 10 geprüfte Zeilen, ohne die kein Hörstück entsteht (Schritt 13) - 0.3 Anteil der Überleitungen an den Zeilen höchstens (Schritt 13) - 10 Hörstücke je Profil höchstens (Schritt 13) - 10 Adressen auf einmal bei Links als Dokument (Schritt 13) - 30 Adressen je Profil, die auf ihren Abruf warten, höchstens (Schritt 13)"
 },
 {
 "lang": "de",
@@ -2549,7 +2557,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "umente und darunter Auswertungen an: das Blatt Auswertungen im Detail jedes eigenen Dokuments, dazu wie viele Auswertungen am Tag. - Funktionen → Eigene Dokumente und darunter Aufnahmen abschreiben an: Ton- und Videodateien unter Ich → Dokumente, dazu Größe, Länge und Minuten am Tag. - Funktionen → Eigene Dokumente und darunter Links als Dokument an: „Link hinzufügen“ unter Ich → Dokumente, dazu Größe je Seite und Abrufe am Tag. - Funktionen → Eigene Dokumente und darunter Mappen an: die Seite Mappen im Menü, dazu wie viele Token eine Mappe dem Modell höchstens gibt."
+"text": "umente und darunter Auswertungen an: das Blatt Auswertungen im Detail jedes eigenen Dokuments, dazu wie viele Auswertungen am Tag. - Funktionen → Eigene Dokumente und darunter Aufnahmen abschreiben an: Ton- und Videodateien unter Ich → Dokumente, dazu Größe, Länge und Minuten am Tag. - Funktionen → Eigene Dokumente und darunter Links als Dokument an: „Link hinzufügen“ unter Ich → Dokumente, dazu Größe je Seite und Abrufe am Tag. - Funktionen → Eigene Dokumente und darunter Mappen an: die Seite Mappen im Menü, dazu wie viele Token eine Mappe dem Modell höchstens gibt. - Funktionen → Eigene Dokumente → Mappen und darunter Hörstück aus einer Mappe an: der Teil Hörstück in jeder Mappe, dazu wie viele am Tag und die drei Stimmen."
 },
 {
 "lang": "de",
@@ -2605,7 +2613,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_wissen, test_auswertung, test_abschrift, test_doklink, test_ytquelle, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung, test_wissenstempo"
+"text": "Selbsttests: test_wissen, test_auswertung, test_abschrift, test_hoerstueck, test_doklink, test_ytquelle, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung, test_wissenstempo"
 },
 {
 "lang": "de",
@@ -3053,7 +3061,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Satz zum Sprechen: Das Panel schickt jeden Satz einer Antwort mit dem API-Schlüssel und der Stufe des Profils an den TTS-Dienst. Andere Programme dürfen das mit dem API-Schlüssel auch. 2. Schlüssel und Größe in Ordnung?: BodyLimit lehnt zu große Anfragen und solche ohne den richtigen Schlüssel ab, bevor etwas gelesen wird. 3. Text gültig?: Der Text darf nicht leer sein und höchstens 20000 Zeichen haben. Eine Vorlage-Stimme nimmt check_reference nur als eingebettete data:audio-Adresse an, nie als Link: die Engine würde einen Link sonst selbst aus dem Heimnetz holen. 4. Engine bereit?: Eine VoiceDesign-Anfrage geht an die zweite Engine, wenn sie eingeschaltet ist; alles andere an die Haupt-Engine. engine_status fragt deren /health und nennt sonst den Grund. 5. Markdown weg, Geheimnisse verdeckt: speech_markdown nimmt die Zeichen der Formatierung heraus, dann ersetzt hide_secrets Passwörter, Codewörter, Einmal-Codes und Schlüssel durch „nur schriftlich sichtbar“. Das läuft auf jeder Anfrage, auch wenn „Text bereinigen“ aus ist; die geschriebene Antwort behält den Wert. 6. Text bereinigen: clean_text nimmt Emojis, „haha“, *lacht*, Codeblöcke und Links heraus, beruhigt auf Wunsch Aus"
+"text": "1. Satz zum Sprechen: Das Panel schickt jeden Satz einer Antwort mit dem API-Schlüssel und der Stufe des Profils an den TTS-Dienst. Andere Programme dürfen das mit dem API-Schlüssel auch. Teile, die das Panel selbst sprechen lässt (Vorlesen im Dungeon, Zeilen eines Hörstücks), gehen über den einen Helfer tonteile.sprich; ein Hörstück im Hintergrund mit der Stufe hinten und dem Schlüssel, so zählt es nie als Sprache (common.signed_low) und wartet hinter jeder Person. 2. Schlüssel und Größe in Ordnung?: BodyLimit lehnt zu große Anfragen und solche ohne den richtigen Schlüssel ab, bevor etwas gelesen wird. 3. Text gültig?: Der Text darf nicht leer sein und höchstens 20000 Zeichen haben. Eine Vorlage-Stimme nimmt check_reference nur als eingebettete data:audio-Adresse an, nie als Link: die Engine würde einen Link sonst selbst aus dem Heimnetz holen. 4. Engine bereit?: Eine VoiceDesign-Anfrage geht an die zweite Engine, wenn sie eingeschaltet ist; alles andere an die Haupt-Engine. engine_status fragt deren /health und nennt sonst den Grund. 5. Markdown weg, Geheimnisse verdeckt: speech_markdown nimmt die Zeichen der Formatierung heraus, dann ersetzt hide_secrets Passwörter, Codewörter, "
 },
 {
 "lang": "de",
@@ -3061,7 +3069,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "rufe und setzt ans Zeilenende einen Punkt, damit die Stimme absetzt. Bleibt nichts übrig, kommt keine Anfrage an die Engine. 7. Sprache, Aussprache, Zahlen: Steht die Sprache auf Auto, rät guess_language an häufigen Wörtern Deutsch oder Englisch, damit ein einzelnes englisches Wort nicht den Ton der ganzen Antwort ändert. Dann gilt die eigene Aussprache-Liste, danach schreibt speak_abbreviations Abkürzungen aus („z. B.“, „ca.“, „€/Monat“) und speak_numbers Datum, Uhrzeit, Geld, Zahlen und Einheiten (km/h, kWh, kg, GB …). 8. Stimme wählen: Temperatur, top_p und ein fester Seed aus den Einstellungen halten die Stimme von Satz zu Satz gleich. Ein Base-Modell spricht mit einer geklonten Stimme aus voices/ (apply_clone); ein unbekannter Name fällt auf die Standardstimme zurück. Mit „Referenz der eigenen Stimme kürzen“ (tts.ref_max_s) nimmt es statt einer langen Aufnahme ein Stück davon: kurzref.cut_at schneidet einmal an der leisesten Stelle vor der Grenze, die Spracherkennung schreibt das Stück auf, kurzref.keep_words behält davon die Wörter des eigenen Textes (mindestens 70 % gleich, sonst bleibt die ganze Aufnahme). Bis das Stück fertig ist, gilt die ganze Aufnahme. 9. Gestreamt mit "
+"text": "Einmal-Codes und Schlüssel durch „nur schriftlich sichtbar“. Das läuft auf jeder Anfrage, auch wenn „Text bereinigen“ aus ist; die geschriebene Antwort behält den Wert. 6. Text bereinigen: clean_text nimmt Emojis, „haha“, *lacht*, Codeblöcke und Links heraus, beruhigt auf Wunsch Ausrufe und setzt ans Zeilenende einen Punkt, damit die Stimme absetzt. Bleibt nichts übrig, kommt keine Anfrage an die Engine. 7. Sprache, Aussprache, Zahlen: Steht die Sprache auf Auto, rät guess_language an häufigen Wörtern Deutsch oder Englisch, damit ein einzelnes englisches Wort nicht den Ton der ganzen Antwort ändert. Dann gilt die eigene Aussprache-Liste, danach schreibt speak_abbreviations Abkürzungen aus („z. B.“, „ca.“, „€/Monat“) und speak_numbers Datum, Uhrzeit, Geld, Zahlen und Einheiten (km/h, kWh, kg, GB …). 8. Stimme wählen: Temperatur, top_p und ein fester Seed aus den Einstellungen halten die Stimme von Satz zu Satz gleich. Ein Base-Modell spricht mit einer geklonten Stimme aus voices/ (apply_clone); ein unbekannter Name fällt auf die Standardstimme zurück. Mit „Referenz der eigenen Stimme kürzen“ (tts.ref_max_s) nimmt es statt einer langen Aufnahme ein Stück davon: kurzref.cut_at schneid"
 },
 {
 "lang": "de",
@@ -3069,7 +3077,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "anderem Tempo?: vllm-omni nimmt beim Streamen kein Tempo an. Dann streckt tempo.Stretcher den Ton Stück für Stück selbst (WSOLA, die Tonhöhe bleibt). 10. Warten nach Vorrang: PrioGate lässt so viele Sätze durch, wie die Engine gleichzeitig nimmt (engine_max_seqs); die anderen warten nach Stufe, dann nach Ankunft. 11. Engine spricht: Die Engine erzeugt den Ton. Gestreamt kommt er als Stücke zurück; das erste Stück ist absichtlich klein (initial_chunk_frames), damit der Ton schnell beginnt, auch wenn mehrere Anfragen laufen. „Mehrere Stimmen gleichzeitig“ (tts.engine_decode_batch) bündelt im Decoder bis zu 2 oder 4 Stimmen mit CUDA-Graphen, „Gleichen Anfang merken“ (tts.engine_prefix_cache) lässt die Engine den gleichen Anfang der Sätze einer Stimme wiederverwenden; beide stehen auf aus (Standard von vllm-omni). 12. Ton zurück: Der Proxy reicht den Ton unverändert weiter und zählt nur Dauer, Länge und Fehler für das Monitoring, nie den Text."
+"text": "et einmal an der leisesten Stelle vor der Grenze, die Spracherkennung schreibt das Stück auf, kurzref.keep_words behält davon die Wörter des eigenen Textes (mindestens 70 % gleich, sonst bleibt die ganze Aufnahme). Bis das Stück fertig ist, gilt die ganze Aufnahme. 9. Gestreamt mit anderem Tempo?: vllm-omni nimmt beim Streamen kein Tempo an. Dann streckt tempo.Stretcher den Ton Stück für Stück selbst (WSOLA, die Tonhöhe bleibt). 10. Warten nach Vorrang: PrioGate lässt so viele Sätze durch, wie die Engine gleichzeitig nimmt (engine_max_seqs); die anderen warten nach Stufe, dann nach Ankunft. 11. Engine spricht: Die Engine erzeugt den Ton. Gestreamt kommt er als Stücke zurück; das erste Stück ist absichtlich klein (initial_chunk_frames), damit der Ton schnell beginnt, auch wenn mehrere Anfragen laufen. „Mehrere Stimmen gleichzeitig“ (tts.engine_decode_batch) bündelt im Decoder bis zu 2 oder 4 Stimmen mit CUDA-Graphen, „Gleichen Anfang merken“ (tts.engine_prefix_cache) lässt die Engine den gleichen Anfang der Sätze einer Stimme wiederverwenden; beide stehen auf aus (Standard von vllm-omni). 12. Ton zurück: Der Proxy reicht den Ton unverändert weiter und zählt nur Dauer, Länge und Fehl"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "er für das Monitoring, nie den Text."
 },
 {
 "lang": "de",
@@ -3109,7 +3125,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/tts_proxy.py speech: der Weg eines Satzes durch den Proxy (Schritt 1) - app/tts_proxy.py check_reference: Vorlage nur eingebettet (Schritt 8) - app/tts_proxy.py engine_status: bereit, lädt, Fehler oder aus (Schritt 4) - app/tts_proxy.py apply_clone: geklonte Stimme aus voices/ (Schritt 8) - app/textnorm.py speech_markdown: Markdown-Zeichen weg (Schritt 5) - app/textnorm.py hide_secrets: Geheimnisse nie sprechen (Schritt 5) - app/textnorm.py clean_text: Emojis, Lachen, Links, Code (Schritt 6) - app/textnorm.py guess_language: Deutsch oder Englisch raten (Schritt 7) - app/textnorm.py speak_numbers: Zahlen ausschreiben (Schritt 7) - app/tempo.py Stretcher: Tempo beim Streamen (Schritt 9) - app/tts_proxy.py shorten: Referenz einmal kürzen (Schritt 8) - app/kurzref.py cut_at: leiseste Stelle vor der Grenze (Schritt 8) - app/kurzref.py keep_words: Wörter des eigenen Textes behalten (Schritt 8) - app/common.py PrioGate: Warten nach Vorrang (Schritt 10)"
+"text": "- app/tts_proxy.py speech: der Weg eines Satzes durch den Proxy (Schritt 1) - app/panel/tonteile.py sprich: der eine Helfer, mit dem das Panel selbst einen Teil sprechen lässt (Schritt 1) - app/tts_proxy.py check_reference: Vorlage nur eingebettet (Schritt 8) - app/tts_proxy.py engine_status: bereit, lädt, Fehler oder aus (Schritt 4) - app/tts_proxy.py apply_clone: geklonte Stimme aus voices/ (Schritt 8) - app/textnorm.py speech_markdown: Markdown-Zeichen weg (Schritt 5) - app/textnorm.py hide_secrets: Geheimnisse nie sprechen (Schritt 5) - app/textnorm.py clean_text: Emojis, Lachen, Links, Code (Schritt 6) - app/textnorm.py guess_language: Deutsch oder Englisch raten (Schritt 7) - app/textnorm.py speak_numbers: Zahlen ausschreiben (Schritt 7) - app/tempo.py Stretcher: Tempo beim Streamen (Schritt 9) - app/tts_proxy.py shorten: Referenz einmal kürzen (Schritt 8) - app/kurzref.py cut_at: leiseste Stelle vor der Grenze (Schritt 8) - app/kurzref.py keep_words: Wörter des eigenen Textes behalten (Schritt 8) - app/common.py PrioGate: Warten nach Vorrang (Schritt 10)"
 },
 {
 "lang": "de",
@@ -3621,7 +3637,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ie versiegelte Datei?: Diese Dateien liest und schreibt nur profiles.read_own und write_own. Öffnet eine nicht (fremder Schlüssel, anderes Profil, auf der Platte geändert), wird sie einmal beiseitegelegt (Name.unlesbar), nie überschrieben, und das Profil beginnt leer. Der Admin sieht einen Hinweis; nach der Umzugs-Sicherung holt „Wieder einlesen“ unter Ich → Gedächtnis sie zurück. 6. Jede Datei einsortiert: Jeder Dateiname hat genau eine Zeile im Datei-Register dateien.py: mit einem Bereich (dateien.AREAS, darf auf den eigenen Speicher) oder mit seiner Art (dateien.LOCAL, bleibt auf dem Spark: Schlüssel, Zugänge, Einstellungen, Stimmabdruck, Warteschlangen). speicher.py nimmt beide Listen von dort. test_technik prüft jeden Namen, den der Code schreibt. Dasselbe Register sagt mit export=, was „Alle meine Daten herunterladen“ (meinedaten.build, Ich → Sicherheit → Meine Daten) in die ZIP legt (33 Einträge, Versiegeltes geöffnet über read_own) und warum der Rest draußen bleibt. 7. Eigener Speicher eingerichtet?: Nur wenn der Admin den eigenen Speicher freigegeben hat und das Profil ein Ziel mit mindestens einem Bereich hat (höchstens 2 Ziele). 8. Nur Geändertes der gewählten Bereiche: "
+"text": "ie versiegelte Datei?: Diese Dateien liest und schreibt nur profiles.read_own und write_own. Öffnet eine nicht (fremder Schlüssel, anderes Profil, auf der Platte geändert), wird sie einmal beiseitegelegt (Name.unlesbar), nie überschrieben, und das Profil beginnt leer. Der Admin sieht einen Hinweis; nach der Umzugs-Sicherung holt „Wieder einlesen“ unter Ich → Gedächtnis sie zurück. 6. Jede Datei einsortiert: Jeder Dateiname hat genau eine Zeile im Datei-Register dateien.py: mit einem Bereich (dateien.AREAS, darf auf den eigenen Speicher) oder mit seiner Art (dateien.LOCAL, bleibt auf dem Spark: Schlüssel, Zugänge, Einstellungen, Stimmabdruck, Warteschlangen). speicher.py nimmt beide Listen von dort. test_technik prüft jeden Namen, den der Code schreibt. Dasselbe Register sagt mit export=, was „Alle meine Daten herunterladen“ (meinedaten.build, Ich → Sicherheit → Meine Daten) in die ZIP legt (34 Einträge, Versiegeltes geöffnet über read_own) und warum der Rest draußen bleibt. 7. Eigener Speicher eingerichtet?: Nur wenn der Admin den eigenen Speicher freigegeben hat und das Profil ein Ziel mit mindestens einem Bereich hat (höchstens 2 Ziele). 8. Nur Geändertes der gewählten Bereiche: "
 },
 {
 "lang": "de",
@@ -5774,6 +5790,46 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": " Minuten mit Zeitmarken abgeschrieben (Stufe 3a). Titel und Kanal sind nur Daten: ohne Steuer- und Markup-Zeichen, gekürzt, als Name „Titel · Kanal.m4a“ (ytquelle.name_of); Herkunft yt:<Nummer>, jedes Video einmal; „Neu abrufen“ gibt es für die Abschrift nicht. Fehlertext von yt-dlp kommt nie ins Log, er wird nur mit festen Mustern zu einem Wort (video, live, laenge, format, groesse, host, zeit, netz). Journal ytquelle: … (Bereich wissen), Live: Kasten Links mit „YouTube: heute n Tonspuren, kB, abgelehnt, fremder Host gesperrt“ oder „yt-dlp fehlt“. Weiche: Abschrift-Wörter mit einer Adresse („Mach eine Abschrift von https://youtu.be/…“) gehen wie „Speicher … als Dokument“ zu Links als Dokument. Ohne JavaScript-Laufzeit (bewusst nicht installiert) liefert YouTube manchen Videos keine Tonspur; dann steht „keine Tonspur zum Holen“ da. Selbsttest test_ytquelle (ein anderer Host und eine private Adresse am Proxy abgelehnt, Notaus, Schlüssel, Methode, Port, Byte-Grenze, feste Optionen, Version und Hash, ohne yt-dlp die Meldung mit Weg, Live und zu lang vor dem Download abgelehnt, kein Link aus fremdem Text, Logs ohne Adresse und Titel)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Hörstück aus einer Mappe, Push 5a (V01.1.343, Plan *open-notebook* Stufe 5, Dominik: „drei feste Stimmen, die der Admin wählt“): Admin-Schalter *Funktionen → Eigene Dokumente → Mappen → Hörstück aus einer Mappe* (chat.hoerstueck, ab Werk aus; baut auf *Mappen*; kein Profilschalter, der Admin sperrt einzelne Profile, Gäste nie), darunter *Hörstücke pro Tag und Profil* (chat.hoerstueck_day, 1 bis 10, Standard 3) und *Die drei Stimmen* (chat.hoerstueck_stimmen, je Rolle A Moderation, B Fachstimme, C Nachfrage eine Stimme der Sprachausgabe oder - für die Standardstimme; ohne Wahl spricht die Standardstimme, mit VoiceDesign mit einer festen Beschreibung je Rolle, hoerstueck.KLANG). In einer Mappe steht unten der Teil *Hörstück*: Länge 5, 10 oder 20 Minuten, 2 oder 3 Stimmen, „Erstellen“ (POST /api/profile/mappen/{id}/hoerstuecke, neues Modul hoerstueck.py, Anmeldung, eigenes Profil, CSRF, 8 KB, Rate-Limit „hoerstueck“). Was das Modell bekommt: nur Dokumente der Mappe auf den Stufen kurz und ganz, nie Seiten des Wissensbuchs (das ist Modelltext), als nummerierte Stellen [S1] … aus den Originalen, höchstens 16 000 Zeichen, im Wechsel aus jedem Dokument; Stücke, auf denen die fertige Kurzf"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "assung und die Kernaussagen der Auswertungen stehen, kommen zuerst (nur deren Stelle, nie ihr Text). Alles als Text von außen (chat.wrap_outside). Was das Modell liefert: nur ein Drehbuch als JSON {\"titel\", \"zeilen\": [{\"sprecher\", \"text\", \"quelle\"}]}. Feste Regeln (hoerstueck.pruefe): Sprecher nur aus SPRECHER (A, B, C; mit 2 Stimmen nur A und B), die Rollen und ihre Namen kommen vom Panel; eine Zeile mit Quelle braucht eine angebotene Stelle und besteht wissensbuch.check_sentence gegen sie (Länge, keine Links, kein Markup, keine Befehlswörter, jede Zahl steht in der Stelle), höchstens 300 Zeichen; eine Überleitung ohne Quelle hat höchstens 120 Zeichen, keine Ziffer und nur Wörter der festen Liste hoerstueck.WORTE (so nie ein Name oder eine Zahl), Überleitungen höchstens 30 % der Zeilen und nie die letzte; doppelte Zeilen gehen; höchstens 120 Zeilen und die Zeichen der Länge (4 500, 9 000, 18 000), gekürzt am Zeilenende; weniger als 10 gültige Zeilen: „Daraus lässt sich kein Hörstück machen“. Eine feste Einleitung („Ein Hörstück des Spark aus deiner Mappe … Es kann Fehler enthalten; die Quellen stehen im Panel.“) und ein fester Schluss kommen vom Panel. Was wegfällt, wird je Grund "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "gezählt (Sprecher, Stelle, Zahl, Form, Überleitung, Anteil, Länge, doppelt), nie als Text gezeigt. Sprechen: hoerstueck.due_once ist ein Glied der ruhigen Kette wissen.KETTE nach den Auswertungen: erst das Drehbuch (ein Modellaufruf über vorrang.run(\"Hörstück\")), dann je Schritt genau eine Zeile über den neuen gemeinsamen Helfer tonteile.sprich mit der Stufe „hinten“ und dem Vorrang-Schlüssel (common.signed_low: zählt nie als Sprache, wartet hinter jeder Person); echte Sprache bricht die Zeile ab, sie kommt in der nächsten Pause noch einmal. Immer nur eine Anfrage zugleich (der Platz von vorrang; die Sprachausgabe ist bei mehreren gleichzeitigen Anfragen schwach). Fehlt die Sprachausgabe (Fehler 5xx, keine Verbindung oder der Dienst-Wächter sieht sie weg), wartet es 5 Minuten, ohne eine Zeile zu verlieren. Die Zeilen liegen als WAV in users/<id>/hoerstuecke/<id>/ (Ordner 0700, Dateien 0600), am Ende schreibt ffmpeg (ohne Shell, -protocol_whitelist file,pipe) eine Opus-Datei mit 48 kbit/s und 300 ms Pause zwischen zwei Stimmen, die Teile gehen. Sekunden der Sprachausgabe zählen im Verbrauch als „Hörstück“. dungeon.ask_tts ruft jetzt denselben Helfer (tonteile.sprich, im Vordergrund "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ohne Stufe, gleiche Anfrage und gleiche Fehler wie vorher). Ansehen: die Liste mit Stand („wartet“, „spricht · 34 von 61 Zeilen“, „fertig“, „zu wenig“), Fortschrittsbalken und „Die Mappe hat sich seitdem geändert“ (Fingerabdruck der Dokumente, neu nur per Klick); ein fertiges mit Player (GET /api/profile/hoerstueck/{id}/ton, Range, nur das eigene Profil), Herunterladen, Löschen und dem Drehbuch: jede Zeile mit Stimme und bei einer Aussage ein Chip mit Dokument, Seite und Überschrift, der das Dokument öffnet; Einleitung und Schluss als „fest“, Überleitungen als „Überleitung“. Grenzen: höchstens 10 gespeicherte je Profil, chat.hoerstueck_day neue am Tag, je Stück höchstens 20 Minuten. Nie eine Quelle: ein Hörstück wird nie ein Dokument, kommt nie ins Wissensbuch, in die Suche, nach Finden oder ins Gedächtnis; eine gelöschte Mappe nimmt ihre Hörstücke mit, nie ein Dokument; Löschen geht auch, wenn der Admin es gesperrt hat, und unter Ich mit „Daten löschen“ bei den Mappen, mit denen sie gehen. Werkzeug hoerstueck_machen (Weiche-Gruppe „Hörstück“: hörstück, podcast, zum anhören, audio overview): stellt nur ein Hörstück mit 2 Stimmen ein, die Mappe nur, wenn ihr Name in der eigenen Nach"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "richt steht; nach Text von außen gesperrt (ändernd), nie über MCP. Live: Kasten *Hörstück* (Hörstücke, wartend, sprechend, offene Zeilen, heute neu, Drehbücher, gesprochene Zeilen, verworfene Zeilen, Abbrüche, fehlende Sprachausgabe; nur Zahlen). Logs hoerstueck: drehbuch | 61 zeilen 7 verworfen …, hoerstueck: zeile | 12 von 61 …, hoerstueck: fertig | 612 s … (Bereich Wissen), nur feste Wörter, Zahlen und profiles.log_name. Apps, Telegram und die Mitteilung „Hörstück fertig“ folgen mit Push 5b; bis dahin zeigt die Android-App den Teil in der Panel-Ansicht der Mappe."
 },
 {
 "lang": "de",
@@ -14277,6 +14333,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Meine Daten",
 "title": "Meine Daten",
+"text": "- Hörstück aus einer Mappe (Funktionen → Meine Daten → „Hörstück aus einer Mappe“; baut auf „Mappen“; Mappen → Einstellungen): Aus einer Mappe ein Gespräch zum Anhören: unter Mappen → eine Mappe → Hörstück wählst du die Länge (5, 10 oder 20 Minuten) und zwei oder drei Stimmen (A Moderation, B Fachstimme, C Nachfrage) und tippst „Erstellen“."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
 "text": "- Finden in allen Daten (Funktionen → Meine Daten → „Finden in allen Daten“; Finden → Einstellungen): Ein Suchindex über deine eigenen Sachen: Dokumente, Wissensordner auf dem NAS, reMarkable und Wissensbuch, mit „Mails und Anhänge finden“ auch alle Mails, mit den weiteren Unterschaltern Termine, Kontakte, frühere Gespräche, Listen, Erin …"
 },
 {
@@ -20213,7 +20277,7 @@
 "file": "Architecture and data flow",
 "head": "Switch",
 "title": "Switch",
-"text": "The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 27 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow."
+"text": "The switch puts the own latest message into a group (smart home, calendar, weather, mail and so on, today 28 groups) and so narrows the tools the language model sees in this turn. It works with fixed word lists; the model may at most pick once from a fixed list when no rule fits, and that too can only narrow."
 },
 {
 "lang": "en",
@@ -20277,7 +20341,7 @@
 "file": "Architecture and data flow",
 "head": "Everyday score",
 "title": "Everyday score",
-"text": "- The test sentences (228) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
+"text": "- The test sentences (232) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
 },
 {
 "lang": "en",
@@ -20301,7 +20365,7 @@
 "file": "Architecture and data flow",
 "head": "Tool names",
 "title": "Tool names",
-"text": "- Wherever a tool shows, a readable name comes from one table (99 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
+"text": "- Wherever a tool shows, a readable name comes from one table (100 tools), for example „Mailbox overview“ instead of mail_tidy_overview."
 },
 {
 "lang": "en",
@@ -20309,7 +20373,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 27 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 228 built-in test sentences (step 4, step 5) - 216 everyday sentences for measuring (step 14) - 66 sentences of the source bench (step 14) - 150 ms at most for the source switch's hit probe (step 14) - 20 versions for undo (step 4)"
+"text": "- 28 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 232 built-in test sentences (step 4, step 5) - 216 everyday sentences for measuring (step 14) - 66 sentences of the source bench (step 14) - 150 ms at most for the source switch's hit probe (step 14) - 20 versions for undo (step 4)"
 },
 {
 "lang": "en",
@@ -20525,7 +20589,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 4 calls per round (step 1) - 3 memory notes per answer (step 1) - 13 tools locked after outside text (step 4) - 8 tools without internet with the kill switch (step 3) - 99 tools with a readable name (step 11)"
+"text": "- 4 calls per round (step 1) - 3 memory notes per answer (step 1) - 13 tools locked after outside text (step 4) - 8 tools without internet with the kill switch (step 3) - 100 tools with a readable name (step 11)"
 },
 {
 "lang": "en",
@@ -20715,6 +20779,14 @@
 "lang": "en",
 "src": "architecture",
 "file": "Architecture and data flow",
+"head": "Audio overview of a collection",
+"title": "Audio overview of a collection",
+"text": "- hoerstueck.stellen gives the model only pieces of the originals from the collection's documents on short and whole, at most 16000 characters, in turns from each document; never knowledge book pages and never analysis text (model text is never a source of model text). The model only delivers a script as JSON; hoerstueck.pruefe keeps a line only by fixed rules: speaker A, B or C (with two voices A and B), a statement only with an offered place and wissensbuch.check_sentence against it, a transition only without a digit and from the fixed word list (hoerstueck.ueberleitung_ok), transitions at most 0.3 of the lines, the chosen length; below 10 lines none is made. In the quiet chain after the analyses hoerstueck.zeile speaks exactly one line per step through tonteile.sprich with the stage „last“ and the priority key (common.signed_low), through vorrang.run: real speech cancels, the line comes again. hoerstueck.zusammen puts the parts together with pauses, ffmpeg writes Opus. At most 10 per profile; an audio overview never becomes a document."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
 "head": "Links as documents",
 "title": "Links as documents",
 "text": "- doklink.pruefe checks every address by fixed rules before anything is fetched: http or https, a host, no login data, port 80 or 443, no IP or name of the home network; at most 10 at once and 30 waiting per profile. doklink.eins fetches one after another only through netguard.hole_oeffentlich (kill switch first, public also after every redirect, size, time, content type and first bytes) and hands it to wissen.aufnehmen: the same rules as an upload, origin „link:“ with the SHA-256 of the address, the same address only once. „Fetch again“ only on a click (doklink.neu_abrufen): a conditional request with ETag; 304 or the same SHA-256 means unchanged, else documents.renew reads the new bytes into the same document. The page content is outside text."
@@ -20829,7 +20901,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "a long document at most (step 13) - 100 analyses per profile and day (default) (step 13) - 10 own kinds (templates) of the admin at most (step 13) - 400 characters of a template's task at most (step 13) - 30 seconds per piece of a recording (step 13) - 1 seconds of overlap in front of a piece (step 13) - 5 recordings per profile waiting for their transcription at most (step 13) - 10 addresses at once for links as documents (step 13) - 30 addresses per profile waiting to be fetched at most (step 13)"
+"text": "a long document at most (step 13) - 100 analyses per profile and day (default) (step 13) - 10 own kinds (templates) of the admin at most (step 13) - 400 characters of a template's task at most (step 13) - 30 seconds per piece of a recording (step 13) - 1 seconds of overlap in front of a piece (step 13) - 5 recordings per profile waiting for their transcription at most (step 13) - 16000 characters of places an audio overview gives the model at most (step 13) - 10 checked lines without which no audio overview is made (step 13) - 0.3 share of transitions among the lines at most (step 13) - 10 audio overviews per profile at most (step 13) - 10 addresses at once for links as documents (step 13) - 30 addresses per profile waiting to be fetched at most (step 13)"
 },
 {
 "lang": "en",
@@ -20845,7 +20917,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "document, with how many analyses a day. - Features → Own documents and below it Transcribe recordings on: audio and video files under Me → Documents, with size, length and minutes a day. - Features → Own documents and below it Links as documents on: „Add link“ under Me → Documents, with size per page and fetches a day. - Features → Own documents and below it Collections on: the page Collections in the menu, with how many tokens a collection gives the model at most."
+"text": "document, with how many analyses a day. - Features → Own documents and below it Transcribe recordings on: audio and video files under Me → Documents, with size, length and minutes a day. - Features → Own documents and below it Links as documents on: „Add link“ under Me → Documents, with size per page and fetches a day. - Features → Own documents and below it Collections on: the page Collections in the menu, with how many tokens a collection gives the model at most. - Features → Own documents → Collections and below it Audio overview on: the part Audio overview in every collection, with how many a day and the three voices."
 },
 {
 "lang": "en",
@@ -20901,7 +20973,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_wissen, test_auswertung, test_abschrift, test_doklink, test_ytquelle, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung, test_wissenstempo"
+"text": "Self-tests: test_wissen, test_auswertung, test_abschrift, test_hoerstueck, test_doklink, test_ytquelle, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung, test_wissenstempo"
 },
 {
 "lang": "en",
@@ -21341,7 +21413,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A sentence to speak: The panel sends every sentence of an answer with the API key and the profile's stage to the TTS service. Other programs may do so too with the API key. 2. Key and size fine?: BodyLimit refuses requests that are too large or lack the right key before anything is read. 3. Text valid?: The text must not be empty and may have at most 20000 characters. check_reference takes a reference voice only as an embedded data:audio address, never as a link: the engine would otherwise fetch a link itself from the home network. 4. Engine ready?: A VoiceDesign request goes to the second engine when it is on; everything else to the main engine. engine_status asks its /health and otherwise names the reason. 5. Markdown off, secrets hidden: speech_markdown takes out the formatting signs, then hide_secrets replaces passwords, code words, one-time codes and keys with „shown in writing only“. This runs on every request, also when „Clean text“ is off; the written answer keeps the value. 6. Clean the text: clean_text takes out emojis, „haha“, *laughs*, code blocks and links, calms exclamations if wanted and puts a full stop at the end of a line so the voice settles. If nothing is lef"
+"text": "1. A sentence to speak: The panel sends every sentence of an answer with the API key and the profile's stage to the TTS service. Other programs may do so too with the API key. Parts the panel has spoken itself (reading aloud in the Dungeon, lines of an audio overview) go through the one helper tonteile.sprich; an audio overview in the background with the stage last and the key, so it never counts as speech (common.signed_low) and waits behind every person. 2. Key and size fine?: BodyLimit refuses requests that are too large or lack the right key before anything is read. 3. Text valid?: The text must not be empty and may have at most 20000 characters. check_reference takes a reference voice only as an embedded data:audio address, never as a link: the engine would otherwise fetch a link itself from the home network. 4. Engine ready?: A VoiceDesign request goes to the second engine when it is on; everything else to the main engine. engine_status asks its /health and otherwise names the reason. 5. Markdown off, secrets hidden: speech_markdown takes out the formatting signs, then hide_secrets replaces passwords, code words, one-time codes and keys with „shown in writing only“. This runs"
 },
 {
 "lang": "en",
@@ -21349,7 +21421,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "t, no request goes to the engine. 7. Language, pronunciation, numbers: When the language is Auto, guess_language guesses German or English from frequent words, so a single English word does not change the tone of the whole answer. Then the own pronunciation list applies, after that speak_abbreviations writes out abbreviations („z. B.“, „ca.“, „€/Monat“) and speak_numbers date, time, money, numbers and units (km/h, kWh, kg, GB …). 8. Pick the voice: Temperature, top_p and a fixed seed from the settings keep the voice the same from sentence to sentence. A Base model speaks with a cloned voice from voices/ (apply_clone); an unknown name falls back to the default voice. With „Shorten the reference of your own voice“ (tts.ref_max_s) it takes a piece of a long recording instead: kurzref.cut_at cuts once at the quietest point before the limit, speech recognition writes the piece down, kurzref.keep_words keeps the words of the own text (at least 70 % alike, else the whole recording stays). Until the piece is ready, the whole recording applies. 9. Streamed at another tempo?: vllm-omni takes no tempo when streaming. Then tempo.Stretcher stretches the sound piece by piece itself (WSOLA, the p"
+"text": " on every request, also when „Clean text“ is off; the written answer keeps the value. 6. Clean the text: clean_text takes out emojis, „haha“, *laughs*, code blocks and links, calms exclamations if wanted and puts a full stop at the end of a line so the voice settles. If nothing is left, no request goes to the engine. 7. Language, pronunciation, numbers: When the language is Auto, guess_language guesses German or English from frequent words, so a single English word does not change the tone of the whole answer. Then the own pronunciation list applies, after that speak_abbreviations writes out abbreviations („z. B.“, „ca.“, „€/Monat“) and speak_numbers date, time, money, numbers and units (km/h, kWh, kg, GB …). 8. Pick the voice: Temperature, top_p and a fixed seed from the settings keep the voice the same from sentence to sentence. A Base model speaks with a cloned voice from voices/ (apply_clone); an unknown name falls back to the default voice. With „Shorten the reference of your own voice“ (tts.ref_max_s) it takes a piece of a long recording instead: kurzref.cut_at cuts once at the quietest point before the limit, speech recognition writes the piece down, kurzref.keep_words keeps"
 },
 {
 "lang": "en",
@@ -21357,7 +21429,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "itch stays). 10. Wait by priority: PrioGate lets as many sentences through as the engine takes at once (engine_max_seqs); the others wait by stage, then by arrival. 11. The engine speaks: The engine makes the sound. Streamed it comes back in pieces; the first piece is small on purpose (initial_chunk_frames) so the sound starts fast, also when several requests run. „Several voices at once“ (tts.engine_decode_batch) batches up to 2 or 4 voices in the decoder with CUDA graphs, „Remember the same beginning“ (tts.engine_prefix_cache) lets the engine reuse the same beginning of a voice's sentences; both are off (vllm-omni's default). 12. Sound back: The proxy passes the sound on unchanged and counts only time, length and errors for monitoring, never the text."
+"text": " the words of the own text (at least 70 % alike, else the whole recording stays). Until the piece is ready, the whole recording applies. 9. Streamed at another tempo?: vllm-omni takes no tempo when streaming. Then tempo.Stretcher stretches the sound piece by piece itself (WSOLA, the pitch stays). 10. Wait by priority: PrioGate lets as many sentences through as the engine takes at once (engine_max_seqs); the others wait by stage, then by arrival. 11. The engine speaks: The engine makes the sound. Streamed it comes back in pieces; the first piece is small on purpose (initial_chunk_frames) so the sound starts fast, also when several requests run. „Several voices at once“ (tts.engine_decode_batch) batches up to 2 or 4 voices in the decoder with CUDA graphs, „Remember the same beginning“ (tts.engine_prefix_cache) lets the engine reuse the same beginning of a voice's sentences; both are off (vllm-omni's default). 12. Sound back: The proxy passes the sound on unchanged and counts only time, length and errors for monitoring, never the text."
 },
 {
 "lang": "en",
@@ -21397,7 +21469,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/tts_proxy.py speech: the way of a sentence through the proxy (step 1) - app/tts_proxy.py check_reference: reference only embedded (step 8) - app/tts_proxy.py engine_status: ready, loading, error or off (step 4) - app/tts_proxy.py apply_clone: cloned voice from voices/ (step 8) - app/textnorm.py speech_markdown: markdown signs off (step 5) - app/textnorm.py hide_secrets: never speak secrets (step 5) - app/textnorm.py clean_text: emojis, laughter, links, code (step 6) - app/textnorm.py guess_language: guess German or English (step 7) - app/textnorm.py speak_numbers: write out numbers (step 7) - app/tempo.py Stretcher: tempo while streaming (step 9) - app/tts_proxy.py shorten: shorten the reference once (step 8) - app/kurzref.py cut_at: quietest point before the limit (step 8) - app/kurzref.py keep_words: keep the words of the own text (step 8) - app/common.py PrioGate: waiting by priority (step 10)"
+"text": "- app/tts_proxy.py speech: the way of a sentence through the proxy (step 1) - app/panel/tonteile.py sprich: the one helper the panel itself has a part spoken with (step 1) - app/tts_proxy.py check_reference: reference only embedded (step 8) - app/tts_proxy.py engine_status: ready, loading, error or off (step 4) - app/tts_proxy.py apply_clone: cloned voice from voices/ (step 8) - app/textnorm.py speech_markdown: markdown signs off (step 5) - app/textnorm.py hide_secrets: never speak secrets (step 5) - app/textnorm.py clean_text: emojis, laughter, links, code (step 6) - app/textnorm.py guess_language: guess German or English (step 7) - app/textnorm.py speak_numbers: write out numbers (step 7) - app/tempo.py Stretcher: tempo while streaming (step 9) - app/tts_proxy.py shorten: shorten the reference once (step 8) - app/kurzref.py cut_at: quietest point before the limit (step 8) - app/kurzref.py keep_words: keep the words of the own text (step 8) - app/common.py PrioGate: waiting by priority (step 10)"
 },
 {
 "lang": "en",
@@ -21893,7 +21965,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "nother key, another profile, changed on the disk), it is set aside once (name.unlesbar), never overwritten, and the profile starts empty. The admin sees a hint; after the move backup „Read in again“ under Me → Memory brings it back. 6. Every file sorted: Every file name has exactly one line in the file register dateien.py: with an area (dateien.AREAS, may go to the own storage) or with its kind (dateien.LOCAL, stays on the Spark: keys, accounts, settings, voiceprint, queues). speicher.py takes both lists from there. test_technik checks every name the code writes. The same register says with export= what „Download all my data“ (meinedaten.build, Me → Security → My data) puts into the ZIP (33 entries, sealed ones opened through read_own) and why the rest stays out. 7. Own storage set up?: Only when the admin allowed the own storage and the profile has a target with at least one area (at most 2 targets). 8. Only changes of the chosen areas: local_files takes only files of the chosen areas: real files, no links, at most 5000. copy_once sends only what changed since the last run, at most 2048 MB per run; the next run goes on. 9. Encrypted, names random: seal_file encrypts every file in "
+"text": "nother key, another profile, changed on the disk), it is set aside once (name.unlesbar), never overwritten, and the profile starts empty. The admin sees a hint; after the move backup „Read in again“ under Me → Memory brings it back. 6. Every file sorted: Every file name has exactly one line in the file register dateien.py: with an area (dateien.AREAS, may go to the own storage) or with its kind (dateien.LOCAL, stays on the Spark: keys, accounts, settings, voiceprint, queues). speicher.py takes both lists from there. test_technik checks every name the code writes. The same register says with export= what „Download all my data“ (meinedaten.build, Me → Security → My data) puts into the ZIP (34 entries, sealed ones opened through read_own) and why the rest stays out. 7. Own storage set up?: Only when the admin allowed the own storage and the profile has a target with at least one area (at most 2 targets). 8. Only changes of the chosen areas: local_files takes only files of the chosen areas: real files, no links, at most 5000. copy_once sends only what changed since the last run, at most 2048 MB per run; the next run goes on. 9. Encrypted, names random: seal_file encrypts every file in "
 },
 {
 "lang": "en",
@@ -23966,6 +24038,46 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "hout control and markup signs, cut, as the name \"Title · Channel.m4a\" (ytquelle.name_of); origin yt:<number>, every video once; there is no \"Fetch again\" for the transcript. yt-dlp's error text never reaches the log, it only becomes a word by fixed patterns (video, live, laenge, format, groesse, host, zeit, netz). Journal ytquelle: … (area wissen), Live: box Links with \"YouTube: today n sound tracks, kB, refused, foreign host blocked\" or \"yt-dlp fehlt\". Weiche: transcription words with an address (\"Transcribe https://youtu.be/…\") go like \"Save … as a document\" to Links as documents. Without a JavaScript runtime (on purpose not installed) YouTube gives some videos no sound track; the row then says \"no sound track to fetch\". Self-test test_ytquelle (another host and a private address refused at the proxy, kill switch, key, method, port, byte limit, fixed options, version and hash, without yt-dlp the sentence with the way, live and too long refused before the download, no link from outside text, logs without address or title)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Audio overview of a collection, push 5a (V01.1.343, plan *open-notebook* stage 5, Dominik: \"three fixed voices the admin picks\"): admin switch *Features → Own documents → Collections → Audio overview* (chat.hoerstueck, off by default; builds on *Collections*; no profile switch, the admin blocks single profiles, guests never), below it *Audio overviews per day and profile* (chat.hoerstueck_day, 1 to 10, default 3) and *The three voices* (chat.hoerstueck_stimmen, per role A host, B expert, C questions a voice of the speech output or - for the standard voice; without a choice the standard voice speaks, with VoiceDesign with a fixed description per role, hoerstueck.KLANG). A collection shows the part *Audio overview* at the bottom: length 5, 10 or 20 minutes, 2 or 3 voices, \"Make\" (POST /api/profile/mappen/{id}/hoerstuecke, new module hoerstueck.py, login, own profile, CSRF, 8 KB, rate limit \"hoerstueck\"). What the model gets: only the collection's documents at the levels short and whole, never knowledge book pages (that is model text), as numbered places [S1] … from the originals, at most 16 000 characters, in turns from each document; pieces the made summary and key points of the ana"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "lyses rest on come first (only their place, never their text). Everything as outside text (chat.wrap_outside). What the model delivers: only a script as JSON {\"titel\", \"zeilen\": [{\"sprecher\", \"text\", \"quelle\"}]}. Fixed rules (hoerstueck.pruefe): speakers only from SPRECHER (A, B, C; with 2 voices only A and B), the roles and their names come from the panel; a line with a source needs an offered place and passes wissensbuch.check_sentence against it (length, no links, no markup, no command words, every number stands in the place), at most 300 characters; a transition without a source has at most 120 characters, no digit and only words of the fixed list hoerstueck.WORTE (so never a name or a number), transitions at most 30 % of the lines and never the last; double lines go; at most 120 lines and the characters of the length (4 500, 9 000, 18 000), cut at a line's end; fewer than 10 valid lines: \"No audio overview can be made of it\". A fixed opening (\"Ein Hörstück des Spark aus deiner Mappe … Es kann Fehler enthalten; die Quellen stehen im Panel.\") and a fixed closing come from the panel. What drops out is counted per reason (speaker, place, number, form, transition, share, length, do"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "uble), never shown as text. Speaking: hoerstueck.due_once is a link of the quiet chain wissen.KETTE after the analyses: first the script (one model call through vorrang.run(\"Hörstück\")), then per step exactly one line through the new shared helper tonteile.sprich with the stage \"last\" and the priority key (common.signed_low: never counts as speech, waits behind every person); real speech cancels the line and it comes again in the next pause. Always only one request at a time (the slot of vorrang; the speech output is weak with several requests at once). Without the speech output (error 5xx, no connection or the service watch sees it gone) it waits 5 minutes without losing a line. The lines wait as WAV in users/<id>/hoerstuecke/<id>/ (folder 0700, files 0600), at the end ffmpeg (no shell, -protocol_whitelist file,pipe) writes one Opus file at 48 kbit/s with 300 ms pause between two voices, and the parts go. Seconds of the speech output count in the usage as \"Hörstück\". dungeon.ask_tts now calls the same helper (tonteile.sprich, in the foreground without a stage, the same request and the same errors as before). Looking at it: the list with its state (\"waiting\", \"speaking · 34 of 61 l"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ines\", \"done\", \"too little\"), a progress bar and \"The collection has changed since\" (fingerprint of the documents, new only per click); a finished one with a player (GET /api/profile/hoerstueck/{id}/ton, ranges, only the own profile), download, delete and the script: every line with its voice and, for a statement, a chip with document, page and heading that opens the document; opening and closing as \"fixed\", transitions as \"transition\". Limits: at most 10 stored per profile, chat.hoerstueck_day new ones a day, at most 20 minutes each. Never a source: an audio overview never becomes a document and never goes into the knowledge book, the search, Find or the memory; a deleted collection takes its audio overviews along, never a document; deleting works also while the admin blocked it, and under Me with \"Delete data\" with the collections they go with. Tool hoerstueck_machen (routing group \"Hörstück\": hörstück, podcast, zum anhören, audio overview): only queues an audio overview with 2 voices, the collection only when its name stands in the own message; locked after outside text (changing), never over MCP. Live: box *Hörstück* (audio overviews, waiting, speaking, open lines, today new, s"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "cripts, lines spoken, lines dropped, cancels, missing speech output; numbers only). Logs hoerstueck: drehbuch | 61 zeilen 7 verworfen …, hoerstueck: zeile | 12 von 61 …, hoerstueck: fertig | 612 s … (area knowledge), only fixed words, numbers and profiles.log_name. Apps, Telegram and the notice \"audio overview done\" follow with push 5b; until then the Android app shows the part in the panel view of the collection."
 },
 {
 "lang": "en",
@@ -32158,6 +32270,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Collections (Features → My data → \"Collections\"; builds on \"Own documents\"; Collections → Settings): A collection bundles documents, knowledge book pages and notes for one undertaking, such as buying a house or taxes."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Audio overview (Features → My data → \"Audio overview\"; builds on \"Collections\"; Collections → Settings): From a collection a talk to listen to: under Collections → a collection → Audio overview you choose the length (5, 10 or 20 minutes) and two or three voices (A host, B expert, C questions) and tap \"Make\"."
 },
 {
 "lang": "en",

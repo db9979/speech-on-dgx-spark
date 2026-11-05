@@ -145,6 +145,13 @@ PHRASES = {
               ("Okay, ich kümmere mich um die Mappe.", "Okay, seeing to the collection."),
               ("Einen Augenblick, ich sortiere das ein.", "Just a second, filing that."),
               ("Mal sehen, was in deinen Mappen steckt.", "Let's see what your collections hold.")),
+    # Hörstück (hoerstueck.py): one queued from a Mappe, spoken later in quiet minutes
+    "hoerstueck": (("Ich reihe das Hörstück ein.", "Queuing the audio overview."),
+                   ("Moment, ich plane das Hörstück.", "One moment, planning the audio overview."),
+                   ("Gleich, ich bereite das Hörstück vor.", "Hang on, preparing the audio overview."),
+                   ("Okay, ich kümmere mich ums Hörstück.", "Okay, seeing to the audio overview."),
+                   ("Einen Augenblick, ich merke es mir vor.", "Just a second, noting it down."),
+                   ("Mal sehen, was die Mappe hergibt.", "Let's see what the collection offers.")),
     # Links als Dokument (doklink.py): a page fetched and kept as an own document
     "doklink": (("Ich hole die Seite.", "Fetching the page."),
                 ("Moment, ich lege den Link ab.", "One moment, filing the link."),
@@ -372,6 +379,8 @@ def group_of(route_names, direct=None, local=False, web=False):
         return names[0]
     if len(names) == 2 and "finden" in names and not set(route_names or []) & set(NO_ACK):
         return "finden"   # „Such mir die Rechnung …“: Finden beside dokument, mail or paket
+    if set(names) == {"hoerstueck", "mappe"} and not set(route_names or []) & set(NO_ACK):
+        return "hoerstueck"   # „Mach ein Hörstück aus der Mappe Wohnung“: the Mappe it names beside it
     if local and not route_names:
         return "lokal"
     return None
