@@ -390,7 +390,8 @@ def mappe(uid, mid):
             "eintraege": out, "zeichen": used, "token": token_of(used), "budget": token_budget(),
             "summe": {"kurz": count("kurz"), "ganz": count("ganz"), "suche": count("suche"), "aus": count("aus"),
                       "voll": count("voll"), "wollen_ganz": sum(1 for x in out if x["stufe"] == "ganz" and not x["grau"])},
-            "max_eintraege": MAX_EINTRAEGE, "hoerstueck": features.allowed("hoerstueck", uid)}
+            "max_eintraege": MAX_EINTRAEGE, "hoerstueck": features.allowed("hoerstueck", uid),
+            "auswertungen": aw_ok}   # the page's tab Auswertungen only while they are released
 
 
 def refs_of(uid, mid, stufen=("ganz",)):

@@ -55,7 +55,7 @@ function wayKids(c,all){const key=JSON.stringify(c)+(all?'+':'');
   else if(c.k==='mon'||c.k==='prof'){for(const [id,l] of GROUPS[c.k])add(l,()=>goSec(id),{k:'s',s:id});
     return wayKeep(key,out.concat(wayKids({k:'s',s:c.k},all)))}   // and what the first page shows (cards, lists)
   else if(c.k.startsWith('o:')){const [sec]=OWN_PAGES[c.k.slice(2)],go=k=>()=>{icTabSet(sec,k);goSec(sec)};
-    add(t('Einstellungen','Settings'),go('set'),{k:'os',id:c.k.slice(2)});add(OWN_PAGES[c.k.slice(2)][2],go('show'),c);
+    if(!OWN_NO_SET.includes(c.k.slice(2)))add(t('Einstellungen','Settings'),go('set'),{k:'os',id:c.k.slice(2)});add(OWN_PAGES[c.k.slice(2)][2],go('show'),c);
     for(const [k,l,on] of OWN_PAGES[c.k.slice(2)][3]||[])if(all||on())add(l,go(k),{k:'ot',id:k})}
   else if(c.k==='os'){const [sec]=OWN_PAGES[c.id];inside($(c.id),async e=>{icTabSet(sec,'set');goSec(sec);await wayWait(120);wayOpen(e);sFlash(wayMark(e))})}
   else if(c.k==='fern')return wayKeep(key,wayKids({k:'s',s:'fern'},all));   // a menu entry with one page: its parts

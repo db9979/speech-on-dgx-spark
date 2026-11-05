@@ -5345,6 +5345,13 @@
 "titel": "Hörstück im Auto anhören (CarPlay)",
 "text": "Ein fertiges Hörstück in einer Mappe haben. Im Auto (oder Xcode-Simulator mit CarPlay): Spark → „Hörstücke“: die fertigen aus allen Mappen mit Mappe und Dauer, das neueste oben. Eins antippen: es spielt, der Autobildschirm zeigt Titel und Mappe unter Now Playing; Pause, 15 Sekunden vor und zurück und nächstes/voriges am Lenkrad gehen. In der Liste oben „Pause“, „Weiter anhören“, „15 Sekunden zurück“. „Mit Spark sprechen“ antippen und etwas fragen: das Hörstück pausiert, nach dem Gespräch spielt es von selbst weiter; Radio und Navigation sind danach normal laut. Auto trennen: es pausiert, nichts kommt aus dem iPhone-Lautsprecher. Später wieder antippen: es geht an der letzten Stelle weiter („weiter ab …“). Ohne Freigabe von Hörstück fehlt die Zeile. iPhone → Einstellungen → Ton-Protokoll: „Hörstück: spielt“, „Pause für Gespräch“, „weiter“, nie ein Titel.",
 "thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P790",
+"v": 1350,
+"titel": "Mappen ruhiger: Liste, Mappe, Teile",
+"text": "Mappen öffnen: links die schmale Liste mit „Mappen N von 50“ und ＋ (öffnet „Neue Mappe“), kein Reiter „Einstellungen“ mehr. Eine Mappe antippen: rechts Symbol, Name, „Ziel · N Einträge“, der blaue Knopf „Fragen“ (der einzige blaue auf der Seite) und ⋯ mit Umbenennen und Mappe löschen (fragt erst). Darunter der dünne Balken mit „… / 24.000 Token“ und ⓘ: dort steht, was aus, kurz und ganz heißen. Teil Einträge: jeder Titel ganz (auch ein langer bricht um), rechts die Stufe als kleines Menü (auf „aus“ stellen: die Token-Zahl verschwindet, der Balken wird kürzer) und ⋯ mit Öffnen und Aus der Mappe nehmen (das Dokument bleibt unter Ich → Dokumente). „Hinzufügen“ ist ein Menü: Dokument, Seite aus dem Wissensbuch, Notiz. Teil Auswertungen: je Dokument „Kurzfassung · Kernaussagen“ oder „noch keine Auswertung“, antippen öffnet das Dokument. Teil Hörstück: Länge, Stimmen und Erstellen in einer Zeile, darunter das fertige Hörstück als Karte mit Player, ⋯ (Herunterladen, An Telegram, Löschen) und „Drehbuch · N Zeilen“ zum Aufklappen. Am Handy: erst die Liste, antippen zeigt die Mappe mit „‹ Mappen“, „Fragen“ breit unter dem Namen; nichts rollt seitlich.",
+"thread": "Mappen ruhiger"
 }
 ]
 }

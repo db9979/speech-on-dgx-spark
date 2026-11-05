@@ -3418,11 +3418,63 @@ button.fzfname{background:none;border:0;padding:4px 0;color:var(--acc,inherit);c
 .fzchiprow .fzchips.fzrechts{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent)}
 .fzchiprow .fzchips.fzlinks{-webkit-mask-image:linear-gradient(to right,transparent,#000 28px);mask-image:linear-gradient(to right,transparent,#000 28px)}
 .fzchiprow .fzchips.fzlinks.fzrechts{-webkit-mask-image:linear-gradient(to right,transparent,#000 28px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,transparent,#000 28px,#000 calc(100% - 28px),transparent)}
-/* Mappen (mappen.js): the budget bar like .ulbar, the chip above the conversation like .merknote */
-.mpbudget{margin:8px 0}.mpbar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:4px 0}
-.mpbar i{display:block;height:100%;border-radius:99px;background:var(--acc)}
-.mprow .ld-right{gap:6px;display:flex;align-items:center}.mpchip button{margin-left:4px;padding:0 8px}
-.mpedit label{display:block;margin:6px 0}
+/* ---- Mappen ruhiger (mappen.js, hoerstueck.js; plan mappen-layout, Dominik 2026-11-05 „ok“: 1a 2a 3a). Only this
+   page's own block: tokens and the ld-/ic- building blocks. The list in 300 px with ＋ in its head, the open Mappe
+   takes the rest; its head, a thin budget bar with ⓘ, one segment, rows with the whole title, the level as a small
+   menu and ⋯; Hörstück: one row length · voices · Erstellen, a card with the player and the script folded. ---- */
+@container (min-width:660px){.mp>.ld-split:has(>.ld-detail:not([hidden])){grid-template-columns:300px minmax(0,1fr);gap:var(--s5)}}
+.mp .mpdet{border:0;background:none;padding:0 var(--s2)}
+.mp .mpdet .ld-empty{margin-top:var(--s8)}
+.mphead{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);padding:0 var(--s2) var(--s2)}
+.mphead b{font:var(--t-head)}.mphead small{color:var(--mut);font:var(--t-sub);margin-left:var(--s2)}
+.mp .mpplus,.mp .mpmore{width:var(--h-ctl);height:var(--h-ctl);padding:0;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.mp .mpmore{border-color:transparent;background:none;color:var(--mut)}
+.mp .mpnew{margin:0 0 var(--s2)}
+.mptop{display:flex;align-items:center;gap:var(--s3);min-width:0}
+.mptop>.ld-ico{width:44px;height:44px;border-radius:var(--r-item);flex:none}.mptop>.ld-ico svg{width:22px;height:22px}
+.mptop .mpname{flex:1;min-width:0}.mptop .mpname b{display:block;font:var(--t-title);overflow-wrap:anywhere}
+.mptop .mpname small{display:block;color:var(--mut);font:var(--t-sub);margin-top:2px;overflow-wrap:anywhere}
+.mptop>.b{flex:none;display:inline-flex;align-items:center;gap:var(--s1)}
+.mp .mpedit{margin:var(--s3) 0}.mp .mpedit label{display:block;margin:var(--s2) 0}
+.mpbud{margin:var(--s4) 0 var(--s2)}
+.mpbar{height:6px;border-radius:var(--r-pill);background:var(--line);overflow:hidden;margin:var(--s1) 0}
+.mpbar i{display:block;height:100%;border-radius:var(--r-pill);background:var(--acc)}
+.mpbudrow{display:flex;align-items:center;flex-wrap:wrap;gap:var(--s1)}.mpbudrow small{color:var(--mut);font:var(--t-sub)}.mpbudrow small.err{color:var(--bad)}
+.mpinfo{border:0;background:none;color:var(--mut);padding:0;width:24px;height:24px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.mpinfo svg{width:15px;height:15px}.mpinfo[aria-expanded="true"]{color:var(--acc)}
+.mpinfobox{border:1px solid var(--line);border-radius:var(--r-box);padding:var(--s3) var(--s4);margin:var(--s2) 0 var(--s3)}
+.mpinfobox p{margin:var(--s2) 0 0;font:var(--t-sub)}
+.mp .mpmsg:empty{display:none}.mp .mpmsg{font:var(--t-sub);padding:var(--s1) var(--s2)}
+.mpsegbar{margin:var(--s3) 0 var(--s1)}.mpsegbar .ld-seg{margin:0}
+.mpsub{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);margin:var(--s3) 0 var(--s1)}
+.mpsub .ld-grp{flex:1;padding-right:0}
+.mp .ic-menu>.b:not(.mpmore){display:inline-flex;align-items:center;gap:var(--s1)}
+.mp .ic-pop{min-width:240px}
+.mp .ic-pop button,.mp .ic-pop a{display:flex;align-items:center;gap:var(--s2);width:100%;text-align:left;border:0;background:none;color:var(--fg);font:var(--t-body);padding:var(--s2) var(--s3);border-radius:var(--r-item);cursor:pointer;text-decoration:none}
+.mp .ic-pop :is(button,a):hover{background:var(--line)}.mp .ic-pop .danger{color:var(--bad)}
+.mp .ic-pop svg{width:16px;height:16px;color:var(--mut);flex:none}
+.mp .mptab .ld-mid b{white-space:normal;overflow-wrap:anywhere}
+.mp .mptab .ld-right{flex:none;max-width:none;flex-wrap:nowrap}
+.mp select.ld-chip.mplvl{min-width:72px}
+.mp .mpaddbox:not(:empty){border:1px solid var(--line);border-radius:var(--r-box);padding:var(--s3);margin:var(--s1) 0 var(--s3)}
+.mp .mpnote{display:grid;gap:var(--s2)}
+.hsmake{display:flex;align-items:center;flex-wrap:wrap;gap:var(--s3) var(--s4);padding:var(--s3) var(--s2);border-bottom:1px solid var(--line);margin-top:var(--s2)}
+.hsopt{display:flex;align-items:center;gap:var(--s2);font:var(--t-sub);color:var(--mut)}
+.hsmake>.b{display:inline-flex;align-items:center;gap:var(--s1)}.hsmake small{color:var(--mut);font:var(--t-sub);margin-left:auto}
+.mpcard{border:1px solid var(--line);border-radius:var(--r-box);padding:var(--s4);margin:var(--s2) 0 var(--s3)}
+.mpcard .mptop .mpname b{font:var(--t-head)}
+.mpcard audio{width:100%;height:36px;margin-top:var(--s3)}
+.mpcard .mpbar{margin-top:var(--s3)}
+.mpcard details{margin-top:var(--s3)}.mpcard summary{cursor:pointer;color:var(--acct);font:var(--t-sub)}
+.hsroles{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2);font:var(--t-sub);color:var(--mut);margin:var(--s2) 0}
+.mpchip button{margin-left:4px;padding:0 8px}
+@container (max-width:659.98px){
+  .mpdet>.mptop{flex-wrap:wrap}.mpdet>.mptop .mpname{flex:1 1 calc(100% - 60px)}
+  .mpdet>.mptop .mpname b{font:var(--t-head)}.mpdet>.mptop>.ld-ico{width:36px;height:36px}
+  .mpdet>.mptop>.b.p{flex:1 1 0;justify-content:center}
+  .mpsegbar .ld-seg{display:flex}.mpsegbar .ld-seg button{flex:1}
+  .hsmake{flex-direction:column;align-items:stretch}.hsopt{justify-content:space-between}.hsmake>.b{justify-content:center}.hsmake small{margin:0;text-align:center}
+}
 /* System-Updates (systemupdates.js): the card under Zustand → Überblick and its page, one column per computer, from the
    building blocks .zrow/.pill, .dvtiles, .dvcommits, .wkerkl, .setrow (pictures 2026-11-04 „Ok“) */
 #mon .sysup h2,.sucomp .suhd{display:flex;align-items:center;gap:8px}

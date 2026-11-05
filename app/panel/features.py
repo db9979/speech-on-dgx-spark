@@ -66,6 +66,9 @@ OWN_PAGES = (("calbox", "cal", "Kalender", "Calendar"), ("mailbox", "post", "E-M
              ("wbbox", "wbuch", "Wissensbuch", "Knowledge book"), ("fundbox", "finden", "Finden", "Find"),
              ("mpbox", "mappen", "Mappen", "Collections"),
              ("dmbox", "dungeon", "Dungeon-Master", "Dungeon Master"))
+# pages of their own without the tab „Einstellungen“: Mappen shows only its list and the open Mappe, the old tab's
+# explanation sits in the ⓘ beside the budget (plan mappen-layout 1a, Dominik 2026-11-05); kalender.js OWN_NO_SET
+OWN_NO_SETTINGS = frozenset(("mpbox",))
 # Ich pages every profile has, whatever is switched on (me.js meAll shows them for every profile too)
 ME_ALWAYS = frozenset(("setbox", "factbox", "logbox", "secbox"))
 # Ich pages the iPhone app leaves out, each with its reason; every other page can be opened in the app

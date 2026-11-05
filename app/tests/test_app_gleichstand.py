@@ -78,6 +78,11 @@ class OneList(unittest.TestCase):
         got = [(m.group(1), m.group(2), js_str(m.group(3)), js_str(m.group(4))) for m in re.finditer(
             r"(\w+):\['(\w+)',t\('((?:[^'\\]|\\.)*)','((?:[^'\\]|\\.)*)'\)", block)]
         self.assertEqual(got, list(features.OWN_PAGES))
+        # the pages without the tab „Einstellungen“ (Mappen, plan mappen-layout 1a): the same in both
+        nos = re.search(r"const OWN_NO_SET=\[([^\]]*)\];", src)
+        self.assertIsNotNone(nos, "kalender.js OWN_NO_SET")
+        self.assertEqual(set(re.findall(r"'(\w+)'", nos.group(1))), set(features.OWN_NO_SETTINGS))
+        self.assertTrue(features.OWN_NO_SETTINGS <= {x[0] for x in features.OWN_PAGES})
         html = read(APP, "panel", "static", "index.html")
         names = read(JS, "guides.js")
         names = names[names.index("const ME_NAME={"):]

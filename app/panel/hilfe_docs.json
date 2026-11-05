@@ -5709,7 +5709,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "äste nie), darunter *Mappe: Token ans Modell* (chat.mappe_token, 4000 bis 100000, Standard 24000). Eigener Menüpunkt *Mappen* mit den Reitern *Einträge* und *Einstellungen* (Ich-Seite mpbox). Eine Mappe bündelt eigene Dokumente, Wissensbuch-Seiten und Notizen zu einem Vorhaben; später wird sie der Kern von „Projekte im Assistenten“, jetzt nur Name, Ziel und Symbol. Tabellen mp_mappe und mp_eintrag in users/<id>/wissen.db, höchstens 50 Mappen je Profil und 100 Einträge je Mappe. Eine Notiz wird ein eigenes Dokument (Quelle „notiz“, bis 20 000 Zeichen) und liegt ganz in der Mappe. Stufen nach fester Regel (mappen.plan), nie vom Modell: *aus* geht nicht mit, *kurz* gibt den Steckbrief (wissen.card_line) bzw. Titel und drei Sätze einer Seite, *ganz* den ganzen Text, solange die Summe ins Budget passt (Zeichen durch verbrauch.CHARS_PER_TOKEN); zuerst alle kurzen, dann die ganzen in der Reihenfolge der Mappe; ein ganzes Dokument, das nicht mehr passt, wird nur durchsucht (documents.search über genau diese Dokumente, höchstens 8 Stellen). Ein Balken zeigt „≈ X von Y Token“. Im Assistenten: „Im Assistenten fragen“ bindet die nächsten Fragen an die Mappe (Chip über dem Gespräch, Feld mappe "
+"text": "äste nie), darunter *Mappe: Token ans Modell* (chat.mappe_token, 4000 bis 100000, Standard 24000). Eigener Menüpunkt *Mappen* (Ich-Seite mpbox; bis V01.1.344 mit den Reitern *Einträge* und *Einstellungen*, seitdem nur Liste und offene Mappe, siehe *Mappen ruhiger*). Eine Mappe bündelt eigene Dokumente, Wissensbuch-Seiten und Notizen zu einem Vorhaben; später wird sie der Kern von „Projekte im Assistenten“, jetzt nur Name, Ziel und Symbol. Tabellen mp_mappe und mp_eintrag in users/<id>/wissen.db, höchstens 50 Mappen je Profil und 100 Einträge je Mappe. Eine Notiz wird ein eigenes Dokument (Quelle „notiz“, bis 20 000 Zeichen) und liegt ganz in der Mappe. Stufen nach fester Regel (mappen.plan), nie vom Modell: *aus* geht nicht mit, *kurz* gibt den Steckbrief (wissen.card_line) bzw. Titel und drei Sätze einer Seite, *ganz* den ganzen Text, solange die Summe ins Budget passt (Zeichen durch verbrauch.CHARS_PER_TOKEN); zuerst alle kurzen, dann die ganzen in der Reihenfolge der Mappe; ein ganzes Dokument, das nicht mehr passt, wird nur durchsucht (documents.search über genau diese Dokumente, höchstens 8 Stellen). Ein Balken zeigt „≈ X von Y Token“. Im Assistenten: „Im Assistenten fragen“ b"
 },
 {
 "lang": "de",
@@ -5717,7 +5717,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "im Chat); das Panel prüft die ID gegen das eigene Profil und gibt die Einträge mit Marken [M1] … als Text von außen (chat.wrap_outside), der Zug gilt als Text von außen (ändernde Werkzeuge gesperrt). Werkzeuge mappe_liste, mappe_stand (liest Namen aus Dokumenten, sperrt danach) und mappe_dazu (ändert; Mappe und Dokument nur, wenn die eigenen Worte der Nachricht sie nennen), Weiche-Gruppe „mappe“. Verschwindet ein Dokument, geht sein Eintrag mit (documents.GONE und beim Lesen); eine Mappe zu löschen nimmt nur die Zuordnung, nie ein Dokument. Endpunkte GET/POST /api/profile/mappen, GET/PUT/DELETE /api/profile/mappen/{id}, POST/PUT/DELETE …/eintrag, POST …/notiz (Anmeldung, eigenes Profil, CSRF, 64 KB, Rate-Limit „mappe“). Logs mappen: chat | 3 eintraege | 1 kurz 2 ganz 0 suche 0 stellen | 5200 token | P1, nie ein Name; Live-Zeile *Mappen* nur mit Zahlen. Selbsttests tests/test_mappen.py. iPhone nativ, Filter der Suche und Wähler in Finden kamen mit Push 1b."
+"text": "indet die nächsten Fragen an die Mappe (Chip über dem Gespräch, Feld mappe im Chat); das Panel prüft die ID gegen das eigene Profil und gibt die Einträge mit Marken [M1] … als Text von außen (chat.wrap_outside), der Zug gilt als Text von außen (ändernde Werkzeuge gesperrt). Werkzeuge mappe_liste, mappe_stand (liest Namen aus Dokumenten, sperrt danach) und mappe_dazu (ändert; Mappe und Dokument nur, wenn die eigenen Worte der Nachricht sie nennen), Weiche-Gruppe „mappe“. Verschwindet ein Dokument, geht sein Eintrag mit (documents.GONE und beim Lesen); eine Mappe zu löschen nimmt nur die Zuordnung, nie ein Dokument. Endpunkte GET/POST /api/profile/mappen, GET/PUT/DELETE /api/profile/mappen/{id}, POST/PUT/DELETE …/eintrag, POST …/notiz (Anmeldung, eigenes Profil, CSRF, 64 KB, Rate-Limit „mappe“). Logs mappen: chat | 3 eintraege | 1 kurz 2 ganz 0 suche 0 stellen | 5200 token | P1, nie ein Name; Live-Zeile *Mappen* nur mit Zahlen. Selbsttests tests/test_mappen.py. iPhone nativ, Filter der Suche und Wähler in Finden kamen mit Push 1b."
 },
 {
 "lang": "de",
@@ -5942,6 +5942,30 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "n Mappen mit Titel, Name der Mappe, Dauer und Zeitpunkt, das neueste oben, höchstens 12 (hoerstueck.AUTO_MAX), nie das Drehbuch oder ein Pfad. Im Auto wird nichts erstellt. Die App spielt über einen gemeinsamen Player für Mappe und Auto (ios/Spark/HoerstueckPlayer.swift, HsPlayer): die AAC-Kopie nur im Speicher (eigene Sitzung ohne Cache), Now Playing mit Titel und Mappe, Fernbedienung (Abspielen, Pause, 15 Sekunden vor und zurück, nächstes und voriges, Position), weiter an der letzten Stelle (auf dem iPhone nur Kennung und Sekunden, höchstens 20). Vor dem Abspielen endet ein Gespräch und die Sprach-Engine gibt den Ton frei (Conversation.giveSound; die Engine stellt beim nächsten Start „Aufnahme und Wiedergabe“ wieder her), das Weckwort ruht, solange ein Hörstück spielt; ein Gespräch pausiert das Hörstück, danach spielt es weiter. Trennt sich das Auto, pausiert es. Ton-Protokoll nur mit festen Wörtern („Hörstück: spielt“, „Pause für Gespräch“, „zu Ende“). Live: kein neuer Wert (das Abspielen geschieht auf dem iPhone)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Mappen ruhiger (V01.1.350, Plan *mappen-layout*, Dominik 2026-11-05 „die seite sieht leider etwas unübersichtlich aus“, Entwurf „ok“: 1a 2a 3a): nur Darstellung, keine neuen Schalter, Endpunkte oder Logs. Die Seite *Mappen* hat keine Reiter mehr: links die Liste in 300 px mit dem Kopf „Mappen 3 von 50“ und ＋ (öffnet das Feld „Neue Mappe“), je Zeile das Linien-Symbol der Mappe, Name, Ziel und rechts die Zahl der Einträge; rechts nimmt die offene Mappe den Rest. Ihr Kopf: Symbol, Name, „Ziel · N Einträge“, Fragen (bindet die nächsten Fragen im Assistenten an die Mappe, der einzige blaue Knopf der Seite) und ⋯ mit *Umbenennen* und *Mappe löschen* (fragt vorher). Darunter ein dünner Balken mit „177 / 24.000 Token“, bei zu großen Einträgen „· N nur in Auszügen“, rot nur „· N passen nicht mehr ins Budget“, und ⓘ: die Erklärung des früheren Reiters *Einstellungen* (aus, kurz, ganz, Budget, Löschen nimmt nur die Zuordnung) und, wenn Hörstücke frei sind, wie ein Hörstück entsteht. Ein Segment teilt die Mappe in Einträge · Auswertungen · Hörstück mit Zahlen; *Auswertungen* nur, solange Auswertungen frei sind (mappen.mappe liefert dafür auswertungen), *Hörstück* nur mit Hörstücken. Einträge: "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "„6 von 100 Einträgen“ und das Menü Hinzufügen (Dokument, Seite aus dem Wissensbuch, Notiz; Auswahl bzw. Notizfeld wie bisher darunter, mit *Abbrechen*); je Zeile Symbol, der ganze Titel (bricht um, nie abgeschnitten), „PDF · ≈ 59 Token“ (nur die Zahl der gewählten Stufe; „zu groß: nur passende Stellen“, „Budget voll“ oder „Wissensbuch gesperrt“ statt der Zahl), die Stufe als kleines Menü aus/kurz/ganz und ⋯ mit *Öffnen* und *Aus der Mappe nehmen*; antippen öffnet das Dokument. Auswertungen: je Dokument „Kurzfassung · Kernaussagen“ bzw. „noch keine Auswertung“, „fertig“ und ›; antippen öffnet das Dokument mit seiner Auswertung (sie entstehen von selbst, kein Knopf). Hörstück: eine Zeile *Länge* · *Stimmen* · *Erstellen* (normaler Knopf; für den Admin daneben *Sofort erstellen*, bei einem wartenden Stück *Jetzt erstellen* unter ⋯) · „heute 2 von 3“, darunter das gewählte oder neueste fertige Hörstück als Karte (Titel, „Datum · Dauer · Stimmen“, Player, ⋯ mit *Herunterladen*, *An Telegram*, *Löschen*, *Drehbuch · N Zeilen* eingeklappt mit den Rollen und dem Verworfenen), dann die übrigen als Zeilen mit Zustand und Fortschritt; antippen zeigt eines in der Karte. Der Technik-Absatz unte"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "r dem Hörstück ist weg (ⓘ und Hilfe sagen es in Worten). Am Handy (unter 660 px) erst die Liste, antippen zeigt die Mappe mit „‹ Mappen“, der Kopf in zwei Zeilen (Name, dann „Fragen“ breit und ⋯), die Hörstück-Zeile untereinander. Gemessen mit 6 Einträgen und 2 Hörstücken: 19 statt 72 Bedienelemente, 1 statt 3 blaue Knöpfe, 0 statt 23 abgeschnittene Texte, die Mappe 800 statt 300 px breit. Da Mappen keinen Reiter *Einstellungen* mehr hat, steht sie in features.OWN_NO_SETTINGS (im Panel kalender.js OWN_NO_SET): Sprung-Links, Anleitungen und die Liste aller Funktionen führen nicht mehr auf einen Reiter *Einstellungen* der Mappen. Browser-Test test_mappen_seite: Liste schmaler als die Mappe, je Teil höchstens ein blauer Knopf, kein abgeschnittener Titel, kein Querrollen bei 1440 und 390 px, Stufe über das Menü, ⋯ → *Aus der Mappe nehmen*, Hörstück aus dem Teil *Hörstück* erstellen. Die iPhone-App folgt in einem eigenen Schritt."
 },
 {
 "lang": "de",
@@ -14437,7 +14461,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Meine Daten",
 "title": "Meine Daten",
-"text": "- Mappen (Funktionen → Meine Daten → „Mappen“; baut auf „Eigene Dokumente“; Mappen → Einstellungen): Eine Mappe bündelt Dokumente, Seiten des Wissensbuchs und Notizen zu einem Vorhaben, etwa Hauskauf oder Steuer."
+"text": "- Mappen (Funktionen → Meine Daten → „Mappen“; baut auf „Eigene Dokumente“; Mappen): Eine Mappe bündelt Dokumente, Seiten des Wissensbuchs und Notizen zu einem Vorhaben, etwa Hauskauf oder Steuer."
 },
 {
 "lang": "de",
@@ -14445,7 +14469,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Meine Daten",
 "title": "Meine Daten",
-"text": "- Hörstück aus einer Mappe (Funktionen → Meine Daten → „Hörstück aus einer Mappe“; baut auf „Mappen“; Mappen → Einstellungen): Aus einer Mappe ein Gespräch zum Anhören: unter Mappen → eine Mappe → Hörstück wählst du die Länge (5, 10 oder 20 Minuten) und zwei oder drei Stimmen (A Moderation, B Fachstimme, C Nachfrage) und tippst „Erstellen“."
+"text": "- Hörstück aus einer Mappe (Funktionen → Meine Daten → „Hörstück aus einer Mappe“; baut auf „Mappen“; Mappen): Aus einer Mappe ein Gespräch zum Anhören: unter Mappen → eine Mappe → Hörstück wählst du die Länge (5, 10 oder 20 Minuten) und zwei oder drei Stimmen (A Moderation, B Fachstimme, C Nachfrage) und tippst „Erstellen“."
 },
 {
 "lang": "de",
@@ -24093,7 +24117,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": " 4000 to 100000, default 24000). Its own menu entry *Collections* with the tabs *Entries* and *Settings* (Me page mpbox). A collection bundles own documents, knowledge book pages and notes for one undertaking; later it becomes the core of \"projects in the assistant\", today only name, goal and symbol. Tables mp_mappe and mp_eintrag in users/<id>/wissen.db, at most 50 collections per profile and 100 entries per collection. A note becomes a document of its own (source \"notiz\", up to 20 000 characters) and lies whole in the collection. Levels by a fixed rule (mappen.plan), never by the model: *off* does not go, *short* gives the profile card (wissen.card_line) or a page's title and three sentences, *whole* the whole text while the sum fits the budget (characters by verbrauch.CHARS_PER_TOKEN); first every short one, then the whole ones in the collection's order; a whole document that no longer fits is only searched (documents.search over exactly these documents, at most 8 passages). A bar shows \"≈ X of Y tokens\". In the assistant: \"Ask in the assistant\" binds the next questions to the collection (chip above the conversation, field mappe in the chat); the panel checks the id against the "
+"text": " 4000 to 100000, default 24000). Its own menu entry *Collections* (Me page mpbox; up to V01.1.344 with the tabs *Entries* and *Settings*, since then only the list and the open collection, see *Calmer collections*). A collection bundles own documents, knowledge book pages and notes for one undertaking; later it becomes the core of \"projects in the assistant\", today only name, goal and symbol. Tables mp_mappe and mp_eintrag in users/<id>/wissen.db, at most 50 collections per profile and 100 entries per collection. A note becomes a document of its own (source \"notiz\", up to 20 000 characters) and lies whole in the collection. Levels by a fixed rule (mappen.plan), never by the model: *off* does not go, *short* gives the profile card (wissen.card_line) or a page's title and three sentences, *whole* the whole text while the sum fits the budget (characters by verbrauch.CHARS_PER_TOKEN); first every short one, then the whole ones in the collection's order; a whole document that no longer fits is only searched (documents.search over exactly these documents, at most 8 passages). A bar shows \"≈ X of Y tokens\". In the assistant: \"Ask in the assistant\" binds the next questions to the collection"
 },
 {
 "lang": "en",
@@ -24101,7 +24125,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "own profile and gives the entries with marks [M1] … as outside text (chat.wrap_outside), the turn counts as outside text (changing tools locked). Tools mappe_liste, mappe_stand (reads names from documents, locks afterwards) and mappe_dazu (changes; collection and document only when the person's own words of the message name them), Weiche group \"mappe\". When a document goes, its entry goes with it (documents.GONE and on reading); deleting a collection only removes the assignment, never a document. Endpoints GET/POST /api/profile/mappen, GET/PUT/DELETE /api/profile/mappen/{id}, POST/PUT/DELETE …/eintrag, POST …/notiz (sign-in, own profile, CSRF, 64 KB, rate limit \"mappe\"). Logs mappen: chat | 3 eintraege | 1 kurz 2 ganz 0 suche 0 stellen | 5200 token | P1, never a name; live line *Collections* with numbers only. Self-tests tests/test_mappen.py. iPhone native, the search filter and the chooser in Find came with push 1b."
+"text": " (chip above the conversation, field mappe in the chat); the panel checks the id against the own profile and gives the entries with marks [M1] … as outside text (chat.wrap_outside), the turn counts as outside text (changing tools locked). Tools mappe_liste, mappe_stand (reads names from documents, locks afterwards) and mappe_dazu (changes; collection and document only when the person's own words of the message name them), Weiche group \"mappe\". When a document goes, its entry goes with it (documents.GONE and on reading); deleting a collection only removes the assignment, never a document. Endpoints GET/POST /api/profile/mappen, GET/PUT/DELETE /api/profile/mappen/{id}, POST/PUT/DELETE …/eintrag, POST …/notiz (sign-in, own profile, CSRF, 64 KB, rate limit \"mappe\"). Logs mappen: chat | 3 eintraege | 1 kurz 2 ganz 0 suche 0 stellen | 5200 token | P1, never a name; live line *Collections* with numbers only. Self-tests tests/test_mappen.py. iPhone native, the search filter and the chooser in Find came with push 1b."
 },
 {
 "lang": "en",
@@ -24318,6 +24342,30 @@
 "head": "Voice chat",
 "title": "Make an audio overview now (V01.1.345, Dominik 2026-11-05: „force the making“)",
 "text": "a path. Nothing is made in the car. The app plays through one player for the collection and the car (ios/Spark/HoerstueckPlayer.swift, HsPlayer): the AAC copy only in memory (its own session without a cache), Now Playing with title and collection, remote buttons (play, pause, 15 seconds forward and back, next and previous, position), on where it stopped (on the iPhone only id and seconds, at most 20). Before it plays a conversation ends and the speech engine hands over the sound (Conversation.giveSound; the engine sets \"play and record\" again at its next start), the wake word rests while an audio overview plays; a conversation pauses the audio overview, afterwards it plays on. When the car disconnects it pauses. Sound log only with fixed words (\"Hörstück: spielt\", \"Pause für Gespräch\", \"zu Ende\"). Live: no new value (the playing happens on the iPhone)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Calmer collections (V01.1.350, plan *mappen-layout*, Dominik 2026-11-05 \"the page looks a bit cluttered\", draft \"ok\": 1a 2a 3a): display only, no new switches, endpoints or logs. The page *Collections* has no tabs any more: on the left the list in 300 px with the head \"Collections 3 of 50\" and ＋ (opens the field \"New collection\"), per row the collection's line symbol, name, goal and on the right the number of entries; on the right the open collection takes the rest. Its head: symbol, name, \"goal · N entries\", Ask (binds the next questions in the assistant to the collection, the page's only blue button) and ⋯ with *Rename* and *Delete collection* (asks first). Below it a thin bar with \"177 / 24,000 tokens\", for entries that are too big \"· N only in parts\", red only \"· N no longer fit the budget\", and ⓘ: the explanation of the former tab *Settings* (off, short, whole, budget, deleting removes only the assignment) and, while audio overviews are released, how one is made. A segment divides the collection into Entries · Analyses · Audio overview with counts; *Analyses* only while analyses are released (mappen.mappe gives auswertungen for it), *Audio overview* only with audio overviews. "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Entries: \"6 of 100 entries\" and the menu Add (document, page of the knowledge book, note; the choice or the note field below as before, with *Cancel*); per row symbol, the whole title (wraps, never cut off), \"PDF · ≈ 59 tokens\" (only the number of the chosen level; \"too big: only fitting parts\", \"budget full\" or \"knowledge book blocked\" instead of the number), the level as a small menu off/short/whole and ⋯ with *Open* and *Take out of the collection*; tapping opens the document. Analyses: per document \"Summary · Key points\" or \"no analysis yet\", \"done\" and ›; tapping opens the document with its analysis (they are made by themselves, no button). Audio overview: one row *Length* · *Voices* · *Make* (a normal button; for the admin *Make now* beside it, *Make it now* under ⋯ for a waiting one) · \"today 2 of 3\", below it the chosen or newest finished audio overview as a card (title, \"date · length · voices\", player, ⋯ with *Download*, *To Telegram*, *Delete*, *Script · N lines* folded with the roles and what was dropped), then the others as rows with state and progress; tapping shows one in the card. The technical paragraph under the audio overview is gone (ⓘ and the help say it in wor"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ds). On a phone (below 660 px) first the list, tapping shows the collection with \"‹ Collections\", the head in two rows (name, then \"Ask\" wide and ⋯), the audio overview row stacked. Measured with 6 entries and 2 audio overviews: 19 instead of 72 controls, 1 instead of 3 blue buttons, 0 instead of 23 cut-off texts, the collection 800 instead of 300 px wide. As Collections has no tab *Settings* any more, it stands in features.OWN_NO_SETTINGS (in the panel kalender.js OWN_NO_SET): jump links, guides and the list of all features no longer lead to a tab *Settings* of Collections. Browser test test_mappen_seite: list narrower than the collection, at most one blue button per part, no cut-off title, no sideways scrolling at 1440 and 390 px, level through the menu, ⋯ → *Take out of the collection*, make an audio overview from the part *Audio overview*. The iPhone app follows in a step of its own."
 },
 {
 "lang": "en",
@@ -32517,7 +32565,7 @@
 "file": "Assistant and panel",
 "head": "My data",
 "title": "My data",
-"text": "- Collections (Features → My data → \"Collections\"; builds on \"Own documents\"; Collections → Settings): A collection bundles documents, knowledge book pages and notes for one undertaking, such as buying a house or taxes."
+"text": "- Collections (Features → My data → \"Collections\"; builds on \"Own documents\"; Collections): A collection bundles documents, knowledge book pages and notes for one undertaking, such as buying a house or taxes."
 },
 {
 "lang": "en",
@@ -32525,7 +32573,7 @@
 "file": "Assistant and panel",
 "head": "My data",
 "title": "My data",
-"text": "- Audio overview (Features → My data → \"Audio overview\"; builds on \"Collections\"; Collections → Settings): From a collection a talk to listen to: under Collections → a collection → Audio overview you choose the length (5, 10 or 20 minutes) and two or three voices (A host, B expert, C questions) and tap \"Make\"."
+"text": "- Audio overview (Features → My data → \"Audio overview\"; builds on \"Collections\"; Collections): From a collection a talk to listen to: under Collections → a collection → Audio overview you choose the length (5, 10 or 20 minutes) and two or three voices (A host, B expert, C questions) and tap \"Make\"."
 },
 {
 "lang": "en",

@@ -607,6 +607,8 @@ def funktionen_liste(lang="de"):
                 bits.append(("builds on " if en else "baut auf ") + q(names[f.parent]))
             if f.me in pages:
                 bits.append(f"{'Me' if en else 'Ich'} → {pages[f.me]}")
+            elif f.me in features.OWN_NO_SETTINGS:
+                bits.append(own[f.me])
             elif f.me in own:
                 bits.append(f"{own[f.me]} → {'Settings' if en else 'Einstellungen'}")
             what = g[f.guide]["sec"].get("what") if f.guide in g else None

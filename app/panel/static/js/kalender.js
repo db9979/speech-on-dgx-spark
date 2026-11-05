@@ -18,7 +18,9 @@ const OWN_PAGES={calbox:['cal',t('Kalender','Calendar'),t('Termine','Appointment
   fundbox:['finden',t('Finden','Find'),t('Suche','Search'),[['worte',t('Schlagworte','Tags'),()=>true]]],
   mpbox:['mappen',t('Mappen','Collections'),t('Einträge','Entries')],
   dmbox:['dungeon',t('Dungeon-Master','Dungeon Master'),t('Runden','Rounds'),[['helden',t('Helden','Heroes'),()=>true]]]};
-// [section, name, first tab, [more tabs: key, name, shown?]]; every page ends with the tab „Einstellungen“
+// [section, name, first tab, [more tabs: key, name, shown?]]; every page ends with the tab „Einstellungen“, except these
+// (features.OWN_NO_SETTINGS: Mappen has its explanation in the ⓘ)
+const OWN_NO_SET=['mpbox'];
 function ownPage(id){const p=OWN_PAGES[id];if(!p)return false;
   if($('profmodal').style.display==='grid'&&window.closeProf)closeProf();
   icTabSet(p[0],'set');goSec(p[0]);return true}
