@@ -1,5 +1,5 @@
 import AVFoundation
-import MediaPlayer
+import Combine
 import SwiftUI
 
 // ---------------------------------------------------------------- Hörstück aus einer Mappe (hoerstueck.py, Push 5b)
@@ -111,10 +111,10 @@ struct HsDetail {
 }
 
 /// Hörstücke in the app: the same endpoints as the panel's part (iphone.THINGS "hoerstueck"), only while the admin
-/// released them for the profile. The sound is the AAC copy (?form=m4a: AVFoundation plays no Ogg), held in memory
-/// while it plays, never stored on the iPhone. Background and lock screen through the audio session and Now Playing.
+/// released them for the profile. The sound plays through HsPlayer (HoerstueckPlayer.swift, shared with CarPlay): the AAC
+/// copy (?form=m4a: AVFoundation plays no Ogg), held in memory, never stored on the iPhone; Now Playing and the lock screen.
 @MainActor
-final class HoerstueckModel: NSObject, ObservableObject, AVAudioPlayerDelegate {
+final class HoerstueckModel: ObservableObject {
     @Published var list: [HsStueck] = []
     @Published var heute = 0
     @Published var grenze = 3
@@ -127,13 +127,13 @@ final class HoerstueckModel: NSObject, ObservableObject, AVAudioPlayerDelegate {
     @Published var loaded = false
     @Published var error: String?
     @Published var note: String?
-    @Published var playing: String?
-    @Published var paused = false
-    @Published var time: Double = 0
-    @Published var fetching: String?
-    private var player: AVAudioPlayer?
-    private var ticker: Task<Void, Never>?
-    private var commands = false
+    private var follow: AnyCancellable?
+    var playing: String? { HsPlayer.shared.playing }
+    var paused: Bool { HsPlayer.shared.paused }
+    var time: Double { HsPlayer.shared.time }
+    var fetching: String? { HsPlayer.shared.fetching }
+
+    init() { follow = HsPlayer.shared.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() } }
 
     func load(_ mid: String) async {
         guard let api = SparkAPI.current else { return }
@@ -197,7 +197,7 @@ final class HoerstueckModel: NSObject, ObservableObject, AVAudioPlayerDelegate {
 
     func delete(_ hid: String) async -> Bool {
         guard let api = SparkAPI.current else { return false }
-        if playing == hid { stop() }
+        HsPlayer.shared.forget(hid)
         do {
             _ = try await api.object("DELETE", "api/profile/hoerstueck/" + hid)
             list.removeAll { $0.id == hid }
@@ -219,116 +219,20 @@ final class HoerstueckModel: NSObject, ObservableObject, AVAudioPlayerDelegate {
         } catch { self.error = error.localizedDescription }
     }
 
-    // ---------------------------------------------------------------- the player
+    // ---------------------------------------------------------------- the player (HsPlayer, also in the car)
     func toggle(_ d: HsDetail) async {
-        if playing == d.id, let p = player {
-            if p.isPlaying { p.pause(); paused = true } else { p.play(); paused = false }
-            nowPlaying(d)
-            return
-        }
-        stop()
-        guard let api = SparkAPI.current else { return }
-        fetching = d.id
-        defer { fetching = nil }
-        do {
-            var r = api.request("api/profile/hoerstueck/" + d.id + "/ton")
-            var c = URLComponents(url: api.base.appendingPathComponent("api/profile/hoerstueck/" + d.id + "/ton"),
-                                  resolvingAgainstBaseURL: false)
-            c?.queryItems = [URLQueryItem(name: "form", value: "m4a")]
-            r.url = c?.url
-            let (data, response) = try await URLSession.shared.data(for: r)
-            try SparkAPI.check(data, response)
-            let p = try AVAudioPlayer(data: data, fileTypeHint: AVFileType.m4a.rawValue)
-            try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio)
-            try? AVAudioSession.sharedInstance().setActive(true)
-            p.delegate = self
-            player = p
-            guard p.play() else { return }
-            playing = d.id
-            paused = false
-            remote()
-            nowPlaying(d)
-            ticker = Task { [weak self] in
-                while !Task.isCancelled {
-                    try? await Task.sleep(for: .milliseconds(400))
-                    guard let self, let p = self.player else { return }
-                    self.time = p.currentTime
-                }
-            }
-        } catch { self.error = error.localizedDescription }
+        let p = HsPlayer.shared
+        if p.playing == d.id { p.toggle(); return }
+        let one = HsSpur(id: d.id, titel: d.titel, mappe: d.mappe, dauer: d.dauer)
+        let mine = list.filter { $0.ton }.map { HsSpur(id: $0.id, titel: $0.titel, mappe: d.mappe, dauer: $0.dauer) }
+        do { try await p.play(one, queue: mine.isEmpty ? [one] : mine) } catch { self.error = error.localizedDescription }
     }
 
     /// plays from the start of one line (its time in the script)
     func seek(_ t: Double, _ d: HsDetail) {
-        guard playing == d.id, let p = player else { return }
-        p.currentTime = Swift.max(0, Swift.min(t, p.duration))
-        time = p.currentTime
-        if !p.isPlaying { p.play(); paused = false }
-        nowPlaying(d)
-    }
-
-    func stop() {
-        ticker?.cancel()
-        ticker = nil
-        player?.stop()
-        player = nil
-        playing = nil
-        paused = false
-        time = 0
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
-    }
-
-    private func nowPlaying(_ d: HsDetail) {
-        guard let p = player else { return }
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = [
-            MPMediaItemPropertyTitle: d.titel.isEmpty ? String(localized: "Hörstück") : d.titel,
-            MPMediaItemPropertyAlbumTitle: d.mappe,
-            MPMediaItemPropertyArtist: "Spark",
-            MPMediaItemPropertyPlaybackDuration: p.duration,
-            MPNowPlayingInfoPropertyElapsedPlaybackTime: p.currentTime,
-            MPNowPlayingInfoPropertyPlaybackRate: p.isPlaying ? 1.0 : 0.0,
-        ]
-    }
-
-    /// the lock screen's and the headphones' buttons (once per app run)
-    private func remote() {
-        guard !commands else { return }
-        commands = true
-        let cc = MPRemoteCommandCenter.shared()
-        cc.playCommand.addTarget { [weak self] _ in
-            Task { @MainActor in self?.player?.play(); self?.paused = false; self?.refresh() }
-            return .success
-        }
-        cc.pauseCommand.addTarget { [weak self] _ in
-            Task { @MainActor in self?.player?.pause(); self?.paused = true; self?.refresh() }
-            return .success
-        }
-        cc.togglePlayPauseCommand.addTarget { [weak self] _ in
-            Task { @MainActor in
-                guard let p = self?.player else { return }
-                if p.isPlaying { p.pause(); self?.paused = true } else { p.play(); self?.paused = false }
-                self?.refresh()
-            }
-            return .success
-        }
-        cc.changePlaybackPositionCommand.addTarget { [weak self] e in
-            guard let e = e as? MPChangePlaybackPositionCommandEvent else { return .commandFailed }
-            let t = e.positionTime
-            Task { @MainActor in self?.player?.currentTime = t; self?.refresh() }
-            return .success
-        }
-    }
-
-    private func refresh() {
-        guard let p = player, var info = MPNowPlayingInfoCenter.default().nowPlayingInfo else { return }
-        info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = p.currentTime
-        info[MPNowPlayingInfoPropertyPlaybackRate] = p.isPlaying ? 1.0 : 0.0
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
-        time = p.currentTime
-    }
-
-    nonisolated func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        Task { @MainActor in self.stop() }
+        guard playing == d.id else { return }
+        HsPlayer.shared.seek(t)
+        if paused { HsPlayer.shared.resume() }
     }
 }
 

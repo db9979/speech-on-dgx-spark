@@ -139,7 +139,12 @@ final class AudioEngine {
         sleeping = false
         try configure()
         if !engine.isRunning {
-            try AVAudioSession.sharedInstance().setActive(true)
+            let s = AVAudioSession.sharedInstance()
+            if s.category != .playAndRecord {   // a Hörstück (HsPlayer) or a clip had the sound as playback meanwhile
+                try s.setCategory(.playAndRecord, mode: .voiceChat, options: Self.sessionOptions)
+                Self.note("Kategorie zurück")
+            }
+            try s.setActive(true)
             engine.prepare()
             do { try engine.start() } catch { Self.note("Start fehlgeschlagen: \(error.localizedDescription)"); throw error }
             startedAt = Date()

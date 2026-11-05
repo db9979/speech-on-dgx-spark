@@ -243,7 +243,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "a1226f8b4b",
+        "stand": "cab5b22fb6",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -290,7 +290,7 @@ SEITEN = {
             "hoerstueck.ZEILEN_MIN": ["s13"], "hoerstueck.UEBER_ANTEIL": ["s13"], "hoerstueck.STELLEN_ZEICHEN": ["s13"],
             "hoerstueck.GESPEICHERT_MAX": ["s13"], "tonteile.sprich": ["s13"],
             "hoerstueck.m4a": ["s13"], "hoerstueck.an_telegram": ["s13"], "hoerstueck.melden": ["s13"],
-            "hoerstueck.ist_admin": ["s13"], "hoerstueck.sofort_lauf": ["s13"], "hoerstueck._sofort_offen": ["s13"],
+            "hoerstueck.ist_admin": ["s13"], "hoerstueck.fertige": ["s13"], "hoerstueck.AUTO_MAX": ["s13"], "hoerstueck.sofort_lauf": ["s13"], "hoerstueck._sofort_offen": ["s13"],
             "documents.stelle": ["s13"], "common.signed_low": ["s13"],
             "doklink.pruefe": ["s13"], "doklink.eins": ["s13"], "doklink.neu_abrufen": ["s13"], "wissen.aufnehmen": ["s13"],
             "fundmail.dok_passt": ["s13"], "fundmail.dok_art": ["s13"], "fundmail.zu_dokumenten": ["s13"],
@@ -564,6 +564,7 @@ SEITEN = {
             ("{hoerstueck.ZEILEN_MIN}", ("geprüfte Zeilen, ohne die kein Hörstück entsteht", "checked lines without which no audio overview is made"), "hoerstueck.ZEILEN_MIN"),
             ("{hoerstueck.UEBER_ANTEIL}", ("Anteil der Überleitungen an den Zeilen höchstens", "share of transitions among the lines at most"), "hoerstueck.UEBER_ANTEIL"),
             ("{hoerstueck.GESPEICHERT_MAX}", ("Hörstücke je Profil höchstens", "audio overviews per profile at most"), "hoerstueck.GESPEICHERT_MAX"),
+            ("{hoerstueck.AUTO_MAX}", ("fertige Hörstücke in der Liste im Auto höchstens", "finished audio overviews in the car's list at most"), "hoerstueck.AUTO_MAX"),
             ("{doklink.MAX_AUF_EINMAL}", ("Adressen auf einmal bei Links als Dokument", "addresses at once for links as documents"), "doklink.MAX_AUF_EINMAL"),
             ("{doklink.MAX_WARTEN}", ("Adressen je Profil, die auf ihren Abruf warten, höchstens", "addresses per profile waiting to be fetched at most"), "doklink.MAX_WARTEN"),
         ],
@@ -911,7 +912,9 @@ SEITEN = {
                  "hoerstueck.sofort_lauf macht ein neues oder vorgezogenes Stück ohne ruhige Minuten, ohne die Kette "
                  "davor und ohne Tagesgrenze, mit denselben Regeln; jede Anfrage geht weiter durch vorrang.run und "
                  "mit der Stufe „hinten“, echte Sprache geht also vor. Höchstens eins zugleich "
-                 "(hoerstueck._sofort_offen); solange es läuft, lässt die Kette die Hörstücke liegen.",
+                 "(hoerstueck._sofort_offen); solange es läuft, lässt die Kette die Hörstücke liegen. Für CarPlay liefert "
+                 "hoerstueck.fertige nur die fertigen aller eigenen Mappen (Titel, Mappe, Dauer, höchstens "
+                 "{hoerstueck.AUTO_MAX}); im Auto wird nichts erstellt.",
                  "hoerstueck.stellen gives the model only pieces of the originals from the collection's documents on "
                  "short and whole, at most {hoerstueck.STELLEN_ZEICHEN} characters, in turns from each document; never "
                  "knowledge book pages and never analysis text (model text is never a source of model text). The model "
@@ -935,7 +938,9 @@ SEITEN = {
                  "hoerstueck.sofort_lauf makes a new or pulled forward one without quiet minutes, without the chain "
                  "before it and without the day limit, with the same rules; every request still goes through "
                  "vorrang.run and with the stage „last“, so real speech goes first. At most one at a time "
-                 "(hoerstueck._sofort_offen); while it runs the chain leaves the audio overviews alone."),
+                 "(hoerstueck._sofort_offen); while it runs the chain leaves the audio overviews alone. For CarPlay "
+                 "hoerstueck.fertige gives only the finished ones of all own collections (title, collection, length, "
+                 "at most {hoerstueck.AUTO_MAX}); nothing is made in the car."),
             ]),
             (("Links als Dokument", "Links as documents"), [
                 ("doklink.pruefe prüft jede Adresse nach festen Regeln, bevor etwas geholt wird: http oder https, ein "
@@ -1269,6 +1274,7 @@ SEITEN = {
             ("hoerstueck.due_once", ("ruhige Kette: erst Drehbuch, dann je Schritt eine Zeile", "quiet chain: first the script, then one line per step")),
             ("hoerstueck.ist_admin", ("„Sofort erstellen“ nur für den Admin, auf dem Server geprüft", "„Sofort erstellen“ only for the admin, checked on the server")),
             ("hoerstueck.sofort_lauf", ("erzwungen: ohne ruhige Minuten und Tagesgrenze, Sprache geht vor", "forced: without quiet minutes and the day limit, speech first")),
+            ("hoerstueck.fertige", ("CarPlay: die fertigen aller eigenen Mappen, nur zum Anhören", "CarPlay: the finished ones of all own collections, only to listen")),
             ("hoerstueck._sofort_offen", ("höchstens ein erzwungenes Hörstück zugleich", "at most one forced audio overview at a time")),
             ("tonteile.sprich", ("der eine Helfer für einen gesprochenen Teil", "the one helper for a spoken part")),
             ("doklink.pruefe", ("Adresse nach festen Regeln, bevor etwas geholt wird", "an address by fixed rules before anything is fetched")),

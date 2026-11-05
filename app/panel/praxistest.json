@@ -5338,6 +5338,13 @@
 "titel": "Link hinzufügen oben neben Hinzufügen",
 "text": "Funktionen → Eigene Dokumente → Links als Dokument einschalten. Ich → Dokumente: oben rechts steht „Link hinzufügen“ mit Ketten-Symbol direkt links neben „＋ Hinzufügen“, auf dem Handy (390 px) beide in einer Zeile, die Zahlen darüber nicht abgeschnitten, nichts läuft seitlich hinaus. Ein Klick öffnet das Adressfeld unter der Kopfzeile, ein zweiter schließt es; eine Adresse holen klappt wie bisher. Weiter unten steht kein aufklappbares „Link hinzufügen“ mehr. Schalter aus: der Knopf ist weg. Auf English heißt er „Add link“.",
 "thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P789",
+"v": 1349,
+"titel": "Hörstück im Auto anhören (CarPlay)",
+"text": "Ein fertiges Hörstück in einer Mappe haben. Im Auto (oder Xcode-Simulator mit CarPlay): Spark → „Hörstücke“: die fertigen aus allen Mappen mit Mappe und Dauer, das neueste oben. Eins antippen: es spielt, der Autobildschirm zeigt Titel und Mappe unter Now Playing; Pause, 15 Sekunden vor und zurück und nächstes/voriges am Lenkrad gehen. In der Liste oben „Pause“, „Weiter anhören“, „15 Sekunden zurück“. „Mit Spark sprechen“ antippen und etwas fragen: das Hörstück pausiert, nach dem Gespräch spielt es von selbst weiter; Radio und Navigation sind danach normal laut. Auto trennen: es pausiert, nichts kommt aus dem iPhone-Lautsprecher. Später wieder antippen: es geht an der letzten Stelle weiter („weiter ab …“). Ohne Freigabe von Hörstück fehlt die Zeile. iPhone → Einstellungen → Ton-Protokoll: „Hörstück: spielt“, „Pause für Gespräch“, „weiter“, nie ein Titel.",
+"thread": "Ideen aus Open Notebook übernehmen"
 }
 ]
 }

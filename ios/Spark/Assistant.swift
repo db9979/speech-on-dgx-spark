@@ -380,7 +380,7 @@ final class Conversation: ObservableObject {
     /// and on battery only for a while after the last use.
     var canWake: Bool {
         // never in the car (Dominik 2026-10-20 „2a“): the radio set it off and the microphone stayed open all drive
-        guard Prefs.wake, allowed.listen, speechAllowed, wake.onDevice, !CallCenter.shared.active, !inCar else { return false }
+        guard Prefs.wake, allowed.listen, speechAllowed, wake.onDevice, !CallCenter.shared.active, !HsPlayer.claiming, !inCar else { return false }
         if charging { return true }
         return Prefs.batteryMinutes > 0 && Date().timeIntervalSince(lastActivity) < Double(Prefs.batteryMinutes) * 60
     }
@@ -599,6 +599,18 @@ final class Conversation: ObservableObject {
         streamDone = true
         pcm = []
         base(why)
+    }
+
+    /// A Hörstück starts or plays on (HsPlayer, HoerstueckPlayer.swift): a conversation stops, the wake word goes quiet
+    /// (canWake asks HsPlayer.claiming) and the audio engine lets go of the sound, so the player gets it as playback.
+    func giveSound(_ why: String) {
+        if phase != .idle { stop(why) }
+        audio.sleep()
+    }
+
+    /// The Hörstück ended or let go of the sound: back to rest, the wake word may listen again (never in the car).
+    func soundBack() {
+        if phase == .idle || phase == .waiting { base() }
     }
 
     func restart() {

@@ -35,6 +35,10 @@ through push.send with the way to the Mappe (only the Mappe's name, never the mo
 the person uses (sprache de or en: the page's or the app's language, the tool's own words): an English prompt, frame and
 list of transition words (WORDS_EN), the same rules otherwise; the speech output gets the language.
 
+CarPlay („Hörstücke", iPhone app): a row while Hörstück is released, behind it the finished ones of every own Mappe
+(fertige, GET /api/profile/hoerstuecke: title, Mappe and length, newest first, at most AUTO_MAX). Nothing is made from
+the car, only listened to; the app holds the AAC copy in memory (HsPlayer, ios/Spark/HoerstueckPlayer.swift).
+
 Limits: chat.hoerstueck_day new Hörstücke per profile and day (documents.count_today key "hoerstueck"), at most
 GESPEICHERT_MAX kept per profile, 20 minutes each. The Mappe changed since (sig): the page says so, a new one only per click.
 
@@ -54,6 +58,7 @@ Table in users/<id>/wissen.db (dateien.py), next to the Mappen:
 
     GET    /api/profile/mappen/{mid}/hoerstuecke   the Mappe's Hörstücke with state and progress, the limits, the roles
     POST   /api/profile/mappen/{mid}/hoerstuecke   {laenge: 5|10|20, stimmen: 2|3, sprache: de|en}: queued
+    GET    /api/profile/hoerstuecke                CarPlay: the finished ones of every own Mappe, newest first, AUTO_MAX
     GET    /api/profile/hoerstueck/{hid}           the script with the places and the start of every line
     GET    /api/profile/hoerstueck/{hid}/ton       the sound (range requests, ?form=m4a the AAC copy), only the own profile
     POST   /api/profile/hoerstueck/{hid}/telegram  „An Telegram": to the own linked chat only
@@ -106,6 +111,7 @@ STELLEN_ZEICHEN = 16_000  # characters of places the model gets
 STELLE_ZEICHEN = 1_500   # characters of one place
 DAY, DAY_MIN, DAY_MAX = 3, 1, 10   # chat.hoerstueck_day (config.default.json holds the default)
 GESPEICHERT_MAX = 10     # kept per profile
+AUTO_MAX = 12            # finished ones in the list for CarPlay (GET /api/profile/hoerstuecke), newest first
 VERSUCHE = 3             # a script that broke this often, or a line the speech output refused this often
 STAENDE = ("wartet", "sprechen", "fertig", "leer", "x")
 PAUSE_MS, PAUSE_KURZ_MS = 300, 120   # silence between two voices / between two lines of the same voice
@@ -595,6 +601,25 @@ def liste(uid, mid):
         rows = con.execute("SELECT * FROM hs_stueck WHERE mappe=? ORDER BY made DESC, id", (mid,)).fetchall()
         alle = con.execute("SELECT COUNT(*) FROM hs_stueck").fetchone()[0]
     return {"stuecke": [_kurz(r, sig) for r in rows], "alle": alle}
+
+
+def fertige(uid, n=AUTO_MAX):
+    """The profile's finished Hörstücke of every Mappe for CarPlay: newest first, at most n, each with its Mappe's name
+    and length (only id, titel, mappe_name, dauer_s, made); one whose Mappe is gone is left out."""
+    import mappen
+    if not _exists(uid):
+        return []
+    out = []
+    with _Db(uid) as con:
+        for r in con.execute("SELECT * FROM hs_stueck WHERE stand='fertig' AND datei!='' ORDER BY made DESC, id").fetchall():
+            m = mappen._get(con, r["mappe"])
+            if not m:
+                continue
+            out.append({"id": r["id"], "titel": r["titel"] or "", "mappe_name": m["name"], "dauer_s": r["dauer_s"],
+                        "made": r["made"]})
+            if len(out) >= n:
+                break
+    return out
 
 
 def eins(uid, hid):
@@ -1240,6 +1265,16 @@ async def list_route(mid: str, request: Request, prof=Depends(own_profile)):
     return dict(got, heute=n, grenze=most, max=GESPEICHERT_MAX, laengen=sorted(LAENGEN), stimmen=list(STIMMEN),
                 rollen={k: list(v) for k, v in ROLLEN.items()}, sofort=ist_admin(request, uid),
                 sofort_frei=not _sofort)
+
+
+@router.get("/api/profile/hoerstuecke", dependencies=[Depends(assistant)])
+async def car_route(request: Request, prof=Depends(own_profile)):
+    """CarPlay (iPhone app, „Hörstücke"): the finished ones of all own Mappen, newest first, at most AUTO_MAX; listening
+    only, nothing is made from the car."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "hoerstueck", uid)
+    return {"stuecke": await asyncio.to_thread(fertige, uid), "max": AUTO_MAX}
 
 
 @router.post("/api/profile/mappen/{mid}/hoerstuecke", dependencies=[Depends(assistant)])

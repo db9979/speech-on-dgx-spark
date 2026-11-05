@@ -262,5 +262,76 @@ class DungeonInTheCar(unittest.TestCase):
         self.assertIn("runden = Self.runden(d)", read("DungeonView.swift"))   # one parser for the app and the car
 
 
+class HoerstueckInTheCar(unittest.TestCase):
+    """Hörstück in CarPlay (Dominik 2026-11-05): a row while Hörstück is released, the finished ones to listen to, one
+    player for the app and the car (HoerstueckPlayer.swift), the sound only in memory, a conversation pauses it."""
+
+    def test_the_row_and_the_list_only_to_listen(self):
+        car = read("CarPlayScene.swift")
+        rows = body(car, "private func items(")
+        self.assertIn('if areas.contains("hoerstueck")', rows)
+        self.assertIn('String(localized: "Hörstücke")', rows)
+        self.assertLess(rows.index("[start, day, repeatRow]"), rows.index('areas.contains("hoerstueck")'))
+        get = body(car, "private func hoerstuecke()")
+        self.assertIn('api.object("GET", "api/profile/hoerstuecke")', get)
+        self.assertIn(".prefix(12)", get)
+        self.assertIn("reachable {", get)
+        self.assertIn("interface.pushTemplate(sub, animated: true)", body(car, "private func hsShow("))
+        self.assertNotRegex(car, r'"POST"[^\n]*hoerstueck|hoerstuecke/sofort|hoerstueck[^\n]*/telegram')   # nothing is made
+        hs = car[car.index("private func hoerstuecke()"):car.index("/// Rückfrage bei unklaren Aktionen")]
+        self.assertNotIn("Conversation.shared.write(", hs)
+        self.assertNotIn("presentTemplate", hs)   # the voice window only through sync()
+        self.assertIn('String(localized: "15 Sekunden zurück")', body(car, "private func hsRows()"))
+
+    def test_the_car_going_away_pauses_and_comes_back(self):
+        car = read("CarPlayScene.swift")
+        gone = body(car, "didDisconnectInterfaceController")
+        self.assertLess(gone.index("HsPlayer.shared.carGone()"), gone.index("Self.away = Task"))
+        self.assertIn("if back { HsPlayer.shared.carBack() }", car)
+        self.assertIn("watchHs = nil", gone)
+
+    def test_sound_only_in_memory(self):
+        p = read("HoerstueckPlayer.swift")
+        self.assertIn("AVAudioPlayer(data: data, fileTypeHint: AVFileType.m4a.rawValue)", p)
+        self.assertIn("URLSession(configuration: .ephemeral)", p)
+        self.assertIn('URLQueryItem(name: "form", value: "m4a")', p)
+        for no in ("contentsOf", "FileManager", "write(to:", "download(", "documentDirectory", "cachesDirectory"):
+            self.assertNotIn(no, p)
+        self.assertNotIn("AVAudioPlayer", read("HoerstueckView.swift").replace("AVFoundation", ""))   # one player only
+        self.assertEqual(p.count("static let shared = HsPlayer()"), 1)
+        # only the place is kept: the id and whole seconds, never a title
+        self.assertIn('$0.id + ":" + String(Int($0.t))', body(p, "private static func store("))
+
+    def test_a_conversation_goes_first(self):
+        p = read("HoerstueckPlayer.swift")
+        talk = body(p, "private func talk(")
+        self.assertIn('pause("Pause für Gespräch")', talk)
+        self.assertIn("guard let self, self.heldForTalk, phase == .idle || phase == .waiting", talk)
+        self.assertIn('Conversation.shared.giveSound("Hörstück")', body(p, "func play("))
+        self.assertIn('Conversation.shared.giveSound("Hörstück")', body(p, "func resume()"))
+        self.assertIn("try? s.setCategory(.playback, mode: .spokenAudio)", body(p, "private func session("))
+        self.assertIn(".notifyOthersOnDeactivation", body(p, "private func session("))
+        a = read("Assistant.swift")
+        give = body(a, "func giveSound(")
+        self.assertIn("stop(why)", give)
+        self.assertIn("audio.sleep()", give)
+        self.assertRegex(body(a, "var canWake: Bool"), r"!HsPlayer\.claiming, !inCar else")   # no wake word while it plays
+        self.assertIn("if s.category != .playAndRecord", read("Engine.swift"))   # the conversation gets its session back
+
+    def test_now_playing_and_the_buttons(self):
+        p = read("HoerstueckPlayer.swift")
+        r = body(p, "private func remote()")
+        for c in ("playCommand", "pauseCommand", "togglePlayPauseCommand", "skipForwardCommand", "skipBackwardCommand",
+                  "nextTrackCommand", "previousTrackCommand", "changePlaybackPositionCommand"):
+            self.assertIn("cc." + c, r)
+        self.assertIn("static let skip: Double = 15", p)
+        self.assertIn("MPMediaItemPropertyAlbumTitle: s.mappe", body(p, "private func info()"))
+        self.assertIn("oldDeviceUnavailable", p)   # the car or the headphones gone: pause
+        notes = re.findall(r'AudioEngine\.note\(([^\n]*)\)', p)
+        self.assertGreaterEqual(len(notes), 6)
+        for n in notes:
+            self.assertRegex(n, r'^(why|"[^"\\]*"( \+ why)?|[^"]*\? "[^"\\]*" : "[^"\\]*")$')   # fixed words only
+
+
 if __name__ == "__main__":
     unittest.main()

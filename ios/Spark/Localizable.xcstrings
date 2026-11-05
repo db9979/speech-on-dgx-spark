@@ -17641,6 +17641,66 @@
         }
       }
     },
+    "Aus deinen Mappen anhören": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listen from your collections"
+          }
+        }
+      }
+    },
+    "Weiter anhören": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resume"
+          }
+        }
+      }
+    },
+    "15 Sekunden zurück": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back 15 seconds"
+          }
+        }
+      }
+    },
+    "weiter ab %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "resume at %@"
+          }
+        }
+      }
+    },
+    "Noch kein fertiges Hörstück": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No finished audio overview yet"
+          }
+        }
+      }
+    },
+    "Erstellen geht in der App bei einer Mappe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create one in the app, in a collection"
+          }
+        }
+      }
+    },
     "Neue Runde": {
       "localizations": {
         "en": {

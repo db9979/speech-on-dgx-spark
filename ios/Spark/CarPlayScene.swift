@@ -35,6 +35,10 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
     private var faceLater = false
     private var day: CPListItem?
     private var remind: CPListItem?
+    /// „Hörstücke": the list behind the row and what it shows, redrawn when the player plays or pauses
+    private var hsSub: CPListTemplate?
+    private var hsList: [HsSpur] = []
+    private var watchHs: AnyCancellable?
     /// Wireless CarPlay drops out for a moment now and then: the conversation goes on and ends only when the car stays
     /// away this long (Dominik 2026-10-21 „3“; before, every drop-out stopped the answer at once).
     static let dropOut: TimeInterval = 5
@@ -49,6 +53,7 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
         Self.away?.cancel()
         Self.away = nil
         AudioEngine.note(back ? "CarPlay: wieder da" : "CarPlay: verbunden")
+        if back { HsPlayer.shared.carBack() }   // a Hörstück paused by the drop-out plays on
         let talk = Conversation.shared
         talk.inCar = true
         if talk.phase == .waiting { talk.stop() }   // no wake word in the car („2a“): base() closes the microphone
@@ -98,6 +103,9 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
         watchFace = talk.$allowed.map(\.face).removeDuplicates().receive(on: RunLoop.main).sink { [weak self] f in self?.use(face: f) }
         watch = talk.$phase.receive(on: RunLoop.main).sink { [weak self] p in self?.show(p) }
         watchChoices = talk.$gameChoices.removeDuplicates().receive(on: RunLoop.main).sink { [weak self] c in self?.choices(c) }
+        let hs = HsPlayer.shared
+        watchHs = hs.$playing.combineLatest(hs.$paused).map { ($0 ?? "") + ($1 ? "|p" : "") }.removeDuplicates()
+            .receive(on: RunLoop.main).sink { [weak self] _ in self?.hsRedraw() }
         // started by the car alone, the phone screen never appeared and nothing asked the Spark yet (hello):
         // without it the car would keep the defaults (robot face, no profile switches)
         Task { await talk.check() }
@@ -137,6 +145,7 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
     func templateApplicationScene(_ templateApplicationScene: CPTemplateApplicationScene,
                                   didDisconnectInterfaceController interfaceController: CPInterfaceController) {
         AudioEngine.note("CarPlay: getrennt")
+        HsPlayer.shared.carGone()   // never on into the iPhone's speaker; back within the drop-out time it plays on
         hide?.cancel()
         hide = nil
         want = nil
@@ -149,6 +158,9 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
         repeatRow = nil
         day = nil
         remind = nil
+        hsSub = nil
+        hsList = []
+        watchHs = nil
         interface = nil
         start = nil
         voice = nil
@@ -206,6 +218,15 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
                 self?.playGame()
             }
             out.append(game)
+        }
+        if areas.contains("hoerstueck") {   // Hörstück aus einer Mappe (hoerstueck.py): only to listen, nothing is made in the car
+            let hs = CPListItem(text: String(localized: "Hörstücke"), detailText: String(localized: "Aus deinen Mappen anhören"),
+                                image: UIImage(systemName: "headphones"))
+            hs.handler = { [weak self] _, done in
+                done()
+                self?.hoerstuecke()
+            }
+            out.append(hs)
         }
         if let fresh { out.append(fresh) }
         return out
@@ -297,6 +318,86 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
         AudioEngine.note(new ? "CarPlay: Knopf Neue Runde" : "CarPlay: Knopf Runde")
         interface?.popToRootTemplate(animated: true) { _, _ in }
         reachable { Conversation.shared.startGame(rid, new: new) }
+    }
+
+    /// „Hörstücke" (Dominik 2026-11-05): the finished Hörstücke of every own Mappe with Mappe and length, the newest first,
+    /// at most 12 (GET /api/profile/hoerstuecke). A tap plays it through HsPlayer (Now Playing, the remote buttons, on
+    /// where it stopped); while one is loaded the list starts with „Pause"/„Weiter" and 15 s back. Only listening.
+    private func hoerstuecke() {
+        AudioEngine.note("CarPlay: Knopf Hörstücke")
+        reachable { [weak self] in
+            Task { [weak self] in
+                var got: [HsSpur] = []
+                if let api = SparkAPI.current, let d = try? await api.object("GET", "api/profile/hoerstuecke") {
+                    got = (d["stuecke"] as? [[String: Any]] ?? []).prefix(12).compactMap { HsSpur($0) }
+                }
+                self?.hsShow(got)
+            }
+        }
+    }
+
+    private func hsShow(_ list: [HsSpur]) {
+        guard let interface else { return }
+        hsList = list
+        let sub = CPListTemplate(title: String(localized: "Hörstücke"), sections: [CPListSection(items: hsRows())])
+        hsSub = sub
+        interface.pushTemplate(sub, animated: true) { _, _ in }
+    }
+
+    private func hsRedraw() { hsSub?.updateSections([CPListSection(items: hsRows())]) }
+
+    private func hsRows() -> [CPListItem] {
+        let p = HsPlayer.shared
+        var rows: [CPListItem] = []
+        if let now = p.spur {
+            let go = CPListItem(text: p.paused ? String(localized: "Weiter anhören") : String(localized: "Pause"), detailText: now.name,
+                                image: UIImage(systemName: p.paused ? "play.fill" : "pause.fill"))
+            go.handler = { [weak self] _, done in
+                done()
+                self?.hsToggle()
+            }
+            rows.append(go)
+            let back = CPListItem(text: String(localized: "15 Sekunden zurück"), detailText: nil, image: UIImage(systemName: "gobackward.15"))
+            back.handler = { _, done in
+                done()
+                AudioEngine.note("CarPlay: Knopf Hörstück zurück")
+                HsPlayer.shared.skip(-HsPlayer.skip)
+            }
+            rows.append(back)
+        }
+        for s in hsList {
+            let at = Int(HsPlayer.place(s.id))
+            let row = CPListItem(text: s.name, detailText: s.mappe + " · " + HsStueck.clock(s.dauer) + " min"
+                                 + (at > 5 ? " · " + String(localized: "weiter ab \(HsStueck.clock(at))") : ""),
+                                 image: UIImage(systemName: "headphones"))
+            row.isPlaying = p.playing == s.id && !p.paused
+            row.handler = { [weak self] _, done in
+                done()
+                self?.hsPlay(s)
+            }
+            rows.append(row)
+        }
+        if hsList.isEmpty {
+            rows.append(CPListItem(text: String(localized: "Noch kein fertiges Hörstück"),
+                                   detailText: String(localized: "Erstellen geht in der App bei einer Mappe"), image: UIImage(systemName: "headphones")))
+        }
+        return rows
+    }
+
+    private func hsToggle() {
+        AudioEngine.note(HsPlayer.shared.paused ? "CarPlay: Knopf Hörstück weiter" : "CarPlay: Knopf Hörstück Pause")
+        HsPlayer.shared.toggle()
+    }
+
+    /// stops a conversation first (HsPlayer.play → Conversation.giveSound); without a sound the car says so for a moment
+    private func hsPlay(_ s: HsSpur) {
+        AudioEngine.note("CarPlay: Knopf Hörstück spielen")
+        let list = hsList
+        reachable { [weak self] in
+            Task { [weak self] in
+                do { try await HsPlayer.shared.play(s, queue: list) } catch { self?.flash("fail") }
+            }
+        }
     }
 
     /// Rückfrage bei unklaren Aktionen (dungeon_rueckfrage.py): the Spark asked „Was genau tut …?“; its suggestions as
