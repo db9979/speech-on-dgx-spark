@@ -118,10 +118,12 @@ final class HoerstueckModel: ObservableObject {
     @Published var list: [HsStueck] = []
     @Published var heute = 0
     @Published var grenze = 3
+    /// no daily limit for this profile (coadmin.unbegrenzt: the admin, or „Ohne Tageslimit“)
+    @Published var frei = false
     @Published var max = 10
     @Published var alle = 0
     @Published var laengen = [5, 10, 20]
-    /// „Sofort erstellen": only when the server says the admin asks (hoerstueck.ist_admin); it checks it again on POST
+    /// „Sofort erstellen": only when the server says the admin asks (coadmin.ist_admin); it checks it again on POST
     @Published var sofort = false
     @Published var sofortFrei = true
     @Published var loaded = false
@@ -143,6 +145,7 @@ final class HoerstueckModel: ObservableObject {
             list = (d["stuecke"] as? [[String: Any]] ?? []).prefix(20).compactMap { HsStueck($0) }
             heute = (d["heute"] as? NSNumber)?.intValue ?? 0
             grenze = (d["grenze"] as? NSNumber)?.intValue ?? 3
+            frei = d["frei"] as? Bool ?? false
             max = (d["max"] as? NSNumber)?.intValue ?? 10
             alle = (d["alle"] as? NSNumber)?.intValue ?? 0
             laengen = (d["laengen"] as? [NSNumber])?.map { $0.intValue } ?? [5, 10, 20]
@@ -259,7 +262,7 @@ struct HoerstueckView: View {
                 Button {
                     Task { busy = true; await m.make(mappe.id, laenge: laenge, stimmen: stimmen); busy = false }
                 } label: { Label("Erstellen", systemImage: "waveform") }
-                    .disabled(busy || m.alle >= m.max || m.heute >= m.grenze)
+                    .disabled(busy || m.alle >= m.max || (!m.frei && m.heute >= m.grenze))
                 if m.sofort {
                     Button {
                         Task { busy = true; await m.now(mappe.id, laenge: laenge, stimmen: stimmen); busy = false }
@@ -269,6 +272,7 @@ struct HoerstueckView: View {
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 Text(m.alle >= m.max ? String(localized: "Höchstens \(m.max) Hörstücke; lösch erst eins.")
+                     : m.frei ? String(localized: "heute \(m.heute) · ohne Tageslimit · läuft in ruhigen Minuten")
                      : m.heute >= m.grenze ? String(localized: "Für heute ist die Grenze erreicht.")
                      : String(localized: "heute \(m.heute) von \(m.grenze) · läuft in ruhigen Minuten"))
                     .font(.caption).foregroundStyle(.secondary)

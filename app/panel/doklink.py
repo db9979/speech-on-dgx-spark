@@ -7,7 +7,8 @@
   (stand "wartet"); one runner fetches them one after another, no model, only the network.
 - Fetch: only netguard.hole_oeffentlich (the Notaus first, public addresses only, also after every redirect and name
   lookup, at most netguard.WEITER redirects, chat.doc_link_mb, ABRUF_S seconds, content types ARTEN, the first bytes
-  of a binary kind checked as well). At most chat.doc_link_day fetches per profile and day (with "Neu abrufen").
+  of a binary kind checked as well). At most chat.doc_link_day fetches per profile and day (with "Neu abrufen"; none for a profile without
+  daily limits, coadmin.unbegrenzt, YouTube links too).
 - The page becomes a document through wissen.aufnehmen (source "link", herkunft "link:" + SHA-256 of the address): every
   rule of an upload holds (quota, MAX_DOCS, the admin's block, the second login step); the same address once. HTML goes
   as "<title>.html" (documents.add reads it with its headings and tables, with a Docling server like any HTML file).
@@ -44,6 +45,7 @@ from urllib.parse import urlsplit, urlunsplit
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
+import coadmin
 import documents
 import features
 import guard
@@ -266,7 +268,7 @@ def _setze(uid, lid, **kw):
 def _tag_voll(uid, now):
     import wissen
     day = wissen.today(now)
-    if documents.count_today(uid, day, key="doklink") >= grenze("doc_link_day"):
+    if documents.count_today(uid, day, key="doklink") >= grenze("doc_link_day") and not coadmin.unbegrenzt(uid):
         _day.today()["grenze"] += 1
         print(f"doklink: grenze | {grenze('doc_link_day')} | {_who(uid)}", flush=True)
         return True
@@ -421,7 +423,7 @@ def info(uid):
         return {"on": False}
     import wissen
     has = os.path.exists(documents.db_path(uid))
-    return {"on": True, "max": MAX_AUF_EINMAL, "mb": grenze("doc_link_mb"), "day": grenze("doc_link_day"),
+    return {"on": True, "max": MAX_AUF_EINMAL, "mb": grenze("doc_link_mb"), "day": grenze("doc_link_day"), "frei": coadmin.unbegrenzt(uid),
             "today": documents.count_today(uid, wissen.today(time.time()), key="doklink") if has else 0,
             "links": liste(uid), "yt": ytquelle.info(uid)}
 

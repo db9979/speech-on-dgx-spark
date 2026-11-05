@@ -324,6 +324,28 @@ class Pieces(Base):
         self.assertEqual(ear.calls, 2)
         self.assertEqual(buf.getvalue().count("abschrift: grenze | 10 min"), 1)
 
+    def test_no_day_limit_for_a_profile_without_daily_limits(self):
+        """Dominik 2026-11-05 „Admin sollte keine Grenze haben“: coadmin.unbegrenzt lifts the minutes per day, the page
+        says frei; size and length of a recording stay; untick: the limit holds again."""
+        import coadmin
+        c, uid = self.fresh("Abschriftfrei")
+        self.addCleanup(coadmin.set_frei, uid, False)
+        helpers.set_config(doc_audio_day_min=10)
+        self.recording(c, uid, 90)
+        documents.count_today(uid, wissen.today(NOW), add=10 * 60, key="abschrift")
+        ear = Ear()
+        with quiet():
+            self.assertIsNone(self.step(uid, ear))                            # a normal profile: the limit
+        self.assertIs(abschrift.info(uid)["frei"], False)
+        coadmin.set_frei(uid, True)
+        self.assertIs(abschrift.info(uid)["frei"], True)
+        self.assertEqual(self.step(uid, ear), "abschrift")                    # freed: beyond it
+        coadmin.set_frei(uid, False)
+        with quiet():
+            self.assertIsNone(self.step(uid, ear))
+        self.assertEqual(ear.calls, 1)
+        self.assertIn("!A.frei&&A.today_min>=A.day_min", helpers.repo_file("app", "panel", "static", "js", "me.js"))
+
     def test_missing_speech_recognition_is_not_tried_and_said_once(self):
         c, uid = self.fresh("Abschriftohr")
         self.recording(c, uid, 40)

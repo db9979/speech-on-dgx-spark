@@ -13,7 +13,8 @@
   the ASR service lets it wait behind every person and does not mark it as speech (common.SpeechMark, Fund 0.1), else
   it would stop itself and all other background work. The words at the edge that the overlap heard twice go by a fixed
   rule (trim_edge). Recordings longer than LONG_S only after wissen.long_ok (night window "Lange Dokumente nachts
-  lesen"); at most chat.doc_audio_day_min minutes per profile and day (documents.count_today key "abschrift").
+  lesen"); at most chat.doc_audio_day_min minutes per profile and day (documents.count_today key "abschrift"; none for
+  a profile without daily limits, coadmin.unbegrenzt).
   While the Dienst-Wächter sees the speech recognition gone (dienstwacht.down("asr")) nothing is tried.
 - Every piece is pieces of the document with its start second as page: wissen.where says "Aufnahme: Name, bei 12:30",
   the text view and hits show the time and play the kept sound track there. At the end: with "Originale aufbewahren"
@@ -38,6 +39,7 @@ import time
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 
+import coadmin
 import documents
 import features
 import guard
@@ -393,7 +395,7 @@ async def due_once(now=None):
         nxt = await asyncio.to_thread(documents.audio_next, uid, None if lang else LONG_S)
         if not nxt:
             continue
-        if documents.count_today(uid, day, key="abschrift") >= most:
+        if documents.count_today(uid, day, key="abschrift") >= most and not coadmin.unbegrenzt(uid):
             if _said.get(("grenze", uid)) != day:
                 _said[("grenze", uid)] = day
                 _day.today()["grenze"] += 1
@@ -414,7 +416,7 @@ def info(uid):
     import wissen
     now = time.time()
     return {"on": True, "types": list(AUDIO), "mb": grenze("doc_audio_mb"), "min": grenze("doc_audio_min"),
-            "day_min": grenze("doc_audio_day_min"), "long_min": LONG_S // 60, "long_ok": wissen.long_ok(now),
+            "day_min": grenze("doc_audio_day_min"), "frei": coadmin.unbegrenzt(uid), "long_min": LONG_S // 60, "long_ok": wissen.long_ok(now),
             "today_min": documents.count_today(uid, _today(now), key="abschrift") // 60 if os.path.exists(documents.db_path(uid)) else 0,
             "now": _now.get("doc") if _now.get("uid") == uid else None,
             "asr": not (dienstwacht.down("asr") or now < _hold["asr"])}

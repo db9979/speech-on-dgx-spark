@@ -28,7 +28,8 @@ Steckbrief's deadline, wissen.remind_at).
 
 Quiet chain: due_once is a link of wissen.KETTE after the Wissenskarte and fund.schlagworte_due; one kind of one
 document per step, through vorrang.run("Auswertung") (cancelled when speech starts, waits again), at most
-chat.doc_auswertung_day kinds per profile and day (documents.count_today key "auswertung").
+chat.doc_auswertung_day kinds per profile and day (documents.count_today key "auswertung"; none for a profile without
+daily limits, coadmin.unbegrenzt).
 
 Tables in users/<id>/wissen.db (dateien.py), next to the documents:
     aw_ergebnis (doc, art, stand, punkte, sig, at, versuche, klick)   stand: wartet / ok / leer / x
@@ -53,6 +54,7 @@ import time
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
+import coadmin
 import documents
 import features
 import guard
@@ -513,7 +515,7 @@ async def due_once(now=None):
     for uid in profiles.user_ids():
         if not features.allowed("auswertungen", uid) or not _exists(uid):
             continue
-        if documents.count_today(uid, day, key="auswertung") >= day_limit():
+        if documents.count_today(uid, day, key="auswertung") >= day_limit() and not coadmin.unbegrenzt(uid):
             if _grenze.get(uid) != day:
                 _grenze[uid] = day
                 _day.today()["grenze"] += 1

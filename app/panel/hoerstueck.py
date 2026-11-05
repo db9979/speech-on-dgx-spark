@@ -39,10 +39,11 @@ CarPlay („Hörstücke", iPhone app): a row while Hörstück is released, behin
 (fertige, GET /api/profile/hoerstuecke: title, Mappe and length, newest first, at most AUTO_MAX). Nothing is made from
 the car, only listened to; the app holds the AAC copy in memory (HsPlayer, ios/Spark/HoerstueckPlayer.swift).
 
-Limits: chat.hoerstueck_day new Hörstücke per profile and day (documents.count_today key "hoerstueck"), at most
+Limits: chat.hoerstueck_day new Hörstücke per profile and day (documents.count_today key "hoerstueck"; never for a
+profile without daily limits, coadmin.unbegrenzt: the admin, Dominik 2026-11-05 „Admin sollte keine Grenze haben“), at most
 GESPEICHERT_MAX kept per profile, 20 minutes each. The Mappe changed since (sig): the page says so, a new one only per click.
 
-„Sofort erstellen" (Dominik 2026-11-05: „die Erstellung forcieren"): only the admin (ist_admin, checked by the server:
+„Sofort erstellen" (Dominik 2026-11-05: „die Erstellung forcieren"): only the admin (coadmin.ist_admin, checked by the server:
 the panel password's own login, or the profile itself with the role „admin" in its own browser or iPhone app, never a
 Verwalter, a guest or another device) makes a new one at once or pulls a waiting one forward (column sofort). It skips
 the quiet minutes (wissen.quiet: a minute without a question), the quiet chain before it and the day's limit (it is not
@@ -87,6 +88,7 @@ import wave
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
 
+import coadmin
 import documents
 import features
 import guard
@@ -533,11 +535,12 @@ def _zeilen(r):
     return [x for x in z if isinstance(x, dict)] if isinstance(z, list) else []
 
 
-def bitte(uid, mid, laenge, stimmen, now=None, sprache="de", sofort=False):
+def bitte(uid, mid, laenge, stimmen, now=None, sprache="de", sofort=False, request=None):
     """The owner's click „Erstellen": a new Hörstück waits, its script in sprache (SPRACHEN). Returns (id, "") or
     (None, reason word): "keine mappe", "leer" (no document at kurz or ganz), "voll" (GESPEICHERT_MAX kept), "grenze"
-    (the day's limit). sofort (the admin's „Sofort erstellen"): marked forced, the day's limit neither asked nor
-    counted."""
+    (the day's limit; never for a profile without daily limits, coadmin.unbegrenzt with the request when there is one:
+    counted, never refused). sofort (the admin's „Sofort erstellen"): marked forced, the day's limit neither asked
+    nor counted."""
     import mappen
     if laenge not in LAENGEN or stimmen not in STIMMEN or sprache not in SPRACHEN:
         raise ValueError("laenge 5, 10 or 20, stimmen 2 or 3, sprache de or en")
@@ -552,7 +555,7 @@ def bitte(uid, mid, laenge, stimmen, now=None, sprache="de", sofort=False):
         if con.execute("SELECT COUNT(*) FROM hs_stueck").fetchone()[0] >= GESPEICHERT_MAX:
             return None, "voll"
     if not sofort:
-        if documents.count_today(uid, day, key="hoerstueck") >= day_limit():
+        if documents.count_today(uid, day, key="hoerstueck") >= day_limit() and not coadmin.unbegrenzt(uid, request):
             _day.today()["grenze"] += 1
             return None, "grenze"
         documents.count_today(uid, day, add=1, key="hoerstueck")
@@ -969,21 +972,6 @@ async def due_once(now=None):
 
 
 # ---------------------------------------------------------------- „Sofort erstellen": only the admin
-def ist_admin(request, uid):
-    """Whether this request of the profile uid comes from the admin, decided by the server: the panel password's own
-    login (only while a password is set), or the profile itself acting with the role „admin" (coadmin.session: its
-    own browser login with the second step, or its proved iPhone app). Never a Verwalter, a guest or a device key."""
-    import coadmin
-    import core
-    try:
-        if core.password_set() and core._admin_cookie_age(request) is not None:
-            return True
-        s = coadmin.session(request)
-    except Exception:   # noqa: BLE001  (no session: no admin)
-        return False
-    return bool(s) and s.get("role") == "admin" and s.get("id") == uid
-
-
 def _sofort_offen(uid, hid):
     """The forced Hörstück that holds the one place ("" when it is free or it is hid itself, with no run going)."""
     if _sofort:
@@ -1262,8 +1250,9 @@ async def list_route(mid: str, request: Request, prof=Depends(own_profile)):
     if got is None:
         raise HTTPException(404, "no such Mappe")
     n, most = heute(uid)
-    return dict(got, heute=n, grenze=most, max=GESPEICHERT_MAX, laengen=sorted(LAENGEN), stimmen=list(STIMMEN),
-                rollen={k: list(v) for k, v in ROLLEN.items()}, sofort=ist_admin(request, uid),
+    return dict(got, heute=n, grenze=most, frei=coadmin.unbegrenzt(uid, request), max=GESPEICHERT_MAX,
+                laengen=sorted(LAENGEN), stimmen=list(STIMMEN),
+                rollen={k: list(v) for k, v in ROLLEN.items()}, sofort=coadmin.ist_admin(request, uid),
                 sofort_frei=not _sofort)
 
 
@@ -1288,7 +1277,7 @@ async def make_route(mid: str, request: Request, prof=Depends(own_profile)):
             or sprache not in SPRACHEN:
         print("hoerstueck: erstellen abgelehnt | form |", profiles.log_name(prof), flush=True)
         raise HTTPException(400, "laenge: 5, 10 or 20; stimmen: 2 or 3; sprache: de or en")
-    hid, why = await asyncio.to_thread(bitte, uid, _id(mid, "Mappe"), laenge, stimmen, sprache=sprache)
+    hid, why = await asyncio.to_thread(bitte, uid, _id(mid, "Mappe"), laenge, stimmen, sprache=sprache, request=request)
     if not hid:
         print(f"hoerstueck: erstellen abgelehnt | {why} |", profiles.log_name(prof), flush=True)
         if why == "keine mappe":
@@ -1370,7 +1359,7 @@ async def _sofort_route(request, prof, mid=None, hid=None):
     _need(uid)
     guard.limit(request, "hoerstuecksofort", uid)
     b = await json_body(request, BODY, lenient=hid is not None)
-    if not ist_admin(request, uid):
+    if not coadmin.ist_admin(request, uid):
         _sofort_nein("admin", prof, *SOFORT_SAY["admin"])
     laenge, stimmen, sprache = b.get("laenge", 5), b.get("stimmen", 2), b.get("sprache", "de")
     if hid is None and (laenge not in LAENGEN or stimmen not in STIMMEN or isinstance(laenge, bool) or

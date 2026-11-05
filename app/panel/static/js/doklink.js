@@ -27,8 +27,8 @@ let lkdTimer=null,lkdOpen=false;
 function lkdShow(){const box=$('lkdbox'),btn=$('lkdadd');if(!box||!btn)return;clearTimeout(lkdTimer);const L=lkdInfo();
   btn.hidden=!L;btn.setAttribute('aria-expanded',String(!!L&&lkdOpen));box.hidden=!L||!lkdOpen;if(!L)return;
   const open=(L.links||[]).filter(x=>!x.doc),Y=L.yt&&L.yt.on?L.yt:null,typed=$('lkdurls')?$('lkdurls').value:'';
-  $('lkdin').innerHTML=`<p class="fh">${esc(t(`Bis zu ${L.max} Adressen, eine je Zeile. Nur öffentliche Seiten und Dateien (HTML, PDF, Text, Word, ODT) bis ${L.mb} MB; heute ${L.today} von ${L.day} Abrufen.`,
-      `Up to ${L.max} addresses, one per line. Public pages and files only (HTML, PDF, text, Word, ODT) up to ${L.mb} MB; ${L.today} of ${L.day} fetches today.`))}</p>`+
+  $('lkdin').innerHTML=`<p class="fh">${esc(t(`Bis zu ${L.max} Adressen, eine je Zeile. Nur öffentliche Seiten und Dateien (HTML, PDF, Text, Word, ODT) bis ${L.mb} MB; heute ${L.today}${L.frei?' Abrufe, ohne Tageslimit':' von '+L.day+' Abrufen'}.`,
+      `Up to ${L.max} addresses, one per line. Public pages and files only (HTML, PDF, text, Word, ODT) up to ${L.mb} MB; ${L.today}${L.frei?' fetches today, no daily limit':' of '+L.day+' fetches today'}.`))}</p>`+
     (Y?`<p class="fh">${esc(Y.da?t(`YouTube-Links: nur die Tonspur wird geholt und abgeschrieben, bis ${Y.min} Minuten und ${Y.mb} MB.`,`YouTube links: only the sound track is fetched and transcribed, up to ${Y.min} minutes and ${Y.mb} MB.`):lkdWort('ytdlp'))}</p>`:'')+
     `<textarea id="lkdurls" rows="3" maxlength="22000" placeholder="https://…" aria-label="${esc(t('Adressen','Addresses'))}"></textarea>`+
     `<div class="ld-acts"><button class="b p" type="button" id="lkdgo">${ic('download')} ${esc(t('Holen','Fetch'))}</button></div>`+

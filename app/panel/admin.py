@@ -267,7 +267,8 @@ def _rights(uid):
 
 @router.put("/api/admin/profiles/{uid}/tageslimit", dependencies=[Depends(auth)])
 async def admin_set_frei(uid: str, request: Request):
-    """{"frei": bool}: this profile has no daily limits (pictures, songs, Kontingent, own Dungeon pictures), also
+    """{"frei": bool}: this profile has no daily limits (pictures, songs, Kontingent, own Dungeon pictures, Hörstücke,
+    Auswertungen, Ton/Video, Link als Dokument), also
     without the second step (Dominik 2026-10-24); space and queues stay (coadmin.unbegrenzt)."""
     guard.limit(request, "features", admin=True)
     frei = (await json_body(request, 256)).get("frei")

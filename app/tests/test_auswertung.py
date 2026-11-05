@@ -6,6 +6,7 @@ wissen.KETTE; the daily limit; a document read again waits again; "Stimmt nicht"
 tool hands over checked points as outside data; logs with fixed words and numbers only. No test depends on the clock."""
 import asyncio
 import contextlib
+import datetime
 import io
 import json
 import unittest
@@ -324,6 +325,30 @@ class Chain(Base):
         self.assertEqual(m.calls, 10)
         self.assertEqual(buf.getvalue().count("auswertung: grenze | 10"), 1)     # once a day, not every step
         self.assertEqual(self.step(uid, m, now=NOW + 86400), "auswertung")    # the next day goes on
+
+    def test_no_day_limit_for_a_profile_without_daily_limits(self):
+        """Dominik 2026-11-05 „Admin sollte keine Grenze haben“: coadmin.unbegrenzt (the admin role that acts, the tick
+        „Ohne Tageslimit“) lifts the kinds per day; still counted; untick: the limit holds again."""
+        import coadmin
+        helpers.set_config(doc_auswertung_day=10)
+        _, uid = self.fresh("Auswertfrei")
+        self.addCleanup(coadmin.set_frei, uid, False)
+        for i in range(7):
+            self.doc(uid, f"Notiz{i}.txt", f"Notiz Nummer {i}: Die Heizung im Keller wird am Montag geprüft.")
+        m = Model()
+        for _ in range(10):
+            self.assertEqual(self.step(uid, m), "auswertung")
+        self.assertIsNone(self.step(uid, m))                                  # a normal profile: the limit
+        coadmin.set_frei(uid, True)
+        self.assertEqual(self.step(uid, m), "auswertung")                     # freed: beyond it
+        self.assertEqual(documents.count_today(uid, datetime.datetime.fromtimestamp(NOW).strftime("%Y-%m-%d"),
+                                               key="auswertung"), 11)
+        with mock.patch.object(coadmin, "frei_uids", lambda: []), \
+                mock.patch.object(coadmin, "acts", lambda u: "admin" if u == uid else ""):
+            self.assertEqual(self.step(uid, m), "auswertung")                 # the admin role that acts
+        coadmin.set_frei(uid, False)
+        self.assertIsNone(self.step(uid, m))
+        self.assertEqual(m.calls, 12)
 
     def test_read_again_waits_again_and_wrong_holds(self):
         c, uid = self.fresh("Auswertneu")

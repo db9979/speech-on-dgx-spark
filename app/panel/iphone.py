@@ -162,7 +162,7 @@ THINGS = {
                    (("GET", "DELETE"), r"/api/profile/hoerstueck/[0-9a-f]{12}"),
                    (("GET",), r"/api/profile/hoerstueck/[0-9a-f]{12}/ton"),
                    (("POST",), r"/api/profile/hoerstueck/[0-9a-f]{12}/telegram"),
-                   # „Sofort erstellen": only the admin's own proved app (hoerstueck.ist_admin checks it on the server)
+                   # „Sofort erstellen": only the admin's own proved app (coadmin.ist_admin checks it on the server)
                    (("POST",), r"/api/profile/mappen/[0-9a-f]{12}/hoerstuecke/sofort"),
                    (("POST",), r"/api/profile/hoerstueck/[0-9a-f]{12}/sofort")),
     # Wissenskarte (wissenskarte.py): see the part of the map around a page or of a document, "Stimmt nicht" for one

@@ -180,7 +180,7 @@ function docHear(d){const A=DOCINFO&&DOCINFO.audio||{},pct=d.secs?Math.round(100
   else if(A.now===d.id)why=t('schreibt gerade ab','transcribing now');
   else if(!A.asr)why=t('wartet, die Spracherkennung fehlt gerade','waiting, the speech recognition is missing right now');
   else if(!A.long_ok&&d.secs>A.long_min*60)why=t('lange Aufnahme, wird nachts abgeschrieben','long recording, transcribed at night');
-  else if(A.today_min>=A.day_min)why=t('Tagesgrenze erreicht, geht morgen weiter','daily limit reached, continues tomorrow');
+  else if(!A.frei&&A.today_min>=A.day_min)why=t('Tagesgrenze erreicht, geht morgen weiter','daily limit reached, continues tomorrow');
   else if(!DOCINFO.quiet)why=t('wartet auf eine ruhige Minute','waits for a quiet minute');
   else why=t('ist gleich dran','next in line');
   return [t(`${docMin(d.heard)} von ${docMin(d.secs)} Minuten abgeschrieben`,`${docMin(d.heard)} of ${docMin(d.secs)} minutes transcribed`)+' · '+why,pct]}

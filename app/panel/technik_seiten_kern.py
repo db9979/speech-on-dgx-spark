@@ -243,7 +243,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "cab5b22fb6",
+        "stand": "6055cb3b05",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -290,7 +290,7 @@ SEITEN = {
             "hoerstueck.ZEILEN_MIN": ["s13"], "hoerstueck.UEBER_ANTEIL": ["s13"], "hoerstueck.STELLEN_ZEICHEN": ["s13"],
             "hoerstueck.GESPEICHERT_MAX": ["s13"], "tonteile.sprich": ["s13"],
             "hoerstueck.m4a": ["s13"], "hoerstueck.an_telegram": ["s13"], "hoerstueck.melden": ["s13"],
-            "hoerstueck.ist_admin": ["s13"], "hoerstueck.fertige": ["s13"], "hoerstueck.AUTO_MAX": ["s13"], "hoerstueck.sofort_lauf": ["s13"], "hoerstueck._sofort_offen": ["s13"],
+            "coadmin.ist_admin": ["s13"], "coadmin.unbegrenzt": ["s13"], "hoerstueck.fertige": ["s13"], "hoerstueck.AUTO_MAX": ["s13"], "hoerstueck.sofort_lauf": ["s13"], "hoerstueck._sofort_offen": ["s13"],
             "documents.stelle": ["s13"], "common.signed_low": ["s13"],
             "doklink.pruefe": ["s13"], "doklink.eins": ["s13"], "doklink.neu_abrufen": ["s13"], "wissen.aufnehmen": ["s13"],
             "fundmail.dok_passt": ["s13"], "fundmail.dok_art": ["s13"], "fundmail.zu_dokumenten": ["s13"],
@@ -906,8 +906,10 @@ SEITEN = {
                  "der Mappe; hoerstueck.an_telegram schickt auf Klick per sendAudio nur an den eigenen verknüpften "
                  "Chat (telegram.send_file, Persönliches dort erlaubt, Notaus). Das Drehbuch entsteht in der Sprache "
                  "der Seite oder App (Deutsch oder Englisch) mit denselben Regeln und einer englischen Wortliste. "
-                 "Höchstens {hoerstueck.GESPEICHERT_MAX} je Profil; ein Hörstück wird nie ein Dokument. „Sofort "
-                 "erstellen“ darf nur der Admin (hoerstueck.ist_admin prüft es auf dem Server: Login des "
+                 "Höchstens {hoerstueck.GESPEICHERT_MAX} je Profil; ein Hörstück wird nie ein Dokument. Die Tagesgrenze gilt "
+                 "nie für ein Profil ohne Tageslimit (coadmin.unbegrenzt: der Admin oder „Ohne Tageslimit“), ebenso bei "
+                 "Auswertungen, Abschriften und Links. „Sofort "
+                 "erstellen“ darf nur der Admin (coadmin.ist_admin prüft es auf dem Server: Login des "
                  "Panel-Passworts oder das Profil selbst mit der Rolle „Admin“, nie ein Verwalter oder Gast): "
                  "hoerstueck.sofort_lauf macht ein neues oder vorgezogenes Stück ohne ruhige Minuten, ohne die Kette "
                  "davor und ohne Tagesgrenze, mit denselben Regeln; jede Anfrage geht weiter durch vorrang.run und "
@@ -932,8 +934,10 @@ SEITEN = {
                  "hoerstueck.an_telegram sends on a click by sendAudio only to the own linked chat "
                  "(telegram.send_file, personal data allowed there, Notaus). The script is made in the page's or the "
                  "app's language (German or English) with the same rules and an English word list. At most "
-                 "{hoerstueck.GESPEICHERT_MAX} per profile; an audio overview never becomes a document. „Sofort "
-                 "erstellen“ (make now) is for the admin only (hoerstueck.ist_admin checks it on the server: the "
+                 "{hoerstueck.GESPEICHERT_MAX} per profile; an audio overview never becomes a document. The day limit never "
+                 "holds for a profile without daily limits (coadmin.unbegrenzt: the admin or „Ohne Tageslimit“), the "
+                 "same for analyses, transcripts and links. „Sofort "
+                 "erstellen“ (make now) is for the admin only (coadmin.ist_admin checks it on the server: the "
                  "panel password's login or the profile itself with the role admin, never a manager or a guest): "
                  "hoerstueck.sofort_lauf makes a new or pulled forward one without quiet minutes, without the chain "
                  "before it and without the day limit, with the same rules; every request still goes through "
@@ -1272,7 +1276,8 @@ SEITEN = {
             ("hoerstueck.an_telegram", ("auf Klick nur an den eigenen verknüpften Telegram-Chat", "on a click only to the own linked Telegram chat")),
             ("hoerstueck.melden", ("Mitteilung „Hörstück fertig“ mit Sprung-Link", "note „Hörstück fertig“ with a jump link")),
             ("hoerstueck.due_once", ("ruhige Kette: erst Drehbuch, dann je Schritt eine Zeile", "quiet chain: first the script, then one line per step")),
-            ("hoerstueck.ist_admin", ("„Sofort erstellen“ nur für den Admin, auf dem Server geprüft", "„Sofort erstellen“ only for the admin, checked on the server")),
+            ("coadmin.ist_admin", ("„Sofort erstellen“ nur für den Admin, auf dem Server geprüft", "„Sofort erstellen“ only for the admin, checked on the server")),
+            ("coadmin.unbegrenzt", ("keine Tagesgrenze für den Admin und Profile ohne Tageslimit", "no day limit for the admin and profiles without daily limits")),
             ("hoerstueck.sofort_lauf", ("erzwungen: ohne ruhige Minuten und Tagesgrenze, Sprache geht vor", "forced: without quiet minutes and the day limit, speech first")),
             ("hoerstueck.fertige", ("CarPlay: die fertigen aller eigenen Mappen, nur zum Anhören", "CarPlay: the finished ones of all own collections, only to listen")),
             ("hoerstueck._sofort_offen", ("höchstens ein erzwungenes Hörstück zugleich", "at most one forced audio overview at a time")),

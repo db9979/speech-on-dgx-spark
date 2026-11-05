@@ -2485,7 +2485,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Hörstück aus einer Mappe",
 "title": "Hörstück aus einer Mappe",
-"text": "Ogg). hoerstueck.melden schickt „Hörstück fertig“ über push.send mit dem Weg zur Mappe, nur mit dem Namen der Mappe; hoerstueck.an_telegram schickt auf Klick per sendAudio nur an den eigenen verknüpften Chat (telegram.send_file, Persönliches dort erlaubt, Notaus). Das Drehbuch entsteht in der Sprache der Seite oder App (Deutsch oder Englisch) mit denselben Regeln und einer englischen Wortliste. Höchstens 10 je Profil; ein Hörstück wird nie ein Dokument. „Sofort erstellen“ darf nur der Admin (hoerstueck.ist_admin prüft es auf dem Server: Login des Panel-Passworts oder das Profil selbst mit der Rolle „Admin“, nie ein Verwalter oder Gast): hoerstueck.sofort_lauf macht ein neues oder vorgezogenes Stück ohne ruhige Minuten, ohne die Kette davor und ohne Tagesgrenze, mit denselben Regeln; jede Anfrage geht weiter durch vorrang.run und mit der Stufe „hinten“, echte Sprache geht also vor. Höchstens eins zugleich (hoerstueck._sofort_offen); solange es läuft, lässt die Kette die Hörstücke liegen. Für CarPlay liefert hoerstueck.fertige nur die fertigen aller eigenen Mappen (Titel, Mappe, Dauer, höchstens 12); im Auto wird nichts erstellt."
+"text": "Ogg). hoerstueck.melden schickt „Hörstück fertig“ über push.send mit dem Weg zur Mappe, nur mit dem Namen der Mappe; hoerstueck.an_telegram schickt auf Klick per sendAudio nur an den eigenen verknüpften Chat (telegram.send_file, Persönliches dort erlaubt, Notaus). Das Drehbuch entsteht in der Sprache der Seite oder App (Deutsch oder Englisch) mit denselben Regeln und einer englischen Wortliste. Höchstens 10 je Profil; ein Hörstück wird nie ein Dokument. Die Tagesgrenze gilt nie für ein Profil ohne Tageslimit (coadmin.unbegrenzt: der Admin oder „Ohne Tageslimit“), ebenso bei Auswertungen, Abschriften und Links. „Sofort erstellen“ darf nur der Admin (coadmin.ist_admin prüft es auf dem Server: Login des Panel-Passworts oder das Profil selbst mit der Rolle „Admin“, nie ein Verwalter oder Gast): hoerstueck.sofort_lauf macht ein neues oder vorgezogenes Stück ohne ruhige Minuten, ohne die Kette davor und ohne Tagesgrenze, mit denselben Regeln; jede Anfrage geht weiter durch vorrang.run und mit der Stufe „hinten“, echte Sprache geht also vor. Höchstens eins zugleich (hoerstueck._sofort_offen); solange es läuft, lässt die Kette die Hörstücke liegen. Für CarPlay liefert hoerstueck.fertige nu"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Hörstück aus einer Mappe",
+"title": "Hörstück aus einer Mappe",
+"text": "r die fertigen aller eigenen Mappen (Titel, Mappe, Dauer, höchstens 12); im Auto wird nichts erstellt."
 },
 {
 "lang": "de",
@@ -5925,7 +5933,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "Hörstück sofort erstellen (V01.1.345, Dominik 2026-11-05: „die Erstellung forcieren“): kein neuer Schalter, es gehört zum Hörstück. Nur der Admin sieht unter Mappen → eine Mappe → Hörstück neben „Erstellen“ den Knopf „Sofort erstellen“ und bei einem Stück, das wartet oder spricht, „Jetzt erstellen“ (vorziehen); im iPhone dieselben Knöpfe. Ob es der Admin ist, entscheidet der Server (hoerstueck.ist_admin): der Login des Panel-Passworts (nur mit gesetztem Passwort) oder das Profil selbst mit der Rolle „Admin“ in seinem Browser-Login mit zweitem Schritt oder seiner bestätigten iPhone-App; nie ein Verwalter, ein Gast oder ein Geräteschlüssel. Endpunkte POST /api/profile/mappen/{id}/hoerstuecke/sofort (Länge, Stimmen, Sprache wie beim Erstellen) und POST /api/profile/hoerstueck/{id}/sofort: Anmeldung, eigenes Profil, Freigabe, Admin-Recht, CSRF, 8 KB, Rate-Limit „hoerstuecksofort“ 5 je Minute. Ein erzwungenes Stück (Spalte sofort) überspringt die ruhigen Minuten (wissen.quiet), die ruhige Kette davor und die Tagesgrenze (es zählt dort nicht mit); die zehn gespeicherten und die Prüfung des Drehbuchs bleiben. Echte Sprache geht trotzdem vor: hoerstueck.sofort_lauf schickt jede Anfrage dur"
+"text": "Hörstück sofort erstellen (V01.1.345, Dominik 2026-11-05: „die Erstellung forcieren“): kein neuer Schalter, es gehört zum Hörstück. Nur der Admin sieht unter Mappen → eine Mappe → Hörstück neben „Erstellen“ den Knopf „Sofort erstellen“ und bei einem Stück, das wartet oder spricht, „Jetzt erstellen“ (vorziehen); im iPhone dieselben Knöpfe. Ob es der Admin ist, entscheidet der Server (coadmin.ist_admin): der Login des Panel-Passworts (nur mit gesetztem Passwort) oder das Profil selbst mit der Rolle „Admin“ in seinem Browser-Login mit zweitem Schritt oder seiner bestätigten iPhone-App; nie ein Verwalter, ein Gast oder ein Geräteschlüssel. Endpunkte POST /api/profile/mappen/{id}/hoerstuecke/sofort (Länge, Stimmen, Sprache wie beim Erstellen) und POST /api/profile/hoerstueck/{id}/sofort: Anmeldung, eigenes Profil, Freigabe, Admin-Recht, CSRF, 8 KB, Rate-Limit „hoerstuecksofort“ 5 je Minute. Ein erzwungenes Stück (Spalte sofort) überspringt die ruhigen Minuten (wissen.quiet), die ruhige Kette davor und die Tagesgrenze (es zählt dort nicht mit); die zehn gespeicherten und die Prüfung des Drehbuchs bleiben. Echte Sprache geht trotzdem vor: hoerstueck.sofort_lauf schickt jede Anfrage durch "
 },
 {
 "lang": "de",
@@ -5933,7 +5941,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "ch vorrang.run (wartet, solange jemand spricht, bricht ab, wenn Sprache beginnt, die Zeile kommt wieder) und an die Sprachausgabe mit derselben Stufe „hinten“ samt Schlüssel; eine normale Stufe würde die eigenen Zeilen als Sprache markieren (common.SpeechMark) und alle Hintergrundarbeit anhalten. Höchstens ein erzwungenes Stück zugleich, über alle Profile (hoerstueck._sofort_offen, sonst 409); solange es läuft, lässt die ruhige Kette die Hörstücke liegen, danach nimmt sie ein markiertes zuerst. Live: Kasten *Hörstück* „erzwungen: schreibt das Drehbuch / spricht / wartet“, „heute N× sofort erstellt, M× abgelehnt“. Logs hoerstueck: erzwungen | neu (oder vorgezogen), hoerstueck: erzwungen abgelehnt | admin (oder laeuft, keins, form, voll, leer), hoerstueck: erzwungen | ende | fertig (oder leer, x, aus, weg, tts, schritte). Hörstück in CarPlay (V01.1.349, Dominik 2026-11-05): kein neuer Schalter, die Zeile „Hörstücke“ steht im Auto nur mit *Hörstück aus einer Mappe* (hello-Bereich „hoerstueck“). Neu GET /api/profile/hoerstuecke (hoerstueck.fertige, Anmeldung, eigenes Profil, Rate-Limit „hoerstueck“, nur lesen; iphone.THINGS „hoerstueck“ nur mit GET): die fertigen Hörstücke aller eigene"
+"text": "vorrang.run (wartet, solange jemand spricht, bricht ab, wenn Sprache beginnt, die Zeile kommt wieder) und an die Sprachausgabe mit derselben Stufe „hinten“ samt Schlüssel; eine normale Stufe würde die eigenen Zeilen als Sprache markieren (common.SpeechMark) und alle Hintergrundarbeit anhalten. Höchstens ein erzwungenes Stück zugleich, über alle Profile (hoerstueck._sofort_offen, sonst 409); solange es läuft, lässt die ruhige Kette die Hörstücke liegen, danach nimmt sie ein markiertes zuerst. Live: Kasten *Hörstück* „erzwungen: schreibt das Drehbuch / spricht / wartet“, „heute N× sofort erstellt, M× abgelehnt“. Logs hoerstueck: erzwungen | neu (oder vorgezogen), hoerstueck: erzwungen abgelehnt | admin (oder laeuft, keins, form, voll, leer), hoerstueck: erzwungen | ende | fertig (oder leer, x, aus, weg, tts, schritte). Hörstück in CarPlay (V01.1.349, Dominik 2026-11-05): kein neuer Schalter, die Zeile „Hörstücke“ steht im Auto nur mit *Hörstück aus einer Mappe* (hello-Bereich „hoerstueck“). Neu GET /api/profile/hoerstuecke (hoerstueck.fertige, Anmeldung, eigenes Profil, Rate-Limit „hoerstueck“, nur lesen; iphone.THINGS „hoerstueck“ nur mit GET): die fertigen Hörstücke aller eigenen M"
 },
 {
 "lang": "de",
@@ -5941,7 +5949,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "n Mappen mit Titel, Name der Mappe, Dauer und Zeitpunkt, das neueste oben, höchstens 12 (hoerstueck.AUTO_MAX), nie das Drehbuch oder ein Pfad. Im Auto wird nichts erstellt. Die App spielt über einen gemeinsamen Player für Mappe und Auto (ios/Spark/HoerstueckPlayer.swift, HsPlayer): die AAC-Kopie nur im Speicher (eigene Sitzung ohne Cache), Now Playing mit Titel und Mappe, Fernbedienung (Abspielen, Pause, 15 Sekunden vor und zurück, nächstes und voriges, Position), weiter an der letzten Stelle (auf dem iPhone nur Kennung und Sekunden, höchstens 20). Vor dem Abspielen endet ein Gespräch und die Sprach-Engine gibt den Ton frei (Conversation.giveSound; die Engine stellt beim nächsten Start „Aufnahme und Wiedergabe“ wieder her), das Weckwort ruht, solange ein Hörstück spielt; ein Gespräch pausiert das Hörstück, danach spielt es weiter. Trennt sich das Auto, pausiert es. Ton-Protokoll nur mit festen Wörtern („Hörstück: spielt“, „Pause für Gespräch“, „zu Ende“). Live: kein neuer Wert (das Abspielen geschieht auf dem iPhone)."
+"text": "appen mit Titel, Name der Mappe, Dauer und Zeitpunkt, das neueste oben, höchstens 12 (hoerstueck.AUTO_MAX), nie das Drehbuch oder ein Pfad. Im Auto wird nichts erstellt. Die App spielt über einen gemeinsamen Player für Mappe und Auto (ios/Spark/HoerstueckPlayer.swift, HsPlayer): die AAC-Kopie nur im Speicher (eigene Sitzung ohne Cache), Now Playing mit Titel und Mappe, Fernbedienung (Abspielen, Pause, 15 Sekunden vor und zurück, nächstes und voriges, Position), weiter an der letzten Stelle (auf dem iPhone nur Kennung und Sekunden, höchstens 20). Vor dem Abspielen endet ein Gespräch und die Sprach-Engine gibt den Ton frei (Conversation.giveSound; die Engine stellt beim nächsten Start „Aufnahme und Wiedergabe“ wieder her), das Weckwort ruht, solange ein Hörstück spielt; ein Gespräch pausiert das Hörstück, danach spielt es weiter. Trennt sich das Auto, pausiert es. Ton-Protokoll nur mit festen Wörtern („Hörstück: spielt“, „Pause für Gespräch“, „zu Ende“). Live: kein neuer Wert (das Abspielen geschieht auf dem iPhone)."
 },
 {
 "lang": "de",
@@ -5966,6 +5974,22 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "r dem Hörstück ist weg (ⓘ und Hilfe sagen es in Worten). Am Handy (unter 660 px) erst die Liste, antippen zeigt die Mappe mit „‹ Mappen“, der Kopf in zwei Zeilen (Name, dann „Fragen“ breit und ⋯), die Hörstück-Zeile untereinander. Gemessen mit 6 Einträgen und 2 Hörstücken: 19 statt 72 Bedienelemente, 1 statt 3 blaue Knöpfe, 0 statt 23 abgeschnittene Texte, die Mappe 800 statt 300 px breit. Da Mappen keinen Reiter *Einstellungen* mehr hat, steht sie in features.OWN_NO_SETTINGS (im Panel kalender.js OWN_NO_SET): Sprung-Links, Anleitungen und die Liste aller Funktionen führen nicht mehr auf einen Reiter *Einstellungen* der Mappen. Browser-Test test_mappen_seite: Liste schmaler als die Mappe, je Teil höchstens ein blauer Knopf, kein abgeschnittener Titel, kein Querrollen bei 1440 und 390 px, Stufe über das Menü, ⋯ → *Aus der Mappe nehmen*, Hörstück aus dem Teil *Hörstück* erstellen. Die iPhone-App folgt in einem eigenen Schritt."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Admin ohne Tagesgrenze bei Hörstück und Dokumenten (V01.1.351, Dominik 2026-11-05 „admin user hat die info: Für heute ist die Grenze erreicht. Admin sollte keine Grenze haben.“): Die Tagesgrenzen von *Hörstück aus einer Mappe* (chat.hoerstueck_day), *Auswertungen* (chat.doc_auswertung_day), *Aufnahmen abschreiben* samt YouTube-Links (chat.doc_audio_day_min) und *Links als Dokument* (chat.doc_link_day, auch „Neu abrufen“) folgen jetzt derselben einen Regel wie Bilder, Musik und Kontingent: coadmin.unbegrenzt. Keine Grenze für ein Profil mit der Rolle „Admin“, die zählt (zweiter Schritt), und für jedes Profil mit dem Haken „Ohne Tageslimit“ (Personen und Geräte, beim Profil unter Rechte). Beim Hörstück, das auf Klick entsteht, zählt auch der Admin selbst, wie beim „Sofort erstellen“ vom Server entschieden: coadmin.unbegrenzt(uid, request) fragt dann coadmin.ist_admin (bisher hoerstueck.ist_admin, jetzt in coadmin.py, eine Quelle), also auch den Login des Panel-Passworts. Was im Hintergrund läuft (Auswertungen, Abschriften, das Holen der Links), kennt keine Anfrage und richtet sich nur nach Rolle und Haken. Platz, Warteschlangen, die zehn gespeicherten Hörstücke, die Größe und Länge e"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "iner Aufnahme und der Vorrang der Sprache bleiben. Die Seite zeigt dann „heute N · ohne Tageslimit“ statt „heute N von 3“ und nie „Für heute ist die Grenze erreicht.“ (frei in GET /api/profile/mappen/{id}/hoerstuecke, im iPhone dasselbe), Links als Dokument „heute N Abrufe, ohne Tageslimit“ (frei in doklink.info), eine Aufnahme nie „Tagesgrenze erreicht“ (frei in abschrift.info). Gezählt wird weiter, nur nicht abgelehnt. Selbsttests test_hoerstueck, test_auswertung, test_abschrift, test_doklink."
 },
 {
 "lang": "de",
@@ -20997,7 +21021,15 @@
 "file": "Architecture and data flow",
 "head": "Audio overview of a collection",
 "title": "Audio overview of a collection",
-"text": " through push.send with the way to the collection, only with the collection's name; hoerstueck.an_telegram sends on a click by sendAudio only to the own linked chat (telegram.send_file, personal data allowed there, Notaus). The script is made in the page's or the app's language (German or English) with the same rules and an English word list. At most 10 per profile; an audio overview never becomes a document. „Sofort erstellen“ (make now) is for the admin only (hoerstueck.ist_admin checks it on the server: the panel password's login or the profile itself with the role admin, never a manager or a guest): hoerstueck.sofort_lauf makes a new or pulled forward one without quiet minutes, without the chain before it and without the day limit, with the same rules; every request still goes through vorrang.run and with the stage „last“, so real speech goes first. At most one at a time (hoerstueck._sofort_offen); while it runs the chain leaves the audio overviews alone. For CarPlay hoerstueck.fertige gives only the finished ones of all own collections (title, collection, length, at most 12); nothing is made in the car."
+"text": " through push.send with the way to the collection, only with the collection's name; hoerstueck.an_telegram sends on a click by sendAudio only to the own linked chat (telegram.send_file, personal data allowed there, Notaus). The script is made in the page's or the app's language (German or English) with the same rules and an English word list. At most 10 per profile; an audio overview never becomes a document. The day limit never holds for a profile without daily limits (coadmin.unbegrenzt: the admin or „Ohne Tageslimit“), the same for analyses, transcripts and links. „Sofort erstellen“ (make now) is for the admin only (coadmin.ist_admin checks it on the server: the panel password's login or the profile itself with the role admin, never a manager or a guest): hoerstueck.sofort_lauf makes a new or pulled forward one without quiet minutes, without the chain before it and without the day limit, with the same rules; every request still goes through vorrang.run and with the stage „last“, so real speech goes first. At most one at a time (hoerstueck._sofort_offen); while it runs the chain leaves the audio overviews alone. For CarPlay hoerstueck.fertige gives only the finished ones of all o"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Audio overview of a collection",
+"title": "Audio overview of a collection",
+"text": "wn collections (title, collection, length, at most 12); nothing is made in the car."
 },
 {
 "lang": "en",
@@ -24325,7 +24357,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Make an audio overview now (V01.1.345, Dominik 2026-11-05: „force the making“)",
-"text": "Make an audio overview now (V01.1.345, Dominik 2026-11-05: „force the making“): no new switch, it is part of the audio overview. Only the admin sees under Collections → a collection → Audio overview next to \"Make\" the button \"Make now\", and for one that waits or speaks \"Make it now\" (pull forward); the iPhone has the same buttons. Whether it is the admin is decided by the server (hoerstueck.ist_admin): the panel password's login (only while a password is set) or the profile itself with the role admin in its browser login with the second step or its proved iPhone app; never a manager, a guest or a device key. Endpoints POST /api/profile/mappen/{id}/hoerstuecke/sofort (length, voices, language as for making) and POST /api/profile/hoerstueck/{id}/sofort: sign-in, own profile, release, admin right, CSRF, 8 KB, rate limit \"hoerstuecksofort\" 5 a minute. A forced one (column sofort) skips the quiet minutes (wissen.quiet), the quiet chain before it and the day limit (it is not counted there); the ten stored and the check of the script stay. Real speech still goes first: hoerstueck.sofort_lauf sends every request through vorrang.run (waits while anybody speaks, is cancelled when speech star"
+"text": "Make an audio overview now (V01.1.345, Dominik 2026-11-05: „force the making“): no new switch, it is part of the audio overview. Only the admin sees under Collections → a collection → Audio overview next to \"Make\" the button \"Make now\", and for one that waits or speaks \"Make it now\" (pull forward); the iPhone has the same buttons. Whether it is the admin is decided by the server (coadmin.ist_admin): the panel password's login (only while a password is set) or the profile itself with the role admin in its browser login with the second step or its proved iPhone app; never a manager, a guest or a device key. Endpoints POST /api/profile/mappen/{id}/hoerstuecke/sofort (length, voices, language as for making) and POST /api/profile/hoerstueck/{id}/sofort: sign-in, own profile, release, admin right, CSRF, 8 KB, rate limit \"hoerstuecksofort\" 5 a minute. A forced one (column sofort) skips the quiet minutes (wissen.quiet), the quiet chain before it and the day limit (it is not counted there); the ten stored and the check of the script stay. Real speech still goes first: hoerstueck.sofort_lauf sends every request through vorrang.run (waits while anybody speaks, is cancelled when speech starts,"
 },
 {
 "lang": "en",
@@ -24333,7 +24365,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Make an audio overview now (V01.1.345, Dominik 2026-11-05: „force the making“)",
-"text": "ts, the line comes again) and to the speech output with the same stage \"last\" and its key; a normal stage would mark the own lines as speech (common.SpeechMark) and stop all background work. At most one forced one at a time, over all profiles (hoerstueck._sofort_offen, else 409); while it runs the quiet chain leaves the audio overviews alone, afterwards it takes a marked one first. Live: box *Audio overview* \"erzwungen: writes the script / speaks / waits\", \"today N× made now, M× refused\". Logs hoerstueck: erzwungen | neu (or vorgezogen), hoerstueck: erzwungen abgelehnt | admin (or laeuft, keins, form, voll, leer), hoerstueck: erzwungen | ende | fertig (or leer, x, aus, weg, tts, schritte). Audio overview in CarPlay (V01.1.349, Dominik 2026-11-05): no new switch, the row \"Audio overviews\" stands in the car only with *Audio overview* (hello area \"hoerstueck\"). New GET /api/profile/hoerstuecke (hoerstueck.fertige, login, own profile, rate limit \"hoerstueck\", read only; iphone.THINGS \"hoerstueck\" only with GET): the finished audio overviews of all own collections with title, the collection's name, length and time, the newest first, at most 12 (hoerstueck.AUTO_MAX), never the script or "
+"text": " the line comes again) and to the speech output with the same stage \"last\" and its key; a normal stage would mark the own lines as speech (common.SpeechMark) and stop all background work. At most one forced one at a time, over all profiles (hoerstueck._sofort_offen, else 409); while it runs the quiet chain leaves the audio overviews alone, afterwards it takes a marked one first. Live: box *Audio overview* \"erzwungen: writes the script / speaks / waits\", \"today N× made now, M× refused\". Logs hoerstueck: erzwungen | neu (or vorgezogen), hoerstueck: erzwungen abgelehnt | admin (or laeuft, keins, form, voll, leer), hoerstueck: erzwungen | ende | fertig (or leer, x, aus, weg, tts, schritte). Audio overview in CarPlay (V01.1.349, Dominik 2026-11-05): no new switch, the row \"Audio overviews\" stands in the car only with *Audio overview* (hello area \"hoerstueck\"). New GET /api/profile/hoerstuecke (hoerstueck.fertige, login, own profile, rate limit \"hoerstueck\", read only; iphone.THINGS \"hoerstueck\" only with GET): the finished audio overviews of all own collections with title, the collection's name, length and time, the newest first, at most 12 (hoerstueck.AUTO_MAX), never the script or a p"
 },
 {
 "lang": "en",
@@ -24341,7 +24373,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Make an audio overview now (V01.1.345, Dominik 2026-11-05: „force the making“)",
-"text": "a path. Nothing is made in the car. The app plays through one player for the collection and the car (ios/Spark/HoerstueckPlayer.swift, HsPlayer): the AAC copy only in memory (its own session without a cache), Now Playing with title and collection, remote buttons (play, pause, 15 seconds forward and back, next and previous, position), on where it stopped (on the iPhone only id and seconds, at most 20). Before it plays a conversation ends and the speech engine hands over the sound (Conversation.giveSound; the engine sets \"play and record\" again at its next start), the wake word rests while an audio overview plays; a conversation pauses the audio overview, afterwards it plays on. When the car disconnects it pauses. Sound log only with fixed words (\"Hörstück: spielt\", \"Pause für Gespräch\", \"zu Ende\"). Live: no new value (the playing happens on the iPhone)."
+"text": "ath. Nothing is made in the car. The app plays through one player for the collection and the car (ios/Spark/HoerstueckPlayer.swift, HsPlayer): the AAC copy only in memory (its own session without a cache), Now Playing with title and collection, remote buttons (play, pause, 15 seconds forward and back, next and previous, position), on where it stopped (on the iPhone only id and seconds, at most 20). Before it plays a conversation ends and the speech engine hands over the sound (Conversation.giveSound; the engine sets \"play and record\" again at its next start), the wake word rests while an audio overview plays; a conversation pauses the audio overview, afterwards it plays on. When the car disconnects it pauses. Sound log only with fixed words (\"Hörstück: spielt\", \"Pause für Gespräch\", \"zu Ende\"). Live: no new value (the playing happens on the iPhone)."
 },
 {
 "lang": "en",
@@ -24366,6 +24398,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "ds). On a phone (below 660 px) first the list, tapping shows the collection with \"‹ Collections\", the head in two rows (name, then \"Ask\" wide and ⋯), the audio overview row stacked. Measured with 6 entries and 2 audio overviews: 19 instead of 72 controls, 1 instead of 3 blue buttons, 0 instead of 23 cut-off texts, the collection 800 instead of 300 px wide. As Collections has no tab *Settings* any more, it stands in features.OWN_NO_SETTINGS (in the panel kalender.js OWN_NO_SET): jump links, guides and the list of all features no longer lead to a tab *Settings* of Collections. Browser test test_mappen_seite: list narrower than the collection, at most one blue button per part, no cut-off title, no sideways scrolling at 1440 and 390 px, level through the menu, ⋯ → *Take out of the collection*, make an audio overview from the part *Audio overview*. The iPhone app follows in a step of its own."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Admin without a day limit for audio overviews and documents (V01.1.351, Dominik 2026-11-05 „admin user hat die info: Für heute ist die Grenze erreicht. Admin sollte keine Grenze haben.“): The day limits of *Audio overview* (chat.hoerstueck_day), *Analyses* (chat.doc_auswertung_day), *Transcribe recordings* with YouTube links (chat.doc_audio_day_min) and *Links as documents* (chat.doc_link_day, also \"Fetch again\") now follow the same one rule as pictures, music and the allowance: coadmin.unbegrenzt. No limit for a profile with the admin role that counts (second step) and for every profile with the tick \"No daily limit\" (People and devices, at the profile under Rights). For an audio overview made on a click the admin himself counts too, decided by the server as for \"Make now\": coadmin.unbegrenzt(uid, request) then asks coadmin.ist_admin (before hoerstueck.ist_admin, now in coadmin.py, one source), so the panel password's login as well. What runs in the background (analyses, transcripts, fetching the links) knows no request and follows only the role and the tick. Space, queues, the ten stored audio overviews, the size and length of a recording and the priority of speech stay. The page"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " then shows \"today N · no daily limit\" instead of \"today N of 3\" and never \"The limit for today is reached.\" (frei in GET /api/profile/mappen/{id}/hoerstuecke, the same on the iPhone), Links as documents \"N fetches today, no daily limit\" (frei in doklink.info), a recording never \"daily limit reached\" (frei in abschrift.info). It is still counted, only never refused. Self-tests test_hoerstueck, test_auswertung, test_abschrift, test_doklink."
 },
 {
 "lang": "en",

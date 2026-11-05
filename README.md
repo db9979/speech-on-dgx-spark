@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.351** Fix: the admin no longer has a day limit for audio overviews, analyses, sound/video and links as documents, nor does any profile with "No daily limit"; the page says "no daily limit"
 - **V01.1.350** Calmer collections: on the left the narrow list with ＋, on the right the open collection with its head, "Ask" as the only blue button, a thin budget bar with ⓘ and the parts Entries, Analyses and Audio overview; whole titles, the level per entry as a small menu, rare things under ⋯
 - **V01.1.349** Audio overview in the car: CarPlay lists the finished ones of all collections under "Audio overviews" and plays them through Now Playing (pause, 15 seconds forward and back, next one, on where you stopped); when Spark speaks, it pauses
 - **V01.1.348** Me → Documents: "Add link" now stands at the top right beside "＋ Add" (only while Links as documents is released), on one line on the phone too; the hidden spot further down is gone.
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.344** Audio overview in the apps: a player of its own in the iPhone app (also in the background and on the lock screen), "To Telegram" only to the own chat, the notice "Audio overview ready" with a jump link, the line being spoken marked in the script, the script also in English
 - **V01.1.343** Audio overview of a collection: a talk of 2 or 3 voices to listen to (5, 10 or 20 minutes); the model only writes a script, the panel checks every line (place, number check, fixed speakers), it is spoken line by line in quiet minutes; the admin picks the three voices
 - **V01.1.342** Transcribe YouTube links: a YouTube link under "Add link" is transcribed, only the sound track through the pinned yt-dlp (version and SHA-256 fixed, own venv with `sudo ./install.sh --youtube`), all its traffic only through a netguard proxy with a fixed host list; then like a recording with time marks (switch off)
-- **V01.1.341** Find: keep an attachment of a mail as an own document with the button "Add to documents", on the page Find and in the iPhone app; only own attachments up to 10 MB of a kind the documents read, the same attachment only once ("Already in the documents").
 
 
 

@@ -20071,6 +20071,16 @@
         }
       }
     },
+    "heute %lld · ohne Tageslimit · läuft in ruhigen Minuten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "today %lld · no daily limit · runs in quiet minutes"
+          }
+        }
+      }
+    },
     "heute %lld von %lld · läuft in ruhigen Minuten": {
       "localizations": {
         "en": {

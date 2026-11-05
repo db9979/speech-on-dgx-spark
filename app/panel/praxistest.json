@@ -5352,6 +5352,13 @@
 "titel": "Mappen ruhiger: Liste, Mappe, Teile",
 "text": "Mappen öffnen: links die schmale Liste mit „Mappen N von 50“ und ＋ (öffnet „Neue Mappe“), kein Reiter „Einstellungen“ mehr. Eine Mappe antippen: rechts Symbol, Name, „Ziel · N Einträge“, der blaue Knopf „Fragen“ (der einzige blaue auf der Seite) und ⋯ mit Umbenennen und Mappe löschen (fragt erst). Darunter der dünne Balken mit „… / 24.000 Token“ und ⓘ: dort steht, was aus, kurz und ganz heißen. Teil Einträge: jeder Titel ganz (auch ein langer bricht um), rechts die Stufe als kleines Menü (auf „aus“ stellen: die Token-Zahl verschwindet, der Balken wird kürzer) und ⋯ mit Öffnen und Aus der Mappe nehmen (das Dokument bleibt unter Ich → Dokumente). „Hinzufügen“ ist ein Menü: Dokument, Seite aus dem Wissensbuch, Notiz. Teil Auswertungen: je Dokument „Kurzfassung · Kernaussagen“ oder „noch keine Auswertung“, antippen öffnet das Dokument. Teil Hörstück: Länge, Stimmen und Erstellen in einer Zeile, darunter das fertige Hörstück als Karte mit Player, ⋯ (Herunterladen, An Telegram, Löschen) und „Drehbuch · N Zeilen“ zum Aufklappen. Am Handy: erst die Liste, antippen zeigt die Mappe mit „‹ Mappen“, „Fragen“ breit unter dem Namen; nichts rollt seitlich.",
 "thread": "Mappen ruhiger"
+},
+{
+"id": "P791",
+"v": 1351,
+"titel": "Hörstück und Dokumente: Admin ohne Tagesgrenze",
+"text": "Admin: Funktionen → Eigene Dokumente → Mappen → Hörstück aus einer Mappe, Hörstücke pro Tag auf 1. Als Admin (Login des Panel-Passworts oder Profil mit der Rolle „Admin“ und zweitem Schritt) Mappen → eine Mappe → Hörstück: oben steht „heute N · ohne Tageslimit“; zweimal „Erstellen“: beide werden angenommen, nie „Für heute ist die Grenze erreicht.“. Dasselbe im iPhone unter Meine Sachen → Mappen → eine Mappe → Hörstück. Ein Profil ohne Rolle und ohne Haken „Ohne Tageslimit“ (Personen und Geräte, beim Profil unter Rechte): nach dem ersten „Für heute ist die Grenze erreicht.“, „heute 1 von 1“. Haken „Ohne Tageslimit“ setzen: dasselbe Profil hat keine Grenze mehr. Ich → Dokumente → Link hinzufügen zeigt beim Admin „heute N Abrufe, ohne Tageslimit“; Auswertungen, Abschriften und Links laufen im Hintergrund für ein Profil mit der Rolle „Admin“ (zweiter Schritt) oder mit dem Haken auch über die Grenze pro Tag weiter. Zustand → Logs (Wissen): keine Zeile „hoerstueck: erstellen abgelehnt | grenze“ für den Admin.",
+"thread": "Ideen aus Open Notebook übernehmen"
 }
 ]
 }

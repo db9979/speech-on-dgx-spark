@@ -63,12 +63,12 @@ function hsCard(){const o=HS.one;if(!o||o.id!==HS.sel)return'';const R=o.rollen;
 function hsPaint(box){const D=HS.data;if(!box)return;
   if(!D){box.innerHTML=`<p class="mut ld-note">${esc(HS.msg||t('Lade die Hörstücke …','Loading the audio overviews …'))}</p>`;return}
   const seg=(k,vals,lab)=>`<span class="segc" role="group" aria-label="${esc(lab)}">${vals.map(v=>`<button type="button" class="${HS[k]===v?'on':''}" aria-pressed="${HS[k]===v}" data-hs${k}="${v}">${esc(k==='laenge'?v+' min':String(v))}</button>`).join('')}</span>`;
-  const full=D.alle>=D.max,limit=D.heute>=D.grenze;
+  const full=D.alle>=D.max,limit=!D.frei&&D.heute>=D.grenze;
   box.innerHTML=`<div class="hsmake"><span class="hsopt"><span>${esc(t('Länge','Length'))}</span>${seg('laenge',D.laengen,t('Länge','Length'))}</span>`+
     `<span class="hsopt"><span>${esc(t('Stimmen','Voices'))}</span>${seg('stimmen',D.stimmen,t('Stimmen','Voices'))}</span>`+
     `<button type="button" class="b" data-hsmake="1"${full||limit?' disabled':''} title="${esc(t('läuft in ruhigen Minuten','runs in quiet minutes'))}">${ic('play')}${esc(t('Erstellen','Make'))}</button>`+
     (D.sofort?`<button type="button" class="b" data-hsmake="sofort"${full||!D.sofort_frei?' disabled':''} title="${esc(t('Nur Admin: ohne ruhige Minuten und Tagesgrenze; echte Sprache geht trotzdem vor','Admin only: without quiet minutes and the day limit; real speech still goes first'))}">${ic('bolt')}${esc(t('Sofort erstellen','Make now'))}</button>`:'')+
-    `<small>${esc(full?t(`Höchstens ${D.max} Hörstücke; lösch erst eins.`,`At most ${D.max} audio overviews; delete one first.`):limit?t('Für heute ist die Grenze erreicht.','The limit for today is reached.'):t(`heute ${D.heute} von ${D.grenze}`,`today ${D.heute} of ${D.grenze}`))}</small></div>`+
+    `<small>${esc(full?t(`Höchstens ${D.max} Hörstücke; lösch erst eins.`,`At most ${D.max} audio overviews; delete one first.`):limit?t('Für heute ist die Grenze erreicht.','The limit for today is reached.'):D.frei?t(`heute ${D.heute} · ohne Tageslimit`,`today ${D.heute} · no daily limit`):t(`heute ${D.heute} von ${D.grenze}`,`today ${D.heute} of ${D.grenze}`))}</small></div>`+
     `<p class="mut ld-note hsmsg" role="status"${HS.msg?'':' hidden'}>${esc(HS.msg)}</p>`+
     (D.stuecke.length?`<div class="ld-grp"><span>${esc(t(`${D.stuecke.length} Hörstücke`,`${D.stuecke.length} audio overviews`))}</span></div>`+hsCard()+D.stuecke.filter(s=>s.id!==HS.sel).map(hsRow).join('')
       :`<div class="ld-empty mut">${esc(t('Noch kein Hörstück aus dieser Mappe.','No audio overview of this collection yet.'))}</div>`)}

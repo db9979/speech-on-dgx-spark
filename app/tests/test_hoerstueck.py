@@ -484,11 +484,11 @@ class Sofort(Base):
     def test_skips_the_day_limit_and_the_quiet_minutes_never_the_rules(self):
         c, uid = self.fresh("Hoerstuecksofortgrenze")
         mid, _, _ = self.mappe(uid)
-        self.admin_of(c)
         helpers.set_config(hoerstueck_day=1)
         self.make(c, mid)
         with quiet():
             self.assertEqual(c.post(f"/api/profile/mappen/{mid}/hoerstuecke", json={"laenge": 5}).status_code, 429)
+        self.admin_of(c)            # the day's limit reached first as a plain profile (the admin has none, V01.1.351)
         with self.only(uid):
             r = self.force(c, mid)
         self.assertEqual(r.status_code, 200, r.text)                              # beyond the day's limit
@@ -583,6 +583,51 @@ class Sofort(Base):
         self.lauf(uid, hid, buf=buf)
         self.assertNotIn("Wärmepumpe", buf.getvalue())
         self.assertIn("hoerstueck: erzwungen | ende | fertig |", buf.getvalue())
+
+    def test_no_day_limit_for_the_admin_or_a_freed_profile_others_keep_it(self):
+        """Dominik 2026-11-05 „Admin sollte keine Grenze haben“: the day's limit never holds for a profile without
+        daily limits (coadmin.unbegrenzt: the admin asking now, a role that acts, the tick „Ohne Tageslimit“);
+        it is still counted, the page says frei and never refuses; everybody else keeps the limit; the ten kept stay."""
+        import coadmin
+        c, uid = self.fresh("Hoerstueckadminfrei")
+        mid, _, _ = self.mappe(uid)
+        helpers.set_config(hoerstueck_day=1)
+        self.addCleanup(coadmin.set_frei, uid, False)
+        with self.only(uid):
+            self.make(c, mid)
+            buf = io.StringIO()
+            with quiet(buf):
+                self.assertEqual(c.post(f"/api/profile/mappen/{mid}/hoerstuecke", json={"laenge": 5}).status_code, 429)
+            self.assertIn("hoerstueck: erstellen abgelehnt | grenze |", buf.getvalue())     # a normal profile
+            got = c.get(f"/api/profile/mappen/{mid}/hoerstuecke").json()
+            self.assertEqual((got["frei"], got["heute"], got["grenze"]), (False, 1, 1))
+            self.assertEqual(hoerstueck.bitte(uid, mid, 5, 2)[1], "grenze")   # the tool's way too
+            with mock.patch.object(coadmin, "session", lambda req: {"id": uid, "role": "manager"}):
+                self.assertEqual(c.post(f"/api/profile/mappen/{mid}/hoerstuecke", json={"laenge": 5}).status_code, 429)
+            with mock.patch.object(coadmin, "session", lambda req: {"id": "u_000000000000", "role": "admin"}):
+                self.assertEqual(c.post(f"/api/profile/mappen/{mid}/hoerstuecke", json={"laenge": 5}).status_code, 429)
+            with mock.patch.object(coadmin, "session", lambda req: {"id": uid, "role": "admin"}):
+                self.assertIs(c.get(f"/api/profile/mappen/{mid}/hoerstuecke").json()["frei"], True)
+                self.make(c, mid)                                                  # the profile as admin
+            self.assertIs(c.get(f"/api/profile/mappen/{mid}/hoerstuecke").json()["frei"], False)
+            with mock.patch.object(coadmin, "acts", lambda u: "admin" if u == uid else ""):
+                self.assertTrue(hoerstueck.bitte(uid, mid, 5, 2)[0])  # a role that acts, no request
+            coadmin.set_frei(uid, True)                                            # „Ohne Tageslimit“
+            got = c.get(f"/api/profile/mappen/{mid}/hoerstuecke").json()
+            self.assertIs(got["frei"], True)
+            self.make(c, mid)
+            self.assertGreaterEqual(c.get(f"/api/profile/mappen/{mid}/hoerstuecke").json()["heute"], 3)   # still counted
+            coadmin.set_frei(uid, False)
+            with quiet():
+                self.assertEqual(c.post(f"/api/profile/mappen/{mid}/hoerstuecke", json={"laenge": 5}).status_code, 429)
+            self.admin_of(c)                                                       # the panel password's own login
+            self.assertIs(c.get(f"/api/profile/mappen/{mid}/hoerstuecke").json()["frei"], True)
+            while len(hoerstueck.liste(uid, mid)["stuecke"]) < hoerstueck.GESPEICHERT_MAX:
+                self.make(c, mid)
+            with quiet():
+                r = c.post(f"/api/profile/mappen/{mid}/hoerstuecke", json={"laenge": 5})
+            self.assertEqual(r.status_code, 400, r.text)                           # the ten kept hold for the admin too
+        self.assertIn("limit=!D.frei&&D.heute>=D.grenze", helpers.repo_file("app", "panel", "static", "js", "hoerstueck.js"))
 
 
 def transport(seen, status=200, body=b"\x00\x01" * 10):

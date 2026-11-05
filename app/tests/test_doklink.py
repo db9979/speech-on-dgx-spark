@@ -355,6 +355,26 @@ class Documents(Base):
         self.assertEqual(sum(1 for x in doklink.liste(uid) if x["fehler"] == "grenze"), 2)
         self.assertIn("doklink: grenze | 5", buf.getvalue())
 
+    def test_no_day_limit_for_a_profile_without_daily_limits(self):
+        """Dominik 2026-11-05 „Admin sollte keine Grenze haben“: coadmin.unbegrenzt lifts the fetches per day (YouTube
+        links go the same way), the page says frei; the addresses at once and the size stay."""
+        import coadmin
+        c, uid = self.fresh("Linkfrei")
+        self.addCleanup(coadmin.set_frei, uid, False)
+        helpers.set_config(doc_link_day=5)
+        self.assertIs(doklink.info(uid)["frei"], False)
+        coadmin.set_frei(uid, True)
+        self.assertIs(doklink.info(uid)["frei"], True)
+        web = Web({f"https://example.org/{i}": html(PAGE.replace(b"Herbst", str(i).encode())) for i in range(7)})
+        with quiet():
+            c.post("/api/profile/docs/link", json={"urls": [f"https://example.org/{i}" for i in range(7)]})
+        buf = io.StringIO()
+        with web.on():
+            self.fetch_all(uid, buf)
+        self.assertEqual(len(web.seen), 7, buf.getvalue())                   # beyond the 5 of a day
+        self.assertEqual([x for x in doklink.liste(uid) if x["fehler"] == "grenze"], [])
+        self.assertNotIn("doklink: grenze", buf.getvalue())
+
     def test_notaus_keeps_them_waiting(self):
         c, uid = self.fresh("Linknotaus")
         with mock.patch.object(notaus, "refuse", lambda kind, uid=None: kind == "internet"), quiet():

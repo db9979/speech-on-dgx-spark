@@ -130,15 +130,33 @@ def set_frei(uid, on):
     return bool(on)
 
 
-def unbegrenzt(uid):
+def unbegrenzt(uid, request=None):
     """No daily limit for this profile (Dominik 2026-10-24 „Tageslimits für Admins deaktiviert“): an admin role that
-    acts, or a profile the admin freed by hand (frei_uids, no second step needed). The one rule for the Kontingent,
-    pictures, songs, own song files and the pictures of an own Dungeon game; space, queues and what goes out of
-    the house (mails, calls, reMarkable) keep their limits. Guests are never a profile here."""
+    acts, a profile the admin freed by hand (frei_uids, no second step needed), or, when the request is given, the
+    admin asking for this profile right now (ist_admin: the panel password's login, Dominik 2026-11-05 „Admin sollte
+    keine Grenze haben“). The one rule for the Kontingent, pictures, songs, own song files, the pictures of an own
+    Dungeon game, Hörstücke, Auswertungen, Ton/Video and Link als Dokument (with YouTube); space, queues, stored
+    counts and what goes out of the house (mails, calls, reMarkable) keep their limits. Guests are never a profile
+    here."""
     try:
-        return bool(uid) and (acts(uid) == "admin" or uid in frei_uids())
+        return bool(uid) and (acts(uid) == "admin" or uid in frei_uids()
+                              or (request is not None and ist_admin(request, uid)))
     except Exception:
         return False
+
+
+def ist_admin(request, uid):
+    """Whether this request of the profile uid comes from the admin, decided by the server: the panel password's own
+    login (only while a password is set), or the profile itself acting with the role „admin" (session: its own
+    browser login with the second step, or its proved iPhone app). Never a Verwalter, a guest or a device key."""
+    import core
+    try:
+        if core.password_set() and core._admin_cookie_age(request) is not None:
+            return True
+        s = session(request)
+    except Exception:   # noqa: BLE001  (no session: no admin)
+        return False
+    return bool(s) and s.get("role") == "admin" and s.get("id") == uid
 
 
 def main_uid():
