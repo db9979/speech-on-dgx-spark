@@ -93,6 +93,8 @@ OPEN = {
     "/api/handoff/claim": "a phone scanned the computer's code; 404 unless the admin allows it, two minutes, once, lockout",
     "/api/handoff/finish": "the phone signs in only after its number was picked on the computer; 404 unless allowed",
     "/api/mymcp/back": "an own MCP service's sign-in comes back: changes nothing, only hands state and code to the signed-in page; 404 while off",
+    "/v1/chat/completions": "programs use the language model with their own key (llmapi.check_key), 404 while switched off",
+    "/v1/models": "programs list the model with their own key (llmapi.check_key), 404 while switched off",
     "/mcp": "the MCP endpoint checks the connection's own token itself (mcpserver.check_conn), 404 while switched off",
     "/oauth/register": "OAuth programs say who they are; opens nothing, the person decides in the panel; 404 unless allowed",
     "/oauth/authorize": "checks the program and hands over to the signed-in panel page; 404 unless allowed",

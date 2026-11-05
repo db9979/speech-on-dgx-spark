@@ -116,6 +116,24 @@ Andere Programme nutzen den Spark über das [Model Context Protocol](https://mod
 
 **Beispiele:** Open WebUI: Einstellungen → Externe Werkzeuge → „+“, Typ MCP (Streamable HTTP). n8n: Knoten „MCP Client Tool“. Programme ohne Header-Feld: `npx mcp-remote http://SPARK:31080/mcp --header "Authorization: Bearer <Schlüssel>"`.
 
+### Sprachmodell per API
+
+Seit V01.1.346 (Plan „LLM von außen per API-Key“, Dominik 2026-11-05 „1a 2a 3b 4a 5a, admin immer unbegrenzt“) nutzen eigene Programme das Sprachmodell des Spark wie die OpenAI-Schnittstelle: `POST /v1/chat/completions` (auch gestreamt) und `GET /v1/models` auf der Adresse des Panels, im Heimnetz `http://SPARK:31080/v1`, von außen über den Reverse-Proxy `https://dein-proxy/v1`. Es ist nur das reine Modell: keine Werkzeuge des Spark, kein Gedächtnis, keine Dokumente, nichts aus dem Profil.
+
+**Einschalten:** Admin: Funktionen → *Sprachmodell per API* (`chat.llm_api`, aus); darunter *Sprachmodell per API von außen* (`chat.llm_api_extern`, aus), *Anfragen pro Minute je Schlüssel* (`chat.llm_api_minute`, 20) und *Tausend Tokens in 24 Stunden je Schlüssel* (`chat.llm_api_tag_k`, 300). Freigegeben gilt es für jedes Profil; einzelne Profile sperrt nur der Admin, Gäste nie. Im Profil: Ich → *Sprachmodell per API* → „＋ Schlüssel anlegen“: Name, erreichbar („nur Heimnetz“ oder „auch von außen“), auf Wunsch ein kleineres Tageslimit, „Schlüssel erzeugen“ mit dem Code. Der Schlüssel (`sk-spark-…`) ist nur einmal sichtbar; höchstens 5 je Profil, ohne Nutzung enden sie nach 90 Tagen.
+
+**Feste Regeln:**
+- Nur Text: Bilder, Ton und Dateien in einer Nachricht werden mit 400 abgelehnt. Nur bekannte Felder gehen durch, `n` ist 1, `max_tokens` höchstens 8192, Nachdenken nur über `chat_template_kwargs.enable_thinking`. Der Modellname ist immer das eigene Sprachmodell (nie „sehen“ oder „helfer“); dahinter prüft der Feldwächter des LLM-Tors noch einmal.
+- Nur mit dem eigenen LLM-Tor: Steht unter Einstellungen → Sprachmodell ein anderer Server, antwortet `/v1` mit 503.
+- Vorrang: Jede Anfrage geht mit der Stufe „hinten“; wer mit dem Spark spricht, geht immer vor.
+- Grenzen je Schlüssel: 20 Anfragen pro Minute, 2 gleichzeitig (alle Schlüssel zusammen 4), höchstens 300 000 Tokens in 24 Stunden; dazu zählt das Kontingent des Profils (Ich → Verbrauch, Aufgabe „Sprachmodell per API“). Admin-Profile haben keine dieser Grenzen; Größe (2 MB) und Feldwächter gelten für alle. Zu viel: 429 mit `Retry-After`.
+- Von außen: nur mit dem eigenen Schalter, dem zweiten Anmeldeschritt des Profils und einem frischen Code, mit Warnhinweis. Ein Schlüssel „nur Heimnetz“ gilt nie über den Reverse-Proxy. Notaus Stufe 1 schließt den Weg von außen, Mein Notaus sperrt die Schlüssel des Profils.
+- Gespeichert wird nur die Prüfsumme des Schlüssels und die Tokens je Stunde (`state/llm-api.json`), nie eine Frage oder Antwort. Logs (Bereich „Rechner, eigene Dienste, Dokumente“): `llmapi: antwort | <profil> | <schlüssel-id> | 7 in 3 aus 812 ms`, `llmapi: abgelehnt minute | …`; Zustand → Live: Kasten „Sprachmodell per API“ mit Schlüsseln, laufenden Anfragen, Antworten und Tokens heute.
+
+**Admin:** Personen und Geräte → Apps und Schnittstellen → *Sprachmodell per API*: jeder Schlüssel mit Profil, erreichbar, zuletzt genutzt und Tokens in 24 Stunden; „Löschen“ (mit Code) gilt sofort.
+
+**Beispiel:** `from openai import OpenAI; c = OpenAI(base_url="http://SPARK:31080/v1", api_key="sk-spark-…"); c.chat.completions.create(model="spark", messages=[{"role": "user", "content": "Hallo"}])`. Open WebUI: Einstellungen → Verbindungen → OpenAI-API mit derselben Adresse und dem Schlüssel. Für lange Antworten von außen den Timeout am Reverse-Proxy auf mindestens 5 Minuten stellen oder `stream=True` nehmen.
+
 ### Eigene MCP-Dienste pro Profil
 
 Seit V01.0.363 (Plan `plaene/eigene-mcp-dienste.md`) bindet jedes Profil eigene MCP-Dienste an (Streamable HTTP), zusätzlich zu denen, die der Admin für alle anbindet. Nur dieses Profil sieht und nutzt sie.

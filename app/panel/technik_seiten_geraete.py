@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "geraet": {
-        "stand": "18ecda8c98",
+        "stand": "8e65b06605",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "zwischenruf.decide": ["s5"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -1030,7 +1030,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "a83004d311",
+        "stand": "d84f38a409",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],
@@ -1038,6 +1038,8 @@ SEITEN = {
             "mcpserver.ask": ["s10"], "mcpserver.propose": ["s11"], "mcpserver.decide": ["s11"],
             "mcpserver.carry_out": ["s11"], "regeln": ["s7"], "regel:Sprache": ["s9"], "regel:Lesen": ["s9"],
             "regel:Spark fragen": ["s10"], "regel:Handeln mit Bestätigung": ["s11"],
+            "llmapi.completions": ["s13"], "llmapi.check_key": ["s13"], "llmapi.clean": ["s13"], "llmapi._limits": ["s13"],
+            "llmapi.MAX_KEYS": ["s13"], "llmapi.AT_ONCE": ["s13"], "llmapi.MAX_TOKENS": ["s13"],
         },
         "kurz": ("Andere Programme (Claude, n8n, Open WebUI, Home Assistant) nutzen den Spark über das Model Context "
                  "Protocol unter /mcp. Jede Verbindung gehört einem Profil, hat ihren eigenen Schlüssel und ihre "
@@ -1147,6 +1149,22 @@ SEITEN = {
                "welches Werkzeug, ob es ging und wie lange, nie Frage oder Antwort.",
                "The answer is cut to {mcpserver.MAX_RESULT} characters. The journal only gets which program, which "
                "tool, whether it worked and how long, never question or answer.")),
+            S("s13", "schritt", ("Nur das Sprachmodell (/v1)", "Only the language model (/v1)"),
+              ("Sprachmodell per API, OpenAI-kompatibel", "Language model by API, OpenAI-compatible"),
+              ("Ein Programm, das nur das Sprachmodell will, schickt POST an /v1 (OpenAI-Chat) mit einem Schlüssel seines "
+               "Profils (höchstens {llmapi.MAX_KEYS} je Profil, nur Hashes gespeichert). Dieselbe Heimnetz-Regel wie oben, "
+               "von außen nur mit eigenem Schalter, zweitem Schritt und frischem Code. Nur Text, nur bekannte Felder, "
+               "höchstens {llmapi.MAX_TOKENS} Tokens Antwort, der Modellname immer der eigene; dann geht die Anfrage mit "
+               "der Stufe „hinten“ ans LLM-Tor. Grenzen je Schlüssel (pro Minute, {llmapi.AT_ONCE} gleichzeitig, Tokens "
+               "in 24 Stunden), Admin-Profile ohne Grenze. Kein Werkzeug des Spark, nichts aus dem Profil, nie ein Inhalt "
+               "im Journal.",
+               "A program that only wants the language model sends POST to /v1 (OpenAI chat) with a key of its profile (at "
+               "most {llmapi.MAX_KEYS} per profile, only hashes kept). The same home network rule as above, from outside "
+               "only with its own switch, the second step and a fresh code. Text only, known fields only, at most "
+               "{llmapi.MAX_TOKENS} tokens of answer, the model name always the own one; then the request goes to the "
+               "LLM gate with the stage „hinten“. Limits per key (per minute, {llmapi.AT_ONCE} at once, tokens in 24 "
+               "hours), admin profiles without a limit. No tool of the Spark, nothing of the profile, never a content in "
+               "the journal.")),
         ],
         "beispiele": [
             (("Claude liest die Termine", "Claude reads the appointments"),
@@ -1182,6 +1200,9 @@ SEITEN = {
             ("{mcpserver.MAX_RESULT}", ("Zeichen höchstens in einer Antwort", "characters at most in an answer"), "mcpserver.MAX_RESULT"),
             ("{mcpserver.ACTION_SECONDS|min}", ("Minuten wartet ein Vorschlag auf das Ja", "minutes a proposal waits for the yes"),
              "mcpserver.ACTION_SECONDS"),
+            ("{llmapi.MAX_KEYS}", ("Schlüssel fürs Sprachmodell per API je Profil", "keys for the language model by API per profile"), "llmapi.MAX_KEYS"),
+            ("{llmapi.AT_ONCE}", ("Anfragen gleichzeitig je Schlüssel über /v1 (Admin ohne Grenze)", "requests at once per key through /v1 (admin without a limit)"), "llmapi.AT_ONCE"),
+            ("{llmapi.MAX_TOKENS}", ("Tokens höchstens in einer Antwort über /v1", "tokens at most in an answer through /v1"), "llmapi.MAX_TOKENS"),
         ],
         "einstellen": [
             ("Funktionen → Spark als MCP-Server: der Server für alle Profile (Standard aus).",
@@ -1192,6 +1213,10 @@ SEITEN = {
              "Features → Spark as MCP server → MCP: acting with confirmation: the tools that propose something."),
             ("Ich → Spark als MCP-Server: Verbindungen anlegen, Werkzeuge wählen, Vorschläge bestätigen oder ablehnen.",
              "Me → Spark as MCP server: make connections, pick tools, confirm or decline proposals."),
+            ("Funktionen → Sprachmodell per API (darunter „von außen“, Anfragen pro Minute, Tokens in 24 Stunden); "
+             "Ich → Sprachmodell per API: Schlüssel anlegen und löschen.",
+             "Features → Language model by API (below it „from outside“, requests per minute, tokens in 24 hours); "
+             "Me → Language model by API: make and delete keys."),
         ],
         "sehen": [
             ("Zustand → Live: jeder Werkzeug-Aufruf als Anfrage des Programms, von außen unter „Über das Internet“.",
@@ -1212,6 +1237,10 @@ SEITEN = {
             ("mcpserver.propose", ("Vorschlag statt Handlung", "proposal instead of action")),
             ("mcpserver.decide", ("das Ja des Profils, dann ausführen", "the profile's yes, then carry out")),
             ("mcpserver.carry_out", ("führt nur bestätigte Aktionen aus", "carries out confirmed actions only")),
+            ("llmapi.completions", ("/v1: Schlüssel, Feldwächter, Grenzen, Stufe hinten", "/v1: key, field guard, limits, stage hinten")),
+            ("llmapi.check_key", ("Schlüssel, Heimnetz, außen, Notaus, Sperre", "key, home network, outside, kill switch, block")),
+            ("llmapi.clean", ("nur Text und bekannte Felder", "text and known fields only")),
+            ("llmapi._limits", ("Grenzen je Schlüssel, Admin ohne", "limits per key, admin without")),
         ],
         "tests": ["test_mcpserver", "test_notaus"],
         "heute": [],

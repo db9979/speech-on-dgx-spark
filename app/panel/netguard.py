@@ -149,6 +149,7 @@ DIRECT_OK = {
     "sparkkalender": ("lokal", "kein Netz: der Spark-Kalender antwortet im Panel selbst (httpx.MockTransport), seine Adresse spark.invalid löst nie auf"),
     "loopwacht": ("lokal", "nur die Meldung an systemd über den Unix-Socket aus $NOTIFY_SOCKET (Watchdog), kein Netz"),
     "mcpserver": ("lokal", "eigene Sprachdienste auf localhost"),
+    "llmapi": ("lokal", "das eigene LLM-Tor (llm.own_tor), nie eine andere Adresse"),
     "monitor": ("lokal", "Gesundheitsabfrage der eigenen Dienste auf localhost"),
     "ichweiss": ("suche", "SearXNG für den Netz-Tipp, nur mit dem Wort eines bestätigten Interesses"),
     "proactive": ("sprachmodell", "Sprachmodell und SearXNG"),

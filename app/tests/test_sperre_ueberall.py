@@ -460,6 +460,8 @@ ADMIN_ON_OK = {
     "kontaktserver.py:admin_on": "Spark switch: without it /carddav does not exist; every login then features.allowed kontaktserver",
     "mcpserver.py:admin_on": "Spark switch; per profile and connection features.allowed mcpserver",
     "mcpserver.py:extern_on": "Spark-wide: the server reachable from outside",
+    "llmapi.py:admin_on": "Spark switch; per profile and key features.allowed llmapi",
+    "llmapi.py:extern_on": "Spark-wide: keys reachable from outside",
     "mcpserver.py:act_on": "Spark switch; each call checks features.allowed for the profile",
     "meinmcp.py:admin_on": "Spark switch; per profile features.allowed mymcp",
     "meldung.py:admin_on": "Spark switch; per profile features.allowed melden (meldung.caller)",

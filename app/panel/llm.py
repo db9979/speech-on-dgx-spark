@@ -11,6 +11,7 @@ import httpx
 from common import load_config, model_host, model_local, no_think
 
 _models = {}   # address -> the model it serves (when chat.llm_model is not set)
+OPENAI_CHAT = "/v1/chat/completions"   # the path own programs use at the panel (llmapi.py, Sprachmodell per API)
 HELFER = "helfer"   # the LLM-Tor's model name for the small helper model (systemone.HELFER)
 # the background jobs that write only a few words: with Funktionen → Hilfsmodell → Für kurze Texte (chat.helfer_kurz)
 # the helper model writes them first, and the language model at once when it is not ready (Dominik 2026-10-25, „3e“)

@@ -111,7 +111,7 @@ AUFGABEN = {
     "Prüffrage": "pruefen", "Qualitätstest": "pruefen", "Prüfen": "pruefen", "Messen": "pruefen",
     "Antwort prüfen": "pruefen", "Einordnung messen": "pruefen", "Erzähler-Prüfstand": "pruefen", "Dungeon-Richter": "pruefen", "Angriff prüfen": "pruefen", "Dienst prüfen": "pruefen", "Suchprüfung": "pruefen",
     # agent, MCP, companion, documents
-    "Agent": "agent", "MCP": "agent", "Schreibhilfe": "begleiter", "Begleiter": "begleiter",
+    "Agent": "agent", "MCP": "agent", "Sprachmodell per API": "agent", "Schreibhilfe": "begleiter", "Begleiter": "begleiter",
     "Dokument erstellen": "dokumente", "Auswertung": "dokumente", "Abschrift": "dokumente", "Hörstück": "dokumente", "Bild malen": "dokumente", "Bild ändern": "dokumente", "Musik machen": "dokumente",
     # the game (dungeon.py): narration, reading aloud and speaking instead of typing
     "Dungeon-Master": "sonstige",

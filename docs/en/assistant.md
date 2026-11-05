@@ -1844,6 +1844,10 @@ Every function of the Spark with its switch, what it builds on, where you set it
 
 - **MCP: acting with confirmation** (Features → On the go and devices → "MCP: acting with confirmation"; builds on "Spark as MCP server"; Me → Spark as MCP server): A program may switch the smart home, enter appointments and set reminders, but only as a proposal.
 
+- **Language model by API** (Features → On the go and devices → "Language model by API"; Me → Language model by API): Own programs (Python openai, Open WebUI, Continue, n8n …) use the Spark's language model like the OpenAI interface at /v1: text only, without the Spark's tools and without personal data.
+
+- **Language model by API from outside** (Features → On the go and devices → "Language model by API from outside"; builds on "Language model by API"; Me → Language model by API): A key "also from outside" works through the reverse proxy too, e.g.
+
 - **iPhone app** (Features → On the go and devices → "iPhone app"; Me → iPhone app): An own app for the iPhone: press the button, ask, the answer comes in the Spark voice, also with the screen locked.
 
 - **Push to the iPhone app** (Features → On the go and devices → "Push to the iPhone app"; builds on "iPhone app"; Me → iPhone app): Reminders, the morning briefing and notes come to the iPhone even when the app is closed.

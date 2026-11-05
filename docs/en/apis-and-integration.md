@@ -116,6 +116,24 @@ Other programs use the Spark over the [Model Context Protocol](https://modelcont
 
 **Examples:** Open WebUI: Settings → External tools → "+", type MCP (Streamable HTTP). n8n: node "MCP Client Tool". Programs without a header field: `npx mcp-remote http://SPARK:31080/mcp --header "Authorization: Bearer <key>"`.
 
+### Language model by API
+
+Since V01.1.346 (plan "Use the LLM from outside with an API key", Dominik 2026-11-05 "1a 2a 3b 4a 5a, admin always unlimited") own programs use the Spark's language model like the OpenAI interface: `POST /v1/chat/completions` (also streamed) and `GET /v1/models` at the panel's address, in the home network `http://SPARK:31080/v1`, from outside through the reverse proxy `https://your-proxy/v1`. It is the plain model only: no tools of the Spark, no memory, no documents, nothing of the profile.
+
+**Switching on:** Admin: Features → *Language model by API* (`chat.llm_api`, off); below it *Language model by API from outside* (`chat.llm_api_extern`, off), *Requests per minute per key* (`chat.llm_api_minute`, 20) and *Thousand tokens in 24 hours per key* (`chat.llm_api_tag_k`, 300). Released, it works for every profile; only the admin blocks single profiles, guests never. In the profile: Me → *Language model by API* → "＋ Make a key": name, reachable ("home network only" or "also from outside"), if wanted a smaller daily limit, "Create key" with the code. The key (`sk-spark-…`) is shown only once; at most 5 per profile, without use they end after 90 days.
+
+**Fixed rules:**
+- Text only: pictures, audio and files in a message are refused with 400. Only known fields pass, `n` is 1, `max_tokens` at most 8192, thinking only through `chat_template_kwargs.enable_thinking`. The model name is always the own language model (never "sehen" or "helfer"); behind it the LLM gate's field guard checks once more.
+- Only with the own LLM gate: with another server under Settings → Language model, `/v1` answers 503.
+- Priority: every request goes with the stage "hinten"; whoever talks to the Spark always goes first.
+- Limits per key: 20 requests per minute, 2 at once (all keys together 4), at most 300,000 tokens in 24 hours; the profile's quota counts too (Me → Usage, task "Sprachmodell per API"). Admin profiles have none of these limits; size (2 MB) and field guard hold for everyone. Too much: 429 with `Retry-After`.
+- From outside: only with its own switch, the profile's second sign-in step and a fresh code, with a warning. A "home network only" key never works through the reverse proxy. Emergency stop stage 1 closes the way from outside, My emergency stop locks the profile's keys.
+- Only the hash of the key and the tokens per hour are kept (`state/llm-api.json`), never a question or an answer. Logs (area "Computer, own services, documents"): `llmapi: antwort | <profile> | <key id> | 7 in 3 aus 812 ms`, `llmapi: abgelehnt minute | …`; Status → Live: box "Sprachmodell per API" with keys, running requests, answers and tokens today.
+
+**Admin:** People and devices → Apps and interfaces → *Language model by API*: every key with profile, reachable, last used and tokens in 24 hours; "Delete" (with code) works at once.
+
+**Example:** `from openai import OpenAI; c = OpenAI(base_url="http://SPARK:31080/v1", api_key="sk-spark-…"); c.chat.completions.create(model="spark", messages=[{"role": "user", "content": "Hello"}])`. Open WebUI: Settings → Connections → OpenAI API with the same address and the key. For long answers from outside set the reverse proxy's timeout to at least 5 minutes or use `stream=True`.
+
 ### Own MCP services per profile
 
 Since V01.0.363 (plan `plaene/eigene-mcp-dienste.md`) every profile can connect its own MCP services (Streamable HTTP), besides the ones the admin connects for everybody. Only that profile sees and uses them.

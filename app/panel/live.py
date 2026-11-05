@@ -162,6 +162,8 @@ TARGETS = {
     "systemupdate": ("System-Updates", "Betriebssystem beider Rechner · OSV und npm · Internet", "net", False),
     # tools of MCP services (mcp_… of the admin, mcpu_… a profile's own, meinmcp.py); the line under Ereignisse names the service
     "mcp": ("MCP-Dienste", "eigene und angebundene Dienste · Netz", "net", False),
+    # Sprachmodell per API (llmapi.py): own programs ask the plain model at /v1; keys, answers and tokens in numbers only
+    "llmapi": ("Sprachmodell per API", "eigene Programme · /v1 · Heimnetz oder Proxy", "net", False),
     # Probleme melden (meldung.py): only after the person looked at the preview; the line shows counts, never text
     "issues": ("GitHub (Meldungen)", "Issues · Internet", "net", False),
     # Dokumente erstellen (docmake.py): the line shows jobs in numbers, never a title or text
@@ -896,6 +898,13 @@ def _conns(now):
         n = sum(1 for v in (getattr(mcpserver, "_busy", {}) or {}).values() if v)
         if n:
             out.append({"name": "MCP-Clients", "proto": "HTTPS", "dir": "ein", "n": n})
+    except Exception:
+        pass
+    try:
+        import llmapi
+        n = sum((getattr(llmapi, "_busy", {}) or {}).values())
+        if n:
+            out.append({"name": "Sprachmodell per API", "proto": "HTTPS · /v1", "dir": "ein", "n": n})
     except Exception:
         pass
     try:
@@ -1903,6 +1912,13 @@ def snapshot(view="admin", now=None):
     if ewk.get("on"):
         used.add("entwickeln")
     try:
+        import llmapi
+        lap = llmapi.for_live(now)
+    except Exception:
+        lap = {"on": False}
+    if lap.get("on"):
+        used.add("llmapi")
+    try:
         import systemupdates
         sup = systemupdates.for_live(now)
     except Exception:
@@ -2092,6 +2108,8 @@ def snapshot(view="admin", now=None):
             x["sub"] = werkstattseite.live_sub(wks)
         if x["id"] == "systemupdate" and sup.get("on"):   # System-Updates: per computer counts, running n of m, waiting (no package name)
             x["sub"] = systemupdates.live_sub(sup) or x["sub"]
+        if x["id"] == "llmapi" and lap.get("on"):   # Sprachmodell per API: keys, running, answers and tokens today (numbers)
+            x["sub"] = llmapi.live_sub(lap)
         if x["id"] == "entwickeln" and ewk.get("on"):   # Entwickeln: lokale Änderungen N, waiting in the clone, the last refusal (fixed word)
             x["sub"] = entwickelnseite.live_sub(ewk)
         if x["id"] == "fernzugang" and fzg.get("on"):   # Fernzugang: paired, online, sessions, waiting for removal (numbers)

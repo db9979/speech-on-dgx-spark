@@ -505,6 +505,10 @@
       <div class="setrow"><div class="lbl"><b>Spark als MCP-Server</b><span>Andere Programme nutzen Sprache, Nachschlagen und den Assistenten über MCP; jedes Profil gibt jedem Programm eigene Werkzeuge.</span></div><label class="tgl"><input type="checkbox" id="chat.mcp_server"><i></i></label></div>
       <div class="setrow" data-show="chat.mcp_server" style="margin-left:18px"><div class="lbl"><b>MCP-Server von außen (OAuth)</b><span>Auch über den Reverse-Proxy, etwa für claude.ai: nur mit zweitem Anmeldeschritt des Profils und Warnhinweis.</span></div><label class="tgl"><input type="checkbox" id="chat.mcp_server_extern"><i></i></label></div>
       <div class="setrow" data-show="chat.mcp_server" style="margin-left:18px"><div class="lbl"><b>MCP: Handeln mit Bestätigung</b><span>Programme dürfen Schalten, Termine und Erinnerungen vorschlagen; ausgeführt wird erst nach dem Ja des Profils im Panel.</span></div><label class="tgl"><input type="checkbox" id="chat.mcp_server_act"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Sprachmodell per API</b><span>Eigene Programme nutzen das Sprachmodell OpenAI-kompatibel unter /v1, nur Text, mit Schlüssel je Profil; Admins ohne Grenzen.</span></div><label class="tgl"><input type="checkbox" id="chat.llm_api"><i></i></label></div>
+      <div class="setrow" data-show="chat.llm_api" style="margin-left:18px"><div class="lbl"><b>Sprachmodell per API von außen</b><span>Auch über den Reverse-Proxy: nur mit zweitem Anmeldeschritt des Profils, frischem Code und Warnhinweis.</span></div><label class="tgl"><input type="checkbox" id="chat.llm_api_extern"><i></i></label></div>
+      <div class="setrow" data-show="chat.llm_api" style="margin-left:18px"><div class="lbl"><b>Anfragen pro Minute je Schlüssel</b><span>Grenze für Profile ohne Admin-Rolle.</span></div><input type="number" class="num" id="chat.llm_api_minute" min="1" max="600"></div>
+      <div class="setrow" data-show="chat.llm_api" style="margin-left:18px"><div class="lbl"><b>Tausend Tokens in 24 Stunden je Schlüssel</b><span>Höchstes Tageslimit eines Schlüssels; das Profil kann weniger wählen.</span></div><input type="number" class="num" id="chat.llm_api_tag_k" min="1" max="100000"></div>
       <div class="setrow"><div class="lbl"><b>Push an die iPhone-App</b><span>Meldungen kommen auch bei geschlossener App. Apple sieht nur „Neue Nachricht“, den Text holt die App vom Spark.</span></div><label class="tgl"><input type="checkbox" id="chat.iphone_push"><i></i></label></div>
       <div data-show="chat.iphone_push" style="margin-left:18px" id="apnsadmin"><div class="fh">Schlüssel von developer.apple.com → Certificates, IDs &amp; Profiles → Keys → „+“ → Apple Push Notifications service (APNs). Die .p8-Datei gibt es nur einmal zum Herunterladen.</div>
         <label>Schlüsseldatei (.p8)</label><input id="apnsfile" type="file" accept=".p8">
@@ -1326,6 +1330,10 @@
     <div class="mut">Programme wie Open WebUI, n8n, Home Assistant oder Claude verbinden sich unter <b>Ich → Spark als MCP-Server</b> mit einem eigenen Zugang pro Profil (Adresse <code>/mcp</code>, Streamable HTTP). Hier siehst du alle Zugänge und kannst jeden sofort beenden.</div>
     <div id="int-mcp" style="margin-top:8px"></div>
   </div>
+  <div class="card" data-sw="llm_api"><h2>Sprachmodell per API</h2>
+    <div class="mut">Eigene Programme nutzen das Sprachmodell unter <b>Ich → Sprachmodell per API</b> mit einem Schlüssel pro Profil (Adresse <code>/v1</code>, OpenAI-kompatibel, nur Text). Hier siehst du alle Schlüssel und kannst jeden sofort löschen.</div>
+    <div id="int-llmapi" style="margin-top:8px"></div>
+  </div>
   <div class="card" data-sw="mcp_own"><h2>Eigene MCP-Dienste der Profile</h2>
     <div class="mut" data-tr>Dienste, die Profile unter <b>Ich → Meine MCP-Dienste</b> selbst angebunden haben, ohne Schlüssel. Sperren gilt sofort, auch wenn das Profil den Dienst neu anbindet.</div>
     <div id="int-mymcp" style="margin-top:8px"></div>
@@ -1577,6 +1585,7 @@
     <div id="pebbox" class="ptab"></div>
     <div id="termbox" class="ptab"></div>
     <div id="mcpbox" class="ptab"></div>
+    <div id="llmapibox" class="ptab"></div>
     <div id="mymcpbox" class="ptab"></div>
     <div id="rpbox" class="ptab"></div>
     <div id="storebox" class="ptab"><div id="nasbox"></div></div>
@@ -1675,6 +1684,7 @@
 <script src="/static/js/verbund.js"></script>
 <script src="/static/js/esp.js"></script>
 <script src="/static/js/mcp.js"></script>
+<script src="/static/js/llmapi.js"></script>
 <script src="/static/js/mymcp.js"></script>
 <script src="/static/js/guides.js"></script>
 <script src="/static/js/search.js"></script>

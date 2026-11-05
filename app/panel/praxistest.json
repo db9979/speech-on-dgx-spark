@@ -5324,6 +5324,13 @@
 "titel": "Hörstück sofort erstellen (nur Admin)",
 "text": "Als Profil mit der Rolle „Admin“ (zweiter Schritt an) Mappen → eine Mappe → Hörstück öffnen: neben „Erstellen“ steht „Sofort erstellen“. Tippen, gleich nachdem du dem Spark eine Frage gestellt hast: das Drehbuch entsteht nach der Antwort sofort, ohne auf die ruhige Minute zu warten; während der Spark antwortet oder du mit ihm sprichst, stockt es und macht danach weiter. Auch nach erreichter Tagesgrenze geht „Sofort erstellen“, „heute N von 3“ zählt nicht hoch. Ein zweites „Sofort erstellen“, solange eins läuft: ausgegraut bzw. „Es wird schon ein Hörstück sofort erstellt“. Ein wartendes Stück öffnen: „Jetzt erstellen“ zieht es vor. Ein Profil ohne Rolle und der Verwalter sehen den Knopf nicht; im iPhone dasselbe nur in der eigenen bestätigten App des Admins. Zustand → Live, Kasten Hörstück: „erzwungen: spricht“, „heute 1× sofort erstellt“; Zustand → Logs (Wissen): „hoerstueck: erzwungen | neu“ und am Ende „hoerstueck: erzwungen | ende | fertig“, nie ein Titel.",
 "thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P787",
+"v": 1346,
+"titel": "Sprachmodell per API (eigener Schlüssel)",
+"text": "Admin: Funktionen → Sprachmodell per API an. Als Profil Ich → Sprachmodell per API → „＋ Schlüssel anlegen“, Name „Test“, nur Heimnetz, Code eingeben: der Schlüssel sk-spark-… erscheint einmal. Am Rechner im Heimnetz: curl http://<Pi-IP>:31080/v1/chat/completions -H \"Authorization: Bearer <Schlüssel>\" -H \"Content-Type: application/json\" -d '{\"model\":\"x\",\"messages\":[{\"role\":\"user\",\"content\":\"Sag Hallo\"}]}' antwortet; mit \"stream\":true kommen Stücke. Dieselbe Anfrage über den Reverse-Proxy: 403 „nur im Heimnetz“. Ein Bild in der Nachricht: 400 nur_text. Zustand → Live, Kasten „Sprachmodell per API“: Schlüssel 1, Antworten und Tokens heute; Zustand → Logs (Rechner, eigene Dienste, Dokumente): „llmapi: antwort | … | 12 in 3 aus … ms“, nie eine Frage. Admin: Funktionen → Sprachmodell per API von außen an, zweiter Schritt im Profil an, Schlüssel „auch von außen“ mit frischem Code: über https://<proxy>/v1 geht es. Als Profil ohne Admin-Rolle nach 20 Anfragen in einer Minute: 429; als Admin keine Grenze. Löschen: der Schlüssel gilt sofort nicht mehr.",
+"thread": "LLM von außen per API-Key nutzen"
 }
 ]
 }

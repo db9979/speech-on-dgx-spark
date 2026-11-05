@@ -52,7 +52,7 @@ ME_PAGES = (("overbox", "Überblick", "Overview"), ("bgbox", "Mein Zustand", "My
             ("habox", "Smart Home", "Smart home"), ("roombox", "Raum-Modus", "Room mode"), ("espbox", "Lautsprecher", "Speakers"), ("telbox", "Telefon", "Phone"),
             ("trbox", "Bus und Bahn", "Bus and train"), ("tgbox", "Telegram", "Telegram"), ("appbox", "iPhone-App", "iPhone app"),
             ("andbox", "Android-App", "Android app"), ("deskbox", "Begleiter", "Companion"), ("pebbox", "Pebble-Uhr", "Pebble watch"),
-            ("termbox", "Terminal", "Terminal"), ("mcpbox", "Spark als MCP-Server", "Spark as MCP server"), ("secbox", "Sicherheit", "Security"),
+            ("termbox", "Terminal", "Terminal"), ("mcpbox", "Spark als MCP-Server", "Spark as MCP server"), ("llmapibox", "Sprachmodell per API", "Language model by API"), ("secbox", "Sicherheit", "Security"),
             ("rpbox", "Probleme melden", "Reporting problems"), ("voicebox", "Sprechererkennung", "Speaker identification"),
             ("usebox", "Verbrauch", "Usage"))
 # pages of their own in the menu, outside Ich (Dominik 2026-10-18: „im richtigen Bereich ersichtlich und einstellbar,
@@ -98,7 +98,7 @@ DESK_SKIP = {
                      "schirm", "modellwechsel", "werkstatt", "entwickeln"), _D_SPARK),
     **dict.fromkeys(("history", "teilen", "bilder", "musik", "dungeon", "mystatus", "agent", "chats", "weather",
                      "feeds", "contacts", "transit", "speaker", "verbrauch", "nas"), _D_PANEL),
-    **dict.fromkeys(("room", "esp32", "wyoming", "telefon", "telegram", "android", "pebble", "terminal", "mcpserver",
+    **dict.fromkeys(("room", "esp32", "wyoming", "telefon", "telegram", "android", "pebble", "terminal", "mcpserver", "llmapi",
                      "iphone", "appmerken"), _D_DEVICE),
     "memory": _D_LINK, "mfa": _D_LINK + " (Meine Daten on the Ich page Sicherheit)",
     "melden": "stays in the panel; the Begleiter's Kopplung page opens it (Problem melden …)",
@@ -764,6 +764,10 @@ FEATURES = (
       parent="mcpserver", me="mcpbox", guide="mcpextern"),
     F("mcpact", "MCP: Handeln mit Bestätigung", "MCP: acting with confirmation", "go", ("mcp_server_act",),
       parent="mcpserver", me="mcpbox", guide="mcpact"),
+    # Sprachmodell per API (llmapi.py): own programs use the plain language model at /v1 with a key of their profile
+    F("llmapi", "Sprachmodell per API", "Language model by API", "go", ("llm_api",), me="llmapibox", guide="llmapi"),
+    F("llmapiextern", "Sprachmodell per API von außen", "Language model by API from outside", "go", ("llm_api_extern",),
+      parent="llmapi", me="llmapibox", guide="llmapiextern"),
     F("iphone", "iPhone-App", "iPhone app", "go", ("iphone",), me="appbox", guide="iphone"),
     F("iphonepush", "Push an die iPhone-App", "Push to the iPhone app", "go", ("iphone_push",), pref="app_push", parent="iphone",
       me="appbox", guide="iphonepush"),

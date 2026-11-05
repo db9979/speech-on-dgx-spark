@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.346** Sprachmodell per API: eigene Programme nutzen das Sprachmodell OpenAI-kompatibel unter /v1 mit einem Schlüssel ihres Profils (Ich → Sprachmodell per API), nur Text, im Heimnetz oder mit eigenem Schalter auch von außen; Grenzen je Schlüssel, Admins unbegrenzt
 - **V01.1.345** Hörstück sofort erstellen: der Admin kann ein Hörstück gleich machen lassen oder ein wartendes vorziehen, ohne ruhige Minuten und Tagesgrenze, auch in der iPhone-App; echte Sprache geht trotzdem vor
 - **V01.1.344** Hörstück in den Apps: eigener Player in der iPhone-App (auch im Hintergrund und auf dem Sperrbildschirm), „An Telegram“ nur an den eigenen Chat, Mitteilung „Hörstück fertig“ mit Sprung-Link, beim Abspielen hervorgehobene Zeile im Drehbuch, Drehbuch auch auf Englisch
 - **V01.1.343** Hörstück aus einer Mappe: in einer Mappe ein Gespräch aus 2 oder 3 Stimmen zum Anhören (5, 10 oder 20 Minuten); das Modell schreibt nur ein Drehbuch, das Panel prüft jede Zeile (Fundstelle, Zahlenprobe, feste Sprecher), gesprochen wird Zeile für Zeile in ruhigen Minuten; der Admin wählt die drei Stimmen
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.339** Fix Spontanhilfe: „Programm laden“ auf /hilfe meldete hinter dem Reverse-Proxy „too many requests“; die Tür des Programms zählt jetzt je Hilfe nach dem richtigen Schlüssel, Raten weiter je Adresse. Die Seite der Person ist neu und schlicht: Kopfzeile mit Stand und „Sitzung beenden“, Anfrage mit Schritten, kleine Vorschau, Nachrichten mit Feld oben, am Handy einspaltig, nur feste Texte (eine 429 zählt herunter); der Dienst-Wächter meldet SparkHilfe nicht mehr als fehlend, solange es das Mac-Release noch nicht gibt
 - **V01.1.338** Sicherheit: certifi, filelock, Pillow, pyasn1, pypdf und zeroconf auf Versionen ohne bekannte Lücke, OpenCode 1.19.5 mit geprüfter Prüfsumme
 - **V01.1.337** ROT-FIX: Selbsttest zu sudo-rs lief nur als root; die Probedatei wird jetzt vor dem zweiten Versuch gelöscht
-- **V01.1.336** Ton und Video als Quelle: Aufnahmen unter Ich → Dokumente hochladen, die eigene Spracherkennung schreibt sie in ruhigen Minuten ab, jede Stelle mit ihrer Zeit („bei 12:30“) und ▶ zum Anhören; Hintergrund-Abschrift bremst nichts mehr aus, echte Sprache bleibt vorn
 
 
 
@@ -67,7 +67,7 @@ flowchart LR
     B["Browser und Handy,<br/>iPhone- und Android-App,<br/>Begleiter für Windows/Mac"]
     T["Terminal-Client spark-tui<br/>z. B. auf der uConsole"]
     X["ESP32-Lautsprecher,<br/>HA Assist über Wyoming :31003,<br/>Telefon (SIP), Telegram,<br/>Siri, Pebble"]
-    M["MCP-Programme<br/>Claude, n8n, Open WebUI"]
+    M["MCP- und API-Programme<br/>Claude, n8n, Open WebUI"]
   end
   subgraph Panel["Panel-Rechner: der Spark oder ein Raspberry Pi 5"]
     G["Webportal :31443<br/>Anmeldung, 2FA, Passkeys,<br/>Profile, Freigaben"]
@@ -108,7 +108,7 @@ flowchart LR
 3. Braucht die Antwort Kalender, Mail, Wetter, Home Assistant, Websuche, Kiwix oder Wikipedia, holt das Portal die Daten selbst; schalten und eintragen geht nur nach Bestätigung. Bilder malt und ändert FLUX.2 klein auf dem Spark; Musik macht ACE-Step 1.5 (zuerst nur „Musik testen“ für den Admin unter Zustand → Prüfen).
 4. Die Antwort geht Satz für Satz an die **Sprachausgabe** und wird gestreamt abgespielt, während das Modell noch schreibt. Der Vorrang sorgt dafür, dass gesprochene Antworten und wichtige Personen zuerst drankommen.
 5. Mit **Spark teilen** liegen Portal, Profile, Chats und Anrufe auf dem kleinen Rechner und erreichen die Modelle nur über das TLS-Tor. Startet der DGX neu oder ist er aus, laufen Chats, Erinnerungen und Anrufe weiter, und der Notbetrieb versteht ein paar feste Befehle ohne Sprachmodell.
-6. Andere Apps nutzen ASR und TTS direkt über die OpenAI-ähnlichen APIs mit API-Schlüssel, MCP-Programme den Spark als MCP-Server mit eigenem Zugang.
+6. Andere Apps nutzen ASR und TTS direkt über die OpenAI-ähnlichen APIs mit API-Schlüssel, MCP-Programme den Spark als MCP-Server mit eigenem Zugang, und eigene Programme das Sprachmodell unter `/v1` mit einem Schlüssel ihres Profils (Sprachmodell per API).
 
 Jede neue Funktion ist ab Werk aus. Gibt der Admin sie frei, gilt sie sofort für jedes Profil; nur der Admin kann einzelne Profile sperren. Gäste bekommen nur Frage und Antwort, nie ein Werkzeug. Updates laufen erst nach grünem Selbsttest und lassen sich zurücknehmen.
 

@@ -166,6 +166,7 @@
 "test_live": 6.0,
 "test_llm_settings": 0.9,
 "test_llm_tor": 0.1,
+"test_llmapi": 1.8,
 "test_llmstart": 0.5,
 "test_lock": 0.0,
 "test_log_luecken": 23.1,

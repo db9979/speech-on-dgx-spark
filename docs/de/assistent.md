@@ -1844,6 +1844,10 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **MCP: Handeln mit Bestätigung** (Funktionen → Unterwegs und Geräte → „MCP: Handeln mit Bestätigung“; baut auf „Spark als MCP-Server“; Ich → Spark als MCP-Server): Ein Programm darf Smart Home schalten, Termine eintragen und Erinnerungen anlegen, aber nur als Vorschlag.
 
+- **Sprachmodell per API** (Funktionen → Unterwegs und Geräte → „Sprachmodell per API“; Ich → Sprachmodell per API): Eigene Programme (Python openai, Open WebUI, Continue, n8n …) nutzen das Sprachmodell des Spark wie die OpenAI-Schnittstelle unter /v1: nur Text, ohne Werkzeuge des Spark und ohne persönliche Daten.
+
+- **Sprachmodell per API von außen** (Funktionen → Unterwegs und Geräte → „Sprachmodell per API von außen“; baut auf „Sprachmodell per API“; Ich → Sprachmodell per API): Ein Schlüssel „auch von außen“ gilt auch über den Reverse-Proxy, etwa für Open WebUI unterwegs oder ein Programm im Büro.
+
 - **iPhone-App** (Funktionen → Unterwegs und Geräte → „iPhone-App“; Ich → iPhone-App): Eine eigene App fürs iPhone: Knopf drücken, fragen, die Antwort kommt mit der Spark-Stimme, auch bei gesperrtem Bildschirm.
 
 - **Push an die iPhone-App** (Funktionen → Unterwegs und Geräte → „Push an die iPhone-App“; baut auf „iPhone-App“; Ich → iPhone-App): Erinnerungen, Morgenrunde und Hinweise von selbst kommen auf dem iPhone auch dann, wenn die App geschlossen ist.

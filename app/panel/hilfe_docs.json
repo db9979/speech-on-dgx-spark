@@ -283,6 +283,54 @@
 "lang": "de",
 "src": "apis-und-einbinden",
 "file": "APIs und Einbinden",
+"head": "Sprachmodell per API",
+"title": "Sprachmodell per API",
+"text": "Seit V01.1.346 (Plan „LLM von außen per API-Key“, Dominik 2026-11-05 „1a 2a 3b 4a 5a, admin immer unbegrenzt“) nutzen eigene Programme das Sprachmodell des Spark wie die OpenAI-Schnittstelle: POST /v1/chat/completions (auch gestreamt) und GET /v1/models auf der Adresse des Panels, im Heimnetz http://SPARK:31080/v1, von außen über den Reverse-Proxy https://dein-proxy/v1. Es ist nur das reine Modell: keine Werkzeuge des Spark, kein Gedächtnis, keine Dokumente, nichts aus dem Profil."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Sprachmodell per API",
+"title": "Einschalten",
+"text": "Einschalten: Admin: Funktionen → *Sprachmodell per API* (chat.llm_api, aus); darunter *Sprachmodell per API von außen* (chat.llm_api_extern, aus), *Anfragen pro Minute je Schlüssel* (chat.llm_api_minute, 20) und *Tausend Tokens in 24 Stunden je Schlüssel* (chat.llm_api_tag_k, 300). Freigegeben gilt es für jedes Profil; einzelne Profile sperrt nur der Admin, Gäste nie. Im Profil: Ich → *Sprachmodell per API* → „＋ Schlüssel anlegen“: Name, erreichbar („nur Heimnetz“ oder „auch von außen“), auf Wunsch ein kleineres Tageslimit, „Schlüssel erzeugen“ mit dem Code. Der Schlüssel (sk-spark-…) ist nur einmal sichtbar; höchstens 5 je Profil, ohne Nutzung enden sie nach 90 Tagen."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Sprachmodell per API",
+"title": "Feste Regeln",
+"text": "Feste Regeln: - Nur Text: Bilder, Ton und Dateien in einer Nachricht werden mit 400 abgelehnt. Nur bekannte Felder gehen durch, n ist 1, max_tokens höchstens 8192, Nachdenken nur über chat_template_kwargs.enable_thinking. Der Modellname ist immer das eigene Sprachmodell (nie „sehen“ oder „helfer“); dahinter prüft der Feldwächter des LLM-Tors noch einmal. - Nur mit dem eigenen LLM-Tor: Steht unter Einstellungen → Sprachmodell ein anderer Server, antwortet /v1 mit 503. - Vorrang: Jede Anfrage geht mit der Stufe „hinten“; wer mit dem Spark spricht, geht immer vor. - Grenzen je Schlüssel: 20 Anfragen pro Minute, 2 gleichzeitig (alle Schlüssel zusammen 4), höchstens 300 000 Tokens in 24 Stunden; dazu zählt das Kontingent des Profils (Ich → Verbrauch, Aufgabe „Sprachmodell per API“). Admin-Profile haben keine dieser Grenzen; Größe (2 MB) und Feldwächter gelten für alle. Zu viel: 429 mit Retry-After. - Von außen: nur mit dem eigenen Schalter, dem zweiten Anmeldeschritt des Profils und einem frischen Code, mit Warnhinweis. Ein Schlüssel „nur Heimnetz“ gilt nie über den Reverse-Proxy. Notaus Stufe 1 schließt den Weg von außen, Mein Notaus sperrt die Schlüssel des Profils. - Gespeichert wird"
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Sprachmodell per API",
+"title": "Feste Regeln",
+"text": " nur die Prüfsumme des Schlüssels und die Tokens je Stunde (state/llm-api.json), nie eine Frage oder Antwort. Logs (Bereich „Rechner, eigene Dienste, Dokumente“): llmapi: antwort | <profil> | <schlüssel-id> | 7 in 3 aus 812 ms, llmapi: abgelehnt minute | …; Zustand → Live: Kasten „Sprachmodell per API“ mit Schlüsseln, laufenden Anfragen, Antworten und Tokens heute."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Sprachmodell per API",
+"title": "Admin",
+"text": "Admin: Personen und Geräte → Apps und Schnittstellen → *Sprachmodell per API*: jeder Schlüssel mit Profil, erreichbar, zuletzt genutzt und Tokens in 24 Stunden; „Löschen“ (mit Code) gilt sofort."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Sprachmodell per API",
+"title": "Beispiel",
+"text": "Beispiel: from openai import OpenAI; c = OpenAI(base_url=\"http://SPARK:31080/v1\", api_key=\"sk-spark-…\"); c.chat.completions.create(model=\"spark\", messages=[{\"role\": \"user\", \"content\": \"Hallo\"}]). Open WebUI: Einstellungen → Verbindungen → OpenAI-API mit derselben Adresse und dem Schlüssel. Für lange Antworten von außen den Timeout am Reverse-Proxy auf mindestens 5 Minuten stellen oder stream=True nehmen."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
 "head": "Eigene MCP-Dienste pro Profil",
 "title": "Eigene MCP-Dienste pro Profil",
 "text": "Seit V01.0.363 (Plan plaene/eigene-mcp-dienste.md) bindet jedes Profil eigene MCP-Dienste an (Streamable HTTP), zusätzlich zu denen, die der Admin für alle anbindet. Nur dieses Profil sieht und nutzt sie."
@@ -1371,15 +1419,15 @@
 "lang": "de",
 "src": "architektur",
 "file": "Architektur und Datenfluss",
-"head": "MCP-Programme",
-"title": "MCP-Programme",
+"head": "MCP und API",
+"title": "MCP und API",
 "text": "Andere Programme (Claude, n8n, Open WebUI, Home Assistant) nutzen den Spark über das Model Context Protocol unter /mcp. Jede Verbindung gehört einem Profil, hat ihren eigenen Schlüssel und ihre eigene Werkzeugliste. Lesen geht direkt, Handeln nur als Vorschlag, den das Profil bestätigt."
 },
 {
 "lang": "de",
 "src": "architektur",
 "file": "Architektur und Datenfluss",
-"head": "MCP-Programme",
+"head": "MCP und API",
 "title": "Warum",
 "text": "Warum: Was ein Programm schickt, ist Text von außen und nie ein Befehl. Deshalb entscheidet das Panel mit festen Listen, welches Werkzeug laufen darf, und nichts ändert sich ohne das Ja der Person im eigenen Browser."
 },
@@ -1405,7 +1453,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "tem Smart-Home-Codewort schaltet ein MCP-Programm nichts. 12. Antwort ans Programm: Die Antwort wird auf 12000 Zeichen gekürzt. Ins Journal kommt nur, welches Programm, welches Werkzeug, ob es ging und wie lange, nie Frage oder Antwort."
+"text": "tem Smart-Home-Codewort schaltet ein MCP-Programm nichts. 12. Antwort ans Programm: Die Antwort wird auf 12000 Zeichen gekürzt. Ins Journal kommt nur, welches Programm, welches Werkzeug, ob es ging und wie lange, nie Frage oder Antwort. 13. Nur das Sprachmodell (/v1): Ein Programm, das nur das Sprachmodell will, schickt POST an /v1 (OpenAI-Chat) mit einem Schlüssel seines Profils (höchstens 5 je Profil, nur Hashes gespeichert). Dieselbe Heimnetz-Regel wie oben, von außen nur mit eigenem Schalter, zweitem Schritt und frischem Code. Nur Text, nur bekannte Felder, höchstens 8192 Tokens Antwort, der Modellname immer der eigene; dann geht die Anfrage mit der Stufe „hinten“ ans LLM-Tor. Grenzen je Schlüssel (pro Minute, 2 gleichzeitig, Tokens in 24 Stunden), Admin-Profile ohne Grenze. Kein Werkzeug des Spark, nichts aus dem Profil, nie ein Inhalt im Journal."
 },
 {
 "lang": "de",
@@ -1421,7 +1469,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 90 Tage ohne Nutzung, dann endet eine Verbindung (Schritt 3) - 10 Verbindungen pro Profil (Schritt 3) - 60 Anfragen pro Minute je Verbindung (Schritt 6, Schritt 10) - 2 Aufrufe gleichzeitig je Verbindung (Schritt 8) - 12000 Zeichen höchstens in einer Antwort (Schritt 12) - 15 Minuten wartet ein Vorschlag auf das Ja (Schritt 11)"
+"text": "- 90 Tage ohne Nutzung, dann endet eine Verbindung (Schritt 3) - 10 Verbindungen pro Profil (Schritt 3) - 60 Anfragen pro Minute je Verbindung (Schritt 6, Schritt 10) - 2 Aufrufe gleichzeitig je Verbindung (Schritt 8) - 12000 Zeichen höchstens in einer Antwort (Schritt 12) - 15 Minuten wartet ein Vorschlag auf das Ja (Schritt 11) - 5 Schlüssel fürs Sprachmodell per API je Profil (Schritt 13) - 2 Anfragen gleichzeitig je Schlüssel über /v1 (Admin ohne Grenze) (Schritt 13) - 8192 Tokens höchstens in einer Antwort über /v1 (Schritt 13)"
 },
 {
 "lang": "de",
@@ -1429,7 +1477,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "- Funktionen → Spark als MCP-Server: der Server für alle Profile (Standard aus). - Funktionen → Spark als MCP-Server → MCP-Server von außen: Verbindungen über den Reverse Proxy und OAuth. - Funktionen → Spark als MCP-Server → MCP: Handeln mit Bestätigung: die Werkzeuge, die etwas vorschlagen. - Ich → Spark als MCP-Server: Verbindungen anlegen, Werkzeuge wählen, Vorschläge bestätigen oder ablehnen."
+"text": "- Funktionen → Spark als MCP-Server: der Server für alle Profile (Standard aus). - Funktionen → Spark als MCP-Server → MCP-Server von außen: Verbindungen über den Reverse Proxy und OAuth. - Funktionen → Spark als MCP-Server → MCP: Handeln mit Bestätigung: die Werkzeuge, die etwas vorschlagen. - Ich → Spark als MCP-Server: Verbindungen anlegen, Werkzeuge wählen, Vorschläge bestätigen oder ablehnen. - Funktionen → Sprachmodell per API (darunter „von außen“, Anfragen pro Minute, Tokens in 24 Stunden); Ich → Sprachmodell per API: Schlüssel anlegen und löschen."
 },
 {
 "lang": "de",
@@ -1445,7 +1493,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/mcpserver.py mcp_post: der Endpunkt: Origin, Schlüssel, Limit, Methode (Schritt 1) - app/panel/mcpserver.py origin_ok: keine fremde Webseite (Schritt 2) - app/panel/mcpserver.py check_conn: Schlüssel, Heimnetz, Notaus, Schalter (Schritt 3) - app/panel/mcpserver.py is_local: wirklich aus dem Heimnetz (Schritt 4) - app/panel/mcpserver.py find: Verbindung zum Hash des Schlüssels (Schritt 3) - app/panel/mcpserver.py tool_ok: darf das Profil dieses Werkzeug jetzt (Schritt 7) - app/panel/mcpserver.py call: gleichzeitige Aufrufe, Journal-Zeile (Schritt 8) - app/panel/mcpserver.py run: verteilt auf Sprache, Lesen, Fragen, Handeln (Schritt 9, Schritt 10) - app/panel/mcpserver.py ask: ein Zug nur mit Lese-Werkzeugen (Schritt 10) - app/panel/mcpserver.py propose: Vorschlag statt Handlung (Schritt 11) - app/panel/mcpserver.py decide: das Ja des Profils, dann ausführen (Schritt 11) - app/panel/mcpserver.py carry_out: führt nur bestätigte Aktionen aus (Schritt 11)"
+"text": "- app/panel/mcpserver.py mcp_post: der Endpunkt: Origin, Schlüssel, Limit, Methode (Schritt 1) - app/panel/mcpserver.py origin_ok: keine fremde Webseite (Schritt 2) - app/panel/mcpserver.py check_conn: Schlüssel, Heimnetz, Notaus, Schalter (Schritt 3) - app/panel/mcpserver.py is_local: wirklich aus dem Heimnetz (Schritt 4) - app/panel/mcpserver.py find: Verbindung zum Hash des Schlüssels (Schritt 3) - app/panel/mcpserver.py tool_ok: darf das Profil dieses Werkzeug jetzt (Schritt 7) - app/panel/mcpserver.py call: gleichzeitige Aufrufe, Journal-Zeile (Schritt 8) - app/panel/mcpserver.py run: verteilt auf Sprache, Lesen, Fragen, Handeln (Schritt 9, Schritt 10) - app/panel/mcpserver.py ask: ein Zug nur mit Lese-Werkzeugen (Schritt 10) - app/panel/mcpserver.py propose: Vorschlag statt Handlung (Schritt 11) - app/panel/mcpserver.py decide: das Ja des Profils, dann ausführen (Schritt 11) - app/panel/mcpserver.py carry_out: führt nur bestätigte Aktionen aus (Schritt 11) - app/panel/llmapi.py completions: /v1: Schlüssel, Feldwächter, Grenzen, Stufe hinten (Schritt 13) - app/panel/llmapi.py check_key: Schlüssel, Heimnetz, außen, Notaus, Sperre (Schritt 13) - app/panel/llmapi.py clean: nur Te"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": "xt und bekannte Felder (Schritt 13) - app/panel/llmapi.py _limits: Grenzen je Schlüssel, Admin ohne (Schritt 13)"
 },
 {
 "lang": "de",
@@ -1725,7 +1781,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "sel mit Bereich (App, Uhr, Raum, Home Assistant, Schreibhilfe, Begleiter, Terminal) reicht nur für seine eigenen Pfade und nur, solange Admin und Profil die Funktion anhaben. Ist sie gerade aus oder hat das Profil seinen eigenen Notaus an, antwortet das Panel mit 503 statt 401, damit die App ihre Kopplung behält. 8. Ohne Profil und Gastzugang aus?: Ohne Profil kommt nur durch, wer der Admin ist (Cookie oder HTTP Basic, dessen Fehlversuche wie auf der Anmeldeseite zählen), oder wenn der Admin den Assistenten ohne Passwort freigegeben hat. Gäste bekommen dann nur Frage und Antwort. 9. Zu viele Anfragen?: Je Profil, sonst je Adresse, zählt das Panel die Anfragen der letzten Minute: im Chat 120 für ein Profil oder den Admin, 30 für einen Gast. Ein Weg mit eigenem Sitzungsschlüssel (Spontanhilfe) zählt nach dem richtigen Schlüssel je Sitzung, nicht je Adresse: von außen haben alle die Adresse des Reverse-Proxys. Retry-After nennt die echten Sekunden bis zum nächsten Versuch. 10. Gast, alle Plätze belegt?: Gäste teilen sich 4 gleichzeitige Plätze im Chat. Ein Platz, den niemand freigibt, gilt nach 10 Minuten wieder als frei. 11. Freigabe je Funktion: Für jede Funktion fragt das Panel in "
+"text": "sel mit Bereich (App, Uhr, Raum, Home Assistant, Schreibhilfe, Begleiter, Terminal) reicht nur für seine eigenen Pfade und nur, solange Admin und Profil die Funktion anhaben. Ist sie gerade aus oder hat das Profil seinen eigenen Notaus an, antwortet das Panel mit 503 statt 401, damit die App ihre Kopplung behält. 8. Ohne Profil und Gastzugang aus?: Ohne Profil kommt nur durch, wer der Admin ist (Cookie oder HTTP Basic, dessen Fehlversuche wie auf der Anmeldeseite zählen), oder wenn der Admin den Assistenten ohne Passwort freigegeben hat. Gäste bekommen dann nur Frage und Antwort. 9. Zu viele Anfragen?: Je Profil, sonst je Adresse, zählt das Panel die Anfragen der letzten Minute: im Chat 120 für ein Profil oder den Admin, 30 für einen Gast. Ein Weg mit eigenem Sitzungsschlüssel (Spontanhilfe) zählt nach dem richtigen Schlüssel je Sitzung, nicht je Adresse: von außen haben alle die Adresse des Reverse-Proxys; ebenso zählt das Sprachmodell per API (/v1) je Schlüssel, Admin-Profile ohne Grenze. Retry-After nennt die echten Sekunden bis zum nächsten Versuch. 10. Gast, alle Plätze belegt?: Gäste teilen sich 4 gleichzeitige Plätze im Chat. Ein Platz, den niemand freigibt, gilt nach 10 Min"
 },
 {
 "lang": "de",
@@ -1733,7 +1789,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "fester Reihenfolge: Schalter des Admins (und der Funktion, auf der sie aufbaut), Gast (bekommt nie eine), vom Admin für das Profil gesperrt, eigener Wunsch des Profils, zweiter Schritt nötig. Gelesen wird bei jeder Anfrage neu, eine Änderung gilt also sofort. 12. Weiter zur Vorbereitung: Die Anfrage geht mit ihrem Profil (oder als Gast) an chat_turn.prepare. Die Sprache bekommt Vorrang vor Hintergrundarbeit, und die anderen offenen Seiten des Profils sehen „antwortet gerade“."
+"text": "uten wieder als frei. 11. Freigabe je Funktion: Für jede Funktion fragt das Panel in fester Reihenfolge: Schalter des Admins (und der Funktion, auf der sie aufbaut), Gast (bekommt nie eine), vom Admin für das Profil gesperrt, eigener Wunsch des Profils, zweiter Schritt nötig. Gelesen wird bei jeder Anfrage neu, eine Änderung gilt also sofort. 12. Weiter zur Vorbereitung: Die Anfrage geht mit ihrem Profil (oder als Gast) an chat_turn.prepare. Die Sprache bekommt Vorrang vor Hintergrundarbeit, und die anderen offenen Seiten des Profils sehen „antwortet gerade“."
 },
 {
 "lang": "de",
@@ -3557,7 +3613,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 48), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 115). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, "
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 49), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 115). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, "
 },
 {
 "lang": "de",
@@ -3581,7 +3637,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 48 Dateien in jeder Sicherung (Schritt 7) - 115 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 49 Dateien in jeder Sicherung (Schritt 7) - 115 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -15381,6 +15437,22 @@
 "file": "Assistent und Oberfläche",
 "head": "Unterwegs und Geräte",
 "title": "Unterwegs und Geräte",
+"text": "- Sprachmodell per API (Funktionen → Unterwegs und Geräte → „Sprachmodell per API“; Ich → Sprachmodell per API): Eigene Programme (Python openai, Open WebUI, Continue, n8n …) nutzen das Sprachmodell des Spark wie die OpenAI-Schnittstelle unter /v1: nur Text, ohne Werkzeuge des Spark und ohne persönliche Daten."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Unterwegs und Geräte",
+"title": "Unterwegs und Geräte",
+"text": "- Sprachmodell per API von außen (Funktionen → Unterwegs und Geräte → „Sprachmodell per API von außen“; baut auf „Sprachmodell per API“; Ich → Sprachmodell per API): Ein Schlüssel „auch von außen“ gilt auch über den Reverse-Proxy, etwa für Open WebUI unterwegs oder ein Programm im Büro."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Unterwegs und Geräte",
+"title": "Unterwegs und Geräte",
 "text": "- iPhone-App (Funktionen → Unterwegs und Geräte → „iPhone-App“; Ich → iPhone-App): Eine eigene App fürs iPhone: Knopf drücken, fragen, die Antwort kommt mit der Spark-Stimme, auch bei gesperrtem Bildschirm."
 },
 {
@@ -18723,6 +18795,54 @@
 "lang": "en",
 "src": "apis-and-integration",
 "file": "APIs and integration",
+"head": "Language model by API",
+"title": "Language model by API",
+"text": "Since V01.1.346 (plan \"Use the LLM from outside with an API key\", Dominik 2026-11-05 \"1a 2a 3b 4a 5a, admin always unlimited\") own programs use the Spark's language model like the OpenAI interface: POST /v1/chat/completions (also streamed) and GET /v1/models at the panel's address, in the home network http://SPARK:31080/v1, from outside through the reverse proxy https://your-proxy/v1. It is the plain model only: no tools of the Spark, no memory, no documents, nothing of the profile."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Language model by API",
+"title": "Switching on",
+"text": "Switching on: Admin: Features → *Language model by API* (chat.llm_api, off); below it *Language model by API from outside* (chat.llm_api_extern, off), *Requests per minute per key* (chat.llm_api_minute, 20) and *Thousand tokens in 24 hours per key* (chat.llm_api_tag_k, 300). Released, it works for every profile; only the admin blocks single profiles, guests never. In the profile: Me → *Language model by API* → \"＋ Make a key\": name, reachable (\"home network only\" or \"also from outside\"), if wanted a smaller daily limit, \"Create key\" with the code. The key (sk-spark-…) is shown only once; at most 5 per profile, without use they end after 90 days."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Language model by API",
+"title": "Fixed rules",
+"text": "Fixed rules: - Text only: pictures, audio and files in a message are refused with 400. Only known fields pass, n is 1, max_tokens at most 8192, thinking only through chat_template_kwargs.enable_thinking. The model name is always the own language model (never \"sehen\" or \"helfer\"); behind it the LLM gate's field guard checks once more. - Only with the own LLM gate: with another server under Settings → Language model, /v1 answers 503. - Priority: every request goes with the stage \"hinten\"; whoever talks to the Spark always goes first. - Limits per key: 20 requests per minute, 2 at once (all keys together 4), at most 300,000 tokens in 24 hours; the profile's quota counts too (Me → Usage, task \"Sprachmodell per API\"). Admin profiles have none of these limits; size (2 MB) and field guard hold for everyone. Too much: 429 with Retry-After. - From outside: only with its own switch, the profile's second sign-in step and a fresh code, with a warning. A \"home network only\" key never works through the reverse proxy. Emergency stop stage 1 closes the way from outside, My emergency stop locks the profile's keys. - Only the hash of the key and the tokens per hour are kept (state/llm-api.json), nev"
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Language model by API",
+"title": "Fixed rules",
+"text": "er a question or an answer. Logs (area \"Computer, own services, documents\"): llmapi: antwort | <profile> | <key id> | 7 in 3 aus 812 ms, llmapi: abgelehnt minute | …; Status → Live: box \"Sprachmodell per API\" with keys, running requests, answers and tokens today."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Language model by API",
+"title": "Admin",
+"text": "Admin: People and devices → Apps and interfaces → *Language model by API*: every key with profile, reachable, last used and tokens in 24 hours; \"Delete\" (with code) works at once."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Language model by API",
+"title": "Example",
+"text": "Example: from openai import OpenAI; c = OpenAI(base_url=\"http://SPARK:31080/v1\", api_key=\"sk-spark-…\"); c.chat.completions.create(model=\"spark\", messages=[{\"role\": \"user\", \"content\": \"Hello\"}]). Open WebUI: Settings → Connections → OpenAI API with the same address and the key. For long answers from outside set the reverse proxy's timeout to at least 5 minutes or use stream=True."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
 "head": "Own MCP services per profile",
 "title": "Own MCP services per profile",
 "text": "Since V01.0.363 (plan plaene/eigene-mcp-dienste.md) every profile can connect its own MCP services (Streamable HTTP), besides the ones the admin connects for everybody. Only that profile sees and uses them."
@@ -19795,15 +19915,15 @@
 "lang": "en",
 "src": "architecture",
 "file": "Architecture and data flow",
-"head": "MCP programs",
-"title": "MCP programs",
+"head": "MCP and API",
+"title": "MCP and API",
 "text": "Other programs (Claude, n8n, Open WebUI, Home Assistant) use the Spark over the Model Context Protocol at /mcp. Every connection belongs to one profile and has its own key and its own tool list. Reading works directly, acting only as a proposal the profile confirms."
 },
 {
 "lang": "en",
 "src": "architecture",
 "file": "Architecture and data flow",
-"head": "MCP programs",
+"head": "MCP and API",
 "title": "Why",
 "text": "Why: What a program sends is outside text and never a command. That is why the panel decides with fixed lists which tool may run, and nothing changes without the person's yes in the own browser."
 },
@@ -19829,7 +19949,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "d and how long, never question or answer."
+"text": "d and how long, never question or answer. 13. Only the language model (/v1): A program that only wants the language model sends POST to /v1 (OpenAI chat) with a key of its profile (at most 5 per profile, only hashes kept). The same home network rule as above, from outside only with its own switch, the second step and a fresh code. Text only, known fields only, at most 8192 tokens of answer, the model name always the own one; then the request goes to the LLM gate with the stage „hinten“. Limits per key (per minute, 2 at once, tokens in 24 hours), admin profiles without a limit. No tool of the Spark, nothing of the profile, never a content in the journal."
 },
 {
 "lang": "en",
@@ -19845,7 +19965,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 90 days without use, then a connection ends (step 3) - 10 connections per profile (step 3) - 60 requests per minute per connection (step 6, step 10) - 2 calls at once per connection (step 8) - 12000 characters at most in an answer (step 12) - 15 minutes a proposal waits for the yes (step 11)"
+"text": "- 90 days without use, then a connection ends (step 3) - 10 connections per profile (step 3) - 60 requests per minute per connection (step 6, step 10) - 2 calls at once per connection (step 8) - 12000 characters at most in an answer (step 12) - 15 minutes a proposal waits for the yes (step 11) - 5 keys for the language model by API per profile (step 13) - 2 requests at once per key through /v1 (admin without a limit) (step 13) - 8192 tokens at most in an answer through /v1 (step 13)"
 },
 {
 "lang": "en",
@@ -19853,7 +19973,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- Features → Spark as MCP server: the server for every profile (default off). - Features → Spark as MCP server → MCP server from outside: connections through the reverse proxy and OAuth. - Features → Spark as MCP server → MCP: acting with confirmation: the tools that propose something. - Me → Spark as MCP server: make connections, pick tools, confirm or decline proposals."
+"text": "- Features → Spark as MCP server: the server for every profile (default off). - Features → Spark as MCP server → MCP server from outside: connections through the reverse proxy and OAuth. - Features → Spark as MCP server → MCP: acting with confirmation: the tools that propose something. - Me → Spark as MCP server: make connections, pick tools, confirm or decline proposals. - Features → Language model by API (below it „from outside“, requests per minute, tokens in 24 hours); Me → Language model by API: make and delete keys."
 },
 {
 "lang": "en",
@@ -19869,7 +19989,15 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/mcpserver.py mcp_post: the endpoint: origin, key, limit, method (step 1) - app/panel/mcpserver.py origin_ok: no other web page (step 2) - app/panel/mcpserver.py check_conn: key, home network, kill switch, switch (step 3) - app/panel/mcpserver.py is_local: really from the home network (step 4) - app/panel/mcpserver.py find: connection for the key's hash (step 3) - app/panel/mcpserver.py tool_ok: may the profile use this tool now (step 7) - app/panel/mcpserver.py call: calls at once, journal line (step 8) - app/panel/mcpserver.py run: hands out to speech, reading, asking, acting (step 9, step 10) - app/panel/mcpserver.py ask: one turn with reading tools only (step 10) - app/panel/mcpserver.py propose: proposal instead of action (step 11) - app/panel/mcpserver.py decide: the profile's yes, then carry out (step 11) - app/panel/mcpserver.py carry_out: carries out confirmed actions only (step 11)"
+"text": "- app/panel/mcpserver.py mcp_post: the endpoint: origin, key, limit, method (step 1) - app/panel/mcpserver.py origin_ok: no other web page (step 2) - app/panel/mcpserver.py check_conn: key, home network, kill switch, switch (step 3) - app/panel/mcpserver.py is_local: really from the home network (step 4) - app/panel/mcpserver.py find: connection for the key's hash (step 3) - app/panel/mcpserver.py tool_ok: may the profile use this tool now (step 7) - app/panel/mcpserver.py call: calls at once, journal line (step 8) - app/panel/mcpserver.py run: hands out to speech, reading, asking, acting (step 9, step 10) - app/panel/mcpserver.py ask: one turn with reading tools only (step 10) - app/panel/mcpserver.py propose: proposal instead of action (step 11) - app/panel/mcpserver.py decide: the profile's yes, then carry out (step 11) - app/panel/mcpserver.py carry_out: carries out confirmed actions only (step 11) - app/panel/llmapi.py completions: /v1: key, field guard, limits, stage hinten (step 13) - app/panel/llmapi.py check_key: key, home network, outside, kill switch, block (step 13) - app/panel/llmapi.py clean: text and known fields only (step 13) - app/panel/llmapi.py _limits: limits p"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "In the code",
+"title": "In the code",
+"text": "er key, admin without (step 13)"
 },
 {
 "lang": "en",
@@ -20141,7 +20269,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "e panel answers 503 instead of 401, so the app keeps its pairing. 8. No profile and guest access off?: Without a profile only the admin passes (cookie or HTTP Basic, whose wrong attempts count like on the login page), or anybody when the admin opened the assistant without password. Guests then only get question and answer. 9. Too many requests?: Per profile, else per address, the panel counts the requests of the last minute: in the chat 120 for a profile or the admin, 30 for a guest. A way with its own session key (spontaneous help) counts per session after the right key, not per address: from outside everyone has the reverse proxy's address. Retry-After gives the real seconds until the next try. 10. Guest, all places taken?: Guests share 4 places at once in the chat. A place nobody frees counts as free again after 10 minutes. 11. Release per function: For every function the panel asks in a fixed order: the admin's switch (and the one of the function it builds on), guest (never gets one), blocked by the admin for the profile, the profile's own wish, second step needed. It is read anew with every request, so a change holds at once. 12. On to preparing: The request goes on with its p"
+"text": "e panel answers 503 instead of 401, so the app keeps its pairing. 8. No profile and guest access off?: Without a profile only the admin passes (cookie or HTTP Basic, whose wrong attempts count like on the login page), or anybody when the admin opened the assistant without password. Guests then only get question and answer. 9. Too many requests?: Per profile, else per address, the panel counts the requests of the last minute: in the chat 120 for a profile or the admin, 30 for a guest. A way with its own session key (spontaneous help) counts per session after the right key, not per address: from outside everyone has the reverse proxy's address; the language model by API (/v1) counts per key the same way, admin profiles without a limit. Retry-After gives the real seconds until the next try. 10. Guest, all places taken?: Guests share 4 places at once in the chat. A place nobody frees counts as free again after 10 minutes. 11. Release per function: For every function the panel asks in a fixed order: the admin's switch (and the one of the function it builds on), guest (never gets one), blocked by the admin for the profile, the profile's own wish, second step needed. It is read anew with "
 },
 {
 "lang": "en",
@@ -20149,7 +20277,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "rofile (or as a guest) to chat_turn.prepare. Speech gets priority over background work, and the profile's other open pages see „answering“."
+"text": "every request, so a change holds at once. 12. On to preparing: The request goes on with its profile (or as a guest) to chat_turn.prepare. Speech gets priority over background work, and the profile's other open pages see „answering“."
 },
 {
 "lang": "en",
@@ -21941,7 +22069,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 48), otherwise the line gives its reason (dateien.STATE_LOCAL, 115). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again, and profiles forgets what it had opened of the profiles' sealed files."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 49), otherwise the line gives its reason (dateien.STATE_LOCAL, 115). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again, and profiles forgets what it had opened of the profiles' sealed files."
 },
 {
 "lang": "en",
@@ -21957,7 +22085,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 48 files in every backup (step 7) - 115 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 49 files in every backup (step 7) - 115 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -33366,6 +33494,22 @@
 "head": "On the go and devices",
 "title": "On the go and devices",
 "text": "- MCP: acting with confirmation (Features → On the go and devices → \"MCP: acting with confirmation\"; builds on \"Spark as MCP server\"; Me → Spark as MCP server): A program may switch the smart home, enter appointments and set reminders, but only as a proposal."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "On the go and devices",
+"title": "On the go and devices",
+"text": "- Language model by API (Features → On the go and devices → \"Language model by API\"; Me → Language model by API): Own programs (Python openai, Open WebUI, Continue, n8n …) use the Spark's language model like the OpenAI interface at /v1: text only, without the Spark's tools and without personal data."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "On the go and devices",
+"title": "On the go and devices",
+"text": "- Language model by API from outside (Features → On the go and devices → \"Language model by API from outside\"; builds on \"Language model by API\"; Me → Language model by API): A key \"also from outside\" works through the reverse proxy too, e.g."
 },
 {
 "lang": "en",

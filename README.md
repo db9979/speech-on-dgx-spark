@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.346** Language model by API: own programs use the Spark's language model OpenAI-compatible at /v1 with a key of their profile (Me → Language model by API), text only, home network or with its own switch also from outside; limits per key, admins unlimited
 - **V01.1.345** Make an audio overview now: the admin can have one made at once or pull a waiting one forward, without quiet minutes and the day limit, also in the iPhone app; real speech still goes first
 - **V01.1.344** Audio overview in the apps: a player of its own in the iPhone app (also in the background and on the lock screen), "To Telegram" only to the own chat, the notice "Audio overview ready" with a jump link, the line being spoken marked in the script, the script also in English
 - **V01.1.343** Audio overview of a collection: a talk of 2 or 3 voices to listen to (5, 10 or 20 minutes); the model only writes a script, the panel checks every line (place, number check, fixed speakers), it is spoken line by line in quiet minutes; the admin picks the three voices
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.339** Fix spontaneous help: "Load program" on /hilfe said "too many requests" behind the reverse proxy; the program door now counts per help after the right key, guessing still per address. The person's page is new and plain: a header with the state and "End session", the request with its steps, a small preview, messages with the field on top, one column on a phone, and only fixed texts (a 429 counts down); the service watch no longer reports SparkHilfe missing while the Mac release does not exist yet
 - **V01.1.338** Security: updated certifi, filelock, Pillow, pyasn1, pypdf and zeroconf to versions without known holes, OpenCode 1.19.5 with its checked hash
 - **V01.1.337** RED FIX: the sudo-rs self-test only passed as root; the trial file is now removed before the second try
-- **V01.1.336** Audio and video as a source: upload recordings under Me → Documents, the own speech recognition transcribes them in quiet minutes, every place with its time ("bei 12:30") and ▶ to listen; background transcription no longer holds anything up, real speech stays first
 
 
 
@@ -67,7 +67,7 @@ flowchart LR
     B["Browser and phone,<br/>iPhone and Android app,<br/>Companion for Windows/Mac"]
     T["Terminal client spark-tui<br/>e.g. on the uConsole"]
     X["ESP32 speakers,<br/>HA Assist via Wyoming :31003,<br/>phone (SIP), Telegram,<br/>Siri, Pebble"]
-    M["MCP programs<br/>Claude, n8n, Open WebUI"]
+    M["MCP and API programs<br/>Claude, n8n, Open WebUI"]
   end
   subgraph Panel["Panel computer: the Spark or a Raspberry Pi 5"]
     G["Web panel :31443<br/>login, 2FA, passkeys,<br/>profiles, releases"]
@@ -108,7 +108,7 @@ flowchart LR
 3. When the answer needs calendars, mail, weather, Home Assistant, web search, Kiwix or Wikipedia, the panel fetches the data itself; switching and adding entries only happen after you confirm. Pictures are painted and edited by FLUX.2 klein on the Spark; music is made by ACE-Step 1.5 (at first only “Test music” for the admin under State → Checks).
 4. The answer goes sentence by sentence to **text to speech** and is played as a stream while the model is still writing. Priority makes sure spoken answers and important people go first.
 5. With the **Spark split** the panel, profiles, chats and calls live on the small computer and reach the models only through the TLS-Tor. If the DGX restarts or is switched off, chats, reminders and calls keep running, and emergency mode understands a few fixed commands without a language model.
-6. Other apps use ASR and TTS directly through the OpenAI-style APIs with an API key, MCP programs use the Spark as an MCP server with their own access.
+6. Other apps use ASR and TTS directly through the OpenAI-style APIs with an API key, MCP programs use the Spark as an MCP server with their own access, and own programs the language model at `/v1` with a key of their profile (Language model by API).
 
 Every new feature is off by default. Once the admin releases it, it applies to every profile at once; only the admin can block single profiles. Guests get questions and answers only, never a tool. Updates only go live after a green self-test and can be rolled back.
 

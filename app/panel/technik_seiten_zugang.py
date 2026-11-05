@@ -438,7 +438,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ zugang (guard, core, profiles, features)
     "zugang": {
-        "stand": "8e7bf4c1c9",
+        "stand": "0b05ffbe51",
         "bezug": {
             "guard.MAX_FAILS": ["s2", "s3"], "guard.MAX_NAME_FAILS": ["s2", "s3"], "guard.LOCK_FIRST": ["s2"],
             "guard.DAY_FAILS": ["s2", "s3"], "guard.failed": ["s3"], "guard.succeeded": ["s5"],
@@ -551,11 +551,13 @@ SEITEN = {
               ("Je Profil, sonst je Adresse, zählt das Panel die Anfragen der letzten Minute: im Chat "
                "{guard.RATE.chat.1} für ein Profil oder den Admin, {guard.RATE.chat.0} für einen Gast. Ein Weg mit eigenem "
                "Sitzungsschlüssel (Spontanhilfe) zählt nach dem richtigen Schlüssel je Sitzung, nicht je Adresse: von "
-               "außen haben alle die Adresse des Reverse-Proxys. Retry-After nennt die echten Sekunden bis zum nächsten Versuch.",
+               "außen haben alle die Adresse des Reverse-Proxys; ebenso zählt das Sprachmodell per API (/v1) je Schlüssel, Admin-Profile "
+               "ohne Grenze. Retry-After nennt die echten Sekunden bis zum nächsten Versuch.",
                "Per profile, else per address, the panel counts the requests of the last minute: in the chat "
                "{guard.RATE.chat.1} for a profile or the admin, {guard.RATE.chat.0} for a guest. A way with its own "
                "session key (spontaneous help) counts per session after the right key, not per address: from outside "
-               "everyone has the reverse proxy's address. Retry-After gives the real seconds until the next try."),
+               "everyone has the reverse proxy's address; the language model by API (/v1) counts per key the same way, admin profiles "
+               "without a limit. Retry-After gives the real seconds until the next try."),
               ("stop", "ja", ("Bitte kurz warten (429)", "Please wait a moment (429)"))),
             S("s10", "frage", ("Gast, alle Plätze belegt?", "Guest, all places taken?"),
               ("guard.Slot", "guard.Slot"),

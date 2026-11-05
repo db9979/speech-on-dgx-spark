@@ -20,7 +20,7 @@ flowchart TB
     apps["Apps<br/>iPhone, Android"]
     kanaele["Telegram, Siri, Uhr<br/>Kanäle"]
     lautsprecher["Lautsprecher/Telefon<br/>:31003 · :31060"]
-    mcpc["MCP-Programme<br/>/mcp"]
+    mcpc["MCP und API<br/>/mcp · /v1"]
   end
   subgraph z_spark["DGX Spark · intern"]
     subgraph z_panel["Panel :31080 / :31443 · bei Spark teilen auf eigenem Rechner"]
@@ -375,6 +375,7 @@ Home Assistant, Aufgaben, Für dich, Wetter, reMarkable, MCP und was der Spark v
 | `app/panel/homeassistant.py` | Home Assistant pro Profil |
 | `app/panel/ichweiss.py` | Was ich über dich weiß: Interessen als Themen mit Beleg, Wiederkehrendes, Woche, Monat, ein Netz-Tipp am Tag |
 | `app/panel/listendav.py` | Listen in Erinnerungen: die Spark-Listen eines Profils als Aufgabenlisten (VTODO) des Kalender-Servers |
+| `app/panel/llmapi.py` | Sprachmodell per API: OpenAI-kompatibel unter /v1 mit Schlüssel je Profil |
 | `app/panel/mcp.py` | Werkzeuge von MCP-Servern, die der Admin einträgt |
 | `app/panel/mcpserver.py` | Der Spark als MCP-Server für andere Programme |
 | `app/panel/meinmcp.py` | Eigene MCP-Dienste pro Profil |
@@ -807,6 +808,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/latency.json` | Wartezeiten | – | nein |
 | `state/live-monitors.json` | Wandmonitore | – | nein |
 | `state/livecheck.json` | Echtprüfung | – | nein |
+| `state/llm-api.json` | Schlüssel fürs Sprachmodell per API (nur Hashes) | nur Hashes | ja |
 | `state/llm-start.json` | Was das eigene Sprachmodell beim Wechseln oder Starten gerade tut: Schritt, Sekunden, feste Wörter | – | nein |
 | `state/llm-startzeiten.json` | Je Modell die Sekunden seines letzten Starts (für die erwartete Zeit) | – | nein |
 | `state/mail-gesendet.json` | Mails senden: heute gesendete Mails je Profil (nur Zahlen) | – | ja |
@@ -1414,7 +1416,7 @@ Gilt bei: [Schritt 5](#kn-lautsprecher-s5), [Schritt 9](#kn-lautsprecher-s9)
 
 Selbsttests: `test_esp32`, `test_wyoming`, `test_telefon`, `test_notaus`, `test_echo`
 
-### MCP-Programme
+### MCP und API
 
 Andere Programme (Claude, n8n, Open WebUI, Home Assistant) nutzen den Spark über das Model Context Protocol unter /mcp. Jede Verbindung gehört einem Profil, hat ihren eigenen Schlüssel und ihre eigene Werkzeugliste. Lesen geht direkt, Handeln nur als Vorschlag, den das Profil bestätigt.
 
@@ -1436,6 +1438,7 @@ flowchart TD
   s10["10. Spark fragen, nur lesend"]
   s11{{"11. Soll etwas geändert werden?"}}
   s12(["12. Antwort ans Programm"])
+  s13["13. Nur das Sprachmodell (/v1)"]
   s1 --> s2
   s2 -->|nein| s3
   s3 -->|ja| s4
@@ -1447,6 +1450,7 @@ flowchart TD
   s9 --> s10
   s10 --> s11
   s11 -->|nein| s12
+  s12 --> s13
   s2x(["Abgelehnt (403)"])
   s2 -->|ja| s2x
   s3x(["Nicht angemeldet (401)"])
@@ -1475,6 +1479,7 @@ flowchart TD
 10. <a id="kn-mcpc-s10"></a>**Spark fragen, nur lesend**: ask_spark (10 pro Minute) läuft als ein Zug des Assistenten für das Profil, aber nur mit den Lese-Werkzeugen dieser Verbindung. Die Frage gilt von Anfang an als fremder Text: nichts wird geschaltet, gespeichert, gelernt oder gesendet, kein Gedächtnis, nichts davon im Verlauf. Passwörter und Codes werden aus der Antwort entfernt.
 11. <a id="kn-mcpc-s11"></a>**Soll etwas geändert werden?**: Smart Home, Erinnerung und Termin werden nur vorgeschlagen (höchstens 10 offen). Das Profil bekommt eine Mitteilung und entscheidet unter Ich → Spark als MCP-Server innerhalb von 15 Minuten; erst dann führt das Panel es aus. Bei Notaus oder gesetztem Smart-Home-Codewort schaltet ein MCP-Programm nichts.
 12. <a id="kn-mcpc-s12"></a>**Antwort ans Programm**: Die Antwort wird auf 12000 Zeichen gekürzt. Ins Journal kommt nur, welches Programm, welches Werkzeug, ob es ging und wie lange, nie Frage oder Antwort.
+13. <a id="kn-mcpc-s13"></a>**Nur das Sprachmodell (/v1)**: Ein Programm, das nur das Sprachmodell will, schickt POST an /v1 (OpenAI-Chat) mit einem Schlüssel seines Profils (höchstens 5 je Profil, nur Hashes gespeichert). Dieselbe Heimnetz-Regel wie oben, von außen nur mit eigenem Schalter, zweitem Schritt und frischem Code. Nur Text, nur bekannte Felder, höchstens 8192 Tokens Antwort, der Modellname immer der eigene; dann geht die Anfrage mit der Stufe „hinten“ ans LLM-Tor. Grenzen je Schlüssel (pro Minute, 2 gleichzeitig, Tokens in 24 Stunden), Admin-Profile ohne Grenze. Kein Werkzeug des Spark, nichts aus dem Profil, nie ein Inhalt im Journal.
 
 **Beispiele:** Claude liest die Termine: Termine des Profils als Text, gekürzt. · Heimnetz-Schlüssel über den Proxy: Abgelehnt: dieser Schlüssel gilt nur im Heimnetz. · n8n will das Licht schalten: Nur vorgeschlagen; es schaltet erst nach dem Ja im Browser. · Programm will Mails lesen: Nicht freigegeben: Mail gibt es über MCP nie.
 
@@ -1498,6 +1503,9 @@ Gilt bei: [Schritt 9](#kn-mcpc-s9)
 - **2** Aufrufe gleichzeitig je Verbindung ([Schritt 8](#kn-mcpc-s8))
 - **12000** Zeichen höchstens in einer Antwort ([Schritt 12](#kn-mcpc-s12))
 - **15** Minuten wartet ein Vorschlag auf das Ja ([Schritt 11](#kn-mcpc-s11))
+- **5** Schlüssel fürs Sprachmodell per API je Profil ([Schritt 13](#kn-mcpc-s13))
+- **2** Anfragen gleichzeitig je Schlüssel über /v1 (Admin ohne Grenze) ([Schritt 13](#kn-mcpc-s13))
+- **8192** Tokens höchstens in einer Antwort über /v1 ([Schritt 13](#kn-mcpc-s13))
 
 #### Einstellen
 
@@ -1505,6 +1513,7 @@ Gilt bei: [Schritt 9](#kn-mcpc-s9)
 - Funktionen → Spark als MCP-Server → MCP-Server von außen: Verbindungen über den Reverse Proxy und OAuth.
 - Funktionen → Spark als MCP-Server → MCP: Handeln mit Bestätigung: die Werkzeuge, die etwas vorschlagen.
 - Ich → Spark als MCP-Server: Verbindungen anlegen, Werkzeuge wählen, Vorschläge bestätigen oder ablehnen.
+- Funktionen → Sprachmodell per API (darunter „von außen“, Anfragen pro Minute, Tokens in 24 Stunden); Ich → Sprachmodell per API: Schlüssel anlegen und löschen.
 
 #### Was du siehst
 
@@ -1525,6 +1534,10 @@ Gilt bei: [Schritt 9](#kn-mcpc-s9)
 - `app/panel/mcpserver.py` `propose`: Vorschlag statt Handlung ([Schritt 11](#kn-mcpc-s11))
 - `app/panel/mcpserver.py` `decide`: das Ja des Profils, dann ausführen ([Schritt 11](#kn-mcpc-s11))
 - `app/panel/mcpserver.py` `carry_out`: führt nur bestätigte Aktionen aus ([Schritt 11](#kn-mcpc-s11))
+- `app/panel/llmapi.py` `completions`: /v1: Schlüssel, Feldwächter, Grenzen, Stufe hinten ([Schritt 13](#kn-mcpc-s13))
+- `app/panel/llmapi.py` `check_key`: Schlüssel, Heimnetz, außen, Notaus, Sperre ([Schritt 13](#kn-mcpc-s13))
+- `app/panel/llmapi.py` `clean`: nur Text und bekannte Felder ([Schritt 13](#kn-mcpc-s13))
+- `app/panel/llmapi.py` `_limits`: Grenzen je Schlüssel, Admin ohne ([Schritt 13](#kn-mcpc-s13))
 
 Selbsttests: `test_mcpserver`, `test_notaus`
 
@@ -1838,7 +1851,7 @@ flowchart TD
 6. <a id="kn-zugang-s6"></a>**Profil bestimmen**: Zuerst, was nur das Panel selbst setzt (Telegram, „Spark fragen“ über MCP), dann der Geräteschlüssel (nur sein Hash ist gespeichert), dann das Cookie: Signatur, Alter, Sitzung noch in der Liste und nicht abgemeldet. Der Schlüssel der eigenen iPhone-App zählt für eine Admin-Rolle nur, wenn er nach dem zweiten Schritt angelegt oder einmal mit Code oder Passkey in der App an ihn gebunden wurde; sonst nennt das Panel den Grund als festes Wort (key_older, no_mfa, not_admin, app_off, notaus).
 7. <a id="kn-zugang-s7"></a>**Schlüssel für diesen Weg frei?**: Ein Schlüssel mit Bereich (App, Uhr, Raum, Home Assistant, Schreibhilfe, Begleiter, Terminal) reicht nur für seine eigenen Pfade und nur, solange Admin und Profil die Funktion anhaben. Ist sie gerade aus oder hat das Profil seinen eigenen Notaus an, antwortet das Panel mit 503 statt 401, damit die App ihre Kopplung behält.
 8. <a id="kn-zugang-s8"></a>**Ohne Profil und Gastzugang aus?**: Ohne Profil kommt nur durch, wer der Admin ist (Cookie oder HTTP Basic, dessen Fehlversuche wie auf der Anmeldeseite zählen), oder wenn der Admin den Assistenten ohne Passwort freigegeben hat. Gäste bekommen dann nur Frage und Antwort.
-9. <a id="kn-zugang-s9"></a>**Zu viele Anfragen?**: Je Profil, sonst je Adresse, zählt das Panel die Anfragen der letzten Minute: im Chat 120 für ein Profil oder den Admin, 30 für einen Gast. Ein Weg mit eigenem Sitzungsschlüssel (Spontanhilfe) zählt nach dem richtigen Schlüssel je Sitzung, nicht je Adresse: von außen haben alle die Adresse des Reverse-Proxys. Retry-After nennt die echten Sekunden bis zum nächsten Versuch.
+9. <a id="kn-zugang-s9"></a>**Zu viele Anfragen?**: Je Profil, sonst je Adresse, zählt das Panel die Anfragen der letzten Minute: im Chat 120 für ein Profil oder den Admin, 30 für einen Gast. Ein Weg mit eigenem Sitzungsschlüssel (Spontanhilfe) zählt nach dem richtigen Schlüssel je Sitzung, nicht je Adresse: von außen haben alle die Adresse des Reverse-Proxys; ebenso zählt das Sprachmodell per API (/v1) je Schlüssel, Admin-Profile ohne Grenze. Retry-After nennt die echten Sekunden bis zum nächsten Versuch.
 10. <a id="kn-zugang-s10"></a>**Gast, alle Plätze belegt?**: Gäste teilen sich 4 gleichzeitige Plätze im Chat. Ein Platz, den niemand freigibt, gilt nach 10 Minuten wieder als frei.
 11. <a id="kn-zugang-s11"></a>**Freigabe je Funktion**: Für jede Funktion fragt das Panel in fester Reihenfolge: Schalter des Admins (und der Funktion, auf der sie aufbaut), Gast (bekommt nie eine), vom Admin für das Profil gesperrt, eigener Wunsch des Profils, zweiter Schritt nötig. Gelesen wird bei jeder Anfrage neu, eine Änderung gilt also sofort.
 12. <a id="kn-zugang-s12"></a>**Weiter zur Vorbereitung**: Die Anfrage geht mit ihrem Profil (oder als Gast) an chat_turn.prepare. Die Sprache bekommt Vorrang vor Hintergrundarbeit, und die anderen offenen Seiten des Profils sehen „antwortet gerade“.
@@ -3759,7 +3772,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 48), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 115). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 49), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 115). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -3769,7 +3782,7 @@ flowchart TD
 
 #### Zahlen (aus dem Code)
 
-- **48** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
+- **49** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
 - **115** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
 - **8 MB** größte Datei beim Wiederherstellen ([Schritt 9](#kn-state-s9))
 - **12** Zeichen hat das Umzugs-Passwort mindestens ([Schritt 8](#kn-state-s8))
