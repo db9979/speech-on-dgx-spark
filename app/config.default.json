@@ -288,6 +288,7 @@
     "doc_audio_min": 180,
     "doc_audio_day_min": 240,
     "doc_link": false,
+    "doc_youtube": false,
     "doc_link_mb": 20,
     "doc_link_day": 50,
     "mappe_token": 24000,

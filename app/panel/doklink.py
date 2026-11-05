@@ -12,6 +12,10 @@
   rule of an upload holds (quota, MAX_DOCS, the admin's block, the second login step); the same address once. HTML goes
   as "<title>.html" (documents.add reads it with its headings and tables, with a Docling server like any HTML file).
   The text is outside text like every document (chat.READS_OUTSIDE): what a page says is never an instruction.
+- A YouTube video (ytquelle.video_id) with „YouTube-Links abschreiben“ (docyoutube) released for the profile is no page:
+  the address is kept as the one built from its video id (ytquelle.kanonisch) and the runner gives it to
+  ytquelle.holen (yt-dlp only through the netguard proxy, the sound track becomes a recording, abschrift.py). Without
+  the release it stays an ordinary link.
 - "Neu abrufen" only on the person's click (Dominik 2026-11-04, never by itself): a conditional GET (If-None-Match,
   If-Modified-Since); 304 or the same SHA-256 → "gleich"; else documents.renew reads the new bytes into the same
   document (Wissensbuch and Auswertungen see the new text by themselves).
@@ -45,6 +49,7 @@ import features
 import guard
 import netguard
 import profiles
+import ytquelle
 from common import DayCounter, load_config
 from core import assistant, browser_profile, json_body
 
@@ -187,10 +192,14 @@ def annehmen(uid, urls, mappe=""):
     import notaus
     out, who = [], _who(uid)
     held = notaus.refuse("internet")
+    yt = features.allowed("docyoutube", uid)
     with _Db(uid) as con:
         warten = con.execute("SELECT COUNT(*) FROM dl_link WHERE stand='wartet'").fetchone()[0]
         for raw in list(urls)[:MAX_AUF_EINMAL]:
             url, why = pruefe(raw)
+            vid = ytquelle.video_id(url) if url and yt else None
+            if vid:          # a video: only the address built from its id goes on (ytquelle.kanonisch)
+                url = ytquelle.kanonisch(vid)
             shown = kurz(url) if url else str(raw or "")[:60]
             if not why and held:
                 why = "notaus"
@@ -232,7 +241,7 @@ def liste(uid):
         con.execute("DELETE FROM dl_link WHERE doc<>'' AND doc NOT IN (SELECT id FROM docs)")
         rows = con.execute("SELECT id, doc, url, geholt, stand, fehler FROM dl_link ORDER BY made DESC, id").fetchall()
     return [{"id": r["id"], "doc": r["doc"], "url": kurz(r["url"]), "geholt": r["geholt"], "stand": r["stand"],
-             "fehler": r["fehler"]} for r in rows]
+             "fehler": r["fehler"], "yt": bool(ytquelle.video_id(r["url"]))} for r in rows]
 
 
 def entfernen(uid, lid):
@@ -285,6 +294,15 @@ async def eins(uid, row, now=None):
     if await asyncio.to_thread(_tag_voll, uid, now or time.time()):
         await asyncio.to_thread(_setze, uid, lid, stand="fehler", fehler="grenze")
         return "grenze"
+    if ytquelle.video_id(row["url"]) and features.allowed("docyoutube", uid):
+        word, doc = await ytquelle.holen(uid, row["url"])
+        if doc:
+            await asyncio.to_thread(_setze, uid, lid, doc=doc["id"], final_url=row["url"], geholt=int(time.time()),
+                                    stand="ok", fehler="")
+        else:
+            _day.today()["fehler"] += 1
+            await asyncio.to_thread(_setze, uid, lid, stand="fehler", fehler=word, geholt=int(time.time()))
+        return word
     try:
         got = await _hole(row["url"])
     except netguard.AbrufFehler as e:
@@ -323,7 +341,7 @@ async def neu_abrufen(uid, doc_id, now=None):
         return "keins"
     with _Db(uid) as con:
         r = con.execute("SELECT * FROM dl_link WHERE doc=?", (doc_id,)).fetchone()
-    if not r:
+    if not r or ytquelle.video_id(r["url"]):      # a video's transcript is not fetched again
         return "keins"
     if await asyncio.to_thread(_tag_voll, uid, now or time.time()):
         return "grenze"
@@ -405,7 +423,7 @@ def info(uid):
     has = os.path.exists(documents.db_path(uid))
     return {"on": True, "max": MAX_AUF_EINMAL, "mb": grenze("doc_link_mb"), "day": grenze("doc_link_day"),
             "today": documents.count_today(uid, wissen.today(time.time()), key="doklink") if has else 0,
-            "links": liste(uid)}
+            "links": liste(uid), "yt": ytquelle.info(uid)}
 
 
 def for_live(now=None):
@@ -433,7 +451,8 @@ def for_live(now=None):
 TOOLS = [{"type": "function", "function": {
     "name": "link_als_dokument",
     "description": "Fetch public web pages or files the user names and keep each as one of the user's own documents. "
-                   "Only when the user asks for it in this message; every address exactly as the user wrote it.",
+                   "Only when the user asks for it in this message; every address exactly as the user wrote it. "
+                   "A YouTube video link is transcribed from its sound track when that is switched on.",
     "parameters": {"type": "object", "properties": {
         "adressen": {"type": "array", "items": {"type": "string"}, "maxItems": MAX_AUF_EINMAL,
                      "description": "the addresses (https://...) as the user wrote them"}}, "required": ["adressen"]}}}]
@@ -446,7 +465,13 @@ SAGEN = {"angenommen": "angenommen", "adresse": "keine gültige Adresse", "zugan
          "ok": "ist jetzt ein Dokument", "groesse": "zu groß", "art": "diese Art liest der Spark nicht",
          "status": "die Seite antwortet nicht mit Inhalt", "weiter": "zu viele Weiterleitungen", "zeit": "zu langsam",
          "netz": "nicht erreichbar", "speicher": "kein Platz für Dokumente", "grenze": "Tagesgrenze erreicht",
-         "wartet": "wird noch geholt"}
+         "wartet": "wird noch geholt",
+         # YouTube (ytquelle.WORTE)
+         "ytdlp": "yt-dlp ist auf dem Panel-Rechner nicht installiert (" + ytquelle.INSTALL + ", Anleitung: " + ytquelle.WEG + ")",
+         "video": "das Video ist nicht abrufbar (privat, gelöscht, Altersgrenze oder Region)",
+         "live": "Livestreams und Premieren holt der Spark nicht", "laenge": "das Video ist zu lang",
+         "format": "keine Tonspur zum Holen", "host": "yt-dlp wollte einen Server außerhalb der festen Liste, abgebrochen",
+         "schritt": "erst den zweiten Anmeldeschritt einrichten (Ich → Sicherheit)"}
 
 
 def eigene(text):

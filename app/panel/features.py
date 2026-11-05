@@ -466,6 +466,11 @@ FEATURES = (
     # gives become documents (netguard.hole_oeffentlich, wissen.aufnehmen); "Neu abrufen" only on a click; outside text
     F("doclink", "Links als Dokument", "Links as documents", "data", ("doc_link",), parent="documents", me="docbox",
       guide="doclink"),
+    # YouTube-Links abschreiben (ytquelle.py, plan open-notebook Stufe 3b): a YouTube link given through Links als
+    # Dokument (so doc_link too) is fetched as its sound track by the pinned yt-dlp, only through the netguard proxy
+    # (netproxy.py, fixed host list), and transcribed like a recording; without yt-dlp the link says how to install it
+    F("docyoutube", "YouTube-Links abschreiben", "Transcribe YouTube links", "data", ("doc_youtube", "doc_link"),
+      parent="docaudio", me="docbox", guide="docyoutube"),
     # Suchprüfung (suchpruefung.py, plan suche-schaerfen, Stufe 1): test questions measure how often the search
     # finds the right passage; the admin's release is enough (no profile switch, Freigabe rule 2026-10-13)
     F("suchpruefung", "Suchprüfung", "Search check", "data", ("search_check",), parent="documents", me="docbox",

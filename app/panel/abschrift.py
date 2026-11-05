@@ -198,7 +198,9 @@ def aufnehmen(uid, name, src):
     def nein(why, de):
         _day.today()["abgelehnt"] += 1
         print(f"abschrift: abgelehnt | {why} | {who}", flush=True)
-        raise ValueError(de)
+        e = ValueError(de)
+        e.wort = why             # the fixed word for a caller (ytquelle.VON_ABSCHRIFT)
+        raise e
     if join.mfa_due(uid):
         nein("zweiter schritt", "Erst den zweiten Anmeldeschritt einrichten (Ich → Sicherheit), dann Aufnahmen ablegen.")
     if not fits(name, head):

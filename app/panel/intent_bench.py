@@ -84,6 +84,10 @@ BENCH = [
     ("Leg https://a.example/b.pdf und https://c.example zu meinen Dokumenten", "doklink"),
     ("Save https://example.org/article as a document", "doklink"),
     ("Store https://example.org/manual.pdf in my documents", "doklink"),
+    # YouTube-Links abschreiben (ytquelle.py, Stufe 3b): a video link to write down goes the same way
+    ("Mach eine Abschrift von https://www.youtube.com/watch?v=dQw4w9WgXcQ", "doklink"),
+    ("Transkribiere https://youtu.be/dQw4w9WgXcQ", "doklink"),
+    ("Transcribe https://youtu.be/dQw4w9WgXcQ", "doklink"),
     ("Schick https://example.org/artikel aufs reMarkable", ""),
     ("Was steht auf https://example.org?", ""),
     # the own Kiwix archive (V01.0.264): mein, dein, im Archiv, never the uploaded documents

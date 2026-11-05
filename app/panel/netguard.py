@@ -171,6 +171,7 @@ DIRECT_OK = {
     "wyoming": ("lokal", "eigene Sprachdienste auf localhost"),
     "telefon": ("geprueft", "SIP und Ton (UDP) nur mit der Telefonanlage nach resolve() im Heimnetz und der Ton-Adresse aus ihrem SDP"),
     "zertpin": ("geprueft", "Zertifikat lesen nach resolve()"),
+    "netproxy": ("geprueft", "der netguard-Proxy für yt-dlp (ytquelle.py): nur CONNECT auf Port 443 zu Hosts der festen Liste, Tunnel erst nach resolve() (PUBLIC, Notaus)"),
     "offline": ("geprueft", "Ohne Internet: eine Uhrzeit-Frage (SNTP, UDP 123) nur an den Zeitserver im Heimnetz nach resolve() (HOME)"),
     "halive": ("geprueft", "WebSocket zum eigenen Home Assistant nach resolve() mit Heimnetz-Regeln (HOME), nur lesen"),
     "asr_proxy": ("lokal", "Spracherkennung: Proxy zur Engine auf localhost"),

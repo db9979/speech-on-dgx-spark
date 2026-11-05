@@ -1,0 +1,6 @@
+# YouTube als Quelle (ytquelle.py, plan open-notebook Stufe 3b): yt-dlp (Unlicense) alone in its own environment
+# /opt/speech-spark/venv-ytdlp, only with install.sh --youtube: exactly this version and the SHA-256 of its wheel from
+# PyPI, without its optional dependencies (pip --no-deps --require-hashes --only-binary :all:). ytquelle.VERSION names
+# the same version (tests/test_ytquelle.py checks it); the panel runs it only through the netguard proxy (netproxy.py).
+yt-dlp==2026.10.26 \
+    --hash=sha256:a05c5b5d8562f7e8a62f5334348b406af4930d56d3a65f8021d14af0e22339ae

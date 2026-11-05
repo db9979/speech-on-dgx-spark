@@ -175,6 +175,7 @@ Every request passes here first: size, origin, kill switch, login, profile and r
 | `app/panel/join.py` | New people by invitation. |
 | `app/panel/mfa.py` | Second login step: a six-digit code from an authenticator app (TOTP, RFC 6238), or a one-time recovery code when the phone is gone. |
 | `app/panel/netguard.py` | Outbound connections to addresses that people or outside text choose: web pages from search results, calendars, address books, task lists, mail servers and H … |
+| `app/panel/netproxy.py` | The netguard proxy: a CONNECT proxy on 127.0.0.1 for one helper program that has its own network code (yt-dlp, ytquelle.py), so that none of its connections … |
 | `app/panel/notaus.py` | Notaus: three stages that stop the Spark from the outside in. |
 | `app/panel/notzugang.py` | Back in when locked out: sudo speech-spark notzugang. |
 | `app/panel/panel.py` | Speech on DGX Spark: web panel for config and monitoring. |
@@ -283,6 +284,7 @@ Own documents, memory, earlier conversations, Kiwix and Wikipedia, created docum
 | `app/panel/wissensdoppelt.py` | Doppelte Punkte der Wissenskarte: the people, companies, places, contracts, accounts and deadlines of the documents (wissenskarte.py, wk_ent) come in many sp … |
 | `app/panel/wissenskarte.py` | Wissenskarte: the pages of the Wissensbuch are the points of a map, this module adds the connections between them ("Auto versichert bei HUK", "Parkschaden fü … |
 | `app/panel/wissensmessung.py` | Wissen messen: times and memory of the document search, the Wissensbuch and the Wissenskarte, for the planned test with 5000 documents (Wissenskarte Stufe 2 … |
+| `app/panel/ytquelle.py` | YouTube als Quelle: the sound track of a YouTube video the person names becomes a recording that the Spark transcribes like an uploaded one (abschrift.py, St … |
 
 ### Connections
 
@@ -719,7 +721,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/tagebuch.json` | Spark diary | State | sealed whole (AES-256-GCM) | yes | – |
 | `users/ID/gesundheit.json` | Steps, pulse and sleep from the Pebble watch (30 days) | Health | sealed | yes | – |
 | `users/ID/docling-wait` | Files until Docling has read them | Queue | – | yes | – |
-| `users/ID/docs/audio-wait/` | Recordings until the speech recognition has transcribed them | Queue | – | yes | – |
+| `users/ID/docs/audio-wait/` | Recordings until the speech recognition has transcribed them; briefly yt-*/ in it with the sound track of a YouTube link while yt-dlp fetches it | Queue | – | yes | – |
 | `users/ID/mfa.json` | Profile's second step | Key | sealed | yes | – |
 | `users/ID/memory-tidy.json` | Tidy proposal | Queue | – | yes | – |
 | `users/ID/memory-tidy-checked` | Last tidy check | State | – | yes | – |
@@ -1682,7 +1684,7 @@ flowchart TD
 3. <a id="kn-sicherheit-s3"></a>**Signed in and within limits?**: Size limit and origin check (CSRF) before reading, then a rate limit per profile or address (a way with its own session key per session after the right key, guessing still per address) and a cap on parallel requests for the model, recognition and output (guard.Slot). Secrets, roles and backups also need a fresh code or passkey (core.confirm_code, 10 minutes). A whole area can be unlocked for a while with a second step (rule "unlocking an area", first remote access: 5 to 120 minutes, fernzugang.entsperrt_bis): this login only, from the same place only, locked on Lock, logout and the kill switch; pairing and removing still ask every time. The models on tars are reached only through the TLS-Tor; commands there are checked by the Wärter (tarswart.check: signature, time, one-time number, one of 18 fixed commands).
 4. <a id="kn-sicherheit-s4"></a>**Who asks, surely known?**: The profile comes from the cookie, the app key or a linked account. At a shared speaker the device key is not enough: chat_turn.shared_stranger allows personal things only when the owner's voice is surely recognised in the same recording.
 5. <a id="kn-sicherheit-s5"></a>**Release and block**: Every function is off until the admin releases it; then it counts for every profile, unless the admin blocks single ones (features.blocked). What is not allowed is not even offered as a tool.
-6. <a id="kn-sicherheit-s6"></a>**Outside stays data**: What a tool reads from outside reaches the model as a marked block of data (textnorm.defuse: the block's end and the model's own markers such as „<|im_start|>“ or „<tool_call>“ are defused; the LLM-Tor does it once more for every message, llm_tor.entschaerft). From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory; after a mail it is 20, everything that asks the internet among them (web search, Wikipedia, weather, transit), so no search word carries mail content out. Whether this holds is checked by the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed); a page or file is fetched only by netguard.hole_oeffentlich (kill switch first, public only also after every redirect, size, time, content type), links as documents take an address only from the person's own words (doklink.eigene), and the page becomes a document like any: data; a remote-access tunnel only to targets by fernweb.ziel_ok: 127.0.0.1 there and the system's own addresses its anchor reports itself. A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures from outside only after the own click and through the guard, a link only after the question with its real address.
+6. <a id="kn-sicherheit-s6"></a>**Outside stays data**: What a tool reads from outside reaches the model as a marked block of data (textnorm.defuse: the block's end and the model's own markers such as „<|im_start|>“ or „<tool_call>“ are defused; the LLM-Tor does it once more for every message, llm_tor.entschaerft). From then on 13 acting tools are locked, in the next turn too, and nothing of it is learned into memory; after a mail it is 20, everything that asks the internet among them (web search, Wikipedia, weather, transit), so no search word carries mail content out. Whether this holds is checked by the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed); a page or file is fetched only by netguard.hole_oeffentlich (kill switch first, public only also after every redirect, size, time, content type), links as documents take an address only from the person's own words (doklink.eigene), and the page becomes a document like any: data; a YouTube link goes as an address built from the video number alone to the pinned yt-dlp with fixed options (ytquelle.befehl), whose whole traffic runs only through the netguard proxy (netproxy.Proxy: fixed host list, port 443, netguard.resolve); a remote-access tunnel only to targets by fernweb.ziel_ok: 127.0.0.1 there and the system's own addresses its anchor reports itself. A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures from outside only after the own click and through the guard, a link only after the question with its real address.
 7. <a id="kn-sicherheit-s7"></a>**The language model proposes**: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run.
 8. <a id="kn-sicherheit-s8"></a>**Does it change something?**: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model; likewise only their click merges, renames or deletes points of the knowledge map (with the code of „Confirm“); by itself only a fixed rule for the same name in another spelling (wissensdoppelt.aehnlich), never the model, and never against their „Different“. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it.
 9. <a id="kn-sicherheit-s9"></a>**Check the answer**: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML.
@@ -1757,6 +1759,8 @@ Applies at: [step 4](#kn-sicherheit-s4), [step 5](#kn-sicherheit-s5)
 - `app/panel/netguard.py` `allowed`: whether a connection out may happen ([step 6](#kn-sicherheit-s6))
 - `app/panel/netguard.py` `hole_oeffentlich`: the one fetch of a public page or file: kill switch first, public only ([step 6](#kn-sicherheit-s6))
 - `app/panel/doklink.py` `eigene`: addresses for the tool only from the own words ([step 6](#kn-sicherheit-s6))
+- `app/panel/ytquelle.py` `befehl`: the fixed call of yt-dlp: only the address from the video number ([step 6](#kn-sicherheit-s6))
+- `app/panel/netproxy.py` `Proxy`: the netguard proxy: yt-dlp's only way out ([step 6](#kn-sicherheit-s6))
 - `app/panel/answercheck.py` `unsupported`: a figure without a source is dropped ([step 9](#kn-sicherheit-s9))
 - `app/textnorm.py` `hide_secrets`: secrets are never spoken ([step 9](#kn-sicherheit-s9))
 - `app/panel/guard.py` `log`: change log with its chain ([step 10](#kn-sicherheit-s10))
@@ -2091,7 +2095,7 @@ Applies at: [step 9](#kn-weiche-s9)
 
 #### Everyday score
 
-- The test sentences (225) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
+- The test sentences (228) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up.
 
 #### Source bench
 
@@ -2113,7 +2117,7 @@ Applies at: [step 9](#kn-weiche-s9)
 - **4** seconds at most for the model's pick ([step 10](#kn-weiche-s10))
 - **300 ms** waiting with „Fast answer start“ ([step 10](#kn-weiche-s10))
 - **80 %** default threshold of the classification ([step 10](#kn-weiche-s10))
-- **225** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
+- **228** built-in test sentences ([step 4](#kn-weiche-s4), [step 5](#kn-weiche-s5))
 - **216** everyday sentences for measuring ([step 14](#kn-weiche-s14))
 - **66** sentences of the source bench ([step 14](#kn-weiche-s14))
 - **150** ms at most for the source switch's hit probe ([step 14](#kn-weiche-s14))
@@ -2498,6 +2502,10 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 
 - „Add to documents“ at an attachment hit of Find only by fixed rules: fundmail.dok_passt shows the button only for a kind from documents.TYPES up to 10485760 bytes by the size in the index. fundmail.zu_dokumenten takes only an attachment entry of the own index (fund.eintrag: own sources and mailboxes); if it is in the documents already with the origin „mail:“ + the entry key, it answers „Already in the documents“ without asking the mailbox. Otherwise it fetches the bytes itself through mail.file_of (EXAMINE, PEEK), requires the same file name as in the index and at most the same size and hands the file to wissen.aufnehmen (source „mail“): the same rules as an upload. The file is outside text.
 
+#### Transcribe YouTube links
+
+- When ytquelle.video_id finds a video number in the address and Transcribe YouTube links is released, doklink keeps only the address made from that number (ytquelle.kanonisch). ytquelle.holen asks yt-dlp (version 2026.10.26, Unlicense, own venv) twice, both times only through the netguard proxy: first without download (the number must match, no live stream, at most chat.doc_audio_min minutes), then only the sound track with --max-filesize. The file goes through abschrift.aufnehmen like an upload and is transcribed in quiet minutes with time marks; title and channel are only the name (ytquelle.name_of), origin „yt:“ with the number, every video once. Without yt-dlp the link says how to install it (word ytdlp).
+
 #### Map helps the search
 
 - wissenskarte.liste(uid, worte, k) returns piece ids with a rank from 1, read only (SQLite with mode=ro) and only for the own profile. Fixed rules, never the model: the search words hit a point when its name or another name stands whole in the question (compared like wissenskarte.ent_norm) or a word of the name with at least 4 letters that is no number and no legal form (wissenskarte.trifft); at most 20 points. Their neighbours one step away join (the same query as wissenskarte.rund_um), and of all of them the passages in used, read documents. A passage with a named point stands before one with only neighbours, more points before fewer, at most 50.
@@ -2681,6 +2689,8 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/doklink.py` `pruefe`: an address by fixed rules before anything is fetched ([step 13](#kn-wissen-s13))
 - `app/panel/doklink.py` `eins`: fetch one address and take it in as a document ([step 13](#kn-wissen-s13))
 - `app/panel/doklink.py` `neu_abrufen`: fetch again: ETag, SHA-256, else read again ([step 13](#kn-wissen-s13))
+- `app/panel/ytquelle.py` `holen`: YouTube link: sound track through yt-dlp and the netguard proxy, then a recording ([step 13](#kn-wissen-s13))
+- `app/panel/ytquelle.py` `video_id`: the video number of a YouTube address, nothing else ([step 13](#kn-wissen-s13))
 - `app/panel/wissen.py` `aufnehmen`: one way in for things that are no upload ([step 13](#kn-wissen-s13))
 - `app/panel/fundmail.py` `dok_passt`: button at an attachment: kind and size by a fixed rule ([step 13](#kn-wissen-s13))
 - `app/panel/fundmail.py` `dok_art`: a kind from documents.TYPES by the ending ([step 13](#kn-wissen-s13))
@@ -2696,7 +2706,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/wissensmessung.py` `_synth`: the throwaway profile from a fixed seed, with the code's limits ([step 6](#kn-wissen-s6))
 - `app/panel/wissensmessung.py` `MESSTEILE`: the measuring parts, extensible ([step 6](#kn-wissen-s6))
 
-Self-tests: `test_wissen`, `test_auswertung`, `test_abschrift`, `test_doklink`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`, `test_wissenstempo`
+Self-tests: `test_wissen`, `test_auswertung`, `test_abschrift`, `test_doklink`, `test_ytquelle`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`, `test_wissenstempo`
 
 ### Guard
 
@@ -2747,7 +2757,7 @@ flowchart TD
   s12 -.->|redirect| s2
 ```
 
-1. <a id="kn-waechter-s1"></a>**A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 34 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
+1. <a id="kn-waechter-s1"></a>**A tool wants out**: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 37 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete.
 2. <a id="kn-waechter-s2"></a>**Resolve the name once**: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops.
 3. <a id="kn-waechter-s3"></a>**Own service?**: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute). When the models run on another computer (models.host), its addresses count the same (model_addresses).
 4. <a id="kn-waechter-s4"></a>**Internet and kill switch on?**: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows.
@@ -2771,12 +2781,16 @@ Applies at: [step 6](#kn-waechter-s6), [step 8](#kn-waechter-s8)
 | internet only | feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, systemupdates, verbund | ✓ | ✕ |
 | user | calendars, contacts, fundmail, mail, mcp, meinmcp, tasks | ✓ | only with switch |
 | home | doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite | ✓ | ✓ |
-| by target | anrufe, dienstwacht, halive, nas, nasquelle, offline, speicher, telefon, zertpin | as the target is set | – |
+| by target | anrufe, dienstwacht, halive, nas, nasquelle, netproxy, offline, speicher, telefon, zertpin | as the target is set | – |
 | always | all | ✕ with kill switch | ✕ own services, 169.254, multicast |
 
 #### One fetch for pages and files
 
 - A page or file from an address is fetched only by netguard.hole_oeffentlich: the pages of search results (chat.page_text), the web page to the reMarkable (through page_text) and links as documents. First the kill switch, then before every request netguard.oeffentlich (http or https, no login data, every address of the name public) and at the connection once more the level internet only; at most 4 redirects, each checked again, a fixed browser name, content type from a fixed list, size and time for all of it. A refusal is a fixed word (netguard.WORTE).
+
+#### A proxy for a program with its own network code
+
+- A helper program with its own network code (yt-dlp for transcribing YouTube links) never goes out directly: it gets only the address of the netguard proxy (netproxy.Proxy) of this one run, on 127.0.0.1 with a one-time key. The proxy takes only CONNECT to port 443 of a name on the fixed list (ytquelle.erlaubt: youtube.com, youtu.be, youtubei.googleapis.com, i.ytimg.com and the media servers *.googlevideo.com), never an IP and never http; netguard.resolve resolves every name at level internet only (kill switch, public only, Live), the tunnel goes to exactly that address. At most 8 tunnels at once and a byte limit for the whole run; every refusal is a fixed word (netproxy.WORTE).
 
 #### When blocked
 
@@ -2808,6 +2822,8 @@ Applies at: [step 6](#kn-waechter-s6), [step 8](#kn-waechter-s8)
 - `app/panel/netguard.py` `client`: the way out for tools ([step 1](#kn-waechter-s1))
 - `app/panel/netguard.py` `hole_oeffentlich`: the one fetch of a public page or file ([step 1](#kn-waechter-s1), [step 12](#kn-waechter-s12))
 - `app/panel/netguard.py` `oeffentlich`: check before every request: public only, no login data ([step 6](#kn-waechter-s6))
+- `app/panel/netproxy.py` `Proxy`: the netguard proxy for a program with its own network: CONNECT 443, fixed list, resolve ([step 1](#kn-waechter-s1), [step 9](#kn-waechter-s9))
+- `app/panel/ytquelle.py` `erlaubt`: yt-dlp's fixed host list ([step 1](#kn-waechter-s1))
 - `app/panel/netguard.py` `_Transport`: password guard, size limit, result for My status ([step 10](#kn-waechter-s10), [step 11](#kn-waechter-s11))
 - `app/panel/netguard.py` `_Capped`: cuts the answer, also unpacked ([step 11](#kn-waechter-s11))
 - `app/panel/netguard.py` `same_site`: same site for login data ([step 10](#kn-waechter-s10))
@@ -2817,7 +2833,7 @@ Applies at: [step 6](#kn-waechter-s6), [step 8](#kn-waechter-s8)
 - `app/panel/notaus.py` `watch`: counts blocks for the automatic kill switch ([step 2](#kn-waechter-s2))
 - `app/panel/live.py` `outgoing`: shows each decision on Live ([step 2](#kn-waechter-s2))
 
-Self-tests: `test_hardening`, `test_notaus`, `test_waechter_umgehung`, `test_doklink`
+Self-tests: `test_hardening`, `test_notaus`, `test_waechter_umgehung`, `test_doklink`, `test_ytquelle`
 
 ### Logs and live
 
@@ -3542,6 +3558,7 @@ Applies at: [step 4](#kn-internet-s4), [step 5](#kn-internet-s5)
 |---|---|
 | Pages from search | guard, internet only |
 | Links as documents | guard, internet only, only the person's addresses |
+| Transcribe YouTube links (yt-dlp) | netguard proxy, fixed host list, port 443 |
 | Mail, calendars, contacts | guard, level user |
 | reMarkable | guard, allowed hosts only |
 | Weather, transit, Wikipedia | fixed address |

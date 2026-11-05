@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.342** Transcribe YouTube links: a YouTube link under "Add link" is transcribed, only the sound track through the pinned yt-dlp (version and SHA-256 fixed, own venv with `sudo ./install.sh --youtube`), all its traffic only through a netguard proxy with a fixed host list; then like a recording with time marks (switch off)
 - **V01.1.341** Find: keep an attachment of a mail as an own document with the button "Add to documents", on the page Find and in the iPhone app; only own attachments up to 10 MB of a kind the documents read, the same attachment only once ("Already in the documents").
 - **V01.1.340** Links as documents: up to 10 addresses at once become own documents (public pages only, also after every redirect), "Fetch again" only on a click with ETag and SHA; one fetch helper for every web page, also with the kill switch for the reMarkable
 - **V01.1.339** Fix spontaneous help: "Load program" on /hilfe said "too many requests" behind the reverse proxy; the program door now counts per help after the right key, guessing still per address. The person's page is new and plain: a header with the state and "End session", the request with its steps, a small preview, messages with the field on top, one column on a phone, and only fixed texts (a 429 counts down); the service watch no longer reports SparkHilfe missing while the Mac release does not exist yet
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.335** Remote access screen now on Windows too: TightVNC, set up by anchor 1.10.0 from the official, pinned and signed file, only on 127.0.0.1, the password never on a command line; "bildschirm aus" or removing uninstalls it again
 - **V01.1.334** Fix files as another user on Ubuntu 25.10 and newer (sudo-rs): `sudo spark-anker dateien als root` failed at visudo; anchor 1.9.1 writes the rule there without the line sudo-rs does not know. Update the anchor.
 - **V01.1.333** Fix "Where does this mail belong?": "Other folder …" now shows the folder list at the card and moves the mail right there
-- **V01.1.332** iPhone build without GitHub costs: the iPhone app builds on GitHub only at night after iOS changes or by hand, TestFlight follows that run
 
 
 

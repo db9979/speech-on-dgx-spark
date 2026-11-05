@@ -143,6 +143,8 @@ MODULE = {
     "auswertung": ("wissen", "Auswertungen je Dokument: Punkte vom Modell mit Zahlenprobe je Stelle; Inhalt, Fristen, Beteiligte fest"),
     "doklink": ("wissen", "Links als Dokument: öffentliche Seiten und Dateien über netguard.hole_oeffentlich, Neu abrufen mit ETag und SHA"),
     "abschrift": ("wissen", "Aufnahmen abschreiben: Ton und Video in Stücken von 30 s durch die eigene Spracherkennung, Zeit als Stelle"),
+    "ytquelle": ("wissen", "YouTube-Links abschreiben: Tonspur über das gepinnte yt-dlp nur durch den netguard-Proxy, dann eine Aufnahme"),
+    "netproxy": ("zugang", "netguard-Proxy: CONNECT nur auf Port 443 zu einer festen Host-Liste, jede Adresse über netguard.resolve"),
     "fund": ("wissen", "Finden: Suchindex über die eigenen Daten, Felder und Schlagworte nach festen Regeln, Blind-Marken je Profil"),
     "fundmail": ("wissen", "Finden: alle Mails und Anhänge in Scheiben eingelesen, versiegelt (AES-GCM) mit Blind-Marken je Profil"),
     "fundquellen": ("wissen", "Finden: Termine und Kontakte versiegelt, Gespräche nur Datum und Kanal, Listen, Medien"),

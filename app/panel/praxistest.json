@@ -5275,6 +5275,13 @@
 "titel": "Anhang aus Finden zu Dokumenten übernehmen",
 "text": "Admin: Funktionen → Finden in allen Daten → Mails und Anhänge finden und Eigene Dokumente an. Eine Mail mit PDF-Rechnung an dich schicken, nach ein paar Minuten unter Finden nach einem Wort aus dem PDF suchen, den Anhang-Treffer (oder die Mail, dann unter „Anhänge“) öffnen: „Zu Dokumenten übernehmen“ tippen. Es steht „Übernommen: unter Ich → Dokumente …“, der Weg ist ein Link, „Dokument öffnen“ zeigt das neue Dokument mit Quelle „Mail“. Noch einmal tippen: „Schon in Dokumenten“, kein zweites Dokument. Ein Anhang, den die Dokumente nicht lesen (z. B. .zip oder .exe), hat keinen Knopf. Dasselbe in der iPhone-App unter Meine Sachen → Finden. Zustand → Logs (Wissen oder Finden): „fund: dokument | uebernommen“, dann „fund: dokument | doppelt“, nie ein Dateiname; Live im Kasten Finden: „Anhänge zu Dokumenten heute 1, 1 schon da, 0 abgelehnt“.",
 "thread": "Alles schnell finden über einen Index"
+},
+{
+"id": "P780",
+"v": 1342,
+"titel": "YouTube-Link wird abgeschrieben",
+"text": "Auf dem Panel-Rechner einmal sudo ./install.sh --youtube (das Log sagt „yt-dlp for YouTube-Links abschreiben (pinned with SHA-256)“). Funktionen → Eigene Dokumente → Aufnahmen abschreiben → YouTube-Links abschreiben an (Links als Dokument muss an sein). Ich → Dokumente → Link hinzufügen: unter dem Feld steht „YouTube-Links: nur die Tonspur wird geholt und abgeschrieben, bis 180 Minuten und 300 MB.“ Einen YouTube-Link eines Vortrags von etwa 10 Minuten eintragen, Holen. Nach etwa einer Minute steht ein neues Dokument „Titel · Kanal“ mit Quelle „Aufnahme“ in der Liste, die Zeile zeigt „0 von 10 Minuten“ und schreibt in ruhigen Minuten ab; danach findet eine Frage dazu die Stelle „bei 02:10“. Derselbe Link als youtu.be-Adresse noch einmal: „liegt schon in den Dokumenten oder wartet“. Ein Livestream-Link: „Livestreams und Premieren holt der Spark nicht“. Zustand → Live, Kasten Links: „YouTube: heute 1 Tonspuren …“; Zustand → Logs (Wissen): „ytquelle: geholt | 10 min … kb“, nie eine Adresse oder ein Titel. Ohne yt-dlp (vor dem install) sagt die Zeile „yt-dlp ist auf dem Panel-Rechner nicht installiert (sudo ./install.sh --youtube …)“.",
+"thread": "Ideen aus Open Notebook übernehmen"
 }
 ]
 }

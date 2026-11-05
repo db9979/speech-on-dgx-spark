@@ -175,6 +175,7 @@ Jede Anfrage geht zuerst hier durch: Größe, Herkunft, Notaus, Anmeldung, Profi
 | `app/panel/join.py` | Neue Personen per Einladung |
 | `app/panel/mfa.py` | Zweiter Anmeldeschritt mit Code (TOTP) und Wiederherstellungscodes |
 | `app/panel/netguard.py` | Wächter: wohin eine Verbindung nach außen darf |
+| `app/panel/netproxy.py` | netguard-Proxy: CONNECT nur auf Port 443 zu einer festen Host-Liste, jede Adresse über netguard.resolve |
 | `app/panel/notaus.py` | Notaus in drei Stufen, von außen nach innen |
 | `app/panel/notzugang.py` | Wieder hinein nach einem Aussperren (nur per sudo am Spark) |
 | `app/panel/panel.py` | Startet das Panel, Middleware (Notaus, Herkunft, Größe), liefert die Seite aus |
@@ -283,6 +284,7 @@ Eigene Dokumente, Gedächtnis, frühere Gespräche, Kiwix und Wikipedia, erstell
 | `app/panel/wissensdoppelt.py` | Doppelte der Wissenskarte: feste Regeln für gleiche und vielleicht gleiche Punkte, Vorschläge, Verschieden |
 | `app/panel/wissenskarte.py` | Wissenskarte: geprüfte Verbindungen und Punkte aus Dokumenten mit Quelle, Aufbau im Speicher, Wortindex, Suchliste |
 | `app/panel/wissensmessung.py` | Wissen messen: Zeiten und Speicher von Suche, Wissensbuch, Karte und Finden, erfunden oder ein Profil lesend |
+| `app/panel/ytquelle.py` | YouTube-Links abschreiben: Tonspur über das gepinnte yt-dlp nur durch den netguard-Proxy, dann eine Aufnahme |
 
 ### Anbindungen
 
@@ -719,7 +721,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `users/ID/tagebuch.json` | Spark-Tagebuch | Zustand | ganz versiegelt (AES-256-GCM) | ja | – |
 | `users/ID/gesundheit.json` | Schritte, Puls und Schlaf von der Pebble-Uhr (30 Tage) | Gesundheit | versiegelt | ja | – |
 | `users/ID/docling-wait` | Dateien, bis Docling sie gelesen hat | Warteschlange | – | ja | – |
-| `users/ID/docs/audio-wait/` | Aufnahmen, bis die Spracherkennung sie abgeschrieben hat | Warteschlange | – | ja | – |
+| `users/ID/docs/audio-wait/` | Aufnahmen, bis die Spracherkennung sie abgeschrieben hat; darin kurz yt-*/ mit der Tonspur eines YouTube-Links, solange yt-dlp sie holt | Warteschlange | – | ja | – |
 | `users/ID/mfa.json` | Zweiter Schritt des Profils | Schlüssel | versiegelt | ja | – |
 | `users/ID/memory-tidy.json` | Aufräum-Vorschlag | Warteschlange | – | ja | – |
 | `users/ID/memory-tidy-checked` | Letzte Aufräum-Prüfung | Zustand | – | ja | – |
@@ -1682,7 +1684,7 @@ flowchart TD
 3. <a id="kn-sicherheit-s3"></a>**Angemeldet und im Rahmen?**: Größenlimit und Herkunftsprüfung (CSRF) vor dem Lesen, dann Rate-Limit pro Profil oder Adresse (ein Weg mit eigenem Sitzungsschlüssel nach dem richtigen Schlüssel je Sitzung, Raten weiter je Adresse) und eine Höchstzahl gleichzeitiger Anfragen für Modell, Erkennung und Ausgabe (guard.Slot). Geheimnisse, Rollen und Sicherungen brauchen dazu einen frischen Code oder Passkey (core.confirm_code, 10 Minuten). Ein ganzer Bereich lässt sich mit einem zweiten Schritt für eine Weile entsperren (Regel „Bereich entsperren“, zuerst der Fernzugang: 5 bis 120 Minuten, fernzugang.entsperrt_bis): nur diese Anmeldung, nur vom selben Ort, gesperrt bei Sperren, Abmelden und Notaus; Koppeln und Entfernen fragen trotzdem jedes Mal. Zu den Modellen auf tars geht es nur durch das TLS-Tor; Befehle dort prüft der Wärter (tarswart.check: Unterschrift, Zeit, Einmal-Nummer, einer von 18 festen Befehlen).
 4. <a id="kn-sicherheit-s4"></a>**Wer fragt, sicher erkannt?**: Das Profil kommt aus Cookie, App-Schlüssel oder verknüpftem Konto. Am geteilten Lautsprecher reicht der Geräteschlüssel nicht: chat_turn.shared_stranger gibt Persönliches nur frei, wenn die Inhaberstimme in derselben Aufnahme sicher erkannt ist.
 5. <a id="kn-sicherheit-s5"></a>**Freigabe und Sperre**: Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten.
-6. <a id="kn-sicherheit-s6"></a>**Fremdes bleibt Daten**: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell (textnorm.defuse: Blockende und die eigenen Marken des Modells wie „<|im_start|>“ oder „<tool_call>“ werden entschärft; das LLM-Tor tut das für jede Nachricht noch einmal, llm_tor.entschaerft). Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt; nach einer Mail sind es 20, dazu gehört alles, was ins Internet fragt (Websuche, Wikipedia, Wetter, Fahrplan), damit kein Suchwort Mail-Inhalt hinausträgt. Ob das hält, prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed); eine Seite oder Datei holt nur netguard.hole_oeffentlich (Notaus zuerst, nur öffentlich auch nach jeder Weiterleitung, Größe, Zeit, Inhaltstyp), Links als Dokument nimmt eine Adresse nur aus den eigenen Worten der Person (doklink.eigene), und die Seite wird ein Dokument wie jedes: Daten; ein Tunnel des Fernzugangs nur zu Zielen nach fernweb.ziel_ok: dort 127.0.0.1 und die eigenen Adressen des Systems, die sein Anker selbst meldet. Eine Mail mit HTML zeigt die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick über den Wächter, ein Link erst nach der Frage mit seiner echten Adresse.
+6. <a id="kn-sicherheit-s6"></a>**Fremdes bleibt Daten**: Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell (textnorm.defuse: Blockende und die eigenen Marken des Modells wie „<|im_start|>“ oder „<tool_call>“ werden entschärft; das LLM-Tor tut das für jede Nachricht noch einmal, llm_tor.entschaerft). Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt; nach einer Mail sind es 20, dazu gehört alles, was ins Internet fragt (Websuche, Wikipedia, Wetter, Fahrplan), damit kein Suchwort Mail-Inhalt hinausträgt. Ob das hält, prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed); eine Seite oder Datei holt nur netguard.hole_oeffentlich (Notaus zuerst, nur öffentlich auch nach jeder Weiterleitung, Größe, Zeit, Inhaltstyp), Links als Dokument nimmt eine Adresse nur aus den eigenen Worten der Person (doklink.eigene), und die Seite wird ein Dokument wie jedes: Daten; ein YouTube-Link geht als Adresse aus der Video-Nummer allein an das gepinnte yt-dlp mit festen Optionen (ytquelle.befehl), dessen ganzer Verkehr nur durch den netguard-Proxy läuft (netproxy.Proxy: feste Host-Liste, Port 443, netguard.resolve); ein Tunnel des Fernzugangs nur zu Zielen nach fernweb.ziel_ok: dort 127.0.0.1 und die eigenen Adressen des Systems, die sein Anker selbst meldet. Eine Mail mit HTML zeigt die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick über den Wächter, ein Link erst nach der Frage mit seiner echten Adresse.
 7. <a id="kn-sicherheit-s7"></a>**Sprachmodell schlägt vor**: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht.
 8. <a id="kn-sicherheit-s8"></a>**Ändert es etwas?**: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät, oder dem Ja-Knopf seiner Karte „Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell; ebenso führt nur ihr Klick Punkte der Wissenskarte zusammen, benennt sie um oder löscht sie (mit dem Code von „Bestätigen“); von selbst nur eine feste Regel bei gleichem Namen in anderer Schreibweise (wissensdoppelt.aehnlich), nie das Modell, und nie gegen ihr „Verschieden“. Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut.
 9. <a id="kn-sicherheit-s9"></a>**Antwort prüfen**: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML.
@@ -1757,6 +1759,8 @@ Gilt bei: [Schritt 4](#kn-sicherheit-s4), [Schritt 5](#kn-sicherheit-s5)
 - `app/panel/netguard.py` `allowed`: ob eine Verbindung nach außen sein darf ([Schritt 6](#kn-sicherheit-s6))
 - `app/panel/netguard.py` `hole_oeffentlich`: der eine Abruf einer öffentlichen Seite oder Datei: Notaus zuerst, nur öffentlich ([Schritt 6](#kn-sicherheit-s6))
 - `app/panel/doklink.py` `eigene`: Adressen fürs Werkzeug nur aus den eigenen Worten ([Schritt 6](#kn-sicherheit-s6))
+- `app/panel/ytquelle.py` `befehl`: der feste Aufruf von yt-dlp: nur die Adresse aus der Video-Nummer ([Schritt 6](#kn-sicherheit-s6))
+- `app/panel/netproxy.py` `Proxy`: der netguard-Proxy: der einzige Weg von yt-dlp hinaus ([Schritt 6](#kn-sicherheit-s6))
 - `app/panel/answercheck.py` `unsupported`: Zahl ohne Quelle fällt heraus ([Schritt 9](#kn-sicherheit-s9))
 - `app/textnorm.py` `hide_secrets`: Geheimnisse werden nie gesprochen ([Schritt 9](#kn-sicherheit-s9))
 - `app/panel/guard.py` `log`: Änderungsprotokoll mit Prüfkette ([Schritt 10](#kn-sicherheit-s10))
@@ -2091,7 +2095,7 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 
 #### Alltagsquote
 
-- Die Testsätze (225) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
+- Die Testsätze (228) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt.
 
 #### Quellen-Messbank
 
@@ -2113,7 +2117,7 @@ Gilt bei: [Schritt 9](#kn-weiche-s9)
 - **4** Sekunden höchstens für die Wahl des Modells ([Schritt 10](#kn-weiche-s10))
 - **300 ms** Wartezeit mit „Schneller Antwortbeginn“ ([Schritt 10](#kn-weiche-s10))
 - **80 %** Standard-Schwelle der Einordnung ([Schritt 10](#kn-weiche-s10))
-- **225** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
+- **228** eingebaute Testsätze ([Schritt 4](#kn-weiche-s4), [Schritt 5](#kn-weiche-s5))
 - **216** Alltagssätze zum Messen ([Schritt 14](#kn-weiche-s14))
 - **66** Sätze der Quellen-Messbank ([Schritt 14](#kn-weiche-s14))
 - **150** ms höchstens für die Treffer-Probe der Quellen-Weiche ([Schritt 14](#kn-weiche-s14))
@@ -2498,6 +2502,10 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 
 - „Zu Dokumenten übernehmen“ an einem Anhang-Treffer von Finden nur nach festen Regeln: fundmail.dok_passt zeigt den Knopf nur für eine Art aus documents.TYPES bis 10485760 Bytes nach der Größe im Index. fundmail.zu_dokumenten nimmt nur einen Anhang-Eintrag des eigenen Index (fund.eintrag: eigene Quellen und Postfächer); liegt er mit Herkunft „mail:“ + Eintragsschlüssel schon in den Dokumenten, antwortet es „Schon in Dokumenten“, ohne das Postfach zu fragen. Sonst holt es die Bytes selbst über mail.file_of (EXAMINE, PEEK), verlangt denselben Dateinamen wie im Index und höchstens dieselbe Größe und gibt die Datei an wissen.aufnehmen (Quelle „mail“): dieselben Regeln wie ein Upload. Die Datei ist Text von außen.
 
+#### YouTube-Links abschreiben
+
+- Ist ytquelle.video_id eine Video-Nummer in der Adresse und YouTube-Links abschreiben frei, behält doklink nur die Adresse aus dieser Nummer (ytquelle.kanonisch). ytquelle.holen fragt yt-dlp (Version 2026.10.26, Unlicense, eigene venv) zweimal, beide Male nur durch den netguard-Proxy: erst ohne Download (die Nummer muss stimmen, kein Livestream, höchstens chat.doc_audio_min Minuten), dann nur die Tonspur mit --max-filesize. Die Datei geht durch abschrift.aufnehmen wie ein Upload und wird in ruhigen Minuten mit Zeitmarken abgeschrieben; Titel und Kanal sind nur der Name (ytquelle.name_of), Herkunft „yt:“ mit der Nummer, jedes Video einmal. Ohne yt-dlp sagt der Link, wie man es installiert (Wort ytdlp).
+
 #### Karte hilft der Suche
 
 - wissenskarte.liste(uid, worte, k) gibt Stück-Ids mit Rang ab 1 zurück, nur lesend (SQLite mit mode=ro) und nur für das eigene Profil. Feste Regeln, nie das Modell: Die Suchwörter treffen einen Punkt, wenn sein Name oder ein anderer Name ganz in der Frage steht (verglichen wie wissenskarte.ent_norm) oder ein Wort des Namens ab 4 Buchstaben, das keine Zahl und keine Rechtsform ist (wissenskarte.trifft); höchstens 20 Punkte. Dazu kommen ihre Nachbarn einen Schritt weit (dieselbe Abfrage wie wissenskarte.rund_um) und von allen die Stellen in genutzten, gelesenen Dokumenten. Eine Stelle mit einem genannten Punkt steht vor einer mit nur Nachbarn, mehr Punkte vor weniger, höchstens 50.
@@ -2681,6 +2689,8 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - `app/panel/doklink.py` `pruefe`: Adresse nach festen Regeln, bevor etwas geholt wird ([Schritt 13](#kn-wissen-s13))
 - `app/panel/doklink.py` `eins`: eine Adresse holen und als Dokument aufnehmen ([Schritt 13](#kn-wissen-s13))
 - `app/panel/doklink.py` `neu_abrufen`: Neu abrufen: ETag, SHA-256, sonst neu lesen ([Schritt 13](#kn-wissen-s13))
+- `app/panel/ytquelle.py` `holen`: YouTube-Link: Tonspur über yt-dlp und den netguard-Proxy, dann eine Aufnahme ([Schritt 13](#kn-wissen-s13))
+- `app/panel/ytquelle.py` `video_id`: die Video-Nummer einer YouTube-Adresse, sonst nichts ([Schritt 13](#kn-wissen-s13))
 - `app/panel/wissen.py` `aufnehmen`: ein Weg hinein für Dinge, die kein Upload sind ([Schritt 13](#kn-wissen-s13))
 - `app/panel/fundmail.py` `dok_passt`: Knopf am Anhang: Art und Größe nach fester Regel ([Schritt 13](#kn-wissen-s13))
 - `app/panel/fundmail.py` `dok_art`: Art aus documents.TYPES nach der Endung ([Schritt 13](#kn-wissen-s13))
@@ -2696,7 +2706,7 @@ Gilt bei: [Schritt 1](#kn-wissen-s1), [Schritt 8](#kn-wissen-s8)
 - `app/panel/wissensmessung.py` `_synth`: das Wegwerf-Profil aus festem Zufall, mit den Grenzen des Codes ([Schritt 6](#kn-wissen-s6))
 - `app/panel/wissensmessung.py` `MESSTEILE`: die Messteile, erweiterbar ([Schritt 6](#kn-wissen-s6))
 
-Selbsttests: `test_wissen`, `test_auswertung`, `test_abschrift`, `test_doklink`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`, `test_wissenstempo`
+Selbsttests: `test_wissen`, `test_auswertung`, `test_abschrift`, `test_doklink`, `test_ytquelle`, `test_wissensdoppelt`, `test_nachsortieren`, `test_abschnitte`, `test_lokal`, `test_kiwix`, `test_gedaechtnis`, `test_gedaechtnis_grenze`, `test_gemerkt`, `test_suchpruefung`, `test_wissensbuch`, `test_wissenskarte`, `test_wissensknoten`, `test_kartensuche`, `test_wissensmessung`, `test_wissenstempo`
 
 ### Wächter
 
@@ -2747,7 +2757,7 @@ flowchart TD
   s12 -.->|Weiterleitung| s2
 ```
 
-1. <a id="kn-waechter-s1"></a>**Werkzeug will nach außen**: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 34 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig.
+1. <a id="kn-waechter-s1"></a>**Werkzeug will nach außen**: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 37 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig.
 2. <a id="kn-waechter-s2"></a>**Name einmal auflösen**: resolve() fragt den Namen genau einmal ab. Hat er mehrere Adressen, muss jede erlaubt sein, sonst ist Schluss.
 3. <a id="kn-waechter-s3"></a>**Eigener Dienst?**: Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu). Laufen die Modelle auf einem anderen Rechner (models.host), gelten seine Adressen genauso (model_addresses).
 4. <a id="kn-waechter-s4"></a>**Internet und Notaus an?**: Ist die Adresse öffentlich und der Notaus mindestens auf Stufe 1, geht nichts ins Internet, egal welche Stufe das Werkzeug hat. Das Heimnetz bleibt erreichbar, wie die Stufe es erlaubt.
@@ -2771,12 +2781,16 @@ Gilt bei: [Schritt 6](#kn-waechter-s6), [Schritt 8](#kn-waechter-s8)
 | nur Internet | feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, systemupdates, verbund | ✓ | ✕ |
 | Nutzer | calendars, contacts, fundmail, mail, mcp, meinmcp, tasks | ✓ | nur mit Schalter |
 | Heimnetz | doclingdienst, esp32, hamelden, homeassistant, kiwix, offsite | ✓ | ✓ |
-| je nach Ziel | anrufe, dienstwacht, halive, nas, nasquelle, offline, speicher, telefon, zertpin | wie das Ziel eingestellt ist | – |
+| je nach Ziel | anrufe, dienstwacht, halive, nas, nasquelle, netproxy, offline, speicher, telefon, zertpin | wie das Ziel eingestellt ist | – |
 | immer | alle | ✕ bei Notaus | ✕ eigene Dienste, 169.254, Multicast |
 
 #### Ein Abruf für Seiten und Dateien
 
 - Eine Seite oder Datei von einer Adresse holt nur netguard.hole_oeffentlich: die Seiten aus Suchergebnissen (chat.page_text), die Webseite aufs reMarkable (über page_text) und Links als Dokument. Zuerst der Notaus, dann vor jeder Anfrage netguard.oeffentlich (http oder https, keine Zugangsdaten, jede Adresse des Namens öffentlich) und an der Verbindung noch einmal die Stufe nur Internet; höchstens 4 Weiterleitungen, jede neu geprüft, ein fester Browser-Name, Inhaltstyp aus einer festen Liste, Größe und Zeit für alles zusammen. Eine Ablehnung ist ein festes Wort (netguard.WORTE).
+
+#### Ein Proxy für ein Programm mit eigenem Netz
+
+- Ein Hilfsprogramm mit eigenem Netz-Code (yt-dlp für YouTube-Links abschreiben) kommt nie direkt hinaus: es bekommt nur die Adresse des netguard-Proxys (netproxy.Proxy) dieses einen Laufs, auf 127.0.0.1 mit einem Einmal-Schlüssel. Der Proxy nimmt nur CONNECT auf Port 443 zu einem Namen der festen Liste (ytquelle.erlaubt: youtube.com, youtu.be, youtubei.googleapis.com, i.ytimg.com und die Medien-Server *.googlevideo.com), nie eine IP und nie http; jeden Namen löst netguard.resolve mit Stufe nur Internet auf (Notaus, nur öffentlich, Live), der Tunnel geht an genau diese Adresse. Höchstens 8 Tunnel zugleich und eine Byte-Grenze für den ganzen Lauf; jede Ablehnung ist ein festes Wort (netproxy.WORTE).
 
 #### Wenn gesperrt
 
@@ -2808,6 +2822,8 @@ Gilt bei: [Schritt 6](#kn-waechter-s6), [Schritt 8](#kn-waechter-s8)
 - `app/panel/netguard.py` `client`: der Zugang nach außen für Werkzeuge ([Schritt 1](#kn-waechter-s1))
 - `app/panel/netguard.py` `hole_oeffentlich`: der eine Abruf einer öffentlichen Seite oder Datei ([Schritt 1](#kn-waechter-s1), [Schritt 12](#kn-waechter-s12))
 - `app/panel/netguard.py` `oeffentlich`: Vorprüfung jeder Anfrage: nur öffentlich, ohne Zugangsdaten ([Schritt 6](#kn-waechter-s6))
+- `app/panel/netproxy.py` `Proxy`: der netguard-Proxy für ein Programm mit eigenem Netz: CONNECT 443, feste Liste, resolve ([Schritt 1](#kn-waechter-s1), [Schritt 9](#kn-waechter-s9))
+- `app/panel/ytquelle.py` `erlaubt`: die feste Host-Liste von yt-dlp ([Schritt 1](#kn-waechter-s1))
 - `app/panel/netguard.py` `_Transport`: Passwort-Schutz, Größengrenze, Ergebnis für Mein Zustand ([Schritt 10](#kn-waechter-s10), [Schritt 11](#kn-waechter-s11))
 - `app/panel/netguard.py` `_Capped`: schneidet die Antwort ab, auch entpackt ([Schritt 11](#kn-waechter-s11))
 - `app/panel/netguard.py` `same_site`: gleiche Seite für Anmeldedaten ([Schritt 10](#kn-waechter-s10))
@@ -2817,7 +2833,7 @@ Gilt bei: [Schritt 6](#kn-waechter-s6), [Schritt 8](#kn-waechter-s8)
 - `app/panel/notaus.py` `watch`: zählt Sperren für Notaus von selbst ([Schritt 2](#kn-waechter-s2))
 - `app/panel/live.py` `outgoing`: zeigt jede Entscheidung auf Live ([Schritt 2](#kn-waechter-s2))
 
-Selbsttests: `test_hardening`, `test_notaus`, `test_waechter_umgehung`, `test_doklink`
+Selbsttests: `test_hardening`, `test_notaus`, `test_waechter_umgehung`, `test_doklink`, `test_ytquelle`
 
 ### Logs und Live
 
@@ -3542,6 +3558,7 @@ Gilt bei: [Schritt 4](#kn-internet-s4), [Schritt 5](#kn-internet-s5)
 |---|---|
 | Seiten aus der Suche | Wächter, nur Internet |
 | Links als Dokument | Wächter, nur Internet, nur Adressen der Person |
+| YouTube-Links abschreiben (yt-dlp) | netguard-Proxy, feste Host-Liste, Port 443 |
 | Mail, Kalender, Kontakte | Wächter, Stufe Nutzer |
 | reMarkable | Wächter, nur erlaubte Hosts |
 | Wetter, Fahrplan, Wikipedia | feste Adresse |

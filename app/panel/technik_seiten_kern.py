@@ -243,7 +243,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "401ba6c890",
+        "stand": "c0b67a0ada",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -289,6 +289,7 @@ SEITEN = {
             "doklink.pruefe": ["s13"], "doklink.eins": ["s13"], "doklink.neu_abrufen": ["s13"], "wissen.aufnehmen": ["s13"],
             "fundmail.dok_passt": ["s13"], "fundmail.dok_art": ["s13"], "fundmail.zu_dokumenten": ["s13"],
             "documents.renew": ["s13"], "doklink.MAX_AUF_EINMAL": ["s13"], "doklink.MAX_WARTEN": ["s13"],
+            "ytquelle.holen": ["s13"], "ytquelle.video_id": ["s13"],
         },
         "kurz": ("Wissen ist alles, was der Spark selbst weiß, ohne ins Internet zu gehen: die hochgeladenen Dokumente "
                  "jedes Profils (eine SQLite-Datei wissen.db pro Profil), das Gedächtnis, frühere Gespräche, das eigene "
@@ -910,6 +911,24 @@ SEITEN = {
                  "most the same size and hands the file to wissen.aufnehmen (source „mail“): the same rules as an "
                  "upload. The file is outside text."),
             ]),
+            (("YouTube-Links abschreiben", "Transcribe YouTube links"), [
+                ("Ist ytquelle.video_id eine Video-Nummer in der Adresse und YouTube-Links abschreiben frei, behält "
+                 "doklink nur die Adresse aus dieser Nummer (ytquelle.kanonisch). ytquelle.holen fragt yt-dlp "
+                 "(Version {ytquelle.VERSION}, Unlicense, eigene venv) zweimal, beide Male nur durch den netguard-Proxy: "
+                 "erst ohne Download (die Nummer muss stimmen, kein Livestream, höchstens chat.doc_audio_min Minuten), "
+                 "dann nur die Tonspur mit --max-filesize. Die Datei geht durch abschrift.aufnehmen wie ein Upload und "
+                 "wird in ruhigen Minuten mit Zeitmarken abgeschrieben; Titel und Kanal sind nur der Name "
+                 "(ytquelle.name_of), Herkunft „yt:“ mit der Nummer, jedes Video einmal. Ohne yt-dlp sagt der Link, "
+                 "wie man es installiert (Wort ytdlp).",
+                 "When ytquelle.video_id finds a video number in the address and Transcribe YouTube links is "
+                 "released, doklink keeps only the address made from that number (ytquelle.kanonisch). ytquelle.holen "
+                 "asks yt-dlp (version {ytquelle.VERSION}, Unlicense, own venv) twice, both times only through the "
+                 "netguard proxy: first without download (the number must match, no live stream, at most "
+                 "chat.doc_audio_min minutes), then only the sound track with --max-filesize. The file goes through "
+                 "abschrift.aufnehmen like an upload and is transcribed in quiet minutes with time marks; title and "
+                 "channel are only the name (ytquelle.name_of), origin „yt:“ with the number, every video once. "
+                 "Without yt-dlp the link says how to install it (word ytdlp)."),
+            ]),
             (("Karte hilft der Suche", "Map helps the search"), [
                 ("wissenskarte.liste(uid, worte, k) gibt Stück-Ids mit Rang ab 1 zurück, nur lesend (SQLite mit mode=ro) "
                  "und nur für das eigene Profil. Feste Regeln, nie das Modell: Die Suchwörter treffen einen Punkt, wenn "
@@ -1178,6 +1197,8 @@ SEITEN = {
             ("doklink.pruefe", ("Adresse nach festen Regeln, bevor etwas geholt wird", "an address by fixed rules before anything is fetched")),
             ("doklink.eins", ("eine Adresse holen und als Dokument aufnehmen", "fetch one address and take it in as a document")),
             ("doklink.neu_abrufen", ("Neu abrufen: ETag, SHA-256, sonst neu lesen", "fetch again: ETag, SHA-256, else read again")),
+            ("ytquelle.holen", ("YouTube-Link: Tonspur über yt-dlp und den netguard-Proxy, dann eine Aufnahme", "YouTube link: sound track through yt-dlp and the netguard proxy, then a recording")),
+            ("ytquelle.video_id", ("die Video-Nummer einer YouTube-Adresse, sonst nichts", "the video number of a YouTube address, nothing else")),
             ("wissen.aufnehmen", ("ein Weg hinein für Dinge, die kein Upload sind", "one way in for things that are no upload")),
             ("fundmail.dok_passt", ("Knopf am Anhang: Art und Größe nach fester Regel", "button at an attachment: kind and size by a fixed rule")),
             ("fundmail.dok_art", ("Art aus documents.TYPES nach der Endung", "a kind from documents.TYPES by the ending")),
@@ -1193,7 +1214,7 @@ SEITEN = {
             ("wissensmessung._synth", ("das Wegwerf-Profil aus festem Zufall, mit den Grenzen des Codes", "the throwaway profile from a fixed seed, with the code's limits")),
             ("wissensmessung.MESSTEILE", ("die Messteile, erweiterbar", "the measuring parts, extensible")),
         ],
-        "tests": ["test_wissen", "test_auswertung", "test_abschrift", "test_doklink", "test_wissensdoppelt", "test_nachsortieren", "test_abschnitte", "test_lokal", "test_kiwix", "test_gedaechtnis",
+        "tests": ["test_wissen", "test_auswertung", "test_abschrift", "test_doklink", "test_ytquelle", "test_wissensdoppelt", "test_nachsortieren", "test_abschnitte", "test_lokal", "test_kiwix", "test_gedaechtnis",
                   "test_gedaechtnis_grenze", "test_gemerkt",
                   "test_suchpruefung", "test_wissensbuch", "test_wissenskarte", "test_wissensknoten", "test_kartensuche",
                   "test_wissensmessung", "test_wissenstempo"],

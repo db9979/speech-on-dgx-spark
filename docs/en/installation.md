@@ -127,6 +127,12 @@ For the screen in Remote access the computer with the panel builds guacd itself 
 sudo ./install.sh --fernbild
 ```
 
+For Features → Transcribe YouTube links, `--youtube` (on the panel computer) puts yt-dlp (license Unlicense) into an environment of its own, `/opt/speech-spark/venv-ytdlp`: exactly the version and the SHA-256 of the wheel from `app/requirements-ytdlp.lock`, without its optional packages (`pip --no-deps --require-hashes --only-binary :all:`). Without the option nothing of it is fetched; once there, every update keeps it at the version of that file. The panel starts it only with fixed options and only through its netguard proxy (`app/panel/netproxy.py`, fixed host list). Then switch on Features → Own documents → Transcribe recordings → Transcribe YouTube links (Links as documents must be on).
+
+```bash
+sudo ./install.sh --youtube
+```
+
 ## Developing on the Pi with OpenCode
 
 A guide for beginners: you change the Spark yourself on the panel computer (such as the Raspberry Pi), with OpenCode in the terminal and the Spark's own language model, without a cloud and without GitHub. OpenCode works as its own user `spark-dev` in its own clone; the running Spark, its data and keys stay out of reach. Nothing is installed until an admin wants it, after a quick test and like an update.

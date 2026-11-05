@@ -1589,7 +1589,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "e Nachricht noch einmal, llm_tor.entschaerft). Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt; nach einer Mail sind es 20, dazu gehört alles, was ins Internet fragt (Websuche, Wikipedia, Wetter, Fahrplan), damit kein Suchwort Mail-Inhalt hinausträgt. Ob das hält, prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed); eine Seite oder Datei holt nur netguard.hole_oeffentlich (Notaus zuerst, nur öffentlich auch nach jeder Weiterleitung, Größe, Zeit, Inhaltstyp), Links als Dokument nimmt eine Adresse nur aus den eigenen Worten der Person (doklink.eigene), und die Seite wird ein Dokument wie jedes: Daten; ein Tunnel des Fernzugangs nur zu Zielen nach fernweb.ziel_ok: dort 127.0.0.1 und die eigenen Adressen des Systems, die sein Anker selbst meldet. Eine Mail mit HTML zeigt die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick über den Wächter, ein Link erst nach der Frag"
+"text": "e Nachricht noch einmal, llm_tor.entschaerft). Ab da sind 13 handelnde Werkzeuge gesperrt, auch im nächsten Zug, und nichts davon wird ins Gedächtnis gelernt; nach einer Mail sind es 20, dazu gehört alles, was ins Internet fragt (Websuche, Wikipedia, Wetter, Fahrplan), damit kein Suchwort Mail-Inhalt hinausträgt. Ob das hält, prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed); eine Seite oder Datei holt nur netguard.hole_oeffentlich (Notaus zuerst, nur öffentlich auch nach jeder Weiterleitung, Größe, Zeit, Inhaltstyp), Links als Dokument nimmt eine Adresse nur aus den eigenen Worten der Person (doklink.eigene), und die Seite wird ein Dokument wie jedes: Daten; ein YouTube-Link geht als Adresse aus der Video-Nummer allein an das gepinnte yt-dlp mit festen Optionen (ytquelle.befehl), dessen ganzer Verkehr nur durch den netguard-Proxy läuft (netproxy.Proxy: feste Host-Liste, Port 443, netguard.resolve); ein Tunnel des Fernzugangs nur zu Zielen nach fernweb.ziel_ok: dort 127.0.0.1 und die eigenen Adressen des Systems, die sein Anker selbst meldet. Eine Mail mit HTML zeig"
 },
 {
 "lang": "de",
@@ -1597,7 +1597,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "e mit seiner echten Adresse. 7. Sprachmodell schlägt vor: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht. 8. Ändert es etwas?: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät, oder dem Ja-Knopf seiner Karte „Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell; ebenso führt nur ihr Klick Punkte der Wissenskarte zusammen, benennt sie um oder löscht sie (mit dem Code von „Bestätigen“); von selbst nur eine feste Regel bei gleichem Namen in anderer Schreibweise (wissensdoppelt.aehnlich), nie das Modell, und nie gegen ihr „Verschieden“. Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person"
+"text": "t die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick über den Wächter, ein Link erst nach der Frage mit seiner echten Adresse. 7. Sprachmodell schlägt vor: Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das nicht angeboten war, läuft es nicht. 8. Ändert es etwas?: Lesen geht sofort. Wer etwas ändert (Licht, Mail senden, Termin, Anruf), legt einen Vorschlag ab; er läuft erst nach einem schlichten „Ja“ auf genau diesen Vorschlag, vom selben Gerät, oder dem Ja-Knopf seiner Karte „Wartet auf dein Ja“ (eigenes Profil, dieselbe Funktion wie das getippte Ja). Home Assistant nur aus einer Allowlist. Mail löscht nur die Person selbst (in den Papierkorb, endgültig nur nach Rückfrage), nie das Modell; ebenso führt nur ihr Klick Punkte der Wissenskarte zusammen, benennt sie um oder löscht sie (mit dem Code von „Bestätigen“); von selbst nur eine feste Regel bei gleichem Namen in anderer Schreibweise (wissensdoppelt.aehnlich), nie das Modell, und nie gegen ihr „Verschieden“. Knöpfe auf Karten im "
 },
 {
 "lang": "de",
@@ -1605,7 +1605,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " es selbst tut. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette (guard.verify prüft sie täglich); einen Bruch, den ein Admin geprüft hat, bestätigt er mit frischem Code und einem Grund der festen Liste (guard.ack_break): ein neuer Eintrag, die Kette bleibt, und nur genau diese Zeile gilt als geprüft. Der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal), Gedächtnis und Gespräche ganz versiegelt im Ordner des Profils (profiles.write_own). Was ein Dienst für ein Profil vorhält (Mail-Vorrat, Mails, Anhänge, Termine und Kontakte in Finden), liegt nur mit AES-GCM versiegelt (vorrat.seal), die Wörter im Suchindex nur als HMAC-Marken mit einem Schlüssel je Profil (vorrat.marke); ohne Schlüssel wird nichts geschrieben. Schlagworte, die das Sprachmodell für Finden vorschlägt, sind Daten: fund.pruefe behält nur Kategorien "
+"text": "Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen würde, öffnet nur die Seite, auf der die Person es selbst tut. 9. Antwort prüfen: Zeiten, Daten und Beträge, die nirgends in den Quellen stehen, fallen heraus (answercheck.unsupported). Passwörter, Codes und Schlüssel werden nie gesprochen (textnorm.hide_secrets). Die Oberfläche zeigt Modelltext nie als HTML. 10. Spuren: Logs nur mit festen Wörtern und Zahlen. Änderungen an Zugängen und Schutz schreibt guard.log mit einer SHA-256-Kette (guard.verify prüft sie täglich); einen Bruch, den ein Admin geprüft hat, bestätigt er mit frischem Code und einem Grund der festen Liste (guard.ack_break): ein neuer Eintrag, die Kette bleibt, und nur genau diese Zeile gilt als geprüft. Der Wachposten meldet Auffälliges an die Admins. Geheimnisse liegen versiegelt im vault (vault.seal), Gedächtnis und Gespräche ganz versiegelt im Ordner des Profils (profiles.write_own). Was ein Dienst für ein Profil vorhält (Mail-Vorrat, Mails, Anhänge, Termine und Kontakte in Finden), liegt nur mit AES-GCM versiegelt (vo"
 },
 {
 "lang": "de",
@@ -1669,7 +1669,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": " des Modells aus jeder Nachricht nehmen (Schritt 6) - app/panel/mailansicht.py clean: HTML einer Mail nur bereinigt, ohne Skript und ohne Laden von außen (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/netguard.py hole_oeffentlich: der eine Abruf einer öffentlichen Seite oder Datei: Notaus zuerst, nur öffentlich (Schritt 6) - app/panel/doklink.py eigene: Adressen fürs Werkzeug nur aus den eigenen Worten (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/guard.py verify: prüft die Kette, bestätigte Brüche nur bei gleicher Zeile und Prüfsumme (Schritt 10) - app/panel/guard.py ack_break: bestätigt nur den Bruch, den die Prüfung gerade meldet (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt ablegen (Schritt 10) - app/panel/profiles.py write_own: Gedächtnis und Gespräche ganz versiegelt (Schritt 10) - app/panel/vorrat.py key: ein Schlüssel je Zweck aus secret.key (Schritt 10) - app/panel/meinedaten.py api_export"
+"text": " des Modells aus jeder Nachricht nehmen (Schritt 6) - app/panel/mailansicht.py clean: HTML einer Mail nur bereinigt, ohne Skript und ohne Laden von außen (Schritt 6) - app/panel/netguard.py allowed: ob eine Verbindung nach außen sein darf (Schritt 6) - app/panel/netguard.py hole_oeffentlich: der eine Abruf einer öffentlichen Seite oder Datei: Notaus zuerst, nur öffentlich (Schritt 6) - app/panel/doklink.py eigene: Adressen fürs Werkzeug nur aus den eigenen Worten (Schritt 6) - app/panel/ytquelle.py befehl: der feste Aufruf von yt-dlp: nur die Adresse aus der Video-Nummer (Schritt 6) - app/panel/netproxy.py Proxy: der netguard-Proxy: der einzige Weg von yt-dlp hinaus (Schritt 6) - app/panel/answercheck.py unsupported: Zahl ohne Quelle fällt heraus (Schritt 9) - app/textnorm.py hide_secrets: Geheimnisse werden nie gesprochen (Schritt 9) - app/panel/guard.py log: Änderungsprotokoll mit Prüfkette (Schritt 10) - app/panel/guard.py verify: prüft die Kette, bestätigte Brüche nur bei gleicher Zeile und Prüfsumme (Schritt 10) - app/panel/guard.py ack_break: bestätigt nur den Bruch, den die Prüfung gerade meldet (Schritt 10) - app/panel/vault.py seal: Geheimnisse versiegelt ablegen (Schritt "
 },
 {
 "lang": "de",
@@ -1677,7 +1677,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": ": eigene Daten nur nach frischem Code, Passkey oder PIN (Schritt 3) - app/panel/meinedaten.py build: die ZIP nur aus dem Datei-Register, ohne Geheimnisse (Schritt 10) - app/panel/profiles.py _cap: Obergrenze des Gedächtnisses ohne Datenverlust (Schritt 8) - app/panel/gedaechtnis.py offer: Gelerntes ersetzt nie Bestätigtes: nur ein Angebot (Schritt 8) - app/panel/gemerkt.py take_back: Rückgängig nur für den eigenen, unveränderten Fakt (Schritt 8) - app/panel/wissensdoppelt.py aehnlich: Punkte der Karte von selbst nur nach fester Regel zusammen, nie gegen „Verschieden“ (Schritt 8)"
+"text": "10) - app/panel/profiles.py write_own: Gedächtnis und Gespräche ganz versiegelt (Schritt 10) - app/panel/vorrat.py key: ein Schlüssel je Zweck aus secret.key (Schritt 10) - app/panel/meinedaten.py api_export: eigene Daten nur nach frischem Code, Passkey oder PIN (Schritt 3) - app/panel/meinedaten.py build: die ZIP nur aus dem Datei-Register, ohne Geheimnisse (Schritt 10) - app/panel/profiles.py _cap: Obergrenze des Gedächtnisses ohne Datenverlust (Schritt 8) - app/panel/gedaechtnis.py offer: Gelerntes ersetzt nie Bestätigtes: nur ein Angebot (Schritt 8) - app/panel/gemerkt.py take_back: Rückgängig nur für den eigenen, unveränderten Fakt (Schritt 8) - app/panel/wissensdoppelt.py aehnlich: Punkte der Karte von selbst nur nach fester Regel zusammen, nie gegen „Verschieden“ (Schritt 8)"
 },
 {
 "lang": "de",
@@ -1973,7 +1973,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Alltagsquote",
 "title": "Alltagsquote",
-"text": "- Die Testsätze (225) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
+"text": "- Die Testsätze (228) halten jede gemeldete Fehlzuordnung fest und müssen alle stimmen. Die Alltagssätze (216) wurden nie zum Einstellen benutzt: sie messen, wie viele richtig landen, von einem Hinweis geschützt werden, offen bleiben oder falsch landen. Ein Selbsttest verbietet, dass richtig plus geschützt sinkt oder falsch steigt."
 },
 {
 "lang": "de",
@@ -2005,7 +2005,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 27 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 225 eingebaute Testsätze (Schritt 4, Schritt 5) - 216 Alltagssätze zum Messen (Schritt 14) - 66 Sätze der Quellen-Messbank (Schritt 14) - 150 ms höchstens für die Treffer-Probe der Quellen-Weiche (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
+"text": "- 27 Gruppen der Weiche (Schritt 4, Schritt 6) - 2 Gruppen höchstens, die noch eingrenzen (Schritt 6) - 80 Zeichen höchstens für eine Folgefrage (Schritt 8) - 4 Sekunden höchstens für die Wahl des Modells (Schritt 10) - 300 ms Wartezeit mit „Schneller Antwortbeginn“ (Schritt 10) - 80 % Standard-Schwelle der Einordnung (Schritt 10) - 228 eingebaute Testsätze (Schritt 4, Schritt 5) - 216 Alltagssätze zum Messen (Schritt 14) - 66 Sätze der Quellen-Messbank (Schritt 14) - 150 ms höchstens für die Treffer-Probe der Quellen-Weiche (Schritt 14) - 20 Versionen für Rückgängig (Schritt 4)"
 },
 {
 "lang": "de",
@@ -2435,6 +2435,14 @@
 "lang": "de",
 "src": "architektur",
 "file": "Architektur und Datenfluss",
+"head": "YouTube-Links abschreiben",
+"title": "YouTube-Links abschreiben",
+"text": "- Ist ytquelle.video_id eine Video-Nummer in der Adresse und YouTube-Links abschreiben frei, behält doklink nur die Adresse aus dieser Nummer (ytquelle.kanonisch). ytquelle.holen fragt yt-dlp (Version 2026.10.26, Unlicense, eigene venv) zweimal, beide Male nur durch den netguard-Proxy: erst ohne Download (die Nummer muss stimmen, kein Livestream, höchstens chat.doc_audio_min Minuten), dann nur die Tonspur mit --max-filesize. Die Datei geht durch abschrift.aufnehmen wie ein Upload und wird in ruhigen Minuten mit Zeitmarken abgeschrieben; Titel und Kanal sind nur der Name (ytquelle.name_of), Herkunft „yt:“ mit der Nummer, jedes Video einmal. Ohne yt-dlp sagt der Link, wie man es installiert (Wort ytdlp)."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
 "head": "Karte hilft der Suche",
 "title": "Karte hilft der Suche",
 "text": "- wissenskarte.liste(uid, worte, k) gibt Stück-Ids mit Rang ab 1 zurück, nur lesend (SQLite mit mode=ro) und nur für das eigene Profil. Feste Regeln, nie das Modell: Die Suchwörter treffen einen Punkt, wenn sein Name oder ein anderer Name ganz in der Frage steht (verglichen wie wissenskarte.ent_norm) oder ein Wort des Namens ab 4 Buchstaben, das keine Zahl und keine Rechtsform ist (wissenskarte.trifft); höchstens 20 Punkte. Dazu kommen ihre Nachbarn einen Schritt weit (dieselbe Abfrage wie wissenskarte.rund_um) und von allen die Stellen in genutzten, gelesenen Dokumenten. Eine Stelle mit einem genannten Punkt steht vor einer mit nur Nachbarn, mehr Punkte vor weniger, höchstens 50. - documents.search mischt die Liste wie die anderen mit 60 plus Platz, gewichtet mit 0.5, und nur Stellen, die dieselbe Bedingung der Suche durchlässt (documents._karte). Ein so gefundener Treffer trägt „karte“, unter der Antwort steht „über die Wissenskarte“. Die Suchprüfung misst die Mischung mit der Karte als eigenen Balken. Fällt die Karte aus, sucht die Suche ohne sie weiter und schreibt eine Zeile „wissen: kartensuche fehler“."
@@ -2597,7 +2605,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_wissen, test_auswertung, test_abschrift, test_doklink, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung, test_wissenstempo"
+"text": "Selbsttests: test_wissen, test_auswertung, test_abschrift, test_doklink, test_ytquelle, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung, test_wissenstempo"
 },
 {
 "lang": "de",
@@ -2621,7 +2629,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Werkzeug will nach außen: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 34 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig. 2. Name einmal auflösen: resolve() fragt den Namen genau einmal ab. Hat er mehrere Adressen, muss jede erlaubt sein, sonst ist Schluss. 3. Eigener Dienst?: Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu). Laufen die Modelle auf einem anderen Rechner (models.host), gelten seine Adressen genauso (model_addresses). 4. Internet und Notaus an?: Ist die Adresse öffentlich und der Notaus mindestens auf Stufe 1, geht nichts ins Internet, egal welche Stufe das Werkzeug hat. Das Heimnetz bleibt erreichbar, wie die Stufe es erlaubt. 5. Öffentliche Adresse?: Eine öffentliche Adresse ist auf jeder Stufe erlaubt. 6. Stufe „nur Internet“?: Was aus Suchergebnissen oder Antworten kommt, darf nie ins Heimnetz (feeds, geraeteupdate, ghtoken, mailansic"
+"text": "1. Werkzeug will nach außen: Alles, was eine Adresse aus Einstellungen oder aus fremdem Text ansteuert, holt sich seinen Zugang über netguard.client mit einer Stufe (heute 37 Module). Feste eigene Dienste wie das Sprachmodell laufen direkt; welche das sind und warum, steht in netguard.DIRECT_OK, ein Selbsttest hält die Liste vollständig. 2. Name einmal auflösen: resolve() fragt den Namen genau einmal ab. Hat er mehrere Adressen, muss jede erlaubt sein, sonst ist Schluss. 3. Eigener Dienst?: Die Ports der eigenen Dienste sind auf dieser Maschine gesperrt: auf Loopback und auf jeder eigenen Adresse im LAN oder VPN (own_addresses liest sie jede Minute neu). Laufen die Modelle auf einem anderen Rechner (models.host), gelten seine Adressen genauso (model_addresses). 4. Internet und Notaus an?: Ist die Adresse öffentlich und der Notaus mindestens auf Stufe 1, geht nichts ins Internet, egal welche Stufe das Werkzeug hat. Das Heimnetz bleibt erreichbar, wie die Stufe es erlaubt. 5. Öffentliche Adresse?: Eine öffentliche Adresse ist auf jeder Stufe erlaubt. 6. Stufe „nur Internet“?: Was aus Suchergebnissen oder Antworten kommt, darf nie ins Heimnetz (feeds, geraeteupdate, ghtoken, mailansic"
 },
 {
 "lang": "de",
@@ -2654,6 +2662,14 @@
 "head": "Ein Abruf für Seiten und Dateien",
 "title": "Ein Abruf für Seiten und Dateien",
 "text": "- Eine Seite oder Datei von einer Adresse holt nur netguard.hole_oeffentlich: die Seiten aus Suchergebnissen (chat.page_text), die Webseite aufs reMarkable (über page_text) und Links als Dokument. Zuerst der Notaus, dann vor jeder Anfrage netguard.oeffentlich (http oder https, keine Zugangsdaten, jede Adresse des Namens öffentlich) und an der Verbindung noch einmal die Stufe nur Internet; höchstens 4 Weiterleitungen, jede neu geprüft, ein fester Browser-Name, Inhaltstyp aus einer festen Liste, Größe und Zeit für alles zusammen. Eine Ablehnung ist ein festes Wort (netguard.WORTE)."
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ein Proxy für ein Programm mit eigenem Netz",
+"title": "Ein Proxy für ein Programm mit eigenem Netz",
+"text": "- Ein Hilfsprogramm mit eigenem Netz-Code (yt-dlp für YouTube-Links abschreiben) kommt nie direkt hinaus: es bekommt nur die Adresse des netguard-Proxys (netproxy.Proxy) dieses einen Laufs, auf 127.0.0.1 mit einem Einmal-Schlüssel. Der Proxy nimmt nur CONNECT auf Port 443 zu einem Namen der festen Liste (ytquelle.erlaubt: youtube.com, youtu.be, youtubei.googleapis.com, i.ytimg.com und die Medien-Server *.googlevideo.com), nie eine IP und nie http; jeden Namen löst netguard.resolve mit Stufe nur Internet auf (Notaus, nur öffentlich, Live), der Tunnel geht an genau diese Adresse. Höchstens 8 Tunnel zugleich und eine Byte-Grenze für den ganzen Lauf; jede Ablehnung ist ein festes Wort (netproxy.WORTE)."
 },
 {
 "lang": "de",
@@ -2693,7 +2709,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/netguard.py allowed: die Regel: nichts oder der Grund (Schritt 3, Schritt 7, Schritt 8) - app/panel/netguard.py resolve: einmal auflösen, jede Adresse prüfen, Live melden (Schritt 2) - app/panel/netguard.py client: der Zugang nach außen für Werkzeuge (Schritt 1) - app/panel/netguard.py hole_oeffentlich: der eine Abruf einer öffentlichen Seite oder Datei (Schritt 1, Schritt 12) - app/panel/netguard.py oeffentlich: Vorprüfung jeder Anfrage: nur öffentlich, ohne Zugangsdaten (Schritt 6) - app/panel/netguard.py _Transport: Passwort-Schutz, Größengrenze, Ergebnis für Mein Zustand (Schritt 10, Schritt 11) - app/panel/netguard.py _Capped: schneidet die Antwort ab, auch entpackt (Schritt 11) - app/panel/netguard.py same_site: gleiche Seite für Anmeldedaten (Schritt 10) - app/panel/netguard.py own_addresses: alle Adressen dieser Maschine (Schritt 3) - app/panel/netguard.py model_addresses: die Adressen des Modell-Rechners, wenn er ein anderer ist (Schritt 3) - app/panel/netguard.py IMAP4_SSL: Mail über die geprüfte Adresse (Schritt 9) - app/panel/notaus.py watch: zählt Sperren für Notaus von selbst (Schritt 2) - app/panel/live.py outgoing: zeigt jede Entscheidung auf Live (Schri"
+"text": "- app/panel/netguard.py allowed: die Regel: nichts oder der Grund (Schritt 3, Schritt 7, Schritt 8) - app/panel/netguard.py resolve: einmal auflösen, jede Adresse prüfen, Live melden (Schritt 2) - app/panel/netguard.py client: der Zugang nach außen für Werkzeuge (Schritt 1) - app/panel/netguard.py hole_oeffentlich: der eine Abruf einer öffentlichen Seite oder Datei (Schritt 1, Schritt 12) - app/panel/netguard.py oeffentlich: Vorprüfung jeder Anfrage: nur öffentlich, ohne Zugangsdaten (Schritt 6) - app/panel/netproxy.py Proxy: der netguard-Proxy für ein Programm mit eigenem Netz: CONNECT 443, feste Liste, resolve (Schritt 1, Schritt 9) - app/panel/ytquelle.py erlaubt: die feste Host-Liste von yt-dlp (Schritt 1) - app/panel/netguard.py _Transport: Passwort-Schutz, Größengrenze, Ergebnis für Mein Zustand (Schritt 10, Schritt 11) - app/panel/netguard.py _Capped: schneidet die Antwort ab, auch entpackt (Schritt 11) - app/panel/netguard.py same_site: gleiche Seite für Anmeldedaten (Schritt 10) - app/panel/netguard.py own_addresses: alle Adressen dieser Maschine (Schritt 3) - app/panel/netguard.py model_addresses: die Adressen des Modell-Rechners, wenn er ein anderer ist (Schritt 3) - app"
 },
 {
 "lang": "de",
@@ -2701,7 +2717,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "tt 2)"
+"text": "/panel/netguard.py IMAP4_SSL: Mail über die geprüfte Adresse (Schritt 9) - app/panel/notaus.py watch: zählt Sperren für Notaus von selbst (Schritt 2) - app/panel/live.py outgoing: zeigt jede Entscheidung auf Live (Schritt 2)"
 },
 {
 "lang": "de",
@@ -2709,7 +2725,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_hardening, test_notaus, test_waechter_umgehung, test_doklink"
+"text": "Selbsttests: test_hardening, test_notaus, test_waechter_umgehung, test_doklink, test_ytquelle"
 },
 {
 "lang": "de",
@@ -5726,6 +5742,38 @@
 "head": "Sprach-Chat",
 "title": "Aufnahmen abschreiben, Push 3a (V01.1.336, Plan *open-notebook* Stufe 3)",
 "text": "sttests tests/test_abschrift.py."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "YouTube-Links abschreiben, Push 3b (V01.1.342, Plan *open-notebook* Stufe 3b, Dominik: „YouTube ja, über ein festgelegtes yt-dlp in eigener venv, nur über einen netguard-Proxy mit fester Host-Liste, mit eigenem Unterschalter“): Admin-Schalter *Funktionen → Eigene Dokumente → Aufnahmen abschreiben → YouTube-Links abschreiben* (chat.doc_youtube, ab Werk aus; braucht dazu *Links als Dokument* und *Aufnahmen abschreiben*; kein Profilschalter, der Admin sperrt einzelne Profile, Gäste nie). Eingang nur über Links als Dokument: das Feld „Link hinzufügen“ unter Ich → Dokumente oder das Werkzeug link_als_dokument mit einer Adresse, die wörtlich in der eigenen Nachricht steht, nie aus einer Seite, Mail oder einem Suchergebnis. Findet ytquelle.video_id eine Video-Nummer (watch?v=, youtu.be/, shorts/, live/, embed/; nur youtube.com, www., m., music. und youtu.be, ohne Zugangsdaten, keine Playlist-Seite), behält doklink nur die daraus gebaute Adresse https://www.youtube.com/watch?v=<Nummer> (ytquelle.kanonisch; gleiche Videos in anderer Schreibweise sind damit doppelt). yt-dlp: Lizenz Unlicense, genau Version 2026.10.26 mit der SHA-256 des Wheels in app/requirements-ytdlp.lock (ohne seine optio"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "nalen Pakete), installiert nur mit sudo ./install.sh --youtube auf dem Panel-Rechner nach /opt/speech-spark/venv-ytdlp (pip --no-deps --require-hashes --only-binary :all:, einmal je Fassung der Datei; ein Update hält es danach aktuell). ytquelle.da prüft die Version auch beim Lauf; fehlt yt-dlp oder ist es eine andere Version, versucht der Spark nichts und die Zeile sagt „yt-dlp ist auf dem Panel-Rechner nicht installiert (sudo ./install.sh --youtube, Anleitung: Funktionen → YouTube-Links abschreiben)“. Aufruf ohne Shell (asyncio.create_subprocess_exec), isoliert (python -I -m yt_dlp, nur PATH, HOME, TMPDIR, LANG und XDG-Ordner im eigenen leeren Ordner, keine Proxy-Variablen) und nur mit den festen Optionen ytquelle.FEST: --ignore-config --no-plugin-dirs --no-js-runtimes --no-remote-components --no-cookies --no-cookies-from-browser --no-cache-dir --no-playlist --use-extractors youtube --no-exec --fixup never --downloader native, -f bestaudio[protocol^=http], --max-filesize = chat.doc_audio_mb, --ffmpeg-location auf einen leeren Ordner. netguard-Proxy (netproxy.py, neu): für jeden Lauf ein CONNECT-Proxy auf 127.0.0.1 mit Zufallsport und Einmal-Schlüssel (Proxy-Authorization, Verglei"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ch in fester Zeit); nur CONNECT auf Port 443, nur Namen der festen Liste ytquelle.erlaubt (youtube.com, www.youtube.com, m.youtube.com, youtu.be, consent.youtube.com, youtubei.googleapis.com, i.ytimg.com und genau ein Namensteil vor .googlevideo.com), nie eine IP; jeder Name über netguard.resolve(host, 443, PUBLIC) (nur öffentliche Adressen, Notaus, Live), der Tunnel geht an genau diese Adresse; höchstens 8 Tunnel zugleich, chat.doc_audio_mb + 30 MB von den Servern je Lauf, sonst schließen alle Tunnel. Ablehnungen sind feste Wörter (netproxy.WORTE: methode, anmeldung, port, host, privat, notaus, netz, viele, groesse). netguard.DIRECT_OK nennt netproxy als „geprueft“. Ablauf (ytquelle.holen, aus dem Lauf von Links als Dokument): erst ein Blick ohne Download (-J, 90 s): die Nummer muss stimmen, kein Livestream und keine Premiere, Länge höchstens chat.doc_audio_min, bekannte Größe höchstens chat.doc_audio_mb; dann nur die Tonspur (höchstens 30 Minuten) in einen frischen Ordner docs/audio-wait/yt-…/ (0700, danach gelöscht). Die Datei geht durch abschrift.aufnehmen wie ein Upload (erste Bytes, Größe, Länge mit ffprobe, Warteschlange, Speicher, zweiter Anmeldeschritt) und wird in ruhigen"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": " Minuten mit Zeitmarken abgeschrieben (Stufe 3a). Titel und Kanal sind nur Daten: ohne Steuer- und Markup-Zeichen, gekürzt, als Name „Titel · Kanal.m4a“ (ytquelle.name_of); Herkunft yt:<Nummer>, jedes Video einmal; „Neu abrufen“ gibt es für die Abschrift nicht. Fehlertext von yt-dlp kommt nie ins Log, er wird nur mit festen Mustern zu einem Wort (video, live, laenge, format, groesse, host, zeit, netz). Journal ytquelle: … (Bereich wissen), Live: Kasten Links mit „YouTube: heute n Tonspuren, kB, abgelehnt, fremder Host gesperrt“ oder „yt-dlp fehlt“. Weiche: Abschrift-Wörter mit einer Adresse („Mach eine Abschrift von https://youtu.be/…“) gehen wie „Speicher … als Dokument“ zu Links als Dokument. Ohne JavaScript-Laufzeit (bewusst nicht installiert) liefert YouTube manchen Videos keine Tonspur; dann steht „keine Tonspur zum Holen“ da. Selbsttest test_ytquelle (ein anderer Host und eine private Adresse am Proxy abgelehnt, Notaus, Schlüssel, Methode, Port, Byte-Grenze, feste Optionen, Version und Hash, ohne yt-dlp die Meldung mit Weg, Live und zu lang vor dem Download abgelehnt, kein Link aus fremdem Text, Logs ohne Adresse und Titel)."
 },
 {
 "lang": "de",
@@ -14165,6 +14213,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Meine Daten",
 "title": "Meine Daten",
+"text": "- YouTube-Links abschreiben (Funktionen → Meine Daten → „YouTube-Links abschreiben“; baut auf „Aufnahmen abschreiben“; Ich → Dokumente): Ein YouTube-Link unter Ich → Dokumente → „Link hinzufügen“ (oder „Speicher https://youtu.be/… als Dokument“) wird kein Seiten-Dokument: der Spark holt nur die Tonspur des Videos und schreibt sie ab wie eine hochgeladene Aufnahme, mit Zei …"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
 "text": "- Suchprüfung (Funktionen → Meine Daten → „Suchprüfung“; baut auf „Eigene Dokumente“; Ich → Dokumente): Prüffragen mit bekannter richtiger Stelle zeigen, wie oft die Suche in deinen Dokumenten das Richtige findet."
 },
 {
@@ -15742,6 +15798,14 @@
 "head": "Musik machen (optional)",
 "title": "Musik machen (optional)",
 "text": "-Knopf, woran es lag („guacd auf dem Spark nicht installiert: …“), und das nächste Update versucht es wieder. Eine guacd-Einheit der Distribution bleibt gesperrt; es läuft nur speech-spark-guacd auf 127.0.0.1:4822, die das Panel startet, wenn ein Bildschirm aufgeht. Ausschalten deinstalliert nichts. Danach auf dem System einmal sudo spark-anker bildschirm."
+},
+{
+"lang": "de",
+"src": "installation",
+"file": "Installation im Detail",
+"head": "Musik machen (optional)",
+"title": "Musik machen (optional)",
+"text": "Für Funktionen → YouTube-Links abschreiben legt --youtube (auf dem Panel-Rechner) yt-dlp (Lizenz Unlicense) in eine eigene Umgebung /opt/speech-spark/venv-ytdlp: genau die Version und die SHA-256 des Wheels aus app/requirements-ytdlp.lock, ohne seine optionalen Pakete (pip --no-deps --require-hashes --only-binary :all:). Ohne die Option wird nichts davon geladen; einmal da, hält jedes Update es auf der Version der Datei. Das Panel startet es nur mit festen Optionen und nur über seinen netguard-Proxy (app/panel/netproxy.py, feste Host-Liste). Danach Funktionen → Eigene Dokumente → Aufnahmen abschreiben → YouTube-Links abschreiben einschalten (Links als Dokument muss an sein)."
 },
 {
 "lang": "de",
@@ -19829,7 +19893,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ter a mail it is 20, everything that asks the internet among them (web search, Wikipedia, weather, transit), so no search word carries mail content out. Whether this holds is checked by the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed); a page or file is fetched only by netguard.hole_oeffentlich (kill switch first, public only also after every redirect, size, time, content type), links as documents take an address only from the person's own words (doklink.eigene), and the page becomes a document like any: data; a remote-access tunnel only to targets by fernweb.ziel_ok: 127.0.0.1 there and the system's own addresses its anchor reports itself. A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures from outside only after the own click and through the guard, a link only after the question with its real address. 7. The language model proposes: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not"
+"text": "ter a mail it is 20, everything that asks the internet among them (web search, Wikipedia, weather, transit), so no search word carries mail content out. Whether this holds is checked by the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed); a page or file is fetched only by netguard.hole_oeffentlich (kill switch first, public only also after every redirect, size, time, content type), links as documents take an address only from the person's own words (doklink.eigene), and the page becomes a document like any: data; a YouTube link goes as an address built from the video number alone to the pinned yt-dlp with fixed options (ytquelle.befehl), whose whole traffic runs only through the netguard proxy (netproxy.Proxy: fixed host list, port 443, netguard.resolve); a remote-access tunnel only to targets by fernweb.ziel_ok: 127.0.0.1 there and the system's own addresses its anchor reports itself. A mail with HTML is shown only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame without script with its own CSP; pictures from outside only after the own"
 },
 {
 "lang": "en",
@@ -19837,7 +19901,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " run. 8. Does it change something?: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model; likewise only their click merges, renames or deletes points of the knowledge map (with the code of „Confirm“); by itself only a fixed rule for the same name in another spelling (wissensdoppelt.aehnlich), never the model, and never against their „Different“. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it. 9. Check the answer: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). Th"
+"text": " click and through the guard, a link only after the question with its real address. 7. The language model proposes: The model words the answer and picks from what is left after the steps before. If it calls a tool that was not offered, it does not run. 8. Does it change something?: Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model; likewise only their click merges, renames or deletes points of the knowledge map (with the code of „Confirm“); by itself only a fixed rule for the same name in another spelling (wissensdoppelt.aehnlich), never the model, and never against their „Different“. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something witho"
 },
 {
 "lang": "en",
@@ -19845,7 +19909,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "e pages never show model text as HTML. 10. Traces: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain (guard.verify checks it daily); a break an admin has checked is confirmed with a fresh code and a reason of the fixed list (guard.ack_break): a new entry, the chain stays, and only exactly that line counts as checked. The Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own). What a service keeps for a profile (the mail supply, mail, attachments, appointments and contacts in Find) lies only sealed with AES-GCM (vorrat.seal), the words in the search index only as HMAC marks with a key per profile (vorrat.marke); without a key nothing is written. Tags the language model proposes for Find are data: fund.pruefe keeps only categories of the fixed list and names that stand in the entry word for word, never a command word."
+"text": "ut a proposal only opens the page where the person does it. 9. Check the answer: Times, dates and amounts that are nowhere in the sources are dropped (answercheck.unsupported). Passwords, codes and keys are never spoken (textnorm.hide_secrets). The pages never show model text as HTML. 10. Traces: Logs carry only fixed words and numbers. Changes to access and protection are written by guard.log with a SHA-256 chain (guard.verify checks it daily); a break an admin has checked is confirmed with a fresh code and a reason of the fixed list (guard.ack_break): a new entry, the chain stays, and only exactly that line counts as checked. The Wachposten tells the admins about anything unusual. Secrets lie sealed in the vault (vault.seal), memory and conversations sealed whole in the profile's folder (profiles.write_own). What a service keeps for a profile (the mail supply, mail, attachments, appointments and contacts in Find) lies only sealed with AES-GCM (vorrat.seal), the words in the search index only as HMAC marks with a key per profile (vorrat.marke); without a key nothing is written. Tags the language model proposes for Find are data: fund.pruefe keeps only categories of the fixed list "
 },
 {
 "lang": "en",
@@ -19909,7 +19973,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "py clean: a mail's HTML only cleaned, without script and without loads from outside (step 6) - app/panel/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/netguard.py hole_oeffentlich: the one fetch of a public page or file: kill switch first, public only (step 6) - app/panel/doklink.py eigene: addresses for the tool only from the own words (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/guard.py verify: checks the chain, confirmed breaks only for the same line and hash (step 10) - app/panel/guard.py ack_break: confirms only the break the check reports now (step 10) - app/panel/vault.py seal: store secrets sealed (step 10) - app/panel/profiles.py write_own: memory and conversations sealed whole (step 10) - app/panel/vorrat.py key: a key per purpose from secret.key (step 10) - app/panel/meinedaten.py api_export: own data only after a fresh code, passkey or PIN (step 3) - app/panel/meinedaten.py build: the ZIP only from the file register, without secrets (step 10) - app/pa"
+"text": "py clean: a mail's HTML only cleaned, without script and without loads from outside (step 6) - app/panel/netguard.py allowed: whether a connection out may happen (step 6) - app/panel/netguard.py hole_oeffentlich: the one fetch of a public page or file: kill switch first, public only (step 6) - app/panel/doklink.py eigene: addresses for the tool only from the own words (step 6) - app/panel/ytquelle.py befehl: the fixed call of yt-dlp: only the address from the video number (step 6) - app/panel/netproxy.py Proxy: the netguard proxy: yt-dlp's only way out (step 6) - app/panel/answercheck.py unsupported: a figure without a source is dropped (step 9) - app/textnorm.py hide_secrets: secrets are never spoken (step 9) - app/panel/guard.py log: change log with its chain (step 10) - app/panel/guard.py verify: checks the chain, confirmed breaks only for the same line and hash (step 10) - app/panel/guard.py ack_break: confirms only the break the check reports now (step 10) - app/panel/vault.py seal: store secrets sealed (step 10) - app/panel/profiles.py write_own: memory and conversations sealed whole (step 10) - app/panel/vorrat.py key: a key per purpose from secret.key (step 10) - app/panel/"
 },
 {
 "lang": "en",
@@ -19917,7 +19981,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "nel/profiles.py _cap: the memory's cap without data loss (step 8) - app/panel/gedaechtnis.py offer: learned never replaces confirmed: only an offer (step 8) - app/panel/gemerkt.py take_back: undo only for the own, unchanged fact (step 8) - app/panel/wissensdoppelt.py aehnlich: points of the map merged by themselves only by a fixed rule, never against „Different“ (step 8)"
+"text": "meinedaten.py api_export: own data only after a fresh code, passkey or PIN (step 3) - app/panel/meinedaten.py build: the ZIP only from the file register, without secrets (step 10) - app/panel/profiles.py _cap: the memory's cap without data loss (step 8) - app/panel/gedaechtnis.py offer: learned never replaces confirmed: only an offer (step 8) - app/panel/gemerkt.py take_back: undo only for the own, unchanged fact (step 8) - app/panel/wissensdoppelt.py aehnlich: points of the map merged by themselves only by a fixed rule, never against „Different“ (step 8)"
 },
 {
 "lang": "en",
@@ -20213,7 +20277,7 @@
 "file": "Architecture and data flow",
 "head": "Everyday score",
 "title": "Everyday score",
-"text": "- The test sentences (225) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
+"text": "- The test sentences (228) hold every reported wrong turn and must all pass. The everyday sentences (216) were never used for tuning: they measure how many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus protected going down or wrong going up."
 },
 {
 "lang": "en",
@@ -20245,7 +20309,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 27 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 225 built-in test sentences (step 4, step 5) - 216 everyday sentences for measuring (step 14) - 66 sentences of the source bench (step 14) - 150 ms at most for the source switch's hit probe (step 14) - 20 versions for undo (step 4)"
+"text": "- 27 groups of the switch (step 4, step 6) - 2 groups at most that still narrow (step 6) - 80 characters at most for a follow-up (step 8) - 4 seconds at most for the model's pick (step 10) - 300 ms waiting with „Fast answer start“ (step 10) - 80 % default threshold of the classification (step 10) - 228 built-in test sentences (step 4, step 5) - 216 everyday sentences for measuring (step 14) - 66 sentences of the source bench (step 14) - 150 ms at most for the source switch's hit probe (step 14) - 20 versions for undo (step 4)"
 },
 {
 "lang": "en",
@@ -20667,6 +20731,14 @@
 "lang": "en",
 "src": "architecture",
 "file": "Architecture and data flow",
+"head": "Transcribe YouTube links",
+"title": "Transcribe YouTube links",
+"text": "- When ytquelle.video_id finds a video number in the address and Transcribe YouTube links is released, doklink keeps only the address made from that number (ytquelle.kanonisch). ytquelle.holen asks yt-dlp (version 2026.10.26, Unlicense, own venv) twice, both times only through the netguard proxy: first without download (the number must match, no live stream, at most chat.doc_audio_min minutes), then only the sound track with --max-filesize. The file goes through abschrift.aufnehmen like an upload and is transcribed in quiet minutes with time marks; title and channel are only the name (ytquelle.name_of), origin „yt:“ with the number, every video once. Without yt-dlp the link says how to install it (word ytdlp)."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
 "head": "Map helps the search",
 "title": "Map helps the search",
 "text": "- wissenskarte.liste(uid, worte, k) returns piece ids with a rank from 1, read only (SQLite with mode=ro) and only for the own profile. Fixed rules, never the model: the search words hit a point when its name or another name stands whole in the question (compared like wissenskarte.ent_norm) or a word of the name with at least 4 letters that is no number and no legal form (wissenskarte.trifft); at most 20 points. Their neighbours one step away join (the same query as wissenskarte.rund_um), and of all of them the passages in used, read documents. A passage with a named point stands before one with only neighbours, more points before fewer, at most 50. - documents.search mixes the list like the others with 60 plus place, weighed 0.5, and only passages the same condition of the search lets through (documents._karte). A hit found so carries „karte“, below the answer it says „via the knowledge map“. The search check measures the mix with the map as a bar of its own. If the map fails, the search goes on without it and writes a line „wissen: kartensuche fehler“."
@@ -20829,7 +20901,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_wissen, test_auswertung, test_abschrift, test_doklink, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung, test_wissenstempo"
+"text": "Self-tests: test_wissen, test_auswertung, test_abschrift, test_doklink, test_ytquelle, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung, test_wissenstempo"
 },
 {
 "lang": "en",
@@ -20853,7 +20925,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A tool wants out: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 34 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete. 2. Resolve the name once: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops. 3. Own service?: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute). When the models run on another computer (models.host), its addresses count the same (model_addresses). 4. Internet and kill switch on?: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows. 5. Public address?: A public address is allowed at every level. 6. Level „internet only“?: What comes from search results or answers may never go to the home network (feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, systemupdat"
+"text": "1. A tool wants out: Everything that goes to an address from settings or from outside text gets its access through netguard.client with a level (today 37 modules). Fixed own services like the language model go directly; which ones and why is listed in netguard.DIRECT_OK, a self-test keeps that list complete. 2. Resolve the name once: resolve() looks the name up exactly once. If it has several addresses, each one must be allowed, else it stops. 3. Own service?: The ports of the own services are closed on this machine: on loopback and on every own address in the LAN or VPN (own_addresses reads them again every minute). When the models run on another computer (models.host), its addresses count the same (model_addresses). 4. Internet and kill switch on?: If the address is public and the kill switch is at stage 1 or higher, nothing goes to the internet, whatever level the tool has. The home network stays reachable as the level allows. 5. Public address?: A public address is allowed at every level. 6. Level „internet only“?: What comes from search results or answers may never go to the home network (feeds, geraeteupdate, ghtoken, mailansicht, meldung, modellseite, remarkable, systemupdat"
 },
 {
 "lang": "en",
@@ -20878,6 +20950,14 @@
 "head": "One fetch for pages and files",
 "title": "One fetch for pages and files",
 "text": "- A page or file from an address is fetched only by netguard.hole_oeffentlich: the pages of search results (chat.page_text), the web page to the reMarkable (through page_text) and links as documents. First the kill switch, then before every request netguard.oeffentlich (http or https, no login data, every address of the name public) and at the connection once more the level internet only; at most 4 redirects, each checked again, a fixed browser name, content type from a fixed list, size and time for all of it. A refusal is a fixed word (netguard.WORTE)."
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "A proxy for a program with its own network code",
+"title": "A proxy for a program with its own network code",
+"text": "- A helper program with its own network code (yt-dlp for transcribing YouTube links) never goes out directly: it gets only the address of the netguard proxy (netproxy.Proxy) of this one run, on 127.0.0.1 with a one-time key. The proxy takes only CONNECT to port 443 of a name on the fixed list (ytquelle.erlaubt: youtube.com, youtu.be, youtubei.googleapis.com, i.ytimg.com and the media servers *.googlevideo.com), never an IP and never http; netguard.resolve resolves every name at level internet only (kill switch, public only, Live), the tunnel goes to exactly that address. At most 8 tunnels at once and a byte limit for the whole run; every refusal is a fixed word (netproxy.WORTE)."
 },
 {
 "lang": "en",
@@ -20917,7 +20997,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/netguard.py allowed: the rule: nothing or the reason (step 3, step 7, step 8) - app/panel/netguard.py resolve: resolve once, check every address, tell Live (step 2) - app/panel/netguard.py client: the way out for tools (step 1) - app/panel/netguard.py hole_oeffentlich: the one fetch of a public page or file (step 1, step 12) - app/panel/netguard.py oeffentlich: check before every request: public only, no login data (step 6) - app/panel/netguard.py _Transport: password guard, size limit, result for My status (step 10, step 11) - app/panel/netguard.py _Capped: cuts the answer, also unpacked (step 11) - app/panel/netguard.py same_site: same site for login data (step 10) - app/panel/netguard.py own_addresses: every address of this machine (step 3) - app/panel/netguard.py model_addresses: the model computer's addresses when it is another one (step 3) - app/panel/netguard.py IMAP4_SSL: mail over the checked address (step 9) - app/panel/notaus.py watch: counts blocks for the automatic kill switch (step 2) - app/panel/live.py outgoing: shows each decision on Live (step 2)"
+"text": "- app/panel/netguard.py allowed: the rule: nothing or the reason (step 3, step 7, step 8) - app/panel/netguard.py resolve: resolve once, check every address, tell Live (step 2) - app/panel/netguard.py client: the way out for tools (step 1) - app/panel/netguard.py hole_oeffentlich: the one fetch of a public page or file (step 1, step 12) - app/panel/netguard.py oeffentlich: check before every request: public only, no login data (step 6) - app/panel/netproxy.py Proxy: the netguard proxy for a program with its own network: CONNECT 443, fixed list, resolve (step 1, step 9) - app/panel/ytquelle.py erlaubt: yt-dlp's fixed host list (step 1) - app/panel/netguard.py _Transport: password guard, size limit, result for My status (step 10, step 11) - app/panel/netguard.py _Capped: cuts the answer, also unpacked (step 11) - app/panel/netguard.py same_site: same site for login data (step 10) - app/panel/netguard.py own_addresses: every address of this machine (step 3) - app/panel/netguard.py model_addresses: the model computer's addresses when it is another one (step 3) - app/panel/netguard.py IMAP4_SSL: mail over the checked address (step 9) - app/panel/notaus.py watch: counts blocks for the au"
 },
 {
 "lang": "en",
@@ -20925,7 +21005,15 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_hardening, test_notaus, test_waechter_umgehung, test_doklink"
+"text": "tomatic kill switch (step 2) - app/panel/live.py outgoing: shows each decision on Live (step 2)"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "In the code",
+"title": "In the code",
+"text": "Self-tests: test_hardening, test_notaus, test_waechter_umgehung, test_doklink, test_ytquelle"
 },
 {
 "lang": "en",
@@ -23846,6 +23934,38 @@
 "head": "Voice chat",
 "title": "Transcribe recordings, push 3a (V01.1.336, plan *open-notebook* stage 3)",
 "text": "he background would have held itself and every other background job for 20 seconds per piece. Now a request with the stage \"hinten\" and the valid priority key from this computer stays unmarked (common.signed_low); without the key, with a wrong key or from another computer it counts as before. Real speech always marks and cancels the transcription at once (self-tests test_vorrang). When the panel runs on its own computer (Pi) the speech service does not know the key: the transcription then runs at the normal stage. Status → Live: box *Transcribe recordings* (\"Hintergrund: 1 Aufnahme · 82 min offen · heute 24 Stücke\"), the background step is called \"Abschrift\"; Logs area Wissen: abschrift: stueck | 30 s 412 zeichen, abschrift: fertig | 94 min 189 stuecke | tonspur ja, abschrift: asr fehlt, abschrift: grenze | 240 min, abschrift: abgebrochen | sprache. iPhone: My things → Documents shows \"transcribing\", uploading, listening and stopping in the panel view (iphone.THINGS[\"documents\"]); Android through the panel view. Self-tests tests/test_abschrift.py."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Transcribe YouTube links, push 3b (V01.1.342, plan *open-notebook* stage 3b, Dominik: \"YouTube yes, through a pinned yt-dlp in its own venv, only through a netguard proxy with a fixed host list, with its own sub-switch\"): admin switch *Features → Own documents → Transcribe recordings → Transcribe YouTube links* (chat.doc_youtube, off by default; also needs *Links as documents* and *Transcribe recordings*; no profile switch, the admin blocks single profiles, guests never). In only through Links as documents: the field \"Add link\" under Me → Documents or the tool link_als_dokument with an address that stands word for word in the own message, never one from a page, mail or search result. When ytquelle.video_id finds a video number (watch?v=, youtu.be/, shorts/, live/, embed/; only youtube.com, www., m., music. and youtu.be, without login data, no playlist page), doklink keeps only the address built from it, https://www.youtube.com/watch?v=<number> (ytquelle.kanonisch; the same video in another spelling is a double). yt-dlp: license Unlicense, exactly version 2026.10.26 with the SHA-256 of its wheel in app/requirements-ytdlp.lock (without its optional packages), installed only with sudo"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": " ./install.sh --youtube on the panel computer into /opt/speech-spark/venv-ytdlp (pip --no-deps --require-hashes --only-binary :all:, once per version of the file; an update keeps it current afterwards). ytquelle.da checks the version at run time too; without yt-dlp or with another version the Spark tries nothing and the row says \"yt-dlp is not installed on the panel computer (sudo ./install.sh --youtube, guide: Features → Transcribe YouTube links)\". Started without a shell (asyncio.create_subprocess_exec), isolated (python -I -m yt_dlp, only PATH, HOME, TMPDIR, LANG and XDG folders in its own empty folder, no proxy variables) and only with the fixed options ytquelle.FEST: --ignore-config --no-plugin-dirs --no-js-runtimes --no-remote-components --no-cookies --no-cookies-from-browser --no-cache-dir --no-playlist --use-extractors youtube --no-exec --fixup never --downloader native, -f bestaudio[protocol^=http], --max-filesize = chat.doc_audio_mb, --ffmpeg-location pointing at an empty folder. netguard proxy (netproxy.py, new): per run a CONNECT proxy on 127.0.0.1 with a random port and a one-time key (Proxy-Authorization, compared in constant time); only CONNECT to port 443, only name"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "s of the fixed list ytquelle.erlaubt (youtube.com, www.youtube.com, m.youtube.com, youtu.be, consent.youtube.com, youtubei.googleapis.com, i.ytimg.com and exactly one label before .googlevideo.com), never an IP; every name through netguard.resolve(host, 443, PUBLIC) (public addresses only, kill switch, Live), the tunnel goes to exactly that address; at most 8 tunnels at once, chat.doc_audio_mb + 30 MB from the servers per run, else every tunnel closes. Refusals are fixed words (netproxy.WORTE: methode, anmeldung, port, host, privat, notaus, netz, viele, groesse). netguard.DIRECT_OK lists netproxy as \"geprueft\". Flow (ytquelle.holen, from the run of Links as documents): first a look without download (-J, 90 s): the number must match, no live stream and no premiere, length at most chat.doc_audio_min, known size at most chat.doc_audio_mb; then only the sound track (at most 30 minutes) into a fresh folder docs/audio-wait/yt-…/ (0700, deleted afterwards). The file goes through abschrift.aufnehmen like an upload (first bytes, size, length with ffprobe, queue, storage, second sign-in step) and is transcribed in quiet minutes with time marks (stage 3a). Title and channel are only data: wit"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "hout control and markup signs, cut, as the name \"Title · Channel.m4a\" (ytquelle.name_of); origin yt:<number>, every video once; there is no \"Fetch again\" for the transcript. yt-dlp's error text never reaches the log, it only becomes a word by fixed patterns (video, live, laenge, format, groesse, host, zeit, netz). Journal ytquelle: … (area wissen), Live: box Links with \"YouTube: today n sound tracks, kB, refused, foreign host blocked\" or \"yt-dlp fehlt\". Weiche: transcription words with an address (\"Transcribe https://youtu.be/…\") go like \"Save … as a document\" to Links as documents. Without a JavaScript runtime (on purpose not installed) YouTube gives some videos no sound track; the row then says \"no sound track to fetch\". Self-test test_ytquelle (another host and a private address refused at the proxy, kill switch, key, method, port, byte limit, fixed options, version and hash, without yt-dlp the sentence with the way, live and too long refused before the download, no link from outside text, logs without address or title)."
 },
 {
 "lang": "en",
@@ -31981,6 +32101,14 @@
 "file": "Assistant and panel",
 "head": "My data",
 "title": "My data",
+"text": "- Transcribe YouTube links (Features → My data → \"Transcribe YouTube links\"; builds on \"Transcribe recordings\"; Me → Documents): A YouTube link under Me → Documents → \"Add link\" (or \"Save https://youtu.be/… as a document\") becomes no page document: the Spark fetches only the video's sound track and transcribes it like an uploaded recording, with time marks (\"at 12 …"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
 "text": "- Search check (Features → My data → \"Search check\"; builds on \"Own documents\"; Me → Documents): Test questions with a known right place show how often the search in your documents finds the right thing."
 },
 {
@@ -33542,6 +33670,14 @@
 "head": "Making music (optional)",
 "title": "Making music (optional)",
 "text": "(\"guacd not installed on the Spark: …\"), and the next update tries again. A distribution's guacd unit stays masked; only speech-spark-guacd runs, on 127.0.0.1:4822, started by the panel when a screen opens. Switching off uninstalls nothing. Then run sudo spark-anker bildschirm once on the system."
+},
+{
+"lang": "en",
+"src": "installation",
+"file": "Installation in detail",
+"head": "Making music (optional)",
+"title": "Making music (optional)",
+"text": "For Features → Transcribe YouTube links, --youtube (on the panel computer) puts yt-dlp (license Unlicense) into an environment of its own, /opt/speech-spark/venv-ytdlp: exactly the version and the SHA-256 of the wheel from app/requirements-ytdlp.lock, without its optional packages (pip --no-deps --require-hashes --only-binary :all:). Without the option nothing of it is fetched; once there, every update keeps it at the version of that file. The panel starts it only with fixed options and only through its netguard proxy (app/panel/netproxy.py, fixed host list). Then switch on Features → Own documents → Transcribe recordings → Transcribe YouTube links (Links as documents must be on)."
 },
 {
 "lang": "en",

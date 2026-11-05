@@ -85,9 +85,11 @@ DOC_WORDS = re.compile(r"(?i)\b(\w*dokument\w*|unterlage\w*|\w*vertrag\w*|\w*ver
 # the person's own message)
 MAPPE_WORDS = re.compile(r"(?i)\b(mappen?|collections?)\b")
 # Links als Dokument (doklink.py): an address in the person's own message and a word of keeping it as a document
-# („Speicher https://… als Dokument“, „Übernimm den Link in meine Dokumente“); „aufs reMarkable“ stays rmweb (route)
+# („Speicher https://… als Dokument“, „Übernimm den Link in meine Dokumente“); „aufs reMarkable“ stays rmweb (route);
+# a YouTube link to write down („Mach eine Abschrift von https://youtu.be/…“, ytquelle.py) goes the same way
 _DOKLINK = (r"(speicher\w*|abspeicher\w*|übernimm|übernehm\w*|als dokumente?|in meine dokumente|zu (meinen |den )?dokumenten|"
-            r"save|store|as (a )?documents?|to my documents|into my documents)")
+            r"abschrift\w*|abschreib\w*|transkribier\w*|"
+            r"save|store|as (a )?documents?|to my documents|into my documents|transcribe\w*|transcript\w*)")
 DOKLINK_WORDS = re.compile(r"(?is)\b" + _DOKLINK + r"\b(?=.*https?://)|https?://\S+(?=.*\b" + _DOKLINK + r"\b)")
 CONTACT_WORDS = re.compile(r"(?i)\b(telefonnummer\w*|handynummer\w*|nummer von|adresse von|kontakt\w*|"
                            r"geburtstag(e|en|s)?|nummer vo[mn]|wo wohnt|anschrift\w*|phone number|contacts?)\b")

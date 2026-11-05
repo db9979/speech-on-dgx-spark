@@ -127,6 +127,12 @@ Für Fernzugang → Bildschirm baut der Rechner mit dem Panel guacd selbst aus d
 sudo ./install.sh --fernbild
 ```
 
+Für Funktionen → YouTube-Links abschreiben legt `--youtube` (auf dem Panel-Rechner) yt-dlp (Lizenz Unlicense) in eine eigene Umgebung `/opt/speech-spark/venv-ytdlp`: genau die Version und die SHA-256 des Wheels aus `app/requirements-ytdlp.lock`, ohne seine optionalen Pakete (`pip --no-deps --require-hashes --only-binary :all:`). Ohne die Option wird nichts davon geladen; einmal da, hält jedes Update es auf der Version der Datei. Das Panel startet es nur mit festen Optionen und nur über seinen netguard-Proxy (`app/panel/netproxy.py`, feste Host-Liste). Danach Funktionen → Eigene Dokumente → Aufnahmen abschreiben → YouTube-Links abschreiben einschalten (Links als Dokument muss an sein).
+
+```bash
+sudo ./install.sh --youtube
+```
+
 ## Entwickeln auf dem Pi mit OpenCode
 
 Eine Anleitung für Einsteiger: Du änderst den Spark auf dem Panel-Rechner (etwa dem Raspberry Pi) selbst, mit OpenCode im Terminal und dem eigenen Sprachmodell des Sparks, ohne Cloud und ohne GitHub. OpenCode arbeitet als eigener Nutzer `spark-dev` in einem eigenen Klon; der laufende Spark, seine Daten und Schlüssel bleiben unerreichbar. Eingespielt wird erst, wenn ein Admin es will, nach einem Schnelltest und wie ein Update.

@@ -31,6 +31,7 @@ TOOLS = {
     "auswertungen": ("dokument_auswertung",),
     "docaudio": ("document_search",),
     "doclink": ("link_als_dokument", "document_search"),
+    "docyoutube": ("link_als_dokument", "document_search"),
     "docshared": ("document_search",),
     "docbrief": ("document_search",),
     "remarkable": ("document_search", "remarkable_library"),

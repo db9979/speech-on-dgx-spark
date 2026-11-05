@@ -4,13 +4,14 @@ from technik_seiten import S
 
 SEITEN = {
     "waechter": {
-        "stand": "8b56db8950",
+        "stand": "2c26ff6727",
         "bezug": {
             "notaus.AUTO": ["s4"], "netguard.allowed": ["s3", "s7", "s8"], "netguard.resolve": ["s2"],
             "netguard._Transport": ["s10", "s11"], "netguard._Capped": ["s11"], "netguard.same_site": ["s10"],
             "netguard.own_addresses": ["s3"], "netguard.model_addresses": ["s3"], "netguard.IMAP4_SSL": ["s9"], "notaus.watch": ["s2"],
             "live.outgoing": ["s2"], "regeln": ["s6", "s8"], "regel:immer": ["s3", "s4", "s7"],
             "netguard.hole_oeffentlich": ["s1", "s12"], "netguard.oeffentlich": ["s6"], "netguard.WEITER": ["s12"],
+            "netproxy.Proxy": ["s1", "s9"], "ytquelle.erlaubt": ["s1"],
         },
         "kurz": ("Der Wächter entscheidet bei jeder Verbindung, die ein Werkzeug nach außen aufbaut, ob sie sein darf: "
                  "Webseiten aus der Suche, Kalender, Kontakte, Mail, Home Assistant, NAS und MCP-Dienste. "
@@ -171,6 +172,24 @@ SEITEN = {
                  "only; at most {netguard.WEITER} redirects, each checked again, a fixed browser name, content type "
                  "from a fixed list, size and time for all of it. A refusal is a fixed word (netguard.WORTE)."),
             ]),
+            (("Ein Proxy für ein Programm mit eigenem Netz", "A proxy for a program with its own network code"), [
+                ("Ein Hilfsprogramm mit eigenem Netz-Code (yt-dlp für YouTube-Links abschreiben) kommt nie direkt "
+                 "hinaus: es bekommt nur die Adresse des netguard-Proxys (netproxy.Proxy) dieses einen Laufs, auf "
+                 "127.0.0.1 mit einem Einmal-Schlüssel. Der Proxy nimmt nur CONNECT auf Port 443 zu einem Namen der "
+                 "festen Liste (ytquelle.erlaubt: youtube.com, youtu.be, youtubei.googleapis.com, i.ytimg.com und die "
+                 "Medien-Server *.googlevideo.com), nie eine IP und nie http; jeden Namen löst netguard.resolve mit "
+                 "Stufe nur Internet auf (Notaus, nur öffentlich, Live), der Tunnel geht an genau diese Adresse. "
+                 "Höchstens {netproxy.TUNNEL_MOST} Tunnel zugleich und eine Byte-Grenze für den ganzen Lauf; jede "
+                 "Ablehnung ist ein festes Wort (netproxy.WORTE).",
+                 "A helper program with its own network code (yt-dlp for transcribing YouTube links) never goes out "
+                 "directly: it gets only the address of the netguard proxy (netproxy.Proxy) of this one run, on "
+                 "127.0.0.1 with a one-time key. The proxy takes only CONNECT to port 443 of a name on the fixed list "
+                 "(ytquelle.erlaubt: youtube.com, youtu.be, youtubei.googleapis.com, i.ytimg.com and the media "
+                 "servers *.googlevideo.com), never an IP and never http; netguard.resolve resolves every name at level "
+                 "internet only (kill switch, public only, Live), the tunnel goes to exactly that address. At most "
+                 "{netproxy.TUNNEL_MOST} tunnels at once and a byte limit for the whole run; every refusal is a fixed "
+                 "word (netproxy.WORTE)."),
+            ]),
             (("Wenn gesperrt", "When blocked"), [
                 ("Das Werkzeug bekommt statt einer Antwort den Fehler Blocked mit dem Grund; es kommt keine Verbindung zustande.",
                  "Instead of an answer the tool gets the error Blocked with the reason; no connection is made."),
@@ -188,6 +207,8 @@ SEITEN = {
             ("netguard.client", ("der Zugang nach außen für Werkzeuge", "the way out for tools")),
             ("netguard.hole_oeffentlich", ("der eine Abruf einer öffentlichen Seite oder Datei", "the one fetch of a public page or file")),
             ("netguard.oeffentlich", ("Vorprüfung jeder Anfrage: nur öffentlich, ohne Zugangsdaten", "check before every request: public only, no login data")),
+            ("netproxy.Proxy", ("der netguard-Proxy für ein Programm mit eigenem Netz: CONNECT 443, feste Liste, resolve", "the netguard proxy for a program with its own network: CONNECT 443, fixed list, resolve")),
+            ("ytquelle.erlaubt", ("die feste Host-Liste von yt-dlp", "yt-dlp's fixed host list")),
             ("netguard._Transport", ("Passwort-Schutz, Größengrenze, Ergebnis für Mein Zustand", "password guard, size limit, result for My status")),
             ("netguard._Capped", ("schneidet die Antwort ab, auch entpackt", "cuts the answer, also unpacked")),
             ("netguard.same_site", ("gleiche Seite für Anmeldedaten", "same site for login data")),
@@ -198,7 +219,7 @@ SEITEN = {
             ("notaus.watch", ("zählt Sperren für Notaus von selbst", "counts blocks for the automatic kill switch")),
             ("live.outgoing", ("zeigt jede Entscheidung auf Live", "shows each decision on Live")),
         ],
-        "tests": ["test_hardening", "test_notaus", "test_waechter_umgehung", "test_doklink"],
+        "tests": ["test_hardening", "test_notaus", "test_waechter_umgehung", "test_doklink", "test_ytquelle"],
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked")),
                   ("guard_cut", ("zu groß, abgebrochen", "too large, stopped"))],
     },
@@ -655,13 +676,13 @@ SEITEN = {
 
     # ------------------------------------------------------------------ sicherheit (the model as a whole)
     "sicherheit": {
-        "stand": "42268d12ce",
+        "stand": "b1a70250a1",
         "bezug": {
             "features.blocked": ["s5"], "geteilt.put": ["s5"], "mitschreiblink.find": ["s3", "s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
             "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"], "sysupdate.wunsch_nehmen": ["s3"],
             "netguard.allowed": ["s6"], "chat.LOCKED_OUTSIDE": ["s6"], "chat.LOCKED_AFTER_MAIL": ["s6"], "mailansicht.clean": ["s6"],
             "textnorm.defuse": ["s6"], "llm_tor.entschaerft": ["s6"], "regeln": ["s4", "s5"], "profiles._cap": ["s8"],
-            "netguard.hole_oeffentlich": ["s6"], "doklink.eigene": ["s6"],
+            "netguard.hole_oeffentlich": ["s6"], "doklink.eigene": ["s6"], "netproxy.Proxy": ["s6"], "ytquelle.befehl": ["s6"],
             "gedaechtnis.offer": ["s8"], "gemerkt.take_back": ["s8"], "profiles.write_own": ["s10"],
             "vorrat.key": ["s10"], "meinedaten.build": ["s10"], "meinedaten.api_export": ["s3"],
         },
@@ -750,7 +771,9 @@ SEITEN = {
                "prüft der Angriffs-Selbsttest mit einem Modell, das jedem Befehl gehorcht (panel/angriffe.json). Verbindungen nach außen laufen nur über den Wächter (netguard.allowed); "
                "eine Seite oder Datei holt nur netguard.hole_oeffentlich (Notaus zuerst, nur öffentlich auch nach jeder "
                "Weiterleitung, Größe, Zeit, Inhaltstyp), Links als Dokument nimmt eine Adresse nur aus den eigenen "
-               "Worten der Person (doklink.eigene), und die Seite wird ein Dokument wie jedes: Daten; ein Tunnel des Fernzugangs nur zu "
+               "Worten der Person (doklink.eigene), und die Seite wird ein Dokument wie jedes: Daten; ein YouTube-Link geht als "
+               "Adresse aus der Video-Nummer allein an das gepinnte yt-dlp mit festen Optionen (ytquelle.befehl), dessen ganzer "
+               "Verkehr nur durch den netguard-Proxy läuft (netproxy.Proxy: feste Host-Liste, Port 443, netguard.resolve); ein Tunnel des Fernzugangs nur zu "
                "Zielen nach fernweb.ziel_ok: dort 127.0.0.1 und die eigenen Adressen des Systems, die sein Anker selbst meldet. Eine Mail mit "
                "HTML zeigt die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter "
                "Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick "
@@ -764,7 +787,9 @@ SEITEN = {
                "the attack self-test with a model that obeys every order (panel/angriffe.json). Connections to the outside go only through the guard (netguard.allowed); "
                "a page or file is fetched only by netguard.hole_oeffentlich (kill switch first, public only also after "
                "every redirect, size, time, content type), links as documents take an address only from the person's "
-               "own words (doklink.eigene), and the page becomes a document like any: data; a remote-access tunnel only to "
+               "own words (doklink.eigene), and the page becomes a document like any: data; a YouTube link goes as an address "
+               "built from the video number alone to the pinned yt-dlp with fixed options (ytquelle.befehl), whose whole traffic "
+               "runs only through the netguard proxy (netproxy.Proxy: fixed host list, port 443, netguard.resolve); a remote-access tunnel only to "
                "targets by fernweb.ziel_ok: 127.0.0.1 there and the system's own addresses its anchor reports itself. A mail with HTML is shown "
                "only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame "
                "without script with its own CSP; pictures from outside only after the own click and through the guard, a "
@@ -966,6 +991,8 @@ SEITEN = {
             ("netguard.allowed", ("ob eine Verbindung nach außen sein darf", "whether a connection out may happen")),
             ("netguard.hole_oeffentlich", ("der eine Abruf einer öffentlichen Seite oder Datei: Notaus zuerst, nur öffentlich", "the one fetch of a public page or file: kill switch first, public only")),
             ("doklink.eigene", ("Adressen fürs Werkzeug nur aus den eigenen Worten", "addresses for the tool only from the own words")),
+            ("ytquelle.befehl", ("der feste Aufruf von yt-dlp: nur die Adresse aus der Video-Nummer", "the fixed call of yt-dlp: only the address from the video number")),
+            ("netproxy.Proxy", ("der netguard-Proxy: der einzige Weg von yt-dlp hinaus", "the netguard proxy: yt-dlp's only way out")),
             ("answercheck.unsupported", ("Zahl ohne Quelle fällt heraus", "a figure without a source is dropped")),
             ("textnorm.hide_secrets", ("Geheimnisse werden nie gesprochen", "secrets are never spoken")),
             ("guard.log", ("Änderungsprotokoll mit Prüfkette", "change log with its chain")),

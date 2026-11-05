@@ -192,7 +192,7 @@ DATEIEN = [
     profil("gesundheit.json", "Schritte, Puls und Schlaf von der Pebble-Uhr (30 Tage)", "Steps, pulse and sleep from the Pebble watch (30 days)",
            art="Gesundheit", schutz=("versiegelt", "sealed"), export=JA),
     profil("docling-wait", "Dateien, bis Docling sie gelesen hat", "Files until Docling has read them", art="Warteschlange"),
-    profil("docs/audio-wait/", "Aufnahmen, bis die Spracherkennung sie abgeschrieben hat", "Recordings until the speech recognition has transcribed them", art="Warteschlange"),
+    profil("docs/audio-wait/", "Aufnahmen, bis die Spracherkennung sie abgeschrieben hat; darin kurz yt-*/ mit der Tonspur eines YouTube-Links, solange yt-dlp sie holt", "Recordings until the speech recognition has transcribed them; briefly yt-*/ in it with the sound track of a YouTube link while yt-dlp fetches it", art="Warteschlange"),
     # users/<id>/: written through their own helper, not through profiles._path (never copied)
     profil("mfa.json", "Zweiter Schritt des Profils", "Profile's second step", art="Schlüssel", helfer=True, schutz=("versiegelt", "sealed")),
     profil("memory-tidy.json", "Aufräum-Vorschlag", "Tidy proposal", art="Warteschlange", helfer=True),

@@ -12,6 +12,7 @@
 #   sudo ./install.sh --musik 2b|2b-klein|xl|none   # Musik machen with ACE-Step 1.5 (optional, default none)
 #   sudo ./install.sh --llm [--kolibri]  # vLLM for the own language model (venv-llm; Kolibri-1 needs its own venv)
 #   sudo ./install.sh --entwickeln     # panel computer: OpenCode for the user spark-dev (Entwickeln auf dem Pi)
+#   sudo ./install.sh --youtube        # panel computer: the pinned yt-dlp in venv-ytdlp (YouTube-Links abschreiben)
 #   sudo ./install.sh --local          # APIs only on 127.0.0.1 (default --network: reachable in the LAN)
 #   sudo ./install.sh --yes            # ask nothing; what is not given stays as before (new: complete)
 #   sudo ./install.sh --small          # 0.6B models (least unified memory)
@@ -50,7 +51,7 @@ DEFAULT_REMOTE=https://github.com/db9979/speech-on-dgx-spark
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 SMALL=0; WITH_ASR=1; WITH_TTS=1; PASSWORD=""; DOWNLOAD=1; SMOKE=1; FROM_UPDATE=0; TTS_BACKEND=""; ASR_BACKEND=""
-TEILEN_PICK=0; MODELLE_PICK=""; PANEL_PICK=0; GEHAEUSE_PICK=""; WERKSTATT_PICK=0; FERNBILD_PICK=0; ENTWICKELN_PICK=0
+TEILEN_PICK=0; MODELLE_PICK=""; PANEL_PICK=0; GEHAEUSE_PICK=""; WERKSTATT_PICK=0; FERNBILD_PICK=0; ENTWICKELN_PICK=0; YOUTUBE_PICK=0
 MODE=""; ASR_PICK=""; TTS_PICK=""; VD_PICK=""; BILD_PICK=""; MUSIK_PICK=""; NET_PICK=""; YES=0; CHOOSE_MODELS=0; LLM_PICK=0; KOLIBRI_PICK=0
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -77,13 +78,14 @@ while [ $# -gt 0 ]; do
     --werkstatt) WERKSTATT_PICK=1 ;;      # the Werkstatt: OpenCode and its sandbox (app/werkstatt.py)
     --fernbild) FERNBILD_PICK=1 ;;        # Fernzugang → Bildschirm: guacd on 127.0.0.1 (app/panel/fernbild.py)
     --entwickeln) ENTWICKELN_PICK=1 ;;    # Entwickeln auf dem Pi: OpenCode for spark-dev, local changes (app/entwickeln.py)
+    --youtube) YOUTUBE_PICK=1 ;;          # YouTube-Links abschreiben: yt-dlp pinned in venv-ytdlp (app/panel/ytquelle.py)
     --local) NET_PICK=local ;;
     --network) NET_PICK=network ;;
     --yes|-y) YES=1 ;;
     --choose-models) CHOOSE_MODELS=1 ;;  # ask the model questions again (sudo speech-spark models)
     --update) FROM_UPDATE=1 ;;  # set by update.sh
     --uninstall) shift; exec "$SRC/uninstall.sh" "$@" ;;
-    -h|--help) sed -n '2,26p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,27p' "$0"; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
   shift
@@ -778,6 +780,30 @@ fi
 WITH_ENTWICKELN=$ENTWICKELN_PICK; id -u spark-dev >/dev/null 2>&1 && [ -x "$PREFIX/opencode/bin/opencode" ] && WITH_ENTWICKELN=1
 [ "$MODE" = full ] || WITH_ENTWICKELN=0
 [ "$WITH_ENTWICKELN" = 1 ] && opencode_holen "$PREFIX/opencode"
+
+# ---------------------------------------------------------------- YouTube-Links abschreiben (optional, plan open-notebook 3b)
+# yt-dlp (Unlicense) alone in its own environment: exactly the version and SHA-256 of app/requirements-ytdlp.lock, the
+# wheel only, without its optional dependencies, once per version of that file (.ytdlp holds its SHA-256). The panel
+# runs it only with fixed options and only through its netguard proxy (app/panel/ytquelle.py, netproxy.py). Only with
+# the web panel here; without the option nothing is fetched; once there, an update keeps it current.
+[ "$YOUTUBE_PICK" = 1 ] && [ "$MODE" != full ] && die "--youtube goes on the panel computer (the one with the web panel)"
+WITH_YOUTUBE=$YOUTUBE_PICK; [ -x "$PREFIX/venv-ytdlp/bin/python" ] && WITH_YOUTUBE=1
+[ "$MODE" = full ] || WITH_YOUTUBE=0
+YT_LOCK="$INSTALL_FROM/app/requirements-ytdlp.lock"
+if [ "$WITH_YOUTUBE" = 1 ] && [ -f "$YT_LOCK" ]; then
+  yt_sum=$(sha256sum "$YT_LOCK" | cut -c1-64)
+  if [ ! -L "$PREFIX/venv-ytdlp" ] && [ ! -L "$PREFIX/venv-ytdlp/.ytdlp" ] && [ -x "$PREFIX/venv-ytdlp/bin/python" ] \
+     && [ "$(cat "$PREFIX/venv-ytdlp/.ytdlp" 2>/dev/null)" = "$yt_sum" ]; then
+    echo "   venv-ytdlp: yt-dlp unchanged, pip skipped"
+  else
+    say "yt-dlp for YouTube-Links abschreiben (pinned with SHA-256) into $PREFIX/venv-ytdlp"
+    [ -L "$PREFIX/venv-ytdlp" ] && die "$PREFIX/venv-ytdlp is a link"
+    [ -x "$PREFIX/venv-ytdlp/bin/python" ] || "$PY" -m venv "$PREFIX/venv-ytdlp"
+    "$PREFIX/venv-ytdlp/bin/pip" install -q --no-deps --require-hashes --only-binary :all: -r "$YT_LOCK" \
+      || die "yt-dlp could not be installed (app/requirements-ytdlp.lock)"
+    rm -f -- "$PREFIX/venv-ytdlp/.ytdlp"; printf '%s\n' "$yt_sum" >"$PREFIX/venv-ytdlp/.ytdlp"
+  fi
+fi
 
 # ---------------------------------------------------------------- Musik machen (optional, plan musik)
 # The engine is acestep.cpp's ace-server, built here once per pinned commit (musikmodell.ACECPP_COMMIT) for the GB10

@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "aussen": {
-        "stand": "380fbd10fc",
+        "stand": "ec26627eef",
         "bezug": {
             "dienstwacht.TIMEOUT": ["s5"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
             "netguard.client": ["s8", "s9", "s10"], "netguard.IMAP4_SSL": ["s9"],
@@ -193,7 +193,7 @@ SEITEN = {
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
     },
     "internet": {
-        "stand": "f14d2ded02",
+        "stand": "0f1768cde2",
         "bezug": {
             "regeln": ["s3", "s4"], "regel:Seiten aus der Suche": ["s4", "s5"], "regel:Mail, Kalender, Kontakte": ["s4", "s5"],
             "regel:reMarkable": ["s4", "s5"], "regel:Wetter, Fahrplan, Wikipedia": ["s3"], "regel:Telegram": ["s7"],
@@ -272,6 +272,7 @@ SEITEN = {
             [("Dienst", "Service"), ("Weg", "Way")],
             [("Seiten aus der Suche", "Pages from search"), ("Wächter, nur Internet", "guard, internet only")],
             [("Links als Dokument", "Links as documents"), ("Wächter, nur Internet, nur Adressen der Person", "guard, internet only, only the person's addresses")],
+            [("YouTube-Links abschreiben (yt-dlp)", "Transcribe YouTube links (yt-dlp)"), ("netguard-Proxy, feste Host-Liste, Port 443", "netguard proxy, fixed host list, port 443")],
             [("Mail, Kalender, Kontakte", "Mail, calendars, contacts"), ("Wächter, Stufe Nutzer", "guard, level user")],
             [("reMarkable", "reMarkable"), ("Wächter, nur erlaubte Hosts", "guard, allowed hosts only")],
             [("Wetter, Fahrplan, Wikipedia", "Weather, transit, Wikipedia"), ("feste Adresse", "fixed address")],

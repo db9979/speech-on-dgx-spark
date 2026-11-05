@@ -1495,6 +1495,11 @@ def snapshot(view="admin", now=None):
     if dln.get("on"):
         used.add("links")
     try:
+        import ytquelle
+        ytn = ytquelle.for_live(now)
+    except Exception:
+        ytn = {"on": False}
+    try:
         import fund
         fnd = fund.for_live()
     except Exception:
@@ -2170,7 +2175,13 @@ def snapshot(view="admin", now=None):
                         + (" · holt" if dln.get("laeuft") else "")
                         + (f" · {dln['fehler']} Fehler" if dln.get("fehler") else "")
                         + (f" · {dln['abgelehnt']} abgelehnt" if dln.get("abgelehnt") else "")
-                        + (f" · {dln['grenze']}× Tagesgrenze" if dln.get("grenze") else ""))
+                        + (f" · {dln['grenze']}× Tagesgrenze" if dln.get("grenze") else "")
+                        # YouTube-Links abschreiben (ytquelle.py): installed, today's sound tracks, refused, hosts the proxy cut
+                        + ((" · YouTube: " + ("yt-dlp fehlt" if not ytn.get("da") else f"heute {ytn.get('geholt', 0)} Tonspuren")
+                            + (f", {ytn.get('kb', 0)} kB in {ytn.get('s', 0)} s" if ytn.get("kb") else "")
+                            + (" · holt" if ytn.get("laeuft") else "")
+                            + (f", {ytn['abgelehnt']} abgelehnt" if ytn.get("abgelehnt") else "")
+                            + (f", {ytn['host']}× fremder Host gesperrt" if ytn.get("host") else "")) if ytn.get("on") else ""))
         if x["id"] == "abschrift":   # Aufnahmen abschreiben: waiting, minutes left, today's pieces (numbers only, never a name)
             x["sub"] = (f"Hintergrund: {abn.get('warten', 0)} Aufnahme{'' if abn.get('warten', 0) == 1 else 'n'} · {abn.get('minuten', 0)} min offen"
                         + f" · heute {abn.get('stuecke', 0)} Stücke, {abn.get('heute_min', 0)} min"
