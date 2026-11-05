@@ -39,6 +39,11 @@ def profile(name, pin="1234"):
 
 class Base(unittest.TestCase):
     def setUp(self):
+        with open(helpers.os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            chat = json.load(f)["chat"]
+        # the other test modules of the same run talk to the fake model at the configured address: put it back after
+        self.before = {k: chat[k] for k in ("llm_api", "llm_api_extern", "llm_api_minute", "llm_api_tag_k", "deny",
+                                             "llm_url", "llm_model") if k in chat}
         helpers.set_config(llm_api=True, llm_api_extern=False, llm_api_minute=20, llm_api_tag_k=300, deny={},
                            llm_url="http://127.0.0.1:31006/v1", llm_model="qwen-test")
         guard.reset()
@@ -70,7 +75,12 @@ class Base(unittest.TestCase):
         mfa.enabled, mfa.verify, coadmin.unbegrenzt, _ = self.real
         llmapi._client = self.real[3]
         core._windows.clear()
-        helpers.set_config(llm_api=False, llm_api_extern=False, deny={}, llm_model="")
+        with open(helpers.os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            cfg = json.load(f)
+        for k in ("llm_api", "llm_api_extern", "llm_api_minute", "llm_api_tag_k", "deny", "llm_url", "llm_model"):
+            cfg["chat"].pop(k, None)
+        cfg["chat"].update(self.before)
+        helpers.write_config(cfg)
 
     def key(self, c, where="lokal", name="Laptop", tag_k=None, code=CODE):
         body = {"name": name, "where": where}

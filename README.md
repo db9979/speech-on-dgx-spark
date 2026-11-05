@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.347** RED FIX: the self-test of the language model by API now puts the model address back after itself
 - **V01.1.346** Language model by API: own programs use the Spark's language model OpenAI-compatible at /v1 with a key of their profile (Me → Language model by API), text only, home network or with its own switch also from outside; limits per key, admins unlimited
 - **V01.1.345** Make an audio overview now: the admin can have one made at once or pull a waiting one forward, without quiet minutes and the day limit, also in the iPhone app; real speech still goes first
 - **V01.1.344** Audio overview in the apps: a player of its own in the iPhone app (also in the background and on the lock screen), "To Telegram" only to the own chat, the notice "Audio overview ready" with a jump link, the line being spoken marked in the script, the script also in English
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.340** Links as documents: up to 10 addresses at once become own documents (public pages only, also after every redirect), "Fetch again" only on a click with ETag and SHA; one fetch helper for every web page, also with the kill switch for the reMarkable
 - **V01.1.339** Fix spontaneous help: "Load program" on /hilfe said "too many requests" behind the reverse proxy; the program door now counts per help after the right key, guessing still per address. The person's page is new and plain: a header with the state and "End session", the request with its steps, a small preview, messages with the field on top, one column on a phone, and only fixed texts (a 429 counts down); the service watch no longer reports SparkHilfe missing while the Mac release does not exist yet
 - **V01.1.338** Security: updated certifi, filelock, Pillow, pyasn1, pypdf and zeroconf to versions without known holes, OpenCode 1.19.5 with its checked hash
-- **V01.1.337** RED FIX: the sudo-rs self-test only passed as root; the trial file is now removed before the second try
 
 
 

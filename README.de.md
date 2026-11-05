@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.347** ROT-FIX: der Selbsttest zum Sprachmodell per API stellt die Adresse des Sprachmodells danach wieder zurück
 - **V01.1.346** Sprachmodell per API: eigene Programme nutzen das Sprachmodell OpenAI-kompatibel unter /v1 mit einem Schlüssel ihres Profils (Ich → Sprachmodell per API), nur Text, im Heimnetz oder mit eigenem Schalter auch von außen; Grenzen je Schlüssel, Admins unbegrenzt
 - **V01.1.345** Hörstück sofort erstellen: der Admin kann ein Hörstück gleich machen lassen oder ein wartendes vorziehen, ohne ruhige Minuten und Tagesgrenze, auch in der iPhone-App; echte Sprache geht trotzdem vor
 - **V01.1.344** Hörstück in den Apps: eigener Player in der iPhone-App (auch im Hintergrund und auf dem Sperrbildschirm), „An Telegram“ nur an den eigenen Chat, Mitteilung „Hörstück fertig“ mit Sprung-Link, beim Abspielen hervorgehobene Zeile im Drehbuch, Drehbuch auch auf Englisch
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.340** Links als Dokument: bis zu 10 Adressen auf einmal werden eigene Dokumente (nur öffentliche Seiten, auch nach jeder Weiterleitung), „Neu abrufen“ nur per Klick mit ETag und SHA; ein Abruf-Helfer für alle Webseiten, auch mit Notaus fürs reMarkable
 - **V01.1.339** Fix Spontanhilfe: „Programm laden“ auf /hilfe meldete hinter dem Reverse-Proxy „too many requests“; die Tür des Programms zählt jetzt je Hilfe nach dem richtigen Schlüssel, Raten weiter je Adresse. Die Seite der Person ist neu und schlicht: Kopfzeile mit Stand und „Sitzung beenden“, Anfrage mit Schritten, kleine Vorschau, Nachrichten mit Feld oben, am Handy einspaltig, nur feste Texte (eine 429 zählt herunter); der Dienst-Wächter meldet SparkHilfe nicht mehr als fehlend, solange es das Mac-Release noch nicht gibt
 - **V01.1.338** Sicherheit: certifi, filelock, Pillow, pyasn1, pypdf und zeroconf auf Versionen ohne bekannte Lücke, OpenCode 1.19.5 mit geprüfter Prüfsumme
-- **V01.1.337** ROT-FIX: Selbsttest zu sudo-rs lief nur als root; die Probedatei wird jetzt vor dem zweiten Versuch gelöscht
 
 
 
