@@ -5296,6 +5296,27 @@
 "titel": "Hörstück: Sprache hat Vorrang",
 "text": "Während ein Hörstück „spricht“ mit dem Spark reden (Assistent oder Lautsprecher): die Antwort kommt sofort, die Zahl der gesprochenen Zeilen bleibt stehen und läuft eine Minute nach dem Gespräch weiter. Im Assistenten „Mach ein Hörstück aus der Mappe <Name>“: eingereiht, die Liste zeigt es. Die Mappe löschen: ihre Hörstücke sind weg, die Dokumente bleiben.",
 "thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P783",
+"v": 1344,
+"titel": "Hörstück abspielen: Zeile hervorgehoben, Mitteilung, Englisch",
+"text": "Ein Hörstück fertig sprechen lassen: es kommt die Mitteilung „Hörstück fertig“ mit „Mappen → <Name> → Hörstück“; antippen öffnet die Mappe. Im Panel abspielen: die gerade gesprochene Zeile im Drehbuch ist farbig hervorgehoben und wandert mit; die Zeit vor einer Zeile antippen spielt ab dort. Das Panel auf English umstellen, ein neues Hörstück erstellen: Einleitung, Zeilen und Schluss sind Englisch, die Fundstellen stimmen, die Mitteilung heißt „Audio overview ready“. Zustand → Live, Kasten Hörstück: „1 auf Englisch“, „1 Mitteilungen“; Logs (Wissen): „hoerstueck: drehbuch | … en“.",
+"thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P784",
+"v": 1344,
+"titel": "iPhone: Hörstück im Hintergrund abspielen",
+"text": "In der iPhone-App Meine Sachen → Mappen → eine Mappe → Hörstück: Länge und Stimmen wählen, „Erstellen“; die Liste zeigt „wartet“, dann den Fortschritt. Ein fertiges öffnen, „Abspielen“: der Ton kommt (AAC), die Zeile im Drehbuch ist hervorgehoben, die Zeit einer Zeile spielt ab dort. Die App in den Hintergrund schicken und das iPhone sperren: es spielt weiter, der Sperrbildschirm zeigt Titel und Mappe mit Pause und Abspielen. „Löschen“ fragt erst, dann ist es auch im Panel weg. Android: Mappen in der Panel-Ansicht, derselbe Player wie im Browser.",
+"thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P785",
+"v": 1344,
+"titel": "Hörstück an Telegram schicken",
+"text": "Ich → Telegram verknüpfen und Persönliches dort erlauben. Ein fertiges Hörstück öffnen, „An Telegram“: im eigenen Telegram-Chat kommt eine Audiodatei „Hörstück aus der Mappe „<Name>““, sie spielt in Telegram. Ein zweites Profil ohne Telegram sieht keinen Knopf, nur „„An Telegram“ geht, sobald Telegram verknüpft ist … Ich → Telegram“ als Link. Persönliches in Telegram ausschalten: der Knopf verschwindet. Zustand → Logs (Wissen): „hoerstueck: telegram | ok“ und „telegram: audio sent | … KB“, nie ein Titel; Live: „Telegram: 1 gesendet“.",
+"thread": "Ideen aus Open Notebook übernehmen"
 }
 ]
 }

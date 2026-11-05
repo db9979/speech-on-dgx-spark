@@ -647,7 +647,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `users/ID/tasks.json` | Tasks |  | – | yes | Tasks and reminders |
 | `users/ID/reminders.json` | Reminders |  | – | yes | Tasks and reminders |
 | `users/ID/wissen.db` | Documents: text, sections with context line, search, vectors; knowledge book and map with people, companies and deadlines; collections with entries and levels; analyses per document with their place; links as documents with address, ETag and SHA; audio overviews with their checked script and progress (SQLite) |  | – | yes | Documents (text, search, originals) |
-| `users/ID/hoerstuecke/` | Audio overviews of collections: one Opus file each, while it is spoken a folder with its lines as WAV |  | – | yes | Documents (text, search, originals) |
+| `users/ID/hoerstuecke/` | Audio overviews of collections: one Opus file each and its AAC copy (.m4a for the iPhone and Telegram), while it is spoken a folder with its lines as WAV |  | – | yes | Documents (text, search, originals) |
 | `users/ID/docs/files/` | Originals of uploads (of recordings only the sound track) |  | – | yes | Documents (text, search, originals) |
 | `users/ID/fund.db` | Find: search index over the own data (titles, fields, tags, own tags, mail and attachments, appointments, contacts, lists, reminders, pictures, songs; conversations only date and channel; SQLite) |  | marks with a key of its own per profile (HMAC); mail, attachments, appointments and contacts: title, excerpt, fields and tags AES-GCM | yes | Documents (text, search, originals) |
 | `users/ID/suchpruefung.json` | Test questions and runs of the search check |  | – | yes | Documents (text, search, originals) |
@@ -2499,7 +2499,7 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 
 #### Audio overview of a collection
 
-- hoerstueck.stellen gives the model only pieces of the originals from the collection's documents on short and whole, at most 16000 characters, in turns from each document; never knowledge book pages and never analysis text (model text is never a source of model text). The model only delivers a script as JSON; hoerstueck.pruefe keeps a line only by fixed rules: speaker A, B or C (with two voices A and B), a statement only with an offered place and wissensbuch.check_sentence against it, a transition only without a digit and from the fixed word list (hoerstueck.ueberleitung_ok), transitions at most 0.3 of the lines, the chosen length; below 10 lines none is made. In the quiet chain after the analyses hoerstueck.zeile speaks exactly one line per step through tonteile.sprich with the stage „last“ and the priority key (common.signed_low), through vorrang.run: real speech cancels, the line comes again. hoerstueck.zusammen puts the parts together with pauses, ffmpeg writes Opus. At most 10 per profile; an audio overview never becomes a document.
+- hoerstueck.stellen gives the model only pieces of the originals from the collection's documents on short and whole, at most 16000 characters, in turns from each document; never knowledge book pages and never analysis text (model text is never a source of model text). The model only delivers a script as JSON; hoerstueck.pruefe keeps a line only by fixed rules: speaker A, B or C (with two voices A and B), a statement only with an offered place and wissensbuch.check_sentence against it, a transition only without a digit and from the fixed word list (hoerstueck.ueberleitung_ok), transitions at most 0.3 of the lines, the chosen length; below 10 lines none is made. In the quiet chain after the analyses hoerstueck.zeile speaks exactly one line per step through tonteile.sprich with the stage „last“ and the priority key (common.signed_low), through vorrang.run: real speech cancels, the line comes again. hoerstueck.zusammen puts the parts together with pauses, keeps the start of every line (the panel and the app mark the line while it plays), ffmpeg writes Opus and hoerstueck.m4a an AAC copy for the iPhone's player and Telegram (neither takes Ogg). hoerstueck.melden sends „Hörstück fertig“ through push.send with the way to the collection, only with the collection's name; hoerstueck.an_telegram sends on a click by sendAudio only to the own linked chat (telegram.send_file, personal data allowed there, Notaus). The script is made in the page's or the app's language (German or English) with the same rules and an English word list. At most 10 per profile; an audio overview never becomes a document.
 
 #### Links as documents
 
@@ -2702,7 +2702,10 @@ Applies at: [step 1](#kn-wissen-s1), [step 8](#kn-wissen-s8)
 - `app/panel/hoerstueck.py` `pruefe`: script by fixed rules: speaker, place, number, transition, length ([step 13](#kn-wissen-s13))
 - `app/panel/hoerstueck.py` `ueberleitung_ok`: transition without a digit, fixed words only ([step 13](#kn-wissen-s13))
 - `app/panel/hoerstueck.py` `zeile`: one line through tonteile.sprich, stage last ([step 13](#kn-wissen-s13))
-- `app/panel/hoerstueck.py` `zusammen`: parts with pauses, ffmpeg to Opus ([step 13](#kn-wissen-s13))
+- `app/panel/hoerstueck.py` `zusammen`: parts with pauses and each line's start, ffmpeg to Opus ([step 13](#kn-wissen-s13))
+- `app/panel/hoerstueck.py` `m4a`: AAC copy for the iPhone and Telegram, without a shell ([step 13](#kn-wissen-s13))
+- `app/panel/hoerstueck.py` `an_telegram`: on a click only to the own linked Telegram chat ([step 13](#kn-wissen-s13))
+- `app/panel/hoerstueck.py` `melden`: note „Hörstück fertig“ with a jump link ([step 13](#kn-wissen-s13))
 - `app/panel/hoerstueck.py` `due_once`: quiet chain: first the script, then one line per step ([step 13](#kn-wissen-s13))
 - `app/panel/tonteile.py` `sprich`: the one helper for a spoken part ([step 13](#kn-wissen-s13))
 - `app/panel/doklink.py` `pruefe`: an address by fixed rules before anything is fetched ([step 13](#kn-wissen-s13))
@@ -3244,7 +3247,7 @@ flowchart TD
   s10 -->|queue full| s10x
 ```
 
-1. <a id="kn-tts-s1"></a>**A sentence to speak**: The panel sends every sentence of an answer with the API key and the profile's stage to the TTS service. Other programs may do so too with the API key. Parts the panel has spoken itself (reading aloud in the Dungeon, lines of an audio overview) go through the one helper tonteile.sprich; an audio overview in the background with the stage last and the key, so it never counts as speech (common.signed_low) and waits behind every person.
+1. <a id="kn-tts-s1"></a>**A sentence to speak**: The panel sends every sentence of an answer with the API key and the profile's stage to the TTS service. Other programs may do so too with the API key. Parts the panel has spoken itself (reading aloud in the Dungeon, lines of an audio overview) go through the one helper tonteile.sprich; an audio overview in the background with the stage last and the key, so it never counts as speech (common.signed_low) and waits behind every person; it names its script's language (German or English).
 2. <a id="kn-tts-s2"></a>**Key and size fine?**: BodyLimit refuses requests that are too large or lack the right key before anything is read.
 3. <a id="kn-tts-s3"></a>**Text valid?**: The text must not be empty and may have at most 20000 characters. check_reference takes a reference voice only as an embedded data:audio address, never as a link: the engine would otherwise fetch a link itself from the home network.
 4. <a id="kn-tts-s4"></a>**Engine ready?**: A VoiceDesign request goes to the second engine when it is on; everything else to the main engine. engine_status asks its /health and otherwise names the reason.

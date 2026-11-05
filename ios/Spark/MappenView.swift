@@ -77,6 +77,8 @@ struct MpDetail {
     var eintraege: [MpEintrag]
     let token: Int
     let budget: Int
+    /// Hörstück aus einer Mappe (HoerstueckView.swift): only while the admin released it for the profile
+    let hoerstueck: Bool
 
     init?(_ d: [String: Any]) {
         guard let id = d["id"] as? String else { return nil }
@@ -86,6 +88,7 @@ struct MpDetail {
         eintraege = (d["eintraege"] as? [[String: Any]] ?? []).prefix(100).compactMap { MpEintrag($0) }
         token = (d["token"] as? NSNumber)?.intValue ?? 0
         budget = (d["budget"] as? NSNumber)?.intValue ?? 0
+        hoerstueck = d["hoerstueck"] as? Bool ?? false
     }
 }
 
@@ -247,6 +250,11 @@ struct MappeDetailView: View {
                         Text("Noch leer. Leg im Panel Dokumente, Seiten oder eine Notiz hinein.").foregroundStyle(.secondary)
                     }
                     ForEach(d.eintraege) { e in row(e) }
+                }
+                if d.hoerstueck {
+                    Section {
+                        NavigationLink { HoerstueckView(mappe: mappe) } label: { Label("Hörstück", systemImage: "waveform") }
+                    }
                 }
                 Section {
                     Button("Mappe löschen", role: .destructive) { askDelete = true }

@@ -19900,6 +19900,236 @@
           }
         }
       }
+    },
+    "Drehbuch folgt, sobald niemand spricht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Script follows as soon as nobody speaks"
+          }
+        }
+      }
+    },
+    "Drehbuch fertig · %lld von %lld Zeilen gesprochen · wartet auf ruhige Minuten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Script done · %lld of %lld lines spoken · waits for quiet minutes"
+          }
+        }
+      }
+    },
+    "%lld Stimmen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld voices"
+          }
+        }
+      }
+    },
+    "Daraus lässt sich kein Hörstück machen: zu wenig geprüfte Zeilen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No audio overview can be made of it: too few checked lines"
+          }
+        }
+      }
+    },
+    "ging nicht; „Löschen“ und neu erstellen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "did not work; delete and make again"
+          }
+        }
+      }
+    },
+    "Eingereiht: das Drehbuch entsteht in der nächsten ruhigen Minute, dann Zeile für Zeile.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Queued: the script is made in the next quiet minute, then line by line."
+          }
+        }
+      }
+    },
+    "An deinen Telegram-Chat geschickt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sent to your Telegram chat."
+          }
+        }
+      }
+    },
+    "Hörstück": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio overview"
+          }
+        }
+      }
+    },
+    "Stimmen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voices"
+          }
+        }
+      }
+    },
+    "Höchstens %lld Hörstücke; lösch erst eins.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At most %lld audio overviews; delete one first."
+          }
+        }
+      }
+    },
+    "Für heute ist die Grenze erreicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The limit for today is reached."
+          }
+        }
+      }
+    },
+    "heute %lld von %lld · läuft in ruhigen Minuten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "today %lld of %lld · runs in quiet minutes"
+          }
+        }
+      }
+    },
+    "Neues Hörstück": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New audio overview"
+          }
+        }
+      }
+    },
+    "Hörstücke": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio overviews"
+          }
+        }
+      }
+    },
+    "Noch kein Hörstück aus dieser Mappe.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No audio overview of this collection yet."
+          }
+        }
+      }
+    },
+    "Die Mappe hat sich seitdem geändert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The collection has changed since."
+          }
+        }
+      }
+    },
+    "Das Modell schreibt nur ein Drehbuch. Der Spark prüft jede Zeile: jede Aussage mit Fundstelle, jede Zahl im Dokument, Überleitungen ohne Zahlen und Namen. Ein Hörstück wird nie zu einem Dokument.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The model writes only a script. The Spark checks every line: every statement with its place, every number in the document, transitions without numbers or names. An audio overview never becomes a document."
+          }
+        }
+      }
+    },
+    "Hörstück aus der Mappe „%@“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio overview of the collection “%@”"
+          }
+        }
+      }
+    },
+    "An Telegram": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To Telegram"
+          }
+        }
+      }
+    },
+    "„An Telegram“ geht, sobald Telegram verknüpft ist und Persönliches dort erlaubt ist: Ich → Telegram": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“To Telegram” works once Telegram is linked and personal data is allowed there: Me → Telegram"
+          }
+        }
+      }
+    },
+    "Drehbuch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Script"
+          }
+        }
+      }
+    },
+    "Hörstück löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete the audio overview?"
+          }
+        }
+      }
+    },
+    "Ab hier anhören": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listen from here"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "asr": {
-        "stand": "f3c4b09b6a",
+        "stand": "45fdba11f7",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "common.NOTASR_PORT": ["s9"], "common.NOTASR_IDLE": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],
@@ -205,7 +205,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Sprachausgabe
     "tts": {
-        "stand": "ad82c44ede",
+        "stand": "47d060a229",
         "bezug": {
             "textnorm.NUMBER_MODES": ["s7"], "tts_proxy.speech": ["s1"], "tts_proxy.check_reference": ["s8"],
             "tts_proxy.engine_status": ["s4"], "tts_proxy.apply_clone": ["s8"], "textnorm.speech_markdown": ["s5"],
@@ -233,12 +233,14 @@ SEITEN = {
                "TTS-Dienst. Andere Programme dürfen das mit dem API-Schlüssel auch. Teile, die das Panel selbst "
                "sprechen lässt (Vorlesen im Dungeon, Zeilen eines Hörstücks), gehen über den einen Helfer "
                "tonteile.sprich; ein Hörstück im Hintergrund mit der Stufe hinten und dem Schlüssel, so zählt es nie "
-               "als Sprache (common.signed_low) und wartet hinter jeder Person.",
+               "als Sprache (common.signed_low) und wartet hinter jeder Person; es nennt die Sprache seines "
+               "Drehbuchs (German oder English).",
                "The panel sends every sentence of an answer with the API key and the profile's stage to the TTS "
                "service. Other programs may do so too with the API key. Parts the panel has spoken itself (reading "
                "aloud in the Dungeon, lines of an audio overview) go through the one helper tonteile.sprich; an audio "
                "overview in the background with the stage last and the key, so it never counts as speech "
-               "(common.signed_low) and waits behind every person.")),
+               "(common.signed_low) and waits behind every person; it names its script's language (German or "
+               "English).")),
             S("s2", "frage", ("Schlüssel und Größe in Ordnung?", "Key and size fine?"),
               ("bevor ein Byte gelesen wird", "before a byte is read"),
               ("BodyLimit lehnt zu große Anfragen und solche ohne den richtigen Schlüssel ab, bevor etwas gelesen "

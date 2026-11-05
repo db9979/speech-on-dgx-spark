@@ -154,6 +154,12 @@ THINGS = {
     "mappen": ((("GET", "POST"), r"/api/profile/mappen"), (("GET", "PUT", "DELETE"), r"/api/profile/mappen/[0-9a-f]{12}"),
                (("POST", "PUT", "DELETE"), r"/api/profile/mappen/[0-9a-f]{12}/eintrag"),
                (("POST",), r"/api/profile/mappen/[0-9a-f]{12}/notiz")),
+    # Hörstück aus einer Mappe (hoerstueck.py, Push 5b): the list of a Mappe, „Erstellen", one with its script, the
+    # sound (?form=m4a: AAC for the app's player), „An Telegram" (own linked chat only), delete; each checks its release
+    "hoerstueck": ((("GET", "POST"), r"/api/profile/mappen/[0-9a-f]{12}/hoerstuecke"),
+                   (("GET", "DELETE"), r"/api/profile/hoerstueck/[0-9a-f]{12}"),
+                   (("GET",), r"/api/profile/hoerstueck/[0-9a-f]{12}/ton"),
+                   (("POST",), r"/api/profile/hoerstueck/[0-9a-f]{12}/telegram")),
     # Wissenskarte (wissenskarte.py): see the part of the map around a page or of a document, "Stimmt nicht" for one
     # connection; the export as text stays in the browser
     "wissenskarte": ((("GET",), r"/api/profile/wissenskarte"), (("DELETE",), r"/api/profile/wissenskarte/kante/[0-9]{1,12}")),

@@ -1,6 +1,6 @@
 """Tonteile: the one helper that has the Spark's own speech output speak one part (plan open-notebook 5.3, Push 5a).
 
-sprich(text, voice, klang, ref, stufe, frist, grenze) posts one part to POST /v1/audio/speech (OpenAI form,
+sprich(text, voice, klang, ref, stufe, frist, grenze, sprache) posts one part to POST /v1/audio/speech (OpenAI form,
 response_format pcm) and returns the bytes as they came: 16-bit mono PCM at 24 kHz, or a WAV when the speech output
 ignores response_format. klang is a voice made from a description (VoiceDesign) instead of a named one, ref (data URL,
 words) has the Base model clone that recording. stufe "hinten" sends stufe.headers("hinten"): with the panel's key
@@ -21,12 +21,16 @@ GRENZE = 32 * 1024 * 1024    # bytes of one part at most (about 11 min of 24 kHz
 FRIST = 150                  # seconds one part may take
 
 
-async def sprich(text, voice="", klang="", ref=None, stufe="", frist=FRIST, grenze=GRENZE):
-    """One part spoken by the Spark's speech output (bytes as they came; tests replace the callers' wrappers)."""
+async def sprich(text, voice="", klang="", ref=None, stufe="", frist=FRIST, grenze=GRENZE, sprache=""):
+    """One part spoken by the Spark's speech output (bytes as they came; tests replace the callers' wrappers).
+    sprache: "German" or "English" when the caller knows the part's language (the Hörstück), else the speech
+    output's own default."""
     import httpx
     from core import api_headers
     cfg = load_config()
     body = {"input": text, "response_format": "pcm"}
+    if sprache in ("German", "English"):
+        body["language"] = sprache
     if ref:
         body.update(ref_audio=ref[0], ref_text=ref[1])
     elif klang:

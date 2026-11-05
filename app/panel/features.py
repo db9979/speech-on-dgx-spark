@@ -105,6 +105,8 @@ DESK_SKIP = {
     "fernzugang": "an admin page, stays in the panel; the Begleiter's settings (Übersicht) link to it for an admin",
     "mappen": "set up, looked at and deleted on the panel's page Mappen and in the iPhone app; its tools and the Mappe "
               "filter of document_search and fund_suche work in Frag Spark like in every answer",
+    "hoerstueck": "listened to in the panel, the iPhone app (native player) and Telegram; made, looked at and deleted "
+                  "on the panel's page Mappen; hoerstueck_machen works in Frag Spark like in every answer",
 }
 # Code-Prüfung D8 (one name per thing): an Ich page carries the name of its function, or a word of it, so "Funktionen →
 # Telefon" and "Ich → Telefon" are found as the same thing; these pages are named otherwise, each with its reason

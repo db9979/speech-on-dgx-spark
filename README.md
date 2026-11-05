@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.344** Audio overview in the apps: a player of its own in the iPhone app (also in the background and on the lock screen), "To Telegram" only to the own chat, the notice "Audio overview ready" with a jump link, the line being spoken marked in the script, the script also in English
 - **V01.1.343** Audio overview of a collection: a talk of 2 or 3 voices to listen to (5, 10 or 20 minutes); the model only writes a script, the panel checks every line (place, number check, fixed speakers), it is spoken line by line in quiet minutes; the admin picks the three voices
 - **V01.1.342** Transcribe YouTube links: a YouTube link under "Add link" is transcribed, only the sound track through the pinned yt-dlp (version and SHA-256 fixed, own venv with `sudo ./install.sh --youtube`), all its traffic only through a netguard proxy with a fixed host list; then like a recording with time marks (switch off)
 - **V01.1.341** Find: keep an attachment of a mail as an own document with the button "Add to documents", on the page Find and in the iPhone app; only own attachments up to 10 MB of a kind the documents read, the same attachment only once ("Already in the documents").
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.337** RED FIX: the sudo-rs self-test only passed as root; the trial file is now removed before the second try
 - **V01.1.336** Audio and video as a source: upload recordings under Me → Documents, the own speech recognition transcribes them in quiet minutes, every place with its time ("bei 12:30") and ▶ to listen; background transcription no longer holds anything up, real speech stays first
 - **V01.1.335** Remote access screen now on Windows too: TightVNC, set up by anchor 1.10.0 from the official, pinned and signed file, only on 127.0.0.1, the password never on a command line; "bildschirm aus" or removing uninstalls it again
-- **V01.1.334** Fix files as another user on Ubuntu 25.10 and newer (sudo-rs): `sudo spark-anker dateien als root` failed at visudo; anchor 1.9.1 writes the rule there without the line sudo-rs does not know. Update the anchor.
 
 
 

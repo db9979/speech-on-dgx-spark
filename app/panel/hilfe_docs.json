@@ -2421,7 +2421,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Hörstück aus einer Mappe",
 "title": "Hörstück aus einer Mappe",
-"text": "- hoerstueck.stellen gibt dem Modell nur Stücke der Originale aus den Dokumenten der Mappe auf kurz und ganz, höchstens 16000 Zeichen, im Wechsel aus jedem Dokument; nie Seiten des Wissensbuchs und nie Text der Auswertungen (Modelltext ist nie Quelle für Modelltext). Das Modell liefert nur ein Drehbuch als JSON; hoerstueck.pruefe behält eine Zeile nur nach festen Regeln: Sprecher A, B oder C (mit zwei Stimmen A und B), eine Aussage nur mit angebotener Stelle und wissensbuch.check_sentence gegen sie, eine Überleitung nur ohne Ziffer und aus der festen Wortliste (hoerstueck.ueberleitung_ok), Überleitungen höchstens 0.3 der Zeilen, Länge der Wahl; unter 10 Zeilen entsteht keins. In der ruhigen Kette nach den Auswertungen spricht hoerstueck.zeile je Schritt genau eine Zeile über tonteile.sprich mit Stufe „hinten“ und Vorrang-Schlüssel (common.signed_low), durch vorrang.run: echte Sprache bricht ab, die Zeile kommt wieder. hoerstueck.zusammen setzt die Teile mit Pausen zusammen, ffmpeg schreibt Opus. Höchstens 10 je Profil; ein Hörstück wird nie ein Dokument."
+"text": "- hoerstueck.stellen gibt dem Modell nur Stücke der Originale aus den Dokumenten der Mappe auf kurz und ganz, höchstens 16000 Zeichen, im Wechsel aus jedem Dokument; nie Seiten des Wissensbuchs und nie Text der Auswertungen (Modelltext ist nie Quelle für Modelltext). Das Modell liefert nur ein Drehbuch als JSON; hoerstueck.pruefe behält eine Zeile nur nach festen Regeln: Sprecher A, B oder C (mit zwei Stimmen A und B), eine Aussage nur mit angebotener Stelle und wissensbuch.check_sentence gegen sie, eine Überleitung nur ohne Ziffer und aus der festen Wortliste (hoerstueck.ueberleitung_ok), Überleitungen höchstens 0.3 der Zeilen, Länge der Wahl; unter 10 Zeilen entsteht keins. In der ruhigen Kette nach den Auswertungen spricht hoerstueck.zeile je Schritt genau eine Zeile über tonteile.sprich mit Stufe „hinten“ und Vorrang-Schlüssel (common.signed_low), durch vorrang.run: echte Sprache bricht ab, die Zeile kommt wieder. hoerstueck.zusammen setzt die Teile mit Pausen zusammen, merkt sich den Beginn jeder Zeile (das Panel und die App heben beim Abspielen die Zeile hervor), ffmpeg schreibt Opus und hoerstueck.m4a eine AAC-Kopie für den Player des iPhones und Telegram (beide nehmen kein "
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Hörstück aus einer Mappe",
+"title": "Hörstück aus einer Mappe",
+"text": "Ogg). hoerstueck.melden schickt „Hörstück fertig“ über push.send mit dem Weg zur Mappe, nur mit dem Namen der Mappe; hoerstueck.an_telegram schickt auf Klick per sendAudio nur an den eigenen verknüpften Chat (telegram.send_file, Persönliches dort erlaubt, Notaus). Das Drehbuch entsteht in der Sprache der Seite oder App (Deutsch oder Englisch) mit denselben Regeln und einer englischen Wortliste. Höchstens 10 je Profil; ein Hörstück wird nie ein Dokument."
 },
 {
 "lang": "de",
@@ -3061,7 +3069,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Satz zum Sprechen: Das Panel schickt jeden Satz einer Antwort mit dem API-Schlüssel und der Stufe des Profils an den TTS-Dienst. Andere Programme dürfen das mit dem API-Schlüssel auch. Teile, die das Panel selbst sprechen lässt (Vorlesen im Dungeon, Zeilen eines Hörstücks), gehen über den einen Helfer tonteile.sprich; ein Hörstück im Hintergrund mit der Stufe hinten und dem Schlüssel, so zählt es nie als Sprache (common.signed_low) und wartet hinter jeder Person. 2. Schlüssel und Größe in Ordnung?: BodyLimit lehnt zu große Anfragen und solche ohne den richtigen Schlüssel ab, bevor etwas gelesen wird. 3. Text gültig?: Der Text darf nicht leer sein und höchstens 20000 Zeichen haben. Eine Vorlage-Stimme nimmt check_reference nur als eingebettete data:audio-Adresse an, nie als Link: die Engine würde einen Link sonst selbst aus dem Heimnetz holen. 4. Engine bereit?: Eine VoiceDesign-Anfrage geht an die zweite Engine, wenn sie eingeschaltet ist; alles andere an die Haupt-Engine. engine_status fragt deren /health und nennt sonst den Grund. 5. Markdown weg, Geheimnisse verdeckt: speech_markdown nimmt die Zeichen der Formatierung heraus, dann ersetzt hide_secrets Passwörter, Codewörter, "
+"text": "1. Satz zum Sprechen: Das Panel schickt jeden Satz einer Antwort mit dem API-Schlüssel und der Stufe des Profils an den TTS-Dienst. Andere Programme dürfen das mit dem API-Schlüssel auch. Teile, die das Panel selbst sprechen lässt (Vorlesen im Dungeon, Zeilen eines Hörstücks), gehen über den einen Helfer tonteile.sprich; ein Hörstück im Hintergrund mit der Stufe hinten und dem Schlüssel, so zählt es nie als Sprache (common.signed_low) und wartet hinter jeder Person; es nennt die Sprache seines Drehbuchs (German oder English). 2. Schlüssel und Größe in Ordnung?: BodyLimit lehnt zu große Anfragen und solche ohne den richtigen Schlüssel ab, bevor etwas gelesen wird. 3. Text gültig?: Der Text darf nicht leer sein und höchstens 20000 Zeichen haben. Eine Vorlage-Stimme nimmt check_reference nur als eingebettete data:audio-Adresse an, nie als Link: die Engine würde einen Link sonst selbst aus dem Heimnetz holen. 4. Engine bereit?: Eine VoiceDesign-Anfrage geht an die zweite Engine, wenn sie eingeschaltet ist; alles andere an die Haupt-Engine. engine_status fragt deren /health und nennt sonst den Grund. 5. Markdown weg, Geheimnisse verdeckt: speech_markdown nimmt die Zeichen der Formatieru"
 },
 {
 "lang": "de",
@@ -3069,7 +3077,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "Einmal-Codes und Schlüssel durch „nur schriftlich sichtbar“. Das läuft auf jeder Anfrage, auch wenn „Text bereinigen“ aus ist; die geschriebene Antwort behält den Wert. 6. Text bereinigen: clean_text nimmt Emojis, „haha“, *lacht*, Codeblöcke und Links heraus, beruhigt auf Wunsch Ausrufe und setzt ans Zeilenende einen Punkt, damit die Stimme absetzt. Bleibt nichts übrig, kommt keine Anfrage an die Engine. 7. Sprache, Aussprache, Zahlen: Steht die Sprache auf Auto, rät guess_language an häufigen Wörtern Deutsch oder Englisch, damit ein einzelnes englisches Wort nicht den Ton der ganzen Antwort ändert. Dann gilt die eigene Aussprache-Liste, danach schreibt speak_abbreviations Abkürzungen aus („z. B.“, „ca.“, „€/Monat“) und speak_numbers Datum, Uhrzeit, Geld, Zahlen und Einheiten (km/h, kWh, kg, GB …). 8. Stimme wählen: Temperatur, top_p und ein fester Seed aus den Einstellungen halten die Stimme von Satz zu Satz gleich. Ein Base-Modell spricht mit einer geklonten Stimme aus voices/ (apply_clone); ein unbekannter Name fällt auf die Standardstimme zurück. Mit „Referenz der eigenen Stimme kürzen“ (tts.ref_max_s) nimmt es statt einer langen Aufnahme ein Stück davon: kurzref.cut_at schneid"
+"text": "ng heraus, dann ersetzt hide_secrets Passwörter, Codewörter, Einmal-Codes und Schlüssel durch „nur schriftlich sichtbar“. Das läuft auf jeder Anfrage, auch wenn „Text bereinigen“ aus ist; die geschriebene Antwort behält den Wert. 6. Text bereinigen: clean_text nimmt Emojis, „haha“, *lacht*, Codeblöcke und Links heraus, beruhigt auf Wunsch Ausrufe und setzt ans Zeilenende einen Punkt, damit die Stimme absetzt. Bleibt nichts übrig, kommt keine Anfrage an die Engine. 7. Sprache, Aussprache, Zahlen: Steht die Sprache auf Auto, rät guess_language an häufigen Wörtern Deutsch oder Englisch, damit ein einzelnes englisches Wort nicht den Ton der ganzen Antwort ändert. Dann gilt die eigene Aussprache-Liste, danach schreibt speak_abbreviations Abkürzungen aus („z. B.“, „ca.“, „€/Monat“) und speak_numbers Datum, Uhrzeit, Geld, Zahlen und Einheiten (km/h, kWh, kg, GB …). 8. Stimme wählen: Temperatur, top_p und ein fester Seed aus den Einstellungen halten die Stimme von Satz zu Satz gleich. Ein Base-Modell spricht mit einer geklonten Stimme aus voices/ (apply_clone); ein unbekannter Name fällt auf die Standardstimme zurück. Mit „Referenz der eigenen Stimme kürzen“ (tts.ref_max_s) nimmt es statt "
 },
 {
 "lang": "de",
@@ -3077,7 +3085,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "et einmal an der leisesten Stelle vor der Grenze, die Spracherkennung schreibt das Stück auf, kurzref.keep_words behält davon die Wörter des eigenen Textes (mindestens 70 % gleich, sonst bleibt die ganze Aufnahme). Bis das Stück fertig ist, gilt die ganze Aufnahme. 9. Gestreamt mit anderem Tempo?: vllm-omni nimmt beim Streamen kein Tempo an. Dann streckt tempo.Stretcher den Ton Stück für Stück selbst (WSOLA, die Tonhöhe bleibt). 10. Warten nach Vorrang: PrioGate lässt so viele Sätze durch, wie die Engine gleichzeitig nimmt (engine_max_seqs); die anderen warten nach Stufe, dann nach Ankunft. 11. Engine spricht: Die Engine erzeugt den Ton. Gestreamt kommt er als Stücke zurück; das erste Stück ist absichtlich klein (initial_chunk_frames), damit der Ton schnell beginnt, auch wenn mehrere Anfragen laufen. „Mehrere Stimmen gleichzeitig“ (tts.engine_decode_batch) bündelt im Decoder bis zu 2 oder 4 Stimmen mit CUDA-Graphen, „Gleichen Anfang merken“ (tts.engine_prefix_cache) lässt die Engine den gleichen Anfang der Sätze einer Stimme wiederverwenden; beide stehen auf aus (Standard von vllm-omni). 12. Ton zurück: Der Proxy reicht den Ton unverändert weiter und zählt nur Dauer, Länge und Fehl"
+"text": "einer langen Aufnahme ein Stück davon: kurzref.cut_at schneidet einmal an der leisesten Stelle vor der Grenze, die Spracherkennung schreibt das Stück auf, kurzref.keep_words behält davon die Wörter des eigenen Textes (mindestens 70 % gleich, sonst bleibt die ganze Aufnahme). Bis das Stück fertig ist, gilt die ganze Aufnahme. 9. Gestreamt mit anderem Tempo?: vllm-omni nimmt beim Streamen kein Tempo an. Dann streckt tempo.Stretcher den Ton Stück für Stück selbst (WSOLA, die Tonhöhe bleibt). 10. Warten nach Vorrang: PrioGate lässt so viele Sätze durch, wie die Engine gleichzeitig nimmt (engine_max_seqs); die anderen warten nach Stufe, dann nach Ankunft. 11. Engine spricht: Die Engine erzeugt den Ton. Gestreamt kommt er als Stücke zurück; das erste Stück ist absichtlich klein (initial_chunk_frames), damit der Ton schnell beginnt, auch wenn mehrere Anfragen laufen. „Mehrere Stimmen gleichzeitig“ (tts.engine_decode_batch) bündelt im Decoder bis zu 2 oder 4 Stimmen mit CUDA-Graphen, „Gleichen Anfang merken“ (tts.engine_prefix_cache) lässt die Engine den gleichen Anfang der Sätze einer Stimme wiederverwenden; beide stehen auf aus (Standard von vllm-omni). 12. Ton zurück: Der Proxy reicht d"
 },
 {
 "lang": "de",
@@ -3085,7 +3093,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "er für das Monitoring, nie den Text."
+"text": "en Ton unverändert weiter und zählt nur Dauer, Länge und Fehler für das Monitoring, nie den Text."
 },
 {
 "lang": "de",
@@ -5829,7 +5837,31 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "richt steht; nach Text von außen gesperrt (ändernd), nie über MCP. Live: Kasten *Hörstück* (Hörstücke, wartend, sprechend, offene Zeilen, heute neu, Drehbücher, gesprochene Zeilen, verworfene Zeilen, Abbrüche, fehlende Sprachausgabe; nur Zahlen). Logs hoerstueck: drehbuch | 61 zeilen 7 verworfen …, hoerstueck: zeile | 12 von 61 …, hoerstueck: fertig | 612 s … (Bereich Wissen), nur feste Wörter, Zahlen und profiles.log_name. Apps, Telegram und die Mitteilung „Hörstück fertig“ folgen mit Push 5b; bis dahin zeigt die Android-App den Teil in der Panel-Ansicht der Mappe."
+"text": "richt steht; nach Text von außen gesperrt (ändernd), nie über MCP. Live: Kasten *Hörstück* (Hörstücke, wartend, sprechend, offene Zeilen, heute neu, Drehbücher, gesprochene Zeilen, verworfene Zeilen, Abbrüche, fehlende Sprachausgabe; nur Zahlen). Logs hoerstueck: drehbuch | 61 zeilen 7 verworfen …, hoerstueck: zeile | 12 von 61 …, hoerstueck: fertig | 612 s … (Bereich Wissen), nur feste Wörter, Zahlen und profiles.log_name. Apps, Telegram und die Mitteilung „Hörstück fertig“ kamen mit Push 5b (V01.1.344, unten)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Hörstück, Push 5b: Apps, Telegram, Mitteilung, Englisch (V01.1.344, Plan *open-notebook* Stufe 5): kein neuer Schalter, alles hängt an *Hörstück aus einer Mappe*. Zeile beim Abspielen: hoerstueck.zusammen merkt sich beim Zusammensetzen den Beginn jeder Zeile im Ton (ab, Sekunden); das Panel hebt beim Abspielen die gerade gesprochene Zeile im Drehbuch hervor (Baustein .ld-row.on), die Zeit vor einer Zeile spielt ab dort. Hörstücke aus V01.1.343 haben keine Zeitmarken und keine Hervorhebung. AAC-Kopie: AVFoundation (iPhone) und Telegrams sendAudio nehmen kein Ogg; neben der Opus-Datei schreibt ffmpeg (ohne Shell, dieselben Regeln) eine AAC-Kopie .m4a mit 64 kbit/s (hoerstueck.m4a), bei älteren beim ersten Abruf; GET /api/profile/hoerstueck/{id}/ton?form=m4a liefert sie (audio/mp4, Range, nur das eigene Profil). iPhone: Meine Sachen → Mappen → eine Mappe → Hörstück (nur wenn der Admin es freigegeben hat; iphone.THINGS „hoerstueck“): Länge und Stimmen, „Erstellen“, die Liste mit Fortschritt, ein fertiges mit eigenem Player (die AAC-Kopie nur im Speicher, nie auf dem iPhone abgelegt), Wiedergabe im Hintergrund und auf dem Sperrbildschirm (Now Playing, Abspielen, Pause, Springen), das Dr"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ehbuch mit hervorgehobener Zeile, „An Telegram“ und „Löschen“. Android zeigt den Teil in der Panel-Ansicht der Mappe. Telegram: „An Telegram“ (POST /api/profile/hoerstueck/{id}/telegram, Anmeldung, eigenes Profil, CSRF, 8 KB, Rate-Limit „hoerstuecktg“ 5 je Minute) schickt die AAC-Kopie per sendAudio über telegram.send_file nur an den mit dem Profil verknüpften Chat, nie an einen anderen, nur wenn Persönliches dort erlaubt ist (dieselbe Regel wie für erstellte Dokumente), nicht beim Notaus, höchstens 45 MB; Titel ist der Name der Mappe, nie Text des Modells. Ohne Verknüpfung fehlt der Knopf, ein Hinweis mit Sprung-Link nennt Ich → Telegram. Mitteilung: fertig, kommt „Hörstück fertig“ über push.send (Art „Hörstück“, persönlich) mit dem Weg „Mappen → <Mappe> → Hörstück“ als Sprung-Link auf jedem Gerät; nur der Name der Mappe, nie der Titel oder eine Zeile des Modells. Englisch: das Drehbuch entsteht in der Sprache, in der die Person das Panel oder die App nutzt (sprache de oder en beim Erstellen; das Werkzeug nimmt die Sprache der eigenen Worte): englische Anweisung, feste englische Einleitung und Schluss, englische Wortliste der Überleitungen (hoerstueck.WORDS_EN), sonst dieselben Re"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "geln (Sprecher, Stelle, Zahlenprobe, Länge, Anteil); die Sprachausgabe bekommt die Sprache mit (tonteile.sprich sprache). Daten löschen unter Ich: eigene Karte „Hörstück aus einer Mappe“ (features.OWN, account.WHO): sperrt der Admin Hörstücke für ein Profil, zeigt die Seite Mappen die Zahl und „Daten löschen“. Begleiter: bewusst nicht (features.DESK_SKIP, Anhören im Panel, in der App und in Telegram). Live: Kasten *Hörstück* zusätzlich „auf Englisch“, „AAC-Kopien“, „Mitteilungen“, „Telegram: N gesendet, M nicht“. Logs hoerstueck: telegram | ok (oder aus, notaus, gross, fehler), telegram: audio sent | … KB."
 },
 {
 "lang": "de",
@@ -16253,7 +16285,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Meine Sachen",
 "title": "Meine Sachen",
-"text": " und Umbenennen gehen im Panel. Der Spark prüft jede Änderung (iphone.THINGS „mappen“). Android zeigt Mappen über die Panel-Ansicht. - Personen, Firmen und Fristen (seit V01.1.253, Plan *wissensgraph* Stufe 2, nur wenn der Admin sie freigegeben hat): Auf der Karte stehen Personen, Firmen, Orte, Verträge, Konten und Fristen aus den Dokumenten als eigene Punkte mit der Farbe ihrer Art; „Nach Art“ zeigt eine Art mit ihren Nachbarn. Ein Tippen auf so einen Punkt zeigt seine Art und Stellen und „Löschen“ (mit dem Code von „Bestätigen“, wenn das Profil den zweiten Schritt hat). Umbenennen und Zusammenführen bleiben im Panel (Wissensbuch → Karte), ebenso „Seite umbenennen“ (Wissensbuch → Seiten); die Seite eines Wissensbuch-Eintrags nennt beide Wege (seit V01.1.273). Der Spark prüft jede Änderung (iphone.THINGS „wissensknoten“). - Vielleicht doppelt (seit V01.1.286, nur mit Personen, Firmen und Fristen): unter der Karte „Vielleicht doppelt“ mit der Zahl offener Vorschläge der festen Regeln des Spark; ein Tippen zeigt die Paare mit Grund, nach links wischen ist „Verschieden“ (das Paar kommt nie wieder). Beim Punkt stehen seine Vorschläge unter „Vielleicht derselbe Punkt“. Zusammenführen ge"
+"text": " und Umbenennen gehen im Panel. Der Spark prüft jede Änderung (iphone.THINGS „mappen“). Android zeigt Mappen über die Panel-Ansicht. - Hörstück (seit V01.1.344, Plan *open-notebook* Push 5b, nur wenn der Admin „Hörstück aus einer Mappe“ freigegeben hat): in einer Mappe unter Meine Sachen → Mappen der Eintrag „Hörstück“: Länge (5, 10, 20 min) und Stimmen (2 oder 3) als Segmented Control, „Erstellen“ (das Drehbuch in der Sprache des iPhones, Deutsch oder Englisch), die Liste mit Stand und Fortschritt (lädt alle 30 s neu, solange etwas wartet oder spricht). Ein fertiges Hörstück spielt mit einem eigenen Player: AVFoundation spielt kein Ogg/Opus, deshalb holt die App die AAC-Kopie (/ton?form=m4a) und hält sie nur im Speicher, nie als Datei. Es spielt im Hintergrund und auf dem Sperrbildschirm weiter (Audio-Sitzung „Wiedergabe“, Now Playing mit Titel und Mappe, Abspielen, Pause und Springen); im Drehbuch ist die gerade gesprochene Zeile hervorgehoben, ihre Zeit spielt ab dort. „An Telegram“ schickt es an den eigenen verknüpften Telegram-Chat (sonst ein Hinweis mit Sprung-Link nach Ich → Telegram), „Löschen“ fragt erst. Der Spark prüft jeden Pfad (iphone.THINGS „hoerstueck“). Android zei"
 },
 {
 "lang": "de",
@@ -20781,7 +20813,15 @@
 "file": "Architecture and data flow",
 "head": "Audio overview of a collection",
 "title": "Audio overview of a collection",
-"text": "- hoerstueck.stellen gives the model only pieces of the originals from the collection's documents on short and whole, at most 16000 characters, in turns from each document; never knowledge book pages and never analysis text (model text is never a source of model text). The model only delivers a script as JSON; hoerstueck.pruefe keeps a line only by fixed rules: speaker A, B or C (with two voices A and B), a statement only with an offered place and wissensbuch.check_sentence against it, a transition only without a digit and from the fixed word list (hoerstueck.ueberleitung_ok), transitions at most 0.3 of the lines, the chosen length; below 10 lines none is made. In the quiet chain after the analyses hoerstueck.zeile speaks exactly one line per step through tonteile.sprich with the stage „last“ and the priority key (common.signed_low), through vorrang.run: real speech cancels, the line comes again. hoerstueck.zusammen puts the parts together with pauses, ffmpeg writes Opus. At most 10 per profile; an audio overview never becomes a document."
+"text": "- hoerstueck.stellen gives the model only pieces of the originals from the collection's documents on short and whole, at most 16000 characters, in turns from each document; never knowledge book pages and never analysis text (model text is never a source of model text). The model only delivers a script as JSON; hoerstueck.pruefe keeps a line only by fixed rules: speaker A, B or C (with two voices A and B), a statement only with an offered place and wissensbuch.check_sentence against it, a transition only without a digit and from the fixed word list (hoerstueck.ueberleitung_ok), transitions at most 0.3 of the lines, the chosen length; below 10 lines none is made. In the quiet chain after the analyses hoerstueck.zeile speaks exactly one line per step through tonteile.sprich with the stage „last“ and the priority key (common.signed_low), through vorrang.run: real speech cancels, the line comes again. hoerstueck.zusammen puts the parts together with pauses, keeps the start of every line (the panel and the app mark the line while it plays), ffmpeg writes Opus and hoerstueck.m4a an AAC copy for the iPhone's player and Telegram (neither takes Ogg). hoerstueck.melden sends „Hörstück fertig“"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Audio overview of a collection",
+"title": "Audio overview of a collection",
+"text": " through push.send with the way to the collection, only with the collection's name; hoerstueck.an_telegram sends on a click by sendAudio only to the own linked chat (telegram.send_file, personal data allowed there, Notaus). The script is made in the page's or the app's language (German or English) with the same rules and an English word list. At most 10 per profile; an audio overview never becomes a document."
 },
 {
 "lang": "en",
@@ -21413,7 +21453,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A sentence to speak: The panel sends every sentence of an answer with the API key and the profile's stage to the TTS service. Other programs may do so too with the API key. Parts the panel has spoken itself (reading aloud in the Dungeon, lines of an audio overview) go through the one helper tonteile.sprich; an audio overview in the background with the stage last and the key, so it never counts as speech (common.signed_low) and waits behind every person. 2. Key and size fine?: BodyLimit refuses requests that are too large or lack the right key before anything is read. 3. Text valid?: The text must not be empty and may have at most 20000 characters. check_reference takes a reference voice only as an embedded data:audio address, never as a link: the engine would otherwise fetch a link itself from the home network. 4. Engine ready?: A VoiceDesign request goes to the second engine when it is on; everything else to the main engine. engine_status asks its /health and otherwise names the reason. 5. Markdown off, secrets hidden: speech_markdown takes out the formatting signs, then hide_secrets replaces passwords, code words, one-time codes and keys with „shown in writing only“. This runs"
+"text": "1. A sentence to speak: The panel sends every sentence of an answer with the API key and the profile's stage to the TTS service. Other programs may do so too with the API key. Parts the panel has spoken itself (reading aloud in the Dungeon, lines of an audio overview) go through the one helper tonteile.sprich; an audio overview in the background with the stage last and the key, so it never counts as speech (common.signed_low) and waits behind every person; it names its script's language (German or English). 2. Key and size fine?: BodyLimit refuses requests that are too large or lack the right key before anything is read. 3. Text valid?: The text must not be empty and may have at most 20000 characters. check_reference takes a reference voice only as an embedded data:audio address, never as a link: the engine would otherwise fetch a link itself from the home network. 4. Engine ready?: A VoiceDesign request goes to the second engine when it is on; everything else to the main engine. engine_status asks its /health and otherwise names the reason. 5. Markdown off, secrets hidden: speech_markdown takes out the formatting signs, then hide_secrets replaces passwords, code words, one-time co"
 },
 {
 "lang": "en",
@@ -21421,7 +21461,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " on every request, also when „Clean text“ is off; the written answer keeps the value. 6. Clean the text: clean_text takes out emojis, „haha“, *laughs*, code blocks and links, calms exclamations if wanted and puts a full stop at the end of a line so the voice settles. If nothing is left, no request goes to the engine. 7. Language, pronunciation, numbers: When the language is Auto, guess_language guesses German or English from frequent words, so a single English word does not change the tone of the whole answer. Then the own pronunciation list applies, after that speak_abbreviations writes out abbreviations („z. B.“, „ca.“, „€/Monat“) and speak_numbers date, time, money, numbers and units (km/h, kWh, kg, GB …). 8. Pick the voice: Temperature, top_p and a fixed seed from the settings keep the voice the same from sentence to sentence. A Base model speaks with a cloned voice from voices/ (apply_clone); an unknown name falls back to the default voice. With „Shorten the reference of your own voice“ (tts.ref_max_s) it takes a piece of a long recording instead: kurzref.cut_at cuts once at the quietest point before the limit, speech recognition writes the piece down, kurzref.keep_words keeps"
+"text": "des and keys with „shown in writing only“. This runs on every request, also when „Clean text“ is off; the written answer keeps the value. 6. Clean the text: clean_text takes out emojis, „haha“, *laughs*, code blocks and links, calms exclamations if wanted and puts a full stop at the end of a line so the voice settles. If nothing is left, no request goes to the engine. 7. Language, pronunciation, numbers: When the language is Auto, guess_language guesses German or English from frequent words, so a single English word does not change the tone of the whole answer. Then the own pronunciation list applies, after that speak_abbreviations writes out abbreviations („z. B.“, „ca.“, „€/Monat“) and speak_numbers date, time, money, numbers and units (km/h, kWh, kg, GB …). 8. Pick the voice: Temperature, top_p and a fixed seed from the settings keep the voice the same from sentence to sentence. A Base model speaks with a cloned voice from voices/ (apply_clone); an unknown name falls back to the default voice. With „Shorten the reference of your own voice“ (tts.ref_max_s) it takes a piece of a long recording instead: kurzref.cut_at cuts once at the quietest point before the limit, speech recogni"
 },
 {
 "lang": "en",
@@ -21429,7 +21469,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " the words of the own text (at least 70 % alike, else the whole recording stays). Until the piece is ready, the whole recording applies. 9. Streamed at another tempo?: vllm-omni takes no tempo when streaming. Then tempo.Stretcher stretches the sound piece by piece itself (WSOLA, the pitch stays). 10. Wait by priority: PrioGate lets as many sentences through as the engine takes at once (engine_max_seqs); the others wait by stage, then by arrival. 11. The engine speaks: The engine makes the sound. Streamed it comes back in pieces; the first piece is small on purpose (initial_chunk_frames) so the sound starts fast, also when several requests run. „Several voices at once“ (tts.engine_decode_batch) batches up to 2 or 4 voices in the decoder with CUDA graphs, „Remember the same beginning“ (tts.engine_prefix_cache) lets the engine reuse the same beginning of a voice's sentences; both are off (vllm-omni's default). 12. Sound back: The proxy passes the sound on unchanged and counts only time, length and errors for monitoring, never the text."
+"text": "tion writes the piece down, kurzref.keep_words keeps the words of the own text (at least 70 % alike, else the whole recording stays). Until the piece is ready, the whole recording applies. 9. Streamed at another tempo?: vllm-omni takes no tempo when streaming. Then tempo.Stretcher stretches the sound piece by piece itself (WSOLA, the pitch stays). 10. Wait by priority: PrioGate lets as many sentences through as the engine takes at once (engine_max_seqs); the others wait by stage, then by arrival. 11. The engine speaks: The engine makes the sound. Streamed it comes back in pieces; the first piece is small on purpose (initial_chunk_frames) so the sound starts fast, also when several requests run. „Several voices at once“ (tts.engine_decode_batch) batches up to 2 or 4 voices in the decoder with CUDA graphs, „Remember the same beginning“ (tts.engine_prefix_cache) lets the engine reuse the same beginning of a voice's sentences; both are off (vllm-omni's default). 12. Sound back: The proxy passes the sound on unchanged and counts only time, length and errors for monitoring, never the text."
 },
 {
 "lang": "en",
@@ -24077,7 +24117,31 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "cripts, lines spoken, lines dropped, cancels, missing speech output; numbers only). Logs hoerstueck: drehbuch | 61 zeilen 7 verworfen …, hoerstueck: zeile | 12 von 61 …, hoerstueck: fertig | 612 s … (area knowledge), only fixed words, numbers and profiles.log_name. Apps, Telegram and the notice \"audio overview done\" follow with push 5b; until then the Android app shows the part in the panel view of the collection."
+"text": "cripts, lines spoken, lines dropped, cancels, missing speech output; numbers only). Logs hoerstueck: drehbuch | 61 zeilen 7 verworfen …, hoerstueck: zeile | 12 von 61 …, hoerstueck: fertig | 612 s … (area knowledge), only fixed words, numbers and profiles.log_name. Apps, Telegram and the notice \"audio overview done\" came with push 5b (V01.1.344, below)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Audio overview, push 5b: apps, Telegram, notice, English (V01.1.344, plan *open-notebook* stage 5): no new switch, everything hangs on *Audio overview*. The line while playing: hoerstueck.zusammen keeps the start of every line in the sound (ab, seconds) while it puts the parts together; the panel marks the line being spoken in the script while it plays (building block .ld-row.on), the time in front of a line plays from there. Audio overviews of V01.1.343 have no time marks and no marking. AAC copy: AVFoundation (iPhone) and Telegram's sendAudio take no Ogg; beside the Opus file ffmpeg (no shell, the same rules) writes an AAC copy .m4a at 64 kbit/s (hoerstueck.m4a), for older ones on the first ask; GET /api/profile/hoerstueck/{id}/ton?form=m4a delivers it (audio/mp4, ranges, only the own profile). iPhone: My things → Collections → a collection → Audio overview (only when the admin released it; iphone.THINGS \"hoerstueck\"): length and voices, \"Make\", the list with its progress, a finished one with a player of its own (the AAC copy only in memory, never stored on the iPhone), playing in the background and on the lock screen (Now Playing, play, pause, seek), the script with the marked l"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ine, \"To Telegram\" and \"Delete\". Android shows the part in the panel view of the collection. Telegram: \"To Telegram\" (POST /api/profile/hoerstueck/{id}/telegram, login, own profile, CSRF, 8 KB, rate limit \"hoerstuecktg\" 5 a minute) sends the AAC copy by sendAudio through telegram.send_file only to the chat linked to the profile, never another, only when personal data is allowed there (the same rule as for made documents), not during the Notaus, at most 45 MB; its title is the collection's name, never model text. Without a link the button is missing and a hint with a jump link names Me → Telegram. Notice: when done, \"Hörstück fertig\" (\"Audio overview ready\") comes through push.send (kind \"Hörstück\", personal) with the way \"Collections → <collection> → Audio overview\" as a jump link on every device; only the collection's name, never the model's title or a line. English: the script is made in the language the person uses the panel or the app in (sprache de or en when making it; the tool takes the language of the own words): an English instruction, a fixed English opening and closing, an English list of transition words (hoerstueck.WORDS_EN), otherwise the same rules (speaker, place, n"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "umber check, length, share); the speech output gets the language (tonteile.sprich sprache). Delete data under Me: its own card \"Audio overview\" (features.OWN, account.WHO): when the admin blocks audio overviews for a profile, the page Collections shows the number and \"Delete data\". Companion: on purpose not (features.DESK_SKIP, listening in the panel, the app and Telegram). Live: box *Hörstück* also \"auf Englisch\", \"AAC-Kopien\", \"Mitteilungen\", \"Telegram: N gesendet, M nicht\". Logs hoerstueck: telegram | ok (or aus, notaus, gross, fehler), telegram: audio sent | … KB."
 },
 {
 "lang": "en",
@@ -34149,7 +34213,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "My things",
 "title": "My things",
-"text": "panel view. - People, companies and deadlines (since V01.1.253, plan *wissensgraph* stage 2, only when the admin released them): on the map, people, companies, places, contracts, accounts and deadlines from the documents stand as points of their own in the colour of their kind; \"By kind\" shows one kind with its neighbours. A tap on such a point shows its kind and passages and \"Delete\" (with the code of \"Confirm\" when the profile has the second step). Renaming and merging stay in the panel (Knowledge book → Map), as does \"Rename page\" (Knowledge book → Pages); the page of a knowledge book entry names both ways (since V01.1.273). The Spark checks every change (iphone.THINGS \"wissensknoten\"). - Maybe double (since V01.1.286, only with people, companies and deadlines): below the map \"Maybe double\" with the number of open suggestions of the Spark's fixed rules; a tap shows the pairs with their reason, swipe left for \"Different\" (the pair never comes back). At a point its suggestions stand under \"Maybe the same point\". Merging is in the panel under Knowledge book → Map (with the code of \"Confirm\"); the app says so with a jump link. - Made by the Spark: the documents the Spark made, as be"
+"text": "panel view. - Audio overview (since V01.1.344, plan *open-notebook* push 5b, only when the admin released \"Audio overview\"): in a collection under My things → Collections the entry \"Audio overview\": length (5, 10, 20 min) and voices (2 or 3) as segmented controls, \"Make\" (the script in the iPhone's language, German or English), the list with state and progress (loads again every 30 s while something waits or speaks). A finished audio overview plays with a player of its own: AVFoundation plays no Ogg/Opus, so the app fetches the AAC copy (/ton?form=m4a) and keeps it only in memory, never as a file. It goes on playing in the background and on the lock screen (audio session \"playback\", Now Playing with title and collection, play, pause and seek); in the script the line being spoken is marked, its time plays from there. \"To Telegram\" sends it to the own linked Telegram chat (else a hint with a jump link to Me → Telegram), \"Delete\" asks first. The Spark checks every path (iphone.THINGS \"hoerstueck\"). Android shows the part in the panel view of the collection with the browser's player. CarPlay comes later. - People, companies and deadlines (since V01.1.253, plan *wissensgraph* stage 2, o"
 },
 {
 "lang": "en",

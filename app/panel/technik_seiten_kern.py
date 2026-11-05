@@ -243,7 +243,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "eb9d4aedd0",
+        "stand": "0d7c3c562c",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -289,6 +289,7 @@ SEITEN = {
             "hoerstueck.zeile": ["s13"], "hoerstueck.ueberleitung_ok": ["s13"], "hoerstueck.zusammen": ["s13"],
             "hoerstueck.ZEILEN_MIN": ["s13"], "hoerstueck.UEBER_ANTEIL": ["s13"], "hoerstueck.STELLEN_ZEICHEN": ["s13"],
             "hoerstueck.GESPEICHERT_MAX": ["s13"], "tonteile.sprich": ["s13"],
+            "hoerstueck.m4a": ["s13"], "hoerstueck.an_telegram": ["s13"], "hoerstueck.melden": ["s13"],
             "documents.stelle": ["s13"], "common.signed_low": ["s13"],
             "doklink.pruefe": ["s13"], "doklink.eins": ["s13"], "doklink.neu_abrufen": ["s13"], "wissen.aufnehmen": ["s13"],
             "fundmail.dok_passt": ["s13"], "fundmail.dok_art": ["s13"], "fundmail.zu_dokumenten": ["s13"],
@@ -896,7 +897,13 @@ SEITEN = {
                  "Wahl; unter {hoerstueck.ZEILEN_MIN} Zeilen entsteht keins. In der ruhigen Kette nach den "
                  "Auswertungen spricht hoerstueck.zeile je Schritt genau eine Zeile über tonteile.sprich mit Stufe "
                  "„hinten“ und Vorrang-Schlüssel (common.signed_low), durch vorrang.run: echte Sprache bricht ab, die "
-                 "Zeile kommt wieder. hoerstueck.zusammen setzt die Teile mit Pausen zusammen, ffmpeg schreibt Opus. "
+                 "Zeile kommt wieder. hoerstueck.zusammen setzt die Teile mit Pausen zusammen, merkt sich den Beginn "
+                 "jeder Zeile (das Panel und die App heben beim Abspielen die Zeile hervor), ffmpeg schreibt Opus und "
+                 "hoerstueck.m4a eine AAC-Kopie für den Player des iPhones und Telegram (beide nehmen kein Ogg). "
+                 "hoerstueck.melden schickt „Hörstück fertig“ über push.send mit dem Weg zur Mappe, nur mit dem Namen "
+                 "der Mappe; hoerstueck.an_telegram schickt auf Klick per sendAudio nur an den eigenen verknüpften "
+                 "Chat (telegram.send_file, Persönliches dort erlaubt, Notaus). Das Drehbuch entsteht in der Sprache "
+                 "der Seite oder App (Deutsch oder Englisch) mit denselben Regeln und einer englischen Wortliste. "
                  "Höchstens {hoerstueck.GESPEICHERT_MAX} je Profil; ein Hörstück wird nie ein Dokument.",
                  "hoerstueck.stellen gives the model only pieces of the originals from the collection's documents on "
                  "short and whole, at most {hoerstueck.STELLEN_ZEICHEN} characters, in turns from each document; never "
@@ -908,7 +915,13 @@ SEITEN = {
                  "chosen length; below {hoerstueck.ZEILEN_MIN} lines none is made. In the quiet chain after the "
                  "analyses hoerstueck.zeile speaks exactly one line per step through tonteile.sprich with the stage "
                  "„last“ and the priority key (common.signed_low), through vorrang.run: real speech cancels, the line "
-                 "comes again. hoerstueck.zusammen puts the parts together with pauses, ffmpeg writes Opus. At most "
+                 "comes again. hoerstueck.zusammen puts the parts together with pauses, keeps the start of every line "
+                 "(the panel and the app mark the line while it plays), ffmpeg writes Opus and hoerstueck.m4a an AAC "
+                 "copy for the iPhone's player and Telegram (neither takes Ogg). hoerstueck.melden sends „Hörstück "
+                 "fertig“ through push.send with the way to the collection, only with the collection's name; "
+                 "hoerstueck.an_telegram sends on a click by sendAudio only to the own linked chat "
+                 "(telegram.send_file, personal data allowed there, Notaus). The script is made in the page's or the "
+                 "app's language (German or English) with the same rules and an English word list. At most "
                  "{hoerstueck.GESPEICHERT_MAX} per profile; an audio overview never becomes a document."),
             ]),
             (("Links als Dokument", "Links as documents"), [
@@ -1236,7 +1249,10 @@ SEITEN = {
             ("hoerstueck.pruefe", ("Drehbuch nach festen Regeln: Sprecher, Stelle, Zahl, Überleitung, Länge", "script by fixed rules: speaker, place, number, transition, length")),
             ("hoerstueck.ueberleitung_ok", ("Überleitung ohne Ziffer, nur feste Wörter", "transition without a digit, fixed words only")),
             ("hoerstueck.zeile", ("eine Zeile über tonteile.sprich, Stufe hinten", "one line through tonteile.sprich, stage last")),
-            ("hoerstueck.zusammen", ("Teile mit Pausen, ffmpeg zu Opus", "parts with pauses, ffmpeg to Opus")),
+            ("hoerstueck.zusammen", ("Teile mit Pausen und Beginn je Zeile, ffmpeg zu Opus", "parts with pauses and each line's start, ffmpeg to Opus")),
+            ("hoerstueck.m4a", ("AAC-Kopie für iPhone und Telegram, ohne Shell", "AAC copy for the iPhone and Telegram, without a shell")),
+            ("hoerstueck.an_telegram", ("auf Klick nur an den eigenen verknüpften Telegram-Chat", "on a click only to the own linked Telegram chat")),
+            ("hoerstueck.melden", ("Mitteilung „Hörstück fertig“ mit Sprung-Link", "note „Hörstück fertig“ with a jump link")),
             ("hoerstueck.due_once", ("ruhige Kette: erst Drehbuch, dann je Schritt eine Zeile", "quiet chain: first the script, then one line per step")),
             ("tonteile.sprich", ("der eine Helfer für einen gesprochenen Teil", "the one helper for a spoken part")),
             ("doklink.pruefe", ("Adresse nach festen Regeln, bevor etwas geholt wird", "an address by fixed rules before anything is fetched")),

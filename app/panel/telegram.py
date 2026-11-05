@@ -771,20 +771,25 @@ async def notify(uid, text, private=True, vg=""):
         return 0
 
 
-async def send_file(uid, name, data, caption=""):
-    """A document the Spark made (docmake.py) to the profile's own Telegram chat; personal data, so only when the
-    profile allowed that there. Returns True when Telegram took it."""
+async def send_file(uid, name, data, caption="", audio=None):
+    """A document the Spark made (docmake.py) or, with audio ({"title", "duration"}), a sound by sendAudio (an
+    .m4a Hörstück, hoerstueck.py) to the profile's own Telegram chat; personal data, so only when the profile allowed
+    that there. Returns True when Telegram took it."""
     if not push_on(uid, True) or not link(uid):
         return False
     if notaus.refuse("aussen") or len(data) > 45 * 1024 * 1024:
         print(f"telegram: document refused, {'notaus' if notaus.refuse('aussen') else 'too big'}", flush=True)
         return False
+    form = {"chat_id": str(link(uid)["chat"]), "caption": str(caption)[:900]}
+    field = "audio" if audio else "document"
+    if audio:
+        form.update(title=str(audio.get("title") or "")[:60], duration=str(int(audio.get("duration") or 0)))
     try:
         async with httpx.AsyncClient(timeout=60) as c:
-            r = await c.post(f"{base()}/sendDocument", data={"chat_id": str(link(uid)["chat"]), "caption": str(caption)[:900]},
-                             files={"document": (re.sub(r"[\x00-\x1f\x7f\"\\/]", "", str(name))[:120] or "Dokument", data)})
+            r = await c.post(f"{base()}/send{field.capitalize()}", data=form,
+                             files={field: (re.sub(r"[\x00-\x1f\x7f\"\\/]", "", str(name))[:120] or "Dokument", data)})
         ok = bool(r.json().get("ok"))
-        print(f"telegram: document {'sent' if ok else 'refused'} | {len(data) // 1024} KB", flush=True)
+        print(f"telegram: {field} {'sent' if ok else 'refused'} | {len(data) // 1024} KB", flush=True)
         if not ok:
             print("telegram: send_file", safe(str(r.json().get("description")), 120), flush=True)
         return ok

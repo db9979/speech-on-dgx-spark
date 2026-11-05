@@ -4,6 +4,8 @@
 // player, „Herunterladen“, „Löschen“ and the script below: every line with its voice (A Moderation, B Fachstimme,
 // C Nachfrage, the panel's fixed roles) and, for a line with a place, a chip that opens the document. The panel checked
 // every line by fixed rules; titles and lines are the model's or the documents' words: only through esc(), never markup.
+// Push 5b: the line being heard is marked while the player plays (the start "ab" of every line, .ld-row.on), its time
+// chip plays from there; „An Telegram" sends it to the own linked chat; the script comes in the page's language (L).
 const HS={mid:'',data:null,sel:'',one:null,laenge:5,stimmen:2,msg:'',seq:0,timer:null};
 const HS_STAND={wartet:['wartet','waiting'],sprechen:['spricht','speaking'],fertig:['fertig','done'],leer:['zu wenig','too little'],x:['ging nicht','did not work']};
 const HS_WEG={sprecher:['Sprecher nicht aus der Liste','speaker not from the list'],stelle:['ohne gültige Fundstelle','without a valid place'],
@@ -26,17 +28,20 @@ function hsRow(s){const kind=s.stand==='fertig'?'ok':s.stand==='leer'||s.stand==
     (s.geaendert?`<small>${esc(t('Die Mappe hat sich seitdem geändert.','The collection has changed since.'))}</small>`:'')+
     (s.stand==='sprechen'?`<div class="mpbar" aria-hidden="true"><i style="width:${pct}%"></i></div>`:'')+
     `</span><span class="ld-right"><span class="ld-st ${kind}">${esc(t(...(HS_STAND[s.stand]||HS_STAND.x)))}</span></span></div>`}
-function hsLine(x,R){const right=x.art==='inhalt'?(x.da?`<button type="button" class="ld-chip" data-hsdoc="${esc(x.doc)}" title="${esc(t('Dokument öffnen','Open the document'))}">${esc([x.dok,x.page?t('S. ','p. ')+x.page:'',x.part].filter(Boolean).join(' · '))}</button>`:`<span class="ld-badge off">${esc(t('Dokument weg','document gone'))}</span>`)
-    :`<span class="ld-badge off">${esc(x.art==='fest'?t('fest','fixed'):t('Überleitung','transition'))}</span>`;
-  return `<div class="ld-row">${hsAva(x.sprecher,R)}<span class="ld-mid"><span>${esc(x.text)}</span></span><span class="ld-right">${right}</span></div>`}
+function hsLine(x,R,i){const at=typeof x.ab==='number'?`<button type="button" class="ld-chip" data-hsab="${x.ab}" title="${esc(t('Ab hier anhören','Listen from here'))}">${esc(hsMin(x.ab))}</button>`:'';
+  const right=at+(x.art==='inhalt'?(x.da?`<button type="button" class="ld-chip" data-hsdoc="${esc(x.doc)}" title="${esc(t('Dokument öffnen','Open the document'))}">${esc([x.dok,x.page?t('S. ','p. ')+x.page:'',x.part].filter(Boolean).join(' · '))}</button>`:`<span class="ld-badge off">${esc(t('Dokument weg','document gone'))}</span>`)
+    :`<span class="ld-badge off">${esc(x.art==='fest'?t('fest','fixed'):t('Überleitung','transition'))}</span>`);
+  return `<div class="ld-row" data-hsi="${i}">${hsAva(x.sprecher,R)}<span class="ld-mid"><span>${esc(x.text)}</span></span><span class="ld-right">${right}</span></div>`}
 function hsDetail(){const o=HS.one;if(!o||o.id!==HS.sel)return'';const R=o.rollen;
   const weg=Object.entries(o.verworfen||{}).filter(([,n])=>n).map(([k,n])=>n+' '+t(...(HS_WEG[k]||[k,k])));
   return `<div class="ld-box"><h3>${esc(o.titel||t('Hörstück','Audio overview'))}</h3>`+
     `<p class="mut ld-note">${esc(t(`Hörstück aus der Mappe „${o.mappe_name}“`,`Audio overview of the collection "${o.mappe_name}"`)+(o.dauer_s?' · '+hsMin(o.dauer_s)+' min':''))}</p>`+
     (o.ton?`<audio controls preload="none" src="${esc(hsUrl('',o.id,'/ton'))}"></audio>`:'')+
     `<div class="ld-acts">${o.ton?`<a class="b" href="${esc(hsUrl('',o.id,'/ton'))}" download="hoerstueck.ogg">${ic('download')} ${esc(t('Herunterladen','Download'))}</a>`:''}`+
+    (o.ton&&o.telegram?`<button type="button" class="b" data-hstg="${esc(o.id)}">${ic('send')} ${esc(t('An Telegram','To Telegram'))}</button>`:'')+
     `<button type="button" class="b" data-hsdel="${esc(o.id)}">${ic('trash')} ${esc(t('Löschen','Delete'))}</button></div>`+
-    (o.drehbuch.length?`<div class="ld-grp"><span>${esc(t('Drehbuch','Script'))}</span><span>${esc(o.stand==='sprechen'?t(`${o.fertig_zeilen} von ${o.zeilen} gesprochen`,`${o.fertig_zeilen} of ${o.zeilen} spoken`):'')}</span></div>`+o.drehbuch.map(x=>hsLine(x,R)).join(''):'')+
+    (o.ton&&!o.telegram&&typeof TG_ON!=='undefined'&&TG_ON?`<p class="mut ld-note">${esc(t('„An Telegram“ geht, sobald Telegram verknüpft ist und Persönliches dort erlaubt ist: Ich → Telegram','"To Telegram" works once Telegram is linked and personal data is allowed there: Me → Telegram'))}</p>`:'')+
+    (o.drehbuch.length?`<div class="ld-grp"><span>${esc(t('Drehbuch','Script'))}</span><span>${esc(o.stand==='sprechen'?t(`${o.fertig_zeilen} von ${o.zeilen} gesprochen`,`${o.fertig_zeilen} of ${o.zeilen} spoken`):'')}</span></div>`+o.drehbuch.map((x,i)=>hsLine(x,R,i)).join(''):'')+
     (weg.length?`<p class="mut ld-note">${esc(t('Verworfen: ','Dropped: ')+weg.join(', '))}</p>`:'')+`</div>`}
 function hsPaint(box){const D=HS.data;if(!box)return;
   if(!D){box.innerHTML=`<p class="mut ld-note">${esc(HS.msg||t('Lade die Hörstücke …','Loading the audio overviews …'))}</p>`;return}
@@ -53,7 +58,7 @@ function hsPaint(box){const D=HS.data;if(!box)return;
     (D.stuecke.length?D.stuecke.map(hsRow).join(''):`<div class="ld-empty mut">${esc(t('Noch kein Hörstück aus dieser Mappe.','No audio overview of this collection yet.'))}</div>`)+
     hsDetail()+
     `<p class="mut ld-note">${esc(t('Das Modell schreibt nur ein Drehbuch (JSON). Das Panel prüft jede Zeile: Sprecher nur A, B oder C, jede Aussage mit Fundstelle, jede Zahl im Dokument, keine Links oder Befehle, Überleitungen ohne Zahlen und Namen. Ein Hörstück wird nie zu einem Dokument.','The model writes only a script (JSON). The panel checks every line: speakers only A, B or C, every statement with its place, every number in the document, no links or commands, transitions without numbers or names. An audio overview never becomes a document.'))}</p>`+
-    (HS.msg?`<p class="mut ld-note" role="status">${esc(HS.msg)}</p>`:'')}
+    `<p class="mut ld-note hsmsg" role="status"${HS.msg?'':' hidden'}>${esc(HS.msg)}</p>`}
 async function hsLoad(){const mid=HS.mid,seq=++HS.seq;const {r,d}=await apiTry(hsUrl(mid));if(seq!==HS.seq||mid!==HS.mid)return;
   if(r.ok){HS.data=d;HS.msg=''}else{HS.data=null;HS.msg=errSay(r.status,d.detail,'')}
   if(HS.sel){const x=await apiTry(hsUrl('',HS.sel));if(seq!==HS.seq)return;HS.one=x.r.ok?x.d:null;if(!x.r.ok)HS.sel=''}
@@ -65,18 +70,28 @@ async function hsLoad(){const mid=HS.mid,seq=++HS.seq;const {r,d}=await apiTry(h
 window.hsShow=(det,o)=>{if(!det)return;if(!o||!o.hoerstueck){HS.mid='';clearTimeout(HS.timer);return}
   const box=document.createElement('div');box.className='hsbox';det.appendChild(box);
   if(HS.mid!==o.id){HS.mid=o.id;HS.data=null;HS.sel='';HS.one=null;HS.msg='';hsPaint(box);hsLoad()}else hsPaint(box)};
-document.body.addEventListener('click',async e=>{const b=e.target.closest('#mpview .hsbox [data-hslaenge],#mpview .hsbox [data-hsstimmen],#mpview .hsbox [data-hsmake],#mpview .hsbox [data-hssel],#mpview .hsbox [data-hsdel],#mpview .hsbox [data-hsdoc]');if(!b)return;
+document.body.addEventListener('click',async e=>{const b=e.target.closest('#mpview .hsbox [data-hslaenge],#mpview .hsbox [data-hsstimmen],#mpview .hsbox [data-hsmake],#mpview .hsbox [data-hssel],#mpview .hsbox [data-hsdel],#mpview .hsbox [data-hsdoc],#mpview .hsbox [data-hsab],#mpview .hsbox [data-hstg]');if(!b)return;
   const D=b.dataset,box=b.closest('.hsbox');
   if(D.hslaenge){HS.laenge=+D.hslaenge;hsPaint(box);return}
   if(D.hsstimmen){HS.stimmen=+D.hsstimmen;hsPaint(box);return}
   if(D.hsdoc){if(typeof docView==='function')docView(D.hsdoc);return}
   if(D.hssel){HS.sel=HS.sel===D.hssel?'':D.hssel;HS.one=null;await hsLoad();return}
-  if(D.hsmake){b.disabled=true;const {r,d}=await apiTry(hsUrl(HS.mid),xjson('POST',{laenge:HS.laenge,stimmen:HS.stimmen}));
+  if(D.hsab){const a=box.querySelector('audio');if(a){a.currentTime=+D.hsab;a.play().catch(()=>{})}return}
+  if(D.hstg){b.disabled=true;const {r,d}=await apiTry(hsUrl('',D.hstg,'/telegram'),xjson('POST',{}));
+    HS.msg=r.ok?t('An deinen Telegram-Chat geschickt.','Sent to your Telegram chat.'):errSay(r.status,d.detail,'');b.disabled=false;
+    const m=box.querySelector('.hsmsg');if(m){m.textContent=HS.msg;m.hidden=!HS.msg}return}   // no new paint: the player keeps playing
+  if(D.hsmake){b.disabled=true;const {r,d}=await apiTry(hsUrl(HS.mid),xjson('POST',{laenge:HS.laenge,stimmen:HS.stimmen,sprache:L==='en'?'en':'de'}));
     HS.msg=r.ok?t('Eingereiht: das Drehbuch entsteht in der nächsten ruhigen Minute, dann Zeile für Zeile.','Queued: the script is made in the next quiet minute, then line by line.'):errSay(r.status,d.detail,'');
     if(r.ok)HS.sel=d.id;await hsLoad();return}
   if(D.hsdel){if(!confirm(t('Hörstück löschen?','Delete the audio overview?')))return;b.disabled=true;
     const {r,d}=await apiTry(hsUrl('',D.hsdel),{method:'DELETE'});HS.msg=r.ok?t('Gelöscht.','Deleted.'):errSay(r.status,d.detail,'');
     if(r.ok){HS.sel='';HS.one=null}await hsLoad()}});
+// the line being heard: the last one whose start lies behind the player's time (timeupdate does not bubble: capture)
+function hsMark(a){const o=HS.one,box=a.closest('.hsbox');if(!o||!box)return;let cur=-1;
+  o.drehbuch.forEach((x,i)=>{if(typeof x.ab==='number'&&x.ab<=a.currentTime+0.05)cur=i});
+  box.querySelectorAll('[data-hsi]').forEach(r=>{const on=+r.dataset.hsi===cur&&!a.paused;if(r.classList.contains('on')!==on){r.classList.toggle('on',on);
+    if(on){r.setAttribute('aria-current','true');if(r.getBoundingClientRect().bottom>innerHeight||r.getBoundingClientRect().top<0)r.scrollIntoView({block:'nearest'})}else r.removeAttribute('aria-current')}})}
+['timeupdate','pause','seeked','ended'].forEach(k=>document.body.addEventListener(k,e=>{const a=e.target;if(a&&a.matches&&a.matches('#mpview .hsbox audio'))hsMark(a)},true));
 document.body.addEventListener('keydown',e=>{const r=e.target.closest&&e.target.closest('#mpview .hsbox [data-hssel]');
   if(r&&(e.key==='Enter'||e.key===' ')){e.preventDefault();r.click()}});
 

@@ -2202,7 +2202,12 @@ def snapshot(view="admin", now=None):
                         + (f" · {hsn['abgebrochen']} abgebrochen (Sprache)" if hsn.get("abgebrochen") else "")
                         + (f" · Sprachausgabe fehlte {hsn['tts']}×" if hsn.get("tts") else "")
                         + (f" · {hsn['fehler']} Fehler" if hsn.get("fehler") else "")
-                        + (f" · {hsn['grenze']} an der Tagesgrenze" if hsn.get("grenze") else ""))
+                        + (f" · {hsn['grenze']} an der Tagesgrenze" if hsn.get("grenze") else "")
+                        + (f" · {hsn['englisch']} auf Englisch" if hsn.get("englisch") else "")
+                        + (f" · {hsn['m4a']} AAC-Kopien (iPhone, Telegram)" if hsn.get("m4a") else "")
+                        + (f" · {hsn['mitteilung']} Mitteilungen" if hsn.get("mitteilung") else "")
+                        + (f" · Telegram: {hsn.get('telegram', 0)} gesendet, {hsn.get('telegram_nein', 0)} nicht"
+                           if hsn.get("telegram") or hsn.get("telegram_nein") else ""))
         if x["id"] == "abschrift":   # Aufnahmen abschreiben: waiting, minutes left, today's pieces (numbers only, never a name)
             x["sub"] = (f"Hintergrund: {abn.get('warten', 0)} Aufnahme{'' if abn.get('warten', 0) == 1 else 'n'} · {abn.get('minuten', 0)} min offen"
                         + f" · heute {abn.get('stuecke', 0)} Stücke, {abn.get('heute_min', 0)} min"

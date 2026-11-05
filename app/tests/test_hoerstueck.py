@@ -86,9 +86,10 @@ class Model:
     def __init__(self, answer=good_script):
         self.calls, self.answer, self.seen = 0, answer, []
 
-    async def __call__(self, text, stimmen, zeichen):
+    async def __call__(self, text, stimmen, zeichen, sprache="de"):
         self.calls += 1
         self.seen.append((text, stimmen, zeichen))
+        self.sprache = sprache
         return self.answer(text, stimmen) if callable(self.answer) else self.answer
 
 
@@ -101,8 +102,9 @@ class Voice:
     def __init__(self, fail=None):
         self.calls, self.fail = [], fail
 
-    async def __call__(self, text, voice, klang):
+    async def __call__(self, text, voice, klang, sprache="de"):
         self.calls.append((text, voice, klang))
+        self.sprache = sprache
         if self.fail:
             raise self.fail
         return pcm()
@@ -374,7 +376,7 @@ class Flow(Base):
         mid, a, _ = self.mappe(uid)
         hid = self.make(c, mid)
         os.makedirs(hoerstueck._dir(uid), exist_ok=True)
-        self.assertNotIn("hoerstueck", features.OWN)          # no card of its own: account.WHO has none
+        self.assertIn("hoerstueck", features.OWN)             # its own card too (account.WHO, Push 5b)
         with quiet():
             features.OWN["mappen"][1](uid)
         self.assertEqual(c.get(f"/api/profile/hoerstueck/{hid}").status_code, 404)
@@ -412,19 +414,173 @@ class Flow(Base):
         self.assertIn("Zeilen offen", box["sub"])
 
 
+def transport(seen, status=200, body=b"\x00\x01" * 10):
+    """httpx answers from here: every request it would send lands in seen."""
+    import httpx
+
+    def handle(request):
+        seen.append(request)
+        return httpx.Response(status, content=body)
+    real = httpx.AsyncClient
+
+    def client(*a, **kw):
+        return real(*a, transport=httpx.MockTransport(handle), **kw)
+    return mock.patch.object(httpx, "AsyncClient", client)
+
+
+def english_script(text, stimmen=2):
+    """An obedient English script of the same places."""
+    s_offer, s_grant = place_of(text, "Jahresarbeitszahl"), place_of(text, "Eigenanteil")
+    rows = [{"sprecher": "A", "text": "So what does it all cost?", "quelle": ""}]
+    for w in ("one", "two", "three", "four", "five", "six"):
+        rows.append({"sprecher": "B", "text": f"The heat pump has a seasonal performance of 3,8, point {w}.", "quelle": s_offer})
+        rows.append({"sprecher": "A", "text": f"After the grant 14 200 euros remain as own share, part {w}.", "quelle": s_grant})
+    rows.append({"sprecher": "A", "text": "Und was sagt Jens Kahl?", "quelle": ""})       # not an English transition
+    rows.append({"sprecher": "B", "text": "The heat pump costs only 9 900 euros, line seven.", "quelle": s_offer})  # number not there
+    return {"titel": "Heat pump", "zeilen": rows}
+
+
+class Done(Base):
+    """Push 5b: the AAC copy and the start of every line, the notice, Telegram only to the own chat, English, the
+    own card under Ich and the app's paths."""
+    def finished(self, name, sprache="de", model=None):
+        c, uid = self.fresh(name)
+        mid, a, b = self.mappe(uid)
+        r = c.post(f"/api/profile/mappen/{mid}/hoerstuecke", json={"laenge": 5, "stimmen": 2, "sprache": sprache})
+        self.assertEqual(r.status_code, 200, r.text)
+        hid = r.json()["id"]
+        sent = []
+
+        async def note(*a, **kw):
+            sent.append((a, kw))
+            return 1
+        with mock.patch("push.send", note):
+            self.step(uid, model)
+            for _ in range(200):
+                if hoerstueck.eins(uid, hid)["stand"] != "sprechen":     # (no request: the rate limit stays for the test)
+                    break
+                self.step(uid, model)
+        return c, uid, mid, hid, sent
+
+    def test_m4a_for_the_app_and_the_start_of_every_line(self):
+        c, uid, _, hid, _ = self.finished("Hoerstueckmfa")
+        got = c.get(f"/api/profile/hoerstueck/{hid}").json()
+        self.assertEqual(got["stand"], "fertig")
+        ab = [x["ab"] for x in got["drehbuch"]]
+        self.assertEqual(ab[0], 0)
+        self.assertEqual(ab, sorted(ab))
+        self.assertGreater(ab[-1], ab[1])
+        r = c.get(f"/api/profile/hoerstueck/{hid}/ton?form=m4a")
+        self.assertEqual((r.status_code, r.headers["content-type"]), (200, "audio/mp4"))
+        self.assertEqual(r.content[4:8], b"ftyp")                     # AAC in MP4: the iPhone plays it, Ogg it does not
+        self.assertEqual(oct(os.stat(hoerstueck._file_m4a(uid, hid)).st_mode & 0o777), "0o600")
+        os.remove(hoerstueck._file_m4a(uid, hid))                      # one of Push 5a: made on the first ask
+        self.assertEqual(c.get(f"/api/profile/hoerstueck/{hid}/ton?form=m4a").status_code, 200)
+        self.assertEqual(c.get(f"/api/profile/hoerstueck/{hid}/ton?form=mp3").status_code, 400)
+        other, _ = self.fresh("Hoerstueckmfafremd")
+        self.assertEqual(other.get(f"/api/profile/hoerstueck/{hid}/ton?form=m4a").status_code, 404)
+        self.assertEqual(c.delete(f"/api/profile/hoerstueck/{hid}").status_code, 200)
+        self.assertFalse(os.path.exists(hoerstueck._file_m4a(uid, hid)))
+
+    def test_notice_when_done_with_the_way_and_no_model_words(self):
+        import wege
+        _, _, _, _, sent = self.finished("Hoerstueckmeldung")
+        self.assertEqual(len(sent), 1)
+        (uid, title, body), kw = sent[0]
+        self.assertEqual((title, kw["tag"], kw["private"]), ("Hörstück fertig", "hoerstueck", True))
+        self.assertEqual(wege.find(body), "Mappen → Wärmepumpe → Hörstück")
+        self.assertNotIn("Gastherme", body)                            # never the model's title
+        import push
+        self.assertEqual(push._why("hoerstueck"), "Hörstück")
+
+    def test_english_script_with_the_same_rules(self):
+        m = Model(english_script)
+        c, uid, mid, hid, sent = self.finished("Hoerstueckenglisch", "en", m)
+        self.assertEqual(m.sprache, "en")
+        got = c.get(f"/api/profile/hoerstueck/{hid}").json()
+        self.assertEqual(got["sprache"], "en")
+        texts = [x["text"] for x in got["drehbuch"]]
+        self.assertTrue(texts[0].startswith("An audio overview by the Spark"))
+        self.assertIn("So what does it all cost?", texts)
+        self.assertNotIn("Und was sagt Jens Kahl?", texts)            # a German word and a name: no English transition
+        self.assertFalse(any("9 900" in t for t in texts))             # the number check holds in English too
+        self.assertEqual((got["verworfen"].get("ueberleitung"), got["verworfen"].get("zahl")), (1, 1))
+        self.assertIn("Collections → Wärmepumpe → Audio overview", sent[0][0][2])
+        self.assertTrue(hoerstueck.ueberleitung_ok("And what does that mean?", "en"))
+        self.assertFalse(hoerstueck.ueberleitung_ok("Und was heißt das?", "en"))
+        self.assertFalse(hoerstueck.ueberleitung_ok("And what about the 55 degrees?", "en"))
+        self.assertEqual(c.post(f"/api/profile/mappen/{mid}/hoerstuecke", json={"laenge": 5, "sprache": "fr"}).status_code, 400)
+        seen = []
+        with transport(seen):
+            run(hoerstueck.ton("A line.", "", "", "en"))
+            run(hoerstueck.ton("Eine Zeile.", "", "", "de"))
+        self.assertEqual([json.loads(r.content)["language"] for r in seen], ["English", "German"])
+
+    def test_telegram_only_to_the_own_linked_chat(self):
+        import notaus
+        import telegram
+        c, uid, _, hid, _ = self.finished("Hoerstuecktelegram")
+        oc, ouid = self.fresh("Hoerstuecktelegramfremd")
+        for u, chat in ((uid, 4711), (ouid, 999)):
+            with open(telegram._link_file(u), "w") as f:
+                json.dump({"chat": chat}, f)
+            self.addCleanup(telegram.unlink, u)
+        allowed = {uid}
+        seen = []
+        with transport(seen, body=b'{"ok": true, "result": {}}'), \
+                mock.patch.object(telegram, "push_on", lambda u, private=False: u in allowed and private), \
+                mock.patch.object(telegram, "token", lambda: "123:abc"), quiet():
+            self.assertTrue(c.get(f"/api/profile/hoerstueck/{hid}").json()["telegram"])
+            self.assertEqual(oc.post(f"/api/profile/hoerstueck/{hid}/telegram", json={}).status_code, 404)   # never someone else's
+            r = c.post(f"/api/profile/hoerstueck/{hid}/telegram", json={})
+            self.assertEqual(r.status_code, 200, r.text)
+            allowed.clear()                                            # not linked or nothing personal there
+            self.assertEqual(c.post(f"/api/profile/hoerstueck/{hid}/telegram", json={}).status_code, 409)
+            self.assertFalse(c.get(f"/api/profile/hoerstueck/{hid}").json()["telegram"])
+            allowed.add(uid)
+            with mock.patch.object(notaus, "refuse", lambda kind, u=None: kind == "internet"):
+                self.assertEqual(c.post(f"/api/profile/hoerstueck/{hid}/telegram", json={}).status_code, 423)
+            self.assertEqual(c.post(f"/api/profile/hoerstueck/{hid}/telegram", content=b"x" * (hoerstueck.BODY + 1),
+                                    headers={"Content-Type": "application/json"}).status_code, 413)
+        self.assertEqual(len(seen), 1)                                  # only the one allowed click went out
+        req = seen[0]
+        self.assertTrue(req.url.path.endswith("/sendAudio"))
+        body = req.content
+        self.assertIn(b'name="chat_id"\r\n\r\n4711\r\n', body)       # the own chat, from the profile's link only
+        self.assertNotIn(b"999", body.split(b'name="audio"')[0])
+        self.assertIn(b'name="audio"; filename="hoerstueck.m4a"', body)
+        self.assertNotIn(b"Gastherme", body)                            # the Mappe's name, never the model's title
+
+    def test_own_card_under_ich_and_the_apps_paths(self):
+        import account
+        import iphone
+        import profiles
+        c, uid, mid, hid, _ = self.finished("Hoerstueckkarte")
+        self.assertEqual(account.WHO["hoerstueck"], "hoerstueck")
+        self.assertTrue(c.get("/api/whoami").json()["hoerstueck"])
+        count, clear = features.OWN["hoerstueck"]
+        self.assertEqual(count(uid), 1)
+        with quiet():
+            clear(uid)
+        self.assertEqual(count(uid), 0)
+        self.assertFalse(os.path.exists(hoerstueck._dir(uid)))
+        self.assertEqual(len(mappen.liste(uid)), 1)                     # the Mappe and its documents stay
+        rules = profiles.APP_AREAS["hoerstueck"]
+        for method, path in (("GET", f"/api/profile/mappen/{mid}/hoerstuecke"), ("POST", f"/api/profile/mappen/{mid}/hoerstuecke"),
+                             ("GET", f"/api/profile/hoerstueck/{hid}"), ("DELETE", f"/api/profile/hoerstueck/{hid}"),
+                             ("GET", f"/api/profile/hoerstueck/{hid}/ton"), ("POST", f"/api/profile/hoerstueck/{hid}/telegram")):
+            self.assertTrue(any(method in ms and p.fullmatch(path) for ms, p in rules), (method, path))
+        self.assertFalse(any("POST" in ms and p.fullmatch(f"/api/profile/hoerstueck/{hid}/ton") for ms, p in rules))
+        self.assertTrue(iphone.panel_rights(uid)["hoerstueck"])
+        helpers.set_config(hoerstueck=False)
+        self.assertFalse(iphone.panel_rights(uid)["hoerstueck"])
+        self.assertIn("hoerstueck", features.DESK_SKIP)
+
+
 class Speech(unittest.TestCase):
     """tonteile.sprich is the one helper: the Dungeon's reading aloud as before, the Hörstück as stufe hinten."""
     def transport(self, seen, status=200, body=b"\x00\x01" * 10):
-        import httpx
-
-        def handle(request):
-            seen.append(request)
-            return httpx.Response(status, content=body)
-        real = httpx.AsyncClient
-
-        def client(*a, **kw):
-            return real(*a, transport=httpx.MockTransport(handle), **kw)
-        return mock.patch.object(httpx, "AsyncClient", client)
+        return transport(seen, status, body)
 
     def test_dungeon_ask_tts_is_a_thin_call_and_unchanged(self):
         seen = []
