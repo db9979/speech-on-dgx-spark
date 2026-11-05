@@ -198,7 +198,8 @@ TARGETS = {
     # Auswertungen (auswertung.py): shown while it is on, made and waiting kinds of all profiles, today's dropped points
     "auswertung": ("Auswertungen", "Kurzfassung und Kernaussagen je Dokument · auf dem Spark", "spark", False),
     # Hörstück aus einer Mappe (hoerstueck.py): shown while it is on, Hörstücke of all profiles, waiting and speaking,
-    # lines left, today's scripts, lines spoken, dropped, stops for speech, a missing speech output (numbers only)
+    # lines left, today's scripts, lines spoken, dropped, stops for speech, a missing speech output, the admin's forced
+    # one („erzwungen": what it does now, how many today, refused) (numbers only)
     "hoerstueck": ("Hörstück", "Gespräch aus einer Mappe über die eigene Sprachausgabe · auf dem Spark", "spark", False),
     # Aufnahmen abschreiben (abschrift.py): shown while it is on, recordings waiting and minutes left of all profiles,
     # today's pieces and minutes, stops for speech, a missing speech recognition (numbers only, never a name)
@@ -2198,6 +2199,10 @@ def snapshot(view="admin", now=None):
                         + f" · heute {hsn.get('neu', 0)} neu, {hsn.get('drehbuch', 0)} Drehbücher, {hsn.get('zeilen', 0)} Zeilen gesprochen,"
                         + f" {hsn.get('fertig', 0)} fertig, {hsn.get('verworfen', 0)} Zeilen verworfen"
                         + (" · schreibt das Drehbuch" if hsn.get("laeuft") == "drehbuch" else " · spricht" if hsn.get("laeuft") else "")
+                        + ({"drehbuch": " · erzwungen: schreibt das Drehbuch", "zeile": " · erzwungen: spricht",
+                            "wartet": " · erzwungen: wartet"}.get(hsn.get("erzwungen"), ""))
+                        + (f" · heute {hsn['erzwungen_heute']}× sofort erstellt" if hsn.get("erzwungen_heute") else "")
+                        + (f", {hsn['erzwungen_nein']}× abgelehnt" if hsn.get("erzwungen_nein") else "")
                         + (f" · {hsn['leer']} ohne genug Zeilen" if hsn.get("leer") else "")
                         + (f" · {hsn['abgebrochen']} abgebrochen (Sprache)" if hsn.get("abgebrochen") else "")
                         + (f" · Sprachausgabe fehlte {hsn['tts']}×" if hsn.get("tts") else "")

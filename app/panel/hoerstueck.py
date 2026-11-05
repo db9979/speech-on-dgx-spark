@@ -38,15 +38,27 @@ list of transition words (WORDS_EN), the same rules otherwise; the speech output
 Limits: chat.hoerstueck_day new Hörstücke per profile and day (documents.count_today key "hoerstueck"), at most
 GESPEICHERT_MAX kept per profile, 20 minutes each. The Mappe changed since (sig): the page says so, a new one only per click.
 
+„Sofort erstellen" (Dominik 2026-11-05: „die Erstellung forcieren"): only the admin (ist_admin, checked by the server:
+the panel password's own login, or the profile itself with the role „admin" in its own browser or iPhone app, never a
+Verwalter, a guest or another device) makes a new one at once or pulls a waiting one forward (column sofort). It skips
+the quiet minutes (wissen.quiet: a minute without a question), the quiet chain before it and the day's limit (it is not
+counted there), never GESPEICHERT_MAX and never the rules over the script. Speech still goes first: every request goes
+through vorrang.run (it waits while anybody speaks and is cancelled when speech starts) and the speech output gets the
+same stage „hinten" with the key (a forced line waits behind every person; a normal stage would mark the panel's own
+lines as speech, common.SpeechMark). At most one forced Hörstück at a time (_sofort, and no other open one with sofort
+in any profile); while it runs the quiet chain leaves the Hörstücke alone. Journal and Live: „erzwungen".
+
 Table in users/<id>/wissen.db (dateien.py), next to the Mappen:
     hs_stueck (id, mappe, titel, laenge, stimmen, stand, zeilen, fertig_zeilen, verworfen, dauer_s, datei, sig, made,
-               versuche, fehler, sprache)        stand: wartet / sprechen / fertig / leer / x
+               versuche, fehler, sprache, sofort)        stand: wartet / sprechen / fertig / leer / x
 
     GET    /api/profile/mappen/{mid}/hoerstuecke   the Mappe's Hörstücke with state and progress, the limits, the roles
     POST   /api/profile/mappen/{mid}/hoerstuecke   {laenge: 5|10|20, stimmen: 2|3, sprache: de|en}: queued
     GET    /api/profile/hoerstueck/{hid}           the script with the places and the start of every line
     GET    /api/profile/hoerstueck/{hid}/ton       the sound (range requests, ?form=m4a the AAC copy), only the own profile
     POST   /api/profile/hoerstueck/{hid}/telegram  „An Telegram": to the own linked chat only
+    POST   /api/profile/mappen/{mid}/hoerstuecke/sofort   admin only: a new one at once (the same body as above)
+    POST   /api/profile/hoerstueck/{hid}/sofort    admin only: a waiting or speaking one pulled forward
     DELETE /api/profile/hoerstueck/{hid}           also while the admin blocked it (own data can always go)
 
 Off until the admin allows it (Funktionen → Eigene Dokumente → Mappen → Hörstück aus einer Mappe), then for every
@@ -116,7 +128,7 @@ CREATE TABLE IF NOT EXISTS hs_stueck (id TEXT PRIMARY KEY, mappe TEXT NOT NULL, 
     laenge INTEGER DEFAULT 5, stimmen INTEGER DEFAULT 2, stand TEXT DEFAULT 'wartet', zeilen TEXT DEFAULT '[]',
     fertig_zeilen INTEGER DEFAULT 0, verworfen TEXT DEFAULT '{}', dauer_s INTEGER DEFAULT 0, datei TEXT DEFAULT '',
     sig TEXT DEFAULT '', made INTEGER DEFAULT 0, versuche INTEGER DEFAULT 0, fehler TEXT DEFAULT '',
-    sprache TEXT DEFAULT 'de');
+    sprache TEXT DEFAULT 'de', sofort INTEGER DEFAULT 0);
 """
 SPRACHEN = ("de", "en")   # the script's language: the one the person uses on the page or in the app (Push 5b)
 EINLEITUNG = "Ein Hörstück des Spark aus deiner Mappe „{name}“. Es kann Fehler enthalten; die Quellen stehen im Panel."
@@ -179,12 +191,15 @@ stand stands hear listen talk speak sum summary summing up stay keep watch matte
 believe welcome hello today not never always often sometimes again too also besides finally lastly anyway meanwhile
 """.split())
 _day = DayCounter(neu=0, drehbuch=0, zeilen=0, verworfen=0, fertig=0, leer=0, abgebrochen=0, fehler=0, tts=0, grenze=0,
-                  englisch=0, m4a=0, mitteilung=0, telegram=0, telegram_nein=0)
+                  englisch=0, m4a=0, mitteilung=0, telegram=0, telegram_nein=0, erzwungen=0, erzwungen_nein=0)
 _live = {"at": 0.0, "data": None}
 _hold = {"tts": 0.0}     # until when nothing is sent to the speech output (it failed, or the Dienst-Wächter)
 _said = {}               # what was written to the journal once: "tts" -> until
 _tries = {}              # (uid, hid, line) -> failed tries of one line (memory only)
 _now = {}                # the Hörstück being worked on right now: {"uid", "id", "was"}
+_sofort = {}             # the one forced Hörstück („Sofort erstellen"): {"uid", "id", "was"} while its run goes
+SOFORT_SCHRITTE = 2000   # steps of one forced run at most (speech may cancel a line often), then the quiet chain goes on
+SOFORT_WARTEN = 12       # waits of HOLD_S for a missing speech output at most, then the quiet chain goes on
 _stimmen = {"t": 0.0, "design": False}   # whether the speech output makes voices from a description (STIMMEN_S)
 
 
@@ -248,8 +263,10 @@ class _Db(documents._Db):
         con = super().__enter__()
         try:
             con.executescript(mappen.SCHEMA + SCHEMA)
-            if "sprache" not in {r[1] for r in con.execute("PRAGMA table_info(hs_stueck)")}:   # a table of Push 5a
-                con.execute("ALTER TABLE hs_stueck ADD COLUMN sprache TEXT DEFAULT 'de'")
+            cols = {r[1] for r in con.execute("PRAGMA table_info(hs_stueck)")}
+            for col, typ in (("sprache", "TEXT DEFAULT 'de'"), ("sofort", "INTEGER DEFAULT 0")):   # tables of 5a, 5b
+                if col not in cols:
+                    con.execute(f"ALTER TABLE hs_stueck ADD COLUMN {col} {typ}")
         except BaseException:
             self.__exit__(Exception)
             raise
@@ -510,10 +527,11 @@ def _zeilen(r):
     return [x for x in z if isinstance(x, dict)] if isinstance(z, list) else []
 
 
-def bitte(uid, mid, laenge, stimmen, now=None, sprache="de"):
+def bitte(uid, mid, laenge, stimmen, now=None, sprache="de", sofort=False):
     """The owner's click „Erstellen": a new Hörstück waits, its script in sprache (SPRACHEN). Returns (id, "") or
     (None, reason word): "keine mappe", "leer" (no document at kurz or ganz), "voll" (GESPEICHERT_MAX kept), "grenze"
-    (the day's limit)."""
+    (the day's limit). sofort (the admin's „Sofort erstellen"): marked forced, the day's limit neither asked nor
+    counted."""
     import mappen
     if laenge not in LAENGEN or stimmen not in STIMMEN or sprache not in SPRACHEN:
         raise ValueError("laenge 5, 10 or 20, stimmen 2 or 3, sprache de or en")
@@ -527,14 +545,15 @@ def bitte(uid, mid, laenge, stimmen, now=None, sprache="de"):
             return None, "leer"
         if con.execute("SELECT COUNT(*) FROM hs_stueck").fetchone()[0] >= GESPEICHERT_MAX:
             return None, "voll"
-    if documents.count_today(uid, day, key="hoerstueck") >= day_limit():
-        _day.today()["grenze"] += 1
-        return None, "grenze"
-    documents.count_today(uid, day, add=1, key="hoerstueck")
+    if not sofort:
+        if documents.count_today(uid, day, key="hoerstueck") >= day_limit():
+            _day.today()["grenze"] += 1
+            return None, "grenze"
+        documents.count_today(uid, day, add=1, key="hoerstueck")
     hid = secrets.token_hex(6)
     with _Db(uid) as con:
-        con.execute("INSERT INTO hs_stueck (id, mappe, laenge, stimmen, stand, made, sprache) "
-                    "VALUES (?, ?, ?, ?, 'wartet', ?, ?)", (hid, mid, laenge, stimmen, now, sprache))
+        con.execute("INSERT INTO hs_stueck (id, mappe, laenge, stimmen, stand, made, sprache, sofort) "
+                    "VALUES (?, ?, ?, ?, 'wartet', ?, ?, ?)", (hid, mid, laenge, stimmen, now, sprache, int(bool(sofort))))
     _day.today()["neu"] += 1
     return hid, ""
 
@@ -561,7 +580,7 @@ def _kurz(r, sig_now):
             "verworfen": weg if isinstance(weg, dict) else {}, "dauer_s": r["dauer_s"], "made": r["made"],
             "ton": bool(r["datei"]), "fehler": r["fehler"] or "", "sprache": _sprache(r),
             "geaendert": bool(r["sig"]) and sig_now is not None and r["sig"] != sig_now,
-            "laeuft": _now.get("id") == r["id"]}
+            "laeuft": _now.get("id") == r["id"], "sofort": bool(r["sofort"]), "erzwungen": _sofort.get("id") == r["id"]}
 
 
 def liste(uid, mid):
@@ -650,11 +669,13 @@ def mappe_weg(uid, mid):
 
 # ---------------------------------------------------------------- the quiet chain
 def _naechstes(uid):
-    """The oldest Hörstück of this profile that is speaking, else the oldest waiting one: (row, Mappe name) or None."""
+    """The oldest Hörstück of this profile that is speaking, else the oldest waiting one, a forced one (sofort) before
+    all others: (row, Mappe name) or None."""
     import mappen
     with _Db(uid) as con:
-        for stand in ("sprechen", "wartet"):
-            for r in con.execute("SELECT * FROM hs_stueck WHERE stand=? ORDER BY made, id", (stand,)).fetchall():
+        for sofort, stand in ((1, "sprechen"), (1, "wartet"), (0, "sprechen"), (0, "wartet")):
+            for r in con.execute("SELECT * FROM hs_stueck WHERE stand=? AND sofort>=? ORDER BY made, id",
+                                 (stand, sofort)).fetchall():
                 m = mappen._get(con, r["mappe"])
                 if m:
                     return dict(r), m["name"]
@@ -891,7 +912,7 @@ async def zeile(uid, r, now, name=""):
 async def due_once(now=None):
     """KETTE (wissen.due_once, after the Auswertungen): one step of one Hörstück of one profile, only in quiet minutes:
     the script, or exactly one line spoken. Never while the speech output is gone."""
-    if not admin_on():
+    if not admin_on() or _sofort:     # a forced one runs: it goes first, the chain leaves the Hörstücke alone
         return None
     import wissen
     if not wissen.quiet():
@@ -920,6 +941,119 @@ async def due_once(now=None):
         await zeile(uid, r, now, name)
         return "hoerstueck"
     return None
+
+
+# ---------------------------------------------------------------- „Sofort erstellen": only the admin
+def ist_admin(request, uid):
+    """Whether this request of the profile uid comes from the admin, decided by the server: the panel password's own
+    login (only while a password is set), or the profile itself acting with the role „admin" (coadmin.session: its
+    own browser login with the second step, or its proved iPhone app). Never a Verwalter, a guest or a device key."""
+    import coadmin
+    import core
+    try:
+        if core.password_set() and core._admin_cookie_age(request) is not None:
+            return True
+        s = coadmin.session(request)
+    except Exception:   # noqa: BLE001  (no session: no admin)
+        return False
+    return bool(s) and s.get("role") == "admin" and s.get("id") == uid
+
+
+def _sofort_offen(uid, hid):
+    """The forced Hörstück that holds the one place ("" when it is free or it is hid itself, with no run going)."""
+    if _sofort:
+        return _sofort["id"]
+    for u in profiles.user_ids():
+        if not _exists(u):
+            continue
+        with _Db(u) as con:
+            r = con.execute("SELECT id FROM hs_stueck WHERE sofort=1 AND stand IN ('wartet', 'sprechen') AND id!=? "
+                            "LIMIT 1", (hid if u == uid else "",)).fetchone()
+        if r:
+            return r["id"]
+    return ""
+
+
+def vorziehen(uid, hid):
+    """A waiting or speaking Hörstück of this profile marked forced. Returns "" or "keins" (none of this profile, or
+    it is done already)."""
+    with _Db(uid) as con:
+        r = _row(con, hid)
+        if not r or r["stand"] not in ("wartet", "sprechen"):
+            return "keins"
+        con.execute("UPDATE hs_stueck SET sofort=1 WHERE id=?", (hid,))
+    return ""
+
+
+def _offen(uid, hid):
+    """(row, Mappe name) of this Hörstück, or None (deleted, or its Mappe went: then it is marked x)."""
+    import mappen
+    with _Db(uid) as con:
+        r = _row(con, hid)
+        if not r:
+            return None
+        m = mappen._get(con, r["mappe"])
+        if not m:
+            if r["stand"] in ("wartet", "sprechen"):
+                con.execute("UPDATE hs_stueck SET stand='x', fehler='mappe' WHERE id=?", (hid,))
+            return None
+        return dict(r), m["name"]
+
+
+async def _pause(secs):
+    await asyncio.sleep(secs)   # (tests replace it)
+
+
+def _spawn(uid, hid):
+    import core
+    core.spawn(sofort_lauf(uid, hid), name="hoerstueck-sofort")
+
+
+async def sofort_lauf(uid, hid):
+    """The forced run: the script, then line by line, one step after the other without the quiet minutes and without
+    the quiet chain. Every request still goes through vorrang.run (speech first) and with the stage „hinten" (ton).
+    Ends when the Hörstück is done, empty, broken or gone, the admin switched it off or blocked the profile, the speech
+    output stayed away SOFORT_WARTEN times HOLD_S, or after SOFORT_SCHRITTE steps (the quiet chain then goes on, the
+    Hörstück stays marked and comes first there). Returns the word it ended with."""
+    import dienstwacht
+    who = _who(uid)
+    _sofort.update(uid=uid, id=hid, was="wartet")
+    ende, warten = "schritte", 0
+    try:
+        for _ in range(SOFORT_SCHRITTE):
+            if not admin_on() or not features.allowed("hoerstueck", uid):
+                ende = "aus"
+                break
+            while _now:          # a step of the quiet chain began before: it ends first
+                await _pause(1)
+            got = await asyncio.to_thread(_offen, uid, hid)
+            if not got:
+                ende = "weg"
+                break
+            r, name = got
+            if r["stand"] not in ("wartet", "sprechen"):
+                ende = r["stand"]
+                break
+            now = time.time()
+            if r["stand"] == "wartet":
+                _sofort["was"] = "drehbuch"
+                await drehbuch(uid, r, name, now)
+                continue
+            if now < _hold["tts"] or dienstwacht.down("tts"):
+                warten += 1
+                if warten > SOFORT_WARTEN:
+                    ende = "tts"
+                    break
+                _sofort["was"] = "wartet"
+                await _pause(HOLD_S)
+                continue
+            _sofort["was"] = "zeile"
+            await zeile(uid, r, now, name)
+    finally:
+        if _sofort.get("id") == hid:
+            _sofort.clear()
+    print(f"hoerstueck: erzwungen | ende | {ende} | {who}", flush=True)
+    return ende
 
 
 # ---------------------------------------------------------------- the notice and Telegram (Push 5b)
@@ -997,8 +1131,8 @@ def _own_count(uid):
 def for_live(now=None):
     """{"on", "stuecke", "warten", "sprechen", "zeilen_offen", "neu", "drehbuch", "zeilen", "verworfen", "fertig",
     "leer", "abgebrochen", "fehler", "tts", "grenze", "englisch", "m4a", "mitteilung", "telegram", "telegram_nein",
-    "laeuft"}: sums over all profiles (remembered LIVE_EVERY s) and
-    today's counts."""
+    "laeuft", "erzwungen", "erzwungen_heute", "erzwungen_nein"}: sums over all profiles (remembered LIVE_EVERY s) and
+    today's counts; erzwungen is what the forced run does right now ("" or drehbuch, zeile, wartet)."""
     now = time.time() if now is None else now
     if not admin_on():
         return {"on": False}
@@ -1021,9 +1155,10 @@ def for_live(now=None):
                 continue
         _live.update(at=now, data={"stuecke": alle, "warten": warten, "sprechen": sprechen, "zeilen_offen": offen})
     d = _day.today(now)
-    return dict(_live["data"], on=True, laeuft=_now.get("was") or "", **{k: d[k] for k in (
-        "neu", "drehbuch", "zeilen", "verworfen", "fertig", "leer", "abgebrochen", "fehler", "tts", "grenze", "englisch",
-        "m4a", "mitteilung", "telegram", "telegram_nein")})
+    return dict(_live["data"], on=True, laeuft=_now.get("was") or "", erzwungen=_sofort.get("was") or "",
+                erzwungen_heute=d["erzwungen"], **{k: d[k] for k in (
+                    "neu", "drehbuch", "zeilen", "verworfen", "fertig", "leer", "abgebrochen", "fehler", "tts", "grenze",
+                    "englisch", "m4a", "mitteilung", "telegram", "telegram_nein", "erzwungen_nein")})
 
 
 # ---------------------------------------------------------------- the tool for the model (only queues)
@@ -1103,7 +1238,8 @@ async def list_route(mid: str, request: Request, prof=Depends(own_profile)):
         raise HTTPException(404, "no such Mappe")
     n, most = heute(uid)
     return dict(got, heute=n, grenze=most, max=GESPEICHERT_MAX, laengen=sorted(LAENGEN), stimmen=list(STIMMEN),
-                rollen={k: list(v) for k, v in ROLLEN.items()})
+                rollen={k: list(v) for k, v in ROLLEN.items()}, sofort=ist_admin(request, uid),
+                sofort_frei=not _sofort)
 
 
 @router.post("/api/profile/mappen/{mid}/hoerstuecke", dependencies=[Depends(assistant)])
@@ -1165,6 +1301,75 @@ async def sound_route(hid: str, request: Request, prof=Depends(own_profile)):
                         content_disposition_type="inline",
                         headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff",
                                  "Content-Security-Policy": "default-src 'none'; sandbox"})
+
+
+_sofort_lock = {}   # event loop -> asyncio.Lock: the check for the one place and taking it go together
+
+
+def _lock():
+    loop = asyncio.get_running_loop()
+    if loop not in _sofort_lock:
+        _sofort_lock.clear()
+        _sofort_lock[loop] = asyncio.Lock()
+    return _sofort_lock[loop]
+
+
+def _sofort_nein(why, prof, code, text):
+    _day.today()["erzwungen_nein"] += 1
+    print(f"hoerstueck: erzwungen abgelehnt | {why} |", profiles.log_name(prof), flush=True)
+    raise HTTPException(code, text)
+
+
+SOFORT_SAY = {"admin": (403, "Sofort erstellen darf nur der Admin."),
+              "laeuft": (409, "Es wird schon ein Hörstück sofort erstellt; danach geht das nächste."),
+              "keins": (404, "Dieses Hörstück wartet nicht (mehr)."),
+              "form": (400, "laenge: 5, 10 or 20; stimmen: 2 or 3; sprache: de or en"),
+              "keine mappe": (404, "no such Mappe"),
+              "leer": (400, "In der Mappe liegt kein Dokument auf der Stufe kurz oder ganz."),
+              "voll": (400, f"Höchstens {GESPEICHERT_MAX} Hörstücke; lösch erst eins.")}
+
+
+async def _sofort_route(request, prof, mid=None, hid=None):
+    """Both ways of „Sofort erstellen": the admin check first (server side), then the one place, then the Hörstück."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "hoerstuecksofort", uid)
+    b = await json_body(request, BODY, lenient=hid is not None)
+    if not ist_admin(request, uid):
+        _sofort_nein("admin", prof, *SOFORT_SAY["admin"])
+    laenge, stimmen, sprache = b.get("laenge", 5), b.get("stimmen", 2), b.get("sprache", "de")
+    if hid is None and (laenge not in LAENGEN or stimmen not in STIMMEN or isinstance(laenge, bool) or
+                        isinstance(stimmen, bool) or sprache not in SPRACHEN):
+        _sofort_nein("form", prof, *SOFORT_SAY["form"])
+    async with _lock():
+        held = await asyncio.to_thread(_sofort_offen, uid, hid or "")
+        if held:
+            _sofort_nein("laeuft", prof, *SOFORT_SAY["laeuft"])
+        if hid is None:
+            hid, why = await asyncio.to_thread(bitte, uid, mid, laenge, stimmen, sprache=sprache, sofort=True)
+            was = "neu"
+        else:
+            why = await asyncio.to_thread(vorziehen, uid, hid)
+            was = "vorgezogen"
+        if why:
+            _sofort_nein(why, prof, *SOFORT_SAY[why])
+        _sofort.update(uid=uid, id=hid, was="wartet")   # taken before the lock opens: never a second one
+    _day.today()["erzwungen"] += 1
+    print(f"hoerstueck: erzwungen | {was} |", profiles.log_name(prof), flush=True)
+    _spawn(uid, hid)
+    return {"ok": True, "id": hid}
+
+
+@router.post("/api/profile/mappen/{mid}/hoerstuecke/sofort", dependencies=[Depends(assistant)])
+async def sofort_neu_route(mid: str, request: Request, prof=Depends(own_profile)):
+    """„Sofort erstellen": a new Hörstück at once, only the admin (Dominik 2026-11-05)."""
+    return await _sofort_route(request, prof, mid=_id(mid, "Mappe"))
+
+
+@router.post("/api/profile/hoerstueck/{hid}/sofort", dependencies=[Depends(assistant)])
+async def sofort_vor_route(hid: str, request: Request, prof=Depends(own_profile)):
+    """„Sofort erstellen" for one that waits or speaks: pulled forward, only the admin."""
+    return await _sofort_route(request, prof, hid=_id(hid, "Hörstück"))
 
 
 TG_SAY = {"keins": (404, "Das Hörstück ist noch nicht fertig."),

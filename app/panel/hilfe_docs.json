@@ -2429,7 +2429,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Hörstück aus einer Mappe",
 "title": "Hörstück aus einer Mappe",
-"text": "Ogg). hoerstueck.melden schickt „Hörstück fertig“ über push.send mit dem Weg zur Mappe, nur mit dem Namen der Mappe; hoerstueck.an_telegram schickt auf Klick per sendAudio nur an den eigenen verknüpften Chat (telegram.send_file, Persönliches dort erlaubt, Notaus). Das Drehbuch entsteht in der Sprache der Seite oder App (Deutsch oder Englisch) mit denselben Regeln und einer englischen Wortliste. Höchstens 10 je Profil; ein Hörstück wird nie ein Dokument."
+"text": "Ogg). hoerstueck.melden schickt „Hörstück fertig“ über push.send mit dem Weg zur Mappe, nur mit dem Namen der Mappe; hoerstueck.an_telegram schickt auf Klick per sendAudio nur an den eigenen verknüpften Chat (telegram.send_file, Persönliches dort erlaubt, Notaus). Das Drehbuch entsteht in der Sprache der Seite oder App (Deutsch oder Englisch) mit denselben Regeln und einer englischen Wortliste. Höchstens 10 je Profil; ein Hörstück wird nie ein Dokument. „Sofort erstellen“ darf nur der Admin (hoerstueck.ist_admin prüft es auf dem Server: Login des Panel-Passworts oder das Profil selbst mit der Rolle „Admin“, nie ein Verwalter oder Gast): hoerstueck.sofort_lauf macht ein neues oder vorgezogenes Stück ohne ruhige Minuten, ohne die Kette davor und ohne Tagesgrenze, mit denselben Regeln; jede Anfrage geht weiter durch vorrang.run und mit der Stufe „hinten“, echte Sprache geht also vor. Höchstens eins zugleich (hoerstueck._sofort_offen); solange es läuft, lässt die Kette die Hörstücke liegen."
 },
 {
 "lang": "de",
@@ -5862,6 +5862,22 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "geln (Sprecher, Stelle, Zahlenprobe, Länge, Anteil); die Sprachausgabe bekommt die Sprache mit (tonteile.sprich sprache). Daten löschen unter Ich: eigene Karte „Hörstück aus einer Mappe“ (features.OWN, account.WHO): sperrt der Admin Hörstücke für ein Profil, zeigt die Seite Mappen die Zahl und „Daten löschen“. Begleiter: bewusst nicht (features.DESK_SKIP, Anhören im Panel, in der App und in Telegram). Live: Kasten *Hörstück* zusätzlich „auf Englisch“, „AAC-Kopien“, „Mitteilungen“, „Telegram: N gesendet, M nicht“. Logs hoerstueck: telegram | ok (oder aus, notaus, gross, fehler), telegram: audio sent | … KB."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Hörstück sofort erstellen (V01.1.345, Dominik 2026-11-05: „die Erstellung forcieren“): kein neuer Schalter, es gehört zum Hörstück. Nur der Admin sieht unter Mappen → eine Mappe → Hörstück neben „Erstellen“ den Knopf „Sofort erstellen“ und bei einem Stück, das wartet oder spricht, „Jetzt erstellen“ (vorziehen); im iPhone dieselben Knöpfe. Ob es der Admin ist, entscheidet der Server (hoerstueck.ist_admin): der Login des Panel-Passworts (nur mit gesetztem Passwort) oder das Profil selbst mit der Rolle „Admin“ in seinem Browser-Login mit zweitem Schritt oder seiner bestätigten iPhone-App; nie ein Verwalter, ein Gast oder ein Geräteschlüssel. Endpunkte POST /api/profile/mappen/{id}/hoerstuecke/sofort (Länge, Stimmen, Sprache wie beim Erstellen) und POST /api/profile/hoerstueck/{id}/sofort: Anmeldung, eigenes Profil, Freigabe, Admin-Recht, CSRF, 8 KB, Rate-Limit „hoerstuecksofort“ 5 je Minute. Ein erzwungenes Stück (Spalte sofort) überspringt die ruhigen Minuten (wissen.quiet), die ruhige Kette davor und die Tagesgrenze (es zählt dort nicht mit); die zehn gespeicherten und die Prüfung des Drehbuchs bleiben. Echte Sprache geht trotzdem vor: hoerstueck.sofort_lauf schickt jede Anfrage dur"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ch vorrang.run (wartet, solange jemand spricht, bricht ab, wenn Sprache beginnt, die Zeile kommt wieder) und an die Sprachausgabe mit derselben Stufe „hinten“ samt Schlüssel; eine normale Stufe würde die eigenen Zeilen als Sprache markieren (common.SpeechMark) und alle Hintergrundarbeit anhalten. Höchstens ein erzwungenes Stück zugleich, über alle Profile (hoerstueck._sofort_offen, sonst 409); solange es läuft, lässt die ruhige Kette die Hörstücke liegen, danach nimmt sie ein markiertes zuerst. Live: Kasten *Hörstück* „erzwungen: schreibt das Drehbuch / spricht / wartet“, „heute N× sofort erstellt, M× abgelehnt“. Logs hoerstueck: erzwungen | neu (oder vorgezogen), hoerstueck: erzwungen abgelehnt | admin (oder laeuft, keins, form, voll, leer), hoerstueck: erzwungen | ende | fertig (oder leer, x, aus, weg, tts, schritte)."
 },
 {
 "lang": "de",
@@ -20821,7 +20837,7 @@
 "file": "Architecture and data flow",
 "head": "Audio overview of a collection",
 "title": "Audio overview of a collection",
-"text": " through push.send with the way to the collection, only with the collection's name; hoerstueck.an_telegram sends on a click by sendAudio only to the own linked chat (telegram.send_file, personal data allowed there, Notaus). The script is made in the page's or the app's language (German or English) with the same rules and an English word list. At most 10 per profile; an audio overview never becomes a document."
+"text": " through push.send with the way to the collection, only with the collection's name; hoerstueck.an_telegram sends on a click by sendAudio only to the own linked chat (telegram.send_file, personal data allowed there, Notaus). The script is made in the page's or the app's language (German or English) with the same rules and an English word list. At most 10 per profile; an audio overview never becomes a document. „Sofort erstellen“ (make now) is for the admin only (hoerstueck.ist_admin checks it on the server: the panel password's login or the profile itself with the role admin, never a manager or a guest): hoerstueck.sofort_lauf makes a new or pulled forward one without quiet minutes, without the chain before it and without the day limit, with the same rules; every request still goes through vorrang.run and with the stage „last“, so real speech goes first. At most one at a time (hoerstueck._sofort_offen); while it runs the chain leaves the audio overviews alone."
 },
 {
 "lang": "en",
@@ -24142,6 +24158,22 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "umber check, length, share); the speech output gets the language (tonteile.sprich sprache). Delete data under Me: its own card \"Audio overview\" (features.OWN, account.WHO): when the admin blocks audio overviews for a profile, the page Collections shows the number and \"Delete data\". Companion: on purpose not (features.DESK_SKIP, listening in the panel, the app and Telegram). Live: box *Hörstück* also \"auf Englisch\", \"AAC-Kopien\", \"Mitteilungen\", \"Telegram: N gesendet, M nicht\". Logs hoerstueck: telegram | ok (or aus, notaus, gross, fehler), telegram: audio sent | … KB."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Make an audio overview now (V01.1.345, Dominik 2026-11-05: „force the making“)",
+"text": "Make an audio overview now (V01.1.345, Dominik 2026-11-05: „force the making“): no new switch, it is part of the audio overview. Only the admin sees under Collections → a collection → Audio overview next to \"Make\" the button \"Make now\", and for one that waits or speaks \"Make it now\" (pull forward); the iPhone has the same buttons. Whether it is the admin is decided by the server (hoerstueck.ist_admin): the panel password's login (only while a password is set) or the profile itself with the role admin in its browser login with the second step or its proved iPhone app; never a manager, a guest or a device key. Endpoints POST /api/profile/mappen/{id}/hoerstuecke/sofort (length, voices, language as for making) and POST /api/profile/hoerstueck/{id}/sofort: sign-in, own profile, release, admin right, CSRF, 8 KB, rate limit \"hoerstuecksofort\" 5 a minute. A forced one (column sofort) skips the quiet minutes (wissen.quiet), the quiet chain before it and the day limit (it is not counted there); the ten stored and the check of the script stay. Real speech still goes first: hoerstueck.sofort_lauf sends every request through vorrang.run (waits while anybody speaks, is cancelled when speech star"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Make an audio overview now (V01.1.345, Dominik 2026-11-05: „force the making“)",
+"text": "ts, the line comes again) and to the speech output with the same stage \"last\" and its key; a normal stage would mark the own lines as speech (common.SpeechMark) and stop all background work. At most one forced one at a time, over all profiles (hoerstueck._sofort_offen, else 409); while it runs the quiet chain leaves the audio overviews alone, afterwards it takes a marked one first. Live: box *Audio overview* \"erzwungen: writes the script / speaks / waits\", \"today N× made now, M× refused\". Logs hoerstueck: erzwungen | neu (or vorgezogen), hoerstueck: erzwungen abgelehnt | admin (or laeuft, keins, form, voll, leer), hoerstueck: erzwungen | ende | fertig (or leer, x, aus, weg, tts, schritte)."
 },
 {
 "lang": "en",
@@ -34213,7 +34245,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "My things",
 "title": "My things",
-"text": "panel view. - Audio overview (since V01.1.344, plan *open-notebook* push 5b, only when the admin released \"Audio overview\"): in a collection under My things → Collections the entry \"Audio overview\": length (5, 10, 20 min) and voices (2 or 3) as segmented controls, \"Make\" (the script in the iPhone's language, German or English), the list with state and progress (loads again every 30 s while something waits or speaks). A finished audio overview plays with a player of its own: AVFoundation plays no Ogg/Opus, so the app fetches the AAC copy (/ton?form=m4a) and keeps it only in memory, never as a file. It goes on playing in the background and on the lock screen (audio session \"playback\", Now Playing with title and collection, play, pause and seek); in the script the line being spoken is marked, its time plays from there. \"To Telegram\" sends it to the own linked Telegram chat (else a hint with a jump link to Me → Telegram), \"Delete\" asks first. The Spark checks every path (iphone.THINGS \"hoerstueck\"). Android shows the part in the panel view of the collection with the browser's player. CarPlay comes later. - People, companies and deadlines (since V01.1.253, plan *wissensgraph* stage 2, o"
+"text": "panel view. - Audio overview (since V01.1.344, plan *open-notebook* push 5b, only when the admin released \"Audio overview\"): in a collection under My things → Collections the entry \"Audio overview\": length (5, 10, 20 min) and voices (2 or 3) as segmented controls, \"Make\" (the script in the iPhone's language, German or English), the list with state and progress (loads again every 30 s while something waits or speaks). A finished audio overview plays with a player of its own: AVFoundation plays no Ogg/Opus, so the app fetches the AAC copy (/ton?form=m4a) and keeps it only in memory, never as a file. It goes on playing in the background and on the lock screen (audio session \"playback\", Now Playing with title and collection, play, pause and seek); in the script the line being spoken is marked, its time plays from there. \"To Telegram\" sends it to the own linked Telegram chat (else a hint with a jump link to Me → Telegram), \"Delete\" asks first. The Spark checks every path (iphone.THINGS \"hoerstueck\"). Android shows the part in the panel view of the collection with the browser's player. CarPlay comes later. Since V01.1.345 the admin (only their own proved app, checked by the Spark) also s"
 },
 {
 "lang": "en",

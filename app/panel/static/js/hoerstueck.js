@@ -6,6 +6,8 @@
 // every line by fixed rules; titles and lines are the model's or the documents' words: only through esc(), never markup.
 // Push 5b: the line being heard is marked while the player plays (the start "ab" of every line, .ld-row.on), its time
 // chip plays from there; „An Telegram" sends it to the own linked chat; the script comes in the page's language (L).
+// „Sofort erstellen" (only when the server says the admin asks, D.sofort; the server checks it again): a new one at
+// once, or „Jetzt erstellen" for one that waits or speaks; without the quiet minutes and the day's limit, speech first.
 const HS={mid:'',data:null,sel:'',one:null,laenge:5,stimmen:2,msg:'',seq:0,timer:null};
 const HS_STAND={wartet:['wartet','waiting'],sprechen:['spricht','speaking'],fertig:['fertig','done'],leer:['zu wenig','too little'],x:['ging nicht','did not work']};
 const HS_WEG={sprecher:['Sprecher nicht aus der Liste','speaker not from the list'],stelle:['ohne gültige Fundstelle','without a valid place'],
@@ -16,6 +18,7 @@ const hsUrl=(mid,hid,x)=>hid?'/api/profile/hoerstueck/'+encodeURIComponent(hid)+
 const hsMin=s=>{s=Math.max(0,Math.round(s||0));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
 const hsAva=(sp,R)=>`<span class="ld-ava" title="${esc(R&&R[sp]?t(R[sp][0],R[sp][1]):sp)}" aria-hidden="true">${esc(sp)}</span>`;
 function hsSub(s){const st=t(...(HS_STAND[s.stand]||HS_STAND.x));
+  if(s.erzwungen&&(s.stand==='wartet'||s.stand==='sprechen'))return t(`Wird sofort erstellt · ${s.fertig_zeilen} von ${s.zeilen} Zeilen gesprochen · echte Sprache geht vor`,`Being made now · ${s.fertig_zeilen} of ${s.zeilen} lines spoken · real speech goes first`);
   if(s.stand==='wartet')return t('Drehbuch folgt, sobald niemand spricht','Script follows as soon as nobody speaks');
   if(s.stand==='sprechen')return t(`Drehbuch fertig · ${s.fertig_zeilen} von ${s.zeilen} Zeilen gesprochen · wartet auf ruhige Minuten`,`Script done · ${s.fertig_zeilen} of ${s.zeilen} lines spoken · waits for quiet minutes`);
   if(s.stand==='leer')return t('Daraus lässt sich kein Hörstück machen: zu wenig geprüfte Zeilen','No audio overview can be made of it: too few checked lines');
@@ -39,6 +42,7 @@ function hsDetail(){const o=HS.one;if(!o||o.id!==HS.sel)return'';const R=o.rolle
     (o.ton?`<audio controls preload="none" src="${esc(hsUrl('',o.id,'/ton'))}"></audio>`:'')+
     `<div class="ld-acts">${o.ton?`<a class="b" href="${esc(hsUrl('',o.id,'/ton'))}" download="hoerstueck.ogg">${ic('download')} ${esc(t('Herunterladen','Download'))}</a>`:''}`+
     (o.ton&&o.telegram?`<button type="button" class="b" data-hstg="${esc(o.id)}">${ic('send')} ${esc(t('An Telegram','To Telegram'))}</button>`:'')+
+    (HS.data&&HS.data.sofort&&!o.erzwungen&&(o.stand==='wartet'||o.stand==='sprechen')?`<button type="button" class="b" data-hsnow="${esc(o.id)}"${HS.data.sofort_frei?'':' disabled'}>${ic('bolt')} ${esc(t('Jetzt erstellen','Make it now'))}</button>`:'')+
     `<button type="button" class="b" data-hsdel="${esc(o.id)}">${ic('trash')} ${esc(t('Löschen','Delete'))}</button></div>`+
     (o.ton&&!o.telegram&&typeof TG_ON!=='undefined'&&TG_ON?`<p class="mut ld-note">${esc(t('„An Telegram“ geht, sobald Telegram verknüpft ist und Persönliches dort erlaubt ist: Ich → Telegram','"To Telegram" works once Telegram is linked and personal data is allowed there: Me → Telegram'))}</p>`:'')+
     (o.drehbuch.length?`<div class="ld-grp"><span>${esc(t('Drehbuch','Script'))}</span><span>${esc(o.stand==='sprechen'?t(`${o.fertig_zeilen} von ${o.zeilen} gesprochen`,`${o.fertig_zeilen} of ${o.zeilen} spoken`):'')}</span></div>`+o.drehbuch.map((x,i)=>hsLine(x,R,i)).join(''):'')+
@@ -54,6 +58,7 @@ function hsPaint(box){const D=HS.data;if(!box)return;
     `<div class="row"><span class="mut">${esc(t('Stimmen','Voices'))}</span>${seg('stimmen',D.stimmen,t('Stimmen','Voices'))}</div>`+
     `<div class="row">${roles}</div>`+
     `<div class="ld-acts"><button type="button" class="b p" data-hsmake="1"${full||limit?' disabled':''}>${esc(t('Erstellen','Make'))}</button>`+
+    (D.sofort?`<button type="button" class="b" data-hsmake="sofort"${full||!D.sofort_frei?' disabled':''} title="${esc(t('Nur Admin: ohne ruhige Minuten und Tagesgrenze; echte Sprache geht trotzdem vor','Admin only: without quiet minutes and the day limit; real speech still goes first'))}">${ic('bolt')} ${esc(t('Sofort erstellen','Make now'))}</button>`:'')+
     `<span class="mut ld-note">${esc(full?t(`Höchstens ${D.max} Hörstücke; lösch erst eins.`,`At most ${D.max} audio overviews; delete one first.`):limit?t('Für heute ist die Grenze erreicht.','The limit for today is reached.'):t('läuft in ruhigen Minuten','runs in quiet minutes'))}</span></div></div>`+
     (D.stuecke.length?D.stuecke.map(hsRow).join(''):`<div class="ld-empty mut">${esc(t('Noch kein Hörstück aus dieser Mappe.','No audio overview of this collection yet.'))}</div>`)+
     hsDetail()+
@@ -70,7 +75,7 @@ async function hsLoad(){const mid=HS.mid,seq=++HS.seq;const {r,d}=await apiTry(h
 window.hsShow=(det,o)=>{if(!det)return;if(!o||!o.hoerstueck){HS.mid='';clearTimeout(HS.timer);return}
   const box=document.createElement('div');box.className='hsbox';det.appendChild(box);
   if(HS.mid!==o.id){HS.mid=o.id;HS.data=null;HS.sel='';HS.one=null;HS.msg='';hsPaint(box);hsLoad()}else hsPaint(box)};
-document.body.addEventListener('click',async e=>{const b=e.target.closest('#mpview .hsbox [data-hslaenge],#mpview .hsbox [data-hsstimmen],#mpview .hsbox [data-hsmake],#mpview .hsbox [data-hssel],#mpview .hsbox [data-hsdel],#mpview .hsbox [data-hsdoc],#mpview .hsbox [data-hsab],#mpview .hsbox [data-hstg]');if(!b)return;
+document.body.addEventListener('click',async e=>{const b=e.target.closest('#mpview .hsbox [data-hslaenge],#mpview .hsbox [data-hsstimmen],#mpview .hsbox [data-hsmake],#mpview .hsbox [data-hssel],#mpview .hsbox [data-hsdel],#mpview .hsbox [data-hsdoc],#mpview .hsbox [data-hsab],#mpview .hsbox [data-hstg],#mpview .hsbox [data-hsnow]');if(!b)return;
   const D=b.dataset,box=b.closest('.hsbox');
   if(D.hslaenge){HS.laenge=+D.hslaenge;hsPaint(box);return}
   if(D.hsstimmen){HS.stimmen=+D.hsstimmen;hsPaint(box);return}
@@ -80,8 +85,11 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#mpvi
   if(D.hstg){b.disabled=true;const {r,d}=await apiTry(hsUrl('',D.hstg,'/telegram'),xjson('POST',{}));
     HS.msg=r.ok?t('An deinen Telegram-Chat geschickt.','Sent to your Telegram chat.'):errSay(r.status,d.detail,'');b.disabled=false;
     const m=box.querySelector('.hsmsg');if(m){m.textContent=HS.msg;m.hidden=!HS.msg}return}   // no new paint: the player keeps playing
-  if(D.hsmake){b.disabled=true;const {r,d}=await apiTry(hsUrl(HS.mid),xjson('POST',{laenge:HS.laenge,stimmen:HS.stimmen,sprache:L==='en'?'en':'de'}));
-    HS.msg=r.ok?t('Eingereiht: das Drehbuch entsteht in der nächsten ruhigen Minute, dann Zeile für Zeile.','Queued: the script is made in the next quiet minute, then line by line.'):errSay(r.status,d.detail,'');
+  if(D.hsnow){b.disabled=true;const {r,d}=await apiTry(hsUrl('',D.hsnow,'/sofort'),xjson('POST',{}));
+    HS.msg=r.ok?t('Wird jetzt erstellt; echte Sprache geht vor.','Being made now; real speech goes first.'):errSay(r.status,d.detail,'');await hsLoad();return}
+  if(D.hsmake){b.disabled=true;const now=D.hsmake==='sofort';
+    const {r,d}=await apiTry(hsUrl(HS.mid)+(now?'/sofort':''),xjson('POST',{laenge:HS.laenge,stimmen:HS.stimmen,sprache:L==='en'?'en':'de'}));
+    HS.msg=r.ok?(now?t('Wird jetzt erstellt; echte Sprache geht vor.','Being made now; real speech goes first.'):t('Eingereiht: das Drehbuch entsteht in der nächsten ruhigen Minute, dann Zeile für Zeile.','Queued: the script is made in the next quiet minute, then line by line.')):errSay(r.status,d.detail,'');
     if(r.ok)HS.sel=d.id;await hsLoad();return}
   if(D.hsdel){if(!confirm(t('Hörstück löschen?','Delete the audio overview?')))return;b.disabled=true;
     const {r,d}=await apiTry(hsUrl('',D.hsdel),{method:'DELETE'});HS.msg=r.ok?t('Gelöscht.','Deleted.'):errSay(r.status,d.detail,'');

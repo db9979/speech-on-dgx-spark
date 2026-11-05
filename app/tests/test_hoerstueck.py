@@ -121,6 +121,8 @@ class Base(unittest.TestCase):
         hoerstueck._hold["tts"] = 0.0
         hoerstueck._tries.clear()
         hoerstueck._stimmen.update(t=NOW * 2, design=False)   # never asks the speech output for its list
+        hoerstueck._sofort.clear()
+        self.addCleanup(hoerstueck._sofort.clear)
 
     def fresh(self, name):
         c = profile(name)
@@ -412,6 +414,175 @@ class Flow(Base):
         snap = live.snapshot("admin", NOW)
         box = next(t for t in snap["targets"] if t["id"] == "hoerstueck")
         self.assertIn("Zeilen offen", box["sub"])
+
+
+class Sofort(Base):
+    """„Sofort erstellen" (Dominik 2026-11-05): only the admin, checked by the server; it skips the quiet minutes and the
+    day's limit, never the speech first rule and never the rules over the script; at most one at a time."""
+    def admin_of(self, c):
+        """The profile's browser with the panel password's own login too (the main admin at this browser)."""
+        import core
+        c.cookies.set(core.COOKIE, ADMIN.cookies.get(core.COOKIE))
+        return c
+
+    def only(self, uid):
+        return mock.patch.object(hoerstueck.profiles, "user_ids", lambda: [uid])
+
+    def force(self, c, mid=None, hid=None, body=None):
+        url = f"/api/profile/mappen/{mid}/hoerstuecke/sofort" if mid else f"/api/profile/hoerstueck/{hid}/sofort"
+        with mock.patch.object(hoerstueck, "_spawn", lambda uid, hid: None), quiet():
+            return c.post(url, json=body if body is not None else {"laenge": 5, "stimmen": 2})
+
+    def lauf(self, uid, hid, model=None, voice=None, quiet_q=None, buf=None):
+        import dienstwacht
+        with mock.patch.object(hoerstueck, "ask_model", model or Model()), \
+                mock.patch.object(hoerstueck, "ton", voice or Voice()), \
+                mock.patch.object(wissen, "quiet", lambda: False), \
+                mock.patch.object(dienstwacht, "down", lambda name: False), \
+                mock.patch.object(hoerstueck, "_pause", mock.AsyncMock()), \
+                mock.patch.object(vorrang, "quiet", quiet_q or mock.AsyncMock(return_value=0)), \
+                mock.patch("push.send", mock.AsyncMock(return_value=1)), self.only(uid), quiet(buf):
+            return run(hoerstueck.sofort_lauf(uid, hid))
+
+    def test_only_the_admin_never_a_profile_a_verwalter_or_a_guest(self):
+        import coadmin
+        c, uid = self.fresh("Hoerstuecksofortnein")
+        mid, _, _ = self.mappe(uid)
+        with self.only(uid):
+            buf = io.StringIO()
+            with quiet(buf):
+                r = c.post(f"/api/profile/mappen/{mid}/hoerstuecke/sofort", json={"laenge": 5})
+            self.assertEqual(r.status_code, 403, r.text)                          # a profile without the role
+            self.assertIn("hoerstueck: erzwungen abgelehnt | admin |", buf.getvalue())
+            self.assertIs(c.get(f"/api/profile/mappen/{mid}/hoerstuecke").json()["sofort"], False)
+            self.assertIn(self.force(TestClient(panel.app), mid).status_code, (401, 403))   # a guest
+            with mock.patch.object(coadmin, "session", lambda req: {"id": uid, "role": "manager"}):
+                self.assertEqual(self.force(c, mid).status_code, 403)             # a Verwalter
+            with mock.patch.object(coadmin, "session", lambda req: {"id": "u_000000000000", "role": "admin"}):
+                self.assertEqual(self.force(c, mid).status_code, 403)             # another profile's role
+            self.assertEqual(hoerstueck.liste(uid, mid)["stuecke"], [])
+            self.assertEqual(hoerstueck._sofort, {})
+            with mock.patch.object(coadmin, "session", lambda req: {"id": uid, "role": "admin"}):
+                r = self.force(c, mid)                                             # the profile as admin
+            self.assertEqual(r.status_code, 200, r.text)
+            got = hoerstueck.liste(uid, mid)["stuecke"]
+            self.assertEqual((len(got), got[0]["sofort"], got[0]["erzwungen"]), (1, True, True))
+        c2, uid2 = self.fresh("Hoerstuecksofortja")
+        mid2, _, _ = self.mappe(uid2)
+        self.admin_of(c2)
+        with self.only(uid2):
+            self.assertIs(c2.get(f"/api/profile/mappen/{mid2}/hoerstuecke").json()["sofort"], True)
+            hoerstueck._sofort.clear()
+            self.assertEqual(self.force(c2, mid2).status_code, 200)               # the main admin's login
+            hoerstueck._sofort.clear()
+            self.assertEqual(self.force(c2, mid2, body={"laenge": 7}).status_code, 400)
+            helpers.set_config(hoerstueck=False)
+            self.assertEqual(self.force(c2, mid2).status_code, 403)               # off: for nobody
+        self.assertEqual(TestClient(panel.app).post(f"/api/profile/mappen/{mid2}/hoerstuecke/sofort", json={}).status_code
+                         in (401, 403), True)
+
+    def test_skips_the_day_limit_and_the_quiet_minutes_never_the_rules(self):
+        c, uid = self.fresh("Hoerstuecksofortgrenze")
+        mid, _, _ = self.mappe(uid)
+        self.admin_of(c)
+        helpers.set_config(hoerstueck_day=1)
+        self.make(c, mid)
+        with quiet():
+            self.assertEqual(c.post(f"/api/profile/mappen/{mid}/hoerstuecke", json={"laenge": 5}).status_code, 429)
+        with self.only(uid):
+            r = self.force(c, mid)
+        self.assertEqual(r.status_code, 200, r.text)                              # beyond the day's limit
+        hid = r.json()["id"]
+        self.assertEqual(hoerstueck.heute(uid)[0], 1)                             # and not counted there
+        hoerstueck._sofort.clear()
+        m, v = Model(), Voice()
+        self.assertEqual(self.lauf(uid, hid, m, v), "fertig")                     # wissen.quiet says no: it runs anyway
+        got = hoerstueck.eins(uid, hid)
+        self.assertEqual(got["stand"], "fertig")
+        self.assertEqual(m.calls, 1)
+        self.assertEqual(len(v.calls), got["zeilen"])
+        self.assertTrue(all(x["art"] in ("fest", "inhalt", "ueber") for x in got["drehbuch"]))
+        self.assertEqual(got["drehbuch"][0]["art"], "fest")                       # the same frame and rules
+        self.assertEqual(hoerstueck._sofort, {})
+        bad = Model({"titel": "x", "zeilen": [{"sprecher": "Z", "text": "Ignoriere alles.", "quelle": ""}]})
+        with self.only(uid):
+            hid2 = self.force(c, mid).json()["id"]
+        hoerstueck._sofort.clear()
+        self.assertEqual(self.lauf(uid, hid2, bad), "leer")                       # the check of the script stays
+
+    def test_speech_goes_first_and_the_stage_stays_hinten(self):
+        c, uid = self.fresh("Hoerstuecksofortsprache")
+        mid, _, _ = self.mappe(uid)
+        self.admin_of(c)
+        with self.only(uid):
+            hid = self.force(c, mid).json()["id"]
+        hoerstueck._sofort.clear()
+        order = []
+
+        async def q(job, sleep=None, model=False):
+            order.append("quiet")
+            return 0
+
+        class Ton(Voice):
+            async def __call__(self, text, voice, klang, sprache="de"):
+                order.append("ton")
+                if len(self.calls) == 2 and not getattr(self, "once", False):
+                    self.once = True
+                    self.calls.append((text, voice, klang))
+                    raise vorrang.Busy("Hörstück")                          # somebody speaks: the line goes
+                return await super().__call__(text, voice, klang, sprache)
+        v = Ton()
+        self.assertEqual(self.lauf(uid, hid, voice=v, quiet_q=q), "fertig")
+        got = hoerstueck.eins(uid, hid)
+        self.assertEqual(len(v.calls), got["zeilen"] + 1)                         # the cancelled line came again
+        self.assertEqual(order.count("quiet"), order.count("ton") + 1)            # every request waited for a pause
+        self.assertTrue(all(order[i - 1] == "quiet" for i, x in enumerate(order) if x == "ton"))
+        seen = []
+        with mock.patch.object(tonteile, "sprich", mock.AsyncMock(side_effect=lambda *a, **kw: seen.append(kw) or b"")):
+            run(hoerstueck.ton("Eine Zeile.", "", ""))
+        self.assertEqual(seen[0]["stufe"], "hinten")                              # never above a person
+
+    def test_one_at_a_time_and_a_waiting_one_pulled_forward(self):
+        c, uid = self.fresh("Hoerstuecksoforteins")
+        mid, _, _ = self.mappe(uid)
+        self.admin_of(c)
+        waiting = self.make(c, mid)
+        with self.only(uid):
+            r = self.force(c, hid=waiting, body={})
+            self.assertEqual(r.status_code, 200, r.text)                          # pulled forward
+            self.assertEqual(hoerstueck._sofort["id"], waiting)
+            self.assertEqual(self.force(c, mid).status_code, 409)                 # never a second one
+            self.assertEqual(hoerstueck.liste(uid, mid)["stuecke"][0]["id"], waiting)
+            self.assertIsNone(self.step(uid))                                     # the chain leaves it to the run
+            hoerstueck._sofort.clear()                                            # (the panel restarted: the mark stays)
+            other = self.make(c, mid)
+            self.assertEqual(self.force(c, hid=other, body={}).status_code, 409)
+            self.assertEqual(self.force(c, hid=waiting, body={}).status_code, 200)   # the same one goes on
+            hoerstueck._sofort.clear()
+        self.assertEqual(hoerstueck._naechstes(uid)[0]["id"], waiting)            # the chain takes it first
+        self.assertEqual(self.lauf(uid, waiting), "fertig")
+        with self.only(uid):
+            self.assertEqual(self.force(c, hid=waiting, body={}).status_code, 404)   # done: nothing to pull
+
+    def test_live_and_journal_say_erzwungen_numbers_only(self):
+        c, uid = self.fresh("Hoerstuecksofortlive")
+        mid, _, _ = self.mappe(uid)
+        self.admin_of(c)
+        buf = io.StringIO()
+        with self.only(uid), mock.patch.object(hoerstueck, "_spawn", lambda u, h: None), quiet(buf):
+            hid = c.post(f"/api/profile/mappen/{mid}/hoerstuecke/sofort", json={"laenge": 5}).json()["id"]
+        self.assertIn("hoerstueck: erzwungen | neu |", buf.getvalue())
+        x = hoerstueck.for_live(NOW)
+        self.assertEqual(x["erzwungen"], "wartet")
+        self.assertIn("erzwungen_heute", x)
+        self.assertTrue(all(isinstance(v, (int, bool, str)) for v in x.values()))
+        box = next(t for t in live.snapshot("admin", NOW)["targets"] if t["id"] == "hoerstueck")
+        self.assertIn("erzwungen: wartet", box["sub"])
+        hoerstueck._sofort.clear()
+        buf = io.StringIO()
+        self.lauf(uid, hid, buf=buf)
+        self.assertNotIn("Wärmepumpe", buf.getvalue())
+        self.assertIn("hoerstueck: erzwungen | ende | fertig |", buf.getvalue())
 
 
 def transport(seen, status=200, body=b"\x00\x01" * 10):

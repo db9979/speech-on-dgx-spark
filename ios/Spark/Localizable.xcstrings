@@ -20130,6 +20130,56 @@
           }
         }
       }
+    },
+    "Sofort erstellen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make now"
+          }
+        }
+      }
+    },
+    "Jetzt erstellen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make it now"
+          }
+        }
+      }
+    },
+    "Wird jetzt erstellt; echte Sprache geht vor.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Being made now; real speech goes first."
+          }
+        }
+      }
+    },
+    "Nur Admin: ohne ruhige Minuten und Tagesgrenze; echte Sprache geht trotzdem vor.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Admin only: without quiet minutes and the day limit; real speech still goes first."
+          }
+        }
+      }
+    },
+    "Wird sofort erstellt · %lld von %lld Zeilen gesprochen · echte Sprache geht vor": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Being made now · %lld of %lld lines spoken · real speech goes first"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.345** Hörstück sofort erstellen: der Admin kann ein Hörstück gleich machen lassen oder ein wartendes vorziehen, ohne ruhige Minuten und Tagesgrenze, auch in der iPhone-App; echte Sprache geht trotzdem vor
 - **V01.1.344** Hörstück in den Apps: eigener Player in der iPhone-App (auch im Hintergrund und auf dem Sperrbildschirm), „An Telegram“ nur an den eigenen Chat, Mitteilung „Hörstück fertig“ mit Sprung-Link, beim Abspielen hervorgehobene Zeile im Drehbuch, Drehbuch auch auf Englisch
 - **V01.1.343** Hörstück aus einer Mappe: in einer Mappe ein Gespräch aus 2 oder 3 Stimmen zum Anhören (5, 10 oder 20 Minuten); das Modell schreibt nur ein Drehbuch, das Panel prüft jede Zeile (Fundstelle, Zahlenprobe, feste Sprecher), gesprochen wird Zeile für Zeile in ruhigen Minuten; der Admin wählt die drei Stimmen
 - **V01.1.342** YouTube-Links abschreiben: ein YouTube-Link unter „Link hinzufügen“ wird abgeschrieben, nur die Tonspur über das festgelegte yt-dlp (Version und SHA-256 fest, eigene venv mit `sudo ./install.sh --youtube`), sein ganzer Verkehr nur über einen netguard-Proxy mit fester Host-Liste; danach wie eine Aufnahme mit Zeitmarken (Schalter aus)
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.338** Sicherheit: certifi, filelock, Pillow, pyasn1, pypdf und zeroconf auf Versionen ohne bekannte Lücke, OpenCode 1.19.5 mit geprüfter Prüfsumme
 - **V01.1.337** ROT-FIX: Selbsttest zu sudo-rs lief nur als root; die Probedatei wird jetzt vor dem zweiten Versuch gelöscht
 - **V01.1.336** Ton und Video als Quelle: Aufnahmen unter Ich → Dokumente hochladen, die eigene Spracherkennung schreibt sie in ruhigen Minuten ab, jede Stelle mit ihrer Zeit („bei 12:30“) und ▶ zum Anhören; Hintergrund-Abschrift bremst nichts mehr aus, echte Sprache bleibt vorn
-- **V01.1.335** Bildschirm im Fernzugang jetzt auch unter Windows: TightVNC, vom Anker 1.10.0 aus der offiziellen, gepinnten und signierten Datei eingerichtet, nur auf 127.0.0.1, Passwort nie auf einer Befehlszeile; „bildschirm aus“ oder Entfernen deinstalliert es wieder
 
 
 

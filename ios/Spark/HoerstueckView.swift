@@ -15,6 +15,7 @@ struct HsStueck: Identifiable, Hashable {
     let laenge: Int
     let ton: Bool
     let geaendert: Bool
+    let erzwungen: Bool
 
     init?(_ d: [String: Any]) {
         guard let id = d["id"] as? String, id.range(of: "^[0-9a-f]{12}$", options: .regularExpression) != nil else { return nil }
@@ -29,9 +30,15 @@ struct HsStueck: Identifiable, Hashable {
         laenge = (d["laenge"] as? NSNumber)?.intValue ?? 5
         ton = d["ton"] as? Bool ?? false
         geaendert = d["geaendert"] as? Bool ?? false
+        erzwungen = d["erzwungen"] as? Bool ?? false
     }
 
+    var offen: Bool { stand == "wartet" || stand == "sprechen" }
+
     var standText: String {
+        if erzwungen && offen {
+            return String(localized: "Wird sofort erstellt · \(fertig) von \(zeilen) Zeilen gesprochen · echte Sprache geht vor")
+        }
         switch stand {
         case "wartet": return String(localized: "Drehbuch folgt, sobald niemand spricht")
         case "sprechen": return String(localized: "Drehbuch fertig · \(fertig) von \(zeilen) Zeilen gesprochen · wartet auf ruhige Minuten")
@@ -114,6 +121,9 @@ final class HoerstueckModel: NSObject, ObservableObject, AVAudioPlayerDelegate {
     @Published var max = 10
     @Published var alle = 0
     @Published var laengen = [5, 10, 20]
+    /// „Sofort erstellen": only when the server says the admin asks (hoerstueck.ist_admin); it checks it again on POST
+    @Published var sofort = false
+    @Published var sofortFrei = true
     @Published var loaded = false
     @Published var error: String?
     @Published var note: String?
@@ -136,6 +146,8 @@ final class HoerstueckModel: NSObject, ObservableObject, AVAudioPlayerDelegate {
             max = (d["max"] as? NSNumber)?.intValue ?? 10
             alle = (d["alle"] as? NSNumber)?.intValue ?? 0
             laengen = (d["laengen"] as? [NSNumber])?.map { $0.intValue } ?? [5, 10, 20]
+            sofort = d["sofort"] as? Bool ?? false
+            sofortFrei = d["sofort_frei"] as? Bool ?? true
             error = nil
         } catch { self.error = error.localizedDescription }
     }
@@ -148,6 +160,24 @@ final class HoerstueckModel: NSObject, ObservableObject, AVAudioPlayerDelegate {
             _ = try await api.object("POST", "api/profile/mappen/" + mid + "/hoerstuecke",
                                      body: ["laenge": laenge, "stimmen": stimmen, "sprache": en ? "en" : "de"])
             note = String(localized: "Eingereiht: das Drehbuch entsteht in der nächsten ruhigen Minute, dann Zeile für Zeile.")
+            error = nil
+            await load(mid)
+        } catch { self.error = error.localizedDescription }
+    }
+
+    /// the admin's „Sofort erstellen": a new one at once (mid), or one that waits pulled forward (hid); without the quiet
+    /// minutes and the day's limit, real speech still first
+    func now(_ mid: String, hid: String? = nil, laenge: Int = 5, stimmen: Int = 2) async {
+        guard let api = SparkAPI.current else { return }
+        let en = Locale.current.language.languageCode?.identifier != "de"
+        do {
+            if let hid {
+                _ = try await api.object("POST", "api/profile/hoerstueck/" + hid + "/sofort", body: [:])
+            } else {
+                _ = try await api.object("POST", "api/profile/mappen/" + mid + "/hoerstuecke/sofort",
+                                         body: ["laenge": laenge, "stimmen": stimmen, "sprache": en ? "en" : "de"])
+            }
+            note = String(localized: "Wird jetzt erstellt; echte Sprache geht vor.")
             error = nil
             await load(mid)
         } catch { self.error = error.localizedDescription }
@@ -326,6 +356,14 @@ struct HoerstueckView: View {
                     Task { busy = true; await m.make(mappe.id, laenge: laenge, stimmen: stimmen); busy = false }
                 } label: { Label("Erstellen", systemImage: "waveform") }
                     .disabled(busy || m.alle >= m.max || m.heute >= m.grenze)
+                if m.sofort {
+                    Button {
+                        Task { busy = true; await m.now(mappe.id, laenge: laenge, stimmen: stimmen); busy = false }
+                    } label: { Label("Sofort erstellen", systemImage: "bolt") }
+                        .disabled(busy || m.alle >= m.max || !m.sofortFrei)
+                    Text("Nur Admin: ohne ruhige Minuten und Tagesgrenze; echte Sprache geht trotzdem vor.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
                 Text(m.alle >= m.max ? String(localized: "Höchstens \(m.max) Hörstücke; lösch erst eins.")
                      : m.heute >= m.grenze ? String(localized: "Für heute ist die Grenze erreicht.")
                      : String(localized: "heute \(m.heute) von \(m.grenze) · läuft in ruhigen Minuten"))
@@ -337,7 +375,7 @@ struct HoerstueckView: View {
                     Text("Noch kein Hörstück aus dieser Mappe.").foregroundStyle(.secondary)
                 }
                 ForEach(m.list) { s in
-                    NavigationLink { HoerstueckDetailView(stueck: s, model: m) } label: {
+                    NavigationLink { HoerstueckDetailView(stueck: s, mappe: mappe.id, model: m) } label: {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(verbatim: s.titel.isEmpty ? String(localized: "Hörstück") : s.titel)
                             Text(verbatim: s.standText).font(.caption).foregroundStyle(.secondary)
@@ -375,6 +413,7 @@ struct HoerstueckView: View {
 /// with the line being heard marked; a line's time plays from there.
 struct HoerstueckDetailView: View {
     let stueck: HsStueck
+    let mappe: String
     @ObservedObject var model: HoerstueckModel
     @Environment(\.dismiss) private var dismiss
     @State private var d: HsDetail?
@@ -406,6 +445,12 @@ struct HoerstueckDetailView: View {
                             }
                         } else {
                             Text(verbatim: stueck.standText).foregroundStyle(.secondary)
+                            if model.sofort && stueck.offen && !stueck.erzwungen {
+                                Button { Task { await model.now(mappe, hid: stueck.id); await load() } } label: {
+                                    Label("Jetzt erstellen", systemImage: "bolt")
+                                }
+                                .disabled(!model.sofortFrei)
+                            }
                         }
                         Button("Löschen", role: .destructive) { askDelete = true }
                     }

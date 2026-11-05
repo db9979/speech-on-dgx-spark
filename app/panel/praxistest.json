@@ -5317,6 +5317,13 @@
 "titel": "Hörstück an Telegram schicken",
 "text": "Ich → Telegram verknüpfen und Persönliches dort erlauben. Ein fertiges Hörstück öffnen, „An Telegram“: im eigenen Telegram-Chat kommt eine Audiodatei „Hörstück aus der Mappe „<Name>““, sie spielt in Telegram. Ein zweites Profil ohne Telegram sieht keinen Knopf, nur „„An Telegram“ geht, sobald Telegram verknüpft ist … Ich → Telegram“ als Link. Persönliches in Telegram ausschalten: der Knopf verschwindet. Zustand → Logs (Wissen): „hoerstueck: telegram | ok“ und „telegram: audio sent | … KB“, nie ein Titel; Live: „Telegram: 1 gesendet“.",
 "thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P786",
+"v": 1345,
+"titel": "Hörstück sofort erstellen (nur Admin)",
+"text": "Als Profil mit der Rolle „Admin“ (zweiter Schritt an) Mappen → eine Mappe → Hörstück öffnen: neben „Erstellen“ steht „Sofort erstellen“. Tippen, gleich nachdem du dem Spark eine Frage gestellt hast: das Drehbuch entsteht nach der Antwort sofort, ohne auf die ruhige Minute zu warten; während der Spark antwortet oder du mit ihm sprichst, stockt es und macht danach weiter. Auch nach erreichter Tagesgrenze geht „Sofort erstellen“, „heute N von 3“ zählt nicht hoch. Ein zweites „Sofort erstellen“, solange eins läuft: ausgegraut bzw. „Es wird schon ein Hörstück sofort erstellt“. Ein wartendes Stück öffnen: „Jetzt erstellen“ zieht es vor. Ein Profil ohne Rolle und der Verwalter sehen den Knopf nicht; im iPhone dasselbe nur in der eigenen bestätigten App des Admins. Zustand → Live, Kasten Hörstück: „erzwungen: spricht“, „heute 1× sofort erstellt“; Zustand → Logs (Wissen): „hoerstueck: erzwungen | neu“ und am Ende „hoerstueck: erzwungen | ende | fertig“, nie ein Titel.",
+"thread": "Ideen aus Open Notebook übernehmen"
 }
 ]
 }
