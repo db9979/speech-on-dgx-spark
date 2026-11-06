@@ -294,6 +294,7 @@ struct StatusView: View {
                         Text(verbatim: Self.num(fz["sitzungen"] ?? 0)).foregroundStyle((fz["sitzungen"] as? Int ?? 0) > 0 ? Theme.bad : .primary)
                     }
                     if (fz["dateien"] as? Int ?? 0) > 0 { LabeledContent("Davon Dateien") { Text(verbatim: Self.num(fz["dateien"] ?? 0)) } }
+                    if (fz["sshtermy"] as? Int ?? 0) > 0 { LabeledContent("Davon sshTermy") { Text(verbatim: Self.num(fz["sshtermy"] ?? 0)) } }
                     if (fz["uebertragungen"] as? Int ?? 0) > 0 { LabeledContent("Übertragungen") { Text(verbatim: Self.num(fz["uebertragungen"] ?? 0)) } }
                     if (fz["abbau"] as? Int ?? 0) > 0 { LabeledContent("Warten auf Abbau") { Text(verbatim: Self.num(fz["abbau"] ?? 0)) } }
                     if (fz["wartet"] as? Int ?? 0) > 0 { LabeledContent("Warten auf Bestätigung") { Text(verbatim: Self.num(fz["wartet"] ?? 0)).foregroundStyle(Theme.warnText) } }
@@ -2059,6 +2060,7 @@ struct FernzugangView: View {
     @State private var askRemove: FernServer?
     @State private var folders: [FernOrdner] = []
     @State private var ask: CodeRequest?
+    @State private var askTermy: [String: Any]?
 
     var body: some View {
         List {
@@ -2158,6 +2160,10 @@ struct FernzugangView: View {
                             }
                             Toggle("Darf sich verbinden", isOn: Binding(get: { g.erlaubt }, set: { v in Task { await allow(g, v) } })).disabled(g.wartet)
                             Button("Shell oder Dateien im Panel öffnen") { panel() }.disabled(!g.online || g.hostkeyFalsch || !g.erlaubt || g.wartet)
+                            if d["sshtermy"] is [String: Any] {   // sshTermy als Jump-Host: the keys the server reported, never a key
+                                let k = Self.termyKeys(d, g.id)
+                                LabeledContent("Schlüssel für sshTermy") { Text(verbatim: k.isEmpty ? "–" : k.joined(separator: "\n")).font(.caption).lineLimit(5) }
+                            }
                             if d["webdienste"] as? Bool == true {   // Webdienste (fernweb.py): list and open them in the panel view
                                 Button("Webdienste im Panel öffnen") { panel() }.disabled(!g.online || g.hostkeyFalsch || !g.erlaubt || g.wartet)
                             }
@@ -2181,6 +2187,30 @@ struct FernzugangView: View {
                         Text("Ordner ordnen nur die Liste; Rechte und Entsperren gelten weiter je System. „Ordner“ bei einem System verschiebt es.")
                     }
                 }
+                if let st = d["sshtermy"] as? [String: Any] {   // sshTermy als Jump-Host (fernsshtermy.py): look, Trennen, Entfernen
+                    Section {
+                        let gs = (st["geraete"] as? [[String: Any]] ?? []).prefix(10)
+                        if gs.isEmpty { Text("Noch kein sshTermy gekoppelt.").foregroundStyle(.secondary) }
+                        ForEach(Array(gs.enumerated()), id: \.offset) { _, x in
+                            let id = x["id"] as? String ?? ""
+                            let kanaele = Self.num(x["kanaele"])
+                            LabeledContent {
+                                Text(Self.termyWord(x)).foregroundStyle(kanaele > 0 ? Theme.badText : .secondary)
+                            } label: {
+                                Text(verbatim: "sshTermy · " + String((x["name"] as? String ?? "").prefix(40)))
+                            }
+                            if kanaele > 0 {
+                                Button("Trennen") { Task { await termyCut(id) } }
+                            }
+                            Button("Entfernen", role: .destructive) { askTermy = x }
+                        }
+                        Button("sshTermy koppeln (im Panel)") { panel() }
+                    } header: {
+                        Text("sshTermy als Jump-Host")
+                    } footer: {
+                        Text("sshTermy erreicht die Server über den Spark, SSH läuft Ende-zu-Ende. Koppeln nur im Panel; Entfernen fragt jedes Mal nach Code oder Passkey.")
+                    }
+                }
                 Section {
                     if servers.isEmpty { Text("Noch kein Server gekoppelt.").foregroundStyle(.secondary) }
                     Button("Neues System koppeln (im Panel)") { panel() }
@@ -2195,6 +2225,12 @@ struct FernzugangView: View {
         .task { await load() }
         .sheet(item: $open) { p in PanelPage(url: p.url).ignoresSafeArea() }
         .codeAlert($ask)
+        .confirmationDialog("Dieses sshTermy entfernen? Sein Schlüssel gilt sofort nicht mehr, offene Kanäle enden.",
+                            isPresented: Binding(get: { askTermy != nil }, set: { if !$0 { askTermy = nil } }), titleVisibility: .visible) {
+            Button("Entfernen", role: .destructive) {
+                if let id = askTermy?["id"] as? String { ask = CodeRequest { c in await termyRemove(id, code: c) } }
+            }
+        }
         .confirmationDialog("Jede Sitzung und jeden Anker jetzt trennen?", isPresented: $askAll, titleVisibility: .visible) {
             Button("Alle trennen", role: .destructive) { Task { await cutAll() } }
         }
@@ -2339,6 +2375,46 @@ struct FernzugangView: View {
         catch { self.error = error.localizedDescription }
         servers = []
         folders = []
+        await load()
+    }
+
+    /// sshTermy: „entsperrt noch N min · 1 Kanal offen“ or „gesperrt“ (numbers and fixed words only)
+    static func termyWord(_ x: [String: Any]) -> String {
+        let bis = (x["entsperrt_bis"] as? NSNumber)?.doubleValue ?? 0
+        let rest = Int((bis - Date().timeIntervalSince1970) / 60)
+        var t = bis > Date().timeIntervalSince1970 ? String(localized: "entsperrt noch \(max(1, rest)) min") : String(localized: "gesperrt")
+        let k = num(x["kanaele"])
+        if k > 0 { t += " · " + String(localized: "\(k) Kanäle offen") }
+        return t
+    }
+
+    /// the keys for sshTermy a server reported: „ssh-ed25519 SHA256:… sshtermy@laptop · mit Tunnel“
+    static func termyKeys(_ d: [String: Any], _ gid: String) -> [String] {
+        let row = (d["geraete"] as? [[String: Any]] ?? []).first { $0["id"] as? String == gid } ?? [:]
+        return (row["schluessel"] as? [[String: Any]] ?? []).prefix(20).map { k in
+            let fp = String((k["fp"] as? String ?? "").prefix(60)), typ = String((k["typ"] as? String ?? "").prefix(24))
+            let tunnel = (k["weiterleiten"] as? Bool ?? false) ? String(localized: "mit Tunnel") : String(localized: "ohne Tunnel")
+            return [typ, fp, String((k["kommentar"] as? String ?? "").prefix(60))].filter { !$0.isEmpty }.joined(separator: " ") + " · " + tunnel
+        }
+    }
+
+    private func termyCut(_ id: String) async {
+        guard id.range(of: #"^d_[0-9a-f]{12}$"#, options: .regularExpression) != nil else { return }
+        do {
+            _ = try await AdminSession.shared.call("POST", "api/admin/fernzugang/sshtermy/\(id)/trennen", body: [:])
+            note = String(localized: "Getrennt.")
+            error = nil
+        } catch { self.error = error.localizedDescription }
+        await load()
+    }
+
+    private func termyRemove(_ id: String, code: String) async {
+        guard id.range(of: #"^d_[0-9a-f]{12}$"#, options: .regularExpression) != nil else { return }
+        do {
+            _ = try await AdminSession.shared.call("DELETE", "api/admin/fernzugang/sshtermy/\(id)", code: code)
+            note = String(localized: "Entfernt.")
+            error = nil
+        } catch { self.error = error.localizedDescription }
         await load()
     }
 

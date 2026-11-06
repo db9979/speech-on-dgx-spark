@@ -4125,7 +4125,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "mal prüft: 127.0.0.1 dort und die eigenen Adressen des Systems, die nur der Anker selbst meldet (fernweb.eigen_von), private Adressen nur mit „Netz dahinter“, nie die Netze des Spark. Anders als die Shell geht das nicht als SSH Ende zu Ende, sondern durch die TLS-Leitung des Ankers mit angeheftetem Zertifikat; höchstens 4 Tunnel mit je 8 Verbindungen und Gegendruck. 7. Spontanhilfe: Eine Hilfe (spontanhilfe.admin_new) gibt eine Nummer für 10 Minuten, nach 5 falschen ist sie tot. Der Bildschirm geht per WebRTC direkt zwischen den zwei Browsern, von unterwegs über TURN auf tars; das Panel vermittelt nur. Steuern (spontansteuern.program_ws) geht über das Programm SparkHilfe mit einem Einmal-Schlüssel für 10 Minuten; Bilder und Eingaben laufen dann durch das Panel. Das Programm baut nur GitHub; der Spark holt es täglich aus dem Release (spontansteuern.fetch), nur mit passender Signatur, Größe und SHA-256, und gibt es nur aus seinem Speicher weiter. Unter Linux X11 gibt es keine Datei: die Seite zeigt die Zeile des Ankers ohne Geheimnis (spontansteuern._zeile), den Schlüssel fügt die Person im Terminal ein; das Programm schickt PNG-Bilder. Am Mac nur mit Developer ID und Notarisierung; "
+"text": "mal prüft: 127.0.0.1 dort und die eigenen Adressen des Systems, die nur der Anker selbst meldet (fernweb.eigen_von), private Adressen nur mit „Netz dahinter“, nie die Netze des Spark. Anders als die Shell geht das nicht als SSH Ende zu Ende, sondern durch die TLS-Leitung des Ankers mit angeheftetem Zertifikat; höchstens 4 Tunnel mit je 8 Verbindungen und Gegendruck. sshTermy als Jump-Host (fernsshtermy.kanal, eigener Schalter, aus): sshTermy auf dem Rechner eines Admins spricht SSH Ende zu Ende mit dem Server, das Panel reicht nur Bytes durch den Anker; koppeln nur der Admin im Browser mit frischem Code (fernsshtermy.admin_koppeln), höchstens 5 Geräte, jeder Weg prüft Schalter, Notaus, Schlüssel, Rolle und Entsperrung (fernsshtermy._pruefen); ein Kanal endet nach dem Leerlauf, spätestens nach 12 Stunden. Die Schlüssel trägt nur root am Server ein, der Anker meldet nur ihre Fingerabdrücke (fernsshtermy.anker_schluessel). 7. Spontanhilfe: Eine Hilfe (spontanhilfe.admin_new) gibt eine Nummer für 10 Minuten, nach 5 falschen ist sie tot. Der Bildschirm geht per WebRTC direkt zwischen den zwei Browsern, von unterwegs über TURN auf tars; das Panel vermittelt nur. Steuern (spontansteuern.p"
 },
 {
 "lang": "de",
@@ -4133,7 +4133,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "der Spark behält die Zip-Datei nur ohne Teile außerhalb der App und mit Ticket (spontansteuern.mac_teile) und packt sie je Hilfe im Speicher neu, mit Adresse und Schlüssel im Namen der App (spontansteuern.mac_zip). Nummer und falsche Schlüssel zählen je Adresse, Datei und Programm erst nach dem richtigen Schlüssel je Hilfe (spontanhilfe.rate), weil von außen alle die Adresse des Reverse-Proxys haben. Der Dienst-Wächter erwartet nur Releases, die es auf GitHub gibt (spontansteuern.erwartet), einen Teil je Release. 8. Logs und Verlauf: Logs nur mit festen Wörtern und Zahlen (fernzugang.log), der Verlauf nur Zeit, System, Admin, Art und Dauer (fernzugang.verlauf_add). Der Notaus schließt jede Leitung (fernzugang.notaus_close)."
+"text": "rogram_ws) geht über das Programm SparkHilfe mit einem Einmal-Schlüssel für 10 Minuten; Bilder und Eingaben laufen dann durch das Panel. Das Programm baut nur GitHub; der Spark holt es täglich aus dem Release (spontansteuern.fetch), nur mit passender Signatur, Größe und SHA-256, und gibt es nur aus seinem Speicher weiter. Unter Linux X11 gibt es keine Datei: die Seite zeigt die Zeile des Ankers ohne Geheimnis (spontansteuern._zeile), den Schlüssel fügt die Person im Terminal ein; das Programm schickt PNG-Bilder. Am Mac nur mit Developer ID und Notarisierung; der Spark behält die Zip-Datei nur ohne Teile außerhalb der App und mit Ticket (spontansteuern.mac_teile) und packt sie je Hilfe im Speicher neu, mit Adresse und Schlüssel im Namen der App (spontansteuern.mac_zip). Nummer und falsche Schlüssel zählen je Adresse, Datei und Programm erst nach dem richtigen Schlüssel je Hilfe (spontanhilfe.rate), weil von außen alle die Adresse des Reverse-Proxys haben. Der Dienst-Wächter erwartet nur Releases, die es auf GitHub gibt (spontansteuern.erwartet), einen Teil je Release. 8. Logs und Verlauf: Logs nur mit festen Wörtern und Zahlen (fernzugang.log), der Verlauf nur Zeit, System, Admin, A"
 },
 {
 "lang": "de",
@@ -4149,7 +4149,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 10 min gilt ein Einmal-Code zum Koppeln (Schritt 3) - 30 s gilt ein Ticket für ein Fenster (Schritt 4) - 120 s wartet eine abgerissene Shell (Schritt 6) - 10 gekoppelte Systeme höchstens (Schritt 3) - 15 Bilder je Sekunde höchstens (Schritt 6) - 10 Fassungen einer Notiz bleiben (Schritt 6) - 30 Ordner höchstens (Schritt 6) - 8 MB MB ist ein Stück einer großen Datei (Schritt 6) - 4 Webdienste gleichzeitig offen höchstens (Schritt 6) - 8 Verbindungen je Webdienst zugleich höchstens (Schritt 6) - 31090 Port der Tunnel-Tür (Schritt 6) - 10 min gilt eine Nummer der Spontanhilfe (Schritt 7)"
+"text": "- 10 min gilt ein Einmal-Code zum Koppeln (Schritt 3) - 30 s gilt ein Ticket für ein Fenster (Schritt 4) - 120 s wartet eine abgerissene Shell (Schritt 6) - 10 gekoppelte Systeme höchstens (Schritt 3) - 15 Bilder je Sekunde höchstens (Schritt 6) - 10 Fassungen einer Notiz bleiben (Schritt 6) - 30 Ordner höchstens (Schritt 6) - 8 MB MB ist ein Stück einer großen Datei (Schritt 6) - 4 Webdienste gleichzeitig offen höchstens (Schritt 6) - 8 Verbindungen je Webdienst zugleich höchstens (Schritt 6) - 31090 Port der Tunnel-Tür (Schritt 6) - 5 sshTermy-Geräte höchstens (Schritt 6) - 12 h bleibt ein sshTermy-Kanal höchstens offen (Schritt 6) - 10 min gilt eine Nummer der Spontanhilfe (Schritt 7)"
 },
 {
 "lang": "de",
@@ -4157,7 +4157,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "- Funktionen → Fernzugang zu Servern: einschalten, Systeme koppeln, Bildschirm, Webdienste, Spontanhilfe, Notizen und Ordner."
+"text": "- Funktionen → Fernzugang zu Servern: einschalten, Systeme koppeln, Bildschirm, Webdienste, sshTermy als Jump-Host, Spontanhilfe, Notizen und Ordner."
 },
 {
 "lang": "de",
@@ -4181,7 +4181,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "ntansteuern.py mac_teile: Mac: nur eine vollständige App mit Ticket (Schritt 7) - app/panel/spontansteuern.py mac_zip: Mac: je Hilfe neu gepackt, Schlüssel nur im Namen der App (Schritt 7) - app/panel/spontansteuern.py _zeile: Linux X11: die Zeile ohne Geheimnis, der Schlüssel getrennt (Schritt 7) - app/panel/fernzugang.py notaus_close: Notaus schließt jede Leitung (Schritt 8) - app/panel/fernnotiz.py fuer_modell: die Notiz nur mit Haken für das Modell (Schritt 6) - app/panel/fernordner.py view: Ordner: nur die Reihenfolge der Liste (Schritt 6) - app/panel/ferngross.py upload_piece: große Datei: ein Stück nur ganz und mit passender SHA-256 (Schritt 6) - app/panel/fernweb.py ziel_ok: Webdienste: wohin ein Tunnel darf (Schritt 6) - app/panel/fernweb.py eigen_von: Webdienste: die eigenen Adressen des Systems, wie sein Anker sie meldet (Schritt 6) - app/panel/fernweb.py verbindung: die Tunnel-Tür: Köpfe umgeschrieben, Cookies getrennt (Schritt 6)"
+"text": "ntansteuern.py mac_teile: Mac: nur eine vollständige App mit Ticket (Schritt 7) - app/panel/spontansteuern.py mac_zip: Mac: je Hilfe neu gepackt, Schlüssel nur im Namen der App (Schritt 7) - app/panel/spontansteuern.py _zeile: Linux X11: die Zeile ohne Geheimnis, der Schlüssel getrennt (Schritt 7) - app/panel/fernzugang.py notaus_close: Notaus schließt jede Leitung (Schritt 8) - app/panel/fernnotiz.py fuer_modell: die Notiz nur mit Haken für das Modell (Schritt 6) - app/panel/fernordner.py view: Ordner: nur die Reihenfolge der Liste (Schritt 6) - app/panel/ferngross.py upload_piece: große Datei: ein Stück nur ganz und mit passender SHA-256 (Schritt 6) - app/panel/fernweb.py ziel_ok: Webdienste: wohin ein Tunnel darf (Schritt 6) - app/panel/fernweb.py eigen_von: Webdienste: die eigenen Adressen des Systems, wie sein Anker sie meldet (Schritt 6) - app/panel/fernweb.py verbindung: die Tunnel-Tür: Köpfe umgeschrieben, Cookies getrennt (Schritt 6) - app/panel/fernsshtermy.py kanal: sshTermy: der Kanal zu einem System, nur Bytes (Schritt 6) - app/panel/fernsshtermy.py _pruefen: sshTermy: Schalter, Notaus, Schlüssel, Rolle und Entsperrung je Anfrage (Schritt 6) - app/panel/fernsshtermy.py"
 },
 {
 "lang": "de",
@@ -4189,7 +4189,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_fernzugang, test_fernbild, test_spontanhilfe, test_ferngross, test_fernweb, test_fernals, test_spontansteuern, test_sparkhilfe_linux, test_sparkhilfe_mac"
+"text": " admin_koppeln: sshTermy koppeln: nur der Admin im Browser mit frischem Code (Schritt 6) - app/panel/fernsshtermy.py anker_schluessel: sshTermy: der Anker meldet nur Fingerabdrücke (Schritt 6)"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": "Selbsttests: test_fernzugang, test_fernbild, test_spontanhilfe, test_ferngross, test_fernweb, test_fernsshtermy, test_fernals, test_spontansteuern, test_sparkhilfe_linux, test_sparkhilfe_mac"
 },
 {
 "lang": "de",
@@ -15869,6 +15877,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Zugang",
 "title": "Zugang",
+"text": "- sshTermy als Jump-Host (Funktionen → Zugang → „sshTermy als Jump-Host“; baut auf „Fernzugang zu Servern“): sshTermy auf deinem Rechner erreicht die gekoppelten Systeme des Fernzugangs über den Spark (Vermittler-Protokoll v1)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Zugang",
+"title": "Zugang",
 "text": "- Angriffsprobe (Funktionen → Zugang → „Angriffsprobe“; baut auf „Werkstatt“): Misst auf Knopfdruck, wie oft das laufende Sprachmodell einem Befehl in fremdem Text folgen würde (Dokument, Mail, Webseite, Kalender, Smart Home). <!-- /funktionen:liste -->"
 },
 {
@@ -22597,7 +22613,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "ly with „Netz dahinter“, never the Spark's networks. Unlike the shell this is not SSH end to end but goes through the anchor's TLS line with a pinned certificate; at most 4 tunnels with 8 connections each and backpressure. 7. Spontaneous help: A help (spontanhilfe.admin_new) gives a number for 10 minutes, after 5 wrong ones it is dead. The screen goes by WebRTC directly between the two browsers, on the way through TURN on tars; the panel only connects them. Control (spontansteuern.program_ws) goes through the program SparkHilfe with a one-time key for 10 minutes; pictures and inputs then pass through the panel. Only GitHub builds the program; the Spark fetches it daily from the release (spontansteuern.fetch), only with a matching signature, size and SHA-256, and hands it out only from its store. On Linux X11 there is no file: the page shows the anchor's line without a secret (spontansteuern._zeile), the person pastes the key in the terminal; the program sends PNG pictures. On a Mac only with Developer ID and notarization; the Spark keeps the zip only without parts outside the app and with the ticket (spontansteuern.mac_teile) and packs it anew in memory for every help, with address"
+"text": "ly with „Netz dahinter“, never the Spark's networks. Unlike the shell this is not SSH end to end but goes through the anchor's TLS line with a pinned certificate; at most 4 tunnels with 8 connections each and backpressure. sshTermy as jump host (fernsshtermy.kanal, own switch, off): sshTermy on an admin's computer speaks SSH end to end with the server, the panel only passes bytes through the anchor; only the admin pairs, in the browser with a fresh code (fernsshtermy.admin_koppeln), at most 5 devices, every route checks switch, kill switch, key, role and unlock (fernsshtermy._pruefen); a channel ends when idle, at the latest after 12 hours. Only root adds the keys on the server, the anchor reports only their fingerprints (fernsshtermy.anker_schluessel). 7. Spontaneous help: A help (spontanhilfe.admin_new) gives a number for 10 minutes, after 5 wrong ones it is dead. The screen goes by WebRTC directly between the two browsers, on the way through TURN on tars; the panel only connects them. Control (spontansteuern.program_ws) goes through the program SparkHilfe with a one-time key for 10 minutes; pictures and inputs then pass through the panel. Only GitHub builds the program; the Spar"
 },
 {
 "lang": "en",
@@ -22605,7 +22621,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " and key in the app's name (spontansteuern.mac_zip). Number and wrong keys count per address, file and program only after the right key per help (spontanhilfe.rate), since from outside everyone has the reverse proxy's address. The service watch expects only releases GitHub has (spontansteuern.erwartet), one part per release. 8. Logs and history: Logs with fixed words and numbers only (fernzugang.log), the history only time, system, admin, kind and duration (fernzugang.verlauf_add). The kill switch closes every line (fernzugang.notaus_close)."
+"text": "k fetches it daily from the release (spontansteuern.fetch), only with a matching signature, size and SHA-256, and hands it out only from its store. On Linux X11 there is no file: the page shows the anchor's line without a secret (spontansteuern._zeile), the person pastes the key in the terminal; the program sends PNG pictures. On a Mac only with Developer ID and notarization; the Spark keeps the zip only without parts outside the app and with the ticket (spontansteuern.mac_teile) and packs it anew in memory for every help, with address and key in the app's name (spontansteuern.mac_zip). Number and wrong keys count per address, file and program only after the right key per help (spontanhilfe.rate), since from outside everyone has the reverse proxy's address. The service watch expects only releases GitHub has (spontansteuern.erwartet), one part per release. 8. Logs and history: Logs with fixed words and numbers only (fernzugang.log), the history only time, system, admin, kind and duration (fernzugang.verlauf_add). The kill switch closes every line (fernzugang.notaus_close)."
 },
 {
 "lang": "en",
@@ -22621,7 +22637,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 10 min a one-time pairing code is valid (step 3) - 30 s a ticket for one window is valid (step 4) - 120 s a dropped shell waits (step 6) - 10 paired systems at most (step 3) - 15 pictures a second at most (step 6) - 10 versions of a note stay (step 6) - 30 folders at most (step 6) - 8 MB MB is one piece of a big file (step 6) - 4 web services open at once at most (step 6) - 8 connections per web service at once at most (step 6) - 31090 port of the tunnel door (step 6) - 10 min a number of spontaneous help is valid (step 7)"
+"text": "- 10 min a one-time pairing code is valid (step 3) - 30 s a ticket for one window is valid (step 4) - 120 s a dropped shell waits (step 6) - 10 paired systems at most (step 3) - 15 pictures a second at most (step 6) - 10 versions of a note stay (step 6) - 30 folders at most (step 6) - 8 MB MB is one piece of a big file (step 6) - 4 web services open at once at most (step 6) - 8 connections per web service at once at most (step 6) - 31090 port of the tunnel door (step 6) - 5 sshTermy devices at most (step 6) - 12 h a sshTermy channel stays open at most (step 6) - 10 min a number of spontaneous help is valid (step 7)"
 },
 {
 "lang": "en",
@@ -22629,7 +22645,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- Features → Remote access to servers: switch on, pair systems, screen, web services, spontaneous help, notes and folders."
+"text": "- Features → Remote access to servers: switch on, pair systems, screen, web services, sshTermy as jump host, spontaneous help, notes and folders."
 },
 {
 "lang": "en",
@@ -22653,7 +22669,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": " its ticket (step 7) - app/panel/spontansteuern.py mac_zip: Mac: packed anew per help, the key only in the app's name (step 7) - app/panel/spontansteuern.py _zeile: Linux X11: the line without a secret, the key apart (step 7) - app/panel/fernzugang.py notaus_close: kill switch closes every line (step 8) - app/panel/fernnotiz.py fuer_modell: the note for the model only when ticked (step 6) - app/panel/fernordner.py view: folders: only the order of the list (step 6) - app/panel/ferngross.py upload_piece: big file: a piece only whole and with a matching SHA-256 (step 6) - app/panel/fernweb.py ziel_ok: web services: where a tunnel may go (step 6) - app/panel/fernweb.py eigen_von: web services: the system's own addresses as its anchor reports them (step 6) - app/panel/fernweb.py verbindung: the tunnel door: heads rewritten, cookies apart (step 6)"
+"text": " its ticket (step 7) - app/panel/spontansteuern.py mac_zip: Mac: packed anew per help, the key only in the app's name (step 7) - app/panel/spontansteuern.py _zeile: Linux X11: the line without a secret, the key apart (step 7) - app/panel/fernzugang.py notaus_close: kill switch closes every line (step 8) - app/panel/fernnotiz.py fuer_modell: the note for the model only when ticked (step 6) - app/panel/fernordner.py view: folders: only the order of the list (step 6) - app/panel/ferngross.py upload_piece: big file: a piece only whole and with a matching SHA-256 (step 6) - app/panel/fernweb.py ziel_ok: web services: where a tunnel may go (step 6) - app/panel/fernweb.py eigen_von: web services: the system's own addresses as its anchor reports them (step 6) - app/panel/fernweb.py verbindung: the tunnel door: heads rewritten, cookies apart (step 6) - app/panel/fernsshtermy.py kanal: sshTermy: the channel to a system, bytes only (step 6) - app/panel/fernsshtermy.py _pruefen: sshTermy: switch, kill switch, key, role and unlock per request (step 6) - app/panel/fernsshtermy.py admin_koppeln: pairing sshTermy: only the admin in the browser with a fresh code (step 6) - app/panel/fernsshtermy.py"
 },
 {
 "lang": "en",
@@ -22661,7 +22677,15 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_fernzugang, test_fernbild, test_spontanhilfe, test_ferngross, test_fernweb, test_fernals, test_spontansteuern, test_sparkhilfe_linux, test_sparkhilfe_mac"
+"text": " anker_schluessel: sshTermy: the anchor reports fingerprints only (step 6)"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "In the code",
+"title": "In the code",
+"text": "Self-tests: test_fernzugang, test_fernbild, test_spontanhilfe, test_ferngross, test_fernweb, test_fernsshtermy, test_fernals, test_spontansteuern, test_sparkhilfe_linux, test_sparkhilfe_mac"
 },
 {
 "lang": "en",
@@ -33990,6 +34014,14 @@
 "head": "Access",
 "title": "Access",
 "text": "- Web services in remote access (Features → Access → \"Web services in remote access\"; builds on \"Remote access to servers\"): The web pages of a paired system in the browser, without opening anything to the internet there: Grafana, a router's page, Home Assistant or a dashboard that listens only on 127.0.0.1 there."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Access",
+"title": "Access",
+"text": "- sshTermy as jump host (Features → Access → \"sshTermy as jump host\"; builds on \"Remote access to servers\"): sshTermy on your computer reaches the paired systems of remote access through the Spark (Vermittler protocol v1)."
 },
 {
 "lang": "en",

@@ -424,6 +424,7 @@ MODULE = {
     "ferngross": ("fern", "Fernzugang, große Dateien: in Teilen mit SHA-256, per Link (curl) oder vom NAS, Prüfsumme vor dem Umbenennen"),
     "fernweb": ("fern", "Fernzugang, Webdienste: eigene Tunnel-Tür (Port 31090), Ziele nach festen Regeln, Cookies je Dienst getrennt"),
     "spontansteuern": ("fern", "Spontanhilfe Steuern: SparkHilfe (Windows, Mac notarisiert und neu gepackt, Linux X11), Einmal-Schlüssel, Bild, Eingaben"),
+    "fernsshtermy": ("fern", "Fernzugang, sshTermy als Jump-Host: rohe Bytes zum sshd, ein Schlüssel je Gerät, je Schlüssel entsperrt"),
     "fernals": ("fern", "Fernzugang, Dateien als anderer Benutzer: sudo nur für den sftp-server mit -R, Freigabe am Server und je System"),
     "fernbild": ("fern", "Fernzugang, Bildschirm: guacd auf 127.0.0.1, VNC oder RDP durch den Anker, erst nur ansehen, höchstens 15 Bilder/s"),
     "fernanker": ("fern", "Fernzugang, Anker aktualisieren: eigener Ed25519-Schlüssel im Tresor, signierte neue Version, nie zurück"),

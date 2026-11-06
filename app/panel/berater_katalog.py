@@ -114,7 +114,7 @@ NEVER = (
 )
 NEVER_KEYS = {("chat", k) for k in ("llm_url", "llm_key", "public", "mfa", "report", "report_repo", "mail_send",
                                     "mail_send_voice", "mcp_server_extern", "llm_api", "llm_api_extern", "llm_api_minute", "llm_api_tag_k", "dev_updates", "system_updates", "system_updates_night_panel", "system_updates_night_models", "telegram_api",
-                                    "fernzugang", "fernzugang_hilfe", "spontanhilfe", "spontansteuern", "fernbild", "fernals",
+                                    "fernzugang", "fernzugang_hilfe", "spontanhilfe", "spontansteuern", "fernbild", "fernals", "fernzugang_sshtermy",
                                     "fernbild_zwischenablage", "fernzugang_notizen",
                                     "fernzugang_ordner", "fernzugang_gross", "fernweb", "fernweb_adresse", "fernzugang_alle", "entwickeln", "entwickeln_github", "entwickeln_terminal", "entwickeln_auftrag")} \
     | {("entwickeln", "schluessel_sha256"), ("api", "key"), ("api", "tls_listen"), ("api", "tls_from"), ("panel", "port"), ("panel", "https_port"),

@@ -871,6 +871,10 @@ FEATURES = (
       guide="ferngross"),
     # fernweb.py (Dominik 2026-10-30 „1a, 2a“): the web pages of a paired system through its anchor, own origin, admins only
     F("fernweb", "Webdienste im Fernzugang", "Web services in remote access", "sec", ("fernweb",), parent="fernzugang", guide="fernweb"),
+    # fernsshtermy.py (Dominik 2026-11-06 „alle empfehlungen umsetzten“): sshTermy reaches the paired systems through the
+    # panel as a jump host (Vermittler-Protokoll v1), SSH end to end, the panel passes bytes only; admins only
+    F("fernsshtermy", "sshTermy als Jump-Host", "sshTermy as jump host", "sec", ("fernzugang_sshtermy",), parent="fernzugang",
+      guide="fernsshtermy"),
     # angriffsprobe.py: how often the real model would follow an order in outside text (numbers only, nothing runs)
     F("angriffsprobe", "Angriffsprobe", "Attack probe", "sec", ("angriffsprobe",), parent="werkstatt", guide="angriffsprobe"),
     # nas.py (plan plaene/synology-bauplan.md): the places of a profile (NAS or cloud connected once), Ich → Speicher
@@ -973,7 +977,7 @@ DUTY = None
 REVIEW = None
 
 # chat.* switches that are no function a profile uses (how the Spark itself works)
-SPARK_ONLY = {"wachposten", "public", "thinking", "prompt_cache", "answer_check", "answer_check_more", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "systemupdates", "systemnachtpanel", "systemnachtmodelle", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "entwickeln", "entwickelngithub", "entwickelnterminal", "entwickelnauftrag", "angriffsprobe", "weicheabstimmen", "fernzugang", "fernzugangmeldung", "fernzugangalle", "spontanhilfe", "fernzuganghilfe", "fernbild", "fernbildablage", "fernnotizen", "fernordner", "ferngross", "fernweb",
+SPARK_ONLY = {"wachposten", "public", "thinking", "prompt_cache", "answer_check", "answer_check_more", "action_check", "loop_stop", "datetime", "face_life", "esp32_ota_http", "wartung", "wartungauto", "notbetriebasr", "gehaeuse", "systemupdates", "systemnachtpanel", "systemnachtmodelle", "schirm", "rundlauf", "modellwechsel", "modelleeigen", "werkstatt", "werkstattnacht", "entwickeln", "entwickelngithub", "entwickelnterminal", "entwickelnauftrag", "angriffsprobe", "weicheabstimmen", "fernzugang", "fernzugangmeldung", "fernzugangalle", "spontanhilfe", "fernzuganghilfe", "fernbild", "fernbildablage", "fernnotizen", "fernordner", "ferngross", "fernweb", "fernsshtermy",
               "helfer", "helferweiche", "helferdungeon", "helfermail", "helferangriff", "helferkurz"}
 # Everything starts off (Dominik 2026-10-08). The only values shipped on in config.default.json are protection and
 # stability rules and the basic functions the Spark had from the start, each with its reason here (Dominik 2026-10-12,

@@ -545,6 +545,12 @@ def set_device_user(did, uid):
         return False
 
 
+def devices_of(scope):
+    """The device keys of one scope (e.g. "sshtermy"): [{id, name, user, created}], never a key's hash."""
+    return [{k: x[k] for k in ("id", "name", "user", "created", "scope") if k in x}
+            for x in _load()["devices"] if x.get("scope") == scope]
+
+
 def delete_device(did):
     with _lock:
         d = _load()
@@ -893,6 +899,10 @@ WRITE_GATE = [lambda uid: False]
 # "panel" or "agent", None for anything else), and only while the admin has the terminal client on (TUI_GATE).
 TUI_GATE = [lambda uid: False]
 TUI_REACH = [lambda request: None]
+# An sshTermy key (scope "sshtermy", paired by code in fernsshtermy.py) is never a profile here (current gives None for
+# it, also with the device header); fernsshtermy takes it only as Bearer on these four ways, only for an admin profile.
+SSHTERMY_PATHS = ("/api/fernzugang/sshtermy/v1/koppeln", "/api/fernzugang/sshtermy/v1/systeme",
+                  "/api/fernzugang/sshtermy/v1/entsperren", "/api/fernzugang/sshtermy/v1/kanal")
 
 
 def _device(d, request):
@@ -1009,6 +1019,8 @@ def current(request):
                 return _gate_closed(request)
             if reach == "agent":   # the agent's pages want the browser login: the terminal's key counts like it there
                 request.scope["speech_app_area"] = "tui"
+        if dev.get("scope") == "sshtermy":   # sshTermy's key (fernsshtermy.py): no profile anywhere; only its four
+            return None                     # ways take it, as Bearer (SSHTERMY_PATHS)
         if dev.get("scope") not in (None, "", "app", "room", "watch", "haev", "write", "desk", "tui"):
             return None
         if notaus.own(dev["user"]):

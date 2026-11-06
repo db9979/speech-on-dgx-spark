@@ -395,6 +395,7 @@ ADMIN_ON_OK = {
     "fernweb.py:admin_on": "admin only: the web services of a paired system in an admin's own browser, admin-only doors and the door's own port, no profile part",
     "ferngross.py:admin_on": "admin only: big files of an admin's own files session on a remote server, no profile part",
     "spontansteuern.py:admin_on": "Spark-wide like the Spontanhilfe: the person's program and the admin's control, admin-only doors, no profile part",
+    "fernsshtermy.py:on": "admin only: sshTermy as jump host for an admin profile's own keys, its own doors (Bearer) and admin-only doors, no profile part",
     "fernals.py:on": "admin only: files as another user on the paired systems, admin-only doors, no profile part",
     "fernnotiz.py:on": "admin only: the notes of an admin on the paired systems, admin-only doors, no profile part",
     "fernordner.py:on": "admin only: the folders of the paired systems on the admin's page, admin-only doors, no profile part",

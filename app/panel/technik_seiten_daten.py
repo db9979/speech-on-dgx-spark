@@ -156,7 +156,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ users/ID/
     "users": {
-        "stand": "f5ea8f2b28",
+        "stand": "dc2f88f169",
         "bezug": {
             "profiles.delete_user": ["s11"], "vault.seal": ["s3"], "profiles.write_own": ["s3", "s4b"],
             "profiles.read_own": ["s4b"], "dateien.SIEGEL": ["s3"], "siegel.migrate": ["s3"], "speakers._store": ["s3", "s4"],

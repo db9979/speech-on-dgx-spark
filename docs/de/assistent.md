@@ -1945,5 +1945,7 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **Webdienste im Fernzugang** (Funktionen → Zugang → „Webdienste im Fernzugang“; baut auf „Fernzugang zu Servern“): Die Webseiten eines gekoppelten Systems im Browser, ohne dort etwas ins Internet zu öffnen: Grafana, die Seite eines Routers, Home Assistant oder ein Dashboard, das dort nur auf 127.0.0.1 lauscht.
 
+- **sshTermy als Jump-Host** (Funktionen → Zugang → „sshTermy als Jump-Host“; baut auf „Fernzugang zu Servern“): sshTermy auf deinem Rechner erreicht die gekoppelten Systeme des Fernzugangs über den Spark (Vermittler-Protokoll v1).
+
 - **Angriffsprobe** (Funktionen → Zugang → „Angriffsprobe“; baut auf „Werkstatt“): Misst auf Knopfdruck, wie oft das laufende Sprachmodell einem Befehl in fremdem Text folgen würde (Dokument, Mail, Webseite, Kalender, Smart Home).
 <!-- /funktionen:liste -->

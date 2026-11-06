@@ -58,7 +58,7 @@ async function fzLoad(){clearTimeout(FZ.timer);const box=$('fzbox');if(!box||doc
   if(document.querySelector('section#fern.on'))FZ.timer=setTimeout(fzLoad,fzBelegt()?15000:10000)}
 function fzFehler(e){fzMsg(e.message,true);if(e.status===423)fzLoad()}   // locked meanwhile: the page shows „Entsperren“
 // locked: nothing of the systems stays in the page, not even hidden
-function fzLeeren(){for(const id of ['fzlist','fzdetail','fzjetztlist','fzstatus','fzverlauflist','fzcode','fzflist','fzcrumbs'])$(id).textContent='';
+function fzLeeren(){for(const id of ['fzlist','fzdetail','fzjetztlist','fzstatus','fzverlauflist','fzcode','fzflist','fzcrumbs','fzsshtermy'])$(id).textContent='';$('fzsshtermy').hidden=true;
   $('fzdetail').hidden=true;$('fzjetzt').hidden=true;FZ.sel='';FZ.auf=false;FZ.code=null;FZ.ordner='';FZ.neuOrdner=false;FZ.ordnerEdit=false;fzMenuZu();
   for(const id of ['fzkoppelnmodal','fzverlaufmodal'])$(id).style.display='none'}
 // the tabs „Systeme | Spontanhilfe“: only on the unlocked page and only while Spontanhilfe is on; true on its tab
@@ -99,7 +99,7 @@ function fzShow(){const d=FZ.d,box=$('fzmain');if(!d||!box)return;const zu=!!(d.
   if(q&&!passt.length)list.appendChild(fzEl('div','mut fzleer',t('Kein System passt.','No system matches.')));
   const akt=fzAktBereit(gs);$('fzalleakt').hidden=!akt.length;$('fzalleaktn').textContent=akt.length?'('+akt.length+')':'';
   const o=d.offen||[],jl=$('fzjetztlist');$('fzjetzt').hidden=!o.length;jl.textContent='';for(const x of o)jl.appendChild(fzJetztZeile(x,true));
-  fzDetail();if($('fzverlaufmodal').style.display==='grid')fzVerlauf();fzSeite()}
+  fzDetail();if(window.stBox)stBox();if($('fzverlaufmodal').style.display==='grid')fzVerlauf();fzSeite()}
 // one system in the list on the left: icon, name (the note symbol with a note, a tag with a session), the second line, a hit in its note
 function fzSysZeile(g,tr){const [lvl]=fzStand(g),row=fzEl('button','fzrow'+(g.id===FZ.sel?' on':''));row.type='button';row.dataset.id=g.id;
       const tx=fzEl('span','fzrtext'),nm=fzEl('span','fzrname');nm.appendChild(fzEl('b','',g.name));if(g.notiz){const n=fzEl('span','fznzmark');n.appendChild(icNode('note'));n.title=t('hat eine Notiz','has a note');nm.appendChild(n)}if(g.sitzungen)nm.appendChild(fzEl('span','fztag',t('Sitzung','Session')));
@@ -111,7 +111,7 @@ function fzWie(g){return g.stand==='abbau'?t('wird abgebaut','being removed'):g.
   :!g.erlaubt?t('darf sich nicht verbinden','may not connect'):g.online?t('online seit ','online since ')+fzZeit(g.online_seit)
   :g.weg?t('offline seit ','offline since ')+fzZeit(g.weg):t('offline','offline')}
 // „Gerade verbunden“: who has a session open, from where (Zuhause or Internet, the address shortened) and with what
-const FZ_CLIENT={browser:['Browser','Browser'],iphone:['iPhone','iPhone'],android:['Android','Android'],fenster:['Fenster','Window']};
+const FZ_CLIENT={browser:['Browser','Browser'],iphone:['iPhone','iPhone'],android:['Android','Android'],fenster:['Fenster','Window'],sshtermy:['sshTermy','sshTermy']};
 function fzWoher(h){return h==='internet'?t('Internet','Internet'):t('Zuhause','Home')}
 // a button that cannot be pressed always says why (Dominik 2026-10-30: „Bildschirm“ grey on the uConsole without a
 // word): the shell's and the files' reason, then the screen's own; as the button's title and, for the screen, a line
@@ -138,7 +138,7 @@ function fzBildHinweis(g,w){const z=fzEl('div','fh fzwarum');z.append(fzEl('span
     if(!w.nurKopieren){const e=fzBtn(t('In die Shell einfügen','Insert into the shell'),'',()=>fzNotizTerminal(g.id,w.cmd));
       e.title=t('Setzt den Befehl in die Zeile, Enter drückst du selbst.','Puts the command in the line; you press Enter yourself.');z.append(' ',e)}}
   return z}
-function fzArt(a){return a==='shell'?t('Shell','Shell'):a==='bildschirm'?t('Bildschirm','Screen'):a==='dateien'?t('Dateien','Files'):a}
+function fzArt(a){return a==='shell'?t('Shell','Shell'):a==='bildschirm'?t('Bildschirm','Screen'):a==='dateien'?t('Dateien','Files'):a==='sshtermy'?'sshTermy':a}
 function fzJetztZeile(x,mitSystem){const d=FZ.d,name=((d.geraete||[]).find(g=>g.id===x.geraet)||{}).name||'';
   const r=fzEl('div','fzjrow'),tx=fzEl('div','fzjtext'),wo=fzWoher(x.herkunft)+(x.ip?' ('+x.ip+')':''),seit=t('seit ','since ')+fzZeit(x.seit);
   tx.append(fzEl('b','',(mitSystem?name:x.admin)+' · '+fzArt(x.art)),
@@ -167,6 +167,7 @@ function fzDetail(){const d=FZ.d,box=$('fzdetail'),g=(d.geraete||[]).find(x=>x.i
   if(g.hostkey_falsch)box.appendChild(fzEl('div','note err',t('Das System zeigt einen anderen Host-Schlüssel als bei der Kopplung: keine Verbindung. War das eine Neuinstallation, „Entfernen“ und neu koppeln.','The system shows another host key than at pairing: no connection. If it was reinstalled, "Remove" and pair again.')));
   if(g.wartet)box.appendChild(fzWartet(g));
   if(d.als_an&&!sh.disabled)box.appendChild(fzAlsBlock(g));
+  if(d.sshtermy&&window.stSchluessel&&g.stand!=='abbau')box.appendChild(stSchluessel(g));
   if(g.anker_neu||g.update_stand)box.appendChild(fzAktBlock(g));
   const grid=fzEl('div','fzdgrid'),li=fzEl('div','fzdcol'),re=fzEl('div','fzdcol');grid.append(li,re);box.appendChild(grid);
   const o=(d.offen||[]).filter(x=>x.geraet===g.id);

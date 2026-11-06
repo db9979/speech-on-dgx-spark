@@ -163,9 +163,10 @@ ENTSPERRT_MIN = (5, 120)  # chat.fernzugang_entsperrt_min: how long one code unl
 DATEI_MB = (1, 4096)    # chat.fernzugang_datei_mb: one upload or download at most (ferndateien.py)
 GROSS_MB = (1, 1048576)  # chat.fernzugang_gross_mb: one big file at most (ferngross.py, default 20480)
 VERLAUF_MAX = 2000       # entries at most
-ARTEN = {"shell": ("Shell", "Shell"), "dateien": ("Dateien", "Files"), "bildschirm": ("Bildschirm", "Screen")}   # what a session is
+ARTEN = {"shell": ("Shell", "Shell"), "dateien": ("Dateien", "Files"), "bildschirm": ("Bildschirm", "Screen"),
+         "sshtermy": ("sshTermy", "sshTermy")}   # what a session is (sshtermy: raw bytes for sshTermy, fernsshtermy.py)
 CLIENTS = {"browser": ("Browser", "Browser"), "iphone": ("iPhone", "iPhone"), "android": ("Android", "Android"),
-           "fenster": ("Fenster", "Window")}
+           "fenster": ("Fenster", "Window"), "sshtermy": ("sshTermy", "sshTermy")}
 # what the remote server's journal gets when a session opens (logger -t spark-fernzugang), with the admin's name
 MELDUNG_REMOTE = "Spark-Fernzugang: {admin} verbunden"
 # the push to the admins on a session from the internet or from a new place (chat.fernzugang_meldung)
@@ -263,7 +264,9 @@ WORDS = ("koppeln_code", "koppeln", "koppeln_datei", "bestaetigt", "anker_auf", 
          "gross_auf", "gross_teil", "gross_weiter", "gross_fertig", "gross_ab", "gross_rate", "gross_rest", "gross_stand", "holen",
          "holen_fertig", "nas_liste", "nas_holen", "nas_fertig", "job_ab", "koppeln_link",
          "web_auf", "web_zu", "web_ticket", "web_abgewiesen", "web_dienst", "web_netz", "web_suchen", "web_fp", "web_tor",
-         "web_verbindung", "web_websocket", "dateien_als")
+         "web_verbindung", "web_websocket", "dateien_als",
+         "sshtermy_code", "sshtermy_koppeln", "sshtermy_systeme", "sshtermy_entsperrt", "sshtermy_kanal", "sshtermy_zu",
+         "sshtermy_trennen", "sshtermy_entfernen", "schluessel")
 # „Frag den Assistenten“ beside the terminal (stage 2b, Dominik 2026-10-28): the own language model only (llm.own_tor),
 # no tool, its answer is text for the person; the panel never types it. What goes to the model: the question, the
 # system's name and OS, the last HILFE_BEFEHLE own commands and, only with „Bildschirm mitschicken“, the last
@@ -595,6 +598,7 @@ def counts(now=None):
             "dateien": sum(1 for s in SITZUNG.values() if s.art == "dateien"),
             "dateien_als": sum(1 for s in SITZUNG.values() if s.art == "dateien" and getattr(s, "als", "")),
             "bildschirm": sum(1 for s in SITZUNG.values() if s.art == "bildschirm"),
+            "sshtermy": sum(1 for s in SITZUNG.values() if s.art == "sshtermy"),
             "gehalten": sum(1 for s in SITZUNG.values() if getattr(s, "browser", 1) is None and getattr(s, "verloren", 0)),
             "uebertragungen": max(0, STATS["uebertragungen"]) + _gross_laufend()}
 
@@ -626,8 +630,10 @@ def for_live(now=None):
               "min": int((now - x.seit) // 60)} for x in sorted(SITZUNG.values(), key=lambda x: x.seit)]
     import fernnotiz
     import fernordner
+    import fernsshtermy
     import fernweb
     return {"on": True, **counts(now), "hilfe": STATS["hilfe"], "offen": offen, "entsperrt": entsperrt_n(now),
+            "sshtermy_geraete": fernsshtermy.anzahl() if fernsshtermy.on() else 0,
             "web": fernweb.for_live(now),
             "notizen": fernnotiz.anzahl() if fernnotiz.on() else 0,
             "ordner": fernordner.anzahl() if fernordner.on() else 0,
@@ -649,6 +655,7 @@ def live_sub(d):
             + (f" · davon {d['dateien']} Dateien" if d.get("dateien") else "")
             + (f" ({d['dateien_als']} als anderer Benutzer)" if d.get("dateien_als") else "")
             + (f" · davon {d['bildschirm']} Bildschirm" if d.get("bildschirm") else "")
+            + (f" · davon {d['sshtermy']} sshTermy" if d.get("sshtermy") else "")
             + (f" · {d['gehalten']} wartet auf Rückkehr" if d.get("gehalten") else "") + offen
             + (f" · {d['uebertragungen']} Übertragungen" if d.get("uebertragungen") else "")
             + (f" · {d['abbau']} warten auf Abbau" if d.get("abbau") else "")
@@ -658,6 +665,7 @@ def live_sub(d):
             + (f" · {d['entsperrt']} entsperrt" if d.get("entsperrt") else "")
             + (f" · {d['notizen']} mit Notiz" if d.get("notizen") else "")
             + (f" · {d['ordner']} Ordner" if d.get("ordner") else "")
+            + (f" · {d['sshtermy_geraete']} sshTermy gekoppelt" if d.get("sshtermy_geraete") else "")
             + fernweb.live_sub(d.get("web") or {}))
 
 
@@ -731,6 +739,8 @@ class Sitzung:
         self.als, self.als_cmd = "", ""   # files as another user (fernals): the user and the exec channel's command
         self.schreiben = False  # files as another user: writing allowed in this session (fresh code)
         self.bild_port = None  # the screen: the one local port guacd connects to (fernbild.Port)
+        self.weiter = None     # sshTermy (fernsshtermy): the anchor's bytes go straight to its WebSocket, no SSH here
+        self.geraet = ""       # sshTermy: the device key's id (Trennen and Entfernen per device)
         self.bild_bytes = 0    # the screen: what went to the page (for the rate at the end, KB/s)
         self.sftp_lock = threading.Lock()   # one SFTP call at a time per session (ferndateien._sftp)
         self.fenster = False   # the terminal runs in its own window („Herauslösen“)
@@ -760,6 +770,15 @@ class Sitzung:
         self.tasks = []
 
     async def from_anker(self, data):
+        if self.art == "sshtermy":      # raw bytes of the server's sshd for sshTermy: no SSH in the panel
+            self.zuletzt = time.time()
+            if self.weiter is None:     # before its WebSocket is accepted: kept (the server's banner comes at once)
+                self.puffer += data
+                if len(self.puffer) > PUFFER:
+                    await self.end("zu_gross")
+                return
+            await self.weiter(data)
+            return
         with contextlib.suppress(OSError):
             await self.loop.sock_sendall(self.ours, data)
 
@@ -939,7 +958,7 @@ class Sitzung:
                 await self._say({"typ": "bald", "s": 0})
 
     async def _say(self, d):
-        if self.browser is None:
+        if self.browser is None or self.art == "sshtermy":   # sshTermy hears only the server's bytes, never a word
             return
         if self.art == "bildschirm":     # the screen's page speaks the Guacamole protocol: only the end, as „error“
             if d.get("typ") in ("zu", "fehler") and self.browser is not None:
@@ -984,12 +1003,12 @@ class Sitzung:
         with contextlib.suppress(Exception):
             await self.browser.close(1000)
         mins = int((time.time() - self.seit) // 60)
-        log({"dateien": "dateien_zu", "bildschirm": "bild_zu"}.get(self.art, "sitzung_zu"), why, mins)
+        log({"dateien": "dateien_zu", "bildschirm": "bild_zu", "sshtermy": "sshtermy_zu"}.get(self.art, "sitzung_zu"), why, mins)
         if self.art == "bildschirm":
             log("bild_rate", "kb_s", int(self.bild_bytes / 1024 / max(1.0, time.time() - self.seit)))
         if self.offen:
             await asyncio.to_thread(verlauf_add, self)
-        _live({"dateien": "Fern-Dateien beendet", "bildschirm": "Fern-Bildschirm beendet"}.get(self.art, "Fernsitzung beendet")
+        _live({"dateien": "Fern-Dateien beendet", "bildschirm": "Fern-Bildschirm beendet", "sshtermy": "sshTermy-Kanal beendet"}.get(self.art, "Fernsitzung beendet")
               + f" ({why})")
         await asyncio.to_thread(_update, self.gid, zuletzt=int(time.time()))
 
@@ -1119,7 +1138,7 @@ async def aufbauen(gid, art, browser=None, who="admin", uid=None, cols=80, rows=
     if conn is not None:
         _wo(s, conn)
     s.admin_name = _admin_name(uid)
-    word = {"dateien": "dateien_abgewiesen", "bildschirm": "bild_abgewiesen"}.get(s.art, "sitzung_abgewiesen")
+    word = {"dateien": "dateien_abgewiesen", "bildschirm": "bild_abgewiesen", "sshtermy": "sshtermy_kanal"}.get(s.art, "sitzung_abgewiesen")
     fut = asyncio.get_running_loop().create_future()
     a.wait[n] = fut
     a.kanaele[n] = s      # before „auf“: the server's first bytes may come right behind the anchor's „offen“
@@ -1141,8 +1160,8 @@ async def aufbauen(gid, art, browser=None, who="admin", uid=None, cols=80, rows=
         return None, None, ok
     SITZUNG[s.id] = s
     s.tasks.append(asyncio.create_task(s._to_anker()))
-    if s.art == "bildschirm":     # no SSH: the screen's port over there, guacd speaks VNC or RDP (fernbild)
-        s.offen = True
+    if s.art in ("bildschirm", "sshtermy"):   # no SSH here: the screen's port (guacd speaks VNC or RDP, fernbild), or
+        s.offen = True                          # the server's sshd for sshTermy, which speaks SSH itself (fernsshtermy)
         return s, g, ""
     await s._say({"typ": "stand", "stand": "ssh"})
     try:
@@ -1793,14 +1812,15 @@ def sperren(conn, why):
     return False
 
 
-def entsperrt_bis(conn, now=None):
+def entsperrt_bis(conn, now=None, tor=None):
     """The end of this login's unlock, or None: never during the Notaus, never after its minutes, never from another
-    kind of place (Zuhause ↔ Internet); an unlock that ends here is logged with why."""
+    kind of place (Zuhause ↔ Internet); an unlock that ends here is logged with why. tor: another unlock than the
+    request's own (a key of sshTermy, fernsshtermy.tor)."""
     now = time.time() if now is None else now
     if _notaus():
         sperren_alle("notaus")
         return None
-    k = _tor(conn)
+    k = tor or _tor(conn)
     e = ENTSPERRT.get(k)
     if e is None:
         return None
@@ -1920,6 +1940,8 @@ def admin_get(request: Request):
     out["anker_version"] = pv = fernanker.version()
     import fernals
     out["als_an"] = als_an = fernals.on(c)
+    import fernsshtermy
+    out["sshtermy"] = fernsshtermy.view() if fernsshtermy.on(c) else None
     for gid, x in sorted(_read(now)["geraete"].items(), key=lambda kv: str(kv[1].get("name", "")).lower()):
         a = ANKER.get(gid)
         rows.append({"id": gid, "name": x.get("name", ""), "os": x.get("os", ""), "anker": x.get("anker", ""),
@@ -1931,7 +1953,8 @@ def admin_get(request: Request):
                      "bild": x.get("bild") or "", "bild_anker": fernbild.anchor_ok(x.get("anker"), x.get("os")),
                      "web_anker": fernweb.anchor_ok(x.get("anker")), "web": len(x.get("web") or []) if web_an else 0,
                      "sitzungen": sum(1 for s in SITZUNG.values() if s.gid == gid), **fernanker.row(x, pv),
-                     "notiz": notizen and fernnotiz.has(gid), **(fernals.row(x) if als_an else {})})
+                     "notiz": notizen and fernnotiz.has(gid), **(fernals.row(x) if als_an else {}),
+                     **(fernsshtermy.row(x) if out["sshtermy"] is not None else {})})
     if ordner_an:                            # folders on: the systems in their order, each with its folder
         v = fernordner.view([r["id"] for r in rows])
         pos = {g: i for i, g in enumerate(v["reihe"])}

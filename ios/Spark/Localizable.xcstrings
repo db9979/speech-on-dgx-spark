@@ -20250,6 +20250,136 @@
           }
         }
       }
+    },
+    "Schlüssel für sshTermy": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keys for sshTermy"
+          }
+        }
+      }
+    },
+    "Noch kein sshTermy gekoppelt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No sshTermy paired yet."
+          }
+        }
+      }
+    },
+    "sshTermy koppeln (im Panel)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pair sshTermy (in the panel)"
+          }
+        }
+      }
+    },
+    "sshTermy als Jump-Host": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sshTermy as jump host"
+          }
+        }
+      }
+    },
+    "sshTermy erreicht die Server über den Spark, SSH läuft Ende-zu-Ende. Koppeln nur im Panel; Entfernen fragt jedes Mal nach Code oder Passkey.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sshTermy reaches the servers through the Spark, SSH runs end to end. Pairing only in the panel; removing asks for a code or passkey every time."
+          }
+        }
+      }
+    },
+    "Dieses sshTermy entfernen? Sein Schlüssel gilt sofort nicht mehr, offene Kanäle enden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this sshTermy? Its key stops at once, open channels end."
+          }
+        }
+      }
+    },
+    "Davon sshTermy": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Of them sshTermy"
+          }
+        }
+      }
+    },
+    "entsperrt noch %lld min": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unlocked for %lld min"
+          }
+        }
+      }
+    },
+    "%lld Kanäle offen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld channels open"
+          }
+        }
+      }
+    },
+    "mit Tunnel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "with tunnels"
+          }
+        }
+      }
+    },
+    "ohne Tunnel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "without tunnels"
+          }
+        }
+      }
+    },
+    "Getrennt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnected."
+          }
+        }
+      }
+    },
+    "Entfernt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

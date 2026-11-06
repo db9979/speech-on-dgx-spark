@@ -3517,3 +3517,9 @@ details.supk{margin:4px 0 8px}details.supk>summary{cursor:pointer;font:var(--t-s
 .supb{white-space:pre-wrap;overflow-wrap:anywhere;font:var(--t-mono);font-size:11.5px;background:var(--fill);border-radius:var(--r-box);padding:8px 10px;margin:6px 0}
 .sumsg:empty{display:none}.sumsg{margin-top:8px}
 @media (max-width:760px){#mon .sysup .zrow>.pill,.sucomp .zrow>.pill,.suneben .zrow>.pill{min-width:0}.sucomp .zrow,.sysup .zrow{flex-wrap:wrap;gap:2px 12px}.sysup .zrow .zch{display:none}.sucomp h3.sec span{margin-left:0}}
+/* Fernzugang → sshTermy als Jump-Host (fernsshtermy.js): the box below the systems and the keys on the system's card */
+.fzst{margin-top:12px;display:flex;flex-direction:column;gap:8px}.stkopf{display:flex;gap:12px;align-items:flex-start}.stkopf h3{margin:0 0 4px}
+.sttext{flex:1;min-width:0}.sttext small{display:block;color:var(--mut)}.stname{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.stzeile{padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg2,transparent);overflow-x:auto}.stzeile code{white-space:nowrap}
+.strow{display:flex;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}.stschl{margin-top:10px;display:flex;flex-direction:column;gap:4px}
+.stschl code,.strow code{word-break:break-all}

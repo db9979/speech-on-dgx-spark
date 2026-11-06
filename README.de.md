@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.352** sshTermy als Jump-Host: sshTermy auf dem Rechner erreicht die Server über den Spark, SSH Ende-zu-Ende, gekoppelt mit einem Code im Panel, entsperrt mit Admin-Code oder Passkey; die Schlüssel trägt nur root am Server ein (Anker 1.11.0, spark-anker schluessel dazu)
 - **V01.1.351** Fix: der Admin hat beim Hörstück, bei Auswertungen, Ton/Video und Links als Dokument keine Tagesgrenze mehr, ebenso jedes Profil mit „Ohne Tageslimit“; die Seite zeigt „ohne Tageslimit“
 - **V01.1.350** Mappen ruhiger: links die schmale Liste mit ＋, rechts die offene Mappe mit Kopf, „Fragen“ als einzigem blauen Knopf, dünnem Budget-Balken mit ⓘ und den Teilen Einträge, Auswertungen und Hörstück; ganze Titel, die Stufe je Eintrag als kleines Menü, Seltenes unter ⋯
 - **V01.1.349** Hörstück im Auto: CarPlay zeigt unter „Hörstücke“ die fertigen aus allen Mappen und spielt sie über Now Playing (Pause, 15 Sekunden vor und zurück, nächstes Stück, weiter an der letzten Stelle); spricht Spark, pausiert es
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.345** Hörstück sofort erstellen: der Admin kann ein Hörstück gleich machen lassen oder ein wartendes vorziehen, ohne ruhige Minuten und Tagesgrenze, auch in der iPhone-App; echte Sprache geht trotzdem vor
 - **V01.1.344** Hörstück in den Apps: eigener Player in der iPhone-App (auch im Hintergrund und auf dem Sperrbildschirm), „An Telegram“ nur an den eigenen Chat, Mitteilung „Hörstück fertig“ mit Sprung-Link, beim Abspielen hervorgehobene Zeile im Drehbuch, Drehbuch auch auf Englisch
 - **V01.1.343** Hörstück aus einer Mappe: in einer Mappe ein Gespräch aus 2 oder 3 Stimmen zum Anhören (5, 10 oder 20 Minuten); das Modell schreibt nur ein Drehbuch, das Panel prüft jede Zeile (Fundstelle, Zahlenprobe, feste Sprecher), gesprochen wird Zeile für Zeile in ruhigen Minuten; der Admin wählt die drei Stimmen
-- **V01.1.342** YouTube-Links abschreiben: ein YouTube-Link unter „Link hinzufügen“ wird abgeschrieben, nur die Tonspur über das festgelegte yt-dlp (Version und SHA-256 fest, eigene venv mit `sudo ./install.sh --youtube`), sein ganzer Verkehr nur über einen netguard-Proxy mit fester Host-Liste; danach wie eine Aufnahme mit Zeitmarken (Schalter aus)
 
 
 

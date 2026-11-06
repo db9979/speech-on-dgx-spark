@@ -10,6 +10,8 @@ and Windows (stage 5: the panel's file spark-anker-einrichten.cmd starts it, see
     curl -fsSL https://<panel>/fernzugang/anker | python3 - steuern https://<panel>         Spontanhilfe S2d: control (X11)
     curl -fsSL https://<panel>/fernzugang/anker | sudo python3 - bildschirm                 the screen too (stage 4)
     sudo spark-anker bildschirm aus                                                         the screen off again
+    sudo spark-anker schluessel dazu '<öffentlicher Schlüssel>' [--weiterleiten]              a key of sshTermy (1.11.0)
+    sudo spark-anker schluessel weg '<Schlüssel oder SHA256:…>' · schluessel liste           … out again, the list
     "C:\\Program Files\\SparkAnker\\spark-anker.cmd" bildschirm [aus]                       Windows (Administrator, 5b)
     curl -fsSL https://<panel>/fernzugang/anker | sudo python3 - aktualisieren              this program anew (no code)
 
@@ -118,7 +120,8 @@ gets the same with the one line `aktualisieren` (as root, no code): it replaces 
 and pairing and pins the signing key.
 
 Removing (`entfernen`, or „Entfernen“ in the panel): stops and deletes both units, the program, the configuration,
-the anchor's folder, the user spark-anker, the panel's line in authorized_keys and the user spark with its home when
+the anchor's folder, the user spark-anker, the panel's line and every sshTermy line (`schluessel dazu`) in
+authorized_keys and the user spark with its home when
 the anchor made it; then it tells the panel (best effort) so it forgets this server too.
 """
 import argparse
@@ -156,7 +159,7 @@ try:
 except ImportError:      # Windows: no passwd database (the anchor asks `net user` there)
     pwd = None
 
-VERSION = "1.10.0"
+VERSION = "1.11.0"
 LIB = "/usr/local/lib/spark-anker"
 PROG = LIB + "/spark-anker.py"
 BIN = "/usr/local/bin/spark-anker"
@@ -2382,18 +2385,18 @@ def remove_paths(root="/", s=None):
 
 
 def strip_key(path):
-    """Takes the panel's line(s) out of authorized_keys; the file stays when other lines are left."""
-    try:
-        with open(path) as f:
-            lines = f.read().splitlines()
-    except OSError:
+    """Takes the panel's line(s) and every line of `schluessel dazu` (sshTermy, 1.11.0) out of authorized_keys; the
+    file stays when other lines are left. Written without following a link (keys_lesen, keys_schreiben): the folder
+    belongs to the user spark."""
+    lines = keys_lesen(path)
+    if lines is None:
         return False
-    keep = [ln for ln in lines if MARK not in ln]
+    keep = [ln for ln in lines if MARK not in ln and not SCHLUESSEL_ZEILE.fullmatch(ln)]
     if len(keep) == len(lines):
         return False
     if keep:
-        with open(path, "w") as f:
-            f.write("\n".join(keep) + "\n")
+        st = os.lstat(path)
+        keys_schreiben(path, keep, (st.st_uid, st.st_gid), lambda p, u, g: os.chown(p, u, g) if os.geteuid() == 0 else None)
     else:
         os.remove(path)
     return True
@@ -2601,6 +2604,202 @@ def cmd_files(args, run=run_cmd, ctx=None):
         say("macOS: Für Schreibtisch, Dokumente, Mail usw. zusätzlich Systemeinstellungen → Allgemein → Teilen → "
             "Entfernte Anmeldung (i) → „Vollzugriff auf die Festplatte für entfernte Benutzer erlauben“")
     say("aus: sudo spark-anker dateien aus")
+    return 0
+
+
+# ---------------------------------------------------------------- keys for sshTermy (1.11.0)
+# `sudo spark-anker schluessel dazu '<public key>' [--weiterleiten]`: sshTermy (Vermittler-Protokoll v1, the panel as
+# jump host, fernsshtermy.py) logs in here end to end as `spark` with its own key, through the anchor's channel to the
+# own sshd. Only a person as root adds that key (the panel can never push one): one line in ~spark/.ssh/authorized_keys
+# with from="127.0.0.1,::1",restrict,pty (only through the anchor, a terminal, no agent, no X11, no forwarding), with
+# --weiterleiten also port-forwarding (tunnels in sshTermy). Strict check: one public key without options, ssh-ed25519,
+# ecdsa-sha2-nistp256/384/521 or ssh-rsa with at least 3072 bits, no line break. `schluessel weg '<key|SHA256:…>'`
+# takes it out, `schluessel liste` shows them; „Entfernen“ takes all of them away (strip_key). The panel only hears
+# fingerprints, the comment and the forwarding mark (POST /api/fernzugang/anker/schluessel), for the system's card.
+SCHLUESSEL_OPT = 'from="127.0.0.1,::1",restrict,pty'
+SCHLUESSEL_MARK = "sshtermy"
+SCHLUESSEL_MAX = 20                # sshTermy keys on one server at most
+SCHLUESSEL_RSA_BITS = 3072
+SCHLUESSEL_ECDSA = {"ecdsa-sha2-nistp256": ("nistp256", 65), "ecdsa-sha2-nistp384": ("nistp384", 97),
+                    "ecdsa-sha2-nistp521": ("nistp521", 133)}
+SCHLUESSEL_TYPEN = ("ssh-ed25519", *SCHLUESSEL_ECDSA, "ssh-rsa")
+SCHLUESSEL_KOMMENTAR = re.compile(r"[A-Za-z0-9._@+\-]{0,60}")
+# exactly the line `schluessel dazu` writes, nothing else counts as one (weg, liste, Entfernen)
+SCHLUESSEL_ZEILE = re.compile(r'from="127\.0\.0\.1,::1",restrict,pty(,port-forwarding)? '
+                              r'(ssh-ed25519|ecdsa-sha2-nistp(?:256|384|521)|ssh-rsa) ([A-Za-z0-9+/]{40,2000}={0,2}) '
+                              r'sshtermy(?::([A-Za-z0-9._@+\-]{1,60}))?')
+SCHLUESSEL_FP = re.compile(r"SHA256:[A-Za-z0-9+/]{43}")
+
+
+def _ssh_teile(raw):
+    """The fields of an SSH public key blob (string, string, …); Fehler when it does not split exactly."""
+    out, i = [], 0
+    while i < len(raw):
+        if i + 4 > len(raw):
+            raise Fehler("der Schlüssel ist beschädigt. Es wurde nichts geändert.")
+        n = struct.unpack(">I", raw[i:i + 4])[0]
+        if n > 16384 or i + 4 + n > len(raw):
+            raise Fehler("der Schlüssel ist beschädigt. Es wurde nichts geändert.")
+        out.append(raw[i + 4:i + 4 + n])
+        i += 4 + n
+    return out
+
+
+def schluessel_pruefen(text):
+    """(type, base64, comment) of one public key as `ssh-keygen` writes it; Fehler for anything else: options in front,
+    a line break, another type, RSA under 3072 bits, a blob that does not match its type."""
+    if not isinstance(text, str) or len(text) > 8192 or any(c in text for c in "\r\n\x00"):
+        raise Fehler("bitte genau eine Zeile mit einem öffentlichen Schlüssel, in einfachen Anführungszeichen. Es wurde nichts geändert.")
+    parts = text.strip().split()
+    if len(parts) < 2 or parts[0] not in SCHLUESSEL_TYPEN:
+        raise Fehler("nur ein öffentlicher Schlüssel ohne Optionen davor: ssh-ed25519, ecdsa-sha2-nistp256/384/521 oder "
+                     f"ssh-rsa ab {SCHLUESSEL_RSA_BITS} Bit (die Zeile aus der .pub-Datei). Es wurde nichts geändert.")
+    typ, b64 = parts[0], parts[1]
+    if not re.fullmatch(r"[A-Za-z0-9+/]{40,2000}={0,2}", b64):
+        raise Fehler("der Schlüssel ist beschädigt. Es wurde nichts geändert.")
+    try:
+        raw = base64.b64decode(b64, validate=True)
+    except ValueError:
+        raise Fehler("der Schlüssel ist beschädigt. Es wurde nichts geändert.") from None
+    f = _ssh_teile(raw)
+    if not f or f[0] != typ.encode():
+        raise Fehler("Typ und Schlüssel passen nicht zusammen. Es wurde nichts geändert.")
+    if typ == "ssh-ed25519" and not (len(f) == 2 and len(f[1]) == 32):
+        raise Fehler("der ed25519-Schlüssel ist beschädigt. Es wurde nichts geändert.")
+    if typ in SCHLUESSEL_ECDSA:
+        curve, size = SCHLUESSEL_ECDSA[typ]
+        if not (len(f) == 3 and f[1] == curve.encode() and len(f[2]) == size and f[2][:1] == b"\x04"):
+            raise Fehler("der ecdsa-Schlüssel ist beschädigt. Es wurde nichts geändert.")
+    if typ == "ssh-rsa":
+        if len(f) != 3 or not f[1] or not f[2]:
+            raise Fehler("der RSA-Schlüssel ist beschädigt. Es wurde nichts geändert.")
+        if int.from_bytes(f[2], "big").bit_length() < SCHLUESSEL_RSA_BITS:
+            raise Fehler(f"RSA erst ab {SCHLUESSEL_RSA_BITS} Bit; besser `ssh-keygen -t ed25519`. Es wurde nichts geändert.")
+    kommentar = re.sub(r"[^A-Za-z0-9._@+\-]", "", "-".join(parts[2:]))[:60]
+    return typ, b64, kommentar
+
+
+def schluessel_fp(b64):
+    """SHA256:… as `ssh-keygen -l` shows it."""
+    return "SHA256:" + base64.b64encode(hashlib.sha256(base64.b64decode(b64)).digest()).decode().rstrip("=")
+
+
+def schluessel_zeile(typ, b64, kommentar, weiter):
+    return (SCHLUESSEL_OPT + (",port-forwarding" if weiter else "") + f" {typ} {b64} {SCHLUESSEL_MARK}"
+            + (f":{kommentar}" if kommentar else ""))
+
+
+def schluessel_eintraege(lines):
+    """[{fp, typ, kommentar, weiterleiten}] of the sshTermy lines among these lines (only exactly ours)."""
+    out = []
+    for ln in lines:
+        m = SCHLUESSEL_ZEILE.fullmatch(ln)
+        if m:
+            out.append({"fp": schluessel_fp(m.group(3)), "typ": m.group(2), "kommentar": m.group(4) or "",
+                        "weiterleiten": bool(m.group(1))})
+    return out
+
+
+def keys_lesen(path):
+    """The lines of authorized_keys, never through a link (the folder belongs to spark); None when there is none."""
+    try:
+        fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+    except OSError:
+        return None
+    with os.fdopen(fd, encoding="utf-8", errors="replace") as f:
+        return f.read(1024 * 1024).splitlines()
+
+
+def keys_schreiben(path, lines, owner, chown):
+    """authorized_keys anew: a fresh file beside it (O_EXCL, never through a link), its owner and 0600, then renamed
+    over the old one (a link there is replaced, never followed)."""
+    folder = os.path.dirname(path)
+    st = os.lstat(folder)
+    if not stat.S_ISDIR(st.st_mode):
+        raise Fehler(f"{folder} ist kein Ordner. Es wurde nichts geändert.")
+    tmp = os.path.join(folder, f".authorized_keys.spark-anker.{secrets.token_hex(4)}")
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0), 0o600)
+    try:
+        with os.fdopen(fd, "w") as f:
+            f.write("\n".join(lines) + "\n")
+        chown(tmp, owner[0], owner[1])
+        os.chmod(tmp, 0o600)
+        os.replace(tmp, path)
+    except BaseException:
+        with contextlib.suppress(OSError):
+            os.remove(tmp)
+        raise
+
+
+def _schluessel_melden(conf, eintraege):
+    """Fingerprints, comments and the forwarding mark to the panel (for the system's card); never the key itself."""
+    try:
+        status, _ = http_call(conf["url"], conf.get("fp") or "", "POST", "/api/fernzugang/anker/schluessel",
+                              {"schluessel": eintraege}, conf["key"], 10)
+    except (OSError, Fehler, ssl.SSLError, http.client.HTTPException):
+        status = 0
+    return status
+
+
+def cmd_keys(args, run=run_cmd, ctx=None):
+    """`schluessel dazu '<key>' [--weiterleiten]` / `schluessel weg '<key|SHA256:…>'` / `schluessel liste`."""
+    ctx = ctx or Ctx(run=run)
+    s = ctx.s
+    if ctx.euid() != 0:
+        say(s.sudo)
+        return 1
+    conf = load(ctx.root, s)
+    if not conf:
+        say("erst einrichten (der Befehl aus dem Panel unter System koppeln)")
+        return 1
+    user = ctx.ids(USER)
+    if not user or not user[2]:
+        raise Fehler(f"den Benutzer {USER} gibt es hier nicht: erst einrichten. Es wurde nichts geändert.")
+    ssh = ctx.path(os.path.join(user[2], ".ssh"))
+    ak = os.path.join(ssh, "authorized_keys")
+    if os.path.islink(ssh):
+        raise Fehler(f"{os.path.join(user[2], '.ssh')} ist ein Link. Es wurde nichts geändert.")
+    lines = keys_lesen(ak)
+    lines = [] if lines is None else lines
+    if args.was == "liste":
+        e = schluessel_eintraege(lines)
+        for x in e:
+            say(f"{x['typ']} {x['fp']} {x['kommentar'] or '-'}" + (" · mit Tunnel" if x["weiterleiten"] else " · ohne Tunnel"))
+        say(f"{len(e)} Schlüssel für sshTermy" if e else "noch kein Schlüssel für sshTermy")
+        _schluessel_melden(conf, e)
+        return 0
+    if len(args.schluessel) != 1:
+        raise Fehler("bitte genau einen Schlüssel in einfachen Anführungszeichen, z. B. "
+                     "schluessel dazu 'ssh-ed25519 AAAA… sshtermy@laptop'. Es wurde nichts geändert.")
+    raw = args.schluessel[0].strip()
+    if args.was == "weg":
+        if SCHLUESSEL_FP.fullmatch(raw):
+            fp = raw
+        else:
+            fp = schluessel_fp(schluessel_pruefen(raw)[1])
+        keep = [ln for ln in lines if not (SCHLUESSEL_ZEILE.fullmatch(ln) and schluessel_fp(SCHLUESSEL_ZEILE.fullmatch(ln).group(3)) == fp)]
+        if len(keep) == len(lines):
+            say("diesen Schlüssel für sshTermy gibt es hier nicht; nichts geändert")
+            return 1
+    else:
+        typ, b64, kommentar = schluessel_pruefen(raw)
+        keep = [ln for ln in lines if not (SCHLUESSEL_ZEILE.fullmatch(ln) and SCHLUESSEL_ZEILE.fullmatch(ln).group(3) == b64)]
+        if len(schluessel_eintraege(keep)) >= SCHLUESSEL_MAX:
+            raise Fehler(f"schon {SCHLUESSEL_MAX} Schlüssel für sshTermy: erst einen mit `schluessel weg` entfernen. Es wurde nichts geändert.")
+        keep.append(schluessel_zeile(typ, b64, kommentar, bool(args.weiterleiten)))
+        fp = schluessel_fp(b64)
+    os.makedirs(ssh, mode=0o700, exist_ok=True)
+    ctx.chown(ssh, user[0], user[1])
+    keys_schreiben(ak, keep, (user[0], user[1]), ctx.chown)
+    e = schluessel_eintraege(keep)
+    status = _schluessel_melden(conf, e)
+    if args.was == "weg":
+        say(f"Schlüssel {fp} für sshTermy entfernt")
+    else:
+        say(f"Schlüssel {fp} für sshTermy eingetragen (Benutzer {USER}, nur über den Anker"
+            + (", mit Tunneln)" if args.weiterleiten else ", ohne Tunnel)"))
+    if status != 200:
+        say(f"(Panel antwortet {status or 'nicht'}: die Liste dort kommt mit `sudo spark-anker schluessel liste`)")
     return 0
 
 
@@ -3991,6 +4190,7 @@ def cmd_control(args, tty=None, screen=None, env=None):
 NOT_YET = {
     ("Windows", "hilfe"): "Die Spontanhilfe in der Shell gibt es unter Windows noch nicht; „Bildschirm teilen“ auf der Hilfe-Seite geht. Es wurde nichts verbunden.",
     ("Windows", "steuern"): "Unter Windows steuert das Programm SparkHilfe von der Hilfe-Seite, nicht diese Zeile. Es wurde nichts verbunden.",
+    ("Windows", "schluessel"): "Schlüssel für sshTermy gibt es unter Windows noch nicht. Es wurde nichts geändert.",
     ("Darwin", "steuern"): "Steuern am Mac gibt es noch nicht (erst mit Notarisierung); „Bildschirm teilen“ auf der Hilfe-Seite geht. Es wurde nichts verbunden.",
 }
 
@@ -4020,6 +4220,10 @@ def main(argv=None, system=None):
     d.add_argument("was", choices=["als", "ordner", "aus"], help="als BENUTZER[,…] | ordner ORDNER … | aus")
     d.add_argument("ziele", nargs="*", default=[], help="Benutzer (als, durch Komma getrennt) oder Ordner (Windows)")
     d.add_argument("--schreiben", action="store_true", help="auch schreiben (sonst nur lesen)")
+    k = sub.add_parser("schluessel", help="Schlüssel für sshTermy (das Panel als Jump-Host): dazu, weg oder liste")
+    k.add_argument("was", choices=["dazu", "weg", "liste"], help="dazu SCHLÜSSEL | weg SCHLÜSSEL|SHA256:… | liste")
+    k.add_argument("schluessel", nargs="*", default=[], help="der öffentliche Schlüssel in einfachen Anführungszeichen")
+    k.add_argument("--weiterleiten", action="store_true", help="auch Tunnel (port-forwarding) erlauben")
     b = sub.add_parser("bildschirm", help="den Bildschirm für das Panel einrichten (oder `bildschirm aus`)")
     b.add_argument("aus", nargs="?", default="", choices=["", "aus"], help="aus: alles vom Bildschirm wieder weg")
     h = sub.add_parser("hilfe", help="Spontanhilfe: einmal, in diesem Terminal, ohne sudo (fragt die Nummer)")
@@ -4035,7 +4239,7 @@ def main(argv=None, system=None):
         return 1
     try:
         return {"einrichten": cmd_setup, "entfernen": cmd_remove, "lauf": cmd_run, "zustand": cmd_state,
-                "hilfe": cmd_help, "steuern": cmd_control, "bildschirm": cmd_screen, "dateien": cmd_files, "aktualisieren": cmd_upgrade, "einheiten": cmd_units,
+                "hilfe": cmd_help, "steuern": cmd_control, "bildschirm": cmd_screen, "dateien": cmd_files, "schluessel": cmd_keys, "aktualisieren": cmd_upgrade, "einheiten": cmd_units,
                 "waechter": cmd_watch}[args.cmd](args)
     except Fehler as e:
         say(str(e))

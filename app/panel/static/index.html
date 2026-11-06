@@ -328,6 +328,7 @@
         <div class="setrow"><div class="lbl"><b>Große Dateien</b><span>In Dateien: große Dateien in Teilen mit Prüfsumme (Pause und Weiter), per Link vom Server geholt oder vom NAS übertragen.</span></div><label class="tgl"><input type="checkbox" id="chat.fernzugang_gross"><i></i></label></div>
         <div data-show="chat.fernzugang_gross" style="margin-left:18px"><label for="chat.fernzugang_gross_mb">Größte große Datei (MB)</label><input class="num" id="chat.fernzugang_gross_mb" type="number" min="1" max="1048576"><div class="fh">1 bis 1048576, Standard 20480 (20 GB). Der Server braucht so viel Platz frei und 64 MB dazu.</div></div>
         <div class="setrow"><div class="lbl"><b>Dateien als anderer Benutzer</b><span>In Dateien als root oder anderer Benutzer, nur wenn der Server es freigibt und je System mit Code. Erst nur lesen.</span></div><label class="tgl"><input type="checkbox" id="chat.fernals"><i></i></label></div>
+        <div class="setrow"><div class="lbl"><b>sshTermy als Jump-Host</b><span>sshTermy auf einem Rechner erreicht die gekoppelten Systeme über den Spark. SSH läuft Ende-zu-Ende, der Spark reicht nur Bytes durch.</span></div><label class="tgl"><input type="checkbox" id="chat.fernzugang_sshtermy"><i></i></label></div>
         <label for="chat.fernzugang_offline_min">Dienst-Wächter meldet einen Server nach (Minuten offline)</label><input class="num" id="chat.fernzugang_offline_min" type="number" min="5" max="1440"><div class="fh">5 bis 1440, Standard 30.</div>
         <div class="setrow"><div class="lbl"><b>Bildschirm</b><span>Den Bildschirm eines gekoppelten Systems im Browser, über seinen Anker und guacd auf dem Spark. Erst nur ansehen, Steuern mit einem Klick.</span></div><label class="tgl"><input type="checkbox" id="chat.fernbild"><i></i></label></div>
         <div data-show="chat.fernbild" style="margin-left:18px"><div class="setrow"><div class="lbl"><b>Zwischenablage beim Bildschirm</b><span>Text zwischen Browser und System austauschen, nur während „Steuern“. Aus: keine Zwischenablage in beide Richtungen.</span></div><label class="tgl"><input type="checkbox" id="chat.fernbild_zwischenablage"><i></i></label></div></div>
@@ -1192,6 +1193,7 @@
       </div>
       <div class="fzdetail" id="fzdetail" hidden></div>
     </div>
+    <div class="card fzst" id="fzsshtermy" hidden></div>
   </div>
   <div id="shmain" hidden>
     <div class="note" id="shturn" hidden>Von unterwegs braucht das Bild den Vermittler: Funktionen → Anrufe von unterwegs. Ohne ihn geht es nur im Heimnetz.</div>
@@ -1742,6 +1744,7 @@
 <script src="/static/js/fernzugang.js"></script>
 <script src="/static/js/fernbild.js"></script>
 <script src="/static/js/fernweb.js"></script>
+<script src="/static/js/fernsshtermy.js"></script>
 <script src="/static/js/ferngross.js"></script>
 <script src="/static/js/spontanhilfe.js"></script>
 <script src="/static/js/praxistest.js"></script>

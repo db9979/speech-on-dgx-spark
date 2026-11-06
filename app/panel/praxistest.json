@@ -5359,6 +5359,34 @@
 "titel": "Hörstück und Dokumente: Admin ohne Tagesgrenze",
 "text": "Admin: Funktionen → Eigene Dokumente → Mappen → Hörstück aus einer Mappe, Hörstücke pro Tag auf 1. Als Admin (Login des Panel-Passworts oder Profil mit der Rolle „Admin“ und zweitem Schritt) Mappen → eine Mappe → Hörstück: oben steht „heute N · ohne Tageslimit“; zweimal „Erstellen“: beide werden angenommen, nie „Für heute ist die Grenze erreicht.“. Dasselbe im iPhone unter Meine Sachen → Mappen → eine Mappe → Hörstück. Ein Profil ohne Rolle und ohne Haken „Ohne Tageslimit“ (Personen und Geräte, beim Profil unter Rechte): nach dem ersten „Für heute ist die Grenze erreicht.“, „heute 1 von 1“. Haken „Ohne Tageslimit“ setzen: dasselbe Profil hat keine Grenze mehr. Ich → Dokumente → Link hinzufügen zeigt beim Admin „heute N Abrufe, ohne Tageslimit“; Auswertungen, Abschriften und Links laufen im Hintergrund für ein Profil mit der Rolle „Admin“ (zweiter Schritt) oder mit dem Haken auch über die Grenze pro Tag weiter. Zustand → Logs (Wissen): keine Zeile „hoerstueck: erstellen abgelehnt | grenze“ für den Admin.",
 "thread": "Ideen aus Open Notebook übernehmen"
+},
+{
+"id": "P792",
+"v": 1352,
+"titel": "sshTermy koppeln",
+"text": "Admin: Funktionen → Fernzugang zu Servern → sshTermy als Jump-Host einschalten. Im Browser unter Spark verwalten → Fernzugang erscheint unter den Systemen der Kasten „sshTermy als Jump-Host“. „Koppeln (Code)“ fragt den Admin-Code und zeigt die Zeile zum Einrichten mit „Kopieren“ (gilt 10 Minuten und einmal). In sshTermy mit Strg+Leertaste die Befehle öffnen und bei „Vermittler koppeln / verwalten“ einfügen. Danach steht in der Liste „sshTermy · <Name>“ mit „gesperrt“; ein zweites Einfügen derselben Zeile wird abgelehnt. In der iPhone-App unter Spark verwalten → Fernzugang steht das Gerät ebenfalls, Koppeln dort nur als Hinweis aufs Panel. Zustand → Logs (Fernzugang): „fernzugang: sshtermy_koppeln ok“, kein Schlüssel, kein Code, kein Name.",
+"thread": "sshTermy als Jump-Host"
+},
+{
+"id": "P793",
+"v": 1352,
+"titel": "sshTermy entsperren und verbinden",
+"text": "Am Server als root: sudo spark-anker update (Anker 1.11.0), dann sudo spark-anker schluessel dazu '<öffentlicher Schlüssel aus sshTermy>'. Spark verwalten → Fernzugang → die Karte des Systems zeigt unter „Schlüssel für sshTermy“ Fingerabdruck, Kommentar und „ohne Tunnel“. In sshTermy das System wählen: sshTermy fragt einmal Admin-Code oder Passkey (Entsperren), dann öffnet sich die SSH-Sitzung Ende-zu-Ende; im Panel steht beim Gerät „entsperrt noch N min · 1 Kanal offen“ und die Live-Übersicht zählt „davon 1 sshTermy“. „Trennen“ beendet den Kanal sofort. Ohne Bytes endet der Kanal nach der Leerlaufzeit des Fernzugangs. System offline: sshTermy meldet „offline“ (409).",
+"thread": "sshTermy als Jump-Host"
+},
+{
+"id": "P794",
+"v": 1352,
+"titel": "sshTermy-Schlüssel am Server",
+"text": "Am Server als root: sudo spark-anker schluessel liste zeigt nur Typ, Fingerabdruck, Kommentar und Tunnel. Ein Schlüssel ssh-rsa mit 2048 Bit oder ein Text mit Zeilenumbruch wird abgelehnt; ohne root: „nur als root“. sudo spark-anker schluessel dazu '<Schlüssel>' --weiterleiten zeigt im Panel „mit Tunnel“. sudo spark-anker schluessel weg 'SHA256:…' entfernt ihn, die Karte im Panel zeigt ihn nach der nächsten Meldung nicht mehr, ein offener Kanal mit dem Schlüssel endet. Spark verwalten → Fernzugang → ein System → Entfernen am Server nimmt auch alle sshTermy-Zeilen aus authorized_keys; andere Zeilen bleiben.",
+"thread": "sshTermy als Jump-Host"
+},
+{
+"id": "P795",
+"v": 1352,
+"titel": "sshTermy entfernen und Notaus",
+"text": "Spark verwalten → Fernzugang, im Kasten „sshTermy als Jump-Host“ „Entfernen“ beim Gerät fragt den Admin-Code; danach antwortet sshTermy mit „nicht gekoppelt“ (401) und offene Kanäle enden. Dasselbe in der iPhone-App unter Spark verwalten → Fernzugang. Notaus: jeder sshTermy-Kanal endet, die Entsperrung ist weg, neue Kanäle bekommen 503. Schalter aus: die Wege antworten 503, der Kasten ist weg.",
+"thread": "sshTermy als Jump-Host"
 }
 ]
 }
