@@ -494,8 +494,10 @@ class AnchorReport(StBase):
             for want in ('fz["sshtermy"]', 'd["sshtermy"]', "api/admin/fernzugang/sshtermy/", "/trennen", '"DELETE"'):
                 self.assertIn(want, src)
             self.assertNotIn("api/admin/fernzugang/sshtermy/koppeln", src)     # pairing only in the browser (E3a)
-        with open(os.path.join(helpers.APP, "panel", "static", "js", "fernsshtermy.js"), encoding="utf-8") as f:
-            js = f.read()
+        js = ""
+        for name in ("js/fernsshtermy.js", "index.html"):     # its own tab; „Koppeln (Code)“ in the page's head (2026-11-06)
+            with open(os.path.join(helpers.APP, "panel", "static", *name.split("/")), encoding="utf-8") as f:
+                js += f.read()
         for want in ("Koppeln (Code)", "Kopieren", "Trennen", "Entfernen", "Schlüssel für sshTermy", "schluessel dazu"):
             self.assertIn(want, js)
 

@@ -3064,18 +3064,23 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .dm-narben{margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;align-items:center}.dm-narbez{margin:6px 0;font-style:italic}
 .dm-rast{margin:8px 0;padding:10px 14px;border-radius:12px;background:linear-gradient(135deg,rgba(234,88,12,.14),rgba(250,204,21,.10));border:1px solid rgba(234,88,12,.35)}.dm-wachen{margin:6px 0 0 18px;padding:0}.dm-frage{margin-top:8px}
 .dm-rstimme{border-top:1px solid var(--line);padding-top:10px}.dm-rstw{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}.dm-rstw select{width:100%;margin:0}
-/* Fernzugang page (layout A, Dominik 2026-10-28 20:24): a head with the tabs, the unlock pill, the gear and „System
-   koppeln“; one quiet status line; the systems as a list (scrolls in itself) beside the chosen one; fits 1440 × 900 */
+/* Fernzugang page (layout A, Dominik 2026-10-28 20:24; tidied 2026-11-06 „ok“, Bild aufraeumen/1-systeme.png): a head
+   with the tabs (with their numbers), the numbers as one small chip, the unlock chip „bis 14:02 · Sperren“, the gear
+   and the tab's own button; the systems as a list (scrolls in itself, stays in view) beside the chosen one, which grows
+   with its content (the page scrolls, never a box in the card) */
 .fzkopf{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.fzkopf h2{margin:0}.fzfill{flex:1}
-.fzlock{display:inline-flex;align-items:center;gap:6px;padding:3px 4px 3px 10px;border-radius:999px;border:1px solid color-mix(in srgb,var(--ok) 45%,transparent);background:color-mix(in srgb,var(--ok) 10%,transparent);color:var(--ok);font-size:13px;font-weight:600}
-.fzlock[hidden]{display:none}.fzlock svg{width:15px;height:15px;flex:none}.fzlock span,.fzpill{white-space:nowrap}
-.fzpill{font:inherit;font-size:12.5px;padding:2px 9px;border-radius:999px;border:1px solid color-mix(in srgb,var(--ok) 45%,transparent);background:var(--card);color:inherit;cursor:pointer}
+.fzlock,.fzzahl{display:inline-flex;align-items:center;gap:6px;min-height:var(--h-ctl);box-sizing:border-box;padding:0 10px;border-radius:var(--r-pill);border:1px solid color-mix(in srgb,var(--ok) 45%,transparent);color:var(--okt,var(--ok));font:var(--t-sub);font-weight:600;white-space:nowrap}
+.fzlock[hidden],.fzzahl[hidden]{display:none}.fzlock svg{width:var(--ic-sm);height:var(--ic-sm);flex:none}.fzzahl{border-color:var(--line);color:var(--fg)}
+.fzlockt{font:inherit;padding:0;border:0;background:none;color:inherit;cursor:pointer}.fzlocksperr{text-decoration:underline;text-underline-offset:2px}.fzlockt:hover{text-decoration:underline}
+.segc button i:empty{display:none}.fztabs button[data-aus]{display:none}
 .fzgear{display:inline-grid;place-items:center;width:34px;height:34px;border:1px solid var(--line);border-radius:10px;color:var(--mut)}.fzgear svg{width:18px;height:18px}
 .fzneubtn[hidden]{display:none}
-.fzstatus{display:flex;gap:16px;flex-wrap:wrap;margin:4px 0 12px;font-size:14px;color:var(--mut)}.fzstatus[hidden]{display:none}.fzst{display:inline-flex;align-items:center;gap:5px}.fzst b{color:var(--fg)}
-.fzsplit{display:grid;grid-template-columns:minmax(260px,320px) minmax(0,1fr);gap:14px;height:var(--fzsh,auto);min-height:0}
-.fzliste{display:flex;flex-direction:column;min-height:0;border:1px solid var(--line);border-radius:14px;padding:10px;background:var(--card)}
-.fzliste>input{flex:none}
+.fzsplit{display:grid;grid-template-columns:minmax(260px,320px) minmax(0,1fr);gap:14px;min-height:var(--fzsh,auto);margin-top:12px;align-items:start}
+.fzliste{display:flex;flex-direction:column;min-height:0;height:var(--fzsh,auto);position:sticky;top:8px;box-sizing:border-box;border:1px solid var(--line);border-radius:14px;padding:10px;background:var(--card)}
+.fzsuchrow{flex:none;display:flex;gap:6px;align-items:center;position:relative}.fzsuchrow input{flex:1;min-width:0;margin:0}
+.fzlmehr{flex:none;display:inline-grid;place-items:center;width:38px;padding:0}.fzlmehr svg{width:var(--ic);height:var(--ic)}
+.fzlmenu{position:absolute;right:0;top:calc(100% + 4px);z-index:20;min-width:240px;max-width:calc(100vw - 24px);background:var(--card);border:1px solid var(--line);border-radius:var(--r-win);box-shadow:var(--shadow-pop);padding:6px;display:flex;flex-direction:column}
+.fzlmenu[hidden]{display:none}
 .fzlist{flex:1;min-height:0;overflow-y:auto;margin-top:2px}.fzleer{padding:10px 6px}
 .fzgrp{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:12px 4px 6px}
 .fzrow{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;text-align:left;padding:8px;border:0;border-radius:10px;background:none;color:inherit;font:inherit;cursor:pointer}
@@ -3089,13 +3094,30 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .fzfuss{flex:none;display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--line);margin-top:6px;padding-top:6px}
 .fzlink{display:flex;justify-content:space-between;align-items:center;gap:8px;font:inherit;text-align:left;padding:6px 8px;border:0;border-radius:8px;background:none;color:var(--acc);cursor:pointer}
 .fzlink:hover{background:color-mix(in srgb,var(--line) 35%,transparent)}.fzlink.danger{color:var(--bad)}.fzdetail .fzlink{display:inline-flex;padding:2px 6px}
-.fzdetail{display:flex;flex-direction:column;min-height:0;min-width:0;overflow-y:auto;border:1px solid var(--line);border-radius:14px;padding:16px 18px;background:var(--card)}
+.fzdetail{display:flex;flex-direction:column;min-height:var(--fzsh,auto);box-sizing:border-box;min-width:0;border:1px solid var(--line);border-radius:14px;padding:16px 18px;background:var(--card)}
 .fzback{display:none}
 .fzakt{margin:10px 0 2px;padding:10px 12px;border:1px solid var(--line);border-radius:12px}.fzaktkopf{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.fzaktkopf>span{flex:1;min-width:0;font-weight:600}   /* Anker aktualisieren (fernanker.py) */
 .fzdkopf{display:flex;gap:14px;align-items:center}.fzdtext{min-width:0}.fzdname{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.fzdname b{font-size:20px}
-.fzknoepfe{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0 4px;padding-bottom:14px;border-bottom:1px solid var(--line)}
-
-.fzdgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 24px;flex:1 0 auto}
+.fzknoepfe{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0 4px}
+/* „Bildschirm“ with its ⓘ inside the same outline: why it is grey, as a line under the buttons */
+.fzkwrap{position:relative;display:inline-flex}.fzkwrap[hidden]{display:none}.fzkwrap .fzmiti{padding-right:30px}
+.fzkwrap .fzinfoi{position:absolute;right:4px;top:50%;transform:translateY(-50%)}
+.fzinfoi{display:inline-grid;place-items:center;width:24px;height:24px;padding:0;border:0;border-radius:var(--r-ctl);background:none;color:var(--mut);cursor:pointer;flex:none}
+.fzinfoi:hover,.fzinfoi[aria-expanded=true]{color:var(--acc)}.fzinfoi svg{width:var(--ic-sm);height:var(--ic-sm)}
+.fzwarum{margin:4px 0 0}.fzwarum[hidden]{display:none}
+/* the sub-tabs of the card: Einrichten · Anker · Verlauf · Notiz */
+.fzdtabs{display:flex;gap:22px;margin:14px 0 0;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.fzdtab{display:inline-flex;align-items:center;gap:6px;border:0;background:none;color:var(--mut);font:inherit;padding:8px 0;margin-bottom:-1px;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap}
+.fzdtab:hover{color:var(--fg)}.fzdtab.on{color:var(--fg);font-weight:600;border-bottom-color:var(--acc)}
+.fzdpane{padding-top:6px}.fzdpane[hidden]{display:none}
+/* „Einrichten“: one row per capability, ✓ done or ○ with one command, Kopieren, In die Shell; more only behind ⓘ */
+.fzein{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.fzeinst{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;border:1.5px dashed var(--faint);box-sizing:border-box;color:var(--okt,var(--ok))}
+.fzein.ok .fzeinst{border:0;background:color-mix(in srgb,var(--ok) 16%,transparent)}.fzeinst svg{width:14px;height:14px}
+.fzeintext{min-width:0}.fzeinkopf{display:flex;align-items:center;gap:4px}.fzeintext small{display:block;color:var(--mut);font:var(--t-sub);overflow-wrap:anywhere}
+.fzeinre{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.fzbefehl{display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap;min-width:0}.fzbefehl code{font:var(--t-mono);background:var(--fill);border-radius:var(--r-ctl);padding:4px 8px;overflow-wrap:anywhere;min-width:0}
+.fzeininfo,.fzeinmehr{grid-column:2/-1;margin:2px 0 0}.fzeininfo[hidden],.fzeinmehr[hidden]{display:none}.fzeinmehr{display:flex;justify-content:flex-end}
 .fzfacts{display:grid;grid-template-columns:max-content 1fr;gap:4px 12px;margin:4px 0 10px;font-size:13.5px}.fzfacts dt{color:var(--mut)}.fzfacts dd{margin:0;overflow-wrap:anywhere}
 .fzkey code{font-size:12.5px}
 .b.danger{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 45%,transparent)}
@@ -3118,17 +3140,20 @@ body.dg-gast>*:not(#dgmodal){display:none!important}   /* a guest without a prof
 .fzsha{display:block;overflow-wrap:anywhere;font-size:12px}
 .fzklink{margin:8px 0}.fzlinktext{display:block;overflow-wrap:anywhere;font-size:12px;margin:4px 0}.fzqr{display:block;width:160px;height:160px;margin:6px 0;border-radius:8px}
 /* phone (like the iPhone settings): „Gerade verbunden“ above the list, a tap opens the system with three big tiles */
-@media (max-width:760px){.fzsplit{grid-template-columns:minmax(0,1fr);height:auto}
-  .fzliste{border:0;padding:0;background:none}.fzlist{overflow:visible}
+@media (max-width:760px){.fzsplit{grid-template-columns:minmax(0,1fr);min-height:0}
+  .fzliste{border:0;padding:0;background:none;height:auto;position:static}.fzlist{overflow:visible}
+  .fzein{grid-template-columns:28px minmax(0,1fr)}.fzeinre{grid-column:2/-1;justify-content:flex-start}.fzeinmehr{justify-content:flex-start}
+  .fzkopf .fztabs{order:4}.fzkopf .fzzahl{order:5}
   .fzsplit.fzauf .fzliste{display:none}.fzsplit:not(.fzauf) .fzdetail{display:none}
-  .fzdetail{overflow:visible;border:0;padding:0;background:none}
+  .fzdetail{border:0;padding:0;background:none;min-height:0}
   .fzback{display:inline-block;align-self:flex-start;border:0;background:none;color:var(--acc);padding:4px 0;font:inherit;cursor:pointer}
   .fzdkopf{flex-direction:column;text-align:center}.fzdname{justify-content:center}
   .fzknoepfe{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:0}
+  .fzkwrap{display:grid}.fzkwrap .fzmiti{padding-right:0}.fzkwrap .fzinfoi{top:4px;transform:none}
   .fzknoepfe .fzk{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:72px;font-weight:600}
   .fzknoepfe .fzfill{display:none}.fzknoepfe .fzankercut{grid-column:1/-1}
-  .fzdgrid{grid-template-columns:minmax(0,1fr)}.fzplatz{grid-template-columns:1fr}.fzplatz>div:last-child{display:none}
-  .fzlock{order:5;width:100%;box-sizing:border-box}.fzdfuss{flex-direction:column;align-items:stretch}}
+  .fzplatz{grid-template-columns:1fr}.fzplatz>div:last-child{display:none}
+  .fzlock{order:6}.fzdfuss{flex-direction:column;align-items:stretch}}
 /* the running remote session: one slim red line at the top of the content (Dominik 2026-10-28 18:54), on every page;
    system, time and the idle limit there, everything else behind its ⓘ (Dominik 2026-10-28 20:07, layout A) */
 .fztop{position:sticky;top:var(--fzbtop,0px);z-index:4;display:flex;flex-direction:column;gap:4px;margin:0 0 8px}.fztop[hidden]{display:none}   /* the remote session and a Spontanhilfe, one under the other */
@@ -3517,9 +3542,10 @@ details.supk{margin:4px 0 8px}details.supk>summary{cursor:pointer;font:var(--t-s
 .supb{white-space:pre-wrap;overflow-wrap:anywhere;font:var(--t-mono);font-size:11.5px;background:var(--fill);border-radius:var(--r-box);padding:8px 10px;margin:6px 0}
 .sumsg:empty{display:none}.sumsg{margin-top:8px}
 @media (max-width:760px){#mon .sysup .zrow>.pill,.sucomp .zrow>.pill,.suneben .zrow>.pill{min-width:0}.sucomp .zrow,.sysup .zrow{flex-wrap:wrap;gap:2px 12px}.sysup .zrow .zch{display:none}.sucomp h3.sec span{margin-left:0}}
-/* Fernzugang → sshTermy als Jump-Host (fernsshtermy.js): the box below the systems and the keys on the system's card */
-.fzst{margin-top:12px;display:flex;flex-direction:column;gap:8px}.stkopf{display:flex;gap:12px;align-items:flex-start}.stkopf h3{margin:0 0 4px}
-.sttext{flex:1;min-width:0}.sttext small{display:block;color:var(--mut)}.stname{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.stzeile{padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg2,transparent);overflow-x:auto}.stzeile code{white-space:nowrap}
-.strow{display:flex;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}.stschl{margin-top:10px;display:flex;flex-direction:column;gap:4px}
-.stschl code,.strow code{word-break:break-all}
+/* Fernzugang → sshTermy (fernsshtermy.js), its own tab: one sentence, the paired devices, one row per system */
+.stmain{margin-top:12px}.stmain[hidden]{display:none}.stintro{margin:0 0 10px}
+.sttext{flex:1;min-width:0}.sttext small{display:block;color:var(--mut);font:var(--t-sub)}
+.stzeile{padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--fill);overflow-x:auto}.stzeile code{white-space:nowrap}
+.strow{display:flex;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.strechts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.stleer{padding:8px 0}
+@media (max-width:760px){.strow{flex-wrap:wrap}.strechts{width:100%;justify-content:flex-start;padding-left:19px}}

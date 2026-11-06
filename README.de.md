@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.353** Fernzugang aufgeräumt: eigener Reiter sshTermy statt des Kastens unten, die Zahlen als ein Schild „6/6 online · 0 Sitzungen“, die Entsperrung kurz „bis 14:02 · Sperren“, Koppeln, Aktualisieren, Verlauf und Trennen im ⋯ neben der Suche, die Systemkarte mit den Reitern Einrichten (✓ oder ○ mit genau einem Befehl, Kopieren, In die Shell), Anker, Verlauf und Notiz, Liste und Karte über die ganze Höhe
 - **V01.1.352** sshTermy als Jump-Host: sshTermy auf dem Rechner erreicht die Server über den Spark, SSH Ende-zu-Ende, gekoppelt mit einem Code im Panel, entsperrt mit Admin-Code oder Passkey; die Schlüssel trägt nur root am Server ein (Anker 1.11.0, spark-anker schluessel dazu)
 - **V01.1.351** Fix: der Admin hat beim Hörstück, bei Auswertungen, Ton/Video und Links als Dokument keine Tagesgrenze mehr, ebenso jedes Profil mit „Ohne Tageslimit“; die Seite zeigt „ohne Tageslimit“
 - **V01.1.350** Mappen ruhiger: links die schmale Liste mit ＋, rechts die offene Mappe mit Kopf, „Fragen“ als einzigem blauen Knopf, dünnem Budget-Balken mit ⓘ und den Teilen Einträge, Auswertungen und Hörstück; ganze Titel, die Stufe je Eintrag als kleines Menü, Seltenes unter ⋯
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.346** Sprachmodell per API: eigene Programme nutzen das Sprachmodell OpenAI-kompatibel unter /v1 mit einem Schlüssel ihres Profils (Ich → Sprachmodell per API), nur Text, im Heimnetz oder mit eigenem Schalter auch von außen; Grenzen je Schlüssel, Admins unbegrenzt
 - **V01.1.345** Hörstück sofort erstellen: der Admin kann ein Hörstück gleich machen lassen oder ein wartendes vorziehen, ohne ruhige Minuten und Tagesgrenze, auch in der iPhone-App; echte Sprache geht trotzdem vor
 - **V01.1.344** Hörstück in den Apps: eigener Player in der iPhone-App (auch im Hintergrund und auf dem Sperrbildschirm), „An Telegram“ nur an den eigenen Chat, Mitteilung „Hörstück fertig“ mit Sprung-Link, beim Abspielen hervorgehobene Zeile im Drehbuch, Drehbuch auch auf Englisch
-- **V01.1.343** Hörstück aus einer Mappe: in einer Mappe ein Gespräch aus 2 oder 3 Stimmen zum Anhören (5, 10 oder 20 Minuten); das Modell schreibt nur ein Drehbuch, das Panel prüft jede Zeile (Fundstelle, Zahlenprobe, feste Sprecher), gesprochen wird Zeile für Zeile in ruhigen Minuten; der Admin wählt die drei Stimmen
 
 
 

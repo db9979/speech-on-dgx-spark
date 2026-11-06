@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.353** Remote access tidied: its own tab sshTermy instead of the box at the bottom, the numbers as one chip "6/6 online · 0 sessions", the unlock short "until 14:02 · Lock", pairing, updating, history and disconnecting in the ⋯ beside the search, the system's card with the tabs Set up (✓ or ○ with exactly one command, Copy, Into the shell), Anchor, History and Note, list and card over the whole height
 - **V01.1.352** sshTermy as jump host: sshTermy on your computer reaches the servers through the Spark, SSH end to end, paired with a code in the panel, unlocked with the admin code or a passkey; only root on the server adds the keys (anchor 1.11.0, spark-anker schluessel dazu)
 - **V01.1.351** Fix: the admin no longer has a day limit for audio overviews, analyses, sound/video and links as documents, nor does any profile with "No daily limit"; the page says "no daily limit"
 - **V01.1.350** Calmer collections: on the left the narrow list with ＋, on the right the open collection with its head, "Ask" as the only blue button, a thin budget bar with ⓘ and the parts Entries, Analyses and Audio overview; whole titles, the level per entry as a small menu, rare things under ⋯
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.346** Language model by API: own programs use the Spark's language model OpenAI-compatible at /v1 with a key of their profile (Me → Language model by API), text only, home network or with its own switch also from outside; limits per key, admins unlimited
 - **V01.1.345** Make an audio overview now: the admin can have one made at once or pull a waiting one forward, without quiet minutes and the day limit, also in the iPhone app; real speech still goes first
 - **V01.1.344** Audio overview in the apps: a player of its own in the iPhone app (also in the background and on the lock screen), "To Telegram" only to the own chat, the notice "Audio overview ready" with a jump link, the line being spoken marked in the script, the script also in English
-- **V01.1.343** Audio overview of a collection: a talk of 2 or 3 voices to listen to (5, 10 or 20 minutes); the model only writes a script, the panel checks every line (place, number check, fixed speakers), it is spoken line by line in quiet minutes; the admin picks the three voices
 
 
 

@@ -5364,14 +5364,14 @@
 "id": "P792",
 "v": 1352,
 "titel": "sshTermy koppeln",
-"text": "Admin: Funktionen → Fernzugang zu Servern → sshTermy als Jump-Host einschalten. Im Browser unter Spark verwalten → Fernzugang erscheint unter den Systemen der Kasten „sshTermy als Jump-Host“. „Koppeln (Code)“ fragt den Admin-Code und zeigt die Zeile zum Einrichten mit „Kopieren“ (gilt 10 Minuten und einmal). In sshTermy mit Strg+Leertaste die Befehle öffnen und bei „Vermittler koppeln / verwalten“ einfügen. Danach steht in der Liste „sshTermy · <Name>“ mit „gesperrt“; ein zweites Einfügen derselben Zeile wird abgelehnt. In der iPhone-App unter Spark verwalten → Fernzugang steht das Gerät ebenfalls, Koppeln dort nur als Hinweis aufs Panel. Zustand → Logs (Fernzugang): „fernzugang: sshtermy_koppeln ok“, kein Schlüssel, kein Code, kein Name.",
+"text": "Admin: Funktionen → Fernzugang zu Servern → sshTermy als Jump-Host einschalten. Im Browser unter Spark verwalten → Fernzugang erscheint neben „Systeme“ der Reiter „sshTermy“ (seit V01.1.353; vorher ein Kasten unter den Systemen). „Koppeln (Code)“ fragt den Admin-Code und zeigt die Zeile zum Einrichten mit „Kopieren“ (gilt 10 Minuten und einmal). In sshTermy mit Strg+Leertaste die Befehle öffnen und bei „Vermittler koppeln / verwalten“ einfügen. Danach steht in der Liste „sshTermy · <Name>“ mit „gesperrt“; ein zweites Einfügen derselben Zeile wird abgelehnt. In der iPhone-App unter Spark verwalten → Fernzugang steht das Gerät ebenfalls, Koppeln dort nur als Hinweis aufs Panel. Zustand → Logs (Fernzugang): „fernzugang: sshtermy_koppeln ok“, kein Schlüssel, kein Code, kein Name.",
 "thread": "sshTermy als Jump-Host"
 },
 {
 "id": "P793",
 "v": 1352,
 "titel": "sshTermy entsperren und verbinden",
-"text": "Am Server als root: sudo spark-anker update (Anker 1.11.0), dann sudo spark-anker schluessel dazu '<öffentlicher Schlüssel aus sshTermy>'. Spark verwalten → Fernzugang → die Karte des Systems zeigt unter „Schlüssel für sshTermy“ Fingerabdruck, Kommentar und „ohne Tunnel“. In sshTermy das System wählen: sshTermy fragt einmal Admin-Code oder Passkey (Entsperren), dann öffnet sich die SSH-Sitzung Ende-zu-Ende; im Panel steht beim Gerät „entsperrt noch N min · 1 Kanal offen“ und die Live-Übersicht zählt „davon 1 sshTermy“. „Trennen“ beendet den Kanal sofort. Ohne Bytes endet der Kanal nach der Leerlaufzeit des Fernzugangs. System offline: sshTermy meldet „offline“ (409).",
+"text": "Am Server als root: sudo spark-anker update (Anker 1.11.0), dann sudo spark-anker schluessel dazu '<öffentlicher Schlüssel aus sshTermy>'. Spark verwalten → Fernzugang → der Reiter „sshTermy“ und auf der Karte des Systems Einrichten → sshTermy zeigen ✓ mit Kommentar, Fingerabdruck und „ohne Tunnel“. In sshTermy das System wählen: sshTermy fragt einmal Admin-Code oder Passkey (Entsperren), dann öffnet sich die SSH-Sitzung Ende-zu-Ende; im Panel steht beim Gerät „entsperrt noch N min · 1 Kanal offen“ und die Live-Übersicht zählt „davon 1 sshTermy“. „Trennen“ beendet den Kanal sofort. Ohne Bytes endet der Kanal nach der Leerlaufzeit des Fernzugangs. System offline: sshTermy meldet „offline“ (409).",
 "thread": "sshTermy als Jump-Host"
 },
 {
@@ -5385,8 +5385,22 @@
 "id": "P795",
 "v": 1352,
 "titel": "sshTermy entfernen und Notaus",
-"text": "Spark verwalten → Fernzugang, im Kasten „sshTermy als Jump-Host“ „Entfernen“ beim Gerät fragt den Admin-Code; danach antwortet sshTermy mit „nicht gekoppelt“ (401) und offene Kanäle enden. Dasselbe in der iPhone-App unter Spark verwalten → Fernzugang. Notaus: jeder sshTermy-Kanal endet, die Entsperrung ist weg, neue Kanäle bekommen 503. Schalter aus: die Wege antworten 503, der Kasten ist weg.",
+"text": "Spark verwalten → Fernzugang, im Reiter „sshTermy“ „Entfernen“ beim Gerät fragt den Admin-Code; danach antwortet sshTermy mit „nicht gekoppelt“ (401) und offene Kanäle enden. Dasselbe in der iPhone-App unter Spark verwalten → Fernzugang. Notaus: jeder sshTermy-Kanal endet, die Entsperrung ist weg, neue Kanäle bekommen 503. Schalter aus: die Wege antworten 503, der Reiter ist weg.",
 "thread": "sshTermy als Jump-Host"
+},
+{
+"id": "P796",
+"v": 1353,
+"titel": "Fernzugang aufgeräumt: Kopf, ⋯ und Karte",
+"text": "Spark verwalten → Fernzugang entsperren (Rechner, 1440 × 900): im Kopf die Reiter „Systeme N“ (und „sshTermy N“, „Spontanhilfe“, wenn an), ein Schild „N/N online · 0 Sitzungen“, „bis HH:MM · Sperren“: ein Klick auf die Uhrzeit fragt Code oder Passkey und verlängert, „Sperren“ sperrt sofort. „⋯“ neben „Systeme suchen“ öffnet „+ Neues System koppeln“, „Alle aktualisieren“ (nur wenn ein Anker neuer sein kann), „Verlauf aller Systeme“ und „Alle trennen“; Esc oder ein Klick daneben schließt es. Ein System wählen: Knöpfe Shell, Dateien, Bildschirm (grau mit ⓘ: ein Klick zeigt darunter warum), Webdienste, Anker trennen; darunter Einrichten · Anker · Verlauf · Notiz. Einrichten: je Zeile ✓ oder ○ mit genau einem Befehl, „Kopieren“ legt ihn in die Zwischenablage, „In die Shell“ öffnet die Shell und setzt ihn in die Zeile ohne Enter; ⓘ zeigt die Erklärung und bleibt beim Nachladen offen. Anker: Version, Host-Schlüssel mit ✓ und Kopieren, „Darf sich verbinden“, „Entfernen …“. Verlauf: die Sitzungen des Systems. Notiz: die Notiz. Liste und Karte reichen bis unten, die Karte hat keinen eigenen Rollbalken. Handy (390 px): nichts ragt über den Rand, ein Tipp öffnet das System mit „‹ Alle Systeme“.",
+"thread": "Fernzugang aufräumen"
+},
+{
+"id": "P797",
+"v": 1353,
+"titel": "Fernzugang: Reiter sshTermy",
+"text": "Funktionen → Fernzugang zu Servern → sshTermy als Jump-Host an. Spark verwalten → Fernzugang → Reiter „sshTermy“: ein Satz mit „So geht's“ (führt zu Funktionen → Fernzugang zu Servern → sshTermy als Jump-Host), oben rechts „Koppeln (Code)“ statt „+ System koppeln“; nach Code oder Passkey steht die Zeile zum Einrichten mit „Kopieren“ oben im Reiter. Darunter die gekoppelten Geräte mit „Admin …“, „entsperrt noch N min“ oder „gesperrt“, „zuletzt …“, „N Kanäle“, „Trennen“ (grau ohne Kanal) und „Entfernen“, dann je System eine Zeile: ✓ mit Kommentar und Fingerabdruck oder ○ „noch kein Schlüssel“ mit dem Befehl sudo spark-anker schluessel dazu '…' und „Kopieren“; ein Windows-System sagt, dass es dort noch nicht geht. Unten auf der Seite „Systeme“ ist kein Kasten sshTermy mehr.",
+"thread": "Fernzugang aufräumen"
 }
 ]
 }

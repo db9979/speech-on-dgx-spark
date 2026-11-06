@@ -3010,9 +3010,10 @@ class InBrowser(unittest.TestCase):
 
     def test_a_grey_button_always_says_why(self):
         """Dominik 2026-10-30 08:45: „Bildschirm“ grey on the uConsole without a word. Every grey button of a system
-        says why in its title; the screen's reason also as a line under the buttons: not set up over there (the command
-        with „Kopieren“ and „In die Shell einfügen“, never Enter), the anchor too old, offline, places taken, no guacd
-        on the Spark (with the build's reason, or „kommt mit dem nächsten Update“)."""
+        says why in its title; the screen's reason also behind its ⓘ as a line under the buttons: not set up over there,
+        the anchor too old, offline, places taken, no guacd on the Spark (with the build's reason, or „kommt mit dem
+        nächsten Update“). The command to run over there stands in „Einrichten“ (Dominik 2026-11-06 „ok“): one row with
+        „Kopieren“ and „In die Shell“ (never Enter), on Windows only „Kopieren“."""
         from tests.test_ui_browser import PAGE_READY, async_playwright, chromium
 
         async def go():
@@ -3028,9 +3029,10 @@ class InBrowser(unittest.TestCase):
                 await pg.wait_for_function(PAGE_READY, timeout=30000)
                 show = """([g,dienst,n])=>{FZ.d={on:true,bildschirm:true,max:4,counts:{sitzungen:n||0},geraete:[g],bild_dienst:dienst};
                     FZ.sel=g.id;fzDetail();const b=[...$('fzdetail').querySelectorAll('.fzknoepfe button')];
-                    const w=$('fzdetail').querySelector('.fzwarum');
-                    return {knoepfe:b.map(x=>[x.textContent,x.disabled,x.title]),warum:w?w.textContent:'',
-                            tasten:w?[...w.querySelectorAll('button')].map(x=>x.textContent):[]}}"""
+                    const w=$('fzdetail').querySelector('.fzwarum'),e=$('fzdetail').querySelector('.fzein[data-k=bild] .fzeinre');
+                    return {knoepfe:b.filter(x=>!x.classList.contains('fzinfoi')).map(x=>[x.textContent,x.disabled,x.title]),warum:w?w.textContent:'',
+                            info:!!$('fzdetail').querySelector('.fzkwrap .fzinfoi'),befehl:e?e.textContent:'',
+                            tasten:e?[...e.querySelectorAll('button')].map(x=>x.textContent):[]}}"""
                 g = {"id": "g_1", "name": "uconsole", "os": "Debian 13", "anker": "1.4.0", "online": True, "online_seit": 1,
                      "erlaubt": True, "art": "linux", "bild": "", "bild_anker": True, "stand": "ok"}
                 da = {"da": True, "version": "1.6.0"}
@@ -3039,19 +3041,22 @@ class InBrowser(unittest.TestCase):
                 self.assertTrue(bild[1])
                 self.assertIn("sudo spark-anker bildschirm", bild[2])
                 self.assertIn("Auf dem System noch nicht eingerichtet", r["warum"])
-                self.assertEqual(r["tasten"], ["Kopieren", "In die Shell einfügen"])
+                self.assertTrue(r["info"], r)                                  # the ⓘ in the button's outline
+                self.assertIn("sudo spark-anker bildschirm", r["befehl"])
+                self.assertEqual(r["tasten"], ["Kopieren", "In die Shell"])
                 self.assertEqual([k[1] for k in r["knoepfe"] if k[0] in ("Shell", "Dateien")], [False, False])
                 # Windows (5b): the command for an Administrator's Command Prompt, only to copy (the shell is spark's)
                 r = await pg.evaluate(show, [{**g, "art": "windows", "os": "Windows 11 Pro", "anker": "1.10.0"}, da, 0])
                 self.assertIn("als Administrator", r["warum"])
-                self.assertIn('"C:\\Program Files\\SparkAnker\\spark-anker.cmd" bildschirm', r["warum"])
-                self.assertNotIn("sudo", r["warum"])
+                self.assertIn('"C:\\Program Files\\SparkAnker\\spark-anker.cmd" bildschirm', r["befehl"])
+                self.assertNotIn("sudo", r["warum"] + r["befehl"])
                 self.assertEqual(r["tasten"], ["Kopieren"])
                 r = await pg.evaluate(show, [{**g, "art": "windows", "bild": "tightvnc"}, da, 0])
                 self.assertEqual(r["warum"], "")
                 r = await pg.evaluate(show, [{**g, "bild": "x11vnc", "bild_anker": False}, da, 0])
                 self.assertIn("Anker zu alt", r["warum"])
                 self.assertEqual(r["tasten"], [])
+                self.assertFalse(r["befehl"])
                 r = await pg.evaluate(show, [{**g, "online": False}, da, 0])
                 self.assertTrue(all(k[1] and "offline" in k[2] for k in r["knoepfe"] if k[0] in ("Shell", "Dateien", "Bildschirm")), r)
                 r = await pg.evaluate(show, [{**g, "bild": "x11vnc"}, da, 4])
@@ -4247,8 +4252,9 @@ class ShellForReal(_ShellPage):
             await pg.wait_for_function("FZ.d&&!FZ.d.gesperrt&&!$('fzdetail').hidden", timeout=15000)
             b = await pg.evaluate(self.SEITE)
             self.assertIsNone(b["gesperrt"])
-            self.assertIn("Entsperrt bis", await pg.evaluate("$('fzlock').textContent"))
-            self.assertRegex(b["status"], r"1 online.*1 gekoppelt.*0 Sitzungen offen")
+            self.assertRegex(await pg.evaluate("$('fzlock').textContent"), r"^bis \d\d:\d\d·Sperren$")   # one short chip (2026-11-06)
+            self.assertIn("Entsperrt bis", await pg.evaluate("$('fzverl').title"))     # a click on the time extends it
+            self.assertEqual(b["status"], "1/1 online · 0 Sitzungen")
             self.assertIn("vps-1", await pg.evaluate("$('fzlist').textContent"))
             self.assertIn("Online · 1", await pg.evaluate("$('fzlist').textContent"))
             names = [k[0] for k in b["knoepfe"]]
@@ -4269,7 +4275,10 @@ class ShellForReal(_ShellPage):
             self.assertEqual(await pg.evaluate("[$('fzwin').hidden,$('fzgo').disabled]"), [True, False])
             await pg.click("#fzkzu")
             # the history of all systems in its sheet
+            await pg.click("#fzlmehr")                                 # the „⋯“ beside the search (2026-11-06)
+            self.assertFalse(await pg.evaluate("$('fzlmenu').hidden"))
             await pg.click("#fzallev")
+            self.assertTrue(await pg.evaluate("$('fzlmenu').hidden"))  # a choice closes the menu
             self.assertIn("alle Systeme", await pg.evaluate("$('fzvhead').textContent"))
             await pg.click("#fzvzu")
             # „Sperren“: locked at once, nothing left in the page
@@ -4291,8 +4300,9 @@ class ShellForReal(_ShellPage):
             self.assertTrue(await pg.evaluate("$('fztabs').hidden&&$('shmain').hidden"))      # locked: no tab
             await pg.click("#fzentsperren")
             await pg.wait_for_function("FZ.d&&!FZ.d.gesperrt&&SH.d&&!SH.d.gesperrt&&!$('fztabs').hidden", timeout=15000)
-            self.assertEqual(await pg.evaluate("[...$('fztabs').querySelectorAll('button')].map(b=>b.textContent+':'+b.getAttribute('aria-selected'))"),
-                             ["Systeme:true", "Spontanhilfe:false"])
+            self.assertEqual(await pg.evaluate("[...$('fztabs').querySelectorAll('button:not([data-aus])')].map(b=>b.firstChild.textContent+':'+b.getAttribute('aria-selected'))"),
+                             ["Systeme:true", "Spontanhilfe:false"])                   # sshTermy off: no tab for it
+            self.assertEqual(await pg.evaluate("$('fztabsysn').textContent"), "1")    # the systems with their number
             self.assertTrue(await pg.evaluate("$('shmain').hidden&&!$('fzmain').hidden"))
             await pg.click("#fztabsh")
             self.assertTrue(await pg.evaluate("!$('shmain').hidden&&$('fzmain').hidden&&$('fzstatus').hidden&&$('fzneu').hidden"))
@@ -4425,7 +4435,10 @@ class ShellForReal(_ShellPage):
             sh.HILFE.clear()
 
     def test_page_on_the_phone_list_then_the_system_with_three_tiles(self):
-        """seite/4-handy.png: a list like the iPhone settings; a tap opens the system with three big tiles in one row."""
+        """seite/4-handy.png: a list like the iPhone settings; a tap opens the system with three big tiles in one row.
+        The screen is on here: switched off, its tile is not there at all (until V01.1.352 the phone showed it grey)."""
+        helpers.set_config(fernbild=True)
+
         async def body(ctx, pg):
             await pg.click("#fzentsperren")
             await pg.wait_for_function("FZ.d&&!FZ.d.gesperrt&&$('fzlist').textContent.includes('vps-1')", timeout=15000)
@@ -4442,7 +4455,10 @@ class ShellForReal(_ShellPage):
             self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-innerWidth"), 0)
             await pg.click("#fzdetail .fzback")
             await pg.wait_for_function("!$('fzsplit').classList.contains('fzauf')", timeout=5000)
-        self.run_seite(body, size=(390, 844))
+        try:
+            self.run_seite(body, size=(390, 844))
+        finally:
+            helpers.set_config(fernbild=False)
 
 # ---------------------------------------------------------------- stage 3: files (ferndateien.py)
 class NotesForReal(_ShellPage):

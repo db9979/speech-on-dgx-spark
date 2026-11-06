@@ -1167,15 +1167,15 @@
 </section>
 <section id="fern"><div class="card ld-box" id="fzbox">
   <div class="ld-head fzkopf"><h2>Fernzugang</h2>
-    <div class="segc fztabs" id="fztabs" role="tablist" aria-label="Fernzugang" hidden><button type="button" class="on" id="fztabsys" role="tab" aria-selected="true" data-tab="systeme">Systeme</button><button type="button" id="fztabsh" role="tab" aria-selected="false" data-tab="spontanhilfe">Spontanhilfe</button></div>
+    <div class="segc fztabs" id="fztabs" role="tablist" aria-label="Fernzugang" hidden><button type="button" class="on" id="fztabsys" role="tab" aria-selected="true" data-tab="systeme">Systeme<i id="fztabsysn"></i></button><button type="button" id="fztabst" role="tab" aria-selected="false" data-tab="sshtermy" data-aus>sshTermy<i id="fztabstn"></i></button><button type="button" id="fztabsh" role="tab" aria-selected="false" data-tab="spontanhilfe" data-aus>Spontanhilfe</button></div>
+    <span class="fzzahl" id="fzstatus" role="status" hidden><span class="fzdot" id="fzstatusdot"></span><span id="fzstatustext"></span></span>
     <span class="fzfill"></span>
-    <div class="fzlock" id="fzlock" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg><span id="fzlockbis"></span><button class="fzpill" type="button" id="fzverl">Verlängern</button><button class="fzpill" type="button" id="fzsperren">Sperren</button></div>
+    <div class="fzlock" id="fzlock" hidden><i data-ic="lock"></i><button class="fzlockt" type="button" id="fzverl" title="Verlängern: Code oder Passkey" aria-label="Entsperrt, verlängern"><span id="fzlockbis"></span></button><span aria-hidden="true">·</span><button class="fzlockt fzlocksperr" type="button" id="fzsperren">Sperren</button></div>
     <a class="wayl fzgear" href="#" data-way="Funktionen → Fernzugang zu Servern" title="Einstellungen: Funktionen → Fernzugang zu Servern" aria-label="Einstellungen des Fernzugangs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></a>
-    <button class="b p fzneubtn" type="button" id="fzneu" hidden>+ System koppeln</button><button class="b p fzneubtn" type="button" id="shgo" hidden>+ Neue Hilfe</button>
+    <button class="b p fzneubtn" type="button" id="fzneu" hidden>+ System koppeln</button><button class="b p fzneubtn" type="button" id="stkoppeln" hidden>Koppeln (Code)</button><button class="b p fzneubtn" type="button" id="shgo" hidden>+ Neue Hilfe</button>
   </div>
   <div class="note" id="fzoff" hidden>Der Fernzugang ist aus. Einschalten unter Funktionen → Fernzugang zu Servern.</div>
   <div class="note err" id="fznotaus" hidden>Notaus: der Fernzugang ist gesperrt, bis der Notaus aufgehoben ist.</div>
-  <div class="fzstatus" id="fzstatus" hidden></div>
   <div class="fzgesperrt" id="fzgesperrt" hidden>
     <div class="fzplatz" aria-hidden="true"><div><i></i><i></i><i></i><i></i><i></i></div><div><i></i><i></i><i></i></div></div>
     <div class="card fzsperrkarte"><span class="fzschloss"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
@@ -1186,15 +1186,15 @@
   <div id="fzmain" hidden>
     <div class="fzsplit" id="fzsplit">
       <div class="fzliste">
-        <input id="fzsuche" type="search" placeholder="Systeme suchen" autocomplete="off" aria-label="Systeme suchen">
+        <div class="fzsuchrow"><input id="fzsuche" type="search" placeholder="Systeme suchen" autocomplete="off" aria-label="Systeme suchen"><button class="b fzlmehr" type="button" id="fzlmehr" aria-haspopup="menu" aria-expanded="false" aria-controls="fzlmenu" title="Mehr: koppeln, aktualisieren, Verlauf, trennen" aria-label="Mehr"><i data-ic="more"></i></button>
+          <div class="fzlmenu" id="fzlmenu" role="menu" aria-label="Mehr" hidden><button class="fzlink" type="button" role="menuitem" id="fzneu2">+ Neues System koppeln</button><button class="fzlink" type="button" role="menuitem" id="fzalleakt" hidden>Alle aktualisieren <span class="mut" id="fzalleaktn"></span></button><button class="fzlink" type="button" role="menuitem" id="fzallev">Verlauf aller Systeme <span class="mut" id="fzallevt"></span></button><button class="fzlink danger" type="button" role="menuitem" id="fzalle">Alle trennen</button></div></div>
         <div class="fzjetzt" id="fzjetzt" hidden><div class="fzgrp">Gerade verbunden</div><div id="fzjetztlist"></div></div>
         <div class="fzlist" id="fzlist"></div>
-        <div class="fzfuss"><button class="fzlink" type="button" id="fzneu2">+ Neues System koppeln</button><button class="fzlink" type="button" id="fzalleakt" hidden>Alle aktualisieren <span class="mut" id="fzalleaktn"></span></button><button class="fzlink" type="button" id="fzallev">Verlauf aller Systeme <span class="mut" id="fzallevt"></span></button><button class="fzlink danger" type="button" id="fzalle">Alle trennen</button></div>
       </div>
       <div class="fzdetail" id="fzdetail" hidden></div>
     </div>
-    <div class="card fzst" id="fzsshtermy" hidden></div>
   </div>
+  <div class="stmain" id="stmain" hidden></div>
   <div id="shmain" hidden>
     <div class="note" id="shturn" hidden>Von unterwegs braucht das Bild den Vermittler: Funktionen → Anrufe von unterwegs. Ohne ihn geht es nur im Heimnetz.</div>
     <div class="shcols">

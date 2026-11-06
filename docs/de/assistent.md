@@ -1935,7 +1935,7 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **Zwischenablage beim Bildschirm** (Funktionen → Zugang → „Zwischenablage beim Bildschirm“; baut auf „Bildschirm im Fernzugang“): Text zwischen deinem Browser und dem System austauschen, während du „Steuern“ hast: kopierst du dort etwas, landet es in deiner Zwischenablage; „Zwischenablage senden“ schickt deine hinüber.
 
-- **Notizen im Fernzugang** (Funktionen → Zugang → „Notizen im Fernzugang“; baut auf „Fernzugang zu Servern“): Zu jedem System eine eigene Notiz: im Kasten „Notizen“ unter „Angaben“ und im Reiter „Notizen“ neben dem Assistenten am Terminal, auch im Vollbild.
+- **Notizen im Fernzugang** (Funktionen → Zugang → „Notizen im Fernzugang“; baut auf „Fernzugang zu Servern“): Zu jedem System eine eigene Notiz: im Reiter „Notiz“ der Karte und im Reiter „Notizen“ neben dem Assistenten am Terminal, auch im Vollbild.
 
 - **Ordner im Fernzugang** (Funktionen → Zugang → „Ordner im Fernzugang“; baut auf „Fernzugang zu Servern“): Die Systeme links in Ordnern wie in Mail: eine Ebene, Name und Symbol frei wählbar, auf- und zuklappbar; zugeklappt zeigt der Ordner „● online / gesamt“.
 

@@ -1935,7 +1935,7 @@ Every function of the Spark with its switch, what it builds on, where you set it
 
 - **Clipboard with the screen** (Features → Access → "Clipboard with the screen"; builds on "Screen in remote access"): Exchange text between your browser and the system while you have "Control": what you copy there lands in your clipboard; "Send clipboard" sends yours over.
 
-- **Notes in remote access** (Features → Access → "Notes in remote access"; builds on "Remote access to servers"): A note of its own for each system: in the box "Notes" below "Details" and in the tab "Notes" beside the assistant at the terminal, also in full screen.
+- **Notes in remote access** (Features → Access → "Notes in remote access"; builds on "Remote access to servers"): A note of its own for each system: in the card's tab "Note" and in the tab "Notes" beside the assistant at the terminal, also in full screen.
 
 - **Folders in remote access** (Features → Access → "Folders in remote access"; builds on "Remote access to servers"): The systems on the left in folders like in Mail: one level, name and symbol of your choice, collapsible; collapsed, a folder shows "● online / total".
 

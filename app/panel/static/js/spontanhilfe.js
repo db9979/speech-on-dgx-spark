@@ -19,7 +19,7 @@ function shLeeren(){for(const id of ['shnummer','shnummerinfo','shringtext','shl
   SH.link='';SH.qr='';SH.befehl='';SH.befehlMac='';SH.neuId='';SH.abgelaufen=false;clearInterval(SH.ntick)}
 function shShow(){const d=SH.d,box=$('shmain');if(!d||!box)return;const aus=!d.on||!!d.notaus||!!d.gesperrt;
   if(aus){box.hidden=true;$('shgo').hidden=true;if(d.gesperrt)shLeeren();$('shbanner').hidden=!(d.gesperrt&&SH.ws);fzTopLine();const war=FZ.tab;fzTabs();if(war!==FZ.tab)fzShow();return}
-  box.hidden=!fzTabs();
+  box.hidden=fzTabs()!=='spontanhilfe';
   const h=d.hilfe,neu=h&&h.stand==='neu',wartet=h&&h.stand==='wartet',offen=h&&h.stand==='offen',shell=!!h&&h.art==='shell';
   if(neu){if(SH.neuId!==h.id){SH.neuId=h.id;SH.abgelaufen=false}SH.nbis=Date.now()/1000+h.nummer_rest;SH.lbis=Date.now()/1000+h.link_rest}
   else if(!h&&SH.neuId&&!SH.abgelaufen){SH.abgelaufen=true;SH.nbis=SH.lbis=0}    // ran out unused: the panel moved it to the history
