@@ -359,8 +359,10 @@ class Channel(StBase):
                 self.assertEqual(fernzugang.for_live()["offen"][0]["art"], "sshTermy")
                 ws.send_bytes(b"x" * (fernzugang.MAX_MSG + 1))                          # too big: the channel ends
                 self.assertTrue(helpers.until(lambda: not fernzugang.SITZUNG))
-            # the session leaves SITZUNG first, its last line follows from the panel's thread
-            self.assertTrue(helpers.until(lambda: "sshtermy_zu" in j.getvalue()))
+                # the session leaves SITZUNG first, its last line and the history follow; wait for them while the
+                # test client's loop still runs (leaving the block stops that loop, and the end with it)
+                self.assertTrue(helpers.until(lambda: "sshtermy_zu" in j.getvalue()))
+                self.assertTrue(helpers.until(lambda: fernzugang.verlauf_read()))
         out = j.getvalue()
         self.assertIn("fernzugang: sshtermy_kanal | ok | 1", out)
         self.assertIn("fernzugang: sshtermy_zu | zu_gross | 0", out)
