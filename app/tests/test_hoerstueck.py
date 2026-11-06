@@ -656,6 +656,144 @@ def english_script(text, stimmen=2):
     return {"titel": "Heat pump", "zeilen": rows}
 
 
+class Haengt(Base):
+    """Dominik 2026-11-06 („wartet immer und startet nicht, obwohl keine Spracheingaben gemacht werden“, 0 von 0 Zeilen):
+    the script's model call (llm.complete) asked vorrang itself inside the outer vorrang.run and waited for its own
+    slot forever. Now a forced one starts within seconds when nobody speaks, a held place without a run is freed, a
+    restart picks it up again, and the list says truly what it waits for."""
+    admin_of, only, force, lauf = Sofort.admin_of, Sofort.only, Sofort.force, Sofort.lauf
+
+    def antwort(self):
+        """The language model's stand-in at the HTTP layer: the real ask_model, llm.complete and vorrang run."""
+        import httpx
+        seen = []
+
+        async def post(client, url, **kw):
+            text = kw["json"]["messages"][1]["content"]
+            seen.append(url)
+            answer = good_script(text) if "[S1]" in text else {"punkte": []}       # the Hörstück's, else any JSON
+            body = {"choices": [{"message": {"content": json.dumps(answer, ensure_ascii=False)}}]}
+            return httpx.Response(200, json=body, request=httpx.Request("POST", url))
+        return mock.patch.object(httpx.AsyncClient, "post", post), seen
+
+    def test_forced_starts_at_once_with_the_real_model_call(self):
+        c, uid = self.fresh("Hoerstueckhaengt")
+        mid, _, _ = self.mappe(uid)
+        self.admin_of(c)
+        helpers.keep_chat(self, "llm_model")
+        helpers.set_config(llm_model="test-modell")
+        with self.only(uid):
+            hid = self.force(c, mid).json()["id"]
+        hoerstueck._sofort.clear()
+        import dienstwacht
+        fake, seen = self.antwort()
+        v = Voice()
+        with fake, mock.patch.object(hoerstueck, "ton", v), mock.patch.object(wissen, "quiet", lambda: False), \
+                mock.patch.object(dienstwacht, "down", lambda name: False), \
+                mock.patch.object(hoerstueck, "_pause", mock.AsyncMock()), \
+                mock.patch.object(vorrang, "speaking", lambda now=None: False), \
+                mock.patch.object(vorrang, "paused", lambda: False), \
+                mock.patch("push.send", mock.AsyncMock(return_value=1)), self.only(uid), quiet():
+            got = run(asyncio.wait_for(hoerstueck.sofort_lauf(uid, hid), 20))   # before: forever at 0 of 0 lines
+        self.assertEqual(got, "fertig")
+        self.assertEqual(len(seen), 1)
+        self.assertEqual(hoerstueck.eins(uid, hid)["stand"], "fertig")
+        self.assertEqual((hoerstueck._sofort, hoerstueck._now, vorrang._holder[0]), ({}, {}, ""))
+
+    def test_the_quiet_chain_and_the_auswertung_never_hang_either(self):
+        import auswertung
+        c, uid = self.fresh("Hoerstueckhaengtkette")
+        mid, _, _ = self.mappe(uid)
+        helpers.keep_chat(self, "llm_model")
+        helpers.set_config(llm_model="test-modell")
+        hid = self.make(c, mid)
+        fake, seen = self.antwort()
+        with fake, mock.patch.object(wissen, "quiet", lambda: True), \
+                mock.patch.object(vorrang, "speaking", lambda now=None: False), \
+                mock.patch.object(vorrang, "paused", lambda: False), \
+                mock.patch.object(hoerstueck.profiles, "user_ids", lambda: [uid]), quiet():
+            self.assertEqual(run(asyncio.wait_for(hoerstueck.due_once(NOW), 20)), "hoerstueck")
+            got = run(asyncio.wait_for(vorrang.run("Auswertung", lambda: auswertung.ask_model("kurz", "Ein Text.", 3),
+                                                   retries=0), 20))
+        self.assertEqual(hoerstueck.eins(uid, hid)["stand"], "sprechen")         # the script is there
+        self.assertIsInstance(got, dict)
+        self.assertEqual(len(seen), 2)
+
+    def test_real_speech_still_holds_it_and_the_list_says_so(self):
+        c, uid = self.fresh("Hoerstueckhaengtsprache")
+        mid, _, _ = self.mappe(uid)
+        self.admin_of(c)
+        with self.only(uid):
+            hid = self.force(c, mid).json()["id"]
+            row = lambda: next(x for x in hoerstueck.liste(uid, mid)["stuecke"] if x["id"] == hid)   # noqa: E731
+            with mock.patch.object(vorrang, "speaking", lambda now=None: True):
+                self.assertEqual(row()["warten"], "gespraech")
+                self.assertEqual(hoerstueck.for_live(NOW)["wartet_auf"], "gespraech")
+            with mock.patch.object(vorrang, "speaking", lambda now=None: False), \
+                    mock.patch.object(vorrang, "paused", lambda: False):
+                self.assertEqual(row()["warten"], "")                             # it works: no reason to wait
+                vorrang._holder[0] = "Auswertung"
+                try:
+                    self.assertEqual(row()["warten"], "andere")
+                finally:
+                    vorrang._holder[0] = ""
+                with mock.patch.object(vorrang, "paused", lambda: True):
+                    self.assertEqual(row()["warten"], "wartung")
+            hoerstueck._sofort.clear()
+            self.assertEqual(row()["warten"], "")                                 # nobody works on it: no claim
+        waits = []
+
+        async def q(job, sleep=None, model=False):
+            waits.append(job)
+            return 0
+        self.assertEqual(self.lauf(uid, hid, quiet_q=q), "fertig")                # every request still waited
+        self.assertTrue(waits and set(waits) == {"Hörstück"})
+
+    def test_a_failed_start_frees_the_place_and_a_restart_goes_on(self):
+        c, uid = self.fresh("Hoerstueckhaengtstart")
+        mid, _, _ = self.mappe(uid)
+        self.admin_of(c)
+
+        def boom(u, h):
+            raise RuntimeError("kein loop")
+        buf = io.StringIO()
+        with self.only(uid), mock.patch.object(hoerstueck, "_spawn", boom), quiet(buf):
+            r = c.post(f"/api/profile/mappen/{mid}/hoerstuecke/sofort", json={"laenge": 5, "stimmen": 2})
+        self.assertEqual(r.status_code, 503, r.text)
+        self.assertEqual(hoerstueck._sofort, {})                                  # never a held place without a run
+        self.assertIn("hoerstueck: erzwungen | ende | start | RuntimeError |", buf.getvalue())
+        hid = hoerstueck.liste(uid, mid)["stuecke"][0]["id"]
+        started = []
+        buf = io.StringIO()
+        with self.only(uid), mock.patch.object(hoerstueck, "_spawn", lambda u, h: started.append((u, h))), quiet(buf):
+            self.assertEqual(run(hoerstueck.weiter()), hid)                       # after a restart: it runs on
+            self.assertEqual(run(hoerstueck.weiter()), "")                        # once
+        self.assertEqual((started, hoerstueck._sofort["id"]), ([(uid, hid)], hid))
+        self.assertIn("hoerstueck: erzwungen | weiter |", buf.getvalue())
+        hoerstueck._sofort.clear()
+        helpers.set_config(hoerstueck=False)
+        with self.only(uid), quiet():
+            self.assertEqual(run(hoerstueck.weiter()), "")                        # switched off: nothing
+        self.assertEqual(hoerstueck._sofort, {})
+
+    def test_a_broken_one_says_why(self):
+        c, uid = self.fresh("Hoerstueckhaengtgrund")
+        mid, _, _ = self.mappe(uid)
+        self.admin_of(c)
+        with self.only(uid):
+            hid = self.force(c, mid).json()["id"]
+        hoerstueck._sofort.clear()
+
+        async def broken(text, stimmen, zeichen, sprache="de"):
+            raise ValueError("no JSON in the answer")
+        buf = io.StringIO()
+        self.assertEqual(self.lauf(uid, hid, model=broken, buf=buf), "x")         # three tries, then it stops
+        got = next(x for x in hoerstueck.liste(uid, mid)["stuecke"] if x["id"] == hid)
+        self.assertEqual((got["stand"], got["fehler"], got["warten"]), ("x", "modell", ""))
+        self.assertEqual(buf.getvalue().count("hoerstueck: fehler | drehbuch | ValueError"), hoerstueck.VERSUCHE)
+        self.assertIn("hoerstueck: erzwungen | ende | x |", buf.getvalue())
+
+
 class Done(Base):
     """Push 5b: the AAC copy and the start of every line, the notice, Telegram only to the own chat, English, the
     own card under Ich and the app's paths."""

@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.355** Fix: an audio overview waited forever at "0 of 0 lines" and never started, also with "Make now"; now it starts within seconds when nobody speaks, the list says what it waits for, and a failed one says why
 - **V01.1.354** RED FIX: the sshTermy channel test waits for the end while the test client still runs
 - **V01.1.353** Remote access tidied: its own tab sshTermy instead of the box at the bottom, the numbers as one chip "6/6 online · 0 sessions", the unlock short "until 14:02 · Lock", pairing, updating, history and disconnecting in the ⋯ beside the search, the system's card with the tabs Set up (✓ or ○ with exactly one command, Copy, Into the shell), Anchor, History and Note, list and card over the whole height
 - **V01.1.352** sshTermy as jump host: sshTermy on your computer reaches the servers through the Spark, SSH end to end, paired with a code in the panel, unlocked with the admin code or a passkey; only root on the server adds the keys (anchor 1.11.0, spark-anker schluessel dazu)
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.348** Me → Documents: "Add link" now stands at the top right beside "＋ Add" (only while Links as documents is released), on one line on the phone too; the hidden spot further down is gone.
 - **V01.1.347** RED FIX: the self-test of the language model by API now puts the model address back after itself
 - **V01.1.346** Language model by API: own programs use the Spark's language model OpenAI-compatible at /v1 with a key of their profile (Me → Language model by API), text only, home network or with its own switch also from outside; limits per key, admins unlimited
-- **V01.1.345** Make an audio overview now: the admin can have one made at once or pull a waiting one forward, without quiet minutes and the day limit, also in the iPhone app; real speech still goes first
 
 
 

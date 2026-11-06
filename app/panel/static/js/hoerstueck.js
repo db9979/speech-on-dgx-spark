@@ -18,12 +18,20 @@ const HS_WEG={sprecher:['Sprecher nicht aus der Liste','speaker not from the lis
 const hsUrl=(mid,hid,x)=>hid?'/api/profile/hoerstueck/'+encodeURIComponent(hid)+(x||''):'/api/profile/mappen/'+encodeURIComponent(mid)+'/hoerstuecke';
 const hsMin=s=>{s=Math.max(0,Math.round(s||0));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
 const hsAva=(sp,R)=>`<span class="ld-ava" title="${esc(R&&R[sp]?t(R[sp][0],R[sp][1]):sp)}" aria-hidden="true">${esc(sp)}</span>`;
-function hsSub(s){const st=t(...(HS_STAND[s.stand]||HS_STAND.x));
-  if(s.erzwungen&&(s.stand==='wartet'||s.stand==='sprechen'))return t(`Wird sofort erstellt · ${s.fertig_zeilen} von ${s.zeilen} Zeilen gesprochen · echte Sprache geht vor`,`Being made now · ${s.fertig_zeilen} of ${s.zeilen} lines spoken · real speech goes first`);
-  if(s.stand==='wartet')return t('Drehbuch folgt, sobald niemand spricht','Script follows as soon as nobody speaks');
+// what the work on it waits for right now (hoerstueck._warten, fixed words of the server) and why a broken one broke
+const HS_WARTEN={gespraech:['wartet: jemand spricht (echte Sprache geht vor)','waits: somebody speaks (real speech goes first)'],
+  wartung:['wartet: Wartung des Sprachmodells','waits: language model maintenance'],andere:['wartet: andere Hintergrundarbeit läuft','waits: other background work runs'],
+  sprachausgabe:['wartet: Sprachausgabe fehlt','waits: speech output missing']};
+const HS_FEHLER={modell:['das Sprachmodell lieferte kein brauchbares Drehbuch','the language model gave no usable script'],
+  ffmpeg:['Zusammensetzen ging nicht','putting it together failed'],mappe:['die Mappe ist weg','the collection is gone'],
+  'kein text':['kein Text in der Mappe','no text in the collection'],'zu wenig':['zu wenig geprüfte Zeilen','too few checked lines']};
+function hsSub(s){const st=t(...(HS_STAND[s.stand]||HS_STAND.x));const w=HS_WARTEN[s.warten]?' · '+t(...HS_WARTEN[s.warten]):'';
+  if(s.erzwungen&&s.stand==='wartet')return t('Wird sofort erstellt · ','Being made now · ')+(w?w.slice(3):t('Drehbuch entsteht','script being written'));
+  if(s.erzwungen&&s.stand==='sprechen')return t(`Wird sofort erstellt · ${s.fertig_zeilen} von ${s.zeilen} Zeilen gesprochen`,`Being made now · ${s.fertig_zeilen} of ${s.zeilen} lines spoken`)+w;
+  if(s.stand==='wartet')return s.laeuft?t('Drehbuch entsteht','Script being written')+w:t('Drehbuch folgt, sobald niemand spricht','Script follows as soon as nobody speaks');
   if(s.stand==='sprechen')return t(`Drehbuch fertig · ${s.fertig_zeilen} von ${s.zeilen} Zeilen gesprochen · wartet auf ruhige Minuten`,`Script done · ${s.fertig_zeilen} of ${s.zeilen} lines spoken · waits for quiet minutes`);
   if(s.stand==='leer')return t('Daraus lässt sich kein Hörstück machen: zu wenig geprüfte Zeilen','No audio overview can be made of it: too few checked lines');
-  if(s.stand==='x')return t('ging nicht; „Löschen“ und neu erstellen','did not work; delete and make again');
+  if(s.stand==='x')return (HS_FEHLER[s.fehler]?t(...HS_FEHLER[s.fehler])+' · ':'')+t('ging nicht; „Löschen“ und neu erstellen','did not work; delete and make again');
   const weg=Object.values(s.verworfen||{}).reduce((a,b)=>a+b,0);
   return [docDate(s.made),hsMin(s.dauer_s)+' min',t(`${s.stimmen} Stimmen`,`${s.stimmen} voices`),t(`${s.zeilen} Zeilen, ${weg} verworfen`,`${s.zeilen} lines, ${weg} dropped`)].join(' · ')||st}
 function hsRow(s){const kind=s.stand==='fertig'?'ok':s.stand==='leer'||s.stand==='x'?'bad':'warn';

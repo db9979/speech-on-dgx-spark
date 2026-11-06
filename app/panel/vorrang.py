@@ -17,10 +17,13 @@ reading uploads ...):
 run()/post() wait for a pause, let only one background request run at a time and cancel it as soon
 as somebody speaks (vLLM stops the request when the connection closes, so the GPU is free at once);
 it starts again in the next pause, at most RETRIES times, then Busy is raised. Journal lines start
-with "vorrang:". During a Wartungspause of the language model (wartung.py) run()/post() and quiet()/hold() with
+with "vorrang:". A run() inside the factory of another run() (a helper such as llm.complete that asks vorrang itself)
+never waits for the one slot a second time: it runs at once under the outer one, which already waits for a pause and
+cancels on speech (before V01.1.355 it waited for its own outer run forever). During a Wartungspause of the language model (wartung.py) run()/post() and quiet()/hold() with
 model=True wait as well (not counted as a try) and go on, one after the other, once it ends.
 """
 import asyncio
+import contextvars
 import os
 import threading
 import time
@@ -36,6 +39,8 @@ MARK = SPEECH_MARK
 
 _local = [0.0]      # this process: the last time an answer streamed
 _sem = {}           # event loop -> Semaphore(1): one background request at a time
+_inside = contextvars.ContextVar("vorrang_inside", default="")   # the job whose slot this task works in ("" outside)
+_holder = [""]      # the job holding the slot now ("" when it is free)
 stats = DayCounter(held=0, waited_max=0, cancelled=0, gave_up=0, behind=0)   # today (Zustand → Prüfen)
 
 
@@ -153,33 +158,57 @@ def _slot():
     return _sem[loop]
 
 
+def grund(job):
+    """What background work of this job waits for right now, as a fixed word: "gespraech" (somebody speaks),
+    "wartung" (Wartungspause of the language model), "andere" (another job holds the one slot) or "" (nothing)."""
+    if speaking():
+        return "gespraech"
+    if paused():
+        return "wartung"
+    return "andere" if _holder[0] and _holder[0] != job else ""
+
+
 async def run(job, factory, retries=RETRIES, sleep=asyncio.sleep):
     """Runs factory() (a function returning a fresh coroutine) as background work, see above."""
+    if _inside.get():           # inside the factory of an outer run: that one holds the slot and watches speech
+        return await factory()
     t0 = time.time()
     async with _slot():
-        for _ in range(retries + 1):
-            await quiet(job, sleep, model=True)
-            _live(job, "run")
+        _holder[0] = job
+        try:
+            return await _run(job, factory, retries, sleep, t0)
+        finally:
+            _holder[0] = ""
+
+
+async def _run(job, factory, retries, sleep, t0):
+    for _ in range(retries + 1):
+        await quiet(job, sleep, model=True)
+        _live(job, "run")
+        mark_in = _inside.set(job)       # the task copies it: a run() inside never waits for this slot again
+        try:
             task = asyncio.ensure_future(factory())
-            while not task.done():
-                await asyncio.wait({task}, timeout=POLL)
-                if not task.done() and speaking():
-                    task.cancel()
-                    try:
-                        await task
-                    except BaseException:
-                        pass
-                    count("cancelled")
-                    _live(job, "wait")
-                    print(f"vorrang: {job} abgebrochen (Gespräch), läuft in der nächsten Pause neu", flush=True)
-                    break
-            else:
-                _live_done(job, task.exception() is None if not task.cancelled() else False, time.time() - t0)
-                return task.result()
-        count("gave_up")
-        _live_done(job, False, why="aufgegeben (Gespräche)")
-        print(f"vorrang: {job} aufgegeben nach {retries + 1} Abbrüchen", flush=True)
-        raise Busy(job)
+        finally:
+            _inside.reset(mark_in)
+        while not task.done():
+            await asyncio.wait({task}, timeout=POLL)
+            if not task.done() and speaking():
+                task.cancel()
+                try:
+                    await task
+                except BaseException:
+                    pass
+                count("cancelled")
+                _live(job, "wait")
+                print(f"vorrang: {job} abgebrochen (Gespräch), läuft in der nächsten Pause neu", flush=True)
+                break
+        else:
+            _live_done(job, task.exception() is None if not task.cancelled() else False, time.time() - t0)
+            return task.result()
+    count("gave_up")
+    _live_done(job, False, why="aufgegeben (Gespräche)")
+    print(f"vorrang: {job} aufgegeben nach {retries + 1} Abbrüchen", flush=True)
+    raise Busy(job)
 
 
 async def post(c, job, url, who=None, **kw):

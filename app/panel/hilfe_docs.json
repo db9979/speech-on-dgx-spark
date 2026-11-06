@@ -2485,7 +2485,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Hörstück aus einer Mappe",
 "title": "Hörstück aus einer Mappe",
-"text": "Ogg). hoerstueck.melden schickt „Hörstück fertig“ über push.send mit dem Weg zur Mappe, nur mit dem Namen der Mappe; hoerstueck.an_telegram schickt auf Klick per sendAudio nur an den eigenen verknüpften Chat (telegram.send_file, Persönliches dort erlaubt, Notaus). Das Drehbuch entsteht in der Sprache der Seite oder App (Deutsch oder Englisch) mit denselben Regeln und einer englischen Wortliste. Höchstens 10 je Profil; ein Hörstück wird nie ein Dokument. Die Tagesgrenze gilt nie für ein Profil ohne Tageslimit (coadmin.unbegrenzt: der Admin oder „Ohne Tageslimit“), ebenso bei Auswertungen, Abschriften und Links. „Sofort erstellen“ darf nur der Admin (coadmin.ist_admin prüft es auf dem Server: Login des Panel-Passworts oder das Profil selbst mit der Rolle „Admin“, nie ein Verwalter oder Gast): hoerstueck.sofort_lauf macht ein neues oder vorgezogenes Stück ohne ruhige Minuten, ohne die Kette davor und ohne Tagesgrenze, mit denselben Regeln; jede Anfrage geht weiter durch vorrang.run und mit der Stufe „hinten“, echte Sprache geht also vor. Höchstens eins zugleich (hoerstueck._sofort_offen); solange es läuft, lässt die Kette die Hörstücke liegen. Für CarPlay liefert hoerstueck.fertige nu"
+"text": "Ogg). hoerstueck.melden schickt „Hörstück fertig“ über push.send mit dem Weg zur Mappe, nur mit dem Namen der Mappe; hoerstueck.an_telegram schickt auf Klick per sendAudio nur an den eigenen verknüpften Chat (telegram.send_file, Persönliches dort erlaubt, Notaus). Das Drehbuch entsteht in der Sprache der Seite oder App (Deutsch oder Englisch) mit denselben Regeln und einer englischen Wortliste. Höchstens 10 je Profil; ein Hörstück wird nie ein Dokument. Die Tagesgrenze gilt nie für ein Profil ohne Tageslimit (coadmin.unbegrenzt: der Admin oder „Ohne Tageslimit“), ebenso bei Auswertungen, Abschriften und Links. „Sofort erstellen“ darf nur der Admin (coadmin.ist_admin prüft es auf dem Server: Login des Panel-Passworts oder das Profil selbst mit der Rolle „Admin“, nie ein Verwalter oder Gast): hoerstueck.sofort_lauf macht ein neues oder vorgezogenes Stück ohne ruhige Minuten, ohne die Kette davor und ohne Tagesgrenze, mit denselben Regeln; jede Anfrage geht weiter durch vorrang.run und mit der Stufe „hinten“, echte Sprache geht also vor. Höchstens eins zugleich (hoerstueck._sofort_offen); solange es läuft, lässt die Kette die Hörstücke liegen; nach einem Neustart nimmt hoerstueck.weit"
 },
 {
 "lang": "de",
@@ -2493,7 +2493,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Hörstück aus einer Mappe",
 "title": "Hörstück aus einer Mappe",
-"text": "r die fertigen aller eigenen Mappen (Titel, Mappe, Dauer, höchstens 12); im Auto wird nichts erstellt."
+"text": "er ein offenes erzwungenes Stück wieder auf, ein Start, der nicht geht, gibt den Platz sofort frei. Worauf die Arbeit gerade wartet, sagt die Liste mit einem festen Wort (hoerstueck._warten aus vorrang.grund: Gespräch, Wartung, andere Hintergrundarbeit, Sprachausgabe), ein gescheitertes sagt den Grund. Der Modellaufruf des Drehbuchs (llm.complete) fragt vorrang selbst; innerhalb von vorrang.run läuft er unter dem äußeren Platz, statt auf ihn zu warten. Für CarPlay liefert hoerstueck.fertige nur die fertigen aller eigenen Mappen (Titel, Mappe, Dauer, höchstens 12); im Auto wird nichts erstellt."
 },
 {
 "lang": "de",
@@ -2997,7 +2997,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/chat.py chat: setzt „Sprache läuft“ bei jedem Stück (Schritt 1) - app/panel/chat.py _answer: Verbindung, Anfrage, Runden (llm_round), Fehlerfälle (Schritt 3, Schritt 5, Schritt 7) - app/panel/llm.py model: Modellname aus Einstellung oder /models (Schritt 4) - app/panel/llm.py url: die eine Adresse des Sprachmodells (Schritt 1) - app/panel/llm.py complete: Aufruf jeder Hintergrundaufgabe, wartet in vorrang (Schritt 1) - app/panel/chat.py sampling: top_p, top_k und presence_penalty (Schritt 5) - app/panel/chat.py first_within: die erste Zeile muss rechtzeitig kommen (Schritt 9) - app/panel/chat.py ContextFull: Anfrage länger als der Kontext (Schritt 8) - app/panel/chat.py llm_error_code: Fehler als festes Kürzel (Schritt 13) - app/panel/chat.py LLM_GONE: der gesprochene Satz, wenn das Modell fehlt (Schritt 13) - app/panel/chat.py prompt_sizes: Größe der Teile einer Anfrage (Schritt 12) - app/panel/stufe.py wait_turn: wartet auf eine Antwort mit Vorrang (Schritt 6) - app/panel/vorrang.py mark: Marke „Sprache läuft“ (Schritt 1) - app/panel/vorrang.py run: Hintergrundarbeit weicht der Sprache (Schritt 1) - app/panel/wartung.py paused: Wartungspause: das Modell wird nicht gef"
+"text": "- app/panel/chat.py chat: setzt „Sprache läuft“ bei jedem Stück (Schritt 1) - app/panel/chat.py _answer: Verbindung, Anfrage, Runden (llm_round), Fehlerfälle (Schritt 3, Schritt 5, Schritt 7) - app/panel/llm.py model: Modellname aus Einstellung oder /models (Schritt 4) - app/panel/llm.py url: die eine Adresse des Sprachmodells (Schritt 1) - app/panel/llm.py complete: Aufruf jeder Hintergrundaufgabe, wartet in vorrang (Schritt 1) - app/panel/chat.py sampling: top_p, top_k und presence_penalty (Schritt 5) - app/panel/chat.py first_within: die erste Zeile muss rechtzeitig kommen (Schritt 9) - app/panel/chat.py ContextFull: Anfrage länger als der Kontext (Schritt 8) - app/panel/chat.py llm_error_code: Fehler als festes Kürzel (Schritt 13) - app/panel/chat.py LLM_GONE: der gesprochene Satz, wenn das Modell fehlt (Schritt 13) - app/panel/chat.py prompt_sizes: Größe der Teile einer Anfrage (Schritt 12) - app/panel/stufe.py wait_turn: wartet auf eine Antwort mit Vorrang (Schritt 6) - app/panel/vorrang.py mark: Marke „Sprache läuft“ (Schritt 1) - app/panel/vorrang.py run: Hintergrundarbeit weicht der Sprache; innen ohne zweites Warten (Schritt 1) - app/panel/wartung.py paused: Wartungspause"
 },
 {
 "lang": "de",
@@ -3005,7 +3005,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "ragt (Schritt 2) - app/panel/wartung.py auto_tick: Wartungspause von selbst, wenn das Sprachmodell neu startet (Schritt 2) - app/panel/wartung.py sentence: der feste Satz mit der Restzeit (Schritt 2) - app/panel/verbrauch.py llm: zählt Tokens einer Runde (Schritt 12) - app/panel/verbrauch.py over: welche Grenze ist voll: Tag, Woche oder Monat? (Schritt 6) - app/panel/verbrauch.py warn: Vorwarnung unter der Antwort, einmal je Zeitraum (Schritt 12)"
+"text": ": das Modell wird nicht gefragt (Schritt 2) - app/panel/wartung.py auto_tick: Wartungspause von selbst, wenn das Sprachmodell neu startet (Schritt 2) - app/panel/wartung.py sentence: der feste Satz mit der Restzeit (Schritt 2) - app/panel/verbrauch.py llm: zählt Tokens einer Runde (Schritt 12) - app/panel/verbrauch.py over: welche Grenze ist voll: Tag, Woche oder Monat? (Schritt 6) - app/panel/verbrauch.py warn: Vorwarnung unter der Antwort, einmal je Zeitraum (Schritt 12)"
 },
 {
 "lang": "de",
@@ -5949,7 +5949,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "vorrang.run (wartet, solange jemand spricht, bricht ab, wenn Sprache beginnt, die Zeile kommt wieder) und an die Sprachausgabe mit derselben Stufe „hinten“ samt Schlüssel; eine normale Stufe würde die eigenen Zeilen als Sprache markieren (common.SpeechMark) und alle Hintergrundarbeit anhalten. Höchstens ein erzwungenes Stück zugleich, über alle Profile (hoerstueck._sofort_offen, sonst 409); solange es läuft, lässt die ruhige Kette die Hörstücke liegen, danach nimmt sie ein markiertes zuerst. Live: Kasten *Hörstück* „erzwungen: schreibt das Drehbuch / spricht / wartet“, „heute N× sofort erstellt, M× abgelehnt“. Logs hoerstueck: erzwungen | neu (oder vorgezogen), hoerstueck: erzwungen abgelehnt | admin (oder laeuft, keins, form, voll, leer), hoerstueck: erzwungen | ende | fertig (oder leer, x, aus, weg, tts, schritte). Hörstück in CarPlay (V01.1.349, Dominik 2026-11-05): kein neuer Schalter, die Zeile „Hörstücke“ steht im Auto nur mit *Hörstück aus einer Mappe* (hello-Bereich „hoerstueck“). Neu GET /api/profile/hoerstuecke (hoerstueck.fertige, Anmeldung, eigenes Profil, Rate-Limit „hoerstueck“, nur lesen; iphone.THINGS „hoerstueck“ nur mit GET): die fertigen Hörstücke aller eigenen M"
+"text": "vorrang.run (wartet, solange jemand spricht, bricht ab, wenn Sprache beginnt, die Zeile kommt wieder) und an die Sprachausgabe mit derselben Stufe „hinten“ samt Schlüssel; eine normale Stufe würde die eigenen Zeilen als Sprache markieren (common.SpeechMark) und alle Hintergrundarbeit anhalten. Höchstens ein erzwungenes Stück zugleich, über alle Profile (hoerstueck._sofort_offen, sonst 409); solange es läuft, lässt die ruhige Kette die Hörstücke liegen, danach nimmt sie ein markiertes zuerst. Live: Kasten *Hörstück* „erzwungen: schreibt das Drehbuch / spricht / wartet“, „heute N× sofort erstellt, M× abgelehnt“. Logs hoerstueck: erzwungen | neu (oder vorgezogen), hoerstueck: erzwungen abgelehnt | admin (oder laeuft, keins, form, voll, leer), hoerstueck: erzwungen | ende | fertig (oder leer, x, aus, weg, tts, schritte). Hörstück wartet nicht mehr für immer (V01.1.355, Dominik 2026-11-06: „wartet immer und startet nicht, obwohl keine Spracheingaben gemacht werden“): Ein Hörstück, auch ein erzwungenes, blieb bei „wartet · 0 von 0 Zeilen“ stehen. Ursache: der Modellaufruf des Drehbuchs (llm.complete) schickt seine Anfrage selbst durch vorrang, und das geschah innerhalb von vorrang.run(\"H"
 },
 {
 "lang": "de",
@@ -5957,7 +5957,31 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "appen mit Titel, Name der Mappe, Dauer und Zeitpunkt, das neueste oben, höchstens 12 (hoerstueck.AUTO_MAX), nie das Drehbuch oder ein Pfad. Im Auto wird nichts erstellt. Die App spielt über einen gemeinsamen Player für Mappe und Auto (ios/Spark/HoerstueckPlayer.swift, HsPlayer): die AAC-Kopie nur im Speicher (eigene Sitzung ohne Cache), Now Playing mit Titel und Mappe, Fernbedienung (Abspielen, Pause, 15 Sekunden vor und zurück, nächstes und voriges, Position), weiter an der letzten Stelle (auf dem iPhone nur Kennung und Sekunden, höchstens 20). Vor dem Abspielen endet ein Gespräch und die Sprach-Engine gibt den Ton frei (Conversation.giveSound; die Engine stellt beim nächsten Start „Aufnahme und Wiedergabe“ wieder her), das Weckwort ruht, solange ein Hörstück spielt; ein Gespräch pausiert das Hörstück, danach spielt es weiter. Trennt sich das Auto, pausiert es. Ton-Protokoll nur mit festen Wörtern („Hörstück: spielt“, „Pause für Gespräch“, „zu Ende“). Live: kein neuer Wert (das Abspielen geschieht auf dem iPhone)."
+"text": "örstück\"); der eine Platz für Hintergrundarbeit war schon belegt, die innere Anfrage wartete auf die äußere und die äußere auf die innere, für immer (ebenso bei den Auswertungen, und die ruhige Kette blieb dahinter stehen). Jetzt läuft ein vorrang.run innerhalb eines anderen sofort unter dessen Platz (vorrang._inside), die äußere wartet weiter auf eine Pause und bricht ab, sobald jemand spricht; echte Sprache geht also weiter vor, und es läuft weiter nur eine Hintergrundanfrage zugleich. Worauf die Arbeit an einem Hörstück gerade wartet, sagt die Liste mit einem festen Wort (hoerstueck._warten aus vorrang.grund): „wartet: jemand spricht (echte Sprache geht vor)“, „Wartung des Sprachmodells“, „andere Hintergrundarbeit läuft“ oder „Sprachausgabe fehlt“; ohne Grund „Drehbuch entsteht“. Ein gescheitertes nennt den Grund („das Sprachmodell lieferte kein brauchbares Drehbuch“, „Zusammensetzen ging nicht“, „die Mappe ist weg“). Geht der Start eines erzwungenen nicht, wird der Platz sofort frei (503 „Sofort erstellen ging gerade nicht“, Log hoerstueck: erzwungen | ende | start), nach einem Neustart des Panels läuft ein offenes erzwungenes von selbst weiter (hoerstueck.weiter, Log hoerstuec"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "k: erzwungen | weiter). Live: Kasten *Hörstück* „wartet auf: Gespräch / Wartung des Sprachmodells / andere Hintergrundarbeit“. Die iPhone-App zeigt dieselben Texte."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Hörstück in CarPlay (V01.1.349, Dominik 2026-11-05)",
+"text": "Hörstück in CarPlay (V01.1.349, Dominik 2026-11-05): kein neuer Schalter, die Zeile „Hörstücke“ steht im Auto nur mit *Hörstück aus einer Mappe* (hello-Bereich „hoerstueck“). Neu GET /api/profile/hoerstuecke (hoerstueck.fertige, Anmeldung, eigenes Profil, Rate-Limit „hoerstueck“, nur lesen; iphone.THINGS „hoerstueck“ nur mit GET): die fertigen Hörstücke aller eigenen Mappen mit Titel, Name der Mappe, Dauer und Zeitpunkt, das neueste oben, höchstens 12 (hoerstueck.AUTO_MAX), nie das Drehbuch oder ein Pfad. Im Auto wird nichts erstellt. Die App spielt über einen gemeinsamen Player für Mappe und Auto (ios/Spark/HoerstueckPlayer.swift, HsPlayer): die AAC-Kopie nur im Speicher (eigene Sitzung ohne Cache), Now Playing mit Titel und Mappe, Fernbedienung (Abspielen, Pause, 15 Sekunden vor und zurück, nächstes und voriges, Position), weiter an der letzten Stelle (auf dem iPhone nur Kennung und Sekunden, höchstens 20). Vor dem Abspielen endet ein Gespräch und die Sprach-Engine gibt den Ton frei (Conversation.giveSound; die Engine stellt beim nächsten Start „Aufnahme und Wiedergabe“ wieder her), das Weckwort ruht, solange ein Hörstück spielt; ein Gespräch pausiert das Hörstück, danach spielt "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Hörstück in CarPlay (V01.1.349, Dominik 2026-11-05)",
+"text": "es weiter. Trennt sich das Auto, pausiert es. Ton-Protokoll nur mit festen Wörtern („Hörstück: spielt“, „Pause für Gespräch“, „zu Ende“). Live: kein neuer Wert (das Abspielen geschieht auf dem iPhone)."
 },
 {
 "lang": "de",
@@ -21037,7 +21061,7 @@
 "file": "Architecture and data flow",
 "head": "Audio overview of a collection",
 "title": "Audio overview of a collection",
-"text": " through push.send with the way to the collection, only with the collection's name; hoerstueck.an_telegram sends on a click by sendAudio only to the own linked chat (telegram.send_file, personal data allowed there, Notaus). The script is made in the page's or the app's language (German or English) with the same rules and an English word list. At most 10 per profile; an audio overview never becomes a document. The day limit never holds for a profile without daily limits (coadmin.unbegrenzt: the admin or „Ohne Tageslimit“), the same for analyses, transcripts and links. „Sofort erstellen“ (make now) is for the admin only (coadmin.ist_admin checks it on the server: the panel password's login or the profile itself with the role admin, never a manager or a guest): hoerstueck.sofort_lauf makes a new or pulled forward one without quiet minutes, without the chain before it and without the day limit, with the same rules; every request still goes through vorrang.run and with the stage „last“, so real speech goes first. At most one at a time (hoerstueck._sofort_offen); while it runs the chain leaves the audio overviews alone. For CarPlay hoerstueck.fertige gives only the finished ones of all o"
+"text": " through push.send with the way to the collection, only with the collection's name; hoerstueck.an_telegram sends on a click by sendAudio only to the own linked chat (telegram.send_file, personal data allowed there, Notaus). The script is made in the page's or the app's language (German or English) with the same rules and an English word list. At most 10 per profile; an audio overview never becomes a document. The day limit never holds for a profile without daily limits (coadmin.unbegrenzt: the admin or „Ohne Tageslimit“), the same for analyses, transcripts and links. „Sofort erstellen“ (make now) is for the admin only (coadmin.ist_admin checks it on the server: the panel password's login or the profile itself with the role admin, never a manager or a guest): hoerstueck.sofort_lauf makes a new or pulled forward one without quiet minutes, without the chain before it and without the day limit, with the same rules; every request still goes through vorrang.run and with the stage „last“, so real speech goes first. At most one at a time (hoerstueck._sofort_offen); while it runs the chain leaves the audio overviews alone; after a restart hoerstueck.weiter picks an open forced one up again,"
 },
 {
 "lang": "en",
@@ -21045,7 +21069,7 @@
 "file": "Architecture and data flow",
 "head": "Audio overview of a collection",
 "title": "Audio overview of a collection",
-"text": "wn collections (title, collection, length, at most 12); nothing is made in the car."
+"text": " a start that fails frees the place at once. What the work waits for right now the list says with a fixed word (hoerstueck._warten from vorrang.grund: conversation, maintenance, other background work, speech output), a failed one says why. The script's model call (llm.complete) asks vorrang itself; inside vorrang.run it runs under the outer slot instead of waiting for it. For CarPlay hoerstueck.fertige gives only the finished ones of all own collections (title, collection, length, at most 12); nothing is made in the car."
 },
 {
 "lang": "en",
@@ -21541,7 +21565,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/chat.py chat: sets „speech is running“ with every piece (step 1) - app/panel/chat.py _answer: connection, request, rounds (llm_round), errors (step 3, step 5, step 7) - app/panel/llm.py model: model name from settings or /models (step 4) - app/panel/llm.py url: the one address of the language model (step 1) - app/panel/llm.py complete: the call of every background job, waits in vorrang (step 1) - app/panel/chat.py sampling: top_p, top_k and presence_penalty (step 5) - app/panel/chat.py first_within: the first line must come in time (step 9) - app/panel/chat.py ContextFull: request longer than the context (step 8) - app/panel/chat.py llm_error_code: error as a fixed code (step 13) - app/panel/chat.py LLM_GONE: the spoken sentence when the model is gone (step 13) - app/panel/chat.py prompt_sizes: size of the parts of a request (step 12) - app/panel/stufe.py wait_turn: waits for an answer with priority (step 6) - app/panel/vorrang.py mark: mark „speech is running“ (step 1) - app/panel/vorrang.py run: background work gives way to speech (step 1) - app/panel/wartung.py paused: maintenance pause: the model is not asked (step 2) - app/panel/wartung.py auto_tick: maintenance pa"
+"text": "- app/panel/chat.py chat: sets „speech is running“ with every piece (step 1) - app/panel/chat.py _answer: connection, request, rounds (llm_round), errors (step 3, step 5, step 7) - app/panel/llm.py model: model name from settings or /models (step 4) - app/panel/llm.py url: the one address of the language model (step 1) - app/panel/llm.py complete: the call of every background job, waits in vorrang (step 1) - app/panel/chat.py sampling: top_p, top_k and presence_penalty (step 5) - app/panel/chat.py first_within: the first line must come in time (step 9) - app/panel/chat.py ContextFull: request longer than the context (step 8) - app/panel/chat.py llm_error_code: error as a fixed code (step 13) - app/panel/chat.py LLM_GONE: the spoken sentence when the model is gone (step 13) - app/panel/chat.py prompt_sizes: size of the parts of a request (step 12) - app/panel/stufe.py wait_turn: waits for an answer with priority (step 6) - app/panel/vorrang.py mark: mark „speech is running“ (step 1) - app/panel/vorrang.py run: background work gives way to speech; inside without a second wait (step 1) - app/panel/wartung.py paused: maintenance pause: the model is not asked (step 2) - app/panel/wartun"
 },
 {
 "lang": "en",
@@ -21549,7 +21573,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "use by itself when the language model restarts (step 2) - app/panel/wartung.py sentence: the fixed sentence with the time left (step 2) - app/panel/verbrauch.py llm: counts the tokens of a round (step 12) - app/panel/verbrauch.py over: which limit is full: day, week or month? (step 6) - app/panel/verbrauch.py warn: the warning under the answer, once per period (step 12)"
+"text": "g.py auto_tick: maintenance pause by itself when the language model restarts (step 2) - app/panel/wartung.py sentence: the fixed sentence with the time left (step 2) - app/panel/verbrauch.py llm: counts the tokens of a round (step 12) - app/panel/verbrauch.py over: which limit is full: day, week or month? (step 6) - app/panel/verbrauch.py warn: the warning under the answer, once per period (step 12)"
 },
 {
 "lang": "en",
@@ -24389,7 +24413,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Make an audio overview now (V01.1.345, Dominik 2026-11-05: „force the making“)",
-"text": " the line comes again) and to the speech output with the same stage \"last\" and its key; a normal stage would mark the own lines as speech (common.SpeechMark) and stop all background work. At most one forced one at a time, over all profiles (hoerstueck._sofort_offen, else 409); while it runs the quiet chain leaves the audio overviews alone, afterwards it takes a marked one first. Live: box *Audio overview* \"erzwungen: writes the script / speaks / waits\", \"today N× made now, M× refused\". Logs hoerstueck: erzwungen | neu (or vorgezogen), hoerstueck: erzwungen abgelehnt | admin (or laeuft, keins, form, voll, leer), hoerstueck: erzwungen | ende | fertig (or leer, x, aus, weg, tts, schritte). Audio overview in CarPlay (V01.1.349, Dominik 2026-11-05): no new switch, the row \"Audio overviews\" stands in the car only with *Audio overview* (hello area \"hoerstueck\"). New GET /api/profile/hoerstuecke (hoerstueck.fertige, login, own profile, rate limit \"hoerstueck\", read only; iphone.THINGS \"hoerstueck\" only with GET): the finished audio overviews of all own collections with title, the collection's name, length and time, the newest first, at most 12 (hoerstueck.AUTO_MAX), never the script or a p"
+"text": " the line comes again) and to the speech output with the same stage \"last\" and its key; a normal stage would mark the own lines as speech (common.SpeechMark) and stop all background work. At most one forced one at a time, over all profiles (hoerstueck._sofort_offen, else 409); while it runs the quiet chain leaves the audio overviews alone, afterwards it takes a marked one first. Live: box *Audio overview* \"erzwungen: writes the script / speaks / waits\", \"today N× made now, M× refused\". Logs hoerstueck: erzwungen | neu (or vorgezogen), hoerstueck: erzwungen abgelehnt | admin (or laeuft, keins, form, voll, leer), hoerstueck: erzwungen | ende | fertig (or leer, x, aus, weg, tts, schritte). An audio overview no longer waits forever (V01.1.355, Dominik 2026-11-06: „waits forever and does not start, though nobody speaks“): An audio overview, a forced one too, stayed at \"waiting · 0 of 0 lines\". Cause: the script's model call (llm.complete) sends its request through vorrang itself, and that happened inside vorrang.run(\"Hörstück\"); the one slot for background work was taken already, the inner request waited for the outer one and the outer one for the inner, forever (the same for the analys"
 },
 {
 "lang": "en",
@@ -24397,7 +24421,23 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Make an audio overview now (V01.1.345, Dominik 2026-11-05: „force the making“)",
-"text": "ath. Nothing is made in the car. The app plays through one player for the collection and the car (ios/Spark/HoerstueckPlayer.swift, HsPlayer): the AAC copy only in memory (its own session without a cache), Now Playing with title and collection, remote buttons (play, pause, 15 seconds forward and back, next and previous, position), on where it stopped (on the iPhone only id and seconds, at most 20). Before it plays a conversation ends and the speech engine hands over the sound (Conversation.giveSound; the engine sets \"play and record\" again at its next start), the wake word rests while an audio overview plays; a conversation pauses the audio overview, afterwards it plays on. When the car disconnects it pauses. Sound log only with fixed words (\"Hörstück: spielt\", \"Pause für Gespräch\", \"zu Ende\"). Live: no new value (the playing happens on the iPhone)."
+"text": "es, and the quiet chain stood still behind it). Now a vorrang.run inside another one runs at once under its slot (vorrang._inside), the outer one still waits for a pause and is cancelled as soon as somebody speaks; real speech still goes first, and still only one background request runs at a time. What the work on an audio overview waits for right now the list says with a fixed word (hoerstueck._warten from vorrang.grund): \"waits: somebody speaks (real speech goes first)\", \"language model maintenance\", \"other background work runs\" or \"speech output missing\"; without a reason \"script being written\". A failed one says why (\"the language model gave no usable script\", \"putting it together failed\", \"the collection is gone\"). If a forced one cannot start, the place is freed at once (503, log hoerstueck: erzwungen | ende | start); after a restart of the panel an open forced one runs on by itself (hoerstueck.weiter, log hoerstueck: erzwungen | weiter). Live: box *Audio overview* \"wartet auf: Gespräch / Wartung des Sprachmodells / andere Hintergrundarbeit\". The iPhone app shows the same texts."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Audio overview in CarPlay (V01.1.349, Dominik 2026-11-05)",
+"text": "Audio overview in CarPlay (V01.1.349, Dominik 2026-11-05): no new switch, the row \"Audio overviews\" stands in the car only with *Audio overview* (hello area \"hoerstueck\"). New GET /api/profile/hoerstuecke (hoerstueck.fertige, login, own profile, rate limit \"hoerstueck\", read only; iphone.THINGS \"hoerstueck\" only with GET): the finished audio overviews of all own collections with title, the collection's name, length and time, the newest first, at most 12 (hoerstueck.AUTO_MAX), never the script or a path. Nothing is made in the car. The app plays through one player for the collection and the car (ios/Spark/HoerstueckPlayer.swift, HsPlayer): the AAC copy only in memory (its own session without a cache), Now Playing with title and collection, remote buttons (play, pause, 15 seconds forward and back, next and previous, position), on where it stopped (on the iPhone only id and seconds, at most 20). Before it plays a conversation ends and the speech engine hands over the sound (Conversation.giveSound; the engine sets \"play and record\" again at its next start), the wake word rests while an audio overview plays; a conversation pauses the audio overview, afterwards it plays on. When the car "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Audio overview in CarPlay (V01.1.349, Dominik 2026-11-05)",
+"text": "disconnects it pauses. Sound log only with fixed words (\"Hörstück: spielt\", \"Pause für Gespräch\", \"zu Ende\"). Live: no new value (the playing happens on the iPhone)."
 },
 {
 "lang": "en",

@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "llm": {
-        "stand": "603ee718fb",
+        "stand": "c6db802738",
         "bezug": {
             "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "llm.model": ["s3"], "llm.url": ["s1"], "llm.complete": ["s1"],
             "chat.sampling": ["s4"], "chat.first_within": ["s8"], "chat.ContextFull": ["s7"],
@@ -229,7 +229,7 @@ SEITEN = {
             ("chat.prompt_sizes", ("Größe der Teile einer Anfrage", "size of the parts of a request")),
             ("stufe.wait_turn", ("wartet auf eine Antwort mit Vorrang", "waits for an answer with priority")),
             ("vorrang.mark", ("Marke „Sprache läuft“", "mark „speech is running“")),
-            ("vorrang.run", ("Hintergrundarbeit weicht der Sprache", "background work gives way to speech")),
+            ("vorrang.run", ("Hintergrundarbeit weicht der Sprache; innen ohne zweites Warten", "background work gives way to speech; inside without a second wait")),
             ("wartung.paused", ("Wartungspause: das Modell wird nicht gefragt", "maintenance pause: the model is not asked")),
             ("wartung.auto_tick", ("Wartungspause von selbst, wenn das Sprachmodell neu startet", "maintenance pause by itself when the language model restarts")),
             ("wartung.sentence", ("der feste Satz mit der Restzeit", "the fixed sentence with the time left")),
@@ -243,7 +243,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "6055cb3b05",
+        "stand": "eefe8d8ff8",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -290,7 +290,7 @@ SEITEN = {
             "hoerstueck.ZEILEN_MIN": ["s13"], "hoerstueck.UEBER_ANTEIL": ["s13"], "hoerstueck.STELLEN_ZEICHEN": ["s13"],
             "hoerstueck.GESPEICHERT_MAX": ["s13"], "tonteile.sprich": ["s13"],
             "hoerstueck.m4a": ["s13"], "hoerstueck.an_telegram": ["s13"], "hoerstueck.melden": ["s13"],
-            "coadmin.ist_admin": ["s13"], "coadmin.unbegrenzt": ["s13"], "hoerstueck.fertige": ["s13"], "hoerstueck.AUTO_MAX": ["s13"], "hoerstueck.sofort_lauf": ["s13"], "hoerstueck._sofort_offen": ["s13"],
+            "coadmin.ist_admin": ["s13"], "coadmin.unbegrenzt": ["s13"], "hoerstueck.fertige": ["s13"], "hoerstueck.AUTO_MAX": ["s13"], "hoerstueck.sofort_lauf": ["s13"], "hoerstueck._sofort_offen": ["s13"], "hoerstueck.weiter": ["s13"], "hoerstueck._warten": ["s13"], "vorrang.grund": ["s13"],
             "documents.stelle": ["s13"], "common.signed_low": ["s13"],
             "doklink.pruefe": ["s13"], "doklink.eins": ["s13"], "doklink.neu_abrufen": ["s13"], "wissen.aufnehmen": ["s13"],
             "fundmail.dok_passt": ["s13"], "fundmail.dok_art": ["s13"], "fundmail.zu_dokumenten": ["s13"],
@@ -914,7 +914,12 @@ SEITEN = {
                  "hoerstueck.sofort_lauf macht ein neues oder vorgezogenes Stück ohne ruhige Minuten, ohne die Kette "
                  "davor und ohne Tagesgrenze, mit denselben Regeln; jede Anfrage geht weiter durch vorrang.run und "
                  "mit der Stufe „hinten“, echte Sprache geht also vor. Höchstens eins zugleich "
-                 "(hoerstueck._sofort_offen); solange es läuft, lässt die Kette die Hörstücke liegen. Für CarPlay liefert "
+                 "(hoerstueck._sofort_offen); solange es läuft, lässt die Kette die Hörstücke liegen; nach einem Neustart "
+                 "nimmt hoerstueck.weiter ein offenes erzwungenes Stück wieder auf, ein Start, der nicht geht, gibt den "
+                 "Platz sofort frei. Worauf die Arbeit gerade wartet, sagt die Liste mit einem festen Wort "
+                 "(hoerstueck._warten aus vorrang.grund: Gespräch, Wartung, andere Hintergrundarbeit, Sprachausgabe), "
+                 "ein gescheitertes sagt den Grund. Der Modellaufruf des Drehbuchs (llm.complete) fragt vorrang selbst; "
+                 "innerhalb von vorrang.run läuft er unter dem äußeren Platz, statt auf ihn zu warten. Für CarPlay liefert "
                  "hoerstueck.fertige nur die fertigen aller eigenen Mappen (Titel, Mappe, Dauer, höchstens "
                  "{hoerstueck.AUTO_MAX}); im Auto wird nichts erstellt.",
                  "hoerstueck.stellen gives the model only pieces of the originals from the collection's documents on "
@@ -942,7 +947,12 @@ SEITEN = {
                  "hoerstueck.sofort_lauf makes a new or pulled forward one without quiet minutes, without the chain "
                  "before it and without the day limit, with the same rules; every request still goes through "
                  "vorrang.run and with the stage „last“, so real speech goes first. At most one at a time "
-                 "(hoerstueck._sofort_offen); while it runs the chain leaves the audio overviews alone. For CarPlay "
+                 "(hoerstueck._sofort_offen); while it runs the chain leaves the audio overviews alone; after a restart "
+                 "hoerstueck.weiter picks an open forced one up again, a start that fails frees the place at once. What "
+                 "the work waits for right now the list says with a fixed word (hoerstueck._warten from vorrang.grund: "
+                 "conversation, maintenance, other background work, speech output), a failed one says why. The script's "
+                 "model call (llm.complete) asks vorrang itself; inside vorrang.run it runs under the outer slot instead "
+                 "of waiting for it. For CarPlay "
                  "hoerstueck.fertige gives only the finished ones of all own collections (title, collection, length, "
                  "at most {hoerstueck.AUTO_MAX}); nothing is made in the car."),
             ]),
@@ -1281,6 +1291,9 @@ SEITEN = {
             ("hoerstueck.sofort_lauf", ("erzwungen: ohne ruhige Minuten und Tagesgrenze, Sprache geht vor", "forced: without quiet minutes and the day limit, speech first")),
             ("hoerstueck.fertige", ("CarPlay: die fertigen aller eigenen Mappen, nur zum Anhören", "CarPlay: the finished ones of all own collections, only to listen")),
             ("hoerstueck._sofort_offen", ("höchstens ein erzwungenes Hörstück zugleich", "at most one forced audio overview at a time")),
+            ("hoerstueck.weiter", ("nach einem Neustart läuft ein erzwungenes weiter", "after a restart a forced one runs on")),
+            ("hoerstueck._warten", ("worauf die Arbeit gerade wartet, als festes Wort", "what the work waits for, as a fixed word")),
+            ("vorrang.grund", ("Gespräch, Wartung oder andere Hintergrundarbeit", "conversation, maintenance or other background work")),
             ("tonteile.sprich", ("der eine Helfer für einen gesprochenen Teil", "the one helper for a spoken part")),
             ("doklink.pruefe", ("Adresse nach festen Regeln, bevor etwas geholt wird", "an address by fixed rules before anything is fetched")),
             ("doklink.eins", ("eine Adresse holen und als Dokument aufnehmen", "fetch one address and take it in as a document")),

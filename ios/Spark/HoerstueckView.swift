@@ -16,6 +16,8 @@ struct HsStueck: Identifiable, Hashable {
     let ton: Bool
     let geaendert: Bool
     let erzwungen: Bool
+    let warten: String
+    let fehler: String
 
     init?(_ d: [String: Any]) {
         guard let id = d["id"] as? String, id.range(of: "^[0-9a-f]{12}$", options: .regularExpression) != nil else { return nil }
@@ -31,13 +33,44 @@ struct HsStueck: Identifiable, Hashable {
         ton = d["ton"] as? Bool ?? false
         geaendert = d["geaendert"] as? Bool ?? false
         erzwungen = d["erzwungen"] as? Bool ?? false
+        let w = d["warten"] as? String ?? ""        // the server's fixed word of what the work waits for
+        warten = ["gespraech", "wartung", "andere", "sprachausgabe"].contains(w) ? w : ""
+        let f = d["fehler"] as? String ?? ""        // the server's fixed word of why a broken one broke
+        fehler = ["modell", "ffmpeg", "mappe", "kein text", "zu wenig"].contains(f) ? f : ""
     }
 
     var offen: Bool { stand == "wartet" || stand == "sprechen" }
 
+    var wartenText: String {
+        switch warten {
+        case "gespraech": return String(localized: "wartet: jemand spricht (echte Sprache geht vor)")
+        case "wartung": return String(localized: "wartet: Wartung des Sprachmodells")
+        case "andere": return String(localized: "wartet: andere Hintergrundarbeit läuft")
+        case "sprachausgabe": return String(localized: "wartet: Sprachausgabe fehlt")
+        default: return ""
+        }
+    }
+
+    var fehlerText: String {
+        switch fehler {
+        case "modell": return String(localized: "das Sprachmodell lieferte kein brauchbares Drehbuch")
+        case "ffmpeg": return String(localized: "Zusammensetzen ging nicht")
+        case "mappe": return String(localized: "die Mappe ist weg")
+        case "kein text": return String(localized: "kein Text in der Mappe")
+        case "zu wenig": return String(localized: "zu wenig geprüfte Zeilen")
+        default: return ""
+        }
+    }
+
     var standText: String {
-        if erzwungen && offen {
-            return String(localized: "Wird sofort erstellt · \(fertig) von \(zeilen) Zeilen gesprochen · echte Sprache geht vor")
+        if erzwungen && stand == "wartet" {
+            return String(localized: "Wird sofort erstellt") + " · " + (wartenText.isEmpty ? String(localized: "Drehbuch entsteht") : wartenText)
+        }
+        if erzwungen && stand == "sprechen" {
+            return String(localized: "Wird sofort erstellt · \(fertig) von \(zeilen) Zeilen gesprochen") + (wartenText.isEmpty ? "" : " · " + wartenText)
+        }
+        if stand == "x" && !fehlerText.isEmpty {
+            return fehlerText + " · " + String(localized: "ging nicht; „Löschen“ und neu erstellen")
         }
         switch stand {
         case "wartet": return String(localized: "Drehbuch folgt, sobald niemand spricht")

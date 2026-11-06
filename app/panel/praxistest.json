@@ -5401,6 +5401,13 @@
 "titel": "Fernzugang: Reiter sshTermy",
 "text": "Funktionen → Fernzugang zu Servern → sshTermy als Jump-Host an. Spark verwalten → Fernzugang → Reiter „sshTermy“: ein Satz mit „So geht's“ (führt zu Funktionen → Fernzugang zu Servern → sshTermy als Jump-Host), oben rechts „Koppeln (Code)“ statt „+ System koppeln“; nach Code oder Passkey steht die Zeile zum Einrichten mit „Kopieren“ oben im Reiter. Darunter die gekoppelten Geräte mit „Admin …“, „entsperrt noch N min“ oder „gesperrt“, „zuletzt …“, „N Kanäle“, „Trennen“ (grau ohne Kanal) und „Entfernen“, dann je System eine Zeile: ✓ mit Kommentar und Fingerabdruck oder ○ „noch kein Schlüssel“ mit dem Befehl sudo spark-anker schluessel dazu '…' und „Kopieren“; ein Windows-System sagt, dass es dort noch nicht geht. Unten auf der Seite „Systeme“ ist kein Kasten sshTermy mehr.",
 "thread": "Fernzugang aufräumen"
+},
+{
+"id": "P798",
+"v": 1355,
+"titel": "Hörstück startet sofort und sagt, worauf es wartet",
+"text": "Admin: Funktionen → Eigene Dokumente → Mappen → Hörstück aus einer Mappe an. Mappen → eine Mappe mit Dokumenten → Hörstück → „Sofort erstellen“, dabei niemand spricht: nach wenigen Sekunden steht „Wird sofort erstellt · Drehbuch entsteht“, nach höchstens ein paar Minuten „N von M Zeilen gesprochen“, am Ende „fertig“ mit Player; nie mehr lange „wartet“ bei „0 von 0 Zeilen“. Während dessen eine Frage an den Assistenten sprechen: die Zeile sagt „wartet: jemand spricht (echte Sprache geht vor)“, danach geht es weiter. Zustand → Live, Kasten Hörstück: „erzwungen: …“ und bei Sprache „wartet auf: Gespräch“. Das Panel neu starten, während ein erzwungenes Stück noch spricht: es läuft danach von selbst weiter. Ein normales „Erstellen“ in ruhigen Minuten kommt ebenso voran, und die Auswertungen (Kurzfassung) entstehen wieder. iPhone: dieselben Texte unter Mappen → Hörstück.",
+"thread": "Hörstück wartet"
 }
 ]
 }

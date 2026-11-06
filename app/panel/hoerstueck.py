@@ -51,7 +51,14 @@ counted there), never GESPEICHERT_MAX and never the rules over the script. Speec
 through vorrang.run (it waits while anybody speaks and is cancelled when speech starts) and the speech output gets the
 same stage „hinten" with the key (a forced line waits behind every person; a normal stage would mark the panel's own
 lines as speech, common.SpeechMark). At most one forced Hörstück at a time (_sofort, and no other open one with sofort
-in any profile); while it runs the quiet chain leaves the Hörstücke alone. Journal and Live: „erzwungen".
+in any profile); while it runs the quiet chain leaves the Hörstücke alone. Journal and Live: „erzwungen". After a
+restart of the panel weiter() picks the forced one up again; a start that fails frees the place at once.
+
+What it waits for (V01.1.355, Dominik 2026-11-06 „wartet immer und startet nicht"): the list says it as a fixed word
+(warten, _warten): gespraech (somebody speaks), wartung (Wartungspause of the language model), andere (another
+background job holds the one vorrang slot), sprachausgabe (the speech output is gone), never a guess. A broken one
+says why (fehler: modell, ffmpeg, mappe, kein text, zu wenig). The script's model call (llm.complete) asks vorrang itself
+inside the outer vorrang.run: vorrang runs it under the outer slot (before, it waited for itself forever).
 
 Table in users/<id>/wissen.db (dateien.py), next to the Mappen:
     hs_stueck (id, mappe, titel, laenge, stimmen, stand, zeilen, fertig_zeilen, verworfen, dauer_s, datei, sig, made,
@@ -589,7 +596,20 @@ def _kurz(r, sig_now):
             "verworfen": weg if isinstance(weg, dict) else {}, "dauer_s": r["dauer_s"], "made": r["made"],
             "ton": bool(r["datei"]), "fehler": r["fehler"] or "", "sprache": _sprache(r),
             "geaendert": bool(r["sig"]) and sig_now is not None and r["sig"] != sig_now,
-            "laeuft": _now.get("id") == r["id"], "sofort": bool(r["sofort"]), "erzwungen": _sofort.get("id") == r["id"]}
+            "laeuft": _now.get("id") == r["id"], "sofort": bool(r["sofort"]), "erzwungen": _sofort.get("id") == r["id"],
+            "warten": _warten(r)}
+
+
+def _warten(r, now=None):
+    """What a Hörstück being worked on (the forced run's or the quiet chain's step) waits for right now, a fixed word:
+    "sprachausgabe", "gespraech", "wartung", "andere" or "" (it works, or it is not being worked on)."""
+    if r["stand"] not in ("wartet", "sprechen") or r["id"] not in (_now.get("id"), _sofort.get("id")):
+        return ""
+    import vorrang
+    now = time.time() if now is None else now
+    if r["stand"] == "sprechen" and now < _hold["tts"]:
+        return "sprachausgabe"
+    return vorrang.grund("Hörstück")
 
 
 def liste(uid, mid):
@@ -1022,6 +1042,30 @@ def _spawn(uid, hid):
     core.spawn(sofort_lauf(uid, hid), name="hoerstueck-sofort")
 
 
+async def weiter():
+    """After a restart of the panel: the forced Hörstück that was still open (column sofort, wartet or sprechen) runs on
+    at once instead of holding the one place without a run. Returns its id or ""."""
+    if not admin_on() or _sofort:
+        return ""
+    for uid in profiles.user_ids():
+        if not features.allowed("hoerstueck", uid) or not _exists(uid):
+            continue
+        with _Db(uid) as con:
+            r = con.execute("SELECT id FROM hs_stueck WHERE sofort=1 AND stand IN ('wartet', 'sprechen') "
+                            "ORDER BY made, id LIMIT 1").fetchone()
+        if r:
+            _sofort.update(uid=uid, id=r["id"], was="wartet")
+            print(f"hoerstueck: erzwungen | weiter | {_who(uid)}", flush=True)
+            try:
+                _spawn(uid, r["id"])
+            except Exception as e:   # noqa: BLE001
+                _sofort.clear()
+                print(f"hoerstueck: erzwungen | ende | start | {type(e).__name__} | {_who(uid)}", flush=True)
+                return ""
+            return r["id"]
+    return ""
+
+
 async def sofort_lauf(uid, hid):
     """The forced run: the script, then line by line, one step after the other without the quiet minutes and without
     the quiet chain. Every request still goes through vorrang.run (speech first) and with the stage „hinten" (ton).
@@ -1144,8 +1188,9 @@ def _own_count(uid):
 def for_live(now=None):
     """{"on", "stuecke", "warten", "sprechen", "zeilen_offen", "neu", "drehbuch", "zeilen", "verworfen", "fertig",
     "leer", "abgebrochen", "fehler", "tts", "grenze", "englisch", "m4a", "mitteilung", "telegram", "telegram_nein",
-    "laeuft", "erzwungen", "erzwungen_heute", "erzwungen_nein"}: sums over all profiles (remembered LIVE_EVERY s) and
-    today's counts; erzwungen is what the forced run does right now ("" or drehbuch, zeile, wartet)."""
+    "laeuft", "erzwungen", "wartet_auf", "erzwungen_heute", "erzwungen_nein"}: sums over all profiles (remembered
+    LIVE_EVERY s) and today's counts; erzwungen is what the forced run does right now ("" or drehbuch, zeile, wartet),
+    wartet_auf what the work on a Hörstück waits for (vorrang.grund: "" or gespraech, wartung, andere)."""
     now = time.time() if now is None else now
     if not admin_on():
         return {"on": False}
@@ -1168,7 +1213,9 @@ def for_live(now=None):
                 continue
         _live.update(at=now, data={"stuecke": alle, "warten": warten, "sprechen": sprechen, "zeilen_offen": offen})
     d = _day.today(now)
+    import vorrang
     return dict(_live["data"], on=True, laeuft=_now.get("was") or "", erzwungen=_sofort.get("was") or "",
+                wartet_auf=vorrang.grund("Hörstück") if _sofort or _now else "",
                 erzwungen_heute=d["erzwungen"], **{k: d[k] for k in (
                     "neu", "drehbuch", "zeilen", "verworfen", "fertig", "leer", "abgebrochen", "fehler", "tts", "grenze",
                     "englisch", "m4a", "mitteilung", "telegram", "telegram_nein", "erzwungen_nein")})
@@ -1380,7 +1427,14 @@ async def _sofort_route(request, prof, mid=None, hid=None):
         _sofort.update(uid=uid, id=hid, was="wartet")   # taken before the lock opens: never a second one
     _day.today()["erzwungen"] += 1
     print(f"hoerstueck: erzwungen | {was} |", profiles.log_name(prof), flush=True)
-    _spawn(uid, hid)
+    try:
+        _spawn(uid, hid)
+    except Exception as e:   # noqa: BLE001  never a held place without a run: the quiet chain takes the marked one
+        if _sofort.get("id") == hid:
+            _sofort.clear()
+        _day.today()["fehler"] += 1
+        print(f"hoerstueck: erzwungen | ende | start | {type(e).__name__} |", profiles.log_name(prof), flush=True)
+        raise HTTPException(503, "Sofort erstellen ging gerade nicht; es entsteht in der nächsten ruhigen Minute.")
     return {"ok": True, "id": hid}
 
 

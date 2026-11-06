@@ -596,6 +596,15 @@ async def doc_reader():
 
 
 @app.on_event("startup")
+async def hoerstueck_weiter():
+    """Hörstück (hoerstueck.weiter): a forced one („Sofort erstellen") still open before the restart runs on."""
+    try:
+        await hoerstueck.weiter()
+    except Exception as e:
+        print("hoerstueck: erzwungen | ende | start |", type(e).__name__, flush=True)
+
+
+@app.on_event("startup")
 async def remarkable_sync():
     """reMarkable notebooks (remarkable.py): each minute one profile whose comparison is due, never
     while someone is talking (vorrang.py)."""

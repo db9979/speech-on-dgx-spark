@@ -134,6 +134,70 @@ class Gate(Base):
         asyncio.run(both())
         self.assertEqual(most[0], 1)
 
+    def test_a_run_inside_a_run_never_waits_for_its_own_slot(self):
+        """Dominik 2026-11-06 („wartet immer und startet nicht“): llm.complete asks vorrang itself, and the Hörstück's
+        and the Auswertung's model call run it inside vorrang.run: the inner one runs under the outer slot at once."""
+        seen = []
+
+        async def leaf():
+            seen.append(vorrang._holder[0])
+            return "drin"
+
+        async def outer():
+            return await vorrang.run("Innen", leaf)
+        got = asyncio.run(asyncio.wait_for(vorrang.run("Aussen", outer, retries=0), 5))
+        self.assertEqual((got, seen, vorrang._holder[0]), ("drin", ["Aussen"], ""))   # free again afterwards
+
+    def test_inside_a_run_speech_still_cancels_and_others_still_wait(self):
+        running, most, cancelled = [0], [0], []
+
+        async def leaf():
+            running[0] += 1
+            most[0] = max(most[0], running[0])
+            await asyncio.sleep(0.02)
+            running[0] -= 1
+
+        async def nested():
+            await vorrang.run("Innen", leaf)
+
+        async def both():
+            await asyncio.gather(*[vorrang.run("Test", nested) for _ in range(3)], vorrang.run("Test", leaf))
+        asyncio.run(asyncio.wait_for(both(), 5))
+        self.assertEqual(most[0], 1)                     # still one background request at a time
+
+        async def talks():
+            try:
+                vorrang.mark()                           # somebody starts talking inside the inner run
+                await asyncio.sleep(30)
+            except asyncio.CancelledError:
+                cancelled.append(1)
+                raise
+
+        async def outer():
+            return await vorrang.run("Innen", talks)
+        with self.assertRaises(vorrang.Busy):
+            asyncio.run(asyncio.wait_for(vorrang.run("Aussen", outer, retries=0), 5))
+        self.assertEqual(cancelled, [1])
+        self.assertEqual(vorrang._holder[0], "")
+
+    def test_grund_says_what_background_work_waits_for(self):
+        self.silence()
+        from unittest import mock
+        with mock.patch.object(vorrang, "paused", lambda: False):
+            self.assertEqual(vorrang.grund("Hörstück"), "")
+            vorrang._holder[0] = "Auswertung"
+            try:
+                self.assertEqual(vorrang.grund("Hörstück"), "andere")
+                vorrang._holder[0] = "Hörstück"
+                self.assertEqual(vorrang.grund("Hörstück"), "")   # its own work: it works, it waits for nothing
+            finally:
+                vorrang._holder[0] = ""
+            vorrang.mark()
+            self.assertEqual(vorrang.grund("Hörstück"), "gespraech")
+            self.silence()
+        with mock.patch.object(vorrang, "paused", lambda: True):
+            self.assertEqual(vorrang.grund("Hörstück"), "wartung")
+
     def test_thread_work_runs_with_low_priority(self):
         def nice():
             return os.getpriority(os.PRIO_PROCESS, threading.get_native_id())

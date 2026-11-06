@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.355** Fix: ein Hörstück wartete für immer bei „0 von 0 Zeilen“ und startete nie, auch mit „Sofort erstellen“; jetzt startet es in Sekunden, wenn niemand spricht, die Liste sagt, worauf es wartet, und ein gescheitertes nennt den Grund
 - **V01.1.354** ROT-FIX: sshTermy-Kanal-Test wartet auf das Ende, solange der Testclient noch läuft
 - **V01.1.353** Fernzugang aufgeräumt: eigener Reiter sshTermy statt des Kastens unten, die Zahlen als ein Schild „6/6 online · 0 Sitzungen“, die Entsperrung kurz „bis 14:02 · Sperren“, Koppeln, Aktualisieren, Verlauf und Trennen im ⋯ neben der Suche, die Systemkarte mit den Reitern Einrichten (✓ oder ○ mit genau einem Befehl, Kopieren, In die Shell), Anker, Verlauf und Notiz, Liste und Karte über die ganze Höhe
 - **V01.1.352** sshTermy als Jump-Host: sshTermy auf dem Rechner erreicht die Server über den Spark, SSH Ende-zu-Ende, gekoppelt mit einem Code im Panel, entsperrt mit Admin-Code oder Passkey; die Schlüssel trägt nur root am Server ein (Anker 1.11.0, spark-anker schluessel dazu)
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.348** Ich → Dokumente: „Link hinzufügen“ steht jetzt oben direkt neben „＋ Hinzufügen“ (nur bei freigegebenem Links als Dokument), auch auf dem Handy in einer Zeile; die versteckte Stelle weiter unten ist weg.
 - **V01.1.347** ROT-FIX: der Selbsttest zum Sprachmodell per API stellt die Adresse des Sprachmodells danach wieder zurück
 - **V01.1.346** Sprachmodell per API: eigene Programme nutzen das Sprachmodell OpenAI-kompatibel unter /v1 mit einem Schlüssel ihres Profils (Ich → Sprachmodell per API), nur Text, im Heimnetz oder mit eigenem Schalter auch von außen; Grenzen je Schlüssel, Admins unbegrenzt
-- **V01.1.345** Hörstück sofort erstellen: der Admin kann ein Hörstück gleich machen lassen oder ein wartendes vorziehen, ohne ruhige Minuten und Tagesgrenze, auch in der iPhone-App; echte Sprache geht trotzdem vor
 
 
 

@@ -20241,12 +20241,122 @@
         }
       }
     },
-    "Wird sofort erstellt · %lld von %lld Zeilen gesprochen · echte Sprache geht vor": {
+    "Wird sofort erstellt": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Being made now · %lld of %lld lines spoken · real speech goes first"
+            "value": "Being made now"
+          }
+        }
+      }
+    },
+    "Drehbuch entsteht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Script being written"
+          }
+        }
+      }
+    },
+    "Wird sofort erstellt · %lld von %lld Zeilen gesprochen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Being made now · %lld of %lld lines spoken"
+          }
+        }
+      }
+    },
+    "wartet: jemand spricht (echte Sprache geht vor)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "waits: somebody speaks (real speech goes first)"
+          }
+        }
+      }
+    },
+    "wartet: Wartung des Sprachmodells": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "waits: language model maintenance"
+          }
+        }
+      }
+    },
+    "wartet: andere Hintergrundarbeit läuft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "waits: other background work runs"
+          }
+        }
+      }
+    },
+    "wartet: Sprachausgabe fehlt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "waits: speech output missing"
+          }
+        }
+      }
+    },
+    "das Sprachmodell lieferte kein brauchbares Drehbuch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "the language model gave no usable script"
+          }
+        }
+      }
+    },
+    "Zusammensetzen ging nicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "putting it together failed"
+          }
+        }
+      }
+    },
+    "die Mappe ist weg": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "the collection is gone"
+          }
+        }
+      }
+    },
+    "kein Text in der Mappe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no text in the collection"
+          }
+        }
+      }
+    },
+    "zu wenig geprüfte Zeilen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "too few checked lines"
           }
         }
       }
