@@ -1443,6 +1443,7 @@ flowchart TD
   s12(["12. Answer to the program"])
   s13["13. Only the language model (/v1)"]
   s14["14. Open WebUI in one step"]
+  s15["15. The whole assistant as a model"]
   s1 --> s2
   s2 -->|no| s3
   s3 -->|yes| s4
@@ -1456,6 +1457,7 @@ flowchart TD
   s11 -->|no| s12
   s12 --> s13
   s13 --> s14
+  s14 --> s15
   s2x(["Refused (403)"])
   s2 -->|yes| s2x
   s3x(["Not signed in (401)"])
@@ -1486,6 +1488,7 @@ flowchart TD
 12. <a id="kn-mcpc-s12"></a>**Answer to the program**: The answer is cut to 12000 characters. The journal only gets which program, which tool, whether it worked and how long, never question or answer.
 13. <a id="kn-mcpc-s13"></a>**Only the language model (/v1)**: A program that only wants the language model sends POST to /v1 (OpenAI chat) with a key of its profile (at most 5 per profile, only hashes kept). The same home network rule as above, from outside only with its own switch, the second step and a fresh code. Text only, known fields only, at most 8192 tokens of answer, the model name always the own one; then the request goes to the LLM gate with the stage „hinten“. Limits per key (per minute, 2 at once, tokens in 24 hours), admin profiles without a limit. No tool of the Spark, nothing of the profile, never a content in the journal.
 14. <a id="kn-mcpc-s14"></a>**Open WebUI in one step**: With „Open WebUI einbinden“, „Open WebUI verbinden“ (with a code) makes for the profile a key for the language model and, if the profile may use the MCP server, an MCP access with only the reading tools and „Spark fragen“, both home network only; „Trennen“ deletes both. Only their ids are kept. The menu opens Open WebUI at home through the inner address, through the proxy through the outer one; the service watcher only asks /health of the inner address, without a login.
+15. <a id="kn-mcpc-s15"></a>**The whole assistant as a model**: When a program asks with the model name „spark-assistent“ (switch „Spark-Assistent per API“), the request does not go to the plain model: it becomes one turn of the assistant as the key's profile like „Spark fragen“, only with the reading tools, nothing kept or switched. The program's system prompt stays out; at most 4 earlier messages go along cut as a marked hint. Key and limits as above.
 
 **Examples:** Claude reads the appointments: The profile's appointments as text, cut. · Home network key through the proxy: Refused: this key only works at home. · n8n wants to switch the light: Only proposed; it switches after the yes in the browser. · Program wants to read mail: Not allowed: mail is never offered over MCP.
 
@@ -1544,6 +1547,8 @@ Applies at: [step 9](#kn-mcpc-s9)
 - `app/panel/llmapi.py` `check_key`: key, home network, outside, kill switch, block ([step 13](#kn-mcpc-s13))
 - `app/panel/llmapi.py` `clean`: text and known fields only ([step 13](#kn-mcpc-s13))
 - `app/panel/llmapi.py` `_limits`: limits per key, admin without ([step 13](#kn-mcpc-s13))
+- `app/panel/llmapi.py` `_assist`: spark-assistent: one read-only turn as the profile ([step 15](#kn-mcpc-s15))
+- `app/panel/llmapi.py` `question`: question plus a few marked messages at most ([step 15](#kn-mcpc-s15))
 - `app/panel/openwebui.py` `connect`: Open WebUI: key and reading access in one step ([step 14](#kn-mcpc-s14))
 - `app/panel/openwebui.py` `link_for`: menu: inner or outer address ([step 14](#kn-mcpc-s14))
 - `app/panel/openwebui.py` `probes`: watcher: only /health, without a login ([step 14](#kn-mcpc-s14))

@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.357** Spark assistant as a model: in Open WebUI (or any program using /v1) "spark-assistent" answers with calendar, reminders and documents, read only
 - **V01.1.356** Open WebUI integration: one step under Me → Language model by API connects your Open WebUI (key and Spark tools for reading, home network only), plus "Open WebUI" in the menu and the service watcher
 - **V01.1.355** Fix: an audio overview waited forever at "0 of 0 lines" and never started, also with "Make now"; now it starts within seconds when nobody speaks, the list says what it waits for, and a failed one says why
 - **V01.1.354** RED FIX: the sshTermy channel test waits for the end while the test client still runs
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.350** Calmer collections: on the left the narrow list with ＋, on the right the open collection with its head, "Ask" as the only blue button, a thin budget bar with ⓘ and the parts Entries, Analyses and Audio overview; whole titles, the level per entry as a small menu, rare things under ⋯
 - **V01.1.349** Audio overview in the car: CarPlay lists the finished ones of all collections under "Audio overviews" and plays them through Now Playing (pause, 15 seconds forward and back, next one, on where you stopped); when Spark speaks, it pauses
 - **V01.1.348** Me → Documents: "Add link" now stands at the top right beside "＋ Add" (only while Links as documents is released), on one line on the phone too; the hidden spot further down is gone.
-- **V01.1.347** RED FIX: the self-test of the language model by API now puts the model address back after itself
 
 
 

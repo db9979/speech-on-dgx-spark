@@ -23,6 +23,14 @@ Fixed rules (the panel decides, never the model or the program):
   have none of these limits; size and field guard stay for everyone. The profile's Kontingent (verbrauch.py) counts
   the tokens too ("Sprachmodell per API") and holds the key when it is used up
 - contents are never kept and never logged: the journal ("llmapi: …") and Live hold counts, tokens and fixed words
+
+The whole assistant as a model (ASSIST, admin switch chat.llm_api_assistant, features "llmapiassist", Dominik
+2026-11-08 „ok nun 3“): a request with the model name ASSIST is no request to the plain model but one turn of the
+Spark's assistant as the key's profile, exactly like „Spark fragen“ over MCP (mcpserver.ask): only the reading tools
+the profile may use now (mcpserver.ASK_TOOLS), the question is outside text from the start, nothing is switched,
+saved, learned, sent or proposed, no memory and no earlier conversations of the Spark. The program's earlier messages
+go along only as marked context (at most CONTEXT of them, each cut), all within mcpserver.MAX_QUESTION characters.
+The same key, limits and refusals as above; the answer comes back OpenAI-shaped (also as a stream, in one piece).
 """
 import hashlib
 import hmac
@@ -66,6 +74,8 @@ FELDER = ("messages", "stream", "max_tokens", "max_completion_tokens", "temperat
           "presence_penalty", "frequency_penalty", "repetition_penalty", "stop", "seed", "tools", "tool_choice",
           "parallel_tool_calls", "response_format", "user")
 ROLES = ("system", "developer", "user", "assistant", "tool")
+ASSIST = "spark-assistent"    # the model name of the whole assistant (read only)
+CONTEXT, CONTEXT_CUT = 4, 300  # earlier messages that go along as context, and their length each
 # the fixed words of a refusal (journal and Live): reason -> (status, German sentence for the program)
 WHY = {"schluessel": (401, "Schlüssel fehlt, ist unbekannt oder abgelaufen."),
        "heimnetz": (403, "Dieser Schlüssel gilt nur im Heimnetz."),
@@ -254,7 +264,7 @@ def _note(what, kid="", prof=None, extra=""):
     """One journal line with fixed words and numbers only."""
     if stats["day"] != _today():
         stats.update(requests=0, refused=0, tokens=0, day=_today())
-    if what != "antwort":
+    if not what.startswith("antwort"):
         stats["refused"] += 1
     who = profiles.log_name(prof) if prof else "-"
     print(f"llmapi: {what} | {who} | {kid or '-'}" + (f" | {extra}" if extra else ""), flush=True)
@@ -414,14 +424,15 @@ async def models(request: Request):
     if refused:
         return refused
     import llm
+    extra = [{"id": ASSIST, "object": "model", "owned_by": "spark"}] if features.allowed("llmapiassist", k["uid"]) else []
     t = _target()
     if not t:
-        return _refuse("kein_tor", k["id"], prof)
+        return {"object": "list", "data": extra} if extra else _refuse("kein_tor", k["id"], prof)
     try:
         name = await llm.model(client(), t[0])
     except (httpx.HTTPError, ValueError, KeyError, IndexError):
-        return _refuse("modell", k["id"], prof)
-    return {"object": "list", "data": [{"id": name, "object": "model", "owned_by": "spark"}]}
+        return {"object": "list", "data": extra} if extra else _refuse("modell", k["id"], prof)
+    return {"object": "list", "data": [{"id": name, "object": "model", "owned_by": "spark"}] + extra}
 
 
 @router.post(OPENAI_CHAT)
@@ -432,11 +443,14 @@ async def completions(request: Request):
     if refused:
         return refused
     try:
-        body = clean(await core.json_body(request, MAX_BODY))
+        raw = await core.json_body(request, MAX_BODY)
+        body = clean(raw)
     except ValueError as e:
         _note("abgelehnt anfrage", k["id"], prof, str(e)[:20])
         return JSONResponse({"error": {"message": WHY["anfrage"][1] + f" ({str(e)[:20]})", "type": "anfrage", "code": 400}},
                             status_code=400)
+    if raw.get("model") == ASSIST:
+        return await _assist(request, k, prof, body)
     t = _target()
     if not t:
         return _refuse("kein_tor", k["id"], prof)
@@ -500,6 +514,91 @@ async def completions(request: Request):
                              headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
 
 
+# ---------------------------------------------------------------- the whole assistant as a model (read only)
+def _text(content):
+    if isinstance(content, list):
+        return " ".join(p.get("text", "") for p in content if isinstance(p, dict))
+    return content if isinstance(content, str) else ""
+
+
+def question(msgs):
+    """The question for one read-only turn: the last user message, before it at most CONTEXT earlier messages of
+    the program as marked context, each cut to CONTEXT_CUT; everything within mcpserver.MAX_QUESTION characters.
+    ValueError("frage") without a last user message with text."""
+    import mcpserver
+    if not msgs or msgs[-1].get("role") != "user" or not _text(msgs[-1].get("content")).strip():
+        raise ValueError("frage")
+    last = _text(msgs[-1]["content"]).strip()[:mcpserver.MAX_QUESTION]
+    earlier = [m for m in msgs[:-1] if m.get("role") in ("user", "assistant") and _text(m.get("content")).strip()][-CONTEXT:]
+    if not earlier:
+        return last
+    lines = [("Frage" if m["role"] == "user" else "Antwort") + ": " + " ".join(_text(m["content"]).split())[:CONTEXT_CUT]
+             for m in earlier]
+    head = "Bisher im Gespräch (nur zum Verständnis):\n" + "\n".join(lines) + "\n\nJetzt: "
+    room = mcpserver.MAX_QUESTION - len(last)
+    return (head[:max(0, room)] + last) if room > 40 else last
+
+
+def _reply(answer, n_in, n_out):
+    now = int(time.time())
+    return {"id": "chatcmpl-" + secrets.token_hex(8), "object": "chat.completion", "created": now, "model": ASSIST,
+            "choices": [{"index": 0, "message": {"role": "assistant", "content": answer}, "finish_reason": "stop"}],
+            "usage": {"prompt_tokens": n_in, "completion_tokens": n_out, "total_tokens": n_in + n_out}}
+
+
+def _sse(answer, n_in, n_out):
+    cid, now = "chatcmpl-" + secrets.token_hex(8), int(time.time())
+
+    def piece(delta, finish=None, usage=None):
+        d = {"id": cid, "object": "chat.completion.chunk", "created": now, "model": ASSIST,
+             "choices": [{"index": 0, "delta": delta, "finish_reason": finish}] if usage is None else []}
+        if usage is not None:
+            d["usage"] = usage
+        return ("data: " + json.dumps(d, ensure_ascii=False) + "\n\n").encode()
+    yield piece({"role": "assistant", "content": answer})
+    yield piece({}, "stop")
+    yield piece({}, usage={"prompt_tokens": n_in, "completion_tokens": n_out, "total_tokens": n_in + n_out})
+    yield b"data: [DONE]\n\n"
+
+
+async def _assist(request, k, prof, body):
+    """One read-only turn of the assistant as the key's profile (like mcpserver.ask), OpenAI-shaped."""
+    import mcpserver
+    if not features.allowed("llmapiassist", k["uid"]):
+        _note("abgelehnt assistent aus", k["id"], prof)
+        return JSONResponse({"error": {"message": "Das Modell spark-assistent ist nicht freigegeben.", "type": "assistent",
+                                       "code": 404}}, status_code=404)
+    try:
+        q = question(body["messages"])
+    except ValueError:
+        _note("abgelehnt anfrage", k["id"], prof, "frage")
+        return JSONResponse({"error": {"message": WHY["anfrage"][1] + " (frage)", "type": "anfrage", "code": 400}},
+                            status_code=400)
+    now = time.time()
+    why = _limits(k, prof, now)
+    if why:
+        return _refuse(why, k["id"], prof)
+    tools = [n for n in mcpserver.ASK_TOOLS if mcpserver.tool_ok(n, k["uid"])]
+    t0 = time.monotonic()
+    try:
+        answer = await mcpserver.ask(request, {"uid": k["uid"], "id": k["id"], "tools": tools}, q)
+    except Exception as e:   # the turn failed: a fixed word and the kind of error, never its text
+        _leave(k["id"])
+        _note("fehler assistent", k["id"], prof, type(e).__name__)
+        return _refuse("modell", k["id"], prof)
+    _leave(k["id"])
+    ms = int((time.monotonic() - t0) * 1000)
+    n_in, n_out = max(1, len(q) // 4), max(1, len(answer) // 4)   # an estimate: the turn itself counts in Verbrauch
+    count(k["id"], n_in + n_out)
+    stats["requests"] += 1
+    stats["tokens"] += n_in + n_out
+    _note("antwort assistent", k["id"], prof, f"{len(tools)} werkzeuge {ms} ms")
+    if body.get("stream"):
+        return StreamingResponse(_sse(answer, n_in, n_out), media_type="text/event-stream",
+                                 headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
+    return JSONResponse(_reply(answer, n_in, n_out), headers={"Cache-Control": "no-store"})
+
+
 # ---------------------------------------------------------------- Ich → Sprachmodell per API
 def _on(prof=Depends(browser_profile)):
     """Only from the profile's own browser login (never with a device key or a key of this function)."""
@@ -534,7 +633,7 @@ def for_me(request, uid):
     import mcpserver
     return {"enabled": admin_on(), "on": features.allowed("llmapi", uid), "extern": extern_on(),
             "mfa": mfa.enabled(uid), "url": mcpserver.base_url(request) + "/v1", "days": DAYS, "most": MAX_KEYS,
-            "unlimited": unlimited(uid), "per_minute": per_minute(), "at_once": AT_ONCE, "tag_k": tag_k_max(),
+            "unlimited": unlimited(uid), "assist": features.allowed("llmapiassist", uid), "per_minute": per_minute(), "at_once": AT_ONCE, "tag_k": tag_k_max(),
             "keys": keys(uid) if admin_on() else []}
 
 

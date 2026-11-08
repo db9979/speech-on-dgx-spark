@@ -331,6 +331,7 @@ WITHOUT = {
     "llmapi": "Schnittstelle für andere Programme",
     "llmapiextern": "Schnittstelle für andere Programme",
     "openwebui": "Schnittstelle für andere Programme",
+    "llmapiassist": "Schnittstelle für andere Programme",
     "mcpextern": "Schnittstelle für andere Programme",
     "mcpact": "Schnittstelle für andere Programme",
     "mymcpjobs": "wirkt in Aufträgen",

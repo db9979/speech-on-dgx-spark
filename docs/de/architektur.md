@@ -1443,6 +1443,7 @@ flowchart TD
   s12(["12. Antwort ans Programm"])
   s13["13. Nur das Sprachmodell (/v1)"]
   s14["14. Open WebUI in einem Schritt"]
+  s15["15. Der ganze Assistent als Modell"]
   s1 --> s2
   s2 -->|nein| s3
   s3 -->|ja| s4
@@ -1456,6 +1457,7 @@ flowchart TD
   s11 -->|nein| s12
   s12 --> s13
   s13 --> s14
+  s14 --> s15
   s2x(["Abgelehnt (403)"])
   s2 -->|ja| s2x
   s3x(["Nicht angemeldet (401)"])
@@ -1486,6 +1488,7 @@ flowchart TD
 12. <a id="kn-mcpc-s12"></a>**Antwort ans Programm**: Die Antwort wird auf 12000 Zeichen gekürzt. Ins Journal kommt nur, welches Programm, welches Werkzeug, ob es ging und wie lange, nie Frage oder Antwort.
 13. <a id="kn-mcpc-s13"></a>**Nur das Sprachmodell (/v1)**: Ein Programm, das nur das Sprachmodell will, schickt POST an /v1 (OpenAI-Chat) mit einem Schlüssel seines Profils (höchstens 5 je Profil, nur Hashes gespeichert). Dieselbe Heimnetz-Regel wie oben, von außen nur mit eigenem Schalter, zweitem Schritt und frischem Code. Nur Text, nur bekannte Felder, höchstens 8192 Tokens Antwort, der Modellname immer der eigene; dann geht die Anfrage mit der Stufe „hinten“ ans LLM-Tor. Grenzen je Schlüssel (pro Minute, 2 gleichzeitig, Tokens in 24 Stunden), Admin-Profile ohne Grenze. Kein Werkzeug des Spark, nichts aus dem Profil, nie ein Inhalt im Journal.
 14. <a id="kn-mcpc-s14"></a>**Open WebUI in einem Schritt**: Mit „Open WebUI einbinden“ legt „Open WebUI verbinden“ (mit Code) für das Profil einen Schlüssel fürs Sprachmodell und, wenn das Profil den MCP-Server nutzen darf, einen MCP-Zugang mit nur den Lese-Werkzeugen und „Spark fragen“ an, beide nur im Heimnetz; „Trennen“ löscht beide. Gespeichert werden nur ihre Kennungen. Das Menü öffnet Open WebUI im Heimnetz über die innere Adresse, über den Proxy über die äußere; der Dienst-Wächter fragt nur /health der inneren Adresse, ohne Anmeldung.
+15. <a id="kn-mcpc-s15"></a>**Der ganze Assistent als Modell**: Fragt ein Programm mit dem Modellnamen „spark-assistent“ (Schalter „Spark-Assistent per API“), geht die Anfrage nicht ans reine Modell: sie wird ein Zug des Assistenten als Profil des Schlüssels wie „Spark fragen“, nur mit den Lese-Werkzeugen, nichts gespeichert oder geschaltet. Die Systemanweisung des Programms bleibt weg; höchstens 4 frühere Nachrichten gehen gekürzt als markierter Hinweis mit. Schlüssel und Grenzen wie oben.
 
 **Beispiele:** Claude liest die Termine: Termine des Profils als Text, gekürzt. · Heimnetz-Schlüssel über den Proxy: Abgelehnt: dieser Schlüssel gilt nur im Heimnetz. · n8n will das Licht schalten: Nur vorgeschlagen; es schaltet erst nach dem Ja im Browser. · Programm will Mails lesen: Nicht freigegeben: Mail gibt es über MCP nie.
 
@@ -1544,6 +1547,8 @@ Gilt bei: [Schritt 9](#kn-mcpc-s9)
 - `app/panel/llmapi.py` `check_key`: Schlüssel, Heimnetz, außen, Notaus, Sperre ([Schritt 13](#kn-mcpc-s13))
 - `app/panel/llmapi.py` `clean`: nur Text und bekannte Felder ([Schritt 13](#kn-mcpc-s13))
 - `app/panel/llmapi.py` `_limits`: Grenzen je Schlüssel, Admin ohne ([Schritt 13](#kn-mcpc-s13))
+- `app/panel/llmapi.py` `_assist`: spark-assistent: ein Zug nur lesend als Profil ([Schritt 15](#kn-mcpc-s15))
+- `app/panel/llmapi.py` `question`: Frage plus höchstens wenige markierte Nachrichten ([Schritt 15](#kn-mcpc-s15))
 - `app/panel/openwebui.py` `connect`: Open WebUI: Schlüssel und Lese-Zugang in einem Schritt ([Schritt 14](#kn-mcpc-s14))
 - `app/panel/openwebui.py` `link_for`: Menü: innere oder äußere Adresse ([Schritt 14](#kn-mcpc-s14))
 - `app/panel/openwebui.py` `probes`: Wächter: nur /health, ohne Anmeldung ([Schritt 14](#kn-mcpc-s14))

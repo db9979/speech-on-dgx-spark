@@ -5415,6 +5415,13 @@
 "titel": "Open WebUI in einem Schritt verbinden",
 "text": "Admin: Funktionen → Sprachmodell per API an, darunter Open WebUI einbinden an und die Adresse von Open WebUI im Heimnetz (z. B. http://192.168.178.20:3000) eintragen, auf Wunsch auch die Adresse von außen. Für die Werkzeuge auch Spark als MCP-Server an. Als Profil Ich → Sprachmodell per API → „Open WebUI verbinden“ mit Code: einmal erscheinen URL und Schlüssel für Verbindungen und für Externe Werkzeuge. In Open WebUI eintragen (Verbindungen → OpenAI-API; Externe Werkzeuge → MCP Streamable HTTP, Bearer). Erwartet: das Modell antwortet in Open WebUI; mit dem Werkzeug „Spark fragen“ kommt z. B. „Was steht morgen in meinem Kalender?“ richtig. Im Menü steht „Open WebUI“ und öffnet es (zu Hause die Heimnetz-Adresse, über den Proxy die von außen). „Trennen“: Open WebUI bekommt sofort 401. Zustand → Live zeigt den Kasten „Open WebUI“; Open WebUI kurz stoppen: nach einigen Minuten meldet der Dienst-Wächter „Open WebUI“ fehlt.",
 "thread": "Open WebUI in den Spark einbinden"
+},
+{
+"id": "P800",
+"v": 1357,
+"titel": "Spark-Assistent als Modell in Open WebUI",
+"text": "Admin: Funktionen → Sprachmodell per API → Spark-Assistent per API an. In Open WebUI (mit dem Schlüssel aus „Open WebUI verbinden“) die Modell-Liste neu laden: „spark-assistent“ erscheint. Damit fragen: „Was steht morgen in meinem Kalender?“ und „Was steht in meinen Dokumenten zur Kündigungsfrist?“: die Antworten kommen aus Kalender und Dokumenten. „Merk dir, dass ich Tee mag“ oder „Schalte das Licht an“: es wird nichts gespeichert oder geschaltet. Nachfrage „Und übermorgen?“ versteht er aus dem Gespräch. Schalter aus: „spark-assistent“ verschwindet aus der Liste.",
+"thread": "Open WebUI in den Spark einbinden"
 }
 ]
 }

@@ -1030,7 +1030,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "4cf445d92f",
+        "stand": "f1586033e0",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],
@@ -1040,6 +1040,7 @@ SEITEN = {
             "regel:Spark fragen": ["s10"], "regel:Handeln mit Bestätigung": ["s11"],
             "llmapi.completions": ["s13"], "llmapi.check_key": ["s13"], "llmapi.clean": ["s13"], "llmapi._limits": ["s13"],
             "llmapi.MAX_KEYS": ["s13"], "llmapi.AT_ONCE": ["s13"], "llmapi.MAX_TOKENS": ["s13"],
+            "llmapi._assist": ["s15"], "llmapi.question": ["s15"],
             "openwebui.connect": ["s14"], "openwebui.link_for": ["s14"], "openwebui.probes": ["s14"],
         },
         "kurz": ("Andere Programme (Claude, n8n, Open WebUI, Home Assistant) nutzen den Spark über das Model Context "
@@ -1178,6 +1179,17 @@ SEITEN = {
                "„Spark fragen“, both home network only; „Trennen“ deletes both. Only their ids are kept. The menu opens "
                "Open WebUI at home through the inner address, through the proxy through the outer one; the service "
                "watcher only asks /health of the inner address, without a login.")),
+            S("s15", "schritt", ("Der ganze Assistent als Modell", "The whole assistant as a model"),
+              ("„spark-assistent“, nur lesend", "„spark-assistent“, read only"),
+              ("Fragt ein Programm mit dem Modellnamen „spark-assistent“ (Schalter „Spark-Assistent per API“), geht die "
+               "Anfrage nicht ans reine Modell: sie wird ein Zug des Assistenten als Profil des Schlüssels wie „Spark "
+               "fragen“, nur mit den Lese-Werkzeugen, nichts gespeichert oder geschaltet. Die Systemanweisung des "
+               "Programms bleibt weg; höchstens {llmapi.CONTEXT} frühere Nachrichten gehen gekürzt als markierter "
+               "Hinweis mit. Schlüssel und Grenzen wie oben.",
+               "When a program asks with the model name „spark-assistent“ (switch „Spark-Assistent per API“), the request "
+               "does not go to the plain model: it becomes one turn of the assistant as the key's profile like „Spark "
+               "fragen“, only with the reading tools, nothing kept or switched. The program's system prompt stays out; at "
+               "most {llmapi.CONTEXT} earlier messages go along cut as a marked hint. Key and limits as above.")),
         ],
         "beispiele": [
             (("Claude liest die Termine", "Claude reads the appointments"),
@@ -1254,6 +1266,8 @@ SEITEN = {
             ("llmapi.check_key", ("Schlüssel, Heimnetz, außen, Notaus, Sperre", "key, home network, outside, kill switch, block")),
             ("llmapi.clean", ("nur Text und bekannte Felder", "text and known fields only")),
             ("llmapi._limits", ("Grenzen je Schlüssel, Admin ohne", "limits per key, admin without")),
+            ("llmapi._assist", ("spark-assistent: ein Zug nur lesend als Profil", "spark-assistent: one read-only turn as the profile")),
+            ("llmapi.question", ("Frage plus höchstens wenige markierte Nachrichten", "question plus a few marked messages at most")),
             ("openwebui.connect", ("Open WebUI: Schlüssel und Lese-Zugang in einem Schritt", "Open WebUI: key and reading access in one step")),
             ("openwebui.link_for", ("Menü: innere oder äußere Adresse", "menu: inner or outer address")),
             ("openwebui.probes", ("Wächter: nur /health, ohne Anmeldung", "watcher: only /health, without a login")),

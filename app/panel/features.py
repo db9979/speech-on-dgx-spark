@@ -101,7 +101,7 @@ DESK_SKIP = {
                      "schirm", "modellwechsel", "werkstatt", "entwickeln"), _D_SPARK),
     **dict.fromkeys(("history", "teilen", "bilder", "musik", "dungeon", "mystatus", "agent", "chats", "weather",
                      "feeds", "contacts", "transit", "speaker", "verbrauch", "nas"), _D_PANEL),
-    **dict.fromkeys(("room", "esp32", "wyoming", "telefon", "telegram", "android", "pebble", "terminal", "mcpserver", "llmapi", "openwebui",
+    **dict.fromkeys(("room", "esp32", "wyoming", "telefon", "telegram", "android", "pebble", "terminal", "mcpserver", "llmapi", "llmapiassist", "openwebui",
                      "iphone", "appmerken"), _D_DEVICE),
     "memory": _D_LINK, "mfa": _D_LINK + " (Meine Daten on the Ich page Sicherheit)",
     "melden": "stays in the panel; the Begleiter's Kopplung page opens it (Problem melden …)",
@@ -771,6 +771,9 @@ FEATURES = (
     F("llmapi", "Sprachmodell per API", "Language model by API", "go", ("llm_api",), me="llmapibox", guide="llmapi"),
     F("llmapiextern", "Sprachmodell per API von außen", "Language model by API from outside", "go", ("llm_api_extern",),
       parent="llmapi", me="llmapibox", guide="llmapiextern"),
+    # Spark-Assistent per API (llmapi.ASSIST): the model "spark-assistent" is one read-only turn of the assistant, like „Spark fragen“
+    F("llmapiassist", "Spark-Assistent per API", "Spark assistant by API", "go", ("llm_api_assistant",), parent="llmapi",
+      me="llmapibox", guide="llmapiassist"),
     # Open WebUI einbinden (openwebui.py): one step makes its key and MCP connection; the menu links to it, the Wächter watches it
     F("openwebui", "Open WebUI einbinden", "Open WebUI integration", "go", ("openwebui",), parent="llmapi", me="llmapibox",
       guide="openwebui"),

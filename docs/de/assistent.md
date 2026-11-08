@@ -1855,6 +1855,8 @@ Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einri
 
 - **Sprachmodell per API von außen** (Funktionen → Unterwegs und Geräte → „Sprachmodell per API von außen“; baut auf „Sprachmodell per API“; Ich → Sprachmodell per API): Ein Schlüssel „auch von außen“ gilt auch über den Reverse-Proxy, etwa für Open WebUI unterwegs oder ein Programm im Büro.
 
+- **Spark-Assistent per API** (Funktionen → Unterwegs und Geräte → „Spark-Assistent per API“; baut auf „Sprachmodell per API“; Ich → Sprachmodell per API): Mit dem Modellnamen „spark-assistent“ fragt ein Programm (etwa Open WebUI) nicht das reine Sprachmodell, sondern deinen Spark-Assistenten: er schlägt in Kalender, Erinnerungen, Dokumenten, Wikipedia und Kiwix nach, nur lesend.
+
 - **Open WebUI einbinden** (Funktionen → Unterwegs und Geräte → „Open WebUI einbinden“; baut auf „Sprachmodell per API“; Ich → Sprachmodell per API): Dein eigenes Open WebUI nutzt den Spark: das Sprachmodell, auf Wunsch Sprache und die Spark-Werkzeuge zum Nachlesen mit „Spark fragen“.
 
 - **iPhone-App** (Funktionen → Unterwegs und Geräte → „iPhone-App“; Ich → iPhone-App): Eine eigene App fürs iPhone: Knopf drücken, fragen, die Antwort kommt mit der Spark-Stimme, auch bei gesperrtem Bildschirm.
