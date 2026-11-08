@@ -1855,6 +1855,8 @@ Every function of the Spark with its switch, what it builds on, where you set it
 
 - **Language model by API from outside** (Features → On the go and devices → "Language model by API from outside"; builds on "Language model by API"; Me → Language model by API): A key "also from outside" works through the reverse proxy too, e.g.
 
+- **Open WebUI integration** (Features → On the go and devices → "Open WebUI integration"; builds on "Language model by API"; Me → Language model by API): Your own Open WebUI uses the Spark: the language model, speech if you like and the Spark tools for reading with "Ask the Spark".
+
 - **iPhone app** (Features → On the go and devices → "iPhone app"; Me → iPhone app): An own app for the iPhone: press the button, ask, the answer comes in the Spark voice, also with the screen locked.
 
 - **Push to the iPhone app** (Features → On the go and devices → "Push to the iPhone app"; builds on "iPhone app"; Me → iPhone app): Reminders, the morning briefing and notes come to the iPhone even when the app is closed.

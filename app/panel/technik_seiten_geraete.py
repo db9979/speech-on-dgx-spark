@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "geraet": {
-        "stand": "9cfb1b2658",
+        "stand": "17a18feda6",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "zwischenruf.decide": ["s5"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -1030,7 +1030,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "87320d8cc0",
+        "stand": "4cf445d92f",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],
@@ -1040,6 +1040,7 @@ SEITEN = {
             "regel:Spark fragen": ["s10"], "regel:Handeln mit Bestätigung": ["s11"],
             "llmapi.completions": ["s13"], "llmapi.check_key": ["s13"], "llmapi.clean": ["s13"], "llmapi._limits": ["s13"],
             "llmapi.MAX_KEYS": ["s13"], "llmapi.AT_ONCE": ["s13"], "llmapi.MAX_TOKENS": ["s13"],
+            "openwebui.connect": ["s14"], "openwebui.link_for": ["s14"], "openwebui.probes": ["s14"],
         },
         "kurz": ("Andere Programme (Claude, n8n, Open WebUI, Home Assistant) nutzen den Spark über das Model Context "
                  "Protocol unter /mcp. Jede Verbindung gehört einem Profil, hat ihren eigenen Schlüssel und ihre "
@@ -1165,6 +1166,18 @@ SEITEN = {
                "LLM gate with the stage „hinten“. Limits per key (per minute, {llmapi.AT_ONCE} at once, tokens in 24 "
                "hours), admin profiles without a limit. No tool of the Spark, nothing of the profile, never a content in "
                "the journal.")),
+            S("s14", "schritt", ("Open WebUI in einem Schritt", "Open WebUI in one step"),
+              ("Schlüssel und Lese-Zugang, nur Heimnetz", "key and reading access, home network only"),
+              ("Mit „Open WebUI einbinden“ legt „Open WebUI verbinden“ (mit Code) für das Profil einen Schlüssel fürs "
+               "Sprachmodell und, wenn das Profil den MCP-Server nutzen darf, einen MCP-Zugang mit nur den Lese-Werkzeugen "
+               "und „Spark fragen“ an, beide nur im Heimnetz; „Trennen“ löscht beide. Gespeichert werden nur ihre "
+               "Kennungen. Das Menü öffnet Open WebUI im Heimnetz über die innere Adresse, über den Proxy über die äußere; "
+               "der Dienst-Wächter fragt nur /health der inneren Adresse, ohne Anmeldung.",
+               "With „Open WebUI einbinden“, „Open WebUI verbinden“ (with a code) makes for the profile a key for the "
+               "language model and, if the profile may use the MCP server, an MCP access with only the reading tools and "
+               "„Spark fragen“, both home network only; „Trennen“ deletes both. Only their ids are kept. The menu opens "
+               "Open WebUI at home through the inner address, through the proxy through the outer one; the service "
+               "watcher only asks /health of the inner address, without a login.")),
         ],
         "beispiele": [
             (("Claude liest die Termine", "Claude reads the appointments"),
@@ -1241,8 +1254,11 @@ SEITEN = {
             ("llmapi.check_key", ("Schlüssel, Heimnetz, außen, Notaus, Sperre", "key, home network, outside, kill switch, block")),
             ("llmapi.clean", ("nur Text und bekannte Felder", "text and known fields only")),
             ("llmapi._limits", ("Grenzen je Schlüssel, Admin ohne", "limits per key, admin without")),
+            ("openwebui.connect", ("Open WebUI: Schlüssel und Lese-Zugang in einem Schritt", "Open WebUI: key and reading access in one step")),
+            ("openwebui.link_for", ("Menü: innere oder äußere Adresse", "menu: inner or outer address")),
+            ("openwebui.probes", ("Wächter: nur /health, ohne Anmeldung", "watcher: only /health, without a login")),
         ],
-        "tests": ["test_mcpserver", "test_notaus"],
+        "tests": ["test_mcpserver", "test_notaus", "test_openwebui"],
         "heute": [],
     },
     # ------------------------------------------------------------------ Spracherkennung

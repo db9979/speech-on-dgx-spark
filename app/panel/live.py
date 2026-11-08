@@ -164,6 +164,8 @@ TARGETS = {
     "mcp": ("MCP-Dienste", "eigene und angebundene Dienste · Netz", "net", False),
     # Sprachmodell per API (llmapi.py): own programs ask the plain model at /v1; keys, answers and tokens in numbers only
     "llmapi": ("Sprachmodell per API", "eigene Programme · /v1 · Heimnetz oder Proxy", "net", False),
+    # Open WebUI einbinden (openwebui.py): its own server in the home network; profiles connected and the Wächter's probe
+    "openwebui": ("Open WebUI", "eigener Server im Heimnetz · Schlüssel und MCP", "lan", False),
     # Probleme melden (meldung.py): only after the person looked at the preview; the line shows counts, never text
     "issues": ("GitHub (Meldungen)", "Issues · Internet", "net", False),
     # Dokumente erstellen (docmake.py): the line shows jobs in numbers, never a title or text
@@ -1919,6 +1921,13 @@ def snapshot(view="admin", now=None):
     if lap.get("on"):
         used.add("llmapi")
     try:
+        import openwebui
+        owu = openwebui.for_live(now)
+    except Exception:
+        owu = {"on": False}
+    if owu.get("on"):
+        used.add("openwebui")
+    try:
         import systemupdates
         sup = systemupdates.for_live(now)
     except Exception:
@@ -2110,6 +2119,8 @@ def snapshot(view="admin", now=None):
             x["sub"] = systemupdates.live_sub(sup) or x["sub"]
         if x["id"] == "llmapi" and lap.get("on"):   # Sprachmodell per API: keys, running, answers and tokens today (numbers)
             x["sub"] = llmapi.live_sub(lap)
+        if x["id"] == "openwebui" and owu.get("on"):   # Open WebUI: profiles connected, whether the addresses are set (numbers)
+            x["sub"] = openwebui.live_sub(owu)
         if x["id"] == "entwickeln" and ewk.get("on"):   # Entwickeln: lokale Änderungen N, waiting in the clone, the last refusal (fixed word)
             x["sub"] = entwickelnseite.live_sub(ewk)
         if x["id"] == "fernzugang" and fzg.get("on"):   # Fernzugang: paired, online, sessions, waiting for removal (numbers)

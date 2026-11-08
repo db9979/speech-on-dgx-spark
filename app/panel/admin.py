@@ -679,6 +679,10 @@ def validate(new):
         raise HTTPException(400, "kiwix_url: http(s)://name or http(s)://name:port, optionally a path, nothing else")
     if ch.get("kiwix_link_url") and not kiwix.URL.fullmatch(str(ch["kiwix_link_url"]).strip().rstrip("/")):
         raise HTTPException(400, "kiwix_link_url: http(s)://name or http(s)://name:port, optionally a path, nothing else")
+    import openwebui   # its two addresses: plain http(s), no user, no query (the menu links to them, the Wächter asks /health)
+    for k in ("openwebui_url", "openwebui_link_url"):
+        if ch.get(k) and not openwebui.URL.fullmatch(str(ch[k]).strip().rstrip("/")):
+            raise HTTPException(400, f"{k}: http(s)://name or http(s)://name:port, optionally a path, nothing else")
     import meldung
     if not isinstance(ch.get("report_repo", meldung.DEFAULT_REPO), str) or not meldung.REPO.fullmatch(ch.get("report_repo", meldung.DEFAULT_REPO)):
         raise HTTPException(400, "report_repo: owner/name of a GitHub repository")
@@ -1018,7 +1022,7 @@ def validate(new):
 
 
 SENSITIVE = [("api", "key"), ("chat", "llm_url"), ("chat", "llm_key"), ("chat", "telegram_api"),
-             ("chat", "search_url"), ("chat", "kiwix_url"), ("chat", "kiwix_link_url"), ("chat", "public"), ("chat", "esp32_url"), ("chat", "telegram_panel_url"), ("chat", "esp32_ota_http"), ("chat", "esp32_repo"),
+             ("chat", "search_url"), ("chat", "kiwix_url"), ("chat", "kiwix_link_url"), ("chat", "openwebui"), ("chat", "openwebui_url"), ("chat", "openwebui_link_url"), ("chat", "public"), ("chat", "esp32_url"), ("chat", "telegram_panel_url"), ("chat", "esp32_ota_http"), ("chat", "esp32_repo"),
              ("chat", "mfa"), ("chat", "mcp_server"), ("chat", "mcp_server_extern"), ("chat", "mcp_server_act"), ("chat", "llm_api"), ("chat", "llm_api_extern"),
              ("chat", "mcp_own"), ("chat", "mcp_own_oauth"), ("chat", "report"), ("chat", "report_repo"),
              ("chat", "chats_verbund"), ("chat", "verbund_media"), ("chat", "verbund_groups"), ("chat", "verbund_mode"), ("chat", "verbund_domain"),

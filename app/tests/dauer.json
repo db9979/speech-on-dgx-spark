@@ -224,6 +224,7 @@
 "test_notzugang": 0.2,
 "test_offline": 15.8,
 "test_offsite": 2.7,
+"test_openwebui": 0.8,
 "test_panel": 75.9,
 "test_parallel_messen": 0.9,
 "test_passkey": 4.4,

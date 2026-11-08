@@ -380,6 +380,7 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/mcpserver.py` | The Spark as an MCP server: other programs (Open WebUI, n8n, Home Assistant, Claude, ...) use the Spark's abilities over the Model Context Protocol at /mcp. |
 | `app/panel/meinmcp.py` | Eigene MCP-Dienste pro Profil. |
 | `app/panel/mitschreiblink.py` | Mitschreib-Link: a link for people without a profile, so a visitor, the cleaner or the grandparents can put something on one list („Bring bitte Milch mit“). |
+| `app/panel/openwebui.py` | Open WebUI einbinden: Open WebUI keeps running where it is (home network, outside through the owner's proxy); the Spark only makes connecting it easy and wat … |
 | `app/panel/parcels.py` | Parcels from the profile's own e-mail: shipping mails of DHL, Hermes, DPD, GLS, UPS and Amazon are recognised by their sender, the status is taken from the m … |
 | `app/panel/proactive.py` | The assistant speaks up by itself: a short note or question when something real happens. |
 | `app/panel/remarkable.py` | reMarkable notebooks as knowledge. |
@@ -847,6 +848,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/offsite-protokoll.enc.part` | Sealed change log copy on its way to the NAS | – | no |
 | `state/offsite.json` | Offsite backup | sealed | yes |
 | `state/ohne-tageslimit.json` | Profiles without daily limit | – | yes |
+| `state/openwebui.json` | Open WebUI: ids of key and MCP connection per profile | – | yes |
 | `state/panel-password` | Admin password (hash) | hash | yes |
 | `state/personen-vorrang.json` | Priority per profile | – | yes |
 | `state/praxistest-stand.json` | Hands-on test: per point the mark (works, problem, later) and the time | – | yes |
@@ -1440,6 +1442,7 @@ flowchart TD
   s11{{"11. Should something change?"}}
   s12(["12. Answer to the program"])
   s13["13. Only the language model (/v1)"]
+  s14["14. Open WebUI in one step"]
   s1 --> s2
   s2 -->|no| s3
   s3 -->|yes| s4
@@ -1452,6 +1455,7 @@ flowchart TD
   s10 --> s11
   s11 -->|no| s12
   s12 --> s13
+  s13 --> s14
   s2x(["Refused (403)"])
   s2 -->|yes| s2x
   s3x(["Not signed in (401)"])
@@ -1481,6 +1485,7 @@ flowchart TD
 11. <a id="kn-mcpc-s11"></a>**Should something change?**: Smart home, reminder and appointment are only proposed (at most 10 open). The profile gets a notice and decides under Me → Spark as MCP server within 15 minutes; only then the panel carries it out. With the kill switch or a smart home code word set, an MCP program switches nothing.
 12. <a id="kn-mcpc-s12"></a>**Answer to the program**: The answer is cut to 12000 characters. The journal only gets which program, which tool, whether it worked and how long, never question or answer.
 13. <a id="kn-mcpc-s13"></a>**Only the language model (/v1)**: A program that only wants the language model sends POST to /v1 (OpenAI chat) with a key of its profile (at most 5 per profile, only hashes kept). The same home network rule as above, from outside only with its own switch, the second step and a fresh code. Text only, known fields only, at most 8192 tokens of answer, the model name always the own one; then the request goes to the LLM gate with the stage „hinten“. Limits per key (per minute, 2 at once, tokens in 24 hours), admin profiles without a limit. No tool of the Spark, nothing of the profile, never a content in the journal.
+14. <a id="kn-mcpc-s14"></a>**Open WebUI in one step**: With „Open WebUI einbinden“, „Open WebUI verbinden“ (with a code) makes for the profile a key for the language model and, if the profile may use the MCP server, an MCP access with only the reading tools and „Spark fragen“, both home network only; „Trennen“ deletes both. Only their ids are kept. The menu opens Open WebUI at home through the inner address, through the proxy through the outer one; the service watcher only asks /health of the inner address, without a login.
 
 **Examples:** Claude reads the appointments: The profile's appointments as text, cut. · Home network key through the proxy: Refused: this key only works at home. · n8n wants to switch the light: Only proposed; it switches after the yes in the browser. · Program wants to read mail: Not allowed: mail is never offered over MCP.
 
@@ -1539,8 +1544,11 @@ Applies at: [step 9](#kn-mcpc-s9)
 - `app/panel/llmapi.py` `check_key`: key, home network, outside, kill switch, block ([step 13](#kn-mcpc-s13))
 - `app/panel/llmapi.py` `clean`: text and known fields only ([step 13](#kn-mcpc-s13))
 - `app/panel/llmapi.py` `_limits`: limits per key, admin without ([step 13](#kn-mcpc-s13))
+- `app/panel/openwebui.py` `connect`: Open WebUI: key and reading access in one step ([step 14](#kn-mcpc-s14))
+- `app/panel/openwebui.py` `link_for`: menu: inner or outer address ([step 14](#kn-mcpc-s14))
+- `app/panel/openwebui.py` `probes`: watcher: only /health, without a login ([step 14](#kn-mcpc-s14))
 
-Self-tests: `test_mcpserver`, `test_notaus`
+Self-tests: `test_mcpserver`, `test_notaus`, `test_openwebui`
 
 ### Middleware
 
@@ -3779,7 +3787,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 49), otherwise the line gives its reason (dateien.STATE_LOCAL, 115). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 50), otherwise the line gives its reason (dateien.STATE_LOCAL, 115). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3789,7 +3797,7 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **49** files in every backup ([step 7](#kn-state-s7))
+- **50** files in every backup ([step 7](#kn-state-s7))
 - **115** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))

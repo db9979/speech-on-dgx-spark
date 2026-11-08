@@ -130,6 +130,7 @@ LIST = {
     ("POST", "/api/admin/agent/mcp/{sid}/refresh"): (CONFIRM, "Spark", "Dienst des Agenten neu laden", "Reload an agent service"),
     ("DELETE", "/api/admin/agent/mcp/{sid}"): (CONFIRM, "Spark", "Dienst des Agenten entfernen", "Remove an agent service"),
     ("DELETE", "/api/admin/mcp/{cid}"): (CONFIRM, "Spark", "Programm (MCP) trennen", "Disconnect a program (MCP)"),
+    ("POST", "/api/profile/openwebui"): (CONFIRM, "Konten", "Open WebUI verbinden (Schlüssel und MCP)", "Connect Open WebUI (key and MCP)"),
     ("DELETE", "/api/admin/llmapi/{kid}"): (CONFIRM, "Spark", "Schlüssel fürs Sprachmodell löschen", "Delete a language model key"),
     ("PUT", "/api/admin/mymcp/hosts"): (CONFIRM, "Spark", "Erlaubte Adressen für eigene Dienste", "Allowed addresses for own services"),
     ("PUT", "/api/admin/mymcp/{uid}/{sid}"): (CONFIRM, "Spark", "Eigenen Dienst einer Person sperren", "Block a person's own service"),

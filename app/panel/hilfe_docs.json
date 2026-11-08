@@ -331,6 +331,46 @@
 "lang": "de",
 "src": "apis-und-einbinden",
 "file": "APIs und Einbinden",
+"head": "Open WebUI einbinden",
+"title": "Open WebUI einbinden",
+"text": "Seit V01.1.356 (Plan open-webui/plan.md, Dominik 2026-11-08 „1-2“) verbindet ein Schritt ein eigenes Open WebUI mit dem Spark. Open WebUI läuft weiter, wo es ist (im Heimnetz, von außen über den eigenen Proxy); es wird nicht auf dem Spark installiert."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Open WebUI einbinden",
+"title": "Einschalten",
+"text": "Einschalten: Admin: Funktionen → Sprachmodell per API → *Open WebUI einbinden* (chat.openwebui, aus; baut auf *Sprachmodell per API*). Darunter die *Adresse von Open WebUI im Heimnetz* (chat.openwebui_url, z. B. http://192.168.178.20:3000) und, wenn es eine gibt, die *Adresse von außen* (chat.openwebui_link_url). Beide nur http(s)://name[:port][/pfad], ohne Benutzer und ohne ?. Freigegeben gilt es für jedes Profil; einzelne Profile sperrt nur der Admin, Gäste nie."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Open WebUI einbinden",
+"title": "Verbinden",
+"text": "Verbinden: Ich → Sprachmodell per API → „Open WebUI verbinden“ mit dem Code. Das legt einen Schlüssel fürs Sprachmodell und, wenn das Profil *Spark als MCP-Server* nutzen darf, einen MCP-Zugang mit nur den Lese-Werkzeugen und ask_spark an, beide „nur Heimnetz“ und beide mit dem Namen „Open WebUI“. Das reicht auch unterwegs: Open WebUI fragt den Spark von seinem Server im Heimnetz aus. Die Werte erscheinen einmal zum Eintragen in Open WebUI (Verbindungen: URL http://SPARK:31080/v1 und Schlüssel; Externe Werkzeuge: Typ MCP Streamable HTTP, URL http://SPARK:31080/mcp, Bearer-Schlüssel). Sprache richtet der Admin wie oben unter „Open WebUI“ ein. „Neu verbinden“ ersetzt beide, „Trennen“ löscht beide sofort."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Open WebUI einbinden",
+"title": "Menü und Wächter",
+"text": "Menü und Wächter: Ist eine Adresse da, steht im Menü „Open WebUI“: im Heimnetz mit der Adresse im Heimnetz, über den Proxy mit der Adresse von außen (ohne sie kein Eintrag). Der Dienst-Wächter fragt alle 5 Minuten nur GET /health der Adresse im Heimnetz (ohne Anmeldung, über netguard im Heimnetz) und meldet, wenn Open WebUI fehlt. Zustand → Live zeigt den Kasten „Open WebUI“ mit der Zahl verbundener Profile und ob die Adressen eingetragen sind."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Open WebUI einbinden",
+"title": "Feste Regeln",
+"text": "Feste Regeln: Was Open WebUI schickt, sind Daten: Schlüssel und Zugang haben genau die Rechte und Grenzen von *Sprachmodell per API* und *Spark als MCP-Server*; „Handeln mit Bestätigung“ gibt dieser Schritt nie. Gespeichert werden nur die Kennungen des Paars (state/openwebui.json), nie ein Schlüssel. Logs (Bereich „Rechner, eigene Dienste, Dokumente“): openwebui: verbunden | <profil> | mcp 1, openwebui: getrennt | …, nie Schlüssel oder Adressen. Admin: Personen und Geräte → Apps und Schnittstellen → *Open WebUI* zeigt, wer verbunden ist."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
 "head": "Eigene MCP-Dienste pro Profil",
 "title": "Eigene MCP-Dienste pro Profil",
 "text": "Seit V01.0.363 (Plan plaene/eigene-mcp-dienste.md) bindet jedes Profil eigene MCP-Dienste an (Streamable HTTP), zusätzlich zu denen, die der Admin für alle anbindet. Nur dieses Profil sieht und nutzt sie."
@@ -1453,7 +1493,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "tem Smart-Home-Codewort schaltet ein MCP-Programm nichts. 12. Antwort ans Programm: Die Antwort wird auf 12000 Zeichen gekürzt. Ins Journal kommt nur, welches Programm, welches Werkzeug, ob es ging und wie lange, nie Frage oder Antwort. 13. Nur das Sprachmodell (/v1): Ein Programm, das nur das Sprachmodell will, schickt POST an /v1 (OpenAI-Chat) mit einem Schlüssel seines Profils (höchstens 5 je Profil, nur Hashes gespeichert). Dieselbe Heimnetz-Regel wie oben, von außen nur mit eigenem Schalter, zweitem Schritt und frischem Code. Nur Text, nur bekannte Felder, höchstens 8192 Tokens Antwort, der Modellname immer der eigene; dann geht die Anfrage mit der Stufe „hinten“ ans LLM-Tor. Grenzen je Schlüssel (pro Minute, 2 gleichzeitig, Tokens in 24 Stunden), Admin-Profile ohne Grenze. Kein Werkzeug des Spark, nichts aus dem Profil, nie ein Inhalt im Journal."
+"text": "tem Smart-Home-Codewort schaltet ein MCP-Programm nichts. 12. Antwort ans Programm: Die Antwort wird auf 12000 Zeichen gekürzt. Ins Journal kommt nur, welches Programm, welches Werkzeug, ob es ging und wie lange, nie Frage oder Antwort. 13. Nur das Sprachmodell (/v1): Ein Programm, das nur das Sprachmodell will, schickt POST an /v1 (OpenAI-Chat) mit einem Schlüssel seines Profils (höchstens 5 je Profil, nur Hashes gespeichert). Dieselbe Heimnetz-Regel wie oben, von außen nur mit eigenem Schalter, zweitem Schritt und frischem Code. Nur Text, nur bekannte Felder, höchstens 8192 Tokens Antwort, der Modellname immer der eigene; dann geht die Anfrage mit der Stufe „hinten“ ans LLM-Tor. Grenzen je Schlüssel (pro Minute, 2 gleichzeitig, Tokens in 24 Stunden), Admin-Profile ohne Grenze. Kein Werkzeug des Spark, nichts aus dem Profil, nie ein Inhalt im Journal. 14. Open WebUI in einem Schritt: Mit „Open WebUI einbinden“ legt „Open WebUI verbinden“ (mit Code) für das Profil einen Schlüssel fürs Sprachmodell und, wenn das Profil den MCP-Server nutzen darf, einen MCP-Zugang mit nur den Lese-Werkzeugen und „Spark fragen“ an, beide nur im Heimnetz; „Trennen“ löscht beide. Gespeichert werden nur "
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "ihre Kennungen. Das Menü öffnet Open WebUI im Heimnetz über die innere Adresse, über den Proxy über die äußere; der Dienst-Wächter fragt nur /health der inneren Adresse, ohne Anmeldung."
 },
 {
 "lang": "de",
@@ -1501,7 +1549,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "xt und bekannte Felder (Schritt 13) - app/panel/llmapi.py _limits: Grenzen je Schlüssel, Admin ohne (Schritt 13)"
+"text": "xt und bekannte Felder (Schritt 13) - app/panel/llmapi.py _limits: Grenzen je Schlüssel, Admin ohne (Schritt 13) - app/panel/openwebui.py connect: Open WebUI: Schlüssel und Lese-Zugang in einem Schritt (Schritt 14) - app/panel/openwebui.py link_for: Menü: innere oder äußere Adresse (Schritt 14) - app/panel/openwebui.py probes: Wächter: nur /health, ohne Anmeldung (Schritt 14)"
 },
 {
 "lang": "de",
@@ -3621,7 +3669,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 49), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 115). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, "
+"text": "ersiegelt. 7. Kommt in die Sicherung?: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 50), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 115). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile. 8. Umzugs-Sicherung?: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung. 9. Beim Wiederherstellen in Ordnung?: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt. 10. Einsetzen mit Rückweg: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück. 11. Schlüssel neu lesen: _forget_cached lässt die Module, die einen Schlüssel im Speicher halten (vault, push, apns, chats, "
 },
 {
 "lang": "de",
@@ -3645,7 +3693,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Zahlen (aus dem Code)",
 "title": "Zahlen (aus dem Code)",
-"text": "- 49 Dateien in jeder Sicherung (Schritt 7) - 115 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
+"text": "- 50 Dateien in jeder Sicherung (Schritt 7) - 115 Dateien und Ordner, die mit Grund draußen bleiben (Schritt 7) - 8 MB größte Datei beim Wiederherstellen (Schritt 9) - 12 Zeichen hat das Umzugs-Passwort mindestens (Schritt 8)"
 },
 {
 "lang": "de",
@@ -15541,6 +15589,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Unterwegs und Geräte",
 "title": "Unterwegs und Geräte",
+"text": "- Open WebUI einbinden (Funktionen → Unterwegs und Geräte → „Open WebUI einbinden“; baut auf „Sprachmodell per API“; Ich → Sprachmodell per API): Dein eigenes Open WebUI nutzt den Spark: das Sprachmodell, auf Wunsch Sprache und die Spark-Werkzeuge zum Nachlesen mit „Spark fragen“."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Unterwegs und Geräte",
+"title": "Unterwegs und Geräte",
 "text": "- iPhone-App (Funktionen → Unterwegs und Geräte → „iPhone-App“; Ich → iPhone-App): Eine eigene App fürs iPhone: Knopf drücken, fragen, die Antwort kommt mit der Spark-Stimme, auch bei gesperrtem Bildschirm."
 },
 {
@@ -18939,6 +18995,46 @@
 "lang": "en",
 "src": "apis-and-integration",
 "file": "APIs and integration",
+"head": "Open WebUI integration",
+"title": "Open WebUI integration",
+"text": "Since V01.1.356 (plan open-webui/plan.md, Dominik 2026-11-08 \"1-2\") one step connects an own Open WebUI with the Spark. Open WebUI keeps running where it is (in the home network, from outside through the own proxy); it is not installed on the Spark."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Open WebUI integration",
+"title": "Switch on",
+"text": "Switch on: Admin: Features → Language model by API → *Open WebUI integration* (chat.openwebui, off; built on *Language model by API*). Below it *Open WebUI's address in the home network* (chat.openwebui_url, e.g. http://192.168.178.20:3000) and, if there is one, the *address from outside* (chat.openwebui_link_url). Both only http(s)://name[:port][/path], without a user and without ?. Once allowed it works for every profile; only the admin blocks single profiles, guests never."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Open WebUI integration",
+"title": "Connect",
+"text": "Connect: Me → Language model by API → \"Connect Open WebUI\" with the code. It makes a key for the language model and, if the profile may use *Spark as MCP server*, an MCP access with only the reading tools and ask_spark, both \"home network only\" and both named \"Open WebUI\". That is enough on the go too: Open WebUI asks the Spark from its server in the home network. The values appear once to enter in Open WebUI (Connections: URL http://SPARK:31080/v1 and key; External tools: type MCP Streamable HTTP, URL http://SPARK:31080/mcp, bearer key). The admin sets up speech as above under \"Open WebUI\". \"Connect again\" replaces both, \"Disconnect\" deletes both at once."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Open WebUI integration",
+"title": "Menu and watcher",
+"text": "Menu and watcher: With an address there is \"Open WebUI\" in the menu: at home with the home network address, through the proxy with the address from outside (without it no entry). The service watcher asks only GET /health of the home network address every 5 minutes (no login, through netguard at home level) and tells when Open WebUI is gone. Status → Live shows the box \"Open WebUI\" with the number of connected profiles and whether the addresses are set."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Open WebUI integration",
+"title": "Fixed rules",
+"text": "Fixed rules: What Open WebUI sends is data: key and access have exactly the rights and limits of *Language model by API* and *Spark as MCP server*; this step never gives \"acting with confirmation\". Only the ids of the pair are kept (state/openwebui.json), never a key. Logs (area \"Computer, own services, documents\"): openwebui: verbunden | <profile> | mcp 1, openwebui: getrennt | …, never keys or addresses. Admin: People and devices → Apps and interfaces → *Open WebUI* shows who is connected."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
 "head": "Own MCP services per profile",
 "title": "Own MCP services per profile",
 "text": "Since V01.0.363 (plan plaene/eigene-mcp-dienste.md) every profile can connect its own MCP services (Streamable HTTP), besides the ones the admin connects for everybody. Only that profile sees and uses them."
@@ -20045,7 +20141,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "d and how long, never question or answer. 13. Only the language model (/v1): A program that only wants the language model sends POST to /v1 (OpenAI chat) with a key of its profile (at most 5 per profile, only hashes kept). The same home network rule as above, from outside only with its own switch, the second step and a fresh code. Text only, known fields only, at most 8192 tokens of answer, the model name always the own one; then the request goes to the LLM gate with the stage „hinten“. Limits per key (per minute, 2 at once, tokens in 24 hours), admin profiles without a limit. No tool of the Spark, nothing of the profile, never a content in the journal."
+"text": "d and how long, never question or answer. 13. Only the language model (/v1): A program that only wants the language model sends POST to /v1 (OpenAI chat) with a key of its profile (at most 5 per profile, only hashes kept). The same home network rule as above, from outside only with its own switch, the second step and a fresh code. Text only, known fields only, at most 8192 tokens of answer, the model name always the own one; then the request goes to the LLM gate with the stage „hinten“. Limits per key (per minute, 2 at once, tokens in 24 hours), admin profiles without a limit. No tool of the Spark, nothing of the profile, never a content in the journal. 14. Open WebUI in one step: With „Open WebUI einbinden“, „Open WebUI verbinden“ (with a code) makes for the profile a key for the language model and, if the profile may use the MCP server, an MCP access with only the reading tools and „Spark fragen“, both home network only; „Trennen“ deletes both. Only their ids are kept. The menu opens Open WebUI at home through the inner address, through the proxy through the outer one; the service watcher only asks /health of the inner address, without a login."
 },
 {
 "lang": "en",
@@ -20093,7 +20189,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "er key, admin without (step 13)"
+"text": "er key, admin without (step 13) - app/panel/openwebui.py connect: Open WebUI: key and reading access in one step (step 14) - app/panel/openwebui.py link_for: menu: inner or outer address (step 14) - app/panel/openwebui.py probes: watcher: only /health, without a login (step 14)"
 },
 {
 "lang": "en",
@@ -22173,7 +22269,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 49), otherwise the line gives its reason (dateien.STATE_LOCAL, 115). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again, and profiles forgets what it had opened of the profiles' sealed files."
+"text": "en.py: with its kind it goes into every backup (dateien.STATE_FILES, 50), otherwise the line gives its reason (dateien.STATE_LOCAL, 115). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line. 8. Move backup?: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup. 9. Fine when restoring?: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays. 10. Put in place with a way back: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back. 11. Read the keys again: _forget_cached makes the modules that keep a key in memory (vault, push, apns, chats, verbund, anrufe, vorrat) read it again, and profiles forgets what it had opened of the profiles' sealed files."
 },
 {
 "lang": "en",
@@ -22189,7 +22285,7 @@
 "file": "Architecture and data flow",
 "head": "Numbers (from the code)",
 "title": "Numbers (from the code)",
-"text": "- 49 files in every backup (step 7) - 115 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
+"text": "- 50 files in every backup (step 7) - 115 files and folders that stay out with a reason (step 7) - 8 MB largest file when restoring (step 9) - 12 characters the move password has at least (step 8)"
 },
 {
 "lang": "en",
@@ -33694,6 +33790,14 @@
 "head": "On the go and devices",
 "title": "On the go and devices",
 "text": "- Language model by API from outside (Features → On the go and devices → \"Language model by API from outside\"; builds on \"Language model by API\"; Me → Language model by API): A key \"also from outside\" works through the reverse proxy too, e.g."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "On the go and devices",
+"title": "On the go and devices",
+"text": "- Open WebUI integration (Features → On the go and devices → \"Open WebUI integration\"; builds on \"Language model by API\"; Me → Language model by API): Your own Open WebUI uses the Spark: the language model, speech if you like and the Spark tools for reading with \"Ask the Spark\"."
 },
 {
 "lang": "en",

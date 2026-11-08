@@ -28,8 +28,8 @@ async function showLlmApi(){const box=$('llmapibox');if(!box)return;if(!PROFILE|
       <div class="row" style="margin-top:8px"><button class="b p" type="button" id="lamake">${t('Schlüssel erzeugen','Create key')}</button></div>
       <div class="fh" id="lamakemsg" role="status"></div>
       <div id="lakey"></div></details>`:''}`:`<div class="fh">${t('Für dein Profil gerade gesperrt.','Blocked for your profile right now.')}</div>`}
-    <div class="fh" id="lamsg"></div>`;
-  laKeyShow();
+    <div class="fh" id="lamsg"></div><div id="owuibox"></div>`;
+  laKeyShow();if(typeof showOwui==='function')showOwui();
   if($('lawhere'))$('lawhere').onchange=()=>{$('lawarn').hidden=$('lawhere').value!=='extern'};
   if($('lamake'))$('lamake').onclick=async()=>{const where=$('lawhere').value,b=$('lamake'),say=(x,err)=>{xmsg('lamakemsg',x,err);$('lamakemsg').scrollIntoView({block:'nearest'})};
     const name=$('laname').value.trim(),tag=$('latag')&&$('latag').value?parseInt($('latag').value,10):null;

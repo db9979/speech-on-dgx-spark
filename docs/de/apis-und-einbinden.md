@@ -134,6 +134,18 @@ Seit V01.1.346 (Plan „LLM von außen per API-Key“, Dominik 2026-11-05 „1a 
 
 **Beispiel:** `from openai import OpenAI; c = OpenAI(base_url="http://SPARK:31080/v1", api_key="sk-spark-…"); c.chat.completions.create(model="spark", messages=[{"role": "user", "content": "Hallo"}])`. Open WebUI: Einstellungen → Verbindungen → OpenAI-API mit derselben Adresse und dem Schlüssel. Für lange Antworten von außen den Timeout am Reverse-Proxy auf mindestens 5 Minuten stellen oder `stream=True` nehmen.
 
+### Open WebUI einbinden
+
+Seit V01.1.356 (Plan `open-webui/plan.md`, Dominik 2026-11-08 „1-2“) verbindet ein Schritt ein eigenes Open WebUI mit dem Spark. Open WebUI läuft weiter, wo es ist (im Heimnetz, von außen über den eigenen Proxy); es wird nicht auf dem Spark installiert.
+
+**Einschalten:** Admin: Funktionen → Sprachmodell per API → *Open WebUI einbinden* (`chat.openwebui`, aus; baut auf *Sprachmodell per API*). Darunter die *Adresse von Open WebUI im Heimnetz* (`chat.openwebui_url`, z. B. `http://192.168.178.20:3000`) und, wenn es eine gibt, die *Adresse von außen* (`chat.openwebui_link_url`). Beide nur `http(s)://name[:port][/pfad]`, ohne Benutzer und ohne `?`. Freigegeben gilt es für jedes Profil; einzelne Profile sperrt nur der Admin, Gäste nie.
+
+**Verbinden:** Ich → Sprachmodell per API → „Open WebUI verbinden“ mit dem Code. Das legt einen Schlüssel fürs Sprachmodell und, wenn das Profil *Spark als MCP-Server* nutzen darf, einen MCP-Zugang mit nur den Lese-Werkzeugen und `ask_spark` an, beide „nur Heimnetz“ und beide mit dem Namen „Open WebUI“. Das reicht auch unterwegs: Open WebUI fragt den Spark von seinem Server im Heimnetz aus. Die Werte erscheinen einmal zum Eintragen in Open WebUI (Verbindungen: URL `http://SPARK:31080/v1` und Schlüssel; Externe Werkzeuge: Typ MCP Streamable HTTP, URL `http://SPARK:31080/mcp`, Bearer-Schlüssel). Sprache richtet der Admin wie oben unter „Open WebUI“ ein. „Neu verbinden“ ersetzt beide, „Trennen“ löscht beide sofort.
+
+**Menü und Wächter:** Ist eine Adresse da, steht im Menü „Open WebUI“: im Heimnetz mit der Adresse im Heimnetz, über den Proxy mit der Adresse von außen (ohne sie kein Eintrag). Der Dienst-Wächter fragt alle 5 Minuten nur `GET /health` der Adresse im Heimnetz (ohne Anmeldung, über netguard im Heimnetz) und meldet, wenn Open WebUI fehlt. Zustand → Live zeigt den Kasten „Open WebUI“ mit der Zahl verbundener Profile und ob die Adressen eingetragen sind.
+
+**Feste Regeln:** Was Open WebUI schickt, sind Daten: Schlüssel und Zugang haben genau die Rechte und Grenzen von *Sprachmodell per API* und *Spark als MCP-Server*; „Handeln mit Bestätigung“ gibt dieser Schritt nie. Gespeichert werden nur die Kennungen des Paars (`state/openwebui.json`), nie ein Schlüssel. Logs (Bereich „Rechner, eigene Dienste, Dokumente“): `openwebui: verbunden | <profil> | mcp 1`, `openwebui: getrennt | …`, nie Schlüssel oder Adressen. Admin: Personen und Geräte → Apps und Schnittstellen → *Open WebUI* zeigt, wer verbunden ist.
+
 ### Eigene MCP-Dienste pro Profil
 
 Seit V01.0.363 (Plan `plaene/eigene-mcp-dienste.md`) bindet jedes Profil eigene MCP-Dienste an (Streamable HTTP), zusätzlich zu denen, die der Admin für alle anbindet. Nur dieses Profil sieht und nutzt sie.

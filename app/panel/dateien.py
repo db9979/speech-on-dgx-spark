@@ -231,6 +231,7 @@ DATEIEN = [
     state("wachposten.json", "Wachposten: wartende Meldungen (Regel, feste Wörter, Zeit) und Zeiten der gesendeten", "Sentry: waiting notes (rule, fixed words, time) and times of those sent", sicherung="json"),
     state("dienstwacht.json", "Dienst-Wächter", "Service watcher", sicherung="json"),  # Dienst-Wächter: services taken off the list, their state, outages of 7 days, notes due
     state("mcp-dienste-admin.json", "Erlaubte MCP-Ziele", "Allowed MCP hosts", sicherung="json"),  # own MCP services of profiles: hosts the admin allows, blocked services
+    state("openwebui.json", "Open WebUI: Kennungen von Schlüssel und MCP-Zugang je Profil", "Open WebUI: ids of key and MCP connection per profile", sicherung="json"),  # Open WebUI einbinden (openwebui.py): which key and connection belong to it, never a token
     state("llm-api.json", "Schlüssel fürs Sprachmodell per API (nur Hashes)", "Keys for the language model by API (hashes only)", sicherung="json", schutz=("nur Hashes", "hashes only")),  # Sprachmodell per API (llmapi.py): keys of own programs, only their hashes and token counts
     state("mcp-server.json", "MCP-Programme (Token-Hashes)", "MCP programs (token hashes)", sicherung="json", schutz=("nur Hashes", "hashes only")),  # programs connected to the Spark as an MCP server (only hashes of their tokens)
     state("personen-vorrang.json", "Vorrang pro Profil", "Priority per profile", sicherung="json"),  # priority for people: the stage the admin gave each profile (stufe.py)

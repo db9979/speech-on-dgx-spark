@@ -3,8 +3,8 @@ admins when one is gone and when it is back.
 
 What is looked at (only what is switched on, every minute; mail, calendar and NAS every 5 minutes, after a failure
 every minute): the language model (/models of the stored address), Hören and Sprechen (/health of the front ends),
-the internet (two fixed public addresses), SearXNG (/healthz), the own Kiwix, Home Assistant, the mail servers, the
-calendar servers and the NAS of the backup. A probe never sends a login: an HTTP answer below 500 (401 included)
+the internet (two fixed public addresses), SearXNG (/healthz), the own Kiwix, Open WebUI (/health), Home Assistant,
+the mail servers, the calendar servers and the NAS of the backup. A probe never sends a login: an HTTP answer below 500 (401 included)
 counts as "answers", for mail the TLS greeting of the IMAP server. Home Assistant is asked for HA_PATH, which it
 serves without a token: /api/ without a token is a failed login there (one line in its log a minute, and with
 ip_ban_enabled it would lock the Spark out). Addresses come only from the stored settings,
@@ -82,6 +82,9 @@ SVC = {
     "inet": ("Internet", "Internet", "Alles, was ins Internet muss, geht gerade nicht. Das Heimnetz läuft weiter.", EVERY, "inet"),
     "web": ("Websuche (SearXNG)", "Web search (SearXNG)", "Die Websuche geht gerade nicht.", EVERY, "web"),
     "kiwix": ("Archiv (Kiwix)", "Archive (Kiwix)", "Fragen ans Archiv gehen gerade nicht.", EVERY, "kiwix"),
+    # Open WebUI einbinden (openwebui.py): GET /health of its address in the home network, no login
+    "openwebui": ("Open WebUI", "Open WebUI", "Open WebUI ist gerade nicht erreichbar; der Spark selbst läuft weiter.", SLOW,
+                  "openwebui"),
     "ha": ("Home Assistant", "Home Assistant", "Schalten und Abfragen im Haus gehen gerade nicht.", EVERY, "ha"),
     "mail": ("Mail", "Mail", "Mails lesen und suchen geht gerade nicht.", SLOW, "mail"),
     "cal": ("Kalender", "Calendar", "Termine lesen und eintragen geht gerade nicht.", SLOW, "cal"),
@@ -292,6 +295,13 @@ def active(c=None, cfg=None):
         import kiwix
         if kiwix.admin_on() and kiwix.base():
             out["kiwix"] = {"kiwix": {"url": kiwix.base() + "/", "level": netguard.HOME, "verify": True}}
+    except Exception:
+        pass
+    try:
+        import openwebui
+        p = openwebui.probes()
+        if p:
+            out["openwebui"] = p
     except Exception:
         pass
     for sid, fkey, parts in (("ha", "ha", _ha_parts), ("mail", "mail", _mail_parts), ("cal", "calendar", _cal_parts)):
