@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.369** Helper model with one switch: once on it helps wherever it can, instead of five separate switches
 - **V01.1.368** Device instead of profile: a "yes" counts only on the device and in the conversation where it was asked, notes know every device on its own, channel answers land in the same main conversation all day
 - **V01.1.367** Ask which way: before a change that could go two ways (mail or message, appointment or reminder) the assistant asks with buttons which one you mean, or just answers; never for reading questions, off by default
 - **V01.1.366** A more precise switch: knowledge questions keep web search and Wikipedia, an emergency number starts no call, a follow-up holds only briefly and with a real reference, "Strassenbahn" and "Wohnzimmerlampe" are understood
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.362** Audio overview as a discussion (part 1): with the new switch the audio overview becomes a talk in chapters with questions and objections instead of sentence after sentence; every number stays backed, questions and reactions carry "Talk"
 - **V01.1.361** Security now: "Don't turn off the light" never switches, "Forget it" deletes nothing, no web search for private things, a browser's notifications for one profile only, code word only from the same device
 - **V01.1.360** ROT-FIX: two tests now check the one pinned package list instead of the removed second one
-- **V01.1.359** Thinned out: old one-time moves and duplicate package lists are gone; tars rebuilds its panel environment once from the pinned package list
 
 
 

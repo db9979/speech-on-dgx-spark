@@ -16,7 +16,7 @@ _models = {}   # address -> (asked, the name to ask with, the model that really 
 MODELS_TTL = 120   # seconds before the list is asked again: after a switch the real model shows within this time
 OPENAI_CHAT = "/v1/chat/completions"   # the path own programs use at the panel (llmapi.py, Sprachmodell per API)
 HELFER = "helfer"   # the LLM-Tor's model name for the small helper model (systemone.HELFER)
-# the background jobs that write only a few words: with Funktionen → Hilfsmodell → Für kurze Texte (chat.helfer_kurz)
+# the background jobs that write only a few words: the helper model first once Funktionen → Hilfsmodell is on
 # the helper model writes them first, and the language model at once when it is not ready (Dominik 2026-10-25, „3e“)
 HELFER_JOBS = ("Gedächtnis-Themen", "Uhr-Antworten", "Uhr-Nachfragen")
 
@@ -82,8 +82,8 @@ async def model(c, ccfg, hdrs=None):
 
 
 def helfer_kurz(ccfg, job):
-    """True when the helper model writes this job first: chat.helfer, chat.helfer_kurz and a job of HELFER_JOBS."""
-    return job in HELFER_JOBS and bool(ccfg.get("helfer")) and bool(ccfg.get("helfer_kurz"))
+    """True when the helper model writes this job first: chat.helfer and a job of HELFER_JOBS."""
+    return job in HELFER_JOBS and bool(ccfg.get("helfer"))
 
 
 def known_model():

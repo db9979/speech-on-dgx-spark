@@ -32,8 +32,8 @@ Uses, each with its own admin switch below chat.systemone (all off) and the prof
              note beside the fixed locks (chat.LOCKED_OUTSIDE, LOCKED_AFTER_MAIL), which already held during the answer
 
 Hilfsmodell (Dominik 2026-10-25 „1+2 und 3a b c d e“, chat.helfer, off): the small helper model on the model computer
-(llm.helfer_modell behind the LLM-Tor, model name "helfer") answers the uses in HELFER_USES first, each with its own
-switch; when it is still loading, busy, unsure or unreachable, the same question goes to the language model at once
+(llm.helfer_modell behind the LLM-Tor, model name "helfer") answers the uses in HELFER_USES first, all with the one
+switch (Ausdünnen 2, Dominik 2026-11-10 „0-9“); when it is still loading, busy, unsure or unreachable, the same question goes to the language model at once
 („weiter mit dem Sprachmodell“). Same questions, same thresholds, the panel decides either way.
 
 Since qwen38 v1.15 its answer also carries x-systemone-label-mass (how much of the probability fell on any option
@@ -64,9 +64,9 @@ USES = {"weiche": "Werkzeugwahl", "mail": "Postfach aufräumen", "wichtig": "Wic
         "pruefen": "Antwort prüfen", "klage": "Beschwerde", "erzaehler": "Erzähler-Prüfstand", "richter": "Dungeon-Richter",
         "angriff": "Angriff prüfen"}
 HELFER = "helfer"             # the LLM-Tor's model name for the helper model
-# the uses the helper model may answer first, each behind its own switch chat.helfer_* (below chat.helfer)
-HELFER_USES = {"weiche": "helfer_weiche", "messen": "helfer_weiche", "erzaehler": "helfer_dungeon",
-               "richter": "helfer_dungeon", "mail": "helfer_mail", "wichtig": "helfer_mail", "angriff": "helfer_angriff"}
+# the uses the helper model answers first once chat.helfer is on (one switch since Ausdünnen 2, V01.1.369: it falls
+# back to the language model anyway, a switch per use only made the page longer); angriff runs only with its own switch
+HELFER_USES = frozenset(("weiche", "messen", "erzaehler", "richter", "mail", "wichtig", "angriff"))
 # the panel's thresholds (Dominik 2026-10-10: "wie empfohlen")
 ROUTE_MIN = 0.80              # the switch narrows only from here (chat.systemone_min, after a measurement)
 ROUTE_STEPS = (0.6, 0.7, 0.8, 0.9)   # the thresholds an admin may choose for the switch
@@ -123,8 +123,8 @@ def body(state, questions, model=MODEL):
 
 
 def helfer_fuer(ccfg, use):
-    """True when the helper model answers this use first: chat.helfer and the use's own switch (HELFER_USES)."""
-    return bool(ccfg.get("helfer")) and bool(ccfg.get(HELFER_USES.get(use, ""), False))
+    """True when the helper model answers this use first: chat.helfer and a use of HELFER_USES."""
+    return bool(ccfg.get("helfer")) and use in HELFER_USES
 
 
 def _p(v):

@@ -2101,7 +2101,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "htes „Ja“/„Nein“ oder ein Knopf der Rückfrage-Karte auf die Frage der Antwort davor (ablauf.was_asked, zehn Minuten, dasselbe Gespräch): „weiche: Antwort auf Rückfrage“. 9. Gezielte Werkzeugwahl an?: Nur mit diesem Schalter grenzt die Weiche ein, und nicht bei einem Bild oder einem direkten Smart-Home-Befehl. Ohne ihn bleibt die Gruppe nur für Journal und Statistik; das Modell sieht alle Werkzeuge, die die Rechte erlauben. 10. Modell ordnet ein?: Hat keine Regel eine Gruppe gefunden und steht „Fragen, die keine Regel erkennt“ auf „Modell“, wählt das Sprachmodell einmal eine Gruppe aus der festen Liste (nur JSON, nur die eigene Nachricht). Die Frage läuft schon ab dem Beginn der Vorbereitung nebenher; gewartet wird höchstens 4 Sekunden, mit „Schneller Antwortbeginn“ nur 300 ms nach der Vorbereitung. Mit der Einordnung mit Wahrscheinlichkeit zählt die Wahl erst ab der Schwelle (Standard 80 %); mit Funktionen → Hilfsmodell → Für die Weiche fragt sie erst das kleine Hilfsmodell, lädt es noch oder ist es unsicher, sofort das große, die Schwelle bleibt dieselbe. Die Hinweis-Gruppen bleiben neben der Wahl. In einer Wartungspause des Sprachmodells wird es nicht gefragt. 11. Eingrenzen: Bei"
+"text": "htes „Ja“/„Nein“ oder ein Knopf der Rückfrage-Karte auf die Frage der Antwort davor (ablauf.was_asked, zehn Minuten, dasselbe Gespräch): „weiche: Antwort auf Rückfrage“. 9. Gezielte Werkzeugwahl an?: Nur mit diesem Schalter grenzt die Weiche ein, und nicht bei einem Bild oder einem direkten Smart-Home-Befehl. Ohne ihn bleibt die Gruppe nur für Journal und Statistik; das Modell sieht alle Werkzeuge, die die Rechte erlauben. 10. Modell ordnet ein?: Hat keine Regel eine Gruppe gefunden und steht „Fragen, die keine Regel erkennt“ auf „Modell“, wählt das Sprachmodell einmal eine Gruppe aus der festen Liste (nur JSON, nur die eigene Nachricht). Die Frage läuft schon ab dem Beginn der Vorbereitung nebenher; gewartet wird höchstens 4 Sekunden, mit „Schneller Antwortbeginn“ nur 300 ms nach der Vorbereitung. Mit der Einordnung mit Wahrscheinlichkeit zählt die Wahl erst ab der Schwelle (Standard 80 %); mit Funktionen → Hilfsmodell fragt sie erst das kleine Hilfsmodell, lädt es noch oder ist es unsicher, sofort das große, die Schwelle bleibt dieselbe. Die Hinweis-Gruppen bleiben neben der Wahl. In einer Wartungspause des Sprachmodells wird es nicht gefragt. 11. Eingrenzen: Bei einer klaren Gru"
 },
 {
 "lang": "de",
@@ -3045,7 +3045,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Sprachmodell",
 "title": "Sprachmodell",
-"text": "Das Sprachmodell schreibt die Antworten: das eigene hinter dem LLM-Tor oder qwen38 aus dgx-spark-qwen38 (nicht Teil dieses Repos). Das Panel spricht es an der eingestellten Adresse über die OpenAI-Schnittstelle an, gestreamt, und sorgt dafür, dass Sprache immer vor Hintergrundarbeit kommt. Adresse, Schlüssel und Modellname stehen nur in llm.py; jede Hintergrundaufgabe fragt über llm.complete. Mit Funktionen → Hilfsmodell → Für kurze Texte schreibt die Aufträge aus llm.HELFER_JOBS erst das kleine Hilfsmodell, sonst sofort das große."
+"text": "Das Sprachmodell schreibt die Antworten: das eigene hinter dem LLM-Tor oder qwen38 aus dgx-spark-qwen38 (nicht Teil dieses Repos). Das Panel spricht es an der eingestellten Adresse über die OpenAI-Schnittstelle an, gestreamt, und sorgt dafür, dass Sprache immer vor Hintergrundarbeit kommt. Adresse, Schlüssel und Modellname stehen nur in llm.py; jede Hintergrundaufgabe fragt über llm.complete. Mit Funktionen → Hilfsmodell schreibt die Aufträge aus llm.HELFER_JOBS erst das kleine Hilfsmodell, sonst sofort das große."
 },
 {
 "lang": "de",
@@ -6877,7 +6877,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "KI-Dungeon-Master: Dungeon-Richter (V01.1.093, Tabletop-Punkt 2 mit dem Hilfsmodell): Admin-Schalter *Funktionen → KI-Dungeon-Master → Dungeon-Richter* (chat.dungeon_richter, standardmäßig aus, braucht *Einordnung mit Wahrscheinlichkeit*). Besteht die erste Erzählung eines Zugs alle festen Prüfungen, fragt dungeon_erzaehler.richter über systemone (Verwendung „richter“, mit *Hilfsmodell → Für den Dungeon-Master* zuerst das kleine Modell) eine feste Ja/Nein-Frage: Widerspricht die Erzählung den Aktionen oder dem Ausgang der Würfe? Aktionen, Proben (nur gelungen oder misslungen) und Erzählung gehen als Daten mit. Das Modell gibt nur die Wahrscheinlichkeit; ab 90 % (RICHTER_MIN) schreibt das Modell einmal neu, mit festem Hinweis. Fällt die neue Fassung bei einer festen Prüfung durch, bleibt die erste (dungeon: richter | bleibt). Antwortet der Richter nicht binnen 8 Sekunden oder ist er unsicher, geht der Zug ohne ihn weiter. Log dungeon: richter | ok | n %, | neu | n %, | ausfall | …; Live: Richter heute ok, neu geschrieben, ohne Antwort (nur Zahlen)."
+"text": "KI-Dungeon-Master: Dungeon-Richter (V01.1.093, Tabletop-Punkt 2 mit dem Hilfsmodell): Admin-Schalter *Funktionen → KI-Dungeon-Master → Dungeon-Richter* (chat.dungeon_richter, standardmäßig aus, braucht *Einordnung mit Wahrscheinlichkeit*). Besteht die erste Erzählung eines Zugs alle festen Prüfungen, fragt dungeon_erzaehler.richter über systemone (Verwendung „richter“, mit *Hilfsmodell* zuerst das kleine Modell) eine feste Ja/Nein-Frage: Widerspricht die Erzählung den Aktionen oder dem Ausgang der Würfe? Aktionen, Proben (nur gelungen oder misslungen) und Erzählung gehen als Daten mit. Das Modell gibt nur die Wahrscheinlichkeit; ab 90 % (RICHTER_MIN) schreibt das Modell einmal neu, mit festem Hinweis. Fällt die neue Fassung bei einer festen Prüfung durch, bleibt die erste (dungeon: richter | bleibt). Antwortet der Richter nicht binnen 8 Sekunden oder ist er unsicher, geht der Zug ohne ihn weiter. Log dungeon: richter | ok | n %, | neu | n %, | ausfall | …; Live: Richter heute ok, neu geschrieben, ohne Antwort (nur Zahlen)."
 },
 {
 "lang": "de",
@@ -13877,31 +13877,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Tempo und Genauigkeit",
 "title": "Tempo und Genauigkeit",
-"text": "- Hilfsmodell (Funktionen → Tempo und Genauigkeit → „Hilfsmodell“): Ein kleines, schnelles Sprachmodell (Qwen3 4B) auf dem Modell-Rechner nimmt dem großen Sprachmodell einfache Arbeit ab: feste Fragen mit fester Antwortliste (Einordnung) für die Weiche, den Dungeon-Master und Mails."
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Tempo und Genauigkeit",
-"title": "Tempo und Genauigkeit",
-"text": "- Hilfsmodell für die Weiche (Funktionen → Tempo und Genauigkeit → „Hilfsmodell für die Weiche“; baut auf „Hilfsmodell“): Fragen, die keine feste Regel der Weiche erkennt, ordnet erst das Hilfsmodell einer Werkzeuggruppe zu, auch beim Messen der Schwelle."
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Tempo und Genauigkeit",
-"title": "Tempo und Genauigkeit",
-"text": "- Hilfsmodell für den Dungeon-Master (Funktionen → Tempo und Genauigkeit → „Hilfsmodell für den Dungeon-Master“; baut auf „Hilfsmodell“): Der Dungeon-Richter (nach jedem Zug: muss die Erzählung neu geschrieben werden?) und die Einordnung im Erzähler-Prüfstand fragen erst das Hilfsmodell."
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Tempo und Genauigkeit",
-"title": "Tempo und Genauigkeit",
-"text": "- Hilfsmodell für Mails (Funktionen → Tempo und Genauigkeit → „Hilfsmodell für Mails“; baut auf „Hilfsmodell“): Mails einordnen beim Postfach aufräumen und wichtige Mails erkennen fragt erst das Hilfsmodell."
+"text": "- Hilfsmodell (Funktionen → Tempo und Genauigkeit → „Hilfsmodell“): Ein kleines, schnelles Sprachmodell (Qwen3 4B) auf dem Modell-Rechner nimmt dem großen Sprachmodell einfache Arbeit ab: feste Fragen mit fester Antwortliste (Einordnung) für die Weiche, den Dungeon-Richter und Erzähler-Prüfstand und Mail …"
 },
 {
 "lang": "de",
@@ -13910,14 +13886,6 @@
 "head": "Tempo und Genauigkeit",
 "title": "Tempo und Genauigkeit",
 "text": "- Hilfsmodell erkennt Angriffe (Funktionen → Tempo und Genauigkeit → „Hilfsmodell erkennt Angriffe“; baut auf „Hilfsmodell“): Nach einer Antwort, für die ein Werkzeug Text von außen gelesen hat (Web, Mail, Dokument, Kalender), fragt das Panel im Hintergrund das Hilfsmodell, ob dieser Text eine Anweisung an den Assistenten enthielt."
-},
-{
-"lang": "de",
-"src": "assistent",
-"file": "Assistent und Oberfläche",
-"head": "Tempo und Genauigkeit",
-"title": "Tempo und Genauigkeit",
-"text": "- Hilfsmodell für kurze Texte (Funktionen → Tempo und Genauigkeit → „Hilfsmodell für kurze Texte“; baut auf „Hilfsmodell“): Kurze Texte im Hintergrund schreibt erst das Hilfsmodell: die Themen gemerkter Fakten im Gedächtnis sowie Antwortvorschläge und Nachfragen auf der Uhr."
 },
 {
 "lang": "de",
@@ -20957,7 +20925,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "he model sees every tool the rights allow. 10. Model sorts?: If no rule found a group and „Questions no rule recognizes“ is set to the model, the language model picks one group from the fixed list once (JSON only, only the own message). The question already runs beside the preparation from its start; the wait is at most 4 seconds, with „Fast answer start“ only 300 ms after the preparation. With classification with probabilities the pick only counts from the threshold (default 80 %); with Features → Helper model → For routing it asks the small helper model first, and while that is loading or unsure the big one at once, with the same threshold. The hint groups stay beside the pick. During a maintenance pause of the language model it is not asked. 11. Narrow: With a clear group its tools stay, plus always 3 fixed ones (remembering something, own documents, Find in all own data), the hints' tools, the admin's extra tools for this group (at most 6) and what the own words name explicitly („onto the reMarkable“, the computer only when the own words name it or the question came from the companion). All only as far as already offered. If nothing of the group is offered, the group is set to "
+"text": "he model sees every tool the rights allow. 10. Model sorts?: If no rule found a group and „Questions no rule recognizes“ is set to the model, the language model picks one group from the fixed list once (JSON only, only the own message). The question already runs beside the preparation from its start; the wait is at most 4 seconds, with „Fast answer start“ only 300 ms after the preparation. With classification with probabilities the pick only counts from the threshold (default 80 %); with Features → Helper model it asks the small helper model first, and while that is loading or unsure the big one at once, with the same threshold. The hint groups stay beside the pick. During a maintenance pause of the language model it is not asked. 11. Narrow: With a clear group its tools stay, plus always 3 fixed ones (remembering something, own documents, Find in all own data), the hints' tools, the admin's extra tools for this group (at most 6) and what the own words name explicitly („onto the reMarkable“, the computer only when the own words name it or the question came from the companion). All only as far as already offered. If nothing of the group is offered, the group is set to „do not narrow"
 },
 {
 "lang": "en",
@@ -21869,7 +21837,7 @@
 "file": "Architecture and data flow",
 "head": "Language model",
 "title": "Language model",
-"text": "The language model writes the answers: the own one behind the LLM-Tor or qwen38 from dgx-spark-qwen38 (not part of this repo). The panel talks to it at the configured address through the OpenAI interface, streamed, and makes sure speech always comes before background work. Address, key and model name live only in llm.py; every background job asks through llm.complete. With Features → Helper model → For short texts the small helper model writes the jobs in llm.HELFER_JOBS first, else the big one at once."
+"text": "The language model writes the answers: the own one behind the LLM-Tor or qwen38 from dgx-spark-qwen38 (not part of this repo). The panel talks to it at the configured address through the OpenAI interface, streamed, and makes sure speech always comes before background work. Address, key and model name live only in llm.py; every background job asks through llm.complete. With Features → Helper model the small helper model writes the jobs in llm.HELFER_JOBS first, else the big one at once."
 },
 {
 "lang": "en",
@@ -25573,7 +25541,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "AI Dungeon Master: Dungeon judge (V01.1.093, Tabletop point 2 with the helper model): Admin switch *Features → AI Dungeon Master → Dungeon judge* (chat.dungeon_richter, off by default, needs *Classification with probabilities*). When the first narration of a turn passes every fixed check, dungeon_erzaehler.richter asks one fixed yes/no question over systemone (use \"richter\", with *Helper model → For the Dungeon Master* the small model first): does the narration contradict the actions or the outcome of the dice? Actions, checks (only succeeded or failed) and narration go along as data. The model only gives the probability; from 90 % (RICHTER_MIN) the model writes once more, with a fixed hint. If the new version fails a fixed check, the first one stays (dungeon: richter | bleibt). If the judge does not answer within 8 seconds or is unsure, the turn goes on without it. Log dungeon: richter | ok | n %, | neu | n %, | ausfall | …; Live: judge today ok, written again, without answer (numbers only)."
+"text": "AI Dungeon Master: Dungeon judge (V01.1.093, Tabletop point 2 with the helper model): Admin switch *Features → AI Dungeon Master → Dungeon judge* (chat.dungeon_richter, off by default, needs *Classification with probabilities*). When the first narration of a turn passes every fixed check, dungeon_erzaehler.richter asks one fixed yes/no question over systemone (use \"richter\", with *Helper model* the small model first): does the narration contradict the actions or the outcome of the dice? Actions, checks (only succeeded or failed) and narration go along as data. The model only gives the probability; from 90 % (RICHTER_MIN) the model writes once more, with a fixed hint. If the new version fails a fixed check, the first one stays (dungeon: richter | bleibt). If the judge does not answer within 8 seconds or is unsure, the turn goes on without it. Log dungeon: richter | ok | n %, | neu | n %, | ausfall | …; Live: judge today ok, written again, without answer (numbers only)."
 },
 {
 "lang": "en",
@@ -32301,31 +32269,7 @@
 "file": "Assistant and panel",
 "head": "Speed and accuracy",
 "title": "Speed and accuracy",
-"text": "- Helper model (Features → Speed and accuracy → \"Helper model\"): A small, fast language model (Qwen3 4B) on the model computer takes simple work off the big language model: fixed questions with a fixed answer list (classification) for routing, the Dungeon Master and mail."
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Speed and accuracy",
-"title": "Speed and accuracy",
-"text": "- Helper model for routing (Features → Speed and accuracy → \"Helper model for routing\"; builds on \"Helper model\"): Questions no fixed rule of the switch recognizes are sorted into a tool group by the helper model first, also when measuring the threshold."
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Speed and accuracy",
-"title": "Speed and accuracy",
-"text": "- Helper model for the Dungeon Master (Features → Speed and accuracy → \"Helper model for the Dungeon Master\"; builds on \"Helper model\"): The dungeon judge (after every turn: must the narration be rewritten?) and the classification in the narrator test bench ask the helper model first."
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Speed and accuracy",
-"title": "Speed and accuracy",
-"text": "- Helper model for mail (Features → Speed and accuracy → \"Helper model for mail\"; builds on \"Helper model\"): Sorting mail when tidying the inbox and recognizing important mail ask the helper model first."
+"text": "- Helper model (Features → Speed and accuracy → \"Helper model\"): A small, fast language model (Qwen3 4B) on the model computer takes simple work off the big language model: fixed questions with a fixed answer list (classification) for routing, the dungeon judge and narrator test bench and mail (tidyin …"
 },
 {
 "lang": "en",
@@ -32334,14 +32278,6 @@
 "head": "Speed and accuracy",
 "title": "Speed and accuracy",
 "text": "- Helper model spots attacks (Features → Speed and accuracy → \"Helper model spots attacks\"; builds on \"Helper model\"): After an answer for which a tool read outside text (web, mail, document, calendar), the panel asks the helper model in the background whether that text held an order to the assistant."
-},
-{
-"lang": "en",
-"src": "assistant",
-"file": "Assistant and panel",
-"head": "Speed and accuracy",
-"title": "Speed and accuracy",
-"text": "- Helper model for short texts (Features → Speed and accuracy → \"Helper model for short texts\"; builds on \"Helper model\"): Short texts in the background are written by the helper model first: the topics of remembered facts in the memory as well as reply suggestions and follow-ups on the watch."
 },
 {
 "lang": "en",

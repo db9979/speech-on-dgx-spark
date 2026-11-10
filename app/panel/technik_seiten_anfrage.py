@@ -469,7 +469,7 @@ SEITEN = {
                "Frage läuft schon ab dem Beginn der Vorbereitung nebenher; gewartet wird höchstens "
                "{intent.ASK_TIMEOUT} Sekunden, mit „Schneller Antwortbeginn“ nur {intent.CACHED_WAIT|ms} "
                "nach der Vorbereitung. Mit der Einordnung mit Wahrscheinlichkeit zählt die Wahl erst ab der "
-               "Schwelle (Standard {systemone.ROUTE_MIN|prozent}); mit Funktionen → Hilfsmodell → Für die Weiche fragt sie "
+               "Schwelle (Standard {systemone.ROUTE_MIN|prozent}); mit Funktionen → Hilfsmodell fragt sie "
                "erst das kleine Hilfsmodell, lädt es noch oder ist es unsicher, sofort das große, die Schwelle bleibt "
                "dieselbe. Die Hinweis-Gruppen bleiben neben der Wahl. In "
                "einer Wartungspause des Sprachmodells wird es nicht gefragt.",
@@ -478,7 +478,7 @@ SEITEN = {
                "runs beside the preparation from its start; the wait is at most {intent.ASK_TIMEOUT} seconds, with "
                "„Fast answer start“ only {intent.CACHED_WAIT|ms} after the preparation. With classification "
                "with probabilities the pick only counts from the threshold (default {systemone.ROUTE_MIN|prozent}); with "
-               "Features → Helper model → For routing it asks the small helper model first, and while that is loading "
+               "Features → Helper model it asks the small helper model first, and while that is loading "
                "or unsure the big one at once, with the same threshold. The hint "
                "groups stay beside the pick. During a maintenance pause of the language model it is not asked."),
               ("info", "ja", ("Grund „Modell“", "reason „Modell“"))),

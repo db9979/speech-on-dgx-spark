@@ -592,25 +592,26 @@ class Hilfsmodell(Base):
         REPLY[0] = lambda b: answer(wichtig=0.9)
         with contextlib.redirect_stdout(io.StringIO()):
             asyncio.run(systemone.ask(self.CFG, "wichtig", "x", systemone.wichtig_question()))
-            asyncio.run(systemone.ask(dict(self.CFG, helfer=True), "wichtig", "x", systemone.wichtig_question()))
-            asyncio.run(systemone.ask(dict(self.CFG, helfer_mail=True), "wichtig", "x", systemone.wichtig_question()))
-        self.assertEqual([b["model"] for b in SEEN], [systemone.MODEL] * 3)
+            asyncio.run(systemone.ask(dict(self.CFG, helfer=False), "wichtig", "x", systemone.wichtig_question()))
+            REPLY[0] = lambda b: answer(klage=0.9)
+            asyncio.run(systemone.ask(dict(self.CFG, helfer=True), "klage", "x", systemone.klage_question()))
+        self.assertEqual([b["model"] for b in SEEN], [systemone.MODEL] * 3)   # off, or a use outside HELFER_USES
 
     def test_helper_first_and_the_same_questions(self):
         REPLY[0] = lambda b: answer(wichtig=0.9)
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
-            a = systemone.ask_sync(dict(self.CFG, helfer=True, helfer_mail=True), "wichtig", "x", systemone.wichtig_question())
+            a = systemone.ask_sync(dict(self.CFG, helfer=True), "wichtig", "x", systemone.wichtig_question())
         self.assertEqual([b["model"] for b in SEEN], [systemone.HELFER])
         self.assertAlmostEqual(a["wichtig"]["yes"], 0.9)
         self.assertIn("hilfsmodell", out.getvalue())
-        # a use whose switch is off still goes to the language model
+        # one switch for every use since Ausdünnen 2: the Weiche asks the helper model first too
         SEEN.clear()
         REPLY[0] = lambda b: answer(absicht={"wetter": 0.9, "unklar": 0.1})
         with contextlib.redirect_stdout(io.StringIO()):
-            asyncio.run(systemone.ask(dict(self.CFG, helfer=True, helfer_mail=True), "weiche", "x",
+            asyncio.run(systemone.ask(dict(self.CFG, helfer=True), "weiche", "x",
                                       systemone.route_question(["wetter"], {"wetter": "Wetter"})))
-        self.assertEqual([b["model"] for b in SEEN], [systemone.MODEL])
+        self.assertEqual([b["model"] for b in SEEN], [systemone.HELFER])
 
     def test_loading_or_unsure_helper_falls_back_at_once(self):
         def loading(b):
@@ -620,7 +621,7 @@ class Hilfsmodell(Base):
         REPLY[0] = loading
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
-            a = asyncio.run(systemone.ask(dict(self.CFG, helfer=True, helfer_mail=True), "wichtig", "x",
+            a = asyncio.run(systemone.ask(dict(self.CFG, helfer=True), "wichtig", "x",
                                           systemone.wichtig_question()))
         self.assertEqual([b["model"] for b in SEEN], [systemone.HELFER, systemone.MODEL])
         self.assertEqual([b["questions"] for b in SEEN][0], SEEN[1]["questions"])
@@ -630,7 +631,7 @@ class Hilfsmodell(Base):
         # both down: Unavailable as before, everything goes on without
         REPLY[0] = lambda b: httpx.Response(503, json={"detail": "x"})
         with self.assertRaises(systemone.Unavailable), contextlib.redirect_stdout(io.StringIO()):
-            asyncio.run(systemone.ask(dict(self.CFG, helfer=True, helfer_mail=True), "wichtig", "x",
+            asyncio.run(systemone.ask(dict(self.CFG, helfer=True), "wichtig", "x",
                                       systemone.wichtig_question()))
 
 
@@ -680,7 +681,7 @@ class Hilfsmodell(Base):
             if b["model"] == llm.HELFER:
                 return httpx.Response(503, json={"detail": "loading"})
             return httpx.Response(200, json={"choices": [{"message": {"content": "Antwort"}}]})
-        cc = {"llm_url": "http://127.0.0.1:1/v1", "llm_model": "gross", "helfer": True, "helfer_kurz": True}
+        cc = {"llm_url": "http://127.0.0.1:1/v1", "llm_model": "gross", "helfer": True}
         real = httpx.AsyncClient
 
         def client(*a, **k):
@@ -693,7 +694,7 @@ class Hilfsmodell(Base):
                           out.getvalue())
             seen.clear()   # a job outside the list, or the switch off: only the language model
             asyncio.run(llm.complete("s", "u", "Proaktiver Hinweis", 20, speech_first=False, ccfg=cc))
-            asyncio.run(llm.complete("s", "u", "Uhr-Antworten", 20, speech_first=False, ccfg=dict(cc, helfer_kurz=False)))
+            asyncio.run(llm.complete("s", "u", "Uhr-Antworten", 20, speech_first=False, ccfg=dict(cc, helfer=False)))
             self.assertEqual(seen, ["gross", "gross"])
         self.assertTrue(set(llm.HELFER_JOBS) <= {"Gedächtnis-Themen", "Uhr-Antworten", "Uhr-Nachfragen"})
 
