@@ -247,18 +247,17 @@ class Passkeys(unittest.TestCase):
         passkey._states.clear()
 
     def test_installed_pinned_without_deps(self):
-        # a new environment: from the lock with its hash; an older one (like tars): alone and without dependencies
+        # every environment from the lock with its hash, installed with --no-deps (since V01.1.359 also tars,
+        # Ausdünnen 8: no install of its own beside the lock)
         lock = open(helpers.os.path.join(helpers.APP, "requirements-panel.lock")).read()
         self.assertRegex(lock, r"fido2==2\.2\.1 \\\n    --hash=sha256:[0-9a-f]{64}")
         path = helpers.os.path.join(helpers.APP, "..", "install.sh")
         if not helpers.os.path.exists(path):
             self.skipTest("install.sh is not in an app/-only copy")
         sh = open(path).read()
-        line = next(x for x in sh.splitlines() if "fido2==" in x and not x.lstrip().startswith("#"))
-        self.assertIn("--no-deps", line)
-        self.assertIn('"fido2==2.2.1"', line)
-        panel_line = next(x for x in sh.splitlines() if x.lstrip().startswith("make_venv panel"))
-        self.assertNotIn("fido2", panel_line)
+        self.assertIn('install -q --no-deps --require-hashes -r "$PANEL_LOCK"', sh)
+        self.assertEqual([x for x in sh.splitlines() if "fido2==" in x and not x.lstrip().startswith("#")], [])
+
 
 if __name__ == "__main__":
     unittest.main()

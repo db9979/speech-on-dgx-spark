@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.360** ROT-FIX: zwei Tests prüfen jetzt die eine feste Paketliste statt der entfernten zweiten
 - **V01.1.359** Ausgedünnt: alte Einmal-Umstellungen und doppelte Paketlisten sind weg; tars baut seine Panel-Umgebung einmal neu aus der festen Paketliste
 - **V01.1.358** Fester Name fürs Sprachmodell: Programme sehen unter /v1 immer „sprachmodell“, welches Modell wirklich läuft, steht daneben und kommt aus der Engine; Live zeigt nicht mehr fest „qwen38“
 - **V01.1.357** Spark-Assistent als Modell: in Open WebUI (oder jedem Programm mit /v1) antwortet „spark-assistent“ mit Kalender, Erinnerungen und Dokumenten, nur lesend
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.353** Fernzugang aufgeräumt: eigener Reiter sshTermy statt des Kastens unten, die Zahlen als ein Schild „6/6 online · 0 Sitzungen“, die Entsperrung kurz „bis 14:02 · Sperren“, Koppeln, Aktualisieren, Verlauf und Trennen im ⋯ neben der Suche, die Systemkarte mit den Reitern Einrichten (✓ oder ○ mit genau einem Befehl, Kopieren, In die Shell), Anker, Verlauf und Notiz, Liste und Karte über die ganze Höhe
 - **V01.1.352** sshTermy als Jump-Host: sshTermy auf dem Rechner erreicht die Server über den Spark, SSH Ende-zu-Ende, gekoppelt mit einem Code im Panel, entsperrt mit Admin-Code oder Passkey; die Schlüssel trägt nur root am Server ein (Anker 1.11.0, spark-anker schluessel dazu)
 - **V01.1.351** Fix: der Admin hat beim Hörstück, bei Auswertungen, Ton/Video und Links als Dokument keine Tagesgrenze mehr, ebenso jedes Profil mit „Ohne Tageslimit“; die Seite zeigt „ohne Tageslimit“
-- **V01.1.350** Mappen ruhiger: links die schmale Liste mit ＋, rechts die offene Mappe mit Kopf, „Fragen“ als einzigem blauen Knopf, dünnem Budget-Balken mit ⓘ und den Teilen Einträge, Auswertungen und Hörstück; ganze Titel, die Stufe je Eintrag als kleines Menü, Seltenes unter ⋯
 
 
 
