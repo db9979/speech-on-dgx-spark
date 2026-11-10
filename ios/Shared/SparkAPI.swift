@@ -883,7 +883,7 @@ struct SparkAPI {
     }
 
     func chat(_ messages: [[String: Any]], car: Bool = false, attachment: Attachment? = nil,
-              speak: Bool = true, more: String? = nil) -> AsyncThrowingStream<ChatEvent, Error> {
+              speak: Bool = true, more: String? = nil, convo: String? = nil) -> AsyncThrowingStream<ChatEvent, Error> {
         AsyncThrowingStream { cont in
             let task = Task {
                 do {
@@ -900,6 +900,8 @@ struct SparkAPI {
                         if car { body["car"] = true }
                         if !speak { body["speak"] = false }
                         if let m = more { body["more"] = m }
+                        // the conversation: a yes or an answer to the Spark's question counts only in it (profiles.quelle)
+                        if let c = convo { body["convo"] = c }
                         if let a = att { body["attachment"] = ["kind": a.kind, "name": a.name, "text": String(a.text.prefix(Reader.chatChars)),
                                                                 "cut": a.text.count > Reader.chatChars] }
                         if !ids.isEmpty { body["images"] = ids }

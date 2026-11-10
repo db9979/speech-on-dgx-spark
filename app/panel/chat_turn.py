@@ -79,6 +79,13 @@ def notaus_note(held, mine=False):
             "sperrt es, bis ein Admin ihn aufhebt.")
 
 
+# a plain yes that finds no proposal of its own device and conversation (profiles.quelle), while one waits elsewhere or
+# was replaced from elsewhere (review A-H3): the model only says that, nothing was done
+YES_ELSEWHERE = ("Ja: Hier wartet kein Vorschlag auf dieses Ja. Ein Vorschlag wartet auf einem anderen Gerät oder in einem "
+                 "anderen Gespräch, oder er wurde dort durch einen neueren ersetzt. Nichts wurde ausgeführt. Sag das in "
+                 "einem kurzen Satz, ohne Werkzeug, und behaupte nicht, etwas sei erledigt.")
+
+
 def waiting_mods():
     """Every module that keeps one proposal per profile waiting for a plain "Ja" (profiles.pending_set): Notaus
     drops them all, and the Freigabe-Karte (ablauf.py) asks about the one this turn left."""
@@ -179,11 +186,13 @@ async def prepare(request):
     # the own data sends its fixed words; the panel takes the question's own words it kept for this profile and device
     # (only for the very next message, every message takes the offer away) and searches the web with exactly those,
     # never a word of what was found. The offer is never kept after mail, for guests, another voice or MCP.
+    # where this turn comes from: client, conversation and device (profiles.quelle, the one key for everything that
+    # waits on an answer: a yes, the code word, the panel's own question, a follow-up, the web chip; P6 Gerät statt Profil)
+    src0 = profiles.quelle(request, body)
     import lokal
     web_tap = ""
     if me0 and messages[-1]["role"] == "user":
-        web_tap = lokal.web_pop(me0["id"], f"{body.get('client') or 'web'}:"
-                                           f"{body.get('convo') if isinstance(body.get('convo'), str) else ''}")
+        web_tap = lokal.web_pop(me0["id"], src0)
         web_tap = web_tap if web_tap and not guest and lokal.web_chip(messages[-1]["content"]) else ""
         if web_tap:
             messages[-1] = dict(messages[-1], content=web_tap)
@@ -198,7 +207,6 @@ async def prepare(request):
     ende = stoppwort.ende(ask0) if ask0 and not web_tap else ""
     if ende and me0 and not guest and proactive.answers_note(me0["id"], ask0, said_before):
         ende = ""
-    src0 = f"{body.get('client') or 'web'}:{body.get('convo') if isinstance(body.get('convo'), str) else ''}"
     if ende:
         if me0 and not guest:
             import klaeren
@@ -556,7 +564,7 @@ async def prepare(request):
     # Rückfrage und Merken (klaeren.py): the answer to the panel's own question of this conversation,
     # read by fixed rules before anything else; it carries the code word of the command it answers
     import klaeren
-    src = f"{body.get('client') or 'web'}:{body.get('convo') if isinstance(body.get('convo'), str) else ''}"
+    src = src0
     kl_on = bool(who and own_browser and private_ok and not mcp and features.allowed("klaeren", who["id"]))
     kl = klaeren.answer(who["id"], src, messages[-1]["content"], own_browser) \
         if kl_on and messages[-1]["role"] == "user" and not room_far and not weg else None
@@ -591,10 +599,9 @@ async def prepare(request):
     weg_other = bool(weg and weg["group"] != "smarthome")
     if ha and messages[-1]["role"] == "user" and not room_far and not kl_took and not weg_other:
         latest = messages[-1]["content"]
-        # a command waiting for the code word belongs to the device it was said at (chat.ha_take): the code word from
-        # another device of the profile neither runs it nor clears it
-        ha_src = chat.ha_source(request, src)
-        pend = chat.ha_take(who["id"], ha_src)
+        # a command waiting for the code word belongs to the device and conversation it was said at (chat.ha_take,
+        # profiles.quelle): the code word from another device of the profile neither runs it nor clears it
+        pend = chat.ha_take(who["id"], src)
         if homeassistant.is_command(latest) and await homeassistant.mentions_device(ha, latest):
             ha_direct = homeassistant.clean_command(latest)
         elif homeassistant._intent(latest):  # sounds like switching but is not taken as a command: say why
@@ -603,7 +610,7 @@ async def prepare(request):
         elif ha_code_ok and pend:
             ha_direct = pend
         if ha_direct and ha_code and not ha_code_ok:
-            chat.ha_wait(who["id"], ha_src, ha_direct)
+            chat.ha_wait(who["id"], src, ha_direct)
             print("homeassistant: command waits for the code word", flush=True)
             system = per_turn(system, "Der Nutzer will etwas im Smart Home schalten, aber das Codewort fehlt. "
                               "Frag in einem kurzen Satz nach dem Codewort; sag nicht, dass etwas geschaltet wurde.")
@@ -675,7 +682,6 @@ async def prepare(request):
     if who:
         notaus.acting(who["id"])
     act_held = held >= 2 or mine
-    src = f"{body.get('client') or 'web'}:{body.get('convo') if isinstance(body.get('convo'), str) else ''}"
     if act_held and who:
         for mod in waiting_mods():
             if mod.pending(who["id"]):
@@ -780,10 +786,11 @@ async def prepare(request):
     # learning from corrections (fixes.py): a yes saves the proposed sentence, a correction leads to one
     fix_ok = bool(who and own_browser and private_ok and ccfg.get("memory", True) and features.allowed("fixes", who["id"], ccfg)
                   and messages[-1]["role"] == "user" and not mcp and not act_held)
-    fix_fix, fix_prev = False, ""
+    fix_fix, fix_prev, fix_took = False, "", False
     if fix_ok and not prop and not mprop and not xprop and not pro and not kl_took:
         fp = fixes.pending(who["id"])
         if fp and fp.get("src", src) == src:
+            fix_took = True
             fixes.drop_pending(who["id"])
             if fixes.confirms(messages[-1]["content"]):
                 saved = profiles.remember(who["id"], fp["text"], src="fix", convo=body.get("convo"),
@@ -860,6 +867,15 @@ async def prepare(request):
                 mod.drop_pending(who["id"])
         import vorgaenge   # the cards „Wartet auf dein Ja“ of the proposals answered now (Alles Offene, Stufe 2)
         vorgaenge.sweep(who["id"])
+        # a plain yes here while the proposal it may mean waits on another device or in another conversation, or was
+        # replaced from there (one per profile and module): nothing is done, a fixed sentence says so (review A-H3)
+        if not (prop or mprop or xprop or pro or kl_took or weg or fix_took) and calendars.confirms(messages[-1]["content"]) \
+                and not (rprop and rprop.get("src", src) == src) and not (mq and mq.get("src", src) == src):
+            gone = profiles.pending_replaced(who["id"], src)
+            if gone or any((m.pending(who["id"]) or {}).get("src", src) != src for m in waiting_mods()):
+                cal_note.append({"name": "Ja (Panel)", "args": "", "result": "nicht ausgeführt"})
+                system = per_turn(system, YES_ELSEWHERE)
+                print(f"chat: ja ohne vorschlag hier | {'ersetzt' if gone else 'anderes geraet'}", flush=True)
     if briefing:
         system = per_turn(system, chat.BRIEFING_HINT + (" " + chat.CALENDAR_HINT if cal["calendars"] else "")
                           + (" Nenne im Briefing nach den Erinnerungen kurz die ungelesenen Mails (Absender und Thema)."

@@ -14,7 +14,6 @@ A sentence that starts with the wake word ("Spark, ...", "Jarvis ...") always co
 signed-in profiles (their login or device key), never for guests: a guest could otherwise test
 what the Spark said to someone else. What the Spark said stays in RAM only, at most 20 pieces for
 60 s; nothing goes to disk, the log names only the reason, never the text."""
-import hashlib
 import re
 import sys
 import os
@@ -59,15 +58,9 @@ def active(uid):
 
 
 def device_of(request):
-    """Which device a request comes from: its device key, else its browser (a hash of the login
-    cookie, never the cookie itself), else its address."""
-    d = profiles.device(request)
-    if d:
-        return "dev:" + d["id"]
-    raw = request.cookies.get(profiles.COOKIE, "") or request.cookies.get("speech_spark_admin", "")
-    if raw:
-        return "web:" + hashlib.sha256(raw.encode()).hexdigest()[:16]
-    return "ip:" + (request.client.host if getattr(request, "client", None) else "")
+    """Which device a request comes from: its device key, else its browser (profiles.geraet, a hash of the login,
+    never the cookie itself), else its address."""
+    return profiles.geraet(request) or "ip:" + (request.client.host if getattr(request, "client", None) else "")
 
 
 def words(text):

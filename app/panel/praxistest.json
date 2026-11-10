@@ -5604,6 +5604,34 @@
 "titel": "Rückfrage zum Weg: Telegram, Uhr und Lautsprecher",
 "text": "In Telegram (mit persönlichen Daten) „Morgen Treffen mit Anna um 3“: die Frage mit Tastatur, ein Tipp auf „Dich später daran erinnern“ stellt die Erinnerung. Am Lautsprecher oder in CarPlay dieselbe Frage gesprochen, „erstens“ sagen wählt den ersten Weg. Nach zwei Minuten ohne Antwort passiert nichts.",
 "thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P827",
+"v": 1368,
+"titel": "„Ja“ nur am eigenen Gerät",
+"text": "Am Laptop-Browser einen Termin vorschlagen lassen („Trag morgen 10 Uhr Zahnarzt ein“), nicht bestätigen. Am zweiten Browser (oder am iPhone) desselben Profils „Ja“ sagen: nichts wird eingetragen, der Assistent sagt, dass hier kein Vorschlag wartet. Am Laptop „Ja“: jetzt wird eingetragen. Ebenso iPhone und iPad, und zwei Gespräche am selben iPhone.",
+"thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P828",
+"v": 1368,
+"titel": "Ersetzter Vorschlag sagt es",
+"text": "Am iPhone einen Termin vorschlagen lassen, danach am Browser einen anderen. Am iPhone „Ja“: nichts wird eingetragen, die Antwort sagt, dass der Vorschlag auf einem anderen Gerät ersetzt wurde. Zustand → Logs: „chat: ja ohne vorschlag hier | ersetzt“.",
+"thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P829",
+"v": 1368,
+"titel": "Mitteilung ans genutzte Gerät mit zwei Fenstern",
+"text": "Funktionen → Mein Tag → Mitteilung ans genutzte Gerät an, zwei Browser mit Push. Am Laptop arbeiten, am zweiten Rechner ein Panel-Fenster offen lassen, nicht anfassen. Eine Erinnerung in 2 Minuten stellen: sie kommt am Laptop. Einen zweiten Tab am Laptop verstecken: die nächste Mitteilung kommt trotzdem am Laptop. Am zweiten Rechner klicken ändert nichts daran, dass eine ungesehene Mitteilung nach 5 Minuten aufs Handy nachkommt.",
+"thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P830",
+"v": 1368,
+"titel": "Hauptgespräch bleibt, Fragen ohne Netz im eigenen Gespräch",
+"text": "Funktionen → Gespräch → Ein Gespräch für alle Kanäle an. Am Morgen per Telegram fragen: die Antwort steht im Hauptgespräch. Mittags im Browser ein anderes Gespräch („Urlaub“) beginnen, dann wieder per Telegram fragen: die Antwort kommt ins selbe Hauptgespräch wie am Morgen, nicht nach „Urlaub“. Im Browser (vertraut, Offline lesen an) ohne Netz in Gespräch A fragen, zu Gespräch B wechseln, Netz an: die Frage läuft in Gespräch A.",
+"thread": "Spark stabilisieren mit Code-Review"
 }
 ]
 }

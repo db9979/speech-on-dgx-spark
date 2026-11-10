@@ -224,7 +224,7 @@ def drop_own(uid, name):
 
 
 # One proposal per profile and module waiting for a yes: USERS_DIR/<uid>/<name>-pending.json with "t" (when) and
-# "src" (where it was proposed; only a yes from there confirms it). calendars, tidy, tasks, agent, meinmcp, fixes, messages.
+# "src" (where it was proposed, quelle(); only a yes from there confirms it). calendars, tidy, tasks, agent, meinmcp, fixes, messages.
 # PENDING_HOOKS get (uid, name, proposal) after it is written (vorgaenge.from_pending: the card „Wartet auf dein Ja“).
 PENDING_HOOKS = []
 
@@ -233,8 +233,19 @@ def pending_file(uid, name):
     return _path(uid, f"{name}-pending.json")
 
 
+_REPLACED = {}      # (uid, source) -> when a proposal from there was replaced by one from another device (in memory)
+REPLACED_S = 900    # like the yes itself: 15 minutes
+
+
 def pending_set(uid, name, data, src=""):
     item = dict(data, t=int(time.time()), src=str(src or "")[:120])
+    old = pending_get(uid, name, REPLACED_S)
+    if old and old.get("src") and old.get("src") != item["src"]:
+        # one proposal per profile and module: the one waiting on another device goes, and a yes there is told so
+        # (pending_replaced) instead of finding nothing (review A-H3)
+        if len(_REPLACED) > 1000:
+            _REPLACED.clear()
+        _REPLACED[(uid, old["src"])] = time.time()
     _write(pending_file(uid, name), item)
     for f in PENDING_HOOKS:
         try:
@@ -251,6 +262,13 @@ def pending_get(uid, name, seconds):
         return d if isinstance(d, dict) and time.time() - d.get("t", 0) < seconds else None
     except (OSError, ValueError):
         return None
+
+
+def pending_replaced(uid, src, now=None):
+    """True once when a proposal made at src was replaced by a newer one from another device or conversation in the
+    last REPLACED_S (the yes there then says nothing was done)."""
+    t = _REPLACED.pop((uid, str(src or "")[:120]), None)
+    return bool(t and (time.time() if now is None else now) - t < REPLACED_S)
 
 
 def pending_drop(uid, name):
@@ -922,6 +940,34 @@ def device(request):
         return None
     dev = _device(_load(), request)
     return {"id": dev["id"], "user": dev["user"], "scope": dev.get("scope") or ""} if dev else None
+
+
+def geraet(request):
+    """Which device a request comes from (P6 Gerät statt Profil, the one helper for it): "dev:<key id>" for a device
+    key (iPhone app, Android app, speaker, Begleiter, Siri's shortcut, the watch through its phone), "web:<hash>" for
+    a browser (a hash of its login's session, never the cookie; the admin's login likewise), "" for the panel's own
+    channels (Telegram, phone, MCP: one per profile there) and anything without a login. Only in memory, never in a
+    log or a file."""
+    if request.scope.get("speech_profile") or request.scope.get("speech_mcp"):
+        return ""
+    dev = device(request)
+    if dev:
+        return "dev:" + dev["id"]
+    raw = str(request.cookies.get(COOKIE, "") or "")
+    if raw.count(".") == 3:
+        raw = raw.split(".")[2]   # the login's session: the same browser while its cookie is renewed
+    raw = raw or str(request.cookies.get("speech_spark_admin", "") or "")
+    return "web:" + hashlib.sha256(raw.encode()).hexdigest()[:16] if raw else ""
+
+
+def quelle(request, body):
+    """Where a chat turn comes from, for everything that waits on it ("Ja" to a proposal, the code word, the panel's
+    own questions, a follow-up): the kind of client, the conversation and the device (geraet, hashed again), so two
+    iPhones, two speakers, two browsers or two conversations never answer each other's question (review A-H3)."""
+    body = body if isinstance(body, dict) else {}
+    client = str(body.get("client") or "web")[:16]
+    convo = body.get("convo") if isinstance(body.get("convo"), str) else ""
+    return f"{client}:{convo[:60]}:{hashlib.sha256(geraet(request).encode()).hexdigest()[:12]}"
 
 
 def device_name(request):

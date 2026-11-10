@@ -1068,6 +1068,16 @@ def set_config(**chat):
     write_config(c)
 
 
+def quelle(client, convo="", kind="web"):
+    """profiles.quelle for a TestClient's login and a conversation (P6 Gerät statt Profil): the source its turns
+    there wait on (a yes, the code word, the panel's own question)."""
+    import profiles
+    from starlette.requests import Request
+    raw = client.cookies.get(profiles.COOKIE) or ""
+    heads = [(b"cookie", f"{profiles.COOKIE}={raw}".encode())] if raw else []
+    return profiles.quelle(Request({"type": "http", "headers": heads}), {"convo": convo, "client": kind})
+
+
 def events(response):
     """The JSON events of a /api/chat stream."""
     return [json.loads(line[5:]) for line in response.text.splitlines() if line.startswith("data:")]

@@ -343,8 +343,9 @@ class CodeWordAtItsSource(unittest.TestCase):
             heads = ([(b"cookie", f"{profiles.COOKIE}={cookie}".encode())] if cookie else []) \
                 + ([(profiles.DEVICE_HEADER.lower().encode(), key.encode())] if key else [])
             return Request({"type": "http", "headers": heads})
-        a = chat.ha_source(req("u1.1700000000.1111111111111111.sig"), "web:c1")
-        b = chat.ha_source(req("u1.1700000000.2222222222222222.sig"), "web:c1")
+        # the one key for everything that waits (profiles.quelle, P6): the code word's source is the turn's source
+        a = profiles.quelle(req("u1.1700000000.1111111111111111.sig"), {"convo": "c1"})
+        b = profiles.quelle(req("u1.1700000000.2222222222222222.sig"), {"convo": "c1"})
         self.assertNotEqual(a, b)                                          # two browsers of the profile
         self.assertTrue(a.startswith("web:c1:"))
         self.assertNotIn("1111111111111111", a)                            # only a hash of the login

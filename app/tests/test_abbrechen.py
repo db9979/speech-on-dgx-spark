@@ -134,11 +134,12 @@ class Chat(unittest.TestCase):
     def test_a_stop_word_drops_the_panels_waiting_question(self):
         c, uid = profile("Abbruch Bert")
         with klaeren._lock:
-            klaeren._waiting[uid] = {"kind": "choice", "id": "q1", "t": time.time(), "src": "web:k1", "area": "licht"}
+            klaeren._waiting[uid] = {"kind": "choice", "id": "q1", "t": time.time(), "src": helpers.quelle(c, "k1"),
+                                     "area": "licht"}
         self.ask(c, "Halt", convo="k2")                  # another conversation: its question stays
-        self.assertTrue(klaeren.waiting(uid, "web:k1"))
+        self.assertTrue(klaeren.waiting(uid, helpers.quelle(c, "k1")))
         self.ask(c, "Halt", convo="k1")
-        self.assertFalse(klaeren.waiting(uid, "web:k1"))
+        self.assertFalse(klaeren.waiting(uid, helpers.quelle(c, "k1")))
 
     def test_notaus_ends_a_running_answer(self):
         """The answer puts itself into laufend while it streams; its stop says "ende" with "notaus" and ends."""

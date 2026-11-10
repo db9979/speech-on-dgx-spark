@@ -381,14 +381,14 @@ class Weg(unittest.TestCase):
         n = len(streamed())
         ask(a, "Auf eine Liste setzen", convo="anderes")   # another conversation never answers it
         self.assertEqual(streamed()[n]["messages"][-1]["content"].split("\n")[0], "Auf eine Liste setzen")
-        self.assertTrue(klaeren.waiting(uid, "web:"))
+        self.assertTrue(klaeren.waiting(uid, helpers.quelle(a)))
         b = profile("Weg Drei")                            # another profile cannot answer it
         ask(b, "Auf eine Liste setzen")
-        self.assertTrue(klaeren.waiting(uid, "web:"))
+        self.assertTrue(klaeren.waiting(uid, helpers.quelle(a)))
         # too late (the time is a parameter, never the clock of the test)
         w = klaeren._waiting[uid]
-        self.assertIsNone(klaeren.weg_answer(uid, "web:", "Auf eine Liste setzen", w["t"] + klaeren.ASK_SECONDS + 1))
-        self.assertFalse(klaeren.waiting(uid, "web:"))
+        self.assertIsNone(klaeren.weg_answer(uid, helpers.quelle(a), "Auf eine Liste setzen", w["t"] + klaeren.ASK_SECONDS + 1))
+        self.assertFalse(klaeren.waiting(uid, helpers.quelle(a)))
 
     def test_never_after_outside_text_or_for_a_negated_or_reading_sentence(self):
         a = profile("Weg Vier")

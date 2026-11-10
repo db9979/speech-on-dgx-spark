@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "geraet": {
-        "stand": "8840742c8f",
+        "stand": "f8db3f016e",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "zwischenruf.decide": ["s5"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
@@ -218,17 +218,18 @@ SEITEN = {
             ("profiles.append_convo", ("hängt unter Sperre an", "appends under a lock")),
             ("profiles._clean_convo", ("prüft und kürzt ein Gespräch; eine Beschreibung des Bildschirms (bedienen.look) wird nur als Hinweis gespeichert", "checks and trims a conversation; a description of the screen (bedienen.look) is stored only as a note")),
             ("verlauf.stream", ("der Sofort-Abgleich je offener Seite", "instant sync per open page")),
-            ("sse.Hub.stream", ("ein Strom je Seite: Warteschlange, Lebenszeichen, Aufräumen",
-                                "one stream per page: queue, keep-alive, cleanup")),
+            ("sse.Hub.stream", ("ein Strom je Seite: Warteschlange, Lebenszeichen, Aufräumen; der verdrängte endet mit „verdraengt“",
+                                "one stream per page: queue, keep-alive, cleanup; the displaced one ends with „verdraengt“")),
             ("verlauf.begin", ("„antwortet gerade“ für die anderen Seiten", "„answering“ for the other pages")),
         ],
-        "tests": ["test_verlauf_sync", "test_stille", "test_echo", "test_fremdstimme", "test_follow_up", "test_abbrechen"],
+        "tests": ["test_verlauf_sync", "test_stille", "test_echo", "test_fremdstimme", "test_follow_up", "test_abbrechen",
+                  "test_geraet_statt_profil"],
         "heute": [],
     },
 
     # ------------------------------------------------------------------ Apps
     "apps": {
-        "stand": "6d3e318bdc",
+        "stand": "06f4d87b2c",
         "bezug": {
             "android.TOKEN_SECONDS": ["s3"], "android.TOKEN_USES": ["s3"], "iphone.profile_pair": ["s1", "s2"],
             "kopplung.Codes.new": ["s3"], "kopplung.Codes.take": ["s4"], "iphone.app_pair": ["s4", "s5"],
@@ -237,7 +238,7 @@ SEITEN = {
             "terminal.profile_pair": ["s1", "s2"], "terminal.setup_base": ["s3"], "terminal.program_pair": ["s4", "s5"],
             "terminal.reaches": ["s7"], "terminal.CODE_SECONDS": ["s3"], "terminal.MAX_DEVICES": ["s2"],
             "regel:tui": ["s7"], "android.assist_gate": ["s9"], "android.flags": ["s9"],
-            "zustellung.api_da": ["s9"], "zustellung.follow": ["s9"], "mitteilungen.opened": ["s9"],
+            "zustellung.api_da": ["s9"], "zustellung.follow": ["s9"], "zustellung.seen": ["s9"], "zustellung._was_seen": ["s9"], "mitteilungen.opened": ["s9"],
         },
         "kurz": ("Die iPhone-App bekommt beim Koppeln einen eigenen Geräteschlüssel des Profils und spricht damit "
                  "dieselben Endpunkte an wie der Browser. Der Schlüssel öffnet nur eine feste Liste von Pfaden. Die "
@@ -337,10 +338,12 @@ SEITEN = {
                 "Grund als festes Wort; ist der App-Schlüssel älter als der zweite Schritt, bindet „Mit Code bestätigen“ "
                 "(POST /api/iphone/admin-step, jedes Mal ein frischer Code oder Passkey) ihn einmal daran. Mit „Mitteilung ans genutzte Gerät“ "
                "sagen App und Seiten jede Minute nur, ob sie gerade benutzt werden (POST /api/zustellung/da, der Begleiter "
-               "mit seiner Leerlaufzeit); zustellung.pick schickt eine Mitteilung dann an das Gerät mit der letzten Eingabe "
+               "mit seiner Leerlaufzeit), jedes Gerät für sich (zustellung.seen, profiles.geraet, eine Seite mit ihrem Tab: "
+               "ein ungenutztes zweites Fenster überstimmt nie das benutzte, ein versteckter Tab meldet nur sich weg); zustellung.pick schickt eine Mitteilung dann an das Gerät mit der letzten Eingabe "
                "der letzten {zustellung.ACTIVE} Sekunden (ein Browser nur mit eigenem Push-Abo, und ein Push-Abo gehört "
                "genau einem Profil), sonst gleich an die Handy-App. Hat niemand sie gesehen, schickt "
-               "zustellung.follow sie nach {zustellung.FOLLOW|min} Minuten einmal aufs Handy; ein angetippter Hinweis meldet "
+               "zustellung.follow sie nach {zustellung.FOLLOW|min} Minuten einmal aufs Handy (gesehen zählt nur der Browser, "
+               "an dessen Abo sie ging); ein angetippter Hinweis meldet "
                "„gesehen“, und mit der Antwort „zu“ räumen Seiten und iPhone Erledigtes weg. Jede Mitteilung bleibt "
                "{mitteilungen.KEEP|h} Stunden mit einer zufälligen Nummer auf dem Spark (mitteilungen.keep, nur im Speicher); "
                "nur die Nummer geht mit. Wer sie antippt, sieht sie als Karte über dem Gespräch, mit dem einen Knopf, den "
@@ -356,11 +359,13 @@ SEITEN = {
                "(zwischenruf.py). If the profile has an admin role but the app has not right now, hello names the reason "
                "in „admin_why“ as a fixed word; if the app key is older than the second step, „Confirm with code“ "
                "(POST /api/iphone/admin-step, a fresh code or passkey every time) binds it to it once. With „Notes to the device in use“ the app and the pages only say "
-               "every minute whether they are in use right now (POST /api/zustellung/da, the companion with its idle time); "
+               "every minute whether they are in use right now (POST /api/zustellung/da, the companion with its idle time), "
+               "each device for itself (zustellung.seen, profiles.geraet, a page with its tab: an idle second window never "
+               "outvotes the one in use, a hidden tab marks only itself away); "
                "zustellung.pick then sends a note to the device with the last input within the last {zustellung.ACTIVE} "
                "seconds (a browser only with its own push subscription, which belongs to exactly one profile), else to the "
                "phone app at once. If nobody saw it, zustellung.follow sends it once to the phone after "
-               "{zustellung.FOLLOW|min} minutes; a tapped note says „seen“, and with the answer „zu“ pages and the iPhone "
+               "{zustellung.FOLLOW|min} minutes (only the browser whose subscription it went to counts as seen); a tapped note says „seen“, and with the answer „zu“ pages and the iPhone "
                "take done ones away. Every note stays on the Spark for {mitteilungen.KEEP|h} hours with a random number "
                "(mitteilungen.keep, in memory only); only the number goes along. Tapped, it shows as a card above the "
                "conversation, with the one button mitteilungen.ziel picks by fixed rules (Open, chat, mail, code, way); only "
@@ -462,6 +467,8 @@ SEITEN = {
             ("android.assist_gate", ("Fragen des Android-Blatts nur mit Freigabe, nie Gäste", "questions of the Android sheet only when released, never guests")),
             ("zustellung.pick", ("Mitteilung ans benutzte Gerät, sonst an die Handy-App", "note to the device in use, else to the phone app")),
             ("zustellung.api_da", ("nur „gerade benutzt“ oder „weg“, nur Seiten und Apps", "only „in use“ or „away“, only pages and the apps")),
+            ("zustellung.seen", ("ein Eintrag je Gerät und Seite, höchstens {zustellung.DEVICES_MAX} je Profil", "one entry per device and page, at most {zustellung.DEVICES_MAX} per profile")),
+            ("zustellung._was_seen", ("gesehen nur auf dem Gerät, an das sie ging", "seen only on the device it went to")),
             ("zustellung.follow", ("einmal aufs Handy nachfassen, nie ein drittes Mal", "follow up once to the phone, never a third time")),
             ("mitteilungen.ziel", ("was die Karte einer angetippten Mitteilung anbietet, feste Regeln", "what the card of a tapped note offers, fixed rules")),
             ("mitteilungen.opened", ("nur die eigene Mitteilung, eine Logzeile ohne Text", "only the own note, one log line without text")),
@@ -471,17 +478,17 @@ SEITEN = {
             ("terminal.reaches", ("die feste Regelliste des Terminals", "the terminal's fixed rule list")),
         ],
         "tests": ["test_iphone", "test_iphone_panel", "test_android", "test_app_notaus", "test_kopplung", "test_terminal",
-                  "test_zustellung", "test_mitteilungen"],
+                  "test_zustellung", "test_mitteilungen", "test_geraet_statt_profil"],
         "heute": [],
     },
 
     # ------------------------------------------------------------------ Telegram, Siri, Uhr
     "kanaele": {
-        "stand": "5832b3fb3b",
+        "stand": "9730136967",
         "bezug": {
             "watch.JOB_TTL": ["s9"], "telegram.loop": ["s1"], "telegram.handle": ["s2", "s3", "s4"],
             "telegram.ask": ["s7", "s8", "s11"], "telegram.transcribe": ["s5"], "chat.siri_ask": ["s1", "s3"],
-            "chat.text_ask": ["s6", "s7", "s11"], "chat.watch_ask": ["s1", "s7"], "chat._watch_run": ["s11"],
+            "chat.text_ask": ["s6", "s7", "s11"], "chat.watch_ask": ["s1", "s7"], "chat._watch_run": ["s11"], "verlauf.main_today": ["s11"],
             "watch.run": ["s8"], "watch.poll": ["s9"], "regeln": ["s1", "s9", "s11"], "chat.ENDE_SAY": ["s8"],
             "watch.follow_ups": ["s9"], "watch.follow_clean": ["s9"], "pebblewatch.watch_sync": ["s9"],
             "pebblewatch.watch_reminder": ["s9"], "pebblewatch.watch_blick": ["s9"], "pebblewatch.watch_brief": ["s9"],
@@ -544,10 +551,12 @@ SEITEN = {
               ("Telegram {telegram.FOLLOW_UP|min} Min. · Siri {chat.SIRI_FOLLOW_UP|min} Min.",
                "Telegram {telegram.FOLLOW_UP|min} min · Siri {chat.SIRI_FOLLOW_UP|min} min"),
               ("Für Nachfragen gehen die letzten acht Nachrichten mit, solange die letzte Frage nicht länger her ist "
-               "als {telegram.FOLLOW_UP|min} Minuten (Telegram) oder {chat.SIRI_FOLLOW_UP|min} Minuten (Siri). Die Uhr "
+               "als {telegram.FOLLOW_UP|min} Minuten (Telegram) oder {chat.SIRI_FOLLOW_UP|min} Minuten (Siri), bei Siri "
+               "und Begleiter je Gerät (profiles.geraet: iPhone und iPad, PC und Mac haben jedes ihren eigenen). Die Uhr "
                "schickt ihren Verlauf selbst; Antworten aus fremdem Text erkennt das Panel daran wieder (watch.mark_of).",
                "For follow-ups the last eight messages go along while the last question is no older than "
-               "{telegram.FOLLOW_UP|min} minutes (Telegram) or {chat.SIRI_FOLLOW_UP|min} minutes (Siri). The watch "
+               "{telegram.FOLLOW_UP|min} minutes (Telegram) or {chat.SIRI_FOLLOW_UP|min} minutes (Siri), for Siri and "
+               "the companion per device (profiles.geraet: iPhone and iPad, PC and Mac each have their own). The watch "
                "sends its history itself; the panel recognizes answers made from outside text in it again "
                "(watch.mark_of).")),
             S("s7", "schritt", ("Anfrage an /api/chat", "Request to /api/chat"),
@@ -630,10 +639,13 @@ SEITEN = {
               ("ein Gespräch pro Tag und Kanal", "one conversation per day and channel"),
               ("verlauf.keep legt Frage und Antwort in das Tagesgespräch des Kanals („Telegram“, „Siri“, „Uhr“ mit "
                "Datum). Mit „Ein Gespräch für alle Kanäle“ landen sie im Hauptgespräch des Tages, markiert mit ihrem "
-               "Kanal.",
+               "Kanal. Das Hauptgespräch legt verlauf.main_today beim ersten Bedarf des Tages fest und merkt es "
+               "(hauptgespraech.json, nur Tag und Nummer); ein später geändertes Themen-Gespräch nimmt nie seinen Platz ein.",
                "verlauf.keep puts question and answer into the channel's conversation of the day („Telegram“, „Siri“, "
                "„Uhr“ with the date). With „One conversation for all channels“ they go into the day's main "
-               "conversation, marked with their channel.")),
+               "conversation, marked with their channel. verlauf.main_today fixes the main conversation the first time "
+               "the day needs it and keeps it (hauptgespraech.json, only the day and the id); a topic conversation changed "
+               "later never takes its place.")),
         ],
         "beispiele": [
             (("Telegram-Sprachnachricht", "Telegram voice message"),
@@ -702,6 +714,7 @@ SEITEN = {
             ("chat.text_ask", ("Siri und Begleiter: Frage, Antwort, Verlauf, beim Begleiter dazu die Karten (desk_cards)", "Siri and companion: question, answer, history, for the companion also the cards (desk_cards)")),
             ("chat.watch_ask", ("Uhr: Antwort als Auftrag starten", "watch: start the answer as a job")),
             ("chat._watch_run", ("Uhr: Antwort in den Verlauf", "watch: the answer into the history")),
+            ("verlauf.main_today", ("das Hauptgespräch des Tages, einmal festgelegt", "the day's main conversation, fixed once")),
             ("watch.run", ("liest den Strom in den Uhr-Auftrag", "reads the stream into the watch job")),
             ("watch.poll", ("Text und Ton stückweise", "text and sound piece by piece")),
             ("watch.follow_ups", ("Nachfragen vom Modell, mit Zeitgrenze", "follow-ups from the model, with a time limit")),
@@ -719,7 +732,7 @@ SEITEN = {
             ("pebblewatch.watch_health", ("Schritte, Puls, Schlaf versiegelt ins Profil", "steps, pulse, sleep sealed into the profile")),
             ("verlauf.keep", ("Tagesgespräch des Kanals oder Hauptgespräch", "the channel's day conversation or the main one")),
         ],
-        "tests": ["test_telegram_tasks", "test_pebble", "test_verlauf_sync", "test_notaus", "test_abbrechen"],
+        "tests": ["test_telegram_tasks", "test_pebble", "test_verlauf_sync", "test_notaus", "test_abbrechen", "test_geraet_statt_profil"],
         "heute": [],
     },
 

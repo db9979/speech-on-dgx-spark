@@ -4,11 +4,11 @@ from technik_seiten import S
 
 SEITEN = {
     "vorbereiten": {
-        "stand": "fc42b0b88a",
+        "stand": "95b32e273c",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
-            "chat.offer_memory": ["s10"], "chat.ha_take": ["s7"], "stoppwort.ende": ["s14"], "proactive.answers_note": ["s14"],
+            "chat.offer_memory": ["s10"], "chat.ha_take": ["s7"], "profiles.quelle": ["s7"], "profiles.pending_replaced": ["s7"], "stoppwort.ende": ["s14"], "proactive.answers_note": ["s14"],
             "regeln": ["s10", "s11"], "regel:Gast oder unbekannte Stimme am Lautsprecher": ["s3"],
         },
         "kurz": ("chat_turn.prepare macht aus einer Chat-Anfrage einen fertigen Gesprächszug, bevor das Sprachmodell "
@@ -129,7 +129,11 @@ SEITEN = {
                "ihn nicht aus und löscht ihn nicht. Ein verneinter Satz ist nie ein direkter Befehl. Hat das Panel gefragt, "
                "welcher Weg gemeint ist (Rückfrage zum Weg, klaeren.weg_answer), liest es die Antwort schon vor der "
                "Weiche: die Wahl führt den Satz davor mit dieser Gruppe aus, „Einfach antworten“ ohne ändernde Werkzeuge, "
-               "alles andere lässt die Frage verfallen.",
+               "alles andere lässt die Frage verfallen. Alles, was auf eine Antwort wartet (Ja, Codewort, Rückfrage), "
+               "gehört zu seiner Quelle: Art des Geräts, Gespräch und Gerät (profiles.quelle; zwei iPhones, zwei "
+               "Lautsprecher oder zwei Browser sind zwei Quellen). Ein schlichtes „Ja“ ohne eigenen Vorschlag, während "
+               "einer auf einem anderen Gerät wartet oder von dort ersetzt wurde, führt nichts aus; das Modell bekommt "
+               "dazu einen festen Satz (chat_turn.YES_ELSEWHERE).",
                "If the panel asked which device is meant, a button, a number or the name counts as the answer, only in "
                "the same conversation, from the own profile and within {klaeren.ASK_SECONDS|min} minutes. „None of "
                "these“ brings the whole list, „No, the other one“ corrects the last choice. The panel carries out the "
@@ -138,7 +142,11 @@ SEITEN = {
                "device and conversation (chat.ha_take): a code word from another device of the profile neither runs nor "
                "clears it. A negated sentence is never a direct command. If the panel asked which way is meant (Ask which "
                "way, klaeren.weg_answer), it reads the answer before the switch already: the choice runs the sentence "
-               "before with that group, „Just answer“ without changing tools, anything else lets the question lapse."),
+               "before with that group, „Just answer“ without changing tools, anything else lets the question lapse. "
+               "Everything that waits on an answer (yes, code word, question back) belongs to its source: kind of "
+               "device, conversation and device (profiles.quelle; two iPhones, two speakers or two browsers are two "
+               "sources). A plain „yes“ without a proposal of its own, while one waits on another device or was replaced "
+               "from there, carries out nothing; the model gets a fixed sentence for it (chat_turn.YES_ELSEWHERE)."),
               ("info", "ja", ("Panel führt die Wahl aus", "panel carries out the choice"))),
             S("s8", "frage", ("Notaus oder Mein Notaus?", "Kill switch or my kill switch?"),
               ("ab Stufe {notaus.STAGE.aktion} keine Aktion", "from stage {notaus.STAGE.aktion} no action"),
@@ -269,11 +277,13 @@ SEITEN = {
             ("intent.narrow", ("Werkzeuge eingrenzen", "narrow the tools")),
             ("chat_turn.notaus_note", ("Satz für das Modell bei Notaus", "sentence for the model with the kill switch")),
             ("chat.ha_take", ("Befehl mit Codewort nur von seiner Quelle", "command with code word only from its source")),
+            ("profiles.quelle", ("die eine Quelle eines Zugs: Art, Gespräch, Gerät", "the one source of a turn: kind, conversation, device")),
+            ("profiles.pending_replaced", ("ein Ja, dessen Vorschlag von woanders ersetzt wurde", "a yes whose proposal was replaced from elsewhere")),
             ("stoppwort.ende", ("ein ganzer Satz aus Stoppwörtern beendet das Gespräch", "a whole sentence of stop words ends the talk")),
             ("proactive.answers_note", ("Antwort auf eine Meldung des Spark", "answer to a note of the Spark")),
         ],
         "tests": ["test_klaeren", "test_features", "test_notaus", "test_hardening", "test_weiche", "test_sicherheit_sofort",
-                  "test_abbrechen"],
+                  "test_abbrechen", "test_geraet_statt_profil"],
         "heute": [],
     },
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)

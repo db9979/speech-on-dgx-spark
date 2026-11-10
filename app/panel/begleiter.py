@@ -771,7 +771,7 @@ async def program_poll(request: Request, after: int = 0, version: str = "", arch
     _mic_said(dev["id"], mic)
     if idle >= 0:   # seconds since the last input at this computer (Meldung ans genutzte Gerät, zustellung.py)
         import zustellung
-        zustellung.seen(prof["id"], "desk", idle)
+        zustellung.seen(prof["id"], "desk", idle, dev=profiles.geraet(request))   # this computer only (P6)
     held = lapsed(prof["id"])        # "Nicht stören" ran out without a word from the program: the summary now
     if held:
         await release(prof["id"], held)

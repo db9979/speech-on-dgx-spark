@@ -118,22 +118,39 @@ async def stream(request: Request, prof=Depends(own_profile)):
 # ---------------------------------------------------------------- one conversation for all channels
 def target(uid, own_cid, own_title, local, via, owner=True):
     """Where a channel keeps its turn: (conversation id, title, extra marks of its messages). With "Ein Gespräch für
-    alle Kanäle" today's main conversation of the profile (the newest of today that is no channel's own), else the
+    alle Kanäle" today's main conversation of the profile (main_today: fixed for the day), else the
     channel's own as before. A voice that was not clearly the owner's never goes into the main conversation."""
     if not owner or via not in VIA or not features.allowed("eingespraech", uid):
         return own_cid, own_title, {}
     return main_today(uid, local) + ({"via": via},)
 
 
+MAIN_FILE = "hauptgespraech.json"   # users/<id>/: only the day and the id of today's main conversation
+
+
 def main_today(uid, local):
-    """(id, title) of today's main conversation: the newest of today that is no channel's own, else a new one of
-    the day. The one place for it: channels (target) and the cards of Offen (vorgaenge.card_message) use it."""
+    """(id, title) of today's main conversation, fixed for the day the first time a channel or a card of Offen needs
+    it (P6 Gerät statt Profil, review A-M1): the newest of today that is no channel's own at that moment, else a new
+    one of the day. It stays the one all day, also when another conversation changes later (before, it was always
+    the one changed last, so answers wandered into a topic conversation); deleted, the next need fixes it anew.
+    The one place for it: channels (target) and the cards of Offen (vorgaenge.card_message) use it."""
+    day = local.strftime("%Y%m%d")
+    own = "tag-" + day, "Heute " + local.strftime("%d.%m.")
+    convs = profiles.convos(uid)
+    kept = profiles.read_own(uid, MAIN_FILE, {})
+    if isinstance(kept, dict) and kept.get("tag") == day and isinstance(kept.get("id"), str):
+        c = next((c for c in convs if c.get("id") == kept["id"]), None)
+        if c:
+            return c["id"], c.get("title") or "Heute"
+        if kept["id"] == own[0]:
+            return own
     midnight = local.replace(hour=0, minute=0, second=0, microsecond=0).timestamp() * 1000
-    main = next((c for c in profiles.convos(uid) if c.get("updated", 0) >= midnight
+    main = next((c for c in convs if c.get("updated", 0) >= midnight
                  and not str(c.get("id", "")).startswith(OWN_PREFIXES)), None)
-    if main:
-        return main["id"], main.get("title") or "Heute"
-    return "tag-" + local.strftime("%Y%m%d"), "Heute " + local.strftime("%d.%m.")
+    cid, title = (main["id"], main.get("title") or "Heute") if main else own
+    profiles.write_own(uid, MAIN_FILE, {"tag": day, "id": str(cid)[:60]})
+    print("chat: hauptgespraech festgelegt | " + ("vorhanden" if main else "neu"), flush=True)
+    return cid, title
 
 
 def keep(uid, own_cid, own_title, local, via, msgs, owner=True):

@@ -319,7 +319,8 @@ async def send(uid, title, body, tag="", private=True, why="", to="", ref="", vg
         n += await _send_one(uid, kind, targets, title, body, tag, private, why, ref, **({"vg": vg} if vg else {}))
     if tag != "hello" and n:   # Meldung ans genutzte Gerät, stage 2: follow-up and „gelesen überall“
         zustellung.sent(uid, [k for k, _ in ways if k], {"title": title, "body": body, "tag": tag, "private": private,
-                                                          "why": why, "ref": ref}, vg, follow=not to)
+                                                          "why": why, "ref": ref}, vg, follow=not to,
+                        keys=[sub_id(x["endpoint"]) for _, targets in ways[:1] for x in targets[:5]])
     # one line per note, sent or not: the kind of note, the ways and how many devices it reached, never its text
     print(f"push: {_word(tag, why)} {'sent' if n else 'reached no device'} | {n} device(s) | "
           f"{','.join(k for k, _ in ways if k) or 'no way'} | {profiles.log_name(profiles.by_id(uid))}", flush=True)

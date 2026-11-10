@@ -284,14 +284,16 @@ class OneConversation(unittest.TestCase):
         c = next(x for x in a.get("/api/profile/convos").json() if x["id"] == tag)
         self.assertEqual([(x["content"], x.get("via")) for x in c["msgs"]], [("F2", "telegram"), ("A2", "telegram")])
         self.assertEqual(texts(a, "tg-1"), ["F1", "A1"])
-        # the conversation of the panel today is the main one; a channel's own never
+        # the main conversation is fixed for the day (P6, review A-M1): a conversation of the panel changed later does
+        # not take its place, so the next channel answer lands where the one before did (test_geraet_statt_profil)
         a.put("/api/profile/convos", json={"id": "web1", "title": "Garten", "add": [m("user", "Panel")]})
         verlauf.keep(uid, "siri-1", "Siri", now, "siri", [m("user", "F3")])
-        self.assertEqual(texts(a, "web1"), ["Panel", "F3"])
+        self.assertEqual(texts(a, tag), ["F2", "A2", "F3"])
+        self.assertEqual(texts(a, "web1"), ["Panel"])
         # a voice at a speaker that is not clearly the owner's stays in the speaker's conversation
         verlauf.keep(uid, "esp-1", "Küche", now, "speaker", [m("user", "Fremd")], owner=False)
         self.assertEqual(texts(a, "esp-1"), ["Fremd"])
-        self.assertEqual(texts(a, "web1"), ["Panel", "F3"])
+        self.assertEqual(texts(a, tag), ["F2", "A2", "F3"])
         # an unknown channel mark is dropped
         a.put("/api/profile/convos", json={"id": "web1", "title": "Garten", "add": [dict(m("user", "X"), via="evil")]})
         self.assertNotIn("via", next(x for x in a.get("/api/profile/convos").json() if x["id"] == "web1")["msgs"][-1])

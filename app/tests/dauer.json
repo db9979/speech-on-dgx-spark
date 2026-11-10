@@ -120,6 +120,7 @@
 "test_gehaeuse": 0.4,
 "test_gemerkt": 1.2,
 "test_genauer": 0.0,
+"test_geraet_statt_profil": 10.0,
 "test_geraeteupdate": 1.9,
 "test_geteilt": 9.3,
 "test_ghtoken": 0.1,

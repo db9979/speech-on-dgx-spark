@@ -96,8 +96,9 @@ _CORRECT_WORDS = set("nein nee noe falsch nicht ich meinte mein meine meinen mei
 
 
 def _same(a, b):
-    """The same conversation on the same kind of device ("client:convo"), exactly: an answer from another
-    chat never answers this one's question (the panel's chat names its conversation from the first message on)."""
+    """The same source (profiles.quelle: kind of client, conversation and device), exactly: an answer from another
+    chat or another device never answers this one's question (the panel's chat names its conversation from the first
+    message on)."""
     return str(a)[:120] == str(b)[:120]
 
 

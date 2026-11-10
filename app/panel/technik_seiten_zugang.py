@@ -684,7 +684,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ sicherheit (the model as a whole)
     "sicherheit": {
-        "stand": "73b0ea7ed7",
+        "stand": "a6ad82af36",
         "bezug": {
             "features.blocked": ["s5"], "geteilt.put": ["s5"], "mitschreiblink.find": ["s3", "s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
             "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"], "sysupdate.wunsch_nehmen": ["s3"],
@@ -693,7 +693,7 @@ SEITEN = {
             "netguard.hole_oeffentlich": ["s6"], "doklink.eigene": ["s6"], "netproxy.Proxy": ["s6"], "ytquelle.befehl": ["s6"],
             "gedaechtnis.offer": ["s8"], "gemerkt.take_back": ["s8"], "profiles.write_own": ["s10"],
             "vorrat.key": ["s10"], "meinedaten.build": ["s10"], "meinedaten.api_export": ["s3"],
-            "intent.negated": ["s8"], "intent.forget_ok": ["s8"], "intent.ask_route": ["s8"], "chat.ha_take": ["s8"], "chat.needed": ["s6"],
+            "intent.negated": ["s8"], "intent.forget_ok": ["s8"], "intent.ask_route": ["s8"], "chat.ha_take": ["s8"], "profiles.quelle": ["s8"], "profiles.pending_replaced": ["s8"], "chat.needed": ["s6"],
             "chat.PRIVATE_WORDS": ["s6"], "push.add": ["s5"], "push.drop_login": ["s5"], "intent.EMERGENCY": ["s8"],
         },
         "kurz": ("Wie die Schutzschichten des Spark zusammenspielen. Der Grundsatz: das Sprachmodell schlägt vor, das Panel "
@@ -841,8 +841,9 @@ SEITEN = {
                "würde, öffnet nur die Seite, auf der die Person es selbst tut. Verneinung ist eine feste Regel des Panels "
                "(intent.negated): „Mach das Licht nicht aus“ schaltet nie, wird nie eingegrenzt und macht kein änderndes "
                "Werkzeug zur Pflicht; „Vergiss es“ ist ein Abbruch ohne Werkzeug, und memory_forget löscht nur auf das "
-               "eigene Wort zum Vergessen (intent.forget_ok). Ein Smart-Home-Befehl, der aufs Codewort wartet, gehört zu "
-               "dem Gerät und Gespräch, an dem er gesagt wurde (chat.ha_take). Eine Notrufnummer („Ruf die 112 an“) "
+               "eigene Wort zum Vergessen (intent.forget_ok). Was wartet (ein Vorschlag aufs Ja, ein Smart-Home-Befehl aufs "
+               "Codewort, eine Rückfrage), gehört zu dem Gerät und Gespräch, an dem es gesagt wurde (profiles.quelle, "
+               "chat.ha_take); ein Ja anderswo führt nichts aus und sagt das (profiles.pending_replaced). Eine Notrufnummer („Ruf die 112 an“) "
                "startet nie einen Anruf, die Antwort bekommt kein Werkzeug (intent.EMERGENCY); ein Anruf für später ist "
                "eine Erinnerung, nie der Sofort-Anruf. Mit „Rückfrage zum Weg“ fragt das Panel vor einer Änderung, die "
                "zwei nahe Wege gehen könnte, welcher gemeint ist (intent.ask_route, feste Regeln, nie das Modell); bis zur "
@@ -860,8 +861,9 @@ SEITEN = {
                "without a proposal only opens the page where the person does it. Negation is a fixed rule of the panel "
                "(intent.negated): „Don't turn off the light“ never switches, is never narrowed and makes no changing tool "
                "a must; „Never mind“ is a cancel without any tool, and memory_forget deletes only on the person's own word "
-               "to forget (intent.forget_ok). A smart home command waiting for the code word belongs to the device and "
-               "conversation it was said at (chat.ha_take). An emergency number („Call 112“) never starts a call, the "
+               "to forget (intent.forget_ok). Whatever waits (a proposal for a yes, a smart home command for the code "
+               "word, a question back) belongs to the device and conversation it was said at (profiles.quelle, "
+               "chat.ha_take); a yes elsewhere carries out nothing and says so (profiles.pending_replaced). An emergency number („Call 112“) never starts a call, the "
                "answer gets no tool (intent.EMERGENCY); a call for later is a reminder, never the instant call. With "
                "„Ask which way“ the panel asks before a change that could go two close ways which one is meant "
                "(intent.ask_route, fixed rules, never the model); until the choice only the fixed question answers, without "
@@ -1060,6 +1062,8 @@ SEITEN = {
             ("chat.needed", ("Pflicht-Werkzeuge: nie ändernd aus Admin-Regeln, keine Websuche bei Privatem",
                              "must tools: never changing from admin rules, no web search for private sentences")),
             ("chat.ha_take", ("Smart-Home-Befehl mit Codewort nur von seiner Quelle", "smart home command with code word only from its source")),
+            ("profiles.quelle", ("was wartet, gehört zu Gerät und Gespräch", "what waits belongs to device and conversation")),
+            ("profiles.pending_replaced", ("Ja zu einem anderswo ersetzten Vorschlag: nichts ausführen", "yes to a proposal replaced elsewhere: carry out nothing")),
             ("chat.PRIVATE_WORDS", ("private Sätze: nie eine Pflicht-Websuche", "private sentences: never a must web search")),
             ("push.add", ("ein Push-Abo gehört genau einem Profil", "a push subscription belongs to exactly one profile")),
             ("push.drop_login", ("Push-Abo endet mit der Anmeldung des Browsers", "push subscription ends with the browser's login")),

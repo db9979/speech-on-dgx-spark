@@ -4,7 +4,6 @@ import asyncio
 import chat_modell
 import chat_ton
 import datetime
-import hashlib
 import json
 import os
 import re
@@ -436,17 +435,8 @@ HA_HINT = ("Mit home_assistant steuerst du das Smart Home des Nutzers (Licht, Ge
            "Einkaufsliste home_assistant_todo.")
 
 
-_HA_PENDING = {}  # profile id -> (time, command, source) waiting for the code word (ha_wait, ha_take)
+_HA_PENDING = {}  # profile id -> (time, command, source) waiting for the code word (ha_wait, ha_take; source: profiles.quelle)
 HA_WAIT_S = 120   # s a smart home command waits for the code word
-
-
-def ha_source(request, src):
-    """Where a smart home command that waits for the code word came from (P1 Sicherheit, review A-H4): client:convo plus
-    the device key or this browser's login, only as a short hash, only in memory, never in a log."""
-    dev = profiles.device(request)
-    raw = "" if dev else str(request.cookies.get(profiles.COOKIE, "") or "")
-    who = dev["id"] if dev else (raw.split(".")[2] if raw.count(".") == 3 else "")
-    return f"{src}:{hashlib.sha256(who.encode()).hexdigest()[:12]}"
 
 
 def ha_wait(uid, source, command, now=None):
@@ -2688,8 +2678,9 @@ async def _watch_run(job, response, prof, text, tz):
 # "Hey Siri, frag Spark": an iPhone shortcut posts the dictated question with the profile's device
 # key and lets Siri read the text answer. Follow-up questions within 10 minutes keep the context;
 # each day's questions are kept as one conversation of the profile ("Siri").
-_SIRI = {}
+_SIRI = {}            # (who, profile, device) -> (when, the last messages)
 SIRI_FOLLOW_UP = 600
+SIRI_MAX = 500        # devices kept (in memory only): the oldest goes
 
 
 @router.post("/api/siri/ask")
@@ -2717,7 +2708,10 @@ async def text_ask(request, prof, body, who="siri"):
     text = str(body.get("text", "")).strip()[:2000]
     if not text:
         return {"answer": "Ich habe keine Frage gehört."}
-    last = _SIRI.get((who, prof["id"]))
+    # follow-ups per device (P6, review A-M2): the Begleiter on the PC never gets the Mac's history, Siri on the iPad
+    # never the iPhone's (profiles.geraet: the device key, else the browser login)
+    key = (who, prof["id"], profiles.geraet(request))
+    last = _SIRI.get(key)
     history = last[1][-8:] if last and time.time() - last[0] < SIRI_FOLLOW_UP else []
     note = str(body.get("note") or "")[:1700]
     if note:   # an answer to one of the Spark's notes (Begleiter): the note is in front, marked as outside text
@@ -2770,7 +2764,9 @@ async def text_ask(request, prof, body, who="siri"):
     msgs = history + [{"role": "user", "content": text},
                       dict({"role": "assistant", "content": answer}, **({"mail": True} if from_mail else
                                                                        {"outside": True} if from_outside else {}))]
-    _SIRI[(who, prof["id"])] = (time.time(), msgs)
+    if len(_SIRI) >= SIRI_MAX and key not in _SIRI:
+        _SIRI.pop(next(iter(_SIRI)))
+    _SIRI[key] = (time.time(), msgs)
     # the day as the person sees it (the shortcut may send its time zone, else the profile's)
     local = datetime.datetime.now(user_zone(body.get("tz") or profiles.settings(prof["id"]).get("tz", "")))
     day = local.strftime("%Y%m%d")

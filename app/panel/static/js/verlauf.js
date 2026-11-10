@@ -16,8 +16,10 @@ function syncStart(){const es=new EventSource('/api/profile/convos/stream');vsyn
   es.onmessage=e=>{let ev;try{ev=JSON.parse(e.data)}catch{return}if(!ev||typeof ev!=='object')return;
     if(ev.type==='convo'){clearTimeout(vsync.t);vsync.t=setTimeout(()=>convoLook(true),300)}
     else if(ev.type==='busy'&&ev.tab!==TAB){vsync.busy[[ev.kind,ev.convo,ev.tab].join('|')]=ev;syncBusy()}
-    else if(ev.type==='idle'){delete vsync.busy[[ev.kind,ev.convo,ev.tab].join('|')];syncBusy()}};
-  // the browser opens it again by itself (retry 5 s); switched off (403) or signed out it stays closed
+    else if(ev.type==='idle'){delete vsync.busy[[ev.kind,ev.convo,ev.tab].join('|')];syncBusy()}
+    // a newer page took this stream's place (sse.py): nothing comes any more until the browser opens it again
+    else if(ev.type==='verdraengt'){vsync.busy={};syncBusy()}};
+  // the browser opens it again by itself (retry 5 s, after "verdraengt" 60 s); switched off (403) or signed out it stays closed
   es.onerror=()=>{if(es.readyState===2&&vsync.es===es){vsync.es=null;vsync.busy={};syncBusy()}}}
 function syncStop(){if(vsync.es){vsync.es.close();vsync.es=null}vsync.busy={};syncBusy()}
 document.addEventListener('visibilitychange',syncSettings);
@@ -51,11 +53,15 @@ async function offlineShell(){if(!window.caches||vsync.shell===SPARK_VER)return;
 function offlineWho(){for(const k of offlineKeys())if(k.startsWith(OFFL))try{const d=JSON.parse(localStorage.getItem(k));
   if(d&&d.p&&d.p.id)return {admin:false,profile:{id:String(d.p.id),name:String(d.p.name||'')},offline:true}}catch{}return null}
 function offlineShow(d){chatSay(t('Ohne Verbindung zum Spark: Verlauf vom ','No connection to the Spark: history of ')+new Date(d.at).toLocaleString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+t(', nur lesen.',', read only.'))}
-// questions asked without the Spark (at most 10) go out once it answers again
+// questions asked without the Spark (at most 10) go out once it answers again, each in its own conversation
 // (opened without the Spark the settings are unknown: then only where the trusted copy is)
-function offlineQueue(text){if(!PROFILE||!(OFFLINE_HERE===true||(OFFLINE_HERE===null&&offlineCopy())))return false;let q=[];try{q=JSON.parse(localStorage.getItem(OFFQ+PROFILE.id)||'[]')}catch{}
-  if(!Array.isArray(q)||q.length>=10)return false;q.push(String(text).slice(0,2000));try{localStorage.setItem(OFFQ+PROFILE.id,JSON.stringify(q))}catch{return false}return true}
+function offlineQueue(text,cid){if(!PROFILE||!(OFFLINE_HERE===true||(OFFLINE_HERE===null&&offlineCopy())))return false;let q=[];try{q=JSON.parse(localStorage.getItem(OFFQ+PROFILE.id)||'[]')}catch{}
+  if(!Array.isArray(q)||q.length>=10)return false;q.push({t:String(text).slice(0,2000),c:/^[\w-]{1,40}$/.test(cid||'')?cid:''});try{localStorage.setItem(OFFQ+PROFILE.id,JSON.stringify(q))}catch{return false}return true}
 async function offlineFlush(){if(!PROFILE||vsync.flushing)return;let q=[];try{q=JSON.parse(localStorage.getItem(OFFQ+PROFILE.id)||'[]')}catch{}
   if(!Array.isArray(q)||!q.length)return;vsync.flushing=true;try{localStorage.removeItem(OFFQ+PROFILE.id)}catch{}
-  try{for(const x of q){while(chat.ctrl||chat.rec)await new Promise(r=>setTimeout(r,300));await ask(String(x))}}finally{vsync.flushing=false}}
+  try{for(const x of q){while(chat.ctrl||chat.rec)await new Promise(r=>setTimeout(r,300));
+    // into the conversation it was typed in (A-N1), never the one open now; older entries are plain texts
+    const text=typeof x==='string'?x:String(x&&x.t||''),cid=x&&typeof x==='object'&&/^[\w-]{1,40}$/.test(x.c||'')?x.c:'';if(!text)continue;
+    if(cid&&cid!==chat.cid){if(convos.load().some(c=>c.id===cid))showConvo(cid);else{showConvo(null);chat.cid=cid}}
+    await ask(text)}}finally{vsync.flushing=false}}
 addEventListener('online',()=>{if(PROFILE)convoLook(true)});   // convoLook sends what waits once the Spark answers

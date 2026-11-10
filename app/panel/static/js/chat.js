@@ -333,7 +333,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
         else if(ev.type==='timing'){if(ev.llm_first_token!=null)llmS=ev.llm_first_token;if(ev.first_audio!=null)audioS=ev.first_audio;if(ev.first_ack!=null)ackS=ev.first_ack}
         else if(ev.type==='ende'){ended=ENDE_TEXT[ev.art]?ev.art:'stopp'}   // a stop word or Notaus (stoppwort.py, laufend.py): over
         else if(ev.type==='error'){if(!err)err=errText(ev.code,ev.message);if(/^tts/.test(ev.code||''))ttsErr=true}}}}
-  catch(e){if(e.name!=='AbortError')err=e instanceof TypeError&&!pids.length&&offlineQueue(text)?t('Keine Verbindung zum Spark. Die Frage geht raus, sobald er wieder antwortet.','No connection to the Spark. The question goes out once it answers again.'):errText(e instanceof TypeError?'net':'',e.message);if(pids.length&&/picture is gone/.test(errRaw(e)))picsGone()}
+  catch(e){if(e.name!=='AbortError')err=e instanceof TypeError&&!pids.length&&offlineQueue(text,cid)?t('Keine Verbindung zum Spark. Die Frage geht raus, sobald er wieder antwortet.','No connection to the Spark. The question goes out once it answers again.'):errText(e instanceof TypeError?'net':'',e.message);if(pids.length&&/picture is gone/.test(errRaw(e)))picsGone()}
   const aborted=ctrl.signal.aborted;if(chat.ctrl===ctrl)chat.ctrl=null;if(frame)show(drawn,true);
   const moved=chat.msgs!==msgs,drop=()=>{const i=msgs.lastIndexOf(um);if(i>=0)msgs.splice(i,1)};
   if(ended){drop();el.classList.remove('typing');el.textContent=ENDE_TEXT[ended];   // nothing kept, nothing asked again

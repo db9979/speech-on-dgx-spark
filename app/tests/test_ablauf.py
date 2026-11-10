@@ -152,7 +152,7 @@ class Chat(unittest.TestCase):
 
     def test_card_for_a_proposal_of_this_answer(self):
         helpers.set_config(show_steps=True)
-        stub = Waiting({"t": int(time.time()) + 1, "src": "web:c1"})
+        stub = Waiting({"t": int(time.time()) + 1, "src": helpers.quelle(self.c, "c1")})
         with mock.patch.object(chat_turn, "waiting_mods", return_value=(stub,)):
             evs = turn(self.c, "Hallo")
             other = turn(self.c, "Hallo", convo="c2")
@@ -171,7 +171,7 @@ class Chat(unittest.TestCase):
 
     def test_no_question_card_when_a_proposal_card_waits(self):
         helpers.set_config(show_steps=True)
-        stub = Waiting({"t": int(time.time()) + 1, "src": "web:c1"})
+        stub = Waiting({"t": int(time.time()) + 1, "src": helpers.quelle(self.c, "c1")})
         with mock.patch.object(chat_turn, "waiting_mods", return_value=(stub,)):
             evs = turn(self.c, "SAY | | Soll ich ihn so eintragen?")
         self.assertEqual([e["type"] for e in evs if e["type"] in ("confirm", "choice")], ["confirm"])
@@ -183,7 +183,7 @@ class Chat(unittest.TestCase):
         said = "Morgen 17 bis 18 Uhr Zahnarzt. Soll ich ihn so eintragen?"
         msgs = [{"role": "user", "content": ask}, {"role": "assistant", "content": said}, {"role": "user", "content": "Ja"}]
         for convo, want in (("c9", True), ("c8", False)):
-            ablauf.remember_asked(uid_of("Abla"), "web:c9", ablauf.asks(said))
+            ablauf.remember_asked(uid_of("Abla"), helpers.quelle(self.c, "c9"), ablauf.asks(said))
             with mock.patch.object(intent, "follow_up", wraps=intent.follow_up) as f:
                 r = self.c.post("/api/chat", json={"messages": msgs, "convo": convo, "speak": False})
                 self.assertEqual(r.status_code, 200)

@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.368** Gerät statt Profil: ein „Ja“ gilt nur auf dem Gerät und im Gespräch, wo gefragt wurde, Mitteilungen kennen jedes Gerät einzeln, Kanal-Antworten landen den ganzen Tag im selben Hauptgespräch
 - **V01.1.367** Rückfrage zum Weg: vor einer Änderung, die zwei Wege gehen könnte (Mail oder Nachricht, Termin oder Erinnerung), fragt der Assistent mit Knöpfen, welcher gemeint ist, oder antwortet einfach; nie bei Lesefragen, standardmäßig aus
 - **V01.1.366** Weiche genauer: Wissensfragen behalten Websuche und Wikipedia, ein Notruf löst keinen Anruf aus, eine Folgefrage gilt nur kurz und mit Rückbezug, „Strassenbahn“ und „Wohnzimmerlampe“ werden verstanden
 - **V01.1.365** Abbrechen heißt aus: „Stopp“ oder „Tschüss“ beendet das Gespräch überall ohne Modell, danach geht kein Mikrofon wieder auf; Notaus Stufe 3 beendet laufende Antworten und Telefonate
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.361** Sicherheit sofort: „Mach das Licht nicht aus“ schaltet nie, „Vergiss es“ löscht nichts, keine Websuche für Privates, Mitteilungen eines Browsers nur für ein Profil, Codewort nur vom selben Gerät
 - **V01.1.360** ROT-FIX: zwei Tests prüfen jetzt die eine feste Paketliste statt der entfernten zweiten
 - **V01.1.359** Ausgedünnt: alte Einmal-Umstellungen und doppelte Paketlisten sind weg; tars baut seine Panel-Umgebung einmal neu aus der festen Paketliste
-- **V01.1.358** Fester Name fürs Sprachmodell: Programme sehen unter /v1 immer „sprachmodell“, welches Modell wirklich läuft, steht daneben und kommt aus der Engine; Live zeigt nicht mehr fest „qwen38“
 
 
 

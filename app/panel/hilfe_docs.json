@@ -1117,7 +1117,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "-Abgleich je offener Seite (Schritt 11) - app/panel/sse.py Hub.stream: ein Strom je Seite: Warteschlange, Lebenszeichen, Aufräumen (Schritt 11) - app/panel/verlauf.py begin: „antwortet gerade“ für die anderen Seiten (Schritt 6, Schritt 11)"
+"text": "-Abgleich je offener Seite (Schritt 11) - app/panel/sse.py Hub.stream: ein Strom je Seite: Warteschlange, Lebenszeichen, Aufräumen; der verdrängte endet mit „verdraengt“ (Schritt 11) - app/panel/verlauf.py begin: „antwortet gerade“ für die anderen Seiten (Schritt 6, Schritt 11)"
 },
 {
 "lang": "de",
@@ -1125,7 +1125,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_verlauf_sync, test_stille, test_echo, test_fremdstimme, test_follow_up, test_abbrechen"
+"text": "Selbsttests: test_verlauf_sync, test_stille, test_echo, test_fremdstimme, test_follow_up, test_abbrechen, test_geraet_statt_profil"
 },
 {
 "lang": "de",
@@ -1165,7 +1165,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "hone/hello; die App zeigt es nur an und hält sich daran. Anrufe zwischen Profilen klingeln über einen VoIP-Push von Apple, der nur die zufällige Nummer des Anrufs trägt; wer anruft, fragt die App beim Spark nach. Für private Chats macht die App ihren eigenen Schlüssel im Secure Enclave; der Spark bekommt nur die öffentliche Hälfte. Das Blatt der Android-App über anderen Apps fragt als Gerät „android“, nur solange „Android: Spark als Assistent“ freigegeben ist (android.assist_gate). Ob die App den letzten Stand der Seiten behalten darf, sagt hello mit „keep“ (appmerken.keep); bei Nein löscht sie ihn. Mit „barge_hold“ hält sie die Antwort fürs Ins-Wort-Fallen nur an (zwischenruf.py). Hat das Profil eine Admin-Rolle, die App aber gerade nicht, nennt hello in „admin_why“ den Grund als festes Wort; ist der App-Schlüssel älter als der zweite Schritt, bindet „Mit Code bestätigen“ (POST /api/iphone/admin-step, jedes Mal ein frischer Code oder Passkey) ihn einmal daran. Mit „Mitteilung ans genutzte Gerät“ sagen App und Seiten jede Minute nur, ob sie gerade benutzt werden (POST /api/zustellung/da, der Begleiter mit seiner Leerlaufzeit); zustellung.pick schickt eine Mitteilung dann an das Ger"
+"text": "hone/hello; die App zeigt es nur an und hält sich daran. Anrufe zwischen Profilen klingeln über einen VoIP-Push von Apple, der nur die zufällige Nummer des Anrufs trägt; wer anruft, fragt die App beim Spark nach. Für private Chats macht die App ihren eigenen Schlüssel im Secure Enclave; der Spark bekommt nur die öffentliche Hälfte. Das Blatt der Android-App über anderen Apps fragt als Gerät „android“, nur solange „Android: Spark als Assistent“ freigegeben ist (android.assist_gate). Ob die App den letzten Stand der Seiten behalten darf, sagt hello mit „keep“ (appmerken.keep); bei Nein löscht sie ihn. Mit „barge_hold“ hält sie die Antwort fürs Ins-Wort-Fallen nur an (zwischenruf.py). Hat das Profil eine Admin-Rolle, die App aber gerade nicht, nennt hello in „admin_why“ den Grund als festes Wort; ist der App-Schlüssel älter als der zweite Schritt, bindet „Mit Code bestätigen“ (POST /api/iphone/admin-step, jedes Mal ein frischer Code oder Passkey) ihn einmal daran. Mit „Mitteilung ans genutzte Gerät“ sagen App und Seiten jede Minute nur, ob sie gerade benutzt werden (POST /api/zustellung/da, der Begleiter mit seiner Leerlaufzeit), jedes Gerät für sich (zustellung.seen, profiles.geraet,"
 },
 {
 "lang": "de",
@@ -1173,7 +1173,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ät mit der letzten Eingabe der letzten 120 Sekunden (ein Browser nur mit eigenem Push-Abo, und ein Push-Abo gehört genau einem Profil), sonst gleich an die Handy-App. Hat niemand sie gesehen, schickt zustellung.follow sie nach 5 Minuten einmal aufs Handy; ein angetippter Hinweis meldet „gesehen“, und mit der Antwort „zu“ räumen Seiten und iPhone Erledigtes weg. Jede Mitteilung bleibt 24 Stunden mit einer zufälligen Nummer auf dem Spark (mitteilungen.keep, nur im Speicher); nur die Nummer geht mit. Wer sie antippt, sieht sie als Karte über dem Gespräch, mit dem einen Knopf, den mitteilungen.ziel nach festen Regeln wählt (Offen, Chat, Mail, Code, Weg); nur das eigene Profil bekommt sie zurück. 10. Konto, Geräte oder Sicherheit?: Endpunkte, die Verbindungen, Geräte oder Sicherheit des Profils ändern, nehmen nur die eigene Browser-Anmeldung (core.browser_profile). Einen Geräteschlüssel lehnen sie ab, außer in einem Bereich, den das Profil der App freigegeben hat; Geheimnisse brauchen dort zusätzlich einen frischen Code. 11. Entfernen wirkt sofort: Wird das iPhone im Panel entfernt, verschwindet der Hash aus der Geräteliste. Die nächste Anfrage der App findet kein Profil mehr."
+"text": " eine Seite mit ihrem Tab: ein ungenutztes zweites Fenster überstimmt nie das benutzte, ein versteckter Tab meldet nur sich weg); zustellung.pick schickt eine Mitteilung dann an das Gerät mit der letzten Eingabe der letzten 120 Sekunden (ein Browser nur mit eigenem Push-Abo, und ein Push-Abo gehört genau einem Profil), sonst gleich an die Handy-App. Hat niemand sie gesehen, schickt zustellung.follow sie nach 5 Minuten einmal aufs Handy (gesehen zählt nur der Browser, an dessen Abo sie ging); ein angetippter Hinweis meldet „gesehen“, und mit der Antwort „zu“ räumen Seiten und iPhone Erledigtes weg. Jede Mitteilung bleibt 24 Stunden mit einer zufälligen Nummer auf dem Spark (mitteilungen.keep, nur im Speicher); nur die Nummer geht mit. Wer sie antippt, sieht sie als Karte über dem Gespräch, mit dem einen Knopf, den mitteilungen.ziel nach festen Regeln wählt (Offen, Chat, Mail, Code, Weg); nur das eigene Profil bekommt sie zurück. 10. Konto, Geräte oder Sicherheit?: Endpunkte, die Verbindungen, Geräte oder Sicherheit des Profils ändern, nehmen nur die eigene Browser-Anmeldung (core.browser_profile). Einen Geräteschlüssel lehnen sie ab, außer in einem Bereich, den das Profil der App fr"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Ablauf",
+"title": "Ablauf",
+"text": "eigegeben hat; Geheimnisse brauchen dort zusätzlich einen frischen Code. 11. Entfernen wirkt sofort: Wird das iPhone im Panel entfernt, verschwindet der Hash aus der Geräteliste. Die nächste Anfrage der App findet kein Profil mehr."
 },
 {
 "lang": "de",
@@ -1221,7 +1229,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "p/panel/zustellung.py pick: Mitteilung ans benutzte Gerät, sonst an die Handy-App (Schritt 9) - app/panel/zustellung.py api_da: nur „gerade benutzt“ oder „weg“, nur Seiten und Apps (Schritt 9) - app/panel/zustellung.py follow: einmal aufs Handy nachfassen, nie ein drittes Mal (Schritt 9) - app/panel/mitteilungen.py ziel: was die Karte einer angetippten Mitteilung anbietet, feste Regeln (Schritt 9) - app/panel/mitteilungen.py opened: nur die eigene Mitteilung, eine Logzeile ohne Text (Schritt 9) - app/panel/terminal.py profile_pair: Kopplungszeile fürs Terminal nur aus dem eigenen Browser (Schritt 1, Schritt 2) - app/panel/terminal.py setup_base: zu Hause gepinnt, extern nur https (Schritt 3) - app/panel/terminal.py program_pair: der erste Kontakt des Terminals (Schritt 4, Schritt 5) - app/panel/terminal.py reaches: die feste Regelliste des Terminals (Schritt 7)"
+"text": "p/panel/zustellung.py pick: Mitteilung ans benutzte Gerät, sonst an die Handy-App (Schritt 9) - app/panel/zustellung.py api_da: nur „gerade benutzt“ oder „weg“, nur Seiten und Apps (Schritt 9) - app/panel/zustellung.py seen: ein Eintrag je Gerät und Seite, höchstens 12 je Profil (Schritt 9) - app/panel/zustellung.py _was_seen: gesehen nur auf dem Gerät, an das sie ging (Schritt 9) - app/panel/zustellung.py follow: einmal aufs Handy nachfassen, nie ein drittes Mal (Schritt 9) - app/panel/mitteilungen.py ziel: was die Karte einer angetippten Mitteilung anbietet, feste Regeln (Schritt 9) - app/panel/mitteilungen.py opened: nur die eigene Mitteilung, eine Logzeile ohne Text (Schritt 9) - app/panel/terminal.py profile_pair: Kopplungszeile fürs Terminal nur aus dem eigenen Browser (Schritt 1, Schritt 2) - app/panel/terminal.py setup_base: zu Hause gepinnt, extern nur https (Schritt 3) - app/panel/terminal.py program_pair: der erste Kontakt des Terminals (Schritt 4, Schritt 5) - app/panel/terminal.py reaches: die feste Regelliste des Terminals (Schritt 7)"
 },
 {
 "lang": "de",
@@ -1229,7 +1237,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_iphone, test_iphone_panel, test_android, test_app_notaus, test_kopplung, test_terminal, test_zustellung, test_mitteilungen"
+"text": "Selbsttests: test_iphone, test_iphone_panel, test_android, test_app_notaus, test_kopplung, test_terminal, test_zustellung, test_mitteilungen, test_geraet_statt_profil"
 },
 {
 "lang": "de",
@@ -1261,7 +1269,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "en. Bei Siri diktiert das iPhone, bei der Uhr das Handy. 6. Kurzer Verlauf: Für Nachfragen gehen die letzten acht Nachrichten mit, solange die letzte Frage nicht länger her ist als 30 Minuten (Telegram) oder 10 Minuten (Siri). Die Uhr schickt ihren Verlauf selbst; Antworten aus fremdem Text erkennt das Panel daran wieder (watch.mark_of). 7. Anfrage an /api/chat: Der Kanal ruft den Chat im Panel selbst auf. Bei Telegram setzt das Panel das Profil in die Anfrage, was keine Anfrage von außen kann; Siri und die Uhr tragen ihren Schlüssel. Rechte, Weiche, Grenzen und Anfrage-Verlauf sind dieselben wie im Browser. 8. Antwort einsammeln: Aus dem Strom zählen Textstücke und Rücknahmen. Kam die Antwort aus Mail oder fremdem Text, wird sie so markiert, damit die nächste Frage gesperrt beginnt. Sagt der Strom „ende“ (ein ganzer Satz aus Stoppwörtern, Notaus Stufe 3), bekommen Telegram und Siri ein festes Wort (chat.ENDE_SAY), der Begleiter leeren Text mit „ende“ und hört auf vorzulesen; nichts kommt in den Verlauf des Begleiters. Eine Rückfrage des Panels wird in Telegram zu Knöpfen, die wie eine getippte Antwort zurückkommen; ohne Rückfrage werden die Beispielsätze von „Das kannst du auch sa"
+"text": "en. Bei Siri diktiert das iPhone, bei der Uhr das Handy. 6. Kurzer Verlauf: Für Nachfragen gehen die letzten acht Nachrichten mit, solange die letzte Frage nicht länger her ist als 30 Minuten (Telegram) oder 10 Minuten (Siri), bei Siri und Begleiter je Gerät (profiles.geraet: iPhone und iPad, PC und Mac haben jedes ihren eigenen). Die Uhr schickt ihren Verlauf selbst; Antworten aus fremdem Text erkennt das Panel daran wieder (watch.mark_of). 7. Anfrage an /api/chat: Der Kanal ruft den Chat im Panel selbst auf. Bei Telegram setzt das Panel das Profil in die Anfrage, was keine Anfrage von außen kann; Siri und die Uhr tragen ihren Schlüssel. Rechte, Weiche, Grenzen und Anfrage-Verlauf sind dieselben wie im Browser. 8. Antwort einsammeln: Aus dem Strom zählen Textstücke und Rücknahmen. Kam die Antwort aus Mail oder fremdem Text, wird sie so markiert, damit die nächste Frage gesperrt beginnt. Sagt der Strom „ende“ (ein ganzer Satz aus Stoppwörtern, Notaus Stufe 3), bekommen Telegram und Siri ein festes Wort (chat.ENDE_SAY), der Begleiter leeren Text mit „ende“ und hört auf vorzulesen; nichts kommt in den Verlauf des Begleiters. Eine Rückfrage des Panels wird in Telegram zu Knöpfen, die "
 },
 {
 "lang": "de",
@@ -1269,7 +1277,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "gen“ zu Antworttasten. Die Sofort-Karte von Finden (ein Treffer klar vorn) wird ein Knopf „Original öffnen“ zur Panel-Adresse für Links (#fund=, nur Navigation), wenn sie eingetragen ist. Die Herkunftszeile aus eigenen Daten („Aus: 2 Mails, 1 Termin“) steht unter der Antwort, nie im Verlauf; „Auch im Internet suchen“ wird eine Antworttaste mit diesen festen Worten. Der Begleiter bekommt die Zeile hinter den Werkzeugen und eine Karte mit „Auch im Internet suchen“ und „In Finden ansehen“ (desk_cards). 9. Ausgabe je Kanal: Telegram bekommt reinen Text und, wenn das Profil es will, eine Sprachnachricht in seiner Stimme. Siri bekommt vorlesbaren Text ohne Passwörter und Codes. Die Uhr holt Text und Ton (auf 6000 Bytes je Abruf, für ihren kleinen Lautsprecher gepackt) über /api/watch/poll, nur das Profil, das gefragt hat (fremde Auftrags-Nummern geben 404); höchstens 8 Uhr-Antworten laufen gleichzeitig. Der Begleiter bekommt Text ohne Markdown und zusätzlich die Antwort mit Markdown (höchstens 60000 Zeichen), wenn darin nicht weniger Geheimnisse verdeckt sind. Mit ihren Schaltern bekommt die Uhr außerdem bis zu 3 Nachfragen zum Antippen (das Modell schlägt nur vor, watch.follow_clean läs"
+"text": "wie eine getippte Antwort zurückkommen; ohne Rückfrage werden die Beispielsätze von „Das kannst du auch sagen“ zu Antworttasten. Die Sofort-Karte von Finden (ein Treffer klar vorn) wird ein Knopf „Original öffnen“ zur Panel-Adresse für Links (#fund=, nur Navigation), wenn sie eingetragen ist. Die Herkunftszeile aus eigenen Daten („Aus: 2 Mails, 1 Termin“) steht unter der Antwort, nie im Verlauf; „Auch im Internet suchen“ wird eine Antworttaste mit diesen festen Worten. Der Begleiter bekommt die Zeile hinter den Werkzeugen und eine Karte mit „Auch im Internet suchen“ und „In Finden ansehen“ (desk_cards). 9. Ausgabe je Kanal: Telegram bekommt reinen Text und, wenn das Profil es will, eine Sprachnachricht in seiner Stimme. Siri bekommt vorlesbaren Text ohne Passwörter und Codes. Die Uhr holt Text und Ton (auf 6000 Bytes je Abruf, für ihren kleinen Lautsprecher gepackt) über /api/watch/poll, nur das Profil, das gefragt hat (fremde Auftrags-Nummern geben 404); höchstens 8 Uhr-Antworten laufen gleichzeitig. Der Begleiter bekommt Text ohne Markdown und zusätzlich die Antwort mit Markdown (höchstens 60000 Zeichen), wenn darin nicht weniger Geheimnisse verdeckt sind. Mit ihren Schaltern bek"
 },
 {
 "lang": "de",
@@ -1277,7 +1285,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "st nur kurze Fragen ohne Ja, Nein, Links oder Zahlen durch; nie nach Mail, Web oder einem Vorschlag; endet die Antwort mit einer Frage, sind deren Knöpfe aus ablauf.asks die Nachfragen), einen Vorschlag als ✓ und ✕ und über /api/watch/sync die Schnellbefehle und die nächsten 8 Erinnerungen, die sie selbst als Wecker klingeln lässt; Push wartet zuerst auf sie. Das Spark-Zifferblatt holt alle 15 Minuten über /api/watch/blick den nächsten Termin, die nächste Erinnerung, das Wetter, einen Tipp und für Admins einen Ausfall; /api/watch/brief baut Mein Tag und Meine Woche aus festen Sätzen, /api/watch/merken legt einen diktierten Satz ins Gedächtnis (mit Ort auf etwa 100 m nur mit eigenem Schalter). /api/watch/chats und /api/watch/chat zeigen die letzten Chats (ohne private) und schicken eine angetippte oder diktierte Antwort über chats.send; bis zu 3 Vorschläge des Modells prüft pebblewatch.reply_clean fest. /api/watch/fern schaltet nur Geräte der eigenen Liste mit festen Tasten (nie mit Smart-Home-Codewort), /api/watch/gesundheit legt Schritte, Puls und Schlaf versiegelt ins Profil, nie für das Modell. 10. Codewort schwärzen: Vor dem Speichern wird das Smart-Home-Codewort durch [Codewor"
+"text": "ommt die Uhr außerdem bis zu 3 Nachfragen zum Antippen (das Modell schlägt nur vor, watch.follow_clean lässt nur kurze Fragen ohne Ja, Nein, Links oder Zahlen durch; nie nach Mail, Web oder einem Vorschlag; endet die Antwort mit einer Frage, sind deren Knöpfe aus ablauf.asks die Nachfragen), einen Vorschlag als ✓ und ✕ und über /api/watch/sync die Schnellbefehle und die nächsten 8 Erinnerungen, die sie selbst als Wecker klingeln lässt; Push wartet zuerst auf sie. Das Spark-Zifferblatt holt alle 15 Minuten über /api/watch/blick den nächsten Termin, die nächste Erinnerung, das Wetter, einen Tipp und für Admins einen Ausfall; /api/watch/brief baut Mein Tag und Meine Woche aus festen Sätzen, /api/watch/merken legt einen diktierten Satz ins Gedächtnis (mit Ort auf etwa 100 m nur mit eigenem Schalter). /api/watch/chats und /api/watch/chat zeigen die letzten Chats (ohne private) und schicken eine angetippte oder diktierte Antwort über chats.send; bis zu 3 Vorschläge des Modells prüft pebblewatch.reply_clean fest. /api/watch/fern schaltet nur Geräte der eigenen Liste mit festen Tasten (nie mit Smart-Home-Codewort), /api/watch/gesundheit legt Schritte, Puls und Schlaf versiegelt ins Profil,"
 },
 {
 "lang": "de",
@@ -1285,7 +1293,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "t] ersetzt. In Telegram löscht der Bot die Nachricht mit dem Codewort oder bittet darum, sie zu löschen. 11. Im Verlauf des Profils: verlauf.keep legt Frage und Antwort in das Tagesgespräch des Kanals („Telegram“, „Siri“, „Uhr“ mit Datum). Mit „Ein Gespräch für alle Kanäle“ landen sie im Hauptgespräch des Tages, markiert mit ihrem Kanal."
+"text": " nie für das Modell. 10. Codewort schwärzen: Vor dem Speichern wird das Smart-Home-Codewort durch [Codewort] ersetzt. In Telegram löscht der Bot die Nachricht mit dem Codewort oder bittet darum, sie zu löschen. 11. Im Verlauf des Profils: verlauf.keep legt Frage und Antwort in das Tagesgespräch des Kanals („Telegram“, „Siri“, „Uhr“ mit Datum). Mit „Ein Gespräch für alle Kanäle“ landen sie im Hauptgespräch des Tages, markiert mit ihrem Kanal. Das Hauptgespräch legt verlauf.main_today beim ersten Bedarf des Tages fest und merkt es (hauptgespraech.json, nur Tag und Nummer); ein später geändertes Themen-Gespräch nimmt nie seinen Platz ein."
 },
 {
 "lang": "de",
@@ -1325,7 +1333,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/telegram.py loop: fragt Telegram, ruht bei Notaus (Schritt 1) - app/panel/telegram.py handle: eine Nachricht: Verknüpfung, Sperren, Befehle, Sprache (Schritt 2, Schritt 3, Schritt 4) - app/panel/telegram.py ask: Frage an den Chat, Antwort einsammeln, speichern (Schritt 7, Schritt 8, Schritt 11) - app/panel/telegram.py transcribe: Sprachnachricht über ffmpeg zur Spracherkennung (Schritt 5) - app/panel/chat.py siri_ask: Siri: Profil aus dem Schlüssel (Schritt 1, Schritt 3) - app/panel/chat.py ENDE_SAY: festes Wort, wenn die Antwort endet (Stopp, Tschüss, Notaus) (Schritt 8) - app/panel/chat.py text_ask: Siri und Begleiter: Frage, Antwort, Verlauf, beim Begleiter dazu die Karten (desk_cards) (Schritt 6, Schritt 7, Schritt 11) - app/panel/chat.py watch_ask: Uhr: Antwort als Auftrag starten (Schritt 1, Schritt 7) - app/panel/chat.py _watch_run: Uhr: Antwort in den Verlauf (Schritt 11) - app/panel/watch.py run: liest den Strom in den Uhr-Auftrag (Schritt 8) - app/panel/watch.py poll: Text und Ton stückweise (Schritt 9) - app/panel/watch.py follow_ups: Nachfragen vom Modell, mit Zeitgrenze (Schritt 9) - app/panel/watch.py follow_clean: feste Prüfung der Nachfragen (Schritt 9) "
+"text": "- app/panel/telegram.py loop: fragt Telegram, ruht bei Notaus (Schritt 1) - app/panel/telegram.py handle: eine Nachricht: Verknüpfung, Sperren, Befehle, Sprache (Schritt 2, Schritt 3, Schritt 4) - app/panel/telegram.py ask: Frage an den Chat, Antwort einsammeln, speichern (Schritt 7, Schritt 8, Schritt 11) - app/panel/telegram.py transcribe: Sprachnachricht über ffmpeg zur Spracherkennung (Schritt 5) - app/panel/chat.py siri_ask: Siri: Profil aus dem Schlüssel (Schritt 1, Schritt 3) - app/panel/chat.py ENDE_SAY: festes Wort, wenn die Antwort endet (Stopp, Tschüss, Notaus) (Schritt 8) - app/panel/chat.py text_ask: Siri und Begleiter: Frage, Antwort, Verlauf, beim Begleiter dazu die Karten (desk_cards) (Schritt 6, Schritt 7, Schritt 11) - app/panel/chat.py watch_ask: Uhr: Antwort als Auftrag starten (Schritt 1, Schritt 7) - app/panel/chat.py _watch_run: Uhr: Antwort in den Verlauf (Schritt 11) - app/panel/verlauf.py main_today: das Hauptgespräch des Tages, einmal festgelegt (Schritt 11) - app/panel/watch.py run: liest den Strom in den Uhr-Auftrag (Schritt 8) - app/panel/watch.py poll: Text und Ton stückweise (Schritt 9) - app/panel/watch.py follow_ups: Nachfragen vom Modell, mit Zeit"
 },
 {
 "lang": "de",
@@ -1333,7 +1341,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/pebblewatch.py watch_sync: Schnellbefehle und Erinnerungen für die Uhr (Schritt 9) - app/panel/pebblewatch.py watch_reminder: Erinnerung auf der Uhr: gespielt, später, beenden, +1, Stopp (Schritt 9) - app/panel/pebblewatch.py watch_blick: was das Spark-Zifferblatt zeigt (Schritt 9) - app/panel/pebblewatch.py watch_brief: Mein Tag und Meine Woche, feste Sätze (Schritt 9) - app/panel/pebblewatch.py watch_note: Schnell merken ins Gedächtnis (Schritt 9) - app/panel/pebblewatch.py watch_chat: ein Chat auf der Uhr, mit Antworten (Schritt 9) - app/panel/pebblewatch.py watch_chat_send: Antwort von der Uhr in den Chat (Schritt 9) - app/panel/pebblewatch.py reply_clean: feste Prüfung der Antwortvorschläge (Schritt 9) - app/panel/pebblewatch.py watch_remote_act: Fernbedienung: eigene Liste, feste Tasten (Schritt 9) - app/panel/pebblewatch.py watch_health: Schritte, Puls, Schlaf versiegelt ins Profil (Schritt 9) - app/panel/verlauf.py keep: Tagesgespräch des Kanals oder Hauptgespräch (Schritt 11)"
+"text": "grenze (Schritt 9) - app/panel/watch.py follow_clean: feste Prüfung der Nachfragen (Schritt 9) - app/panel/pebblewatch.py watch_sync: Schnellbefehle und Erinnerungen für die Uhr (Schritt 9) - app/panel/pebblewatch.py watch_reminder: Erinnerung auf der Uhr: gespielt, später, beenden, +1, Stopp (Schritt 9) - app/panel/pebblewatch.py watch_blick: was das Spark-Zifferblatt zeigt (Schritt 9) - app/panel/pebblewatch.py watch_brief: Mein Tag und Meine Woche, feste Sätze (Schritt 9) - app/panel/pebblewatch.py watch_note: Schnell merken ins Gedächtnis (Schritt 9) - app/panel/pebblewatch.py watch_chat: ein Chat auf der Uhr, mit Antworten (Schritt 9) - app/panel/pebblewatch.py watch_chat_send: Antwort von der Uhr in den Chat (Schritt 9) - app/panel/pebblewatch.py reply_clean: feste Prüfung der Antwortvorschläge (Schritt 9) - app/panel/pebblewatch.py watch_remote_act: Fernbedienung: eigene Liste, feste Tasten (Schritt 9) - app/panel/pebblewatch.py watch_health: Schritte, Puls, Schlaf versiegelt ins Profil (Schritt 9) - app/panel/verlauf.py keep: Tagesgespräch des Kanals oder Hauptgespräch (Schritt 11)"
 },
 {
 "lang": "de",
@@ -1341,7 +1349,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_telegram_tasks, test_pebble, test_verlauf_sync, test_notaus, test_abbrechen"
+"text": "Selbsttests: test_telegram_tasks, test_pebble, test_verlauf_sync, test_notaus, test_abbrechen, test_geraet_statt_profil"
 },
 {
 "lang": "de",
@@ -1805,7 +1813,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "er Änderung fragen, feste Regeln (Schritt 8) - app/panel/chat.py needed: Pflicht-Werkzeuge: nie ändernd aus Admin-Regeln, keine Websuche bei Privatem (Schritt 6) - app/panel/chat.py ha_take: Smart-Home-Befehl mit Codewort nur von seiner Quelle (Schritt 8) - app/panel/chat.py PRIVATE_WORDS: private Sätze: nie eine Pflicht-Websuche (Schritt 6) - app/panel/push.py add: ein Push-Abo gehört genau einem Profil (Schritt 5) - app/panel/push.py drop_login: Push-Abo endet mit der Anmeldung des Browsers (Schritt 5) - app/panel/wissensdoppelt.py aehnlich: Punkte der Karte von selbst nur nach fester Regel zusammen, nie gegen „Verschieden“ (Schritt 8)"
+"text": "er Änderung fragen, feste Regeln (Schritt 8) - app/panel/chat.py needed: Pflicht-Werkzeuge: nie ändernd aus Admin-Regeln, keine Websuche bei Privatem (Schritt 6) - app/panel/chat.py ha_take: Smart-Home-Befehl mit Codewort nur von seiner Quelle (Schritt 8) - app/panel/profiles.py quelle: was wartet, gehört zu Gerät und Gespräch (Schritt 8) - app/panel/profiles.py pending_replaced: Ja zu einem anderswo ersetzten Vorschlag: nichts ausführen (Schritt 8) - app/panel/chat.py PRIVATE_WORDS: private Sätze: nie eine Pflicht-Websuche (Schritt 6) - app/panel/push.py add: ein Push-Abo gehört genau einem Profil (Schritt 5) - app/panel/push.py drop_login: Push-Abo endet mit der Anmeldung des Browsers (Schritt 5) - app/panel/wissensdoppelt.py aehnlich: Punkte der Karte von selbst nur nach fester Regel zusammen, nie gegen „Verschieden“ (Schritt 8)"
 },
 {
 "lang": "de",
@@ -1973,7 +1981,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " Modell sagt nur das Ergebnis und bekommt in diesem Zug kein Werkzeug. 8. Antwort auf eine Rückfrage?: Hat das Panel gefragt, welches Gerät gemeint ist, gilt als Antwort ein Knopf, eine Zahl oder der Name, nur im selben Gespräch, vom eigenen Profil und innerhalb von 2 Minuten. „Keins davon“ bringt die ganze Liste, „Nein, den anderen“ korrigiert die letzte Wahl. Das Panel führt die Wahl aus und bietet an, sie sich zu merken; ein „Ja“ dazu zählt 15 Minuten. Ein direkter Smart-Home-Befehl ohne das nötige Codewort wartet 2 Minuten, gebunden an Gerät und Gespräch (chat.ha_take): ein Codewort von einem anderen Gerät des Profils führt ihn nicht aus und löscht ihn nicht. Ein verneinter Satz ist nie ein direkter Befehl. Hat das Panel gefragt, welcher Weg gemeint ist (Rückfrage zum Weg, klaeren.weg_answer), liest es die Antwort schon vor der Weiche: die Wahl führt den Satz davor mit dieser Gruppe aus, „Einfach antworten“ ohne ändernde Werkzeuge, alles andere lässt die Frage verfallen. 9. Notaus oder Mein Notaus?: Ab Notaus-Stufe 2 oder mit dem eigenen Notaus des Profils werden alle wartenden Vorschläge verworfen; kein „Ja“ führt etwas aus. Lesen und Antworten gehen weiter. 10. Ja zu einem Vo"
+"text": " Modell sagt nur das Ergebnis und bekommt in diesem Zug kein Werkzeug. 8. Antwort auf eine Rückfrage?: Hat das Panel gefragt, welches Gerät gemeint ist, gilt als Antwort ein Knopf, eine Zahl oder der Name, nur im selben Gespräch, vom eigenen Profil und innerhalb von 2 Minuten. „Keins davon“ bringt die ganze Liste, „Nein, den anderen“ korrigiert die letzte Wahl. Das Panel führt die Wahl aus und bietet an, sie sich zu merken; ein „Ja“ dazu zählt 15 Minuten. Ein direkter Smart-Home-Befehl ohne das nötige Codewort wartet 2 Minuten, gebunden an Gerät und Gespräch (chat.ha_take): ein Codewort von einem anderen Gerät des Profils führt ihn nicht aus und löscht ihn nicht. Ein verneinter Satz ist nie ein direkter Befehl. Hat das Panel gefragt, welcher Weg gemeint ist (Rückfrage zum Weg, klaeren.weg_answer), liest es die Antwort schon vor der Weiche: die Wahl führt den Satz davor mit dieser Gruppe aus, „Einfach antworten“ ohne ändernde Werkzeuge, alles andere lässt die Frage verfallen. Alles, was auf eine Antwort wartet (Ja, Codewort, Rückfrage), gehört zu seiner Quelle: Art des Geräts, Gespräch und Gerät (profiles.quelle; zwei iPhones, zwei Lautsprecher oder zwei Browser sind zwei Quellen). "
 },
 {
 "lang": "de",
@@ -1981,7 +1989,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "rschlag: Wartet ein Vorschlag aus diesem Gespräch (ein Termin, eine Mail-Änderung, ein Listeneintrag, eine Korrektur, ein Anruf, eine Antwort fürs reMarkable), entscheidet das Panel über das „Ja“. Ein Ja bestätigt genau eine Sache; jede Antwort erledigt alle anderen wartenden Vorschläge dieses Gesprächs. 11. Werkzeuge nach Rechten: Jede Werkzeuggruppe kommt nur mit Schalter des Admins, Freigabe für das Profil und den eigenen Daten dazu: Suche, Gedächtnis, Verlauf, Dokumente, Smart Home, Erinnerungen, Kalender, Mail. Telegram, die iPhone-App und CarPlay können das nur enger machen, nie weiter. Eine fremde erkannte Stimme an diesem Gerät bekommt nichts Persönliches. Eine Nachricht, die nur fragt („Weißt du, wie mein Bruder heißt?“: ein Satz mit Fragezeichen, nichts zum Merken), bekommt kein memory_save (chat.offer_memory), damit kein erfundener Fakt gespeichert wird. 12. Etwas nimmt Werkzeuge weg?: Der Notaus nimmt Werkzeuge ins Internet oder ändernde weg, „Spark fragen“ über MCP behält nur die Werkzeuge der Verbindung, ein Bild, ein fester Satz oder ein fester Weg des Panels (Anrufe per Assistent, rufen.py) lässt keines übrig. Für einen Gast wird die Liste noch einmal geleert, egal "
+"text": "Ein schlichtes „Ja“ ohne eigenen Vorschlag, während einer auf einem anderen Gerät wartet oder von dort ersetzt wurde, führt nichts aus; das Modell bekommt dazu einen festen Satz (chat_turn.YES_ELSEWHERE). 9. Notaus oder Mein Notaus?: Ab Notaus-Stufe 2 oder mit dem eigenen Notaus des Profils werden alle wartenden Vorschläge verworfen; kein „Ja“ führt etwas aus. Lesen und Antworten gehen weiter. 10. Ja zu einem Vorschlag: Wartet ein Vorschlag aus diesem Gespräch (ein Termin, eine Mail-Änderung, ein Listeneintrag, eine Korrektur, ein Anruf, eine Antwort fürs reMarkable), entscheidet das Panel über das „Ja“. Ein Ja bestätigt genau eine Sache; jede Antwort erledigt alle anderen wartenden Vorschläge dieses Gesprächs. 11. Werkzeuge nach Rechten: Jede Werkzeuggruppe kommt nur mit Schalter des Admins, Freigabe für das Profil und den eigenen Daten dazu: Suche, Gedächtnis, Verlauf, Dokumente, Smart Home, Erinnerungen, Kalender, Mail. Telegram, die iPhone-App und CarPlay können das nur enger machen, nie weiter. Eine fremde erkannte Stimme an diesem Gerät bekommt nichts Persönliches. Eine Nachricht, die nur fragt („Weißt du, wie mein Bruder heißt?“: ein Satz mit Fragezeichen, nichts zum Merken)"
 },
 {
 "lang": "de",
@@ -2021,7 +2029,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "- app/panel/chat_turn.py prepare: der ganze Ablauf (Schritt 1, Schritt 14) - app/panel/chat_turn.py shared_stranger: fremde Stimme am Lautsprecher (Schritt 4) - app/panel/chat.py trim_history: Verlauf kürzen (Schritt 3) - app/panel/chat.py left_out: Antworten aus fremdem Text weglassen (Schritt 3, Schritt 5) - app/panel/chat.py offer_memory: kein memory_save, wenn die Nachricht nur fragt (Schritt 11) - app/panel/intent.py classify_cfg: feste Regeln der Weiche (Schritt 5) - app/panel/klaeren.py answer: Antwort auf eine Rückfrage (Schritt 8) - app/panel/klaeren.py weg_answer: Antwort auf die Rückfrage zum Weg (Schritt 8) - app/panel/features.py allowed: Freigabe je Funktion (Schritt 11) - app/panel/notaus.py locked_tools: was der Notaus wegnimmt (Schritt 12) - app/panel/intent.py narrow: Werkzeuge eingrenzen (Schritt 13) - app/panel/chat_turn.py notaus_note: Satz für das Modell bei Notaus (Schritt 9, Schritt 12) - app/panel/chat.py ha_take: Befehl mit Codewort nur von seiner Quelle (Schritt 8) - app/panel/stoppwort.py ende: ein ganzer Satz aus Stoppwörtern beendet das Gespräch (Schritt 2) - app/panel/proactive.py answers_note: Antwort auf eine Meldung des Spark (Schritt 2)"
+"text": "- app/panel/chat_turn.py prepare: der ganze Ablauf (Schritt 1, Schritt 14) - app/panel/chat_turn.py shared_stranger: fremde Stimme am Lautsprecher (Schritt 4) - app/panel/chat.py trim_history: Verlauf kürzen (Schritt 3) - app/panel/chat.py left_out: Antworten aus fremdem Text weglassen (Schritt 3, Schritt 5) - app/panel/chat.py offer_memory: kein memory_save, wenn die Nachricht nur fragt (Schritt 11) - app/panel/intent.py classify_cfg: feste Regeln der Weiche (Schritt 5) - app/panel/klaeren.py answer: Antwort auf eine Rückfrage (Schritt 8) - app/panel/klaeren.py weg_answer: Antwort auf die Rückfrage zum Weg (Schritt 8) - app/panel/features.py allowed: Freigabe je Funktion (Schritt 11) - app/panel/notaus.py locked_tools: was der Notaus wegnimmt (Schritt 12) - app/panel/intent.py narrow: Werkzeuge eingrenzen (Schritt 13) - app/panel/chat_turn.py notaus_note: Satz für das Modell bei Notaus (Schritt 9, Schritt 12) - app/panel/chat.py ha_take: Befehl mit Codewort nur von seiner Quelle (Schritt 8) - app/panel/profiles.py quelle: die eine Quelle eines Zugs: Art, Gespräch, Gerät (Schritt 8) - app/panel/profiles.py pending_replaced: ein Ja, dessen Vorschlag von woanders ersetzt wurde (Schri"
 },
 {
 "lang": "de",
@@ -2029,7 +2037,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_klaeren, test_features, test_notaus, test_hardening, test_weiche, test_sicherheit_sofort, test_abbrechen"
+"text": "tt 8) - app/panel/stoppwort.py ende: ein ganzer Satz aus Stoppwörtern beendet das Gespräch (Schritt 2) - app/panel/proactive.py answers_note: Antwort auf eine Meldung des Spark (Schritt 2)"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Im Code",
+"title": "Im Code",
+"text": "Selbsttests: test_klaeren, test_features, test_notaus, test_hardening, test_weiche, test_sicherheit_sofort, test_abbrechen, test_geraet_statt_profil"
 },
 {
 "lang": "de",
@@ -13317,7 +13333,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Die Oberfläche",
 "title": "Die Oberfläche",
-"text": "- *Verlauf sofort abgleichen*: Jede offene Seite hält eine Ereignis-Verbindung zum Spark (/api/profile/convos/stream, höchstens 8 pro Profil, nach 30 Minuten neu). Ändert sich ein Gespräch auf einem anderen Gerät, holt die Seite es sofort; ein gelöschtes Gespräch schließt sich. Antwortet gerade ein anderes Gerät im offenen Gespräch, steht blass „Handy antwortet gerade …“ (nur die Geräteart, nie die Frage). Die Live-Übersicht zeigt nur die Zahl dieser Verbindungen. - *Ein Gespräch für alle Kanäle*: Telegram, Siri, Begleiter, Uhr und die eigene Stimme am Lautsprecher schreiben ins heutige Hauptgespräch (das neueste von heute, das keinem Kanal allein gehört; sonst „Heute TT.MM.“), jede Nachricht mit Kanal-Zeichen (in der eigenen, blauen Blase weiß wie der Text, V01.0.534). Mehr Zusammenhang, aber auch mehr fremder Kontext. Eine Stimme, die nicht sicher die des Besitzers ist, bleibt im Gespräch des Lautsprechers. - *Verlauf offline lesen*: Nur ein Browser, dem das Profil beim zweiten Anmeldeschritt vertraut, behält eine Kopie der letzten 30 Gespräche und die Seite selbst. Ohne Verbindung zum Spark öffnet das Panel sie zum Lesen; Fragen ohne Verbindung (höchstens 10) gehen raus, sobald "
+"text": "- *Verlauf sofort abgleichen*: Jede offene Seite hält eine Ereignis-Verbindung zum Spark (/api/profile/convos/stream, höchstens 8 pro Profil, nach 30 Minuten neu). Ändert sich ein Gespräch auf einem anderen Gerät, holt die Seite es sofort; ein gelöschtes Gespräch schließt sich. Antwortet gerade ein anderes Gerät im offenen Gespräch, steht blass „Handy antwortet gerade …“ (nur die Geräteart, nie die Frage). Die Live-Übersicht zeigt nur die Zahl dieser Verbindungen. - *Ein Gespräch für alle Kanäle*: Telegram, Siri, Begleiter, Uhr und die eigene Stimme am Lautsprecher schreiben ins heutige Hauptgespräch (beim ersten Bedarf des Tages das neueste von heute, das keinem Kanal allein gehört, sonst „Heute TT.MM.“; seit V01.1.368 bleibt es dann den ganzen Tag dasselbe), jede Nachricht mit Kanal-Zeichen (in der eigenen, blauen Blase weiß wie der Text, V01.0.534). Mehr Zusammenhang, aber auch mehr fremder Kontext. Eine Stimme, die nicht sicher die des Besitzers ist, bleibt im Gespräch des Lautsprechers. - *Verlauf offline lesen*: Nur ein Browser, dem das Profil beim zweiten Anmeldeschritt vertraut, behält eine Kopie der letzten 30 Gespräche und die Seite selbst. Ohne Verbindung zum Spark öffne"
 },
 {
 "lang": "de",
@@ -13325,7 +13341,23 @@
 "file": "Assistent und Oberfläche",
 "head": "Die Oberfläche",
 "title": "Die Oberfläche",
-"text": "der Spark wieder antwortet. Jeder andere Browser speichert nichts und löscht beim nächsten Öffnen, was er hatte; Abmelden löscht immer."
+"text": "t das Panel sie zum Lesen; Fragen ohne Verbindung (höchstens 10) gehen raus, sobald der Spark wieder antwortet, jede in das Gespräch, in dem sie getippt wurde (seit V01.1.368). Jeder andere Browser speichert nichts und löscht beim nächsten Öffnen, was er hatte; Abmelden löscht immer."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Die Oberfläche",
+"title": "Die Oberfläche",
+"text": "Gerät statt Profil als Schlüssel (V01.1.368, Code-Prüfung 10.11.2026 Teil A, Dominik „1a, Rest nach Empfehlung“; kein Schalter, feste Regeln): Was auf eine Antwort wartet, gehört zum Gerät und Gespräch, an dem es entstand, nicht nur zum Profil. Die eine Quelle eines Zugs ist profiles.quelle: Art des Geräts, Gespräch und Gerät (profiles.geraet: der Geräteschlüssel, im Browser ein Hash seiner Anmeldung; Telegram und Telefon haben je Profil nur einen Weg). Daran hängen das „Ja“ zu einem Vorschlag, der Befehl, der aufs Codewort wartet, die Rückfragen des Panels und die kurze Folgefrage der Weiche. Zwei iPhones (oder iPhone und iPad), zwei Lautsprecher, zwei Browser oder zwei Gespräche bestätigen sich also nie gegenseitig; die iPhone-App schickt dazu ihr Gespräch mit (neuer TestFlight-Build). Ein schlichtes „Ja“, für das hier kein Vorschlag wartet, während einer auf einem anderen Gerät wartet oder von dort durch einen neueren ersetzt wurde, führt nichts aus, und der Assistent sagt genau das (chat_turn.YES_ELSEWHERE, Logzeile chat: ja ohne vorschlag hier | ersetzt|anderes geraet). Weiter gilt je Profil und Modul ein offener Vorschlag. - *Mitteilung ans genutzte Gerät*: jedes Gerät meldet"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Die Oberfläche",
+"title": "Die Oberfläche",
+"text": " für sich, eine Seite mit ihrem Tab; ein ungenutztes zweites Fenster überstimmt nie das benutzte, ein versteckter Tab meldet nur sich selbst weg, und als gesehen zählt eine Mitteilung nur auf dem Browser, an dessen Push-Abo sie ging (sonst kommt sie wie gewohnt aufs Handy nach). - *Hauptgespräch des Tages*: wird beim ersten Bedarf festgelegt und gemerkt (users/<id>/hauptgespraech.json, nur Tag und Nummer); Antworten von Telegram, Lautsprecher, Uhr, Siri, Begleiter und die Karten von Offen landen den ganzen Tag dort, auch wenn später ein Themen-Gespräch geändert wird. Wird es gelöscht, legt der nächste Bedarf ein neues fest. - *Siri und Begleiter*: die kurze Folgefrage (10 Minuten) gilt je Gerät; PC und Mac, iPhone und iPad bekommen nie den Verlauf des anderen. - *Sofort-Abgleich*: Öffnet ein Profil mehr als 8 Seiten, endet die Verbindung der ältesten mit dem Ereignis „verdraengt“; die Seite verbindet sich nach einer Minute neu, statt sich still für verbunden zu halten."
 },
 {
 "lang": "de",
@@ -19957,7 +19989,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "live, cleanup (step 11) - app/panel/verlauf.py begin: „answering“ for the other pages (step 6, step 11)"
+"text": "live, cleanup; the displaced one ends with „verdraengt“ (step 11) - app/panel/verlauf.py begin: „answering“ for the other pages (step 6, step 11)"
 },
 {
 "lang": "en",
@@ -19965,7 +19997,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_verlauf_sync, test_stille, test_echo, test_fremdstimme, test_follow_up, test_abbrechen"
+"text": "Self-tests: test_verlauf_sync, test_stille, test_echo, test_fremdstimme, test_follow_up, test_abbrechen, test_geraet_statt_profil"
 },
 {
 "lang": "en",
@@ -20005,7 +20037,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "'s random number; the app asks the Spark who calls. For private chats the app makes its own key in the Secure Enclave; the Spark only gets the public half. The Android app's sheet over other apps asks as device „android“ only while „Android: Spark as assistant“ is released (android.assist_gate). Whether the app may keep the pages' last state, hello says with „keep“ (appmerken.keep); on no it deletes it. With „barge_hold“ it only pauses the answer for a barge-in (zwischenruf.py). If the profile has an admin role but the app has not right now, hello names the reason in „admin_why“ as a fixed word; if the app key is older than the second step, „Confirm with code“ (POST /api/iphone/admin-step, a fresh code or passkey every time) binds it to it once. With „Notes to the device in use“ the app and the pages only say every minute whether they are in use right now (POST /api/zustellung/da, the companion with its idle time); zustellung.pick then sends a note to the device with the last input within the last 120 seconds (a browser only with its own push subscription, which belongs to exactly one profile), else to the phone app at once. If nobody saw it, zustellung.follow sends it once to the "
+"text": "'s random number; the app asks the Spark who calls. For private chats the app makes its own key in the Secure Enclave; the Spark only gets the public half. The Android app's sheet over other apps asks as device „android“ only while „Android: Spark as assistant“ is released (android.assist_gate). Whether the app may keep the pages' last state, hello says with „keep“ (appmerken.keep); on no it deletes it. With „barge_hold“ it only pauses the answer for a barge-in (zwischenruf.py). If the profile has an admin role but the app has not right now, hello names the reason in „admin_why“ as a fixed word; if the app key is older than the second step, „Confirm with code“ (POST /api/iphone/admin-step, a fresh code or passkey every time) binds it to it once. With „Notes to the device in use“ the app and the pages only say every minute whether they are in use right now (POST /api/zustellung/da, the companion with its idle time), each device for itself (zustellung.seen, profiles.geraet, a page with its tab: an idle second window never outvotes the one in use, a hidden tab marks only itself away); zustellung.pick then sends a note to the device with the last input within the last 120 seconds (a br"
 },
 {
 "lang": "en",
@@ -20013,7 +20045,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "phone after 5 minutes; a tapped note says „seen“, and with the answer „zu“ pages and the iPhone take done ones away. Every note stays on the Spark for 24 hours with a random number (mitteilungen.keep, in memory only); only the number goes along. Tapped, it shows as a card above the conversation, with the one button mitteilungen.ziel picks by fixed rules (Open, chat, mail, code, way); only the own profile gets it back. 10. Account, devices or security?: Endpoints that change the profile's connections, devices or security only take the own browser login (core.browser_profile). They refuse a device key, except in an area the profile opened for the app; secrets need a fresh code there as well. 11. Removing works at once: When the iPhone is removed in the panel, its hash leaves the device list. The app's next request finds no profile any more."
+"text": "owser only with its own push subscription, which belongs to exactly one profile), else to the phone app at once. If nobody saw it, zustellung.follow sends it once to the phone after 5 minutes (only the browser whose subscription it went to counts as seen); a tapped note says „seen“, and with the answer „zu“ pages and the iPhone take done ones away. Every note stays on the Spark for 24 hours with a random number (mitteilungen.keep, in memory only); only the number goes along. Tapped, it shows as a card above the conversation, with the one button mitteilungen.ziel picks by fixed rules (Open, chat, mail, code, way); only the own profile gets it back. 10. Account, devices or security?: Endpoints that change the profile's connections, devices or security only take the own browser login (core.browser_profile). They refuse a device key, except in an area the profile opened for the app; secrets need a fresh code there as well. 11. Removing works at once: When the iPhone is removed in the panel, its hash leaves the device list. The app's next request finds no profile any more."
 },
 {
 "lang": "en",
@@ -20061,7 +20093,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "e phone app (step 9) - app/panel/zustellung.py api_da: only „in use“ or „away“, only pages and the apps (step 9) - app/panel/zustellung.py follow: follow up once to the phone, never a third time (step 9) - app/panel/mitteilungen.py ziel: what the card of a tapped note offers, fixed rules (step 9) - app/panel/mitteilungen.py opened: only the own note, one log line without text (step 9) - app/panel/terminal.py profile_pair: terminal pairing line only from the own browser (step 1, step 2) - app/panel/terminal.py setup_base: pinned at home, outside https only (step 3) - app/panel/terminal.py program_pair: the terminal's first contact (step 4, step 5) - app/panel/terminal.py reaches: the terminal's fixed rule list (step 7)"
+"text": "e phone app (step 9) - app/panel/zustellung.py api_da: only „in use“ or „away“, only pages and the apps (step 9) - app/panel/zustellung.py seen: one entry per device and page, at most 12 per profile (step 9) - app/panel/zustellung.py _was_seen: seen only on the device it went to (step 9) - app/panel/zustellung.py follow: follow up once to the phone, never a third time (step 9) - app/panel/mitteilungen.py ziel: what the card of a tapped note offers, fixed rules (step 9) - app/panel/mitteilungen.py opened: only the own note, one log line without text (step 9) - app/panel/terminal.py profile_pair: terminal pairing line only from the own browser (step 1, step 2) - app/panel/terminal.py setup_base: pinned at home, outside https only (step 3) - app/panel/terminal.py program_pair: the terminal's first contact (step 4, step 5) - app/panel/terminal.py reaches: the terminal's fixed rule list (step 7)"
 },
 {
 "lang": "en",
@@ -20069,7 +20101,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_iphone, test_iphone_panel, test_android, test_app_notaus, test_kopplung, test_terminal, test_zustellung, test_mitteilungen"
+"text": "Self-tests: test_iphone, test_iphone_panel, test_android, test_app_notaus, test_kopplung, test_terminal, test_zustellung, test_mitteilungen, test_geraet_statt_profil"
 },
 {
 "lang": "en",
@@ -20101,7 +20133,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " messages go along while the last question is no older than 30 minutes (Telegram) or 10 minutes (Siri). The watch sends its history itself; the panel recognizes answers made from outside text in it again (watch.mark_of). 7. Request to /api/chat: The channel calls the chat inside the panel. For Telegram the panel puts the profile into the request, which no request from outside can do; Siri and the watch carry their key. Rights, switch, limits and request history are the same as in the browser. 8. Collect the answer: From the stream, pieces of text and retractions count. If the answer came from mail or outside text it is marked so, so the next question starts locked. When the stream says „ende“ (a whole sentence of stop words, kill switch stage 3), Telegram and Siri get a fixed word (chat.ENDE_SAY), the companion empty text with „ende“ and stops reading aloud; nothing goes into the companion's history. A question back from the panel becomes buttons in Telegram that come back like a typed answer; without one, the example sentences of „You can also say“ become reply buttons. Find's Sofort-Karte (one hit clearly ahead) becomes a button „Original öffnen“ to the panel's address for links "
+"text": " messages go along while the last question is no older than 30 minutes (Telegram) or 10 minutes (Siri), for Siri and the companion per device (profiles.geraet: iPhone and iPad, PC and Mac each have their own). The watch sends its history itself; the panel recognizes answers made from outside text in it again (watch.mark_of). 7. Request to /api/chat: The channel calls the chat inside the panel. For Telegram the panel puts the profile into the request, which no request from outside can do; Siri and the watch carry their key. Rights, switch, limits and request history are the same as in the browser. 8. Collect the answer: From the stream, pieces of text and retractions count. If the answer came from mail or outside text it is marked so, so the next question starts locked. When the stream says „ende“ (a whole sentence of stop words, kill switch stage 3), Telegram and Siri get a fixed word (chat.ENDE_SAY), the companion empty text with „ende“ and stops reading aloud; nothing goes into the companion's history. A question back from the panel becomes buttons in Telegram that come back like a typed answer; without one, the example sentences of „You can also say“ become reply buttons. Find's"
 },
 {
 "lang": "en",
@@ -20109,7 +20141,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "(#fund=, only navigation) when one is entered. The line of origin from own data („From: 2 mails, 1 appointment“) stands under the answer, never in the history; „Also search the web“ becomes a reply button with these fixed words. The Begleiter gets the line after the tools and a card with „Also search the web“ and „Show in Find“ (desk_cards). 9. Output per channel: Telegram gets plain text and, if the profile wants it, a voice message in its voice. Siri gets speakable text without passwords and codes. The watch fetches text and sound (packed for its small speaker, 6000 bytes per fetch) through /api/watch/poll, only for the profile that asked (a foreign job number gives 404); at most 8 watch answers run at once. The companion gets text without Markdown and also the answer with Markdown (at most 60000 characters) when it hides no fewer secrets. With its switches the watch also gets up to 3 follow-ups to tap (the model only suggests, watch.follow_clean keeps short questions without yes, no, links or numbers; never after mail, web or a proposal; when the answer ends with a question, its buttons from ablauf.asks are the follow-ups), a proposal as ✓ and ✕, and through /api/watch/sync the "
+"text": " Sofort-Karte (one hit clearly ahead) becomes a button „Original öffnen“ to the panel's address for links (#fund=, only navigation) when one is entered. The line of origin from own data („From: 2 mails, 1 appointment“) stands under the answer, never in the history; „Also search the web“ becomes a reply button with these fixed words. The Begleiter gets the line after the tools and a card with „Also search the web“ and „Show in Find“ (desk_cards). 9. Output per channel: Telegram gets plain text and, if the profile wants it, a voice message in its voice. Siri gets speakable text without passwords and codes. The watch fetches text and sound (packed for its small speaker, 6000 bytes per fetch) through /api/watch/poll, only for the profile that asked (a foreign job number gives 404); at most 8 watch answers run at once. The companion gets text without Markdown and also the answer with Markdown (at most 60000 characters) when it hides no fewer secrets. With its switches the watch also gets up to 3 follow-ups to tap (the model only suggests, watch.follow_clean keeps short questions without yes, no, links or numbers; never after mail, web or a proposal; when the answer ends with a question,"
 },
 {
 "lang": "en",
@@ -20117,7 +20149,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "quick commands and the next 8 reminders, which it rings itself as wake-ups; push waits for it first. The Spark watchface fetches the next appointment, reminder, weather, a hint and for admins an outage through /api/watch/blick every 15 minutes; /api/watch/brief builds My day and My week from fixed sentences, /api/watch/merken keeps a dictated sentence in memory (with the place to about 100 m only with its own switch). /api/watch/chats and /api/watch/chat show the latest chats (no private ones) and send a tapped or dictated reply through chats.send; up to 3 suggestions of the model pass the fixed check pebblewatch.reply_clean. /api/watch/fern switches only devices on the own list with fixed buttons (never with a smart home code word), /api/watch/gesundheit keeps steps, pulse and sleep sealed in the profile, never for the model. 10. Black out the code word: Before storing, the smart home code word is replaced by [Codewort]. In Telegram the bot deletes the message with the code word or asks the person to delete it. 11. In the profile's history: verlauf.keep puts question and answer into the channel's conversation of the day („Telegram“, „Siri“, „Uhr“ with the date). With „One conversa"
+"text": " its buttons from ablauf.asks are the follow-ups), a proposal as ✓ and ✕, and through /api/watch/sync the quick commands and the next 8 reminders, which it rings itself as wake-ups; push waits for it first. The Spark watchface fetches the next appointment, reminder, weather, a hint and for admins an outage through /api/watch/blick every 15 minutes; /api/watch/brief builds My day and My week from fixed sentences, /api/watch/merken keeps a dictated sentence in memory (with the place to about 100 m only with its own switch). /api/watch/chats and /api/watch/chat show the latest chats (no private ones) and send a tapped or dictated reply through chats.send; up to 3 suggestions of the model pass the fixed check pebblewatch.reply_clean. /api/watch/fern switches only devices on the own list with fixed buttons (never with a smart home code word), /api/watch/gesundheit keeps steps, pulse and sleep sealed in the profile, never for the model. 10. Black out the code word: Before storing, the smart home code word is replaced by [Codewort]. In Telegram the bot deletes the message with the code word or asks the person to delete it. 11. In the profile's history: verlauf.keep puts question and answe"
 },
 {
 "lang": "en",
@@ -20125,7 +20157,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "tion for all channels“ they go into the day's main conversation, marked with their channel."
+"text": "r into the channel's conversation of the day („Telegram“, „Siri“, „Uhr“ with the date). With „One conversation for all channels“ they go into the day's main conversation, marked with their channel. verlauf.main_today fixes the main conversation the first time the day needs it and keeps it (hauptgespraech.json, only the day and the id); a topic conversation changed later never takes its place."
 },
 {
 "lang": "en",
@@ -20165,7 +20197,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/telegram.py loop: polls Telegram, rests with the kill switch (step 1) - app/panel/telegram.py handle: one message: link, locks, commands, voice (step 2, step 3, step 4) - app/panel/telegram.py ask: question to the chat, collect the answer, store (step 7, step 8, step 11) - app/panel/telegram.py transcribe: voice message through ffmpeg to recognition (step 5) - app/panel/chat.py siri_ask: Siri: profile from the key (step 1, step 3) - app/panel/chat.py ENDE_SAY: fixed word when the answer ends (stop, goodbye, kill switch) (step 8) - app/panel/chat.py text_ask: Siri and companion: question, answer, history, for the companion also the cards (desk_cards) (step 6, step 7, step 11) - app/panel/chat.py watch_ask: watch: start the answer as a job (step 1, step 7) - app/panel/chat.py _watch_run: watch: the answer into the history (step 11) - app/panel/watch.py run: reads the stream into the watch job (step 8) - app/panel/watch.py poll: text and sound piece by piece (step 9) - app/panel/watch.py follow_ups: follow-ups from the model, with a time limit (step 9) - app/panel/watch.py follow_clean: fixed check of the follow-ups (step 9) - app/panel/pebblewatch.py watch_sync: quick com"
+"text": "- app/panel/telegram.py loop: polls Telegram, rests with the kill switch (step 1) - app/panel/telegram.py handle: one message: link, locks, commands, voice (step 2, step 3, step 4) - app/panel/telegram.py ask: question to the chat, collect the answer, store (step 7, step 8, step 11) - app/panel/telegram.py transcribe: voice message through ffmpeg to recognition (step 5) - app/panel/chat.py siri_ask: Siri: profile from the key (step 1, step 3) - app/panel/chat.py ENDE_SAY: fixed word when the answer ends (stop, goodbye, kill switch) (step 8) - app/panel/chat.py text_ask: Siri and companion: question, answer, history, for the companion also the cards (desk_cards) (step 6, step 7, step 11) - app/panel/chat.py watch_ask: watch: start the answer as a job (step 1, step 7) - app/panel/chat.py _watch_run: watch: the answer into the history (step 11) - app/panel/verlauf.py main_today: the day's main conversation, fixed once (step 11) - app/panel/watch.py run: reads the stream into the watch job (step 8) - app/panel/watch.py poll: text and sound piece by piece (step 9) - app/panel/watch.py follow_ups: follow-ups from the model, with a time limit (step 9) - app/panel/watch.py follow_clean: fi"
 },
 {
 "lang": "en",
@@ -20173,7 +20205,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "mands and reminders for the watch (step 9) - app/panel/pebblewatch.py watch_reminder: reminder on the watch: played, later, end, +1, stop (step 9) - app/panel/pebblewatch.py watch_blick: what the Spark watchface shows (step 9) - app/panel/pebblewatch.py watch_brief: My day and My week, fixed sentences (step 9) - app/panel/pebblewatch.py watch_note: quick note into memory (step 9) - app/panel/pebblewatch.py watch_chat: one chat on the watch, with replies (step 9) - app/panel/pebblewatch.py watch_chat_send: reply from the watch into the chat (step 9) - app/panel/pebblewatch.py reply_clean: fixed check of the reply suggestions (step 9) - app/panel/pebblewatch.py watch_remote_act: remote: own list, fixed buttons (step 9) - app/panel/pebblewatch.py watch_health: steps, pulse, sleep sealed into the profile (step 9) - app/panel/verlauf.py keep: the channel's day conversation or the main one (step 11)"
+"text": "xed check of the follow-ups (step 9) - app/panel/pebblewatch.py watch_sync: quick commands and reminders for the watch (step 9) - app/panel/pebblewatch.py watch_reminder: reminder on the watch: played, later, end, +1, stop (step 9) - app/panel/pebblewatch.py watch_blick: what the Spark watchface shows (step 9) - app/panel/pebblewatch.py watch_brief: My day and My week, fixed sentences (step 9) - app/panel/pebblewatch.py watch_note: quick note into memory (step 9) - app/panel/pebblewatch.py watch_chat: one chat on the watch, with replies (step 9) - app/panel/pebblewatch.py watch_chat_send: reply from the watch into the chat (step 9) - app/panel/pebblewatch.py reply_clean: fixed check of the reply suggestions (step 9) - app/panel/pebblewatch.py watch_remote_act: remote: own list, fixed buttons (step 9) - app/panel/pebblewatch.py watch_health: steps, pulse, sleep sealed into the profile (step 9) - app/panel/verlauf.py keep: the channel's day conversation or the main one (step 11)"
 },
 {
 "lang": "en",
@@ -20181,7 +20213,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_telegram_tasks, test_pebble, test_verlauf_sync, test_notaus, test_abbrechen"
+"text": "Self-tests: test_telegram_tasks, test_pebble, test_verlauf_sync, test_notaus, test_abbrechen, test_geraet_statt_profil"
 },
 {
 "lang": "en",
@@ -20557,7 +20589,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model; likewise only their click merges, renames or deletes points of the knowledge map (with the code of „Confirm“); by itself only a fixed rule for the same name in another spelling (wissensdoppelt.aehnlich), never the model, and never against their „Different“. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it. Negation is a fixed rule of the panel (intent.negated): „Don't turn off the light“ never switches, is never narrowed and makes no changing tool a must; „Never mind“ is a cancel without any tool, and memory_forget deletes only on the person's own word to forget (intent.forget_ok). A smart home command waiting for the code word belongs to the"
+"text": " only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only from an allowlist. Only the person deletes mail (into the trash, for good only after a question), never the model; likewise only their click merges, renames or deletes points of the knowledge map (with the code of „Confirm“); by itself only a fixed rule for the same name in another spelling (wissensdoppelt.aehnlich), never the model, and never against their „Different“. Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something without a proposal only opens the page where the person does it. Negation is a fixed rule of the panel (intent.negated): „Don't turn off the light“ never switches, is never narrowed and makes no changing tool a must; „Never mind“ is a cancel without any tool, and memory_forget deletes only on the person's own word to forget (intent.forget_ok). Whatever waits (a proposal for a yes, a smart home command fo"
 },
 {
 "lang": "en",
@@ -20629,7 +20661,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "p/panel/profiles.py write_own: memory and conversations sealed whole (step 10) - app/panel/vorrat.py key: a key per purpose from secret.key (step 10) - app/panel/meinedaten.py api_export: own data only after a fresh code, passkey or PIN (step 3) - app/panel/meinedaten.py build: the ZIP only from the file register, without secrets (step 10) - app/panel/profiles.py _cap: the memory's cap without data loss (step 8) - app/panel/gedaechtnis.py offer: learned never replaces confirmed: only an offer (step 8) - app/panel/gemerkt.py take_back: undo only for the own, unchanged fact (step 8) - app/panel/intent.py negated: negation: never switch directly, never narrow, no changing must tool (step 8) - app/panel/intent.py forget_ok: memory_forget only on the own word to forget (step 8) - app/panel/intent.py EMERGENCY: emergency number: never a call, no tool (step 8) - app/panel/intent.py ask_route: ask which way: ask before a change, fixed rules (step 8) - app/panel/chat.py needed: must tools: never changing from admin rules, no web search for private sentences (step 6) - app/panel/chat.py ha_take: smart home command with code word only from its source (step 8) - app/panel/chat.py PRIVATE_WORDS"
+"text": "p/panel/profiles.py write_own: memory and conversations sealed whole (step 10) - app/panel/vorrat.py key: a key per purpose from secret.key (step 10) - app/panel/meinedaten.py api_export: own data only after a fresh code, passkey or PIN (step 3) - app/panel/meinedaten.py build: the ZIP only from the file register, without secrets (step 10) - app/panel/profiles.py _cap: the memory's cap without data loss (step 8) - app/panel/gedaechtnis.py offer: learned never replaces confirmed: only an offer (step 8) - app/panel/gemerkt.py take_back: undo only for the own, unchanged fact (step 8) - app/panel/intent.py negated: negation: never switch directly, never narrow, no changing must tool (step 8) - app/panel/intent.py forget_ok: memory_forget only on the own word to forget (step 8) - app/panel/intent.py EMERGENCY: emergency number: never a call, no tool (step 8) - app/panel/intent.py ask_route: ask which way: ask before a change, fixed rules (step 8) - app/panel/chat.py needed: must tools: never changing from admin rules, no web search for private sentences (step 6) - app/panel/chat.py ha_take: smart home command with code word only from its source (step 8) - app/panel/profiles.py quelle: w"
 },
 {
 "lang": "en",
@@ -20637,7 +20669,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": ": private sentences: never a must web search (step 6) - app/panel/push.py add: a push subscription belongs to exactly one profile (step 5) - app/panel/push.py drop_login: push subscription ends with the browser's login (step 5) - app/panel/wissensdoppelt.py aehnlich: points of the map merged by themselves only by a fixed rule, never against „Different“ (step 8)"
+"text": "hat waits belongs to device and conversation (step 8) - app/panel/profiles.py pending_replaced: yes to a proposal replaced elsewhere: carry out nothing (step 8) - app/panel/chat.py PRIVATE_WORDS: private sentences: never a must web search (step 6) - app/panel/push.py add: a push subscription belongs to exactly one profile (step 5) - app/panel/push.py drop_login: push subscription ends with the browser's login (step 5) - app/panel/wissensdoppelt.py aehnlich: points of the map merged by themselves only by a fixed rule, never against „Different“ (step 8)"
 },
 {
 "lang": "en",
@@ -20805,7 +20837,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "le and within 2 minutes. „None of these“ brings the whole list, „No, the other one“ corrects the last choice. The panel carries out the choice and offers to remember it; a „yes“ to that counts for 15 minutes. A direct smart home command without the needed code word waits 2 minutes, bound to device and conversation (chat.ha_take): a code word from another device of the profile neither runs nor clears it. A negated sentence is never a direct command. If the panel asked which way is meant (Ask which way, klaeren.weg_answer), it reads the answer before the switch already: the choice runs the sentence before with that group, „Just answer“ without changing tools, anything else lets the question lapse. 9. Kill switch or my kill switch?: From kill switch stage 2 or with the profile's own kill switch every waiting proposal is dropped; no „yes“ carries anything out. Reading and answering go on. 10. Yes to a proposal: If a proposal of this conversation waits (an appointment, a mail change, a list entry, a correction, a call, an answer for the reMarkable), the panel decides on the „yes“. One yes confirms exactly one thing; every answer settles all other waiting proposals of this conversation. "
+"text": "le and within 2 minutes. „None of these“ brings the whole list, „No, the other one“ corrects the last choice. The panel carries out the choice and offers to remember it; a „yes“ to that counts for 15 minutes. A direct smart home command without the needed code word waits 2 minutes, bound to device and conversation (chat.ha_take): a code word from another device of the profile neither runs nor clears it. A negated sentence is never a direct command. If the panel asked which way is meant (Ask which way, klaeren.weg_answer), it reads the answer before the switch already: the choice runs the sentence before with that group, „Just answer“ without changing tools, anything else lets the question lapse. Everything that waits on an answer (yes, code word, question back) belongs to its source: kind of device, conversation and device (profiles.quelle; two iPhones, two speakers or two browsers are two sources). A plain „yes“ without a proposal of its own, while one waits on another device or was replaced from there, carries out nothing; the model gets a fixed sentence for it (chat_turn.YES_ELSEWHERE). 9. Kill switch or my kill switch?: From kill switch stage 2 or with the profile's own kill sw"
 },
 {
 "lang": "en",
@@ -20813,7 +20845,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "11. Tools by rights: Each tool group comes only with the admin's switch, the release for the profile and its own data: search, memory, history, documents, smart home, reminders, calendar, mail. Telegram, the iPhone app and CarPlay can only make it narrower, never wider. Another recognized voice at this device gets nothing personal. A message that only asks („Do you know my brother's name?“: one sentence with a question mark, nothing to remember) gets no memory_save (chat.offer_memory), so no made-up fact is saved. 12. Something takes tools away?: The kill switch takes away tools to the internet or that change things, „Ask Spark“ over MCP keeps only the connection's tools, a picture, a fixed sentence or a fixed panel path (calls by the assistant, rufen.py) leaves none. For a guest the list is emptied once more, whatever filled it. 13. The switch narrows: With „Targeted tool choice“ only the question's group stays. Then the panel decides whether to search locally first (the source switch says internal, external or both, only for the own profile; „Also search the web“ takes the kept own words of the question before and searches only those on the web; never for a plain „yes“ or „no“ an"
+"text": "itch every waiting proposal is dropped; no „yes“ carries anything out. Reading and answering go on. 10. Yes to a proposal: If a proposal of this conversation waits (an appointment, a mail change, a list entry, a correction, a call, an answer for the reMarkable), the panel decides on the „yes“. One yes confirms exactly one thing; every answer settles all other waiting proposals of this conversation. 11. Tools by rights: Each tool group comes only with the admin's switch, the release for the profile and its own data: search, memory, history, documents, smart home, reminders, calendar, mail. Telegram, the iPhone app and CarPlay can only make it narrower, never wider. Another recognized voice at this device gets nothing personal. A message that only asks („Do you know my brother's name?“: one sentence with a question mark, nothing to remember) gets no memory_save (chat.offer_memory), so no made-up fact is saved. 12. Something takes tools away?: The kill switch takes away tools to the internet or that change things, „Ask Spark“ over MCP keeps only the connection's tools, a picture, a fixed sentence or a fixed panel path (calls by the assistant, rufen.py) leaves none. For a guest the lis"
 },
 {
 "lang": "en",
@@ -20853,7 +20885,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "- app/panel/chat_turn.py prepare: the whole way (step 1, step 14) - app/panel/chat_turn.py shared_stranger: unknown voice at a speaker (step 4) - app/panel/chat.py trim_history: trim the history (step 3) - app/panel/chat.py left_out: leave out answers from outside text (step 3, step 5) - app/panel/chat.py offer_memory: no memory_save when the message only asks (step 11) - app/panel/intent.py classify_cfg: the switch's fixed rules (step 5) - app/panel/klaeren.py answer: answer to a question back (step 8) - app/panel/klaeren.py weg_answer: answer to the question which way (step 8) - app/panel/features.py allowed: release per function (step 11) - app/panel/notaus.py locked_tools: what the kill switch takes away (step 12) - app/panel/intent.py narrow: narrow the tools (step 13) - app/panel/chat_turn.py notaus_note: sentence for the model with the kill switch (step 9, step 12) - app/panel/chat.py ha_take: command with code word only from its source (step 8) - app/panel/stoppwort.py ende: a whole sentence of stop words ends the talk (step 2) - app/panel/proactive.py answers_note: answer to a note of the Spark (step 2)"
+"text": "- app/panel/chat_turn.py prepare: the whole way (step 1, step 14) - app/panel/chat_turn.py shared_stranger: unknown voice at a speaker (step 4) - app/panel/chat.py trim_history: trim the history (step 3) - app/panel/chat.py left_out: leave out answers from outside text (step 3, step 5) - app/panel/chat.py offer_memory: no memory_save when the message only asks (step 11) - app/panel/intent.py classify_cfg: the switch's fixed rules (step 5) - app/panel/klaeren.py answer: answer to a question back (step 8) - app/panel/klaeren.py weg_answer: answer to the question which way (step 8) - app/panel/features.py allowed: release per function (step 11) - app/panel/notaus.py locked_tools: what the kill switch takes away (step 12) - app/panel/intent.py narrow: narrow the tools (step 13) - app/panel/chat_turn.py notaus_note: sentence for the model with the kill switch (step 9, step 12) - app/panel/chat.py ha_take: command with code word only from its source (step 8) - app/panel/profiles.py quelle: the one source of a turn: kind, conversation, device (step 8) - app/panel/profiles.py pending_replaced: a yes whose proposal was replaced from elsewhere (step 8) - app/panel/stoppwort.py ende: a whole "
 },
 {
 "lang": "en",
@@ -20861,7 +20893,15 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_klaeren, test_features, test_notaus, test_hardening, test_weiche, test_sicherheit_sofort, test_abbrechen"
+"text": "sentence of stop words ends the talk (step 2) - app/panel/proactive.py answers_note: answer to a note of the Spark (step 2)"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "In the code",
+"title": "In the code",
+"text": "Self-tests: test_klaeren, test_features, test_notaus, test_hardening, test_weiche, test_sicherheit_sofort, test_abbrechen, test_geraet_statt_profil"
 },
 {
 "lang": "en",
@@ -31717,7 +31757,7 @@
 "file": "Assistant and panel",
 "head": "The panel",
 "title": "The panel",
-"text": "- *Instant history sync*: each open page keeps one event connection to the Spark (/api/profile/convos/stream, at most 8 per profile, renewed after 30 minutes). When a conversation changes on another device, the page fetches it at once; a deleted conversation closes. While another device answers in the open conversation, a pale \"Phone is answering …\" shows (only the kind of device, never the question). The live view shows only the number of these connections. - *One conversation for all channels*: Telegram, Siri, the companion, the watch and the own voice at a speaker write into today's main conversation (the newest of today that belongs to no channel alone; else \"Heute DD.MM.\"), each message marked with its channel (white like the text in the own, blue bubble, V01.0.534). More context, but also more foreign context. A voice that is not surely the owner's stays in the speaker's conversation. - *Read history offline*: only a browser the profile trusts at the second sign-in step keeps a copy of the last 30 conversations and the page itself. Without a connection to the Spark the panel opens it for reading; questions without a connection (at most 10) go out once the Spark answers again."
+"text": "- *Instant history sync*: each open page keeps one event connection to the Spark (/api/profile/convos/stream, at most 8 per profile, renewed after 30 minutes). When a conversation changes on another device, the page fetches it at once; a deleted conversation closes. While another device answers in the open conversation, a pale \"Phone is answering …\" shows (only the kind of device, never the question). The live view shows only the number of these connections. - *One conversation for all channels*: Telegram, Siri, the companion, the watch and the own voice at a speaker write into today's main conversation (the first time the day needs it the newest of today that belongs to no channel alone, else \"Heute DD.MM.\"; since V01.1.368 it then stays the same all day), each message marked with its channel (white like the text in the own, blue bubble, V01.0.534). More context, but also more foreign context. A voice that is not surely the owner's stays in the speaker's conversation. - *Read history offline*: only a browser the profile trusts at the second sign-in step keeps a copy of the last 30 conversations and the page itself. Without a connection to the Spark the panel opens it for reading; "
 },
 {
 "lang": "en",
@@ -31725,7 +31765,23 @@
 "file": "Assistant and panel",
 "head": "The panel",
 "title": "The panel",
-"text": " Every other browser stores nothing and deletes what it had the next time it opens; signing out always deletes."
+"text": "questions without a connection (at most 10) go out once the Spark answers again, each into the conversation it was typed in (since V01.1.368). Every other browser stores nothing and deletes what it had the next time it opens; signing out always deletes."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "The panel",
+"title": "The panel",
+"text": "Device instead of profile as the key (V01.1.368, code review 10.11.2026 part A, Dominik \"1a, the rest as recommended\"; no switch, fixed rules): Whatever waits on an answer belongs to the device and conversation it came from, not only to the profile. The one source of a turn is profiles.quelle: kind of device, conversation and device (profiles.geraet: the device key, in a browser a hash of its login; Telegram and the phone have one way per profile). The \"yes\" to a proposal, the command waiting for the code word, the panel's questions back and the switch's short follow-up hang on it. Two iPhones (or iPhone and iPad), two speakers, two browsers or two conversations never confirm each other; the iPhone app sends its conversation for it (new TestFlight build). A plain \"yes\" for which no proposal waits here, while one waits on another device or was replaced from there by a newer one, carries out nothing, and the assistant says exactly that (chat_turn.YES_ELSEWHERE, log line chat: ja ohne vorschlag hier | ersetzt|anderes geraet). One open proposal per profile and module still applies. - *Notes to the device in use*: each device reports for itself, a page with its tab; an idle second windo"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "The panel",
+"title": "The panel",
+"text": "w never outvotes the one in use, a hidden tab marks only itself away, and a note counts as seen only on the browser whose push subscription it went to (else it follows to the phone as usual). - *Today's main conversation*: fixed and kept the first time it is needed (users/<id>/hauptgespraech.json, only the day and the id); answers from Telegram, speaker, watch, Siri, companion and the cards of Open land there all day, also when a topic conversation changes later. Deleted, the next need fixes a new one. - *Siri and companion*: the short follow-up (10 minutes) is per device; PC and Mac, iPhone and iPad never get each other's history. - *Instant sync*: when a profile opens more than 8 pages, the oldest one's connection ends with the event \"verdraengt\"; the page connects again after a minute instead of silently thinking it is connected."
 },
 {
 "lang": "en",

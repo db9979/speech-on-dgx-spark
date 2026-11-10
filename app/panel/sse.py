@@ -2,7 +2,10 @@
 a few streams, each with its own queue on its own event loop. An event goes into every queue of the key; a full
 queue drops its oldest event (the pages ask again now and then anyway). A stream ends after `seconds` or when
 `alive()` turns false, sends a comment line every `beat` seconds so proxies keep a quiet stream open, and leaves
-the list when it ends (also when the page goes away). Only fixed event dicts pass here, never texts."""
+the list when it ends (also when the page goes away). A stream that gives way to a newer one past `most` ends at once
+with the event "verdraengt" and asks the page to come back after GONE_RETRY_MS (review A-N2: before, it went on
+silently up to `seconds` with beats only, and the page thought it was connected). Only fixed event dicts pass here,
+never texts."""
 import asyncio
 import json
 import secrets
@@ -10,6 +13,20 @@ import threading
 import time
 
 from fastapi.responses import StreamingResponse
+
+
+GONE = {"type": "verdraengt"}   # the last event of a stream that gave way to a newer one
+GONE_RETRY_MS = 60000          # the page's EventSource opens a new stream after this (no ping-pong every 5 s)
+
+
+def _put(q, ev):
+    """Puts ev into q on its own loop; a full queue drops its oldest event."""
+    if q.full():
+        try:
+            q.get_nowait()
+        except asyncio.QueueEmpty:
+            pass
+    q.put_nowait(ev)
 
 
 class Hub:
@@ -32,15 +49,8 @@ class Hub:
         with self._lock:
             subs = list(self.subs.get(key, {}).values())
         for loop, q in subs:
-            def put(q=q):
-                if q.full():
-                    try:
-                        q.get_nowait()
-                    except asyncio.QueueEmpty:
-                        pass
-                q.put_nowait(ev)
             try:
-                loop.call_soon_threadsafe(put)
+                loop.call_soon_threadsafe(_put, q, ev)
             except RuntimeError:   # the stream's loop is gone
                 pass
 
@@ -49,9 +59,14 @@ class Hub:
         loop, q, sid = asyncio.get_running_loop(), asyncio.Queue(maxsize=self.queue), secrets.token_hex(6)
         with self._lock:
             mine = self.subs.setdefault(key, {})
-            if len(mine) >= self.most:   # the oldest page gives way (it asks again now and then anyway)
-                mine.pop(next(iter(mine)))
+            gone = mine.pop(next(iter(mine))) if len(mine) >= self.most else None   # the oldest page gives way
             mine[sid] = (loop, q)
+        if gone:   # it ends now and says so (None: the end mark of its queue)
+            print("seite: ereignisstrom verdraengt | aeltester gibt platz", flush=True)
+            try:
+                gone[0].call_soon_threadsafe(_put, gone[1], None)
+            except RuntimeError:
+                pass
 
         async def events():
             end_at = time.monotonic() + seconds
@@ -65,6 +80,9 @@ class Hub:
                     except asyncio.TimeoutError:
                         yield ": .\n\n"
                         continue
+                    if ev is None:   # a newer stream took this one's place: the page comes back later
+                        yield f"retry: {GONE_RETRY_MS}\ndata: {json.dumps(GONE)}\n\n"
+                        return
                     yield f"data: {json.dumps(ev)}\n\n"
             finally:
                 with self._lock:

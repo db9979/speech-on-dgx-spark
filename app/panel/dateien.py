@@ -78,6 +78,8 @@ DATEIEN = [
     profil("memory.json", "Gedächtnis", "Memory", bereich="gedaechtnis", siegel=True),
     profil("learned.json", "Lesemarken des Lernens aus Gesprächen", "Read marks of learning from conversations", bereich="gedaechtnis", siegel=True),
     profil("zuordnungen.json", "Gemerkte Zuordnungen", "Remembered matches", bereich="gedaechtnis", siegel=True),
+    profil("hauptgespraech.json", "Hauptgespräch des Tages (nur Tag und Nummer, Ein Gespräch für alle Kanäle)",
+           "Today's main conversation (only the day and its id, One conversation for all channels)", art="Zustand"),
     profil("tasks.json", "Aufgaben", "Tasks", bereich="alltag"),
     profil("geteilt.json", "Geteilt: welche Dokumente mit welchen Profilen, seit wann; wann Ich → Geteilt zuletzt offen war",
            "Shared: which documents with which profiles, since when; when Me → Shared was last open", art="Einstellungen", export=JA),

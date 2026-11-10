@@ -1089,7 +1089,7 @@ final class Conversation: ObservableObject {
         let more = suggested?.text == text ? suggested?.tool : nil
         suggested = nil
         do {
-            for try await ev in api.chat(history, car: inCar, attachment: attachment, speak: inCar || Prefs.speakAnswers, more: more) {
+            for try await ev in api.chat(history, car: inCar, attachment: attachment, speak: inCar || Prefs.speakAnswers, more: more, convo: convoId) {
                 got = true
                 unreachable = false
                 switch ev {
