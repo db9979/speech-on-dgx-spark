@@ -5471,6 +5471,13 @@
 "titel": "Codewort nur vom selben Gerät",
 "text": "Smart-Home-Codewort gesetzt: am Handy „Mach das Garagentor auf“ ohne Codewort, dann innerhalb von 2 Minuten am Rechner etwas mit Codewort sagen: das Tor bleibt zu. Danach am Handy das Codewort sagen: das Tor geht auf.",
 "thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P808",
+"v": 1362,
+"titel": "Hörstück als Diskussion: Plan, Kapitel, Gespräch",
+"text": "Admin: Funktionen → Eigene Dokumente → Mappen → Hörstück aus einer Mappe und darunter „Hörstück als Diskussion“ an. In einer Mappe mit zwei, drei echten Dokumenten auf kurz oder ganz ein Hörstück mit 10 Minuten und 3 Stimmen „Sofort erstellen“. Die Liste zeigt „Drehbuch entsteht · Kapitel 1 von 4“ und zählt weiter. Fertig: im Drehbuch Kapitel-Überschriften (Einstieg … Fazit), Beiträge mit mehreren Sätzen, Fakten mit Quellen-Chip, Fragen und Einwände mit „Gespräch“. Prüfen: keine Zahl in einem Satz mit „Gespräch“, jede Zahl mit Chip steht im Dokument. Anhören: klingt es wie ein Gespräch statt Abfragen? Zustand → Live, Kasten Hörstück: „Diskussion: heute … Kapitel geplant … neu geschrieben (flach) … Beiträge im Schnitt … Zeichen“. Zustand → Logs (Wissen): „hoerstueck: plan | 4 kapitel“, „hoerstueck: kapitel | 1 von 4 | …“, nie ein Satz oder Titel. Schalter wieder aus: ein neues Hörstück entsteht wie bisher.",
+"thread": "Hörstück als Diskussion"
 }
 ]
 }

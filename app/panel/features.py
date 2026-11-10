@@ -505,6 +505,11 @@ FEATURES = (
     # line by fixed rules and the speech output reads it line by line in quiet minutes
     F("hoerstueck", "Hörstück aus einer Mappe", "Audio overview", "data", ("hoerstueck",), parent="mappen", me="mpbox",
       guide="hoerstueck"),
+    # Hörstück als Diskussion (hoerstueck_diskussion.py, plan open-notebook hoerstueck-diskussion, Dominik 2026-11-10
+    # „als Schalter für Diskussion“): plan, chapters with contributions of several sentences, role cards and a fixed
+    # measure per chapter; off, the Hörstück stays as before
+    F("hoerstueckdisk", "Hörstück als Diskussion", "Audio overview as a discussion", "data", ("hoerstueck_diskussion",),
+      parent="hoerstueck", me="mpbox", guide="hoerstueckdisk"),
     # Finden (fund.py, plan such-index, Stufe A): one index over the own data with fields and tags, the page Finden,
     # Strg K and the tool fund_suche; each source follows its own function (documents, NAS, reMarkable, Wissensbuch)
     F("fund", "Finden in allen Daten", "Find in all data", "data", ("fund",), me="fundbox", guide="fund"),

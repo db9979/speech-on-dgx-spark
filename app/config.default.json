@@ -283,6 +283,7 @@
     "hoerstueck": false,
     "hoerstueck_day": 3,
     "hoerstueck_stimmen": [],
+    "hoerstueck_diskussion": false,
     "doc_auswertung": false,
     "doc_auswertung_auto": ["kurz", "kern"],
     "doc_auswertung_day": 100,

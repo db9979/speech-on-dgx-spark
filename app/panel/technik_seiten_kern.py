@@ -249,7 +249,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "eefe8d8ff8",
+        "stand": "adb0abcd62",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -295,6 +295,9 @@ SEITEN = {
             "hoerstueck.zeile": ["s13"], "hoerstueck.ueberleitung_ok": ["s13"], "hoerstueck.zusammen": ["s13"],
             "hoerstueck.ZEILEN_MIN": ["s13"], "hoerstueck.UEBER_ANTEIL": ["s13"], "hoerstueck.STELLEN_ZEICHEN": ["s13"],
             "hoerstueck.GESPEICHERT_MAX": ["s13"], "tonteile.sprich": ["s13"],
+            "hoerstueck_diskussion.schritt": ["s13"], "hoerstueck_diskussion.pruefe_plan": ["s13"],
+            "hoerstueck_diskussion.pruefe_kapitel": ["s13"], "hoerstueck_diskussion.gespraech_ok": ["s13"],
+            "hoerstueck_diskussion.guete": ["s13"],
             "hoerstueck.m4a": ["s13"], "hoerstueck.an_telegram": ["s13"], "hoerstueck.melden": ["s13"],
             "coadmin.ist_admin": ["s13"], "coadmin.unbegrenzt": ["s13"], "hoerstueck.fertige": ["s13"], "hoerstueck.AUTO_MAX": ["s13"], "hoerstueck.sofort_lauf": ["s13"], "hoerstueck._sofort_offen": ["s13"], "hoerstueck.weiter": ["s13"], "hoerstueck._warten": ["s13"], "vorrang.grund": ["s13"],
             "documents.stelle": ["s13"], "common.signed_low": ["s13"],
@@ -927,7 +930,18 @@ SEITEN = {
                  "ein gescheitertes sagt den Grund. Der Modellaufruf des Drehbuchs (llm.complete) fragt vorrang selbst; "
                  "innerhalb von vorrang.run läuft er unter dem äußeren Platz, statt auf ihn zu warten. Für CarPlay liefert "
                  "hoerstueck.fertige nur die fertigen aller eigenen Mappen (Titel, Mappe, Dauer, höchstens "
-                 "{hoerstueck.AUTO_MAX}); im Auto wird nichts erstellt.",
+                 "{hoerstueck.AUTO_MAX}); im Auto wird nichts erstellt. Mit dem Schalter „Hörstück als Diskussion“ "
+                 "nimmt hoerstueck.stellen benachbarte Stücke in Blöcken, höchstens "
+                 "{hoerstueck_diskussion.STELLEN_ZEICHEN} Zeichen, und hoerstueck_diskussion.schritt arbeitet je ruhigem "
+                 "Schritt einen Modellaufruf ab: erst den Plan (hoerstueck_diskussion.pruefe_plan: nur angebotene "
+                 "Stellen, jede einmal, feste Arten, erstes Kapitel Einstieg, letztes Fazit, sonst der Plan des Panels), "
+                 "dann je Kapitel den Dialog nur aus dessen Originalstellen und festen Wörtern, nie aus Text von Schritt 1. "
+                 "hoerstueck_diskussion.pruefe_kapitel behält Beiträge mit zwei bis sechs Sätzen: ein Satz mit Stelle "
+                 "besteht die Zahlenprobe auch für Zahlwörter, ein Gesprächssatz ohne Stelle hat höchstens "
+                 "{hoerstueck_diskussion.GESPRAECH_LEN} Zeichen, keine Zahl und nur Wörter der Stellen des Kapitels oder "
+                 "der festen Liste (hoerstueck_diskussion.gespraech_ok), höchstens {hoerstueck_diskussion.GESPRAECH_ANTEIL} "
+                 "der Sätze. hoerstueck_diskussion.guete misst jedes Kapitel mit festen Zahlen; ein flaches wird genau "
+                 "einmal mit festen Hinweisen neu geschrieben, das bessere bleibt.",
                  "hoerstueck.stellen gives the model only pieces of the originals from the collection's documents on "
                  "short and whole, at most {hoerstueck.STELLEN_ZEICHEN} characters, in turns from each document; never "
                  "knowledge book pages and never analysis text (model text is never a source of model text). The model "
@@ -960,7 +974,18 @@ SEITEN = {
                  "model call (llm.complete) asks vorrang itself; inside vorrang.run it runs under the outer slot instead "
                  "of waiting for it. For CarPlay "
                  "hoerstueck.fertige gives only the finished ones of all own collections (title, collection, length, "
-                 "at most {hoerstueck.AUTO_MAX}); nothing is made in the car."),
+                 "at most {hoerstueck.AUTO_MAX}); nothing is made in the car. With the switch „Hörstück als "
+                 "Diskussion“ hoerstueck.stellen takes neighbouring pieces in blocks, at most "
+                 "{hoerstueck_diskussion.STELLEN_ZEICHEN} characters, and hoerstueck_diskussion.schritt does one model "
+                 "call per quiet step: first the plan (hoerstueck_diskussion.pruefe_plan: only offered places, each "
+                 "once, fixed kinds, the first chapter the opening, the last the conclusion, else the panel's own plan), "
+                 "then per chapter the dialog only from its original places and fixed words, never from text of step 1. "
+                 "hoerstueck_diskussion.pruefe_kapitel keeps contributions of two to six sentences: a sentence with a "
+                 "place passes the number check also for number words, a talk sentence without a place has at most "
+                 "{hoerstueck_diskussion.GESPRAECH_LEN} characters, no number and only words of the chapter's places or "
+                 "the fixed list (hoerstueck_diskussion.gespraech_ok), at most {hoerstueck_diskussion.GESPRAECH_ANTEIL} "
+                 "of the sentences. hoerstueck_diskussion.guete measures every chapter with fixed numbers; a flat one is "
+                 "written exactly once more with fixed hints, the better one stays."),
             ]),
             (("Links als Dokument", "Links as documents"), [
                 ("doklink.pruefe prüft jede Adresse nach festen Regeln, bevor etwas geholt wird: http oder https, ein "
@@ -1300,6 +1325,11 @@ SEITEN = {
             ("hoerstueck.weiter", ("nach einem Neustart läuft ein erzwungenes weiter", "after a restart a forced one runs on")),
             ("hoerstueck._warten", ("worauf die Arbeit gerade wartet, als festes Wort", "what the work waits for, as a fixed word")),
             ("vorrang.grund", ("Gespräch, Wartung oder andere Hintergrundarbeit", "conversation, maintenance or other background work")),
+            ("hoerstueck_diskussion.schritt", ("Diskussion: je Schritt Plan, ein Kapitel oder sein Neuschreiben", "discussion: per step the plan, one chapter or its rewrite")),
+            ("hoerstueck_diskussion.pruefe_plan", ("Plan nach festen Regeln, sonst der Plan des Panels", "the plan by fixed rules, else the panel's own")),
+            ("hoerstueck_diskussion.pruefe_kapitel", ("Beiträge: Satz mit Stelle und Zahlenprobe, Gesprächssatz mit Wortprobe", "contributions: sentence with a place and the number check, talk sentence with the word check")),
+            ("hoerstueck_diskussion.gespraech_ok", ("Gesprächssatz ohne Zahl, nur Wörter der Stellen oder der Liste", "talk sentence without a number, only words of the places or the list")),
+            ("hoerstueck_diskussion.guete", ("feste Gütemessung je Kapitel", "fixed measure per chapter")),
             ("tonteile.sprich", ("der eine Helfer für einen gesprochenen Teil", "the one helper for a spoken part")),
             ("doklink.pruefe", ("Adresse nach festen Regeln, bevor etwas geholt wird", "an address by fixed rules before anything is fetched")),
             ("doklink.eins", ("eine Adresse holen und als Dokument aufnehmen", "fetch one address and take it in as a document")),
@@ -1321,7 +1351,7 @@ SEITEN = {
             ("wissensmessung._synth", ("das Wegwerf-Profil aus festem Zufall, mit den Grenzen des Codes", "the throwaway profile from a fixed seed, with the code's limits")),
             ("wissensmessung.MESSTEILE", ("die Messteile, erweiterbar", "the measuring parts, extensible")),
         ],
-        "tests": ["test_wissen", "test_auswertung", "test_abschrift", "test_hoerstueck", "test_doklink", "test_ytquelle", "test_wissensdoppelt", "test_nachsortieren", "test_abschnitte", "test_lokal", "test_kiwix", "test_gedaechtnis",
+        "tests": ["test_wissen", "test_auswertung", "test_abschrift", "test_hoerstueck", "test_hoerstueck_diskussion", "test_doklink", "test_ytquelle", "test_wissensdoppelt", "test_nachsortieren", "test_abschnitte", "test_lokal", "test_kiwix", "test_gedaechtnis",
                   "test_gedaechtnis_grenze", "test_gemerkt",
                   "test_suchpruefung", "test_wissensbuch", "test_wissenskarte", "test_wissensknoten", "test_kartensuche",
                   "test_wissensmessung", "test_wissenstempo"],

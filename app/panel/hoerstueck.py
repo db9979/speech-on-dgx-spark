@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS hs_stueck (id TEXT PRIMARY KEY, mappe TEXT NOT NULL, 
     laenge INTEGER DEFAULT 5, stimmen INTEGER DEFAULT 2, stand TEXT DEFAULT 'wartet', zeilen TEXT DEFAULT '[]',
     fertig_zeilen INTEGER DEFAULT 0, verworfen TEXT DEFAULT '{}', dauer_s INTEGER DEFAULT 0, datei TEXT DEFAULT '',
     sig TEXT DEFAULT '', made INTEGER DEFAULT 0, versuche INTEGER DEFAULT 0, fehler TEXT DEFAULT '',
-    sprache TEXT DEFAULT 'de', sofort INTEGER DEFAULT 0);
+    sprache TEXT DEFAULT 'de', sofort INTEGER DEFAULT 0, stil TEXT DEFAULT '', plan TEXT DEFAULT '');
 """
 SPRACHEN = ("de", "en")   # the script's language: the one the person uses on the page or in the app (Push 5b)
 EINLEITUNG = "Ein Hörstück des Spark aus deiner Mappe „{name}“. Es kann Fehler enthalten; die Quellen stehen im Panel."
@@ -206,7 +206,11 @@ stand stands hear listen talk speak sum summary summing up stay keep watch matte
 believe welcome hello today not never always often sometimes again too also besides finally lastly anyway meanwhile
 """.split())
 _day = DayCounter(neu=0, drehbuch=0, zeilen=0, verworfen=0, fertig=0, leer=0, abgebrochen=0, fehler=0, tts=0, grenze=0,
-                  englisch=0, m4a=0, mitteilung=0, telegram=0, telegram_nein=0, erzwungen=0, erzwungen_nein=0)
+                  englisch=0, m4a=0, mitteilung=0, telegram=0, telegram_nein=0, erzwungen=0, erzwungen_nein=0,
+                  # the discussion (hoerstueck_diskussion.schritt): plans, the panel's own plan, chapters planned and
+                  # written, rewritten (flat), contributions and their characters, conversation sentences dropped
+                  plan=0, plan_fest=0, kapitel_geplant=0, kapitel=0, kapitel_neu=0, beitraege=0, beitrag_zeichen=0,
+                  gespraech_weg=0)
 _live = {"at": 0.0, "data": None}
 _hold = {"tts": 0.0}     # until when nothing is sent to the speech output (it failed, or the Dienst-Wächter)
 _said = {}               # what was written to the journal once: "tts" -> until
@@ -224,6 +228,13 @@ def _chat():
 
 def admin_on():
     return features.admin_on("hoerstueck")
+
+
+def diskussion_on(uid=None):
+    """Hörstück als Diskussion (hoerstueck_diskussion.py): the admin's switch chat.hoerstueck_diskussion (off by
+    default); a new Hörstück takes the style at its making (column stil), one already queued keeps its own. With a
+    uid features.allowed (the admin may block a profile), without one the Spark-wide switch for Zustand → Live."""
+    return features.allowed("hoerstueckdisk", uid) if uid else features.admin_on("hoerstueckdisk")
 
 
 def day_limit():
@@ -279,7 +290,8 @@ class _Db(documents._Db):
         try:
             con.executescript(mappen.SCHEMA + SCHEMA)
             cols = {r[1] for r in con.execute("PRAGMA table_info(hs_stueck)")}
-            for col, typ in (("sprache", "TEXT DEFAULT 'de'"), ("sofort", "INTEGER DEFAULT 0")):   # tables of 5a, 5b
+            for col, typ in (("sprache", "TEXT DEFAULT 'de'"), ("sofort", "INTEGER DEFAULT 0"),    # tables of 5a, 5b
+                             ("stil", "TEXT DEFAULT ''"), ("plan", "TEXT DEFAULT ''")):          # and of before the discussion
                 if col not in cols:
                     con.execute(f"ALTER TABLE hs_stueck ADD COLUMN {col} {typ}")
         except BaseException:
@@ -328,10 +340,13 @@ def _vorne(con, ids, uid):
     return out
 
 
-def stellen(uid, mid):
-    """[(number from 1, doc, piece n, page, part, text)]: places from the Mappe's documents, at most STELLEN_ZEICHEN
+def stellen(uid, mid, zeichen=STELLEN_ZEICHEN, zusammen=False):
+    """[(number from 1, doc, piece n, page, part, text)]: places from the Mappe's documents, at most zeichen
     characters, taken in turns from every document (the pieces of its Kurzfassung and Kernaussagen first), then put
-    back in the Mappe's and the document's order."""
+    back in the Mappe's and the document's order. zusammen (the discussion, hoerstueck_diskussion.BLOCK_ZEICHEN): each
+    turn takes neighbouring pieces of a document in their order until a block is full, so a chapter's places belong
+    together."""
+    import hoerstueck_diskussion as hd
     with _Db(uid) as con:
         ids = _doc_ids(con, mid)
         vorne = _vorne(con, ids, uid)
@@ -340,19 +355,20 @@ def stellen(uid, mid):
     for d in ids:
         first = set(vorne.get(d, ()))
         rs = [r for r in rows[d] if (r["text"] or "").strip()]
-        queues.append((d, [r for r in rs if r["n"] in first] + [r for r in rs if r["n"] not in first]))
+        queues.append((d, rs if zusammen else [r for r in rs if r["n"] in first] + [r for r in rs if r["n"] not in first]))
     picked, used = [], 0
     while any(q for _, q in queues):
         for d, q in queues:
-            if not q:
-                continue
-            r = q.pop(0)
-            t = re.sub(r"\s+", " ", r["text"]).strip()[:STELLE_ZEICHEN]
-            if used + len(t) > STELLEN_ZEICHEN:
-                q.clear()
-                continue
-            picked.append((ids.index(d), r["n"], d, r["page"], r["part"] or "", t))
-            used += len(t)
+            block = 0
+            while q and (not block or (zusammen and block < hd.BLOCK_ZEICHEN)):
+                r = q.pop(0)
+                t = re.sub(r"\s+", " ", r["text"]).strip()[:STELLE_ZEICHEN]
+                if used + len(t) > zeichen:
+                    q.clear()
+                    break
+                picked.append((ids.index(d), r["n"], d, r["page"], r["part"] or "", t))
+                used += len(t)
+                block += len(t)
     picked.sort(key=lambda x: (x[0], x[1]))
     return [(k, d, n, page, part, t) for k, (_, n, d, page, part, t) in enumerate(picked, 1)]
 
@@ -447,13 +463,20 @@ def pruefe(got, offen, stimmen=2, zeichen=LAENGEN[5], sprache="de"):
     while out and out[-1]["art"] == "ueber":   # a question at the end without an answer
         out.pop()
         drop("anteil")
-    titel = wissensbuch.clean_title(got.get("titel"))
-    all_text = " ".join(t for *_, t in offen)
-    if titel and (not wissensbuch._nums(titel) <= wissensbuch._nums(all_text) or wissensbuch._BAD.search(titel)):
-        titel = ""
+    titel = titel_von(got, offen)
     if len(out) < ZEILEN_MIN:
         return titel, [], weg
     return titel, out, weg
+
+
+def titel_von(got, offen):
+    """The model's title by the fixed rules: clean_title, every number in the places offered, no link or markup."""
+    import wissensbuch
+    titel = wissensbuch.clean_title(got.get("titel") if isinstance(got, dict) else "")
+    all_text = " ".join(t for *_, t in offen)
+    if titel and (not wissensbuch._nums(titel) <= wissensbuch._nums(all_text) or wissensbuch._BAD.search(titel)):
+        return ""
+    return titel
 
 
 def rahmen(name, lines, sprache="de"):
@@ -553,6 +576,7 @@ def bitte(uid, mid, laenge, stimmen, now=None, sprache="de", sofort=False, reque
         raise ValueError("laenge 5, 10 or 20, stimmen 2 or 3, sprache de or en")
     now = int(now or time.time())
     day = datetime.datetime.fromtimestamp(now).strftime("%Y-%m-%d")
+    stil = "diskussion" if diskussion_on(uid) else ""
     with _Db(uid) as con:
         m = mappen._get(con, mid)
         if not m:
@@ -568,8 +592,9 @@ def bitte(uid, mid, laenge, stimmen, now=None, sprache="de", sofort=False, reque
         documents.count_today(uid, day, add=1, key="hoerstueck")
     hid = secrets.token_hex(6)
     with _Db(uid) as con:
-        con.execute("INSERT INTO hs_stueck (id, mappe, laenge, stimmen, stand, made, sprache, sofort) "
-                    "VALUES (?, ?, ?, ?, 'wartet', ?, ?, ?)", (hid, mid, laenge, stimmen, now, sprache, int(bool(sofort))))
+        con.execute("INSERT INTO hs_stueck (id, mappe, laenge, stimmen, stand, made, sprache, sofort, stil) "
+                    "VALUES (?, ?, ?, ?, 'wartet', ?, ?, ?, ?)", (hid, mid, laenge, stimmen, now, sprache,
+                                                                 int(bool(sofort)), stil))
     _day.today()["neu"] += 1
     return hid, ""
 
@@ -585,7 +610,12 @@ def _sprache(r):
     return r["sprache"] if r["sprache"] in SPRACHEN else "de"
 
 
+def _stil(r):
+    return "diskussion" if r["stil"] == "diskussion" else ""
+
+
 def _kurz(r, sig_now):
+    import hoerstueck_diskussion as hd
     z = _zeilen(r)
     try:
         weg = json.loads(r["verworfen"] or "{}")
@@ -597,7 +627,8 @@ def _kurz(r, sig_now):
             "ton": bool(r["datei"]), "fehler": r["fehler"] or "", "sprache": _sprache(r),
             "geaendert": bool(r["sig"]) and sig_now is not None and r["sig"] != sig_now,
             "laeuft": _now.get("id") == r["id"], "sofort": bool(r["sofort"]), "erzwungen": _sofort.get("id") == r["id"],
-            "warten": _warten(r)}
+            "warten": _warten(r), "stil": _stil(r),
+            "kapitel": list(hd.fortschritt(r)) if _stil(r) and r["stand"] == "wartet" else [0, 0]}
 
 
 def _warten(r, now=None):
@@ -658,7 +689,8 @@ def eins(uid, hid):
         m = mappen._get(con, r["mappe"])
         sig = sig_of(con, r["mappe"]) if m else None
         z = _zeilen(r)
-        ids = sorted({x["doc"] for x in z if ID.fullmatch(str(x.get("doc") or ""))})
+        ids = sorted({y["doc"] for x in z for y in [x] + (x.get("saetze") if isinstance(x.get("saetze"), list) else [])
+                      if isinstance(y, dict) and ID.fullmatch(str(y.get("doc") or ""))})
         q = ",".join("?" * len(ids))
         names = {d["id"]: d["title"] or d["name"] for d in
                  con.execute(f"SELECT id, title, name FROM docs WHERE id IN ({q})", ids)} if ids else {}
@@ -673,6 +705,17 @@ def eins(uid, hid):
         if x.get("art") == "inhalt":
             y.update(doc=x.get("doc"), dok=names.get(x.get("doc"), ""), page=x.get("page"), part=x.get("part") or "",
                      da=x.get("doc") in names)
+        elif x.get("art") == "beitrag":   # a contribution of the discussion: every sentence with its place or „Gespräch“
+            ss = []
+            for s in x.get("saetze") if isinstance(x.get("saetze"), list) else []:
+                if not isinstance(s, dict):
+                    continue
+                t = {"text": s.get("text") or "", "art": "inhalt" if s.get("art") == "inhalt" else "gespraech"}
+                if t["art"] == "inhalt":
+                    t.update(doc=s.get("doc"), dok=names.get(s.get("doc"), ""), page=s.get("page"),
+                             part=s.get("part") or "", da=s.get("doc") in names)
+                ss.append(t)
+            y.update(saetze=ss, weise=x.get("weise") or "", kapitel=x.get("kapitel"), kart=x.get("kart") or "")
         lines.append(y)
     out["drehbuch"] = lines
     out["rollen"] = {k: list(v) for k, v in ROLLEN.items()}
@@ -742,8 +785,12 @@ def _set(uid, hid, **kw):
 
 async def drehbuch(uid, r, name, now):
     """The script of one waiting Hörstück: one model call through vorrang, then the fixed rules. Returns "drehbuch",
-    "leer", "abgebrochen" or "fehler"."""
+    "leer", "abgebrochen" or "fehler". A discussion (stil, hoerstueck_diskussion.schritt) takes one step of its plan
+    and chapters per call ("plan", "kapitel" too)."""
     import vorrang
+    if _stil(r):
+        import hoerstueck_diskussion as hd
+        return await hd.schritt(uid, r, name, now)
     who = _who(uid)
     offen = await asyncio.to_thread(stellen, uid, r["mappe"])
     with _Db(uid) as con:
@@ -1188,7 +1235,8 @@ def _own_count(uid):
 def for_live(now=None):
     """{"on", "stuecke", "warten", "sprechen", "zeilen_offen", "neu", "drehbuch", "zeilen", "verworfen", "fertig",
     "leer", "abgebrochen", "fehler", "tts", "grenze", "englisch", "m4a", "mitteilung", "telegram", "telegram_nein",
-    "laeuft", "erzwungen", "wartet_auf", "erzwungen_heute", "erzwungen_nein"}: sums over all profiles (remembered
+    "laeuft", "erzwungen", "wartet_auf", "erzwungen_heute", "erzwungen_nein", "diskussion", "plan", "plan_fest",
+    "kapitel_geplant", "kapitel", "kapitel_neu", "beitraege", "beitrag_schnitt", "gespraech_weg"}: sums over all profiles (remembered
     LIVE_EVERY s) and today's counts; erzwungen is what the forced run does right now ("" or drehbuch, zeile, wartet),
     wartet_auf what the work on a Hörstück waits for (vorrang.grund: "" or gespraech, wartung, andere)."""
     now = time.time() if now is None else now
@@ -1216,7 +1264,9 @@ def for_live(now=None):
     import vorrang
     return dict(_live["data"], on=True, laeuft=_now.get("was") or "", erzwungen=_sofort.get("was") or "",
                 wartet_auf=vorrang.grund("Hörstück") if _sofort or _now else "",
-                erzwungen_heute=d["erzwungen"], **{k: d[k] for k in (
+                erzwungen_heute=d["erzwungen"], diskussion=diskussion_on(),
+                beitrag_schnitt=d["beitrag_zeichen"] // d["beitraege"] if d["beitraege"] else 0, **{k: d[k] for k in (
+                    "plan", "plan_fest", "kapitel_geplant", "kapitel", "kapitel_neu", "beitraege", "gespraech_weg",
                     "neu", "drehbuch", "zeilen", "verworfen", "fertig", "leer", "abgebrochen", "fehler", "tts", "grenze",
                     "englisch", "m4a", "mitteilung", "telegram", "telegram_nein", "erzwungen_nein")})
 

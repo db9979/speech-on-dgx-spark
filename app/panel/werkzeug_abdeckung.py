@@ -31,6 +31,7 @@ TOOLS = {
     "auswertungen": ("dokument_auswertung",),
     "docaudio": ("document_search",),
     "hoerstueck": ("hoerstueck_machen",),
+    "hoerstueckdisk": ("hoerstueck_machen",),   # the same tool; the admin's switch decides the style of the script
     "doclink": ("link_als_dokument", "document_search"),
     "docyoutube": ("link_als_dokument", "document_search"),
     "docshared": ("document_search",),

@@ -2573,7 +2573,15 @@
 "file": "Architektur und Datenfluss",
 "head": "Hörstück aus einer Mappe",
 "title": "Hörstück aus einer Mappe",
-"text": "er ein offenes erzwungenes Stück wieder auf, ein Start, der nicht geht, gibt den Platz sofort frei. Worauf die Arbeit gerade wartet, sagt die Liste mit einem festen Wort (hoerstueck._warten aus vorrang.grund: Gespräch, Wartung, andere Hintergrundarbeit, Sprachausgabe), ein gescheitertes sagt den Grund. Der Modellaufruf des Drehbuchs (llm.complete) fragt vorrang selbst; innerhalb von vorrang.run läuft er unter dem äußeren Platz, statt auf ihn zu warten. Für CarPlay liefert hoerstueck.fertige nur die fertigen aller eigenen Mappen (Titel, Mappe, Dauer, höchstens 12); im Auto wird nichts erstellt."
+"text": "er ein offenes erzwungenes Stück wieder auf, ein Start, der nicht geht, gibt den Platz sofort frei. Worauf die Arbeit gerade wartet, sagt die Liste mit einem festen Wort (hoerstueck._warten aus vorrang.grund: Gespräch, Wartung, andere Hintergrundarbeit, Sprachausgabe), ein gescheitertes sagt den Grund. Der Modellaufruf des Drehbuchs (llm.complete) fragt vorrang selbst; innerhalb von vorrang.run läuft er unter dem äußeren Platz, statt auf ihn zu warten. Für CarPlay liefert hoerstueck.fertige nur die fertigen aller eigenen Mappen (Titel, Mappe, Dauer, höchstens 12); im Auto wird nichts erstellt. Mit dem Schalter „Hörstück als Diskussion“ nimmt hoerstueck.stellen benachbarte Stücke in Blöcken, höchstens 40000 Zeichen, und hoerstueck_diskussion.schritt arbeitet je ruhigem Schritt einen Modellaufruf ab: erst den Plan (hoerstueck_diskussion.pruefe_plan: nur angebotene Stellen, jede einmal, feste Arten, erstes Kapitel Einstieg, letztes Fazit, sonst der Plan des Panels), dann je Kapitel den Dialog nur aus dessen Originalstellen und festen Wörtern, nie aus Text von Schritt 1. hoerstueck_diskussion.pruefe_kapitel behält Beiträge mit zwei bis sechs Sätzen: ein Satz mit Stelle besteht die Zahl"
+},
+{
+"lang": "de",
+"src": "architektur",
+"file": "Architektur und Datenfluss",
+"head": "Hörstück aus einer Mappe",
+"title": "Hörstück aus einer Mappe",
+"text": "enprobe auch für Zahlwörter, ein Gesprächssatz ohne Stelle hat höchstens 160 Zeichen, keine Zahl und nur Wörter der Stellen des Kapitels oder der festen Liste (hoerstueck_diskussion.gespraech_ok), höchstens 0.4 der Sätze. hoerstueck_diskussion.guete misst jedes Kapitel mit festen Zahlen; ein flaches wird genau einmal mit festen Hinweisen neu geschrieben, das bessere bleibt."
 },
 {
 "lang": "de",
@@ -2765,7 +2773,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Im Code",
 "title": "Im Code",
-"text": "Selbsttests: test_wissen, test_auswertung, test_abschrift, test_hoerstueck, test_doklink, test_ytquelle, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung, test_wissenstempo"
+"text": "Selbsttests: test_wissen, test_auswertung, test_abschrift, test_hoerstueck, test_hoerstueck_diskussion, test_doklink, test_ytquelle, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung, test_wissenstempo"
 },
 {
 "lang": "de",
@@ -6102,6 +6110,30 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "iner Aufnahme und der Vorrang der Sprache bleiben. Die Seite zeigt dann „heute N · ohne Tageslimit“ statt „heute N von 3“ und nie „Für heute ist die Grenze erreicht.“ (frei in GET /api/profile/mappen/{id}/hoerstuecke, im iPhone dasselbe), Links als Dokument „heute N Abrufe, ohne Tageslimit“ (frei in doklink.info), eine Aufnahme nie „Tagesgrenze erreicht“ (frei in abschrift.info). Gezählt wird weiter, nur nicht abgelehnt. Selbsttests test_hoerstueck, test_auswertung, test_abschrift, test_doklink."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Hörstück als Diskussion, Teil 1 (V01.1.362, Plan *hoerstueck-diskussion*, Dominik 2026-11-10 „als Schalter für Diskussion. Das andere 1-8“): Neuer Admin-Schalter *Funktionen → Eigene Dokumente → Mappen → Hörstück aus einer Mappe → Hörstück als Diskussion* (chat.hoerstueck_diskussion, ab Werk aus; baut auf *Hörstück aus einer Mappe*; kein Profilschalter, Gäste nie). Aus bleibt alles wie bisher (ein Drehbuch, hoerstueck.pruefe). An entsteht jedes neue Hörstück in zwei Schritten (hoerstueck_diskussion.py), je ruhigem Schritt höchstens ein Modellaufruf: Gesprächsplan: das Modell liefert nur Kapitel mit Stellennummern und einer Art aus der festen Liste (Einstieg, These, Streitfrage, Beispiel, Wendepunkt, Fazit); das Panel behält nur angebotene Stellen, jede einmal, höchstens 8 000 Zeichen je Kapitel, 3 Kapitel bei 5 Minuten, 4 bei 10, 5 bei 20; das erste Kapitel ist immer der Einstieg, das letzte das Fazit; ein zu dünner Plan wird durch den festen Plan des Panels ersetzt (Stellen der Reihe nach geteilt). Die Stellen sind jetzt benachbarte Stücke in Blöcken (bis 40 000 Zeichen statt 16 000). Dialog je Kapitel: ein Aufruf bekommt nur die Originalstellen dieses Kapitels, das feste Wort sei"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "ner Art und die festen Rollenkarten (A Moderation: neugierig, fasst zusammen, holt die Hörer ab; B Fachstimme: erklärt mit Beispielen; C Skepsis: hakt nach, widerspricht; mit zwei Stimmen übernimmt A die Skepsis), nie Text aus Schritt 1. Eine Zeile ist jetzt ein Beitrag mit zwei bis sechs Sätzen (höchstens 900 Zeichen). Jeder Satz mit Quelle besteht die Zahlenprobe gegen seine Stelle, jetzt auch für ausgeschriebene Zahlen. Neu sind Gesprächssätze ohne Quelle (Frage, Einwand, Reaktion): höchstens 160 Zeichen, keine Ziffer, kein Zahlwort, keine Links oder Befehlswörter, und jedes Wort steht in den Stellen des Kapitels oder in der festen Gesprächswortliste (hoerstueck_worte.json, rund 2 400 Wörter, dazu die alte Liste); höchstens 40 % der Sätze eines Kapitels. Im Drehbuch tragen sie den Hinweis „Gespräch“, die Fakten behalten ihren Quellen-Chip; Kapitel stehen als Überschrift darüber. Gütemessung: nach jedem Kapitel misst das Panel Beitragslänge (Schnitt mindestens 180 Zeichen), Anteil der Fragen (15 bis 40 %), mindestens einen Einwand der Skepsis, keine Stimme mehr als dreimal hintereinander und mindestens 60 % genutzte Stellen; ein flaches Kapitel wird genau einmal mit festen Hinwei"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "sen des Panels neu geschrieben, das bessere bleibt. Höchstens 11 Modellaufrufe je Stück. Die Liste sagt „Drehbuch entsteht · Kapitel 2 von 4“. Live (Zustand → Live, Kasten Hörstück) zeigt nur Zahlen: Kapitel geplant, geschrieben, neu geschrieben, Beitragslänge im Schnitt, verworfene Gesprächssätze. Journal mit festen Wörtern: hoerstueck: plan | 4 kapitel, hoerstueck: kapitel | 2 von 4 | …, hoerstueck: flach | nochmal | kapitel 2. Ehrlich: die Wortprobe verhindert erfundene Namen, Zahlen und Fachwörter, nicht jede erfundene Behauptung aus erlaubten Wörtern; deshalb verlangt der Prompt Fragen und Reaktionen statt Aussagen, und „Gespräch“ zeigt, was nicht belegt ist."
 },
 {
 "lang": "de",
@@ -14613,6 +14645,14 @@
 "file": "Assistent und Oberfläche",
 "head": "Meine Daten",
 "title": "Meine Daten",
+"text": "- Hörstück als Diskussion (Funktionen → Meine Daten → „Hörstück als Diskussion“; baut auf „Hörstück aus einer Mappe“; Mappen): Das Hörstück wird ein echtes Gespräch statt Satz für Satz: zuerst plant das Sprachmodell nur die Kapitel (Einstieg, dann Thesen, Streitfragen, Beispiele oder ein Wendepunkt, am Ende das Fazit) mit den Stellen, die zusammengehören."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Meine Daten",
+"title": "Meine Daten",
 "text": "- Finden in allen Daten (Funktionen → Meine Daten → „Finden in allen Daten“; Finden → Einstellungen): Ein Suchindex über deine eigenen Sachen: Dokumente, Wissensordner auf dem NAS, reMarkable und Wissensbuch, mit „Mails und Anhänge finden“ auch alle Mails, mit den weiteren Unterschaltern Termine, Kontakte, frühere Gespräche, Listen, Erin …"
 },
 {
@@ -21229,7 +21269,15 @@
 "file": "Architecture and data flow",
 "head": "Audio overview of a collection",
 "title": "Audio overview of a collection",
-"text": " a start that fails frees the place at once. What the work waits for right now the list says with a fixed word (hoerstueck._warten from vorrang.grund: conversation, maintenance, other background work, speech output), a failed one says why. The script's model call (llm.complete) asks vorrang itself; inside vorrang.run it runs under the outer slot instead of waiting for it. For CarPlay hoerstueck.fertige gives only the finished ones of all own collections (title, collection, length, at most 12); nothing is made in the car."
+"text": " a start that fails frees the place at once. What the work waits for right now the list says with a fixed word (hoerstueck._warten from vorrang.grund: conversation, maintenance, other background work, speech output), a failed one says why. The script's model call (llm.complete) asks vorrang itself; inside vorrang.run it runs under the outer slot instead of waiting for it. For CarPlay hoerstueck.fertige gives only the finished ones of all own collections (title, collection, length, at most 12); nothing is made in the car. With the switch „Hörstück als Diskussion“ hoerstueck.stellen takes neighbouring pieces in blocks, at most 40000 characters, and hoerstueck_diskussion.schritt does one model call per quiet step: first the plan (hoerstueck_diskussion.pruefe_plan: only offered places, each once, fixed kinds, the first chapter the opening, the last the conclusion, else the panel's own plan), then per chapter the dialog only from its original places and fixed words, never from text of step 1. hoerstueck_diskussion.pruefe_kapitel keeps contributions of two to six sentences: a sentence with a place passes the number check also for number words, a talk sentence without a place has at most "
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Audio overview of a collection",
+"title": "Audio overview of a collection",
+"text": "160 characters, no number and only words of the chapter's places or the fixed list (hoerstueck_diskussion.gespraech_ok), at most 0.4 of the sentences. hoerstueck_diskussion.guete measures every chapter with fixed numbers; a flat one is written exactly once more with fixed hints, the better one stays."
 },
 {
 "lang": "en",
@@ -21421,7 +21469,7 @@
 "file": "Architecture and data flow",
 "head": "In the code",
 "title": "In the code",
-"text": "Self-tests: test_wissen, test_auswertung, test_abschrift, test_hoerstueck, test_doklink, test_ytquelle, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung, test_wissenstempo"
+"text": "Self-tests: test_wissen, test_auswertung, test_abschrift, test_hoerstueck, test_hoerstueck_diskussion, test_doklink, test_ytquelle, test_wissensdoppelt, test_nachsortieren, test_abschnitte, test_lokal, test_kiwix, test_gedaechtnis, test_gedaechtnis_grenze, test_gemerkt, test_suchpruefung, test_wissensbuch, test_wissenskarte, test_wissensknoten, test_kartensuche, test_wissensmessung, test_wissenstempo"
 },
 {
 "lang": "en",
@@ -24638,6 +24686,30 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": " then shows \"today N · no daily limit\" instead of \"today N of 3\" and never \"The limit for today is reached.\" (frei in GET /api/profile/mappen/{id}/hoerstuecke, the same on the iPhone), Links as documents \"N fetches today, no daily limit\" (frei in doklink.info), a recording never \"daily limit reached\" (frei in abschrift.info). It is still counted, only never refused. Self-tests test_hoerstueck, test_auswertung, test_abschrift, test_doklink."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Audio overview as a discussion, part 1 (V01.1.362, plan *hoerstueck-diskussion*, Dominik 2026-11-10 „as a switch for discussion. The rest 1-8“): New admin switch *Features → Own documents → Collections → Audio overview → Audio overview as a discussion* (chat.hoerstueck_diskussion, off by default; builds on *Audio overview*; no profile switch, never guests). Off, everything stays as before (one script, hoerstueck.pruefe). On, every new audio overview is made in two steps (hoerstueck_diskussion.py), at most one model call per quiet step: Talk plan: the model only delivers chapters with place numbers and a kind from the fixed list (opening, claim, point of dispute, example, turning point, conclusion); the panel keeps only offered places, each once, at most 8,000 characters per chapter, 3 chapters for 5 minutes, 4 for 10, 5 for 20; the first chapter is always the opening, the last the conclusion; a too thin plan is replaced by the panel's fixed plan (the places split in order). The places are now neighbouring pieces in blocks (up to 40,000 characters instead of 16,000). Dialog per chapter: one call gets only this chapter's original places, the fixed word of its kind and the fixed role "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "cards (A host: curious, sums up, takes the listeners along; B expert: explains with examples; C sceptic: pushes back, objects; with two voices A is the sceptic too), never text of step 1. A line is now a contribution of two to six sentences (at most 900 characters). Every sentence with a source passes the number check against its place, now also for written-out numbers. New are talk sentences without a source (question, objection, reaction): at most 160 characters, no digit, no number word, no links or command words, and every word stands in the chapter's places or in the fixed list of talk words (hoerstueck_worte.json, about 2,400 words, plus the old list); at most 40 % of a chapter's sentences. In the script they carry the note \"Talk\", facts keep their source chip; chapters stand as headings above. Measure: after each chapter the panel measures the contribution length (average at least 180 characters), the share of questions (15 to 40 %), at least one objection of the sceptic, no voice more than three times in a row and at least 60 % of the places used; a flat chapter is written exactly once more with fixed hints of the panel, the better one stays. At most 11 model calls per piec"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "e. The list says \"Script being written · chapter 2 of 4\". Live (Status → Live, box Hörstück) shows numbers only: chapters planned, written, rewritten, average contribution length, talk sentences dropped. Journal with fixed words: hoerstueck: plan | 4 kapitel, hoerstueck: kapitel | 2 von 4 | …, hoerstueck: flach | nochmal | kapitel 2. Honestly: the word check stops invented names, numbers and terms, not every invented claim made of allowed words; so the prompt asks for questions and reactions instead of statements, and \"Talk\" shows what is not backed."
 },
 {
 "lang": "en",
@@ -32846,6 +32918,14 @@
 "head": "My data",
 "title": "My data",
 "text": "- Audio overview (Features → My data → \"Audio overview\"; builds on \"Collections\"; Collections): From a collection a talk to listen to: under Collections → a collection → Audio overview you choose the length (5, 10 or 20 minutes) and two or three voices (A host, B expert, C questions) and tap \"Make\"."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "My data",
+"title": "My data",
+"text": "- Audio overview as a discussion (Features → My data → \"Audio overview as a discussion\"; builds on \"Audio overview\"; Collections): The audio overview becomes a real talk instead of one sentence after the other: first the language model only plans the chapters (opening, then claims, points of dispute, examples or a turning point, at the end the conclusion) with the p …"
 },
 {
 "lang": "en",

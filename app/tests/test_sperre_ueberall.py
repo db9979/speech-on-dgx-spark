@@ -505,6 +505,7 @@ ADMIN_ON_OK = {
     "mappen.py:admin_on": "Spark switch for the Live page only; per profile features.allowed(\"mappen\", uid)",
     "doklink.py:admin_on": "Spark switch for the runner, the minute loop and the Live page; per profile features.allowed(\"doclink\", uid)",
     "hoerstueck.py:admin_on": "Spark switch for the quiet step and the Live page; per profile features.allowed(\"hoerstueck\", uid)",
+    "hoerstueck.py:diskussion_on": "without a uid only the Spark-wide flag for Zustand → Live; with a uid features.allowed(\"hoerstueckdisk\", uid)",
     "abschrift.py:admin_on": "Spark switch for the quiet step and the Live page; per profile features.allowed(\"docaudio\", uid)",
     "ytquelle.py:for_live": "the Live page only (numbers of all profiles); per profile features.allowed(\"docyoutube\", uid) in doklink and ytquelle.info",
     "auswertung.py:admin_on": "Spark switch for the quiet step and the Live page; per profile features.allowed(\"auswertungen\", uid)",

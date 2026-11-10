@@ -14,7 +14,11 @@ const HS_STAND={wartet:['wartet','waiting'],sprechen:['spricht','speaking'],fert
 const HS_WEG={sprecher:['Sprecher nicht aus der Liste','speaker not from the list'],stelle:['ohne gültige Fundstelle','without a valid place'],
   zahl:['Zahl nicht im Dokument','number not in the document'],form:['Form, Link oder Befehl','form, link or command'],
   ueberleitung:['Überleitung mit Zahl, Name oder fremdem Wort','transition with a number, name or unknown word'],
-  anteil:['zu viele Überleitungen','too many transitions'],lang:['zu lang','too long'],doppelt:['doppelt','twice']};
+  anteil:['zu viele Überleitungen oder Gesprächssätze','too many transitions or talk sentences'],lang:['zu lang','too long'],doppelt:['doppelt','twice'],
+  gespraech:['Gesprächssatz mit Zahl oder fremdem Wort','talk sentence with a number or an unknown word'],leer:['Beitrag ohne geprüften Satz','contribution without a checked sentence'],
+  plan:['Kapitel ohne gültige Stelle','chapter without a valid place'],art:['Kapitel-Art nicht aus der Liste','chapter kind not from the list']};
+// a discussion (hoerstueck_diskussion.py): the fixed kinds of its chapters
+const HS_KART={einstieg:['Einstieg','Opening'],these:['These','Claim'],streitfrage:['Streitfrage','Point of dispute'],beispiel:['Beispiel','Example'],wendepunkt:['Wendepunkt','Turning point'],fazit:['Fazit','Conclusion']};
 const hsUrl=(mid,hid,x)=>hid?'/api/profile/hoerstueck/'+encodeURIComponent(hid)+(x||''):'/api/profile/mappen/'+encodeURIComponent(mid)+'/hoerstuecke';
 const hsMin=s=>{s=Math.max(0,Math.round(s||0));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
 const hsAva=(sp,R)=>`<span class="ld-ava" title="${esc(R&&R[sp]?t(R[sp][0],R[sp][1]):sp)}" aria-hidden="true">${esc(sp)}</span>`;
@@ -28,7 +32,8 @@ const HS_FEHLER={modell:['das Sprachmodell lieferte kein brauchbares Drehbuch','
 function hsSub(s){const st=t(...(HS_STAND[s.stand]||HS_STAND.x));const w=HS_WARTEN[s.warten]?' · '+t(...HS_WARTEN[s.warten]):'';
   if(s.erzwungen&&s.stand==='wartet')return t('Wird sofort erstellt · ','Being made now · ')+(w?w.slice(3):t('Drehbuch entsteht','script being written'));
   if(s.erzwungen&&s.stand==='sprechen')return t(`Wird sofort erstellt · ${s.fertig_zeilen} von ${s.zeilen} Zeilen gesprochen`,`Being made now · ${s.fertig_zeilen} of ${s.zeilen} lines spoken`)+w;
-  if(s.stand==='wartet')return s.laeuft?t('Drehbuch entsteht','Script being written')+w:t('Drehbuch folgt, sobald niemand spricht','Script follows as soon as nobody speaks');
+  const kap=s.stil&&s.kapitel&&s.kapitel[1]?t(` · Kapitel ${Math.min(s.kapitel[0]+1,s.kapitel[1])} von ${s.kapitel[1]}`,` · chapter ${Math.min(s.kapitel[0]+1,s.kapitel[1])} of ${s.kapitel[1]}`):'';
+  if(s.stand==='wartet')return (s.laeuft?t('Drehbuch entsteht','Script being written')+kap+w:t('Drehbuch folgt, sobald niemand spricht','Script follows as soon as nobody speaks')+kap);
   if(s.stand==='sprechen')return t(`Drehbuch fertig · ${s.fertig_zeilen} von ${s.zeilen} Zeilen gesprochen · wartet auf ruhige Minuten`,`Script done · ${s.fertig_zeilen} of ${s.zeilen} lines spoken · waits for quiet minutes`);
   if(s.stand==='leer')return t('Daraus lässt sich kein Hörstück machen: zu wenig geprüfte Zeilen','No audio overview can be made of it: too few checked lines');
   if(s.stand==='x')return (HS_FEHLER[s.fehler]?t(...HS_FEHLER[s.fehler])+' · ':'')+t('ging nicht; „Löschen“ und neu erstellen','did not work; delete and make again');
@@ -40,7 +45,13 @@ function hsRow(s){const kind=s.stand==='fertig'?'ok':s.stand==='leer'||s.stand==
     (s.geaendert?`<small>${esc(t('Die Mappe hat sich seitdem geändert.','The collection has changed since.'))}</small>`:'')+
     (s.stand==='sprechen'?`<div class="mpbar" aria-hidden="true"><i style="width:${pct}%"></i></div>`:'')+
     `</span><span class="ld-right"><span class="ld-st ${kind}">${esc(t(...(HS_STAND[s.stand]||HS_STAND.x)))}</span></span></div>`}
-function hsLine(x,R,i){const at=typeof x.ab==='number'?`<button type="button" class="ld-chip" data-hsab="${x.ab}" title="${esc(t('Ab hier anhören','Listen from here'))}">${esc(hsMin(x.ab))}</button>`:'';
+// a sentence of a contribution: its place as a chip, or the note „Gespräch“ (a question or reaction without a place)
+function hsSatz(s){const chip=s.art==='inhalt'?(s.da?`<button type="button" class="ld-chip" data-hsdoc="${esc(s.doc)}" title="${esc(t('Dokument öffnen','Open the document'))}">${esc([s.dok,s.page?t('S. ','p. ')+s.page:'',s.part].filter(Boolean).join(' · '))}</button>`:`<span class="ld-badge off">${esc(t('Dokument weg','document gone'))}</span>`)
+  :`<span class="ld-badge off">${esc(t('Gespräch','Talk'))}</span>`;return `<span class="hssatz">${esc(s.text)} ${chip}</span>`}
+function hsLine(x,R,i,prev){if(x.art==='beitrag'){const at=typeof x.ab==='number'?`<button type="button" class="ld-chip" data-hsab="${x.ab}" title="${esc(t('Ab hier anhören','Listen from here'))}">${esc(hsMin(x.ab))}</button>`:'';
+    const head=(!prev||prev.kapitel!==x.kapitel)&&HS_KART[x.kart]?`<div class="ld-grp"><span>${esc(t(`Kapitel ${x.kapitel+1}`,`Chapter ${x.kapitel+1}`)+' · '+t(...HS_KART[x.kart]))}</span></div>`:'';
+    return head+`<div class="ld-row" data-hsi="${i}">${hsAva(x.sprecher,R)}<span class="ld-mid"><span>${(x.saetze||[]).map(hsSatz).join(' ')}</span></span><span class="ld-right">${at}</span></div>`}
+  const at=typeof x.ab==='number'?`<button type="button" class="ld-chip" data-hsab="${x.ab}" title="${esc(t('Ab hier anhören','Listen from here'))}">${esc(hsMin(x.ab))}</button>`:'';
   const right=at+(x.art==='inhalt'?(x.da?`<button type="button" class="ld-chip" data-hsdoc="${esc(x.doc)}" title="${esc(t('Dokument öffnen','Open the document'))}">${esc([x.dok,x.page?t('S. ','p. ')+x.page:'',x.part].filter(Boolean).join(' · '))}</button>`:`<span class="ld-badge off">${esc(t('Dokument weg','document gone'))}</span>`)
     :`<span class="ld-badge off">${esc(x.art==='fest'?t('fest','fixed'):t('Überleitung','transition'))}</span>`);
   return `<div class="ld-row" data-hsi="${i}">${hsAva(x.sprecher,R)}<span class="ld-mid"><span>${esc(x.text)}</span></span><span class="ld-right">${right}</span></div>`}
@@ -64,7 +75,7 @@ function hsCard(){const o=HS.one;if(!o||o.id!==HS.sel)return'';const R=o.rollen;
     (o.stand==='sprechen'?`<div class="mpbar" aria-hidden="true"><i style="width:${pct}%"></i></div>`:'')+
     (o.ton&&!o.telegram&&typeof TG_ON!=='undefined'&&TG_ON?`<p class="mut ld-note">${esc(t('„An Telegram“ geht, sobald Telegram verknüpft ist und Persönliches dort erlaubt ist: Ich → Telegram','"To Telegram" works once Telegram is linked and personal data is allowed there: Me → Telegram'))}</p>`:'')+
     (o.drehbuch.length?`<details class="hsscript"${HS.script?' open':''}><summary>${esc(t(`Drehbuch · ${o.drehbuch.length} Zeilen`,`Script · ${o.drehbuch.length} lines`)+(o.stand==='sprechen'?t(` · ${o.fertig_zeilen} gesprochen`,` · ${o.fertig_zeilen} spoken`):''))}</summary>`+
-      (roles?`<div class="hsroles">${roles}</div>`:'')+o.drehbuch.map((x,i)=>hsLine(x,R,i)).join('')+
+      (roles?`<div class="hsroles">${roles}</div>`:'')+o.drehbuch.map((x,i)=>hsLine(x,R,i,o.drehbuch[i-1])).join('')+
       (weg.length?`<p class="mut ld-note">${esc(t('Verworfen: ','Dropped: ')+weg.join(', '))}</p>`:'')+`</details>`:'')+`</div>`}
 // the tab Hörstück of a Mappe: length · voices · Erstellen (a normal button, 2a) · today's count in one row, the card,
 // then the other Hörstücke as rows with their state

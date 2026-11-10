@@ -143,6 +143,7 @@ MODULE = {
     "auswertung": ("wissen", "Auswertungen je Dokument: Punkte vom Modell mit Zahlenprobe je Stelle; Inhalt, Fristen, Beteiligte fest"),
     "doklink": ("wissen", "Links als Dokument: öffentliche Seiten und Dateien über netguard.hole_oeffentlich, Neu abrufen mit ETag und SHA"),
     "hoerstueck": ("wissen", "Hörstück aus einer Mappe: Drehbuch nur als JSON, jede Zeile fest geprüft, Zeile für Zeile gesprochen"),
+    "hoerstueck_diskussion": ("wissen", "Hörstück als Diskussion: Plan in Kapiteln, Dialog je Kapitel, jeder Satz fest geprüft, feste Gütemessung"),
     "tonteile": ("wissen", "Tonteile: der eine Helfer, der einen Teil von der eigenen Sprachausgabe sprechen lässt"),
     "abschrift": ("wissen", "Aufnahmen abschreiben: Ton und Video in Stücken von 30 s durch die eigene Spracherkennung, Zeit als Stelle"),
     "ytquelle": ("wissen", "YouTube-Links abschreiben: Tonspur über das gepinnte yt-dlp nur durch den netguard-Proxy, dann eine Aufnahme"),
