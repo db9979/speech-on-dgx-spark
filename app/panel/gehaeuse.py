@@ -379,11 +379,11 @@ def zeilen(key, now=None):
     if key == "dgxdetail":
         if not steuer.remote():
             from common import mem_available_gib
-            return ["DGX Detail", "auf diesem Rechner", f"Frei {_num(_safe(mem_available_gib))} GiB", "LLM " + _kurz(_llm_lokal())]
+            return ["DGX Detail", "auf diesem Rechner", f"Frei {_num(_safe(mem_available_gib))} GiB", "LLM " + _kurz(_llm((load_config().get("llm") or {}).get("modell")))]
         gpu = d.get("gpu") or {}
         llm = ((d.get("modellwahl") or {}).get("llm") or {})
         return ["DGX Detail", f"GPU {_num(gpu.get('temp'))} C", f"Frei {_num(d.get('mem_avail_gib'))} GiB",
-                "LLM " + (_kurz(llm.get("modell")) if llm.get("enabled", True) else "aus")]
+                "LLM " + (_kurz(_llm(llm.get("modell"))) if llm.get("enabled", True) else "aus")]
     if key == "sicherheit":
         n = _zaehler()
         try:
@@ -446,8 +446,10 @@ def _kurz(name):
     return str(name or "-").rsplit("/", 1)[-1][:17]
 
 
-def _llm_lokal():
-    return (load_config().get("llm") or {}).get("modell")
+def _llm(setting):
+    """The language model that really runs (what the LLM-Tor last said, llm.known_model), else the setting llm.modell."""
+    import llm
+    return llm.known_model() or setting
 
 
 def _zaehler():

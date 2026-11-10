@@ -48,7 +48,7 @@ function laKeyShow(){const k=$('llmapibox').querySelector('#lakey'),r=LLMAPI_NEW
     <table><tbody>${[['base_url',r.url],['api_key',r.token]].map(([a,b])=>`<tr><td>${esc(a)}</td><td><code>${esc(b)}</code></td></tr>`).join('')}</tbody></table>
     <pre>from openai import OpenAI
 c = OpenAI(base_url="${esc(r.url)}", api_key="${esc(r.token)}")
-print(c.chat.completions.create(model="spark", messages=[{"role": "user", "content": "Hallo"}]).choices[0].message.content)</pre>
+print(c.chat.completions.create(model="sprachmodell", messages=[{"role": "user", "content": "Hallo"}]).choices[0].message.content)</pre>
     <div class="fh">${t('Der Modellname ist egal: der Spark nimmt immer sein eigenes Sprachmodell.','The model name does not matter: the Spark always uses its own language model.')}</div>`;
   xmsg('lamsg',t('Schlüssel angelegt.','Key made.'))}
 // Apps und Schnittstellen (admin): every key of every profile, with "Löschen"

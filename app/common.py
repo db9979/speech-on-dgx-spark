@@ -828,6 +828,9 @@ def model_settings(cfg):
 # it counts while the admin switch chat.entwickeln is on. On the model computer of a split install the panel's synced
 # value counts as it is (the panel sends "" while the switch is off there).
 ENTWICKLER_PLAETZE = 1     # developer requests at once at the LLM-Tor (its own gate, llm_tor.entwickler_tor)
+# the language model's fixed name in /v1/models of the LLM-Tor and of the panel's own /v1 (Dominik 2026-11-10 „1“): the same
+# whatever model runs behind it; the real one goes along only as the extra field "modell"
+LLM_ALIAS = "sprachmodell"
 
 
 def entwickler_hash(cfg):

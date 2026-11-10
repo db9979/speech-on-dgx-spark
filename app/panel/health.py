@@ -250,7 +250,7 @@ async def livecheck(reason="manual"):
                 ok = r.status_code == 200
                 text = (r.json()["choices"][0]["message"].get("content") or "").strip() if ok else r.text[:200]
                 steps.append({"name": "llm", "ok": ok, "seconds": round(time.time() - t0, 2),
-                              "detail": (model + ": " + text[:80]) if ok else f"HTTP {r.status_code}: {text}"})
+                              "detail": ((llm.known_model() or model) + ": " + text[:80]) if ok else f"HTTP {r.status_code}: {text}"})
             except Exception as e:
                 steps.append({"name": "llm", "ok": False, "seconds": round(time.time() - t0, 2),
                               "detail": f"{type(e).__name__}: {e}"[:200]})

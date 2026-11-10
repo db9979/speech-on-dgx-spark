@@ -4,7 +4,12 @@ The engine (vLLM in venv-llm, `modelle.py starten llm`, unit speech-spark-llm) l
 This service sits on llm.port (31006, on the network like the speech APIs) and adds what dgx-spark-qwen38 taught:
 - the API key (api.key, like ASR and TTS), a size limit before a byte is read, CORS only with a key;
 - a field guard: only the request fields in FELDER pass (no token ids, no logit_bias, n is 1, top_logprobs at most
-  TOP_MAX, max_tokens within the context); the model name is always the catalog's, whatever the client sends;
+  TOP_MAX, max_tokens within the context); the model name is always the one the engine serves, whatever the client
+  sends;
+- one fixed name for the language model (LLM_ALIAS "sprachmodell", Dominik 2026-11-10 „1“): GET /v1/models lists it
+  first, whatever model runs behind it, so a program never has to change its model name after a switch; which model
+  really runs comes from the engine's own /v1/models (laufend, asked at most every ECHT_S seconds), never from the
+  configuration alone, and goes along as the extra field "modell";
 - the model's own markers ("<|im_start|>", "<tool_call>" ...) taken out of every message's text (entschaerft), so
   outside text in a message can never start a turn or a tool call;
 - sampling values sent always (the catalog's, where the client sends none), so no generation_config of a repository
@@ -44,7 +49,7 @@ import einordnung
 import modelle
 from textnorm import defuse_marks
 from common import (STAGE_LOW, BodyLimit, GateFull, KeyedCORS, PrioGate, api_key_dependency, api_key_ok, check_memory,
-                    ENTWICKLER_PLAETZE, entwickler_ok, inside, load_config, outside_view, quiet_access_log, stage_of)
+                    ENTWICKLER_PLAETZE, LLM_ALIAS, entwickler_ok, inside, load_config, outside_view, quiet_access_log, stage_of)
 
 UNIT_ENGINE, UNIT_SEHEN, UNIT_HELFER = "speech-spark-llm", "speech-spark-sehen", "speech-spark-helfer"
 TOP_MAX = modelle.LOGPROBS_MAX  # top_logprobs the engine is started with (--max-logprobs)
@@ -55,6 +60,7 @@ KANARIE_S = 60                 # quiet seconds before the canary asks again
 SEHEN_START_S = 300            # the image engine has this long to load on demand
 HELFER_START_S = 600           # the helper engine's start in the background is given up after this long
 HELFER = "helfer"              # the model name that asks for the helper model
+ECHT_S = 15                    # the engine is asked which model it serves at most this often
 # the request fields that pass; everything else (prompt_token_ids, input_ids, stop_token_ids, logit_bias, guided_*,
 # best_of …) is dropped before the engine sees it
 FELDER = ("messages", "stream", "stream_options", "max_tokens", "max_completion_tokens", "temperature", "top_p", "top_k",
@@ -238,6 +244,7 @@ started = time.time()
 stats = {"requests": 0, "refused": 0, "failures": 0, "tokens_in": 0, "tokens_out": 0, "systemone": 0, "sehen": 0,
          "helfer": 0, "helfer_laedt": 0, "entwickler": 0, "entwickler_voll": 0}
 canary = {"status": "loading", "ms": None, "t": 0.0}
+echt = {"t": None, "port": 0, "id": "", "anders": False}   # what the engine said it serves (laufend)
 sehen = {"used": 0.0, "lock": None}
 helfer = {"used": 0.0, "start": None}
 gate = None
@@ -252,9 +259,38 @@ def _entwickler_gate():
 
 
 def aktiv():
-    """The catalog entry the engine runs (llm.modell), its served name and its port."""
+    """The catalog entry the engine is set to run (llm.modell), its served name and its port."""
     m, port = modelle.rolle("llm", load_config())
     return m, m["id"], port
+
+
+async def laufend():
+    """aktiv() as the engine really runs it: the name from its own /v1/models (asked at most every ECHT_S seconds),
+    and that model's catalog entry when it is not the one the configuration names (an engine started before a
+    change of llm.modell keeps serving its model; asking with the configured name would only get a 404). Without an
+    answer from the engine: the configuration's."""
+    c = load_config()
+    m, served, port = aktiv()
+    now = time.monotonic()
+    if echt["t"] is None or echt["port"] != port or now - echt["t"] > ECHT_S:
+        mid = ""
+        try:
+            r = await client.get(_url(port, "/v1/models"), timeout=3)
+            x = r.json()["data"][0]["id"]
+            mid = x if isinstance(x, str) and modelle.ID.match(x) else ""
+        except Exception:
+            mid = ""
+        echt.update(t=now, port=port, id=mid)
+    anders = bool(echt["id"]) and echt["id"] != served
+    if anders != echt["anders"]:
+        echt["anders"] = anders
+        print("llmtor: modell weicht von einstellung ab" if anders else "llmtor: modell wie einstellung", flush=True)
+    if not anders:
+        return m, served, port
+    try:
+        return modelle._platz(modelle.eintrag(echt["id"]), c), echt["id"], port
+    except modelle.Fehler:      # not in the catalog: the configured limits, the engine's name
+        return m, echt["id"], port
 
 
 def _url(port, path):
@@ -432,7 +468,7 @@ async def chat(request: Request):
         raise HTTPException(400, "json")
     c = cfg()
     try:
-        m, served, port = aktiv()
+        m, served, port = await laufend()
         if zum_sehen(body, m, c):
             m, port = await _sehen_bereit(c)
             sehen["used"] = time.monotonic()
@@ -463,7 +499,7 @@ async def systemone(request: Request):
     except ValueError:
         print("llmtor: systemone abgelehnt", flush=True)
         raise HTTPException(400, "questions")
-    m, served, port = aktiv()
+    m, served, port = await laufend()
     wer = HELFER if zum_helfer(body, cfg()) else "sprachmodell"
     if wer == HELFER:
         m, port = await _helfer_bereit(cfg())
@@ -496,8 +532,9 @@ async def systemone(request: Request):
 
 @app.get("/v1/models", dependencies=auth_entwickler)
 async def models():
-    m, served, _ = aktiv()
-    data = [{"id": served, "object": "model", "owned_by": "speech-spark"}]
+    """LLM_ALIAS first (the language model, whatever runs: its real name in "modell"), then "sehen" and the helper."""
+    m, served, _ = await laufend()
+    data = [{"id": LLM_ALIAS, "object": "model", "owned_by": "speech-spark", "modell": served}]
     if cfg().get("sehen_modell"):
         data.append({"id": "sehen", "object": "model", "owned_by": "speech-spark"})
     if cfg().get("helfer_modell"):
@@ -518,7 +555,7 @@ async def health(request: Request):
     if not inside(request):
         return outside_view(out)
     try:
-        served = aktiv()[1]
+        served = (await laufend())[1]
     except modelle.Fehler:
         served, out["status"] = "", "error"
     return {**out, "model": served, "canary_ms": canary["ms"], "uptime_s": round(time.time() - started), **stats}
@@ -532,7 +569,7 @@ async def kanarie_loop():
             continue
         t0 = time.monotonic()
         try:
-            m, served, port = aktiv()
+            m, served, port = await laufend()
             r = await client.post(_url(port, modelle.CHAT), timeout=30,
                                   json={"model": served, "messages": [{"role": "user", "content": "Hallo"}], "max_tokens": 1,
                                         "temperature": 0, "chat_template_kwargs": {"enable_thinking": False}})

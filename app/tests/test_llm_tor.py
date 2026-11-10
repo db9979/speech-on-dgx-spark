@@ -37,10 +37,13 @@ class Engine:
 
     def __init__(self):
         self.got = []
+        self.serves = None    # the model id the engine says it serves on /v1/models (None: no answer)
 
     def __call__(self, request):
         if request.url.path == "/health":
             return httpx.Response(200, text="")
+        if request.url.path == "/v1/models":
+            return httpx.Response(200, json={"data": [{"id": self.serves}]}) if self.serves else httpx.Response(404)
         body = json.loads(request.content)
         self.got.append((request.url.port, body))
         if body.get("top_logprobs"):
@@ -63,6 +66,7 @@ class Base(unittest.TestCase):
         self.old_client = llm_tor.client
         llm_tor.client = httpx.AsyncClient(transport=httpx.MockTransport(self.engine))
         llm_tor.gate = None
+        llm_tor.echt.update(t=None, port=0, id="", anders=False)
         self.app = TestClient(llm_tor.app)
 
     def tearDown(self):
@@ -174,6 +178,29 @@ class Dienst(Base):
         self.assertEqual(self.engine.got, [])
         h = self.app.get("/health").json()
         self.assertEqual(set(h), {"service", "status"})     # outside: up or not, nothing more
+
+    def test_the_model_list_has_one_fixed_name_and_the_real_model_from_the_engine(self):
+        # Dominik 2026-11-10: the list showed the configured qwen38-27b-nvfp4-dspark while another model ran
+        r = self.app.get("/v1/models", headers=KEY).json()["data"]
+        self.assertEqual(r[0]["id"], "sprachmodell")
+        self.assertEqual(r[0]["modell"], "qwen38-27b-nvfp4")       # the engine says nothing: the setting
+        self.engine.serves = "kolibri-1-nvfp4"                       # the engine runs another model than the setting
+        llm_tor.echt["t"] = None
+        out = io.StringIO()
+        with redirect_stdout(out):
+            r = self.app.get("/v1/models", headers=KEY).json()["data"]
+            self.assertEqual(r[0]["id"], "sprachmodell")
+            self.assertEqual(r[0]["modell"], "kolibri-1-nvfp4")
+            chat = self.app.post("/v1/chat/completions", headers=KEY, json={
+                "model": "sprachmodell", "messages": [{"role": "user", "content": "Hallo"}]})
+        self.assertEqual(chat.status_code, 200, chat.text)
+        self.assertEqual(self.engine.got[-1][1]["model"], "kolibri-1-nvfp4")   # asked with the name it really serves
+        self.assertIn("llmtor: modell weicht von einstellung ab", out.getvalue())
+        self.assertEqual(out.getvalue().count("weicht"), 1)                # once per change, not per request
+        self.engine.serves = "../etc"                                        # never a name outside the catalog's form
+        llm_tor.echt["t"] = None
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(self.app.get("/v1/models", headers=KEY).json()["data"][0]["modell"], "qwen38-27b-nvfp4")
 
     def test_a_request_reaches_the_engine_checked_and_is_counted(self):
         before = dict(llm_tor.stats)

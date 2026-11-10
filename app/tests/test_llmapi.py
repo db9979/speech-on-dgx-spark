@@ -298,3 +298,31 @@ class Pure(unittest.TestCase):
 if __name__ == "__main__":
     asyncio.run(asyncio.sleep(0))
     unittest.main()
+
+
+class FesterName(unittest.TestCase):
+    """Dominik 2026-11-10 „1“: programs see one fixed name for the language model, the real one only as "modell";
+    the panel asks again after llm.MODELS_TTL seconds, so a switch shows without a restart."""
+
+    def test_fixed_name_real_model_and_a_switch_shows(self):
+        import llm
+        from common import LLM_ALIAS
+        laeuft = {"id": "qwen36-35b-a3b-nvfp4"}
+
+        def tor(request):
+            return httpx.Response(200, json={"data": [{"id": LLM_ALIAS, "modell": laeuft["id"]}]})
+        cc = {"llm_url": "http://127.0.0.1:31006/v1", "llm_key": ""}
+        llm._models.clear()
+
+        async def ask():
+            async with httpx.AsyncClient(transport=httpx.MockTransport(tor)) as c:
+                return await llm.model(c, cc)
+        self.assertEqual(asyncio.run(ask()), LLM_ALIAS)
+        self.assertEqual(llm.known_model(), "qwen36-35b-a3b-nvfp4")
+        laeuft["id"] = "qwen38-27b-nvfp4"
+        base = cc["llm_url"]
+        t, name, real = llm._models[base]
+        llm._models[base] = (t - llm.MODELS_TTL - 1, name, real)     # the time is up (no clock in the test)
+        self.assertEqual(asyncio.run(ask()), LLM_ALIAS)
+        self.assertEqual(llm.known_model(), "qwen38-27b-nvfp4")
+        llm._models.clear()

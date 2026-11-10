@@ -101,7 +101,7 @@ TOOLS = {
 }
 # The targets: name, short line, zone (spark = on this machine, lan = home network, net = internet), fixed = always shown
 TARGETS = {
-    "qwen": ("Sprachmodell qwen38", "LLM · auf dem Spark", "spark", True),
+    "qwen": ("Sprachmodell", "LLM · auf dem Spark", "spark", True),
     "ha": ("Home Assistant", "HTTP · Heimnetz", "lan", True),
     "kiwix": ("Kiwix", "Archiv · Heimnetz", "lan", True),
     "mem": ("Spark-Speicher", "Dokumente, Erinnerungen", "spark", False),
@@ -1997,9 +1997,9 @@ def snapshot(view="admin", now=None):
                 x["sub"] += f" · {vb['full']} am Kontingent"
         if x["id"] == "qwen" and mb.get("on"):   # Modell-Budget: memory left for models (a number and a fixed word)
             x["sub"] = f"{x['sub']} · frei {mb['frei']:g} GiB" + (" · knapp" if mb["regel"] != "alle" else "")
-            if mb.get("eigen"):                  # the own model behind the LLM-Tor (its catalog name, never an address)
-                x["name"] = "Sprachmodell " + mb["eigen"]
-                x["sub"] = x["sub"].replace("LLM · auf dem Spark", "LLM-Tor · auf dem Spark", 1)
+            if mb.get("eigen"):                  # the own model behind the LLM-Tor: the box keeps its fixed name, the
+                # model that really runs (its catalog name, never an address) comes first in the line below it
+                x["sub"] = mb["eigen"] + " · " + x["sub"].replace("LLM · auf dem Spark", "LLM-Tor · auf dem Spark", 1)
             if mb.get("start"):                  # it switches or starts: step n of 6 first, so the Steuerzentrale's
                 import llmstart
                 x["sub"] = f"{llmstart.kurz(mb['start'])} · {x['sub']}"   # short line keeps it (never which model)

@@ -6,11 +6,14 @@ in this one place (plan Raspberry-Pi split, B1).
 Everything the model answers is data, never a command (Richtlinie Teil 2): complete() returns plain text without the
 thinking; the caller checks it with fixed rules.
 """
+import time
+
 import httpx
 
 from common import load_config, model_host, model_local, no_think
 
-_models = {}   # address -> the model it serves (when chat.llm_model is not set)
+_models = {}   # address -> (asked, the name to ask with, the model that really runs) when chat.llm_model is not set
+MODELS_TTL = 120   # seconds before the list is asked again: after a switch the real model shows within this time
 OPENAI_CHAT = "/v1/chat/completions"   # the path own programs use at the panel (llmapi.py, Sprachmodell per API)
 HELFER = "helfer"   # the LLM-Tor's model name for the small helper model (systemone.HELFER)
 # the background jobs that write only a few words: with Funktionen → Hilfsmodell → Für kurze Texte (chat.helfer_kurz)
@@ -55,15 +58,27 @@ def headers(ccfg):
 
 
 async def model(c, ccfg, hdrs=None):
-    """The model's name: the configured one, else the first the server lists (asked once per address)."""
+    """The model's name to ask with: the configured one, else the first the server lists (the own LLM-Tor: its fixed
+    name "sprachmodell", whatever runs behind it). Asked again after MODELS_TTL seconds, so known_model() follows a
+    switch; a failed new ask keeps the old answer."""
     if ccfg.get("llm_model"):
         return ccfg["llm_model"]
     base = str(ccfg["llm_url"]).rstrip("/")
-    if base not in _models:
-        r = await c.get(base + "/models", headers=headers(ccfg) if hdrs is None else hdrs, timeout=10)
-        r.raise_for_status()
-        _models[base] = r.json()["data"][0]["id"]
-    return _models[base]
+    hit = _models.get(base)
+    if hit is None or time.monotonic() - hit[0] > MODELS_TTL:
+        try:
+            r = await c.get(base + "/models", headers=headers(ccfg) if hdrs is None else hdrs, timeout=10)
+            r.raise_for_status()
+            first = r.json()["data"][0]
+            name = first["id"]
+            real = first.get("modell") if isinstance(first.get("modell"), str) and first.get("modell") else name
+        except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError, AttributeError):
+            if hit is None:
+                raise
+            _models[base] = (time.monotonic(), hit[1], hit[2])
+            return hit[1]
+        _models[base] = hit = (time.monotonic(), name, real)
+    return hit[1]
 
 
 def helfer_kurz(ccfg, job):
@@ -72,8 +87,9 @@ def helfer_kurz(ccfg, job):
 
 
 def known_model():
-    """The model name already asked for, without a request ("" before the first call)."""
-    return next(iter(_models.values()), "")
+    """The model that really runs, as last asked, without a request ("" before the first call): behind the own LLM-Tor
+    its "modell" field (the engine's own name), never the fixed name "sprachmodell"."""
+    return next((x[2] for x in _models.values()), "")
 
 
 def content(r):

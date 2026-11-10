@@ -5422,6 +5422,13 @@
 "titel": "Spark-Assistent als Modell in Open WebUI",
 "text": "Admin: Funktionen → Sprachmodell per API → Spark-Assistent per API an. In Open WebUI (mit dem Schlüssel aus „Open WebUI verbinden“) die Modell-Liste neu laden: „spark-assistent“ erscheint. Damit fragen: „Was steht morgen in meinem Kalender?“ und „Was steht in meinen Dokumenten zur Kündigungsfrist?“: die Antworten kommen aus Kalender und Dokumenten. „Merk dir, dass ich Tee mag“ oder „Schalte das Licht an“: es wird nichts gespeichert oder geschaltet. Nachfrage „Und übermorgen?“ versteht er aus dem Gespräch. Schalter aus: „spark-assistent“ verschwindet aus der Liste.",
 "thread": "Open WebUI in den Spark einbinden"
+},
+{
+"id": "P801",
+"v": 1358,
+"titel": "Fester Name fürs Sprachmodell",
+"text": "Nach dem Update in Open WebUI (oder mit curl gegen http://SPARK:31080/v1/models oder das LLM-Tor auf Port 31006) die Modell-Liste neu laden: oben steht „sprachmodell“, im Feld „modell“ das Modell, das wirklich läuft (nicht mehr qwen38-27b-nvfp4-dspark). Mit „sprachmodell“ fragen: die Antwort kommt. Zustand → Live: der Kasten heißt „Sprachmodell“, darunter das echte Modell; im Ablauf steht „LLM“ statt „qwen38“. Unter Zustand → Logs (LLM-Tor) nachsehen, ob „llmtor: modell weicht von einstellung ab“ steht: dann laufen Einstellung und Engine auseinander.",
+"thread": "Neutralen Modellnamen beim Modellwechsel zeigen"
 }
 ]
 }

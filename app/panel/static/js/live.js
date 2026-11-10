@@ -20,7 +20,7 @@ const NET='var(--c4)',COLS=['var(--c2)','var(--c3)','var(--c5)','var(--c1)','var
 const col=id=>{if(!LV.cm||Object.keys(LV.cm).length>300)LV.cm={};const m=LV.cm;
   if(m[id]==null){const used=new Set(((LV.data||{}).reqs||[]).map(r=>m[r.id]).filter(x=>x!=null));let i=0;
     while(i<COLS.length-1&&used.has(i))i++;m[id]=i}return COLS[m[id]]};
-const STAGES=[['asr',tt('Hören','Listening'),'ASR · 31001'],['weiche',tt('Weiche','Switch'),tt('Absicht','Intent')],['llm',tt('Sprachmodell','Language model'),'qwen38'],
+const STAGES=[['asr',tt('Hören','Listening'),'ASR · 31001'],['weiche',tt('Weiche','Switch'),tt('Absicht','Intent')],['llm',tt('Sprachmodell','Language model'),'LLM'],
   ['tool',tt('Werkzeuge','Tools'),tt('Suchen, Nachschlagen, Schalten','search, look up, switch')],['tts',tt('Sprechen','Speaking'),'TTS · 31002']];
 const SNAME=Object.fromEntries(STAGES.map(s=>[s[0],s[1]]));
 const SVC={ok:'var(--ok)',load:'var(--warn)',down:'var(--bad)',off:'var(--mut)',pause:'var(--acc)'};

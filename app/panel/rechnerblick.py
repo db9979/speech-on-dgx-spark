@@ -98,7 +98,6 @@ _gpu = {}
 _dienste = {"t": 0.0, "d": []}
 _warn = {}             # kind -> value while the warning is on
 
-
 def an():
     import steuer
     return steuer.remote()
@@ -377,10 +376,11 @@ def karte(k, now=None, mono=None):
     if k == "modell":
         d = steuer.cached(now=mono)
         v = str((d or {}).get("version") or "")
-        llm = (((d or {}).get("modellwahl") or {}).get("llm") or {})
+        wahl = (((d or {}).get("modellwahl") or {}).get("llm") or {})
+        import llm   # the model that really runs (what the LLM-Tor last said), else the setting llm.modell
         out.update(ok=d is not None and not steuer.weg(mono), stumm_s=steuer.stumm_s(mono), gpu=gpu,
                    version=v if v.startswith("V") and len(v) <= 20 else "",
-                   llm=rechner._sauber(str(llm.get("modell") or "").rsplit("/", 1)[-1], 40) if llm.get("enabled", True) else "",
+                   llm=rechner._sauber(str(llm.known_model() or wahl.get("modell") or "").rsplit("/", 1)[-1], 40) if wahl.get("enabled", True) else "",
                    dienste=_dienste_modell(d))
     else:
         from core import app_version

@@ -4,9 +4,9 @@ from technik_seiten import S
 
 SEITEN = {
     "llm": {
-        "stand": "c6db802738",
+        "stand": "ed6eb5c83d",
         "bezug": {
-            "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "llm.model": ["s3"], "llm.url": ["s1"], "llm.complete": ["s1"],
+            "chat.chat": ["s1"], "chat._answer": ["s2", "s4", "s6"], "llm.model": ["s3"], "llm.known_model": ["s3"], "llm.url": ["s1"], "llm.complete": ["s1"],
             "chat.sampling": ["s4"], "chat.first_within": ["s8"], "chat.ContextFull": ["s7"],
             "chat.llm_error_code": ["s12"], "chat.LLM_GONE": ["s12"], "chat.prompt_sizes": ["s11"],
             "stufe.wait_turn": ["s5"], "vorrang.run": ["s1"], "wartung.paused": ["s1w"], "wartung.sentence": ["s1w"], "wartung.MAX_MIN": ["s1w"],
@@ -73,9 +73,14 @@ SEITEN = {
                "and does not go through the guard.")),
             S("s3", "schritt", ("Modellname", "Model name"),
               ("eingestellt oder /models", "configured or /models"),
-              ("Ist kein Modell eingestellt, fragt das Panel einmal /models und merkt sich den ersten Namen für "
-               "diese Adresse.",
-               "When no model is configured, the panel asks /models once and keeps the first name for this address.")),
+              ("Ist kein Modell eingestellt, fragt das Panel /models und nimmt den ersten Namen, alle {llm.MODELS_TTL} "
+               "Sekunden neu. Das eigene LLM-Tor nennt dort immer denselben Namen „sprachmodell“, egal welches Modell "
+               "läuft; welches wirklich läuft, fragt es die Engine selbst und gibt es im Feld „modell“ mit. Das zeigen "
+               "Live, Steuerzentrale, Gehäuse und Rechner-Blick (llm.known_model), nie nur die Einstellung.",
+               "When no model is configured, the panel asks /models and takes the first name, again every "
+               "{llm.MODELS_TTL} seconds. The own LLM-Tor always names the same „sprachmodell“ there, whatever model "
+               "runs; which one really runs it asks the engine itself and sends along in the field „modell“. Live, "
+               "control centre, case display and computer view show that (llm.known_model), never only the setting.")),
             S("s4", "schritt", ("Anfrage bauen", "Build the request"),
               ("stream, max_tokens, Temperatur, Denken aus", "stream, max_tokens, temperature, thinking off"),
               ("Die Anfrage streamt, mit Länge, Temperatur, top_p, top_k und presence_penalty aus den Einstellungen "
@@ -218,7 +223,8 @@ SEITEN = {
         "code": [
             ("chat.chat", ("setzt „Sprache läuft“ bei jedem Stück", "sets „speech is running“ with every piece")),
             ("chat._answer", ("Verbindung, Anfrage, Runden (llm_round), Fehlerfälle", "connection, request, rounds (llm_round), errors")),
-            ("llm.model", ("Modellname aus Einstellung oder /models", "model name from settings or /models")),
+            ("llm.model", ("Modellname aus Einstellung oder /models, alle MODELS_TTL Sekunden neu", "model name from settings or /models, again every MODELS_TTL seconds")),
+            ("llm.known_model", ("das Modell, das wirklich läuft (Feld „modell“ des LLM-Tors)", "the model that really runs (the LLM-Tor's field „modell“)")),
             ("llm.url", ("die eine Adresse des Sprachmodells", "the one address of the language model")),
             ("llm.complete", ("Aufruf jeder Hintergrundaufgabe, wartet in vorrang", "the call of every background job, waits in vorrang")),
             ("chat.sampling", ("top_p, top_k und presence_penalty", "top_p, top_k and presence_penalty")),

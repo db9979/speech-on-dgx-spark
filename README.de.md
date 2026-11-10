@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.358** Fester Name fürs Sprachmodell: Programme sehen unter /v1 immer „sprachmodell“, welches Modell wirklich läuft, steht daneben und kommt aus der Engine; Live zeigt nicht mehr fest „qwen38“
 - **V01.1.357** Spark-Assistent als Modell: in Open WebUI (oder jedem Programm mit /v1) antwortet „spark-assistent“ mit Kalender, Erinnerungen und Dokumenten, nur lesend
 - **V01.1.356** Open WebUI einbinden: ein Schritt unter Ich → Sprachmodell per API verbindet dein Open WebUI (Schlüssel und Spark-Werkzeuge zum Nachlesen, nur Heimnetz), dazu „Open WebUI“ im Menü und der Dienst-Wächter
 - **V01.1.355** Fix: ein Hörstück wartete für immer bei „0 von 0 Zeilen“ und startete nie, auch mit „Sofort erstellen“; jetzt startet es in Sekunden, wenn niemand spricht, die Liste sagt, worauf es wartet, und ein gescheitertes nennt den Grund
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.351** Fix: der Admin hat beim Hörstück, bei Auswertungen, Ton/Video und Links als Dokument keine Tagesgrenze mehr, ebenso jedes Profil mit „Ohne Tageslimit“; die Seite zeigt „ohne Tageslimit“
 - **V01.1.350** Mappen ruhiger: links die schmale Liste mit ＋, rechts die offene Mappe mit Kopf, „Fragen“ als einzigem blauen Knopf, dünnem Budget-Balken mit ⓘ und den Teilen Einträge, Auswertungen und Hörstück; ganze Titel, die Stufe je Eintrag als kleines Menü, Seltenes unter ⋯
 - **V01.1.349** Hörstück im Auto: CarPlay zeigt unter „Hörstücke“ die fertigen aus allen Mappen und spielt sie über Now Playing (Pause, 15 Sekunden vor und zurück, nächstes Stück, weiter an der letzten Stelle); spricht Spark, pausiert es
-- **V01.1.348** Ich → Dokumente: „Link hinzufügen“ steht jetzt oben direkt neben „＋ Hinzufügen“ (nur bei freigegebenem Links als Dokument), auch auf dem Handy in einer Zeile; die versteckte Stelle weiter unten ist weg.
 
 
 

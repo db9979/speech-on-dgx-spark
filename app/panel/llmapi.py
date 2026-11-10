@@ -49,7 +49,7 @@ import features
 import guard
 import notaus
 import profiles
-from common import STATE, load_config, write_json
+from common import LLM_ALIAS, STATE, load_config, write_json
 from llm import OPENAI_CHAT
 import core
 from core import auth, admin_code, browser_profile, confirm_code
@@ -429,10 +429,12 @@ async def models(request: Request):
     if not t:
         return {"object": "list", "data": extra} if extra else _refuse("kein_tor", k["id"], prof)
     try:
-        name = await llm.model(client(), t[0])
+        await llm.model(client(), t[0])
     except (httpx.HTTPError, ValueError, KeyError, IndexError):
         return {"object": "list", "data": extra} if extra else _refuse("modell", k["id"], prof)
-    return {"object": "list", "data": [{"id": name, "object": "model", "owned_by": "spark"}] + extra}
+    # the fixed name (common.LLM_ALIAS), whatever runs behind it; the real model only as the extra field "modell"
+    echt = llm.known_model() or t[0].get("llm_model") or ""
+    return {"object": "list", "data": [{"id": LLM_ALIAS, "object": "model", "owned_by": "spark", "modell": echt}] + extra}
 
 
 @router.post(OPENAI_CHAT)

@@ -275,6 +275,14 @@ async def melde_tick(vorher):
     return jetzt
 
 
+def echt_name(cfg, kat, i=0):
+    """The catalog name of the language model that really runs: what the LLM-Tor last said its engine serves
+    (llm.known_model, its "modell" field), else the one the configuration names (i: 0 German, 1 English)."""
+    import llm
+    m = kat.get(llm.known_model()) or modelle.rolle("llm", cfg, kat)[0]
+    return m["name"][("de", "en")[i]]
+
+
 def for_live(now=None):
     """For the Live view's language model box: the memory left for models and the budget's rule (numbers, fixed word),
     after the move (llm.enabled) the catalog name of the own model."""
@@ -285,8 +293,8 @@ def for_live(now=None):
             total_gib, lanes, _, laeuft, kat, _, misst, _, start = _quelle(cfg)
             b = modelle.budget(cfg, total_gib, lanes, kat)
             _live["v"] = {"on": True, "frei": b["frei"], "regel": b["regel"]}
-            if cfg.get("llm", {}).get("enabled"):   # after the move: the own model's catalog name instead of qwen38
-                _live["v"]["eigen"] = modelle.rolle("llm", cfg, kat)[0]["name"]["de"]
+            if cfg.get("llm", {}).get("enabled"):   # after the move: the catalog name of the model that really runs
+                _live["v"]["eigen"] = echt_name(cfg, kat)
             if _an(cfg) and (_laeuft() if laeuft is None else laeuft):   # stage E4: a switch runs (never which model)
                 _live["v"]["wechsel"] = True
             if _misst() if misst is None else misst:   # a measurement runs (from the panel or the command line)
