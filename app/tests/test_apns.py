@@ -168,6 +168,38 @@ class Apns(unittest.TestCase):
         c.delete("/api/profile/iphone/" + did)
         self.assertEqual(apns.profile_tokens(uid), [])
 
+    def test_an_iphone_paired_anew_rings_only_for_the_new_profile(self):
+        """Code-Review 10.11.2026 A-H2: the iPhone of profile A paired anew with profile B kept A's push and VoIP
+        addresses under A's old key, so A's notes and calls rang on the phone B now uses. One address belongs to one
+        key; the app drops its old key's addresses before the key is replaced."""
+        ADMIN.put("/api/admin/apns", json=GOOD)
+        app = TestClient(panel.app)
+        a, ha = self.phone("Quirina")
+        a.put("/api/profile/settings", json={"app_push": True})
+        for kind, t in (("alert", T1), ("voip", T2)):
+            self.assertEqual(app.post("/api/iphone/push-token", json={"token": t, "kind": kind}, headers=ha).status_code, 200)
+        ua = uid_of("Quirina")
+        self.assertEqual(len(apns.profile_tokens(ua)), 1)
+        self.assertEqual(len(apns.voip_tokens(ua)), 1)
+        # the same iPhone, now with profile B's key, hands over the same addresses: they leave A's entry
+        b, hb = self.phone("Quentin")
+        b.put("/api/profile/settings", json={"app_push": True})
+        app.post("/api/iphone/push-token", json={"token": T1}, headers=hb)
+        self.assertEqual(apns.profile_tokens(ua), [])
+        self.assertEqual(len(apns.voip_tokens(ua)), 1)            # only the address handed over moves
+        app.post("/api/iphone/push-token", json={"token": T2, "kind": "voip"}, headers=hb)
+        self.assertEqual(apns.voip_tokens(ua), [])
+        ub = uid_of("Quentin")
+        self.assertEqual([t for _, t in apns.profile_tokens(ub)], [T1])
+        self.assertEqual([t for _, t in apns.voip_tokens(ub)], [T2])
+        # pairing anew: the app drops its old key's addresses first, also when the new profile never sends one
+        r = app.post("/api/iphone/push-token", json={"forget": True}, headers=hb)
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(apns.profile_tokens(ub), [])
+        self.assertEqual(apns.voip_tokens(ub), [])
+        self.assertEqual(app.post("/api/iphone/push-token", json={"forget": "yes"}, headers=hb).status_code, 400)   # nothing but true
+        self.assertEqual(b.post("/api/iphone/push-token", json={"forget": True}).status_code, 403)   # only the app's key
+
     def test_car_mode_never_unlocks_the_smart_home(self):
         a = profile("Pit")
         url = f"http://127.0.0.1:{helpers.HA_PORT}"

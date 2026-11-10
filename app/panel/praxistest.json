@@ -5478,6 +5478,27 @@
 "titel": "Hörstück als Diskussion: Plan, Kapitel, Gespräch",
 "text": "Admin: Funktionen → Eigene Dokumente → Mappen → Hörstück aus einer Mappe und darunter „Hörstück als Diskussion“ an. In einer Mappe mit zwei, drei echten Dokumenten auf kurz oder ganz ein Hörstück mit 10 Minuten und 3 Stimmen „Sofort erstellen“. Die Liste zeigt „Drehbuch entsteht · Kapitel 1 von 4“ und zählt weiter. Fertig: im Drehbuch Kapitel-Überschriften (Einstieg … Fazit), Beiträge mit mehreren Sätzen, Fakten mit Quellen-Chip, Fragen und Einwände mit „Gespräch“. Prüfen: keine Zahl in einem Satz mit „Gespräch“, jede Zahl mit Chip steht im Dokument. Anhören: klingt es wie ein Gespräch statt Abfragen? Zustand → Live, Kasten Hörstück: „Diskussion: heute … Kapitel geplant … neu geschrieben (flach) … Beiträge im Schnitt … Zeichen“. Zustand → Logs (Wissen): „hoerstueck: plan | 4 kapitel“, „hoerstueck: kapitel | 1 von 4 | …“, nie ein Satz oder Titel. Schalter wieder aus: ein neues Hörstück entsteht wie bisher.",
 "thread": "Hörstück als Diskussion"
+},
+{
+"id": "P809",
+"v": 1363,
+"titel": "Stopp heißt aus auf iPhone und CarPlay",
+"text": "iPhone-App mit Freihändig: eine Frage stellen und während der Antwort antippen (anhalten). Erwartet: das Mikrofon geht nicht wieder auf. Im Auto: „Mit Spark sprechen“, fragen, während Spark spricht das Auto trennen (Kabel ab oder CarPlay aus) und 10 Sekunden warten: das iPhone hört danach nicht in der Tasche zu. Mit „Von selbst“ an: während eines Gesprächs kommt ein Hinweis, du tippst auf Stopp: der Hinweis kommt erst etwa 10 bis 30 Sekunden später, und danach bleibt das Mikrofon zu (auch ohne Auto). Einstellungen → „Ton-Protokoll kopieren“ zeigt „Ende: gestoppt“ bzw. „Ende: Hinweis gesagt“.",
+"thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P810",
+"v": 1363,
+"titel": "CarPlay: Rückfrage-Liste im Dungeon und Grenzen",
+"text": "Im Auto „Dungeon-Master spielen“, eine Runde wählen und eine unklare Aktion sagen, bis die Liste „Was genau?“ erscheint. Die Rückfrage mit der Stimme beantworten: die Liste verschwindet. Bei der nächsten Rückfrage liegt nur eine Liste da; ein Knopf einer alten Rückfrage tut nichts. „Dungeon-Master“ zweimal schnell antippen: nur eine Liste. Im Funkloch fragen: nach etwa 30 Sekunden „Dauert zu lange“ mit tiefem Ton, auch während „Erkenne Sprache“. Nach dem Gespräch spielen Radio oder Musik wieder normal laut. Während Spark spricht, anrufen lassen und das Telefonat länger als 15 Sekunden führen: danach hängt das Auto nicht in „Spark spricht …“, das Ton-Protokoll zeigt „Ende: Ton hängt“ oder „Ende: Unterbrechung“, und es erscheint kein „Kein Zugriff aufs Mikrofon“. Leise Stille nach einer Antwort zeigt nicht mehr „Nicht erkannt“, sondern endet leise („Ende: Stille erkannt“ oder „eigenes Echo“).",
+"thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P811",
+"v": 1363,
+"titel": "iPhone-App mit anderem Profil neu koppeln",
+"text": "Die iPhone-App ist mit Profil A gekoppelt, Push an, ein Gespräch ist offen und eine Frage wartet offline. Im Panel als Profil B unter Ich → iPhone-App einen Kopplungslink holen und in der App öffnen, „Koppeln“. Erwartet: das alte Gespräch und die wartende Frage sind weg und gehen nicht als B raus. Eine Erinnerung für A (Push) kommt nicht mehr auf dieses iPhone, eine für B kommt. Ein Spark-Anruf an A klingelt nicht mehr auf diesem iPhone.",
+"thread": "Spark stabilisieren mit Code-Review"
 }
 ]
 }

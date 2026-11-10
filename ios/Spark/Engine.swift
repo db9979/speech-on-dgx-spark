@@ -11,7 +11,6 @@ final class AudioEngine {
     private let node = AVAudioPlayerNode()
     private let playFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: 24000, channels: 1, interleaved: false)!
     private let target = AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: AudioEngine.rate, channels: 1, interleaved: true)!
-    private var converter: AVAudioConverter?
     private var rest = Data()
     private var queued = 0
     /// Buffers scheduled but not yet played, so they survive an engine restart.
@@ -56,12 +55,21 @@ final class AudioEngine {
     var onIdle: (() -> Void)?
     /// Main thread: Siri, a call or another app took the sound (true) or gave it back (false).
     var onInterrupt: ((Bool) -> Void)?
-    /// Taken by another app: pieces not yet heard wait for the sound to come back instead of being given up.
-    private var interrupted = false
+    /// Taken by another app: pieces not yet heard wait for the sound to come back instead of being given up. Reset by
+    /// every successful start: an interruption without an end signal (Apple promises none) no longer holds forever.
+    private(set) var interrupted = false
+    /// Main thread: an interruption ended without iOS suggesting to go on (shouldResume missing, e.g. another app kept
+    /// the sound); what waited was dropped (Code-Review 10.11.2026 B6).
+    var onLost: (() -> Void)?
     /// Loudness of what is playing right now (0...1), for the face's mouth.
     private(set) var outLevel: Float = 0
 
     var busy: Bool { queued > 0 }
+    /// Pieces wait but the engine does not run (taken by Siri, a call or another app): nothing comes out. The
+    /// conversation ends the turn when this lasts too long (Conversation.checkTurn, Code-Review B6).
+    var stalled: Bool { queued > 0 && !engine.isRunning }
+    /// When the last piece of an answer (no tone) arrived: the car's watch over a turn without sound (Code-Review B5).
+    private(set) var lastPiece = Date.distantPast
     /// "Ins Wort fallen: erst anhalten" (zwischenruf.py): the answer is paused, new pieces wait until it plays on
     private(set) var paused = false
     /// pieces arrived while paused that resume() still has to schedule (the settle time ended meanwhile)
@@ -73,13 +81,23 @@ final class AudioEngine {
         NotificationCenter.default.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] n in
             guard let self, let raw = n.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt else { return }
             let ended = raw == AVAudioSession.InterruptionType.ended.rawValue
-            Self.note(ended ? "Unterbrechung vorbei" : "Unterbrechung")
+            // Apple's advice whether to play on (HsPlayer asks the same); without it another app keeps the sound
+            let opts = n.userInfo?[AVAudioSessionInterruptionOptionKey] as? UInt ?? 0
+            let again = opts & AVAudioSession.InterruptionOptions.shouldResume.rawValue != 0
+            Self.note(ended ? (again ? "Unterbrechung vorbei" : "Unterbrechung vorbei, ohne Fortsetzen") : "Unterbrechung")
             self.interrupted = !ended
+            var lost = false
             if ended && !self.sleeping {
-                try? self.ensureRunning()
-                self.resume()
+                if again {
+                    try? self.ensureRunning()
+                    self.resume()
+                } else if !self.pending.isEmpty {
+                    self.stopPlaying()
+                    lost = true
+                }
             }
             self.onInterrupt?(!ended)
+            if lost { self.onLost?() }
         }
         // where the sound goes (car, speaker, headset) and why it changed: the evidence after a drive
         NotificationCenter.default.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main) { n in
@@ -100,7 +118,6 @@ final class AudioEngine {
             Self.note("Konfiguration geändert, offen \(self.pending.count)")
             let wasListening = self.tapOn
             self.removeTap()
-            self.converter = nil
             // switching on voice processing (first answer) or a headset change stops the engine
             // and with it the player: play again what had not been heard yet
             self.restart(wasListening, tries: 3)
@@ -148,6 +165,7 @@ final class AudioEngine {
             engine.prepare()
             do { try engine.start() } catch { Self.note("Start fehlgeschlagen: \(error.localizedDescription)"); throw error }
             startedAt = Date()
+            if interrupted { interrupted = false; Self.note("Unterbrechung ohne Ende, Ton wieder da") }
             Self.note("Engine gestartet")
         }
     }
@@ -171,11 +189,14 @@ final class AudioEngine {
         let input = engine.inputNode
         let format = input.outputFormat(forBus: 0)
         guard format.sampleRate > 0 else { throw SparkError(message: String(localized: "Kein Mikrofon verfügbar.")) }
-        converter = AVAudioConverter(from: format, to: target)
+        // the converter and the wake word's hand are kept by this tap alone: the audio thread never reads a property
+        // that the main thread changes meanwhile (route change; Code-Review B12)
+        let converter = AVAudioConverter(from: format, to: target)
+        let raw = onRaw
         input.installTap(onBus: 0, bufferSize: 2048, format: format) { [weak self] buf, _ in
             guard let self else { return }
-            self.onRaw?(buf)
-            let samples = self.convert(buf)
+            raw?(buf)
+            let samples = self.convert(buf, converter)
             let level = Self.level(samples)
             DispatchQueue.main.async { self.onInput?(samples, level) }
         }
@@ -189,14 +210,19 @@ final class AudioEngine {
     /// Akku (2026-10-16): nothing listens and nothing plays any more and the app is in the background: stop the
     /// engine and let go of the audio session. A running engine (voice processing, microphone) keeps the app awake
     /// through the "audio" background mode; stopped, iOS can put it to sleep. The next answer or listening starts
-    /// it again (ensureRunning, with the usual settle time).
+    /// it again (ensureRunning, with the usual settle time). The sound is let go also when iOS had stopped the engine
+    /// already (a route change without a restart, a failed start): the radio and the music come back, and a later
+    /// route change or the end of an interruption no longer starts the engine at rest (Code-Review 10.11.2026 B2).
     func sleep() {
-        guard engine.isRunning, !tapOn, queued == 0, pending.isEmpty, !holding else { return }
+        guard !tapOn, queued == 0, pending.isEmpty, !holding, engine.isRunning || !sleeping else { return }
+        let running = engine.isRunning
         sleeping = true
-        node.stop()
-        engine.stop()
+        if running {
+            node.stop()
+            engine.stop()
+        }
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-        Self.note("Engine schläft (Hintergrund)")
+        Self.note(running ? "Engine schläft (Hintergrund)" : "Ton freigegeben, Engine stand")
     }
 
     private func removeTap() {
@@ -204,7 +230,7 @@ final class AudioEngine {
         tapOn = false
     }
 
-    private func convert(_ buf: AVAudioPCMBuffer) -> [Int16] {
+    private func convert(_ buf: AVAudioPCMBuffer, _ converter: AVAudioConverter?) -> [Int16] {
         guard let converter else { return [] }
         let cap = AVAudioFrameCount(Double(buf.frameLength) * Self.rate / buf.format.sampleRate + 64)
         guard let out = AVAudioPCMBuffer(pcmFormat: target, frameCapacity: cap) else { return [] }
@@ -258,7 +284,17 @@ final class AudioEngine {
         if queued == 0 {   // the player is silent: begin softly
             for i in 0..<min(frames, Self.fadeIn) { out[i] *= Float(i) / Float(Self.fadeIn) }
         }
-        do { try ensureRunning() } catch { return 0 }
+        if tone == nil { lastPiece = Date() }
+        do { try ensureRunning() } catch {
+            // taken by a call or Siri: the piece waits with the others until the sound is back (resume) instead of being
+            // dropped unheard; the conversation then does not take the silence for the end (Code-Review B7)
+            guard interrupted else { return 0 }
+            queued += 1
+            nextId += 1
+            pending.append((nextId, buffer))
+            if pending.count == 1 { Self.note("Stück wartet, Ton belegt") }
+            return 0
+        }
         let dry = queued == 0 && heard && !holding && tone == nil
         let ahead = Double(pending.reduce(0) { $0 + Int($1.1.frameLength) }) / 24000
         queued += 1
@@ -419,4 +455,8 @@ final class AudioEngine {
     static func microphoneAllowed() async -> Bool {
         await AVAudioApplication.requestRecordPermission()
     }
+
+    /// The microphone was allowed for the app (Einstellungen → Spark → Mikrofon): tells a refused permission apart from a
+    /// microphone that is only busy, e.g. during a phone call (Code-Review B7, B13).
+    static var microphoneGranted: Bool { AVAudioApplication.shared.recordPermission == .granted }
 }

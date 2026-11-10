@@ -17,8 +17,11 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
     private var voice: CPVoiceControlTemplate?
     /// the state the voice template should show, nil for the list
     private var want: String?
-    /// a present or dismiss is under way: the next one waits for its completion (sync)
+    /// a present or dismiss is under way: the next one waits for its completion (sync); moveN counts the steps, so a
+    /// completion that never comes frees the window after `moveWait` seconds (Code-Review 10.11.2026 B11)
     private var moving = false
+    private var moveN = 0
+    static let moveWait: TimeInterval = 3
     private var refused = 0
     /// back to the list only after a short moment: the step between two answers does not flicker
     private var hide: Task<Void, Never>?
@@ -30,6 +33,9 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
     private var list: CPListTemplate?
     private var watchAreas: AnyCancellable?
     private var watchChoices: AnyCancellable?
+    /// the list of the open Rückfrage on the stack: replaced by the next question, taken away when it was answered
+    /// (also by voice) or the game ended (Code-Review B3: the lists piled up)
+    private var choiceSub: CPListTemplate?
     /// the face the pictures show; the profile's choice arrives with hello, often only after CarPlay connected
     private var face = ""
     private var faceLater = false
@@ -102,13 +108,15 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
         }
         watchFace = talk.$allowed.map(\.face).removeDuplicates().receive(on: RunLoop.main).sink { [weak self] f in self?.use(face: f) }
         watch = talk.$phase.receive(on: RunLoop.main).sink { [weak self] p in self?.show(p) }
-        watchChoices = talk.$gameChoices.removeDuplicates().receive(on: RunLoop.main).sink { [weak self] c in self?.choices(c) }
+        // every new question counts, also one with the same suggestions (its buttons carry the new number)
+        watchChoices = talk.$gameChoices.receive(on: RunLoop.main).sink { [weak self] c in self?.choices(c) }
         let hs = HsPlayer.shared
         watchHs = hs.$playing.combineLatest(hs.$paused).map { ($0 ?? "") + ($1 ? "|p" : "") }.removeDuplicates()
             .receive(on: RunLoop.main).sink { [weak self] _ in self?.hsRedraw() }
-        // started by the car alone, the phone screen never appeared and nothing asked the Spark yet (hello):
-        // without it the car would keep the defaults (robot face, no profile switches)
-        Task { await talk.check() }
+        // started by the car alone, the phone screen never appeared and nothing asked the Spark yet (hello): without it
+        // the car would keep the defaults (robot face, no profile switches). begin() also starts the tick (notes, a new
+        // check while the Spark is away) and asks for the microphone once (Code-Review B13); a second call is harmless
+        if SparkAPI.current != nil { Task { await talk.begin(nil) } }
         if !back { briefingOnConnect() }
     }
 
@@ -139,7 +147,9 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
             CPVoiceControlState(identifier: "slow", titleVariants: [String(localized: "Dauert zu lange")],
                                 image: FaceStill.image(kind, .sad) ?? UIImage(systemName: "hourglass"), repeats: false),
             CPVoiceControlState(identifier: "remind", titleVariants: [String(localized: "Woran soll ich dich erinnern?")],
-                                image: FaceStill.image(kind, .listen) ?? UIImage(systemName: "bell"), repeats: true)])
+                                image: FaceStill.image(kind, .listen) ?? UIImage(systemName: "bell"), repeats: true),
+            CPVoiceControlState(identifier: "mic", titleVariants: [String(localized: "Mikrofon in der App erlauben")],
+                                image: FaceStill.image(kind, .sad) ?? UIImage(systemName: "mic.slash"), repeats: false)])
     }
 
     func templateApplicationScene(_ templateApplicationScene: CPTemplateApplicationScene,
@@ -153,6 +163,8 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
         watch = nil
         watchFace = nil
         watchAreas = nil
+        watchChoices = nil
+        choiceSub = nil
         list = nil
         fresh = nil
         repeatRow = nil
@@ -237,6 +249,7 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
     private func begin(fresh: Bool) {
         let talk = Conversation.shared
         AudioEngine.note(fresh ? "CarPlay: Knopf Neues Gespräch" : "CarPlay: Knopf Sprechen")
+        guard micAllowed() else { return }
         if fresh { talk.restart() }
         reachable { [weak self] in
             switch talk.phase {
@@ -283,7 +296,8 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
     }
 
     private func gameList(_ rounds: [DMRunde]) {
-        guard let interface else { return }
+        // only on the main list of this car: a second tap or a slow answer never lays a second list on top
+        guard let interface, let list, interface.topTemplate === list else { return }
         var rows: [CPListItem] = rounds.prefix(12).map { r -> CPListItem in
             let row = CPListItem(text: r.titel, detailText: String(localized: "Zug \(r.zug) · \(r.held)") + (r.pause ? " · " + String(localized: "Pause") : ""),
                                  image: UIImage(systemName: "shield.lefthalf.filled"))
@@ -337,7 +351,7 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
     }
 
     private func hsShow(_ list: [HsSpur]) {
-        guard let interface else { return }
+        guard let interface, let root = self.list, interface.topTemplate === root else { return }
         hsList = list
         let sub = CPListTemplate(title: String(localized: "Hörstücke"), sections: [CPListSection(items: hsRows())])
         hsSub = sub
@@ -402,15 +416,31 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
 
     /// Rückfrage bei unklaren Aktionen (dungeon_rueckfrage.py): the Spark asked „Was genau tut …?“; its suggestions as
     /// buttons and „So lassen“, each goes back as if it was said. The rows come only from the Spark's answer.
+    /// Exactly one such list is on the stack: a new question replaces the old one, an empty one (answered by voice or by
+    /// a button, the game left) takes it away. Each button carries the number of its question (gameChoiceN); a button of
+    /// an older question does nothing.
     private func choices(_ c: [String]) {
-        guard let interface, !c.isEmpty else { return }
+        guard let interface else { return }
+        let old = choiceSub
+        choiceSub = nil
+        guard let old, interface.templates.contains(where: { $0 === old }) else { showChoices(c); return }
+        interface.popToRootTemplate(animated: c.isEmpty) { [weak self] _, _ in
+            Task { @MainActor in self?.showChoices(c) }
+        }
+    }
+
+    private func showChoices(_ c: [String]) {
+        let talk = Conversation.shared
+        // the question may have changed again while the old list went away: only the newest one is shown
+        guard let interface, !c.isEmpty, choiceSub == nil, talk.gameChoices == c else { return }
+        let n = talk.gameChoiceN
         var rows: [CPListItem] = c.map { text -> CPListItem in
             let row = CPListItem(text: text, detailText: nil, image: UIImage(systemName: "text.bubble"))
             row.handler = { [weak self] _, done in
                 done()
                 AudioEngine.note("CarPlay: Knopf Rückfrage")
-                self?.interface?.popToRootTemplate(animated: true) { _, _ in }
-                Conversation.shared.answerGame(text)
+                self?.choiceDone()
+                Conversation.shared.answerGame(text, n)
             }
             return row
         }
@@ -419,13 +449,21 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
         keep.handler = { [weak self] _, done in
             done()
             AudioEngine.note("CarPlay: Knopf So lassen")
-            self?.interface?.popToRootTemplate(animated: true) { _, _ in }
-            Conversation.shared.answerGame(Conversation.gameLang == "en" ? "keep it" : "so lassen")
+            self?.choiceDone()
+            Conversation.shared.answerGame(Conversation.gameLang == "en" ? "keep it" : "so lassen", n)
         }
         rows.append(keep)
-        let own = Conversation.shared.gameChoiceTitle
+        let own = talk.gameChoiceTitle
         let sub = CPListTemplate(title: own.isEmpty ? String(localized: "Was genau?") : own, sections: [CPListSection(items: rows)])
-        interface.pushTemplate(sub, animated: true) { _, _ in }
+        choiceSub = sub
+        interface.pushTemplate(sub, animated: true) { ok, _ in
+            if !ok { Task { @MainActor in AudioEngine.note("CarPlay: Rückfrage abgelehnt") } }
+        }
+    }
+
+    private func choiceDone() {
+        choiceSub = nil
+        interface?.popToRootTemplate(animated: true) { _, _ in }
     }
 
     private func leaveGame() {
@@ -439,7 +477,16 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
     /// „Erinnerung sprechen“: listens at once, the voice window asks „Woran soll ich dich erinnern?“.
     private func remindMe() {
         AudioEngine.note("CarPlay: Knopf Erinnerung")
+        guard micAllowed() else { return }
         reachable { Conversation.shared.listenForReminder() }
+    }
+
+    /// Without the microphone allowed for the app (never asked when the car started the app alone, or refused) the car
+    /// says so at once instead of „Das Mikrofon liefert keinen Ton“ after seconds (Code-Review B13).
+    private func micAllowed() -> Bool {
+        guard !AudioEngine.microphoneGranted else { return true }
+        flash("mic")
+        return false
     }
 
     /// „Briefing beim Einsteigen“ (switch in the app, off; Dominik 2026-10-21 „6b“): once a day, a few seconds after the
@@ -459,11 +506,14 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
 
     /// Runs `go` when the Spark answers. A question in the car never waits in the outbox (its answer would start
     /// speaking by itself much later): without the Spark the car shows „Spark nicht erreichbar“ for a moment.
+    /// After the check the car must still be there: gone meanwhile, nothing starts on the iPhone alone (Code-Review B8).
     private func reachable(_ go: @escaping @MainActor () -> Void) {
         let talk = Conversation.shared
         guard talk.unreachable else { go(); return }
         Task { [weak self] in
-            if await talk.check() { go() } else { self?.flash("offline") }
+            let ok = await talk.check()
+            guard let self, self.interface != nil else { AudioEngine.note("CarPlay: Auto weg, nichts gestartet"); return }
+            if ok { go() } else { self.flash("offline") }
         }
     }
 
@@ -519,21 +569,38 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
         if let want {
             voice.activateVoiceControlState(withIdentifier: want)
             guard !up else { return }
-            moving = true
+            let n = startMove()
             interface.presentTemplate(voice, animated: true) { [weak self] ok, _ in
-                Task { @MainActor in self?.moved(ok, "auf") }
+                Task { @MainActor in self?.moved(ok, "auf", n) }
             }
         } else if up {
-            moving = true
+            let n = startMove()
             interface.dismissTemplate(animated: true) { [weak self] ok, _ in
-                Task { @MainActor in self?.moved(ok, "zu") }
+                Task { @MainActor in self?.moved(ok, "zu", n) }
             }
         } else if faceLater {
             use(face: Conversation.shared.allowed.face)
         }
     }
 
-    private func moved(_ ok: Bool, _ how: String) {
+    /// A present or dismiss begins; when CarPlay never calls its completion, the window is free again after moveWait.
+    private func startMove() -> Int {
+        moving = true
+        moveN += 1
+        let n = moveN
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.moveWait) { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self, self.moving, self.moveN == n else { return }
+                AudioEngine.note("CarPlay: Sprachfenster ohne Antwort")
+                self.moving = false
+                self.sync()
+            }
+        }
+        return n
+    }
+
+    private func moved(_ ok: Bool, _ how: String, _ n: Int) {
+        guard n == moveN else { return }   // late, after the watch had freed the window and a new step began
         moving = false
         AudioEngine.note(ok ? "CarPlay: Sprachfenster \(how)" : "CarPlay: Sprachfenster \(how) abgelehnt")
         if ok {
@@ -542,6 +609,9 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
         } else if refused < 3 {
             refused += 1
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in MainActor.assumeIsolated { self?.sync() } }
+        } else {
+            refused = 0   // given up for now; the next state change tries again
+            AudioEngine.note("CarPlay: Sprachfenster aufgegeben")
         }
     }
 

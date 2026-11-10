@@ -98,8 +98,10 @@ class Sound(unittest.TestCase):
 
 class Use(unittest.TestCase):
     def test_no_microphone_after_a_note_in_the_car(self):
+        # since the Code-Review of 10.11.2026 (C8) on the iPhone too: after a note never listening, also with Freihändig
         a = read("Assistant.swift")
-        self.assertIn("if unasked && inCar", body(a, "private func answered()"))
+        self.assertIn("if unasked {", body(a, "private func answered()"))
+        self.assertNotIn("unasked && inCar", a)
         self.assertIn("unasked = true", body(a, "private func sayNote()"))
         self.assertIn("unasked = false", body(a, "private func send("))
 
@@ -163,8 +165,10 @@ class RoundTwo(unittest.TestCase):
 
     def test_an_unknown_voice_is_said(self):
         a = read("Assistant.swift")
-        self.assertIn('if text.isEmpty && inCar && !ignored.isEmpty', a)
-        self.assertIn('lastEnd = "unknown"', a)
+        # only the Spark's fixed word for a foreign voice (fremdstimme.py); silence and echo end quietly (Code-Review B4)
+        self.assertIn('if text.isEmpty && inCar && ignored == "foreign voice"', a)
+        self.assertEqual(a.count('lastEnd = "unknown"'), 1)
+        self.assertIn('"eigenes Echo" : "Stille erkannt"', a)
         car = read("CarPlayScene.swift")
         self.assertIn('talk.lastEnd == "unknown" { flash("unknown") }', car)
         self.assertIn('d["ignored"] as? String', read(os.path.join("..", "Shared", "SparkAPI.swift")))
@@ -179,11 +183,23 @@ class RoundTwo(unittest.TestCase):
         self.assertIn('"CarPlay: wieder da"', car)
 
     def test_slow_answers_free_the_car(self):
+        # since the Code-Review of 10.11.2026 (B5) one watch over every turn, not a timer in send() alone: recognizing the
+        # speech, a turn of the game, a note or a repeated answer read aloud and text without sound are limited too
         a = read("Assistant.swift")
         self.assertIn("static let carSlow: TimeInterval = 30", a)
-        self.assertIn("self?.tooSlow(id)", body(a, "private func send("))
+        self.assertNotIn("tooSlow(", body(a, "private func send("))
+        self.assertIn("phaseChanged(from: oldValue)", a)
+        watch = body(a, "private func phaseChanged(")
+        self.assertIn("self.checkTurn()", watch)
+        self.assertIn("try? await Task.sleep(for: .seconds(2))", watch)
+        self.assertIn("phase == .transcribing || phase == .thinking || phase == .speaking", a)
+        check = body(a, "private func checkTurn()")
+        self.assertIn("guard inCar, held == nil, !(phase == .speaking && audio.busy) else { return }", check)
+        self.assertIn("now.timeIntervalSince(max(turnAt, audio.lastPiece)) > Self.carSlow { tooSlow() }", check)
+        self.assertIn("if tone == nil { lastPiece = Date() }", read("Engine.swift"))
         slow = body(a, "private func tooSlow(")
-        self.assertIn("guard phase == .thinking", slow)
+        self.assertIn("guard turnRunning, inCar", slow)
+        self.assertIn("task?.cancel()", slow)
         self.assertIn('base("zu langsam")', slow)
         car = read("CarPlayScene.swift")
         for kind in ('"Mails", hint:', '"Fristen", hint:', '"Termine", hint:', '"MeinTag", hint:'):
@@ -331,6 +347,172 @@ class HoerstueckInTheCar(unittest.TestCase):
         self.assertGreaterEqual(len(notes), 6)
         for n in notes:
             self.assertRegex(n, r'^(why|"[^"\\]*"( \+ why)?|[^"]*\? "[^"\\]*" : "[^"\\]*")$')   # fixed words only
+
+
+class CodeReview(unittest.TestCase):
+    """Code-Review of 10.11.2026, package P3 „iPhone und CarPlay“ (Dominik: „1a, Rest nach Empfehlung“): one rule each,
+    findings B1-B13 of review-b-carplay, A-H2 (pairing anew) and C8 (a note after Stopp)."""
+
+    def test_a_cancelled_turn_never_listens_again(self):
+        # B1: a cancelled AsyncThrowingStream ends without an error; send(), sayNote(), tellGame() and repeatLast() check
+        a = read("Assistant.swift")
+        send = body(a, "private func send(")
+        loop_end = send.index("streamDone = true", send.index("for try await ev in api.chat("))
+        self.assertIn("guard !Task.isCancelled else {", send[send.index("for try await ev in api.chat("):loop_end])
+        note = body(a, "private func sayNote()")
+        self.assertLess(note.index("guard !Task.isCancelled else { return }"), note.index("answered()"))
+        tell = body(a, "private func tellGame(")
+        self.assertLess(tell.rindex("guard !Task.isCancelled else { return }"), tell.index("streamDone = true"))
+        rep = body(a, "func repeatLast()")
+        self.assertLess(rep.index("guard !Task.isCancelled else { return }"), rep.index("answered()"))
+        # the car's short sentence is a task of its own, stopped with the turn
+        self.assertIn("hintTask = Task {", body(a, "func write("))
+        self.assertIn("!Task.isCancelled, self.phase == .thinking", body(a, "func write("))
+        self.assertIn("hintTask?.cancel()", body(a, "func stop("))
+        # a Spark call rings or runs: no microphone after an answer
+        self.assertIn('if CallCenter.shared.active { base("Anruf"); return }', body(a, "private func answered()"))
+
+    def test_the_sound_is_let_go_also_when_the_engine_stood(self):
+        # B2: sleep() gives the session back without a running engine, and a failed listen() ends through base()
+        e = body(read("Engine.swift"), "func sleep()")
+        self.assertIn("engine.isRunning || !sleeping else { return }", e)
+        self.assertNotRegex(e, r"guard engine\.isRunning,")
+        self.assertIn("setActive(false, options: .notifyOthersOnDeactivation)", e)
+        self.assertLess(e.index("if running {"), e.index("setActive(false"))
+        listen = body(read("Assistant.swift"), "private func listen(")
+        fail = listen[listen.index("do { try audio.startInput() } catch {"):listen.index("if preroll == 0")]
+        self.assertIn('base(denied ? "Mikrofon fehlt" : "Mikrofon belegt")', fail)
+        self.assertNotIn("phase = .idle", fail)
+
+    def test_one_question_list_and_no_stale_button(self):
+        # B3: one list of the open Rückfrage, replaced or taken away, each button carries the number of its question
+        car = read("CarPlayScene.swift")
+        self.assertNotIn("$gameChoices.removeDuplicates()", car)
+        ch = body(car, "private func choices(")
+        self.assertIn("choiceSub = nil", ch)
+        self.assertIn("interface.popToRootTemplate(", ch)
+        show = body(car, "private func showChoices(")
+        self.assertIn("let n = talk.gameChoiceN", show)
+        self.assertEqual(show.count("Conversation.shared.answerGame("), 2)
+        self.assertEqual(len(re.findall(r"answerGame\([^\n]*, n\)", show)), 2)
+        self.assertIn("talk.gameChoices == c", show)
+        gone = body(car, "didDisconnectInterfaceController")
+        self.assertIn("watchChoices = nil", gone)
+        self.assertIn("choiceSub = nil", gone)
+        a = read("Assistant.swift")
+        self.assertIn("guard game, n == gameChoiceN, !gameChoices.isEmpty else", body(a, "func answerGame("))
+        self.assertIn("gameChoiceN += 1", body(a, "private func tellGame("))
+        self.assertIn("if !gameChoices.isEmpty { gameChoices = [] }", body(a, "private func playGame("))   # answered by voice
+        self.assertIn("if !gameChoices.isEmpty { gameChoices = [] }", body(a, "private func base("))
+        # the round and Hörstück lists only on top of the main list: a second tap lays no second one
+        self.assertIn("interface.topTemplate === list", body(car, "private func gameList("))
+        self.assertIn("interface.topTemplate === root", body(car, "private func hsShow("))
+
+    def test_the_apps_words_are_the_sparks(self):
+        # B4: the app compares fixed words of the Spark, never free text; they must stay these words there
+        root = os.path.join(ROOT, "app", "panel")
+        with open(os.path.join(root, "fremdstimme.py"), encoding="utf-8") as f:
+            self.assertIn('return "foreign voice", v', f.read())
+        with open(os.path.join(root, "echo.py"), encoding="utf-8") as f:
+            src = f.read()
+        for w in ('"own voice"', '"speaking pause"'):
+            self.assertIn("return " + w, src)
+            self.assertIn("ignored == " + w, read("Assistant.swift"))
+
+    def test_sound_that_never_comes_back_ends_the_turn(self):
+        # B6: shouldResume decides, a successful start ends an interruption without an end, stalled pieces end the turn
+        e = read("Engine.swift")
+        self.assertIn("AVAudioSession.InterruptionOptions.shouldResume.rawValue", e)
+        self.assertIn("if lost { self.onLost?() }", e)
+        self.assertIn("if interrupted { interrupted = false;", body(e, "func ensureRunning()"))
+        self.assertIn("var stalled: Bool { queued > 0 && !engine.isRunning }", e)
+        a = read("Assistant.swift")
+        self.assertIn("static let soundStall: TimeInterval = 15", a)
+        check = body(a, "private func checkTurn()")
+        self.assertIn("if audio.stalled && held == nil {", check)
+        self.assertIn('stop("Ton hängt")', check)
+        self.assertIn('stop("Unterbrechung")', body(a, "private func soundLost()"))
+
+    def test_a_phone_call_keeps_the_pieces_and_says_the_right_thing(self):
+        # B7: pieces wait while the sound is taken, a busy microphone is not a refused one
+        play = body(read("Engine.swift"), "func play(")
+        keep = play[play.index("do { try ensureRunning() } catch {"):play.index("let dry =")]
+        self.assertIn("guard interrupted else { return 0 }", keep)
+        self.assertIn("pending.append((nextId, buffer))", keep)
+        self.assertIn("AVAudioApplication.shared.recordPermission == .granted", read("Engine.swift"))
+        listen = body(read("Assistant.swift"), "private func listen(")
+        self.assertIn("let denied = !AudioEngine.microphoneGranted", listen)
+        self.assertIn('String(localized: "Das Mikrofon ist gerade belegt', listen)
+
+    def test_reachable_only_while_the_car_is_there_and_one_check(self):
+        # B8: after the check the car must still be there; a running check is waited for, never the old state
+        reach = body(read("CarPlayScene.swift"), "private func reachable(")
+        self.assertIn("guard let self, self.interface != nil else", reach)
+        self.assertLess(reach.index("await talk.check()"), reach.index("self.interface != nil"))
+        check = body(read("Assistant.swift"), "func check() async -> Bool")
+        self.assertIn("if let running = checkTask { return await running.value }", check)
+        self.assertNotIn("checking", read("Assistant.swift"))
+
+    def test_wake_word_restarts_only_its_own_recognition(self):
+        # B10: the late callback of a cancelled recognition never restarts the new one
+        w = read("WakeWord.swift")
+        self.assertIn("DispatchQueue.main.async { self?.handle(result, error, g) }", w)
+        self.assertIn("guard running, g == gen else { return }", w)
+        self.assertIn("guard let self, self.running, self.gen == g else { return }", w)
+
+    def test_the_voice_window_is_never_stuck_moving(self):
+        # B11: a completion that never comes frees the window; a late one does not end a newer step
+        car = read("CarPlayScene.swift")
+        self.assertIn("static let moveWait: TimeInterval = 3", car)
+        start = body(car, "private func startMove()")
+        self.assertIn("guard let self, self.moving, self.moveN == n else { return }", start)
+        self.assertIn('AudioEngine.note("CarPlay: Sprachfenster ohne Antwort")', start)
+        moved = body(car, "private func moved(")
+        self.assertIn("guard n == moveN else { return }", moved)
+        self.assertIn("refused = 0   // given up for now", moved)
+        self.assertEqual(body(car, "private func sync()").count("startMove()"), 2)
+
+    def test_the_tap_keeps_its_own_converter(self):
+        # B12: the audio thread never reads a property the main thread changes
+        e = read("Engine.swift")
+        self.assertNotIn("private var converter", e)
+        tap = body(e, "func startInput()")
+        self.assertIn("let converter = AVAudioConverter(from: format, to: target)", tap)
+        self.assertIn("let raw = onRaw", tap)
+        self.assertIn("raw?(buf)", tap)
+        self.assertNotIn("self.onRaw", tap)
+
+    def test_the_car_alone_starts_the_assistant(self):
+        # B13: the car started the app alone: begin() (tick, microphone question); without the microphone a clear state
+        car = read("CarPlayScene.swift")
+        self.assertIn("Task { await talk.begin(nil) }", car)
+        self.assertIn('CPVoiceControlState(identifier: "mic"', car)
+        self.assertIn('String(localized: "Mikrofon in der App erlauben")', car)
+        self.assertIn('flash("mic")', body(car, "private func micAllowed()"))
+        self.assertIn("guard micAllowed() else { return }", body(car, "private func begin("))
+        self.assertIn("guard micAllowed() else { return }", body(car, "private func remindMe()"))
+        b = body(read("Assistant.swift"), "func begin(")
+        self.assertLess(b.index("timer = Timer.scheduledTimer"), b.index("await AudioEngine.microphoneAllowed()"))
+
+    def test_no_note_right_after_stop(self):
+        # C8: „Stopp“ is quiet for a while, the waiting note comes later and never opens the microphone
+        a = read("Assistant.swift")
+        self.assertIn("quietUntil = Date().addingTimeInterval(Self.quietAfterStop)", body(a, "func stop("))
+        self.assertIn("guard !notes.isEmpty, Date() >= quietUntil,", body(a, "private func sayNote()"))
+
+    def test_pairing_anew_leaves_nothing_of_the_old_profile(self):
+        # A-H2: another profile or Spark: conversation, outbox, keychain and kept data go; the old key's push addresses
+        # are dropped on the Spark and the new key gets them
+        c = body(read("Conversation.swift"), "func pair(")
+        self.assertIn("Task { await before.forgetPush() }", c)
+        other = c[c.index("if before != nil && (link.replacing != nil || r.profile != Store.profile) {"):c.index("Store.baseURL = link.base")]
+        for step in ("ChatSec.shared.forget()", "Merken.forget()", "AppleReminders.forget()",
+                     "Conversation.shared.dropOutbox()", "Conversation.shared.restart()"):
+            self.assertIn(step, other)
+        self.assertLess(c.index("ChatSec.shared.forget()"), c.index("Store.profile = r.profile"))   # named after the old one
+        self.assertIn("CallCenter.shared.resendToken()", c)
+        self.assertIn('post("api/iphone/push-token", ["forget": true])', read(os.path.join("..", "Shared", "SparkAPI.swift")))
+        self.assertIn("registry?.pushToken(for: .voIP)", body(read("Calls.swift"), "func resendToken()"))
 
 
 if __name__ == "__main__":

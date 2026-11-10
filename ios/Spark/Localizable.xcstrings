@@ -20490,6 +20490,26 @@
           }
         }
       }
+    },
+    "Das Mikrofon ist gerade belegt, zum Beispiel durch ein Telefonat. Gleich noch einmal tippen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The microphone is busy right now, for example with a phone call. Tap again in a moment."
+          }
+        }
+      }
+    },
+    "Mikrofon in der App erlauben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow the microphone in the app"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

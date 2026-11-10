@@ -128,10 +128,21 @@ final class AppState: ObservableObject {
         defer { busy = false }
         do {
             let r = try await SparkAPI.pair(base: link.base, code: link.code, name: UIDevice.current.name)
-            if link.replacing != nil {
-                // another Spark: nothing of the old one goes along (unsent messages, reminder links)
-                Outbox.clear()
+            let before = paired ? SparkAPI.current : nil
+            if let before {
+                // the old key goes: Apple's addresses of this iPhone no longer ring for it (apns.py), whichever profile
+                // pairs now; the Spark that is away just misses it (it drops the address when the new key sends it)
+                Task { await before.forgetPush() }
+            }
+            if before != nil && (link.replacing != nil || r.profile != Store.profile) {
+                // another Spark or another profile (Code-Review 10.11.2026 A-H2): nothing of the old pairing goes along,
+                // neither the open conversation nor unsent questions, the key for private chats, what the app kept or
+                // reminder links. ChatSec first: its keychain entry is named after the old Spark and profile
+                ChatSec.shared.forget()
+                Merken.forget()
                 AppleReminders.forget()
+                Conversation.shared.dropOutbox()
+                Conversation.shared.restart()
             }
             Store.baseURL = link.base
             Store.key = r.key
@@ -140,6 +151,13 @@ final class AppState: ObservableObject {
             profile = r.profile
             paired = true
             message = nil
+            if before != nil {
+                // the screen stays, so its start does not run again: the new key gets the push addresses and the rights now
+                Task {
+                    await Conversation.shared.begin(await refresh())
+                    CallCenter.shared.resendToken()
+                }
+            }
         } catch {
             message = NetWatch.certificate(error) ? NetWatch.certificateText(link.base) : error.localizedDescription
         }

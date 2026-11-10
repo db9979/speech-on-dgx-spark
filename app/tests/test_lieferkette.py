@@ -226,7 +226,12 @@ class IphonePairLink(unittest.TestCase):
         self.assertIn('Text("Zu einem anderen Spark wechseln?")', v)
         self.assertIn('.destructive(Text("Wechseln"))', v)
         pair = c[c.index("func pair(_ link: Link) async"):c.index("func join(")]
-        self.assertLess(pair.index("Outbox.clear()"), pair.index("Store.baseURL = link.base"))
+        # the waiting questions go before the new Spark is set; since the Code-Review of 10.11.2026 (A-H2) through the
+        # conversation, so the list it shows is empty too, and also for another profile on the same Spark
+        self.assertLess(pair.index("Conversation.shared.dropOutbox()"), pair.index("Store.baseURL = link.base"))
+        a = read(ROOT, "ios", "Spark", "Assistant.swift")
+        drop = a[a.index("func dropOutbox()"):]
+        self.assertIn("Outbox.clear()", drop[:drop.index("\n    }\n")])
         strings = read(ROOT, "ios", "Spark", "Localizable.xcstrings")
         self.assertIn('"Zu einem anderen Spark wechseln?"', strings)
 

@@ -846,6 +846,12 @@ struct SparkAPI {
         try await post("api/iphone/push-token", ["token": hex, "kind": kind])["push"] as? Bool ?? false
     }
 
+    /// Before this key is replaced by a new pairing: the Spark forgets this device's push and VoIP addresses, so the old
+    /// profile's notes and calls no longer ring on this iPhone (Code-Review 10.11.2026 A-H2).
+    func forgetPush() async {
+        _ = try? await post("api/iphone/push-token", ["forget": true])
+    }
+
     /// The answer as a stream of text and sound, while the Spark is still writing.
     /// car: asked from CarPlay (short answers; the Spark only gets stricter, never looser).
     /// attachment: text from a photo or document; the Spark treats it as outside text (locks actions).

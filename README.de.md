@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.363** iPhone und CarPlay stabil: nach Stopp, Anruf oder wenn das Auto weg ist, geht das Mikrofon nicht mehr von selbst auf; Radio und Musik kommen zurück, eine Rückfrage-Liste im Dungeon, 30 Sekunden für alles im Auto, neu koppeln mit anderem Profil räumt auf
 - **V01.1.362** Hörstück als Diskussion (Teil 1): mit dem neuen Schalter wird das Hörstück ein Gespräch in Kapiteln mit Rückfragen und Widerspruch statt Satz für Satz; jede Zahl bleibt belegt, Fragen und Reaktionen tragen „Gespräch“
 - **V01.1.361** Sicherheit sofort: „Mach das Licht nicht aus“ schaltet nie, „Vergiss es“ löscht nichts, keine Websuche für Privates, Mitteilungen eines Browsers nur für ein Profil, Codewort nur vom selben Gerät
 - **V01.1.360** ROT-FIX: zwei Tests prüfen jetzt die eine feste Paketliste statt der entfernten zweiten
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.356** Open WebUI einbinden: ein Schritt unter Ich → Sprachmodell per API verbindet dein Open WebUI (Schlüssel und Spark-Werkzeuge zum Nachlesen, nur Heimnetz), dazu „Open WebUI“ im Menü und der Dienst-Wächter
 - **V01.1.355** Fix: ein Hörstück wartete für immer bei „0 von 0 Zeilen“ und startete nie, auch mit „Sofort erstellen“; jetzt startet es in Sekunden, wenn niemand spricht, die Liste sagt, worauf es wartet, und ein gescheitertes nennt den Grund
 - **V01.1.354** ROT-FIX: sshTermy-Kanal-Test wartet auf das Ende, solange der Testclient noch läuft
-- **V01.1.353** Fernzugang aufgeräumt: eigener Reiter sshTermy statt des Kastens unten, die Zahlen als ein Schild „6/6 online · 0 Sitzungen“, die Entsperrung kurz „bis 14:02 · Sperren“, Koppeln, Aktualisieren, Verlauf und Trennen im ⋯ neben der Suche, die Systemkarte mit den Reitern Einrichten (✓ oder ○ mit genau einem Befehl, Kopieren, In die Shell), Anker, Verlauf und Notiz, Liste und Karte über die ganze Höhe
 
 
 

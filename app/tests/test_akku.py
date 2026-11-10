@@ -64,7 +64,8 @@ class IPhone(unittest.TestCase):
         eng = read(need(os.path.join(IOS, "Engine.swift")))
         sleep = eng[eng.index("func sleep()"):]
         sleep = sleep[:sleep.index("\n    }\n")]
-        self.assertRegex(sleep, r"guard engine\.isRunning, !tapOn, queued == 0, pending\.isEmpty, !holding")
+        # nothing hears or plays; since the Code-Review of 10.11.2026 (B2) also with an engine iOS had stopped already
+        self.assertRegex(sleep, r"guard !tapOn, queued == 0, pending\.isEmpty, !holding, engine\.isRunning \|\| !sleeping")
         self.assertIn("engine.stop()", sleep)
         self.assertIn("setActive(false", sleep)
         # a route change or the end of an interruption does not wake it again by itself

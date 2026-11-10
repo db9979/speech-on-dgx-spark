@@ -120,6 +120,11 @@ final class CallCenter: ObservableObject {
         Task { _ = try? await SparkAPI.current?.pushToken(hex, kind: "voip") }
     }
 
+    /// After a new pairing: the VoIP address once more with the new key (PushKit reports it only when it changes).
+    func resendToken() {
+        if let t = registry?.pushToken(for: .voIP) { token(t) }
+    }
+
     /// A VoIP push: report the call to CallKit at once (Apple's rule), then ask the Spark who calls.
     func pushed(_ payload: [AnyHashable: Any], done: @escaping () -> Void) {
         let id = payload["call"] as? String ?? ""

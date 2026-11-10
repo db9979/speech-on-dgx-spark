@@ -5,8 +5,10 @@ Off until the admin switches it on (chat.iphone_push) and enters the key from de
 STATE/apns.json, only changed with the admin login plus the second step, and never sent back.
 
 Each paired iPhone hands over its push address (device token) with its own app key
-(POST /api/iphone/push-token); it is kept per device and dropped with the device. A profile gets
-pushes unless it switched app_push off (a preference, on by default).
+(POST /api/iphone/push-token); it is kept per device and dropped with the device. One address belongs to one
+app key only: handed over again by a new key, it leaves every other entry, and an app paired anew first drops its old
+key's addresses ({"forget": true}), so the old profile's notes and calls no longer ring on that iPhone (Code-Review
+10.11.2026 A-H2). A profile gets pushes unless it switched app_push off (a preference, on by default).
 
 What Apple sees: only "Neue Nachricht vom Spark" and a random id. The text stays on the Spark
 (mitteilungen.py, a day); the app's notification extension fetches it with the app key from
@@ -107,11 +109,17 @@ def tokens():
 def set_token(did, uid, token, kind="alert"):
     """kind "alert": notes; "voip": calls ring through CallKit (PushKit, anrufe.py). Both live in the device's entry."""
     d = {k: v for k, v in tokens().items() if k in _app_devices()}   # drops removed iPhones
+    field = "voip" if kind == "voip" else "token"
+    for k, v in list(d.items()):   # the same address under another key (an earlier pairing of this iPhone) goes
+        if k != did and isinstance(v, dict) and v.get(field) == token:
+            v.pop(field, None)
+            if not v.get("token") and not v.get("voip"):
+                d.pop(k)
     old = d.get(did) if isinstance(d.get(did), dict) and d[did].get("uid") == uid else {}
     entry = {"uid": uid, "token": old.get("token", ""), "t": int(time.time())}
     if old.get("voip"):
         entry["voip"] = old["voip"]
-    entry["voip" if kind == "voip" else "token"] = token
+    entry[field] = token
     d[did] = entry
     _write("apns-tokens.json", d)
 
@@ -385,6 +393,10 @@ async def app_token(request: Request, prof=Depends(own_profile)):
     guard.limit(request, "chat", prof["id"], False)
     import iphone
     body = await json_body(request, iphone.MAX_BODY, lenient=True)
+    if body.get("forget") is True:   # the app is paired anew: this key's addresses go before the key is replaced
+        _drop(dev["id"])
+        print(f"apns: tokens dropped | {profiles.log_name(prof)}", flush=True)
+        return {"ok": True, "push": False}
     token = body.get("token") if isinstance(body.get("token"), str) else ""
     token = token.lower()
     kind = body.get("kind", "alert")

@@ -32,6 +32,9 @@ final class WakeWord {
     private var task: SFSpeechRecognitionTask?
     private var started = Date()
     private var seen = 0
+    /// counts the recognitions: the late callback of a cancelled one (iOS reports „canceled“ afterwards) never restarts the
+    /// new one, which had ended in a restart loop (Code-Review 10.11.2026 B10)
+    private var gen = 0
     private(set) var running = false
     var word: Word = .spark
     /// Main thread: the wake word was heard.
@@ -56,8 +59,10 @@ final class WakeWord {
         seen = 0
         started = Date()
         running = true
+        gen += 1
+        let g = gen
         task = r.recognitionTask(with: req) { [weak self] result, error in
-            DispatchQueue.main.async { self?.handle(result, error) }
+            DispatchQueue.main.async { self?.handle(result, error, g) }
         }
     }
 
@@ -78,8 +83,8 @@ final class WakeWord {
         lock.unlock()
     }
 
-    private func handle(_ result: SFSpeechRecognitionResult?, _ error: Error?) {
-        guard running else { return }
+    private func handle(_ result: SFSpeechRecognitionResult?, _ error: Error?, _ g: Int) {
+        guard running, g == gen else { return }
         if let result {
             let words = result.bestTranscription.formattedString.lowercased()
                 .components(separatedBy: CharacterSet.letters.inverted).filter { !$0.isEmpty }
@@ -94,8 +99,16 @@ final class WakeWord {
             }
             if result.isFinal { start(); return }
         }
-        // a recognition task runs about a minute at most; start a fresh one in time
-        if error != nil || Date().timeIntervalSince(started) > 50 { start() }
+        // a recognition task runs about a minute at most; start a fresh one in time. After an error of the own task a
+        // second later, so a recognizer that fails at once does not spin
+        if error != nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
+                guard let self, self.running, self.gen == g else { return }
+                self.start()
+            }
+        } else if Date().timeIntervalSince(started) > 50 {
+            start()
+        }
     }
 
     /// The question without the wake word in front ("Hey Spark, wie spät ist es" → "wie spät ist es").
