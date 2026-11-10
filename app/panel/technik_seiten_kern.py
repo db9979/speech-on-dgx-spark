@@ -249,7 +249,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "adb0abcd62",
+        "stand": "03d3b3cc1f",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -297,7 +297,9 @@ SEITEN = {
             "hoerstueck.GESPEICHERT_MAX": ["s13"], "tonteile.sprich": ["s13"],
             "hoerstueck_diskussion.schritt": ["s13"], "hoerstueck_diskussion.pruefe_plan": ["s13"],
             "hoerstueck_diskussion.pruefe_kapitel": ["s13"], "hoerstueck_diskussion.gespraech_ok": ["s13"],
-            "hoerstueck_diskussion.guete": ["s13"],
+            "hoerstueck_diskussion.guete": ["s13"], "hoerstueck_diskussion.zusatz": ["s13"],
+            "hoerstueck_diskussion.klang_von": ["s13"], "hoerstueck_diskussion.pause_ms": ["s13"],
+            "hoerstueck_diskussion.rueckmeldungen": ["s13"],
             "hoerstueck.m4a": ["s13"], "hoerstueck.an_telegram": ["s13"], "hoerstueck.melden": ["s13"],
             "coadmin.ist_admin": ["s13"], "coadmin.unbegrenzt": ["s13"], "hoerstueck.fertige": ["s13"], "hoerstueck.AUTO_MAX": ["s13"], "hoerstueck.sofort_lauf": ["s13"], "hoerstueck._sofort_offen": ["s13"], "hoerstueck.weiter": ["s13"], "hoerstueck._warten": ["s13"], "vorrang.grund": ["s13"],
             "documents.stelle": ["s13"], "common.signed_low": ["s13"],
@@ -941,7 +943,15 @@ SEITEN = {
                  "{hoerstueck_diskussion.GESPRAECH_LEN} Zeichen, keine Zahl und nur Wörter der Stellen des Kapitels oder "
                  "der festen Liste (hoerstueck_diskussion.gespraech_ok), höchstens {hoerstueck_diskussion.GESPRAECH_ANTEIL} "
                  "der Sätze. hoerstueck_diskussion.guete misst jedes Kapitel mit festen Zahlen; ein flaches wird genau "
-                 "einmal mit festen Hinweisen neu geschrieben, das bessere bleibt.",
+                 "einmal mit festen Hinweisen neu geschrieben, das bessere bleibt. Die Sprechweise eines Beitrags ist ein "
+                 "Wort einer festen Liste; zur Sprachausgabe geht nur der feste englische Zusatz des Panels "
+                 "(hoerstueck_diskussion.zusatz, als art von tonteile.sprich: bei VoiceDesign an der Beschreibung der "
+                 "Rolle, sonst als instructions), die Stimmen sind feste Beschreibungen je Rolle "
+                 "(hoerstueck_diskussion.klang_von, „▶ Probe“ nur für den Admin). Pausen nach festen Regeln "
+                 "(hoerstueck_diskussion.pause_ms), kurze Rückmeldungen aus einer festen Liste "
+                 "(hoerstueck_diskussion.rueckmeldungen), je Stimme einmal gesprochen und behalten. Die Hörprobe des Admins "
+                 "ist eine Diskussion mit nur zwei Kapiteln und höchstens {hoerstueck.PROBE_ZEICHEN} Zeichen, sofort, "
+                 "nie gezählt; hoerstueck.proben_weg löscht sie stündlich nach einem Tag samt Datei.",
                  "hoerstueck.stellen gives the model only pieces of the originals from the collection's documents on "
                  "short and whole, at most {hoerstueck.STELLEN_ZEICHEN} characters, in turns from each document; never "
                  "knowledge book pages and never analysis text (model text is never a source of model text). The model "
@@ -985,7 +995,14 @@ SEITEN = {
                  "{hoerstueck_diskussion.GESPRAECH_LEN} characters, no number and only words of the chapter's places or "
                  "the fixed list (hoerstueck_diskussion.gespraech_ok), at most {hoerstueck_diskussion.GESPRAECH_ANTEIL} "
                  "of the sentences. hoerstueck_diskussion.guete measures every chapter with fixed numbers; a flat one is "
-                 "written exactly once more with fixed hints, the better one stays."),
+                 "written exactly once more with fixed hints, the better one stays. A contribution's way of speaking is a "
+                 "word of a fixed list; only the panel's fixed English addition goes to the speech output "
+                 "(hoerstueck_diskussion.zusatz, as art of tonteile.sprich: with VoiceDesign at the role's description, "
+                 "else as instructions), the voices are fixed descriptions per role (hoerstueck_diskussion.klang_von, "
+                 "„▶ Probe“ only for the admin). Pauses by fixed rules (hoerstueck_diskussion.pause_ms), short reactions "
+                 "of a fixed list (hoerstueck_diskussion.rueckmeldungen), spoken once per voice and kept. The admin's sample "
+                 "is a discussion of only two chapters and at most {hoerstueck.PROBE_ZEICHEN} characters, at once, never "
+                 "counted; hoerstueck.proben_weg deletes it hourly after a day with its file."),
             ]),
             (("Links als Dokument", "Links as documents"), [
                 ("doklink.pruefe prüft jede Adresse nach festen Regeln, bevor etwas geholt wird: http oder https, ein "
@@ -1330,6 +1347,10 @@ SEITEN = {
             ("hoerstueck_diskussion.pruefe_kapitel", ("Beiträge: Satz mit Stelle und Zahlenprobe, Gesprächssatz mit Wortprobe", "contributions: sentence with a place and the number check, talk sentence with the word check")),
             ("hoerstueck_diskussion.gespraech_ok", ("Gesprächssatz ohne Zahl, nur Wörter der Stellen oder der Liste", "talk sentence without a number, only words of the places or the list")),
             ("hoerstueck_diskussion.guete", ("feste Gütemessung je Kapitel", "fixed measure per chapter")),
+            ("hoerstueck_diskussion.zusatz", ("Sprechweise: nur der feste Zusatz des Panels", "way of speaking: only the panel's fixed addition")),
+            ("hoerstueck_diskussion.klang_von", ("feste Stimmbeschreibung je Rolle", "fixed voice description per role")),
+            ("hoerstueck_diskussion.pause_ms", ("Pausen nach festen Regeln", "pauses by fixed rules")),
+            ("hoerstueck_diskussion.rueckmeldungen", ("kurze Rückmeldungen aus fester Liste", "short reactions of a fixed list")),
             ("tonteile.sprich", ("der eine Helfer für einen gesprochenen Teil", "the one helper for a spoken part")),
             ("doklink.pruefe", ("Adresse nach festen Regeln, bevor etwas geholt wird", "an address by fixed rules before anything is fetched")),
             ("doklink.eins", ("eine Adresse holen und als Dokument aufnehmen", "fetch one address and take it in as a document")),

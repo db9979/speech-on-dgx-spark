@@ -18,6 +18,7 @@ struct HsStueck: Identifiable, Hashable {
     let erzwungen: Bool
     let warten: String
     let fehler: String
+    let probe: Bool         // the admin's Hörprobe of a discussion (about two minutes, gone after a day)
 
     init?(_ d: [String: Any]) {
         guard let id = d["id"] as? String, id.range(of: "^[0-9a-f]{12}$", options: .regularExpression) != nil else { return nil }
@@ -37,6 +38,7 @@ struct HsStueck: Identifiable, Hashable {
         warten = ["gespraech", "wartung", "andere", "sprachausgabe"].contains(w) ? w : ""
         let f = d["fehler"] as? String ?? ""        // the server's fixed word of why a broken one broke
         fehler = ["modell", "ffmpeg", "mappe", "kein text", "zu wenig"].contains(f) ? f : ""
+        probe = d["probe"] as? Bool ?? false
     }
 
     var offen: Bool { stand == "wartet" || stand == "sprechen" }
@@ -85,7 +87,9 @@ struct HsStueck: Identifiable, Hashable {
 }
 
 /// One line of the script: its voice (A, B, C, the panel's fixed roles), its words, where it starts in the sound and,
-/// for a line with a place, the document's title and page.
+/// for a line with a place, the document's title and page. A contribution of a discussion (art "beitrag") carries the
+/// places of its sentences, whether a talk sentence without a place is in it („Gespräch“), its way of speaking (a fixed
+/// word of the server) and its chapter; a short reaction has art "rueck".
 struct HsZeile: Identifiable, Hashable {
     let id: Int
     let sprecher: String
@@ -94,17 +98,71 @@ struct HsZeile: Identifiable, Hashable {
     let dok: String
     let page: Int
     let ab: Double?
+    let quellen: [String]
+    let gespraech: Bool
+    let weise: String
+    let kapitel: Int?
+    let kart: String
+    var kapitelStart = false
+
+    static let weisen = ["neugierig", "nachdenklich", "begeistert", "skeptisch", "lachend", "ernst", "ruhig"]
+    static let arten = ["einstieg", "these", "streitfrage", "beispiel", "wendepunkt", "fazit"]
 
     init?(_ i: Int, _ d: [String: Any]) {
         let sp = d["sprecher"] as? String ?? ""
         guard ["A", "B", "C"].contains(sp) else { return nil }
         id = i
         sprecher = sp
-        text = String((d["text"] as? String ?? "").prefix(400))
+        text = String((d["text"] as? String ?? "").prefix(1000))
         art = d["art"] as? String ?? ""
         dok = String((d["dok"] as? String ?? "").prefix(120))
         page = (d["page"] as? NSNumber)?.intValue ?? 0
         ab = (d["ab"] as? NSNumber)?.doubleValue
+        let saetze = (d["saetze"] as? [[String: Any]] ?? []).prefix(12)
+        var q: [String] = []
+        for s in saetze where s["art"] as? String == "inhalt" {
+            let name = String((s["dok"] as? String ?? "").prefix(120))
+            let p = (s["page"] as? NSNumber)?.intValue ?? 0
+            let one = name + (p > 0 ? " · " + String(localized: "S. \(p)") : "")
+            if !name.isEmpty && !q.contains(one) { q.append(one) }
+        }
+        quellen = q
+        gespraech = saetze.contains { $0["art"] as? String == "gespraech" }
+        let w = d["weise"] as? String ?? ""
+        weise = HsZeile.weisen.contains(w) ? w : ""
+        kapitel = (d["kapitel"] as? NSNumber)?.intValue
+        let k = d["kart"] as? String ?? ""
+        kart = HsZeile.arten.contains(k) ? k : ""
+    }
+
+    /// the way of speaking in the app's language (only the server's fixed words)
+    var weiseText: String {
+        switch weise {
+        case "neugierig": return String(localized: "neugierig")
+        case "nachdenklich": return String(localized: "nachdenklich")
+        case "begeistert": return String(localized: "begeistert")
+        case "skeptisch": return String(localized: "skeptisch")
+        case "lachend": return String(localized: "lachend")
+        case "ernst": return String(localized: "ernst")
+        case "ruhig": return String(localized: "ruhig")
+        default: return ""
+        }
+    }
+
+    /// „Kapitel 2 · Streitfrage“ above the first line of a chapter
+    var kapitelText: String {
+        let n = (kapitel ?? 0) + 1
+        let a: String
+        switch kart {
+        case "einstieg": a = String(localized: "Einstieg")
+        case "these": a = String(localized: "These")
+        case "streitfrage": a = String(localized: "Streitfrage")
+        case "beispiel": a = String(localized: "Beispiel")
+        case "wendepunkt": a = String(localized: "Wendepunkt")
+        case "fazit": a = String(localized: "Fazit")
+        default: a = ""
+        }
+        return String(localized: "Kapitel \(n)") + (a.isEmpty ? "" : " · " + a)
     }
 }
 
@@ -130,7 +188,13 @@ struct HsDetail {
         telegram = d["telegram"] as? Bool ?? false
         dauer = (d["dauer_s"] as? NSNumber)?.intValue ?? 0
         let raw = (d["drehbuch"] as? [[String: Any]] ?? []).prefix(200)
-        zeilen = raw.enumerated().compactMap { HsZeile($0.offset, $0.element) }
+        var zs = raw.enumerated().compactMap { HsZeile($0.offset, $0.element) }
+        var last: Int? = nil
+        for i in zs.indices where zs[i].kapitel != nil {
+            zs[i].kapitelStart = zs[i].kapitel != last
+            last = zs[i].kapitel
+        }
+        zeilen = zs
         let en = Locale.current.language.languageCode?.identifier != "de"
         var r: [String: String] = [:]
         for (k, v) in d["rollen"] as? [String: [String]] ?? [:] where ["A", "B", "C"].contains(k) && v.count == 2 {
@@ -318,7 +382,7 @@ struct HoerstueckView: View {
                 ForEach(m.list) { s in
                     NavigationLink { HoerstueckDetailView(stueck: s, mappe: mappe.id, model: m) } label: {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(verbatim: s.titel.isEmpty ? String(localized: "Hörstück") : s.titel)
+                            Text(verbatim: (s.probe ? String(localized: "Hörprobe") + " · " : "") + (s.titel.isEmpty ? String(localized: "Hörstück") : s.titel))
                             Text(verbatim: s.standText).font(.caption).foregroundStyle(.secondary)
                             if s.stand == "sprechen", s.zeilen > 0 {
                                 ProgressView(value: Double(s.fertig), total: Double(s.zeilen))
@@ -429,10 +493,24 @@ struct HoerstueckDetailView: View {
                 .background(on ? Theme.onAccent.opacity(0.25) : Theme.soft, in: Circle())
                 .accessibilityLabel(Text(verbatim: d.rollen[z.sprecher] ?? z.sprecher))
             VStack(alignment: .leading, spacing: 2) {
+                if z.kapitelStart {
+                    Text(verbatim: z.kapitelText)
+                        .font(.caption.weight(.semibold)).foregroundStyle(on ? Theme.onAccent : Theme.muted)
+                }
                 Text(verbatim: z.text)
                 if z.art == "inhalt", !z.dok.isEmpty {
                     Text(verbatim: z.dok + (z.page > 0 ? " · " + String(localized: "S. \(z.page)") : ""))
                         .font(.caption).foregroundStyle(on ? Theme.onAccent : Theme.muted)
+                }
+                if z.art == "beitrag" {
+                    let notes = z.quellen + (z.gespraech ? [String(localized: "Gespräch")] : []) + (z.weise.isEmpty ? [] : [z.weiseText])
+                    if !notes.isEmpty {
+                        Text(verbatim: notes.joined(separator: " · "))
+                            .font(.caption).foregroundStyle(on ? Theme.onAccent : Theme.muted)
+                    }
+                }
+                if z.art == "rueck" {
+                    Text("Rückmeldung").font(.caption).foregroundStyle(on ? Theme.onAccent : Theme.muted)
                 }
             }
             Spacer(minLength: 0)

@@ -93,7 +93,7 @@ import time
 import wave
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 
 import coadmin
 import documents
@@ -101,16 +101,15 @@ import features
 import guard
 import profiles
 from common import DayCounter, fester_ordner, load_config
-from core import assistant, json_body, own_profile
+from core import assistant, auth, json_body, own_profile
 
 router = APIRouter()
 SPRECHER = ("A", "B", "C")
 ROLLEN = {"A": ("Moderation", "Host"), "B": ("Fachstimme", "Expert"), "C": ("Nachfrage", "Questions")}
-# the standard voice made from a description per role (VoiceDesign), when the admin chose no voice for it
-KLANG = {"A": "Ruhige, freundliche Moderatorin, klar und in mittlerem Tempo",
-         "B": "Sachlicher Sprecher mit tiefer, ruhiger Stimme, deutlich und langsam",
-         "C": "Neugierige junge Stimme, lebhaft und freundlich, fragt gern nach"}
 LAENGEN = {5: 4500, 10: 9000, 20: 18000}   # minutes -> characters of the script at most
+# the admin's Hörprobe of a discussion (Dominik 2026-11-10 „1-8“, plan hoerstueck-diskussion 8a): about two minutes,
+# the opening and one point of dispute, made at once like „Sofort erstellen“, never counted, gone after PROBE_S
+PROBE_LAENGE, PROBE_ZEICHEN, PROBE_S = 2, 1800, 24 * 3600
 STIMMEN = (2, 3)
 ZEILEN_MAX, ZEILEN_MIN = 120, 10
 INHALT_LEN = 300         # characters of a line with a place
@@ -143,7 +142,8 @@ CREATE TABLE IF NOT EXISTS hs_stueck (id TEXT PRIMARY KEY, mappe TEXT NOT NULL, 
     laenge INTEGER DEFAULT 5, stimmen INTEGER DEFAULT 2, stand TEXT DEFAULT 'wartet', zeilen TEXT DEFAULT '[]',
     fertig_zeilen INTEGER DEFAULT 0, verworfen TEXT DEFAULT '{}', dauer_s INTEGER DEFAULT 0, datei TEXT DEFAULT '',
     sig TEXT DEFAULT '', made INTEGER DEFAULT 0, versuche INTEGER DEFAULT 0, fehler TEXT DEFAULT '',
-    sprache TEXT DEFAULT 'de', sofort INTEGER DEFAULT 0, stil TEXT DEFAULT '', plan TEXT DEFAULT '');
+    sprache TEXT DEFAULT 'de', sofort INTEGER DEFAULT 0, stil TEXT DEFAULT '', plan TEXT DEFAULT '',
+    probe INTEGER DEFAULT 0);
 """
 SPRACHEN = ("de", "en")   # the script's language: the one the person uses on the page or in the app (Push 5b)
 EINLEITUNG = "Ein Hörstück des Spark aus deiner Mappe „{name}“. Es kann Fehler enthalten; die Quellen stehen im Panel."
@@ -210,7 +210,7 @@ _day = DayCounter(neu=0, drehbuch=0, zeilen=0, verworfen=0, fertig=0, leer=0, ab
                   # the discussion (hoerstueck_diskussion.schritt): plans, the panel's own plan, chapters planned and
                   # written, rewritten (flat), contributions and their characters, conversation sentences dropped
                   plan=0, plan_fest=0, kapitel_geplant=0, kapitel=0, kapitel_neu=0, beitraege=0, beitrag_zeichen=0,
-                  gespraech_weg=0)
+                  gespraech_weg=0, weise=0, rueck=0, rueck_kopie=0, hoerproben=0, hoerproben_weg=0)
 _live = {"at": 0.0, "data": None}
 _hold = {"tts": 0.0}     # until when nothing is sent to the speech output (it failed, or the Dienst-Wächter)
 _said = {}               # what was written to the journal once: "tts" -> until
@@ -291,7 +291,8 @@ class _Db(documents._Db):
             con.executescript(mappen.SCHEMA + SCHEMA)
             cols = {r[1] for r in con.execute("PRAGMA table_info(hs_stueck)")}
             for col, typ in (("sprache", "TEXT DEFAULT 'de'"), ("sofort", "INTEGER DEFAULT 0"),    # tables of 5a, 5b
-                             ("stil", "TEXT DEFAULT ''"), ("plan", "TEXT DEFAULT ''")):          # and of before the discussion
+                             ("stil", "TEXT DEFAULT ''"), ("plan", "TEXT DEFAULT ''"),          # and of before the discussion
+                             ("probe", "INTEGER DEFAULT 0")):
                 if col not in cols:
                     con.execute(f"ALTER TABLE hs_stueck ADD COLUMN {col} {typ}")
         except BaseException:
@@ -507,12 +508,12 @@ async def ask_model(text, stimmen, zeichen, sprache="de"):
     return json.loads(m[0])
 
 
-async def ton(text, voice, klang, sprache="de"):
+async def ton(text, voice, klang, sprache="de", art=""):
     """One line through the one speech helper, as background work (stufe hinten, never taken for speech), in the
-    script's language."""
+    script's language; art: the panel's fixed English addition for how it is spoken (hoerstueck_diskussion.zusatz)."""
     import tonteile
     return await tonteile.sprich(text, voice, klang, stufe="hinten", frist=TON_FRIST, grenze=TON_GRENZE,
-                                 sprache="English" if sprache == "en" else "German")
+                                 sprache="English" if sprache == "en" else "German", art=art)
 
 
 async def _design():
@@ -528,13 +529,15 @@ async def _design():
     return _stimmen["design"]
 
 
-async def stimme_von(sp):
+async def stimme_von(sp, stil=""):
     """(voice, klang) for one role: the admin's voice, else the standard voice with the role's description when
-    VoiceDesign runs, else the standard voice."""
+    VoiceDesign runs (hoerstueck_stimmen.json: the standard one, for a discussion the admin's choice,
+    hoerstueck_diskussion.klang_von), else the standard voice."""
+    import hoerstueck_diskussion as hd
     v = stimmen_wahl().get(sp, "")
     if v:
         return v, ""
-    return "", KLANG[sp] if await _design() else ""
+    return "", hd.klang_von(sp, stil) if await _design() else ""
 
 
 def pcm_of(b):
@@ -565,18 +568,27 @@ def _zeilen(r):
     return [x for x in z if isinstance(x, dict)] if isinstance(z, list) else []
 
 
-def bitte(uid, mid, laenge, stimmen, now=None, sprache="de", sofort=False, request=None):
+def zeichen_von(r):
+    """Characters of a Hörstück's script at most: its length's, a Hörprobe's PROBE_ZEICHEN."""
+    return PROBE_ZEICHEN if r["laenge"] == PROBE_LAENGE else LAENGEN.get(r["laenge"], LAENGEN[5])
+
+
+def bitte(uid, mid, laenge, stimmen, now=None, sprache="de", sofort=False, request=None, probe=False):
     """The owner's click „Erstellen": a new Hörstück waits, its script in sprache (SPRACHEN). Returns (id, "") or
     (None, reason word): "keine mappe", "leer" (no document at kurz or ganz), "voll" (GESPEICHERT_MAX kept), "grenze"
     (the day's limit; never for a profile without daily limits, coadmin.unbegrenzt with the request when there is one:
     counted, never refused). sofort (the admin's „Sofort erstellen"): marked forced, the day's limit neither asked
-    nor counted."""
+    nor counted. probe (the admin's Hörprobe, only with the discussion): forced too, PROBE_LAENGE, a discussion."""
     import mappen
-    if laenge not in LAENGEN or stimmen not in STIMMEN or sprache not in SPRACHEN:
+    if probe:
+        laenge, sofort = PROBE_LAENGE, True
+    elif laenge not in LAENGEN:
+        raise ValueError("laenge 5, 10 or 20, stimmen 2 or 3, sprache de or en")
+    if stimmen not in STIMMEN or sprache not in SPRACHEN:
         raise ValueError("laenge 5, 10 or 20, stimmen 2 or 3, sprache de or en")
     now = int(now or time.time())
     day = datetime.datetime.fromtimestamp(now).strftime("%Y-%m-%d")
-    stil = "diskussion" if diskussion_on(uid) else ""
+    stil = "diskussion" if probe or diskussion_on(uid) else ""
     with _Db(uid) as con:
         m = mappen._get(con, mid)
         if not m:
@@ -592,9 +604,9 @@ def bitte(uid, mid, laenge, stimmen, now=None, sprache="de", sofort=False, reque
         documents.count_today(uid, day, add=1, key="hoerstueck")
     hid = secrets.token_hex(6)
     with _Db(uid) as con:
-        con.execute("INSERT INTO hs_stueck (id, mappe, laenge, stimmen, stand, made, sprache, sofort, stil) "
-                    "VALUES (?, ?, ?, ?, 'wartet', ?, ?, ?, ?)", (hid, mid, laenge, stimmen, now, sprache,
-                                                                 int(bool(sofort)), stil))
+        con.execute("INSERT INTO hs_stueck (id, mappe, laenge, stimmen, stand, made, sprache, sofort, stil, probe) "
+                    "VALUES (?, ?, ?, ?, 'wartet', ?, ?, ?, ?, ?)", (hid, mid, laenge, stimmen, now, sprache,
+                                                                    int(bool(sofort)), stil, int(bool(probe))))
     _day.today()["neu"] += 1
     return hid, ""
 
@@ -627,7 +639,7 @@ def _kurz(r, sig_now):
             "ton": bool(r["datei"]), "fehler": r["fehler"] or "", "sprache": _sprache(r),
             "geaendert": bool(r["sig"]) and sig_now is not None and r["sig"] != sig_now,
             "laeuft": _now.get("id") == r["id"], "sofort": bool(r["sofort"]), "erzwungen": _sofort.get("id") == r["id"],
-            "warten": _warten(r), "stil": _stil(r),
+            "warten": _warten(r), "stil": _stil(r), "probe": bool(r["probe"]),
             "kapitel": list(hd.fortschritt(r)) if _stil(r) and r["stand"] == "wartet" else [0, 0]}
 
 
@@ -679,6 +691,7 @@ def fertige(uid, n=AUTO_MAX):
 def eins(uid, hid):
     """One Hörstück with its script: every line with its role and, for a line with a place, the document's title,
     page and heading (the chip in the panel). None when there is none of this profile."""
+    import hoerstueck_diskussion as hd
     import mappen
     if not _exists(uid):
         return None
@@ -705,6 +718,8 @@ def eins(uid, hid):
         if x.get("art") == "inhalt":
             y.update(doc=x.get("doc"), dok=names.get(x.get("doc"), ""), page=x.get("page"), part=x.get("part") or "",
                      da=x.get("doc") in names)
+        elif x.get("art") == "rueck":     # a short reaction of the fixed list (hoerstueck_diskussion.rueckmeldungen)
+            y.update(kapitel=x.get("kapitel"), kart=x.get("kart") or "")
         elif x.get("art") == "beitrag":   # a contribution of the discussion: every sentence with its place or „Gespräch“
             ss = []
             for s in x.get("saetze") if isinstance(x.get("saetze"), list) else []:
@@ -715,7 +730,8 @@ def eins(uid, hid):
                     t.update(doc=s.get("doc"), dok=names.get(s.get("doc"), ""), page=s.get("page"),
                              part=s.get("part") or "", da=s.get("doc") in names)
                 ss.append(t)
-            y.update(saetze=ss, weise=x.get("weise") or "", kapitel=x.get("kapitel"), kart=x.get("kart") or "")
+            y.update(saetze=ss, weise=x.get("weise") if x.get("weise") in hd.weisen() else "", kapitel=x.get("kapitel"),
+                     kart=x.get("kart") or "")
         lines.append(y)
     out["drehbuch"] = lines
     out["rollen"] = {k: list(v) for k, v in ROLLEN.items()}
@@ -795,7 +811,7 @@ async def drehbuch(uid, r, name, now):
     offen = await asyncio.to_thread(stellen, uid, r["mappe"])
     with _Db(uid) as con:
         sig = sig_of(con, r["mappe"])
-    zeichen = LAENGEN.get(r["laenge"], LAENGEN[5])
+    zeichen = zeichen_von(r)
     if not offen:
         await asyncio.to_thread(_set, uid, r["id"], stand="leer", sig=sig, fehler="kein text")
         _day.today()["leer"] += 1
@@ -895,8 +911,10 @@ def zusammen(uid, hid, z):
     """The end (worker thread): the parts in order with PAUSE_MS between two voices, one Opus file and its AAC copy
     through ffmpeg, the parts gone. Every line gets "ab", the second it starts in the sound (the panel and the app mark
     the line while it plays). Returns the seconds, or None when ffmpeg failed."""
+    import hoerstueck_diskussion as hd
     d = _parts(uid, hid)
-    rate, frames, last = None, 0, None
+    rate, frames, last, prev = None, 0, None, None
+    disk = any(y.get("art") == "beitrag" for y in z)    # a discussion: the pauses by its fixed rules
     whole = os.path.join(d, "ganz.wav")
     with wave.open(whole, "wb") as out:
         out.setnchannels(1)
@@ -913,13 +931,14 @@ def zusammen(uid, hid, z):
             elif r_ != rate:
                 continue          # (one speech output speaks at one rate; another never goes in)
             if last is not None:
-                gap = int(rate * (PAUSE_MS if x.get("sprecher") != last else PAUSE_KURZ_MS) / 1000)
+                ms = hd.pause_ms(prev, x) if disk else PAUSE_MS if x.get("sprecher") != last else PAUSE_KURZ_MS
+                gap = int(rate * ms / 1000)
                 out.writeframes(b"\0\0" * gap)
                 frames += gap
             x["ab"] = round(frames / rate, 2)
             out.writeframes(pcm)
             frames += len(pcm) // 2
-            last = x.get("sprecher")
+            last, prev = x.get("sprecher"), x
         if rate is None:
             out.setframerate(RATE)
     if not frames:
@@ -951,23 +970,34 @@ async def zeile(uid, r, now, name=""):
                                 zeilen=json.dumps(z, ensure_ascii=False))
         _day.today()["fertig"] += 1
         print(f"hoerstueck: fertig | {secs} s {len(z)} zeilen | {who}", flush=True)
+        if r.get("probe"):
+            _day.today()["hoerproben"] += 1
+            print(f"hoerstueck: hoerprobe | fertig | {who}", flush=True)
         live.bg_done("Hörstück", True, None)
         await melden(uid, name, _sprache(r))
         return "fertig"
     x = z[i]
-    voice, klang = await stimme_von(x.get("sprecher") if x.get("sprecher") in SPRECHER else "A")
+    if x.get("art") == "rueck" and await asyncio.to_thread(_rueck_kopie, uid, r["id"], z, i):
+        # a short reaction this voice said before in this Hörstück: its part again, never a second request
+        await asyncio.to_thread(_set, uid, r["id"], fertig_zeilen=i + 1)
+        _day.today()["rueck_kopie"] += 1
+        print(f"hoerstueck: zeile | {i + 1} von {len(z)} | rueckmeldung behalten | {who}", flush=True)
+        return "zeile"
+    import hoerstueck_diskussion as hd
+    voice, klang = await stimme_von(x.get("sprecher") if x.get("sprecher") in SPRECHER else "A", _stil(r))
+    art = hd.zusatz(x.get("weise")) if x.get("art") == "beitrag" else ""   # only the panel's fixed addition
     sprache = _sprache(r)
     key = (uid, r["id"], i)
     t0 = time.time()
     _now.update(uid=uid, id=r["id"], was="zeile")
     try:
         try:
-            raw = await vorrang.run("Hörstück", lambda: ton(x["text"], voice, klang, sprache), retries=0)
+            raw = await vorrang.run("Hörstück", lambda: ton(x["text"], voice, klang, sprache, art), retries=0)
         except RuntimeError as e:
             if not klang or not str(e).startswith("tts 503"):
                 raise
             _stimmen.update(design=False, t=time.time())   # VoiceDesign not up: the standard voice stands in
-            raw = await vorrang.run("Hörstück", lambda: ton(x["text"], voice, "", sprache), retries=0)
+            raw = await vorrang.run("Hörstück", lambda: ton(x["text"], voice, "", sprache, art), retries=0)
     except vorrang.Busy:
         _day.today()["abgebrochen"] += 1
         print(f"hoerstueck: abgebrochen | sprache | zeile {i + 1} | {who}", flush=True)
@@ -1000,19 +1030,43 @@ async def zeile(uid, r, now, name=""):
         print(f"hoerstueck: weg | geloescht | {who}", flush=True)
         return "fehler"
     _day.today()["zeilen"] += 1
+    _day.today()["weise"] += bool(art)
+    _day.today()["rueck"] += x.get("art") == "rueck"
     print(f"hoerstueck: zeile | {i + 1} von {len(z)} | {who}", flush=True)
     return "zeile"
+
+
+def _rueck_kopie(uid, hid, z, i):
+    """A short reaction (art rueck) the same voice said before in this Hörstück with the same word: its part copied to
+    line i (spoken once per voice and kept for the Hörstück). Returns True when it was copied."""
+    x = z[i]
+    for j in range(i):
+        y = z[j]
+        if y.get("art") == "rueck" and y.get("sprecher") == x.get("sprecher") and y.get("text") == x.get("text"):
+            src = os.path.join(_parts(uid, hid), f"{j:03d}.wav")
+            if os.path.isfile(src):
+                dst = os.path.join(_parts(uid, hid), f"{i:03d}.wav")
+                shutil.copyfile(src, dst + ".tmp")
+                os.chmod(dst + ".tmp", 0o600)
+                os.replace(dst + ".tmp", dst)
+                return True
+    return False
 
 
 async def due_once(now=None):
     """KETTE (wissen.due_once, after the Auswertungen): one step of one Hörstück of one profile, only in quiet minutes:
     the script, or exactly one line spoken. Never while the speech output is gone."""
-    if not admin_on() or _sofort:     # a forced one runs: it goes first, the chain leaves the Hörstücke alone
+    if not admin_on():
+        return None
+    now = time.time() if now is None else now
+    if now - _probe_at["t"] >= PROBE_TAKT:
+        _probe_at["t"] = now
+        await asyncio.to_thread(proben_weg, now)
+    if _sofort:                       # a forced one runs: it goes first, the chain leaves the Hörstücke alone
         return None
     import wissen
     if not wissen.quiet():
         return None
-    now = time.time() if now is None else now
     for uid in profiles.user_ids():
         if not features.allowed("hoerstueck", uid) or not _exists(uid):
             continue
@@ -1036,6 +1090,30 @@ async def due_once(now=None):
         await zeile(uid, r, now, name)
         return "hoerstueck"
     return None
+
+
+PROBE_TAKT = 3600        # seconds between two looks for old Hörproben
+_probe_at = {"t": 0.0}
+
+
+def proben_weg(now):
+    """Hörproben older than PROBE_S go with their files, in every profile (never one being made). Returns the count."""
+    n = 0
+    for uid in profiles.user_ids():
+        if not _exists(uid):
+            continue
+        with _Db(uid) as con:
+            ids = [r[0] for r in con.execute("SELECT id FROM hs_stueck WHERE probe=1 AND made<? AND id!=?",
+                                             (int(now - PROBE_S), _sofort.get("id") or ""))]
+            for hid in ids:
+                con.execute("DELETE FROM hs_stueck WHERE id=?", (hid,))
+        for hid in ids:
+            _weg_dateien(uid, hid)
+        n += len(ids)
+    if n:
+        _day.today(now)["hoerproben_weg"] += n
+        print(f"hoerstueck: hoerprobe | weg | {n}", flush=True)
+    return n
 
 
 # ---------------------------------------------------------------- „Sofort erstellen": only the admin
@@ -1236,7 +1314,8 @@ def for_live(now=None):
     """{"on", "stuecke", "warten", "sprechen", "zeilen_offen", "neu", "drehbuch", "zeilen", "verworfen", "fertig",
     "leer", "abgebrochen", "fehler", "tts", "grenze", "englisch", "m4a", "mitteilung", "telegram", "telegram_nein",
     "laeuft", "erzwungen", "wartet_auf", "erzwungen_heute", "erzwungen_nein", "diskussion", "plan", "plan_fest",
-    "kapitel_geplant", "kapitel", "kapitel_neu", "beitraege", "beitrag_schnitt", "gespraech_weg"}: sums over all profiles (remembered
+    "kapitel_geplant", "kapitel", "kapitel_neu", "beitraege", "beitrag_schnitt", "gespraech_weg", "weise", "rueck",
+    "rueck_kopie", "hoerproben", "hoerproben_weg"}: sums over all profiles (remembered
     LIVE_EVERY s) and today's counts; erzwungen is what the forced run does right now ("" or drehbuch, zeile, wartet),
     wartet_auf what the work on a Hörstück waits for (vorrang.grund: "" or gespraech, wartung, andere)."""
     now = time.time() if now is None else now
@@ -1267,6 +1346,7 @@ def for_live(now=None):
                 erzwungen_heute=d["erzwungen"], diskussion=diskussion_on(),
                 beitrag_schnitt=d["beitrag_zeichen"] // d["beitraege"] if d["beitraege"] else 0, **{k: d[k] for k in (
                     "plan", "plan_fest", "kapitel_geplant", "kapitel", "kapitel_neu", "beitraege", "gespraech_weg",
+                    "weise", "rueck", "rueck_kopie", "hoerproben", "hoerproben_weg",
                     "neu", "drehbuch", "zeilen", "verworfen", "fertig", "leer", "abgebrochen", "fehler", "tts", "grenze",
                     "englisch", "m4a", "mitteilung", "telegram", "telegram_nein", "erzwungen_nein")})
 
@@ -1350,7 +1430,9 @@ async def list_route(mid: str, request: Request, prof=Depends(own_profile)):
     return dict(got, heute=n, grenze=most, frei=coadmin.unbegrenzt(uid, request), max=GESPEICHERT_MAX,
                 laengen=sorted(LAENGEN), stimmen=list(STIMMEN),
                 rollen={k: list(v) for k, v in ROLLEN.items()}, sofort=coadmin.ist_admin(request, uid),
-                sofort_frei=not _sofort)
+                sofort_frei=not _sofort, diskussion=diskussion_on(uid),
+                # the admin's hint: a discussion's voices from a description need VoiceDesign on the speech output
+                design=await _design() if diskussion_on(uid) and coadmin.ist_admin(request, uid) else None)
 
 
 @router.get("/api/profile/hoerstuecke", dependencies=[Depends(assistant)])
@@ -1447,19 +1529,23 @@ SOFORT_SAY = {"admin": (403, "Sofort erstellen darf nur der Admin."),
               "form": (400, "laenge: 5, 10 or 20; stimmen: 2 or 3; sprache: de or en"),
               "keine mappe": (404, "no such Mappe"),
               "leer": (400, "In der Mappe liegt kein Dokument auf der Stufe kurz oder ganz."),
-              "voll": (400, f"Höchstens {GESPEICHERT_MAX} Hörstücke; lösch erst eins.")}
+              "voll": (400, f"Höchstens {GESPEICHERT_MAX} Hörstücke; lösch erst eins."),
+              "diskussion": (409, "Die Hörprobe gibt es nur mit dem Schalter „Hörstück als Diskussion“.")}
 
 
-async def _sofort_route(request, prof, mid=None, hid=None):
-    """Both ways of „Sofort erstellen": the admin check first (server side), then the one place, then the Hörstück."""
+async def _sofort_route(request, prof, mid=None, hid=None, probe=False):
+    """Both ways of „Sofort erstellen" and the Hörprobe: the admin check first (server side), then the one place, then
+    the Hörstück."""
     uid = prof["id"]
     _need(uid)
     guard.limit(request, "hoerstuecksofort", uid)
     b = await json_body(request, BODY, lenient=hid is not None)
     if not coadmin.ist_admin(request, uid):
         _sofort_nein("admin", prof, *SOFORT_SAY["admin"])
+    if probe and not diskussion_on(uid):
+        _sofort_nein("diskussion", prof, *SOFORT_SAY["diskussion"])
     laenge, stimmen, sprache = b.get("laenge", 5), b.get("stimmen", 2), b.get("sprache", "de")
-    if hid is None and (laenge not in LAENGEN or stimmen not in STIMMEN or isinstance(laenge, bool) or
+    if hid is None and ((laenge not in LAENGEN and not probe) or stimmen not in STIMMEN or isinstance(laenge, bool) or
                         isinstance(stimmen, bool) or sprache not in SPRACHEN):
         _sofort_nein("form", prof, *SOFORT_SAY["form"])
     async with _lock():
@@ -1467,8 +1553,9 @@ async def _sofort_route(request, prof, mid=None, hid=None):
         if held:
             _sofort_nein("laeuft", prof, *SOFORT_SAY["laeuft"])
         if hid is None:
-            hid, why = await asyncio.to_thread(bitte, uid, mid, laenge, stimmen, sprache=sprache, sofort=True)
-            was = "neu"
+            hid, why = await asyncio.to_thread(bitte, uid, mid, laenge, stimmen, sprache=sprache, sofort=True,
+                                               probe=probe)
+            was = "hoerprobe" if probe else "neu"
         else:
             why = await asyncio.to_thread(vorziehen, uid, hid)
             was = "vorgezogen"
@@ -1492,6 +1579,13 @@ async def _sofort_route(request, prof, mid=None, hid=None):
 async def sofort_neu_route(mid: str, request: Request, prof=Depends(own_profile)):
     """„Sofort erstellen": a new Hörstück at once, only the admin (Dominik 2026-11-05)."""
     return await _sofort_route(request, prof, mid=_id(mid, "Mappe"))
+
+
+@router.post("/api/profile/mappen/{mid}/hoerstuecke/probe", dependencies=[Depends(assistant)])
+async def probe_neu_route(mid: str, request: Request, prof=Depends(own_profile)):
+    """„Hörprobe (2 Min.)": the opening and one point of dispute of a discussion at once, only the admin, never counted,
+    gone after PROBE_S (Dominik 2026-11-10 „1-8“, plan hoerstueck-diskussion 8a)."""
+    return await _sofort_route(request, prof, mid=_id(mid, "Mappe"), probe=True)
 
 
 @router.post("/api/profile/hoerstueck/{hid}/sofort", dependencies=[Depends(assistant)])
@@ -1535,6 +1629,70 @@ async def delete_route(hid: str, request: Request, prof=Depends(own_profile)):
         raise HTTPException(404, "no such Hörstück")
     print("hoerstueck: geloescht | 1 |", profiles.log_name(prof), flush=True)
     return {"ok": True}
+
+
+# ---------------------------------------------------------------- the admin: voices of a discussion and their sample
+PROBE_SATZ = {"de": "Hallo, so klinge ich im Hörstück. Was steht eigentlich in den Unterlagen?",
+              "en": "Hello, this is how I sound in the audio overview. What do the documents actually say?"}
+PROBEN_MAX = 24          # samples kept in memory (role, description, language)
+_proben = {}
+_probe_lock = {}
+
+
+def _wav(raw):
+    """A WAV of what the speech output sent (PCM or WAV)."""
+    pcm, rate = pcm_of(raw)
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(rate)
+        w.writeframes(pcm)
+    return buf.getvalue()
+
+
+@router.get("/api/admin/hoerstueck/stimmen", dependencies=[Depends(auth)])
+async def stimmen_route(request: Request):
+    """The fixed descriptions per role (labels only), the admin's choice and whether VoiceDesign runs."""
+    import hoerstueck_diskussion as hd
+    guard.limit(request, "hoerstueck", admin=True)
+    return {"rollen": {sp: [[de, en] for de, en, _ in hd.klaenge(sp)] for sp in SPRECHER}, "wahl": hd.klang_wahl(),
+            "design": await _design(), "namen": {k: list(v) for k, v in ROLLEN.items()}}
+
+
+@router.get("/api/admin/hoerstueck/probe", dependencies=[Depends(auth)])
+async def probe_route(request: Request, rolle: str = "A", klang: str = "0", sprache: str = "de"):
+    """„▶ Probe": a fixed sentence in one role's fixed description through VoiceDesign, as WAV (the admin listens, a
+    person in the foreground like the Dungeon's sample); kept in memory per role, description and language."""
+    import hoerstueck_diskussion as hd
+    import tonteile
+    guard.limit(request, "hoerstueckprobe", admin=True)
+    xs = hd.klaenge(rolle) if rolle in SPRECHER else []
+    if not xs or not re.fullmatch(r"\d", klang) or int(klang) >= len(xs) or sprache not in SPRACHEN:
+        raise HTTPException(400, "rolle: A, B or C; klang: a number of the list; sprache: de or en")
+    if not await _design():
+        print("hoerstueck: probe | aus | voicedesign", flush=True)
+        raise HTTPException(409, "VoiceDesign ist aus: Einstellungen → Sprachausgabe → „VoiceDesign zusätzlich bereitstellen“.")
+    key = (rolle, int(klang), sprache)
+    if key not in _proben:
+        loop = asyncio.get_running_loop()
+        if loop not in _probe_lock:
+            _probe_lock.clear()
+            _probe_lock[loop] = asyncio.Lock()
+        async with _probe_lock[loop]:
+            try:
+                raw = await tonteile.sprich(PROBE_SATZ[sprache], klang=xs[int(klang)][2], frist=TON_FRIST,
+                                            grenze=TON_GRENZE, sprache="English" if sprache == "en" else "German")
+            except Exception as e:   # noqa: BLE001  (busy or gone: said in words, never the error's text)
+                print(f"hoerstueck: probe | fehler | {type(e).__name__}", flush=True)
+                raise HTTPException(503, "Die Sprachausgabe ist gerade belegt oder fehlt; gleich noch einmal.")
+            while len(_proben) >= PROBEN_MAX:
+                _proben.pop(next(iter(_proben)))
+            _proben[key] = _wav(raw)
+        print("hoerstueck: probe | neu", flush=True)
+    else:
+        print("hoerstueck: probe | behalten", flush=True)
+    return Response(_proben[key], media_type="audio/wav", headers={"Cache-Control": "no-store"})
 
 
 # ---------------------------------------------------------------- Ich → Daten löschen: with the Mappen they are made of

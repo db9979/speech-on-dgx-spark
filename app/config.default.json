@@ -284,6 +284,7 @@
     "hoerstueck_day": 3,
     "hoerstueck_stimmen": [],
     "hoerstueck_diskussion": false,
+    "hoerstueck_klang": [],
     "doc_auswertung": false,
     "doc_auswertung_auto": ["kurz", "kern"],
     "doc_auswertung_day": 100,

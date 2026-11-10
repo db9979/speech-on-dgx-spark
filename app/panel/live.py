@@ -2236,7 +2236,11 @@ def snapshot(view="admin", now=None):
                             + (f" ({hsn['plan_fest']}× Plan des Panels)" if hsn.get("plan_fest") else "")
                             + f", {hsn.get('kapitel', 0)} geschrieben, {hsn.get('kapitel_neu', 0)} neu geschrieben (flach),"
                             + f" Beiträge im Schnitt {hsn.get('beitrag_schnitt', 0)} Zeichen,"
-                            + f" {hsn.get('gespraech_weg', 0)} Gesprächssätze verworfen") if hsn.get("diskussion") else "")
+                            + f" {hsn.get('gespraech_weg', 0)} Gesprächssätze verworfen,"
+                            + f" {hsn.get('weise', 0)} Zeilen mit Sprechweise, {hsn.get('rueck', 0)} Rückmeldungen gesprochen"
+                            + f" ({hsn.get('rueck_kopie', 0)} behalten), {hsn.get('hoerproben', 0)} Hörproben fertig"
+                            + (f", {hsn['hoerproben_weg']} alte Hörproben gelöscht" if hsn.get("hoerproben_weg") else ""))
+                           if hsn.get("diskussion") else "")
                         + (f" · heute {hsn['erzwungen_heute']}× sofort erstellt" if hsn.get("erzwungen_heute") else "")
                         + (f", {hsn['erzwungen_nein']}× abgelehnt" if hsn.get("erzwungen_nein") else "")
                         + (f" · {hsn['leer']} ohne genug Zeilen" if hsn.get("leer") else "")

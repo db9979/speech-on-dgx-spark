@@ -102,9 +102,9 @@ class Voice:
     def __init__(self, fail=None):
         self.calls, self.fail = [], fail
 
-    async def __call__(self, text, voice, klang, sprache="de"):
+    async def __call__(self, text, voice, klang, sprache="de", art=""):
         self.calls.append((text, voice, klang))
-        self.sprache = sprache
+        self.sprache, self.art = sprache, art
         if self.fail:
             raise self.fail
         return pcm()
@@ -336,7 +336,7 @@ class Flow(Base):
         self.step(uid, voice=v)                                       # the opening: A
         self.assertEqual(v.calls[-1][1:], ("ryan", ""))
         hoerstueck._stimmen.update(t=NOW * 2, design=True)
-        self.assertEqual(run(hoerstueck.stimme_von("B")), ("", hoerstueck.KLANG["B"]))
+        self.assertEqual(run(hoerstueck.stimme_von("B")), ("", "Sachlicher Sprecher mit tiefer, ruhiger Stimme, deutlich und langsam"))
         self.assertEqual(run(hoerstueck.stimme_von("C")), ("vivian", ""))
         import admin
         from fastapi import HTTPException
@@ -524,13 +524,13 @@ class Sofort(Base):
             return 0
 
         class Ton(Voice):
-            async def __call__(self, text, voice, klang, sprache="de"):
+            async def __call__(self, text, voice, klang, sprache="de", art=""):
                 order.append("ton")
                 if len(self.calls) == 2 and not getattr(self, "once", False):
                     self.once = True
                     self.calls.append((text, voice, klang))
                     raise vorrang.Busy("Hörstück")                          # somebody speaks: the line goes
-                return await super().__call__(text, voice, klang, sprache)
+                return await super().__call__(text, voice, klang, sprache, art)
         v = Ton()
         self.assertEqual(self.lauf(uid, hid, voice=v, quiet_q=q), "fertig")
         got = hoerstueck.eins(uid, hid)

@@ -5499,6 +5499,20 @@
 "titel": "iPhone-App mit anderem Profil neu koppeln",
 "text": "Die iPhone-App ist mit Profil A gekoppelt, Push an, ein Gespräch ist offen und eine Frage wartet offline. Im Panel als Profil B unter Ich → iPhone-App einen Kopplungslink holen und in der App öffnen, „Koppeln“. Erwartet: das alte Gespräch und die wartende Frage sind weg und gehen nicht als B raus. Eine Erinnerung für A (Push) kommt nicht mehr auf dieses iPhone, eine für B kommt. Ein Spark-Anruf an A klingelt nicht mehr auf diesem iPhone.",
 "thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P812",
+"v": 1364,
+"titel": "Hörstück als Diskussion: Sprechweise, Stimmen, Pausen, Rückmeldungen",
+"text": "Einstellungen → Sprachausgabe → „VoiceDesign zusätzlich bereitstellen“ an. Dann Funktionen → Eigene Dokumente → Mappen → Hörstück aus einer Mappe, unter „Stimmen der Diskussion“ je Rolle eine Beschreibung wählen und mit „▶ Probe“ anhören (der erste Klang dauert ein paar Sekunden, der zweite kommt sofort), speichern. VoiceDesign aus: „▶ Probe“ sagt, dass VoiceDesign fehlt, und die Mappen-Seite zeigt den Hinweis mit dem Weg. Ein Hörstück als Diskussion erstellen: im Drehbuch tragen Beiträge eine Sprechweise (neugierig, skeptisch …), dazwischen kurze „Rückmeldung“ wie „Mhm.“ oder „Genau.“. Anhören: Fragen kommen schneller dran, nach einem Kapitel eine längere Pause, die Rollen klingen verschieden und nicht nach Vorlesen. Zustand → Live, Kasten Hörstück: Zahl der Sprechweisen und Rückmeldungen. Zustand → Logs (Wissen): nur „hoerstueck: …“ mit Zahlen, nie ein Satz. Mit dem Schalter aus klingt ein neues Hörstück wie bisher.",
+"thread": "Hörstück als Diskussion"
+},
+{
+"id": "P813",
+"v": 1364,
+"titel": "Hörprobe einer Diskussion und Drehbuch im iPhone",
+"text": "Admin, „Hörstück als Diskussion“ an: in einer Mappe mit Dokumenten auf kurz oder ganz „Hörprobe (2 Min.)“ tippen. Die Liste zeigt „Hörprobe · …“, nach wenigen Minuten etwa zwei Minuten Ton mit Einstieg und einer Streitfrage; „heute … von …“ zählt nicht hoch. Schalter aus: der Knopf ist weg. Ein anderes Profil sieht den Knopf nie. iPhone-App, dieselbe Mappe → Hörstück: im Drehbuch Kapitel-Überschriften, „Gespräch“, Sprechweise und „Rückmeldung“, in Englisch ebenso. Am nächsten Tag ist die Hörprobe von selbst weg. Zustand → Logs (Wissen): „hoerstueck: hoerprobe | fertig“ und „hoerstueck: hoerprobe | weg | 1“, Zustand → Live, Kasten Hörstück: Hörproben gemacht und weg.",
+"thread": "Hörstück als Diskussion"
 }
 ]
 }

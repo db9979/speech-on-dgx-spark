@@ -2581,7 +2581,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Hörstück aus einer Mappe",
 "title": "Hörstück aus einer Mappe",
-"text": "enprobe auch für Zahlwörter, ein Gesprächssatz ohne Stelle hat höchstens 160 Zeichen, keine Zahl und nur Wörter der Stellen des Kapitels oder der festen Liste (hoerstueck_diskussion.gespraech_ok), höchstens 0.4 der Sätze. hoerstueck_diskussion.guete misst jedes Kapitel mit festen Zahlen; ein flaches wird genau einmal mit festen Hinweisen neu geschrieben, das bessere bleibt."
+"text": "enprobe auch für Zahlwörter, ein Gesprächssatz ohne Stelle hat höchstens 160 Zeichen, keine Zahl und nur Wörter der Stellen des Kapitels oder der festen Liste (hoerstueck_diskussion.gespraech_ok), höchstens 0.4 der Sätze. hoerstueck_diskussion.guete misst jedes Kapitel mit festen Zahlen; ein flaches wird genau einmal mit festen Hinweisen neu geschrieben, das bessere bleibt. Die Sprechweise eines Beitrags ist ein Wort einer festen Liste; zur Sprachausgabe geht nur der feste englische Zusatz des Panels (hoerstueck_diskussion.zusatz, als art von tonteile.sprich: bei VoiceDesign an der Beschreibung der Rolle, sonst als instructions), die Stimmen sind feste Beschreibungen je Rolle (hoerstueck_diskussion.klang_von, „▶ Probe“ nur für den Admin). Pausen nach festen Regeln (hoerstueck_diskussion.pause_ms), kurze Rückmeldungen aus einer festen Liste (hoerstueck_diskussion.rueckmeldungen), je Stimme einmal gesprochen und behalten. Die Hörprobe des Admins ist eine Diskussion mit nur zwei Kapiteln und höchstens 1800 Zeichen, sofort, nie gezählt; hoerstueck.proben_weg löscht sie stündlich nach einem Tag samt Datei."
 },
 {
 "lang": "de",
@@ -3221,7 +3221,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Satz zum Sprechen: Das Panel schickt jeden Satz einer Antwort mit dem API-Schlüssel und der Stufe des Profils an den TTS-Dienst. Andere Programme dürfen das mit dem API-Schlüssel auch. Teile, die das Panel selbst sprechen lässt (Vorlesen im Dungeon, Zeilen eines Hörstücks), gehen über den einen Helfer tonteile.sprich; ein Hörstück im Hintergrund mit der Stufe hinten und dem Schlüssel, so zählt es nie als Sprache (common.signed_low) und wartet hinter jeder Person; es nennt die Sprache seines Drehbuchs (German oder English). 2. Schlüssel und Größe in Ordnung?: BodyLimit lehnt zu große Anfragen und solche ohne den richtigen Schlüssel ab, bevor etwas gelesen wird. 3. Text gültig?: Der Text darf nicht leer sein und höchstens 20000 Zeichen haben. Eine Vorlage-Stimme nimmt check_reference nur als eingebettete data:audio-Adresse an, nie als Link: die Engine würde einen Link sonst selbst aus dem Heimnetz holen. 4. Engine bereit?: Eine VoiceDesign-Anfrage geht an die zweite Engine, wenn sie eingeschaltet ist; alles andere an die Haupt-Engine. engine_status fragt deren /health und nennt sonst den Grund. 5. Markdown weg, Geheimnisse verdeckt: speech_markdown nimmt die Zeichen der Formatieru"
+"text": "1. Satz zum Sprechen: Das Panel schickt jeden Satz einer Antwort mit dem API-Schlüssel und der Stufe des Profils an den TTS-Dienst. Andere Programme dürfen das mit dem API-Schlüssel auch. Teile, die das Panel selbst sprechen lässt (Vorlesen im Dungeon, Zeilen eines Hörstücks), gehen über den einen Helfer tonteile.sprich; ein Hörstück im Hintergrund mit der Stufe hinten und dem Schlüssel, so zählt es nie als Sprache (common.signed_low) und wartet hinter jeder Person; es nennt die Sprache seines Drehbuchs (German oder English). Ein Hörstück als Diskussion gibt mit art den festen englischen Zusatz des Panels für die Sprechweise mit (bei VoiceDesign an der Beschreibung, sonst als instructions); ohne art bleibt jeder Aufruf genau wie bisher. 2. Schlüssel und Größe in Ordnung?: BodyLimit lehnt zu große Anfragen und solche ohne den richtigen Schlüssel ab, bevor etwas gelesen wird. 3. Text gültig?: Der Text darf nicht leer sein und höchstens 20000 Zeichen haben. Eine Vorlage-Stimme nimmt check_reference nur als eingebettete data:audio-Adresse an, nie als Link: die Engine würde einen Link sonst selbst aus dem Heimnetz holen. 4. Engine bereit?: Eine VoiceDesign-Anfrage geht an die zweite Eng"
 },
 {
 "lang": "de",
@@ -3229,7 +3229,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ng heraus, dann ersetzt hide_secrets Passwörter, Codewörter, Einmal-Codes und Schlüssel durch „nur schriftlich sichtbar“. Das läuft auf jeder Anfrage, auch wenn „Text bereinigen“ aus ist; die geschriebene Antwort behält den Wert. 6. Text bereinigen: clean_text nimmt Emojis, „haha“, *lacht*, Codeblöcke und Links heraus, beruhigt auf Wunsch Ausrufe und setzt ans Zeilenende einen Punkt, damit die Stimme absetzt. Bleibt nichts übrig, kommt keine Anfrage an die Engine. 7. Sprache, Aussprache, Zahlen: Steht die Sprache auf Auto, rät guess_language an häufigen Wörtern Deutsch oder Englisch, damit ein einzelnes englisches Wort nicht den Ton der ganzen Antwort ändert. Dann gilt die eigene Aussprache-Liste, danach schreibt speak_abbreviations Abkürzungen aus („z. B.“, „ca.“, „€/Monat“) und speak_numbers Datum, Uhrzeit, Geld, Zahlen und Einheiten (km/h, kWh, kg, GB …). 8. Stimme wählen: Temperatur, top_p und ein fester Seed aus den Einstellungen halten die Stimme von Satz zu Satz gleich. Ein Base-Modell spricht mit einer geklonten Stimme aus voices/ (apply_clone); ein unbekannter Name fällt auf die Standardstimme zurück. Mit „Referenz der eigenen Stimme kürzen“ (tts.ref_max_s) nimmt es statt "
+"text": "ine, wenn sie eingeschaltet ist; alles andere an die Haupt-Engine. engine_status fragt deren /health und nennt sonst den Grund. 5. Markdown weg, Geheimnisse verdeckt: speech_markdown nimmt die Zeichen der Formatierung heraus, dann ersetzt hide_secrets Passwörter, Codewörter, Einmal-Codes und Schlüssel durch „nur schriftlich sichtbar“. Das läuft auf jeder Anfrage, auch wenn „Text bereinigen“ aus ist; die geschriebene Antwort behält den Wert. 6. Text bereinigen: clean_text nimmt Emojis, „haha“, *lacht*, Codeblöcke und Links heraus, beruhigt auf Wunsch Ausrufe und setzt ans Zeilenende einen Punkt, damit die Stimme absetzt. Bleibt nichts übrig, kommt keine Anfrage an die Engine. 7. Sprache, Aussprache, Zahlen: Steht die Sprache auf Auto, rät guess_language an häufigen Wörtern Deutsch oder Englisch, damit ein einzelnes englisches Wort nicht den Ton der ganzen Antwort ändert. Dann gilt die eigene Aussprache-Liste, danach schreibt speak_abbreviations Abkürzungen aus („z. B.“, „ca.“, „€/Monat“) und speak_numbers Datum, Uhrzeit, Geld, Zahlen und Einheiten (km/h, kWh, kg, GB …). 8. Stimme wählen: Temperatur, top_p und ein fester Seed aus den Einstellungen halten die Stimme von Satz zu Satz g"
 },
 {
 "lang": "de",
@@ -3237,7 +3237,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "einer langen Aufnahme ein Stück davon: kurzref.cut_at schneidet einmal an der leisesten Stelle vor der Grenze, die Spracherkennung schreibt das Stück auf, kurzref.keep_words behält davon die Wörter des eigenen Textes (mindestens 70 % gleich, sonst bleibt die ganze Aufnahme). Bis das Stück fertig ist, gilt die ganze Aufnahme. 9. Gestreamt mit anderem Tempo?: vllm-omni nimmt beim Streamen kein Tempo an. Dann streckt tempo.Stretcher den Ton Stück für Stück selbst (WSOLA, die Tonhöhe bleibt). 10. Warten nach Vorrang: PrioGate lässt so viele Sätze durch, wie die Engine gleichzeitig nimmt (engine_max_seqs); die anderen warten nach Stufe, dann nach Ankunft. 11. Engine spricht: Die Engine erzeugt den Ton. Gestreamt kommt er als Stücke zurück; das erste Stück ist absichtlich klein (initial_chunk_frames), damit der Ton schnell beginnt, auch wenn mehrere Anfragen laufen. „Mehrere Stimmen gleichzeitig“ (tts.engine_decode_batch) bündelt im Decoder bis zu 2 oder 4 Stimmen mit CUDA-Graphen, „Gleichen Anfang merken“ (tts.engine_prefix_cache) lässt die Engine den gleichen Anfang der Sätze einer Stimme wiederverwenden; beide stehen auf aus (Standard von vllm-omni). 12. Ton zurück: Der Proxy reicht d"
+"text": "leich. Ein Base-Modell spricht mit einer geklonten Stimme aus voices/ (apply_clone); ein unbekannter Name fällt auf die Standardstimme zurück. Mit „Referenz der eigenen Stimme kürzen“ (tts.ref_max_s) nimmt es statt einer langen Aufnahme ein Stück davon: kurzref.cut_at schneidet einmal an der leisesten Stelle vor der Grenze, die Spracherkennung schreibt das Stück auf, kurzref.keep_words behält davon die Wörter des eigenen Textes (mindestens 70 % gleich, sonst bleibt die ganze Aufnahme). Bis das Stück fertig ist, gilt die ganze Aufnahme. 9. Gestreamt mit anderem Tempo?: vllm-omni nimmt beim Streamen kein Tempo an. Dann streckt tempo.Stretcher den Ton Stück für Stück selbst (WSOLA, die Tonhöhe bleibt). 10. Warten nach Vorrang: PrioGate lässt so viele Sätze durch, wie die Engine gleichzeitig nimmt (engine_max_seqs); die anderen warten nach Stufe, dann nach Ankunft. 11. Engine spricht: Die Engine erzeugt den Ton. Gestreamt kommt er als Stücke zurück; das erste Stück ist absichtlich klein (initial_chunk_frames), damit der Ton schnell beginnt, auch wenn mehrere Anfragen laufen. „Mehrere Stimmen gleichzeitig“ (tts.engine_decode_batch) bündelt im Decoder bis zu 2 oder 4 Stimmen mit CUDA-Gra"
 },
 {
 "lang": "de",
@@ -3245,7 +3245,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "en Ton unverändert weiter und zählt nur Dauer, Länge und Fehler für das Monitoring, nie den Text."
+"text": "phen, „Gleichen Anfang merken“ (tts.engine_prefix_cache) lässt die Engine den gleichen Anfang der Sätze einer Stimme wiederverwenden; beide stehen auf aus (Standard von vllm-omni). 12. Ton zurück: Der Proxy reicht den Ton unverändert weiter und zählt nur Dauer, Länge und Fehler für das Monitoring, nie den Text."
 },
 {
 "lang": "de",
@@ -6134,6 +6134,30 @@
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
 "text": "sen des Panels neu geschrieben, das bessere bleibt. Höchstens 11 Modellaufrufe je Stück. Die Liste sagt „Drehbuch entsteht · Kapitel 2 von 4“. Live (Zustand → Live, Kasten Hörstück) zeigt nur Zahlen: Kapitel geplant, geschrieben, neu geschrieben, Beitragslänge im Schnitt, verworfene Gesprächssätze. Journal mit festen Wörtern: hoerstueck: plan | 4 kapitel, hoerstueck: kapitel | 2 von 4 | …, hoerstueck: flach | nochmal | kapitel 2. Ehrlich: die Wortprobe verhindert erfundene Namen, Zahlen und Fachwörter, nicht jede erfundene Behauptung aus erlaubten Wörtern; deshalb verlangt der Prompt Fragen und Reaktionen statt Aussagen, und „Gespräch“ zeigt, was nicht belegt ist."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Hörstück als Diskussion, Teil 2: Sprechweise, Stimmen, Pausen (V01.1.364, Plan *hoerstueck-diskussion* 4a und 5a): kein neuer Schalter, alles hängt an *Hörstück als Diskussion*. Sprechweise je Beitrag: das Modell nennt ein Wort einer festen Liste (neugierig, nachdenklich, begeistert, skeptisch, lachend, ernst, ruhig); zur Sprachausgabe geht nie dieses Wort, nur der feste englische Zusatz des Panels aus hoerstueck_stimmen.json (hoerstueck_diskussion.zusatz, ein unbekanntes Wort ergibt keinen Zusatz). tonteile.sprich hat dafür den Parameter art (Standard leer, jeder Aufruf ohne ihn bleibt genau wie bisher, auch im Dungeon): bei VoiceDesign hängt er an der Beschreibung der Rolle, bei einer gewählten oder der Standardstimme geht er als instructions mit, was 1.7B-CustomVoice auswertet; mit 0.6B klingt es wie bisher, die Texte sind trotzdem lebendiger. Stimmen: unter dem Schalter wählt der Admin je Rolle eine feste Beschreibung (je sechs, Eintrag 0 ist die bisherige Standardstimme; chat.hoerstueck_klang) und hört sie mit „▶ Probe“ an (GET /api/admin/hoerstueck/probe, nur Admin, fester Satz, im Speicher behalten; GET /api/admin/hoerstueck/stimmen liefert nur die Namen). Sie gilt für Rolle"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "n mit „Standardstimme“ und braucht VoiceDesign: *Einstellungen → Sprachausgabe → „VoiceDesign zusätzlich bereitstellen“* (lädt das festgelegte Modell beim ersten Start selbst und bleibt dann geladen). Ist es aus, sagen die Einstellungen und für den Admin die Hörstück-Seite einer Mappe das mit diesem Weg; gesprochen wird dann mit der Standardstimme. Pausen nach festen Regeln statt immer 300 ms: Antwort nach einer Frage 200 ms, Einwand 120 ms, dieselbe Stimme 250 ms, neues Kapitel 900 ms, vor dem Fazit 700 ms. Rückmeldungen („Mhm.“, „Genau.“, „Ach so.“, „Stimmt.“, feste Liste, englisch „Mhm.“, „Right.“ …) als eigene kurze Zeilen dort, wo das Modell rueckmeldung markiert, höchstens 10 % der Beiträge, nie am Ende; dasselbe Wort derselben Stimme wird einmal gesprochen und danach als Teil wiederverwendet. Im Drehbuch stehen Sprechweise und „Rückmeldung“ als Hinweis. Live zählt Zeilen mit Sprechweise und Rückmeldungen (gesprochen, behalten)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Hörstück als Diskussion, Teil 3: Hörprobe und iPhone (V01.1.364, Plan *hoerstueck-diskussion* 8a): der Admin kann in einer Mappe mit „Hörprobe (2 Min.)“ gleich eine kurze Diskussion machen lassen: nur Einstieg und ein Streitpunkt (zwei Kapitel, höchstens 1800 Zeichen), sofort wie „Sofort erstellen“ (POST /api/profile/mappen/{id}/hoerstuecke/probe, nur Admin, Rate-Limit wie „Sofort erstellen“, ohne den Schalter *Hörstück als Diskussion* 409 mit dem Weg). Sie zählt nie zur Tagesgrenze, steht in der Liste als „Hörprobe · …“ und ist nach einem Tag samt Tondatei von selbst weg (hoerstueck.proben_weg, stündlich). Die iPhone-App zeigt im Drehbuch Kapitel-Überschriften, „Gespräch“, die Sprechweise, „Rückmeldung“ und die Hörprobe. Live zählt Hörproben (gemacht, weg), Logs nur „hoerstueck: hoerprobe | fertig“ und „… | weg | Zahl“."
 },
 {
 "lang": "de",
@@ -21277,7 +21301,7 @@
 "file": "Architecture and data flow",
 "head": "Audio overview of a collection",
 "title": "Audio overview of a collection",
-"text": "160 characters, no number and only words of the chapter's places or the fixed list (hoerstueck_diskussion.gespraech_ok), at most 0.4 of the sentences. hoerstueck_diskussion.guete measures every chapter with fixed numbers; a flat one is written exactly once more with fixed hints, the better one stays."
+"text": "160 characters, no number and only words of the chapter's places or the fixed list (hoerstueck_diskussion.gespraech_ok), at most 0.4 of the sentences. hoerstueck_diskussion.guete measures every chapter with fixed numbers; a flat one is written exactly once more with fixed hints, the better one stays. A contribution's way of speaking is a word of a fixed list; only the panel's fixed English addition goes to the speech output (hoerstueck_diskussion.zusatz, as art of tonteile.sprich: with VoiceDesign at the role's description, else as instructions), the voices are fixed descriptions per role (hoerstueck_diskussion.klang_von, „▶ Probe“ only for the admin). Pauses by fixed rules (hoerstueck_diskussion.pause_ms), short reactions of a fixed list (hoerstueck_diskussion.rueckmeldungen), spoken once per voice and kept. The admin's sample is a discussion of only two chapters and at most 1800 characters, at once, never counted; hoerstueck.proben_weg deletes it hourly after a day with its file."
 },
 {
 "lang": "en",
@@ -21909,7 +21933,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A sentence to speak: The panel sends every sentence of an answer with the API key and the profile's stage to the TTS service. Other programs may do so too with the API key. Parts the panel has spoken itself (reading aloud in the Dungeon, lines of an audio overview) go through the one helper tonteile.sprich; an audio overview in the background with the stage last and the key, so it never counts as speech (common.signed_low) and waits behind every person; it names its script's language (German or English). 2. Key and size fine?: BodyLimit refuses requests that are too large or lack the right key before anything is read. 3. Text valid?: The text must not be empty and may have at most 20000 characters. check_reference takes a reference voice only as an embedded data:audio address, never as a link: the engine would otherwise fetch a link itself from the home network. 4. Engine ready?: A VoiceDesign request goes to the second engine when it is on; everything else to the main engine. engine_status asks its /health and otherwise names the reason. 5. Markdown off, secrets hidden: speech_markdown takes out the formatting signs, then hide_secrets replaces passwords, code words, one-time co"
+"text": "1. A sentence to speak: The panel sends every sentence of an answer with the API key and the profile's stage to the TTS service. Other programs may do so too with the API key. Parts the panel has spoken itself (reading aloud in the Dungeon, lines of an audio overview) go through the one helper tonteile.sprich; an audio overview in the background with the stage last and the key, so it never counts as speech (common.signed_low) and waits behind every person; it names its script's language (German or English). An audio overview as a discussion passes the panel's fixed English addition for the way of speaking as art (with VoiceDesign at the description, else as instructions); without art every call stays exactly as before. 2. Key and size fine?: BodyLimit refuses requests that are too large or lack the right key before anything is read. 3. Text valid?: The text must not be empty and may have at most 20000 characters. check_reference takes a reference voice only as an embedded data:audio address, never as a link: the engine would otherwise fetch a link itself from the home network. 4. Engine ready?: A VoiceDesign request goes to the second engine when it is on; everything else to the ma"
 },
 {
 "lang": "en",
@@ -21917,7 +21941,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "des and keys with „shown in writing only“. This runs on every request, also when „Clean text“ is off; the written answer keeps the value. 6. Clean the text: clean_text takes out emojis, „haha“, *laughs*, code blocks and links, calms exclamations if wanted and puts a full stop at the end of a line so the voice settles. If nothing is left, no request goes to the engine. 7. Language, pronunciation, numbers: When the language is Auto, guess_language guesses German or English from frequent words, so a single English word does not change the tone of the whole answer. Then the own pronunciation list applies, after that speak_abbreviations writes out abbreviations („z. B.“, „ca.“, „€/Monat“) and speak_numbers date, time, money, numbers and units (km/h, kWh, kg, GB …). 8. Pick the voice: Temperature, top_p and a fixed seed from the settings keep the voice the same from sentence to sentence. A Base model speaks with a cloned voice from voices/ (apply_clone); an unknown name falls back to the default voice. With „Shorten the reference of your own voice“ (tts.ref_max_s) it takes a piece of a long recording instead: kurzref.cut_at cuts once at the quietest point before the limit, speech recogni"
+"text": "in engine. engine_status asks its /health and otherwise names the reason. 5. Markdown off, secrets hidden: speech_markdown takes out the formatting signs, then hide_secrets replaces passwords, code words, one-time codes and keys with „shown in writing only“. This runs on every request, also when „Clean text“ is off; the written answer keeps the value. 6. Clean the text: clean_text takes out emojis, „haha“, *laughs*, code blocks and links, calms exclamations if wanted and puts a full stop at the end of a line so the voice settles. If nothing is left, no request goes to the engine. 7. Language, pronunciation, numbers: When the language is Auto, guess_language guesses German or English from frequent words, so a single English word does not change the tone of the whole answer. Then the own pronunciation list applies, after that speak_abbreviations writes out abbreviations („z. B.“, „ca.“, „€/Monat“) and speak_numbers date, time, money, numbers and units (km/h, kWh, kg, GB …). 8. Pick the voice: Temperature, top_p and a fixed seed from the settings keep the voice the same from sentence to sentence. A Base model speaks with a cloned voice from voices/ (apply_clone); an unknown name falls"
 },
 {
 "lang": "en",
@@ -21925,7 +21949,15 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "tion writes the piece down, kurzref.keep_words keeps the words of the own text (at least 70 % alike, else the whole recording stays). Until the piece is ready, the whole recording applies. 9. Streamed at another tempo?: vllm-omni takes no tempo when streaming. Then tempo.Stretcher stretches the sound piece by piece itself (WSOLA, the pitch stays). 10. Wait by priority: PrioGate lets as many sentences through as the engine takes at once (engine_max_seqs); the others wait by stage, then by arrival. 11. The engine speaks: The engine makes the sound. Streamed it comes back in pieces; the first piece is small on purpose (initial_chunk_frames) so the sound starts fast, also when several requests run. „Several voices at once“ (tts.engine_decode_batch) batches up to 2 or 4 voices in the decoder with CUDA graphs, „Remember the same beginning“ (tts.engine_prefix_cache) lets the engine reuse the same beginning of a voice's sentences; both are off (vllm-omni's default). 12. Sound back: The proxy passes the sound on unchanged and counts only time, length and errors for monitoring, never the text."
+"text": " back to the default voice. With „Shorten the reference of your own voice“ (tts.ref_max_s) it takes a piece of a long recording instead: kurzref.cut_at cuts once at the quietest point before the limit, speech recognition writes the piece down, kurzref.keep_words keeps the words of the own text (at least 70 % alike, else the whole recording stays). Until the piece is ready, the whole recording applies. 9. Streamed at another tempo?: vllm-omni takes no tempo when streaming. Then tempo.Stretcher stretches the sound piece by piece itself (WSOLA, the pitch stays). 10. Wait by priority: PrioGate lets as many sentences through as the engine takes at once (engine_max_seqs); the others wait by stage, then by arrival. 11. The engine speaks: The engine makes the sound. Streamed it comes back in pieces; the first piece is small on purpose (initial_chunk_frames) so the sound starts fast, also when several requests run. „Several voices at once“ (tts.engine_decode_batch) batches up to 2 or 4 voices in the decoder with CUDA graphs, „Remember the same beginning“ (tts.engine_prefix_cache) lets the engine reuse the same beginning of a voice's sentences; both are off (vllm-omni's default). 12. Sound b"
+},
+{
+"lang": "en",
+"src": "architecture",
+"file": "Architecture and data flow",
+"head": "Way",
+"title": "Way",
+"text": "ack: The proxy passes the sound on unchanged and counts only time, length and errors for monitoring, never the text."
 },
 {
 "lang": "en",
@@ -24710,6 +24742,30 @@
 "head": "Voice chat",
 "title": "Voice chat",
 "text": "e. The list says \"Script being written · chapter 2 of 4\". Live (Status → Live, box Hörstück) shows numbers only: chapters planned, written, rewritten, average contribution length, talk sentences dropped. Journal with fixed words: hoerstueck: plan | 4 kapitel, hoerstueck: kapitel | 2 von 4 | …, hoerstueck: flach | nochmal | kapitel 2. Honestly: the word check stops invented names, numbers and terms, not every invented claim made of allowed words; so the prompt asks for questions and reactions instead of statements, and \"Talk\" shows what is not backed."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Audio overview as a discussion, part 2: way of speaking, voices, pauses (V01.1.364, plan *hoerstueck-diskussion* 4a and 5a): no new switch, everything hangs on *Audio overview as a discussion*. Way of speaking per contribution: the model names a word of a fixed list (curious, thoughtful, enthusiastic, sceptical, laughing, serious, calm); that word never goes to the speech output, only the panel's fixed English addition from hoerstueck_stimmen.json (hoerstueck_diskussion.zusatz, an unknown word gives no addition). tonteile.sprich has the parameter art for it (empty by default, every call without it stays exactly as before, also in the Dungeon): with VoiceDesign it is added to the role's description, with a chosen or the standard voice it goes as instructions, which 1.7B-CustomVoice follows; with 0.6B it sounds as before, the texts are livelier anyway. Voices: below the switch the admin chooses a fixed description per role (six each, entry 0 is the standard voice of before; chat.hoerstueck_klang) and listens with \"▶ Sample\" (GET /api/admin/hoerstueck/probe, admin only, a fixed sentence, kept in memory; GET /api/admin/hoerstueck/stimmen gives the names only). It applies to roles with "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "\"Standard voice\" and needs VoiceDesign: *Settings → Speech output → \"Also provide VoiceDesign\"* (fetches the pinned model itself at its first start and then stays loaded). While it is off, the settings and for the admin the audio overview page of a collection say so with this way; then the standard voice speaks. Pauses by fixed rules instead of always 300 ms: answer after a question 200 ms, objection 120 ms, the same voice 250 ms, new chapter 900 ms, before the conclusion 700 ms. Reactions (\"Mhm.\", \"Genau.\", \"Ach so.\", \"Stimmt.\", fixed list, in English \"Mhm.\", \"Right.\" …) as short lines of their own where the model marks rueckmeldung, at most 10 % of the contributions, never at the end; the same word of the same voice is spoken once and then reused as a part. In the script the way of speaking and \"Reaction\" stand as notes. Live counts lines with a way of speaking and reactions (spoken, kept)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "Audio overview as a discussion, part 3: sample and iPhone (V01.1.364, plan *hoerstueck-diskussion* 8a): in a collection the admin can have a short discussion made at once with \"Sample (2 min)\": only the opening and one point of dispute (two chapters, at most 1800 characters), at once like \"Make now\" (POST /api/profile/mappen/{id}/hoerstuecke/probe, admin only, rate limit as \"Make now\", without the switch *Audio overview as a discussion* 409 with the way). It never counts towards the daily limit, shows in the list as \"Sample · …\" and is gone with its sound file after one day (hoerstueck.proben_weg, hourly). The iPhone app shows chapter headings, \"Conversation\", the way of speaking, \"Reaction\" and the sample in the script. Live counts samples (made, gone), logs only \"hoerstueck: hoerprobe | fertig\" and \"… | weg | number\"."
 },
 {
 "lang": "en",

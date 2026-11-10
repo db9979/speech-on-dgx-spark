@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.364** Audio overview as a discussion (parts 2 and 3): each contribution has a way of speaking, each role a chosen voice with a sample, pauses fit the turn, short reactions like "Mhm." in between; a two-minute sample for the admin, gone after a day; the iPhone app shows chapters and conversation notes
 - **V01.1.363** iPhone and CarPlay stable: after a stop, a call or when the car is gone the microphone no longer opens by itself; radio and music come back, one follow-up list in the dungeon, 30 seconds for everything in the car, pairing with another profile cleans up
 - **V01.1.362** Audio overview as a discussion (part 1): with the new switch the audio overview becomes a talk in chapters with questions and objections instead of sentence after sentence; every number stays backed, questions and reactions carry "Talk"
 - **V01.1.361** Security now: "Don't turn off the light" never switches, "Forget it" deletes nothing, no web search for private things, a browser's notifications for one profile only, code word only from the same device
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.357** Spark assistant as a model: in Open WebUI (or any program using /v1) "spark-assistent" answers with calendar, reminders and documents, read only
 - **V01.1.356** Open WebUI integration: one step under Me → Language model by API connects your Open WebUI (key and Spark tools for reading, home network only), plus "Open WebUI" in the menu and the service watcher
 - **V01.1.355** Fix: an audio overview waited forever at "0 of 0 lines" and never started, also with "Make now"; now it starts within seconds when nobody speaks, the list says what it waits for, and a failed one says why
-- **V01.1.354** RED FIX: the sshTermy channel test waits for the end while the test client still runs
 
 
 

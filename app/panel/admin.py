@@ -988,6 +988,12 @@ def validate(new):
     if not isinstance(d, list) or len(d) > len(hoerstueck.SPRECHER) \
             or any(not isinstance(x, str) or not (x == "-" or hoerstueck.VOICE.fullmatch(x)) for x in d):
         raise HTTPException(400, "hoerstueck_stimmen: up to 3 voice names or -")
+    d = ch.get("hoerstueck_klang", [])   # Hörstück als Diskussion: the admin's description per role, a number of its list
+    import hoerstueck_diskussion
+    if not isinstance(d, list) or len(d) > len(hoerstueck.SPRECHER) or any(
+            not isinstance(x, str) or not re.fullmatch(r"\d", x) or int(x) >= len(hoerstueck_diskussion.klaenge(sp))
+            for x, sp in zip(d, hoerstueck.SPRECHER)):
+        raise HTTPException(400, "hoerstueck_klang: up to 3 numbers of the lists")
     d = ch.get("fund_tag_day", 200)   # Finden, Schlagworte vom Modell (fund.tag_day_limit)
     if not isinstance(d, int) or isinstance(d, bool) or not 5 <= d <= 500:
         raise HTTPException(400, "fund_tag_day: 5 to 500")

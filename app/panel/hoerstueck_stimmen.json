@@ -1,0 +1,42 @@
+{
+  "_": "Hörstück: the fixed voice descriptions per role (VoiceDesign) and the fixed English additions per way of speaking; hoerstueck_diskussion.stimmen_daten. Entry 0 of a role is the standard (the voice of before); the admin picks one per role (chat.hoerstueck_klang) for a discussion. Labels: German, English; the description goes to the speech output, never a word of the model.",
+  "rollen": {
+    "A": [
+      ["ruhig und freundlich (Standard)", "calm and friendly (standard)", "Ruhige, freundliche Moderatorin, klar und in mittlerem Tempo"],
+      ["Moderatorin, warm und neugierig", "host, warm and curious", "A woman in her thirties, warm clear voice, curious and friendly, medium pace"],
+      ["Moderator, locker", "host, relaxed", "A man in his forties, relaxed friendly voice, smiling, medium pace"],
+      ["Radiostimme, lebhaft", "radio voice, lively", "A young woman, bright lively radio voice, energetic and clear"],
+      ["Moderator, sachlich", "host, matter of fact", "A middle aged man, calm even voice, clear and matter of fact"],
+      ["Erzählerin, sanft", "narrator, gentle", "An older woman, soft warm voice, gentle and patient"]
+    ],
+    "B": [
+      ["tief und ruhig (Standard)", "deep and calm (standard)", "Sachlicher Sprecher mit tiefer, ruhiger Stimme, deutlich und langsam"],
+      ["Experte, tief und genau", "expert, deep and precise", "A man in his fifties, deep calm voice, precise and knowledgeable"],
+      ["Expertin, klar und begeistert", "expert, clear and enthusiastic", "A woman in her forties, clear confident voice, enthusiastic when explaining"],
+      ["Professor, bedächtig", "professor, measured", "An older man, warm measured voice, slow and thoughtful"],
+      ["Technikerin, schnell", "engineer, quick", "A young woman, quick precise voice, practical and direct"],
+      ["Berater, freundlich", "adviser, friendly", "A man in his thirties, friendly reassuring voice, steady pace"]
+    ],
+    "C": [
+      ["jung und lebhaft (Standard)", "young and lively (standard)", "Neugierige junge Stimme, lebhaft und freundlich, fragt gern nach"],
+      ["Skeptiker, trocken", "sceptic, dry", "A man in his forties, dry slightly ironic voice, questioning"],
+      ["Skeptikerin, direkt", "sceptic, direct", "A woman in her thirties, direct firm voice, critical and alert"],
+      ["Student, neugierig", "student, curious", "A young man, lively curious voice, quick and eager"],
+      ["Nachbarin, bodenständig", "neighbour, down to earth", "An older woman, down to earth voice, warm but doubtful"],
+      ["Journalist, hartnäckig", "journalist, persistent", "A man in his thirties, crisp persistent voice, probing"]
+    ]
+  },
+  "sprechweise": {
+    "neugierig": ["neugierig", "curious", "curious, lively and interested"],
+    "nachdenklich": ["nachdenklich", "thoughtful", "thoughtful, a little slower"],
+    "begeistert": ["begeistert", "enthusiastic", "enthusiastic and warm, a bit faster"],
+    "skeptisch": ["skeptisch", "sceptical", "sceptical, questioning tone"],
+    "lachend": ["lachend", "laughing", "laughing lightly while speaking"],
+    "ernst": ["ernst", "serious", "serious and calm"],
+    "ruhig": ["ruhig", "calm", "calm and even"]
+  },
+  "rueckmeldung": {
+    "de": ["Mhm.", "Genau.", "Ach so.", "Stimmt."],
+    "en": ["Mhm.", "Right.", "I see.", "True."]
+  }
+}

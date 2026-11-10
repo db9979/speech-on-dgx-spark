@@ -18,6 +18,7 @@ const HS_WEG={sprecher:['Sprecher nicht aus der Liste','speaker not from the lis
   gespraech:['Gesprächssatz mit Zahl oder fremdem Wort','talk sentence with a number or an unknown word'],leer:['Beitrag ohne geprüften Satz','contribution without a checked sentence'],
   plan:['Kapitel ohne gültige Stelle','chapter without a valid place'],art:['Kapitel-Art nicht aus der Liste','chapter kind not from the list']};
 // a discussion (hoerstueck_diskussion.py): the fixed kinds of its chapters
+const HS_WEISE={neugierig:['neugierig','curious'],nachdenklich:['nachdenklich','thoughtful'],begeistert:['begeistert','enthusiastic'],skeptisch:['skeptisch','sceptical'],lachend:['lachend','laughing'],ernst:['ernst','serious'],ruhig:['ruhig','calm']};
 const HS_KART={einstieg:['Einstieg','Opening'],these:['These','Claim'],streitfrage:['Streitfrage','Point of dispute'],beispiel:['Beispiel','Example'],wendepunkt:['Wendepunkt','Turning point'],fazit:['Fazit','Conclusion']};
 const hsUrl=(mid,hid,x)=>hid?'/api/profile/hoerstueck/'+encodeURIComponent(hid)+(x||''):'/api/profile/mappen/'+encodeURIComponent(mid)+'/hoerstuecke';
 const hsMin=s=>{s=Math.max(0,Math.round(s||0));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
@@ -41,7 +42,7 @@ function hsSub(s){const st=t(...(HS_STAND[s.stand]||HS_STAND.x));const w=HS_WART
   return [docDate(s.made),hsMin(s.dauer_s)+' min',t(`${s.stimmen} Stimmen`,`${s.stimmen} voices`),t(`${s.zeilen} Zeilen, ${weg} verworfen`,`${s.zeilen} lines, ${weg} dropped`)].join(' · ')||st}
 function hsRow(s){const kind=s.stand==='fertig'?'ok':s.stand==='leer'||s.stand==='x'?'bad':'warn';
   const pct=s.zeilen?Math.round(100*s.fertig_zeilen/s.zeilen):0;
-  return `<div class="ld-row${s.id===HS.sel?' on':''}" role="button" tabindex="0" data-hssel="${esc(s.id)}"><span class="ld-ico" aria-hidden="true">${ic('speaker')}</span><span class="ld-mid"><b>${esc(s.titel||t('Hörstück','Audio overview'))}</b><small>${esc(hsSub(s))}</small>`+
+  return `<div class="ld-row${s.id===HS.sel?' on':''}" role="button" tabindex="0" data-hssel="${esc(s.id)}"><span class="ld-ico" aria-hidden="true">${ic('speaker')}</span><span class="ld-mid"><b>${esc((s.probe?t('Hörprobe · ','Sample · '):'')+(s.titel||t('Hörstück','Audio overview')))}</b><small>${esc(hsSub(s))}</small>`+
     (s.geaendert?`<small>${esc(t('Die Mappe hat sich seitdem geändert.','The collection has changed since.'))}</small>`:'')+
     (s.stand==='sprechen'?`<div class="mpbar" aria-hidden="true"><i style="width:${pct}%"></i></div>`:'')+
     `</span><span class="ld-right"><span class="ld-st ${kind}">${esc(t(...(HS_STAND[s.stand]||HS_STAND.x)))}</span></span></div>`}
@@ -50,7 +51,9 @@ function hsSatz(s){const chip=s.art==='inhalt'?(s.da?`<button type="button" clas
   :`<span class="ld-badge off">${esc(t('Gespräch','Talk'))}</span>`;return `<span class="hssatz">${esc(s.text)} ${chip}</span>`}
 function hsLine(x,R,i,prev){if(x.art==='beitrag'){const at=typeof x.ab==='number'?`<button type="button" class="ld-chip" data-hsab="${x.ab}" title="${esc(t('Ab hier anhören','Listen from here'))}">${esc(hsMin(x.ab))}</button>`:'';
     const head=(!prev||prev.kapitel!==x.kapitel)&&HS_KART[x.kart]?`<div class="ld-grp"><span>${esc(t(`Kapitel ${x.kapitel+1}`,`Chapter ${x.kapitel+1}`)+' · '+t(...HS_KART[x.kart]))}</span></div>`:'';
-    return head+`<div class="ld-row" data-hsi="${i}">${hsAva(x.sprecher,R)}<span class="ld-mid"><span>${(x.saetze||[]).map(hsSatz).join(' ')}</span></span><span class="ld-right">${at}</span></div>`}
+    const weise=HS_WEISE[x.weise]?`<span class="ld-badge off">${esc(t(...HS_WEISE[x.weise]))}</span>`:'';
+    return head+`<div class="ld-row" data-hsi="${i}">${hsAva(x.sprecher,R)}<span class="ld-mid"><span>${(x.saetze||[]).map(hsSatz).join(' ')}</span></span><span class="ld-right">${weise}${at}</span></div>`}
+  if(x.art==='rueck')return `<div class="ld-row" data-hsi="${i}">${hsAva(x.sprecher,R)}<span class="ld-mid"><span>${esc(x.text)}</span></span><span class="ld-right"><span class="ld-badge off">${esc(t('Rückmeldung','Reaction'))}</span></span></div>`;
   const at=typeof x.ab==='number'?`<button type="button" class="ld-chip" data-hsab="${x.ab}" title="${esc(t('Ab hier anhören','Listen from here'))}">${esc(hsMin(x.ab))}</button>`:'';
   const right=at+(x.art==='inhalt'?(x.da?`<button type="button" class="ld-chip" data-hsdoc="${esc(x.doc)}" title="${esc(t('Dokument öffnen','Open the document'))}">${esc([x.dok,x.page?t('S. ','p. ')+x.page:'',x.part].filter(Boolean).join(' · '))}</button>`:`<span class="ld-badge off">${esc(t('Dokument weg','document gone'))}</span>`)
     :`<span class="ld-badge off">${esc(x.art==='fest'?t('fest','fixed'):t('Überleitung','transition'))}</span>`);
@@ -86,9 +89,11 @@ function hsPaint(box){const D=HS.data;if(!box)return;
   box.innerHTML=`<div class="hsmake"><span class="hsopt"><span>${esc(t('Länge','Length'))}</span>${seg('laenge',D.laengen,t('Länge','Length'))}</span>`+
     `<span class="hsopt"><span>${esc(t('Stimmen','Voices'))}</span>${seg('stimmen',D.stimmen,t('Stimmen','Voices'))}</span>`+
     `<button type="button" class="b" data-hsmake="1"${full||limit?' disabled':''} title="${esc(t('läuft in ruhigen Minuten','runs in quiet minutes'))}">${ic('play')}${esc(t('Erstellen','Make'))}</button>`+
+    (D.sofort&&D.diskussion?`<button type="button" class="b" data-hsmake="probe"${full||!D.sofort_frei?' disabled':''} title="${esc(t('Nur Admin: Einstieg und eine Streitfrage sofort, etwa zwei Minuten; zählt nicht, nach einem Tag gelöscht','Admin only: the opening and one point of dispute at once, about two minutes; not counted, deleted after a day'))}">${ic('play')}${esc(t('Hörprobe (2 Min.)','Sample (2 min)'))}</button>`:'')+
     (D.sofort?`<button type="button" class="b" data-hsmake="sofort"${full||!D.sofort_frei?' disabled':''} title="${esc(t('Nur Admin: ohne ruhige Minuten und Tagesgrenze; echte Sprache geht trotzdem vor','Admin only: without quiet minutes and the day limit; real speech still goes first'))}">${ic('bolt')}${esc(t('Sofort erstellen','Make now'))}</button>`:'')+
     `<small>${esc(full?t(`Höchstens ${D.max} Hörstücke; lösch erst eins.`,`At most ${D.max} audio overviews; delete one first.`):limit?t('Für heute ist die Grenze erreicht.','The limit for today is reached.'):D.frei?t(`heute ${D.heute} · ohne Tageslimit`,`today ${D.heute} · no daily limit`):t(`heute ${D.heute} von ${D.grenze}`,`today ${D.heute} of ${D.grenze}`))}</small></div>`+
     `<p class="mut ld-note hsmsg" role="status"${HS.msg?'':' hidden'}>${esc(HS.msg)}</p>`+
+    (D.diskussion&&D.design===false?`<p class="mut ld-note">${esc(t('Hörstück als Diskussion: die Stimmen aus Beschreibung brauchen VoiceDesign, sonst spricht die Standardstimme. Einschalten unter Einstellungen → Sprachausgabe.','Audio overview as a discussion: voices from a description need VoiceDesign, else the standard voice speaks. Switch it on under Settings → Speech output.'))}</p>`:'')+
     (D.stuecke.length?`<div class="ld-grp"><span>${esc(t(`${D.stuecke.length} Hörstücke`,`${D.stuecke.length} audio overviews`))}</span></div>`+hsCard()+D.stuecke.filter(s=>s.id!==HS.sel).map(hsRow).join('')
       :`<div class="ld-empty mut">${esc(t('Noch kein Hörstück aus dieser Mappe.','No audio overview of this collection yet.'))}</div>`)}
 async function hsLoad(){const mid=HS.mid,seq=++HS.seq;const {r,d}=await apiTry(hsUrl(mid));if(seq!==HS.seq||mid!==HS.mid)return;
@@ -119,8 +124,8 @@ document.body.addEventListener('click',async e=>{const b=e.target.closest('#mpvi
     const m=box.querySelector('.hsmsg');if(m){m.textContent=HS.msg;m.hidden=!HS.msg}return}   // no new paint: the player keeps playing
   if(D.hsnow){b.disabled=true;const {r,d}=await apiTry(hsUrl('',D.hsnow,'/sofort'),xjson('POST',{}));
     HS.msg=r.ok?t('Wird jetzt erstellt; echte Sprache geht vor.','Being made now; real speech goes first.'):errSay(r.status,d.detail,'');await hsLoad();return}
-  if(D.hsmake){b.disabled=true;const now=D.hsmake==='sofort';
-    const {r,d}=await apiTry(hsUrl(HS.mid)+(now?'/sofort':''),xjson('POST',{laenge:HS.laenge,stimmen:HS.stimmen,sprache:L==='en'?'en':'de'}));
+  if(D.hsmake){b.disabled=true;const now=D.hsmake==='sofort'||D.hsmake==='probe';
+    const {r,d}=await apiTry(hsUrl(HS.mid)+(D.hsmake==='probe'?'/probe':now?'/sofort':''),xjson('POST',{laenge:HS.laenge,stimmen:HS.stimmen,sprache:L==='en'?'en':'de'}));
     HS.msg=r.ok?(now?t('Wird jetzt erstellt; echte Sprache geht vor.','Being made now; real speech goes first.'):t('Eingereiht: das Drehbuch entsteht in der nächsten ruhigen Minute, dann Zeile für Zeile.','Queued: the script is made in the next quiet minute, then line by line.')):errSay(r.status,d.detail,'');
     if(r.ok)HS.sel=d.id;await hsLoad();return}
   if(D.hsdel){if(!confirm(t('Hörstück löschen?','Delete the audio overview?')))return;b.disabled=true;
@@ -143,8 +148,28 @@ async function hsVoicesAdmin(){const box=$('hsvoices'),el=$('chat.hoerstueck_sti
   const paint=()=>{const cur=el.value.split(/[\s,;]+/).filter(Boolean);
     box.innerHTML=['A','B','C'].map((sp,i)=>{const v=cur[i]||'-',opts=['-',...vs];if(v!=='-'&&!opts.includes(v))opts.push(v);
       return `<label class="row">${esc(sp+' · '+t(...R[sp]))} <select data-hsvoice="${i}" aria-label="${esc(t('Stimme ','Voice ')+sp)}">${opts.map(x=>`<option value="${esc(x)}"${x===v?' selected':''}>${esc(x==='-'?t('Standardstimme','Standard voice'):x)}</option>`).join('')}</select></label>`}).join('')};
-  paint();box.onchange=e=>{const s=e.target.closest('[data-hsvoice]');if(!s)return;
+  paint();hsKlangAdmin();box.onchange=e=>{const s=e.target.closest('[data-hsvoice]');if(!s)return;
     const cur=el.value.split(/[\s,;]+/).filter(Boolean);while(cur.length<3)cur.push('-');cur[+s.dataset.hsvoice]=s.value||'-';
     el.value=cur.join(', ');el.dispatchEvent(new Event('input',{bubbles:true}))};
   el.addEventListener('change',paint)}
 window.hsVoicesAdmin=hsVoicesAdmin;
+
+// Admin (… → Hörstück aus einer Mappe → Hörstück als Diskussion): a fixed description per role (hoerstueck_stimmen.json,
+// labels only) fills the hidden list field chat.hoerstueck_klang; „▶ Probe“ plays a fixed sentence in it (VoiceDesign;
+// while it is off the hint names its way and the button stays off). Saved with the other settings.
+const HSK={el:null,url:''};
+async function hsKlangAdmin(){const box=$('hsklang'),el=$('chat.hoerstueck_klang');if(!box||!el||document.body.classList.contains('mgr'))return;
+  let D=null;try{const r=await api('/api/admin/hoerstueck/stimmen');if(r.ok)D=await r.json()}catch{}
+  if(!D||!D.rollen){box.textContent='';return}
+  const paint=()=>{const cur=el.value.split(/[\s,;]+/).filter(Boolean);
+    box.innerHTML=(D.design?'':`<p class="mut ld-note">${esc(t('VoiceDesign ist aus: Stimmen aus Beschreibung und „▶ Probe“ gehen erst mit Einstellungen → Sprachausgabe → „VoiceDesign zusätzlich bereitstellen“.','VoiceDesign is off: voices from a description and "▶ Sample" only work with Settings → Speech output → "Also provide VoiceDesign".'))}</p>`)+
+      ['A','B','C'].map((sp,i)=>{const v=+(cur[i]||0);return `<label class="row">${esc(sp+' · '+t(...D.namen[sp]))} <select data-hsklang="${i}" aria-label="${esc(t('Beschreibung ','Description ')+sp)}">${D.rollen[sp].map((x,j)=>`<option value="${j}"${j===v?' selected':''}>${esc(t(x[0],x[1]))}</option>`).join('')}</select>`+
+        ` <button type="button" class="b" data-hsprobe="${sp}"${D.design?'':' disabled'}>${esc(t('▶ Probe','▶ Sample'))}</button></label>`}).join('')};
+  paint();
+  box.onchange=e=>{const s=e.target.closest('[data-hsklang]');if(!s)return;const cur=el.value.split(/[\s,;]+/).filter(Boolean);
+    while(cur.length<3)cur.push('0');cur[+s.dataset.hsklang]=s.value||'0';el.value=cur.join(', ');el.dispatchEvent(new Event('input',{bubbles:true}))};
+  box.onclick=async e=>{const b=e.target.closest('[data-hsprobe]');if(!b)return;const sp=b.dataset.hsprobe,s=box.querySelector(`[data-hsklang="${'ABC'.indexOf(sp)}"]`);
+    b.disabled=true;try{const r=await api(`/api/admin/hoerstueck/probe?rolle=${sp}&klang=${encodeURIComponent(s?s.value:'0')}&sprache=${L==='en'?'en':'de'}`);
+      if(r.ok){if(HSK.el)HSK.el.pause();if(HSK.url)URL.revokeObjectURL(HSK.url);HSK.url=URL.createObjectURL(await r.blob());HSK.el=new Audio(HSK.url);await HSK.el.play()}
+      else{const d=await r.json().catch(()=>({}));let m=box.querySelector('.hsprobemsg');if(!m){m=document.createElement('p');m.className='mut ld-note hsprobemsg';m.setAttribute('role','status');box.append(m)}m.textContent=errSay(r.status,d.detail,'')}}catch{}b.disabled=false};
+  el.addEventListener('change',paint)}

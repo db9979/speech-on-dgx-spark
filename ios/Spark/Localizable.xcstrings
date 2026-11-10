@@ -20191,6 +20191,156 @@
         }
       }
     },
+    "Hörprobe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sample"
+          }
+        }
+      }
+    },
+    "Rückmeldung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reaction"
+          }
+        }
+      }
+    },
+    "neugierig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "curious"
+          }
+        }
+      }
+    },
+    "nachdenklich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "thoughtful"
+          }
+        }
+      }
+    },
+    "begeistert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "enthusiastic"
+          }
+        }
+      }
+    },
+    "skeptisch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sceptical"
+          }
+        }
+      }
+    },
+    "lachend": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "laughing"
+          }
+        }
+      }
+    },
+    "ernst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "serious"
+          }
+        }
+      }
+    },
+    "ruhig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "calm"
+          }
+        }
+      }
+    },
+    "Einstieg": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opening"
+          }
+        }
+      }
+    },
+    "These": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claim"
+          }
+        }
+      }
+    },
+    "Streitfrage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Point of dispute"
+          }
+        }
+      }
+    },
+    "Beispiel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Example"
+          }
+        }
+      }
+    },
+    "Wendepunkt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turning point"
+          }
+        }
+      }
+    },
+    "Fazit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conclusion"
+          }
+        }
+      }
+    },
     "Ab hier anhören": {
       "localizations": {
         "en": {
