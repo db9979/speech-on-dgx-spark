@@ -4,11 +4,11 @@ from technik_seiten import S
 
 SEITEN = {
     "vorbereiten": {
-        "stand": "b76178ce06",
+        "stand": "ff90f75a7f",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
-            "chat.offer_memory": ["s10"],
+            "chat.offer_memory": ["s10"], "chat.ha_take": ["s7"],
             "regeln": ["s10", "s11"], "regel:Gast oder unbekannte Stimme am Lautsprecher": ["s3"],
         },
         "kurz": ("chat_turn.prepare macht aus einer Chat-Anfrage einen fertigen Gesprächszug, bevor das Sprachmodell "
@@ -106,11 +106,16 @@ SEITEN = {
                "nur im selben Gespräch, vom eigenen Profil und innerhalb von {klaeren.ASK_SECONDS|min} Minuten. "
                "„Keins davon“ bringt die ganze Liste, „Nein, den anderen“ korrigiert die letzte Wahl. Das Panel führt "
                "die Wahl aus und bietet an, sie sich zu merken; ein „Ja“ dazu zählt {klaeren.REMEMBER_SECONDS|min} "
-               "Minuten.",
+               "Minuten. Ein direkter Smart-Home-Befehl ohne das nötige Codewort wartet {chat.HA_WAIT_S|min} Minuten, "
+               "gebunden an Gerät und Gespräch (chat.ha_take): ein Codewort von einem anderen Gerät des Profils führt "
+               "ihn nicht aus und löscht ihn nicht. Ein verneinter Satz ist nie ein direkter Befehl.",
                "If the panel asked which device is meant, a button, a number or the name counts as the answer, only in "
                "the same conversation, from the own profile and within {klaeren.ASK_SECONDS|min} minutes. „None of "
                "these“ brings the whole list, „No, the other one“ corrects the last choice. The panel carries out the "
-               "choice and offers to remember it; a „yes“ to that counts for {klaeren.REMEMBER_SECONDS|min} minutes."),
+               "choice and offers to remember it; a „yes“ to that counts for {klaeren.REMEMBER_SECONDS|min} minutes. "
+               "A direct smart home command without the needed code word waits {chat.HA_WAIT_S|min} minutes, bound to "
+               "device and conversation (chat.ha_take): a code word from another device of the profile neither runs nor "
+               "clears it. A negated sentence is never a direct command."),
               ("info", "ja", ("Panel führt die Wahl aus", "panel carries out the choice"))),
             S("s8", "frage", ("Notaus oder Mein Notaus?", "Kill switch or my kill switch?"),
               ("ab Stufe {notaus.STAGE.aktion} keine Aktion", "from stage {notaus.STAGE.aktion} no action"),
@@ -236,13 +241,14 @@ SEITEN = {
             ("notaus.locked_tools", ("was der Notaus wegnimmt", "what the kill switch takes away")),
             ("intent.narrow", ("Werkzeuge eingrenzen", "narrow the tools")),
             ("chat_turn.notaus_note", ("Satz für das Modell bei Notaus", "sentence for the model with the kill switch")),
+            ("chat.ha_take", ("Befehl mit Codewort nur von seiner Quelle", "command with code word only from its source")),
         ],
-        "tests": ["test_klaeren", "test_features", "test_notaus", "test_hardening", "test_weiche"],
+        "tests": ["test_klaeren", "test_features", "test_notaus", "test_hardening", "test_weiche", "test_sicherheit_sofort"],
         "heute": [],
     },
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)
     "weiche": {
-        "stand": "71660b7de7",
+        "stand": "2397de5611",
         "bezug": {
             "intent.GROUPS": ["s4", "s6"], "intent_bench.BENCH": ["s4", "s5"], "intent_alltag.ALLTAG": ["s14"],
             "weiche.KEEP_VERSIONS": ["s4"], "intent.Route": ["s6"], "intent.follow_up": ["s8"],
@@ -253,6 +259,8 @@ SEITEN = {
             "quellen.klasse": ["s14"], "quellen.PROBE_MS": ["s14"], "quellen.blick": ["s14"],
             "regel:Modell ordnet ein": ["s10"], "regel:Knapp": ["s12"],
             "regel:Einordnung mit Wahrscheinlichkeit": ["s10"],
+            "intent.negated": ["s11", "s13"], "intent.cancel": ["s2"], "chat.PRIVATE_WORDS": ["s5", "s13"],
+            "chat.first_tool": ["s13"],
         },
         "kurz": ("Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und "
                  "so weiter, heute {intent.GROUPS|anzahl} Gruppen) und grenzt damit die Werkzeuge ein, die das "
@@ -264,10 +272,14 @@ SEITEN = {
                  "fits, and that too can only narrow."),
         "warum": ("Wenige passende Werkzeuge machen das Modell schneller und treffsicherer: es liest weniger und greift "
                   "seltener daneben. Weil die Weiche nur wegnimmt, was die Rechte und Sperren übrig gelassen haben, "
-                  "kann ein falsch zugeordneter Satz nie mehr erlauben, höchstens ein Werkzeug fehlen lassen.",
+                  "kann ein falsch zugeordneter Satz nie mehr erlauben. Er kann ein Werkzeug fehlen lassen oder, bei "
+                  "einer Gruppe mit einem einzigen Werkzeug, dieses zur Pflicht machen; darum macht nur ein starkes Wort "
+                  "die Websuche zur Pflicht, nie ein privater Satz, und ein verneinter Satz nie ein änderndes Werkzeug.",
                   "Few fitting tools make the model faster and more accurate: it reads less and misses less often. "
                   "Because the switch only takes away from what rights and locks left, a wrongly sorted sentence can "
-                  "never allow more, at most leave a tool out."),
+                  "never allow more. It can leave a tool out or, for a group with a single tool, make that one a must; "
+                  "so only a strong word makes the web search a must, never a private sentence, and a negated sentence "
+                  "never a changing tool."),
         "ablauf": [
             S("s1", "start", ("Nur die eigene Nachricht", "Only the own message"),
               ("intent.classify_cfg", "intent.classify_cfg"),
@@ -278,10 +290,12 @@ SEITEN = {
                "model wrote. The words the admin saved under Features → Routing are added.")),
             S("s2", "frage", ("Nur Plaudern?", "Only small talk?"),
               ("„Danke“, „Hallo“, „Gute Nacht“", "„thanks“, „hello“, „good night“"),
-              ("Ist der ganze Satz ein Gruß oder Dank, heißt die Gruppe „plaudern“. Die Antwort bekommt dann gar kein "
-               "Werkzeug.",
-               "If the whole sentence is a greeting or thanks, the group is „plaudern“ (small talk). The answer then "
-               "gets no tool at all."),
+              ("Ist der ganze Satz ein Gruß oder Dank oder ruft er den Wunsch ab („Vergiss es“, „Lass es“, „Schon "
+               "gut“, „Nein, doch nicht“: intent.cancel, Grund „Abbruch“), heißt die Gruppe „plaudern“. Die Antwort "
+               "bekommt dann gar kein Werkzeug, also nie das Gedächtnis.",
+               "If the whole sentence is a greeting or thanks or calls the wish off („Never mind“, „Forget it“, "
+               "„Leave it“: intent.cancel, reason „Abbruch“), the group is „plaudern“ (small talk). The answer then "
+               "gets no tool at all, so never the memory."),
               ("ok", "ja", "s14")),
             S("s3", "frage", ("Frage zum Spark?", "Question about the Spark?"),
               ("vor allen anderen Gruppen", "before every other group"),
@@ -319,7 +333,9 @@ SEITEN = {
                "regelmäßig wiederkommt oder etwas beobachtet, ist ein Agent; eine Frage zu Sprache oder Natur oder "
                "nach einem Unterschied ist nie ein Gerät; ein Preis oder Streik ist die Websuche, nicht iPhone oder "
                "Bahn; „Ruf mich an“ ist der Rückruf des Spark, nicht das iPhone; „Liste der …“ in einer Datei ist "
-               "nicht die eigene Liste. Zuletzt nehmen die „Nicht bei“-Wörter des Admins Gruppen wieder heraus.",
+               "nicht die eigene Liste; ein schwaches Suchwort allein („Ergebnis“, „gewonnen“, „Nachrichten“) in einem "
+               "privaten Satz („Ergebnis meiner Blutuntersuchung“, „Nachrichten von Tom“, „Ich habe gewonnen“) ist "
+               "keine Websuche. Zuletzt nehmen die „Nicht bei“-Wörter des Admins Gruppen wieder heraus.",
                "When several groups match, fixed rules tidy up: weather, list, message, document and „create "
                "document“ come before smart home when there is no switching command; parcels before mail, unless "
                "someone „wrote to me“ (then mail); a price „according to the offer, invoice or contract“ is an own "
@@ -330,8 +346,9 @@ SEITEN = {
                "new messages?“ is a message, „What is in the news?“ the web search; a job that comes back regularly "
                "or watches something is an agent; a question about language, nature or a difference is never a "
                "device; a price or a strike is the web search, not the iPhone or the train; „Call me“ is the Spark "
-               "calling back, not the iPhone; „a list of …“ in a file is not the own list. Last, the "
-               "admin's „Not with“ words take groups out again.")),
+               "calling back, not the iPhone; „a list of …“ in a file is not the own list; a weak search word alone "
+               "(„result“, „won“, „news“) in a private sentence („result of my blood test“, „messages from Tom“, „I "
+               "won“) is no web search. Last, the admin's „Not with“ words take groups out again.")),
             S("s6", "frage", ("Gruppe erkannt?", "Group recognized?"),
               ("eine, zwei oder mehr", "one, two or more"),
               ("Eine Gruppe oder höchstens {intent.MAX_MIXED} gelten als klar und grenzen ein. Mehr Gruppen auf "
@@ -396,13 +413,16 @@ SEITEN = {
               ("Bei einer klaren Gruppe bleiben ihre Werkzeuge, dazu immer {intent.NARROW_KEEP|anzahl} feste "
                "(sich etwas merken, eigene Dokumente, Finden in allen eigenen Daten, PC), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des "
                "Admins für diese Gruppe (höchstens {intent.MAX_EXTRA}) und was die eigenen Worte ausdrücklich "
-               "nennen („aufs reMarkable“). Alles nur, soweit schon angeboten. Ist von der Gruppe nichts angeboten "
-               "oder steht die Gruppe auf „nicht eingrenzen“, bleiben alle.",
+               "nennen („aufs reMarkable“). Alles nur, soweit schon angeboten. Ist von der Gruppe nichts angeboten, "
+               "steht die Gruppe auf „nicht eingrenzen“ oder ist der Satz verneint („Ruf Mama nicht an“, „Mach das "
+               "Licht nicht aus“: intent.negated, eine feste Regel; „nicht vergessen“ zählt nicht), bleiben alle; "
+               "das Journal nennt dann „verneint“.",
                "With a clear group its tools stay, plus always {intent.NARROW_KEEP|anzahl} fixed ones (remembering "
                "something, own documents, Find in all own data, PC), the hints' tools, the admin's extra tools for this group (at most "
                "{intent.MAX_EXTRA}) and what the own words name explicitly („onto the reMarkable“). All only as far "
-               "as already offered. If nothing of the group is offered or the group is set to „do not narrow“, all "
-               "stay.")),
+               "as already offered. If nothing of the group is offered, the group is set to „do not narrow“ or the "
+               "sentence is negated („Don't call Mom“, „Don't turn off the light“: intent.negated, a fixed rule; "
+               "„don't forget“ does not count), all stay; the journal then says „verneint“.")),
             S("s12", "frage", ("Knapp?", "Lean?"),
               ("unklar · „Knapp“ · kein Pflicht-Werkzeug", "unclear · „Lean“ · no required tool"),
               ("Bleibt die Frage ohne Gruppe, steht die Einstellung auf „Knapp“ und verlangt kein Pflicht-Wort ein "
@@ -415,11 +435,15 @@ SEITEN = {
             S("s13", "schritt", ("Erstes Werkzeug festlegen", "Fix the first tool"),
               ("intent.forced · intent.direct", "intent.forced · intent.direct"),
               ("Eine einzige klare Gruppe, ein Pflicht-Werkzeug und nur dieses aus der Gruppe angeboten: die erste "
-               "Runde muss genau dieses rufen („Wie wird das Wetter?“). Ein kurzer, eindeutiger Lesesatz („Wie ist "
+               "Runde muss genau dieses rufen („Wie wird das Wetter?“). Pflicht ist nie ein änderndes Werkzeug aus einer "
+               "Admin-Regel, nie die Websuche bei einem privaten Satz (chat.PRIVATE_WORDS) und bei einem verneinten "
+               "Satz nur ein lesendes ohne Internet, das dann mit Namen gerufen wird (chat.first_tool). Ein kurzer, eindeutiger Lesesatz („Wie ist "
                "das Wetter heute?“) wird mit „Eindeutiges direkt abrufen“ vom Panel selbst abgerufen, für morgen "
                "und übermorgen mit dem Datum, das das Panel ausrechnet.",
                "One single clear group, one required tool and only that one of the group offered: the first round "
-               "must call exactly that one („What will the weather be?“). A short, clear reading sentence („What is "
+               "must call exactly that one („What will the weather be?“). A must is never a changing tool from an admin "
+               "rule, never the web search for a private sentence (chat.PRIVATE_WORDS) and for a negated sentence only "
+               "a reading one without the internet, which is then called by name (chat.first_tool). A short, clear reading sentence („What is "
                "the weather today?“) is fetched by the panel itself with „Fetch clear questions directly“, for "
                "tomorrow and the day after with the date the panel works out.")),
             S("s14", "ende", ("Journal und Zählung", "Journal and count"),
@@ -456,6 +480,10 @@ SEITEN = {
               "Unclear, hint „gießen“ → weather: short list plus the weather tool.")),
             (("„Danke!“", "„Thanks!“"), ["s1", "s2", "s2!", "s14"],
              ("Gruppe plaudern: Antwort ohne Werkzeug.", "Group small talk: answer without a tool.")),
+            (("„Ruf Mama nicht an“", "„Don't call Mom“"),
+             ["s1", "s2", "s3", "s4", "s5", "s6", "s6!", "s9", "s10", "s11", "s12", "s13", "s14"],
+             ("Gruppe iphone, aber verneint: nichts wird eingegrenzt, kein Werkzeug ist Pflicht.",
+              "Group iphone, but negated: nothing is narrowed, no tool is a must.")),
         ],
         "regeln": [
             [("Fragen, die keine Regel erkennt", "Questions no rule recognizes"), ("Was das Modell sieht", "What the model sees"),
@@ -581,6 +609,10 @@ SEITEN = {
             ("intent.narrow", ("Werkzeuge eingrenzen", "narrow the tools")),
             ("intent.lean", ("kurze Liste bei „Knapp“", "short list with „Lean“")),
             ("intent.forced", ("Pflicht für die erste Runde", "required first tool")),
+            ("intent.negated", ("Verneinung: nie eingrenzen, keine Pflicht", "negation: never narrow, no must")),
+            ("intent.cancel", ("„Vergiss es“ als Abbruch ohne Werkzeug", "„Never mind“ as a cancel without any tool")),
+            ("chat.PRIVATE_WORDS", ("private Sätze: keine Websuche aus schwachen Wörtern", "private sentences: no web search from weak words")),
+            ("chat.first_tool", ("Pflicht-Werkzeug der ersten Runde", "must tool of the first round")),
             ("weiche.count", ("Statistik ohne Inhalt", "statistics without content")),
             ("weiche_unklar.anon", ("unklare Fragen geschwärzt", "unclear questions redacted")),
             ("weiche.trace", ("Satz ausprobieren", "try a sentence")),
@@ -872,12 +904,12 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Werkzeuge (chat_tools.run)
     "werkzeuge": {
-        "stand": "1d6343c707",
+        "stand": "64168aea23",
         "bezug": {
             "chat.LOCKED_OUTSIDE": ["s4"], "notaus.INTERNET_TOOLS": ["s3"], "werkzeuge.NAMES": ["s11"],
             "chat_tools.run": ["s2", "s7"], "chat.wrap_outside": ["s9"], "chat.LOCKED_AFTER_MAIL": ["s4"],
             "chat.READS_OUTSIDE": ["s4", "s6"], "notaus.locked_tools": ["s3"], "dienstwacht.tool_down": ["s5"],
-            "chat.tool_info": ["s11"], "werkzeuge.label": ["s11"], "regeln": ["s4"],
+            "chat.tool_info": ["s11"], "werkzeuge.label": ["s11"], "regeln": ["s4"], "intent.forget_ok": ["s7"],
             "regel:Notaus Stufe {notaus.STAGE.internet}": ["s3"],
             "regel:Notaus Stufe {notaus.STAGE.aktion} oder eigener Notaus": ["s3"],
         },
@@ -967,7 +999,9 @@ SEITEN = {
                "(halive.states), solange sie für genau diese Adresse und diesen Schlüssel steht, sonst über HTTP. Den "
                "Zeitraum der Websuche bestimmen die eigenen Worte der Frage und die Suchwörter (frisch.zeitraum), nie "
                "die Zeitangabe des Panels. Eine Erweiterung kann statt einer Antwort des Modells den festen Satz des "
-               "Panels übergeben (ctx „fest“, die Sofort-Karte von Finden); das Modell formuliert ihn nie um.",
+               "Panels übergeben (ctx „fest“, die Sofort-Karte von Finden); das Modell formuliert ihn nie um. "
+               "memory_forget löscht nur, wenn die eigene letzte Nachricht ums Vergessen bittet und es weder abruft noch "
+               "verneint (intent.forget_ok); ein verneinter Smart-Home-Befehl erreicht Home Assistant nie.",
                "Extensions get profile, device and origin from the panel, never from the model. Smart home changes need "
                "the code word in the latest message when one is set. Connections to outside services go through the "
                "guard. Home Assistant reads states from the live connection's copy (halive.states) while it stands for "
@@ -1067,6 +1101,7 @@ SEITEN = {
         ],
         "code": [
             ("chat_tools.run", ("die Prüfungen und alle eingebauten Werkzeuge", "the checks and all built-in tools")),
+            ("intent.forget_ok", ("memory_forget nur auf das eigene Wort zum Vergessen", "memory_forget only on the own word to forget")),
             ("chat_modell.model_turn", ("ruft run_tool, packt Ergebnisse ein, stoppt Schleifen", "calls run_tool, wraps results, stops loops")),
             ("chat.wrap_outside", ("fremder Text als Datenblock", "outside text as a data block")),
             ("chat.LOCKED_OUTSIDE", ("gesperrt nach fremdem Text", "locked after outside text")),

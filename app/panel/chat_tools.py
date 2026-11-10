@@ -377,6 +377,13 @@ async def run(t, name, args, st):
             return profiles.FULL_TEXT
         return "Saved." if fact else "Nothing to save."
     if name == "memory_forget" and t.prof:
+        import intent
+        # only on the person's own word to forget in this message, never on „Vergiss es“ (a cancel) or „Vergiss das
+        # bloß nicht“ (intent.forget_ok, fixed rule): the model alone never deletes a note
+        if not intent.forget_ok(getattr(t, "ask_text", "") or ""):
+            print("gedaechtnis: vergessen abgelehnt | nicht in eigenen Worten", flush=True)
+            return ("Not done: the user did not ask to forget something in their own words (or called it off). "
+                    "Nothing was forgotten; they can delete a note under Ich → Gedächtnis.")
         text = str(args.get("text", "")).strip()
         # never "forget everything": a real word, and only when it names one to three notes
         hits = [x for x in profiles.memory(t.prof["id"]) if text.lower() in x["text"].lower()] \

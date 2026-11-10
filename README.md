@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.361** Security now: "Don't turn off the light" never switches, "Forget it" deletes nothing, no web search for private things, a browser's notifications for one profile only, code word only from the same device
 - **V01.1.360** ROT-FIX: two tests now check the one pinned package list instead of the removed second one
 - **V01.1.359** Thinned out: old one-time moves and duplicate package lists are gone; tars rebuilds its panel environment once from the pinned package list
 - **V01.1.358** Fixed name for the language model: programs always see "sprachmodell" under /v1, the model that really runs is shown beside it and comes from the engine; Live no longer shows a fixed "qwen38"
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.354** RED FIX: the sshTermy channel test waits for the end while the test client still runs
 - **V01.1.353** Remote access tidied: its own tab sshTermy instead of the box at the bottom, the numbers as one chip "6/6 online · 0 sessions", the unlock short "until 14:02 · Lock", pairing, updating, history and disconnecting in the ⋯ beside the search, the system's card with the tabs Set up (✓ or ○ with exactly one command, Copy, Into the shell), Anchor, History and Note, list and card over the whole height
 - **V01.1.352** sshTermy as jump host: sshTermy on your computer reaches the servers through the Spark, SSH end to end, paired with a code in the panel, unlocked with the admin code or a passkey; only root on the server adds the keys (anchor 1.11.0, spark-anker schluessel dazu)
-- **V01.1.351** Fix: the admin no longer has a day limit for audio overviews, analyses, sound/video and links as documents, nor does any profile with "No daily limit"; the page says "no daily limit"
 
 
 

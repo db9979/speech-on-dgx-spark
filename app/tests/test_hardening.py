@@ -453,11 +453,14 @@ class Stage2(unittest.TestCase):
         p = profile("Hxolga")
         for f in ("Hxolga mag Rosen.", "Hxolga mag Tulpen.", "Hxolga mag Nelken.", "Hxolga mag Lilien."):
             ask(p, [{"role": "user", "content": 'TOOL memory_save {"fact": "%s"}' % f}])
-        res = answer(ask(p, [{"role": "user", "content": 'TOOL memory_forget {"text": "Hxolga"}'}]))
+        # (the person's own word to forget is in the message: memory_forget runs only then, test_sicherheit_sofort)
+        res = answer(ask(p, [{"role": "user", "content": 'TOOL memory_forget {"text": "Hxolga", "wort": "vergiss"}'}]))
         self.assertIn("Nothing forgotten", res)
-        res = answer(ask(p, [{"role": "user", "content": 'TOOL memory_forget {"text": "er"}'}]))
+        res = answer(ask(p, [{"role": "user", "content": 'TOOL memory_forget {"text": "er", "wort": "vergiss"}'}]))
         self.assertIn("Forgot 0", res)
-        self.assertIn("Forgot 1", answer(ask(p, [{"role": "user", "content": 'TOOL memory_forget {"text": "Tulpen"}'}])))
+        self.assertIn("Forgot 1", answer(ask(p, [{"role": "user", "content": 'TOOL memory_forget {"text": "Tulpen", "wort": "vergiss"}'}])))
+        # without it (or with „Vergiss es“) the model alone never deletes a note
+        self.assertIn("Not done", answer(ask(p, [{"role": "user", "content": 'TOOL memory_forget {"text": "Rosen"}'}])))
 
     def test_ha_allowlist(self):
         import homeassistant

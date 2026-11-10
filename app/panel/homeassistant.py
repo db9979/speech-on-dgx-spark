@@ -283,6 +283,10 @@ async def command(item, text, language="de", panel=False, out=None):
     panel: the panel ran the command itself, so the model has no switching tool in this answer and the
     text never sends it to one (it called a tool it was not offered, Dominik 2026-10-12)."""
     notaus.stop("aktion")   # the Notaus holds every action off (notaus.py)
+    if _negated(text):   # a negated command never reaches Assist or the fallback, whoever sends it (intent.NEGATION)
+        print("homeassistant: nothing switched | verneint", flush=True)
+        return False, ("Not done: the command says not to do it (negated). Nothing was switched. Never switch it "
+                       "another way; ask the user what they want."), []
     ok, speech, targets, unknown, ids = await _assist(item, text, language)
     if unknown:
         done, more = await fallback(item, text, panel, out)
@@ -335,7 +339,7 @@ def is_command(text):
     ("Ist das Licht an?", "Wie warm ist es?") and statements ("Ich habe das Licht an gelassen") are not."""
     t = clean_command(text)
     words = [w for w in re.findall(r"\w+", _norm(t)) if w not in ("hey", "hallo", "spark", "ok", "okay")]
-    if not words or not _intent(t):
+    if not words or not _intent(t) or _negated(t):
         return False
     if words[0] in _MODAL or any(w in _IMPERATIVE for w in words[:4]):
         return True
@@ -343,6 +347,12 @@ def is_command(text):
         return False
     # short commands: "Fernseher aus", "Licht an im Wohnzimmer", "Bitte den Fernseher ausschalten"
     return len(words) <= 8
+
+
+def _negated(text):
+    """„Mach das Licht nicht aus“, „… nein, doch nicht“: the one fixed rule of the panel (intent.NEGATION)."""
+    import intent   # (here, not on top: intent reads this module's rules)
+    return intent.negated(text)
 
 
 def _intent(text):
@@ -745,6 +755,9 @@ async def fallback(item, text, panel=False, out=None):
     out (a dict, panel only): what the panel needs to ask the person or correct the choice later:
     service, cands (the devices that fit), chosen and its state before."""
     out = {} if out is None else out
+    if _negated(text):   # „Mach das Licht nicht aus“: never the opposite (intent.NEGATION)
+        _log("fallback: negated, nothing switched")
+        return False, "Not done: the command says not to do it (negated). Nothing was switched."
     words = [w for w in re.findall(r"\w+", _norm(clean_command(text))) if len(w) > 1]
     service = next((svc for svc, verbs in _VERBS if any(w in verbs.split() for w in words)), None)
     out["service"] = service

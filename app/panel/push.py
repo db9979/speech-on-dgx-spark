@@ -111,12 +111,55 @@ def valid(sub):
     return {"endpoint": url, "keys": {"p256dh": keys["p256dh"], "auth": keys["auth"]}}
 
 
-def add(uid, sub, name=""):
-    item = dict(valid(sub), name=str(name)[:60], created=int(time.time()))
+def _login(sid):
+    """The login a browser's subscription is bound to, as a short hash of its session (never the session itself)."""
+    return hashlib.sha256(("push-login:" + str(sid)).encode()).hexdigest()[:16] if sid else ""
+
+
+def add(uid, sub, name="", login=""):
+    """A browser's subscription belongs to exactly one profile (P1 Sicherheit, review A-K1): a browser has one per
+    origin, so whoever switches it on last at this browser gets it, and every other profile loses it at once (else the
+    next person at a shared PC or tablet read the notes of the one before, with title and text). login: the session of
+    the browser login that switched it on; logging out there ends the subscription too (drop_login)."""
+    item = dict(valid(sub), name=str(name)[:60], created=int(time.time()), **({"login": _login(login)} if login else {}))
     with _lock:
+        for other in profiles.user_ids():
+            if other != uid and any(x.get("endpoint") == item["endpoint"] for x in subs(other)):
+                profiles._write(_file(other), [x for x in subs(other) if x.get("endpoint") != item["endpoint"]])
+                print("push: browser moved to another profile | removed from the one before", flush=True)
         rest = [x for x in subs(uid) if x["endpoint"] != item["endpoint"]]
         profiles._write(_file(uid), (rest + [item])[-MAX_SUBS:])
     return item
+
+
+def drop_login(uid, sid):
+    """The browser login sid ended (Abmelden, a login ended under Ich → Sicherheit or by the admin): the subscriptions
+    it switched on go with it. Returns how many."""
+    key = _login(sid)
+    if not key:
+        return 0
+    with _lock:
+        items = subs(uid)
+        keep = [x for x in items if x.get("login") != key]
+        if len(keep) != len(items):
+            profiles._write(_file(uid), keep)
+    if len(keep) != len(items):
+        print(f"push: browser abo beim abmelden entfernt | {len(items) - len(keep)}", flush=True)
+    return len(items) - len(keep)
+
+
+def logins_ended(uid, keep_sid="", new_sid=""):
+    """Überall abmelden: every subscription bound to a browser login goes, the one of this browser (keep_sid) moves
+    to its new login (new_sid). Subscriptions without a login (older ones) stay."""
+    old, new = _login(keep_sid), _login(new_sid)
+    with _lock:
+        items = subs(uid)
+        keep = [dict(x, login=new) if old and x.get("login") == old and new else x for x in items
+                if not x.get("login") or (old and x.get("login") == old and new)]
+        profiles._write(_file(uid), keep)
+    if len(items) != len(keep):
+        print(f"push: browser abos nach ueberall abmelden entfernt | {len(items) - len(keep)}", flush=True)
+    return len(items) - len(keep)
 
 
 def remove(uid, endpoint):
@@ -174,6 +217,11 @@ def sub_id(endpoint):
     return hashlib.sha256(str(endpoint).encode()).hexdigest()[:16]
 
 
+def has_sub(uid, key):
+    """The browser behind this short name (sub_id) has a subscription of the profile."""
+    return bool(key) and any(sub_id(s["endpoint"]) == key for s in subs(uid))
+
+
 LAST_KEEP = 12 * 3600
 
 
@@ -193,21 +241,33 @@ def pick(uid, private=True, to=""):
     """One target for a note (V01.0.181: everything once): with Meldung ans genutzte Gerät (zustellung.pick) the device in
     use right now, else the phone app; otherwise the device the profile used last, else the
     iPhone app, else the Android app (android.py, it asks for notes itself), else the Spark-Begleiter on PC or
-    Mac (begleiter.py, same), else Telegram, else the newest browser. Returns ("app"|"and"|"desk"|"tg"|"web", [subscriptions]).
+    Mac (begleiter.py, same), else Telegram, else the newest browser. A browser used last without a subscription of its
+    own never sends the note to another browser: the next way in that order, the newest browser only when browsers
+    are all the profile has (P1). Returns ("app"|"and"|"desk"|"tg"|"web", [subscriptions]).
     to: the way the profile chose for this kind of note (e.g. svc_device of the Dienst-Wächter), when it is set up."""
     import zustellung
     have = _have(uid, private)
     kind, key, t = profiles.LAST_USED.get(uid, ("", "", 0))
     routed = None if to in have and have[to] else zustellung.pick(uid, have)
+    used = False   # the way is the device used last (profiles.LAST_USED)
     if to in have and have[to]:
         kind, key = to, (key if kind == to else "")
     elif routed:   # Meldung ans genutzte Gerät (zustellung.py): the device in use now, else the phone app
         kind, key = routed[0], routed[1]
     elif not (have.get(kind) and time.time() - t < LAST_KEEP):
         kind = next((k for k in WAYS if have[k]), "")
+    else:
+        used = True
+    if kind == "web" and used and not has_sub(uid, key):
+        # the browser in use has no subscription of this profile (P1 Sicherheit, review A-H6): never another browser
+        # instead (an old phone in a drawer), the next way of the profile (phone app, Begleiter, Telegram)
+        kind = next((k for k in WAYS if k != "web" and have[k]), "web")
+        print("push: route web ohne abo | " + (kind if kind != "web" else "neuester browser"), flush=True)
     if kind != "web":
         return kind, []
     mine = [s for s in subs(uid) if key and sub_id(s["endpoint"]) == key]
+    # no browser named (none used lately, or browsers are the only way left): the profile's newest one; a subscription
+    # belongs to one profile only (add), so it is always one of the profile's own browsers
     return "web", mine or subs(uid)[-1:]
 
 

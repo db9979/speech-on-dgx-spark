@@ -107,6 +107,42 @@ WEATHER_WORDS = re.compile(dict(chat.NEED_TOOLS)["weather"].pattern + r"|(?i:\b(
                            r"wird es .{0,25}(schön|sonnig|nass|trocken))\b)")
 SWITCH_VERBS = re.compile(r"(?i)\b((aus|ein|an|ab|um)(schalten|machen)|schalt\w*|turn (on|off)|switch (on|off))\b")
 MINE = re.compile(r"(?i)\b(habe|hab|hat|für mich|an mich|mir|meine?)\b")
+# Verneinung und Abbruch (P1 Sicherheit, 2026-11-10): ONE fixed rule of the panel for every place that would act on a
+# sentence by itself. A negated wish („Mach das Licht nicht aus“, „Ruf Mama bloß nicht an“, „Kein Licht bitte“, „… nein,
+# doch nicht“) is never a direct smart home command (homeassistant.is_command, command), never narrowed to the tools of
+# one group (narrow) and never forces a changing tool (chat.needed, chat.first_tool); the group stays for the journal.
+# „Nicht vergessen“, „vergiss nicht“ are no negation of the wish. Never the model.
+NEGATION = re.compile(r"(?i)\b(nicht|nichts|kein|keine[nmrs]?|nie|niemals|not|never|don'?t|do not|doesn'?t|dont)\b")
+NOT_NEGATION = re.compile(r"(?i)\b((nicht|nie) (zu )?vergessen|vergiss (\w+ ){0,3}(nicht|nie)|don'?t forget|"
+                          r"nicht nur|not only)\b")
+# a whole sentence that calls the wish off („Vergiss es“, „Lass es“, „Schon gut“): a cancel, answered without any tool
+# (chat_turn: like small talk), never the memory group or memory_forget; klaeren._NONE takes the same phrases
+CANCEL_PHRASES = (r"vergiss es|vergiss das( ganze)?|lass es( lieber)?|lass das( lieber)?|lass mal|lass gut sein|schon gut|"
+                  r"nein,? doch nicht|doch nicht|egal|nicht so wichtig|abbrechen|never ?mind|forget it|forget about it|"
+                  r"cancel( that| it)?|skip it")
+CANCEL = re.compile(r"(?i)\W*(?:" + CANCEL_PHRASES + r")\b[\s,.!?]*(?:(?:spark|bitte|danke|war nur (?:ein )?(?:spaß|scherz)|"
+                    r"(?:ist )?nicht so wichtig|just kidding)[\s,.!?]*)*")
+# memory_forget only on the person's own word to forget (chat_tools.py), never on a negated one („Vergiss das bloß nicht“)
+FORGET_WORDS = re.compile(r"(?i)\b(vergiss\w*|vergessen|lösch\w*|losch\w*|entfern\w*|streich\w*|forget|delete|remove|erase)\b")
+FORGET_NOT = re.compile(r"(?i)\b(vergiss\w*|vergessen|lösch\w*|entfern\w*|streich\w*|forget|delete|remove|erase)\W+(\w+\W+){0,8}"
+                        r"(nicht|nie|niemals|not|never)\b|\b(nicht|nie|niemals|don'?t|do not|never)\W+(\w+\W+){0,2}"
+                        r"(vergessen|löschen|entfernen|streichen|forget|delete|remove|erase)\b")
+
+
+def negated(text):
+    """The person's own sentence says not to do it (NEGATION, without „nicht vergessen“): fixed rule, no model."""
+    return bool(NEGATION.search(NOT_NEGATION.sub(" ", str(text or "")[:2000])))
+
+
+def cancel(text):
+    """The whole sentence calls the wish off („Vergiss es“, „Lass es“, „Schon gut“, „Nein, doch nicht“)."""
+    return bool(CANCEL.fullmatch(str(text or "")[:200]))
+
+
+def forget_ok(text):
+    """memory_forget may run: the person's own latest message asks to forget, and neither calls off nor negates it."""
+    text = str(text or "")[:2000]
+    return bool(FORGET_WORDS.search(text)) and not cancel(text) and not FORGET_NOT.search(text)
 SPARK_WORDS = re.compile(r"(?i)\b(einstellung\w*|schalter\b|funktion(en)?\b|panel\b|settings?\b|"
                          r"best practice\w*|empfiehlst du|was empfiehlst|was (soll|sollte|kann) ich (hier )?(noch )?(einstellen|einschalten|ändern)|"
                          r"wie stelle ich|wo stelle ich|wo schalte ich|wo finde ich (die|den|das) (einstellung|schalter)|"
@@ -132,10 +168,15 @@ MAIL_WORDS = re.compile(chat.NEED_MAIL.pattern + r"|(?i:\b(postfach\w*|postfäch
 PARCEL_WORDS = re.compile(dict(chat.NEED_TOOLS)["parcels"].pattern + r"|(?i:\b(\w*bestellung\w*|dhl|hermes|dpd|gls|"
                           r"zustell\w*)\b)")
 # plan weiche-intelligenter 2: current things the rules missed („Wie steht der DAX?“, „Hat der Baumarkt heute offen?“)
-SEARCH_WORDS = re.compile(chat.NEED_SEARCH.pattern + r"|(?i:\b(dax|aktie\w*|börse\w*|bitcoin|benzinpreis\w*|spritpreis\w*|"
-                          r"diesel\w*|stau|staus|staumeldung\w*|fernsehprogramm|tv-programm|im fernsehen|was gibt es neues|"
-                          r"neuigkeiten|in der welt|weltgeschehen|flohmarkt\w*|veranstaltung\w*|konzert\w*|trainer\w*|"
-                          r"öffnungszeit\w*|(hat|haben) .{1,30}\b(geöffnet|offen)|was kostet|wie viel kostet|streik\w*)\b)")
+SEARCH_MORE = re.compile(r"(?i)\b(dax|aktie\w*|börse\w*|bitcoin|benzinpreis\w*|spritpreis\w*|"
+                         r"diesel\w*|stau|staus|staumeldung\w*|fernsehprogramm|tv-programm|im fernsehen|was gibt es neues|"
+                         r"neuigkeiten|in der welt|weltgeschehen|flohmarkt\w*|veranstaltung\w*|konzert\w*|trainer\w*|"
+                         r"öffnungszeit\w*|(hat|haben) .{1,30}\b(geöffnet|offen)|was kostet|wie viel kostet|streik\w*)\b")
+# the group websuche: the strong words (chat.NEED_SEARCH, a must), the weak ones (chat.SEARCH_WEAK) and these
+SEARCH_WORDS = re.compile("|".join("(?i:" + rx.pattern.removeprefix("(?i)") + ")"
+                                   for rx in (chat.NEED_SEARCH, chat.SEARCH_WEAK, SEARCH_MORE)))
+# „Ich habe im Lotto gewonnen“, „Wir spielen gern Skat“: about the person, no search (with the weak words only)
+PERSONAL = re.compile(r"(?i)\b(ich|wir|i|we)\b")
 # „Was kostet ein neues iPhone?“ asks the web for a price, „Streik bei der Bahn“ is news, not a connection
 PRICE_NEWS = re.compile(r"(?i)\b(was kostet|wie viel kostet|streik\w*)\b")
 # „Was kostet die Wärmepumpe laut Angebot?“ (plan such-index/zuverlaessig.md, step 2): the price in an own offer, invoice
@@ -306,10 +347,11 @@ REFERS = re.compile(r"(?i)\b(davon|dazu|daran|darin|drin|daraus|darauf|darüber|
 
 
 class Route:
-    def __init__(self, names, why, hints=None):
+    def __init__(self, names, why, hints=None, neg=False):
         self.names = names          # [intent], [] = unklar, ["plaudern"]
         self.why = why              # {intent: word that matched}
         self.hints = hints or {}    # {intent: hint word}: only when no rule was sure (HINTS); never narrows
+        self.neg = neg              # the sentence is negated (negated()): never narrowed, never a forced tool
 
     @property
     def clear(self):
@@ -334,6 +376,8 @@ def classify(text, extra_words="", group_words="", not_words=""):
         return Route([], {})
     if chat.SMALLTALK.fullmatch(text):
         return Route(["plaudern"], {})
+    if cancel(text):   # „Vergiss es“, „Lass es“: called off, never the memory group (NEGATION above)
+        return Route(["plaudern"], {"plaudern": "Abbruch"})
     # a question about the Spark itself (hilfe.py, plan hilfe-besser 1): "Wie verbinde ich Home Assistant?" is about
     # setting it up, not about switching; it goes to the Spark-Hilfe only, before any other rule or the model's pick
     lang = LANGUAGE.search(text)
@@ -380,8 +424,13 @@ def classify(text, extra_words="", group_words="", not_words=""):
     # nothing else was recognized ("Fernseher aus" names a device and counts anyway)
     if "smarthome" in why and not device and len(why) > 1:
         why.pop("smarthome")
+    # P1 (review D-2): weak search words alone („Ergebnis“, „gewonnen“, „Nachrichten“) in a private sentence („Ergebnis
+    # meiner Blutuntersuchung“, „Nachrichten von Tom“, „Ich habe gewonnen“) are no web search: nothing of it goes out
+    if "websuche" in why and not chat.NEED_SEARCH.search(text) and not SEARCH_MORE.search(text) \
+            and (chat.PRIVATE_WORDS.search(text) or PERSONAL.search(text)):
+        why.pop("websuche")
     # "Habe ich neue Nachrichten?" are messages for the person, "Was gibt es in den Nachrichten?" news
-    news = any(m.group(0).lower().startswith("nachricht") for m in SEARCH_WORDS.finditer(text))
+    news = any("nachricht" in m.group(0).lower() for m in SEARCH_WORDS.finditer(text))
     if "websuche" in why and "nachricht" in why and news:
         why.pop("websuche" if MINE.search(text) else "nachricht")
     # "Schreib Anna, dass ..." is a message even without the word (messages.py decides the details)
@@ -465,7 +514,7 @@ def classify(text, extra_words="", group_words="", not_words=""):
         if COMPARE.search(text):
             why.pop("wetter", None)
     # „Was kostet die Wärmepumpe laut Angebot?“: the price in an own paper, never the web search
-    if "websuche" in why and OWN_PAPER.search(text) and not chat.NEED_SEARCH.search(text):
+    if "websuche" in why and OWN_PAPER.search(text) and not (chat.NEED_SEARCH.search(text) or chat.SEARCH_WEAK.search(text)):
         why.pop("websuche")
         if not why:
             why["finden"] = OWN_PAPER.search(text).group(0)[:40]
@@ -494,7 +543,7 @@ def classify(text, extra_words="", group_words="", not_words=""):
     # zur Wahl?“). Smart home goes unless the sentence is a command; the hint words stay beside it.
     read = None
     if not set(why) - {"smarthome"} and not PRESS.search(text) and not fund.FIND_NOT.search(text) \
-            and not chat.NEED_SEARCH.search(text):
+            and not (chat.NEED_SEARCH.search(text) or chat.SEARCH_WEAK.search(text)):
         m = OWN_WROTE.search(text)
         if m and not VAGUE.search(text):
             read = "mail"
@@ -513,7 +562,7 @@ def classify(text, extra_words="", group_words="", not_words=""):
     for name, rx in own_route_words(not_words).items():
         if name in why and rx.search(text):
             why.pop(name)
-    return Route(list(why), why, {} if why and not read else hints_of(text))
+    return Route(list(why), why, {} if why and not read else hints_of(text), negated(text))
 
 
 def hints_of(text):
@@ -596,7 +645,7 @@ def narrow(route, tools, ccfg=None, keep=frozenset()):
     keep: tools a module offered only because the person's own words named them (extras "keep": „aufs reMarkable“,
     the name of an own MCP service); they stay, whatever group the rest of the sentence is (plan werkzeug-abdeckung B1:
     „Leg meine Einkaufsliste aufs reMarkable“ lost the reMarkable to the group liste)."""
-    if not route.clear:
+    if not route.clear or route.neg:   # a negated wish keeps every tool the rights left (NEGATION)
         return tools
     ccfg = ccfg or {}
     off = ccfg.get("route_off") if isinstance(ccfg.get("route_off"), list) else []
@@ -678,7 +727,7 @@ def forced(route, need, offered):
     """The one tool the first round has to call, or None: a single clear intent whose group has
     exactly one tool on offer, and that is the needed one ("Wie wird das Wetter?" -> weather). A group
     with several (set, list, cancel a reminder) keeps "required": the model picks among those."""
-    if not route.clear or len(route.names) != 1 or len(need) != 1:
+    if not route.clear or route.neg or len(route.names) != 1 or len(need) != 1:
         return None
     return need[0] if route.tools() & set(offered) == {need[0]} else None
 

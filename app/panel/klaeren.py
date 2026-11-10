@@ -73,8 +73,14 @@ _NUM = {"eins": 1, "ein": 1, "einen": 1, "erste": 1, "ersten": 1, "erstes": 1, "
         "zwei": 2, "zweite": 2, "zweiten": 2, "zweites": 2, "zweiter": 2, "2": 2, "two": 2, "second": 2,
         "drei": 3, "dritte": 3, "dritten": 3, "drittes": 3, "dritter": 3, "3": 3, "three": 3, "third": 3,
         "vier": 4, "vierte": 4, "vierten": 4, "viertes": 4, "vierter": 4, "4": 4, "four": 4, "fourth": 4}
-_NONE = re.compile(r"(?i)^\W*(keins?|keine[nrs]?|nichts davon|keins davon|keines davon|abbrechen|vergiss es|lass es|"
-                   r"none|cancel|neither|never mind)\b")
+_NONE = re.compile(r"(?i)^\W*(keins?|keine[nrs]?|nichts davon|keins davon|keines davon|none|neither)\b")
+
+
+def _none(text):
+    """None of the devices: the own words of a choice, or a sentence that calls the wish off (intent.CANCEL_PHRASES,
+    the one list for „Vergiss es“, „Lass es“, „Abbrechen“; P1 Sicherheit)."""
+    import intent   # (here: intent loads chat, which loads this module late)
+    return bool(_NONE.search(text) or re.match(r"(?i)^\W*(" + intent.CANCEL_PHRASES + r")\b", text))
 _LIST = re.compile(r"(?i)\b(liste|alle geräte|alle geraete|zeig mir alle|list|show all)\b")
 _CORRECT = re.compile(r"(?i)^\W*(nein|nee|falsch|nicht (den|die|das)|ich meinte|ich mein|den anderen|die andere|das andere|"
                       r"no|wrong|i meant|the other)\b")
@@ -248,7 +254,7 @@ def answer(uid, src, text, own=True):
         drop(uid)   # something else: the offer lapses
     elif w and w["kind"] == "choice":
         if len(text.split()) <= 10:
-            if _NONE.search(text):
+            if _none(text):
                 drop(uid)
                 if not w["list"]:   # "keins davon": the whole list next
                     return {"kind": "list", "area": w["area"], "said": w["said"], "act": w["act"], "code_ok": w["code_ok"]}

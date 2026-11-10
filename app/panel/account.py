@@ -447,10 +447,11 @@ def profile_logout(request: Request):
     end_window(request)
     _fern_sperren(request)
     raw = request.cookies.get(profiles.COOKIE, "")
+    u, _ = profiles._cookie_user(profiles._load(), raw)   # before the revoke: a revoked login names nobody
     guard.revoke(raw, profiles.session_secs())
-    u, _ = profiles._cookie_user(profiles._load(), raw)
     if u and raw.count(".") == 3:
         profiles.end_session(u["id"], raw.split(".")[2])
+        push.drop_login(u["id"], raw.split(".")[2])   # the browser's push subscription ends with its login (P1)
     r = Response('{"ok": true}', media_type="application/json")
     r.delete_cookie(profiles.COOKIE)
     return r
@@ -515,6 +516,7 @@ def profile_sessions(request: Request, prof=Depends(browser_profile)):
 def profile_end_session(sid: str, request: Request, prof=Depends(browser_profile)):
     if not re.fullmatch(r"[0-9a-f]{16}", sid) or not profiles.end_session(prof["id"], sid):
         raise HTTPException(404, "no such login")
+    push.drop_login(prof["id"], sid)
     guard.log("profile_session_end", ip=guard.client_ip(request), name=prof["name"], uid=prof["id"])
     return {"ok": True}
 
@@ -535,9 +537,13 @@ async def profile_logout_all(request: Request, prof=Depends(browser_profile)):
     guard.log("profile_logout_all", ip=guard.client_ip(request), name=prof["name"], uid=prof["id"])
     u = next(u for u in profiles._load()["users"] if u["id"] == prof["id"])
     r = Response('{"ok": true}', media_type="application/json")
+    if request.headers.get(profiles.DEVICE_HEADER):
+        push.logins_ended(prof["id"])   # from an app: every browser login ended, their subscriptions too
     if not request.headers.get(profiles.DEVICE_HEADER):
         mark = profiles.second_step_of(request.cookies.get(profiles.COOKIE, ""))
         value = profiles._cookie_value(u, agent=request.headers.get("user-agent", ""))
+        old = request.cookies.get(profiles.COOKIE, "")
+        push.logins_ended(prof["id"], old.split(".")[2] if old.count(".") == 3 else "", value.split(".")[2])
         r.set_cookie(profiles.COOKIE, value, max_age=profiles.session_secs(), httponly=True, samesite="lax")
         if mark and mark == mfa.mark(prof["id"]):
             profiles.mark_second_step(value, mark)   # the new login keeps what the old one was made with
@@ -2085,8 +2091,9 @@ def profile_push(prof=Depends(own_profile)):
 @router.post("/api/profile/push", dependencies=[Depends(assistant), Depends(_push_on)])
 async def profile_push_add(request: Request, prof=Depends(secret_profile)):
     body = await request.json()
+    raw = "" if request.headers.get(profiles.DEVICE_HEADER) else request.cookies.get(profiles.COOKIE, "")
     try:
-        push.add(prof["id"], body.get("subscription"), body.get("name", ""))
+        push.add(prof["id"], body.get("subscription"), body.get("name", ""), raw.split(".")[2] if raw.count(".") == 3 else "")
     except ValueError as e:
         raise HTTPException(400, str(e))
     n = await push.send(prof["id"], "Spark", "Erinnerungen kommen jetzt auch auf dieses Gerät.", tag="hello")

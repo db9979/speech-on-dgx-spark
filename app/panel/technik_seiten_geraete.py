@@ -213,7 +213,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Apps
     "apps": {
-        "stand": "2670a86920",
+        "stand": "6d3e318bdc",
         "bezug": {
             "android.TOKEN_SECONDS": ["s3"], "android.TOKEN_USES": ["s3"], "iphone.profile_pair": ["s1", "s2"],
             "kopplung.Codes.new": ["s3"], "kopplung.Codes.take": ["s4"], "iphone.app_pair": ["s4", "s5"],
@@ -323,7 +323,8 @@ SEITEN = {
                 "(POST /api/iphone/admin-step, jedes Mal ein frischer Code oder Passkey) ihn einmal daran. Mit „Mitteilung ans genutzte Gerät“ "
                "sagen App und Seiten jede Minute nur, ob sie gerade benutzt werden (POST /api/zustellung/da, der Begleiter "
                "mit seiner Leerlaufzeit); zustellung.pick schickt eine Mitteilung dann an das Gerät mit der letzten Eingabe "
-               "der letzten {zustellung.ACTIVE} Sekunden, sonst gleich an die Handy-App. Hat niemand sie gesehen, schickt "
+               "der letzten {zustellung.ACTIVE} Sekunden (ein Browser nur mit eigenem Push-Abo, und ein Push-Abo gehört "
+               "genau einem Profil), sonst gleich an die Handy-App. Hat niemand sie gesehen, schickt "
                "zustellung.follow sie nach {zustellung.FOLLOW|min} Minuten einmal aufs Handy; ein angetippter Hinweis meldet "
                "„gesehen“, und mit der Antwort „zu“ räumen Seiten und iPhone Erledigtes weg. Jede Mitteilung bleibt "
                "{mitteilungen.KEEP|h} Stunden mit einer zufälligen Nummer auf dem Spark (mitteilungen.keep, nur im Speicher); "
@@ -342,7 +343,8 @@ SEITEN = {
                "(POST /api/iphone/admin-step, a fresh code or passkey every time) binds it to it once. With „Notes to the device in use“ the app and the pages only say "
                "every minute whether they are in use right now (POST /api/zustellung/da, the companion with its idle time); "
                "zustellung.pick then sends a note to the device with the last input within the last {zustellung.ACTIVE} "
-               "seconds, else to the phone app at once. If nobody saw it, zustellung.follow sends it once to the phone after "
+               "seconds (a browser only with its own push subscription, which belongs to exactly one profile), else to the "
+               "phone app at once. If nobody saw it, zustellung.follow sends it once to the phone after "
                "{zustellung.FOLLOW|min} minutes; a tapped note says „seen“, and with the answer „zu“ pages and the iPhone "
                "take done ones away. Every note stays on the Spark for {mitteilungen.KEEP|h} hours with a random number "
                "(mitteilungen.keep, in memory only); only the number goes along. Tapped, it shows as a card above the "

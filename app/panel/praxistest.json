@@ -5429,6 +5429,48 @@
 "titel": "Fester Name fürs Sprachmodell",
 "text": "Nach dem Update in Open WebUI (oder mit curl gegen http://SPARK:31080/v1/models oder das LLM-Tor auf Port 31006) die Modell-Liste neu laden: oben steht „sprachmodell“, im Feld „modell“ das Modell, das wirklich läuft (nicht mehr qwen38-27b-nvfp4-dspark). Mit „sprachmodell“ fragen: die Antwort kommt. Zustand → Live: der Kasten heißt „Sprachmodell“, darunter das echte Modell; im Ablauf steht „LLM“ statt „qwen38“. Unter Zustand → Logs (LLM-Tor) nachsehen, ob „llmtor: modell weicht von einstellung ab“ steht: dann laufen Einstellung und Engine auseinander.",
 "thread": "Neutralen Modellnamen beim Modellwechsel zeigen"
+},
+{
+"id": "P802",
+"v": 1361,
+"titel": "Push-Abo nur für ein Profil",
+"text": "Am selben Browser (https) als Profil A anmelden, Ich → Mitteilungen → Erinnerungen auf diesem Gerät einschalten, abmelden, als Profil B anmelden: Ich → Mitteilungen zeigt „Aus“, nicht „An“. Für A eine Erinnerung in 2 Minuten stellen (am Handy): sie kommt nicht in diesem Browser. Als B einschalten: unter A steht der Browser nicht mehr.",
+"thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P803",
+"v": 1361,
+"titel": "Mitteilung nie an einen anderen Browser",
+"text": "Profil mit iPhone-App und einem Browser mit Mitteilungen; in einem zweiten Browser ohne Mitteilungen arbeiten und eine Erinnerung fällig werden lassen: sie kommt auf dem iPhone, nicht im ersten Browser. Zustand → Logs (Mitteilung): „push: route web ohne abo | app“.",
+"thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P804",
+"v": 1361,
+"titel": "Gesprächsliste nach schnellem Profilwechsel",
+"text": "Am geteilten Browser als A anmelden und sofort (Netz gedrosselt) zu B wechseln: die Gesprächsliste zeigt nur B's Gespräche, kein Gespräch von A ist offen.",
+"thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P805",
+"v": 1361,
+"titel": "Verneinung schaltet nie",
+"text": "Mit Home Assistant: „Mach das Licht nicht aus“, „Mach das Licht aus, nein doch nicht“ und „Kein Licht bitte“ sagen: das Licht bleibt an. „Vergiss es“ und „Schon gut“: kurze Antwort, nichts im Gedächtnis gelöscht (Ich → Gedächtnis). Zustand → Logs (Weiche): „verneint“ in der Zeile „weiche: Absicht …“.",
+"thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P806",
+"v": 1361,
+"titel": "Keine Websuche für Privates",
+"text": "Mit Websuche: „Wie ist das Ergebnis meiner Blutuntersuchung?“ und „Gibt es Nachrichten von Tom?“ fragen: Logs → Anfragen zeigt keine Websuche, „Pflicht -“. „Wer hat gestern in der Bundesliga gewonnen?“ sucht weiter im Web.",
+"thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P807",
+"v": 1361,
+"titel": "Codewort nur vom selben Gerät",
+"text": "Smart-Home-Codewort gesetzt: am Handy „Mach das Garagentor auf“ ohne Codewort, dann innerhalb von 2 Minuten am Rechner etwas mit Codewort sagen: das Tor bleibt zu. Danach am Handy das Codewort sagen: das Tor geht auf.",
+"thread": "Spark stabilisieren mit Code-Review"
 }
 ]
 }

@@ -7,7 +7,6 @@ chat._answer() asks the model with it, chat_tools.run() carries out the tool cal
 import asyncio
 import os
 import sys
-import time
 
 import httpx
 from fastapi import HTTPException
@@ -546,15 +545,19 @@ async def prepare(request):
         system = per_turn(system, "Rückfrage: Die Auswahl kann gerade nicht ausgeführt werden. Sag das kurz, ohne Werkzeug.")
     if ha and messages[-1]["role"] == "user" and not room_far and not kl_took:
         latest = messages[-1]["content"]
-        pend = chat._HA_PENDING.pop(who["id"], None)
+        # a command waiting for the code word belongs to the device it was said at (chat.ha_take): the code word from
+        # another device of the profile neither runs it nor clears it
+        ha_src = chat.ha_source(request, src)
+        pend = chat.ha_take(who["id"], ha_src)
         if homeassistant.is_command(latest) and await homeassistant.mentions_device(ha, latest):
             ha_direct = homeassistant.clean_command(latest)
         elif homeassistant._intent(latest):  # sounds like switching but is not taken as a command: say why
-            print(f"homeassistant: not taken as a command | {len(str(latest).split())} words", flush=True)
-        elif ha_code_ok and pend and time.time() - pend[0] < 120:
-            ha_direct = pend[1]
+            print(f"homeassistant: not taken as a command | {len(str(latest).split())} words"
+                  + (" | verneint" if homeassistant._negated(latest) else ""), flush=True)
+        elif ha_code_ok and pend:
+            ha_direct = pend
         if ha_direct and ha_code and not ha_code_ok:
-            chat._HA_PENDING[who["id"]] = (time.time(), ha_direct)
+            chat.ha_wait(who["id"], ha_src, ha_direct)
             print("homeassistant: command waits for the code word", flush=True)
             system = per_turn(system, "Der Nutzer will etwas im Smart Home schalten, aber das Codewort fehlt. "
                               "Frag in einem kurzen Satz nach dem Codewort; sag nicht, dass etwas geschaltet wurde.")
@@ -1031,13 +1034,13 @@ async def prepare(request):
     if not force and ex.get("must") and ex["must"] in {t["function"]["name"] for t in tools}:
         force, need = ex["must"], [ex["must"]]
     # the words that matched, only as far as they are still in the message (a code word is gone by now)
-    why = ", ".join(f"{k}: „{v if v.lower() in ask_text.lower() or v in ('Modell', 'Sende-Bitte', 'Seite', 'Folgefrage', 'Foto ändern') else '…'}“"
+    why = ", ".join(f"{k}: „{v if v.lower() in ask_text.lower() or v in ('Modell', 'Sende-Bitte', 'Seite', 'Folgefrage', 'Foto ändern', 'Abbruch') else '…'}“"
                     for k, v in route.why.items())[:200]
     print("weiche: Absicht", route.label(), "| Grund", why or "-",
           "| Hinweis", "+".join(route.hints) or "-",
           "| Werkzeuge", f"{len(tools)} von {all_tools}" if len(tools) != all_tools else len(tools),
           "| Pflicht", force or ", ".join(need) or "-", "| gesperrt", carry or "nichts",
-          "| eingrenzen", "an" if route_on else "aus", flush=True)
+          "| eingrenzen", "an" if route_on else "aus", *(["| verneint"] if route.neg else []), flush=True)
     if carry:   # what is locked and why, said plainly so the model never makes up another reason
         line = intent.lock_line(carry, {t["function"]["name"] for t in tools} & locked({"mail": carry == "mail",
                                                                                           "outside": carry != "mail"}))
@@ -1097,7 +1100,8 @@ async def prepare(request):
     tool_temp = float(ccfg.get("tool_temperature", 0.1))
     # thinking only while choosing the tool: released by the admin for this profile (never guests)
     think_tools = bool(who and own_browser and features.allowed("toolthink", who["id"], ccfg))
-    small = bool(chat.SMALLTALK.fullmatch(ask_text))
+    # small talk and a sentence that calls the wish off („Vergiss es“, intent.cancel): answered without any tool
+    small = bool(chat.SMALLTALK.fullmatch(ask_text)) or intent.cancel(ask_text)
     # Ablauf und Freigabe zeigen (ablauf.py): the tools of this answer under it, a waiting proposal as a card with
     # Ja and Nein; only the profile's own device, never guests or another voice
     steps_on = bool(who and own_browser and features.allowed("ablauf", who["id"], ccfg))

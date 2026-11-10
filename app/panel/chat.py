@@ -4,6 +4,7 @@ import asyncio
 import chat_modell
 import chat_ton
 import datetime
+import hashlib
 import json
 import os
 import re
@@ -434,7 +435,41 @@ HA_HINT = ("Mit home_assistant steuerst du das Smart Home des Nutzers (Licht, Ge
            "Einkaufsliste home_assistant_todo.")
 
 
-_HA_PENDING = {}  # profile id -> (time, command) waiting for the code word
+_HA_PENDING = {}  # profile id -> (time, command, source) waiting for the code word (ha_wait, ha_take)
+HA_WAIT_S = 120   # s a smart home command waits for the code word
+
+
+def ha_source(request, src):
+    """Where a smart home command that waits for the code word came from (P1 Sicherheit, review A-H4): client:convo plus
+    the device key or this browser's login, only as a short hash, only in memory, never in a log."""
+    dev = profiles.device(request)
+    raw = "" if dev else str(request.cookies.get(profiles.COOKIE, "") or "")
+    who = dev["id"] if dev else (raw.split(".")[2] if raw.count(".") == 3 else "")
+    return f"{src}:{hashlib.sha256(who.encode()).hexdigest()[:12]}"
+
+
+def ha_wait(uid, source, command, now=None):
+    """The command waits for the code word, bound to its source (one per profile, the newest)."""
+    if len(_HA_PENDING) > 1000:
+        _HA_PENDING.clear()
+    _HA_PENDING[uid] = (time.time() if now is None else now, command, source)
+
+
+def ha_take(uid, source, now=None):
+    """The waiting command of this profile, only for the same source; it is taken then (run with the code word or
+    dropped by the next message from there). A message from another device of the profile neither runs nor clears it.
+    None when none waits, it is older than HA_WAIT_S or it came from another source."""
+    now = time.time() if now is None else now
+    pend = _HA_PENDING.get(uid)
+    if not pend:
+        return None
+    if now - pend[0] >= HA_WAIT_S:
+        _HA_PENDING.pop(uid, None)
+        return None
+    if pend[2] != source:
+        return None
+    _HA_PENDING.pop(uid, None)
+    return pend[1]
 HA_CODE_HINT = ("Änderungen im Smart Home (home_assistant, home_assistant_action) brauchen das Codewort des Nutzers "
                 "in derselben Nachricht; du siehst es nur als [Codewort]. Fehlt es, frag kurz danach, ohne ein "
                 "Codewort zu nennen oder zu raten, und führ die Änderung erst aus, wenn die Antwort es enthält. "
@@ -613,11 +648,30 @@ MAIL_FOLLOW_UP = re.compile(r"(?i)\b(e-?mails?|mails?|posteingang|inbox|postfach
                             r"neueste|von wem|wer war|pakete?|päckchen|sendung\w*|lieferung\w*|"
                             r"the (first|second|last) one|reply|sender|subject|attachment)\b")
 NEED_REMINDER = re.compile(r"(?i)\b(erinnerung\w*|erinnere? mich|timer\w*|wecker\w*|reminders?)\b")
-NEED_SEARCH = re.compile(r"(?i)\b(gewonnen|gewinnt|verloren|gespielt|spielt\w*|spiel(e|s)?|spielstand|ausgegangen|ergebnis(se)?|tabelle|"
-                         r"bundesliga|champions league|nachrichten|news|schlagzeilen?|politi\w*|(heute|gerade) (so )?los|"
+# P1 Sicherheit (2026-11-10, review D-2): only STRONG words make the web search a must (a forced call sends words out);
+# the weak ones (SEARCH_WEAK: „gewonnen“, „spielt“, „Ergebnis“, „Tabelle“, „Nachrichten“, „Politik“) only find the group
+# websuche (intent.SEARCH_WORDS). A sports word counts as strong only in a question about a match („Wer hat gewonnen?“).
+NEED_SEARCH = re.compile(r"(?i)\b(bundesliga|champions league|schlagzeilen?|headlines|spielstand|"
+                         r"(aktuelle|neueste|heutige) nachrichten|nachrichten (von )?heute|in den nachrichten|in the news|tagesschau|"
+                         r"(heute|gerade|aktuell)\b.{0,20}\bpoliti\w*|politi\w*\b.{0,20}\b(heute|gerade|aktuell|los)|"
+                         r"(wer|wie|gegen wen|who|how)\b.{0,60}\b(gewonnen|verloren|gespielt|ausgegangen|won|lost|played)|"
                          # asked for in so many words: "such im Internet", "google mal", "recherchier"
                          r"(im|ins|aus dem) (internet|netz|web)|online (such|nachseh|nachschau|schau|nach)\w*|(schau|such|guck)\w* (mal )?online|googl\w*|recherch\w*|websuche|web search|"
                          r"search the web|look (it )?up online)\b")
+SEARCH_WEAK = re.compile(r"(?i)\b(gewonnen|gewinnt|verloren|gespielt|spielt\w*|spiel(e|s)?|ausgegangen|ergebnis(se)?|tabelle|"
+                         r"nachrichten|news|politi\w*|(heute|gerade) (so )?los)\b")
+# words that make a sentence private (P1, review D-2): an own thing, health, money or a message from a person. Such a
+# sentence never makes the web search a must (needed), and weak search words alone give it no group websuche
+# (intent.classify), so nothing of it goes out as a search unless the person asks for the web in so many words.
+PRIVATE_WORDS = re.compile(r"(?i:\b(mein|meine[mnrs]?|unser|unsere[mnrs]?|my|our|"
+                           r"blut\w*|\w*untersuchung\w*|befund\w*|diagnose\w*|arzt|ärzt\w*|krank\w*|medikament\w*|"
+                           r"tablette\w*|labor\w*|symptom\w*|therapie\w*|schwanger\w*|röntgen\w*|blood|doctor|diagnos\w*|"
+                           r"konto\w*|kontostand|gehalt\w*|lohn\w*|iban|kredit\w*|schulden|überweisung\w*|depot\w*|"
+                           r"rente\w*|salary|bank account)\b)"
+                           # „Nachrichten von Tom“: messages from a person, never the news
+                           r"|\b(?i:nachricht\w*|messages?|news) (?i:von|vom|an|für|from|to) "
+                           r"(?!(?i:der|die|das|dem|den|des|heute|gestern|morgen|aus|zu|zum|zur|über|spiegel|tagesschau)\b)"
+                           r"(?:[A-ZÄÖÜ]\w+|(?i:mama|papa|mutti|vati|oma|opa|mum|mom|dad))")
 CALENDAR_ADD_HINT = ("Neue Termine trägst du mit calendar_add ein. Das Werkzeug speichert noch nichts: Lies dem "
                      "Nutzer den Vorschlag aus dem Ergebnis vor und frag, ob du ihn eintragen sollst. Eingetragen "
                      "wird erst, wenn er in der nächsten Nachricht zustimmt. Frag vorher nach, wenn Tag oder Uhrzeit "
@@ -738,6 +792,8 @@ def first_tool(route, need, offered, route_on=True):
     own_need = [n for n in need if n not in {x for x, _ in NEED_TOOLS}]
     if not force and len(own_need) == 1 and len(need) == 1:
         force = own_need[0]    # the admin's own Pflicht-Regel for one tool (R1): that tool first, not just any
+    if not force and getattr(route, "neg", False) and need:
+        force = need[0]   # a negated sentence (intent.NEGATION): never "required" with an open choice, one reading tool
     if not force and ("document_status" in need or "remarkable_sent" in need):
         # „Wurde ein Dokument für den reMarkable erstellt?“: the Spark's own doing is looked up, never guessed or
         # searched in the uploaded documents (chat.DONE_WORDS; document_status also lists the reMarkable)
@@ -750,13 +806,23 @@ def first_tool(route, need, offered, route_on=True):
 
 
 def needed(text, offered, extra=""):
-    """The tools among offered (names) that this question has to go through (extra: chat.tool_words)."""
+    """The tools among offered (names) that this question has to go through (extra: chat.tool_words). Fixed rules of
+    the panel (P1 Sicherheit): only reading tools are ever a must (the admin's Pflicht-Regel for a changing tool only
+    finds its group, review D-5); a private sentence (PRIVATE_WORDS) never makes the web search a must; a negated one
+    (intent.negated) never one that changes something or goes out to the internet."""
+    import intent
     own = own_words(extra)
     built = [name for name, words in NEED_TOOLS if name in offered
              and (words.search(text or "") or (name in own and own[name].search(text or "")))]
     # the admin's rules for any other tool (R1): whole words only, the tool must be offered in this turn
-    mine = [name for name, rx in own.items() if name in offered and name not in built and rx.search(text or "")]
-    return list(dict.fromkeys(built + mine))
+    mine = [name for name, rx in own.items() if name in offered and name not in built and rx.search(text or "")
+            and name not in taten.KIND]
+    out = list(dict.fromkeys(built + mine))
+    if "web_search" in out and PRIVATE_WORDS.search(text or ""):
+        out.remove("web_search")
+    if out and intent.negated(text):
+        out = [n for n in out if n not in taten.KIND and n not in notaus.INTERNET_TOOLS]
+    return out
 
 
 # chat.tool_hints (R2, plan vorschlaege-besser.md): the admin's own hint per tool, one line each,

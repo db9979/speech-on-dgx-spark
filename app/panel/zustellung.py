@@ -88,7 +88,10 @@ def pick(uid, have, now=None):
     """(way, key, why) for a note by the rules above, None to let push.pick go on as before. have: way -> set up."""
     if not features.allowed("notedevice", uid):
         return None
-    got = next(((w, k, "aktiv") for w, k, _ in in_use(uid, now) if have.get(w)), None)
+    # a browser counts only when it has a subscription itself (P1 Sicherheit, review A-H6): else the next device in use
+    import push
+    got = next(((w, k, "aktiv") for w, k, _ in in_use(uid, now) if have.get(w) and (w != "web" or push.has_sub(uid, k))),
+               None)
     if got is None:
         got = next(((w, "", "handy") for w in PHONES if have.get(w)), None)
     if got is not None:

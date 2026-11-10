@@ -529,6 +529,7 @@ $('chatnew').onclick=()=>{stopListening(true);stopAnswer();openConvo(null);chat.
 // Conversations are kept in this browser (localStorage), at most 30, newest first.
 // Conversations stay in this browser, kept apart per profile (guests: "convos").
 let PROFILE=null;
+let PROFILE_GEN=0;   // counts profile changes (setProfile): an answer asked for the profile before is dropped (P1)
 const TAB=Math.random().toString(36).slice(2,12);   // this page among the profile's open pages (verlauf.js: not "answering elsewhere" for itself)
 // Logged in, conversations live in the profile on the Spark (same list on every device); this
 // page keeps a copy in convos.cache. Guests keep theirs in this browser only.
@@ -540,26 +541,30 @@ const convos={cache:[],
     else this.local([c,...this.load().filter(x=>x.id!==c.id)])},
   // only the new messages: the Spark adds them to its copy, so what another device (phone, iPhone app) added
   // to the same conversation meanwhile stays; the answer is the conversation as the Spark has it now
-  async add(c,news){this.cache=[c,...this.cache.filter(x=>x.id!==c.id)];
+  async add(c,news){this.cache=[c,...this.cache.filter(x=>x.id!==c.id)];const gen=PROFILE_GEN;
     try{const d=await (await api('/api/profile/convos',{method:'PUT',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({id:c.id,title:c.title,add:news})})).json();
+      if(gen!==PROFILE_GEN)return null;   // another profile signed in meanwhile: never into its list
       if(d&&d.item){this.cache=[d.item,...this.cache.filter(x=>x.id!==d.item.id)];return d.item}}catch{}return null},
   del(id){if(PROFILE){this.cache=this.cache.filter(x=>x.id!==id);api('/api/profile/convos/'+encodeURIComponent(id),{method:'DELETE'}).catch(()=>{})}
     else this.local(this.load().filter(x=>x.id!==id))},
-  async sync(){if(!PROFILE){this.cache=[];return}
+  // every answer is taken only while the profile it was asked for is still signed in here (PROFILE_GEN, P1 Sicherheit):
+  // after a quick change of profile the list of the one before never lands with the next
+  async sync(){if(!PROFILE){this.cache=[];return}const gen=PROFILE_GEN,pid=PROFILE.id;
     // conversations this browser kept for the profile before they moved to the Spark
-    let old=[];try{old=JSON.parse(localStorage.getItem('convos:'+PROFILE.id)||'[]')}catch{}
-    for(const c of old)await api('/api/profile/convos',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)}).catch(()=>{});
-    try{localStorage.removeItem('convos:'+PROFILE.id)}catch{}
+    let old=[];try{old=JSON.parse(localStorage.getItem('convos:'+pid)||'[]')}catch{}
+    for(const c of old){if(gen!==PROFILE_GEN)return;await api('/api/profile/convos',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)}).catch(()=>{})}
+    if(gen!==PROFILE_GEN)return;
+    try{localStorage.removeItem('convos:'+pid)}catch{}
     // inside the Android app the kept conversations at once (merken.js), until the Spark answers
     const k=!this.cache.length?merkGet('verlauf'):null,t0=performance.now();let seen=null;
     if(k&&Array.isArray(k.d)){this.cache=k.d;merkNote(k.at);fillConvos();if(!chat.msgs.length)openConvo(latestConvo());seen=chat.cid}
-    try{this.cache=await (await api('/api/profile/convos')).json();this.at=Date.now();merkConvos(this.cache);merkTime('verlauf',t0);
+    try{const got=await (await api('/api/profile/convos')).json();if(gen!==PROFILE_GEN)return;this.cache=got;this.at=Date.now();merkConvos(this.cache);merkTime('verlauf',t0);
       if(k){merkNote(null);if(seen&&chat.cid===seen&&chat.saved===chat.msgs.length){const top=latestConvo();if(top!==seen)openConvo(top);else convoAdopt(this.cache.find(x=>x.id===seen))}}}
-    catch{if(k){merkFailed();return}const o=OFFLINE_HERE!==false?offlineCopy():null;this.cache=o?o.c:[];if(o)offlineShow(o)}},   // offline: a trusted browser's copy
+    catch{if(gen!==PROFILE_GEN)return;if(k){merkFailed();return}const o=OFFLINE_HERE!==false?offlineCopy():null;this.cache=o?o.c:[];if(o)offlineShow(o)}},   // offline: a trusted browser's copy
   // what changed on other devices since the last look (deleted ones disappear); false when nothing came back
-  async fresh(){if(!PROFILE)return false;const since=Math.max(0,...this.cache.map(x=>x.updated||0));
-    try{const d=await (await api('/api/profile/convos?since='+since)).json();if(!d||!Array.isArray(d.items))return false;
+  async fresh(){if(!PROFILE)return false;const since=Math.max(0,...this.cache.map(x=>x.updated||0)),gen=PROFILE_GEN;
+    try{const d=await (await api('/api/profile/convos?since='+since)).json();if(gen!==PROFILE_GEN||!d||!Array.isArray(d.items))return false;
       const ids=new Set(d.ids||[]),got=new Set(d.items.map(x=>x.id));
       this.cache=[...d.items,...this.cache.filter(x=>ids.has(x.id)&&!got.has(x.id))].sort((a,b)=>b.updated-a.updated);this.at=Date.now();if(d.items.length)merkConvos(this.cache);return true}
     catch{return false}}};

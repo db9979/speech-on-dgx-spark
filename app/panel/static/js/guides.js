@@ -1960,7 +1960,7 @@ const GUIDES=[
  say:[['Nichts zu sagen, sie kommen von selbst.','Nothing to say, they come by themselves.']],
  out:[['Die Mitteilung geht verschlüsselt über den Push-Dienst deines Browsers (bei Apple über Apple).','The notification goes encrypted through your browser\'s push service (Apple\'s for Apple devices).']],
  off:[['Ich → Mitteilungen → „Ausschalten“.','Me → Notifications → "Switch off".']],
- fix:[['Knopf fehlt: Seite nicht über https oder auf dem iPhone nicht als App geöffnet.','Button missing: page not over https, or on iPhone not opened as an app.']]},
+ fix:[['Knopf fehlt: Seite nicht über https oder auf dem iPhone nicht als App geöffnet.','Button missing: page not over https, or on iPhone not opened as an app.'],['Nach Abmelden oder einem Profilwechsel aus: wieder einschalten. Ein Browser bekommt Mitteilungen immer nur für ein Profil.','Off after logging out or a change of profile: switch it on again. A browser gets notifications for one profile only.']]},
 {id:'telegram',grp:'go',sw:'chat.telegram',me:'tgbox',ng:1,t:['Telegram','Telegram'],
  what:[['Du schreibst dem Assistenten über einen eigenen Telegram-Bot oder schickst eine Sprachnachricht, von überall. Der Spark fragt Telegram selbst nach neuen Nachrichten, es braucht keinen offenen Port. Auf Wunsch kommen Erinnerungen und Hinweise auch dort an.','You write to the assistant through your own Telegram bot or send a voice message, from anywhere. The Spark asks Telegram for new messages itself, no open port is needed. If you like, reminders and notes arrive there too.']],
  need:[['Die Telegram-App und einen Bot, den der Admin einmal bei @BotFather anlegt.','The Telegram app and a bot the admin creates once with @BotFather.']],

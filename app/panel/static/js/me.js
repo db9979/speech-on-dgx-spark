@@ -2,7 +2,9 @@
 // ---------------------------------------------------------------- profile of this browser
 const ME_LOAD={p:null,next:null};   // Ich's boxes: the load running now and the one queued after it (openMe)
 function setProfile(p){const changed=(p&&p.id)!==(PROFILE&&PROFILE.id);PROFILE=p||null;
+  if(changed)PROFILE_GEN++;   // answers asked for the profile before are dropped (convos, pushMine: P1 Sicherheit)
   $('profname').textContent=PROFILE?PROFILE.name:t('Gast','Guest');
+  if(changed&&PROFILE)pushBind();
   if(changed){stopListening(true);stopAnswer();syncStop();if(!PROFILE){offlineWipe(true);merkWipe(true)}convos.cache=[];openConvo(null);convos.sync().then(()=>{if(!chat.msgs.length)openConvo(latestConvo())})}
   loadSettings();rem.load();if(window.room)room.show();guestLock();if(typeof sideWho==='function')sideWho()}
 // Guests change no settings and cannot use room mode: they get the admin's defaults (the admin's own browser may).
@@ -761,7 +763,7 @@ $('proflogin').onclick=async()=>{try{const r=await (await api('/api/profile/logi
     if(GATE||r.admin){location.reload();return}   // an admin profile: the page loads again with the admin menu
     const who=await (await api('/api/whoami')).json();SETUP=who.setup||null;setProfile(who.profile);if(typeof hilfeStart==='function')hilfeStart(who.hilfe);closeProf()}
   catch(e){$('profmsg').textContent=/too many/.test(errRaw(e))?t('Zu viele falsche Versuche. Bitte später noch einmal (','Too many wrong attempts. Please try again later (')+(errRaw(e).match(/in (.+)$/)||['',''])[1]+').':/wrong code/.test(errRaw(e))?t('Code falsch.','Wrong code.'):t('Name oder PIN falsch.','Wrong name or PIN.')}};
-$('proflogout').onclick=async()=>{await /*raw: logout must not open the login or a code prompt*/fetch('/api/profile/logout',{method:'POST'});offlineWipe(true);merkWipe(true);if(!PUBLIC&&!ADMIN||elevated()){location.reload();return}setProfile(null);if(typeof hilfeStart==='function')hilfeStart(null);closeProf()};
+$('proflogout').onclick=async()=>{await pushDrop();await /*raw: logout must not open the login or a code prompt*/fetch('/api/profile/logout',{method:'POST'});offlineWipe(true);merkWipe(true);if(!PUBLIC&&!ADMIN||elevated()){location.reload();return}setProfile(null);if(typeof hilfeStart==='function')hilfeStart(null);closeProf()};
 $('factclear').onclick=async()=>{if(!confirm(t('Alles vergessen, was sich der Assistent über dich gemerkt hat?','Forget everything the assistant remembered about you?')))return;
   await api('/api/profile/memory',{method:'DELETE'});showFacts()};
 // ---------------------------------------------------------------- conversation settings
@@ -913,11 +915,24 @@ $('seclogoutall').onclick=async()=>{if(!confirm(t('Dein Profil in allen anderen 
 // Only with https and a trusted certificate (e.g. behind a reverse proxy); iPhone: from the home screen.
 const pushOk=()=>'serviceWorker' in navigator&&'PushManager' in window&&window.isSecureContext;
 async function pushSub(){try{const r=await navigator.serviceWorker.getRegistration();return r&&await r.pushManager.getSubscription()}catch{return null}}
+// A browser's subscription belongs to one profile only (P1 Sicherheit, push.add): this browser's one counts as "An" only
+// when the signed-in profile lists it; when the profile surely does not (another profile switched it on here), the
+// browser gives it up, so nobody gets the notes of the one before. null: not known now (offline, push off).
+async function pushMine(s){if(!s||!PROFILE)return false;const gen=PROFILE_GEN;let d;
+  try{const r=await api('/api/profile/push');d=await r.json()}catch{return null}
+  if(gen!==PROFILE_GEN||!d||!Array.isArray(d.devices))return null;
+  if(d.devices.some(x=>x.endpoint===s.endpoint))return true;
+  await s.unsubscribe().catch(()=>{});return false}
+async function pushBind(){if(!PROFILE||!pushOk())return;const s=await pushSub();if(s)await pushMine(s)}
+// Abmelden: this browser's subscription goes with the login (the Spark drops it too, push.drop_login)
+async function pushDrop(){if(!pushOk())return;const s=await pushSub();if(!s)return;
+  if(PROFILE)try{await api('/api/profile/push',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({endpoint:s.endpoint})})}catch{}
+  await s.unsubscribe().catch(()=>{})}
 async function showPush(){const box=$('pushbox');box.style.display=PROFILE&&REM_ON?'':'none';if(!PROFILE||!REM_ON)return;
   $('briefat').value=S.briefing_at||'';
   if(!pushOk()){$('pushstate').textContent=/iPhone|iPad/.test(navigator.userAgent)&&!navigator.standalone?t('Auf dem iPhone: die Seite über „Teilen → Zum Home-Bildschirm“ als App anlegen und dort einschalten.','On an iPhone: add the page to the home screen ("Share → Add to Home Screen") and switch it on there.'):t('Geht nur über https mit gültigem Zertifikat (z. B. hinter deinem Proxy). Hier klingeln Erinnerungen, solange die Seite offen ist.','Needs https with a valid certificate (e.g. behind your proxy). Here reminders ring while the page is open.');
     $('pushgo').style.display=$('pushoff').style.display='none';return}
-  const s=await pushSub();$('pushgo').style.display=s?'none':'';$('pushoff').style.display=s?'':'none';
+  let s=await pushSub();if(s&&await pushMine(s)===false)s=null;$('pushgo').style.display=s?'none':'';$('pushoff').style.display=s?'':'none';
   $('pushstate').textContent=s?t('An: Erinnerungen kommen als Mitteilung, auch wenn die Seite zu ist.','On: reminders arrive as notifications, also when the page is closed.'):t('Aus: Erinnerungen klingeln nur, solange die Seite offen ist.','Off: reminders ring only while the page is open.')}
 $('briefat').onchange=()=>{saveSet('tz',TZ());saveSet('briefing_at',$('briefat').value||'')};
 $('briefoff').onclick=()=>{$('briefat').value='';saveSet('briefing_at','')};

@@ -835,7 +835,11 @@ class Push(unittest.TestCase):
             kind, subs = push.pick(uid)
             self.assertEqual((kind, [x["endpoint"] for x in subs]), ("web", [s1["endpoint"]]))   # this browser only
             a.get("/api/profile/reminders?page=1&push_id=zz")
-            self.assertEqual([x["endpoint"] for x in push.pick(uid)[1]], [s2["endpoint"]])     # unknown: newest
+            # P1 Sicherheit (review A-H6): the browser in use has no subscription: the next way, never another browser
+            self.assertEqual(push.pick(uid), ("app", []))
+            apns.reachable = lambda u: False
+            self.assertEqual([x["endpoint"] for x in push.pick(uid)[1]], [s2["endpoint"]])     # browsers only: newest
+            apns.reachable = lambda u: u == uid
             profiles.used(uid, "tg")
             self.assertEqual(push.pick(uid, private=False), ("tg", []))
             self.assertEqual(push.pick(uid, private=True), ("app", []))        # private not over Telegram

@@ -292,6 +292,8 @@ def admin_end_session(uid: str, sid: str, request: Request):
     _no_admin_profile(request, uid)
     if not re.fullmatch(r"[0-9a-f]{16}", sid) or not profiles.end_session(uid, sid):
         raise HTTPException(404, "no such login")
+    import push
+    push.drop_login(uid, sid)   # its push subscription ends with it (P1)
     guard.log("profile_session_end", ip=guard.client_ip(request), uid=uid, by="admin")
     return {"ok": True}
 

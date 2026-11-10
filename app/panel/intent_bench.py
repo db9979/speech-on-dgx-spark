@@ -268,4 +268,20 @@ BENCH = [
     ("Öffne das Terminal", ""),
     ("Mein Arzttermin ist verschoben", "kalender"),
     ("Kannst du mich morgen früh anrufen?", "erinnerung"),
+    # P1 Sicherheit (Code-Review 10.11.): a cancel is small talk, never the memory; a negated wish keeps its group for the
+    # journal (it is never narrowed, test_sicherheit_sofort); weak search words in a private sentence are no web search
+    ("Vergiss es", "plaudern"),
+    ("Vergiss es, war nur Spaß", "plaudern"),
+    ("Lass es", "plaudern"),
+    ("Schon gut", "plaudern"),
+    ("Nein, doch nicht", "plaudern"),
+    ("Never mind", "plaudern"),
+    ("Vergiss, dass ich Tee mag", "gedaechtnis"),
+    ("Mach das Licht nicht aus", "smarthome"),
+    ("Ruf Mama nicht an", "iphone"),
+    ("Wie ist das Ergebnis meiner Blutuntersuchung?", ""),
+    ("Gibt es Nachrichten von Tom?", "nachricht"),
+    ("Ich habe im Lotto gewonnen", ""),
+    ("Wer hat gestern gewonnen?", "websuche"),
+    ("Was sind die Schlagzeilen?", "websuche"),
 ]

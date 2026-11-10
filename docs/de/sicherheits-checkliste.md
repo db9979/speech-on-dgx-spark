@@ -45,6 +45,7 @@ Vor jedem Commit durchgehen. In der Antwort an Dominik kurz nennen, welche Punkt
 
 ## Bestätigen und Handeln
 - [ ] Es gibt pro Profil genau einen offenen Vorschlag. Er gilt nur für dasselbe Gerät, ein schlichtes „Ja“ und 15 Minuten. Jede neue Antwort verwirft ihn.
+- [ ] Ein verneinter Satz („Mach das Licht nicht aus“) schaltet nie, wird nie eingegrenzt und macht kein änderndes Werkzeug zur Pflicht; „Vergiss es“ ist ein Abbruch ohne Werkzeug; Löschen von Gespeichertem nur auf das eigene Wort (`intent.negated`, `intent.cancel`, `intent.forget_ok`, eine Stelle). Ein wartender Befehl gilt nur von seiner Quelle (`chat.ha_take`). Eine Pflicht-Websuche nie bei einem privaten Satz (`chat.PRIVATE_WORDS`). Ein Push-Abo gehört genau einem Profil und endet mit seiner Anmeldung. (Code-Review 10.11.2026: „Mach das Licht nicht aus“ schaltete das Licht aus.)
 - [ ] Die Stimmprüfung für „Ja“ gehört zur selben Aufnahme wie der Text.
 - [ ] Home Assistant läuft mit einer Allowlist von Domains, nicht mit einer Sperrliste (`script`, `automation`, `button` usw. bleiben draußen).
 - [ ] Mail löscht nur die Person selbst auf der Seite E-Mail (Schalter „Mails löschen“, aus): in den Papierkorb mit „Rückgängig“, endgültig nur im Papierkorb nach eigener Rückfrage und nur genau diese Mail (gleiche Message-ID, UID EXPUNGE, nie ein blankes EXPUNGE); Modell, Regeln, „Für dich“ und Stimme nie. Verschieben nur mit geprüfter UIDVALIDITY und exaktem Abgleich von Absender und Message-ID nach SEARCH.

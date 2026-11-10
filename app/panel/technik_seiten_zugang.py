@@ -678,7 +678,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ sicherheit (the model as a whole)
     "sicherheit": {
-        "stand": "b1a70250a1",
+        "stand": "ca5e081b07",
         "bezug": {
             "features.blocked": ["s5"], "geteilt.put": ["s5"], "mitschreiblink.find": ["s3", "s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
             "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"], "sysupdate.wunsch_nehmen": ["s3"],
@@ -687,6 +687,8 @@ SEITEN = {
             "netguard.hole_oeffentlich": ["s6"], "doklink.eigene": ["s6"], "netproxy.Proxy": ["s6"], "ytquelle.befehl": ["s6"],
             "gedaechtnis.offer": ["s8"], "gemerkt.take_back": ["s8"], "profiles.write_own": ["s10"],
             "vorrat.key": ["s10"], "meinedaten.build": ["s10"], "meinedaten.api_export": ["s3"],
+            "intent.negated": ["s8"], "intent.forget_ok": ["s8"], "chat.ha_take": ["s8"], "chat.needed": ["s6"],
+            "chat.PRIVATE_WORDS": ["s6"], "push.add": ["s5"], "push.drop_login": ["s5"],
         },
         "kurz": ("Wie die Schutzschichten des Spark zusammenspielen. Der Grundsatz: das Sprachmodell schlägt vor, das Panel "
                  "entscheidet. Rechte, Sperren, Handlungen und Grenzen regelt das Panel mit festen Regeln im Code; was von "
@@ -759,9 +761,17 @@ SEITEN = {
             S("s5", "schritt", ("Freigabe und Sperre", "Release and block"),
               ("features.allowed", "features.allowed"),
               ("Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt "
-               "einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten.",
+               "einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten. Was einem "
+               "Profil gehört, bleibt bei ihm: das Push-Abo eines Browsers gehört genau einem Profil (push.add nimmt es "
+               "jedem anderen) und endet mit der Anmeldung, die es eingeschaltet hat (push.drop_login); eine Mitteilung geht "
+               "nie an einen anderen Browser, weil der benutzte keines hat; eine Seite übernimmt keine Antwort, die noch "
+               "für das Profil davor bestellt war.",
                "Every function is off until the admin releases it; then it counts for every profile, unless the admin "
-               "blocks single ones (features.blocked). What is not allowed is not even offered as a tool.")),
+               "blocks single ones (features.blocked). What is not allowed is not even offered as a tool. What belongs to a "
+               "profile stays with it: a browser's push subscription belongs to exactly one profile (push.add takes it from "
+               "every other) and ends with the login that switched it on (push.drop_login); a note never goes to another "
+               "browser because the one in use has none; a page takes no answer that was still asked for the profile "
+               "before.")),
             S("s6", "schritt", ("Fremdes bleibt Daten", "Outside stays data"),
               ("chat.wrap_outside", "chat.wrap_outside"),
               ("Was ein Werkzeug von außen liest, kommt als markierter Datenblock zum Modell (textnorm.defuse: Blockende "
@@ -779,7 +789,10 @@ SEITEN = {
                "Zielen nach fernweb.ziel_ok: dort 127.0.0.1 und die eigenen Adressen des Systems, die sein Anker selbst meldet. Eine Mail mit "
                "HTML zeigt die Seite nur so, wie der Spark sie bereinigt hat (mailansicht.clean: feste Liste erlaubter "
                "Tags, kein Skript), in einem Rahmen ohne Skript mit eigener CSP; Bilder von außen erst nach eigenem Klick "
-               "über den Wächter, ein Link erst nach der Frage mit seiner echten Adresse.",
+               "über den Wächter, ein Link erst nach der Frage mit seiner echten Adresse. Zur Pflicht wird die Websuche "
+               "nur aus starken Wörtern („such im Internet“, „Bundesliga“, „Wer hat gewonnen?“) und nie bei einem privaten "
+               "Satz (chat.PRIVATE_WORDS: mein, Gesundheit, Geld, „Nachrichten von Tom“), damit nichts Privates als "
+               "Suchanfrage hinausgeht (chat.needed).",
                "What a tool reads from outside reaches the model as a marked block of data (textnorm.defuse: the block's "
                "end and the model's own markers such as „<|im_start|>“ or „<tool_call>“ are defused; the LLM-Tor does it "
                "once more for every message, llm_tor.entschaerft). From then on "
@@ -795,7 +808,9 @@ SEITEN = {
                "targets by fernweb.ziel_ok: 127.0.0.1 there and the system's own addresses its anchor reports itself. A mail with HTML is shown "
                "only as the Spark cleaned it (mailansicht.clean: a fixed list of allowed tags, no script), in a frame "
                "without script with its own CSP; pictures from outside only after the own click and through the guard, a "
-               "link only after the question with its real address.")),
+               "link only after the question with its real address. The web search becomes a must only from strong words "
+               "(„search the internet“, „Bundesliga“, „Who won?“) and never for a private sentence (chat.PRIVATE_WORDS: my, "
+               "health, money, „messages from Tom“), so nothing private goes out as a query (chat.needed).")),
             S("s7", "schritt", ("Sprachmodell schlägt vor", "The language model proposes"),
               ("nur angebotene Werkzeuge", "only offered tools"),
               ("Das Modell formuliert und wählt aus dem, was nach den Schritten davor übrig ist. Ruft es ein Werkzeug, das "
@@ -813,7 +828,11 @@ SEITEN = {
                "(wissensdoppelt.aehnlich), nie das Modell, und nie gegen ihr „Verschieden“. "
                "Knöpfe auf Karten im Gespräch und auf der Seite Offen sind feste Namen (vorgaenge.AKTIONEN); jeden Druck prüft "
                "das Panel (Besitzer, Art, Stand, Notaus, Schalter des Moduls), und was ohne Vorschlag senden oder eintragen "
-               "würde, öffnet nur die Seite, auf der die Person es selbst tut.",
+               "würde, öffnet nur die Seite, auf der die Person es selbst tut. Verneinung ist eine feste Regel des Panels "
+               "(intent.negated): „Mach das Licht nicht aus“ schaltet nie, wird nie eingegrenzt und macht kein änderndes "
+               "Werkzeug zur Pflicht; „Vergiss es“ ist ein Abbruch ohne Werkzeug, und memory_forget löscht nur auf das "
+               "eigene Wort zum Vergessen (intent.forget_ok). Ein Smart-Home-Befehl, der aufs Codewort wartet, gehört zu "
+               "dem Gerät und Gespräch, an dem er gesagt wurde (chat.ha_take).",
                "Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a "
                "proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of "
                "its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only "
@@ -823,7 +842,11 @@ SEITEN = {
                "never the model, and never against their „Different“. "
                "Buttons on cards in the conversation and on the page Open are fixed names (vorgaenge.AKTIONEN); the panel checks "
                "every press (owner, kind, state, kill switch, the module's switches), and what would send or enter something "
-               "without a proposal only opens the page where the person does it."),
+               "without a proposal only opens the page where the person does it. Negation is a fixed rule of the panel "
+               "(intent.negated): „Don't turn off the light“ never switches, is never narrowed and makes no changing tool "
+               "a must; „Never mind“ is a cancel without any tool, and memory_forget deletes only on the person's own word "
+               "to forget (intent.forget_ok). A smart home command waiting for the code word belongs to the device and "
+               "conversation it was said at (chat.ha_take)."),
               ("info", "ja", ("Erst ein Vorschlag, dann „Ja“", "First a proposal, then „yes“"))),
             S("s9", "schritt", ("Antwort prüfen", "Check the answer"),
               ("answercheck.unsupported, textnorm.hide_secrets", "answercheck.unsupported, textnorm.hide_secrets"),
@@ -1008,6 +1031,15 @@ SEITEN = {
             ("profiles._cap", ("Obergrenze des Gedächtnisses ohne Datenverlust", "the memory's cap without data loss")),
             ("gedaechtnis.offer", ("Gelerntes ersetzt nie Bestätigtes: nur ein Angebot", "learned never replaces confirmed: only an offer")),
             ("gemerkt.take_back", ("Rückgängig nur für den eigenen, unveränderten Fakt", "undo only for the own, unchanged fact")),
+            ("intent.negated", ("Verneinung: nie direkt schalten, nie eingrenzen, kein änderndes Pflicht-Werkzeug",
+                                "negation: never switch directly, never narrow, no changing must tool")),
+            ("intent.forget_ok", ("memory_forget nur auf das eigene Wort zum Vergessen", "memory_forget only on the own word to forget")),
+            ("chat.needed", ("Pflicht-Werkzeuge: nie ändernd aus Admin-Regeln, keine Websuche bei Privatem",
+                             "must tools: never changing from admin rules, no web search for private sentences")),
+            ("chat.ha_take", ("Smart-Home-Befehl mit Codewort nur von seiner Quelle", "smart home command with code word only from its source")),
+            ("chat.PRIVATE_WORDS", ("private Sätze: nie eine Pflicht-Websuche", "private sentences: never a must web search")),
+            ("push.add", ("ein Push-Abo gehört genau einem Profil", "a push subscription belongs to exactly one profile")),
+            ("push.drop_login", ("Push-Abo endet mit der Anmeldung des Browsers", "push subscription ends with the browser's login")),
             ("wissensdoppelt.aehnlich", ("Punkte der Karte von selbst nur nach fester Regel zusammen, nie gegen „Verschieden“", "points of the map merged by themselves only by a fixed rule, never against „Different“")),
         ],
         "tests": ["test_hardening", "test_angriffe", "test_gaeste", "test_kontext_trennung", "test_scanner", "test_stufen", "test_notaus",
