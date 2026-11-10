@@ -43,8 +43,9 @@ window.room={on:false,speaking:false,id:'',key:'',until:0,lastAlive:0,lastPing:0
     b.classList.add('pro','recap')},
   body(o){const c=this.cfg();return JSON.stringify({room:this.id,level:c.level,kinds:c.kinds,area:c.area,detect:!!c.detect,voices:RV_ON?c.voices:'all',probe:c.probe!==false,
     tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),...o})},
-  async heard(text){if(!this.on)return;
-    if(this.speaking&&/^\W*(stopp?|halt|ruhe|still|sei still|psst|nicht jetzt|jetzt nicht|schon gut|genug|aufhören|hör auf)\b/i.test(text))stopAnswer();
+  // ende: the Spark's own word that the whole sentence is a stop word (stoppwort.py, /api/test/asr), never a list here
+  async heard(text,ende){if(!this.on)return;
+    if(this.speaking&&ende)stopAnswer();
     try{const r=await /*raw: hands-free in the background, no login or code prompt*/fetch('/api/room/heard',{method:'POST',headers:{'Content-Type':'application/json'},body:this.body({text})});if(!r.ok)return;
       const d=await r.json();if(d.stop)stopAnswer();if(d.reminder&&window.rem)rem.event({action:'set',item:d.reminder});if(d.say)this.say(d.say,d.silent);
       if(d.end){this.stop('voice');return}this.wait=!!d.wait;this.need=2.5}catch{}},

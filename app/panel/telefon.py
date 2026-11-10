@@ -56,6 +56,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import features
 import guard
 import profiles
+import stoppwort
 import telefon_ton
 import vault
 from common import STATE, DayCounter, beside, load_config, read_json, write_json
@@ -82,17 +83,6 @@ GUESTS = 20                     # calls from unknown numbers outside a day at mo
 UA = "Speech-on-DGX-Spark"
 METHODS = ("INVITE", "ACK", "BYE", "CANCEL", "OPTIONS", "INFO", "NOTIFY")
 DTMF = "0123456789*#ABCD"
-# the caller says goodbye (a fixed rule, never the model): the Spark says "Tschüss!" and hangs up itself
-BYE_WORDS = re.compile(r"(?i)^\W*(?:(?:ok|okay|gut|alles klar|prima|super|perfekt|dann|nein|nee|danke|danke schön|dankeschön|"
-                       r"danke dir|danke sehr|vielen dank|merci)\W+)*"
-                       r"(?:tschüss|tschüs|tschau|ciao|servus|auf wiederhören|auf wiedersehen|bis dann|bis später|bis bald|"
-                       r"bis morgen|gute nacht|schönen tag noch|schönen abend noch|(?:du kannst|ich|ich lege?|ich leg) (?:jetzt )?auf(?:legen)?|"
-                       r"leg (?:jetzt )?auf|auflegen|das war'?s|das wars|das war es|das war alles|das ist alles|nichts mehr|"
-                       r"nichts weiter|ende|schluss|bye|bye bye|goodbye|that'?s all|that'?s it)"
-                       r"(?:\W+(?:danke|danke schön|dir auch|spark|für heute|erstmal|tschüss|tschüs|ciao|bye))*\W*$")
-# right after "Noch etwas?" also a plain no ends the call (the same words elsewhere answer the assistant)
-NO_MORE = re.compile(r"(?i)^\W*(?:nein|nee|ne|nö|nope|no|nichts|danke|passt|passt so|alles gut|das reicht|reicht)"
-                     r"(?:\W+(?:danke|danke schön|vielen dank|thanks|passt|alles gut|das reicht|reicht|spark))*\W*$")
 PREBUF, PREBUF_MAX = 10, 40     # packets of 20 ms that wait before speech plays; more after each gap (at most 0.8 s)
 RTP_GONE = 8                    # seconds without any sound packet from the phone: it hung up without a BYE (line gone)
 CALLBACK_WORDS = re.compile(r"(?i)\b(?:ruf|rufe|rufst)\s+(?:mich|du mich)\s+(?:bitte\s+)?(?:gleich\s+)?zurück|\brückruf\b|\bcall me back\b")
@@ -989,6 +979,8 @@ class Call:
     async def run(self):
         a = self.agent
         why = "fehler"
+        import laufend   # Notaus stage 3 „Alles still“ ends the call at once (also while the Spark speaks)
+        running = laufend.add("telefon", lambda: self.end("notaus"))
         try:
             if self.out:                           # we called: the dialog stands, the sound socket waits
                 self.rtp = Rtp(self)
@@ -1026,6 +1018,7 @@ class Call:
         except Exception as e:
             print("telefon: anruf", type(e).__name__, str(e)[:120], flush=True)
         finally:
+            laufend.drop(running)
             self.stop_send.set()
             if self.answered and not self.by_peer and not a.closing:
                 try:
@@ -1405,13 +1398,15 @@ class Call:
             if vt:
                 vt.cancel()
             return
-        if BYE_WORDS.match(text) or (asked and NO_MORE.match(text)):    # before "das reicht" counts as a stop word
+        # the caller says goodbye (stoppwort.py, a fixed rule, never the model): the Spark says "Tschüss!" and hangs up
+        # itself; right after "Noch etwas?" a plain no too (before "das reicht" counts as a stop word)
+        if stoppwort.bye(text, call=True) or (asked and stoppwort.no_more(text)):
             if vt:
                 vt.cancel()
             await self.say("Tschüss!")
             self.end("verabschiedet")
             return
-        if esp32.STOP_WORDS.match(text):
+        if stoppwort.stop(text):
             if vt:
                 vt.cancel()
             return
@@ -1559,7 +1554,7 @@ class Call:
 
     async def answer(self, text, uid, voice, why):
         """The chat answers (fixed rules decide what it may: chat_turn); "#" or "Stopp" end the answer, a goodbye
-        (BYE_WORDS) ends it and the call."""
+        (stoppwort.bye) ends it and the call."""
         import esp32
         talk = asyncio.ensure_future(self._chat(text, uid, voice, why))
         ear, stop, bye = esp32.Ear(), None, False
@@ -1574,11 +1569,11 @@ class Call:
                 if stop and stop.done():
                     heard = stop.result() if not stop.exception() else ""
                     stop = None
-                    if heard and BYE_WORDS.match(heard):
+                    if heard and stoppwort.bye(heard, call=True):
                         print("telefon: antwort abgebrochen, verabschiedet", flush=True)
                         bye = True
                         break
-                    if heard and esp32.STOP_WORDS.match(heard):
+                    if heard and stoppwort.stop(heard):
                         print("telefon: antwort abgebrochen, stopp-wort", flush=True)
                         break
                 if pcm and stop is None and ear.feed(pcm) == "done":

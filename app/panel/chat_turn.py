@@ -184,6 +184,25 @@ async def prepare(request):
             messages[-1] = dict(messages[-1], content=web_tap)
     import intent   # (needs chat fully loaded: its word lists)
     ask0 = messages[-1]["content"] if messages[-1]["role"] == "user" else ""
+    # Abbrechen heißt aus (stoppwort.py, Dominik 2026-11-10 2a): a whole sentence of stop words or a goodbye ends the
+    # talk by the panel's fixed rule, before the switch and before any model: no answer, no tool, nothing kept. The
+    # panel's own waiting question of this conversation (klaeren.py) lapses; the clients close the microphone
+    # (event "ende", chat._chat)
+    # (an answer to the Spark's own note, „Nicht jetzt“, stays that note's feedback: proactive.reply pauses it)
+    import stoppwort
+    ende = stoppwort.ende(ask0) if ask0 and not web_tap else ""
+    if ende and me0 and not guest and proactive.answers_note(me0["id"], ask0, said_before):
+        ende = ""
+    if ende:
+        if me0 and not guest:
+            import klaeren
+            src0 = f"{body.get('client') or 'web'}:{body.get('convo') if isinstance(body.get('convo'), str) else ''}"
+            if klaeren.waiting(me0["id"], src0):
+                klaeren.drop(me0["id"])
+        import verlauf
+        kind = verlauf.kind_of(request, body)   # a fixed word for the kind of device
+        print(f"chat: ende {ende} | {kind}", flush=True)
+        return Turn({"ende": ende, "body": body, "who": None if guest else me0, "ask_text": ask0})
     route = intent.classify_cfg(ask0, ccfg)
     # a follow-up („Und morgen?“) takes the group of the person's own question just before (plan weiche-intelligenter 1)
     if ask0 and not route.names:

@@ -30,6 +30,7 @@ import chat
 import bilder
 import musik
 import docmake
+import stoppwort
 import guard
 import homeassistant
 import llm
@@ -117,10 +118,7 @@ NOT_NEGATION = re.compile(r"(?i)\b((nicht|nie) (zu )?vergessen|vergiss (\w+ ){0,
                           r"nicht nur|not only)\b")
 # a whole sentence that calls the wish off („Vergiss es“, „Lass es“, „Schon gut“): a cancel, answered without any tool
 # (chat_turn: like small talk), never the memory group or memory_forget; klaeren._NONE takes the same phrases
-CANCEL_PHRASES = (r"vergiss es|vergiss das( ganze)?|lass es( lieber)?|lass das( lieber)?|lass mal|lass gut sein|schon gut|"
-                  r"nein,? doch nicht|doch nicht|egal|nicht so wichtig|abbrechen|never ?mind|forget it|forget about it|"
-                  r"cancel( that| it)?|skip it")
-CANCEL = re.compile(r"(?i)\W*(?:" + CANCEL_PHRASES + r")\b[\s,.!?]*(?:(?:spark|bitte|danke|war nur (?:ein )?(?:spaß|scherz)|"
+CANCEL = re.compile(r"(?i)\W*(?:" + stoppwort.ABBRUCH + r")\b[\s,.!?]*(?:(?:spark|bitte|danke|war nur (?:ein )?(?:spaß|scherz)|"
                     r"(?:ist )?nicht so wichtig|just kidding)[\s,.!?]*)*")
 # memory_forget only on the person's own word to forget (chat_tools.py), never on a negated one („Vergiss das bloß nicht“)
 FORGET_WORDS = re.compile(r"(?i)\b(vergiss\w*|vergessen|lösch\w*|losch\w*|entfern\w*|streich\w*|forget|delete|remove|erase)\b")

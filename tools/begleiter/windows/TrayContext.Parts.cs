@@ -889,9 +889,15 @@ internal sealed partial class TrayContext
         bool keepBusy = false;
         try
         {
-            (bool wake, string rest) = await SparkClient.HearAsync(creds.Base, creds.Key, wav, CancellationToken.None);
+            (bool wake, string rest, bool ende) = await SparkClient.HearAsync(creds.Base, creds.Key, wav, CancellationToken.None);
             if (!wake || !ReferenceEquals(listener, _wake) || listener.Paused)
             {
+                return;
+            }
+
+            if (ende)
+            {
+                StopSpeaking(); // „Hey Spark, stopp“: nur das Vorlesen endet, keine Frage, kein Ton
                 return;
             }
 
@@ -950,6 +956,12 @@ internal sealed partial class TrayContext
             }
 
             string text = (await SparkClient.DictateAsync(creds.Base, creds.Key, wav, _desk?.DictateSprache ?? "auto", CancellationToken.None)).Trim();
+            // „Mikrofon zu“ oder Pause, während mitgeschrieben wurde: die Frage fällt weg, nichts wird gefragt oder vorgelesen
+            if (!ReferenceEquals(listener, _wake) || listener.Paused || MicSwitch.Closed)
+            {
+                return;
+            }
+
             if (text.Length == 0)
             {
                 Notify("Es wurde nichts erkannt.", ToolTipIcon.Info);

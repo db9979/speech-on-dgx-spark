@@ -26,6 +26,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import features
 import guard
 import profiles
+import stoppwort
 import core
 from common import DayCounter
 from core import assistant, browser_profile
@@ -77,10 +78,9 @@ _NONE = re.compile(r"(?i)^\W*(keins?|keine[nrs]?|nichts davon|keins davon|keines
 
 
 def _none(text):
-    """None of the devices: the own words of a choice, or a sentence that calls the wish off (intent.CANCEL_PHRASES,
+    """None of the devices: the own words of a choice, or a sentence that calls the wish off (stoppwort.ABBRUCH,
     the one list for „Vergiss es“, „Lass es“, „Abbrechen“; P1 Sicherheit)."""
-    import intent   # (here: intent loads chat, which loads this module late)
-    return bool(_NONE.search(text) or re.match(r"(?i)^\W*(" + intent.CANCEL_PHRASES + r")\b", text))
+    return bool(_NONE.search(text) or re.match(r"(?i)^\W*(" + stoppwort.ABBRUCH + r")\b", text))
 _LIST = re.compile(r"(?i)\b(liste|alle geräte|alle geraete|zeig mir alle|list|show all)\b")
 _CORRECT = re.compile(r"(?i)^\W*(nein|nee|falsch|nicht (den|die|das)|ich meinte|ich mein|den anderen|die andere|das andere|"
                       r"no|wrong|i meant|the other)\b")

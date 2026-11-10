@@ -52,7 +52,8 @@ internal sealed record AskButton(string Label, string? Send, string? Open, bool 
 internal sealed record AskCard(string Title, IReadOnlyList<AskButton> Buttons);
 
 /// <summary>Antwort von /api/desk/ask: schlichter Text, Markdown, die Zeile „Werkzeuge benutzt“ und die Karten.</summary>
-internal sealed record AskReply(string Answer, string? Md, string? Steps, IReadOnlyList<AskCard> Cards);
+/// <summary>Ende: "stopp", "tschuess" oder "notaus" – ein ganzer Satz aus Stoppwörtern (feste Regel des Spark): keine Antwort.</summary>
+internal sealed record AskReply(string Answer, string? Md, string? Steps, IReadOnlyList<AskCard> Cards, string? Ende = null);
 
 /// <summary>Eine Bitte des Spark, am PC etwas zu tun (Teil "act").</summary>
 internal sealed record ActAsk(string Id, string Action, string Arg, string Text);
@@ -673,7 +674,8 @@ internal static partial class SparkClient
         JsonNode json = await SendAsync(request, key, pairing: false, LongTimeout, ct).ConfigureAwait(true);
         string answer = Json.Str(json["answer"]) ?? throw new SparkException(null, "Der Spark hat keine Antwort geschickt.");
         string? steps = Json.Str(json["steps"]);
-        return new AskReply(answer, Json.Str(json["md"]), steps is null ? null : Clean(steps, 200), AskCards.Parse(json["cards"]));
+        string? ende = Json.Str(json["ende"]) is { Length: > 0 and <= 12 } e ? e : null;
+        return new AskReply(answer, Json.Str(json["md"]), steps is null ? null : Clean(steps, 200), AskCards.Parse(json["cards"]), ende);
     }
 
     /// <summary>POST /api/desk/note/act – ein Knopf einer Meldung zu einer Für-dich-Karte ("done", "fdremind"). Gibt den Satz für den Hinweis zurück.</summary>
@@ -803,8 +805,9 @@ internal static partial class SparkClient
         return Json.Str(json["text"]) ?? throw new SparkException(null, "Der Spark hat keinen Text zurückgeschickt.");
     }
 
-    /// <summary>POST /api/desk/hear – kurzer Satz (≤ 5 s): Weckwort gehört? Und was danach kam.</summary>
-    public static async Task<(bool Wake, string After)> HearAsync(string baseUrl, string key, byte[] wav, CancellationToken ct)
+    /// <summary>POST /api/desk/hear – kurzer Satz (≤ 5 s): Weckwort gehört? Und was danach kam. Ende: „Hey Spark, stopp“
+    /// (ein ganzer Satz aus Stoppwörtern, feste Regel des Spark).</summary>
+    public static async Task<(bool Wake, string After, bool Ende)> HearAsync(string baseUrl, string key, byte[] wav, CancellationToken ct)
     {
         using var form = new MultipartFormDataContent();
         var file = new ByteArrayContent(wav);
@@ -813,7 +816,7 @@ internal static partial class SparkClient
 
         using var request = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/api/desk/hear") { Content = form };
         JsonNode json = await SendAsync(request, key, pairing: false, MediumTimeout, ct).ConfigureAwait(true);
-        return (Json.Bool(json["wake"]) ?? false, (Json.Str(json["rest"]) ?? "").Trim());
+        return (Json.Bool(json["wake"]) ?? false, (Json.Str(json["rest"]) ?? "").Trim(), (Json.Str(json["ende"]) ?? "").Length > 0);
     }
 
     private static List<ActAsk> ParseAsks(JsonNode json)

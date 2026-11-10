@@ -141,7 +141,7 @@ function vgPage(w){w.classList.toggle('ld-sel',!!VG.sel);
   if(x.vorschau)det.appendChild(vgMailBox(x));
   // „Im Gespräch zeigen“ (Dominik 2026-11-04 „klappt nicht wirklich“): only for a card that went into a conversation,
   // that conversation opened (not just the current one), the card waited for and marked briefly
-  if(x.gespraech&&typeof openConvo==='function')det.appendChild(icLink(t('Im Gespräch zeigen','Show in the conversation'),()=>{openConvo(x.gespraech,true);goSec('chat');
+  if(x.gespraech&&typeof showConvo==='function')det.appendChild(icLink(t('Im Gespräch zeigen','Show in the conversation'),()=>{showConvo(x.gespraech);goSec('chat');
     let n=0;const look=()=>{const m=document.querySelector('#chatlog .vgmsg[data-vg="'+x.id+'"]');
       if(m){m.scrollIntoView({block:'center'});m.classList.add('vgflash');setTimeout(()=>m.classList.remove('vgflash'),1600)}else if(++n<30)setTimeout(look,100)};look()}))}
 // the card's mail under „Wohin gehört diese Mail?“ (Dominik 2026-11-04 „inhalt der mail sehen um eine genaue neue

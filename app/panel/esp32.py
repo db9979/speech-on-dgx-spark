@@ -74,6 +74,7 @@ import notaus
 import verbrauch
 import profiles
 import spkcode
+import stoppwort
 import vault
 import features
 from common import STATE, beside, load_config, model_url, read_json, write_json
@@ -114,12 +115,6 @@ MIC_LEVELS = {"low": 300.0, "normal": 150.0, "high": 70.0}   # "Mikrofon" per sp
 # "Raummodus an", "Raum-Modus einschalten", "starte den Raummodus"
 ROOM_START = re.compile(r"(?i)^\W*(?:(?:hey )?(?:spark|jarvis),? )?(?:(?:den )?raum[- ]?modus (?:an|ein|einschalten|anschalten|starten)|"
                         r"(?:starte|schalte?) (?:den )?raum[- ]?modus(?: an| ein)?)\b")
-# "Stopp", "Halt", "Ruhe", "Danke, reicht" as the whole sentence (also after "Jarvis" while it spoke): the answer
-# ends, nothing goes to the language model, the board goes back to its wake word
-STOP_WORDS = re.compile(r"(?i)^\W*(?:(?:hey |ok |okay )?(?:jarvis|spark)\W*)?"
-                        r"(?:stopp?|halt|ruhe|sei (?:jetzt )?still|psst+|hör (?:jetzt )?auf|aufhören|abbrechen|schon gut|genug|"
-                        r"(?:danke,? )?(?:das )?(?:reicht|genügt)|nicht jetzt|jetzt nicht|(?:halt die )?klappe)"
-                        r"(?:\W+(?:bitte|jetzt|danke|jarvis|spark|stopp?))*\W*$")
 STOP_PIECE = 3.0           # "Stopp beim Vorlesen": seconds of sound per piece heard while it speaks
 
 
@@ -773,6 +768,8 @@ class Session:
         self.stop_on = False     # "Stopp beim Vorlesen" (espstopp): the board keeps its microphone on while speaking
         self.stop_ear = None     # what is heard while it speaks
         self.stop_job = None     # one recognition of such a piece at a time
+        self.stop_next = None    # the newest piece heard meanwhile: checked right after (never thrown away)
+        self.quiet_stop = False  # a stop word ended the answer: its own end sends spark_quiet, never a plain stop
         self.spoken = collections.deque(maxlen=4)   # its last sentences: a "Stopp" in them is its own echo
 
     def note(self, text):
@@ -804,7 +801,7 @@ class Session:
 
     def hear_stop(self, pcm):
         """Sound while it speaks: short pieces go to the speech recognition; only a whole sentence from
-        STOP_WORDS that it did not just say itself ends the answer (fixed rule, no model, check_stop)."""
+        stoppwort.stop that it did not just say itself ends the answer (fixed rule, no model, check_stop)."""
         if not pcm:
             return
         if self.stop_ear is None:
@@ -820,6 +817,8 @@ class Session:
             seg, self.stop_ear = bytes(ear.pcm), None
             if self.stop_job is None or self.stop_job.done():
                 self.stop_job = asyncio.ensure_future(self.check_stop(seg))
+            else:
+                self.stop_next = seg   # a piece is still being recognized: this one comes right after it
 
     def own_echo(self, text):
         """The stop phrase is in what it just said ("das ist halt so"): its own voice came through."""
@@ -828,23 +827,35 @@ class Session:
         return bool(phrase) and re.search(r"(?<!\w)" + re.escape(phrase) + r"(?!\w)", said) is not None
 
     async def check_stop(self, pcm):
+        while pcm:
+            if await self._check_stop(pcm):
+                self.stop_next = None
+                return
+            pcm, self.stop_next = self.stop_next, None
+
+    async def _check_stop(self, pcm):
+        """True when the piece was a stop word and the answer ended: the board drops its queue first
+        (spark_quiet, before the answer's own end could send a plain stop), then the connection closes like after
+        a whole „Stopp“ as the question: the board waits for its wake word again, nothing listens on."""
         try:
             text = await transcribe(pcm)
         except Exception as e:
             print("esp32: speech recognition while speaking", type(e).__name__, flush=True)
-            return
+            return False
         task = self.answer
-        if not text or not STOP_WORDS.match(text) or not task or task.done():
-            return
+        if not text or not stoppwort.stop(text) or not task or task.done():
+            return False
         if self.own_echo(text):
             logfilter.detail("esp32", "stop word ignored while speaking, it was in its own sentence")
-            return
+            return False
         print("esp32: stop word while speaking, answer ended", flush=True)
-        self.note("Stopp beim Vorlesen gehört: still, hört zu")
+        self.note("Stopp beim Vorlesen gehört: still, wartet aufs Weckwort")
+        self.quiet_stop = True
+        await self.send({"type": "tts", "state": "stop", "spark_quiet": True})   # the board drops its queue
         task.cancel()
         await asyncio.wait({task}, timeout=2)
-        await self.send({"type": "tts", "state": "stop", "spark_quiet": True})   # the board drops its queue
-        self.listen(self.mode)
+        await self.ws.close(1000)
+        return True
 
     def mic_report(self, heard):
         """One diagnosis line about the sound the board sent for this question."""
@@ -1082,7 +1093,7 @@ class Session:
             if text and not self.testing and self.own_voice(text, pcm, ended):
                 text = ""
             self.note(f"Verstanden: „{text[:80]}“" if text else "Nichts verstanden")
-            if text and not self.testing and STOP_WORDS.match(text):
+            if text and not self.testing and stoppwort.stop(text):
                 print("esp32: stop word, answer ended", flush=True)
                 self.note("Stopp gehört: keine Antwort, Lautsprecher wartet wieder aufs Weckwort")
                 await self.ws.close(1000)
@@ -1112,7 +1123,8 @@ class Session:
             logfilter.detail("esp32", f"answer finished {(time.time() - ended) * 1000:.0f} ms after the question ended")
         except asyncio.CancelledError:
             try:
-                await self.send({"type": "tts", "state": "stop"})
+                if not self.quiet_stop:   # after a stop word check_stop already sent spark_quiet (it drops the queue)
+                    await self.send({"type": "tts", "state": "stop"})
             except Exception:
                 pass
             raise

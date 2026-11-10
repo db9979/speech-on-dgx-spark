@@ -26,7 +26,8 @@ data: nothing here acts on them; the answers come from the normal assistant with
     GET    /api/desk/config                     -> parts, write defaults, rev
     GET    /api/desk/poll?after=n&mic=open|closed -> rev, notes, Notaus stage (also the "online" mark; mic: the
                                                    program's switch "Mikrofon offen/zu", shown under Ich → Begleiter)
-    POST   /api/desk/ask {text, tz?}            -> {"answer", "md"?, "steps"?, "cards"?} (cards: Rückfrage, Freigabe, goto)
+    POST   /api/desk/ask {text, tz?}            -> {"answer", "md"?, "steps"?, "cards"?} (cards: Rückfrage, Freigabe, goto);
+                                                   {"answer": "", "ende"} after a whole sentence of stop words
     POST   /api/desk/note/act {note, act}       -> a button of a note of its own kind (part actions, NOTE_ACTS)
     POST   /api/desk/dictate (multipart file)   -> {"text"}
     POST   /api/desk/notaus {}                  -> {"on": true}
@@ -812,6 +813,9 @@ async def program_ask(request: Request):
     md = out.get("md")   # the Markdown for builds that draw it; "answer" stays plain for older ones
     # Frag Spark mit Karten (5a): the steps line and the cards under the answer, built by chat.text_ask from fixed words
     more = {k: out[k] for k in ("steps", "cards") if out.get(k)}
+    # Abbrechen heißt aus: a whole sentence of stop words ends the talk (stoppwort.py); the program stops reading aloud
+    if out.get("ende"):
+        return {"answer": "", "ende": out["ende"]}
     return dict({"answer": str(out.get("answer") or "")}, **({"md": md} if isinstance(md, str) and md else {}), **more)
 
 
@@ -1186,7 +1190,13 @@ async def program_hear(request: Request, file: UploadFile = File(...)):
         return {"wake": False, "rest": ""}     # what was heard stays here: not kept, not shown
     profiles.used(prof["id"], "desk")
     _live("Weckwort am PC gehört")
-    return {"wake": True, "rest": rest[:2000]}
+    # „Hey Spark, stopp“: a whole sentence of stop words after the wake word (stoppwort.py) only stops reading aloud;
+    # "rest" stays for older programs (they ask it, and /api/desk/ask answers "ende" without the model)
+    import stoppwort
+    ende = stoppwort.ende(rest) if rest else ""
+    if ende:
+        print(f"begleiter: weckwort ende {ende}", flush=True)
+    return dict({"wake": True, "rest": rest[:2000]}, **({"ende": ende} if ende else {}))
 
 
 # Am PC handeln (part act, admin switch chat.desk_act): the assistant asks a paired computer to do one of a few

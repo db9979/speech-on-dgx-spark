@@ -53,6 +53,7 @@ import gedaechtnis  # noqa: E402  (Gedächtnis prüfen: evidence and fixed rules
 import gemerkt  # noqa: E402  (Gemerkt-Hinweis: what was learned by itself becomes a card)
 import vorab  # noqa: E402  (fetching ahead when the answer asks back)
 import vorrat  # noqa: E402  (Vorrat je Profil: answers from what the services keep in memory)
+import laufend  # noqa: E402  (Notaus stage 3 ends running answers)
 import ack  # noqa: E402  (the instant ready-made sentence)
 import sofort  # noqa: E402  (Einfaches sofort beantworten: fixed sentences, no model)
 import rechnen  # noqa: E402  (Rechnen mit festem Werkzeug: sums in an answer computed again)
@@ -2067,10 +2068,31 @@ EMPTY_RESULT = re.compile(r"(?i)\s*(keine?|nichts|noch keine|leer|kein treffer|0
 async def _chat(request: Request):
     t_req = _last_chat[0] = time.time()
     turn = await chat_turn.prepare(request)
+    if getattr(turn, "ende", None):   # a whole sentence of stop words (stoppwort.py): no model, the client closes up
+        return ende_response(turn.ende)
     turn.t_req = t_req   # for the timing lines (logfilter detail "chat") and Logs → Anfragen
     # Vorrat je Profil (vorrat.py): what this answer's tools take from the services' memory, and "nochmal nachsehen"
     turn.vorrat = vorrat.begin(getattr(turn, "ask_text", "") or "", (turn.body or {}).get("tz") if isinstance(turn.body, dict) else None)
     return await _answer(request, turn)
+
+
+# what a client without its own word says after "ende" (Siri, Telegram): de, en
+ENDE_SAY = {"stopp": ("Okay.", "Okay."), "tschuess": ("Tschüss!", "Bye!"),
+            "notaus": ("Notaus: alles still.", "Emergency stop: all quiet.")}
+
+
+def ende_event(kind):
+    """The event that tells every client the talk is over (Abbrechen heißt aus): stop speaking, never open the
+    microphone again by itself, keep nothing; kind "stopp", "tschuess" or "notaus" (Notaus stage 3, laufend.py)."""
+    return f"data: {json.dumps({'type': 'ende', 'art': kind})}\n\n"
+
+
+def ende_response(kind):
+    async def events():
+        yield ende_event(kind)
+        yield f"data: {json.dumps({'type': 'done', 'total': 0})}\n\n"
+    return StreamingResponse(events(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
 async def _answer(request, turn):
@@ -2498,8 +2520,16 @@ async def _answer(request, turn):
     async def events():
         outside = carry in ("outside", "mail")
         asked = False   # the panel's own question (klaeren.py) already has its buttons: no Rückfrage-Karte
+        # Notaus stage 3 (laufend.py): this answer ends at once with "ende"; the finally below stops model and voice
+        running = laufend.add("chat", lambda: out.put_nowait({"type": "ende", "art": "notaus"}))
         try:
             while (ev := await out.get()) is not None:
+                if ev.get("type") == "ende":
+                    import verlauf
+                    kind = verlauf.kind_of(request, body)   # a fixed word for the kind of device
+                    print(f"chat: ende notaus | {kind}", flush=True)
+                    yield ende_event("notaus")
+                    return
                 if guest and ev.get("type") == "error":
                     ev = {"type": "error", "code": ev.get("code") or "error"}
                 outside = outside or ev.get("type") in ("outside", "mail")
@@ -2561,6 +2591,7 @@ async def _answer(request, turn):
                     yield f"data: {json.dumps(ask_ev)}\n\n"
             yield f"data: {json.dumps({'type': 'done', 'total': round(time.time() - t0, 3)})}\n\n"
         finally:  # also runs when the browser aborts (barge-in): stop LLM and TTS
+            laufend.drop(running)
             for t in tasks:
                 t.cancel()
             # interrupted after its first sound: still counted; the file is written off the event loop (code check
@@ -2696,7 +2727,7 @@ async def text_ask(request, prof, body, who="siri"):
     async def receive():
         return {"type": "http.request", "body": data, "more_body": False}
     response = await chat(Request(request.scope, receive))
-    answer, error, from_mail, from_outside = "", "", False, False
+    answer, error, from_mail, from_outside, ende = "", "", False, False, ""
     steps, cards, mems = [], [], []   # the Begleiter's Frag Spark: tools used and the cards under the answer (desk_cards)
     async for chunk in response.body_iterator:
         for line in (chunk.decode() if isinstance(chunk, bytes) else chunk).split("\n"):
@@ -2722,6 +2753,10 @@ async def text_ask(request, prof, body, who="siri"):
                 cards.append(ev)
             elif ev.get("type") == "memory" and ev.get("action") == "saved" and ev.get("id") and len(mems) < 3:
                 mems.append(ev)   # Gemerkt-Hinweis (gemerkt.py): the Begleiter's card „Gemerkt: …“
+            elif ev.get("type") == "ende" and ev.get("art") in ENDE_SAY:
+                ende = ev["art"]
+    if ende:   # a stop word or Notaus: nothing kept; Siri hears the fixed word, the Begleiter stops reading aloud
+        return {"answer": ENDE_SAY[ende][0]} if who == "siri" else {"answer": "", "ende": ende}
     answer = answer.strip() or error or "Dazu habe ich keine Antwort."
     # kept like the browser keeps it: the code word blacked out, an answer from mail marked (so the
     # background learner never reads it)

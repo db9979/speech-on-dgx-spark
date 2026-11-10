@@ -10,7 +10,7 @@ const BARGE={low:[0.05,6,0.8,3.5],mid:[0.03,4,0.5,2.5],high:[0.02,3,0.35,2]};   
 // quiet. A voice must stand out from it to interrupt, and the follow-up window and hands-free use it as well:
 // a TV across the room is quieter than someone talking to the device (Dominik 2026-10-13, Anfrage d80a75).
 const roomLevel=()=>chat.amb&&performance.now()-chat.amb.t<10000?chat.amb.v:0;
-const chat={live:{busy:false,want:false,last:null},msgs:[],rec:null,stream:null,ctrl:null,ctx:null,sources:[],playEnd:0,vad:null,cancelRec:false,busy:false};
+const chat={live:{busy:false,want:false,last:null},msgs:[],rec:null,stream:null,ctrl:null,ctx:null,sources:[],playEnd:0,vad:null,cancelRec:false,busy:false,turn:0};
 const chatSay=x=>{$('chatstate').textContent=x;$('fabstate').textContent=x};
 function chatLog(role,text){const d=document.createElement('div');d.className='msg '+(role==='user'?'user':'bot');
   d.innerHTML=role==='user'?'<div class="bubble"></div>':'<div class="av"><i></i></div><div class="bubble"></div>';
@@ -80,7 +80,7 @@ function resumeAnswer(h){if(!chat.held||(h&&chat.held!==h))return;clearTimeout(c
 // Nothing scheduled (playEnd 0) is never "speaking": a context that is stalled near 0 s (iOS interrupted it,
 // or no audio output) would otherwise count as speaking forever and hands-free would never listen again.
 const playing=()=>{const c=chat.pctx;return !!c&&chat.playEnd>0&&chat.playEnd+(c.outputLatency||0)+(c.baseLatency||0)+0.08>c.currentTime};
-function setTalk(){$('talklbl').textContent=chat.rec?t('Fertig','Done'):t('Sprechen','Speak');$('talk').classList.toggle('rec',!!chat.rec);$('talk').classList.toggle('ans',!chat.rec&&!!(chat.ctrl||playing()));$('chatstop').disabled=!(chat.rec||chat.ctrl||playing())}
+function setTalk(){$('talklbl').textContent=chat.rec?t('Fertig','Done'):t('Sprechen','Speak');$('talk').classList.toggle('rec',!!chat.rec);$('talk').classList.toggle('ans',!chat.rec&&!!(chat.ctrl||playing()));$('chatstop').disabled=!(chat.rec||chat.ctrl||playing()||chat.asrBusy)}
 function showSecure(){const port=CFG&&CFG.panel&&CFG.panel.https_port;const u=`https://${location.hostname}:${port}/`;
   $('chatsecure').style.display='block';$('chathttps').href=u;$('chathttps').textContent=port?u:t('https (im Panel unter Konfiguration einschalten)','https (enable it under Configuration)')}
 async function chatTab(){if(!CFG)try{CFG=await (await api('/api/config')).json()}catch{}
@@ -109,6 +109,14 @@ function micBack(){if(document.hidden)return;
   if(chat.resumeMic&&S.hands&&!chat.rec&&!chat.ctrl&&!playing()&&!chat.asrBusy){chat.resumeMic=false;startListening({opened:'hands'})}}
 document.addEventListener('visibilitychange',()=>{if(document.hidden){if(chat.rec&&S.hands)chat.resumeMic=true}else setTimeout(micBack,300)});
 addEventListener('pageshow',()=>setTimeout(micBack,300));
+// Abbrechen heißt aus (P2): the microphone track is released as soon as nothing listens any more (no recording, no
+// Ins-Wort-Fallen, no wake word, no room mode), so the browser no longer shows "microphone in use"
+function releaseMic(){if(chat.rec||chat.barge||wake.on||(window.room&&room.on)||!chat.stream)return;
+  const s=chat.stream;chat.stream=null;s.getTracks().forEach(x=>{x.onended=null;try{x.stop()}catch{}})}
+// Stopp, a new or another conversation and a stop word end the turn for good (chat.turn): nothing still waiting (the
+// end of the voice, a running recognition, the way back after the tab was hidden) opens the microphone again
+function endTurn(){chat.turn++;chat.resumeMic=false;stopListening(true);stopAnswer();releaseMic();setTalk()}
+const ENDE_TEXT={stopp:t('Gestoppt.','Stopped.'),tschuess:t('Tschüss!','Bye!'),notaus:t('Notaus: alles still.','Emergency stop: all quiet.')};
 
 // Simple voice activity detection: stop after ~0.8 s of silence once speech was heard.
 function startVad(o={}){const ctx=audioCtx(),src=ctx.createMediaStreamSource(chat.stream),an=ctx.createAnalyser();
@@ -137,7 +145,7 @@ function stopVad(){chat.micLevel=0;chat.micPaused=false;if(chat.vad){clearInterv
 // priority for people (stufe.py): a profile with Vorrang says "recording starts" before it is sent
 let VOR_ON=false;
 function vorSpricht(){if(PROFILE&&VOR_ON)api('/api/vorrang/spricht',{method:'POST'}).catch(()=>{})}
-async function startListening(o={}){stopBarge();if(!o.held)stopAnswer();chat.turnWait=null;chat.stopWhy=null;chat.resumeMic=false;
+async function startListening(o={}){stopBarge();if(!o.held){stopAnswer();chat.turn++}chat.turnWait=null;chat.stopWhy=null;chat.resumeMic=false;
   if(!window.isSecureContext||!navigator.mediaDevices){showSecure();chatSay(t('Mikrofon braucht https, siehe Hinweis oben.','The microphone needs https, see the note above.'));return}
   try{await getMic()}
   catch(e){chatSay(micError(e));return}
@@ -150,7 +158,7 @@ async function startListening(o={}){stopBarge();if(!o.held)stopAnswer();chat.tur
     const why=chat.stopWhy;chat.stopWhy=null;
     if(cancel&&chat.held){clearLive();resumeAnswer(chat.held);return}   // nothing to decide: the answer plays on
     if(chat.held){const h=chat.held;h.t=setTimeout(()=>resumeAnswer(h),HOLD_MS)}
-    if(cancel){clearLive();if(why!=='lost')chatSay(why==='quiet'&&S.hands?t('Nichts gehört, Mikrofon aus. Tippe „Sprechen“ oder sag „Hey Spark“.','Heard nothing, microphone off. Tap "Speak" or say "Hey Spark".'):t('Bereit.','Ready.'));return}
+    if(cancel){clearLive();if(why==='quiet')releaseMic();if(why!=='lost')chatSay(why==='quiet'&&S.hands?t('Nichts gehört, Mikrofon aus. Tippe „Sprechen“ oder sag „Hey Spark“.','Heard nothing, microphone off. Tap "Speak" or say "Hey Spark".'):t('Bereit.','Ready.'));return}
     transcribe(new Blob(parts,{type:rec.mimeType||'audio/webm'}),performance.now(),rec,rec.opened)};
   if(rec.state==='inactive')rec.start();chat.rec=rec;setTalk();vorSpricht();chatSay(o.held?t('Angehalten, ich höre zu …','Paused, listening …'):o.speaking?t('Unterbrochen, ich höre zu …','Interrupted, listening …'):o.follow?t('Noch eine Frage? Ich höre kurz zu …','Anything else? Listening briefly …'):t('Ich höre zu …','Listening …'));startVad(o)}
 // Barge-in: while the answer plays, the microphone keeps listening (the browser's echo
@@ -189,7 +197,7 @@ async function toWav(blob,rate=16000){const raw=await audioCtx().decodeAudioData
   v.setUint32(24,rate,true);v.setUint32(28,rate*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,pcm.length*2,true);
   for(let i=0;i<pcm.length;i++)v.setInt16(44+2*i,Math.max(-1,Math.min(1,pcm[i]))*32767,true);
   return new Blob([buf],{type:'audio/wav'})}
-async function transcribe(blob,tEnd,rec,opened){chat.asrBusy=true;try{await transcribe2(blob,tEnd,rec,opened)}finally{chat.asrBusy=false}}
+async function transcribe(blob,tEnd,rec,opened){chat.asrBusy=true;setTalk();try{await transcribe2(blob,tEnd,rec,opened)}finally{chat.asrBusy=false;setTalk()}}
 async function asrText(blob,opened,held,turn){
   let file=blob,name='frage.'+(blob.type.includes('mp4')?'m4a':blob.type.includes('ogg')?'ogg':'webm');
   try{file=await toWav(blob);name='frage.wav'}catch{}            // fall back to the original recording
@@ -204,12 +212,13 @@ async function asrText(blob,opened,held,turn){
 function turnNote(rec,id,x,at){(rec.turns=rec.turns||[]).push({id,st:turnState(x),at});if(rec.endVoice!=null)turnDone(rec)}
 function turnDone(rec){for(const p of rec.turns||[])(chat.turnOut=chat.turnOut||[]).push(p.id+':'+({done:'fertig',open:'offen'}[p.st]||'neutral')+':'+(rec.endVoice>p.at?1:0));
   rec.turns=[];if(chat.turnOut&&chat.turnOut.length>8)chat.turnOut.splice(0,chat.turnOut.length-8)}
-async function transcribe2(blob,tEnd,rec,opened){const h=opened==='barge'?chat.held:null;chatSay(t('Erkenne Sprache …','Transcribing …'));
+async function transcribe2(blob,tEnd,rec,opened){const h=opened==='barge'?chat.held:null,g=chat.turn;chatSay(t('Erkenne Sprache …','Transcribing …'));
   // a live snapshot taken after the last voiced moment already holds the whole question
   const last=chat.live.last;chat.live.last=null;let r=null;
   if(!h&&last&&last.rec===rec&&chat.lastVoice!=null&&last.at>chat.lastVoice+150)r=await last.p;
   clearLive();
-  if(!r)try{r=await asrText(blob,opened,h)}catch(e){if(h){resumeAnswer(h);return}chatSay(errText(e instanceof TypeError?'net':/asr_down|unreachable/.test(errRaw(e))?'asr_down':/loading/.test(errRaw(e))?'asr_loading':'asr_error',e.message));return}
+  if(!r)try{r=await asrText(blob,opened,h)}catch(e){if(g!==chat.turn)return;if(h){resumeAnswer(h);return}chatSay(errText(e instanceof TypeError?'net':/asr_down|unreachable/.test(errRaw(e))?'asr_down':/loading/.test(errRaw(e))?'asr_loading':'asr_error',e.message));return}
+  if(g!==chat.turn){releaseMic();return}   // Stopp (or a new recording) while it was recognized: this question is never asked
   // the Spark's own voice (another device answering, echo.py) counts as silence
   // silence, a click or the chime that came back as "Ja"/"Okay" (stille.py) is no question either
   if(h){if(chat.held!==h)return;   // decided meanwhile: played on after HOLD_MS, or "Stopp" was tapped
@@ -269,6 +278,9 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   if(thumbs.length){const w=document.createElement('div');w.className='picrow';w.innerHTML=thumbs.map(u=>`<img alt="" src="${esc(u)}">`).join('');ub.appendChild(w)}chat.msgs.push(um);deletable(ub,um);let foreign=false,ttsErr=false,mailUsed=false,outsideUsed=false,screenUsed=false,why=null;
   // the conversation is named from its first question on, so the panel's own question (klaeren.py) is answered in the same one
   if(!chat.cid)chat.cid=Date.now().toString(36);
+  // this turn and its conversation: Stopp or another conversation opened meanwhile never reopens the microphone, and
+  // the answer goes into the conversation it was asked in (A-H1), never into the one open now
+  const g=chat.turn,msgs=chat.msgs,cid=chat.cid;let ended='';
   const el=chatLog('assistant','');$('fabtext').textContent='';
   // shown formatted while it streams (md.js), at most once per frame; the small answer line gets the plain text
   let drawn=null,frame=0;const draw=()=>{frame=0;md.render(el,drawn);$('fabtext').textContent=md.plain(drawn);$('chatlog').scrollTop=1e9};
@@ -319,13 +331,19 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
         else if(ev.type==='memory'){if(ev.action==='saved'&&ev.id&&window.gmChips&&gms.length<3)gms.push(ev);else mems.push((ev.action==='saved'?t('Gemerkt: ','Remembered: '):t('Vergessen: ','Forgotten: '))+ev.text)}   // Gemerkt-Hinweis (gemerkt.js): a chip with Rückgängig
         else if(ev.type==='search_error'){chatSay(t('Websuche fehlgeschlagen: ','Web search failed: ')+ev.message)}
         else if(ev.type==='timing'){if(ev.llm_first_token!=null)llmS=ev.llm_first_token;if(ev.first_audio!=null)audioS=ev.first_audio;if(ev.first_ack!=null)ackS=ev.first_ack}
+        else if(ev.type==='ende'){ended=ENDE_TEXT[ev.art]?ev.art:'stopp'}   // a stop word or Notaus (stoppwort.py, laufend.py): over
         else if(ev.type==='error'){if(!err)err=errText(ev.code,ev.message);if(/^tts/.test(ev.code||''))ttsErr=true}}}}
   catch(e){if(e.name!=='AbortError')err=e instanceof TypeError&&!pids.length&&offlineQueue(text)?t('Keine Verbindung zum Spark. Die Frage geht raus, sobald er wieder antwortet.','No connection to the Spark. The question goes out once it answers again.'):errText(e instanceof TypeError?'net':'',e.message);if(pids.length&&/picture is gone/.test(errRaw(e)))picsGone()}
   const aborted=ctrl.signal.aborted;if(chat.ctrl===ctrl)chat.ctrl=null;if(frame)show(drawn,true);
+  const moved=chat.msgs!==msgs,drop=()=>{const i=msgs.lastIndexOf(um);if(i>=0)msgs.splice(i,1)};
+  if(ended){drop();el.classList.remove('typing');el.textContent=ENDE_TEXT[ended];   // nothing kept, nothing asked again
+    if(!moved)chatSay(ENDE_TEXT[ended]);if(g===chat.turn)endTurn();return}
   const att=attOf(searches,sources,docs,drefs,mkcards,blcards);   // what stands under the answer, kept with it
   // another person's voice: the exchange is theirs, so it stays out of this browser's history and context
-  if(foreign){const i=chat.msgs.indexOf(um);if(i>=0)chat.msgs.splice(i,1)}
-  else if(full.trim()){chat.msgs.push({role:'assistant',content:full.trim(),...(mailUsed?{mail:true}:outsideUsed?{outside:true}:{}),...(screenUsed?{screen:true}:{}),...(att.length?{att}:{}),...(gms.length?{mem:gms.map(x=>({id:x.id,rev:x.rev}))}:{})});deletable(el,chat.msgs.at(-1))}else chat.msgs.pop();saveConvo();
+  if(foreign)drop();
+  else if(full.trim()){msgs.push({role:'assistant',content:full.trim(),...(mailUsed?{mail:true}:outsideUsed?{outside:true}:{}),...(screenUsed?{screen:true}:{}),...(att.length?{att}:{}),...(gms.length?{mem:gms.map(x=>({id:x.id,rev:x.rev}))}:{})});if(!moved)deletable(el,msgs.at(-1))}else drop();
+  if(moved){saveOther(cid,msgs,!foreign&&full.trim()?[um,msgs.at(-1)]:[]);return}   // the page shows another conversation now
+  saveConvo();
   el.classList.remove('typing');if(!full.trim())el.textContent=aborted?t('(abgebrochen)','(cancelled)'):'–';
   attRender(el,att,true);
   if(steps.length)el.appendChild(stepsFold(steps));
@@ -357,12 +375,13 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
     (chat.gaps.length?`<span class="chip" title="${t('Die Sprachausgabe kam nicht schnell genug nach','Speech output fell behind')}">${t('Aussetzer bei','stalls at')} <b>${chat.gaps.map(x=>x.toFixed(1)+' s').join(', ')}</b></span>`+
       `<div class="blocks">${t('Tonblöcke (Länge@Ankunft, ! = Aussetzer)','Audio blocks (length@arrival, ! = stall)')}: ${esc(chat.blocks.join(' '))}</div>`:'');
   if(err){const d=document.createElement('div');d.className='err';d.textContent=err;el.appendChild(d);$('chatlog').scrollTop=1e9}
-  if(err&&!(ttsErr&&full.trim())){chat.errAt=performance.now();chatSay(err);setTalk();return}
+  if(err&&!(ttsErr&&full.trim())){chat.errAt=performance.now();chatSay(err);setTalk();releaseMic();return}
   if(aborted){setTalk();return}
-  const done=async()=>{while(playing()&&!chat.ctrl&&!chat.rec&&!chat.held)await new Promise(res=>setTimeout(res,100));   // wait until it has finished speaking
+  const done=async()=>{while(playing()&&!chat.ctrl&&!chat.rec&&!chat.held&&g===chat.turn)await new Promise(res=>setTimeout(res,100));   // wait until it has finished speaking
+    if(g!==chat.turn)return;   // Stopp while the voice still played (the stream was done): never listens again
     setTalk();if(chat.held&&!chat.ctrl){chat.afterHeld=done;return}   // paused: once it plays on, the end comes after it
     if(chat.ctrl||chat.rec||chat.held)return;
-    chatSay(t('Bereit.','Ready.'));if(S.hands)startListening({opened:'hands'});else if(spoken&&followSecs())startListening({follow:followSecs()})};
+    chatSay(t('Bereit.','Ready.'));if(S.hands)startListening({opened:'hands'});else if(spoken&&followSecs())startListening({follow:followSecs()});else releaseMic()};
   await done()}
 // Ablauf zeigen (ablauf.py): the tools of this answer, folded: „3 Werkzeuge benutzt · 2,1 s“, open: ✓ or the warning symbol, name and time
 function stepsFold(steps){const d=document.createElement('details');d.className='steps';const s=document.createElement('summary');
@@ -476,8 +495,9 @@ function chime(){try{const ctx=audioCtx(),o=ctx.createOscillator(),g=ctx.createG
   o.start();o.stop(ctx.currentTime+0.2)}catch{}}
 async function checkWake(chunks,rate){wake.busy=true;try{
   const fd=new FormData();fd.append('file',pcmWav(chunks,rate),'wake.wav');fd.append('language',(CFG&&CFG.asr.default_language)||'auto');fd.append('wake','Hey Spark');if(window.room&&room.on)fd.append('room',room.id);
-  const text=((await (await api('/api/test/asr',{method:'POST',body:fd})).json()).text||'').trim();
-  const m=text&&matchWake(text);if(!m){if(window.room&&room.on&&text)room.heard(text);return}if(!wake.on)return;
+  const d=await (await api('/api/test/asr',{method:'POST',body:fd})).json(),text=(d.text||'').trim();
+  const m=text&&matchWake(text);if(!m){if(window.room&&room.on&&text)room.heard(text,d.ende);return}if(!wake.on)return;
+  if(d.ende){wake.busy=false;endTurn();chatSay(ENDE_TEXT[d.ende]||ENDE_TEXT.stopp);return}   // „Hey Spark, stopp“ (stoppwort.py): no tone, no microphone
   if(m.rest.split(/\s+/).filter(Boolean).length>=2){wake.busy=false;chat.nextSpoken=true;ask(m.rest,null)}
   else{chime();wake.busy=false;startListening()}}
   catch{}finally{wake.busy=false}}
@@ -502,7 +522,7 @@ async function startWake(){if(wake.on)return;
   if(ctx.state==='suspended'){chatSay(t('Einmal tippen, dann lauscht der Assistent.','Tap once, then the assistant listens.'));document.addEventListener('pointerdown',()=>ctx.resume(),{once:true})}
   keepAwake();$('wakeind').hidden=false}
 function stopWake(){wake.on=false;if(wake.node){wake.node.onaudioprocess=null;try{wake.src.disconnect();wake.node.disconnect()}catch{}}wake.node=wake.src=wake.seg=null;
-  if(wake.lock){wake.lock.release().catch(()=>{});wake.lock=null}$('wakeind').hidden=true}
+  if(wake.lock){wake.lock.release().catch(()=>{});wake.lock=null}$('wakeind').hidden=true;releaseMic()}
 async function keepAwake(){if(wake.on&&'wakeLock' in navigator&&!document.hidden)try{wake.lock=await navigator.wakeLock.request('screen')}catch{}}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)keepAwake()});
 setInterval(()=>{if(wake.on&&!document.hidden)$('wakeind').classList.toggle('paused',!wakeIdle())},300);
@@ -521,11 +541,11 @@ try{$('chatwake').checked=localStorage.getItem('wake')==='1'}catch{}
 $('chatwake').onchange=()=>{try{localStorage.setItem('wake',$('chatwake').checked?'1':'0')}catch{}if($('chatwake').checked)startWake();else if(!(window.room&&room.on))stopWake()};
 // started once it is known who uses this page (see guestLock)
 $('talk').onclick=()=>{audioCtx();if(MOBILE.matches&&$('talk').classList.contains('ans')){$('chatstop').click();return}if(chat.rec)stopListening(false);else startListening()};
-$('chatstop').onclick=()=>{stopListening(true);stopAnswer();setTalk();chatSay(t('Gestoppt.','Stopped.'))};
+$('chatstop').onclick=()=>{endTurn();chatSay(t('Gestoppt.','Stopped.'))};
 $('searchtest').onclick=async()=>{$('searchmsg').textContent=t('Teste …','Testing …');
   try{const r=await (await api('/api/search-test?url='+encodeURIComponent($('chat.search_url').value.trim()))).json();$('searchmsg').textContent=`${r.results} ${t('Treffer in','results in')} ${r.seconds} s: ${r.first.map(x=>x.title).join(' · ').slice(0,120)}`}
   catch(e){$('searchmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
-$('chatnew').onclick=()=>{stopListening(true);stopAnswer();openConvo(null);chat.fresh=true;setTalk();chatSay(t('Bereit.','Ready.'))};
+$('chatnew').onclick=()=>{endTurn();openConvo(null);chat.fresh=true;setTalk();chatSay(t('Bereit.','Ready.'))};
 // Conversations are kept in this browser (localStorage), at most 30, newest first.
 // Conversations stay in this browser, kept apart per profile (guests: "convos").
 let PROFILE=null;
@@ -570,6 +590,12 @@ const convos={cache:[],
     catch{return false}}};
 // "whole": the conversation as it is here replaces the Spark's copy (after deleting messages); otherwise only
 // the messages not yet saved (chat.saved counts them) are added there
+// an answer whose conversation is no longer open here (A-H1): its question and answer go into that conversation
+function saveOther(cid,msgs,news){if(!cid||!news.length)return;const first=msgs.find(m=>m.role==='user');
+  const c={id:cid,title:(first?first.content:'').slice(0,60),updated:Date.now(),msgs:msgs.slice(-60)};
+  if(PROFILE)convos.add(c,news).then(()=>fillConvos());else{convos.put(c);fillConvos()}}
+// another conversation opened from elsewhere (Finden, Offen, Ich): the running answer and recording end first
+function showConvo(id){endTurn();openConvo(id,true)}
 function saveConvo(whole){if(!chat.msgs.length)return;
   if(!chat.cid)chat.cid=Date.now().toString(36);const first=chat.msgs.find(m=>m.role==='user');
   const c={id:chat.cid,title:(first?first.content:'').slice(0,60),updated:Date.now(),msgs:chat.msgs.slice(-60)};
@@ -654,9 +680,9 @@ function deleteMsg(d){if(chat.ctrl||chat.rec)return;   // not while an answer is
   chat.msgs=chat.msgs.filter(m=>!gone.has(m));
   for(const x of [...$('chatlog').children])if(x===d||gone.has(x._m))x.remove();
   if(chat.msgs.length)saveConvo(true);else if(chat.cid){convos.del(chat.cid);openConvo(null)}}
-$('convosel').onchange=()=>{stopListening(true);stopAnswer();openConvo($('convosel').value||null,true);setTalk();chatSay(t('Bereit.','Ready.'))};
+$('convosel').onchange=()=>{endTurn();openConvo($('convosel').value||null,true);setTalk();chatSay(t('Bereit.','Ready.'))};
 $('convodel').onclick=()=>{if(!chat.cid||!confirm(t('Dieses Gespräch löschen?','Delete this conversation?')))return;
-  convos.del(chat.cid);stopListening(true);stopAnswer();openConvo(null)};
+  convos.del(chat.cid);endTurn();openConvo(null)};
 // A new day starts a new conversation (setting "daily"); older ones stay in the history.
 const today0=()=>new Date().setHours(0,0,0,0);
 const latestConvo=()=>{const c=convos.load()[0];return c&&(!S.daily||c.updated>=today0())?c.id:null};
@@ -678,7 +704,7 @@ function findRun(){const q=$('findq').value.trim(),hits=findHits(q);
   const d=x=>new Date(x).toLocaleString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
   $('findlist').innerHTML=hits.map((h,k)=>`<li data-k="${k}"><span><small class="mut">${d(h.c.updated)} · ${esc((h.c.title||'').slice(0,50))} · ${h.m.role==='user'?t('du','you'):t('Assistent','assistant')}</small><br>${snippet(h.m.role==='user'?h.m.content:md.plain(h.m.content),q)}</span></li>`).join('');
   $('findlist').querySelectorAll('li').forEach(li=>li.onclick=()=>{const h=hits[+li.dataset.k];$('findmodal').style.display='none';
-    stopListening(true);stopAnswer();openConvo(h.c.id,true);if(typeof setView==='function'&&MOBILE.matches)setView('log');
+    endTurn();openConvo(h.c.id,true);if(typeof setView==='function'&&MOBILE.matches)setView('log');
     const el=[...$('chatlog').querySelectorAll('.msg')][h.i];if(el){el.scrollIntoView({block:'center'});el.classList.add('found');setTimeout(()=>el.classList.remove('found'),2500)}})}
 let findT=null;$('findq').oninput=()=>{clearTimeout(findT);findT=setTimeout(findRun,150)};
 $('findq').onkeydown=e=>{if(e.key==='Escape')$('findmodal').style.display='none'};

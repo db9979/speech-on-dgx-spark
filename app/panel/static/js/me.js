@@ -5,7 +5,7 @@ function setProfile(p){const changed=(p&&p.id)!==(PROFILE&&PROFILE.id);PROFILE=p
   if(changed)PROFILE_GEN++;   // answers asked for the profile before are dropped (convos, pushMine: P1 Sicherheit)
   $('profname').textContent=PROFILE?PROFILE.name:t('Gast','Guest');
   if(changed&&PROFILE)pushBind();
-  if(changed){stopListening(true);stopAnswer();syncStop();if(!PROFILE){offlineWipe(true);merkWipe(true)}convos.cache=[];openConvo(null);convos.sync().then(()=>{if(!chat.msgs.length)openConvo(latestConvo())})}
+  if(changed){endTurn();syncStop();if(!PROFILE){offlineWipe(true);merkWipe(true)}convos.cache=[];openConvo(null);convos.sync().then(()=>{if(!chat.msgs.length)openConvo(latestConvo())})}
   loadSettings();rem.load();if(window.room)room.show();guestLock();if(typeof sideWho==='function')sideWho()}
 // Guests change no settings and cannot use room mode: they get the admin's defaults (the admin's own browser may).
 const isGuest=()=>!PROFILE&&!ADMIN;
@@ -70,7 +70,7 @@ function factDetail(f){const E=icEl,d=E('div','ic-row factdet');const m=E('div',
   const dl=E('dl','ld-facts');const add=(k,v)=>{dl.append(E('dt','',k));const dd=E('dd');if(typeof v==='string')dd.textContent=v;else dd.appendChild(v);dl.appendChild(dd)};
   const known=f.convo&&typeof convos!=='undefined'&&convos.load().some(c=>c.id===f.convo);
   let from=FSRC[f.src]||FSRC.said;
-  if(f.convo){if(known){const a=icLink(t('Gespräch öffnen','Open the conversation'),()=>{closeProf();openConvo(f.convo,true)});const sp=E('span','',from+' · ');sp.appendChild(a);add(t('Woher','Where from'),sp)}
+  if(f.convo){if(known){const a=icLink(t('Gespräch öffnen','Open the conversation'),()=>{closeProf();showConvo(f.convo)});const sp=E('span','',from+' · ');sp.appendChild(a);add(t('Woher','Where from'),sp)}
     else add(t('Woher','Where from'),from+' · '+t('Gespräch nicht mehr da','conversation gone'))}
   else add(t('Woher','Where from'),from);
   add(t('Gemerkt','Remembered'),fdate(f.created)||'–');add(t('Bestätigt','Confirmed'),f.confirmed?fdate(f.confirmed):t('nie','never'));

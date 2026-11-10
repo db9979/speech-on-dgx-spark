@@ -5455,7 +5455,7 @@
 "id": "P805",
 "v": 1361,
 "titel": "Verneinung schaltet nie",
-"text": "Mit Home Assistant: „Mach das Licht nicht aus“, „Mach das Licht aus, nein doch nicht“ und „Kein Licht bitte“ sagen: das Licht bleibt an. „Vergiss es“ und „Schon gut“: kurze Antwort, nichts im Gedächtnis gelöscht (Ich → Gedächtnis). Zustand → Logs (Weiche): „verneint“ in der Zeile „weiche: Absicht …“.",
+"text": "Mit Home Assistant: „Mach das Licht nicht aus“, „Mach das Licht aus, nein doch nicht“ und „Kein Licht bitte“ sagen: das Licht bleibt an. „Vergiss es“: kurze Antwort, „Schon gut“: „Gestoppt.“ (Stoppwort, P811), beide Male nichts im Gedächtnis gelöscht (Ich → Gedächtnis). Zustand → Logs (Weiche): „verneint“ in der Zeile „weiche: Absicht …“.",
 "thread": "Spark stabilisieren mit Code-Review"
 },
 {
@@ -5513,6 +5513,48 @@
 "titel": "Hörprobe einer Diskussion und Drehbuch im iPhone",
 "text": "Admin, „Hörstück als Diskussion“ an: in einer Mappe mit Dokumenten auf kurz oder ganz „Hörprobe (2 Min.)“ tippen. Die Liste zeigt „Hörprobe · …“, nach wenigen Minuten etwa zwei Minuten Ton mit Einstieg und einer Streitfrage; „heute … von …“ zählt nicht hoch. Schalter aus: der Knopf ist weg. Ein anderes Profil sieht den Knopf nie. iPhone-App, dieselbe Mappe → Hörstück: im Drehbuch Kapitel-Überschriften, „Gespräch“, Sprechweise und „Rückmeldung“, in Englisch ebenso. Am nächsten Tag ist die Hörprobe von selbst weg. Zustand → Logs (Wissen): „hoerstueck: hoerprobe | fertig“ und „hoerstueck: hoerprobe | weg | 1“, Zustand → Live, Kasten Hörstück: Hörproben gemacht und weg.",
 "thread": "Hörstück als Diskussion"
+},
+{
+"id": "P814",
+"v": 1365,
+"titel": "Stopp beendet das Gespräch ohne Modell",
+"text": "Freihändig an: eine Frage sprechen, dann „Stopp“ sagen (auch „Danke, das war's“ oder „Tschüss“). Die Seite sagt „Gestoppt.“ bzw. „Tschüss!“, es kommt keine Antwort, das Mikrofon bleibt zu. Zustand → Logs (chat): nur „chat: ende stopp | web“. „Stopp die Musik“ wird weiter beantwortet.",
+"thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P815",
+"v": 1365,
+"titel": "Stopp während der Ton nachklingt",
+"text": "Freihändig an, eine lange Antwort vorlesen lassen und „Stopp“ tippen, wenn der Text schon fertig ist, der Ton aber noch läuft: still, „Gestoppt.“, kein „Noch eine Frage?“, auch nicht nach einem Tab-Wechsel. Tippt man während „Erkenne Sprache …“ Stopp, geht die Frage nicht raus. Danach zeigt der Browser kein „Mikrofon in Verwendung“ mehr (Weckwort aus).",
+"thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P816",
+"v": 1365,
+"titel": "Anderes Gespräch während einer Antwort",
+"text": "Während eine Antwort läuft, über Finden oder Offen ein anderes Gespräch öffnen: die Antwort hört auf, das geöffnete Gespräch bleibt unverändert, Frage und Antwort stehen im alten Gespräch.",
+"thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P817",
+"v": 1365,
+"titel": "Lautsprecher: Stopp beim Vorlesen",
+"text": "Mit „Stopp beim Vorlesen“: während der Lautsprecher spricht „Stopp“ sagen. Er ist sofort still und wartet wieder auf „Jarvis“; Ich → Lautsprecher → Prüfen zeigt „Stopp beim Vorlesen gehört: still, wartet aufs Weckwort“, eine Frage danach ohne Weckwort wird nicht gehört.",
+"thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P818",
+"v": 1365,
+"titel": "Notaus Stufe 3 beendet Laufendes",
+"text": "Eine lange Antwort in der App oder im Browser laufen lassen (und ein Telefonat, falls eingerichtet), dann Notaus Stufe 3: die Antwort bricht ab, die Seite sagt „Notaus: alles still.“, das Mikrofon geht nicht wieder auf, das Telefonat endet. Zustand → Logs: „notaus: laufendes beendet | notaus | chat 1 …“.",
+"thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P819",
+"v": 1365,
+"titel": "Begleiter: Hey Spark, stopp",
+"text": "Am Rechner mit Weckwort: während der Begleiter vorliest „Hey Spark, stopp“ sagen: er hört auf, kein Ton, keine Frage. Weckwort, Frage sprechen und gleich „Mikrofon zu“ schalten: die Frage wird nicht gestellt.",
+"thread": "Spark stabilisieren mit Code-Review"
 }
 ]
 }

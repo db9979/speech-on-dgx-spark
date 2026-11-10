@@ -4,11 +4,11 @@ from technik_seiten import S
 
 SEITEN = {
     "vorbereiten": {
-        "stand": "ff90f75a7f",
+        "stand": "662c8bab63",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
-            "chat.offer_memory": ["s10"], "chat.ha_take": ["s7"],
+            "chat.offer_memory": ["s10"], "chat.ha_take": ["s7"], "stoppwort.ende": ["s14"], "proactive.answers_note": ["s14"],
             "regeln": ["s10", "s11"], "regel:Gast oder unbekannte Stimme am Lautsprecher": ["s3"],
         },
         "kurz": ("chat_turn.prepare macht aus einer Chat-Anfrage einen fertigen Gesprächszug, bevor das Sprachmodell "
@@ -34,6 +34,21 @@ SEITEN = {
                "answer the browser marked as made from mail or outside text keeps that mark. A question from the Android "
                "app's assistant sheet only passes when „Android: Spark as assistant“ is released for the profile (else 403)."),
               ("stop", ("leer", "empty"), ("Keine Nachricht (400)", "No message (400)"))),
+            S("s14", "frage", ("Nur ein Stoppwort?", "Only a stop word?"),
+              ("stoppwort.ende · vor der Weiche", "stoppwort.ende · before the switch"),
+              ("Ist die ganze Nachricht ein Stoppwort oder ein Abschied („Stopp“, „Hör auf“, „Danke, das war's“, "
+               "„Tschüss“; die eine Liste in stoppwort.py), endet der Zug hier: kein Modell, kein Werkzeug, nichts wird "
+               "gespeichert, eine wartende Rückfrage dieses Gesprächs verfällt. Die Antwort ist nur das Ereignis "
+               "„ende“; Seite, Apps und Begleiter hören auf zu sprechen und öffnen das Mikrofon nicht wieder, Telegram "
+               "und Siri bekommen ein festes Wort. „Stopp die Musik“ bleibt eine Frage. Antwortet die Person auf eine "
+               "Meldung des Spark („Nicht jetzt“, proactive.answers_note), bleibt das die Rückmeldung zur Meldung.",
+               "If the whole message is a stop word or a goodbye („Stop“, „Be quiet“, „Thanks, that's all“, „Bye“; "
+               "the one list in stoppwort.py), the turn ends here: no model, no tool, nothing is stored, a waiting "
+               "question back of this conversation lapses. The answer is only the event „ende“; page, apps and "
+               "Begleiter stop speaking and do not open the microphone again, Telegram and Siri get a fixed word. "
+               "„Stop the music“ stays a question. When the person answers a note of the Spark („Not now“, "
+               "proactive.answers_note), that stays the note's feedback."),
+              ("stop", "ja", ("„ende“, kein Modell", "„ende“, no model"))),
             S("s2", "schritt", ("Verlauf kürzen, Sperre übernehmen", "Trim history, carry the lock"),
               ("chat.trim_history", "chat.trim_history"),
               ("Der Verlauf wird auf sein Budget gekürzt. Steht eine Antwort aus fremdem Text unter den letzten drei "
@@ -183,15 +198,18 @@ SEITEN = {
         ],
         "beispiele": [
             (("Gast fragt nach dem Wetter", "Guest asks for the weather"),
-             ["s1", "s2", "s3", "s3!", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "s11!", "s13"],
+             ["s1", "s14", "s2", "s3", "s3!", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "s11!", "s13"],
              ("Antwort ohne Werkzeug: Gäste bekommen nur Frage und Antwort.", "Answer without a tool: guests only get question and answer.")),
             (("„Das zweite“ nach einer Rückfrage", "„The second“ after a question back"),
-             ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s7!", "s8", "s9", "s10", "s11", "s12", "s13"],
+             ["s1", "s14", "s2", "s3", "s4", "s5", "s6", "s7", "s7!", "s8", "s9", "s10", "s11", "s12", "s13"],
              ("Das Panel schaltet das gewählte Gerät; das Modell sagt nur das Ergebnis.",
               "The panel switches the chosen device; the model only says the result.")),
             (("Notaus Stufe 2, Frage nach Terminen", "Kill switch stage 2, asking for appointments"),
-             ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s8!", "s9", "s10", "s11", "s11!", "s12", "s13"],
+             ["s1", "s14", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s8!", "s9", "s10", "s11", "s11!", "s12", "s13"],
              ("Nur lesende Werkzeuge; Termine eintragen wird nicht angeboten.", "Only reading tools; adding appointments is not offered.")),
+            (("„Stopp“ mit Freihändig", "„Stop“ with hands-free"), ["s1", "s14", "s14!"],
+             ("Kein Modell, die Seite sagt „Gestoppt.“ und das Mikrofon bleibt zu.",
+              "No model, the page says „Stopped.“ and the microphone stays closed.")),
         ],
         "regeln": [
             [("Wer spricht", "Who speaks"), ("Werkzeuge", "Tools"), ("Persönliches", "Personal data"), ("Ja zu Vorschlägen", "Yes to proposals")],
@@ -242,8 +260,11 @@ SEITEN = {
             ("intent.narrow", ("Werkzeuge eingrenzen", "narrow the tools")),
             ("chat_turn.notaus_note", ("Satz für das Modell bei Notaus", "sentence for the model with the kill switch")),
             ("chat.ha_take", ("Befehl mit Codewort nur von seiner Quelle", "command with code word only from its source")),
+            ("stoppwort.ende", ("ein ganzer Satz aus Stoppwörtern beendet das Gespräch", "a whole sentence of stop words ends the talk")),
+            ("proactive.answers_note", ("Antwort auf eine Meldung des Spark", "answer to a note of the Spark")),
         ],
-        "tests": ["test_klaeren", "test_features", "test_notaus", "test_hardening", "test_weiche", "test_sicherheit_sofort"],
+        "tests": ["test_klaeren", "test_features", "test_notaus", "test_hardening", "test_weiche", "test_sicherheit_sofort",
+                  "test_abbrechen"],
         "heute": [],
     },
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)
@@ -630,13 +651,14 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "561874ce83",
+        "stand": "e29d5ddd85",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_modell.herkunft_und_chip": ["s3"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
             "chat.loop_count": ["s11"], "answercheck.known": ["s6"], "answercheck.unsupported": ["s6"],
             "answercheck.fresh": ["s6"], "rechnen.fix": ["s6"],
             "taten.announces": ["s7", "s12"], "vorrat.WAIT": ["s11"], "frisch.nachsatz": ["s12"],
+            "laufend.add": ["s14"],
         },
         "kurz": ("Hier entsteht die Antwort: Das Panel fragt das Sprachmodell in Runden, lässt angebotene Werkzeuge "
                  "laufen, prüft jeden fertigen Satz mit festen Regeln und schickt Text und Ton als einen Strom ans Gerät. "
@@ -823,11 +845,15 @@ SEITEN = {
             S("s14", "ende", ("Strom endet", "Stream ends"),
               ("Anfrage-Verlauf, Fälle, „done“", "request trace, cases, „done“"),
               ("Der Anfrage-Verlauf wird abgeschlossen, Fälle und die Prüfung im Hintergrund laufen erst nach dem "
-               "Sprechen. Bricht das Gerät ab (Unterbrechen), stoppen Modell und Sprachausgabe sofort. Stützt sich die "
+               "Sprechen. Bricht das Gerät ab (Unterbrechen, Stopp), stoppen Modell und Sprachausgabe sofort. Solange "
+               "die Antwort läuft, steht sie in laufend: Notaus Stufe 3 beendet sie mit dem Ereignis „ende“, das Gerät "
+               "hört dann auf und öffnet das Mikrofon nicht wieder. Stützt sich die "
                "Antwort auf mindestens zwei eigene Dokumente oder Kiwix-Artikel, merkt wissensbuch.keep_offer sie und "
                "das Gerät zeigt „Ins Wissensbuch“; nur der Klick des Besitzers legt sie ab.",
                "The request trace is closed; cases and the background check run only after speaking. When the device "
-               "aborts (barge-in), model and speech output stop at once. When the answer rests on at least two own "
+               "aborts (barge-in, stop), model and speech output stop at once. While the answer runs it is listed in "
+               "laufend: kill switch stage 3 ends it with the event „ende“, the device then stops and does not open the "
+               "microphone again. When the answer rests on at least two own "
                "documents or Kiwix articles, wissensbuch.keep_offer keeps it and the device shows „To the knowledge "
                "book“; only the owner's click files it.")),
         ],
@@ -882,6 +908,7 @@ SEITEN = {
         "code": [
             ("chat.chat", ("Rate-Limit, Sprache zuerst, „antwortet gerade“", "rate limit, speech first, „answering“")),
             ("chat._answer", ("führt Modellseite, Sprachausgabe und Ereignisse zu einem Strom zusammen", "joins model side, speech output and events into one stream")),
+            ("laufend.add", ("die laufende Antwort für Notaus Stufe 3", "the running answer for kill switch stage 3")),
             ("chat_ton.speech_out", ("Sätze an die Sprachausgabe, Ton als Strom", "sentences to the speech output, sound as a stream")),
             ("chat_modell.model_turn", ("Runden mit dem Modell, Werkzeuge, Prüfungen", "rounds with the model, tools, checks")),
             ("chat_modell.herkunft_und_chip", ("Herkunftszeile und „Auch im Internet suchen“ unter der Antwort", "line of origin and „Also search the web“ under the answer")),

@@ -1277,7 +1277,8 @@ async def test_asr(request: Request, file: UploadFile = File(...), language: str
                    turn: str = Form(""), turns: str = Form("", max_length=400)):
     """Load limits (per caller per minute, guests only a few at once), then the transcription. hold: the page paused
     the answer for this barge-in and asks whether it plays on (zwischenruf.py; asked: the answer ended on a question).
-    turn: a pause snapshot Satzende am Tonfall measures, turns: what became of earlier ones (satzende.py)."""
+    turn: a pause snapshot Satzende am Tonfall measures, turns: what became of earlier ones (satzende.py).
+    wake: the answer says "ende" when the whole sentence is a stop word or a goodbye (stoppwort.py)."""
     me = profiles.current(request)
     admin = not me and admin_cookie_ok(request)
     guard.limit(request, "asr", me and me["id"], admin)
@@ -1288,10 +1289,15 @@ async def test_asr(request: Request, file: UploadFile = File(...), language: str
         heard = {"start": (lambda data: satzende.start(me["id"], data, load_config())) if me and turn == "1" else None}
         res = await _test_asr(request, file, language, wake, room, opened, heard)
         key = heard.get("key")
-        got = answer_dict(res) if me and (hold == "1" or key) else None
+        got = answer_dict(res) if (me and (hold == "1" or key)) or wake else None
         if got is None:
             return res
-        if hold == "1" and fremdstimme.opened(opened) == "barge":
+        if wake:   # „Hey Spark, stopp“: a whole sentence of stop words (stoppwort.py) only stops, never opens the mic
+            import stoppwort
+            ende = stoppwort.ende(got.get("text"))
+            if ende:
+                got = dict(got, ende=ende)
+        if me and hold == "1" and fremdstimme.opened(opened) == "barge":
             import zwischenruf
             got = zwischenruf.attach(got, me["id"], asked == "1", echo.device_of(request).split(":")[0])
         if key:

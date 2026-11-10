@@ -460,7 +460,8 @@ def gate(request):
 
 # ---------------------------------------------------------------- what happens right after a change
 async def after_change(old, new, by, channel):
-    """Holds what runs (agent jobs, speakers, room mode) and tells the admins; never raises."""
+    """Holds what runs (agent jobs, speakers, room mode; at stage 3 every running answer, call and Home Assistant
+    session, laufend.py) and tells the admins; never raises."""
     if new >= STAGE["aussen"] > old:
         try:
             import fernzugang
@@ -499,6 +500,11 @@ async def after_change(old, new, by, channel):
             await roomlive.end_all("notaus")
         except Exception as e:
             print("notaus: room mode", type(e).__name__, flush=True)
+        try:
+            import laufend   # running answers (web, apps, Begleiter), phone calls, Home Assistant sessions
+            laufend.end_all("notaus")
+        except Exception as e:
+            print("notaus: laufendes", type(e).__name__, flush=True)
     try:
         await tell_admins(old, new, by, channel)
     except Exception as e:

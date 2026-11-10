@@ -109,7 +109,7 @@ function fundGo(w,it){
   if(w.art==='termin'&&typeof KAL!=='undefined'){KAL.day=new Date((it.wann||0)*1000);icTabSet('cal','show');goSec('cal')}
   else if(w.art==='kontakt'&&typeof KON!=='undefined'){KON.sel=String(w.id);KON.form=null;icTabSet('kontakte','show');goSec('kontakte')}
   else if(w.art==='liste'&&typeof LST!=='undefined'){LST.sel=String(w.id);icTabSet('listen','show');goSec('listen')}
-  else if(w.art==='chat'&&typeof openConvo==='function'){openConvo(String(w.id),true);goSec('chat')}
+  else if(w.art==='chat'&&typeof showConvo==='function'){showConvo(String(w.id));goSec('chat')}
   else if(w.art==='erinnerung'&&typeof openMe==='function')openMe('notebox');
   else if(w.art==='bild'&&typeof openMe==='function')openMe('bildbox');
   else if(w.art==='musik'&&typeof openMe==='function')openMe('musikbox')}

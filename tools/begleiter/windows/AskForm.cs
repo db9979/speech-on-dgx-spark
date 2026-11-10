@@ -455,6 +455,14 @@ internal sealed class AskForm : ThemedForm
                 return;
             }
 
+            if (reply.Ende is not null)
+            {
+                _stopSpeaking(); // ein Stoppwort: keine Antwort, nichts wird vorgelesen
+                _chat.Pending = false;
+                SetStatus("Gestoppt.", error: false);
+                return;
+            }
+
             if (_note is not null)
             {
                 _note = null;

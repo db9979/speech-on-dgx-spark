@@ -4,10 +4,11 @@ from technik_seiten import S
 
 SEITEN = {
     "geraet": {
-        "stand": "eceb5e2ad7",
+        "stand": "8840742c8f",
         "bezug": {
             "account.CONVO_BODY": ["s10"], "admin.test_asr": ["s4"], "admin._test_asr": ["s4", "s5"],
             "admin.read_audio": ["s4"], "zwischenruf.decide": ["s5"], "chat.chat": ["s6", "s7"], "account.profile_save_convo": ["s10"],
+            "stoppwort.ende": ["s5"],
             "account.profile_convos": ["s11"], "profiles.append_convo": ["s10"], "profiles._clean_convo": ["s10"],
             "verlauf.stream": ["s11"], "sse.Hub.stream": ["s11"], "verlauf.begin": ["s6", "s11"],
             "regeln": ["s6", "s10"],
@@ -72,14 +73,17 @@ SEITEN = {
                "Spark von einem anderen Gerät (echo.check) und bei selbst geöffnetem Mikrofon eine fremde Stimme, etwa "
                "vom Fernseher (fremdstimme.check), sind keine Frage. Die Antwort ist dann leerer Text mit dem Grund. Hat "
                "die Seite oder die iPhone-App die Antwort fürs Ins-Wort-Fallen nur angehalten (hold), sagt zwischenruf.decide mit festen "
-               "Wörtern dazu: weiter (nichts, Überhörtes, „mhm“), stopp („Stopp“) oder frage (alles andere); ohne "
-               "Entscheidung nach {zwischenruf.HOLD_MAX} s spielt sie weiter.",
+               "Wörtern dazu: weiter (nichts, Überhörtes, „mhm“), stopp („Stopp“, „Tschüss“) oder frage (alles andere); "
+               "ohne Entscheidung nach {zwischenruf.HOLD_MAX} s spielt sie weiter. Beim Weckwort sagt die Antwort "
+               "„ende“, wenn der ganze Satz ein Stoppwort ist („Hey Spark, stopp“, stoppwort.ende): die Seite hört "
+               "auf, ohne Ton und ohne Mikrofon.",
                "Fixed rules, no model: a „yes“ out of silence or a click and the name list read back (stille.check), the Spark's own voice from "
                "another device (echo.check) and, with a microphone the page opened itself, a foreign voice like the TV "
                "(fremdstimme.check) are no question. The answer is then empty text with the reason. When the page or the iPhone "
                "app only paused the answer for a barge-in (hold), zwischenruf.decide adds with fixed words: on (nothing, ignored, "
-               "„mhm“), stop („stop“) or question (anything else); without a decision after {zwischenruf.HOLD_MAX} s it "
-               "plays on."),
+               "„mhm“), stop („stop“, „bye“) or question (anything else); without a decision after {zwischenruf.HOLD_MAX} s it "
+               "plays on. With the wake word the answer says „ende“ when the whole sentence is a stop word („Hey Spark, "
+               "stop“, stoppwort.ende): the page stops, without a tone and without the microphone."),
               ("stop", "ja", ("Überhört, nichts gesendet", "Ignored, nothing sent"))),
             S("s6", "schritt", ("Frage an /api/chat", "Question to /api/chat"),
               ("Verlauf, Gespräch, Stimme, Stimm-Token", "history, conversation, voice, voice token"),
@@ -140,9 +144,19 @@ SEITEN = {
             S("s12", "ende", ("Bereit", "Ready"),
               ("wartet, bis der Ton zu Ende ist", "waits until the sound has ended"),
               ("Die Seite wartet, bis die Antwort ausgesprochen ist. Freihändig oder nach einer gesprochenen Frage "
-               "mit Nachfrage-Fenster öffnet sie das Mikrofon wieder.",
+               "mit Nachfrage-Fenster öffnet sie das Mikrofon wieder, aber nur, wenn der Zug noch gilt: Stopp, ein "
+               "neues oder anderes Gespräch und das Ereignis „ende“ (ein Stoppwort, Notaus Stufe 3) erhöhen die "
+               "Zugnummer, dann öffnet nichts mehr das Mikrofon, auch keine Erkennung, die noch lief. Hört nichts "
+               "mehr zu (keine Aufnahme, kein Ins-Wort-Fallen, kein Weckwort, kein Raum-Modus), gibt die Seite die "
+               "Mikrofon-Spur frei. Ein anderes Gespräch (Auswahl, Finden, Offen, Ich) öffnet erst nach dem Stopp, "
+               "und eine Antwort landet immer in dem Gespräch, in dem gefragt wurde.",
                "The page waits until the answer is spoken. Hands-free, or after a spoken question with a follow-up "
-               "window, it opens the microphone again."),
+               "window, it opens the microphone again, but only while the turn still holds: Stop, a new or another "
+               "conversation and the event „ende“ (a stop word, kill switch stage 3) raise the turn number, then nothing "
+               "opens the microphone any more, not even a recognition still running. When nothing listens any more (no "
+               "recording, no barge-in, no wake word, no room mode), the page releases the microphone track. Another "
+               "conversation (picker, Find, Open, Me) opens only after the stop, and an answer always lands in the "
+               "conversation it was asked in."),
               ("zurueck", ("freihändig, Nachfrage", "hands-free, follow-up"), "s3")),
         ],
         "beispiele": [
@@ -195,6 +209,7 @@ SEITEN = {
             ("admin.read_audio", ("liest die Aufnahme mit Größengrenze", "reads the recording with a size limit")),
             ("stille.check", ("Stille wird nie zu Worten", "silence never becomes words")),
             ("echo.check", ("die eigene Stimme des Spark ist keine Frage", "the Spark's own voice is no question")),
+            ("stoppwort.ende", ("ganzer Satz Stoppwort nach dem Weckwort: „ende“", "a whole stop sentence after the wake word: „ende“")),
             ("zwischenruf.decide", ("angehaltene Antwort: weiter, stopp oder neue Frage nach festen Wörtern",
                                     "paused answer: on, stop or new question by fixed words")),
             ("chat.chat", ("Grenzen, Vorrang, „antwortet gerade“, dann der Strom", "limits, priority, „answering“, then the stream")),
@@ -207,7 +222,7 @@ SEITEN = {
                                 "one stream per page: queue, keep-alive, cleanup")),
             ("verlauf.begin", ("„antwortet gerade“ für die anderen Seiten", "„answering“ for the other pages")),
         ],
-        "tests": ["test_verlauf_sync", "test_stille", "test_echo", "test_fremdstimme", "test_follow_up"],
+        "tests": ["test_verlauf_sync", "test_stille", "test_echo", "test_fremdstimme", "test_follow_up", "test_abbrechen"],
         "heute": [],
     },
 
@@ -462,12 +477,12 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Telegram, Siri, Uhr
     "kanaele": {
-        "stand": "bf3901ffc2",
+        "stand": "5832b3fb3b",
         "bezug": {
             "watch.JOB_TTL": ["s9"], "telegram.loop": ["s1"], "telegram.handle": ["s2", "s3", "s4"],
             "telegram.ask": ["s7", "s8", "s11"], "telegram.transcribe": ["s5"], "chat.siri_ask": ["s1", "s3"],
             "chat.text_ask": ["s6", "s7", "s11"], "chat.watch_ask": ["s1", "s7"], "chat._watch_run": ["s11"],
-            "watch.run": ["s8"], "watch.poll": ["s9"], "regeln": ["s1", "s9", "s11"],
+            "watch.run": ["s8"], "watch.poll": ["s9"], "regeln": ["s1", "s9", "s11"], "chat.ENDE_SAY": ["s8"],
             "watch.follow_ups": ["s9"], "watch.follow_clean": ["s9"], "pebblewatch.watch_sync": ["s9"],
             "pebblewatch.watch_reminder": ["s9"], "pebblewatch.watch_blick": ["s9"], "pebblewatch.watch_brief": ["s9"],
             "pebblewatch.watch_note": ["s9"], "pebblewatch.watch_chat": ["s9"], "pebblewatch.watch_chat_send": ["s9"],
@@ -546,7 +561,9 @@ SEITEN = {
             S("s8", "schritt", ("Antwort einsammeln", "Collect the answer"),
               ("Text, Rücknahmen, Herkunft", "text, retractions, origin"),
               ("Aus dem Strom zählen Textstücke und Rücknahmen. Kam die Antwort aus Mail oder fremdem Text, wird sie "
-               "so markiert, damit die nächste Frage gesperrt beginnt. Eine Rückfrage des Panels wird in Telegram zu "
+               "so markiert, damit die nächste Frage gesperrt beginnt. Sagt der Strom „ende“ (ein ganzer Satz aus "
+               "Stoppwörtern, Notaus Stufe 3), bekommen Telegram und Siri ein festes Wort (chat.ENDE_SAY), der Begleiter "
+               "leeren Text mit „ende“ und hört auf vorzulesen; nichts kommt in den Verlauf des Begleiters. Eine Rückfrage des Panels wird in Telegram zu "
                "Knöpfen, die wie eine getippte Antwort zurückkommen; ohne Rückfrage werden die Beispielsätze von „Das "
                "kannst du auch sagen“ zu Antworttasten. Die Sofort-Karte von Finden (ein Treffer klar vorn) wird ein "
                "Knopf „Original öffnen“ zur Panel-Adresse für Links (#fund=, nur Navigation), wenn sie eingetragen ist. "
@@ -555,7 +572,9 @@ SEITEN = {
                "bekommt die Zeile hinter den Werkzeugen und eine Karte mit „Auch im Internet suchen“ und „In Finden "
                "ansehen“ (desk_cards).",
                "From the stream, pieces of text and retractions count. If the answer came from mail or outside text it "
-               "is marked so, so the next question starts locked. A question back from the panel becomes buttons in "
+               "is marked so, so the next question starts locked. When the stream says „ende“ (a whole sentence of stop "
+               "words, kill switch stage 3), Telegram and Siri get a fixed word (chat.ENDE_SAY), the companion empty "
+               "text with „ende“ and stops reading aloud; nothing goes into the companion's history. A question back from the panel becomes buttons in "
                "Telegram that come back like a typed answer; without one, the example sentences of „You can also say“ "
                "become reply buttons. Find's Sofort-Karte (one hit clearly ahead) becomes a button „Original öffnen“ "
                "to the panel's address for links (#fund=, only navigation) when one is entered. The line of origin "
@@ -679,6 +698,7 @@ SEITEN = {
             ("telegram.ask", ("Frage an den Chat, Antwort einsammeln, speichern", "question to the chat, collect the answer, store")),
             ("telegram.transcribe", ("Sprachnachricht über ffmpeg zur Spracherkennung", "voice message through ffmpeg to recognition")),
             ("chat.siri_ask", ("Siri: Profil aus dem Schlüssel", "Siri: profile from the key")),
+            ("chat.ENDE_SAY", ("festes Wort, wenn die Antwort endet (Stopp, Tschüss, Notaus)", "fixed word when the answer ends (stop, goodbye, kill switch)")),
             ("chat.text_ask", ("Siri und Begleiter: Frage, Antwort, Verlauf, beim Begleiter dazu die Karten (desk_cards)", "Siri and companion: question, answer, history, for the companion also the cards (desk_cards)")),
             ("chat.watch_ask", ("Uhr: Antwort als Auftrag starten", "watch: start the answer as a job")),
             ("chat._watch_run", ("Uhr: Antwort in den Verlauf", "watch: the answer into the history")),
@@ -699,19 +719,20 @@ SEITEN = {
             ("pebblewatch.watch_health", ("Schritte, Puls, Schlaf versiegelt ins Profil", "steps, pulse, sleep sealed into the profile")),
             ("verlauf.keep", ("Tagesgespräch des Kanals oder Hauptgespräch", "the channel's day conversation or the main one")),
         ],
-        "tests": ["test_telegram_tasks", "test_pebble", "test_verlauf_sync", "test_notaus"],
+        "tests": ["test_telegram_tasks", "test_pebble", "test_verlauf_sync", "test_notaus", "test_abbrechen"],
         "heute": [],
     },
 
     # ------------------------------------------------------------------ Lautsprecher, HA
     "lautsprecher": {
-        "stand": "05dd31d6a2",
+        "stand": "d6af04cc0c",
         "bezug": {
             "wyoming.MAX_CONNS": ["s5"], "esp32.ota": ["s1"], "esp32._activation": ["s2"],
             "esp32.same_board": ["s3"], "esp32.speaker_ws": ["s5"], "esp32.still_allowed": ["s5"],
             "esp32.Session.run_answer": ["s10"], "esp32.Session.code_gate": ["s9"], "esp32.Session.speak": ["s11"],
             "esp32.remember": ["s12"], "wyoming.settings": ["s5"], "wyoming.handle": ["s5"],
-            "wyoming._session": ["s7", "s11"], "regeln": ["s5", "s9"],
+            "wyoming._session": ["s7", "s11"], "regeln": ["s5", "s9"], "stoppwort.stop": ["s8"],
+            "esp32.Session.check_stop": ["s8"], "wyoming.until_gone": ["s7"],
             "telefon.Call.start": ["s5"], "telefon.Call.outside": ["s5"], "telefon.Call.pin": ["s9"], "telefon_ich.try_code": ["s5"], "telefon_ich.pin_attempt": ["s9"],
             "telefon_ich.FAILS": ["s9"], "telefon.MAX_CALLS": ["s5"], "telefon.MAX_CALL": ["s10"], "telefon.Call.voice_result": ["s9"], "telefon.Call._chat": ["s10", "s11"],
             "telefon.Call.dial": ["s5"], "telefon_anruf.target": ["s5"], "telefon_anruf.call_back": ["s9"],
@@ -786,10 +807,17 @@ SEITEN = {
                "profile's voice, when speaker ID is on and the profile has taught its voice.")),
             S("s8", "frage", ("Nichts, Stopp oder eigene Stimme?", "Nothing, stop or own voice?"),
               ("keine Antwort, zurück zum Weckwort", "no answer, back to the wake word"),
-              ("Kein Text, ein Stopp-Wort oder die eigene Stimme des Spark von einem anderen Gerät (echo.check) "
-               "bekommen keine Antwort. Das Board wartet wieder auf sein Weckwort.",
-               "No text, a stop word or the Spark's own voice from another device (echo.check) get no answer. The "
-               "board waits for its wake word again."),
+              ("Kein Text, ein Stopp-Wort (stoppwort.stop) oder die eigene Stimme des Spark von einem anderen Gerät "
+               "(echo.check) bekommen keine Antwort. Das Board wartet wieder auf sein Weckwort. Mit „Stopp beim "
+               "Vorlesen“ gilt dasselbe mitten in der Antwort: erst verwirft das Board seine Warteschlange "
+               "(spark_quiet), dann endet die Antwort ohne zweites normales Stopp, und die Verbindung schließt wie "
+               "nach einem ganzen „Stopp“, nichts hört weiter zu. Ein Stück, das kommt, während ein anderes noch "
+               "erkannt wird, wird danach geprüft, nie weggeworfen.",
+               "No text, a stop word (stoppwort.stop) or the Spark's own voice from another device (echo.check) get no "
+               "answer. The board waits for its wake word again. With „Stop while reading aloud“ the same holds in the "
+               "middle of an answer: first the board drops its queue (spark_quiet), then the answer ends without a "
+               "second plain stop, and the connection closes as after a whole „Stop“, nothing listens on. A piece "
+               "that comes while another is still recognized is checked after it, never thrown away."),
               ("stop", "ja", ("Keine Antwort", "No answer"))),
             S("s9", "frage", ("Persönliches ohne sichere Stimme?", "Personal without a sure voice?"),
               ("Codewort am Lautsprecher", "speaker code word"),
@@ -870,11 +898,16 @@ SEITEN = {
                  "Profil, nichts Persönliches. Höchstens {wyoming.MAX_CONNS} Verbindungen gleichzeitig; Längen werden "
                  "geprüft, bevor gelesen wird; nur Tonformate, die ein Mikrofon schickt. „describe“ antwortet sofort mit der "
                  "Stimmenliste aus dem Speicher (alle {wyoming.VOICES_TTL|min} Minuten neu gelesen), weil Home Assistant "
-                 "nur 1 Sekunde wartet.",
+                 "nur 1 Sekunde wartet. Bricht Home Assistant ab (Stopp am Voice PE, neues Weckwort), enden Erkennung "
+                 "und Sprachausgabe nach höchstens {wyoming.GONE_CHECK} s (wyoming.until_gone); Notaus Stufe 3 beendet "
+                 "jede Sitzung sofort (laufend).",
                  "Home Assistant only gets „sound in, text out“ and „text in, sound out“, no language model, no "
                  "profile, nothing personal. At most {wyoming.MAX_CONNS} connections at once; lengths are checked "
                  "before reading; only sound formats a microphone sends. „describe“ answers at once with the voice list from "
-                 "memory (read again every {wyoming.VOICES_TTL|min} minutes), because Home Assistant waits only 1 second."),
+                 "memory (read again every {wyoming.VOICES_TTL|min} minutes), because Home Assistant waits only 1 second. "
+                 "When Home Assistant aborts (stop on the Voice PE, a new wake word), recognition and speech output end "
+                 "after at most {wyoming.GONE_CHECK} s (wyoming.until_gone); kill switch stage 3 ends every session at once "
+                 "(laufend)."),
                 ("Abgewiesene Adressen erscheinen auf Zustand → Live unter Eingang und als Vorschlag für die Liste.",
                  "Refused addresses show on Status → Live under input and as a suggestion for the list."),
             ]),
@@ -901,8 +934,8 @@ SEITEN = {
                  "Stimme das Profil. Nach {telefon.QUIET_ASK} Sekunden Stille „Noch etwas?“, nach weiteren "
                  "{telefon.QUIET_END} legt er auf; höchstens {telefon.MAX_CALL|min} Minuten. Ein Abschied („Tschüss“, „Danke, "
                  "das war's“, „Ich lege auf“, auch mitten in der Antwort) und direkt nach „Noch etwas?“ ein „Nein danke“ "
-                 "beenden das Gespräch: „Tschüss!“, dann legt der Spark selbst auf (feste Wortlisten BYE_WORDS und "
-                 "NO_MORE, nie das Modell). Legt das Telefon auf, beendet sein BYE den Anruf sofort; kommt keins an "
+                 "beenden das Gespräch: „Tschüss!“, dann legt der Spark selbst auf (die eine Liste stoppwort.bye und "
+                 "stoppwort.no_more, nie das Modell). Notaus Stufe 3 beendet jeden laufenden Anruf sofort (laufend). Legt das Telefon auf, beendet sein BYE den Anruf sofort; kommt keins an "
                  "(Router, Leitung), legt der Spark nach {telefon.RTP_GONE} Sekunden ohne jedes Tonpaket auf, außer "
                  "das Telefon hat gehalten.",
                  "A call runs like a question at a speaker: end of sentence with the same level check, speech "
@@ -911,8 +944,8 @@ SEITEN = {
                  "the profile. After {telefon.QUIET_ASK} seconds of silence „Noch etwas?“, after another "
                  "{telefon.QUIET_END} it hangs up; at most {telefon.MAX_CALL|min} minutes. A goodbye („Tschüss“, „Danke, "
                  "das war's“, „Ich lege auf“, also in the middle of an answer) and right after „Noch etwas?“ a „Nein "
-                 "danke“ end the call: „Tschüss!“, then the Spark hangs up itself (fixed word lists BYE_WORDS and "
-                 "NO_MORE, never the model). When the phone hangs up, its BYE ends the call at once; if none arrives "
+                 "danke“ end the call: „Tschüss!“, then the Spark hangs up itself (the one list stoppwort.bye and "
+                 "stoppwort.no_more, never the model). Kill switch stage 3 ends every running call at once (laufend). When the phone hangs up, its BYE ends the call at once; if none arrives "
                  "(router, line), the Spark hangs up after {telefon.RTP_GONE} seconds without any sound packet, unless "
                  "the phone put the call on hold."),
                 ("Von außen: eine eigene Nummer, die unter Ich → Telefon auf ihren Code wartet, tippt ihn "
@@ -1014,6 +1047,9 @@ SEITEN = {
             ("wyoming.settings", ("Schalter, Port, erlaubte Adressen", "switch, port, allowed addresses")),
             ("wyoming.handle", ("nur erlaubte Adressen, höchstens so viele", "only allowed addresses, at most so many")),
             ("wyoming._session", ("Ton zu Text und Text zu Ton", "sound to text and text to sound")),
+            ("wyoming.until_gone", ("Erkennung und Ton enden, wenn Home Assistant weg ist", "recognition and sound end when Home Assistant is gone")),
+            ("esp32.Session.check_stop", ("Stopp beim Vorlesen: still, Verbindung zu", "stop while reading aloud: quiet, connection closed")),
+            ("stoppwort.stop", ("die eine Liste der Stoppwörter", "the one list of stop words")),
             ("telefon.Call.start", ("wer anruft: intern, Profil, gesperrt, besetzt", "who calls: internal, profile, blocked, busy")),
             ("telefon.Call.outside", ("von außen: Code, bekannte Nummer, Gast", "from outside: code, known number, guest")),
             ("telefon.Call.pin", ("Telefon-PIN prüfen, Sperre", "check the phone PIN, lock")),
@@ -1026,7 +1062,7 @@ SEITEN = {
             ("telefon_anruf.call_back", ("Rückruf nur an die bestätigte Nummer", "call back only to the confirmed number")),
             ("telefon_anruf.alarm_tick", ("Alarm-Anruf mit Ruhezeiten", "alarm call with quiet hours")),
         ],
-        "tests": ["test_esp32", "test_wyoming", "test_telefon", "test_notaus", "test_echo"],
+        "tests": ["test_esp32", "test_wyoming", "test_telefon", "test_notaus", "test_echo", "test_abbrechen"],
         "heute": [],
     },
 

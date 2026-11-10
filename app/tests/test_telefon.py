@@ -22,6 +22,7 @@ from tests import helpers
 helpers.start()
 import esp32  # noqa: E402
 import profiles  # noqa: E402
+import stoppwort  # noqa: E402
 import telefon  # noqa: E402
 import telefon_anruf  # noqa: E402
 import telefon_ich  # noqa: E402
@@ -527,14 +528,14 @@ class Calls(unittest.TestCase):
         for t in ("Tschüss.", "Okay, danke, tschüss!", "Vielen Dank, tschüss", "Danke dir, bis bald!", "Nein danke, das war's.",
                   "Das wars für heute.", "Ich lege jetzt auf.", "Du kannst auflegen", "Alles klar, dann tschüss",
                   "Gute Nacht, Spark", "Auf Wiederhören", "Das ist alles, danke", "Ende.", "Bye bye"):
-            self.assertTrue(telefon.BYE_WORDS.match(t), t)
+            self.assertTrue(stoppwort.bye(t, call=True), t)
         for t in ("Wie spät ist es?", "Ich lege die Wäsche auf den Tisch", "Nein", "Danke", "Ende des Monats ist Zahltag",
                   "Tschüss sagt man in Hamburg nicht", "Was heißt bye auf Deutsch?", "Bis wann hat die Post offen?"):
-            self.assertFalse(telefon.BYE_WORDS.match(t), t)
+            self.assertFalse(stoppwort.bye(t, call=True), t)
         for t in ("Nein.", "Nein danke.", "Nö, passt.", "Danke!", "Nein, das reicht", "Nichts"):
-            self.assertTrue(telefon.NO_MORE.match(t), t)
+            self.assertTrue(stoppwort.no_more(t), t)
         for t in ("Nein, wie wird das Wetter?", "Danke, und wie spät ist es?", "Nicht das Licht"):
-            self.assertFalse(telefon.NO_MORE.match(t), t)
+            self.assertFalse(stoppwort.no_more(t), t)
 
     async def _speak(self, sock, to):
         """1 s of a loud tone between quiet, as G.722 packets a few ms apart (the Ear hears one question)."""

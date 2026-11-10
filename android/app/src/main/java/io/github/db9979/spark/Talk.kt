@@ -26,6 +26,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.IOException
+import java.net.HttpURLConnection
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.TimeZone
@@ -62,6 +63,8 @@ class Talk(private val ctx: Context, private val ui: Ui) {
     private var saved = 0
     private var lastAt = 0L
     @Volatile private var player: Player? = null
+    // the open answer stream: Stopp closes it, so the Spark ends the turn at once (model, tools, voice)
+    @Volatile private var conn: HttpURLConnection? = null
     private var prefs: JSONObject? = null
 
     private fun set(s: State) {
@@ -109,7 +112,15 @@ class Talk(private val ctx: Context, private val ui: Ui) {
         gen++
         player?.stop()
         player = null
+        hangUp()
         set(State.REST)
+    }
+
+    /** Closes the answer stream (off the main thread): the Spark notices at once and ends the turn. */
+    private fun hangUp() {
+        val c = conn ?: return
+        conn = null
+        Thread { try { c.disconnect() } catch (_: Exception) {} }.start()
     }
 
     /** A typed question. */
@@ -249,8 +260,10 @@ class Talk(private val ctx: Context, private val ui: Ui) {
         var mail = false
         var outside = false
         var got = false
+        var ende = ""   // a whole sentence of stop words or Notaus (the Spark's fixed rule, stoppwort.py): over
         try {
             val conn = Api.open(ctx, "POST", "/api/chat", 300000)
+            this.conn = conn
             try {
                 conn.doOutput = true
                 conn.setRequestProperty("Content-Type", "application/json")
@@ -284,12 +297,14 @@ class Talk(private val ctx: Context, private val ui: Ui) {
                                 // number, the person still taps the green button there
                                 "anruf" -> main.post { openApp() }
                                 "waehlen" -> ev.optString("number").takeIf { NUMBER.matches(it) }?.let { n -> main.post { dial(n) } }
+                                "ende" -> { ende = ev.optString("art").ifEmpty { "stopp" }; p?.stop() }
                                 "error" -> if (err.isEmpty()) err = ev.optString("message").take(200)
                             }
                         }
                     }
                 }
             } finally {
+                if (this.conn === conn) this.conn = null
                 conn.disconnect()
             }
         } catch (e: Exception) {
@@ -302,6 +317,13 @@ class Talk(private val ctx: Context, private val ui: Ui) {
         }
         p?.finish()
         if (my != gen) return
+        if (ende.isNotEmpty()) {   // nothing kept, nothing said, the microphone stays closed (also with hands-free)
+            msgs.remove(q)
+            gen++
+            set(State.REST)
+            say(when (ende) { "tschuess" -> "Tschüss!"; "notaus" -> "Notaus: alles still."; else -> "Gestoppt." })
+            return
+        }
         if (full.isNotBlank()) {
             val a = JSONObject().put("role", "assistant").put("content", full.trim())
             if (mail) a.put("mail", true) else if (outside) a.put("outside", true)

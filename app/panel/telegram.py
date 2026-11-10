@@ -263,6 +263,8 @@ async def ask(uid, text, pictures=None):
                 from_outside = True
             elif ev.get("type") == "error" and not error:
                 error = "Der Spark konnte gerade nicht antworten."
+            elif ev.get("type") == "ende" and ev.get("art") in chat.ENDE_SAY:   # a stop word or Notaus: the fixed word
+                answer = chat.ENDE_SAY[ev["art"]][0]
             elif ev.get("type") == "choice":   # the panel asks which one (klaeren.py): buttons under the answer
                 _keys[uid] = keyboard(ev)
             elif ev.get("type") == "goto" and ev.get("to") == "fund" and uid not in _keys:

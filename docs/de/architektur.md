@@ -173,6 +173,7 @@ Jede Anfrage geht zuerst hier durch: Größe, Herkunft, Notaus, Anmeldung, Profi
 | `app/panel/features.py` | Alle Funktionen mit Namen und Freigaben an einer Stelle |
 | `app/panel/guard.py` | Rate-Limits, Sperren nach falschen Versuchen, fremde Seiten, audit.log mit Prüfkette |
 | `app/panel/join.py` | Neue Personen per Einladung |
+| `app/panel/laufend.py` | Was gerade spricht (Antworten, Anrufe, Home Assistant): Notaus Stufe 3 beendet es sofort |
 | `app/panel/mfa.py` | Zweiter Anmeldeschritt mit Code (TOTP) und Wiederherstellungscodes |
 | `app/panel/netguard.py` | Wächter: wohin eine Verbindung nach außen darf |
 | `app/panel/netproxy.py` | netguard-Proxy: CONNECT nur auf Port 443 zu einer festen Host-Liste, jede Adresse über netguard.resolve |
@@ -218,6 +219,7 @@ Bereitet eine Anfrage vor, fragt das Sprachmodell in Runden und prüft, was gesa
 | `app/panel/sofort.py` | Einfaches sofort beantworten: Uhrzeit, Datum, Rechnen und Einheiten als fester Satz ohne Modell |
 | `app/panel/spickzettel.py` | Spickzettel zum Ausdrucken: was das Profil sagen kann, aus den Regeln der Weiche erzeugt |
 | `app/panel/stille.py` | Aus Stille werden nie Wörter |
+| `app/panel/stoppwort.py` | Die eine Liste der Stoppwörter und Abschiede: ein ganzer Satz beendet das Gespräch ohne Modell |
 | `app/panel/stufe.py` | Vorrang für Personen in der Warteschlange der Sprachausgabe |
 | `app/panel/systemone.py` | Einordnung mit Wahrscheinlichkeit über das Sprachmodell (LLM-Tor oder qwen38) |
 | `app/panel/taten.py` | Handlungs-Prüfung: hat ein Werkzeug wirklich getan, was der Satz sagt |
@@ -973,14 +975,14 @@ flowchart TD
 2. <a id="kn-geraet-s2"></a>**Sichere Verbindung?**: Browser geben das Mikrofon nur auf einer sicheren Seite frei. Ohne https zeigt die Seite einen Hinweis mit der https-Adresse des Panels und nimmt nichts auf.
 3. <a id="kn-geraet-s3"></a>**Aufnehmen, Satzende erkennen**: MediaRecorder nimmt auf, ein Pegelmesser hört auf Stille. Etwa jede Sekunde geht die Aufnahme bis jetzt zur Spracherkennung und erscheint als blasse Blase. Endet der Satz mit Punkt, Frage- oder Ausrufezeichen, ist die Frage sofort fertig; endet er auf „und“, „weil“, „ähm“ oder einem Komma, wartet die Seite etwas länger.
 4. <a id="kn-geraet-s4"></a>**Ton an /api/test/asr**: Die Seite wandelt die Aufnahme in ein einfaches WAV in Mono (sonst geht das Original). Der Spark prüft das Rate-Limit (240 pro Minute für ein Profil, Gäste höchstens 3 gleichzeitig), liest höchstens 50 MB und schickt den Ton an die Spracherkennung, beim Dungeon-Master im Auto mit den Namen der Runde vorne. Nebenher misst er auf der CPU, wie viel davon Stimme ist und wessen Stimme es ist.
-5. <a id="kn-geraet-s5"></a>**Stille, eigene oder fremde Stimme?**: Feste Regeln, kein Modell: ein „Ja“ aus Stille oder einem Klick und die zurückgelesene Namensliste (stille.check), die eigene Stimme des Spark von einem anderen Gerät (echo.check) und bei selbst geöffnetem Mikrofon eine fremde Stimme, etwa vom Fernseher (fremdstimme.check), sind keine Frage. Die Antwort ist dann leerer Text mit dem Grund. Hat die Seite oder die iPhone-App die Antwort fürs Ins-Wort-Fallen nur angehalten (hold), sagt zwischenruf.decide mit festen Wörtern dazu: weiter (nichts, Überhörtes, „mhm“), stopp („Stopp“) oder frage (alles andere); ohne Entscheidung nach 4 s spielt sie weiter.
+5. <a id="kn-geraet-s5"></a>**Stille, eigene oder fremde Stimme?**: Feste Regeln, kein Modell: ein „Ja“ aus Stille oder einem Klick und die zurückgelesene Namensliste (stille.check), die eigene Stimme des Spark von einem anderen Gerät (echo.check) und bei selbst geöffnetem Mikrofon eine fremde Stimme, etwa vom Fernseher (fremdstimme.check), sind keine Frage. Die Antwort ist dann leerer Text mit dem Grund. Hat die Seite oder die iPhone-App die Antwort fürs Ins-Wort-Fallen nur angehalten (hold), sagt zwischenruf.decide mit festen Wörtern dazu: weiter (nichts, Überhörtes, „mhm“), stopp („Stopp“, „Tschüss“) oder frage (alles andere); ohne Entscheidung nach 4 s spielt sie weiter. Beim Weckwort sagt die Antwort „ende“, wenn der ganze Satz ein Stoppwort ist („Hey Spark, stopp“, stoppwort.ende): die Seite hört auf, ohne Ton und ohne Mikrofon.
 6. <a id="kn-geraet-s6"></a>**Frage an /api/chat**: Die Seite schickt die letzten Nachrichten des offenen Gesprächs, seine Kennung, Stimme, Tempo und, wenn die Stimme erkannt wurde, ein signiertes Einmal-Token. Der Spark prüft das Rate-Limit (120 pro Minute für ein Profil, Gäste höchstens 4 gleichzeitig), lässt Hintergrundarbeit warten (vorrang) und sagt den anderen offenen Seiten des Profils „antwortet gerade“ (nur die Art des Geräts).
 7. <a id="kn-geraet-s7"></a>**Text und Ton in einem Strom**: Die Antwort kommt als Ereignisse: Textstücke, Tonstücke, Suche, Quellen, Rückfragen, Fehler. Der Text wird höchstens einmal pro Bild neu gezeichnet. Der Ton läuft in einem eigenen Audio-Kontext mit der Rate der Sprachausgabe; jedes Stück endet mit einer kurzen Blende, damit die Nähte nicht knacken.
 8. <a id="kn-geraet-s8"></a>**Spricht jemand dazwischen?**: Während die Antwort spielt, hört das Mikrofon weiter. Ist der Pegel eine Weile deutlich über der eigenen Ausgabe und dem Raum (Fernseher), bricht die Antwort ab, und die schon laufende Aufnahme wird die nächste Frage.
 9. <a id="kn-geraet-s9"></a>**Fehler im Strom?**: Ein Fehler erscheint unter der Antwort in einfachen Worten; der Admin sieht zusätzlich die technische Angabe, Gäste nur die Art des Fehlers. Fehlt nur die Sprachausgabe, bleibt die Antwort als Text.
 10. <a id="kn-geraet-s10"></a>**Gespräch speichern**: Bei einem Profil schickt die Seite nur die neuen Nachrichten (PUT /api/profile/convos mit „add“). Der Spark hängt sie unter einer Sperre an seine Kopie an, damit ein anderes Gerät nichts überschreibt, und behält höchstens 50 Gespräche mit je 60 Nachrichten.
 11. <a id="kn-geraet-s11"></a>**Abgleich mit anderen Geräten**: Kommt die Seite wieder nach vorn und regelmäßig dazwischen, fragt sie, was sich seit dem letzten Mal geändert hat; ein anderswo gelöschtes Gespräch schließt sich. Mit dem Sofort-Abgleich hält jede sichtbare Seite einen Ereignis-Strom offen, der nur „Gespräch geändert“ und „antwortet gerade“ meldet, nie Inhalte (höchstens 8 pro Profil, je 30 Minuten); eine verdeckte Seite schließt ihn, um den Akku zu schonen, und fragt beim Zurückkommen nach.
-12. <a id="kn-geraet-s12"></a>**Bereit**: Die Seite wartet, bis die Antwort ausgesprochen ist. Freihändig oder nach einer gesprochenen Frage mit Nachfrage-Fenster öffnet sie das Mikrofon wieder.
+12. <a id="kn-geraet-s12"></a>**Bereit**: Die Seite wartet, bis die Antwort ausgesprochen ist. Freihändig oder nach einer gesprochenen Frage mit Nachfrage-Fenster öffnet sie das Mikrofon wieder, aber nur, wenn der Zug noch gilt: Stopp, ein neues oder anderes Gespräch und das Ereignis „ende“ (ein Stoppwort, Notaus Stufe 3) erhöhen die Zugnummer, dann öffnet nichts mehr das Mikrofon, auch keine Erkennung, die noch lief. Hört nichts mehr zu (keine Aufnahme, kein Ins-Wort-Fallen, kein Weckwort, kein Raum-Modus), gibt die Seite die Mikrofon-Spur frei. Ein anderes Gespräch (Auswahl, Finden, Offen, Ich) öffnet erst nach dem Stopp, und eine Antwort landet immer in dem Gespräch, in dem gefragt wurde.
 
 **Beispiele:** Gesprochene Frage eines Profils: Antwort gehört, auf dem Spark gespeichert, auf den anderen Geräten sichtbar. · Panel über http geöffnet: Kein Mikrofon: die Seite zeigt die https-Adresse. · Fernseher im Nachfrage-Fenster: Überhört: fremde Stimme, es geht keine Frage raus. · Dazwischenreden: Die Antwort bricht ab, das Gesagte wird die nächste Frage.
 
@@ -1021,6 +1023,7 @@ Gilt bei: [Schritt 6](#kn-geraet-s6), [Schritt 10](#kn-geraet-s10)
 - `app/panel/admin.py` `read_audio`: liest die Aufnahme mit Größengrenze ([Schritt 4](#kn-geraet-s4))
 - `app/panel/stille.py` `check`: Stille wird nie zu Worten ([Schritt 5](#kn-geraet-s5))
 - `app/panel/echo.py` `check`: die eigene Stimme des Spark ist keine Frage ([Schritt 5](#kn-geraet-s5))
+- `app/panel/stoppwort.py` `ende`: ganzer Satz Stoppwort nach dem Weckwort: „ende“ ([Schritt 5](#kn-geraet-s5))
 - `app/panel/zwischenruf.py` `decide`: angehaltene Antwort: weiter, stopp oder neue Frage nach festen Wörtern ([Schritt 5](#kn-geraet-s5))
 - `app/panel/chat.py` `chat`: Grenzen, Vorrang, „antwortet gerade“, dann der Strom ([Schritt 6](#kn-geraet-s6), [Schritt 7](#kn-geraet-s7))
 - `app/panel/account.py` `profile_save_convo`: speichert nur die neuen Nachrichten ([Schritt 10](#kn-geraet-s10))
@@ -1031,7 +1034,7 @@ Gilt bei: [Schritt 6](#kn-geraet-s6), [Schritt 10](#kn-geraet-s10)
 - `app/panel/sse.py` `Hub.stream`: ein Strom je Seite: Warteschlange, Lebenszeichen, Aufräumen ([Schritt 11](#kn-geraet-s11))
 - `app/panel/verlauf.py` `begin`: „antwortet gerade“ für die anderen Seiten ([Schritt 6](#kn-geraet-s6), [Schritt 11](#kn-geraet-s11))
 
-Selbsttests: `test_verlauf_sync`, `test_stille`, `test_echo`, `test_fremdstimme`, `test_follow_up`
+Selbsttests: `test_verlauf_sync`, `test_stille`, `test_echo`, `test_fremdstimme`, `test_follow_up`, `test_abbrechen`
 
 ### Apps
 
@@ -1206,7 +1209,7 @@ flowchart TD
 5. <a id="kn-kanaele-s5"></a>**Sprachnachricht in Text**: Eine Telegram-Sprachnachricht wird mit Größengrenze geladen, mit ffmpeg zu WAV gewandelt (Länge begrenzt) und von der Spracherkennung des Spark gelesen. Bei Siri diktiert das iPhone, bei der Uhr das Handy.
 6. <a id="kn-kanaele-s6"></a>**Kurzer Verlauf**: Für Nachfragen gehen die letzten acht Nachrichten mit, solange die letzte Frage nicht länger her ist als 30 Minuten (Telegram) oder 10 Minuten (Siri). Die Uhr schickt ihren Verlauf selbst; Antworten aus fremdem Text erkennt das Panel daran wieder (watch.mark_of).
 7. <a id="kn-kanaele-s7"></a>**Anfrage an /api/chat**: Der Kanal ruft den Chat im Panel selbst auf. Bei Telegram setzt das Panel das Profil in die Anfrage, was keine Anfrage von außen kann; Siri und die Uhr tragen ihren Schlüssel. Rechte, Weiche, Grenzen und Anfrage-Verlauf sind dieselben wie im Browser.
-8. <a id="kn-kanaele-s8"></a>**Antwort einsammeln**: Aus dem Strom zählen Textstücke und Rücknahmen. Kam die Antwort aus Mail oder fremdem Text, wird sie so markiert, damit die nächste Frage gesperrt beginnt. Eine Rückfrage des Panels wird in Telegram zu Knöpfen, die wie eine getippte Antwort zurückkommen; ohne Rückfrage werden die Beispielsätze von „Das kannst du auch sagen“ zu Antworttasten. Die Sofort-Karte von Finden (ein Treffer klar vorn) wird ein Knopf „Original öffnen“ zur Panel-Adresse für Links (#fund=, nur Navigation), wenn sie eingetragen ist. Die Herkunftszeile aus eigenen Daten („Aus: 2 Mails, 1 Termin“) steht unter der Antwort, nie im Verlauf; „Auch im Internet suchen“ wird eine Antworttaste mit diesen festen Worten. Der Begleiter bekommt die Zeile hinter den Werkzeugen und eine Karte mit „Auch im Internet suchen“ und „In Finden ansehen“ (desk_cards).
+8. <a id="kn-kanaele-s8"></a>**Antwort einsammeln**: Aus dem Strom zählen Textstücke und Rücknahmen. Kam die Antwort aus Mail oder fremdem Text, wird sie so markiert, damit die nächste Frage gesperrt beginnt. Sagt der Strom „ende“ (ein ganzer Satz aus Stoppwörtern, Notaus Stufe 3), bekommen Telegram und Siri ein festes Wort (chat.ENDE_SAY), der Begleiter leeren Text mit „ende“ und hört auf vorzulesen; nichts kommt in den Verlauf des Begleiters. Eine Rückfrage des Panels wird in Telegram zu Knöpfen, die wie eine getippte Antwort zurückkommen; ohne Rückfrage werden die Beispielsätze von „Das kannst du auch sagen“ zu Antworttasten. Die Sofort-Karte von Finden (ein Treffer klar vorn) wird ein Knopf „Original öffnen“ zur Panel-Adresse für Links (#fund=, nur Navigation), wenn sie eingetragen ist. Die Herkunftszeile aus eigenen Daten („Aus: 2 Mails, 1 Termin“) steht unter der Antwort, nie im Verlauf; „Auch im Internet suchen“ wird eine Antworttaste mit diesen festen Worten. Der Begleiter bekommt die Zeile hinter den Werkzeugen und eine Karte mit „Auch im Internet suchen“ und „In Finden ansehen“ (desk_cards).
 9. <a id="kn-kanaele-s9"></a>**Ausgabe je Kanal**: Telegram bekommt reinen Text und, wenn das Profil es will, eine Sprachnachricht in seiner Stimme. Siri bekommt vorlesbaren Text ohne Passwörter und Codes. Die Uhr holt Text und Ton (auf 6000 Bytes je Abruf, für ihren kleinen Lautsprecher gepackt) über /api/watch/poll, nur das Profil, das gefragt hat (fremde Auftrags-Nummern geben 404); höchstens 8 Uhr-Antworten laufen gleichzeitig. Der Begleiter bekommt Text ohne Markdown und zusätzlich die Antwort mit Markdown (höchstens 60000 Zeichen), wenn darin nicht weniger Geheimnisse verdeckt sind. Mit ihren Schaltern bekommt die Uhr außerdem bis zu 3 Nachfragen zum Antippen (das Modell schlägt nur vor, watch.follow_clean lässt nur kurze Fragen ohne Ja, Nein, Links oder Zahlen durch; nie nach Mail, Web oder einem Vorschlag; endet die Antwort mit einer Frage, sind deren Knöpfe aus ablauf.asks die Nachfragen), einen Vorschlag als ✓ und ✕ und über /api/watch/sync die Schnellbefehle und die nächsten 8 Erinnerungen, die sie selbst als Wecker klingeln lässt; Push wartet zuerst auf sie. Das Spark-Zifferblatt holt alle 15 Minuten über /api/watch/blick den nächsten Termin, die nächste Erinnerung, das Wetter, einen Tipp und für Admins einen Ausfall; /api/watch/brief baut Mein Tag und Meine Woche aus festen Sätzen, /api/watch/merken legt einen diktierten Satz ins Gedächtnis (mit Ort auf etwa 100 m nur mit eigenem Schalter). /api/watch/chats und /api/watch/chat zeigen die letzten Chats (ohne private) und schicken eine angetippte oder diktierte Antwort über chats.send; bis zu 3 Vorschläge des Modells prüft pebblewatch.reply_clean fest. /api/watch/fern schaltet nur Geräte der eigenen Liste mit festen Tasten (nie mit Smart-Home-Codewort), /api/watch/gesundheit legt Schritte, Puls und Schlaf versiegelt ins Profil, nie für das Modell.
 10. <a id="kn-kanaele-s10"></a>**Codewort schwärzen**: Vor dem Speichern wird das Smart-Home-Codewort durch [Codewort] ersetzt. In Telegram löscht der Bot die Nachricht mit dem Codewort oder bittet darum, sie zu löschen.
 11. <a id="kn-kanaele-s11"></a>**Im Verlauf des Profils**: verlauf.keep legt Frage und Antwort in das Tagesgespräch des Kanals („Telegram“, „Siri“, „Uhr“ mit Datum). Mit „Ein Gespräch für alle Kanäle“ landen sie im Hauptgespräch des Tages, markiert mit ihrem Kanal.
@@ -1255,6 +1258,7 @@ Gilt bei: [Schritt 1](#kn-kanaele-s1), [Schritt 9](#kn-kanaele-s9), [Schritt 11]
 - `app/panel/telegram.py` `ask`: Frage an den Chat, Antwort einsammeln, speichern ([Schritt 7](#kn-kanaele-s7), [Schritt 8](#kn-kanaele-s8), [Schritt 11](#kn-kanaele-s11))
 - `app/panel/telegram.py` `transcribe`: Sprachnachricht über ffmpeg zur Spracherkennung ([Schritt 5](#kn-kanaele-s5))
 - `app/panel/chat.py` `siri_ask`: Siri: Profil aus dem Schlüssel ([Schritt 1](#kn-kanaele-s1), [Schritt 3](#kn-kanaele-s3))
+- `app/panel/chat.py` `ENDE_SAY`: festes Wort, wenn die Antwort endet (Stopp, Tschüss, Notaus) ([Schritt 8](#kn-kanaele-s8))
 - `app/panel/chat.py` `text_ask`: Siri und Begleiter: Frage, Antwort, Verlauf, beim Begleiter dazu die Karten (desk_cards) ([Schritt 6](#kn-kanaele-s6), [Schritt 7](#kn-kanaele-s7), [Schritt 11](#kn-kanaele-s11))
 - `app/panel/chat.py` `watch_ask`: Uhr: Antwort als Auftrag starten ([Schritt 1](#kn-kanaele-s1), [Schritt 7](#kn-kanaele-s7))
 - `app/panel/chat.py` `_watch_run`: Uhr: Antwort in den Verlauf ([Schritt 11](#kn-kanaele-s11))
@@ -1274,7 +1278,7 @@ Gilt bei: [Schritt 1](#kn-kanaele-s1), [Schritt 9](#kn-kanaele-s9), [Schritt 11]
 - `app/panel/pebblewatch.py` `watch_health`: Schritte, Puls, Schlaf versiegelt ins Profil ([Schritt 9](#kn-kanaele-s9))
 - `app/panel/verlauf.py` `keep`: Tagesgespräch des Kanals oder Hauptgespräch ([Schritt 11](#kn-kanaele-s11))
 
-Selbsttests: `test_telegram_tasks`, `test_pebble`, `test_verlauf_sync`, `test_notaus`
+Selbsttests: `test_telegram_tasks`, `test_pebble`, `test_verlauf_sync`, `test_notaus`, `test_abbrechen`
 
 ### Lautsprecher/Telefon
 
@@ -1328,7 +1332,7 @@ flowchart TD
 5. <a id="kn-lautsprecher-s5"></a>**Verbindung erlaubt?**: Beim Aufbau prüft der Spark: Notaus Stufe 3 aus, der Schlüssel gehört einem Lautsprecher (nicht einer Uhr oder einem anderen Gerät), Lautsprecher in Funktionen an und für das Profil nicht gesperrt. Danach schaut er alle 2.0 Sekunden wieder nach und beendet die Verbindung, wenn sich etwas geändert hat.
 6. <a id="kn-lautsprecher-s6"></a>**Zuhören**: Nach dem Weckwort schickt das Board Opus-Ton. Der Spark erkennt das Satzende selbst (0.7 Sekunden Stille nach Sprache) und nimmt höchstens 30 Sekunden pro Frage.
 7. <a id="kn-lautsprecher-s7"></a>**Erkennen und Stimme prüfen**: Die Spracherkennung macht Text daraus. Gleichzeitig prüft speakers.verify, ob es die Stimme des Profils ist, wenn die Sprechererkennung an ist und das Profil seine Stimme angelernt hat.
-8. <a id="kn-lautsprecher-s8"></a>**Nichts, Stopp oder eigene Stimme?**: Kein Text, ein Stopp-Wort oder die eigene Stimme des Spark von einem anderen Gerät (echo.check) bekommen keine Antwort. Das Board wartet wieder auf sein Weckwort.
+8. <a id="kn-lautsprecher-s8"></a>**Nichts, Stopp oder eigene Stimme?**: Kein Text, ein Stopp-Wort (stoppwort.stop) oder die eigene Stimme des Spark von einem anderen Gerät (echo.check) bekommen keine Antwort. Das Board wartet wieder auf sein Weckwort. Mit „Stopp beim Vorlesen“ gilt dasselbe mitten in der Antwort: erst verwirft das Board seine Warteschlange (spark_quiet), dann endet die Antwort ohne zweites normales Stopp, und die Verbindung schließt wie nach einem ganzen „Stopp“, nichts hört weiter zu. Ein Stück, das kommt, während ein anderes noch erkannt wird, wird danach geprüft, nie weggeworfen.
 9. <a id="kn-lautsprecher-s9"></a>**Persönliches ohne sichere Stimme?**: Mit Codewort am Lautsprecher: eine unsichere Stimme, die nach Persönlichem fragt, wird nach dem Codewort gefragt, die Frage wartet. Nach 3 falschen Versuchen fragt der Lautsprecher 30 Minuten lang nicht mehr. Ohne sichere Stimme gibt es nur Allgemeines. Eine sichere Stimme in einer kurzen Frage ohne Persönliches bekommt die Rechte des Inhabers wie ohne Codewort.
 10. <a id="kn-lautsprecher-s10"></a>**Wie ein Gerät an /api/chat**: Der Spark ruft den Chat mit dem Schlüssel des Lautsprechers auf; Stimme, Gedächtnis und Raum des Profils gelten. Wessen Stimme es war, setzt nur das Panel selbst in die Anfrage; war sie nicht sicher die des Profils, gilt die Frage wie die eines Gastes.
 11. <a id="kn-lautsprecher-s11"></a>**Ton zurück**: Die Antwort geht als Opus mit 24000 Hz im Takt der Wiedergabe zum Board, der Text ohne Markdown für ein Display. Andere Geräte im Haus wissen, dass gerade der Spark spricht (echo.said).
@@ -1351,13 +1355,13 @@ Gilt bei: [Schritt 5](#kn-lautsprecher-s5), [Schritt 9](#kn-lautsprecher-s9)
 #### Home Assistant Assist (Wyoming)
 
 - Ein eigener Server lauscht auf dem Wyoming-Port (Standard 31003), solange der Schalter an ist. Wyoming hat kein Passwort; deshalb antwortet er nur Adressen aus der Liste des Admins, mit leerer Liste niemandem.
-- Home Assistant bekommt nur „Ton rein, Text raus“ und „Text rein, Ton raus“, kein Sprachmodell, kein Profil, nichts Persönliches. Höchstens 8 Verbindungen gleichzeitig; Längen werden geprüft, bevor gelesen wird; nur Tonformate, die ein Mikrofon schickt. „describe“ antwortet sofort mit der Stimmenliste aus dem Speicher (alle 10 Minuten neu gelesen), weil Home Assistant nur 1 Sekunde wartet.
+- Home Assistant bekommt nur „Ton rein, Text raus“ und „Text rein, Ton raus“, kein Sprachmodell, kein Profil, nichts Persönliches. Höchstens 8 Verbindungen gleichzeitig; Längen werden geprüft, bevor gelesen wird; nur Tonformate, die ein Mikrofon schickt. „describe“ antwortet sofort mit der Stimmenliste aus dem Speicher (alle 10 Minuten neu gelesen), weil Home Assistant nur 1 Sekunde wartet. Bricht Home Assistant ab (Stopp am Voice PE, neues Weckwort), enden Erkennung und Sprachausgabe nach höchstens 0.25 s (wyoming.until_gone); Notaus Stufe 3 beendet jede Sitzung sofort (laufend).
 - Abgewiesene Adressen erscheinen auf Zustand → Live unter Eingang und als Vorschlag für die Liste.
 
 #### Den Spark anrufen (Telefon)
 
 - Der Spark meldet sich an der Telefonanlage im Heimnetz als IP-Telefon an (SIP über UDP, Port 31060, Digest-Anmeldung, alle 10 Minuten erneuert). Nachrichten nimmt er nur von der Adresse der Anlage, höchstens 4096 Bytes und 100 je Sekunde; Ton (RTP) nur von der Adresse aus deren SDP, die im Heimnetz liegen muss. Den Ton hinaus schickt ein eigener Faden im 20-ms-Takt, unabhängig von der Ereignis-Schleife des Panels; Sprache beginnt erst, wenn 10 Pakete bereitliegen oder der Satz fertig ist, nach jeder Lücke wartet er auf mehr (höchstens 40). Die Logzeile am Ende nennt Lücken, verspätete Pakete und die Rechenzeit fürs Kodieren je Sekunde Ton.
-- Ein Anruf läuft wie eine Frage am Lautsprecher: Satzende mit derselben Pegelprüfung, Spracherkennung, Stimmprüfung, Chat mit dem Profil (gesetzt nur vom Panel), Antwort in G.722 oder G.711 zurück. Ein Mobilteil eines Profils bekommt Persönliches nur bei sicherer Stimme; am gemeinsamen Telefon wählt die Stimme das Profil. Nach 20 Sekunden Stille „Noch etwas?“, nach weiteren 10 legt er auf; höchstens 15 Minuten. Ein Abschied („Tschüss“, „Danke, das war's“, „Ich lege auf“, auch mitten in der Antwort) und direkt nach „Noch etwas?“ ein „Nein danke“ beenden das Gespräch: „Tschüss!“, dann legt der Spark selbst auf (feste Wortlisten BYE_WORDS und NO_MORE, nie das Modell). Legt das Telefon auf, beendet sein BYE den Anruf sofort; kommt keins an (Router, Leitung), legt der Spark nach 8 Sekunden ohne jedes Tonpaket auf, außer das Telefon hat gehalten.
+- Ein Anruf läuft wie eine Frage am Lautsprecher: Satzende mit derselben Pegelprüfung, Spracherkennung, Stimmprüfung, Chat mit dem Profil (gesetzt nur vom Panel), Antwort in G.722 oder G.711 zurück. Ein Mobilteil eines Profils bekommt Persönliches nur bei sicherer Stimme; am gemeinsamen Telefon wählt die Stimme das Profil. Nach 20 Sekunden Stille „Noch etwas?“, nach weiteren 10 legt er auf; höchstens 15 Minuten. Ein Abschied („Tschüss“, „Danke, das war's“, „Ich lege auf“, auch mitten in der Antwort) und direkt nach „Noch etwas?“ ein „Nein danke“ beenden das Gespräch: „Tschüss!“, dann legt der Spark selbst auf (die eine Liste stoppwort.bye und stoppwort.no_more, nie das Modell). Notaus Stufe 3 beendet jeden laufenden Anruf sofort (laufend). Legt das Telefon auf, beendet sein BYE den Anruf sofort; kommt keins an (Router, Leitung), legt der Spark nach 8 Sekunden ohne jedes Tonpaket auf, außer das Telefon hat gehalten.
 - Von außen: eine eigene Nummer, die unter Ich → Telefon auf ihren Code wartet, tippt ihn (4 Ziffern, 15 Minuten, 3 Versuche), dann legt er auf. Mit „Anrufe von außen“ wählt eine bestätigte Nummer ihr Profil, Persönliches aber nur bei sicherer Stimme oder PIN, weil sich Nummern fälschen lassen; mit „Gäste“ auch unbekannte Nummern als Gast, höchstens 20 am Tag. Logs und Live nennen nie eine Nummer von außen.
 - Die Telefon-PIN (Ziffern, dann #) steht für den Rest des Gesprächs für die Stimme: am Mobilteil für dessen Profil, am gemeinsamen Telefon für das Profil, dem sie gehört. 3 falsche in 15 Minuten sperren sie an diesem Telefon 30 Minuten. Gespeichert als gesalzener Hash im Tresor; nie gesprochen, angezeigt oder im Log.
 - Der Spark ruft an (Schalter „Der Spark ruft an“): Weckruf und Erinnerung, die ein Profil selbst bestellt (Werkzeug anruf_planen, nur Zeit, Art und Text, nie eine Nummer), der Rückruf und der Alarm. Er ruft nur das zugeordnete Mobilteil oder, mit „auch bestätigte eigene Nummern“, die bestätigte Nummer des Profils an; höchstens 5 Anrufe je Profil und Tag, nie bei „Nicht stören“; nicht abgehoben einmal nach 5 Minuten, dann eine Mitteilung. Eine Erinnerung liest er erst vor, wenn Stimme oder PIN passen. Rückruf: Wer von außen mit unsicherer Stimme „Ruf mich zurück“ sagt, wird unter der hinterlegten bestätigten Nummer angerufen, eine gefälschte Nummer erreicht so nie den Fälscher.
@@ -1406,6 +1410,9 @@ Gilt bei: [Schritt 5](#kn-lautsprecher-s5), [Schritt 9](#kn-lautsprecher-s9)
 - `app/panel/wyoming.py` `settings`: Schalter, Port, erlaubte Adressen ([Schritt 5](#kn-lautsprecher-s5))
 - `app/panel/wyoming.py` `handle`: nur erlaubte Adressen, höchstens so viele ([Schritt 5](#kn-lautsprecher-s5))
 - `app/panel/wyoming.py` `_session`: Ton zu Text und Text zu Ton ([Schritt 7](#kn-lautsprecher-s7), [Schritt 11](#kn-lautsprecher-s11))
+- `app/panel/wyoming.py` `until_gone`: Erkennung und Ton enden, wenn Home Assistant weg ist ([Schritt 7](#kn-lautsprecher-s7))
+- `app/panel/esp32.py` `Session.check_stop`: Stopp beim Vorlesen: still, Verbindung zu ([Schritt 8](#kn-lautsprecher-s8))
+- `app/panel/stoppwort.py` `stop`: die eine Liste der Stoppwörter ([Schritt 8](#kn-lautsprecher-s8))
 - `app/panel/telefon.py` `Call.start`: wer anruft: intern, Profil, gesperrt, besetzt ([Schritt 5](#kn-lautsprecher-s5))
 - `app/panel/telefon.py` `Call.outside`: von außen: Code, bekannte Nummer, Gast ([Schritt 5](#kn-lautsprecher-s5))
 - `app/panel/telefon.py` `Call.pin`: Telefon-PIN prüfen, Sperre ([Schritt 9](#kn-lautsprecher-s9))
@@ -1418,7 +1425,7 @@ Gilt bei: [Schritt 5](#kn-lautsprecher-s5), [Schritt 9](#kn-lautsprecher-s9)
 - `app/panel/telefon_anruf.py` `call_back`: Rückruf nur an die bestätigte Nummer ([Schritt 9](#kn-lautsprecher-s9))
 - `app/panel/telefon_anruf.py` `alarm_tick`: Alarm-Anruf mit Ruhezeiten ([Schritt 5](#kn-lautsprecher-s5))
 
-Selbsttests: `test_esp32`, `test_wyoming`, `test_telefon`, `test_notaus`, `test_echo`
+Selbsttests: `test_esp32`, `test_wyoming`, `test_telefon`, `test_notaus`, `test_echo`, `test_abbrechen`
 
 ### MCP und API
 
@@ -1611,7 +1618,7 @@ flowchart TD
 3. <a id="kn-middleware-s3"></a>**Mein Notaus für diesen Schlüssel?**: Trägt die Anfrage einen Geräteschlüssel und hat dessen Profil seinen eigenen Notaus an, bekommt sie nichts außer dem Stand des Notaus. Sonst merkt sich das Panel, für welches Profil diese Anfrage handelt, damit die letzte Abwehr tiefer unten weiß, wessen Aktion es wäre.
 4. <a id="kn-middleware-s4"></a>**Notaus an?**: Ist der Notaus aus, geht die Anfrage gleich weiter zur Herkunftsprüfung. Die Seite selbst und ihre Dateien kommen immer durch, damit man den Notaus sehen und aufheben kann.
 5. <a id="kn-middleware-s5"></a>**Von außen?**: Im Heimnetz ist nur, wer eine private Adresse hat und nicht über einen Proxy kommt, oder über einen eingetragenen Proxy, der eine private Adresse meldet. Ab Notaus-Stufe 1 bekommt alles von außen nur noch die Seite und den Notaus-Stand.
-6. <a id="kn-middleware-s6"></a>**Alles still?**: In Stufe 3 gehen auch im Heimnetz nur noch Anmelden, das Aufheben des Notaus und das Lesen von Zustand, Logs und Live durch. In den Stufen darunter läuft im Heimnetz alles weiter; Aktionen hält das Panel dann tiefer unten an.
+6. <a id="kn-middleware-s6"></a>**Alles still?**: In Stufe 3 gehen auch im Heimnetz nur noch Anmelden, das Aufheben des Notaus und das Lesen von Zustand, Logs und Live durch. Beim Wechsel auf diese Stufe endet sofort, was gerade spricht (laufend.end_all): jede laufende Antwort in Seite, Apps und Begleiter (Ereignis „ende“), jedes Telefonat und jede Sitzung von Home Assistant; Lautsprecher und Raum-Modus schließen. In den Stufen darunter läuft im Heimnetz alles weiter; Aktionen hält das Panel dann tiefer unten an.
 7. <a id="kn-middleware-s7"></a>**Fremde Seite?**: Eine ändernde Anfrage (POST, PUT, PATCH, DELETE), die ein Anmelde-Cookie mitbringt, muss von der eigenen Seite kommen: der Browser sagt es mit Sec-Fetch-Site, sonst wird Origin mit dem Host verglichen. Ein anderer Port auf demselben Rechner gilt als fremd. Ohne beide Kopfzeilen ist es kein Browser (Skripte) und geht durch.
 8. <a id="kn-middleware-s8"></a>**Großer Upload ohne Anmeldung?**: Die Pfade für große Uploads (Sicherungen, Stimmen, Ton, Dokumente, Bilder, Musik, MCP) nehmen nur an, wer überhaupt angemeldet sein könnte: Admin-Cookie, Profil oder eine Authorization-Zeile. Die Datei eines anderen Sparks (/api/verbund/blob) nur, wenn Verbund und Dateien an sind und der Absender ein erlaubter Spark mit bekanntem Schlüssel ist. Die echte Prüfung kommt danach im Endpunkt; hier geht es nur darum, dass kein Byte eines fremden Uploads gelesen wird.
 9. <a id="kn-middleware-s9"></a>**Zu groß?**: Jeder Pfad hat seine Grenze, sonst gilt eine kleine Standardgrenze von zwei MB. Eine zu große Content-Length wird sofort abgelehnt; beim Lesen zählt BodyLimit zusätzlich mit und bricht ab, sobald mehr kommt als erlaubt.
@@ -1662,6 +1669,7 @@ Gilt bei: [Schritt 4](#kn-middleware-s4), [Schritt 5](#kn-middleware-s5), [Schri
 - `app/panel/notaus.py` `mine_gate`: Mein Notaus für Geräteschlüssel ([Schritt 3](#kn-middleware-s3))
 - `app/panel/notaus.py` `gate`: was bei welcher Stufe durchkommt ([Schritt 4](#kn-middleware-s4))
 - `app/panel/notaus.py` `at_home`: im Heimnetz oder von außen ([Schritt 5](#kn-middleware-s5))
+- `app/panel/laufend.py` `end_all`: Stufe 3 beendet, was gerade spricht ([Schritt 6](#kn-middleware-s6))
 - `app/panel/panel.py` `sessions`: fremde Seiten, Protokoll, Cookies erneuern ([Schritt 7](#kn-middleware-s7), [Schritt 11](#kn-middleware-s11), [Schritt 12](#kn-middleware-s12))
 - `app/panel/guard.py` `same_origin`: die Herkunftsregel ([Schritt 7](#kn-middleware-s7))
 - `app/panel/panel.py` `_may_upload`: große Uploads nur mit Anmeldung ([Schritt 8](#kn-middleware-s8))
@@ -1669,7 +1677,7 @@ Gilt bei: [Schritt 4](#kn-middleware-s4), [Schritt 5](#kn-middleware-s5), [Schri
 - `app/panel/update.py` `update_lock`: Änderungen während eines Updates ([Schritt 10](#kn-middleware-s10))
 - `app/panel/panel.py` `protect`: Schutz-Kopfzeilen ([Schritt 12](#kn-middleware-s12))
 
-Selbsttests: `test_hardening`, `test_panel`, `test_notaus`, `test_seiten_laden`
+Selbsttests: `test_hardening`, `test_panel`, `test_notaus`, `test_seiten_laden`, `test_abbrechen`
 
 ### Sicherheit
 
@@ -1711,7 +1719,7 @@ flowchart TD
 ```
 
 1. <a id="kn-sicherheit-s1"></a>**Frage oder Auftrag kommt herein**: Im Heimnetz direkt, von unterwegs nur über den Reverse-Proxy mit TLS. Jedes Gerät hat seinen eigenen Schlüssel oder meldet sich wie im Browser an. Jeder Weg hinein (Panel, Geräteschlüssel, Kalender- und Kontakte-Apps, MCP, andere Sparks, Wyoming, Telefon, Telegram, die Anker und das Web-Terminal des Fernzugangs, die Seite der Spontanhilfe, der Abhol-Link von „Alle meine Daten herunterladen“) steht mit seinem Schutz in der Sicherheits-Doku unter „Wege hinein“.
-2. <a id="kn-sicherheit-s2"></a>**Lässt der Notaus es zu?**: Der Notaus hat drei Stufen von außen nach innen: Stufe 1 sperrt das Internet, Stufe 2 jede Handlung, Stufe 3 jedes Gespräch. Kein Modell, keine Mail und kein Dokument kann ihn auslösen oder aufheben.
+2. <a id="kn-sicherheit-s2"></a>**Lässt der Notaus es zu?**: Der Notaus hat drei Stufen von außen nach innen: Stufe 1 sperrt das Internet, Stufe 2 jede Handlung, Stufe 3 jedes Gespräch, und was dann noch spricht (Antworten, Anrufe, Home Assistant), endet sofort (laufend.end_all). Kein Modell, keine Mail und kein Dokument kann ihn auslösen oder aufheben. Ein ganzer Satz aus Stoppwörtern („Stopp“, „Tschüss“) beendet ein Gespräch nach fester Regel ohne Modell (stoppwort.ende).
 3. <a id="kn-sicherheit-s3"></a>**Angemeldet und im Rahmen?**: Größenlimit und Herkunftsprüfung (CSRF) vor dem Lesen, dann Rate-Limit pro Profil oder Adresse (ein Weg mit eigenem Sitzungsschlüssel nach dem richtigen Schlüssel je Sitzung, Raten weiter je Adresse) und eine Höchstzahl gleichzeitiger Anfragen für Modell, Erkennung und Ausgabe (guard.Slot). Geheimnisse, Rollen und Sicherungen brauchen dazu einen frischen Code oder Passkey (core.confirm_code, 10 Minuten). Ein ganzer Bereich lässt sich mit einem zweiten Schritt für eine Weile entsperren (Regel „Bereich entsperren“, zuerst der Fernzugang: 5 bis 120 Minuten, fernzugang.entsperrt_bis): nur diese Anmeldung, nur vom selben Ort, gesperrt bei Sperren, Abmelden und Notaus; Koppeln und Entfernen fragen trotzdem jedes Mal. Zu den Modellen auf tars geht es nur durch das TLS-Tor; Befehle dort prüft der Wärter (tarswart.check: Unterschrift, Zeit, Einmal-Nummer, einer von 18 festen Befehlen).
 4. <a id="kn-sicherheit-s4"></a>**Wer fragt, sicher erkannt?**: Das Profil kommt aus Cookie, App-Schlüssel oder verknüpftem Konto. Am geteilten Lautsprecher reicht der Geräteschlüssel nicht: chat_turn.shared_stranger gibt Persönliches nur frei, wenn die Inhaberstimme in derselben Aufnahme sicher erkannt ist.
 5. <a id="kn-sicherheit-s5"></a>**Freigabe und Sperre**: Jede Funktion ist aus, bis der Admin sie freigibt; dann gilt sie für jedes Profil, außer der Admin sperrt einzelne (features.blocked). Was nicht erlaubt ist, wird gar nicht erst als Werkzeug angeboten. Was einem Profil gehört, bleibt bei ihm: das Push-Abo eines Browsers gehört genau einem Profil (push.add nimmt es jedem anderen) und endet mit der Anmeldung, die es eingeschaltet hat (push.drop_login); eine Mitteilung geht nie an einen anderen Browser, weil der benutzte keines hat; eine Seite übernimmt keine Antwort, die noch für das Profil davor bestellt war.
@@ -1773,6 +1781,8 @@ Gilt bei: [Schritt 4](#kn-sicherheit-s4), [Schritt 5](#kn-sicherheit-s5)
 #### Im Code
 
 - `app/panel/notaus.py` `blocks`: ob eine Notaus-Stufe diese Art Arbeit anhält ([Schritt 2](#kn-sicherheit-s2))
+- `app/panel/laufend.py` `end_all`: Notaus Stufe 3 beendet, was gerade spricht ([Schritt 2](#kn-sicherheit-s2))
+- `app/panel/stoppwort.py` `ende`: Stoppwörter beenden ein Gespräch ohne Modell ([Schritt 2](#kn-sicherheit-s2))
 - `app/panel/guard.py` `limit`: Rate-Limit pro Adresse und Profil ([Schritt 3](#kn-sicherheit-s3))
 - `app/panel/guard.py` `Slot`: Höchstzahl gleichzeitiger Anfragen ([Schritt 3](#kn-sicherheit-s3))
 - `app/panel/core.py` `confirm_code`: frischer Code oder Passkey für heikle Wege ([Schritt 3](#kn-sicherheit-s3), [Schritt 8](#kn-sicherheit-s8))
@@ -1953,19 +1963,21 @@ chat_turn.prepare macht aus einer Chat-Anfrage einen fertigen Gesprächszug, bev
 ```mermaid
 flowchart TD
   s1(["1. Nachrichten lesen"])
-  s2["2. Verlauf kürzen, Sperre übernehmen"]
-  s3{{"3. Gast oder fremde Stimme?"}}
-  s4["4. Weiche liest die Frage"]
-  s5["5. Systemprompt bauen"]
-  s6{{"6. Fester Satz?"}}
-  s7{{"7. Antwort auf eine Rückfrage?"}}
-  s8{{"8. Notaus oder Mein Notaus?"}}
-  s9["9. Ja zu einem Vorschlag"]
-  s10["10. Werkzeuge nach Rechten"]
-  s11{{"11. Etwas nimmt Werkzeuge weg?"}}
-  s12["12. Weiche grenzt ein"]
-  s13(["13. Gesprächszug fertig"])
-  s1 --> s2
+  s14{{"2. Nur ein Stoppwort?"}}
+  s2["3. Verlauf kürzen, Sperre übernehmen"]
+  s3{{"4. Gast oder fremde Stimme?"}}
+  s4["5. Weiche liest die Frage"]
+  s5["6. Systemprompt bauen"]
+  s6{{"7. Fester Satz?"}}
+  s7{{"8. Antwort auf eine Rückfrage?"}}
+  s8{{"9. Notaus oder Mein Notaus?"}}
+  s9["10. Ja zu einem Vorschlag"]
+  s10["11. Werkzeuge nach Rechten"]
+  s11{{"12. Etwas nimmt Werkzeuge weg?"}}
+  s12["13. Weiche grenzt ein"]
+  s13(["14. Gesprächszug fertig"])
+  s1 --> s14
+  s14 -->|nein| s2
   s2 --> s3
   s3 -->|nein| s4
   s4 --> s5
@@ -1979,6 +1991,8 @@ flowchart TD
   s12 --> s13
   s1x(["Keine Nachricht (400)"])
   s1 -->|leer| s1x
+  s14x(["„ende“, kein Modell"])
+  s14 -->|ja| s14x
   s3x(["nur Frage und Antwort"])
   s3 -->|ja| s3x
   s6x(["Panel führt aus, kein Werkzeug"])
@@ -1992,24 +2006,25 @@ flowchart TD
 ```
 
 1. <a id="kn-vorbereiten-s1"></a>**Nachrichten lesen**: Übernommen werden nur Textnachrichten von Nutzer und Assistent, jede auf 20000 Zeichen gekürzt. Eine Antwort, die der Browser als aus Mail oder fremdem Text gemacht markiert hat, behält diese Marke. Eine Frage vom Assistenten-Blatt der Android-App kommt nur durch, wenn „Android: Spark als Assistent“ für das Profil freigegeben ist (sonst 403).
-2. <a id="kn-vorbereiten-s2"></a>**Verlauf kürzen, Sperre übernehmen**: Der Verlauf wird auf sein Budget gekürzt. Steht eine Antwort aus fremdem Text unter den letzten drei Nachrichten, beginnt dieser Zug gesperrt; ältere werden gar nicht mehr mitgeschickt. Wünscht sich die Person in eigenen Worten ein Lied, bleibt so eine Antwort bis 7 Nachrichten zurück als Daten dabei (Akkorde, Stil). Eine Bildschirm-Beschreibung kommt nur als fester Hinweis mit und sperrt nichts.
-3. <a id="kn-vorbereiten-s3"></a>**Gast oder fremde Stimme?**: Ohne Profil, oder am eigenen Lautsprecher oder Telefon, wenn die Spracherkennung nicht klar die Stimme des Profils gehört hat (am Telefon: und keine Telefon-PIN getippt wurde), gibt es nur Frage und Antwort: kein Werkzeug, kein Gedächtnis, kein Verlauf. Wessen Stimme es war, setzt nur das Panel selbst, nie die Anfrage.
-4. <a id="kn-vorbereiten-s4"></a>**Weiche liest die Frage**: Feste Regeln ordnen die eigene letzte Nachricht einer Gruppe zu. Eine neue eigene Bitte, die nicht auf die Antwort aus fremdem Text zurückzeigt, lässt diese Antwort und ihre Sperre weg. Erkennt keine Regel die Frage, kann das Modell parallel einmal aus einer festen Liste wählen (wenn der Admin das anhat). Eine Folgefrage wie „Und morgen?“ übernimmt die Gruppe der eigenen Frage davor (intent.follow_up); Hinweiswörter geben ihre Gruppen dazu, auch neben der Wahl des Modells. Ein Foto mit Änderungswunsch (bilder.wants_change) ist die Gruppe Bilder, ohne Wahl des Modells.
-5. <a id="kn-vorbereiten-s5"></a>**Systemprompt bauen**: Der Systemprompt des Admins, dazu Länge und Stil des Profils und ein Hinweis je Kanal (Uhr, Siri, Lautsprecher, Telefon, Telegram, App, Browser). Mit „Schneller Antwortbeginn“ geht, was nur für diesen Zug gilt, mit der Frage statt in den Systemprompt, damit der Server ihn aus dem Cache liest. Mit „Großes Gedächtnis kürzen“ stehen bei einem langen Gedächtnis nur die neuesten Fakten fest darin (höchstens 6000 Zeichen), dazu bis zu 5 ältere, die Wörter mit der Frage teilen, nur für diesen Zug (chat.memory_split). Ist das Wissensbuch an und hat Seiten, kommen bis zu 40 Seitentitel dazu, die am besten zur Frage passen, als fremder Text (wissensbuch.hint). Hat die Person das Gespräch auf eine ihrer Mappen beschränkt (Feld mappe, eine eigene ID, vom Panel geprüft), kommen deren Einträge nach den festen Stufen aus, kurz und ganz als fremder Text dazu (mappen.for_turn); der Zug ist dann gesperrt wie nach fremdem Text.
-6. <a id="kn-vorbereiten-s6"></a>**Fester Satz?**: Sätze wie „Spark Notaus“, „Problem melden: …“ oder „Das war falsch“ führt das Panel selbst aus, nur aus den eigenen Worten des Profils und nie über MCP. Das Modell sagt nur das Ergebnis und bekommt in diesem Zug kein Werkzeug.
-7. <a id="kn-vorbereiten-s7"></a>**Antwort auf eine Rückfrage?**: Hat das Panel gefragt, welches Gerät gemeint ist, gilt als Antwort ein Knopf, eine Zahl oder der Name, nur im selben Gespräch, vom eigenen Profil und innerhalb von 2 Minuten. „Keins davon“ bringt die ganze Liste, „Nein, den anderen“ korrigiert die letzte Wahl. Das Panel führt die Wahl aus und bietet an, sie sich zu merken; ein „Ja“ dazu zählt 15 Minuten. Ein direkter Smart-Home-Befehl ohne das nötige Codewort wartet 2 Minuten, gebunden an Gerät und Gespräch (chat.ha_take): ein Codewort von einem anderen Gerät des Profils führt ihn nicht aus und löscht ihn nicht. Ein verneinter Satz ist nie ein direkter Befehl.
-8. <a id="kn-vorbereiten-s8"></a>**Notaus oder Mein Notaus?**: Ab Notaus-Stufe 2 oder mit dem eigenen Notaus des Profils werden alle wartenden Vorschläge verworfen; kein „Ja“ führt etwas aus. Lesen und Antworten gehen weiter.
-9. <a id="kn-vorbereiten-s9"></a>**Ja zu einem Vorschlag**: Wartet ein Vorschlag aus diesem Gespräch (ein Termin, eine Mail-Änderung, ein Listeneintrag, eine Korrektur, ein Anruf, eine Antwort fürs reMarkable), entscheidet das Panel über das „Ja“. Ein Ja bestätigt genau eine Sache; jede Antwort erledigt alle anderen wartenden Vorschläge dieses Gesprächs.
-10. <a id="kn-vorbereiten-s10"></a>**Werkzeuge nach Rechten**: Jede Werkzeuggruppe kommt nur mit Schalter des Admins, Freigabe für das Profil und den eigenen Daten dazu: Suche, Gedächtnis, Verlauf, Dokumente, Smart Home, Erinnerungen, Kalender, Mail. Telegram, die iPhone-App und CarPlay können das nur enger machen, nie weiter. Eine fremde erkannte Stimme an diesem Gerät bekommt nichts Persönliches. Eine Nachricht, die nur fragt („Weißt du, wie mein Bruder heißt?“: ein Satz mit Fragezeichen, nichts zum Merken), bekommt kein memory_save (chat.offer_memory), damit kein erfundener Fakt gespeichert wird.
-11. <a id="kn-vorbereiten-s11"></a>**Etwas nimmt Werkzeuge weg?**: Der Notaus nimmt Werkzeuge ins Internet oder ändernde weg, „Spark fragen“ über MCP behält nur die Werkzeuge der Verbindung, ein Bild, ein fester Satz oder ein fester Weg des Panels (Anrufe per Assistent, rufen.py) lässt keines übrig. Für einen Gast wird die Liste noch einmal geleert, egal was sie gefüllt hat.
-12. <a id="kn-vorbereiten-s12"></a>**Weiche grenzt ein**: Mit „Gezielte Werkzeugwahl“ bleibt nur die Gruppe der Frage übrig. Danach entscheidet das Panel, ob erst lokal gesucht wird (die Quellen-Weiche sagt intern, extern oder beides, nur für das eigene Profil; „Auch im Internet suchen“ nimmt die gemerkten eigenen Worte der Frage davor und sucht nur damit im Web; nie bei einem schlichten „Ja“ oder „Nein“ und nie, wenn es in diesem Zug schon etwas bestätigt ausgeführt hat), ob es ein eindeutiges Abrufen selbst macht und welches Werkzeug die erste Runde rufen muss. Mit „Schneller Antwortbeginn“ bekommt eine erkannte Gruppe immer dieselbe Liste in derselben Reihenfolge, so hält der Server je Gruppe einen Anfang im Cache; nur eine unklare Frage sieht die volle Liste.
-13. <a id="kn-vorbereiten-s13"></a>**Gesprächszug fertig**: Der Systemprompt steht vorn, dazu die Werkzeuge und die Sperrregel. Der Notaus wird bei jedem Werkzeugaufruf neu gelesen: wird er während einer Antwort ausgelöst, hält er den nächsten Aufruf an.
+2. <a id="kn-vorbereiten-s14"></a>**Nur ein Stoppwort?**: Ist die ganze Nachricht ein Stoppwort oder ein Abschied („Stopp“, „Hör auf“, „Danke, das war's“, „Tschüss“; die eine Liste in stoppwort.py), endet der Zug hier: kein Modell, kein Werkzeug, nichts wird gespeichert, eine wartende Rückfrage dieses Gesprächs verfällt. Die Antwort ist nur das Ereignis „ende“; Seite, Apps und Begleiter hören auf zu sprechen und öffnen das Mikrofon nicht wieder, Telegram und Siri bekommen ein festes Wort. „Stopp die Musik“ bleibt eine Frage. Antwortet die Person auf eine Meldung des Spark („Nicht jetzt“, proactive.answers_note), bleibt das die Rückmeldung zur Meldung.
+3. <a id="kn-vorbereiten-s2"></a>**Verlauf kürzen, Sperre übernehmen**: Der Verlauf wird auf sein Budget gekürzt. Steht eine Antwort aus fremdem Text unter den letzten drei Nachrichten, beginnt dieser Zug gesperrt; ältere werden gar nicht mehr mitgeschickt. Wünscht sich die Person in eigenen Worten ein Lied, bleibt so eine Antwort bis 7 Nachrichten zurück als Daten dabei (Akkorde, Stil). Eine Bildschirm-Beschreibung kommt nur als fester Hinweis mit und sperrt nichts.
+4. <a id="kn-vorbereiten-s3"></a>**Gast oder fremde Stimme?**: Ohne Profil, oder am eigenen Lautsprecher oder Telefon, wenn die Spracherkennung nicht klar die Stimme des Profils gehört hat (am Telefon: und keine Telefon-PIN getippt wurde), gibt es nur Frage und Antwort: kein Werkzeug, kein Gedächtnis, kein Verlauf. Wessen Stimme es war, setzt nur das Panel selbst, nie die Anfrage.
+5. <a id="kn-vorbereiten-s4"></a>**Weiche liest die Frage**: Feste Regeln ordnen die eigene letzte Nachricht einer Gruppe zu. Eine neue eigene Bitte, die nicht auf die Antwort aus fremdem Text zurückzeigt, lässt diese Antwort und ihre Sperre weg. Erkennt keine Regel die Frage, kann das Modell parallel einmal aus einer festen Liste wählen (wenn der Admin das anhat). Eine Folgefrage wie „Und morgen?“ übernimmt die Gruppe der eigenen Frage davor (intent.follow_up); Hinweiswörter geben ihre Gruppen dazu, auch neben der Wahl des Modells. Ein Foto mit Änderungswunsch (bilder.wants_change) ist die Gruppe Bilder, ohne Wahl des Modells.
+6. <a id="kn-vorbereiten-s5"></a>**Systemprompt bauen**: Der Systemprompt des Admins, dazu Länge und Stil des Profils und ein Hinweis je Kanal (Uhr, Siri, Lautsprecher, Telefon, Telegram, App, Browser). Mit „Schneller Antwortbeginn“ geht, was nur für diesen Zug gilt, mit der Frage statt in den Systemprompt, damit der Server ihn aus dem Cache liest. Mit „Großes Gedächtnis kürzen“ stehen bei einem langen Gedächtnis nur die neuesten Fakten fest darin (höchstens 6000 Zeichen), dazu bis zu 5 ältere, die Wörter mit der Frage teilen, nur für diesen Zug (chat.memory_split). Ist das Wissensbuch an und hat Seiten, kommen bis zu 40 Seitentitel dazu, die am besten zur Frage passen, als fremder Text (wissensbuch.hint). Hat die Person das Gespräch auf eine ihrer Mappen beschränkt (Feld mappe, eine eigene ID, vom Panel geprüft), kommen deren Einträge nach den festen Stufen aus, kurz und ganz als fremder Text dazu (mappen.for_turn); der Zug ist dann gesperrt wie nach fremdem Text.
+7. <a id="kn-vorbereiten-s6"></a>**Fester Satz?**: Sätze wie „Spark Notaus“, „Problem melden: …“ oder „Das war falsch“ führt das Panel selbst aus, nur aus den eigenen Worten des Profils und nie über MCP. Das Modell sagt nur das Ergebnis und bekommt in diesem Zug kein Werkzeug.
+8. <a id="kn-vorbereiten-s7"></a>**Antwort auf eine Rückfrage?**: Hat das Panel gefragt, welches Gerät gemeint ist, gilt als Antwort ein Knopf, eine Zahl oder der Name, nur im selben Gespräch, vom eigenen Profil und innerhalb von 2 Minuten. „Keins davon“ bringt die ganze Liste, „Nein, den anderen“ korrigiert die letzte Wahl. Das Panel führt die Wahl aus und bietet an, sie sich zu merken; ein „Ja“ dazu zählt 15 Minuten. Ein direkter Smart-Home-Befehl ohne das nötige Codewort wartet 2 Minuten, gebunden an Gerät und Gespräch (chat.ha_take): ein Codewort von einem anderen Gerät des Profils führt ihn nicht aus und löscht ihn nicht. Ein verneinter Satz ist nie ein direkter Befehl.
+9. <a id="kn-vorbereiten-s8"></a>**Notaus oder Mein Notaus?**: Ab Notaus-Stufe 2 oder mit dem eigenen Notaus des Profils werden alle wartenden Vorschläge verworfen; kein „Ja“ führt etwas aus. Lesen und Antworten gehen weiter.
+10. <a id="kn-vorbereiten-s9"></a>**Ja zu einem Vorschlag**: Wartet ein Vorschlag aus diesem Gespräch (ein Termin, eine Mail-Änderung, ein Listeneintrag, eine Korrektur, ein Anruf, eine Antwort fürs reMarkable), entscheidet das Panel über das „Ja“. Ein Ja bestätigt genau eine Sache; jede Antwort erledigt alle anderen wartenden Vorschläge dieses Gesprächs.
+11. <a id="kn-vorbereiten-s10"></a>**Werkzeuge nach Rechten**: Jede Werkzeuggruppe kommt nur mit Schalter des Admins, Freigabe für das Profil und den eigenen Daten dazu: Suche, Gedächtnis, Verlauf, Dokumente, Smart Home, Erinnerungen, Kalender, Mail. Telegram, die iPhone-App und CarPlay können das nur enger machen, nie weiter. Eine fremde erkannte Stimme an diesem Gerät bekommt nichts Persönliches. Eine Nachricht, die nur fragt („Weißt du, wie mein Bruder heißt?“: ein Satz mit Fragezeichen, nichts zum Merken), bekommt kein memory_save (chat.offer_memory), damit kein erfundener Fakt gespeichert wird.
+12. <a id="kn-vorbereiten-s11"></a>**Etwas nimmt Werkzeuge weg?**: Der Notaus nimmt Werkzeuge ins Internet oder ändernde weg, „Spark fragen“ über MCP behält nur die Werkzeuge der Verbindung, ein Bild, ein fester Satz oder ein fester Weg des Panels (Anrufe per Assistent, rufen.py) lässt keines übrig. Für einen Gast wird die Liste noch einmal geleert, egal was sie gefüllt hat.
+13. <a id="kn-vorbereiten-s12"></a>**Weiche grenzt ein**: Mit „Gezielte Werkzeugwahl“ bleibt nur die Gruppe der Frage übrig. Danach entscheidet das Panel, ob erst lokal gesucht wird (die Quellen-Weiche sagt intern, extern oder beides, nur für das eigene Profil; „Auch im Internet suchen“ nimmt die gemerkten eigenen Worte der Frage davor und sucht nur damit im Web; nie bei einem schlichten „Ja“ oder „Nein“ und nie, wenn es in diesem Zug schon etwas bestätigt ausgeführt hat), ob es ein eindeutiges Abrufen selbst macht und welches Werkzeug die erste Runde rufen muss. Mit „Schneller Antwortbeginn“ bekommt eine erkannte Gruppe immer dieselbe Liste in derselben Reihenfolge, so hält der Server je Gruppe einen Anfang im Cache; nur eine unklare Frage sieht die volle Liste.
+14. <a id="kn-vorbereiten-s13"></a>**Gesprächszug fertig**: Der Systemprompt steht vorn, dazu die Werkzeuge und die Sperrregel. Der Notaus wird bei jedem Werkzeugaufruf neu gelesen: wird er während einer Antwort ausgelöst, hält er den nächsten Aufruf an.
 
-**Beispiele:** Gast fragt nach dem Wetter: Antwort ohne Werkzeug: Gäste bekommen nur Frage und Antwort. · „Das zweite“ nach einer Rückfrage: Das Panel schaltet das gewählte Gerät; das Modell sagt nur das Ergebnis. · Notaus Stufe 2, Frage nach Terminen: Nur lesende Werkzeuge; Termine eintragen wird nicht angeboten.
+**Beispiele:** Gast fragt nach dem Wetter: Antwort ohne Werkzeug: Gäste bekommen nur Frage und Antwort. · „Das zweite“ nach einer Rückfrage: Das Panel schaltet das gewählte Gerät; das Modell sagt nur das Ergebnis. · Notaus Stufe 2, Frage nach Terminen: Nur lesende Werkzeuge; Termine eintragen wird nicht angeboten. · „Stopp“ mit Freihändig: Kein Modell, die Seite sagt „Gestoppt.“ und das Mikrofon bleibt zu.
 
 #### Regeln
 
-Gilt bei: [Schritt 10](#kn-vorbereiten-s10), [Schritt 11](#kn-vorbereiten-s11)
+Gilt bei: [Schritt 11](#kn-vorbereiten-s10), [Schritt 12](#kn-vorbereiten-s11)
 
 | Wer spricht | Werkzeuge | Persönliches | Ja zu Vorschlägen |
 |---|---|---|---|
@@ -2021,10 +2036,10 @@ Gilt bei: [Schritt 10](#kn-vorbereiten-s10), [Schritt 11](#kn-vorbereiten-s11)
 #### Zahlen (aus dem Code)
 
 - **20000** Zeichen höchstens je Nachricht ([Schritt 1](#kn-vorbereiten-s1))
-- **2** Minuten gilt eine Auswahl bei einer Rückfrage ([Schritt 7](#kn-vorbereiten-s7))
-- **15** Minuten wartet „Soll ich mir das merken?“ ([Schritt 7](#kn-vorbereiten-s7))
-- **4** Knöpfe höchstens bei einer Rückfrage ([Schritt 7](#kn-vorbereiten-s7))
-- **2** Notaus-Stufe ohne Aktionen ([Schritt 8](#kn-vorbereiten-s8))
+- **2** Minuten gilt eine Auswahl bei einer Rückfrage ([Schritt 8](#kn-vorbereiten-s7))
+- **15** Minuten wartet „Soll ich mir das merken?“ ([Schritt 8](#kn-vorbereiten-s7))
+- **4** Knöpfe höchstens bei einer Rückfrage ([Schritt 8](#kn-vorbereiten-s7))
+- **2** Notaus-Stufe ohne Aktionen ([Schritt 9](#kn-vorbereiten-s8))
 
 #### Einstellen
 
@@ -2040,20 +2055,22 @@ Gilt bei: [Schritt 10](#kn-vorbereiten-s10), [Schritt 11](#kn-vorbereiten-s11)
 
 #### Im Code
 
-- `app/panel/chat_turn.py` `prepare`: der ganze Ablauf ([Schritt 1](#kn-vorbereiten-s1), [Schritt 13](#kn-vorbereiten-s13))
-- `app/panel/chat_turn.py` `shared_stranger`: fremde Stimme am Lautsprecher ([Schritt 3](#kn-vorbereiten-s3))
-- `app/panel/chat.py` `trim_history`: Verlauf kürzen ([Schritt 2](#kn-vorbereiten-s2))
-- `app/panel/chat.py` `left_out`: Antworten aus fremdem Text weglassen ([Schritt 2](#kn-vorbereiten-s2), [Schritt 4](#kn-vorbereiten-s4))
-- `app/panel/chat.py` `offer_memory`: kein memory_save, wenn die Nachricht nur fragt ([Schritt 10](#kn-vorbereiten-s10))
-- `app/panel/intent.py` `classify_cfg`: feste Regeln der Weiche ([Schritt 4](#kn-vorbereiten-s4))
-- `app/panel/klaeren.py` `answer`: Antwort auf eine Rückfrage ([Schritt 7](#kn-vorbereiten-s7))
-- `app/panel/features.py` `allowed`: Freigabe je Funktion ([Schritt 10](#kn-vorbereiten-s10))
-- `app/panel/notaus.py` `locked_tools`: was der Notaus wegnimmt ([Schritt 11](#kn-vorbereiten-s11))
-- `app/panel/intent.py` `narrow`: Werkzeuge eingrenzen ([Schritt 12](#kn-vorbereiten-s12))
-- `app/panel/chat_turn.py` `notaus_note`: Satz für das Modell bei Notaus ([Schritt 8](#kn-vorbereiten-s8), [Schritt 11](#kn-vorbereiten-s11))
-- `app/panel/chat.py` `ha_take`: Befehl mit Codewort nur von seiner Quelle ([Schritt 7](#kn-vorbereiten-s7))
+- `app/panel/chat_turn.py` `prepare`: der ganze Ablauf ([Schritt 1](#kn-vorbereiten-s1), [Schritt 14](#kn-vorbereiten-s13))
+- `app/panel/chat_turn.py` `shared_stranger`: fremde Stimme am Lautsprecher ([Schritt 4](#kn-vorbereiten-s3))
+- `app/panel/chat.py` `trim_history`: Verlauf kürzen ([Schritt 3](#kn-vorbereiten-s2))
+- `app/panel/chat.py` `left_out`: Antworten aus fremdem Text weglassen ([Schritt 3](#kn-vorbereiten-s2), [Schritt 5](#kn-vorbereiten-s4))
+- `app/panel/chat.py` `offer_memory`: kein memory_save, wenn die Nachricht nur fragt ([Schritt 11](#kn-vorbereiten-s10))
+- `app/panel/intent.py` `classify_cfg`: feste Regeln der Weiche ([Schritt 5](#kn-vorbereiten-s4))
+- `app/panel/klaeren.py` `answer`: Antwort auf eine Rückfrage ([Schritt 8](#kn-vorbereiten-s7))
+- `app/panel/features.py` `allowed`: Freigabe je Funktion ([Schritt 11](#kn-vorbereiten-s10))
+- `app/panel/notaus.py` `locked_tools`: was der Notaus wegnimmt ([Schritt 12](#kn-vorbereiten-s11))
+- `app/panel/intent.py` `narrow`: Werkzeuge eingrenzen ([Schritt 13](#kn-vorbereiten-s12))
+- `app/panel/chat_turn.py` `notaus_note`: Satz für das Modell bei Notaus ([Schritt 9](#kn-vorbereiten-s8), [Schritt 12](#kn-vorbereiten-s11))
+- `app/panel/chat.py` `ha_take`: Befehl mit Codewort nur von seiner Quelle ([Schritt 8](#kn-vorbereiten-s7))
+- `app/panel/stoppwort.py` `ende`: ein ganzer Satz aus Stoppwörtern beendet das Gespräch ([Schritt 2](#kn-vorbereiten-s14))
+- `app/panel/proactive.py` `answers_note`: Antwort auf eine Meldung des Spark ([Schritt 2](#kn-vorbereiten-s14))
 
-Selbsttests: `test_klaeren`, `test_features`, `test_notaus`, `test_hardening`, `test_weiche`, `test_sicherheit_sofort`
+Selbsttests: `test_klaeren`, `test_features`, `test_notaus`, `test_hardening`, `test_weiche`, `test_sicherheit_sofort`, `test_abbrechen`
 
 ### Weiche
 
@@ -2265,7 +2282,7 @@ flowchart TD
 11. <a id="kn-antwort-s11"></a>**Werkzeuge ausführen**: Halbe Worte vor dem Aufruf werden zurückgenommen, ein fertiger Satz bleibt. Jeder Aufruf geht über chat_tools.run; das Ergebnis kommt als Werkzeug-Nachricht zurück. Scheitert ein Werkzeug zweimal gleich, wird es für diese Antwort gestoppt. Hatte keine Regel die Frage erkannt, zählt die Weiche die Gruppe des ersten Werkzeugs und das feste Hinweiswort (weiche.learn), nie ein Wort der Frage. Lesende Werkzeuge (Kalender, Wetter, Pakete) nehmen ihre Daten aus dem Speicher ihres Dienstes, solange sie frisch genug sind (Vorrat je Profil, vorrat.take); ein älterer Stand wartet höchstens 2.0 s auf den Server und kommt sonst mit Stand und Tag („Stand gestern 18:00“, frisch.stand), „schau nochmal nach“ fragt immer den Server. Jede Antwort hält fest, wie lange die Werkzeuge warteten und woher jeder Dienst kam (latency, Zustand → Prüfen).
 12. <a id="kn-antwort-s12"></a>**Ehrliche Schlusssätze**: Fiel ein Satz wegen einer Zahl weg, sagt das Panel „Genauere Angaben dazu habe ich nicht.“; fiel eine Tat weg, einen festen Satz aus taten.sentence. Kam ein Dienst nur mit einem älteren Stand, fand eine Suche nach Heutigem nichts von heute oder stammt ein Archiv-Artikel aus einem Kiwix-Buch, das älter als ein Jahr ist, und die Antwort sagt das nicht selbst, hängt das Panel „Nicht ganz aktuell: Wetter: Stand gestern 23:10 Uhr.“ an (frisch.nachsatz, Regel „Stand nennen“ der Antwort-Prüfung). Alle Sätze kommen vom Panel, nie vom Modell. Antwortet das Sprachmodell nicht, weil es gerade wechselt, neu startet oder gemessen wird, sagt das Panel das mit der erwarteten Zeit (llmstart.satz, auch in der Wartungspause eines Wechsels).
 13. <a id="kn-antwort-s13"></a>**Nachfragen des Panels**: Nur wenn nichts Fremdes gelesen wurde: eine gelernte Korrektur zum Merken anbieten oder ein Fakt aus dem Gedächtnis nachfragen (nach festen Regeln). Danach legt das Panel die Antwort aufs reMarkable, wenn gewünscht; bietet die Antwort selbst an, sich dort hinzulegen, wartet sie auf ein „Ja“ (remarkable.propose). Es holt bei einer Rückfrage schon vorab. Ist „Das kannst du auch sagen“ an, hängt das Panel feste Beispielsätze an (saetze.row, am Bildschirm als Zeile vor dem Ende; saetze.spoken, beim Sprechen höchstens ein Satz am Tag). Das Werkzeug-Log des Profils wird geschrieben.
-14. <a id="kn-antwort-s14"></a>**Strom endet**: Der Anfrage-Verlauf wird abgeschlossen, Fälle und die Prüfung im Hintergrund laufen erst nach dem Sprechen. Bricht das Gerät ab (Unterbrechen), stoppen Modell und Sprachausgabe sofort. Stützt sich die Antwort auf mindestens zwei eigene Dokumente oder Kiwix-Artikel, merkt wissensbuch.keep_offer sie und das Gerät zeigt „Ins Wissensbuch“; nur der Klick des Besitzers legt sie ab.
+14. <a id="kn-antwort-s14"></a>**Strom endet**: Der Anfrage-Verlauf wird abgeschlossen, Fälle und die Prüfung im Hintergrund laufen erst nach dem Sprechen. Bricht das Gerät ab (Unterbrechen, Stopp), stoppen Modell und Sprachausgabe sofort. Solange die Antwort läuft, steht sie in laufend: Notaus Stufe 3 beendet sie mit dem Ereignis „ende“, das Gerät hört dann auf und öffnet das Mikrofon nicht wieder. Stützt sich die Antwort auf mindestens zwei eigene Dokumente oder Kiwix-Artikel, merkt wissensbuch.keep_offer sie und das Gerät zeigt „Ins Wissensbuch“; nur der Klick des Besitzers legt sie ab.
 
 **Beispiele:** Plaudern ohne Werkzeug: Gesprochen ab dem ersten Satz, keine Prüfung greift. · Termine von morgen: Das Modell ruft den Kalender, die nächste Runde antwortet aus dem Ergebnis. · Erfundene Uhrzeit: Der Satz mit der Uhrzeit wird nie gesagt, dafür ein ehrlicher Satz. · „Licht ist an“, Schalten scheiterte: Statt der Behauptung: „Das hat nicht geklappt: …“.
 
@@ -2293,6 +2310,7 @@ flowchart TD
 
 - `app/panel/chat.py` `chat`: Rate-Limit, Sprache zuerst, „antwortet gerade“ ([Schritt 1](#kn-antwort-s1))
 - `app/panel/chat.py` `_answer`: führt Modellseite, Sprachausgabe und Ereignisse zu einem Strom zusammen ([Schritt 4](#kn-antwort-s4), [Schritt 5](#kn-antwort-s5), [Schritt 11](#kn-antwort-s11))
+- `app/panel/laufend.py` `add`: die laufende Antwort für Notaus Stufe 3 ([Schritt 14](#kn-antwort-s14))
 - `app/panel/chat_ton.py` `speech_out`: Sätze an die Sprachausgabe, Ton als Strom ([Schritt 8](#kn-antwort-s8))
 - `app/panel/chat_modell.py` `model_turn`: Runden mit dem Modell, Werkzeuge, Prüfungen ([Schritt 4](#kn-antwort-s4), [Schritt 11](#kn-antwort-s11))
 - `app/panel/chat_modell.py` `herkunft_und_chip`: Herkunftszeile und „Auch im Internet suchen“ unter der Antwort ([Schritt 3](#kn-antwort-s3))

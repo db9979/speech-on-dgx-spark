@@ -8,8 +8,8 @@ here with a fixed rule, never the model (idea from sonia-assistant, plan "Ins Wo
 1. "weiter": nothing heard, the own voice (echo.py), a voice that is not the profile's (fremdstimme.py), silence
    (stille.py) or only words that tell "I am listening" (BACK: "mhm", "ja", "okay", "genau" …). The answer plays on
    where it stopped.
-2. "stopp": only words that say stop (STOP: "Stopp", "Halt", "Ruhe", "Danke, reicht" …). The answer ends, what was
-   spoken stays.
+2. "stopp": a whole sentence of stop words or a goodbye (stoppwort.ende: "Stopp", "Halt", "Danke, reicht",
+   "Tschüss" …). The answer ends, what was spoken stays.
 3. "frage": anything else. The answer ends, what was spoken stays, and the sentence is the new question. After an
    answer that ended on a question ("asked") even "ja" is an answer and counts as a question.
 
@@ -17,14 +17,13 @@ The page plays on by itself when no decision comes within HOLD_MAX seconds (reco
 decision and its fixed reason go to the journal and to Live, never the words."""
 import re
 
+import stoppwort
+
 HOLD_MAX = 4   # seconds the page waits for a decision before the answer plays on (chat.js, Assistant.swift)
 MAX_WORDS = 4  # a longer recording is always a question
 BACK = {"mhm", "mhmm", "hm", "hmm", "aha", "ah", "äh", "ähm", "ehm", "oh", "ja", "jaja", "jo", "ok", "okay", "oke", "okey",
         "genau", "richtig", "stimmt", "gut", "schön", "klar", "verstehe", "ach so", "alles klar", "ja genau", "na klar",
         "uh-huh", "uh huh", "uhhuh", "yes", "yeah", "yep", "right", "sure", "i see", "got it", "cool", "nice", "um", "uh"}
-STOP = {"stopp", "stop", "halt", "ruhe", "still", "sei still", "hör auf", "aufhören", "schluss", "genug", "reicht",
-        "das reicht", "es reicht", "danke reicht", "abbrechen", "abbruch", "enough", "that's enough", "be quiet", "quiet",
-        "shut up", "cancel", "stop it"}
 CALL = {"spark", "jarvis", "computer", "hey", "hallo"}   # the wake words may stand in front: "Spark, stopp"
 WHY = {"leer": "nothing heard", "ueberhoert": "ignored voice", "rueckmeldung": "listening words",
        "stoppwort": "stop words", "rueckfrage": "answer to a question", "satz": "a sentence"}
@@ -66,9 +65,9 @@ def decide(text, ignored="", asked=False):
         return "weiter", "leer"
     if len(words) > MAX_WORDS:
         return "frage", "satz"
-    got = _cover(words, STOP | BACK | CALL)
-    if got and any(p in STOP for p in got):
+    if stoppwort.ende(text):   # the one list of stop words and goodbyes (stoppwort.py)
         return "stopp", "stoppwort"
+    got = _cover(words, BACK | CALL)
     if got and any(p in BACK for p in got):
         return ("frage", "rueckfrage") if asked else ("weiter", "rueckmeldung")
     return "frage", "satz"

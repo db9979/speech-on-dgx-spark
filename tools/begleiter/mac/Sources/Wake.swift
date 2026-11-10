@@ -200,9 +200,14 @@ final class Wake: ObservableObject {
             do {
                 let r = try await client.hear(wav: wav)
                 guard r.wake, self.listening else { return }
+                if r.ende {   // „Hey Spark, stopp“: only stops reading aloud, no question, no tone
+                    Speaker.shared.stop()
+                    HUD.show("Gestoppt.", symbol: "stop.circle")
+                    return
+                }
                 if !r.rest.isEmpty {
                     let q = String(r.rest.prefix(SparkClient.askMax))
-                    AskController.shared.run(question: q, spoken: true) { c in try await c.ask(q) }
+                    AskController.shared.run(question: q, spoken: true) { c in try await Self.askOrStop(c, q) }
                 } else {
                     self.beginQuestion()
                 }
@@ -212,6 +217,16 @@ final class Wake: ObservableObject {
                 if case .off? = error as? SparkProblem { self.problem = m }
             }
         }
+    }
+
+    /// The question; a whole sentence of stop words (the Spark answers "ende") stops reading aloud and shows nothing.
+    static func askOrStop(_ c: SparkClient, _ q: String) async throws -> String {
+        let r = try await c.askFull(q)
+        if r.ende != nil {
+            Speaker.shared.stop()
+            throw CancellationError()
+        }
+        return r.answer
     }
 
     private func beginQuestion() {
@@ -238,12 +253,14 @@ final class Wake: ObservableObject {
             do {
                 let text = try await client.dictate(wav: wav, sprache: sprache).trimmingCharacters(in: .whitespacesAndNewlines)
                 HUD.hide()
+                // „Mikrofon zu“ or Pause while it was written down: the question is dropped, nothing is asked or read
+                guard self.listening, !self.paused, !MicSwitch.shared.closed else { return }
                 guard !text.isEmpty else {
                     HUD.show("Nichts verstanden.", symbol: "ear")
                     return
                 }
                 let q = String(text.prefix(SparkClient.askMax))
-                AskController.shared.run(question: q, spoken: true) { c in try await c.ask(q) }
+                AskController.shared.run(question: q, spoken: true) { c in try await Self.askOrStop(c, q) }
             } catch is CancellationError {
                 HUD.hide()
             } catch {

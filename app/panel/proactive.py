@@ -305,6 +305,20 @@ def calendars_confirms_or_feedback(text):
     return calendars.confirms(text) or bool(LESS.search(text) or NOT_NOW.search(text) or MORE.search(text))
 
 
+def answers_note(uid, text, prev=None):
+    """The message is the person's answer to the Spark's last note (reply takes it), without any change. A stop
+    word like „Nicht jetzt“ then is the note's feedback (a pause), not the end of a talk (stoppwort, chat_turn)."""
+    if not enabled() or not text:
+        return False
+    last = state(uid).get("last") or {}
+    if time.time() - last.get("t", 0) > OFFER_SECONDS or len(text) > SHORT:
+        return False
+    if prev is not None and last.get("text") and _norm(last["text"])[:60] not in _norm(prev):
+        return False
+    # no note before it in this conversation: only a plain yes/no counts, never a new question
+    return prev is not None or calendars_confirms_or_feedback(text)
+
+
 def reply(uid, text, prev=None):
     """The panel's part when the person answers a note: a yes to an offered reminder sets it, "nicht
     jetzt" pauses, "interessiert mich nicht" lowers that kind. Returns {"system", "call"} for the
@@ -312,15 +326,9 @@ def reply(uid, text, prev=None):
 
     prev: the assistant's message right before this answer, if any. The answer only counts for the
     note when that message is the note (a "ja" to some other question is not meant for it)."""
-    if not enabled() or not text:
+    if not answers_note(uid, text, prev):
         return None
     last = state(uid).get("last") or {}
-    if time.time() - last.get("t", 0) > OFFER_SECONDS or len(text) > SHORT:
-        return None
-    if prev is not None and last.get("text") and _norm(last["text"])[:60] not in _norm(prev):
-        return None
-    if prev is None and not calendars_confirms_or_feedback(text):
-        return None  # no note before it in this conversation: only a plain yes/no counts, never a new question
     import calendars
     kind = last.get("kind", "")
     offer = last.get("offer")

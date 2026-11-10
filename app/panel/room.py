@@ -51,6 +51,7 @@ import calendars
 import homeassistant
 import logfilter
 import profiles
+import stoppwort
 import proactive
 import features
 from common import load_config, no_think
@@ -381,7 +382,7 @@ async def heard(uid, rid, text, body):
         r["offer"] = r["pending"] = None
         print("room: ended by voice", flush=True)
         return {"end": True, "stop": True, "wait": False}
-    stop = STOP.match(text)
+    stop = stoppwort.starts(text)   # the one list of stop words, here as the start of a sentence
     if stop and len(text) <= 40 and time.time() - r["said"] < 60:
         _drop(r["pending"])
         r["offer"] = r["pending"] = None
@@ -541,8 +542,6 @@ async def pause(uid, rid, body):
     return {"say": say, "kind": kind}
 
 
-STOP = re.compile(r"(?i)^\W*(stopp?|halt|ruhe|still|sei still|psst|nicht jetzt|jetzt nicht|schon gut|"
-                  r"danke,? (das )?(reicht|genügt)|genug|aufhören|hör auf)\b")
 # "Raummodus aus", "Raum-Modus beenden", "beende den Raummodus", "hör auf zuzuhören": room mode ends
 # (only ever less listening, so any voice may say it)
 END = re.compile(r"(?i)^\W*(?:(?:hey )?spark,? )?(?:(?:den )?raum[- ]?modus (?:aus|ausschalten|beenden|stopp?|ende)|"

@@ -19,6 +19,7 @@ import panel  # noqa: E402
 import esp32  # noqa: E402
 import features  # noqa: E402
 import netguard  # noqa: E402
+import stoppwort  # noqa: E402
 from fastapi import FastAPI  # noqa: E402
 from fastapi.responses import Response  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
@@ -626,9 +627,9 @@ class Speakers(unittest.TestCase):
         s = a.post("/api/profile/esp32/setup", json={"name": "Flur", "variant": "bread-compact-wifi",
                                                      "base": "https://speech.example.de"}).json()
         for said in ("Stopp", "Jarvis, stopp!", "Danke, das reicht", "Hör auf"):
-            self.assertTrue(esp32.STOP_WORDS.match(said), said)
+            self.assertTrue(stoppwort.stop(said), said)
         for said in ("Stopp die Musik", "Halt, wie spät ist es?", "Danke", "Wie spät ist es?"):
-            self.assertFalse(esp32.STOP_WORDS.match(said), said)
+            self.assertFalse(stoppwort.stop(said), said)
         spoken = []
 
         async def tts(uid, text):
@@ -706,9 +707,10 @@ class Speakers(unittest.TestCase):
             helpers.set_config(esp32_stop=False, deny={})
 
     def test_stop_heard_while_speaking(self):
-        """Only a stop phrase ends the answer: the board gets "tts stop" with spark_quiet (drops its queue) and the
-        Spark listens again. The phrase in its own sentence is its echo; other words never stop it."""
-        sent = []
+        """Only a stop phrase ends the answer: the board gets "tts stop" with spark_quiet (drops its queue) before the
+        answer is cancelled, then the connection closes like after a whole „Stopp“ as the question (P2 Abbrechen heißt
+        aus: no 12 s of listening on). The phrase in its own sentence is its echo; other words never stop it."""
+        sent, closed = [], []
 
         class WS:
             async def send_text(self, t):
@@ -716,6 +718,9 @@ class Speakers(unittest.TestCase):
 
             async def send_bytes(self, b):
                 pass
+
+            async def close(self, code=1000):
+                closed.append(code)
         dev = {"id": "d_stop", "user": "u_stop", "name": "Test"}
         heard = {"text": ""}
 
@@ -724,6 +729,7 @@ class Speakers(unittest.TestCase):
 
         async def run(text, spoken=()):
             sent.clear()
+            closed.clear()
             heard["text"] = text
             ses = esp32.Session(WS(), "t", dev, "c_stop")
             ses.stop_on = True
@@ -734,12 +740,13 @@ class Speakers(unittest.TestCase):
             await ses.check_stop(b"\0" * 32000)
             stopped = ses.answer.cancelled()
             ses.answer.cancel()
-            return stopped, ses.ear is not None, sent
+            self.assertIsNone(ses.ear)   # nothing listens on after the stop
+            return stopped, closed == [1000], sent
         old = esp32.transcribe
         esp32.transcribe = asr
         try:
-            stopped, listens, out = asyncio.run(run("Stopp!"))
-            self.assertTrue(stopped and listens)
+            stopped, gone, out = asyncio.run(run("Stopp!"))
+            self.assertTrue(stopped and gone)
             self.assertEqual(out, [{"type": "tts", "state": "stop", "spark_quiet": True, "session_id": out[0]["session_id"]}])
             self.assertEqual(asyncio.run(run("Hör auf, bitte."))[:2], (True, True))
             self.assertEqual(asyncio.run(run("Wie spät ist es?"))[:2], (False, False))     # no stop phrase

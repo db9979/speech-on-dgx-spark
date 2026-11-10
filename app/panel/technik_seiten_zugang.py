@@ -225,11 +225,11 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ middleware (panel.py, notaus.py)
     "middleware": {
-        "stand": "b0f20679f0",
+        "stand": "778430916b",
         "bezug": {
             "panel.slow_reads": ["s2"], "panel.emergency": ["s3", "s4"], "notaus.at_home": ["s5"],
             "panel.sessions": ["s7", "s11", "s12"], "guard.same_origin": ["s7"], "panel._may_upload": ["s8"],
-            "panel.protect": ["s12"], "regeln": ["s4", "s5", "s6"],
+            "panel.protect": ["s12"], "regeln": ["s4", "s5", "s6"], "laufend.end_all": ["s6"],
         },
         "kurz": ("Die Middleware ist die Schicht in panel.py, durch die jede HTTP-Anfrage geht, bevor ein Endpunkt sie "
                  "liest: Notaus, fremde Seiten (CSRF), Größe der Anfrage und Update-Sperre. Auf dem Rückweg setzt sie "
@@ -292,11 +292,16 @@ SEITEN = {
             S("s6", "frage", ("Alles still?", "All quiet?"),
               ("Stufe {notaus.STAGE.gespraech}", "stage {notaus.STAGE.gespraech}"),
               ("In Stufe {notaus.STAGE.gespraech} gehen auch im Heimnetz nur noch Anmelden, das "
-               "Aufheben des Notaus und das Lesen von Zustand, Logs und Live durch. In den Stufen darunter läuft "
-               "im Heimnetz alles weiter; Aktionen hält das Panel dann tiefer unten an.",
+               "Aufheben des Notaus und das Lesen von Zustand, Logs und Live durch. Beim Wechsel auf diese Stufe endet "
+               "sofort, was gerade spricht (laufend.end_all): jede laufende Antwort in Seite, Apps und Begleiter "
+               "(Ereignis „ende“), jedes Telefonat und jede Sitzung von Home Assistant; Lautsprecher und Raum-Modus "
+               "schließen. In den Stufen darunter läuft im Heimnetz alles weiter; Aktionen hält das Panel dann tiefer "
+               "unten an.",
                "In stage {notaus.STAGE.gespraech} only logins, lifting the kill switch and reading "
-               "status, logs and live pass, also at home. In the stages below everything at home goes on; the panel "
-               "then holds actions off further down."),
+               "status, logs and live pass, also at home. Switching to this stage ends at once what is talking right "
+               "now (laufend.end_all): every running answer on page, apps and Begleiter (event „ende“), every phone "
+               "call and every Home Assistant session; speakers and room mode close. In the stages below everything "
+               "at home goes on; the panel then holds actions off further down."),
               ("stop", "ja", ("Alles angehalten (503)", "Everything stopped (503)"))),
             S("s7", "frage", ("Fremde Seite?", "Foreign page?"),
               ("Sec-Fetch-Site oder Origin", "Sec-Fetch-Site or Origin"),
@@ -425,6 +430,7 @@ SEITEN = {
             ("notaus.mine_gate", ("Mein Notaus für Geräteschlüssel", "my kill switch for device keys")),
             ("notaus.gate", ("was bei welcher Stufe durchkommt", "what passes at which stage")),
             ("notaus.at_home", ("im Heimnetz oder von außen", "at home or from outside")),
+            ("laufend.end_all", ("Stufe 3 beendet, was gerade spricht", "stage 3 ends what is talking now")),
             ("panel.sessions", ("fremde Seiten, Protokoll, Cookies erneuern", "foreign pages, log, renew cookies")),
             ("guard.same_origin", ("die Herkunftsregel", "the origin rule")),
             ("panel._may_upload", ("große Uploads nur mit Anmeldung", "big uploads only with a login")),
@@ -432,7 +438,7 @@ SEITEN = {
             ("update.update_lock", ("Änderungen während eines Updates", "changes during an update")),
             ("panel.protect", ("Schutz-Kopfzeilen", "protective headers")),
         ],
-        "tests": ["test_hardening", "test_panel", "test_notaus", "test_seiten_laden"],
+        "tests": ["test_hardening", "test_panel", "test_notaus", "test_seiten_laden", "test_abbrechen"],
         "heute": [],
     },
 
@@ -678,7 +684,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ sicherheit (the model as a whole)
     "sicherheit": {
-        "stand": "ca5e081b07",
+        "stand": "062b4ea5b5",
         "bezug": {
             "features.blocked": ["s5"], "geteilt.put": ["s5"], "mitschreiblink.find": ["s3", "s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
             "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"], "sysupdate.wunsch_nehmen": ["s3"],
@@ -721,11 +727,15 @@ SEITEN = {
             S("s2", "frage", ("Lässt der Notaus es zu?", "Does the kill switch allow it?"),
               ("notaus.blocks", "notaus.blocks"),
               ("Der Notaus hat drei Stufen von außen nach innen: Stufe {notaus.STAGE.internet} sperrt das Internet, Stufe "
-               "{notaus.STAGE.aktion} jede Handlung, Stufe {notaus.STAGE.gespraech} jedes Gespräch. Kein Modell, keine Mail und "
-               "kein Dokument kann ihn auslösen oder aufheben.",
+               "{notaus.STAGE.aktion} jede Handlung, Stufe {notaus.STAGE.gespraech} jedes Gespräch, und was dann noch "
+               "spricht (Antworten, Anrufe, Home Assistant), endet sofort (laufend.end_all). Kein Modell, keine Mail und "
+               "kein Dokument kann ihn auslösen oder aufheben. Ein ganzer Satz aus Stoppwörtern („Stopp“, „Tschüss“) "
+               "beendet ein Gespräch nach fester Regel ohne Modell (stoppwort.ende).",
                "The kill switch has three stages from the outside in: stage {notaus.STAGE.internet} closes the internet, stage "
-               "{notaus.STAGE.aktion} every action, stage {notaus.STAGE.gespraech} every conversation. No model, mail or "
-               "document can trigger or lift it."),
+               "{notaus.STAGE.aktion} every action, stage {notaus.STAGE.gespraech} every conversation, and whatever still "
+               "talks then (answers, calls, Home Assistant) ends at once (laufend.end_all). No model, mail or "
+               "document can trigger or lift it. A whole sentence of stop words („Stop“, „Bye“) ends a talk by a fixed "
+               "rule without the model (stoppwort.ende)."),
               ("stop", "nein", ("Gestoppt", "Stopped"))),
             S("s3", "frage", ("Angemeldet und im Rahmen?", "Signed in and within limits?"),
               ("guard.limit, Größe, Herkunft", "guard.limit, size, origin"),
@@ -999,6 +1009,8 @@ SEITEN = {
         ],
         "code": [
             ("notaus.blocks", ("ob eine Notaus-Stufe diese Art Arbeit anhält", "whether a kill switch stage stops this kind of work")),
+            ("laufend.end_all", ("Notaus Stufe 3 beendet, was gerade spricht", "kill switch stage 3 ends what is talking")),
+            ("stoppwort.ende", ("Stoppwörter beenden ein Gespräch ohne Modell", "stop words end a talk without the model")),
             ("guard.limit", ("Rate-Limit pro Adresse und Profil", "rate limit per address and profile")),
             ("guard.Slot", ("Höchstzahl gleichzeitiger Anfragen", "cap on parallel requests")),
             ("core.confirm_code", ("frischer Code oder Passkey für heikle Wege", "fresh code or passkey for sensitive ways")),

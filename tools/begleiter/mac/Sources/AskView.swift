@@ -76,6 +76,13 @@ final class AskController: ObservableObject {
             do {
                 let r = try await client.askFull(q, note: note)
                 guard let self else { return }
+                if r.ende != nil {   // a stop word: no answer, nothing read aloud
+                    Speaker.shared.stop()
+                    if self.generation == mine { self.input = ""; self.status = "Gestoppt." }
+                    self.pending = nil
+                    self.busy = false
+                    return
+                }
                 self.noteContext = nil
                 let clean = r.answer.trimmingCharacters(in: .whitespacesAndNewlines)
                 let shown = r.md?.trimmingCharacters(in: .whitespacesAndNewlines)

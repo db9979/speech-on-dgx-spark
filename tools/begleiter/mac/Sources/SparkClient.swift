@@ -294,6 +294,8 @@ extension SparkClient {
         let md: String?
         let steps: String?
         let cards: [AskCards.Card]
+        /// "stopp", "tschuess" or "notaus": a whole sentence of stop words (the Spark's fixed rule): no answer, stop
+        var ende: String? = nil
     }
 
     func askFull(_ text: String, note: Int? = nil) async throws -> AskReply {
@@ -302,8 +304,9 @@ extension SparkClient {
         let d = try await postJSON("api/desk/ask", body, timeout: 190)
         guard let a = d["answer"] as? String else { throw SparkProblem.failed("Keine Antwort vom Spark.") }
         let steps = (d["steps"] as? String).map { DeskConfig.plain($0, max: 200) }
+        let ende = (d["ende"] as? String).flatMap { $0.isEmpty ? nil : String($0.prefix(12)) }
         return AskReply(answer: a, md: d["md"] as? String, steps: steps?.isEmpty == false ? steps : nil,
-                        cards: AskCards.parse(d["cards"]))
+                        cards: AskCards.parse(d["cards"]), ende: ende)
     }
 
     /// POST /api/desk/note/act: a button of a note about a Für-dich card ("done", "fdremind"); the sentence to show.
@@ -349,11 +352,13 @@ extension SparkClient {
     }
 
     /// POST /api/desk/hear: was the wake word in it, and what came after it.
-    func hear(wav: Data) async throws -> (wake: Bool, rest: String) {
+    /// ende: „Hey Spark, stopp“, a whole sentence of stop words after the wake word (the Spark's fixed rule)
+    func hear(wav: Data) async throws -> (wake: Bool, rest: String, ende: Bool) {
         var form = Multipart()
         form.file("file", filename: "hoeren.wav", type: "audio/wav", data: wav)
         let d = try await postMultipart("api/desk/hear", form, timeout: 30)
-        return ((d["wake"] as? Bool) ?? false, ((d["rest"] as? String) ?? "").trimmingCharacters(in: .whitespacesAndNewlines))
+        return ((d["wake"] as? Bool) ?? false, ((d["rest"] as? String) ?? "").trimmingCharacters(in: .whitespacesAndNewlines),
+                ((d["ende"] as? String) ?? "").isEmpty == false)
     }
 
     /// POST /api/desk/act: the answer to one of the Spark's wishes. auto: it ran without the dialog (set on this

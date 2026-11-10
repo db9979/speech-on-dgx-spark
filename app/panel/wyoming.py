@@ -26,6 +26,7 @@ from urllib.parse import urlsplit
 
 from common import load_config, model_url
 import live
+import laufend
 import notaus
 import verbrauch
 
@@ -259,10 +260,41 @@ async def handle(reader, writer):
         writer.close()
         return
     _conns[0] += 1
+    task, by_notaus = asyncio.current_task(), []
+
+    def stop():
+        by_notaus.append(True)
+        task.cancel()
+    running = laufend.add("wyoming", stop)   # Notaus stage 3 ends the session at once (laufend.py)
     try:
         await _session(reader, writer, peer, s)
+    except asyncio.CancelledError:
+        if not by_notaus:
+            raise
+        print("wyoming: session ended by notaus", flush=True)
     finally:
+        laufend.drop(running)
         _conns[0] -= 1
+
+
+GONE_CHECK = 0.25   # seconds: how often a running recognition or speech output looks whether Home Assistant is gone
+
+
+async def until_gone(reader, work):
+    """The recognition or speech output, stopped as soon as Home Assistant closed the connection (Assist aborted on
+    the Voice PE: stop button, wake word again): the GPU does not go on for nobody. reader.at_eof() reads nothing."""
+    job = asyncio.ensure_future(work)
+    try:
+        while True:
+            done, _ = await asyncio.wait({job}, timeout=GONE_CHECK)
+            if done:
+                return job.result()
+            if reader.at_eof():
+                print("wyoming: home assistant gone, work stopped", flush=True)
+                raise ConnectionError("home assistant gone")
+    finally:
+        if not job.done():
+            job.cancel()
 
 
 async def _session(reader, writer, peer, s):
@@ -297,7 +329,7 @@ async def _session(reader, writer, peer, s):
                 audio += payload
             elif kind == "audio-stop":
                 t_asr = time.time()
-                text = await transcribe(s, wav_of(bytes(audio), *fmt), language) if audio else ""
+                text = await until_gone(reader, transcribe(s, wav_of(bytes(audio), *fmt), language)) if audio else ""
                 if rec:
                     rec.step("asr", "Spracherkennung", t_asr, time.time(), chars=len(text))
                     live.end(rec)
@@ -311,8 +343,8 @@ async def _session(reader, writer, peer, s):
                 if rec:
                     rec.step("in", "Eingang", t_tts)
                     rec.now("tts", "Sprachausgabe")
-                rate, width, channels, pcm = await synthesize(s, str(data.get("text", "")),
-                                                              str((data.get("voice") or {}).get("name") or ""))
+                rate, width, channels, pcm = await until_gone(reader, synthesize(
+                    s, str(data.get("text", "")), str((data.get("voice") or {}).get("name") or "")))
                 fmt_out = {"rate": rate, "width": width, "channels": channels}
                 await write_event(writer, "audio-start", fmt_out)
                 for i in range(0, len(pcm), CHUNK):

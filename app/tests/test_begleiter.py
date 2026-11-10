@@ -916,6 +916,14 @@ class Deeper(unittest.TestCase):
             ASR_TEXT[0] = "Ich rede gerade mit jemandem"
             self.assertEqual(prog.post("/api/desk/hear", files={"file": ("w.wav", WAV, "audio/wav")}).json(),
                              {"wake": False, "rest": ""})
+            # „Hey Spark, stopp“ (stoppwort.py): only stops reading aloud; the rest stays for older programs, and
+            # /api/desk/ask answers it with "ende" without the model (Abbrechen heißt aus)
+            ASR_TEXT[0] = "Hey Spark, stopp"
+            self.assertEqual(prog.post("/api/desk/hear", files={"file": ("w.wav", WAV, "audio/wav")}).json(),
+                             {"wake": True, "rest": "Stopp", "ende": "stopp"})
+            n = len(helpers.LLM_CALLS)
+            self.assertEqual(prog.post("/api/desk/ask", json={"text": "Stopp"}).json(), {"answer": "", "ende": "stopp"})
+            self.assertEqual(len(helpers.LLM_CALLS), n)
         finally:
             ASR_TEXT[0] = "Hallo aus dem Diktat"
             asr_port(old)
