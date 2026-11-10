@@ -284,4 +284,233 @@ BENCH = [
     ("Ich habe im Lotto gewonnen", ""),
     ("Wer hat gestern gewonnen?", "websuche"),
     ("Was sind die Schlagzeilen?", "websuche"),
+    # P4 Weiche genauer (Code-Review 10.11., D-6/D-9): one normalization step before the rules (umlauts, „ss“, glued
+    # device words, a few English phrases); a call for later is a reminder, an emergency number gets no tool
+    ("Wann fährt die Strassenbahn", "bahn"),
+    ("Mach die Wohnzimmerlampe aus", "smarthome"),
+    ("Mach den Heizlüfter aus", "smarthome"),
+    ("Alles aus", "smarthome"),
+    ("Wie hoch ist die Luftfeuchtigkeit?", "smarthome"),
+    ("Ist die Haustuer zu?", "smarthome"),
+    ("Search the internet for pizza places", "websuche"),
+    ("What do you know about me?", "gedaechtnis"),
+    ("What are my tasks?", "liste"),
+    ("Ruf Tom morgen früh an", "erinnerung"),
+    ("Ruf den Notarzt an", "plaudern"),
+    ("Wie funktioniert meine Heizung?", "smarthome"),
+    ("Rechne 7 mal 8 aus", ""),
 ]
+
+# Gegenprobe (P4 „Weiche genauer“, review D-13): BENCH and ALLTAG hold almost only sentences that should get a group;
+# these measure the other side, sentences that must NOT get one. Measured, never tuned to 100 % (like ALLTAG):
+# tests/test_intent.py holds the number of wrong ones (GEGEN_MAX_WRONG) and of wrong ones with a must-call tool
+# (GEGEN_MAX_FORCED); both may only go down. Each line: sentence -> what it must not get:
+#   ""        no group at all (small talk, a stop or a cancel may be „plaudern“)
+#   "wissen"  a knowledge question: none of the acting groups (intent.KNOW_DROP); web search and Wikipedia may stay
+#   "pflicht" a negated wish: it may keep its group for the journal, but it is never narrowed and never forces a tool
+#             that changes something or goes out (intent.negated, chat.needed)
+#   "a+b"     none of these groups
+GEGEN = [
+    # knowledge with everyday words (D-3)
+    ("Was ist eine Lampe?", "wissen"),
+    ("Wie funktioniert eine Steckdose?", "wissen"),
+    ("Wer hat den Strom erfunden?", "wissen"),
+    ("Was bedeutet Klima?", "wissen"),
+    ("Wer hat das Fenster erfunden?", "wissen"),
+    ("Erzähl mir was über Kameras", "wissen"),
+    ("Was ist eine Versicherung?", "wissen"),
+    ("Was ist ein Lebenslauf?", "wissen"),
+    ("Was ist eine Allergie?", "wissen"),
+    ("Was ist ein Agent?", "wissen"),
+    ("Wer war James Bond, der Agent?", "wissen"),
+    ("Was ist ein Chat-Bot?", "wissen"),
+    ("Was ist ein Kontakt in der Elektrotechnik?", "wissen"),
+    ("Was ist ein Kalender?", "wissen"),
+    ("Was ist eine Anleitung?", "wissen"),
+    ("Was ist ein Bescheid?", "wissen"),
+    ("Wie funktioniert ein Thermostat?", "wissen"),
+    ("Was sind Rollläden?", "wissen"),
+    ("Wie funktioniert eine Waschmaschine?", "wissen"),
+    ("Wer hat die Glühbirne erfunden?", "wissen"),
+    ("Wer hat das Telefon erfunden?", "wissen"),
+    ("Erklär mir, wie eine Heizung funktioniert", "wissen"),
+    ("Erkläre mir, was ein Saugroboter ist", "wissen"),
+    ("Wie funktioniert eine Kamera?", "wissen"),
+    ("Was ist eine Garage?", "wissen"),
+    ("Was bedeutet Kündigungsfrist?", "wissen"),
+    ("Was ist eine Einkaufsliste?", "wissen"),
+    ("Wer hat das iPhone erfunden?", "wissen"),
+    ("Was ist eine Nachricht?", "wissen"),
+    ("Wie funktioniert ein Akku?", "wissen"),
+    ("Was sind Routinen?", "wissen"),
+    ("Was ist ein Meeting?", "wissen"),
+    ("Was ist eine Durchsage?", "wissen"),
+    ("Wie funktioniert eine Klimaanlage?", "wissen"),
+    ("Was sind Jalousien?", "wissen"),
+    ("Wer hat den Fernseher erfunden?", "wissen"),
+    ("Erklär mir den Begriff Steckdose", "wissen"),
+    ("Was ist ein Garantieschein?", "wissen"),
+    ("Wie funktioniert eine Lüftung im Haus?", "wissen"),
+    ("Was ist ein Kurzbefehl?", "wissen"),
+    ("What is a thermostat?", "wissen"),
+    ("How does a heating system work?", "wissen"),
+    ("Who invented the light bulb?", "wissen"),
+    ("What is a smart home?", "wissen"),
+    ("Explain how a camera works", "wissen"),
+    ("Klimawandel erklärt", "smarthome"),
+    ("Wie schreibe ich eine Kündigung?", "dokument"),
+    ("Wie hoch ist die Steuer auf Benzin?", "dokument"),
+    ("Remember the Alamo", "gedaechtnis"),
+    # a list of things to name, not the own list (D-3: „Liste“ only with an own or place word)
+    ("Nenne mir eine Liste von Pflanzen", "liste"),
+    ("Liste mir drei Gründe auf", "liste"),
+    ("Gib mir eine Liste der größten Städte", "liste"),
+    ("Welche Liste der Bestseller ist die bekannteste?", "liste"),
+    # small talk and sentences about the person (D-3)
+    ("Ich bin gerade in der Küche", "smarthome"),
+    ("Schreib ein Gedicht über das Licht", "smarthome"),
+    ("Kennst du einen Witz über Lampen?", "smarthome"),
+    ("Ich bin im Garten", "smarthome"),
+    ("Mir ist langweilig", ""),
+    ("Ich bin müde", ""),
+    ("Du bist lustig", ""),
+    ("Was machst du so?", ""),
+    ("Wie war dein Tag?", ""),
+    ("Mein Tag war anstrengend", "kalender"),
+    ("Was hältst du von Politik?", "websuche"),
+    ("Wir haben gewonnen!", ""),
+    ("Ich spiele gern Schach", ""),
+    ("Erzähl mir eine Geschichte über einen Roboter", ""),
+    ("Call it a day", "iphone"),
+    # stop and cancel (stoppwort.py, intent.cancel)
+    ("Stopp", ""),
+    ("Hör auf", ""),
+    ("Spark, sei still", ""),
+    ("Lass gut sein", ""),
+    ("Abbrechen", ""),
+    ("Egal", ""),
+    ("Schon gut, danke", ""),
+    ("Forget it", ""),
+    ("Forget about it", ""),
+    ("Vergiss das ganze", ""),
+    # the call group (D-6): an emergency number and a wish for later never go to the instant call
+    ("Ruf die 112 an", "iphone"),
+    ("Ruf den Notruf an", "iphone"),
+    ("Ruf die Feuerwehr an", "iphone"),
+    ("Kannst du Mama anrufen, wenn ich zuhause bin?", "iphone"),
+    ("Ruf Papa um 6 an", "iphone"),
+    ("Remind me to call mom at 6", "iphone"),
+    ("Ruf morgen den Zahnarzt an", "iphone"),
+    ("Ruf Oma an, sobald ich im Auto sitze", "iphone"),
+    # „Bescheid“ is a notice from an office only with it (D-10), „sag … Bescheid“ a message
+    ("Sag Anna Bescheid", "dokument"),
+    ("Gib mir Bescheid, wenn du fertig bist", "dokument"),
+    # negated wishes (P1): the group may stay, but nothing is narrowed or forced
+    ("Mach das Licht aus, nein doch nicht", "pflicht"),
+    ("Mach das Licht im Wohnzimmer bloß nicht aus", "pflicht"),
+    ("Trag den Termin nicht ein", "pflicht"),
+    ("Lösch die Mail nicht", "pflicht"),
+    ("Ich will keine Erinnerung", "pflicht"),
+    ("Schalte bitte nicht den Fernseher ein", "pflicht"),
+    ("Kein Licht bitte", "pflicht"),
+    ("Such nicht im Internet nach meiner Diagnose", "pflicht"),
+    ("Schick Tom keine Nachricht", "pflicht"),
+    ("Setz Milch nicht auf die Einkaufsliste", "pflicht"),
+    ("Don't turn off the lights", "pflicht"),
+    ("Stell keinen Wecker", "pflicht"),
+    ("Navigiere nicht nach Hause", "pflicht"),
+]
+GEGEN_KINDS = ("wissen", "pflicht")
+
+
+def must_call(text, route):
+    """What the first round has to call for `text` with every group's tool on offer: the named tool (chat.first_tool),
+    "required" (chat.needed found some), or "". The same fixed rules as a turn (chat_turn), no model."""
+    import chat
+    import intent
+    offered = sorted({t for tools, _ in intent.GROUPS.values() for t in tools})
+    need = chat.needed(text, offered)
+    return chat.first_tool(route, need, offered) or ("required" if need else "")
+
+
+def gegen(classify, rows=None):
+    """Every GEGEN sentence through `classify` (text -> intent.Route): {"n", "richtig", "falsch", "erzwungen", "rows",
+    "gruppen"}. falsch: it got what it must not get; erzwungen: falsch and the first round must call a tool (the risky
+    part, review D-2/D-13); gruppen: {group: how many sentences wrongly got it}."""
+    import intent
+    import notaus
+    import taten
+    out = {"n": 0, "richtig": 0, "falsch": 0, "erzwungen": 0, "rows": [], "gruppen": {}}
+    for q, rule in (GEGEN if rows is None else rows):
+        r = classify(q)
+        names = [] if r.names == ["plaudern"] else list(r.names)
+        tool = must_call(q, r)
+        if rule == "pflicht":
+            bad = [] if r.neg and tool not in taten.KIND and tool not in notaus.INTERNET_TOOLS else names or ["eingegrenzt"]
+        elif rule == "wissen":
+            bad = [n for n in names if n in intent.KNOW_DROP]
+        elif rule:
+            bad = [n for n in names if n in rule.split("+")]
+        else:
+            bad = names
+        out["n"] += 1
+        if not bad:
+            out["richtig"] += 1
+            continue
+        out["falsch"] += 1
+        out["erzwungen"] += bool(tool)
+        for n in bad:
+            out["gruppen"][n] = out["gruppen"].get(n, 0) + 1
+        out["rows"].append({"q": q, "rule": rule or "keine", "got": "+".join(names) or "unklar", "must": tool})
+    return out
+
+
+def confusion(classify, rows):
+    """soll -> ist per group for (sentence, want) rows (BENCH, ALLTAG): {(want, got): count} of the wrong ones only;
+    "–" stands for no group."""
+    out = {}
+    for q, want in rows:
+        r = classify(q)
+        got = "+".join(n for n in r.names if n != "plaudern") or "–"
+        want = "+".join(w for w in want.split("+") if w and w != "plaudern" and not w.startswith("@")) or "–"
+        if set(got.split("+")) != set(want.split("+")):
+            out[(want, got)] = out.get((want, got), 0) + 1
+    return out
+
+
+def report(classify=None):
+    """The numbers as lines of text: BENCH, ALLTAG, GEGEN, the confusion per group and the wrong GEGEN sentences."""
+    import intent
+    import intent_alltag
+    classify = classify or intent.classify
+    lines = []
+    bench_ok = sum(1 for q, w in BENCH if set(classify(q).names) == (set(w.split("+")) if w else set()))
+    lines.append(f"BENCH   {bench_ok}/{len(BENCH)} richtig")
+    a = intent_alltag.measure(classify)
+    lines.append(f"ALLTAG  {a['n']} Sätze: richtig {a['richtig']}, geschützt {a['geschuetzt']}, offen {a['offen']}, "
+                 f"falsch {a['falsch']}")
+    g = gegen(classify)
+    lines.append(f"GEGEN   {g['n']} Sätze: richtig {g['richtig']}, falsch {g['falsch']}, falsch erzwungen {g['erzwungen']}")
+    lines.append("")
+    lines.append("Gegenprobe: falsch vergeben je Gruppe")
+    for name, n in sorted(g["gruppen"].items(), key=lambda kv: (-kv[1], kv[0])):
+        lines.append(f"  {name:<14}{n:>4}")
+    for title, rows in (("BENCH", BENCH), ("ALLTAG", intent_alltag.ALLTAG)):
+        lines.append("")
+        lines.append(f"Verwechslungen {title} (soll -> ist)")
+        for (want, got), n in sorted(confusion(classify, rows).items(), key=lambda kv: (-kv[1], kv[0])):
+            lines.append(f"  {want:<22} -> {got:<22}{n:>4}")
+    lines.append("")
+    lines.append("Gegenprobe: falsche Sätze")
+    for row in g["rows"]:
+        lines.append(f"  {row['q']!r}: {row['got']} (darf nicht: {row['rule']}){' Pflicht ' + row['must'] if row['must'] else ''}")
+    return lines
+
+
+if __name__ == "__main__":   # cd app && python3 panel/intent_bench.py   (the test configuration, no model, no clock)
+    import os
+    import sys
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+    from tests import helpers
+    helpers.start()
+    sys.stdout.write("\n".join(report()) + "\n")

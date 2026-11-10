@@ -1641,7 +1641,9 @@ def offer(ctx):
     must = "pc_look" if look else "pc_action" if act and (here or named) and must_act(devs, text) else None
     return {"tools": tools, "hint": " ".join(([ACT_HINT] if act else []) + ([SEND_HINT] if send else [])
                                              + ([LOOK_HINT] if look else [])),
-            "must": must, "outside": set(), "keep": {"pc_look"} if look else set(),
+            # kept whatever the Weiche's group (intent.narrow): offered only on the person's own word for the computer or
+            # asked at the computer itself (P4, review D-14: no longer in intent.NARROW_KEEP for every group)
+            "must": must, "outside": set(), "keep": {t["function"]["name"] for t in tools},
             "changes": {"pc_action"} if act else set(),
             "filler": {t["function"]["name"]: filler[t["function"]["name"]] for t in tools}}
 

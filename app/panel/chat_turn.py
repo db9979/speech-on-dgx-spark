@@ -6,6 +6,7 @@ prepare() returns a Turn: every value it worked out, as attributes (t.who, t.ha,
 chat._answer() asks the model with it, chat_tools.run() carries out the tool calls."""
 import asyncio
 import os
+import time
 import sys
 
 import httpx
@@ -204,19 +205,24 @@ async def prepare(request):
         print(f"chat: ende {ende} | {kind}", flush=True)
         return Turn({"ende": ende, "body": body, "who": None if guest else me0, "ask_text": ask0})
     route = intent.classify_cfg(ask0, ccfg)
+    src0 = f"{body.get('client') or 'web'}:{body.get('convo') if isinstance(body.get('convo'), str) else ''}"
+    # how long ago the person's own message before came in this conversation (P4, review D-8: a follow-up only while
+    # it is fresh); the clock is read here, intent only gets the number
+    age0 = intent.asked_age(((me0 or {}).get("id") or "", src0), time.time()) if ask0 else None
     # a follow-up („Und morgen?“) takes the group of the person's own question just before (plan weiche-intelligenter 1)
     if ask0 and not route.names:
         before0 = next((m["content"] for m in reversed(messages[:-1])
                         if m.get("role") == "user" and isinstance(m.get("content"), str)), "")
         # Rückfrage-Karten 3a: the answer before asked the person (ablauf.py, only with „Ablauf und Freigabe zeigen“)
         import ablauf
-        src0 = f"{body.get('client') or 'web'}:{body.get('convo') if isinstance(body.get('convo'), str) else ''}"
         answered = bool(before0 and me0 and features.allowed("ablauf", me0["id"], ccfg)
                         and ablauf.was_asked(me0["id"], src0, ask0))
-        follow = intent.follow_up(ask0, before0, ccfg, answered)
+        follow = intent.follow_up(ask0, before0, ccfg, answered, age0)
         if follow:
             route = follow
             print("weiche: Antwort auf Rückfrage -" if answered else "weiche: Folgefrage -", route.label(), flush=True)
+        elif age0 is not None and age0 > intent.FOLLOW_SECONDS and intent.follow_up(ask0, before0, ccfg, answered):
+            print("weiche: Folgefrage zu alt - unklar", flush=True)
     # a photo of this turn with a wish to change it is Bilder ändern (bilder.from_turn decides by its fixed rule
     # further down): the group bild, so no model pick starts and Logs → Anfragen does not show it as „unklar“
     if ask0 and not route.names and images.ids_of(body):

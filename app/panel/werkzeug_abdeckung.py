@@ -392,7 +392,9 @@ BY_WORD = {"remarkable_note": "remarkable", "remarkable_sent": "remarkable", "re
            "remarkable_attachment": "remarkable", "remarkable_library": "rmliste", "remarkable_sheet": "remarkable", "spark_zustand": "zustand_wz", "code_auftrag": "codeauftrag", "rechnen": "rechnen",
            "home_rules_list": "hamelden", "home_rule_delete": "hamelden", "speaker_volume": "aendern",
            "proactive_pause": "aendern", "undo_last": "aendern", "nas_ablegen": "nasablage",
-           "nas_zustand": "naszustand", "offen_zeigen": "vorgaenge"}
+           "nas_zustand": "naszustand", "offen_zeigen": "vorgaenge",
+           # the computer (P4, review D-14): only when the own words name it or at the Begleiter itself
+           "pc_action": "begleiter", "pc_send": "begleiter", "pc_look": "begleiter"}
 
 # one typical request per tool of a Weiche group, German and English: it must reach that group
 # (tests/test_werkzeug_abdeckung.py). The one list of example sentences: „Das kannst du auch sagen“ (saetze.py) shows

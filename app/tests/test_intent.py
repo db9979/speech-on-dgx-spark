@@ -310,5 +310,152 @@ class OwnWords(unittest.TestCase):
             helpers.set_config(public=False)
 
 
+# P4 „Weiche genauer“ (Code-Review 10.11.2026, review D-3 … D-14): measured when the Gegenprobe came (101 sentences:
+# 67 wrong and 2 of them with a must-call tool before, 1 wrong after); these may only go down, never up
+GEGEN_MAX_WRONG = 1
+GEGEN_MAX_FORCED = 0
+
+
+class Genauer(unittest.TestCase):
+    def test_gegenprobe_does_not_get_worse(self):
+        import intent_bench
+        m = intent_bench.gegen(intent.classify)
+        bad = [f"{r['q']!r}: {r['got']} (darf nicht: {r['rule']})" for r in m["rows"]]
+        self.assertGreaterEqual(m["n"], 80)
+        self.assertLessEqual(m["falsch"], GEGEN_MAX_WRONG, "\n".join(bad))
+        self.assertLessEqual(m["erzwungen"], GEGEN_MAX_FORCED, "\n".join(bad))
+        # every kind is there: knowledge, negation, small talk, stop and cancel
+        rules = {r for _, r in intent_bench.GEGEN}
+        self.assertTrue({"", "wissen", "pflicht"} <= rules)
+        self.assertGreaterEqual(sum(1 for _, r in intent_bench.GEGEN if r == "wissen"), 30)
+        for _, rule in intent_bench.GEGEN:
+            for n in rule.split("+"):
+                self.assertTrue(not n or n in intent_bench.GEGEN_KINDS or n in intent.GROUPS, rule)
+
+    def test_gegenprobe_measures_and_is_apart(self):
+        import intent_alltag
+        import intent_bench
+        # the measure itself: a wrong one counts, a forced one too, a right one not
+        m = intent_bench.gegen(intent.classify, [("Wie wird das Wetter morgen?", ""), ("Was ist eine Lampe?", "wissen"),
+                                                 ("Mach das Licht im Flur an", "pflicht"), ("Erzähl einen Witz", "")])
+        self.assertEqual((m["n"], m["richtig"], m["falsch"], m["erzwungen"]), (4, 2, 2, 1))
+        self.assertEqual(m["gruppen"], {"wetter": 1, "smarthome": 1})
+        # sentences to measure are never tuned test sentences
+        tuned = {q.lower() for q, _ in intent_bench.BENCH} | {q.lower() for q, _ in intent_alltag.ALLTAG}
+        self.assertEqual([q for q, _ in intent_bench.GEGEN if q.lower() in tuned], [])
+        # the report prints the numbers and the confusion per group
+        text = "\n".join(intent_bench.report())
+        for word in ("BENCH", "ALLTAG", "GEGEN", "falsch erzwungen", "Verwechslungen", "je Gruppe"):
+            self.assertIn(word, text)
+        self.assertEqual(intent_bench.confusion(intent.classify, [("Mach das Licht an", "wetter"), ("Danke", "plaudern")]),
+                         {("wetter", "smarthome"): 1})
+        # Funktionen → Weiche shows it beside the everyday score (admin only)
+        d = ADMIN.get("/api/admin/weiche").json()
+        self.assertEqual(d["gegen"]["n"], len(intent_bench.GEGEN))
+        self.assertLessEqual(d["gegen"]["falsch"], GEGEN_MAX_WRONG)
+
+    def test_knowledge_keeps_web_and_wikipedia(self):
+        tools = [tool(n) for n in ("web_search", "wikipedia", "home_assistant_action", "home_assistant_states",
+                                   "memory_save")]
+        for q in ("Was ist eine Lampe?", "Wie funktioniert eine Steckdose?", "Wer hat den Strom erfunden?",
+                  "Erklär mir, wie eine Heizung funktioniert", "What is a thermostat?", "Klimawandel erklärt",
+                  "Kennst du einen Witz über Lampen?", "Ich bin gerade in der Küche"):
+            r = intent.classify(q)
+            self.assertFalse(set(r.names) & set(intent.KNOW_DROP), (q, r.names))
+            self.assertEqual(intent.narrow(r, tools), tools, q)
+        # an own thing, a room or a command keeps the group
+        self.assertEqual(intent.classify("Wie funktioniert meine Heizung?").names, ["smarthome"])
+        self.assertEqual(intent.classify("Ich bin in der Küche, mach das Licht an").names, ["smarthome"])
+        self.assertEqual(intent.classify("Was ist auf meiner To-do-Liste?").names, ["liste"])
+        # the Spark-Hilfe only for the Spark itself (D-7)
+        import hilfe
+        for q in ("Was ist ein Kalender?", "Was ist eine Anleitung?", "What is a smart home?"):
+            self.assertIsNone(hilfe.help_question(q), q)
+        self.assertTrue(hilfe.help_question("Was ist der Raummodus?"))
+
+    def test_a_list_only_with_an_own_or_place_word(self):
+        for q in ("Nenne mir eine Liste von Pflanzen", "Liste mir drei Gründe auf", "Gib mir eine Liste der größten Städte"):
+            self.assertNotIn("liste", intent.classify(q).names, q)
+        for q in ("Setz Brot auf die Liste", "Was steht auf meiner Baumarkt-Liste?", "Streich Milch von der Liste"):
+            self.assertIn("liste", intent.classify(q).names, q)
+
+    def test_no_instant_call_for_an_emergency_or_later(self):
+        tools = [tool(n) for n in ("iphone_action", "reminder_set", "reminder_list", "memory_save")]
+        for q in ("Ruf die 112 an", "Ruf die Polizei an", "Call 911"):
+            r = intent.classify(q)
+            self.assertEqual((r.names, r.why), (["plaudern"], {"plaudern": "Notruf"}), q)
+        for q in ("Ruf Papa um 6 an", "Kannst du Mama anrufen, wenn ich zuhause bin?", "Remind me to call mom at 6"):
+            r = intent.classify(q)
+            self.assertEqual(r.names, ["erinnerung"], q)
+            self.assertNotIn("iphone_action", [t["function"]["name"] for t in intent.narrow(r, tools)], q)
+        self.assertEqual(intent.classify("Ruf Mama an").names, ["iphone"])
+        self.assertEqual(intent.classify("Call it a day").names, [])
+
+    def test_follow_up_needs_a_real_reference_and_a_fresh_question(self):
+        before = "Wie wird das Wetter heute?"
+        self.assertEqual(intent.follow_up("Und morgen?", before, age=10).names, ["wetter"])
+        self.assertEqual(intent.follow_up("Und morgen?", before).names, ["wetter"])      # unknown age: as before
+        self.assertIsNone(intent.follow_up("Und morgen?", before, age=intent.FOLLOW_SECONDS + 1))
+        for q in ("Wie spät ist es?", "Ist es dort warm?", "Gib ihr das Buch", "Was ist das?"):
+            self.assertIsNone(intent.follow_up(q, before, age=1), q)
+        self.assertEqual(intent.follow_up("Mach es wieder aus", "Mach das Licht im Flur an", age=1).names, ["smarthome"])
+        # an answer to the Spark's own question has its own window (ablauf.was_asked)
+        self.assertEqual(intent.follow_up("Ja", "Trag morgen um 9 den Zahnarzt ein", answered=True,
+                                          age=intent.FOLLOW_SECONDS + 1).names, ["kalender"])
+        # the time comes in from outside (no clock here), per profile and conversation, in a bounded memory
+        key = ("p4test", "web:")
+        intent._ASKED.pop(key, None)
+        self.assertIsNone(intent.asked_age(key, 1000.0))
+        self.assertEqual(intent.asked_age(key, 1042.0), 42.0)
+        self.assertEqual(intent.asked_age(("other", "web:"), 1050.0), None)
+        for i in range(intent.FOLLOW_KEEP + 5):
+            intent.asked_age(("x", str(i)), 1.0)
+        self.assertLessEqual(len(intent._ASKED), intent.FOLLOW_KEEP)
+
+    def test_one_normalization_step(self):
+        self.assertEqual(intent.normalize("Wann kommt die Strassenbahn"), "Wann kommt die Straßenbahn")
+        self.assertEqual(intent.normalize("Kueche und Haustuer"), "Küche und Haustür")
+        self.assertEqual(intent.normalize("Mach die Wohnzimmerlampe aus"), "Mach die Wohnzimmer lampe aus")
+        for keep in ("Taschenlampe", "Tageslicht", "Schulpflicht", "Feuer", "Wasser", "neue Mails"):
+            self.assertEqual(intent.normalize(keep), keep)
+        self.assertEqual(intent.normalize("Search the internet for pizza"), "such im internet nach pizza")
+        # the one helper for folding is homeassistant._norm; the must words read the same step
+        import chat
+        import homeassistant
+        self.assertIn(homeassistant._norm("straßenbahn"), intent._umlaut_words())
+        offered = {"transit", "web_search"}
+        self.assertEqual(chat.needed("Wann fährt die Strassenbahn?", offered), chat.needed("Wann fährt die Straßenbahn?", offered))
+        for q, want in (("Kueche Licht an", ["smarthome"]), ("Mach den Heizlüfter aus", ["smarthome"])):
+            self.assertEqual(intent.classify(q).names, want, q)
+
+    def test_one_source_for_the_word_lists(self):
+        self.assertFalse(hasattr(intent, "SWITCH_VERBS"))         # one list of switching verbs (D-10)
+        self.assertIn(intent._CALL_ME, intent.REMINDER_WORDS.pattern)
+        self.assertIn(intent.CALL_WORDS.pattern.removeprefix("(?i)\\b(").removesuffix(")\\b"), intent.PHONE_WORDS.pattern)
+        # „Bescheid“ gives one group at most
+        for q, want in (("Sag Anna Bescheid", ["nachricht"]), ("Gib mir Bescheid, wenn du fertig bist", []),
+                        ("Was ist ein Bescheid?", []), ("Wo ist der Bescheid vom Finanzamt?", ["dokument", "finden"]),
+                        ("Sag mir in 10 Minuten Bescheid", ["erinnerung"]), ("Wo ist mein Rentenbescheid?", ["dokument", "finden"])):
+            self.assertEqual(sorted(intent.classify(q).names), want, q)
+        # the function names are compiled once (D-11)
+        self.assertEqual(intent.feature_switch("Schalte die Websuche ein"), "websuche")
+        rx = intent._FEATURE_RX[0]
+        intent.feature_switch("Mach die Kaffeemaschine an")
+        self.assertIs(intent._FEATURE_RX[0], rx)
+        self.assertEqual(len(intent._FEATURE_RX), 1)
+
+    def test_the_computer_only_with_its_word(self):
+        import werkzeug_abdeckung as wa
+        for t in ("pc_action", "pc_send", "pc_look"):
+            self.assertNotIn(t, intent.NARROW_KEEP)
+            self.assertIn(t, wa.BY_WORD)
+        tools = [tool(n) for n in ("calendar_add", "calendar_events", "pc_action", "memory_save")]
+        got = [t["function"]["name"] for t in intent.narrow(intent.classify("Trag morgen um 9 den Zahnarzt ein"), tools)]
+        self.assertNotIn("pc_action", got)
+        got = [t["function"]["name"] for t in intent.narrow(intent.classify("Trag morgen um 9 den Zahnarzt ein"), tools,
+                                                            keep={"pc_action"})]
+        self.assertIn("pc_action", got)
+
+
 if __name__ == "__main__":
     unittest.main()

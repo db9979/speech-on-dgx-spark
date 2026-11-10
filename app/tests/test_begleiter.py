@@ -1252,7 +1252,10 @@ class Seven(unittest.TestCase):
         import intent
         import live
         self.assertIn("pc_send", live.TOOLS)
-        self.assertIn("pc_send", intent.NARROW_KEEP)
+        import werkzeug_abdeckung
+        # kept beside any group only on the own word for the computer (P4, review D-14), never for every group
+        self.assertNotIn("pc_send", intent.NARROW_KEEP)
+        self.assertIn("pc_send", werkzeug_abdeckung.BY_WORD)
         self.assertIn("pc_send", begleiter.INSIDE)          # not locked after outside text
         self.assertIn(begleiter, extras.SERVICES)
         c = self.on("DqDora")
@@ -1263,6 +1266,7 @@ class Seven(unittest.TestCase):
         did = self.parts(c, prog, inbox=True)
         o = begleiter.offer(ctx)
         self.assertEqual([t["function"]["name"] for t in o["tools"]], ["pc_send"])
+        self.assertEqual(o["keep"], {"pc_send"})
         self.assertEqual(o["changes"], set())
         self.assertIsNone(begleiter.offer(dict(ctx, text="Schick mir den Link")))       # no computer named
         self.assertIsNone(begleiter.offer(dict(ctx, text="Was ist ein PC?")))           # no sending

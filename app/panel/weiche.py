@@ -15,7 +15,8 @@ can never give more than the rights do:
     chat.systemone_min from which probability the classification narrows (moved here from Funktionen → Einordnung
                        mit Wahrscheinlichkeit; the switch itself stays there)
 
-The everyday check (intent_alltag.py) shows how well the rules do on sentences nobody tuned them for („Alltagsquote“).
+The everyday check (intent_alltag.py) shows how well the rules do on sentences nobody tuned them for („Alltagsquote“),
+the Gegenprobe (intent_bench.GEGEN) how many sentences get a group they must not get („Gegenprobe“).
 
 Every change is checked against all test sentences first; one that would turn out different stops the save until
 the admin confirms it. The last versions are kept for „Rückgängig“ (STATE/weiche-history.json). The protection
@@ -556,6 +557,7 @@ def _view(ch, english=False):
                   "own": [x for x in tests if x["own"]], "wrong": [x for x in tests if not x["ok"]][:50]},
         "unklar": {"stats": stats["groups"].get("unklar", {}), "fragen": _fragen()},
         "alltag": alltag(ch),
+        "gegen": gegen(ch),
         "systemone": ch.get("systemone") is True,
         "steps": list(_steps()),
         "must_tools": sorted(chat.rule_tools()),
@@ -597,6 +599,15 @@ def alltag(ch):
     or land wrong, and the sentences that do not land right (at most 60)."""
     import intent_alltag
     m = intent_alltag.measure(lambda q: intent.classify_cfg(q, ch))
+    m["rows"] = m["rows"][:60]
+    return m
+
+
+def gegen(ch):
+    """The Gegenprobe with these rules (intent_bench.GEGEN, P4 „Weiche genauer“): sentences that must get no group or
+    not a given one; how many get one anyway, how many of those with a must-call tool, and those sentences (at most 60)."""
+    import intent_bench
+    m = intent_bench.gegen(lambda q: intent.classify_cfg(q, ch))
     m["rows"] = m["rows"][:60]
     return m
 

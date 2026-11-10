@@ -40,20 +40,27 @@ import fund
 from common import load_config
 from core import auth
 
-# a switching verb a picture wish keeps the smart home for („Male das Wohnzimmer blau aus“ stays both)
-SWITCH_VERB = re.compile(r"(?i)\b(schalt\w*|einschalt\w*|ausschalt\w*|dimm\w*)\b|\b(an|aus)\s*[.!?]?\s*$")
+# the one list of switching verbs (P4, review D-10: SWITCH_VERB and SWITCH_VERBS were two): a picture or song wish
+# keeps the smart home with it („Male das Wohnzimmer blau aus“ stays both); without a device word a verb is smart home
+# only as a whole command (homeassistant.is_command), „an“/„aus“ at the end alone only as „Alles aus“ (never „Mach die
+# Sauna an“ or „Leg mir für Freitag 18 Uhr Kino an“)
+SWITCH_VERB = re.compile(r"(?i)^\W*((mach|schalt\w*) )?alles( wieder)? (an|aus|ein|ab)\W*$|"
+                         r"\b(schalt\w*|(ein|aus|an|ab|um)schalt\w*|(aus|ein|an|ab|um)machen|dimm\w*|"
+                         r"turn (on|off)|switch (on|off))\b|\b(an|aus)\s*[.!?]?\s*$")
 # intent -> (tools of this group, words in the person's message); order is only for the journal
 HOME_WORDS = re.compile(r"(?i)\b(licht\w*|lampe\w*|leuchte\w*|heizung\w*|thermostat\w*|temperatur\w*|grad\b|"
                         r"fernseher\w*|tv|rollo\w*|rolll?[aä]den\w*|jalousie\w*|steckdose\w*|pool\w*|whirlpool\w*|"
-                        r"staubsauger\w*|saugroboter\w*|klima\w*|lüftung\w*|ventilator\w*|garage\w*|"
+                        r"staubsauger\w*|saugroboter\w*|klima\w*|lüftung\w*|lüfter\w*|ventilator\w*|garage\w*|"
                         r"wohnzimmer|küche|schlafzimmer|kinderzimmer|badezimmer|bad\b|flur|keller|garten|terrasse|"
                         r"smart ?home|home assistant|lights?|heating|"
                         # doors, windows, appliances and readings (plan werkzeug-abdeckung B2: „Ist die Haustür zu?“
                         # and „Wann ist die Waschmaschine fertig?“ were „unklar“, with route_model lean without HA tools)
                         r"\w*tür(en)?|\w*fenster|garagentor\w*|türschloss|waschmaschine\w*|trockner\w*|"
-                        r"spülmaschine\w*|geschirrspüler\w*|strom(verbrauch|zähler)?|akku\w*|kamera\w*|doors?|windows?)\b")
+                        r"spülmaschine\w*|geschirrspüler\w*|strom(verbrauch|zähler)?|akku\w*|kamera\w*|doors?|windows?|"
+                        # P4 (review D-9): „Wie hoch ist die Luftfeuchtigkeit?“ was „unklar“
+                        r"luftfeuchtigkeit|luftfeuchte)\b")
 CALENDAR_WORDS = re.compile(chat.NEED_CALENDAR.pattern + "|" + chat.MORNING.pattern + r"|(?i:\b(\w*-?briefing\w*|tagesüberblick|was steht (heute|morgen) an|"
-                            r"mein(en)? tag|was hab(e)? ich (heute|morgen)( noch)?( vor)?|\w+termin(?!al)\w*|"
+                            r"mein(en)? tag(?! (war|ist|wird|lief)\b)|was hab(e)? ich (heute|morgen)( noch)?( vor)?|\w+termin(?!al)\w*|"
                             # „Terminal“ is the terminal client (terminal.py), never an appointment
                             r"elterngespräch\w*|sprechstunde\w*|vorstellungsgespräch\w*|"
                             r"hab(e)? ich (heute|morgen|übermorgen|am \w+|\w+tag)\b.{0,20}\bnoch (was|etwas|einen termin)\b|"
@@ -65,21 +72,28 @@ CALENDAR_WORDS = re.compile(chat.NEED_CALENDAR.pattern + "|" + chat.MORNING.patt
                             # „was hat das Wetter morgen“ or „Hat Lidl heute offen?“ is none
                             r"|(?-i:\b([Ww]as hat|[Hh]at) (?!der |die |das |es |man )[A-ZÄÖÜ][a-zäöüß]+ (heute|morgen|übermorgen|am [A-Z][a-z]+|diese Woche)\b"
                             r"( noch)?( (vor|frei|Zeit|Termine|einen Termin|verplant))?\W*$)")
-LIST_WORDS = re.compile(r"(?i)(einkaufsliste|einkaufszettel|aufgabenliste|to-?do|\b(auf|von) (die|der|meine[rn]?) "
-                        r"liste\b|\bliste\b|shopping list|\bhak\w* .{1,40}\bab\b|\babhaken\b|\bstreich\w* .{1,40}\b(von|durch)\b|"
+# „Liste“ alone only with an own or place word („auf die Liste“, „meine Baumarkt-Liste“), never „Nenne mir eine Liste von
+# Pflanzen“ (P4, review D-3)
+LIST_WORDS = re.compile(r"(?i)(einkaufsliste|einkaufszettel|aufgabenliste|to-?do|\b(auf|von|in|zu|aus) (die|der|den|meine[rn]?|"
+                        r"unsere[rn]?) (\w+-)?liste\b|\b(meine[rnms]?|unsere[rnms]?|die|der|zur) (\w+-)?liste\b(?! (der|von|mit|aller|über)\b)|"
+                        r"^\W*liste\W*$|shopping list|\bhak\w* .{1,40}\bab\b|\babhaken\b|\bstreich\w* .{1,40}\b(von|durch)\b|"
                         r"\b(muss|müssen|soll|sollen) (ich|wir) .{0,25}einkaufen\b|^\W*schreib \w+( und \w+)? auf\W*$|"
                         r"\b(auf|in|zu) (meine|die|den) (aufgaben|einkauf)\b|"
                         # „Kauf noch Zwiebeln“, „Was fehlt noch im Kühlschrank?“
                         r"^\W*kauf(e)? (noch|bitte|mal|auch) |\bwas fehlt (noch )?(im kühlschrank|zu ?hause|daheim)\b)")
 MEMORY_WORDS = re.compile(r"(?i)\b(merk dir|merke dir|vergiss|weißt du (noch|was)|was weißt du über mich|"
                           r"erinnerst du dich|haben wir (schon )?(mal )?(darüber )?(gesprochen|geredet)|letztes mal|"
-                          r"remember|forget|"
+                          r"remember(?! the\b)|forget(?! (it|about)\b)|"
                           # what the person says about themselves, and what was talked about (plan weiche-intelligenter 2)
                           r"ich mag (keine?n?|kein)|ich hasse|ich bin allergisch|allergi\w*|mein(e)? lieblings\w*|"
                           r"worüber haben wir|was hab(e)? ich dir .{0,40}(erzählt|gesagt))\b")
+# „Bescheid“ (P4, review D-10): a notice of an office only as a compound („Steuerbescheid“) or with the office
+# (dokument); „Sag Anna Bescheid“ tells someone (nachricht); „Sag mir in einer Stunde Bescheid“ stays a reminder;
+# „Gib mir Bescheid“ and „Was ist ein Bescheid?“ are neither. So one sentence never gets two groups from the word.
+_AMT = r"(\w*amt\w*|behörde\w*|\w*kasse\w*|finanz\w*|steuer\w*|rente\w*|gericht\w*|jobcenter|agentur)"
 DOC_WORDS = re.compile(r"(?i)\b(\w*dokument\w*|unterlage\w*|\w*vertrag\w*|\w*verträge\w*|\w*rechnung\w*|pdf|"
                        r"\w*versicherung\w*|police\w*|garantie\w*|gewährleistung\w*|\w*anleitung\w*|handbuch\w*|"
-                       r"\w*bescheid\w*|kündigung\w*|kündigungsfrist\w*|steuer(erklärung|bescheid|unterlagen)?|"
+                       r"\w+bescheid\w*|bescheid\w*(?=.{0,40}\b" + _AMT + r")|kündigung\w*|kündigungsfrist\w*|steuer(erklärung|bescheid|unterlagen)?|"
                        r"arztbrief\w*|befund\w*|beleg\w*|quittung\w*|zeugnis\w*|lebenslauf\w*|"
                        r"(meine[nmr]?|in den) (dateien|papiere\w*)|nebenkosten\w*|documents?)\b")
 # Mappen (mappen.py): the word itself, never a Schulmappe or Aktenmappe of someone else's text (the Weiche reads only
@@ -96,17 +110,20 @@ _DOKLINK = (r"(speicher\w*|abspeicher\w*|übernimm|übernehm\w*|als dokumente?|i
 DOKLINK_WORDS = re.compile(r"(?is)\b" + _DOKLINK + r"\b(?=.*https?://)|https?://\S+(?=.*\b" + _DOKLINK + r"\b)")
 CONTACT_WORDS = re.compile(r"(?i)\b(telefonnummer\w*|handynummer\w*|nummer von|adresse von|kontakt\w*|"
                            r"geburtstag(e|en|s)?|nummer vo[mn]|wo wohnt|anschrift\w*|phone number|contacts?)\b")
-MESSAGE_WORDS = re.compile(r"(?i)\b(nachricht\w*|chat\w*|durchsage\w*|bescheid|richte\w* .{1,40}aus|messages?|"
+MESSAGE_WORDS = re.compile(r"(?i)\b(nachricht\w*|chat\w*|durchsage\w*|(sag|gib|geb)\w* (?!mir\b|uns\b)(\w+ ){1,3}bescheid|"
+                           r"(?-i:[A-ZÄÖÜ]\w+) bescheid (sagen|geben)|richte\w* .{1,40}aus|messages?|"
                            r"ruf(e)? alle|antworte? [A-ZÄÖÜ]\w+,? dass)\b")
 AGENT_WORDS = re.compile(r"(?i)\b(agent\w*|routine\w*|auftr(a|ä)g\w*|beobachtung\w*)\b")
-REMINDER_WORDS = re.compile(chat.NEED_REMINDER.pattern + r"|(?i:\b(weck\w* mich|remind me|ruf\w* mich\b.{0,40}\ban|per anruf|call me at|"
-                            r"mich\b.{0,40}\banrufen|"
+# „Ruf mich um acht an“, „Kannst du mich morgen anrufen?“: the Spark calls the person (telefon_anruf.py), not the iPhone
+_CALL_ME = r"ruf\w* mich\b.{0,40}\ban|mich\b.{0,40}\banrufen"
+CALL_ME = re.compile(r"(?i)\b(" + _CALL_ME + r")\b")
+REMINDER_WORDS = re.compile(chat.NEED_REMINDER.pattern + r"|(?i:\b(weck\w* mich|remind me|" + _CALL_ME
+                            + r"|per anruf|call me at|"
                             r"sag mir (in|um|heute|morgen|gleich) .{1,40}(bescheid|,? dass))\b)")
 WEATHER_WORDS = re.compile(dict(chat.NEED_TOOLS)["weather"].pattern + r"|(?i:\b(schneit|gewitter\w*|sonnig|"
                            r"(warm|kalt|heiß) wird es|wird es (warm|kalt|heiß)|forecast|"
                            r"schirm\w*|regenjacke|sonnencreme|draußen|frost\w*|glatteis|unwetter\w*|jacke mitnehm\w*|"
                            r"wird es .{0,25}(schön|sonnig|nass|trocken))\b)")
-SWITCH_VERBS = re.compile(r"(?i)\b((aus|ein|an|ab|um)(schalten|machen)|schalt\w*|turn (on|off)|switch (on|off))\b")
 MINE = re.compile(r"(?i)\b(habe|hab|hat|für mich|an mich|mir|meine?)\b")
 # Verneinung und Abbruch (P1 Sicherheit, 2026-11-10): ONE fixed rule of the panel for every place that would act on a
 # sentence by itself. A negated wish („Mach das Licht nicht aus“, „Ruf Mama bloß nicht an“, „Kein Licht bitte“, „… nein,
@@ -151,9 +168,20 @@ SPARK_WORDS = re.compile(r"(?i)\b(einstellung\w*|schalter\b|funktion(en)?\b|pane
                          r"datenexport\w*|daten-?auskunft\w*|(download|export) (all )?my data|"
                          # Fernzugang (fernzugang.py): „Öffne eine Shell auf dem VPS“ only leads to the page, never runs anything
                          r"fernzugang\w*|fern-?server\w*|(öffne|starte|zeig)\w* (mir )?(eine |die )?(shell|konsole|ssh)\b|(ssh|shell) auf\b)")
+# calling (iphone_action): „Ruf Mama an“; never „Call it a day“ (P4, review D-6)
+CALL_WORDS = re.compile(r"(?i)\b((?<!ich )ruf(e)? (\w+ ){1,3}an|anrufen|call (?!(it|that|this|off|out|back|me)\b)\w+)\b")
 PHONE_WORDS = re.compile(r"(?i)\b(iphone|auf meinem handy|am handy|shortcut|kurzbefehl\w*|"
                          # calling and navigating (iphone_action): „Ruf Mama an“, „Navigiere nach Hause“
-                         r"(?<!ich )ruf(e)? (\w+ ){1,3}an|anrufen|navigier\w*|route nach|bring mich nach|call \w+|navigate)\b")
+                         + CALL_WORDS.pattern.removeprefix("(?i)\\b(").removesuffix(")\\b")
+                         + r"|navigier\w*|route nach|bring mich nach|navigate)\b")
+# a call the Spark never starts at once (P4, review D-6): an emergency number goes to nobody but the person themselves
+# (the answer has no tool: plaudern, reason „Notruf“), a call for later or on a condition („um 6“, „wenn ich zuhause bin“)
+# is a reminder, not the instant call
+EMERGENCY = re.compile(r"(?i)\b(110|112|911|999|144|117|118|19222|notruf\w*|feuerwehr|polizei|rettungs(dienst|wagen)|"
+                       r"krankenwagen|notarzt|giftnotruf|ambulance|emergency|police|fire department)\b")
+LATER = re.compile(r"(?i)\b(wenn|sobald|falls|nachdem|später|nachher|morgen|übermorgen|heute (abend|nachmittag|mittag)|"
+                   r"abends|um \d|um (ein|zwei|drei|vier|fünf|sechs|sieben|acht|neun|zehn|elf|zwölf|halb)\b|in \d+|"
+                   r"in (einer|zwei|drei|einer halben) (minute|stunde)|at \d|when|later|tomorrow|tonight|in an? (hour|minute))")
 # „Räum mein Postfach auf“ is the mailbox (mail_tidy), „Amazon-Bestellung“ a parcel (plan werkzeug-abdeckung B2)
 MAIL_WORDS = re.compile(chat.NEED_MAIL.pattern + r"|(?i:\b(postfach\w*|postfächer|post (vo[mn]|von der)|antwort (vo[mn]|von der)|"
                         r"(e-?mail-?|mail)?entwurf\w* .{0,30}antwort\w*|antwort an (frau|herrn?)|"
@@ -204,8 +232,6 @@ OWN_READ = re.compile(r"(?i)\b((hat|haben|hatte) sich (der|die|das|mein\w*|unser
 VAGUE = re.compile(r"(?i)\b(jemand|irgendwer|irgendjemand|wer|niemand|anyone|anybody|someone|somebody|who)\b")
 # a newspaper or a broadcaster „schreibt“ the news (the web), never the own mail
 PRESS = re.compile(r"(?i)\b(zeitung\w*|presse|medien|spiegel|faz|taz|bild-?zeitung|tagesschau|süddeutsche|welt|focus)\b")
-# „Ruf mich um acht an“, „Kannst du mich morgen anrufen?“: the Spark calls the person (telefon_anruf.py), not the iPhone
-CALL_ME = re.compile(r"(?i)\b(ruf\w* mich\b.{0,40}\ban|mich\b.{0,40}\banrufen)\b")
 # „Mach mir eine Liste der Hauptstädte als Excel“: a file with a list in it, not the own shopping or task list
 LIST_OF = re.compile(r"(?i)\bliste (der|von|mit|aller|über)\b")
 # „Was ist der Unterschied zwischen Wetter und Klima?“: knowledge, no forecast and no device
@@ -230,7 +256,38 @@ MAKE_LETTER = re.compile(r"(?i)\b(schreib|erstell|entwirf|verfass|formulier)\w* 
 LANGUAGE = re.compile(r"(?i)\b(was (bedeutet|heißt) (das wort|der begriff|das fremdwort)|auf (englisch|deutsch|französisch|"
                       r"spanisch|italienisch|türkisch|polnisch|russisch|niederländisch)|übersetz\w*|in english)\b")
 NATURE = re.compile(r"(?i)\b(sonne|erde|mond\w*|planet\w*|lichtjahr\w*|lichtgeschwindigkeit|universum|weltall|sterne?n?)\b")
+# Wissensfrage (P4, review D-3): what a thing is, how something works, who invented it, „erklär mir …“; a definite
+# article („Was ist der Stand …“, „Wie funktioniert die Heizung?“) points at a thing of the person's own and is no
+# knowledge question. A joke, poem or story about a thing (TOPIC) and the person saying where they are (HERE_I_AM) are
+# no device either.
+_KNOW_LEAD = r"^\W*(?:(?:bitte|spark|hey spark|sag mal|weißt du|kannst du mir (?:sagen|erklären)|please|tell me)\W+)*"
+KNOW = re.compile(r"(?i)" + _KNOW_LEAD + r"(?:"
+                  r"(?:was|wofür) (?:ist|sind|bedeutet|bedeuten|heißt|heißen|macht) (?:ein|eine|einen|a|an)\b|"
+                  r"was (?:sind|bedeutet|bedeuten|heißt) (?-i:[A-ZÄÖÜ])[\w-]*\W*$|"
+                  r"was versteht man unter\b|"
+                  r"wie (?:funktionier|entsteh|arbeite|wirk)\w* (?:ein|eine|einen|(?-i:[A-ZÄÖÜ])[\w-]*\W*$)|"
+                  r"wie (?:schreib|mach|bau|spiel|benutz|reparier)\w* (?:man|ich)\b|"
+                  r"wer (?:hat|haben) .{1,60}\b(?:erfunden|entdeckt|entwickelt|gegründet|komponiert|gemalt|gebaut)\b|"
+                  r"wer (?:erfand|entdeckte)\b|wer (?:war|waren) (?-i:[A-ZÄÖÜ])|"
+                  r"erklär\w*\b|erzähl\w* (?:mir )?(?:was|etwas|mehr|einiges) (?:über|von|zu)\b|"
+                  r"what (?:is|are) (?:a|an)\b|how (?:does|do) (?:an? |the )?\w+(?: \w+)? work\b|"
+                  r"who (?:invented|discovered|was)\b|explain\w*\b)|\b\w+ erklärt\W*$")
+TOPIC = re.compile(r"(?i)\b(witz\w*|gedicht\w*|geschichte\w*|märchen|reim\w*|limerick\w*|joke\w*|poem\w*|story|"
+                   r"stories)\b.{0,30}\b(über|von|mit|zu|about)\b")
+HERE_I_AM = re.compile(r"(?i)^\W*(ich bin|wir sind|i am|i'm|we are) (gerade |jetzt |noch |schon )*(in|im|auf|bei|at)\b"
+                       r"[^,;.!?]*[.!?]?\s*$")
+# an own thing or a room keeps the group with a knowledge question („Wie funktioniert meine Heizung?“)
+OWN_PLACE = re.compile(r"(?i)\b(mein\w*|unser\w*|dein\w*|my|our|bei (mir|uns)|zu ?hause|daheim)\b|"
+                       r"\b(im|in der|in dem) (wohnzimmer|küche|schlafzimmer|kinderzimmer|badezimmer|bad|flur|keller|"
+                       r"garten|büro|arbeitszimmer)\b")
+# „Was hältst du von Politik?“: an opinion, no search (only with the weak search words, chat.SEARCH_WEAK)
+OPINION = re.compile(r"(?i)\b(was hältst du von|was denkst du über|wie findest du|magst du|what do you think)\b")
 
+# Wissensfrage (P4 „Weiche genauer“, review D-3/D-7): „Was ist eine Lampe?“, „Wie funktioniert eine Steckdose?“, „Wer hat
+# den Strom erfunden?“, „Erklär mir …“ ask for knowledge, never for a device, an appointment or an own paper. A fixed rule
+# takes these acting groups away, so web search and Wikipedia stay (narrow); with an own or place word („meine Heizung“,
+# „im Wohnzimmer“) or a whole command it stays as it was.
+KNOW_DROP = ("smarthome", "iphone", "kalender", "dokument", "agent", "liste", "spark", "kontakt", "nachricht", "gedaechtnis")
 # Hint words (plan weiche-intelligenter 2): when no rule recognizes a group for sure, a hint names the groups the
 # question may be about. A hint never narrows: it only keeps that group's tools with chat.route_model "lean" and
 # beside a model's pick (lean(), narrow()), and only those the rights and locks left. Fixed words, never the model.
@@ -316,8 +373,10 @@ INTENT_NAMES = [n for n in GROUPS if n not in ("wikipedia", "archiv")]   # the m
 # or a question the rules file under another group may well be answered from them); Finden over every own source
 # (fund_suche, plan such-index/zuverlaessig.md step 2: „Was ist der Stand bei meiner Steuererklärung?“ lost the mails
 # from the tax office). Each only when offered: fund.offer gives it only to the own profile in the own browser or
-# with the owner's voice, never to a guest, a stranger's voice or an MCP client.
-NARROW_KEEP = {"memory_save", "document_search", "fund_suche", "pc_action", "pc_send", "pc_look"}
+# with the owner's voice, never to a guest, a stranger's voice or an MCP client. The computer's tools (pc_action,
+# pc_send, pc_look) are not here (P4, review D-14): begleiter.offer keeps them only when the person's own words name
+# the computer or the question comes from the Begleiter itself (werkzeug_abdeckung.BY_WORD, "keep").
+NARROW_KEEP = {"memory_save", "document_search", "fund_suche"}
 # chat.route_model "lean": a question no rule recognizes gets only these (of those offered). A short
 # tool list makes the model read far less before its first word; the rule groups keep everything else.
 LEAN = {"web_search", "wikipedia", "archive_search", "article_more", "history_search"} | NARROW_KEEP
@@ -342,6 +401,63 @@ REFERS = re.compile(r"(?i)\b(davon|dazu|daran|darin|drin|daraus|darauf|darüber|
                     r"das(?=\s*(?:$|[.,!?;:]|auf\b|in\b|an\b|ein\b|aus\b|bitte\b|mal\b|für\b|als\b|noch\b|"
                     r"auch\b|so\b|vor\b|zu\b|weiter\b))|es\b|ihn\b|ihm\b|ihr\b|"
                     r"that|this|it\b|them\b)|^\W*(und|aber|also|and|so)\b")
+
+
+# Normalisierung (P4, review D-9): ONE step before every rule of the Weiche (classify) and of the must words
+# (chat.needed). A word written without umlauts or with „ss“ („Strassenbahn“, „Kueche“, „Haustuer“) gets the spelling
+# of the word lists (both folded with homeassistant._norm, the one helper for it); a device word glued to a room or a
+# thing („Wohnzimmerlampe“, „Deckenlicht“, „Heizlüfter“) is set apart; a few English phrases get the German words the
+# rules know. Fixed lists, never the model; the person's sentence itself is kept as it was for everything else.
+NORM_GLUED = ("lampen", "lampe", "leuchten", "leuchte", "lichter", "licht", "heizungen", "heizung", "lüfter", "steckdosen",
+              "steckdose", "ventilatoren", "ventilator", "thermostate", "thermostat", "rollos", "rollo", "jalousien",
+              "jalousie")
+# „Taschenlampe“, „Tageslicht“, „Polarlicht“, „Schulpflicht“: no device of the home
+NORM_NOT_GLUED = ("tages", "sonnen", "mond", "kerzen", "sternen", "polar", "nord", "gegen", "zwie", "augen", "rampen",
+                  "blau", "blitz", "taschen", "sch", "kron")
+NORM_EN = (("search the internet for", "such im internet nach"), ("search the internet", "such im internet"),
+           ("search online for", "such im internet nach"), ("what do you know about me", "was weißt du über mich"),
+           ("what are my tasks", "was steht auf meiner aufgabenliste"), ("my to-do list", "meine aufgabenliste"),
+           ("my todo list", "meine aufgabenliste"), ("my tasks", "meine aufgabenliste"),
+           ("my shopping list", "meine einkaufsliste"), ("e mails", "e-mails"), ("e mail", "e-mail"))
+_GLUED = re.compile(r"(?i)\b([a-zäöüß]{3,}?)(" + "|".join(NORM_GLUED) + r")\b")
+_EN = [(re.compile(r"(?i)\b" + re.escape(a) + r"\b"), b) for a, b in NORM_EN]
+_UMLAUT_WORDS = {}   # folded spelling -> the spelling of the word lists, built once from the rules themselves
+
+
+def _umlaut_words():
+    if not _UMLAUT_WORDS:
+        rules = [HOME_WORDS, SEARCH_MORE] + [w for _, w in GROUPS.values() if w is not None] + [w for _, w in chat.NEED_TOOLS]
+        for rx in rules:
+            for w in re.findall(r"[a-zäöüß]{3,}", rx.pattern.lower()):
+                if any(c in w for c in "äöüß"):
+                    _UMLAUT_WORDS.setdefault(homeassistant._norm(w), w)
+    return _UMLAUT_WORDS
+
+
+def _respell(m):
+    w = m.group(0)
+    low = w.lower()
+    if not any(x in low for x in ("ae", "oe", "ue", "ss")):
+        return w
+    words = _umlaut_words()
+    new = words.get(low) or next((low[:len(low) - len(f)] + u for f, u in words.items()
+                                  if len(f) >= 4 and len(low) > len(f) and low.endswith(f)), "")
+    return (new[:1].upper() + new[1:] if w[:1].isupper() else new) if new else w
+
+
+def _unglue(m):
+    head = m.group(1)
+    return m.group(0) if head.lower() in NORM_NOT_GLUED or head.lower().endswith("pf") else head + " " + m.group(2)
+
+
+def normalize(text):
+    """The person's sentence as the rules read it (NORM_*): umlauts and „ß“ as in the word lists, glued device words
+    apart, a few English phrases in German. Only for the rules, never shown or kept."""
+    text = re.sub(r"[A-Za-z]+", _respell, str(text or "")[:2000])
+    text = _GLUED.sub(_unglue, text)
+    for rx, de in _EN:
+        text = rx.sub(de, text)
+    return text
 
 
 class Route:
@@ -369,13 +485,15 @@ def classify(text, extra_words="", group_words="", not_words=""):
     """The person's own latest message -> Route (fixed rules only). extra_words: the admin's words
     per tool (chat.tool_words), group_words: the admin's words per group (chat.route_words), not_words: the
     admin's words that take a group out again (chat.route_not, Funktionen → Weiche „Nicht bei“)."""
-    text = str(text or "")[:2000]
+    text = normalize(text)   # one step before every rule (P4, review D-9)
     if not text.strip():
         return Route([], {})
     if chat.SMALLTALK.fullmatch(text):
         return Route(["plaudern"], {})
     if cancel(text):   # „Vergiss es“, „Lass es“: called off, never the memory group (NEGATION above)
         return Route(["plaudern"], {"plaudern": "Abbruch"})
+    if stoppwort.ende(text):   # „Stopp“, „Hör auf“, „Tschüss“: the talk ends (chat_turn answers before the Weiche)
+        return Route(["plaudern"], {"plaudern": "Stopp"})
     # a question about the Spark itself (hilfe.py, plan hilfe-besser 1): "Wie verbinde ich Home Assistant?" is about
     # setting it up, not about switching; it goes to the Spark-Hilfe only, before any other rule or the model's pick
     lang = LANGUAGE.search(text)
@@ -398,7 +516,9 @@ def classify(text, extra_words="", group_words="", not_words=""):
         if name == "smarthome":
             m = HOME_WORDS.search(text)
             # a switching verb without a device word only as a whole command ("Alles aus")
-            verb = SWITCH_VERBS.search(text) if not m and homeassistant.is_command(text) else None
+            verb = SWITCH_VERB.search(text) if not m and homeassistant.is_command(text) else None
+            if verb and verb.group(0).strip(" .!?").lower() in ("an", "aus"):   # the end alone (SWITCH_VERB)
+                verb = None
             verb = verb and verb.group(0)
             if m or verb:
                 why[name] = m.group(0) if m else verb
@@ -511,6 +631,26 @@ def classify(text, extra_words="", group_words="", not_words=""):
             why.pop(name, None)
         if COMPARE.search(text):
             why.pop("wetter", None)
+    # „Was ist eine Lampe?“, „Wer hat den Strom erfunden?“, „Erklär mir …“, „Ein Witz über Lampen“, „Ich bin in der
+    # Küche“: knowledge or talk, no acting group, so web search and Wikipedia stay (P4, review D-3); with an own thing or
+    # a room („Wie funktioniert meine Heizung?“) it stays, and where the person is only with a whole command („Ich bin
+    # in der Küche, mach das Licht an“). The Spark asked about by name stays spark.
+    if (KNOW.search(text) or TOPIC.search(text)) and not OWN_PLACE.search(text) \
+            or HERE_I_AM.search(text) and not homeassistant.is_command(text):
+        for name in KNOW_DROP:
+            if name != "spark" or not SPARK_WORDS.search(text):
+                why.pop(name, None)
+    if "websuche" in why and OPINION.search(text) and not chat.NEED_SEARCH.search(text):
+        why.pop("websuche")
+    # a call the Spark never starts at once (P4, review D-6): an emergency number gets no tool at all (the person dials
+    # it), a call for later or on a condition is a reminder („Ruf Papa um 6 an“, „Remind me to call mom at 6“)
+    if "iphone" in why and CALL_WORDS.search(text):
+        if EMERGENCY.search(text):
+            return Route(["plaudern"], {"plaudern": "Notruf"}, neg=negated(text))
+        if LATER.search(text):
+            why.pop("iphone")
+            why.pop("kontakt", None)
+            why.setdefault("erinnerung", "später anrufen")
     # „Was kostet die Wärmepumpe laut Angebot?“: the price in an own paper, never the web search
     if "websuche" in why and OWN_PAPER.search(text) and not (chat.NEED_SEARCH.search(text) or chat.SEARCH_WEAK.search(text)):
         why.pop("websuche")
@@ -531,9 +671,6 @@ def classify(text, extra_words="", group_words="", not_words=""):
             why["agent"] = "Beobachten"
             for name in ("websuche", "erinnerung", "zustand", "nachricht", "smarthome"):
                 why.pop(name, None)
-            # „Bescheid“ here is „sag Bescheid“, not a notice from an office
-            if why.get("dokument", "").lower() == "bescheid":
-                why.pop("dokument")
     except ImportError:
         pass
     # Lesefragen nach eigenen Daten („Hat mir die Bank geschrieben?“, „Hat sich der Klempner gemeldet?“): only when no
@@ -584,15 +721,38 @@ def hint_tools(route):
 # A follow-up („Und morgen?“, „Mach es wieder aus“, plan weiche-intelligenter 1): no rule recognizes it, it points
 # back, it is short, and the person's own question just before had one clear group. Then it is that group again.
 # Only the person's own earlier message counts (never an answer or outside text), and only narrowing follows.
+# P4 (review D-8): it must point back for real (FOLLOW: „und …“, „wieder“, „auch“, „davon“), never by a bare „es“,
+# „dort“ or „ihr“ („Wie spät ist es?“ after the weather is no weather question), and only while the question before is
+# fresh (FOLLOW_SECONDS since the person's previous message in the same conversation, asked_age).
 FOLLOW_MAX = 80
+FOLLOW_SECONDS = 300
+FOLLOW = re.compile(r"(?i)^\W*(und|aber|also|and|so|what about|how about|wie (wäre|ist) es mit|was ist mit)\b|"
+                    r"\b(wieder|nochmal|noch mal|noch einmal|auch|ebenfalls|dasselbe|das gleiche|genauso|davon|dazu|daran|"
+                    r"darin|daraus|darauf|darüber|damit|dafür|dorthin|again|too|as well|the same)\b")
+FOLLOW_KEEP = 2000   # at most this many conversations remembered (memory only, never on disk)
+_ASKED = {}          # (profile, conversation) -> when the person's latest own message came
 
 
-def follow_up(text, before, ccfg=None, answered=False):
+def asked_age(key, now):
+    """Seconds since the person's previous own message in this conversation, or None when the panel saw none (a
+    restart, a history sent at once), and note this one. now is passed in (chat_turn: the clock), never read here."""
+    before = _ASKED.pop(key, None)
+    _ASKED[key] = now
+    while len(_ASKED) > FOLLOW_KEEP:
+        _ASKED.pop(next(iter(_ASKED)))
+    return None if before is None else max(0.0, now - before)
+
+
+def follow_up(text, before, ccfg=None, answered=False, age=None):
     """The Route of a follow-up question from the person's own question before, or None. answered: the message
     answers the assistant's question just before (a yes, a no or one of its buttons, ablauf.was_asked), so it needs
-    no word pointing back (Rückfrage-Karten 3a: „Ja“ to „Soll ich ihn so eintragen?“ keeps the calendar tools)."""
+    no word pointing back (Rückfrage-Karten 3a: „Ja“ to „Soll ich ihn so eintragen?“ keeps the calendar tools; that
+    one has its own ten minutes). age: seconds since the question before (asked_age); older than FOLLOW_SECONDS, no
+    follow-up; None, unknown, counts as fresh."""
     text = str(text or "")
-    if not text.strip() or len(text) > FOLLOW_MAX or not before or not (answered or refers_back(text)):
+    if not text.strip() or len(text) > FOLLOW_MAX or not before or not (answered or FOLLOW.search(text)):
+        return None
+    if not answered and age is not None and age > FOLLOW_SECONDS:
         return None
     if classify_cfg(text, ccfg).names:
         return None
@@ -606,7 +766,8 @@ def follow_up(text, before, ccfg=None, answered=False):
 FEATURE_VERB = re.compile(r"(?i)^\W*(bitte |kannst du |könntest du |spark,? )?(schalt\w*|mach\w*|aktivier\w*|deaktivier\w*|"
                           r"turn|switch|enable|disable)\b")
 FEATURE_END = re.compile(r"(?i)\b(ein|an|aus|ab|on|off|aktivieren|deaktivieren|einschalten|ausschalten|abschalten)\W*$")
-_FEATURE_NAMES = []
+_FEATURE_NAMES = []   # the names, longest first, and one compiled alternation of them (P4, review D-11: 696 patterns
+_FEATURE_RX = []      # were compiled anew for every sentence)
 
 
 def feature_switch(text):
@@ -616,13 +777,15 @@ def feature_switch(text):
     text = str(text or "")[:200]
     if not FEATURE_VERB.search(text) or not FEATURE_END.search(text) or HOME_WORDS.search(text):
         return ""
-    if not _FEATURE_NAMES:
+    if not _FEATURE_RX:
         import features
         _FEATURE_NAMES.extend(sorted({n.lower() for f in features.FEATURES for n in (f.de, f.en) if len(n) >= 5}
                                      | {"notaus", "emergency stop"},
                                      key=len, reverse=True))
+        _FEATURE_RX.append(re.compile(r"(?<!\w)(?=(" + "|".join(re.escape(n) for n in _FEATURE_NAMES) + r")(?!\w))"))
     low = text.lower()
-    hit = next((n for n in _FEATURE_NAMES if re.search(r"(?<!\w)" + re.escape(n) + r"(?!\w)", low)), "")
+    # the longest name anywhere in the sentence (overlapping hits too: the lookahead finds one at every position)
+    hit = max((m.group(1) for m in _FEATURE_RX[0].finditer(low)), key=len, default="")
     if hit:
         return hit
     m = re.search(r"(?i)\b(funktion\w*|feature)\b", text)
@@ -1053,7 +1216,7 @@ def rules(group_words=""):
     mine = parse_route_words_safe(group_words)
     out = []
     for name, (tools, words) in GROUPS.items():
-        built = _alternatives(HOME_WORDS.pattern) + _alternatives(SWITCH_VERBS.pattern) if name == "smarthome" \
+        built = _alternatives(HOME_WORDS.pattern) + _alternatives(SWITCH_VERB.pattern) if name == "smarthome" \
             else _alternatives(words.pattern)
         out.append({"name": name, "label": LABELS.get(name, name), "tools": sorted(tools), "words": built,
                     "own": mine.get(name, [])})

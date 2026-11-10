@@ -810,8 +810,10 @@ def needed(text, offered, extra=""):
     """The tools among offered (names) that this question has to go through (extra: chat.tool_words). Fixed rules of
     the panel (P1 Sicherheit): only reading tools are ever a must (the admin's Pflicht-Regel for a changing tool only
     finds its group, review D-5); a private sentence (PRIVATE_WORDS) never makes the web search a must; a negated one
-    (intent.negated) never one that changes something or goes out to the internet."""
+    (intent.negated) never one that changes something or goes out to the internet. The words are read after the
+    Weiche's one normalization step (intent.normalize: „Strassenbahn“, „Wohnzimmerlampe“)."""
     import intent
+    text = intent.normalize(text)
     own = own_words(extra)
     built = [name for name, words in NEED_TOOLS if name in offered
              and (words.search(text or "") or (name in own and own[name].search(text or "")))]

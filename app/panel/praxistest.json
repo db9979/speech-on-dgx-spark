@@ -5555,6 +5555,34 @@
 "titel": "Begleiter: Hey Spark, stopp",
 "text": "Am Rechner mit Weckwort: während der Begleiter vorliest „Hey Spark, stopp“ sagen: er hört auf, kein Ton, keine Frage. Weckwort, Frage sprechen und gleich „Mikrofon zu“ schalten: die Frage wird nicht gestellt.",
 "thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P820",
+"v": 1366,
+"titel": "Weiche: Wissensfrage behält das Web",
+"text": "Im Chat „Was ist eine Lampe?“ und „Wer hat den Strom erfunden?“ fragen: Zustand → Logs zeigt „weiche: Absicht unklar“ (kein Smart Home), die Antwort darf Websuche oder Wikipedia nutzen. Gegenprobe: „Wie funktioniert meine Heizung?“ bleibt Smart Home.",
+"thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P821",
+"v": 1366,
+"titel": "Weiche: Notruf und Anruf für später",
+"text": "Am Handy „Ruf die 112 an“ sagen: kein Anruf, keine Frage „Soll ich anrufen?“, nur eine Antwort ohne Werkzeug (Logs: Grund „Notruf“). „Ruf Papa um 6 an“: Gruppe Erinnerung, das iPhone wählt nicht sofort.",
+"thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P822",
+"v": 1366,
+"titel": "Weiche: Folgefrage nur frisch und mit Rückbezug",
+"text": "„Wie wird das Wetter heute?“, dann sofort „Und morgen?“: wieder Wetter. Danach „Wie spät ist es?“: kein Wetter. Mehr als 5 Minuten warten, dann „Und morgen?“: Logs zeigen „weiche: Folgefrage zu alt“.",
+"thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P823",
+"v": 1366,
+"titel": "Weiche: Schreibweisen und Gegenprobe",
+"text": "„Wann fährt die Strassenbahn“ und „Mach die Wohnzimmerlampe aus“ landen bei Bahn bzw. Smart Home. Funktionen → Weiche, unter den Alltagssätzen steht „Gegenprobe: 100 von 101 ohne falsche Gruppe, falsch erzwungen 0“.",
+"thread": "Spark stabilisieren mit Code-Review"
 }
 ]
 }

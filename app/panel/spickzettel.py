@@ -81,7 +81,7 @@ KARTEN = {
     "nachrichten": (
         (("nachricht",), ("message_send", "message_read", "message_announce"),
          ("Nachrichten im Haus", "Messages at home"),
-         ("Nachricht, Chat, Durchsage, Bescheid, richte … aus", "message, chat"),
+         ("Nachricht, Chat, Durchsage, sag … Bescheid, richte … aus", "message, chat"),
          (("message_send", "Richte Tom aus, dass das Essen fertig ist", "Tell Tom that dinner is ready"),)),
         (("iphone",), ("iphone_action",), ("Auf dem iPhone", "On the iPhone"),
          ("ruf … an, anrufen, navigieren, Route nach, bring mich nach, Kurzbefehl, iPhone",
@@ -106,7 +106,7 @@ KARTEN = {
          ("Wikipedia, Wiki, Lexikon, Enzyklopädie, Kiwix, mein Archiv, im Archiv", "wikipedia, wiki, encyclopedia, kiwix"),
          (("wikipedia", "Was sagt das Lexikon über Vulkane?", "What does the encyclopedia say about volcanoes?"),)),
         (("dokument",), ("document_search", "document_list", "dokument_auswertung"), ("Eigene Dokumente", "Own documents"),
-         ("Dokument, Unterlagen, Vertrag, Rechnung, PDF, Versicherung, Garantie, Anleitung, Bescheid, "
+         ("Dokument, Unterlagen, Vertrag, Rechnung, PDF, Versicherung, Garantie, Anleitung, Steuerbescheid, "
           "Kündigungsfrist, Steuer, Beleg", "documents, pdf"),
          (("document_search", "Wie lange habe ich Garantie auf den Fernseher?",
            "How long is the warranty on the TV?"),

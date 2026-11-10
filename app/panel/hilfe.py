@@ -150,6 +150,8 @@ PANEL_WORDS = re.compile(r"(?i)\b(spark|panel|assistent\w*|schalter|einstellung\
                          r"pin|anmeld\w*|app|gerät\w*|code|update|sicherung|backup|logs?|protokoll|zustand|stimme|weckwort|"
                          r"lautsprecher|uhr|telegram|mcp|du|dich|dir|hier|settings?|switch|feature|page|you|einlad\w*|invit\w*|notaus|"
                          r"passkeys?)\b")
+# the Spark named as such (P4, review D-7): a what-is question with an indefinite article is about the Spark only with it
+SPARK_NAMED = re.compile(r"(?i)\b(spark|panel|funktion\w*|feature|einstellung\w*|schalter|settings?)\b")
 # own data asked for, not how something works ("Wo finde ich meinen Termin morgen?")
 DATA_ASK = re.compile(r"(?i)\b(heute|morgen|gestern|übermorgen|nächste[nrs]? woche|diese woche|am (montag|dienstag|mittwoch|"
                       r"donnerstag|freitag|samstag|sonntag)|um \d|letzte[nrs]? (mail|nachricht|termin)|today|tomorrow|yesterday|"
@@ -381,6 +383,10 @@ def help_question(text):
     m = HELP_ASK.search(text)
     if not m:
         what = re.search(r"(?i)\b(was|wofür) (ist|sind|bedeutet|heißt)\b|\bwhat (is|are|does)\b", text)
+        # „Was ist ein Kalender?“, „What is a smart home?“ ask about the thing in general (P4, review D-7): with an
+        # indefinite article only when the Spark itself is named („Was ist eine Weiche beim Spark?“)
+        if what and re.match(r"(?i)\s+(ein|eine|einen|a|an)\b", text[what.end():]) and not SPARK_NAMED.search(text):
+            what = None
         if what and not DATA_ASK.search(text):
             low = _norm(text)
             # the thing asked about, without articles, spaces and hyphens ("Was ist der Raummodus?" = Raum-Modus)

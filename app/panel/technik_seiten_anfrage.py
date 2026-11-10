@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "vorbereiten": {
-        "stand": "662c8bab63",
+        "stand": "596a164cb2",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -75,13 +75,16 @@ SEITEN = {
               ("Feste Regeln ordnen die eigene letzte Nachricht einer Gruppe zu. Eine neue eigene Bitte, die nicht auf "
                "die Antwort aus fremdem Text zurückzeigt, lässt diese Antwort und ihre Sperre weg. Erkennt keine Regel "
                "die Frage, kann das Modell parallel einmal aus einer festen Liste wählen (wenn der Admin das anhat). "
-               "Eine Folgefrage wie „Und morgen?“ übernimmt die Gruppe der eigenen Frage davor (intent.follow_up); "
+               "Eine Folgefrage wie „Und morgen?“ übernimmt die Gruppe der eigenen Frage davor (intent.follow_up), "
+               "solange diese höchstens {intent.FOLLOW_SECONDS} Sekunden zurückliegt (die Zeit gibt prepare hinein, "
+               "intent.asked_age); "
                "Hinweiswörter geben ihre Gruppen dazu, auch neben der Wahl des Modells. Ein Foto mit Änderungswunsch "
                "(bilder.wants_change) ist die Gruppe Bilder, ohne Wahl des Modells.",
                "Fixed rules put the own latest message into a group. A new own request that does not point back at the "
                "answer from outside text leaves that answer and its lock out. If no rule knows the question, the model "
                "may pick once from a fixed list in parallel (when the admin has that on). A follow-up like „And "
-               "tomorrow?“ takes the group of the own question before (intent.follow_up); hint words add their groups, "
+               "tomorrow?“ takes the group of the own question before (intent.follow_up), as long as that was at most "
+               "{intent.FOLLOW_SECONDS} seconds ago (prepare passes the time in, intent.asked_age); hint words add their groups, "
                "also beside the model's pick. A photo with a wish to change it (bilder.wants_change) is the group "
                "pictures, without the model's pick.")),
             S("s5", "schritt", ("Systemprompt bauen", "Build the system prompt"),
@@ -269,7 +272,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)
     "weiche": {
-        "stand": "2397de5611",
+        "stand": "bba693ded5",
         "bezug": {
             "intent.GROUPS": ["s4", "s6"], "intent_bench.BENCH": ["s4", "s5"], "intent_alltag.ALLTAG": ["s14"],
             "weiche.KEEP_VERSIONS": ["s4"], "intent.Route": ["s6"], "intent.follow_up": ["s8"],
@@ -281,7 +284,9 @@ SEITEN = {
             "regel:Modell ordnet ein": ["s10"], "regel:Knapp": ["s12"],
             "regel:Einordnung mit Wahrscheinlichkeit": ["s10"],
             "intent.negated": ["s11", "s13"], "intent.cancel": ["s2"], "chat.PRIVATE_WORDS": ["s5", "s13"],
-            "chat.first_tool": ["s13"],
+            "chat.first_tool": ["s13"], "intent.normalize": ["s4"], "intent.KNOW": ["s5"], "intent.EMERGENCY": ["s5"],
+            "intent.LATER": ["s5"], "intent.FOLLOW": ["s8"], "intent.asked_age": ["s8"], "intent_bench.GEGEN": ["s14"],
+            "intent_bench.gegen": ["s14"],
         },
         "kurz": ("Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und "
                  "so weiter, heute {intent.GROUPS|anzahl} Gruppen) und grenzt damit die Werkzeuge ein, die das "
@@ -306,15 +311,22 @@ SEITEN = {
               ("intent.classify_cfg", "intent.classify_cfg"),
               ("Gelesen wird nur die letzte Nachricht der Person selbst, nie eine Antwort davor, fremder Text oder was "
                "das Modell geschrieben hat. Dazu kommen die Wörter, die der Admin unter Funktionen → Weiche gespeichert "
-               "hat.",
+               "hat. Vor allen Regeln läuft ein Schritt Normalisierung (intent.normalize, auch für die Pflicht-Wörter): "
+               "„Strassenbahn“ und „Kueche“ in der Schreibweise der Wortlisten, „Wohnzimmerlampe“ als „Wohnzimmer "
+               "lampe“, einige englische Wendungen auf Deutsch.",
                "Only the person's own latest message is read, never an answer before, outside text or what the "
-               "model wrote. The words the admin saved under Features → Routing are added.")),
+               "model wrote. The words the admin saved under Features → Routing are added. Before every rule one "
+               "normalization step runs (intent.normalize, also for the must words): „Strassenbahn“ and „Kueche“ in "
+               "the spelling of the word lists, „Wohnzimmerlampe“ as „Wohnzimmer lampe“, a few English phrases in "
+               "German.")),
             S("s2", "frage", ("Nur Plaudern?", "Only small talk?"),
               ("„Danke“, „Hallo“, „Gute Nacht“", "„thanks“, „hello“, „good night“"),
-              ("Ist der ganze Satz ein Gruß oder Dank oder ruft er den Wunsch ab („Vergiss es“, „Lass es“, „Schon "
+              ("Ist der ganze Satz ein Gruß oder Dank, ein Stoppwort („Stopp“, „Hör auf“: Grund „Stopp“) oder ruft er "
+               "den Wunsch ab („Vergiss es“, „Lass es“, „Schon "
                "gut“, „Nein, doch nicht“: intent.cancel, Grund „Abbruch“), heißt die Gruppe „plaudern“. Die Antwort "
                "bekommt dann gar kein Werkzeug, also nie das Gedächtnis.",
-               "If the whole sentence is a greeting or thanks or calls the wish off („Never mind“, „Forget it“, "
+               "If the whole sentence is a greeting or thanks, a stop word („Stop“, „Be quiet“: reason „Stopp“) or "
+               "calls the wish off („Never mind“, „Forget it“, "
                "„Leave it“: intent.cancel, reason „Abbruch“), the group is „plaudern“ (small talk). The answer then "
                "gets no tool at all, so never the memory."),
               ("ok", "ja", "s14")),
@@ -323,23 +335,27 @@ SEITEN = {
               ("„Wie verbinde ich Home Assistant?“ oder „Schalte die Websuche ein“ fragen nach dem Spark selbst, nicht "
                "nach einem Gerät oder einer Suche: Gruppe „spark“. Eine Frage zu Wörtern oder Sprachen zählt nie "
                "dazu, ebenso wenig „Was kannst du mir über die Frauenkirche erzählen?“: Das fragt nach dem Ding, "
-               "außer es ist der Spark oder eine seiner Funktionen (hilfe.ABOUT). Wurde auf einer Seite des Panels „Frag Spark“ benutzt, gilt dieselbe Gruppe nach fester Regel "
+               "außer es ist der Spark oder eine seiner Funktionen (hilfe.ABOUT); ebenso „Was ist ein Kalender?“, "
+               "außer der Spark ist genannt (hilfe.SPARK_NAMED). Wurde auf einer Seite des Panels „Frag Spark“ benutzt, gilt dieselbe Gruppe nach fester Regel "
                "über den Ort der Frage.",
                "„How do I connect Home Assistant?“ or „Switch on web search“ ask about the Spark itself, not about a "
                "device or a search: group „spark“. A question about words or languages never counts, nor does „What "
                "can you tell me about the Frauenkirche?“: it asks about the thing, unless that is the Spark or one of "
-               "its functions (hilfe.ABOUT). When „Ask "
+               "its functions (hilfe.ABOUT); likewise „What is a calendar?“, unless the Spark is named "
+               "(hilfe.SPARK_NAMED). When „Ask "
                "Spark“ was used on a page of the panel, the same group holds by a fixed rule about where it was "
                "asked."),
               ("ok", "ja", "s9")),
             S("s4", "schritt", ("Wörter je Gruppe", "Words per group"),
               ("eingebaut · Pflicht-Wörter · eigene Wörter", "built in · must words · own words"),
-              ("Jede Gruppe hat ihre eingebaute Wortliste (Licht, Termin, Postfach, Schirm …). Ein Schaltwort ohne "
-               "Gerät („Alles aus“) zählt nur als ganzer Befehl. Die Pflicht-Wörter des Admins und seine eigenen "
+              ("Jede Gruppe hat ihre eingebaute Wortliste (Licht, Termin, Postfach, Schirm …). Ein Schaltverb ohne "
+               "Gerät zählt nur als ganzer Befehl, „an“ oder „aus“ am Ende allein nur als „Alles aus“ (eine Liste, "
+               "intent.SWITCH_VERB). Die Pflicht-Wörter des Admins und seine eigenen "
                "Wörter je Gruppe (höchstens {intent.MAX_ROUTE_WORDS}, nur ganze Wörter) finden eine Gruppe "
                "zusätzlich, ersetzen aber nichts.",
-               "Each group has its built-in word list (light, appointment, mailbox, umbrella …). A switching word "
-               "without a device („all off“) only counts as a whole command. The admin's must words and own words "
+               "Each group has its built-in word list (light, appointment, mailbox, umbrella …). A switching verb "
+               "without a device only counts as a whole command, „on“ or „off“ at the end alone only as „all off“ (one "
+               "list, intent.SWITCH_VERB). The admin's must words and own words "
                "per group (at most {intent.MAX_ROUTE_WORDS}, whole words only) find a group as well, but replace "
                "nothing.")),
             S("s5", "schritt", ("Vorrang zwischen Gruppen", "Priority between groups"),
@@ -356,7 +372,14 @@ SEITEN = {
                "Bahn; „Ruf mich an“ ist der Rückruf des Spark, nicht das iPhone; „Liste der …“ in einer Datei ist "
                "nicht die eigene Liste; ein schwaches Suchwort allein („Ergebnis“, „gewonnen“, „Nachrichten“) in einem "
                "privaten Satz („Ergebnis meiner Blutuntersuchung“, „Nachrichten von Tom“, „Ich habe gewonnen“) ist "
-               "keine Websuche. Zuletzt nehmen die „Nicht bei“-Wörter des Admins Gruppen wieder heraus.",
+               "keine Websuche. Eine Wissensfrage („Was ist eine Lampe?“, „Wie funktioniert eine Steckdose?“, „Wer hat den "
+               "Strom erfunden?“, „Erklär mir …“), ein Witz oder Gedicht über ein Ding und „Ich bin in der Küche“ "
+               "verlieren jede handelnde Gruppe, damit Websuche und Wikipedia bleiben, außer ein eigenes Ding oder "
+               "ein Raum ist genannt (intent.KNOW); „Liste“ allein zählt nur mit eigenem oder Ortswort. Eine "
+               "Notrufnummer bekommt nie den Anruf, sondern gar kein Werkzeug (Grund „Notruf“, intent.EMERGENCY), ein "
+               "Anruf für später ist eine Erinnerung (intent.LATER). „Bescheid“ ist ein Amtsbescheid nur zusammengesetzt "
+               "oder mit dem Amt, „Sag Anna Bescheid“ eine Nachricht. Zuletzt nehmen die „Nicht bei“-Wörter des Admins "
+               "Gruppen wieder heraus.",
                "When several groups match, fixed rules tidy up: weather, list, message, document and „create "
                "document“ come before smart home when there is no switching command; parcels before mail, unless "
                "someone „wrote to me“ (then mail); a price „according to the offer, invoice or contract“ is an own "
@@ -369,7 +392,13 @@ SEITEN = {
                "device; a price or a strike is the web search, not the iPhone or the train; „Call me“ is the Spark "
                "calling back, not the iPhone; „a list of …“ in a file is not the own list; a weak search word alone "
                "(„result“, „won“, „news“) in a private sentence („result of my blood test“, „messages from Tom“, „I "
-               "won“) is no web search. Last, the admin's „Not with“ words take groups out again.")),
+               "won“) is no web search. A knowledge question („What is a lamp?“, „How does a socket work?“, „Who invented "
+               "electricity?“, „Explain …“), a joke or poem about a thing and „I am in the kitchen“ lose every acting "
+               "group, so web search and Wikipedia stay, unless an own thing or a room is named (intent.KNOW); „list“ "
+               "alone only counts with an own or place word. An emergency number never gets the call but no tool at "
+               "all (reason „Notruf“, intent.EMERGENCY), a call for later is a reminder (intent.LATER). „Bescheid“ is "
+               "an official notice only as a compound or with the office, „Tell Anna“ (Bescheid) a message. Last, the "
+               "admin's „Not with“ words take groups out again.")),
             S("s6", "frage", ("Gruppe erkannt?", "Group recognized?"),
               ("eine, zwei oder mehr", "one, two or more"),
               ("Eine Gruppe oder höchstens {intent.MAX_MIXED} gelten als klar und grenzen ein. Mehr Gruppen auf "
@@ -389,13 +418,19 @@ SEITEN = {
                "tools stay when something narrows later.")),
             S("s8", "frage", ("Folgefrage?", "Follow-up?"),
               ("„Und morgen?“", "„And tomorrow?“"),
-              ("Ist die Nachricht kurz (höchstens {intent.FOLLOW_MAX} Zeichen), zeigt zurück („und“, „das“, „es“) "
-               "und hatte die eigene Frage direkt davor eine klare Gruppe, gilt diese Gruppe wieder. Es zählt nur die "
+              ("Ist die Nachricht kurz (höchstens {intent.FOLLOW_MAX} Zeichen), zeigt sie wirklich zurück („und …“, "
+               "„wieder“, „auch“, „davon“; nie ein nacktes „es“, „dort“ oder „ihr“, intent.FOLLOW), kam die eigene "
+               "Frage davor höchstens {intent.FOLLOW_SECONDS} Sekunden vorher in diesem Gespräch (intent.asked_age, "
+               "nur im Speicher; sonst „weiche: Folgefrage zu alt“) "
+               "und hatte sie eine klare Gruppe, gilt diese Gruppe wieder. Es zählt nur die "
                "eigene Frage, nie die Antwort. Im Journal steht „weiche: Folgefrage“. Ebenso ein schlichtes „Ja“/„Nein“ "
                "oder ein Knopf der Rückfrage-Karte auf die Frage der Antwort davor (ablauf.was_asked, zehn Minuten, "
                "dasselbe Gespräch): „weiche: Antwort auf Rückfrage“.",
-               "If the message is short (at most {intent.FOLLOW_MAX} characters), points back („and“, „that“, „it“) "
-               "and the own question just before had a clear group, that group holds again. Only the own question "
+               "If the message is short (at most {intent.FOLLOW_MAX} characters), really points back („and …“, "
+               "„again“, „too“, „of it“; never a bare „it“, „there“ or „her“, intent.FOLLOW), the own question before "
+               "came at most {intent.FOLLOW_SECONDS} seconds earlier in this conversation (intent.asked_age, memory "
+               "only; otherwise „weiche: Folgefrage zu alt“) "
+               "and had a clear group, that group holds again. Only the own question "
                "counts, never the answer. The journal says „weiche: Folgefrage“. So does a plain „yes“/„no“ or a "
                "button of the question card to the question of the answer before (ablauf.was_asked, ten minutes, same "
                "conversation): „weiche: Antwort auf Rückfrage“."),
@@ -432,15 +467,17 @@ SEITEN = {
             S("s11", "schritt", ("Eingrenzen", "Narrow"),
               ("intent.narrow · nie mehr als vorher", "intent.narrow · never more than before"),
               ("Bei einer klaren Gruppe bleiben ihre Werkzeuge, dazu immer {intent.NARROW_KEEP|anzahl} feste "
-               "(sich etwas merken, eigene Dokumente, Finden in allen eigenen Daten, PC), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des "
+               "(sich etwas merken, eigene Dokumente, Finden in allen eigenen Daten), die Werkzeuge der Hinweise, die zusätzlichen Werkzeuge des "
                "Admins für diese Gruppe (höchstens {intent.MAX_EXTRA}) und was die eigenen Worte ausdrücklich "
-               "nennen („aufs reMarkable“). Alles nur, soweit schon angeboten. Ist von der Gruppe nichts angeboten, "
+               "nennen („aufs reMarkable“, der Rechner nur, wenn die eigenen Worte ihn nennen oder die Frage am Begleiter "
+               "kam). Alles nur, soweit schon angeboten. Ist von der Gruppe nichts angeboten, "
                "steht die Gruppe auf „nicht eingrenzen“ oder ist der Satz verneint („Ruf Mama nicht an“, „Mach das "
                "Licht nicht aus“: intent.negated, eine feste Regel; „nicht vergessen“ zählt nicht), bleiben alle; "
                "das Journal nennt dann „verneint“.",
                "With a clear group its tools stay, plus always {intent.NARROW_KEEP|anzahl} fixed ones (remembering "
-               "something, own documents, Find in all own data, PC), the hints' tools, the admin's extra tools for this group (at most "
-               "{intent.MAX_EXTRA}) and what the own words name explicitly („onto the reMarkable“). All only as far "
+               "something, own documents, Find in all own data), the hints' tools, the admin's extra tools for this group (at most "
+               "{intent.MAX_EXTRA}) and what the own words name explicitly („onto the reMarkable“, the computer only when the "
+               "own words name it or the question came from the companion). All only as far "
                "as already offered. If nothing of the group is offered, the group is set to „do not narrow“ or the "
                "sentence is negated („Don't call Mom“, „Don't turn off the light“: intent.negated, a fixed rule; "
                "„don't forget“ does not count), all stay; the journal then says „verneint“.")),
@@ -505,6 +542,10 @@ SEITEN = {
              ["s1", "s2", "s3", "s4", "s5", "s6", "s6!", "s9", "s10", "s11", "s12", "s13", "s14"],
              ("Gruppe iphone, aber verneint: nichts wird eingegrenzt, kein Werkzeug ist Pflicht.",
               "Group iphone, but negated: nothing is narrowed, no tool is a must.")),
+            (("„Was ist eine Lampe?“", "„What is a lamp?“"),
+             ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "s12", "s13", "s14"],
+             ("Wissensfrage: Smart Home fällt weg, das Modell behält Websuche und Wikipedia.",
+              "Knowledge question: smart home goes, the model keeps web search and Wikipedia.")),
         ],
         "regeln": [
             [("Fragen, die keine Regel erkennt", "Questions no rule recognizes"), ("Was das Modell sieht", "What the model sees"),
@@ -526,6 +567,8 @@ SEITEN = {
             ("{systemone.ROUTE_MIN|prozent}", ("Standard-Schwelle der Einordnung", "default threshold of the classification"), "systemone.ROUTE_MIN"),
             ("{intent_bench.BENCH|anzahl}", ("eingebaute Testsätze", "built-in test sentences"), "intent_bench.BENCH"),
             ("{intent_alltag.ALLTAG|anzahl}", ("Alltagssätze zum Messen", "everyday sentences for measuring"), "intent_alltag.ALLTAG"),
+            ("{intent_bench.GEGEN|anzahl}", ("Sätze der Gegenprobe", "sentences of the counter check"), "intent_bench.GEGEN"),
+            ("{intent.FOLLOW_SECONDS}", ("Sekunden höchstens bis zur Folgefrage", "seconds at most until a follow-up"), "intent.FOLLOW_SECONDS"),
             ("{quellen_bench.BENCH|anzahl}", ("Sätze der Quellen-Messbank", "sentences of the source bench"), "quellen_bench.BENCH"),
             ("{quellen.PROBE_MS}", ("ms höchstens für die Treffer-Probe der Quellen-Weiche", "ms at most for the source switch's hit probe"), "quellen.PROBE_MS"),
             ("{weiche.KEEP_VERSIONS}", ("Versionen für Rückgängig", "versions for undo"), "weiche.KEEP_VERSIONS"),
@@ -558,13 +601,13 @@ SEITEN = {
         ],
         "sehen": [
             ("Funktionen → Weiche: „Satz ausprobieren“ zeigt den ganzen Weg eines Satzes ohne Modell; dazu Testsätze, "
-             "Alltagsquote und Statistik (7 Tage, nur Anzahlen).",
+             "Alltagsquote, Gegenprobe und Statistik (7 Tage, nur Anzahlen).",
              "Features → Routing: „Try a sentence“ shows the whole way of a sentence without the model; also test "
-             "sentences, everyday score and statistics (7 days, counts only)."),
-            ("Zustand → Logs: Zeilen „weiche: Absicht …“, „weiche: Folgefrage“, „weiche: Modell-Zuordnung …“ und "
-             "„weiche: direkt abgerufen“.",
-             "Status → Logs: lines „weiche: Absicht …“, „weiche: Folgefrage“, „weiche: Modell-Zuordnung …“ and "
-             "„weiche: direkt abgerufen“."),
+             "sentences, everyday score, counter check and statistics (7 days, counts only)."),
+            ("Zustand → Logs: Zeilen „weiche: Absicht …“, „weiche: Folgefrage“, „weiche: Folgefrage zu alt“, "
+             "„weiche: Modell-Zuordnung …“ und „weiche: direkt abgerufen“.",
+             "Status → Logs: lines „weiche: Absicht …“, „weiche: Folgefrage“, „weiche: Folgefrage zu alt“, "
+             "„weiche: Modell-Zuordnung …“ and „weiche: direkt abgerufen“."),
             ("Logs → Anfragen: je Frage Gruppe, Werkzeuge „x von y“ und was aus der Wahl des Modells wurde.",
              "Logs → Requests: per question group, tools „x of y“ and what became of the model's pick."),
         ],
@@ -578,6 +621,18 @@ SEITEN = {
                  "The everyday sentences ({intent_alltag.ALLTAG|anzahl}) were never used for tuning: they measure how "
                  "many land right, are protected by a hint, stay open or land wrong. A self-test forbids right plus "
                  "protected going down or wrong going up."),
+            ]),
+            (("Gegenprobe", "Counter check"), [
+                ("Die Gegenprobe ({intent_bench.GEGEN|anzahl} Sätze: Wissensfragen mit Alltagswörtern, Verneinungen, "
+                 "Plaudern, Stopp und Abbruch, Anrufe) misst die andere Seite: Sätze, die keine oder eine bestimmte "
+                 "Gruppe nicht bekommen dürfen. Gezählt werden falsche Sätze und davon die, bei denen die erste Runde "
+                 "ein Werkzeug rufen müsste („falsch erzwungen“). Ein Selbsttest erlaubt beiden Zahlen nur zu sinken. "
+                 "In app/ druckt python3 panel/intent_bench.py alle drei Messungen und die Verwechslungen je Gruppe.",
+                 "The counter check ({intent_bench.GEGEN|anzahl} sentences: knowledge questions with everyday words, "
+                 "negations, small talk, stop and cancel, calls) measures the other side: sentences that must get no "
+                 "group or not a given one. It counts the wrong ones and of those the ones where the first round would "
+                 "have to call a tool („wrongly forced“). A self-test only lets both numbers go down. In app/, python3 "
+                 "panel/intent_bench.py prints all three measures and the confusions per group."),
             ]),
             (("Quellen-Messbank", "Source bench"), [
                 ("Die Quellen-Messbank ({quellen_bench.BENCH|anzahl} Sätze, deutsch und englisch) prüft für Lese- und "
@@ -644,6 +699,13 @@ SEITEN = {
             ("intent.OWN_PAPER", ("Preis laut eigener Unterlage, nie das Web", "price according to an own paper, never the web")),
             ("intent.PARCEL_MAIL", ("Paketwort mit eigener Mail → mail", "parcel word with the own mail → mail")),
             ("intent.NARROW_KEEP", ("bleibt immer beim Eingrenzen", "always kept when narrowing")),
+            ("intent.normalize", ("ein Schritt Normalisierung vor allen Regeln", "one normalization step before every rule")),
+            ("intent.KNOW", ("Wissensfrage: keine handelnde Gruppe", "knowledge question: no acting group")),
+            ("intent.EMERGENCY", ("Notruf: kein Anruf, kein Werkzeug", "emergency number: no call, no tool")),
+            ("intent.LATER", ("Anruf für später: Erinnerung", "call for later: reminder")),
+            ("intent.FOLLOW", ("Folgefrage nur mit echtem Rückbezug", "follow-up only with a real reference back")),
+            ("intent.asked_age", ("Folgefrage nur, solange die Frage davor frisch ist", "follow-up only while the question before is fresh")),
+            ("intent_bench.gegen", ("Gegenprobe: falsch und falsch erzwungen", "counter check: wrong and wrongly forced")),
             ("quellen.klasse", ("zweite Stufe: intern, extern oder beides", "second stage: internal, external or both")),
             ("quellen.blick", ("die Quellen des kurzen Blicks je Klasse", "the quick look's sources per class")),
         ],
