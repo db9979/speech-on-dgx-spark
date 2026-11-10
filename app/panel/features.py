@@ -157,6 +157,8 @@ FEATURES = (
       guide="klaeren"),
     F("klaerenmerken", "Auswahl merken", "Remember the choice", "talk", ("klaeren_merken",),
       parent="klaeren", me="setbox", guide="klaerenmerken"),
+    # Rückfragen der Weiche (klaeren.py area "weg", intent.ask_route, P5): before a change, which way a wish goes
+    F("klaerenweg", "Rückfrage zum Weg", "Ask which way", "talk", ("klaeren_weg",), parent="klaeren", guide="klaerenweg"),
     # ablauf.py: the tools of an answer under it, a waiting proposal as a card with Ja and Nein
     F("ablauf", "Ablauf und Freigabe zeigen", "Show steps and approvals", "talk", ("show_steps",), guide="ablauf"),
     F("images", "Bilder erkennen", "Picture recognition", "talk", ("images",), me="setbox", guide="images"),

@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.367** Rückfrage zum Weg: vor einer Änderung, die zwei Wege gehen könnte (Mail oder Nachricht, Termin oder Erinnerung), fragt der Assistent mit Knöpfen, welcher gemeint ist, oder antwortet einfach; nie bei Lesefragen, standardmäßig aus
 - **V01.1.366** Weiche genauer: Wissensfragen behalten Websuche und Wikipedia, ein Notruf löst keinen Anruf aus, eine Folgefrage gilt nur kurz und mit Rückbezug, „Strassenbahn“ und „Wohnzimmerlampe“ werden verstanden
 - **V01.1.365** Abbrechen heißt aus: „Stopp“ oder „Tschüss“ beendet das Gespräch überall ohne Modell, danach geht kein Mikrofon wieder auf; Notaus Stufe 3 beendet laufende Antworten und Telefonate
 - **V01.1.364** Hörstück als Diskussion (Teil 2 und 3): jeder Beitrag mit Sprechweise, jede Rolle mit gewählter Stimme samt Probe, Pausen passend zum Wechsel, kurze Rückmeldungen wie „Mhm.“ dazwischen; eine Hörprobe von zwei Minuten für den Admin, nach einem Tag weg; die iPhone-App zeigt Kapitel und Gesprächs-Hinweise
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.360** ROT-FIX: zwei Tests prüfen jetzt die eine feste Paketliste statt der entfernten zweiten
 - **V01.1.359** Ausgedünnt: alte Einmal-Umstellungen und doppelte Paketlisten sind weg; tars baut seine Panel-Umgebung einmal neu aus der festen Paketliste
 - **V01.1.358** Fester Name fürs Sprachmodell: Programme sehen unter /v1 immer „sprachmodell“, welches Modell wirklich läuft, steht daneben und kommt aus der Engine; Live zeigt nicht mehr fest „qwen38“
-- **V01.1.357** Spark-Assistent als Modell: in Open WebUI (oder jedem Programm mit /v1) antwortet „spark-assistent“ mit Kalender, Erinnerungen und Dokumenten, nur lesend
 
 
 

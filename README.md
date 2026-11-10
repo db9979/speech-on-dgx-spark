@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.367** Ask which way: before a change that could go two ways (mail or message, appointment or reminder) the assistant asks with buttons which one you mean, or just answers; never for reading questions, off by default
 - **V01.1.366** A more precise switch: knowledge questions keep web search and Wikipedia, an emergency number starts no call, a follow-up holds only briefly and with a real reference, "Strassenbahn" and "Wohnzimmerlampe" are understood
 - **V01.1.365** Stopping means off: "Stopp" or "Tschüss" ends the talk everywhere without the model, no microphone opens again afterwards; kill switch stage 3 ends running answers and calls
 - **V01.1.364** Audio overview as a discussion (parts 2 and 3): each contribution has a way of speaking, each role a chosen voice with a sample, pauses fit the turn, short reactions like "Mhm." in between; a two-minute sample for the admin, gone after a day; the iPhone app shows chapters and conversation notes
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.360** ROT-FIX: two tests now check the one pinned package list instead of the removed second one
 - **V01.1.359** Thinned out: old one-time moves and duplicate package lists are gone; tars rebuilds its panel environment once from the pinned package list
 - **V01.1.358** Fixed name for the language model: programs always see "sprachmodell" under /v1, the model that really runs is shown beside it and comes from the engine; Live no longer shows a fixed "qwen38"
-- **V01.1.357** Spark assistant as a model: in Open WebUI (or any program using /v1) "spark-assistent" answers with calendar, reminders and documents, read only
 
 
 

@@ -15,7 +15,11 @@ code word of the command it answers and nothing else. Remembering needs a plain 
 mapping is checked against the tool's data each time it is used. Never for guests; admin switch
 chat.klaeren, off, then for every profile the admin did not block; remembering has its own (chat.klaeren_merken). The
 journal has fixed words and numbers only, never names of devices, contacts or words people said.
+
+Rückfragen der Weiche (area "weg", P5, Dominik 2026-11-10 3a, sub-switch chat.klaeren_weg, off): not which thing but
+which way a wish goes, asked before anything changes (intent.ask_route decides, weg_ask/weg_answer below).
 """
+import hashlib
 import re
 import threading
 import time
@@ -73,7 +77,8 @@ _STOP = set("der die das den dem des ein eine einen einem einer im in ist sind a
 _NUM = {"eins": 1, "ein": 1, "einen": 1, "erste": 1, "ersten": 1, "erstes": 1, "erster": 1, "1": 1, "one": 1, "first": 1,
         "zwei": 2, "zweite": 2, "zweiten": 2, "zweites": 2, "zweiter": 2, "2": 2, "two": 2, "second": 2,
         "drei": 3, "dritte": 3, "dritten": 3, "drittes": 3, "dritter": 3, "3": 3, "three": 3, "third": 3,
-        "vier": 4, "vierte": 4, "vierten": 4, "viertes": 4, "vierter": 4, "4": 4, "four": 4, "fourth": 4}
+        "vier": 4, "vierte": 4, "vierten": 4, "viertes": 4, "vierter": 4, "4": 4, "four": 4, "fourth": 4,
+        "erstens": 1, "zweitens": 2, "drittens": 3, "viertens": 4}
 _NONE = re.compile(r"(?i)^\W*(keins?|keine[nrs]?|nichts davon|keins davon|keines davon|none|neither)\b")
 
 
@@ -236,7 +241,7 @@ def answer(uid, src, text, own=True):
     if not own:
         return None
     if w and _same(w["src"], src):
-        limit = ASK_SECONDS if w["kind"] == "choice" else REMEMBER_SECONDS
+        limit = REMEMBER_SECONDS if w["kind"] == "remember" else ASK_SECONDS
         if now - w["t"] > limit:
             drop(uid)
             w = None
@@ -336,6 +341,103 @@ def drop(uid):
         _waiting.pop(uid, None)
 
 
+# ---------------------------------------------------------------- Rückfragen der Weiche (area "weg", P5)
+# Not which thing but which way: intent.ask_route decides by fixed rules that a wish could go two ways that change
+# something (or one on weak evidence), the panel answers with only the fixed question (intent.ask_texts) and its chips,
+# the same "choice" event as above (area "weg", every option with "send"), and nothing changes before the choice. The
+# choice runs the person's own sentence again with the chosen group; „Einfach antworten“ runs it as plain chat without
+# a changing tool. Same conversation, own profile and voice, ASK_SECONDS; anything else lets the question lapse and runs
+# as a new message. Never twice for the same sentence (a hash per profile, memory only). Kept in memory only.
+WEG_SAID = 2000                # characters of the sentence kept for the choice (memory only, ASK_SECONDS)
+WEG_SEEN_SECONDS = 24 * 3600   # a sentence asked about once is not asked about again within this time
+WEG_SEEN_MAX = 50              # sentences remembered per profile (hashes only)
+WEG_WORDS = 8                  # an answer to the question has at most this many words
+_weg_seen = {}                 # uid -> {hash of the sentence: when it was asked about}
+_WEG_PLAIN = re.compile(r"(?i)\b(einfach|nur antworten|antworte nur|just answer|only answer|plain)\b")
+_WEG_SKIP = {"den", "die", "das", "nummer", "number", "option", "als", "as", "it", "es", "schicken", "send", "bitte"}
+_WEG_FILL = {"lieber", "per", "via", "by", "eher", "doch", "okay", "ok", "ja", "yes", "one", "way", "weg", "besser", "e"}
+
+
+def _weg_key(uid, said):
+    return hashlib.sha256(f"{uid}\0{' '.join(re.findall(r'[a-z0-9]+', _norm(said)))}".encode()).hexdigest()[:20]
+
+
+def weg_ask(uid, src, said, way, route, en=False, now=None):
+    """Puts the question which way (way: intent.ask_route's result) to the person. Returns (question, chat event), or
+    None when this sentence was asked about before (never twice). route: the switch's result of this turn, kept in memory
+    for the choice (weiche.learn_choice); said: the person's own sentence, run again after the choice."""
+    import intent
+    now = time.time() if now is None else now
+    key = _weg_key(uid, said)
+    with _lock:
+        seen = _weg_seen.setdefault(uid, {})
+        for k in [k for k, t in seen.items() if now - t > WEG_SEEN_SECONDS]:
+            seen.pop(k, None)
+        again = key in seen
+        if not again:
+            seen[key] = now
+            while len(seen) > WEG_SEEN_MAX:
+                seen.pop(next(iter(seen)))
+    if again:
+        print("klaeren: frage weg | schon einmal gefragt", flush=True)
+        return None
+    q, chips = intent.ask_texts(way["cands"], en)
+    qid = uuid.uuid4().hex[:12]
+    with _lock:
+        _waiting[uid] = {"kind": "weg", "id": qid, "t": now, "src": str(src)[:120], "area": "weg",
+                         "said": str(said)[:WEG_SAID], "cands": [g for g, _ in chips], "labels": [x for _, x in chips],
+                         "why": way["why"], "route": route}
+    print(f"klaeren: frage weg | {len(chips) - 1} kandidaten | {way['why']}", flush=True)
+    _count("weg_frage")
+    return q, {"type": "choice", "id": qid, "area": "weg", "list": False,
+               "options": [{"n": i + 1, "label": x, "room": "", "info": "", "send": x} for i, (_, x) in enumerate(chips)],
+               "none": ""}
+
+
+def _weg_pick(text, w):
+    """The way a short answer names: a chip's words, a number („zweitens“, „die erste“), „einfach antworten“ / „keins
+    davon“ (""), or a word of exactly one way (intent.ASK_WORDS). None: not an answer (the question lapses)."""
+    import intent
+    t = str(text or "")
+    if len(t.split()) > WEG_WORDS or re.match(r"(?i)^\W*(" + stoppwort.ABBRUCH + r")\b", t):
+        return None
+    ws = re.findall(r"[a-z0-9]+", _norm(t))
+    for g, label in zip(w["cands"], w["labels"]):
+        if ws == re.findall(r"[a-z0-9]+", _norm(label)):
+            return g
+    ws = [x for x in ws if x not in _STOP and x not in _WEG_SKIP]
+    nums = [_NUM[x] for x in ws if x in _NUM]
+    if len(nums) == 1 and len(ws) <= 3:
+        return w["cands"][nums[0] - 1] if nums[0] <= len(w["cands"]) else None
+    if _NONE.search(t) or _WEG_PLAIN.search(t):
+        return ""
+    # a word of exactly one way, and nothing else in the answer („die Nachricht bitte“, „lieber per Mail“); a new wish
+    # with a way word in it („Erinnerung: Milch auf die Liste“) is not an answer but a new message
+    hits = {g for g in w["cands"] if g and intent.ASK_WORDS[g].search(t)}
+    rest = [x for x in ws if x not in _WEG_FILL and not any(intent.ASK_WORDS[g].search(x) for g in w["cands"] if g)]
+    return hits.pop() if len(hits) == 1 and not rest else None
+
+
+def weg_answer(uid, src, text, now=None):
+    """The answer to the waiting question which way, by fixed rules: {"kind": "weg", "group" (or "" for „Einfach
+    antworten“), "said", "route", "why"}, or None. Anything else in this conversation, or too late, lets the question
+    lapse (a journal line) and the message runs as a new one."""
+    now = time.time() if now is None else now
+    with _lock:
+        w = _waiting.get(uid)
+    if not w or w.get("kind") != "weg" or not _same(w["src"], src):
+        return None
+    drop(uid)
+    g = _weg_pick(text, w) if now - w["t"] <= ASK_SECONDS else None
+    if g is None:
+        print(f"klaeren: weg verfallen | {'zeit' if now - w['t'] > ASK_SECONDS else 'andere nachricht'}", flush=True)
+        _count("weg_verfallen")
+        return None
+    print(f"klaeren: auswahl weg | {g or 'einfach'}", flush=True)
+    _count("weg_gewaehlt" if g else "weg_einfach")
+    return {"kind": "weg", "group": g, "said": w["said"], "route": w["route"], "why": w["why"]}
+
+
 # ---------------------------------------------------------------- mappings (users/<id>/zuordnungen.json)
 def load(uid):
     rows = profiles.read_own(uid, "zuordnungen.json", [])
@@ -402,9 +504,12 @@ def for_live():
     with _lock:
         n = _stats.counts()["n"]
         now = time.time()
-        open_ = sum(1 for w in _waiting.values() if now - w["t"] <= (ASK_SECONDS if w["kind"] == "choice" else REMEMBER_SECONDS))
+        open_ = sum(1 for w in _waiting.values() if now - w["t"] <= (REMEMBER_SECONDS if w["kind"] == "remember" else ASK_SECONDS))
     return {"offen": open_, "fragen": n.get("frage", 0), "auswahl": n.get("auswahl", 0), "korrektur": n.get("korrektur", 0),
-            "gemerkt": n.get("gemerkt", 0), "genutzt": n.get("genutzt", 0)}
+            "gemerkt": n.get("gemerkt", 0), "genutzt": n.get("genutzt", 0),
+            # Rückfragen der Weiche (area "weg"): asked, a way chosen, plain chat chosen, lapsed
+            "weg_frage": n.get("weg_frage", 0), "weg_gewaehlt": n.get("weg_gewaehlt", 0),
+            "weg_einfach": n.get("weg_einfach", 0), "weg_verfallen": n.get("weg_verfallen", 0)}
 
 
 # ---------------------------------------------------------------- endpoints: Ich → Gedächtnis → Zuordnungen

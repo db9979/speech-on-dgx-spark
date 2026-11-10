@@ -285,6 +285,34 @@ def _files():
             yield os.path.basename(path), ast.parse(f.read())
 
 
+class Weg(Lines):
+    def test_question_which_way_choice_plain_and_lapse(self):
+        """Rückfragen der Weiche (klaeren.py area "weg"): asked, never twice, a way chosen, plain chat, lapsed by another
+        message or by time: one line each, fixed words and numbers only, never the sentence."""
+        import intent
+        import klaeren
+        _, uid = profile("Log-Weg")
+        said = f"Schreib Tom eine Mail {SECRET}"
+        route = intent.Route(["mail", "nachricht"], {"mail": "Mail", "nachricht": "Sende-Bitte"})
+        ask = {"cands": ["mail", "nachricht"], "why": "nah"}
+        t0 = 1000.0
+        self.addCleanup(lambda: (klaeren._waiting.pop(uid, None), klaeren._weg_seen.pop(uid, None)))
+        got = self.lines(lambda: klaeren.weg_ask(uid, "web:x", said, ask, route, False, t0), "Log-Weg")
+        self.assertEqual(self.area(got, "klaeren: frage weg | 2 kandidaten | nah"), ["klaeren"])
+        got = self.lines(lambda: klaeren.weg_ask(uid, "web:x", said, ask, route, False, t0 + 1), "Log-Weg")
+        self.assertEqual(self.area(got, "klaeren: frage weg | schon einmal gefragt"), ["klaeren"])
+        got = self.lines(lambda: klaeren.weg_answer(uid, "web:x", "Mail", t0 + 2), "Log-Weg")
+        self.assertEqual(self.area(got, "klaeren: auswahl weg | mail"), ["klaeren"])
+        for n, (answer, line) in enumerate((("Einfach antworten", "klaeren: auswahl weg | einfach"),
+                                            (f"Was ist {SECRET}?", "klaeren: weg verfallen | andere nachricht"))):
+            klaeren.weg_ask(uid, "web:x", said + str(n), ask, route, False, t0)
+            got = self.lines(lambda: klaeren.weg_answer(uid, "web:x", answer, t0 + 3), "Log-Weg")
+            self.assertEqual(self.area(got, line), ["klaeren"])
+        klaeren.weg_ask(uid, "web:x", said + "z", ask, route, False, t0)
+        got = self.lines(lambda: klaeren.weg_answer(uid, "web:x", "Mail", t0 + klaeren.ASK_SECONDS + 1), "Log-Weg")
+        self.assertEqual(self.area(got, "klaeren: weg verfallen | zeit"), ["klaeren"])
+
+
 class Structure(unittest.TestCase):
     """Dominik 2026-10-13: „alles neues immer im log mit aufnehmen“. These fail for a new line or action that
     does not fit, without anyone having to remember it."""

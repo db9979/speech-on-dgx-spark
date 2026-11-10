@@ -5583,6 +5583,27 @@
 "titel": "Weiche: Schreibweisen und Gegenprobe",
 "text": "„Wann fährt die Strassenbahn“ und „Mach die Wohnzimmerlampe aus“ landen bei Bahn bzw. Smart Home. Funktionen → Weiche, unter den Alltagssätzen steht „Gegenprobe: 100 von 101 ohne falsche Gruppe, falsch erzwungen 0“.",
 "thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P824",
+"v": 1367,
+"titel": "Rückfrage zum Weg: Mail oder Nachricht",
+"text": "Funktionen → Rückfrage zum Weg an. Im Chat „Schreib Tom eine Mail, dass ich später komme“: es kommt nur die Frage „Soll ich erstens als E-Mail schicken, zweitens als Nachricht im Haus schicken oder drittens einfach antworten?“ mit drei Knöpfen, nichts wird geschickt. „Zweitens“ antworten: die Nachricht wird vorbereitet. Denselben Satz noch einmal: keine zweite Frage.",
+"thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P825",
+"v": 1367,
+"titel": "Rückfrage zum Weg: einfach antworten und nie bei Lesefragen",
+"text": "„Morgen Treffen mit Anna um 3“: Frage Termin oder Erinnerung, „Einfach antworten“ tippen: nur eine Antwort, kein Termin, keine Erinnerung. „Hast du morgen Zeit?“ und „Schreib Tom keine Mail“: keine Frage. Zustand → Live, Kasten Rückfrage und Merken: „Weg: … gefragt · … gewählt · … einfach geantwortet“.",
+"thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P826",
+"v": 1367,
+"titel": "Rückfrage zum Weg: Telegram, Uhr und Lautsprecher",
+"text": "In Telegram (mit persönlichen Daten) „Morgen Treffen mit Anna um 3“: die Frage mit Tastatur, ein Tipp auf „Dich später daran erinnern“ stellt die Erinnerung. Am Lautsprecher oder in CarPlay dieselbe Frage gesprochen, „erstens“ sagen wählt den ersten Weg. Nach zwei Minuten ohne Antwort passiert nichts.",
+"thread": "Spark stabilisieren mit Code-Review"
 }
 ]
 }

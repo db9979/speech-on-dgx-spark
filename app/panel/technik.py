@@ -103,7 +103,7 @@ MODULE = {
     "answercheck": ("gespraech", "Antwort-Prüfung: das Panel entscheidet, ob ein Satz gesagt werden darf"),
     "taten": ("gespraech", "Handlungs-Prüfung: hat ein Werkzeug wirklich getan, was der Satz sagt"),
     "ack": ("gespraech", "Sofortige Rückmeldung aus aufgenommenen Sätzen"),
-    "klaeren": ("gespraech", "Rückfrage, Korrektur und Merken von Zuordnungen"),
+    "klaeren": ("gespraech", "Rückfrage (welches Ding, welcher Weg), Korrektur und Merken von Zuordnungen"),
     "vorab": ("gespraech", "Holt bei einer Rückfrage die Antwort schon vorab"),
     "hoerwoerter": ("gespraech", "Namen fürs Hören: Räume, Geräte und Personen als Kontext für die Spracherkennung"),
     "sofort": ("gespraech", "Einfaches sofort beantworten: Uhrzeit, Datum, Rechnen und Einheiten als fester Satz ohne Modell"),

@@ -2144,6 +2144,8 @@ async def _answer(request, turn):
             and (features.allowed("sofort", who["id"], ccfg) if who else features.admin_on("sofort", ccfg)):
         fixed = sofort.answer(messages[-1]["content"], local_now(body.get("tz")),
                               guess_language(messages[-1]["content"]) == "English")
+    if getattr(turn, "weg_q", None):   # Rückfragen der Weiche (klaeren weg): only the panel's fixed question, no model
+        fixed = ("rueckfrage weg", turn.weg_q)
     # "Sofortige Rückmeldung" (ack.py): right away a ready-made sentence of what the Spark does now, chosen by fixed
     # rules (Weiche group, "Erst lokal", a direct fetch) and played from a recording (no GPU); never small talk
     ack_lang, acked = None, False

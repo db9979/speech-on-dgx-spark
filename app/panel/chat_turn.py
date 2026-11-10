@@ -145,6 +145,10 @@ async def prepare(request):
         import android
         android.assist_gate(request, me0)
     guest = not me0 or bool(shared_stranger(request, body, me0))
+    # A voice recognized by the speech recognition (signed token, speakers.check, good once): read here once, for the
+    # answer to the panel's question which way (klaeren weg, below) and for the profile of this turn (further down)
+    heard_id = speakers.check(body.get("speaker"), me0["id"]) \
+        if ccfg.get("speaker_id", False) and body.get("speaker") and not guest else None
     search = bool(ccfg.get("search") and ccfg.get("search_url")) and not guest and features.allowed("search", me0["id"], ccfg)
     # The answer before came from mail (also a mail note the assistant made by itself): kept in this
     # turn it would lock the web search too (its text could carry the mail away). So it is kept only
@@ -194,18 +198,35 @@ async def prepare(request):
     ende = stoppwort.ende(ask0) if ask0 and not web_tap else ""
     if ende and me0 and not guest and proactive.answers_note(me0["id"], ask0, said_before):
         ende = ""
+    src0 = f"{body.get('client') or 'web'}:{body.get('convo') if isinstance(body.get('convo'), str) else ''}"
     if ende:
         if me0 and not guest:
             import klaeren
-            src0 = f"{body.get('client') or 'web'}:{body.get('convo') if isinstance(body.get('convo'), str) else ''}"
             if klaeren.waiting(me0["id"], src0):
                 klaeren.drop(me0["id"])
         import verlauf
         kind = verlauf.kind_of(request, body)   # a fixed word for the kind of device
         print(f"chat: ende {ende} | {kind}", flush=True)
         return Turn({"ende": ende, "body": body, "who": None if guest else me0, "ask_text": ask0})
-    route = intent.classify_cfg(ask0, ccfg)
-    src0 = f"{body.get('client') or 'web'}:{body.get('convo') if isinstance(body.get('convo'), str) else ''}"
+    # Rückfragen der Weiche (klaeren.py area "weg", P5): the answer to the panel's question which way the person's own
+    # sentence before goes, by fixed rules (a chip, a number, a word of the way, „Einfach antworten“), only in the same
+    # conversation, from the own login or voice, never over MCP. The sentence then runs again with the chosen group
+    # (reason „Rückfrage“), or as plain chat without a changing tool („Einfach antworten“); the choice is a correction
+    # signal for the Weiche (weiche.learn_choice: groups and numbers only). Anything else lets the question lapse.
+    weg = None
+    if ask0 and me0 and not guest and not web_tap and not request.scope.get("speech_mcp") \
+            and heard_id in (None, me0["id"]) and features.allowed("klaerenweg", me0["id"], ccfg):
+        import klaeren
+        weg = klaeren.weg_answer(me0["id"], src0, ask0, time.time())
+    if weg:
+        messages[-1] = dict(messages[-1], content=weg["said"])
+        ask0 = weg["said"]
+        g = weg["group"]
+        route = intent.Route([g], {g: "Rückfrage"}) if g else intent.Route(["plaudern"], {"plaudern": "Einfach antworten"})
+        import weiche
+        weiche.learn_choice(weg["route"], g)
+    else:
+        route = intent.classify_cfg(ask0, ccfg)
     # how long ago the person's own message before came in this conversation (P4, review D-8: a follow-up only while
     # it is fresh); the clock is read here, intent only gets the number
     age0 = intent.asked_age(((me0 or {}).get("id") or "", src0), time.time()) if ask0 else None
@@ -240,7 +261,7 @@ async def prepare(request):
     # where the question came from (plan hilfe-besser 10): only what the panel knows itself, never the question
     hilfe_origin = hilfe.origin(body, request)
     hilfe_app = hilfe.app_view(body)
-    if (hilfe_focus or hilfe.page_rule(hilfe_page, ask0, route.names)) and route_on and hilfe_origin != "mcp":
+    if (hilfe_focus or hilfe.page_rule(hilfe_page, ask0, route.names)) and route_on and hilfe_origin != "mcp" and not weg:
         route = intent.Route(["spark"], {"spark": "Schalter" if hilfe_focus else "Seite"})
     # chat.route_model "on": the model's pick for a question no rule recognizes starts right here and runs while
     # the panel prepares the rest of the turn (plan „Anfrage aufteilen“ 2); it is waited for further down
@@ -330,9 +351,7 @@ async def prepare(request):
     sound_of = who      # voice, speed and length of the answer stay the speaker's own
     # A voice recognized by the speech recognition (signed token, see speakers.py) picks that
     # profile for this turn; its own settings apply then, not the ones this browser sends.
-    heard = speakers.check(body.get("speaker"), who["id"]) \
-        if ccfg.get("speaker_id", False) and body.get("speaker") and who and not stranger else None
-    heard = heard and profiles.by_id(heard)
+    heard = heard_id and profiles.by_id(heard_id)
     own_browser = not heard or (who and who["id"] == heard["id"])
     device_owner = who
     if heard:
@@ -540,7 +559,7 @@ async def prepare(request):
     src = f"{body.get('client') or 'web'}:{body.get('convo') if isinstance(body.get('convo'), str) else ''}"
     kl_on = bool(who and own_browser and private_ok and not mcp and features.allowed("klaeren", who["id"]))
     kl = klaeren.answer(who["id"], src, messages[-1]["content"], own_browser) \
-        if kl_on and messages[-1]["role"] == "user" and not room_far else None
+        if kl_on and messages[-1]["role"] == "user" and not room_far and not weg else None
     kl_took = bool(kl)
     ha_choice = ha_list = None
     kl_note, kl_events = [], []
@@ -568,7 +587,9 @@ async def prepare(request):
         ha_code_ok = ha_code_ok or bool(kl.get("code_ok"))   # it carries the code word of the request it answers
     elif kl:   # an area this turn cannot act in (Home Assistant off meanwhile): nothing happens
         system = per_turn(system, "Rückfrage: Die Auswahl kann gerade nicht ausgeführt werden. Sag das kurz, ohne Werkzeug.")
-    if ha and messages[-1]["role"] == "user" and not room_far and not kl_took:
+    # the way chosen after the panel asked (klaeren weg): the sentence switches directly only when that way is the home
+    weg_other = bool(weg and weg["group"] != "smarthome")
+    if ha and messages[-1]["role"] == "user" and not room_far and not kl_took and not weg_other:
         latest = messages[-1]["content"]
         # a command waiting for the code word belongs to the device it was said at (chat.ha_take): the code word from
         # another device of the profile neither runs it nor clears it
@@ -917,7 +938,9 @@ async def prepare(request):
     # question
     tools_stable = list(tools) if cache_on else None
     offered_all = {t["function"]["name"] for t in tools}
-    if route_on and tools and not pics and not ha_direct and not ha_wait:
+    # a way the person chose after the panel asked (klaeren weg) narrows to it even with „Gezielte Werkzeugwahl“ off:
+    # the person named it in so many words; like every narrowing it only takes away
+    if (route_on or weg) and tools and not pics and not ha_direct and not ha_wait:
         # the answer to the assistant's own question about a wish just before ("Worum soll es gehen?" - "Den
         # Mauerfall, 3 Folien"): the group of that wish, by the module's fixed rule (extras "route")
         if not route.names and ex.get("route"):
@@ -944,6 +967,31 @@ async def prepare(request):
             tools = intent.lean(route, tools, ex.get("keep", set()))
     if pick_task and not pick_task.done():   # not needed in this turn (no tools, a picture, a direct command)
         pick_task.cancel()
+    # „Einfach antworten“ to the panel's question which way (klaeren weg): the sentence as plain chat, so no tool that
+    # changes something (taten.KIND) is offered in this answer; reading ones stay
+    if weg and not weg["group"]:
+        gone_n = len(tools)
+        tools = [t for t in tools if t["function"]["name"] not in taten.KIND]
+        tools_stable = [t for t in tools_stable if t["function"]["name"] not in taten.KIND] if tools_stable is not None else None
+        print(f"klaeren: weg einfach | {gone_n - len(tools)} aendernde Werkzeuge nicht angeboten", flush=True)
+    # Rückfragen der Weiche (klaeren.py area "weg", P5, Dominik 2026-11-10 3a): before anything changes, the panel asks
+    # which way the person's own sentence goes when it could go two close changing ways or one changing way rests on weak
+    # evidence (intent.ask_route, fixed rules, never the model). Only for the own login or voice, never a guest, MCP, after
+    # outside text, a picture, an answer to another question or a fixed sentence of the panel; at most once per turn and
+    # never twice for the same sentence. This answer is then only the fixed question with its chips (chat._answer), no
+    # model and no tool, so nothing changes before the choice.
+    weg_q = None
+    if not weg and who and own_browser and private_ok and not mcp and not carry and not pics and not role_cmd \
+            and not room_far and not ha_direct and not ha_wait and not kl_took and not cal_note and not xprop \
+            and not kl_events and tools and messages[-1]["role"] == "user" and features.allowed("klaerenweg", who["id"], ccfg):
+        weg_ask = intent.ask_route(route, messages[-1]["content"], offered_all, own=True, outside=bool(carry),
+                                   unsure=pick_info.get("raw") if pick_state == "unsicher" else None)
+        got = klaeren.weg_ask(who["id"], src, messages[-1]["content"], weg_ask, route,
+                              chat.guess_language(messages[-1]["content"]) == "English", time.time()) if weg_ask else None
+        if got:
+            weg_q, weg_ev = got
+            kl_events.append(weg_ev)
+            tools, tools_stable = [], None
     # "Erst lokal suchen" (lokal.py) with the Quellen-Weiche (quellen.py, plan such-index/zuverlaessig.md, steps 3 and
     # 4): the second stage decides by fixed rules on the person's own words whether a question to know or read
     # something goes to the own data (intern), the world (extern) or both; the probe in Finden's index runs in a
@@ -956,7 +1004,7 @@ async def prepare(request):
         print("lokal: Internet-Chip abgelehnt (nicht erlaubt)", flush=True)
         web_tap = ""
     if lokal.on(ccfg, who) and own_browser and private_ok and not mcp and messages[-1]["role"] == "user" and tools \
-            and not cal_note and not pics and not role_cmd and not room_far and not ha_direct and not ha_wait:
+            and not cal_note and not pics and not role_cmd and not room_far and not ha_direct and not ha_wait and not weg_q:
         import quellen
         lk_text = messages[-1]["content"]
         lk_nur = None
@@ -1001,7 +1049,7 @@ async def prepare(request):
     # "... und leg es aufs reMarkable" (remarkable.py): the panel puts this answer there afterwards, by a fixed rule
     # on the person's own words; the model only writes the answer
     import remarkable
-    rm_after = bool(messages[-1]["role"] == "user" and not pics and not role_cmd and not room_far and not mcp
+    rm_after = bool(messages[-1]["role"] == "user" and not pics and not role_cmd and not room_far and not mcp and not weg_q
                     and remarkable.answer_wanted(messages[-1]["content"], (who or {}).get("id"))
                     and remarkable.answer_ok(who, own_browser, private_ok))
     if rm_after:
@@ -1059,7 +1107,7 @@ async def prepare(request):
     if not force and ex.get("must") and ex["must"] in {t["function"]["name"] for t in tools}:
         force, need = ex["must"], [ex["must"]]
     # the words that matched, only as far as they are still in the message (a code word is gone by now)
-    why = ", ".join(f"{k}: „{v if v.lower() in ask_text.lower() or v in ('Modell', 'Sende-Bitte', 'Seite', 'Folgefrage', 'Foto ändern', 'Abbruch') else '…'}“"
+    why = ", ".join(f"{k}: „{v if v.lower() in ask_text.lower() or v in ('Modell', 'Sende-Bitte', 'Seite', 'Folgefrage', 'Foto ändern', 'Abbruch', 'Rückfrage', 'Einfach antworten') else '…'}“"
                     for k, v in route.why.items())[:200]
     print("weiche: Absicht", route.label(), "| Grund", why or "-",
           "| Hinweis", "+".join(route.hints) or "-",

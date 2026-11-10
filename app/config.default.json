@@ -177,6 +177,7 @@
     "learn_fixes": true,
     "klaeren": true,
     "klaeren_merken": true,
+    "klaeren_weg": false,
     "follow_up": true,
     "no_self_echo": false,
     "barge_hold": false,

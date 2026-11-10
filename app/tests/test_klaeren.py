@@ -291,5 +291,166 @@ class Klaeren(unittest.TestCase):
         self.assertIsNone(klaeren.pick("Toaster", c))
 
 
+def streamed():
+    return [c for c in helpers.LLM_CALLS if c.get("stream")]
+
+
+def offered(call):
+    return {t["function"]["name"] for t in call.get("tools") or []}
+
+
+class Weg(unittest.TestCase):
+    """Rückfragen der Weiche (P5, Dominik 2026-11-10 3a): before a change the panel asks which way a wish goes (area
+    "weg"), with the fixed question and chips only, no model and no tool; the choice runs the person's own sentence on
+    that way, „Einfach antworten“ as plain chat without a changing tool. Off by default, never for guests, never after
+    outside text, never twice for the same sentence, only in the same conversation and within ASK_SECONDS."""
+
+    def setUp(self):
+        helpers.keep_chat(self, "klaeren", "klaeren_weg", "public")
+        helpers.set_config(klaeren=True, klaeren_weg=True)
+        klaeren._waiting.clear()
+        klaeren._weg_seen.clear()
+
+    def tearDown(self):
+        klaeren._waiting.clear()
+        klaeren._weg_seen.clear()
+        helpers.set_config(deny={})
+
+    def weg(self, evs):
+        return [e for e in choices(evs) if e.get("area") == "weg"]
+
+    def test_off_by_default_and_never_for_guests(self):
+        import features
+        self.assertFalse(features.BY_KEY["klaerenweg"].key in features.DEFAULT_ON)
+        with open(os.path.join(os.path.dirname(klaeren.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["klaeren_weg"], False)
+        self.assertEqual(features.BY_KEY["klaerenweg"].parent, "klaeren")
+        helpers.set_config(klaeren_weg=False)
+        a = profile("Weg Aus")
+        self.assertEqual(self.weg(ask(a, "Milch")), [])
+        helpers.set_config(klaeren_weg=True, klaeren=False)   # the parent off: off as well
+        self.assertEqual(self.weg(ask(a, "Milch kaufen")), [])
+        helpers.set_config(klaeren=True)
+        uid = a.get("/api/whoami").json()["profile"]["id"]
+        helpers.set_config(deny={"klaerenweg": [uid]})      # the admin blocks this one profile
+        self.assertEqual(self.weg(ask(a, "Brot")), [])
+        helpers.set_config(deny={}, public=True)
+        guest = TestClient(panel.app)                        # a guest only asks and gets answers
+        self.assertEqual(self.weg(ask(guest, "Butter")), [])
+        self.assertEqual(klaeren._waiting, {})
+
+    def test_asks_only_the_question_then_runs_the_choice(self):
+        a = profile("Weg Eins")
+        n = len(streamed())
+        evs = ask(a, "Milch")
+        ev = self.weg(evs)
+        self.assertEqual(len(ev), 1, evs)
+        labels = [o["label"] for o in ev[0]["options"]]
+        self.assertEqual(labels, ["Auf eine Liste setzen", "Einfach antworten"])
+        self.assertTrue(all(o["send"] == o["label"] for o in ev[0]["options"]))   # every client sends the label back
+        self.assertEqual(answer(evs), "Soll ich erstens auf eine Liste setzen oder zweitens einfach antworten?")
+        self.assertEqual(len(streamed()), n)   # no model and no tool before the choice
+        # the chip: the sentence runs again with the group liste (the model sees only that group's tools)
+        evs = ask(a, "Auf eine Liste setzen")
+        call = streamed()[-1]
+        self.assertEqual(call["messages"][-1]["content"].split("\n")[0], "Milch")
+        self.assertIn("tasks_add", offered(call))
+        self.assertFalse(offered(call) & {"reminder_set", "web_search"}, offered(call))
+        self.assertEqual(self.weg(evs), [])   # never a second question for it
+        self.assertNotIn(a.get("/api/whoami").json()["profile"]["id"], klaeren._waiting)
+
+    def test_just_answer_offers_nothing_that_changes(self):
+        import taten
+        a = profile("Weg Einfach")
+        ask(a, "Denk dran Müll rausbringen")
+        ask(a, "zweitens")   # by number: the last chip is „Einfach antworten“
+        call = streamed()[-1]
+        self.assertEqual(call["messages"][-1]["content"].split("\n")[0], "Denk dran Müll rausbringen")
+        self.assertFalse(offered(call) & set(taten.KIND), offered(call))
+
+    def test_never_twice_and_lapses_on_anything_else(self):
+        a = profile("Weg Zwei")
+        self.assertTrue(self.weg(ask(a, "Milch")))
+        n = len(streamed())
+        evs = ask(a, "Wie wird das Wetter morgen?")   # something else: the question lapses, this runs as a new message
+        self.assertEqual(self.weg(evs), [])
+        self.assertEqual(streamed()[n]["messages"][-1]["content"].split("\n")[0], "Wie wird das Wetter morgen?")
+        self.assertEqual(self.weg(ask(a, "Milch")), [])    # the same sentence is never asked about twice
+        self.assertTrue(self.weg(ask(a, "Butter")))
+        uid = a.get("/api/whoami").json()["profile"]["id"]
+        n = len(streamed())
+        ask(a, "Auf eine Liste setzen", convo="anderes")   # another conversation never answers it
+        self.assertEqual(streamed()[n]["messages"][-1]["content"].split("\n")[0], "Auf eine Liste setzen")
+        self.assertTrue(klaeren.waiting(uid, "web:"))
+        b = profile("Weg Drei")                            # another profile cannot answer it
+        ask(b, "Auf eine Liste setzen")
+        self.assertTrue(klaeren.waiting(uid, "web:"))
+        # too late (the time is a parameter, never the clock of the test)
+        w = klaeren._waiting[uid]
+        self.assertIsNone(klaeren.weg_answer(uid, "web:", "Auf eine Liste setzen", w["t"] + klaeren.ASK_SECONDS + 1))
+        self.assertFalse(klaeren.waiting(uid, "web:"))
+
+    def test_never_after_outside_text_or_for_a_negated_or_reading_sentence(self):
+        a = profile("Weg Vier")
+        r = a.post("/api/chat", json={"messages": [{"role": "user", "content": "Was gibt es Neues?"},
+                                                   {"role": "assistant", "content": "Laut Web: Milch", "outside": True},
+                                                   {"role": "user", "content": "Milch"}]})
+        self.assertEqual(self.weg(helpers.events(r)), [])
+        for s in ("Keine Milch", "Hast du Zeit?", "Vergiss es", "Danke"):
+            self.assertEqual(self.weg(ask(a, s)), [], s)
+
+    def test_choice_feeds_the_weiche_as_a_correction(self):
+        import intent
+        import weiche
+        got = []
+        old = weiche.learn_choice
+        weiche.learn_choice = lambda route, group, now=None: got.append((sorted(route.hints), group))
+        self.addCleanup(setattr, weiche, "learn_choice", old)
+        a = profile("Weg Lernen")
+        ask(a, "Um 6 Uhr Milch kaufen")   # hint words only: liste and erinnerung
+        ask(a, "die Erinnerung")
+        self.assertEqual(got, [(["erinnerung", "kalender", "liste"], "erinnerung")])
+        weiche.learn_choice = old
+        # what it keeps: per day the chosen way and plain chat, a group learned only when no rule had named one, with
+        # the hint word only as weiche.learn keeps it (a fixed word of intent.HINTS); the day is a parameter
+        now = 4102444800.0
+        self.addCleanup(lambda: weiche._days().pop(weiche._day(now), None))
+        self.assertEqual(weiche.learn_choice(intent.Route([], {}, {"erinnerung": "denk dran"}), "erinnerung", now),
+                         "erinnerung")
+        self.assertIsNone(weiche.learn_choice(intent.Route(["mail", "nachricht"], {"mail": "Mail"}), "mail", now))
+        self.assertIsNone(weiche.learn_choice(intent.Route([], {}, {"liste": "milch"}), "", now))
+        day = weiche._days()[weiche._day(now)]
+        self.assertEqual(day["rueckfrage"], {"erinnerung": 1, "mail": 1, "einfach": 1})
+        self.assertEqual(day["lernen"], {"erinnerung": {"n": 1, "w": {}}})   # „denk dran“ is no single hint word
+
+    def test_event_works_for_telegram_watch_and_the_app(self):
+        import intent
+        import telegram
+        q, chips = intent.ask_texts(["mail", "nachricht"])
+        ev = {"type": "choice", "area": "weg", "list": False, "none": "",
+              "options": [{"n": i + 1, "label": x, "send": x, "room": ""} for i, (_, x) in enumerate(chips)]}
+        kb = telegram.keyboard(ev)
+        self.assertEqual([r[0]["text"] for r in kb["keyboard"]],
+                         ["Als E-Mail schicken", "Als Nachricht im Haus schicken", "Einfach antworten"])
+        self.assertIn("erstens", q)   # spoken: a voice answers with the number
+        w = {"cands": [g for g, _ in chips], "labels": [x for _, x in chips]}
+        for said, want in (("Als E-Mail schicken", "mail"), ("zweitens", "nachricht"), ("die erste", "mail"),
+                           ("Mail", "mail"), ("die Nachricht bitte", "nachricht"), ("drittens", ""),
+                           ("Einfach antworten", ""), ("keins davon", ""), ("second", "nachricht")):
+            self.assertEqual(klaeren._weg_pick(said, w), want, said)
+        for said in ("Vergiss es", "Wie wird das Wetter morgen in Berlin?", "Erinnerung Milch auf die Liste", "vier"):
+            self.assertIsNone(klaeren._weg_pick(said, w), said)
+
+    def test_live_has_numbers_only(self):
+        import live
+        a = profile("Weg Live")
+        ask(a, "Milch")
+        t = next(x for x in live.snapshot()["targets"] if x["id"] == "klaeren")
+        self.assertIn("Weg: ", t["sub"])
+        self.assertNotIn("Milch", t["sub"])
+        kl = klaeren.for_live()
+        self.assertGreaterEqual(kl["weg_frage"], 1)
+
+
 if __name__ == "__main__":
     unittest.main()

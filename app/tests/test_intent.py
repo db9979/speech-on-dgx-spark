@@ -457,5 +457,71 @@ class Genauer(unittest.TestCase):
         self.assertIn("pc_action", got)
 
 
+class AskRoute(unittest.TestCase):
+    """Rückfragen der Weiche (P5, Dominik 2026-11-10 3a): intent.ask_route asks only before a change, by fixed rules,
+    with candidates from GROUPS and texts from ASK_SAYS, never from the sentence; never for guests, another voice, MCP,
+    after outside text, a negated, cancelled or stop sentence, small talk, a reading question or a group that only reads."""
+    ALL = frozenset().union(*[t for t, _ in intent.GROUPS.values()])
+
+    def ask(self, text, route=None, offered=None, **kw):
+        return intent.ask_route(route or intent.classify(text), text, self.ALL if offered is None else offered, **kw)
+
+    def test_the_fixed_tables(self):
+        import taten
+        self.assertEqual(set(intent.ASK_SAYS), set(intent.ASK_WORDS))
+        for g, (de, en) in intent.ASK_SAYS.items():
+            self.assertIn(g, intent.GROUPS)
+            self.assertTrue(intent.GROUPS[g][0] & set(taten.KIND), g)   # only groups that can change something
+            self.assertTrue(de and en and len(de) <= 45 and len(en) <= 45, g)
+        for pair in intent.ASK_NEAR:
+            self.assertTrue(pair <= set(intent.ASK_SAYS), pair)
+        self.assertLessEqual(intent.ASK_MAX + 1, 3)   # three chips at most, also in the car (CAR_HINT)
+
+    def test_close_ways_and_weak_evidence_ask(self):
+        self.assertEqual(self.ask("Schreib Tom eine Mail, dass ich später komme"), {"cands": ["mail", "nachricht"], "why": "nah"})
+        self.assertEqual(self.ask("Ruf alle an")["why"], "nah")
+        self.assertEqual(self.ask("Morgen Treffen mit Anna um 3"), {"cands": ["kalender", "erinnerung"], "why": "unsicher"})
+        self.assertEqual(self.ask("Milch"), {"cands": ["liste"], "why": "unsicher"})
+        # a follow-up that names something new („Und was ist mit Papa?“ after „Ruf Mama an“)
+        follow = intent.Route(["iphone"], {"iphone": "Folgefrage"})
+        self.assertEqual(self.ask("Und was ist mit Papa?", follow), {"cands": ["iphone"], "why": "unsicher"})
+        self.assertIsNone(self.ask("Mach es wieder aus", intent.Route(["smarthome"], {"smarthome": "Folgefrage"})))
+        # the model's pick below its threshold
+        self.assertEqual(self.ask("Papa wegen Sonntag", intent.Route([], {}), unsure="nachricht"),
+                         {"cands": ["nachricht"], "why": "unsicher"})
+        self.assertIsNone(self.ask("Papa wegen Sonntag", intent.Route([], {}), unsure="wetter"))
+
+    def test_never(self):
+        mail = "Schreib Tom eine Mail, dass ich später komme"
+        self.assertIsNone(self.ask(mail, own=False))        # guest, another voice, MCP: the caller says own=False
+        self.assertIsNone(self.ask(mail, outside=True))     # after outside text
+        self.assertIsNone(self.ask(mail, offered={"mail_list", "message_read"}))   # nothing that changes is offered
+        for text in ("Schreib Tom bloß keine Mail, dass ich später komme", "Vergiss es", "Stopp", "Danke",
+                     "Hast du Zeit?", "Ist es kalt?", "Hat Tom mir eine Mail oder Nachricht geschrieben?",
+                     "Erklär mir die Uhr", "Erinnere mich morgen an den Termin beim Zahnarzt",
+                     "Termin morgen um 10 und erinner mich", "Schick Tom eine Nachricht per Mail", "Wie wird das Wetter?",
+                     "Muss ich die Pflanzen gießen?", "x" * (intent.ASK_MAX_CHARS + 1) + " Milch"):
+            self.assertIsNone(self.ask(text), text)
+        # an answer to a question already, the plain chat after „Einfach antworten“, three groups at once
+        self.assertIsNone(self.ask(mail, intent.Route(["mail"], {"mail": "Rückfrage"})))
+        self.assertIsNone(self.ask(mail, intent.Route(["plaudern"], {"plaudern": "Einfach antworten"})))
+        self.assertIsNone(self.ask(mail, intent.Route(["mail", "nachricht", "kalender"], {})))
+        self.assertIsNone(self.ask("Ja", intent.Route(["mail"], {"mail": "Antwort auf Rückfrage"})))
+        # more hint groups than one question may carry
+        self.assertIsNone(self.ask("Um 6 Uhr Milch", intent.Route([], {}, {"liste": "milch", "erinnerung": "um 6 uhr",
+                                                                          "kalender": "uhr"})))
+
+    def test_texts_come_from_the_table_only(self):
+        q, chips = intent.ask_texts(["mail", "nachricht"])
+        self.assertEqual(q, "Soll ich erstens als E-Mail schicken, zweitens als Nachricht im Haus schicken oder drittens "
+                            "einfach antworten?")
+        self.assertEqual([g for g, _ in chips], ["mail", "nachricht", ""])
+        q, chips = intent.ask_texts(["liste"], en=True)
+        self.assertEqual(q, "Should I first put it on a list or second just answer?")
+        self.assertEqual([x for _, x in chips], ["Put it on a list", "Just answer"])
+        res = self.ask("Schreib Tom eine Mail, dass ich später komme")
+        self.assertNotIn("Tom", intent.ask_texts(res["cands"])[0])
+
+
 if __name__ == "__main__":
     unittest.main()

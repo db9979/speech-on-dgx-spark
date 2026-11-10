@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "vorbereiten": {
-        "stand": "596a164cb2",
+        "stand": "fc42b0b88a",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -126,14 +126,19 @@ SEITEN = {
                "die Wahl aus und bietet an, sie sich zu merken; ein „Ja“ dazu zählt {klaeren.REMEMBER_SECONDS|min} "
                "Minuten. Ein direkter Smart-Home-Befehl ohne das nötige Codewort wartet {chat.HA_WAIT_S|min} Minuten, "
                "gebunden an Gerät und Gespräch (chat.ha_take): ein Codewort von einem anderen Gerät des Profils führt "
-               "ihn nicht aus und löscht ihn nicht. Ein verneinter Satz ist nie ein direkter Befehl.",
+               "ihn nicht aus und löscht ihn nicht. Ein verneinter Satz ist nie ein direkter Befehl. Hat das Panel gefragt, "
+               "welcher Weg gemeint ist (Rückfrage zum Weg, klaeren.weg_answer), liest es die Antwort schon vor der "
+               "Weiche: die Wahl führt den Satz davor mit dieser Gruppe aus, „Einfach antworten“ ohne ändernde Werkzeuge, "
+               "alles andere lässt die Frage verfallen.",
                "If the panel asked which device is meant, a button, a number or the name counts as the answer, only in "
                "the same conversation, from the own profile and within {klaeren.ASK_SECONDS|min} minutes. „None of "
                "these“ brings the whole list, „No, the other one“ corrects the last choice. The panel carries out the "
                "choice and offers to remember it; a „yes“ to that counts for {klaeren.REMEMBER_SECONDS|min} minutes. "
                "A direct smart home command without the needed code word waits {chat.HA_WAIT_S|min} minutes, bound to "
                "device and conversation (chat.ha_take): a code word from another device of the profile neither runs nor "
-               "clears it. A negated sentence is never a direct command."),
+               "clears it. A negated sentence is never a direct command. If the panel asked which way is meant (Ask which "
+               "way, klaeren.weg_answer), it reads the answer before the switch already: the choice runs the sentence "
+               "before with that group, „Just answer“ without changing tools, anything else lets the question lapse."),
               ("info", "ja", ("Panel führt die Wahl aus", "panel carries out the choice"))),
             S("s8", "frage", ("Notaus oder Mein Notaus?", "Kill switch or my kill switch?"),
               ("ab Stufe {notaus.STAGE.aktion} keine Aktion", "from stage {notaus.STAGE.aktion} no action"),
@@ -258,6 +263,7 @@ SEITEN = {
             ("chat.offer_memory", ("kein memory_save, wenn die Nachricht nur fragt", "no memory_save when the message only asks")),
             ("intent.classify_cfg", ("feste Regeln der Weiche", "the switch's fixed rules")),
             ("klaeren.answer", ("Antwort auf eine Rückfrage", "answer to a question back")),
+            ("klaeren.weg_answer", ("Antwort auf die Rückfrage zum Weg", "answer to the question which way")),
             ("features.allowed", ("Freigabe je Funktion", "release per function")),
             ("notaus.locked_tools", ("was der Notaus wegnimmt", "what the kill switch takes away")),
             ("intent.narrow", ("Werkzeuge eingrenzen", "narrow the tools")),
@@ -272,7 +278,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Antwort bauen (chat._answer)
     "weiche": {
-        "stand": "bba693ded5",
+        "stand": "1f9018d02c",
         "bezug": {
             "intent.GROUPS": ["s4", "s6"], "intent_bench.BENCH": ["s4", "s5"], "intent_alltag.ALLTAG": ["s14"],
             "weiche.KEEP_VERSIONS": ["s4"], "intent.Route": ["s6"], "intent.follow_up": ["s8"],
@@ -286,7 +292,9 @@ SEITEN = {
             "intent.negated": ["s11", "s13"], "intent.cancel": ["s2"], "chat.PRIVATE_WORDS": ["s5", "s13"],
             "chat.first_tool": ["s13"], "intent.normalize": ["s4"], "intent.KNOW": ["s5"], "intent.EMERGENCY": ["s5"],
             "intent.LATER": ["s5"], "intent.FOLLOW": ["s8"], "intent.asked_age": ["s8"], "intent_bench.GEGEN": ["s14"],
-            "intent_bench.gegen": ["s14"],
+            "intent_bench.gegen": ["s14"], "intent.ask_route": ["s15"], "intent.ask_texts": ["s15"],
+            "intent.ASK_SAYS": ["s15"], "intent.ASK_MAX": ["s15"], "intent.ASK_MAX_CHARS": ["s15"],
+            "klaeren.weg_ask": ["s15"], "weiche.learn_choice": ["s15"],
         },
         "kurz": ("Die Weiche ordnet die eigene letzte Nachricht einer Gruppe zu (Smart Home, Kalender, Wetter, Mail und "
                  "so weiter, heute {intent.GROUPS|anzahl} Gruppen) und grenzt damit die Werkzeuge ein, die das "
@@ -504,6 +512,33 @@ SEITEN = {
                "a reading one without the internet, which is then called by name (chat.first_tool). A short, clear reading sentence („What is "
                "the weather today?“) is fetched by the panel itself with „Fetch clear questions directly“, for "
                "tomorrow and the day after with the date the panel works out.")),
+            S("s15", "frage", ("Rückfrage zum Weg?", "Ask which way?"),
+              ("intent.ask_route · nur vor einer Änderung", "intent.ask_route · only before a change"),
+              ("Mit Funktionen → Rückfrage zum Weg (Standard aus) fragt das Panel, bevor sich etwas ändert, welcher Weg "
+               "gemeint ist (intent.ask_route, feste Regeln, nie das Modell): zwei nahe Gruppen, die beide etwas ändern "
+               "und angeboten sind (Mail oder Nachricht, Termin oder Erinnerung, Anruf oder Nachricht, Liste oder "
+               "Erinnerung), oder eine ändernde Gruppe nur auf schwache Zeichen (nur Hinweiswörter, eine Folgefrage mit "
+               "etwas Neuem, die Wahl des Modells unter ihrer Schwelle). Nie bei einer Lese- oder Wissensfrage, einem "
+               "verneinten Satz, Abbruch oder Stopp, nach Text von außen, für Gäste, eine fremde Stimme oder MCP, nie "
+               "wenn der Satz den Weg selbst nennt oder beide Wünsche verbindet, nie über {intent.ASK_MAX_CHARS} Zeichen, "
+               "höchstens einmal je Zug und nie zweimal für denselben Satz (klaeren.weg_ask). Frage und Knöpfe kommen aus "
+               "der festen Tabelle intent.ASK_SAYS (intent.ask_texts, höchstens {intent.ASK_MAX} Wege und immer „Einfach "
+               "antworten“, gesprochen mit „erstens, zweitens …“); diese Antwort ist nur die Frage, ohne Modell und ohne "
+               "Werkzeug. Die Wahl führt den Satz mit der gewählten Gruppe aus (Grund „Rückfrage“), „Einfach antworten“ "
+               "ohne ändernde Werkzeuge, und zählt als Korrektur (weiche.learn_choice, nur Gruppen und Zahlen).",
+               "With Features → Ask which way (default off) the panel asks which way is meant before anything changes "
+               "(intent.ask_route, fixed rules, never the model): two close groups that both change something and are "
+               "offered (mail or message, appointment or reminder, call or message, list or reminder), or one changing "
+               "group on weak evidence only (hint words only, a follow-up naming something new, the model's pick below "
+               "its threshold). Never for a reading or knowledge question, a negated sentence, a cancel or stop, after "
+               "outside text, for guests, another voice or MCP, never when the sentence names the way itself or joins "
+               "both wishes, never over {intent.ASK_MAX_CHARS} characters, at most once per turn and never twice for the "
+               "same sentence (klaeren.weg_ask). Question and buttons come from the fixed table intent.ASK_SAYS "
+               "(intent.ask_texts, at most {intent.ASK_MAX} ways and always „Just answer“, spoken with „first, second "
+               "…“); this answer is only the question, without the model and without a tool. The choice runs the "
+               "sentence with the chosen group (reason „Rückfrage“), „Just answer“ without changing tools, and counts as "
+               "a correction (weiche.learn_choice, groups and numbers only)."),
+              ("info", "ja", ("nur die feste Frage", "only the fixed question"))),
             S("s14", "ende", ("Journal und Zählung", "Journal and count"),
               ("weiche: Absicht … · weiche-stats.json", "weiche: Absicht … · weiche-stats.json"),
               ("Jeder Zug schreibt eine Zeile „weiche: Absicht … | Grund … | Hinweis … | Werkzeuge x von y | Pflicht "
@@ -542,6 +577,13 @@ SEITEN = {
              ["s1", "s2", "s3", "s4", "s5", "s6", "s6!", "s9", "s10", "s11", "s12", "s13", "s14"],
              ("Gruppe iphone, aber verneint: nichts wird eingegrenzt, kein Werkzeug ist Pflicht.",
               "Group iphone, but negated: nothing is narrowed, no tool is a must.")),
+            (("„Schreib Tom eine Mail, dass ich später komme“ mit „Rückfrage zum Weg“",
+              "„Write Tom a mail that I am late“ with „Ask which way“"),
+             ["s1", "s2", "s3", "s4", "s5", "s6", "s6!", "s9", "s10", "s11", "s12", "s13", "s15", "s15!", "s14"],
+             ("Zwei nahe Gruppen mail und nachricht: das Panel fragt „Soll ich erstens als E-Mail schicken, zweitens als "
+              "Nachricht im Haus schicken oder drittens einfach antworten?“, nichts ändert sich vor der Wahl.",
+              "Two close groups mail and message: the panel asks „Should I first send it as an e-mail, second send it as a "
+              "message at home or third just answer?“, nothing changes before the choice.")),
             (("„Was ist eine Lampe?“", "„What is a lamp?“"),
              ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "s12", "s13", "s14"],
              ("Wissensfrage: Smart Home fällt weg, das Modell behält Websuche und Wikipedia.",
@@ -572,6 +614,8 @@ SEITEN = {
             ("{quellen_bench.BENCH|anzahl}", ("Sätze der Quellen-Messbank", "sentences of the source bench"), "quellen_bench.BENCH"),
             ("{quellen.PROBE_MS}", ("ms höchstens für die Treffer-Probe der Quellen-Weiche", "ms at most for the source switch's hit probe"), "quellen.PROBE_MS"),
             ("{weiche.KEEP_VERSIONS}", ("Versionen für Rückgängig", "versions for undo"), "weiche.KEEP_VERSIONS"),
+            ("{intent.ASK_MAX}", ("Wege höchstens in einer Rückfrage zum Weg", "ways at most in one question which way"), "intent.ASK_MAX"),
+            ("{intent.ASK_MAX_CHARS}", ("Zeichen höchstens für eine Rückfrage zum Weg", "characters at most for a question which way"), "intent.ASK_MAX_CHARS"),
         ],
         "einstellen": [
             ("Funktionen → Gezielte Werkzeugwahl: ohne diesen Schalter grenzt die Weiche nichts ein (Standard aus).",
@@ -584,6 +628,10 @@ SEITEN = {
              "own test sentences and what questions no rule recognizes get. Every change runs through all test "
              "sentences first; if one changes, it is saved only after confirming. Undo keeps the last "
              "{weiche.KEEP_VERSIONS} versions."),
+            ("Funktionen → Rückfrage zum Weg: vor einer Änderung fragt das Panel, welcher Weg gemeint ist (Standard aus, "
+             "baut auf „Rückfrage statt Raten“).",
+             "Features → Ask which way: before a change the panel asks which way is meant (default off, builds on „Ask "
+             "instead of guessing“)."),
             ("Funktionen → Eindeutiges direkt abrufen: kurze Lesefragen ruft das Panel selbst ab (Standard aus).",
              "Features → Fetch clear questions directly: the panel fetches short reading questions itself (default off)."),
             ("Funktionen → Weiche abstimmen (Standard aus): das Sprachmodell schlägt Wörter je Gruppe vor, das Panel behält "
@@ -708,12 +756,17 @@ SEITEN = {
             ("intent_bench.gegen", ("Gegenprobe: falsch und falsch erzwungen", "counter check: wrong and wrongly forced")),
             ("quellen.klasse", ("zweite Stufe: intern, extern oder beides", "second stage: internal, external or both")),
             ("quellen.blick", ("die Quellen des kurzen Blicks je Klasse", "the quick look's sources per class")),
+            ("intent.ask_route", ("Rückfrage zum Weg: wann das Panel fragt", "ask which way: when the panel asks")),
+            ("intent.ask_texts", ("Frage und Knöpfe aus fester Tabelle", "question and buttons from a fixed table")),
+            ("intent.ASK_SAYS", ("die Wege, nach denen gefragt wird", "the ways that are asked about")),
+            ("klaeren.weg_ask", ("Frage stellen, nie zweimal derselbe Satz", "ask, never twice the same sentence")),
+            ("weiche.learn_choice", ("die Wahl als Korrektur, nur Gruppen und Zahlen", "the choice as a correction, groups and numbers only")),
         ],
-        "tests": ["test_intent", "test_intent_alltag", "test_quellen_bench", "test_quellen", "test_weiche", "test_weiche_unklar", "test_werkzeuge", "test_systemone"],
+        "tests": ["test_intent", "test_klaeren", "test_intent_alltag", "test_quellen_bench", "test_quellen", "test_weiche", "test_weiche_unklar", "test_werkzeuge", "test_systemone"],
         "heute": [],
     },
     "antwort": {
-        "stand": "e29d5ddd85",
+        "stand": "9551c0b372",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_modell.herkunft_und_chip": ["s3"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -744,7 +797,8 @@ SEITEN = {
                "Befehle ohne Modell (notbetrieb.antwort: Home Assistant, Uhrzeit, Erinnerungen). Mit „Einfaches sofort "
                "beantworten“ bekommen Uhrzeit, Datum, Rechnungen (rechnen.calc), Datumsrechnungen und Einheiten als ganzer kurzer Satz den "
                "festen Satz des Panels, ohne Modell und ohne Sofort-Satz davor (sofort.answer, höchstens "
-               "{sofort.MAX_CHARS} Zeichen).",
+               "{sofort.MAX_CHARS} Zeichen). Ebenso kommt die Rückfrage zum Weg nur als feste Frage des Panels mit "
+               "ihren Knöpfen, ohne Modell und ohne Werkzeug.",
                "chat() checks the rate limit, sets the mark „speech is running“ (background work waits) and shows the "
                "profile's other devices „answering“. Then chat_turn.prepare works out rights, locks, system prompt and "
                "the offered tools; _answer takes over. When the language model pauses (maintenance pause, emergency "
@@ -752,7 +806,8 @@ SEITEN = {
                "without a model (notbetrieb.antwort: Home Assistant, time, reminders). With „Answer simple things at "
                "once“ the time, the date, calculations (rechnen.calc), date calculations and units as a whole short sentence get the panel's fixed "
                "sentence, without a model and without an instant sentence before it (sofort.answer, at most "
-               "{sofort.MAX_CHARS} characters).")),
+               "{sofort.MAX_CHARS} characters). The question which way likewise comes only as the panel's fixed "
+               "question with its buttons, without a model and without a tool.")),
             S("s2", "schritt", ("Strom öffnen, Sofort-Satz", "Open the stream, instant sentence"),
               ("drei Aufgaben: Modell, Sprachausgabe, Brücke", "three tasks: model, speech output, bridge"),
               ("Zwei Warteschlangen verbinden alles: eine für die Ereignisse ans Gerät, eine für Sätze an die "

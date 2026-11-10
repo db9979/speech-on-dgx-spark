@@ -368,6 +368,11 @@ def learn(route, tool, now=None):
     group = group_of_tool(tool)
     if not group:
         return None
+    return _learn(route, group, now)
+
+
+def _learn(route, group, now=None):
+    """Counts group for an unclear question (learn, learn_choice): the hint word only when HINT_WORD fits."""
     word = str((route.hints or {}).get(group, "")).strip().lower()
     word = word if HINT_WORD.fullmatch(word) else ""
     now = time.time() if now is None else now
@@ -389,6 +394,27 @@ def learn(route, tool, now=None):
     import weiche_unklar   # the anonymous row of this turn (if kept) shows which group the model took
     weiche_unklar.took(route, group)
     return group
+
+
+def learn_choice(route, group, now=None):
+    """Rückfragen der Weiche (klaeren.py, area "weg", P5): the person answered the panel's question which way with
+    `group`, or "" for „Einfach antworten“. A correction signal in fixed words only: per day how often each way and plain
+    chat was chosen ("rueckfrage"), and when no rule had named a group (hint words alone or an unsure pick of the model)
+    the group counts as learned like learn(), the hint word only as there and the anonymous row of that turn
+    (weiche_unklar, if kept) shows it. Never a word of the sentence otherwise. Returns the group learned, or None."""
+    key = group if group in intent.GROUPS else "einfach"
+    now = time.time() if now is None else now
+    with _lock:
+        day = _days().setdefault(_day(now), {})
+        box = day.get("rueckfrage")
+        if not isinstance(box, dict):
+            box = day["rueckfrage"] = {}
+        box[key] = int(box.get(key, 0)) + 1
+        _stats["dirty"] = True
+    print("weiche: rueckfrage beantwortet", key, flush=True)
+    if key == "einfach" or route is None or route.names:
+        return None
+    return _learn(route, key, now)
 
 
 def learned(ch, now=None):

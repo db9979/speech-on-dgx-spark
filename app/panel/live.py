@@ -1441,7 +1441,7 @@ def snapshot(view="admin", now=None):
     try:
         import klaeren
         import features
-        kl = klaeren.for_live() if features.admin_on("klaeren") else None
+        kl = dict(klaeren.for_live(), weg_on=features.admin_on("klaerenweg")) if features.admin_on("klaeren") else None
     except Exception:
         kl = None
     if kl is not None:
@@ -2167,6 +2167,9 @@ def snapshot(view="admin", now=None):
         if x["id"] == "klaeren":   # Rückfrage statt Raten: numbers only (never a device, a name or a word)
             x["sub"] = (f"{kl.get('offen', 0)} Fragen offen · heute {kl.get('fragen', 0)} gefragt · {kl.get('auswahl', 0)} gewählt"
                         f" · {kl.get('korrektur', 0)} korrigiert · {kl.get('gemerkt', 0)} gemerkt · {kl.get('genutzt', 0)} genutzt")
+            if kl.get("weg_on"):   # Rückfragen der Weiche (area "weg"): asked, a way chosen, plain chat, lapsed
+                x["sub"] += (f" · Weg: {kl.get('weg_frage', 0)} gefragt · {kl.get('weg_gewaehlt', 0)} gewählt"
+                             f" · {kl.get('weg_einfach', 0)} einfach geantwortet · {kl.get('weg_verfallen', 0)} verfallen")
         if x["id"] == "chats":  # Chats: numbers only (never a text, a name or a group's name)
             x["sub"] = (f"{cht.get('chats', 0)} Chats · {cht.get('groups', 0)} Gruppen · heute {cht.get('sent', 0)} Nachrichten · "
                         f"{cht.get('pushed', 0)} Mitteilungen" + (f" · {cht['push_failed']} nicht zugestellt" if cht.get("push_failed") else "")

@@ -92,6 +92,7 @@ RULES = {
     "fixes": "fixes.py: erkennt eine Korrektur, ein Ja merkt sie",
     "klaeren": "klaeren.py: fragt bei mehreren Treffern zurück",
     "klaerenmerken": "klaeren.py: „Merk dir das“ nach der Rückfrage",
+    "klaerenweg": "intent.ask_route und klaeren.py: fragt vor einer Änderung, welcher Weg gemeint ist",
     "images": "images.py: das Bild geht mit der Frage ans Modell",
     "bildaendern": "bilder.py: Foto im Chat mit Änderungswunsch, das Panel startet die Änderung nach fester Regel",
     "gedpruefen": "gedaechtnis.py: „Stimmt das noch?“ und die Antwort darauf",

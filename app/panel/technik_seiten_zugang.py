@@ -684,7 +684,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ sicherheit (the model as a whole)
     "sicherheit": {
-        "stand": "f9efeed913",
+        "stand": "73b0ea7ed7",
         "bezug": {
             "features.blocked": ["s5"], "geteilt.put": ["s5"], "mitschreiblink.find": ["s3", "s5"], "core.confirm_code": ["s3", "s8"], "core.CONFIRM_WINDOW": ["s3"], "guard.Slot": ["s3"],
             "notaus.STAGE": ["s2"], "vault.seal": ["s10"], "tarswart.check": ["s3"], "tarswart.COMMANDS": ["s3"], "sysupdate.wunsch_nehmen": ["s3"],
@@ -693,7 +693,7 @@ SEITEN = {
             "netguard.hole_oeffentlich": ["s6"], "doklink.eigene": ["s6"], "netproxy.Proxy": ["s6"], "ytquelle.befehl": ["s6"],
             "gedaechtnis.offer": ["s8"], "gemerkt.take_back": ["s8"], "profiles.write_own": ["s10"],
             "vorrat.key": ["s10"], "meinedaten.build": ["s10"], "meinedaten.api_export": ["s3"],
-            "intent.negated": ["s8"], "intent.forget_ok": ["s8"], "chat.ha_take": ["s8"], "chat.needed": ["s6"],
+            "intent.negated": ["s8"], "intent.forget_ok": ["s8"], "intent.ask_route": ["s8"], "chat.ha_take": ["s8"], "chat.needed": ["s6"],
             "chat.PRIVATE_WORDS": ["s6"], "push.add": ["s5"], "push.drop_login": ["s5"], "intent.EMERGENCY": ["s8"],
         },
         "kurz": ("Wie die Schutzschichten des Spark zusammenspielen. Der Grundsatz: das Sprachmodell schlägt vor, das Panel "
@@ -844,7 +844,10 @@ SEITEN = {
                "eigene Wort zum Vergessen (intent.forget_ok). Ein Smart-Home-Befehl, der aufs Codewort wartet, gehört zu "
                "dem Gerät und Gespräch, an dem er gesagt wurde (chat.ha_take). Eine Notrufnummer („Ruf die 112 an“) "
                "startet nie einen Anruf, die Antwort bekommt kein Werkzeug (intent.EMERGENCY); ein Anruf für später ist "
-               "eine Erinnerung, nie der Sofort-Anruf.",
+               "eine Erinnerung, nie der Sofort-Anruf. Mit „Rückfrage zum Weg“ fragt das Panel vor einer Änderung, die "
+               "zwei nahe Wege gehen könnte, welcher gemeint ist (intent.ask_route, feste Regeln, nie das Modell); bis zur "
+               "Wahl antwortet nur die feste Frage, ohne Modell und ohne Werkzeug, nie nach Text von außen, für Gäste, "
+               "fremde Stimmen oder MCP.",
                "Reading happens at once. Whatever changes something (light, sending mail, appointment, call) leaves a "
                "proposal; it runs only after a plain „yes“ to exactly that proposal, from the same device, or the yes button of "
                "its card „Waiting for your yes“ (own profile, the same function as the typed yes). Home Assistant only "
@@ -859,7 +862,10 @@ SEITEN = {
                "a must; „Never mind“ is a cancel without any tool, and memory_forget deletes only on the person's own word "
                "to forget (intent.forget_ok). A smart home command waiting for the code word belongs to the device and "
                "conversation it was said at (chat.ha_take). An emergency number („Call 112“) never starts a call, the "
-               "answer gets no tool (intent.EMERGENCY); a call for later is a reminder, never the instant call."),
+               "answer gets no tool (intent.EMERGENCY); a call for later is a reminder, never the instant call. With "
+               "„Ask which way“ the panel asks before a change that could go two close ways which one is meant "
+               "(intent.ask_route, fixed rules, never the model); until the choice only the fixed question answers, without "
+               "model and tool, never after outside text, for guests, other voices or MCP."),
               ("info", "ja", ("Erst ein Vorschlag, dann „Ja“", "First a proposal, then „yes“"))),
             S("s9", "schritt", ("Antwort prüfen", "Check the answer"),
               ("answercheck.unsupported, textnorm.hide_secrets", "answercheck.unsupported, textnorm.hide_secrets"),
@@ -1050,6 +1056,7 @@ SEITEN = {
                                 "negation: never switch directly, never narrow, no changing must tool")),
             ("intent.forget_ok", ("memory_forget nur auf das eigene Wort zum Vergessen", "memory_forget only on the own word to forget")),
             ("intent.EMERGENCY", ("Notrufnummer: nie ein Anruf, kein Werkzeug", "emergency number: never a call, no tool")),
+            ("intent.ask_route", ("Rückfrage zum Weg: vor einer Änderung fragen, feste Regeln", "ask which way: ask before a change, fixed rules")),
             ("chat.needed", ("Pflicht-Werkzeuge: nie ändernd aus Admin-Regeln, keine Websuche bei Privatem",
                              "must tools: never changing from admin rules, no web search for private sentences")),
             ("chat.ha_take", ("Smart-Home-Befehl mit Codewort nur von seiner Quelle", "smart home command with code word only from its source")),

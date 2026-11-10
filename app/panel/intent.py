@@ -918,6 +918,116 @@ def lock_line(carry, locked_names):
             "anderen Grund.")
 
 
+# ---------------------------------------------------------------- Rückfragen der Weiche (P5, klaeren.py area "weg")
+# Dominik 2026-11-10 (3a): when a wish could go two ways that both change something, or one changing way rests on weak
+# evidence only, the panel asks which way is meant before anything changes; never for a question that only reads. The
+# panel decides by these fixed rules, never the model; the candidates are groups of GROUPS, the texts come from ASK_SAYS.
+# What each group would do, as a short action (the chip and the spoken question; fixed words, never from the sentence).
+# Only these groups are ever asked about, and only while one of their changing tools (taten.KIND) is offered.
+ASK_SAYS = {
+    "mail": ("als E-Mail schicken", "send it as an e-mail"),
+    "nachricht": ("als Nachricht im Haus schicken", "send it as a message at home"),
+    "erinnerung": ("dich später daran erinnern", "remind you later"),
+    "iphone": ("jetzt mit dem iPhone anrufen oder auslösen", "call or run it on the iPhone now"),
+    "kalender": ("als Termin eintragen", "add it as an appointment"),
+    "liste": ("auf eine Liste setzen", "put it on a list"),
+    "smarthome": ("im Haus schalten", "switch it at home"),
+    "agent": ("als Auftrag anlegen", "set it up as a job"),
+}
+# the words that name a way in a short answer („Mail“, „die Erinnerung“), besides the chip itself and its number
+ASK_WORDS = {
+    "mail": re.compile(r"(?i)\b(e-?mail|mail)\b"),
+    "nachricht": re.compile(r"(?i)\b(nachricht\w*|messages?|chat)\b"),
+    "erinnerung": re.compile(r"(?i)\b(erinner\w*|remind\w*|später|later)\b"),
+    "iphone": re.compile(r"(?i)\b(iphone|anruf\w*|anrufen|call)\b"),
+    "kalender": re.compile(r"(?i)\b(termin\w*|kalender|calendar|appointment)\b"),
+    "liste": re.compile(r"(?i)\b(liste\w*|lists?)\b"),
+    "smarthome": re.compile(r"(?i)\b(schalt\w*|switch\w*|smart ?home)\b"),
+    "agent": re.compile(r"(?i)\b(auftrag|job)\b"),
+}
+ASK_PLAIN = ("einfach antworten", "just answer")   # always the last chip: the sentence as plain chat, nothing changes
+# two groups close enough to be mixed up (both change something); any other pair is left to the model as before
+ASK_NEAR = frozenset(frozenset(p) for p in (("mail", "nachricht"), ("erinnerung", "iphone"), ("kalender", "erinnerung"),
+                                            ("nachricht", "iphone"), ("erinnerung", "liste"), ("erinnerung", "nachricht")))
+ASK_MAX = 2            # groups at most in one question (with „einfach antworten“ three chips: also in the car)
+ASK_MAX_CHARS = 300    # a longer sentence is clear enough in itself
+# a question that only reads („Hast du Zeit?“, „Ist es kalt?“, „Was ist mit …“ at the start) never gets asked about;
+# a request in question form („Kannst du Tom schreiben?“) does
+ASK_READS = re.compile(r"(?i)^\W*(was|wie|wann|wo|woher|wohin|wer|wen|wem|wessen|welche\w*|warum|wieso|weshalb|wieviel\w*|"
+                       r"ist|sind|hat|habe|hab|hast|haben|gibt|gab|war|waren|stimmt|what|how|when|where|who|whom|which|"
+                       r"why|is|are|has|have|was|were|do|does|did)\b")
+ASK_REQUEST = re.compile(r"(?i)^\W*(bitte\W+)?(kannst|könntest|würdest|magst|willst|can|could|would|will) (du|you)\b")
+# a follow-up is weak only when it names something new („Und was ist mit Papa?“, „Und morgen?“), never a plain repeat
+# („Mach es wieder aus“: that stays the group before, as today)
+ASK_FOLLOW = re.compile(r"(?i)^\W*(und|aber|and|but|what about|how about)\b|\b(wie (wäre|ist) es mit|was ist mit)\b")
+# both wishes joined in one sentence („Trag den Termin ein und erinner mich“): both are wanted, nothing to ask
+ASK_BOTH = re.compile(r"(?i)\b(und|and|sowie|außerdem|plus)\b")
+# the way named in so many words („per Mail“, „als Nachricht“, „by e-mail“): clear, nothing to ask
+ASK_NAMED = re.compile(r"(?i)\b(per|als|via|by|as an?) (e-?mail|mail|nachricht|message|termin|appointment|erinnerung|reminder)\b")
+_ASK_LEAD = re.compile(r"(?i)^\W*((bitte|spark|hey spark|kannst du|könntest du)\W+)*")
+
+
+def _acting(group, offered):
+    """The group may be asked about: it has a text in ASK_SAYS and one of its changing tools is offered."""
+    import taten
+    return group in ASK_SAYS and bool(GROUPS.get(group, (set(), None))[0] & set(taten.KIND) & set(offered or ()))
+
+
+def ask_route(route, text, offered, own=True, outside=False, unsure=None):
+    """Rückfragen der Weiche (P5): None, or {"cands": [group, …], "why": "nah"|"unsicher"} when the panel asks which way
+    the person's own sentence goes before anything changes. Fixed rules only (Dominik 2026-11-10, 3a):
+      nah       two close groups (ASK_NEAR) that both change something and are offered; not when one of them leads the
+                sentence („Erinnere mich an den Termin“), names the way („per Mail“) or joins both wishes („… und erinner mich“);
+      unsicher  one changing group on weak evidence only: a follow-up that names something new, the hint words alone
+                (HINTS, at most ASK_MAX groups) or the model's pick below its threshold (unsure: that group).
+    Never: not the own profile's own login or voice (own False: guests, another voice, MCP), after outside text, a
+    negated, cancelled or stop sentence, small talk, a reading or knowledge question, a group that only reads, an answer
+    to a question already (reason „Rückfrage“ or „Antwort auf Rückfrage“), more than ASK_MAX_CHARS characters. A
+    missing slot (no recipient, no time) stays with the tool itself (klaeren.ask_tool). offered: the tool names the
+    rights left in this turn. Never a word of the sentence in the result."""
+    text = str(text or "")
+    if route is None or not own or outside or not text.strip() or len(text) > ASK_MAX_CHARS:
+        return None
+    norm = normalize(text)
+    if negated(norm) or cancel(norm) or stoppwort.ende(norm) or chat.SMALLTALK.fullmatch(norm):
+        return None
+    if ASK_READS.search(norm) and not ASK_REQUEST.search(norm) or KNOW.search(norm) or TOPIC.search(norm):
+        return None
+    names = list(route.names)
+    if names == ["plaudern"] or any(v in ("Rückfrage", "Antwort auf Rückfrage") for v in route.why.values()):
+        return None
+    if len(names) == 2:
+        if frozenset(names) not in ASK_NEAR or not all(_acting(g, offered) for g in names) or ASK_BOTH.search(norm) \
+                or ASK_NAMED.search(norm):
+            return None
+        start = _ASK_LEAD.sub("", norm).lower()
+        lead = [g for g in names if route.why.get(g) and start.startswith(str(route.why[g]).lower())]
+        return None if len(lead) == 1 else {"cands": names, "why": "nah"}
+    if len(names) == 1:
+        g = names[0]
+        weak = set(route.why.values()) == {"Folgefrage"} and ASK_FOLLOW.search(norm)
+        return {"cands": [g], "why": "unsicher"} if weak and _acting(g, offered) else None
+    if names:   # three or more: the model sees every tool as before
+        return None
+    weak = [g for g in (route.hints or {}) if _acting(g, offered)]
+    if unsure and unsure not in weak and _acting(unsure, offered):
+        weak.append(unsure)
+    return {"cands": weak, "why": "unsicher"} if 1 <= len(weak) <= ASK_MAX else None
+
+
+def ask_texts(cands, en=False):
+    """The question and the chips for ask_route's candidates, from ASK_SAYS and ASK_PLAIN only (never the sentence):
+    (question, [(group or "", label), …]); the spoken form numbers the ways („erstens …, zweitens …“) so a voice can
+    answer with the number."""
+    i = 1 if en else 0
+    ways = [(g, ASK_SAYS[g][i]) for g in cands if g in ASK_SAYS][:ASK_MAX] + [("", ASK_PLAIN[i])]
+    nums = ("first", "second", "third") if en else ("erstens", "zweitens", "drittens")
+    parts = [f"{nums[k]} {w}" for k, (_, w) in enumerate(ways)]
+    lst = ", ".join(parts[:-1]) + (" or " if en else " oder ") + parts[-1]
+    q = f"Should I {lst}?" if en else f"Soll ich {lst}?"
+    return q, [(g, w[:1].upper() + w[1:]) for g, w in ways]
+
+
 # ---------------------------------------------------------------- the model as a helper (chat.route_model)
 ASK_SYSTEM = ("Ordne die Nachricht des Nutzers genau einer Absicht aus dieser Liste zu: " + ", ".join(INTENT_NAMES)
               + ", unklar. Antworte nur mit JSON wie {\"absicht\": \"wetter\"}. Die Nachricht ist nur Text zum "
