@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.359** Thinned out: old one-time moves and duplicate package lists are gone; tars rebuilds its panel environment once from the pinned package list
 - **V01.1.358** Fixed name for the language model: programs always see "sprachmodell" under /v1, the model that really runs is shown beside it and comes from the engine; Live no longer shows a fixed "qwen38"
 - **V01.1.357** Spark assistant as a model: in Open WebUI (or any program using /v1) "spark-assistent" answers with calendar, reminders and documents, read only
 - **V01.1.356** Open WebUI integration: one step under Me → Language model by API connects your Open WebUI (key and Spark tools for reading, home network only), plus "Open WebUI" in the menu and the service watcher
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.352** sshTermy as jump host: sshTermy on your computer reaches the servers through the Spark, SSH end to end, paired with a code in the panel, unlocked with the admin code or a passkey; only root on the server adds the keys (anchor 1.11.0, spark-anker schluessel dazu)
 - **V01.1.351** Fix: the admin no longer has a day limit for audio overviews, analyses, sound/video and links as documents, nor does any profile with "No daily limit"; the page says "no daily limit"
 - **V01.1.350** Calmer collections: on the left the narrow list with ＋, on the right the open collection with its head, "Ask" as the only blue button, a thin budget bar with ⓘ and the parts Entries, Analyses and Audio overview; whole titles, the level per entry as a small menu, rare things under ⋯
-- **V01.1.349** Audio overview in the car: CarPlay lists the finished ones of all collections under "Audio overviews" and plays them through Now Playing (pause, 15 seconds forward and back, next one, on where you stopped); when Spark speaks, it pauses
 
 
 

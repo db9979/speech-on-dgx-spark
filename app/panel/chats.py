@@ -1066,35 +1066,6 @@ def all_group(now=None):
     return cid
 
 
-def put_old(sender, uid, text, t, read):
-    """One message of the old mailbox (messages.migrate, before V01.0.488) into the chat of sender and uid, at its own
-    time and marked "via Spark". The chat is made even when one of them has chats off: it is their history."""
-    if not text or not UID.fullmatch(sender or "") or not UID.fullmatch(uid or ""):
-        raise ValueError("bad old message")
-    cid = one_id(sender, uid)
-    with _lock:
-        chats = _index()
-        if cid not in chats:
-            chats[cid] = {"kind": "one", "members": sorted([sender, uid]), "admins": [], "by": sender, "t": t,
-                          "updated": t, "vanish": 0, "last": {}, "unread": {}}
-            _save_chat(cid, {"items": []})
-            _save_index(chats)
-    mid = secrets.token_hex(6)
-
-    def put(meta, d, chats):
-        d["items"].append({"id": mid, "from": sender, "t": t, "kind": "text", "text": seal(clean(text), cid, mid),
-                           "react": {}, "via": "spark"})
-        d["items"].sort(key=lambda x: float(x.get("t") or 0))
-        meta["updated"] = max(float(meta.get("updated") or 0), t)
-        if not read:
-            un = _map(meta, "unread")
-            un[uid] = int(un.get(uid) or 0) + 1
-        else:
-            _map(meta, "read")[uid] = max(float(_map(meta, "read").get(uid) or 0), t)
-    _mutate(cid, put)
-    return cid
-
-
 def make_group(uid, name, members, now=None):
     """A group the profile makes: it is its admin; only people who take messages from it come in."""
     now = time.time() if now is None else now

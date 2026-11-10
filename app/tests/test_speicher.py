@@ -914,27 +914,3 @@ class SmbTarget(Base):
         self.assertEqual(r.status_code, 400)
         p = next(p for p in speicher.probes().values() if uid in p["uids"])
         self.assertEqual((p["tcp"], p["ssh"], p["port"]), (True, False, 445))
-
-
-class Packages(unittest.TestCase):
-    def test_extra_lock_matches_the_main_lock(self):
-        """requirements-speicher.lock (for an environment made before the lock file) holds exactly the SFTP and SMB
-        packages, with the same versions and hashes as requirements-panel.lock."""
-        import re
-
-        def blocks(name):
-            with open(os.path.join(helpers.APP, name)) as f:
-                text = f.read()
-            out = {}
-            for b in re.split(r"\n(?=[a-z0-9])", text):
-                m = re.match(r"([a-z0-9_.\-]+)==(\S+)", b)
-                if m:
-                    out[m.group(1)] = (m.group(2), sorted(re.findall(r"sha256:([0-9a-f]{64})", b)))
-            return out
-        extra, main = blocks("requirements-speicher.lock"), blocks("requirements-panel.lock")
-        self.assertEqual(set(extra), {"bcrypt", "invoke", "paramiko", "pynacl", "pyspnego", "smbprotocol",
-                                          "ifaddr", "zeroconf",   # since V01.0.524: Im Heimnetz suchen (nashilfe.py)
-                                          "pyasn1", "pysnmp"})   # since S6: Zustand der NAS (naszustand.py)
-        for k, v in extra.items():
-            self.assertEqual(v, main[k], k)
-            self.assertTrue(v[1], k)

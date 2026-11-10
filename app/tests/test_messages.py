@@ -508,43 +508,6 @@ class Backup(Base):
         b.put("/api/chats/who", json={"block": []})
 
 
-class Migration(Base):
-    def test_old_mailbox_moves_into_the_chats_once(self):
-        a, ua = profile("Ulla")
-        b, ub = profile("Udo")
-        old = [{"id": "a1" * 6, "from": ua, "name": "Ulla", "text": vault.seal("Erste"), "t": NOW, "read": True, "kind": "text"},
-               {"id": "a2" * 6, "from": ua, "name": "Ulla", "text": vault.seal("Wer kommt mit?"), "t": NOW + 5,
-                "read": False, "kind": "all"},
-               {"id": "a3" * 6, "from": ua, "name": "Ulla", "text": vault.seal("Bring Brot"), "t": NOW + 9,
-                "read": False, "kind": "voice", "secs": 3},
-               {"id": "a4" * 6, "from": "u_000000000000", "name": "Weg", "text": vault.seal("Von niemandem"), "t": NOW + 1}]
-        profiles._write(messages._file(ub), {"items": old, "allow": [ua], "block": [], "recent": [ua], "fav": []})
-        os.makedirs(profiles._path(ub, "messages"), exist_ok=True)
-        with open(profiles._path(ub, "messages", "a3" * 6 + ".ogg.enc"), "wb") as f:
-            f.write(b"enc1:x")
-        with open(profiles._path(ub, "settings.json")) as f:
-            s = json.load(f)
-        s["msg_on"] = True                                         # Udo used Nachrichten: Chats come on for him
-        profiles._write(profiles._path(ub, "settings.json"), s)
-        helpers.set_config(chats=False, messages=True, messages_voice=True)
-        self.assertEqual(messages.migrate_all(), 3)
-        from common import load_config
-        c = load_config("chat")
-        self.assertIs(c["chats"], True)                            # the Spark switch carried over
-        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
-            self.assertNotIn("messages_voice", json.load(f)["chat"])
-        self.assertTrue(messages.usable(ub))                       # released for every profile
-        cid = chats.one_id(ua, ub)
-        self.assertEqual(got(ub, cid), [("Ulla", "Erste"), ("Ulla", "an alle: Wer kommt mit?"), ("Ulla", "🎤 Bring Brot")])
-        items = chats._chat(cid)["items"]
-        self.assertEqual([x["t"] for x in items], [NOW, NOW + 5, NOW + 9])   # at their own time
-        self.assertEqual(int(chats._index()[cid]["unread"][ub]), 2)
-        self.assertEqual(messages._raw(ub), {"allow": [ua], "block": [], "spoken": 0.0})
-        self.assertFalse(os.path.exists(profiles._path(ub, "messages")))
-        self.assertEqual(messages.migrate_all(), 0)                # once
-        self.assertEqual(len(chats._chat(cid)["items"]), 3)
-
-
 class Unlock(Base):
     def test_asking_to_send_after_outside_text(self):
         """An answer from outside text just before (web, mail, a read message) would lock sending; a new

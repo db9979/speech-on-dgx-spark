@@ -759,23 +759,5 @@ class Live(Base):
         tracelog.clear()
 
 
-class Lock(unittest.TestCase):
-    def test_extra_lock_matches_the_main_lock(self):
-        def blocks(name):
-            with open(os.path.join(helpers.APP, name)) as f:
-                text = f.read()
-            out = {}
-            for b in re.split(r"\n(?=[a-z0-9])", text):
-                m = re.match(r"([a-z0-9_.\-]+)==(\S+)", b)
-                if m:
-                    out[m.group(1)] = (m.group(2), sorted(re.findall(r"sha256:([0-9a-f]{64})", b)))
-            return out
-        doc, main = blocks("requirements-docmake.lock"), blocks("requirements-panel.lock")
-        self.assertEqual(set(doc), {"defusedxml", "fonttools", "fpdf2", "lxml", "python-docx", "python-pptx", "xlsxwriter"})
-        for k, v in doc.items():
-            self.assertEqual(v, main[k], k)
-            self.assertTrue(v[1], k)
-
-
 if __name__ == "__main__":
     unittest.main()

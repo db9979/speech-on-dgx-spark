@@ -538,12 +538,6 @@ async def stability():
 
 
 @app.on_event("startup")
-async def nas_move():
-    """S1 (nas.py): Eigener Speicher and the backup to the NAS keep their login in one NAS connection."""
-    await asyncio.to_thread(nas.migrate_all)
-
-
-@app.on_event("startup")
 async def mail_tidy():
     """Tidying inboxes (see tidy.py): each minute the mailboxes whose interval is due; the language
     model only sorts while nobody is talking to the assistant."""
@@ -672,15 +666,6 @@ async def warm_start():
 async def verbund_queue():
     """Chats mit anderen Sparks (verbund.py): what waits for another Spark goes out every 30 seconds, new ones at once."""
     spawn(verbund.loop())
-
-
-@app.on_event("startup")
-def messages_into_chats():
-    """Once after V01.0.488: the old mailboxes of "Nachrichten" into the chats (messages.migrate_all)."""
-    try:
-        messages.migrate_all()
-    except Exception as e:
-        print("messages: moving into chats failed:", type(e).__name__, flush=True)
 
 
 @app.on_event("startup")

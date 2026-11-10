@@ -25,8 +25,6 @@ never in the profile's quiet hours or for a muted chat. Announcements: on the sp
 
     USERS_DIR/<uid>/messages.json          {"allow": [uid], "block": [uid], "spoken": t (speaker read up to)}
     USERS_DIR/<uid>/messages-pending.json  the proposal waiting for "Ja"
-Before V01.0.488 messages.json also held a mailbox ("items", voice under messages/): migrate_all moves those once
-into the chats of the two profiles and deletes them.
 """
 import asyncio
 import collections
@@ -166,62 +164,6 @@ def forget(uid):
         except OSError:
             pass
     shutil.rmtree(profiles._path(uid, "messages"), ignore_errors=True)
-
-
-def migrate(uid):
-    """The old mailbox of uid (before V01.0.488) into the chats with each sender: the text with its time, "an alle:"
-    in front of a message to everybody, a voice message as 🎤 and the text the speech recognition wrote. Then the
-    mailbox and its sound are gone. Returns how many messages moved."""
-    import chats
-    d = _raw(uid)
-    items = [x for x in d.get("items") or [] if isinstance(x, dict) and re.fullmatch(r"[0-9a-f]{12}", str(x.get("id")))]
-    moved = 0
-    for x in sorted(items, key=lambda x: float(x.get("t") or 0)):
-        sender = str(x.get("from") or "")
-        if sender == uid or not profiles.by_id(sender):
-            continue   # the sender's profile is gone: its words go with it, as in the chats
-        text = vault.open_(x.get("text", "")) if str(x.get("text", "")).startswith(vault.PREFIX) else str(x.get("text") or "")
-        kind = x.get("kind")
-        text = ("an alle: " if kind == "all" else "🎤 " if kind == "voice" else "") + (text or "")
-        if not text.strip():
-            continue
-        try:
-            chats.put_old(sender, uid, text, float(x.get("t") or 0), bool(x.get("read")))
-            moved += 1
-        except (OSError, ValueError, RuntimeError) as e:
-            print("messages: moving an old message failed", type(e).__name__, flush=True)
-            return moved   # the mailbox stays for the next start
-    with _lock:
-        if _raw(uid).get("items") is not None:
-            _save(uid, _load(uid))
-    shutil.rmtree(profiles._path(uid, "messages"), ignore_errors=True)
-    return moved
-
-
-def migrate_all():
-    """Once after the update: every profile's old mailbox into the chats; a profile that used Nachrichten gets Chats
-    switched on (its own switch carried over), and the Spark's Nachrichten switch carries over to Chats."""
-    from common import CONFIG_PATH, write_json
-    try:
-        with open(CONFIG_PATH) as f:
-            raw = json.load(f)
-        c = raw.get("chat") if isinstance(raw.get("chat"), dict) else None
-        if c is not None and "messages" in c:
-            if c.get("messages") is True and c.get("chats") is not True:
-                c["chats"] = True
-                print("messages: Spark switch Nachrichten carried over to Chats", flush=True)
-            for k in ("messages", "messages_voice"):
-                c.pop(k, None)
-            write_json(CONFIG_PATH, raw, indent=2)
-    except (OSError, ValueError) as e:
-        print("messages: config carry-over failed", type(e).__name__, flush=True)
-    n = 0
-    for uid in profiles.user_ids():
-        if _raw(uid).get("items") is not None:
-            n += migrate(uid)
-    if n:
-        print(f"messages: moved {n} old message(s) into chats", flush=True)
-    return n
 
 
 # ---------------------------------------------------------------- who may write to whom

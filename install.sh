@@ -594,13 +594,30 @@ if [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = transformers ]; then
 fi
 say "Python env for the panel and the ASR / TTS front ends"
 # sherpa-onnx + huggingface_hub: the Parakeet recognizer (CPU) that asr_proxy.py runs when chosen
-# A new environment is built from app/requirements-panel.lock: exactly those versions, each file checked against
-# its hash (pip --require-hashes), the same file the GitHub test installs (V01.0.286). The lock already holds every
+# The environment is built from app/requirements-panel.lock: exactly those versions, each file checked against its
+# hash (pip --require-hashes), the same file the GitHub test installs (V01.0.286). The lock already holds every
 # dependency, so pip installs it with --no-deps: rmscene's packaging<24 pin (it only uses packaging.version.Version)
-# is overridden there, packaging stays current (requirements-panel.override). An environment made before keeps its
-# packages as they are (see below) until it is built again (remove $PREFIX/venv-panel, run install.sh).
+# is overridden there, packaging stays current (requirements-panel.override).
 PANEL_LOCK="$INSTALL_FROM/app/requirements-panel.lock"
-if [ -f "$PANEL_LOCK" ] && { [ ! -x "$PREFIX/venv-panel/bin/python" ] || [ -f "$PREFIX/venv-panel/.locked" ]; }; then
+[ -f "$PANEL_LOCK" ] || die "app/requirements-panel.lock is missing"
+panel_old=0
+if [ -x "$PREFIX/venv-panel/bin/python" ] && [ ! -f "$PREFIX/venv-panel/.locked" ]; then
+  # Einmal-Umstellung (Ausdünnen 8, V01.1.359): an environment made before the lock file (before V01.0.286, tars)
+  # is built anew from it once. The old one waits beside it; when pip fails it comes back unchanged and the next
+  # update tries again (a warning, the update goes on).
+  echo "   venv-panel: made before the lock file, built anew from it once"
+  rm -rf -- "$PREFIX/venv-panel.alt"
+  mv -- "$PREFIX/venv-panel" "$PREFIX/venv-panel.alt"
+  if "$PY" -m venv "$PREFIX/venv-panel" \
+     && "$PREFIX/venv-panel/bin/pip" install -q --no-deps --require-hashes -r "$PANEL_LOCK"; then
+    rm -rf -- "$PREFIX/venv-panel.alt"
+  else
+    rm -rf -- "$PREFIX/venv-panel"; mv -- "$PREFIX/venv-panel.alt" "$PREFIX/venv-panel"
+    warn "venv-panel could not be built from app/requirements-panel.lock; the old environment stays, next update tries again"
+    panel_old=1
+  fi
+fi
+if [ "$panel_old" = 0 ]; then
   # .locked holds the SHA-256 of the lock file it was built from: an update with the same lock skips pip
   lock_sum=$(sha256sum "$PANEL_LOCK" | cut -c1-64)
   if [ "$FROM_UPDATE" = 1 ] && [ -x "$PREFIX/venv-panel/bin/python" ] && [ ! -L "$PREFIX/venv-panel/.locked" ] \
@@ -611,47 +628,7 @@ if [ -f "$PANEL_LOCK" ] && { [ ! -x "$PREFIX/venv-panel/bin/python" ] || [ -f "$
     "$PREFIX/venv-panel/bin/pip" install -q --no-deps --require-hashes -r "$PANEL_LOCK"
   fi
   rm -f -- "$PREFIX/venv-panel/.locked"; printf '%s\n' "$lock_sum" >"$PREFIX/venv-panel/.locked"
-else
-  # rmscene pins packaging<24 although it only uses packaging.version.Version; resolved together
-  # with the rest, pip downgraded packaging to 23.2 and broke wheel (packaging>=24), which showed up
-  # as "pip's dependency resolver ... dependency conflicts" in every update log. So packaging stays
-  # current and rmscene comes in without its dependencies; the first line repairs venvs from .273-.276.
-  if same_pkgs "$PREFIX/venv-panel" "pkgs-r1 legacy-r2"; then
-    echo "   venv-panel: packages unchanged, pip skipped"
-  else
-  [ -x "$PREFIX/venv-panel/bin/pip" ] && "$PREFIX/venv-panel/bin/pip" install -q --no-deps "packaging>=24"
-  make_venv panel fastapi "uvicorn[standard]" python-multipart "httpx[http2]" psutil num2words numpy "pypdf>=6.21.4" icalendar recurring-ical-events cryptography segno sherpa-onnx huggingface_hub "certifi>=2026.10.18" "filelock>=4.2.1" "packaging>=24" "pillow==13.0.0" "onnxruntime==1.22.1" "tokenizers==0.22.1" "pypdfium2==4.30.0"   # pictures (images.py), meaning search (docembed.py), scanned pages (documents.py): fixed versions
-  "$PREFIX/venv-panel/bin/pip" install -q --no-deps "rmscene==0.8.0"   # reMarkable pages (remarkable.py)
-  # passkeys (passkey.py): python-fido2 only needs cryptography (above); alone, so its cap on cryptography moves nothing
-  "$PREFIX/venv-panel/bin/pip" install -q --no-deps "fido2==2.2.1"
-  # bump legacy-r2 when a package in this branch changes
-  rm -f -- "$PREFIX/venv-panel/.pkgs"; printf '%s\n' "pkgs-r1 legacy-r2" >"$PREFIX/venv-panel/.pkgs"
-  fi
-  # Dokumente erstellen (docmake.py): Word, PowerPoint, Excel and PDF packages for an environment made before the lock
-  # file, exactly the versions and hashes of requirements-docmake.lock (the same as in requirements-panel.lock),
-  # once per version of that file (.docmake holds its SHA-256)
-  DOC_LOCK="$INSTALL_FROM/app/requirements-docmake.lock"
-  if [ -f "$DOC_LOCK" ]; then
-    doc_sum=$(sha256sum "$DOC_LOCK" | cut -c1-64)
-    if [ ! -L "$PREFIX/venv-panel/.docmake" ] && [ "$(cat "$PREFIX/venv-panel/.docmake" 2>/dev/null)" = "$doc_sum" ]; then
-      echo "   venv-panel: document packages unchanged, pip skipped"
-    else
-      "$PREFIX/venv-panel/bin/pip" install -q --no-deps --require-hashes -r "$DOC_LOCK"
-      rm -f -- "$PREFIX/venv-panel/.docmake"; printf '%s\n' "$doc_sum" >"$PREFIX/venv-panel/.docmake"
-    fi
-  fi
-  # Eigener Speicher (speicher.py): SFTP and SMB3 packages for an environment made before the lock file, exactly the
-  # versions and hashes of requirements-speicher.lock (the same as in requirements-panel.lock), once per version of it
-  STORE_LOCK="$INSTALL_FROM/app/requirements-speicher.lock"
-  if [ -f "$STORE_LOCK" ]; then
-    store_sum=$(sha256sum "$STORE_LOCK" | cut -c1-64)
-    if [ ! -L "$PREFIX/venv-panel/.speicher" ] && [ "$(cat "$PREFIX/venv-panel/.speicher" 2>/dev/null)" = "$store_sum" ]; then
-      echo "   venv-panel: storage packages unchanged, pip skipped"
-    else
-      "$PREFIX/venv-panel/bin/pip" install -q --no-deps --require-hashes -r "$STORE_LOCK"
-      rm -f -- "$PREFIX/venv-panel/.speicher"; printf '%s\n' "$store_sum" >"$PREFIX/venv-panel/.speicher"
-    fi
-  fi
+  rm -f -- "$PREFIX/venv-panel/.pkgs" "$PREFIX/venv-panel/.docmake" "$PREFIX/venv-panel/.speicher"   # marks of the old way
 fi
 
 # ---------------------------------------------------------------- engines (vLLM + vllm-omni, native)

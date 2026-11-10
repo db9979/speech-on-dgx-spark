@@ -14,8 +14,8 @@ Two stores, each with at most MAX connections:
 How the uses keep working unchanged (S1, "Umstellung"): a use stores {"nas": id, "path": "/folder"} instead of
 address, user and password. expand() fills the full address and the login back in when the use is read,
 collapse() writes them into the connection when the use is saved (the same kind, address and user mean the same
-connection). So an old speicher.json or offsite.json is moved over the first time it is saved (and once at start,
-migrate_all), and a restored old backup still works. The old file stays readable as it was.
+connection). So an old speicher.json or offsite.json is moved over the first time it is saved, and a restored old backup still
+works: the old file stays readable as it was.
 
 Rules (fixed, not decided by the model): adding a connection or changing its user, password, certificate or
 server key only in the profile's browser login with a code (stufen.py); a connection that a use still needs is
@@ -266,65 +266,6 @@ def uses(owner):
         for nid, n in got.items():
             out.setdefault(nid, {})[name] = n
     return out
-
-
-def _keep(path):
-    """The file as it was before the move, next to it as *.vor-nas.json (0600): an older version after a rollback
-    finds the login there by hand (docs: Eigener Speicher, "Zurück auf eine ältere Version")."""
-    old = path[:-5] + ".vor-nas.json"
-    if os.path.islink(path) or os.path.exists(old):
-        return
-    with open(path, "rb") as f:
-        data = f.read()
-    with open(os.open(old, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600), "wb") as f:
-        f.write(data)
-
-
-def _switch_carry():
-    from common import CONFIG_PATH, write_json
-    try:
-        with open(CONFIG_PATH) as f:
-            raw = json.load(f)
-        c = raw.get("chat") if isinstance(raw.get("chat"), dict) else None
-        if c is not None and c.get("storage_own") is True and c.get("nas_on") is not True:
-            c["nas_on"] = True
-            write_json(CONFIG_PATH, raw, indent=2)
-            print("nas: umgestellt schalter=1", flush=True)
-    except (OSError, ValueError) as e:
-        print("nas: umstellung schalter fehlgeschlagen", type(e).__name__, flush=True)
-
-
-def migrate_all():
-    """Once at start: every profile's copy (speicher.py) and the backup to the NAS move onto connections (S1). Saving
-    through the modules does it; this only makes sure it happens before anybody opens a page. "Kopie meiner Daten"
-    hangs below "Speicher und NAS" since the clean-up: who had only the copy on gets the heading switched on too."""
-    _switch_carry()
-    n = 0
-    try:
-        import speicher
-        for uid in profiles.user_ids():
-            raw = speicher._json(speicher._file(uid))
-            if any(isinstance(t, dict) and t.get("kind") in speicher.LOGIN_KINDS and "nas" not in t
-                   for t in raw.get("targets") or [] if isinstance(raw.get("targets"), list)):
-                _keep(speicher._file(uid))
-                d = speicher.load(uid)
-                speicher.save(uid, d)
-                n += 1
-    except Exception as e:   # noqa: BLE001 - the old file keeps working, the next save moves it
-        print("nas: umstellung speicher fehlgeschlagen", type(e).__name__, flush=True)
-    try:
-        import offsite
-        raw = offsite._raw()
-        if raw.get("url") and "nas" not in raw:
-            _keep(offsite.FILE)
-            with offsite._lock:
-                offsite._write(offsite._read())
-            n += 1
-    except Exception as e:   # noqa: BLE001
-        print("nas: umstellung sicherung fehlgeschlagen", type(e).__name__, flush=True)
-    if n:
-        print(f"nas: umgestellt nutzungen={n}", flush=True)
-    return n
 
 
 # ---------------------------------------------------------------- checking a connection

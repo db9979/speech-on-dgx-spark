@@ -1,6 +1,6 @@
 """pip hash lock for the panel's environment (V01.0.286): every package pinned with its hashes, install.sh builds a new
 environment from it with --no-deps --require-hashes, the GitHub test installs the same file, and the list of wanted
-packages is the same in install.sh and requirements-panel.in. packaging stays >= 24 although rmscene asks for < 24
+packages is requirements-panel.in. packaging stays >= 24 although rmscene asks for < 24
 (V01.0.278: an older packaging broke wheel). (install.sh and the workflow are skipped in an app/-only copy.)"""
 import os
 import re
@@ -43,19 +43,10 @@ class Lock(unittest.TestCase):
         with open(sh) as f:
             text = f.read()
         self.assertIn('install -q --no-deps --require-hashes -r "$PANEL_LOCK"', text)
-        line = re.search(r"make_venv panel (.*?)(?:\s+#|$)", text, re.M).group(1)
-        listed = [x.strip('"') for x in re.findall(r'"[^"]+"|\S+', line)]
-        listed += re.findall(r'install -q --no-deps "((?:rmscene|fido2)==[^"]+)"', text)   # alone: rmscene's packaging<24 pin, fido2's cryptography cap
-        # Dokumente erstellen: the packages of requirements-docmake.lock, installed with their hashes
-        self.assertIn('install -q --no-deps --require-hashes -r "$DOC_LOCK"', text)
-        with open(os.path.join(APP, "requirements-docmake.lock")) as f:
-            doc = dict(re.findall(r"^([a-z0-9_.\-]+)==([^\s\\]+)", f.read(), re.M))
-        listed += [f"{n}=={v}" for n, v in doc.items() if f"{n}=={v}" in wanted()]
-        # Eigener Speicher: the packages of requirements-speicher.lock, installed with their hashes
-        self.assertIn('install -q --no-deps --require-hashes -r "$STORE_LOCK"', text)
-        with open(os.path.join(APP, "requirements-speicher.lock")) as f:
-            store = dict(re.findall(r"^([a-z0-9_.\-]+)==([^\s\\]+)", f.read(), re.M))
-        listed += [f"{n}=={v}" for n, v in store.items() if f"{n}=={v}" in wanted()]
-        self.assertEqual(sorted(listed), sorted(wanted()))
+        # one way only (Ausdünnen 8): no package list of its own beside the lock, no extra lock files
+        self.assertNotIn("make_venv panel", text)
+        self.assertNotIn("legacy-r2", text)
+        self.assertEqual(sorted(f for f in os.listdir(APP) if f.startswith("requirements-") and f.endswith(".lock")),
+                         ["requirements-panel.lock", "requirements-ytdlp.lock"])
         with open(os.path.join(ROOT, ".github", "workflows", "tests.yml")) as f:
             self.assertIn("--no-deps --require-hashes -r app/requirements-panel.lock", f.read())

@@ -199,6 +199,21 @@ class OwnJsonWrite(Ratchet, unittest.TestCase):
         return count_by_file(py_files(), count)
 
 
+ONE_TIME = re.compile(r"^(?:async )?def (?:migrate\w*|\w+_carry|seal_stored)\(", re.M)
+
+
+class OneTimeMove(Ratchet, unittest.TestCase):
+    """Einmal-Umstellungen (Ausdünnen 8, Dominik 2026-11-10 „0-9“): code that moves old data once stays only while a
+    restored backup can still need it; a new one needs an entry here with its reason, and the list only shrinks."""
+    WHAT = "a new one-time move (migrate…, …_carry, seal_stored); read old data where it is read instead"
+    ALT = {"panel/siegel.py": 2,          # migrate + migrate_later: a restored backup from before the seal is sealed once
+           "panel/calendars.py": 1,       # seal_stored: plain calendar passwords from a restored backup get encrypted
+           "panel/homeassistant.py": 1}   # seal_stored: plain Home Assistant tokens from a restored backup get encrypted
+
+    def hits(self):
+        return count_by_file(py_files(), lambda name, src: len(ONE_TIME.findall(src)))
+
+
 class OwnModelCall(Ratchet, unittest.TestCase):
     WHAT = "an own call of the language model (chat/completions), use llm.complete"
     ALT = {}   # all through llm.py since the big cleanup step 3

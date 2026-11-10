@@ -65,7 +65,7 @@ OSV_URL = "https://api.osv.dev/v1/querybatch"
 OSV_MAX = 2 * 1048576
 NPM_URL = "https://registry.npmjs.org/opencode-linux-{arch}/latest"
 NPM_MAX = 262144
-LOCKS = ("requirements-panel.lock", "requirements-docmake.lock", "requirements-speicher.lock")
+LOCKS = ("requirements-panel.lock",)
 LOCK_LINE = re.compile(r"^([A-Za-z0-9][A-Za-z0-9._\-]{0,63})==([A-Za-z0-9.+!\-]{1,40})\s")
 OSV_ID = re.compile(r"[A-Z][A-Za-z0-9\-]{2,40}")
 APP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

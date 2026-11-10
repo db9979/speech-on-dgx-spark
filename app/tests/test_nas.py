@@ -286,24 +286,9 @@ class Uses(Base):
         self.assertEqual(c.delete(f"/api/profile/nas/{nid}").status_code, 200)
         self.assertEqual(nas.load(uid), [])
 
-    def test_copy_switch_brings_its_heading(self):
-        """"Kopie meiner Daten" hangs below "Speicher und NAS": who had only the copy on keeps it after the update."""
-        from common import CONFIG_PATH
-
-        def chat():
-            with open(CONFIG_PATH) as f:
-                return json.load(f)["chat"]
-        helpers.set_config(nas_on=False, storage_own=False)
-        nas._switch_carry()
-        self.assertIs(chat()["nas_on"], False)                  # nothing on: nothing switched
-        helpers.set_config(nas_on=False, storage_own=True)
-        self.assertFalse(features.admin_on("speicher"))
-        nas._switch_carry()
-        self.assertIs(chat()["nas_on"], True)
-        self.assertTrue(features.admin_on("speicher"))
-        self.assertEqual(features.BY_KEY["speicher"].parent, "nas")
-
-    def test_old_files_move_over_and_keep_working(self):
+    def test_old_files_keep_working_and_move_over_on_save(self):
+        """No move at start since Ausdünnen 8: an old file (a restored backup) is read as it is and moves onto a
+        connection the first time it is saved."""
         c, uid = profile("NasAlt")
         sealed = nas.vault.seal(PW)
         old = {"id": "abcd12", "name": "Alt", "kind": "webdav", "url": URL + "/alt/", "user": USER, "password": sealed,
@@ -312,12 +297,16 @@ class Uses(Base):
         with open(offsite.FILE, "w") as f:
             json.dump({"on": False, "url": URL + "/backup/", "user": USER, "password": sealed, "sent": []}, f)
         try:
-            self.assertGreaterEqual(nas.migrate_all(), 2)
+            t = speicher.load(uid)["targets"][0]
+            self.assertEqual((t["url"], t["user"], t["password"], t["areas"]), (URL + "/alt/", USER, sealed, ["gedaechtnis"]))
+            self.assertEqual((offsite._read()["url"], offsite._read()["user"]), (URL + "/backup/", USER))
+            speicher.save(uid, speicher.load(uid))
+            with offsite._lock:
+                offsite._write(offsite._read())
             with open(profiles._path(uid, "speicher.json")) as f:
                 moved = json.load(f)["targets"][0]
             self.assertEqual(moved["path"], "/alt")
             self.assertNotIn("password", moved)
-            self.assertTrue(os.path.exists(profiles._path(uid, "speicher.vor-nas.json")))
             t = speicher.load(uid)["targets"][0]
             self.assertEqual((t["url"], t["user"], t["password"], t["areas"]), (URL + "/alt/", USER, sealed, ["gedaechtnis"]))
             raw = offsite._raw()
@@ -325,16 +314,14 @@ class Uses(Base):
             self.assertNotIn("password", raw)
             self.assertEqual((offsite._read()["url"], offsite._read()["user"]), (URL + "/backup/", USER))
             self.assertEqual(len(nas.load(nas.ADMIN)), 1)
-            self.assertEqual(nas.uses(nas.ADMIN), {nas.load(nas.ADMIN)[0]["id"]: {"sicherung": 1}})
-            self.assertEqual(nas.migrate_all(), 0)                   # once
+            self.assertFalse(hasattr(nas, "migrate_all"))
         finally:
             offsite._write({})
             for p in (profiles._path(uid, "speicher.json"), profiles._path(uid, "nas.json")):   # no copy left for other tests
                 if os.path.exists(p):
                     os.remove(p)
-            for p in (os.path.join(nas.STATE, nas.ADMIN_FILE), offsite.FILE[:-5] + ".vor-nas.json"):
-                if os.path.exists(p):
-                    os.remove(p)
+            if os.path.exists(os.path.join(nas.STATE, nas.ADMIN_FILE)):
+                os.remove(os.path.join(nas.STATE, nas.ADMIN_FILE))
 
     def test_a_connection_that_is_gone_drops_the_use_not_the_page(self):
         c, uid = profile("NasWeg")
