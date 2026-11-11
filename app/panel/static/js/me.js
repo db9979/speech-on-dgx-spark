@@ -450,13 +450,19 @@ function meAll(){return [['overbox',t('Überblick','Overview'),!!PROFILE&&!PHONE
     ['habox',t('Smart Home','Smart home'),PROFILE&&HA_ON],['roombox',t('Raum-Modus','Room mode'),PROFILE&&ROOM_ON],['espbox',t('Lautsprecher','Speakers'),PROFILE&&ESP_ON],['telbox',t('Telefon','Phone'),PROFILE&&typeof TEL_ON!=='undefined'&&TEL_ON],
     ['trbox',t('Bus und Bahn','Bus and train'),PROFILE&&TR_ON],['tgbox',t('Telegram','Telegram'),PROFILE&&TG_ON],['appbox',t('iPhone-App','iPhone app'),PROFILE&&APP_ON],['andbox',t('Android-App','Android app'),PROFILE&&typeof AND_ON!=='undefined'&&AND_ON],['deskbox',t('Begleiter','Companion'),PROFILE&&typeof DESK_ON!=='undefined'&&DESK_ON],['pebbox',t('Pebble-Uhr','Pebble watch'),PROFILE&&PEB_ON],['termbox',t('Terminal','Terminal'),PROFILE&&typeof TERM_ON!=='undefined'&&TERM_ON],['mcpbox',t('Spark als MCP-Server','Spark as MCP server'),PROFILE&&MCPS_ON],['llmapibox',t('Sprachmodell per API','Language model by API'),PROFILE&&typeof LLMAPI_ON!=='undefined'&&LLMAPI_ON],
     ['secbox',t('Sicherheit','Security'),!!PROFILE],['rpbox',t('Probleme melden','Reporting problems'),PROFILE&&typeof RP_ON!=='undefined'&&RP_ON],['voicebox',t('Sprechererkennung','Speaker identification'),PROFILE&&SPK_ON],['usebox',t('Verbrauch','Usage'),PROFILE&&typeof VB_ON!=='undefined'&&VB_ON]]}
+// The small header over a group of pages, for the menu and the overview (one source). A page whose group already
+// had its header further up (Sicherheit, a „Meine Daten“ page, stands with the last group) goes under the header of
+// that last group: before, the menu showed „Meine Daten“ twice (code review 2026-11-11, point 6).
+function meHeads(){let grp=null;const seen=new Set(),last=GGROUPS[GGROUPS.length-1];
+  return id=>{let g=typeof meGroup==='function'?meGroup(id):null;if(!g)return '';if(seen.has(g)&&g!==grp)g=last[0];
+    if(g===grp)return '';grp=g;if(seen.has(g))return '';seen.add(g);const gg=GGROUPS.find(x=>x[0]===g);
+    return `<div class="mgrp">${esc(t(gg[1],gg[2]))}</div>`}}
 function meTabs(){const own=meOwnBoxes();ME_ONLY=new Set();
   // a page the admin blocked that still holds own data shows only its „Daten löschen“ card (meOwn)
   const items=meAll().map(x=>{if(!x[2]&&PROFILE&&own.has(x[0])){ME_ONLY.add(x[0]);return [x[0],x[1],true]}return x}).filter(x=>x[2]);
   // pages in the same groups as everywhere else (guides.js), with a small header per group
-  let grp=null;$('ptabs').innerHTML=items.map(([id,l])=>{const g=typeof meGroup==='function'?meGroup(id):null,gg=g&&GGROUPS.find(x=>x[0]===g);
-    const head=g&&g!==grp?`<div class="mgrp">${esc(t(gg[1],gg[2]))}</div>`:'';if(g)grp=g;
-    return head+`<button type="button" data-t="${id}">${esc(l)}<small class="mst" data-st="${id}"></small></button>`}).join('');
+  const head=meHeads();$('ptabs').innerHTML=items.map(([id,l])=>{
+    return head(id)+`<button type="button" data-t="${id}">${esc(l)}<small class="mst" data-st="${id}"></small></button>`}).join('');
   $('ptabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{meLast=b.dataset.t;ptab(b.dataset.t)});ME_ITEMS=items;
   $('profmodal').classList.toggle('one',items.length<2);if(typeof meSearchMount==='function')meSearchMount();return items.map(x=>x[0])}
 let meLast='overbox',ME_ITEMS=[],ME_ONLY=new Set();
@@ -472,11 +478,11 @@ function meState(){const n=id=>id==='factlist'?FACTS.length:[...document.querySe
     setbox:S.hands?t('freihändig','hands-free'):''}}
 function showOver(){const st=meState(),box=$('overbox');
   document.querySelectorAll('#ptabs .mst').forEach(e=>e.textContent=st[e.dataset.st]||'');
-  if(!box)return;let grp=null;const su=typeof SETUP!=='undefined'&&SETUP&&SETUP.open>0?SETUP:null;
-  box.innerHTML=(su?`<button type="button" class="overrow gorow" data-go="gobox"><b>${esc(t('Los geht\'s','Let\'s go'))}</b><span>${esc(t('Einrichten ','Setup ')+su.done+t(' von ',' of ')+su.total)}</span></button>`:'')+`<div class="intro">${esc(t('Alles, was du für dich eingerichtet hast. Antippen öffnet die Seite.','Everything you set up for yourself. Tap to open the page.'))}</div><div class="overlist">`+
-    ME_ITEMS.filter(([id])=>id!=='overbox'&&id!=='loginbox').map(([id,l])=>{const g=typeof meGroup==='function'?meGroup(id):null,gg=g&&GGROUPS.find(x=>x[0]===g);
-      const head=g&&g!==grp?`<div class="mgrp">${esc(t(gg[1],gg[2]))}</div>`:'';if(g)grp=g;
-      return head+`<button type="button" class="overrow" data-go="${id}"><b>${esc(l)}</b><span>${esc(st[id]||'')}</span></button>`}).join('')+'</div>';
+  if(!box)return;const head=meHeads(),su=typeof SETUP!=='undefined'&&SETUP&&SETUP.open>0?SETUP:null;
+  box.innerHTML=(su?`<button type="button" class="overrow gorow" data-go="gobox"><b>${esc(t('Los geht\'s','Let\'s go'))}</b><span>${esc(t('Einrichten ','Setup ')+su.done+t(' von ',' of ')+su.total)}</span></button>`:'')+`<div class="intro">${esc(t('Was du für dich eingerichtet hast. Antippen öffnet die Seite.','What you set up for yourself. Tap to open the page.'))}</div><div class="overlist">`+
+    // only pages that have something to say (the menu beside it lists them all; before, the list was a copy of it)
+    ME_ITEMS.filter(([id])=>st[id]).map(([id,l])=>
+      head(id)+`<button type="button" class="overrow" data-go="${id}"><b>${esc(l)}</b><span>${esc(st[id])}</span></button>`).join('')+'</div>';
   box.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{meLast=b.dataset.go;ptab(b.dataset.go);if(b.dataset.go==='gobox'&&typeof goShow==='function')goShow()});
   if(FEATS)meReleased(box,FEATS.features);   // drawn anew: the line from /api/features stays
   if(typeof tipOver==='function')tipOver(box)}

@@ -1,7 +1,7 @@
 """A page whose function is off says so (code review 2026-11-11, point 6): Mappen, Wissensbuch, Dungeon-Master and
 Kontakte showed a lasting „Lade …“ (or nothing) when someone reached them by a link while the admin had the function
 off. Each now shows one sentence with the way to its switch (base.js ausSatz, a jump link like every way); and the
-footer stands at the bottom of a phone's window. Static
+footer stands at the bottom of a phone's window; Ich → Überblick is no copy of the menu. Static
 checks everywhere, the browser check where Playwright and Chromium exist; no test reads the clock."""
 import asyncio
 import os
@@ -106,6 +106,32 @@ class Browser(unittest.TestCase):
                     await pg.evaluate("goSec('chat')")
                     await pg.wait_for_timeout(400)
                     self.assertEqual((await pg.evaluate(maß))[2], 0)
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
+        asyncio.run(go())
+
+    def test_the_me_overview_is_no_copy_of_the_menu(self):
+        """Ich → Überblick (code review 2026-11-11, point 6): every group header stands once in the menu („Meine
+        Daten“ stood twice), the overview lists only pages that have something to say, and „Los geht's“ stands
+        there once."""
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1280, 900, profile=True)
+                try:
+                    await pg.evaluate("openMe('overbox')")
+                    await pg.wait_for_function("document.querySelectorAll('#overbox .overrow b').length>0", timeout=20000)
+                    menu = await pg.evaluate("[...document.querySelectorAll('#ptabs .mgrp')].map(e=>e.textContent)")
+                    self.assertGreater(len(menu), 2)
+                    self.assertEqual(len(menu), len(set(menu)), menu)
+                    self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#ptabs button')].pop().previousElementSibling.textContent"), "Zugang")
+                    rows = await pg.evaluate("[...document.querySelectorAll('#overbox .overlist .overrow')].map(b=>[b.dataset.go,b.querySelector('span').textContent])")
+                    self.assertIn("factbox", [r[0] for r in rows])
+                    self.assertTrue(all(r[1].strip() for r in rows), rows)
+                    self.assertLess(len(rows), await pg.evaluate("document.querySelectorAll('#ptabs button').length") - 1)
+                    self.assertLessEqual(await pg.evaluate("document.querySelectorAll('#overbox [data-go=gobox]').length"), 1)
+                    heads = await pg.evaluate("[...document.querySelectorAll('#overbox .overlist .mgrp')].map(e=>e.textContent)")
+                    self.assertEqual(len(heads), len(set(heads)), heads)
                     self.assertEqual(errors, [])
                 finally:
                     await br.close()

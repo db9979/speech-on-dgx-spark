@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.384** Ich → Überblick aufgeräumt: keine Kopie des Menüs mehr, nur Seiten mit einem Stand; jede Gruppen-Überschrift im Menü steht einmal
 - **V01.1.383** Hörstück als Diskussion rund: jede Frage beantwortet eine andere Stimme, ein Faden über alle Kapitel, Gruß nur am Anfang, keine vorgelesenen Listen, ein Kapitel „Was sich geändert hat“ bei mehreren Fassungen und ein Rund-Wert von 10
 - **V01.1.382** Mappen, Wissensbuch, Dungeon-Master und Kontakte sagen, wenn ihre Funktion ausgeschaltet ist, mit dem Weg zum Schalter, statt dauerhaft „Lade …“ zu zeigen
 - **V01.1.381** Bild des Rechners: jede Rechner-Karte unter Zustand → Überblick zeigt eine Zeichnung des erkannten Geräts (GB10, Raspberry Pi); der Admin kann ein eigenes Foto hochladen, es bleibt auf dem Spark
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.377** Sprachausgabe bei vielen Anfragen: 4 Stimmen gleichzeitig statt 2, der erste Satz einer Antwort geht vor, neue Einstellung „Blöcke selbst anpassen“
 - **V01.1.376** ROT-FIX: die gesperrte Zeile „Eigene Stimme“ sieht aus wie jede gesperrte Zeile; drei Tests hängen nicht mehr vom Datum und von einem früheren Test ab
 - **V01.1.375** OpenCode-Anzeige richtig: System-Updates zeigt OpenCode auf dem Pi als installiert, wenn Entwickeln auf dem Pi es eingerichtet hat; fehlt es, steht dort der Installationsbefehl.
-- **V01.1.374** Eigene Stimmen gestalten: 20 fertige Antwortstimmen und bis zu drei eigene aus Feldern und eigenen Worten, einmal mit VoiceDesign gemacht und danach in jeder Antwort gleich; VoiceDesign lädt nur bei Bedarf
 
 
 
