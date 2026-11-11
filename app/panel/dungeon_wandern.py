@@ -16,7 +16,7 @@ Chronik“. Journal: fixed words and numbers, Live only counts.
 import random
 
 import dungeon_nsc as nsc
-import features
+import dungeon_tiefe
 from common import DayCounter
 
 KEY = "dungeonwandern"
@@ -31,7 +31,7 @@ AUFGABE = {
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"]) and nsc.on(rd) and bool(rd.get("karte"))
+    return dungeon_tiefe.an(KEY, rd) and nsc.on(rd) and bool(rd.get("karte"))
 
 
 def rest(dm, r, rd, rng=None):

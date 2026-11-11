@@ -50,7 +50,7 @@ name the next one (clue_facts: spur, at the stall hint's stage 1 deutlich), a na
 counts it as shown (seen, and a clue shown is progress for the stall hint). A clue not yet shown is a secret for the
 narrator's ways (check_ways). The host sees the clues with ✓ in „Nur für dich → Geschichte“.
 
-Off by default: the admin's switch dungeonanleiten (features.py, chat.dungeon_anleiten) for the round's host; a guest at
+Since Ausdünnen 1 the part dungeonanleiten hangs on on with the game itself (dungeon_tiefe.py) for the round's host; a guest at
 the table gets it like everyone, it is part of the game and no tool. Step 4's progress counter with the stall hint and
 step 5's clues are the core of the story (Review 27.10. E12, Dominik „ok“): their own switch dungeonfortschritt
 (chat.dungeon_fortschritt) is on from the start (features.DEFAULT_ON, kern), at the level normal while this is off.
@@ -60,7 +60,7 @@ import random
 import re
 
 import dungeon_einordnung as einordnung
-import features
+import dungeon_tiefe
 from common import DayCounter
 
 KEY = "dungeonanleiten"
@@ -112,12 +112,12 @@ HOHL = re.compile(r"(?i)(?:^|\W)(?:und |also |nun |so )?(?:was (?:tut|macht|tust
 
 
 def on(rd):
-    return bool(rd.get(PRUEFSTAND)) or bool(rd.get("owner")) and features.allowed(KEY, rd["owner"])
+    return bool(rd.get(PRUEFSTAND)) or dungeon_tiefe.an(KEY, rd)
 
 
 def kern(rd):
     """Whether the story's progress counter, stall hint and clues count (steps 4 and 5, switch KERN)."""
-    return bool(rd.get(PRUEFSTAND)) or bool(rd.get("owner")) and features.allowed(KERN, rd["owner"])
+    return bool(rd.get(PRUEFSTAND)) or dungeon_tiefe.an(KERN, rd)
 
 
 TASK = {

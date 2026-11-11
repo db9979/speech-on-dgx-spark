@@ -16,7 +16,7 @@ import re
 
 import dungeon_einordnung as einordnung
 import dungeon_nsc as nsc
-import features
+import dungeon_tiefe
 from common import DayCounter
 
 KEY = "dungeonzeugen"
@@ -41,7 +41,7 @@ AUFGABE = {
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"]) and nsc.on(rd)
+    return dungeon_tiefe.an(KEY, rd) and nsc.on(rd)
 
 
 def deed(text):

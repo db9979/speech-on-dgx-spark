@@ -7,7 +7,7 @@ of a chapter), award gives every title of the fixed list (TITEL) to the hero wit
 with its numbers; the log entry "ehrung" carries it all (the table draws the certificate, the music thread plays its
 fanfare). Only numbers of the panel, never of the model; at the children's table only the friendly titles.
 """
-import features
+import dungeon_tiefe
 
 EHRE = "dungeonehrungen"     # the switch „Ehrungen des Abends“ (features.py) for the round's host
 ZAHLEN = ("treffer", "krit", "schaden", "zwanzig", "eins", "proben", "schatten", "rettet", "heilung")
@@ -21,7 +21,7 @@ TITEL = (("klinge", "schaden", 1, ["Klinge des Abends", "Blade of the evening"],
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(EHRE, rd["owner"])
+    return dungeon_tiefe.an(EHRE, rd)
 
 
 def count(rd, pid, **n):

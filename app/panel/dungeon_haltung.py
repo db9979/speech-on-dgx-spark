@@ -10,14 +10,14 @@ Haltung: a hero's action may say how it stands (stance, fixed words, also by voi
 to its armour class against the foes this turn, but its own attack at a disadvantage; „Ausweichen“ its saves against
 the foes' states this turn with advantage; anything else attacks as before.
 
-Off by default: the admin's switch dungeonhaltung (features.py, chat.dungeon_haltung) for the round's host.
+Since Ausdünnen 1 the part dungeonhaltung hangs on the Regeltiefe „voll“ of the round (dungeon_tiefe.py) for the round's host.
 State in the fight: rd["kampf"]["ansage"] {foe's k: {"art", "pid"}}, made new every turn.
 Journal: fixed words and numbers („dungeon: ansage | …“, „dungeon: haltung | …“), Live only counts.
 """
 import random
 import re
 
-import features
+import dungeon_tiefe
 from common import DayCounter
 
 KEY = "dungeonhaltung"
@@ -35,7 +35,7 @@ _day = DayCounter(ansagen=0, abwehr=0, ausweichen=0)
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"])
+    return dungeon_tiefe.an(KEY, rd)
 
 
 def stance(rd, pid):

@@ -17,7 +17,7 @@ blocking.
 In the car (dungeon_auto): the question is said with the suggestions as „erstens …, zweitens …“, the CarPlay list
 shows them as buttons; „die erste“ or a button sends that suggestion, „so lassen“ keeps the action.
 
-Off by default: the admin's switch dungeonrueckfrage (features.py, chat.dungeon_rueckfrage) for the round's host;
+Since Ausdünnen 1 the part dungeonrueckfrage hangs on on with the game itself (dungeon_tiefe.py) for the round's host;
 guests at the table get it the same way (it is part of the game, not a tool).
 Journal: „dungeon: rueckfrage | regel | kurz“ (salat, fuerwort, kein tun), „| vorschlag genommen“, „| so lassen“,
 „| klar“; Live only counts.
@@ -25,7 +25,7 @@ Journal: „dungeon: rueckfrage | regel | kurz“ (salat, fuerwort, kein tun), �
 import re
 
 import dungeon_einordnung as einordnung
-import features
+import dungeon_tiefe
 from common import DayCounter
 
 KEY = "dungeonrueckfrage"
@@ -78,7 +78,7 @@ _day = DayCounter(gefragt=0, kurz=0, salat=0, fuerwort=0, kein_tun=0, genommen=0
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"])
+    return dungeon_tiefe.an(KEY, rd)
 
 
 def _names(dm, r, rd, pid):

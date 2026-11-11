@@ -8,12 +8,12 @@ Gruppenprobe: when GRUPPE_MIN or more seats roll the same value against the same
 passes if at least half of them pass; then every check of the group counts as passed (the receipt says "gruppe").
 Both are fixed rules of the panel on its own rolls (dungeon.roll); the model only reads them in the facts.
 
-Off by default: the admin's switch dungeonhelfen (features.py, chat.dungeon_helfen) for the round's host.
+Since Ausdünnen 1 the part dungeonhelfen hangs on the Regeltiefe „voll“ of the round (dungeon_tiefe.py) for the round's host.
 Journal: fixed words and numbers („dungeon: helfen | …“), Live only counts.
 """
 import re
 
-import features
+import dungeon_tiefe
 from common import DayCounter
 
 KEY = "dungeonhelfen"
@@ -25,7 +25,7 @@ _day = DayCounter(hilfe=0, gruppe_geschafft=0, gruppe_nicht=0)
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"])
+    return dungeon_tiefe.an(KEY, rd)
 
 
 def _words(text):

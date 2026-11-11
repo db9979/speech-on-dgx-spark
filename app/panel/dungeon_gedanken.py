@@ -20,7 +20,7 @@ Journal: fixed words and numbers („dungeon: gedanken | …“), Live only coun
 import re
 
 import dungeon_nsc as nsc
-import features
+import dungeon_tiefe
 from common import DayCounter
 
 KEY = "dungeongedanken"
@@ -40,7 +40,7 @@ AUFGABE = {
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"]) and nsc.on(rd)
+    return dungeon_tiefe.an(KEY, rd) and nsc.on(rd)
 
 
 def reads(h, a):

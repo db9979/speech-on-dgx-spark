@@ -167,15 +167,15 @@ _wirkt = {"k": None, "v": False}
 
 def on(rd):
     """Runes fall and are set at this table: the admin's switch for the round's host."""
-    import features
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"])
+    import dungeon_tiefe
+    return dungeon_tiefe.an(KEY, rd)
 
 
 def wirkt():
     """Whether runes do anything (13a: off, they stay with the heroes but do nothing): the admin's switch, read again
     only when the config file changed (the rules ask it in every fight and check)."""
     import common
-    import features
+    import dungeon_tiefe
     try:
         st = os.stat(common.CONFIG_PATH)
         k = (common.CONFIG_PATH, st.st_mtime_ns, st.st_size, st.st_ino)
@@ -183,7 +183,7 @@ def wirkt():
         return False
     if k != _wirkt["k"]:
         try:
-            v = features.admin_on(KEY)
+            v = dungeon_tiefe.admin_an(KEY)
         except Exception:  # noqa: BLE001 - a broken config: runes do nothing
             v = False
         _wirkt.update(k=k, v=bool(v))

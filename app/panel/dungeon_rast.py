@@ -13,7 +13,7 @@ Only the panel rolls and heals; the next narration tells the camp from its facts
 the narration's encounter of the panel's foes. While a rest waits for its narration rd["rast"] stands (the music's
 mood „lager“, dungeon_musik); the narrated turn ends it (done).
 
-Off by default: the admin's switch dungeonrast (features.py, chat.dungeon_rast) for the round's host.
+Since Ausdünnen 1 the part dungeonrast hangs on the Regeltiefe „voll“ of the round (dungeon_tiefe.py) for the round's host.
 Journal: fixed words and numbers („dungeon: rast | …“), Live only counts.
 """
 import asyncio
@@ -21,7 +21,7 @@ import random
 
 from fastapi import APIRouter, Depends, Request
 
-import features
+import dungeon_tiefe
 import guard
 from common import DayCounter
 from core import assistant, browser_profile, json_body
@@ -40,7 +40,7 @@ _day = DayCounter(kurz=0, lang=0, gestoert=0, abgelehnt=0)
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"])
+    return dungeon_tiefe.an(KEY, rd)
 
 
 def land(r, rd):

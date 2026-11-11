@@ -119,6 +119,7 @@ import dungeon_dingbild  # noqa: E402
 import dungeon_pruefstand  # noqa: E402
 import dungeon_erzaehlstand  # noqa: E402
 import dungeon_import  # noqa: E402
+import dungeon_tiefe  # noqa: E402
 import dungeon_geschichten  # noqa: E402
 import dungeon_regelseite  # noqa: E402
 import dungeon_musik  # noqa: E402
@@ -621,6 +622,15 @@ async def remarkable_sync():
 async def seal_profile_data():
     """Memory and conversations of older versions get sealed once, after a backup „vor-siegel“ (siegel.py)."""
     spawn(siegel.migrate_later())
+
+
+@app.on_event("startup")
+def dungeon_regeltiefe():
+    """The old dungeon switches of the stored config become the Regeltiefe and the new switches, once (dungeon_tiefe)."""
+    try:
+        dungeon_tiefe.uebernehmen()
+    except Exception as e:
+        print("dungeon: regeltiefe | fehler |", type(e).__name__, flush=True)
 
 
 @app.on_event("startup")

@@ -1,6 +1,6 @@
 """Heldenbuch aufs reMarkable (dungeon_buch.py, Dominik 2026-10-27).
 
-- Off by default (chat.dungeon_buch, with „Aufs reMarkable schicken“); guests and seats without a profile (guest,
+- Off by default (chat.dungeon_buecher „Chronik und Heldenbuch“, with „Aufs reMarkable schicken“); guests and seats without a profile (guest,
   Figur-Code, guest account) never get a chronicle or a book.
 - notiere never raises and never stops a turn; pruefe keeps only a list of fixed kinds with catalog ids, whole numbers
   and fellow heroes' name, people and class, at most CHRONIK_MAX entries, never a text of the model.
@@ -38,6 +38,7 @@ import dungeon_album as album  # noqa: E402
 import dungeon_buch as buch  # noqa: E402
 import dungeon_personen as personen  # noqa: E402
 import dungeon_pruefstand as ps  # noqa: E402
+import dungeon_tiefe  # noqa: E402
 import features  # noqa: E402
 import profiles  # noqa: E402
 import remarkable  # noqa: E402
@@ -48,8 +49,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 
 ADMIN = TestClient(panel.app)
 ADMIN.post("/api/login", json={"password": "secret-admin"})
-ON = dict(dungeon=True, dungeon_buch=True, remarkable=True, remarkable_send=True, doc_pictures=True, dungeon_album=True,
-          dungeon_personen=True, dungeon_nsc=True)
+ON = dict(dungeon=True, dungeon_buecher=True, remarkable=True, remarkable_send=True, doc_pictures=True, dungeon_bilder=True)
 SWITCHES = tuple(ON) + ("rmsend",)
 T = 1_793_000_000
 _PROFILES = {}
@@ -124,17 +124,18 @@ class Base(unittest.TestCase):
 class Switch(Base):
     def test_off_by_default_and_only_with_sending(self):
         with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_buch"], False)
-        self.assertNotIn("dungeonbuch", getattr(features, "DEFAULT_ON", {}))
-        self.assertEqual(features.BY_KEY["dungeonbuch"].parent, "dungeon")
+            self.assertIs(json.load(f)["chat"]["dungeon_buecher"], False)
+        self.assertNotIn("chat.dungeon_buecher", getattr(features, "DEFAULT_ON", {}))
+        self.assertEqual(dungeon_tiefe.schalter(buch.KEY), "dungeonbuecher")
+        self.assertEqual(features.BY_KEY["dungeonbuecher"].parent, "dungeon")
         c, uid, h = self.mine()
         self.assertTrue(buch.on(uid))
-        helpers.set_config(dungeon_buch=False)
+        helpers.set_config(dungeon_buecher=False)
         self.assertFalse(buch.on(uid))
         self.assertEqual(c.get(f"/api/profile/dungeon/buch/{h['hid']}.pdf").status_code, 403)
         self.assertEqual(c.post(f"/api/profile/dungeon/buch/{h['hid']}/senden", json={}).status_code, 403)
         self.assertFalse(c.get("/api/profile/dungeon/buch").json()["on"])
-        helpers.set_config(dungeon_buch=True, remarkable_send=False)
+        helpers.set_config(remarkable_send=False, dungeon_buecher=True)
         self.assertFalse(buch.on(uid))                                   # without „Aufs reMarkable schicken“ never
 
     def test_guests_and_seats_without_a_profile_never(self):
@@ -393,7 +394,7 @@ class Sending(Base):
         self.addCleanup(p.stop)
         self.assertIn("heldenbuch", rmplus.sheets_for(uid, "Schick mein Heldenbuch aufs reMarkable"))
         self.assertIn(h["name"], run(rmplus.sheet_now(uid, "heldenbuch")))
-        helpers.set_config(dungeon_buch=False)
+        helpers.set_config(dungeon_buecher=False)
         self.assertNotIn("heldenbuch", rmplus.sheets_for(uid, "Schick mein Heldenbuch aufs reMarkable"))
 
 

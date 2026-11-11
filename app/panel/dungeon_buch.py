@@ -65,6 +65,7 @@ import time
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response
 
+import dungeon_tiefe
 import features
 import guard
 import profiles
@@ -105,7 +106,17 @@ _last = {"s": 0.0}
 
 def on(uid):
     """The book for this profile: its switch (with the Dungeon-Master) and „Aufs reMarkable schicken“; never a guest."""
-    return bool(uid) and features.allowed(KEY, uid) and features.allowed("rmsend", uid)
+    return dungeon_tiefe.fuer(KEY, uid) and features.allowed("rmsend", uid)
+
+
+def admin_on():
+    """The Spark allows hero books at all: „Chronik und Heldenbuch“ and „Aufs reMarkable schicken“."""
+    return dungeon_tiefe.admin_an(KEY) and features.admin_on("rmsend")
+
+
+def _fehlt(uid):
+    """Why there is no book for this profile, with the way of the missing switch."""
+    return dungeon_tiefe.fehlt(KEY, uid) or features.missing_text("rmsend", uid)
 
 
 def connected(uid):
@@ -1243,8 +1254,8 @@ def _personen(b, data):
     cw = b.x1 - b.x0
     ps = data["personen"]
     if ps is None:
-        b.y += b.write(b.x0, b.y, _t(b, "Die Album-Seite „Personen“ ist aus (Funktionen → KI-Dungeon-Master → Personen-Katalog).",
-                                     "The album page „People“ is off (Features → AI Dungeon Master → People catalog)."), cw, 9.4, color="mut")
+        b.y += b.write(b.x0, b.y, _t(b, "Die Album-Seite „Personen“ ist aus (Funktionen → KI-Dungeon-Master).",
+                                     "The album page „People“ is off (Features → AI Dungeon Master)."), cw, 9.4, color="mut")
         return
     b.y += b.write(b.x0, b.y, _t(b, f"{len(ps)} von {data['personen_alle']} Personen der Welt bekannt.",
                                  f"{len(ps)} of {data['personen_alle']} people of the world known."), cw, 8.6, color="mut") + 2
@@ -1294,8 +1305,8 @@ def _bestien(b, data):
             _t(b, "Je öfter besiegt, desto mehr verrät das Album", "The more often defeated, the more the album tells"))
     cw = b.x1 - b.x0
     if not data["album"]:
-        b.y += b.write(b.x0, b.y, _t(b, "Das Monster-Album ist aus (Funktionen → KI-Dungeon-Master → Monster-Album).",
-                                     "The monster album is off (Features → AI Dungeon Master → Monster album)."), cw, 9.4, color="mut")
+        b.y += b.write(b.x0, b.y, _t(b, "Das Monster-Album ist aus (Funktionen → KI-Dungeon-Master → Bilder und Heldenlied).",
+                                     "The monster album is off (Features → AI Dungeon Master → Pictures and hero song)."), cw, 9.4, color="mut")
         return
     bs = data["bestien"]
     b.y += b.write(b.x0, b.y, _t(b, f"{len(bs)} Arten von {data['bestien_alle']} · {data['siege']} Siege",
@@ -1591,7 +1602,7 @@ def due(uid, now):
 
 async def due_once(idle=True, now=None, uids=None):
     """Each minute (panel.remarkable_sync): at most one book, only in a quiet minute. Returns the word or None."""
-    if not idle or not features.admin_on(KEY):
+    if not idle or not admin_on():
         return None
     now = time.time() if now is None else now
     for uid in uids or profiles.user_ids():
@@ -1635,8 +1646,8 @@ def public(uid):
         out.append({"hid": h["hid"], "name": h["name"], "ausgabe": b.get("ausgabe", 0), "t": b.get("t", 0),
                     "seiten": b.get("seiten", 0), "wartet": st["warte"].get(h["hid"], 0), "notizen": h["hid"] in st["notizen"],
                     "status": dict((_status.get(uid) or {}).get(h["hid"]) or {})})
-    return {"on": on(uid), "admin": features.admin_on(KEY), "verbunden": connected(uid) if on(uid) else False,
-            "fehlt": features.missing_text(KEY, uid) if not on(uid) else "", "modell": m["key"], "farbe": bool(m["color"]),
+    return {"on": on(uid), "admin": admin_on(), "verbunden": connected(uid) if on(uid) else False,
+            "fehlt": _fehlt(uid) if not on(uid) else "", "modell": m["key"], "farbe": bool(m["color"]),
             "helden": out}
 
 
@@ -1652,7 +1663,7 @@ def _need(uid):
     if not on(uid):
         _day.bump("abgelehnt")
         print("dungeon: buch | abgelehnt | aus", flush=True)
-        raise HTTPException(403, features.missing_text(KEY, uid) or "aus")
+        raise HTTPException(403, _fehlt(uid) or "aus")
 
 
 @router.get("/api/profile/dungeon/buch", dependencies=[Depends(assistant)])

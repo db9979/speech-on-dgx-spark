@@ -11,14 +11,14 @@ sounds the same. Who understands it is fixed too (versteht): a hero of that peop
 bard or a wizard every tongue. Everyone sees and hears the sounds; the meaning goes through the view only to the seats
 that understand it and to the host (view, GEHEIM „fremd_bedeutung“ in dungeon_sicht.py), never to the car or the model.
 
-Off by default: the admin's switch dungeonsprachen (features.py, chat.dungeon_sprachen) for the round's host.
+Since Ausdünnen 1 the part dungeonsprachen hangs on the Regeltiefe „voll“ of the round (dungeon_tiefe.py) for the round's host.
 State in the round: rd["fremd"] [{"k": the narration's number, "sagt", "wer": [pid, …]}], the last FREMD_MAX.
 Journal: fixed words and numbers („dungeon: sprache | …“), Live only counts.
 """
 import hashlib
 import re
 
-import features
+import dungeon_tiefe
 from common import DayCounter
 
 KEY = "dungeonsprachen"
@@ -52,7 +52,7 @@ _day = DayCounter(gesagt=0, verstanden=0, verworfen=0)
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"])
+    return dungeon_tiefe.an(KEY, rd)
 
 
 def task(rd, lang):

@@ -396,9 +396,9 @@ class Emoji(Ratchet, unittest.TestCase):
     symbols) and the game stay; the rest of the old list shrinks (setting names with thumbs in index.html, guides.js
     texts, the Dungeon). i18n.js follows the German texts."""
     WHAT = "an emoji as a symbol in the user interface; take a line symbol of icons.js (ic('name'))"
-    ALT = {"app.css": 1, "index.html": 9, "js/dungeon-ton.js": 9, "js/dungeon.js": 225, "js/dungeonbuch.js": 1,
+    ALT = {"app.css": 1, "index.html": 7, "js/dungeon-ton.js": 9, "js/dungeon.js": 225, "js/dungeonbuch.js": 1,
            "js/dungeonfenster.js": 38, "js/dungeonkarte.js": 21, "js/dungeonwarten.js": 9, "js/fernzugang.js": 2,
-           "js/guides.js": 240, "js/i18n.js": 18}
+           "js/guides.js": 136, "js/i18n.js": 14}
 
     def hits(self):
         return {n.replace(os.sep, "/"): c for n in ui_files() if (c := len(EMOJI.findall(read(n))))}

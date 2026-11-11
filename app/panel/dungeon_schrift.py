@@ -10,10 +10,10 @@ Who sees it is the host's choice (set): every seat („alle“, the default), on
 („niemand“); the one sight filter keeps the text from everyone else (view, GEHEIM["schrift"] in dungeon_sicht).
 The model keeps the last SCHRIFT_FAKTEN in its facts, so the story stays consistent; it never decides who sees them.
 
-Off by default: the admin's switch dungeonschrift (features.py, chat.dungeon_schrift) for the round's host.
+Since Ausdünnen 1 the part dungeonschrift hangs on on with the game itself (dungeon_tiefe.py) for the round's host.
 Journal: fixed words and numbers („dungeon: schrift | …“), Live only counts.
 """
-import features
+import dungeon_tiefe
 from common import DayCounter
 
 KEY = "dungeonschrift"
@@ -50,7 +50,7 @@ _day = DayCounter(gefunden=0, verworfen=0, geheim=0)
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"])
+    return dungeon_tiefe.an(KEY, rd)
 
 
 def task(rd, lang):

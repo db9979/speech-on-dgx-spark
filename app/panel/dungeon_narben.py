@@ -5,21 +5,20 @@ texts come from the thread „DnDAppFiles für den Dungeon-Master“, dungeon_sr
 A hero that stands up again after lying down (stood_up, Gnade) or takes a foe's critical hit gets a wound: the panel
 rolls a d20 on the table ideen.narben; mostly only a scar (its look), on a few rows a mild consequence, −1 on one value
 (folge, in dungeon.total) until a healer of a settlement takes it away for gold (dungeon_gold, „heiler“); the scar stays
-as a memory. At the children's table only a plaster (ideen.narben_kinder), never a consequence. The admin's second
-switch „nur Narben“ (chat.dungeon_narben_nur) keeps every wound to its look. At most one wound a hero and turn, at most
+as a memory. At the children's table only a plaster (ideen.narben_kinder), never a consequence. The host's choice
+„Nur Narben“ for the round (dungeon_tiefe.nur_narben, Spielleiter-Pult) keeps every wound to its look. At most one wound a hero and turn, at most
 NARBEN_MAX a hero; the scars are kept with the hero (h["narben"], fix) and shown in its sheet; in a settlement people
 ask about one (ideen.narben_sprueche, saying). Only the panel rolls; the model only reads the scars in its facts.
 
-Off by default: the admin's switch dungeonnarben (features.py, chat.dungeon_narben) for the round's host.
+Since Ausdünnen 1 the part dungeonnarben hangs on the Regeltiefe „voll“ of the round (dungeon_tiefe.py) for the round's host.
 Journal: fixed words and numbers („dungeon: narbe | …“), Live only counts.
 """
 import random
 
-import features
+import dungeon_tiefe
 from common import DayCounter
 
 KEY = "dungeonnarben"
-NUR = "dungeonnarbennur"   # the admin's „nur Narben“ (chat.dungeon_narben_nur): the look only, never a consequence
 NARBEN_MAX = 8             # wounds a hero keeps
 HEILER = 8                 # the healer's gold per level of the group (dungeon_gold.PREIS)
 TEXT_MAX = 200
@@ -29,11 +28,11 @@ _day = DayCounter(narben=0, folgen=0, pflaster=0, geheilt=0)
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"])
+    return dungeon_tiefe.an(KEY, rd)
 
 
 def only_look(rd):
-    return features.allowed(NUR, rd["owner"])
+    return dungeon_tiefe.nur_narben(rd)
 
 
 def wound(dm, r, rd, pid, h, warum, rng=None):

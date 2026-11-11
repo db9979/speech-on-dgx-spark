@@ -19,7 +19,7 @@ counts.
     rd["_mitkommen"]  [{"name", "pid", "ja", "grund"}]   only on run_turn's copy; the story carries it into keep
 """
 import dungeon_nsc as nsc
-import features
+import dungeon_tiefe
 from common import DayCounter
 
 KEY = "dungeonmitkommen"
@@ -38,7 +38,7 @@ AUFGABE = {
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"]) and nsc.on(rd) and bool(rd.get("karte"))
+    return dungeon_tiefe.an(KEY, rd) and nsc.on(rd) and bool(rd.get("karte"))
 
 
 def checks(dm, r, rd, proben):

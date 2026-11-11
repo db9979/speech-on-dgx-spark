@@ -37,7 +37,7 @@ import threading
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 import dungeon
-import features
+import dungeon_tiefe
 import guard
 import profiles
 from common import DayCounter, read_json, write_json
@@ -164,7 +164,7 @@ _day = DayCounter(gewaehlt=0, abgelehnt=0)
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"])
+    return dungeon_tiefe.an(KEY, rd)
 
 
 def _rng(seed):
@@ -380,7 +380,7 @@ def sweep(now):
 
 def for_live():
     """Numbers only: rounds with arms, own choices, chosen and refused today."""
-    if not features.admin_on(KEY):
+    if not dungeon_tiefe.admin_an(KEY):
         return {"on": False}
     rs = [v for v in dungeon._read()["runden"].values() if v.get("status") == "laeuft"]
     return {"on": True, "runden": sum(1 for v in rs if on(v)), **_day.counts()}

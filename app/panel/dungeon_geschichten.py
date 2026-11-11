@@ -11,7 +11,7 @@ und 3b; own code).
 3b. Every host manages only the own stories (EIGENE_MAX); the admin sees and changes all of them under Regeln →
    Geschichten (the admin's own list and limit stay as they were).
 
-Off by default: the admin's switch dungeongeschichten (features.py, chat.dungeon_geschichten) for the host. While off
+Since Ausdünnen 1 the part dungeongeschichten hangs on the switch dungeongeschichten (features.py) (dungeon_tiefe.py) for the host. While off
 no host has own or hidden stories (the admin's and the Spark's stories as before), the files stay.
 
     STATE/dungeon-geschichten.json      the stories, a host's own with "von": profile id (dungeon.plans)

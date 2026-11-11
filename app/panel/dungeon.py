@@ -178,6 +178,7 @@ import dungeon_knapp as knapp
 import dungeon_helfen as helfen
 import dungeon_schrift as schrift
 import coadmin
+import dungeon_tiefe
 import features
 import guard
 import mfa
@@ -2515,6 +2516,7 @@ def make_round(owner, b, lang, now=None, kampagne=None):
                             "erzaehlweise": b.get("erzaehlweise") if b.get("erzaehlweise") in WEISEN else "normal",
                             "plaetze": {pid: {"h": "", "uid": owner, "held": h, "made": now, "gast": False}}}
         rd = d["runden"][rid]
+        dungeon_tiefe.neu(rd, b.get("tiefe"))           # Regeltiefe (Ausdünnen 1): the host's choice, else the standard
         if not h.get("stimme") and not h.get("klang"):
             h["stimme"] = voice_for(r, rd, h)
         if kampagne:
@@ -3030,7 +3032,7 @@ def campaign_view(r, uid, lang):
                     "rid": c.get("rid", ""), "t": c.get("t", 0), "helden": [x["name"] for x in c.get("helden") or []],
                     "gaeste": [h.get("name", "") for h in c.get("gaeste") or []],
                     "titelbilder": list(c.get("titelbilder") or []), "orte": list(c.get("orte") or []),
-                    "buch": len(c.get("buch") or []) if features.allowed(chronikbuch.KEY, uid) else None})
+                    "buch": len(c.get("buch") or []) if dungeon_tiefe.fuer(chronikbuch.KEY, uid) else None})
     return out
 
 
@@ -3144,8 +3146,8 @@ def _planner_limits(uid=None):
     """The planner form's limits: the admin's (uid None) with the file import, a host's with its own limit; the act's
     special thing while the quest things are on (Spark-wide for the admin, for the host by features.allowed)."""
     import dungeon_import
-    on = features.admin_on("dungeonquest") if uid is None else features.allowed("dungeonquest", uid)
-    leute = personen.admin_on() if uid is None else personen.on({"owner": uid})
+    on = dungeon_tiefe.admin_an(quest.KEY) if uid is None else dungeon_tiefe.fuer(quest.KEY, uid)
+    leute = dungeon_tiefe.admin_an(personen.KEY) if uid is None else personen.on({"owner": uid})
     return {"max": GESCHICHTEN_MAX if uid is None else geschichten.EIGENE_MAX, "akte": AKTE, "zuege": AKT_ZUEGE, "akt_min": AKT_MIN,
             "idee": IDEE_MAX, "ziel": ZIEL_MAX, "inhalt": INHALT_MAX, "wende": WENDE_MAX, "stichworte": STICHWORTE_MAX, "orte": ORTE_MAX,
             "spuren": [anleiten.SPUREN_MAX, anleiten.SPUR_LEN],
@@ -6143,6 +6145,7 @@ def view(rid, pid, now=None):
     near = (mine["tasche"] if mine else []) + ((rd.get("markt") or {}).get("ware") or []) + (rd.get("boden") or [])
     out["vergleich"] = {x["i"]: v for x in near for v in [compare(r, mine, x)] if v} if mine else {}
     out["regler"] = {"wert": kampf.dial(rd), "fest": bool(rd.get("regler_fest"))} if host and kampf.dial_on(rd) else None
+    out["tiefe"] = dungeon_tiefe.view(rd, host, li)            # Regeltiefe einfach/voll, the host's choice and „Nur Narben“
     out["kampfstufe"] = {"wert": kampf.stage(rd), "wahl": [[k, v[li]] for k, v in kampf.STUFEN.items()]} if host and kampf.stages_on(rd) else None
     out["echt_plaetze"] = echt.choice(rd) if host else None    # which seats throw their own d20 (dungeon_echt, D&D idea 5)
     out["knapp"] = knapp.view(rd, pid)                         # the own near miss: give up or pay (dungeon_knapp)
@@ -6635,6 +6638,7 @@ def for_live():
             "am_rand": sum(1 for v in rs for p in v["plaetze"].values() if p.get("wartet")),
             **grenzen.for_live(rs), **zufall.for_live(rs), **nsc.for_live(rs), **orakel.for_live(rs), **fraktionen.for_live(rs), **quest.for_live(rs),
             "kampfstufen": sum(1 for v in rs if v.get("kampfstufe") not in (None, "mittel")),
+            **{"tiefe_" + k: v for k, v in dungeon_tiefe.counts(rs).items()},
             "neu_laeuft": sum(1 for v in rs if erz.running(v)),
             **{k: t[k] for k in ("rand", "held_geflohen", "neu_gesperrt", "geraet", "rettungswurf", "gnade", "stabil", "verschnauft", "getippt", "gegeben", "schaden_ohne_grund", "probe_wert_fest", "akt_ohne_wende", "ziel_zu_frueh", "beute_vorab", "beute_ort", "oel", "beleg_falsch", "hoer_namen",
                                  "grenzen", "x_karte", "schleier", "schreiber_an", "schreiber_weg", "zufall_treffer", "zufall_daneben",
@@ -6713,6 +6717,7 @@ def _choices(lang, stories=True, welt="", uid=None):
             "verteilung": sorted(r["verteilung"], reverse=True),
             "zug_s": r["grenzen"]["zug_s"], "zug_standard": r["grenzen"]["zug_standard"], "stunden": r["grenzen"]["stunden"],
             "spieler": r["grenzen"]["spieler"], "prompt": default_prompt(r, lang), "text_max": TEXT_MAX,
+            "tiefe": dungeon_tiefe.standard(), "tiefen": [[k, v[li]] for k, v in dungeon_tiefe.TIEFEN.items()],
             "geschichten": geschichten.cards(r, uid, lang) if stories else []}
 
 
@@ -7458,7 +7463,8 @@ async def erzaehler(rid: str, request: Request, prof=Depends(browser_profile)):
     or {kampfstufe} the stage of the next encounters (leicht, mittel, schwer, toedlich; Tabletop-Punkt 13);
     or {mail_vorschau} the narrator's last sentence in a guest's „Du bist dran“ mail (on unless switched off);
     or {echt: [pid, …]} the seats that throw their own d20 at the real table (dungeon_echt.choose, D&D idea 5);
-    or {schrift: {id, sicht}} who sees a writing: alle, niemand or one seat (dungeon_schrift.set_sight, D&D idea 3)."""
+    or {schrift: {id, sicht}} who sees a writing: alle, niemand or one seat (dungeon_schrift.set_sight, D&D idea 3);
+    or {tiefe} the round's Regeltiefe einfach or voll, or {nur_narben} wounds keep to their look (dungeon_tiefe, Ausdünnen 1)."""
     uid = prof["id"]
     _need(uid)
     guard.limit(request, "dungeon", uid)
@@ -7474,6 +7480,12 @@ async def erzaehler(rid: str, request: Request, prof=Depends(browser_profile)):
                 if not isinstance(b["regler_fest"], bool) or not kampf.dial_on(rd):
                     raise ValueError()
                 rd["regler_fest"] = b["regler_fest"]
+            elif "tiefe" in b:                        # Regeltiefe (Ausdünnen 1): the extra rules of „voll“ from the next turn on
+                dungeon_tiefe.choose(rd, b["tiefe"])
+            elif "nur_narben" in b:
+                if not isinstance(b["nur_narben"], bool):
+                    raise ValueError()
+                rd["nur_narben"] = b["nur_narben"]
             elif "kampfstufe" in b:                   # Budget-Stufen (Tabletop-Punkt 13): how hard the next encounters are
                 if b["kampfstufe"] not in kampf.STUFEN or not kampf.stages_on(rd):
                     raise ValueError()
@@ -7499,6 +7511,10 @@ async def erzaehler(rid: str, request: Request, prof=Depends(browser_profile)):
             _write(d)
         if "regler_fest" in b:
             print(f"dungeon: regler | {'festgehalten' if b['regler_fest'] else 'frei'}", flush=True)
+        elif "tiefe" in b:
+            print(f"dungeon: regeltiefe | {b['tiefe']}", flush=True)
+        elif "nur_narben" in b:
+            print(f"dungeon: narbe | nur aussehen {'an' if b['nur_narben'] else 'aus'}", flush=True)
         elif "kampfstufe" in b:
             print(f"dungeon: kampfstufe | {b['kampfstufe']}", flush=True)
         elif "mail_vorschau" in b:
@@ -8194,7 +8210,7 @@ def admin_show(request: Request = None):
     import dungeon_dingbild
     r = rules()
     lang = "en" if request is not None and request.query_params.get("lang") == "en" else "de"
-    return json_out(request, {"eigene": own_rules(), "summe": _summary(r), "standard": _base_rules(), "live": for_live(), "personen_an": personen.admin_on(),
+    return json_out(request, {"eigene": own_rules(), "summe": _summary(r), "standard": _base_rules(), "live": for_live(), "personen_an": dungeon_tiefe.admin_an(personen.KEY),
             "geschichten": [plan_view(r, k, g) for k, g in sorted(plans().items(), key=lambda x: -x[1].get("t", 0))],
             "wahl": _choices(lang), "planer": _planner_limits(),
             "dingbilder": dungeon_dingbild.status(r), "daumen": erz.stats(_me, r), "gastmail": gastkonto.admin_view()})
@@ -8285,7 +8301,7 @@ async def _planner(request, fn):
 @router.post("/api/admin/dungeon/geschichte/vorschlag", dependencies=[Depends(auth)])
 async def admin_vorschlag(request: Request):
     """{welt, ton, akte, stichworte, tabus, lang}: the model proposes a story; nothing is kept until the admin saves."""
-    return await _planner(request, lambda b: propose_plan(b, personen.admin_on()))
+    return await _planner(request, lambda b: propose_plan(b, dungeon_tiefe.admin_an(personen.KEY)))
 
 
 @router.post("/api/admin/dungeon/geschichte/akt", dependencies=[Depends(auth)])

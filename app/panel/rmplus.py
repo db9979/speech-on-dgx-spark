@@ -644,7 +644,7 @@ SHEETS = {"morgen": (re.compile(r"morgen\s?blatt|tages\s?blatt|morning\s+sheet",
           "abgleich": (re.compile(r"abgleich\w*[\s-]?blatt|kalibrier\w*|calibration\s+sheet", re.I), "rmpapier"),
           "anleitung": (re.compile(r"anleitung|\bguide\b", re.I), "rmguide"),
           "aufgaben": (re.compile(r"aufgaben\s?blatt|aufgabenliste\b|task\s+sheet", re.I), "rmaufgaben"),
-          "heldenbuch": (re.compile(r"helden\s?buch|helden\s?bogen|hero\s?book|hero\s+sheet", re.I), "dungeonbuch")}
+          "heldenbuch": (re.compile(r"helden\s?buch|helden\s?bogen|hero\s?book|hero\s+sheet", re.I), "dungeonbuecher")}
 SHEET_DONE = {"aufgaben": "Das Aufgabenblatt", "morgen": "Das Morgenblatt", "woche": "Der Wochenrückblick",
               "abgleich": "Das Abgleich-Blatt",
               "anleitung": "Die Anleitung"}

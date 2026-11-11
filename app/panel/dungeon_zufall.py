@@ -7,7 +7,7 @@ roll counts for the whole group or one roll for each hero. The panel rolls a d10
 effect by its own rules and writes every roll into the feed; the model only hears a hint as data (facts „zufall“),
 never as an instruction, and never sees the rules. Only the host sees and sets them (dungeon_sicht: „zufall“).
 The rules live in rd["zufall"] = [{"name", "prozent", "ausloeser", "wirkung", "zahl", "text", "wer"}].
-Only while „Zufallsregeln“ is allowed for the round's host (features "dungeonzufall").
+Only while „Zufallsregeln“ is allowed for the round's host (dungeon_tiefe "dungeonzufall": the host's tool in the Spielleiter-Pult, no switch).
 """
 import random
 
@@ -23,8 +23,8 @@ WER = {"alle": ("Ein Wurf für alle", "One roll for all"), "je": ("Ein Wurf je H
 
 
 def on(rd):
-    import features
-    return bool(rd.get("owner")) and features.allowed("dungeonzufall", rd["owner"])
+    import dungeon_tiefe
+    return dungeon_tiefe.an("dungeonzufall", rd)
 
 
 def clean(dm, b):

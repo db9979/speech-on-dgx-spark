@@ -6,7 +6,7 @@ table: when at least half of the other players give 👍 to one of the hero's ac
 counts the charges by fixed rules, the model never gives or takes one.
 
 The charges live in the round (rd["mut"][pid] = {"abend", "genutzt", "lob"}), the 👍 in rd["mut_lob"][zug][pid].
-Only while „Heldenmut“ is allowed for the round's host (features "dungeonheldenmut").
+Only while „Heldenmut“ is allowed for the round's host (dungeon_tiefe "dungeonheldenmut": the Regeltiefe „voll“ of the round).
 """
 import time
 
@@ -16,8 +16,8 @@ clock = time.time
 
 
 def on(rd):
-    import features
-    return bool(rd.get("owner")) and features.allowed("dungeonheldenmut", rd["owner"])
+    import dungeon_tiefe
+    return dungeon_tiefe.an("dungeonheldenmut", rd)
 
 
 def evening():

@@ -58,8 +58,8 @@ SCHEMA = {"type": "object", "properties": {"text": {"type": "string"}}, "require
 
 
 def on(rd):
-    import features
-    return bool(rd.get("owner")) and features.allowed("dungeongrenzen", rd["owner"])
+    import dungeon_tiefe
+    return dungeon_tiefe.an("dungeongrenzen", rd)
 
 
 def _seats(rd):

@@ -25,8 +25,8 @@ import dungeon_warten as warten  # noqa: E402
 class Gestures(Base):
     def setUp(self):
         super().setUp()
-        helpers.keep_chat(self, "dungeon_nsc", "dungeon_gesten")
-        helpers.set_config(dungeon_nsc=True, dungeon_gesten=True)
+        helpers.keep_chat(self, "dungeon_tiefe")
+        helpers.set_config(dungeon_tiefe="voll")
         self.rid = self.new_round()["rid"]
         with dungeon._lock:
             d = dungeon._read()
@@ -54,8 +54,7 @@ class Gestures(Base):
         self.assertFalse(warten.geste_faellig(dict(rd, tisch=[{"n": 1, "text": "x", "t": t - 5}]), t))   # table talk just now
         self.assertFalse(warten.geste_faellig(dict(rd, geste={"zug": rd["zug"], "n": warten.GESTE_ZUG, "t": 0}), t))
         self.assertTrue(warten.geste_faellig(dict(rd, geste={"zug": rd["zug"] - 1, "n": warten.GESTE_ZUG, "t": 0}), t))  # a new turn
-        helpers.set_config(dungeon_gesten=False)
-        self.assertFalse(warten.geste_faellig(rd, t))
+        self.assertFalse(warten.geste_faellig(dict(rd, tiefe="einfach"), t))           # gestures are Regeltiefe „Voll“
 
     def test_a_gesture_in_the_feed_at_most_twice_a_turn(self):
         before = self.state(self.rid)

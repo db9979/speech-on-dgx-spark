@@ -57,6 +57,7 @@ import dungeon
 import dungeon_gesicht
 import dungeon_wappen
 import dungeon_karte
+import dungeon_tiefe
 import features
 import guard
 import profiles
@@ -1010,7 +1011,7 @@ def entry_pic(r, teil, c, welt=""):
 def person_on():
     """Faces of the people catalog: the catalog pictures, „Gesichter für NSCs“ and the people catalog on the Spark."""
     import dungeon_personen
-    return on() and features.admin_on(dungeon_gesicht.KEY) and dungeon_personen.admin_on()
+    return on() and dungeon_tiefe.admin_an(dungeon_gesicht.KEY) and dungeon_tiefe.admin_an(dungeon_personen.KEY)
 
 
 def person_text(r, x):

@@ -25,9 +25,7 @@ import dungeon_runen as runen  # noqa: E402
 class Give(Base):
     def setUp(self):
         super().setUp()
-        helpers.keep_chat(self, "dungeon_geben")
-        helpers.keep_chat(self, "dungeon_runen")
-        helpers.set_config(dungeon_geben=True)
+        helpers.keep_chat(self, "dungeon_tiefe")
         self.rid = self.new_round()["rid"]
         self.r = dungeon.rules()
         rd = self.state(self.rid)
@@ -44,11 +42,14 @@ class Give(Base):
         return self.c.post(self.url, json=dict({"an": self.pid}, **b))
 
     def test_off_by_default_and_only_for_the_admin(self):
-        helpers.set_config(dungeon_geben=False)
+        import dungeon_tiefe
+        self.assertEqual(dungeon_tiefe.GRUPPE[geben.KEY], "pult")          # a tool of the console, no switch (Ausdünnen 1)
+        p = mock.patch.object(dungeon_tiefe, "an", lambda t, rd: False)  # as for a host the admin has blocked
+        p.start()
         self.assertIsNone(self.c.get(f"/api/profile/dungeon/{self.rid}").json()["geben"])
         self.assertEqual(self.give(art="gold", n=10).json()["detail"], "geben aus")
         self.assertEqual(self.c.get(self.url).json()["detail"], "geben aus")
-        helpers.set_config(dungeon_geben=True)
+        p.stop()
         v = self.c.get(f"/api/profile/dungeon/{self.rid}").json()["geben"]
         self.assertEqual([x["pid"] for x in v["helden"]], [self.pid])
         self.assertEqual(v["selten"][-1]["id"], "episch")
@@ -143,10 +144,10 @@ class Give(Base):
         self.assertEqual(self.give(art="gold", n=1, an="p_gibt_es_nicht").json()["detail"], "geben")
 
     def test_runes_only_with_runes_and_never_above_the_bag(self):
-        helpers.set_config(dungeon_runen=False)
+        self.tiefe(self.rid, "einfach")
         self.assertEqual(self.c.get(f"/api/profile/dungeon/{self.rid}").json()["geben"]["runen"], [])
         self.assertEqual(self.give(art="rune", id="uruz", n=1).json()["detail"], "geben")
-        helpers.set_config(dungeon_runen=True)
+        self.tiefe(self.rid, "voll")
         with mock.patch("dungeon_runen.wirkt", return_value=True):
             self.assertIn("uruz", [x["id"] for x in self.c.get(f"/api/profile/dungeon/{self.rid}").json()["geben"]["runen"]])
             with contextlib.redirect_stdout(io.StringIO()) as out:

@@ -17,13 +17,13 @@ before, a long rest and the inn always until the next morning (kalender.weiter).
 The narrator gets the time of day as data (facts szene.tageszeit) and, on the first turn after a change, tageszeit_neu
 to tell the change in one or two sentences; the model's szene.tageszeit is ignored while this is on (one source).
 
-Off by default: the admin's switch dungeontageszeit (features.py, chat.dungeon_tageszeit) for the round's host; off,
+Since Ausdünnen 1 the part dungeontageszeit hangs on on with the game itself (dungeon_tiefe.py) for the round's host; off,
 the narrator reports the time of day as before (only forward, dungeon.tageszeit_ok).
 State in the round: rd["tageszeit"] (the section, also read by dungeon_dingbild and dungeon_gold), rd["uhr"]
 {"halbe": the calendar's half days it counted from, "zuege": told turns in this half, "wechsel": the turn the change is
 told on}. Journal: fixed words and numbers („dungeon: tageszeit | …“), Live only counts.
 """
-import features
+import dungeon_tiefe
 from common import DayCounter
 
 KEY = "dungeontageszeit"
@@ -36,7 +36,7 @@ _day = DayCounter(wechsel=0, dunkel=0, zu=0)
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"])
+    return dungeon_tiefe.an(KEY, rd)
 
 
 def stand(rd):

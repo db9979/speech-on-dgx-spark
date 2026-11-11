@@ -16,7 +16,7 @@ The people the tables met become a stock the stories and the roads use again:
    person whose exact name the draft uses comes ticked (pick). A round with that story brings them into the chapter's
    truth with their stored role and goal (into_truth) and always offers them first (offer), so the narration meets them
    with their fixed card.
-5. Off by default: the admin's switch dungeonpersonen (features.py, chat.dungeon_personen), on top of „NSC-Gedächtnis
+5. Since Ausdünnen 1 the part dungeonpersonen hangs on on with the game itself (dungeon_tiefe.py), on top of „NSC-Gedächtnis
    und Chronik“, for the round's host.
 
     STATE/dungeon-personen.json  {id: {"id", "name", "welt", "karte": {feld: [de, en]}, "wesen", "rolle", "ziel",
@@ -34,7 +34,7 @@ import dungeon_album as album
 import dungeon_bestiarium as best
 import dungeon_nsc as nsc
 import dungeon_stimmen as stimmen
-import features
+import dungeon_tiefe
 from common import STATE, DayCounter, read_json, write_json
 
 KEY = "dungeonpersonen"
@@ -54,11 +54,7 @@ FELD = {"aussehen": ("Aussehen", "Looks"), "art": ("Art", "Manner"), "beruf": ("
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"]) and nsc.on(rd)
-
-
-def admin_on():
-    return features.admin_on(KEY)
+    return dungeon_tiefe.an(KEY, rd) and nsc.on(rd)
 
 
 def load():

@@ -10,7 +10,7 @@ disadvantage the second d20 is the panel's. A seat that gave no number twice in 
 throws again. Never in the car (CarPlay): a seat
 whose profile plays from the car is not asked (dungeon_auto.im_auto); a guest seat has no car.
 
-Off by default: the admin's switch dungeonechtwuerfel (features.py, chat.dungeon_echtwuerfel) for the round's host.
+Since Ausdünnen 1 the part dungeonechtwuerfel hangs on the host's tool in the Spielleiter-Pult, no switch (dungeon_tiefe.py) for the round's host.
 The number is data: only the own seat, only whole numbers 1 to 20, only for the turn asked, an own rate limit.
 State in the round (dungeon.py's rounds file), only while a turn waits for numbers:
     rd["echt_frage"]  {"zug", "t", "plaetze": {pid: {"fragen": [{"wert", "schwer", "n", "sg"?} | {"angriff": True, "gegner",
@@ -26,7 +26,7 @@ import time
 
 from fastapi import APIRouter, Depends, Request
 
-import features
+import dungeon_tiefe
 import guard
 from common import DayCounter
 from core import assistant, browser_profile, json_body
@@ -45,7 +45,7 @@ _day = DayCounter(gefragt=0, echt=0, rueckfall=0, abgelehnt=0, angriff=0, kurz=0
 
 def on(rd):
     """The host's admin switch and the round's seats with own dice."""
-    return bool(rd.get("owner")) and bool(rd.get("echt")) and features.allowed(KEY, rd["owner"])
+    return bool(rd.get("echt")) and dungeon_tiefe.an(KEY, rd)
 
 
 def _im_auto(uid):
@@ -202,7 +202,7 @@ def give(rd, pid, zug, zahlen):
 def choice(rd):
     """The host's console (Am Tisch): the seats with a hero and whether each throws its own d20; None while the admin's
     switch is off for the host."""
-    if not rd.get("owner") or not features.allowed(KEY, rd["owner"]):
+    if not dungeon_tiefe.an(KEY, rd):
         return None
     on_ = set(rd.get("echt") or [])
     return [{"pid": pid, "name": p["held"]["name"], "an": pid in on_, "auto": _im_auto(p.get("uid"))}
@@ -214,7 +214,7 @@ def choose(rd, pids):
     (a seat in the car stays chosen, it is only not asked while it drives)."""
     ok = isinstance(pids, list) and len(pids) <= len(rd["plaetze"]) and all(isinstance(p, str) for p in pids) \
         and len(set(pids)) == len(pids) and all((rd["plaetze"].get(p) or {}).get("held") for p in pids)
-    if not ok or not rd.get("owner") or not features.allowed(KEY, rd["owner"]):
+    if not ok or not dungeon_tiefe.an(KEY, rd):
         print("dungeon: echt | plaetze | abgelehnt", flush=True)
         raise ValueError("eingabe")
     if pids:

@@ -296,161 +296,31 @@ FEATURES = (
     # KI-Dungeon-Master (dungeon.py, plan dungeon-master): a role-playing round for up to five players, also without a
     # profile by seat link; the model narrates, the panel rolls and gives loot, experience, levels and trades by fixed rules
     F("dungeon", "KI-Dungeon-Master", "AI Dungeon Master", "data", ("dungeon",), me="dmbox", guide="dungeon"),
-    # Bilder für Ausrüstung und Zauber (dungeon_dingbild.py, plan „5i“): one picture per catalog entry and world, painted
-    # at night or on the admin's button, and named finds; needs „Bilder malen“ of the Spark too
-    F("dungeonbilder", "Bilder für Ausrüstung und Zauber", "Pictures for gear and spells", "data", ("dungeon_bilder",),
+    # Ausdünnen 1 (dungeon_tiefe.py, Dominik 2026-11-11 „Ok“): the game's parts hang on the game and its Regeltiefe
+    # (einfach/voll, chat.dungeon_tiefe and per round) or on one of these six switches, never one switch per part
+    # Bilder und Heldenlied (dungeon_dingbild, dungeon_gesicht, dungeon_wappen, dungeon_album, dungeon_lied): pictures
+    # for gear, spells, faces and arms, the monster album and the bard's song; painting needs „Bilder malen“ too
+    F("dungeonbilder", "Bilder und Heldenlied", "Pictures and hero song", "data", ("dungeon_bilder",),
       parent="dungeon", me="dmbox", guide="dungeonbilder"),
-    # Gäste mit E-Mail (dungeon_gast.py, plan Stufe 3): a guest keeps its heroes in an account after a 6-digit code from
-    # the admin's mailbox, and may get „Du bist dran“ by mail; only a hash of the address, the address sealed on wish
+    # Zweite Prüfung durch das Modell (dungeon_erzaehler Richter, dungeon_schreiber, dungeon_kommentar): a second model
+    # call per turn after the fixed checks, about 2 to 4 seconds more
+    F("dungeonpruefung", "Zweite Prüfung durch das Modell", "Second check by the model", "data", ("dungeon_pruefung",),
+      parent="dungeon", me="dmbox", guide="dungeonpruefung"),
+    # Gäste mit E-Mail (dungeon_gast.py): guests sign in with a code from the admin's mailbox and keep their heroes
     F("dungeongast", "Gäste mit E-Mail", "Guests with e-mail", "data", ("dungeon_gast",), parent="dungeon", me="dmbox",
       guide="dungeongast"),
-    # Balance-Prüfstand (dungeon_pruefstand.py, Idee 5 of 2026-10-24): the panel plays fights alone with the real rules,
-    # at night or on the admin's button, and shows the wins per level under Regeln; no model, no profile's data
-    F("dungeonpruefstand", "Balance-Prüfstand", "Balance bench", "data", ("dungeon_pruefstand",), parent="dungeon",
+    # Bücher (dungeon_chronik.py, dungeon_buch.py): the campaign's chronicle book and the hero book to the reMarkable
+    # (that one needs „Aufs reMarkable schicken“ too)
+    F("dungeonbuecher", "Chronik und Heldenbuch", "Chronicle and hero book", "data", ("dungeon_buecher",),
+      parent="dungeon", me="dmbox", guide="dungeonbuecher"),
+    # Eigene Geschichten (dungeon_geschichten.py, dungeon_import.py): edit, copy and delete stories, „＋ Neue Geschichte“
+    # and the adventure import
+    F("dungeongeschichten", "Eigene Geschichten und Import", "Own stories and import", "data", ("dungeon_geschichten",),
+      parent="dungeon", me="dmbox", guide="dungeongeschichten"),
+    # Prüfstände (dungeon_pruefstand.py, dungeon_erzaehlstand.py): the balance bench at night and the narrator bench on
+    # the admin's button
+    F("dungeonpruefstand", "Prüfstände", "Test benches", "data", ("dungeon_pruefstand",), parent="dungeon",
       me="dmbox", guide="dungeonpruefstand"),
-    # Erzähler-Prüfstand (dungeon_erzaehlstand.py, Tabletop-Punkt 4): fixed scenes through the real narration of the running model
-    F("dungeonerzaehlstand", "Erzähler-Prüfstand", "Narrator bench", "data", ("dungeon_erzaehlstand",), parent="dungeon",
-      me="dmbox", guide="dungeonerzaehlstand"),
-    # Erzähler-Fehler beheben (dungeon_erzaehlstand.FIX): a 👎 with a fixed reason tells the last scene again with the
-    # reason's fixed hint, often reported reasons become fixed hints of a world; fixed texts, never a report's words
-    F("dungeonerzfehler", "Erzähler-Fehler beheben", "Fix narrator errors", "data", ("dungeon_erzfehler",), parent="dungeon",
-      me="dmbox", guide="dungeonerzfehler"),
-    # Dungeon-Richter (dungeon_erzaehler.RICHTER, systemone use "richter"): after the fixed checks the model only gives the
-    # probability of a contradiction, the panel writes anew from a fixed threshold; needs Einordnung mit Wahrscheinlichkeit
-    F("dungeonrichter", "Dungeon-Richter", "Dungeon judge", "data", ("dungeon_richter",), parent="dungeon",
-      me="dmbox", guide="dungeonrichter"),
-    # Krit- und Patzer-Tabellen (dungeon_kampf.KRIT, D&D idea 2): a critical hit or a natural 1 rolls a d12 on a fixed
-    # table (dungeon_srd.json „ideen“), its state for 1 to 3 turns; the model only tells the line
-    F("dungeonkrit", "Krit- und Patzer-Tabellen", "Critical and fumble tables", "data", ("dungeon_krit",), parent="dungeon",
-      me="dmbox", guide="dungeonkrit"),
-    # Ehrungen des Abends (dungeon_ehre.py, D&D idea 1): at a round's end titles and a certificate per hero from the
-    # panel's own dice receipts, never from the model
-    F("dungeonehrungen", "Ehrungen des Abends", "Honours of the evening", "data", ("dungeon_ehrungen",), parent="dungeon",
-      me="dmbox", guide="dungeonehrungen"),
-    # Knapp daneben (dungeon_knapp.py, D&D round 2 idea 1): a check missing by 1 or 2 asks its seat, give up or pay a
-    # price from a fixed table; the price works by a fixed rule
-    F("dungeonknapp", "Knapp daneben", "Near miss", "data", ("dungeon_knapp",), parent="dungeon", me="dmbox", guide="dungeonknapp"),
-    # Helfen und Gruppenprobe (dungeon_helfen.py, D&D round 2 idea 4): a named help gives advantage, half of a group passing is enough
-    F("dungeonhelfen", "Helfen und Gruppenprobe", "Helping and group checks", "data", ("dungeon_helfen",), parent="dungeon", me="dmbox",
-      guide="dungeonhelfen"),
-    # Schriftstücke (dungeon_schrift.py, D&D idea 3): a found writing as a parchment, the host chooses who sees it
-    F("dungeonschrift", "Schriftstücke", "Writings", "data", ("dungeon_schrift",), parent="dungeon", me="dmbox", guide="dungeonschrift"),
-    # Helden kommentieren selbst (dungeon_kommentar.py, Dominik 2026-10-26 „2a“): a short line per hero who acted
-    F("dungeonkommentar", "Helden kommentieren", "Heroes comment", "data", ("dungeon_kommentar",), parent="dungeon", me="dmbox", guide="dungeonkommentar"),
-    # Lagerfeuer und Rast (dungeon_rast.py, D&D idea 4): short and long rests with night watches and question cards
-    F("dungeonrast", "Lagerfeuer und Rast", "Campfire and rest", "data", ("dungeon_rast",), parent="dungeon", me="dmbox", guide="dungeonrast"),
-    # Reise-Etappen (dungeon_reise.py, D&D idea 9): a long way is a journey with roles, checks and an event
-    F("dungeonreise", "Reise-Etappen", "Travel stages", "data", ("dungeon_reise",), parent="dungeon", me="dmbox", guide="dungeonreise"),
-    # Sprachen der Völker (dungeon_sprachen.py, D&D idea 7): a greeting in a people's tongue, the meaning only for who knows it
-    F("dungeonsprachen", "Sprachen der Völker", "Tongues of the peoples", "data", ("dungeon_sprachen",), parent="dungeon", me="dmbox", guide="dungeonsprachen"),
-    # Kalender der Welt (dungeon_kalender.py, D&D idea 6): months, moons and festivals; time runs only by fixed rules
-    F("dungeonkalender", "Kalender der Welt", "Calendar of the world", "data", ("dungeon_kalender",), parent="dungeon", me="dmbox", guide="dungeonkalender"),
-    # Tageszeit vom Panel (dungeon_tageszeit.py, LlamaTale idea 1): morning to night by fixed rules, shops shut at night
-    F("dungeontageszeit", "Tageszeit vom Panel", "Time of day by the panel", "data", ("dungeon_tageszeit",), parent="dungeon", me="dmbox", guide="dungeontageszeit"),
-    # Spieler anleiten (dungeon_anleiten.py, plan dungeon-anleitung): narrations with points to take up, a concrete choice
-    F("dungeonanleiten", "Spieler anleiten", "Guide the players", "data", ("dungeon_anleiten",), parent="dungeon", me="dmbox", guide="dungeonanleiten"),
-    # Fortschritt der Geschichte (dungeon_anleiten.kern, Review 27.10. E12): stall counter, wink and clues; on (DEFAULT_ON)
-    F("dungeonfortschritt", "Fortschritt der Geschichte", "Story progress", "data", ("dungeon_fortschritt",), parent="dungeon", me="dmbox", guide="dungeonfortschritt"),
-    # Zeugen-Regel (dungeon_zeugen.py, LlamaTale idea 3): deeds in front of people change their attitude by a fixed table
-    F("dungeonzeugen", "Zeugen-Regel", "Witness rule", "data", ("dungeon_zeugen",), parent="dungeon", me="dmbox", guide="dungeonzeugen"),
-    # Gedanken lesen (dungeon_gedanken.py, LlamaTale idea 5): the panel's check, the thoughts only for the reading seat
-    F("dungeongedanken", "Gedanken lesen", "Read thoughts", "data", ("dungeon_gedanken",), parent="dungeon", me="dmbox", guide="dungeongedanken"),
-    # Überreden zum Mitkommen (dungeon_mitkommen.py, LlamaTale idea 4): attitude and the panel's Charisma check decide
-    F("dungeonmitkommen", "Überreden zum Mitkommen", "Persuade to come along", "data", ("dungeon_mitkommen",), parent="dungeon", me="dmbox", guide="dungeonmitkommen"),
-    # Aufträge von Personen (dungeon_auftraege.py, LlamaTale idea 2): the panel rolls errands and checks them by receipts
-    F("dungeonauftraege", "Aufträge von Personen", "Errands from people", "data", ("dungeon_auftraege",), parent="dungeon", me="dmbox", guide="dungeonauftraege"),
-    # Wandernde Personen and Kleine Gesten (dungeon_wandern.py, dungeon_nsc.ziel_ort/geste, LlamaTale ideas 6 and 7)
-    F("dungeonwandern", "Wandernde Personen", "Wandering people", "data", ("dungeon_wandern",), parent="dungeon", me="dmbox", guide="dungeonwandern"),
-    F("dungeongesten", "Kleine Gesten", "Small gestures", "data", ("dungeon_gesten",), parent="dungeon", me="dmbox", guide="dungeongesten"),
-    # Chronikbuch (dungeon_chronik.py, D&D idea 11): a page per chapter to turn, as a PDF made on the Spark
-    F("dungeonchronik", "Chronikbuch", "Chronicle book", "data", ("dungeon_chronik",), parent="dungeon", me="dmbox", guide="dungeonchronik"),
-    # Heldenbuch aufs reMarkable (dungeon_buch.py): one book per hero as a PDF in the device's format, needs rmsend (READY)
-    F("dungeonbuch", "Heldenbuch aufs reMarkable", "Hero book to the reMarkable", "data", ("dungeon_buch",), parent="dungeon", me="dmbox", guide="dungeonbuch"),
-    # Gegner-Ansagen und Haltung (dungeon_haltung.py, D&D round 2, idea 2): foes announce their next blow, heroes defend or dodge
-    # Umgebung nutzen (dungeon_umgebung.py, D&D round 2, idea 3): the props of a fight, one check of the panel, a fixed effect
-    F("dungeonumgebung", "Umgebung nutzen", "Use the surroundings", "data", ("dungeon_umgebung",), parent="dungeon", me="dmbox", guide="dungeonumgebung"),
-    # Personen-Katalog (dungeon_personen.py, Dominik 2026-10-26 „1-5“): the people met, kept and met again in the world
-    F("dungeonpersonen", "Personen-Katalog", "People catalog", "data", ("dungeon_personen",), parent="dungeon", me="dmbox", guide="dungeonpersonen"),
-    # Gefährten anheuern (dungeon_gefaehrte.py, D&D round 2, idea 9): a companion of the world in a settlement, the panel rolls its blows
-    F("dungeongefaehrte", "Gefährten anheuern", "Hire companions", "data", ("dungeon_gefaehrte",), parent="dungeon", me="dmbox", guide="dungeongefaehrte"),
-    # Herzenswunsch (dungeon_wunsch.py, D&D round 2, idea 7): a secret wish per hero, one per act for the narrator
-    F("dungeonwunsch", "Herzenswunsch", "Heart's wish", "data", ("dungeon_wunsch",), parent="dungeon", me="dmbox", guide="dungeonwunsch"),
-    # Alarm und Fackeln (dungeon_alarm.py, D&D round 2, idea 6): noise wakes the vault, torches burn down, the dark hinders
-    F("dungeonalarm", "Alarm und Fackeln", "Alarm and torches", "data", ("dungeon_alarm",), parent="dungeon", me="dmbox", guide="dungeonalarm"),
-    # Flüstern mit einer Figur (dungeon_fluestern.py, D&D round 2, idea 5): a word to a person only one seat hears
-    F("dungeonfluestern", "Flüstern mit einer Figur", "Whisper to a person", "data", ("dungeon_fluestern",), parent="dungeon", me="dmbox", guide="dungeonfluestern"),
-    F("dungeonhaltung", "Gegner-Ansagen und Haltung", "Foe announcements and stance", "data", ("dungeon_haltung",), parent="dungeon", me="dmbox", guide="dungeonhaltung"),
-    # Rückfrage bei unklaren Aktionen (dungeon_rueckfrage.py, Dominik 2026-10-26 „wie empfehlung umsetzen“): fixed rules, suggestions from the scene
-    F("dungeonrueckfrage", "Rückfrage bei unklaren Aktionen", "Ask back on unclear actions", "data", ("dungeon_rueckfrage",), parent="dungeon", me="dmbox", guide="dungeonrueckfrage"),
-    # Eigene Geschichten (dungeon_geschichten.py, Dominik 2026-10-26 „nach empfehlung umsetzten“ + „und 2“): ⋯ and ＋ on the story cards
-    F("dungeongeschichten", "Eigene Geschichten", "Own stories", "data", ("dungeon_geschichten",), parent="dungeon", me="dmbox", guide="dungeongeschichten"),
-    # Narben (dungeon_narben.py, D&D idea 8): wounds after lying down or a foe's critical hit, a healer in a settlement
-    F("dungeonnarben", "Narben", "Scars", "data", ("dungeon_narben",), parent="dungeon", me="dmbox", guide="dungeonnarben"),
-    F("dungeonnarbennur", "Nur Narben", "Scars only", "data", ("dungeon_narben_nur",), parent="dungeonnarben", me="dmbox", guide="dungeonnarbennur"),
-    # Monster-Album (dungeon_album.py, D&D idea 12): the foes the hero defeated, more known after 1, 3 and 5 wins
-    F("dungeonalbum", "Monster-Album", "Monster album", "data", ("dungeon_album",), parent="dungeon", me="dmbox", guide="dungeonalbum"),
-    # Abenteuer-Import (dungeon_import.py, Tabletop-Punkt 10): a written adventure becomes a draft of the story planner
-    F("dungeonimport", "Abenteuer-Import", "Adventure import", "data", ("dungeon_import",), parent="dungeon", me="dmbox",
-      guide="dungeonimport"),
-    # Spielleiter-Regler (dungeon_kampf.turn_dial, Idee 6): after every fight the next encounters at most ±25 % by fixed
-    # numbers, the host may hold it, the children's table only easier
-    F("dungeonregler", "Spielleiter-Regler", "Game master dial", "data", ("dungeon_regler",), parent="dungeon",
-      me="dmbox", guide="dungeonregler"),
-    # Heldenmut (dungeon_mut.py, Idee 8): once an evening a failed check again or a hit critical, a second charge from
-    # the other players' 👍; fixed rules of the panel, never the model
-    F("dungeonheldenmut", "Heldenmut", "Heroic courage", "data", ("dungeon_heldenmut",), parent="dungeon",
-      me="dmbox", guide="dungeonheldenmut"),
-    # Grenzen und X-Karte (dungeon_grenzen.py, Tabletop-Punkt 18): lines and veils per seat as word lists, an anonymous
-    # X-card retells the last scene; fixed rules of the panel, never the model; on from the start (DEFAULT_ON)
-    F("dungeongrenzen", "Grenzen und X-Karte", "Lines and X-card", "data", ("dungeon_grenzen",), parent="dungeon",
-      me="dmbox", guide="dungeongrenzen"),
-    # Schreiber-Abgleich (dungeon_schreiber.py, Tabletop-Punkt 1): after each turn a small model call proposes what the
-    # narration changed (gold, a thing from the ground, life outside a fight, place, person); the panel takes it by fixed limits
-    F("dungeonschreiber", "Schreiber-Abgleich", "Scribe check", "data", ("dungeon_schreiber",), parent="dungeon",
-      me="dmbox", guide="dungeonschreiber"),
-    # Zufallsregeln (dungeon_zufall.py, Tabletop-Punkt 9): the host's own rules with chance, trigger and effect; the
-    # panel rolls and applies them, the model only hears a hint as data
-    F("dungeonzufall", "Zufallsregeln", "Random rules", "data", ("dungeon_zufall",), parent="dungeon",
-      me="dmbox", guide="dungeonzufall"),
-    # NSC-Gedächtnis und Chronik (dungeon_nsc.py, Tabletop-Punkt 5): cards from fixed tables, attitudes and relations by
-    # fixed rules, only the scene's people to the model; the chronicle and the heroes' reputation
-    F("dungeonnsc", "NSC-Gedächtnis und Chronik", "NPC memory and chronicle", "data", ("dungeon_nsc",), parent="dungeon",
-      me="dmbox", guide="dungeonnsc"),
-    # Gesichter für NSCs (dungeon_gesicht.py, Tabletop-Punkt 15): one portrait per person met, from fixed parts; later
-    # scene pictures take it as a reference picture
-    F("dungeongesicht", "Gesichter für NSCs", "Faces for NPCs", "data", ("dungeon_gesicht",), parent="dungeon",
-      me="dmbox", guide="dungeongesicht"),
-    # Wappen für Gruppe und Fraktionen (dungeon_wappen.py, D&D-Idee 10): SVG from a start value, own parts, checked
-    F("dungeonwappen", "Wappen für Gruppe und Fraktionen", "Arms for group and factions", "data", ("dungeon_wappen",),
-      parent="dungeon", me="dmbox", guide="dungeonwappen"),
-    # Orakel (dungeon_orakel.py, Tabletop-Punkt 8): yes or no with a chaos grade and the catalog's tables for the host;
-    # the panel rolls, the model only hears the answer as data
-    F("dungeonorakel", "Orakel", "Oracle", "data", ("dungeon_orakel",), parent="dungeon", me="dmbox", guide="dungeonorakel"),
-    # Fraktionen mit Uhren (dungeon_fraktionen.py, Tabletop-Punkt 7): the truth's groups with clocks the panel turns
-    F("dungeonfraktionen", "Fraktionen mit Uhren", "Factions with clocks", "data", ("dungeon_fraktionen",), parent="dungeon", me="dmbox",
-      guide="dungeonfraktionen"),
-    # Quest-Gegenstände (dungeon_quest.py, Punkt 15 of 2026-10-24): named things the story needs, the panel checks every find
-    F("dungeonquest", "Quest-Gegenstände", "Quest items", "data", ("dungeon_quest",), parent="dungeon", me="dmbox", guide="dungeonquest"),
-    # Kampfstufen (dungeon_kampf.STUFEN, Tabletop-Punkt 13): the host chooses easy to deadly, the SRD 5.2.1 table sets the ratio
-    F("dungeonstufen", "Kampfstufen", "Combat stages", "data", ("dungeon_stufen",), parent="dungeon", me="dmbox", guide="dungeonstufen"),
-    # Gold mit Zweck (dungeon_gold.py, Idee 9): inn, smith, lesson and rumour in a settlement, priced by the group's
-    # level; fixed rules of the panel, never the model
-    F("dungeongold", "Gold mit Zweck", "Gold with a purpose", "data", ("dungeon_gold",), parent="dungeon",
-      me="dmbox", guide="dungeongold"),
-    # Echte Würfel am Tisch (dungeon_echt.py, D&D idea 5): a seat throws its own d20 and gives the number, the panel
-    # checks it and rolls on; never in the car
-    F("dungeonechtwuerfel", "Echte Würfel am Tisch", "Real dice at the table", "data", ("dungeon_echtwuerfel",),
-      parent="dungeon", me="dmbox", guide="dungeonechtwuerfel"),
-    # Heldenlied des Barden (dungeon_lied.py, D&D round 2 idea 8): a sung song of each chapter, fixed verses + names
-    F("dungeonheldenlied", "Heldenlied des Barden", "Bard's hero song", "data", ("dungeon_heldenlied",),
-      parent="dungeon", me="dmbox", guide="dungeonheldenlied"),
-    # Runen und Sockel (dungeon_runen.py, plan dungeon-runen Stufe 1): sockets in finds, runes from finds and the trader,
-    # set with a preview; caps and effects by the panel's fixed rules, never the model
-    F("dungeonrunen", "Runen und Sockel", "Runes and sockets", "data", ("dungeon_runen",), parent="dungeon", me="dmbox", guide="dungeonrunen"),
-    # Spielleiter gibt Dinge (dungeon_geben.py, Dominik 2026-10-28 „1a 2a 3a 4a 5a“): the host as admin gives a hero a
-    # catalog thing, gold, runes or experience in the console; the game's caps by fixed rules, never the model
-    F("dungeongeben", "Spielleiter gibt Dinge", "Game master gives things", "data", ("dungeon_geben",), parent="dungeon",
-      me="dmbox", guide="dungeongeben"),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",),
       parent="documents", me="docbox", guide="docbrief"),
     # Auswertungen je Dokument (auswertung.py, plan open-notebook Stufe 2): Kurzfassung and Kernaussagen by themselves in
@@ -963,7 +833,6 @@ def _docling_set_up(c):
 
 
 READY = {"beraterissue": lambda c: admin_on("melden", c),   # a case as a report needs „Probleme melden“
-         "dungeonbuch": lambda c: admin_on("rmsend", c),      # the hero book goes the way of „Aufs reMarkable schicken“
          "docling": _docling_set_up,                          # the Docling server needs its address
          "bilder": lambda c: bool(load_config("image").get("enabled")),   # the picture model installed (install.sh --bild)
          "musik": lambda c: bool(load_config("music").get("enabled")),    # the music model installed (install.sh --musik)
@@ -1010,8 +879,6 @@ DEFAULT_ON = {
     "chat.documents": "Grundfunktion von Anfang an, nur eigene Daten, nie Gäste",
     "chat.reminders": "Grundfunktion von Anfang an, nur eigene Daten, nie Gäste",
     "chat.calendar": "Grundfunktion von Anfang an, braucht trotzdem einen eigenen Kalender des Profils",
-    "chat.dungeon_fortschritt": "Dominik 2026-10-27 (Review E12, Entscheidung 4): eine Geschichte, die stehen bleibt, bekommt Wink, Ereignis und Tipp, ohne Modellaufruf mehr",
-    "chat.dungeon_grenzen": "Schutz am Spieltisch (Tabletop-Punkt 18): Grenzen, Schleier und X-Karte gelten, bevor ein Modell erzählt",
     "chat.esp32_ota_http": "Dominik 2026-10-11: Lautsprecher-Updates über http bleiben erlaubt (sonst nur per USB)",
 }
 # Grundausstattung (Dominik 2026-10-17, plan grundeinstellungen/plan.md): what makes a newcomer's chat good from the

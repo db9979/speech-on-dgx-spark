@@ -11,7 +11,7 @@ thread has it), nachteil gives the hero's next check a disadvantage, schaden cos
 breaks a tool of the bag (the smith of a settlement mends it), gold costs up to GOLD gold, zeit and nsc stay in the story.
 Never in the car: a seat that plays from the car is not asked (dungeon_echt._im_auto). The model decides nothing.
 
-Off by default: the admin's switch dungeonknapp (features.py, chat.dungeon_knapp) for the round's host.
+Since Ausdünnen 1 the part dungeonknapp hangs on the Regeltiefe „voll“ of the round (dungeon_tiefe.py) for the round's host.
 State in the round, only while a turn waits for the answers:
     rd["knapp_frage"]  {"zug", "t", "plaetze": {pid: {"frage": {"wert", "schwer", "gesamt", "wofuer"}, "wahl": None | "zahlen" | "aufgeben"}}}
 Journal: fixed words and numbers („dungeon: knapp | …“), Live only counts.
@@ -25,7 +25,7 @@ import time
 
 from fastapi import APIRouter, Depends, Request
 
-import features
+import dungeon_tiefe
 import guard
 from common import DayCounter
 from core import assistant, browser_profile, json_body
@@ -44,7 +44,7 @@ _day = DayCounter(gefragt=0, gezahlt=0, aufgegeben=0, ohne_antwort=0, abgelehnt=
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"])
+    return dungeon_tiefe.an(KEY, rd)
 
 
 def table(r, rd, kids):

@@ -16,7 +16,7 @@ when an action names the thing and the group carries it (the map thread asks dun
 dungeon.quest_genannt); a thing used up goes with a line in the feed (dungeon.quest_verbrauchen). A carrier who leaves
 the table or dies drops it where the group stands. Players see what the group carries and what lies here once seen
 (named by a narration, or taken); the host sees every thing with its place (quest_geheim, dungeon_sicht.NUR_GASTGEBER).
-Only while „Quest-Gegenstände“ is allowed for the round's host (features "dungeonquest").
+Only while „Quest-Gegenstände“ is allowed for the round's host (dungeon_tiefe "dungeonquest": on with the game itself).
 
     rd["quest"]      {qid: {"q", "name": [de, en], "info", "wer": pid | None, "hid": the carrier's hero | None,
                      "ort": place id, "gesehen": bool, "von": "plan" | "karte" | "modell", "zug"}}   place id: "" = the
@@ -28,6 +28,7 @@ the used ones; a thing left lying stays behind.
 """
 import re
 
+KEY = "dungeonquest"       # its part in dungeon_tiefe (KERN: on with the game itself)
 NAME_LEN = 40
 INFO_LEN = 120
 QUEST_MAX = 12             # quest things of a round at once
@@ -58,8 +59,8 @@ DATEN = {                 # only while the story's things are there (Review 27.1
 
 
 def on(rd):
-    import features
-    return bool(rd.get("owner")) and features.allowed("dungeonquest", rd["owner"])
+    import dungeon_tiefe
+    return dungeon_tiefe.an(KEY, rd)
 
 
 def _all(rd):

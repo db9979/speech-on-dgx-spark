@@ -95,15 +95,15 @@ class InTheCar(Base):
         the car; only what the panel offered can be picked."""
         import contextlib
         import io
-        from tests import helpers
+        from tests.test_dungeon import teil_aus
         v = self.new_round(einstieg="Nebel liegt über Hallstein.")
         rid, host = v["rid"], v["pid"]
         code, gp = self.guest(rid)
         n = self.car()["n"]
+        aus = teil_aus(self, "dungeonrueckfrage")                        # blocked for the host (a Kern part, Ausdünnen 1)
         a = self.car(text="hm ja", nach=n)
         self.assertTrue(a.get("frage"))                                   # off: said back as always
-        helpers.keep_chat(self, "dungeon_rueckfrage")
-        helpers.set_config(dungeon_rueckfrage=True)
+        aus()                                                             # on with the game
         a = self.car(text="hm ja", nach=n)
         self.assertTrue(a["sagen"].startswith("Was genau tut Arvid?"), a["sagen"])
         self.assertIn("Erstens:", a["sagen"])

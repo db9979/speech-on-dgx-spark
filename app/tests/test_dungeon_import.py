@@ -48,8 +48,8 @@ FORM = {"welt": "fantasy", "ton": "8", "akte": "", "tabus": "Spinnen", "lang": "
 class Import(Base):
     def setUp(self):
         super().setUp()
-        helpers.keep_chat(self, "dungeon_import")
-        helpers.set_config(dungeon_import=False)
+        helpers.keep_chat(self, "dungeon_geschichten")
+        helpers.set_config(dungeon_geschichten=False)
 
     def send(self, answers, name="abenteuer.md", data=ABENTEUER.encode(), form=None):
         seen = []
@@ -81,7 +81,7 @@ class Import(Base):
         self.assertFalse(ADMIN.get("/api/admin/dungeon").json()["planer"]["import"]["an"])
 
     def test_an_adventure_becomes_a_checked_draft(self):
-        helpers.set_config(dungeon_import=True)
+        helpers.set_config(dungeon_geschichten=True)
         self.assertTrue(ADMIN.get("/api/admin/dungeon").json()["planer"]["import"]["an"])
         two = dict(GUT, akte=GUT["akte"][:2])
         r, seen = self.send([two, GUT])
@@ -104,7 +104,7 @@ class Import(Base):
         self.assertRegex(live._abenteuerimport(), r"^ · Abenteuer-Import an, heute \d+ übernommen, \d+ abgelehnt$")
 
     def test_fixed_refusals_before_the_model(self):
-        helpers.set_config(dungeon_import=True)
+        helpers.set_config(dungeon_geschichten=True)
         r, seen = self.send([], name="abenteuer.exe")
         self.assertEqual((r.status_code, r.json()["detail"], seen), (400, "dateiart", []))
         with mock.patch("dungeon_import.MAX_BYTES", 100):

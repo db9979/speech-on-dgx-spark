@@ -42,7 +42,7 @@ import dungeon_album as album
 import dungeon_gefaehrte as gf
 import dungeon_nsc as nsc
 import dungeon_stimmen as stimmen
-import features
+import dungeon_tiefe
 import guard
 import profiles
 from common import DayCounter
@@ -67,7 +67,7 @@ _day = DayCounter(gemalt=0, weg=0, vorlagen=0)
 
 
 def _basis(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"]) and dungeon.pictures_on(rd["owner"])
+    return dungeon_tiefe.an(KEY, rd) and dungeon.pictures_on(rd["owner"])
 
 
 def on(rd):
@@ -398,7 +398,7 @@ def may_see(name, uid=None, rid=None):
 
 def for_live():
     """Numbers only: portraits there are, on their way, painted and refused today, scenes with reference pictures."""
-    if not features.admin_on(KEY):
+    if not dungeon_tiefe.admin_an(KEY):
         return {"on": False}
     rs = [v for v in dungeon._read()["runden"].values() if v.get("status") == "laeuft"]
     return {"on": True, "da": sum(1 for v in rs for x in _alle(v) if isinstance(x, dict) and (x.get("gesicht") or {}).get("st") == "ok"),

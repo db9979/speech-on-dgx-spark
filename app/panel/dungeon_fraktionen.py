@@ -45,8 +45,8 @@ AUFGABE = {
 
 
 def on(rd):
-    import features
-    return bool(rd.get("owner")) and features.allowed("dungeonfraktionen", rd["owner"])
+    import dungeon_tiefe
+    return dungeon_tiefe.an("dungeonfraktionen", rd)
 
 
 def _all(rd):

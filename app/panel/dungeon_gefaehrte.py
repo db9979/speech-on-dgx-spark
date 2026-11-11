@@ -13,14 +13,14 @@ morale check once a fight (d20 ≥ MORAL, else it flees this fight), at 0 it lie
 no experience. In the encounter budget each companion up counts as ANTEIL of a hero (share), so the balance holds.
 The model only tells: it gets the companions as data and their blows as receipts.
 
-Off by default: the admin's switch dungeongefaehrte (features.py, chat.dungeon_gefaehrte) for the round's host.
+Since Ausdünnen 1 the part dungeongefaehrte hangs on the Regeltiefe „voll“ of the round (dungeon_tiefe.py) for the round's host.
 State: rd["gefaehrten"] [{k, id, name, satz, wert, hid, stufe, leben, max, ruestung, angriff, schaden, plus, sold,
 kapitel, aus, moral}]; a campaign keeps them (keep, carry).
 Journal: fixed words and numbers („dungeon: gefaehrte | …“), Live only counts.
 """
 import random
 
-import features
+import dungeon_tiefe
 from common import DayCounter
 
 KEY = "dungeongefaehrte"
@@ -35,7 +35,7 @@ _day = DayCounter(angeheuert=0, hiebe=0, am_boden=0, geflohen=0, gegangen=0, sol
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"])
+    return dungeon_tiefe.an(KEY, rd)
 
 
 def is_one(pid):

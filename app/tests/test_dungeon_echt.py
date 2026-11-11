@@ -124,10 +124,10 @@ class Rules(unittest.TestCase):
 
     def test_switch_is_off_by_default(self):
         import json
-        import features
-        self.assertIn("dungeonechtwuerfel", features.BY_KEY)
+        import dungeon_tiefe
+        self.assertEqual(dungeon_tiefe.GRUPPE[echt.KEY], "pult")          # a tool of the console, no switch (Ausdünnen 1)
         with open(os.path.join(PANEL, "..", "config.default.json"), encoding="utf-8") as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_echtwuerfel"], False)
+            self.assertIs(json.load(f)["chat"]["dungeon"], False)
         self.assertIn("dungeonecht", guard.RATE)
         live = echt.for_live()
         self.assertTrue(all(isinstance(x, int) for x in live.values()))
@@ -136,8 +136,6 @@ class Rules(unittest.TestCase):
 class Table(Base):
     def setUp(self):
         super().setUp()
-        helpers.keep_chat(self, "dungeon_echtwuerfel")
-        helpers.set_config(dungeon_echtwuerfel=True)
         car(self, lambda uid: False)
         for k, v in (("WARTE_S", 5), ("TAKT_S", 0.02)):
             self.addCleanup(setattr, echt, k, getattr(echt, k))
@@ -179,7 +177,7 @@ class Table(Base):
     def test_off_without_the_switch_or_the_seats(self):
         self.assertIsNone(self.ask())                                    # the host chose no seats
         self.set_round(echt=[self.gpid])
-        helpers.set_config(dungeon_echtwuerfel=False)
+        self.teil_aus(echt.KEY)
         self.assertIsNone(self.ask())
         self.assertNotIn("echt_frage", self.state(self.rid))
 
@@ -302,7 +300,7 @@ class Table(Base):
         self.assertEqual(self.c2.post(url, json={"echt": []}).status_code, 404)     # not the host
         self.assertEqual(self.c.post(url, json={"echt": []}).status_code, 200)
         self.assertNotIn("echt", self.state(self.rid))
-        helpers.set_config(dungeon_echtwuerfel=False)
+        self.teil_aus(echt.KEY)
         self.assertIsNone(self.c.get(f"/api/profile/dungeon/{self.rid}").json()["echt_plaetze"])
         self.assertEqual(self.c.post(url, json={"echt": [self.gpid]}).status_code, 400)
         with open(os.path.join(PANEL, "static", "js", "dungeon.js"), encoding="utf-8") as f:

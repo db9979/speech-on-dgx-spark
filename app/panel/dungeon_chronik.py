@@ -14,7 +14,7 @@ At most BUCH_MAX pages a campaign, the oldest goes first.
 The log entry „kapitel_ende“ {kapitel} of end_chapter is the one place a chapter's end is told (the bard's song of the
 music thread, dungeon_lied, waits for it); it comes with or without this switch.
 
-Off by default: the admin's switch dungeonchronik (features.py, chat.dungeon_chronik) for the campaign's owner.
+Since Ausdünnen 1 the part dungeonchronik hangs on the switch dungeonbuecher (features.py) (dungeon_tiefe.py) for the campaign's owner.
 Journal: fixed words and numbers („dungeon: chronik | …“), Live only counts.
 
     GET  /api/profile/dungeon/kampagne/{kid}/chronik           the book's pages
@@ -27,7 +27,7 @@ import io
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import Response
 
-import features
+import dungeon_tiefe
 import guard
 from common import DayCounter
 from core import assistant, browser_profile, json_body, own_profile
@@ -45,7 +45,7 @@ _day = DayCounter(seiten=0, pdf=0, geloescht=0, abgelehnt=0)
 
 def page(dm, r, rd, c, now):
     """Inside end_chapter: the chapter's page from what the round holds, into the campaign's book c["buch"]."""
-    if not rd.get("owner") or not features.allowed(KEY, rd["owner"]):
+    if not dungeon_tiefe.an(KEY, rd):
         return None
     import dungeon_karte
     li = 1 if rd.get("lang") == "en" else 0
@@ -162,7 +162,7 @@ def for_live():
 
 # ---------------------------------------------------------------- routes
 def _book(dm, uid, kid):
-    if not features.allowed(KEY, uid):
+    if not dungeon_tiefe.fuer(KEY, uid):
         raise LookupError("chronik aus")
     return dm._campaign(uid, kid)
 

@@ -12,12 +12,12 @@ The consequence works by a fixed rule: ueberrascht, every hero's checks of the n
 journey from its facts (reise); the table shows it as a card in the log. rd["reise_tage"] counts the days on the road
 (the world's calendar, D&D idea 6).
 
-Off by default: the admin's switch dungeonreise (features.py, chat.dungeon_reise) for the round's host.
+Since Ausdünnen 1 the part dungeonreise hangs on the Regeltiefe „voll“ of the round (dungeon_tiefe.py) for the round's host.
 Journal: fixed words and numbers („dungeon: reise | …“), Live only counts.
 """
 import random
 
-import features
+import dungeon_tiefe
 from common import DayCounter
 
 KEY = "dungeonreise"
@@ -31,7 +31,7 @@ _day = DayCounter(reisen=0, gelungen=0, misslungen=0)
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"])
+    return dungeon_tiefe.an(KEY, rd)
 
 
 def _name(x, welt):

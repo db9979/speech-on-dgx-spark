@@ -40,8 +40,8 @@ AUFGABE = {
 
 
 def on(rd):
-    import features
-    return bool(rd.get("owner")) and features.allowed("dungeonschreiber", rd["owner"])
+    import dungeon_tiefe
+    return dungeon_tiefe.an("dungeonschreiber", rd)
 
 
 def _done(rd, turn):

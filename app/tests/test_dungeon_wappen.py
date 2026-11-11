@@ -116,8 +116,8 @@ class Table(unittest.TestCase):
         cls.g, cls.guid = profile("Wappen Gunda")
 
     def setUp(self):
-        helpers.keep_chat(self, "dungeon", "dungeon_wappen", "dungeon_fraktionen")
-        helpers.set_config(dungeon=True, dungeon_wappen=True, dungeon_fraktionen=True)
+        helpers.keep_chat(self, "dungeon", "dungeon_bilder", "dungeon_tiefe")
+        helpers.set_config(dungeon=True, dungeon_tiefe="voll", dungeon_bilder=True)
         guard.reset()
         for k in [k for k in guard._rate if str(k[0]).startswith("dungeon")]:
             guard._rate.pop(k, None)
@@ -157,7 +157,7 @@ class Table(unittest.TestCase):
 
     def test_off_shows_nothing_and_refuses_the_choice(self):
         rid = self.new_round()
-        helpers.set_config(dungeon_wappen=False)
+        helpers.set_config(dungeon_bilder=False)
         v = self.c.get(f"/api/profile/dungeon/{rid}").json()
         self.assertNotIn("wappen", v)
         r = self.c.post(f"/api/profile/dungeon/{rid}/wappen", json={"farbe": "blau"})
@@ -234,7 +234,7 @@ class Table(unittest.TestCase):
         live = wappen.for_live()
         self.assertEqual(set(live), {"on", "runden", "gewaehlt", "abgelehnt"})
         self.assertTrue(all(isinstance(v, (bool, int)) for v in live.values()))
-        helpers.set_config(dungeon_wappen=False)
+        helpers.set_config(dungeon_bilder=False)
         self.assertEqual(wappen.for_live(), {"on": False})
 
     def test_the_page_shows_arms_only_as_pictures(self):

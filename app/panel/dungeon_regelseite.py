@@ -28,6 +28,7 @@ import dungeon_kampf as kampf
 import dungeon_personen as personen
 import dungeon_runen as runen
 import dungeon_stimmen as stimmen
+import dungeon_tiefe
 import guard
 from common import write_json
 from core import app_version, auth, json_body
@@ -324,10 +325,9 @@ def tafel(x, r, li):
             for i, y in enumerate(x.get("zeilen") or []) if isinstance(y, dict) and isinstance(y.get("t"), list) and y["t"]]
 
 
-def _an(key):
-    import features
+def _an(teil):
     try:
-        return bool(features.admin_on(key))
+        return bool(dungeon_tiefe.admin_an(teil))
     except Exception:  # noqa: BLE001 - a broken config: shown as off
         return False
 
@@ -337,8 +337,8 @@ def kasten(teil, r, li):
     Schalter“): the switch with its way (a jump link on the page) and [label, value] pairs from the code's constants."""
     L = lambda de, enw: enw if li else de          # noqa: E731
     if teil in ("runen", "runenwoerter"):
-        an, sw = _an(runen.KEY), {"name": L("Runen und Sockel", "Runes and sockets"),
-                                  "weg": L("Funktionen → KI-Dungeon-Master → Runen und Sockel", "Features → AI Dungeon Master → Runes and sockets")}
+        an, sw = _an(runen.KEY), {"name": L("Regeltiefe „Voll“", 'Rule depth "Full"'),
+                                  "weg": L("Funktionen → KI-Dungeon-Master → Regeltiefe „Voll“", 'Features → AI Dungeon Master → Rule depth "Full"')}
         sel = [_name(x, li) for x in r["seltenheit"]]
         d = runen.DECKEL
         sp = runen.SOCKEL_PLATZ
@@ -386,8 +386,8 @@ def kasten(teil, r, li):
                                                     f"{_num(dr['rest'], li)}), {runen.WIDERSTAND_RW} kinds of resistance a thing, to hit still at most +{runen.TREFFER_MAX}")])
         return {"schalter": dict(sw, an=an), "zeilen": zeilen}
     if teil == "stillstand":
-        return {"schalter": {"name": L("Spieler anleiten", "Guide the players"), "an": _an("dungeonanleiten"),
-                             "weg": L("Funktionen → KI-Dungeon-Master → Spieler anleiten", "Features → AI Dungeon Master → Guide the players")},
+        return {"schalter": {"name": L("KI-Dungeon-Master", "AI Dungeon Master"), "an": _an("dungeonanleiten"),
+                             "weg": L("Funktionen → KI-Dungeon-Master", "Features → AI Dungeon Master")},
                 "zeilen": [[L("Wann", "When"), L("Kommt die Geschichte ein paar Züge nicht voran (Einsteiger nach 1, Normal nach 2 erzählten Zügen, Erfahren nie), "
                                                  "lässt die Erzählung erst etwas Greifbares auftauchen, einen Zug später würfelt das Panel eines dieser Ereignisse, "
                                                  "danach kommt ein Tipp aus der Szene",
@@ -536,7 +536,7 @@ def change(teil, was, i, eintrag=None):
     """One entry of the own rules set, hidden or taken back; refused (ValueError with the errors) unless the rules
     still pass. Returns the hint of the balance for the entry (or None). A person goes to dungeon_personen."""
     if teil == "personen":
-        if not personen.admin_on():
+        if not dungeon_tiefe.admin_an(personen.KEY):
             raise LookupError("personen aus")
         return personen.change(was, i, eintrag)
     own = dungeon.own_rules()
@@ -581,7 +581,7 @@ async def katalog(teil: str, request: Request):
     guard.limit(request, "dungeonregel", admin=True)
     if teil not in ALLE:
         raise HTTPException(404, "teil")
-    if teil == "personen" and not personen.admin_on():
+    if teil == "personen" and not dungeon_tiefe.admin_an(personen.KEY):
         raise HTTPException(404, "personen aus")
     out = await asyncio.to_thread(view, teil, _lang(request), request.query_params.get("welt", "")[:40])
     if teil == "personen":                 # whether the voices from a description run (Dominik 2026-10-27 „stimme klang bei alles gleich“)
@@ -594,7 +594,7 @@ async def katalog_change(teil: str, request: Request):
     guard.limit(request, "dungeonregel", admin=True)
     if teil not in ALLE or teil == ZAHLEN:
         raise HTTPException(404, "teil")
-    if teil == "personen" and not personen.admin_on():
+    if teil == "personen" and not dungeon_tiefe.admin_an(personen.KEY):
         raise HTTPException(404, "personen aus")
     b = await json_body(request, BODY)
     i = str(b.get("id") or "")
@@ -616,7 +616,7 @@ async def personen_probe(request: Request):
     """{"stimme": {alter, geschlecht, klang, wesen, tempo}, "lang"}: the fixed sentence in the voice the admin chose for a
     person of the catalog (dungeon_stimmen's fixed words; without VoiceDesign the rules' fixed NPC voice), as WAV."""
     guard.limit(request, "dungeonprobe", admin=True)
-    if not personen.admin_on():
+    if not dungeon_tiefe.admin_an(personen.KEY):
         raise HTTPException(404, "personen aus")
     b = await json_body(request, 2000)
     try:
@@ -642,7 +642,7 @@ async def personen_probe(request: Request):
 async def katalog_bild(teil: str, request: Request):
     """„Nochmal malen“ (was "malen"), then „Neues behalten“ ("neu") or „Altes behalten“ ("alt")."""
     guard.limit(request, "dungeonbild", admin=True)
-    if teil not in MIT_BILD and not (teil == "personen" and personen.admin_on()):   # a person's face (Dominik 2026-10-27)
+    if teil not in MIT_BILD and not (teil == "personen" and dungeon_tiefe.admin_an(personen.KEY)):   # a person's face (Dominik 2026-10-27)
         raise HTTPException(404, "teil")
     b = await json_body(request, 2000)
     was = b.get("was")

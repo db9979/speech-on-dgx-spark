@@ -54,19 +54,18 @@ def hero(r, klasse="krieger"):
 class Rules(Base):
     def setUp(self):
         super().setUp()
-        helpers.keep_chat(self, "dungeon_runen")
-        helpers.set_config(dungeon_runen=True)
+        helpers.keep_chat(self, "dungeon_tiefe")
+        helpers.set_config(dungeon_tiefe="voll")
         self.r = dungeon.rules()
 
     def rd(self, **kw):
         return dict({"owner": self.uid, "lang": "de", "welt": "fantasy", "zug": 1, "log": []}, **kw)
 
     def test_switch_is_off_by_default(self):
-        import features
-        self.assertIn("dungeonrunen", features.BY_KEY)
-        self.assertEqual(features.BY_KEY["dungeonrunen"].parent, "dungeon")
+        import dungeon_tiefe
+        self.assertEqual(dungeon_tiefe.GRUPPE[runen.KEY], dungeon_tiefe.VOLL)   # since Ausdünnen 1: Regeltiefe „Voll“
         with open(os.path.join(PANEL, "..", "config.default.json"), encoding="utf-8") as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_runen"], False)
+            self.assertEqual(json.load(f)["chat"]["dungeon_tiefe"], "einfach")
         live = runen.for_live()
         self.assertTrue(live and all(isinstance(x, int) for x in live.values()))
         self.assertEqual(set(runen.ART_WELT), {"fantasy", "scifi", "piraten", "horror"})   # 10a: every world its word
@@ -129,12 +128,12 @@ class Rules(Base):
     def test_off_the_runes_rest(self):
         r = self.r
         wp = thing(r, "langschwert", so=3, ru=["kenaz"])
-        helpers.set_config(dungeon_runen=False)
+        helpers.set_config(dungeon=False)                           # the game off on this Spark: runes rest
         self.assertEqual(dungeon.item_effects(r, wp), [])
         self.assertEqual(dungeon.strength(r, wp), dungeon.strength(r, thing(r, "langschwert")))
         self.assertTrue(any("ruhen" in z for z in dungeon.item_view(r, wp, "de")["zeilen"]))
         self.assertEqual(runen.find(dungeon, r, self.rd(), [hero(r)], "boss", random.Random(1)), "")
-        helpers.set_config(dungeon_runen=True)
+        helpers.set_config(dungeon=True)
         self.assertEqual([e["id"] for e in dungeon.item_effects(r, wp)], ["feuer"])     # 13a: on again, all as before
 
     def test_every_chain_is_under_the_cap_or_refused(self):
@@ -253,8 +252,8 @@ class Rules(Base):
 class Table(Base):
     def setUp(self):
         super().setUp()
-        helpers.keep_chat(self, "dungeon_runen")
-        helpers.set_config(dungeon_runen=True)
+        helpers.keep_chat(self, "dungeon_tiefe")
+        helpers.set_config(dungeon_tiefe="voll")
         self.rid = self.new_round()["rid"]
         self.r = dungeon.rules()
         with dungeon._lock:
@@ -328,7 +327,7 @@ class Table(Base):
         self.assertEqual(self.me()["tasche"][0]["ru"], [])
 
     def test_off_nothing_is_set(self):
-        helpers.set_config(dungeon_runen=False)
+        self.tiefe(self.rid, "einfach")
         v = self.held(tun="einsetzen", rune="kenaz", i=self.iid)
         self.assertEqual((v.status_code, v.json()["detail"]), (400, "rune aus"))
 
@@ -352,7 +351,7 @@ class Table(Base):
         x = car("Setze Isa ins Langschwert")
         self.assertFalse(x.get("frage"))
         self.assertTrue(x["sagen"].startswith("Zu stark"), x["sagen"])
-        helpers.set_config(dungeon_runen=False)
+        self.tiefe(self.rid, "einfach")
         self.assertEqual(car("Welche Runen habe ich?")["sagen"], dungeon_auto.SAGEN["runen_aus"][0])
 
     def test_buy_and_sell_at_the_trader(self):
@@ -411,7 +410,7 @@ class Runewords(Rules):
         self.assertIsNone(runen.match(dungeon, r, thing(r, "langschwert", so=3, ru=["ehwaz", "thurisaz", "uruz"])))
         self.assertIsNone(runen.match(dungeon, r, thing(r, "langschwert", "selten", so=3, ru=["thurisaz", "ehwaz", "uruz"])))
         self.assertIsNone(runen.match(dungeon, r, thing(r, "schwert", so=2, ru=["thurisaz", "ehwaz"])))
-        helpers.set_config(dungeon_runen=False)
+        helpers.set_config(dungeon=False)
         self.assertNotIn("donnernd", [e["id"] for e in dungeon.item_effects(r, wp)])   # 13a: off, it rests
 
     def test_a_runeword_waits_for_its_level(self):
@@ -516,9 +515,8 @@ class Runewords(Rules):
 class Smith(Base):
     def setUp(self):
         super().setUp()
-        helpers.keep_chat(self, "dungeon_runen")
-        helpers.keep_chat(self, "dungeon_gold")
-        helpers.set_config(dungeon_runen=True, dungeon_gold=True)
+        helpers.keep_chat(self, "dungeon_tiefe")
+        helpers.set_config(dungeon_tiefe="voll")
         self.rid = self.new_round()["rid"]
         self.r = dungeon.rules()
         with dungeon._lock:
@@ -581,10 +579,10 @@ class Smith(Base):
         self.assertIn("erlischt", self.state(self.rid)["log"][-1]["text"][0])
 
     def test_without_the_runes_no_rune_service(self):
-        helpers.set_config(dungeon_runen=False)
+        self.tiefe(self.rid, "einfach")
         s = self.c.get(f"/api/profile/dungeon/{self.rid}").json()["siedlung"]
-        self.assertFalse({"sockel", "loesen", "verschmelzen"} & {x["id"] for x in s["dienste"]})
-        self.assertEqual(self.dienst(id="sockel", i=self.a).json()["detail"], "dienst")
+        self.assertIsNone(s)          # Regeltiefe einfach: Gold mit Zweck rests too, so no service at all, none for runes
+        self.assertEqual(self.dienst(id="sockel", i=self.a).json()["detail"], "gold")       # refused before the runes
 
 
 if __name__ == "__main__":

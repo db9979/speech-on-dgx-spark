@@ -59,6 +59,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import dungeon
 import dungeon_erzaehler as erz
 import dungeon_kampf as kampf
+import dungeon_tiefe
 import features
 import guard
 from common import STATE, load_config, read_json, write_json
@@ -144,13 +145,13 @@ _flock = threading.Lock()
 
 
 def on():
-    return features.admin_on("dungeonerzaehlstand")
+    return dungeon_tiefe.admin_an("dungeonerzaehlstand")
 
 
 def cases_on(owner):
     """A 👎 may carry a reason and becomes a case while the bench or „Erzähler-Fehler beheben“ (FIX, for the round's
     host: a new telling, the world's hints) is on."""
-    return on() or features.allowed(FIX, owner)
+    return on() or dungeon_tiefe.fuer(FIX, owner)
 
 
 def clock():
@@ -560,7 +561,7 @@ def world_reasons(welt, now=None):
 
 def world_task(rd, lang):
     """The standing hints of a world for its narrator: fixed texts of GRUENDE, never words of a report."""
-    if not features.allowed(FIX, rd.get("owner")):
+    if not dungeon_tiefe.an(FIX, rd):
         return ""
     hints = [GRUENDE[g][4 if lang == "en" else 3] for g in world_reasons(rd.get("welt"))]
     return (" " + ("Often reported in this world, keep to it: " if lang == "en" else "In dieser Welt oft gemeldet, halte dich daran: ")
@@ -612,7 +613,7 @@ def drop(key, fid):
 
 def cases_view():
     d = cases()
-    return {"an": on(), "beheben": features.admin_on(FIX), "gruende": {k: list(v[:2]) for k, v in GRUENDE.items()},
+    return {"an": on(), "beheben": dungeon_tiefe.admin_an(FIX), "gruende": {k: list(v[:2]) for k, v in GRUENDE.items()},
             "wochen": weeks(), "welten": {w: world_reasons(w) for w in sorted({m.get("welt") for m in d.get("meldungen") or []} - {None})},
             "faelle": d.get("faelle") or [],
             "szenen": [{k: s[k] for k in ("id", "name", "grund", "lang")} for s in own_scenes()], "max": FAELLE_MAX, "namen": list(NAMEN),

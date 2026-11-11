@@ -10,13 +10,13 @@ the moons, today's festival or the next one within BALD days and the market day 
 a festival a settlement's services cost FEST_AUFSCHLAG percent more (dungeon_gold.price). The narrator gets the date as
 data (facts) and may not change it.
 
-Off by default: the admin's switch dungeonkalender (features.py, chat.dungeon_kalender) for the round's host.
+Since Ausdünnen 1 the part dungeonkalender hangs on the Regeltiefe „voll“ of the round (dungeon_tiefe.py) for the round's host.
 State in the round: rd["kalender"] {"start": the first day of the year count, "halbe": half days since}.
 Journal: fixed words and numbers („dungeon: kalender | …“), Live only counts.
 """
 import hashlib
 
-import features
+import dungeon_tiefe
 from common import DayCounter
 
 KEY = "dungeonkalender"
@@ -64,7 +64,7 @@ _day = DayCounter(halbe_tage=0, feste=0)
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"])
+    return dungeon_tiefe.an(KEY, rd)
 
 
 def _welt(r, rd, table):

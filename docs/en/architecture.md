@@ -360,6 +360,7 @@ Home Assistant, tasks, For you, weather, reMarkable, MCP and what the Spark does
 | `app/panel/dungeon_stimmen.py` | KI-Dungeon-Master: voices made from descriptions. |
 | `app/panel/dungeon_tabellen.py` | KI-Dungeon-Master: the fixed tables of the catalog. |
 | `app/panel/dungeon_tageszeit.py` | KI-Dungeon-Master: Tageszeit vom Panel. |
+| `app/panel/dungeon_tiefe.py` | KI-Dungeon-Master: Regeltiefe, the one table of which game part hangs on which switch. |
 | `app/panel/dungeon_umgebung.py` | KI-Dungeon-Master: Umgebung nutzen. |
 | `app/panel/dungeon_vorlesen.py` | KI-Dungeon-Master: reading aloud part by part. |
 | `app/panel/dungeon_wandern.py` | KI-Dungeon-Master: Wandernde Personen und kleine Gesten. |

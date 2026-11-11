@@ -621,7 +621,7 @@ class Vaults(unittest.TestCase):
         without light a hero without darkvision rolls at a disadvantage; new dwellers calm the vault."""
         import dungeon_alarm as A
         with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_alarm"], False)
+            self.assertEqual(json.load(f)["chat"]["dungeon_tiefe"], "einfach")
         rd, v, j = self.vault_with("kammer")
         self.assertIsNone(K.laerm(rd, 2, "kampf"))                                        # off: nothing counts
         self.assertEqual({x: K.view(self.r, rd)[x] for x in ("alarm", "fackel")}, {"alarm": None, "fackel": None})

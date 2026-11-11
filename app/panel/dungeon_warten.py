@@ -275,8 +275,8 @@ def geste_faellig(rd, now):
     g = rd.get("geste") or {}
     if g.get("zug") == rd.get("zug") and g.get("n", 0) >= GESTE_ZUG:
         return False
-    import features
-    return now - _still_since(rd) >= GESTE_S and features.allowed("dungeongesten", rd["owner"])
+    import dungeon_tiefe
+    return now - _still_since(rd) >= GESTE_S and dungeon_tiefe.an("dungeongesten", rd)
 
 
 def geste(dm, rid, now):

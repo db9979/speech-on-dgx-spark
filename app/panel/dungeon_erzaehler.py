@@ -17,6 +17,7 @@ import asyncio
 import re
 import time
 import dungeon_einordnung as einordnung
+import dungeon_tiefe
 
 PERSONEN = (3, 6)          # people the model sets at the start of a chapter
 PERSONEN_MAX = 12          # people kept (the model's new NPCs join until then)
@@ -690,7 +691,7 @@ async def richter(dm, rd, story, wuerfe=(), hits=()):
     import features
     import systemone
     from common import load_config
-    if not rd.get("owner") or not features.allowed(RICHTER, rd["owner"]) or not features.allowed("einordnung", rd["owner"]):
+    if not dungeon_tiefe.an(RICHTER, rd) or not features.allowed("einordnung", rd["owner"]):
         return False
     li = 1 if rd.get("lang") == "en" else 0
     taten = [f"{rd['plaetze'][pid]['held']['name']}: {a.get('text', '')}" for pid, a in (rd.get("offen") or {}).items()
@@ -1473,8 +1474,7 @@ def thumb(dm, rid, pid, zug, gut, grund=None):
     if again:
         dm._go(retell_fixed(dm, rid, zug, grund), name="dungeon")
     elif grund and fall:
-        import features                          # local: this module has its own features() (the thing memory)
-        print(f"dungeon: erzaehlfehler | neu erzaehlen | {'aus' if not features.allowed(es.FIX, rd.get('owner')) else 'nein'}", flush=True)
+        print(f"dungeon: erzaehlfehler | neu erzaehlen | {'aus' if not dungeon_tiefe.an(es.FIX, rd) else 'nein'}", flush=True)
     return out
 
 
@@ -1497,10 +1497,9 @@ NEU_AUFGABE = {
 def again_ok(es, rd, zug):
     """Whether a 👎 with a reason tells the narration of turn zug again: „Erzähler-Fehler beheben“ on for the host, the
     round's last narration, not told again yet, nothing being told (a turn, an X-Karte, another new telling)."""
-    import features                              # local: this module has its own features() (the thing memory)
     last = next((e for e in reversed(rd["log"]) if e["art"] == "dm"), None)
     x = rd.get("x") or {}
-    return bool(features.allowed(es.FIX, rd.get("owner")) and last and last["n"] == zug and not last.get("prolog") and zug not in (rd.get("neu_erzaehlt") or [])
+    return bool(dungeon_tiefe.an(es.FIX, rd) and last and last["n"] == zug and not last.get("prolog") and zug not in (rd.get("neu_erzaehlt") or [])
                 and not rd.get("dm") and not running(rd) and not (x and not x.get("fertig")))
 
 

@@ -15,14 +15,14 @@ fixed rule of its kind (roll), in this turn already, and is gone from there (use
 A failed check leaves the prop where it is. The model only tells; it gets the props as data (facts) and the check as a
 receipt like any other.
 
-Off by default: the admin's switch dungeonumgebung (features.py, chat.dungeon_umgebung) for the round's host.
+Since Ausdünnen 1 the part dungeonumgebung hangs on the Regeltiefe „voll“ of the round (dungeon_tiefe.py) for the round's host.
 State: rd["kampf"]["requisiten"] [ids]; only on run_turn's copy rd["kampf"]["_umgebung"] {wirkung: [pids]}.
 Journal: fixed words and numbers („dungeon: umgebung | …“), Live only counts.
 """
 import random
 import re
 
-import features
+import dungeon_tiefe
 from common import DayCounter
 
 KEY = "dungeonumgebung"
@@ -40,7 +40,7 @@ _day = DayCounter(proben=0, geschafft=0, daneben=0)
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"])
+    return dungeon_tiefe.an(KEY, rd)
 
 
 def _rows(r):

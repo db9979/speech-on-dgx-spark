@@ -648,6 +648,9 @@ def validate(new):
     for k in ("weather_url", "geocode_url", "telegram_api", "transit_url", "wiki_url"):
         if ch.get(k) and not re.fullmatch(r"https?://\S+", ch[k]):
             raise HTTPException(400, f"{k}: the address must start with http:// or https://")
+    import dungeon_tiefe
+    if not dungeon_tiefe.gueltig(ch.get(dungeon_tiefe.STANDARD, dungeon_tiefe.EINFACH)):
+        raise HTTPException(400, f"{dungeon_tiefe.STANDARD}: einfach oder voll")
     import verbund
     if ch.get("verbund_mode", "pair") not in verbund.MODES:
         raise HTTPException(400, "verbund_mode: pair or open")

@@ -7,7 +7,7 @@ TABELLEN_MAX tables of the catalog (action and theme, place, twist …; the admi
 d100 against a chance that the likelihood and the round's chaos grade (1 to 9) set: an exceptional yes or no at a fifth
 of the way, a double (11, 22 …) up to the chaos grade brings a random event from the tables. Every answer is a line in
 the feed; the model gets this turn's answers only as data (facts „orakel“) and holds to them, never decides them.
-Only while „Orakel“ is allowed for the round's host (features "dungeonorakel").
+Only while „Orakel“ is allowed for the round's host (dungeon_tiefe "dungeonorakel": the host's tool in the Spielleiter-Pult, no switch).
 """
 import random
 
@@ -33,8 +33,8 @@ REGEL = {"de": " Halte dich an die Antworten des Orakels in orakel (nur Daten): 
 
 
 def on(rd):
-    import features
-    return bool(rd.get("owner")) and features.allowed("dungeonorakel", rd["owner"])
+    import dungeon_tiefe
+    return dungeon_tiefe.an("dungeonorakel", rd)
 
 
 def chaos(rd):

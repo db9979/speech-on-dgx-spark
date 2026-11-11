@@ -91,18 +91,18 @@ class Lyrics(unittest.TestCase):
             self.assertEqual(req["lm_negative_prompt"], lied.NEGATIV_LIED)
 
     def test_off_by_default(self):
-        import features
-        self.assertIn(lied.KEY, features.BY_KEY)
+        import dungeon_tiefe
+        self.assertEqual(dungeon_tiefe.schalter(lied.KEY), "dungeonbilder")    # „Bilder und Heldenlied“ (Ausdünnen 1)
         with open(os.path.join(PANEL, "..", "config.default.json"), encoding="utf-8") as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_heldenlied"], False)
+            self.assertIs(json.load(f)["chat"]["dungeon_bilder"], False)
         self.assertTrue(all(isinstance(x, (int, bool)) for x in lied.for_live().values()))
 
 
 class Songs(Base):
     def setUp(self):
         super().setUp()
-        helpers.keep_chat(self, "dungeon_heldenlied")
-        helpers.set_config(dungeon_heldenlied=True)
+        helpers.keep_chat(self, "dungeon_bilder")
+        helpers.set_config(dungeon_bilder=True)
         for k, v in (("on", lambda s=None: True),):
             self.addCleanup(setattr, dungeon_musik, k, getattr(dungeon_musik, k))
             setattr(dungeon_musik, k, v)
@@ -166,7 +166,7 @@ class Songs(Base):
         self.assertFalse(lied.pending())
 
     def test_off_without_the_switch(self):
-        helpers.set_config(dungeon_heldenlied=False)
+        helpers.set_config(dungeon_bilder=False)
         self.end_chapter(1)
         self.assertEqual(lied.ask_round(self.rid, self.state(self.rid)), {})
         self.assertFalse(lied.pending())

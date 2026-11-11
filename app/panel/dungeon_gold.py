@@ -17,7 +17,7 @@ At night (dungeon_tageszeit, LlamaTale idea 1) the shops of tageszeit.LADEN_ZU a
 hiring a companion stay open.
 The inn grows with the level like the finds (PREIS per level and hero); the balance bench measures the economy
 (dungeon_pruefstand.economy) and its self-test keeps income to expenses between 1.2 and 2.
-Only while „Gold mit Zweck“ is allowed for the round's host (features "dungeongold"). The hero's move goes through the
+Only while „Gold mit Zweck“ is allowed for the round's host (dungeon_tiefe "dungeongold": the Regeltiefe „voll“ of the round). The hero's move goes through the
 seat's „held“ endpoint ({was: "dienst", id, i, wert}).
 """
 import time
@@ -57,8 +57,8 @@ clock = time.time
 
 
 def on(rd):
-    import features
-    return bool(rd.get("owner")) and features.allowed("dungeongold", rd["owner"])
+    import dungeon_tiefe
+    return dungeon_tiefe.an("dungeongold", rd)
 
 
 def evening():

@@ -8,12 +8,12 @@ characters, no word the round refuses, no number, no first-person deed (TUN: „
 deciding word of dungeon_erzaehler.ENTSCHEIDET. The line stands as a speech bubble of the hero under the narration and,
 read aloud, speaks in the hero's own voice (speak). Players' own quotes in their actions stay first (hero_lines).
 
-Off by default: the admin's switch dungeonkommentar (features.py, chat.dungeon_kommentar) for the round's host.
+Since Ausdünnen 1 the part dungeonkommentar hangs on the switch dungeonpruefung (features.py) (dungeon_tiefe.py) for the round's host.
 Journal: fixed words and numbers („dungeon: kommentar | …“), Live only counts.
 """
 import re
 
-import features
+import dungeon_tiefe
 from common import DayCounter
 
 KEY = "dungeonkommentar"
@@ -38,7 +38,7 @@ _day = DayCounter(gesagt=0, verworfen=0)
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"])
+    return dungeon_tiefe.an(KEY, rd)
 
 
 def task(rd, lang):

@@ -28,8 +28,6 @@ KEY = {"id": "q_schluessel", "name": ["Messingschlüssel", "brass key"], "info":
 class Quest(T.Base):
     def setUp(self):
         super().setUp()
-        helpers.keep_chat(self, "dungeon_quest")
-        helpers.set_config(dungeon_quest=False)
         v = self.new_round()
         self.rid, self.host = v["rid"], v["pid"]
         self.code, self.gp = self.guest(self.rid)
@@ -59,6 +57,7 @@ class Quest(T.Base):
         return self.c.post(f"/api/profile/dungeon/{self.rid}/held", json=b)
 
     def test_off_nothing(self):
+        self.teil_aus(quest.KEY)                                    # on with the game since Ausdünnen 1: a blocked host
         self.assertRaises(PermissionError, self.edit, lambda rd: dungeon.quest_legen(rd, "", KEY))
         self.assertEqual(self.held(was="questaufheben", q="q_schluessel").json()["detail"], "quest aus")
         v = self.c.get(f"/api/profile/dungeon/{self.rid}").json()
@@ -70,7 +69,6 @@ class Quest(T.Base):
         self.assertEqual(dungeon.for_live()["quest_dinge"], 0)
 
     def test_naming_takes_it_and_the_heroes_pass_it_on(self):
-        helpers.set_config(dungeon_quest=True)
         self.assertEqual(self.edit(lambda rd: dungeon.quest_legen(rd, "", KEY)), "q_schluessel")
         self.assertEqual(self.edit(lambda rd: dungeon.quest_legen(rd, "", dict(KEY, name="Anders"))), "q_schluessel")   # the same id: nothing new
         self.assertRaises(ValueError, self.edit, lambda rd: dungeon.quest_legen(rd, "", dict(KEY, id="Schlüssel")))
@@ -118,7 +116,6 @@ class Quest(T.Base):
         self.assertTrue(live["quest_genommen"] >= 2 and live["quest_gegeben"] >= 1 and live["quest_verbraucht"] >= 1, live)
 
     def test_a_find_of_the_narration_by_fixed_rules(self):
-        helpers.set_config(dungeon_quest=True)
         r = dungeon.rules()
         rd = self.state(self.rid)
         self.assertIn("quest_fund", dungeon.system_text(r, rd, "erzaehlen"))
@@ -144,7 +141,6 @@ class Quest(T.Base):
         self.assertGreaterEqual(dungeon.for_live()["quest_gefunden"], 1)
 
     def test_a_carrier_who_dies_drops_it_and_the_next_chapter_keeps_it(self):
-        helpers.set_config(dungeon_quest=True)
         r = dungeon.rules()
 
         def lay(rd):
@@ -176,7 +172,6 @@ class Quest(T.Base):
         self.assertEqual(nxt["quest"]["q_siegel"]["wer"], "p_neu")
 
     def test_the_story_planner_gives_an_act_its_thing(self):
-        helpers.set_config(dungeon_quest=True)
         r = dungeon.rules()
         akt = {"titel": "Die Kapelle", "inhalt": "Die Helden suchen in der Kapelle nach dem Weg.", "wende": "Das Siegel bricht", "zuege": 4}
         plan = {"titel": "Glocke", "welt": "fantasy", "ton": 12, "idee": "Eine Glocke läutet von selbst.", "ziel": "Die Glocke stillen",
@@ -195,7 +190,7 @@ class Quest(T.Base):
             return rd
         rd = self.edit(run)
         self.assertEqual([(x["q"], x["von"], x["ort"]) for x in rd["quest"].values()], [("q_akt1", "plan", "")])
-        helpers.set_config(dungeon_quest=False)
+        helpers.set_config(dungeon=False)                           # the game off: no thing, no planner field
         off = dict(rd, quest={})
         quest.act_thing(dungeon, r, off)
         self.assertEqual(off["quest"], {})

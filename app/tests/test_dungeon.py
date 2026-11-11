@@ -116,6 +116,35 @@ PNG = b"\x89PNG\r\n\x1a\n" + bytes(24)   # what the picture service sends (bilde
 HERO = {"name": "Arvid", "volk": "mensch", "klasse": "krieger", "satz": "", "geschlecht": "maennlich"}
 
 
+def teil_aus(test, *teile):
+    """Parts without a switch of their own (Kern or Pult of dungeon_tiefe, Ausdünnen 1) as off, as for a host the
+    admin has blocked: their modules' guards still say no. Returns the call that turns them on again (once; at the
+    test's end at the latest). One patch per test, every call adds its parts, so calls end in any order."""
+    import dungeon_tiefe
+    zu = test.__dict__.get("_teil_aus")
+    if zu is None:
+        zu = test._teil_aus = []
+        old = {k: getattr(dungeon_tiefe, k) for k in ("an", "fuer", "admin_an")}
+
+        def frei(t):
+            return not any(t in x for x in zu)
+        ps = [mock.patch.object(dungeon_tiefe, "an", lambda t, rd: frei(t) and old["an"](t, rd)),
+              mock.patch.object(dungeon_tiefe, "fuer", lambda t, uid: frei(t) and old["fuer"](t, uid)),
+              mock.patch.object(dungeon_tiefe, "admin_an", lambda t, c=None: frei(t) and old["admin_an"](t, c))]
+        for p in ps:
+            p.start()
+            test.addCleanup(p.stop)
+    mine = set(teile)
+    zu.append(mine)
+
+    def stop():
+        for i, x in enumerate(zu):
+            if x is mine:
+                del zu[i]
+                return
+    return stop
+
+
 class Base(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -183,6 +212,17 @@ class Base(unittest.TestCase):
 
     def state(self, rid):
         return dungeon._read()["runden"][rid]
+
+    def teil_aus(self, *teile):
+        return teil_aus(self, *teile)
+
+    def tiefe(self, rid, v):
+        """The host's Regeltiefe for this round (dungeon_tiefe, Ausdünnen 1): a round keeps the depth it was made
+        with, so a test turns the extra rules off or on by the round, not by the admin's standard."""
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][rid]["tiefe"] = v
+            dungeon._write(d)
 
     def give(self, rid, pid, cid, selten="selten"):
         """An item into a hero's bag, straight in the file (the test's own loot)."""
@@ -379,8 +419,9 @@ class Turns(Base):
         self.code, self.gp = self.guest(self.rid)
 
     def act_all(self, text="Ich öffne die Tür."):
-        self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": text, "zug": 1}).status_code, 200)
-        r = self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": text, "zug": 1})
+        # „So lassen“: the Rückfrage (on with the game since Ausdünnen 1) keeps both actions as written
+        self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": text, "zug": 1, "so_lassen": True}).status_code, 200)
+        r = self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": text, "zug": 1, "so_lassen": True})
         self.assertEqual(r.status_code, 200, r.text)
         self.assertEqual(self.spawned, ["dungeon"])   # everyone acted: the turn closes by the fixed rule
 
@@ -393,13 +434,13 @@ class Turns(Base):
         import dungeon_wunsch as wunsch
         self.assertNotIn(wunsch.KEY, features.DEFAULT_ON)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_wunsch"], False)
+            self.assertEqual(json.load(f)["chat"]["dungeon_tiefe"], "einfach")
         self.assertIn("wunsch_erfuellt", dungeon.SCHEMA_ERZAEHLEN["properties"])
         url = f"/api/profile/dungeon/{self.rid}/wunsch"
         x = self.c.post(url, json={"text": "Den Glockenturm erklimmen."})
         self.assertEqual((x.status_code, x.json()["detail"]), (404, "wunsch aus"))
-        helpers.keep_chat(self, "dungeon_wunsch")
-        helpers.set_config(dungeon_wunsch=True)
+        helpers.keep_chat(self, "dungeon_tiefe")
+        helpers.set_config(dungeon_tiefe="voll")
         r = dungeon.rules()
         wahl = wunsch.choices(r, self.state(self.rid))
         self.assertTrue(wahl)
@@ -458,10 +499,9 @@ class Turns(Base):
         import dungeon_gold as gold
         self.assertNotIn(gef.KEY, features.DEFAULT_ON)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_gefaehrte"], False)
-        helpers.keep_chat(self, "dungeon_gold")
-        helpers.keep_chat(self, "dungeon_gefaehrte")
-        helpers.set_config(dungeon_gold=True)
+            self.assertEqual(json.load(f)["chat"]["dungeon_tiefe"], "einfach")
+        helpers.keep_chat(self, "dungeon_tiefe")
+        helpers.set_config(dungeon_tiefe="voll")
         r = dungeon.rules()
         url = f"/api/profile/dungeon/{self.rid}"
         dienst = lambda **kw: self.c.post(url + "/held", json=dict(was="dienst", id="gefaehrte", **kw))
@@ -473,9 +513,10 @@ class Turns(Base):
             for _, x in dungeon.seated(rd):
                 x["held"]["gold"] = 500
             dungeon._write(d)
+        aus = teil_aus(self, gef.KEY)            # blocked for the host: no offer, even at „voll“
         self.assertNotIn("gefaehrte", [x["id"] for x in self.c.get(url).json()["siedlung"]["dienste"]])   # off: no offer
         self.assertEqual(dienst(i="grete").json()["detail"], "dienst")
-        helpers.set_config(dungeon_gefaehrte=True)
+        aus()
         rd = self.state(self.rid)
         v = self.c.get(url).json()["siedlung"]
         w = gef.werte(r, dungeon.group_level(dungeon._living(rd)))
@@ -557,11 +598,12 @@ class Turns(Base):
         once a turn to a person of the scene; the model answers as that person, the panel checks it and keeps it only
         for that seat; the host sees only that and with whom, the other seats and the narration nothing; a gift only
         from a fond person and once a round; the panel's d20 decides a betrayal, then the next narration gets it."""
+        aus = teil_aus(self, 'dungeonnsc')   # off at first (Ausdünnen 1: no switch of its own)
         import features
         import dungeon_fluestern as fl
         self.assertNotIn(fl.KEY, features.DEFAULT_ON)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_fluestern"], False)
+            self.assertEqual(json.load(f)["chat"]["dungeon_tiefe"], "einfach")
         with dungeon._lock:
             d = dungeon._read()
             dungeon._log(d["runden"][self.rid], "dm", text="Der Wirt Bodo poliert ein Glas.", npc=[{"name": "Bodo"}], frage="")
@@ -570,8 +612,8 @@ class Turns(Base):
         url = f"/api/profile/dungeon/{self.rid}/fluestern"
         x = self.c.post(url, json={"an": "Bodo", "text": "Wo liegt der Glockenschlüssel?"})
         self.assertEqual((x.status_code, x.json()["detail"]), (404, "fluestern aus"))
-        helpers.keep_chat(self, "dungeon_fluestern")
-        helpers.set_config(dungeon_fluestern=True)
+        helpers.keep_chat(self, "dungeon_tiefe")
+        helpers.set_config(dungeon_tiefe="voll")
         rd = self.state(self.rid)
         self.assertEqual(fl.figures(rd), {"bodo": "Bodo"})
         self.assertEqual(self.c.post(url, json={"an": "Niemand", "text": "Hallo"}).json()["detail"], "figur")
@@ -606,8 +648,7 @@ class Turns(Base):
         b = copy.deepcopy(rd)
         b["fluester"].pop(self.host)
         b.setdefault("nsc", {})["bodo"] = {"name": "Bodo", "karte": {}, "kanten": [], "haltung": {rd["plaetze"][self.host]["held"]["name"].lower(): 3}}
-        helpers.keep_chat(self, "dungeon_nsc")
-        helpers.set_config(dungeon_nsc=True)
+        aus()
         c2 = dict(ctx, text="Verrätst du mich?")
         gold0 = b["plaetze"][self.host]["held"].get("gold", 0)
         with contextlib.redirect_stdout(io.StringIO()):
@@ -615,7 +656,7 @@ class Turns(Base):
         self.assertEqual((e["gold"], b["plaetze"][self.host]["held"]["gold"]), (8, gold0 + 8))   # a fond person's gift, once
         b["fluester"].pop(self.host)
         b["plaetze"][self.host]["held"]["gold"] = gold0
-        helpers.set_config(dungeon_nsc=False)
+        aus = teil_aus(self, 'dungeonnsc')   # off (Ausdünnen 1: no switch of its own)
 
         class One:
             def randint(self, a, b):
@@ -644,7 +685,7 @@ class Turns(Base):
         import dungeon_kommentar as kommentar
         self.assertNotIn(kommentar.KEY, features.DEFAULT_ON)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_kommentar"], False)
+            self.assertIs(json.load(f)["chat"]["dungeon_pruefung"], False)
         self.assertIn("helden_sagen", dungeon.SCHEMA_ERZAEHLEN["properties"])
         r = dungeon.rules()
         rd = self.state(self.rid)
@@ -653,8 +694,8 @@ class Turns(Base):
         acted = dict(rd, offen={self.host: {"text": "Ich öffne die Tür."}, self.gp: {"text": "Ich schaue mich um."}})
         self.assertEqual(kommentar.check(dungeon, r, acted, [gut]), [])            # switch off
         self.assertNotIn("helden_sagen", dungeon.system_text(r, rd, "erzaehlen"))
-        helpers.keep_chat(self, "dungeon_kommentar")
-        helpers.set_config(dungeon_kommentar=True)
+        helpers.keep_chat(self, "dungeon_pruefung")
+        helpers.set_config(dungeon_pruefung=True)
         self.assertIn("helden_sagen", dungeon.system_text(r, rd, "erzaehlen"))
         rows = [gut, {"name": a, "sagt": "Noch eine Zeile."}, {"name": b, "sagt": "Ich nehme die Fackel."}, {"name": b, "sagt": "Das kostet 5 Gold."},
                 {"name": b, "sagt": "Bela greift zum Schwert."}, {"name": "Niemand", "sagt": "Hallo zusammen."}, "kaputt"]
@@ -790,16 +831,12 @@ class Rueckfrage(Turns):
     """Rückfrage bei unklaren Aktionen (Dominik 2026-10-26 „wie empfehlung umsetzen“, plaene/dungeon-rueckfrage.md):
     fixed rules at sending, suggestions only from the scene's data, never blocking, the guest too, off by default."""
 
-    def on(self):
-        helpers.keep_chat(self, "dungeon_rueckfrage")
-        helpers.set_config(dungeon_rueckfrage=True)
-
     def test_the_table_of_clear_and_unclear_actions(self):
         import dungeon_rueckfrage as rf
         import features
         self.assertNotIn(rf.KEY, features.DEFAULT_ON)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_rueckfrage"], False)
+            self.assertIs(json.load(f)["chat"]["dungeon"], False)
         r = dungeon.rules()
         rd = self.state(self.rid)
         for text, want in (("ok", "kurz"), ("ja", "kurz"), ("hm, naja", "kurz"), ("asdfgh qwrtz xcvbn", "salat"),
@@ -854,9 +891,10 @@ class Rueckfrage(Turns):
 
     def test_asked_at_the_table_never_blocking(self):
         url = f"/api/profile/dungeon/{self.rid}"
+        aus = teil_aus(self, "dungeonrueckfrage")      # blocked for the host (Ausdünnen 1: a Kern part, no switch)
         self.assertEqual(self.c.post(url + "/aktion", json={"text": "ok", "zug": 1}).status_code, 200)
-        self.assertIsNone(self.c.get(url).json()["rueckfrage"])                                     # switch off: nothing asked
-        self.on()
+        self.assertIsNone(self.c.get(url).json()["rueckfrage"])                                     # off: nothing asked
+        aus()
         with contextlib.redirect_stdout(io.StringIO()) as out:
             v = self.c.post(url + "/aktion", json={"text": "mach was", "zug": 1}).json()
         self.assertIn("dungeon: rueckfrage | regel | kurz", out.getvalue())
@@ -888,7 +926,6 @@ class Rueckfrage(Turns):
         self.assertTrue(dungeon.due(dict(rd, dm=""), max(x["t"] for x in rd["offen"].values()) + dungeon.GNADE_S + 1))
 
     def test_asked_once_for_the_same_text(self):
-        self.on()
         url = f"/api/profile/dungeon/{self.rid}"
         self.assertIsNotNone(self.c.post(url + "/aktion", json={"text": "hm", "zug": 1}).json()["rueckfrage"])
         self.assertIsNone(self.c.post(url + "/aktion", json={"text": "hm", "zug": 1}).json()["rueckfrage"])   # never twice
@@ -896,7 +933,6 @@ class Rueckfrage(Turns):
         self.assertIsNone(self.c.post(url + "/aktion", json={"text": "Ich öffne die Tür.", "zug": 1}).json()["rueckfrage"])
 
     def test_never_from_the_model_and_only_the_own_seat(self):
-        self.on()
         url = f"/api/profile/dungeon/{self.rid}"
         self.c.post(url + "/aktion", json={"text": "ok", "zug": 1})
         g = self.v.post("/api/dungeon/lage", json={"code": self.code}).json()
@@ -955,9 +991,9 @@ class ReviewEingabe(Turns):
 
     def test_a_question_holds_the_turn_at_most_thirty_seconds(self):
         """G3: a marked action holds the turn at most WARTE_S after it was written, never the turn's whole time."""
+        aus = teil_aus(self, 'dungeonrueckfrage')   # off at first (Ausdünnen 1: no switch of its own)
         import dungeon_rueckfrage as rf
-        helpers.keep_chat(self, "dungeon_rueckfrage")
-        helpers.set_config(dungeon_rueckfrage=True)
+        aus()
         url = f"/api/profile/dungeon/{self.rid}"
         self.assertIsNotNone(self.c.post(url + "/aktion", json={"text": "mach was", "zug": 1}).json()["rueckfrage"])
         self.assertEqual(self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "Ich öffne die Tür.", "zug": 1}).status_code, 200)
@@ -994,6 +1030,7 @@ class ReviewEingabe(Turns):
     def test_typed_buying_resting_and_gold_given(self):
         """E13/G6: typed buying, selling and resting get a fixed line only at the own seat with the window that does it,
         the narrator hears nicht_erfolgt; gold typed to a person of the scene is really taken; too much gold is not."""
+        teil_aus(self, "dungeonnsc")   # a Kern part, off here (Ausdünnen 1): not what this test is about
         r = dungeon.rules()
         with dungeon._lock:
             d = dungeon._read()
@@ -1141,6 +1178,7 @@ class ReviewPruefung(Turns):
     def test_every_fault_is_found_hinted_and_repaired(self):
         """E9/T8: faults gives every fault (judge the first), the hint names all; repair_all strikes first, then adds,
         and a hero missing afterwards gets a fixed sentence from his roll."""
+        teil_aus(self, "dungeonanleiten")   # a Kern part, off here (Ausdünnen 1): not what this test is about
         erz = dungeon.erz
         rd, a, b = self.seats()
         text = (f"Der Nebel hängt schwer über dem Hof und die Fackeln flackern im Wind. {a} kniet am Tor und findet 30 Goldmünzen. "
@@ -1249,6 +1287,7 @@ class ReviewPruefung(Turns):
     def test_pronouns_places_secrets_tracks_and_ignored_actions(self):
         """G19/G20/G21: „Er“ after a woman, a place the map does not have, a secret told without a success, a failed
         search that shows the way and an action not taken up are faults by fixed rules; the pronoun is fixed by the name."""
+        teil_aus(self, "dungeonanleiten")   # a Kern part, off here (Ausdünnen 1): not what this test is about
         erz = dungeon.erz
         rd, a, b = self.seats()
         for pid, p in dungeon.seated(rd):
@@ -2078,6 +2117,7 @@ class Zugzeit(Base):
         self.assertEqual((v["rest"], v["warn_s"]), (60, dungeon.WARN_S))     # the clock waits while one reads
 
     def test_the_last_action_closes_only_after_the_grace(self):
+        teil_aus(self, "dungeonrueckfrage")   # a Kern part, off here (Ausdünnen 1): not what this test is about
         self.assertEqual(self.c.post(f"/api/profile/dungeon/{self.rid}/aktion", json={"text": "Ich warte.", "zug": 1}).status_code, 200)
         self.assertEqual(self.v.post("/api/dungeon/aktion", json={"code": self.code, "text": "Ich auch.", "zug": 1}).status_code, 200)
         self.assertEqual(self.spawned, [])                      # „Ändern“ still works
@@ -2313,9 +2353,9 @@ class ReviewPersonen(Base):
         """Z4/B15: the kind from the words of the name („Alchemistin Mira“ sells potions), a name that is no person gives the
         default name (either form), a named merchant gets a card while the person memory is on, a treasure is never
         offered."""
+        aus = teil_aus(self, 'dungeonnsc')   # off at first (Ausdünnen 1: no switch of its own)
         import dungeon_nsc as nsc
-        helpers.keep_chat(self, "dungeon_nsc")
-        helpers.set_config(dungeon_nsc=True)
+        aus()
         r, rd = dungeon.rules(), self.state(self.rid)
         rd["nsc"] = {}
         for seed in range(8):
@@ -2699,15 +2739,15 @@ class Campaign(Base):
         import dungeon_chronik as chronik
         self.assertNotIn(chronik.KEY, features.DEFAULT_ON)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_chronik"], False)
+            self.assertIs(json.load(f)["chat"]["dungeon_buecher"], False)
         rid, kid = self.chapter()
         self.assertEqual([e["kapitel"] for e in self.state(rid)["log"] if e["art"] == "kapitel_ende"], [1])
         self.assertNotIn("buch", dungeon.campaigns(self.uid)[kid])
         u = f"/api/profile/dungeon/kampagne/{kid}/chronik"
         with contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(self.c.get(u).status_code, 404)                    # switch off
-        helpers.keep_chat(self, "dungeon_chronik")
-        helpers.set_config(dungeon_chronik=True)
+        helpers.keep_chat(self, "dungeon_buecher")
+        helpers.set_config(dungeon_buecher=True)
         self.summarize(kid, {"bisher": "Arvid und Bela fanden unter der Glocke eine versiegelte Krypta."})
         rid2 = self.c.post(f"/api/profile/dungeon/kampagne/{kid}/weiter", json={}).json()["rid"]
         with dungeon._lock:
@@ -3611,6 +3651,7 @@ class Stories(Base):
         every world (name and occupation, never wish or secret); a story keeps only ids of its own world, each once, at
         most PLAN_MAX; the model's draft gets them only as data and a person named exactly comes ticked; a round of the
         story has them first in the chapter's truth with role and goal (never twice) and offers them first; off nothing."""
+        aus = teil_aus(self, 'dungeonnsc', 'dungeonpersonen')   # off at first (Ausdünnen 1: no switch of its own)
         import dungeon_personen as pers
         if os.path.exists(pers.FILE):
             os.remove(pers.FILE)
@@ -3619,9 +3660,8 @@ class Stories(Base):
         dungeon.write_json(pers.FILE, {
             "oskar": {"id": "oskar", "name": "Oskar", "welt": "fantasy", "karte": karte, "rolle": "Wirt der Schenke", "ziel": "die Schenke retten"},
             "mira": {"id": "mira", "name": "Mira", "welt": "anderswo", "karte": karte, "rolle": "Diebin", "ziel": ""}})
-        helpers.keep_chat(self, "dungeon_nsc", "dungeon_personen")
         self.assertEqual(dungeon._planner_limits()["personen"], [])                  # off: nobody listed
-        helpers.set_config(dungeon_nsc=True, dungeon_personen=True)
+        aus()
         P = dungeon._planner_limits()
         self.assertEqual(P["personen_max"], pers.PLAN_MAX)
         self.assertEqual(sorted(x["id"] for x in P["personen"]), ["mira", "oskar"])
@@ -3653,7 +3693,7 @@ class Stories(Base):
         w = {"personen": [{"name": "oskar", "rolle": "", "ziel": "", "sprache": ""}], "gruppen": [], "geheimnisse": []}
         self.assertEqual(pers.into_truth(r0, dict(rd, wahrheit=None), copy.deepcopy(w))["personen"], w["personen"])   # never twice
         self.assertIs(pers.into_truth(r0, rd, w), w)                                 # a truth already set stays
-        helpers.set_config(dungeon_personen=False)
+        aus = teil_aus(self, 'dungeonpersonen')   # off (Ausdünnen 1: no switch of its own)
         self.assertEqual((pers.offer(dungeon, r0, rd), pers.into_truth(r0, dict(rd, wahrheit=None), None)), ([], None))
 
 class OwnStories(Base):
@@ -4107,7 +4147,7 @@ class Equipment(Base):
         import dungeon_reise as reise
         self.assertNotIn(reise.KEY, features.DEFAULT_ON)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_reise"], False)
+            self.assertEqual(json.load(f)["chat"]["dungeon_tiefe"], "einfach")
         r = self.r
 
         def move(rd):
@@ -4121,8 +4161,8 @@ class Equipment(Base):
             rd = self.edit(move)
         self.assertNotIn("dungeon: reise", out.getvalue())                       # switch off: a way stays a step
         self.assertNotIn("reise", rd)
-        helpers.keep_chat(self, "dungeon_reise")
-        helpers.set_config(dungeon_reise=True)
+        helpers.keep_chat(self, "dungeon_tiefe")
+        helpers.set_config(dungeon_tiefe="voll")
         with mock.patch.object(dungeon_karte, "etappen", lambda k, a, b: 3), contextlib.redirect_stdout(io.StringIO()) as out:
             rd = self.edit(move)
         self.assertIn("dungeon: reise | 3 etappen | ", out.getvalue())
@@ -4195,7 +4235,7 @@ class Equipment(Base):
         import dungeon_sprachen as sprachen
         self.assertNotIn(sprachen.KEY, features.DEFAULT_ON)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_sprachen"], False)
+            self.assertEqual(json.load(f)["chat"]["dungeon_tiefe"], "einfach")
         r = self.r
         self.assertIn("elf", sprachen.tongues(r))
         a = sprachen.laut(r, "elf", "Sei gegrüßt, Wanderer!")
@@ -4214,8 +4254,8 @@ class Equipment(Base):
                 return self.edit(go), out.getvalue()
         story, _ = tell(line)
         self.assertIsNone(story["fremd"])                                        # switch off
-        helpers.keep_chat(self, "dungeon_sprachen")
-        helpers.set_config(dungeon_sprachen=True)
+        helpers.keep_chat(self, "dungeon_tiefe")
+        helpers.set_config(dungeon_tiefe="voll")
 
         def heroes(rd):
             rd["plaetze"][self.host]["held"].update(volk="elf")
@@ -4230,7 +4270,7 @@ class Equipment(Base):
         self.assertEqual(rd["fremd"][-1], {"k": e["k"], "sagt": "Sei gegrüßt, Wanderer!", "wer": [self.host]})
         self.assertEqual(dungeon.view(self.rid, self.host)["fremd"][str(e["k"])], "Sei gegrüßt, Wanderer!")
         self.assertEqual(dungeon.view(self.rid, self.gp)["fremd"], {})          # the dwarf hears only sounds
-        self.assertNotIn("Wanderer", dungeon.facts(r, rd))
+        self.assertNotIn("gegrüßt, Wanderer", dungeon.facts(r, rd))           # never the meaning (a moon of the calendar may wander)
         self.assertEqual([x[1] for x in sprachen.speak(dungeon, r, rd, e)], [a])
         self.edit(lambda rd: rd["plaetze"][self.gp]["held"].update(klasse="barde"))
         story, _ = tell(line)
@@ -4261,11 +4301,11 @@ class Equipment(Base):
         import dungeon_rast as rast
         self.assertNotIn(kal.KEY, features.DEFAULT_ON)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_kalender"], False)
+            self.assertEqual(json.load(f)["chat"]["dungeon_tiefe"], "einfach")
         r = self.r
         self.assertIsNone(dungeon.view(self.rid, self.host)["kalender"])
-        helpers.keep_chat(self, "dungeon_kalender", "dungeon_rast")
-        helpers.set_config(dungeon_kalender=True, dungeon_rast=True)
+        helpers.keep_chat(self, "dungeon_tiefe")
+        helpers.set_config(dungeon_tiefe="voll")
         rd = self.state(self.rid)
         self.assertEqual(kal.ensure(copy.deepcopy(rd)), kal.ensure(copy.deepcopy(rd)))   # the same round, the same first day
         self.assertTrue(0 <= kal.ensure(rd)["start"] < kal.JAHR)
@@ -4336,6 +4376,7 @@ class Equipment(Base):
         itself, a long rest ends at the next morning, the model's tageszeit is ignored and a change is told once as data;
         at night the shops and the merchant are shut (the inn stays open), outdoors a hero without darkvision and
         without a light in the group rolls at a disadvantage, and the night's foes are offered when enough fit."""
+        aus = teil_aus(self, 'dungeontageszeit')   # off at first (Ausdünnen 1: no switch of its own)
         import features
         import dungeon_gold
         import dungeon_kalender as kal
@@ -4343,13 +4384,14 @@ class Equipment(Base):
         import dungeon_tageszeit as tz
         self.assertNotIn(tz.KEY, features.DEFAULT_ON)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_tageszeit"], False)
+            self.assertIs(json.load(f)["chat"]["dungeon"], False)
         r = self.r
         self.assertIsNone(dungeon.view(self.rid, self.host)["tageszeit"])
         rd = self.state(self.rid)
         self.assertIn(tz.MELDEN["de"].strip(), dungeon.system_text(r, rd, "erzaehlen"))      # off: the narrator reports it
-        helpers.keep_chat(self, "dungeon_tageszeit", "dungeon_rast")
-        helpers.set_config(dungeon_tageszeit=True, dungeon_rast=True)
+        aus()
+        helpers.keep_chat(self, "dungeon_tiefe")
+        helpers.set_config(dungeon_tiefe="voll")
         rd = self.state(self.rid)
         rd.update(kalender={"start": 0, "halbe": 0}, tageszeit="tag", zug=1)
         rd.pop("uhr", None)
@@ -4435,13 +4477,14 @@ class Equipment(Base):
         take up, a concrete choice), the world's model narration joins the style examples, and a quiet seat gets a
         choice the panel builds from the scene (people here, ways of the map, foes in a fight), never the model's words;
         with fewer than two points the old line stays. The rules' examples are checked."""
+        aus = teil_aus(self, 'dungeonanleiten')   # off at first (Ausdünnen 1: no switch of its own)
         import features
         import dungeon_anleiten as an
         import dungeon_erzaehler as erz
         import dungeon_kampf
         self.assertNotIn(an.KEY, features.DEFAULT_ON)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_anleiten"], False)
+            self.assertIs(json.load(f)["chat"]["dungeon"], False)
         r = self.r
         rd = self.state(self.rid)
         rd.pop("karte", None)
@@ -4456,8 +4499,7 @@ class Equipment(Base):
         bad["welten"][0]["anleiten"] = ["zu kurz"]
         self.assertTrue(any("anleiten" in p for p in dungeon.check_rules(bad)))
         self.assertEqual(dungeon.check_rules(r), [])
-        helpers.keep_chat(self, "dungeon_anleiten")
-        helpers.set_config(dungeon_anleiten=True)
+        aus()
         rd = self.state(self.rid)
         rd.pop("karte", None)
         self.assertIn(an.TASK["de"].strip(), dungeon.system_text(r, rd, "erzaehlen"))
@@ -4512,6 +4554,7 @@ class Equipment(Base):
         with the value that likely counts, Erfahren none), only the host chooses it; a healing spell or potion comes
         when someone is badly hurt; an action that is a button counts as taken; the car says them on „Was kann ich
         tun?“ and takes a pick of the CarPlay list."""
+        aus = teil_aus(self, 'dungeonanleiten')   # off at first (Ausdünnen 1: no switch of its own)
         import dungeon_anleiten as an
         import dungeon_auto
         import dungeon_rueckfrage as rf
@@ -4519,8 +4562,7 @@ class Equipment(Base):
         rd = self.state(self.rid)
         self.assertIsNone(dungeon.view(self.rid, self.host)["anleiten"])
         self.assertEqual(an.buttons(dungeon, r, rd, self.host), [])
-        helpers.keep_chat(self, "dungeon_anleiten")
-        helpers.set_config(dungeon_anleiten=True)
+        aus()
         rd = self.state(self.rid)
         rd.update(offen={}, dm=False, status="laeuft")
         dungeon_karte.ensure(r, rd, random.Random(1))
@@ -4610,6 +4652,7 @@ class Equipment(Base):
         many as there are, when fewer) or ends with a hollow question is told again once with a hint naming points to
         take up (the fixed check „vage“ of erz.judge), the second try stays; a 👎 may carry „Wusste nicht, was wir tun
         können“ only while on."""
+        aus = teil_aus(self, 'dungeonanleiten')   # off at first (Ausdünnen 1: no switch of its own)
         import dungeon_anleiten as an
         import dungeon_erzaehler as erz
         import dungeon_erzaehlstand as es
@@ -4628,8 +4671,7 @@ class Equipment(Base):
         self.assertEqual(an.vague(dungeon, rd, mood), [])                          # off: no check
         self.assertEqual(erz.judge(dungeon, rd, mood), ("", []))
         self.assertNotIn("vage", [g for g, _ in es.reasons(rd)])
-        helpers.keep_chat(self, "dungeon_anleiten")
-        helpers.set_config(dungeon_anleiten=True)
+        aus()
         with contextlib.redirect_stdout(io.StringIO()) as out:
             fault, names = erz.judge(dungeon, rd, mood)
             self.assertEqual(fault, "vage")
@@ -4670,7 +4712,7 @@ class Equipment(Base):
             n = d["runden"][self.rid]["log"][-1]["n"]
             dungeon._write(d)
         erz.thumb(dungeon, self.rid, self.host, n, False, "vage")
-        helpers.set_config(dungeon_anleiten=False)
+        aus = teil_aus(self, 'dungeonanleiten')   # off (Ausdünnen 1: no switch of its own)
         with self.assertRaises(ValueError):
             erz.thumb(dungeon, self.rid, self.host, n, False, "vage")
 
@@ -4691,11 +4733,10 @@ class Equipment(Base):
         dungeon_karte.ensure(r, rd, random.Random(1))
         rd["karte"].setdefault("leute", {})["Grimma"] = {"ort": rd["karte"]["hier"], "mit": False}
         rd.update(offen={}, dm=False, status="laeuft")
-        helpers.keep_chat(self, "dungeon_anleiten", "dungeon_fortschritt")
-        helpers.set_config(dungeon_fortschritt=False)
+        aus = teil_aus(self, 'dungeonfortschritt')   # off (Ausdünnen 1: no switch of its own)
         self.assertEqual(an.progress(dungeon, r, rd, {}, [], random.Random(1)), "")     # off: nothing
         self.assertNotIn("stillstand", rd)
-        helpers.set_config(dungeon_anleiten=True, dungeon_fortschritt=True)
+        aus()
         self.assertNotIn(an.WINK_TASK["de"].strip(), dungeon.system_text(r, rd, "erzaehlen"))   # Review 27.10. T20: only with a wink
         self.assertIn(an.WINK_TASK["de"].strip(), dungeon.system_text(r, dict(rd, anleitwink={"zug": rd["zug"], "stufe": 1}), "erzaehlen"))
 
@@ -4774,10 +4815,9 @@ class Equipment(Base):
                              ["akte"][0]["spuren"][0]), an.SPUR_LEN + 2)      # cut with „ …“
         rd = self.state(self.rid)
         rd.update(plan=g, akt=0, offen={}, dm=False, status="laeuft")
-        helpers.keep_chat(self, "dungeon_anleiten", "dungeon_fortschritt")
-        helpers.set_config(dungeon_fortschritt=False)
+        aus = teil_aus(self, 'dungeonfortschritt')   # off (Ausdünnen 1: no switch of its own)
         self.assertEqual((an.clue_facts(rd), an.seen(rd, "Frisches Wachs klebt am Glockenseil.")), ({}, 0))   # off
-        helpers.set_config(dungeon_anleiten=True, dungeon_fortschritt=True)
+        aus()
         self.assertIn(an.SPUR_TASK["de"].strip(), dungeon.system_text(r, rd, "erzaehlen"))
         self.assertIn(an.SPUREN_PLAN[0], dungeon.AUFGABE_PLAN["de"] if isinstance(dungeon.AUFGABE_PLAN, dict) else dungeon.AUFGABE_PLAN)
         self.assertEqual(an.clue_facts(rd), {"spur": "Frisches Wachs klebt am Glockenseil."})
@@ -4809,18 +4849,15 @@ class Equipment(Base):
 
     def test_story_progress_is_core_and_on_from_the_start(self):
         """Review 27.10. E12 (Dominik „ok“, decision 4): the progress counter, the stall hint and the clues are the
-        story's core with their own switch dungeonfortschritt, on from the start (reason in features.DEFAULT_ON); they
-        count at the level normal while „Spieler anleiten“ is off, whose form, buttons and quiet-seat questions stay
-        off. Live shows the winks and clues on their own line."""
+        story's core, on with the game (since Ausdünnen 1 Kern of dungeon_tiefe, before its own switch on from the start);
+        they count at the level normal while „Spieler anleiten“ is off (a blocked part), whose form, buttons and
+        quiet-seat questions stay off. Live shows the winks and clues on their own line."""
         import dungeon_anleiten as an
+        import dungeon_tiefe
         import live
         r = self.r
-        self.assertIn("chat.dungeon_fortschritt", dungeon.features.DEFAULT_ON)
-        with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
-            c = json.load(f)["chat"]
-        self.assertEqual((c["dungeon_fortschritt"], c["dungeon_anleiten"]), (True, False))
-        helpers.keep_chat(self, "dungeon_anleiten", "dungeon_fortschritt")
-        helpers.set_config(dungeon_anleiten=False, dungeon_fortschritt=True)
+        self.assertEqual({dungeon_tiefe.GRUPPE[an.KERN], dungeon_tiefe.GRUPPE[an.KEY]}, {"kern"})
+        teil_aus(self, an.KEY)
         rd = self.state(self.rid)
         dungeon_karte.ensure(r, rd, random.Random(1))
         rd["karte"].setdefault("leute", {})["Grimma"] = {"ort": rd["karte"]["hier"], "mit": False}
@@ -4844,8 +4881,8 @@ class Equipment(Base):
         self.assertTrue(set(an.KERN_ZAEHLER) <= set(an.for_live()))
         snap = json.dumps(live.snapshot(), ensure_ascii=False)
         self.assertIn("Fortschritt der Geschichte: Stillstand-Winke", snap)
-        # the admin's switch off: nothing counts, no wink, no clue
-        helpers.set_config(dungeon_fortschritt=False)
+        # the part off (a blocked host): nothing counts, no wink, no clue
+        teil_aus(self, an.KERN)
         rd.pop("anleitwink", None)
         self.assertFalse(an.kern(rd))
         self.assertEqual((an.clue_facts(rd), an.facts(rd), an.task(rd, "de")), ({}, {}, ""))
@@ -5286,6 +5323,7 @@ class BetterStories(Base):
         self.assertEqual(g["faeden"], ["Wer hat die Glocke zum Schweigen gebracht?"])
 
     def test_one_rewrite_when_a_hero_is_missing(self):
+        teil_aus(self, "dungeonanleiten")   # a Kern part, off here (Ausdünnen 1): not what this test is about
         self.act_all()
         before = dungeon.for_live()["nachgebessert"]                                       # a day's count: other tests ran before
         rd = self.play([{"proben": []},
@@ -5329,6 +5367,7 @@ class BetterStories(Base):
         self.assertIn("dmBeleg", open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8").read())
 
     def test_repeating_counts_as_a_fault(self):
+        teil_aus(self, "dungeonanleiten")   # a Kern part, off here (Ausdünnen 1): not what this test is about
         rd = self.state(self.rid)
         old = "Der Regen trommelt auf das Dach der Hütte, und die Laterne schwankt im Wind über der Tür"
         rd["log"].append({"art": "dm", "text": old, "n": 0})
@@ -5337,6 +5376,7 @@ class BetterStories(Base):
         self.assertEqual(dungeon.erz.judge(dungeon, rd, {"text": "Ein Fuchs huscht über den Hof, seine Augen glühen grün im Licht der ersten Sterne, dann ist er fort und hinterlässt nur Spuren im nassen Gras.", "ooc": []})[0], "")
 
     def test_a_place_the_group_cannot_be_at_is_a_fault(self):
+        teil_aus(self, "dungeonanleiten")   # a Kern part, off here (Ausdünnen 1): not what this test is about
         rd = self.state(self.rid)
         rd["offen"] = {}
         k = rd["karte"]
@@ -5354,6 +5394,7 @@ class BetterStories(Base):
         """Dominik 2026-10-24 „1-5 umsetzten“ (back at the old place, its people there again), Punkte 3 und 4: every
         narration carries its place; after a change the model gets only the new place's and the last one, each with
         „[place]“; a speaker the map knows elsewhere and who does not travel along makes the narration a fault."""
+        teil_aus(self, "dungeonanleiten")   # a Kern part, off here (Ausdünnen 1): not what this test is about
         import dungeon_karte
         rd = self.state(self.rid)
         rd["offen"] = {}
@@ -6673,10 +6714,11 @@ class Windows(unittest.TestCase):
         asyncio.run(go())
 
     def test_hero_sheet_merchant_and_item_windows(self):
+        teil_aus(self, "dungeonnarben", "dungeongefaehrte", "dungeonrunen")   # Voll parts, off here (Ausdünnen 1): the old houses
         from tests.test_ui_browser import Browser, async_playwright
         import profiles
         helpers.keep_chat(self, "dungeon")
-        helpers.set_config(dungeon=True, dungeon_gold=True)
+        helpers.set_config(dungeon=True, dungeon_tiefe="voll")
         uid = next(u for u in profiles.user_ids() if (profiles.by_id(u) or {}).get("name") == "Uitest")
         old_ask = dungeon.ask_model
 
@@ -7699,11 +7741,13 @@ class Windows(unittest.TestCase):
         """Dominik 2026-10-24 „rechte spalte … durcheinander und lang“, „unübersichtlich“: the right column shows the turn
         and the own hero, then one tab of map, host and date at a time; a class card only counts, the detail below names
         the powers by grade. No page wider than the screen at 1280, 390 and 320 px."""
+        aus = teil_aus(self, 'dungeonstufen')   # off at first (Ausdünnen 1: no switch of its own)
         from tests.test_ui_browser import Browser, async_playwright
         import profiles
         for k in ("dungeon", "dungeon_stufen", "dungeon_regler"):
             helpers.keep_chat(self, k)
-        helpers.set_config(dungeon=True, dungeon_stufen=True, dungeon_regler=True)   # the card „Schwierigkeit“ of the console
+        aus()
+        helpers.set_config(dungeon=True, dungeon_tiefe="voll")   # the card „Schwierigkeit“ of the console
         uid = next(u for u in profiles.user_ids() if (profiles.by_id(u) or {}).get("name") == "Uitest")
         rid = dungeon.make_round(uid, {"titel": "Spaltentisch", "welt": "fantasy", "ton": 12, "held": dict(HERO, name="Uma")}, "de")
         dungeon._running.discard(rid)
@@ -7835,10 +7879,12 @@ class Windows(unittest.TestCase):
         own tab „Regeln“ with the sections left, a part as a list with picture or sign and mark, the detail below or
         beside it; search and filters; Funktionen → KI-Dungeon-Master → Regeln anpassen opens the tab. No page wider
         than the screen at 1280, 390 and 320 px."""
+        aus = teil_aus(self, 'dungeonnsc', 'dungeonpersonen')   # off at first (Ausdünnen 1: no switch of its own)
         from tests.test_ui_browser import Browser, async_playwright
         import dungeon_personen as pers
-        helpers.keep_chat(self, "dungeon", "dungeon_nsc", "dungeon_personen")
-        helpers.set_config(dungeon=True, dungeon_nsc=True, dungeon_personen=True)
+        aus()
+        helpers.keep_chat(self, "dungeon")
+        helpers.set_config(dungeon=True)
         if os.path.exists(pers.FILE):
             os.remove(pers.FILE)
         self.addCleanup(lambda: os.path.exists(pers.FILE) and os.remove(pers.FILE))
@@ -8924,6 +8970,7 @@ class Fight(Turns):
     def test_the_narration_names_the_foes_of_the_card(self):
         """The card and the text tell the same encounter (Dominik 2026-10-24: the card showed Dunkelelfen, the text
         Schattenwächter): a foe not named by its bestiary name gets one rewrite with the names in the note."""
+        teil_aus(self, "dungeonanleiten")   # a Kern part, off here (Ausdünnen 1): not what this test is about
         r = dungeon.rules()
         rd, held = self.held()
         foe = kampf.offer(dungeon, r, rd, held)[0]
@@ -9140,12 +9187,13 @@ class Fight(Turns):
         """Dungeon-Richter (systemone use "richter"): off by default; on, the model only gives the probability of a
         contradiction after the fixed checks passed, the panel writes anew from RICHTER_MIN, once, and keeps the first
         try when the rewrite fails a fixed check; unsure or slow, the turn goes on as without."""
+        teil_aus(self, "dungeonanleiten")   # a Kern part, off here (Ausdünnen 1): not what this test is about
         import features
         import systemone
         E = dungeon.erz
         self.assertNotIn(E.RICHTER, features.DEFAULT_ON)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_richter"], False)
+            self.assertIs(json.load(f)["chat"]["dungeon_pruefung"], False)
         rd = self.state(self.rid)
         asked = []
 
@@ -9160,9 +9208,9 @@ class Fight(Turns):
         with mock.patch.object(systemone, "ask", answer(0.99)), contextlib.redirect_stdout(io.StringIO()):
             self.assertFalse(asyncio.run(E.richter(dungeon, rd, story)))        # switch off: never asked
         self.assertEqual(asked, [])
-        helpers.keep_chat(self, "dungeon_richter")
+        helpers.keep_chat(self, "dungeon_pruefung")
         helpers.keep_chat(self, "systemone")
-        helpers.set_config(dungeon_richter=True, systemone=True)
+        helpers.set_config(systemone=True, dungeon_pruefung=True)
         for p, want in ((0.99, True), (E.RICHTER_MIN, True), (0.5, False), (None, False)):
             with mock.patch.object(systemone, "ask", answer(p)), contextlib.redirect_stdout(io.StringIO()) as out:
                 self.assertIs(asyncio.run(E.richter(dungeon, rd, story)), want, p)
@@ -9308,7 +9356,7 @@ class Fight(Turns):
         """Idee 6 of 2026-10-24 (Dominik „alle umsetzen“): after a fight the next encounters are set by fixed numbers,
         won with little life lost REGLER_HOCH harder, a hero down REGLER_RUNTER easier, at most ±REGLER, at the
         children's table never above 0; the host can hold it; off it changes nothing and shows nothing."""
-        helpers.keep_chat(self, "dungeon_regler")
+        helpers.keep_chat(self, "dungeon_tiefe")
         r = dungeon.rules()
         u = f"/api/profile/dungeon/{self.rid}/erzaehler"
         with dungeon._lock:
@@ -9321,7 +9369,7 @@ class Fight(Turns):
             self.assertNotIn("regler", rd)
         self.assertIsNone(self.c.get(f"/api/profile/dungeon/{self.rid}").json().get("regler"))
         self.assertEqual(self.c.post(u, json={"regler_fest": True}).status_code, 400)
-        helpers.set_config(dungeon_regler=True)
+        helpers.set_config(dungeon_tiefe="voll")
         with dungeon._lock:
             for want in (10, 20, 25, 25):                                        # won without a scratch, again and again
                 rd["kampf_aus"] = {"leben0": sum(h["leben"] for h in held), "why": ""}
@@ -9366,7 +9414,7 @@ class Fight(Turns):
         """Tabletop-Punkt 13 of 2026-10-25: the host chooses leicht, mittel, schwer or toedlich; the budget of the next
         encounters is the medium times the SRD 5.2.1 ratio of the heroes' levels (deadly the hard one times TOEDLICH), the
         danger still against the medium; only the host, only a stage of the list; off it changes nothing and shows nothing."""
-        helpers.keep_chat(self, "dungeon_stufen")
+        aus = teil_aus(self, 'dungeonstufen')   # off at first (Ausdünnen 1: no switch of its own)
         r = dungeon.rules()
         u = f"/api/profile/dungeon/{self.rid}/erzaehler"
         self.assertEqual(self.c.post(u, json={"kampfstufe": "schwer"}).status_code, 400)            # off
@@ -9377,7 +9425,7 @@ class Fight(Turns):
             base = kampf.budget(dungeon, r, rd, held)
             rd["kampfstufe"] = "toedlich"
             self.assertEqual(kampf.budget(dungeon, r, rd, held), base, "off: always the medium")
-        helpers.set_config(dungeon_stufen=True)
+        aus()
         self.assertEqual(self.c.post(u, json={"kampfstufe": "brutal"}).status_code, 400)
         self.assertEqual(self.v.post("/api/dungeon/erzaehler", json={"code": self.code, "kampfstufe": "toedlich"}).status_code // 100, 4)
         v = self.c.post(u, json={"kampfstufe": "schwer"})
@@ -9409,7 +9457,7 @@ class Fight(Turns):
         once, a hit becomes critical, a miss is rolled again once; a success keeps it. When half of the other players give
         an action 👍, its hero gets one more (LOB_MAX); off nothing of it works. The panel counts, never the model."""
         import dungeon_mut as mut
-        helpers.keep_chat(self, "dungeon_heldenmut")
+        helpers.keep_chat(self, "dungeon_tiefe")
         p = mock.patch.object(mut, "clock", lambda: 1_790_000_000)
         p.start()
         self.addCleanup(p.stop)
@@ -9418,7 +9466,7 @@ class Fight(Turns):
         self.assertEqual(self.c.post(url + "/aktion", json={"text": "Ich stemme das Tor auf.", "zug": 1, "mut": True}).status_code, 200)
         self.assertNotIn("mut", self.state(self.rid)["offen"][self.host])             # off: nothing marked
         self.assertIsNone(self.c.get(url).json()["mut"])
-        helpers.set_config(dungeon_heldenmut=True)
+        helpers.set_config(dungeon_tiefe="voll")
         self.assertEqual(self.c.get(url).json()["mut"], {"frei": 1, "lob": [], "geschenkt": 0})
         self.assertEqual(self.c.post(url + "/aktion", json={"text": "Ich stemme das Tor auf.", "zug": 1, "mut": "ja"}).status_code, 200)
         self.assertNotIn("mut", self.state(self.rid)["offen"][self.host])             # only true counts
@@ -9470,7 +9518,7 @@ class Fight(Turns):
         self.assertEqual(dungeon.for_live()["heldenmut"], 1)                          # the live overview: numbers only
         with mock.patch.object(mut, "clock", lambda: 1_790_000_000 + 86_400):
             self.assertEqual(self.c.get(url).json()["mut"]["frei"], 1)                # the next evening: a new one
-        helpers.set_config(dungeon_heldenmut=False)
+        helpers.set_config(dungeon_tiefe="einfach")
         self.assertEqual(self.v.post("/api/dungeon/daumen", json=lob).status_code, 400)
 
     def test_lines_veils_and_the_x_card(self):
@@ -9478,10 +9526,10 @@ class Fight(Turns):
         every seat sets lines and veils; the table sees them together without names; a line refuses an action and a
         narration, a veil may stand once (else told again, at last cut); the model gets them only as data. The X-card is
         anonymous, stops the reading and retells the last scene, without the model or with a line in fixed words."""
+        aus = teil_aus(self, 'dungeongrenzen')   # off at first (Ausdünnen 1: no switch of its own)
         import dungeon_grenzen as grenzen
-        helpers.keep_chat(self, "dungeon_grenzen")
-        helpers.set_config(dungeon_grenzen=True)
-        self.assertIn("chat.dungeon_grenzen", dungeon.features.DEFAULT_ON)          # protection at the table from the start
+        aus()
+        self.assertEqual(dungeon.dungeon_tiefe.GRUPPE["dungeongrenzen"], "kern")   # protection at the table with the game
         url = f"/api/profile/dungeon/{self.rid}"
         r = self.c.post(url + "/grenzen", json={"linien": "Spinnen, spinnen, x, " + ", ".join(f"W{i}x" for i in range(12)), "schleier": ["Ratten"]})
         self.assertEqual(r.status_code, 200, r.text)
@@ -9560,7 +9608,7 @@ class Fight(Turns):
         live = dungeon.for_live()
         self.assertEqual((live["grenzen_plaetze"], live["x_laeuft"]), (2, 0))
         self.assertGreaterEqual(live["x_karte"], 2)
-        helpers.set_config(dungeon_grenzen=False)                                    # off: nothing counts, nothing to set
+        aus = teil_aus(self, 'dungeongrenzen')   # off (Ausdünnen 1: no switch of its own)
         self.assertIsNone(self.c.get(url).json()["grenzen"])
         self.assertEqual(self.c.post(url + "/grenzen", json={"x": True}).json()["detail"], "grenzen aus")
         self.assertFalse(dungeon.bad_words(dungeon.rules(), self.state(self.rid), "Spinnen"))
@@ -9571,7 +9619,7 @@ class Fight(Turns):
         exactly where GEHEIM allows it, nowhere else."""
         import dungeon_sicht as sicht
         helpers.keep_chat(self, *sicht.SCHALTER)
-        helpers.set_config(**{k: True for k in sicht.SCHALTER})       # every switch whose secrets GEHEIM names
+        helpers.set_config(**sicht.SCHALTER)       # every switch whose secrets GEHEIM names
         self.assertEqual(set(sicht.BETRACHTER), {"gastgeber", "spieler", "auto", "modell"})
         for i, (gid, (was, sehen, plant)) in enumerate(sicht.GEHEIM.items()):
             self.assertTrue(sehen <= set(sicht.BETRACHTER) and all(len(x) > 5 for x in was))
@@ -9600,7 +9648,7 @@ class Fight(Turns):
         (gold up to 10 × level, a thing only from the ground, life never in a fight nor down to 0, the place only without
         a map, a person only new), at most NEHMEN_MAX, once a turn; every proposal is logged, taken or dropped."""
         import dungeon_schreiber as schreiber
-        helpers.keep_chat(self, "dungeon_schreiber")
+        helpers.keep_chat(self, "dungeon_pruefung")
         r = dungeon.rules()
         with dungeon._lock:
             d = dungeon._read()
@@ -9626,7 +9674,7 @@ class Fight(Turns):
             dungeon.ask_model = fake([vor])
             asyncio.run(schreiber.abgleich(dungeon, self.rid, turn))
         self.assertIn("dungeon: schreiber | aus", out.getvalue())
-        helpers.set_config(dungeon_schreiber=True)
+        helpers.set_config(dungeon_pruefung=True)
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
             dungeon.ask_model = fake([vor, vor])
@@ -9667,14 +9715,14 @@ class Fight(Turns):
         sets up to ZUFALL_MAX rules (chance, trigger, effect, one roll for all or per hero); the panel rolls a d100 at the
         trigger and applies the effect by its own rules, every roll in the feed; a hint reaches the next narration only
         as data; only the host sees the rules; off nothing is set and nothing rolled."""
+        aus = teil_aus(self, 'dungeonzufall')   # off at first (Ausdünnen 1: no switch of its own)
         import dungeon_zufall as zufall
-        helpers.keep_chat(self, "dungeon_zufall")
         url = f"/api/profile/dungeon/{self.rid}"
         regeln = [{"name": "Steinschlag", "prozent": 100, "ausloeser": "zug", "wirkung": "schaden", "zahl": 2, "wer": "alle"},
                   {"name": "Taschendieb", "prozent": 1, "ausloeser": "zug", "wirkung": "verlust", "zahl": 5, "wer": "je"},
                   {"name": "Flüstern", "prozent": 100, "ausloeser": "zug", "wirkung": "hinweis", "text": "Ein kalter Wind trägt ein Flüstern heran.", "wer": "alle"}]
         self.assertEqual(self.c.post(url + "/zufall", json={"regeln": regeln}).json()["detail"], "zufall aus")   # off from the start
-        helpers.set_config(dungeon_zufall=True)
+        aus()
         for bad in ([dict(regeln[0], prozent=0)], [dict(regeln[0], zahl=9)], [dict(regeln[0], ausloeser="mond")],
                     [dict(regeln[2], text="")], regeln * 2, "Steinschlag"):
             self.assertEqual(self.c.post(url + "/zufall", json={"regeln": bad}).status_code, 400, bad)
@@ -9704,7 +9752,7 @@ class Fight(Turns):
         self.assertEqual(live["zufall_regeln"], 3)
         self.assertGreaterEqual(live["zufall_treffer"], 2)
         self.assertGreaterEqual(live["zufall_daneben"], 2)
-        helpers.set_config(dungeon_zufall=False)
+        aus = teil_aus(self, 'dungeonzufall')   # off (Ausdünnen 1: no switch of its own)
         self.assertEqual(zufall.roll(dungeon, rules, copy.deepcopy(rd), "zug"), [])     # off: nothing rolled
         self.assertIsNone(self.c.get(url).json()["zufall"])
 
@@ -9714,9 +9762,9 @@ class Fight(Turns):
         an attitude step only for a person and a hero named in it, one step per hero and turn, a relation only to a hero
         or a known person; only the scene's people go to the model with their cards; the chronicle and the reputation
         by fixed rules, wish, secret and relations only for the host; all of it goes on into the next chapter; off none."""
+        aus = teil_aus(self, 'dungeonnsc')   # off at first (Ausdünnen 1: no switch of its own)
         import dungeon_nsc as nsc
         import dungeon_tabellen as tabellen
-        helpers.keep_chat(self, "dungeon_nsc")
         url = f"/api/profile/dungeon/{self.rid}"
         with dungeon._lock:
             d = dungeon._read()
@@ -9726,7 +9774,7 @@ class Fight(Turns):
             dungeon._write(d)
         self.assertIsNone(self.c.get(url).json()["nsc"])                               # off from the start
         self.assertEqual(nsc.facts(dungeon.rules(), self.state(self.rid), 0), {})
-        helpers.set_config(dungeon_nsc=True)
+        aus()
         self.spawned.clear()
         self.act_all("Wir betreten die Schenke.")
         text = ("Arvid und Bela betreten die verrauchte Schenke. Oskar mustert Arvid zuerst streng, dann lacht er über "
@@ -9775,7 +9823,7 @@ class Fight(Turns):
         self.assertEqual(live["nsc_karten"], 2)
         self.assertGreaterEqual(live["nsc_haltung"], 1)
         self.assertGreaterEqual(live["nsc_kanten"], 1)
-        helpers.set_config(dungeon_nsc=False)
+        aus = teil_aus(self, 'dungeonnsc')   # off (Ausdünnen 1: no switch of its own)
         self.assertEqual(nsc.facts(r, rd, 0), {})
         self.assertIn("Diebin im Hafen", dungeon.facts(r, rd))                          # off: the truth as before
         self.assertEqual(nsc.check(dungeon, r, rd, [{"name": "Oskar", "held": "Arvid", "haltung": "besser"}], text), [])
@@ -9787,9 +9835,10 @@ class Fight(Turns):
         theft, +1 for the target of a gift or help; a theft whose Geschick check passed stays unseen, an attack on a foe
         of the running fight is no deed; the narration gets the deeds as data and the model's own step for the same
         person and hero is dropped; off nothing."""
+        aus = teil_aus(self, 'dungeonnsc')   # off at first (Ausdünnen 1: no switch of its own)
         import dungeon_nsc as nsc
         import dungeon_zeugen as zg
-        helpers.keep_chat(self, "dungeon_nsc", "dungeon_zeugen")
+        helpers.keep_chat(self, "dungeon_tiefe")
         self.assertEqual([zg.deed(t) for t in ("Ich greife Oskar an.", "Ich greife nach dem Seil.", "Ich stehle Mira den Beutel.",
                                                "Ich gebe ihm einen Silberling.", "I help Mira up.", "Ich schaue mich um.")],
                          ["angriff", "", "diebstahl", "geschenk", "hilfe", ""])
@@ -9799,7 +9848,7 @@ class Fight(Turns):
                                                               {"name": "Mira", "rolle": "Gast", "ziel": "", "sprache": ""}],
                                                  "gruppen": [], "geheimnisse": []}
             dungeon._write(d)
-        helpers.set_config(dungeon_nsc=True)
+        aus()
         self.spawned.clear()
         self.act_all("Wir betreten die Schenke.")
         rd = self.play([{"proben": []}, {"erzaehlung": "Arvid und Bela betreten die Schenke. Oskar wischt den Tresen, Mira sitzt am Fenster.",
@@ -9808,7 +9857,7 @@ class Fight(Turns):
         self.assertEqual(sorted(nsc.scene(rd)), ["mira", "oskar"])
         rd["offen"] = {self.host: {"text": "Ich schenke Oskar einen Silberling.", "t": 0}, self.gp: {"text": "Ich stehle Mira den Beutel.", "t": 0}}
         self.assertEqual(zg.seen(dungeon, r, rd), [])                                  # off
-        helpers.set_config(dungeon_zeugen=True)
+        helpers.set_config(dungeon_tiefe="voll")
         deeds = zg.seen(dungeon, r, rd)
         self.assertEqual([(x["tat"], x["ziel"], x["schritte"]) for x in deeds],
                          [("geschenk", "oskar", {"oskar": 1}), ("diebstahl", "mira", {"mira": -2, "oskar": -1})])
@@ -9847,14 +9896,15 @@ class Fight(Turns):
         sees a fixed line with the person's wish, secret and attitude, failed that it shut its thoughts away; the host
         sees only whose thoughts were read, the guest's seat nothing, the narration only the task to tell the listening
         and never the secret; off nothing."""
+        aus = teil_aus(self, 'dungeonnsc')   # off at first (Ausdünnen 1: no switch of its own)
         import dungeon_gedanken as gd
-        helpers.keep_chat(self, "dungeon_nsc", "dungeon_gedanken")
+        helpers.keep_chat(self, "dungeon_tiefe")
         with dungeon._lock:
             d = dungeon._read()
             d["runden"][self.rid]["wahrheit"] = {"personen": [{"name": "Oskar", "rolle": "Wirt", "ziel": "", "sprache": ""}],
                                                  "gruppen": [], "geheimnisse": []}
             dungeon._write(d)
-        helpers.set_config(dungeon_nsc=True)
+        aus()
         self.spawned.clear()
         self.act_all("Wir betreten die Schenke.")
         rd = self.play([{"proben": []}, {"erzaehlung": "Arvid und Bela betreten die Schenke. Oskar wischt den Tresen.", "frage_an": "", "nsc": []}])
@@ -9871,7 +9921,7 @@ class Fight(Turns):
         rd["offen"] = {self.host: {"text": "Ich wirke Gedanken lesen auf Oskar.", "t": 0, "kraft": "gedanken_lesen"},
                        self.gp: {"text": "Ich lausche Oskars Gedanken.", "t": 0}}
         self.assertEqual(gd.checks(dungeon, r, rd, model), model)                     # off
-        helpers.set_config(dungeon_gedanken=True)
+        helpers.set_config(dungeon_tiefe="voll")
         p = gd.checks(dungeon, r, rd, model)
         self.assertEqual([(x["pid"], x["wert"], x["schwer"], x.get("gedanken")) for x in p], [(self.host, "intelligenz", 15, "oskar")])
         self.assertEqual(gd.hard({"haltung": {"arvid": 2}}, "arvid"), 11)
@@ -9925,14 +9975,15 @@ class Fight(Turns):
         in between a Charisma check, SG 13 or 11, in place of the model's), a person at another place stays; the
         narration gets the answer as data, the map takes the person along after it (dungeon_karte.mitnehmen); off the
         old way, one word of MIT."""
+        aus = teil_aus(self, 'dungeonnsc')   # off at first (Ausdünnen 1: no switch of its own)
         import dungeon_mitkommen as mk
-        helpers.keep_chat(self, "dungeon_nsc", "dungeon_mitkommen")
+        helpers.keep_chat(self, "dungeon_tiefe")
         with dungeon._lock:
             d = dungeon._read()
             d["runden"][self.rid]["wahrheit"] = {"personen": [{"name": "Grimma", "rolle": "Schmiedin", "ziel": "", "sprache": ""}],
                                                  "gruppen": [], "geheimnisse": []}
             dungeon._write(d)
-        helpers.set_config(dungeon_nsc=True)
+        aus()
         self.spawned.clear()
         self.act_all("Wir gehen zur Schmiede.")
         self.play([{"proben": []}, {"erzaehlung": "Arvid und Bela treten in die Schmiede. Grimma hämmert am Amboss.", "frage_an": "", "nsc": []}])
@@ -9945,7 +9996,7 @@ class Fight(Turns):
         model = [{"pid": self.host, "wert": "staerke", "schwer": 10, "vt": "", "wofuer": "reden"}]
         rd["offen"] = {self.host: {"text": "Komm mit uns, Grimma.", "t": 0}}
         self.assertEqual(mk.checks(dungeon, r, rd, model), model)                     # off: the map's old way
-        helpers.set_config(dungeon_mitkommen=True)
+        helpers.set_config(dungeon_tiefe="voll")
         with contextlib.redirect_stdout(io.StringIO()) as out:
             for v, want in ((0, "abgelehnt"), (-2, "abgelehnt"), (3, "treu")):
                 rd["nsc"]["grimma"]["haltung"] = {arvid: v}
@@ -10003,15 +10054,16 @@ class Fight(Turns):
         (the thing given while carried, the other person named in the scene, a hit that fells such a foe); given back
         the person is a step cooler; the narration gets them as data; the reward, the experience, the feed and the
         chronicle by the panel; off nothing."""
+        aus = teil_aus(self, 'dungeonnsc')   # off at first (Ausdünnen 1: no switch of its own)
         import dungeon_auftraege as au
-        helpers.keep_chat(self, "dungeon_nsc", "dungeon_auftraege")
+        helpers.keep_chat(self, "dungeon_tiefe")
         with dungeon._lock:
             d = dungeon._read()
             d["runden"][self.rid]["wahrheit"] = {"personen": [{"name": "Oskar", "rolle": "Wirt", "ziel": "", "sprache": ""},
                                                               {"name": "Mira", "rolle": "Gast", "ziel": "", "sprache": ""}],
                                                  "gruppen": [], "geheimnisse": []}
             dungeon._write(d)
-        helpers.set_config(dungeon_nsc=True)
+        aus()
         self.spawned.clear()
         self.act_all("Wir betreten die Schenke.")
         rd = self.play([{"proben": []}, {"erzaehlung": "Arvid und Bela betreten die Schenke. Oskar wischt den Tresen, Mira sitzt am Fenster.",
@@ -10019,7 +10071,7 @@ class Fight(Turns):
         r = dungeon.rules()
         rd["offen"] = {self.host: {"text": "Oskar, hast du Arbeit für mich?", "t": 0}}
         self.assertEqual(au.seen(dungeon, r, rd), [])                                   # off
-        helpers.set_config(dungeon_auftraege=True)
+        helpers.set_config(dungeon_tiefe="voll")
         ev = au.seen(dungeon, r, rd, rng=random.Random(1))
         self.assertEqual([(e["was"], e["auftrag"]["geber"]) for e in ev], [("neu", "oskar")])
         a = ev[0]["auftrag"]
@@ -10107,11 +10159,12 @@ class Fight(Turns):
         a person of the map not with the group moves one way towards the place its open goals name, else the fitting
         place of its occupation (dungeon_nsc.ziel_ort); a rumour in the feed, the next narration gets the moves once;
         a gesture is a fixed line of a person of the scene with a strong trait; off nothing."""
+        aus = teil_aus(self, 'dungeonnsc')   # off at first (Ausdünnen 1: no switch of its own)
         import dungeon_karte
         import dungeon_nsc as nsc
         import dungeon_wandern as wa
-        helpers.keep_chat(self, "dungeon_nsc", "dungeon_wandern", "dungeon_gesten")
-        helpers.set_config(dungeon_nsc=True)
+        aus()
+        helpers.keep_chat(self, "dungeon_tiefe")
         r = dungeon.rules()
         rd = self.state(self.rid)
         dungeon_karte.make(r, rd, random.Random(3))
@@ -10134,7 +10187,7 @@ class Fight(Turns):
         rd["nsc"]["oskar"]["karte"] = {"beruf": ["Händler", "trader"]}
         always = mock.Mock(randrange=lambda a: 0)
         self.assertEqual(wa.rest(dungeon, r, rd, always), [])                                  # off
-        helpers.set_config(dungeon_wandern=True)
+        helpers.set_config(dungeon_tiefe="voll")
         with contextlib.redirect_stdout(io.StringIO()) as out:
             moves = wa.rest(dungeon, r, rd, always)
         self.assertEqual([(m["name"], m["nach"]) for m in moves], [("Oskar", k["orte"][stadt]["name"])])
@@ -10154,16 +10207,17 @@ class Fight(Turns):
             x.update(karte=k, nsc=rd["nsc"])
             x["karte"]["leute"] = {"Oskar": {"ort": k["hier"], "mit": False}}
             dungeon._write(d)
-        helpers.keep_chat(self, "dungeon_rast")
-        helpers.set_config(dungeon_rast=True)
+        helpers.keep_chat(self, "dungeon_tiefe")
+        helpers.set_config(dungeon_tiefe="voll")
         with mock.patch("random.randrange", lambda *a: 0), contextlib.redirect_stdout(io.StringIO()) as out:
             res = self.c.post(f"/api/profile/dungeon/{self.rid}/rast", json={"art": "lang"})
         self.assertEqual(res.status_code, 200, res.text)
         self.assertIn("dungeon: wandern |", out.getvalue())
         # gestures: off none, on a fixed line of a person of the scene with a strong trait
         rd["log"].append({"art": "dm", "text": "Oskar steht am Tresen.", "npc": [], "n": rd["zug"]})
+        aus = teil_aus(self, "dungeongesten")
         self.assertIsNone(nsc.geste(rd, random.Random(1)))
-        helpers.set_config(dungeon_gesten=True)
+        aus()
         g = nsc.geste(rd, random.Random(1))
         self.assertEqual(g, {"nsc": "Oskar", "art": "freundlich+", "text": ["Oskar nickt euch freundlich zu.", "Oskar nods at you kindly."]})
         rd["nsc"]["oskar"]["wesen"] = {"freundlich": 1}
@@ -10177,11 +10231,11 @@ class Fight(Turns):
         gender is written once when its card is made (a title's or role's, else the name's, never the model's: Review
         27.10. Paket 10; dungeon_stimmen.fix) and portrait, voice, occupation word (the table's form m or w) and the narration's pronouns
         follow it; a name or role that is a title names the occupation; cards made before keep their portrait's gender."""
+        aus = teil_aus(self, 'dungeonnsc')   # off at first (Ausdünnen 1: no switch of its own)
         import copy
         import dungeon_nsc as nsc
         import dungeon_stimmen
-        helpers.keep_chat(self, "dungeon_nsc")
-        helpers.set_config(dungeon_nsc=True)
+        aus()
         r = copy.deepcopy(dungeon.rules())
         rows = next(t for t in r["tabellen"] if t["id"] == "nsc_beruf")["zeilen"]
         for z in rows:                                   # the forms as the DnDAppFiles thread adds them
@@ -10229,11 +10283,10 @@ class Fight(Turns):
         or white only when old, a beard only for a man from young on); the model's age and gender of a person with a
         card are dropped; facts, voice and the catalog read the card; the look check compares the fixed looks (blond is
         a colour); a role naming another occupation sets it."""
+        aus = teil_aus(self, 'dungeonpersonen')   # off at first (Ausdünnen 1: no switch of its own)
         import dungeon_nsc as nsc
         import dungeon_personen as pers
         import dungeon_stimmen
-        helpers.keep_chat(self, "dungeon_nsc", "dungeon_personen")
-        helpers.set_config(dungeon_nsc=True)
         r = dungeon.rules()
         rd = self.state(self.rid)
         rd["nsc"], rd["npc_stimmen"] = {}, {}
@@ -10290,7 +10343,7 @@ class Fight(Turns):
         t = nsc.for_live([rd])
         self.assertTrue(t["beruf_rolle"] >= 1 and t["stimme_verworfen"] >= 1, t)
         # the catalog keeps gender, age and the voice with them
-        helpers.set_config(dungeon_personen=True)
+        aus()
         voice = pers._voice(rd, edda, {"alter": "kind", "geschlecht": "maennlich", "klang": "rau"})
         self.assertEqual((voice["alter"], voice["klang"]), ("jung", "rau"))
         self.assertEqual(pers._fixed({"stimme": {"geschlecht": "offen", "alter": "alt"}}), {"geschlecht": "divers", "alter": "alt"})   # the admin's voice
@@ -10302,9 +10355,9 @@ class Fight(Turns):
         goal, in life 6); after a told turn the panel rolls a d6 per person for its nearest open goal (5 or more, a brave
         one 4 or more); a reached goal goes into the chronicle without what it was and only as data into the next
         narration, a reached goal of today is followed by a new one; only host and model see traits and goals."""
+        aus = teil_aus(self, 'dungeonnsc')   # off at first (Ausdünnen 1: no switch of its own)
         import dungeon_nsc as nsc
-        helpers.keep_chat(self, "dungeon_nsc")
-        helpers.set_config(dungeon_nsc=True)
+        aus()
         r = dungeon.rules()
         with dungeon._lock:
             d = dungeon._read()
@@ -10353,17 +10406,16 @@ class Fight(Turns):
         a name the world has already only once; another round of the world is offered up to ANGEBOT of them only as
         data, and one the narration brings by its exact name comes with its stored card and knows the heroes again;
         its entry follows the round; a person with a word of the table's lists is never offered; off nothing."""
+        aus = teil_aus(self, 'dungeonpersonen')   # off at first (Ausdünnen 1: no switch of its own)
         import features
         import dungeon_nsc as nsc
         import dungeon_personen as pers
         self.assertNotIn(pers.KEY, features.DEFAULT_ON)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_personen"], False)
+            self.assertIs(json.load(f)["chat"]["dungeon"], False)
         if os.path.exists(pers.FILE):
             os.remove(pers.FILE)
         self.addCleanup(lambda: os.path.exists(pers.FILE) and os.remove(pers.FILE))
-        helpers.keep_chat(self, "dungeon_nsc", "dungeon_personen")
-        helpers.set_config(dungeon_nsc=True)
         r = dungeon.rules()
         rd = self.state(self.rid)
         rd["wahrheit"] = {"personen": [{"name": "Oskar", "rolle": "Wirt", "ziel": "die Schenke retten", "sprache": ""},
@@ -10373,7 +10425,7 @@ class Fight(Turns):
         rd["npc_stimmen"] = {"oskar": {"stimme": "tief"}}
         self.assertEqual(pers.collect(dungeon, r, rd, 100), 0)                          # off: nothing kept
         self.assertEqual(pers.facts(dungeon, r, rd, 0), {})
-        helpers.set_config(dungeon_personen=True)
+        aus()
         with contextlib.redirect_stdout(io.StringIO()) as out:
             self.assertEqual(pers.collect(dungeon, r, rd, 100), 1)                      # Mira was never met
             self.assertEqual(pers.collect(dungeon, r, rd, 101), 0)                      # the world has Oskar already
@@ -10416,7 +10468,7 @@ class Fight(Turns):
         live = pers.for_live()
         self.assertEqual(live["personen"], 2)
         self.assertGreaterEqual((live["neu"], live["wieder"], live["erkannt"]), (2, 1, 1))
-        helpers.set_config(dungeon_personen=False)
+        aus = teil_aus(self, 'dungeonpersonen')   # off (Ausdünnen 1: no switch of its own)
         self.assertEqual((pers.offer(dungeon, r, nxt), pers.adopt(r, nxt, "Oskar")), ([], None))
 
     def test_the_album_page_people_knows_more_after_each_meeting(self):
@@ -10425,6 +10477,7 @@ class Fight(Turns):
         table met counts one meeting per round in the album of every living hero; after 1 meeting name, face, looks and
         world, after 2 occupation and manner, after 4 traits and the attitude towards this hero; never wish, secret, role
         or goal; a word of the table's lists hides the person; the face only for a seat whose heroes met the person."""
+        aus = teil_aus(self, 'dungeonnsc', 'dungeonpersonen')   # off at first (Ausdünnen 1: no switch of its own)
         import dungeon_album as album
         import dungeon_gesicht as gesicht
         import dungeon_nsc as nsc
@@ -10432,8 +10485,8 @@ class Fight(Turns):
         if os.path.exists(pers.FILE):
             os.remove(pers.FILE)
         self.addCleanup(lambda: os.path.exists(pers.FILE) and os.remove(pers.FILE))
-        helpers.keep_chat(self, "dungeon_nsc", "dungeon_personen", "dungeon_album")
-        helpers.set_config(dungeon_nsc=True, dungeon_personen=True)
+        aus()
+        helpers.keep_chat(self, "dungeon_bilder")
         r = dungeon.rules()
         rd = copy.deepcopy(self.state(self.rid))
         h, g = rd["plaetze"][self.host]["held"], rd["plaetze"][self.gp]["held"]
@@ -10447,7 +10500,7 @@ class Fight(Turns):
         self.assertNotIn("personen", h)                                                  # album off: nothing counted
         self.assertIsNone(album.people(dungeon, r, rd, h, "de"))
         os.remove(pers.FILE)
-        helpers.set_config(dungeon_album=True)
+        helpers.set_config(dungeon_bilder=True)
         with contextlib.redirect_stdout(io.StringIO()) as out:
             pers.collect(dungeon, r, rd, 100)
         self.assertIn("dungeon: album | person stufe 1", out.getvalue())
@@ -10498,7 +10551,7 @@ class Fight(Turns):
             dungeon._write(d)
         self.assertFalse(gesicht.may_see(face, uid=owner))
         self.assertGreaterEqual(album.for_live()["personen"], 3)
-        helpers.set_config(dungeon_personen=False)
+        aus = teil_aus(self, 'dungeonpersonen')   # off (Ausdünnen 1: no switch of its own)
         self.assertIsNone(album.people(dungeon, r, rd, h, "de"))                        # the people catalog off: no page
         with open(os.path.join(os.path.dirname(dungeon.__file__), "static", "js", "dungeon.js"), encoding="utf-8") as f:
             self.assertIn("data-dmalbseite", f.read())
@@ -10508,10 +10561,9 @@ class Fight(Turns):
         berücksichtigt werden“): a person of the scene comes into the foes' offer with the bestiary template of its
         occupation, the strongest of its row within the budget, and counts in it like any foe; one at a time, never a
         friend of a hero here, never again after it was beaten; the model never gives it values; off nothing."""
+        aus = teil_aus(self, 'dungeonpersonen')   # off at first (Ausdünnen 1: no switch of its own)
         import dungeon_nsc as nsc
         import dungeon_personen as pers
-        helpers.keep_chat(self, "dungeon_nsc", "dungeon_personen")
-        helpers.set_config(dungeon_nsc=True)
         r = dungeon.rules()
         rd = self.state(self.rid)
         rd.pop("kampf", None)
@@ -10525,7 +10577,7 @@ class Fight(Turns):
         held = dungeon._living(rd)
         b = kampf.budget(dungeon, r, rd, held)
         self.assertFalse(any(g.get("person") for g in kampf.offer(dungeon, r, rd, held)))   # off: no person as a foe
-        helpers.set_config(dungeon_personen=True)
+        aus()
         by = {g["oid"]: g for g in kampf.offer(dungeon, r, rd, held) if g.get("person")}
         self.assertEqual(set(by), {"p:oskar", "p:ilse"})
         self.assertEqual((by["p:oskar"]["id"], by["p:oskar"]["name"]), ("wache", ["Oskar", "Oskar"]))
@@ -10579,7 +10631,7 @@ class Fight(Turns):
         holds the group's place (the map's hook); the table sees a clock once the narration named the faction, never
         what it wants; the host adds, changes, turns and removes; off nothing."""
         import dungeon_fraktionen as fr
-        helpers.keep_chat(self, "dungeon_fraktionen")
+        helpers.keep_chat(self, "dungeon_tiefe")
         url = f"/api/profile/dungeon/{self.rid}/fraktion"
         with dungeon._lock:
             d = dungeon._read()
@@ -10590,7 +10642,7 @@ class Fight(Turns):
         self.assertEqual(self.c.post(url, json={"name": "Die Rabengilde", "schritt": 1}).json()["detail"], "fraktionen aus")   # off
         self.assertIsNone(self.c.get(f"/api/profile/dungeon/{self.rid}").json()["fraktionen"])
         self.assertEqual(fr.facts(self.state(self.rid)), {})
-        helpers.set_config(dungeon_fraktionen=True)
+        helpers.set_config(dungeon_tiefe="voll")
         self.spawned.clear()
         self.act_all("Wir gehen zum Hafen.")
         text = "Arvid und Bela vertreiben am Hafen die Schläger der Rabengilde, die dort Schutzgeld eintreiben wollten."
@@ -10653,7 +10705,7 @@ class Fight(Turns):
         live = dungeon.for_live()
         self.assertGreaterEqual(live["fraktionen"], 2)
         self.assertGreaterEqual(live["fraktion_voll"], 1)
-        helpers.set_config(dungeon_fraktionen=False)
+        helpers.set_config(dungeon_tiefe="einfach")
         self.assertEqual(fr.facts(rd), {})
         self.assertEqual(fr.check(rd, [{"name": "Die Rabengilde", "wirkung": "hilft"}], "Die Rabengilde"), [])
 
@@ -10662,11 +10714,11 @@ class Fight(Turns):
         a likelihood or rolls up to three tables; the panel rolls a d100 against the chance of likelihood and chaos grade
         (an exceptional yes or no at a fifth of the way, a double up to the chaos grade an event); every answer a line
         in the feed, the model gets it only as data; at most ZUG_MAX a turn; the admin's own tables join; off nothing."""
+        aus = teil_aus(self, 'dungeonorakel')   # off at first (Ausdünnen 1: no switch of its own)
         import dungeon_orakel as orakel
-        helpers.keep_chat(self, "dungeon_orakel")
         url = f"/api/profile/dungeon/{self.rid}/orakel"
         self.assertEqual(self.c.post(url, json={"frage": "Ist die Brücke bewacht?"}).json()["detail"], "orakel aus")   # off from the start
-        helpers.set_config(dungeon_orakel=True)
+        aus()
         self.assertEqual([orakel.answer(w, 50) for w in (1, 10, 11, 50, 51, 90, 91)], ["ja_und", "ja_und", "ja", "ja", "nein", "nein", "nein_und"])
         self.assertEqual((orakel.chance("sicher", 9), orakel.chance("kaum", 1), orakel.chance("offen", 7)), (95, 5, 60))
         for bad in ({}, {"chaos": 0}, {"chaos": 10}, {"frage": "Gibt es Wachen?", "wahrscheinlichkeit": "gewiss"},
@@ -10708,7 +10760,7 @@ class Fight(Turns):
         live = dungeon.for_live()
         self.assertGreaterEqual(live["orakel"], orakel.ZUG_MAX)
         self.assertGreaterEqual(live["orakel_chaos"], 1)
-        helpers.set_config(dungeon_orakel=False)
+        aus = teil_aus(self, 'dungeonorakel')   # off (Ausdünnen 1: no switch of its own)
         self.assertIsNone(self.c.get(f"/api/profile/dungeon/{self.rid}").json()["orakel"])
         self.assertEqual(orakel.facts(rd, 0)["orakel"][0]["antwort"], "Ja")           # what was asked stays in the feed
         self.assertEqual(orakel.task(rd, "de"), "")
@@ -10718,8 +10770,9 @@ class Fight(Turns):
         the group's level: the inn rests the whole group once an evening, the smith mends a tool broken on a 1, a lesson
         gives +1 on one value until the round ends, a rumour names the next place on the way once per place; never in a
         fight, never without the gold; off nothing of it."""
+        teil_aus(self, "dungeonnarben", "dungeongefaehrte", "dungeonrunen")   # a Kern part, off here (Ausdünnen 1): not what this test is about
         import dungeon_gold as gold
-        helpers.keep_chat(self, "dungeon_gold")
+        helpers.keep_chat(self, "dungeon_tiefe")
         p = mock.patch.object(gold, "clock", lambda: 1_790_000_000)
         p.start()
         self.addCleanup(p.stop)
@@ -10739,7 +10792,7 @@ class Fight(Turns):
         self.assertEqual(g0.status_code, 200, g0.text)
         self.assertIsNone(g0.json()["siedlung"])                                   # off: nothing shown
         self.assertEqual(dienst(id="gasthaus").status_code, 400)
-        helpers.set_config(dungeon_gold=True)
+        helpers.set_config(dungeon_tiefe="voll")
         v = self.c.get(url).json()["siedlung"]
         stufe = dungeon.group_level(dungeon._living(self.state(self.rid)))
         self.assertEqual(v["name"], k["orte"][k["hier"]]["name"])
@@ -11382,7 +11435,7 @@ class Fight(Turns):
         r = dungeon.rules()
         self.assertNotIn(kampf.KRIT, features.DEFAULT_ON)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_krit"], False)
+            self.assertEqual(json.load(f)["chat"]["dungeon_tiefe"], "einfach")
         rd, _ = self.encounter()
         g = rd["kampf"]["gegner"][0]
         g.update(immun=[], resistenz=[], schwaeche=[], leben=999, max=999)
@@ -11394,8 +11447,8 @@ class Fight(Turns):
         x = kampf.attacks(dungeon, r, rd, [p], Dice(20))[1][0]
         self.assertTrue(x["krit"])
         self.assertNotIn("krit_tabelle", x)                                       # switch off: no table
-        helpers.keep_chat(self, "dungeon_krit")
-        helpers.set_config(dungeon_krit=True)
+        helpers.keep_chat(self, "dungeon_tiefe")
+        helpers.set_config(dungeon_tiefe="voll")
         n0 = dungeon._day.counts()
         with contextlib.redirect_stdout(io.StringIO()) as out:
             x = kampf.attacks(dungeon, r, rd, [p], Dice(20))[1][0]               # then always the highest: 12 on the d12
@@ -11457,7 +11510,7 @@ class Fight(Turns):
         import dungeon_ehre as ehre
         self.assertNotIn(ehre.EHRE, features.DEFAULT_ON)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_ehrungen"], False)
+            self.assertEqual(json.load(f)["chat"]["dungeon_tiefe"], "einfach")
         r = dungeon.rules()
         rd, _ = self.encounter()
         rd["ton"] = next(t_["id"] for t_ in r["toene"] if t_["id"] != min(x_["id"] for x_ in r["toene"]))
@@ -11469,8 +11522,8 @@ class Fight(Turns):
         with contextlib.redirect_stdout(io.StringIO()):
             kampf.apply(dungeon, r, rd, [x], [], "", {})
         self.assertNotIn("ehre", rd)                                               # switch off: nothing counted
-        helpers.keep_chat(self, "dungeon_ehrungen")
-        helpers.set_config(dungeon_ehrungen=True)
+        helpers.keep_chat(self, "dungeon_tiefe")
+        helpers.set_config(dungeon_tiefe="voll")
         with contextlib.redirect_stdout(io.StringIO()):
             kampf.apply(dungeon, r, rd, [x], [], "", {})
         self.assertEqual(rd["ehre"][self.host], {"treffer": 1, "krit": 1, "schaden": x["schaden"], "zwanzig": 1})
@@ -11528,7 +11581,7 @@ class Fight(Turns):
         import dungeon_knapp as knapp
         self.assertNotIn(knapp.KEY, features.DEFAULT_ON)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_knapp"], False)
+            self.assertEqual(json.load(f)["chat"]["dungeon_tiefe"], "einfach")
         t = lambda s_: [s_, s_ + " (en)"]
         tab = [{"id": "laerm_1", "von": 1, "bis": 10, "art": "laerm", "t": t("Es scheppert."), "kinder": True},
                {"id": "gold_1", "von": 11, "bis": 20, "art": "gold", "t": t("Es kostet.")}]
@@ -11547,8 +11600,8 @@ class Fight(Turns):
         go = lambda ws, rng=None: asyncio.run(knapp.ask(dungeon, self.rid, turn, r, rd, ws, rng))
         with contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(go([miss]), [miss])                                   # switch off: no question
-        helpers.keep_chat(self, "dungeon_knapp")
-        helpers.set_config(dungeon_knapp=True)
+        helpers.keep_chat(self, "dungeon_tiefe")
+        helpers.set_config(dungeon_tiefe="voll")
         self.assertEqual(knapp.near(rd, [dict(miss, gesamt=11), dict(miss, w=1, gesamt=4, ws=[1]), dict(miss, ok=True)]), {})   # 3 short, a 1, passed
         self.assertEqual(knapp.near(rd, [miss, dict(miss, gesamt=12)]), {self.host: 0})   # once a turn per seat
 
@@ -11630,7 +11683,7 @@ class Fight(Turns):
         import dungeon_helfen as helfen
         self.assertNotIn(helfen.KEY, features.DEFAULT_ON)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_helfen"], False)
+            self.assertEqual(json.load(f)["chat"]["dungeon_tiefe"], "einfach")
         r = dungeon.rules()
         rd = self.state(self.rid)
         for _, p_ in dungeon.seated(rd):
@@ -11639,8 +11692,8 @@ class Fight(Turns):
         rd["offen"] = {self.host: {"text": f"Ich helfe {bela.split()[0]} über die Mauer."}}
         check = lambda pid, schwer=12: {"pid": pid, "wert": "staerke", "schwer": schwer}
         self.assertEqual(dungeon.roll(r, rd, [check(self.gp)], Dice(5, 15))[0]["vt"], "")   # switch off: one die
-        helpers.keep_chat(self, "dungeon_helfen")
-        helpers.set_config(dungeon_helfen=True)
+        helpers.keep_chat(self, "dungeon_tiefe")
+        helpers.set_config(dungeon_tiefe="voll")
         with contextlib.redirect_stdout(io.StringIO()) as out:
             x, y = dungeon.roll(r, rd, [check(self.gp), check(self.gp, 15)], Dice(5, 15, 5))
         self.assertEqual((x["vt"], x["w"], x["hilfe"]), ("vorteil", 15, rd["plaetze"][self.host]["held"]["name"]))
@@ -11671,12 +11724,13 @@ class Fight(Turns):
         """D&D idea 3 (Schriftstücke, switch dungeonschrift): off by default; on, a writing the narration reports passes the
         fixed rules (kind, lengths, the round's limits) and goes into the round for every seat; the host shows it to all,
         one seat or nobody, and a seat never gets another's secret writing (GEHEIM["schrift_geheim"] in the leak test)."""
+        aus = teil_aus(self, 'dungeonschrift')   # off at first (Ausdünnen 1: no switch of its own)
         import features
         import dungeon_schrift as schrift
         import dungeon_sicht
         self.assertNotIn(schrift.KEY, features.DEFAULT_ON)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_schrift"], False)
+            self.assertIs(json.load(f)["chat"]["dungeon"], False)
         self.assertIn("schrift_geheim", dungeon_sicht.GEHEIM)
         self.assertIn("schriftstueck", dungeon.SCHEMA_ERZAEHLEN["properties"])
         r = dungeon.rules()
@@ -11685,8 +11739,7 @@ class Fight(Turns):
         E = "Auf dem Tisch liegt ein Brief mit einem Siegel."
         with contextlib.redirect_stdout(io.StringIO()):
             self.assertIsNone(schrift.check(dungeon, r, rd, brief, E))            # switch off
-        helpers.keep_chat(self, "dungeon_schrift")
-        helpers.set_config(dungeon_schrift=True)
+        aus()
         with contextlib.redirect_stdout(io.StringIO()) as out:
             self.assertEqual(schrift.check(dungeon, r, rd, brief, E), brief)
             self.assertIsNone(schrift.check(dungeon, r, rd, dict(brief, text="Kurz."), E))
@@ -11737,7 +11790,7 @@ class Fight(Turns):
         import dungeon_album as album
         self.assertNotIn(album.KEY, features.DEFAULT_ON)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_album"], False)
+            self.assertIs(json.load(f)["chat"]["dungeon_bilder"], False)
         r = dungeon.rules()
         rd, foe = self.encounter(2)
         g1, g2 = rd["kampf"]["gegner"][:2]
@@ -11749,8 +11802,8 @@ class Fight(Turns):
             kampf.apply(dungeon, r, rd, [hit(g1)], [], "", {})
         self.assertEqual(g1["aus"], "besiegt")
         self.assertNotIn("album", rd["plaetze"][self.host]["held"])               # switch off: nothing counted
-        helpers.keep_chat(self, "dungeon_album")
-        helpers.set_config(dungeon_album=True)
+        helpers.keep_chat(self, "dungeon_bilder")
+        helpers.set_config(dungeon_bilder=True)
         with contextlib.redirect_stdout(io.StringIO()) as out:
             kampf.apply(dungeon, r, rd, [hit(g2)], [], "", {})
         self.assertIn("dungeon: album | stufe 1", out.getvalue())
@@ -11803,8 +11856,7 @@ class Fight(Turns):
         self.assertNotIn(narben.KEY, features.DEFAULT_ON)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
             c = json.load(f)["chat"]
-        self.assertIs(c["dungeon_narben"], False)
-        self.assertIs(c["dungeon_narben_nur"], False)
+        self.assertEqual(c["dungeon_tiefe"], "einfach")                 # scars come with the Regeltiefe „voll“
         r = dungeon.rules()
         rows = r["ideen"]["narben"]
         mit = next(x for x in rows if x.get("folge"))
@@ -11823,9 +11875,8 @@ class Fight(Turns):
         h = rd["plaetze"][self.host]["held"]
         with contextlib.redirect_stdout(io.StringIO()):
             self.assertIsNone(narben.wound(dungeon, r, rd, self.host, h, "auf", W(mit["von"])))   # switch off
-        helpers.keep_chat(self, "dungeon_narben")
-        helpers.keep_chat(self, "dungeon_narben_nur")
-        helpers.set_config(dungeon_narben=True)
+        helpers.keep_chat(self, "dungeon_tiefe")
+        helpers.set_config(dungeon_tiefe="voll")
         wert = mit["folge"]["wert"]
         vorher = dungeon.total(r, h, wert)
         with contextlib.redirect_stdout(io.StringIO()) as out:
@@ -11845,12 +11896,12 @@ class Fight(Turns):
             kampf.apply(dungeon, r, rd, [], [hit], "", {})
         self.assertIn("dungeon: narbe | narbe | krit", out.getvalue())
         self.assertEqual(h["narben"][-1], {"t": ohne["t"], "w": ohne["von"]})
-        # „nur Narben“: the look only
-        helpers.set_config(dungeon_narben=True, dungeon_narben_nur=True)
+        # „Nur Narben“, the host's choice for the round: the look only
+        rd["nur_narben"] = True
         rd["zug"] += 1
         with contextlib.redirect_stdout(io.StringIO()):
             self.assertNotIn("folge", narben.wound(dungeon, r, rd, self.host, h, "gnade", W(mit["von"])))
-        helpers.set_config(dungeon_narben=True, dungeon_narben_nur=False)
+        rd["nur_narben"] = False
         # the children's table: a plaster, never a consequence
         kid = rd["plaetze"][self.gp]["held"]
         ton = rd["ton"]
@@ -11877,8 +11928,8 @@ class Fight(Turns):
         x = dict(copy.deepcopy(h), narben=[{"t": ["a", "b"], "folge": {"wert": wert, "minus": 3}}, {"t": "x"}, {"t": ["c", "d"], "pflaster": True, "folge": {"wert": wert, "minus": 1}}, 5])
         self.assertEqual(dungeon.fix_hero(r, x)["narben"], [{"t": ["a", "b"]}, {"t": ["c", "d"], "pflaster": True}])
         # the healer in a settlement takes the consequence for gold, the scar stays
-        helpers.keep_chat(self, "dungeon_gold")
-        helpers.set_config(dungeon_narben=True, dungeon_gold=True)
+        helpers.keep_chat(self, "dungeon_tiefe")
+        helpers.set_config(dungeon_tiefe="voll")
         rd.pop("kampf", None)
         rd["markt"] = {"name": "Marktplatz", "ware": []}
         h["gold"] = 500
@@ -11895,7 +11946,7 @@ class Fight(Turns):
         self.assertEqual((h["gold"], len(h["narben"]), narben.minus(h, wert)), (500 - heiler["preis"], n, 0))
         with contextlib.redirect_stdout(io.StringIO()), self.assertRaises(ValueError):
             gold.serve(dungeon, r, rd, self.host, h, {"id": "heiler"})               # nothing left to heal
-        helpers.set_config(dungeon_narben=False, dungeon_gold=True)
+        teil_aus(self, narben.KEY)               # scars blocked for the host, nothing left to heal: no healer
         self.assertNotIn(gold.HEILER, [x_["id"] for x_ in gold.view(dungeon, r, rd, self.host)["dienste"]])
         self.assertGreaterEqual(narben.for_live()["narben"], 1)
         root = os.path.dirname(dungeon.__file__)
@@ -11915,14 +11966,14 @@ class Fight(Turns):
         import dungeon_haltung as haltung
         self.assertNotIn(haltung.KEY, features.DEFAULT_ON)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_haltung"], False)
+            self.assertEqual(json.load(f)["chat"]["dungeon_tiefe"], "einfach")
         r = dungeon.rules()
         self.fight()
         rd = self.state(self.rid)
         rd["offen"] = {self.host: {"text": "Abwehr, ich hebe den Schild.", "t": 0}, self.gp: {"text": "Ich weiche dem Hieb aus.", "t": 0}}
         self.assertEqual(haltung.stance(rd, self.host), "")                    # switch off
-        helpers.keep_chat(self, "dungeon_haltung")
-        helpers.set_config(dungeon_haltung=True)
+        helpers.keep_chat(self, "dungeon_tiefe")
+        helpers.set_config(dungeon_tiefe="voll")
         self.assertEqual((haltung.stance(rd, self.host), haltung.stance(rd, self.gp)), ("abwehr", "ausweichen"))
         self.assertEqual(haltung.stance(dict(rd, offen={self.host: {"text": "Ich greife an."}}), self.host), "")
         with contextlib.redirect_stdout(io.StringIO()) as out:
@@ -11983,7 +12034,7 @@ class Fight(Turns):
         import dungeon_umgebung as umg
         self.assertNotIn(umg.KEY, features.DEFAULT_ON)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_umgebung"], False)
+            self.assertEqual(json.load(f)["chat"]["dungeon_tiefe"], "einfach")
         r = dungeon.rules()
         self.fight()
         rd = self.state(self.rid)
@@ -11993,8 +12044,8 @@ class Fight(Turns):
         rd["offen"] = {self.host: {"text": "Ich schlage die Kette vom Kronleuchter.", "t": 0}, self.gp: {"text": "Ich springe hinter die dicke Säule.", "t": 0}}
         probe = [{"pid": self.host, "wert": "staerke", "schwer": 10, "ziel": g["name"]}]
         self.assertEqual((umg.here(r, rd), umg.checks(dungeon, r, rd, probe)), ([], probe))   # switch off
-        helpers.keep_chat(self, "dungeon_umgebung")
-        helpers.set_config(dungeon_umgebung=True)
+        helpers.keep_chat(self, "dungeon_tiefe")
+        helpers.set_config(dungeon_tiefe="voll")
         self.assertEqual([x["id"] for x in umg.view(r, rd)], rd["kampf"]["requisiten"])
         self.assertIn("Kronleuchter", json.dumps(dungeon.facts(r, rd), ensure_ascii=False))
         self.assertIn("umgebung", dungeon.system_text(r, rd, "erzaehlen"))
@@ -12066,7 +12117,7 @@ class Fight(Turns):
         import dungeon_rast as rast
         self.assertNotIn(rast.KEY, features.DEFAULT_ON)
         with open(os.path.join(os.path.dirname(dungeon.__file__), "..", "config.default.json")) as f:
-            self.assertIs(json.load(f)["chat"]["dungeon_rast"], False)
+            self.assertEqual(json.load(f)["chat"]["dungeon_tiefe"], "einfach")
         r = dungeon.rules()
         u = f"/api/profile/dungeon/{self.rid}/rast"
 
@@ -12077,8 +12128,8 @@ class Fight(Turns):
                 dungeon._write(d)
         with contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(self.c.post(u, json={"art": "kurz"}).status_code, 404)   # switch off
-        helpers.keep_chat(self, "dungeon_rast")
-        helpers.set_config(dungeon_rast=True)
+        helpers.keep_chat(self, "dungeon_tiefe")
+        helpers.set_config(dungeon_tiefe="voll")
         edit(lambda rd: rd["plaetze"][self.host]["held"].update(leben=1))
         h0 = self.state(self.rid)["plaetze"][self.host]["held"]
         with contextlib.redirect_stdout(io.StringIO()) as out:
@@ -12434,6 +12485,7 @@ class Fight(Turns):
     def test_longer_at_the_moments_and_the_rounds_way_of_telling(self):
         """Dominik 2026-10-24 „können wir die erzählungen etwas ausweiten“ („alles wie vorgeschlagen“ = 1 + 2): the panel
         names the moment by fixed rules, the host picks knapp, normal or ausführlich."""
+        teil_aus(self, "dungeonanleiten")   # a Kern part, off here (Ausdünnen 1): not what this test is about
         r = dungeon.rules()
         rd = dict(self.state(self.rid), zug=5, plan=None)
         self.assertEqual(dungeon.erz_max(rd), dungeon.ERZ_MAX)
@@ -12566,6 +12618,7 @@ class Fight(Turns):
     def test_the_time_of_day_by_the_narrator(self):
         """The stage's day or night picture (picture thread, 2026-10-25): the narrator reports szene.tageszeit from a fixed
         list, the panel keeps it in rd["tageszeit"] and gives it back in the facts; anything else is ignored."""
+        teil_aus(self, "dungeontageszeit", "dungeonanleiten")   # a Kern part, off here (Ausdünnen 1): not what this test is about
         self.act_all()
         rd = self.play([{"proben": []}, {"erzaehlung": "Die Sonne sinkt hinter die Hügel, die Fackeln werden entzündet.",
                                          "szene": {"ort": "Hügel", "stimmung": "still", "tageszeit": "nacht"}, "frage_an": ""}])
@@ -12624,8 +12677,9 @@ class NarratorCases(Base):
         import dungeon_erzaehlstand as es
         import live
         self.es, self.live = es, live
-        helpers.keep_chat(self, "dungeon_erzaehlstand", "dungeon_erzfehler")
-        helpers.set_config(dungeon_erzaehlstand=False, dungeon_erzfehler=False)
+        self.aus = teil_aus(self, 'dungeonerzfehler')   # off at first (Ausdünnen 1: no switch of its own)
+        helpers.keep_chat(self, "dungeon_pruefstand")
+        helpers.set_config(dungeon_pruefstand=False)
         for f in (es.FALL_FILE, es.FILE):
             if os.path.exists(f):
                 os.remove(f)
@@ -12646,13 +12700,14 @@ class NarratorCases(Base):
         self.P = "/api/admin/dungeon/erzaehlfehler"
 
     def test_a_thumb_down_with_a_reason_becomes_a_case_without_names(self):
+        teil_aus(self, "dungeonanleiten")   # a Kern part, off here (Ausdünnen 1): not what this test is about
         es = self.es
         down = {"zug": self.n, "gut": False, "grund": "probe"}
         d = self.c.post(self.u, json=down).json()                           # off: a plain 👎, no case
         self.assertEqual((d["daumen"], d["fall"]), ({str(self.n): -1}, {}))
         self.assertFalse(os.path.exists(es.FALL_FILE))
         self.assertNotIn("gruende", self.c.get(f"/api/profile/dungeon/{self.rid}").json())
-        helpers.set_config(dungeon_erzaehlstand=True)
+        helpers.set_config(dungeon_pruefstand=True)
         self.assertEqual([g[0] for g in self.c.get(f"/api/profile/dungeon/{self.rid}").json()["gruende"]],
                          [g for g in es.GRUENDE if g != "vage"])      # „vage“ only with „Spieler anleiten“ (test_a_vague_narration_is_told_again)
         for bad in (dict(down, grund="quatsch"), dict(down, gut=True), dict(down, grund=["probe"])):
@@ -12676,7 +12731,7 @@ class NarratorCases(Base):
 
     def test_the_admin_takes_a_case_over_as_a_bench_scene(self):
         es = self.es
-        helpers.set_config(dungeon_erzaehlstand=True)
+        helpers.set_config(dungeon_pruefstand=True)
         self.c.post(self.u, json={"zug": self.n, "gut": False, "grund": "probe"})
         self.assertIn(self.c.get(self.P).status_code, (401, 403))
         self.assertIn(self.c.post(self.P, json={}).status_code, (401, 403))
@@ -12701,7 +12756,7 @@ class NarratorCases(Base):
         with mock.patch("dungeon.ask_model", ask):
             self.assertEqual(asyncio.run(es.play(r, s["id"], s))["punkte"], 2)
         self.assertRegex(self.live._erzaehlstand(), r"Erzähler-Fehler 1 Fälle, 1 als Szene im Prüfstand$")
-        helpers.set_config(dungeon_erzaehlstand=False)
+        helpers.set_config(dungeon_pruefstand=False)
         self.assertEqual(ADMIN.post(self.P, json={"fall": fid, "aktion": "szene"}).status_code, 409)   # off: no new scene
         self.assertEqual(ADMIN.post(self.P, json={"szene": "f" + fid, "aktion": "loeschen"}).json()["szenen"], [])   # deleting always
         self.assertEqual(ADMIN.post(self.P, json={"fall": fid, "aktion": "loeschen"}).json()["faelle"], [])
@@ -12711,8 +12766,9 @@ class NarratorCases(Base):
         """Dominik 2026-10-25 „empfehlung“ für 1 bis 5, Vorschlag 1: with „Erzähler-Fehler beheben“ a 👎 with a reason on
         the last narration tells it again once, with the reason's fixed hint, the turn's actions and checks as data; the new
         text must pass the fixed checks, else the old one stays."""
+        teil_aus(self, "dungeonanleiten")   # a Kern part, off here (Ausdünnen 1): not what this test is about
         es, E = self.es, dungeon.erz
-        helpers.set_config(dungeon_erzfehler=True)
+        self.aus()
         self.assertIn("gruende", self.c.get(f"/api/profile/dungeon/{self.rid}").json())     # cases without the bench too
         self.c.post(self.u, json={"zug": self.n, "gut": False, "grund": "frage"})
         rd = self.state(self.rid)
@@ -12746,7 +12802,7 @@ class NarratorCases(Base):
         dm = next(e for e in self.state(self.rid)["log"] if e["art"] == "dm" and e["n"] == self.n)
         self.assertEqual((dm["text"], dm["neu"], dm["npc"]), (good, "frage", []))
         self.assertIn("dungeon: erzaehlfehler | neu erzaehlt | ok", out.getvalue())
-        helpers.set_config(dungeon_erzfehler=False)                                          # off: a case, no new telling
+        teil_aus(self, 'dungeonerzfehler')   # off (Ausdünnen 1: no switch of its own)
         with dungeon._lock:
             d = dungeon._read()
             d["runden"][self.rid]["neu_erzaehlt"] = []
@@ -12776,7 +12832,7 @@ class NarratorCases(Base):
         self.assertEqual(es.world_reasons("andere"), [])
         r = dungeon.rules()
         self.assertNotIn(es.GRUENDE["frage"][3], dungeon.system_text(r, rd, "erzaehlen"))   # off: no hint
-        helpers.set_config(dungeon_erzfehler=True)
+        self.aus()
         self.assertIn(es.GRUENDE["frage"][3], dungeon.system_text(r, rd, "erzaehlen"))
         self.assertNotIn(es.GRUENDE["frage"][3], dungeon.system_text(r, rd, "proben"))
         self.assertNotIn("Kordula", es.world_task(rd, "de"))
@@ -12788,7 +12844,7 @@ class NarratorCases(Base):
         self.assertEqual(w[0]["woche"], "2026-W43")
         v = ADMIN.get(self.P).json()
         self.assertEqual((len(v["wochen"]), v["welten"][rd["welt"]], v["beheben"]), (3, ["frage"], True))
-        helpers.set_config(dungeon_erzaehlstand=True)                                         # the night's run
+        helpers.set_config(dungeon_pruefstand=True)                                         # the night's run
         runs = []
 
         async def go(nacht=False):

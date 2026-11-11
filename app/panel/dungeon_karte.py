@@ -910,8 +910,8 @@ def _back_asked(rd):
 
 def _switch(key, rd):
     """A switch of the main thread that may not exist yet (then off)."""
-    import features
-    return key in features.BY_KEY and bool(rd.get("owner")) and features.allowed(key, rd["owner"])
+    import dungeon_tiefe
+    return key in dungeon_tiefe.GRUPPE and dungeon_tiefe.an(key, rd)
 
 
 def _wants(name, said):

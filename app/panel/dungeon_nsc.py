@@ -237,8 +237,8 @@ def looks(r, rd, x, rng=None):
 
 
 def on(rd):
-    import features
-    return bool(rd.get("owner")) and features.allowed("dungeonnsc", rd["owner"])
+    import dungeon_tiefe
+    return dungeon_tiefe.an("dungeonnsc", rd)
 
 
 def card(r, rd, rng=None):
@@ -458,8 +458,8 @@ def geste(rd, rng=None):
     """A small gesture for the idle time (LlamaTale idea 7, the music thread's dungeon_warten asks when one is due): a
     person of the scene with a strong trait and its fixed line (GESTEN), {nsc, art, text: [de, en]}; None while the
     switch dungeongesten is off or nobody fits. No state changes, no model."""
-    import features
-    if not on(rd) or not features.allowed("dungeongesten", rd["owner"]):
+    import dungeon_tiefe
+    if not on(rd) or not dungeon_tiefe.an("dungeongesten", rd):
         return None
     rng = rng or random
     ns = rd.get("nsc") or {}

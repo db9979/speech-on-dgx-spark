@@ -808,8 +808,8 @@ class Props(Base):
     into the scene picture by their English catalog name (at most REQUISITEN_MAX), never the model's text; a used prop
     and the switch off leave them out."""
     def test_the_fights_props_are_in_the_scene_picture(self):
-        helpers.keep_chat(self, "dungeon_umgebung")
-        helpers.set_config(dungeon_umgebung=True)
+        helpers.keep_chat(self, "dungeon_tiefe")
+        helpers.set_config(dungeon_tiefe="voll")
         r = dungeon.rules()
         rid = self.new_round()
         with dungeon._lock:
@@ -832,10 +832,10 @@ class Props(Base):
         self.assertTrue(prompt.endswith(dungeon.BILD_ENDE))
         rd["kampf"]["requisiten"] = ["oelfass"]                             # the others were used
         self.assertNotIn(rows["kronleuchter"]["name"][1].lower(), db.props(r, rd))
-        helpers.set_config(dungeon_umgebung=False)
+        rd["tiefe"] = "einfach"                                             # the round's Regeltiefe einfach: none
         self.assertEqual(db.props(r, rd), "")
         rd.pop("kampf")
-        helpers.set_config(dungeon_umgebung=True)
+        rd["tiefe"] = "voll"
         self.assertEqual(db.props(r, rd), "")
 
 
@@ -947,14 +947,13 @@ class Runes(Base):
     colours of its set runes (dungeonsockel.js draws the dots over the item's picture, no new picture)."""
     def test_rune_pictures_per_world_word_and_colours(self):
         import dungeon_runen
-        helpers.keep_chat(self, "dungeon_runen")
         r = dungeon.rules()
         self.assertEqual(set(db.RUNE_EN), {dungeon_runen.word(w, 1) for w in dungeon_runen.ART_WELT})
         self.assertGreaterEqual(len(db.RUNE_FARBE), dungeon_runen.RAENGE)
         self.assertEqual(len({f for _, f in db.RUNE_FARBE}), len(db.RUNE_FARBE))      # each rank its own colour
-        helpers.set_config(dungeon_runen=False)                                      # off: no rune is painted
+        helpers.set_config(dungeon=False)                                                # off: no rune is painted
         self.assertFalse([p for _, p in db.wanted(r) if any(w.format("") in p for w in db.RUNE_EN.values())])
-        helpers.set_config(dungeon_runen=True)
+        helpers.set_config(dungeon=True, dungeon_tiefe="einfach")   # every host may choose voll: painted at einfach too
         want = dict(db.wanted(r))
         uruz = dungeon_runen.by(r)["uruz"]
         for welt in ("fantasy", "scifi", "piraten", "horror"):
@@ -970,8 +969,6 @@ class Runes(Base):
         rune's picture in the world chosen above the list (its word there), with Malen, Nochmal malen and keeping; the
         sweep keeps rune pictures while the switch is off."""
         import dungeon_runen
-        helpers.keep_chat(self, "dungeon_runen")
-        helpers.set_config(dungeon_runen=False)
         K = RulesPage.K
         r = dungeon.rules()
         scifi = next(w["id"] for w in r["welten"] if "science fiction" in w["bildstil"])
@@ -988,6 +985,7 @@ class Runes(Base):
         self.assertFalse(db.entry_pic(r, "runen", uruz, r["welten"][0]["id"])[1])   # the first world: a rune, not yet
         self.assertEqual(ADMIN.post(K + "runen/bild", json={"id": "uruz", "was": "malen", "welt": scifi}).json()["neu"], "neu-" + n[5:])
         self.assertEqual(ADMIN.post(K + "runen/bild", json={"id": "uruz", "was": "neu", "welt": scifi}).status_code, 200)
+        helpers.set_config(dungeon=False)
         db.sweep(force=True)                                                    # off: not painted, but kept
         self.assertIn(n, db.files())
 

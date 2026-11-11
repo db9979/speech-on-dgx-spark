@@ -90,8 +90,8 @@ class Base(unittest.TestCase):
         cls.c, cls.uid = profile("Gesicht Greta")
 
     def setUp(self):
-        helpers.keep_chat(self, "dungeon", "dungeon_nsc", "dungeon_gesicht", "dungeon_bilder", "bilder", "dungeon_gefaehrte", "dungeon_personen")
-        helpers.set_config(dungeon=True, dungeon_nsc=True, dungeon_gesicht=True, dungeon_bilder=False, bilder=True)
+        helpers.keep_chat(self, "dungeon", "dungeon_bilder", "bilder", "dungeon_tiefe")
+        helpers.set_config(dungeon=True, dungeon_bilder=True, bilder=True)
         self._image(True)
         self.addCleanup(self._image, False)
         guard.reset()
@@ -183,12 +183,12 @@ class Faces(Base):
     def test_off_paints_nothing_and_names_no_face(self):
         rid = self.new_round()
         self.meet(rid)
-        for off in ({"dungeon_gesicht": False}, {"dungeon_nsc": False}, {"bilder": False}):
-            helpers.set_config(**dict({"dungeon_gesicht": True, "dungeon_nsc": True, "bilder": True}, **off))
+        for off in ({"dungeon_bilder": False}, {"dungeon": False}, {"bilder": False}):
+            helpers.set_config(**dict({"dungeon_bilder": True, "dungeon": True, "bilder": True}, **off))
             self.assertEqual(gesicht.queue(), [], off)
             self.assertEqual(gesicht.vorlagen(dungeon.rules(), dungeon._read()["runden"][rid]), ([], ""))
         self.assertEqual(self.calls, [])
-        helpers.set_config(dungeon_gesicht=False, dungeon_nsc=True, bilder=True)
+        helpers.set_config(bilder=True, dungeon_bilder=False)
         v = self.c.get(f"/api/profile/dungeon/{rid}").json()
         self.assertTrue(all("bild" not in p for p in v["nsc"]["leute"]))
 
@@ -305,7 +305,7 @@ class Reference(Base):
         self.assertEqual(len(self.calls[0]["refs"]), 1)
         self.assertEqual(base64.b64decode(self.calls[0]["refs"][0])[:8], b"\x89PNG\r\n\x1a\n")
         self.assertEqual(gesicht._vorlagen, {})
-        helpers.set_config(dungeon_gesicht=False)                   # off: the scene comes without a reference
+        helpers.set_config(dungeon_bilder=False)                   # off: the scene comes without a reference
         with dungeon._lock:
             d = dungeon._read()
             rd = d["runden"][rid]
@@ -374,12 +374,18 @@ class Companions(Base):
                  "max": 8, "kapitel": d["runden"][rid].get("kapitel", 0), "aus": "", "moral": False})
             dungeon._write(d)
 
+    def tiefe(self, rid, v):
+        with dungeon._lock:
+            d = dungeon._read()
+            d["runden"][rid]["tiefe"] = v
+            dungeon._write(d)
+
     def test_a_hired_companion_gets_its_face_at_once(self):
-        helpers.set_config(dungeon_gefaehrte=False)
+        helpers.set_config(dungeon_tiefe="einfach")
         rid = self.new_round()
         self.hire(rid)
-        self.assertEqual(gesicht.queue(), [])                       # „Gefährten anheuern“ off: no face
-        helpers.set_config(dungeon_gefaehrte=True, dungeon_nsc=False)   # the cards' switch is not needed for it
+        self.assertEqual(gesicht.queue(), [])                       # „Gefährten anheuern“ off (Regeltiefe einfach): no face
+        self.tiefe(rid, "voll")                                     # the cards need no switch of their own
         jobs = self.paint_all()
         self.assertEqual(len(jobs), 1)
         _, key, n, p = jobs[0]
@@ -414,7 +420,7 @@ class Companions(Base):
         self.assertIn(n, gesicht.keep(dungeon._read()))
         self.assertEqual(gesicht.sweep(self.now[0]), 0)
         self.assertTrue(os.path.exists(dungeon.bild_file(n)))
-        helpers.set_config(dungeon_gefaehrte=False)                 # off again: the row names no face
+        self.tiefe(rid, "einfach")                                  # off again: the row names no face
         self.assertNotIn("bild", (self.c.get(f"/api/profile/dungeon/{rid}").json().get("gefaehrten") or [{}])[0])
 
 
@@ -440,8 +446,9 @@ class Katalog(Base):
         r = dungeon.rules()
         silas = self.pers.load()["silas"]
         s, p = db.person_text(r, silas)
+        helpers.set_config(dungeon_bilder=False)
         self.assertEqual(db.people(r, s), [])                              # off: „Bilder für Ausrüstung“, faces and catalog
-        helpers.set_config(dungeon_bilder=True, dungeon_personen=True)
+        helpers.set_config(dungeon_bilder=True)
         want = db.people(r, s)
         self.assertEqual([n for n, _, _ in want], [db.name_of(p)])          # Silas only: Odo has a face from a round
         self.assertIn((db.name_of(p), p), db.missing(r))                    # the night run and „Alle Bilder malen“ paint it
@@ -471,7 +478,7 @@ class Katalog(Base):
         self.pers._save({k: v for k, v in self.pers.load().items() if k != "silas"})
         db.sweep(self.now[0], force=True)
         self.assertTrue(os.path.exists(dungeon.bild_file(db.name_of(p))))
-        helpers.set_config(dungeon_gesicht=False)                           # off: nothing more to paint, the faces stay
+        helpers.set_config(dungeon_bilder=False)                           # off: nothing more to paint, the faces stay
         self.assertEqual(db.people(r, s), [])
         self.assertFalse(ADMIN.get(K).json()["bilder_an"])
 

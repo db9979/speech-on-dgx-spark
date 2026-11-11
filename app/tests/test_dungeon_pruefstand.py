@@ -260,7 +260,8 @@ class Page(Base):
         self.assertEqual((len(d["zellen"]), d["kaempfe"], d["laeuft"]), (n, 2, False))
         self.assertEqual(len(d["herr"]), n)                                       # Review 27.10. B1: the master's room at every cell
         self.assertEqual(d["boss_ziel"], ps.BOSS_ZIEL)
-        self.assertRegex(live._pruefstand(), r"^ · Prüfstand \d+ Felder, \d+ unter und \d+ über dem Ziel · gegen Bosse \d+ Gruppengrößen unter dem Ziel$")
+        # with the game the runes are measured too (Regeltiefe „Voll“ is every host's choice since Ausdünnen 1)
+        self.assertRegex(live._pruefstand(), r"^ · Prüfstand \d+ Felder, \d+ unter und \d+ über dem Ziel · mit Runen [+-]\d+(,\d+)? Punkte · gegen Bosse \d+ Gruppengrößen unter dem Ziel$")
         self.assertEqual(ps.last()["nacht"], "")                                  # the button is not the night's run
         asyncio.run(ps.due())                                                      # noon: no night run
         self.assertEqual(ps.last()["nacht"], "")

@@ -13,7 +13,7 @@ chorus per world) with the heroes' names and deeds after a word list, never a te
 The table plays the new song once (music on), the bar lists the round's songs to play again, the host deletes one;
 nobody else hears them: a song is fetched like a piece only by a seat of its own round (dungeon_musik.stueck).
 
-Off by default: the admin's switch dungeonheldenlied (features.py, chat.dungeon_heldenlied) for the round's host,
+Since Ausdünnen 1 the part dungeonheldenlied hangs on the switch dungeonbilder (features.py) (dungeon_tiefe.py) for the round's host,
 and only with „Musik vorbereiten“ and the music model (dungeon_musik.on). The journal gets fixed words and numbers
 („dungeon: lied | …“), Live only counts.
 
@@ -31,7 +31,7 @@ import time
 
 from fastapi import APIRouter, Depends, Request
 
-import features
+import dungeon_tiefe
 import guard
 from common import STATE, DayCounter, read_json, write_json
 from core import assistant, own_profile
@@ -89,7 +89,7 @@ _day = DayCounter(gemacht=0, weg=0, geloescht=0)
 def on(rd):
     """The host's admin switch and the round's music (dungeon_musik.on: „Musik vorbereiten“ and the model)."""
     import dungeon_musik
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"]) and dungeon_musik.on()
+    return dungeon_tiefe.an(KEY, rd) and dungeon_musik.on()
 
 
 # ---------------------------------------------------------------- the lyrics (fixed verses, names and deeds only)

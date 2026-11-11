@@ -27,7 +27,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Uplo
 import documents
 import dungeon
 import dungeon_anleiten
-import features
+import dungeon_tiefe
 import guard
 import textnorm
 from common import DayCounter
@@ -44,7 +44,7 @@ _day = DayCounter(importe=0, import_abgelehnt=0)
 
 
 def on():
-    return features.admin_on("dungeonimport")
+    return dungeon_tiefe.admin_an("dungeonimport")
 
 
 def digest(text):

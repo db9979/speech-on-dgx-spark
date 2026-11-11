@@ -16,11 +16,11 @@ The map's vault (dungeon_karte) counts by fixed rules of the panel, the model on
 The view carries karte.alarm (0 to 6) and karte.fackel (rooms left, -1 lasting, 0 dark), both null outside a vault;
 the facts tell the model the alarm and whether it is dark.
 
-Off by default: the admin's switch dungeonalarm (features.py, chat.dungeon_alarm) for the round's host.
+Since Ausdünnen 1 the part dungeonalarm hangs on the Regeltiefe „voll“ of the round (dungeon_tiefe.py) for the round's host.
 State: in the vault v["alarm"], v["streife"] (0 none yet, 1 coming, 2 came), v["licht"], v["licht_von"] [de, en].
 Journal: fixed words and numbers („dungeon: alarm | …“), Live only counts.
 """
-import features
+import dungeon_tiefe
 from common import DayCounter
 
 KEY = "dungeonalarm"
@@ -36,7 +36,7 @@ _day = DayCounter(laerm=0, streifen=0, bereit=0, fackeln=0, dunkel=0)
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"])
+    return dungeon_tiefe.an(KEY, rd)
 
 
 def _vault(rd):

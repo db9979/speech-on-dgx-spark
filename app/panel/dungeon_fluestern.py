@@ -13,7 +13,7 @@ By fixed rules of the panel, never the model's:
   betrayal   a d20 at or below VERRAT − the attitude: the person tells on; the table sees „X erzählt weiter …“ and the
              next narration gets the whisper as game text (betrayed_lines)
 
-Off by default: the admin's switch dungeonfluestern (features.py, chat.dungeon_fluestern) for the round's host.
+Since Ausdünnen 1 the part dungeonfluestern hangs on the Regeltiefe „voll“ of the round (dungeon_tiefe.py) for the round's host.
 Journal: fixed words and numbers („dungeon: fluestern | …“), Live only counts.
 
     POST /api/profile/dungeon/{rid}/fluestern   {an, text}: the own seat whispers
@@ -25,7 +25,7 @@ import random
 
 from fastapi import APIRouter, Depends, Request
 
-import features
+import dungeon_tiefe
 import guard
 import textnorm
 from common import DayCounter
@@ -64,7 +64,7 @@ _day = DayCounter(gefluestert=0, verraten=0, geschenkt=0, stumm=0, abgelehnt=0)
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"])
+    return dungeon_tiefe.an(KEY, rd)
 
 
 def figures(rd):

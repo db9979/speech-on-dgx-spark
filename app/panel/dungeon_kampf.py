@@ -272,8 +272,8 @@ def reward(k, stufe, anteil=1):
 
 def stages_on(rd):
     """The host may choose the stage: „Kampfstufen“ allowed for the round's host."""
-    import features
-    return bool(rd.get("owner")) and features.allowed("dungeonstufen", rd["owner"])
+    import dungeon_tiefe
+    return dungeon_tiefe.an("dungeonstufen", rd)
 
 
 def stage(rd):
@@ -307,8 +307,8 @@ def check_rules(r):
 
 def dial_on(rd):
     """The game master's dial works for this round: „Spielleiter-Regler“ allowed for its host."""
-    import features
-    return bool(rd.get("owner")) and features.allowed("dungeonregler", rd["owner"])
+    import dungeon_tiefe
+    return dungeon_tiefe.an("dungeonregler", rd)
 
 
 def dial(rd):
@@ -768,8 +768,8 @@ def spell_save(dm, r, rd, h, pid, g, c, wert, wuerfel, art, mit, life, rng):
 
 def tables_on(rd):
     """The host's admin switch for the critical and fumble tables (D&D idea 2)."""
-    import features
-    return bool(rd.get("owner")) and features.allowed(KRIT, rd["owner"])
+    import dungeon_tiefe
+    return dungeon_tiefe.an(KRIT, rd)
 
 
 def table(dm, r, rd, krit, patzer, art, spell, fern, rng):

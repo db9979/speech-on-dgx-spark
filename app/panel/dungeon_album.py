@@ -14,13 +14,13 @@ after the fourth the traits and how the person stands towards this hero. Never i
 stay with the admin and the host), never a person whose words do not fit the round's tone. Only while the people catalog
 is allowed for the host too.
 
-Off by default: the admin's switch dungeonalbum (features.py, chat.dungeon_album) for the round's host.
+Since Ausdünnen 1 the part dungeonalbum hangs on the switch dungeonbilder (features.py) (dungeon_tiefe.py) for the round's host.
 Journal: fixed words and numbers („dungeon: album | …“), Live only counts.
 """
 import re
 
 import dungeon_buch as heldenbuch
-import features
+import dungeon_tiefe
 from common import DayCounter
 
 KEY = "dungeonalbum"
@@ -36,7 +36,7 @@ _day = DayCounter(eintraege=0, aufgestiegen=0, personen=0)
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"])
+    return dungeon_tiefe.an(KEY, rd)
 
 
 def stage(n):

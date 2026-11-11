@@ -88,8 +88,8 @@ RUND = dict(zip(es.RUNDLAUF, (
 class Bench(Base):
     def setUp(self):
         super().setUp()
-        helpers.keep_chat(self, "dungeon_erzaehlstand", "systemone")
-        helpers.set_config(dungeon_erzaehlstand=False, systemone=False)
+        helpers.keep_chat(self, "dungeon_pruefstand", "systemone")
+        helpers.set_config(systemone=False, dungeon_pruefstand=False)
         self.t = [1_790_000_000]
         p = mock.patch("dungeon_erzaehlstand.clock", lambda: self.t[0])
         p.start()
@@ -320,7 +320,7 @@ class Bench(Base):
         self.assertEqual(live._erzaehlstand(), "")
 
     def test_the_button_the_models_and_the_live_line(self):
-        helpers.set_config(dungeon_erzaehlstand=True)
+        helpers.set_config(dungeon_pruefstand=True)
         self.assertIn("noch ohne Lauf", live._erzaehlstand())
 
         def spawn():                                                    # the run in its own loop, done when the request answers

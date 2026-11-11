@@ -14,8 +14,7 @@ import json
 BETRACHTER = ("gastgeber", "spieler", "auto", "modell")
 NUR_GASTGEBER = ("plan", "wahrheit", "dinge", "regler", "mail_vorschau", "bild_grund", "zufall", "nsc_geheim", "orakel", "kampfstufe",
                  "fraktionen_geheim", "quest_geheim", "echt_plaetze", "geben")
-SCHALTER = ("dungeon_zufall", "dungeon_nsc", "dungeon_fraktionen", "dungeon_quest", "dungeon_schrift", "dungeon_sprachen", "dungeon_fluestern", "dungeon_wunsch",
-            "dungeon_gedanken")   # the admin switches of the secrets below: the self-test turns them on
+SCHALTER = {"dungeon_tiefe": "voll"}   # the config of the secrets below (Regeltiefe voll, dungeon_tiefe): the self-test sets it
 
 
 def _foe(rd, m):

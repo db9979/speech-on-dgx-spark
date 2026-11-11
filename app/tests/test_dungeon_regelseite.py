@@ -63,7 +63,8 @@ class Page(Base):
         is on; the admin adds a person (new id), changes it and deletes it; a wrong field, a word of „nie“ or a name the
         world has already is refused with its errors and nothing is written; wish and secret only here."""
         import dungeon_personen as pers
-        helpers.keep_chat(self, "dungeon_nsc", "dungeon_personen")
+        helpers.keep_chat(self, "dungeon")
+        helpers.set_config(dungeon=False)                     # the catalog hangs on the game itself (Ausdünnen 1)
         if os.path.exists(pers.FILE):
             os.remove(pers.FILE)
         self.addCleanup(lambda: os.path.exists(pers.FILE) and os.remove(pers.FILE))
@@ -72,7 +73,7 @@ class Page(Base):
         self.assertEqual((x.status_code, x.json()["detail"]), (404, "personen aus"))
         self.assertEqual(ADMIN.post(K + "personen", json={"was": "setzen", "id": "oskar"}).json()["detail"], "personen aus")
         self.assertFalse(ADMIN.get("/api/admin/dungeon").json()["personen_an"])
-        helpers.set_config(dungeon_nsc=True, dungeon_personen=True)
+        helpers.set_config(dungeon=True)
         self.assertTrue(ADMIN.get("/api/admin/dungeon").json()["personen_an"])
         self.assertIn(self.c.post(K + "personen", json={"was": "setzen", "id": "oskar"}).status_code, (401, 403))
         d = ADMIN.get(K + "personen").json()
@@ -117,14 +118,15 @@ class Page(Base):
         from unittest import mock
         import dungeon_personen as pers
         import dungeon_stimmen as st
-        helpers.keep_chat(self, "dungeon_nsc", "dungeon_personen")
+        helpers.keep_chat(self, "dungeon")
+        helpers.set_config(dungeon=False)
         if os.path.exists(pers.FILE):
             os.remove(pers.FILE)
         self.addCleanup(lambda: os.path.exists(pers.FILE) and os.remove(pers.FILE))
         P = "/api/admin/dungeon/personen/probe"
         v = {"alter": "alt", "geschlecht": "weiblich", "klang": "rau", "wesen": "weise", "tempo": "langsam"}
         self.assertEqual(ADMIN.post(P, json={"stimme": v}).status_code, 404)              # the catalog off
-        helpers.set_config(dungeon_nsc=True, dungeon_personen=True)
+        helpers.set_config(dungeon=True)
         pers._save({"silas": {"id": "silas", "name": "Silas", "welt": "fantasy", "karte": {"beruf": ["Mystikerin", "Mystic"]},
                               "wesen": {}, "rolle": "", "ziel": "", "stimme": {}, "haltung": {}, "treffen": 1, "made": 1, "t": 1, "stand": "runde"}})
         rows, d = self.rows("personen")
@@ -276,8 +278,8 @@ class Page(Base):
     def test_runes_with_their_rules_and_switch(self):
         """Dominik 2026-10-28 „die runen sehe ich die auch unter den regeln wie alles andere?“: runes and runewords
         are parts of the page, with the fixed rules around them (sockets, caps) and the switch with its way."""
-        helpers.keep_chat(self, "dungeon_runen")
-        helpers.set_config(dungeon_runen=False)
+        helpers.keep_chat(self, "dungeon")
+        helpers.set_config(dungeon=False)
         rows, d = self.rows("runen")
         self.assertEqual(len(rows), 13)
         self.assertEqual((rows["uruz"]["stand"], rows["uruz"]["zeichen"]), ("srd", "ᚱ"))
@@ -286,13 +288,13 @@ class Page(Base):
         self.assertEqual(w["In einer Waffe"], "+1 Schaden")
         self.assertIn("Krämer", w["Fällt"])
         k = d["kasten"]
-        self.assertEqual((k["schalter"]["name"], k["schalter"]["an"]), ("Runen und Sockel", False))
-        self.assertEqual(k["schalter"]["weg"], "Funktionen → KI-Dungeon-Master → Runen und Sockel")
+        self.assertEqual((k["schalter"]["name"], k["schalter"]["an"]), ("Regeltiefe „Voll“", False))
+        self.assertEqual(k["schalter"]["weg"], "Funktionen → KI-Dungeon-Master → Regeltiefe „Voll“")
         z = dict(k["zeilen"])
         self.assertIn(f"Treffer höchstens +{rs.runen.TREFFER_MAX}", z["Obergrenzen"])
         self.assertIn("Waffe 6,5", z["Obergrenzen"])
         self.assertIn(f"zu {rs.runen.SOCKEL_FUND} von 100", z["Sockel"])
-        helpers.set_config(dungeon_runen=True)
+        helpers.set_config(dungeon=True)
         self.assertIs(self.rows("runen")[1]["kasten"]["schalter"]["an"], True)
         words, d = self.rows("runenwoerter")
         self.assertEqual(len(words), 7)
@@ -304,7 +306,7 @@ class Page(Base):
         self.assertEqual({x["marke"]["marke"] for x in words.values()} - {"schwach", "ok", "stark"}, set())   # none too strong
         self.assertIn("Stärke", dict(words["sturmlied"]["werte"]))
         en = ADMIN.get(K + "runen?lang=en").json()
-        self.assertEqual(en["kasten"]["schalter"]["weg"], "Features → AI Dungeon Master → Runes and sockets")
+        self.assertEqual(en["kasten"]["schalter"]["weg"], 'Features → AI Dungeon Master → Rule depth "Full"')
         # a rune changed by its id (merged like every list), taken back; hiding one leaves a gap in the ranks: refused
         e = dict(dungeon._by(dungeon.rules(), "runen")["uruz"], preis=30)
         r = ADMIN.post(K + "runen", json={"was": "setzen", "id": "uruz", "eintrag": e})
@@ -333,7 +335,7 @@ class Page(Base):
             rows, _ = self.rows(teil)
             self.assertTrue(all(x["zeile"] and x["zeichen"] for x in rows.values()), teil)
         stall, d = self.rows("stillstand")
-        self.assertEqual(d["kasten"]["schalter"]["weg"], "Funktionen → KI-Dungeon-Master → Spieler anleiten")
+        self.assertEqual(d["kasten"]["schalter"]["weg"], "Funktionen → KI-Dungeon-Master")
         self.assertTrue(stall["bote"]["name"].startswith("Ein Bote"))
         self.assertLessEqual(len(stall["bote"]["name"]), rs.NAME_KURZ + 2)
         self.assertEqual(dict(stall["bote"]["werte"])["Am Kindertisch"], "ja")

@@ -31,8 +31,8 @@ AUFGABE = {"de": " Der Spielleiter hat in diesem Zug etwas gegeben (spielleiter_
 
 def on(rd):
     """The admin's switch for the round's host."""
-    import features
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"])
+    import dungeon_tiefe
+    return dungeon_tiefe.an(KEY, rd)
 
 
 def admin(request, uid):

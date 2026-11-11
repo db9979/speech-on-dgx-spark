@@ -11,7 +11,7 @@ only by fixed rules (check): the hero of this act's wish, it acted this turn, th
 open; then the hero gets the experience of an act (r["ep"]["akt"]) and the table sees „💖 … Herzenswunsch hat sich
 erfüllt“ (never the wish itself). The wish goes to the model only as game text between <<< and >>>.
 
-Off by default: the admin's switch dungeonwunsch (features.py, chat.dungeon_wunsch) for the round's host.
+Since Ausdünnen 1 the part dungeonwunsch hangs on the Regeltiefe „voll“ of the round (dungeon_tiefe.py) for the round's host.
 Journal: fixed words and numbers („dungeon: wunsch | …“), Live only counts.
 
     POST /api/profile/dungeon/{rid}/wunsch   {text} or {id}; both empty: the wish away
@@ -21,7 +21,7 @@ import asyncio
 
 from fastapi import APIRouter, Depends, Request
 
-import features
+import dungeon_tiefe
 import guard
 from common import DayCounter
 from core import assistant, browser_profile, json_body
@@ -38,7 +38,7 @@ _day = DayCounter(gesetzt=0, erfuellt=0, verworfen=0, abgelehnt=0)
 
 
 def on(rd):
-    return bool(rd.get("owner")) and features.allowed(KEY, rd["owner"])
+    return dungeon_tiefe.an(KEY, rd)
 
 
 def choices(r, rd):
