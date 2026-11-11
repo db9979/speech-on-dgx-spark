@@ -277,7 +277,7 @@ MODULE = {
     "einladung": ("post", "Einladungen aus Mails: eine .ics-Einladung mit einem Tipp in den Kalender, Antwort an den Einladenden"),
     "kontaktserver": ("post", "Kontakte-Server: das Adressbuch „Auf dem Spark“ für Kontakte-Apps (CardDAV unter /carddav/)"),
     "kontaktkarte": ("post", "Kontakte ändern: Felder prüfen, nur die Zeilen der Seite in der vCard ersetzen, Rest bleibt"),
-    "tasks": ("dienste", "Listen für Einkauf und Aufgaben"),
+    "tasks": ("dienste", "Listen für Einkauf und Aufgaben, wie Apple Erinnerungen: Farbe, Reihenfolge, Info je Eintrag, Erinnern zur Uhrzeit"),
     "vorgaenge": ("dienste", "Alles Offene im Assistenten: Karten mit Knöpfen, Später, Seite Offen, Ja-Knopf, Telegram-Knöpfe"),
     "weather": ("dienste", "Wetter von Open-Meteo als feste Sätze"),
     "transit": ("dienste", "Bus und Bahn"),

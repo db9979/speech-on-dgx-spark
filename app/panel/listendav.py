@@ -9,8 +9,10 @@ password, its own path only, Mein Notaus, guard.RATE "caldav" (kalenderserver.ca
 
 - Only the profile's own lists that live on the Spark (a list kept in a calendar account is there already) and
   never another profile's list, also not a shared one.
-- What comes in is data: one VTODO per object, only its summary (cut to tasks.clean, at most 400 characters) and
-  whether it is done are taken; the rest of the object is not kept. At most tasks.MAX_ITEMS entries.
+- What comes in is data: one VTODO per object, only its summary (cut to tasks.clean, at most 400 characters),
+  whether it is done, its date and time (DUE), note (DESCRIPTION, tasks.NOTE_MAX) and priority (PRIORITY) are taken
+  (Apple-Stil Stufe 4); the rest of the object is not kept. At most tasks.MAX_ITEMS entries. The time goes out as
+  floating local time, as the person typed it; a time with zone comes in in the profile's zone.
 - An entry from Reminders is put on with the source „iPhone Erinnerungen“; it keeps the app's object name and UID
   so the app finds it again. Deleting there deletes it on the Spark (the owner's own list), ticking off keeps it
   under „Zuletzt erledigt“ for tasks.KEEP_DONE like on the page.
@@ -27,6 +29,7 @@ from xml.sax.saxutils import escape
 import icalendar
 
 import features
+import profiles
 import sparkkalender
 import tasks
 from common import DayCounter
@@ -35,6 +38,16 @@ PART = "liste-"                                    # /caldav/<uid>/liste-<list i
 NAME = re.compile(r"[A-Za-z0-9._@-]{1,200}\.ics")
 MAX_TEXT = 64 * 1024                               # characters of one object
 _count = DayCounter()                              # per day: "gespeichert" (changes from calendar apps)
+PRIO_OUT = {1: 9, 2: 5, 3: 1}                      # tasks.PRIOS low, medium, high as iCalendar PRIORITY (1 = highest)
+
+
+def prio_in(n):
+    """tasks.PRIOS of an iCalendar PRIORITY: 1-4 high, 5 medium, 6-9 low, 0 or anything else none."""
+    try:
+        n = int(n)
+    except (TypeError, ValueError):
+        return 0
+    return 3 if 1 <= n <= 4 else 2 if n == 5 else 1 if 6 <= n <= 9 else 0
 
 
 def collections(uid):
@@ -68,8 +81,14 @@ def _ics(x):
     todo.add("dtstamp", _stamp(x.get("done") or x.get("t")))
     todo.add("created", _stamp(x.get("t")))
     todo.add("summary", tasks.show(x))
-    if x.get("due"):   # „bis“ (a meeting's task): a date, so Reminders shows it on that day
+    if x.get("due") and x.get("at"):   # date and time: floating, the wall clock time the person set
+        todo.add("due", datetime.datetime.fromisoformat(f"{x['due']}T{x['at']}"))
+    elif x.get("due"):   # „bis“ (a meeting's task): a date, so Reminders shows it on that day
         todo.add("due", datetime.date.fromisoformat(x["due"]))
+    if x.get("note"):
+        todo.add("description", x["note"])
+    if x.get("prio"):
+        todo.add("priority", PRIO_OUT[x["prio"]])
     if x.get("done"):
         todo.add("status", "COMPLETED")
         todo.add("completed", _stamp(x["done"]))
@@ -81,7 +100,9 @@ def _ics(x):
 
 
 def _ctag(items):
-    raw = "|".join(f"{n}:{tasks.show(x)}:{x.get('done', 0)}:{x.get('due', '')}" for n, x in sorted(items.items()))
+    raw = "|".join(f"{n}:{tasks.show(x)}:{x.get('done', 0)}:{x.get('due', '')}:{x.get('at', '')}:{x.get('prio', 0)}:"
+                   f"{hashlib.sha1(x.get('note', '').encode('utf-8', 'replace')).hexdigest()[:8]}"
+                   for n, x in sorted(items.items()))
     return hashlib.sha1(raw.encode("utf-8", "replace")).hexdigest()[:16]
 
 
@@ -95,8 +116,9 @@ def collection(uid, part, li, base):
                                      f"<cs:getctag>{_ctag(_entries(uid, li['id']))}</cs:getctag>" + sparkkalender.PROPS)
 
 
-def _read(body):
-    """(summary, done, uid, due) of the one VTODO in a calendar object, or None (due: only the date, "" without)."""
+def _read(body, zone=None):
+    """{"summary", "done", "uid", "due", "at", "note", "prio"} of the one VTODO in a calendar object, or None (due a
+    date, at a time „HH:MM“ in zone, "" without)."""
     text = (body or b"").decode("utf-8", "replace")
     if len(text) > MAX_TEXT:
         return None
@@ -111,15 +133,21 @@ def _read(body):
     if not summary:
         return None
     done = str(t.get("STATUS", "")).upper() == "COMPLETED" or bool(t.get("COMPLETED"))
-    due = tasks._todo_due(t)
-    return summary, done, re.sub(r"[^A-Za-z0-9._@-]", "", str(t.get("UID", "")))[:200], due if tasks.due_ok(due) else ""
+    due, at = tasks.todo_due_at(t, zone)
+    due = due if tasks.due_ok(due) else ""
+    note = re.sub(r"[\x00-\x08\x0b-\x1f]", "", str(t.get("DESCRIPTION", ""))).strip()[:tasks.NOTE_MAX]
+    return {"summary": summary, "done": done, "uid": re.sub(r"[^A-Za-z0-9._@-]", "", str(t.get("UID", "")))[:200],
+            "due": due, "at": at if due and tasks.AT_RE.fullmatch(at or "") else "", "note": note,
+            "prio": prio_in(t.get("PRIORITY"))}
 
 
 def _put(uid, lid, name, body, headers):
-    got = _read(body)
+    import chat
+    got = _read(body, chat.user_zone(profiles.settings(uid).get("tz", "")))
     if not got:
         return 415, "failed (not a task)"
-    summary, done, ref, due = got
+    summary, done, ref, due = got["summary"], got["done"], got["uid"], got["due"]
+    info = {k: got[k] for k in ("at", "note", "prio") if got[k]}
     with tasks._lock:
         d = tasks._load(uid)
         have = _entries(uid, lid, d).get(name)
@@ -132,8 +160,9 @@ def _put(uid, lid, name, body, headers):
                 return 507, "refused (full)"
             text, qty = tasks.split_qty(summary)
             x = dict({"id": os.urandom(5).hex(), "list": lid, "text": text or summary, "t": now, "by": uid,
-                      "src": "erinnerungen", "dav": name}, **({"qty": qty} if qty else {}), **({"dav_uid": ref} if ref else {}),
-                     **({"due": due} if due else {}))
+                      "src": "erinnerungen", "dav": name, "pos": tasks._last_pos(d, lid) + 1},
+                     **({"qty": qty} if qty else {}), **({"dav_uid": ref} if ref else {}),
+                     **({"due": due} if due else {}), **(info if due else {k: v for k, v in info.items() if k != "at"}))
             if done:
                 x["done"], x["done_by"] = now, uid
             d["items"].append(x)
@@ -149,6 +178,11 @@ def _put(uid, lid, name, body, headers):
                 have["due"] = due
             else:
                 have.pop("due", None)
+            for k in ("at", "note", "prio"):   # the same for time, note and priority
+                if info.get(k) and (k != "at" or due):
+                    have[k] = info[k]
+                else:
+                    have.pop(k, None)
             what = "edit"
             if done and not have.get("done"):
                 have["done"], have["done_by"], what = now, uid, "done"
@@ -157,6 +191,7 @@ def _put(uid, lid, name, body, headers):
                 have.pop("done_by", None)
                 what = "undo"
             x = have
+            tasks._remind(uid, x, uid)   # a reminder set on the page follows the new time, ticked off it goes
         tasks._save(uid, d)
     tasks._log(what, lid, uid, "1 entries from calendar app")
     if what in ("done", "undo"):

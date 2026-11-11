@@ -344,7 +344,7 @@ class UnusedText(unittest.TestCase):
 
 class UnusedCss(unittest.TestCase):
     """Every class in the panel's style sheets is used somewhere. Classes built in code from a prefix stand in DYN."""
-    DYN = ("ag-", "c-", "st-", "lz-", "vb-c", "kn-", "mdf-")
+    DYN = ("ag-", "c-", "st-", "lz-", "vb-c", "kn-", "mdf-", "lc-")   # lc-: a list's colour (listen.js, tasks.COLORS)
 
     def test_every_class_is_used(self):
         hay = panel_text()

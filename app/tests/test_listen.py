@@ -316,5 +316,141 @@ class Teilen(unittest.TestCase):
         self.assertGreaterEqual(tasks.for_live()["shares"], 1)
 
 
+class AppleStil(unittest.TestCase):
+    """Apple-Stil Stufe 4 (Dominik 2026-10-20 „7a“): like Apple's Reminders. Info per entry (note, date, time, flag,
+    priority) checked by the panel, „Erinnern“ as a reminder of Timer und Erinnerungen that follows ticking off,
+    taking back and deleting, moving onto another list (away only the owner, onto it only with Mitschreiben), the
+    order of entries and lists, the colour of every list, the rules of every new endpoint, the journal without names.
+    The dates lie in 2099, so nothing depends on today."""
+
+    def setUp(self):
+        helpers.keep_chat(self, "tasks", "tasks_share", "reminders", "deny")
+        helpers.set_config(tasks=True, tasks_share=True, reminders=True, deny={})
+        for k in [k for k in guard._rate if k[0] == "listen"]:
+            guard._rate.pop(k, None)
+
+    def test_info_of_an_entry(self):
+        a = profile("Apfel Anna")
+        a.post("/api/profile/tasks/aufgaben", json={"text": "Reifen wechseln"})
+        x = a.get("/api/profile/tasks").json()["lists"]["aufgaben"]["items"][0]
+        self.assertEqual((x["note"], x["at"], x["flag"], x["prio"], x["remind"]), ("", "", False, 0, False))
+        path = f"/api/profile/tasks/aufgaben/{x['id']}"
+        r = a.put(path, json={"note": "Winterreifen\nim Keller", "due": "2099-03-01", "at": "17:30", "flag": True, "prio": 3})
+        self.assertEqual(r.status_code, 200, r.text)
+        y = r.json()["lists"]["aufgaben"]["items"][0]
+        self.assertEqual((y["note"], y["due"], y["at"], y["flag"], y["prio"]), ("Winterreifen\nim Keller", "2099-03-01", "17:30", True, 3))
+        for bad in ({"at": "25:00"}, {"prio": 7}, {"due": "morgen"}, {"text": "  "}):
+            self.assertEqual(a.put(path, json=bad).status_code, 400, bad)
+        self.assertEqual(a.put("/api/profile/tasks/aufgaben/ffffffffff", json={"flag": True}).status_code, 404)
+        y = a.put(path, json={"due": "", "flag": False, "prio": 0, "note": ""}).json()["lists"]["aufgaben"]["items"][0]
+        self.assertEqual((y["due"], y["at"], y["flag"], y["prio"], y["note"]), ("", "", False, 0, ""))   # no time without a date
+        y = a.put(path, json={"text": "3 Reifen"}).json()["lists"]["aufgaben"]["items"][0]
+        self.assertEqual((y["text"], y["qty"]), ("Reifen", "3×"))
+
+    def test_remind_follows_the_entry(self):
+        import profiles
+        a = profile("Apfel Bert")
+        uid = uid_of("Apfel Bert")
+        a.post("/api/profile/tasks/einkauf", json={"text": "Äpfel"})
+        x = a.get("/api/profile/tasks").json()["lists"]["einkauf"]["items"][0]
+        path = f"/api/profile/tasks/einkauf/{x['id']}"
+        mine = lambda: [r for r in profiles.reminders(uid) if r["text"].startswith("Äpfel")]
+        a.put(path, json={"due": "2099-03-01", "remind": True})
+        self.assertEqual(mine(), [])                                  # no time: nothing rings
+        a.put(path, json={"at": "17:00"})
+        self.assertEqual(len(mine()), 1)
+        self.assertEqual(mine()[0]["text"], "Äpfel (Einkauf)")
+        a.put(path, json={"at": "18:00"})                             # a new time: one reminder, the new one
+        self.assertEqual(len(mine()), 1)
+        a.post("/api/profile/tasks/einkauf/done", json={"ids": [x["id"]]})
+        self.assertEqual(mine(), [])                                  # ticked off: gone
+        a.post("/api/profile/tasks/einkauf/undo", json={"ids": [x["id"]]})
+        self.assertEqual(len(mine()), 1)                              # taken back: it comes again
+        a.delete(path)
+        self.assertEqual(mine(), [])                                  # deleted: gone
+        # without Timer und Erinnerungen the entry keeps „Erinnern“, but nothing rings
+        a.post("/api/profile/tasks/einkauf", json={"text": "Birnen"})
+        y = next(x for x in a.get("/api/profile/tasks").json()["lists"]["einkauf"]["items"] if x["text"] == "Birnen")
+        helpers.set_config(reminders=False)
+        r = a.put(f"/api/profile/tasks/einkauf/{y['id']}", json={"due": "2099-03-01", "at": "08:00", "remind": True})
+        self.assertFalse(r.json()["reminders"])
+        self.assertEqual([r for r in profiles.reminders(uid) if r["text"].startswith("Birnen")], [])
+
+    def test_move_order_and_colours(self):
+        owner, other = profile("Apfel Cora"), profile("Apfel Dirk")
+        so, to = uid_of("Apfel Cora"), uid_of("Apfel Dirk")
+        lid = owner.post("/api/profile/listen", json={"name": "Baumarkt", "icon": "🔨", "color": "gruen"}).json()["made"]
+        owner.post("/api/profile/tasks/aufgaben", json={"text": "Dübel, Schrauben, Leim"})
+        items = owner.get("/api/profile/tasks").json()["lists"]["aufgaben"]["items"]
+        self.assertEqual([x["text"] for x in items], ["Dübel", "Schrauben", "Leim"])     # in the order typed
+        ids = {x["text"]: x["id"] for x in items}
+        r = owner.put("/api/profile/tasks/aufgaben/order", json={"ids": [ids["Leim"], ids["Dübel"]]})
+        self.assertEqual([x["text"] for x in r.json()["lists"]["aufgaben"]["items"]], ["Leim", "Dübel", "Schrauben"])
+        owner.put(f"/api/profile/tasks/aufgaben/{ids['Leim']}", json={"note": "Holzleim", "flag": True})
+        r = owner.put(f"/api/profile/tasks/aufgaben/{ids['Leim']}", json={"to": lid})
+        self.assertEqual(r.status_code, 200, r.text)
+        moved = r.json()["lists"][lid]["items"]
+        self.assertEqual([(x["text"], x["note"], x["flag"]) for x in moved], [("Leim", "Holzleim", True)])  # keeps its info
+        self.assertNotIn("Leim", [x["text"] for x in r.json()["lists"]["aufgaben"]["items"]])
+        self.assertEqual(owner.put(f"/api/profile/tasks/{lid}/{ids['Leim']}", json={"to": lid}).status_code, 400)
+        # colours: every list, a fixed one too; a colour not in the choice changes nothing
+        self.assertEqual(r.json()["lists"][lid]["color"], "gruen")
+        self.assertEqual(r.json()["lists"]["einkauf"]["color"], "orange")
+        r = owner.put("/api/profile/listen/einkauf", json={"color": "lila"})
+        self.assertEqual(r.json()["lists"]["einkauf"]["color"], "lila")
+        self.assertEqual(owner.put("/api/profile/listen/einkauf", json={"color": "#ff0000"}).status_code, 400)
+        self.assertEqual(owner.put("/api/profile/listen/einkauf", json={"name": "Shop"}).status_code, 400)
+        # the order of the lists: what was dragged first, the rest after it; unknown ids are dropped
+        r = owner.put("/api/profile/listen/order", json={"order": [lid, "aufgaben", "lffffffff", "<b>"]})
+        self.assertEqual(r.json()["order"][:3], [lid, "aufgaben", "einkauf"])
+        # shared: see only takes nothing; Mitschreiben may put on, sort and change info, but never move away
+        owner.put("/api/profile/listen/aufgaben/share", json={"to": to, "level": "see"})
+        key = f"{so}.aufgaben"
+        self.assertEqual(other.put(f"/api/profile/tasks/{key}/{ids['Dübel']}", json={"flag": True}).status_code, 403)
+        self.assertEqual(owner.put(f"/api/profile/tasks/aufgaben/{ids['Dübel']}", json={"to": f"{to}.einkauf"}).status_code, 404)
+        owner.put("/api/profile/listen/aufgaben/share", json={"to": to, "level": "add"})
+        self.assertEqual(other.put(f"/api/profile/tasks/{key}/{ids['Dübel']}", json={"prio": 2}).status_code, 200)
+        self.assertEqual(other.put(f"/api/profile/tasks/{key}/order", json={"ids": [ids["Schrauben"]]}).status_code, 200)
+        self.assertEqual(other.put(f"/api/profile/tasks/{key}/{ids['Dübel']}", json={"to": "einkauf"}).status_code, 404)
+        r = owner.put(f"/api/profile/tasks/aufgaben/{ids['Dübel']}", json={"to": f"{to}.einkauf"})
+        self.assertEqual(r.status_code, 404)                          # Tom shares nothing with Cora
+        self.assertEqual([x["text"] for x in owner.get("/api/profile/tasks").json()["lists"]["aufgaben"]["items"]],
+                         ["Schrauben", "Dübel"])
+
+    def test_every_new_endpoint_keeps_the_rules(self):
+        guest = TestClient(panel.app)
+        for p in ("/api/profile/tasks/einkauf/abcdefabcd", "/api/profile/tasks/einkauf/order", "/api/profile/listen/order"):
+            self.assertIn(guest.put(p, json={}).status_code, (401, 403), p)
+        a = profile("Apfel Emil")
+        uid = uid_of("Apfel Emil")
+        for p in ("/api/profile/tasks/einkauf/abcdefabcd", "/api/profile/tasks/einkauf/order", "/api/profile/listen/order"):
+            self.assertEqual(a.put(p, content=b"{" + b" " * 9000 + b"}", headers={"Content-Type": "application/json"}).status_code, 413, p)
+        a.post("/api/profile/tasks/einkauf", json={"text": "Brot"})
+        x = a.get("/api/profile/tasks").json()["lists"]["einkauf"]["items"][0]
+        ADMIN.put(f"/api/admin/features/tasks/profiles/{uid}", json={"on": False})
+        self.addCleanup(ADMIN.put, f"/api/admin/features/tasks/profiles/{uid}", json={"on": True})
+        self.assertEqual(a.put(f"/api/profile/tasks/einkauf/{x['id']}", json={"flag": True}).status_code, 403)
+        self.assertEqual(a.put("/api/profile/listen/order", json={"order": []}).status_code, 403)
+
+    def test_the_journal_says_what_never_which(self):
+        a = profile("Apfel Frida")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            lid = a.post("/api/profile/listen", json={"name": "Geheimliste"}).json()["made"]
+            a.post("/api/profile/tasks/einkauf", json={"text": "Tresorcode"})
+            x = a.get("/api/profile/tasks").json()["lists"]["einkauf"]["items"][0]
+            a.put(f"/api/profile/tasks/einkauf/{x['id']}", json={"note": "Geheimnotiz"})
+            a.put(f"/api/profile/tasks/einkauf/{x['id']}", json={"at": "99:99"})
+            a.put("/api/profile/tasks/einkauf/order", json={"ids": [x["id"]]})
+            a.put(f"/api/profile/tasks/einkauf/{x['id']}", json={"to": lid})
+            a.put("/api/profile/listen/order", json={"order": [lid]})
+        log = out.getvalue()
+        for line in ("tasks: edit einkauf | 1 entries", "tasks: edit einkauf | refused", "tasks: sort einkauf | 1 entries",
+                     "tasks: move einkauf | 1 entries", "tasks: list order | ok"):
+            self.assertIn(line, log)
+        for word in ("Geheimliste", "Tresorcode", "Geheimnotiz", "Apfel Frida"):
+            self.assertNotIn(word, log)
+
+
 if __name__ == "__main__":
     unittest.main()

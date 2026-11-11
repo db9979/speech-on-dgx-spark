@@ -47,6 +47,21 @@ enum Theme {
     static let wkVertrag = c(0x7c3aed, 0x7c3aed)
     static let wkKonto = c(0x047857, 0x047857)
     static let wkFrist = c(0xdc2626, 0xdc2626)
+    // --lst-*: the colours of a list (tasks.COLORS), the same as in the panel, light and dark alike
+    static let lstBlau = c(0x0a7aff, 0x0a7aff)
+    static let lstRot = c(0xff3b30, 0xff3b30)
+    static let lstOrange = c(0xff9500, 0xff9500)
+    static let lstGelb = c(0xe6b800, 0xe6b800)
+    static let lstGruen = c(0x34c759, 0x34c759)
+    static let lstTuerkis = c(0x30b0c7, 0x30b0c7)
+    static let lstLila = c(0xaf52de, 0xaf52de)
+    static let lstRosa = c(0xff2d55, 0xff2d55)
+    static let lstBraun = c(0xa2845e, 0xa2845e)
+    static let lstGrau = c(0x8e8e93, 0x8e8e93)
+    /// a list's colour by its name from the Spark (tasks.COLORS); the accent for one it does not know
+    static func list(_ name: String) -> Color {
+        ["blau": lstBlau, "rot": lstRot, "orange": lstOrange, "gelb": lstGelb, "gruen": lstGruen, "tuerkis": lstTuerkis, "lila": lstLila, "rosa": lstRosa, "braun": lstBraun, "grau": lstGrau][name] ?? accent
+    }
 
     // spacing on the 4/8 grid (--s1 … --s12)
     static let s1: CGFloat = 4

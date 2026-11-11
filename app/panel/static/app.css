@@ -2303,29 +2303,62 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .feldkopf{display:flex;align-items:center;gap:8px}.feldkopf b{flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.feldkopf .b[hidden]{display:none}
 #feldtext{flex:1;min-height:0;font-size:15px;line-height:1.55;padding:12px 14px}.feldfuss{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--mut)}
 @media (max-width:760px){#feldmodal{padding:0;place-items:stretch}#feldmodal .feldcard{width:100%;height:100dvh;border:0;border-radius:0;box-shadow:none;padding:calc(10px + env(safe-area-inset-top)) 12px calc(10px + env(safe-area-inset-bottom))}#feldtext{font-size:16px}}
-/* Listen (listen.js, plan listen-teilen Stufe 1): the lists on the left, the one tapped on the right; each entry with
-   a round box to tick it off, who put it on, when and from where in a grey line, the shop's departments as headings */
+/* Listen (listen.js) like Apple's Reminders (Apple-Stil Stufe 4, board apple-stil/4-listen.png): on the left the search,
+   four tiles and the lists with their colour (--lc from the tokens --lst-*), on the right the list in its colour with
+   round boxes, a grey line, the flag, ⓘ and the empty row at the end; the info card beside the entry (phone: a sheet) */
+.lst{position:relative}
 .lst .ld-split:has(>.ld-detail:not([hidden])){grid-template-columns:minmax(240px,320px) minmax(0,1fr);gap:16px}
 .lst .ld-detail{padding:16px 20px}
-.lstico{background:color-mix(in srgb,var(--acc) 10%,transparent);font-size:17px;color:inherit}
-.lstcnt{font-variant-numeric:tabular-nums;color:var(--fg)}
-.lsthead{display:flex;align-items:center;gap:10px;margin-bottom:10px}.lsthead h3{margin:0}
-.lstquick{display:flex;gap:8px;margin:6px 0 8px}.lstquick input{flex:1;min-width:0;width:auto}
+.lc-blau{--lc:var(--lst-blau)}.lc-rot{--lc:var(--lst-rot)}.lc-orange{--lc:var(--lst-orange)}.lc-gelb{--lc:var(--lst-gelb)}.lc-gruen{--lc:var(--lst-gruen)}
+.lc-tuerkis{--lc:var(--lst-tuerkis)}.lc-lila{--lc:var(--lst-lila)}.lc-rosa{--lc:var(--lst-rosa)}.lc-braun{--lc:var(--lst-braun)}.lc-grau{--lc:var(--lst-grau)}
+.lstfind{padding:2px var(--s2) 8px}.lstfind input{width:100%}
+.lsttiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 var(--s2) 4px}
+.lsttile{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:2px 8px;padding:10px 12px;border:0;border-radius:var(--r-box);background:var(--fill);color:var(--fg);font:inherit;text-align:left;cursor:pointer;min-height:var(--h-touch);transition:background-color var(--dur) var(--ease)}
+.lsttile b{font:var(--t-title);text-align:right;font-variant-numeric:tabular-nums}.lsttile span:last-child{grid-column:1/-1;font-weight:600;color:var(--mut)}
+.lsttile:hover{background:var(--sel)}.lsttile.on{background:var(--lc);color:var(--on-acc)}.lsttile.on span:last-child{color:var(--on-acc)}
+.lsttic{width:28px;height:28px;border-radius:99px;background:var(--lc);color:var(--on-acc);display:grid;place-items:center}.lsttic svg{width:16px;height:16px}
+.lsttile.on .lsttic{background:var(--on-acc);color:var(--lc)}
+.lstico{background:color-mix(in srgb,var(--lc,var(--acc)) 22%,transparent);font-size:17px;color:inherit}
+.lstrow.drag,.lstitem.drag{opacity:.45}.lstover{box-shadow:inset 0 0 0 2px var(--acc);border-radius:var(--r-item)}
+.lstcnt{font-variant-numeric:tabular-nums;color:var(--mut)}.ld-row.on .lstcnt{color:var(--on-acc)}
+.lsthead{display:flex;align-items:center;gap:10px;margin-bottom:10px}.lsthead h3{margin:0;font:var(--t-large);color:var(--lc,var(--fg))}
+.lstbig{font:var(--t-large);color:var(--lc,var(--fg));font-variant-numeric:tabular-nums}
+.ld-grp[class*=lc-] span:first-child{color:var(--lc)}
 .lstitem{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line);min-width:0}
+.lstitem.on{background:var(--sel);border-radius:var(--r-item)}
 .lstit{flex:1;min-width:0;overflow-wrap:anywhere}.lstit b{font-weight:550}.lstit small{display:block;color:var(--mut);font-size:12px}
+.lstit small:empty{display:none}.lstprio{color:var(--lc)}.lstin{font-size:11.5px;color:var(--lc)}
 .lstqty{color:var(--mut);font-size:12.5px}
-.lstdue{font-size:11.5px;padding:1px 7px;border-radius:99px;background:color-mix(in srgb,var(--acc) 14%,transparent);color:var(--acc);white-space:nowrap}.lstdue.late{background:color-mix(in srgb,#ef4444 14%,transparent);color:var(--bad)}
+.lstdue{font-size:11.5px;padding:1px 7px;border-radius:99px;background:var(--acc-weak);color:var(--acct);white-space:nowrap}.lstdue.late{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--badt)}
+.lstdue svg{width:11px;height:11px;vertical-align:-1px}
+.lstflag{color:var(--lst-orange);display:grid}.lstflag svg{width:16px;height:16px}
 .lstck{flex:none;width:24px;height:24px;border-radius:99px;border:2px solid var(--line);background:none;padding:0;cursor:pointer;display:grid;place-items:center;font-size:13px;color:var(--on-acc)}
-.lstck:hover{border-color:var(--ok)}.lstck.on{background:var(--ok);border-color:var(--ok)}
+.lstck:hover{border-color:var(--lc,var(--ok))}.lstck.on{background:var(--lc,var(--ok));border-color:var(--lc,var(--ok))}.lstck.dash{border-style:dashed;cursor:default}
 .lstitem.done .lstit b{text-decoration:line-through;color:var(--mut)}
+.lstinf{opacity:.55}.lstitem:hover .lstinf,.lstinf:focus-visible,.lstitem.on .lstinf{opacity:1}
 .lstdel{opacity:.55}.lstitem:hover .lstdel,.lstdel:focus-visible{opacity:1}
+.lstquick{border-bottom:0}.lstquick input{width:100%;border:0;background:none;padding:2px 0;font:inherit}.lstquick input:focus{outline:none}
+.lstquick small{visibility:hidden}.lstquick:focus-within small{visibility:visible}
+.lstdone{padding:10px 2px;color:var(--mut);font-size:12.5px}
 .lstform{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0}.lstform input{width:100%}
 .lstshare .setrow{padding:6px 0}
 .lstshare select{min-width:9em}
 .lstnote{display:flex;gap:8px;align-items:center;margin:8px 0}.lstform .lstnote input{width:auto}
 .mitlinks{border-top:1px solid var(--line);margin-top:10px;padding-top:10px}.mitlinks .row{flex-wrap:wrap;gap:8px;align-items:center}.mitlinks select{width:auto}.mitmade{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;margin:8px 0}.mitmade .jqr svg{width:132px;height:132px}.mitmade .sp{flex:1;min-width:200px}.mititems{margin:6px 0 0 18px;padding:0}
 .lsticons{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.lsticons .ld-chip{font-size:16px;padding:2px 8px}
-@media (max-width:760px){.lstck{width:28px;height:28px}.lstitem{padding:10px 2px}.lstdel{opacity:1}}
+.lstcols{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}.lstcol{width:26px;height:26px;border-radius:99px;border:2px solid transparent;background:var(--lc);padding:0;cursor:pointer}
+.lstcol.on{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--lc)}
+.lstpop[hidden]{display:none}.lst.ld-box.ld-sel>.lstpop:not([hidden]){display:grid}   /* also over the open list on a phone */
+.lstpop{position:absolute;right:20px;z-index:20;width:min(340px,calc(100% - 40px));background:var(--card);border-radius:var(--r-box);box-shadow:var(--shadow-pop);padding:12px 14px;display:grid;gap:8px}
+.lstpophead{display:flex;gap:8px;align-items:center}.lstpophead input{flex:1;min-width:0;font-weight:600}
+.lstpop textarea{width:100%}
+.lstprow{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:var(--h-ctl);border-top:1px solid var(--line);padding-top:8px}
+.lstprow>span{display:flex;flex-direction:column}.lstprow small{color:var(--mut);font-size:11.5px}
+.lstprow input[type=date],.lstprow input[type=time],.lstprow select{width:auto}
+.lstpopfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid var(--line);padding-top:8px}.lstpopfoot small{color:var(--mut)}
+@media (max-width:760px){.lstck{width:28px;height:28px}.lstitem{padding:10px 2px}.lstdel,.lstinf{opacity:1}.lstinf{min-width:var(--h-touch);min-height:var(--h-touch)}
+  .lstpop{position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;z-index:65;border-radius:var(--r-box) var(--r-box) 0 0;padding:14px 16px calc(14px + env(safe-area-inset-bottom))}
+  .lstfind input,.lstquick input,.lstpop input,.lstpop textarea,.lstpop select{font-size:16px}}
 /* Offen (offen.js, plan assistent-zentrale Stufe 1): one card for the conversation and the page; kind and deadline on
    top, the panel's sentence, facts, fixed buttons with „Später ▾“, a grey line with what happened; done ones shrink */
 .msg .bubble.vgb{background:none;padding:0;width:min(600px,100%);white-space:normal}

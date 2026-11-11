@@ -26,6 +26,11 @@
   --shadow-pop:0 0 0 .5px rgba(255,255,255,.1),0 8px 28px rgba(0,0,0,.5);--visor:#070912;color-scheme:dark;--okt:#32d74b;--warnt:#ffb340;--badt:#ff6961;--acct:#4da3ff}
 :root[data-theme=light]{color-scheme:light}
 
+/* Farben der Listen (listen.js, Apple-Stil Stufe 4, tasks.COLORS): kräftig wie die Kreise in Apples Erinnerungen,
+   in Hell und Dunkel gleich; Text darauf ist --on-acc */
+:root{--lst-blau:#0a7aff;--lst-rot:#ff3b30;--lst-orange:#ff9500;--lst-gelb:#e6b800;--lst-gruen:#34c759;--lst-tuerkis:#30b0c7;
+  --lst-lila:#af52de;--lst-rosa:#ff2d55;--lst-braun:#a2845e;--lst-grau:#8e8e93}
+
 /* Spieltisch (Dungeon-Master, Redesign Stufe 7): der eine eigene Ton, warm und ruhig, mit dem Akzent Gold. Beide Sätze
    stehen hier, weil der Tisch hell oder dunkel unabhängig vom Panel sein kann (Knopf am Tisch, .dm-hell); app.css liest sie
    als --t-* im Block .dm.dm-tisch. Die Welt einer Runde färbt nur den Akzent (welten[].farben gold). -h hell, -d dunkel. */

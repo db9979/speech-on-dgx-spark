@@ -28,8 +28,18 @@ one note per NOTE_EVERY (preference list_note, function listnote). Entries of ot
 An entry may have „bis“ (due, a date „JJJJ-MM-TT“ as the person means it, no time zone; from a meeting in the Begleiter,
 Dominik 2026-10-20): the page and the apps show it as a chip, the voice and the lists elsewhere keep it as it is.
 
-    USERS_DIR/<uid>/tasks.json   {"items": [{id, list, text, qty?, due?, t, by, src, done?, done_by?, sent?}],
+Like Apple's Reminders (Dominik 2026-10-20 „7a“, plan apple-stil/plan.md Stufe 4): every list has a colour from COLORS
+and a place in the profile's own order (also the fixed and the shared ones), every entry on the Spark a place in its
+list (pos, drag to sort), a note, a time to its date („at“, the profile's local time), a flag, a priority (PRIOS) and
+„Erinnern“: with date and time it becomes a reminder of „Timer und Erinnerungen“ (profiles.add_reminder) of the
+profile that set it, only while that function is allowed for it; ticking off, deleting or moving the time takes it
+back (_remind). Moving an entry to another list is deleting there (the owner) and putting on here (add). The page
+counts Heute, Geplant, Alle and Markiert itself from the entries it gets.
+
+    USERS_DIR/<uid>/tasks.json   {"items": [{id, list, text, qty?, due?, at?, note?, flag?, prio?, pos?, remind?,
+                                             rem? {u, id}, t, by, src, done?, done_by?, sent?}],
                                   "lists": [{id, name, icon}],
+                                  "colors": {list id: colour}, "order": [list id | "<owner>.<list>"],
                                   "targets": {"einkauf": {"acc", "url", "name"} | absent},
                                   "shares": {list id: {profile id: "see" | "add"}}}
 """
@@ -62,6 +72,13 @@ ICONS = ("📝", "🛒", "🔨", "🧳", "🎁", "🏠", "🌱", "🍳", "💊",
 # lists that are sorted by departments: the shopping list and own lists with the cart
 SHOP_ICON = "🛒"
 MAX_LISTS = 20
+# the colours of a list (Apple-Stil Stufe 4): a fixed choice, the page draws them from its tokens (--lst-<colour>)
+COLORS = ("blau", "rot", "orange", "gelb", "gruen", "tuerkis", "lila", "rosa", "braun", "grau")
+FIRST_COLOR = {"einkauf": "orange", "aufgaben": "blau"}   # an own list starts blue
+PRIOS = (0, 1, 2, 3)        # none, low, medium, high
+AT_RE = re.compile(r"([01]\d|2[0-3]):[0-5]\d")   # the time of an entry's date, the profile's local time
+NOTE_MAX = 400              # characters of an entry's note
+ENTRY_KEYS = ("id", "text", "qty", "due", "at", "note", "flag", "prio", "remind", "t", "by", "src", "by_link")
 LEVELS = ("see", "add")     # Sehen, Mitschreiben
 SHARED = re.compile(r"(u_[0-9a-f]{12})\.(einkauf|aufgaben|l[0-9a-f]{8})")
 NOTE_EVERY = 600            # one note per list and person at most this often (new entries of others)
@@ -146,6 +163,10 @@ def _load(uid):
         x.setdefault("src", "panel")
         if "due" in x and not due_ok(x["due"]):
             x.pop("due")
+        if "at" in x and not (x.get("due") and isinstance(x["at"], str) and AT_RE.fullmatch(x["at"])):
+            x.pop("at")
+        if x.get("prio") not in PRIOS[1:]:
+            x.pop("prio", None)
     targets = {k: v for k, v in (d.get("targets") or {}).items()
                if k in LISTS and isinstance(v, dict) and v.get("url") and v.get("acc")}
     shares = {}
@@ -154,7 +175,9 @@ def _load(uid):
             v = {u: lv for u, lv in v.items() if lv in LEVELS and isinstance(u, str) and u != uid}
             if v:
                 shares[k] = v
-    return {"items": items, "lists": lists, "targets": targets, "shares": shares}
+    colors = {k: v for k, v in (d.get("colors") or {}).items() if k in ids and v in COLORS}
+    order = [k for k in d.get("order") or [] if isinstance(k, str) and (k in ids or SHARED.fullmatch(k))][:200]
+    return {"items": items, "lists": lists, "targets": targets, "shares": shares, "colors": colors, "order": order}
 
 
 def _save(uid, d):
@@ -164,7 +187,8 @@ def _save(uid, d):
         drop = {id(x) for x in done[:len(items) - MAX_ITEMS]}
         items = [x for x in items if id(x) not in drop][-MAX_ITEMS:]
     profiles._write(_file(uid), {"items": items, "lists": d["lists"], "targets": d["targets"],
-                                 "shares": d.get("shares") or {}})
+                                 "shares": d.get("shares") or {}, "colors": d.get("colors") or {},
+                                 "order": d.get("order") or []})
 
 
 def clean(text):
@@ -188,10 +212,13 @@ def clean_name(text):
 
 
 def lists_of(uid, d=None):
-    """[{"id", "name", "name_en", "icon", "own"}] of the profile's lists: the two fixed ones, then its own."""
+    """[{"id", "name", "name_en", "icon", "color", "own"}] of the profile's lists: the two fixed ones, then its own."""
     d = d or _load(uid)
-    return [{"id": k, "name": de, "name_en": en, "icon": ic, "own": False} for k, (de, en, ic) in LISTS.items()] + \
-           [{"id": x["id"], "name": x["name"], "name_en": x["name"], "icon": x["icon"], "own": True} for x in d["lists"]]
+    col = d.get("colors") or {}
+    return [{"id": k, "name": de, "name_en": en, "icon": ic, "color": col.get(k, FIRST_COLOR[k]), "own": False}
+            for k, (de, en, ic) in LISTS.items()] + \
+           [{"id": x["id"], "name": x["name"], "name_en": x["name"], "icon": x["icon"],
+             "color": col.get(x["id"], COLORS[0]), "own": True} for x in d["lists"]]
 
 
 # ---------------------------------------------------------------- sharing with other profiles (Stufe 2)
@@ -429,8 +456,8 @@ async def items(uid, lst):
     d = _load(uid)
     tgt = d["targets"].get(lst)
     if not tgt:
-        return [{k: x.get(k, "") for k in ("id", "text", "qty", "due", "t", "by", "src", "by_link")}
-                for x in d["items"] if x["list"] == lst and not x.get("sent") and not x.get("done")]
+        return [{k: x.get(k, "") for k in ENTRY_KEYS}
+                for x in ordered(x for x in d["items"] if x["list"] == lst and not x.get("sent") and not x.get("done"))]
     acc = _account(uid, tgt["acc"])
     if not acc:
         raise ValueError("the calendar account of this list was removed")
@@ -440,18 +467,34 @@ async def items(uid, lst):
                 for href, etag, _, todo in await _todos(c, tgt["url"]) if str(todo.get("SUMMARY", "")).strip()]
 
 
-def _todo_due(todo):
-    """The date of a VTODO's DUE (only the date), "" when it has none."""
+def ordered(entries):
+    """The entries in their list's order: by place (pos, set by dragging), entries from before by when."""
+    return sorted(entries, key=lambda x: (x.get("pos") or 0, x.get("t") or 0))
+
+
+def _todo_due(todo, zone=None):
+    """The date of a VTODO's DUE (only the date), "" when it has none; with zone the date there."""
+    return todo_due_at(todo, zone)[0]
+
+
+def todo_due_at(todo, zone=None):
+    """(date, time „HH:MM“ or "") of a VTODO's DUE: a floating time as it is, a time with zone in zone (the profile's;
+    without zone only the date)."""
     try:
         d = todo.decoded("DUE")
     except (KeyError, ValueError):
-        return ""
-    return d.date().isoformat() if isinstance(d, datetime.datetime) else d.isoformat() if isinstance(d, datetime.date) else ""
+        return "", ""
+    if isinstance(d, datetime.datetime):
+        if d.tzinfo and zone is None:
+            return d.date().isoformat(), ""
+        d = d.astimezone(zone) if d.tzinfo else d   # a floating time is the wall clock time as it is
+        return d.date().isoformat(), d.strftime("%H:%M")
+    return (d.isoformat(), "") if isinstance(d, datetime.date) else ("", "")
 
 
 def done_items(uid, lst):
     """The entries ticked off in the last KEEP_DONE, newest first (only lists on the Spark keep them)."""
-    return sorted(({k: x.get(k, "") for k in ("id", "text", "qty", "due", "t", "by", "src", "done", "done_by", "by_link")}
+    return sorted(({k: x.get(k, "") for k in ENTRY_KEYS + ("done", "done_by")}
                    for x in _load(uid)["items"] if x["list"] == lst and x.get("done")), key=lambda x: -x["done"])
 
 
@@ -496,6 +539,7 @@ async def _add(uid, lst, texts, by, src, due=None, qty=True, guest=None):
         d = _load(uid)
         have = {x["text"].lower(): x for x in d["items"] if x["list"] == lst and not x.get("sent") and not x.get("done")}
         now = int(time.time())
+        pos = _last_pos(d, lst)
         for x in new:
             old = have.get(x["text"].lower())
             if old:
@@ -503,13 +547,19 @@ async def _add(uid, lst, texts, by, src, due=None, qty=True, guest=None):
                 if due and not old.get("due"):
                     old["due"] = due
             else:
+                pos += 1
                 d["items"].append(dict({"id": os.urandom(5).hex(), "list": lst, "text": x["text"], "t": now,
-                                        "by": "" if guest is not None else by or uid, "src": src},
+                                        "by": "" if guest is not None else by or uid, "src": src, "pos": pos},
                                        **({"qty": x["qty"]} if x["qty"] else {}),
                                        **({"due": due} if due else {}),
                                        **({"by_link": guest} if guest is not None else {})))
         _save(uid, d)
     return [show(x) for x in new]
+
+
+def _last_pos(d, lst):
+    """The highest place on the list (a new entry comes after it, at the end like the empty row it was typed in)."""
+    return max([x.get("pos") or 0 for x in d["items"] if x["list"] == lst] + [0])
 
 
 async def _change(uid, lst, picked, action, by):
@@ -566,6 +616,8 @@ def _change_here(uid, lst, ids, action, by, card=True):
                 x.pop("done_by", None)
             else:
                 x["done"], x["done_by"] = int(time.time()), by or uid
+        for x in hit:   # ticked off or deleted: its reminder goes; taken back: it comes again if its time is ahead
+            _remind(uid, x if action != "delete" else dict(x, remind=False), by or uid)
         _save(uid, d)
     if card:
         card_follows(uid, lst, [x["id"] for x in hit], action)
@@ -656,6 +708,154 @@ async def change(uid, lst, picked, action, by=None):
     return await _logged(what, lst, uid, _change(uid, lst, picked, action, by), by)
 
 
+# ---------------------------------------------------------------- like Apple's Reminders (Apple-Stil Stufe 4)
+def _remind(owner, x, who):
+    """Keeps the entry's reminder in step (call inside _lock): the old one goes, a new one comes for who (the profile
+    that changed the entry) when „Erinnern“ is on, the entry is open, has date and time ahead and who may use „Timer
+    und Erinnerungen“. The reminder says the entry and its list, it rings like every other one."""
+    old = x.pop("rem", None)
+    if isinstance(old, dict) and old.get("u") and old.get("id"):
+        profiles.remove_reminders(old["u"], {old["id"]})
+    if not (x.get("remind") and x.get("due") and x.get("at")) or x.get("done") or x.get("sent") \
+            or not features.allowed("reminders", who):
+        return
+    import chat
+    zone = chat.user_zone(profiles.settings(who).get("tz", ""))
+    try:
+        at = datetime.datetime.fromisoformat(f"{x['due']}T{x['at']}").replace(tzinfo=zone)
+    except ValueError:
+        return
+    if at.timestamp() <= time.time():
+        return
+    item = profiles.add_reminder(who, f"{show(x)} ({name_of(owner, x['list'])})"[:200], int(at.timestamp() * 1000))
+    x["rem"] = {"u": who, "id": item["id"]}
+
+
+def _check_edit(body):
+    """The changes an entry may get, checked: {key: value}, "" or 0 takes a value away. ValueError for a wrong one."""
+    out = {}
+    if "text" in body:
+        text, qty = split_qty(body["text"])
+        if not text:
+            raise ValueError("an entry needs a text")
+        out["text"], out["qty"] = text, qty
+    if "note" in body:
+        out["note"] = re.sub(r"[\x00-\x08\x0b-\x1f]", "", str(body["note"] or "")).strip()[:NOTE_MAX]
+    if "due" in body:
+        if body["due"] and not due_ok(body["due"]):
+            raise ValueError("the date must be JJJJ-MM-TT")
+        out["due"] = body["due"] or ""
+    if "at" in body:
+        if body["at"] and not (isinstance(body["at"], str) and AT_RE.fullmatch(body["at"])):
+            raise ValueError("the time must be HH:MM")
+        out["at"] = body["at"] or ""
+    if "flag" in body:
+        out["flag"] = bool(body["flag"])
+    if "prio" in body:
+        if body["prio"] not in PRIOS:
+            raise ValueError("the priority must be 0 to 3")
+        out["prio"] = body["prio"]
+    if "remind" in body:
+        out["remind"] = bool(body["remind"])
+    return out
+
+
+def edit_entry(owner, lst, eid, body, by):
+    """The info of one entry on a list the Spark keeps (text, note, date, time, flag, priority, „Erinnern“); returns
+    the entry. ValueError for a wrong value or an entry that is not there (any more), with a journal line each."""
+    try:
+        notaus.stop("aktion", owner)
+        ch = _check_edit(body if isinstance(body, dict) else {})
+        with _lock:
+            d = _load(owner)
+            if d["targets"].get(lst):
+                raise ValueError("a list in a CalDAV task list keeps no info")
+            x = next((y for y in d["items"] if y["id"] == eid and y["list"] == lst and not y.get("sent")), None)
+            if x is None:
+                raise ValueError("this entry does not exist (any more)")
+            for k, v in ch.items():
+                if v in ("", 0, False) and k not in ("text",):
+                    x.pop(k, None)
+                else:
+                    x[k] = v
+            if not x.get("due"):
+                x.pop("at", None)
+            if not x.get("qty"):
+                x.pop("qty", None)
+            _remind(owner, x, by or owner)
+            _save(owner, d)
+    except notaus.NotausAktiv:
+        _log("edit", lst, owner, "refused notaus", by)
+        raise
+    except ValueError:
+        _log("edit", lst, owner, "refused", by)
+        raise
+    _log("edit", lst, owner, "1 entries", by)
+    return {k: x.get(k, "") for k in ENTRY_KEYS}
+
+
+def move_entry(owner, lst, eid, to_owner, to_lst, by):
+    """Moves one open entry to another list on the Spark (drag onto a list, „Liste“ in the info): it keeps its text,
+    info, who and when, and comes at the end there. The caller checked the levels (owner here, add there)."""
+    try:
+        notaus.stop("aktion", owner)
+        if (owner, lst) == (to_owner, to_lst):
+            raise ValueError("the entry is on this list already")
+        with _lock:
+            d = _load(owner)
+            dd = d if to_owner == owner else _load(to_owner)
+            if d["targets"].get(lst) or dd["targets"].get(to_lst):
+                raise ValueError("a list in a CalDAV task list takes no entries moved")
+            x = next((y for y in d["items"] if y["id"] == eid and y["list"] == lst and not y.get("sent")
+                      and not y.get("done")), None)
+            if x is None:
+                raise ValueError("this entry does not exist (any more)")
+            d["items"] = [y for y in d["items"] if y is not x]
+            _remind(owner, dict(x, remind=False), by or owner)   # its reminder goes with the old place …
+            x.pop("rem", None)
+            x.update(list=to_lst, pos=_last_pos(dd, to_lst) + 1)
+            dd["items"].append(x)
+            _remind(to_owner, x, by or owner)                    # … and comes again with the new name
+            _save(owner, d)
+            if dd is not d:
+                _save(to_owner, dd)
+    except notaus.NotausAktiv:
+        _log("move", lst, owner, "refused notaus", by)
+        raise
+    except ValueError:
+        _log("move", lst, owner, "refused", by)
+        raise
+    _log("move", lst, owner, "1 entries", by)
+    card_follows(owner, lst, [eid], "delete")
+    return 1
+
+
+def sort_entries(owner, lst, ids, by):
+    """The order of the list's open entries after dragging: the ids in their new order first, the rest after them as
+    they were. Returns how many were placed."""
+    with _lock:
+        d = _load(owner)
+        open_ = ordered(x for x in d["items"] if x["list"] == lst and not x.get("sent") and not x.get("done"))
+        place = {eid: i for i, eid in enumerate(dict.fromkeys(str(x) for x in ids))}
+        hit = [x for x in open_ if x["id"] in place]
+        rest = [x for x in open_ if x["id"] not in place]
+        for i, x in enumerate(sorted(hit, key=lambda x: place[x["id"]]) + rest):
+            x["pos"] = i + 1
+        _save(owner, d)
+    _log("sort", lst, owner, f"{len(hit)} entries", by)
+    return len(hit)
+
+
+def set_order(uid, order):
+    """The order of the lists on the page (own, fixed and shared ones); unknown ids are dropped."""
+    with _lock:
+        d = _load(uid)
+        d["order"] = [k for k in dict.fromkeys(str(x) for x in order if isinstance(x, str))
+                      if known(uid, k) or SHARED.fullmatch(k)][:200]
+        _save(uid, d)
+    _list_log("order", uid, "ok")
+
+
 # ---------------------------------------------------------------- a note when others put something on (Stufe 2)
 _notes = {}   # (to, owner, list) -> {"last": time sent, "n": entries waiting, "by": [names], "wait": a send is due}
 
@@ -720,8 +920,9 @@ def _list_log(what, uid, result):
     print(f"tasks: list {what} | {result} | {profiles.log_name(profiles.by_id(uid))}", flush=True)
 
 
-def make_list(uid, name, icon):
-    """A new own list; returns its id. ValueError for no name, a name taken or too many lists."""
+def make_list(uid, name, icon, color=None):
+    """A new own list (colour from COLORS, else the first); returns its id. ValueError for no name, a name taken or
+    too many lists."""
     name = clean_name(name)
     try:
         if not name:
@@ -734,6 +935,8 @@ def make_list(uid, name, icon):
                 raise ValueError("a list with this name exists already")
             lid = "l" + os.urandom(4).hex()
             d["lists"].append({"id": lid, "name": name, "icon": icon if icon in ICONS else ICONS[0]})
+            if color in COLORS:
+                d["colors"][lid] = color
             _save(uid, d)
     except ValueError:
         _list_log("make", uid, "refused")
@@ -742,14 +945,24 @@ def make_list(uid, name, icon):
     return lid
 
 
-def edit_list(uid, lid, name=None, icon=None):
-    """Renames an own list or gives it another symbol."""
+def edit_list(uid, lid, name=None, icon=None, color=None):
+    """Renames an own list or gives it another symbol; a colour (COLORS) any list of the profile."""
     with _lock:
         d = _load(uid)
         x = next((y for y in d["lists"] if y["id"] == lid), None)
+        if lid in LISTS:   # a fixed list: only its colour
+            if color not in COLORS or name is not None:
+                _list_log("edit", uid, "refused fixed")
+                raise ValueError("a fixed list keeps its name; its colour must be one of the choice")
+            d["colors"][lid] = color
+            _save(uid, d)
+            _list_log("edit", uid, "ok")
+            return
         if not x:
             _list_log("edit", uid, "refused unknown")
             raise ValueError("this list does not exist (any more)")
+        if color in COLORS:
+            d["colors"][lid] = color
         if name is not None:
             name = clean_name(name)
             if not name or any(_norm(y["name"]) == _norm(name) for y in lists_of(uid, d) if y["id"] != lid):
@@ -770,8 +983,12 @@ def drop_list(uid, lid):
             _list_log("delete", uid, "refused unknown")
             raise ValueError("this list does not exist (any more)")
         n = sum(1 for x in d["items"] if x["list"] == lid)
+        for x in d["items"]:
+            if x["list"] == lid and x.get("rem"):
+                _remind(uid, dict(x, remind=False), uid)
         d["lists"] = [x for x in d["lists"] if x["id"] != lid]
         d["items"] = [x for x in d["items"] if x["list"] != lid]
+        d["colors"].pop(lid, None)
         _save(uid, d)
     _list_log("delete", uid, f"{n} entries")
     import mitschreiblink
@@ -1019,7 +1236,9 @@ def _entry(x, names):
     if by and by not in names:
         p = profiles.by_id(by)
         names[by] = p["name"] if p else ""
-    out = {"id": x["id"], "text": x["text"], "qty": x.get("qty", ""), "due": x.get("due", ""), "t": x.get("t", 0),
+    out = {"id": x["id"], "text": x["text"], "qty": x.get("qty", ""), "due": x.get("due", ""), "at": x.get("at", ""),
+           "note": x.get("note", ""), "flag": bool(x.get("flag")), "prio": x.get("prio") or 0,
+           "remind": bool(x.get("remind")), "t": x.get("t", 0),
            "src": x.get("src", ""), "by_name": names.get(by, "") if by else x.get("by_link", "")}
     if x.get("done"):
         db = x.get("done_by") or ""
@@ -1069,7 +1288,10 @@ async def get_lists(prof=Depends(_on)):
         od = _load(owner)
         out[k] = dict(li, own=False, shared={"owner": oname, "level": lvl}, **await _rows(owner, li["id"], od, names, may))
         order.append(k)
-    res = {"lists": out, "order": order, "icons": list(ICONS),
+    mine = [k for k in d["order"] if k in out]   # the order the person dragged; what is new comes after it
+    order = mine + [k for k in order if k not in mine]
+    res = {"lists": out, "order": order, "icons": list(ICONS), "colors": list(COLORS),
+           "reminders": features.allowed("reminders", uid),
            "depts": [[de, en] for de, en, _ in DEPARTMENTS] + [list(OTHER_DEPT)],
            "sources": {k: list(v) for k, v in SOURCES.items()}, "max_lists": MAX_LISTS, "sharing": share}
     if share:
@@ -1129,17 +1351,25 @@ async def new_list(request: Request, prof=Depends(_on)):
     """An own list (name, symbol from ICONS)."""
     body = await core.json_body(request, BODY)
     try:
-        lid = make_list(prof["id"], body.get("name"), body.get("icon"))
+        lid = make_list(prof["id"], body.get("name"), body.get("icon"), body.get("color"))
     except ValueError as e:
         raise HTTPException(400, str(e))
     return dict(await get_lists(prof), made=lid)
+
+
+@router.put("/api/profile/listen/order")
+async def order_lists(request: Request, prof=Depends(_on)):
+    """The order of the lists after dragging them: {"order": [list id | "<owner>.<list>"]}."""
+    order = (await core.json_body(request, BODY)).get("order")
+    set_order(prof["id"], order[:200] if isinstance(order, list) else [])
+    return await get_lists(prof)
 
 
 @router.put("/api/profile/listen/{lid}")
 async def change_list(lid: str, request: Request, prof=Depends(_on)):
     body = await core.json_body(request, BODY)
     try:
-        edit_list(prof["id"], lid, body.get("name") if "name" in body else None, body.get("icon"))
+        edit_list(prof["id"], lid, body.get("name") if "name" in body else None, body.get("icon"), body.get("color"))
     except ValueError as e:
         raise HTTPException(404 if "exist" in str(e) else 400, str(e))
     return await get_lists(prof)
@@ -1216,6 +1446,35 @@ async def undo_items(lst: str, request: Request, prof=Depends(_on)):
     owner, lid = _where(prof["id"], lst, "add")
     ids = await _ids(request)
     await change(owner, lid, [{"id": x} for x in ids], "undo", by=prof["id"])
+    return await get_lists(prof)
+
+
+@router.put("/api/profile/tasks/{lst}/order")
+async def order_items(lst: str, request: Request, prof=Depends(_on)):
+    """The order of a list's open entries after dragging: {"ids": [...]} (Mitschreiben may sort too)."""
+    owner, lid = _where(prof["id"], lst, "add")
+    sort_entries(owner, lid, await _ids(request), prof["id"])
+    return await get_lists(prof)
+
+
+@router.put("/api/profile/tasks/{lst}/{item}")
+async def edit_item(lst: str, item: str, request: Request, prof=Depends(_on)):
+    """The info of one entry (text, note, due, at, flag, prio, remind) and with "to" (a list address) moving it there:
+    away from here only for the owner, onto the other list for whoever may put on there."""
+    owner, lid = _where(prof["id"], lst, "add")
+    body = await core.json_body(request, BODY)
+    try:
+        if body.get("to"):
+            _where(prof["id"], lst, "own")
+            to_owner, to_lid = _where(prof["id"], str(body["to"])[:40], "add")
+            move_entry(owner, lid, item[:20], to_owner, to_lid, prof["id"])
+        info = {k: v for k, v in body.items() if k != "to"}
+        if info:
+            edit_entry(*((to_owner, to_lid) if body.get("to") else (owner, lid)), item[:20], info, prof["id"])
+    except notaus.NotausAktiv:
+        raise HTTPException(423, "Notaus is on")
+    except ValueError as e:
+        raise HTTPException(404 if "exist" in str(e) else 400, str(e))
     return await get_lists(prof)
 
 

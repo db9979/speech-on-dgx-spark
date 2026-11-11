@@ -161,6 +161,29 @@ class Erinnerungen(unittest.TestCase):
         self.assertEqual(self.dav.put(path + "D-1.ics", content=new, headers={"If-None-Match": "*"}).status_code, 201)
         self.assertEqual(next(y for y in tasks._load(self.uid)["items"] if y["text"] == "Raum buchen")["due"], "2026-10-30")
 
+    def test_time_note_and_priority_go_both_ways(self):
+        """Apple-Stil Stufe 4: time (floating, the wall clock time set), note and priority reach Reminders and come
+        back; a time with zone comes in in the profile's zone; taken away there, gone here."""
+        import asyncio
+        path = self.base + "liste-aufgaben/"
+        asyncio.run(tasks.add(self.uid, "aufgaben", ["Steuer abgeben"]))
+        eid = tasks._load(self.uid)["items"][0]["id"]
+        tasks.edit_entry(self.uid, "aufgaben", eid, {"due": "2099-03-01", "at": "17:30", "note": "Belege", "prio": 3}, self.uid)
+        r = self.dav.get(path + f"{eid}.ics")
+        for part in ("DUE:20990301T173000", "DESCRIPTION:Belege", "PRIORITY:1"):
+            self.assertIn(part, r.text)
+        self.assertNotIn("DUE:20990301T173000Z", r.text)
+        back = TODO.format(uid=f"{eid}@speech-spark", text="Steuer abgeben",
+                           extra="DUE:20990302T080000\r\nDESCRIPTION:Belege und Quittungen\r\nPRIORITY:5\r\n")
+        self.assertEqual(self.dav.put(path + f"{eid}.ics", content=back).status_code, 204)
+        x = tasks._load(self.uid)["items"][0]
+        self.assertEqual((x["due"], x["at"], x["note"], x["prio"]), ("2099-03-02", "08:00", "Belege und Quittungen", 2))
+        bare = TODO.format(uid=f"{eid}@speech-spark", text="Steuer abgeben", extra="DUE;VALUE=DATE:20990303\r\n")
+        self.assertEqual(self.dav.put(path + f"{eid}.ics", content=bare).status_code, 204)
+        x = tasks._load(self.uid)["items"][0]
+        self.assertEqual((x["due"], "at" in x, "note" in x, "prio" in x), ("2099-03-03", False, False, False))
+        self.assertEqual([listendav.prio_in(n) for n in (1, 4, 5, 6, 9, 0, "x")], [3, 3, 2, 1, 1, 0, 0])
+
     def test_only_one_task_with_a_summary(self):
         path = self.base + "liste-aufgaben/"
         event = TODO.replace("VTODO", "VEVENT").format(uid="E1", text="Termin", extra="")

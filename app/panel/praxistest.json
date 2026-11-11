@@ -5667,6 +5667,13 @@
 "titel": "Sprachausgabe bei vielen Anfragen",
 "text": "A: Auf dem Pi sudo speech-spark update (tars zuerst). Einstellungen → Sprachausgabe → Erweitert zeigt „Max. gleichzeitige Anfragen“ 4 und „Mehrere Stimmen gleichzeitig“ auf „bis zu 4 gebündelt (empfohlen)“; Zustand → Überblick: die Sprachausgabe ist nach dem Neustart wieder bereit. B: Zustand → Prüfen → Leistung messen: „erster Ton bei 4“ und „Davon in der Warteschlange“ mit der Messung von vorher vergleichen und in den Thread geben. C: Auf drei Geräten gleichzeitig eine lange Antwort anfordern und während sie spricht auf einem vierten eine Frage stellen: der erste Ton kommt ohne lange Pause, die laufenden Antworten reißen nicht ab; Zustand → Logs (Sprachausgabe) zeigt „vorrang: erster Satz vor … Folgesatz/Folgesätzen“. D: „Blöcke selbst anpassen“ an, speichern (die Sprachausgabe startet neu), wieder messen; bringt es nichts oder stockt es, wieder aus.",
 "thread": "Sprachausgabe bei vielen Anfragen stärken"
+},
+{
+ "id": "P836",
+ "v": 1378,
+ "titel": "Listen wie Apple Erinnerungen",
+ "text": "Funktionen → Listen für Einkauf und Aufgaben an (und Timer und Erinnerungen für C). A: Listen: links Suche, die Kacheln Heute, Geplant, Alle, Markiert mit Zahlen, darunter die Listen mit Farbe; eine Liste mit der Maus auf eine andere ziehen: die Reihenfolge bleibt nach dem Neuladen. B: In einer Liste in die leere Zeile am Ende „Milch“ tippen, Enter, gleich „Brot“, Enter: beide stehen da, das Feld bleibt offen. Einen Eintrag auf einen anderen ziehen (Reihenfolge) und auf eine Liste links (verschoben). C: ⓘ an einem Eintrag: Notiz, Datum heute, Uhrzeit in 3 Minuten, Erinnern an, Markiert an, Priorität !!: der Eintrag zeigt „Heute, HH:MM“ mit Glocke, die Fahne, „!!“; die Kacheln Heute und Markiert zählen ihn; zur Uhrzeit klingelt die Erinnerung „<Eintrag> (<Liste>)“ auf deinem Gerät. Einen zweiten Eintrag so einstellen und vor der Uhrzeit abhaken: er klingelt nicht. D: ⋯ → Farbe bei Einkauf: die Farbe wechselt links und im Titel. E: Am Handy (Panel und iPhone-App): Kacheln, Liste, ⓘ als Blatt von unten, in der App „Neue Erinnerung“ als letzte Zeile und „Bearbeiten“ zum Sortieren. F: Mit „Listen in Erinnerungen“: Uhrzeit, Notiz und Priorität erscheinen in Apples Erinnerungen und kommen geändert zurück.",
+ "thread": "Listen im Apple-Stil bauen"
 }
 ]
 }

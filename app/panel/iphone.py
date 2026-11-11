@@ -197,11 +197,14 @@ THINGS = {
     # renamed and deleted (the CalDAV target and the shortcut's inbox stay in the browser and with app_ios)
     "tasks": ((("GET",), r"/api/profile/tasks"), (("POST",), r"/api/profile/listen"),
               (("PUT", "DELETE"), r"/api/profile/listen/l[0-9a-f]{8}"),
+              (("PUT",), r"/api/profile/listen/(?:einkauf|aufgaben|order)"),   # colour of a fixed list, order of the lists
               (("PUT",), r"/api/profile/listen/(?:einkauf|aufgaben|l[0-9a-f]{8})/share"),
               (("GET", "POST"), r"/api/profile/listen/(?:einkauf|aufgaben|l[0-9a-f]{8})/links"),
               (("DELETE",), r"/api/profile/listen/(?:einkauf|aufgaben|l[0-9a-f]{8})/links/k[0-9a-f]{8}"),
               (("POST",), r"/api/profile/tasks/(?:u_[0-9a-f]{12}\.)?(?:einkauf|aufgaben|l[0-9a-f]{8})/(?:add|done|undo)"),
-              (("DELETE",), r"/api/profile/tasks/(?:einkauf|aufgaben|l[0-9a-f]{8})/[0-9a-f]{10}")),
+              (("DELETE",), r"/api/profile/tasks/(?:einkauf|aufgaben|l[0-9a-f]{8})/[0-9a-f]{10}"),
+              # Apple-Stil Stufe 4: the info of an entry (and moving it), the order of a list's entries
+              (("PUT",), r"/api/profile/tasks/(?:u_[0-9a-f]{12}\.)?(?:einkauf|aufgaben|l[0-9a-f]{8})/(?:order|[0-9a-f]{10})")),
     # Kontakte (contacts.py, Apple-Stil „6a“): the page's cards, „Mit Anna“, a card as .vcf; changing, adding and
     # deleting only with Kontakte ändern (its own function, checked there again; the address books stay in the browser)
     "contacts": ((("GET",), r"/api/profile/contacts/page"), (("GET",), r"/api/profile/contacts/(?:with|vcf)/[csv][0-9a-f]{12}")),

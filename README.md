@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.378** Lists like Apple Reminders: tiles Today, Scheduled, All, Flagged, lists with a colour, an empty row to keep typing, drag to sort and move, ⓘ with note, date, time with remind, flag and priority; in the panel, on the phone and in the iPhone app.
 - **V01.1.377** Speech output with many requests: 4 voices at once instead of 2, the first sentence of an answer goes first, new setting "Adapt the blocks by itself"
 - **V01.1.376** Red fix: the locked row "Own voice" looks like every locked row; three tests no longer depend on the date or on an earlier test
 - **V01.1.375** OpenCode shown correctly: System updates shows OpenCode on the Pi as installed when Develop on the Pi set it up; when it is missing, the install command is shown.
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.371** Leaner docs: the guide describes only today's state (history stays in the CHANGELOG), the CHANGELOG starts at V01.1 with the older series in CHANGELOG-V01.0.md, the guideline without provenance notes
 - **V01.1.370** Only the own language model: the fallback to qwen38 is gone, and Models lists only models that run or were measured
 - **V01.1.369** Helper model with one switch: once on it helps wherever it can, instead of five separate switches
-- **V01.1.368** Device instead of profile: a "yes" counts only on the device and in the conversation where it was asked, notes know every device on its own, channel answers land in the same main conversation all day
 
 
 

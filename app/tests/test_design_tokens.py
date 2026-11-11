@@ -415,7 +415,7 @@ class OwnSymbols(Ratchet, unittest.TestCase):
 
 class HexColours(Ratchet, unittest.TestCase):
     WHAT = "a fixed hex colour outside tokens.css; take a token (var(--…)) or add one to tokens.css"
-    ALT = {"app.css": 357, "live.css": 18, "weiche.css": 2}
+    ALT = {"app.css": 356, "live.css": 18, "weiche.css": 2}
 
     def hits(self):
         return {n: c for n in sheets() if n != TOKENS and (c := hex_colours(read(n)))}
@@ -562,7 +562,8 @@ ANDROID_SRC = os.path.join(ROOT, "android", "app", "src", "main", "java", "io", 
 # the iPhone app's Theme (ios/Shared/Theme.swift) carries the companion's names and a few more
 IOS_TOKENS = dict(MAC_TOKENS, faint="faint", okText="okt", warnText="warnt", badText="badt", onAccent="on-acc",
                   wkPerson="wk-person", wkFirma="wk-firma", wkOrt="wk-ort", wkVertrag="wk-vertrag", wkKonto="wk-konto",
-                  wkFrist="wk-frist")
+                  wkFrist="wk-frist", **{"lst" + n.capitalize(): "lst-" + n for n in
+                                          ("blau", "rot", "orange", "gelb", "gruen", "tuerkis", "lila", "rosa", "braun", "grau")})
 # drawn pictures with their own colours (the faces) and the theme itself
 APP_PICTURES = {"ComicFace.swift", "Face.swift", "Theme.swift", "FaceView.kt"}
 # a colour written in place in Swift: Color(red: …), Color.red, an implicit .red, a hex number

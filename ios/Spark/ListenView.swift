@@ -7,6 +7,9 @@ import CoreImage.CIFilterBuiltins
 /// list by departments. Opens with the admin's release of Listen (iphone.THINGS "tasks"); every rule stays on the Spark.
 /// Listen teilen (Stufe 2): lists other profiles share show under „Mit mir geteilt“ with whose they are; „Sehen“ only
 /// shows them, „Mitschreiben“ adds and ticks off, deleting stays with the owner. An own list is shared with „Teilen …“.
+/// Apple-Stil Stufe 4 (plan apple-stil/plan.md „7a“): like Apple's Reminders. Tiles Heute, Geplant, Alle, Markiert
+/// (counted here from the entries), lists with their colour, „Neue Erinnerung“ as the last row, ⓘ per entry (note,
+/// date, time with „Erinnern“, flag, priority, list), drag to sort. The colours come from Theme.list.
 struct ListEntry: Identifiable {
     let id: String
     let text: String
@@ -14,6 +17,13 @@ struct ListEntry: Identifiable {
     /// „bis“ (from a meeting in the Begleiter): "bis Fr 24.10." / "due Fri 24 Oct", "" without; late: the day has passed
     let due: String
     let late: Bool
+    /// the raw date „JJJJ-MM-TT“ and time „HH:MM“ ("" without), note, flag, priority 0-3, „Erinnern“
+    let dueDay: String
+    let time: String
+    let note: String
+    let flag: Bool
+    let prio: Int
+    let remind: Bool
     let at: Date?
     let by: String
     let src: String
@@ -26,6 +36,12 @@ struct ListEntry: Identifiable {
         text = d["text"] as? String ?? ""
         qty = d["qty"] as? String ?? ""
         let raw = d["due"] as? String ?? ""
+        dueDay = raw
+        time = d["at"] as? String ?? ""
+        note = d["note"] as? String ?? ""
+        flag = d["flag"] as? Bool ?? false
+        prio = (d["prio"] as? NSNumber)?.intValue ?? 0
+        remind = d["remind"] as? Bool ?? false
         let f0 = DateFormatter()
         f0.calendar = Calendar(identifier: .gregorian)
         f0.locale = Locale(identifier: "en_US_POSIX")
@@ -34,7 +50,7 @@ struct ListEntry: Identifiable {
             let f1 = DateFormatter()
             f1.locale = Locale(identifier: en ? "en_GB" : "de_DE")
             f1.dateFormat = en ? "EEE d MMM" : "EEE dd.MM."
-            due = (en ? "due " : "bis ") + f1.string(from: day)
+            due = (en ? "due " : "bis ") + f1.string(from: day) + (time.isEmpty ? "" : ", " + time)
             late = raw < f0.string(from: Date())
         } else {
             due = ""
@@ -55,6 +71,8 @@ struct SparkListe: Identifiable {
     let id: String
     let name: String
     let icon: String
+    /// the list's colour (tasks.COLORS) for Theme.list
+    let color: String
     let own: Bool
     let shop: Bool
     let onCalendar: Bool
@@ -89,6 +107,9 @@ final class ListenModel: ObservableObject {
     @Published var note = true
     /// Mitschreib-Link is released by the admin (mitschreiblink.py)
     @Published var linking = false
+    /// the colours a list can have and whether „Erinnern“ works (Timer und Erinnerungen is allowed)
+    @Published var colors: [String] = []
+    @Published var reminders = false
     private var sources: [String: [String]] = [:]
     static let en = Locale.current.language.languageCode?.identifier != "de"
 
@@ -104,6 +125,7 @@ final class ListenModel: ObservableObject {
             let en = Self.en && !(l["own"] as? Bool ?? false)
             let sh = l["shared"] as? [String: Any] ?? [:]
             return SparkListe(id: k, name: (en ? l["name_en"] : l["name"]) as? String ?? k, icon: l["icon"] as? String ?? "",
+                             color: l["color"] as? String ?? "",
                              own: l["own"] as? Bool ?? false, shop: l["shop"] as? Bool ?? false, onCalendar: l["target"] is [String: Any],
                              error: l["error"] as? String ?? "",
                              items: (l["items"] as? [[String: Any]] ?? []).map { ListEntry($0, en: Self.en) },
@@ -116,10 +138,46 @@ final class ListenModel: ObservableObject {
         people = (d["people"] as? [[String: Any]] ?? []).map { ListPerson(id: $0["id"] as? String ?? "", name: $0["name"] as? String ?? "") }
         note = d["note"] as? Bool ?? note
         icons = d["icons"] as? [String] ?? icons
+        colors = d["colors"] as? [String] ?? colors
+        reminders = d["reminders"] as? Bool ?? false
         sources = d["sources"] as? [String: [String]] ?? sources
     }
 
     func load() async { await send("GET", "/api/profile/tasks") }
+
+    /// today as „JJJJ-MM-TT“ (the tiles and Geplant)
+    static func day(_ add: Int = 0) -> String {
+        let f = DateFormatter()
+        f.calendar = Calendar(identifier: .gregorian)
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        return f.string(from: Calendar.current.date(byAdding: .day, value: add, to: Date()) ?? Date())
+    }
+
+    /// the open entries of every list with their list, for the tiles and the search
+    func all() -> [(ListEntry, SparkListe)] { lists.flatMap { l in l.items.map { ($0, l) } } }
+
+    /// whether an entry belongs to a tile: heute (due today or before), geplant (with a date), alle, markiert
+    static func fits(_ kind: String, _ x: ListEntry) -> Bool {
+        switch kind {
+        case "heute": return !x.dueDay.isEmpty && x.dueDay <= day()
+        case "geplant": return !x.dueDay.isEmpty
+        case "markiert": return x.flag
+        default: return true
+        }
+    }
+
+    /// a colour's name in the app's language (tasks.COLORS are German words without umlauts)
+    static func colorName(_ c: String) -> String {
+        let names = ["blau": ("Blau", "Blue"), "rot": ("Rot", "Red"), "orange": ("Orange", "Orange"), "gelb": ("Gelb", "Yellow"),
+                     "gruen": ("Grün", "Green"), "tuerkis": ("Türkis", "Teal"), "lila": ("Lila", "Purple"),
+                     "rosa": ("Rosa", "Pink"), "braun": ("Braun", "Brown"), "grau": ("Grau", "Grey")]
+        guard let n = names[c] else { return c }
+        return en ? n.1 : n.0
+    }
+
+    /// the entry with this id on this list, as it is now
+    func entry(_ list: String, _ id: String) -> ListEntry? { self.list(list)?.items.first { $0.id == id } }
 
     /// the note when others put something on a shared list (the profile's own setting, the same as in the panel)
     func setNote(_ on: Bool) async {
@@ -153,23 +211,58 @@ struct ListenView: View {
     @StateObject private var m = ListenModel()
     @State private var making = false
     @State private var name = ""
+    @State private var query = ""
 
     var body: some View {
         List {
-            let shared = m.lists.filter { !$0.mine }
-            if shared.isEmpty {
-                ForEach(m.lists) { row($0) }
+            if !query.trimmingCharacters(in: .whitespaces).isEmpty {
+                let q = query.lowercased()
+                let hits = m.all().filter { ($0.0.text + " " + $0.0.note).lowercased().contains(q) }
+                Section {
+                    if hits.isEmpty { Text("Nichts gefunden.").foregroundStyle(.secondary) }
+                    ForEach(hits, id: \.0.id) { x, l in
+                        NavigationLink { ListeView(m: m, id: l.id) } label: {
+                            VStack(alignment: .leading) {
+                                Text(verbatim: x.text)
+                                Text(verbatim: l.name).font(.caption).foregroundStyle(Theme.list(l.color))
+                            }
+                        }
+                    }
+                }
             } else {
-                Section("Meine Listen") { ForEach(m.lists.filter(\.mine)) { row($0) } }
-                Section("Mit mir geteilt") { ForEach(shared) { row($0) } }
+                Section {
+                    LazyVGrid(columns: [GridItem(.flexible(), spacing: Theme.s2), GridItem(.flexible(), spacing: Theme.s2)], spacing: Theme.s2) {
+                        tile("heute", "calendar.badge.clock", "blau", "Heute")
+                        tile("geplant", "calendar", "rot", "Geplant")
+                        tile("alle", "tray", "grau", "Alle")
+                        tile("markiert", "flag.fill", "orange", "Markiert")
+                    }
+                }
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets())
+                let shared = m.lists.filter { !$0.mine }
+                Section("Meine Listen") {
+                    ForEach(m.lists.filter(\.mine)) { row($0) }
+                        .onMove { from, to in
+                            var order = m.lists.map(\.id)
+                            let mine = m.lists.filter(\.mine).map(\.id)
+                            var moved = mine
+                            moved.move(fromOffsets: from, toOffset: to)
+                            order = moved + order.filter { !mine.contains($0) }
+                            Task { await m.send("PUT", "/api/profile/listen/order", ["order": order]) }
+                        }
+                }
+                if !shared.isEmpty { Section("Mit mir geteilt") { ForEach(shared) { row($0) } } }
             }
             if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
+        .searchable(text: $query, prompt: Text("Suchen"))
         .navigationTitle("Listen")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button { name = ""; making = true } label: { Image(systemName: "plus") }.accessibilityLabel("Neue Liste")
             }
+            ToolbarItem(placement: .secondaryAction) { EditButton() }
         }
         .alert("Neue Liste", isPresented: $making) {
             TextField("Name", text: $name)
@@ -181,10 +274,30 @@ struct ListenView: View {
         .overlay { if m.loading && m.lists.isEmpty { LadeZeilen(rows: 4).padding() } }
     }
 
+    /// one of the four tiles: its symbol on its colour, how many, its name
+    private func tile(_ kind: String, _ symbol: String, _ color: String, _ title: LocalizedStringKey) -> some View {
+        NavigationLink { SmartListeView(m: m, kind: kind, title: title, color: color) } label: {
+            VStack(alignment: .leading, spacing: Theme.s1) {
+                HStack {
+                    Image(systemName: symbol).font(.footnote.weight(.semibold)).foregroundStyle(Theme.onAccent)
+                        .frame(width: 28, height: 28).background(Circle().fill(Theme.list(color)))
+                    Spacer()
+                    Text(verbatim: "\(m.all().filter { ListenModel.fits(kind, $0.0) }.count)").font(.title2.bold())
+                        .foregroundStyle(Theme.fg)
+                }
+                Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.muted)
+            }
+            .padding(Theme.s3)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: Theme.rBox).fill(Theme.card))
+        }
+        .buttonStyle(.plain)
+    }
+
     private func row(_ l: SparkListe) -> some View {
         NavigationLink { ListeView(m: m, id: l.id) } label: {
             HStack {
-                Text(verbatim: l.icon).frame(width: 28)
+                Text(verbatim: l.icon).frame(width: 30, height: 30).background(Circle().fill(Theme.list(l.color).opacity(0.22)))
                 VStack(alignment: .leading) {
                     Text(verbatim: l.name)
                     if !l.owner.isEmpty {
@@ -211,6 +324,8 @@ struct ListeView: View {
     @State private var newName = ""
     @State private var dropping = false
     @State private var sharingSheet = false
+    @State private var coloring = false
+    @State private var info: String?
     @FocusState private var typing: Bool
 
     private var path: String { "/api/profile/tasks/" + id }
@@ -223,20 +338,23 @@ struct ListeView: View {
                 (l.write ? Text("Von \(l.owner) geteilt: du kannst eintragen und abhaken.") : Text("Von \(l.owner) geteilt: nur zum Ansehen."))
                     .font(.footnote).foregroundStyle(.secondary)
             }
-            if l?.write ?? true {
-                Section {
-                    HStack {
-                        TextField("Eintragen, z. B. Milch 2x", text: $text).focused($typing).submitLabel(.done).onSubmit(add)
-                        Button(action: add) { Image(systemName: "plus.circle.fill") }.disabled(text.isEmpty).accessibilityLabel("Eintragen")
-                    }
-                }
-            }
             if let l {
-                if l.items.isEmpty { Text("Die Liste ist leer.").foregroundStyle(.secondary) }
                 ForEach(groups(l), id: \.0) { dept, rows in
                     Section {
                         ForEach(rows) { x in entry(x, l) }
+                            .onMove(perform: mover(l, rows))
                     } header: { if !dept.isEmpty { Text(verbatim: dept) } }
+                }
+                // the empty row at the end: type, return, and the next one (several at once with commas)
+                if l.write {
+                    Section {
+                        HStack {
+                            Image(systemName: "circle.dashed").foregroundStyle(Theme.list(l.color))
+                            TextField("Neue Erinnerung", text: $text).focused($typing).submitLabel(.next).onSubmit(add)
+                        }
+                    } footer: { Text("Mehrere mit Komma, z. B. „2 Milch, Brot“") }
+                } else if l.items.isEmpty {
+                    Text("Die Liste ist leer.").foregroundStyle(.secondary)
                 }
                 if !l.done.isEmpty {
                     Section("Zuletzt erledigt") {
@@ -266,11 +384,13 @@ struct ListeView: View {
             if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
         }
         .navigationTitle(Text(verbatim: l.map { $0.icon + " " + $0.name } ?? ""))
+        .tint(Theme.list(l?.color ?? ""))
         .toolbar {
-            if l?.own == true || teilen {
+            if l?.mine == true {
                 ToolbarItem(placement: .primaryAction) {
                     Menu {
                         if teilen { Button("Teilen …") { sharingSheet = true } }
+                        Button("Farbe …") { coloring = true }
                         if l?.own == true {
                             Button("Umbenennen") { newName = l?.name ?? ""; renaming = true }
                             Button("Liste löschen", role: .destructive) { dropping = true }
@@ -278,8 +398,21 @@ struct ListeView: View {
                     } label: { Image(systemName: "ellipsis.circle") }
                 }
             }
+            if l?.write == true && l?.shop == false && l?.onCalendar == false {
+                ToolbarItem(placement: .secondaryAction) { EditButton() }
+            }
         }
         .sheet(isPresented: $sharingSheet) { NavigationStack { ListeTeilenView(m: m, id: id) } }
+        .sheet(item: Binding(get: { info.map { EintragRef(list: id, id: $0) } }, set: { info = $0?.id })) { r in
+            NavigationStack { EintragInfoView(m: m, list: r.list, id: r.id) }
+        }
+        .confirmationDialog("Farbe", isPresented: $coloring) {
+            ForEach(m.colors, id: \.self) { c in
+                Button(ListenModel.colorName(c)) {
+                    Task { await m.send("PUT", "/api/profile/listen/" + id, ["color": c]) }
+                }
+            }
+        }
         .alert("Umbenennen", isPresented: $renaming) {
             TextField("Name", text: $newName)
             Button("Sichern") { Task { await m.send("PUT", "/api/profile/listen/" + id, ["name": newName]) } }
@@ -301,6 +434,19 @@ struct ListeView: View {
         typing = true
     }
 
+    /// dragging an entry to another place (Bearbeiten): the new order of the open entries; not on a shopping list
+    /// (sorted by departments), a list shared to look at or a CalDAV list
+    private func mover(_ l: SparkListe, _ rows: [ListEntry]) -> ((IndexSet, Int) -> Void)? {
+        if l.shop || !l.write || l.onCalendar { return nil }
+        let p = path
+        let model = m
+        return { from, to in
+            var ids = rows.map(\.id)
+            ids.move(fromOffsets: from, toOffset: to)
+            Task { await model.send("PUT", p + "/order", ["ids": ids]) }
+        }
+    }
+
     /// a shopping list by departments in the Spark's order, any other list as it is
     private func groups(_ l: SparkListe) -> [(String, [ListEntry])] {
         guard l.shop else { return l.items.isEmpty ? [] : [("", l.items)] }
@@ -320,30 +466,211 @@ struct ListeView: View {
             .filter { !$0.isEmpty }.joined(separator: " · ")
     }
 
+    /// one entry: the round box ticks it off, ⓘ opens its info (no button inside another, so both get their tap)
     private func entry(_ x: ListEntry, _ l: SparkListe) -> some View {
-        Button {
-            guard l.write else { return }
-            Task { await m.send("POST", path + "/done", ["ids": [x.id]]) }
-        } label: {
-            HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .top, spacing: 10) {
+            Button {
+                guard l.write else { return }
+                Task { await m.send("POST", path + "/done", ["ids": [x.id]]) }
+            } label: {
                 Image(systemName: "circle").foregroundStyle(l.write ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(verbatim: line(x)).foregroundStyle(.primary)
-                    if !x.due.isEmpty {
-                        Text(verbatim: x.due).font(.caption.weight(.semibold))
-                            .foregroundStyle(x.late ? AnyShapeStyle(Theme.bad) : AnyShapeStyle(.tint))
-                    }
-                    let w = who(x.by, x.at, x.src)
-                    if !w.isEmpty { Text(verbatim: w).font(.caption).foregroundStyle(.secondary) }
+            }
+            .buttonStyle(.borderless)
+            .accessibilityLabel(l.write ? Text("Abhaken") : Text(verbatim: x.text))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verbatim: (x.prio > 0 ? String(repeating: "!", count: x.prio) + " " : "") + line(x)).foregroundStyle(.primary)
+                if !x.due.isEmpty {
+                    Text(verbatim: x.due).font(.caption.weight(.semibold))
+                        .foregroundStyle(x.late ? AnyShapeStyle(Theme.bad) : AnyShapeStyle(.tint))
                 }
+                if !x.note.isEmpty { Text(verbatim: x.note).font(.caption).foregroundStyle(.secondary).lineLimit(2) }
+                let w = who(x.by, x.at, x.src)
+                if !w.isEmpty { Text(verbatim: w).font(.caption).foregroundStyle(.secondary) }
+            }
+            Spacer()
+            if x.flag { Image(systemName: "flag.fill").foregroundStyle(Theme.lstOrange).accessibilityLabel("Markiert") }
+            if l.write && !l.onCalendar {
+                Button { info = x.id } label: { Image(systemName: "info.circle") }
+                    .buttonStyle(.borderless).accessibilityLabel("Info")
             }
         }
-        .accessibilityHint(l.write ? Text("Abhaken") : Text(verbatim: ""))
         .swipeActions {
             if !l.onCalendar && l.mine {
                 Button("Löschen", role: .destructive) { Task { await m.send("DELETE", path + "/" + x.id) } }
             }
         }
+    }
+}
+
+/// which entry the info sheet shows
+struct EintragRef: Identifiable {
+    let list: String
+    let id: String
+}
+
+/// One tile (Heute, Geplant, Alle, Markiert): the open entries of every list that fit, by list (Geplant: by day);
+/// a tap ticks off, ⓘ opens the info, as on the list itself.
+struct SmartListeView: View {
+    @ObservedObject var m: ListenModel
+    let kind: String
+    let title: LocalizedStringKey
+    let color: String
+    @State private var info: EintragRef?
+
+    var body: some View {
+        let hits = m.all().filter { ListenModel.fits(kind, $0.0) }
+        List {
+            if hits.isEmpty { Text("Keine Einträge.").foregroundStyle(.secondary) }
+            ForEach(groups(hits), id: \.0) { head, rows in
+                Section {
+                    ForEach(rows, id: \.0.id) { x, l in row(x, l) }
+                } header: { Text(verbatim: head) }
+            }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
+        }
+        .navigationTitle(title)
+        .tint(Theme.list(color))
+        .refreshable { await m.load() }
+        .sheet(item: $info) { r in NavigationStack { EintragInfoView(m: m, list: r.list, id: r.id) } }
+    }
+
+    private func groups(_ hits: [(ListEntry, SparkListe)]) -> [(String, [(ListEntry, SparkListe)])] {
+        var order: [String] = []
+        var by: [String: [(ListEntry, SparkListe)]] = [:]
+        let sorted = kind == "geplant" ? hits.sorted { ($0.0.dueDay + $0.0.time) < ($1.0.dueDay + $1.0.time) } : hits
+        for h in sorted {
+            let k = kind == "geplant" ? (h.0.dueDay < ListenModel.day() ? String(localized: "Überfällig") : h.0.due) : h.1.name
+            if by[k] == nil { order.append(k) }
+            by[k, default: []].append(h)
+        }
+        return order.map { ($0, by[$0] ?? []) }
+    }
+
+    private func row(_ x: ListEntry, _ l: SparkListe) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Button {
+                guard l.write else { return }
+                Task { await m.send("POST", "/api/profile/tasks/" + l.id + "/done", ["ids": [x.id]]) }
+            } label: { Image(systemName: "circle").foregroundStyle(Theme.list(l.color)) }
+                .buttonStyle(.borderless).accessibilityLabel("Abhaken")
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verbatim: (x.prio > 0 ? String(repeating: "!", count: x.prio) + " " : "") + x.text)
+                if !x.due.isEmpty {
+                    Text(verbatim: x.due).font(.caption.weight(.semibold))
+                        .foregroundStyle(x.late ? AnyShapeStyle(Theme.bad) : AnyShapeStyle(.tint))
+                }
+                Text(verbatim: l.name).font(.caption).foregroundStyle(Theme.list(l.color))
+            }
+            Spacer()
+            if x.flag { Image(systemName: "flag.fill").foregroundStyle(Theme.lstOrange).accessibilityLabel("Markiert") }
+            if l.write && !l.onCalendar {
+                Button { info = EintragRef(list: l.id, id: x.id) } label: { Image(systemName: "info.circle") }
+                    .buttonStyle(.borderless).accessibilityLabel("Info")
+            }
+        }
+    }
+}
+
+/// ⓘ of one entry: title, note, date, time with „Erinnern“, flag, priority and the list; every change goes to the
+/// Spark at once (PUT …/<entry>), moving and deleting only on the owner's own list.
+struct EintragInfoView: View {
+    @ObservedObject var m: ListenModel
+    let list: String
+    let id: String
+    @Environment(\.dismiss) private var dismiss
+    @State private var title = ""
+    @State private var note = ""
+    @State private var ready = false
+
+    private var path: String { "/api/profile/tasks/" + list + "/" + id }
+
+    var body: some View {
+        let x = m.entry(list, id)
+        let l = m.list(list)
+        Form {
+            if let x, let l {
+                Section {
+                    TextField("Titel", text: $title).onSubmit { save(["text": title]) }
+                    TextField("Notiz", text: $note, axis: .vertical).lineLimit(2...6)
+                }
+                Section {
+                    Toggle("Datum", isOn: Binding(get: { !x.dueDay.isEmpty }, set: { on in save(["due": on ? ListenModel.day() : ""]) }))
+                    if !x.dueDay.isEmpty {
+                        DatePicker("Datum", selection: Binding(get: { Self.date(x.dueDay, "") ?? Date() },
+                                                                  set: { save(["due": Self.text($0, "yyyy-MM-dd")]) }),
+                                   displayedComponents: .date)
+                        Toggle("Uhrzeit", isOn: Binding(get: { !x.time.isEmpty }, set: { on in save(["at": on ? "09:00" : ""]) }))
+                        if !x.time.isEmpty {
+                            DatePicker("Uhrzeit", selection: Binding(get: { Self.date(x.dueDay, x.time) ?? Date() },
+                                                                      set: { save(["at": Self.text($0, "HH:mm")]) }),
+                                       displayedComponents: .hourAndMinute)
+                            Toggle("Erinnern", isOn: Binding(get: { x.remind }, set: { save(["remind": $0]) })).disabled(!m.reminders)
+                        }
+                    }
+                } footer: {
+                    if !m.reminders { Text(SparkAPI.way(String(localized: "Erinnern braucht Funktionen → Timer und Erinnerungen."))) }
+                }
+                Section {
+                    Toggle("Markiert", isOn: Binding(get: { x.flag }, set: { save(["flag": $0]) }))
+                    Picker("Priorität", selection: Binding(get: { x.prio }, set: { save(["prio": $0]) })) {
+                        Text("Keine").tag(0)
+                        Text(verbatim: "!").tag(1)
+                        Text(verbatim: "!!").tag(2)
+                        Text(verbatim: "!!!").tag(3)
+                    }
+                    if l.mine {
+                        Picker("Liste", selection: Binding(get: { list }, set: { to in
+                            guard to != list else { return }
+                            Task { if await m.send("PUT", path, ["to": to]) { dismiss() } }
+                        })) {
+                            ForEach(m.lists.filter { $0.id == list || ($0.write && !$0.onCalendar) }) { Text(verbatim: $0.name).tag($0.id) }
+                        }
+                    }
+                }
+                if l.mine {
+                    Section {
+                        Button("Löschen", role: .destructive) {
+                            Task { if await m.send("DELETE", path) { dismiss() } }
+                        }
+                    }
+                }
+            } else {
+                Text("Diesen Eintrag gibt es nicht mehr.").foregroundStyle(.secondary)
+            }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(Theme.badText) }
+        }
+        .navigationTitle("Info")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { dismiss() } } }
+        .onDisappear {   // title and note go when the sheet closes, however it is closed
+            guard ready, let x = m.entry(list, id) else { return }
+            var ch: [String: Any] = [:]
+            if title != x.text + (x.qty.isEmpty ? "" : " " + x.qty), !title.isEmpty { ch["text"] = title }
+            if note != x.note { ch["note"] = note }
+            if !ch.isEmpty { save(ch) }
+        }
+        .onAppear {
+            guard !ready, let x = m.entry(list, id) else { return }
+            title = x.text + (x.qty.isEmpty ? "" : " " + x.qty)
+            note = x.note
+            ready = true
+        }
+    }
+
+    private func save(_ body: [String: Any]) { Task { await m.send("PUT", path, body) } }
+
+    static func date(_ day: String, _ time: String) -> Date? {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = time.isEmpty ? "yyyy-MM-dd" : "yyyy-MM-dd HH:mm"
+        return f.date(from: time.isEmpty ? day : day + " " + time)
+    }
+
+    static func text(_ d: Date, _ format: String) -> String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = format
+        return f.string(from: d)
     }
 }
 

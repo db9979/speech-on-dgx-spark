@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.378** Listen wie Apple Erinnerungen: Kacheln Heute, Geplant, Alle, Markiert, Listen mit Farbe, leere Zeile zum Weitertippen, Ziehen zum Sortieren und Verschieben, ⓘ mit Notiz, Datum, Uhrzeit mit Erinnern, Markiert und Priorität; im Panel, am Handy und in der iPhone-App.
 - **V01.1.377** Sprachausgabe bei vielen Anfragen: 4 Stimmen gleichzeitig statt 2, der erste Satz einer Antwort geht vor, neue Einstellung „Blöcke selbst anpassen“
 - **V01.1.376** ROT-FIX: die gesperrte Zeile „Eigene Stimme“ sieht aus wie jede gesperrte Zeile; drei Tests hängen nicht mehr vom Datum und von einem früheren Test ab
 - **V01.1.375** OpenCode-Anzeige richtig: System-Updates zeigt OpenCode auf dem Pi als installiert, wenn Entwickeln auf dem Pi es eingerichtet hat; fehlt es, steht dort der Installationsbefehl.
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.371** Schlankere Doku: die Anleitung beschreibt nur noch den heutigen Stand (Werdegang steht im CHANGELOG), das CHANGELOG beginnt bei V01.1 mit der älteren Reihe in CHANGELOG-V01.0.md, die Richtlinie ohne Herkunftsangaben
 - **V01.1.370** Nur noch das eigene Sprachmodell: der Rückfall auf qwen38 ist weg, und unter Modelle stehen nur Modelle, die laufen oder gemessen wurden
 - **V01.1.369** Hilfsmodell mit einem Schalter: eingeschaltet hilft es überall, wo es kann, statt fünf einzelner Schalter
-- **V01.1.368** Gerät statt Profil: ein „Ja“ gilt nur auf dem Gerät und im Gespräch, wo gefragt wurde, Mitteilungen kennen jedes Gerät einzeln, Kanal-Antworten landen den ganzen Tag im selben Hauptgespräch
 
 
 
