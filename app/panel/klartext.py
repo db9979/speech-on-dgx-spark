@@ -49,11 +49,10 @@ CODES = {
                    ("Unter Zustand → Überblick ansehen, was die Sprachausgabe zu der Zeit ausgelastet hat.",
                     "Look under Status → Summary at what kept the speech output busy at that time."), "sprechen"),
     "llm_down": (("Das Sprachmodell war nicht erreichbar.", "The language model could not be reached."),
-                 ("Das Sprachmodell (qwen38) lief nicht oder startete gerade neu.",
-                  "The language model (qwen38) was not running or was just restarting."),
-                 ("Unter Zustand → Dienste nachsehen, ob das Sprachmodell läuft. qwen38 gehört nicht zum Spark: dort "
-                  "nichts ändern, nur nachsehen.", "Check under Status → Services whether the language model runs. "
-                  "qwen38 is not part of the Spark: change nothing there, only look."), "sprachmodell"),
+                 ("Das Sprachmodell lief nicht oder startete gerade neu.",
+                  "The language model was not running or was just restarting."),
+                 ("Unter Zustand → Dienste nachsehen, ob das Sprachmodell läuft.",
+                  "Check under Status → Services whether the language model runs."), "sprachmodell"),
     "llm_slow": (("Das Sprachmodell hat nicht rechtzeitig geantwortet.", "The language model did not answer in time."),
                  ("Das Sprachmodell war ausgelastet, oft weil gleichzeitig etwas anderes lief.",
                   "The language model was busy, often because something else ran at the same time."),

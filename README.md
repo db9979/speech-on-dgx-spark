@@ -4,7 +4,7 @@
 
 [![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-support-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/zquu1xu570)
 
-Speech recognition (**Qwen3-ASR**), text to speech (**Qwen3-TTS**), pictures (**FLUX.2 klein**) and an own language model (**vLLM**) as services on an NVIDIA DGX Spark (GB10), plus a web panel with a voice assistant, profiles and monitoring. Runs natively with systemd, without Docker. The panel runs on the Spark itself or on a small computer of its own such as a Raspberry Pi 5. Instead of the own language model, [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38) can still provide it.
+Speech recognition (**Qwen3-ASR**), text to speech (**Qwen3-TTS**), pictures (**FLUX.2 klein**) and an own language model (**vLLM**) as services on an NVIDIA DGX Spark (GB10), plus a web panel with a voice assistant, profiles and monitoring. Runs natively with systemd, without Docker. The panel runs on the Spark itself or on a small computer of its own such as a Raspberry Pi 5.
 
 | Assistant | Status | Architecture |
 |---|---|---|
@@ -30,7 +30,7 @@ At the end it prints the address, password and API key, then TTS speaks a senten
 |---|---|
 | Update | button in the panel under *Settings → Update*, or `sudo speech-spark update` |
 | Show addresses and keys | `sudo speech-spark info` |
-| Own language model | `sudo ./install.sh --llm`, then `sudo speech-spark modelle llm uebernehmen` (back: `… zurueck`) |
+| Own language model | `sudo ./install.sh --llm` (switches the chat to it) |
 | Workshop (test run, code measurement, diagnosis, repair) | on the model computer `sudo ./install.sh --werkstatt`, then *Features → Workshop* |
 | Develop on the Pi (OpenCode with the own language model, install locally) | on the panel computer `sudo ./install.sh --entwickeln`, then *Features → Develop on the Pi*; used under *Status → Workshop → Develop* (overview, terminal in the browser, code orders from the chat); guide with pictures in [Installation](docs/en/installation.md#developing-on-the-pi-with-opencode) |
 | Screen in remote access (guacd) | on the computer with the panel `sudo ./install.sh --fernbild`, then *Features → Remote access to servers → Screen* |
@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.370** Only the own language model: the fallback to qwen38 is gone, and Models lists only models that run or were measured
 - **V01.1.369** Helper model with one switch: once on it helps wherever it can, instead of five separate switches
 - **V01.1.368** Device instead of profile: a "yes" counts only on the device and in the conversation where it was asked, notes know every device on its own, channel answers land in the same main conversation all day
 - **V01.1.367** Ask which way: before a change that could go two ways (mail or message, appointment or reminder) the assistant asks with buttons which one you mean, or just answers; never for reading questions, off by default
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.363** iPhone and CarPlay stable: after a stop, a call or when the car is gone the microphone no longer opens by itself; radio and music come back, one follow-up list in the dungeon, 30 seconds for everything in the car, pairing with another profile cleans up
 - **V01.1.362** Audio overview as a discussion (part 1): with the new switch the audio overview becomes a talk in chapters with questions and objections instead of sentence after sentence; every number stays backed, questions and reactions carry "Talk"
 - **V01.1.361** Security now: "Don't turn off the light" never switches, "Forget it" deletes nothing, no web search for private things, a browser's notifications for one profile only, code word only from the same device
-- **V01.1.360** ROT-FIX: two tests now check the one pinned package list instead of the removed second one
 
 
 
@@ -104,7 +104,7 @@ flowchart LR
 ```
 
 1. You speak into your phone, browser, one of the apps, the terminal client, a speaker or the phone. The panel signs you in, sends the audio to **speech recognition** and gets text back.
-2. The **router** picks by fixed rules which tools the question needs. The panel passes the text, with memory, conversation history, your own knowledge and exactly those tools, to the **language model** behind the LLM-Tor (or to qwen38 if you keep it).
+2. The **router** picks by fixed rules which tools the question needs. The panel passes the text, with memory, conversation history, your own knowledge and exactly those tools, to the **language model** behind the LLM-Tor.
 3. When the answer needs calendars, mail, weather, Home Assistant, web search, Kiwix or Wikipedia, the panel fetches the data itself; switching and adding entries only happen after you confirm. Pictures are painted and edited by FLUX.2 klein on the Spark; music is made by ACE-Step 1.5 (at first only “Test music” for the admin under State → Checks).
 4. The answer goes sentence by sentence to **text to speech** and is played as a stream while the model is still writing. Priority makes sure spoken answers and important people go first.
 5. With the **Spark split** the panel, profiles, chats and calls live on the small computer and reach the models only through the TLS-Tor. If the DGX restarts or is switched off, chats, reminders and calls keep running, and emergency mode understands a few fixed commands without a language model.
@@ -121,7 +121,7 @@ Every new feature is off by default. Once the admin releases it, it applies to e
 - [iPhone app](docs/en/iphone-app.md) and [Android app](docs/en/android-app.md): chat, calls, panel areas on the phone
 - [Security and operation](docs/en/security-and-operation.md): login, lockouts, backups, watchdog, self-test, logs
 - [Architecture](docs/en/architecture.md): parts, the way of a request, every storage place (also in the panel under Status → Architecture)
-- [Technical details and troubleshooting](docs/en/technical.md): services and ports, benchmarks, own language model or qwen38, troubleshooting
+- [Technical details and troubleshooting](docs/en/technical.md): services and ports, benchmarks, own language model, troubleshooting
 - [Coding guideline](docs/en/guidelines.md) and [security checklist](docs/en/security-checklist.md): rules for every change, checklist for new features
 
 The panel has its own guide for every feature under *Funktionen → Anleitungen* (Features → Guides).

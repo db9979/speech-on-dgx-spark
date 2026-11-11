@@ -27,7 +27,7 @@ def args(**k):
 
 
 def cfg():
-    return {"memory": {"reserve_gib": 10}, "llm": {"enabled": True, "modell": "qwen38-27b-nvfp4"},
+    return {"memory": {"reserve_gib": 10}, "llm": {"enabled": True, "modell": "qwen36-35b-a3b-nvfp4"},
             "asr": {"enabled": True, "recognizer": "qwen", "model": "Qwen/Qwen3-ASR-1.7B"},
             "tts": {"enabled": True, "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"}}
 
@@ -123,7 +123,7 @@ class Rezept(unittest.TestCase):
         with self.assertRaises(modelle.Fehler):
             modelle.docker_args(m, "c" * 40, "speech-spark-messen-engine", 990, 990)    # pinned: no other commit
         with self.assertRaises(modelle.Fehler):
-            modelle.docker_args(modelle.eintrag("qwen38-27b-nvfp4"), "", "speech-spark-messen-engine", 990, 990)
+            modelle.docker_args(modelle.eintrag("qwen36-35b-a3b-nvfp4"), "", "speech-spark-messen-engine", 990, 990)
 
     def test_catalog_rules(self):
         m = modelle.eintrag(FN)
@@ -145,7 +145,7 @@ class Rezept(unittest.TestCase):
         with self.assertRaises(modelle.Fehler):
             modelle.vllm_args(m, revision=m["revision"])              # never natively on a port
         with self.assertRaises(modelle.Fehler):
-            modelle.vllm_args(modelle.eintrag("qwen38-27b-nvfp4"), uds=modelle.DOCKER_SOCK)
+            modelle.vllm_args(modelle.eintrag("qwen36-35b-a3b-nvfp4"), uds=modelle.DOCKER_SOCK)
         with self.assertRaises(modelle.Fehler) as e:
             modelle.rolle("llm", {"llm": {"modell": FN}})
         self.assertEqual(str(e.exception), "docker")
@@ -155,7 +155,7 @@ class Rezept(unittest.TestCase):
             self.assertEqual(str(e.exception), wort)
         self.assertEqual(modelle.messliste(["flash"]), [FN])
         self.assertEqual(modelle.laden_frist(m), modelle.DOCKER["b12x"]["laden_s"])
-        self.assertEqual(modelle.laden_frist(modelle.eintrag("qwen38-27b-nvfp4")), modelle.GESUND_S)
+        self.assertEqual(modelle.laden_frist(modelle.eintrag("qwen36-35b-a3b-nvfp4")), modelle.GESUND_S)
 
 
 class Tor(unittest.TestCase):

@@ -5632,6 +5632,20 @@
 "titel": "Hauptgespräch bleibt, Fragen ohne Netz im eigenen Gespräch",
 "text": "Funktionen → Gespräch → Ein Gespräch für alle Kanäle an. Am Morgen per Telegram fragen: die Antwort steht im Hauptgespräch. Mittags im Browser ein anderes Gespräch („Urlaub“) beginnen, dann wieder per Telegram fragen: die Antwort kommt ins selbe Hauptgespräch wie am Morgen, nicht nach „Urlaub“. Im Browser (vertraut, Offline lesen an) ohne Netz in Gespräch A fragen, zu Gespräch B wechseln, Netz an: die Frage läuft in Gespräch A.",
 "thread": "Spark stabilisieren mit Code-Review"
+},
+{
+"id": "P831",
+"v": 1370,
+"titel": "Eigenes Sprachmodell ohne qwen38",
+"text": "Nach dem Update: Zustand → Modelle zeigt beim Sprachmodell nur Qwen3.6 (mit und ohne MTP) und Qwen3.8 Flash Next, dazu Hilfsmodell und Qwen3-VL 8B, nichts von Qwen3.8 27B, Kolibri oder Gemma. Zustand → Logs: im Bereich-Menü gibt es kein „Umzug“ mehr. Eine Frage im Assistenten beantwortet das eigene Sprachmodell; Zustand → Überblick zeigt keine qwen38-Spuren.",
+"thread": "Eigene Modell-Installation statt qwen38"
+},
+{
+"id": "P832",
+"v": 1370,
+"titel": "install.sh --llm schaltet das eigene Sprachmodell ein",
+"text": "Auf einem Spark ohne eingeschaltetes eigenes Sprachmodell `sudo ./install.sh --llm`: danach steht unter Einstellungen → Sprachmodell die Adresse http://127.0.0.1:31006/v1, und der Assistent antwortet. Ein zweiter Lauf ändert nichts mehr daran. Bei Spark teilen erreicht das Panel auf dem anderen Rechner das Sprachmodell danach ohne weiteren Schritt.",
+"thread": "Eigene Modell-Installation statt qwen38"
 }
 ]
 }

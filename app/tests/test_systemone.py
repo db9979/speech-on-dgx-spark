@@ -147,7 +147,7 @@ class Contract(Base):
 
     def test_busy_missing_and_slow_mean_without(self):
         q = systemone.wichtig_question()
-        for code, why in ((529, "ausgelastet"), (503, "ausgelastet"), (404, "fehlt (qwen38 älter als v1.15?)"),
+        for code, why in ((529, "ausgelastet"), (503, "ausgelastet"), (404, "fehlt"),
                           (401, "Schlüssel abgelehnt"), (500, "HTTP 500")):
             REPLY[0] = lambda b, code=code: httpx.Response(code, json={"detail": "x"})
             with self.assertRaises(systemone.Unavailable) as e, contextlib.redirect_stdout(io.StringIO()):
@@ -470,7 +470,7 @@ class Schwelle(Base):
         REPLY[0] = lambda b: httpx.Response(404)
         with contextlib.redirect_stdout(io.StringIO()):
             asyncio.run(systemone._bench_run({"llm_url": "http://127.0.0.1:1/v1"}, rows))
-        self.assertEqual(systemone.bench_view()["why"], "fehlt (qwen38 älter als v1.15?)")
+        self.assertEqual(systemone.bench_view()["why"], "fehlt")
 
 
 class Berater(Base):

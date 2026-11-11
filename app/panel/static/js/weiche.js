@@ -112,7 +112,7 @@ function whDetail(){const box=$('whdet'),d=WH.d,n=WH.sel;
   $('whsplit').classList.add('wh-has')}
 // ---------------------------------------------------------------- questions no rule recognizes, must words
 const WHM={off:['Alle Werkzeuge wie bisher (empfohlen)','All tools as before (recommended)'],on:['Das Sprachmodell ordnet kurz einer Gruppe zu (etwa eine halbe Sekunde)','The language model sorts into a group (about half a second)'],
-  lean:['Knapp: Websuche, Gedächtnis und Hinweis-Gruppen (beginnt früher)','Lean: web search, memory and hinted groups (starts sooner)'],systemone:['Einordnung mit Wahrscheinlichkeit, erst ab der Schwelle (qwen38, etwa 0,2 s)','Classification with probability, only from the threshold (qwen38, about 0.2 s)']};
+  lean:['Knapp: Websuche, Gedächtnis und Hinweis-Gruppen (beginnt früher)','Lean: web search, memory and hinted groups (starts sooner)'],systemone:['Einordnung mit Wahrscheinlichkeit, erst ab der Schwelle (etwa 0,2 s)','Classification with probability, only from the threshold (about 0.2 s)']};
 function whUnclear(){const d=WH.d,r=whRules(),A=d.alltag;
   $('whunclear').innerHTML=`<div class="wh-unc"><label for="whmodel">${esc(t('Was bekommen sie?','What do they get?'))}</label><select id="whmodel">${Object.keys(WHM).map(k=>`<option value="${k}"${r.route_model===k?' selected':''}>${esc(t(...WHM[k]))}</option>`).join('')}</select>`
     +(d.systemone?`<label for="whmin">${esc(t('Einordnung grenzt ein ab','Classification narrows from'))}</label><select id="whmin">${d.steps.map(v=>`<option value="${v}"${Number(r.systemone_min)===v?' selected':''}>${Math.round(v*100)} %${v===0.8?esc(t(' (Standard)',' (default)')):''}</option>`).join('')}</select>`:'')+'</div>'

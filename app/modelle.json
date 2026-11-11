@@ -2,163 +2,6 @@
   "hinweis": "Modell-Katalog (plaene/eigene-modelle.md): eine Zeile je Modell, gelesen nur von app/modelle.py. Revision leer = noch nicht festgelegt (vLLM-Einträge nur zum Messen). Nie trust_remote_code, nie Pickle-Dateien.",
   "modelle": [
     {
-      "id": "qwen38-27b-nvfp4",
-      "art": "llm",
-      "name": {
-        "de": "Qwen3.8 27B NVFP4",
-        "en": "Qwen3.8 27B NVFP4"
-      },
-      "engine": "vllm",
-      "repo": "RadixArk/Qwen3.8-27B-NVFP4",
-      "revision": "52d1adc5f38aa5ebf099c29ed7025ba34cfbb854",
-      "lizenz": "Apache-2.0",
-      "gewerblich": true,
-      "platte_gb": 20,
-      "need_gib": 36,
-      "gemessen": false,
-      "anteil": 0.3,
-      "kontext": 131072,
-      "kontext_max": 262144,
-      "kann_sehen": true,
-      "werkzeuge": true,
-      "vllm": {
-        "reasoning_parser": "qwen3",
-        "tool_call_parser": "qwen3_coder",
-        "mtp": 3,
-        "max_seqs": 8
-      },
-      "anfrage": {
-        "chat_template_kwargs": {
-          "enable_thinking": false
-        },
-        "top_k": 20
-      },
-      "messen": "immer",
-      "betrieb": "resident"
-    },
-    {
-      "id": "qwen38-27b-nvfp4-dspark",
-      "basis": "qwen38-27b-nvfp4",
-      "name": {
-        "de": "Qwen3.8 27B NVFP4 mit DSpark (nur privat)",
-        "en": "Qwen3.8 27B NVFP4 with DSpark (private use only)"
-      },
-      "lizenz": "Apache-2.0, DSpark-Hilfsmodell: other",
-      "gewerblich": false,
-      "platte_gb": 24,
-      "need_gib": 46,
-      "gemessen": false,
-      "anteil": 0.38,
-      "vllm": {
-        "mtp": 0,
-        "entwurf": {
-          "methode": "dspark",
-          "repo": "RadixArk/Qwen3.8-27B-DSpark",
-          "revision": "b9a5dbdf03bc999c6c73c426b19c2d9041cea393",
-          "tokens": 7
-        }
-      },
-      "messen": "auf_wunsch"
-    },
-    {
-      "id": "qwen38-27b-fp8",
-      "art": "llm",
-      "name": {
-        "de": "Qwen3.8 27B FP8 (Vergleich)",
-        "en": "Qwen3.8 27B FP8 (reference)"
-      },
-      "engine": "vllm",
-      "repo": "Qwen/Qwen3.8-27B-FP8",
-      "revision": "017b9c7af6b5689d5dd426a76e0bc077eb5ca20a",
-      "lizenz": "Apache-2.0",
-      "gewerblich": true,
-      "platte_gb": 30,
-      "need_gib": 45,
-      "gemessen": false,
-      "anteil": 0.38,
-      "kontext": 131072,
-      "kann_sehen": true,
-      "werkzeuge": true,
-      "vllm": {
-        "reasoning_parser": "qwen3",
-        "tool_call_parser": "qwen3_coder",
-        "mtp": 3,
-        "max_seqs": 8
-      },
-      "anfrage": {
-        "chat_template_kwargs": {
-          "enable_thinking": false
-        },
-        "top_k": 20
-      },
-      "messen": "auf_wunsch",
-      "betrieb": "resident"
-    },
-    {
-      "id": "kolibri-1-nvfp4",
-      "art": "llm",
-      "name": {
-        "de": "Kolibri-1 (Aleph Alpha, für Deutsch, 78B FP8)",
-        "en": "Kolibri-1 (Aleph Alpha, built for German, 78B FP8)"
-      },
-      "engine": "vllm",
-      "repo": "Aleph-Alpha/Kolibri-1",
-      "revision": "",
-      "lizenz": "Apache-2.0",
-      "gewerblich": true,
-      "platte_gb": 79,
-      "need_gib": 90,
-      "gemessen": false,
-      "anteil": 0.74,
-      "kontext": 65536,
-      "kann_sehen": false,
-      "werkzeuge": true,
-      "vllm": {
-        "reasoning_parser": "kolibri1",
-        "tool_call_parser": "kolibri1",
-        "kv_cache_dtype": "fp8",
-        "max_seqs": 8,
-        "venv": "kolibri"
-      },
-      "anfrage": {
-        "chat_template_kwargs": {
-          "enable_thinking": false
-        }
-      },
-      "messen": "auf_wunsch",
-      "betrieb": "resident"
-    },
-    {
-      "id": "qwen3-vl-30b-a3b-fp8",
-      "art": "llm",
-      "name": {
-        "de": "Qwen3-VL 30B A3B FP8 (schnell, sieht)",
-        "en": "Qwen3-VL 30B A3B FP8 (fast, can see)"
-      },
-      "engine": "vllm",
-      "repo": "Qwen/Qwen3-VL-30B-A3B-Instruct-FP8",
-      "revision": "",
-      "lizenz": "Apache-2.0",
-      "gewerblich": true,
-      "platte_gb": 33,
-      "need_gib": 44,
-      "gemessen": false,
-      "anteil": 0.36,
-      "kontext": 65536,
-      "kann_sehen": true,
-      "werkzeuge": true,
-      "vllm": {
-        "tool_call_parser": "hermes",
-        "max_seqs": 8,
-        "bilder_pro_frage": 4
-      },
-      "anfrage": {
-        "top_k": 20
-      },
-      "messen": "auf_wunsch",
-      "betrieb": "resident"
-    },
-    {
       "id": "qwen36-35b-a3b-nvfp4",
       "art": "llm",
       "name": {
@@ -186,7 +29,7 @@
         "bilder_pro_frage": 4
       },
       "anfrage": {"chat_template_kwargs": {"enable_thinking": false}, "top_k": 20},
-      "messen": "auf_wunsch",
+      "messen": "immer",
       "betrieb": "resident"
     },
     {
@@ -196,24 +39,8 @@
         "de": "Qwen3.6 35B A3B NVFP4 ohne MTP",
         "en": "Qwen3.6 35B A3B NVFP4 without MTP"
       },
-      "vllm": {"mtp": 0}
-    },
-    {
-      "id": "qwen36-35b-a3b-frei-nvfp4",
-      "basis": "qwen36-35b-a3b-nvfp4",
-      "name": {"de": "Qwen3.6 35B A3B frei (Heretic, ohne Ablehnungen)", "en": "Qwen3.6 35B A3B free (Heretic, no refusals)"},
-      "repo": "AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4",
-      "revision": "a483749169933e3fc5a4f48a5979effeba093192",
-      "platte_gb": 22
-    },
-    {
-      "id": "qwen36-35b-a3b-frei-nvfp4-ohne-mtp",
-      "basis": "qwen36-35b-a3b-nvfp4",
-      "name": {"de": "Qwen3.6 35B A3B frei ohne MTP", "en": "Qwen3.6 35B A3B free without MTP"},
-      "repo": "AEON-7/Qwen3.6-35B-A3B-heretic-NVFP4",
-      "revision": "a483749169933e3fc5a4f48a5979effeba093192",
-      "platte_gb": 22,
-      "vllm": {"mtp": 0}
+      "vllm": {"mtp": 0},
+      "messen": "auf_wunsch"
     },
     {
       "id": "qwen38-flash-next-fp4",
@@ -248,25 +75,6 @@
       "anfrage": {"chat_template_kwargs": {"enable_thinking": false}, "top_k": 20},
       "messen": "auf_wunsch",
       "betrieb": "resident"
-    },
-    {
-      "revision": "",
-      "gewerblich": true,
-      "gemessen": false,
-      "id": "qwen38-extern",
-      "art": "llm",
-      "name": {
-        "de": "qwen38 (dgx-spark-qwen38, bisher)",
-        "en": "qwen38 (dgx-spark-qwen38, so far)"
-      },
-      "engine": "extern",
-      "repo": "",
-      "lizenz": "Apache-2.0",
-      "platte_gb": 500,
-      "need_gib": 91,
-      "betrieb": "resident",
-      "kann_sehen": true,
-      "hinweis": "Speicher aus dem Anteil der laufenden qwen38-Dienste"
     },
     {
       "id": "qwen3-4b-instruct-2507-fp8",
@@ -316,36 +124,6 @@
         "top_k": 20
       },
       "messen": "immer",
-      "betrieb": "bei_bedarf"
-    },
-    {
-      "id": "gemma-4-26b-a4b",
-      "art": "sehen",
-      "name": {
-        "de": "Gemma 4 26B A4B (FP8 beim Laden)",
-        "en": "Gemma 4 26B A4B (FP8 while loading)"
-      },
-      "engine": "vllm",
-      "repo": "google/gemma-4-26B-A4B-it",
-      "revision": "",
-      "lizenz": "Apache-2.0",
-      "gewerblich": true,
-      "platte_gb": 52,
-      "need_gib": 34,
-      "gemessen": false,
-      "anteil": 0.3,
-      "kontext": 32768,
-      "kann_sehen": true,
-      "werkzeuge": true,
-      "vllm": {
-        "reasoning_parser": "gemma4",
-        "tool_call_parser": "gemma4",
-        "quantization": "fp8",
-        "max_seqs": 4,
-        "bilder_pro_frage": 4
-      },
-      "anfrage": {},
-      "messen": "auf_wunsch",
       "betrieb": "bei_bedarf"
     },
     {

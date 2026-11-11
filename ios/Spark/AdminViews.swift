@@ -478,9 +478,6 @@ struct StatusView: View {
                 out.append(("  " + (e["name"] as? String ?? ""), e["state"] as? String ?? "?"))
             }
         }
-        for q in d["qwen38"] as? [[String: Any]] ?? [] {
-            out.append((q["unit"] as? String ?? "", q["state"] as? String ?? "?"))
-        }
         return out
     }
 }

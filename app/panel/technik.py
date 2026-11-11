@@ -117,7 +117,7 @@ MODULE = {
     "satzende": ("gespraech", "Satzende am Tonfall: misst an jeder Sprechpause Smart Turn gegen die Wortliste, nur Zahlen"),
     "images": ("gespraech", "Bilder in der Frage: das Sprachmodell sieht sie selbst"),
     "schreib": ("gespraech", "Schreibhilfe: korrigieren, kürzen, übersetzen, entwerfen"),
-    "systemone": ("gespraech", "Einordnung mit Wahrscheinlichkeit über das Sprachmodell (LLM-Tor oder qwen38)"),
+    "systemone": ("gespraech", "Einordnung mit Wahrscheinlichkeit über das Sprachmodell (LLM-Tor)"),
     "tipps": ("gespraech", "Schlägt passende Funktionen vor, die noch aus sind"),
     "ablauf": ("gespraech", "Zeigt unter der Antwort die benutzten Werkzeuge und einen wartenden Vorschlag als Karte mit Ja und Nein"),
     "saetze": ("gespraech", "Zeigt Sätze für Funktionen, die an sind und noch nie benutzt wurden"),
@@ -504,10 +504,10 @@ KNOTEN = {
                 "Request history, live overview, watchers, backup. Only fixed words and numbers.", []),
     "llm": (896, 344, "Sprachmodell", "Language model", ":31006 → :31016", "",
             "Das eigene Modell (vLLM) hinter dem LLM-Tor (:31006 → :31016, Bildverständnis :31017 und Hilfsmodell :31018 bei Bedarf), eingeschaltet mit "
-            "speech-spark modelle llm uebernehmen; bis dahin oder nach … zurueck Qwen3.8 aus dgx-spark-qwen38 (:30001). Ein Modell "
+            "sudo ./install.sh --llm. Ein Modell "
             "in Docker (Qwen3.8 Flash Next) läuft vorerst nur zum Messen: festes Image, ohne Netz, Socket über das Docker-Tor.",
             "The own model (vLLM) behind the LLM-Tor (:31006 → :31016, image understanding :31017 and helper model :31018 on demand), switched on with "
-            "speech-spark modelle llm uebernehmen; until then or after … zurueck Qwen3.8 from dgx-spark-qwen38 (:30001). A model in "
+            "sudo ./install.sh --llm. A model in "
             "Docker (Qwen3.8 Flash Next) runs only to be measured for now: pinned image, no network, socket through the Docker-Tor.",
             ["llm_tor.py", "einordnung.py", "modelle.py", "dockertor.py"]),
     "asr": (896, 196, "Spracherkennung", "Speech recognition", ":31001 → :31011", "sprache",

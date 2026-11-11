@@ -16,7 +16,7 @@ a time (at most WINDOW seconds off) and a one-time number (each is taken once).
     einstellen {settings}       the panel's speech settings (common.model_settings_take: known keys, same kind,
                                 never addresses, ports or backends, model ids only Qwen's)
     logs <teil> <n>             the last n (at most MAX_LINES) log lines of a model unit
-    modelle                     what Zustand → Modelle needs from here: memory, qwen38 lanes, measurement, switches,
+    modelle                     what Zustand → Modelle needs from here: memory, measurement, switches,
                                 own models, whether a switch or a measurement runs
     wechseln <art> <id|zurueck> a switch with the fixed rules (modelle.wechsel_anfragen), then speech-spark-wechsel
     messen <id>                 Zustand → Modelle „Messen“ (modelle.messen_anfragen), then speech-spark-messen-wunsch
@@ -54,7 +54,7 @@ import rechner
 import sysupdate
 import werkstatt
 from common import (CONFIG_PATH, MODEL_LOG_UNITS, ON_DEMAND_UNITS, OWN_LLM_UNITS, UNITS, WAERTER_PORT, BodyLimit, gpu_stats, journal, load_config,
-                    WARTUNG_FILE, installed_version, mem_available_gib, model_choice, model_settings_hash, model_settings_take, qwen38_lanes, read_json,
+                    WARTUNG_FILE, installed_version, mem_available_gib, model_choice, model_settings_hash, model_settings_take, read_json,
                     UPDATE_PROGRESS, run, shipped, uhr, update_anteil, waerter_key, waerter_sign, write_json)
 
 WINDOW = 60            # seconds a request's time may be off
@@ -211,7 +211,7 @@ def _misst():
 def modelle_daten():
     """Read only, asked by the page and the Live view: no line, like status."""
     messung = read_json(modelle.MESSUNG, {})
-    return {"gesamt_gib": round(modelle.gesamt_gib(), 1), "lanes": [f for _, f in qwen38_lanes() if f],
+    return {"gesamt_gib": round(modelle.gesamt_gib(), 1),
             "messung": messung, "wechsel": read_json(modelle.WECHSEL, {}),
             "eigene": modelle.eigene(), "laeuft": _wechsel_laeuft(), **_messung_laeuft(),
             "start": llmstart.hier(load_config(), messung)}     # what the language model does while it starts
@@ -233,8 +233,8 @@ def wechseln(art, was):
         print("waerter: wechseln abgelehnt misst", flush=True)
         return {"ok": False, "fehler": "misst"}
     try:
-        m = modelle.wechsel_anfragen(art, was, load_config(), modelle.gesamt_gib(), [f for _, f in qwen38_lanes() if f],
-                                     starten, _wechsel_laeuft())
+        m = modelle.wechsel_anfragen(art, was, load_config(), modelle.gesamt_gib(), starten,
+                                     _wechsel_laeuft())
     except modelle.Fehler as e:
         print(f"waerter: wechseln abgelehnt {e}", flush=True)
         return {"ok": False, "fehler": str(e)}
@@ -254,7 +254,7 @@ def platz(was):
         print("waerter: platz abgelehnt misst", flush=True)
         return {"ok": False, "fehler": "misst"}
     try:
-        modelle.platz_anfragen(was, load_config(), modelle.gesamt_gib(), [f for _, f in qwen38_lanes() if f], starten,
+        modelle.platz_anfragen(was, load_config(), modelle.gesamt_gib(), starten,
                                _wechsel_laeuft())
     except modelle.Fehler as e:
         print(f"waerter: platz abgelehnt {e}", flush=True)

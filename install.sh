@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Speech on DGX Spark: installs Qwen3-ASR + Qwen3-TTS as systemd services with a web
-# panel for config, monitoring and updates. Designed to run next to dgx-spark-qwen38.
+# panel for config, monitoring and updates, and with --llm its own language model.
 #
 #   sudo ./install.sh                  # install (the first run asks what to install), or update
 #   sudo ./install.sh --mode api       # only the models with their APIs, no web panel (or --mode full)
@@ -10,7 +10,7 @@
 #   sudo ./install.sh --asr 1.7b|0.6b|parakeet|none --tts 0.6b|1.7b|none [--voicedesign]
 #   sudo ./install.sh --bild 4b-q8|4b-q4|9b-q8|9b-q4|none   # Bilder malen with FLUX.2 [klein] (optional, default none)
 #   sudo ./install.sh --musik 2b|2b-klein|xl|none   # Musik machen with ACE-Step 1.5 (optional, default none)
-#   sudo ./install.sh --llm [--kolibri]  # vLLM for the own language model (venv-llm; Kolibri-1 needs its own venv)
+#   sudo ./install.sh --llm            # vLLM for the own language model (venv-llm), the chat then talks to it
 #   sudo ./install.sh --entwickeln     # panel computer: OpenCode for the user spark-dev (Entwickeln auf dem Pi)
 #   sudo ./install.sh --youtube        # panel computer: the pinned yt-dlp in venv-ytdlp (YouTube-Links abschreiben)
 #   sudo ./install.sh --local          # APIs only on 127.0.0.1 (default --network: reachable in the LAN)
@@ -42,17 +42,14 @@ TORCH_INDEX=https://download.pytorch.org/whl/cu130
 # Both ship aarch64 wheels on PyPI built for CUDA 13; installed natively, no Docker.
 VLLM_VERSION=0.30.0
 VLLM_OMNI_VERSION=0.30.0
-# The own language model (plan eigene-modelle.md, E2) has its own vLLM in venv-llm, apart from vllm-omni's; Kolibri-1
-# needs vLLM 0.29 with Aleph Alpha's plugin (pinned by its wheel's SHA-256, installed without its dependencies).
+# The own language model (plan eigene-modelle.md, E2) has its own vLLM in venv-llm, apart from vllm-omni's.
 VLLM_LLM_VERSION=0.30.0
-VLLM_KOLIBRI_VERSION=0.29.0
-KOLIBRI_PLUGIN="aleph-alpha-inference==1.0.0 --hash=sha256:5a0ca118e67924f10c4f9c04dd64bef117007a17dd820233a8841b9cb8d6f211"
 DEFAULT_REMOTE=https://github.com/db9979/speech-on-dgx-spark
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 SMALL=0; WITH_ASR=1; WITH_TTS=1; PASSWORD=""; DOWNLOAD=1; SMOKE=1; FROM_UPDATE=0; TTS_BACKEND=""; ASR_BACKEND=""
 TEILEN_PICK=0; MODELLE_PICK=""; PANEL_PICK=0; GEHAEUSE_PICK=""; WERKSTATT_PICK=0; FERNBILD_PICK=0; ENTWICKELN_PICK=0; YOUTUBE_PICK=0
-MODE=""; ASR_PICK=""; TTS_PICK=""; VD_PICK=""; BILD_PICK=""; MUSIK_PICK=""; NET_PICK=""; YES=0; CHOOSE_MODELS=0; LLM_PICK=0; KOLIBRI_PICK=0
+MODE=""; ASR_PICK=""; TTS_PICK=""; VD_PICK=""; BILD_PICK=""; MUSIK_PICK=""; NET_PICK=""; YES=0; CHOOSE_MODELS=0; LLM_PICK=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --small) SMALL=1 ;;
@@ -74,7 +71,6 @@ while [ $# -gt 0 ]; do
     --musik) MUSIK_PICK="$2"; shift ;;
     --llm) LLM_PICK=1 ;;
     --gehaeuse) GEHAEUSE_PICK="${2:-}"; shift ;;
-    --kolibri) LLM_PICK=1; KOLIBRI_PICK=1 ;;
     --werkstatt) WERKSTATT_PICK=1 ;;      # the Werkstatt: OpenCode and its sandbox (app/werkstatt.py)
     --fernbild) FERNBILD_PICK=1 ;;        # Fernzugang → Bildschirm: guacd on 127.0.0.1 (app/panel/fernbild.py)
     --entwickeln) ENTWICKELN_PICK=1 ;;    # Entwickeln auf dem Pi: OpenCode for spark-dev, local changes (app/entwickeln.py)
@@ -248,10 +244,6 @@ fi
 INSTALL_FROM="$SRC"   # the files installed now are the ones next to this script
 
 # ---------------------------------------------------------------- config
-# Lanes from dgx-spark-qwen38 that claim most of the unified pool (0.76 / 0.85).
-big_lane=""
-if systemctl cat qwen38-flash.service >/dev/null 2>&1; then big_lane="qwen38-flash (85 %)"; fi
-if systemctl cat qwen38-sglang.service 2>/dev/null | grep -q -- '--mem-fraction-static 0.7'; then big_lane="qwen38-sglang 1M mode (76 %)"; fi
 
 # ---------------------------------------------------------------- what to install
 # The first install asks (in a terminal): complete or only the models with their APIs, which
@@ -289,7 +281,7 @@ TEILEN=0
 
 # current choice, as the defaults of the questions
 cur_asr() {
-  if [ "$FIRST" = 1 ]; then { [ "$SMALL" = 1 ] || [ -n "$big_lane" ]; } && echo 0.6b || echo 1.7b; return; fi
+  if [ "$FIRST" = 1 ]; then [ "$SMALL" = 1 ] && echo 0.6b || echo 1.7b; return; fi
   cfgq -r 'if .asr.enabled != true then "none" elif .asr.recognizer == "parakeet" then "parakeet"
          elif (.asr.model | test("0.6B")) then "0.6b" else "1.7b" end'
 }
@@ -316,7 +308,6 @@ if [ "$ASK" = 1 ] && [ -z "$MODELLE_PICK" ] && { [ "$CHOOSE_MODELS" = 1 ] || { [
      && [ "$SMALL$WITH_ASR$WITH_TTS" = 011 ]; }; }; then
   echo
   echo "Which models? Memory figures are rough estimates; $(gib_free) GiB are free right now."
-  [ -n "$big_lane" ] && echo "(found $big_lane: the 0.6B models are recommended next to it)"
   if [ -z "$ASR_PICK" ]; then
     echo "Speech recognition (ASR, port $(cfgq -r '.asr.port // 31001' 2>/dev/null || echo 31001)):"
     pick_model asr "$(cur_asr)"; ASR_PICK=$PICKED
@@ -362,8 +353,7 @@ no_links "$ETC/config.json"
 if [ ! -f "$ETC/config.json" ]; then
   say "Writing $ETC/config.json"
   put_file "$ETC/config.json" 640 "$SVC_USER:$SVC_USER" <"$INSTALL_FROM/app/config.default.json"
-  if [ "$SMALL" = 1 ] || [ -n "$big_lane" ]; then
-    [ -n "$big_lane" ] && [ "$SMALL" = 0 ] && warn "found $big_lane: choosing the 0.6B models so speech fits next to it"
+  if [ "$SMALL" = 1 ]; then
     jqi '.asr.model="Qwen/Qwen3-ASR-0.6B" | .tts.model="Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"'
   fi
   jqi --argjson a "$WITH_ASR" --argjson t "$WITH_TTS" '.asr.enabled=($a==1) | .tts.enabled=($t==1)'
@@ -416,7 +406,7 @@ fi
 # api: only the models with their APIs; full: with the web panel
 echo "$MODE" | put_file "$ETC/mode" 644 root:root
 if [ "$TEILEN" = 1 ]; then echo 1 | put_file "$ETC/teilen" 644 root:root; else no_links "$ETC/teilen"; rm -f -- "$ETC/teilen"; fi
-# Earlier start values were too generous next to a qwen38 lane; move untouched ones down.
+# Earlier start values were too generous next to a large language model; move untouched ones down.
 case "$(cfgq -r .asr.engine_mem)" in 0.08|0.05) jqi '.asr.engine_mem=0.045 | .asr.engine_max_seqs=4' ;; esac
 # (0.03 + 0.015 left no room for the KV cache on the Spark)
 case "$(cfgq -c '[.tts.engine_mem_talker, .tts.engine_mem_code2wav]')" in
@@ -424,7 +414,7 @@ case "$(cfgq -c '[.tts.engine_mem_talker, .tts.engine_mem_code2wav]')" in
 esac
 # A 2-frame first chunk (0.16 s of audio) ran out before the next 25-frame chunk was ready.
 [ "$(cfgq -r .tts.initial_chunk_frames)" = 2 ] && jqi '.tts.initial_chunk_frames=8'
-# 8 frames (the old default) stalled next to a busy qwen38 lane; move to 10 once.
+# 8 frames (the old default) stalled next to a busy language model; move to 10 once.
 if [ ! -e "$VAR/state/migrated-chunk10" ]; then
   [ "$(cfgq -r .tts.initial_chunk_frames)" = 8 ] && jqi '.tts.initial_chunk_frames=10'
   as_svc touch "$VAR/state/migrated-chunk10"
@@ -444,32 +434,6 @@ fi
 # working memory left nothing for the cache ("No available memory for the cache blocks").
 if cfgq -e '.asr.model | test("1.7B")' >/dev/null && [ "$(cfgq -r .asr.engine_mem)" = 0.045 ]; then
   jqi '.asr.engine_mem=0.06'
-fi
-# The voice chat in the panel talks to the qwen38 LLM: take its API key from the user who
-# installed qwen38. Panel updates run without SUDO_USER, so also look in the other homes.
-# A key imported earlier is refreshed when the file changes; a hand-entered key is kept.
-qkey=""
-# Root reads it, so only a plain file without links on the way (a link could point at any file of
-# the system, whose content would then go to the LLM address as "key"), owned by the home's owner.
-qkey_ok() {
-  local f="$1/.config/qwen38/api-key"
-  [ -f "$f" ] && [ -s "$f" ] && [ "$(realpath -e -- "$f" 2>/dev/null)" = "$(realpath -e -- "$1")/.config/qwen38/api-key" ] \
-    && [ "$(stat -c %u -- "$f")" = "$(stat -c %u -- "$1")" ] && [ "$(stat -c %s -- "$f")" -le 512 ]
-}
-for h in "$( [ -n "${SUDO_USER:-}" ] && getent passwd "$SUDO_USER" | cut -d: -f6)" /home/* /root; do
-  [ -n "$h" ] && [ -d "$h" ] && qkey_ok "$h" && { qkey="$h/.config/qwen38/api-key"; break; }
-done
-# after the move to the own language model (llm.enabled) the chat talks to the LLM-Tor with api.key: no qwen38 key
-[ "$(cfgq -r '.llm.enabled // false')" = true ] && qkey=""
-if [ -n "$qkey" ]; then
-  cur="$(cfgq -r '.chat.llm_key // ""')"
-  from="$(cfgq -r '.chat.llm_key_from // ""')"
-  new="$(head -c 512 -- "$qkey" | tr -d ' \n\r')"
-  [[ "$new" =~ ^[A-Za-z0-9._~+/=-]{8,300}$ ]] || new=""
-  if [ -n "$new" ] && { [ -z "$cur" ] || { [ -n "$from" ] && [ "$cur" != "$new" ]; }; }; then
-    jqi --arg k "$new" --arg f "$qkey" '.chat.llm_key=$k | .chat.llm_key_from=$f'
-    say "Voice chat: using the qwen38 API key from $qkey"
-  fi
 fi
 no_links "$ETC/config.json"
 chown -h "$SVC_USER:$SVC_USER" "$ETC/config.json"; as_svc chmod 640 "$ETC/config.json"
@@ -505,20 +469,30 @@ BACKEND=$(cfg .tts.backend); ASR_BACKEND=$(cfg .asr.backend)
 [ "$(cfg .asr.enabled)" = true ] || WITH_ASR=0
 WITH_BILD=0; { [ "$MODE" = full ] || [ "$TEILEN" = 1 ]; } && [ "$(cfg '.image.enabled // false')" = true ] && WITH_BILD=1
 WITH_MUSIK=0; { [ "$MODE" = full ] || [ "$TEILEN" = 1 ]; } && [ "$(cfg '.music.enabled // false')" = true ] && WITH_MUSIK=1
-# venv-llm / venv-kolibri: once installed, every update keeps them current; the services run only with llm.enabled
+# venv-llm: once installed, every update keeps it current; the services run only with llm.enabled
 WITH_LLM=$LLM_PICK; [ -x "$PREFIX/venv-llm/bin/vllm" ] && WITH_LLM=1
-WITH_KOLIBRI=$KOLIBRI_PICK; [ -x "$PREFIX/venv-kolibri/bin/vllm" ] && WITH_KOLIBRI=1
 LLM_ON=0; [ "$WITH_LLM" = 1 ] && [ "$(cfg '.llm.enabled // false')" = true ] && LLM_ON=1
 # Spark teilen: the panel computer (models.host on another computer, set by the pairing) installs no model, engine or
 # model service of its own; its pages read what runs from the model computer
 PANEL_ONLY=0
 if [ "$MODE" = full ] && { [ -n "$MODELLE_PICK" ] \
      || [ "$(cfg '(.models.host // "127.0.0.1") | . == "127.0.0.1" or . == "localhost" or . == "::1"')" != true ]; }; then
-  PANEL_ONLY=1; WITH_ASR=0; WITH_TTS=0; WITH_BILD=0; WITH_MUSIK=0; WITH_LLM=0; WITH_KOLIBRI=0; LLM_ON=0; DOWNLOAD=0; SMOKE=0
+  PANEL_ONLY=1; WITH_ASR=0; WITH_TTS=0; WITH_BILD=0; WITH_MUSIK=0; WITH_LLM=0; LLM_ON=0; DOWNLOAD=0; SMOKE=0
 fi
+# --llm on the model computer: the own language model becomes the chat's (llm.enabled, the chat to its LLM-Tor, whose
+# key is api.key); later updates keep it.
+LLM_NEU=0
+if [ "$LLM_PICK" = 1 ] && [ "$PANEL_ONLY" = 0 ] && [ "$(cfg '.llm.enabled // false')" != true ]; then
+  jqi --argjson p "$(cfg_int .llm.port 31006)" '.llm.enabled = true | .chat.llm_url = "http://127.0.0.1:\($p)/v1"
+         | .chat.llm_key = "" | .chat.llm_model = "" | del(.chat.llm_key_from)'
+  echo "The own language model is on; the chat talks to it."
+  LLM_ON=1; LLM_NEU=1
+fi
+# the note of the old move from qwen38 (gone since V01.1.370)
+rm -f -- "$VAR/state/qwen38-vorher.json" "$VAR/state/qwen38-vorher.json.alt"
 
 # ---------------------------------------------------------------- ports
-say "Checking ports (dgx-spark-qwen38 uses 30000-30099)"
+say "Checking ports"
 ports=""
 [ "$PANEL_ONLY" = 0 ] && ports="$ASR_PORT $TTS_PORT"
 [ "$MODE" = full ] && ports="$ports $PANEL_PORT"
@@ -651,27 +625,22 @@ if [ "$USE_ENGINE" = 1 ]; then
 fi
 
 # ---------------------------------------------------------------- the own language model (optional, plan eigene-modelle)
-llm_venv() {  # $1 = name (llm, kolibri), $2 = vLLM version, rest = the plugin's requirement line with its hash
-  local v="$PREFIX/venv-$1" ver="$2" sig; shift 2
-  sig="llm-r1 $ver $*"
+llm_venv() {  # $1 = name (llm), $2 = vLLM version
+  local v="$PREFIX/venv-$1" ver="$2" sig
+  sig="llm-r1 $ver "
   if same_pkgs "$v" "$sig"; then echo "   venv-${v##*/venv-}: same versions, nothing to install"; return 0; fi
   say "Python env for the own language model: venv-${v##*/venv-} with vllm $ver (large, takes a while the first time)"
   [ -x "$v/bin/python" ] || "$PY" -m venv "$v"
   "$v/bin/pip" install -q -U pip uv
   "$v/bin/uv" pip install -q --python "$v/bin/python" "vllm==$ver"
-  if [ $# -gt 0 ]; then
-    # the plugin alone, by its hash and without dependencies: vLLM, torch and transformers stay as vLLM brought them
-    rm -f -- "$v/.plugin-req"; printf '%s\n' "$*" >"$v/.plugin-req"
-    "$v/bin/pip" install -q --no-deps --require-hashes -r "$v/.plugin-req"
-  fi
   "$v/bin/python" -c 'import torch; assert torch.version.cuda and torch.cuda.is_available()' \
     || die "torch in venv-${v##*/venv-} has no CUDA. Re-run; if it persists, see docs/en/technical.md (Troubleshooting)."
   "$v/bin/vllm" --help >/dev/null 2>&1 || die "vllm in venv-${v##*/venv-} does not start; see the output above"
   rm -f -- "$v/.pkgs"; printf '%s\n' "$sig" >"$v/.pkgs"
 }
 [ "$WITH_LLM" = 1 ] && llm_venv llm "$VLLM_LLM_VERSION"
-# shellcheck disable=SC2086  # the requirement line with its hash, split on purpose
-[ "$WITH_KOLIBRI" = 1 ] && llm_venv kolibri "$VLLM_KOLIBRI_VERSION" $KOLIBRI_PLUGIN
+# Kolibri-1 left the catalog (V01.1.370): its venv goes too
+[ -d "$PREFIX/venv-kolibri" ] && [ ! -L "$PREFIX/venv-kolibri" ] && rm -rf -- "$PREFIX/venv-kolibri"
 
 # ---------------------------------------------------------------- Bilder malen (optional, plan bildgenerierung)
 # The engine is stable-diffusion.cpp's sd-server, built here once per pinned commit (bildmodell.SDCPP_COMMIT) for the
@@ -1078,7 +1047,7 @@ if [ -n "$MODELLE_PICK" ] && { [ "$(cfg '.models.host // ""')" != "$MODELLE_PICK
     bash "$PREFIX/app/speech-spark.sh" teilen koppeln "$MODELLE_PICK" || die "the pairing did not work; run the install again with a new code"
 fi
 # a panel computer reaches the language model only through the model computer's LLM-Tor: a chat address on this
-# computer (127.0.0.1, such as qwen38's from a move) or a plain http address on the model computer (its old ports are
+# computer (127.0.0.1) or a plain http address on the model computer (its old ports are
 # closed, V01.0.640) becomes the door's, on every install and update (V01.0.637)
 if [ "$(cfg '(.models.host // "127.0.0.1") | . == "127.0.0.1" or . == "localhost" or . == "::1"')" = false ]; then
   jqi '.models.host as $h | if ((.chat.llm_url // "") | test("^https?://(127[.]0[.]0[.]1|localhost|[[]::1[]])([:/]|$)")
@@ -1097,7 +1066,6 @@ fi
 
 # ---------------------------------------------------------------- systemd
 say "systemd units"
-QWEN38_AFTER="qwen38-sglang.service qwen38-flash.service qwen38-image.service qwen38-video.service qwen38-llamacpp.service"
 common_env="Environment=SPEECH_SPARK_CONFIG=$ETC/config.json
 Environment=SPEECH_SPARK_VOICES=$VAR/voices
 Environment=SPEECH_SPARK_STATE=$VAR/state
@@ -1117,8 +1085,7 @@ fi
 cat >/etc/systemd/system/speech-spark-asr.service <<EOF
 [Unit]
 Description=Speech on DGX Spark: Qwen3-ASR ($ASR_BACKEND)
-# Start after the qwen38 lanes so their static memory fraction is claimed first.
-After=network-online.target $QWEN38_AFTER
+After=network-online.target
 Wants=network-online.target
 $asr_deps
 
@@ -1160,7 +1127,7 @@ fi
 cat >/etc/systemd/system/speech-spark-tts.service <<EOF
 [Unit]
 Description=Speech on DGX Spark: Qwen3-TTS ($BACKEND)
-After=network-online.target $QWEN38_AFTER
+After=network-online.target
 Wants=network-online.target
 $tts_deps
 
@@ -1192,7 +1159,7 @@ engine_unit() {  # $1 = unit suffix, $2 = engine.sh role
   cat >"/etc/systemd/system/speech-spark-$1.service" <<EOF
 [Unit]
 Description=Speech on DGX Spark: vLLM engine ($2)
-After=network-online.target $QWEN38_AFTER
+After=network-online.target
 Wants=network-online.target
 
 [Service]
@@ -1426,7 +1393,7 @@ fi
 cat >/etc/systemd/system/speech-spark-bild.service <<EOF
 [Unit]
 Description=Speech on DGX Spark: Bilder malen (FLUX.2 klein)
-After=network-online.target $QWEN38_AFTER
+After=network-online.target
 
 [Service]
 LogNamespace=speech-spark
@@ -1455,7 +1422,7 @@ EOF
 cat >/etc/systemd/system/speech-spark-musik.service <<EOF
 [Unit]
 Description=Speech on DGX Spark: Musik machen (ACE-Step 1.5)
-After=network-online.target $QWEN38_AFTER
+After=network-online.target
 
 [Service]
 LogNamespace=speech-spark
@@ -2057,8 +2024,8 @@ restart_engine() {  # $1 = unit suffix, $2 = settings signature
 
 # The own language model first, in engine.sh's order (llm, asr, main, design, sehen): the engines after it wait while it
 # loads; restarted after them it loaded while the TTS engine sized its memory ("No available memory for the cache
-# blocks", tars 2026-10-16). It runs only once `speech-spark modelle llm uebernehmen` switched llm.enabled on; until
-# then qwen38 stays the language model and these units stay off. Its signature is modelle.signatur(): its own catalog
+# blocks", tars 2026-10-16). It runs only with llm.enabled (install.sh --llm switches it on);
+# without it these units stay off. Its signature is modelle.signatur(): its own catalog
 # entry, port and commit, not the whole catalog, so a new music or image model does not reload the language model.
 if [ "$LLM_ON" = 1 ]; then
   restart_engine llm "$VLLM_LLM_VERSION $("$PREFIX/venv-panel/bin/python" "$PREFIX/app/modelle.py" signatur llm 2>/dev/null \
@@ -2154,6 +2121,12 @@ fi
 if [ "$TEILEN" = 1 ]; then
   systemctl enable speech-spark-teilen-fw.service >/dev/null 2>&1
   systemctl start speech-spark-teilen-fw.service 2>/dev/null || warn "the door's firewall did not load (sudo speech-spark teilen firewall)"
+  # the door opens the LLM-Tor's port only while llm.enabled (tlstor.ports): just switched on, the firewall's rules are
+  # written again from the new port list (V01.0.639: the Pi got no answer)
+  if [ "$LLM_NEU" = 1 ] && [ -f "$(dirname "$ETC")/speech-spark-teilen.nft" ]; then
+    SPEECH_SPARK_PREFIX="$PREFIX" SPEECH_SPARK_ETC="$ETC" SPEECH_SPARK_VAR="$VAR" \
+      bash "$PREFIX/app/speech-spark.sh" teilen firewall || warn "the door's firewall did not take the new port (sudo speech-spark teilen firewall)"
+  fi
   restart_front tlstor
   restart_front waerter
 fi

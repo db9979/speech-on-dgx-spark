@@ -26,7 +26,7 @@ import steuer  # noqa: E402
 ADMIN = TestClient(panel.app)
 ADMIN.post("/api/login", json={"password": "secret-admin"})
 T0 = 1_800_000_000.0
-DSPARK = "qwen38-27b-nvfp4-dspark"
+DSPARK = "qwen36-35b-a3b-nvfp4-ohne-mtp"     # a candidate beside the running model
 
 
 def hit(repo="beispiel/klein-8b", **k):
@@ -76,12 +76,12 @@ class Probe(unittest.TestCase):
                 modelle.probe_merken(mid, art, self.p, now=T0)
         self.assertIsNone(modelle.probe_stand(self.kat, {}, [], False, self.p, now=T0))
         modelle.probe_merken(DSPARK, "llm", self.p, now=T0)
-        alt = {"modelle": {DSPARK: {"zeit": T0 - 3600, "tok_s": 20.0}, "qwen38-27b-nvfp4": {"tok_s": 24.7}}}
-        s = modelle.probe_stand(self.kat, alt, ["qwen38-27b-nvfp4"], False, self.p, now=T0 + 60)
-        self.assertEqual((s["fertig"], s["jetzt_id"], s["jetzt_tok_s"]), (False, "qwen38-27b-nvfp4", 24.7))   # an older one
-        neu = {"modelle": {DSPARK: {"zeit": T0 + 900, "tok_s": 31.2, "ok": True}, "qwen38-27b-nvfp4": {"tok_s": 24.7}}}
-        self.assertFalse(modelle.probe_stand(self.kat, neu, ["qwen38-27b-nvfp4"], True, self.p, now=T0 + 900)["fertig"])  # still measuring
-        s = modelle.probe_stand(self.kat, neu, ["qwen38-27b-nvfp4"], False, self.p, now=T0 + 1000)
+        alt = {"modelle": {DSPARK: {"zeit": T0 - 3600, "tok_s": 20.0}, "qwen36-35b-a3b-nvfp4": {"tok_s": 24.7}}}
+        s = modelle.probe_stand(self.kat, alt, ["qwen36-35b-a3b-nvfp4"], False, self.p, now=T0 + 60)
+        self.assertEqual((s["fertig"], s["jetzt_id"], s["jetzt_tok_s"]), (False, "qwen36-35b-a3b-nvfp4", 24.7))   # an older one
+        neu = {"modelle": {DSPARK: {"zeit": T0 + 900, "tok_s": 31.2, "ok": True}, "qwen36-35b-a3b-nvfp4": {"tok_s": 24.7}}}
+        self.assertFalse(modelle.probe_stand(self.kat, neu, ["qwen36-35b-a3b-nvfp4"], True, self.p, now=T0 + 900)["fertig"])  # still measuring
+        s = modelle.probe_stand(self.kat, neu, ["qwen36-35b-a3b-nvfp4"], False, self.p, now=T0 + 1000)
         self.assertEqual((s["fertig"], s["ok"], s["tok_s"]), (True, True, 31.2))
         neu["modelle"][DSPARK]["ok"] = False
         self.assertFalse(modelle.probe_stand(self.kat, neu, [], False, self.p, now=T0 + 1000)["ok"])
@@ -97,15 +97,14 @@ class Panel(unittest.TestCase):
     def setUp(self):
         for k in [k for k in guard._rate if k[0] in ("modelle_eigen", "modelle", "modelle_messen", "modelle_wechsel")]:
             guard._rate.pop(k, None)
-        self.saved = modellseite._lanes, modellseite._laeuft, modellseite._misst
-        modellseite._lanes = lambda: []
+        self.saved = modellseite._laeuft, modellseite._misst
         modellseite._laeuft = lambda: False
         modellseite._misst = lambda: False
         for f in (modelle.PROBE, modelle.MESS_WUNSCH, modelle.WUNSCH):
             self.addCleanup(lambda f=f: os.path.exists(f) and os.remove(f))
 
     def tearDown(self):
-        modellseite._lanes, modellseite._laeuft, modellseite._misst = self.saved
+        modellseite._laeuft, modellseite._misst = self.saved
         helpers.set_config(modelle_wechseln=False, modelle_eigene=False)
         modellseite._live["t"] = None
 
@@ -170,16 +169,16 @@ class Panel(unittest.TestCase):
         out = io.StringIO()
         with mock.patch.object(modellseite.subprocess, "run", return_value=done), mock.patch.object(steuer, "remote", return_value=False), \
                 mock.patch.object(modelle, "gesamt_gib", return_value=121.0), redirect_stdout(out):
-            r = ADMIN.post("/api/admin/modelle/messen", json={"id": "gemma-4-26b-a4b", "probe": True})
+            r = ADMIN.post("/api/admin/modelle/messen", json={"id": "qwen3-vl-8b-fp8", "probe": True})
             self.assertEqual(r.status_code, 200, r.text)
-            self.assertEqual(modelle.read_json(modelle.PROBE, {})["id"], "gemma-4-26b-a4b")
+            self.assertEqual(modelle.read_json(modelle.PROBE, {})["id"], "qwen3-vl-8b-fp8")
             p = r.json()["wechsel"]["probe"]
-            self.assertEqual((p["id"], p["fertig"]), ("gemma-4-26b-a4b", False))
-            self.assertEqual(p["name"], modelle.katalog()["gemma-4-26b-a4b"]["name"]["de"])
+            self.assertEqual((p["id"], p["fertig"]), ("qwen3-vl-8b-fp8", False))
+            self.assertEqual(p["name"], modelle.katalog()["qwen3-vl-8b-fp8"]["name"]["de"])
             r = ADMIN.delete("/api/admin/modelle/probe")
             self.assertEqual(r.status_code, 200)
             self.assertIsNone(r.json()["wechsel"]["probe"])
-            ADMIN.post("/api/admin/modelle/messen", json={"id": "gemma-4-26b-a4b"})          # „Messen“ alone: no question
+            ADMIN.post("/api/admin/modelle/messen", json={"id": "qwen3-vl-8b-fp8"})          # „Messen“ alone: no question
             self.assertFalse(os.path.exists(modelle.PROBE))
         for word in ("ausprobieren angefragt", "ausprobieren verworfen"):
             self.assertIn("modelle: " + word, out.getvalue())
@@ -197,7 +196,7 @@ class Panel(unittest.TestCase):
         self.assertIn("modelle: ausprobieren erledigt", out.getvalue())
 
     def test_off_no_question_on_the_page(self):
-        modelle.probe_merken("gemma-4-26b-a4b", "sehen")
+        modelle.probe_merken("qwen3-vl-8b-fp8", "sehen")
         self.assertIsNone(ADMIN.get("/api/admin/modelle").json()["wechsel"]["probe"])
 
 

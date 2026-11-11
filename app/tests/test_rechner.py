@@ -136,7 +136,7 @@ class Karten(unittest.TestCase):
                        "einheiten": {"speech-spark-asr": {"state": "active"}, "speech-spark-tts": {"state": "failed"},
                                      "speech-spark-llm": {"state": "active"}, "speech-spark-sehen": {"state": "unknown"},
                                      "speech-spark-musik": {"state": "active"}},
-                       "modellwahl": {"llm": {"modell": "RadixArk/qwen38-27b-nvfp4", "enabled": True}},
+                       "modellwahl": {"llm": {"modell": "beispiel/qwen36-35b-a3b-nvfp4", "enabled": True}},
                        "rechner": messung()}
         p = mock.patch.object(steuer, "cached", side_effect=lambda **kw: self.status)
         p.start()
@@ -167,7 +167,7 @@ class Karten(unittest.TestCase):
         m, p = d["liste"]
         self.assertEqual((m["id"], p["id"]), ("modell", "panel"))
         self.assertEqual(m["gpu"], {"util": 12.0, "temp": 58.0, "power": 41.0})
-        self.assertEqual(m["llm"], "qwen38-27b-nvfp4")
+        self.assertEqual(m["llm"], "qwen36-35b-a3b-nvfp4")
         self.assertEqual((m["netz_rx_mbs"], m["netz_tx_mbs"]), (1.0, 0.1))
         self.assertEqual([(x["id"], x["state"]) for x in m["dienste"]],
                          [("asr", "active"), ("tts", "failed"), ("llm", "active"), ("musik", "active"), ("waerter", "active")])
@@ -296,15 +296,15 @@ class WerRechnet(unittest.TestCase):
         return d
 
     def test_each_service_from_systemds_counters(self):
-        d = self.cgroup({"speech-spark-llm.service": 0, "speech-spark-asr.service": 0, "qwen38-sglang.service": 0,
+        d = self.cgroup({"speech-spark-llm.service": 0, "speech-spark-asr.service": 0, "fremd-dienst.service": 0,
                          "docker-abc.scope": 0, "ssh.service": 0, "speech-spark-tts.service": 5_000_000})
         self.assertEqual(rechner.dienste_cpu(base=d, now=100.0, kerne=4), {})          # the first round: no baseline
         d2 = self.cgroup({"speech-spark-llm.service": 6_000_000, "speech-spark-asr.service": 1_200_000,
-                          "qwen38-sglang.service": 30_000, "docker-abc.scope": 600_000, "ssh.service": 9_000_000,
+                          "fremd-dienst.service": 30_000, "docker-abc.scope": 600_000, "ssh.service": 9_000_000,
                           "speech-spark-tts.service": 100})                               # tts started again: counts 0
         got = rechner.dienste_cpu(base=d2, now=103.0, kerne=4)
-        self.assertEqual(got, {"llm": 50.0, "asr": 10.0, "docker": 5.0, "qwen38": 0.2})
-        self.assertEqual(list(got), ["llm", "asr", "docker", "qwen38"])                 # the biggest first
+        self.assertEqual(got, {"llm": 50.0, "asr": 10.0, "docker": 5.0})              # a foreign unit counts as rest
+        self.assertEqual(list(got), ["llm", "asr", "docker"])                         # the biggest first
         self.assertIsNone(rechner.dienste_cpu(base=os.path.join(d, "fehlt")))           # no counters (cgroup v1)
 
     def test_the_model_computers_services_are_data(self):

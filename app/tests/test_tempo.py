@@ -57,20 +57,15 @@ class OffTheLoop(unittest.TestCase):
         def state(unit):
             seen.append(threading.get_ident())
             return "active"
-        calls = []
-        with mock.patch.object(admin, "unit_state", state), mock.patch.object(common, "QWEN38_UNITS", ["qwen38-a"]), \
-                mock.patch.object(common, "unit_exists", lambda u: calls.append(u) or True), \
-                mock.patch.object(common, "lane_fraction", lambda u: 0.5), \
-                mock.patch.dict(admin._lanes, {"t": None, "units": []}):
+        with mock.patch.object(admin, "unit_state", state):
             c = TestClient(panel.app)
             c.post("/api/login", json={"password": "secret-admin"})
             for _ in range(2):
                 r = c.get("/api/status")
                 self.assertEqual(r.status_code, 200, r.text)
-                self.assertEqual(r.json()["qwen38"], [{"unit": "qwen38-a", "state": "active", "mem_fraction": 0.5}])
+                self.assertNotIn("qwen38", r.json())     # qwen38 is gone (Dominik 2026-11-11)
         self.assertTrue(seen)
         self.assertNotIn(main, seen)
-        self.assertEqual(calls, ["qwen38-a"])   # which lanes exist: looked up once, not every 3 seconds
 
     def test_update_check_waits_for_git_in_a_worker_thread(self):
         loop_thread = []

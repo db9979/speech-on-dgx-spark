@@ -32,13 +32,13 @@ from tests import test_waerter  # noqa: E402
 ADMIN = TestClient(panel.app)
 ADMIN.post("/api/login", json={"password": "secret-admin"})
 T0 = 1_800_000_000.0
-QWEN = "qwen38-27b-nvfp4"
+QWEN = "qwen36-35b-a3b-nvfp4"
 UNIT = ["sudo", "-n", "/usr/bin/systemctl", "start", "--no-block", modelle.WECHSEL_UNIT]
 
 
 def cfg(reserve=10, **llm):
     return {"chat": {"llm_url": "http://127.0.0.1:31006/v1"}, "memory": {"reserve_gib": reserve},
-            "llm": dict({"enabled": True, "modell": QWEN, "sehen_modell": "gemma-4-26b-a4b"}, **llm),
+            "llm": dict({"enabled": True, "modell": QWEN, "sehen_modell": "qwen3-vl-8b-fp8"}, **llm),
             "image": {"enabled": False, "variant": "4b-q8"}}
 
 
@@ -114,7 +114,7 @@ class Regeln(unittest.TestCase):
         self.assertEqual(args(cfg(platz="1x256k"))[0], "262144")
         self.assertGreater(float(args(cfg(platz="1x256k"))[1]), float(std[1]))
         # the vision model stays as it is
-        self.assertEqual(modelle.rolle("sehen", cfg(platz="1x256k"))[0], modelle.eintrag("gemma-4-26b-a4b"))
+        self.assertEqual(modelle.rolle("sehen", cfg(platz="1x256k"))[0], modelle.eintrag("qwen3-vl-8b-fp8"))
 
     def test_the_page_lists_the_choices_with_why_not(self):
         w = modelle.platz_wahl(cfg(), 121.0)
@@ -132,7 +132,7 @@ class Regeln(unittest.TestCase):
                 modelle.wunsch_schreiben("platz", bad, path=p)
         self.assertFalse(os.path.exists(p))
         with self.assertRaises(modelle.Fehler):
-            modelle.platz_anfragen("4x64k", cfg(), 121.0, (), lambda: True, laeuft=True)
+            modelle.platz_anfragen("4x64k", cfg(), 121.0, lambda: True, laeuft=True)
         modelle.wunsch_schreiben("platz", "1x256k", path=p)
         with open(p) as f:
             zeit = json.load(f)["zeit"]
@@ -171,14 +171,13 @@ class Panel(unittest.TestCase):
     def setUp(self):
         for k in [k for k in guard._rate if k[0] in ("modelle_wechsel", "modelle")]:
             guard._rate.pop(k, None)
-        self.saved = modellseite._lanes, modellseite._laeuft, modellseite._misst
-        modellseite._lanes = lambda: []
+        self.saved = modellseite._laeuft, modellseite._misst
         modellseite._laeuft = lambda: False
         modellseite._misst = lambda: False
         self.addCleanup(lambda: os.path.exists(modelle.WUNSCH) and os.remove(modelle.WUNSCH))
 
     def tearDown(self):
-        modellseite._lanes, modellseite._laeuft, modellseite._misst = self.saved
+        modellseite._laeuft, modellseite._misst = self.saved
         helpers.set_config(modelle_wechseln=False)
         modellseite._live["t"] = None
 

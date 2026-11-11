@@ -2150,7 +2150,7 @@ class Browser(unittest.TestCase):
                          "messbar": True, "gemessen": True, "betrieb": "resident", "lizenz": "apache-2.0", "gewerblich": True,
                          "aktiv": False, "gib": None, "fest": True, "messung": {}}, **k)
         arten = [{"art": "llm", "name": "Sprachmodell", "modelle": [
-                     m("qwen38-27b-nvfp4", "Qwen3.8 27B NVFP4", aktiv=True, gib=36.3, messung={"tok_s": 24.7}),
+                     m("qwen36-35b-a3b-nvfp4", "Qwen3.8 27B NVFP4", aktiv=True, gib=36.3, messung={"tok_s": 24.7}),
                      m("qwen38-27b-nvfp4-dspark", "Qwen3.8 27B NVFP4 mit DSpark", nein="revision", gemessen=False),
                      m("gemma-4-26b-a4b", "Gemma 4 26B A4B", waehlbar=True, messung={"tok_s": 41.0}),
                      m("kolibri-1-nvfp4", "Kolibri-1 NVFP4 mit einem sehr langen Namen", nein="budget", gewerblich=False)]},
@@ -2159,10 +2159,10 @@ class Browser(unittest.TestCase):
                                                                        m("qwen3-asr-0.6b", "Qwen3-ASR 0.6B", waehlbar=True, engine="qwen-asr", messbar=False)]},
                  {"art": "tts", "name": "Sprachausgabe", "modelle": [m("qwen3-tts-0.6b", "Qwen3-TTS 0.6B", aktiv=True, messbar=False)]},
                  {"art": "klein", "name": "Kleine Modelle", "modelle": []}]
-        probe = {"id": "qwen38-27b-nvfp4-dspark", "art": "llm", "fertig": True, "ok": True, "tok_s": 31.2, "jetzt_id": "qwen38-27b-nvfp4",
+        probe = {"id": "qwen38-27b-nvfp4-dspark", "art": "llm", "fertig": True, "ok": True, "tok_s": 31.2, "jetzt_id": "qwen36-35b-a3b-nvfp4",
                  "jetzt_tok_s": 24.7, "name": "Qwen3.8 27B NVFP4 mit DSpark", "jetzt_name": "Qwen3.8 27B NVFP4", "waehlbar": True}
         d = {"arten": arten, "budget": {"gesamt": 121.7, "system": 8, "reserve": 10, "fest": 56.4, "bedarf": 12, "bedarf_max": 12, "frei": 47.3, "regel": "alle",
-                        "teile": [{"id": "qwen38-27b-nvfp4", "name": "Qwen3.8 27B NVFP4", "art": "llm", "gib": 36.3, "betrieb": "resident"},
+                        "teile": [{"id": "qwen36-35b-a3b-nvfp4", "name": "Qwen3.8 27B NVFP4", "art": "llm", "gib": 36.3, "betrieb": "resident"},
                                   {"id": "qwen3-vl-8b-fp8", "name": "Qwen3-VL 8B", "art": "sehen", "gib": 12, "betrieb": "bei_bedarf"},
                                   {"id": "qwen3-asr-1.7b", "name": "Qwen3-ASR 1.7B", "art": "asr", "gib": 8.8, "betrieb": "resident"},
                                   {"id": "qwen3-tts-0.6b", "name": "Qwen3-TTS 0.6B", "art": "tts", "gib": 11.3, "betrieb": "resident"},

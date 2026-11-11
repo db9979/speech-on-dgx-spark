@@ -17,10 +17,9 @@ import httpx  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
 
-def result(ttfa=0.62, rtf=0.38, tts_par=3.1, tts_first_max=2.37, asr_s=0.94, acc=0.98, asr_par=30.7, free=10.4,
-           qwen38=("qwen38-flash.service",), errors=()):
+def result(ttfa=0.62, rtf=0.38, tts_par=3.1, tts_first_max=2.37, asr_s=0.94, acc=0.98, asr_par=30.7, free=10.4, errors=()):
     """A measurement like one from tars (time fixed, nothing depends on the clock)."""
-    return {"time": 1760000000, "host": "tars", "qwen38_active": list(qwen38), "errors": list(errors),
+    return {"time": 1760000000, "host": "tars", "errors": list(errors),
             "config": {"tts": {"model": "m", "backend": "vllm-omni"}, "asr": {"model": "m", "backend": "b"}},
             "tts": {"streaming": True, "single": {"ttfa_s": ttfa, "total_s": 6.0, "audio_s": 15.8, "rtf": rtf},
                     "parallel": {"n": 4, "wall_s": 20, "ttfa_s": 1.4, "ttfa_max_s": tts_first_max, "x_realtime": tts_par}},
@@ -75,14 +74,13 @@ class Rating(unittest.TestCase):
         v = bench.rate(result())["verdict"]
         self.assertEqual(v["level"], "warn")
         self.assertEqual(v["title"], "Gut für ein Gespräch, bei 4 gleichzeitig wird es knapp.")
-        self.assertIn("qwen38-flash lief während der Messung", v["detail"])
         self.assertIn("freier Speicher", v["detail"])
-        good = bench.rate(result(tts_par=6, tts_first_max=0.8, free=20, qwen38=()))["verdict"]
+        good = bench.rate(result(tts_par=6, tts_first_max=0.8, free=20))["verdict"]
         self.assertEqual((good["level"], good["title"], good["detail"]),
                          ("ok", "Alles flüssig, auch bei mehreren gleichzeitig.", ""))
         bad = bench.rate(result(rtf=1.3))["verdict"]
         self.assertEqual((bad["level"], bad["title"]), ("bad", "Hier hakt es: Tempo der Stimme."))
-        none = bench.rate({"errors": ["TTS not measured: unreachable"], "qwen38_active": []})
+        none = bench.rate({"errors": ["TTS not measured: unreachable"]})
         self.assertEqual((none["verdict"]["level"], none["groups"]), ("bad", []))
         part = bench.rate(result(tts_par=6, tts_first_max=0.8, free=20, errors=["ASR: x"]))["verdict"]
         self.assertEqual(part["level"], "warn")
@@ -91,22 +89,22 @@ class Rating(unittest.TestCase):
     def test_the_language_model_and_what_is_missing(self):
         """16.10.: after the split the Pi measured only memory, TTS and ASR "unreachable" (127.0.0.1), no language
         model, and said "Alles flüssig"."""
-        r = dict(result(qwen38=()), llm={"model": "qwen38-27b-nvfp4", "single": {"first_s": 0.4, "tok_s": 22.0},
+        r = dict(result(), llm={"model": "qwen36-35b-a3b-nvfp4", "single": {"first_s": 0.4, "tok_s": 22.0},
                                           "parallel": {"n": 4, "wall_s": 10, "tok_s": 48.0}})
         got = rows(r)
         self.assertEqual((got["llm_first"]["level"], got["llm_speed"]["level"], got["llm_par"]["level"]), ("top", "ok", "ok"))
         self.assertEqual(rows(dict(r, llm={"single": {"tok_s": 6.0}, "parallel": {}}))["llm_speed"]["word"], "stockt")
         self.assertIn("Sprachmodell", [g["name"] for g in bench.rate(r)["groups"]])
-        self.assertIn("LLM  qwen38-27b-nvfp4", bench.report(dict(r, llm=r["llm"])))
+        self.assertIn("LLM  qwen36-35b-a3b-nvfp4", bench.report(dict(r, llm=r["llm"])))
         only_memory = bench.rate({"errors": ["TTS not measured: unreachable", "ASR not measured: unreachable",
-                                             "LLM: ConnectError"], "qwen38_active": [],
+                                             "LLM: ConnectError"],
                                   "memory_after": {"mem_available_gib": 55.4}})["verdict"]
         self.assertEqual(only_memory["title"], "Nicht gemessen: Sprachausgabe, Spracherkennung, Sprachmodell.")
         self.assertEqual(only_memory["level"], "warn")
-        self.assertNotIn("qwen38", bench.report({"time": 1760000000, "host": "x", "qwen38_active": [], "errors": []}))
-        for g in bench.rate(result(free=9, rtf=0.9, qwen38=()))["groups"]:
+        self.assertNotIn("qwen38", bench.report({"time": 1760000000, "host": "x", "errors": []}))
+        for g in bench.rate(result(free=9, rtf=0.9))["groups"]:
             for x in g["rows"]:
-                self.assertNotIn("qwen38", x["why"], "the texts speak of the language model, not of qwen38")
+                self.assertNotIn("qwen38", x["why"], "the texts speak of the language model")
 
     def test_several_voices_at_once(self):
         """V01.0.800: 2 at once, a short answer sentence at once and the wait in the TTS service's queue apart from
@@ -173,7 +171,7 @@ class Rating(unittest.TestCase):
 
     def test_history_keeps_ten_runs(self):
         for i in range(13):
-            bench.save_history(bench.load_history() + [{"time": i, "qwen38": False, "values": {"tts_first": i}}])
+            bench.save_history(bench.load_history() + [{"time": i, "values": {"tts_first": i}}])
         h = bench.load_history()
         self.assertEqual([x["time"] for x in h], list(range(3, 13)))
         with open(bench.HISTORY, "w") as f:

@@ -19,7 +19,7 @@ This service sits on llm.port (31006, on the network like the speech APIs) and a
   with a token drawn per request;
 - a real canary instead of /health: every KANARIE_S seconds of quiet one token is generated; /health says ready only
   while that works;
-- "sehen" as model name, or a picture in a message while the language model cannot see (Kolibri), goes to the image
+- "sehen" as model name, or a picture in a message while the language model cannot see, goes to the image
   understanding engine (llm.sehen_modell on llm.sehen_port, no tools), a fixed rule (zum_sehen); it is started on
   demand through systemd (memory checked first) and stopped after llm.sehen_leerlauf_min minutes without a question;
 - "helfer" as model name (a chat or a System One question) goes to the small helper model (llm.helfer_modell on

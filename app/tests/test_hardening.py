@@ -747,25 +747,13 @@ class Stage4(unittest.TestCase):
             self.assertEqual(out.returncode, 1)
             self.assertNotIn("Signature check off", out.stdout)
 
-    def test_qwen38_key_not_through_links(self):
-        import re
-        import subprocess
-        import tempfile
+    def test_no_key_file_from_a_home_is_read(self):
+        # the qwen38 key from ~/.config/qwen38/api-key (read by root, checked against links) is gone with qwen38
+        # (Dominik 2026-11-11): the own language model's door takes api.key, so root reads no key from any home
         install = repo_file("install.sh")
-        fn = re.search(r"^qkey_ok\(\) \{.*?^\}", install, re.M | re.S).group(0)
-        with tempfile.TemporaryDirectory() as d:
-            good, bad = os.path.join(d, "good"), os.path.join(d, "bad")
-            for h in (good, bad):
-                os.makedirs(os.path.join(h, ".config", "qwen38"))
-            with open(os.path.join(good, ".config", "qwen38", "api-key"), "w") as f:
-                f.write("sk-1234567890")
-            secret = os.path.join(d, "secret")
-            with open(secret, "w") as f:
-                f.write("root:x:secret")
-            os.symlink(secret, os.path.join(bad, ".config", "qwen38", "api-key"))
-            run = lambda h: subprocess.run(["bash", "-c", fn + '\nqkey_ok "$1"', "x", h]).returncode
-            self.assertEqual(run(good), 0)
-            self.assertNotEqual(run(bad), 0)
+        self.assertNotIn("qkey", install)
+        self.assertNotIn("/.config/", install.split("# ---------------------------------------------------------------- config", 1)[1]
+                         .split("# ---------------------------------------------------------------- systemd", 1)[0])
 
 
 class Stage5(unittest.TestCase):

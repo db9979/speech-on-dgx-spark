@@ -10,7 +10,7 @@ its answer first when several people talk to the Spark at once.
   is then the profile's own, else it is a guest turn).
 - The panel sends the stage to the ASR/TTS services with the key of common.stage_key(); they let waiting
   requests go by stage (common.PrioGate), never stop one that runs.
-- Language model (qwen38, not ours): while an answer with Vorrang has no first sentence yet, new rounds of
+- Language model: while an answer with Vorrang has no first sentence yet, new rounds of
   other people wait at most chat.person_priority_wait seconds before they go out (wait_turn()). Background
   work gives way to all speech anyway (vorrang.py).
 - A device of a profile with Vorrang may say "recording starts" (POST /api/vorrang/spricht): background work

@@ -219,7 +219,7 @@ def installiert():
 
 
 def jetzt_modell(cfg=None):
-    """The catalog id of the language model the own LLM-Tor runs, "" without one (qwen38 or off)."""
+    """The catalog id of the language model the own LLM-Tor runs, "" when it is off."""
     import modelle
     cfg = load_config() if cfg is None else cfg
     try:

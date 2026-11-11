@@ -364,7 +364,7 @@ class Installation(unittest.TestCase):
 
     def test_panel_computer(self):
         sh = repo_file("install.sh")
-        self.assertIn("PANEL_ONLY=1; WITH_ASR=0; WITH_TTS=0; WITH_BILD=0; WITH_MUSIK=0; WITH_LLM=0; WITH_KOLIBRI=0; LLM_ON=0; DOWNLOAD=0", sh)
+        self.assertIn("PANEL_ONLY=1; WITH_ASR=0; WITH_TTS=0; WITH_BILD=0; WITH_MUSIK=0; WITH_LLM=0; LLM_ON=0; DOWNLOAD=0", sh)
         self.assertIn("sys.version_info < (3, 11)", sh)
         self.assertIn("aarch64|x86_64", sh)
         # paired before any unit is written or started: the panel never talks to the models without the pin
@@ -417,18 +417,16 @@ class Installation(unittest.TestCase):
                       "only an address that names the model computer, the whole host, no path")
         self.assertIn("grep -m1 -E '^[0-9]+([.][0-9]+){3}$'", block)
 
-    def test_the_door_follows_the_language_models_move(self):
-        """V01.0.639: after `modelle llm uebernehmen` on tars the door still had the port list from before (the LLM-Tor
-        only while llm.enabled), so the Pi got no answer; both ways of the move refresh the door and its firewall."""
-        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "speech-spark.sh")) as f:
-            cli = f.read()
-        body = cli[cli.index("cmd_umzug_intern() {"):cli.index("\nrun_umzug() {")]
-        self.assertIn('echo "modelle: umgeschaltet $mid"\n  tuer_neu\n}', body)
-        self.assertIn("umzug_zurueck\n    tuer_neu\n", body)
-        fn = cli[cli.index("tuer_neu() {"):cli.index("\n}\n", cli.index("tuer_neu() {"))]
-        self.assertIn("restart_if_there speech-spark-tlstor", fn)
-        self.assertIn("cmd_teilen firewall", fn)
-        self.assertIn(".api.tls_listen", fn, "only on a model computer with its door open")
+    def test_the_door_follows_the_language_model_switched_on(self):
+        """V01.0.639: after the language model was switched on at tars the door still had the port list from before (the
+        LLM-Tor only while llm.enabled), so the Pi got no answer; `install.sh --llm` writes the door's firewall again."""
+        sh = helpers.repo_file("install.sh")
+        an = sh[sh.index('if [ "$LLM_PICK" = 1 ] && [ "$PANEL_ONLY" = 0 ]'):]
+        self.assertIn("LLM_NEU=1", an[:an.index("\nfi\n")])
+        tuer = sh[sh.index('if [ "$TEILEN" = 1 ]; then\n  systemctl enable speech-spark-teilen-fw.service'):]
+        tuer = tuer[:tuer.index("\nfi\n")]
+        self.assertIn('bash "$PREFIX/app/speech-spark.sh" teilen firewall', tuer[tuer.index('if [ "$LLM_NEU" = 1 ]'):])
+        self.assertIn("restart_front tlstor", tuer)
         self.assertEqual(tlstor.ports({"llm": {"enabled": False, "port": 31006}, "asr": {"port": 31001}})[:1], [31001])
         self.assertIn(31006, tlstor.ports({"llm": {"enabled": True, "port": 31006}}))
 

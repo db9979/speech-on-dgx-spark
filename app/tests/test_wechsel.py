@@ -1,6 +1,6 @@
 """Modelle wechseln, stage E4 (modelle.py wechsel_*, panel modellseite.py, speech-spark modelle wechseln|zurueckholen|
 entfernen; plan plaene/eigene-modelle.md): only catalog models of the same kind, an own engine only on a pinned commit,
-the language model only after the move, never one that leaves the budget too tight; the old model can be brought back
+the language model only while the own one is on, never one that leaves the budget too tight; the old model can be brought back
 for 7 days and is never removed while it runs or within those days; the panel only leaves a checked wish for the root
 unit speech-spark-wechsel, behind an admin switch that is off by default. Nothing depends on the time of day."""
 import copy
@@ -28,11 +28,27 @@ T0 = 1_800_000_000.0
 DAY = 86400
 VL = "qwen3-vl-8b-fp8"
 MESSUNG = {"modelle": {VL: {"ok": True, "revision": "9" * 40}}}
+OHNE = "qwen36-35b-a3b-nvfp4-ohne-mtp"
+
+
+def kat_mit_alten():
+    """The catalog plus two made-up entries (the catalog keeps one model per kind that switches since 2026-11-11):
+    an older eye model to switch away from, and a language model on an engine that is not vLLM."""
+    k = copy.deepcopy(modelle.katalog())
+    alt = copy.deepcopy(k[VL])
+    alt.update(id="sehen-alt", repo="beispiel/sehen-alt")
+    fremd = copy.deepcopy(k["qwen36-35b-a3b-nvfp4"])
+    fremd.update(id="fremde-engine", engine="extern", repo="")
+    k.update({"sehen-alt": alt, "fremde-engine": fremd})
+    return k
+
+
+KAT = kat_mit_alten()
 
 
 def cfg(**over):
     c = {"chat": {"llm_url": "http://127.0.0.1:31006/v1"}, "memory": {"reserve_gib": 10},
-         "llm": {"enabled": True, "modell": "qwen38-27b-nvfp4", "sehen_modell": "gemma-4-26b-a4b"},
+         "llm": {"enabled": True, "modell": "qwen36-35b-a3b-nvfp4", "sehen_modell": "sehen-alt"},
          "asr": {"enabled": True, "recognizer": "qwen", "model": "Qwen/Qwen3-ASR-1.7B"},
          "tts": {"enabled": True, "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"},
          "image": {"enabled": False, "variant": "4b-q8"}}
@@ -44,36 +60,37 @@ def cfg(**over):
 class Regeln(unittest.TestCase):
     def test_what_runs_now(self):
         c = cfg()
-        self.assertEqual(modelle.jetzt_id("llm", c), "qwen38-27b-nvfp4")
-        self.assertEqual(modelle.jetzt_id("sehen", c), "gemma-4-26b-a4b")
+        self.assertEqual(modelle.jetzt_id("llm", c), "qwen36-35b-a3b-nvfp4")
+        self.assertEqual(modelle.jetzt_id("sehen", c, KAT), "sehen-alt")
+        self.assertEqual(modelle.jetzt_id("sehen", c), "")                   # one the catalog does not know
         self.assertEqual(modelle.jetzt_id("asr", c), "qwen3-asr-1.7b")
         self.assertEqual(modelle.jetzt_id("tts", c), "qwen3-tts-0.6b")
         self.assertEqual(modelle.jetzt_id("bild", c), "")
         self.assertEqual(modelle.jetzt_id("asr", cfg(asr={"recognizer": "parakeet"})), "parakeet-primeline")
-        self.assertEqual(modelle.jetzt_id("llm", cfg(llm={"enabled": False})), "")     # qwen38 still answers
+        self.assertEqual(modelle.jetzt_id("llm", cfg(llm={"enabled": False})), "")
 
     def test_fixed_rules(self):
         c = cfg()
-        ok = modelle.wechsel_pruefen("sehen", VL, c, 120, messung=MESSUNG)
+        ok = modelle.wechsel_pruefen("sehen", VL, c, 120, KAT, messung=MESSUNG)
         self.assertEqual(ok["id"], VL)
         cases = [("musik", VL, c, "art"), ("llm", VL, c, "art"), ("llm", "gibts-nicht", c, "unbekannt"),
-                 ("llm", "qwen38-extern", c, "engine"), ("sehen", VL, c, "revision"),
-                 ("llm", "qwen38-27b-fp8", cfg(llm={"enabled": False}), "aus"),
+                 ("llm", "fremde-engine", c, "engine"), ("sehen", VL, c, "revision"),
+                 ("llm", OHNE, cfg(llm={"enabled": False}), "aus"),
                  ("asr", "qwen3-forcedaligner-0.6b", c, "wahl"), ("asr", "qwen3-asr-1.7b", c, "schon")]
         for art, mid, cc, word in cases:
             with self.assertRaisesRegex(modelle.Fehler, f"^{word}$", msg=(art, mid)):
-                modelle.wechsel_pruefen(art, mid, cc, 120, messung={} if word == "revision" else MESSUNG)
+                modelle.wechsel_pruefen(art, mid, cc, 120, KAT, messung={} if word == "revision" else MESSUNG)
         with self.assertRaisesRegex(modelle.Fehler, "^budget$"):       # the panel decides from numbers, never a model
-            modelle.wechsel_pruefen("llm", "qwen38-27b-fp8", c, 40, messung=MESSUNG)
+            modelle.wechsel_pruefen("llm", OHNE, c, 30, KAT, messung=MESSUNG)
 
     def test_the_switched_configuration(self):
         c = cfg()
-        self.assertEqual(modelle.mit_wechsel(c, "llm", modelle.eintrag("qwen38-27b-fp8"))["llm"]["modell"], "qwen38-27b-fp8")
+        self.assertEqual(modelle.mit_wechsel(c, "llm", modelle.eintrag(OHNE))["llm"]["modell"], OHNE)
         p = modelle.mit_wechsel(c, "asr", modelle.eintrag("parakeet-primeline"))["asr"]
         self.assertEqual((p["recognizer"], p["model"]), ("parakeet", "Qwen/Qwen3-ASR-1.7B"))
         self.assertEqual(modelle.mit_wechsel(c, "bild", modelle.eintrag("flux2-klein-9b-q4") if "flux2-klein-9b-q4" in
                          modelle.katalog() else modelle.zur_variante("bild", "9b-q4"))["image"]["variant"], "9b-q4")
-        self.assertEqual(c["llm"]["modell"], "qwen38-27b-nvfp4")              # the original stays as it was
+        self.assertEqual(c["llm"]["modell"], "qwen36-35b-a3b-nvfp4")              # the original stays as it was
 
 
 class Zurueck(unittest.TestCase):
@@ -82,35 +99,35 @@ class Zurueck(unittest.TestCase):
         self.w = os.path.join(self.d, "modelle-wechsel.json")
 
     def test_seven_days_to_bring_it_back(self):
-        modelle.wechsel_merken("sehen", "gemma-4-26b-a4b", VL, now=T0, path=self.w)
-        self.assertEqual(modelle.zurueck_ziel("sehen", now=T0 + 6 * DAY, path=self.w), "gemma-4-26b-a4b")
+        modelle.wechsel_merken("sehen", "sehen-alt", VL, now=T0, path=self.w)
+        self.assertEqual(modelle.zurueck_ziel("sehen", now=T0 + 6 * DAY, path=self.w), "sehen-alt")
         with self.assertRaisesRegex(modelle.Fehler, "frist"):
             modelle.zurueck_ziel("sehen", now=T0 + 8 * DAY, path=self.w)
         with self.assertRaisesRegex(modelle.Fehler, "keins"):
             modelle.zurueck_ziel("asr", now=T0, path=self.w)
         c = cfg(llm={"sehen_modell": VL})
-        self.assertEqual(modelle.alte(c, now=T0 + 2 * DAY, path=self.w), {"sehen": {"id": "gemma-4-26b-a4b", "tage_frei": 5}})
-        self.assertEqual(modelle.alte(c, now=T0 + 9 * DAY, path=self.w)["sehen"]["tage_frei"], 0)
+        self.assertEqual(modelle.alte(c, now=T0 + 2 * DAY, path=self.w, kat=KAT), {"sehen": {"id": "sehen-alt", "tage_frei": 5}})
+        self.assertEqual(modelle.alte(c, now=T0 + 9 * DAY, path=self.w, kat=KAT)["sehen"]["tage_frei"], 0)
 
     def test_never_removed_while_it_runs_or_within_the_days(self):
         hf = os.path.join(self.d, "hf")
-        os.makedirs(modelle.hf_ordner(modelle.eintrag("gemma-4-26b-a4b"), hf))
+        os.makedirs(modelle.hf_ordner(KAT["sehen-alt"], hf))
         os.makedirs(modelle.hf_ordner(modelle.eintrag("qwen3-asr-0.6b"), hf))
         c = cfg(llm={"sehen_modell": VL})
-        modelle.wechsel_merken("sehen", "gemma-4-26b-a4b", VL, now=T0, path=self.w)
+        modelle.wechsel_merken("sehen", "sehen-alt", VL, now=T0, path=self.w)
         with self.assertRaisesRegex(modelle.Fehler, "frist"):
-            modelle.entfernbar("gemma-4-26b-a4b", c, now=T0 + DAY, path=self.w, hf_home=hf)
-        self.assertTrue(modelle.entfernbar("gemma-4-26b-a4b", c, now=T0 + 8 * DAY, path=self.w, hf_home=hf).endswith(
-            "models--google--gemma-4-26B-A4B-it"))
+            modelle.entfernbar("sehen-alt", c, now=T0 + DAY, path=self.w, kat=KAT, hf_home=hf)
+        self.assertTrue(modelle.entfernbar("sehen-alt", c, now=T0 + 8 * DAY, path=self.w, kat=KAT, hf_home=hf).endswith(
+            "models--beispiel--sehen-alt"))
         with self.assertRaisesRegex(modelle.Fehler, "aktiv"):
-            modelle.entfernbar("qwen3-asr-1.7b", c, now=T0, path=self.w, hf_home=hf)
+            modelle.entfernbar("qwen3-asr-1.7b", c, now=T0, path=self.w, kat=KAT, hf_home=hf)
         with self.assertRaisesRegex(modelle.Fehler, "aktiv"):
-            modelle.entfernbar(VL, c, now=T0, path=self.w, hf_home=hf)
+            modelle.entfernbar(VL, c, now=T0, path=self.w, kat=KAT, hf_home=hf)
         with self.assertRaisesRegex(modelle.Fehler, "art"):
-            modelle.entfernbar("qwen38-extern", c, now=T0, path=self.w, hf_home=hf)        # never qwen38's own
-        self.assertTrue(modelle.entfernbar("qwen3-asr-0.6b", c, now=T0, path=self.w, hf_home=hf))
+            modelle.entfernbar("fremde-engine", c, now=T0, path=self.w, kat=KAT, hf_home=hf)   # no cache folder of its own
+        self.assertTrue(modelle.entfernbar("qwen3-asr-0.6b", c, now=T0, path=self.w, kat=KAT, hf_home=hf))
         with self.assertRaisesRegex(modelle.Fehler, "fehlt"):
-            modelle.entfernbar("qwen3-tts-1.7b", c, now=T0, path=self.w, hf_home=hf)
+            modelle.entfernbar("qwen3-tts-1.7b", c, now=T0, path=self.w, kat=KAT, hf_home=hf)
 
 
 class Wunsch(unittest.TestCase):
@@ -134,13 +151,12 @@ class Panel(unittest.TestCase):
     def setUp(self):
         for k in [k for k in guard._rate if k[0] in ("modelle_wechsel", "modelle")]:
             guard._rate.pop(k, None)
-        self.saved = modellseite._lanes, modellseite._laeuft, modellseite._misst
-        modellseite._lanes = lambda: []
+        self.saved = modellseite._laeuft, modellseite._misst
         modellseite._laeuft = lambda: False
         modellseite._misst = lambda: False        # no measurement runs (test_messen_knopf checks one that does)
 
     def tearDown(self):
-        modellseite._lanes, modellseite._laeuft, modellseite._misst = self.saved
+        modellseite._laeuft, modellseite._misst = self.saved
         helpers.set_config(modelle_wechseln=False)
         try:
             os.remove(modelle.WUNSCH)

@@ -1240,15 +1240,15 @@ def past_reqs(view="admin", now=None):
 
 
 # the warnings at a node (hints): one sentence what it means and which page helps (goSec name)
-EXPLAIN = (("Speicher knapp", "Weniger freier Speicher als die Reserve: Dienste können abstürzen. Läuft qwen38 oder "
-            "ein anderer großer Dienst gerade?", "mon"),
+EXPLAIN = (("Speicher knapp", "Weniger freier Speicher als die Reserve: Dienste können abstürzen. Läuft gerade "
+            "ein großer Dienst?", "mon"),
            ("vom Wächter neu gestartet", "Der Dienst hat nicht mehr geantwortet, der Wächter hat ihn neu gestartet. "
             "Die Logs zeigen, was davor passierte.", "logs"),
            ("hängt", "Der Dienst antwortet nicht und der Wächter darf ihn diese Stunde nicht mehr neu starten.", "logs"),
            ("Funktionsprüfung", "Die regelmäßige Prüfung von Hören, Weiche, Modell und Sprechen ist hier gescheitert.", "test"),
            ("Qualitätstest", "Fragen, die früher richtig beantwortet wurden, gehen jetzt schief.", "test"),
-           ("erster Ton", "Bis zum ersten Ton dauert es heute länger als sonst. Meist läuft qwen38 gerade viel oder "
-            "der Speicher ist knapp.", "test"),
+           ("erster Ton", "Bis zum ersten Ton dauert es heute länger als sonst. Meist hat das Sprachmodell gerade viel zu tun "
+            "oder der Speicher ist knapp.", "test"),
            ("Bot-Token", "Ein zweites Programm benutzt denselben Telegram-Bot: Nachrichten gehen verloren.", "apps"),
            ("antwortet nicht seit", "Der Dienst-Wächter erreicht diesen Dienst seit dieser Zeit nicht. Die Admins haben einen "
             "Hinweis bekommen; Zustand → Dienste zeigt den Verlauf.", "mon"),

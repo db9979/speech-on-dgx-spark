@@ -175,7 +175,7 @@ def sentence(art, status, en=False, what=""):
 
 # „Beschwerde erkennen“ (features einordnungklage, plan systemone/einschaetzung.md 6): the deeds of a profile's last
 # answer stay in memory for LAST_S (kind, worked, short name; never a file). When the next message of that profile
-# says it did not work (the fixed list COMPLAINT, else qwen38's /v1/systemone in chat_turn.py), the panel only
+# says it did not work (the fixed list COMPLAINT, else the LLM-Tor's /v1/systemone in chat_turn.py), the panel only
 # lets the model look: the tools that change things of that kind are not offered in this answer.
 LAST_S = 600
 COMPLAINT = re.compile(r"(?i)^\W*(?:nein,?\s*|hm+,?\s*|äh+,?\s*)?(?:(?:das|der|die)\s+\w+\s+|(?:das|es|er|sie)\s+)?(?:"

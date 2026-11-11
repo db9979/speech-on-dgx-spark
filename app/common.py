@@ -448,8 +448,7 @@ def mem_available_gib(key="MemAvailable"):
 
 
 def check_memory(need_gib):
-    """GB10 shares one 128 GB pool between CPU and GPU. The qwen38 lanes claim a static
-    fraction of it (0.50 to 0.85), and DGX OS earlyoom kills processes when the host
+    """GB10 shares one 128 GB pool between CPU and GPU, and DGX OS earlyoom kills processes when the host
     drops to ~8 GiB. Refuse to load when loading would eat into the reserve."""
     mem = load_config().get("memory", {})
     if not mem.get("guard", True):
@@ -459,7 +458,7 @@ def check_memory(need_gib):
     if avail - need_gib < reserve:
         raise MemoryError(
             f"not enough unified memory: {avail:.1f} GiB available, model needs ~{need_gib} GiB, "
-            f"reserve is {reserve:g} GiB. Use a 0.6B model, stop the large qwen38 lane, "
+            f"reserve is {reserve:g} GiB. Use a 0.6B model, stop the language model "
             f"or lower memory.reserve_gib.")
 
 
@@ -659,7 +658,7 @@ def audio_rate_ok(data):
 
 
 # the units of the model side (speech, engines, the own language model); the panel may start/stop/restart UNITS
-# (matches /etc/sudoers.d/speech-spark); OWN_LLM_UNITS only `speech-spark modelle llm uebernehmen|zurueck` switches
+# (matches /etc/sudoers.d/speech-spark); OWN_LLM_UNITS only a model switch (speech-spark-wechsel) and install.sh switch
 SERVICES = {"asr": "speech-spark-asr", "tts": "speech-spark-tts"}
 UNITS = dict(SERVICES, **{"asr-engine": "speech-spark-asr-engine", "tts-engine": "speech-spark-tts-engine",
                           "tts-design": "speech-spark-tts-design"})
@@ -672,9 +671,6 @@ MODEL_LOG_UNITS = {"wechsel": "speech-spark-wechsel"}
 # unit (install.sh --werkstatt, only werkstatt.py's checked wish starts it): watched and shown on the model computer's
 # card (Monitoring, Steuerzentrale), never started or stopped by the panel's `einheit`
 ON_DEMAND_UNITS = {"bild": "speech-spark-bild", "musik": "speech-spark-musik", "werkstatt": "speech-spark-werkstatt"}
-# Units installed by github.com/hasso5703/dgx-spark-qwen38; only one lane runs at a time.
-QWEN38_UNITS = ["qwen38-sglang", "qwen38-sglang-1m", "qwen38-flash", "qwen38-image",
-                "qwen38-video", "qwen38-llamacpp", "qwen38-keepalive", "qwen38-dashboard"]
 # the Wärter on the model computer (tarswart.py, plan Raspberry-Pi split B4): behind the TLS-Tor, own key
 WAERTER_PORT = 31007
 # Notbetrieb mit Parakeet on the panel computer (B5c, panel/notbetrieb.py): asr_proxy.py with SPEECH_SPARK_NOTASR=1
@@ -751,22 +747,6 @@ def uhr():
 def unit_exists(unit):
     code, out = run(["systemctl", "list-unit-files", unit + ".service", "--no-legend"])
     return code == 0 and out.startswith(unit + ".service")
-
-
-def lane_fraction(unit):
-    """The static share of the unified pool a qwen38 lane claims (0.50 / 0.76 / 0.85)."""
-    code, out = run(["systemctl", "cat", unit])
-    m = re.search(r"--mem-fraction-static\s+([0-9.]+)", out)
-    if m:
-        return float(m.group(1))
-    if unit == "qwen38-flash":  # the flag lives in its launch script; installer default
-        return 0.85
-    return None
-
-
-def qwen38_lanes():
-    """[(unit, share)] of the qwen38 lanes installed on this computer."""
-    return [(u, lane_fraction(u)) for u in QWEN38_UNITS if unit_exists(u)]
 
 
 def gpu_stats():
@@ -1164,7 +1144,7 @@ UPDATE_STEPS = [("Sicherung vor dem Update", 1, "Sicherung vor dem Update"), ("U
                 ("Lädt und prüft", 3, "Lädt und prüft die neue Version"), ("Neue Version", 5, "Neue Version geladen"),
                 ("Modell-Rechner", 5, "Modell-Rechner wird zuerst aktualisiert"), ("System packages", 10, "Systempakete"),
                 ("Service user", 14, "Dienstkonto und Ordner"), ("Git clone", 16, "Git-Kopie"),
-                ("config.json", 20, "Einstellungen übernehmen"), ("qwen38 API key", 22, "Schlüssel für das Sprachmodell"),
+                ("config.json", 20, "Einstellungen übernehmen"),
                 ("certificate", 24, "Zertifikat"), ("Checking ports", 26, "Ports prüfen"),
                 ("Python env for Qwen3", 32, "Python-Umgebung Spracherkennung/-ausgabe"),
                 ("Python env for the panel", 38, "Python-Umgebung Panel"),

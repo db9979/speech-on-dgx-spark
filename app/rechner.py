@@ -23,7 +23,7 @@ _NAME = re.compile(r"[^A-Za-z0-9 .()+_-]")
 _fest = {}
 _cpu = {}              # the CPU times of the last measurement (its own, psutil.cpu_percent(None) is shared)
 # every service's CPU time in systemd's counters (cgroup v2, always on): own units by their name, the units of
-# dgx-spark-qwen38 and Docker's model containers each together; everything else counts as "rest" (computed by the panel)
+# Docker's model containers together; everything else counts as "rest" (computed by the panel)
 CGROUP = "/sys/fs/cgroup/system.slice"
 _EIGEN = re.compile(r"speech-spark-([a-z][a-z0-9-]{0,23})\.service")
 DIENSTE_MAX = 24       # entries at most (more own units do not exist)
@@ -88,12 +88,10 @@ def cpu_pct():
 
 
 def _dienst_von(name):
-    """The part a unit of system.slice counts for: own units by their name, qwen38 and Docker together, else None."""
+    """The part a unit of system.slice counts for: own units by their name, Docker together, else None."""
     m = _EIGEN.fullmatch(name)
     if m:
         return m.group(1)
-    if name.startswith("qwen38-") and name.endswith(".service"):
-        return "qwen38"
     if name.startswith("docker-") and name.endswith(".scope"):   # only model engines run in Docker (modelle.DOCKER)
         return "docker"
     return None

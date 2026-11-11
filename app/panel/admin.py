@@ -32,7 +32,7 @@ import speakers  # noqa: E402
 import wyoming  # noqa: E402
 import telefon  # noqa: E402
 import profiles  # noqa: E402
-from common import (CONFIG_PATH, MODEL_CHOICE, MODEL_ID, estimate_gib, load_config, model_local, model_url, qwen38_lanes,  # noqa: E402
+from common import (CONFIG_PATH, MODEL_CHOICE, MODEL_ID, estimate_gib, load_config, model_local, model_url,  # noqa: E402
                     write_json)
 import modelle  # noqa: E402
 from core import (  # noqa: E402
@@ -421,20 +421,6 @@ async def status():
     return await asyncio.to_thread(_status, cfg, dict(zip(SERVICES, healths)))
 
 
-# Which qwen38 lanes exist (and their pool share) changes only when qwen38 is reinstalled: looked up once in 5 minutes
-LANES_EVERY = 300
-_lanes = {"t": None, "units": []}
-
-
-def _qwen38_lanes():
-    now = time.monotonic()
-    if _lanes["t"] is None or now - _lanes["t"] > LANES_EVERY:
-        # models on another computer: its lanes count only in its own budget (Zustand → Modelle, through the Wärter)
-        _lanes["units"] = qwen38_lanes() if model_local() else []
-        _lanes["t"] = now
-    return _lanes["units"]
-
-
 def _status(cfg, healths):
     services = {}
     for name, unit in SERVICES.items():
@@ -470,9 +456,8 @@ def _status(cfg, healths):
             services["tts"]["engines"].append(
                 {"name": "tts-design", "kind": "vllm-omni", "unit": UNITS["tts-design"], "state": unit_state(UNITS["tts-design"]),
                  "model": t["voicedesign_model"], "port": t["voicedesign_port"], "estimate_gib": per_engine})
-    qwen38 = [{"unit": u, "state": unit_state(u), "mem_fraction": frac} for u, frac in _qwen38_lanes()]
     return {"time": time.time(), "system": sysd, "gpu": steuer.gpu(),
-            "services": services, "qwen38": qwen38, "history": list(history),
+            "services": services, "history": list(history),
             "alerts": health.alerts(), "watchdog": health.events[-10:], "glance": glance(cfg),
             "rechner": rechnerblick.fuer_status(),   # both computers when the models run apart (Zustand → Überblick → Rechner)
             "rundlauf": rundlauf.fuer_status(),      # the last round trip through the models (Zustand → Überblick → Rundlauf)
@@ -523,7 +508,7 @@ def prompt_preview():
 # The models the configured LLM server offers, for the choice under Einstellungen -> Sprachmodell. The request
 # goes only to the stored address (never one from the request: no way to make the panel call elsewhere), with
 # the stored key, no redirects, 5 seconds and 256 KB at most; at most 50 names of up to 200 plain characters.
-# Not through netguard: that refuses this machine's ports 30000-31099, where qwen38 lives. Kept 60 seconds.
+# Not through netguard: that refuses this machine's ports 30000-31099, the Spark's own services. Kept 60 seconds.
 LLM_MODELS_TTL, LLM_MODELS_MAX, LLM_MODELS_BYTES = 60, 50, 256 * 1024
 _llm_list = {}                    # url -> (time, models)
 _MODEL_ID = re.compile(r"^[\w.:/@+-]{1,200}$")
@@ -819,8 +804,6 @@ def validate(new):
     for p in ports:
         if not isinstance(p, int) or not 1024 <= p <= 65535:
             raise HTTPException(400, f"invalid port {p}")
-        if 30000 <= p <= 30099:
-            raise HTTPException(400, f"port {p} is in the 30000-30099 range used by dgx-spark-qwen38")
     if len(set(ports)) != len(ports):
         raise HTTPException(400, "ports must differ")
     # Bilder malen (bild_server.py): whether it is installed, which model and its ports are chosen by install.sh

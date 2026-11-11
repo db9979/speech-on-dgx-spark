@@ -13,7 +13,7 @@ mailbox. Who decides, in this order; the first sure stage wins:
   4. the language model, only for the rest: one category from a fixed list and how sure it is; it
      has no tools, and anything else in its answer is thrown away. Unsure: the profile is asked.
      With Einordnung mit Wahrscheinlichkeit (systemone.py) the percent is a real probability, and it
-     moves by itself only from systemone.TIDY_SURE (90 %); qwen38 busy or missing: the JSON answer as before.
+     moves by itself only from systemone.TIDY_SURE (90 %); the model busy or missing: the JSON answer as before.
 
 Modes per mailbox: off, preview (only proposals), safe (moves stages 2 and 3), auto (also the
 model when it is sure). Brakes: at most MAX_MOVES per run; a run that would move more than half of
@@ -562,8 +562,8 @@ def suggest_folder(domain, folders):
 
 def classify_systemone(h, text):
     """Stage 4 with Einordnung mit Wahrscheinlichkeit (systemone.py, chat.systemone_tidy, profile systemone_on):
-    (category or "keep", percent) from qwen38's /v1/systemone; systemone.Unavailable when it cannot answer.
-    The mail is the state (data, fenced by qwen38); the categories are the fixed TIDY_OPTIONS."""
+    (category or "keep", percent) from the LLM-Tor's /v1/systemone; systemone.Unavailable when it cannot answer.
+    The mail is the state (data, fenced by the LLM-Tor); the categories are the fixed TIDY_OPTIONS."""
     import systemone
     from common import load_config
     body = re.sub(r"<{3,}|>{3,}", " ", text or "")[:1500]
@@ -575,7 +575,7 @@ def classify_systemone(h, text):
 
 def classify_for(uid, h, text):
     """(category or "keep" or None, percent, the percent from which it may move by itself, how):
-    systemone when the profile may use it there, else (or when qwen38 cannot answer) the model's own JSON."""
+    systemone when the profile may use it there, else (or when the model cannot answer) the model's own JSON."""
     if features.allowed("einordnungpost", uid):
         import systemone
         try:

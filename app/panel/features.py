@@ -200,7 +200,7 @@ FEATURES = (
       parent="tipps", me="kannbox", guide="tippssaetze"),
     F("tippsstimme", "Tipps beim Sprechen", "Tips while talking", "talk", ("feature_sentences_voice",),
       pref="voice_tips", parent="tippssaetze", me="setbox", guide="tippsstimme"),
-    # qwen38's /v1/systemone (systemone.py): probabilities instead of words, the panel decides with fixed thresholds
+    # the LLM-Tor's /v1/systemone (systemone.py): probabilities instead of words, the panel decides with fixed thresholds
     F("einordnung", "Einordnung mit Wahrscheinlichkeit", "Classification with probabilities", "speed", ("systemone",), me="setbox", guide="einordnung"),
     F("einordnungpost", "Einordnung beim Postfach aufräumen", "Classification when tidying the inbox", "speed",
       ("systemone_tidy", "mail_tidy", "mail"), parent="einordnung", me="setbox", guide="einordnungpost"),

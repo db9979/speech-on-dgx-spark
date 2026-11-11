@@ -35,8 +35,6 @@ async function refresh(){const seen=$('mon')&&$('mon').classList.contains('on')&
     <td>${fmt(h.avg_latency_s,' s',2)}</td><td>${fmt(h.avg_ttfa_s??h.avg_ttft_s,' s',2)}${h.streams?`<div class="mut">${h.streams} Streams</div>`:''}</td><td>${fmt(h.avg_rtf,'',2)}</td><td>${fmt(h.torch_cuda_reserved_gb,' GB',1)}</td>
     <td class="row">${btns(n,v.state)}</td></tr>`+(v.engines||[]).map(e=>`<tr><td class="mut" style="padding-left:20px">↳ ${e.name==='tts-design'?'VoiceDesign-Engine':'Engine'}<div>127.0.0.1:${e.port}</div></td><td>${pill(e.state)}</td>
     <td>${esc(e.model)}<div class="mut">${e.kind}${e.estimate_gib!=null?` · ${t('reserviert','reserves')} ~${e.estimate_gib} GiB`:''}</div></td><td colspan=5></td><td class="row">${btns(e.name,e.state)}</td></tr>`).join('')}).join(''));
-  $('q38none').style.display=s.qwen38.length?'none':'block';
-  setHtml($('q38'),s.qwen38.map(q=>`<tr><td>${esc(q.unit)}</td><td>${pill(q.state)}</td><td>${q.mem_fraction!=null?(q.mem_fraction*100).toFixed(0)+t(' % des Pools',' % of the pool'):'–'}</td></tr>`).join(''));
   setHtml($('gp'),(g.processes||[]).map(p=>`<tr><td>${esc(p.pid)}</td><td>${esc(p.name)}</td><td>${p.mem_mib!=null?fmt(p.mem_mib/1024,' GiB',1):'–'}</td></tr>`).join('')||'<tr><td class="mut" colspan=3>–</td></tr>');
 }
 
@@ -83,7 +81,7 @@ window.zustand=zustand;
 // the sentence chips with version, last backup and last check; „Jetzt“ four tiles Zuhören, Sprechen, Sprachmodell,
 // Speicher (with the 8 GiB line below which DGX OS ends processes); „Heute“ tiles for answers, first sound, speakers
 // online and background work that waited for speech, each one a jump link to its place; the other cards below as
-// „Bereiche“ with an icon. The service table, GPU and qwen38 stay complete under "Technische Details". From
+// „Bereiche“ with an icon. The service table and GPU stay complete under "Technische Details". From
 // /api/status (admin.glance); the colours come from fixed rules there and here, never from the model.
 const zAgo=s=>{if(!s)return t('noch nie','never');const m=Math.round((Date.now()/1e3-s)/60);return m<1?t('gerade eben','just now'):m<90?(L==='en'?m+' min ago':'vor '+m+' Min.'):m<2880?(L==='en'?Math.round(m/60)+' h ago':'vor '+Math.round(m/60)+' Std.'):(L==='en'?Math.round(m/1440)+' days ago':'vor '+Math.round(m/1440)+' Tagen')};
 function zTech(id){const d=$('ztech');d.open=true;const el=id&&$(id);(el?el.closest('.card'):d).scrollIntoView({behavior:'smooth',block:'start'})}
@@ -1187,8 +1185,8 @@ async function satzendeLoad(){if(!$('satzendemsg'))return;try{const d=await (awa
   $('satzendemsg').textContent=!d.n?t('Noch keine Pause gemessen.','No pause measured yet.'):`${d.n} / ${d.rows} ${t('Pausen','pauses')}${d.measuring?'':' · '+t('Messung fertig','measurement done')} · `+
     `${t('mit Zahl','with a number')} ${d.rated} · ${t('Treffer','hits')} ${d.hits} · ${t('Fehlalarme','false alarms')} ${d.false} · ${t('gespart','saved')} ${d.saved_s} s`+(d.ms!=null?` · ${d.ms} ms`:'')}catch{}}
 async function visionLoad(){if(!$('visiongo'))return;try{visionShow((await (await api('/api/admin/vision-test')).json()).last)}catch{}}
-// Einordnung mit Wahrscheinlichkeit (systemone.py): one question of the switch through qwen38's /v1/systemone
-// the label mass (how much of the probability fell on any option) and the option orders qwen38 asked in
+// Einordnung mit Wahrscheinlichkeit (systemone.py): one question of the switch through the LLM-Tor's /v1/systemone
+// the label mass (how much of the probability fell on any option) and the option orders the model was asked in
 function s1Extra(r){const m=typeof r.mass==='number'?' · '+t('Label-Masse','label mass')+' '+Math.round(r.mass*100)+' %':'';
   const o=r.orders===2?' · '+t('zwei Reihenfolgen an','two orders on'):r.orders===1?' · '+t('eine Reihenfolge (zwei Reihenfolgen aus)','one order (two orders off)'):'';return m+o}
 if($('s1go'))$('s1go').onclick=async()=>{$('s1go').disabled=true;$('s1msg').textContent=t('prüft …','checking …');

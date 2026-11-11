@@ -305,7 +305,7 @@ async def _run_case(c, ccfg, headers, model, case):
 
 
 async def judge(ccfg, case, got):
-    """Einordnung im Qualitätstest (chat.systemone_quality): qwen38's /v1/systemone rates the answer, a second
+    """Einordnung im Qualitätstest (chat.systemone_quality): the LLM-Tor's /v1/systemone rates the answer, a second
     opinion beside the fixed checks; it never passes or fails a case. {"passt": 0..2, "erfunden": 0..1} or None."""
     import features
     import systemone

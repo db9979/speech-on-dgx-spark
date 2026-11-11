@@ -1,18 +1,16 @@
 """Modell-Katalog (plan plaene/eigene-modelle.md, Dominik 2026-10-14 „1a 2a 3a 4a 5a 6a“): the models this
 installation runs itself, one line each in modelle.json, read only here.
 
-Stage E0 measures before anything switches: `sudo speech-spark modelle messen [llm] [sehen] [fp8] [gemma] [kolibri] [vl30]
-[dspark] [flash]` stops the
-qwen38 lanes for a while (with a Wartungspause), starts one catalog model at a time natively with vLLM on
-127.0.0.1:MESS_PORT and measures it with fixed German questions, one tool call and fixed test pictures, then
-starts qwen38 again. The result goes to STATE/modelle-messung.json and into the journal ("modelle:" lines with
+Stage E0 measures before anything switches: `sudo speech-spark modelle messen [llm] [sehen] [flash] [helfer] …` stops
+the running language model for a while (with a Wartungspause), starts one catalog model at a time natively with vLLM
+on 127.0.0.1:MESS_PORT and measures it with fixed German questions, one tool call and fixed test pictures, then
+starts the language model again. The result goes to STATE/modelle-messung.json and into the journal ("modelle:" lines with
 fixed words and numbers, never an answer's text). Nothing is switched by a measurement and nothing is deleted.
 A main model candidate is also measured with 2 and 4 long questions at once and one question of about 60K tokens, and
 the engine's own count of the context room (Dominik 2026-10-17: 2-4 at once with a context of 64K or more).
 
 A variant ("basis": an earlier entry's id) takes that entry and changes only the fields it names, its vllm fields
-merged (one source: Qwen3.8 with the DSpark helper model). A helper model
-(vllm "entwurf") is a second repository with a pinned commit, fetched and checked like the main one.
+merged (one source: Qwen3.6 with and without MTP).
 
 Rules for every entry (test_modelle): the engine is one we know, the repository a plain "owner/name", the revision
 a full commit or empty (empty only to measure), the memory share at most ANTEIL_MAX (above ~0.80 the GB10 freezes),
@@ -52,25 +50,21 @@ from common import MODEL_LOG_UNITS, STATE, load_config, mem_available_gib, read_
 
 KATALOG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "modelle.json")
 MESSUNG = os.path.join(STATE, "modelle-messung.json")
-VORHER = os.path.join(STATE, "qwen38-vorher.json")    # stage E3: what `modelle llm uebernehmen` switched off
-QWEN38_KEINE = ("qwen38-dashboard",)                     # qwen38 units that are no model; they keep running
 ARTEN = {"llm": ("Sprachmodell", "Language model"), "sehen": ("Bildverständnis", "Image understanding"),
          "asr": ("Spracherkennung", "Speech recognition"), "tts": ("Sprachausgabe", "Speech output"),
          "bild": ("Bilder malen", "Painting pictures"), "musik": ("Musik machen", "Making music"),
          "klein": ("Kleine Modelle (CPU)", "Small models (CPU)"), "helfer": ("Hilfsmodell", "Helper model")}
 # vllm: an engine this installation starts itself (the strict rules below); the others are run as before by their
-# own services and are listed for the budget: extern (qwen38), the speech models, sd.cpp, acestep.cpp, ONNX on the CPU
-ENGINES = ("vllm", "extern", "qwen-asr", "qwen-tts", "sdcpp", "acestepcpp", "onnx-cpu")
+# own services and are listed for the budget: the speech models, sd.cpp, acestep.cpp, ONNX on the CPU
+ENGINES = ("vllm", "qwen-asr", "qwen-tts", "sdcpp", "acestepcpp", "onnx-cpu")
 BETRIEB = ("resident", "bei_bedarf")
 MESSEN = ("immer", "auf_wunsch")
 ANTEIL_MAX = 0.80
 MESS_PORT = 31016
-VLLM_KEYS = ("reasoning_parser", "tool_call_parser", "mtp", "max_seqs", "quantization", "bilder_pro_frage", "kv_cache_dtype", "entwurf",
+VLLM_KEYS = ("reasoning_parser", "tool_call_parser", "mtp", "max_seqs", "quantization", "bilder_pro_frage", "kv_cache_dtype",
              "venv", "docker")
-VENVS = ("llm", "kolibri")       # $PREFIX/venv-<name>: venv-llm (install.sh --llm), venv-kolibri (install.sh --kolibri)
+VENVS = ("llm",)                 # $PREFIX/venv-<name>: venv-llm (install.sh --llm)
 KV = ("fp8",)
-# speculative decoding with a helper model (vllm "entwurf"): the method and its fixed extra settings for vLLM
-ENTWURF = {"dspark": {"draft_sample_method": "probabilistic"}}
 LOGPROBS_MAX = 20                # top_logprobs an engine started here gives (--max-logprobs; System One in llm_tor.py)
 ROLLEN = {"llm": ("modell", "engine_port", 31016), "sehen": ("sehen_modell", "sehen_port", 31017),   # config llm.*
           # the small helper model beside the language model (Dominik 2026-10-25 „1+2 und 3a b c d e“): fixed-answer
@@ -161,7 +155,7 @@ def pruefe_eintrag(m):
         raise Fehler("id")
     if m.get("art") not in ARTEN or m.get("engine") not in ENGINES or m.get("betrieb") not in BETRIEB:
         raise Fehler("art")
-    if not (m["engine"] == "extern" and m.get("repo") == "") and (not REPO.match(str(m.get("repo", ""))) or ".." in m["repo"]):
+    if (not REPO.match(str(m.get("repo", ""))) or ".." in m["repo"]):
         raise Fehler("repo")
     if not (m.get("revision") == "" or REV.match(str(m.get("revision")))):
         raise Fehler("revision")
@@ -217,16 +211,8 @@ def _pruefe_vllm(m):
         raise Fehler("kv_cache_dtype")
     if v.get("venv", "llm") not in VENVS:
         raise Fehler("venv")
-    if "docker" in v and (v["docker"] not in DOCKER or m["art"] != "llm" or "venv" in v or "entwurf" in v):
+    if "docker" in v and (v["docker"] not in DOCKER or m["art"] != "llm" or "venv" in v):
         raise Fehler("docker")
-    if "entwurf" in v:
-        e = v["entwurf"]
-        if not isinstance(e, dict) or set(e) != {"methode", "repo", "revision", "tokens"} or e["methode"] not in ENTWURF:
-            raise Fehler("entwurf")
-        if not REPO.match(str(e["repo"])) or ".." in e["repo"] or not REV.match(str(e["revision"])):
-            raise Fehler("entwurf")
-        if isinstance(e["tokens"], bool) or not isinstance(e["tokens"], int) or not 1 <= e["tokens"] <= 16 or v.get("mtp"):
-            raise Fehler("entwurf")
 
 
 def _aus_bildmodell(m):
@@ -319,15 +305,9 @@ def zur_variante(art, v, kat=None):
     return next((m for m in kat.values() if m["art"] == art and v and m.get("variante") == v), None)
 
 
-def _url_qwen38(url):
-    """True when the language model's address is qwen38's own range on this machine (ports 30000-30099)."""
-    m = re.match(r"^https?://(127\.0\.0\.1|localhost)(?::(\d+))?(/|$)", str(url or ""))
-    return bool(m) and 30000 <= int(m.group(2) or 0) <= 30099
-
-
-def aktiv(cfg, total_gib, lanes=(), kat=None):
+def aktiv(cfg, total_gib, kat=None):
     """The models the configuration runs now: [{id, art, gib, betrieb}], gib from the engines' memory shares where
-    the configuration sets them (vLLM), else from the catalog. lanes: the memory shares of the running qwen38 lanes."""
+    the configuration sets them (vLLM), else from the catalog."""
     kat = katalog() if kat is None else kat
     out = []
 
@@ -336,9 +316,6 @@ def aktiv(cfg, total_gib, lanes=(), kat=None):
             out.append({"id": m["id"], "art": m["art"], "gib": round(float(gib if gib is not None else m["need_gib"]), 1),
                         "betrieb": betrieb or m["betrieb"]})
     chat = cfg.get("chat", {})
-    if _url_qwen38(chat.get("llm_url")):
-        share = sum(f for f in lanes if f)
-        add(kat.get("qwen38-extern"), share * total_gib if share else None)
     own = cfg.get("llm", {})
     if own.get("enabled"):
         m = kat.get(own.get("modell"))
@@ -381,12 +358,12 @@ EIN_PLATZ = ("bild", "musik")     # loaded one after the other, never both at on
 SYSTEM_GIB = 6     # DGX OS, the panel and the small services next to the models (plan: Speicher-Budget)
 
 
-def budget(cfg, total_gib, lanes=(), kat=None):
+def budget(cfg, total_gib, kat=None):
     """The memory budget (plan „Speicher-Budget“): fixed = the resident models + system + reserve; on demand = the
     models loaded when needed. "alle" when all of them fit at once, "ein_platz" when only one on-demand model fits
     beside the fixed ones (they then run one after the other through vorrang), "zu_knapp" when not even that fits.
     A fixed rule from numbers; the model decides nothing."""
-    teile = aktiv(cfg, total_gib, lanes, kat)
+    teile = aktiv(cfg, total_gib, kat)
     reserve = float(cfg.get("memory", {}).get("reserve_gib", 10))
     fest = round(sum(x["gib"] for x in teile if x["betrieb"] == "resident"), 1)
     # pictures and music share one place (Dominik 2026-10-18 „immer nur ein Modell, beide nicht gleichzeitig“):
@@ -433,18 +410,12 @@ def wahl_zeilen(art, kat=None):
 
 
 def messliste(was, kat=None):
-    """The ids to measure, in catalog order: was = words llm, sehen (the entries marked "immer"), fp8, gemma, kolibri,
-    vl30, dspark (one entry each that is measured only on request), qwen36 (Qwen3.6 35B A3B NVFP4 with and without MTP),
-    qwen36frei (the same without refusals), flash (Qwen3.8 Flash Next in Docker), helfer (the small helper model);
-    no word means llm and sehen."""
+    """The ids to measure, in catalog order: was = words llm, sehen, helfer (the entries marked "immer"), qwen36
+    (Qwen3.6 35B A3B NVFP4 with and without MTP), flash (Qwen3.8 Flash Next in Docker, measured only on request);
+    no word means llm and sehen. Only models that run or were measured stay in the catalog (Dominik 2026-11-11)."""
     kat = katalog() if kat is None else kat
     was = list(was) or ["llm", "sehen"]
-    wunsch = {"fp8": ("qwen38-27b-fp8",), "gemma": ("gemma-4-26b-a4b",), "kolibri": ("kolibri-1-nvfp4",),
-              "vl30": ("qwen3-vl-30b-a3b-fp8",), "dspark": ("qwen38-27b-nvfp4-dspark",),
-              "qwen36": ("qwen36-35b-a3b-nvfp4", "qwen36-35b-a3b-nvfp4-ohne-mtp"),     # Dominik 2026-10-18 „ja 1“
-              # Qwen3.6 without refusals (Heretic), with and without MTP: its NVFP4 comes from llmcompressor and may
-              # lack the MTP layers; for the assistant too (Dominik 2026-10-25 „alles für erwachsene ok“)
-              "qwen36frei": ("qwen36-35b-a3b-frei-nvfp4", "qwen36-35b-a3b-frei-nvfp4-ohne-mtp"),
+    wunsch = {"qwen36": ("qwen36-35b-a3b-nvfp4", "qwen36-35b-a3b-nvfp4-ohne-mtp"),     # Dominik 2026-10-18 „ja 1“
               "flash": ("qwen38-flash-next-fp4",)}     # Docker; share 0.65 never started (tars 2026-10-21)
     wunsch.update({i: (i,) for i, m in kat.items() if m.get("eigen") or docker_bild(m)})   # an own model by its id
     if any(w not in ("llm", "sehen", "helfer") and w not in wunsch for w in was):
@@ -484,16 +455,10 @@ def vllm_args(m, port=MESS_PORT, revision="", mtp=True, uds=""):
         a += ["--reasoning-parser", v["reasoning_parser"]]
     if v.get("tool_call_parser"):
         a += ["--tool-call-parser", v["tool_call_parser"], "--enable-auto-tool-choice"]
-    if m["kann_sehen"]:      # a text-only model (Kolibri) gets no picture flag at all
+    if m["kann_sehen"]:      # a text-only model gets no picture flag at all
         a += ["--limit-mm-per-prompt.image", str(v.get("bilder_pro_frage", 2))]
     if mtp and v.get("mtp"):
         a += ["--speculative-config", json.dumps({"method": "mtp", "num_speculative_tokens": v["mtp"]})]
-    if v.get("entwurf"):     # the helper model from the cache (offline), its commit pinned; never measured without it
-        if not mtp:
-            raise Fehler("entwurf")
-        e = v["entwurf"]
-        a += ["--speculative-config", json.dumps({"method": e["methode"], "model": e["repo"], "revision": e["revision"],
-                                                  "num_speculative_tokens": e["tokens"], **ENTWURF[e["methode"]]})]
     return a + (DOCKER[v["docker"]]["args"] if uds else [])
 
 
@@ -608,8 +573,8 @@ def _platz(m, cfg):
         return m
 
 
-def platz_pruefen(platz, cfg, total_gib, lanes=(), kat=None):
-    """The fixed rules for „Lange Gespräche“: a known choice, after the move, one the model allows, not the one set, and
+def platz_pruefen(platz, cfg, total_gib, kat=None):
+    """The fixed rules for „Lange Gespräche“: a known choice, the own language model on, one the model allows, not the one set, and
     the budget must not end up too tight. Returns the entry as it would start; raises Fehler with a fixed word."""
     if platz not in PLATZ:
         raise Fehler("platz")
@@ -621,12 +586,12 @@ def platz_pruefen(platz, cfg, total_gib, lanes=(), kat=None):
         raise Fehler("schon")
     probe = json.loads(json.dumps(cfg))
     probe.setdefault("llm", {})["platz"] = platz
-    if budget(probe, total_gib, lanes, kat)["regel"] == "zu_knapp":
+    if budget(probe, total_gib, kat)["regel"] == "zu_knapp":
         raise Fehler("budget")
     return neu
 
 
-def platz_wahl(cfg, total_gib, lanes=(), kat=None):
+def platz_wahl(cfg, total_gib, kat=None):
     """For the page: the choices with their extra memory and why one is not possible (a fixed word, "" when it is)."""
     c = cfg.get("llm", {})
     m = (kat or katalog()).get(c.get("modell"))
@@ -635,7 +600,7 @@ def platz_wahl(cfg, total_gib, lanes=(), kat=None):
         try:
             if m is None:
                 raise Fehler("aus")
-            platz_pruefen(p, cfg, total_gib, lanes, kat)
+            platz_pruefen(p, cfg, total_gib, kat)
             nein = ""
         except Fehler as e:
             nein = str(e)
@@ -674,10 +639,6 @@ def start_args(art, cfg, messung=None, kat=None, hf_home=None):
     rev = fest_revision(m, messung)
     pruefen(hf_ordner(m, hf_home), rev, hashes=False)
     zeiger(hf_ordner(m, hf_home), rev)
-    if m["vllm"].get("entwurf"):
-        e = m["vllm"]["entwurf"]
-        pruefen(hf_ordner(e, hf_home), e["revision"], hashes=False)
-        zeiger(hf_ordner(e, hf_home), e["revision"])
     return vllm_args(m, port, rev) + ["--max-logprobs", str(LOGPROBS_MAX)]
 
 
@@ -873,13 +834,8 @@ def ohne_netz():
 
 def vorbereiten(m, hf_home=None):
     """Makes sure the weights are in the cache (download only the ERLAUBT kinds) and checks them. Returns the
-    commit. A pinned revision is fetched exactly; an empty one takes the newest commit (only to measure). A helper
-    model (vllm "entwurf") always has its own pinned commit and is fetched and checked the same way."""
-    commit = _laden(m["repo"], m["revision"], hf_ordner(m, hf_home))
-    e = (m.get("vllm") or {}).get("entwurf")
-    if e:
-        _laden(e["repo"], e["revision"], hf_ordner(e, hf_home))
-    return commit
+    commit. A pinned revision is fetched exactly; an empty one takes the newest commit (only to measure)."""
+    return _laden(m["repo"], m["revision"], hf_ordner(m, hf_home))
 
 
 # ---------------------------------------------------------------- measuring
@@ -1313,10 +1269,7 @@ def zeile(mid, r):
     return f"modelle: ergebnis {mid} " + ", ".join(teile)
 
 
-# ---------------------------------------------------------------- the move (stage E3)
-CHAT_FELDER = ("llm_url", "llm_key", "llm_key_from", "llm_model")
-
-
+# ---------------------------------------------------------------- the configuration file
 def _roh():
     """The configuration file as it is (without the shipped defaults merged in), for a small change."""
     from common import CONFIG_PATH
@@ -1327,56 +1280,6 @@ def _roh():
 def _schreib(raw):
     from common import CONFIG_PATH
     write_json(CONFIG_PATH, raw, indent=2)
-
-
-def tor_url(cfg):
-    from common import model_url
-    return model_url("llm", "/v1", cfg)
-
-
-def merken(units, cfg, path=VORHER):
-    """Notes the running qwen38 units and the chat's model address before the move. Refuses a second move."""
-    if cfg.get("llm", {}).get("enabled") or os.path.exists(path):
-        raise Fehler("schon")
-    if any(not re.fullmatch(r"qwen38-[a-z0-9-]{1,40}\.service", u) for u in units):
-        raise Fehler("unit")
-    chat = cfg.get("chat", {})
-    write_json(path, {"units": list(units), "chat": {k: chat[k] for k in CHAT_FELDER if k in chat}, "zeit": int(time.time())},
-               indent=1)
-
-
-def vorher(path=VORHER):
-    data = read_json(path, {})
-    units = [u for u in data.get("units") or [] if re.fullmatch(r"qwen38-[a-z0-9-]{1,40}\.service", str(u))]
-    return units, data.get("chat") or {}
-
-
-def schalten(was, raw, path=VORHER):
-    """The configuration for one step of the move: an = the own engine and door run (llm.enabled), um = the chat talks
-    to the door (its key is api.key, llm.key), zurueck = everything as noted before the move. Returns the new raw."""
-    raw = json.loads(json.dumps(raw))
-    llm = raw.setdefault("llm", {})
-    chat = raw.setdefault("chat", {})
-    if was == "an":
-        llm["enabled"] = True
-    elif was == "um":
-        if not llm.get("enabled"):
-            raise Fehler("aus")
-        merged = load_config()
-        chat.update(llm_url=tor_url(merged), llm_key="", llm_model="")
-        chat.pop("llm_key_from", None)
-    elif was == "zurueck":
-        _, alt = vorher(path)
-        llm["enabled"] = False
-        if alt:
-            for k in CHAT_FELDER:
-                if k in alt:
-                    chat[k] = alt[k]
-                else:
-                    chat.pop(k, None)
-    else:
-        raise Fehler("was")
-    return raw
 
 
 def rundlauf(cfg, log=print, frist=GESUND_S, now=time.monotonic, sleep=time.sleep, stufe=lambda wort: None):
@@ -1498,10 +1401,10 @@ def mit_wechsel(cfg, art, m):
     return c
 
 
-def wechsel_pruefen(art, mid, cfg, total_gib, lanes=(), kat=None, messung=None):
+def wechsel_pruefen(art, mid, cfg, total_gib, kat=None, messung=None):
     """The fixed rules of a switch (the panel decides, never a model): a kind that switches, an entry of that kind from
     the catalog, for an own engine a pinned commit (catalog or measured), for the others an entry install.sh offers,
-    the language model only after the move (`modelle llm uebernehmen`), not the one running, and the budget must not
+    the language model only while the own one is on (llm.enabled), not the one running, and the budget must not
     end up too tight. Returns the entry; raises Fehler with a fixed word."""
     kat = katalog() if kat is None else kat
     if art not in TAUSCH:
@@ -1526,7 +1429,7 @@ def wechsel_pruefen(art, mid, cfg, total_gib, lanes=(), kat=None, messung=None):
             raise Fehler("ungeprueft")
     if jetzt_id(art, cfg, kat) == mid:
         raise Fehler("schon")
-    if budget(mit_wechsel(cfg, art, m), total_gib, lanes, kat)["regel"] == "zu_knapp":
+    if budget(mit_wechsel(cfg, art, m), total_gib, kat)["regel"] == "zu_knapp":
         raise Fehler("budget")
     return m
 
@@ -1561,14 +1464,14 @@ def alte(cfg, now=None, path=WECHSEL, kat=None, daten=None):
 
 def entfernbar(mid, cfg, now=None, path=WECHSEL, kat=None, hf_home=None):
     """The cache folder of a catalog model that may be removed: lives in the Hugging Face cache, no kind runs it, not
-    within the 7 days to bring it back, never qwen38's own model. Returns the folder; raises Fehler."""
+    within the 7 days to bring it back. Returns the folder; raises Fehler."""
     kat = katalog() if kat is None else kat
     m = eintrag(mid, kat)
     if m["engine"] not in ENTFERNBAR or not m["repo"]:
         raise Fehler("art")
     # a variant shares its folder with its basis: none of the entries with this repository may run
     teilen = {i for i, x in kat.items() if x["repo"] == m["repo"]}
-    if any(jetzt_id(a, cfg, kat) in teilen for a in TAUSCH) or any(x["id"] in teilen for x in aktiv(cfg, 0, (), kat)):
+    if any(jetzt_id(a, cfg, kat) in teilen for a in TAUSCH) or any(x["id"] in teilen for x in aktiv(cfg, 0, kat)):
         raise Fehler("aktiv")
     w = read_json(path, {}).get(m["art"]) or {}
     if w.get("alt") == mid and (time.time() if now is None else now) - float(w.get("zeit", 0)) <= ALT_TAGE * 86400:
@@ -1591,25 +1494,25 @@ def wunsch_schreiben(art, was, path=WUNSCH):
     write_json(path, {"art": art, "was": was, "zeit": int(time.time())}, indent=1)
 
 
-def wechsel_anfragen(art, was, cfg, total_gib, lanes, starten, laeuft=False):
+def wechsel_anfragen(art, was, cfg, total_gib, starten, laeuft=False):
     """A switch asked for (an id, or "zurueck" for the model before the last switch): the fixed rules, the wish for
     root, then starten() starts WECHSEL_UNIT. Used by the panel on this computer and by the Wärter (tarswart.py) for
     a panel on another one. Returns the entry; raises Fehler (laeuft, the rule's word, start)."""
     if laeuft:
         raise Fehler("laeuft")
-    m = wechsel_pruefen(art, zurueck_ziel(art) if was == "zurueck" else was, cfg, total_gib, lanes)
+    m = wechsel_pruefen(art, zurueck_ziel(art) if was == "zurueck" else was, cfg, total_gib)
     wunsch_schreiben(art, was)
     if not starten():
         raise Fehler("start")
     return m
 
 
-def platz_anfragen(platz, cfg, total_gib, lanes, starten, laeuft=False):
+def platz_anfragen(platz, cfg, total_gib, starten, laeuft=False):
     """„Lange Gespräche“ asked for: the fixed rules, the wish for root (art platz), then starten() starts WECHSEL_UNIT,
     which restarts the language model with it. Returns the entry as it will start; raises Fehler."""
     if laeuft:
         raise Fehler("laeuft")
-    m = platz_pruefen(platz, cfg, total_gib, lanes)
+    m = platz_pruefen(platz, cfg, total_gib)
     wunsch_schreiben("platz", platz)
     if not starten():
         raise Fehler("start")
@@ -2005,22 +1908,6 @@ def cli(args, log=print):
                 r["mtp"] = "aus"
             merke(m["id"], r)
             return 0 if r["ok"] else 3
-        if cmd == "umzug-merken":
-            merken(args[1:], load_config())
-            log(f"modelle: qwen38 notiert {len(args) - 1} dienste")
-            return 0
-        if cmd == "umzug-vorher":
-            for u in vorher()[0]:
-                log(u)
-            return 0
-        if cmd == "umzug-schalten":
-            _schreib(schalten(args[1], _roh()))
-            log(f"modelle: schalter {args[1]}")
-            return 0
-        if cmd == "umzug-fertig":           # after the way back: the note becomes the old one, a new move may start
-            if os.path.exists(VORHER):
-                os.replace(VORHER, VORHER + ".alt")
-            return 0
         if cmd == "rundlauf":
             import llmstart
             ok, wort = rundlauf(load_config(), log, stufe=llmstart.stufe)
@@ -2028,15 +1915,11 @@ def cli(args, log=print):
                 llmstart.stufe("fehler", grund=wort)
             log(f"modelle: rundlauf {'ok' if ok else 'fehler ' + wort}")
             return 0 if ok else 3
-        if cmd == "umzug-modell":
-            m, _ = rolle("llm", load_config())
-            log(f"{m['id']} {m['repo']} {m['revision'] or fest_revision(m)}")
-            return 0
         if cmd == "jetzt":
             log(jetzt_id(args[1], load_config()) or "-")
             return 0
         if cmd == "wechsel-pruefen":
-            # root checks again what the panel checked (the panel adds the running qwen38 lanes to the budget)
+            # root checks again what the panel checked
             m = wechsel_pruefen(args[1], args[2], load_config(), gesamt_gib())
             log(f"wahl {m['wahl']}" if args[1] in INSTALL else f"vllm {m['repo']} {fest_revision(m)}")
             return 0

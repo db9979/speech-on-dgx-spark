@@ -1,15 +1,15 @@
-"""Einordnung mit Wahrscheinlichkeit (V01.0.340): qwen38's POST /v1/systemone for a few fixed questions.
+"""Einordnung mit Wahrscheinlichkeit (V01.0.340): the LLM-Tor's POST /v1/systemone for a few fixed questions.
 
-dgx-spark-qwen38 (not ours, proxy v6.19 / qwen38 v1.15 and later) answers typed questions about a text
-("state") with probabilities instead of words: a choice from fixed options, a score on fixed levels or a
-yes/no. "jev-latest" is only a name there: the Qwen3.8 lane that already runs answers, one token per
-question, so it needs no memory of its own and nothing leaves the machine.
+The LLM-Tor (llm_tor.py, in front of the own language model; the contract came from dgx-spark-qwen38 v1.15)
+answers typed questions about a text ("state") with probabilities instead of words: a choice from fixed
+options, a score on fixed levels or a yes/no. "jev-latest" is only a name there: the language model that
+already runs answers, one token per question, so it needs no memory of its own and nothing leaves the machine.
 
 Here the model only gives numbers; the panel decides with fixed thresholds what they mean. The questions
 and options are fixed in the code, never from outside text. The text being judged (a person's own
-message, the head of a mail, a test answer) is data: qwen38 fences it with a token drawn at its start, and
+message, the head of a mail, a test answer) is data: the LLM-Tor fences it with a token drawn at its start, and
 here it is cut to MAX_STATE characters. Only the stored chat.llm_url and key are used (no address from a
-request), no redirects, at most MAX_BYTES back, short timeouts. When qwen38 is busy (529), too old (404)
+request), no redirects, at most MAX_BYTES back, short timeouts. When the model is busy (529), the door too old (404)
 or slow, the caller goes on as without it.
 
 Uses, each with its own admin switch below chat.systemone (all off) and the profile's systemone_on:
@@ -181,7 +181,7 @@ def _read(r):
     if r.status_code == 529 or r.status_code == 503:
         raise Unavailable("ausgelastet")
     if r.status_code in (404, 405):
-        raise Unavailable("fehlt (qwen38 älter als v1.15?)")
+        raise Unavailable("fehlt")
     if r.status_code in (401, 403):
         raise Unavailable("Schlüssel abgelehnt")
     if r.status_code != 200:
@@ -227,7 +227,7 @@ def _prep(ccfg, use, state, questions):
     if not url:
         raise Unavailable("keine Adresse")
     import wartung
-    if wartung.paused("llm"):     # Wartungspause: qwen38 is being updated, nothing is asked
+    if wartung.paused("llm"):     # Wartungspause: the language model is being updated, nothing is asked
         raise Unavailable("Wartung")
     return url, body(state, questions)
 
@@ -547,7 +547,7 @@ SUGGEST_WRONG = 0.03          # a threshold is suggested when at most this share
 SUGGEST_LEAST = 10            # ... and it narrows at least this many sentences
 _bench = {"run": False, "done": 0, "total": 0, "t": 0.0, "result": None, "why": ""}
 _bench_task = [None]
-STOP = ("keine Adresse", "fehlt (qwen38 älter als v1.15?)", "Schlüssel abgelehnt")
+STOP = ("keine Adresse", "fehlt", "Schlüssel abgelehnt")
 
 
 def bench_rows(ccfg):

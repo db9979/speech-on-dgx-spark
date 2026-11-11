@@ -249,10 +249,9 @@ class Auto(Base):
         super().setUp()
         helpers.set_config(wartung_auto=True)
         wartung._units.clear()
-        self.units = {"qwen38-sglang": ("active", "100"), "qwen38-keepalive": ("active", "5"),
-                      "speech-spark-tts-engine": ("active", "200")}
+        self.units = {"speech-spark-llm": ("active", "100"), "speech-spark-tts-engine": ("active", "200")}
         self.patches = [mock.patch.object(wartung, "watched", lambda: {
-            "llm": ["qwen38-sglang"], "asr": [], "tts": ["speech-spark-tts-engine"]})]
+            "llm": ["speech-spark-llm"], "asr": [], "tts": ["speech-spark-tts-engine"]})]
         for x in self.patches:
             x.start()
 
@@ -270,13 +269,13 @@ class Auto(Base):
         return run(wartung.auto_tick(now, look=self.look))
 
     def test_first_look_only_notes(self):
-        self.units["qwen38-sglang"] = ("activating", "100")
+        self.units["speech-spark-llm"] = ("activating", "100")
         self.assertEqual(self.tick(T0), [])
         self.assertFalse(wartung.state()["on"])
 
     def test_a_restart_pauses_its_part_and_it_ends_once_it_answers(self):
         self.tick(T0)
-        self.units["qwen38-sglang"] = ("activating", "100")
+        self.units["speech-spark-llm"] = ("activating", "100")
         self.assertEqual(self.tick(T0 + 15), ["llm"])
         s = wartung.state()
         self.assertEqual((s["parts"], s["channel"], s["by"]), (["llm"], "automatisch", "automatisch"))
@@ -288,7 +287,7 @@ class Auto(Base):
             return True
         # still starting: no check, the pause holds
         self.assertEqual(run(wartung.tick(T0 + 30, answers=good)), "pause")
-        self.units["qwen38-sglang"] = ("active", "900")   # up again, the model loads
+        self.units["speech-spark-llm"] = ("active", "900")   # up again, the model loads
         self.tick(T0 + 45)
 
         async def bad(part, cfg):
@@ -310,7 +309,7 @@ class Auto(Base):
         self.units["speech-spark-tts-engine"] = ("activating", "200")
         self.assertEqual(self.tick(T0 + 15), [])
         health._restarts.pop("speech-spark-tts-engine", None)
-        self.units["qwen38-sglang"] = ("activating", "100")
+        self.units["speech-spark-llm"] = ("activating", "100")
         with mock.patch("update.update_running", lambda: True):
             self.assertEqual(self.tick(T0 + 30), [])
         wartung.start(["tts"], 30, "main", now=T0)
@@ -326,9 +325,7 @@ class Auto(Base):
             x.stop()
         try:
             w = wartung.watched()
-            self.assertIn("qwen38-sglang", w["llm"])
-            self.assertNotIn("qwen38-keepalive", w["llm"])
-            self.assertNotIn("qwen38-dashboard", w["llm"])
+            self.assertEqual(w["llm"], ["speech-spark-llm", "speech-spark-llmtor"])   # only the own model (qwen38 is gone)
             self.assertIn("speech-spark-asr-engine", w["asr"])
         finally:
             for x in self.patches:

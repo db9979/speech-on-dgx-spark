@@ -334,7 +334,7 @@ class Tor(unittest.TestCase):
         with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
             self.saved = json.load(f)
         c = copy.deepcopy(self.saved)
-        c["llm"] = dict(c.get("llm", {}), modell="qwen38-27b-nvfp4", engine_port=31016)
+        c["llm"] = dict(c.get("llm", {}), modell="qwen36-35b-a3b-nvfp4", engine_port=31016)
         c["chat"]["entwickeln"] = True
         c["entwickeln"] = {"schluessel_sha256": hashlib.sha256(KEY.encode()).hexdigest()}
         helpers.write_config(c)

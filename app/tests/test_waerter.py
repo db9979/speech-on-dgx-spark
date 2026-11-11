@@ -247,7 +247,7 @@ class Modelle(Base):
 
     def test_the_page_comes_from_the_model_computer(self):
         d = self.post(body("modelle")).json()
-        self.assertEqual(set(d), {"gesamt_gib", "lanes", "messung", "wechsel", "eigene", "laeuft", "misst", "stand", "start"})
+        self.assertEqual(set(d), {"gesamt_gib", "messung", "wechsel", "eigene", "laeuft", "misst", "stand", "start"})
         with mock.patch.object(self.seite, "_laeuft", side_effect=AssertionError("asked here")), \
                 mock.patch.object(self.seite, "_misst", side_effect=AssertionError("asked here")):
             page = self.seite.seite(cfg=self.cfg)

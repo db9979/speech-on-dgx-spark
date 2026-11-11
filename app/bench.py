@@ -273,8 +273,6 @@ class Bench:
                                                                "engine_mem_code2wav", "engine_max_seqs",
                                                                "voicedesign_enabled", "engine_decode_batch",
                                                                "engine_prefix_cache", "ref_max_s")}},
-               "qwen38_active": [u for u in run(["systemctl", "list-units", "qwen38-*", "--state=active",
-                                                 "--no-legend", "--plain"]).split() if u.endswith(".service")],
                "tts": None, "asr": None, "errors": []}
         if common.model_local(c):
             res["gpu_name"] = run(["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"])
@@ -322,8 +320,7 @@ class Bench:
         history = load_history()
         res["previous"] = history[-1] if history else None
         try:
-            save_history(history + [{"time": round(res["time"]), "qwen38": bool(res["qwen38_active"]),
-                                     "values": values(res)}])
+            save_history(history + [{"time": round(res["time"]), "values": values(res)}])
         except OSError as e:
             self.log(f"could not save {HISTORY}: {e}")
         try:
@@ -544,9 +541,6 @@ def _verdict(r, rows):
     else:
         title = "Läuft, aber an einer Stelle knapp." if len(weak) == 1 else "Läuft, aber an mehreren Stellen knapp."
     detail = []
-    if r.get("qwen38_active"):
-        detail.append(f"{', '.join(u.removesuffix('.service') for u in r['qwen38_active'][:4])} lief während der "
-                      "Messung, ohne qwen38 sind die Werte meist besser.")
     if weak:
         detail.append(("Knapp" if level == "warn" else "Schwach") + ": " + ", ".join(SHORT[row["key"]] for row in weak) + ".")
     if errors:
@@ -572,8 +566,6 @@ def save_history(items):
 def report(r):
     lines = [f"Speech on DGX Spark, measured {time.strftime('%Y-%m-%d %H:%M', time.localtime(r['time']))} "
              f"on {r['host']} ({r.get('gpu_name') or 'GPU ?'})"]
-    if r.get("qwen38_active"):
-        lines.append(f"qwen38 running: {', '.join(r['qwen38_active'])}")
     t = r.get("tts")
     if t:
         s, p = t["single"], t["parallel"]

@@ -28,7 +28,7 @@ UTC = datetime.timezone.utc
 
 
 def ergebnis(**kw):
-    r = {"id": "w1760000000", "art": "reparatur", "zeit": 1760000000, "dauer_s": 30, "grund": "ok", "modell": "qwen38-27b-nvfp4",
+    r = {"id": "w1760000000", "art": "reparatur", "zeit": 1760000000, "dauer_s": 30, "grund": "ok", "modell": "qwen36-35b-a3b-nvfp4",
          "aufgabe": "Licht geht nicht", "text": "Ursache gefunden", "patch": "diff --git a/app/x.py b/app/x.py\n",
          "dateien": [{"pfad": "app/x.py", "plus": 1, "minus": 0}], "tests": {"gruen": 1, "rot": 0, "wackelig": 0}, "aufgaben": []}
     r.update(kw)
@@ -40,7 +40,7 @@ class Regeln(unittest.TestCase):
         self.tmp = tempfile.mkdtemp(prefix="werkstatt-")
         self.addCleanup(shutil.rmtree, self.tmp, True)
         self.wunsch = os.path.join(self.tmp, "wunsch.json")
-        p = mock.patch.object(werkstatt, "jetzt_modell", return_value="qwen38-27b-nvfp4")
+        p = mock.patch.object(werkstatt, "jetzt_modell", return_value="qwen36-35b-a3b-nvfp4")
         self.modell = p.start()
         self.addCleanup(p.stop)
 
@@ -56,7 +56,7 @@ class Regeln(unittest.TestCase):
             werkstatt.pruefen("diagnose", "Das Licht im Bad geht nicht an", {}, da=True)
         self.assertEqual(str(e.exception), "llm", "no own language model: no OpenCode order")
         self.assertEqual(werkstatt.pruefen("tests", "egal", {}, da=False), "", "the test run needs neither OpenCode nor a text")
-        self.modell.return_value = "qwen38-27b-nvfp4"
+        self.modell.return_value = "qwen36-35b-a3b-nvfp4"
         text = werkstatt.pruefen("diagnose", "  Licht\x00 im Bad\x1b geht nicht\n" + "x" * 3000, {}, da=True)
         self.assertTrue(text.startswith("Licht im Bad geht nicht\n"))
         self.assertEqual(len(text), werkstatt.TEXT_MAX)
@@ -154,7 +154,7 @@ class Ergebnis(unittest.TestCase):
         self.assertEqual(d["auftraege"][0]["id"], "w1760000102")
         self.assertNotIn("patch", d["auftraege"][1], "the list holds no patches")
         self.assertTrue(d["auftraege"][3]["hat_patch"])
-        self.assertEqual(d["messungen"], {"qwen38-27b-nvfp4": {"zeit": 1760000000, "gruen": 5, "von": 10, "dauer_s": 30, "id": "w1760000100"}},
+        self.assertEqual(d["messungen"], {"qwen36-35b-a3b-nvfp4": {"zeit": 1760000000, "gruen": 5, "von": 10, "dauer_s": 30, "id": "w1760000100"}},
                          "only a finished measurement counts")
         self.assertEqual(d["nacht"]["tests"]["rot"], 1)
         self.assertEqual(werkstatt.eins("w1760000010", self.daten)["patch"], ergebnis()["patch"])
@@ -394,7 +394,7 @@ class Lauf(unittest.TestCase):
         return path
 
     def order(self, art, opencode, text="Das Licht im Bad geht nicht an"):
-        return {"id": "w1760000000", "art": art, "text": text, "modell": "qwen38-27b-nvfp4", "kontext": 65536,
+        return {"id": "w1760000000", "art": art, "text": text, "modell": "qwen36-35b-a3b-nvfp4", "kontext": 65536,
                 "url": "http://127.0.0.1:31006/v1", "key": "hauskey", "quelle": self.quelle, "python": sys.executable,
                 "opencode": opencode}
 
@@ -464,7 +464,7 @@ class Nacht(unittest.TestCase):
         self.w = werkstattseite
 
     def d(self, **kw):
-        d = {"laeuft": False, "installiert": True, "modell": "qwen38-27b-nvfp4", "messungen": {}, "nacht": {}}
+        d = {"laeuft": False, "installiert": True, "modell": "qwen36-35b-a3b-nvfp4", "messungen": {}, "nacht": {}}
         d.update(kw)
         return d
 
@@ -478,7 +478,7 @@ class Nacht(unittest.TestCase):
         getestet = self.d(nacht={"zeit": int(at(3, 50).timestamp())})
         self.assertEqual(self.w.nacht_art(getestet, at(5), 3), "messen", "after a switch the measurement follows")
         self.assertEqual(self.w.nacht_art(getestet, at(5), 3, {"messen": "2026-10-17"}), "")
-        self.assertEqual(self.w.nacht_art(dict(getestet, messungen={"qwen38-27b-nvfp4": {}}), at(5), 3), "")
+        self.assertEqual(self.w.nacht_art(dict(getestet, messungen={"qwen36-35b-a3b-nvfp4": {}}), at(5), 3), "")
         self.assertEqual(self.w.nacht_art(getestet, at(8), 3), "", "outside the window")
         gestern = self.d(nacht={"zeit": int(at(3, 50, 16).timestamp())})
         self.assertEqual(self.w.nacht_art(gestern, at(3), 3), "tests", "yesterday's run does not count")

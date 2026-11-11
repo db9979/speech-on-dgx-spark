@@ -1,5 +1,5 @@
 """Wartungspause (plan plaene/wartungspause.md, Dominik 2026-10-14 „1b 2c 3a 4a 5a 6a“): while the language model
-(own or qwen38), the speech recognition or the speech output is updated, the Spark pauses on purpose instead of failing.
+(the own one), the speech recognition or the speech output is updated, the Spark pauses on purpose instead of failing.
 
 An admin starts it under Zustand → Wartungspause (or on the Spark: sudo speech-spark pause llm 30) for one or more parts
 (PARTS) and at most MAX_MIN minutes. While it holds:
@@ -54,7 +54,6 @@ EVERY = 15                     # seconds between two looks of the loop
 CHANNELS = ("panel", "app", "kommandozeile", "automatisch")
 AUTO_MIN = 30                  # an automatic pause: at most this long before it counts as overdue
 AUTO_GRACE = 180               # a restart by our own watchdog this many seconds ago is no update (health._restarts)
-AUTO_SKIP = ("qwen38-keepalive", "qwen38-dashboard")   # qwen38 units that are no model
 MOVING = ("activating", "deactivating", "reloading")
 CLIP_DAYS = 1                  # the speakers' sentence is made anew once a day (voice or model may have changed)
 # the short sentence (no minutes): when the time is over and for the speakers' file
@@ -358,8 +357,8 @@ async def tick(now=None, answers=_answers):
 # ---------------------------------------------------------------- automatic (P2)
 def watched():
     """{part: [systemd units]} the automatic looks at."""
-    from common import OWN_LLM_UNITS, QWEN38_UNITS, UNITS
-    return {"llm": [u for u in QWEN38_UNITS if u not in AUTO_SKIP] + [OWN_LLM_UNITS["llm"], OWN_LLM_UNITS["llmtor"]],
+    from common import OWN_LLM_UNITS, UNITS
+    return {"llm": [OWN_LLM_UNITS["llm"], OWN_LLM_UNITS["llmtor"]],
             "asr": [UNITS["asr"], UNITS["asr-engine"]],
             "tts": [UNITS["tts"], UNITS["tts-engine"], UNITS["tts-design"]]}
 

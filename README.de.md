@@ -4,7 +4,7 @@
 
 [![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-support-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/zquu1xu570)
 
-Spracherkennung (**Qwen3-ASR**), Sprachausgabe (**Qwen3-TTS**), Bilder (**FLUX.2 klein**) und ein eigenes Sprachmodell (**vLLM**) als Dienste auf einer NVIDIA DGX Spark (GB10), dazu ein Webportal mit Sprach-Assistent, Profilen und Monitoring. Läuft nativ mit systemd, ohne Docker. Das Portal läuft auf dem Spark selbst oder auf einem kleinen eigenen Rechner wie einem Raspberry Pi 5. Statt des eigenen Sprachmodells kann weiterhin [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38) es liefern.
+Spracherkennung (**Qwen3-ASR**), Sprachausgabe (**Qwen3-TTS**), Bilder (**FLUX.2 klein**) und ein eigenes Sprachmodell (**vLLM**) als Dienste auf einer NVIDIA DGX Spark (GB10), dazu ein Webportal mit Sprach-Assistent, Profilen und Monitoring. Läuft nativ mit systemd, ohne Docker. Das Portal läuft auf dem Spark selbst oder auf einem kleinen eigenen Rechner wie einem Raspberry Pi 5.
 
 | Assistent | Zustand | Technik |
 |---|---|---|
@@ -30,7 +30,7 @@ Am Ende stehen Adresse, Passwort und API-Schlüssel auf dem Bildschirm, danach s
 |---|---|
 | Aktualisieren | Knopf im Portal unter *Einstellungen → Update* oder `sudo speech-spark update` |
 | Adressen und Schlüssel anzeigen | `sudo speech-spark info` |
-| Eigenes Sprachmodell | `sudo ./install.sh --llm`, danach `sudo speech-spark modelle llm uebernehmen` (zurück: `… zurueck`) |
+| Eigenes Sprachmodell | `sudo ./install.sh --llm` (stellt das Gespräch darauf um) |
 | Werkstatt (Testlauf, Code-Messung, Diagnose, Reparatur) | auf dem Modell-Rechner `sudo ./install.sh --werkstatt`, dann *Funktionen → Werkstatt* |
 | Entwickeln auf dem Pi (OpenCode mit dem eigenen Sprachmodell, lokal einspielen) | auf dem Panel-Rechner `sudo ./install.sh --entwickeln`, dann *Funktionen → Entwickeln auf dem Pi*; bedient unter *Zustand → Werkstatt → Entwickeln* (Übersicht, Terminal im Browser, Code-Aufträge aus dem Chat); Anleitung mit Bildern in [Installation](docs/de/installation.md#entwickeln-auf-dem-pi-mit-opencode) |
 | Bildschirm im Fernzugang (guacd) | auf dem Rechner mit dem Panel `sudo ./install.sh --fernbild`, dann *Funktionen → Fernzugang zu Servern → Bildschirm* |
@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.370** Nur noch das eigene Sprachmodell: der Rückfall auf qwen38 ist weg, und unter Modelle stehen nur Modelle, die laufen oder gemessen wurden
 - **V01.1.369** Hilfsmodell mit einem Schalter: eingeschaltet hilft es überall, wo es kann, statt fünf einzelner Schalter
 - **V01.1.368** Gerät statt Profil: ein „Ja“ gilt nur auf dem Gerät und im Gespräch, wo gefragt wurde, Mitteilungen kennen jedes Gerät einzeln, Kanal-Antworten landen den ganzen Tag im selben Hauptgespräch
 - **V01.1.367** Rückfrage zum Weg: vor einer Änderung, die zwei Wege gehen könnte (Mail oder Nachricht, Termin oder Erinnerung), fragt der Assistent mit Knöpfen, welcher gemeint ist, oder antwortet einfach; nie bei Lesefragen, standardmäßig aus
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.363** iPhone und CarPlay stabil: nach Stopp, Anruf oder wenn das Auto weg ist, geht das Mikrofon nicht mehr von selbst auf; Radio und Musik kommen zurück, eine Rückfrage-Liste im Dungeon, 30 Sekunden für alles im Auto, neu koppeln mit anderem Profil räumt auf
 - **V01.1.362** Hörstück als Diskussion (Teil 1): mit dem neuen Schalter wird das Hörstück ein Gespräch in Kapiteln mit Rückfragen und Widerspruch statt Satz für Satz; jede Zahl bleibt belegt, Fragen und Reaktionen tragen „Gespräch“
 - **V01.1.361** Sicherheit sofort: „Mach das Licht nicht aus“ schaltet nie, „Vergiss es“ löscht nichts, keine Websuche für Privates, Mitteilungen eines Browsers nur für ein Profil, Codewort nur vom selben Gerät
-- **V01.1.360** ROT-FIX: zwei Tests prüfen jetzt die eine feste Paketliste statt der entfernten zweiten
 
 
 
@@ -104,7 +104,7 @@ flowchart LR
 ```
 
 1. Du sprichst ins Handy, in den Browser, in eine der Apps, den Terminal-Client, einen Lautsprecher oder ins Telefon. Das Portal meldet dich an, schickt den Ton an die **Spracherkennung** und bekommt Text zurück.
-2. Die **Weiche** wählt nach festen Regeln, welche Werkzeuge die Frage braucht. Das Portal gibt den Text mit Gedächtnis, Gesprächsverlauf, eigenem Wissen und genau diesen Werkzeugen an das **Sprachmodell** hinter dem LLM-Tor (oder an qwen38, wenn du es behältst).
+2. Die **Weiche** wählt nach festen Regeln, welche Werkzeuge die Frage braucht. Das Portal gibt den Text mit Gedächtnis, Gesprächsverlauf, eigenem Wissen und genau diesen Werkzeugen an das **Sprachmodell** hinter dem LLM-Tor.
 3. Braucht die Antwort Kalender, Mail, Wetter, Home Assistant, Websuche, Kiwix oder Wikipedia, holt das Portal die Daten selbst; schalten und eintragen geht nur nach Bestätigung. Bilder malt und ändert FLUX.2 klein auf dem Spark; Musik macht ACE-Step 1.5 (zuerst nur „Musik testen“ für den Admin unter Zustand → Prüfen).
 4. Die Antwort geht Satz für Satz an die **Sprachausgabe** und wird gestreamt abgespielt, während das Modell noch schreibt. Der Vorrang sorgt dafür, dass gesprochene Antworten und wichtige Personen zuerst drankommen.
 5. Mit **Spark teilen** liegen Portal, Profile, Chats und Anrufe auf dem kleinen Rechner und erreichen die Modelle nur über das TLS-Tor. Startet der DGX neu oder ist er aus, laufen Chats, Erinnerungen und Anrufe weiter, und der Notbetrieb versteht ein paar feste Befehle ohne Sprachmodell.
@@ -121,7 +121,7 @@ Jede neue Funktion ist ab Werk aus. Gibt der Admin sie frei, gilt sie sofort fü
 - [iPhone-App](docs/de/iphone-app.md) und [Android-App](docs/de/android-app.md): Chat, Anrufe, Panel-Bereiche auf dem Handy
 - [Sicherheit und Betrieb](docs/de/sicherheit-und-betrieb.md): Anmeldung, Sperren, Sicherungen, Wächter, Selbsttest, Logs
 - [Architektur](docs/de/architektur.md): Bausteine, Weg einer Anfrage, alle Speicherorte (auch im Panel unter Zustand → Technik)
-- [Technik und Fehlersuche](docs/de/technik.md): Dienste und Ports, Leistung messen, eigenes Sprachmodell oder qwen38, Fehlersuche
+- [Technik und Fehlersuche](docs/de/technik.md): Dienste und Ports, Leistung messen, eigenes Sprachmodell, Fehlersuche
 - [Coding-Richtlinie](docs/de/richtlinien.md) und [Sicherheits-Checkliste](docs/de/sicherheits-checkliste.md): Regeln für jede Änderung, Pflichtliste für neue Funktionen
 
 Im Portal steht zu jeder Funktion eine eigene Anleitung unter *Funktionen → Anleitungen*.

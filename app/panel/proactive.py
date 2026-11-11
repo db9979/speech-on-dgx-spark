@@ -862,7 +862,7 @@ async def check_follow(uid, p, now):
 
 # ---------------------------------------------------------------- 6: mail from chosen senders
 # "Wichtige Mails erkennen" (pro_mail_smart, chat.systemone_mail): a mail from a sender not on the list counts
-# when qwen38's /v1/systemone says yes to WICHTIG with at least systemone.WICHTIG_MIN, judged from sender and
+# when the LLM-Tor's /v1/systemone says yes to WICHTIG with at least systemone.WICHTIG_MIN, judged from sender and
 # subject only (never the text); at most SMART_PER_CHECK such questions per check, only while nobody speaks.
 # Erst einordnen, dann melden (Dominik 2026-10-26 „1-4“): before any card the panel's fixed rules decide (sort()):
 # a mail no longer in the inbox (a rule or „Mails aufräumen“ moved it) never becomes one; while „Mails aufräumen“
@@ -962,7 +962,7 @@ def sort(uid, items, now=None):
 
 async def important(h):
     """The probability that a mail is important to its reader, from its sender and subject; None when
-    qwen38 cannot answer (asked again at the next check)."""
+    the model cannot answer (asked again at the next check)."""
     import systemone
     await vorrang.quiet("Wichtige Mail", model=True)
     def one(v):     # a header stays one line of data

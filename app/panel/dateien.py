@@ -323,8 +323,6 @@ DATEIEN = [
     state("wartung.json", "Wartungspause", "Maintenance pause", lokal="Wartungspause gilt nur für das laufende Update"),
     state("praxistest-stand.json", "Praxistest: je Prüfpunkt die Markierung (klappt, Problem, später) und die Zeit", "Hands-on test: per point the mark (works, problem, later) and the time", "json"),
     state("modelle-messung.json", "Messung der Modelle (nur Zahlen)", "Model measurement (numbers only)", lokal="Messwert dieses Geräts (speech-spark modelle messen)"),
-    state("qwen38-vorher.json", "Vor dem Umzug: laufende qwen38-Dienste und alte Adresse des Sprachmodells", "Before the move: running qwen38 services and the language model's old address", lokal="gilt nur für dieses Gerät (speech-spark modelle llm uebernehmen, zurueck)"),
-    state("qwen38-vorher.json.alt", "Die Notiz des letzten Umzugs nach dem Weg zurück", "The last move's note after the way back", lokal="gilt nur für dieses Gerät", sonst=True),
     state("llm-start.json", "Was das eigene Sprachmodell beim Wechseln oder Starten gerade tut: Schritt, Sekunden, feste Wörter", "What the own language model does while it switches or starts: step, seconds, fixed words", lokal="gilt nur für dieses Gerät (speech-spark modelle wechseln, Lange Gespräche)"),
     state("llm-startzeiten.json", "Je Modell die Sekunden seines letzten Starts (für die erwartete Zeit)", "Per model the seconds of its last start (for the expected time)", lokal="gilt nur für dieses Gerät"),
     state("modelle-wechsel.json", "Je Art das Modell vor dem letzten Wechsel (7 Tage zurückholbar)", "Per kind the model before the last switch (7 days to bring back)", lokal="gilt nur für dieses Gerät (speech-spark modelle wechseln, zurueckholen)"),

@@ -105,7 +105,7 @@ ENTRIES = {
 # D: never, whatever a case says (shown on the page so the admin sees the border)
 NEVER = (
     ("Passwörter, Schlüssel und Zugangsdaten", "Passwords, keys and credentials"),
-    ("Adresse und Schlüssel des Sprachmodells, qwen38", "Address and key of the language model, qwen38"),
+    ("Adresse und Schlüssel des Sprachmodells", "Address and key of the language model"),
     ("Notaus und Wächter (netguard)", "Notaus and Wächter (netguard)"),
     ("Zweiter Anmeldeschritt, Rollen und Rechte", "Second sign-in step, roles and rights"),
     ("Ports, Netz und Gastzugang", "Ports, network and guest access"),

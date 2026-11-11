@@ -1,6 +1,6 @@
 """Pictures for the assistant: the person attaches a photo (panel, iPhone app, Telegram) and the
-language model looks at it itself. qwen38's Qwen3.8 is a vision model; the admin checks once with
-"Bilderkennung prüfen" that the running lane accepts pictures (POST /api/admin/vision-test).
+language model looks at it itself (the own one if it can see, else the eye model by the LLM-Tor's fixed rule); the
+admin checks once with "Bilderkennung prüfen" that the running model accepts pictures (POST /api/admin/vision-test).
 
 Off until the admin switches it on (chat.images); then on for every profile unless the admin blocks one
 (Personen und Geräte → Gesperrte Funktionen); from the iPhone app also app_images, over Telegram also tg_images. Guests and

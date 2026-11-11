@@ -2,7 +2,7 @@
 answer of the assistant (chat.py), kept for two weeks in STATE/latency.json.
 
 Zustand → Prüfen shows the median of the last 24 hours and of the six days before, and the page warns
-(health.alerts) when answers became clearly slower, e.g. while qwen38 is busy or memory runs short.
+(health.alerts) when answers became clearly slower, e.g. while the language model is busy or memory runs short.
 Nothing personal is kept: only the time, the seconds and the kind of client (web, speaker, watch ...).
 
 Since plan genauer-und-schneller (1) each answer also keeps, as fixed words and numbers (MEASURE): the Weiche group,
@@ -191,5 +191,5 @@ def _summary(now):
     # clearly slower: at least 10 answers today, median more than 1.5 times and 1.5 s above the week's
     if d and w and d["n"] >= 10 and w["n"] >= 10 and d["median"] > 1.5 * w["median"] and d["median"] > w["median"] + 1.5:
         res["warn"] = (f"Antworten sind langsamer geworden: bis zum ersten Ton im Mittel {d['median']:g} s "
-                       f"(sonst {w['median']:g} s). Läuft qwen38 gerade viel oder ist der Speicher knapp?")
+                       f"(sonst {w['median']:g} s). Hat das Sprachmodell gerade viel zu tun oder ist der Speicher knapp?")
     return res

@@ -149,7 +149,7 @@ class Panel(unittest.TestCase):
 
     def test_steuer_drops_a_wrong_start_but_keeps_the_page(self):
         import steuer
-        d = {"gesamt_gib": 121.7, "lanes": [], "messung": {}, "wechsel": {}, "eigene": [], "laeuft": True, "misst": False,
+        d = {"gesamt_gib": 121.7, "messung": {}, "wechsel": {}, "eigene": [], "laeuft": True, "misst": False,
              "stand": [], "start": dict(self.X, teil="<b>")}
         with mock.patch.object(steuer, "call", return_value=json.loads(json.dumps(d))):
             self.assertIsNone(steuer.modelle({})["start"])
@@ -260,7 +260,7 @@ class Panel(unittest.TestCase):
         helpers.set_config(modelle_wechseln=True)
         kat = {"qwen36-35b-a3b-nvfp4": {"name": {"de": "Qwen3.6 35B"}}}
         with mock.patch.object(modellseite, "lage", return_value={"start": fertig, "misst": False}), \
-                mock.patch.object(modellseite, "_quelle", return_value=(0, 0, None, None, kat, {}, None, None, fertig)), \
+                mock.patch.object(modellseite, "_quelle", return_value=(0, None, None, kat, {}, None, None, fertig)), \
                 mock.patch.object(notaus, "admin_uids", return_value=["a1", "a2"]), \
                 mock.patch.object(push, "reachable", side_effect=lambda uid, private: uid == "a1"), \
                 mock.patch.object(push, "send", side_effect=send):

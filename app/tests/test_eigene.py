@@ -102,10 +102,10 @@ class Liste(unittest.TestCase):
         base = modelle.katalog(eigene=os.path.join(self.tmp.name, "fehlt.json"))
         with open(self.path, "w") as f:
             json.dump({"modelle": [dict(self.m, revision="main"), dict(self.m, eigen=False, id="eigen-x"), "kaputt",
-                                   dict(self.m, id="qwen38-27b-nvfp4"), self.m]}, f)
+                                   dict(self.m, id="qwen36-35b-a3b-nvfp4"), self.m]}, f)
         kat = modelle.katalog(eigene=self.path)
         self.assertEqual(set(kat) - set(base), {self.m["id"]})
-        self.assertEqual(kat["qwen38-27b-nvfp4"], base["qwen38-27b-nvfp4"])       # never replaces a catalog entry
+        self.assertEqual(kat["qwen36-35b-a3b-nvfp4"], base["qwen36-35b-a3b-nvfp4"])       # never replaces a catalog entry
         with open(self.path, "w") as f:
             f.write("{nicht json")
         self.assertEqual(set(modelle.katalog(eigene=self.path)), set(base))
@@ -138,7 +138,7 @@ class Liste(unittest.TestCase):
             self.assertEqual(str(e.exception), "aktiv")
             with open(wechsel, "w") as f:
                 json.dump({"llm": {"alt": self.m["id"], "zeit": T0 - 2 * 86400}}, f)
-            cfg = {"llm": {"enabled": True, "modell": "qwen38-27b-nvfp4"}}
+            cfg = {"llm": {"enabled": True, "modell": "qwen36-35b-a3b-nvfp4"}}
             with self.assertRaises(modelle.Fehler) as e:
                 modelle.eigen_loeschen(self.m["id"], cfg, T0, self.path, wechsel, self.tmp.name)
             self.assertEqual(str(e.exception), "frist")
@@ -173,7 +173,7 @@ class Liste(unittest.TestCase):
         m = modelle.eigen_vorschlag(info(config={"architectures": ["Qwen2_5_VLForConditionalGeneration"]}),
                                     "sehen", "beispiel/Mini-VL", 128)
         kat = dict(modelle.katalog(eigene=os.path.join(self.tmp.name, "fehlt.json")), **{m["id"]: m})
-        cfg = {"llm": {"enabled": True, "modell": "qwen38-27b-nvfp4", "sehen_modell": "gemma-4-26b-a4b"},
+        cfg = {"llm": {"enabled": True, "modell": "qwen36-35b-a3b-nvfp4", "sehen_modell": "gemma-4-26b-a4b"},
                "memory": {"reserve_gib": 10}}
         with self.assertRaises(modelle.Fehler) as e:
             modelle.wechsel_pruefen("sehen", m["id"], cfg, 128, kat=kat, messung={})
@@ -186,12 +186,11 @@ class Panel(unittest.TestCase):
     def setUp(self):
         for k in [k for k in guard._rate if k[0] in ("modelle_eigen", "modelle")]:
             guard._rate.pop(k, None)
-        self.saved = modellseite._lanes, modellseite._laeuft
-        modellseite._lanes = lambda: []
+        self.saved = modellseite._laeuft
         modellseite._laeuft = lambda: False
 
     def tearDown(self):
-        modellseite._lanes, modellseite._laeuft = self.saved
+        modellseite._laeuft = self.saved
         helpers.set_config(modelle_wechseln=False, modelle_eigene=False)
         try:
             os.remove(modelle.EIGENE)

@@ -319,10 +319,10 @@ class FesterName(unittest.TestCase):
                 return await llm.model(c, cc)
         self.assertEqual(asyncio.run(ask()), LLM_ALIAS)
         self.assertEqual(llm.known_model(), "qwen36-35b-a3b-nvfp4")
-        laeuft["id"] = "qwen38-27b-nvfp4"
+        laeuft["id"] = "qwen36-35b-a3b-nvfp4"
         base = cc["llm_url"]
         t, name, real = llm._models[base]
         llm._models[base] = (t - llm.MODELS_TTL - 1, name, real)     # the time is up (no clock in the test)
         self.assertEqual(asyncio.run(ask()), LLM_ALIAS)
-        self.assertEqual(llm.known_model(), "qwen38-27b-nvfp4")
+        self.assertEqual(llm.known_model(), "qwen36-35b-a3b-nvfp4")
         llm._models.clear()

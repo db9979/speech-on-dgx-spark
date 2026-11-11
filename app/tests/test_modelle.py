@@ -3,7 +3,7 @@
 commit or empty, memory share at most ANTEIL_MAX, never trust_remote_code); the vLLM arguments come only from those
 fields and listen on 127.0.0.1; a cached model is checked file by file against its names (no pickle, no links out of
 blobs/); a measurement keeps numbers and fixed words only, never an answer's text; the shell command never leaves
-qwen38 stopped and never removes it. The engine is faked (no GPU); nothing depends on the time of day."""
+the language model stopped. The engine is faked (no GPU); nothing depends on the time of day."""
 import copy
 import hashlib
 import io
@@ -93,13 +93,13 @@ class Engine:
 
 
 def qwen():
-    return copy.deepcopy(modelle.eintrag("qwen38-27b-nvfp4"))
+    return copy.deepcopy(modelle.eintrag("qwen36-35b-a3b-nvfp4"))
 
 
 class Katalog(unittest.TestCase):
     def test_every_entry_follows_the_rules(self):
         kat = modelle.katalog()
-        self.assertIn("qwen38-27b-nvfp4", kat)
+        self.assertIn("qwen36-35b-a3b-nvfp4", kat)
         self.assertTrue(any(m["art"] == "sehen" for m in kat.values()))
         for mid, m in kat.items():
             if m["engine"] == "vllm":
@@ -108,7 +108,7 @@ class Katalog(unittest.TestCase):
             self.assertRegex(m["revision"], r"^([0-9a-f]{40})?$", mid)
             self.assertTrue(m["name"]["de"] and m["name"]["en"], mid)
         # the default language model is pinned, so a measurement and later the switch load exactly this commit
-        self.assertRegex(kat["qwen38-27b-nvfp4"]["revision"], r"^[0-9a-f]{40}$")
+        self.assertRegex(kat["qwen36-35b-a3b-nvfp4"]["revision"], r"^[0-9a-f]{40}$")
 
     def test_broken_entries_are_refused(self):
         bad = [("trust", lambda m: m["vllm"].update(trust_remote_code=True)),
@@ -137,14 +137,15 @@ class Katalog(unittest.TestCase):
                 modelle.katalog(path)
 
     def test_messliste(self):
-        self.assertEqual(modelle.messliste([]), ["qwen38-27b-nvfp4", "qwen3-vl-8b-fp8"])
-        self.assertEqual(modelle.messliste(["llm"]), ["qwen38-27b-nvfp4"])
-        # the big downloads only when asked for by name
-        self.assertNotIn("gemma-4-26b-a4b", modelle.messliste(["llm", "sehen"]))
-        self.assertIn("gemma-4-26b-a4b", modelle.messliste(["gemma"]))
-        self.assertIn("qwen38-27b-fp8", modelle.messliste(["fp8"]))
-        # the two fast MoE candidates for the main model (Dominik 2026-10-17 "ja 1+2"), in catalog order
-        self.assertEqual(modelle.messliste(["gemma", "vl30"]), ["qwen3-vl-30b-a3b-fp8", "gemma-4-26b-a4b"])
+        self.assertEqual(modelle.messliste([]), ["qwen36-35b-a3b-nvfp4", "qwen3-vl-8b-fp8"])
+        self.assertEqual(modelle.messliste(["llm"]), ["qwen36-35b-a3b-nvfp4"])
+        # the big download in Docker only when asked for by name
+        self.assertNotIn("qwen38-flash-next-fp4", modelle.messliste(["llm", "sehen", "helfer"]))
+        self.assertEqual(modelle.messliste(["flash"]), ["qwen38-flash-next-fp4"])
+        # Dominik 2026-11-11: only models that run or were measured; the words of the ones gone are refused
+        for gone in ("fp8", "gemma", "kolibri", "vl30", "dspark", "qwen36frei"):
+            with self.assertRaises(modelle.Fehler, msg=gone):
+                modelle.messliste([gone])
         # Dominik 2026-10-18 „ja 1“: Qwen3.6 35B A3B NVFP4 natively, with and without MTP
         self.assertEqual(modelle.messliste(["qwen36"]), ["qwen36-35b-a3b-nvfp4", "qwen36-35b-a3b-nvfp4-ohne-mtp"])
         q36, ohne = (modelle.katalog()[i] for i in ("qwen36-35b-a3b-nvfp4", "qwen36-35b-a3b-nvfp4-ohne-mtp"))
@@ -152,11 +153,6 @@ class Katalog(unittest.TestCase):
         self.assertNotIn("--speculative-config", modelle.vllm_args(ohne, revision=ohne["revision"]))
         self.assertNotIn("--trust-remote-code", modelle.vllm_args(q36, revision=q36["revision"]))
         self.assertEqual((q36["gewerblich"], ohne["revision"], modelle.docker_bild(q36)), (True, q36["revision"], ""))
-        m = modelle.katalog()["qwen3-vl-30b-a3b-fp8"]
-        self.assertEqual((m["art"], m["kann_sehen"], m["werkzeuge"]), ("llm", True, True))
-        a = modelle.vllm_args(m, revision="c" * 40)
-        self.assertEqual(a[a.index("--tool-call-parser") + 1], "hermes")
-        self.assertNotIn("--reasoning-parser", a)                       # the Instruct model does not think aloud
         with self.assertRaises(modelle.Fehler):
             modelle.messliste(["alles; rm"])
 
@@ -164,7 +160,7 @@ class Katalog(unittest.TestCase):
 class VllmArgs(unittest.TestCase):
     def test_local_pinned_never_remote_code(self):
         a = modelle.vllm_args(qwen())
-        self.assertEqual(a[0], "RadixArk/Qwen3.8-27B-NVFP4")
+        self.assertEqual(a[0], "nvidia/Qwen3.6-35B-A3B-NVFP4")
         self.assertEqual(a[a.index("--host") + 1], "127.0.0.1")
         self.assertEqual(a[a.index("--revision") + 1], qwen()["revision"])
         self.assertEqual(a[a.index("--max-model-len") + 1], "131072")
@@ -201,15 +197,15 @@ class VllmArgs(unittest.TestCase):
     def test_cli_prints_one_argument_per_line(self):
         out = io.StringIO()
         with redirect_stdout(out):
-            self.assertEqual(modelle.cli(["vllm-args", "qwen38-27b-nvfp4", "--ohne-mtp"]), 0)
+            self.assertEqual(modelle.cli(["vllm-args", "qwen36-35b-a3b-nvfp4", "--ohne-mtp"]), 0)
         lines = out.getvalue().splitlines()
-        self.assertEqual(lines[0], "RadixArk/Qwen3.8-27B-NVFP4")
+        self.assertEqual(lines[0], "nvidia/Qwen3.6-35B-A3B-NVFP4")
         self.assertNotIn("--speculative-config", lines)
         with redirect_stdout(io.StringIO()) as o:
             self.assertEqual(modelle.cli(["vllm-args", "gibtsnicht"]), 2)
         self.assertEqual(o.getvalue().strip(), "modelle: abgelehnt unbekannt")
         with redirect_stdout(io.StringIO()):
-            self.assertEqual(modelle.cli(["feld", "qwen38-27b-nvfp4", "anteil"]), 2)
+            self.assertEqual(modelle.cli(["feld", "qwen36-35b-a3b-nvfp4", "anteil"]), 2)
 
 
 class Pruefen(unittest.TestCase):
@@ -257,16 +253,6 @@ class Pruefen(unittest.TestCase):
             with self.assertRaisesRegex(modelle.Fehler, "link"):
                 modelle.pruefen(d, self.REV)
 
-    def test_the_copy_from_qwen38_takes_only_named_blobs_as_plain_files(self):
-        with open(os.path.join(helpers.APP, "speech-spark.sh")) as f:
-            sh = f.read()
-        b = sh[sh.index("hf_from_qwen38() {"):]
-        b = b[:b.index("\n}\n")]
-        self.assertIn('[ "$t" = "../../blobs/$b" ] || continue', b)
-        self.assertIn('"$src/blobs"|"$hub"/blobs/??) blobs+=', b)
-        self.assertIn('tar -C "$src" -hcf - "${blobs[@]}"', b)
-        self.assertLess(b.index("-hcf"), b.index("modelle.py pruefen"))           # checked after the copy
-
     def test_changed_file(self):
         with tempfile.TemporaryDirectory() as d:
             self.cache(d, {"model.safetensors": b"x" * 500, "config.json": b"{}"})
@@ -301,22 +287,6 @@ class Pruefen(unittest.TestCase):
                 modelle.pruefen(d, self.REV)
             with self.assertRaisesRegex(modelle.Fehler, "revision"):
                 modelle.pruefen(d, "../../etc")
-
-    def qwen36_frei(self):
-        """Dominik 2026-10-25: Qwen3.6 without refusals (Heretic) for everything, measured first; natively in vLLM,
-        never with trust_remote_code or Docker, pinned, with and without MTP."""
-        self.assertEqual(modelle.messliste(["qwen36frei"]), ["qwen36-35b-a3b-frei-nvfp4", "qwen36-35b-a3b-frei-nvfp4-ohne-mtp"])
-        frei, ohne = (modelle.katalog()[i] for i in modelle.messliste(["qwen36frei"]))
-        self.assertEqual((frei["repo"], frei["revision"]), (ohne["repo"], ohne["revision"]))
-        self.assertRegex(frei["revision"], modelle.REV)
-        a = modelle.vllm_args(frei)
-        self.assertNotIn("--trust-remote-code", a)
-        self.assertIn("--speculative-config", a)
-        self.assertNotIn("--speculative-config", modelle.vllm_args(ohne))
-        self.assertEqual((frei["lizenz"], modelle.docker_bild(frei), frei["art"]), ("Apache-2.0", "", "llm"))
-
-    def test_qwen36_frei(self):
-        self.qwen36_frei()
 
     def test_download_takes_only_allowed_kinds(self):
         for pat in modelle.ERLAUBT:
@@ -373,20 +343,20 @@ class Messen(unittest.TestCase):
         self.assertTrue(r["werkzeug"])
         self.assertTrue(r["bild_text"])
         self.assertTrue(r["bild_szene"])
-        modelle.merke("qwen38-27b-nvfp4", r, self.file)
+        modelle.merke("qwen36-35b-a3b-nvfp4", r, self.file)
         with open(self.file) as f:
             saved = f.read()
-        for line in lines + [modelle.zeile("qwen38-27b-nvfp4", r)]:
+        for line in lines + [modelle.zeile("qwen36-35b-a3b-nvfp4", r)]:
             self.assertTrue(line.startswith("modelle: "), line)
             self.assertNotIn(GEHEIM, line)
         self.assertNotIn(GEHEIM, saved)
-        self.assertIn("werkzeug ok", modelle.zeile("qwen38-27b-nvfp4", r))
+        self.assertIn("werkzeug ok", modelle.zeile("qwen36-35b-a3b-nvfp4", r))
         # the prefix cache: the same long question cold and warm, the share from vLLM's counters
         self.assertEqual(r["zwischenspeicher"], 0.75)
         self.assertIn("erste_kalt_s", r)
         self.assertIn("erste_warm_s", r)
-        self.assertTrue(any(x.startswith("modelle: messung qwen38-27b-nvfp4 zwischenspeicher 75 %, erste kalt ") for x in lines), lines)
-        self.assertIn("zwischenspeicher 75 %", modelle.zeile("qwen38-27b-nvfp4", r))
+        self.assertTrue(any(x.startswith("modelle: messung qwen36-35b-a3b-nvfp4 zwischenspeicher 75 %, erste kalt ") for x in lines), lines)
+        self.assertIn("zwischenspeicher 75 %", modelle.zeile("qwen36-35b-a3b-nvfp4", r))
 
     def test_a_model_without_tools_or_eyes_is_not_asked(self):
         m = qwen()
@@ -436,7 +406,7 @@ class Kommando(unittest.TestCase):
         # measurement next to it ended with "port belegt" (tars 2026-10-16)
         b = self.body("cmd_messen_intern")
         self.assertEqual(modelle.MESS_PORT, modelle.ROLLEN["llm"][2])
-        self.assertLess(b.index('systemctl stop "${MESS_QWEN[@]}"'), b.index("port belegt"))
+        self.assertLess(b.index('systemctl stop "${MESS_LLM[@]}"'), b.index("port belegt"))
         self.assertIn("speech-spark-llm.service", b[:b.index("port belegt")])
 
     def test_wired(self):
@@ -464,18 +434,15 @@ class Kommando(unittest.TestCase):
         self.assertIn('modelle.py" kompilieren', eng)
         self.assertLess(eng.index('modelle.py" kompilieren'), eng.index("elif [ \"$ROLE\" = asr ]"))
 
-    def test_qwen38_comes_back_and_stays_installed(self):
+    def test_the_language_model_comes_back(self):
         intern = self.body("cmd_messen_intern")
-        # the trap is set before anything of qwen38 stops
-        self.assertLess(intern.index("trap mess_restore EXIT"), intern.index('systemctl stop "${MESS_QWEN[@]}"'))
+        # the trap is set before the language model stops
+        self.assertLess(intern.index("trap mess_restore EXIT"), intern.index('systemctl stop "${MESS_LLM[@]}"'))
         self.assertIn('systemctl start --no-block "$u"', self.body("mess_restore"))
         self.assertIn("as_panel_user wartung.py weiter", self.body("mess_restore"))
         self.assertIn('[ "${INVOCATION_ID:-}" ]', self.body("cmd_modelle"))
-        # qwen38 is removed only by its own uninstall, only in cmd_qwen38_aufraeumen (Dominik's command, asks first)
-        rest = self.sh.replace(self.body("cmd_qwen38_aufraeumen"), "")
-        for line in rest.splitlines():
-            code = line.split("#", 1)[0]
-            self.assertNotRegex(code, r"(?i)qwen38.*(uninstall|disable|rm -)", line)
+        # only the own language model's units stop, nothing that is not ours (qwen38 is gone, Dominik 2026-11-11)
+        self.assertNotIn("qwen38", intern)
 
     def test_the_own_unit_runs_the_script_through_bash(self):
         # /opt/speech-spark/app/speech-spark.sh is not executable (the wrapper runs it with /bin/bash): systemd-run
@@ -488,15 +455,10 @@ class Kommando(unittest.TestCase):
         eng = self.body("mess_engine")
         self.assertIn('-p User="$svc"', eng)
         self.assertIn("--setenv=HF_HUB_OFFLINE=1", eng)
-        # the entry's own venv from the catalog (venv-llm, venv-kolibri), never a path the catalog does not name
+        # the entry's own venv from the catalog (venv-llm), never a path the catalog does not name
         self.assertIn('venv="$PREFIX/venv-$(as_panel_user ../modelle.py venv "$1")"', eng)
         self.assertIn('"$venv/bin/vllm" serve "${args[@]}"', eng)
         self.assertIn('--revision "$2"', eng.split("messen-lauf", 1)[1])   # the result names the checked commit
-        # the copy out of qwen38's cache is written by the service user and checked before use
-        cp = self.body("hf_from_qwen38")
-        self.assertIn('runuser -u "$svc" -- tar -C', cp)
-        self.assertIn("as_panel_user ../modelle.py pruefen", cp)
-        self.assertNotRegex(cp, r"\bcp\b|\bmv\b")
 
 
 if __name__ == "__main__":
@@ -505,7 +467,7 @@ if __name__ == "__main__":
 
 class Budget(unittest.TestCase):
     """Stufe E1: one catalog for every kind, the memory budget as a fixed rule from numbers."""
-    CFG = {"chat": {"llm_url": "http://127.0.0.1:30001/v1", "doc_semantic": False, "rerank": False},
+    CFG = {"chat": {"llm_url": "http://127.0.0.1:31006/v1", "doc_semantic": False, "rerank": False},
            "asr": {"enabled": True, "recognizer": "qwen", "backend": "transformers", "model": "Qwen/Qwen3-ASR-1.7B",
                    "timestamps": False},
            "tts": {"enabled": True, "backend": "transformers", "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"},
@@ -516,6 +478,15 @@ class Budget(unittest.TestCase):
         for k, v in change.items():
             c[k].update(v)
         return c
+
+    @staticmethod
+    def own(c, anteil=None):
+        """The configuration with the own language model on, and the catalog with its memory share changed."""
+        c = dict(copy.deepcopy(c), llm={"enabled": True, "modell": "qwen36-35b-a3b-nvfp4"})
+        kat = copy.deepcopy(modelle.katalog())
+        if anteil:
+            kat["qwen36-35b-a3b-nvfp4"]["anteil"] = anteil
+        return c, kat
 
     def test_memory_need_comes_from_the_catalog(self):
         import common
@@ -536,35 +507,38 @@ class Budget(unittest.TestCase):
             self.assertEqual(modelle.zur_variante("klein", size)["need_gib"], gib)
 
     def test_which_models_run(self):
-        ids = [x["id"] for x in modelle.aktiv(self.cfg(), 120, [0.76])]
-        self.assertEqual(ids, ["qwen38-extern", "qwen3-asr-1.7b", "qwen3-tts-0.6b"])
+        ids = [x["id"] for x in modelle.aktiv(self.cfg(), 120)]
+        self.assertEqual(ids, ["qwen3-asr-1.7b", "qwen3-tts-0.6b"])          # the own language model is off
         a = modelle.aktiv(self.cfg(asr={"recognizer": "parakeet"}, image={"enabled": True, "variant": "9b-q4"},
                                    tts={"voicedesign_enabled": True, "voicedesign_model": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign"},
                                    chat={"llm_url": "http://192.168.1.5:8000/v1", "rerank": True, "rerank_model": "gross"}), 120)
         self.assertEqual([x["id"] for x in a], ["parakeet-primeline", "qwen3-tts-0.6b", "qwen3-tts-1.7b-voicedesign",
                                                 "flux2-klein-9b-q4", "nsfw-pruefung", "rerank-gross"])
-        self.assertEqual(modelle.aktiv(self.cfg(), 120, [0.76])[0]["gib"], 91.2)   # the lane's share of the pool
+        self.assertEqual(modelle.aktiv(self.own(self.cfg())[0], 120)[0],         # its share of the pool + 1.5 GiB
+                         {"id": "qwen36-35b-a3b-nvfp4", "art": "llm", "gib": 37.5, "betrieb": "resident"})
 
     def test_the_rule_follows_the_numbers(self):
         c = self.cfg(image={"enabled": True, "variant": "4b-q8"})
-        self.assertEqual(modelle.budget(c, 120, [0.76])["regel"], "zu_knapp")     # qwen38 in its 1M mode
-        self.assertEqual(modelle.budget(c, 120, [0.30])["regel"], "alle")
+        for anteil, regel in ((0.76, "zu_knapp"), (0.30, "alle")):
+            oc, kat = self.own(c, anteil)
+            self.assertEqual(modelle.budget(oc, 120, kat)["regel"], regel, anteil)
         c["chat"]["rerank"] = True                                                 # 11 + 0.5 + 4 GiB on demand
-        b = modelle.budget(c, 120, [0.66])
-        self.assertEqual((b["frei"], b["bedarf"], b["bedarf_max"]), (14.8, 15.5, 11))
+        oc, kat = self.own(c, 0.66)
+        b = modelle.budget(oc, 120, kat)
+        self.assertEqual((b["frei"], b["bedarf"], b["bedarf_max"]), (13.3, 15.5, 11))
         self.assertEqual(b["regel"], "ein_platz", b)
-        self.assertEqual(b["fest"], round(0.66 * 120 + 6 + 4, 1))
+        self.assertEqual(b["fest"], round(0.66 * 120 + 1.5 + 6 + 4, 1))
 
     def test_pictures_and_music_share_one_place(self):
         """Dominik 2026-10-18: only ever one of them is loaded, never both: the bigger one counts, not the sum."""
         c = self.cfg(image={"enabled": True, "variant": "9b-q4"})
         c["music"] = {"enabled": True, "variant": "xl"}
-        b = modelle.budget(c, 120, [0.30])
+        b = modelle.budget(c, 120)
         rest = sum(x["gib"] for x in b["teile"] if x["betrieb"] == "bei_bedarf" and x["art"] not in ("bild", "musik"))
         self.assertEqual({x["art"] for x in b["teile"] if x["betrieb"] == "bei_bedarf"} >= {"bild", "musik"}, True)
         self.assertEqual((b["bedarf"], b["bedarf_max"]), (round(20 + rest, 1), 20))   # 13 and 20 GiB: one place of 20
         c["chat"]["rerank"] = True                                            # a reranker on demand still adds up
-        self.assertEqual(modelle.budget(c, 120, [0.30])["bedarf"],
+        self.assertEqual(modelle.budget(c, 120)["bedarf"],
                          round(20 + rest + modelle.zur_variante("klein", "klein")["need_gib"], 1))
         sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "panel"))
         import schwer                                                         # the queue that keeps them apart
@@ -601,21 +575,21 @@ class Seite(unittest.TestCase):
 
     def test_page_data(self):
         import modellseite
-        d = modellseite.seite(Budget.CFG, 120, [0.76], {"zeit": 5, "modelle": {"qwen38-27b-nvfp4": {
+        d = modellseite.seite(Budget.own(Budget.CFG)[0], 120, {"zeit": 5, "modelle": {"qwen36-35b-a3b-nvfp4": {
             "ok": True, "tok_s": 24.7, "grund": "x", "frei_start_gib": 90}}})
         arten = {a["art"]: a for a in d["arten"]}
         self.assertEqual(set(arten), set(modelle.ARTEN))
-        q = next(m for m in arten["llm"]["modelle"] if m["id"] == "qwen38-27b-nvfp4")
+        q = next(m for m in arten["llm"]["modelle"] if m["id"] == "qwen36-35b-a3b-nvfp4")
         self.assertEqual(q["messung"], {"ok": True, "tok_s": 24.7})     # only the fixed numbers, nothing else
-        self.assertTrue(next(m for m in arten["llm"]["modelle"] if m["id"] == "qwen38-extern")["aktiv"])
-        self.assertEqual((d["budget"]["frei"], d["budget"]["regel"]), (2.8, "alle"))
+        self.assertTrue(q["aktiv"])
+        self.assertEqual((d["budget"]["frei"], d["budget"]["regel"]), (56.5, "alle"))
         # the bar's pieces (Dominik 2026-10-18): only id, name, kind, GiB and mode, the same sum as the fixed part
         teile = d["budget"]["teile"]
         self.assertTrue(teile)
         self.assertTrue(all(set(x) == {"id", "name", "art", "gib", "betrieb"} for x in teile))
         self.assertAlmostEqual(sum(x["gib"] for x in teile if x["betrieb"] == "resident"), d["budget"]["fest"], places=0)
         self.assertEqual(teile[0]["name"], modelle.katalog()[teile[0]["id"]]["name"]["de"])
-        en = modellseite.seite(Budget.CFG, 120, [], {}, lang="en")
+        en = modellseite.seite(Budget.CFG, 120, {}, lang="en")
         self.assertEqual(en["arten"][0]["name"], "Language model")
         self.assertEqual(en["budget"]["teile"][0]["name"], modelle.katalog()[en["budget"]["teile"][0]["id"]]["name"]["en"])
 

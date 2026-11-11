@@ -32,6 +32,17 @@ def kat():
     return modelle.katalog()
 
 
+def ohne_augen():
+    """The catalog with one language model that cannot see (none of the kept ones is like that, Kolibri left
+    2026-11-11): a copy of Qwen3.6 without eyes, only for the fixed rule for pictures."""
+    k = copy.deepcopy(modelle.katalog())
+    m = copy.deepcopy(k["qwen36-35b-a3b-nvfp4"])
+    m.update(id="nur-text", kann_sehen=False)
+    m["vllm"].pop("bilder_pro_frage", None)
+    k["nur-text"] = m
+    return k
+
+
 class Engine:
     """A fake vLLM: records what it got, answers chat completions (with top_logprobs when asked) and /health."""
 
@@ -59,7 +70,7 @@ class Base(unittest.TestCase):
         with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
             self.saved = json.load(f)
         c = copy.deepcopy(self.saved)
-        c["llm"] = dict(c.get("llm", {}), modell="qwen38-27b-nvfp4", engine_port=31016, sehen_port=31017,
+        c["llm"] = dict(c.get("llm", {}), modell="qwen36-35b-a3b-nvfp4", engine_port=31016, sehen_port=31017,
                         sehen_modell="qwen3-vl-8b-fp8")
         helpers.write_config(c)
         self.engine = Engine()
@@ -83,13 +94,13 @@ class Base(unittest.TestCase):
 
 class Feldgrenzen(unittest.TestCase):
     def setUp(self):
-        self.m = kat()["qwen38-27b-nvfp4"]
+        self.m = kat()["qwen36-35b-a3b-nvfp4"]
 
     def test_only_known_fields_pass_and_the_model_name_is_the_catalogs(self):
         body = {"model": "anything/else", "messages": [{"role": "user", "content": "Hallo"}], "prompt_token_ids": [1, 2],
                 "logit_bias": {"5": 100}, "guided_regex": ".*", "best_of": 4, "stop_token_ids": [3], "max_tokens": 50}
-        out = llm_tor.pruefe(body, self.m, "qwen38-27b-nvfp4")
-        self.assertEqual(out["model"], "qwen38-27b-nvfp4")
+        out = llm_tor.pruefe(body, self.m, "qwen36-35b-a3b-nvfp4")
+        self.assertEqual(out["model"], "qwen36-35b-a3b-nvfp4")
         for k in ("prompt_token_ids", "logit_bias", "guided_regex", "best_of", "stop_token_ids"):
             self.assertNotIn(k, out)
         self.assertTrue(set(out) <= set(llm_tor.FELDER) | {"model"})
@@ -126,16 +137,16 @@ class Feldgrenzen(unittest.TestCase):
 
 class Sehen(unittest.TestCase):
     def test_the_fixed_rule_for_pictures(self):
-        k = kat()
+        k = ohne_augen()
         bild = {"messages": [{"role": "user", "content": [{"type": "text", "text": "Was ist das?"},
                                                            {"type": "image_url", "image_url": {"url": "data:,"}}]}]}
         text = {"messages": [{"role": "user", "content": "Hallo"}]}
         c = {"sehen_modell": "qwen3-vl-8b-fp8"}
-        self.assertTrue(llm_tor.zum_sehen(bild, k["kolibri-1-nvfp4"], c))       # Kolibri cannot see
-        self.assertFalse(llm_tor.zum_sehen(bild, k["qwen38-27b-nvfp4"], c))     # Qwen3.8 sees itself
-        self.assertFalse(llm_tor.zum_sehen(text, k["kolibri-1-nvfp4"], c))
-        self.assertTrue(llm_tor.zum_sehen(dict(text, model="sehen"), k["qwen38-27b-nvfp4"], c))
-        self.assertFalse(llm_tor.zum_sehen(bild, k["kolibri-1-nvfp4"], {"sehen_modell": ""}))
+        self.assertTrue(llm_tor.zum_sehen(bild, k["nur-text"], c))              # a model that cannot see
+        self.assertFalse(llm_tor.zum_sehen(bild, k["qwen36-35b-a3b-nvfp4"], c))     # Qwen3.6 sees itself
+        self.assertFalse(llm_tor.zum_sehen(text, k["nur-text"], c))
+        self.assertTrue(llm_tor.zum_sehen(dict(text, model="sehen"), k["qwen36-35b-a3b-nvfp4"], c))
+        self.assertFalse(llm_tor.zum_sehen(bild, k["nur-text"], {"sehen_modell": ""}))
 
     def test_the_image_model_gets_no_tools(self):
         m = dict(kat()["qwen3-vl-8b-fp8"], werkzeuge=False)
@@ -183,24 +194,24 @@ class Dienst(Base):
         # Dominik 2026-11-10: the list showed the configured qwen38-27b-nvfp4-dspark while another model ran
         r = self.app.get("/v1/models", headers=KEY).json()["data"]
         self.assertEqual(r[0]["id"], "sprachmodell")
-        self.assertEqual(r[0]["modell"], "qwen38-27b-nvfp4")       # the engine says nothing: the setting
-        self.engine.serves = "kolibri-1-nvfp4"                       # the engine runs another model than the setting
+        self.assertEqual(r[0]["modell"], "qwen36-35b-a3b-nvfp4")       # the engine says nothing: the setting
+        self.engine.serves = "qwen38-flash-next-fp4"                 # the engine runs another model than the setting
         llm_tor.echt["t"] = None
         out = io.StringIO()
         with redirect_stdout(out):
             r = self.app.get("/v1/models", headers=KEY).json()["data"]
             self.assertEqual(r[0]["id"], "sprachmodell")
-            self.assertEqual(r[0]["modell"], "kolibri-1-nvfp4")
+            self.assertEqual(r[0]["modell"], "qwen38-flash-next-fp4")
             chat = self.app.post("/v1/chat/completions", headers=KEY, json={
                 "model": "sprachmodell", "messages": [{"role": "user", "content": "Hallo"}]})
         self.assertEqual(chat.status_code, 200, chat.text)
-        self.assertEqual(self.engine.got[-1][1]["model"], "kolibri-1-nvfp4")   # asked with the name it really serves
+        self.assertEqual(self.engine.got[-1][1]["model"], "qwen38-flash-next-fp4")   # asked with the name it really serves
         self.assertIn("llmtor: modell weicht von einstellung ab", out.getvalue())
         self.assertEqual(out.getvalue().count("weicht"), 1)                # once per change, not per request
         self.engine.serves = "../etc"                                        # never a name outside the catalog's form
         llm_tor.echt["t"] = None
         with redirect_stdout(io.StringIO()):
-            self.assertEqual(self.app.get("/v1/models", headers=KEY).json()["data"][0]["modell"], "qwen38-27b-nvfp4")
+            self.assertEqual(self.app.get("/v1/models", headers=KEY).json()["data"][0]["modell"], "qwen36-35b-a3b-nvfp4")
 
     def test_a_request_reaches_the_engine_checked_and_is_counted(self):
         before = dict(llm_tor.stats)
@@ -211,7 +222,7 @@ class Dienst(Base):
         self.assertEqual(r.status_code, 200, r.text)
         port, body = self.engine.got[-1]
         self.assertEqual(port, 31016)
-        self.assertEqual(body["model"], "qwen38-27b-nvfp4")
+        self.assertEqual(body["model"], "qwen36-35b-a3b-nvfp4")
         self.assertNotIn("logit_bias", body)
         self.assertEqual(llm_tor.stats["tokens_out"] - before["tokens_out"], 2)
         self.assertNotIn(GEHEIM, out.getvalue())
@@ -219,11 +230,13 @@ class Dienst(Base):
         bad = self.app.post("/v1/chat/completions", headers=KEY, json={"messages": [{"role": "user", "content": "x"}], "n": 2})
         self.assertEqual(bad.status_code, 400)
 
-    def test_a_picture_for_kolibri_goes_to_the_image_model(self):
-        self.modell("kolibri-1-nvfp4")
-        r = self.app.post("/v1/chat/completions", headers=KEY, json={"messages": [{"role": "user", "content": [
-            {"type": "text", "text": "Was steht da?"}, {"type": "image_url", "image_url": {"url": "data:,"}}]}],
-            "tools": [{"type": "function", "function": {"name": "wetter"}}]})
+    def test_a_picture_for_a_model_that_cannot_see_goes_to_the_image_model(self):
+        self.modell("nur-text")
+        k = ohne_augen()
+        with mock.patch.object(modelle, "katalog", lambda *a, **kw: k):
+            r = self.app.post("/v1/chat/completions", headers=KEY, json={"messages": [{"role": "user", "content": [
+                {"type": "text", "text": "Was steht da?"}, {"type": "image_url", "image_url": {"url": "data:,"}}]}],
+                "tools": [{"type": "function", "function": {"name": "wetter"}}]})
         self.assertEqual(r.status_code, 200, r.text)
         port, body = self.engine.got[-1]
         self.assertEqual((port, body["model"]), (31017, "qwen3-vl-8b-fp8"))
@@ -308,34 +321,25 @@ class Start(unittest.TestCase):
     """speech-spark-llm / speech-spark-sehen (engine.sh llm|sehen): only a pinned commit, files checked, 127.0.0.1."""
 
     def test_start_needs_a_pinned_commit(self):
-        cfg = {"llm": {"modell": "kolibri-1-nvfp4", "engine_port": 31016}}
+        cfg = {"llm": {"sehen_modell": "qwen3-vl-8b-fp8", "sehen_port": 31017}}      # its catalog entry pins no commit
         with self.assertRaises(modelle.Fehler) as e:
-            modelle.start_args("llm", cfg, messung={})
+            modelle.start_args("sehen", cfg, messung={})
         self.assertEqual(str(e.exception), "revision")
         # a measurement that failed pins nothing; a successful one pins its checked commit
         rev = "a" * 40
-        self.assertRaises(modelle.Fehler, modelle.fest_revision, kat()["kolibri-1-nvfp4"],
-                          {"modelle": {"kolibri-1-nvfp4": {"ok": False, "revision": rev}}})
-        self.assertEqual(modelle.fest_revision(kat()["kolibri-1-nvfp4"],
-                                               {"modelle": {"kolibri-1-nvfp4": {"ok": True, "revision": rev}}}), rev)
+        self.assertRaises(modelle.Fehler, modelle.fest_revision, kat()["qwen3-vl-8b-fp8"],
+                          {"modelle": {"qwen3-vl-8b-fp8": {"ok": False, "revision": rev}}})
+        self.assertEqual(modelle.fest_revision(kat()["qwen3-vl-8b-fp8"],
+                                               {"modelle": {"qwen3-vl-8b-fp8": {"ok": True, "revision": rev}}}), rev)
 
-    def test_kolibri_runs_from_its_own_venv_with_its_parsers(self):
-        m = kat()["kolibri-1-nvfp4"]
-        self.assertEqual(modelle.venv(m), "kolibri")
-        self.assertEqual(modelle.venv(kat()["qwen38-27b-nvfp4"]), "llm")
-        a = modelle.vllm_args(m, revision="b" * 40)
-        self.assertEqual(a[a.index("--kv-cache-dtype") + 1], "fp8")
-        # 78B parameters already in FP8 (block 128x128): 73.6 GiB loaded on tars 2026-10-17 with and without
-        # --quantization fp8, "Available KV cache memory: -16.24 GiB" at 46 %; 74 % leaves room for the KV cache
-        self.assertNotIn("--quantization", a)
-        self.assertEqual(a[a.index("--gpu-memory-utilization") + 1], "0.74")
-        self.assertGreater(m["anteil"] * 121 - 73.6, 10)
-        self.assertEqual(a[a.index("--tool-call-parser") + 1], "kolibri1")
-        self.assertNotIn("--limit-mm-per-prompt.image", a)
-        self.assertNotIn("trust", " ".join(a))
-        bad = copy.deepcopy(m)
-        bad["vllm"]["venv"] = "../../bin"
-        self.assertRaises(modelle.Fehler, modelle.pruefe_eintrag, bad)
+    def test_only_the_venv_the_catalog_names(self):
+        m = kat()["qwen36-35b-a3b-nvfp4"]
+        self.assertEqual(modelle.venv(m), "llm")
+        self.assertEqual(modelle.VENVS, ("llm",))                  # venv-kolibri went with Kolibri (2026-11-11)
+        for bad_venv in ("../../bin", "kolibri"):
+            bad = copy.deepcopy(m)
+            bad["vllm"]["venv"] = bad_venv
+            self.assertRaises(modelle.Fehler, modelle.pruefe_eintrag, bad)
 
     def test_roles_take_only_their_own_kind(self):
         with self.assertRaises(modelle.Fehler):
@@ -346,12 +350,12 @@ class Start(unittest.TestCase):
         self.assertEqual((m["id"], port), ("qwen3-vl-8b-fp8", 31017))
 
     def test_budget_counts_the_own_model_and_the_image_model_on_demand(self):
-        cfg = {"llm": {"enabled": True, "modell": "kolibri-1-nvfp4", "sehen_modell": "qwen3-vl-8b-fp8"},
+        cfg = {"llm": {"enabled": True, "modell": "nur-text", "sehen_modell": "qwen3-vl-8b-fp8"},
                "chat": {"llm_url": "http://127.0.0.1:31006/v1"}}
-        teile = {x["id"]: x for x in modelle.aktiv(cfg, 120)}
-        self.assertEqual(teile["kolibri-1-nvfp4"]["betrieb"], "resident")
+        teile = {x["id"]: x for x in modelle.aktiv(cfg, 120, ohne_augen())}
+        self.assertEqual(teile["nur-text"]["betrieb"], "resident")
         self.assertEqual(teile["qwen3-vl-8b-fp8"]["betrieb"], "bei_bedarf")
-        cfg["llm"]["modell"] = "qwen38-27b-nvfp4"
+        cfg["llm"]["modell"] = "qwen36-35b-a3b-nvfp4"
         self.assertNotIn("qwen3-vl-8b-fp8", {x["id"] for x in modelle.aktiv(cfg, 120)})
 
 

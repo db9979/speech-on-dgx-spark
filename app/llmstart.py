@@ -80,8 +80,7 @@ def teil(wort, path=DATEI):
 
 def stufe(wort, grund="", now=None, path=DATEI):
     """modelle.rundlauf's progress: "probe" (the engine answers) moves a running step 4 on to 5, a part of PROBE is
-    noted under it, "fehler" keeps rundlauf's word for `ende`. Nothing when no switch runs (a rundlauf of its own,
-    `speech-spark modelle llm uebernehmen`)."""
+    noted under it, "fehler" keeps rundlauf's word for `ende`. Nothing when no switch runs (a rundlauf of its own)."""
     d = read_json(path, {})
     if not d or d.get("ende") or d.get("vorgang") not in VORGAENGE:
         return

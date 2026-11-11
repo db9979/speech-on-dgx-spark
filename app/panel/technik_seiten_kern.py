@@ -13,14 +13,12 @@ SEITEN = {
             "verbrauch.llm": ["s11"], "verbrauch.over": ["s5"], "verbrauch.warn": ["s11"],
             "wartung.auto_tick": ["s1w"], "wartung.AUTO_MIN": ["s1w"],
         },
-        "kurz": ("Das Sprachmodell schreibt die Antworten: das eigene hinter dem LLM-Tor oder qwen38 aus dgx-spark-qwen38 "
-                 "(nicht Teil dieses Repos). Das "
+        "kurz": ("Das Sprachmodell schreibt die Antworten: das eigene hinter dem LLM-Tor. Das "
                  "Panel spricht es an der eingestellten Adresse über die OpenAI-Schnittstelle an, gestreamt, und sorgt "
                  "dafür, dass Sprache immer vor Hintergrundarbeit kommt. Adresse, Schlüssel und Modellname stehen nur in llm.py; "
                  "jede Hintergrundaufgabe fragt über llm.complete. Mit Funktionen → Hilfsmodell "
                  "schreibt die Aufträge aus llm.HELFER_JOBS erst das kleine Hilfsmodell, sonst sofort das große.",
-                 "The language model writes the answers: the own one behind the LLM-Tor or qwen38 from dgx-spark-qwen38 "
-                 "(not part of this repo). The panel "
+                 "The language model writes the answers: the own one behind the LLM-Tor. The panel "
                  "talks to it at the configured address through the OpenAI interface, streamed, and makes sure speech "
                  "always comes before background work. Address, key and model name live only in llm.py; every "
                  "background job asks through llm.complete. With Features → Helper model the small "
@@ -46,7 +44,7 @@ SEITEN = {
                "ist sofort ein fester Satz mit der Restzeit, auch die Weiche und System One fragen nicht. "
                "Hintergrundarbeit am Modell wartet, bis die Pause endet, und zählt das nicht als Abbruch. Am Ende der "
                "Zeit endet die Pause erst, wenn das Modell {wartung.OK_N}-mal hintereinander antwortet. Mit „Automatisch bei "
-               "Neustart“ pausiert das Panel selbst, sobald ein Dienst des Sprachmodells (eigenes oder qwen38) neu startet oder umschaltet (höchstens "
+               "Neustart“ pausiert das Panel selbst, sobald ein Dienst des Sprachmodells neu startet oder umschaltet (höchstens "
                "{wartung.AUTO_MIN} min), und macht weiter, sobald das Modell wieder antwortet. Läuft das Modell auf einem "
                "anderen Rechner, der nicht antwortet (Notbetrieb, steuer.weg), gilt dasselbe mit dem Satz „Der Spark macht "
                "gerade Pause.“; der Dienst-Wächter meldet den Ausfall trotzdem. Mit Funktionen → Notbetrieb mit Parakeet "
@@ -56,7 +54,7 @@ SEITEN = {
                "a fixed sentence with the time left at once, the Weiche and System One do not ask either. Background "
                "work on the model waits until the pause ends and does not count that as a cancel. At the end of the "
                "time the pause only ends once the model answers {wartung.OK_N} times in a row. With “Automatically on "
-               "restart” the panel pauses by itself as soon as a language model service (own or qwen38) restarts or switches (at most "
+               "restart” the panel pauses by itself as soon as a language model service restarts or switches (at most "
                "{wartung.AUTO_MIN} min) and goes on once the model answers again. When the model runs on another "
                "computer that does not answer (emergency mode, steuer.weg), the same holds with the sentence “The Spark "
                "is taking a break right now.”; the Dienst-Wächter still reports the outage. With Features → Emergency "

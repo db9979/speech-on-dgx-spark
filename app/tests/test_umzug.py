@@ -1,14 +1,11 @@
-"""Umzug aufs eigene Sprachmodell, Stufe E3 (modelle.py umzug-*, rundlauf; speech-spark modelle llm uebernehmen|zurueck,
-qwen38-aufraeumen; plan plaene/eigene-modelle.md): the running qwen38 units and the chat's old address are noted before
-anything stops; the chat switches only after a round trip through the LLM-Tor (German sentence, tool call, picture,
-System One) and goes back by itself when it fails; the way back restores exactly what was noted; qwen38 is stopped and
-disabled, never removed, except by its own uninstall on Dominik's command after a working move. The door is faked;
-nothing depends on the time of day."""
+"""The own language model is the only one (Dominik 2026-11-11 „Ganz weg“, Ausdünnen point 6): `install.sh --llm`
+switches it on and the chat to its LLM-Tor, the move from qwen38 (modelle llm uebernehmen|zurueck, qwen38-aufraeumen,
+the copy out of qwen38's cache) is gone for good; the round trip through the LLM-Tor (German sentence, tool call,
+picture, System One) still checks a model switch. The door is faked; nothing depends on the time of day."""
 import copy
 import json
 import os
 import re
-import tempfile
 import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -64,38 +61,7 @@ def cfg_with(port, **llm_extra):
     return c
 
 
-class Schalten(unittest.TestCase):
-    def setUp(self):
-        self.d = tempfile.mkdtemp()
-        self.note = os.path.join(self.d, "qwen38-vorher.json")
-        self.raw = {"chat": {"llm_url": "http://127.0.0.1:30001/v1", "llm_key": "qk-123", "llm_key_from": "/home/db/.config/qwen38/api-key"},
-                    "api": {"key": "sk-test"}}
-
-    def test_the_way_back_restores_exactly_what_was_noted(self):
-        modelle.merken(["qwen38-sglang.service", "qwen38-keepalive.service"], self.raw, self.note)
-        units, alt = modelle.vorher(self.note)
-        self.assertEqual(units, ["qwen38-sglang.service", "qwen38-keepalive.service"])
-        an = modelle.schalten("an", self.raw, self.note)
-        self.assertTrue(an["llm"]["enabled"])
-        self.assertEqual(an["chat"], self.raw["chat"])                  # "an" alone changes nothing of the chat
-        um = modelle.schalten("um", an, self.note)
-        self.assertEqual(um["chat"]["llm_url"], modelle.tor_url(modelle.load_config()))
-        self.assertEqual(um["chat"]["llm_key"], "")                     # the door takes api.key (llm.key)
-        self.assertNotIn("llm_key_from", um["chat"])                   # so an update never brings qwen38's key back
-        back = modelle.schalten("zurueck", um, self.note)
-        self.assertFalse(back["llm"]["enabled"])
-        self.assertEqual({k: back["chat"][k] for k in self.raw["chat"]}, self.raw["chat"])
-        self.assertNotIn("llm_model", {k for k in back["chat"] if k not in self.raw["chat"] and back["chat"][k]})
-
-    def test_no_second_move_and_only_qwen38_units(self):
-        modelle.merken([], self.raw, self.note)
-        with self.assertRaisesRegex(modelle.Fehler, "schon"):
-            modelle.merken([], self.raw, self.note)
-        with self.assertRaisesRegex(modelle.Fehler, "unit"):
-            modelle.merken(["sshd.service"], self.raw, os.path.join(self.d, "x.json"))
-        with self.assertRaisesRegex(modelle.Fehler, "aus"):
-            modelle.schalten("um", self.raw, self.note)               # the chat never points at a door that is off
-
+class Schluessel(unittest.TestCase):
     def test_the_chat_uses_the_api_key_for_the_own_door(self):
         cfg = {"llm": {"port": 31006}, "api": {"key": "sk-neu"}}
         self.assertEqual(llm.key({"llm_url": "http://127.0.0.1:31006/v1", "llm_key": ""}, cfg), "sk-neu")
@@ -164,33 +130,25 @@ class Kommando(unittest.TestCase):
         s = self.sh[self.sh.index(name + "() {"):]
         return s[:s.index("\n}\n")]
 
-    def test_move_notes_first_and_goes_back_by_itself(self):
-        b = self.body("cmd_umzug_intern")
-        self.assertLess(b.index("umzug-merken"), b.index("trap umzug_abbruch EXIT"))
-        self.assertLess(b.index("trap umzug_abbruch EXIT"), b.index('systemctl stop "${units[@]}"'))
-        self.assertLess(b.index("modelle.py rundlauf"), b.index("umzug-schalten um"))     # the chat switches last
-        self.assertIn("umzug_zurueck", self.body("umzug_abbruch"))
-        self.assertIn("modelle: uebernahme abgebrochen", self.body("umzug_abbruch"))
-        back = self.body("umzug_zurueck")
-        self.assertIn('systemctl start --no-block "$u"', back)
-        self.assertIn("umzug-schalten zurueck", back)
-        self.assertIn('systemd-run --quiet --collect --unit="$UMZUG_UNIT"', self.body("run_umzug"))
+    def test_no_way_back_to_qwen38(self):
+        for word in ("umzug-intern", "qwen38-aufraeumen", "hf_from_qwen38", "UMZUG_UNIT", "llm uebernehmen", "qwen38-*"):
+            self.assertNotIn(word, self.sh, word)
+        with open(os.path.join(helpers.APP, "modelle.py")) as f:
+            m = f.read()
+        for word in ("umzug-", "qwen38-vorher", "qwen38_lanes", "qwen38-extern"):
+            self.assertNotIn(word, m, word)
+        self.assertNotIn("qwen38-extern", modelle.katalog())
 
-    def test_qwen38_is_removed_only_by_its_own_uninstall_after_a_working_move(self):
-        b = self.body("cmd_qwen38_aufraeumen")
-        self.assertIn('[ "$(cfg \'.llm.enabled // false\')" = true ] && [ "$tor" = ready ]', b)
-        self.assertLess(b.index('ask_yes ""'), b.index('if bash "$d/uninstall.sh"'))     # asks first, never --yes
-        self.assertNotRegex(b, r"\brm -")
-        self.assertIn("qwen38-aufraeumen) cmd_qwen38_aufraeumen ;;", self.sh)
-        for name in ("cmd_umzug_intern", "umzug_zurueck", "cmd_messen_intern", "mess_restore"):
-            self.assertNotIn("uninstall", self.body(name), name)
-
-    def test_updates_never_bring_qwen38s_key_back_after_the_move(self):
+    def test_install_llm_switches_the_chat_to_the_own_door(self):
         if self.inst is None:
             self.skipTest("install.sh is not part of an app/-only copy")
-        i = self.inst.index('[ "$(cfgq -r \'.llm.enabled // false\')" = true ] && qkey=""')
-        self.assertLess(i, self.inst.index('if [ -n "$qkey" ]; then'))
-        self.assertNotRegex(self.inst, r"(?i)qwen38[^\n]*uninstall")
+        i = self.inst.index('if [ "$LLM_PICK" = 1 ] && [ "$PANEL_ONLY" = 0 ]')
+        b = self.inst[i:self.inst.index("\nfi\n", i)]
+        self.assertIn(".llm.enabled = true", b)
+        self.assertIn('.chat.llm_url = "http://127.0.0.1:\\($p)/v1"', b)       # this computer's door, never elsewhere
+        self.assertIn('.chat.llm_key = ""', b)                                 # its key is api.key (llm.key)
+        self.assertLess(self.inst.index("PANEL_ONLY=1; WITH_ASR=0"), i)          # a panel computer keeps its address
+        self.assertNotIn(".config/qwen38", self.inst)                          # no foreign key is read any more
 
 
 class Panel(unittest.TestCase):
@@ -201,13 +159,13 @@ class Panel(unittest.TestCase):
         with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
             saved = json.load(f)
         c = copy.deepcopy(saved)
-        c["llm"] = dict(c.get("llm", {}), enabled=True, modell="qwen38-27b-nvfp4")
+        c["llm"] = dict(c.get("llm", {}), enabled=True, modell="qwen36-35b-a3b-nvfp4")
         helpers.write_config(c)
         try:
             modellseite._live["t"] = None
             v = modellseite.for_live(now=1e9)
             if v.get("on"):
-                self.assertEqual(v["eigen"], modelle.eintrag("qwen38-27b-nvfp4")["name"]["de"])
+                self.assertEqual(v["eigen"], modelle.eintrag("qwen36-35b-a3b-nvfp4")["name"]["de"])
         finally:
             modellseite._live["t"] = None
             helpers.write_config(saved)

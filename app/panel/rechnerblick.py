@@ -63,7 +63,7 @@ ZEILEN = 6             # services listed per card, the others count for the rest
 DARIN = 3              # the panel's biggest parts in its line „darin“
 REST_MIN = 0.5         # % below which no rest line is shown
 DIENST_ID = re.compile(r"[a-z][a-z0-9-]{0,23}")
-# the services' names (de, en): the ids rechner.dienste_cpu gives (speech-spark-<id>.service, qwen38, docker) and the
+# the services' names (de, en): the ids rechner.dienste_cpu gives (speech-spark-<id>.service, docker) and the
 # chips „Dienste“; an unknown own unit shows its id
 DIENST_NAMEN = {"asr": ("Spracherkennung", "Speech recognition"), "asr-engine": ("Spracherkennung (Engine)", "Speech recognition (engine)"),
                 "tts": ("Sprachausgabe", "Speech output"), "tts-engine": ("Sprachausgabe (Engine)", "Speech output (engine)"),
@@ -77,7 +77,7 @@ DIENST_NAMEN = {"asr": ("Spracherkennung", "Speech recognition"), "asr-engine": 
                 "gehaeuse": ("Gehäuse", "Case"), "systemupdate": ("System-Updates", "System updates"), "schirm": ("Steuerzentrale", "Control centre"),
                 "guacd": ("Bildschirm (guacd)", "Screen (guacd)"), "tlstor": ("TLS-Tor", "TLS gate"),
                 "watch": ("API-Wächter", "API watchdog"), "update": ("Update", "Update"), "wechsel": ("Modellwechsel", "Model switch"),
-                "messen-wunsch": ("Modelle messen", "Measuring models"), "qwen38": ("qwen38", "qwen38"),
+                "messen-wunsch": ("Modelle messen", "Measuring models"),
                 "docker": ("Modell in Docker", "Model in Docker"), "rest": ("System und Rest", "System and rest")}
 # the parts inside the panel (rechenteile.py); a background job („bg:<job>“) shows its fixed name from the code
 TEIL_NAMEN = {"anfragen": ("Anfragen und Seiten", "Requests and pages"), "bedeutungssuche": ("Bedeutungssuche", "Meaning search"),

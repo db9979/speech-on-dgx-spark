@@ -9,7 +9,7 @@ Normalerweise läuft alles auf dem DGX Spark: Modelle, APIs und das Panel mit de
 ## Was du brauchst
 
 - **Rechner für das Panel:** Raspberry Pi 5 mit 8 GB, NVMe-SSD statt SD-Karte, Kabel-LAN und eine feste IP-Adresse im Router. Als System Raspberry Pi OS Lite 64-bit in der aktuellen Version (Trixie, Python 3.13), Start von der NVMe. Ein Gehäuse wie das SunFounder Pironman 5 bringt den M.2-Steckplatz gleich mit; dann ohne zusätzliche NVMe-Platine. Andere 64-Bit-Rechner mit Debian oder Ubuntu und Python ab 3.11 gehen genauso.
-- **Auf dem DGX das eigene Sprachmodell:** Spark teilen erreicht das Sprachmodell über das LLM-Tor. qwen38 ist vom Panel-Rechner aus nicht erreichbar, also vorher `sudo speech-spark modelle llm uebernehmen` (siehe [Installation](installation.md)).
+- **Auf dem DGX das eigene Sprachmodell:** Spark teilen erreicht das Sprachmodell über das LLM-Tor, also vorher `sudo ./install.sh --llm` (siehe [Installation](installation.md)).
 - Beide Rechner im selben Heimnetz.
 
 ## Neu installieren, geteilt

@@ -84,8 +84,7 @@ MELDER = {
 # Punkt 7: services outside the Spark -> steps to copy (the panel never runs them)
 UMGEBUNG = {
     "sprachmodell": (("Sprachmodell antwortet langsam oder gar nicht", "Language model slow or not answering"),
-                     ["speech-spark status", "Zustand → Überblick: Sprachmodell und Speicher ansehen",
-                      "qwen38 gehört nicht zum Spark: dort nichts ändern, nur nachsehen"]),
+                     ["speech-spark status", "Zustand → Überblick: Sprachmodell und Speicher ansehen"]),
     "speicher": (("Speicher auf dem Spark knapp", "Memory on the Spark short"),
                  ["free -g", "speech-spark status", "Zustand → Überblick: was belegt den Speicher?"]),
     "websuche": (("Websuche (SearXNG) antwortet schlecht", "Web search (SearXNG) answers badly"),
@@ -1524,7 +1523,7 @@ async def pick(case, cands, c):
             + "".join(f"\nNotiz: <<<{data(n)}>>>" for n in case.get("notes", [])[-2:]))
     if features.admin_on("einordnungrat", c):
         # Einordnung im Einstellungs-Assistenten (systemone.py): the pick with a real probability, proposed only from
-        # systemone.BERATER_MIN; below it the catalog's order. qwen38 busy or missing: the JSON question below
+        # systemone.BERATER_MIN; below it the catalog's order. the model busy or missing: the JSON question below
         import systemone
         try:
             ans = await vorrang.run("Verbessern", lambda: systemone.ask(

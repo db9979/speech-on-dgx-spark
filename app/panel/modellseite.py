@@ -8,7 +8,7 @@ the fixed rule that follows from the numbers (all at once, one on-demand model a
 Stage E4 (admin switch Funktionen → Modelle wechseln, default off): "Wechseln" per model and "Zurückholen" per kind
 for 7 days. With the same switch "Messen" per model (Dominik 2026-10-17): the wish for the root unit
 speech-spark-messen-wunsch, which measures like `sudo speech-spark modelle messen <id>`; the language model pauses
-meanwhile, a switch waits until the measurement is done and the other way round. The panel checks the fixed rules (modelle.wechsel_pruefen, with the running qwen38 lanes in the budget),
+meanwhile, a switch waits until the measurement is done and the other way round. The panel checks the fixed rules (modelle.wechsel_pruefen, with the budget),
 leaves a wish file and starts the root unit speech-spark-wechsel, which checks everything again and does the work
 (download, check, switch, restart, round trip). Only names, numbers and fixed words; never an address, a key or a
 text of an answer.
@@ -123,7 +123,7 @@ def _starten(unit=modelle.WECHSEL_UNIT):
 
 
 def _quelle(cfg):
-    """(total_gib, lanes, messung, laeuft, kat, alte switches, misst, stand, start) of the computer the models run on;
+    """(total_gib, messung, laeuft, kat, alte switches, misst, stand, start) of the computer the models run on;
     HTTPException 503 when that is another one and it does not answer. laeuft, misst and stand are None here (asked
     when needed); start is what the language model does while it switches or starts (llmstart)."""
     if steuer.remote(cfg):
@@ -131,10 +131,10 @@ def _quelle(cfg):
         if d is None:
             raise HTTPException(503, GRUND["rechner"])
         stand = modelle.stand("\n".join(x for x in d.get("stand", []) if isinstance(x, str))) if d.get("misst") else []
-        return (d["gesamt_gib"], d["lanes"], d["messung"], d["laeuft"], modelle.katalog(eigene=d["eigene"]), d["wechsel"],
+        return (d["gesamt_gib"], d["messung"], d["laeuft"], modelle.katalog(eigene=d["eigene"]), d["wechsel"],
                 d.get("misst", False), stand, d.get("start"))
     messung = read_json(modelle.MESSUNG, {})
-    return (modelle.gesamt_gib(), _lanes(), messung, None, modelle.katalog(), None, None, None,
+    return (modelle.gesamt_gib(), messung, None, modelle.katalog(), None, None, None,
             llmstart.hier(cfg, messung))
 
 
@@ -145,29 +145,23 @@ def _fehler(e, was="wechsel"):
     raise HTTPException(STATUS.get(word, 400), GRUND.get(word, "ungültig"))
 
 
-def _waehlbar(art, mid, cfg, total_gib, lanes, kat, messung):
+def _waehlbar(art, mid, cfg, total_gib, kat, messung):
     try:
-        modelle.wechsel_pruefen(art, mid, cfg, total_gib, lanes, kat, messung)
+        modelle.wechsel_pruefen(art, mid, cfg, total_gib, kat, messung)
         return ""
     except modelle.Fehler as e:
         return str(e)
 
 
-def _lanes():
-    import admin
-    return [f for _, f in admin._qwen38_lanes()]
-
-
-def seite(cfg=None, total_gib=None, lanes=None, messung=None, lang="de", gestartet=False, wechselt=False):
+def seite(cfg=None, total_gib=None, messung=None, lang="de", gestartet=False, wechselt=False):
     """What the page shows: {arten: [{art, name, modelle: [...]}], budget, messung_zeit}."""
     cfg = load_config() if cfg is None else cfg
-    q_gib, q_lanes, q_messung, laeuft, kat, wechsel, misst, stand, start = _quelle(cfg)
+    q_gib, q_messung, laeuft, kat, wechsel, misst, stand, start = _quelle(cfg)
     total_gib = q_gib if total_gib is None else total_gib
-    lanes = q_lanes if lanes is None else lanes
     messung = q_messung if messung is None else messung
     i = 1 if lang == "en" else 0
     an = _an(cfg)
-    b = modelle.budget(cfg, total_gib, lanes, kat)
+    b = modelle.budget(cfg, total_gib, kat)
     laufend = {x["id"]: x["gib"] for x in b["teile"]}
     gemessen = messung.get("modelle") or {}
     arten = []
@@ -177,19 +171,19 @@ def seite(cfg=None, total_gib=None, lanes=None, messung=None, lang="de", gestart
             if m["art"] != art:
                 continue
             r = gemessen.get(mid) or {}
-            nein = _waehlbar(art, mid, cfg, total_gib, lanes, kat, messung) if an and art in modelle.TAUSCH else "art"
+            nein = _waehlbar(art, mid, cfg, total_gib, kat, messung) if an and art in modelle.TAUSCH else "art"
             rows.append({"id": mid, "name": m["name"]["en" if i else "de"], "engine": m["engine"], "need_gib": m["need_gib"],
                          "waehlbar": not nein, "nein": "" if nein in ("art", "schon", "wahl") else nein,
                          "eigen": bool(m.get("eigen")), "messbar": an and m["engine"] == "vllm",
                          "gemessen": m["gemessen"], "betrieb": m["betrieb"], "lizenz": m["lizenz"], "gewerblich": m["gewerblich"],
-                         "aktiv": mid in laufend, "gib": laufend.get(mid), "fest": bool(m["revision"]) or m["engine"] == "extern",
+                         "aktiv": mid in laufend, "gib": laufend.get(mid), "fest": bool(m["revision"]),
                          "messung": {k: r[k] for k in MESSWERTE if k in r}})
         arten.append({"art": art, "name": namen[i], "modelle": rows})
     laeuft = ((_laeuft() if laeuft is None else laeuft) or wechselt) if an else False
     misst = bool(_misst() if misst is None else misst)
     stand = (_stand() if stand is None else stand) if misst else []
     # just asked for: the unit starts in a moment (--no-block), the page shows it at once
-    platz = modelle.platz_wahl(cfg, total_gib, lanes, kat) if an and cfg.get("llm", {}).get("enabled") else None
+    platz = modelle.platz_wahl(cfg, total_gib, kat) if an and cfg.get("llm", {}).get("enabled") else None
     for p in (platz or {}).get("wahl", []):
         p["name"] = p["name"][i]
     probe = modelle.probe_stand(kat, messung, laufend, misst or gestartet) if an else None
@@ -224,7 +218,7 @@ def lage(now=None):
         try:
             cfg = load_config()
             q = _quelle(cfg)
-            _lage["v"] = {"start": q[8], "misst": bool(_misst() if q[6] is None else q[6])}
+            _lage["v"] = {"start": q[7], "misst": bool(_misst() if q[5] is None else q[5])}
         except Exception:
             _lage["v"] = {"start": None, "misst": False}
         _lage["t"] = now
@@ -258,7 +252,7 @@ async def melde_tick(vorher):
     if not _an(cfg):
         print("modelle: meldung aus", flush=True)
         return jetzt
-    kat = (await asyncio.to_thread(_quelle, cfg))[4]
+    kat = (await asyncio.to_thread(_quelle, cfg))[3]
     title, body = llmstart.meldung(x, (kat.get(x["ziel"]) or {}).get("name", {}).get("de", ""))
     reached = 0
     for uid in notaus.admin_uids():
@@ -290,8 +284,8 @@ def for_live(now=None):
     if _live["t"] is None or now - _live["t"] > LIVE_EVERY:
         try:
             cfg = load_config()
-            total_gib, lanes, _, laeuft, kat, _, misst, _, start = _quelle(cfg)
-            b = modelle.budget(cfg, total_gib, lanes, kat)
+            total_gib, _, laeuft, kat, _, misst, _, start = _quelle(cfg)
+            b = modelle.budget(cfg, total_gib, kat)
             _live["v"] = {"on": True, "frei": b["frei"], "regel": b["regel"]}
             if cfg.get("llm", {}).get("enabled"):   # after the move: the catalog name of the model that really runs
                 _live["v"]["eigen"] = echt_name(cfg, kat)
@@ -366,7 +360,7 @@ def _messen(request, body):
             _fehler(e, "messen")
     print("modelle: messen angefragt", flush=True)
     if probe:
-        kat = _quelle(cfg)[4]                 # with the model computer's own models
+        kat = _quelle(cfg)[3]                 # with the model computer's own models
         if mid in kat and kat[mid]["art"] in modelle.TAUSCH:
             modelle.probe_merken(mid, kat[mid]["art"])
             print("modelle: ausprobieren angefragt", flush=True)
@@ -395,7 +389,7 @@ def _wunsch(request, art, was, mid=""):
         if _misst():
             _fehler("misst")
         try:
-            name = modelle.wechsel_anfragen(art, was, cfg, modelle.gesamt_gib(), _lanes(), _starten, _laeuft())["name"]["de"]
+            name = modelle.wechsel_anfragen(art, was, cfg, modelle.gesamt_gib(), _starten, _laeuft())["name"]["de"]
         except modelle.Fehler as e:
             if str(e) == "start":
                 print("modelle: wechsel start fehler", flush=True)
@@ -433,7 +427,7 @@ def _platz(request, was):
         if _misst():
             _fehler("misst", "platz")
         try:
-            modelle.platz_anfragen(was, cfg, modelle.gesamt_gib(), _lanes(), _starten, _laeuft())
+            modelle.platz_anfragen(was, cfg, modelle.gesamt_gib(), _starten, _laeuft())
         except modelle.Fehler as e:
             if str(e) == "start":
                 print("modelle: platz start fehler", flush=True)
@@ -533,7 +527,7 @@ async def eigen_suche(request: Request):
         except ValueError:
             raise modelle.Fehler("antwort")
         q = await asyncio.to_thread(_quelle, load_config())
-        treffer = modelle.such_treffer(items, art, q[0], q[4])
+        treffer = modelle.such_treffer(items, art, q[0], q[3])
     except modelle.Fehler as e:
         print(f"modelle: suche abgelehnt {e}", flush=True)
         raise HTTPException(503 if str(e) == "netz" else 400, GRUND.get(str(e), "ungültig"))

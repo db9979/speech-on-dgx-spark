@@ -1067,7 +1067,7 @@ GROUP_SAYS = {
 
 
 async def ask_systemone(ccfg, text, info=None):
-    """chat.route_model "systemone": the pick from INTENT_NAMES as one choice of qwen38's /v1/systemone, only
+    """chat.route_model "systemone": the pick from INTENT_NAMES as one choice of the LLM-Tor's /v1/systemone, only
     from systemone.route_min on; None for "unklar", too unsure (also a label mass under systemone.MIN_MASS), busy
     or missing (the turn goes on as without). `info` gets the probability for Logs → Anfragen. Like ask_model, it
     can only narrow."""

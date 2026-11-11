@@ -140,18 +140,15 @@ fn(ordner, anzahl) -> {"key": number, ...}    # e.g. p50_ms, p95_ms, max_ms, mb,
 
 `fn` works only in `ordner`, the run's empty throwaway folder, never in a real profile, and builds `anzahl` documents, mails or entries there. Only numbers come back (int, float, bool) under keys of a–z, 0–9 and `_`; everything else is dropped. Between two steps `fn` calls `wissensmessung.ruhe()` (stops when somebody speaks); `zeiten(name, fn, args)` gives median, p95 and maximum, `rss_mb()` the memory. The parts run one after the other in the same measuring process; the run writes one log line per part and keeps the numbers under its name.
 
-## Language model: own or dgx-spark-qwen38
+## Language model
 
-The language model runs either as the own vLLM behind the LLM-Tor (`sudo ./install.sh --llm`, then `sudo speech-spark modelle llm uebernehmen`, back with `… zurueck`) or, as before, from [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38). With the Spark split only the own one works, because the panel computer cannot reach qwen38. The points below about lanes and the cockpit only apply while qwen38 runs.
+The language model runs as the own vLLM behind the LLM-Tor (`sudo ./install.sh --llm` switches it on and points the chat at it). The former fallback to [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38) is gone since V01.1.370 (Dominik 2026-11-11); an installed qwen38 is left untouched.
 
-- **Ports**: qwen38 uses 30000 to 30099 (engine 30000, proxy 30001, image 30020, video 30022, cockpit 30090/30091). Speech uses 31001 (ASR), 31002 (TTS), 31003 (Wyoming), 31005 (pictures), 31006 (LLM-Tor), 31080 and 31443 (panel over https), plus UDP 31060 and 31062–31068 for the phone; the engines on 31011, 31012, 31013, 31015, 31016 and 31017 listen on 127.0.0.1 only, as do the Wärter (31007) and the emergency mode (31009). The full list is in the [architecture](architecture.md#processes-and-ports). The panel rejects ports in qwen38's range, and the installer stops if a port is taken.
-- **Memory**: the GB10 has one 128 GB pool shared by CPU and GPU. The qwen38 lanes reserve a fixed share of it: 50 % with `stock`/`fp8`, 76 % in 1M mode and 85 % with `flash`. According to the qwen38 docs only ~16.6 GiB stay free at idle with `flash`, and below ~8 GiB DGX OS's earlyoom kills processes. Therefore:
-  - If the installer detects a flash or 1M lane, it picks the 0.6B models.
+- **Ports**: Speech uses 31001 (ASR), 31002 (TTS), 31003 (Wyoming), 31005 (pictures), 31006 (LLM-Tor), 31080 and 31443 (panel over https), plus UDP 31060 and 31062–31068 for the phone; the engines on 31011, 31012, 31013, 31015, 31016 and 31017 listen on 127.0.0.1 only, as do the Wärter (31007) and the emergency mode (31009). The full list is in the [architecture](architecture.md#processes-and-ports). The installer stops if a port is taken.
+- **Memory**: the GB10 has one 128 GB pool shared by CPU and GPU. Each engine reserves its fixed share from the catalog (`app/modelle.json`), and below ~8 GiB DGX OS's earlyoom kills processes. Therefore:
   - Before a service loads its model it checks that the reserve stays free afterwards (default 10 GiB). If not, it does not load and the panel shows `blocked` with the reason.
-  - If memory still runs short, the system kills the panel first (`OOMScoreAdjust=900`), then the speech services (500), not the LLM lane and not sshd (see "Speech first").
-  - Speech starts after the qwen38 lanes, so they take their fixed share first.
+  - If memory still runs short, the system kills the panel first (`OOMScoreAdjust=900`), then the speech services (500), not the language model and not sshd (see "Speech first").
   - Engines start one after another, because vLLM measures free memory at start-up and parallel starts take each other's share. Order: own language model, speech recognition, speech output, VoiceDesign, image understanding. Each waits while one before it stops, restarts or loads, at most an hour (`engine.sh`). `install.sh` restarts an engine only when its settings changed or it is not running, also on a run by hand, and the language model first (since V01.0.680). Before, a run such as `install.sh --musik 2b` restarted every engine, the language model last. It then loaded while speech output measured its memory, and speech output failed every 30 seconds with "No available memory for the cache blocks". To restart one on purpose: `sudo systemctl restart speech-spark-<engine>`. Since V01.0.775 every engine also waits while a model measurement has its engine running (`speech-spark-messen-engine`): on tars speech output restarted while the measured engine broke off, counted the memory freed meanwhile as its own and took 83 instead of 5 GiB; the language model then found no room (self-test `test_no_start_next_to_a_measurement`).
-- **Lane switch**: if you switch to `flash` in the cockpit, already loaded speech models stay in memory. With 1.7B models that can get too tight. Stop ASR and TTS in the panel first or switch them to 0.6B.
 - **GPU time**: ASR and TTS share the GPU with the LLM. During a transcription or speech request the LLM gets a little slower.
 
 ## Speech first
@@ -169,7 +166,7 @@ Speech recognition and speech output always come first (fixed rule without a swi
   - `await vorrang.in_thread("Name", fn, *args)`: CPU work (e.g. an embedding model) after a pause in its own thread with `nice 15`.
   - `vorrang.hold("Name")`: inside a worker thread, wait between two steps while speech runs (never call it on the event loop).
   - `vorrang.speaking()`: whether speech is running.
-- **Operating system**: the ASR and TTS services and their engines run with `Nice=-5`, `CPUWeight=1000`, `IOWeight=1000`. When memory runs out, the system ends the panel first (`OOMScoreAdjust=900`), then the speech services (500), not the LLM lane and not sshd.
+- **Operating system**: the ASR and TTS services and their engines run with `Nice=-5`, `CPUWeight=1000`, `IOWeight=1000`. When memory runs out, the system ends the panel first (`OOMScoreAdjust=900`), then the speech services (500), not the language model and not sshd.
 - **GPU**: the GB10 has no priorities between processes. The speech engines' memory is reserved from their start. The language model's own answer runs at the same time as the speech output and sometimes slows it down ("tts behind … inside the piece"). Since V01.0.430 the panel therefore sends the next piece to the speech output at 5 s of audio in stock while the answer is still being written (times the speaking rate, so 6 s at 1.2; `chat.WRITE_LEAD`), afterwards at 2 to 3 s as before. The iPhone app collects 0.4 s of audio after it ran dry before it plays on, and starts with a 5 ms fade-in after silence.
 - **Checking**: Status → Checks → "Speech first" speaks a sentence alone, under load without priority and under load with priority, and shows first audio, real-time factor and recognition time, above it today's counters. Status → Logs shows the lines in the area "Priority" (`vorrang: … wartet`, `… abgebrochen`, `… wartete N s`).
 
@@ -194,7 +191,7 @@ When several people talk at once, chosen profiles get their answer first (since 
 - **Separate venvs** for the transformers backends: qwen-asr needs `transformers==4.57.6`, qwen-tts `transformers==4.57.3`.
 - **ASR with vLLM**: vLLM 0.30 supports Qwen3-ASR natively, with `/v1/audio/transcriptions`, streaming and concurrent requests. It shares the environment with the TTS engine. `qwen-asr[vllm]` is not needed (it would force vllm 0.14).
 - **TTS with vllm-omni**: `qwen-tts` cannot stream. The Qwen team points to vllm-omni for streaming. vllm 0.30.0 and vllm-omni 0.30.0 have ARM wheels on PyPI (CUDA 13) and are installed natively, without Docker.
-- **Engine memory**: vLLM reserves a fixed share of the *whole* memory pool at start-up, for TTS per stage (talker and code2wav). The defaults (ASR 1.7B 0.06, 0.6B 0.035; TTS 0.04 + 0.025) are kept small so speech fits next to the qwen38 `stock` lane. If a share is too small, the engine stops at start-up with "No available memory for the cache blocks"; raise the share in the panel.
+- **Engine memory**: vLLM reserves a fixed share of the *whole* memory pool at start-up, for TTS per stage (talker and code2wav). The defaults (ASR 1.7B 0.06, 0.6B 0.035; TTS 0.04 + 0.025) are kept small so speech fits next to the language model. If a share is too small, the engine stops at start-up with "No available memory for the cache blocks"; raise the share in the panel.
 
 ## How the chat is built
 
@@ -297,7 +294,7 @@ Since V01.0.312 *Status → Live* (and the monitor `/live`) show everything the 
 | Symptom | Fix |
 |---|---|
 | Installer: "torch in venv-… has no CUDA" | Run `sudo ./install.sh` again. If that does not help, delete `/opt/speech-spark/venv-*` and reinstall. |
-| Panel shows `blocked` | Not enough memory next to the running qwen38 lane. Switch to 0.6B, lower the reserve (at your own risk) or stop the big lane. |
+| Panel shows `blocked` | Not enough memory next to the running language model. Switch to 0.6B, lower the reserve (at your own risk) or pick a smaller model under *Status → Models*. |
 | Panel shows `error` | Read the message in the panel and under Logs. |
 | `no kernel image is available` | A package was built without Blackwell kernels. Check with `/opt/speech-spark/venv-engine/bin/python -c "import torch; print(torch.cuda.get_arch_list())"`. |
 | Engine does not start | Panel → Logs → engine. With "No available memory for the cache blocks", raise the engine's memory share in the panel. The first start downloads the model and takes longer. |
