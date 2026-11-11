@@ -8,7 +8,7 @@
 #   speech-spark key [new]         show the API key, or make a new one (the old one stops working)
 #   speech-spark models            choose the models again (same questions as the first install)
 #   speech-spark update [--check]  update to the newest version (like the button in the panel)
-#   speech-spark logs [what] [-n N]  last log lines: asr, tts, asr-engine, tts-engine, tts-design, bild, musik,
+#   speech-spark logs [what] [-n N]  last log lines: asr, tts, asr-engine, tts-engine, tts-design, tts-klon, bild, musik,
 #                                  llm, llmtor, sehen, helfer, tlstor, waerter, notasr, schirm, panel, watch, update, messen, wechsel,
 #                                  werkstatt, entwickeln or all (default)
 #   speech-spark panel enable|disable  add the web panel later, or remove it (its data stays)
@@ -104,6 +104,7 @@ tts_model() {
   if [ "$(cfg '.tts.enabled')" != true ]; then echo "not installed"; return; fi
   printf '%s' "$(cfg '.tts.model')"
   [ "$(cfg '.tts.voicedesign_enabled')" = true ] && printf ' + VoiceDesign'
+  [ "$(cfg '.tts.klon_enabled')" = true ] && printf ' + Eigene Stimmen'
   echo
 }
 
@@ -169,7 +170,7 @@ cmd_status() {
   echo "Free memory: $free GiB (DGX OS starts killing processes at about 8 GiB)"
   command -v docker >/dev/null && echo "Docker: $(docker version --format '{{.Server.Version}}' 2>/dev/null || echo "?") (only for models in Docker)"
   echo
-  for u in asr asr-engine tts tts-engine tts-design bild musik panel watch; do
+  for u in asr asr-engine tts tts-engine tts-design tts-klon bild musik panel watch; do
     st=$(systemctl is-active "speech-spark-$u.service" 2>/dev/null || true)
     [ "$(systemctl is-enabled "speech-spark-$u.service" 2>/dev/null || true)" = enabled ] || [ "$st" = active ] || continue
     printf '  %-26s %s\n' "speech-spark-$u" "$st"
@@ -222,12 +223,12 @@ cmd_logs() {
   [[ "$n" =~ ^[0-9]{1,5}$ ]] || die "-n needs a number"
   case "$what" in
     all) units=(-u 'speech-spark-*') ;;
-    asr|tts|asr-engine|tts-engine|tts-design|bild|musik|llm|llmtor|sehen|helfer|panel|watch|update|tlstor|waerter|notasr|schirm) units=(-u "speech-spark-$what") ;;
+    asr|tts|asr-engine|tts-engine|tts-design|tts-klon|bild|musik|llm|llmtor|sehen|helfer|panel|watch|update|tlstor|waerter|notasr|schirm) units=(-u "speech-spark-$what") ;;
     messen) units=(-u speech-spark-messen -u speech-spark-messen-wunsch -u speech-spark-messen-engine) ;;
     werkstatt) units=(-u speech-spark-werkstatt -u speech-spark-werkstatt-lauf) ;;
     entwickeln) units=(-u speech-spark-update -u speech-spark-lokaltest -u speech-spark-lokaltest-umgebung -u speech-spark-github) ;;
     wechsel) units=(-u speech-spark-wechsel -u speech-spark-llm -u speech-spark-sehen) ;;
-    *) die "logs: asr, tts, asr-engine, tts-engine, tts-design, bild, musik, llm, llmtor, sehen, helfer, tlstor, waerter, notasr, schirm, panel, watch, update, messen, wechsel, werkstatt, entwickeln or all" ;;
+    *) die "logs: asr, tts, asr-engine, tts-engine, tts-design, tts-klon, bild, musik, llm, llmtor, sehen, helfer, tlstor, waerter, notasr, schirm, panel, watch, update, messen, wechsel, werkstatt, entwickeln or all" ;;
   esac
   journalctl --namespace=speech-spark "${units[@]}" --no-pager -n "$n"
 }

@@ -45,7 +45,11 @@
     "ref_max_s": 0,
     "voicedesign_enabled": false,
     "voicedesign_model": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
-    "voicedesign_port": 31013
+    "voicedesign_port": 31013,
+    "voicedesign_leerlauf_min": 5,
+    "klon_enabled": false,
+    "klon_model": "Qwen/Qwen3-TTS-12Hz-0.6B-Base",
+    "klon_port": 31019
   },
   "image": {
     "enabled": false,
@@ -232,6 +236,7 @@
     "hoerstueck_stimmen": [],
     "hoerstueck_diskussion": false,
     "hoerstueck_klang": [],
+    "stimmdesign": false,
     "doc_auswertung": false,
     "doc_auswertung_auto": ["kurz", "kern"],
     "doc_auswertung_day": 100,

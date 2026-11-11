@@ -15,7 +15,8 @@ never. Without art the body is exactly as before (the Dungeon's calls).
 A 503 of the speech output says why in its body; the error is RuntimeError("tts 503 loading") and the like (NICHT),
 so a caller can let the fixed voice stand in. Above grenze bytes the part is given up (RuntimeError("tts")).
 
-Users: dungeon.ask_tts (a thin call, unchanged behaviour) and hoerstueck.py (one line of a Hörstück per step).
+Users: dungeon.ask_tts (a thin call, unchanged behaviour), hoerstueck.py (one line of a Hörstück per step) and
+stimmdesign.py (the sample of a designed voice, with its seed).
 """
 import re
 
@@ -26,16 +27,19 @@ GRENZE = 32 * 1024 * 1024    # bytes of one part at most (about 11 min of 24 kHz
 FRIST = 150                  # seconds one part may take
 
 
-async def sprich(text, voice="", klang="", ref=None, stufe="", frist=FRIST, grenze=GRENZE, sprache="", art=""):
+async def sprich(text, voice="", klang="", ref=None, stufe="", frist=FRIST, grenze=GRENZE, sprache="", art="", seed=None):
     """One part spoken by the Spark's speech output (bytes as they came; tests replace the callers' wrappers).
     sprache: "German" or "English" when the caller knows the part's language (the Hörstück), else the speech
-    output's own default."""
+    output's own default. seed: a whole number for VoiceDesign (Eigene Stimmen gestalten, „Neu würfeln“: another
+    number, another voice for the same description); without it the speech output's own (tts.seed)."""
     import httpx
     from core import api_headers
     cfg = load_config()
     body = {"input": text, "response_format": "pcm"}
     if sprache in ("German", "English"):
         body["language"] = sprache
+    if isinstance(seed, int) and not isinstance(seed, bool) and 0 <= seed < 2 ** 31:
+        body["seed"] = seed
     if ref:
         body.update(ref_audio=ref[0], ref_text=ref[1])
     elif klang:

@@ -168,7 +168,7 @@ OHNE = {
         "iphone_update", "iphone_review", "kiwix", "kiwix_books", "kiwix_link_url", "kiwix_url", "klaeren", "klaeren_merken", "klaeren_weg", "learn_fixes", "llm_key_from", "llm_model",
         "llm_timeout", "mail", "mail_code", "mail_idle", "mail_insight", "mail_style", "mail_tidy", "max_tokens", "note_device", "mcp_own", "mcp_own_jobs", "mcp_own_oauth", "mcp_server",
         "mcp_server_act", "memory", "memory_ask", "memory_check", "memory_note", "memory_stale_months", "memory_topics", "messages_all", "messages_announce", "my_status", "nas_on", "nas_sources", "nas_shared", "nas_max_docs", "nas_sources_every", "nas_drop", "nas_drop_every", "nas_status", "nas_full_pct", "nas_temp_max",
-        "barge_hold", "turn_tone", "deny", "no_self_echo", "own_style", "parcels", "pebble", "pebble_follow", "pebble_quick", "pebble_remind", "pebble_face", "pebble_day", "pebble_alerts", "pebble_note", "pebble_place", "pebble_chat", "pebble_reply", "pebble_remote", "pebble_health", "terminal", "person_priority",
+        "barge_hold", "turn_tone", "deny", "no_self_echo", "stimmdesign", "own_style", "parcels", "pebble", "pebble_follow", "pebble_quick", "pebble_remind", "pebble_face", "pebble_day", "pebble_alerts", "pebble_note", "pebble_place", "pebble_chat", "pebble_reply", "pebble_remote", "pebble_health", "terminal", "person_priority",
         "person_priority_wait", "prefetch", "presence_penalty", "top_k", "proactive", "remarkable", "remarkable_fresh",
         "remarkable_paper", "remarkable_plus", "remarkable_tasks", "remarkable_send", "reminders", "report_notify", "roles", "room", "room_ha",
         "room_remote", "room_voices", "route_off", "route_unklar", "routing", "search", "search_url",
@@ -206,9 +206,9 @@ OHNE = {
     "tts": (
         "backend", "calm", "clean_text", "default_instruct", "default_language", "default_voice", "dtype",
         "enabled", "engine_decode_batch", "engine_max_model_len", "engine_max_seqs", "engine_mem_code2wav",
-        "engine_mem_talker", "engine_port", "engine_prefix_cache", "host", "model", "numbers", "port", "ref_max_s",
-        "seed", "temperature", "top_p", "voicedesign_enabled",
-        "voicedesign_model", "voicedesign_port",
+        "engine_mem_talker", "engine_port", "engine_prefix_cache", "host", "klon_enabled", "klon_model", "klon_port",
+        "model", "numbers", "port", "ref_max_s", "seed", "temperature", "top_p", "voicedesign_enabled",
+        "voicedesign_leerlauf_min", "voicedesign_model", "voicedesign_port",
     ),
     "watch": (
         "warn_gib", "watchdog", "zeitserver",

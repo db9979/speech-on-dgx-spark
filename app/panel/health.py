@@ -152,12 +152,17 @@ async def watch_once(update_running=lambda: False):
             if reason:
                 done.append(await asyncio.to_thread(_restart, name.upper() + "-Engine", unit, reason, now))
     # the VoiceDesign engine has no front end of its own: restarted when it is switched on but has
-    # failed (systemd gave up on it)
+    # failed (systemd gave up on it); on demand (voicedesign_leerlauf_min) it is only stopped, never failed
     t = cfg.get("tts", {})
     if t.get("enabled", True) and t.get("backend") == "vllm-omni" and t.get("voicedesign_enabled") and not wartung.quiet("tts"):
         unit = UNITS["tts-design"]
         if await asyncio.to_thread(steuer.unit_state, unit) == "failed":
             done.append(await asyncio.to_thread(_restart, "TTS-VoiceDesign", unit, "ausgefallen", now))
+    # the same for the engine of the own designed voices (tts.klon_enabled, stimmdesign.py)
+    if t.get("enabled", True) and t.get("backend") == "vllm-omni" and t.get("klon_enabled") and not wartung.quiet("tts"):
+        unit = UNITS["tts-klon"]
+        if await asyncio.to_thread(steuer.unit_state, unit) == "failed":
+            done.append(await asyncio.to_thread(_restart, "TTS-Eigene-Stimmen", unit, "ausgefallen", now))
     return done
 
 

@@ -5653,6 +5653,13 @@
 "titel": "Regeltiefe Einfach oder Voll statt 58 Dungeon-Schalter",
 "text": "Nach dem Update auf dem Pi: A: Funktionen → KI-Dungeon-Master: nur noch Regeltiefe (Einfach/Voll) und sechs Schalter (Bilder und Heldenlied, Zweite Prüfung durch das Modell, Gäste mit E-Mail, Chronik und Heldenbuch, Eigene Geschichten und Import, Prüfstände); waren vorher die meisten Voll-Regeln an, steht die Regeltiefe auf Voll. Zustand → Logs, Filter „regeltiefe“: einmal „uebernommen“. B: Eine neue Runde anlegen: im Formular „Regeltiefe“ mit Einfach und Voll, Vorgabe der Standard des Admins. C: Am Tisch im Spielleiter-Pult unter „Schwierigkeit“ Einfach und Voll umschalten: bei Voll erscheint „Nur Narben“; die Krit-Zeilen, Rast und Siedlung gibt es nur bei Voll. D: Orakel, Geben, Zufallsregeln und echte Würfel stehen im Pult ohne Schalter. E: Am iPhone (Breite 390) im Reiter Karte: das Feld zum Handeln liegt nicht über den Wegen der Karte. F: Zustand → Überblick: „Regeltiefe: N einfach, M voll“.",
 "thread": "Spark ausdünnen und zusammenführen"
+},
+{
+"id": "P834",
+"v": 1374,
+"titel": "Eigene Stimmen gestalten",
+"text": "Einstellungen → Sprachausgabe → „VoiceDesign zusätzlich bereitstellen“ und „Eigene Stimmen zusätzlich bereitstellen“ an, speichern; Funktionen → Eigene Stimmen gestalten an. Ich → Gespräch → Eigene Stimme → „Stimmen …“: nach einiger Zeit sind die 20 fertigen Stimmen da, ▶ spielt sie, ein Klick wählt sie, die nächste Antwort klingt so. Unter „Eigene gestalten“ Felder wählen, „▶ Probe“ (beim ersten Mal „VoiceDesign wird geladen …“, bis zu einer Minute), „Neu würfeln“, dann „Übernehmen“: mehrere Antworten hintereinander klingen gleich. Nach 5 Minuten ohne Probe ist VoiceDesign unter Zustand → Überblick wieder aus.",
+"thread": "Eigene Stimme per VoiceDesign wählen"
 }
 ]
 }

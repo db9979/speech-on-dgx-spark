@@ -44,6 +44,7 @@ from core import (  # noqa: E402
     DEFAULTS,
     FACES,
     DESIGN_KEYS,
+    KLON_KEYS,
     ENGINE_KEYS,
     LANGS,
     LOG_UNITS,
@@ -448,7 +449,8 @@ def _status(cfg, healths):
     if t.get("backend") == "vllm-omni":
         per_engine = share(t["engine_mem_talker"] + t["engine_mem_code2wav"])
         services["tts"]["backend"] = "vllm-omni"
-        services["tts"]["estimate_gib"] = per_engine and round(per_engine * (2 if t.get("voicedesign_enabled") else 1), 1)
+        services["tts"]["estimate_gib"] = per_engine and round(per_engine * (1 + bool(t.get("voicedesign_enabled"))
+                                                                         + bool(t.get("klon_enabled"))), 1)
         services["tts"]["engines"] = [
             {"name": "tts-engine", "kind": "vllm-omni", "unit": UNITS["tts-engine"], "state": unit_state(UNITS["tts-engine"]),
              "model": t["model"], "port": t["engine_port"], "estimate_gib": per_engine}]
@@ -456,6 +458,10 @@ def _status(cfg, healths):
             services["tts"]["engines"].append(
                 {"name": "tts-design", "kind": "vllm-omni", "unit": UNITS["tts-design"], "state": unit_state(UNITS["tts-design"]),
                  "model": t["voicedesign_model"], "port": t["voicedesign_port"], "estimate_gib": per_engine})
+        if t.get("klon_enabled") or unit_state(UNITS["tts-klon"]) != "inactive":
+            services["tts"]["engines"].append(
+                {"name": "tts-klon", "kind": "vllm-omni", "unit": UNITS["tts-klon"], "state": unit_state(UNITS["tts-klon"]),
+                 "model": t.get("klon_model", ""), "port": t.get("klon_port", 31019), "estimate_gib": per_engine})
     return {"time": time.time(), "system": sysd, "gpu": steuer.gpu(),
             "services": services, "history": list(history),
             "alerts": health.alerts(), "watchdog": health.events[-10:], "glance": glance(cfg),
@@ -786,11 +792,18 @@ def validate(new):
         raise HTTPException(400, "engine_max_seqs must be 1..64")
     if not MODEL_ID.fullmatch(str(t["voicedesign_model"])):
         raise HTTPException(400, "VoiceDesign: only Qwen's own speech models (Qwen/Qwen3-TTS-...)")
+    vl = t.get("voicedesign_leerlauf_min", 5)
+    if not isinstance(vl, int) or isinstance(vl, bool) or not 0 <= vl <= 120:
+        raise HTTPException(400, "VoiceDesign idle minutes: 0 (always loaded) to 120")
+    if not isinstance(t.get("klon_enabled", False), bool):
+        raise HTTPException(400, "klon_enabled must be true or false")
+    if not MODEL_ID.fullmatch(str(t.get("klon_model", ""))) or not str(t.get("klon_model", "")).endswith("-Base"):
+        raise HTTPException(400, "Own voices: only Qwen's Base speech models (Qwen/Qwen3-TTS-...-Base)")
     ports = [new["asr"]["port"], t["port"], new["panel"]["port"]]
     if a.get("backend") == "vllm":
         ports.append(a["engine_port"])
     if t.get("backend") == "vllm-omni":
-        ports += [t["engine_port"], t["voicedesign_port"]]
+        ports += [t["engine_port"], t["voicedesign_port"], t.get("klon_port", 31019)]
     sd = new["panel"].get("session_days", 30)
     if not isinstance(sd, int) or isinstance(sd, bool) or not 7 <= sd <= 90:
         raise HTTPException(400, "session_days must be 7..90")
@@ -1089,7 +1102,7 @@ def _save_locked(new, old, by):
     if t.get("backend") == "vllm-omni":
         changed = lambda keys: any(t.get(k) != ot.get(k) for k in keys)  # noqa: E731
         if not t["enabled"]:
-            actions["tts-engine"] = actions["tts-design"] = "stop"
+            actions["tts-engine"] = actions["tts-design"] = actions["tts-klon"] = "stop"
         else:
             if changed(ENGINE_KEYS) or mem_changed or not ot["enabled"]:
                 actions["tts-engine"] = "restart"
@@ -1097,7 +1110,13 @@ def _save_locked(new, old, by):
                 if ot.get("voicedesign_enabled"):
                     actions["tts-design"] = "stop"
             elif changed(DESIGN_KEYS) or mem_changed or not ot["enabled"]:
-                actions["tts-design"] = "restart"
+                # on demand (voicedesign_leerlauf_min > 0) only stopped: the next request starts it with the new values
+                actions["tts-design"] = "stop" if t.get("voicedesign_leerlauf_min", 5) else "restart"
+            if not t.get("klon_enabled"):
+                if ot.get("klon_enabled"):
+                    actions["tts-klon"] = "stop"
+            elif changed(KLON_KEYS) or mem_changed or not ot["enabled"]:
+                actions["tts-klon"] = "restart"
     errors = []
     for n, action in actions.items():
         code, out = steuer.systemctl(action, UNITS[n])

@@ -67,7 +67,8 @@ DIENST_ID = re.compile(r"[a-z][a-z0-9-]{0,23}")
 # chips „Dienste“; an unknown own unit shows its id
 DIENST_NAMEN = {"asr": ("Spracherkennung", "Speech recognition"), "asr-engine": ("Spracherkennung (Engine)", "Speech recognition (engine)"),
                 "tts": ("Sprachausgabe", "Speech output"), "tts-engine": ("Sprachausgabe (Engine)", "Speech output (engine)"),
-                "tts-design": ("Stimmen gestalten", "Voice design"), "llm": ("Sprachmodell", "Language model"),
+                "tts-design": ("Stimmen gestalten", "Voice design"),
+                "tts-klon": ("Eigene Stimmen", "Own voices"), "llm": ("Sprachmodell", "Language model"),
                 "llmtor": ("LLM-Tor", "LLM-Tor"), "sehen": ("Bildverständnis", "Image understanding"),
                 "helfer": ("Hilfsmodell", "Helper model"), "bild": ("Bilder malen", "Painting pictures"), "musik": ("Musik machen", "Making music"),
                 "werkstatt": ("Werkstatt", "Werkstatt"),

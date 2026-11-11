@@ -204,6 +204,9 @@ TARGETS = {
     # Hörstück aus einer Mappe (hoerstueck.py): shown while it is on, Hörstücke of all profiles, waiting and speaking,
     # lines left, today's scripts, lines spoken, dropped, stops for speech, a missing speech output, the admin's forced
     # one („erzwungen": what it does now, how many today, refused), what the work waits for (vorrang.grund) (numbers only)
+    # Eigene Stimmen gestalten (stimmdesign.py): shown while it is on, fixed voices ready of 20, what the background
+    # run does, probes kept in memory right now (numbers and fixed words only, never a name or a description)
+    "stimmdesign": ("Eigene Stimmen", "20 fertige und eigene Antwortstimmen über VoiceDesign · auf dem Spark", "spark", False),
     "hoerstueck": ("Hörstück", "Gespräch aus einer Mappe über die eigene Sprachausgabe · auf dem Spark", "spark", False),
     # Aufnahmen abschreiben (abschrift.py): shown while it is on, recordings waiting and minutes left of all profiles,
     # today's pieces and minutes, stops for speech, a missing speech recognition (numbers only, never a name)
@@ -1496,6 +1499,13 @@ def snapshot(view="admin", now=None):
     if awn.get("on"):
         used.add("auswertung")
     try:
+        import stimmdesign
+        sdn = stimmdesign.for_live()
+    except Exception:
+        sdn = {"on": False}
+    if sdn.get("on"):
+        used.add("stimmdesign")
+    try:
         import hoerstueck
         hsn = hoerstueck.for_live(now)
     except Exception:
@@ -2225,6 +2235,11 @@ def snapshot(view="admin", now=None):
                             + (" · holt" if ytn.get("laeuft") else "")
                             + (f", {ytn['abgelehnt']} abgelehnt" if ytn.get("abgelehnt") else "")
                             + (f", {ytn['host']}× fremder Host gesperrt" if ytn.get("host") else "")) if ytn.get("on") else ""))
+        if x["id"] == "stimmdesign":   # Eigene Stimmen: fixed voices ready, the background run, probes kept (numbers only)
+            x["sub"] = (f"{sdn.get('fertig', 0)} von {sdn.get('von', 20)} fertigen Stimmen · Hintergrund: "
+                        + {"laeuft": "macht Stimmen", "laedt": "wartet, VoiceDesign lädt", "fehler": "Fehler, neuer Versuch später",
+                           "fertig": "alle fertig"}.get(sdn.get("zustand"), "ruht")
+                        + (f" · {sdn['proben']} Proben bereit zum Übernehmen" if sdn.get("proben") else ""))
         if x["id"] == "hoerstueck":   # Hörstück: kept, waiting, speaking, lines left, today's work (numbers only, never a title or text)
             x["sub"] = (f"{hsn.get('stuecke', 0)} Hörstücke · Hintergrund: {hsn.get('warten', 0)} warten, {hsn.get('sprechen', 0)} sprechen"
                         + f" ({hsn.get('zeilen_offen', 0)} Zeilen offen)"

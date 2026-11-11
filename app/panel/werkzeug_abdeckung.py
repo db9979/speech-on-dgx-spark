@@ -132,6 +132,7 @@ WITHOUT = {
     "style": "wirkt auf jede Antwort",
     "follow": "Verhalten am Lautsprecher",
     "selfecho": "Verhalten am Lautsprecher",
+    "stimmdesign": "Einstellung, mit welcher Stimme Antworten klingen (Ich → Gespräch → Eigene Stimme)",
     "anhalten": "Verhalten beim Ins-Wort-Fallen",
     "satzende": "Messung an Sprechpausen, kein Werkzeug",
     "toolthink": "Einstellung, wie Antworten entstehen",

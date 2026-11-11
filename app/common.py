@@ -661,7 +661,7 @@ def audio_rate_ok(data):
 # (matches /etc/sudoers.d/speech-spark); OWN_LLM_UNITS only a model switch (speech-spark-wechsel) and install.sh switch
 SERVICES = {"asr": "speech-spark-asr", "tts": "speech-spark-tts"}
 UNITS = dict(SERVICES, **{"asr-engine": "speech-spark-asr-engine", "tts-engine": "speech-spark-tts-engine",
-                          "tts-design": "speech-spark-tts-design"})
+                          "tts-design": "speech-spark-tts-design", "tts-klon": "speech-spark-tts-klon"})
 OWN_LLM_UNITS = {"llm": "speech-spark-llm", "llmtor": "speech-spark-llmtor", "sehen": "speech-spark-sehen",
                  "helfer": "speech-spark-helfer"}
 # units that run only for a while on the model computer and are shown under Logs → Dienste: their lines live there,
@@ -782,10 +782,10 @@ MODEL_ID = re.compile(r"Qwen/Qwen3-(ASR|TTS|ForcedAligner)-[\w.\-]+")
 # settings of the model side the panel sets and the model computer must know (Spark teilen, B4b): the sections and the
 # keys that stay as each computer's install made them (addresses, ports, backends)
 SYNC_SECTIONS = ("asr", "tts", "memory", "watch", "image", "music", "entwickeln")
-SYNC_KEEP = {"host", "port", "engine_port", "voicedesign_port", "backend"}
+SYNC_KEEP = {"host", "port", "engine_port", "voicedesign_port", "klon_port", "backend"}
 # which model runs (B4c): the model computer decides (install.sh, Zustand → Modelle, `speech-spark modelle`) and
 # reports it in its status; the panel takes it over, never the other way round
-MODEL_CHOICE = {"asr": ("model", "aligner_model", "recognizer"), "tts": ("model", "voicedesign_model"),
+MODEL_CHOICE = {"asr": ("model", "aligner_model", "recognizer"), "tts": ("model", "voicedesign_model", "klon_model"),
                 "image": ("enabled", "variant"), "music": ("enabled", "variant"),
                 "llm": ("enabled", "modell", "sehen_modell", "platz")}
 

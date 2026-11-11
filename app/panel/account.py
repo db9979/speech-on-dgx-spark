@@ -101,7 +101,7 @@ WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speake
        "remarkable": "remarkable", "remarkable_send": "rmsend", "remarkable_fresh": "rmfresh", "remarkable_plus": "rmguide", "remarkable_paper": "rmpapier", "remarkable_tasks": "rmaufgaben", "my_status": "mystatus", "usage_count": "verbrauch", "person_priority": "vorrang",
        "ha_live": "halive", "ha_loud": "haloud", "ha_events": "haevent", "ha_voice_rules": "havoice", "ha_camera": "hacam",
        "systemone_mail": "mailwichtig", "report": "melden", "doc_make": "erstellen", "bilder": "bilder", "bilder_aendern": "bildaendern", "musik": "musik", "musik_bearbeiten": "musikbearbeiten", "dungeon": "dungeon", "storage": "speicher", "nas": "nas", "nasquelle": "nasquelle", "nas_drop": "nasablage", "nas_status": "naszustand", "nas_shared": "nashaushalt",
-       "chats": "chats", "chats_groups": "chatgroups", "chats_media": "chatmedia", "chats_invite": "chatinvite", "chats_private": "chatprivate", "chats_verbund": "verbund", "verbund_media": "verbundmedia", "verbund_groups": "verbundgruppen",
+       "chats": "chats", "chats_groups": "chatgroups", "chats_media": "chatmedia", "chats_invite": "chatinvite", "chats_private": "chatprivate", "chats_verbund": "verbund", "verbund_media": "verbundmedia", "verbund_groups": "verbundgruppen", "stimmdesign": "stimmdesign",
        "chats_calls": "anrufe", "calls_turn": "anrufeturn", "telefon": "telefon", "saetze": "tippssaetze", "collections": "mappen",
        "hoerstueck": "hoerstueck"}
 
@@ -2038,7 +2038,8 @@ ALLOW = {"tool_think": "toolthink", "route": "routing", "direct_read": "direct",
          "chats": "chats", "chatall": "messages_all", "chatann": "messages_announce", "verbund": "verbund",
          "rate": "bewerten", "rateback": "bewertenzurueck", "beratnote": "beraterhinweis", "beratask": "beraterchat",
          "beratme": "beratermich", "klaeren": "klaeren", "klaeren_merken": "klaerenmerken",
-         "tagebuch": "tagebuch", "warum": "beraterwarum", "unklaranon": "weicheunklar"}
+         "tagebuch": "tagebuch", "warum": "beraterwarum", "unklaranon": "weicheunklar",
+         "stimmdesign": "stimmdesign"}
 
 
 def _allow(prof, chat):
@@ -2071,9 +2072,13 @@ async def profile_save_settings(request: Request, prof=Depends(browser_profile))
 
 @router.get("/api/assistant/voices", dependencies=[Depends(assistant)])
 async def assistant_voices(prof=Depends(own_profile)):
-    """Voice names to choose from in the conversation settings (profiles only; guests get the default)."""
+    """Voice names to choose from in the conversation settings (profiles only; guests get the default); with Eigene
+    Stimmen gestalten also the ready fixed voices and the profile's own ones, "namen" their names (iPhone picker)."""
     v = await tts_voices()
-    return {"voices": [x for x in v.get("voices", []) if isinstance(x, str)]}
+    import stimmdesign
+    extra = stimmdesign.waehlbar(prof["id"])
+    return {"voices": [x for x in v.get("voices", []) if isinstance(x, str)] + [i for i, _ in extra],
+            "namen": dict(extra)}
 
 
 # Push notifications for reminders, per device of the profile (see push.py).

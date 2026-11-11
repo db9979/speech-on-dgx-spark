@@ -1308,13 +1308,26 @@ def defaults(admin=None):
     return dict({k: v for k, (v, _) in SETTINGS.items()}, **own)
 
 
+# (uid, voice) -> whether the profile may speak with that voice (stimmdesign.stimme_ok: a designed voice only while the
+# function is allowed and it is a fixed one or the profile's own); a voice one of them refuses is never stored and,
+# stored earlier, counts as the standard voice
+VOICE_CHECK = []
+
+
+def _voice_ok(uid, voice):
+    return all(ok(uid, voice) for ok in VOICE_CHECK)
+
+
 def effective(uid, chat=None):
     """What applies to this profile (or a guest, uid None): the admin's presets, overlaid with its own.
     The one place that mixes them (plan „Vereinheitlichen“, V01.0.268)."""
     if chat is None:
         from common import load_config
         chat = load_config().get("chat", {})
-    return dict(defaults(chat.get("defaults")), **(settings(uid) if uid else {}))
+    out = dict(defaults(chat.get("defaults")), **(settings(uid) if uid else {}))
+    if out.get("voice") and not _voice_ok(uid, out["voice"]):
+        out["voice"] = ""
+    return out
 
 
 def settings(uid):
@@ -1337,8 +1350,11 @@ def log_name(prof):
 
 
 def save_settings(uid, d):
+    d = clean_settings(d)
+    if d.get("voice") and not _voice_ok(uid, d["voice"]):
+        d.pop("voice")
     with _lock:
-        merged = dict(settings(uid), **clean_settings(d))
+        merged = dict(settings(uid), **d)
         _write(_path(uid, "settings.json"), merged)
     return merged
 

@@ -61,7 +61,9 @@ def remote(cfg=None):
 
 
 def call(cmd, args=(), cfg=None, timeout=TIMEOUT, daten=None):
-    """One signed request to the Wärter; its JSON answer, or None when it does not answer or refuses."""
+    """One signed request to the Wärter; its JSON answer, or None when it does not answer or refuses. A voice sample
+    (stimme_ablegen) goes to its own path with the bigger limit (tarswart.STIMME_BODY)."""
+    pfad = "/v1/wart/stimme" if cmd == "stimme_ablegen" else "/v1/wart"
     cfg = load_config() if cfg is None else cfg
     key = waerter_key()
     if not key:
@@ -73,10 +75,10 @@ def call(cmd, args=(), cfg=None, timeout=TIMEOUT, daten=None):
     headers = {"Content-Type": "application/json", "X-Wart": waerter_sign(key, body)}
     try:
         if _client is not None:
-            r = _client.post("/v1/wart", content=body, headers=headers)
+            r = _client.post(pfad, content=body, headers=headers)
         else:
             with httpx.Client(timeout=timeout, trust_env=False, follow_redirects=False) as c:
-                r = c.post(model_url("waerter", "/v1/wart", cfg), content=body, headers=headers)
+                r = c.post(model_url("waerter", pfad, cfg), content=body, headers=headers)
         if r.status_code == 403 and _detail(r) == "zeit":   # the clocks are more than the Wärter's window apart
             _status["zeit"] = time.time()
         return r.json() if r.status_code == 200 else None

@@ -33,6 +33,10 @@ a time (at most WINDOW seconds off) and a one-time number (each is taken once).
                                 versions in a fixed character set, counts) and whether its root unit runs
     systemupdate_tun <wort>     System-Updates: one wish of sysupdate.WUENSCHE (pruefen, einspielen, neustart) for the
                                 fixed root unit speech-spark-systemupdate; never a package, a source or a command
+    stimmen                     the names of the designed voices in the speech output's voices folder (stimmablage)
+    stimme_ablegen {name, wav, worte}   one sample of a designed voice (base64 WAV, checked by stimmablage.ablegen),
+                                only on its own path /v1/wart/stimme with the bigger limit STIMME_BODY
+    stimme_weg <name>           deletes one designed voice (sd-…, eigen-…)
 
 Every action writes one log line ("waerter:" with the command and the result word, never content); the reads
 status and modelle only when refused.
@@ -51,6 +55,7 @@ from fastapi.responses import JSONResponse
 import llmstart
 import modelle
 import rechner
+import stimmablage
 import sysupdate
 import werkstatt
 from common import (CONFIG_PATH, MODEL_LOG_UNITS, ON_DEMAND_UNITS, OWN_LLM_UNITS, UNITS, WAERTER_PORT, BodyLimit, gpu_stats, journal, load_config,
@@ -59,21 +64,23 @@ from common import (CONFIG_PATH, MODEL_LOG_UNITS, ON_DEMAND_UNITS, OWN_LLM_UNITS
 
 WINDOW = 60            # seconds a request's time may be off
 MAX_BODY = 64 * 1024     # the speech settings (pronunciation, context) fit easily
+STIMME_BODY = 2 * 1024 * 1024   # one voice sample (stimmablage.MAX_BYTES as base64), only on /v1/wart/stimme
+VOICES_DIR = os.environ.get("SPEECH_SPARK_VOICES", "/var/lib/speech-spark/voices")   # tts_proxy.VOICES_DIR
 MAX_LINES = 2000
 MAX_SEEN = 5000        # one-time numbers kept (each lives WINDOW * 2 seconds)
 RATE = (40, 10)        # at most 40 requests in 10 seconds (the panel asks for the status every few seconds)
 ACTIONS = ("start", "stop", "restart")
 COMMANDS = ("status", "einheit", "einstellen", "logs", "modelle", "wechseln", "messen", "platz", "eigen_dazu", "eigen_weg",
             "weiter", "update", "werkstatt", "werkstatt_auftrag", "werkstatt_eins", "werkstatt_weg", "systemupdate",
-            "systemupdate_tun")
+            "systemupdate_tun", "stimmen", "stimme_ablegen", "stimme_weg")
 UPDATE_UNIT = "speech-spark-update"
 PAUSE_KEYS = ("on", "parts", "since", "until", "channel")   # what the panel needs of the pause (never who)
-WITH_DATA = ("einstellen", "eigen_dazu", "werkstatt_auftrag")
+WITH_DATA = ("einstellen", "eigen_dazu", "werkstatt_auftrag", "stimme_ablegen")
 # what status reports: the units the panel shows and watches
 WATCHED = dict(UNITS, **OWN_LLM_UNITS, **ON_DEMAND_UNITS)
 
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
-app.add_middleware(BodyLimit, default=MAX_BODY)
+app.add_middleware(BodyLimit, default=MAX_BODY, limits=[("/v1/wart/stimme", STIMME_BODY)])
 _seen = {}
 _times = []
 _lock = threading.Lock()
@@ -361,6 +368,44 @@ def systemupdate_tun(was):
     return {"ok": ok}
 
 
+def stimmen():
+    return {"namen": stimmablage.namen(VOICES_DIR)}
+
+
+def stimme_ablegen(daten):
+    """One sample of a designed voice (stimmablage checks name, WAV, words and the number)."""
+    import base64
+    import binascii
+    try:
+        wav = base64.b64decode(str(daten.get("wav", "")), validate=True)
+    except (binascii.Error, ValueError):
+        print("waerter: stimme_ablegen abgelehnt wav", flush=True)
+        return {"ok": False, "grund": "wav"}
+    try:
+        stimmablage.ablegen(VOICES_DIR, daten.get("name"), wav, daten.get("worte"))
+    except ValueError as e:
+        print(f"waerter: stimme_ablegen abgelehnt {e}", flush=True)
+        return {"ok": False, "grund": str(e)}
+    except OSError as e:
+        print(f"waerter: stimme_ablegen fehler {type(e).__name__}", flush=True)
+        return {"ok": False, "grund": "platte"}
+    print("waerter: stimme_ablegen ok", flush=True)
+    return {"ok": True}
+
+
+def stimme_weg(name):
+    try:
+        da = stimmablage.weg(VOICES_DIR, name)
+    except ValueError:
+        print("waerter: stimme_weg abgelehnt name", flush=True)
+        return {"ok": False, "grund": "name"}
+    except OSError as e:
+        print(f"waerter: stimme_weg fehler {type(e).__name__}", flush=True)
+        return {"ok": False, "grund": "platte"}
+    print(f"waerter: stimme_weg {'ok' if da else 'nicht da'}", flush=True)
+    return {"ok": True, "da": da}
+
+
 def einheit(action, teil):
     if action not in ACTIONS or teil not in UNITS:
         raise ValueError("befehl")
@@ -409,8 +454,18 @@ def _rate(now):
         return True
 
 
+@app.post("/v1/wart/stimme")
+async def wart_stimme(request: Request):
+    """The one command with a bigger body (a voice sample): the same check as /v1/wart, only stimme_ablegen."""
+    return await _wart(request, True)
+
+
 @app.post("/v1/wart")
 async def wart(request: Request):
+    return await _wart(request, False)
+
+
+async def _wart(request, stimme):
     now = time.time()
     if not _rate(now):
         print("waerter: abgelehnt zu viele", flush=True)
@@ -421,6 +476,9 @@ async def wart(request: Request):
     except ValueError as e:
         print(f"waerter: abgelehnt {e}", flush=True)
         raise HTTPException(403 if str(e) != "befehl" else 400, str(e))
+    if (cmd == "stimme_ablegen") != stimme:   # the big body only for a sample, a sample only on its own path
+        print("waerter: abgelehnt befehl", flush=True)
+        raise HTTPException(400, "befehl")
     if cmd == "status":       # asked every few seconds: no line for a good answer, only for refusals
         return JSONResponse(status())
     if cmd == "modelle":
@@ -434,6 +492,12 @@ async def wart(request: Request):
             return JSONResponse(einstellen(daten))
         if cmd == "eigen_dazu":
             return JSONResponse(eigen_dazu(daten))
+        if cmd == "stimme_ablegen":
+            return JSONResponse(stimme_ablegen(daten))
+        if cmd == "stimmen":
+            return JSONResponse(stimmen())
+        if cmd == "stimme_weg":
+            return JSONResponse(stimme_weg(*args) if len(args) == 1 else stimme_weg(""))
         if cmd == "werkstatt_auftrag":
             return JSONResponse(werkstatt_auftrag(daten))
         if cmd in ("werkstatt_eins", "werkstatt_weg"):

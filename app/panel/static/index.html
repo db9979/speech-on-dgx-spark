@@ -529,6 +529,7 @@
       <div class="setrow"><div class="lbl"><b>Rückfrage ohne Weckwort</b><span>Nach der Antwort auf eine gesprochene Frage hört der Assistent ein paar Sekunden weiter zu; jedes Profil wählt die Dauer.</span></div><label class="tgl"><input type="checkbox" id="chat.follow_up"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Eigene Stimme überhören</b><span>Hört ein Gerät die Antwort eines anderen Geräts (Lautsprecher, iPhone), nimmt der Assistent sie nicht als neue Frage.</span></div><label class="tgl"><input type="checkbox" id="chat.no_self_echo"><i></i></label></div>
       <div data-show="chat.no_self_echo"><label>Was er überhört</label><select id="chat.self_echo_mode"><option value="text">Sätze, die er gerade selbst gesagt hat</option><option value="pause">dazu alles, solange ein anderes Gerät spricht (empfohlen)</option></select></div>
+      <div class="setrow"><div class="lbl"><b>Eigene Stimmen gestalten</b><span>20 fertige Antwortstimmen und bis zu drei eigene je Profil; braucht VoiceDesign und „Eigene Stimmen“ in der Sprachausgabe.</span></div><label class="tgl"><input type="checkbox" id="chat.stimmdesign"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Ins Wort fallen: erst anhalten</b><span>Ein „mhm“ oder Husten hält die Antwort nur an; sie läuft weiter, erst ein echter Satz oder „Stopp“ beendet sie.</span></div><label class="tgl"><input type="checkbox" id="chat.barge_hold"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Satzende am Tonfall</b><span>Misst an jeder Sprechpause, ob der Tonfall nach fertigem Satz klingt (Smart Turn); entscheidet noch nichts, nur Zahlen.</span></div><label class="tgl"><input type="checkbox" id="chat.turn_tone"><i></i></label></div>
       <div data-show="chat.turn_tone"><div class="fh" id="satzendemsg"></div></div>
@@ -700,6 +701,9 @@
           <div class="setrow"><div class="lbl"><b>Gleichen Anfang merken</b><span>Die Engine merkt sich den Teil, der bei jedem Satz derselben Stimme gleich ist (Präfix-Cache).</span></div><label class="tgl"><input type="checkbox" id="tts.engine_prefix_cache"><i></i></label></div>
           <div class="setrow"><div class="lbl"><b>VoiceDesign zusätzlich bereitstellen</b><span>Zweite Engine, braucht den gleichen Speicher noch einmal.</span></div><label class="tgl"><input type="checkbox" id="tts.voicedesign_enabled"><i></i></label></div>
           <div class="setrow"><div class="lbl"><b>VoiceDesign-Modell</b><span>Stimme per Beschreibung.</span></div><select class="wide" id="tts.voicedesign_model"><option>Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign</option></select></div>
+          <div class="setrow"><div class="lbl"><b>VoiceDesign nur bei Bedarf laden</b><span>Minuten ohne Anfrage, nach denen VoiceDesign wieder entladen wird; 0 = immer geladen.</span></div><input class="num" id="tts.voicedesign_leerlauf_min" type="number" min="0" max="120"></div>
+          <div class="setrow"><div class="lbl"><b>Eigene Stimmen zusätzlich bereitstellen</b><span>Dritte Engine (Base), spricht die gestalteten Stimmen aus Funktionen → Eigene Stimmen gestalten.</span></div><label class="tgl"><input type="checkbox" id="tts.klon_enabled"><i></i></label></div>
+          <div class="setrow"><div class="lbl"><b>Modell für eigene Stimmen</b><span>Ein Base-Modell, es klont die gestalteten Stimmen.</span></div><select class="wide" id="tts.klon_model"><option>Qwen/Qwen3-TTS-12Hz-0.6B-Base</option><option>Qwen/Qwen3-TTS-12Hz-1.7B-Base</option></select></div>
         </div>
         <div id="ttsdtype"><div class="setrow"><div class="lbl"><b>Datentyp</b><span>bfloat16 passt für die meisten Grafikkarten.</span></div><select id="tts.dtype"><option>bfloat16</option><option>float16</option><option>float32</option></select></div></div>
       </details>
@@ -1680,6 +1684,7 @@
 <script src="/static/js/finden.js"></script>
 <script src="/static/js/mappen.js"></script>
 <script src="/static/js/hoerstueck.js"></script>
+<script src="/static/js/stimmdesign.js"></script>
 <script src="/static/js/dungeonlader.js"></script>
 <script src="/static/js/tipps.js"></script>
 <script src="/static/js/saetze.js"></script>

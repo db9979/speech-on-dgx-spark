@@ -5,6 +5,12 @@ The engine (native vllm-omni venv, 127.0.0.1 only) does the work, including stre
 16 bit mono 24 kHz chunks. This service sits on the public TTS port and adds the API
 key, defaults (voice, language, format), routing of VoiceDesign requests to the second
 engine, and the counters the panel shows. Request and stream pass through unchanged.
+
+Designed voices (Eigene Stimmen gestalten, panel stimmdesign.py, Dominik 2026-11-11): a voice named "sd-…" or
+"eigen-…" is a stored sample in VOICES_DIR (stimmablage.py); when the main engine cannot clone (CustomVoice), the
+third engine "klon" (tts.klon_enabled, a Base model) speaks it, and when that one is not up the main engine's
+default voice stands in. The VoiceDesign engine runs on demand when tts.voicedesign_leerlauf_min is above 0: the
+first request starts it (503 "TTS engine loading" until it answers) and it stops after that many idle minutes.
 """
 import asyncio
 import base64
@@ -51,7 +57,52 @@ def engines():
     out = {"main": (cfg["model"], cfg["engine_port"])}
     if cfg.get("voicedesign_enabled"):
         out["design"] = (cfg["voicedesign_model"], cfg["voicedesign_port"])
+    if cfg.get("klon_enabled"):
+        out["klon"] = (cfg.get("klon_model", ""), cfg.get("klon_port", 31019))
     return out
+
+
+UNIT_OF = {"main": "speech-spark-tts-engine", "design": "speech-spark-tts-design", "klon": "speech-spark-tts-klon"}
+EIGENE = ("sd-", "eigen-")   # the names of designed voices (stimmablage.NAME)
+design = {"used": 0.0, "start": 0.0}   # the VoiceDesign engine on demand: last request, last start (time.time)
+DESIGN_START_S = 600        # a start on demand counts as running this long before a new start is tried
+
+
+def design_bedarf():
+    """Minutes the VoiceDesign engine stays loaded without a request; 0 = always loaded (it starts with the machine)."""
+    m = cfg.get("voicedesign_leerlauf_min", 5)
+    return m if isinstance(m, int) and not isinstance(m, bool) and 0 <= m <= 120 else 5
+
+
+def _systemctl(action, unit):
+    """sudo systemctl for exactly the VoiceDesign unit (the sudoers line of install.sh allows start and stop)."""
+    try:
+        return subprocess.run(["sudo", "-n", "/usr/bin/systemctl", action, unit], capture_output=True, text=True,
+                              timeout=30).returncode
+    except Exception:
+        return 1
+
+
+async def design_bereit(status):
+    """On demand: starts the stopped VoiceDesign engine once (the request still gets its 503 "loading")."""
+    design["used"] = time.time()
+    if status != "stopped" or not design_bedarf() or time.time() - design["start"] < DESIGN_START_S:
+        return status
+    design["start"] = time.time()
+    rc = await asyncio.to_thread(_systemctl, "start", UNIT_OF["design"])
+    print("tts: voicedesign start" if rc == 0 else "tts: voicedesign start fehler", flush=True)
+    return "loading" if rc == 0 else status
+
+
+async def design_leerlauf():
+    """Stops the VoiceDesign engine on demand after design_bedarf() minutes without a request."""
+    while True:
+        await asyncio.sleep(30)
+        m = design_bedarf()
+        if m and design["used"] and time.time() - design["used"] > m * 60 and "design" in engines():
+            design["used"], design["start"] = 0.0, 0.0
+            rc = await asyncio.to_thread(_systemctl, "stop", UNIT_OF["design"])
+            print("tts: voicedesign gestoppt leerlauf" if rc == 0 else "tts: voicedesign stop fehler", flush=True)
 
 
 def model_kind(model):
@@ -85,7 +136,7 @@ async def engine_status(role):
             return "ready", None
     except httpx.HTTPError:
         pass
-    unit = f"speech-spark-tts-{'engine' if role == 'main' else 'design'}"
+    unit = UNIT_OF[role]
     # systemctl and journalctl block for a moment: in a worker thread (only while the engine is not up)
     return await asyncio.to_thread(_not_ready, role, unit)
 
@@ -248,6 +299,30 @@ def apply_clone(body):
     body.pop("instructions", None)  # Base checkpoints do not follow instructions
 
 
+def eigene_stimme(body):
+    """A designed voice (sd-…, eigen-…) whose sample lies here, asked without a reference of its own."""
+    v = str(body.get("voice") or "")
+    return v.startswith(EIGENE) and not body.get("ref_audio") and v in clone_voices()
+
+
+_ersatz = {}   # status -> time of the last log line, so a missing engine is named once a minute
+
+
+async def eigene_rolle(body):
+    """The engine for a designed voice: the main one when it clones itself (Base), else "klon"; when that one is
+    off or not up, the main engine's default voice stands in (the request still gets its answer)."""
+    if model_kind(cfg["model"]) == "base":
+        return "main"
+    status = (await engine_status("klon"))[0] if "klon" in engines() else "aus"
+    if status == "ready":
+        return "klon"
+    body.pop("voice", None)
+    if time.time() - _ersatz.get(status, 0) > 60:
+        _ersatz[status] = time.time()
+        print(f"tts: eigene stimme ersatz {status}", flush=True)
+    return "main"
+
+
 async def engine_voices(role):
     if model_kind(engines()[role][0]) == "base":
         return clone_voices()
@@ -293,6 +368,11 @@ async def warm_up(role):
 
 
 @app.on_event("startup")
+async def watch_design():
+    asyncio.create_task(design_leerlauf())
+
+
+@app.on_event("startup")
 async def watch_engines():
     async def loop():
         ready = {}
@@ -326,6 +406,9 @@ async def health(request: Request):
     }
     if "design" in engines():
         out["voicedesign"] = dict(zip(("status", "error"), await engine_status("design")))
+        out["voicedesign"]["bedarf_min"] = design_bedarf()
+    if "klon" in engines():
+        out["klon"] = dict(zip(("status", "error"), await engine_status("klon")))
     out["queue"] = gate("main").view()
     return out
 
@@ -341,9 +424,12 @@ async def voices_for_panel(request: Request):
     if not inside(request):
         raise HTTPException(401, "invalid or missing API key")
     status, _ = await engine_status("main")
-    return {"model_kind": model_kind(cfg["model"]) if status == "ready" else None,
-            "voices": await engine_voices("main") if status == "ready" else [],
-            "languages": LANGUAGES, "voicedesign": "design" in engines()}
+    voices = [v for v in await engine_voices("main") if not v.startswith(EIGENE)] if status == "ready" else []
+    return {"model_kind": model_kind(cfg["model"]) if status == "ready" else None, "voices": voices,
+            "languages": LANGUAGES, "voicedesign": "design" in engines(),
+            "voicedesign_bedarf": design_bedarf() if "design" in engines() else None,
+            "klon": (await engine_status("klon"))[0] if "klon" in engines() else None,
+            "eigene": [v for v in clone_voices() if v.startswith(EIGENE)]}
 
 
 @app.get("/v1/audio/voices", dependencies=auth)
@@ -387,9 +473,15 @@ async def speech(request: Request):
         if "design" not in engines():
             raise HTTPException(400, "VoiceDesign is not enabled on this server (panel: Konfiguration -> Sprachausgabe)")
         role = "design"
+    elif eigene_stimme(body):
+        role = await eigene_rolle(body)
     model, port = engines()[role]
     status, error = await engine_status(role)
+    if role == "design":
+        status = await design_bereit(status)
     if status != "ready":
+        if role == "design" and status == "loading":
+            raise HTTPException(503, "TTS engine loading: VoiceDesign starts on demand", headers={"Retry-After": "20"})
         raise HTTPException(503, f"TTS engine {status}: {error or ''}".strip())
 
     # always, whatever clean_text says: no Markdown signs, no secrets (textnorm.speech_markdown, SECRET_HINT)
@@ -436,7 +528,7 @@ async def speech(request: Request):
     # A fixed seed keeps the voice consistent when a client sends a reply sentence by sentence.
     if body.get("seed") is None and isinstance(cfg.get("seed"), int) and cfg["seed"] >= 0:
         body["seed"] = cfg["seed"]
-    if role == "main" and model_kind(model) == "base":
+    if role == "klon" or (role == "main" and model_kind(model) == "base"):
         apply_clone(body)
     elif role == "main" and model_kind(model) != "voice_design":
         known = {v.lower(): v for v in await engine_voices(role)}

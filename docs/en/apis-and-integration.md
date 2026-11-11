@@ -47,7 +47,7 @@ curl -N http://SPARK:31002/v1/audio/speech -H "Authorization: Bearer $KEY" -H 'C
 
 **Speaking style:** `"instructions": "calm and friendly, rather slow"` in the request. Without it, the default instruction from Settings → Speech output applies. Only the 1.7B models (CustomVoice, VoiceDesign) follow instructions; the 0.6B models ignore them (per the Qwen model card).
 
-**VoiceDesign** (voice from a description): `"task_type": "VoiceDesign"` and `"instructions": "deep, calm male voice"`. This needs its own model: enable "VoiceDesign zusätzlich bereitstellen" in Settings → Speech output. It starts a second engine with the same memory footprint again.
+**VoiceDesign** (voice from a description): `"task_type": "VoiceDesign"` and `"instructions": "deep, calm male voice"`. This needs its own model: enable "VoiceDesign zusätzlich bereitstellen" in Settings → Speech output. It starts a second engine with the same memory footprint again; since V01.1.374 it loads only when needed: the first request gets 503 "TTS engine loading" with `Retry-After`, after `tts.voicedesign_leerlauf_min` minutes without a request (default 5, 0 = always loaded) it is unloaded again. The designed voices (`sd-…`, `eigen-…`) are spoken by the engine "Own voices"; they are not listed in `/v1/audio/voices`.
 
 In the panel under **Status → Checks**, "streamed" plays audio while it is generated and shows the time to first audio.
 

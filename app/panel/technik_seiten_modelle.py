@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "asr": {
-        "stand": "f524940f44",
+        "stand": "1273ecedc4",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "common.NOTASR_PORT": ["s9"], "common.NOTASR_IDLE": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],
@@ -205,14 +205,15 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Sprachausgabe
     "tts": {
-        "stand": "72e67895a9",
+        "stand": "83eb229f41",
         "bezug": {
             "textnorm.NUMBER_MODES": ["s7"], "tts_proxy.speech": ["s1"], "tts_proxy.check_reference": ["s8"],
             "tts_proxy.engine_status": ["s4"], "tts_proxy.apply_clone": ["s8"], "textnorm.speech_markdown": ["s5"],
             "textnorm.hide_secrets": ["s5"], "textnorm.clean_text": ["s6"], "textnorm.guess_language": ["s7"],
             "textnorm.speak_numbers": ["s7"], "common.PrioGate": ["s10"], "kurzref.cut_at": ["s8"],
             "kurzref.keep_words": ["s8"], "tts_proxy.shorten": ["s8"], "kurzref.MIN_S": ["s8"], "kurzref.SLACK_S": ["s8"],
-            "tonteile.sprich": ["s1"],
+            "tonteile.sprich": ["s1"], "tts_proxy.eigene_rolle": ["s4"], "tts_proxy.design_bereit": ["s4"],
+            "tts_proxy.design_leerlauf": ["s4"], "stimmablage.ablegen": ["s8"],
         },
         "kurz": ("Die Sprachausgabe macht aus Text Ton. Der TTS-Dienst nimmt einen Satz an, räumt ihn auf, verdeckt "
                  "Geheimnisse, wählt Sprache und Stimme und gibt ihn an die Engine (Qwen3-TTS über vllm-omni), die nur "
@@ -261,10 +262,18 @@ SEITEN = {
               ("stop", "nein", ("Abgelehnt (400)", "Refused (400)"))),
             S("s4", "frage", ("Engine bereit?", "Engine ready?"),
               ("Haupt-Engine oder VoiceDesign", "main engine or VoiceDesign"),
-              ("Eine VoiceDesign-Anfrage geht an die zweite Engine, wenn sie eingeschaltet ist; alles andere an die "
-               "Haupt-Engine. engine_status fragt deren /health und nennt sonst den Grund.",
-               "A VoiceDesign request goes to the second engine when it is on; everything else to the main engine. "
-               "engine_status asks its /health and otherwise names the reason."),
+              ("Eine VoiceDesign-Anfrage geht an die zweite Engine, wenn sie eingeschaltet ist; eine gestaltete "
+               "Stimme (sd-…, eigen-…, Eigene Stimmen gestalten) an die Engine „Eigene Stimmen“ (Base, "
+               "eigene_rolle), läuft die nicht, spricht die Standardstimme der Haupt-Engine; alles andere an die "
+               "Haupt-Engine. engine_status fragt deren /health und nennt sonst den Grund. VoiceDesign lädt nur bei "
+               "Bedarf (tts.voicedesign_leerlauf_min): design_bereit startet die gestoppte Einheit einmal und "
+               "antwortet „loading“ mit Retry-After, design_leerlauf stoppt sie nach den Minuten ohne Anfrage.",
+               "A VoiceDesign request goes to the second engine when it is on; a designed voice (sd-…, eigen-…, "
+               "Design own voices) to the engine \"Own voices\" (Base, eigene_rolle), and when that one is not "
+               "running the main engine's standard voice speaks; everything else to the main engine. engine_status "
+               "asks its /health and otherwise names the reason. VoiceDesign loads only when needed "
+               "(tts.voicedesign_leerlauf_min): design_bereit starts the stopped unit once and answers \"loading\" "
+               "with Retry-After, design_leerlauf stops it after the minutes without a request."),
               ("stop", "nein", ("Nicht bereit (503)", "Not ready (503)"))),
             S("s5", "schritt", ("Markdown weg, Geheimnisse verdeckt", "Markdown off, secrets hidden"),
               ("immer, ohne Schalter", "always, no switch"),
@@ -301,14 +310,16 @@ SEITEN = {
                "es statt einer langen Aufnahme ein Stück davon: kurzref.cut_at schneidet einmal an der leisesten "
                "Stelle vor der Grenze, die Spracherkennung schreibt das Stück auf, kurzref.keep_words behält davon "
                "die Wörter des eigenen Textes (mindestens {kurzref.MATCH|prozent} gleich, sonst bleibt die ganze "
-               "Aufnahme). Bis das Stück fertig ist, gilt die ganze Aufnahme.",
+               "Aufnahme). Bis das Stück fertig ist, gilt die ganze Aufnahme. Die Proben der gestalteten Stimmen legt "
+               "stimmablage.ablegen dort ab, nur als schlichte WAV mit festem Namen (sd-…, eigen-…).",
                "Temperature, top_p and a fixed seed from the settings keep the voice the same from sentence to "
                "sentence. A Base model speaks with a cloned voice from voices/ (apply_clone); an unknown name falls "
                "back to the default voice. With „Shorten the reference of your own voice“ (tts.ref_max_s) it takes a "
                "piece of a long recording instead: kurzref.cut_at cuts once at the quietest point before the limit, "
                "speech recognition writes the piece down, kurzref.keep_words keeps the words of the own text "
                "(at least {kurzref.MATCH|prozent} alike, else the whole recording stays). Until the piece is ready, "
-               "the whole recording applies.")),
+               "the whole recording applies. stimmablage.ablegen puts the samples of the designed voices there, only "
+               "as a plain WAV with a fixed name (sd-…, eigen-…).")),
             S("s9", "frage", ("Gestreamt mit anderem Tempo?", "Streamed at another tempo?"),
               ("die Engine kann das beim Streamen nicht", "the engine cannot do that while streaming"),
               ("vllm-omni nimmt beim Streamen kein Tempo an. Dann streckt tempo.Stretcher den Ton Stück für Stück "
@@ -403,8 +414,12 @@ SEITEN = {
             ("kurzref.cut_at", ("leiseste Stelle vor der Grenze", "quietest point before the limit")),
             ("kurzref.keep_words", ("Wörter des eigenen Textes behalten", "keep the words of the own text")),
             ("common.PrioGate", ("Warten nach Vorrang", "waiting by priority")),
+            ("tts_proxy.eigene_rolle", ("gestaltete Stimme an die Engine „Eigene Stimmen“", "designed voice to the engine \"Own voices\"")),
+            ("tts_proxy.design_bereit", ("VoiceDesign bei Bedarf starten", "start VoiceDesign when needed")),
+            ("tts_proxy.design_leerlauf", ("VoiceDesign nach Leerlauf stoppen", "stop VoiceDesign after idle time")),
+            ("stimmablage.ablegen", ("Probe einer gestalteten Stimme ablegen", "store a designed voice's sample")),
         ],
-        "tests": ["test_units", "test_markdown", "test_hardening", "test_stufe", "test_tempo", "test_kurzref"],
+        "tests": ["test_units", "test_markdown", "test_hardening", "test_stufe", "test_tempo", "test_kurzref", "test_stimmdesign"],
         "heute": [("vb_tts_calls", ("Ausgaben", "outputs")), ("vb_tts_amount", ("Sekunden gesprochen", "seconds spoken"))],
     },
 

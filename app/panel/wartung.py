@@ -360,7 +360,15 @@ def watched():
     from common import OWN_LLM_UNITS, UNITS
     return {"llm": [OWN_LLM_UNITS["llm"], OWN_LLM_UNITS["llmtor"]],
             "asr": [UNITS["asr"], UNITS["asr-engine"]],
-            "tts": [UNITS["tts"], UNITS["tts-engine"], UNITS["tts-design"]]}
+            "tts": [UNITS["tts"], UNITS["tts-engine"], UNITS["tts-klon"]] + _design_fest()}
+
+
+def _design_fest():
+    """The VoiceDesign unit, when it always runs: on demand (tts.voicedesign_leerlauf_min > 0) its start for a request
+    is no restart, like the image understanding and the helper model of the language model (never in the list)."""
+    from common import UNITS, load_config
+    m = load_config().get("tts", {}).get("voicedesign_leerlauf_min", 5)
+    return [UNITS["tts-design"]] if m == 0 else []
 
 
 def _look(unit):

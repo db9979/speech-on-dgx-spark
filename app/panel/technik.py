@@ -410,6 +410,8 @@ MODULE = {
     "tts_proxy": ("sprache", "Sprachausgabe: nimmt an und reicht an die Engine durch"),
     "tts_server": ("sprache", "Sprachausgabe als eigener kleiner Dienst"),
     "tempo": ("sprache", "Sprechtempo für gestreamte Sprache"),
+    "stimmablage": ("sprache", "Stimmablage: prüft Name, WAV und Anzahl der Proben gestalteter Stimmen und legt sie ab"),
+    "stimmdesign": ("sprache", "Eigene Stimmen gestalten: 20 fertige und eigene Stimmen aus festen Feldern, einmal mit VoiceDesign gemacht, dann geklont"),
     "kurzref": ("sprache", "Kürzere Referenz einer geklonten Stimme: schneidet an einer Pause, behält die Wörter des eigenen Textes"),
     "bild_server": ("sprache", "Bild-Dienst: startet FLUX.2 klein bei Bedarf, prüft und kennzeichnet jedes Bild"),
     "llmstart": ("sprache", "Was das eigene Sprachmodell beim Wechseln und Starten tut: feste Schritte, Zeiten, Phase der Engine, Satz für den Chat"),
@@ -514,7 +516,7 @@ KNOTEN = {
     "asr": (896, 196, "Spracherkennung", "Speech recognition", ":31001 → :31011", "sprache",
             "Proxy nimmt an, die Engine läuft nur lokal.", "The proxy accepts, the engine runs locally only.", []),
     "tts": (896, 418, "Sprachausgabe", "Speech output", ":31002 → :31012", "",
-            "Qwen3-TTS mit eigenen Stimmen.", "Qwen3-TTS with own voices.", ["tts_proxy.py", "tts_server.py", "tempo.py", "kurzref.py", "textnorm.py"]),
+            "Qwen3-TTS mit eigenen Stimmen.", "Qwen3-TTS with own voices.", ["tts_proxy.py", "tts_server.py", "tempo.py", "kurzref.py", "textnorm.py", "stimmablage.py"]),
     "bild": (896, 490, "Bilder und Musik", "Pictures and music", ":31005 → :31015\n:31004 → :31014", "",
              "FLUX.2 klein (:31005 → :31015) und ACE-Step 1.5 (:31004 → :31014) auf dem Spark, nur lokal; jede Engine lädt "
              "beim ersten Auftrag und entlädt nach Ruhe. Immer nur eine zur Zeit: eine Warteschlange im Panel, die Sperre "

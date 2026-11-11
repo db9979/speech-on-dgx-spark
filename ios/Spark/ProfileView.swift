@@ -11,6 +11,8 @@ final class ProfileModel: ObservableObject {
     @Published var services: [String: Bool] = [:]
     @Published var proactive = false
     @Published var voices: [String] = []
+    /// shown names of the designed voices (Eigene Stimmen gestalten): id → name
+    @Published var voiceNames: [String: String] = [:]
     @Published var loading = true
     @Published var error: String?
     @Published var sample = false
@@ -35,7 +37,12 @@ final class ProfileModel: ObservableObject {
             Merken.keepObject("einstellungen", d)
             show(d)
             keptAt = nil
-            voices = (try? await api.voices()) ?? []
+            if let v = try? await api.voicesNamed() {
+                voices = v.voices
+                voiceNames = v.names
+            } else {
+                voices = []
+            }
             error = nil
         } catch {
             self.error = error.localizedDescription
@@ -134,7 +141,7 @@ struct ProfileView: View {
         Section {
             Picker("Stimme", selection: Binding(get: { m.text("voice") }, set: { m.set("voice", $0) })) {
                 Text("Standard").tag("")
-                ForEach(m.voices, id: \.self) { Text(verbatim: $0).tag($0) }
+                ForEach(m.voices, id: \.self) { Text(verbatim: m.voiceNames[$0] ?? $0).tag($0) }
             }
             VStack(alignment: .leading) {
                 LabeledContent("Sprechtempo") {

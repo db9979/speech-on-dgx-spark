@@ -338,8 +338,10 @@ def aktiv(cfg, total_gib, kat=None):
         omni = t.get("backend") == "vllm-omni" and "engine_mem_talker" in t
         gib = (t["engine_mem_talker"] + t.get("engine_mem_code2wav", 0)) * total_gib + 1.5 if omni else None
         add(zum_repo(t.get("model"), kat), gib)
-        if t.get("voicedesign_enabled"):
-            add(zum_repo(t.get("voicedesign_model"), kat), gib)
+        if t.get("voicedesign_enabled"):   # on demand (voicedesign_leerlauf_min > 0) like the image understanding
+            add(zum_repo(t.get("voicedesign_model"), kat), gib, None if t.get("voicedesign_leerlauf_min", 5) == 0 else "bei_bedarf")
+        if t.get("klon_enabled"):          # the own designed voices (stimmdesign.py): always loaded
+            add(zum_repo(t.get("klon_model"), kat), gib, "resident")
     img = cfg.get("image", {})
     if img.get("enabled"):
         add(zur_variante("bild", img.get("variant"), kat) or zur_variante("bild", "4b-q8", kat))

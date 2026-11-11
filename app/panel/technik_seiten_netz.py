@@ -303,7 +303,7 @@ SEITEN = {
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
     },
     "teilen": {
-        "stand": "c930afbbe9",
+        "stand": "bb7d107de2",
         "bezug": {
             "teilen.CODE_SECS": ["s2"], "teilen.schluessel": ["s3"], "teilen.regeln": ["s4"], "tlstor.server_context": ["s5"],
             "tlstor.allowed": ["s5"], "steuer.call": ["s6"], "tarswart.check": ["s7"], "tarswart.COMMANDS": ["s7"], "tarswart.systemupdate_tun": ["s7"],
@@ -370,9 +370,13 @@ SEITEN = {
             S("s7", "frage", ("Unterschrift, Zeit, Nummer, Befehl gültig?", "Signature, time, number, command valid?"),
               ("{tarswart.COMMANDS|anzahl} feste Befehle", "{tarswart.COMMANDS|anzahl} fixed commands"),
               ("tarswart.check prüft die Unterschrift, eine Zeit höchstens {tarswart.WINDOW} s daneben, die Nummer nur "
-               "einmal und einen Befehl aus der festen Liste. Keine Shell, keine freien Namen.",
+               "einmal und einen Befehl aus der festen Liste. Keine Shell, keine freien Namen. Nur die Probe einer "
+               "gestalteten Stimme (stimme_ablegen) geht über den eigenen Pfad /v1/wart/stimme mit größerem Limit; "
+               "stimmablage prüft dort Name, WAV und Anzahl.",
                "tarswart.check checks the signature, a time at most {tarswart.WINDOW} s off, the number only once and a "
-               "command from the fixed list. No shell, no free names."),
+               "command from the fixed list. No shell, no free names. Only the sample of a designed voice "
+               "(stimme_ablegen) goes over its own path /v1/wart/stimme with a bigger limit; stimmablage checks the "
+               "name, the WAV and the number there."),
               ("stop", "nein", ("Abgelehnt", "Refused"))),
             S("s9", "schritt", ("Werte beider Rechner", "Values of both computers"),
               ("alle 3 s, nur Zahlen", "every 3 s, numbers only"),

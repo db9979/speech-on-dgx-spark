@@ -3553,3 +3553,10 @@ details.supk{margin:4px 0 8px}details.supk>summary{cursor:pointer;font:var(--t-s
 .strow{display:flex;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.strechts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .stleer{padding:8px 0}
 @media (max-width:760px){.strow{flex-wrap:wrap}.strechts{width:100%;justify-content:flex-start;padding-left:19px}}
+/* Eigene Stimmen gestalten (stimmdesign.js): the box below the row „Eigene Stimme“ */
+.sdbox{border:1px solid var(--line);border-radius:var(--r-box);padding:var(--s2) var(--s3);margin:var(--s2) 0}
+.sdgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px}
+.sdgrid .ld-row{border:1px solid var(--line)}.sdgrid .ld-row.on{border-color:var(--acc)}
+.sdplay{width:34px;height:34px;padding:0;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.sdbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:var(--s2)}.sdbar .wide{flex:1;min-width:160px}
+.sdpane .setrow .ld-seg{margin:0}

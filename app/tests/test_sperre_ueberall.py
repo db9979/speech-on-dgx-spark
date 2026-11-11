@@ -299,6 +299,7 @@ ADMIN_ON_OK = {
     "listendav.py:for_live": "Zustand → Live: Spark-wide flag beside a number; each profile's lists ask features.allowed listdav",
     "dungeon_buch.py:admin_on": "the hero book's Spark-wide switches („Chronik und Heldenbuch“ and „Aufs reMarkable schicken“) for the night run and the admin's page; a profile asks dungeon_buch.on (dungeon_tiefe.fuer, features.allowed)",
     "dungeon_tiefe.py:admin_an": "the one place for a game part's Spark-wide switch (night jobs, the admin's rules page and catalog, Ausdünnen 1); a round asks dungeon_tiefe.an, that is features.allowed for its host",
+    "stimmdesign.py:for_live": "Zustand → Live: Spark-wide flag beside numbers; each profile asks features.allowed stimmdesign (stimmdesign._prof)",
     "dungeon.py:for_live": "Zustand → Live: Spark-wide flag beside numbers; each round asks features.allowed dungeon for its host",
     "dungeon_musik.py:probe_geht": "admin-only: the admin's probe of a field of the Spark-wide music store (Funktionen → KI-Dungeon-Master → Regeln anpassen → Musik am Tisch), no profile acts here",
     "dungeon_musik.py:on": "Spark-wide: one shared music store for every round (nothing personal); a seat reaches a round only through dungeon.py, which asks features.allowed dungeon for its host",

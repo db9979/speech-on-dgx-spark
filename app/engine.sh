@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Starts one vLLM engine natively (no Docker), as the speech user:
 #   speech-spark-tts-engine.service  -> engine.sh main    (vllm-omni, CustomVoice / Base model)
-#   speech-spark-tts-design.service  -> engine.sh design  (vllm-omni, VoiceDesign model)
+#   speech-spark-tts-design.service  -> engine.sh design  (vllm-omni, VoiceDesign model, on demand with voicedesign_leerlauf_min)
+#   speech-spark-tts-klon.service    -> engine.sh klon    (vllm-omni, Base model: the own designed voices, stimmdesign)
 #   speech-spark-asr-engine.service  -> engine.sh asr     (plain vLLM, Qwen3-ASR)
 #   speech-spark-llm.service         -> engine.sh llm     (plain vLLM, the own language model, modelle.py start-args)
 #   speech-spark-sehen.service       -> engine.sh sehen   (plain vLLM, image understanding, started on demand)
@@ -9,7 +10,7 @@
 # Listens on 127.0.0.1 only; speech-spark-tts / speech-spark-asr / speech-spark-llmtor on the public ports sit in front.
 set -euo pipefail
 
-ROLE="${1:?usage: engine.sh main|design|asr|llm|sehen|helfer}"
+ROLE="${1:?usage: engine.sh main|design|klon|asr|llm|sehen|helfer}"
 CONFIG="${SPEECH_SPARK_CONFIG:-/etc/speech-spark/config.json}"
 STATE_DIR="${SPEECH_SPARK_STATE:-/var/lib/speech-spark/state}"
 VENV="${SPEECH_SPARK_ENGINE_VENV:-/opt/speech-spark/venv-engine}"
@@ -52,6 +53,9 @@ else
   SEQS=$(c engine_max_seqs); MEM0=$(c engine_mem_talker); MEM1=$(c engine_mem_code2wav)
   MAXLEN=$(jq -r '.tts.engine_max_model_len // 4096' "$CONFIG")
   if [ "$ROLE" = design ]; then MODEL=$(c voicedesign_model); PORT=$(c voicedesign_port)
+  elif [ "$ROLE" = klon ]; then MODEL=$(c klon_model); PORT=$(c klon_port)
+    # only a Base model clones the stored samples of the designed voices (stimmdesign)
+    [[ "$MODEL" =~ -Base$ ]] || fail "tts.klon_model must be a Base model (Qwen/Qwen3-TTS-...-Base)"
   else MODEL=$(c model); PORT=$(c engine_port); fi
 fi
 
@@ -86,7 +90,7 @@ export PATH="$VENV/bin:/usr/local/cuda/bin:$PATH"
 
 # One engine at a time: vLLM sizes its KV cache from device-wide memory use while it starts,
 # so an engine loading at the same moment eats into this one's budget (seen on GB10:
-# "Available KV cache memory: 0.0 GiB"). Order: llm, asr, main, design, sehen (helfer like sehen); each waits for the ones
+# "Available KV cache memory: 0.0 GiB"). Order: llm, asr, main, klon, design, sehen (helfer like sehen); each waits for the ones
 # before it that are running, stopping or restarting but not ready yet, at most an hour (the own language model
 # compiles its kernels after a restart and loads for well over 20 minutes; a TTS engine that stopped waiting then
 # failed with "No available memory for the cache blocks" every 30 seconds, tars 2026-10-16).
@@ -95,8 +99,11 @@ own_llm="speech-spark-llm $(jq -r '.llm.engine_port // 31016' "$CONFIG")"
 case "$ROLE" in
   asr) others=("$own_llm") ;;
   main) others=("$own_llm" "speech-spark-asr-engine $(jq -r .asr.engine_port "$CONFIG")") ;;
+  klon) others=("$own_llm" "speech-spark-asr-engine $(jq -r .asr.engine_port "$CONFIG")"
+                "speech-spark-tts-engine $(jq -r .tts.engine_port "$CONFIG")") ;;
   design) others=("$own_llm" "speech-spark-asr-engine $(jq -r .asr.engine_port "$CONFIG")"
-                  "speech-spark-tts-engine $(jq -r .tts.engine_port "$CONFIG")") ;;
+                  "speech-spark-tts-engine $(jq -r .tts.engine_port "$CONFIG")"
+                  "speech-spark-tts-klon $(jq -r '.tts.klon_port // 31019' "$CONFIG")") ;;
   sehen|helfer) others=("$own_llm" "speech-spark-asr-engine $(jq -r .asr.engine_port "$CONFIG")"
                  "speech-spark-tts-engine $(jq -r .tts.engine_port "$CONFIG")") ;;
 esac

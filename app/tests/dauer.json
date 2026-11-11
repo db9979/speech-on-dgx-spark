@@ -291,6 +291,7 @@
 "test_steuerzentrale": 0.8,
 "test_stille": 0.3,
 "test_stimmabdruck": 0.0,
+"test_stimmdesign": 2.0,
 "test_stufe": 0.9,
 "test_stufen": 1.3,
 "test_suche_gesicht": 15.4,

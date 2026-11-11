@@ -806,11 +806,17 @@ struct SparkAPI {
         try Self.check(data, response)
     }
 
-    /// The voice names to choose from.
+    /// The voice names to choose from; with "Eigene Stimmen gestalten" also the designed voices (sd-…, eigen-…),
+    /// whose shown names come in "namen".
     func voices() async throws -> [String] {
+        try await voicesNamed().voices
+    }
+
+    func voicesNamed() async throws -> (voices: [String], names: [String: String]) {
         let (data, response) = try await URLSession.shared.data(for: request("api/assistant/voices"))
         try Self.check(data, response)
-        return Self.object(data)["voices"] as? [String] ?? []
+        let o = Self.object(data)
+        return (o["voices"] as? [String] ?? [], o["namen"] as? [String: String] ?? [:])
     }
 
     /// The Spark's version page (only with the admin's right for this profile).

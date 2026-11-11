@@ -100,7 +100,7 @@ DESK_SKIP = {
                      "berater", "geraeteupdate", "dienstwacht", "wachposten", "wartung", "notbetriebasr", "gehaeuse", "systemupdates",
                      "schirm", "modellwechsel", "werkstatt", "entwickeln"), _D_SPARK),
     **dict.fromkeys(("history", "teilen", "bilder", "musik", "dungeon", "mystatus", "agent", "chats", "weather",
-                     "feeds", "contacts", "transit", "speaker", "verbrauch", "nas"), _D_PANEL),
+                     "feeds", "contacts", "transit", "speaker", "verbrauch", "nas", "stimmdesign"), _D_PANEL),
     **dict.fromkeys(("room", "esp32", "wyoming", "telefon", "telegram", "android", "pebble", "terminal", "mcpserver", "llmapi", "llmapiassist", "openwebui",
                      "iphone", "appmerken"), _D_DEVICE),
     "memory": _D_LINK, "mfa": _D_LINK + " (Meine Daten on the Ich page Sicherheit)",
@@ -146,6 +146,10 @@ FEATURES = (
     F("style", "Eigener Gesprächsstil", "Own conversation style", "talk", ("own_style",), me="setbox", guide="style"),
     F("follow", "Rückfrage ohne Weckwort", "Follow-up without wake word", "talk", ("follow_up",), me="setbox", guide="follow"),
     F("selfecho", "Eigene Stimme überhören", "Ignore my own voice", "talk", ("no_self_echo",), me="setbox", guide="selfecho"),
+    # stimmdesign.py (Dominik 2026-11-11, plan eigene-stimme): 20 fixed voices and own ones from fields, made once with
+    # VoiceDesign, then cloned by the Base engine (tts.klon_enabled); READY needs both on the speech output
+    F("stimmdesign", "Eigene Stimmen gestalten", "Design own voices", "talk", ("stimmdesign",), me="setbox",
+      guide="stimmdesign"),
     # zwischenruf.py (plan ins-wort-fallen): a barge-in only pauses the answer; fixed words decide on, stop or question
     F("anhalten", "Ins Wort fallen: erst anhalten", "Barge-in: pause first", "talk", ("barge_hold",), me="setbox",
       guide="anhalten"),
@@ -832,11 +836,17 @@ def _docling_set_up(c):
     return doclingdienst.set_up(c)
 
 
+def _stimmdesign_set_up():
+    t = load_config("tts")
+    return bool(t.get("voicedesign_enabled")) and (bool(t.get("klon_enabled")) or str(t.get("model", "")).endswith("-Base"))
+
+
 READY = {"beraterissue": lambda c: admin_on("melden", c),   # a case as a report needs „Probleme melden“
          "docling": _docling_set_up,                          # the Docling server needs its address
          "bilder": lambda c: bool(load_config("image").get("enabled")),   # the picture model installed (install.sh --bild)
          "musik": lambda c: bool(load_config("music").get("enabled")),    # the music model installed (install.sh --musik)
-         "naszustand": _naszustand_set_up}                    # the NAS status needs its host and SNMP user
+         "naszustand": _naszustand_set_up,                    # the NAS status needs its host and SNMP user
+         "stimmdesign": lambda c: _stimmdesign_set_up()}       # VoiceDesign and a Base engine on the speech output
 # extra per-profile conditions given by the admin (the agent level): key -> function(uid) -> bool
 GRANTED = {}
 # a profile's own stored data of a function, registered by the module that keeps it: key -> (count(uid) -> int,

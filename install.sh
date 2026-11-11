@@ -497,7 +497,7 @@ ports=""
 [ "$PANEL_ONLY" = 0 ] && ports="$ASR_PORT $TTS_PORT"
 [ "$MODE" = full ] && ports="$ports $PANEL_PORT"
 [ "$MODE" = full ] && [ "$HTTPS_PORT" != 0 ] && ports="$ports $HTTPS_PORT"
-[ "$WITH_TTS" = 1 ] && [ "$BACKEND" = vllm-omni ] && ports="$ports $(cfg_int .tts.engine_port 31012) $(cfg_int .tts.voicedesign_port 31013)"
+[ "$WITH_TTS" = 1 ] && [ "$BACKEND" = vllm-omni ] && ports="$ports $(cfg_int .tts.engine_port 31012) $(cfg_int .tts.voicedesign_port 31013) $(cfg_int .tts.klon_port 31019)"
 [ "$WITH_ASR" = 1 ] && [ "$ASR_BACKEND" = vllm ] && ports="$ports $(cfg_int .asr.engine_port 31011)"
 [ "$TEILEN" = 1 ] && ports="$ports 31007"   # the Wärter (common.WAERTER_PORT); the door shares the services' ports
 [ "$WITH_BILD" = 1 ] && ports="$ports $(cfg_int .image.port 31005) $(cfg_int .image.engine_port 31015)"
@@ -830,7 +830,7 @@ fi
 # An update downloads only when the chosen models changed since the last complete download
 # ($PREFIX/.models, root's file); the services fetch a model that went missing themselves, only its pinned commit and
 # the allowed file kinds, each file checked before every start (modelle.vorbereiten from engine.sh and modelle.lokal).
-MODELS_SIG="models-r2 $(sha256sum "$INSTALL_FROM/app/modelle.json" | cut -c1-16) $WITH_ASR $WITH_TTS $ASR_BACKEND $BACKEND $(cfgq -c '{a: .asr.model, b: .asr.aligner_model, c: .asr.timestamps, d: .asr.recognizer, e: .tts.model, f: .tts.voicedesign_enabled, g: .tts.voicedesign_model}')"
+MODELS_SIG="models-r2 $(sha256sum "$INSTALL_FROM/app/modelle.json" | cut -c1-16) $WITH_ASR $WITH_TTS $ASR_BACKEND $BACKEND $(cfgq -c '{a: .asr.model, b: .asr.aligner_model, c: .asr.timestamps, d: .asr.recognizer, e: .tts.model, f: .tts.voicedesign_enabled, g: .tts.voicedesign_model, h: .tts.klon_enabled, i: .tts.klon_model}')"
 if [ "$DOWNLOAD" = 1 ] && [ "$FROM_UPDATE" = 1 ] && [ -f "$PREFIX/.models" ] && [ ! -L "$PREFIX/.models" ] \
    && [ "$(cat "$PREFIX/.models")" = "$MODELS_SIG" ]; then
   say "Downloading skipped: the models are the same as before"
@@ -882,6 +882,7 @@ if [ "$DOWNLOAD" = 1 ]; then
     say "Downloading TTS model for the engine"
     dl engine "$(cfg .tts.model)"
     [ "$(cfg .tts.voicedesign_enabled)" = true ] && dl engine "$(cfg .tts.voicedesign_model)"
+    [ "$(cfg .tts.klon_enabled)" = true ] && dl engine "$(cfg .tts.klon_model)"
   fi
   if [ "$MODELS_OK" = 1 ]; then rm -f -- "$PREFIX/.models"; printf '%s\n' "$MODELS_SIG" >"$PREFIX/.models"; fi
 fi
@@ -1008,7 +1009,7 @@ fi
 {
   printf '%s ALL=(root) NOPASSWD: ' "$SVC_USER"
   first=1
-  for u in asr asr-engine tts tts-engine bild musik tts-design turn llm llmtor sehen helfer guacd; do
+  for u in asr asr-engine tts tts-engine bild musik tts-design tts-klon turn llm llmtor sehen helfer guacd; do
     for a in start stop restart; do
       [ $first = 1 ] || printf ', '
       printf '/usr/bin/systemctl %s speech-spark-%s' "$a" "$u"; first=0
@@ -1189,6 +1190,7 @@ EOF
 }
 engine_unit tts-engine main
 engine_unit tts-design design
+engine_unit tts-klon klon
 engine_unit asr-engine asr
 # the own language model and, on demand, the image understanding model (engine.sh reads the catalog, modelle.py);
 # speech-spark-sehen is never enabled: the LLM-Tor starts it for a picture question and stops it when idle; the same
@@ -2079,14 +2081,22 @@ fi
 
 if [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = vllm-omni ]; then
   restart_engine tts-engine "$VLLM_OMNI_VERSION $(cfgq -c '.tts | {model, engine_mem_talker, engine_mem_code2wav, engine_max_seqs, engine_max_model_len, engine_port}')"
-  if [ "$(cfg .tts.voicedesign_enabled)" = true ]; then
+  if [ "$(cfg .tts.voicedesign_enabled)" = true ] && [ "$(cfg_int .tts.voicedesign_leerlauf_min 5)" = 0 ]; then
     # like the engines above: only when its settings changed (a restart loads the VoiceDesign model again)
     restart_engine tts-design "$VLLM_OMNI_VERSION $(cfgq -c '.tts')"
   else
+    # off, or on demand (tts.voicedesign_leerlauf_min > 0): the TTS front end starts it for a request and stops it
+    # after the idle minutes (tts_proxy.design_bereit), so it never starts with the machine
     systemctl disable --now speech-spark-tts-design.service 2>/dev/null || true
   fi
+  if [ "$(cfg .tts.klon_enabled)" = true ]; then
+    # the own designed voices (stimmdesign): the Base model clones their stored samples
+    restart_engine tts-klon "$VLLM_OMNI_VERSION $(cfgq -c '.tts | {klon_model, klon_port, engine_mem_talker, engine_mem_code2wav, engine_max_seqs, engine_max_model_len}')"
+  else
+    systemctl disable --now speech-spark-tts-klon.service 2>/dev/null || true
+  fi
 else
-  systemctl disable --now speech-spark-tts-engine.service speech-spark-tts-design.service 2>/dev/null || true
+  systemctl disable --now speech-spark-tts-engine.service speech-spark-tts-design.service speech-spark-tts-klon.service 2>/dev/null || true
 fi
 if [ "$WITH_TTS" = 1 ]; then
   restart_front tts

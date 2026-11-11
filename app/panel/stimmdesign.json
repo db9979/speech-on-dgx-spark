@@ -1,0 +1,35 @@
+{
+  "satz": {
+    "de": "Guten Morgen. Heute wird es sonnig, und um zehn Uhr hast du einen Termin. Soll ich dich eine Viertelstunde vorher erinnern?",
+    "en": "Good morning. It will be sunny today, and you have an appointment at ten. Shall I remind you a quarter of an hour before?"
+  },
+  "fertig": [
+    ["ruhigwarm", "Ruhig und warm", "Calm and warm", "w", 40, "ruhig", "A calm, warm female voice of about forty, soft and friendly, relaxed pace."],
+    ["sachlich", "Sachlich und klar", "Factual and clear", "m", 45, "ruhig", "A clear, factual male voice of about forty five, steady and precise, medium pitch."],
+    ["jungfreundlich", "Freundlich und jung", "Friendly and young", "w", 25, "lebhaft", "A bright, friendly young female voice of about twenty five, open and cheerful."],
+    ["locker", "Entspannt und locker", "Relaxed and easygoing", "m", 30, "lebhaft", "A relaxed, easygoing male voice of about thirty, casual and warm, slightly smiling."],
+    ["erzaehler", "Tiefe Erzählerstimme", "Deep narrator", "m", 60, "erzaehler", "A deep, resonant male narrator voice of about sixty, slow and expressive."],
+    ["maerchen", "Märchenerzählerin", "Storyteller", "w", 55, "erzaehler", "A soft, gentle female storyteller voice of about fifty five, warm and slow, like reading a fairy tale."],
+    ["nachrichten", "Nachrichtensprecherin", "Newsreader", "w", 35, "ruhig", "A professional female newsreader voice of about thirty five, clear, neutral and confident."],
+    ["butler", "Butler, trocken und höflich", "Butler, dry and polite", "m", 60, "ruhig", "A polite, dry male butler voice of about sixty, refined and composed, with understated humor."],
+    ["froh", "Fröhlich und energisch", "Cheerful and energetic", "w", 30, "lebhaft", "A cheerful, energetic female voice of about thirty, lively and upbeat, quick pace."],
+    ["weise", "Bedächtig und weise", "Thoughtful and wise", "w", 75, "erzaehler", "An old, thoughtful female voice of about seventy five, slow, kind and wise."],
+    ["opa", "Gemütlicher Großvater", "Cosy grandfather", "m", 75, "erzaehler", "An old, cosy male voice of about seventy five, warm and slightly raspy, slow and kind."],
+    ["leise", "Leise, fast flüsternd", "Quiet, almost whispering", "w", 30, "ruhig", "A very soft, quiet female voice of about thirty, almost whispering, intimate and calm."],
+    ["trainer", "Trainer, motivierend", "Coach, motivating", "m", 28, "lebhaft", "A motivating male coach voice of about twenty eight, energetic and encouraging, firm."],
+    ["rauchig", "Rauchig und dunkel", "Husky and dark", "w", 45, "ruhig", "A husky, dark female voice of about forty five, low pitch, smoky and calm."],
+    ["neugierig", "Hell und neugierig", "Bright and curious", "n", 20, "lebhaft", "A bright, curious, androgynous young voice of about twenty, light and quick."],
+    ["geduldig", "Geduldig und beruhigend", "Patient and soothing", "w", 50, "ruhig", "A patient, soothing female voice of about fifty, gentle and reassuring, slow pace."],
+    ["humor", "Trocken-humorvoll", "Dry and humorous", "m", 40, "lebhaft", "A dry, witty male voice of about forty, laid back, with a hint of irony."],
+    ["bayrisch", "Bairisch gefärbt", "Bavarian touch", "m", 50, "lebhaft", "A hearty male voice of about fifty with a light Bavarian accent, warm and down to earth."],
+    ["norden", "Norddeutsch, nüchtern", "North German, sober", "w", 40, "ruhig", "A sober female voice of about forty with a light North German accent, calm and matter of fact."],
+    ["sanfttief", "Sanft und tief", "Soft and deep", "n", 35, "ruhig", "A soft, deep, androgynous voice of about thirty five, calm and smooth."]
+  ],
+  "felder": {
+    "geschlecht": [["w", "weiblich", "female", "female"], ["m", "männlich", "male", "male"], ["n", "neutral", "neutral", "androgynous"]],
+    "alter": [["jung", "jung", "young", "young, about twenty five"], ["mittel", "mittel", "middle", "about forty"], ["aelter", "älter", "older", "about sixty"], ["alt", "alt", "old", "old, about seventy five"]],
+    "tonlage": [["hell", "hell", "high", "high pitch"], ["mittel", "mittel", "medium", "medium pitch"], ["tief", "tief", "low", "low pitch"]],
+    "tempo": [["langsam", "langsam", "slow", "slow pace"], ["normal", "normal", "normal", "natural pace"], ["zuegig", "zügig", "quick", "quick pace"]],
+    "art": [["warm", "warm", "warm", "warm"], ["sachlich", "sachlich", "factual", "factual"], ["froh", "fröhlich", "cheerful", "cheerful"], ["rauchig", "rauchig", "husky", "husky"], ["ruhig", "ruhig", "calm", "calm"], ["energisch", "energisch", "energetic", "energetic"], ["trocken", "trocken", "dry", "dry"], ["weich", "weich", "soft", "soft"]]
+  }
+}

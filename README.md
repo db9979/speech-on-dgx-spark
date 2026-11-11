@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.374** Design own voices: 20 ready answer voices and up to three of your own from fields and own words, made once with VoiceDesign and then the same in every answer; VoiceDesign loads only when needed
 - **V01.1.373** AI Dungeon Master with a rule depth: Simple or Full instead of 58 switches, the host chooses per round, console tools without a switch, six own switches stay
 - **V01.1.372** New avatar "Wave": no face, a line at rest, a wave with an echo while speaking, in the panel, the apps, the companion and on the Pebble
 - **V01.1.371** Leaner docs: the guide describes only today's state (history stays in the CHANGELOG), the CHANGELOG starts at V01.1 with the older series in CHANGELOG-V01.0.md, the guideline without provenance notes
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.367** Ask which way: before a change that could go two ways (mail or message, appointment or reminder) the assistant asks with buttons which one you mean, or just answers; never for reading questions, off by default
 - **V01.1.366** A more precise switch: knowledge questions keep web search and Wikipedia, an emergency number starts no call, a follow-up holds only briefly and with a real reference, "Strassenbahn" and "Wohnzimmerlampe" are understood
 - **V01.1.365** Stopping means off: "Stopp" or "Tschüss" ends the talk everywhere without the model, no microphone opens again afterwards; kill switch stage 3 ends running answers and calls
-- **V01.1.364** Audio overview as a discussion (parts 2 and 3): each contribution has a way of speaking, each role a chosen voice with a sample, pauses fit the turn, short reactions like "Mhm." in between; a two-minute sample for the admin, gone after a day; the iPhone app shows chapters and conversation notes
 
 
 

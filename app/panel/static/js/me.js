@@ -779,6 +779,8 @@ const SETF=[
   {k:'barge_level',type:'sel',l:t('Empfindlichkeit','Sensitivity'),h:t('Wie leicht Geräusche die Antwort unterbrechen.','How easily sounds interrupt the answer.'),o:{low:t('gering','low'),mid:t('mittel','medium'),high:t('hoch','high')}},
   {g:t('Antwort','Answer'),k:'speak',type:'bool',l:t('Antworten vorlesen','Read answers aloud'),h:t('Aus: Antworten nur als Text, auf all deinen Geräten. Lautsprecher ohne Bildschirm und CarPlay sprechen weiter.','Off: answers as text only, on all your devices. Speakers without a screen and CarPlay keep speaking.')},
   {k:'voice',type:'voice',l:t('Stimme','Voice'),h:t('Leer = Standardstimme des Servers.','Empty = the server\'s default voice.')},
+  // Eigene Stimmen gestalten (stimmdesign.js): 20 fixed voices and own ones; the button opens the box below the row
+  {k:'sd',type:'sd',prof:1,need:'stimmdesign',l:t('Eigene Stimme','Own voice'),h:t('20 fertige Stimmen oder eine eigene nach deiner Beschreibung; gilt auf allen Geräten.','20 ready voices or one of your own from a description; counts on all devices.')},
   {k:'speed',type:'range',l:t('Sprechtempo','Speaking rate'),h:t('Schneller oder langsamer, ohne die Stimmlage zu ändern. Über 1,0 hält der Spark bei langen Antworten mehr Ton auf Vorrat, damit nichts aussetzt.','Faster or slower without changing the pitch. Above 1.0 the Spark keeps more audio in stock during long answers, so nothing drops out.'),step:0.05},
   {k:'length',type:'sel',l:t('Antwortlänge','Answer length'),h:t('Wie ausführlich der Assistent antwortet.','How detailed the assistant answers.'),o:{short:t('kurz','short'),normal:t('normal','normal'),long:t('ausführlich','detailed')}},
   {k:'voice_tips',type:'bool',prof:1,need:'voice_tips',l:t('Tipps beim Sprechen','Tips while talking'),h:t('Am Lautsprecher, am Telefon und im Auto sagt der Assistent höchstens einmal am Tag am Ende einer Antwort einen Satz, den du auch sagen kannst, z. B. „Übrigens: du kannst auch sagen ‚Ruf mich morgen um sieben an‘.“','At a speaker, on the phone and in the car the assistant says at most once a day at the end of an answer a sentence you can also say, e.g. "By the way: you can also say \'Call me tomorrow at seven\'."')},
@@ -828,6 +830,7 @@ async function renderSet(el,vals,onchange){const admin=!onchange;await setReady(
       ctl=`<select id="${id}" class="facesel" data-noseg>${opts(f).map(([a])=>[a,a?nm[a]||a:t('Vorgabe','Default')+' ('+nm[sp]+')'])
         .map(([a,b])=>`<option value="${a}"${a?'':` data-short="${esc(t('Vorgabe','Default'))}"`}${(v[f.k]||'')===a?' selected':''}>${esc(b)}</option>`).join('')}</select>`}
     else if(f.type==='text')ctl=`<textarea id="${id}" rows="3" maxlength="${f.max}">${esc(v[f.k]||'')}</textarea>`;
+    else if(f.type==='sd')ctl=`<button class="b" type="button" id="${id}">${t('Stimmen …','Voices …')}</button>`;
     else if(f.type==='voice')ctl=(voices.length?'':'<div>')+`<select id="${id}"><option value="">${t('Standard','Default')}</option>${[...new Set([...voices,...(v.voice?[v.voice]:[])])].map(x=>`<option${x===v.voice?' selected':''}>${esc(x)}</option>`).join('')}</select>`+(voices.length?'':`<div class="fh">${t('Die Sprachausgabe nennt gerade keine Stimmen (startet noch?). Später erneut öffnen.','The speech output lists no voices right now (still starting?). Open again later.')}</div></div>`);
     else ctl=`<input type="range" id="${id}" min="${(rng[f.k]||[])[0]}" max="${(rng[f.k]||[])[1]}" step="${f.step}" value="${v[f.k]}"><output id="${id}_o">${Number(v[f.k]).toFixed(2)}×</output>`;
     const head=f.grp!==prev;prev=f.grp;
@@ -840,6 +843,7 @@ async function renderSet(el,vals,onchange){const admin=!onchange;await setReady(
   if(window.faceTiles)faceTiles(el);
   if(!admin)meLayout(el);
   if(!admin&&window.cxWhoRows)cxWhoRows(el);   // „Wer darf mir schreiben“: the picked and blocked ones, the Rufname (chats.js)
+  if(!admin&&window.sdRow)sdRow(el);   // „Eigene Stimme“: its box with the 20 voices and the own ones (stimmdesign.js)
   return()=>({...v})}
 // Ich → Gespräch (plaene/einstellungen-anordnung.md, Umzug 1): the groups one below the other in boxes as on the
 // settings pages (no tabs), "Tempo und Genauigkeit" folded, and what the admin switched off collected at the bottom
