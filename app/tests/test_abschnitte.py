@@ -88,6 +88,59 @@ class Cutting(unittest.TestCase):
         self.assertIn((table, "Kosten"), got)
 
 
+class HeadingsInsideParagraphs(unittest.TestCase):
+    """Plan open-notebook hoerstueck-rund (Dominik 2026-11-11): a pasted chat or note has its headings without an empty
+    line before them, bold, with a colon or a bracket; a text broken at the page's width never gets one."""
+    BODY = "Dieser Absatz erklärt in ganzen Sätzen, was in diesem Abschnitt wirklich gemeint ist und warum."
+
+    def test_more_kinds_of_heading_lines(self):
+        for block, want in (("**Wichtige Hebel für die Kostenneutralität:**", "Wichtige Hebel für die Kostenneutralität"),
+                            ("### Der Vertriebs-Pilot (Roadmap)", "Der Vertriebs-Pilot (Roadmap)"),
+                            ("Erste Ausgabe vom ersten Entwurf:", "Erste Ausgabe vom ersten Entwurf"),
+                            ("KI-Readiness: Wie ich die IT umbauen würde\n" + self.BODY,
+                             "KI-Readiness: Wie ich die IT umbauen würde"),
+                            ("Stufe 1 – Kundenbriefing (lesend, ca. 3 Monate)\n" + self.BODY,
+                             "Stufe 1 – Kundenbriefing (lesend, ca. 3 Monate)"),
+                            ("5. Querschnitt: Governance & Fachbereich\n" + self.BODY, "5. Querschnitt: Governance & Fachbereich"),
+                            # a lead-in over a list, a key with a value, a bold sentence: no heading
+                            ("Daraus folgen drei Dinge:\n• Modellwahl: ein mittelgroßes Modell läuft dort schnell genug.", ""),
+                            ("Datum: 12. März 2026\n" + self.BODY, ""),
+                            ("**Das ist wichtig.**", "")):
+            self.assertEqual(documents.heading(block), want, block)
+
+    def test_a_heading_line_inside_a_paragraph_starts_a_section(self):
+        text = ("Was die Station bedeutet\n" + self.BODY + "\nKostenneutrale Struktur (15 Personen)\n" + self.BODY +
+                "\nPilot Vertrieb und Außendienst\n" + self.BODY + "\n### Nächste Fragen\n" + self.BODY)
+        heads = [documents.heading(b) for b in documents.paragraphs(text)]
+        self.assertEqual([h for h in heads if h], ["Was die Station bedeutet", "Kostenneutrale Struktur (15 Personen)",
+                                                   "Pilot Vertrieb und Außendienst", "Nächste Fragen"])
+
+    def test_no_heading_inside_a_paragraph_by_mistake(self):
+        # a text broken at the page's width (every line about as long), a numbered list, a table pasted with tabs
+        wrapped = ("Die Station ist sehr leistungsfähig und trägt ein Modell.\nDie Ergebnisse zeigen deutlich einen "
+                   "Zuwachs\nbei allen Gruppen, die in diesem Jahr am Pilot teilgenommen haben.")
+        numbered = "Vier Dinge:\n1. Kundendaten\n2. Hardware der Nutzer im Außendienst und in den Niederlassungen klären"
+        table = ("Ohne neue Stellen geht das nur mit weniger Arbeit.\nTeam\tBesetzung\tFokus\n"
+                 "KI-Plattform\t1 Admin (voll) + 1 Entwickler (50 %)\tDGX Station, Gateway, Rechte, Monitoring")
+        for text in (wrapped, numbered, table):
+            got = documents.paragraphs(" ".join(text.split(" ")).replace("\t", " "), documents.tab_lines(text))
+            self.assertEqual(len(got), 1, got)
+
+    def test_the_pasted_note_gets_its_sections(self):
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "hoerstueck_notiz.md"),
+                  encoding="utf-8") as f:
+            text = f.read()
+        parts = [part for _, part in documents.pieces(text)]
+        for want in ("Wichtige Hebel für die Kostenneutralität", "Kostenneutrale Struktur (15 Personen)",
+                     "Pilot Vertrieb und Außendienst", "Stufe 2 – Produkt- und Regulatorik-Fragen (lesend)",
+                     "Erste Ausgabe vom ersten Promt", "KI-Readiness: Wie ich die IT umbauen würde",
+                     "2. KI-Assistent / Applications-Team (3–4 Personen)", "Phasen"):
+            self.assertTrue(any(want in p for p in parts), (want, parts))
+        # before: 16 of 27 pieces under „Was die DGX Station bedeutet“, the whole first version with them
+        self.assertLessEqual(sum(1 for p in parts if p == "Was die DGX Station bedeutet"), 3, parts)
+        self.assertNotIn("Team Besetzung Fokus", " ".join(parts))     # a table's head row is no heading
+
+
 class ContextLines(unittest.TestCase):
     def setUp(self):
         helpers.set_config(documents=True, doc_semantic=False, doc_brief=False)

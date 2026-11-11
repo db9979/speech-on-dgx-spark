@@ -48,13 +48,14 @@ def on():
 
 
 def digest(text):
-    """(digest, chapters): the text cut at its headings (documents.heading, fixed rules), every heading with the start
+    """(digest, chapters): the text cut at its headings (documents.paragraphs and heading, fixed rules), every heading with the start
     of its section, at most ABSCHNITTE_MAX sections and DIGEST_MAX characters; chapters = the headings found, the
     first one not when the text starts with it and more follow (the adventure's title)."""
+    tabs = documents.tab_lines(str(text or ""))
     text = re.sub(r"[ \t]+", " ", str(text or ""))
     text = re.sub(r"\n\s*\n+", "\n\n", text).strip()
     secs, cur = [], None
-    for b in text.split("\n\n"):
+    for b in documents.paragraphs(text, tabs):
         h = documents.heading(b)
         if h or cur is None:
             cur = [h, []]

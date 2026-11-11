@@ -476,6 +476,27 @@ _H_MD = re.compile(r"#{1,6}\s+(\S.{0,118})")
 _H_LAW = re.compile(r"((?:§|Art\.|Artikel|TOP|Kapitel|Abschnitt|Teil)\s*\d+[a-z]?\b[^.:\n]{0,60})[.:]?(\s|$)")
 _H_NUM = re.compile(r"(\d{1,2}(?:\.\d{1,2}){0,3}\.?\s+[A-ZÄÖÜ][^.!?:\n]{1,70})$")
 _H_LINE = re.compile(r"[A-ZÄÖÜ0-9][^.!?;,:\n]{1,68}[^.!?;,:\s]")
+# plan open-notebook hoerstueck-rund (Dominik 2026-11-11): a bold line of its own („**Wichtige Hebel:**“), a short
+# label before a colon with a title after it („KI-Readiness: Wie ich …“), a line of its own ending in a colon over the
+# next paragraph („Erste Ausgabe:“), a note in brackets at the end („Stufe 1 – Briefing (lesend, ca. 3 Monate)“)
+_H_BOLD = re.compile(r"(?:\*\*|__)([^*_\n]{2,80}?):?(?:\*\*|__):?")
+_H_PAREN = re.compile(r"(.*?\S)\s*\([^()\n]{1,60}\)")
+_H_LABEL = re.compile(r"([A-ZÄÖÜ][^.!?;,:\s]*(?:\s[^.!?;,:\s]+){0,2}):\s+([A-ZÄÖÜ].*)")
+HEAD_WORDS = 8          # a heading line of words at most (the part outside a bracket at the end)
+HEAD_INNER = 0.7        # a heading inside a paragraph: at most this share of the length of the line below it
+
+
+def _line_head(line):
+    """The heading a line is by the line rules (short, no full stop, a bracket at the end and a label before a colon
+    allowed), or "" (fixed rules, nothing from a model)."""
+    m = _H_PAREN.fullmatch(line)
+    core = m[1] if m else line
+    m = _H_LABEL.fullmatch(core)
+    if m and _H_LINE.fullmatch(m[2]) and len(core.split()) <= HEAD_WORDS:
+        return line
+    if _H_LINE.fullmatch(core) and len(core.split()) <= HEAD_WORDS and not core.isdigit():
+        return line
+    return ""
 
 
 def heading(block):
@@ -484,6 +505,9 @@ def heading(block):
     m = _H_MD.fullmatch(first)
     if m:
         return m[1].strip(" #*")
+    m = _H_BOLD.fullmatch(first)
+    if m and len(m[1].split()) <= HEAD_WORDS + 2 and not re.search(r"[.!?]$", m[1].strip()):
+        return m[1].strip()
     m = _H_LAW.match(first)
     if m:
         return m[1].strip()
@@ -491,10 +515,60 @@ def heading(block):
     if m and len(first.split()) <= 10:
         return m[1].strip()
     rest = block.strip().split("\n")[1:]
-    # a short line over a paragraph (never over more short lines: an address, a list of names)
-    if rest and len(rest[0]) >= 40 and _H_LINE.fullmatch(first) and len(first.split()) <= 8 and not first.isdigit():
-        return first
+    # a short line over a paragraph (never over more short lines: an address, a list of names), also numbered
+    num = re.fullmatch(r"\d{1,2}(?:\.\d{1,2}){0,3}\.?\s+(.+)", first)
+    if rest and len(rest[0]) >= 40 and (_line_head(num[1]) if num else _line_head(first)):
+        if not num or len(first.split()) <= HEAD_WORDS + 2:
+            return first
+    # a line of its own ending in a colon, over the next paragraph
+    if not rest and first.endswith(":") and _line_head(first[:-1].rstrip()):
+        return first[:-1].rstrip()
     return ""
+
+
+def _inner_head(lines, i, tabs=frozenset()):
+    """Whether line i (not the first) of a paragraph is a heading of its own: Markdown or bold always; else the
+    line before ends a sentence or is a list or table line, and the line is a numbered heading (never one item of a
+    numbered list) or a short heading line far shorter than the long line below it and than the line above it (unless
+    that is a list line), the line below starting no lower case word (so a line of a text broken at the page's width
+    never counts). tabs: lines that held a tab (a table row, never a heading)."""
+    line, prev, nxt = lines[i].strip(), lines[i - 1].strip(), (lines[i + 1].strip() if i + 1 < len(lines) else "")
+    if _H_MD.fullmatch(line) or _H_BOLD.fullmatch(line):
+        return bool(heading(line))
+    if line in tabs or len(nxt) < 40:
+        return False
+    if not (re.search(r"[.!?:)\"“”]$", prev) or re.match(r"[•*\-o]\s|\d{1,2}\.\s|\|", prev) or prev in tabs):
+        return False
+    m = re.fullmatch(r"\d{1,2}(?:\.\d{1,2}){0,3}\.?\s+(.+)", line)
+    if m:
+        return (len(line.split()) <= HEAD_WORDS + 2 and bool(_line_head(m[1]))
+                and not re.match(r"\d{1,2}\.\s", nxt))
+    if nxt[0].islower():
+        return False                # the sentence goes on in the next line
+    listed = bool(re.match(r"[•*\-o]\s|\d{1,2}\.\s|\|", prev)) or prev in tabs or prev.endswith(":")
+    return (len(line) <= HEAD_INNER * len(nxt) and (listed or len(line) <= HEAD_INNER * len(prev))
+            and bool(_line_head(line)))
+
+
+def tab_lines(text):
+    """The lines of a text that hold a tab (rows of a pasted table), with their spaces made one, for paragraphs."""
+    return frozenset(" ".join(x.split()) for x in text.split("\n") if "\t" in x.strip())
+
+
+def paragraphs(text, tabs=frozenset()):
+    """The paragraphs of a text (split at empty lines), a heading line inside a paragraph split off as the start of
+    its own (_inner_head), so heading sees it. tabs: the lines that held a tab before the spaces were made one."""
+    out = []
+    for b in text.split("\n\n"):
+        lines = b.split("\n")
+        cur = [lines[0]]
+        for i in range(1, len(lines)):
+            if _inner_head(lines, i, tabs):
+                out.append("\n".join(cur))
+                cur = []
+            cur.append(lines[i])
+        out.append("\n".join(cur))
+    return out
 
 
 def _is_table(block):
@@ -507,12 +581,13 @@ def pieces(text):
     sections joined with the next; a table stays one piece up to TABLE characters, a longer one is cut between
     its rows with its head in every piece (_rows). part: the headings the piece
     stands under ("" when the text has none). A text without headings is cut exactly as before."""
+    tabs = tab_lines(text)
     text = re.sub(r"[ \t]+", " ", text)
     text = re.sub(r"\n\s*\n+", "\n\n", text).strip()[:MAX_CHARS]
     if not text:
         return []
     secs, cur, title, last = [], [], "", ""     # sections: (heading, [blocks]); last: the heading above
-    for b in text.split("\n\n"):
+    for b in paragraphs(text, tabs):
         h = heading(b)
         if (h or _is_table(b)) and cur:
             secs.append((title, cur))

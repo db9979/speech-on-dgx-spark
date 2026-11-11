@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.385** Headings inside a paragraph too: pasted chats and notes get their sections (bold, with a colon or a bracket), so source chips show the right section; holds after "Read again"
 - **V01.1.384** Me → Overview tidied: no copy of the menu any more, only pages with a status; every group header in the menu stands once
 - **V01.1.383** Audio overview as a discussion, round: another voice answers every question, one thread through all chapters, a greeting only at the start, no lists read out, a chapter "What has changed" for several versions and a roundness value of 10
 - **V01.1.382** Collections, Knowledge book, Dungeon Master and Contacts say when their function is switched off, with the way to the switch, instead of showing "Loading …" for ever
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.378** Lists like Apple Reminders: tiles Today, Scheduled, All, Flagged, lists with a colour, an empty row to keep typing, drag to sort and move, ⓘ with note, date, time with remind, flag and priority; in the panel, on the phone and in the iPhone app.
 - **V01.1.377** Speech output with many requests: 4 voices at once instead of 2, the first sentence of an answer goes first, new setting "Adapt the blocks by itself"
 - **V01.1.376** Red fix: the locked row "Own voice" looks like every locked row; three tests no longer depend on the date or on an earlier test
-- **V01.1.375** OpenCode shown correctly: System updates shows OpenCode on the Pi as installed when Develop on the Pi set it up; when it is missing, the install command is shown.
 
 
 
