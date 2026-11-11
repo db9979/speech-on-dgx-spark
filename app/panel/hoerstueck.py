@@ -212,7 +212,10 @@ _day = DayCounter(neu=0, drehbuch=0, zeilen=0, verworfen=0, fertig=0, leer=0, ab
                   # the discussion (hoerstueck_diskussion.schritt): plans, the panel's own plan, chapters planned and
                   # written, rewritten (flat), contributions and their characters, conversation sentences dropped
                   plan=0, plan_fest=0, kapitel_geplant=0, kapitel=0, kapitel_neu=0, beitraege=0, beitrag_zeichen=0,
-                  gespraech_weg=0, weise=0, rueck=0, rueck_kopie=0, hoerproben=0, hoerproben_weg=0)
+                  gespraech_weg=0, weise=0, rueck=0, rueck_kopie=0, hoerproben=0, hoerproben_weg=0,
+                  # rund (hoerstueck_diskussion.paare, rundheit): sentences moved to another voice, open questions
+                  # dropped, plans with versions of a text, the points of rundheit and the scripts measured
+                  repariert=0, frage_offen=0, fassungen=0, rund=0, rund_n=0)
 _live = {"at": 0.0, "data": None}
 _hold = {"tts": 0.0}     # until when nothing is sent to the speech output (it failed, or the Dienst-Wächter)
 _said = {}               # what was written to the journal once: "tts" -> until
@@ -731,12 +734,15 @@ def eins(uid, hid):
                 t = {"text": s.get("text") or "", "art": "inhalt" if s.get("art") == "inhalt" else "gespraech"}
                 if t["art"] == "inhalt":
                     t.update(doc=s.get("doc"), dok=names.get(s.get("doc"), ""), page=s.get("page"),
-                             part=s.get("part") or "", da=s.get("doc") in names)
+                             part=s.get("part") or "", da=s.get("doc") in names,
+                             fassung=s.get("fassung") if s.get("fassung") in hd.FASSUNG_ARTEN else "")
                 ss.append(t)
             y.update(saetze=ss, weise=x.get("weise") if x.get("weise") in hd.weisen() else "", kapitel=x.get("kapitel"),
                      kart=x.get("kart") or "")
         lines.append(y)
     out["drehbuch"] = lines
+    # how round the discussion is (hoerstueck_diskussion.rundheit, fixed numbers over the stored lines), else None
+    out["rund"] = hd.rundheit(z) if any(isinstance(x, dict) and x.get("art") == "beitrag" for x in z) else None
     out["rollen"] = {k: list(v) for k, v in ROLLEN.items()}
     out["telegram"] = telegram_bereit(uid)
     return out
@@ -1331,7 +1337,8 @@ def for_live(now=None):
     "leer", "abgebrochen", "fehler", "tts", "grenze", "englisch", "m4a", "mitteilung", "telegram", "telegram_nein",
     "laeuft", "erzwungen", "wartet_auf", "erzwungen_heute", "erzwungen_nein", "diskussion", "plan", "plan_fest",
     "kapitel_geplant", "kapitel", "kapitel_neu", "beitraege", "beitrag_schnitt", "gespraech_weg", "weise", "rueck",
-    "rueck_kopie", "hoerproben", "hoerproben_weg"}: sums over all profiles (remembered
+    "rueck_kopie", "hoerproben", "hoerproben_weg", "repariert", "frage_offen", "fassungen", "rund_n",
+    "rund_schnitt"}: sums over all profiles (remembered
     LIVE_EVERY s) and today's counts; erzwungen is what the forced run does right now ("" or drehbuch, zeile, wartet),
     wartet_auf what the work on a Hörstück waits for (vorrang.grund: "" or gespraech, wartung, andere)."""
     now = time.time() if now is None else now
@@ -1360,9 +1367,11 @@ def for_live(now=None):
     return dict(_live["data"], on=True, laeuft=_now.get("was") or "", erzwungen=_sofort.get("was") or "",
                 wartet_auf=vorrang.grund("Hörstück") if _sofort or _now else "",
                 erzwungen_heute=d["erzwungen"], diskussion=diskussion_on(),
-                beitrag_schnitt=d["beitrag_zeichen"] // d["beitraege"] if d["beitraege"] else 0, **{k: d[k] for k in (
+                beitrag_schnitt=d["beitrag_zeichen"] // d["beitraege"] if d["beitraege"] else 0,
+                rund_schnitt=round(d["rund"] / d["rund_n"]) if d["rund_n"] else 0, **{k: d[k] for k in (
                     "plan", "plan_fest", "kapitel_geplant", "kapitel", "kapitel_neu", "beitraege", "gespraech_weg",
-                    "weise", "rueck", "rueck_kopie", "hoerproben", "hoerproben_weg",
+                    "weise", "rueck", "rueck_kopie", "hoerproben", "hoerproben_weg", "repariert", "frage_offen",
+                    "fassungen", "rund_n",
                     "neu", "drehbuch", "zeilen", "verworfen", "fertig", "leer", "abgebrochen", "fehler", "tts", "grenze",
                     "englisch", "m4a", "mitteilung", "telegram", "telegram_nein", "erzwungen_nein")})
 

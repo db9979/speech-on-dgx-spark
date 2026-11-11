@@ -106,7 +106,7 @@ struct HsZeile: Identifiable, Hashable {
     var kapitelStart = false
 
     static let weisen = ["neugierig", "nachdenklich", "begeistert", "skeptisch", "lachend", "ernst", "ruhig"]
-    static let arten = ["einstieg", "these", "streitfrage", "beispiel", "wendepunkt", "fazit"]
+    static let arten = ["einstieg", "these", "streitfrage", "beispiel", "wendepunkt", "fazit", "aenderung"]
 
     init?(_ i: Int, _ d: [String: Any]) {
         let sp = d["sprecher"] as? String ?? ""
@@ -123,7 +123,8 @@ struct HsZeile: Identifiable, Hashable {
         for s in saetze where s["art"] as? String == "inhalt" {
             let name = String((s["dok"] as? String ?? "").prefix(120))
             let p = (s["page"] as? NSNumber)?.intValue ?? 0
-            let one = name + (p > 0 ? " · " + String(localized: "S. \(p)") : "")
+            let alt = s["fassung"] as? String == "frueher" ? " · " + String(localized: "frühere Fassung") : ""
+            let one = name + (p > 0 ? " · " + String(localized: "S. \(p)") : "") + alt
             if !name.isEmpty && !q.contains(one) { q.append(one) }
         }
         quellen = q
@@ -160,6 +161,7 @@ struct HsZeile: Identifiable, Hashable {
         case "beispiel": a = String(localized: "Beispiel")
         case "wendepunkt": a = String(localized: "Wendepunkt")
         case "fazit": a = String(localized: "Fazit")
+        case "aenderung": a = String(localized: "Was sich geändert hat")
         default: a = ""
         }
         return String(localized: "Kapitel \(n)") + (a.isEmpty ? "" : " · " + a)
@@ -177,6 +179,11 @@ struct HsDetail {
     let dauer: Int
     let zeilen: [HsZeile]
     let rollen: [String: String]
+    /// how round the discussion is (hoerstueck_diskussion.rundheit): points of 10 and the points missed, fixed words
+    let rund: Int?
+    let rundFehlt: [String]
+
+    static let rundPunkte = ["fragen", "selbst", "offen", "gruss", "doppelt", "liste", "rueck"]
 
     init?(_ d: [String: Any]) {
         guard let id = d["id"] as? String, id.range(of: "^[0-9a-f]{12}$", options: .regularExpression) != nil else { return nil }
@@ -201,6 +208,26 @@ struct HsDetail {
             r[k] = String(v[en ? 1 : 0].prefix(30))
         }
         rollen = r
+        let ru = d["rund"] as? [String: Any]
+        rund = (ru?["wert"] as? NSNumber).map { min(10, max(0, $0.intValue)) }
+        rundFehlt = (ru?["fehlt"] as? [String] ?? []).filter { HsDetail.rundPunkte.contains($0) }
+    }
+
+    /// „rund 8 von 10 · verfehlt: …“ under the script (only the server's fixed words)
+    var rundText: String? {
+        guard let rund else { return nil }
+        let fehlt = rundFehlt.map { k -> String in
+            switch k {
+            case "fragen": return String(localized: "Fragen ohne Antwort")
+            case "selbst": return String(localized: "Selbstantworten")
+            case "offen": return String(localized: "offene Fäden am Ende")
+            case "gruss": return String(localized: "Begrüßung nach Kapitel 1")
+            case "doppelt": return String(localized: "Wiederholungen")
+            case "liste": return String(localized: "Aufzählungen wie Stichpunkte")
+            default: return String(localized: "Rückmeldungen am falschen Ort")
+            }
+        }
+        return String(localized: "Rund \(rund) von 10") + (fehlt.isEmpty ? "" : " · " + String(localized: "Verfehlt:") + " " + fehlt.joined(separator: ", "))
     }
 
     /// the line being heard at this time: the last one whose start lies behind it
@@ -460,6 +487,9 @@ struct HoerstueckDetailView: View {
                         Button("Löschen", role: .destructive) { askDelete = true }
                     }
                     Section("Drehbuch") {
+                        if let r = d.rundText {
+                            Text(verbatim: r).font(.caption).foregroundStyle(Theme.muted)
+                        }
                         let cur = model.playing == d.id ? d.current(model.time) : nil
                         ForEach(d.zeilen) { z in
                             line(z, d, on: z.id == cur).id(z.id)

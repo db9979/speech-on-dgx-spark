@@ -16,10 +16,22 @@ const HS_WEG={sprecher:['Sprecher nicht aus der Liste','speaker not from the lis
   ueberleitung:['Überleitung mit Zahl, Name oder fremdem Wort','transition with a number, name or unknown word'],
   anteil:['zu viele Überleitungen oder Gesprächssätze','too many transitions or talk sentences'],lang:['zu lang','too long'],doppelt:['doppelt','twice'],
   gespraech:['Gesprächssatz mit Zahl oder fremdem Wort','talk sentence with a number or an unknown word'],leer:['Beitrag ohne geprüften Satz','contribution without a checked sentence'],
-  plan:['Kapitel ohne gültige Stelle','chapter without a valid place'],art:['Kapitel-Art nicht aus der Liste','chapter kind not from the list']};
+  plan:['Kapitel ohne gültige Stelle','chapter without a valid place'],art:['Kapitel-Art nicht aus der Liste','chapter kind not from the list'],
+  // rund (hoerstueck_diskussion.paare): moved to another voice or dropped by the panel's fixed rules
+  selbst:['Selbstantwort an B gegeben','self-answer handed to B'],rolle:['Fakt der Moderation an B gegeben','fact of the host handed to B'],
+  frage_offen:['Frage ohne Antwort gestrichen','question without an answer dropped'],allein:['„Genau.“ ohne Inhalt gestrichen','„Right.“ without content dropped'],
+  gruss:['Begrüßung nach Kapitel 1','greeting after chapter 1'],zwischenfazit:['Zwischenfazit vor dem Fazit','interim conclusion before the end'],
+  schon:['schon in einem Kapitel davor','already in a chapter before']};
+// what the panel moved to another voice (hoerstueck_diskussion.REPARIERT): not dropped, shown apart
+const HS_UMGESTELLT=['selbst','rolle'];
+// how round the discussion is (hoerstueck_diskussion.rundheit): the points it missed
+const HS_RUND={fragen:['Fragen ohne Antwort','questions without an answer'],selbst:['Selbstantworten','self-answers'],offen:['offene Fäden am Ende','open threads at the end'],
+  gruss:['Begrüßung nach Kapitel 1','greeting after chapter 1'],doppelt:['Wiederholungen','repeats'],liste:['Aufzählungen wie Stichpunkte','lists like bullet points'],
+  rueck:['Rückmeldungen am falschen Ort','reactions in the wrong place']};
+const HS_FASSUNG={frueher:['frühere Fassung','earlier version'],aktuell:['aktuelle Fassung','current version'],zusammenfassung:['Zusammenfassung','summary']};
 // a discussion (hoerstueck_diskussion.py): the fixed kinds of its chapters
 const HS_WEISE={neugierig:['neugierig','curious'],nachdenklich:['nachdenklich','thoughtful'],begeistert:['begeistert','enthusiastic'],skeptisch:['skeptisch','sceptical'],lachend:['lachend','laughing'],ernst:['ernst','serious'],ruhig:['ruhig','calm']};
-const HS_KART={einstieg:['Einstieg','Opening'],these:['These','Claim'],streitfrage:['Streitfrage','Point of dispute'],beispiel:['Beispiel','Example'],wendepunkt:['Wendepunkt','Turning point'],fazit:['Fazit','Conclusion']};
+const HS_KART={einstieg:['Einstieg','Opening'],these:['These','Claim'],streitfrage:['Streitfrage','Point of dispute'],beispiel:['Beispiel','Example'],wendepunkt:['Wendepunkt','Turning point'],fazit:['Fazit','Conclusion'],aenderung:['Was sich geändert hat','What has changed']};
 const hsUrl=(mid,hid,x)=>hid?'/api/profile/hoerstueck/'+encodeURIComponent(hid)+(x||''):'/api/profile/mappen/'+encodeURIComponent(mid)+'/hoerstuecke';
 const hsMin=s=>{s=Math.max(0,Math.round(s||0));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
 const hsAva=(sp,R)=>`<span class="ld-ava" title="${esc(R&&R[sp]?t(R[sp][0],R[sp][1]):sp)}" aria-hidden="true">${esc(sp)}</span>`;
@@ -38,7 +50,7 @@ function hsSub(s){const st=t(...(HS_STAND[s.stand]||HS_STAND.x));const w=HS_WART
   if(s.stand==='sprechen')return t(`Drehbuch fertig · ${s.fertig_zeilen} von ${s.zeilen} Zeilen gesprochen · wartet auf ruhige Minuten`,`Script done · ${s.fertig_zeilen} of ${s.zeilen} lines spoken · waits for quiet minutes`);
   if(s.stand==='leer')return t('Daraus lässt sich kein Hörstück machen: zu wenig geprüfte Zeilen','No audio overview can be made of it: too few checked lines');
   if(s.stand==='x')return (HS_FEHLER[s.fehler]?t(...HS_FEHLER[s.fehler])+' · ':'')+t('ging nicht; „Löschen“ und neu erstellen','did not work; delete and make again');
-  const weg=Object.values(s.verworfen||{}).reduce((a,b)=>a+b,0);
+  const weg=Object.entries(s.verworfen||{}).filter(([k])=>!HS_UMGESTELLT.includes(k)).reduce((a,[,n])=>a+n,0);
   return [docDate(s.made),hsMin(s.dauer_s)+' min',t(`${s.stimmen} Stimmen`,`${s.stimmen} voices`),t(`${s.zeilen} Zeilen, ${weg} verworfen`,`${s.zeilen} lines, ${weg} dropped`)].join(' · ')||st}
 function hsRow(s){const kind=s.stand==='fertig'?'ok':s.stand==='leer'||s.stand==='x'?'bad':'warn';
   const pct=s.zeilen?Math.round(100*s.fertig_zeilen/s.zeilen):0;
@@ -46,8 +58,9 @@ function hsRow(s){const kind=s.stand==='fertig'?'ok':s.stand==='leer'||s.stand==
     (s.geaendert?`<small>${esc(t('Die Mappe hat sich seitdem geändert.','The collection has changed since.'))}</small>`:'')+
     (s.stand==='sprechen'?`<div class="mpbar" aria-hidden="true"><i style="width:${pct}%"></i></div>`:'')+
     `</span><span class="ld-right"><span class="ld-st ${kind}">${esc(t(...(HS_STAND[s.stand]||HS_STAND.x)))}</span></span></div>`}
-// a sentence of a contribution: its place as a chip, or the note „Gespräch“ (a question or reaction without a place)
-function hsSatz(s){const chip=s.art==='inhalt'?(s.da?`<button type="button" class="ld-chip" data-hsdoc="${esc(s.doc)}" title="${esc(t('Dokument öffnen','Open the document'))}">${esc([s.dok,s.page?t('S. ','p. ')+s.page:'',s.part].filter(Boolean).join(' · '))}</button>`:`<span class="ld-badge off">${esc(t('Dokument weg','document gone'))}</span>`)
+// a sentence of a contribution: its place as a chip (with the version of the text it comes from, if the panel found
+// one), or the note „Gespräch“ (a question or reaction without a place)
+function hsSatz(s){const chip=s.art==='inhalt'?(s.da?`<button type="button" class="ld-chip" data-hsdoc="${esc(s.doc)}" title="${esc(t('Dokument öffnen','Open the document'))}">${esc([s.dok,s.page?t('S. ','p. ')+s.page:'',s.part,HS_FASSUNG[s.fassung]?t(...HS_FASSUNG[s.fassung]):''].filter(Boolean).join(' · '))}</button>`:`<span class="ld-badge off">${esc(t('Dokument weg','document gone'))}</span>`)
   :`<span class="ld-badge off">${esc(t('Gespräch','Talk'))}</span>`;return `<span class="hssatz">${esc(s.text)} ${chip}</span>`}
 function hsLine(x,R,i,prev){if(x.art==='beitrag'){const at=typeof x.ab==='number'?`<button type="button" class="ld-chip" data-hsab="${x.ab}" title="${esc(t('Ab hier anhören','Listen from here'))}">${esc(hsMin(x.ab))}</button>`:'';
     const head=(!prev||prev.kapitel!==x.kapitel)&&HS_KART[x.kart]?`<div class="ld-grp"><span>${esc(t(`Kapitel ${x.kapitel+1}`,`Chapter ${x.kapitel+1}`)+' · '+t(...HS_KART[x.kart]))}</span></div>`:'';
@@ -61,7 +74,8 @@ function hsLine(x,R,i,prev){if(x.art==='beitrag'){const at=typeof x.ab==='number
 // the chosen Hörstück (else the newest finished one) as a card: title, date · length · voices, ⋯ (Herunterladen,
 // An Telegram, Löschen), the player and the script folded („Drehbuch · N Zeilen“) with the roles and what was dropped
 function hsCard(){const o=HS.one;if(!o||o.id!==HS.sel)return'';const R=o.rollen;
-  const weg=Object.entries(o.verworfen||{}).filter(([,n])=>n).map(([k,n])=>n+' '+t(...(HS_WEG[k]||[k,k])));
+  const weg=Object.entries(o.verworfen||{}).filter(([k,n])=>n&&!HS_UMGESTELLT.includes(k)).map(([k,n])=>n+' '+t(...(HS_WEG[k]||[k,k])));
+  const um=Object.entries(o.verworfen||{}).filter(([k,n])=>n&&HS_UMGESTELLT.includes(k)).map(([k,n])=>n+' '+t(...(HS_WEG[k]||[k,k])));
   const sub=o.stand==='fertig'?[docDate(o.made),hsMin(o.dauer_s)+' min',t(`${o.stimmen} Stimmen`,`${o.stimmen} voices`)].filter(Boolean).join(' · '):hsSub(o);
   const ton=hsUrl('',o.id,'/ton'),kind=o.stand==='fertig'?'ok':o.stand==='leer'||o.stand==='x'?'bad':'warn';
   const pct=o.zeilen?Math.round(100*o.fertig_zeilen/o.zeilen):0;
@@ -77,9 +91,11 @@ function hsCard(){const o=HS.one;if(!o||o.id!==HS.sel)return'';const R=o.rollen;
     (o.ton?`<audio controls preload="none" src="${esc(ton)}"></audio>`:'')+
     (o.stand==='sprechen'?`<div class="mpbar" aria-hidden="true"><i style="width:${pct}%"></i></div>`:'')+
     (o.ton&&!o.telegram&&typeof TG_ON!=='undefined'&&TG_ON?`<p class="mut ld-note">${esc(t('„An Telegram“ geht, sobald Telegram verknüpft ist und Persönliches dort erlaubt ist: Ich → Telegram','"To Telegram" works once Telegram is linked and personal data is allowed there: Me → Telegram'))}</p>`:'')+
-    (o.drehbuch.length?`<details class="hsscript"${HS.script?' open':''}><summary>${esc(t(`Drehbuch · ${o.drehbuch.length} Zeilen`,`Script · ${o.drehbuch.length} lines`)+(o.stand==='sprechen'?t(` · ${o.fertig_zeilen} gesprochen`,` · ${o.fertig_zeilen} spoken`):''))}</summary>`+
+    (o.drehbuch.length?`<details class="hsscript"${HS.script?' open':''}><summary>${esc(t(`Drehbuch · ${o.drehbuch.length} Zeilen`,`Script · ${o.drehbuch.length} lines`)+(o.stand==='sprechen'?t(` · ${o.fertig_zeilen} gesprochen`,` · ${o.fertig_zeilen} spoken`):'')+(o.rund?t(` · rund ${o.rund.wert}/${o.rund.von}`,` · round ${o.rund.wert}/${o.rund.von}`):''))}</summary>`+
+      (o.rund&&o.rund.fehlt&&o.rund.fehlt.length?`<p class="mut ld-note">${esc(t('Verfehlt: ','Missed: ')+o.rund.fehlt.map(k=>t(...(HS_RUND[k]||[k,k]))).join(', '))}</p>`:'')+
       (roles?`<div class="hsroles">${roles}</div>`:'')+o.drehbuch.map((x,i)=>hsLine(x,R,i,o.drehbuch[i-1])).join('')+
-      (weg.length?`<p class="mut ld-note">${esc(t('Verworfen: ','Dropped: ')+weg.join(', '))}</p>`:'')+`</details>`:'')+`</div>`}
+      (weg.length?`<p class="mut ld-note">${esc(t('Verworfen: ','Dropped: ')+weg.join(', '))}</p>`:'')+
+      (um.length?`<p class="mut ld-note">${esc(t('Umgestellt: ','Moved: ')+um.join(', '))}</p>`:'')+`</details>`:'')+`</div>`}
 // the tab Hörstück of a Mappe: length · voices · Erstellen (a normal button, 2a) · today's count in one row, the card,
 // then the other Hörstücke as rows with their state
 function hsPaint(box){const D=HS.data;if(!box)return;

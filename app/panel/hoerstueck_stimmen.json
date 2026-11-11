@@ -1,5 +1,5 @@
 {
-  "_": "Hörstück: the fixed voice descriptions per role (VoiceDesign) and the fixed English additions per way of speaking; hoerstueck_diskussion.stimmen_daten. Entry 0 of a role is the standard (the voice of before); the admin picks one per role (chat.hoerstueck_klang) for a discussion. Labels: German, English; the description goes to the speech output, never a word of the model.",
+  "_": "Hörstück: the fixed voice descriptions per role (VoiceDesign) and the fixed English additions per way of speaking; hoerstueck_diskussion.stimmen_daten. Entry 0 of a role is the standard (the voice of before); the admin picks one per role (chat.hoerstueck_klang) for a discussion. Labels: German, English; the description goes to the speech output, never a word of the model. rueckmeldung: the short reactions per rule of hoerstueck_diskussion.rueckmeldungen (after an answer to a question, after an objection, else).",
   "rollen": {
     "A": [
       ["ruhig und freundlich (Standard)", "calm and friendly (standard)", "Ruhige, freundliche Moderatorin, klar und in mittlerem Tempo"],
@@ -36,7 +36,7 @@
     "ruhig": ["ruhig", "calm", "calm and even"]
   },
   "rueckmeldung": {
-    "de": ["Mhm.", "Genau.", "Ach so.", "Stimmt."],
-    "en": ["Mhm.", "Right.", "I see.", "True."]
+    "de": {"antwort": ["Ach so."], "einwand": ["Stimmt."], "sonst": ["Mhm."]},
+    "en": {"antwort": ["I see."], "einwand": ["True."], "sonst": ["Mhm."]}
   }
 }

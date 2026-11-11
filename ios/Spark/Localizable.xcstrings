@@ -20950,6 +20950,116 @@
           }
         }
       }
+    },
+    "frühere Fassung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "earlier version"
+          }
+        }
+      }
+    },
+    "Was sich geändert hat": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What has changed"
+          }
+        }
+      }
+    },
+    "Fragen ohne Antwort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "questions without an answer"
+          }
+        }
+      }
+    },
+    "Selbstantworten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "self-answers"
+          }
+        }
+      }
+    },
+    "offene Fäden am Ende": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "open threads at the end"
+          }
+        }
+      }
+    },
+    "Begrüßung nach Kapitel 1": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "greeting after chapter 1"
+          }
+        }
+      }
+    },
+    "Wiederholungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "repeats"
+          }
+        }
+      }
+    },
+    "Aufzählungen wie Stichpunkte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lists like bullet points"
+          }
+        }
+      }
+    },
+    "Rückmeldungen am falschen Ort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "reactions in the wrong place"
+          }
+        }
+      }
+    },
+    "Rund %lld von 10": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Round %lld of 10"
+          }
+        }
+      }
+    },
+    "Verfehlt:": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Missed:"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

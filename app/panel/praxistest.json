@@ -5709,6 +5709,13 @@
 "titel": "Mehr Platz für Dokumente",
 "text": "Ich → Dokumente: mehr als 200 eigene Dokumente hochladen geht jetzt (bis 1000 je Profil, solange der Speicher pro Profil reicht). Das Wissensbuch legt bis zu 5000 Seiten an. Zustand → Prüfen → Wissen messen mit 5000 Dokumenten: Suche mit Karte bleibt unter etwa 300 ms auf dem Pi, das Panel stockt nicht (Zustand → Logs ohne „loopwacht“-Zeile).",
 "thread": "Wissenskarte Stufe 2 bauen"
+},
+{
+"id": "P842",
+"v": 1383,
+"titel": "Hörstück als Diskussion: rund",
+"text": "A: Pi updaten. In der Mappe mit der Notiz mit mehreren Fassungen (Zusammenfassung, frühere und aktuelle Fassung) unter Funktionen → Eigene Dokumente → Mappen → Hörstück aus einer Mappe: das Hörstück mit 10 Minuten und 3 Stimmen neu „Sofort erstellen“. B: Im Drehbuch: nur im ersten Kapitel ein Gruß, der Einstieg beginnt mit einem Aufhänger; jede Frage beantwortet eine andere Stimme mit einem Satz mit Quellen-Chip; niemand beantwortet seine eigene Frage; kein Kapitel endet auf eine Frage; ein Kapitel „Was sich geändert hat“ stellt früher und jetzt gegenüber (Chip „frühere Fassung“) und nennt einen Widerspruch; das Fazit bringt keine neue Tatsache; keine vorgelesene Liste („erstens, zweitens …“). C: Oben im Drehbuch „rund W/10“; fehlt etwas, steht „Verfehlt: …“ darunter, „Umgestellt: …“ zählt Sätze an eine andere Stimme. D: Prüfen: „drei bis sechs“ im Gespräch steht als 3–6 in der Quelle, keine andere Zahl. E: Anhören: klingt es rund, ohne Wiederholungen? „Ach so.“/„Stimmt.“/„Mhm.“ nur mitten in einer langen Erklärung. F: Zustand → Live, Kasten Hörstück: „rund im Schnitt … von 10“, „Sätze an eine andere Stimme“, „offene Fragen gestrichen“, „Pläne mit Fassungen“. Zustand → Logs (Wissen): „hoerstueck: plan | … fassungen“, „drehbuch | … rund W von 10“, nie ein Satz. G: iPhone-App, dieselbe Mappe → Hörstück: „Rund N von 10“, „Was sich geändert hat“ und „frühere Fassung“.",
+"thread": "Hörstück rund"
 }
 ]
 }

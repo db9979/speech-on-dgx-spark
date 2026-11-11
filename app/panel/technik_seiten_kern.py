@@ -247,7 +247,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "920a7925df",
+        "stand": "de94f072f3",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -301,6 +301,11 @@ SEITEN = {
             "hoerstueck_diskussion.guete": ["s13"], "hoerstueck_diskussion.zusatz": ["s13"],
             "hoerstueck_diskussion.klang_von": ["s13"], "hoerstueck_diskussion.pause_ms": ["s13"],
             "hoerstueck_diskussion.rueckmeldungen": ["s13"],
+            "hoerstueck_diskussion.paare": ["s13"], "hoerstueck_diskussion.bogen": ["s13"],
+            "hoerstueck_diskussion.fassungen": ["s13"], "hoerstueck_diskussion.aenderung": ["s13"],
+            "hoerstueck_diskussion.widersprueche": ["s13"], "hoerstueck_diskussion.liste": ["s13"],
+            "hoerstueck_diskussion.rundheit": ["s13"], "hoerstueck_diskussion.sprechweise": ["s13"],
+            "hoerstueck_diskussion.zahl_ok": ["s13"],
             "hoerstueck.m4a": ["s13"], "hoerstueck.an_telegram": ["s13"], "hoerstueck.melden": ["s13"],
             "coadmin.ist_admin": ["s13"], "coadmin.unbegrenzt": ["s13"], "hoerstueck.fertige": ["s13"], "hoerstueck.AUTO_MAX": ["s13"], "hoerstueck.sofort_lauf": ["s13"], "hoerstueck._sofort_offen": ["s13"], "hoerstueck.weiter": ["s13"], "hoerstueck._warten": ["s13"], "vorrang.grund": ["s13"],
             "documents.stelle": ["s13"], "common.signed_low": ["s13"],
@@ -984,18 +989,29 @@ SEITEN = {
                  "Schritt einen Modellaufruf ab: erst den Plan (hoerstueck_diskussion.pruefe_plan: nur angebotene "
                  "Stellen, jede einmal, feste Arten, erstes Kapitel Einstieg, letztes Fazit, sonst der Plan des Panels), "
                  "dann je Kapitel den Dialog nur aus dessen Originalstellen und festen Wörtern, nie aus Text von Schritt 1. "
-                 "hoerstueck_diskussion.pruefe_kapitel behält Beiträge mit zwei bis sechs Sätzen: ein Satz mit Stelle "
-                 "besteht die Zahlenprobe auch für Zahlwörter, ein Gesprächssatz ohne Stelle hat höchstens "
+                 "hoerstueck_diskussion.pruefe_kapitel behält Beiträge mit höchstens "
+                 "{hoerstueck_diskussion.SAETZE_MAX} Sätzen: ein Satz mit Stelle besteht die Zahlenprobe auch für "
+                 "Zahlwörter (hoerstueck_diskussion.zahl_ok: „drei bis sechs“ gleich „3–6“, nie eine andere Zahl), "
+                 "ein Gesprächssatz ohne Stelle hat höchstens "
                  "{hoerstueck_diskussion.GESPRAECH_LEN} Zeichen, keine Zahl und nur Wörter der Stellen des Kapitels oder "
                  "der festen Liste (hoerstueck_diskussion.gespraech_ok), höchstens {hoerstueck_diskussion.GESPRAECH_ANTEIL} "
                  "der Sätze. hoerstueck_diskussion.guete misst jedes Kapitel mit festen Zahlen; ein flaches wird genau "
-                 "einmal mit festen Hinweisen neu geschrieben, das bessere bleibt. Die Sprechweise eines Beitrags ist ein "
-                 "Wort einer festen Liste; zur Sprachausgabe geht nur der feste englische Zusatz des Panels "
+                 "einmal mit festen Hinweisen neu geschrieben, das bessere bleibt. Rund nach festen Regeln: "
+                 "hoerstueck_diskussion.paare teilt einen Beitrag, der seine eigene Frage beantwortet, gibt Sätze mit "
+                 "Stelle an die Fachstimme und streicht eine Frage ohne Antwort; hoerstueck_diskussion.bogen gibt jedem "
+                 "Kapitel feste Fakten (Kapitel i von m, Nachbarn, Gruß nur im ersten, Fazit ohne neue Stelle), eine "
+                 "schon gesagte Tatsache fällt weg; hoerstueck_diskussion.fassungen erkennt an festen Wörtern "
+                 "Zusammenfassung, frühere und aktuelle Fassung, frühere Fassungen stehen nur im Kapitel „Was sich "
+                 "geändert hat“ (hoerstueck_diskussion.aenderung, Widersprüche aus "
+                 "hoerstueck_diskussion.widersprueche); hoerstueck_diskussion.liste meldet vorgelesene Listen, "
+                 "hoerstueck_diskussion.rundheit misst das fertige Drehbuch mit festen Zahlen (Wert von 10, in Live "
+                 "nur Zahlen). Die Sprechweise setzt das Panel nach der Art des Beitrags "
+                 "(hoerstueck_diskussion.sprechweise), ein Wort einer festen Liste; zur Sprachausgabe geht nur der feste englische Zusatz des Panels "
                  "(hoerstueck_diskussion.zusatz, als art von tonteile.sprich: bei VoiceDesign an der Beschreibung der "
                  "Rolle, sonst als instructions), die Stimmen sind feste Beschreibungen je Rolle "
                  "(hoerstueck_diskussion.klang_von, „▶ Probe“ nur für den Admin). Pausen nach festen Regeln "
-                 "(hoerstueck_diskussion.pause_ms), kurze Rückmeldungen aus einer festen Liste "
-                 "(hoerstueck_diskussion.rueckmeldungen), je Stimme einmal gesprochen und behalten. Die Hörprobe des Admins "
+                 "(hoerstueck_diskussion.pause_ms), kurze Rückmeldungen aus einer festen Liste nur mitten in einer "
+                 "langen Erklärung, das Wort nach Regel (hoerstueck_diskussion.rueckmeldungen), je Stimme einmal gesprochen und behalten. Die Hörprobe des Admins "
                  "ist eine Diskussion mit nur zwei Kapiteln und höchstens {hoerstueck.PROBE_ZEICHEN} Zeichen, sofort, "
                  "nie gezählt; hoerstueck.proben_weg löscht sie stündlich nach einem Tag samt Datei.",
                  "hoerstueck.stellen gives the model only pieces of the originals from the collection's documents on "
@@ -1037,17 +1053,29 @@ SEITEN = {
                  "call per quiet step: first the plan (hoerstueck_diskussion.pruefe_plan: only offered places, each "
                  "once, fixed kinds, the first chapter the opening, the last the conclusion, else the panel's own plan), "
                  "then per chapter the dialog only from its original places and fixed words, never from text of step 1. "
-                 "hoerstueck_diskussion.pruefe_kapitel keeps contributions of two to six sentences: a sentence with a "
-                 "place passes the number check also for number words, a talk sentence without a place has at most "
+                 "hoerstueck_diskussion.pruefe_kapitel keeps contributions of at most "
+                 "{hoerstueck_diskussion.SAETZE_MAX} sentences: a sentence with a place passes the number check also "
+                 "for number words (hoerstueck_diskussion.zahl_ok: „drei bis sechs“ equals „3–6“, never another "
+                 "number), a talk sentence without a place has at most "
                  "{hoerstueck_diskussion.GESPRAECH_LEN} characters, no number and only words of the chapter's places or "
                  "the fixed list (hoerstueck_diskussion.gespraech_ok), at most {hoerstueck_diskussion.GESPRAECH_ANTEIL} "
                  "of the sentences. hoerstueck_diskussion.guete measures every chapter with fixed numbers; a flat one is "
-                 "written exactly once more with fixed hints, the better one stays. A contribution's way of speaking is a "
-                 "word of a fixed list; only the panel's fixed English addition goes to the speech output "
+                 "written exactly once more with fixed hints, the better one stays. Round by fixed rules: "
+                 "hoerstueck_diskussion.paare splits a contribution that answers its own question, gives sentences "
+                 "with a place to the expert voice and drops a question without an answer; hoerstueck_diskussion.bogen "
+                 "gives every chapter fixed facts (chapter i of m, neighbours, a greeting only in the first, a "
+                 "conclusion without a new place), a fact said before goes; hoerstueck_diskussion.fassungen finds by "
+                 "fixed words the summary, an earlier and the current version, earlier versions stand only in the "
+                 "chapter „Was sich geändert hat“ (hoerstueck_diskussion.aenderung, contradictions from "
+                 "hoerstueck_diskussion.widersprueche); hoerstueck_diskussion.liste reports lists read out, "
+                 "hoerstueck_diskussion.rundheit measures the finished script with fixed numbers (a value of 10, in "
+                 "Live only numbers). The panel sets the way of speaking by the kind of contribution "
+                 "(hoerstueck_diskussion.sprechweise), a word of a fixed list; only the panel's fixed English addition goes to the speech output "
                  "(hoerstueck_diskussion.zusatz, as art of tonteile.sprich: with VoiceDesign at the role's description, "
                  "else as instructions), the voices are fixed descriptions per role (hoerstueck_diskussion.klang_von, "
                  "„▶ Probe“ only for the admin). Pauses by fixed rules (hoerstueck_diskussion.pause_ms), short reactions "
-                 "of a fixed list (hoerstueck_diskussion.rueckmeldungen), spoken once per voice and kept. The admin's sample "
+                 "of a fixed list only inside a long explanation, the word by rule "
+                 "(hoerstueck_diskussion.rueckmeldungen), spoken once per voice and kept. The admin's sample "
                  "is a discussion of only two chapters and at most {hoerstueck.PROBE_ZEICHEN} characters, at once, never "
                  "counted; hoerstueck.proben_weg deletes it hourly after a day with its file."),
             ]),
@@ -1403,6 +1431,15 @@ SEITEN = {
             ("hoerstueck_diskussion.klang_von", ("feste Stimmbeschreibung je Rolle", "fixed voice description per role")),
             ("hoerstueck_diskussion.pause_ms", ("Pausen nach festen Regeln", "pauses by fixed rules")),
             ("hoerstueck_diskussion.rueckmeldungen", ("kurze Rückmeldungen aus fester Liste", "short reactions of a fixed list")),
+            ("hoerstueck_diskussion.paare", ("Frage und Antwort von zwei Stimmen, Frage ohne Antwort fällt weg", "question and answer by two voices, a question without an answer goes")),
+            ("hoerstueck_diskussion.bogen", ("Bogen: Einstieg mit Haken, Fazit ohne neue Stelle", "the bend: an opening with a hook, a conclusion without a new place")),
+            ("hoerstueck_diskussion.fassungen", ("Zusammenfassung, frühere und aktuelle Fassung an festen Wörtern", "summary, earlier and current version by fixed words")),
+            ("hoerstueck_diskussion.aenderung", ("Kapitel „Was sich geändert hat“", "the chapter „Was sich geändert hat“")),
+            ("hoerstueck_diskussion.widersprueche", ("dieselbe Aussage mit anderer Zahl als Widerspruch", "the same statement with another number as a contradiction")),
+            ("hoerstueck_diskussion.liste", ("vorgelesene Liste erkennen", "find a list read out")),
+            ("hoerstueck_diskussion.rundheit", ("Rundheit des Drehbuchs mit festen Zahlen", "roundness of the script by fixed numbers")),
+            ("hoerstueck_diskussion.sprechweise", ("Sprechweise nach der Art des Beitrags", "way of speaking by the kind of contribution")),
+            ("hoerstueck_diskussion.zahl_ok", ("Zahlwort gleich Ziffer derselben Zahl", "a number word equals the digit of the same number")),
             ("tonteile.sprich", ("der eine Helfer für einen gesprochenen Teil", "the one helper for a spoken part")),
             ("doklink.pruefe", ("Adresse nach festen Regeln, bevor etwas geholt wird", "an address by fixed rules before anything is fetched")),
             ("doklink.eins", ("eine Adresse holen und als Dokument aufnehmen", "fetch one address and take it in as a document")),

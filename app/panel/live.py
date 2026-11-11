@@ -2257,6 +2257,11 @@ def snapshot(view="admin", now=None):
                             + f" {hsn.get('gespraech_weg', 0)} Gesprächssätze verworfen,"
                             + f" {hsn.get('weise', 0)} Zeilen mit Sprechweise, {hsn.get('rueck', 0)} Rückmeldungen gesprochen"
                             + f" ({hsn.get('rueck_kopie', 0)} behalten), {hsn.get('hoerproben', 0)} Hörproben fertig"
+                            + (f", rund im Schnitt {hsn.get('rund_schnitt', 0)} von 10 ({hsn['rund_n']} Drehbücher)"
+                               if hsn.get("rund_n") else "")
+                            + f", {hsn.get('repariert', 0)} Sätze an eine andere Stimme, {hsn.get('frage_offen', 0)}"
+                            + " offene Fragen gestrichen"
+                            + (f", {hsn['fassungen']} Pläne mit Fassungen" if hsn.get("fassungen") else "")
                             + (f", {hsn['hoerproben_weg']} alte Hörproben gelöscht" if hsn.get("hoerproben_weg") else ""))
                            if hsn.get("diskussion") else "")
                         + (f" · heute {hsn['erzwungen_heute']}× sofort erstellt" if hsn.get("erzwungen_heute") else "")
