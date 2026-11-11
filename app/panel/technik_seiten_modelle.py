@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "asr": {
-        "stand": "1273ecedc4",
+        "stand": "68a9193c23",
         "bezug": {
             "parakeet.MAX_AUDIO_S": ["s9"], "common.NOTASR_PORT": ["s9"], "common.NOTASR_IDLE": ["s9"], "admin.test_asr": ["s1"], "admin._test_asr": ["s2", "s4"],
             "common.BodyLimit": ["s5"], "common.PrioGate": ["s7"], "common.audio_rate_ok": ["s8"],
@@ -205,7 +205,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Sprachausgabe
     "tts": {
-        "stand": "83eb229f41",
+        "stand": "c580008bdb",
         "bezug": {
             "textnorm.NUMBER_MODES": ["s7"], "tts_proxy.speech": ["s1"], "tts_proxy.check_reference": ["s8"],
             "tts_proxy.engine_status": ["s4"], "tts_proxy.apply_clone": ["s8"], "textnorm.speech_markdown": ["s5"],
@@ -329,10 +329,14 @@ SEITEN = {
               ("info", "ja", ("Der Proxy streckt den Ton selbst", "The proxy stretches the sound itself"))),
             S("s10", "schritt", ("Warten nach Vorrang", "Wait by priority"),
               ("ein Tor je Engine", "one gate per engine"),
-              ("PrioGate lässt so viele Sätze durch, wie die Engine gleichzeitig nimmt (engine_max_seqs); die "
-               "anderen warten nach Stufe, dann nach Ankunft.",
-               "PrioGate lets as many sentences through as the engine takes at once (engine_max_seqs); the others "
-               "wait by stage, then by arrival."),
+              ("PrioGate lässt so viele Sätze durch, wie die Engine gleichzeitig nimmt (engine_max_seqs, ab Werk 4); die "
+               "anderen warten nach Stufe, dann nach Ankunft. Innerhalb einer Stufe geht der erste Satz einer Antwort "
+               "bis zu 2 s vor Folgesätzen, die das Panel mit X-Spark-Folgesatz schickt, solange beim Hörer noch Ton "
+               "wartet.",
+               "PrioGate lets as many sentences through as the engine takes at once (engine_max_seqs, 4 out of the "
+               "box); the others wait by stage, then by arrival. Within a stage the first sentence of an answer goes "
+               "up to 2 s before follow-up sentences, which the panel sends with X-Spark-Folgesatz while the listener "
+               "still has audio."),
               ("stop", ("Schlange voll", "queue full"), ("Besetzt (503)", "Busy (503)"))),
             S("s11", "schritt", ("Engine spricht", "The engine speaks"),
               ("nur auf dieser Maschine, gestreamt", "on this machine only, streamed"),
@@ -340,12 +344,15 @@ SEITEN = {
                "klein (initial_chunk_frames), damit der Ton schnell beginnt, auch wenn mehrere Anfragen laufen. "
                "„Mehrere Stimmen gleichzeitig“ (tts.engine_decode_batch) bündelt im Decoder bis zu 2 oder 4 Stimmen "
                "mit CUDA-Graphen, „Gleichen Anfang merken“ (tts.engine_prefix_cache) lässt die Engine den gleichen "
-               "Anfang der Sätze einer Stimme wiederverwenden; beide stehen auf aus (Standard von vllm-omni).",
+               "Anfang der Sätze einer Stimme wiederverwenden, „Blöcke selbst anpassen“ (tts.engine_chunk_adaptive) "
+               "lässt vllm-omni die Blockgrößen nach Auslastung wählen. Bündeln steht ab Werk auf 4, die anderen "
+               "beiden auf aus.",
                "The engine makes the sound. Streamed it comes back in pieces; the first piece is small on purpose "
                "(initial_chunk_frames) so the sound starts fast, also when several requests run. „Several voices at "
                "once“ (tts.engine_decode_batch) batches up to 2 or 4 voices in the decoder with CUDA graphs, "
                "„Remember the same beginning“ (tts.engine_prefix_cache) lets the engine reuse the same beginning of "
-               "a voice's sentences; both are off (vllm-omni's default).")),
+               "a voice's sentences, „Adapt the blocks by itself“ (tts.engine_chunk_adaptive) lets vllm-omni pick "
+               "the block sizes by the load. Batching is 4 out of the box, the other two are off.")),
             S("s12", "ende", ("Ton zurück", "Sound back"),
               ("Zähler fürs Monitoring", "counters for monitoring"),
               ("Der Proxy reicht den Ton unverändert weiter und zählt nur Dauer, Länge und Fehler für das "
@@ -384,12 +391,12 @@ SEITEN = {
              "pronunciation list."),
             ("Einstellungen → Stimmen: eigene Stimmen aufnehmen, anhören und sichern (für ein Base-Modell).",
              "Settings → Voices: record, play and save own voices (for a Base model)."),
-            ("Einstellungen → Sprachausgabe → Erweitert: „Referenz der eigenen Stimme kürzen“, „Mehrere Stimmen "
-             "gleichzeitig“ und „Gleichen Anfang merken“ (alle aus); vorher und nachher Zustand → Prüfen → Leistung "
-             "messen.",
-             "Settings → Speech output → Advanced: „Shorten the reference of your own voice“, „Several voices at "
-             "once“ and „Remember the same beginning“ (all off); before and after Status → Checks → Measure "
-             "performance."),
+            ("Einstellungen → Sprachausgabe → Erweitert: „Referenz der eigenen Stimme kürzen“ (aus), „Mehrere "
+             "Stimmen gleichzeitig“ (bis zu 4), „Gleichen Anfang merken“ (aus) und „Blöcke selbst anpassen“ (aus); "
+             "vorher und nachher Zustand → Prüfen → Leistung messen.",
+             "Settings → Speech output → Advanced: „Shorten the reference of your own voice“ (off), „Several voices "
+             "at once“ (up to 4), „Remember the same beginning“ (off) and „Adapt the blocks by itself“ (off); before "
+             "and after Status → Checks → Measure performance."),
         ],
         "sehen": [
             ("Zustand → Verbrauch: gesprochene Sekunden je Tag, Aufgabe und Profil.",

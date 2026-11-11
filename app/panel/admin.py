@@ -782,6 +782,8 @@ def validate(new):
         raise HTTPException(400, "Several voices at once (decoder): 1, 2 or 4")
     if not isinstance(t.get("engine_prefix_cache"), bool):
         raise HTTPException(400, "engine_prefix_cache must be true or false")
+    if not isinstance(t.get("engine_chunk_adaptive", False), bool):
+        raise HTTPException(400, "engine_chunk_adaptive must be true or false")
     if t.get("ref_max_s") not in (0, 8, 10, 15) or isinstance(t.get("ref_max_s"), bool):
         raise HTTPException(400, "Shorten the voice reference: 0 (off), 8, 10 or 15 seconds")
     if t.get("numbers") not in ("off", "words", "blocks", "digits"):

@@ -5660,6 +5660,13 @@
 "titel": "Eigene Stimmen gestalten",
 "text": "Einstellungen → Sprachausgabe → „VoiceDesign zusätzlich bereitstellen“ und „Eigene Stimmen zusätzlich bereitstellen“ an, speichern; Funktionen → Eigene Stimmen gestalten an. Ich → Gespräch → Eigene Stimme → „Stimmen …“: nach einiger Zeit sind die 20 fertigen Stimmen da, ▶ spielt sie, ein Klick wählt sie, die nächste Antwort klingt so. Unter „Eigene gestalten“ Felder wählen, „▶ Probe“ (beim ersten Mal „VoiceDesign wird geladen …“, bis zu einer Minute), „Neu würfeln“, dann „Übernehmen“: mehrere Antworten hintereinander klingen gleich. Nach 5 Minuten ohne Probe ist VoiceDesign unter Zustand → Überblick wieder aus.",
 "thread": "Eigene Stimme per VoiceDesign wählen"
+},
+{
+"id": "P835",
+"v": 1377,
+"titel": "Sprachausgabe bei vielen Anfragen",
+"text": "A: Auf dem Pi sudo speech-spark update (tars zuerst). Einstellungen → Sprachausgabe → Erweitert zeigt „Max. gleichzeitige Anfragen“ 4 und „Mehrere Stimmen gleichzeitig“ auf „bis zu 4 gebündelt (empfohlen)“; Zustand → Überblick: die Sprachausgabe ist nach dem Neustart wieder bereit. B: Zustand → Prüfen → Leistung messen: „erster Ton bei 4“ und „Davon in der Warteschlange“ mit der Messung von vorher vergleichen und in den Thread geben. C: Auf drei Geräten gleichzeitig eine lange Antwort anfordern und während sie spricht auf einem vierten eine Frage stellen: der erste Ton kommt ohne lange Pause, die laufenden Antworten reißen nicht ab; Zustand → Logs (Sprachausgabe) zeigt „vorrang: erster Satz vor … Folgesatz/Folgesätzen“. D: „Blöcke selbst anpassen“ an, speichern (die Sprachausgabe startet neu), wieder messen; bringt es nichts oder stockt es, wieder aus.",
+"thread": "Sprachausgabe bei vielen Anfragen stärken"
 }
 ]
 }

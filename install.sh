@@ -419,6 +419,15 @@ if [ ! -e "$VAR/state/migrated-chunk10" ]; then
   [ "$(cfgq -r .tts.initial_chunk_frames)" = 8 ] && jqi '.tts.initial_chunk_frames=10'
   as_svc touch "$VAR/state/migrated-chunk10"
 fi
+# Several voices at once (V01.1.377): 2 places let the 3rd and 4th answer wait a whole sentence, and the decoder had
+# CUDA graphs for one voice only; move untouched start values to 4 places, 4 voices per decoder batch and a little more
+# decoder memory for its graphs, once (a later own choice stays)
+if [ ! -e "$VAR/state/migrated-tts4" ]; then
+  [ "$(cfgq -r .tts.engine_max_seqs)" = 2 ] && jqi '.tts.engine_max_seqs=4'
+  case "$(cfgq -r '.tts.engine_decode_batch // 1')" in 1) jqi '.tts.engine_decode_batch=4' ;; esac
+  [ "$(cfgq -r .tts.engine_mem_code2wav)" = 0.025 ] && jqi '.tts.engine_mem_code2wav=0.03'
+  as_svc touch "$VAR/state/migrated-tts4"
+fi
 [ "$(cfgq -r .chat.max_tokens)" = 600 ] && jqi '.chat.max_tokens=4096'   # old default cut long answers off
 # The first voice-chat prompt gave pompous, overexcited answers; replace it if untouched.
 OLD_PROMPT='Du bist ein freundlicher Sprachassistent. Deine Antworten werden vorgelesen: antworte kurz und natürlich in ganzen Sätzen, ohne Listen, Tabellen, Markdown, Code oder Emojis. Antworte in der Sprache, in der du angesprochen wirst.'
@@ -2080,7 +2089,7 @@ else
 fi
 
 if [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = vllm-omni ]; then
-  restart_engine tts-engine "$VLLM_OMNI_VERSION $(cfgq -c '.tts | {model, engine_mem_talker, engine_mem_code2wav, engine_max_seqs, engine_max_model_len, engine_port}')"
+  restart_engine tts-engine "$VLLM_OMNI_VERSION $(cfgq -c '.tts | {model, engine_mem_talker, engine_mem_code2wav, engine_max_seqs, engine_max_model_len, engine_port, engine_decode_batch, engine_chunk_adaptive}')"
   if [ "$(cfg .tts.voicedesign_enabled)" = true ] && [ "$(cfg_int .tts.voicedesign_leerlauf_min 5)" = 0 ]; then
     # like the engines above: only when its settings changed (a restart loads the VoiceDesign model again)
     restart_engine tts-design "$VLLM_OMNI_VERSION $(cfgq -c '.tts')"
@@ -2091,7 +2100,7 @@ if [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = vllm-omni ]; then
   fi
   if [ "$(cfg .tts.klon_enabled)" = true ]; then
     # the own designed voices (stimmdesign): the Base model clones their stored samples
-    restart_engine tts-klon "$VLLM_OMNI_VERSION $(cfgq -c '.tts | {klon_model, klon_port, engine_mem_talker, engine_mem_code2wav, engine_max_seqs, engine_max_model_len}')"
+    restart_engine tts-klon "$VLLM_OMNI_VERSION $(cfgq -c '.tts | {klon_model, klon_port, engine_mem_talker, engine_mem_code2wav, engine_max_seqs, engine_max_model_len, engine_decode_batch, engine_chunk_adaptive}')"
   else
     systemctl disable --now speech-spark-tts-klon.service 2>/dev/null || true
   fi

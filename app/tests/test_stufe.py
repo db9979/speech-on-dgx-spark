@@ -2,6 +2,8 @@
 the speech services believe it only from the panel, waiting requests go by stage without anybody starving,
 and other people's language model rounds wait at most the set time. No test depends on the time of day."""
 import asyncio
+import contextlib
+import io
 import os
 import stat
 import unittest
@@ -85,6 +87,48 @@ class Gate(unittest.TestCase):
         low_done, vip_done, g, low, vip = asyncio.run(go())
         self.assertTrue(low_done)
         self.assertFalse(vip_done)
+
+    def test_first_sentence_goes_before_a_follow_up_sentence_for_a_while(self):
+        """A follow-up sentence (common.FOLGE_HEADER) waits behind the first sentence of another answer of the same
+        stage, counted in the stats and the log; after `folge` seconds of waiting it is not held back any more."""
+        async def go(wait):
+            clock = Clock()
+            g, order = PrioGate(1, clock=clock, folge=2.0), []
+            running = await g.enter(1)
+
+            async def one(name, folge):
+                t = await g.enter(1, folge=folge)
+                order.append(name)
+                return t
+            f = asyncio.ensure_future(one("folge", True))
+            await asyncio.sleep(0)
+            clock.t += wait
+            n = asyncio.ensure_future(one("erster", False))
+            await asyncio.sleep(0)
+            g.leave(running)
+            for _ in range(5):
+                await asyncio.sleep(0)
+            self.assertEqual(len(order), 1)              # one slot: only one of the two goes on
+            g.leave((f if f.done() else n).result())
+            g.leave(await f)
+            g.leave(await n)
+            return order, g.view()
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            order, view = asyncio.run(go(0.5))
+        self.assertEqual(order, ["erster", "folge"])
+        self.assertEqual(view["first_ahead"], 1)
+        self.assertIn("vorrang: erster Satz vor 1 Folgesatz/Folgesätzen", out.getvalue())
+        order, view = asyncio.run(go(2.5))               # waited longer than `folge`: its turn by arrival again
+        self.assertEqual(order, ["folge", "erster"])
+        self.assertEqual(view["first_ahead"], 0)
+
+    def test_a_follow_up_mark_never_raises_the_own_place(self):
+        g = PrioGate(1, folge=2.0)
+        plain, folge = [1, 0.0, 5, None, {}, False, False], [1, 0.0, 5, None, {}, False, True]
+        self.assertLess(g._rank(folge, 1.0), g._rank(plain, 1.0))
+        self.assertEqual(g._rank(folge, 3.0), g._rank(plain, 3.0))
+        self.assertEqual(common.FOLGE_HEADER, "x-spark-folgesatz")
 
     def test_queue_has_a_limit(self):
         async def go():

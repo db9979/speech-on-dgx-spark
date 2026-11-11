@@ -31,13 +31,15 @@ LOG_UNITS = dict(UNITS, panel="speech-spark-panel", update="speech-spark-update"
 ASR_ENGINE_KEYS = ("model", "engine_port", "engine_mem", "engine_max_seqs")
 # tts keys that only the vllm-omni engine reads; changing them restarts the engine
 ENGINE_KEYS = ("model", "engine_port", "engine_mem_talker", "engine_mem_code2wav", "engine_max_seqs",
-               "engine_max_model_len", "initial_chunk_frames", "engine_decode_batch", "engine_prefix_cache")
+               "engine_max_model_len", "initial_chunk_frames", "engine_decode_batch", "engine_prefix_cache",
+               "engine_chunk_adaptive")
 DESIGN_KEYS = ("voicedesign_enabled", "voicedesign_model", "voicedesign_port", "voicedesign_leerlauf_min",
                "engine_mem_talker", "engine_mem_code2wav", "engine_max_seqs", "engine_max_model_len", "initial_chunk_frames",
-               "engine_decode_batch", "engine_prefix_cache")
+               "engine_decode_batch", "engine_prefix_cache", "engine_chunk_adaptive")
 # tts keys the engine of the own designed voices reads (tts.klon_*, stimmdesign.py); changing them restarts it
 KLON_KEYS = ("klon_enabled", "klon_model", "klon_port", "engine_mem_talker", "engine_mem_code2wav", "engine_max_seqs",
-             "engine_max_model_len", "initial_chunk_frames", "engine_decode_batch", "engine_prefix_cache")
+             "engine_max_model_len", "initial_chunk_frames", "engine_decode_batch", "engine_prefix_cache",
+             "engine_chunk_adaptive")
 LANGS = ["auto", "Chinese", "English", "German", "French", "Spanish", "Italian", "Portuguese",
          "Russian", "Japanese", "Korean", "Dutch", "Polish", "Turkish", "Arabic"]
 security = HTTPBasic(auto_error=False)

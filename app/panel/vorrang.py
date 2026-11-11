@@ -357,8 +357,8 @@ async def _people(c, cfg, h):
     others (as many as it takes at once plus two waiting), then one more sentence comes, once as a normal
     profile and once with Vorrang. With Vorrang it skips the waiting ones and only waits for a free slot."""
     import stufe
-    n = cfg["tts"].get("engine_max_seqs", 2)
-    n = (n if isinstance(n, int) and not isinstance(n, bool) and 1 <= n <= 8 else 2) + 2
+    n = cfg["tts"].get("engine_max_seqs", 4)
+    n = (n if isinstance(n, int) and not isinstance(n, bool) and 1 <= n <= 8 else 4) + 2
     out = {"load": n}
     for name, extra in (("normal", {}), ("vorrang", stufe.headers("vorrang"))):
         loads = [asyncio.ensure_future(_speak(c, cfg, h)) for _ in range(n)]

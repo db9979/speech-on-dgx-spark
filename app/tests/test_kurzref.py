@@ -99,7 +99,9 @@ class Proxy(unittest.TestCase):
     def test_off_by_default(self):
         with open(os.path.join(helpers.APP, "config.default.json")) as f:
             tts = json.load(f)["tts"]
-        self.assertEqual((tts["ref_max_s"], tts["engine_decode_batch"], tts["engine_prefix_cache"]), (0, 1, False))
+        self.assertEqual((tts["ref_max_s"], tts["engine_prefix_cache"], tts["engine_chunk_adaptive"]), (0, False, False))
+        # several voices at once (V01.1.377): 4 places in the gate and the decoder batches up to 4 with CUDA graphs
+        self.assertEqual((tts["engine_max_seqs"], tts["engine_decode_batch"]), (4, 4))
         with mock.patch.dict(tts_proxy.cfg, {"ref_max_s": 0}):
             url, text = tts_proxy.clone_reference("dom")
             asyncio.run(tts_proxy.shorten("dom"))
@@ -190,6 +192,40 @@ class Engine(unittest.TestCase):
         self.assertIn("FAIL invalid engine_decode_batch '3'", self.run_part({"engine_decode_batch": 3}))
         self.assertIn("FAIL invalid engine_prefix_cache", self.run_part({"engine_prefix_cache": "yes"}))
 
+    def test_adaptive_blocks_replace_the_fixed_steps(self):
+        """tts.engine_chunk_adaptive: vllm-omni's own block sizes (codec_chunk_adaptive) instead of our fixed ramp."""
+        out = self.run_part({"initial_chunk_frames": 10, "engine_decode_batch": 4, "engine_chunk_adaptive": True})
+        self.assertIn("codec_chunk_adaptive: true", out)
+        self.assertNotIn("codec_chunk_ramp", out)
+        self.assertIn("decode_batch_max_size: 4", out)
+        self.assertNotIn("codec_chunk_adaptive", self.run_part({"initial_chunk_frames": 10}))
+        self.assertIn("decode_batch_max_size: 4", self.run_part({"initial_chunk_frames": 10}))   # old config: 4
+        self.assertIn("FAIL invalid engine_chunk_adaptive", self.run_part({"engine_chunk_adaptive": "yes"}))
+
+    def test_install_moves_untouched_start_values_once(self):
+        """install.sh: 2 places, a decoder for one voice and 0.025 decoder memory become 4, 4 and 0.03 once; an own
+        choice made afterwards stays at the next update."""
+        src = helpers.repo_file("install.sh")
+        part = src[src.index('if [ ! -e "$VAR/state/migrated-tts4" ]'):]
+        part = part[:part.index("\nfi\n") + 4]
+        d = tempfile.mkdtemp(dir=helpers.TMP)
+        os.makedirs(os.path.join(d, "state"))
+
+        def run(tts):
+            with open(os.path.join(d, "c.json"), "w") as f:
+                json.dump({"tts": tts}, f)
+            script = (f"set -euo pipefail; C={d}/c.json; VAR={d}; cfgq() {{ jq \"$@\" \"$C\"; }}; "
+                      'jqi() { jq "$1" "$C" > "$C.n"; mv "$C.n" "$C"; }; as_svc() { "$@"; }\n' + part)
+            subprocess.run(["bash", "-c", script], check=True, timeout=30)
+            with open(os.path.join(d, "c.json")) as f:
+                return json.load(f)["tts"]
+        old = {"engine_max_seqs": 2, "engine_mem_code2wav": 0.025}
+        self.assertEqual(run(old), {"engine_max_seqs": 4, "engine_decode_batch": 4, "engine_mem_code2wav": 0.03})
+        self.assertEqual(run(old), old)                  # once: the own choice afterwards stays
+        os.remove(os.path.join(d, "state", "migrated-tts4"))
+        own = {"engine_max_seqs": 3, "engine_decode_batch": 2, "engine_mem_code2wav": 0.04}
+        self.assertEqual(run(own), own)                  # not the old start values: untouched
+        shutil.rmtree(d, ignore_errors=True)
 
 if __name__ == "__main__":
     unittest.main()

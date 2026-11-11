@@ -9,6 +9,7 @@ import re
 import time
 import verbrauch
 import vorrang
+from common import FOLGE_HEADER
 from textnorm import speakable
 
 
@@ -72,12 +73,16 @@ async def speech_out(*, body, c, device_owner, messages, out, play_clip, request
             # answer: a piece that brought no audio yet is tried once more, then the next one goes on.
             # Not reachable or 502/503 (restarting, e.g. ~8 s during an update): tried again after 0.5/1/2/4 s
             # (TTS_WAITS, at most once per answer in all), before the answer goes on as text only.
+            # a later piece while the listener still has more than FOLGE_LEAD s of audio: the speech service lets the
+            # first sentences of other answers go before it (common.FOLGE_HEADER), it only ever lowers its own place
+            hdrs = dict(tts_headers, **{FOLGE_HEADER: "1"}) \
+                if not first and played_until - time.time() > chat.FOLGE_LEAD else tts_headers
             attempt = 0
             while True:
                 attempt += 1
                 sent, got, mine = time.time(), False, None
                 try:
-                    async with c.stream("POST", tts_url, json=req, headers=tts_headers) as r:
+                    async with c.stream("POST", tts_url, json=req, headers=hdrs) as r:
                         for k, h in (("waited", "x-spark-wait-ms"), ("overtook", "x-spark-overtook")):
                             v = r.headers.get(h, "")   # how long it queued in the TTS (common.PrioGate)
                             said[k] += int(v) if v.isdigit() and len(v) < 7 else 0

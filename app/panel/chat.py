@@ -114,6 +114,10 @@ FIRST_CUT = 50   # a first sentence longer than this goes to TTS at its last com
 # time (engine.sh). The next piece goes to TTS while this much audio is still to play (seconds, times the
 # speaking rate: at 1.2 the listener uses up audio 1.2x faster), so a slower piece does not run dry.
 WRITE_LEAD = 5.0
+# A later piece goes to TTS as a follow-up sentence (common.FOLGE_HEADER) only while the listener still has more than
+# this much audio: the speech service lets first sentences of other answers go first for at most 2 s of its waiting
+# (PrioGate folge), so at least about a second is still left when it starts
+FOLGE_LEAD = 3
 
 
 def piece_margin(ttfa, writing, speed=1.0):

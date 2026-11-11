@@ -251,6 +251,8 @@ class SpeechMark:
 # sandbox, werkstatt.py, asks the LLM-Tor that way).
 STAGE_LOW, STAGE_NORMAL, STAGE_HIGH = 0, 1, 2
 STAGE_HEADER, STAGE_KEY_HEADER = "x-spark-stufe", "x-spark-vorrang"
+# a follow-up sentence of an answer whose listener still has audio buffered: waits behind first sentences (PrioGate)
+FOLGE_HEADER = "x-spark-folgesatz"
 _stage_key = [None]
 
 
@@ -326,16 +328,20 @@ class PrioGate:
     """At most `slots` requests at once go on to an engine (as many as it takes, engine_max_seqs); the
     others wait here instead of in the engine's own first-come queue. Who waits goes by stage (2
     Vorrang, 1 normal, 0 hinten), then by arrival; a request never stops one that already runs. Every
-    `age` seconds of waiting move a request one stage up, so nobody starves. A slot is given back at
+    `age` seconds of waiting move a request one stage up, so nobody starves. Within a stage the first sentence of an
+    answer goes before a follow-up sentence (FOLGE_HEADER, sent only while its listener still has audio buffered),
+    for at most `folge` seconds of the follow-up's waiting; marking oneself a follow-up only ever lowers one's own
+    place, so the header needs no key. A slot is given back at
     the end of the request, at the latest after `lease` seconds (a stream the client dropped before it
     began must not block the engine for good). One gate per engine and process (asyncio only)."""
 
-    def __init__(self, slots, age=4.0, lease=90.0, most=64, clock=time.monotonic):
+    def __init__(self, slots, age=4.0, lease=90.0, most=64, clock=time.monotonic, folge=2.0):
         self.slots, self.age, self.lease, self.most, self.clock = max(1, int(slots)), age, lease, most, clock
+        self.folge = folge
         self.running = {}       # ticket -> start
-        self.waiting = []       # [stage, arrival, seq, future, ticket]
+        self.waiting = []       # [stage, arrival, seq, future, ticket, fest, folge]
         self.seq = 0
-        self.stats = {"waited": 0, "overtook": 0, "waited_max_ms": 0, "full": 0}
+        self.stats = {"waited": 0, "overtook": 0, "waited_max_ms": 0, "full": 0, "first_ahead": 0}
 
     def _busy(self):
         now = self.clock()
@@ -345,7 +351,8 @@ class PrioGate:
         return len(self.running)
 
     def _rank(self, w, now):
-        return (min(STAGE_HIGH, w[0] + int((now - w[1]) // self.age)) if self.age and not w[5] else w[0], -w[2])
+        stage = min(STAGE_HIGH, w[0] + int((now - w[1]) // self.age)) if self.age and not w[5] else w[0]
+        return stage, 0 if w[6] and now - w[1] < self.folge else 1, -w[2]
 
     def _grant(self):
         while self.waiting and self._busy() < self.slots:
@@ -355,10 +362,12 @@ class PrioGate:
             if best[3].done():          # given up while waiting
                 continue
             best[4]["overtook"] = sum(1 for w in self.waiting if w[2] < best[2])
+            if not best[6]:
+                best[4]["first_ahead"] = sum(1 for w in self.waiting if w[6] and w[2] < best[2])
             self.running[best[4]["id"]] = now
             best[3].set_result(True)
 
-    async def enter(self, stage=STAGE_NORMAL, fest=False):
+    async def enter(self, stage=STAGE_NORMAL, fest=False, folge=False):
         """Waits for a slot. Returns the ticket: {"id", "waited_ms", "overtook"}; pass it to leave(). fest: the stage
         never rises while waiting (the LLM-Tor's developer key stays last, Entwickeln auf dem Pi)."""
         import asyncio
@@ -373,7 +382,7 @@ class PrioGate:
         t0 = self.clock()
         fut = asyncio.get_running_loop().create_future()
         self.waiting.append([stage if stage in (STAGE_LOW, STAGE_NORMAL, STAGE_HIGH) else STAGE_NORMAL, t0, self.seq, fut, ticket,
-                             fest is True])
+                             fest is True, folge is True])
         self._grant()
         while not fut.done():   # a slot whose lease ran out frees itself: look again now and then
             try:
@@ -391,7 +400,11 @@ class PrioGate:
         self.stats["waited"] += 1
         self.stats["overtook"] += ticket["overtook"]
         self.stats["waited_max_ms"] = max(self.stats["waited_max_ms"], ticket["waited_ms"])
-        if ticket["overtook"]:
+        if ticket.get("first_ahead"):
+            self.stats["first_ahead"] += 1
+            print(f"vorrang: erster Satz vor {ticket['first_ahead']} Folgesatz/Folgesätzen, wartete "
+                  f"{ticket['waited_ms'] / 1000:.1f} s", flush=True)
+        elif ticket["overtook"]:
             print(f"vorrang: Stufe {stage} überholt {ticket['overtook']} wartende Anfrage(n), wartete "
                   f"{ticket['waited_ms'] / 1000:.1f} s", flush=True)
         return ticket

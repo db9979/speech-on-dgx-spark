@@ -319,8 +319,8 @@ class Schluessel(unittest.TestCase):
 
     def test_a_fixed_stage_never_ages(self):
         g = common.PrioGate(1, age=1)
-        self.assertEqual(g._rank([common.STAGE_LOW, 0, 7, None, {}, True], 10_000), (common.STAGE_LOW, -7))
-        self.assertGreater(g._rank([common.STAGE_LOW, 0, 7, None, {}, False], 10_000)[0], common.STAGE_LOW)
+        self.assertEqual(g._rank([common.STAGE_LOW, 0, 7, None, {}, True, False], 10_000), (common.STAGE_LOW, 1, -7))
+        self.assertGreater(g._rank([common.STAGE_LOW, 0, 7, None, {}, False, False], 10_000)[0], common.STAGE_LOW)
 
 
 class Tor(unittest.TestCase):

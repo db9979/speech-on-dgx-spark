@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.377** Sprachausgabe bei vielen Anfragen: 4 Stimmen gleichzeitig statt 2, der erste Satz einer Antwort geht vor, neue Einstellung „Blöcke selbst anpassen“
 - **V01.1.376** ROT-FIX: die gesperrte Zeile „Eigene Stimme“ sieht aus wie jede gesperrte Zeile; drei Tests hängen nicht mehr vom Datum und von einem früheren Test ab
 - **V01.1.375** OpenCode-Anzeige richtig: System-Updates zeigt OpenCode auf dem Pi als installiert, wenn Entwickeln auf dem Pi es eingerichtet hat; fehlt es, steht dort der Installationsbefehl.
 - **V01.1.374** Eigene Stimmen gestalten: 20 fertige Antwortstimmen und bis zu drei eigene aus Feldern und eigenen Worten, einmal mit VoiceDesign gemacht und danach in jeder Antwort gleich; VoiceDesign lädt nur bei Bedarf
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.370** Nur noch das eigene Sprachmodell: der Rückfall auf qwen38 ist weg, und unter Modelle stehen nur Modelle, die laufen oder gemessen wurden
 - **V01.1.369** Hilfsmodell mit einem Schalter: eingeschaltet hilft es überall, wo es kann, statt fünf einzelner Schalter
 - **V01.1.368** Gerät statt Profil: ein „Ja“ gilt nur auf dem Gerät und im Gespräch, wo gefragt wurde, Mitteilungen kennen jedes Gerät einzeln, Kanal-Antworten landen den ganzen Tag im selben Hauptgespräch
-- **V01.1.367** Rückfrage zum Weg: vor einer Änderung, die zwei Wege gehen könnte (Mail oder Nachricht, Termin oder Erinnerung), fragt der Assistent mit Knöpfen, welcher gemeint ist, oder antwortet einfach; nie bei Lesefragen, standardmäßig aus
 
 
 

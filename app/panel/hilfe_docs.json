@@ -2261,7 +2261,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "seine Ergebnisse zählen hier als belegt (answercheck.calc_facts). Solange das an ist, kommt jeder Satz erst fertig. 7. Tat ohne Werkzeug?: Behauptet ein Satz eine Tat („ist jetzt an“, „habe eingetragen“), muss in dieser Antwort ein Werkzeug dieser Art geklappt haben (taten.check). Ein Satz, der einen Werkzeugaufruf oder eine Tat nur ankündigt („Ich rufe das Timer-Werkzeug auf …“), wird nie gesagt; kommt danach kein Werkzeug, sagt das Panel am Ende seinen festen Satz (taten.announces). Klappt ein Werkzeug der behaupteten Art später in derselben Antwort („Ich mache das Lied.“ vor musik_machen), fällt der Satz still weg. Gilt, wenn ein änderndes Werkzeug oder gar keines angeboten war. 8. Zeigen und sprechen: Ein geprüfter Satz geht als Text ans Gerät und in die Warteschlange der Sprachausgabe; Codeblöcke werden nur gezeigt. Ein schon gesagter Satz aus einer früheren Runde wird ausgelassen. Die Sprachausgabe fasst nach dem ersten Satz alles Wartende zu einem Stück zusammen, damit die Stimme ruhig bleibt. 9. Datenfrage ohne Nachsehen?: Braucht die Frage ein Werkzeug und das Modell antwortet ohne eines, wird die ganze Runde nie gesagt. Das Modell wird einmal neu gefragt, mit dem Hinweis,"
+"text": "seine Ergebnisse zählen hier als belegt (answercheck.calc_facts). Solange das an ist, kommt jeder Satz erst fertig. 7. Tat ohne Werkzeug?: Behauptet ein Satz eine Tat („ist jetzt an“, „habe eingetragen“), muss in dieser Antwort ein Werkzeug dieser Art geklappt haben (taten.check). Ein Satz, der einen Werkzeugaufruf oder eine Tat nur ankündigt („Ich rufe das Timer-Werkzeug auf …“), wird nie gesagt; kommt danach kein Werkzeug, sagt das Panel am Ende seinen festen Satz (taten.announces). Klappt ein Werkzeug der behaupteten Art später in derselben Antwort („Ich mache das Lied.“ vor musik_machen), fällt der Satz still weg. Gilt, wenn ein änderndes Werkzeug oder gar keines angeboten war. 8. Zeigen und sprechen: Ein geprüfter Satz geht als Text ans Gerät und in die Warteschlange der Sprachausgabe; Codeblöcke werden nur gezeigt. Ein schon gesagter Satz aus einer früheren Runde wird ausgelassen. Die Sprachausgabe fasst nach dem ersten Satz alles Wartende zu einem Stück zusammen, damit die Stimme ruhig bleibt. Hat der Hörer noch mehr als 3 s Ton, geht ein solches Stück als Folgesatz (X-Spark-Folgesatz) und lässt erste Sätze anderer Antworten vor. 9. Datenfrage ohne Nachsehen?: Braucht die Fr"
 },
 {
 "lang": "de",
@@ -2269,7 +2269,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": " zuerst das Werkzeug zu nutzen. 10. Werkzeug gewünscht?: Hat das Modell keinen Werkzeugaufruf geschrieben oder ist die Länge erreicht, ist die Antwort fertig. Bei erreichter Länge wird bis zum letzten Satzende gesprochen, der Rest fällt weg. 11. Werkzeuge ausführen: Halbe Worte vor dem Aufruf werden zurückgenommen, ein fertiger Satz bleibt. Jeder Aufruf geht über chat_tools.run; das Ergebnis kommt als Werkzeug-Nachricht zurück. Scheitert ein Werkzeug zweimal gleich, wird es für diese Antwort gestoppt. Hatte keine Regel die Frage erkannt, zählt die Weiche die Gruppe des ersten Werkzeugs und das feste Hinweiswort (weiche.learn), nie ein Wort der Frage. Lesende Werkzeuge (Kalender, Wetter, Pakete) nehmen ihre Daten aus dem Speicher ihres Dienstes, solange sie frisch genug sind (Vorrat je Profil, vorrat.take); ein älterer Stand wartet höchstens 2.0 s auf den Server und kommt sonst mit Stand und Tag („Stand gestern 18:00“, frisch.stand), „schau nochmal nach“ fragt immer den Server. Jede Antwort hält fest, wie lange die Werkzeuge warteten und woher jeder Dienst kam (latency, Zustand → Prüfen). 12. Ehrliche Schlusssätze: Fiel ein Satz wegen einer Zahl weg, sagt das Panel „Genauere Angaben"
+"text": "age ein Werkzeug und das Modell antwortet ohne eines, wird die ganze Runde nie gesagt. Das Modell wird einmal neu gefragt, mit dem Hinweis, zuerst das Werkzeug zu nutzen. 10. Werkzeug gewünscht?: Hat das Modell keinen Werkzeugaufruf geschrieben oder ist die Länge erreicht, ist die Antwort fertig. Bei erreichter Länge wird bis zum letzten Satzende gesprochen, der Rest fällt weg. 11. Werkzeuge ausführen: Halbe Worte vor dem Aufruf werden zurückgenommen, ein fertiger Satz bleibt. Jeder Aufruf geht über chat_tools.run; das Ergebnis kommt als Werkzeug-Nachricht zurück. Scheitert ein Werkzeug zweimal gleich, wird es für diese Antwort gestoppt. Hatte keine Regel die Frage erkannt, zählt die Weiche die Gruppe des ersten Werkzeugs und das feste Hinweiswort (weiche.learn), nie ein Wort der Frage. Lesende Werkzeuge (Kalender, Wetter, Pakete) nehmen ihre Daten aus dem Speicher ihres Dienstes, solange sie frisch genug sind (Vorrat je Profil, vorrat.take); ein älterer Stand wartet höchstens 2.0 s auf den Server und kommt sonst mit Stand und Tag („Stand gestern 18:00“, frisch.stand), „schau nochmal nach“ fragt immer den Server. Jede Antwort hält fest, wie lange die Werkzeuge warteten und woher je"
 },
 {
 "lang": "de",
@@ -3285,7 +3285,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "WSOLA, die Tonhöhe bleibt). 10. Warten nach Vorrang: PrioGate lässt so viele Sätze durch, wie die Engine gleichzeitig nimmt (engine_max_seqs); die anderen warten nach Stufe, dann nach Ankunft. 11. Engine spricht: Die Engine erzeugt den Ton. Gestreamt kommt er als Stücke zurück; das erste Stück ist absichtlich klein (initial_chunk_frames), damit der Ton schnell beginnt, auch wenn mehrere Anfragen laufen. „Mehrere Stimmen gleichzeitig“ (tts.engine_decode_batch) bündelt im Decoder bis zu 2 oder 4 Stimmen mit CUDA-Graphen, „Gleichen Anfang merken“ (tts.engine_prefix_cache) lässt die Engine den gleichen Anfang der Sätze einer Stimme wiederverwenden; beide stehen auf aus (Standard von vllm-omni). 12. Ton zurück: Der Proxy reicht den Ton unverändert weiter und zählt nur Dauer, Länge und Fehler für das Monitoring, nie den Text."
+"text": "WSOLA, die Tonhöhe bleibt). 10. Warten nach Vorrang: PrioGate lässt so viele Sätze durch, wie die Engine gleichzeitig nimmt (engine_max_seqs, ab Werk 4); die anderen warten nach Stufe, dann nach Ankunft. Innerhalb einer Stufe geht der erste Satz einer Antwort bis zu 2 s vor Folgesätzen, die das Panel mit X-Spark-Folgesatz schickt, solange beim Hörer noch Ton wartet. 11. Engine spricht: Die Engine erzeugt den Ton. Gestreamt kommt er als Stücke zurück; das erste Stück ist absichtlich klein (initial_chunk_frames), damit der Ton schnell beginnt, auch wenn mehrere Anfragen laufen. „Mehrere Stimmen gleichzeitig“ (tts.engine_decode_batch) bündelt im Decoder bis zu 2 oder 4 Stimmen mit CUDA-Graphen, „Gleichen Anfang merken“ (tts.engine_prefix_cache) lässt die Engine den gleichen Anfang der Sätze einer Stimme wiederverwenden, „Blöcke selbst anpassen“ (tts.engine_chunk_adaptive) lässt vllm-omni die Blockgrößen nach Auslastung wählen. Bündeln steht ab Werk auf 4, die anderen beiden auf aus. 12. Ton zurück: Der Proxy reicht den Ton unverändert weiter und zählt nur Dauer, Länge und Fehler für das Monitoring, nie den Text."
 },
 {
 "lang": "de",
@@ -3309,7 +3309,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Einstellen",
 "title": "Einstellen",
-"text": "- Einstellungen → Sprachausgabe: Modell, Standardstimme, Sprache, Text bereinigen, Zahlen vorlesen und die eigene Aussprache-Liste. - Einstellungen → Stimmen: eigene Stimmen aufnehmen, anhören und sichern (für ein Base-Modell). - Einstellungen → Sprachausgabe → Erweitert: „Referenz der eigenen Stimme kürzen“, „Mehrere Stimmen gleichzeitig“ und „Gleichen Anfang merken“ (alle aus); vorher und nachher Zustand → Prüfen → Leistung messen."
+"text": "- Einstellungen → Sprachausgabe: Modell, Standardstimme, Sprache, Text bereinigen, Zahlen vorlesen und die eigene Aussprache-Liste. - Einstellungen → Stimmen: eigene Stimmen aufnehmen, anhören und sichern (für ein Base-Modell). - Einstellungen → Sprachausgabe → Erweitert: „Referenz der eigenen Stimme kürzen“ (aus), „Mehrere Stimmen gleichzeitig“ (bis zu 4), „Gleichen Anfang merken“ (aus) und „Blöcke selbst anpassen“ (aus); vorher und nachher Zustand → Prüfen → Leistung messen."
 },
 {
 "lang": "de",
@@ -16781,7 +16781,7 @@
 "file": "Technik und Fehlersuche",
 "head": "Mehrere Stimmen gleichzeitig",
 "title": "Mehrere Stimmen gleichzeitig",
-"text": "Drei Einstellungen unter Einstellungen → Sprachausgabe → Erweitert sollen den ersten Ton beschleunigen, wenn mehrere Antworten gleichzeitig laufen. Alle stehen auf aus (so wie bisher); jede einzeln einschalten und vorher und nachher Leistung messen."
+"text": "Seit V01.1.377 nimmt die Sprachausgabe ab Werk 4 Sätze gleichzeitig an (tts.engine_max_seqs 4 statt 2) und der Decoder bündelt bis zu 4 Stimmen mit CUDA-Graphen (tts.engine_decode_batch 4 statt 1, dafür tts.engine_mem_code2wav 0,03 statt 0,025). Mit 2 Plätzen warteten bei 4 gleichzeitigen Anfragen die dritte und vierte einen ganzen Satz lang, und vllm-omni legt die schnellen Decoder-Graphen von sich aus nur für eine Stimme an. Das Update stellt unveränderte alte Startwerte einmal um (install.sh, Marke state/migrated-tts4); eine eigene Wahl danach bleibt. Der Speicheranteil des Talkers bleibt gleich: vLLM reserviert ihn fest, die Zahl der Plätze ändert ihn nicht."
 },
 {
 "lang": "de",
@@ -16789,7 +16789,7 @@
 "file": "Technik und Fehlersuche",
 "head": "Mehrere Stimmen gleichzeitig",
 "title": "Mehrere Stimmen gleichzeitig",
-"text": "- Referenz der eigenen Stimme kürzen (tts.ref_max_s: aus, 8, 10 oder 15 s): Mit einem Base-Modell geht bei jedem Satz die ganze Referenzaufnahme der geklonten Stimme mit, und die Engine liest sie vor dem ersten Ton ganz. Ist die Aufnahme mehr als 2 s länger als die Grenze, schneidet der TTS-Dienst sie einmal an der leisesten Stelle zwischen 60 % der Grenze (mindestens 3 s) und der Grenze (kurzref.cut_at), lässt das Stück von der Spracherkennung auf diesem Rechner aufschreiben und behält vom eigenen Text der Stimme so viele Wörter, wie sie gehört hat (kurzref.keep_words, mindestens 70 % gleich). Passt es nicht, bleibt die ganze Aufnahme. Das Stück liegt mit Text in voices/kurz/ und gilt, bis sich die Aufnahme oder die Grenze ändert; die Aufnahme selbst bleibt unverändert. Jedes Ergebnis schreibt eine Zeile tts: referenz … ins Log der Sprachausgabe (gekürzt mit Sekunden, schon kurz, Format, Spracherkennung, passt nicht, Fehler), ohne Namen oder Text. - Mehrere Stimmen gleichzeitig (tts.engine_decode_batch: 1, 2 oder 4): Der Decoder (Code2Wav) rechnet bis zu 2 oder 4 Stimmen zusammen, mit CUDA-Graphen für 1 bis n Stimmen (decode_batch_max_size, decode_cudagraph_batch_sizes, wie die Pr"
+"text": "Wird es trotzdem eng, geht der erste Satz einer Antwort vor die Folgesätze anderer Antworten derselben Stufe: Das Panel schickt einen späteren Teil einer Antwort mit X-Spark-Folgesatz: 1 (common.FOLGE_HEADER), solange beim Hörer noch mehr als chat.FOLGE_LEAD (3 s) Ton wartet. common.PrioGate lässt einen solchen Folgesatz höchstens 2 s hinter erste Sätze zurückfallen, danach zählt wieder der Eingang. Die Markierung kann den eigenen Platz nur verschlechtern, deshalb braucht sie keinen Schlüssel. Journal vorrang: erster Satz vor N Folgesatz/Folgesätzen, wartete X s, im Status der Sprachausgabe zählt queue.first_ahead mit."
 },
 {
 "lang": "de",
@@ -16797,7 +16797,7 @@
 "file": "Technik und Fehlersuche",
 "head": "Mehrere Stimmen gleichzeitig",
 "title": "Mehrere Stimmen gleichzeitig",
-"text": "ofile von vllm-omni für viele Anfragen). Braucht beim Start etwas mehr Speicher und Zeit. - Gleichen Anfang merken (tts.engine_prefix_cache): Der Talker merkt sich den Teil des Prompts, der bei jedem Satz derselben Stimme gleich ist (enable_prefix_caching für Stufe 0)."
+"text": "Weitere Einstellungen unter Einstellungen → Sprachausgabe → Erweitert sollen den ersten Ton beschleunigen, wenn mehrere Antworten gleichzeitig laufen. Jede einzeln ändern und vorher und nachher Leistung messen."
 },
 {
 "lang": "de",
@@ -16805,7 +16805,23 @@
 "file": "Technik und Fehlersuche",
 "head": "Mehrere Stimmen gleichzeitig",
 "title": "Mehrere Stimmen gleichzeitig",
-"text": "Die beiden Engine-Werte schreibt engine.sh in die Deploy-Datei (state/tts-deploy-main.yaml) und in die Stufen-Werte; eine Änderung startet die Sprachausgabe neu. Den Referenz-Kontext des Decoders begrenzt vllm-omni 0.30 schon selbst auf 72 Takte (ref_code_context_frames folgt codec_left_context_frames)."
+"text": "- Referenz der eigenen Stimme kürzen (tts.ref_max_s: aus, 8, 10 oder 15 s): Mit einem Base-Modell geht bei jedem Satz die ganze Referenzaufnahme der geklonten Stimme mit, und die Engine liest sie vor dem ersten Ton ganz. Ist die Aufnahme mehr als 2 s länger als die Grenze, schneidet der TTS-Dienst sie einmal an der leisesten Stelle zwischen 60 % der Grenze (mindestens 3 s) und der Grenze (kurzref.cut_at), lässt das Stück von der Spracherkennung auf diesem Rechner aufschreiben und behält vom eigenen Text der Stimme so viele Wörter, wie sie gehört hat (kurzref.keep_words, mindestens 70 % gleich). Passt es nicht, bleibt die ganze Aufnahme. Das Stück liegt mit Text in voices/kurz/ und gilt, bis sich die Aufnahme oder die Grenze ändert; die Aufnahme selbst bleibt unverändert. Jedes Ergebnis schreibt eine Zeile tts: referenz … ins Log der Sprachausgabe (gekürzt mit Sekunden, schon kurz, Format, Spracherkennung, passt nicht, Fehler), ohne Namen oder Text. - Mehrere Stimmen gleichzeitig (tts.engine_decode_batch: 1, 2 oder 4, Standard 4): Der Decoder (Code2Wav) rechnet bis zu 2 oder 4 Stimmen zusammen, mit CUDA-Graphen für 1 bis n Stimmen (decode_batch_max_size, decode_cudagraph_batch_sizes"
+},
+{
+"lang": "de",
+"src": "technik",
+"file": "Technik und Fehlersuche",
+"head": "Mehrere Stimmen gleichzeitig",
+"title": "Mehrere Stimmen gleichzeitig",
+"text": ", wie die Profile von vllm-omni für viele Anfragen). Braucht beim Start etwas mehr Speicher und Zeit. - Gleichen Anfang merken (tts.engine_prefix_cache, aus): Der Talker merkt sich den Teil des Prompts, der bei jedem Satz derselben Stimme gleich ist (enable_prefix_caching für Stufe 0). - Blöcke selbst anpassen (tts.engine_chunk_adaptive, aus): vllm-omni wählt die Größe der Tonblöcke selbst (codec_chunk_adaptive, neu in 0.30), den ersten nach der Zahl laufender Stimmen, jeden weiteren danach, wie viel Ton beim Hörer noch wartet. Ersetzt die festen Stufen aus „Start der Sprachausgabe“ (codec_chunk_ramp). Neu und wenig erprobt, darum aus."
+},
+{
+"lang": "de",
+"src": "technik",
+"file": "Technik und Fehlersuche",
+"head": "Mehrere Stimmen gleichzeitig",
+"title": "Mehrere Stimmen gleichzeitig",
+"text": "Die Engine-Werte schreibt engine.sh in die Deploy-Datei (state/tts-deploy-main.yaml) und in die Stufen-Werte; eine Änderung startet die Sprachausgabe neu. Den Referenz-Kontext des Decoders begrenzt vllm-omni 0.30 schon selbst auf 72 Takte (ref_code_context_frames folgt codec_left_context_frames)."
 },
 {
 "lang": "de",
@@ -17021,7 +17037,7 @@
 "file": "Technik und Fehlersuche",
 "head": "Vorrang für Personen",
 "title": "Vorrang für Personen",
-"text": "warten, sonst 503. Ein Platz kommt spätestens nach 90 s zurück, auch wenn ein Gerät die Verbindung vor dem Start fallen ließ. - Sprachmodell (seit V01.0.284): Solange eine Antwort mit Vorrang ihren ersten Satz noch nicht hat, warten neue Runden anderer Personen höchstens chat.person_priority_wait Sekunden (0–5, Standard 2), bevor sie ans Sprachmodell gehen (stufe.wait_turn). Laufende Antworten werden nie abgebrochen, eine Antwort ohne ersten Satz hält andere höchstens 30 s auf. Logs → Anfragen zeigt bei der Runde „wartete … auf eine Antwort mit Vorrang“, Journal vorrang: Antwort wartete N s auf eine Antwort mit Vorrang. - Früher Bescheid: Browser und iPhone-App melden beim Start einer Aufnahme POST /api/vorrang/spricht (Profil oder Geräteschlüssel, höchstens 60 pro Minute). Hat das Profil Vorrang, stoppt die Hintergrundarbeit sofort und das Tor fürs Sprachmodell schließt für höchstens 15 s, bis die Frage da ist. Die Antwort ist für alle gleich, so verrät sie nicht, wer Vorrang hat. Am geteilten Lautsprecher gibt es diesen Bescheid nicht. - Wer die Stufe sagen darf: nur das Panel. Es schickt X-Spark-Stufe (0, 1, 2) zusammen mit dem Schlüssel aus state/vorrang-key (vom Panel einmal e"
+"text": "warten, sonst 503. Ein Platz kommt spätestens nach 90 s zurück, auch wenn ein Gerät die Verbindung vor dem Start fallen ließ. Innerhalb einer Stufe geht der erste Satz einer Antwort bis zu 2 s vor Folgesätzen (X-Spark-Folgesatz, siehe „Mehrere Stimmen gleichzeitig“). - Sprachmodell (seit V01.0.284): Solange eine Antwort mit Vorrang ihren ersten Satz noch nicht hat, warten neue Runden anderer Personen höchstens chat.person_priority_wait Sekunden (0–5, Standard 2), bevor sie ans Sprachmodell gehen (stufe.wait_turn). Laufende Antworten werden nie abgebrochen, eine Antwort ohne ersten Satz hält andere höchstens 30 s auf. Logs → Anfragen zeigt bei der Runde „wartete … auf eine Antwort mit Vorrang“, Journal vorrang: Antwort wartete N s auf eine Antwort mit Vorrang. - Früher Bescheid: Browser und iPhone-App melden beim Start einer Aufnahme POST /api/vorrang/spricht (Profil oder Geräteschlüssel, höchstens 60 pro Minute). Hat das Profil Vorrang, stoppt die Hintergrundarbeit sofort und das Tor fürs Sprachmodell schließt für höchstens 15 s, bis die Frage da ist. Die Antwort ist für alle gleich, so verrät sie nicht, wer Vorrang hat. Am geteilten Lautsprecher gibt es diesen Bescheid nicht. - We"
 },
 {
 "lang": "de",
@@ -17029,7 +17045,7 @@
 "file": "Technik und Fehlersuche",
 "head": "Vorrang für Personen",
 "title": "Vorrang für Personen",
-"text": "rzeugt, Rechte 0600, nicht in der Sicherung). Die Dienste glauben das nur von 127.0.0.1 und nur mit diesem Schlüssel; alle anderen sind normal, auch mit dem API-Schlüssel. - Sehen: Zustand → Logs → Anfragen zeigt bei „Eingang“ „mit Vorrang“ und bei „Sprachausgabe“, wie lange die Sätze in der Reihe warteten und wie viele sie überholten. Journal: vorrang: Stufe 2 überholt N wartende Anfrage(n). /health der Dienste zeigt unter queue Plätze, Wartende und Zähler. - Messen: Zustand → Prüfen → „Vorrang für Sprache“ misst zusätzlich den Fall „Zwei Personen gleichzeitig“: die Sprachausgabe ist mit Sätzen anderer voll (alle Plätze plus zwei Wartende), dann kommt ein Satz einmal normal und einmal mit Vorrang. Gezeigt wird der erste Ton beider Fälle. - Grenzen: Das Sprachmodell selbst kennt keine Reihenfolge: Das Tor wirkt nur auf Anfragen des Panels, Open WebUI und andere Programme, die direkt dorthin fragen, bremst der Vorrang nicht. Spricht nur eine Person, ist nichts schneller."
+"text": "r die Stufe sagen darf: nur das Panel. Es schickt X-Spark-Stufe (0, 1, 2) zusammen mit dem Schlüssel aus state/vorrang-key (vom Panel einmal erzeugt, Rechte 0600, nicht in der Sicherung). Die Dienste glauben das nur von 127.0.0.1 und nur mit diesem Schlüssel; alle anderen sind normal, auch mit dem API-Schlüssel. - Sehen: Zustand → Logs → Anfragen zeigt bei „Eingang“ „mit Vorrang“ und bei „Sprachausgabe“, wie lange die Sätze in der Reihe warteten und wie viele sie überholten. Journal: vorrang: Stufe 2 überholt N wartende Anfrage(n). /health der Dienste zeigt unter queue Plätze, Wartende und Zähler. - Messen: Zustand → Prüfen → „Vorrang für Sprache“ misst zusätzlich den Fall „Zwei Personen gleichzeitig“: die Sprachausgabe ist mit Sätzen anderer voll (alle Plätze plus zwei Wartende), dann kommt ein Satz einmal normal und einmal mit Vorrang. Gezeigt wird der erste Ton beider Fälle. - Grenzen: Das Sprachmodell selbst kennt keine Reihenfolge: Das Tor wirkt nur auf Anfragen des Panels, Open WebUI und andere Programme, die direkt dorthin fragen, bremst der Vorrang nicht. Spricht nur eine Person, ist nichts schneller."
 },
 {
 "lang": "de",
@@ -19533,7 +19549,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " tool?: When a sentence claims a deed („is on now“, „entered it“), a tool of that kind must have worked in this answer (taten.check). A sentence that only announces a tool call or a deed („I'm calling the timer tool …“) is never said; when no tool follows, the panel says its fixed sentence at the end (taten.announces). When a tool of the claimed kind works later in the same answer („I'm making the song.“ before musik_machen), the sentence is left out silently. Applies when a changing tool or none at all was offered. 8. Show and speak: A checked sentence goes to the device as text and into the speech output queue; code blocks are only shown. A sentence already said in an earlier round is left out. After the first sentence speech output joins everything waiting into one piece, so the voice stays calm. 9. Data question without looking?: When the question needs a tool and the model answers without one, the whole round is never said. The model is asked once more, told to use the tool first. 10. Tool wanted?: When the model wrote no tool call or hit the length limit, the answer is done. At the length limit it is spoken up to the last sentence end, the rest is dropped. 11. Run the tools: "
+"text": " tool?: When a sentence claims a deed („is on now“, „entered it“), a tool of that kind must have worked in this answer (taten.check). A sentence that only announces a tool call or a deed („I'm calling the timer tool …“) is never said; when no tool follows, the panel says its fixed sentence at the end (taten.announces). When a tool of the claimed kind works later in the same answer („I'm making the song.“ before musik_machen), the sentence is left out silently. Applies when a changing tool or none at all was offered. 8. Show and speak: A checked sentence goes to the device as text and into the speech output queue; code blocks are only shown. A sentence already said in an earlier round is left out. After the first sentence speech output joins everything waiting into one piece, so the voice stays calm. When the listener still has more than 3 s of audio, such a piece goes as a follow-up sentence (X-Spark-Folgesatz) and lets first sentences of other answers go first. 9. Data question without looking?: When the question needs a tool and the model answers without one, the whole round is never said. The model is asked once more, told to use the tool first. 10. Tool wanted?: When the model "
 },
 {
 "lang": "en",
@@ -19541,7 +19557,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "Half words before the call are taken back, a finished sentence stays. Every call goes through chat_tools.run; the result comes back as a tool message. A tool that fails twice the same way is stopped for this answer. When no rule recognized the question, the switch counts the group of the first tool and the fixed hint word (weiche.learn), never a word of the question. Reading tools (calendar, weather, parcels) take their data from their service's memory while it is fresh enough (Vorrat je Profil, vorrat.take); an older reading waits at most 2.0 s for the server and otherwise comes with its time and day („as of yesterday 18:00“, frisch.stand), „look again“ always asks the server. Every answer keeps how long the tools waited and where each service came from (latency, Status → Checks). 12. Honest closing sentences: When a sentence fell out because of a figure, the panel says „I have no more precise details on that.“; when a deed fell out, a fixed sentence from taten.sentence. When a service came only with an older reading, a search for today found nothing of today or an archive article comes from a Kiwix book older than a year, and the answer does not say so itself, the panel adds „Not"
+"text": "wrote no tool call or hit the length limit, the answer is done. At the length limit it is spoken up to the last sentence end, the rest is dropped. 11. Run the tools: Half words before the call are taken back, a finished sentence stays. Every call goes through chat_tools.run; the result comes back as a tool message. A tool that fails twice the same way is stopped for this answer. When no rule recognized the question, the switch counts the group of the first tool and the fixed hint word (weiche.learn), never a word of the question. Reading tools (calendar, weather, parcels) take their data from their service's memory while it is fresh enough (Vorrat je Profil, vorrat.take); an older reading waits at most 2.0 s for the server and otherwise comes with its time and day („as of yesterday 18:00“, frisch.stand), „look again“ always asks the server. Every answer keeps how long the tools waited and where each service came from (latency, Status → Checks). 12. Honest closing sentences: When a sentence fell out because of a figure, the panel says „I have no more precise details on that.“; when a deed fell out, a fixed sentence from taten.sentence. When a service came only with an older reading,"
 },
 {
 "lang": "en",
@@ -20525,7 +20541,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "st applies, after that speak_abbreviations writes out abbreviations („z. B.“, „ca.“, „€/Monat“) and speak_numbers date, time, money, numbers and units (km/h, kWh, kg, GB …). 8. Pick the voice: Temperature, top_p and a fixed seed from the settings keep the voice the same from sentence to sentence. A Base model speaks with a cloned voice from voices/ (apply_clone); an unknown name falls back to the default voice. With „Shorten the reference of your own voice“ (tts.ref_max_s) it takes a piece of a long recording instead: kurzref.cut_at cuts once at the quietest point before the limit, speech recognition writes the piece down, kurzref.keep_words keeps the words of the own text (at least 70 % alike, else the whole recording stays). Until the piece is ready, the whole recording applies. stimmablage.ablegen puts the samples of the designed voices there, only as a plain WAV with a fixed name (sd-…, eigen-…). 9. Streamed at another tempo?: vllm-omni takes no tempo when streaming. Then tempo.Stretcher stretches the sound piece by piece itself (WSOLA, the pitch stays). 10. Wait by priority: PrioGate lets as many sentences through as the engine takes at once (engine_max_seqs); the others wait "
+"text": "st applies, after that speak_abbreviations writes out abbreviations („z. B.“, „ca.“, „€/Monat“) and speak_numbers date, time, money, numbers and units (km/h, kWh, kg, GB …). 8. Pick the voice: Temperature, top_p and a fixed seed from the settings keep the voice the same from sentence to sentence. A Base model speaks with a cloned voice from voices/ (apply_clone); an unknown name falls back to the default voice. With „Shorten the reference of your own voice“ (tts.ref_max_s) it takes a piece of a long recording instead: kurzref.cut_at cuts once at the quietest point before the limit, speech recognition writes the piece down, kurzref.keep_words keeps the words of the own text (at least 70 % alike, else the whole recording stays). Until the piece is ready, the whole recording applies. stimmablage.ablegen puts the samples of the designed voices there, only as a plain WAV with a fixed name (sd-…, eigen-…). 9. Streamed at another tempo?: vllm-omni takes no tempo when streaming. Then tempo.Stretcher stretches the sound piece by piece itself (WSOLA, the pitch stays). 10. Wait by priority: PrioGate lets as many sentences through as the engine takes at once (engine_max_seqs, 4 out of the box)"
 },
 {
 "lang": "en",
@@ -20533,7 +20549,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "by stage, then by arrival. 11. The engine speaks: The engine makes the sound. Streamed it comes back in pieces; the first piece is small on purpose (initial_chunk_frames) so the sound starts fast, also when several requests run. „Several voices at once“ (tts.engine_decode_batch) batches up to 2 or 4 voices in the decoder with CUDA graphs, „Remember the same beginning“ (tts.engine_prefix_cache) lets the engine reuse the same beginning of a voice's sentences; both are off (vllm-omni's default). 12. Sound back: The proxy passes the sound on unchanged and counts only time, length and errors for monitoring, never the text."
+"text": "; the others wait by stage, then by arrival. Within a stage the first sentence of an answer goes up to 2 s before follow-up sentences, which the panel sends with X-Spark-Folgesatz while the listener still has audio. 11. The engine speaks: The engine makes the sound. Streamed it comes back in pieces; the first piece is small on purpose (initial_chunk_frames) so the sound starts fast, also when several requests run. „Several voices at once“ (tts.engine_decode_batch) batches up to 2 or 4 voices in the decoder with CUDA graphs, „Remember the same beginning“ (tts.engine_prefix_cache) lets the engine reuse the same beginning of a voice's sentences, „Adapt the blocks by itself“ (tts.engine_chunk_adaptive) lets vllm-omni pick the block sizes by the load. Batching is 4 out of the box, the other two are off. 12. Sound back: The proxy passes the sound on unchanged and counts only time, length and errors for monitoring, never the text."
 },
 {
 "lang": "en",
@@ -20557,7 +20573,7 @@
 "file": "Architecture and data flow",
 "head": "Settings",
 "title": "Settings",
-"text": "- Settings → Speech output: model, default voice, language, clean text, reading numbers and the own pronunciation list. - Settings → Voices: record, play and save own voices (for a Base model). - Settings → Speech output → Advanced: „Shorten the reference of your own voice“, „Several voices at once“ and „Remember the same beginning“ (all off); before and after Status → Checks → Measure performance."
+"text": "- Settings → Speech output: model, default voice, language, clean text, reading numbers and the own pronunciation list. - Settings → Voices: record, play and save own voices (for a Base model). - Settings → Speech output → Advanced: „Shorten the reference of your own voice“ (off), „Several voices at once“ (up to 4), „Remember the same beginning“ (off) and „Adapt the blocks by itself“ (off); before and after Status → Checks → Measure performance."
 },
 {
 "lang": "en",
@@ -33709,7 +33725,7 @@
 "file": "Technical details and troubleshooting",
 "head": "Several voices at once",
 "title": "Several voices at once",
-"text": "Three settings under Settings → Speech output → Advanced are meant to make the first audio faster when several answers run at once. All are off (as before); switch each on alone and measure performance before and after."
+"text": "Since V01.1.377 speech output takes 4 sentences at once out of the box (tts.engine_max_seqs 4 instead of 2) and the decoder batches up to 4 voices with CUDA graphs (tts.engine_decode_batch 4 instead of 1, with tts.engine_mem_code2wav 0.03 instead of 0.025). With 2 places the third and fourth of 4 requests at once waited a whole sentence, and vllm-omni prepares the fast decoder graphs for one voice only by itself. The update moves untouched old start values once (install.sh, mark state/migrated-tts4); an own choice made afterwards stays. The talker's memory share stays the same: vLLM reserves it as a fixed share, the number of places does not change it."
 },
 {
 "lang": "en",
@@ -33717,7 +33733,7 @@
 "file": "Technical details and troubleshooting",
 "head": "Several voices at once",
 "title": "Several voices at once",
-"text": "- Shorten the reference of your own voice (tts.ref_max_s: off, 8, 10 or 15 s): with a Base model every sentence carries the cloned voice's whole reference recording, and the engine reads all of it before the first audio. When the recording is more than 2 s longer than the limit, the TTS service cuts it once at the quietest point between 60 % of the limit (at least 3 s) and the limit (kurzref.cut_at), has speech recognition on this computer write the piece down and keeps as many words of the voice's own text as it heard (kurzref.keep_words, at least 70 % alike). When it does not fit, the whole recording stays. The piece is kept with its text in voices/kurz/ and applies until the recording or the limit changes; the recording itself stays unchanged. Every result writes a line tts: referenz … to the speech output's log (shortened with seconds, already short, format, speech recognition, does not fit, error), without names or text. - Several voices at once (tts.engine_decode_batch: 1, 2 or 4): the decoder (Code2Wav) computes up to 2 or 4 voices together, with CUDA graphs for 1 to n voices (decode_batch_max_size, decode_cudagraph_batch_sizes, like vllm-omni's profiles for many requests). "
+"text": "When it still gets tight, the first sentence of an answer goes before follow-up sentences of other answers of the same stage: the panel sends a later piece of an answer with X-Spark-Folgesatz: 1 (common.FOLGE_HEADER) while the listener still has more than chat.FOLGE_LEAD (3 s) of audio waiting. common.PrioGate lets such a follow-up fall behind first sentences for at most 2 s, after that arrival counts again. The mark can only lower one's own place, so it needs no key. Journal vorrang: erster Satz vor N Folgesatz/Folgesätzen, wartete X s, the speech output's status counts queue.first_ahead."
 },
 {
 "lang": "en",
@@ -33725,7 +33741,7 @@
 "file": "Technical details and troubleshooting",
 "head": "Several voices at once",
 "title": "Several voices at once",
-"text": "Takes a little more memory and time at start. - Remember the same beginning (tts.engine_prefix_cache): the talker remembers the part of the prompt that is the same in every sentence of the same voice (enable_prefix_caching for stage 0)."
+"text": "More settings under Settings → Speech output → Advanced are meant to make the first audio faster when several answers run at once. Change each alone and measure performance before and after."
 },
 {
 "lang": "en",
@@ -33733,7 +33749,23 @@
 "file": "Technical details and troubleshooting",
 "head": "Several voices at once",
 "title": "Several voices at once",
-"text": "engine.sh writes both engine values into the deploy file (state/tts-deploy-main.yaml) and the stage values; a change restarts speech output. vllm-omni 0.30 already bounds the decoder's reference context to 72 frames itself (ref_code_context_frames follows codec_left_context_frames)."
+"text": "- Shorten the reference of your own voice (tts.ref_max_s: off, 8, 10 or 15 s): with a Base model every sentence carries the cloned voice's whole reference recording, and the engine reads all of it before the first audio. When the recording is more than 2 s longer than the limit, the TTS service cuts it once at the quietest point between 60 % of the limit (at least 3 s) and the limit (kurzref.cut_at), has speech recognition on this computer write the piece down and keeps as many words of the voice's own text as it heard (kurzref.keep_words, at least 70 % alike). When it does not fit, the whole recording stays. The piece is kept with its text in voices/kurz/ and applies until the recording or the limit changes; the recording itself stays unchanged. Every result writes a line tts: referenz … to the speech output's log (shortened with seconds, already short, format, speech recognition, does not fit, error), without names or text. - Several voices at once (tts.engine_decode_batch: 1, 2 or 4, default 4): the decoder (Code2Wav) computes up to 2 or 4 voices together, with CUDA graphs for 1 to n voices (decode_batch_max_size, decode_cudagraph_batch_sizes, like vllm-omni's profiles for many "
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "Several voices at once",
+"title": "Several voices at once",
+"text": "requests). Takes a little more memory and time at start. - Remember the same beginning (tts.engine_prefix_cache, off): the talker remembers the part of the prompt that is the same in every sentence of the same voice (enable_prefix_caching for stage 0). - Adapt the blocks by itself (tts.engine_chunk_adaptive, off): vllm-omni picks the size of the audio blocks itself (codec_chunk_adaptive, new in 0.30), the first by the number of voices running, every next one by how much audio still waits at the listener. It replaces the fixed steps of \"Speech output start\" (codec_chunk_ramp). New and little tried, so off."
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "Several voices at once",
+"title": "Several voices at once",
+"text": "engine.sh writes the engine values into the deploy file (state/tts-deploy-main.yaml) and the stage values; a change restarts speech output. vllm-omni 0.30 already bounds the decoder's reference context to 72 frames itself (ref_code_context_frames follows codec_left_context_frames)."
 },
 {
 "lang": "en",
@@ -33949,7 +33981,7 @@
 "file": "Technical details and troubleshooting",
 "head": "Priority for people",
 "title": "Priority for people",
-"text": "omes back after 90 s at the latest, even when a device dropped the connection before its stream began. - Language model (since V01.0.284): while an answer with priority has no first sentence yet, new rounds of other people wait at most chat.person_priority_wait seconds (0–5, default 2) before they go to the language model (stufe.wait_turn). Running answers are never stopped; an answer without a first sentence holds others for 30 s at most. Logs → Anfragen shows \"waited … for an answer with priority\" at the round, journal vorrang: Antwort wartete N s auf eine Antwort mit Vorrang. - Early notice: the browser and the iPhone app send POST /api/vorrang/spricht when a recording starts (profile or device key, at most 60 per minute). If the profile has priority, background work stops at once and the language model gate closes for 15 s at most, until the question arrives. The answer is the same for everybody, so it does not tell who has priority. Shared speakers do not send it. - Who may say the stage: only the panel. It sends X-Spark-Stufe (0, 1, 2) together with the key from state/vorrang-key (made once by the panel, mode 0600, not in the backup). The services believe it only from 127.0.0"
+"text": "omes back after 90 s at the latest, even when a device dropped the connection before its stream began. Within a stage the first sentence of an answer goes up to 2 s before follow-up sentences (X-Spark-Folgesatz, see \"Several voices at once\"). - Language model (since V01.0.284): while an answer with priority has no first sentence yet, new rounds of other people wait at most chat.person_priority_wait seconds (0–5, default 2) before they go to the language model (stufe.wait_turn). Running answers are never stopped; an answer without a first sentence holds others for 30 s at most. Logs → Anfragen shows \"waited … for an answer with priority\" at the round, journal vorrang: Antwort wartete N s auf eine Antwort mit Vorrang. - Early notice: the browser and the iPhone app send POST /api/vorrang/spricht when a recording starts (profile or device key, at most 60 per minute). If the profile has priority, background work stops at once and the language model gate closes for 15 s at most, until the question arrives. The answer is the same for everybody, so it does not tell who has priority. Shared speakers do not send it. - Who may say the stage: only the panel. It sends X-Spark-Stufe (0, 1, 2) to"
 },
 {
 "lang": "en",
@@ -33957,7 +33989,7 @@
 "file": "Technical details and troubleshooting",
 "head": "Priority for people",
 "title": "Priority for people",
-"text": ".1 and only with that key; everybody else is normal, even with the API key. - Seeing it: Status → Logs → Anfragen shows \"with priority\" at the arrival and, at speech output, how long the sentences queued and how many they overtook. Journal: vorrang: Stufe 2 überholt N wartende Anfrage(n). The services' /health shows slots, waiting requests and counters under queue. - Measuring: Status → Checks → \"Speech first\" also measures the case \"two people at once\": the speech output is full with sentences of others (all slots plus two waiting), then one more sentence comes, once normal and once with priority. It shows the first audio of both. - Limits: the language model knows no order; Open WebUI and other programs that ask it directly are not held back. With one person talking nothing gets faster."
+"text": "gether with the key from state/vorrang-key (made once by the panel, mode 0600, not in the backup). The services believe it only from 127.0.0.1 and only with that key; everybody else is normal, even with the API key. - Seeing it: Status → Logs → Anfragen shows \"with priority\" at the arrival and, at speech output, how long the sentences queued and how many they overtook. Journal: vorrang: Stufe 2 überholt N wartende Anfrage(n). The services' /health shows slots, waiting requests and counters under queue. - Measuring: Status → Checks → \"Speech first\" also measures the case \"two people at once\": the speech output is full with sentences of others (all slots plus two waiting), then one more sentence comes, once normal and once with priority. It shows the first audio of both. - Limits: the language model knows no order; Open WebUI and other programs that ask it directly are not held back. With one person talking nothing gets faster."
 },
 {
 "lang": "en",

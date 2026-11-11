@@ -776,7 +776,7 @@ SEITEN = {
         "heute": [],
     },
     "antwort": {
-        "stand": "9551c0b372",
+        "stand": "bc04e4b6db",
         "bezug": {
             "chat.MAX_SAVES": ["s11"], "chat.LOOP_SAME": ["s11"], "chat._answer": ["s4", "s5", "s11"], "chat_modell.model_turn": ["s4", "s11"], "chat_modell.herkunft_und_chip": ["s3"], "chat_ton.speech_out": ["s8"],
             "chat.split_sentences": ["s5"], "chat.said_key": ["s8"], "chat.no_code": ["s8"],
@@ -902,10 +902,14 @@ SEITEN = {
               ("nie ein Satz zweimal", "never a sentence twice"),
               ("Ein geprüfter Satz geht als Text ans Gerät und in die Warteschlange der Sprachausgabe; Codeblöcke werden "
                "nur gezeigt. Ein schon gesagter Satz aus einer früheren Runde wird ausgelassen. Die Sprachausgabe "
-               "fasst nach dem ersten Satz alles Wartende zu einem Stück zusammen, damit die Stimme ruhig bleibt.",
+               "fasst nach dem ersten Satz alles Wartende zu einem Stück zusammen, damit die Stimme ruhig bleibt. Hat "
+               "der Hörer noch mehr als {chat.FOLGE_LEAD} s Ton, geht ein solches Stück als Folgesatz "
+               "(X-Spark-Folgesatz) und lässt erste Sätze anderer Antworten vor.",
                "A checked sentence goes to the device as text and into the speech output queue; code blocks are only "
                "shown. A sentence already said in an earlier round is left out. After the first sentence speech output "
-               "joins everything waiting into one piece, so the voice stays calm.")),
+               "joins everything waiting into one piece, so the voice stays calm. When the listener still has more "
+               "than {chat.FOLGE_LEAD} s of audio, such a piece goes as a follow-up sentence (X-Spark-Folgesatz) and "
+               "lets first sentences of other answers go first.")),
             S("s9", "frage", ("Datenfrage ohne Nachsehen?", "Data question without looking?"),
               ("ganze Runde zurückgehalten", "whole round held back"),
               ("Braucht die Frage ein Werkzeug und das Modell antwortet ohne eines, wird die ganze Runde nie gesagt. "

@@ -205,8 +205,9 @@ OHNE = {
     ),
     "tts": (
         "backend", "calm", "clean_text", "default_instruct", "default_language", "default_voice", "dtype",
-        "enabled", "engine_decode_batch", "engine_max_model_len", "engine_max_seqs", "engine_mem_code2wav",
-        "engine_mem_talker", "engine_port", "engine_prefix_cache", "host", "klon_enabled", "klon_model", "klon_port",
+        "enabled", "engine_chunk_adaptive", "engine_decode_batch", "engine_max_model_len", "engine_max_seqs",
+        "engine_mem_code2wav", "engine_mem_talker", "engine_port", "engine_prefix_cache", "host", "klon_enabled",
+        "klon_model", "klon_port",
         "model", "numbers", "port", "ref_max_s", "seed", "temperature", "top_p", "voicedesign_enabled",
         "voicedesign_leerlauf_min", "voicedesign_model", "voicedesign_port",
     ),

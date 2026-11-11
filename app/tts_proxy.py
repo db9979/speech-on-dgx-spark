@@ -27,8 +27,8 @@ from fastapi.responses import Response, StreamingResponse
 
 import kurzref
 
-from common import (BodyLimit, GateFull, KeyedCORS, PrioGate, inside, outside_view, api_key_dependency, api_key_ok,
-                    engine_crash_reason, load_config, quiet_access_log, SpeechMark, stage_of, STATE)
+from common import (FOLGE_HEADER, BodyLimit, GateFull, KeyedCORS, PrioGate, inside, outside_view, api_key_dependency,
+                    api_key_ok, engine_crash_reason, load_config, quiet_access_log, SpeechMark, stage_of, STATE)
 from textnorm import (MAX_INPUT, apply_pronunciations, clean_text, guess_language, hide_secrets, parse_pronunciations,
                       speak_abbreviations, speak_numbers, speech_markdown)
 
@@ -446,8 +446,8 @@ gates = {}
 
 def gate(role):
     if role not in gates:
-        n = cfg.get("engine_max_seqs", 2)
-        gates[role] = PrioGate(n if isinstance(n, int) and not isinstance(n, bool) and 1 <= n <= 64 else 2)
+        n = cfg.get("engine_max_seqs", 4)
+        gates[role] = PrioGate(n if isinstance(n, int) and not isinstance(n, bool) and 1 <= n <= 64 else 4)
     return gates[role]
 
 
@@ -555,7 +555,8 @@ async def speech(request: Request):
     url = f"http://127.0.0.1:{port}/v1/audio/speech"
     g = gate(role)
     try:
-        ticket = await g.enter(stage_of(request))
+        # a follow-up sentence of an answer that still plays waits behind first sentences (common.FOLGE_HEADER)
+        ticket = await g.enter(stage_of(request), folge=request.headers.get(FOLGE_HEADER) == "1")
     except GateFull:
         raise HTTPException(503, "TTS busy: too many requests waiting")
     stats["requests"] += 1

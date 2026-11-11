@@ -178,12 +178,14 @@ fi
 
 [[ "$MAXLEN" =~ ^[0-9]{3,6}$ ]] || fail "invalid engine_max_model_len '$MAXLEN'"
 # A short talker context keeps its KV cache small; 4096 talker steps are minutes of audio.
-# Several voices at once (tts.engine_decode_batch, tts.engine_prefix_cache; both off = vllm-omni's own defaults):
+# Several voices at once (tts.engine_decode_batch, 4 since V01.1.377; tts.engine_prefix_cache off = vllm-omni's default):
 # the decoder batches up to n voices with CUDA graphs for 1..n (vllm-omni's high-concurrency profiles), and the
 # talker reuses the part of the prompt that is the same for every sentence of a cloned voice (its reference)
-DB=$(jq -r '.tts.engine_decode_batch // 1' "$CONFIG"); PC=$(jq -r '.tts.engine_prefix_cache // false' "$CONFIG")
+DB=$(jq -r '.tts.engine_decode_batch // 4' "$CONFIG"); PC=$(jq -r '.tts.engine_prefix_cache // false' "$CONFIG")
+AD=$(jq -r '.tts.engine_chunk_adaptive // false' "$CONFIG")
 [[ "$DB" =~ ^[124]$ ]] || fail "invalid engine_decode_batch '$DB' (1, 2 or 4)"
 [[ "$PC" =~ ^(true|false)$ ]] || fail "invalid engine_prefix_cache '$PC'"
+[[ "$AD" =~ ^(true|false)$ ]] || fail "invalid engine_chunk_adaptive '$AD'"
 overrides=$(jq -cn --argjson m0 "$MEM0" --argjson m1 "$MEM1" --argjson s "$SEQS" --argjson l "$MAXLEN" --argjson pc "$PC" \
   '{"0": ({gpu_memory_utilization: $m0, max_num_seqs: $s, max_model_len: $l} + (if $pc then {enable_prefix_caching: true} else {} end)),
     "1": {gpu_memory_utilization: $m1, max_num_seqs: $s}}')
@@ -194,7 +196,12 @@ overrides=$(jq -cn --argjson m0 "$MEM0" --argjson m1 "$MEM1" --argjson s "$SEQS"
 # straight to 25 frames (2 s of audio), which stalled playback after the first block on GB10.
 deploy=(); extra=""
 ic=$(jq -r '.tts.initial_chunk_frames // 8' "$CONFIG")
-if [[ "$ic" =~ ^[0-9]+$ ]] && [ "$ic" -gt 0 ]; then
+if [ "$AD" = true ]; then
+  # tts.engine_chunk_adaptive: vllm-omni sizes the blocks itself, the first one by the load, every next one by how much
+  # audio the listener still has (codec_chunk_adaptive, new in vllm-omni 0.30); it replaces the fixed steps below
+  echo "streaming blocks: adaptive (codec_chunk_adaptive)"
+  extra+="      codec_chunk_adaptive: true"$'\n'
+elif [[ "$ic" =~ ^[0-9]+$ ]] && [ "$ic" -gt 0 ]; then
   # e.g. 10 -> [10, 8, 9, 10, 11, 12, 13, 15, 17, 19, 21, 24, 25]: the first block as configured,
   # then from 8 frames each block ~12 % longer than the one before. Measured on GB10 while qwen38
   # generates, the talker makes only ~14.8 frames/s (1.2x real time); steeper steps ran dry.

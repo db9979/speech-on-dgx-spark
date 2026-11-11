@@ -272,7 +272,7 @@ class Bench:
                           "tts": {k: c["tts"].get(k) for k in ("enabled", "model", "backend", "engine_mem_talker",
                                                                "engine_mem_code2wav", "engine_max_seqs",
                                                                "voicedesign_enabled", "engine_decode_batch",
-                                                               "engine_prefix_cache", "ref_max_s")}},
+                                                               "engine_prefix_cache", "engine_chunk_adaptive", "ref_max_s")}},
                "tts": None, "asr": None, "errors": []}
         if common.model_local(c):
             res["gpu_name"] = run(["nvidia-smi", "--query-gpu=name", "--format=csv,noheader"])

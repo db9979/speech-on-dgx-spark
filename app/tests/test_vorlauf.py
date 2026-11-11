@@ -43,6 +43,20 @@ class Margin(unittest.TestCase):
             src = f.read()
         self.assertIn('chat.piece_margin(ttfa, not tm.get("written"), tts_body.get("speed"))', src)
 
+    def test_follow_up_sentences_wait_behind_first_ones_only_with_audio_left(self):
+        """Several answers at once (V01.1.377): a later piece goes as a follow-up sentence (common.FOLGE_HEADER) only
+        while the listener has more audio than the speech service may hold it back (PrioGate folge) plus a second."""
+        import inspect
+        import chat_ton
+        from common import FOLGE_HEADER, PrioGate
+        folge = inspect.signature(PrioGate.__init__).parameters["folge"].default
+        self.assertGreaterEqual(chat.FOLGE_LEAD, folge + 1)
+        with open(chat_ton.__file__) as f:
+            src = f.read()
+        self.assertIn("if not first and played_until - time.time() > chat.FOLGE_LEAD else tts_headers", src)
+        self.assertIn('async with c.stream("POST", tts_url, json=req, headers=hdrs) as r:', src)
+        self.assertEqual(FOLGE_HEADER, "x-spark-folgesatz")
+
 
 class IPhone(unittest.TestCase):
     def setUp(self):
