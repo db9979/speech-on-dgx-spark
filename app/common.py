@@ -98,6 +98,13 @@ def edit_distance(a, b, limit):
     return prev[-1]
 
 
+def klon_noetig(t):
+    """Whether the engine of the own designed voices (tts-klon, stimmdesign) runs: switched on and the main model is
+    not a Base model itself. A Base main model clones the designed voices on its own (tts_proxy.eigene_rolle), so a
+    second Base engine next to it would only hold memory (Dominik 2026-11-11: never a weaker model beside a better one)."""
+    return bool(t.get("klon_enabled")) and not str(t.get("model", "")).rstrip("/").endswith("-Base")
+
+
 def load_config(section=None):
     """The configuration with the shipped default for every key that is missing (plan „Vereinheitlichen“,
     V01.0.268): one place for defaults instead of a `.get(key, default)` at every caller."""

@@ -31,7 +31,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import guard  # noqa: E402
 import llm  # noqa: E402
 import steuer  # noqa: E402
-from common import STATE, load_config, model_url, write_json  # noqa: E402
+from common import STATE, klon_noetig, load_config, model_url, write_json  # noqa: E402
 from core import UNITS, api_headers, app_version  # noqa: E402
 from monitor import service_health  # noqa: E402
 import verbrauch  # noqa: E402
@@ -159,7 +159,7 @@ async def watch_once(update_running=lambda: False):
         if await asyncio.to_thread(steuer.unit_state, unit) == "failed":
             done.append(await asyncio.to_thread(_restart, "TTS-VoiceDesign", unit, "ausgefallen", now))
     # the same for the engine of the own designed voices (tts.klon_enabled, stimmdesign.py)
-    if t.get("enabled", True) and t.get("backend") == "vllm-omni" and t.get("klon_enabled") and not wartung.quiet("tts"):
+    if t.get("enabled", True) and t.get("backend") == "vllm-omni" and klon_noetig(t) and not wartung.quiet("tts"):
         unit = UNITS["tts-klon"]
         if await asyncio.to_thread(steuer.unit_state, unit) == "failed":
             done.append(await asyncio.to_thread(_restart, "TTS-Eigene-Stimmen", unit, "ausgefallen", now))

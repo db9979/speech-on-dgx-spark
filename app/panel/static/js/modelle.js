@@ -10,6 +10,8 @@ const MD_NEIN={revision:['noch nicht gemessen','not measured yet'],schon:['schon
 const MD_REGEL={alle:['Alle Modelle passen gleichzeitig in den Speicher.','All models fit into memory at the same time.'],
   ein_platz:['Knapp: Modelle bei Bedarf (Bilder malen, Bildverständnis, Nachsortieren) laden nacheinander, nie gleichzeitig.','Tight: models on demand (painting pictures, image understanding, re-ranking) load one after the other, never at once.'],
   zu_knapp:['Zu knapp: neben den festen Modellen bleibt weniger als die Reserve. Ein kleineres Modell wählen.','Too tight: beside the fixed models less than the reserve is left. Choose a smaller model.']};
+// a model the configuration loads only on demand (VoiceDesign, image understanding) is set up, not loaded all the time
+const mdLaeuft=m=>m.betrieb==='bei_bedarf'?t('bereit, lädt bei Bedarf','ready, loads on demand'):t('läuft','running');
 function mdGib(v){return v==null?'–':(Math.round(v*10)/10).toLocaleString(L==='en'?'en':'de')+' GiB'}
 const MD_ABLAGE={nvme:()=>t('Modelle auf interner NVMe','models on internal NVMe'),usb:()=>t('Modelle auf USB-Platte (langsamer)','models on USB disk (slower)'),
   andere:()=>t('Modelle auf anderer Platte','models on another disk'),unbekannt:()=>t('Ablage unbekannt','storage unknown')};
@@ -36,7 +38,7 @@ function mdAlt(a,w,d){const x=(w.alte||{})[a.art];if(!w.an||!x)return '';
   return `<div class="row vb-note"><span class="mut">${esc(t('Vorher: ','Before: ')+n+(x.tage_frei?t(' · noch '+x.tage_frei+' Tage zurückholbar',' · can be brought back for '+x.tage_frei+' more days'):t(' · älter als '+w.tage+' Tage',' · older than '+w.tage+' days')))}</span>`+
     (x.tage_frei&&!w.laeuft?` <button type="button" class="b sm" data-mdz="${esc(a.art)}">${esc(t('Zurückholen','Bring back'))}</button>`:'')+`</div>`}
 function mdArt(a,w,d){if(!a.modelle.length)return '';
-  const rows=a.modelle.map(m=>`<tr><td>${esc(m.name)}${m.aktiv?` <span class="pill ok">${esc(t('läuft','running'))}</span>`:''}${m.gewerblich?'':` <span class="pill warn">${esc(t('nur privat','private use only'))}</span>`}${m.eigen?` <span class="pill">${esc(t('eigenes','own'))}</span>`:''}</td>`+
+  const rows=a.modelle.map(m=>`<tr><td>${esc(m.name)}${m.aktiv?` <span class="pill ok">${esc(mdLaeuft(m))}</span>`:''}${m.gewerblich?'':` <span class="pill warn">${esc(t('nur privat','private use only'))}</span>`}${m.eigen?` <span class="pill">${esc(t('eigenes','own'))}</span>`:''}</td>`+
     `<td class="n">${m.gemessen?'':'~'}${esc(mdGib(m.aktiv&&m.gib!=null?m.gib:m.need_gib))}</td><td>${esc(m.betrieb==='resident'?t('immer geladen','always loaded'):t('bei Bedarf','on demand'))}</td>`+
     `<td>${esc(m.lizenz)}</td><td>${esc(mdMess(m))}</td>${w.an?`<td>${mdTun(m,a,w)}</td>`:''}</tr>`).join('');
   return `<div class="card"><h3>${esc(a.name)}</h3><div class="vb-tw"><table class="vb-tab"><thead><tr><th>${esc(t('Modell','Model'))}</th><th class="n">${esc(t('Speicher','Memory'))}</th>`+
@@ -91,7 +93,7 @@ function mdKachel(a,w){const m=a.modelle.find(x=>x.aktiv);
     (wahl?`<span><button type="button" class="b sm" data-mdo="${esc(a.art)}" aria-expanded="${MD_OFFEN===a.art}">${esc(MD_OFFEN===a.art?t('Schließen','Close'):t('Wechseln','Switch'))}</button></span>`:'')+`</div>`}
 // „Wechseln“: the kind's models as cards
 function mdKarte(m,a,w){const x=m.messung||{},probe=['revision','ungeprueft'].includes(m.nein)&&m.messbar;
-  const tun=m.aktiv?`<span class="pill ok">${esc(t('läuft','running'))}</span>`:m.waehlbar?`<button type="button" class="b sm" data-mdw="${esc(a.art)}" data-mdid="${esc(m.id)}">${esc(t('Wechseln','Switch'))}</button>`:
+  const tun=m.aktiv?`<span class="pill ok">${esc(mdLaeuft(m))}</span>`:m.waehlbar?`<button type="button" class="b sm" data-mdw="${esc(a.art)}" data-mdid="${esc(m.id)}">${esc(t('Wechseln','Switch'))}</button>`:
     probe?`<button type="button" class="b sm" data-mdp="${esc(m.id)}">${esc(t('Ausprobieren','Try'))}</button>`:`<span class="mut">${esc(t(...(MD_NEIN[m.nein]||['nicht wählbar','not selectable'])))}</span>`;
   const weg=w.eigene&&m.eigen&&!m.aktiv?` <button type="button" class="b sm danger" data-mde="${esc(m.id)}">${esc(t('Löschen','Delete'))}</button>`:'';
   const zeile=[x.ok===false?t('Messung abgebrochen','measurement broke off'):x.tok_s!=null?x.tok_s+t(' tok/s gemessen',' tok/s measured'):probe?t('noch nicht gemessen','not measured yet'):'',

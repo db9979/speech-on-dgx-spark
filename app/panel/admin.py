@@ -32,7 +32,7 @@ import speakers  # noqa: E402
 import wyoming  # noqa: E402
 import telefon  # noqa: E402
 import profiles  # noqa: E402
-from common import (CONFIG_PATH, MODEL_CHOICE, MODEL_ID, estimate_gib, load_config, model_local, model_url,  # noqa: E402
+from common import (CONFIG_PATH, MODEL_CHOICE, MODEL_ID, estimate_gib, klon_noetig, load_config, model_local, model_url,  # noqa: E402
                     write_json)
 import modelle  # noqa: E402
 from core import (  # noqa: E402
@@ -450,7 +450,7 @@ def _status(cfg, healths):
         per_engine = share(t["engine_mem_talker"] + t["engine_mem_code2wav"])
         services["tts"]["backend"] = "vllm-omni"
         services["tts"]["estimate_gib"] = per_engine and round(per_engine * (1 + bool(t.get("voicedesign_enabled"))
-                                                                         + bool(t.get("klon_enabled"))), 1)
+                                                                         + klon_noetig(t)), 1)
         services["tts"]["engines"] = [
             {"name": "tts-engine", "kind": "vllm-omni", "unit": UNITS["tts-engine"], "state": unit_state(UNITS["tts-engine"]),
              "model": t["model"], "port": t["engine_port"], "estimate_gib": per_engine}]
@@ -458,7 +458,7 @@ def _status(cfg, healths):
             services["tts"]["engines"].append(
                 {"name": "tts-design", "kind": "vllm-omni", "unit": UNITS["tts-design"], "state": unit_state(UNITS["tts-design"]),
                  "model": t["voicedesign_model"], "port": t["voicedesign_port"], "estimate_gib": per_engine})
-        if t.get("klon_enabled") or unit_state(UNITS["tts-klon"]) != "inactive":
+        if klon_noetig(t) or unit_state(UNITS["tts-klon"]) != "inactive":
             services["tts"]["engines"].append(
                 {"name": "tts-klon", "kind": "vllm-omni", "unit": UNITS["tts-klon"], "state": unit_state(UNITS["tts-klon"]),
                  "model": t.get("klon_model", ""), "port": t.get("klon_port", 31019), "estimate_gib": per_engine})
@@ -1114,10 +1114,10 @@ def _save_locked(new, old, by):
             elif changed(DESIGN_KEYS) or mem_changed or not ot["enabled"]:
                 # on demand (voicedesign_leerlauf_min > 0) only stopped: the next request starts it with the new values
                 actions["tts-design"] = "stop" if t.get("voicedesign_leerlauf_min", 5) else "restart"
-            if not t.get("klon_enabled"):
-                if ot.get("klon_enabled"):
+            if not klon_noetig(t):         # off, or the main model is a Base model and clones by itself
+                if klon_noetig(ot):
                     actions["tts-klon"] = "stop"
-            elif changed(KLON_KEYS) or mem_changed or not ot["enabled"]:
+            elif changed(KLON_KEYS) or mem_changed or not ot["enabled"] or not klon_noetig(ot):
                 actions["tts-klon"] = "restart"
     errors = []
     for n, action in actions.items():

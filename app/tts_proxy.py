@@ -28,7 +28,7 @@ from fastapi.responses import Response, StreamingResponse
 import kurzref
 
 from common import (dauerlauf, FOLGE_HEADER, BodyLimit, GateFull, KeyedCORS, PrioGate, inside, outside_view, api_key_dependency,
-                    api_key_ok, engine_crash_reason, load_config, quiet_access_log, SpeechMark, stage_of, STATE)
+                    api_key_ok, engine_crash_reason, klon_noetig, load_config, quiet_access_log, SpeechMark, stage_of, STATE)
 from textnorm import (MAX_INPUT, apply_pronunciations, clean_text, guess_language, hide_secrets, parse_pronunciations,
                       speak_abbreviations, speak_numbers, speech_markdown)
 
@@ -57,7 +57,7 @@ def engines():
     out = {"main": (cfg["model"], cfg["engine_port"])}
     if cfg.get("voicedesign_enabled"):
         out["design"] = (cfg["voicedesign_model"], cfg["voicedesign_port"])
-    if cfg.get("klon_enabled"):
+    if klon_noetig(cfg):
         out["klon"] = (cfg.get("klon_model", ""), cfg.get("klon_port", 31019))
     return out
 

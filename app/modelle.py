@@ -46,7 +46,7 @@ import time
 import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from common import MODEL_LOG_UNITS, STATE, load_config, mem_available_gib, read_json, write_json  # noqa: E402
+from common import MODEL_LOG_UNITS, STATE, klon_noetig, load_config, mem_available_gib, read_json, write_json  # noqa: E402
 
 KATALOG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "modelle.json")
 MESSUNG = os.path.join(STATE, "modelle-messung.json")
@@ -340,7 +340,7 @@ def aktiv(cfg, total_gib, kat=None):
         add(zum_repo(t.get("model"), kat), gib)
         if t.get("voicedesign_enabled"):   # on demand (voicedesign_leerlauf_min > 0) like the image understanding
             add(zum_repo(t.get("voicedesign_model"), kat), gib, None if t.get("voicedesign_leerlauf_min", 5) == 0 else "bei_bedarf")
-        if t.get("klon_enabled"):          # the own designed voices (stimmdesign.py): always loaded
+        if klon_noetig(t):                 # the own designed voices (stimmdesign.py): always loaded, only beside a non-Base main
             add(zum_repo(t.get("klon_model"), kat), gib, "resident")
     img = cfg.get("image", {})
     if img.get("enabled"):

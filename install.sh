@@ -891,7 +891,7 @@ if [ "$DOWNLOAD" = 1 ]; then
     say "Downloading TTS model for the engine"
     dl engine "$(cfg .tts.model)"
     [ "$(cfg .tts.voicedesign_enabled)" = true ] && dl engine "$(cfg .tts.voicedesign_model)"
-    [ "$(cfg .tts.klon_enabled)" = true ] && dl engine "$(cfg .tts.klon_model)"
+    [ "$(cfgq '(.tts.klon_enabled == true) and ((.tts.model // "") | endswith("-Base") | not)')" = true ] && dl engine "$(cfg .tts.klon_model)"
   fi
   if [ "$MODELS_OK" = 1 ]; then rm -f -- "$PREFIX/.models"; printf '%s\n' "$MODELS_SIG" >"$PREFIX/.models"; fi
 fi
@@ -2098,8 +2098,9 @@ if [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = vllm-omni ]; then
     # after the idle minutes (tts_proxy.design_bereit), so it never starts with the machine
     systemctl disable --now speech-spark-tts-design.service 2>/dev/null || true
   fi
-  if [ "$(cfg .tts.klon_enabled)" = true ]; then
-    # the own designed voices (stimmdesign): the Base model clones their stored samples
+  if [ "$(cfgq '(.tts.klon_enabled == true) and ((.tts.model // "") | endswith("-Base") | not)')" = true ]; then
+    # the own designed voices (stimmdesign): the Base model clones their stored samples; not when the main model is
+    # a Base model itself, it clones them on its own (common.klon_noetig)
     restart_engine tts-klon "$VLLM_OMNI_VERSION $(cfgq -c '.tts | {klon_model, klon_port, engine_mem_talker, engine_mem_code2wav, engine_max_seqs, engine_max_model_len, engine_decode_batch, engine_chunk_adaptive}')"
   else
     systemctl disable --now speech-spark-tts-klon.service 2>/dev/null || true

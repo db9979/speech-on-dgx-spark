@@ -11,7 +11,7 @@
 | TTS-Dienst `speech-spark-tts` (nimmt Anfragen an, reicht sie an die Engine durch) | `/opt/speech-spark/venv-panel` | 31002 |
 | TTS-Engine `speech-spark-tts-engine` (vllm-omni) | `/opt/speech-spark/venv-engine` | 31012, nur lokal |
 | optional VoiceDesign-Engine `speech-spark-tts-design` (seit V01.1.374 nur bei Bedarf geladen, `tts.voicedesign_leerlauf_min`) | `/opt/speech-spark/venv-engine` | 31013, nur lokal |
-| optional Engine für eigene Stimmen `speech-spark-tts-klon` (Base, seit V01.1.374) | `/opt/speech-spark/venv-engine` | 31019, nur lokal |
+| optional Engine für eigene Stimmen `speech-spark-tts-klon` (Base, seit V01.1.374; nur neben einem Hauptmodell, das kein Base ist, seit V01.1.386) | `/opt/speech-spark/venv-engine` | 31019, nur lokal |
 | Update `speech-spark-update` (läuft nur auf Knopfdruck) | `/opt/speech-spark/src` | |
 | Panel `speech-spark-panel` (nur komplett) | `/opt/speech-spark/venv-panel` | 31080, https 31443 |
 | Wächter `speech-spark-watch` (nur ohne Portal) | `/opt/speech-spark/venv-panel` | |

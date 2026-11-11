@@ -104,7 +104,7 @@ tts_model() {
   if [ "$(cfg '.tts.enabled')" != true ]; then echo "not installed"; return; fi
   printf '%s' "$(cfg '.tts.model')"
   [ "$(cfg '.tts.voicedesign_enabled')" = true ] && printf ' + VoiceDesign'
-  [ "$(cfg '.tts.klon_enabled')" = true ] && printf ' + Eigene Stimmen'
+  [ "$(cfg '(.tts.klon_enabled == true) and ((.tts.model // "") | endswith("-Base") | not)')" = true ] && printf ' + Eigene Stimmen'
   echo
 }
 

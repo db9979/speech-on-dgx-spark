@@ -162,7 +162,7 @@ def seite(cfg=None, total_gib=None, messung=None, lang="de", gestartet=False, we
     i = 1 if lang == "en" else 0
     an = _an(cfg)
     b = modelle.budget(cfg, total_gib, kat)
-    laufend = {x["id"]: x["gib"] for x in b["teile"]}
+    laufend = {x["id"]: x for x in b["teile"]}
     gemessen = messung.get("modelle") or {}
     arten = []
     for art, namen in modelle.ARTEN.items():
@@ -175,8 +175,9 @@ def seite(cfg=None, total_gib=None, messung=None, lang="de", gestartet=False, we
             rows.append({"id": mid, "name": m["name"]["en" if i else "de"], "engine": m["engine"], "need_gib": m["need_gib"],
                          "waehlbar": not nein, "nein": "" if nein in ("art", "schon", "wahl") else nein,
                          "eigen": bool(m.get("eigen")), "messbar": an and m["engine"] == "vllm",
-                         "gemessen": m["gemessen"], "betrieb": m["betrieb"], "lizenz": m["lizenz"], "gewerblich": m["gewerblich"],
-                         "aktiv": mid in laufend, "gib": laufend.get(mid), "fest": bool(m["revision"]),
+                         # how the configuration runs it (VoiceDesign on demand), else the catalog's way
+                         "gemessen": m["gemessen"], "betrieb": (laufend.get(mid) or {}).get("betrieb") or m["betrieb"], "lizenz": m["lizenz"], "gewerblich": m["gewerblich"],
+                         "aktiv": mid in laufend, "gib": (laufend.get(mid) or {}).get("gib"), "fest": bool(m["revision"]),
                          "messung": {k: r[k] for k in MESSWERTE if k in r}})
         arten.append({"art": art, "name": namen[i], "modelle": rows})
     laeuft = ((_laeuft() if laeuft is None else laeuft) or wechselt) if an else False

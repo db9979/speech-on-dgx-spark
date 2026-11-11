@@ -206,6 +206,46 @@ class Proxy(unittest.TestCase):
         self.assertNotIn(b"sd-", got.body)
 
 
+class NurEineBase(unittest.TestCase):
+    """Dominik 2026-11-11: never a weaker model beside a better one. A Base main model clones the designed voices on
+    its own, so the engine of the own voices runs only beside a main model that is not Base; VoiceDesign shows as
+    on demand when it unloads when idle."""
+    def test_klon_only_beside_a_non_base_main(self):
+        self.assertFalse(common.klon_noetig({"klon_enabled": False, "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"}))
+        self.assertTrue(common.klon_noetig({"klon_enabled": True, "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"}))
+        self.assertFalse(common.klon_noetig({"klon_enabled": True, "model": "Qwen/Qwen3-TTS-12Hz-1.7B-Base"}))
+        self.assertFalse(common.klon_noetig({"klon_enabled": True, "model": "Qwen/Qwen3-TTS-12Hz-1.7B-Base/"}))
+
+    def test_engines_and_the_model_page_drop_the_second_base(self):
+        import modelle
+        import tts_proxy
+        base = {**tts_proxy.cfg, "model": "Qwen/Qwen3-TTS-12Hz-1.7B-Base", "klon_enabled": True, "voicedesign_enabled": True}
+        with mock.patch.object(tts_proxy, "cfg", base):
+            self.assertEqual(sorted(tts_proxy.engines()), ["design", "main"])
+        with mock.patch.object(tts_proxy, "cfg", {**base, "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"}):
+            self.assertEqual(sorted(tts_proxy.engines()), ["design", "klon", "main"])
+        cfg = common.load_config()
+        cfg["tts"].update(enabled=True, model="Qwen/Qwen3-TTS-12Hz-1.7B-Base", klon_enabled=True,
+                          voicedesign_enabled=True, voicedesign_leerlauf_min=5)
+        teile = [x for x in modelle.aktiv(cfg, 120) if x["art"] == "tts"]
+        self.assertEqual(len(teile), 2, teile)
+        self.assertFalse(any(x["id"] == modelle.zum_repo("Qwen/Qwen3-TTS-12Hz-0.6B-Base")["id"] for x in teile))
+        design = modelle.zum_repo(cfg["tts"]["voicedesign_model"])["id"]
+        self.assertEqual(next(x["betrieb"] for x in teile if x["id"] == design), "bei_bedarf")
+
+    def test_the_model_page_shows_voicedesign_on_demand(self):
+        from panel import modellseite
+        cfg = common.load_config()
+        cfg["tts"].update(enabled=True, klon_enabled=True, voicedesign_enabled=True, voicedesign_leerlauf_min=5)
+        import modelle
+        design = modelle.zum_repo(cfg["tts"]["voicedesign_model"])["id"]
+        rows = [r for a in modellseite.seite(cfg, 120, {})["arten"] for r in a["modelle"]]
+        self.assertEqual(next(r["betrieb"] for r in rows if r["id"] == design), "bei_bedarf")
+        cfg["tts"]["voicedesign_leerlauf_min"] = 0
+        rows = [r for a in modellseite.seite(cfg, 120, {})["arten"] for r in a["modelle"]]
+        self.assertEqual(next(r["betrieb"] for r in rows if r["id"] == design), "resident")
+
+
 class Panel(unittest.TestCase):
     def setUp(self):
         helpers.keep_chat(self, "stimmdesign")
