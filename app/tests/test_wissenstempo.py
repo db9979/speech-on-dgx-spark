@@ -359,8 +359,12 @@ class Doppelt(unittest.TestCase):
             self.assertIsNone(run(wd.due_once(day)))                        # done and nothing changed: no run
         log = out.getvalue()
         self.assertIn("vergleiche | weiter", log)
-        self.assertRegex(log.strip().splitlines()[-1], r"wissen: wissenskarte doppelt geprueft \| \d+ zusammengefuehrt "
-                                                       r"\| \d+ vorschlaege neu \| \d+ offen \| \d+ weg \| \d+ vergleiche \| fertig$")
+        # the run's own lines only: with the event log on (left on by a test before, wobbly on GitHub since 4.11.)
+        # live.bg_done writes "ereignis: Hintergrund | …" after each of them
+        lauf = [z for z in log.splitlines() if z.startswith("wissen: wissenskarte doppelt ")]
+        self.assertRegex(lauf[-1], r"wissen: wissenskarte doppelt geprueft \| \d+ zusammengefuehrt "
+                                   r"\| \d+ vorschlaege neu \| \d+ offen \| \d+ weg \| \d+ vergleiche \| fertig$")
+        self.assertEqual(sum(z.endswith("| fertig") for z in lauf), 1)
         day_key = __import__("datetime").datetime.fromtimestamp(day).strftime("%Y-%m-%d")
         self.assertEqual(documents.count_today(uid, day_key, key="wkdoppelt"), 1)    # the slices of one run count once
 

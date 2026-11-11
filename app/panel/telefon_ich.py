@@ -53,7 +53,8 @@ FAIL_WINDOW = 15 * 60
 FAILS = 3                       # wrong PINs at one phone in FAIL_WINDOW ...
 LOCK = 30 * 60                  # ... and no PIN there for this long
 KEEP_CALLS = 50
-ROUNDS = 100_000                # PBKDF2 rounds of the PIN hash
+ROUNDS = 600_000                # PBKDF2 rounds of the PIN hash (OWASP, as core.ROUNDS and profiles.PIN_ROUNDS)
+OLD_ROUNDS = 100_000            # a PIN stored without its rounds (before V01.1.380): renewed at its next right entry
 ARTEN = ("intern", "gemeinsam", "extern", "bestaetigung", "spark")
 PLAN_MAX = 10                   # calls a profile has ordered and that are still to come (telefon_anruf.py)
 PLAN_ARTEN = ("weckruf", "erinnerung")
@@ -225,8 +226,18 @@ def has_pin(uid):
     return bool(uid) and _pin(uid) is not None
 
 
-def _hash(pin, salt):
-    return hashlib.pbkdf2_hmac("sha256", pin.encode(), bytes.fromhex(salt), ROUNDS).hex()
+def _hash(pin, salt, rounds=None):
+    return hashlib.pbkdf2_hmac("sha256", pin.encode(), bytes.fromhex(salt), rounds or ROUNDS).hex()
+
+
+def _rounds(p):
+    r = p.get("rounds")
+    return r if isinstance(r, int) and not isinstance(r, bool) and 1 <= r <= 10_000_000 else OLD_ROUNDS
+
+
+def _store(d, pin):
+    salt = secrets.token_hex(16)
+    d["pin"] = vault.seal(json.dumps({"salt": salt, "hash": _hash(pin, salt), "rounds": ROUNDS}))
 
 
 def set_pin(uid, pin):
@@ -239,8 +250,7 @@ def set_pin(uid, pin):
         d = _read(uid)
         d.pop("pin", None)
         if pin:
-            salt = secrets.token_hex(16)
-            d["pin"] = vault.seal(json.dumps({"salt": salt, "hash": _hash(pin, salt)}))
+            _store(d, pin)
         _write(uid, d)
     return has_pin(uid)
 
@@ -248,9 +258,21 @@ def set_pin(uid, pin):
 def _pin_right(uid, entered):
     p = _pin(uid)
     try:
-        return bool(p) and hmac.compare_digest(p["hash"], _hash(entered, p["salt"]))
+        return bool(p) and hmac.compare_digest(p["hash"], _hash(entered, p["salt"], _rounds(p)))
     except (KeyError, ValueError, TypeError):
         return False
+
+
+def _renew(uid, entered):
+    """A right PIN stored with fewer rounds than ROUNDS is stored anew (like profiles: at the next right entry)."""
+    p = _pin(uid)
+    if not p or _rounds(p) == ROUNDS:
+        return False
+    d = _read(uid)
+    _store(d, entered)
+    _write(uid, d)
+    print(f"telefon: PIN mit {ROUNDS} Runden neu gespeichert | {profiles.log_name(profiles.by_id(uid))}", flush=True)
+    return True
 
 
 def locked(nr, now=None):
@@ -275,6 +297,7 @@ def pin_attempt(nr, uids, entered, now=None):
     with _lock:
         if len(hits) == 1:
             _fails.pop(k, None)
+            _renew(hits[0], entered)
             return "ok", hits[0]
         fails = [t for t in _fails.get(k, []) if now - t < FAIL_WINDOW] + [now]
         _fails[k] = fails[-10:]

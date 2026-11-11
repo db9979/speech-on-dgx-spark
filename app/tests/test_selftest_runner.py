@@ -1,6 +1,8 @@
 """selftest.py (Dominik 2026-10-11, choice 1): a failed test gets exactly one second try; failing twice stays red,
 green only the second time passes with a visible warning, many failures get no second try. Same rule on GitHub
 and on the Spark (install.sh)."""
+import contextlib
+import io
 import json
 import os
 import re
@@ -179,6 +181,56 @@ class Runner(unittest.TestCase):
             with mock.patch.dict(os.environ, {"SELFTEST_NOTE": note}):
                 selftest.total(d, 2)
             self.assertFalse(os.path.exists(note), "all green and steady: no note")
+
+    def test_a_chronic_wobbler_is_red_and_named(self):
+        """Code review 2026-11-11: green only the second time in DAUER_LAEUFE runs in a row is red, with its name
+        in the note; a run in between without it (or without a result) breaks the row."""
+        self.assertEqual(selftest.DAUER_LAEUFE, 3)
+        with tempfile.TemporaryDirectory() as d:
+            os.makedirs(os.path.join(d, "teile", "teil-1"))
+            with open(os.path.join(d, "teile", "teil-1", "teil.json"), "w") as f:
+                json.dump({"failed_first": ["t.a", "t.b"], "red": [], "wobbly": ["t.a", "t.b"], "ran": 5}, f)
+            note, mine = os.path.join(d, "note.md"), os.path.join(d, "wackler.json")
+
+            def lauf(*before):
+                vor = tempfile.mkdtemp(dir=d)
+                for i, w in enumerate(before):
+                    if w is None:
+                        continue                                  # a run that left no wackler.json
+                    os.makedirs(os.path.join(vor, str(i)))
+                    with open(os.path.join(vor, str(i), "wackler.json"), "w") as f:
+                        json.dump({"wobbly": w}, f)
+                env = {"SELFTEST_NOTE": note, "SELFTEST_WACKLER": mine, "SELFTEST_VORHER": vor}
+                with mock.patch.dict(os.environ, env), contextlib.redirect_stdout(io.StringIO()) as out:
+                    code = selftest.total(os.path.join(d, "teile"), 1)
+                with open(note, encoding="utf-8") as f:
+                    return code, out.getvalue(), f.read()
+
+            code, out, text = lauf(["t.a"], ["t.a", "t.c"])
+            self.assertEqual(code, 1)
+            self.assertIn(f"{selftest.DAUER}, in 3 runs in a row green only the second time: t.a\n", out)
+            self.assertIn("- `t.a`", text.split(selftest.WARN)[0])
+            self.assertNotIn("- `t.b`", text.split(selftest.WARN)[0])
+            with open(mine, encoding="utf-8") as f:
+                self.assertEqual(json.load(f), {"wobbly": ["t.a", "t.b"]})      # what the next run reads
+            for before in ((["t.a"], []), (["t.a"],), (), (["t.a"], None), (["t.c"], ["t.c"])):
+                code, out, text = lauf(*before)
+                self.assertEqual(code, 0, before)
+                self.assertNotIn(selftest.DAUER, out + text)
+            with mock.patch.dict(os.environ, {"SELFTEST_VORHER": os.path.join(d, "fehlt")}):
+                os.environ.pop("SELFTEST_WACKLER", None)
+                self.assertEqual(selftest.total(os.path.join(d, "teile"), 1), 0)
+
+    def test_github_hands_the_earlier_runs_over(self):
+        path = os.path.join(os.path.dirname(APP), ".github", "workflows", "tests.yml")
+        if not os.path.exists(path):
+            self.skipTest("app/-only copy")
+        with open(path) as f:
+            job = f.read().split("ergebnis:", 1)[1]
+        for part in ("actions: read", "gh run download", "-n wackler", "SELFTEST_VORHER: ${{ runner.temp }}/vorher",
+                     "SELFTEST_WACKLER: ${{ runner.temp }}/wackler.json", "name: wackler",
+                     f"[:{selftest.DAUER_LAEUFE - 1}]"):
+            self.assertIn(part, job)
 
     def test_the_report_counts_skipped_tests(self):
         """The Werkstatt shows skipped tests as "did not run", never as green (2026-10-21)."""

@@ -67,6 +67,10 @@ class AdminList(Base):
     # a name no other test uses: the run shares one profile list, and "viel" also found "AuViele" (test_auslassen)
     @classmethod
     def setUpClass(cls):
+        # the profiles' clock stands an hour before NOW for this class: test_filter_and_sort gives Listenprobe07 the
+        # fixed moment NOW as „the newest use“, and the sign-ins of the other tests here (Listenprobe11 and 12) are
+        # noted by the clock. With the real clock they were newer than NOW once the real day was past it (15.1.2027)
+        helpers.feste_uhr(cls, NOW - 3600, profiles)
         for i in range(30):
             r = ADMIN.post("/api/admin/profiles", json={"name": f"Listenprobe{i:02d}", "pin": "1234"})
             assert r.status_code in (200, 409), r.text

@@ -182,6 +182,29 @@ class Proxy(unittest.TestCase):
             self.assertFalse(tts_proxy.eigene_stimme({"voice": "sd-opa"}), "no sample there")
             self.assertFalse(tts_proxy.eigene_stimme({"voice": "vivian"}))
 
+    def test_the_list_for_api_clients_names_no_designed_voice(self):
+        """Code review 2026-11-11: GET /v1/audio/voices handed the engine's list on as it came; with the Base model
+        as the main engine it named every profile's own voice to every holder of the API key."""
+        import tts_proxy
+        raw = json.dumps({"voices": ["vivian", "eigen-0123456789abcdef", "sd-butler", "ryan"],
+                          "uploaded_voices": [{"name": "eigen-0123456789abcdef"}, {"name": "opa"}], "x": 1}).encode()
+        self.assertEqual(json.loads(tts_proxy.ohne_eigene(raw)),
+                         {"voices": ["vivian", "ryan"], "uploaded_voices": [{"name": "opa"}], "x": 1})
+        self.assertEqual(tts_proxy.ohne_eigene(b"kein json"), b"kein json")
+        self.assertEqual(tts_proxy.ohne_eigene(b"[1]"), b"[1]")
+
+        class R:
+            content, status_code = raw, 200
+
+        async def get(url, **k):
+            return R
+
+        with mock.patch.object(tts_proxy, "engines", lambda: {"main": ("m", 1)}), \
+                mock.patch.object(tts_proxy.client, "get", get):
+            got = asyncio.run(tts_proxy.audio_voices())
+        self.assertNotIn(b"eigen-", got.body)
+        self.assertNotIn(b"sd-", got.body)
+
 
 class Panel(unittest.TestCase):
     def setUp(self):
@@ -234,6 +257,120 @@ class Panel(unittest.TestCase):
         profiles.save_settings(ub, {"voice": fremd})
         self.assertNotEqual(profiles.settings(ub).get("voice"), fremd)
         self.assertNotEqual(profiles.effective(ub).get("voice"), fremd)
+
+    def test_a_voice_it_may_not_use_speaks_on_no_way(self):
+        """Code review 2026-11-11, point 4: speaker, Telegram, MCP and the chat's own "voice" took the voice past
+        stimme_ok. A designed voice stored earlier (function off since, or another profile's) is the standard voice
+        on every way, and a request cannot ask for one."""
+        import re
+        import esp32
+        import telegram
+        helpers.set_config(stimmdesign=True)
+        _, ua = profile("Sdwegea")
+        _, ub = profile("Sdwegeb")
+        fremd = "eigen-" + secrets.token_hex(8)
+        stimmdesign._speichern(ua, [{"id": fremd, "name": "Abend", "felder": {}, "worte": "", "t": 1}])
+        self.addCleanup(stimmdesign._speichern, ua, [])
+        for uid in (ua, ub):               # stored earlier, as if it had been allowed then
+            profiles._write(profiles._path(uid, "settings.json"), dict(profiles.settings(uid), voice=fremd))
+            self.addCleanup(profiles.save_settings, uid, {"voice": ""})
+        self.assertEqual(profiles.settings(ub).get("voice"), fremd)
+        self.assertEqual(profiles.voice_for(ua), fremd)
+        self.assertEqual(profiles.voice_for(ub), "")
+        self.assertEqual(profiles.voice_for(None), "")
+        seen = []
+
+        class Client:
+            def __init__(self, *a, **k):
+                pass
+
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, *a):
+                return False
+
+            async def post(self, url, json=None, **k):
+                seen.append(json)
+                raise RuntimeError("stop")
+
+            def stream(self, method, url, json=None, **k):
+                seen.append(json)
+                raise RuntimeError("stop")
+
+        async def speaker(uid):
+            async for _ in esp32.tts_stream(uid, "Hallo"):
+                pass
+
+        def bodies(uid):
+            del seen[:]
+            with mock.patch.object(telegram.httpx, "AsyncClient", Client), mock.patch.object(esp32.httpx, "AsyncClient", Client):
+                for job in (telegram.speak(uid, "Hallo"), speaker(uid)):
+                    with self.assertRaisesRegex(RuntimeError, "stop"):
+                        asyncio.run(job)
+            self.assertEqual(len(seen), 2)
+            return [b.get("voice") for b in seen]
+
+        self.assertEqual(bodies(ua), [fremd, fremd])
+        self.assertEqual(bodies(ub), [None, None], "another profile's voice")
+        helpers.set_config(stimmdesign=False)
+        self.assertEqual(bodies(ua), [None, None], "the function is off")
+        self.assertEqual(profiles.voice_for(ua), "")
+        # no way reads the stored voice past the check: only profiles.py reads settings()["voice"]
+        # (and stimmdesign.py, which forgets a deleted voice there)
+        for name in sorted(os.listdir(os.path.dirname(profiles.__file__))):
+            if name.endswith(".py") and name not in ("profiles.py", "stimmdesign.py"):
+                with open(os.path.join(os.path.dirname(profiles.__file__), name), encoding="utf-8") as f:
+                    text = f.read()
+                self.assertIsNone(re.search(r"settings\([^()\n]*\)\s*\.get\(\s*[\"']voice[\"']", text), name)
+                self.assertIsNone(re.search(r"settings\([^()\n]*\)\s*\[\s*[\"']voice[\"']", text), name)
+        for name, part in (("chat_turn.py", 'k != "voice" or profiles.voice_ok(who["id"], body[k])'),
+                           ("chat_turn.py", 'k != "voice" or profiles.voice_ok(sound_of["id"], own[k])'),
+                           ("mcpserver.py", "if voice and not profiles.voice_ok(uid, voice):"),
+                           ("mcpserver.py", 'args.get("voice") or profiles.voice_for(uid)')):
+            with open(os.path.join(os.path.dirname(profiles.__file__), name), encoding="utf-8") as f:
+                self.assertIn(part, f.read(), name)
+
+    def test_a_leftover_sample_goes_and_two_takes_at_once_make_one_voice(self):
+        """Code review 2026-11-11, point 4: a deletion that did not reach the speech output left the sample there
+        for good; two „Übernehmen“ at the same time could make a fourth voice."""
+        helpers.set_config(stimmdesign=True)
+        c, uid = profile("Sdreste")
+        mein, rest, neu = ("eigen-" + secrets.token_hex(8) for _ in range(3))
+        stimmdesign._speichern(uid, [{"id": mein, "name": "Abend", "felder": {}, "worte": "", "t": 1}])
+        self.addCleanup(stimmdesign._speichern, uid, [])
+        weg = []
+        out = io.StringIO()
+        with mock.patch.object(stimmdesign, "_weg", lambda n: weg.append(n) or n != "eigen-" + "f" * 16), \
+                mock.patch.dict(stimmdesign._nimmt, {"x": neu}), redirect_stdout(out):
+            n = stimmdesign.reste_weg([mein, rest, neu, "sd-butler", "eigen-" + "f" * 16, "eigen-../x", 7])
+        self.assertEqual(n, 1)
+        self.assertEqual(sorted(weg), sorted([rest, "eigen-" + "f" * 16]))      # never an owned, a fixed or a new one
+        self.assertEqual(sorted(out.getvalue().split("\n")), ["", "stimmdesign: rest geloescht fehler",
+                                                               "stimmdesign: rest geloescht fehler",
+                                                               "stimmdesign: rest geloescht ok"])
+        self.assertEqual(stimmdesign.reste_weg(None), 0)                          # no answer: nothing is touched
+        with mock.patch.object(stimmdesign, "_weg", lambda n: weg.append(n) or True), redirect_stdout(io.StringIO()):
+            self.assertEqual(stimmdesign.reste_weg(["eigen-%016x" % i for i in range(30)]), stimmdesign.RESTE_MOST)
+        # a deletion the model computer did not get says so, and the voice is gone for the profile all the same
+        with mock.patch.object(stimmdesign, "_weg", lambda n: False), redirect_stdout(out):
+            self.assertTrue(stimmdesign._loeschen(uid, mein))
+        self.assertIn("stimmdesign: loeschen ablage fehler\n", out.getvalue())
+        self.assertEqual(stimmdesign.eigene(uid), [])
+        # a second take while the first still stores is refused
+        stimmdesign._proben[uid] = (time.time(), wav(), {}, "")
+        self.addCleanup(stimmdesign._proben.pop, uid, None)
+        with mock.patch.dict(stimmdesign._nimmt, {uid: neu}), redirect_stdout(io.StringIO()):
+            r = c.post("/api/stimmdesign/eigene", json={"name": "Zwei"})
+        self.assertEqual(r.status_code, 409, r.text)
+        self.assertEqual(stimmdesign.eigene(uid), [])
+        with mock.patch.object(stimmdesign, "_ablegen", lambda *a: True), redirect_stdout(io.StringIO()):
+            r = c.post("/api/stimmdesign/eigene", json={"name": "Eins"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(stimmdesign._nimmt, {})
+        self.assertEqual(len(stimmdesign.eigene(uid)), 1)
+        with mock.patch.object(stimmdesign, "_weg", lambda n: True), redirect_stdout(io.StringIO()):
+            stimmdesign._loeschen(uid, r.json()["id"])
 
     def test_take_only_the_own_probe_and_logs_no_words(self):
         helpers.set_config(stimmdesign=True)

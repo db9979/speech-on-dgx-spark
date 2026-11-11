@@ -4,7 +4,7 @@ from technik_seiten import S
 
 SEITEN = {
     "vorbereiten": {
-        "stand": "95b32e273c",
+        "stand": "5c04bf0f3e",
         "bezug": {
             "klaeren.MAX_BUTTONS": ["s7"], "chat_turn.prepare": ["s1", "s13"], "chat_turn.shared_stranger": ["s3"],
             "chat.left_out": ["s2", "s4"], "notaus.locked_tools": ["s11"], "chat_turn.notaus_note": ["s8", "s11"],
@@ -65,10 +65,13 @@ SEITEN = {
               ("Ohne Profil, oder am eigenen Lautsprecher oder Telefon, wenn die Spracherkennung nicht klar die Stimme "
                "des Profils gehört hat (am Telefon: und keine Telefon-PIN getippt wurde), gibt es nur Frage und Antwort: "
                "kein Werkzeug, kein Gedächtnis, kein Verlauf. Wessen Stimme es war, setzt nur das Panel selbst, nie die "
-               "Anfrage.",
+               "Anfrage. Eine Antwortstimme aus der Anfrage oder vom erkannten Sprecher gilt nur, wenn das Profil mit ihr "
+               "sprechen darf (profiles.voice_ok: eine gestaltete Stimme nur die eigene oder eine feste).",
                "Without a profile, or at an own speaker or phone when speech recognition did not clearly hear the "
                "profile's voice (on the phone: and no phone PIN was typed), there is only question and answer: no tool, "
-               "no memory, no history. Whose voice it was only the panel itself sets, never the request."),
+               "no memory, no history. Whose voice it was only the panel itself sets, never the request. An answer "
+               "voice from the request or of the recognised speaker counts only when the profile may speak with it "
+               "(profiles.voice_ok: a designed voice only its own or a fixed one)."),
               ("info", "ja", ("nur Frage und Antwort", "question and answer only"))),
             S("s4", "schritt", ("Weiche liest die Frage", "The switch reads the question"),
               ("intent.classify_cfg", "intent.classify_cfg"),

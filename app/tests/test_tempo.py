@@ -125,7 +125,7 @@ class Rounds(unittest.TestCase):
         import os
         import re
         here = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "panel")
-        for name, const in (("core.py", "ROUNDS"), ("profiles.py", "PIN_ROUNDS")):
+        for name, const in (("core.py", "ROUNDS"), ("profiles.py", "PIN_ROUNDS"), ("telefon_ich.py", "ROUNDS")):
             with open(os.path.join(here, name)) as f:
                 m = re.search(rf"^{const} = ([0-9_]+)", f.read(), re.M)
             self.assertIsNotNone(m, name)

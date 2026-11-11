@@ -582,10 +582,10 @@ async def tts_stream(uid, text):
     import base64
     from core import api_headers
     cfg = load_config()
-    st = profiles.settings(uid) if uid else {}   # no profile: the speech output's own voice (pause_clip)
+    voice = profiles.voice_for(uid)              # no profile: the speech output's own voice (pause_clip)
     body = {"input": text[:600], "response_format": "pcm", "stream": True}
-    if st.get("voice"):
-        body["voice"] = st["voice"]
+    if voice:
+        body["voice"] = voice
     left = 60 * OUT_RATE * 2
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(120, connect=5)) as c:

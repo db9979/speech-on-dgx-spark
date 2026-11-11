@@ -1314,8 +1314,17 @@ def defaults(admin=None):
 VOICE_CHECK = []
 
 
-def _voice_ok(uid, voice):
+def voice_ok(uid, voice):
     return all(ok(uid, voice) for ok in VOICE_CHECK)
+
+
+def voice_for(uid):
+    """The profile's own stored voice when it may (still) speak with it, else "" (the speech output's standard
+    voice). Every way that speaks for a profile without effective() takes the voice here, never from settings()
+    (code review 2026-11-11: speaker, Telegram and MCP read it unchecked, so a designed voice kept speaking after
+    the function was switched off or the voice was another profile's)."""
+    v = settings(uid).get("voice") if uid else ""
+    return str(v) if v and voice_ok(uid, v) else ""
 
 
 def effective(uid, chat=None):
@@ -1325,7 +1334,7 @@ def effective(uid, chat=None):
         from common import load_config
         chat = load_config().get("chat", {})
     out = dict(defaults(chat.get("defaults")), **(settings(uid) if uid else {}))
-    if out.get("voice") and not _voice_ok(uid, out["voice"]):
+    if out.get("voice") and not voice_ok(uid, out["voice"]):
         out["voice"] = ""
     return out
 
@@ -1351,7 +1360,7 @@ def log_name(prof):
 
 def save_settings(uid, d):
     d = clean_settings(d)
-    if d.get("voice") and not _voice_ok(uid, d["voice"]):
+    if d.get("voice") and not voice_ok(uid, d["voice"]):
         d.pop("voice")
     with _lock:
         merged = dict(settings(uid), **d)

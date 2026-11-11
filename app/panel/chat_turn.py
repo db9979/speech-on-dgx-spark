@@ -381,11 +381,13 @@ async def prepare(request):
     pset = profiles.effective(who and who["id"], ccfg)
     if stranger and sound_of:
         own = profiles.settings(sound_of["id"])
-        pset.update({k: own[k] for k in ("voice", "speed", "length") if k in own})
+        pset.update({k: own[k] for k in ("voice", "speed", "length")
+                     if k in own and (k != "voice" or profiles.voice_ok(sound_of["id"], own[k]))})
     # guests change nothing: they get the admin's defaults (the admin's own browser may try speed and length)
     for k in (("voice", "speed", "length") if who else ("speed", "length") if admin_cookie_ok(request) else ()) \
             if own_browser else ():
-        if k in body and profiles.SETTINGS[k][1](body[k]):
+        # a voice the profile may not speak with (profiles.voice_ok: a designed one) is not taken from the request
+        if k in body and profiles.SETTINGS[k][1](body[k]) and (k != "voice" or profiles.voice_ok(who["id"], body[k])):
             pset[k] = body[k]
     length = chat.LENGTH_HINT.get(pset["length"])
     if length:

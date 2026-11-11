@@ -335,7 +335,7 @@ async def speak(uid, text):
     """The answer in the profile's voice as OGG/Opus for sendVoice."""
     from core import api_headers
     cfg = load_config()
-    voice = profiles.settings(uid).get("voice") or ""
+    voice = profiles.voice_for(uid)
     body = {"input": text[:1500], "response_format": "wav"}
     if voice:
         body["voice"] = voice

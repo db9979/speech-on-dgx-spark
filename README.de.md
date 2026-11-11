@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.380** Tests stabil: kein Test hängt mehr vom Datum ab, ein nächtlicher Lauf mit der Uhr 120 Tage voraus wacht darüber, Dauer-Wackler zählen als rot; ein Hörstück wartet auf seine gestalteten Stimmen, statt sofort die Standardstimme zu nehmen; gestaltete Stimmen sind auf jedem Weg gesperrt, wo sie nicht erlaubt sind
 - **V01.1.379** Wissenskarte Stufe 2: wartende Dokumente vorziehen, Widersprüche rot, gezogene Punkte bleiben angeheftet, Filter nach Zeit, eine Zeitleiste mit Fristen, Themen-Inseln bei vielen Punkten und Platz für 1000 Dokumente
 - **V01.1.378** Listen wie Apple Erinnerungen: Kacheln Heute, Geplant, Alle, Markiert, Listen mit Farbe, leere Zeile zum Weitertippen, Ziehen zum Sortieren und Verschieben, ⓘ mit Notiz, Datum, Uhrzeit mit Erinnern, Markiert und Priorität; im Panel, am Handy und in der iPhone-App.
 - **V01.1.377** Sprachausgabe bei vielen Anfragen: 4 Stimmen gleichzeitig statt 2, der erste Satz einer Antwort geht vor, neue Einstellung „Blöcke selbst anpassen“
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.373** KI-Dungeon-Master mit Regeltiefe: Einfach oder Voll statt 58 Schaltern, der Gastgeber wählt je Runde, Werkzeuge im Spielleiter-Pult ohne Schalter, sechs eigene Schalter bleiben
 - **V01.1.372** Neuer Avatar „Welle“: kein Gesicht, in Ruhe ein Strich, beim Sprechen eine Welle mit Echo, im Panel, in den Apps, im Begleiter und auf der Pebble
 - **V01.1.371** Schlankere Doku: die Anleitung beschreibt nur noch den heutigen Stand (Werdegang steht im CHANGELOG), das CHANGELOG beginnt bei V01.1 mit der älteren Reihe in CHANGELOG-V01.0.md, die Richtlinie ohne Herkunftsangaben
-- **V01.1.370** Nur noch das eigene Sprachmodell: der Rückfall auf qwen38 ist weg, und unter Modelle stehen nur Modelle, die laufen oder gemessen wurden
 
 
 

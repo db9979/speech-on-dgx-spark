@@ -603,9 +603,11 @@ async def speech(name, args, uid):
             return _result(f"Die Spracherkennung hat abgelehnt (HTTP {r.status_code}).", True)
         return _result(str(r.json().get("text", "")).strip() or "(nichts erkannt)")
     text = _text(args, "text", MAX_SPEAK)
-    voice = str(args.get("voice") or profiles.settings(uid).get("voice") or "")
+    voice = str(args.get("voice") or profiles.voice_for(uid))
     if not re.fullmatch(r"[\w .\-]{0,64}", voice):
         raise ValueError("voice: nur Buchstaben, Ziffern, Leerzeichen, . _ -")
+    if voice and not profiles.voice_ok(uid, voice):
+        raise ValueError("voice: diese Stimme ist für dieses Profil nicht freigegeben")
     lang = "English" if str(args.get("language") or "").lower() in ("en", "english", "englisch") else "German"
     body = {"input": text, "language": lang, "response_format": "mp3"}
     if voice:

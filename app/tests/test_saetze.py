@@ -109,6 +109,17 @@ class Rows(unittest.TestCase):
         cls.p, cls.uid = profile("Satztest")
 
     def setUp(self):
+        # every answer here is asked at the fixed moment T0 (the endpoints too: the clock of saetze and tipps stands
+        # there), so „released lately“ (saetze._new_items) must not meet the real clock: the release times
+        # (features._seen) are this test's own, noted by a clock that stands more than tipps.NEW_DAYS before T0.
+        # With the real clock every function was „new“ once the real day was past T0 (15.1.2027) and the tests
+        # that expect no row got the sentence of a new function (zeitreise 2026-11-11)
+        helpers.feste_uhr(self, T0, saetze, tipps)
+        seen = mock.patch.object(features, "SEEN", os.path.join(helpers.TMP, "saetze-seen.json"))
+        seen.start()
+        self.addCleanup(seen.stop)
+        self.addCleanup(lambda: os.path.exists(features.SEEN) and os.remove(features.SEEN))
+        helpers.feste_uhr(self, T0 - (tipps.NEW_DAYS + 1) * 86400, features)
         helpers.set_config(memory=True, history=True, reminders=True, **ON)
         tipps.forget(self.uid)
 

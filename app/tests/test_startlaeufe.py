@@ -70,5 +70,69 @@ class StartupTasks(unittest.TestCase):
                                                "asyncio.wait_for: wait in one of them or add the way here")
 
 
+class ModellDienste(unittest.TestCase):
+    """The background loops of the model services (speech output, speech recognition, LLM-Tor) start only through
+    common.dauerlauf (code review 2026-11-11, point 5): kept, and started again after an error with a line."""
+    def test_a_loop_that_fails_writes_a_line_and_starts_again(self):
+        import contextlib
+        import io
+        import common
+        runs = []
+
+        async def loop():
+            runs.append(1)
+            if len(runs) < 3:
+                raise ValueError("geheim 4711")
+            await asyncio.sleep(3600)
+
+        async def main():
+            t = common.dauerlauf("tts", "probe", loop, pause=0.01)
+            self.assertIn(t, common._dauerlaeufe)                      # kept: asyncio holds only a weak reference
+            for _ in range(500):
+                if len(runs) >= 3:
+                    break
+                await asyncio.sleep(0.01)
+            self.assertFalse(t.done())
+            t.cancel()
+            with self.assertRaises(asyncio.CancelledError):
+                await t
+            await asyncio.sleep(0)
+            self.assertNotIn(t, common._dauerlaeufe)
+
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            asyncio.run(main())
+        self.assertEqual(len(runs), 3)
+        self.assertEqual(out.getvalue(), "tts: hintergrundlauf probe fehler | ValueError | neu in 0 s\n" * 2)   # no content
+        self.assertEqual(common.DAUERLAUF_PAUSE, 30)
+
+    def test_a_loop_that_ends_by_itself_is_done(self):
+        import common
+
+        async def kurz():
+            return None
+
+        async def main():
+            t = common.dauerlauf("asr", "kurz", kurz)
+            await t
+            await asyncio.sleep(0)
+            return t in common._dauerlaeufe
+
+        self.assertFalse(asyncio.run(main()))
+
+    def test_no_service_starts_a_loop_without_it(self):
+        import re
+        seen = 0
+        for name in sorted(os.listdir(helpers.APP)):
+            if not name.endswith(".py"):
+                continue
+            with open(os.path.join(helpers.APP, name), encoding="utf-8") as f:
+                text = f.read()
+            bare = [z.strip() for z in text.split("\n") if re.match(r"\s*asyncio\.create_task\(", z)]
+            self.assertEqual(bare, [], f"{name}: a background loop without reference and catch; use common.dauerlauf")
+            seen += text.count("dauerlauf(\"")
+        self.assertGreaterEqual(seen, 6)                               # tts 2, asr 2, llmtor 2
+
+
 if __name__ == "__main__":
     unittest.main()

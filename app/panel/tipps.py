@@ -359,7 +359,7 @@ def weekly_text(uid, now=None):
     st = _st(uid)
     if now - st.get("push", 0) < WEEK:
         return "", None
-    items = [x for x in candidates(uid) if _may(st, x["id"], "", now)]
+    items = [x for x in candidates(uid, now=now) if _may(st, x["id"], "", now)]
     if not items:   # nothing to set up: the sentence of the week (saetze.py, plan funktionen-zeigen 9)
         import saetze
         text = saetze.week_text(uid, now) if features.allowed(saetze.KEY, uid) else ""

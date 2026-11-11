@@ -140,8 +140,9 @@ Every change is checked not only against the traps above, but also against wheth
 **Regular review**
 - [ ] Before large versions and at least once a month a sceptical overall review against these standards (as on 08.10. and 11.10.2026). Every finding gets a self-test.
 
-**Not yet met** (brought up to date the next time the place is touched; as of 19.10.2026)
+**Not yet met** (brought up to date the next time the place is touched; as of 11.11.2026, code review)
 - Fernet (AES-CBC plus HMAC) in the vault and for move keys: secure, but not AEAD; new parts use AES-GCM, a change only with migration of the existing data.
-- The check of the Python packages against the OSV database runs in the Spark (Status → System updates, since V01.1.322), not yet in "Tests".
+- The spoken code word for Home Assistant is stored with 3000 PBKDF2 rounds (`homeassistant._hash`), far below the standard: the comparison tries many spellings of speech recognition, each costs one derivation, and the panel holds nothing up for speech. The protection here is not the number of rounds but the sealed storage (`vault`) and the file rights. Another derivation only together with a faster comparison.
+- Done on 11.11.2026: the check of the Python packages against the OSV database now also runs on GitHub, every night in the run "Pakete prüfen" (`tools/pakete_pruefen.py`, issue "Pakete mit bekannter Lücke"; 🧪 test_pakete_pruefen). Deliberately not a step of "Tests": a hole published tonight would turn main red without any push, and the Spark installs only versions with a green run. The phone PIN now has 600 000 PBKDF2 rounds like password and profile PIN (`telefon_ich.ROUNDS`; an older PIN keeps working and is stored anew at its next right entry; 🧪 test_telefon, test_tempo).
 - Signed device updates are built, but off without a key (`UPDATE_SIGNING_KEY` is still missing).
 - `style-src 'unsafe-inline'` remains because of older Safari versions in the iPhone app.

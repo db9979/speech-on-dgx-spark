@@ -129,6 +129,8 @@ M4A_KBIT = 64            # the AAC copy for the iPhone and Telegram (no Ogg ther
 MAX_S = 25 * 60          # seconds of one sound at most (20 minutes and the frame)
 TG_MAX = 45 * 1024 * 1024   # bytes Telegram takes from the bot at most
 HOLD_S = 300             # after the speech output failed: the next try after this long
+LADEN_S = 30             # while VoiceDesign loads on demand: the same line comes again after this long
+LADEN_MAX_S = 300        # ... and after this long without it the standard voice stands in
 READ_TIMEOUT = 240
 TON_FRIST = 150          # seconds one line may take
 TON_GRENZE = 16 * 1024 * 1024
@@ -219,6 +221,7 @@ _now = {}                # the Hörstück being worked on right now: {"uid", "id
 _sofort = {}             # the one forced Hörstück („Sofort erstellen"): {"uid", "id", "was"} while its run goes
 SOFORT_SCHRITTE = 2000   # steps of one forced run at most (speech may cancel a line often), then the quiet chain goes on
 SOFORT_WARTEN = 12       # waits of HOLD_S for a missing speech output at most, then the quiet chain goes on
+_laedt = {}              # (uid, id) -> since when this Hörstück waits for VoiceDesign to load (LADEN_MAX_S)
 _stimmen = {"t": 0.0, "design": False}   # whether the speech output makes voices from a description (STIMMEN_S)
 
 
@@ -996,8 +999,20 @@ async def zeile(uid, r, now, name=""):
         except RuntimeError as e:
             if not klang or not str(e).startswith("tts 503"):
                 raise
+            # VoiceDesign runs on demand (V01.1.374): this very request started it and got "loading". The line
+            # waits and comes again, each try keeps the engine loaded; before, the standard voice stood in for
+            # STIMMEN_S, the engine stopped unused after 5 minutes and no Hörstück ever got its designed voices.
+            if "loading" in str(e) and now - _laedt.setdefault((uid, r["id"]), now) < LADEN_MAX_S:
+                _hold["tts"] = now + LADEN_S
+                print(f"hoerstueck: stimmen laden | zeile {i + 1} | naechster versuch in {LADEN_S} s | {who}", flush=True)
+                live.bg_done("Hörstück", False, time.time() - t0, "Stimmen laden")
+                return "tts"
+            _laedt.pop((uid, r["id"]), None)
             _stimmen.update(design=False, t=time.time())   # VoiceDesign not up: the standard voice stands in
+            print(f"hoerstueck: stimmen fehlen | feste stimme | zeile {i + 1} | {who}", flush=True)
             raw = await vorrang.run("Hörstück", lambda: ton(x["text"], voice, "", sprache, art), retries=0)
+        else:
+            _laedt.pop((uid, r["id"]), None)
     except vorrang.Busy:
         _day.today()["abgebrochen"] += 1
         print(f"hoerstueck: abgebrochen | sprache | zeile {i + 1} | {who}", flush=True)
@@ -1227,7 +1242,8 @@ async def sofort_lauf(uid, hid):
                     ende = "tts"
                     break
                 _sofort["was"] = "wartet"
-                await _pause(HOLD_S)
+                # a short hold (VoiceDesign loading, LADEN_S) is waited out as it is, never the long HOLD_S
+                await _pause(min(HOLD_S, max(1.0, _hold["tts"] - now)) if now < _hold["tts"] else HOLD_S)
                 continue
             _sofort["was"] = "zeile"
             await zeile(uid, r, now, name)

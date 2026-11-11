@@ -1241,6 +1241,37 @@ class OwnNumbersAndPin(unittest.TestCase):
         telefon_ich.set_pin(self.a, "")
         self.assertFalse(telefon_ich.has_pin(self.a))
 
+    def test_an_old_pin_still_opens_and_is_stored_anew(self):
+        """Code review 2026-11-11, point 11: the Telefon-PIN had 100 000 PBKDF2 rounds (the panel's measure: 600 000).
+        A PIN stored before keeps working and gets the new rounds at its next right entry; a wrong one changes nothing."""
+        import contextlib
+        import io
+        with mock.patch.object(telefon_ich, "ROUNDS", 2000), mock.patch.object(telefon_ich, "OLD_ROUNDS", 500):
+            salt = "ab" * 16
+            alt = hashlib.pbkdf2_hmac("sha256", b"2580", bytes.fromhex(salt), 500).hex()
+            d = telefon_ich._read(self.a)
+            d["pin"] = vault.seal(json.dumps({"salt": salt, "hash": alt}))            # as stored before: no rounds
+            telefon_ich._write(self.a, d)
+            self.addCleanup(telefon_ich.set_pin, self.a, "")
+            self.assertEqual(telefon_ich.pin_attempt("**621", [self.a], "2581", now=10), ("wrong", ""))
+            self.assertNotIn("rounds", telefon_ich._pin(self.a))
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                self.assertEqual(telefon_ich.pin_attempt("**621", [self.a], "2580", now=11), ("ok", self.a))
+            p = telefon_ich._pin(self.a)
+            self.assertEqual(p["rounds"], 2000)
+            self.assertNotEqual(p["salt"], salt)
+            self.assertEqual(p["hash"], hashlib.pbkdf2_hmac("sha256", b"2580", bytes.fromhex(p["salt"]), 2000).hex())
+            self.assertRegex(out.getvalue(), r"^telefon: PIN mit 2000 Runden neu gespeichert \| Profil \w{4}\n$")
+            self.assertNotIn("2580", out.getvalue().replace("2000", ""))
+            with contextlib.redirect_stdout(out):
+                self.assertEqual(telefon_ich.pin_attempt("**621", [self.a], "2580", now=12), ("ok", self.a))
+            self.assertEqual(out.getvalue().count("neu gespeichert"), 1)              # once
+            telefon_ich.set_pin(self.a, "7391")
+            self.assertEqual(telefon_ich._pin(self.a)["rounds"], 2000)                # a new PIN: the new rounds at once
+        with open(telefon.__file__, encoding="utf-8") as f:                          # never on the panel's loop
+            self.assertIn("await asyncio.to_thread(telefon_ich.pin_attempt, self.number, cands, entered)", f.read())
+
     def test_calls_kept_and_deleted_and_own_data(self):
         for i in range(telefon_ich.KEEP_CALLS + 3):
             telefon_ich.keep_call(self.a, 100 + i, 30, 2, "intern")

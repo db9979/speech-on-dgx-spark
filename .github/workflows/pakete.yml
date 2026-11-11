@@ -1,0 +1,63 @@
+name: Pakete prüfen
+
+# The pinned Python packages against the OSV database, every night (code review 2026-11-11, Dominik „1-11“;
+# security checklist "Noch nicht erfüllt": the check ran only inside the Spark). tools/pakete_pruefen.py sends only
+# names and versions of public packages and gets ids back; a known hole opens the issue "Pakete mit bekannter
+# Lücke" (a comment for every further night, closed when none is left). Not a step of "Tests" on purpose: a hole
+# published tonight would turn main red without any push, and the Spark installs only versions whose "Tests" run
+# is green. By hand: Actions → "Pakete prüfen" → Run workflow.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 4 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pakete
+  cancel-in-progress: false
+
+jobs:
+  pakete:
+    name: OSV
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write         # only for the issue "Pakete mit bekannter Lücke"
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools/pakete_pruefen.py
+            app/requirements-panel.lock
+            app/requirements-ytdlp.lock
+          sparse-checkout-cone-mode: false
+      - name: OSV
+        id: osv
+        env:
+          PAKETE_NOTE: ${{ runner.temp }}/pakete.md
+        run: python3 tools/pakete_pruefen.py
+      # package names, versions and ids only. No answer from OSV (exit code 2) writes no note and changes nothing
+      - name: Note on GitHub
+        continue-on-error: true
+        if: always() && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OUTCOME: ${{ steps.osv.outcome }}
+          NOTE: ${{ runner.temp }}/pakete.md
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          R="$GITHUB_REPOSITORY"
+          head="Lauf: $RUN (Commit ${GITHUB_SHA:0:7})"
+          offen=$(gh issue list -R "$R" --state open --search 'in:title "Pakete mit bekannter Lücke"' --json number,title \
+                    --jq 'map(select(.title == "Pakete mit bekannter Lücke")) | .[0].number // empty')
+          if [ -s "$NOTE" ]; then
+            { echo "$head"; echo; cat "$NOTE"; } > body.md
+            if [ -n "$offen" ]; then gh issue comment "$offen" -R "$R" -F body.md
+            else gh issue create -R "$R" -t "Pakete mit bekannter Lücke" -F body.md; fi
+          elif [ "$OUTCOME" = "success" ]; then
+            [ -z "$offen" ] || gh issue close "$offen" -R "$R" -c "Keine bekannte Lücke mehr. $head"
+          fi

@@ -738,7 +738,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ Lautsprecher, HA
     "lautsprecher": {
-        "stand": "d6af04cc0c",
+        "stand": "6a174d28c6",
         "bezug": {
             "wyoming.MAX_CONNS": ["s5"], "esp32.ota": ["s1"], "esp32._activation": ["s2"],
             "esp32.same_board": ["s3"], "esp32.speaker_ws": ["s5"], "esp32.still_allowed": ["s5"],
@@ -975,11 +975,13 @@ SEITEN = {
                 ("Die Telefon-PIN (Ziffern, dann #) steht für den Rest des Gesprächs für die Stimme: am Mobilteil für "
                  "dessen Profil, am gemeinsamen Telefon für das Profil, dem sie gehört. {telefon_ich.FAILS} falsche in "
                  "{telefon_ich.FAIL_WINDOW|min} Minuten sperren sie an diesem Telefon {telefon_ich.LOCK|min} Minuten. "
-                 "Gespeichert als gesalzener Hash im Tresor; nie gesprochen, angezeigt oder im Log.",
+                 "Gespeichert als gesalzener Hash mit 600 000 Runden im Tresor (eine ältere PIN wird beim nächsten richtigen "
+                 "Eintippen neu abgelegt), geprüft neben der Ereignis-Schleife; nie gesprochen, angezeigt oder im Log.",
                  "The phone PIN (digits, then #) stands for the voice for the rest of the call: on a handset for its "
                  "profile, at the shared phone for the profile it belongs to. {telefon_ich.FAILS} wrong ones in "
                  "{telefon_ich.FAIL_WINDOW|min} minutes lock it at that phone for {telefon_ich.LOCK|min} minutes. Stored "
-                 "as a salted hash in the vault; never spoken, shown or logged."),
+                 "as a salted hash with 600 000 rounds in the vault (an older PIN is stored anew at its next right "
+                 "entry), checked beside the event loop; never spoken, shown or logged."),
                 ("Der Spark ruft an (Schalter „Der Spark ruft an“): Weckruf und Erinnerung, die ein Profil selbst "
                  "bestellt (Werkzeug anruf_planen, nur Zeit, Art und Text, nie eine Nummer), der Rückruf und der Alarm. "
                  "Er ruft nur das zugeordnete Mobilteil oder, mit „auch bestätigte eigene Nummern“, die bestätigte "

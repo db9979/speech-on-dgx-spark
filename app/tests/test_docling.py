@@ -149,6 +149,9 @@ class Base(unittest.TestCase):
         SEEN.update(got=[], answer="ok", pages=None)
         doclingdienst._mem.update(down_until=0.0, now=None)
         doclingdienst._write({})
+        # the service's own clock stands at NOW too: view() and for_live() compare „server down until“ (NOW + 10 min,
+        # from due_once(NOW)) with it, and the real clock is past NOW from 15.1.2027 on (zeitreise 2026-11-11)
+        helpers.feste_uhr(self, NOW, doclingdienst)
         for uid in profiles.user_ids():     # pages other tests left waiting: each test reads only its own
             if os.path.exists(documents.db_path(uid)):
                 with documents._Db(uid) as con:

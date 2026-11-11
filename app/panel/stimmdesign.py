@@ -220,6 +220,25 @@ def _namen_dort():
     return r.get("namen") if isinstance(r, dict) and isinstance(r.get("namen"), list) else None
 
 
+RESTE_MOST = 10            # leftover own voices taken off the speech output per look at most
+_nimmt = {}                # uid -> the id being taken over right now (one „Übernehmen“ per profile at a time)
+
+
+def reste_weg(dort):
+    """Own voices the speech output still has but no profile owns (its deletion did not reach the model computer,
+    or the profile is gone): taken off there, at most RESTE_MOST per look; never one being taken over right now.
+    A voice sample is a person's data and must not stay behind. Returns how many went."""
+    if not dort:
+        return 0
+    meine = {x["id"] for uid in profiles.user_ids() for x in eigene(uid)} | set(_nimmt.values())
+    n = 0
+    for name in sorted(x for x in dort if isinstance(x, str) and x.startswith("eigen-") and x not in meine)[:RESTE_MOST]:
+        ok = stimmablage.NAME.fullmatch(name) and _weg(name)
+        n += bool(ok)
+        print(f"stimmdesign: rest geloescht {'ok' if ok else 'fehler'}", flush=True)
+    return n
+
+
 # ---------------------------------------------------------------- making a sample
 def _wav(raw):
     """A WAV of what the speech output sent (PCM or WAV), checked like the speech output checks it."""
@@ -354,6 +373,7 @@ async def uebersicht(request: Request, prof=Depends(own_profile)):
     f = daten()["felder"]
     xs = eigene(uid)
     dort = await asyncio.to_thread(_namen_dort)
+    await asyncio.to_thread(reste_weg, dort)
     for x in xs:    # the speech output lost an own voice (new install): its copy goes back
         if dort is not None and x["id"] not in dort and os.path.exists(_wav_pfad(uid, x["id"])):
             with open(_wav_pfad(uid, x["id"]), "rb") as fh:
@@ -364,7 +384,7 @@ async def uebersicht(request: Request, prof=Depends(own_profile)):
             "eigene": [{"id": x["id"], "name": x.get("name", ""), "felder": x.get("felder", {}), "worte": x.get("worte", ""),
                         "t": x.get("t", 0)} for x in xs],
             "felder": {k: [[y[0], y[1], y[2]] for y in v] for k, v in f.items()},
-            "wahl": profiles.settings(uid).get("voice", ""), "max": MAX_EIGENE,
+            "wahl": profiles.voice_for(uid), "max": MAX_EIGENE,
             "proben": proben_heute(uid), "proben_max": PROBEN_TAG, "frei": coadmin.unbegrenzt(uid, request),
             "design": design, "klon": klon, "lauf": for_live()}
 
@@ -450,18 +470,26 @@ async def uebernehmen(request: Request, prof=Depends(browser_profile)):
     if len(xs) >= MAX_EIGENE:
         print(f"stimmdesign: uebernehmen abgelehnt voll fuer {profiles.log_name(prof)}", flush=True)
         raise HTTPException(409, f"Schon {MAX_EIGENE} eigene Stimmen. Lösche zuerst eine.")
+    if uid in _nimmt:      # a second „Übernehmen“ while the first still stores: both read the same list (a fourth voice)
+        print(f"stimmdesign: uebernehmen abgelehnt laeuft fuer {profiles.log_name(prof)}", flush=True)
+        raise HTTPException(409, "Die Stimme wird gerade übernommen.")
     vid = "eigen-" + secrets.token_hex(8)
-    pfad = _wav_pfad(uid, vid)
-    os.makedirs(os.path.dirname(pfad), mode=0o700, exist_ok=True)
-    with open(pfad + ".neu", "wb") as f:
-        f.write(p[1])
-    os.replace(pfad + ".neu", pfad)
-    if not await asyncio.to_thread(_ablegen, vid, p[1], satz()):
-        os.remove(pfad)
-        print(f"stimmdesign: uebernehmen fehler ablage fuer {profiles.log_name(prof)}", flush=True)
-        raise HTTPException(503, "Die Sprachausgabe hat die Stimme nicht angenommen; gleich noch einmal.")
-    xs.append({"id": vid, "name": name, "felder": p[2], "worte": p[3], "t": int(time.time())})
-    _speichern(uid, xs)
+    _nimmt[uid] = vid
+    try:
+        pfad = _wav_pfad(uid, vid)
+        os.makedirs(os.path.dirname(pfad), mode=0o700, exist_ok=True)
+        with open(pfad + ".neu", "wb") as f:
+            f.write(p[1])
+        os.replace(pfad + ".neu", pfad)
+        if not await asyncio.to_thread(_ablegen, vid, p[1], satz()):
+            os.remove(pfad)
+            print(f"stimmdesign: uebernehmen fehler ablage fuer {profiles.log_name(prof)}", flush=True)
+            raise HTTPException(503, "Die Sprachausgabe hat die Stimme nicht angenommen; gleich noch einmal.")
+        xs = eigene(uid)
+        xs.append({"id": vid, "name": name, "felder": p[2], "worte": p[3], "t": int(time.time())})
+        _speichern(uid, xs)
+    finally:
+        _nimmt.pop(uid, None)
     _proben.pop(uid, None)
     profiles.save_settings(uid, {"voice": vid})
     print(f"stimmdesign: uebernommen fuer {profiles.log_name(prof)}", flush=True)
@@ -472,7 +500,8 @@ def _loeschen(uid, vid):
     xs = eigene(uid)
     if not any(x["id"] == vid for x in xs):
         return False
-    _weg(vid)
+    if not _weg(vid):      # the model computer did not answer: the sample goes with the next look (reste_weg)
+        print("stimmdesign: loeschen ablage fehler", flush=True)
     try:
         os.remove(_wav_pfad(uid, vid))
     except OSError:

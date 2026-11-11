@@ -13,6 +13,7 @@ import json
 import os
 import unittest
 import wave
+from unittest import mock
 
 import numpy as np
 
@@ -171,6 +172,15 @@ class Endpoint(unittest.TestCase):
         old = dict(c.get("chat") or {})
         c.setdefault("chat", {})["hoer_namen"] = True
         helpers.write_config(c)
+        # the house of this test has exactly these three profiles: late in a whole run hundreds of profiles of the tests
+        # before fill the hint list (hoerwoerter.MAX_WORDS, MAX_CHARS) and these three fell out of it, so the test was
+        # red in every run on GitHub and green only alone, in its second try (code review 2026-11-11)
+        import profiles
+        haus = [p for p in profiles.names() if p["name"] in ("Stella", "Hansi", "Cornelia")]
+        self.assertEqual(len(haus), 3)
+        drei = mock.patch.object(profiles, "names", return_value=haus)
+        drei.start()
+        self.addCleanup(drei.stop)
         try:
             out = self.heard("Stella, Hansi, Cornelia.", recording(1.2))
             self.assertEqual(out, {"text": "", "ignored": "context echo"})

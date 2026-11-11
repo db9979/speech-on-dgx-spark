@@ -229,6 +229,7 @@
 "test_offline": 15.8,
 "test_offsite": 2.7,
 "test_openwebui": 0.8,
+"test_pakete_pruefen": 0.0,
 "test_panel": 75.9,
 "test_parallel_messen": 0.9,
 "test_passkey": 4.4,
@@ -436,6 +437,7 @@
 "test_workflows": 0.1,
 "test_wyoming": 0.7,
 "test_ytquelle": 2.1,
+"test_zeitreise": 10.0,
 "test_zustellung": 0.7,
 "test_zweiter_schritt": 1.1,
 "test_zwischenruf": 4.1

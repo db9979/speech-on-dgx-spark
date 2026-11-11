@@ -247,7 +247,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "530007f7f6",
+        "stand": "920a7925df",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -955,7 +955,8 @@ SEITEN = {
                  "Wahl; unter {hoerstueck.ZEILEN_MIN} Zeilen entsteht keins. In der ruhigen Kette nach den "
                  "Auswertungen spricht hoerstueck.zeile je Schritt genau eine Zeile über tonteile.sprich mit Stufe "
                  "„hinten“ und Vorrang-Schlüssel (common.signed_low), durch vorrang.run: echte Sprache bricht ab, die "
-                 "Zeile kommt wieder. hoerstueck.zusammen setzt die Teile mit Pausen zusammen, merkt sich den Beginn "
+                 "Zeile kommt wieder. Lädt VoiceDesign erst (es läuft nach Bedarf), wartet die Zeile 30 Sekunden und kommt "
+                 "wieder; erst nach 5 Minuten ohne VoiceDesign spricht die Standardstimme. hoerstueck.zusammen setzt die Teile mit Pausen zusammen, merkt sich den Beginn "
                  "jeder Zeile (das Panel und die App heben beim Abspielen die Zeile hervor), ffmpeg schreibt Opus und "
                  "hoerstueck.m4a eine AAC-Kopie für den Player des iPhones und Telegram (beide nehmen kein Ogg). "
                  "hoerstueck.melden schickt „Hörstück fertig“ über push.send mit dem Weg zur Mappe, nur mit dem Namen "
@@ -1007,7 +1008,8 @@ SEITEN = {
                  "chosen length; below {hoerstueck.ZEILEN_MIN} lines none is made. In the quiet chain after the "
                  "analyses hoerstueck.zeile speaks exactly one line per step through tonteile.sprich with the stage "
                  "„last“ and the priority key (common.signed_low), through vorrang.run: real speech cancels, the line "
-                 "comes again. hoerstueck.zusammen puts the parts together with pauses, keeps the start of every line "
+                 "comes again. While VoiceDesign is still loading (it runs on demand) the line waits 30 seconds and comes "
+                 "again; only after 5 minutes without VoiceDesign the standard voice speaks. hoerstueck.zusammen puts the parts together with pauses, keeps the start of every line "
                  "(the panel and the app mark the line while it plays), ffmpeg writes Opus and hoerstueck.m4a an AAC "
                  "copy for the iPhone's player and Telegram (neither takes Ogg). hoerstueck.melden sends „Hörstück "
                  "fertig“ through push.send with the way to the collection, only with the collection's name; "

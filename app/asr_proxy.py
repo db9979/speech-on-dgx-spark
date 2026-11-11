@@ -18,7 +18,7 @@ import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, PlainTextResponse, Response, StreamingResponse
 
-from common import (ASR_ISO, audio_rate_ok, BodyLimit, GateFull, KeyedCORS, PrioGate, inside, outside_view, api_key_dependency, api_key_ok,
+from common import (dauerlauf, ASR_ISO, audio_rate_ok, BodyLimit, GateFull, KeyedCORS, PrioGate, inside, outside_view, api_key_dependency, api_key_ok,
                     engine_crash_reason, load_config, NOTASR_IDLE, NOTASR_PORT, quiet_access_log, SpeechMark, stage_of, STATE)
 import smartturn
 
@@ -144,7 +144,7 @@ async def warm_up():
 async def watch_engine():
     if local and NOT:
         local.status = "idle"
-        asyncio.create_task(idle_loop())
+        dauerlauf("asr", "leerlauf", idle_loop)
         return
     if local:
         local.load_in_background()
@@ -157,7 +157,7 @@ async def watch_engine():
                 await warm_up()
             ready = now
             await asyncio.sleep(5)
-    asyncio.create_task(loop())
+    dauerlauf("asr", "aufwaermen", loop)
 
 
 async def idle_loop():

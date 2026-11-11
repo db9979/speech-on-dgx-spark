@@ -84,6 +84,9 @@ class Base(unittest.TestCase):
         fund._last.clear()
         # the day's counters start fresh for every test (a fixed day, never the clock)
         fund._stat.update(day="", tag_heute=0, tag_ok=0, tag_weg=0, tag_fehler=0, sofort=0)
+        # the endpoints take fund's own clock: it stands at NOW too, else „Neu vom Modell“ (the model's tags of the
+        # last TAG_NEU_TAGE days, made at NOW here) is empty once the real day is that far past NOW (zeitreise 2026-11-11)
+        helpers.feste_uhr(self, NOW, fund)
 
     def fresh(self, name):
         c, uid = profile(name)

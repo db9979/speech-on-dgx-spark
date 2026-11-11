@@ -1444,7 +1444,8 @@ class Call:
             cands = [u for u in profiles.user_ids() if features.allowed("telefon", u)]
         else:
             cands = []
-        res, who = telefon_ich.pin_attempt(self.number, cands, entered)
+        # in a thread: 600 000 rounds per profile with a PIN would hold the panel's loop (voice goes first)
+        res, who = await asyncio.to_thread(telefon_ich.pin_attempt, self.number, cands, entered)
         if res == "ok":
             self.pin_uid = who
             _bump("pin")

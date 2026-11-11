@@ -14,6 +14,7 @@ import sys
 import tempfile
 import threading
 import time
+from unittest import mock
 
 APP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -102,6 +103,8 @@ import profiles  # noqa: E402
 # ~600 logins in the self-tests: 200 000 PBKDF2 rounds each cost minutes; the strength itself is checked in
 # test_tempo.py (Rounds) against the shipped values
 core.ROUNDS = profiles.PIN_ROUNDS = 1000
+import telefon_ich  # noqa: E402
+telefon_ich.ROUNDS = telefon_ich.OLD_ROUNDS = 1000
 import uvicorn  # noqa: E402
 from fastapi import FastAPI, HTTPException, Request, WebSocket  # noqa: E402
 from fastapi.responses import PlainTextResponse, Response, StreamingResponse  # noqa: E402
@@ -1025,6 +1028,42 @@ def start():
         import update
         update.update_running = lambda: update._upd_cache["running"]
         _started = True
+
+
+class _Uhr:
+    """A module's `time` with a fixed clock (feste_uhr): time() is the fixed moment plus the seconds that really
+    passed since, localtime/gmtime/strftime without a moment take that clock; everything else is the real module."""
+    def __init__(self, t):
+        self._t, self._m = float(t), time.monotonic()
+
+    def time(self):
+        return self._t + (time.monotonic() - self._m)
+
+    def localtime(self, secs=None):
+        return time.localtime(self.time() if secs is None else secs)
+
+    def gmtime(self, secs=None):
+        return time.gmtime(self.time() if secs is None else secs)
+
+    def strftime(self, fmt, t=None):
+        return time.strftime(fmt, self.localtime() if t is None else t)
+
+    def __getattr__(self, name):
+        return getattr(time, name)
+
+
+def feste_uhr(test, t, *module):
+    """The clock of these panel modules stands at t for one test (or, with a class, for the whole class): a test
+    with fixed moments must not meet the real clock in the code it tests, else it turns red by itself once the real
+    day has moved far enough (main red 2026-11-11: fixed moments of 12.10. against a 30-day window of the real
+    clock). Only the named modules get the clock (their `time`), never the whole process: servers, waits and the
+    other tests keep the real one. tools/zeitreise.py runs every test with the real clock moved months ahead."""
+    uhr = _Uhr(t)
+    for m in module:
+        p = mock.patch.object(m, "time", uhr)
+        p.start()
+        (test.addClassCleanup if isinstance(test, type) else test.addCleanup)(p.stop)
+    return uhr
 
 
 def write_config(c):

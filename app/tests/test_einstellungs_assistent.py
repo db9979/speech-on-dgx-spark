@@ -42,11 +42,10 @@ from common import load_config  # noqa: E402
 ADMIN = TestClient(panel.app)
 ADMIN.post("/api/login", json={"password": "secret-admin"})
 STATE = os.environ["SPEECH_SPARK_STATE"]
-# a fixed moment (Oct 2026), moved on by whole weeks so it stays within the last 7 days: the code keeps cases only
-# faelle.KEEP_S (30 days) back from the real clock (faelle.get, the admin's list), and a moment further back made
-# every case vanish once it was 30 days old (main red 2026-11-11). Weekday and time of day stay those of the moment;
-# every time below is relative to it
-T0 = 1_791_800_000.0 + 7 * 86400 * max(0, int((time.time() - 1_791_800_000.0) // (7 * 86400)))
+# a fixed moment (12.10.2026 10:13:20 UTC); every time below is relative to it, and the modules that keep cases only
+# a while back from the clock (faelle.KEEP_S, berater) get this moment as their clock in Base.setUp (helpers.feste_uhr)
+T0 = 1_791_800_000.0
+UHR = (faelle, berater)   # test_befund and test_handlungsregel take the same clock with Base
 OFF = dict(berater=False, berater_explain=False, berater_chat=False, berater_notify=False, berater_issue=False,
            berater_auto=False, berater_env=False, berater_ideas=False, berater_analyse=False, berater_auto_undo=False, berater_me=False, bewerten=False, bewerten_back=False,
            berater_off=[], berater_calls=20, berater_check_h=24, tool_hints="", tool_words="", route_extra="")
@@ -86,6 +85,7 @@ class Base(unittest.TestCase):
         faelle._bad_today.clear()
         faelle._live.update(day="", n={})
         berater._rt.update(wake=0.0, melder=0.0, confirm={})
+        helpers.feste_uhr(self, T0 + 600, *UHR)
         guard._rate.clear()     # the per-minute limits of the endpoints: every test starts with a fresh minute
         sysd = mock.patch.object(steuer, "run", return_value=(0, ""))   # never systemctl from a test
         sysd.start()

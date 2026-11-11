@@ -140,8 +140,9 @@ Jede Änderung wird nicht nur gegen die Fallen oben geprüft, sondern auch dageg
 **Regelmäßige Prüfung**
 - [ ] Vor großen Versionen und mindestens einmal im Monat eine skeptische Gesamtprüfung gegen diese Maßstäbe (wie am 08.10. und 11.10.2026). Jeder Befund bekommt einen Selbsttest.
 
-**Noch nicht erfüllt** (wird beim nächsten Berühren der Stelle nachgezogen; Stand 19.10.2026)
+**Noch nicht erfüllt** (wird beim nächsten Berühren der Stelle nachgezogen; Stand 11.11.2026, Code-Review)
 - Fernet (AES-CBC plus HMAC) im vault und bei Umzugsschlüsseln: sicher, aber kein AEAD; neue Teile nehmen AES-GCM, ein Wechsel nur mit Umzug der vorhandenen Daten.
-- Der Abgleich der Python-Pakete gegen die OSV-Datenbank läuft im Spark (Zustand → System-Updates, seit V01.1.322), noch nicht in „Tests“.
+- Das gesprochene Codewort für Home Assistant wird mit 3000 PBKDF2-Runden abgelegt (`homeassistant._hash`), weit unter dem Maßstab: beim Vergleich werden viele Schreibweisen der Spracherkennung durchprobiert, jede kostet eine Ableitung, und das Panel hält für Sprache nichts auf. Der Schutz ist hier nicht die Rundenzahl, sondern der versiegelte Speicher (`vault`) und die Dateirechte. Eine andere Ableitung nur zusammen mit einem schnelleren Vergleich.
+- Erledigt am 11.11.2026: Der Abgleich der Python-Pakete gegen die OSV-Datenbank läuft jetzt auch auf GitHub, jede Nacht im Lauf „Pakete prüfen“ (`tools/pakete_pruefen.py`, Issue „Pakete mit bekannter Lücke“; 🧪 test_pakete_pruefen). Bewusst nicht als Schritt in „Tests“: eine heute Nacht veröffentlichte Lücke würde main ohne jeden Push rot machen, und der Spark installiert nur Versionen mit grünem Lauf. Die Telefon-PIN hat jetzt 600 000 PBKDF2-Runden wie Passwort und Profil-PIN (`telefon_ich.ROUNDS`; eine ältere PIN gilt weiter und wird beim nächsten richtigen Eintippen neu abgelegt; 🧪 test_telefon, test_tempo).
 - Signierte Geräte-Updates sind gebaut, aber ohne Schlüssel aus (`UPDATE_SIGNING_KEY` fehlt noch).
 - `style-src 'unsafe-inline'` bleibt wegen älterer Safari-Versionen in der iPhone-App.

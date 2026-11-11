@@ -326,6 +326,71 @@ class Flow(Base):
         self.step(uid, voice=v, now=NOW + hoerstueck.HOLD_S + 1)
         self.assertEqual(c.get(f"/api/profile/hoerstueck/{hid}").json()["fertig_zeilen"], 1)
 
+    def test_voicedesign_loading_on_demand_waits_and_gets_its_voices(self):
+        """Code review 2026-11-11, point 3: VoiceDesign runs on demand, the first line gets "loading". The line waits
+        LADEN_S and comes again with its described voice; only after LADEN_MAX_S the standard voice stands in."""
+        c, uid = self.fresh("Hoerstuecklaedt")
+        mid, _, _ = self.mappe(uid)
+        hid = self.make(c, mid)
+        self.step(uid)
+        hoerstueck._stimmen.update(t=NOW * 2, design=True)
+        hoerstueck._laedt.clear()
+        self.addCleanup(hoerstueck._laedt.clear)
+        laedt = Voice(fail=RuntimeError("tts 503 loading"))
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            with mock.patch.object(hoerstueck, "ask_model", Model()), mock.patch.object(hoerstueck, "ton", laedt), \
+                    mock.patch.object(wissen, "quiet", lambda: True), \
+                    mock.patch.object(hoerstueck.profiles, "user_ids", lambda: [uid]):
+                run(hoerstueck.due_once(NOW))
+        self.assertEqual(len(laedt.calls), 1)                          # no second request with the standard voice
+        self.assertTrue(laedt.calls[0][2])
+        self.assertRegex(out.getvalue(), r"hoerstueck: stimmen laden \| zeile 1 \| naechster versuch in 30 s \| Profil \w+\n")
+        self.assertEqual(c.get(f"/api/profile/hoerstueck/{hid}").json()["fertig_zeilen"], 0)
+        self.assertTrue(hoerstueck._stimmen["design"])
+        v = Voice()
+        self.assertIsNone(self.step(uid, voice=v, now=NOW + 5))        # waits LADEN_S, not HOLD_S
+        self.assertEqual(v.calls, [])
+        self.step(uid, voice=laedt, now=NOW + hoerstueck.LADEN_S + 1)  # still loading: waits again
+        self.assertEqual(c.get(f"/api/profile/hoerstueck/{hid}").json()["fertig_zeilen"], 0)
+        self.step(uid, voice=v, now=NOW + 2 * hoerstueck.LADEN_S + 2)  # up: the described voice
+        self.assertEqual(c.get(f"/api/profile/hoerstueck/{hid}").json()["fertig_zeilen"], 1)
+        self.assertTrue(v.calls[0][2])
+        self.assertEqual(hoerstueck._laedt, {})
+        # it never comes up: after LADEN_MAX_S the standard voice stands in, the Hörstück goes on
+        spaet = NOW + 1000
+        nie = Voice(fail=RuntimeError("tts 503 loading"))
+        self.step(uid, voice=nie, now=spaet)
+        self.assertEqual(c.get(f"/api/profile/hoerstueck/{hid}").json()["fertig_zeilen"], 1)
+
+        class Erst(Voice):
+            async def __call__(self, text, voice, klang, sprache="de", art=""):
+                self.calls.append((text, voice, klang))
+                if klang:
+                    raise RuntimeError("tts 503 loading")
+                return pcm()
+
+        e = Erst()
+        self.step(uid, voice=e, now=spaet + hoerstueck.LADEN_MAX_S + 1)
+        self.assertEqual([bool(x[2]) for x in e.calls], [True, False])
+        self.assertEqual(c.get(f"/api/profile/hoerstueck/{hid}").json()["fertig_zeilen"], 2)
+        self.assertFalse(hoerstueck._stimmen["design"])
+        # stopped for good or in error: the standard voice at once, as before
+        hoerstueck._stimmen.update(t=NOW * 2, design=True)
+
+        class Aus(Erst):
+            async def __call__(self, text, voice, klang, sprache="de", art=""):
+                self.calls.append((text, voice, klang))
+                if klang:
+                    raise RuntimeError("tts 503 error")
+                return pcm()
+
+        a = Aus()
+        self.step(uid, voice=a, now=spaet + 2 * hoerstueck.LADEN_MAX_S)
+        self.assertEqual([bool(x[2]) for x in a.calls], [True, False])
+        self.assertEqual(c.get(f"/api/profile/hoerstueck/{hid}").json()["fertig_zeilen"], 3)
+        self.assertLess(hoerstueck.LADEN_S, 60)        # each try comes well before the engine unloads (1 min at least)
+
     def test_voices_of_the_admin_and_the_standard(self):
         c, uid = self.fresh("Hoerstueckstimmen")
         mid, _, _ = self.mappe(uid)

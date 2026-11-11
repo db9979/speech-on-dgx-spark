@@ -1176,3 +1176,30 @@ def update_anteil(text):
             pct, label = share, name
     return pct, label
 
+
+# ---------------------------------------------------------------- background loops of the model services
+DAUERLAUF_PAUSE = 30     # seconds before a background loop that ended with an error starts again
+_dauerlaeufe = set()     # asyncio keeps only a weak reference: an unreferenced task can vanish mid-way
+
+
+def dauerlauf(bereich, name, make, pause=DAUERLAUF_PAUSE):
+    """Starts a background loop of a model service (speech output, speech recognition, LLM-Tor) that must never
+    end: keeps the task, and when the loop ends with an error writes one line ("<bereich>: hintergrundlauf <name>
+    fehler | <Type> | neu in 30 s") and starts it again. Before (code review 2026-11-11, point 5) such a loop was an
+    unreferenced asyncio.create_task without a catch: one error and the VoiceDesign engine was never unloaded
+    again, or an engine never warmed up, without a word in the log. make: a function returning the loop's coroutine.
+    The panel's own tasks use core.spawn."""
+    async def lauf():
+        while True:
+            try:
+                await make()
+                return
+            except asyncio.CancelledError:
+                raise
+            except Exception as e:   # noqa: BLE001  (a loop must survive whatever one round threw)
+                print(f"{bereich}: hintergrundlauf {name} fehler | {type(e).__name__} | neu in {int(pause)} s", flush=True)
+                await asyncio.sleep(pause)
+    task = asyncio.get_running_loop().create_task(lauf(), name=f"{bereich}-{name}")
+    _dauerlaeufe.add(task)
+    task.add_done_callback(_dauerlaeufe.discard)
+    return task

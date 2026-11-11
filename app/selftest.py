@@ -22,6 +22,12 @@ module there). Each part writes what failed the first time to $SELFTEST_REPORT; 
 "more than MAX_RETRY failures is red" holds for the whole run, not per part. With $SELFTEST_NOTE --sum also writes
 which tests stayed red and which passed only the second time; GitHub opens the issue "main rot" with it (closed
 again by the next green run) and counts the wobbly ones on the issue "Wackelnde Tests" (V01.0.820).
+
+A chronic wobbler is red (code review 2026-11-11, Dominik „1-11“): --sum writes the run's wobbly tests to
+$SELFTEST_WACKLER (GitHub keeps it as the artifact "wackler") and reads those of the runs of main before it from
+$SELFTEST_VORHER (one folder per run with its wackler.json). A test green only the second time in DAUER_LAEUFE runs
+in a row turns the run red and is named: four such tests sat for a week in every run and used four of the
+MAX_RETRY places, so two real wobbles more would have turned main red.
 """
 import json
 import os
@@ -33,6 +39,8 @@ import unittest
 
 MAX_RETRY = 5          # more failures than this: something is really broken, no second try
 WARN = "WARNUNG erst im zweiten Versuch grün"
+DAUER_LAEUFE = 3       # green only the second time in this many runs in a row: a chronic wobbler, red
+DAUER = "Dauer-Wackler"
 NEW_UNIT = 10          # seconds a unit not yet in tests/dauer.json counts for when the parts are cut
 STALE_S = 60           # a unit measured this many seconds (and twice) off its entry in tests/dauer.json is stale
 
@@ -238,8 +246,19 @@ def total(folder, n):
     if out and dur:
         # measured on GitHub: copied to tests/dauer.json when the parts drift apart
         write_durations(out, dur)
-    _note(red if len(names) <= MAX_RETRY else names, wobbly)
+    out = os.environ.get("SELFTEST_WACKLER")
+    if out:
+        with open(out, "w", encoding="utf-8") as f:
+            json.dump({"wobbly": sorted(set(wobbly))}, f)
+    immer = chronic(wobbly, earlier(os.environ.get("SELFTEST_VORHER")))
+    _note(red if len(names) <= MAX_RETRY else names, wobbly, immer)
     if ran <= 0:
+        return 1
+    if immer:
+        line = f"{DAUER}, in {DAUER_LAEUFE} runs in a row green only the second time: {' '.join(immer)}"
+        print("selftest: " + line, flush=True)
+        if os.environ.get("GITHUB_ACTIONS") == "true":
+            print(f"::error title={DAUER}::{line}", flush=True)
         return 1
     if len(names) > MAX_RETRY:
         print(f"selftest: {len(names)} failed, more than {MAX_RETRY} is a real break: {' '.join(names)}", flush=True)
@@ -247,13 +266,36 @@ def total(folder, n):
     return 0
 
 
-def _note(red, wobbly):
+def earlier(folder):
+    """The wobbly tests of the runs before this one: one list per folder under `folder` that holds a wackler.json
+    (a run without one, an older or a cancelled one, has no folder and so breaks the row)."""
+    out = []
+    for name in sorted(os.listdir(folder)) if folder and os.path.isdir(folder) else ():
+        try:
+            with open(os.path.join(folder, name, "wackler.json"), encoding="utf-8") as f:
+                out.append([str(x) for x in json.load(f).get("wobbly", [])])
+        except (OSError, ValueError, AttributeError):
+            continue
+    return out
+
+
+def chronic(wobbly, before):
+    """The tests green only the second time now and in every one of the DAUER_LAEUFE - 1 runs before."""
+    if len(before) < DAUER_LAEUFE - 1:
+        return []
+    return sorted(t for t in set(wobbly) if all(t in b for b in before[:DAUER_LAEUFE - 1]))
+
+
+def _note(red, wobbly, immer=()):
     """$SELFTEST_NOTE (GitHub "Tests", job "Ergebnis"): the text of the issue "main rot" or of the comment on
     "Wackelnde Tests", test names only (V01.0.820). Red first; nothing written when all is green and steady."""
     out = os.environ.get("SELFTEST_NOTE")
     if not out or not (red or wobbly):
         return
     lines = []
+    if immer:
+        lines += ["%s (in %d Läufen hintereinander erst im zweiten Versuch grün, das zählt als rot):" % (DAUER, DAUER_LAEUFE), ""]
+        lines += ["- `%s`" % x for x in immer] + [""]
     if red:
         lines += ["Rot (auch im zweiten Versuch oder mehr als %d auf einmal):" % MAX_RETRY, ""]
         lines += ["- `%s`" % x for x in red[:40]] + (["- und %d weitere" % (len(red) - 40)] if len(red) > 40 else [])

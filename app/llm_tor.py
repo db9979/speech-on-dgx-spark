@@ -48,7 +48,7 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 import einordnung
 import modelle
 from textnorm import defuse_marks
-from common import (STAGE_LOW, BodyLimit, GateFull, KeyedCORS, PrioGate, api_key_dependency, api_key_ok, check_memory,
+from common import (dauerlauf, STAGE_LOW, BodyLimit, GateFull, KeyedCORS, PrioGate, api_key_dependency, api_key_ok, check_memory,
                     ENTWICKLER_PLAETZE, LLM_ALIAS, entwickler_ok, inside, load_config, outside_view, quiet_access_log, stage_of)
 
 UNIT_ENGINE, UNIT_SEHEN, UNIT_HELFER = "speech-spark-llm", "speech-spark-sehen", "speech-spark-helfer"
@@ -602,8 +602,8 @@ async def sehen_leerlauf_loop():
 
 @app.on_event("startup")
 async def _start():
-    asyncio.create_task(kanarie_loop())
-    asyncio.create_task(sehen_leerlauf_loop())
+    dauerlauf("llmtor", "kanarie", kanarie_loop)
+    dauerlauf("llmtor", "sehen-leerlauf", sehen_leerlauf_loop)
 
 
 if __name__ == "__main__":

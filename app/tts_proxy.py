@@ -27,7 +27,7 @@ from fastapi.responses import Response, StreamingResponse
 
 import kurzref
 
-from common import (FOLGE_HEADER, BodyLimit, GateFull, KeyedCORS, PrioGate, inside, outside_view, api_key_dependency,
+from common import (dauerlauf, FOLGE_HEADER, BodyLimit, GateFull, KeyedCORS, PrioGate, inside, outside_view, api_key_dependency,
                     api_key_ok, engine_crash_reason, load_config, quiet_access_log, SpeechMark, stage_of, STATE)
 from textnorm import (MAX_INPUT, apply_pronunciations, clean_text, guess_language, hide_secrets, parse_pronunciations,
                       speak_abbreviations, speak_numbers, speech_markdown)
@@ -369,7 +369,7 @@ async def warm_up(role):
 
 @app.on_event("startup")
 async def watch_design():
-    asyncio.create_task(design_leerlauf())
+    dauerlauf("tts", "voicedesign-leerlauf", design_leerlauf)
 
 
 @app.on_event("startup")
@@ -383,7 +383,7 @@ async def watch_engines():
                     await warm_up(role)
                 ready[role] = now
             await asyncio.sleep(5)
-    asyncio.create_task(loop())
+    dauerlauf("tts", "aufwaermen", loop)
 
 
 @app.get("/health")
@@ -436,7 +436,25 @@ async def voices_for_panel(request: Request):
 async def audio_voices():
     _, port = engines()["main"]
     r = await client.get(f"http://127.0.0.1:{port}/v1/audio/voices")
-    return Response(r.content, status_code=r.status_code, media_type="application/json")
+    return Response(ohne_eigene(r.content), status_code=r.status_code, media_type="application/json")
+
+
+def ohne_eigene(content):
+    """The engine's list of voices without the designed ones (EIGENE): they belong to profiles, the panel alone
+    decides who speaks with which (stimmdesign.stimme_ok), and this list goes to every holder of the API key.
+    With the Base model as the main engine the samples sit in its own folder and were listed (code review 2026-11-11)."""
+    try:
+        d = json.loads(content)
+    except ValueError:
+        return content
+    if not isinstance(d, dict):
+        return content
+    if isinstance(d.get("voices"), list):
+        d["voices"] = [v for v in d["voices"] if not (isinstance(v, str) and v.startswith(EIGENE))]
+    if isinstance(d.get("uploaded_voices"), list):
+        d["uploaded_voices"] = [v for v in d["uploaded_voices"]
+                                if not (isinstance(v, dict) and str(v.get("name", "")).startswith(EIGENE))]
+    return json.dumps(d).encode()
 
 
 # Priority for people (panel stufe.py): as many requests at once as the engine takes, the rest wait here

@@ -20,6 +20,9 @@ class Car(th.Base):
     finished = th.Done.finished
 
     def test_only_the_own_finished_ones_newest_first(self):
+        # the piece made over the endpoint gets the module's clock as its moment, the other two th.NOW + …: the
+        # clock stands at th.NOW, else the order turns round once the real day is past th.NOW (15.1.2027)
+        helpers.feste_uhr(self, th.NOW, hoerstueck)
         c, uid, mid, hid, _ = self.finished("Hoerstueckauto")
         with th.quiet():
             waits, _ = hoerstueck.bitte(uid, mid, 5, 2, now=th.NOW + 50)
