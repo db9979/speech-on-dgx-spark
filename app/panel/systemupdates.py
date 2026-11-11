@@ -203,13 +203,21 @@ def opencode_version():
     return werkstatt.OPENCODE_VERSION
 
 
-def opencode_da(rolle):
-    """Whether OpenCode is installed on the panel's computer (Entwickeln auf dem Pi) or the model computer
-    (Werkstatt); the version is the one pin for both."""
+def opencode_hier():
+    """Whether the OpenCode program is really on this computer: Entwickeln auf dem Pi (install.sh --entwickeln,
+    entwickeln.OPENCODE) or the Werkstatt (install.sh --werkstatt, werkstatt.OPENCODE; on one computer both can be
+    here). The real file, never a switch."""
+    import entwickeln
     import werkstatt
+    return any(os.path.isfile(p) and os.access(p, os.X_OK) for p in (entwickeln.OPENCODE, werkstatt.OPENCODE))
+
+
+def opencode_da(rolle, s=None):
+    """Whether OpenCode is installed on the panel's computer (here) or the model computer (its Wärter's state s,
+    sysupdate.fremd: the Werkstatt's program there); the version is the one pin for both."""
     if rolle == "panel":
-        return os.access(werkstatt.OPENCODE, os.X_OK)
-    return features.admin_on("werkstatt")
+        return opencode_hier()
+    return isinstance(s, dict) and s.get("opencode") is True
 
 
 async def check_osv(c=None):
@@ -304,9 +312,9 @@ def _rechner(rolle, d, c, lang):
     name = f"{host} ({NAMEN[rolle][i]})" if host else FALLBACK[rolle][i]
     out = {"rolle": rolle, "name": name, "da": s is not None, "nacht": nacht_an(rolle, c),
            "wartet": int(d["wartet"].get(rolle) or 0), "neustart_nacht": d["neustart_nacht"].get(rolle) == _tag(),
-           "opencode": opencode_da(rolle)}
+           "opencode": opencode_da(rolle, s)}
     if s:
-        out.update(s)
+        out.update({k: v for k, v in s.items() if k != "opencode"})
     return out
 
 

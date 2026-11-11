@@ -15853,7 +15853,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "System-Updates (seit V01.1.322)",
 "title": "System-Updates (seit V01.1.322)",
-"text": "*Funktionen → System-Updates* (aus, nur Admins, nie Gäste, kein Werkzeug für das Sprachmodell; systemupdates.py, sysupdate.py) zeigt unter *Zustand → System-Updates* je Rechner (Pi mit dem Panel, bei Spark teilen auch tars mit den Modellen) die wartenden Betriebssystem-Updates, davon die für die Sicherheit, und jedes Paket als Name alt → neu; dazu das gepinnte OpenCode gegen die neueste Version auf npm, OSV-Warnungen der gepinnten Python-Pakete und Firmware und Treiber (EEPROM, NVIDIA-Treiber, DGX OS). Geprüft wird alle 6 Stunden und mit „Jetzt prüfen“."
+"text": "*Funktionen → System-Updates* (aus, nur Admins, nie Gäste, kein Werkzeug für das Sprachmodell; systemupdates.py, sysupdate.py) zeigt unter *Zustand → System-Updates* je Rechner (Pi mit dem Panel, bei Spark teilen auch tars mit den Modellen) die wartenden Betriebssystem-Updates, davon die für die Sicherheit, und jedes Paket als Name alt → neu; dazu das gepinnte OpenCode gegen die neueste Version auf npm, OSV-Warnungen der gepinnten Python-Pakete und Firmware und Treiber (EEPROM, NVIDIA-Treiber, DGX OS). Geprüft wird alle 6 Stunden und mit „Jetzt prüfen“. OpenCode gilt als installiert, wenn das Programm wirklich da ist: auf dem Pi von *Funktionen → Entwickeln auf dem Pi* (sudo ./install.sh --entwickeln) oder der Werkstatt, auf tars von der Werkstatt (sudo ./install.sh --werkstatt, meldet der Wärter); fehlt es, nennt die Seite den Installationsbefehl."
 },
 {
 "lang": "de",
@@ -32805,7 +32805,7 @@
 "file": "Security and operation",
 "head": "System updates (since V01.1.322)",
 "title": "System updates (since V01.1.322)",
-"text": "*Features → System updates* (off, admins only, never guests, no tool for the language model; systemupdates.py, sysupdate.py) shows under *Status → System updates* for each computer (the Pi with the panel, with Spark split also tars with the models) the waiting operating system updates, those for security, and each package as name old → new; also the pinned OpenCode against the newest version on npm, OSV warnings for the pinned Python packages, and firmware and drivers (EEPROM, NVIDIA driver, DGX OS). It checks every 6 hours and with \"Jetzt prüfen\"."
+"text": "*Features → System updates* (off, admins only, never guests, no tool for the language model; systemupdates.py, sysupdate.py) shows under *Status → System updates* for each computer (the Pi with the panel, with Spark split also tars with the models) the waiting operating system updates, those for security, and each package as name old → new; also the pinned OpenCode against the newest version on npm, OSV warnings for the pinned Python packages, and firmware and drivers (EEPROM, NVIDIA driver, DGX OS). It checks every 6 hours and with \"Jetzt prüfen\". OpenCode counts as installed when the program is really there: on the Pi from *Features → Develop on the Pi* (sudo ./install.sh --entwickeln) or the Workshop, on tars from the Workshop (sudo ./install.sh --werkstatt, reported by the Wärter); when it is missing, the page names the install command."
 },
 {
 "lang": "en",

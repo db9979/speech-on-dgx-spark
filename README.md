@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.375** OpenCode shown correctly: System updates shows OpenCode on the Pi as installed when Develop on the Pi set it up; when it is missing, the install command is shown.
 - **V01.1.374** Design own voices: 20 ready answer voices and up to three of your own from fields and own words, made once with VoiceDesign and then the same in every answer; VoiceDesign loads only when needed
 - **V01.1.373** AI Dungeon Master with a rule depth: Simple or Full instead of 58 switches, the host chooses per round, console tools without a switch, six own switches stay
 - **V01.1.372** New avatar "Wave": no face, a line at rest, a wave with an echo while speaking, in the panel, the apps, the companion and on the Pebble
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.368** Device instead of profile: a "yes" counts only on the device and in the conversation where it was asked, notes know every device on its own, channel answers land in the same main conversation all day
 - **V01.1.367** Ask which way: before a change that could go two ways (mail or message, appointment or reminder) the assistant asks with buttons which one you mean, or just answers; never for reading questions, off by default
 - **V01.1.366** A more precise switch: knowledge questions keep web search and Wikipedia, an emergency number starts no call, a follow-up holds only briefly and with a real reference, "Strassenbahn" and "Wohnzimmerlampe" are understood
-- **V01.1.365** Stopping means off: "Stopp" or "Tschüss" ends the talk everywhere without the model, no microphone opens again afterwards; kill switch stage 3 ends running answers and calls
 
 
 

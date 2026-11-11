@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.375** OpenCode-Anzeige richtig: System-Updates zeigt OpenCode auf dem Pi als installiert, wenn Entwickeln auf dem Pi es eingerichtet hat; fehlt es, steht dort der Installationsbefehl.
 - **V01.1.374** Eigene Stimmen gestalten: 20 fertige Antwortstimmen und bis zu drei eigene aus Feldern und eigenen Worten, einmal mit VoiceDesign gemacht und danach in jeder Antwort gleich; VoiceDesign lädt nur bei Bedarf
 - **V01.1.373** KI-Dungeon-Master mit Regeltiefe: Einfach oder Voll statt 58 Schaltern, der Gastgeber wählt je Runde, Werkzeuge im Spielleiter-Pult ohne Schalter, sechs eigene Schalter bleiben
 - **V01.1.372** Neuer Avatar „Welle“: kein Gesicht, in Ruhe ein Strich, beim Sprechen eine Welle mit Echo, im Panel, in den Apps, im Begleiter und auf der Pebble
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.368** Gerät statt Profil: ein „Ja“ gilt nur auf dem Gerät und im Gespräch, wo gefragt wurde, Mitteilungen kennen jedes Gerät einzeln, Kanal-Antworten landen den ganzen Tag im selben Hauptgespräch
 - **V01.1.367** Rückfrage zum Weg: vor einer Änderung, die zwei Wege gehen könnte (Mail oder Nachricht, Termin oder Erinnerung), fragt der Assistent mit Knöpfen, welcher gemeint ist, oder antwortet einfach; nie bei Lesefragen, standardmäßig aus
 - **V01.1.366** Weiche genauer: Wissensfragen behalten Websuche und Wikipedia, ein Notruf löst keinen Anruf aus, eine Folgefrage gilt nur kurz und mit Rückbezug, „Strassenbahn“ und „Wohnzimmerlampe“ werden verstanden
-- **V01.1.365** Abbrechen heißt aus: „Stopp“ oder „Tschüss“ beendet das Gespräch überall ohne Modell, danach geht kein Mikrofon wieder auf; Notaus Stufe 3 beendet laufende Antworten und Telefonate
 
 
 

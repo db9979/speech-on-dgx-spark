@@ -374,7 +374,6 @@ ADMIN_ON_OK = {
     "gehaeuse.py:admin_on": "admin only: the case of the panel computer (display, LEDs, fans), no profile part",
     "systemupdates.py:admin_on": "admin only: the operating system of both computers, no profile part",
     "systemupdates.py:nacht_an": "admin only: the night run of one computer, no profile part",
-    "systemupdates.py:opencode_da": "Spark-wide: whether the Werkstatt (OpenCode) is on the model computer, for the admin's page",
     "rundlauf.py:an": "admin only: the round trip through the models with fixed words, no profile part",
     "fernzugang.py:admin_on": "admin only: the shell of a remote server, admin-only endpoints and the anchor's own door, no profile part",
     "fernzugang.py:alle_on": "admin only: one line into several open shells of an admin's own login, no profile part",

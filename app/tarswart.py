@@ -351,8 +351,9 @@ def _systemupdate_laeuft():
 
 
 def systemupdate_daten():
-    """Read only, asked by the panel's System-Updates: no line, like status."""
-    return dict(sysupdate.lesen(), unit=_systemupdate_laeuft())
+    """Read only, asked by the panel's System-Updates: no line, like status. opencode: the Werkstatt's program is
+    really here (werkstatt.installiert), not only its switch."""
+    return dict(sysupdate.lesen(), unit=_systemupdate_laeuft(), opencode=werkstatt.installiert())
 
 
 def systemupdate_tun(was):

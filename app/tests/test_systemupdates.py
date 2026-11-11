@@ -442,6 +442,44 @@ class Packages(Base):
         self.assertTrue(su.overview()["opencode"]["neuer"])
         self.assertEqual(run(su.check_opencode(self.Client({"version": "1.0.0; curl x|sh"}), "arm64")), "ValueError")
 
+    def test_opencode_installed_means_the_real_program(self):
+        """Dominik 2026-11-11: install.sh --entwickeln puts OpenCode into entwickeln.OPENCODE, the Werkstatt into
+        werkstatt.OPENCODE; either one on the panel's computer counts, a switch alone never does."""
+        import tempfile
+        import entwickeln
+        import tarswart
+        import werkstatt
+        self.on()
+        d = tempfile.mkdtemp()
+        dev, wk = os.path.join(d, "opencode", "bin", "opencode"), os.path.join(d, "werkstatt", "bin", "opencode")
+        mock.patch.object(entwickeln, "OPENCODE", dev).start()
+        mock.patch.object(werkstatt, "OPENCODE", wk).start()
+
+        def leg(p):
+            os.makedirs(os.path.dirname(p), exist_ok=True)
+            with open(p, "w") as f:
+                f.write("#!/bin/sh\n")
+            os.chmod(p, 0o755)
+        self.assertFalse(su.overview()["rechner"][0]["opencode"])
+        leg(dev)                                              # Entwickeln auf dem Pi only
+        self.assertTrue(su.opencode_da("panel"))
+        self.assertTrue(su.overview()["rechner"][0]["opencode"])
+        os.remove(dev)
+        leg(wk)                                               # the Werkstatt on a computer with both parts
+        self.assertTrue(su.opencode_da("panel"))
+        os.chmod(wk, 0o644)                                   # not runnable: not installed
+        self.assertFalse(su.opencode_da("panel"))
+        # the model computer: what its Wärter reports about the real program, checked as a bool, never the switch
+        self.on(werkstatt=True)
+        self.assertFalse(su.opencode_da("modelle", None))
+        self.assertFalse(su.opencode_da("modelle", sysupdate.fremd({"opencode": "yes"})))
+        self.assertTrue(su.opencode_da("modelle", sysupdate.fremd({"opencode": True})))
+        os.chmod(wk, 0o755)
+        with mock.patch.object(tarswart, "_systemupdate_laeuft", return_value=False):
+            self.assertTrue(tarswart.systemupdate_daten()["opencode"])
+            os.remove(wk)
+            self.assertFalse(tarswart.systemupdate_daten()["opencode"])
+
     def test_check_request_never_installs(self):
         self.on()
         self.assertEqual(ADMIN.post("/api/admin/sysup/pruefbitte", json={}).status_code, 409)   # nothing to check

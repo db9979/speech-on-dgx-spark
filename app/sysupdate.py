@@ -238,7 +238,7 @@ def lesen():
 def fremd(d):
     """The other computer's state as its Wärter sent it (lesen() there), checked again here: data, never orders."""
     d = d if isinstance(d, dict) else {}
-    return dict(sauber({"pruefung": d, "lauf": d.get("lauf")}), unit=d.get("unit") is True)
+    return dict(sauber({"pruefung": d, "lauf": d.get("lauf")}), unit=d.get("unit") is True, opencode=d.get("opencode") is True)
 
 
 def sauber(d):
