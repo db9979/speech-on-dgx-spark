@@ -137,7 +137,7 @@ struct FaceView: View {
     var mic: Float
     /// read every frame: the loudness of what plays right now
     var out: () -> Float
-    /// the face the admin picked in the panel ("robot", "comic" or "comic_woman", from hello)
+    /// the face the admin picked in the panel ("robot", "comic", "comic_woman" or "wave", from hello)
     var kind = "robot"
     /// "Gesicht zeigt, was es tut": the assistant's state of the chat events, nil while the admin switch is off
     var acts: FaceActs? = nil
@@ -145,6 +145,7 @@ struct FaceView: View {
     @State private var robot = RobotFace()
     @State private var comic = ComicFace()
     @State private var comicWoman = ComicFace(woman: true)
+    @State private var wave = WaveFace()
 
     var body: some View {
         TimelineView(.animation) { tl in
@@ -168,6 +169,7 @@ struct FaceView: View {
         switch kind {
         case "comic": return comic
         case "comic_woman": return comicWoman
+        case "wave": return wave
         default: return robot
         }
     }
@@ -222,6 +224,51 @@ struct FaceView: View {
 }
 
 /// The robot from the panel: halo, antenna, rounded head, visor with glowing eyes and mouth.
+/// "wave" (V01.1.372, Dominik 2026-11-11 „Hüllkurve“), the same as the panel (face.js waveSvg, wavePath,
+/// waveFrame): no face, on a calm tile one line that runs out softly at both ends; while it speaks the middle
+/// swings with the loudness of what plays, a faint echo behind it; listening follows the microphone, thinking
+/// is a small slow swing. System blue (the panel's accent), red when something went wrong.
+/// A class: it keeps its amplitude and phase between frames.
+final class WaveFace: FaceStyle {
+    private var amp = 0.0, phase = 0.0, last = 0.0
+
+    private static func path(_ a: Double, _ ph: Double) -> Path {
+        var p = Path()
+        guard a >= 0.05 else { p.move(to: CGPoint(x: 24, y: 100)); p.addLine(to: CGPoint(x: 176, y: 100)); return p }
+        for i in 0...64 {
+            let t = Double(i) / 64, e = exp(-((t - 0.5) * (t - 0.5)) / 0.0512)
+            let pt = CGPoint(x: 24 + 152 * t, y: 100 + a * e * sin(28.27 * t + ph))
+            if i == 0 { p.move(to: pt) } else { p.addLine(to: pt) }
+        }
+        return p
+    }
+
+    func draw(_ ctx: inout GraphicsContext, _ p: FacePose) {
+        let dt = min(0.05, last == 0 ? 0 : max(0, p.now - last)); last = p.now
+        let target: Double
+        switch p.mood {
+        case .speak: target = 6 + max(p.out, p.open / 16) * 30
+        case .listen: target = 2 + p.mic * 16
+        case .think, .search, .calendar, .mail, .home, .memory: target = 5
+        default: target = 0
+        }
+        amp += (target - amp) * min(1, dt * (target > amp ? 18 : 6))
+        phase += dt * (p.mood == .speak ? 9 : p.mood == .listen ? 6 : 3)
+        let tile = Path(roundedRect: CGRect(x: 1, y: 1, width: 198, height: 198), cornerRadius: 44)
+        ctx.fill(tile, with: .color(Color(uiColor: .secondarySystemBackground)))
+        ctx.stroke(tile, with: .color(Color(uiColor: .separator)), lineWidth: 1.5)
+        let c: Color = p.mood == .sad || p.mood == .error ? .red : .blue
+        let fade = GraphicsContext.Shading.linearGradient(
+            Gradient(stops: [.init(color: c.opacity(0), location: 0), .init(color: c, location: 0.2),
+                             .init(color: c, location: 0.8), .init(color: c.opacity(0), location: 1)]),
+            startPoint: CGPoint(x: 20, y: 100), endPoint: CGPoint(x: 180, y: 100))
+        var echo = ctx
+        echo.opacity = 0.35
+        echo.stroke(Self.path(amp * 0.6, phase + 2.2), with: fade, lineWidth: 2)
+        ctx.stroke(Self.path(amp, phase), with: fade, style: StrokeStyle(lineWidth: 3.5, lineCap: .round, lineJoin: .round))
+    }
+}
+
 struct RobotFace: FaceStyle {
     private static let acc = Color(red: 0.36, green: 0.36, blue: 0.94)
     private static let acc2 = Color(red: 0.05, green: 0.65, blue: 0.78)

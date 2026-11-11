@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.372** Neuer Avatar „Welle“: kein Gesicht, in Ruhe ein Strich, beim Sprechen eine Welle mit Echo, im Panel, in den Apps, im Begleiter und auf der Pebble
 - **V01.1.371** Schlankere Doku: die Anleitung beschreibt nur noch den heutigen Stand (Werdegang steht im CHANGELOG), das CHANGELOG beginnt bei V01.1 mit der älteren Reihe in CHANGELOG-V01.0.md, die Richtlinie ohne Herkunftsangaben
 - **V01.1.370** Nur noch das eigene Sprachmodell: der Rückfall auf qwen38 ist weg, und unter Modelle stehen nur Modelle, die laufen oder gemessen wurden
 - **V01.1.369** Hilfsmodell mit einem Schalter: eingeschaltet hilft es überall, wo es kann, statt fünf einzelner Schalter
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.365** Abbrechen heißt aus: „Stopp“ oder „Tschüss“ beendet das Gespräch überall ohne Modell, danach geht kein Mikrofon wieder auf; Notaus Stufe 3 beendet laufende Antworten und Telefonate
 - **V01.1.364** Hörstück als Diskussion (Teil 2 und 3): jeder Beitrag mit Sprechweise, jede Rolle mit gewählter Stimme samt Probe, Pausen passend zum Wechsel, kurze Rückmeldungen wie „Mhm.“ dazwischen; eine Hörprobe von zwei Minuten für den Admin, nach einem Tag weg; die iPhone-App zeigt Kapitel und Gesprächs-Hinweise
 - **V01.1.363** iPhone und CarPlay stabil: nach Stopp, Anruf oder wenn das Auto weg ist, geht das Mikrofon nicht mehr von selbst auf; Radio und Musik kommen zurück, eine Rückfrage-Liste im Dungeon, 30 Sekunden für alles im Auto, neu koppeln mit anderem Profil räumt auf
-- **V01.1.362** Hörstück als Diskussion (Teil 1): mit dem neuen Schalter wird das Hörstück ein Gespräch in Kapiteln mit Rückfragen und Widerspruch statt Satz für Satz; jede Zahl bleibt belegt, Fragen und Reaktionen tragen „Gespräch“
 
 
 

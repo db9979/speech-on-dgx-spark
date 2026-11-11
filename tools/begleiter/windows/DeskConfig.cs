@@ -105,7 +105,7 @@ internal sealed class DeskConfig
     /// <summary>Kaffee-Link aus dem Panel (nur https://buymeacoffee.com/…), sonst <c>null</c>.</summary>
     public string? Coffee { get; set; }
 
-    /// <summary>Gesicht, das der Admin im Panel gewählt hat: "robot", "comic" oder "comic_woman" (Unbekanntes bleibt Roboter).</summary>
+    /// <summary>Gesicht, das der Admin im Panel gewählt hat: "robot", "comic", "comic_woman" oder "wave" (Unbekanntes bleibt Roboter).</summary>
     public string Face { get; set; } = "robot";
     /// <summary>Antworten vorlesen of the profile (panel): off = Frag Spark never reads answers aloud.</summary>
     public bool Aloud { get; set; } = true;
@@ -208,7 +208,7 @@ internal sealed class DeskConfig
 
         config.Coffee = CoffeeLink.Accept(Json.Str(json["coffee"]));
         string? face = Json.Str(json["face"]);
-        config.Face = face is "comic" or "comic_woman" ? face : "robot";
+        config.Face = face is "comic" or "comic_woman" or "wave" ? face : "robot";
         config.Aloud = Json.Bool(json["aloud"]) ?? true;
         config.Fern = Json.Bool(json["fern"]) ?? false;
 

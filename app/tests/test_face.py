@@ -61,10 +61,12 @@ class Face(unittest.TestCase):
 
     def test_browser_draws_only_known_faces(self):
         js = read("js", "face.js")
-        self.assertIn("window.setFaceKind=k=>{k=k==='comic'||k==='comic_woman'?k:'robot';", js)
+        self.assertIn("window.setFaceKind=k=>{k=faceOk(k)?k:'robot';", js)
         # every face the admin can pick has a drawing, and only fixed drawings are mounted
         self.assertIn("const COMICS={comic:[COMIC,comicSvg],comic_woman:[COMIC_W,comicWSvg]};", js)
-        self.assertEqual(set(FACES), {"robot", "comic", "comic_woman"})
+        self.assertEqual(set(FACES), {"robot", "comic", "comic_woman", "wave"})
+        self.assertIn("FACE_KIND==='wave'?mountWave(el,sfx):mountRobot(el,sfx)", js)
+        self.assertIn("if(vis[0].wave)return waveFrame(vis,mode,out,mic,now);", js)
         self.assertNotIn("innerHTML=k", js)
         self.assertIn("setFaceKind(who.face)", read("js", "start.js"))
 
@@ -73,7 +75,7 @@ class Face(unittest.TestCase):
         js, css = read("js", "face.js"), read("app.css")
         self.assertIn("function faceIcon(){document.body.dataset.face=FACE_KIND;", js)
         self.assertIn("mountAll();faceIcon()};", js)
-        for kind in FACES[1:]:
+        for kind in FACES[1:]:   # comic faces: a still as --avface; the wave: the line on the card, from CSS only
             self.assertIn(f"body[data-face={kind}] .av", css)
             self.assertIn(f"body[data-face={kind}] .av i", css)
         self.assertIn("{background:var(--avface) center/cover no-repeat}", css)
@@ -98,25 +100,30 @@ class FacesInTheApps(unittest.TestCase):
             return f.read()
 
     def test_iphone_app(self):
-        self.assertIn('["comic", "comic_woman"].contains(f) ? f : "robot"', self.src("ios", "Shared", "SparkAPI.swift"))
+        self.assertIn('["comic", "comic_woman", "wave"].contains(f) ? f : "robot"', self.src("ios", "Shared", "SparkAPI.swift"))
         face = self.src("ios", "Spark", "Face.swift")
         for kind in FACES[1:]:
             self.assertIn(f'case "{kind}": return', face)
         self.assertIn("ComicFace(woman: true)", face)
+        self.assertIn('case "wave": style = WaveFace()', self.src("ios", "Spark", "CarPlayScene.swift"))
+        self.assertIn('Text("Welle").tag("wave")', self.src("ios", "Spark", "Views.swift"))
 
     def test_companions(self):
         mac = self.src("tools", "begleiter", "mac", "Sources", "ComicFace.swift")
         self.assertIn('case comicWoman = "comic_woman"', mac)
+        self.assertIn("case robot, comic, wave", mac)
         self.assertIn("FaceKind(rawValue: any as? String ?? \"\") ?? .robot", mac)
         win = self.src("tools", "begleiter", "windows", "DeskConfig.cs")
-        self.assertIn('config.Face = face is "comic" or "comic_woman" ? face : "robot";', win)
+        self.assertIn('config.Face = face is "comic" or "comic_woman" or "wave" ? face : "robot";', win)
         tray = self.src("tools", "begleiter", "windows", "TrayContext.cs")
         self.assertEqual(tray.count('Face.ComicWoman = '), 2)
+        self.assertEqual(tray.count('Face.Wave = '), 2)
 
     def test_pebble(self):
-        self.assertIn("var FACES = {robot: 0, comic: 1, comic_woman: 2};", self.src("pebble", "src", "pkjs", "index.js"))
+        self.assertIn("var FACES = {robot: 0, comic: 1, comic_woman: 2, wave: 3};", self.src("pebble", "src", "pkjs", "index.js"))
         face = self.src("pebble", "src", "c", "face.c")
-        self.assertIn("s_kind = kind == 1 || kind == 2 ? kind : 0;", face)
+        self.assertIn("s_kind = kind >= 1 && kind <= 3 ? kind : 0;", face)
+        self.assertIn("if (s_kind == 3) draw_wave(layer, ctx);", face)
         # the woman's shapes come from the same generator as the comic face
         shapes = self.src("pebble", "src", "c", "comic_shapes.h")
         for name in ("COMIC_W_FACE", "COMIC_W_FRONT", "COMIC_W_BACK"):

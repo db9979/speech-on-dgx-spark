@@ -20660,6 +20660,16 @@
           }
         }
       }
+    },
+    "Welle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wave"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

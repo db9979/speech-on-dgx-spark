@@ -71,6 +71,7 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
         _desk = _config.IsPaired ? _config.Desk : null;
         Face.Comic = _desk?.Face == "comic";
         Face.ComicWoman = _desk?.Face == "comic_woman";
+        Face.Wave = _desk?.Face == "wave";
         Face.InHeader = _config.ShowFace;
         _connection = _config.IsPaired ? Connection.Unknown : Connection.Unpaired;
         _updater = new Updater(Credentials);
@@ -359,6 +360,7 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
         _config.Desk = desk;
         Face.Comic = desk.Face == "comic";
         Face.ComicWoman = desk.Face == "comic_woman";
+        Face.Wave = desk.Face == "wave";
         if (!string.IsNullOrEmpty(desk.Profile))
         {
             _config.Profile = desk.Profile;

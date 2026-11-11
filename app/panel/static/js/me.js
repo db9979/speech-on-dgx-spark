@@ -824,7 +824,7 @@ async function renderSet(el,vals,onchange){const admin=!onchange;await setReady(
   let prev;el.innerHTML=fields.map(f=>{let ctl;const id='set_'+el.id+'_'+f.k;
     if(f.type==='bool')ctl=`<label class="tgl"><input type="checkbox" id="${id}"${v[f.k]?' checked':''}><i></i></label>`;
     else if(f.type==='sel')ctl=`<select id="${id}">${opts(f).map(([a,b])=>`<option value="${a}"${String(v[f.k])===a?' selected':''}>${esc(b)}</option>`).join('')}</select>`;
-    else if(f.type==='face'){const nm={robot:t('Roboter','Robot'),comic:'Comic',comic_woman:t('Comic (Frau)','Comic (woman)')},sp=window.faceSpark?faceSpark():'robot';
+    else if(f.type==='face'){const nm={robot:t('Roboter','Robot'),comic:'Comic',comic_woman:t('Comic (Frau)','Comic (woman)'),wave:t('Welle','Wave')},sp=window.faceSpark?faceSpark():'robot';
       ctl=`<select id="${id}" class="facesel" data-noseg>${opts(f).map(([a])=>[a,a?nm[a]||a:t('Vorgabe','Default')+' ('+nm[sp]+')'])
         .map(([a,b])=>`<option value="${a}"${a?'':` data-short="${esc(t('Vorgabe','Default'))}"`}${(v[f.k]||'')===a?' selected':''}>${esc(b)}</option>`).join('')}</select>`}
     else if(f.type==='text')ctl=`<textarea id="${id}" rows="3" maxlength="${f.max}">${esc(v[f.k]||'')}</textarea>`;

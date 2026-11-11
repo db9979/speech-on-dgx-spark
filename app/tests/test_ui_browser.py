@@ -409,6 +409,13 @@ class Browser(unittest.TestCase):
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#fabface [data-p],#fabface .feyeL').length"), 0, kind)
                         if kind == "robot":
                             continue
+                        if kind == "wave":
+                            # no face: the line in the accent on the card, at rest straight; the answer's picture is the line too
+                            self.assertEqual(await pg.evaluate("document.querySelector('#face [data-p=main]').getAttribute('d')"), "M24 100H176")
+                            self.assertEqual(await pg.evaluate("document.querySelectorAll('#face [data-p=echo]').length"), 1)
+                            self.assertTrue(await pg.evaluate("(()=>{const i=document.createElement('i');i.style.color='var(--acc)';document.body.append(i);"
+                                                              "const c=getComputedStyle(i).color;i.remove();return c===getComputedStyle(document.querySelector('#face svg.wave')).color})()"))
+                            continue
                         await self.until(pg, "!!document.querySelector('#face [data-p=ml]').getAttribute('d')")
                         lips = await pg.evaluate("[...document.querySelectorAll('#face [data-p=lipT],#face [data-p=lipB]')]"
                                                  ".map(e=>e.getAttribute('d')||'')")

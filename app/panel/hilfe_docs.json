@@ -589,7 +589,7 @@
 "file": "APIs und Einbinden",
 "head": "Pebble-Uhr",
 "title": "Pebble-Uhr",
-"text": "dy), nochmal SELECT stoppt die Sprache, lang SELECT beginnt ein neues Gespräch. Ein kleines Gesicht oben zeigt, ob Spark zuhört, nachdenkt oder spricht; der Mund folgt der Sprache. Es ist dasselbe Gesicht wie im Panel (Roboter, Comic oder Comic (Frau), *Einstellungen → Assistent*), die Uhr übernimmt es mit der nächsten Antwort. In der Pebble-App: Settings → Sounds & Haptics → Volume begrenzt, wie laut die App werden kann."
+"text": "dy), nochmal SELECT stoppt die Sprache, lang SELECT beginnt ein neues Gespräch. Ein kleines Gesicht oben zeigt, ob Spark zuhört, nachdenkt oder spricht; der Mund folgt der Sprache. Es ist dasselbe Gesicht wie im Panel (Roboter, Comic, Comic (Frau) oder Welle, *Einstellungen → Assistent*), die Uhr übernimmt es mit der nächsten Antwort. In der Pebble-App: Settings → Sounds & Haptics → Volume begrenzt, wie laut die App werden kann."
 },
 {
 "lang": "de",
@@ -4509,7 +4509,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "Der Assistent braucht das Mikrofon, das Browser nur über https erlauben; das Panel läuft daher auch auf https://SPARK:31443 mit selbst erstelltem Zertifikat (einmalige Browserwarnung). Die LLM-Verbindung steht unter Einstellungen → Sprachmodell (Standard: das eigene Sprachmodell hinter dem LLM-Tor, http://127.0.0.1:31006/v1). „Modell“ bietet die Modelle an, die der Server meldet (/v1/models, nur Admin, 60 Sekunden zwischengespeichert, „Neu laden“ fragt sofort); „Automatisch“ nimmt das erste, „Anderes eingeben …“ öffnet ein Textfeld, das auch bleibt (mit Grund), wenn die Liste nicht abrufbar ist. Nachdenken ist im Chat aus, damit die Antwort sofort beginnt. Ein animiertes Gesicht zeigt Zuhören, Nachdenken und Sprechen, der Mund folgt der Stimme; es steht nur im Assistenten, auf allen anderen Seiten startet „Frag Spark“ oben (Rechner: neben „Spark“ in der Seitenleiste, Handy: Leiste oben) das Sprechen. Gesichter: *Roboter* (Standard), *Comic* (Stachelhaare, kurzer Schnurrbart über der Oberlippe) und *Comic (Frau)* (lange dunkle Haare, Seitenscheitel, Wimpern, Lippen öffnen sich beim Sprechen). Die Comic-Gesichter schauen umher, blinzeln, heben die Brauen, neigen den Kopf und zeigen d"
+"text": "Der Assistent braucht das Mikrofon, das Browser nur über https erlauben; das Panel läuft daher auch auf https://SPARK:31443 mit selbst erstelltem Zertifikat (einmalige Browserwarnung). Die LLM-Verbindung steht unter Einstellungen → Sprachmodell (Standard: das eigene Sprachmodell hinter dem LLM-Tor, http://127.0.0.1:31006/v1). „Modell“ bietet die Modelle an, die der Server meldet (/v1/models, nur Admin, 60 Sekunden zwischengespeichert, „Neu laden“ fragt sofort); „Automatisch“ nimmt das erste, „Anderes eingeben …“ öffnet ein Textfeld, das auch bleibt (mit Grund), wenn die Liste nicht abrufbar ist. Nachdenken ist im Chat aus, damit die Antwort sofort beginnt. Ein animiertes Gesicht zeigt Zuhören, Nachdenken und Sprechen, der Mund folgt der Stimme; es steht nur im Assistenten, auf allen anderen Seiten startet „Frag Spark“ oben (Rechner: neben „Spark“ in der Seitenleiste, Handy: Leiste oben) das Sprechen. Gesichter: *Roboter* (Standard), *Comic* (Stachelhaare, kurzer Schnurrbart über der Oberlippe) *Comic (Frau)* (lange dunkle Haare, Seitenscheitel, Wimpern, Lippen öffnen sich beim Sprechen) und *Welle* (kein Gesicht: auf einer ruhigen Kachel ein Strich mit weich auslaufenden Enden; bei"
 },
 {
 "lang": "de",
@@ -4517,7 +4517,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "en Zustand mit einem Ring: grau Ruhe, blau zuhören, gelb nachdenken, grün sprechen, rot Fehler. Jedes Profil wählt sein Gesicht unter Ich → Gespräch → *Anzeige* (*Vorgabe*, *Roboter*, *Comic*, *Comic (Frau)*), gültig auf allen seinen Geräten (Panel, iPhone-App unter Einstellungen → *Gesicht*, Begleiter als ruhendes Bild, Pebble); *Vorgabe* nimmt die Wahl des Admins unter Einstellungen → Vorgaben → *Gesicht*, die für Gäste, geteilte Geräte und alle ohne eigene Wahl gilt; die Vorgaben kopieren nie ein Gesicht ins Profil. Der Server nimmt nur feste Namen an (profiles.FACES), alle Geräte fragen über profiles.face_of; weitere Gesichter kommen in static/js/face.js. Auch das kleine Bild vor jeder Antwort zeigt das gewählte Gesicht. Der Schalter „Gesicht zeigt, was es tut“ (aus) zeigt neben dem Kopf ein Zeichen, nur aus Panel-Ereignissen, nie aus dem Modelltext: Lupe bei Suche (Netz, Dokumente, frühere Gespräche), Kalenderblatt bei Kalender und Briefing, Brief bei Mails, Glühbirne bei Home Assistant, Notizblock bei Merken und Erinnerungen, Denkblasen beim Nachdenken. Nach einer erledigten Aktion freut es sich und zwinkert, bei Fehlern schaut es ratlos mit Fragezeichen, nach 5 Minuten ohne "
+"text": "m Sprechen schwingt die Mitte mit der Lautstärke, dahinter ein leises Echo, beim Zuhören folgt sie dem Mikrofon, bei einem Fehler wird sie rot; Farben nur aus dem Panel, hell und dunkel von selbst; Begleiter als ruhendes Bild, Pebble als Linie). Die Comic-Gesichter schauen umher, blinzeln, heben die Brauen, neigen den Kopf und zeigen den Zustand mit einem Ring: grau Ruhe, blau zuhören, gelb nachdenken, grün sprechen, rot Fehler. Jedes Profil wählt sein Gesicht unter Ich → Gespräch → *Anzeige* (*Vorgabe*, *Roboter*, *Comic*, *Comic (Frau)*, *Welle*), gültig auf allen seinen Geräten (Panel, iPhone-App unter Einstellungen → *Gesicht*, Begleiter als ruhendes Bild, Pebble); *Vorgabe* nimmt die Wahl des Admins unter Einstellungen → Vorgaben → *Gesicht*, die für Gäste, geteilte Geräte und alle ohne eigene Wahl gilt; die Vorgaben kopieren nie ein Gesicht ins Profil. Der Server nimmt nur feste Namen an (profiles.FACES), alle Geräte fragen über profiles.face_of; weitere Gesichter kommen in static/js/face.js. Auch das kleine Bild vor jeder Antwort zeigt das gewählte Gesicht. Der Schalter „Gesicht zeigt, was es tut“ (aus) zeigt neben dem Kopf ein Zeichen, nur aus Panel-Ereignissen, nie aus dem"
 },
 {
 "lang": "de",
@@ -4525,7 +4525,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "Gespräch und Bedienung schläft es („zzz“); Tippen, Taste oder Maus wecken es."
+"text": " Modelltext: Lupe bei Suche (Netz, Dokumente, frühere Gespräche), Kalenderblatt bei Kalender und Briefing, Brief bei Mails, Glühbirne bei Home Assistant, Notizblock bei Merken und Erinnerungen, Denkblasen beim Nachdenken. Nach einer erledigten Aktion freut es sich und zwinkert, bei Fehlern schaut es ratlos mit Fragezeichen, nach 5 Minuten ohne Gespräch und Bedienung schläft es („zzz“); Tippen, Taste oder Maus wecken es."
 },
 {
 "lang": "de",
@@ -10549,7 +10549,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Begleiter mit dem gewählten Gesicht",
-"text": "Begleiter mit dem gewählten Gesicht: Der Begleiter zeigt das unter Einstellungen → Vorgaben gewählte Gesicht (Roboter, Comic oder Comic (Frau)) in allen Fenstern und im Symbol; ein Wechsel kommt mit dem nächsten Abruf an. Das Comic-Gesicht ist im Begleiter ein ruhendes Bild."
+"text": "Begleiter mit dem gewählten Gesicht: Der Begleiter zeigt das unter Einstellungen → Vorgaben gewählte Gesicht (Roboter, Comic, Comic (Frau) oder Welle) in allen Fenstern und im Symbol; ein Wechsel kommt mit dem nächsten Abruf an. Das Comic-Gesicht ist im Begleiter ein ruhendes Bild."
 },
 {
 "lang": "de",
@@ -15381,7 +15381,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Benutzen",
 "title": "Benutzen",
-"text": "- Oben das Gesicht des Assistenten, dasselbe wie im Panel (Roboter, Comic oder Comic (Frau); seit V01.0.521 wählst du es selbst ganz oben unter Einstellungen → *Gesicht* in der App oder im Panel unter Ich → Gespräch, sonst gilt die Vorgabe des Admins; die App übernimmt es beim Öffnen und nach der Wahl, mit dem nächsten TestFlight-Build): es blinzelt, schaut umher, hört mit roter Antenne zu, denkt mit kreisendem Bogen und bewegt beim Sprechen den Mund. Antippen ist wie der Knopf. Ist im Panel „Gesicht zeigt, was es tut“ an (V01.0.323), zeigt das Gesicht in der App dasselbe wie im Panel: Lupe beim Suchen, Kalenderblatt, Brief, Glühbirne beim Smart Home, Notizblock beim Merken, Denkblasen, Haken mit Zwinkern nach einer erledigten Aktion, Fragezeichen bei einem Fehler und „zzz“ nach 5 Minuten Ruhe. Ausgelöst nur von den Ereignissen des Spark, nie vom Text der Antwort. - Großer Knopf: tippen, sprechen, die App merkt selbst, wann du fertig bist (oder nochmal tippen). Während der Spark spricht, hält Tippen ihn an. - Unten kann man die Frage auch schreiben. Oben links beginnt ein neues Gespräch; nach 10 Minuten Pause beginnt es von selbst neu. - „Hey Siri, Frag Spark“ (oder „Hey Siri, Spar"
+"text": "- Oben das Gesicht des Assistenten, dasselbe wie im Panel (Roboter, Comic, Comic (Frau) oder Welle; seit V01.0.521 wählst du es selbst ganz oben unter Einstellungen → *Gesicht* in der App oder im Panel unter Ich → Gespräch, sonst gilt die Vorgabe des Admins; die App übernimmt es beim Öffnen und nach der Wahl, mit dem nächsten TestFlight-Build): es blinzelt, schaut umher, hört mit roter Antenne zu, denkt mit kreisendem Bogen und bewegt beim Sprechen den Mund. Antippen ist wie der Knopf. Ist im Panel „Gesicht zeigt, was es tut“ an (V01.0.323), zeigt das Gesicht in der App dasselbe wie im Panel: Lupe beim Suchen, Kalenderblatt, Brief, Glühbirne beim Smart Home, Notizblock beim Merken, Denkblasen, Haken mit Zwinkern nach einer erledigten Aktion, Fragezeichen bei einem Fehler und „zzz“ nach 5 Minuten Ruhe. Ausgelöst nur von den Ereignissen des Spark, nie vom Text der Antwort. - Großer Knopf: tippen, sprechen, die App merkt selbst, wann du fertig bist (oder nochmal tippen). Während der Spark spricht, hält Tippen ihn an. - Unten kann man die Frage auch schreiben. Oben links beginnt ein neues Gespräch; nach 10 Minuten Pause beginnt es von selbst neu. - „Hey Siri, Frag Spark“ (oder „Hey Sir"
 },
 {
 "lang": "de",
@@ -15389,7 +15389,7 @@
 "file": "iPhone-App „Spark“",
 "head": "Benutzen",
 "title": "Benutzen",
-"text": "k fragen“): Siri fragt nach der Frage und liest die Antwort vor."
+"text": "i, Spark fragen“): Siri fragt nach der Frage und liest die Antwort vor."
 },
 {
 "lang": "de",
@@ -18269,7 +18269,7 @@
 "file": "APIs and integration",
 "head": "Pebble watch",
 "title": "Pebble watch",
-"text": "The phone must reach the Spark, at home over Wi-Fi, on the road through a VPN such as Tailscale or the address on the road (below). The app uses HTTP because the Pebble app does not trust the self-signed certificate. On the Spark, POST /api/watch/ask and GET /api/watch/poll serve it: the answer is made like in the voice chat (kept short), the audio is compressed for the small speaker (quiet syllables lifted, peaks softly limited) and goes to the watch as 8 kHz IMA ADPCM. Watch and phone retry lost messages; after 30 s without a message the watch gives up. At the end the phone sends the times to POST /api/watch/report; *Status → Logs* then shows one line watch: zeit … per answer in the area \"Watch\" (dictation, first text, first sound, done, retries, outcome). The watch shows the same face as the panel (robot, comic or comic woman), taken over with the next answer."
+"text": "The phone must reach the Spark, at home over Wi-Fi, on the road through a VPN such as Tailscale or the address on the road (below). The app uses HTTP because the Pebble app does not trust the self-signed certificate. On the Spark, POST /api/watch/ask and GET /api/watch/poll serve it: the answer is made like in the voice chat (kept short), the audio is compressed for the small speaker (quiet syllables lifted, peaks softly limited) and goes to the watch as 8 kHz IMA ADPCM. Watch and phone retry lost messages; after 30 s without a message the watch gives up. At the end the phone sends the times to POST /api/watch/report; *Status → Logs* then shows one line watch: zeit … per answer in the area \"Watch\" (dictation, first text, first sound, done, retries, outcome). The watch shows the same face as the panel (robot, comic, comic woman or wave), taken over with the next answer."
 },
 {
 "lang": "en",
@@ -22093,7 +22093,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "The Assistant page needs the microphone, which browsers only allow over https; the panel therefore also listens on https://SPARK:31443 with a self-signed certificate (one browser warning). The LLM connection is under Settings → Language model (default: the own language model behind the LLM-Tor, http://127.0.0.1:31006/v1). \"Model\" offers the models the server reports (/v1/models, admin only, kept 60 seconds, \"Reload\" asks at once); \"Automatic\" takes the first, \"Type another …\" opens a text field, which also stays (with the reason) when the list cannot be read. Thinking is off for the chat so the answer starts at once. An animated face shows listening, thinking and speaking, its mouth follows the voice; it stands only in the assistant, on every other page \"Ask Spark\" at the top (computer: next to \"Spark\" in the side menu, phone: top bar) starts talking. Faces: *Robot* (default), *Comic* (spiky hair, short mustache above the upper lip) and *Comic (woman)* (long dark hair, side parting, lashes, lips that open when speaking). The comic faces look around, blink, raise their brows, tilt their head and show the state with a ring: grey idle, blue listening, yellow thinking, green speaking, "
+"text": "The Assistant page needs the microphone, which browsers only allow over https; the panel therefore also listens on https://SPARK:31443 with a self-signed certificate (one browser warning). The LLM connection is under Settings → Language model (default: the own language model behind the LLM-Tor, http://127.0.0.1:31006/v1). \"Model\" offers the models the server reports (/v1/models, admin only, kept 60 seconds, \"Reload\" asks at once); \"Automatic\" takes the first, \"Type another …\" opens a text field, which also stays (with the reason) when the list cannot be read. Thinking is off for the chat so the answer starts at once. An animated face shows listening, thinking and speaking, its mouth follows the voice; it stands only in the assistant, on every other page \"Ask Spark\" at the top (computer: next to \"Spark\" in the side menu, phone: top bar) starts talking. Faces: *Robot* (default), *Comic* (spiky hair, short mustache above the upper lip) *Comic (woman)* (long dark hair, side parting, lashes, lips that open when speaking) and *Wave* (no face: on a calm tile one line that runs out softly at both ends; while speaking the middle swings with the loudness, a faint echo behind it, while listen"
 },
 {
 "lang": "en",
@@ -22101,7 +22101,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "red error. Every profile picks its face under Me → Conversation → *Display* (*Default*, *Robot*, *Comic*, *Comic (woman)*), valid on all its devices (panel, iPhone app under Settings → *Face*, companions as a still, Pebble); *Default* takes the admin's pick under Settings → Defaults → *Face*, which applies to guests, shared devices and everybody without an own pick; the presets never copy a face into a profile. The server only takes fixed names (profiles.FACES), every device asks through profiles.face_of; more faces go into static/js/face.js. The small picture before each answer shows the chosen face too. The switch \"Gesicht zeigt, was es tut\" (off) shows a sign beside the head, taken only from panel events, never from the model's text: a magnifier for searches (web, documents, earlier conversations), a calendar sheet for calendar and briefing, a letter for mail, a light bulb for Home Assistant, a note pad for memory and reminders, thought bubbles while thinking. After a completed action it is pleased and winks, on errors it looks puzzled with a question mark, after 5 minutes without conversation or use it sleeps (\"zzz\"); a tap, key or the mouse wake it."
+"text": "ing it follows the microphone, on an error it turns red; colours only from the panel, light and dark by themselves; companions as a still, Pebble as a line). The comic faces look around, blink, raise their brows, tilt their head and show the state with a ring: grey idle, blue listening, yellow thinking, green speaking, red error. Every profile picks its face under Me → Conversation → *Display* (*Default*, *Robot*, *Comic*, *Comic (woman)*, *Wave*), valid on all its devices (panel, iPhone app under Settings → *Face*, companions as a still, Pebble); *Default* takes the admin's pick under Settings → Defaults → *Face*, which applies to guests, shared devices and everybody without an own pick; the presets never copy a face into a profile. The server only takes fixed names (profiles.FACES), every device asks through profiles.face_of; more faces go into static/js/face.js. The small picture before each answer shows the chosen face too. The switch \"Gesicht zeigt, was es tut\" (off) shows a sign beside the head, taken only from panel events, never from the model's text: a magnifier for searches (web, documents, earlier conversations), a calendar sheet for calendar and briefing, a letter for m"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "ail, a light bulb for Home Assistant, a note pad for memory and reminders, thought bubbles while thinking. After a completed action it is pleased and winks, on errors it looks puzzled with a question mark, after 5 minutes without conversation or use it sleeps (\"zzz\"); a tap, key or the mouse wake it."
 },
 {
 "lang": "en",
@@ -27965,7 +27973,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Companion with the chosen face",
-"text": "Companion with the chosen face: the companion shows the face picked under Settings → Defaults (robot, comic or comic woman) in every window and the icon; a change arrives with the next check. In the companion the comic face is a still picture."
+"text": "Companion with the chosen face: the companion shows the face picked under Settings → Defaults (robot, comic, comic woman or wave) in every window and the icon; a change arrives with the next check. In the companion the comic face is a still picture."
 },
 {
 "lang": "en",
@@ -32717,7 +32725,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Using it",
 "title": "Using it",
-"text": "- The assistant's face at the top is the same as in the panel (robot, comic or comic woman; since V01.0.521 you pick it yourself at the top of Settings → *Face* in the app or in the panel under Me → Conversation, else the admin's default applies; the app takes it over when it opens and after the pick, with the next TestFlight build). It blinks, looks around, listens with a red antenna, thinks with a turning arc and moves its mouth while speaking. Tapping it works like the button. With \"Face shows what it does\" on in the panel (V01.0.323), the app's face shows the same as the panel: a magnifier while searching, a calendar sheet, a letter, a light bulb for the smart home, a note pad when remembering, think bubbles, a tick with a wink after something was done, a question mark on an error and \"zzz\" after 5 quiet minutes. Driven only by the Spark's events, never by the answer's text. - Big button: tap, speak; the app notices when you are done (or tap again). Tapping while the Spark speaks stops it. - Questions can also be typed. Top left starts a new conversation; after 10 minutes of quiet it starts anew by itself. - \"Hey Siri, Frag Spark\" (or \"Hey Siri, Spark fragen\"): Siri asks for th"
+"text": "- The assistant's face at the top is the same as in the panel (robot, comic, comic woman or wave; since V01.0.521 you pick it yourself at the top of Settings → *Face* in the app or in the panel under Me → Conversation, else the admin's default applies; the app takes it over when it opens and after the pick, with the next TestFlight build). It blinks, looks around, listens with a red antenna, thinks with a turning arc and moves its mouth while speaking. Tapping it works like the button. With \"Face shows what it does\" on in the panel (V01.0.323), the app's face shows the same as the panel: a magnifier while searching, a calendar sheet, a letter, a light bulb for the smart home, a note pad when remembering, think bubbles, a tick with a wink after something was done, a question mark on an error and \"zzz\" after 5 quiet minutes. Driven only by the Spark's events, never by the answer's text. - Big button: tap, speak; the app notices when you are done (or tap again). Tapping while the Spark speaks stops it. - Questions can also be typed. Top left starts a new conversation; after 10 minutes of quiet it starts anew by itself. - \"Hey Siri, Frag Spark\" (or \"Hey Siri, Spark fragen\"): Siri asks "
 },
 {
 "lang": "en",
@@ -32725,7 +32733,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Using it",
 "title": "Using it",
-"text": "e question and reads the answer aloud."
+"text": "for the question and reads the answer aloud."
 },
 {
 "lang": "en",

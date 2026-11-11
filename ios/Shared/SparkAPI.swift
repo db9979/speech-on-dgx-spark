@@ -303,7 +303,7 @@ struct SparkAPI {
     /// the faces the app can draw (core.FACES); anything else stays the robot
     static func knownFace(_ v: Any?) -> String {
         let f = v as? String ?? ""
-        return ["comic", "comic_woman"].contains(f) ? f : "robot"
+        return ["comic", "comic_woman", "wave"].contains(f) ? f : "robot"
     }
 
     static func object(_ data: Data) -> [String: Any] {

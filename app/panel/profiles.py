@@ -30,7 +30,7 @@ MAX_FACTS, MAX_FACT_LEN = 200, 300
 WARN_FACTS = 180   # Ich → Gedächtnis shows „N von MAX_FACTS“ in yellow from here on (plan nutzerwissen, Punkt 4.5)
 _lock = threading.Lock()
 # the assistant's faces (static/js/face.js): the admin picks the Spark's (chat.face), each profile may pick its own
-FACES = ("robot", "comic", "comic_woman")
+FACES = ("robot", "comic", "comic_woman", "wave")
 
 
 def _path(*parts):

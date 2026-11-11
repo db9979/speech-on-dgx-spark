@@ -1,5 +1,6 @@
 // The faces the panel offers (chat.face): the robot (a rounded head with two eyes and a mouth), the
-// comic face and the comic woman, drawn after COMIC and COMIC_W in app/panel/static/js/face.js.
+// comic face and the comic woman, drawn after COMIC and COMIC_W in app/panel/static/js/face.js, and the
+// wave (no face, a line that swings while it speaks, after waveSvg/waveFrame there).
 // Keep the functions from face.h.
 #include "face.h"
 #include "comic_shapes.h"
@@ -14,7 +15,7 @@ static FaceMode s_mode = FaceIdle;
 static int s_level, s_target;   // mouth opening, smoothed toward the audio level
 static int s_frame;
 static bool s_blink;
-static int s_kind;              // 0 robot, 1 comic, 2 comic woman
+static int s_kind;              // 0 robot, 1 comic, 2 comic woman, 3 wave
 static int s_gx, s_gy;          // comic: where the eyes look, -100 to 100
 
 static void schedule(void);
@@ -336,8 +337,37 @@ static void draw_comic(Layer *layer, GContext *ctx) {
   graphics_draw_circle(ctx, to_px(400, 400), 96 * s_size / 200);
 }
 
+// the wave's envelope over 33 points (percent), the panel's exp(-(t - .5)^2 / .0512)
+static const uint8_t WAVE_ENV[33] = {1, 1, 2, 4, 6, 10, 15, 21, 30, 39, 50, 62, 74, 84, 93, 98, 100,
+                                     98, 93, 84, 74, 62, 50, 39, 30, 21, 15, 10, 6, 4, 2, 1, 1};
+
+// "wave" (V01.1.372): at rest a straight line, speaking the middle swings with the level, thinking and
+// listening a small swing; the outer ends are thin, like the panel's line that runs out softly
+static void draw_wave(Layer *layer, GContext *ctx) {
+  GRect b = layer_get_bounds(layer);
+  int side = b.size.w < b.size.h ? b.size.w : b.size.h;
+  GPoint mid = grect_center_point(&b);
+  s_size = side;
+  s_org = GPoint(mid.x - side / 2, mid.y - side / 2);
+  graphics_context_set_antialiased(ctx, true);
+  int amp = s_mode == FaceSpeak ? 24 + s_level * 112 / 255 : s_mode == FaceThink ? 20 : s_mode == FaceListen ? 12 : 0;
+  int32_t ph = TRIG_MAX_ANGLE * (s_frame % 8) / 8;
+  for (int k = 0; k < 33; k++) {
+    int32_t a = TRIG_MAX_ANGLE * 9 * k / 64 + ph;   // 4.5 turns over the line, as in the panel
+    s_pts[k] = to_px(96 + k * 19, 400 + amp * WAVE_ENV[k] / 100 * sin_lookup(a) / TRIG_MAX_RATIO);
+  }
+  GColor c = s_mode == FaceSad ? PBL_IF_COLOR_ELSE(GColorDarkCandyAppleRed, GColorBlack) : PBL_IF_COLOR_ELSE(GColorBlueMoon, GColorBlack);
+  int w = line_w(14) < 2 ? 2 : line_w(14);
+  graphics_context_set_stroke_color(ctx, c);
+  for (int i = 1; i < 33; i++) {
+    graphics_context_set_stroke_width(ctx, i <= 4 || i >= 29 ? 1 : w);
+    graphics_draw_line(ctx, s_pts[i - 1], s_pts[i]);
+  }
+}
+
 static void update(Layer *layer, GContext *ctx) {
-  if (s_kind == 1 || s_kind == 2) draw_comic(layer, ctx);
+  if (s_kind == 3) draw_wave(layer, ctx);
+  else if (s_kind == 1 || s_kind == 2) draw_comic(layer, ctx);
   else draw_robot(layer, ctx);
 }
 
@@ -374,6 +404,6 @@ void face_set_level(uint8_t level) {
 }
 
 void face_set_kind(int kind) {
-  s_kind = kind == 1 || kind == 2 ? kind : 0;
+  s_kind = kind >= 1 && kind <= 3 ? kind : 0;
   if (s_layer) layer_mark_dirty(s_layer);
 }

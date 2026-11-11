@@ -630,6 +630,7 @@ enum FaceStill {
         switch kind {
         case "comic": style = ComicFace()
         case "comic_woman": style = ComicFace(woman: true)
+        case "wave": style = WaveFace()
         default: style = RobotFace()
         }
         let t: (open: Double, smile: Double, eyeH: Double, halo: Double, brow: Double, look: Double)

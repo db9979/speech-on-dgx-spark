@@ -218,6 +218,10 @@ body.inchat #fab{display:none}
 .av i{width:14px;height:8px;border-radius:5px;background:var(--visor);display:block;position:relative}
 .av i::before,.av i::after{content:"";position:absolute;top:2px;width:3px;height:4px;border-radius:2px;background:#bff6ff}.av i::before{left:3px}.av i::after{right:3px}
 body[data-face=comic] .av,body[data-face=comic_woman] .av{background:var(--avface) center/cover no-repeat}body[data-face=comic] .av i,body[data-face=comic_woman] .av i{display:none}
+/* "wave" (Hüllkurve, V01.1.372): the tile in the panel's own colours; the small picture before each answer is the line on the card */
+.wave{color:var(--acc)}.wave .wvbg{fill:var(--card);stroke:var(--line);stroke-width:1.5}[data-mode=sad]>.wave,[data-mode=error]>.wave{color:var(--bad)}
+body[data-face=wave] .av{background:var(--card);box-shadow:inset 0 0 0 1px var(--line)}
+body[data-face=wave] .av i{width:16px;height:2.5px;border-radius:2px;background:linear-gradient(90deg,transparent,var(--acc) 25%,var(--acc) 75%,transparent)}body[data-face=wave] .av i::before,body[data-face=wave] .av i::after{display:none}
 .typing::after{content:"";display:inline-block;width:18px;text-align:left;animation:dots 1.2s steps(4) infinite}
 @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
 @keyframes pop{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:none}}

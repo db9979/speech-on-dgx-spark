@@ -18,6 +18,9 @@ internal static class Face
     /// <summary>Das Panel hat die Comic-Frau gewählt (config.face "comic_woman", V01.0.497).</summary>
     public static bool ComicWoman { get; set; }
 
+    /// <summary>Das Panel hat die Welle gewählt (config.face "wave", V01.1.372, „Hüllkurve“): kein Gesicht, eine Linie.</summary>
+    public static bool Wave { get; set; }
+
     /// <summary>
     /// Das Gesicht im Kopf der Fenster und neben den Antworten nur auf Wunsch (Redesign Stufe 9, Plan „Comic-Gesicht
     /// nur auf Wunsch“): in den Einstellungen des Programms auf der Seite „Übersicht“ der Schalter „Gesicht in den Fenstern zeigen“, lokal, Standard aus
@@ -39,6 +42,12 @@ internal static class Face
 
     public static void Draw(Graphics g, RectangleF r, Palette p, bool tight = false)
     {
+        if (Wave)
+        {
+            DrawWave(g, r, p.HighContrast ? Palette.Light.Accent : p.Accent);
+            return;
+        }
+
         if (ComicWoman)
         {
             ComicWomanFace.Draw(g, r);
@@ -332,6 +341,39 @@ internal static class Glyphs
                     g.DrawLine(pen, 7, 13.5f, 9, 13.5f);
                     break;
             }
+        }
+        finally
+        {
+            g.Restore(state);
+        }
+    }
+
+    /// <summary>
+    /// Die Welle als ruhendes Bild wie im Panel (face.js waveSvg): eine Linie im Akzent, in der Mitte geschwungen,
+    /// an beiden Enden auslaufend; klein wird der Strich dicker, damit sie im Infobereich lesbar bleibt.
+    /// </summary>
+    private static void DrawWave(Graphics g, RectangleF r, Color acc)
+    {
+        float side = Math.Min(r.Width, r.Height);
+        if (side <= 0)
+        {
+            return;
+        }
+
+        float s = side / 200f, ox = r.X + ((r.Width - side) / 2f), oy = r.Y + ((r.Height - side) / 2f);
+        var pts = new PointF[49];
+        for (int i = 0; i < pts.Length; i++)
+        {
+            double t = i / 48.0, e = Math.Exp(-((t - 0.5) * (t - 0.5)) / 0.0512);
+            pts[i] = new PointF(ox + (float)((16 + (168 * t)) * s), oy + (float)((100 + (34 * e * Math.Sin(19.5 * t))) * s));
+        }
+
+        GraphicsState state = g.Save();
+        try
+        {
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            using var pen = new Pen(acc, Math.Max(6f * s, 1.4f)) { StartCap = LineCap.Round, EndCap = LineCap.Round, LineJoin = LineJoin.Round };
+            g.DrawLines(pen, pts);
         }
         finally
         {

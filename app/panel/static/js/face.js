@@ -1,6 +1,7 @@
 // The assistant's faces (eyes, mouth, moods). The admin picks the Spark's (chat.face), each profile may pick its own
 // under Ich → Gespräch → Anzeige (whoami "face" is the one to show):
-// "robot" (the first face) or "comic" (a caricature of Dominik) or "comic_woman" (a woman drawn the same way). A new face is one more drawing here,
+// "robot" (the first face) or "comic" (a caricature of Dominik) or "comic_woman" (a woman drawn the same way) or "wave" (no face, a line
+// that swings while it speaks). A new face is one more drawing here,
 // one more name in core.FACES and one more option under Einstellungen → Vorgaben.
 // ---------------------------------------------------------------- assistant face
 // The face lives only in the assistant (Klar 2, Redesign Stufe 2, Dominik 2026-10-29 „wie Empfehlung“): the button at
@@ -90,6 +91,16 @@ function comicLips(mx,cy,w,o,sm){const r=n=>Math.round(n*100)/100,y0=r(cy-sm*.5)
   return[`M${r(mx-w-1)} ${y0} Q${r(mx-w*.5)} ${r(up-4.2)} ${mx} ${r(up-2)} Q${r(mx+w*.5)} ${r(up-4.2)} ${r(mx+w+1)} ${y0} Q${mx} ${r(cy+sm-o*.35)} ${r(mx-w-1)} ${y0}Z`,
     `M${r(mx-w-1)} ${y0} Q${mx} ${r(lo+8.5)} ${r(mx+w+1)} ${y0} Q${mx} ${r(lo)} ${r(mx-w-1)} ${y0}Z`]}
 
+// "wave" (V01.1.372, Dominik 2026-11-11 „Hüllkurve“, proposals avatar-welle/): no face, timeless and calm. At rest one line
+// that runs out softly at both ends; while the Spark speaks the middle swings with the loudness of what plays (an
+// envelope), a faint echo behind it; listening follows the microphone, thinking is a small slow swing. Colour only
+// from the panel (--acc, --bad when something went wrong, --card/--line for the tile), so light and dark follow.
+function wavePath(a,ph){if(a<.05)return'M24 100H176';const r=n=>Math.round(n*10)/10;let d='';
+  for(let i=0;i<=64;i++){const t=i/64,e=Math.exp(-((t-.5)**2)/.0512);d+=(i?'L':'M')+r(24+152*t)+' '+r(100+a*e*Math.sin(28.27*t+ph))}return d}
+function waveSvg(sfx,a){const g='wvf'+sfx,d=wavePath(a||0,0),e=wavePath((a||0)*.6,2.2),st=o=>`<stop offset="${o}" style="stop-color:currentColor"${o===0||o===1?' stop-opacity="0"':''}/>`;
+  return {svg:`<svg viewBox="0 0 200 200" class="wave" aria-hidden="true"><defs><linearGradient id="${g}" gradientUnits="userSpaceOnUse" x1="20" y1="0" x2="180" y2="0">${[0,.2,.8,1].map(st).join('')}</linearGradient></defs>`+
+    `<rect class="wvbg" x="1" y="1" width="198" height="198" rx="44"/><path data-p="echo" d="${e}" fill="none" stroke="url(#${g})" stroke-opacity=".35" stroke-width="2"/>`+
+    `<path data-p="main" d="${d}" fill="none" stroke="url(#${g})" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`}}
 const faces=[];let FACE_KIND='robot',FACE_LIFE=false;
 const FD={typed:-1e9,last:0,vis:null,visAt:-1e9,n:0};   // the frames' own state (faceFrame: Tippen geht vor)
 // ---------------------------------------------------------------- "Gesicht zeigt, was es tut" (V01.0.294)
@@ -148,7 +159,7 @@ function drawProps(vis,mode,t,dt){const k=n=>Math.min(1,dt*n),r2=n=>Math.round(n
     pp.zzz.setAttribute('opacity',r2(c.zzz));
     if(c.zzz>.01)for(const[i,z]of[[0,pp.z1],[1,pp.z2],[2,pp.z3]]){const q=(t*.5+i/3)%1;z.setAttribute('opacity',r2(Math.sin(q*Math.PI)));z.setAttribute('transform',`translate(${r2(q*6)} ${r2(-q*8)})`)}
     pp.lens.setAttribute('opacity',r2(c.lens));pp.lens.setAttribute('transform',`translate(${r2(100+Math.sin(t*2.4)*30)} 96)`)}}
-function mountFace(el,sfx){const f=COMICS[FACE_KIND]?mountComic(el,sfx):mountRobot(el,sfx);
+function mountFace(el,sfx){const f=COMICS[FACE_KIND]?mountComic(el,sfx):FACE_KIND==='wave'?mountWave(el,sfx):mountRobot(el,sfx);
   if(FACE_LIFE){const svg=el.querySelector('svg');svg.insertAdjacentHTML('beforeend',PROP_SVG);const q=n=>svg.querySelector(`[data-p="${n}"]`);
     f.pp={badge:q('badge'),dots:q('dots'),zzz:q('zzz'),lens:q('lens'),calendar:q('i-calendar'),calp:q('cal-page'),mail:q('i-mail'),flap:q('flap'),home:q('i-home'),glow:q('glow'),
       bulb:q('bulb'),memory:q('i-memory'),write:q('write'),pen:q('pen'),happy:q('i-happy'),error:q('i-error'),d1:q('d1'),d2:q('d2'),dd:q('dd'),z1:q('z1'),z2:q('z2'),z3:q('z3')};
@@ -158,6 +169,7 @@ function mountRobot(el,sfx){el.innerHTML=FACE_SVG.replace(/\b(fhead|fshine|fglow
   const q=c=>el.querySelector('.'+c);return {el,eyeL:q('feyeL'),eyeR:q('feyeR'),mouth:q('fmouth'),halo:q('fhalo'),ant:q('fant'),cheeks:q('fcheeks'),body:q('fbody')}}
 function mountComic(el,sfx){const[s,draw]=COMICS[FACE_KIND],b=draw(sfx);el.innerHTML=b.svg;const q=n=>el.querySelector(`[data-p="${n}"]`);
   return {el,comic:1,s,mcy:b.mcy,p:{head:q('head'),iL:q('irisL'),iR:q('irisR'),lL:q('lidL'),lR:q('lidR'),llL:q('llL'),llR:q('llR'),bL:q('browL'),bR:q('browR'),mo:q('mo'),ml:q('ml'),lip:q('lip'),lipT:q('lipT'),lipB:q('lipB'),st:q('st'),ring:q('ring')}}}
+function mountWave(el,sfx){el.innerHTML=waveSvg(sfx).svg;return {el,wave:1,main:el.querySelector('[data-p="main"]'),echo:el.querySelector('[data-p="echo"]')}}
 function mountAll(){faces.length=0;FD.vis=null;FD.mode=null;mountFace($('face'),'A')}
 // called with whoami's "face" and after the admin saved another one; unknown names keep the robot
 // the small picture before each answer (chat.js .av) follows the face: a still of the comic face,
@@ -171,19 +183,19 @@ function comicIcon(){if(COMIC_ICON[FACE_KIND])return COMIC_ICON[FACE_KIND];const
   if(q('lipT')){const[t,u]=comicLips(100,b.mcy,s.mouthW,0,0);q('lipT').setAttribute('d',t);q('lipB').setAttribute('d',u)}q('ring').setAttribute('stroke-width','0');box.firstElementChild.setAttribute('viewBox','36 24 128 128');   // the head fills the small circle
   COMIC_ICON[FACE_KIND]=`url("data:image/svg+xml,${encodeURIComponent(new XMLSerializer().serializeToString(box.firstElementChild))}")`;return COMIC_ICON[FACE_KIND]}
 function faceIcon(){document.body.dataset.face=FACE_KIND;if(COMICS[FACE_KIND])document.documentElement.style.setProperty('--avface',comicIcon())}
-window.setFaceKind=k=>{k=k==='comic'||k==='comic_woman'?k:'robot';if(k===FACE_KIND)return;FACE_KIND=k;mountAll();faceIcon()};
+window.setFaceKind=k=>{k=faceOk(k)?k:'robot';if(k===FACE_KIND)return;FACE_KIND=k;mountAll();faceIcon()};
 window.setFaceLife=on=>{on=on===true;if(on===FACE_LIFE)return;FACE_LIFE=on;FL.act='';FL.happyNext=false;FL.happyUntil=0;FL.quiet=performance.now();mountAll()};
 // Gesicht (plaene/suche-gesicht.md): the Spark's face (chat.face, whoami "face_spark") and the profile's own pick
 // (Ich → Gespräch → Anzeige, S.face; "" = the Spark's). Only the fixed names; anything else is the robot.
 let FACE_SPARK='robot';
-const faceOk=k=>k==='robot'||k==='comic'||k==='comic_woman';
+const faceOk=k=>k==='robot'||k==='comic'||k==='comic_woman'||k==='wave';
 window.setFaceSpark=k=>{FACE_SPARK=faceOk(k)?k:'robot'};
 window.faceSpark=()=>FACE_SPARK;
 // the face this browser shows: the signed-in profile's own pick, else the Spark's
 window.faceApply=()=>{const own=typeof PROFILE!=='undefined'&&PROFILE&&typeof S!=='undefined'&&S?S.face:'';setFaceKind(faceOk(own)?own:FACE_SPARK)};
 // a still of a face by name for the pick tiles, from the fixed drawings only
 let faceTileN=0;
-function faceStill(k){const sfx='T'+(++faceTileN);return COMICS[k]?COMICS[k][1](sfx).svg:FACE_SVG.replace(/\b(fhead|fshine|fglow|fsoft)\b/g,'$1'+sfx)}
+function faceStill(k){const sfx='T'+(++faceTileN);return COMICS[k]?COMICS[k][1](sfx).svg:k==='wave'?waveSvg(sfx,22).svg:FACE_SVG.replace(/\b(fhead|fshine|fglow|fsoft)\b/g,'$1'+sfx)}
 // picture tiles for every face select (select.facesel) under root: a tap sets the select and sends "change", so
 // saving stays the select's own way; called again after the select got a value from code, the tiles follow it
 window.faceTiles=root=>{(root||document).querySelectorAll('select.facesel').forEach(sel=>{let box=sel.nextElementSibling;
@@ -206,6 +218,13 @@ function faceMode(){if(chat.rec)return'listen';if(playing())return'speak';if(cha
   if(chat.errAt&&performance.now()-chat.errAt<5000)return'sad';return'idle'}
 const lerp=(a,b,k)=>a+(b-a)*k;
 let outBuf=null;
+// the wave's life: amplitude towards the mood (fast up, slower down, so it reads as speech, not flicker), phase runs on
+const WV={a:0,ph:0,last:0},WAVE_AMP={think:5,search:5,calendar:5,mail:5,home:5,memory:5};
+function waveFrame(vis,mode,out,mic,now){const dt=Math.min(.05,(now-(WV.last||now))/1000);WV.last=now;
+  const tgt=mode==='speak'?6+out*30:mode==='listen'?2+mic*16:WAVE_AMP[mode]||0;
+  WV.a=lerp(WV.a,tgt,Math.min(1,dt*(tgt>WV.a?18:6)));WV.ph+=dt*(mode==='speak'?9:mode==='listen'?6:3);
+  const m=wavePath(WV.a,WV.ph),e=wavePath(WV.a*.6,WV.ph+2.2);
+  for(const f of vis){f.main.setAttribute('d',m);f.echo.setAttribute('d',e);f.el.dataset.mode=mode}}
 function comicFrame(vis,mode,out,mic,now){const s=vis[0].s,dt=Math.min(.05,(now-(C.last||now))/1000),k=n=>Math.min(1,dt*n),r2=n=>Math.round(n*100)/100;C.last=now;
   const lg=lifeGaze(mode,now/1000);if(lg){C.tx=lg[0];C.ty=lg[1]}
   else if(now>C.look){let tx=(Math.random()-.5)*.4,ty=(Math.random()-.5)*.25;
@@ -263,6 +282,7 @@ function faceFrame(now){requestAnimationFrame(faceFrame);
   const mic=chat.micLevel||0;
   if(FACE_LIFE){drawProps(vis,mode,now/1000,Math.min(.05,(now-(FL.last||now))/1000));FL.last=now}
   if(vis[0].comic)return comicFrame(vis,mode,out,mic,now);
+  if(vis[0].wave)return waveFrame(vis,mode,out,mic,now);
   const T={idle:{open:0,smile:1,eyeH:24,halo:.22,cheeks:.6},listen:{open:0,smile:.5,eyeH:28,halo:.3+mic*.7,cheeks:.35},
     think:{open:1.5,smile:0,eyeH:20,halo:.3,cheeks:.2},speak:{open:out*16,smile:.7,eyeH:24,halo:.25+out*.6,cheeks:.5},
     sad:{open:0,smile:-1,eyeH:16,halo:.15,cheeks:0},search:{open:1,smile:0,eyeH:20,halo:.3,cheeks:.2},calendar:{open:0,smile:.1,eyeH:24,halo:.25,cheeks:.3},

@@ -65,10 +65,10 @@ class OwnFace(unittest.TestCase):
         for bad in ("Comic", "../comic", "<svg>", 1, None, True, ["comic"]):
             c.put("/api/profile/settings", json={"face": bad})
             self.assertEqual(c.get("/api/whoami").json()["face"], "comic", bad)
-        for v in ("robot", "comic", "comic_woman", ""):
+        for v in ("robot", "comic", "comic_woman", "wave", ""):
             self.assertTrue(profiles.SETTINGS["face"][1](v), v)
         self.assertFalse(profiles.SETTINGS["face"][1]("<svg>"))
-        self.assertEqual(set(FACES), {"robot", "comic", "comic_woman"})
+        self.assertEqual(set(FACES), {"robot", "comic", "comic_woman", "wave"})
         self.assertIs(profiles.FACES, FACES)
 
     def test_guests_get_the_sparks_face(self):
@@ -123,7 +123,7 @@ class Static(unittest.TestCase):
         self.assertIn("pic.innerHTML=faceStill(faceOk(k)?k:'robot')", fn)
         self.assertEqual(fn.count("innerHTML"), 1)
         self.assertIn("l.textContent=", fn)
-        self.assertIn("const faceOk=k=>k==='robot'||k==='comic'||k==='comic_woman';", js)
+        self.assertIn("const faceOk=k=>k==='robot'||k==='comic'||k==='comic_woman'||k==='wave';", js)
         self.assertIn("setFaceSpark(who.face_spark||who.face);setFaceKind(who.face);", read(STATIC, "js", "start.js"))
 
     def test_admin_face_sits_on_top_of_vorgaben(self):

@@ -110,7 +110,9 @@ struct FaceView: View {
     @ObservedObject private var model = AppModel.shared
 
     var body: some View {
-        if model.face != .robot {
+        if model.face == .wave {
+            WaveStillView(size: size)
+        } else if model.face != .robot {
             ComicFaceView(size: size, woman: model.face == .comicWoman)
         } else {
             robot
@@ -390,12 +392,16 @@ enum MenuIcon {
     /// other icons); with a dot it is drawn in colour, the dot bottom right.
     /// `moon`: part "quiet" found the person busy (a call, a presentation): a small crescent top left.
     /// `face` "comic" or "comic_woman": the comic still in colour (a silhouette of it would only be a disc), dot and moon as usual.
+    /// `face` "wave": the line, a template like the robot without a dot, in the accent with one.
     /// `micClosed`: "Mikrofon zu": a struck-through microphone bottom left.
     static func image(dot: Dot, moon: Bool = false, face: FaceKind = .robot, micClosed: Bool = false) -> NSImage {
         let size = NSSize(width: 18, height: 18)
-        let comic = face != .robot
+        let comic = face == .comic || face == .comicWoman
         let img = NSImage(size: size, flipped: true) { rect in
-            if comic, let g = NSGraphicsContext.current?.cgContext {
+            if face == .wave, let g = NSGraphicsContext.current?.cgContext {
+                WaveStill.draw(g, in: rect, color: dot == .plain ? NSColor.black.cgColor : NSColor(Theme.accent).cgColor)
+                if dot != .plain { drawDot(in: rect, dot: dot) }
+            } else if comic, let g = NSGraphicsContext.current?.cgContext {
                 if face == .comicWoman { ComicWomanStill.draw(g, in: rect) } else { ComicStill.draw(g, in: rect) }
                 drawDot(in: rect, dot: dot)
             } else {

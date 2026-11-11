@@ -1,10 +1,10 @@
 import AppKit
 import SwiftUI
 
-/// The face the admin picked for everybody (panel chat.face, sent in config.face): "robot", "comic" or
-/// "comic_woman" (V01.0.497). Unknown names keep the robot, like the panel.
+/// The face the admin picked for everybody (panel chat.face, sent in config.face): "robot", "comic",
+/// "comic_woman" (V01.0.497) or "wave" (V01.1.372). Unknown names keep the robot, like the panel.
 enum FaceKind: String {
-    case robot, comic
+    case robot, comic, wave
     case comicWoman = "comic_woman"
 
     init(_ any: Any?) {
@@ -319,6 +319,44 @@ enum ComicWomanStill {
             if let stroke { g.addPath(p); g.setStrokeColor(c(stroke)); g.setLineWidth(w); g.strokePath() }
             g.restoreGState()
         }
+    }
+}
+
+/// "wave" (V01.1.372, Dominik 2026-11-11 „Hüllkurve“) as a still: no face, the line of the panel (face.js waveSvg)
+/// swinging in the middle and running out at both ends, so it reads as "the Spark speaks" even when small. One
+/// colour: the accent in the windows, black for the menu-bar template. The line gets thicker when small.
+enum WaveStill {
+    static func draw(_ g: CGContext, in rect: CGRect, color: CGColor) {
+        let side = min(rect.width, rect.height)
+        guard side > 0 else { return }
+        let s = side / 200, ox = rect.midX - side / 2, oy = rect.midY - side / 2
+        let p = CGMutablePath()
+        for i in 0...48 {
+            let t = CGFloat(i) / 48, e = exp(-((t - 0.5) * (t - 0.5)) / 0.0512)
+            let pt = CGPoint(x: ox + (16 + 168 * t) * s, y: oy + (100 + 34 * e * sin(19.5 * t)) * s)
+            if i == 0 { p.move(to: pt) } else { p.addLine(to: pt) }
+        }
+        g.saveGState()
+        defer { g.restoreGState() }
+        g.setLineCap(.round)
+        g.setLineJoin(.round)
+        g.setStrokeColor(color)
+        g.setLineWidth(max(6 * s, 1.4))
+        g.addPath(p)
+        g.strokePath()
+    }
+}
+
+/// The wave still as a SwiftUI view, in the accent.
+struct WaveStillView: View {
+    var size: CGFloat
+
+    var body: some View {
+        Canvas { ctx, sz in
+            ctx.withCGContext { g in WaveStill.draw(g, in: CGRect(origin: .zero, size: sz), color: NSColor(Theme.accent).cgColor) }
+        }
+        .frame(width: size, height: size)
+        .accessibilityHidden(true)
     }
 }
 

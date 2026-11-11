@@ -1179,6 +1179,7 @@ struct SettingsView: View {
                         Text("Roboter").tag("robot")
                         Text("Comic").tag("comic")
                         Text("Comic (Frau)").tag("comic_woman")
+                        Text("Welle").tag("wave")
                     }
                 } footer: {
                     Text(SparkAPI.way(String(localized: "Nur für dich, auf all deinen Geräten. Im Panel steht es unter Ich → Gespräch.")))
@@ -1331,7 +1332,7 @@ struct SettingsView: View {
         if let h = p["hands"] as? Bool, h != handsFree { handsFree = h }
         if let b = p["barge"] as? Bool, b != bargeIn { bargeIn = b }
         if let v = p["speak"] as? Bool, v != speakAnswers { speakAnswers = v }
-        if let f = p["face"] as? String, ["", "robot", "comic", "comic_woman"].contains(f), f != face { face = f }
+        if let f = p["face"] as? String, ["", "robot", "comic", "comic_woman", "wave"].contains(f), f != face { face = f }
         // the onChange calls for the values just read run before this (at worst they save the same value back)
         await Task.yield()
         synced = true
