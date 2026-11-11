@@ -3613,3 +3613,21 @@ details.supk{margin:4px 0 8px}details.supk>summary{cursor:pointer;font:var(--t-s
    ended under the tab bar. 59 px = the tab bar (appview.css #profmodal takes the same). */
 body.appview.aptabs:not(.inchat):not(.appage){min-height:100dvh;display:flex;flex-direction:column;box-sizing:border-box;padding-bottom:calc(59px + env(safe-area-inset-bottom))}
 body.appview.aptabs:not(.inchat):not(.appage)>main{flex:1 0 auto;width:100%;box-sizing:border-box}
+/* Tap areas on touch screens (code review 2026-11-11, point 6 step 3; goes on from the rule „touch screens“ above):
+   the small marks keep their look, a finger hits at least 44 px (guideline part 6, „Handy“). Measured on a phone
+   before: the „more“ arrow of a function 22 px, a switch 20 px, the filters 36 px, a group's header 30 px, small
+   buttons 27 px, a jump link 31 px. test_leere_seiten measures the main pages: nothing to tap under 40 px (older
+   controls stand at 40 to 42 px). */
+@media (pointer:coarse){.fexp,.tgl,main button.b,.ic-lnk{position:relative}
+  .fexp::after{content:'';position:absolute;inset:-11px}
+  .tgl::after{content:'';position:absolute;inset:-12px -4px}
+  .ffilt button::after{inset:-10px 0}
+  main button.b::after{content:'';position:absolute;inset:-9px 0}
+  .wayl::after{inset:-15px 0}
+  .ic-lnk::after{content:'';position:absolute;inset:-7px 0}
+  .segc button{min-height:40px}   /* higher itself: an area around it would make its row scroll (test_bildlauf) */
+  #pane-feat .fgrp>summary,main .card>summary,.ztech>summary{min-height:44px}}
+/* the filters of Funktionen on a phone: a second row instead of cut-off words („An…“, „Empfohle…“); no box that
+   scrolls sideways (test_bildlauf: one bar per page) */
+body.appview .ffilt{flex-wrap:wrap;width:auto}
+body.appview .ffilt button{flex:0 0 auto;overflow:visible}

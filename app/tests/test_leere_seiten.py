@@ -1,7 +1,8 @@
 """A page whose function is off says so (code review 2026-11-11, point 6): Mappen, Wissensbuch, Dungeon-Master and
 Kontakte showed a lasting „Lade …“ (or nothing) when someone reached them by a link while the admin had the function
 off. Each now shows one sentence with the way to its switch (base.js ausSatz, a jump link like every way); and the
-footer stands at the bottom of a phone's window; Ich → Überblick is no copy of the menu. Static
+footer stands at the bottom of a phone's window; Ich → Überblick is no copy of the menu; a finger hits every control on a
+phone. Static
 checks everywhere, the browser check where Playwright and Chromium exist; no test reads the clock."""
 import asyncio
 import os
@@ -133,6 +134,51 @@ class Browser(unittest.TestCase):
                     self.assertLessEqual(await pg.evaluate("document.querySelectorAll('#overbox [data-go=gobox]').length"), 1)
                     heads = await pg.evaluate("[...document.querySelectorAll('#overbox .overlist .mgrp')].map(e=>e.textContent)")
                     self.assertEqual(len(heads), len(set(heads)), heads)
+                    self.assertEqual(errors, [])
+                finally:
+                    await br.close()
+        asyncio.run(go())
+
+    def test_a_finger_hits_every_control_on_a_phone(self):
+        """Tap areas (code review 2026-11-11, point 6 step 3): on a touch screen nothing to tap on the main pages
+        is lower than 40 px, counting the area a rule adds around a small mark (::after). Before: 178 of 271
+        controls on Funktionen were lower (the „more“ arrow 22 px, a switch 20 px). And the filters of Funktionen
+        show their whole words."""
+        maß = """(()=>{const bad=[];
+for(const e of document.querySelectorAll('main button, main a, main select, main summary, main label.tgl, main input:not([type=hidden]):not([type=checkbox])')){
+  if(!e.offsetParent)continue;const r=e.getBoundingClientRect();if(r.width<1||r.height<1)continue;
+  const a=getComputedStyle(e,'::after');let h=r.height;
+  if(a.position==='absolute'&&a.content!=='none')h=r.height-(parseFloat(a.top)||0)-(parseFloat(a.bottom)||0);
+  if(h<40)bad.push(e.tagName+'.'+String(e.className)+' '+Math.round(h))}
+return bad})()"""
+        async def go():
+            async with async_playwright() as p:
+                exe = test_ruhige_seiten.chromium()
+                br = await p.chromium.launch(**({"executable_path": exe} if exe else {}))
+                try:
+                    ctx = await br.new_context(viewport={"width": 390, "height": 760}, locale="de-DE", bypass_csp=True,
+                                               has_touch=True, is_mobile=True)
+                    pg = await ctx.new_page()
+                    errors = []
+                    pg.on("pageerror", lambda e: errors.append(str(e)))
+                    base = f"http://127.0.0.1:{self.port}"
+                    await pg.goto(base + "/")
+                    self.assertEqual((await pg.request.post(base + "/api/login", data={"password": "secret-admin"})).status, 200)
+                    self.assertEqual((await pg.request.post(base + "/api/profile/login", data={"name": "Ruhig", "pin": "4711"})).status, 200)
+                    await pg.goto(base + "/")
+                    await pg.wait_for_function("document.body.classList.contains('adm')", timeout=20000)
+                    await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
+                    self.assertTrue(await pg.evaluate("matchMedia('(pointer:coarse)').matches"))
+                    for seite, etwas in (("feat", "#pane-feat .fexp"), ("mon", "#mon button"), ("cfg", "#cfg button"),
+                                         ("offen", "#offen button"), ("cal", "#cal button"), ("finden", "#finden button")):
+                        await pg.evaluate(f"goSec('{seite}')")
+                        await pg.wait_for_function(f"!!document.querySelector('{etwas}')&&!!window.lzIdle&&lzIdle()", timeout=20000)
+                        self.assertEqual(await pg.evaluate(maß), [], seite)
+                    await pg.evaluate("goSec('feat')")
+                    await pg.wait_for_function("document.querySelectorAll('.ffilt button').length>3", timeout=20000)
+                    self.assertEqual(await pg.evaluate(
+                        "[...document.querySelectorAll('.ffilt button')].filter(b=>b.offsetParent&&b.scrollWidth>b.clientWidth+1).length"), 0)
+                    self.assertFalse(await pg.evaluate("document.documentElement.scrollWidth>innerWidth"))
                     self.assertEqual(errors, [])
                 finally:
                     await br.close()

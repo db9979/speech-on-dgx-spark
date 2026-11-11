@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.389** Tap areas on the phone: a finger now hits switches, arrows, filters and small buttons on at least 44 px; the filters of the Features page show whole words
 - **V01.1.388** Red fix for tests: one test left the open voice chat switched on and made another one wobble; a photo that is too big for the computer card is always refused as "too big"
 - **V01.1.387** Fix: shorter hint for "Own voices" in the speech output settings.
 - **V01.1.386** Only one Base engine for speech: a Base main model speaks the own voices itself, no weaker second model beside it; VoiceDesign shows as loaded on demand.
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.382** Collections, Knowledge book, Dungeon Master and Contacts say when their function is switched off, with the way to the switch, instead of showing "Loading …" for ever
 - **V01.1.381** Picture of the computer: every computer card under Status → Summary shows a drawing of the recognised device (GB10, Raspberry Pi); the admin can upload an own photo, it stays on the Spark
 - **V01.1.380** Stable tests: no test depends on the date any more, a nightly run with the clock 120 days ahead guards it, chronic wobblers count as red; an audio overview waits for its designed voices instead of taking the standard voice at once; designed voices are locked on every way where they are not allowed
-- **V01.1.379** Knowledge map stage 2: wish waiting documents first, contradictions in red, dragged points stay pinned, a time filter, a timeline with deadlines, topic islands for many points and room for 1000 documents
 
 
 
