@@ -75,7 +75,10 @@ jobs:
           # three tries with a fresh package list and a minute's pause. The same packages, no test touched or weakened.
           if ! getent hosts azure.archive.ubuntu.com >/dev/null; then
             echo "azure.archive.ubuntu.com does not resolve: apt uses archive.ubuntu.com for this run"
-            sudo sed -i 's#azure\.archive\.ubuntu\.com#archive.ubuntu.com#g' /etc/apt/sources.list.d/*.sources /etc/apt/sources.list 2>/dev/null || true
+            # the runner image lists its mirrors in apt-mirrors.txt (Azure first) besides the .sources files
+            sudo sed -i 's#azure\.archive\.ubuntu\.com#archive.ubuntu.com#g' /etc/apt/apt-mirrors.txt \
+              /etc/apt/sources.list.d/*.sources /etc/apt/sources.list 2>/dev/null || true
+            sudo apt-get update -q || true
           fi
           tries() {
             for n in 1 2 3; do
