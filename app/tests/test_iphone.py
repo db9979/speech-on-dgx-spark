@@ -45,7 +45,7 @@ def pair(c, name="Annas iPhone"):
 
 class IPhone(unittest.TestCase):
     def setUp(self):
-        helpers.set_config(iphone=True, deny={})
+        helpers.set_config(iphone=True, deny={}, public=False)   # the key's narrow scope is the one without chat.public
         iphone._pending.clear()
         for k in [k for k in guard._rate if k[0] == "pair"]:   # every test client shares one address
             guard._rate.pop(k, None)

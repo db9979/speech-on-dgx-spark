@@ -168,6 +168,18 @@ class Foto(unittest.TestCase):
         huge.save(buf, "PNG")
         with self.assertRaisesRegex(ValueError, "gross"):
             geraetebild.jpeg(buf.getvalue())
+        # Pillow's own limit is one number for the whole process, other modules lower it: still „gross“, and a
+        # picture of allowed size still goes through (main red 2026-11-11 with the limit of an earlier test)
+        old = Image.MAX_IMAGE_PIXELS
+        try:
+            for limit in (10_000_000, 30_000_000, None):
+                Image.MAX_IMAGE_PIXELS = limit
+                with self.assertRaisesRegex(ValueError, "gross"):
+                    geraetebild.jpeg(buf.getvalue())
+            Image.MAX_IMAGE_PIXELS = 10_000_000
+            self.assertTrue(geraetebild.jpeg(base64.b64decode(url(foto()).split(",", 1)[1])).startswith(b"\xff\xd8"))
+        finally:
+            Image.MAX_IMAGE_PIXELS = old
 
     def test_rate_limit_and_the_file_register(self):
         n = guard.RATE["rechnerbild_tun"][1]

@@ -85,9 +85,18 @@ def fuer_karte(k, geraet):
 def jpeg(data):
     """The picture as a small JPEG without the file's extra data. ValueError("format") for anything that is not a
     JPEG, PNG or WebP picture, ValueError("gross") above MAX_PIXEL."""
+    import warnings
     from PIL import Image
     try:
-        im = Image.open(io.BytesIO(data), formats=FORMATE)
+        # Pillow's own pixel limit is one number for the whole process and other modules set it (images, bilder,
+        # documents): above it Pillow warns or raises before the size can be asked. Both mean „gross“ here, whatever
+        # that number is (main red 2026-11-11: with a lower limit the answer was „format“).
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", Image.DecompressionBombWarning)
+                im = Image.open(io.BytesIO(data), formats=FORMATE)
+        except (Image.DecompressionBombError, Image.DecompressionBombWarning):
+            raise ValueError("gross")
         if im.width * im.height > MAX_PIXEL or min(im.size) < 1:
             raise ValueError("gross")
         im.load()

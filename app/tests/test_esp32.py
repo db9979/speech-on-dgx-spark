@@ -1154,7 +1154,9 @@ class SharedSpeaker(unittest.TestCase):
         helpers.set_config(esp32=True, mail=True, public=True)
 
     def tearDown(self):
-        helpers.set_config(mail=False, speaker_id=False)
+        # public too: left on, it opened the voice chat endpoints for every later module of the same process
+        # (test_iphone read "the key reaches the settings", main red 2026-11-11)
+        helpers.set_config(mail=False, speaker_id=False, public=False)
 
     def speaker(self, name):
         a = profile(name)

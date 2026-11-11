@@ -440,9 +440,15 @@ class Browser(unittest.TestCase):
         phone, with the strict CSP on. (Freigabe vereinfachen: a profile switches no function on any more, so what is
         off is off on the Spark; released there it works at once for the profile.)"""
         from unittest import mock
+        import guard
         import profiles
         import tipps
         uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Uitest")
+        # its own minute: every page the tests before opened asked for „Probier mal“ (the same rate "tipps", 30 a
+        # minute for the one profile of all these tests); with five of them just before, „Einrichten“ got 429 and
+        # the setup never opened (red on the first try, V01.1.386/.387)
+        for k in [k for k in list(guard._rate) if k[0] == "tipps"]:
+            guard._rate.pop(k, None)
         # back as they were afterwards: tasks=False left behind took Listen away from test_listen_page (red at V01.1.272)
         helpers.keep_chat(self, "spark_help", "feature_tips", "tasks", "routing", "direct_read", "deny")
         helpers.set_config(spark_help=True, feature_tips=True, tasks=False, routing=False, direct_read=False, deny={})
