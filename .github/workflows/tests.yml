@@ -69,10 +69,27 @@ jobs:
           # connection (60 s, then retries it) while a slow but progressing download runs on (V01.0.952). With
           # the 60-min job cap that leaves, even a slow mirror finishes. No test is touched or weakened.
           printf '%s\n' 'DPkg::Lock::Timeout "300";' 'Acquire::Retries "5";' 'Acquire::http::Timeout "60";' 'Acquire::https::Timeout "60";' | sudo tee /etc/apt/apt.conf.d/99ci >/dev/null
-          python -m playwright install --with-deps chromium
-          sudo apt-get install -y -q --no-install-recommends ffmpeg
+          # (3) GitHub 2026-11-11 (V01.1.377, four tries, also .376 by hand): the runner could not resolve the Azure
+          # mirror (azure.archive.ubuntu.com) for an hour, every part died in this step before a single test ran. When
+          # the mirror's name does not resolve, apt uses archive.ubuntu.com for this run; every apt step gets up to
+          # three tries with a fresh package list and a minute's pause. The same packages, no test touched or weakened.
+          if ! getent hosts azure.archive.ubuntu.com >/dev/null; then
+            echo "azure.archive.ubuntu.com does not resolve: apt uses archive.ubuntu.com for this run"
+            sudo sed -i 's#azure\.archive\.ubuntu\.com#archive.ubuntu.com#g' /etc/apt/sources.list.d/*.sources /etc/apt/sources.list 2>/dev/null || true
+          fi
+          tries() {
+            for n in 1 2 3; do
+              "$@" && return 0
+              [ "$n" = 3 ] && return 1
+              echo "try $n of 3 failed: $*; again in 60 s"
+              sleep 60
+              sudo apt-get update -q || true
+            done
+          }
+          tries python -m playwright install --with-deps chromium
+          tries sudo apt-get install -y -q --no-install-recommends ffmpeg
           # Fernzugang → Bildschirm (test_fernbild): a real guacd with its VNC part, x11vnc and Xvfb for the end-to-end test
-          sudo apt-get install -y -q --no-install-recommends guacd libguac-client-vnc0 x11vnc xvfb
+          tries sudo apt-get install -y -q --no-install-recommends guacd libguac-client-vnc0 x11vnc xvfb
           sudo systemctl disable --now guacd.service 2>/dev/null || true
       - name: Self-tests
         working-directory: app
