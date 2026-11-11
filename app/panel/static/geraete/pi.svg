@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" role="img" aria-label="Raspberry Pi">
+  <!-- own drawing in the app's style: the single-board computer seen from above -->
+  <rect width="160" height="120" rx="14" fill="#8a94a6" fill-opacity=".12"/>
+  <rect x="22" y="24" width="116" height="74" rx="7" fill="#2f8f5b" stroke="#1f6a41" stroke-width="2"/>
+  <circle cx="29" cy="31" r="2.6" fill="#e8c66a"/><circle cx="131" cy="31" r="2.6" fill="#e8c66a"/><circle cx="29" cy="91" r="2.6" fill="#e8c66a"/><circle cx="131" cy="91" r="2.6" fill="#e8c66a"/>
+  <rect x="36" y="27" width="74" height="8" rx="1.5" fill="#2b2f38"/>
+  <g fill="#e8c66a"><rect x="39" y="29" width="2" height="4"/><rect x="45" y="29" width="2" height="4"/><rect x="51" y="29" width="2" height="4"/><rect x="57" y="29" width="2" height="4"/><rect x="63" y="29" width="2" height="4"/><rect x="69" y="29" width="2" height="4"/><rect x="75" y="29" width="2" height="4"/><rect x="81" y="29" width="2" height="4"/><rect x="87" y="29" width="2" height="4"/><rect x="93" y="29" width="2" height="4"/><rect x="99" y="29" width="2" height="4"/><rect x="105" y="29" width="2" height="4"/></g>
+  <rect x="50" y="46" width="26" height="26" rx="3" fill="#c9ced8" stroke="#6b7385" stroke-width="1.5"/>
+  <rect x="84" y="50" width="14" height="14" rx="2" fill="#2b2f38"/>
+  <rect x="30" y="50" width="12" height="16" rx="2" fill="#2b2f38"/>
+  <rect x="118" y="38" width="24" height="16" rx="2" fill="#c9ced8" stroke="#6b7385" stroke-width="1.5"/>
+  <rect x="118" y="58" width="24" height="14" rx="2" fill="#c9ced8" stroke="#6b7385" stroke-width="1.5"/>
+  <rect x="118" y="76" width="24" height="14" rx="2" fill="#4f8fe0" stroke="#6b7385" stroke-width="1.5"/>
+  <rect x="34" y="92" width="14" height="8" rx="1.5" fill="#c9ced8" stroke="#6b7385" stroke-width="1.5"/>
+  <rect x="56" y="92" width="10" height="8" rx="1.5" fill="#c9ced8" stroke="#6b7385" stroke-width="1.5"/>
+  <rect x="72" y="92" width="10" height="8" rx="1.5" fill="#c9ced8" stroke="#6b7385" stroke-width="1.5"/>
+</svg>

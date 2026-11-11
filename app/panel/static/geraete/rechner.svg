@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" role="img" aria-label="Rechner">
+  <!-- own drawing in the app's style: a neutral computer for hardware the panel does not know -->
+  <rect width="160" height="120" rx="14" fill="#8a94a6" fill-opacity=".12"/>
+  <ellipse cx="80" cy="99" rx="46" ry="4" fill="#8a94a6" fill-opacity=".25"/>
+  <rect x="50" y="22" width="60" height="76" rx="8" fill="#c9ced8" stroke="#6b7385" stroke-width="2"/>
+  <rect x="58" y="32" width="44" height="6" rx="3" fill="#6b7385"/>
+  <rect x="58" y="44" width="44" height="6" rx="3" fill="#6b7385" fill-opacity=".55"/>
+  <circle cx="80" cy="74" r="9" fill="none" stroke="#6b7385" stroke-width="2"/>
+  <path d="M80 68v6" stroke="#6b7385" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="98" cy="88" r="2.5" fill="#34c759"/>
+</svg>

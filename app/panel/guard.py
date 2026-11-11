@@ -782,7 +782,7 @@ RATE = {"chat": (30, 120), "dungeon": (0, 120), "dungeongast": (150, 150), "dung
         "zustellung": (0, 30), "mitteilung": (0, 30), "deskspeak": (0, 20), "deskinbox": (0, 60), "desksend": (0, 20), "deskagenda": (0, 30), "desknote": (0, 30), "deskpost": (0, 30), "deskoffen": (0, 30), "deskfund": (0, 20), "deskcapture": (0, 60), "deskbusy": (0, 30),
         "deskmeet": (0, 20), "deskhome": (0, 30), "deskdaily": (0, 10), "deskapps": (0, 6), "deskoffice": (0, 10),
         "haev": (0, 30), "hamelden": (0, 30), "hament": (0, 40), "notaus": (30, 60), "notausset": (0, 10), "notausoff": (0, 10), "notausha": (10, 10),
-        "systemone": (0, 10), "changelog": (0, 30), "mymcp": (0, 30), "devup": (0, 20), "sysup": (0, 30), "sysup_tun": (0, 10), "report": (0, 30),
+        "systemone": (0, 10), "changelog": (0, 30), "mymcp": (0, 30), "devup": (0, 20), "sysup": (0, 30), "sysup_tun": (0, 10), "rechnerbild": (0, 60), "rechnerbild_tun": (0, 10), "report": (0, 30),
         "make": (0, 60), "bilder": (0, 60), "bildmalen": (0, 6), "bildfoto": (0, 20), "bildschnell": (0, 30), "bildjob": (0, 120), "bilddatei": (0, 120), "bildtest": (0, 3), "musiktest": (0, 3), "musikdatei": (0, 60), "musik": (0, 60), "musikmachen": (0, 6), "musiktext": (0, 10), "musikhochladen": (0, 6), "musikjob": (0, 120), "makejob": (0, 120), "makefile": (0, 30), "makesend": (0, 10), "maketmpl": (0, 10),
         "makedl": (20, 30), "svcwatch": (0, 30), "svcwatchnow": (0, 4), "wartung": (0, 20),
         "rate": (0, 30), "zuordnung": (0, 60), "zuordnungset": (0, 30), "berater": (0, 60), "beraterset": (0, 30), "beraterrun": (0, 4),

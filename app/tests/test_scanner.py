@@ -71,6 +71,7 @@ OPEN = {
     "/pebble/spark-zifferblatt.pbw": "the Spark watchface (Paket 2), a public app file like the watch app",
     "/fernzugang/anker": "the spark-anker program for curl … | sudo python3 - einrichten; no secret in it, 404 while Fernzugang is off",
     "/static/xterm/{name}": "page files (xterm.js for Fernzugang → Systeme, pinned in fernzugang.XTERM)",
+    "/static/geraete/{name}": "page files (own drawings of the computers, only geraetebild.ZEICHNUNGEN)",
     "/static/guac/{name}": "page files (guacamole-common-js for Fernzugang → Bildschirm, pinned in fernbild.GUAC)",
     "/api/fernzugang/anker/schluessel": "the anchor reports the fingerprints of `schluessel dazu|weg|liste` (sshTermy), never a key; only with its own device key (Bearer), lockout, 404 while off",
     "/api/fernzugang/sshtermy/v1/koppeln": "sshTermy's first contact: only with a one-time code an admin made in the browser (fresh code first), 10 tries per address in 10 min, lockout, 503 while off",

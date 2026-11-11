@@ -598,6 +598,7 @@ Panel on its own computer, models on the DGX: pairing, TLS-Tor, Wärter and the 
 | Module | Task |
 |---|---|
 | `app/panel/gehaeuse.py` | Gehäuse. |
+| `app/panel/geraetebild.py` | Geräte-Bild: a picture of each computer on its card. |
 | `app/panel/notbetrieb.py` | Notbetrieb mit Parakeet. |
 | `app/panel/rechenteile.py` | Status → Summary → Computers, „Wer rechnet gerade“: which part inside the panel takes the CPU, next to the services of both computers (rechner.dienste_cpu). |
 | `app/rechner.py` | The values of one computer for Status → Summary → Computers: CPU, memory, disk, network, temperature, fan, power flags, running time, device and system name, … |
@@ -805,6 +806,7 @@ All files belong to the user `speech` (folders 0700, files 0600) and are written
 | `state/fernzugang.json` | Remote access: paired remote servers (name, system, host key, times, the reported fingerprints of the keys for sshTermy), per server an own SSH key of the panel, the anchor's device key only as SHA-256 | SSH key sealed, device key only as a hash | no |
 | `state/gehaeuse-wunsch.json` | The panel's wish for the case (set up, remove, restart), seconds | – | no |
 | `state/geraete-updates.json` | Device updates | – | yes |
+| `state/geraetebild.json` | The admin's own photos of both computers for their cards under Status → Summary → Computers (small, as JPEG without the file's extra data); delete there at the picture with "Foto entfernen" | – | yes |
 | `state/github-token.json` | GitHub read token | sealed | yes |
 | `state/github-wunsch` | Branch waiting for GitHub (Hand to GitHub): one topic of a fixed charset, until root handed it over | – | no |
 | `state/guacd-bau.json` | Remote access, screen: how the last build of guacd ended (ok or a fixed word like laden or bauen, and when); install.sh writes it, the next update replaces it | – | no |
@@ -3793,7 +3795,7 @@ flowchart TD
 5. <a id="kn-teilen-s5"></a>**Connection to the TLS-Tor allowed?**: Every request to speech recognition, speech output, the language model, pictures and the Wärter goes through the door. It speaks TLS 1.3 only and lets only the panel computer in; it never reads the content.
 6. <a id="kn-teilen-s6"></a>**Command to the Wärter**: steuer.call sends a command with a time stamp and a number that counts only once, signed with the Wärter key.
 7. <a id="kn-teilen-s7"></a>**Signature, time, number, command valid?**: tarswart.check checks the signature, a time at most 60 s off, the number only once and a command from the fixed list. No shell, no free names. Only the sample of a designed voice (stimme_ablegen) goes over its own path /v1/wart/stimme with a bigger limit; stimmablage checks the name, the WAV and the number there.
-8. <a id="kn-teilen-s9"></a>**Values of both computers**: rechner.messen measures CPU, memory, disk, network, temperature and power; the Wärter sends the DGX's values with its status. rechnerblick.warnungen warns by fixed rules: the panel computer from 80 °C, throttled or short of power, less than 0.5 GiB free; on either computer less than 10 % disk free; the DGX not answering. „Who is computing now“: rechner.dienste_cpu takes each service's share of the CPU from systemd's counters, rechenteile.messen the panel's parts from its threads and worker processes; rechnerblick.spitze names the biggest from 5 % on, below that it is idle. rechnerblick.wer keeps the list still: always 6 lines in a fixed order, chosen over 20 minutes, 0 % instead of gone; both cards show the same rows at the same height (mirror cards). Services that start only for a job (rechnerblick.ABRUF: image understanding, Werkstatt, case) rest as „ready“; what is not installed on the DGX is left out.
+8. <a id="kn-teilen-s9"></a>**Values of both computers**: rechner.messen measures CPU, memory, disk, network, temperature and power; the Wärter sends the DGX's values with its status. rechnerblick.warnungen warns by fixed rules: the panel computer from 80 °C, throttled or short of power, less than 0.5 GiB free; on either computer less than 10 % disk free; the DGX not answering. „Who is computing now“: rechner.dienste_cpu takes each service's share of the CPU from systemd's counters, rechenteile.messen the panel's parts from its threads and worker processes; rechnerblick.spitze names the biggest from 5 % on, below that it is idle. rechnerblick.wer keeps the list still: always 6 lines in a fixed order, chosen over 20 minutes, 0 % instead of gone; both cards show the same rows at the same height (mirror cards). Services that start only for a job (rechnerblick.ABRUF: image understanding, Werkstatt, case) rest as „ready“; what is not installed on the DGX is left out. Each card shows a picture of its computer: geraetebild.art picks an own drawing by fixed patterns in the device name (else a neutral computer), or the admin uploads an own photo; geraetebild.jpeg stores it anew as a JPEG with an edge of at most 640 pixels and without extra data. None of it comes from the internet.
 9. <a id="kn-teilen-s10"></a>**Control centre on the screen**: When Features → Control centre on the screen is on, schirm.abgleich starts the unit and lets it start at boot by itself, without signing in. steuerzentrale.py asks schirm.schirm_zustand every second, only from 127.0.0.1 and with its own key, and draws the flow, both computers, services and curves as text; only kind, place, time and numbers. steuerzentrale.schrift picks the font by the resolution for at enough columns and rows, schirm.an_jetzt makes it dark by the times. Switched off, schirm.anmeldung starts the sign-in on tty1 again; a restart of the screen never stops an update.
 10. <a id="kn-teilen-s8"></a>**Notbetrieb when the DGX is missing**: When the DGX no longer answers, chats, reminders and logs go on on the panel computer, and speech questions get a fixed sentence.
 
@@ -3809,6 +3811,7 @@ flowchart TD
 - **10 %** disk free, below it a note ([step 8](#kn-teilen-s9))
 - **0.5 GiB** memory free on the panel computer, below it a note ([step 8](#kn-teilen-s9))
 - **5 %** CPU from which the biggest service counts as „computing now“ ([step 8](#kn-teilen-s9))
+- **640 Pixel** longest edge of a computer's own photo ([step 8](#kn-teilen-s9))
 - **15 s** without a question from the control centre, then the screen counts as dark ([step 9](#kn-teilen-s10))
 
 #### Settings
@@ -3840,6 +3843,8 @@ flowchart TD
 - `app/rechner.py` `dienste_cpu`: CPU per service from systemd ([step 8](#kn-teilen-s9))
 - `app/panel/rechenteile.py` `messen`: CPU per part of the panel ([step 8](#kn-teilen-s9))
 - `app/panel/rechnerblick.py` `spitze`: who computes most ([step 8](#kn-teilen-s9))
+- `app/panel/geraetebild.py` `art`: the drawing by fixed patterns in the device name ([step 8](#kn-teilen-s9))
+- `app/panel/geraetebild.py` `jpeg`: the own photo anew as a small JPEG without extra data ([step 8](#kn-teilen-s9))
 - `app/panel/schirm.py` `schirm_zustand`: local only and with a key ([step 9](#kn-teilen-s10))
 - `app/panel/schirm.py` `abgleich`: unit follows the switch ([step 9](#kn-teilen-s10))
 - `app/panel/schirm.py` `an_jetzt`: dark by the times ([step 9](#kn-teilen-s10))
@@ -3893,7 +3898,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Seal**: vault.seal turns the value into „enc1:“ and a Fernet token (encrypted and protected against change). A value already sealed stays as it is.
 5. <a id="kn-state-s5"></a>**Write atomically**: common.write_json writes into a fresh temporary file next to it, never through a link, gives it the rights of the old file (a new one is readable for the service only) and then swaps it in one step. A crash in the middle leaves the old file whole.
 6. <a id="kn-state-s6"></a>**Read**: A sealed value is opened with the key. If the key does not fit (backup from another Spark), an empty value comes back and the account has to be entered again. Older unsealed values are read and sealed the next time they are saved.
-7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 50), otherwise the line gives its reason (dateien.STATE_LOCAL, 114). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
+7. <a id="kn-state-s7"></a>**Goes into the backup?**: Every file in state/ has exactly one line in the file register dateien.py: with its kind it goes into every backup (dateien.STATE_FILES, 51), otherwise the line gives its reason (dateien.STATE_LOCAL, 114). backup.py takes both lists from there. test_technik finds every name the code writes there and wants its line.
 8. <a id="kn-state-s8"></a>**Move backup?**: secret.key is in no ordinary backup. Only a move backup carries it, sealed with a password of the admin (scrypt and Fernet, move-keys.json). The Spark's login keys are in no backup.
 9. <a id="kn-state-s9"></a>**Fine when restoring?**: _check_state checks every file of the backup: at most 8 MB, valid JSON, the push key a real EC key. An admin second step whose secret cannot be opened here is not taken; the current one stays.
 10. <a id="kn-state-s10"></a>**Put in place with a way back**: _swap writes each file through a temporary file (never through a link) and keeps the old content. If a step fails, everything swapped comes back.
@@ -3903,7 +3908,7 @@ flowchart TD
 
 #### Numbers (from the code)
 
-- **50** files in every backup ([step 7](#kn-state-s7))
+- **51** files in every backup ([step 7](#kn-state-s7))
 - **114** files and folders that stay out with a reason ([step 7](#kn-state-s7))
 - **8 MB** largest file when restoring ([step 9](#kn-state-s9))
 - **12** characters the move password has at least ([step 8](#kn-state-s8))

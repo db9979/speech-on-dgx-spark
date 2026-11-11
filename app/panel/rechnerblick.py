@@ -389,6 +389,8 @@ def karte(k, now=None, mono=None):
         out.update(ok=bool(m), stumm_s=None, version=app_version(), temp_warn=TEMP_WARN,
                    dienste=_dienste_panel(time.monotonic() if mono is None else mono),
                    haenger=loopwacht.view(now))   # the Hänge-Wächter: stalls of the panel's loop, numbers only
+    import geraetebild
+    out["bild"] = geraetebild.fuer_karte(k, m.get("geraet"))    # the drawing that fits, or the admin's own photo
     lv = {ARTEN[a][1] for a in w}
     out["stufe"] = "bad" if "bad" in lv or not out["ok"] else "warn" if "warn" in lv else "ok"
     return out

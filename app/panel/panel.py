@@ -166,6 +166,7 @@ import nasablage  # noqa: E402
 import naszustand  # noqa: E402
 import gehaeuse  # noqa: E402
 import systemupdates  # noqa: E402
+import geraetebild  # noqa: E402
 import schirm  # noqa: E402
 import rundlauf  # noqa: E402
 import wachposten  # noqa: E402
@@ -211,7 +212,7 @@ import ferngross  # noqa: E402
 
 # no /docs, /redoc or /openapi.json: a map of every path for guests, and Swagger from a CDN
 app = FastAPI(title="Speech on DGX Spark", docs_url=None, redoc_url=None, openapi_url=None)
-for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, mailstil, fuerdich, ichweiss, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, terminal, android, appupdate, appmerken, pruefzugang, apns, transit, feeds, logfilter, agent, auftragsplan, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, wissensmessung, wissensbuch, fund, mappen, auswertung, hoerstueck, stimmdesign, abschrift, doklink, gemerkt, meinedaten, siegel, dungeon_dingbild, dungeon_musik, dungeon_echt, dungeon_lied, dungeon_knapp, dungeon_fluestern, dungeon_wunsch, dungeon_rast, dungeon_chronik, dungeon_buch, dungeon_regelseite, dungeon_pruefstand, dungeon_erzaehlstand, dungeon_import, dungeon_geschichten, dungeon, dungeon_karte, dungeon_gesicht, dungeon_wappen, wissenskarte, wissensdoppelt, mcpserver, llmapi, openwebui, meinmcp, live, hamelden, notaus, hilfe, tipps, saetze, spickzettel, schreib, begleiter, fernsicht, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, weiche_abstimmen, weiche_unklar, dienstwacht, offline, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, auslassen, nasablage, naszustand, gehaeuse, systemupdates, schirm, verlauf, klaeren, technik, bilder, musik, verbrauch, modellseite, werkstattseite, entwickelnseite, praxistest, telefon, telefon_ich, kalenderserver, kontaktserver, einladung, zustellung, geteilt, vorgaenge, mailansicht, mitschreiblink, mitteilungen, fernzugang, spontanhilfe, spontansteuern, ferndateien, fernbild, fernweb, fernanker, fernnotiz, fernordner, fernals, fernsshtermy, ferngross):
+for _module in (account, admin, chat, chats, chatsec, verbund, anrufe, update, system, proactive, room, roomlive, tidy, mailstil, fuerdich, ichweiss, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, terminal, android, appupdate, appmerken, pruefzugang, apns, transit, feeds, logfilter, agent, auftragsplan, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, rmpapier, join, onboard, hintergrund, stufe, today, offsite, doclingdienst, suchpruefung, wissensmessung, wissensbuch, fund, mappen, auswertung, hoerstueck, stimmdesign, abschrift, doklink, gemerkt, meinedaten, siegel, dungeon_dingbild, dungeon_musik, dungeon_echt, dungeon_lied, dungeon_knapp, dungeon_fluestern, dungeon_wunsch, dungeon_rast, dungeon_chronik, dungeon_buch, dungeon_regelseite, dungeon_pruefstand, dungeon_erzaehlstand, dungeon_import, dungeon_geschichten, dungeon, dungeon_karte, dungeon_gesicht, dungeon_wappen, wissenskarte, wissensdoppelt, mcpserver, llmapi, openwebui, meinmcp, live, hamelden, notaus, hilfe, tipps, saetze, spickzettel, schreib, begleiter, fernsicht, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, weiche_abstimmen, weiche_unklar, dienstwacht, offline, wartung, faelle, berater, speicher, nashilfe, nas, nasquelle, auslassen, nasablage, naszustand, gehaeuse, systemupdates, geraetebild, schirm, verlauf, klaeren, technik, bilder, musik, verbrauch, modellseite, werkstattseite, entwickelnseite, praxistest, telefon, telefon_ich, kalenderserver, kontaktserver, einladung, zustellung, geteilt, vorgaenge, mailansicht, mitschreiblink, mitteilungen, fernzugang, spontanhilfe, spontansteuern, ferndateien, fernbild, fernweb, fernanker, fernnotiz, fernordner, fernals, fernsshtermy, ferngross):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -810,6 +811,12 @@ def guac_file(name: str, request: Request):
     """guacamole-common-js for Fernzugang → Bildschirm (Apache-2.0, pinned in fernbild.GUAC, served only from here)."""
     path, media = fernbild.guac_file(name)
     return _asset(request, path, media)
+
+
+@app.get("/static/geraete/{name}")
+def geraete_file(name: str, request: Request):
+    """The own drawings of the computers for Zustand → Überblick → Rechner (geraetebild.ZEICHNUNGEN, nothing else)."""
+    return _asset(request, geraetebild.zeichnung(name), "image/svg+xml")
 
 
 @app.get("/fernzugang/anker")

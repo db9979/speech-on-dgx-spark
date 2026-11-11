@@ -303,7 +303,7 @@ SEITEN = {
         "heute": [("guard_ok", ("verbunden", "connected")), ("guard_bad", ("gesperrt", "blocked"))],
     },
     "teilen": {
-        "stand": "bb7d107de2",
+        "stand": "942d916c7b",
         "bezug": {
             "teilen.CODE_SECS": ["s2"], "teilen.schluessel": ["s3"], "teilen.regeln": ["s4"], "tlstor.server_context": ["s5"],
             "tlstor.allowed": ["s5"], "steuer.call": ["s6"], "tarswart.check": ["s7"], "tarswart.COMMANDS": ["s7"], "tarswart.systemupdate_tun": ["s7"],
@@ -311,7 +311,8 @@ SEITEN = {
             "rechner.messen": ["s9"], "rechnerblick.warnungen": ["s9"], "rechnerblick.TEMP_WARN": ["s9"],
             "rechnerblick.PLATTE_MIN_PCT": ["s9"], "rechnerblick.RAM_MIN_GIB": ["s9"],
             "rechner.dienste_cpu": ["s9"], "rechenteile.messen": ["s9"], "rechnerblick.spitze": ["s9"],
-            "rechnerblick.LEERLAUF_PCT": ["s9"],
+            "rechnerblick.LEERLAUF_PCT": ["s9"], "geraetebild.art": ["s9"], "geraetebild.jpeg": ["s9"],
+            "geraetebild.MAX_PX": ["s9"],
             "schirm.schirm_zustand": ["s10"], "schirm.abgleich": ["s10"], "schirm.an_jetzt": ["s10"],
             "steuerzentrale.schrift": ["s10"], "schirm.SIEHT_S": ["s10"],
         },
@@ -390,7 +391,10 @@ SEITEN = {
                "Liste ruhig: immer {rechnerblick.ZEILEN} Zeilen in fester Reihenfolge, gewählt über 20 Minuten, 0 % statt "
                "weg; beide Karten zeigen dieselben Zeilen auf gleicher Höhe (Spiegel-Karten). Dienste, die nur für einen "
                "Auftrag starten (rechnerblick.ABRUF: Bildverständnis, Werkstatt, Gehäuse), stehen in Ruhe als „bereit“; "
-               "was auf dem DGX nicht installiert ist, fehlt.",
+               "was auf dem DGX nicht installiert ist, fehlt. Jede Karte zeigt ein Bild ihres Rechners: geraetebild.art wählt "
+               "nach festen Mustern im Gerätenamen eine eigene Zeichnung (sonst einen neutralen Rechner), oder der Admin "
+               "lädt ein eigenes Foto hoch; geraetebild.jpeg speichert es neu als JPEG mit höchstens {geraetebild.MAX_PX} "
+               "Pixeln Kante und ohne Zusatzdaten. Nichts davon kommt aus dem Internet.",
                "rechner.messen measures CPU, memory, disk, network, temperature and power; the Wärter sends the DGX's "
                "values with its status. rechnerblick.warnungen warns by fixed rules: the panel computer from "
                "{rechnerblick.TEMP_WARN} °C, throttled or short of power, less than {rechnerblick.RAM_MIN_GIB} GiB free; "
@@ -401,7 +405,10 @@ SEITEN = {
                "list still: always {rechnerblick.ZEILEN} lines in a fixed order, chosen over 20 minutes, 0 % instead of "
                "gone; both cards show the same rows at the same height (mirror cards). Services that start only for a "
                "job (rechnerblick.ABRUF: image understanding, Werkstatt, case) rest as „ready“; what is not installed on "
-               "the DGX is left out.")),
+               "the DGX is left out. Each card shows a picture of its computer: geraetebild.art picks an own drawing by "
+               "fixed patterns in the device name (else a neutral computer), or the admin uploads an own photo; "
+               "geraetebild.jpeg stores it anew as a JPEG with an edge of at most {geraetebild.MAX_PX} pixels and without "
+               "extra data. None of it comes from the internet.")),
             S("s10", "schritt", ("Steuerzentrale am Bildschirm", "Control centre on the screen"),
               ("tty1, nur lokal mit Schlüssel", "tty1, local only with a key"),
               ("Ist Funktionen → Steuerzentrale am Bildschirm an, startet schirm.abgleich den Dienst und lässt ihn beim "
@@ -440,6 +447,7 @@ SEITEN = {
             ("{rechnerblick.PLATTE_MIN_PCT} %", ("Platte frei, darunter ein Hinweis", "disk free, below it a note"), "rechnerblick.PLATTE_MIN_PCT"),
             ("{rechnerblick.RAM_MIN_GIB} GiB", ("Arbeitsspeicher frei am Panel-Rechner, darunter ein Hinweis", "memory free on the panel computer, below it a note"), "rechnerblick.RAM_MIN_GIB"),
             ("{rechnerblick.LEERLAUF_PCT} %", ("CPU, ab der der größte Dienst als „rechnet gerade“ gilt", "CPU from which the biggest service counts as „computing now“"), "rechnerblick.LEERLAUF_PCT"),
+            ("{geraetebild.MAX_PX} Pixel", ("längste Kante des eigenen Fotos eines Rechners", "longest edge of a computer's own photo"), "geraetebild.MAX_PX"),
             ("{schirm.SIEHT_S} s", ("ohne Frage der Steuerzentrale, dann gilt der Bildschirm als dunkel", "without a question from the control centre, then the screen counts as dark"), "schirm.SIEHT_S"),
         ],
         "einstellen": [
@@ -482,6 +490,8 @@ SEITEN = {
             ("rechner.dienste_cpu", ("CPU je Dienst aus systemd", "CPU per service from systemd")),
             ("rechenteile.messen", ("CPU je Teil des Panels", "CPU per part of the panel")),
             ("rechnerblick.spitze", ("wer am meisten rechnet", "who computes most")),
+            ("geraetebild.art", ("die Zeichnung nach festen Mustern im Gerätenamen", "the drawing by fixed patterns in the device name")),
+            ("geraetebild.jpeg", ("das eigene Foto neu als kleines JPEG ohne Zusatzdaten", "the own photo anew as a small JPEG without extra data")),
             ("schirm.schirm_zustand", ("nur lokal und mit Schlüssel", "local only and with a key")),
             ("schirm.abgleich", ("Dienst folgt dem Schalter", "unit follows the switch")),
             ("schirm.an_jetzt", ("dunkel nach den Zeiten", "dark by the times")),

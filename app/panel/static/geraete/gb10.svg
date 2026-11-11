@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" role="img" aria-label="Dell Pro Max GB10">
+  <!-- own drawing in the app's style (no manufacturer's picture): the small desktop box with its perforated front -->
+  <rect width="160" height="120" rx="14" fill="#8a94a6" fill-opacity=".12"/>
+  <ellipse cx="80" cy="97" rx="56" ry="5" fill="#8a94a6" fill-opacity=".25"/>
+  <rect x="26" y="34" width="108" height="58" rx="9" fill="#c9ced8" stroke="#6b7385" stroke-width="2"/>
+  <rect x="26" y="34" width="108" height="14" rx="9" fill="#e4e7ec" stroke="#6b7385" stroke-width="2"/>
+  <rect x="34" y="54" width="92" height="30" rx="5" fill="#3a4050"/>
+  <g fill="#8a94a6">
+    <circle cx="42" cy="61" r="2"/><circle cx="50" cy="61" r="2"/><circle cx="58" cy="61" r="2"/><circle cx="66" cy="61" r="2"/><circle cx="74" cy="61" r="2"/><circle cx="82" cy="61" r="2"/><circle cx="90" cy="61" r="2"/><circle cx="98" cy="61" r="2"/><circle cx="106" cy="61" r="2"/><circle cx="114" cy="61" r="2"/>
+    <circle cx="46" cy="69" r="2"/><circle cx="54" cy="69" r="2"/><circle cx="62" cy="69" r="2"/><circle cx="70" cy="69" r="2"/><circle cx="78" cy="69" r="2"/><circle cx="86" cy="69" r="2"/><circle cx="94" cy="69" r="2"/><circle cx="102" cy="69" r="2"/><circle cx="110" cy="69" r="2"/><circle cx="118" cy="69" r="2"/>
+    <circle cx="42" cy="77" r="2"/><circle cx="50" cy="77" r="2"/><circle cx="58" cy="77" r="2"/><circle cx="66" cy="77" r="2"/><circle cx="74" cy="77" r="2"/><circle cx="82" cy="77" r="2"/><circle cx="90" cy="77" r="2"/><circle cx="98" cy="77" r="2"/><circle cx="106" cy="77" r="2"/><circle cx="114" cy="77" r="2"/>
+  </g>
+  <circle cx="124" cy="41" r="2.5" fill="#34c759"/>
+</svg>

@@ -212,6 +212,7 @@ function zRCard(c){const card=document.createElement('div');card.className='card
   pl.className='pill '+(c.stufe||'');pl.textContent=stale?t('antwortet nicht','not answering')+(c.stumm_s!=null?t(' seit ',' for ')+zDur(c.stumm_s):''):c.stufe==='ok'?t('alles gut','all good'):c.stufe==='bad'?t('Fehler','Error'):t('Hinweis','Note');
   h.append(nm,pl);const meta=document.createElement('div');meta.className='mut zrmeta';
   meta.textContent=[c.geraet,c.system,c.laeuft_s!=null?t('läuft seit ','up ')+zDur(c.laeuft_s):'',c.version].filter(Boolean).join(' · ');card.append(h,meta);
+  h.prepend(zRBild(c));
   const K=c.kurven||{},hw=c.hinweise||[],g=c.gpu||{},modell=c.id==='modell';
   const row=(k,big,small,curve,max,lvl,cls)=>{const r=document.createElement('div');r.className='zrrow'+(cls?' '+cls:'');const tx=document.createElement('div');
     const kk=document.createElement('small');kk.textContent=k;const b=document.createElement('b');b.textContent=big;tx.append(kk,b);
@@ -254,6 +255,34 @@ function zRechner(R){const box=$('zrechner'),h=$('zrechnerh');if(!box)return;box
   const neu=R.map(zRCard),alt=[...box.children];
   if(alt.length!==neu.length||alt.some((c,i)=>c.dataset.id!==neu[i].dataset.id)){box.replaceChildren(...neu);return}
   neu.forEach((n,i)=>zRSetzen(alt[i],n))}
+// The computer's picture (geraetebild.py): the panel's own drawing that fits the device, or the admin's own photo.
+// It sits in the card's head (no row of its own, the cards keep their ZR_ZEILEN places); a click opens it big with
+// „Eigenes Foto wählen“ and „Foto entfernen“. The photo is made small here before it is sent.
+const ZR_BILD=['gb10','pi','rechner'];
+const zRBildSrc=c=>{const b=c.bild||{};return b.eigen?`/api/admin/rechner/bild/${c.id}?t=${b.eigen}`:`/static/geraete/${ZR_BILD.includes(b.art)?b.art:'rechner'}.svg`};
+function zRBild(c){const b=document.createElement('button');b.type='button';b.className='zrbild';b.dataset.id=c.id;
+  b.title=t('Bild des Rechners: groß ansehen, eigenes Foto wählen','Picture of the computer: view it big, choose an own photo');b.setAttribute('aria-label',b.title);
+  const im=document.createElement('img');im.alt='';im.width=88;im.height=66;im.src=zRBildSrc(c);b.appendChild(im);return b}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.zrbild');if(b)zRBildGross(b.dataset.id,b.querySelector('img').src,!b.querySelector('img').src.includes('/static/geraete/'))});
+function zRBildGross(id,src,eigen){document.getElementById('zrbilddlg')?.remove();
+  const d=document.createElement('dialog');d.id='zrbilddlg';d.className='zrbilddlg';const im=document.createElement('img');im.alt='';im.src=src;
+  const note=document.createElement('p');note.className='mut';
+  note.textContent=eigen?t('Dein eigenes Foto. Es liegt nur auf dem Spark.','Your own photo. It is kept only on the Spark.')
+    :t('Eine Zeichnung des Spark. Mit einem eigenen Foto siehst du dein echtes Gerät; es bleibt auf dem Spark.','A drawing of the Spark. With an own photo you see your real device; it stays on the Spark.');
+  const row=document.createElement('div');row.className='row';const msg=document.createElement('span');msg.className='mut';msg.setAttribute('role','status');
+  const mk=(txt,cls,fn)=>{const x=document.createElement('button');x.type='button';x.className=cls;x.textContent=txt;x.onclick=fn;row.appendChild(x);return x};
+  const fertig=()=>{d.close();d.remove();refresh()};
+  mk(t('Eigenes Foto wählen …','Choose an own photo …'),'b p',()=>{const f=document.createElement('input');f.type='file';f.accept='image/jpeg,image/png,image/webp';
+    f.onchange=async()=>{if(!f.files[0])return;msg.textContent=t('Wird gespeichert …','Saving …');
+      try{const bild=await zRBildKlein(f.files[0]);await api(`/api/admin/rechner/bild/${id}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bild})});fertig()}
+      catch(err){msg.textContent=err.message||t('Das Bild ließ sich nicht speichern.','The picture could not be saved.')}};f.click()});
+  if(eigen)mk(t('Foto entfernen','Remove photo'),'b',async()=>{try{await api(`/api/admin/rechner/bild/${id}`,{method:'DELETE'});fertig()}catch(err){msg.textContent=err.message}});
+  mk(t('Schließen','Close'),'b',()=>{d.close();d.remove()});
+  d.append(im,note,row,msg);d.addEventListener('click',e=>{if(e.target===d){d.close();d.remove()}});document.body.appendChild(d);d.showModal()}
+// at most 800 px and a fresh JPEG: small to send, and the file's extra data (place, camera) never leaves the browser
+async function zRBildKlein(file){const bmp=await createImageBitmap(file),k=Math.min(1,800/Math.max(bmp.width,bmp.height));
+  const cv=document.createElement('canvas');cv.width=Math.max(1,Math.round(bmp.width*k));cv.height=Math.max(1,Math.round(bmp.height*k));
+  cv.getContext('2d').drawImage(bmp,0,0,cv.width,cv.height);return cv.toDataURL('image/jpeg',.85)}
 function zRSetzen(alt,neu){alt.className=neu.className;alt.dataset.lvl=neu.dataset.lvl;const N=[...neu.children];
   N.forEach((x,i)=>{const a=alt.children[i];if(!a)alt.appendChild(x);else if(!a.isEqualNode(x))a.replaceWith(x)});
   while(alt.children.length>N.length)alt.lastElementChild.remove()}

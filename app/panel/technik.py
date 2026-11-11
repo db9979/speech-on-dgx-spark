@@ -443,6 +443,7 @@ MODULE = {
     "schirm": ("teilen", "Steuerzentrale am Bildschirm: was die Textanzeige zeigt, nur lokal mit Schlüssel; der Dienst folgt dem Schalter"),
     "steuerzentrale": ("teilen", "Textanzeige auf tty1: zeichnet die Steuerzentrale, Schrift nach Auflösung, dunkel nach Zeitplan"),
     "rechnerblick": ("teilen", "Zustand → Überblick → Rechner: beide Rechner nebeneinander, Kurven, Hinweise nach festen Regeln"),
+    "geraetebild": ("teilen", "Bild auf den Rechner-Karten: eigene Zeichnung nach dem erkannten Gerät oder ein eigenes Foto des Admins"),
     "rechenteile": ("teilen", "Wer rechnet gerade: CPU je Teil des Panels aus seinen Threads und Hilfsprozessen"),
     "einordnung": ("sprache", "Regeln für System-One-Fragen, gemeinsam für Panel und LLM-Tor"),
     "bildmodell": ("sprache", "Bildmodelle: Varianten, Dateien mit festen Prüfsummen, Laden bei der Installation"),

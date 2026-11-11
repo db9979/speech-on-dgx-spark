@@ -598,6 +598,7 @@ Panel auf einem eigenen Rechner, Modelle auf dem DGX: Kopplung, TLS-Tor, Wärter
 | Modul | Aufgabe |
 |---|---|
 | `app/panel/gehaeuse.py` | Gehäuse des Panel-Rechners (Pironman 5): OLED-Seiten für den Admin, Status-LEDs, Lüftergrenzen |
+| `app/panel/geraetebild.py` | Bild auf den Rechner-Karten: eigene Zeichnung nach dem erkannten Gerät oder ein eigenes Foto des Admins |
 | `app/panel/notbetrieb.py` | Notbetrieb mit Parakeet: feste Befehle ohne Sprachmodell, wenn der Modell-Rechner fehlt |
 | `app/panel/rechenteile.py` | Wer rechnet gerade: CPU je Teil des Panels aus seinen Threads und Hilfsprozessen |
 | `app/rechner.py` | Werte eines Rechners: CPU (auch je Dienst), Speicher, Platte, Netz, Temperatur, Strom (für beide Rechner gleich) |
@@ -805,6 +806,7 @@ Alle Dateien gehören dem Benutzer `speech` (Ordner 0700, Dateien 0600) und werd
 | `state/fernzugang.json` | Fernzugang: gekoppelte Fern-Server (Name, System, Host-Schlüssel, Zeiten, die gemeldeten Fingerabdrücke der Schlüssel für sshTermy), je Server ein eigener SSH-Schlüssel des Panels, der Geräteschlüssel des Ankers nur als SHA-256 | SSH-Schlüssel versiegelt, Geräteschlüssel nur als Hash | nein |
 | `state/gehaeuse-wunsch.json` | Wunsch des Panels für das Gehäuse (einrichten, entfernen, neu starten), Sekunden | – | nein |
 | `state/geraete-updates.json` | Geräte-Updates | – | ja |
+| `state/geraetebild.json` | Eigene Fotos der beiden Rechner für ihre Karten unter Zustand → Überblick → Rechner (klein, als JPEG ohne Aufnahmedaten); löschen dort am Bild mit „Foto entfernen“ | – | ja |
 | `state/github-token.json` | GitHub-Lese-Token | versiegelt | ja |
 | `state/github-wunsch` | Wartender Zweig für GitHub (An GitHub geben): ein Thema aus festen Zeichen, bis root ihn weitergegeben hat | – | nein |
 | `state/guacd-bau.json` | Fernzugang → Bildschirm: wie der letzte Bau von guacd ausging (ok oder ein festes Wort wie laden oder bauen, und wann); schreibt install.sh, das nächste Update ersetzt ihn | – | nein |
@@ -3793,7 +3795,7 @@ flowchart TD
 5. <a id="kn-teilen-s5"></a>**Verbindung zum TLS-Tor erlaubt?**: Jede Anfrage an Spracherkennung, Sprachausgabe, Sprachmodell, Bilder und Wärter geht durch das Tor. Es spricht nur TLS 1.3 und lässt nur den Panel-Rechner herein; den Inhalt liest es nie.
 6. <a id="kn-teilen-s6"></a>**Befehl an den Wärter**: steuer.call schickt einen Befehl mit Zeitstempel und einer Nummer, die nur einmal gilt, unterschrieben mit dem Wärter-Schlüssel.
 7. <a id="kn-teilen-s7"></a>**Unterschrift, Zeit, Nummer, Befehl gültig?**: tarswart.check prüft die Unterschrift, eine Zeit höchstens 60 s daneben, die Nummer nur einmal und einen Befehl aus der festen Liste. Keine Shell, keine freien Namen. Nur die Probe einer gestalteten Stimme (stimme_ablegen) geht über den eigenen Pfad /v1/wart/stimme mit größerem Limit; stimmablage prüft dort Name, WAV und Anzahl.
-8. <a id="kn-teilen-s9"></a>**Werte beider Rechner**: rechner.messen misst CPU, Speicher, Platte, Netz, Temperatur und Strom; der Wärter schickt die Werte des DGX mit seinem Zustand. rechnerblick.warnungen meldet mit festen Regeln: Panel-Rechner ab 80 °C, gedrosselt oder zu wenig Strom, weniger als 0.5 GiB frei; auf jedem Rechner weniger als 10 % Platte frei; der DGX antwortet nicht. „Wer rechnet gerade“: rechner.dienste_cpu nimmt den Anteil jedes Dienstes an der CPU aus den Zählern von systemd, rechenteile.messen die Teile des Panels aus seinen Threads und Hilfsprozessen; rechnerblick.spitze nennt den größten ab 5 %, darunter ist Leerlauf. rechnerblick.wer hält die Liste ruhig: immer 6 Zeilen in fester Reihenfolge, gewählt über 20 Minuten, 0 % statt weg; beide Karten zeigen dieselben Zeilen auf gleicher Höhe (Spiegel-Karten). Dienste, die nur für einen Auftrag starten (rechnerblick.ABRUF: Bildverständnis, Werkstatt, Gehäuse), stehen in Ruhe als „bereit“; was auf dem DGX nicht installiert ist, fehlt.
+8. <a id="kn-teilen-s9"></a>**Werte beider Rechner**: rechner.messen misst CPU, Speicher, Platte, Netz, Temperatur und Strom; der Wärter schickt die Werte des DGX mit seinem Zustand. rechnerblick.warnungen meldet mit festen Regeln: Panel-Rechner ab 80 °C, gedrosselt oder zu wenig Strom, weniger als 0.5 GiB frei; auf jedem Rechner weniger als 10 % Platte frei; der DGX antwortet nicht. „Wer rechnet gerade“: rechner.dienste_cpu nimmt den Anteil jedes Dienstes an der CPU aus den Zählern von systemd, rechenteile.messen die Teile des Panels aus seinen Threads und Hilfsprozessen; rechnerblick.spitze nennt den größten ab 5 %, darunter ist Leerlauf. rechnerblick.wer hält die Liste ruhig: immer 6 Zeilen in fester Reihenfolge, gewählt über 20 Minuten, 0 % statt weg; beide Karten zeigen dieselben Zeilen auf gleicher Höhe (Spiegel-Karten). Dienste, die nur für einen Auftrag starten (rechnerblick.ABRUF: Bildverständnis, Werkstatt, Gehäuse), stehen in Ruhe als „bereit“; was auf dem DGX nicht installiert ist, fehlt. Jede Karte zeigt ein Bild ihres Rechners: geraetebild.art wählt nach festen Mustern im Gerätenamen eine eigene Zeichnung (sonst einen neutralen Rechner), oder der Admin lädt ein eigenes Foto hoch; geraetebild.jpeg speichert es neu als JPEG mit höchstens 640 Pixeln Kante und ohne Zusatzdaten. Nichts davon kommt aus dem Internet.
 9. <a id="kn-teilen-s10"></a>**Steuerzentrale am Bildschirm**: Ist Funktionen → Steuerzentrale am Bildschirm an, startet schirm.abgleich den Dienst und lässt ihn beim Booten von selbst starten, ohne Anmeldung. steuerzentrale.py fragt jede Sekunde schirm.schirm_zustand, nur von 127.0.0.1 und mit dem eigenen Schlüssel, und zeichnet Fluss, beide Rechner, Dienste und Kurven als Text; nur Art, Ort, Zeit und Zahlen. steuerzentrale.schrift wählt die Schrift nach der Auflösung für genug Spalten und Zeilen, schirm.an_jetzt schaltet nach den Zeiten dunkel. Aus geschaltet, startet schirm.anmeldung die Anmeldung auf tty1 wieder; ein Neustart der Anzeige hält ein Update nie an.
 10. <a id="kn-teilen-s8"></a>**Notbetrieb, wenn der DGX fehlt**: Antwortet der DGX nicht mehr, laufen Chats, Erinnerungen und Logs auf dem Panel-Rechner weiter, und Sprachfragen bekommen einen festen Satz.
 
@@ -3809,6 +3811,7 @@ flowchart TD
 - **10 %** Platte frei, darunter ein Hinweis ([Schritt 8](#kn-teilen-s9))
 - **0.5 GiB** Arbeitsspeicher frei am Panel-Rechner, darunter ein Hinweis ([Schritt 8](#kn-teilen-s9))
 - **5 %** CPU, ab der der größte Dienst als „rechnet gerade“ gilt ([Schritt 8](#kn-teilen-s9))
+- **640 Pixel** längste Kante des eigenen Fotos eines Rechners ([Schritt 8](#kn-teilen-s9))
 - **15 s** ohne Frage der Steuerzentrale, dann gilt der Bildschirm als dunkel ([Schritt 9](#kn-teilen-s10))
 
 #### Einstellen
@@ -3840,6 +3843,8 @@ flowchart TD
 - `app/rechner.py` `dienste_cpu`: CPU je Dienst aus systemd ([Schritt 8](#kn-teilen-s9))
 - `app/panel/rechenteile.py` `messen`: CPU je Teil des Panels ([Schritt 8](#kn-teilen-s9))
 - `app/panel/rechnerblick.py` `spitze`: wer am meisten rechnet ([Schritt 8](#kn-teilen-s9))
+- `app/panel/geraetebild.py` `art`: die Zeichnung nach festen Mustern im Gerätenamen ([Schritt 8](#kn-teilen-s9))
+- `app/panel/geraetebild.py` `jpeg`: das eigene Foto neu als kleines JPEG ohne Zusatzdaten ([Schritt 8](#kn-teilen-s9))
 - `app/panel/schirm.py` `schirm_zustand`: nur lokal und mit Schlüssel ([Schritt 9](#kn-teilen-s10))
 - `app/panel/schirm.py` `abgleich`: Dienst folgt dem Schalter ([Schritt 9](#kn-teilen-s10))
 - `app/panel/schirm.py` `an_jetzt`: dunkel nach den Zeiten ([Schritt 9](#kn-teilen-s10))
@@ -3893,7 +3898,7 @@ flowchart TD
 4. <a id="kn-state-s4"></a>**Versiegeln**: vault.seal macht aus dem Wert „enc1:“ und ein Fernet-Token (verschlüsselt und gegen Änderung geschützt). Ein schon versiegelter Wert bleibt, wie er ist.
 5. <a id="kn-state-s5"></a>**Atomar schreiben**: common.write_json schreibt in eine frische Zwischendatei daneben, nie durch einen Link, gibt ihr die Rechte der alten Datei (eine neue ist nur für den Dienst lesbar) und tauscht sie dann in einem Schritt aus. Ein Absturz mittendrin lässt die alte Datei ganz.
 6. <a id="kn-state-s6"></a>**Lesen**: Ein versiegelter Wert wird mit dem Schlüssel geöffnet. Passt der Schlüssel nicht (Sicherung von einem anderen Spark), kommt ein leerer Wert zurück und der Zugang muss neu eingetragen werden. Ältere unversiegelte Werte werden gelesen und beim nächsten Speichern versiegelt.
-7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 50), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 114). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
+7. <a id="kn-state-s7"></a>**Kommt in die Sicherung?**: Jede Datei in state/ hat genau eine Zeile im Datei-Register dateien.py: mit ihrer Art kommt sie in jede Sicherung (dateien.STATE_FILES, 51), sonst steht dort ihr Grund (dateien.STATE_LOCAL, 114). backup.py nimmt beide Listen von dort. test_technik findet jeden Namen, den der Code dort schreibt, und verlangt seine Zeile.
 8. <a id="kn-state-s8"></a>**Umzugs-Sicherung?**: secret.key ist in keiner gewöhnlichen Sicherung. Nur eine Umzugs-Sicherung trägt ihn, versiegelt mit einem Passwort des Admins (scrypt und Fernet, move-keys.json). Die Anmelde-Schlüssel des Spark sind in keiner Sicherung.
 9. <a id="kn-state-s9"></a>**Beim Wiederherstellen in Ordnung?**: _check_state prüft jede Datei der Sicherung: höchstens 8 MB, gültiges JSON, der Push-Schlüssel ein echter EC-Schlüssel. Ein zweiter Schritt des Admins, dessen Geheimnis sich hier nicht öffnen lässt, wird nicht übernommen; der bisherige bleibt.
 10. <a id="kn-state-s10"></a>**Einsetzen mit Rückweg**: _swap schreibt jede Datei über eine Zwischendatei (nie durch einen Link) und merkt sich den alten Inhalt. Geht ein Schritt schief, kommt alles Getauschte zurück.
@@ -3903,7 +3908,7 @@ flowchart TD
 
 #### Zahlen (aus dem Code)
 
-- **50** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
+- **51** Dateien in jeder Sicherung ([Schritt 7](#kn-state-s7))
 - **114** Dateien und Ordner, die mit Grund draußen bleiben ([Schritt 7](#kn-state-s7))
 - **8 MB** größte Datei beim Wiederherstellen ([Schritt 9](#kn-state-s9))
 - **12** Zeichen hat das Umzugs-Passwort mindestens ([Schritt 8](#kn-state-s8))
