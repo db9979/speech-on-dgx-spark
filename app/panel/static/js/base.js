@@ -109,6 +109,9 @@ const ERR_PLAIN=[[/^(too large|too big)$/i,'Das ist zu groß.','That is too larg
   [/not reachable/i,'Der Dienst ist gerade nicht erreichbar. Bitte Adresse und Netz prüfen.','The service cannot be reached right now. Please check the address and the network.'],
   [/rejects? the (user name or password|token)|rejected the token/i,'Benutzername, Passwort oder Token werden abgelehnt.','The user name, password or token is refused.'],
   [/^[a-z][\w ]* (are|is) turned off\b/i,'Diese Funktion ist ausgeschaltet (Funktionen bzw. Ich).','This function is switched off (Features or Me).']];
+// A page whose function is off says so with the way to its switch, instead of a lasting „Lade …“ (code review
+// 2026-11-11, point 6; reached by a link or an old tab while the menu entry is hidden). Fixed names only.
+const ausSatz=(de,en)=>t(`Die Funktion „${de}“ ist ausgeschaltet. Der Admin schaltet sie ein unter Funktionen → ${de}.`,`The function "${en}" is switched off. The admin switches it on under Features → ${en}.`);
 function errSay(status,d,raw){
   if(Array.isArray(d)){const f=[...new Set(d.map(x=>x&&Array.isArray(x.loc)?x.loc.filter(k=>typeof k==='string'&&k!=='body').pop():'').filter(Boolean))];
     return f.length?t('Diese Angabe fehlt oder passt nicht: ','This entry is missing or does not fit: ')+f.join(', '):t('Die Eingabe passt nicht.','The input does not fit.')}

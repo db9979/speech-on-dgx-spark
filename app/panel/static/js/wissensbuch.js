@@ -43,7 +43,7 @@ function wbSay(x,err){WB.msg=String(x||'').slice(0,300);WB.err=!!err;const m=doc
 function wbPaint(w){const W=WB.data;w.classList.toggle('ld-sel',!!WB.sel);
   if(!w.querySelector('.ld-split'))w.innerHTML=`<div class="ld-split"><div class="ld-list"></div><div class="ld-detail wbdet" hidden></div></div>`;
   const list=w.querySelector('.ld-list');
-  if(!W){list.innerHTML=`<div class="ld-empty mut">${esc(WB.err?WB.msg:t('Lade das Wissensbuch …','Loading the knowledge book …'))}</div>`;return}
+  if(!W){list.innerHTML=`<div class="ld-empty mut"><span>${esc(WB.err?WB.msg:WB_ON?t('Lade das Wissensbuch …','Loading the knowledge book …'):ausSatz('Wissensbuch','Knowledge book'))}</span></div>`;return}
   const pages=(W.seiten||[]).filter(p=>p.n),q=WB.q.trim().toLowerCase(),shown=q?pages.filter(p=>p.title.toLowerCase().includes(q)):pages;
   const open=(W.widersprueche||[]).length+(W.veraltet||[]).length;
   const groups=Object.keys(WBART).map(a=>[a,shown.filter(p=>p.art===a)]).filter(([,l])=>l.length);

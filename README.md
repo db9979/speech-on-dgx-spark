@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.382** Collections, Knowledge book, Dungeon Master and Contacts say when their function is switched off, with the way to the switch, instead of showing "Loading …" for ever
 - **V01.1.381** Picture of the computer: every computer card under Status → Summary shows a drawing of the recognised device (GB10, Raspberry Pi); the admin can upload an own photo, it stays on the Spark
 - **V01.1.380** Stable tests: no test depends on the date any more, a nightly run with the clock 120 days ahead guards it, chronic wobblers count as red; an audio overview waits for its designed voices instead of taking the standard voice at once; designed voices are locked on every way where they are not allowed
 - **V01.1.379** Knowledge map stage 2: wish waiting documents first, contradictions in red, dragged points stay pinned, a time filter, a timeline with deadlines, topic islands for many points and room for 1000 documents
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.375** OpenCode shown correctly: System updates shows OpenCode on the Pi as installed when Develop on the Pi set it up; when it is missing, the install command is shown.
 - **V01.1.374** Design own voices: 20 ready answer voices and up to three of your own from fields and own words, made once with VoiceDesign and then the same in every answer; VoiceDesign loads only when needed
 - **V01.1.373** AI Dungeon Master with a rule depth: Simple or Full instead of 58 switches, the host chooses per round, console tools without a switch, six own switches stay
-- **V01.1.372** New avatar "Wave": no face, a line at rest, a wave with an echo while speaking, in the panel, the apps, the companion and on the Pebble
 
 
 

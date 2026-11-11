@@ -83,7 +83,7 @@ async function dmRound(){if(!DM.rid)return;const seq=++DM.seq;const {r,d}=await 
   if(!r.ok){const m=document.querySelector('#dmview .dmmsg');if(m)m.scrollIntoView({block:'center',behavior:'smooth'})}}
 function dmDraw(){const w=$('dmview');if(w)dmPaint(w)}
 function dmPaint(w){const D=DM.data;w.classList.toggle('dm-voll',!!DMA.voll);w.classList.remove('dm-amtisch');delete w.dataset.welt;dmLook(w,D&&dmWelt(D.wahl,DM.welt).farben);
-  if(!D){w.innerHTML=`<div class="ld-empty mut">${esc(DM.err?DM.msg:t('Lade den Dungeon-Master …','Loading the Dungeon Master …'))}</div>`;return}
+  if(!D){w.innerHTML=`<div class="ld-empty mut"><span>${esc(DM.err?DM.msg:DM.on?t('Lade den Dungeon-Master …','Loading the Dungeon Master …'):ausSatz('KI-Dungeon-Master','AI Dungeon Master'))}</span></div>`;return}
   if(w.dataset.tab==='helden'){w.innerHTML=`<div class="dm-mitte">${dmTop(t('Deine Helden','Your heroes'))+dmHeroes(D)+dmMsg(DM)}</div>`;return}
   if(DM.v){dmTable(w,DM.v,'p');return}
   w.innerHTML=`<div class="dm-mitte">${dmTop(t('Runden, Kampagnen und eine neue Runde','Rounds, campaigns and a new round'))+dmRounds(D)+dmCampaigns(D)+dmNew(D)+dmMsg(DM)}</div>`;dmDingFill(w,'p')}

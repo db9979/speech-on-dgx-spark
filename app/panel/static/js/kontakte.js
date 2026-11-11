@@ -53,7 +53,7 @@ function konShown(){const d=KON.data,q=KON.q.trim().toLowerCase();
   return d.cards.filter(c=>(!KON.book||c.book===KON.book)&&(!q||[c.name,c.org,c.nick,...c.emails,...c.phones.map(p=>p[1])].some(v=>String(v||'').toLowerCase().includes(q))))}
 // the rows under their letters and the bar of the letters there are (tapping one jumps to it)
 function konRows(w){const d=KON.data,rows=w.querySelector('.konrows'),bar=w.querySelector('.konlet');
-  if(!d){rows.innerHTML=KON.busy?`<div class="ld-empty mut">${esc(t('Lade die Kontakte …','Loading the contacts …'))}</div>`:'';bar.innerHTML='';return}
+  if(!d){rows.innerHTML=KON.busy||!CON_ON?`<div class="ld-empty mut"><span>${esc(CON_ON?t('Lade die Kontakte …','Loading the contacts …'):ausSatz('Kontakte','Contacts'))}</span></div>`:'';bar.innerHTML='';return}
   const shown=konShown(),by={};shown.forEach(c=>{(by[konLetter(c)]=by[konLetter(c)]||[]).push(c)});
   const lets=Object.keys(by).sort((a,b)=>a==='#'?1:b==='#'?-1:a.localeCompare(b));
   rows.innerHTML=(d.edit?`<div class="ld-more"><button class="b" type="button" data-k="new">${esc(t('+ Neuer Kontakt','+ New contact'))}</button></div>`:'')+

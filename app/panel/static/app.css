@@ -3608,3 +3608,8 @@ details.supk{margin:4px 0 8px}details.supk>summary{cursor:pointer;font:var(--t-s
 .sdplay{width:34px;height:34px;padding:0;display:inline-flex;align-items:center;justify-content:center;flex:none}
 .sdbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:var(--s2)}.sdbar .wide{flex:1;min-width:160px}
 .sdpane .setrow .ld-seg{margin:0}
+/* Feinschliff Bedienung (code review 2026-11-11, point 6). The footer at the bottom of the window on a phone too
+   (on the computer since Webanwendung 6): on a short page it stood in the middle of the screen, on a long one it
+   ended under the tab bar. 59 px = the tab bar (appview.css #profmodal takes the same). */
+body.appview.aptabs:not(.inchat):not(.appage){min-height:100dvh;display:flex;flex-direction:column;box-sizing:border-box;padding-bottom:calc(59px + env(safe-area-inset-bottom))}
+body.appview.aptabs:not(.inchat):not(.appage)>main{flex:1 0 auto;width:100%;box-sizing:border-box}

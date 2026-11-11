@@ -38,7 +38,7 @@ const mpMsg=()=>`<div class="mpmsg ${MP.err?'err':'mut'}" role="status">${esc(MP
 function mpPaint(w){const D=MP.list;w.classList.toggle('ld-sel',!!MP.sel);
   if(!w.querySelector('.ld-split'))w.innerHTML=`<div class="ld-split"><div class="ld-list"></div><div class="ld-detail mpdet"></div></div>`;
   const list=w.querySelector('.ld-list');
-  if(!D){list.innerHTML=`<div class="ld-empty mut">${esc(MP.err?MP.msg:t('Lade die Mappen …','Loading the collections …'))}</div>`;w.querySelector('.mpdet').hidden=true;return}
+  if(!D){list.innerHTML=`<div class="ld-empty mut"><span>${esc(MP.err?MP.msg:MP_ON?t('Lade die Mappen …','Loading the collections …'):ausSatz('Mappen','Collections'))}</span></div>`;w.querySelector('.mpdet').hidden=true;return}
   const l=D.mappen||[],full=l.length>=D.max,form=(MP.neu||!l.length)&&!full;
   list.innerHTML=`<div class="mphead"><span><b>${esc(OWN_PAGES.mpbox[1])}</b><small>${esc(t(`${l.length} von ${D.max}`,`${l.length} of ${D.max}`))}</small></span>`+
     `<button type="button" class="b mpplus" data-mpneu="1" aria-expanded="${form}" aria-label="${esc(t('Neue Mappe','New collection'))}" title="${esc(full?t(`Höchstens ${D.max} Mappen`,`At most ${D.max} collections`):t('Neue Mappe','New collection'))}"${full?' disabled':''}>${ic('plus')}</button></div>
