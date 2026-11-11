@@ -43,6 +43,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.387** Fix: kürzerer Hinweis zu „Eigene Stimmen“ in den Sprachausgabe-Einstellungen.
 - **V01.1.386** Nur eine Base-Engine für Sprachausgabe: ein Base-Hauptmodell spricht die eigenen Stimmen selbst, kein schwächeres zweites Modell daneben; VoiceDesign steht als „lädt bei Bedarf“.
 - **V01.1.385** Überschriften auch mitten im Absatz: eingefügte Chats und Notizen bekommen ihre Abschnitte (fett, mit Doppelpunkt oder Klammer), so zeigen Quellen-Chips den richtigen Abschnitt; gilt nach „Neu einlesen“
 - **V01.1.384** Ich → Überblick aufgeräumt: keine Kopie des Menüs mehr, nur Seiten mit einem Stand; jede Gruppen-Überschrift im Menü steht einmal
@@ -52,7 +53,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.1.380** Tests stabil: kein Test hängt mehr vom Datum ab, ein nächtlicher Lauf mit der Uhr 120 Tage voraus wacht darüber, Dauer-Wackler zählen als rot; ein Hörstück wartet auf seine gestalteten Stimmen, statt sofort die Standardstimme zu nehmen; gestaltete Stimmen sind auf jedem Weg gesperrt, wo sie nicht erlaubt sind
 - **V01.1.379** Wissenskarte Stufe 2: wartende Dokumente vorziehen, Widersprüche rot, gezogene Punkte bleiben angeheftet, Filter nach Zeit, eine Zeitleiste mit Fristen, Themen-Inseln bei vielen Punkten und Platz für 1000 Dokumente
 - **V01.1.378** Listen wie Apple Erinnerungen: Kacheln Heute, Geplant, Alle, Markiert, Listen mit Farbe, leere Zeile zum Weitertippen, Ziehen zum Sortieren und Verschieben, ⓘ mit Notiz, Datum, Uhrzeit mit Erinnern, Markiert und Priorität; im Panel, am Handy und in der iPhone-App.
-- **V01.1.377** Sprachausgabe bei vielen Anfragen: 4 Stimmen gleichzeitig statt 2, der erste Satz einer Antwort geht vor, neue Einstellung „Blöcke selbst anpassen“
 
 
 
