@@ -14,6 +14,7 @@ import asyncio
 import io
 import json
 import os
+import time
 import types
 import unittest
 from contextlib import redirect_stdout
@@ -41,7 +42,11 @@ from common import load_config  # noqa: E402
 ADMIN = TestClient(panel.app)
 ADMIN.post("/api/login", json={"password": "secret-admin"})
 STATE = os.environ["SPEECH_SPARK_STATE"]
-T0 = 1_791_800_000.0          # a fixed moment (Oct 2026); every time below is relative to it
+# a fixed moment (Oct 2026), moved on by whole weeks so it stays within the last 7 days: the code keeps cases only
+# faelle.KEEP_S (30 days) back from the real clock (faelle.get, the admin's list), and a moment further back made
+# every case vanish once it was 30 days old (main red 2026-11-11). Weekday and time of day stay those of the moment;
+# every time below is relative to it
+T0 = 1_791_800_000.0 + 7 * 86400 * max(0, int((time.time() - 1_791_800_000.0) // (7 * 86400)))
 OFF = dict(berater=False, berater_explain=False, berater_chat=False, berater_notify=False, berater_issue=False,
            berater_auto=False, berater_env=False, berater_ideas=False, berater_analyse=False, berater_auto_undo=False, berater_me=False, bewerten=False, bewerten_back=False,
            berater_off=[], berater_calls=20, berater_check_h=24, tool_hints="", tool_words="", route_extra="")

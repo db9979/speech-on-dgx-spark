@@ -18,6 +18,7 @@ from tests import helpers
 helpers.start()
 import common  # noqa: E402
 import gehaeuse  # noqa: E402
+import llm  # noqa: E402
 import steuer  # noqa: E402
 
 APP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -51,6 +52,10 @@ class Base(unittest.TestCase):
     def setUp(self):
         self.old = common.load_config()
         self.addCleanup(helpers.write_config, self.old)
+        # the model an earlier test left in llm._models (a fake name) would show instead of the setting
+        p = mock.patch.dict(llm._models, clear=True)
+        p.start()
+        self.addCleanup(p.stop)
         self.hw = FakeHw()
         p = mock.patch.object(gehaeuse, "hw", self.hw)
         p.start()

@@ -15,6 +15,7 @@ from tests import helpers
 helpers.start()
 import health  # noqa: E402
 import live  # noqa: E402
+import llm  # noqa: E402
 import rechenteile  # noqa: E402
 import rechner  # noqa: E402
 import rechnerblick  # noqa: E402
@@ -128,6 +129,10 @@ class Karten(unittest.TestCase):
     def setUp(self):
         leer()
         self.addCleanup(leer)
+        # the model an earlier test left in llm._models (a fake name) would show instead of the setting
+        p = mock.patch.dict(llm._models, clear=True)
+        p.start()
+        self.addCleanup(p.stop)
         for name, kw in (("remote", {"return_value": True}), ("weg", {"return_value": False}), ("stumm_s", {"return_value": 2})):
             p = mock.patch.object(steuer, name, **kw)
             p.start()

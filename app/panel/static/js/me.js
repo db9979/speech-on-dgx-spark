@@ -830,7 +830,8 @@ async function renderSet(el,vals,onchange){const admin=!onchange;await setReady(
       ctl=`<select id="${id}" class="facesel" data-noseg>${opts(f).map(([a])=>[a,a?nm[a]||a:t('Vorgabe','Default')+' ('+nm[sp]+')'])
         .map(([a,b])=>`<option value="${a}"${a?'':` data-short="${esc(t('Vorgabe','Default'))}"`}${(v[f.k]||'')===a?' selected':''}>${esc(b)}</option>`).join('')}</select>`}
     else if(f.type==='text')ctl=`<textarea id="${id}" rows="3" maxlength="${f.max}">${esc(v[f.k]||'')}</textarea>`;
-    else if(f.type==='sd')ctl=`<button class="b" type="button" id="${id}">${t('Stimmen …','Voices …')}</button>`;
+    else if(f.type==='sd')ctl=why(f)?`<select id="${id}" disabled><option>${t('Stimmen …','Voices …')}</option></select>`   // locked: a control like every locked row
+      :`<button class="b" type="button" id="${id}">${t('Stimmen …','Voices …')}</button>`;
     else if(f.type==='voice')ctl=(voices.length?'':'<div>')+`<select id="${id}"><option value="">${t('Standard','Default')}</option>${[...new Set([...voices,...(v.voice?[v.voice]:[])])].map(x=>`<option${x===v.voice?' selected':''}>${esc(x)}</option>`).join('')}</select>`+(voices.length?'':`<div class="fh">${t('Die Sprachausgabe nennt gerade keine Stimmen (startet noch?). Später erneut öffnen.','The speech output lists no voices right now (still starting?). Open again later.')}</div></div>`);
     else ctl=`<input type="range" id="${id}" min="${(rng[f.k]||[])[0]}" max="${(rng[f.k]||[])[1]}" step="${f.step}" value="${v[f.k]}"><output id="${id}_o">${Number(v[f.k]).toFixed(2)}×</output>`;
     const head=f.grp!==prev;prev=f.grp;
