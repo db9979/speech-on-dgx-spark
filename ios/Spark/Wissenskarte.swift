@@ -11,6 +11,32 @@ struct WkPoint: Identifiable, Hashable {
     let degree: Int
     var ent: String = ""
     var places: Int = 0
+    /// sentences of its page in the knowledge book marked as a contradiction (red border)
+    var contradictions: Int = 0
+}
+
+/// A topic island of the map (a fixed rule of the Spark groups closely connected points), with its point count.
+struct WkIsland: Identifiable, Hashable {
+    let id: String
+    let name: String
+    let count: Int
+}
+
+/// A document on the Zeitleiste: its date, its deadline and how many shown connections stand on it.
+struct WkDated: Identifiable, Hashable {
+    let id: String
+    let name: String
+    let date: String
+    let deadline: String
+    var count = 0
+}
+
+/// A document still waiting for the map; "Zuerst einarbeiten" puts it first (wissenskarte.vorziehen, daily limits stay).
+struct WkWait: Identifiable, Hashable {
+    let id: String
+    let name: String
+    let first: Bool
+    let failed: Bool
 }
 
 /// A kind of points from documents and how many the profile has (numbers from the Spark, never names).
@@ -41,6 +67,10 @@ struct WkLine: Identifiable, Hashable {
     let detail: String
     let source: String
     let page: Int?
+    var doc: String = ""
+    /// the date of its document (Steckbrief, else the day it came) and the document's deadline, YYYY-MM-DD or ""
+    var date: String = ""
+    var deadline: String = ""
 }
 
 /// Wissensbuch → Karte in the app: the part of the map the Spark chose (around a page or the best connected ones),
@@ -53,6 +83,15 @@ final class WissenskarteModel: ObservableObject {
     @Published var center = ""
     @Published var cut = false
     @Published var waiting = 0
+    @Published var waitList: [WkWait] = []
+    /// points pinned in the browser (wk_lage); the phone keeps its ring layout, shows a pin and can loosen them
+    @Published var pinned: Set<String> = []
+    /// „Neu seit …“: only connections of the last 7 or 30 days (0 all), the days the Spark offers
+    @Published var neu = 0
+    @Published var neuTage: [Int] = []
+    /// Themen-Inseln: the island shown ("" none) and the biggest islands for the menu
+    @Published var island = ""
+    @Published var islands: [WkIsland] = []
     @Published var loading = true
     @Published var error: String?
     /// the kind of points from documents shown with their neighbours ("" all), and how many there are of each kind
@@ -79,6 +118,7 @@ final class WissenskarteModel: ObservableObject {
 
     /// The border of a point: the centre in the accent colour, a point from documents in the colour of its kind.
     func edge(_ p: WkPoint) -> Color {
+        if p.contradictions > 0 { return Theme.bad }
         if p.id == center { return Color.accentColor }
         return p.ent.isEmpty ? Color.secondary.opacity(0.5) : Self.color(p.ent)
     }
@@ -103,14 +143,17 @@ final class WissenskarteModel: ObservableObject {
 
     func load(_ around: String = "", only kind: String = "") async {
         guard let api = SparkAPI.current else { return }
-        let q = Self.isNode(around) ? ["um": around] : (kind.isEmpty ? [:] : ["art": kind])
+        if Self.isNode(around) || !kind.isEmpty { island = "" }
+        var q = Self.isNode(around) ? ["um": around] : (kind.isEmpty ? [:] : ["art": kind])
+        if q.isEmpty && Self.isNode(island) { q["insel"] = island } else { q["inseln"] = "0" }
+        if neu > 0 { q["neu"] = String(neu) }
         do {
             let d = try await api.object("GET", "api/profile/wissenskarte", query: q)
             points = (d["nodes"] as? [[String: Any]] ?? []).prefix(150).compactMap { n in
                 guard let id = n["id"] as? String, Self.isNode(id) else { return nil }
                 return WkPoint(id: id, title: String((n["title"] as? String ?? "").prefix(80)), kind: n["art"] as? String ?? "Thema",
                                degree: (n["deg"] as? NSNumber)?.intValue ?? 0, ent: Self.isPoint(id) ? (n["ent"] as? String ?? "") : "",
-                               places: (n["n"] as? NSNumber)?.intValue ?? 0)
+                               places: (n["n"] as? NSNumber)?.intValue ?? 0, contradictions: (n["w"] as? NSNumber)?.intValue ?? 0)
             }
             only = d["art"] as? String ?? ""
             entWords = [:]
@@ -129,7 +172,9 @@ final class WissenskarteModel: ObservableObject {
                 let p = (e["page"] as? NSNumber)?.intValue ?? 0
                 return WkLine(id: id, a: a, b: b, kind: e["art"] as? String ?? "", cause: e["cause"] as? Bool ?? false,
                               detail: String((e["detail"] as? String ?? "").prefix(40)),
-                              source: String((e["name"] as? String ?? "").prefix(120)), page: p > 0 ? p : nil)
+                              source: String((e["name"] as? String ?? "").prefix(120)), page: p > 0 ? p : nil,
+                              doc: Self.day(e["doc"] as? String ?? "", pattern: #"^[0-9a-f]{12}$"#),
+                              date: Self.day(e["datum"] as? String ?? ""), deadline: Self.day(e["frist"] as? String ?? ""))
             }
             words = [:]
             for (k, v) in d["arten"] as? [String: [Any]] ?? [:] where v.count >= 2 {
@@ -137,7 +182,16 @@ final class WissenskarteModel: ObservableObject {
             }
             center = d["um"] as? String ?? ""
             cut = d["cut"] as? Bool ?? false
-            waiting = (d["wait"] as? NSNumber)?.intValue ?? 0
+            waiting = (d["warten_n"] as? NSNumber ?? d["wait"] as? NSNumber)?.intValue ?? 0
+            neuTage = ((d["zeit"] as? [String: Any])?["neu_tage"] as? [NSNumber] ?? []).map(\.intValue).filter { $0 > 0 && $0 < 1000 }
+            let ins = d["inseln"] as? [String: Any] ?? [:]
+            if (ins["anzahl"] as? NSNumber)?.intValue ?? 0 > 1 { await loadIslands() } else { islands = [] }
+            pinned = Set((d["lage"] as? [String: Any] ?? [:]).keys.filter { Self.isNode($0) })
+            waitList = (d["warten"] as? [[String: Any]] ?? []).prefix(12).compactMap { w in
+                guard let id = w["id"] as? String, WissensbuchModel.isPage(id) else { return nil }
+                return WkWait(id: id, name: String((w["name"] as? String ?? "").prefix(120)), first: w["vor"] as? Bool ?? false,
+                              failed: w["fehler"] as? Bool ?? false)
+            }
             error = nil
             if d["ents"] as? Bool ?? false { await loadPairs() } else { pairs = []; pairsOpen = 0 }
         } catch { self.error = error.localizedDescription }
@@ -179,6 +233,47 @@ final class WissenskarteModel: ObservableObject {
     }
 
     /// "Stimmt nicht": the connection goes and never comes back from that document.
+    func first(_ w: WkWait) async {
+        guard let api = SparkAPI.current else { return }
+        do { _ = try await api.object("POST", "api/profile/wissenskarte/vorziehen/\(w.id)"); error = nil }
+        catch { self.error = error.localizedDescription }
+        await load(center, only: only)
+    }
+
+    /// The overview of the islands (?inseln=1): names and point counts only, the biggest first.
+    func loadIslands() async {
+        guard let api = SparkAPI.current,
+              let d = try? await api.object("GET", "api/profile/wissenskarte", query: ["inseln": "1"]) else { return }
+        islands = (((d["inseln"] as? [String: Any])?["liste"] as? [[String: Any]]) ?? []).prefix(80).compactMap { x in
+            guard let id = x["id"] as? String, Self.isNode(id) else { return nil }
+            return WkIsland(id: id, name: String((x["name"] as? String ?? "").prefix(80)), count: (x["n"] as? NSNumber)?.intValue ?? 0)
+        }
+    }
+
+    /// A value only when it has the fixed form (a date YYYY-MM-DD by default), else "".
+    static func day(_ s: String, pattern: String = #"^(19|20)[0-9]{2}-[0-9]{2}-[0-9]{2}$"#) -> String {
+        s.range(of: pattern, options: .regularExpression) != nil ? s : ""
+    }
+
+    /// Zeitleiste: the documents of the shown connections by their date, with their deadline and how many connections.
+    var timeline: [WkDated] {
+        var by: [String: WkDated] = [:]
+        for l in lines where !l.doc.isEmpty && !l.date.isEmpty {
+            var x = by[l.doc] ?? WkDated(id: l.doc, name: l.source, date: l.date, deadline: l.deadline)
+            x.count += 1
+            by[l.doc] = x
+        }
+        return by.values.sorted { $0.date == $1.date ? $0.name < $1.name : $0.date < $1.date }
+    }
+
+    /// „Lösen“: one point (or every one with "") goes back to the drawn layout of the browser.
+    func unpin(_ id: String) async {
+        guard let api = SparkAPI.current, id.isEmpty || Self.isNode(id) else { return }
+        do { _ = try await api.object("DELETE", "api/profile/wissenskarte/lage" + (id.isEmpty ? "" : "/" + id)); error = nil }
+        catch { self.error = error.localizedDescription }
+        await load(center, only: only)
+    }
+
     func wrong(_ line: WkLine) async {
         guard let api = SparkAPI.current else { return }
         do { _ = try await api.object("DELETE", "api/profile/wissenskarte/kante/\(line.id)"); error = nil }
@@ -230,6 +325,8 @@ struct WissenskarteView: View {
     @StateObject private var m = WissenskarteModel()
     @State private var picked: WkPoint?
     @State private var showPairs = false
+    @State private var showWaiting = false
+    @State private var showTimeline = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -256,7 +353,8 @@ struct WissenskarteView: View {
                         ForEach(m.points) { p in
                             if let pos = at[p.id] {
                                 Button { picked = p } label: {
-                                    Text(verbatim: p.title).font(.caption.weight(p.id == m.center ? .bold : .regular))
+                                    (m.pinned.contains(p.id) ? Text(Image(systemName: "pin.fill")) + Text(verbatim: " " + p.title) : Text(verbatim: p.title))
+                                        .font(.caption.weight(p.id == m.center ? .bold : .regular))
                                         .lineLimit(1).padding(.horizontal, 8).padding(.vertical, 5)
                                         .background(.background, in: Capsule())
                                         .overlay(Capsule().stroke(m.edge(p), lineWidth: p.id == m.center || !p.ent.isEmpty ? 2 : 1))
@@ -268,7 +366,12 @@ struct WissenskarteView: View {
                 }
                 if m.cut { Text("Die Karte zeigt nur einen Teil. Tippe auf einen Punkt und dann „In die Mitte“.").font(.caption).foregroundStyle(.secondary).padding(8) }
             }
-            if m.waiting > 0 { Text(verbatim: String(localized: "Noch nicht eingearbeitet:") + " " + String(m.waiting)).font(.caption).foregroundStyle(.secondary).padding(8) }
+            if m.waiting > 0 {
+                Button { showWaiting = true } label: {
+                    Text(verbatim: String(localized: "Noch nicht eingearbeitet:") + " " + String(m.waiting))
+                }
+                .font(.caption).padding(8)
+            }
             if m.pairsOpen > 0 {
                 Button { showPairs = true } label: {
                     Text(verbatim: String(localized: "Vielleicht doppelt") + " · " + String(m.pairsOpen))
@@ -279,9 +382,28 @@ struct WissenskarteView: View {
         .navigationTitle("Wissenskarte")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if !m.center.isEmpty || !m.only.isEmpty {
-                Button("Alles") { Task { await m.load() } }
+            if !m.islands.isEmpty {
+                Menu {
+                    ForEach(m.islands) { x in
+                        Button { m.island = x.id; Task { await m.load() } } label: {
+                            Label(x.name + " · " + String(x.count), systemImage: m.island == x.id ? "checkmark" : "circle.hexagongrid")
+                        }
+                    }
+                } label: { Label("Themen-Inseln", systemImage: "circle.hexagongrid") }
             }
+            if !m.center.isEmpty || !m.only.isEmpty || !m.island.isEmpty {
+                Button("Alles") { m.island = ""; Task { await m.load() } }
+            }
+            Menu {
+                ForEach(m.neuTage, id: \.self) { n in
+                    Button { m.neu = m.neu == n ? 0 : n; Task { await m.load(m.center, only: m.only) } } label: {
+                        Label(n == 7 ? String(localized: "Neu seit letzter Woche") : String(localized: "Neu seit") + " " + String(n) + " " + String(localized: "Tagen"),
+                              systemImage: m.neu == n ? "checkmark" : "clock")
+                    }
+                }
+                if m.neu > 0 { Button("Alle Zeiten") { m.neu = 0; Task { await m.load(m.center, only: m.only) } } }
+                Button { showTimeline = true } label: { Label("Zeitleiste", systemImage: "calendar.day.timeline.left") }
+            } label: { Label("Zeit", systemImage: "clock") }
             if !m.kinds.isEmpty {
                 Menu {
                     ForEach(m.kinds) { k in
@@ -294,6 +416,14 @@ struct WissenskarteView: View {
         }
         .sheet(item: $picked) { p in
             WkPointSheet(point: p, model: m) { picked = nil }
+                .presentationDetents([.medium, .large])
+        }
+        .sheet(isPresented: $showTimeline) {
+            WkTimelineSheet(model: m)
+                .presentationDetents([.medium, .large])
+        }
+        .sheet(isPresented: $showWaiting) {
+            WkWaitSheet(model: m)
                 .presentationDetents([.medium, .large])
         }
         .sheet(isPresented: $showPairs) {
@@ -336,6 +466,11 @@ struct WkPointSheet: View {
                 } header: { Text("Verbindungen") } footer: { Text("Nach links wischen: „Stimmt nicht“ entfernt die Verbindung für immer aus diesem Dokument.") }
                 Section {
                     Button("In die Mitte") { close(); Task { await model.load(point.id) } }
+                    if model.pinned.contains(point.id) {
+                        Button("Lösen") { close(); Task { await model.unpin(point.id) } }
+                    }
+                } footer: {
+                    if model.pinned.contains(point.id) { Text("Im Browser angeheftet: Dort bleibt der Punkt, wo er hingezogen wurde. „Lösen“ ordnet ihn wieder selbst ein.") }
                 }
                 if !point.ent.isEmpty {
                     let own = model.pairs.filter { "k" + String($0.a) == point.id || "k" + String($0.b) == point.id }
@@ -392,6 +527,63 @@ struct WkPairsSheet: View {
             .navigationTitle("Vielleicht doppelt")
             .navigationBarTitleDisplayMode(.inline)
             .refreshable { await model.loadPairs() }
+        }
+    }
+}
+
+/// The documents still waiting for the map; "Zuerst" puts one first (it goes next in quiet minutes, daily limits stay).
+struct WkWaitSheet: View {
+    @ObservedObject var model: WissenskarteModel
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    ForEach(model.waitList) { w in
+                        HStack {
+                            Text(verbatim: w.name).lineLimit(2)
+                            Spacer()
+                            if w.failed {
+                                Text("nicht eingearbeitet").font(.caption).foregroundStyle(Theme.badText)
+                            } else if w.first {
+                                Text("kommt zuerst").font(.caption).foregroundStyle(.secondary)
+                            } else {
+                                Button("Zuerst") { Task { await model.first(w) } }.buttonStyle(.bordered)
+                            }
+                        }
+                    }
+                } footer: { Text("„Zuerst“ arbeitet das Dokument als Nächstes ein, in ruhigen Minuten.") }
+            }
+            .navigationTitle("Wartet")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+}
+
+/// Zeitleiste: the documents of the part shown, oldest first, each with its date, its deadline and its connections.
+struct WkTimelineSheet: View {
+    @ObservedObject var model: WissenskarteModel
+
+    var body: some View {
+        NavigationStack {
+            List {
+                let items = model.timeline
+                if items.isEmpty { Text("Keine Verbindung mit Datum in diesem Ausschnitt.").foregroundStyle(.secondary) }
+                ForEach(items) { x in
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(verbatim: x.date + " · " + x.name).lineLimit(2)
+                        HStack(spacing: 8) {
+                            Text(verbatim: String(localized: "Verbindungen") + ": " + String(x.count))
+                            if !x.deadline.isEmpty {
+                                Text(verbatim: String(localized: "Frist") + " " + x.deadline).foregroundStyle(Theme.badText)
+                            }
+                        }
+                        .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .navigationTitle("Zeitleiste")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 }

@@ -20790,6 +20790,166 @@
           }
         }
       }
+    },
+    "nicht eingearbeitet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not worked in"
+          }
+        }
+      }
+    },
+    "kommt zuerst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "goes first"
+          }
+        }
+      }
+    },
+    "Zuerst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First"
+          }
+        }
+      }
+    },
+    "„Zuerst“ arbeitet das Dokument als Nächstes ein, in ruhigen Minuten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“First” works the document in next, in quiet minutes."
+          }
+        }
+      }
+    },
+    "Wartet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting"
+          }
+        }
+      }
+    },
+    "Lösen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpin"
+          }
+        }
+      }
+    },
+    "Im Browser angeheftet: Dort bleibt der Punkt, wo er hingezogen wurde. „Lösen“ ordnet ihn wieder selbst ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pinned in the browser: there the point stays where it was dragged. “Unpin” places it by itself again."
+          }
+        }
+      }
+    },
+    "Neu seit letzter Woche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New since last week"
+          }
+        }
+      }
+    },
+    "Neu seit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New in"
+          }
+        }
+      }
+    },
+    "Tagen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "days"
+          }
+        }
+      }
+    },
+    "Alle Zeiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All times"
+          }
+        }
+      }
+    },
+    "Zeitleiste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timeline"
+          }
+        }
+      }
+    },
+    "Zeit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time"
+          }
+        }
+      }
+    },
+    "Keine Verbindung mit Datum in diesem Ausschnitt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No connection with a date in this part."
+          }
+        }
+      }
+    },
+    "Frist": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deadline"
+          }
+        }
+      }
+    },
+    "Themen-Inseln": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Topic islands"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

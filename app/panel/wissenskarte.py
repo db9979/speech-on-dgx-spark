@@ -28,9 +28,14 @@ quiet minutes after the Wissensbuch (wissen.due_once), at most chat.knowledge_ma
 (own limit, Dominik 2026-10-21 „1“: a step only names connections, so the backlog of a full book goes in about a day),
 one model request at a time behind speech (vorrang). The journal gets fixed words and numbers only.
 
-    GET    /api/profile/wissenskarte                 the visible part (?um=<page>&tiefe=1|2, ?doc=<document>)
+    GET    /api/profile/wissenskarte                 the visible part (?um=<page>&tiefe=1|2, ?doc=<document>,
+                                                     time filter ?von=&bis= YYYY-MM[-DD], ?neu=7|30 days,
+                                                     Themen-Inseln ?inseln=1|0 overview, ?insel=<island>)
     GET    /api/profile/wissenskarte/export          the same part as Mermaid or Graphviz text (?fmt=mermaid|dot)
     DELETE /api/profile/wissenskarte/kante/{id}      "Stimmt nicht": the connection goes, never back from that document
+    POST   /api/profile/wissenskarte/vorziehen/{doc} „Zuerst einarbeiten“: a waiting document goes first (wb_vor)
+    POST   /api/profile/wissenskarte/lage            pin dragged points {"lagen": [{"id", "x", "y"}]} (wk_lage)
+    DELETE /api/profile/wissenskarte/lage[/{id}]     „Lösen“: one point or every one back to the drawn layout
     GET    /api/admin/wissenskarte                   Zustand → Überblick: sums over all profiles, numbers only
 
 Knoten aus Dokumenten (plan wissensgraph Stufe 2, Dominik 2026-10-29 „Empfehlung umsetzen“): people, companies,
@@ -110,12 +115,17 @@ EDGES_PER_DOC = 30       # connections one document may bring
 MAX_EDGES = 25000        # connections per profile
 VIEW_NODES = 150         # points in one answer of the map
 VIEW_EDGES = 400         # connections in one answer of the map
+WARTEN_MOST = 12         # waiting documents one answer of the map names
+LAGE_MOST = 3000         # pinned places per profile (the oldest leaves)
+LAGE_JE = 50             # places one request may pin
+LAGE_WEIT = 100000       # a place lies within ±this many units of the map
 DAY = 200                # documents per profile and day (chat.knowledge_map_day)
 DETAIL_LEN = 40          # characters of the detail on a connection
 READ_TIMEOUT = 180
 EXPORT_FMTS = ("mermaid", "dot")
 # the tables whose change makes the stored build of the map (_bau) old: a trigger counts every change in wk_stand
-STAND_TABELLEN = ("wk_edges", "wk_ent", "wk_ment", "wk_entpage", "wk_docs", "wb_pages", "wb_sent", "wb_docs", "docs")
+STAND_TABELLEN = ("wk_edges", "wk_ent", "wk_ment", "wk_entpage", "wk_docs", "wb_pages", "wb_sent", "wb_docs", "docs",
+                  "wb_vor")
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS wk_edges (id INTEGER PRIMARY KEY, a TEXT NOT NULL, b TEXT NOT NULL, art TEXT NOT NULL,
     detail TEXT DEFAULT '', doc TEXT NOT NULL, part INTEGER, dpage INTEGER, made INTEGER);
@@ -146,6 +156,7 @@ CREATE TRIGGER IF NOT EXISTS wk_entwort_u AFTER UPDATE OF art, norm, alias ON wk
 CREATE TRIGGER IF NOT EXISTS wk_entwort_d AFTER DELETE ON wk_ent BEGIN
     DELETE FROM wk_entwort WHERE ent = old.id; DELETE FROM wk_entwortneu WHERE ent = old.id; END;
 CREATE TABLE IF NOT EXISTS wk_stand (id INTEGER PRIMARY KEY CHECK (id = 1), n INTEGER NOT NULL, token TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS wk_lage (id TEXT PRIMARY KEY, x REAL NOT NULL, y REAL NOT NULL, at INTEGER NOT NULL);
 """ + "".join(f"CREATE TRIGGER IF NOT EXISTS wk_stand_{t}_{e[0].lower()} AFTER {e} ON {t} BEGIN "
               f"UPDATE wk_stand SET n = n + 1 WHERE id = 1; END;\n" for t in STAND_TABELLEN for e in ("INSERT", "UPDATE", "DELETE"))
 PROMPT = ("Du verbindest Seiten im Wissensbuch eines Menschen. Du bekommst ein Dokument in nummerierten Stellen [S1], "
@@ -298,12 +309,13 @@ def _tidy(con):
 
 def next_doc(uid):
     """(doc id, the Wissensbuch's fingerprint) of the next own document the book worked in and the map did not (or
-    did from other pieces: read again), else None. The connections of a document read again go first."""
+    did from other pieces: read again), else None. The connections of a document read again go first; documents the
+    owner wished first (wissensbuch.VOR_ORDER) before all others."""
     with _Db(uid) as con:
         _tidy(con)
         book = {r["doc"]: r["sig"] or "" for r in con.execute(
-            "SELECT w.doc, w.sig FROM wb_docs w JOIN docs d ON d.id=w.doc WHERE w.state='ok' AND d.use=1 "
-            "AND d.state='ready' ORDER BY w.at, w.doc")}
+            "SELECT w.doc, w.sig FROM wb_docs w JOIN docs d ON d.id=w.doc LEFT JOIN wb_vor v ON v.doc=w.doc "
+            "WHERE w.state='ok' AND d.use=1 AND d.state='ready' ORDER BY " + wissensbuch.VOR_ORDER + ", w.at, w.doc")}
         mine = {r["doc"]: r["sig"] or "" for r in con.execute("SELECT doc, sig FROM wk_docs")}
         for doc, sig in book.items():
             if doc not in mine:
@@ -861,11 +873,11 @@ def _titles(con, ids):
 
 def next_ent_doc(uid):
     """(doc id, the Wissensbuch's fingerprint) of the next own document the book worked in and whose points were not
-    looked for (or from other pieces: again), else None."""
+    looked for (or from other pieces: again), else None. Documents the owner wished first go first."""
     with _Db(uid) as con:
         book = {r["doc"]: r["sig"] or "" for r in con.execute(
-            "SELECT w.doc, w.sig FROM wb_docs w JOIN docs d ON d.id=w.doc WHERE w.state='ok' AND d.use=1 "
-            "AND d.state='ready' ORDER BY w.at, w.doc")}
+            "SELECT w.doc, w.sig FROM wb_docs w JOIN docs d ON d.id=w.doc LEFT JOIN wb_vor v ON v.doc=w.doc "
+            "WHERE w.state='ok' AND d.use=1 AND d.state='ready' ORDER BY " + wissensbuch.VOR_ORDER + ", w.at, w.doc")}
         mine = {r["doc"]: r["sig"] or "" for r in con.execute("SELECT doc, sig FROM wk_entdocs")}
     for doc, sig in book.items():
         if doc not in mine or mine[doc] != sig:
@@ -1543,6 +1555,7 @@ def _baue(con, ents):
     docs = wissensbuch._own_ready(con)
     pages = {r["id"]: dict(r, ent="") for r in con.execute("SELECT id, title, art FROM wb_pages")}
     sents = {r["page"]: r["n"] for r in con.execute("SELECT page, COUNT(*) AS n FROM wb_sent GROUP BY page")}
+    wider = {r[0]: r[1] for r in con.execute("SELECT page, COUNT(*) FROM wb_sent WHERE mark='widerspruch' GROUP BY page")}
     seite = {}
     if ents:      # the points from documents: their name, kind and how often they stand in documents
         pages.update({r["id"]: {"id": r["id"], "title": r["name"], "art": ENT_NAMEN[r["art"]][0], "ent": r["art"]}
@@ -1564,12 +1577,96 @@ def _baue(con, ents):
         per.setdefault(doc, [0, i])[0] += 1
         by_doc.setdefault(doc, set()).update((a, b))
     rank = lambda x: (-deg.get(x, 0), pages[x]["title"])      # noqa: E731
-    return {"docs": docs, "pages": pages, "sents": sents, "seite": seite, "rows": rows, "deg": deg, "adj": adj,
-            "by_doc": by_doc, "rank": rank, "best": sorted(deg, key=rank), "links": _links(con, ents),
+    best = sorted(deg, key=rank)
+    insel = inseln(best, adj)
+    return {"insel": insel, "inseln": _inseln_liste(insel, best, rows, pages),
+            "docs": docs, "pages": pages, "sents": sents, "seite": seite, "rows": rows, "deg": deg, "adj": adj,
+            "by_doc": by_doc, "rank": rank, "best": best, "links": _links(con, ents),
             "per_doc": sorted(per.items(), key=lambda x: (-x[1][0], x[1][1]))[:40],
             "done": {r[0] for r in con.execute("SELECT doc FROM wk_docs")},
             "booked": {r[0] for r in con.execute("SELECT doc FROM wb_docs WHERE state='ok'")},
+            "tried": {r[0] for r in con.execute("SELECT doc FROM wb_docs")}, "wider": wider,
+            "made": {r[0]: r[1] or 0 for r in con.execute("SELECT id, made FROM wk_edges")},
+            "datum": {d: _datum(r) for d, r in docs.items()},
+            "vor": [r[0] for r in con.execute("SELECT doc FROM wb_vor ORDER BY at, doc")],
             "kinds": {r[0]: r[1] for r in con.execute("SELECT art, COUNT(*) FROM wk_ent GROUP BY art")} if ents else {}}
+
+
+_DATUM = re.compile(r"(19|20)\d\d-(0[1-9]|1[0-2])(-(0[1-9]|[12]\d|3[01]))?")
+ZEIT_NEU = (7, 30)       # „Neu seit …“: days the map offers (the newest connections)
+
+
+def _datum(r):
+    """(date, deadline) of a document as YYYY-MM-DD: the date of its Steckbrief (a month only: its first day), else the
+    day it came; the deadline of its Steckbrief or ""."""
+    d = r["ddate"] or ""
+    if _DATUM.fullmatch(d):
+        d = d if len(d) == 10 else d + "-01"
+    else:
+        d = datetime.date.fromtimestamp(r["created"] or 0).isoformat()
+    f = r["due"] or ""
+    return d, (f if len(f) == 10 else f + "-01") if _DATUM.fullmatch(f) else ""
+
+
+def zeit_ok(von="", bis="", neu=0):
+    """The time filter as the panel takes it: von and bis YYYY-MM or YYYY-MM-DD (or ""), neu one of ZEIT_NEU (or 0);
+    None when it breaks these rules."""
+    if von and not _DATUM.fullmatch(von) or bis and not _DATUM.fullmatch(bis) or neu and neu not in ZEIT_NEU:
+        return None
+    lo = (von + "-01")[:10] if von else ""
+    hi = (bis + "-31")[:10] if bis else ""
+    if lo and hi and lo > hi:
+        return None
+    return lo, hi, neu
+
+
+INSEL_RUNDEN = 12        # rounds of the label propagation at most (it ends earlier when nothing changes)
+INSEL_MOST = 80          # islands one answer of the overview names
+INSEL_BRUECKEN = 200     # connections between islands one answer names
+
+
+def inseln(order, adj, runden=INSEL_RUNDEN):
+    """Themen-Inseln (Stufe 2, fixed rule, no model): label propagation over the connections. Every point starts as
+    its own island; round by round, in the fixed order (best connected first), it takes the island most of its
+    neighbours have, on a tie the one whose first point comes first. Always the same result for the same map.
+    Returns {point: the id of its island (its best connected point)}."""
+    pos = {x: i for i, x in enumerate(order)}
+    lab = list(range(len(order)))
+    nb = [[pos[y] for y in adj.get(x, ()) if y in pos] for x in order]
+    for _ in range(runden):
+        moved = 0
+        for i, ns in enumerate(nb):
+            if not ns:
+                continue
+            count = {}
+            for j in ns:
+                count[lab[j]] = count.get(lab[j], 0) + 1
+            top = max(count.values())
+            new = min(k for k, v in count.items() if v == top)
+            if count.get(lab[i], 0) == top and lab[i] < new:
+                new = lab[i]
+            if new != lab[i]:
+                lab[i] = new
+                moved += 1
+        if not moved:
+            break
+    return {x: order[lab[i]] for i, x in enumerate(order)}
+
+
+def _inseln_liste(insel, best, rows, pages):
+    """(islands, bridges): [{id, name, n}] biggest first (name: its best connected point), [(a, b, connections)]."""
+    n = {}
+    for x in best:
+        n[insel[x]] = n.get(insel[x], 0) + 1
+    order = {x: i for i, x in enumerate(best)}
+    liste = [{"id": k, "name": pages[k]["title"], "n": v} for k, v in sorted(n.items(), key=lambda kv: (-kv[1], order[kv[0]]))]
+    br = {}
+    for _, a, b, *_ in rows:
+        ia, ib = insel.get(a), insel.get(b)
+        if ia and ib and ia != ib:
+            k = (ia, ib) if order[ia] < order[ib] else (ib, ia)
+            br[k] = br.get(k, 0) + 1
+    return liste, sorted(((a, b, c) for (a, b), c in br.items()), key=lambda x: (-x[2], order[x[0]], order[x[1]]))
 
 
 def _bau(con, uid, ents):
@@ -1588,20 +1685,37 @@ def _bau(con, uid, ents):
     return b
 
 
-def view(uid, um="", tiefe=2, doc="", art=""):
+def view(uid, um="", tiefe=2, doc="", art="", von="", bis="", neu=0, now=None, insel="", uebersicht=False):
     """The part of the map one answer shows, chosen by fixed rules: around the point um (up to tiefe steps), the
     connections of the document doc, the points from documents of one kind art with their neighbours, or else the
     best connected points. At most VIEW_NODES points and VIEW_EDGES connections; cut says whether more is there.
     Sources only of documents that are still there. The build of the map (_bau) comes from SQLite once per stand;
-    each answer only chooses its part from it."""
+    each answer only chooses its part from it. The time filter (Stufe 2) keeps only connections whose document is
+    dated from von to bis (its Steckbrief, else the day it came) or that were made in the last neu days; without a
+    point or document it shows the points of those connections. Themen-Inseln: insel shows the points of one island
+    (best connected first); the overview (uebersicht True, or None, as the page asks without a choice, and more points
+    than VIEW_NODES without any other choice) names the islands and the connections between them instead of points."""
     tiefe = 1 if tiefe == 1 else 2
+    lo, hi, neu = zeit_ok(von, bis, neu) or ("", "", 0)
     ents = ents_allowed(uid)
     art = art if ents and art in ENT_ARTEN else ""
     with _Db(uid) as con:
         b = _bau(con, uid, ents)
     pages, deg, adj, rank, docs = b["pages"], b["deg"], b["adj"], b["rank"], b["docs"]
+    datum, made = b["datum"], b["made"]
+    zeit = bool(lo or hi or neu)
+    if zeit:
+        seit = (now or time.time()) - neu * 86400
+        rows = [e for e in b["rows"] if (not lo or datum[e[5]][0] >= lo) and (not hi or datum[e[5]][0] <= hi)
+                and (not neu or made.get(e[0], 0) >= seit)]
+    else:
+        rows = b["rows"]
     if ents and um and _ID.fullmatch(um):
         um = b["links"].get(um, um)
+    insel = insel if insel in b["insel"] and b["insel"][insel] == insel else ""
+    liste, bruecken = b["inseln"]
+    if uebersicht is None:
+        uebersicht = not (um or doc or art or insel or zeit) and len(deg) > VIEW_NODES and len(liste) > 1
     if um and um in pages:
         dist, ring = {um: 0}, [um]                      # the walk of _rund_um, over the build
         for d in range(1, tiefe + 1):
@@ -1614,6 +1728,15 @@ def view(uid, um="", tiefe=2, doc="", art=""):
         own = sorted((x for x, p in pages.items() if p["ent"] == art), key=rank)
         near = {y for x in own[:VIEW_NODES] for y in adj.get(x, ())} - set(own)
         pick = own + sorted(near, key=rank)
+    elif insel:   # the points of one island, best connected first
+        pick = [x for x in b["best"] if b["insel"][x] == insel]
+        if zeit:
+            ok = {x for e in rows for x in (e[1], e[2])}
+            pick = [x for x in pick if x in ok]
+    elif uebersicht:
+        pick = []
+    elif zeit:    # the points of the connections in that time, best connected first
+        pick = sorted({x for e in rows for x in (e[1], e[2])}, key=rank)
     else:
         pick = b["best"]
     cut = len(pick) > VIEW_NODES
@@ -1621,7 +1744,7 @@ def view(uid, um="", tiefe=2, doc="", art=""):
     ks = set(keep)
     only_doc = bool(doc) and not um
     edges = []
-    for e in b["rows"]:                                 # in order of their id, at most VIEW_EDGES + 1
+    for e in rows:                                      # in order of their id, at most VIEW_EDGES + 1
         if e[1] in ks and e[2] in ks and (not only_doc or e[5] == doc):
             edges.append(e)
             if len(edges) > VIEW_EDGES:
@@ -1629,16 +1752,112 @@ def view(uid, um="", tiefe=2, doc="", art=""):
     cut = cut or len(edges) > VIEW_EDGES
     edges = edges[:VIEW_EDGES]
     kinds = b["kinds"]
-    return {"nodes": [{"id": p, "title": pages[p]["title"], "art": pages[p]["art"], "ent": pages[p]["ent"],
-                       "deg": deg.get(p, 0), "n": b["sents"].get(p, 0), "seite": b["seite"].get(p, "")} for p in keep],
+    wider = b["wider"]
+    with _Db(uid) as con:
+        lage = lagen(con, keep)
+    keep_ins = [i["id"] for i in liste[:INSEL_MOST]] if uebersicht else []
+    ks_ins = set(keep_ins)
+    return {"inseln": {"an": bool(uebersicht), "anzahl": len(liste),
+                       "liste": liste[:INSEL_MOST] if uebersicht else [],
+                       "bruecken": [{"a": a, "b": b_, "n": n} for a, b_, n in bruecken if a in ks_ins and b_ in ks_ins][:INSEL_BRUECKEN]},
+            "insel": insel, "insel_name": pages[insel]["title"] if insel else "",
+            "lage": lage,
+            "nodes": [{"id": p, "title": pages[p]["title"], "art": pages[p]["art"], "ent": pages[p]["ent"],
+                       "deg": deg.get(p, 0), "n": b["sents"].get(p, 0), "seite": b["seite"].get(p, ""),
+                       "w": wider.get(b["seite"].get(p, p), 0)} for p in keep],
             "edges": [{"id": i, "a": a, "b": b_, "art": art_, "cause": ARTEN[art_][2], "detail": detail or "", "doc": d,
-                       "page": dpage or 0, "name": docs[d]["title"] or docs[d]["name"]}
+                       "page": dpage or 0, "name": docs[d]["title"] or docs[d]["name"], "datum": datum[d][0],
+                       "frist": datum[d][1]}
                       for i, a, b_, art_, detail, d, dpage in edges if art_ in ARTEN],
             "cut": cut, "um": um if um in pages else "", "doc": doc if doc in docs else "", "art": art,
+            "zeit": {"von": lo, "bis": hi, "neu": neu, "neu_tage": list(ZEIT_NEU)},
             "total": {"nodes": len(deg), "edges": sum(deg.values()) // 2},     # each connection counts at both ends
             "knoten": {k: kinds.get(k, 0) for k in ENT_ARTEN} if ents else {},
             "docs": [{"id": d, "name": docs[d]["title"] or docs[d]["name"], "n": n} for d, (n, _) in b["per_doc"]],
-            "wait": len((b["booked"] & set(docs)) - b["done"])}
+            "wait": len((b["booked"] & set(docs)) - b["done"]), "warten": warten(b),
+            "warten_n": len(set(docs) - b["done"])}
+
+
+def lagen(con, ids):
+    """{point: [x, y]} of the pinned points among ids (Stufe 2 „Lagen merken“): a dragged point stays where the owner
+    put it, in every part of the map, until „Lösen“."""
+    ids = list(ids)
+    out = {}
+    for i in range(0, len(ids), 500):
+        part = ids[i:i + 500]
+        out.update({r[0]: [r[1], r[2]] for r in con.execute(
+            "SELECT id, x, y FROM wk_lage WHERE id IN (" + ",".join("?" * len(part)) + ")", part)})
+    return out
+
+
+def _lage_ok(e):
+    if not isinstance(e, dict) or not isinstance(e.get("id"), str) or not _NODE.fullmatch(e["id"]):
+        return None
+    xy = []
+    for k in ("x", "y"):
+        v = e.get(k)
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or v != v or abs(v) > LAGE_WEIT:
+            return None
+        xy.append(round(float(v), 1))
+    return e["id"], xy[0], xy[1]
+
+
+def anheften(uid, got, now=None):
+    """Pin the places of points the owner dragged: [{"id", "x", "y"}], at most LAGE_JE, each a point of the map now,
+    numbers within ±LAGE_WEIT. Returns the count pinned, or None when the list breaks the rules (nothing is kept)."""
+    if not isinstance(got, list) or not 0 < len(got) <= LAGE_JE:
+        return None
+    rows = [_lage_ok(e) for e in got]
+    if None in rows:
+        return None
+    now = int(now or time.time())
+    with _Db(uid) as con:
+        da = {r[0] for r in con.execute(_NODE_SET)}
+        rows = [r for r in rows if r[0] in da]
+        con.executemany("INSERT OR REPLACE INTO wk_lage (id, x, y, at) VALUES (?, ?, ?, ?)",
+                        [(i, x, y, now) for i, x, y in rows])
+        con.execute("DELETE FROM wk_lage WHERE id NOT IN (" + _NODE_SET + ")")     # points gone (merged, deleted)
+        con.execute("DELETE FROM wk_lage WHERE id NOT IN (SELECT id FROM wk_lage ORDER BY at DESC, id LIMIT ?)",
+                    (LAGE_MOST,))
+    return len(rows)
+
+
+def loesen(uid, kid=""):
+    """„Lösen“: one point (kid) or every point (kid "") goes back to the drawn layout. Returns how many."""
+    with _Db(uid) as con:
+        if kid:
+            return con.execute("DELETE FROM wk_lage WHERE id=?", (kid,)).rowcount
+        return con.execute("DELETE FROM wk_lage").rowcount
+
+
+def warten(b):
+    """The documents still waiting for the map (not worked in by it), wished ones first, then the newest; at most
+    WARTEN_MOST, each with whether it is wished first (vor) and whether the book could not take it (fehler)."""
+    docs, done, vor = b["docs"], b["done"], b["vor"]
+    rest = sorted((d for d in docs if d not in done and d not in vor), key=lambda d: (-(docs[d]["created"] or 0), d))
+    pick = [d for d in vor if d in docs and d not in done] + rest
+    return [{"id": d, "name": docs[d]["title"] or docs[d]["name"], "vor": d in vor,
+             "fehler": d in b["tried"] and d not in b["booked"]} for d in pick[:WARTEN_MOST]]
+
+
+def vorziehen(uid, doc, now=None):
+    """The owner wishes a waiting document first (drag onto the map, „Zuerst einarbeiten“): "ok", "nicht da" (no own
+    searched ready document), "fertig" (the map has it already) or "fehler" (the book could not take it). The oldest
+    wish leaves when there are more than wissensbuch.VOR_MOST."""
+    now = int(now or time.time())
+    with _Db(uid) as con:
+        wissensbuch.vor_tidy(con, now)
+        if not con.execute("SELECT 1 FROM docs WHERE id=? AND use=1 AND state='ready'", (doc,)).fetchone():
+            return "nicht da"
+        if con.execute("SELECT 1 FROM wk_docs WHERE doc=?", (doc,)).fetchone():
+            return "fertig"
+        r = con.execute("SELECT state FROM wb_docs WHERE doc=?", (doc,)).fetchone()
+        if r and r[0] != "ok":
+            return "fehler"
+        con.execute("INSERT OR REPLACE INTO wb_vor (doc, at) VALUES (?, ?)", (doc, now))
+        con.execute("DELETE FROM wb_vor WHERE doc NOT IN (SELECT doc FROM wb_vor ORDER BY at DESC, doc LIMIT ?)",
+                    (wissensbuch.VOR_MOST,))
+    return "ok"
 
 
 # ---------------------------------------------------------------- export as text (fixed code, never the model's)
@@ -1700,7 +1919,10 @@ def counts(uid):
         kinds = {r[0]: r[1] for r in con.execute("SELECT art, COUNT(*) FROM wk_ent GROUP BY art")}
         mine = {r[0] for r in con.execute("SELECT doc FROM wk_entdocs")}
         linked = con.execute("SELECT COUNT(*) FROM wk_entpage").fetchone()[0]
+        vor = {r[0] for r in con.execute("SELECT doc FROM wb_vor")}
+        wider = con.execute("SELECT COUNT(DISTINCT page) FROM wb_sent WHERE mark='widerspruch'").fetchone()[0]
     return {"verbindungen": e, "punkte": n, "warten": len((booked & live) - done),
+            "vorgezogen": len((vor & live) - done), "widerspruch": wider,
             "knoten": {k: kinds.get(k, 0) for k in ENT_ARTEN}, "knoten_warten": len((booked & live) - mine),
             "mit_seite": linked}
 
@@ -1716,7 +1938,7 @@ def for_live():
         return {"on": False}
     if _live["d"] is not None and time.time() - _live["at"] < LIVE_CACHE:
         return dict(_live["d"], running=bool(_running), suche=_suche_live(), nacht=dict(NACHT))
-    e = n = w = profs = kw = ms = 0
+    e = n = w = profs = kw = ms = vz = wi = 0
     kinds = dict.fromkeys(ENT_ARTEN, 0)
     on = ents_on()
     for uid in profiles.user_ids():
@@ -1727,12 +1949,15 @@ def for_live():
         e += c["verbindungen"]
         n += c["punkte"]
         w += c["warten"]
+        vz += c["vorgezogen"]
+        wi += c["widerspruch"]
         if on and ents_allowed(uid):
             kw += c["knoten_warten"]
             ms += c["mit_seite"]
             for k, v in c["knoten"].items():
                 kinds[k] += v
-    _live.update(at=time.time(), d={"on": True, "verbindungen": e, "punkte": n, "warten": w, "profile": profs,
+    _live.update(at=time.time(), d={"on": True, "verbindungen": e, "punkte": n, "warten": w, "profile": profs, "vorgezogen": vz,
+                                    "widerspruch": wi,
                                     "knoten": kinds if on else {}, "knoten_warten": kw, "mit_seite": ms})
     return dict(_live["d"], running=bool(_running), suche=_suche_live(), nacht=dict(NACHT))
 
@@ -1747,7 +1972,15 @@ def _args(request):
     um, doc, art = q.get("um", ""), q.get("doc", ""), q.get("art", "")
     if um and not _NODE.fullmatch(um) or doc and not _ID.fullmatch(doc) or art and art not in ENT_ARTEN:
         raise HTTPException(400, "um, doc, art")
-    return um, (1 if q.get("tiefe") == "1" else 2), doc, art
+    neu = q.get("neu", "")
+    z = zeit_ok(q.get("von", ""), q.get("bis", ""), int(neu) if neu.isdigit() and len(neu) < 4 else (-1 if neu else 0))
+    if z is None:
+        raise HTTPException(400, "von, bis: YYYY-MM or YYYY-MM-DD, von before bis; neu: " + " or ".join(map(str, ZEIT_NEU)))
+    insel, ueb = q.get("insel", ""), q.get("inseln", "")
+    if insel and not _NODE.fullmatch(insel) or ueb not in ("", "0", "1"):
+        raise HTTPException(400, "insel, inseln")
+    return (um, (1 if q.get("tiefe") == "1" else 2), doc, art, q.get("von", ""), q.get("bis", ""), z[2], insel,
+            None if ueb == "" else ueb == "1")
 
 
 @router.get("/api/profile/wissenskarte", dependencies=[Depends(assistant)])
@@ -1755,8 +1988,8 @@ async def show(request: Request, prof=Depends(own_profile)):
     uid = prof["id"]
     _need(uid)
     guard.limit(request, "wkarte", uid)
-    um, tiefe, doc, art = _args(request)
-    v = await asyncio.to_thread(view, uid, um, tiefe, doc, art)
+    um, tiefe, doc, art, von, bis, neu, insel, ueb = _args(request)
+    v = await asyncio.to_thread(view, uid, um, tiefe, doc, art, von, bis, neu, None, insel, ueb)
     return dict(v, on=True, running=uid in _running, arten={k: [a[0], a[1], a[2]] for k, a in ARTEN.items()},
                 max={"nodes": VIEW_NODES, "edges": VIEW_EDGES}, ents=ents_allowed(uid),
                 ent_arten={k: list(ENT_NAMEN[k]) for k in ENT_ARTEN})
@@ -1770,8 +2003,8 @@ async def export(request: Request, prof=Depends(own_profile)):
     fmt = request.query_params.get("fmt", "mermaid")
     if fmt not in EXPORT_FMTS:
         raise HTTPException(400, "fmt")
-    um, tiefe, doc, art = _args(request)
-    v = await asyncio.to_thread(view, uid, um, tiefe, doc, art)
+    um, tiefe, doc, art, von, bis, neu, insel, _ = _args(request)
+    v = await asyncio.to_thread(view, uid, um, tiefe, doc, art, von, bis, neu, None, insel, False)
     text = export_text(v, fmt, "en" if request.query_params.get("lang") == "en" else "de")
     print(f"wissen: wissenskarte export | {fmt} | {len(v['nodes'])} punkte | {len(v['edges'])} verbindungen", flush=True)
     name = "Wissenskarte." + ("dot" if fmt == "dot" else "mmd")
@@ -1789,6 +2022,57 @@ def wrong(eid: int, request: Request, prof=Depends(browser_profile)):
         raise HTTPException(404, "no such connection")
     print("wissen: wissenskarte verbindung entfernt | stimmt nicht", flush=True)
     return {"ok": True}
+
+
+_VOR_SAY = {"nicht da": (404, "no such document"), "fertig": (409, "the map has this document already"),
+            "fehler": (409, "the knowledge book could not take this document")}
+
+
+@router.post("/api/profile/wissenskarte/vorziehen/{doc}", dependencies=[Depends(assistant)])
+def wish_first(doc: str, request: Request, prof=Depends(browser_profile)):
+    """„Zuerst einarbeiten“: a waiting document goes first in the book, the map and the points (daily limits stay)."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "wbuch", uid)     # the changes of the knowledge book and map share one limit
+    if not _ID.fullmatch(doc):
+        print("wissen: wissenskarte vorziehen abgelehnt | ungueltig", flush=True)
+        raise HTTPException(400, "doc")
+    got = vorziehen(uid, doc)
+    if got != "ok":
+        print(f"wissen: wissenskarte vorziehen abgelehnt | {got.replace(' ', '_')}", flush=True)
+        raise HTTPException(*_VOR_SAY[got])
+    print("wissen: wissenskarte vorgezogen | 1 dokument", flush=True)
+    return {"ok": True}
+
+
+@router.post("/api/profile/wissenskarte/lage", dependencies=[Depends(assistant)])
+async def pin(request: Request, prof=Depends(browser_profile)):
+    """Pin dragged points: body {"lagen": [{"id", "x", "y"}]} (at most LAGE_JE)."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "wkarte", uid)
+    body = await json_body(request, 8192)
+    n = await asyncio.to_thread(anheften, uid, body.get("lagen"))
+    if n is None:
+        print("wissen: wissenskarte anheften abgelehnt | ungueltig", flush=True)
+        raise HTTPException(400, f"lagen: 1 to {LAGE_JE} of id, x, y within ±{LAGE_WEIT}")
+    print(f"wissen: wissenskarte angeheftet | {n} punkte", flush=True)
+    return {"ok": True, "n": n}
+
+
+@router.delete("/api/profile/wissenskarte/lage", dependencies=[Depends(assistant)])
+@router.delete("/api/profile/wissenskarte/lage/{kid}", dependencies=[Depends(assistant)])
+def unpin(request: Request, kid: str = "", prof=Depends(browser_profile)):
+    """„Lösen“: one point, or without a point every one, goes back to the drawn layout."""
+    uid = prof["id"]
+    _need(uid)
+    guard.limit(request, "wkarte", uid)
+    if kid and not _NODE.fullmatch(kid):
+        print("wissen: wissenskarte loesen abgelehnt | ungueltig", flush=True)
+        raise HTTPException(400, "id")
+    n = loesen(uid, kid)
+    print(f"wissen: wissenskarte geloest | {n} punkte", flush=True)
+    return {"ok": True, "n": n}
 
 
 def _need_ents(uid):
@@ -1883,7 +2167,7 @@ def _own_clear(uid):
     if not os.path.exists(documents.db_path(uid)):
         return
     with _Db(uid) as con:
-        for t in ("wk_edges", "wk_docs", "wk_block"):
+        for t in ("wk_edges", "wk_docs", "wk_block", "wk_lage"):
             con.execute(f"DELETE FROM {t}")
     print("wissen: wissenskarte geleert | daten loeschen", flush=True)
 

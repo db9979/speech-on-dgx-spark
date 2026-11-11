@@ -38,7 +38,7 @@ import profiles
 MAX_FILE = 100 * 1024 * 1024    # PDFs by default (scanned books are big; V01.0.242, was 20 MB for all)
 MAX_PDF = 300 * 1024 * 1024     # the most the admin may allow (chat.doc_max_mb)
 MAX_OTHER = 20 * 1024 * 1024    # every other kind of file
-MAX_DOCS = 200
+MAX_DOCS = 1000           # own uploads per profile (Dominik 2026-11-11 „ok“: 200 → 1000, 2000 after the next Pi measurement)
 MAX_CHARS = 2_000_000          # text per document after extraction
 MAX_UNPACKED = 50 * 1024 * 1024  # an Office file's text parts after unpacking, all together
 MAX_PARTS = 300                # slides or sheets read from one Office file

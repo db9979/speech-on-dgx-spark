@@ -2534,6 +2534,8 @@ def snapshot(view="admin", now=None):
                 import wissenskarte
                 kinds = ", ".join(f"{wissenskarte.ENT_NAMEN[k][0]} {v}" for k, v in kn.items() if v and k in wissenskarte.ENT_NAMEN)
             x["sub"] = (f"{wkk.get('verbindungen', 0)} Verbindungen · {wkk.get('punkte', 0)} Punkte · {wkk.get('warten', 0)} Dokumente warten"
+                        + (f" · {wkk['vorgezogen']} vorgezogen" if wkk.get("vorgezogen") else "")
+                        + (f" · {wkk['widerspruch']} Seiten mit Widerspruch" if wkk.get("widerspruch") else "")
                         + f" · {wkk.get('profile', 0)} Profile"
                         + (f" · {sum(kn.values())} Knoten" + (f" ({kinds})" if kinds else "")
                            + f" · {wkk.get('knoten_warten', 0)} Dokumente warten auf Knoten"

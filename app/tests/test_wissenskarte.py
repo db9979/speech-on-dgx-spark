@@ -23,6 +23,7 @@ import panel  # noqa: E402
 import wissensbuch  # noqa: E402
 import wissenskarte  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
+from tests.test_ui_browser import async_playwright, browser_ok, chromium  # noqa: E402
 
 ADMIN = TestClient(panel.app)
 ADMIN.post("/api/login", json={"password": "secret-admin"})
@@ -431,3 +432,306 @@ class Rekursiv(Base):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Vorziehen(Base):
+    """Stufe 2 (Dominik 2026-11-11 „ok“): „Zuerst einarbeiten“ puts a waiting document first in the book, the map and
+    the points; only own searched ready documents, the map's ones never again, at most VOR_MOST wishes."""
+    def docs(self, uid):
+        b = documents.add(uid, "Miete.txt", HOUSE.encode(), text=HOUSE)["id"]
+        c = documents.add(uid, "Miete2.txt", (HOUSE + " Kaution 2000 Euro.").encode(), text=HOUSE + " Kaution 2000 Euro.")["id"]
+        return b, c
+
+    def test_a_wished_document_goes_first_everywhere(self):
+        cl, uid, a = self.fresh("Wkvor")
+        b, c = self.docs(uid)
+        first = wissensbuch.next_doc(uid)[0]
+        other = c if first == b else b
+        v = cl.get("/api/profile/wissenskarte").json()
+        self.assertEqual({w["id"] for w in v["warten"]}, {a, b, c})
+        self.assertEqual(v["warten_n"], 3)
+        self.assertFalse(any(w["vor"] for w in v["warten"]))
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(cl.post(f"/api/profile/wissenskarte/vorziehen/{other}").status_code, 200)
+        self.assertIn("wissen: wissenskarte vorgezogen | 1 dokument", out.getvalue())
+        self.assertEqual(wissensbuch.next_doc(uid)[0], other)          # the book takes it first
+        v = cl.get("/api/profile/wissenskarte").json()
+        self.assertEqual((v["warten"][0]["id"], v["warten"][0]["vor"]), (other, True))
+        with wissenskarte._Db(uid) as con:                               # the map and the points take it first too
+            for d, at in ((b, DAY + 1), (c, DAY + 2)):
+                con.execute("INSERT OR REPLACE INTO wb_docs (doc, state, at, sig) VALUES (?, 'ok', ?, '')", (d, at))
+        self.assertEqual(wissenskarte.next_doc(uid)[0], other)
+        self.assertEqual(wissenskarte.next_ent_doc(uid)[0], other)
+        with wissenskarte._Db(uid) as con:
+            con.execute("DELETE FROM wb_vor")
+        self.assertEqual(wissenskarte.next_doc(uid)[0], a)               # without a wish the order of before
+
+    def test_only_waiting_own_documents_and_the_limits(self):
+        cl, uid, a = self.fresh("Wkvorn")
+        b, c = self.docs(uid)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(cl.post("/api/profile/wissenskarte/vorziehen/0123456789ab").status_code, 404)
+            self.assertEqual(cl.post("/api/profile/wissenskarte/vorziehen/..%2Fx").status_code, 404)
+            self.assertEqual(cl.post("/api/profile/wissenskarte/vorziehen/ZZZZ").status_code, 400)
+            self.work(uid, self.proposal(uid, a, ("Nordstern Versicherung", "VW Golf", "versichert bei", 1, "")))
+            self.assertEqual(cl.post(f"/api/profile/wissenskarte/vorziehen/{a}").status_code, 409)     # the map has it
+            with wissenskarte._Db(uid) as con:
+                con.execute("INSERT OR REPLACE INTO wb_docs (doc, state, at) VALUES (?, 'fehler', ?)", (b, DAY))
+            self.assertEqual(cl.post(f"/api/profile/wissenskarte/vorziehen/{b}").status_code, 409)     # the book could not
+        self.assertIn("wissen: wissenskarte vorziehen abgelehnt | nicht_da", out.getvalue())
+        self.assertIn("wissen: wissenskarte vorziehen abgelehnt | fertig", out.getvalue())
+        self.assertIn("wissen: wissenskarte vorziehen abgelehnt | fehler", out.getvalue())
+        self.assertIn("wissen: wissenskarte vorziehen abgelehnt | ungueltig", out.getvalue())
+        self.assertTrue(next(w for w in cl.get("/api/profile/wissenskarte").json()["warten"] if w["id"] == b)["fehler"])
+        other = profile("Wkvorfremd")                                    # never a document of another profile
+        self.assertEqual(other.post(f"/api/profile/wissenskarte/vorziehen/{c}").status_code, 404)
+        guest = TestClient(panel.app)
+        self.assertIn(guest.post(f"/api/profile/wissenskarte/vorziehen/{c}").status_code, (401, 403))
+        with mock.patch.object(wissensbuch, "VOR_MOST", 1):              # the oldest wish leaves
+            self.assertEqual(wissenskarte.vorziehen(uid, c, now=DAY), "ok")
+            with wissenskarte._Db(uid) as con:
+                con.execute("UPDATE wb_docs SET state='ok' WHERE doc=?", (b,))
+            self.assertEqual(wissenskarte.vorziehen(uid, b, now=DAY + 5), "ok")
+            with wissenskarte._Db(uid) as con:
+                self.assertEqual([r[0] for r in con.execute("SELECT doc FROM wb_vor")], [b])
+        with wissenskarte._Db(uid) as con:                               # an old wish ends after VOR_S
+            wissensbuch.vor_tidy(con, DAY + 5 + wissensbuch.VOR_S + 1)
+            self.assertEqual(con.execute("SELECT COUNT(*) FROM wb_vor").fetchone()[0], 0)
+        helpers.set_config(knowledge_map=False)
+        self.assertEqual(cl.post(f"/api/profile/wissenskarte/vorziehen/{c}").status_code, 403)
+
+    def test_contradictions_are_marked_and_live_counts_numbers_only(self):
+        cl, uid, a = self.fresh("Wkwider")
+        b, _ = self.docs(uid)
+        self.work(uid, self.proposal(uid, a, ("Nordstern Versicherung", "VW Golf", "versichert bei", 1, "")))
+        golf = self.ids(uid)["VW Golf"]
+        with wissenskarte._Db(uid) as con:
+            con.execute("UPDATE wb_sent SET mark='widerspruch' WHERE page=?", (golf,))
+        v = cl.get("/api/profile/wissenskarte").json()
+        self.assertEqual({n["title"]: n["w"] for n in v["nodes"]}, {"VW Golf": 1, "Nordstern Versicherung": 0})
+        wissenskarte.vorziehen(uid, b, now=DAY)
+        wissenskarte._live.update(at=0.0, d=None)
+        sums = wissenskarte.for_live()
+        self.assertGreaterEqual(sums["vorgezogen"], 1)
+        self.assertGreaterEqual(sums["widerspruch"], 1)
+        snap = json.dumps(live.snapshot(), ensure_ascii=False)
+        self.assertIn("vorgezogen", snap)
+        self.assertIn("Seiten mit Widerspruch", snap)
+        self.assertNotIn("Miete", snap)
+
+
+class Lagen(Base):
+    """Stufe 2 „Lagen merken“: a dragged point is pinned per profile (wk_lage) and comes with every part of the map
+    until „Lösen“; only points of the map now, finite numbers within the limits, at most LAGE_JE per request."""
+    def test_pin_show_and_loosen(self):
+        cl, uid, a = self.fresh("Wklage")
+        self.work(uid, self.proposal(uid, a, ("Nordstern Versicherung", "VW Golf", "versichert bei", 1, "")))
+        golf, nord = self.ids(uid)["VW Golf"], self.ids(uid)["Nordstern Versicherung"]
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            r = cl.post("/api/profile/wissenskarte/lage", json={"lagen": [{"id": golf, "x": 120.25, "y": -40},
+                                                                         {"id": "0123456789ab", "x": 1, "y": 1}]})
+        self.assertEqual(r.json(), {"ok": True, "n": 1})                  # a point that is not on the map is left out
+        self.assertIn("wissen: wissenskarte angeheftet | 1 punkte", out.getvalue())
+        self.assertEqual(cl.get("/api/profile/wissenskarte").json()["lage"], {golf: [120.2, -40.0]})
+        self.assertEqual(cl.get(f"/api/profile/wissenskarte?um={nord}").json()["lage"], {golf: [120.2, -40.0]})
+        other = profile("Wklagefremd")                                   # never in another profile's map
+        self.assertEqual(other.get("/api/profile/wissenskarte").json()["lage"], {})
+        self.assertEqual(cl.delete(f"/api/profile/wissenskarte/lage/{golf}").json(), {"ok": True, "n": 1})
+        self.assertEqual(cl.get("/api/profile/wissenskarte").json()["lage"], {})
+        wissenskarte.anheften(uid, [{"id": golf, "x": 1, "y": 2}, {"id": nord, "x": 3, "y": 4}], now=DAY)
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(cl.delete("/api/profile/wissenskarte/lage").json(), {"ok": True, "n": 2})
+        self.assertIn("wissen: wissenskarte geloest | 2 punkte", out.getvalue())
+        wissenskarte.anheften(uid, [{"id": golf, "x": 1, "y": 2}], now=DAY)
+        count, clear = features.OWN["wissenskarte"]
+        clear(uid)                                                       # Daten löschen takes the places too
+        with wissenskarte._Db(uid) as con:
+            self.assertEqual(con.execute("SELECT COUNT(*) FROM wk_lage").fetchone()[0], 0)
+
+    def test_bad_places_are_refused_and_the_limits_hold(self):
+        cl, uid, a = self.fresh("Wklagen")
+        self.work(uid, self.proposal(uid, a, ("Nordstern Versicherung", "VW Golf", "versichert bei", 1, "")))
+        golf, nord = self.ids(uid)["VW Golf"], self.ids(uid)["Nordstern Versicherung"]
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            for bad in ([], [{"id": golf, "x": 1}], [{"id": golf, "x": "1", "y": 2}], [{"id": golf, "x": True, "y": 2}],
+                        [{"id": golf, "x": wissenskarte.LAGE_WEIT + 1, "y": 0}], [{"id": "../x", "x": 0, "y": 0}],
+                        [{"id": golf, "x": 0, "y": 0}] * (wissenskarte.LAGE_JE + 1), "x", None):
+                self.assertEqual(cl.post("/api/profile/wissenskarte/lage", json={"lagen": bad}).status_code, 400, bad)
+            self.assertEqual(cl.post("/api/profile/wissenskarte/lage", content=b"{" + b" " * 9000 + b"}",
+                                     headers={"content-type": "application/json"}).status_code, 413)
+            self.assertEqual(cl.delete("/api/profile/wissenskarte/lage/..x").status_code, 400)
+        self.assertIn("wissen: wissenskarte anheften abgelehnt | ungueltig", out.getvalue())
+        self.assertIsNone(wissenskarte.anheften(uid, [{"id": golf, "x": float("nan"), "y": 0}]))
+        self.assertIsNone(wissenskarte.anheften(uid, [{"id": golf, "x": float("inf"), "y": 0}]))
+        with mock.patch.object(wissenskarte, "LAGE_MOST", 1):           # the oldest place leaves
+            wissenskarte.anheften(uid, [{"id": golf, "x": 1, "y": 1}], now=DAY)
+            wissenskarte.anheften(uid, [{"id": nord, "x": 2, "y": 2}], now=DAY + 1)
+        with wissenskarte._Db(uid) as con:
+            self.assertEqual([r[0] for r in con.execute("SELECT id FROM wk_lage")], [nord])
+        guest = TestClient(panel.app)
+        self.assertIn(guest.post("/api/profile/wissenskarte/lage", json={"lagen": [{"id": golf, "x": 0, "y": 0}]}).status_code, (401, 403))
+        self.assertIn(guest.delete("/api/profile/wissenskarte/lage").status_code, (401, 403))
+        helpers.set_config(knowledge_map=False)
+        self.assertEqual(cl.delete("/api/profile/wissenskarte/lage").status_code, 403)
+
+
+class Zeit(Base):
+    """Stufe 2 „Zeitraum, Neu seit letzter Woche, Zeitleiste“: connections by the date of their document (its
+    Steckbrief, else the day it came) or by when they were made; dates checked by fixed rules, the clock passed in."""
+    def test_period_new_and_dates_of_the_timeline(self):
+        cl, uid, a = self.fresh("Wkzeit")
+        self.work(uid, self.proposal(uid, a, ("Nordstern Versicherung", "VW Golf", "versichert bei", 1, "")))
+        with wissenskarte._Db(uid) as con:
+            con.execute("UPDATE docs SET ddate='2025-11', due='2026-01-15' WHERE id=?", (a,))
+            con.execute("UPDATE wk_edges SET made=?", (int(DAY),))
+        v = cl.get("/api/profile/wissenskarte").json()
+        self.assertEqual((v["edges"][0]["datum"], v["edges"][0]["frist"]), ("2025-11-01", "2026-01-15"))
+        self.assertEqual(v["zeit"], {"von": "", "bis": "", "neu": 0, "neu_tage": [7, 30]})
+        self.assertEqual(len(cl.get("/api/profile/wissenskarte?von=2025-10&bis=2025-11").json()["edges"]), 1)
+        self.assertEqual(len(cl.get("/api/profile/wissenskarte?von=2025-11-02").json()["edges"]), 0)
+        self.assertEqual(len(cl.get("/api/profile/wissenskarte?bis=2025-10-31").json()["edges"]), 0)
+        empty = cl.get("/api/profile/wissenskarte?von=2026-01").json()
+        self.assertEqual((empty["nodes"], empty["zeit"]["von"]), ([], "2026-01-01"))
+        golf = self.ids(uid)["VW Golf"]                                 # around a point the filter takes connections only
+        v = cl.get(f"/api/profile/wissenskarte?um={golf}&von=2026-01").json()
+        self.assertEqual((v["um"], v["edges"]), (golf, []))
+        self.assertEqual(len(wissenskarte.view(uid, neu=7, now=DAY + 6 * 86400)["edges"]), 1)
+        self.assertEqual(len(wissenskarte.view(uid, neu=7, now=DAY + 8 * 86400)["edges"]), 0)
+        self.assertEqual(len(wissenskarte.view(uid, neu=30, now=DAY + 8 * 86400)["edges"]), 1)
+        m = cl.get("/api/profile/wissenskarte/export?fmt=mermaid&von=2026-01").text      # the export follows the filter
+        self.assertNotIn("versichert", m)
+        with wissenskarte._Db(uid) as con:                               # without a date of the Steckbrief: the day it came
+            con.execute("UPDATE docs SET ddate='', due='x', created=? WHERE id=?", (int(DAY), a))
+        v = cl.get("/api/profile/wissenskarte").json()["edges"][0]
+        self.assertEqual((v["datum"], v["frist"]), (datetime.date.fromtimestamp(DAY).isoformat(), ""))
+
+    def test_bad_times_are_refused(self):
+        cl, uid, _ = self.fresh("Wkzeitn")
+        for q in ("von=2025", "von=2025-13", "bis=25-01", "von=2026-02&bis=2026-01", "neu=8", "neu=-7", "neu=99999",
+                  "neu=x", "von=2025-01-01%27"):
+            self.assertEqual(cl.get("/api/profile/wissenskarte?" + q).status_code, 400, q)
+            self.assertEqual(cl.get("/api/profile/wissenskarte/export?" + q).status_code, 400, q)
+        self.assertIsNone(wissenskarte.zeit_ok(neu=1))
+        self.assertEqual(wissenskarte.zeit_ok("2026-02", "2026-02"), ("2026-02-01", "2026-02-31", 0))
+
+
+@unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
+class Browser(Base):
+    """Wissensbuch → Karte (Stufe 2): „Wartet“ with „Zuerst“, a dragged point is pinned, the time bar and the timeline;
+    fits 390 and 1280 px, nothing scrolls sideways, no script error."""
+    @classmethod
+    def setUpClass(cls):
+        cls.port = helpers._port()
+        helpers.serve_panel(cls, cls.port)
+
+    async def check(self, uid, golf, wait, w, shot=""):
+        async with async_playwright() as p:
+            exe = chromium()
+            br = await p.chromium.launch(**({"executable_path": exe} if exe else {}))
+            try:
+                ctx = await br.new_context(viewport={"width": w, "height": 900}, locale="de-DE", bypass_csp=True)
+                pg = await ctx.new_page()
+                errors = []
+                pg.on("pageerror", lambda e: errors.append(str(e)))
+                base = f"http://127.0.0.1:{self.port}"
+                await pg.goto(base + "/")
+                self.assertEqual((await pg.request.post(base + "/api/profile/login",
+                                                        data={"name": "Wkseite2", "pin": "2468"})).status, 200)
+                await pg.goto(base + "/")
+                await pg.wait_for_function("typeof WK_ON!=='undefined'&&WK_ON&&typeof wkaFocus==='function'", timeout=30000)
+                await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
+                await pg.evaluate("goSec('wbuch');icTabSet('wbuch','karte');wbOpen()")
+                await pg.wait_for_function("document.querySelectorAll('#wkview .wkn').length>=2", timeout=30000)
+                self.assertEqual(await pg.locator("#wkview .wkn.wid").count(), 1)          # the page with a contradiction
+                row = pg.locator(f"#wkview .wkwait:has-text('Miete') button:has-text('Zuerst')")
+                if await row.count():
+                    await row.first.click()
+                    await pg.wait_for_function("document.querySelector('#wkview .wkmsg').textContent.includes('Nächstes')", timeout=30000)
+                self.assertIn("kommt zuerst", await pg.inner_text("#wkview .wkside"))
+                await pg.locator("#wkview .wkmap").scroll_into_view_if_needed()
+                box = await pg.locator(f"#wkview [data-n='{golf}'] rect").bounding_box()
+                await pg.mouse.move(box["x"] + 10, box["y"] + 10)
+                await pg.mouse.down()
+                await pg.mouse.move(box["x"] + 60, box["y"] + 50, steps=5)
+                await pg.mouse.up()
+                await pg.wait_for_function(f"document.querySelector(\"#wkview [data-n='{golf}']\").classList.contains('pin')", timeout=30000)
+                await pg.click("#wkview .wkzeit button:has-text('Neu seit letzter Woche')")
+                await pg.wait_for_function("document.querySelector('#wkview .wkzeit button.on')", timeout=30000)
+                await pg.click("#wkview .wkzeit .segc button:has-text('Zeitleiste')")
+                await pg.wait_for_function("document.querySelectorAll('#wkview .wkt, #wkview .wkleer').length>0", timeout=30000)
+                if shot:
+                    await pg.screenshot(path=shot)
+                self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth"), w)
+                self.assertEqual(errors, [])
+            finally:
+                await br.close()
+
+    def test_wait_pin_and_time_on_the_page(self):
+        import os
+        c, uid, a = self.fresh("Wkseite2")
+        self.work(uid, self.proposal(uid, a, ("Nordstern Versicherung", "VW Golf", "versichert bei", 1, "")))
+        golf = self.ids(uid)["VW Golf"]
+        b = documents.add(uid, "Miete.txt", HOUSE.encode(), text=HOUSE)["id"]
+        with wissenskarte._Db(uid) as con:
+            con.execute("UPDATE wb_sent SET mark='widerspruch' WHERE page=?", (golf,))
+            con.execute("UPDATE docs SET ddate='2025-11', due='2026-01-15' WHERE id=?", (a,))
+        for w in (390, 1280):
+            asyncio.run(self.check(uid, golf, b, w, os.environ.get("WK_SHOT", "") and f"{os.environ['WK_SHOT']}-{w}.png"))
+            wissenskarte.loesen(uid)
+        with wissenskarte._Db(uid) as con:
+            self.assertEqual(con.execute("SELECT COUNT(*) FROM wb_vor").fetchone()[0], 1)
+
+
+class Inseln(Base):
+    """Stufe 2 „Themen-Inseln“: islands by a fixed label propagation (no model), always the same for the same map; the
+    overview names islands and their bridges, an island shows its points; the overview comes by itself only when the
+    map has more points than one answer shows."""
+    def test_the_fixed_rule_finds_the_same_islands(self):
+        adj = {"a": {"b", "c"}, "b": {"a", "c"}, "c": {"a", "b", "d"}, "d": {"c", "e"},
+               "e": {"d", "f", "g"}, "f": {"e", "g"}, "g": {"e", "f"}}
+        order = ["c", "e", "a", "b", "d", "f", "g"]
+        got = wissenskarte.inseln(order, adj)
+        self.assertEqual(got, wissenskarte.inseln(order, adj))           # the same map, the same islands
+        self.assertEqual(got["a"], got["b"])
+        self.assertEqual(got["f"], got["g"])
+        self.assertNotEqual(got["a"], got["f"])
+        self.assertTrue(all(got[x] in order for x in order))
+        self.assertEqual(wissenskarte.inseln([], {}), {})
+        self.assertEqual(wissenskarte.inseln(["x"], {}), {"x": "x"})
+
+    def test_overview_island_and_arguments(self):
+        cl, uid, a = self.fresh("Wkinsel")
+        self.work(uid, self.proposal(uid, a, ("Nordstern Versicherung", "VW Golf", "versichert bei", 1, "")))
+        v = cl.get("/api/profile/wissenskarte").json()                   # few points: no overview by itself
+        self.assertFalse(v["inseln"]["an"])
+        self.assertEqual(v["inseln"]["anzahl"], 1)
+        o = cl.get("/api/profile/wissenskarte?inseln=1").json()
+        self.assertTrue(o["inseln"]["an"])
+        self.assertEqual(o["nodes"], [])
+        isl = o["inseln"]["liste"][0]
+        self.assertEqual((isl["n"], isl["name"] in ("VW Golf", "Nordstern Versicherung")), (2, True))
+        i = cl.get(f"/api/profile/wissenskarte?insel={isl['id']}").json()
+        self.assertEqual((i["insel"], len(i["nodes"]), len(i["edges"])), (isl["id"], 2, 1))
+        self.assertEqual(i["insel_name"], isl["name"])
+        nord = self.ids(uid)["Nordstern Versicherung"]
+        other = nord if isl["id"] != nord else self.ids(uid)["VW Golf"]
+        self.assertEqual(cl.get(f"/api/profile/wissenskarte?insel={other}").json()["insel"], "")   # not an island's id
+        with mock.patch.object(wissenskarte, "VIEW_NODES", 1):         # more points than one answer: the overview
+            b = documents.add(uid, "Miete.txt", HOUSE.encode(), text=HOUSE)["id"]
+            with mock.patch.object(wissensbuch, "ask_model", mock.AsyncMock(return_value=book(
+                    ("Lindenstraße 4", "Ort", "Die Wohnung liegt in der Lindenstraße 4 in Bremen."),
+                    ("Hansa Wohnbau", "Firma", "Vermieter ist die Hansa Wohnbau.")))), contextlib.redirect_stdout(io.StringIO()):
+                run(wissensbuch.work_in(uid, DAY))
+            self.work(uid, self.proposal(uid, b, ("Hansa Wohnbau", "Lindenstraße 4", "besitzt", 1, "")))
+            v = cl.get("/api/profile/wissenskarte").json()
+            self.assertTrue(v["inseln"]["an"])
+            self.assertEqual(v["inseln"]["anzahl"], 2)
+            self.assertEqual(v["inseln"]["bruecken"], [])
+            self.assertFalse(cl.get("/api/profile/wissenskarte?inseln=0").json()["inseln"]["an"])
+            self.assertFalse(cl.get(f"/api/profile/wissenskarte?um={nord}").json()["inseln"]["an"])
+        for q in ("insel=../x", "inseln=2", "inseln=ja"):
+            self.assertEqual(cl.get("/api/profile/wissenskarte?" + q).status_code, 400, q)

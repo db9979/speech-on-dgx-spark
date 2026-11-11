@@ -247,7 +247,7 @@ SEITEN = {
     },
     # ------------------------------------------------------------------ Wissen: how a question finds passages
     "wissen": {
-        "stand": "2af5782cc9",
+        "stand": "530007f7f6",
         "bezug": {
             "lokal.MAX_HITS": ["s5"], "wissen.search": ["s1", "s8", "s9"], "documents.search": ["s5", "s6"],
             "documents._terms": ["s5"], "documents.match_docs": ["s4"], "docembed.query": ["s3"],
@@ -258,7 +258,10 @@ SEITEN = {
             "regeln": ["s1", "s8"], "regel:Geteilte Dokumente": ["s8"], "regel:Gedächtnis": ["s13"],
             "regel:Erst lokal suchen": ["s5"], "regel:Wissensbuch": ["s13"], "wissensbuch.answer_block": ["s13"],
             "wissensbuch.PAGES_PER_DOC": ["s13"], "wissensbuch.MAX_PAGES": ["s13"],
-            "wissensbuch.SAMPLE": ["s13"], "wissenskarte.view": ["s13"], "wissenskarte.check_edge": ["s13"],
+            "wissensbuch.SAMPLE": ["s13"], "wissenskarte.view": ["s13"], "wissenskarte.vorziehen": ["s13"], "wissenskarte.anheften": ["s13"],
+            "wissenskarte.loesen": ["s13"], "wissenskarte.zeit_ok": ["s13"], "wissenskarte.inseln": ["s13"],
+            "wissenskarte.INSEL_RUNDEN": ["s13"], "wissenskarte.INSEL_MOST": ["s13"], "wissenskarte.INSEL_BRUECKEN": ["s13"], "wissenskarte.LAGE_MOST": ["s13"], "wissenskarte.LAGE_JE": ["s13"], "wissenskarte.LAGE_WEIT": ["s13"],
+            "wissenskarte.WARTEN_MOST": ["s13"], "wissensbuch.VOR_MOST": ["s13"], "wissensbuch.VOR_S": ["s13"], "wissenskarte.check_edge": ["s13"],
             "wissenskarte.EDGES_PER_DOC": ["s13"], "wissenskarte.VIEW_NODES": ["s13"], "wissenskarte.VIEW_EDGES": ["s13"],
             "wissenskarte.WEG_MOST": ["s13"], "wissenskarte.rund_um": ["s13"], "wissenskarte.weg": ["s13"],
             "wissenskarte._bau": ["s13"], "wissenskarte._worte_sync": ["s6"], "wissenskarte.BAU_MOST": ["s13"],
@@ -540,6 +543,15 @@ SEITEN = {
             ("{wissenskarte.MAX_EDGES}", ("Verbindungen in der Wissenskarte pro Profil", "connections in the knowledge map per profile"), "wissenskarte.MAX_EDGES"),
             ("{wissenskarte.VIEW_NODES}", ("Punkte, die die Karte auf einmal zeigt", "points the map shows at once"), "wissenskarte.VIEW_NODES"),
             ("{wissenskarte.VIEW_EDGES}", ("Verbindungen, die die Karte auf einmal zeigt", "connections the map shows at once"), "wissenskarte.VIEW_EDGES"),
+            ("{wissenskarte.LAGE_MOST}", ("angeheftete Punkte je Profil", "pinned points per profile"), "wissenskarte.LAGE_MOST"),
+            ("{wissenskarte.LAGE_JE}", ("Punkte, die eine Anfrage höchstens anheftet", "points one request pins at most"), "wissenskarte.LAGE_JE"),
+            ("{wissenskarte.LAGE_WEIT}", ("so weit liegt eine Lage höchstens von der Mitte", "a place lies at most this far from the middle"), "wissenskarte.LAGE_WEIT"),
+            ("{wissenskarte.INSEL_RUNDEN}", ("Runden der Inseln-Regel höchstens", "rounds of the island rule at most"), "wissenskarte.INSEL_RUNDEN"),
+            ("{wissenskarte.INSEL_MOST}", ("Inseln, die die Übersicht nennt", "islands the overview names"), "wissenskarte.INSEL_MOST"),
+            ("{wissenskarte.INSEL_BRUECKEN}", ("Verbindungen zwischen Inseln in der Übersicht", "connections between islands in the overview"), "wissenskarte.INSEL_BRUECKEN"),
+            ("{wissenskarte.WARTEN_MOST}", ("wartende Dokumente, die die Karte nennt", "waiting documents the map names"), "wissenskarte.WARTEN_MOST"),
+            ("{wissensbuch.VOR_MOST}", ("Wünsche „Zuerst einarbeiten“ je Profil", "wishes „Work in first“ per profile"), "wissensbuch.VOR_MOST"),
+            ("{wissensbuch.VOR_S} s", ("so lange gilt ein Wunsch „Zuerst einarbeiten“ höchstens", "a wish „Work in first“ holds this long at most"), "wissensbuch.VOR_S"),
             ("{wissenskarte.WEG_MOST}", ("Schritte, die wissenskarte.weg höchstens sucht", "steps wissenskarte.weg looks for at most"), "wissenskarte.WEG_MOST"),
             ("{wissenskarte.BAU_MOST}", ("Aufbauten der Karte, die das Panel im Speicher behält", "builds of the map the panel keeps in memory"), "wissenskarte.BAU_MOST"),
             ("{wissenskarte.BAU_S} s", ("so lange bleibt ein Aufbau höchstens", "a build stays this long at most"), "wissenskarte.BAU_S"),
@@ -713,6 +725,41 @@ SEITEN = {
                  "Browser and app draw the map with their own code from names and kinds, never from SVG, Mermaid or "
                  "DOT of the model. The panel only answers the visible part with at most {wissenskarte.VIEW_NODES} "
                  "points; the export as Mermaid or Graphviz text comes from fixed code with cleaned names."),
+                ("Zuerst einarbeiten: Die Karte nennt bis zu {wissenskarte.WARTEN_MOST} Dokumente, die sie noch nicht "
+                 "hat. Zieht die Besitzerin oder der Besitzer eines davon auf die Karte (oder tippt „Zuerst“), prüft "
+                 "wissenskarte.vorziehen: eigenes, durchsuchbares, fertiges Dokument, von der Karte noch nicht "
+                 "eingearbeitet, vom Wissensbuch nicht abgelehnt; dann steht es in wb_vor, und Wissensbuch, Karte und "
+                 "Punkte nehmen es vor allen anderen (wissensbuch.VOR_ORDER). Die Tagesgrenzen bleiben; höchstens "
+                 "{wissensbuch.VOR_MOST} Wünsche je Profil, jeder höchstens {wissensbuch.VOR_S} s. Hat eine Seite im "
+                 "Wissensbuch Sätze mit der Marke „widerspruch“, liefert die Karte ihre Zahl (w) und der Punkt ist rot "
+                 "umrandet. Ein gezogener Punkt wird angeheftet (wissenskarte.anheften, Tabelle wk_lage): nur Punkte der "
+                 "Karte, Zahlen innerhalb ±{wissenskarte.LAGE_WEIT}, höchstens {wissenskarte.LAGE_JE} je Anfrage und "
+                 "{wissenskarte.LAGE_MOST} je Profil; view liefert die Lagen der gezeigten Punkte mit, wissenskarte.loesen "
+                 "gibt einen oder alle frei. Zeitfilter (wissenskarte.zeit_ok): von und bis als JJJJ-MM oder JJJJ-MM-TT "
+                 "gegen das Datum des Dokuments (Steckbrief, sonst der Tag, an dem es kam), neu nur aus "
+                 "wissenskarte.ZEIT_NEU Tagen gegen wk_edges.made; jede Verbindung trägt Datum und Frist ihres Dokuments "
+                 "für die Zeitleiste. Themen-Inseln (wissenskarte.inseln): Label-Propagation im Aufbau der Karte, "
+                 "höchstens {wissenskarte.INSEL_RUNDEN} Runden in fester Reihenfolge, bei Gleichstand die Insel, deren "
+                 "erster Punkt zuerst kommt; die Übersicht nennt höchstens {wissenskarte.INSEL_MOST} Inseln und "
+                 "{wissenskarte.INSEL_BRUECKEN} Verbindungen zwischen ihnen und kommt von selbst, wenn die Karte mehr "
+                 "Punkte hat, als eine Antwort zeigt.",
+                 "Work in first: the map names up to {wissenskarte.WARTEN_MOST} documents it does not have yet. When "
+                 "the owner drags one of them onto the map (or taps „First“), wissenskarte.vorziehen checks: an own, "
+                 "searched, ready document, not yet worked in by the map, not refused by the knowledge book; then it "
+                 "stands in wb_vor, and the knowledge book, the map and the points take it before all others "
+                 "(wissensbuch.VOR_ORDER). The daily limits stay; at most {wissensbuch.VOR_MOST} wishes per profile, "
+                 "each for {wissensbuch.VOR_S} s at most. When a page of the knowledge book has sentences marked "
+                 "„widerspruch“, the map hands their number (w) and the point has a red border. A dragged point is pinned "
+                 "(wissenskarte.anheften, table wk_lage): only points of the map, numbers within "
+                 "±{wissenskarte.LAGE_WEIT}, at most {wissenskarte.LAGE_JE} per request and {wissenskarte.LAGE_MOST} per "
+                 "profile; view hands the places of the points shown, wissenskarte.loesen frees one or all. Time filter "
+                 "(wissenskarte.zeit_ok): von and bis as YYYY-MM or YYYY-MM-DD against the document's date (Steckbrief, "
+                 "else the day it came), neu only of wissenskarte.ZEIT_NEU days against wk_edges.made; every connection "
+                 "carries the date and deadline of its document for the timeline. Topic islands (wissenskarte.inseln): "
+                 "label propagation in the build of the map, at most {wissenskarte.INSEL_RUNDEN} rounds in a fixed order, "
+                 "on a tie the island whose first point comes first; the overview names at most "
+                 "{wissenskarte.INSEL_MOST} islands and {wissenskarte.INSEL_BRUECKEN} connections between them and comes "
+                 "by itself when the map has more points than one answer shows."),
                 ("Den Aufbau der Karte (Namen, Verbindungen je Punkt und Dokument, wer neben wem steht) holt eine "
                  "feste Abfrage aus SQLite und das Panel behält ihn im Speicher, solange sich nichts ändert: Trigger "
                  "zählen jede Änderung der Tabellen in wissenskarte.STAND_TABELLEN in wk_stand, höchstens "
@@ -1273,6 +1320,11 @@ SEITEN = {
             ("wissensbuch.answer_block", ("passende Seiten des Wissensbuchs mit Quellen", "fitting pages of the knowledge book with sources")),
             ("wissenskarte.check_edge", ("feste Regeln für jede vorgeschlagene Verbindung", "fixed rules for every proposed connection")),
             ("wissenskarte.view", ("der sichtbare Teil der Karte", "the visible part of the map")),
+            ("wissenskarte.anheften", ("gezogene Punkte anheften, feste Grenzen (wk_lage)", "pin dragged points, fixed limits (wk_lage)")),
+            ("wissenskarte.inseln", ("Themen-Inseln nach fester Regel (Label-Propagation)", "topic islands by a fixed rule (label propagation)")),
+            ("wissenskarte.zeit_ok", ("Zeitfilter nach festen Regeln: Monat oder Tag, 7 oder 30 Tage", "time filter by fixed rules: month or day, 7 or 30 days")),
+            ("wissenskarte.loesen", ("einen oder alle Punkte lösen", "unpin one or all points")),
+            ("wissenskarte.vorziehen", ("„Zuerst einarbeiten“: ein wartendes Dokument nach vorn (wb_vor)", "„Work in first“: a waiting document to the front (wb_vor)")),
             ("wissenskarte.rund_um", ("Punkte um einen Punkt, eine Abfrage je Schritt", "points around a point, one query per step")),
             ("wissenskarte.weg", ("kürzester Weg, von beiden Enden zugleich", "shortest way, from both ends at once")),
             ("wissenskarte._bau", ("Aufbau der Karte im Speicher, neu bei jeder Änderung (wk_stand)", "build of the map in memory, new on every change (wk_stand)")),

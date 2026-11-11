@@ -167,7 +167,9 @@ THINGS = {
                    (("POST",), r"/api/profile/hoerstueck/[0-9a-f]{12}/sofort")),
     # Wissenskarte (wissenskarte.py): see the part of the map around a page or of a document, "Stimmt nicht" for one
     # connection; the export as text stays in the browser
-    "wissenskarte": ((("GET",), r"/api/profile/wissenskarte"), (("DELETE",), r"/api/profile/wissenskarte/kante/[0-9]{1,12}")),
+    "wissenskarte": ((("GET",), r"/api/profile/wissenskarte"), (("DELETE",), r"/api/profile/wissenskarte/kante/[0-9]{1,12}"),
+                     (("POST",), r"/api/profile/wissenskarte/vorziehen/[0-9a-f]{12}"),
+                     (("DELETE",), r"/api/profile/wissenskarte/lage(?:/(?:[0-9a-f]{12}|k[1-9][0-9]{0,11}))?")),
     # Personen, Firmen und Fristen (wissenskarte.py, Stufe 2): the list of points, rename, merge and delete (each with
     # the code of „Bestätigen“ through SparkAPI.confirmed); the points on the map come with "wissenskarte"
     "wissensknoten": ((("GET",), r"/api/profile/wissenskarte/knoten"), (("DELETE",), r"/api/profile/wissenskarte/knoten/[0-9]{1,12}"),

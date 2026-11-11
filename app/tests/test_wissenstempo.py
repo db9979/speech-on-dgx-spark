@@ -381,7 +381,7 @@ class Doppelt(unittest.TestCase):
 
 class Grenzen(unittest.TestCase):
     def test_the_limits_of_the_map_and_the_book(self):
-        self.assertEqual((wissensbuch.MAX_PAGES, wk.MAX_EDGES, wk.MAX_ENT), (3000, 25000, 15000))
+        self.assertEqual((wissensbuch.MAX_PAGES, wk.MAX_EDGES, wk.MAX_ENT), (5000, 25000, 15000))
         self.assertEqual((wk.VIEW_NODES, wk.VIEW_EDGES), (150, 400))      # the visible part stays as it was
         self.assertEqual((wk.DAY, wk.ENT_DAY), (200, 200))                # the daily limits too (and stay settable)
 

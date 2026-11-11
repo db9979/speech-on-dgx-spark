@@ -2434,6 +2434,12 @@ textarea{resize:none}textarea[data-fest]{resize:vertical}textarea.feldplatz{padd
 .wkn{cursor:pointer}.wkn rect{fill:var(--card);stroke:var(--wkc);stroke-width:1.6}.wkn circle{fill:var(--wkc)}
 .wkn text{fill:var(--fg);font-size:12px;font-weight:500}.wkn.s rect{stroke-width:3.2}.wkn.um rect{stroke-width:2.6}.wkn.s text,.wkn.um text{font-weight:700}
 .wkn.dim,.wke.dim{opacity:.35}
+.wkn .pinm{fill:var(--acc)}
+.wkzeit{display:inline-flex;flex-wrap:wrap;gap:6px;align-items:center}.wkzlab{font:var(--t-sub);color:var(--mut);display:inline-flex;align-items:center;gap:4px}.wkzlab input{font:inherit;padding:2px 4px}
+.wktime .axis{stroke:var(--line);stroke-width:1.5}.wktime .tick{fill:var(--mut);font-size:11.5px}.wkt{cursor:pointer}.wkt circle{fill:var(--acc)}.wkt .stem{stroke:var(--line);stroke-dasharray:2 3}
+.wkt text{fill:var(--fg);font-size:12px}.wkt.s text{font-weight:700}.wkt .frist{fill:var(--bad)}.wkleer{padding:24px;text-align:center}
+.wkins .br{stroke:var(--line)}.wki{cursor:pointer}.wki circle{fill:color-mix(in srgb,var(--acc) 14%,var(--card));stroke:var(--acc);stroke-width:1.6}
+.wki text{fill:var(--fg);font-size:12px;font-weight:600}.wki text.n{fill:var(--mut);font-weight:400}.wki:focus circle,.wki:hover circle{stroke-width:3}.wkn.wid rect{stroke:var(--bad);stroke-width:2.6;stroke-dasharray:6 3}.wkwid{font:var(--t-sub);margin:4px 0 6px}.wkwait .b{min-height:28px;padding:2px 10px}
 .wke line{stroke:var(--mut);stroke-width:1.4}.wke line.hit{stroke:transparent;stroke-width:14;cursor:pointer}
 .wke.c line:not(.hit){stroke:var(--warn);stroke-dasharray:6 4}.wke.s line:not(.hit){stroke:var(--bad);stroke-width:2.6;stroke-dasharray:none}
 .wke .lab{fill:var(--card);stroke:var(--line)}.wke text{fill:var(--mut);font-size:10.5px}.wke.c text{fill:var(--warn)}.wke.s text{fill:var(--bad)}

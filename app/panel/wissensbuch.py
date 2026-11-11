@@ -69,7 +69,7 @@ from core import assistant, auth, browser_profile, confirm_code, json_body, own_
 
 router = APIRouter()
 ARTS = ("Thema", "Person", "Firma", "Ding", "Ort")
-MAX_PAGES = 3000         # pages per profile
+MAX_PAGES = 5000         # pages per profile (Dominik 2026-11-11 „ok“: 3000 → 5000 after measuring)
 MAX_SENT = 60            # sentences per page
 PAGES_PER_DOC = 5        # pages one document may change
 SENT_PER_DOC = 8         # new sentences per page from one document
@@ -106,6 +106,7 @@ CREATE TABLE IF NOT EXISTS wb_state (key TEXT PRIMARY KEY, val INTEGER);
 CREATE TABLE IF NOT EXISTS wb_kiwix (id TEXT PRIMARY KEY, book TEXT, path TEXT, title TEXT);
 CREATE TABLE IF NOT EXISTS wb_ftsdirty (page TEXT PRIMARY KEY);
 CREATE TABLE IF NOT EXISTS wb_alttitel (alt TEXT PRIMARY KEY, name TEXT NOT NULL, titel TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS wb_vor (doc TEXT PRIMARY KEY, at INTEGER NOT NULL);
 CREATE TRIGGER IF NOT EXISTS wb_fts_pi AFTER INSERT ON wb_pages BEGIN
     INSERT OR IGNORE INTO wb_ftsdirty (page) VALUES (new.id); END;
 CREATE TRIGGER IF NOT EXISTS wb_fts_pu AFTER UPDATE OF id, title ON wb_pages BEGIN
@@ -496,13 +497,30 @@ def hint(uid, question=""):
 
 
 # ---------------------------------------------------------------- working a document in
+# „Zuerst einarbeiten“ (plan wissensgraph Stufe 2, Dominik 2026-11-11 „ok“): a document the owner drags onto the map
+# (wissenskarte.vorziehen) stands in wb_vor and goes first in the book, the map and the points, oldest wish first; the
+# daily limits stay. At most VOR_MOST wishes per profile, each kept VOR_S seconds at most (then the normal order again).
+VOR_MOST = 20
+VOR_S = 7 * 86400
+VOR_ORDER = "v.at IS NULL, v.at"     # SQL: wished documents first (table wb_vor as v, joined on the document)
+
+
+def vor_tidy(con, now=None):
+    """Wishes of documents that are gone, not searched or too old leave (fixed rule, no model)."""
+    now = int(now or time.time())
+    con.execute("DELETE FROM wb_vor WHERE at < ? OR doc NOT IN (SELECT id FROM docs WHERE use=1 AND state='ready')",
+                (now - VOR_S,))
+
+
 def next_doc(uid):
-    """(doc id, card) of the next own document to work in, or None. With "Steckbrief und Tags" on it waits for its card."""
+    """(doc id, card) of the next own document to work in, or None. With "Steckbrief und Tags" on it waits for its card.
+    Documents the owner wished first (wb_vor) go first."""
     import wissen
     brief = wissen.on(uid, "brief")
     with _Db(uid) as con:
         done = {r[0] for r in con.execute("SELECT doc FROM wb_docs")}
-        for r in con.execute("SELECT * FROM docs WHERE use=1 AND state='ready' ORDER BY created, id"):
+        for r in con.execute("SELECT d.* FROM docs d LEFT JOIN wb_vor v ON v.doc = d.id WHERE d.use=1 AND "
+                             "d.state='ready' ORDER BY " + VOR_ORDER + ", d.created, d.id"):
             if r["id"] in done or (brief and not r["brief"]):
                 continue
             return r["id"], documents.card(r) | {"name": r["name"]}
