@@ -50,6 +50,21 @@ def tool(name, **args):
 
 
 class Hilfe(unittest.TestCase):
+    def test_a_guide_without_a_switch_names_its_place(self):
+        """Code review 2026-11-11, point 10: the page of all guides is gone; the help names the place where such a
+        guide stands (guides.js `at`), never the old page."""
+        by = {g["id"]: g for g in hilfe.guides()}
+        self.assertEqual(by["siri"]["at"], "int-siri")
+        gs = [it for it in hilfe._entries() if it["kind"] == "guide" and it["lang"] == "de"]
+        pages = {it["title"]: it["page"] for it in gs}
+        self.assertEqual(pages["„Hey Siri, frag Spark“"], "apps")
+        self.assertEqual(pages["Firmware von Hand"], "mon")
+        self.assertNotIn("int", set(pages.values()))
+        self.assertNotIn("int", hilfe.SECTIONS)
+        where = {it["title"]: it["where"] for it in gs}
+        self.assertEqual(where["„Hey Siri, frag Spark“"], hilfe.SECTIONS["apps"][0])
+        self.assertEqual(where["Firmware von Hand"], "Zustand → System-Updates")
+
     @classmethod
     def setUpClass(cls):
         cls.p, cls.uid = profile("Hilfetest")

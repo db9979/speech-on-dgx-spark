@@ -1,5 +1,6 @@
 // Guides: one openable how-to per service, the same text next to its switch (Funktionen),
-// on its page in the "Ich" window and collected under Funktionen → Anleitungen. Services are sorted into
+// on its page in the "Ich" window and found by the search (Strg K, group „Anleitungen“), which opens it at its place (guideGo); there is no page of all
+// guides any more (code review 2026-11-11, point 10). A guide without a switch and an Ich page names its place with `at`. Services are sorted into
 // fixed groups everywhere. Each guide: sw = admin switch id, me = page in the "Ich" window. Texts are [German, English]; every section is a list of such pairs.
 // A self-test checks that every switch in Funktionen and every "Ich" page has a guide and a group.
 const GGROUPS=[['talk','Gespräch','Conversation'],['speed','Tempo und Genauigkeit','Speed and accuracy'],['data','Meine Daten','My data'],['day','Mein Tag','My day'],['post','Post und Kontakte','Mail and contacts'],
@@ -1912,7 +1913,7 @@ const GUIDES=[
  out:[['Nichts nach außen. Der Prüfer erreicht dein Panel über deine https-Adresse wie jedes gekoppelte iPhone. Für das Profil sind dabei Smart Home, Mail, Kalender, Kontakte, Anrufe, Chats, Telegram, Aufträge, Lautsprecher, Telefon, Begleiter, Updates, Meldungen, NAS und reMarkable gesperrt, egal was sonst an ist.','Nothing goes out. The reviewer reaches your panel through your https address like any paired iPhone. For the profile smart home, mail, calendars, contacts, calls, chats, Telegram, jobs, speakers, phone, companion, updates, reports, NAS and reMarkable are blocked, whatever else is on.']],
  off:[['Den Prüfzugang löschen: Der Code geht nicht mehr, die damit gekoppelten iPhones sind sofort entfernt. Nach 14 Tagen geschieht das von selbst. Schalter aus: kein Code koppelt mehr, die Liste bleibt zum Löschen.','Delete the review access: the code stops working, the iPhones paired with it are removed at once. After 14 days this happens by itself. Switch off: no code pairs any more, the list stays for deleting.']],
  fix:[['Die App sagt „passt nicht oder ist abgelaufen“: Code abgelaufen, schon fünfmal benutzt oder vertippt; Groß- und Kleinschreibung und Bindestriche sind egal.','The app says "does not fit or has expired": the code expired, was used five times already or was mistyped; case and dashes do not matter.'],['Nach mehreren falschen Codes wartet die Adresse wie nach falschen PINs (Zustand → Live, Eingang).','After several wrong codes the address waits as after wrong PINs (Status → Live, Entrance).']]},
-{id:'siri',grp:'go',t:['„Hey Siri, frag Spark“','"Hey Siri, ask Spark"'],
+{id:'siri',grp:'go',at:'int-siri',t:['„Hey Siri, frag Spark“','"Hey Siri, ask Spark"'],
  what:[['Ein iPhone-Kurzbefehl schickt deine Frage an den Spark, Siri liest die Antwort vor. Auch auf der Apple Watch, mit AirPods und im Auto.','An iPhone shortcut sends your question to the Spark, Siri reads the answer. Also on Apple Watch, with AirPods and in the car.']],
  need:[['Ein Geräteschlüssel deines Profils und ein iPhone mit der App Kurzbefehle.','A device key of your profile and an iPhone with the Shortcuts app.']],
  setup:[['Personen und Geräte: beim eigenen Profil ein Gerät „iPhone Siri“ anlegen, Schlüssel kopieren.','People and devices: add a device "iPhone Siri" to your profile, copy the key.'],['Den Kurzbefehl wie in der Karte „Hey Siri, frag Spark“ unter Personen und Geräte → Apps und Schnittstellen beschrieben anlegen.','Build the shortcut as described in the "Hey Siri, ask Spark" card under People and devices → Apps and interfaces.']],
@@ -1920,7 +1921,7 @@ const GUIDES=[
  out:[['Siri macht aus deiner Sprache Text (bei Apple). Die Frage selbst geht direkt an den Spark.','Siri turns your speech into text (at Apple). The question itself goes directly to the Spark.']],
  off:[['Gerät unter Personen und Geräte löschen.','Delete the device under People and devices.']],
  fix:[['Unterwegs keine Antwort: im Kurzbefehl die Adresse deines Reverse Proxys statt der Heimnetz-Adresse.','No answer away from home: use your reverse proxy address in the shortcut, not the home address.']]},
-{id:'pebble',grp:'go',t:['Pebble-Uhr','Pebble watch'],
+{id:'pebble',grp:'go',at:'int-pebble',t:['Pebble-Uhr','Pebble watch'],
  what:[['App „Spark“ für die Pebble: Frage per Knopfdruck, Antwort als Text und über den Lautsprecher der Uhr.','"Spark" app for the Pebble: ask with a button, answer as text and through the watch speaker.']],
  need:[['Pebble Time 2, Core 2 Duo oder Round 2, ein Geräteschlüssel deines Profils.','Pebble Time 2, Core 2 Duo or Round 2, a device key of your profile.']],
  setup:[['Einfacher mit „Pebble-Uhr koppeln“ (Einrichtungscode). Sonst: Personen und Geräte → Geräte: Gerät „Pebble“ anlegen, Schlüssel kopieren.','Easier with "Pair the Pebble watch" (setup code). Otherwise: People and devices → Devices: add a device "Pebble", copy the key.'],['Die App-Datei aus der Karte „Pebble-Uhr“ unter Personen und Geräte → Apps und Schnittstellen mit der Pebble-App öffnen.','Open the app file from the "Pebble watch" card under People and devices → Apps and interfaces with the Pebble app.'],['In der Pebble-App bei „Spark“ Adresse und Schlüssel eintragen.','In the Pebble app enter address and key for "Spark".']],
@@ -1928,7 +1929,7 @@ const GUIDES=[
  out:[['Das Diktieren macht die Pebble-App auf dem Handy, je nach Einstellung dort auch über einen Online-Dienst.','Dictation is done by the Pebble phone app, depending on its setting also through an online service.']],
  off:[['Gerät unter Personen und Geräte löschen.','Delete the device under People and devices.']],
  fix:[['Leise: Uhr → Einstellungen → Töne → Lautstärke.','Quiet: watch → Settings → Sounds → Volume.'],['Unterwegs: das Handy muss den Spark erreichen (VPN oder Proxy).','Away from home: the phone has to reach the Spark (VPN or proxy).']]},
-{id:'apps',grp:'go',t:['Open WebUI und eigene Programme','Open WebUI and own programs'],
+{id:'apps',grp:'go',at:'int-ep',t:['Open WebUI und eigene Programme','Open WebUI and own programs'],
  what:[['Spracherkennung und Sprachausgabe sprechen die OpenAI-Audio-API. Jede App mit eigener „Base URL“ kann sie nutzen.','Speech recognition and speech output speak the OpenAI audio API. Any app with its own "Base URL" can use them.']],
  need:[['Die Adressen und, falls gesetzt, den API-Schlüssel (Einstellungen → Sicherheit).','The addresses and, if set, the API key (Settings → Security).']],
  setup:[['Adressen und Beispiele stehen unter Personen und Geräte → Apps und Schnittstellen (Open WebUI, Andere Apps, curl, Python).','Addresses and examples are under People and devices → Apps and interfaces (Open WebUI, Other apps, curl, Python).']],
@@ -2068,7 +2069,7 @@ const GUIDES=[
  out:[['Nur die festen Paketquellen von tars (Ubuntu und NVIDIA DGX).','Only tars\' fixed package sources (Ubuntu and NVIDIA DGX).']],
  off:[['Den Schalter aus: eingespielt wird nur noch auf deinen Knopfdruck.','Switch it off: updates are installed only when you press the button.']],
  fix:[['Nichts eingespielt: Um diese Zeit sprach jemand oder tars antwortete nicht. Die nächste Nacht versucht es wieder.','Nothing installed: somebody talked at that time or tars did not answer. The next night tries again.']]},
-{id:'firmwarehand',grp:'sec',t:['Firmware von Hand','Firmware by hand'],
+{id:'firmwarehand',grp:'sec',at:'zsudet',t:['Firmware von Hand','Firmware by hand'],
  what:[['Firmware und Treiber spielt der Spark nie selbst ein, auch nicht nachts: Ein Fehler hier legt den Rechner lahm. Zustand → System-Updates zeigt nur, was da ist und was es Neues gibt; diese Anleitung führt Schritt für Schritt durch das Einspielen.','The Spark never installs firmware and drivers itself, not at night either: a mistake here stops the computer. Status → System updates only shows what there is and what is new; this guide walks through installing step by step.']],
  need:[['Zugang zum Rechner per SSH oder Tastatur, eine Zeit, in der niemand den Spark braucht, und eine Sicherung (Einstellungen → Sicherung).','Access to the computer by SSH or keyboard, a time when nobody needs the Spark, and a backup (Settings → Backup).']],
  setup:[['Vorher: Zustand → Wartungspause starten, damit Hintergrundarbeit wartet und der Dienst-Wächter still bleibt.','Before: start Status → Maintenance pause, so background work waits and the service watch stays quiet.'],
@@ -2500,8 +2501,10 @@ const gT=p=>Array.isArray(p)?t(p[0],p[1]):p;
 function guideHTML(g){return GSECT.filter(([k])=>g[k]&&g[k].length).map(([k,de,en])=>{
     const items=g[k].map(x=>`<li>${esc(gT(x))}</li>`).join('');
     return `<div class="gsec"><b>${esc(t(de,en))}</b>${k==='setup'?`<ol>${items}</ol>`:g[k].length>1?`<ul>${items}</ul>`:`<p>${esc(gT(g[k][0]))}</p>`}</div>`}).join('')}
-function guideBox(g,open,plain){const d=document.createElement('details');d.className='guide';d.dataset.guide=g.id;d.open=!!open;
-  d.innerHTML=`<summary>${plain?'':esc(t('Anleitung','Guide'))+': '}${esc(gT(g.t))}</summary><div class="gbody">${guideHTML(g)}</div>`;return d}
+// (lazy: the text is written when the guide is opened first, for guides drawn at every page start)
+function guideBox(g,open,plain,lazy){const d=document.createElement('details');d.className='guide';d.dataset.guide=g.id;d.open=!!open;
+  d.innerHTML=`<summary>${plain?'':esc(t('Anleitung','Guide'))+': '}${esc(gT(g.t))}</summary><div class="gbody">${lazy?'':guideHTML(g)}</div>`;
+  if(lazy)d.addEventListener('toggle',()=>{const b=d.querySelector('.gbody');if(d.open&&!b.firstChild)b.innerHTML=guideHTML(g)});return d}
 // Funktionen: rows sorted into the groups, each feature one short line (name, mark, switch).
 // A tap on the name opens its sentence, marks, guide and settings below; switching it on opens it too.
 function guidesFeat(){const pane=$('pane-feat');if(!pane||pane.dataset.grouped)return;pane.dataset.grouped='1';
@@ -2617,15 +2620,26 @@ function guidesSwitches(){GUIDES.filter(g=>g.sw).forEach(g=>{const el=$(g.sw);if
   btn.onclick=()=>{if(!box.firstChild)box.innerHTML=`<div class="gbody">${guideHTML(g)}</div>`;box.hidden=!box.hidden;btn.classList.toggle('on',!box.hidden)};
   (row?row.querySelector('.lbl'):after).appendChild(btn);after.after(box)})}
 // "Ich" window: the guides of a page at its top (re-added when a page redraws itself).
-function guidesMe(id){const page=$(id);if(!page)return;const list=GUIDES.filter(g=>g.me===id);
+// (a guide that is no function of its own, like „Synology einrichten“, shows on the page its `mep` names)
+function guidesMe(id){const page=$(id);if(!page)return;const list=GUIDES.filter(g=>g.me===id||g.mep===id&&!g.sw);
   list.slice().reverse().forEach(g=>{if(!page.querySelector(`details.guide[data-guide="${g.id}"]`))page.prepend(guideBox(g,false))})}
 // Group of an "Ich" page, for the headers in its menu.
 const meGroup=id=>{const g=GUIDES.find(x=>x.me===id&&x.id!=='hands');return g?g.grp:null};
-// Funktionen → Anleitungen: all guides, grouped.
-function guidesAll(){const el=$('guidelist');if(!el||el.firstChild)return;
-  el.innerHTML=GGROUPS.map(([gid,de,en])=>`<div class="ggrp"><h3>${esc(t(de,en))}</h3><div data-g="${gid}"></div></div>`).join('');
-  GUIDES.forEach(g=>el.querySelector(`[data-g="${g.grp}"]`).appendChild(guideBox(g,false,true)))}
-// the list of all guides is drawn when its page (Funktionen → Anleitungen) opens, not at every page start
-function guidesInit(){guidesFeat();guidesSwitches();const sec=$('int');if(!sec)return;if(sec.classList.contains('on'))guidesAll();
-  new MutationObserver(()=>{if(sec.classList.contains('on'))guidesAll()}).observe(sec,{attributes:true,attributeFilter:['class']})}
+// A guide without a switch and without an Ich page stands at its place `at` (an element's id): in that element's card,
+// below what the card says already (Apps und Schnittstellen: Endpunkte, Pebble, Siri; Zustand: System-Updates).
+function guidesAt(){GUIDES.filter(g=>g.at).forEach(g=>{const el=$(g.at),card=el&&(el.closest('.card')||el);
+  if(card&&!card.querySelector(`details.guide[data-guide="${g.id}"]`))card.appendChild(guideBox(g,false,false,true))})}
+// Opens a guide where it stands (search, „Von Hand einspielen“): beside its switch, on its Ich page or at its place.
+function guideGo(id){const g=GUIDES.find(x=>x.id===id);if(!g)return;
+  const open=d=>{if(d){d.open=true;if(typeof sFlash==='function')sFlash(d)}};
+  const sw=g.sw&&$(g.sw),me=g.me||(!g.sw&&g.mep);
+  if(sw&&typeof goCfg==='function'){const pane=sw.closest('.pane');goCfg(pane?pane.id.replace(/^pane-/,''):'feat');
+    setTimeout(()=>{if(typeof featShow==='function')featShow(sw);const b=document.querySelector(`[data-gbtn="${g.id}"]`);
+      if(b){if(!b.classList.contains('on'))b.click();if(typeof sFlash==='function')sFlash(b.closest('.setrow')||b)}},120);return}
+  if(me&&typeof openMe==='function'){Promise.resolve(openMe(me)).then(()=>setTimeout(()=>{guidesMe(me);open(document.querySelector(`#${me} details.guide[data-guide="${g.id}"]`))},120));return}
+  const el=g.at&&$(g.at),sec=el&&el.closest('section');if(!sec)return;
+  // (the details of System-Updates are a page of their own inside Zustand: opened first, while the function is on)
+  goSec(sec.id);setTimeout(()=>{if(g.at==='zsudet'&&el.hidden&&typeof suOpen==='function'&&$('zsysup')&&!$('zsysup').hidden)suOpen();
+    guidesAt();open((el.closest('.card')||el).querySelector(`details.guide[data-guide="${g.id}"]`))},120)}
+function guidesInit(){guidesFeat();guidesSwitches();guidesAt()}
 guidesInit();

@@ -70,6 +70,32 @@ if __name__ == "__main__":
     unittest.main()
 
 
+class GuidePlaces(unittest.TestCase):
+    """Code review 2026-11-11, point 10: the page of all guides is gone, so every guide needs a place where it is
+    read: beside its switch, on its Ich page, or at the element its `at` names."""
+
+    def test_every_guide_has_a_place(self):
+        js = read("js", "guides.js")
+        html = read("index.html")
+        body = js[js.index("const GUIDES=["):js.index("// ---------------------------------------------------------------- rendering")]
+        heads = [c.split("\n", 1)[0] for c in re.split(r"\n\{(?=id:)", body)[1:]]
+        self.assertGreater(len(heads), 250)
+        ats = []
+        for h in heads:
+            m = dict(re.findall(r"\b(id|sw|me|mep|at):'([^']+)'", h))
+            self.assertTrue(m.get("sw") or m.get("me") or m.get("mep") or m.get("at"), m.get("id"))
+            if m.get("at"):
+                ats.append(m["id"])
+                self.assertIn(f'id="{m["at"]}"', html, m["id"])
+                self.assertFalse(m.get("sw") or m.get("me"), m["id"])   # one place, not two
+        self.assertEqual(sorted(ats), ["apps", "firmwarehand", "pebble", "siri"])
+        # a guide that is no function of its own shows on the page its mep names
+        self.assertIn("g.me===id||g.mep===id&&!g.sw", js)
+        for gone in ("guidesAll", "guidelist", "goSec('int')"):
+            for f in ("guides.js", "find.js", "way.js", "base.js", "coadmin.js", "hilfe.js", "systemupdates.js"):
+                self.assertNotIn(gone, read("js", f), f)
+
+
 class MenuPlaces(unittest.TestCase):
     """Cloned voices are a settings page (Einstellungen → Stimmen); the main menu entry is "Profile"."""
 
@@ -209,8 +235,10 @@ class MenuStructure(unittest.TestCase):
         for el in ("baklist", "updlog", "sysver", "updgo", "bakmove"):
             self.assertIn(f'id="{el}"', upd, el)
         self.assertNotIn('<section id="sys">', html)
-        self.assertIn('id="guidelist"', sec("int"))
-        self.assertNotIn('id="int-ep"', sec("int"))
+        # code review 2026-11-11, point 10: no page of all guides any more (a guide stands at its switch, on its Ich
+        # page or at its place, the search opens it there)
+        self.assertNotIn('<section id="int">', html)
+        self.assertNotIn('id="guidelist"', html)
         self.assertIn('id="int-ep"', sec("apps"))
         base = read("js", "base.js")
         self.assertIn("['test',t('Prüfen'", base)

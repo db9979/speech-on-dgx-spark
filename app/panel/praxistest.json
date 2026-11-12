@@ -1209,7 +1209,7 @@
 "id": "P196",
 "v": 512,
 "titel": "MCP-Server auf der NAS (Synology S7, nur Anleitung)",
-"text": "Funktionen → Anleitungen → „Fortgeschritten: MCP-Server auf der NAS“ öffnen: Warnung oben, Vorlage docs/vorlagen/nas-mcp genannt. Unter Ich → Meine MCP-Dienste erscheint dieselbe Anleitung oben. Optional: Vorlage auf der Synology bauen, Reverse Proxy einrichten, unter Ich → Meine MCP-Dienste anbinden; „Such in meinen NAS-Dateien …“ findet eine Datei, schreibende Werkzeuge stehen auf „Aus“."
+"text": "Unter Ich → Meine MCP-Dienste oben die Anleitung „Fortgeschritten: MCP-Server auf der NAS“ öffnen (die Suche mit Strg K findet sie auch): Warnung oben, Vorlage docs/vorlagen/nas-mcp genannt. Optional: Vorlage auf der Synology bauen, Reverse Proxy einrichten, unter Ich → Meine MCP-Dienste anbinden; „Such in meinen NAS-Dateien …“ findet eine Datei, schreibende Werkzeuge stehen auf „Aus“."
 },
 {
 "id": "P197",

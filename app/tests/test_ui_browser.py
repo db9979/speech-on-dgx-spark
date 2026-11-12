@@ -57,7 +57,7 @@ STATE = ("JSON.stringify({hidden:document.hidden,rec:!!chat.rec,live:micLive(),r
          "ctrl:!!chat.ctrl,playing:playing(),asr:!!chat.asrBusy,pctx:chat.pctx&&[chat.pctx.state,chat.pctx.currentTime],"
          "ctx:chat.ctx&&[chat.ctx.state,chat.ctx.currentTime],say:$('chatstate').textContent})")
 
-SECTIONS = ("chat", "chats", "mon", "live", "sys", "test", "werk", "logs", "cfg", "prof", "route", "int", "apps")
+SECTIONS = ("chat", "chats", "mon", "live", "sys", "test", "werk", "logs", "cfg", "prof", "route", "apps")
 VIEWS = (("pc", 1280, 900), ("handy", 390, 844))
 
 
@@ -2964,8 +2964,9 @@ class Browser(unittest.TestCase):
 
     def test_menu_search_and_features_page(self):
         """Plan „Bedienung gesamt“ (V01.0.265): Funktionen is its own menu entry (without the settings menu),
-        Anleitungen sit under it, Apps und Schnittstellen under Personen und Geräte, and Strg K finds pages,
-        switches, Ich settings and guides and opens them."""
+        Weiche sits under it, Apps und Schnittstellen under Personen und Geräte, and Strg K finds pages,
+        switches, Ich settings and guides and opens them. Code review 2026-11-11, point 10: there is no page of all
+        guides; a guide found by the search opens where it stands (beside its switch, at its place)."""
         async def go():
             async with async_playwright() as p:
                 for name, w, h in VIEWS:
@@ -2979,7 +2980,7 @@ class Browser(unittest.TestCase):
                     await self.loaded(pg)
                     self.assertFalse(await pg.evaluate("$('pane-feat').classList.contains('on')"), name)
                     self.assertFalse(await pg.evaluate("document.querySelector('#cfgnav button[data-p=feat]').offsetParent!==null"), name)
-                    await pg.evaluate("goSec('int')")
+                    await pg.evaluate("goSec('route')")
                     self.assertTrue(await pg.evaluate("document.querySelector('nav button[data-s=feat]').classList.contains('on')"), name)
                     await pg.evaluate("goSec('apps')")
                     self.assertTrue(await pg.evaluate("document.querySelector('nav button[data-s=prof]').classList.contains('on')"), name)
@@ -2990,6 +2991,25 @@ class Browser(unittest.TestCase):
                     groups = await pg.evaluate("[...document.querySelectorAll('#palres .fgrp')].map(x=>x.textContent)")
                     self.assertIn("Funktionen", groups, name)
                     self.assertIn("Anleitungen", groups, name)
+                    self.assertEqual(await pg.evaluate("GROUPS.feat.map(x=>x[0]).join()"), "feat,route", name)
+                    self.assertFalse(await pg.evaluate("!!$('int')||!!$('guidelist')"), name)
+                    # a guide of a function: Funktionen opens, the function too, its guide below its line
+                    gid = await pg.evaluate("GUIDES.find(g=>g.sw==='chat.weather').id")
+                    await pg.keyboard.press("Escape")
+                    await pg.evaluate(f"guideGo('{gid}')")
+                    await self.until(pg, f"$('pane-feat').classList.contains('on')&&document.querySelector('[data-gbtn=\"{gid}\"]').classList.contains('on')", 20)
+                    self.assertTrue(await pg.evaluate("$('chat.weather').closest('.fitem')?$('chat.weather').closest('.fitem').classList.contains('open'):featCur().dataset.sw==='chat.weather'"), name)
+                    self.assertTrue(await pg.evaluate("[...document.querySelectorAll('.guide.inline')].some(b=>!b.hidden&&b.offsetParent&&b.textContent.length>40)"), name)
+                    # a guide without a switch: at its place, written when it opens
+                    self.assertEqual(await pg.evaluate("document.querySelector('details.guide[data-guide=siri] .gbody').textContent"), "", name)
+                    await pg.evaluate("guideGo('siri')")
+                    await self.until(pg, "$('apps').classList.contains('on')&&document.querySelector('details.guide[data-guide=siri]').open", 20)
+                    self.assertTrue(await pg.evaluate("$('int-siri').closest('.card').contains(document.querySelector('details.guide[data-guide=siri]'))"), name)
+                    self.assertGreater(await pg.evaluate("document.querySelector('details.guide[data-guide=siri] .gbody').textContent.length"), 40, name)
+                    await pg.evaluate("guideGo('firmwarehand')")
+                    await self.until(pg, "$('mon').classList.contains('on')&&document.querySelector('#zsudet details.guide[data-guide=firmwarehand]').open", 20)
+                    await pg.keyboard.press("Control+k")
+                    await pg.fill("#palq", "websuche")
                     await pg.evaluate("PAL.hits.findIndex(h=>h.grp==='Funktionen'&&h.label==='Websuche')>=0&&document.querySelectorAll('#palres .fit')[PAL.hits.findIndex(h=>h.grp==='Funktionen'&&h.label==='Websuche')].click()")
                     await pg.wait_for_timeout(400)
                     self.assertFalse(await pg.is_visible("#fpal"), name)

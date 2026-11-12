@@ -320,9 +320,9 @@ class QuickStart(unittest.TestCase):
 
     def test_guides_are_written_when_they_are_opened(self):
         g = self.js("guides.js")
-        init = g[g.index("function guidesInit("):]
-        self.assertIn("if(sec.classList.contains('on'))guidesAll()", init)   # the list only with its page open
-        self.assertNotIn(";guidesAll();", init)
+        self.assertNotIn("guidesAll", g)   # no list of all guides any more (code review 2026-11-11, point 10)
+        at = g[g.index("function guidesAt("):g.index("function guideGo(")]
+        self.assertIn("guideBox(g,false,false,true)", at)   # the few guides at their place: text at the first opening
         sw = g[g.index("function guidesSwitches("):g.index("function guidesMe(")]
         build = sw[:sw.index("btn.onclick")]
         self.assertNotIn("guideHTML", build, "the inline guide is written at the first tap, not at the start")

@@ -59,9 +59,9 @@ MAX_CARDS_UID = 10     # per profile
 SECTIONS = {"chat": ("Assistent", "Assistant"), "mon": ("Zustand", "Status"), "live": ("Zustand → Live", "Status → Live"),
             "test": ("Zustand → Prüfen", "Status → Checks"), "logs": ("Zustand → Logs", "Status → Logs"),
             "feat": ("Funktionen", "Features"),
-            "route": ("Funktionen → Weiche", "Features → Routing"), "tech": ("Zustand → Technik", "Status → Architecture"), "int": ("Funktionen → Anleitungen", "Features → Guides"), "prof": ("Personen und Geräte", "People and devices"),
+            "route": ("Funktionen → Weiche", "Features → Routing"), "tech": ("Zustand → Technik", "Status → Architecture"), "prof": ("Personen und Geräte", "People and devices"),
             "apps": ("Personen und Geräte → Apps und Schnittstellen", "People and devices → Apps and interfaces")}
-PAGE = re.compile(r"(?:chat|mon|live|test|logs|feat|route|int|prof|apps|cfg/[a-z]{2,8}|me/[a-z]{2,10}box)")
+PAGE = re.compile(r"(?:chat|mon|live|test|logs|feat|route|prof|apps|cfg/[a-z]{2,8}|me/[a-z]{2,10}box)")
 # what a page is for (plan plaene/hilfe-besser.md 2): fixed sentences; the switches on it are added from the page itself
 PAGE_TEXT = {
     "chat": ("Das Gespräch mit dem Assistenten: sprechen (Mikrofon oder Kopf antippen) oder tippen; darüber die Gespräche, "
@@ -86,8 +86,6 @@ PAGE_TEXT = {
               "Wörtern, „Nicht bei“ und zusätzlichen Werkzeugen ergänzen, Testsätze, „Falsch zugeordnet …“ und Rückgängig.",
               "Features → Routing: which tools a question gets, as a picture. Try a sentence, add own words, “Not with” and extra "
               "tools to groups, test sentences, “Wrongly sorted …” and undo."),
-    "int": ("Funktionen → Anleitungen: alle Anleitungen zum Nachlesen, mit Einrichten und „Wenn es nicht klappt“.",
-            "Features → Guides: all guides to read, with setting up and \"If it does not work\"."),
     "prof": ("Personen und Geräte: Profile anlegen und einladen, PIN, Rollen, Vorrang, Geräte und ihre Schlüssel. Unten "
              "„Gesperrte Funktionen“: was der Admin für ein Profil gesperrt hat, antippen hebt die Sperre auf; neue Sperren "
              "setzt der Admin in der Funktion unter „Wer darf es“.",
@@ -478,7 +476,7 @@ def visible(it, level, c=None):
         return level == "admin" or (level == "manager" and it["page"] == "feat")
     if it["kind"] == "page":
         return it["page"] in ("chat",) or it["page"].startswith("me/") or level == "admin" \
-            or (level == "manager" and it["page"] in ("feat", "prof", "int"))
+            or (level == "manager" and it["page"] in ("feat", "prof"))
     if it["kind"] == "doc":
         return level == "admin" or it.get("src") in USER_DOCS
     if it["kind"] in ("tip", "faq"):
@@ -530,15 +528,24 @@ GSECT = (("what", "Was es kann", "What it does"), ("need", "Was du brauchst", "W
          ("fix", "Wenn es nicht klappt", "If it does not work"))
 
 
+# a guide without a switch and without an Ich page stands at its place (guides.js `at`): the page of that place
+GUIDE_AT = {"apps": SECTIONS["apps"], "mon": ("Zustand → System-Updates", "Status → System updates")}
+
+
+def _at_page(at):
+    return "apps" if at.startswith("int-") else "mon"
+
+
 def guides():
-    """[{id, grp, sw, me, t: (de, en), sec: {key: ([de], [en])}}] from guides.js."""
+    """[{id, grp, sw, me, at, t: (de, en), sec: {key: ([de], [en])}}] from guides.js (at: the place of a guide without a
+    switch and an Ich page, an element's id)."""
     js = _read(STATIC, "js", "guides.js")
     body = js[js.index("const GUIDES=["):js.index("// ---------------------------------------------------------------- rendering")]
     nothing = (["Nichts. Alles bleibt auf dem Spark."], ["Nothing. Everything stays on the Spark."])
     out = []
     for chunk in re.split(r"\n\{(?=id:)", body)[1:]:
         head = chunk.split("\n", 1)[0]
-        meta = dict(re.findall(r"\b(id|grp|sw|me|mep):'([^']+)'", head))
+        meta = dict(re.findall(r"\b(id|grp|sw|me|mep|at):'([^']+)'", head))
         tm = re.search(r"\bt:\['((?:[^'\\]|\\.)*)','((?:[^'\\]|\\.)*)'\]", head)
         if not meta.get("id") or not tm:
             continue
@@ -551,7 +558,7 @@ def guides():
                 pairs = _PAIR.findall(v)
                 sec[k] = ([_js(a) for a, _ in pairs], [_js(b) for _, b in pairs])
         out.append({"id": meta["id"], "grp": meta.get("grp", ""), "sw": meta.get("sw", ""),
-                    "me": meta.get("me") or meta.get("mep", ""), "t": (_js(tm.group(1)), _js(tm.group(2))), "sec": sec})
+                    "me": meta.get("me") or meta.get("mep", ""), "at": meta.get("at", ""), "t": (_js(tm.group(1)), _js(tm.group(2))), "sec": sec})
     return out
 
 
@@ -812,12 +819,14 @@ def _entries():
                 where.append(("Funktionen → " if li == 0 else "Features → ") + g["t"][li])
             if g["me"] and g["me"] in mp:
                 where.append(("Ich → " if li == 0 else "Me → ") + mp[g["me"]][li])
+            if not where and g["at"]:
+                where.append(GUIDE_AT[_at_page(g["at"])][li])
             text = " ".join(f"{s[1 + li]}: " + " ".join(g["sec"][k][li]) for s in GSECT for k in [s[0]] if g["sec"].get(k))
             # for a profile without admin rights: without the admin's steps
             mine = " ".join(f"{s[1 + li]}: " + " ".join(x for x in g["sec"][k][li] if not x.startswith("Admin:"))
                             for s in GSECT for k in [s[0]] if g["sec"].get(k) and any(not x.startswith("Admin:") for x in g["sec"][k][li]))
             out.append({"kind": "guide", "lang": lang, "title": g["t"][li], "where": " / ".join(where), "text": text, "text_user": mine,
-                        "page": "me/" + g["me"] if g["me"] else "feat" if g["sw"] else "int", "feature": fk,
+                        "page": "me/" + g["me"] if g["me"] else "feat" if g["sw"] else _at_page(g["at"]), "feature": fk,
                         "sid": "sw:" + g["sw"] if g["sw"] else ""})
     for r in setting_rows():
         page = "feat" if r["pane"] == "feat" else "cfg/" + r["pane"]

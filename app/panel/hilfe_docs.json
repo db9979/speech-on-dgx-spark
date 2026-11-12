@@ -485,7 +485,7 @@
 "file": "APIs und Einbinden",
 "head": "„Hey Siri, frag Spark“",
 "title": "„Hey Siri, frag Spark“",
-"text": "Ein iPhone-Kurzbefehl schickt die diktierte Frage an POST /api/siri/ask (Header X-Speech-Device mit einem Geräteschlüssel deines Profils, Inhalt {\"text\": \"...\"}) und lässt Siri das Feld answer vorlesen. Geht ohne geöffnete Seite, auch auf der Apple Watch, mit AirPods und mit CarPlay; Nachfragen innerhalb von 10 Minuten kennen den Zusammenhang, die Fragen eines Tages stehen als Gespräch im Profil. Schritt für Schritt unter Funktionen → Anleitungen."
+"text": "Ein iPhone-Kurzbefehl schickt die diktierte Frage an POST /api/siri/ask (Header X-Speech-Device mit einem Geräteschlüssel deines Profils, Inhalt {\"text\": \"...\"}) und lässt Siri das Feld answer vorlesen. Geht ohne geöffnete Seite, auch auf der Apple Watch, mit AirPods und mit CarPlay; Nachfragen innerhalb von 10 Minuten kennen den Zusammenhang, die Fragen eines Tages stehen als Gespräch im Profil. Schritt für Schritt unter Personen und Geräte → Apps und Schnittstellen."
 },
 {
 "lang": "de",
@@ -4637,7 +4637,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Schneller Start und aufgeräumte Seiten",
-"text": "Schneller Start und aufgeräumte Seiten: Ein Admin-Seitenstart dauert auf einem langsamen Handy etwa 2 s. Sprung-Links prüfen die Sichtbarkeit der Menüs einmal pro Bild. Die Karten unter Zustand (Hört gerade zu, Dienste, NAS, Verbrauch u. a.) fragen den Spark nur, solange Zustand offen ist, beim Öffnen alle zusammen. Die Liste aller Anleitungen entsteht erst unter Funktionen → Anleitungen, der Text hinter „Anleitung“ beim ersten Antippen. Die Startseite geht gepackt hinaus (etwa 40 KB), jede Skript- und Stildatei trägt ihren Fingerabdruck: nach einem Update lädt der Browser nur Geändertes, den Rest behält er bis zu einem Jahr. Am Rechner ist die Gesichtsspalte 320 px breit (Knöpfe und Schalter untereinander). Abseits des Assistenten endet jede Seite mit Platz für das schwebende Gesicht. Zustand hat ein Menü wie Einstellungen: Symbole und die Blöcke Beobachten (Überblick, Live, Logs), Prüfen (Prüfen, Verbessern, Praxistest) und Technik (Verbrauch, Modelle, Technik); die Fußzeile steht unten am Fenster. Am Handy passt „Verwalten“ ganz in den Zurück-Knopf. Auch Funktionen und Personen und Geräte haben Symbole; jede Gruppe der Funktionen trägt das Symbol derselben Gruppe unter Ich. Die "
+"text": "Schneller Start und aufgeräumte Seiten: Ein Admin-Seitenstart dauert auf einem langsamen Handy etwa 2 s. Sprung-Links prüfen die Sichtbarkeit der Menüs einmal pro Bild. Die Karten unter Zustand (Hört gerade zu, Dienste, NAS, Verbrauch u. a.) fragen den Spark nur, solange Zustand offen ist, beim Öffnen alle zusammen. Der Text hinter „Anleitung“ entsteht beim ersten Antippen; eine Seite mit allen Anleitungen gibt es nicht mehr. Die Startseite geht gepackt hinaus (etwa 40 KB), jede Skript- und Stildatei trägt ihren Fingerabdruck: nach einem Update lädt der Browser nur Geändertes, den Rest behält er bis zu einem Jahr. Am Rechner ist die Gesichtsspalte 320 px breit (Knöpfe und Schalter untereinander). Abseits des Assistenten endet jede Seite mit Platz für das schwebende Gesicht. Zustand hat ein Menü wie Einstellungen: Symbole und die Blöcke Beobachten (Überblick, Live, Logs), Prüfen (Prüfen, Verbessern, Praxistest) und Technik (Verbrauch, Modelle, Technik); die Fußzeile steht unten am Fenster. Am Handy passt „Verwalten“ ganz in den Zurück-Knopf. Auch Funktionen und Personen und Geräte haben Symbole; jede Gruppe der Funktionen trägt das Symbol derselben Gruppe unter Ich. Die Profilliste "
 },
 {
 "lang": "de",
@@ -4645,7 +4645,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Schneller Start und aufgeräumte Seiten",
-"text": "Profilliste zeigt einen farbigen Kreis mit Kürzel, eine Zeile „zuletzt … · 2 Geräte · 30 Fakten“, Einrichten als Balken mit „14/15“, einen Pfeil (die ganze Zeile öffnet die Person), Suchfeld und Auswahl gleich hoch, „+ Neues Profil“ neben der Anzahl; Geräte zeigen ihre Art als Symbol (Lautsprecher, iPhone-App, Uhr, Terminal, Home Assistant, eigener Schlüssel)."
+"text": "zeigt einen farbigen Kreis mit Kürzel, eine Zeile „zuletzt … · 2 Geräte · 30 Fakten“, Einrichten als Balken mit „14/15“, einen Pfeil (die ganze Zeile öffnet die Person), Suchfeld und Auswahl gleich hoch, „+ Neues Profil“ neben der Anzahl; Geräte zeigen ihre Art als Symbol (Lautsprecher, iPhone-App, Uhr, Terminal, Home Assistant, eigener Schlüssel)."
 },
 {
 "lang": "de",
@@ -4685,7 +4685,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Anleitungen",
-"text": "Anleitungen: Jeder einschaltbare Dienst hat eine aufklappbare Anleitung (was er kann, was du brauchst, Einrichten, Beispielsätze, was das Haus verlässt, Ausschalten, Fehlerhilfe): neben seinem Schalter unter Funktionen, oben auf seiner Seite unter „Ich“ und gesammelt unter Funktionen → Anleitungen. Gruppen überall gleich: Gespräch, Mein Tag, Post und Dokumente, Zuhause, Unterwegs und Geräte, Sicherheit und Zugang. Texte in app/panel/static/js/guides.js; ein Selbsttest prüft, dass kein Schalter ohne Anleitung und Gruppe bleibt."
+"text": "Anleitungen: Jeder einschaltbare Dienst hat eine aufklappbare Anleitung (was er kann, was du brauchst, Einrichten, Beispielsätze, was das Haus verlässt, Ausschalten, Fehlerhilfe): neben seinem Schalter unter Funktionen und oben auf seiner Seite unter „Ich“. Eine eigene Seite „Anleitungen“ gibt es seit V01.1.391 nicht mehr (sie wiederholte in rund 300 Klappzeilen ohne Suche, was neben jedem Schalter steht): die Suche (Strg K, Gruppe „Anleitungen“) findet jede Anleitung und öffnet sie an ihrem Platz. Die vier Anleitungen ohne Schalter und ohne Ich-Seite stehen dort, wo man sie braucht: „Hey Siri, frag Spark“, „Pebble-Uhr“ und „Open WebUI und eigene Programme“ in ihrer Karte unter Personen und Geräte → Apps und Schnittstellen, „Firmware von Hand“ unten in den Einzelheiten der System-Updates (der Knopf „Von Hand einspielen“ öffnet sie); „Synology einrichten“ steht oben unter Ich → Speicher. Ein Verwalter hat den Menüpunkt Funktionen damit nicht mehr (er sah dort nur die Anleitungen). Gruppen überall gleich: Gespräch, Mein Tag, Post und Dokumente, Zuhause, Unterwegs und Geräte, Sicherheit und Zugang. Texte in app/panel/static/js/guides.js; ein Selbsttest prüft, dass kein Schalter ohne A"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Anleitungen",
+"text": "nleitung und Gruppe bleibt."
 },
 {
 "lang": "de",
@@ -12357,7 +12365,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Alle Funktionen",
 "title": "Alle Funktionen",
-"text": "Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einrichtet und was sie tut (der erste Satz ihrer Anleitung unter Funktionen → Anleitungen). Die Liste schreibt hilfe.py --docs aus features.py und den Anleitungen; eine neue Funktion steht damit von selbst hier und in der Hilfe."
+"text": "Jede Funktion des Spark mit ihrem Schalter, worauf sie aufbaut, wo man sie einrichtet und was sie tut (der erste Satz ihrer Anleitung). Die Liste schreibt hilfe.py --docs aus features.py und den Anleitungen; eine neue Funktion steht damit von selbst hier und in der Hilfe."
 },
 {
 "lang": "de",
@@ -15997,7 +16005,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "System-Updates (seit V01.1.322)",
 "title": "System-Updates (seit V01.1.322)",
-"text": "lassen“ legt eine Prüfbitte mit festem Text an, die ein Claude-Thread neu pinnt; sie kommt mit dem nächsten Spark-Update. - Firmware von Hand: *Funktionen → Anleitungen → Firmware von Hand* führt durch EEPROM, NVIDIA-Treiber und DGX OS. - Nach dem Update auf V01.1.322 einmal auf jedem Rechner sudo speech-spark update (oder sudo ./install.sh), damit Unit und sudoers-Zeile da sind; bis dahin sagt die Seite „Ließ sich nicht starten“."
+"text": "lassen“ legt eine Prüfbitte mit festem Text an, die ein Claude-Thread neu pinnt; sie kommt mit dem nächsten Spark-Update. - Firmware von Hand: die Anleitung „Firmware von Hand“ unten in den Einzelheiten unter *Zustand → System-Updates* (Knopf „Von Hand einspielen“) führt durch EEPROM, NVIDIA-Treiber und DGX OS. - Nach dem Update auf V01.1.322 einmal auf jedem Rechner sudo speech-spark update (oder sudo ./install.sh), damit Unit und sudoers-Zeile da sind; bis dahin sagt die Seite „Ließ sich nicht starten“."
 },
 {
 "lang": "de",
@@ -17925,7 +17933,7 @@
 "file": "APIs and integration",
 "head": "\"Hey Siri, ask Spark\"",
 "title": "\"Hey Siri, ask Spark\"",
-"text": "An iPhone shortcut sends the dictated question to POST /api/siri/ask (header X-Speech-Device with a device key of your profile, body {\"text\": \"...\"}) and lets Siri speak the answer field. Works without the page open, also on Apple Watch, AirPods and CarPlay; follow-ups within 10 minutes keep the context, and each day's questions are kept as a conversation of the profile. Step by step under People and devices → Apps and interfaces and in Features → Guides."
+"text": "An iPhone shortcut sends the dictated question to POST /api/siri/ask (header X-Speech-Device with a device key of your profile, body {\"text\": \"...\"}) and lets Siri speak the answer field. Works without the page open, also on Apple Watch, AirPods and CarPlay; follow-ups within 10 minutes keep the context, and each day's questions are kept as a conversation of the profile. Step by step under People and devices → Apps and interfaces."
 },
 {
 "lang": "en",
@@ -21965,7 +21973,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Quick start and tidier pages",
-"text": "Quick start and tidier pages: an admin's page start on a slow phone takes about 2 s. Jump links check menu visibility once per frame. The cards under Status (Listening now, Services, NAS, Usage and others) ask the Spark only while Status is open, all together when it opens. The list of all guides is drawn under Features → Guides, the text behind „Guide“ at the first tap. The start page goes out gzipped (about 40 KB), every script and style file carries its fingerprint: after an update the browser loads only what changed and keeps the rest up to a year. On computers the face column is 320 px wide (buttons and switches one below the other). Away from the assistant every page ends with room for the floating face. Status has a menu like Settings: symbols and the blocks Watch (Summary, Live, Logs), Check (Checks, Improve, Hands-on test) and Technology (Usage, Models, Architecture); the footer stands at the bottom of the window. On phones „Manage“/„Verwalten“ fits whole into the back button. Features and People and devices have symbols too; every group of Features carries the symbol of the same group under Me. The profile list shows a coloured circle with initials, one line \"last … · 2 d"
+"text": "Quick start and tidier pages: an admin's page start on a slow phone takes about 2 s. Jump links check menu visibility once per frame. The cards under Status (Listening now, Services, NAS, Usage and others) ask the Spark only while Status is open, all together when it opens. The text behind „Guide“ is written at the first tap; there is no page of all guides any more. The start page goes out gzipped (about 40 KB), every script and style file carries its fingerprint: after an update the browser loads only what changed and keeps the rest up to a year. On computers the face column is 320 px wide (buttons and switches one below the other). Away from the assistant every page ends with room for the floating face. Status has a menu like Settings: symbols and the blocks Watch (Summary, Live, Logs), Check (Checks, Improve, Hands-on test) and Technology (Usage, Models, Architecture); the footer stands at the bottom of the window. On phones „Manage“/„Verwalten“ fits whole into the back button. Features and People and devices have symbols too; every group of Features carries the symbol of the same group under Me. The profile list shows a coloured circle with initials, one line \"last … · 2 device"
 },
 {
 "lang": "en",
@@ -21973,7 +21981,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Quick start and tidier pages",
-"text": "evices · 30 facts\", setup as a bar with \"14/15\", a chevron (the whole line opens the person), search field and selects of one height, \"+ New profile\" beside the count; devices show their kind as a symbol (speaker, iPhone app, watch, terminal, Home Assistant, own key)."
+"text": "s · 30 facts\", setup as a bar with \"14/15\", a chevron (the whole line opens the person), search field and selects of one height, \"+ New profile\" beside the count; devices show their kind as a symbol (speaker, iPhone app, watch, terminal, Home Assistant, own key)."
 },
 {
 "lang": "en",
@@ -22013,7 +22021,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Guides",
-"text": "Guides: every service that can be switched on has an openable guide (what it does, what you need, setup, example phrases, what leaves the house, switching off, troubleshooting): next to its switch under Features, at the top of its page under \"Me\" and collected under Features → Guides. Groups are the same everywhere: Conversation, My day, Mail and documents, Home, On the go and devices, Security and access. Texts in app/panel/static/js/guides.js; a self-test checks that no switch is left without a guide and group."
+"text": "Guides: every service that can be switched on has an openable guide (what it does, what you need, setup, example phrases, what leaves the house, switching off, troubleshooting): next to its switch under Features and at the top of its page under \"Me\". There is no page \"Guides\" of its own any more since V01.1.391 (it repeated in some 300 folding lines without a search what stands next to every switch): the search (Ctrl K, group \"Guides\") finds every guide and opens it at its place. The four guides without a switch and without a Me page stand where they are needed: \"Hey Siri, ask Spark\", \"Pebble watch\" and \"Open WebUI and own programs\" in their card under People and devices → Apps and interfaces, \"Firmware by hand\" at the bottom of the details of the system updates (the button \"Install by hand\" opens it); \"Set up a Synology\" stands at the top of Me → Storage. A manager no longer has the menu entry Features (it only showed the guides there). Groups are the same everywhere: Conversation, My day, Mail and documents, Home, On the go and devices, Security and access. Texts in app/panel/static/js/guides.js; a self-test checks that no switch is left without a guide and group."
 },
 {
 "lang": "en",
@@ -29397,7 +29405,7 @@
 "file": "Assistant and panel",
 "head": "The panel",
 "title": "The panel",
-"text": "The menu is on the left on computers and at the bottom on phones (Assistant, Me, Status, Manage). Search (Ctrl K or ⌘ K; on phones a magnifier at the top of the assistant) finds pages, switches, settings, Me, checks, logs and guides and marks the hit. A way like \"Settings → Spark → Operation\" or \"Me → Documents\" in a hint or answer is a link there. Below are Assistant and Me, under *Manage Spark* the admin pages Status, Features (with *Guides*), People and devices (with *Apps and interfaces*) and Settings, each with sub-pages; a number at \"Settings\" counts unsaved pages. On a computer \"Me\" opens as a page right of the sidebar."
+"text": "The menu is on the left on computers and at the bottom on phones (Assistant, Me, Status, Manage). Search (Ctrl K or ⌘ K; on phones a magnifier at the top of the assistant) finds pages, switches, settings, Me, checks, logs and guides and marks the hit. A way like \"Settings → Spark → Operation\" or \"Me → Documents\" in a hint or answer is a link there. Below are Assistant and Me, under *Manage Spark* the admin pages Status, Features (with *Routing*), People and devices (with *Apps and interfaces*) and Settings, each with sub-pages; a number at \"Settings\" counts unsaved pages. On a computer \"Me\" opens as a page right of the sidebar."
 },
 {
 "lang": "en",
@@ -29509,7 +29517,7 @@
 "file": "Assistant and panel",
 "head": "All functions",
 "title": "All functions",
-"text": "Every function of the Spark with its switch, what it builds on, where you set it up and what it does (the first sentence of its guide under Features → Guides). hilfe.py --docs writes this list from features.py and the guides, so a new function stands here and in the help by itself."
+"text": "Every function of the Spark with its switch, what it builds on, where you set it up and what it does (the first sentence of its guide). hilfe.py --docs writes this list from features.py and the guides, so a new function stands here and in the help by itself."
 },
 {
 "lang": "en",
@@ -33077,7 +33085,7 @@
 "file": "Security and operation",
 "head": "System updates (since V01.1.322)",
 "title": "System updates (since V01.1.322)",
-"text": " anew; it comes with the next Spark update. - Firmware by hand: *Features → Guides → Firmware by hand* walks through EEPROM, NVIDIA driver and DGX OS. - After updating to V01.1.322 once on each computer sudo speech-spark update (or sudo ./install.sh), so that unit and sudoers line are there; until then the page says \"Ließ sich nicht starten\"."
+"text": " anew; it comes with the next Spark update. - Firmware by hand: the guide \"Firmware by hand\" at the bottom of the details under *Status → System updates* (button \"Install by hand\") walks through EEPROM, NVIDIA driver and DGX OS. - After updating to V01.1.322 once on each computer sudo speech-spark update (or sudo ./install.sh), so that unit and sudoers line are there; until then the page says \"Ließ sich nicht starten\"."
 },
 {
 "lang": "en",

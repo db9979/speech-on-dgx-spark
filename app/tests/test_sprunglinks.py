@@ -421,7 +421,7 @@ class Browser(unittest.TestCase):
             async with async_playwright() as p:
                 for locale, roots in (("de-DE", DE_ROOTS), ("en-US", EN_ROOTS)):
                     br, pg, errors = await self.page(p, locale)
-                    for s in ("mon", "logs", "test", "prof", "apps", "int", "cfg"):   # pages draw their parts on opening
+                    for s in ("mon", "logs", "test", "prof", "apps", "cfg"):   # pages draw their parts on opening
                         await pg.evaluate(f"goSec('{s}')")
                         await pg.wait_for_timeout(400)
                     ways = [s for s in found if in_locale(s, roots)]
@@ -453,7 +453,7 @@ class Browser(unittest.TestCase):
             async with async_playwright() as p:
                 for locale, roots in (("de-DE", DE_ROOTS), ("en-US", EN_ROOTS)):
                     br, pg, errors = await self.page(p, locale)
-                    for s in ("mon", "logs", "test", "prof", "apps", "int", "cfg"):
+                    for s in ("mon", "logs", "test", "prof", "apps", "cfg"):
                         await pg.evaluate(f"goSec('{s}')")
                         await pg.wait_for_timeout(400)
                     ways = [s for s in found if in_locale(s, roots)]

@@ -148,8 +148,8 @@ const api=async(p,o={},code)=>{const hd=!code?null:typeof code==='string'?{'X-Sp
 const apiTry=async(p,o)=>{try{const r=await api(p,o);return {r,d:await r.json()}}catch(e){return {r:{ok:false,status:0},d:{detail:e.message}}}};
 // Main menu (design „Klar“, V01.0.145; plan „Bedienung gesamt“ V01.0.265): on a computer a sidebar with the search
 // (Strg K), Assistent and Ich for oneself, then "Spark verwalten" with Zustand, Funktionen, Personen und Geräte,
-// Einstellungen; on phones a bar at the bottom. Einbinden is gone: Anleitungen sit under Funktionen, Apps und
-// Schnittstellen under Personen und Geräte.
+// Einstellungen; on phones a bar at the bottom. Einbinden is gone: Apps und Schnittstellen sit under Personen und Geräte; the page
+// Anleitungen is gone too (code review 2026-11-11, point 10: a guide stands at its switch, the search finds it).
 // the symbols of the page itself (menu: i.ni, buttons: i[data-ic]) from icons.js
 document.querySelectorAll('i.ni').forEach(e=>e.innerHTML=ic(e.dataset.ni));
 document.querySelectorAll('i[data-ic]').forEach(e=>e.innerHTML=ic(e.dataset.ic));
@@ -158,7 +158,7 @@ function mbarMark(g){document.querySelectorAll('#mbar button').forEach(x=>x.clas
 // Main menu: Zustand, Funktionen and Personen und Geräte hold several pages behind a sub-tab bar. Funktionen is the
 // page "feat" of the settings form (saved with it), shown alone without the settings menu (class featmode).
 const GROUPS={chat:[['chat','']],chats:[['chats','']],cal:[['cal','']],post:[['post','']],listen:[['listen','']],offen:[['offen','']],kontakte:[['kontakte','']],wbuch:[['wbuch','']],finden:[['finden','']],mappen:[['mappen','']],dungeon:[['dungeon','']],spiel:[['spiel','']],fern:[['fern','']],mon:[['mon',t('Überblick','Summary')],['live',t('Live','Live')],['logs',t('Logs','Logs')],['test',t('Prüfen','Checks')],['werk',t('Werkstatt','Workshop')],['verb',t('Verbessern','Improve')],['praxis',t('Praxistest','Hands-on test')],['usage',t('Verbrauch','Usage')],['models',t('Modelle','Models')],['tech',t('Technik','Architecture')]],
-  feat:[['feat',t('Funktionen','Features')],['route',t('Weiche','Routing')],['int',t('Anleitungen','Guides')]],
+  feat:[['feat',t('Funktionen','Features')],['route',t('Weiche','Routing')]],
   prof:[['prof',t('Personen und Geräte','People and devices')],['apps',t('Apps und Schnittstellen','Apps and interfaces')]],cfg:[['cfg','']]};
 const lastSec={};
 // Seiten sichtbar laden (laden.js): what a page loads when it is opened shows placeholders, „wird aktualisiert …“,
@@ -220,6 +220,7 @@ document.querySelectorAll('nav button[data-s]').forEach(b=>b.onclick=()=>{const 
 // page never wins over it (Dominik 2026-10-28: goSec('fern') right after loading stayed on the assistant)
 let startBusy=true,startGo=null;
 window.goSec=s=>{if(s==='sys'){goCfg('upd');return}   // update and backups moved to Einstellungen (V01.0.207)
+  if(s==='int')s='feat';   // the page of all guides is gone (V01.1.391): an older app's link lands on Funktionen
   if(startBusy)startGo=s;goDirect=true;const g=Object.keys(GROUPS).find(k=>GROUPS[k].some(x=>x[0]===s));lastSec[g]=s;document.querySelector(`nav button[data-s=${g}]`).click()};
 // One row for every setting (plan „Vereinheitlichen“ Phase 4, V01.0.270): label, one sentence, the control on the
 // right. l, h and ctl are HTML (callers escape). A locked row stays visible with its reason (o.why, from the panel's

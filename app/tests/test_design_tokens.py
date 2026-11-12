@@ -423,7 +423,7 @@ class HexColours(Ratchet, unittest.TestCase):
 
 class FontSizes(Ratchet, unittest.TestCase):
     WHAT = "a font size outside the scale (SCALE); take a size of the scale"
-    ALT = {"app.css": 346, "live.css": 21, "technik.css": 2, "weiche.css": 14}
+    ALT = {"app.css": 345, "live.css": 21, "technik.css": 2, "weiche.css": 14}
 
     def hits(self):
         return {n: c for n in sheets() if n != TOKENS and (c := off_scale(read(n)))}

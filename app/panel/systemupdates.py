@@ -16,7 +16,7 @@ model, never for guests; off until the admin switches Funktionen → System-Upda
    (app/requirements-*.lock: names and versions only go out). „Von Claude prüfen lassen“ keeps a check request with a
    fixed text to hand to a Claude thread; nothing is ever installed from here: it comes with the next Spark update.
 3. Firmware and drivers (the Pi's EEPROM, NVIDIA driver and DGX OS): shown only; by hand with the guide
-   Funktionen → Anleitungen → Firmware von Hand.
+   the guide „Firmware von Hand“ at the bottom of Zustand → System-Updates → Einzelheiten.
 4. Zeitpunkt: per computer „Nachts einspielen (03–05 Uhr)“ (own switches, off): only the operating system, never
    firmware, never a restart without the admin; after the Spark's own night update (update.night_once), never while
    it runs, never while somebody talks.

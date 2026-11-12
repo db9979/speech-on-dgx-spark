@@ -196,7 +196,7 @@ Since V01.0.552 (Synology plan S7, guide only, no code in the Spark). If you wou
 An iPhone shortcut sends the dictated question to `POST /api/siri/ask` (header `X-Speech-Device` with a
 device key of your profile, body `{"text": "..."}`) and lets Siri speak the `answer` field. Works without
 the page open, also on Apple Watch, AirPods and CarPlay; follow-ups within 10 minutes keep the context,
-and each day's questions are kept as a conversation of the profile. Step by step under People and devices → Apps and interfaces and in Features → Guides.
+and each day's questions are kept as a conversation of the profile. Step by step under People and devices → Apps and interfaces.
 
 ### iPhone app "Spark"
 

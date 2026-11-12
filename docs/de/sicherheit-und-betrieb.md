@@ -177,7 +177,7 @@ Auf GitHub empfohlen: 2FA mit Passkey, Ruleset auf `main` gegen Löschen und For
 - **Neustart nur auf dein Wort**: Braucht der Rechner einen Neustart (`/var/run/reboot-required` oder ein neuer Kernel, `libc6`, `systemd`), zeigt die Seite „Neustart nötig“ mit „Jetzt neu starten“ oder „Heute Nacht“ (beides mit frischem Code). Ohne diese Wahl startet nichts neu, auch nachts nicht.
 - **Nachts**: je Rechner der Schalter *System-Updates nachts auf dem Panel-Rechner* bzw. *auf dem Modell-Rechner* (aus, Ändern mit Code): zwischen 03 und 05 Uhr nach dem Spark-Update, nur das Betriebssystem, nie Firmware, nie ein Neustart von selbst.
 - **OpenCode und Python-Pakete**: Nach außen gehen nur Paketnamen und Versionen an `api.osv.dev` und eine Versionsfrage an `registry.npmjs.org`, beides über den Netz-Wächter (öffentliche Adressen) und nicht, solange der Notaus das Internet sperrt; ohne Internet steht „nicht geprüft, kein Internet“. Zurück kommen nur Kennungen (`GHSA-…`, `PYSEC-…`) und eine Versionsnummer. Eingespielt wird davon nie etwas: „Von Claude prüfen lassen“ legt eine Prüfbitte mit festem Text an, die ein Claude-Thread neu pinnt; sie kommt mit dem nächsten Spark-Update.
-- **Firmware von Hand**: *Funktionen → Anleitungen → Firmware von Hand* führt durch EEPROM, NVIDIA-Treiber und DGX OS.
+- **Firmware von Hand**: die Anleitung „Firmware von Hand“ unten in den Einzelheiten unter *Zustand → System-Updates* (Knopf „Von Hand einspielen“) führt durch EEPROM, NVIDIA-Treiber und DGX OS.
 - **Nach dem Update auf V01.1.322** einmal auf jedem Rechner `sudo speech-spark update` (oder `sudo ./install.sh`), damit Unit und sudoers-Zeile da sind; bis dahin sagt die Seite „Ließ sich nicht starten“.
 
 ## Notaus

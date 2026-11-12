@@ -42,9 +42,9 @@ function wayKids(c,all){const key=JSON.stringify(c)+(all?'+':'');
   if(wayFrame().has(key))return WAY_MEMO.get(key);
   const out=[],seen=new Set(),add=(label,go,ctx,el)=>{label=(label||'').replace(/\s+/g,' ').trim().replace(/[:：]$/,'');
     const low=wayLow(label);if(!label||label.length>90||seen.has(low))return;seen.add(low);out.push({label,low,go,ctx:ctx||c,el})};
-  // not inside guides (only a guide's own name under Funktionen → Anleitungen), not a tab that is off (Logs → Anfragen
+  // not inside guides, not a tab that is off (Logs → Anfragen
   // without the recording)
-  const inside=(root,go)=>{if(root)root.querySelectorAll(WAY_SEL).forEach(e=>{if(e.closest('details.guide')&&!e.matches('#guidelist details.guide>summary')||e.hidden&&e.matches(WAY_TAB))return;add(visText(e),()=>go(e),c,e)})};
+  const inside=(root,go)=>{if(root)root.querySelectorAll(WAY_SEL).forEach(e=>{if(e.closest('details.guide')||e.hidden&&e.matches(WAY_TAB))return;add(visText(e),()=>go(e),c,e)})};
   if(c.k==='cfg'){
     document.querySelectorAll('#cfgnav button[data-p]').forEach(b=>add(visText(b),()=>goCfg(b.dataset.p),b.dataset.p==='feat'?{k:'feat'}:{k:'p',p:b.dataset.p}));
     document.querySelectorAll('#cfgnav .cgrp').forEach(e=>add(e.textContent,()=>goSec('cfg'),c))}   // Assistent, Sprache, Spark

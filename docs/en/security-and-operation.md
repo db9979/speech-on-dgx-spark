@@ -177,7 +177,7 @@ Recommended on GitHub: 2FA with a passkey, a ruleset on `main` against deletion 
 - **A restart only on your word**: when the computer needs a restart (`/var/run/reboot-required` or a new kernel, `libc6`, `systemd`), the page shows "Neustart nötig" with "Jetzt neu starten" or "Heute Nacht" (both with a fresh code). Without that choice nothing restarts, not at night either.
 - **At night**: per computer the switch *System updates at night on the panel computer* or *on the model computer* (off, changing needs the code): between 03 and 05 after the Spark update, only the operating system, never firmware, never a restart by itself.
 - **OpenCode and Python packages**: only package names and versions go out to `api.osv.dev` and one version question to `registry.npmjs.org`, both through the network guard (public addresses) and not while the Notaus blocks the internet; without internet it says "nicht geprüft, kein Internet". Only ids (`GHSA-…`, `PYSEC-…`) and a version number come back. Nothing of it is ever installed: "Von Claude prüfen lassen" makes a check request with a fixed text that a Claude thread pins anew; it comes with the next Spark update.
-- **Firmware by hand**: *Features → Guides → Firmware by hand* walks through EEPROM, NVIDIA driver and DGX OS.
+- **Firmware by hand**: the guide "Firmware by hand" at the bottom of the details under *Status → System updates* (button "Install by hand") walks through EEPROM, NVIDIA driver and DGX OS.
 - **After updating to V01.1.322** once on each computer `sudo speech-spark update` (or `sudo ./install.sh`), so that unit and sudoers line are there; until then the page says "Ließ sich nicht starten".
 
 ## Kill switch (Notaus)

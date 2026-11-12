@@ -16,7 +16,7 @@ What is installed, and from where (the rule the root unit follows, docs: Funktio
 - `apt-get upgrade --with-new-pkgs --no-remove`: only the sources the system already has, never a new one; packages
   only upgraded, a new one only as a dependency of an upgrade (a new kernel of the same series); nothing is ever
   removed (apt stops instead). Not full-upgrade, which may remove packages to solve a conflict: that stays a step by
-  hand (Funktionen → Anleitungen → Firmware von Hand).
+  hand (the guide „Firmware von Hand“ under Zustand → System-Updates).
 - Only origins of the system's own family (ERLAUBT: Debian and Raspberry Pi on the Pi, Ubuntu and NVIDIA DGX on tars).
   A package from any other source (Docker, a PPA …) is held back during the run and shown as „fremde Quelle“.
 - Firmware and drivers never (VON_HAND: the Pi's EEPROM, NVIDIA driver, CUDA and the kernel the driver is built for

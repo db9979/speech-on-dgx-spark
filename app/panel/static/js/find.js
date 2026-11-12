@@ -17,7 +17,7 @@ function palItems(){const out=[],seen=new Set(),add=(grp,label,where,go,more)=>{
     if(!document.body.classList.contains('mgr')){
       document.querySelectorAll('#test h2, #test h3, #test button.b').forEach(e=>{const l=visText(e);if(l&&l.length<=48)add(C,l,t('Zustand → Prüfen','Status → Checks'),()=>{goSec('test');setTimeout(()=>sFlash(e),120)})})}
     document.querySelectorAll('#logs .ptabs button, #logs [data-area], #logs [data-tab]').forEach(e=>{const l=visText(e);if(l&&l.length<=40)add(C,t('Logs: ','Logs: ')+l,t('Zustand → Logs','Status → Logs'),()=>{goSec('logs');setTimeout(()=>{e.click();sFlash(e)},120)})});
-    if(cfgOk)(typeof GUIDES!=='undefined'?GUIDES:[]).forEach(g=>add(G,gT(g.t),t('Funktionen → Anleitungen','Features → Guides'),()=>{goSec('int');setTimeout(()=>{const d=document.querySelector(`#guidelist details.guide[data-guide="${g.id}"]`);if(d){d.open=true;sFlash(d)}},120)}))}
+    if(cfgOk)(typeof GUIDES!=='undefined'?GUIDES:[]).forEach(g=>add(G,gT(g.t),g.sw?F:g.me||g.mep?t('Ich','Me'):'',()=>guideGo(g.id)))}
   if(PROFILE&&typeof meIndex==='function'){
     if(!ME_ITEMS.length&&typeof meTabs==='function')try{meTabs()}catch{}
     for(const h of meIndex())add(M,h.label,h.el?t('Ich → ','Me → ')+h.page:t('Ich','Me'),()=>{openMe(h.id);setTimeout(()=>meGo(h),120)},h.more)}

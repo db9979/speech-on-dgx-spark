@@ -43,6 +43,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.1.391** Page "Guides" dissolved: every guide stands next to its switch or on its Me page, the search (Ctrl K) opens it there
 - **V01.1.390** Features on a computer: description in two lines, the first function open at once, "Save" as a bar under the whole page
 - **V01.1.389** Tap areas on the phone: a finger now hits switches, arrows, filters and small buttons on at least 44 px; the filters of the Features page show whole words
 - **V01.1.388** Red fix for tests: one test left the open voice chat switched on and made another one wobble; a photo that is too big for the computer card is always refused as "too big"
@@ -52,7 +53,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.1.384** Me → Overview tidied: no copy of the menu any more, only pages with a status; every group header in the menu stands once
 - **V01.1.383** Audio overview as a discussion, round: another voice answers every question, one thread through all chapters, a greeting only at the start, no lists read out, a chapter "What has changed" for several versions and a roundness value of 10
 - **V01.1.382** Collections, Knowledge book, Dungeon Master and Contacts say when their function is switched off, with the way to the switch, instead of showing "Loading …" for ever
-- **V01.1.381** Picture of the computer: every computer card under Status → Summary shows a drawing of the recognised device (GB10, Raspberry Pi); the admin can upload an own photo, it stays on the Spark
 
 
 
@@ -124,7 +124,7 @@ Every new feature is off by default. Once the admin releases it, it applies to e
 - [Technical details and troubleshooting](docs/en/technical.md): services and ports, benchmarks, own language model, troubleshooting
 - [Coding guideline](docs/en/guidelines.md) and [security checklist](docs/en/security-checklist.md): rules for every change, checklist for new features
 
-The panel has its own guide for every feature under *Funktionen → Anleitungen* (Features → Guides).
+The panel has its own guide for every feature next to its switch under *Funktionen* (Features); the search (Ctrl K) finds each one.
 
 ## Support
 
