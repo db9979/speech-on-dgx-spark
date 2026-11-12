@@ -104,7 +104,8 @@ Jede Änderung wird nicht nur gegen die Fallen oben geprüft, sondern auch dageg
 
 **Maßstäbe**
 - [ ] Web und API: OWASP ASVS 5.0, Stufe 2; Anmeldung, Geheimnisse und Admin-Wege Stufe 3.
-- [ ] Sprachmodell-Wege: OWASP Top 10 for LLM Applications 2025 (Prompt-Injection, Datenabfluss, zu viel Handlungsmacht, ungeprüfte Ausgabe, unbegrenzter Verbrauch).
+- [ ] Sprachmodell-Wege: OWASP Top 10 for LLM Applications 2026 (Prompt-Injection auch über Bilder und Ton, Datenabfluss, zu viel Handlungsmacht, Falschaussagen, unbegrenzter Verbrauch, verborgener Kontext, ungeprüfte Ausgabe); seit 12.11.2026, vorher die Fassung 2025.
+- [ ] Werkzeuge, Aufträge und MCP: OWASP Top 10 for Agentic Applications 2026 (Abgleich unten); MCP nach der Fassung 2026-07-28 (ohne Sitzung, Kopfzeilen gleich dem Inhalt), ältere Programme weiter mit `initialize`.
 - [ ] Kryptografie und TLS: BSI TR-02102 bzw. NIST-Empfehlungen; TLS nach Mozilla „intermediate“ oder strenger.
 - [ ] Lieferkette: feste Versionen mit Hash, gepinnte Actions, Signaturen (SLSA-Gedanke: nachvollziehbar gebaut, geprüft geladen).
 
@@ -133,7 +134,8 @@ Jede Änderung wird nicht nur gegen die Fallen oben geprüft, sondern auch dageg
 - [ ] Fremdes HTML (Mail) nur bereinigt, im `sandbox`-Rahmen ohne `allow-scripts` mit eigener CSP (`default-src 'none'`), externe Bilder nur über den Spark nach eigenem Klick, Bildtyp nach den ersten Bytes, nie SVG.
 
 **Lieferkette und Betrieb**
-- [ ] Neue Pakete mit Version und Hash im Lock; neue Actions per SHA gepinnt; Dependabot-Hinweise zeitnah übernehmen.
+- [ ] Neue Pakete mit Version und Hash im Lock; neue Actions per SHA gepinnt, in der Fassung für Node 24 (🧪 test_workflows); Dependabot-Hinweise zeitnah übernehmen.
+- [ ] Die nächtliche Prüfung „Pakete prüfen“ fragt OSV nach jedem gepinnten Paket, auch nach vLLM und vllm-omni aus `install.sh`, und nennt jedes Docker-Abbild eines Modells, dessen Digest älter als 90 Tage ist (`seit` in `modelle.DOCKER`; 🧪 test_pakete_pruefen). Eine neue Engine-Version kommt als `*_VERSION=` in `install.sh`, ein neues Abbild mit `seit`.
 - [ ] Geheimnisse nie im Repo (Secret Scanning mit Push-Schutz ist an).
 - [ ] Bekannte Schwachstellen in Abhängigkeiten werden geprüft, bevor eine Version mit neuen Paketen ausgeliefert wird.
 - [ ] Was als root läuft, ist ein fester Ablauf in einer eigenen Unit, gestartet über eine feste sudoers-Zeile; das Panel schreibt nur einen Wunsch aus einem festen Wort, nie einen Befehl, Namen oder Pfad. Ein Neustart nur auf das Wort des Admins (System-Updates).
@@ -141,9 +143,23 @@ Jede Änderung wird nicht nur gegen die Fallen oben geprüft, sondern auch dageg
 **Regelmäßige Prüfung**
 - [ ] Vor großen Versionen und mindestens einmal im Monat eine skeptische Gesamtprüfung gegen diese Maßstäbe (wie am 08.10. und 11.10.2026). Jeder Befund bekommt einen Selbsttest.
 
-**Noch nicht erfüllt** (wird beim nächsten Berühren der Stelle nachgezogen; Stand 11.11.2026, Code-Review)
+**Abgleich mit den OWASP Top 10 for Agentic Applications 2026** (12.11.2026, Prüfung „Stand der Technik“; neuer Befund war nur MCP, jetzt nachgezogen)
+- ASI01 Ziel-Übernahme: Fremder Text ist Daten, danach sind ändernde und ausleitende Werkzeuge gesperrt (🧪 test_angriffe, test_ausleiten).
+- ASI02 Werkzeug-Missbrauch: Nur angebotene Werkzeuge laufen, jedes steht in genau einer Sperrliste, Notaus sperrt sofort (🧪 test_notaus, test_kontext_trennung).
+- ASI03 Identität und Rechte: Rechte setzt das Panel je Profil, Gerät und Stimme, nie das Modell; Gäste ohne Werkzeuge; Endpunkte mit Code nach `stufen.LIST` (🧪 test_gaeste, test_stufen).
+- ASI04 Lieferkette: Modelle per Revision, Pakete per Hash, Actions per SHA, nächtliche OSV-Prüfung samt vLLM und Alter der Docker-Abbilder; `--trust-remote-code` nur für Qwens eigene Sprachmodelle in `engine.sh` (🧪 test_pakete_pruefen, test_workflows, test_modelle).
+- ASI05 Unerwartete Code-Ausführung: kein `shell=True`, `eval` oder Pickle auf Fremddaten; Code nur in der Werkstatt-Sandbox (🧪 test_werkstatt).
+- ASI06 Gedächtnis-Vergiftung: Aus fremdem Text wird nie gelernt, das „Fremd“-Kennzeichen gilt auch im nächsten Zug (🧪 test_gedaechtnis, test_kontext_trennung).
+- ASI07 Agent-zu-Agent: MCP mit eigenem Token je Programm und Profil, Fragen von dort zählen als fremd, MCP 2026-07-28 mit Abgleich der Kopfzeilen (🧪 test_mcpserver, test_meinmcp).
+- ASI08 Kaskaden: Obergrenzen für Werkzeugaufrufe, Suchen, Jobs und Budgets je Antwort (🧪 test_agent).
+- ASI09 Ausgenutztes Vertrauen: Handeln nur nach eigenem „Ja“ am selben Gerät mit voll vorgelesenen Angaben; die Herkunftszeile zählt das Panel selbst (🧪 test_quellen, test_meinmcp).
+- ASI10 Abtrünnige Agenten: Entscheidungen nach festen Regeln, Hintergrund-Aufträge nur lesend, Notaus in Stufen (🧪 test_notaus, test_agent).
+
+**Noch nicht erfüllt** (wird beim nächsten Berühren der Stelle nachgezogen; Stand 12.11.2026, Prüfung „Stand der Technik“)
 - Fernet (AES-CBC plus HMAC) im vault und bei Umzugsschlüsseln: sicher, aber kein AEAD; neue Teile nehmen AES-GCM, ein Wechsel nur mit Umzug der vorhandenen Daten.
 - Das gesprochene Codewort für Home Assistant wird mit 3000 PBKDF2-Runden abgelegt (`homeassistant._hash`), weit unter dem Maßstab: beim Vergleich werden viele Schreibweisen der Spracherkennung durchprobiert, jede kostet eine Ableitung, und das Panel hält für Sprache nichts auf. Der Schutz ist hier nicht die Rundenzahl, sondern der versiegelte Speicher (`vault`) und die Dateirechte. Eine andere Ableitung nur zusammen mit einem schnelleren Vergleich.
 - Erledigt am 11.11.2026: Der Abgleich der Python-Pakete gegen die OSV-Datenbank läuft jetzt auch auf GitHub, jede Nacht im Lauf „Pakete prüfen“ (`tools/pakete_pruefen.py`, Issue „Pakete mit bekannter Lücke“; 🧪 test_pakete_pruefen). Bewusst nicht als Schritt in „Tests“: eine heute Nacht veröffentlichte Lücke würde main ohne jeden Push rot machen, und der Spark installiert nur Versionen mit grünem Lauf. Die Telefon-PIN hat jetzt 600 000 PBKDF2-Runden wie Passwort und Profil-PIN (`telefon_ich.ROUNDS`; eine ältere PIN gilt weiter und wird beim nächsten richtigen Eintippen neu abgelegt; 🧪 test_telefon, test_tempo).
-- Signierte Geräte-Updates sind gebaut, aber ohne Schlüssel aus (`UPDATE_SIGNING_KEY` fehlt noch).
+- Signierte Geräte-Updates sind gebaut, aber ohne Schlüssel aus (`UPDATE_SIGNING_KEY` fehlt noch; braucht Dominik).
+- Auf dem Modell-Rechner kommen torch, `qwen-asr` und `qwen-tts` in den Umgebungen für den Rückweg ohne vLLM (`--asr-backend transformers`, `--tts-backend transformers`) noch ohne feste Version (`install.sh make_venv`). Der Normalweg (vLLM, vllm-omni) ist gepinnt. Nachziehen beim nächsten Berühren, mit Lock je Umgebung.
+- Erledigt am 12.11.2026: vLLM und vllm-omni 0.30.0 → 0.32.0 (0.32 schließt GHSA-4hhp-h66f-j5j7 Chat-Vorlagen, GHSA-q97c-p368-75c4 Tokenizer, GHSA-frvg-qw88-hww9 P2P).
 - `style-src 'unsafe-inline'` bleibt wegen älterer Safari-Versionen in der iPhone-App.

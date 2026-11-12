@@ -7,6 +7,7 @@ import importlib.util
 import io
 import json
 import os
+import re
 import tempfile
 import unittest
 from unittest import mock
@@ -70,7 +71,8 @@ class Pakete(unittest.TestCase):
                     if isinstance(answer, Exception):
                         raise answer
                     return json.dumps({"results": answer}).encode()
-                with mock.patch.object(t, "gepinnt", return_value=pak), mock.patch.dict(os.environ, {"PAKETE_NOTE": note}), \
+                with mock.patch.object(t, "gepinnt", return_value=pak), mock.patch.object(t, "motoren", return_value={}), \
+                        mock.patch.object(t, "abbilder", return_value=[]), mock.patch.dict(os.environ, {"PAKETE_NOTE": note}), \
                         contextlib.redirect_stdout(io.StringIO()) as out:
                     return t.main([], post), out.getvalue()
 
@@ -87,11 +89,52 @@ class Pakete(unittest.TestCase):
             with mock.patch.object(t, "gepinnt", return_value={}), contextlib.redirect_stdout(io.StringIO()):
                 self.assertEqual(t.main([], lambda data: b""), 2)
 
+    def test_the_model_computer_too(self):
+        """Stand der Technik 2026-11-12: vLLM and vllm-omni (pinned in install.sh, no lock file) are asked too, and
+        every Docker image of a model engine carries the day it was pinned and is named after DOCKER_TAGE days."""
+        import datetime
+        import modelle
+        t = tool()
+        eng = t.motoren()
+        self.assertEqual(set(eng), {"vllm", "vllm-omni"} | {n for n in eng if n.startswith("vllm ")})
+        sh = helpers.repo_file("install.sh")
+        for var in ("VLLM_VERSION", "VLLM_OMNI_VERSION", "VLLM_LLM_VERSION"):
+            ver = re.search(rf"^{var}=(\S+)$", sh, re.M).group(1)
+            self.assertIn(ver, eng.values(), var)
+        # a second vLLM with another version is asked under its own key, sent to OSV as "vllm"
+        with tempfile.TemporaryDirectory() as d:
+            with open(os.path.join(d, "install.sh"), "w") as f:
+                f.write("VLLM_VERSION=0.32.0\nVLLM_OMNI_VERSION=0.32.0\nVLLM_LLM_VERSION=0.33.0\n")
+            two = t.motoren(d)
+        self.assertEqual(two, {"vllm": "0.32.0", "vllm-omni": "0.32.0", "vllm 0.33.0": "0.33.0"})
+        sent = []
+        t.frage(two, lambda data: (sent.append(json.loads(data)), json.dumps({"results": [{}, {}, {}]}).encode())[1])
+        self.assertEqual([q["package"]["name"] for q in sent[0]["queries"]], ["vllm", "vllm-omni", "vllm"])
+        # every image in modelle.DOCKER has its day, and the age is counted from a given day, never the clock
+        bilder = t.abbilder()
+        self.assertEqual(sorted(n for n, _ in bilder), sorted(x["image"].split("@")[0] for x in modelle.DOCKER.values()))
+        for x in modelle.DOCKER.values():
+            datetime.date.fromisoformat(x["seit"])
+        day = bilder[0][1]
+        self.assertEqual(t.alt(bilder[:1], day + datetime.timedelta(days=t.DOCKER_TAGE)), [])
+        self.assertEqual(t.alt(bilder[:1], day + datetime.timedelta(days=t.DOCKER_TAGE + 1)),
+                         [(bilder[0][0], t.DOCKER_TAGE + 1)])
+        with tempfile.TemporaryDirectory() as d:
+            note = os.path.join(d, "note.md")
+            with mock.patch.object(t, "gepinnt", return_value={"aaa": "1.0"}), mock.patch.object(t, "motoren", return_value={}), \
+                    mock.patch.object(t, "abbilder", return_value=bilder[:1]), mock.patch.dict(os.environ, {"PAKETE_NOTE": note}), \
+                    contextlib.redirect_stdout(io.StringIO()):
+                ok = lambda data: json.dumps({"results": [{}]}).encode()      # noqa: E731
+                self.assertEqual(t.main([], ok, heute=day), 0)
+                self.assertEqual(t.main([], ok, heute=day + datetime.timedelta(days=200)), 1)
+            with open(note, encoding="utf-8") as f:
+                self.assertIn(f"- `{bilder[0][0]}`: 200 Tage", f.read())
+
     def test_github_asks_every_night_and_never_inside_tests(self):
         text = helpers.repo_file(".github", "workflows", "pakete.yml")
         for part in ("schedule:", "cron:", "python3 tools/pakete_pruefen.py", "issues: write", "PAKETE_NOTE",
                      'gh issue create -R "$R" -t "Pakete mit bekannter Lücke"', "app/requirements-panel.lock",
-                     "app/requirements-ytdlp.lock"):
+                     "app/requirements-ytdlp.lock", "app/modelle.py", "install.sh"):
             self.assertIn(part, text)
         for name in systemupdates.LOCKS:
             self.assertIn("app/" + name, text)                           # every lock the Spark checks is fetched

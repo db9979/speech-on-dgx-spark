@@ -40,10 +40,10 @@ TORCH_INDEX=https://download.pytorch.org/whl/cu130
 # Engines: vLLM serves Qwen3-ASR natively; vllm-omni (TTS, streaming) needs the vLLM
 # release with the same major/minor.
 # Both ship aarch64 wheels on PyPI built for CUDA 13; installed natively, no Docker.
-VLLM_VERSION=0.30.0
-VLLM_OMNI_VERSION=0.30.0
+VLLM_VERSION=0.32.0
+VLLM_OMNI_VERSION=0.32.0
 # The own language model (plan eigene-modelle.md, E2) has its own vLLM in venv-llm, apart from vllm-omni's.
-VLLM_LLM_VERSION=0.30.0
+VLLM_LLM_VERSION=0.32.0
 DEFAULT_REMOTE=https://github.com/db9979/speech-on-dgx-spark
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 

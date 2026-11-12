@@ -1495,7 +1495,7 @@ flowchart TD
   s11 -->|ja| s11x
 ```
 
-1. <a id="kn-mcpc-s1"></a>**Programm schickt eine Anfrage**: Jede Anfrage ist eine JSON-RPC-Nachricht. Ist der MCP-Server vom Admin aus, gibt es den Endpunkt nicht (404).
+1. <a id="kn-mcpc-s1"></a>**Programm schickt eine Anfrage**: Jede Anfrage ist eine JSON-RPC-Nachricht. Ist der MCP-Server vom Admin aus, gibt es den Endpunkt nicht (404). Der Spark spricht beide Fassungen von MCP (5 Versionen): die neue 2026-07-28 ohne Sitzung, in der jede Anfrage Version und Fähigkeiten selbst mitbringt und die Kopfzeilen MCP-Protocol-Version, Mcp-Method und Mcp-Name genau dem Inhalt entsprechen müssen (sonst 400), und die ältere mit initialize. Gemerkt wird zwischen Anfragen nichts.
 2. <a id="kn-mcpc-s2"></a>**Von einer fremden Webseite?**: Schickt ein Browser einen Origin, muss es der des Panels sein. So kann keine fremde Seite den Endpunkt über DNS-Rebinding benutzen.
 3. <a id="kn-mcpc-s3"></a>**Schlüssel gültig?**: Der Bearer-Schlüssel ist ein fester Schlüssel oder ein OAuth-Zugangstoken (gilt 60 Minuten). Gespeichert sind nur Hashes. Eine Verbindung endet nach 90 Tagen ohne Nutzung.
 4. <a id="kn-mcpc-s4"></a>**Heimnetz-Schlüssel von außen?**: Ein Schlüssel „lokal“ gilt nur, wenn die Gegenstelle eine private Adresse ist, kein Proxy-Kopf in der Anfrage steht und sie keiner der eingetragenen Reverse Proxys ist. „extern“ geht nur mit dem Schalter des Admins.

@@ -32,6 +32,7 @@ PORT = helpers._port()
 BASE = f"http://127.0.0.1:{PORT}"
 KEY = "own-mcp-key-4711"
 CALLS = []          # (path, tool, arguments)
+MODERN_SEEN = []    # (method, headers, _meta) the 2026-07-28 server got
 TOOLS = [{"name": "search_docs", "description": "Find documents", "inputSchema": {
              "type": "object", "properties": {"q": {"type": "string"}}}},
          {"name": "delete_doc", "description": "Delete a document", "inputSchema": {
@@ -67,6 +68,35 @@ def fake():
     @app.post("/omcp")
     async def signed(req: Request):
         return await rpc(req, req.headers.get("authorization") in ("Bearer at-1", "Bearer at-2"))
+
+    @app.post("/modern")
+    async def modern(req: Request):
+        """Only MCP 2026-07-28: no initialize, version and capabilities in _meta, headers equal to the body."""
+        if req.headers.get("authorization") != "Bearer " + KEY:
+            return Response(status_code=401)
+        m = await req.json()
+        meta = (m.get("params") or {}).get("_meta") or {}
+        MODERN_SEEN.append((m["method"], dict(req.headers), meta))
+        want = meta.get("io.modelcontextprotocol/protocolVersion")
+        if want != "2026-07-28":
+            return JSONResponse({"jsonrpc": "2.0", "id": m.get("id"), "error": {
+                "code": -32022, "message": "Unsupported protocol version",
+                "data": {"supported": ["2026-07-28"], "requested": str(want)}}}, status_code=400)
+        if req.headers.get("mcp-protocol-version") != want or req.headers.get("mcp-method") != m["method"] or \
+                (m["method"] == "tools/call" and req.headers.get("mcp-name") != m["params"]["name"]) or \
+                "mcp-session-id" in req.headers:
+            return JSONResponse({"jsonrpc": "2.0", "id": m["id"], "error": {"code": -32020, "message": "Header mismatch"}},
+                                status_code=400)
+        done = {"resultType": "complete"}
+        if m["method"] == "server/discover":
+            return {"jsonrpc": "2.0", "id": m["id"], "result": dict(done, supportedVersions=["2026-07-28"], capabilities={"tools": {}})}
+        if m["method"] == "tools/list":
+            return {"jsonrpc": "2.0", "id": m["id"], "result": dict(done, tools=TOOLS)}
+        if m["method"] == "tools/call":
+            if m["params"]["name"] == "delete_doc":
+                return {"jsonrpc": "2.0", "id": m["id"], "result": {"resultType": "input_required", "inputRequests": {}}}
+            return {"jsonrpc": "2.0", "id": m["id"], "result": dict(done, content=[{"type": "text", "text": "modern"}])}
+        return JSONResponse({"jsonrpc": "2.0", "id": m["id"], "error": {"code": -32601, "message": "unknown"}}, status_code=404)
 
     @app.get("/.well-known/oauth-protected-resource/omcp")
     def resource():
@@ -152,6 +182,46 @@ class Base(unittest.TestCase):
     def release(self, c, sid, **modes):
         r = c.put(f"/api/profile/mymcp/{sid}", json={"tools": modes})
         self.assertEqual(r.status_code, 200, r.text)
+
+
+class Modern(Base):
+    def test_both_eras_of_mcp(self):
+        """Stand der Technik 2026-11-12: the Spark speaks MCP 2026-07-28 to a server that only knows that (version,
+        client and capabilities in every request, headers equal to the body, never a session) and still the
+        initialize handshake to an older one; the era is remembered per address; it never answers a server's
+        questions (input_required)."""
+        import asyncio
+        set_panel(panel={"allow_lan": True})
+        mcp._eras.clear()
+        MODERN_SEEN.clear()
+        url = BASE + "/modern"
+        names = [t["name"] for t in asyncio.run(mcp.list_tools(url, KEY))]
+        self.assertEqual(names, ["search_docs", "delete_doc"])
+        self.assertEqual([x[0] for x in MODERN_SEEN], ["server/discover", "tools/list"])
+        for _, head, meta in MODERN_SEEN:
+            self.assertEqual(meta["io.modelcontextprotocol/protocolVersion"], "2026-07-28")
+            self.assertEqual(meta["io.modelcontextprotocol/clientCapabilities"], {})
+            self.assertNotIn("mcp-session-id", head)
+        self.assertEqual(mcp._era(url), "modern")
+        srv = {"url": url, "token": ""}
+        self.assertEqual(asyncio.run(mcp.call(srv, "search_docs", {"q": "x"}, bearer=KEY)), "modern")
+        self.assertEqual(MODERN_SEEN[-1][1].get("mcp-name"), "search_docs")
+        self.assertNotIn("server/discover", [x[0] for x in MODERN_SEEN[2:]])  # remembered, no new probe
+        with self.assertRaises(ValueError):
+            asyncio.run(mcp.call(srv, "delete_doc", {"id": "1"}, bearer=KEY))
+        # an older server: the probe fails, the handshake follows, and that is remembered too
+        old = BASE + "/mcp"
+        self.assertEqual([t["name"] for t in asyncio.run(mcp.list_tools(old, KEY))], ["search_docs", "delete_doc"])
+        self.assertEqual(mcp._era(old), "legacy")
+        # a sign-in is still a sign-in in the probe
+        with self.assertRaises(mcp.NeedsLogin):
+            asyncio.run(mcp.list_tools(url, "wrong"))
+        # the memory of eras is small and forgets
+        self.assertIsNone(mcp._era(url, now=10 ** 12))
+        for i in range(mcp.MAX_ERAS + 5):
+            mcp._remember(f"http://x{i}/mcp", "legacy", now=i)
+        self.assertLessEqual(len(mcp._eras), mcp.MAX_ERAS)
+        mcp._eras.clear()
 
 
 class Switches(Base):

@@ -166,6 +166,79 @@ class OffAndKeys(Base):
                                                                           "Content-Type": "application/json"}).status_code, 400)
 
 
+class Modern(Base):
+    def test_mcp_2026_07_28_and_the_older_way(self):
+        """Stand der Technik 2026-11-12: /mcp answers MCP 2026-07-28 (no initialize, everything in each request,
+        headers equal to the body, typed errors) and still the initialize way of older programs."""
+        c, _ = profile("McpModern")
+        token = self.key(c, ["voices", "speak"])
+        V = "2026-07-28"
+
+        def meta(ver=V, caps=True):
+            m = {"io.modelcontextprotocol/protocolVersion": ver, "io.modelcontextprotocol/clientInfo": {"name": "t"}}
+            if caps:
+                m["io.modelcontextprotocol/clientCapabilities"] = {}
+            return m
+
+        def new(method, params=None, head=None, ver=V, caps=True, rid=7):
+            h = {"MCP-Protocol-Version": ver, "Mcp-Method": method}
+            if method == "tools/call":
+                h["Mcp-Name"] = (params or {}).get("name", "")
+            h.update(head or {})
+            return rpc(self.lan, token, method, dict(params or {}, _meta=meta(ver, caps)), rid=rid, headers=h)
+
+        d = new("server/discover")
+        self.assertEqual(d.status_code, 200, d.text)
+        res = d.json()["result"]
+        self.assertEqual(res["resultType"], "complete")
+        self.assertIn(V, res["supportedVersions"])
+        self.assertIn("2025-06-18", res["supportedVersions"])
+        self.assertEqual(res["_meta"]["io.modelcontextprotocol/serverInfo"]["name"], "spark")
+        self.assertNotIn("mcp-session-id", d.headers)
+        lst = new("tools/list").json()["result"]
+        self.assertEqual({t["name"] for t in lst["tools"]}, {"voices", "speak"})
+        self.assertEqual(lst["resultType"], "complete")
+        r = new("tools/call", {"name": "voices", "arguments": {}}).json()["result"]
+        self.assertEqual((r["content"][0]["text"], r["resultType"]), ("ryan, serena", "complete"))
+        # the Base64 form of Mcp-Name is read too
+        b64 = "=?base64?" + base64.b64encode(b"voices").decode() + "?="
+        self.assertEqual(new("tools/call", {"name": "voices"}, head={"Mcp-Name": b64}).status_code, 200)
+        # headers that say something else than the body, or are missing: 400 with -32020
+        for head in ({"Mcp-Method": "tools/list"}, {"Mcp-Name": "speak"}, {"MCP-Protocol-Version": "2025-06-18"},
+                     {"Mcp-Name": "=?base64?kaputt?="}):
+            r = new("tools/call", {"name": "voices"}, head=head)
+            self.assertEqual((r.status_code, r.json()["error"]["code"]), (400, -32020), head)
+        # missing capabilities: -32602; an unknown version: -32022 with the supported ones
+        r = new("tools/list", caps=False)
+        self.assertEqual((r.status_code, r.json()["error"]["code"]), (400, -32602))
+        r = new("tools/list", ver="2099-01-01")
+        self.assertEqual((r.status_code, r.json()["error"]["code"]), (400, -32022))
+        self.assertIn(V, r.json()["error"]["data"]["supported"])
+        # an unknown method is 404 with -32601; initialize is not a modern method
+        for m in ("resources/list", "initialize"):
+            r = new(m)
+            self.assertEqual((r.status_code, r.json()["error"]["code"]), (404, -32601), m)
+        # the same rules as ever: a tool not given to this connection stays refused
+        self.assertTrue(new("tools/call", {"name": "ask_spark", "arguments": {"question": "x"}}).json()["result"]["isError"])
+        # the older way still works on the same address, 2025-11-25 included
+        r = rpc(self.lan, token, "initialize", {"protocolVersion": "2025-11-25", "capabilities": {}})
+        self.assertEqual(r.json()["result"]["protocolVersion"], "2025-11-25")
+        self.assertNotIn("resultType", rpc(self.lan, token, "tools/list").json()["result"])
+
+    def test_oauth_answers_name_the_issuer(self):
+        """RFC 9207 (MCP 2026-07-28 authorization): the sign-in's answer carries iss, also an error."""
+        helpers.set_config(mcp_server_extern=True)
+        net = TestClient(panel.app, client=("8.8.8.8", 1), follow_redirects=False)
+        meta = net.get("/.well-known/oauth-authorization-server").json()
+        self.assertIs(meta["authorization_response_iss_parameter_supported"], True)
+        cid = net.post("/oauth/register", json={"client_name": "X", "redirect_uris": ["https://claude.ai/api/mcp/auth_callback"]}
+                       ).json()["client_id"]
+        r = net.get("/oauth/authorize", params={"response_type": "token", "client_id": cid, "state": "s",
+                                               "redirect_uri": "https://claude.ai/api/mcp/auth_callback"})
+        got = parse_qs(urlsplit(r.headers["location"]).query)
+        self.assertEqual(got["iss"], [meta["issuer"]])
+
+
 def _live(on):
     import os
     with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:

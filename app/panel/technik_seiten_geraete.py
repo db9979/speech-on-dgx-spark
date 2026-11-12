@@ -1083,7 +1083,7 @@ SEITEN = {
 
     # ------------------------------------------------------------------ MCP-Programme
     "mcpc": {
-        "stand": "88677e2dc9",
+        "stand": "621ba8c934",
         "bezug": {
             "mcpserver.MAX_CONNS": ["s3"], "mcpserver.mcp_post": ["s1"], "mcpserver.origin_ok": ["s2"],
             "mcpserver.check_conn": ["s3"], "mcpserver.is_local": ["s4"], "mcpserver.find": ["s3"],
@@ -1111,9 +1111,15 @@ SEITEN = {
             S("s1", "start", ("Programm schickt eine Anfrage", "A program sends a request"),
               ("POST /mcp, JSON-RPC 2.0", "POST /mcp, JSON-RPC 2.0"),
               ("Jede Anfrage ist eine JSON-RPC-Nachricht. Ist der MCP-Server vom Admin aus, gibt es den Endpunkt nicht "
-               "(404).",
+               "(404). Der Spark spricht beide Fassungen von MCP ({mcpserver.PROTOCOLS|anzahl} Versionen): die neue "
+               "2026-07-28 ohne Sitzung, in der jede Anfrage Version und Fähigkeiten selbst mitbringt und die "
+               "Kopfzeilen MCP-Protocol-Version, Mcp-Method und Mcp-Name genau dem Inhalt entsprechen müssen (sonst "
+               "400), und die ältere mit initialize. Gemerkt wird zwischen Anfragen nichts.",
                "Every request is one JSON-RPC message. If the MCP server is off by the admin, the endpoint does not "
-               "exist (404).")),
+               "exist (404). The Spark speaks both kinds of MCP ({mcpserver.PROTOCOLS|anzahl} versions): the new "
+               "2026-07-28 without a session, where every request brings its version and capabilities and the headers "
+               "MCP-Protocol-Version, Mcp-Method and Mcp-Name must match the body exactly (else 400), and the older one "
+               "with initialize. Nothing is kept between requests.")),
             S("s2", "frage", ("Von einer fremden Webseite?", "From another web page?"),
               ("Origin muss der eigene sein", "Origin must be our own"),
               ("Schickt ein Browser einen Origin, muss es der des Panels sein. So kann keine fremde Seite den "

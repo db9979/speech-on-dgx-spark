@@ -67,7 +67,7 @@ jobs:
           # modes stay inside the zip (the artifact itself would lose them)
           ditto -c -k --norsrc --keepParent "$app" dist/SparkHilfe-ungeprueft.zip
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: SparkHilfe-mac-build
           path: dist/SparkHilfe-ungeprueft.zip
@@ -94,7 +94,7 @@ jobs:
             /ios/ci/
             /tools/
 
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: SparkHilfe-mac-build
           path: build
@@ -179,7 +179,7 @@ jobs:
           UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
         run: OPENSSL="$(brew --prefix openssl@3)/bin/openssl" tools/sign-manifest.sh dist/sparkhilfe.json
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: SparkHilfe-mac
           path: |

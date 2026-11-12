@@ -28,7 +28,18 @@ import httpx
 import netguard
 import vault
 
+# Dual-era (Stand der Technik 2026-11-12, Dominik "ok"): first a request in the MCP 2026-07-28 way (no initialize,
+# version and capabilities in every request's _meta, mirrored in headers). Only an answer that clearly comes from
+# such a server (a server/discover result naming MODERN, or a modern error) keeps it; anything else falls back to
+# the initialize handshake of PROTOCOL. The era is remembered per address for ERA_SECONDS.
+MODERN = "2026-07-28"
 PROTOCOL = "2025-06-18"
+META = "io.modelcontextprotocol/"
+CLIENT = {"name": "speech-on-dgx-spark", "version": "1"}
+MODERN_ERRORS = (-32020, -32021, -32022)
+ERA_SECONDS = 3600
+MAX_ERAS = 64
+_eras = {}               # url -> (era "modern" | "legacy", time)
 MAX_BYTES = 2 * 1024 * 1024
 MAX_SERVERS = 8
 MAX_TOOLS = 60           # per server
@@ -103,32 +114,82 @@ def _messages(r):
     return d if isinstance(d, list) else [d]
 
 
+def _era(url, now=None):
+    now = time.time() if now is None else now
+    e = _eras.get(url)
+    return e[0] if e and now - e[1] < ERA_SECONDS else None
+
+
+def _remember(url, era, now=None):
+    if len(_eras) >= MAX_ERAS and url not in _eras:
+        _eras.pop(min(_eras, key=lambda k: _eras[k][1]), None)
+    _eras[url] = (era, time.time() if now is None else now)
+
+
+def _modern_answer(r, rid):
+    """"modern" if this answer to server/discover comes from a 2026-07-28 server, else None."""
+    try:
+        msgs = _messages(r)
+    except ValueError:
+        return None
+    for m in msgs:
+        if not isinstance(m, dict) or m.get("id") != rid:
+            continue
+        res, err = m.get("result"), m.get("error")
+        if isinstance(res, dict) and MODERN in (res.get("supportedVersions") or []):
+            return "modern"
+        if isinstance(err, dict) and err.get("code") in MODERN_ERRORS:
+            sup = (err.get("data") or {}).get("supported") if isinstance(err.get("data"), dict) else None
+            if isinstance(sup, list) and MODERN not in sup:
+                return None     # a modern server that does not speak our modern version: try the handshake
+            raise ValueError("the server reports: " + clean_text(err.get("message") or "error", 200))
+    return None
+
+
 class Session:
-    """One short conversation with a server: initialize, then requests (each call opens its own)."""
+    """One short conversation with a server: requests in the 2026-07-28 way, or initialize first for an older one."""
 
     def __init__(self, url, token, seen=None):
-        self.url, self.token, self.sid, self.n, self.seen = url, token, None, 0, seen
+        self.url, self.token, self.sid, self.n, self.seen, self.era = url, token, None, 0, seen, None
 
     async def __aenter__(self):
         self.c = _client(self.url, self.token, self.seen)
         await self.c.__aenter__()
-        res = await self.request("initialize", {"protocolVersion": PROTOCOL, "capabilities": {},
-                                                "clientInfo": {"name": "speech-on-dgx-spark", "version": "1"}})
-        if not isinstance(res, dict):
-            raise ValueError("the server did not answer initialize")
-        await self._post({"jsonrpc": "2.0", "method": "notifications/initialized"})
+        era = _era(self.url)
+        if era is None:
+            self.n += 1
+            r = await self._post({"jsonrpc": "2.0", "id": self.n, "method": "server/discover", "params": {}},
+                                 modern=True, check=False)
+            era = _modern_answer(r, self.n) or "legacy"
+            _remember(self.url, era)
+        self.era = era
+        if era == "legacy":
+            res = await self.request("initialize", {"protocolVersion": PROTOCOL, "capabilities": {}, "clientInfo": CLIENT})
+            if not isinstance(res, dict):
+                raise ValueError("the server did not answer initialize")
+            await self._post({"jsonrpc": "2.0", "method": "notifications/initialized"})
         return self
 
     async def __aexit__(self, *exc):
         await self.c.__aexit__(*exc)
 
-    async def _post(self, msg):
-        head = {"MCP-Protocol-Version": PROTOCOL}
-        if self.sid:
+    async def _post(self, msg, modern=None, check=True):
+        modern = self.era == "modern" if modern is None else modern
+        if modern:
+            msg = dict(msg, params=dict(msg.get("params") or {}, _meta={
+                META + "protocolVersion": MODERN, META + "clientInfo": CLIENT, META + "clientCapabilities": {}}))
+            head = {"MCP-Protocol-Version": MODERN, "Mcp-Method": msg["method"]}
+            if msg["method"] == "tools/call":
+                head["Mcp-Name"] = str(msg["params"].get("name"))      # TOOL_NAME: plain ASCII, no Base64 needed
+        else:
+            head = {"MCP-Protocol-Version": PROTOCOL}
+        if self.sid and not modern:
             head["Mcp-Session-Id"] = self.sid
         r = await self.c.post(self.url, content=json.dumps(msg), headers=head)
         if r.status_code == 401:
             raise NeedsLogin(r.headers.get("www-authenticate"), bool(self.token))
+        if not check:
+            return r
         if r.status_code == 403:
             raise ValueError(f"the server refuses the token ({r.status_code})")
         if r.is_redirect:
@@ -148,7 +209,11 @@ class Session:
                 if m.get("error"):
                     err = m["error"] if isinstance(m["error"], dict) else {}
                     raise ValueError("the server reports: " + clean_text(err.get("message") or "error", 200))
-                return m.get("result")
+                res = m.get("result")
+                kind = res.get("resultType", "complete") if isinstance(res, dict) else "complete"
+                if kind != "complete":    # "input_required" (MRTR): the Spark never answers a server's questions
+                    raise ValueError("the server wants more input; not supported")
+                return res
         raise ValueError("no answer from the server")
 
 

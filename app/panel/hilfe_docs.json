@@ -237,7 +237,7 @@
 "file": "APIs und Einbinden",
 "head": "Spark als MCP-Server",
 "title": "Spark als MCP-Server",
-"text": "Andere Programme nutzen den Spark über das Model Context Protocol (Streamable HTTP, Adresse /mcp des Panels, z. B. http://SPARK:31080/mcp). Standardmäßig aus."
+"text": "Andere Programme nutzen den Spark über das Model Context Protocol (Streamable HTTP, Adresse /mcp des Panels, z. B. http://SPARK:31080/mcp). Standardmäßig aus. Seit V01.1.404 spricht der Spark die MCP-Fassung 2026-07-28 (ohne Sitzung, jede Anfrage bringt Version und Fähigkeiten mit, die Kopfzeilen MCP-Protocol-Version, Mcp-Method und Mcp-Name müssen dem Inhalt entsprechen) und weiter die älteren Fassungen bis 2024-11-05 mit initialize; die Anmeldung von außen nennt in jeder Antwort ihren Aussteller (iss, RFC 9207)."
 },
 {
 "lang": "de",
@@ -389,7 +389,7 @@
 "file": "APIs und Einbinden",
 "head": "Eigene MCP-Dienste pro Profil",
 "title": "Eigene MCP-Dienste pro Profil",
-"text": "Seit V01.0.363 (Plan plaene/eigene-mcp-dienste.md) bindet jedes Profil eigene MCP-Dienste an (Streamable HTTP), zusätzlich zu denen, die der Admin für alle anbindet. Nur dieses Profil sieht und nutzt sie."
+"text": "Seit V01.0.363 (Plan plaene/eigene-mcp-dienste.md) bindet jedes Profil eigene MCP-Dienste an (Streamable HTTP), zusätzlich zu denen, die der Admin für alle anbindet. Nur dieses Profil sieht und nutzt sie. Der Spark fragt einen Dienst zuerst in der Fassung 2026-07-28 und nimmt sonst den älteren Weg mit initialize; welche Fassung ein Dienst spricht, merkt er sich eine Stunde."
 },
 {
 "lang": "de",
@@ -1501,7 +1501,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "1. Programm schickt eine Anfrage: Jede Anfrage ist eine JSON-RPC-Nachricht. Ist der MCP-Server vom Admin aus, gibt es den Endpunkt nicht (404). 2. Von einer fremden Webseite?: Schickt ein Browser einen Origin, muss es der des Panels sein. So kann keine fremde Seite den Endpunkt über DNS-Rebinding benutzen. 3. Schlüssel gültig?: Der Bearer-Schlüssel ist ein fester Schlüssel oder ein OAuth-Zugangstoken (gilt 60 Minuten). Gespeichert sind nur Hashes. Eine Verbindung endet nach 90 Tagen ohne Nutzung. 4. Heimnetz-Schlüssel von außen?: Ein Schlüssel „lokal“ gilt nur, wenn die Gegenstelle eine private Adresse ist, kein Proxy-Kopf in der Anfrage steht und sie keiner der eingetragenen Reverse Proxys ist. „extern“ geht nur mit dem Schalter des Admins. 5. Mein Notaus oder Profil gesperrt?: Mein Notaus des Profils sperrt jeden MCP-Zugang (503); hat der Admin den MCP-Server für das Profil gesperrt, gibt es nichts (403). 6. Rate-Limit und Größe: Jede Verbindung darf 60 Anfragen pro Minute schicken; eine Anfrage ist höchstens 16 MB groß. Viele abgewiesene Anfragen von außen zählen für „Notaus von selbst“. 7. Werkzeug freigegeben?: Nur Werkzeuge aus der festen Liste (15), nur die, die dieser Verbi"
+"text": "1. Programm schickt eine Anfrage: Jede Anfrage ist eine JSON-RPC-Nachricht. Ist der MCP-Server vom Admin aus, gibt es den Endpunkt nicht (404). Der Spark spricht beide Fassungen von MCP (5 Versionen): die neue 2026-07-28 ohne Sitzung, in der jede Anfrage Version und Fähigkeiten selbst mitbringt und die Kopfzeilen MCP-Protocol-Version, Mcp-Method und Mcp-Name genau dem Inhalt entsprechen müssen (sonst 400), und die ältere mit initialize. Gemerkt wird zwischen Anfragen nichts. 2. Von einer fremden Webseite?: Schickt ein Browser einen Origin, muss es der des Panels sein. So kann keine fremde Seite den Endpunkt über DNS-Rebinding benutzen. 3. Schlüssel gültig?: Der Bearer-Schlüssel ist ein fester Schlüssel oder ein OAuth-Zugangstoken (gilt 60 Minuten). Gespeichert sind nur Hashes. Eine Verbindung endet nach 90 Tagen ohne Nutzung. 4. Heimnetz-Schlüssel von außen?: Ein Schlüssel „lokal“ gilt nur, wenn die Gegenstelle eine private Adresse ist, kein Proxy-Kopf in der Anfrage steht und sie keiner der eingetragenen Reverse Proxys ist. „extern“ geht nur mit dem Schalter des Admins. 5. Mein Notaus oder Profil gesperrt?: Mein Notaus des Profils sperrt jeden MCP-Zugang (503); hat der Admin den M"
 },
 {
 "lang": "de",
@@ -1509,7 +1509,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ndung gegeben wurden, und nur, wenn das Profil die Funktion gerade nutzen darf, bei jedem Aufruf neu geprüft. Mail, Gedächtnis, frühere Gespräche, Einstellungen und Code sind nie dabei (31 Namen in mcpserver.NEVER). 8. Zu viele gleichzeitig?: Höchstens 2 Aufrufe einer Verbindung und 6 aller Verbindungen laufen gleichzeitig. 9. Sprache und Lesen: Spracherkennung (höchstens 10 MB) und Sprachausgabe (höchstens 2000 Zeichen) laufen mit der Stufe „hinten“, damit Menschen am Spark immer zuerst dran sind. Die Lese-Werkzeuge lesen nur die Daten dieses Profils. 10. Spark fragen, nur lesend: ask_spark (10 pro Minute) läuft als ein Zug des Assistenten für das Profil, aber nur mit den Lese-Werkzeugen dieser Verbindung. Die Frage gilt von Anfang an als fremder Text: nichts wird geschaltet, gespeichert, gelernt oder gesendet, kein Gedächtnis, nichts davon im Verlauf. Passwörter und Codes werden aus der Antwort entfernt. 11. Soll etwas geändert werden?: Smart Home, Erinnerung und Termin werden nur vorgeschlagen (höchstens 10 offen). Das Profil bekommt eine Mitteilung und entscheidet unter Ich → Spark als MCP-Server innerhalb von 15 Minuten; erst dann führt das Panel es aus. Bei Notaus oder gesetz"
+"text": "CP-Server für das Profil gesperrt, gibt es nichts (403). 6. Rate-Limit und Größe: Jede Verbindung darf 60 Anfragen pro Minute schicken; eine Anfrage ist höchstens 16 MB groß. Viele abgewiesene Anfragen von außen zählen für „Notaus von selbst“. 7. Werkzeug freigegeben?: Nur Werkzeuge aus der festen Liste (15), nur die, die dieser Verbindung gegeben wurden, und nur, wenn das Profil die Funktion gerade nutzen darf, bei jedem Aufruf neu geprüft. Mail, Gedächtnis, frühere Gespräche, Einstellungen und Code sind nie dabei (31 Namen in mcpserver.NEVER). 8. Zu viele gleichzeitig?: Höchstens 2 Aufrufe einer Verbindung und 6 aller Verbindungen laufen gleichzeitig. 9. Sprache und Lesen: Spracherkennung (höchstens 10 MB) und Sprachausgabe (höchstens 2000 Zeichen) laufen mit der Stufe „hinten“, damit Menschen am Spark immer zuerst dran sind. Die Lese-Werkzeuge lesen nur die Daten dieses Profils. 10. Spark fragen, nur lesend: ask_spark (10 pro Minute) läuft als ein Zug des Assistenten für das Profil, aber nur mit den Lese-Werkzeugen dieser Verbindung. Die Frage gilt von Anfang an als fremder Text: nichts wird geschaltet, gespeichert, gelernt oder gesendet, kein Gedächtnis, nichts davon im Verlauf"
 },
 {
 "lang": "de",
@@ -1517,7 +1517,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "tem Smart-Home-Codewort schaltet ein MCP-Programm nichts. 12. Antwort ans Programm: Die Antwort wird auf 12000 Zeichen gekürzt. Ins Journal kommt nur, welches Programm, welches Werkzeug, ob es ging und wie lange, nie Frage oder Antwort. 13. Nur das Sprachmodell (/v1): Ein Programm, das nur das Sprachmodell will, schickt POST an /v1 (OpenAI-Chat) mit einem Schlüssel seines Profils (höchstens 5 je Profil, nur Hashes gespeichert). Dieselbe Heimnetz-Regel wie oben, von außen nur mit eigenem Schalter, zweitem Schritt und frischem Code. Nur Text, nur bekannte Felder, höchstens 8192 Tokens Antwort, der Modellname immer der eigene; dann geht die Anfrage mit der Stufe „hinten“ ans LLM-Tor. Grenzen je Schlüssel (pro Minute, 2 gleichzeitig, Tokens in 24 Stunden), Admin-Profile ohne Grenze. Kein Werkzeug des Spark, nichts aus dem Profil, nie ein Inhalt im Journal. 14. Open WebUI in einem Schritt: Mit „Open WebUI einbinden“ legt „Open WebUI verbinden“ (mit Code) für das Profil einen Schlüssel fürs Sprachmodell und, wenn das Profil den MCP-Server nutzen darf, einen MCP-Zugang mit nur den Lese-Werkzeugen und „Spark fragen“ an, beide nur im Heimnetz; „Trennen“ löscht beide. Gespeichert werden nur "
+"text": ". Passwörter und Codes werden aus der Antwort entfernt. 11. Soll etwas geändert werden?: Smart Home, Erinnerung und Termin werden nur vorgeschlagen (höchstens 10 offen). Das Profil bekommt eine Mitteilung und entscheidet unter Ich → Spark als MCP-Server innerhalb von 15 Minuten; erst dann führt das Panel es aus. Bei Notaus oder gesetztem Smart-Home-Codewort schaltet ein MCP-Programm nichts. 12. Antwort ans Programm: Die Antwort wird auf 12000 Zeichen gekürzt. Ins Journal kommt nur, welches Programm, welches Werkzeug, ob es ging und wie lange, nie Frage oder Antwort. 13. Nur das Sprachmodell (/v1): Ein Programm, das nur das Sprachmodell will, schickt POST an /v1 (OpenAI-Chat) mit einem Schlüssel seines Profils (höchstens 5 je Profil, nur Hashes gespeichert). Dieselbe Heimnetz-Regel wie oben, von außen nur mit eigenem Schalter, zweitem Schritt und frischem Code. Nur Text, nur bekannte Felder, höchstens 8192 Tokens Antwort, der Modellname immer der eigene; dann geht die Anfrage mit der Stufe „hinten“ ans LLM-Tor. Grenzen je Schlüssel (pro Minute, 2 gleichzeitig, Tokens in 24 Stunden), Admin-Profile ohne Grenze. Kein Werkzeug des Spark, nichts aus dem Profil, nie ein Inhalt im Journal."
 },
 {
 "lang": "de",
@@ -1525,7 +1525,7 @@
 "file": "Architektur und Datenfluss",
 "head": "Ablauf",
 "title": "Ablauf",
-"text": "ihre Kennungen. Das Menü öffnet Open WebUI im Heimnetz über die innere Adresse, über den Proxy über die äußere; der Dienst-Wächter fragt nur /health der inneren Adresse, ohne Anmeldung. 15. Der ganze Assistent als Modell: Fragt ein Programm mit dem Modellnamen „spark-assistent“ (Schalter „Spark-Assistent per API“), geht die Anfrage nicht ans reine Modell: sie wird ein Zug des Assistenten als Profil des Schlüssels wie „Spark fragen“, nur mit den Lese-Werkzeugen, nichts gespeichert oder geschaltet. Die Systemanweisung des Programms bleibt weg; höchstens 4 frühere Nachrichten gehen gekürzt als markierter Hinweis mit. Schlüssel und Grenzen wie oben."
+"text": " 14. Open WebUI in einem Schritt: Mit „Open WebUI einbinden“ legt „Open WebUI verbinden“ (mit Code) für das Profil einen Schlüssel fürs Sprachmodell und, wenn das Profil den MCP-Server nutzen darf, einen MCP-Zugang mit nur den Lese-Werkzeugen und „Spark fragen“ an, beide nur im Heimnetz; „Trennen“ löscht beide. Gespeichert werden nur ihre Kennungen. Das Menü öffnet Open WebUI im Heimnetz über die innere Adresse, über den Proxy über die äußere; der Dienst-Wächter fragt nur /health der inneren Adresse, ohne Anmeldung. 15. Der ganze Assistent als Modell: Fragt ein Programm mit dem Modellnamen „spark-assistent“ (Schalter „Spark-Assistent per API“), geht die Anfrage nicht ans reine Modell: sie wird ein Zug des Assistenten als Profil des Schlüssels wie „Spark fragen“, nur mit den Lese-Werkzeugen, nichts gespeichert oder geschaltet. Die Systemanweisung des Programms bleibt weg; höchstens 4 frühere Nachrichten gehen gekürzt als markierter Hinweis mit. Schlüssel und Grenzen wie oben."
 },
 {
 "lang": "de",
@@ -17213,7 +17213,7 @@
 "file": "Technik und Fehlersuche",
 "head": "Warum die Installation so aussieht",
 "title": "Warum die Installation so aussieht",
-"text": "- PyTorch aus dem cu130-Index: Das aarch64-torch auf PyPI hat kein CUDA. Ein einfaches pip install qwen-tts würde also auf der CPU laufen. torch und torchaudio müssen außerdem aus demselben Index kommen, sonst lädt libtorchaudio.so nicht. - Kein flash-attn: Es gibt kein ARM-Wheel, und für sm_121 lässt es sich laut Berichten nicht bauen. Beide Modelle laufen stattdessen mit PyTorch-SDPA. - Getrennte venvs: qwen-asr verlangt transformers==4.57.6, qwen-tts transformers==4.57.3. - ASR mit vLLM: vLLM 0.30 kann Qwen3-ASR selbst, mit /v1/audio/transcriptions, Streaming und mehreren Anfragen gleichzeitig. Es läuft in derselben Umgebung wie die TTS-Engine. qwen-asr[vllm] wird nicht gebraucht (es würde vllm 0.14 erzwingen). - TTS mit vllm-omni: qwen-tts kann nicht stückweise ausgeben. Das Qwen-Team verweist für Streaming auf vllm-omni. vllm 0.30.0 und vllm-omni 0.30.0 haben ARM-Pakete auf PyPI (CUDA 13) und werden nativ in einer eigenen Umgebung installiert, ohne Docker. - Engine-Speicher: vLLM reserviert beim Start einen festen Anteil des *gesamten* Speicherpools, bei TTS pro Stufe (Talker und Code2Wav) getrennt. Die Voreinstellungen (ASR 1.7B 0,06, 0.6B 0,035; TTS 0,04 + 0,025) sind knapp "
+"text": "- PyTorch aus dem cu130-Index: Das aarch64-torch auf PyPI hat kein CUDA. Ein einfaches pip install qwen-tts würde also auf der CPU laufen. torch und torchaudio müssen außerdem aus demselben Index kommen, sonst lädt libtorchaudio.so nicht. - Kein flash-attn: Es gibt kein ARM-Wheel, und für sm_121 lässt es sich laut Berichten nicht bauen. Beide Modelle laufen stattdessen mit PyTorch-SDPA. - Getrennte venvs: qwen-asr verlangt transformers==4.57.6, qwen-tts transformers==4.57.3. - ASR mit vLLM: vLLM 0.32 kann Qwen3-ASR selbst, mit /v1/audio/transcriptions, Streaming und mehreren Anfragen gleichzeitig. Es läuft in derselben Umgebung wie die TTS-Engine. qwen-asr[vllm] wird nicht gebraucht (es würde vllm 0.14 erzwingen). - TTS mit vllm-omni: qwen-tts kann nicht stückweise ausgeben. Das Qwen-Team verweist für Streaming auf vllm-omni. vllm 0.32.0 und vllm-omni 0.32.0 (seit V01.1.404; 0.32 schließt drei Lücken: Chat-Vorlagen, Tokenizer, P2P) haben ARM-Pakete auf PyPI (CUDA 13) und werden nativ in einer eigenen Umgebung installiert, ohne Docker. - Engine-Speicher: vLLM reserviert beim Start einen festen Anteil des *gesamten* Speicherpools, bei TTS pro Stufe (Talker und Code2Wav) getrennt. Die"
 },
 {
 "lang": "de",
@@ -17221,7 +17221,7 @@
 "file": "Technik und Fehlersuche",
 "head": "Warum die Installation so aussieht",
 "title": "Warum die Installation so aussieht",
-"text": "gewählt, damit Speech neben dem Sprachmodell Platz findet. Ist ein Anteil zu klein, bricht die Engine beim Start mit „No available memory for the cache blocks“ ab. Dann im Panel den Anteil erhöhen."
+"text": " Voreinstellungen (ASR 1.7B 0,06, 0.6B 0,035; TTS 0,04 + 0,025) sind knapp gewählt, damit Speech neben dem Sprachmodell Platz findet. Ist ein Anteil zu klein, bricht die Engine beim Start mit „No available memory for the cache blocks“ ab. Dann im Panel den Anteil erhöhen."
 },
 {
 "lang": "de",
@@ -17725,7 +17725,7 @@
 "file": "APIs and integration",
 "head": "Spark as an MCP server",
 "title": "Spark as an MCP server",
-"text": "Other programs use the Spark over the Model Context Protocol (Streamable HTTP, the panel's address /mcp, e.g. http://SPARK:31080/mcp). Off by default."
+"text": "Other programs use the Spark over the Model Context Protocol (Streamable HTTP, the panel's address /mcp, e.g. http://SPARK:31080/mcp). Off by default. Since V01.1.404 the Spark speaks MCP revision 2026-07-28 (no session, every request brings its version and capabilities, the headers MCP-Protocol-Version, Mcp-Method and Mcp-Name must match the body) and still the older revisions down to 2024-11-05 with initialize; the sign-in from outside names its issuer in every answer (iss, RFC 9207)."
 },
 {
 "lang": "en",
@@ -17869,7 +17869,7 @@
 "file": "APIs and integration",
 "head": "Own MCP services per profile",
 "title": "Own MCP services per profile",
-"text": "Since V01.0.363 (plan plaene/eigene-mcp-dienste.md) every profile can connect its own MCP services (Streamable HTTP), besides the ones the admin connects for everybody. Only that profile sees and uses them."
+"text": "Since V01.0.363 (plan plaene/eigene-mcp-dienste.md) every profile can connect its own MCP services (Streamable HTTP), besides the ones the admin connects for everybody. Only that profile sees and uses them. The Spark first asks a service in revision 2026-07-28 and otherwise takes the older way with initialize; it remembers for an hour which revision a service speaks."
 },
 {
 "lang": "en",
@@ -18965,7 +18965,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "1. A program sends a request: Every request is one JSON-RPC message. If the MCP server is off by the admin, the endpoint does not exist (404). 2. From another web page?: If a browser sends an Origin, it must be the panel's. So no other page can use the endpoint through DNS rebinding. 3. Key valid?: The bearer key is a fixed key or an OAuth access token (valid 60 minutes). Only hashes are stored. A connection ends after 90 days without use. 4. Home network key from outside?: A „lokal“ key only works when the peer is a private address, no proxy header is in the request and it is none of the listed reverse proxies. „extern“ only works with the admin's switch. 5. My kill switch or profile blocked?: The profile's My kill switch closes every MCP access (503); if the admin blocked the MCP server for the profile, there is nothing (403). 6. Rate limit and size: Every connection may send 60 requests per minute; a request is at most 16 MB. Many refused requests from outside count for „Emergency stop by itself“. 7. Tool allowed?: Only tools from the fixed list (15), only those given to this connection, and only when the profile may use the function right now, checked again on every call. Mail,"
+"text": "1. A program sends a request: Every request is one JSON-RPC message. If the MCP server is off by the admin, the endpoint does not exist (404). The Spark speaks both kinds of MCP (5 versions): the new 2026-07-28 without a session, where every request brings its version and capabilities and the headers MCP-Protocol-Version, Mcp-Method and Mcp-Name must match the body exactly (else 400), and the older one with initialize. Nothing is kept between requests. 2. From another web page?: If a browser sends an Origin, it must be the panel's. So no other page can use the endpoint through DNS rebinding. 3. Key valid?: The bearer key is a fixed key or an OAuth access token (valid 60 minutes). Only hashes are stored. A connection ends after 90 days without use. 4. Home network key from outside?: A „lokal“ key only works when the peer is a private address, no proxy header is in the request and it is none of the listed reverse proxies. „extern“ only works with the admin's switch. 5. My kill switch or profile blocked?: The profile's My kill switch closes every MCP access (503); if the admin blocked the MCP server for the profile, there is nothing (403). 6. Rate limit and size: Every connection may "
 },
 {
 "lang": "en",
@@ -18973,7 +18973,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " memory, earlier conversations, settings and code are never among them (31 names in mcpserver.NEVER). 8. Too many at once?: At most 2 calls of one connection and 6 of all connections run at once. 9. Speech and reading: Speech recognition (at most 10 MB) and speech output (at most 2000 characters) run at the level „hinten“, so people at the Spark always go first. The reading tools only read this profile's data. 10. Ask the Spark, read only: ask_spark (10 per minute) runs as one turn of the assistant for the profile, but only with this connection's reading tools. The question counts as outside text from the start: nothing is switched, stored, learned or sent, no memory, nothing of it in the history. Passwords and codes are removed from the answer. 11. Should something change?: Smart home, reminder and appointment are only proposed (at most 10 open). The profile gets a notice and decides under Me → Spark as MCP server within 15 minutes; only then the panel carries it out. With the kill switch or a smart home code word set, an MCP program switches nothing. 12. Answer to the program: The answer is cut to 12000 characters. The journal only gets which program, which tool, whether it worke"
+"text": "send 60 requests per minute; a request is at most 16 MB. Many refused requests from outside count for „Emergency stop by itself“. 7. Tool allowed?: Only tools from the fixed list (15), only those given to this connection, and only when the profile may use the function right now, checked again on every call. Mail, memory, earlier conversations, settings and code are never among them (31 names in mcpserver.NEVER). 8. Too many at once?: At most 2 calls of one connection and 6 of all connections run at once. 9. Speech and reading: Speech recognition (at most 10 MB) and speech output (at most 2000 characters) run at the level „hinten“, so people at the Spark always go first. The reading tools only read this profile's data. 10. Ask the Spark, read only: ask_spark (10 per minute) runs as one turn of the assistant for the profile, but only with this connection's reading tools. The question counts as outside text from the start: nothing is switched, stored, learned or sent, no memory, nothing of it in the history. Passwords and codes are removed from the answer. 11. Should something change?: Smart home, reminder and appointment are only proposed (at most 10 open). The profile gets a notice "
 },
 {
 "lang": "en",
@@ -18981,7 +18981,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": "d and how long, never question or answer. 13. Only the language model (/v1): A program that only wants the language model sends POST to /v1 (OpenAI chat) with a key of its profile (at most 5 per profile, only hashes kept). The same home network rule as above, from outside only with its own switch, the second step and a fresh code. Text only, known fields only, at most 8192 tokens of answer, the model name always the own one; then the request goes to the LLM gate with the stage „hinten“. Limits per key (per minute, 2 at once, tokens in 24 hours), admin profiles without a limit. No tool of the Spark, nothing of the profile, never a content in the journal. 14. Open WebUI in one step: With „Open WebUI einbinden“, „Open WebUI verbinden“ (with a code) makes for the profile a key for the language model and, if the profile may use the MCP server, an MCP access with only the reading tools and „Spark fragen“, both home network only; „Trennen“ deletes both. Only their ids are kept. The menu opens Open WebUI at home through the inner address, through the proxy through the outer one; the service watcher only asks /health of the inner address, without a login. 15. The whole assistant as a model:"
+"text": "and decides under Me → Spark as MCP server within 15 minutes; only then the panel carries it out. With the kill switch or a smart home code word set, an MCP program switches nothing. 12. Answer to the program: The answer is cut to 12000 characters. The journal only gets which program, which tool, whether it worked and how long, never question or answer. 13. Only the language model (/v1): A program that only wants the language model sends POST to /v1 (OpenAI chat) with a key of its profile (at most 5 per profile, only hashes kept). The same home network rule as above, from outside only with its own switch, the second step and a fresh code. Text only, known fields only, at most 8192 tokens of answer, the model name always the own one; then the request goes to the LLM gate with the stage „hinten“. Limits per key (per minute, 2 at once, tokens in 24 hours), admin profiles without a limit. No tool of the Spark, nothing of the profile, never a content in the journal. 14. Open WebUI in one step: With „Open WebUI einbinden“, „Open WebUI verbinden“ (with a code) makes for the profile a key for the language model and, if the profile may use the MCP server, an MCP access with only the reading"
 },
 {
 "lang": "en",
@@ -18989,7 +18989,7 @@
 "file": "Architecture and data flow",
 "head": "Way",
 "title": "Way",
-"text": " When a program asks with the model name „spark-assistent“ (switch „Spark-Assistent per API“), the request does not go to the plain model: it becomes one turn of the assistant as the key's profile like „Spark fragen“, only with the reading tools, nothing kept or switched. The program's system prompt stays out; at most 4 earlier messages go along cut as a marked hint. Key and limits as above."
+"text": " tools and „Spark fragen“, both home network only; „Trennen“ deletes both. Only their ids are kept. The menu opens Open WebUI at home through the inner address, through the proxy through the outer one; the service watcher only asks /health of the inner address, without a login. 15. The whole assistant as a model: When a program asks with the model name „spark-assistent“ (switch „Spark-Assistent per API“), the request does not go to the plain model: it becomes one turn of the assistant as the key's profile like „Spark fragen“, only with the reading tools, nothing kept or switched. The program's system prompt stays out; at most 4 earlier messages go along cut as a marked hint. Key and limits as above."
 },
 {
 "lang": "en",
@@ -34285,7 +34285,7 @@
 "file": "Technical details and troubleshooting",
 "head": "Why the installation looks like this",
 "title": "Why the installation looks like this",
-"text": "- PyTorch from the cu130 index: the aarch64 torch on PyPI has no CUDA, so a plain pip install qwen-tts would run on the CPU. torch and torchaudio must come from the same index, otherwise libtorchaudio.so does not load. - No flash-attn: there is no ARM wheel, and it reportedly does not build for sm_121. Both models use PyTorch SDPA instead. - Separate venvs for the transformers backends: qwen-asr needs transformers==4.57.6, qwen-tts transformers==4.57.3. - ASR with vLLM: vLLM 0.30 supports Qwen3-ASR natively, with /v1/audio/transcriptions, streaming and concurrent requests. It shares the environment with the TTS engine. qwen-asr[vllm] is not needed (it would force vllm 0.14). - TTS with vllm-omni: qwen-tts cannot stream. The Qwen team points to vllm-omni for streaming. vllm 0.30.0 and vllm-omni 0.30.0 have ARM wheels on PyPI (CUDA 13) and are installed natively, without Docker. - Engine memory: vLLM reserves a fixed share of the *whole* memory pool at start-up, for TTS per stage (talker and code2wav). The defaults (ASR 1.7B 0.06, 0.6B 0.035; TTS 0.04 + 0.025) are kept small so speech fits next to the language model. If a share is too small, the engine stops at start-up with \"No avai"
+"text": "- PyTorch from the cu130 index: the aarch64 torch on PyPI has no CUDA, so a plain pip install qwen-tts would run on the CPU. torch and torchaudio must come from the same index, otherwise libtorchaudio.so does not load. - No flash-attn: there is no ARM wheel, and it reportedly does not build for sm_121. Both models use PyTorch SDPA instead. - Separate venvs for the transformers backends: qwen-asr needs transformers==4.57.6, qwen-tts transformers==4.57.3. - ASR with vLLM: vLLM 0.32 supports Qwen3-ASR natively, with /v1/audio/transcriptions, streaming and concurrent requests. It shares the environment with the TTS engine. qwen-asr[vllm] is not needed (it would force vllm 0.14). - TTS with vllm-omni: qwen-tts cannot stream. The Qwen team points to vllm-omni for streaming. vllm 0.32.0 and vllm-omni 0.32.0 (since V01.1.404; 0.32 closes three holes: chat templates, tokenizer, P2P) have ARM wheels on PyPI (CUDA 13) and are installed natively, without Docker. - Engine memory: vLLM reserves a fixed share of the *whole* memory pool at start-up, for TTS per stage (talker and code2wav). The defaults (ASR 1.7B 0.06, 0.6B 0.035; TTS 0.04 + 0.025) are kept small so speech fits next to the language"
 },
 {
 "lang": "en",
@@ -34293,7 +34293,7 @@
 "file": "Technical details and troubleshooting",
 "head": "Why the installation looks like this",
 "title": "Why the installation looks like this",
-"text": "lable memory for the cache blocks\"; raise the share in the panel."
+"text": " model. If a share is too small, the engine stops at start-up with \"No available memory for the cache blocks\"; raise the share in the panel."
 },
 {
 "lang": "en",

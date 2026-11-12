@@ -93,6 +93,7 @@ KOMPILIEREN = {"MAX_JOBS": "4", "NVCC_THREADS": "1", "TORCHINDUCTOR_COMPILE_THRE
 # here; nothing of them comes from the panel or the model. Stage 1: measured only (wechsel_pruefen says "docker").
 DOCKER = {"b12x": {
     "image": "eugr/spark-vllm-b12x@sha256:03a956544e9f9b4b7ba91690469fbe7848bdbef29a7d2e0f5788368467bb3595",
+    "seit": "2026-11-05",        # the day this digest was pinned: the nightly "Pakete prüfen" names it after 90 days
     "umgebung": {"VLLM_PLE_TABLE_MEMORY": "disk", "B12X_DISK_BACKEND": "io_uring", "CUTE_DSL_ARCH": "sm_121a",
                  "SAFETENSORS_FAST_GPU": "1", "VLLM_WORKER_MULTIPROC_METHOD": "spawn", "VLLM_SSM_CONV_STATE_LAYOUT": "DS",
                  "VLLM_USE_AOT_COMPILE": "1", "VLLM_USE_MEGA_AOT_ARTIFACT": "1", "VLLM_USE_V2_MODEL_RUNNER": "1",

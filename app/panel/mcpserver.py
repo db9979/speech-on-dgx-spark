@@ -59,7 +59,16 @@ from core import admin_code, api_headers, app_version, auth, browser_profile, co
 router = APIRouter()
 _lock = threading.Lock()
 
-PROTOCOLS = ("2025-06-18", "2025-03-26", "2024-11-05")
+# MCP 2026-07-28 ("modern", Stand der Technik 2026-11-12, Dominik "ok"): no initialize, no session; every request
+# carries its version, client and capabilities in params._meta, mirrored in the headers MCP-Protocol-Version,
+# Mcp-Method and Mcp-Name, which must match the body. Older programs ("legacy") still open with initialize; the Spark
+# answers both on the same /mcp ("dual-era"), and keeps no state between requests either way.
+MODERN = ("2026-07-28",)
+LEGACY = ("2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05")
+PROTOCOLS = MODERN + LEGACY
+META = "io.modelcontextprotocol/"
+INSTRUCTIONS = ("Tools of the Spark home assistant for one person. Actions are only proposed and need that person's "
+                "confirmation on the Spark.")
 DAYS = 90                    # a connection ends after this many days without use
 MAX_CONNS = 10               # per profile
 MAX_BODY = 16 * 1024 ** 2    # a request to /mcp (audio as base64)
@@ -371,8 +380,54 @@ def origin_ok(request):
 _busy = {}
 
 
-def _error(rid, code, message):
-    return {"jsonrpc": "2.0", "id": rid, "error": {"code": code, "message": message}}
+def _error(rid, code, message, data=None):
+    err = {"code": code, "message": message}
+    if data is not None:
+        err["data"] = data
+    return {"jsonrpc": "2.0", "id": rid, "error": err}
+
+
+def _bad(rid, code, message, data=None, status=400):
+    return JSONResponse(_error(rid, code, message, data), status_code=status, headers={"Cache-Control": "no-store"})
+
+
+def _unsupported(rid, want):
+    return _bad(rid, -32022, "Unsupported protocol version",
+                {"supported": list(PROTOCOLS), "requested": str(want)[:40]})
+
+
+def _header_value(v):
+    """An Mcp-Name value: plain visible ASCII, or the Base64 sentinel =?base64?...?= (decoded); None if malformed."""
+    if v is None:
+        return None
+    if v.startswith("=?base64?") and v.endswith("?=") and len(v) > 11:
+        try:
+            return base64.b64decode(v[9:-2], validate=True).decode("utf-8")
+        except (ValueError, UnicodeDecodeError):
+            return None
+    return v if re.fullmatch(r"[\x20-\x7e]{1,300}", v) else None
+
+
+def modern(request, msg, params):
+    """For a request in the 2026-07-28 way: None if it is fine, else the answer that refuses it. The body is the
+    source of truth; the headers must say the same (a proxy may route by them)."""
+    rid, meta = msg.get("id"), params.get("_meta")
+    want = meta.get(META + "protocolVersion") if isinstance(meta, dict) else None
+    if not isinstance(want, str):
+        return _bad(rid, -32602, "_meta needs io.modelcontextprotocol/protocolVersion")
+    if want not in MODERN:
+        return _unsupported(rid, want)
+    if not isinstance(meta.get(META + "clientCapabilities"), dict):
+        return _bad(rid, -32602, "_meta needs io.modelcontextprotocol/clientCapabilities")
+    if request.headers.get("mcp-protocol-version") != want:
+        return _bad(rid, -32020, "Header mismatch: MCP-Protocol-Version")
+    if request.headers.get("mcp-method") != msg["method"]:
+        return _bad(rid, -32020, "Header mismatch: Mcp-Method")
+    if msg["method"] in ("tools/call", "resources/read", "prompts/get"):
+        body = params.get("uri") if msg["method"] == "resources/read" else params.get("name")
+        if _header_value(request.headers.get("mcp-name")) != body:
+            return _bad(rid, -32020, "Header mismatch: Mcp-Name")
+    return None
 
 
 def _unauthorized(request, why):
@@ -423,7 +478,7 @@ async def mcp_post(request: Request):
         return refused
     ver = request.headers.get("mcp-protocol-version")
     if ver and ver not in PROTOCOLS:
-        return JSONResponse(_error(None, -32600, "unsupported protocol version"), status_code=400)
+        return _unsupported(None, ver)
     guard.limit(request, "mcp", "mcp:" + c["id"])
     raw = await _body(request, MAX_BODY)
     try:
@@ -438,25 +493,35 @@ async def mcp_post(request: Request):
         return Response(status_code=202)
     if not isinstance(rid, (str, int)) or isinstance(rid, bool) or len(str(rid)) > 100:
         return JSONResponse(_error(None, -32600, "invalid id"), status_code=400)
+    new = isinstance(params.get("_meta"), dict) and META + "protocolVersion" in params["_meta"] or ver in MODERN
+    if new:
+        refused = modern(request, msg, params)
+        if refused:
+            return refused
     touch(c["id"])
-    if method == "initialize":
+    info = {"name": "spark", "title": "Spark (Speech on DGX Spark)", "version": app_version()}
+    if method == "initialize" and not new:
         want = params.get("protocolVersion")
-        return _ok(rid, {"protocolVersion": want if want in PROTOCOLS else PROTOCOLS[0],
-                         "capabilities": {"tools": {"listChanged": False}},
-                         "serverInfo": {"name": "spark", "title": "Spark (Speech on DGX Spark)", "version": app_version()},
-                         "instructions": "Tools of the Spark home assistant for one person. Actions are only proposed "
-                                         "and need that person's confirmation on the Spark."})
+        return _ok(rid, {"protocolVersion": want if want in LEGACY else LEGACY[0],
+                         "capabilities": {"tools": {"listChanged": False}}, "serverInfo": info,
+                         "instructions": INSTRUCTIONS})
+    if method == "server/discover" and new:
+        return _ok(rid, {"supportedVersions": list(PROTOCOLS), "capabilities": {"tools": {}},
+                         "instructions": INSTRUCTIONS}, info)
+    done = info if new else None
     if method == "ping":
-        return _ok(rid, {})
+        return _ok(rid, {}, done)
     if method == "tools/list":
-        return _ok(rid, {"tools": tool_list(c)})
+        return _ok(rid, {"tools": tool_list(c)}, done)
     if method == "tools/call":
         name, args = params.get("name"), params.get("arguments") or {}
         if not isinstance(name, str) or name not in c["tools"] or not tool_ok(name, c["uid"]):
-            return _ok(rid, _result(f"Das Werkzeug {str(name)[:40]} ist für diese Verbindung nicht freigegeben.", True))
+            return _ok(rid, _result(f"Das Werkzeug {str(name)[:40]} ist für diese Verbindung nicht freigegeben.", True), done)
         if not isinstance(args, dict):
-            return _ok(rid, _result("arguments must be an object", True))
-        return _ok(rid, await call(request, c, name, args))
+            return _ok(rid, _result("arguments must be an object", True), done)
+        return _ok(rid, await call(request, c, name, args), done)
+    if new:   # 2026-07-28: an unknown method is 404 with -32601, so a client can tell it from a server without /mcp
+        return _bad(rid, -32601, "method not found", status=404)
     return JSONResponse(_error(rid, -32601, "method not found"))
 
 
@@ -468,7 +533,10 @@ def mcp_get():
     return Response(status_code=405, headers={"Allow": "POST"})
 
 
-def _ok(rid, result):
+def _ok(rid, result, modern_info=None):
+    """modern_info: the server's name for a 2026-07-28 answer (resultType and serverInfo in _meta)."""
+    if modern_info:
+        result = dict(result, resultType="complete", _meta={META + "serverInfo": modern_info})
     return JSONResponse({"jsonrpc": "2.0", "id": rid, "result": result}, headers={"Cache-Control": "no-store"})
 
 
@@ -938,7 +1006,8 @@ def _meta(request):
     return {"issuer": b, "authorization_endpoint": b + "/oauth/authorize", "token_endpoint": b + "/oauth/token",
             "registration_endpoint": b + "/oauth/register", "response_types_supported": ["code"],
             "grant_types_supported": ["authorization_code", "refresh_token"], "code_challenge_methods_supported": ["S256"],
-            "token_endpoint_auth_methods_supported": ["none"], "scopes_supported": ["mcp"]}
+            "token_endpoint_auth_methods_supported": ["none"], "scopes_supported": ["mcp"],
+            "authorization_response_iss_parameter_supported": True}      # RFC 9207: iss in every answer
 
 
 @router.get("/.well-known/oauth-authorization-server")
@@ -1006,7 +1075,7 @@ def oauth_authorize(request: Request):
 
     def back(err):
         return RedirectResponse(uri + ("&" if "?" in uri else "?") + urlencode(
-            {"error": err, **({"state": state} if state else {})}), status_code=302)
+            {"error": err, **({"state": state} if state else {}), "iss": base_url(request)}), status_code=302)
     if q.get("response_type") != "code":
         return back("unsupported_response_type")
     if q.get("code_challenge_method") != "S256" or not CHALLENGE.fullmatch(q.get("code_challenge") or ""):
@@ -1241,7 +1310,7 @@ async def profile_auth_answer(rid: str, request: Request, prof=Depends(_on)):
     if body.get("yes") is not True:
         with _lock:
             _auth_asks.pop(rid, None)
-        return {"redirect": ask["redirect"] + sep + urlencode({"error": "access_denied", **extra})}
+        return {"redirect": ask["redirect"] + sep + urlencode({"error": "access_denied", **extra, "iss": ask["base"]})}
     if not features.allowed("mcpserver", uid):
         raise HTTPException(403, "Erst „Spark als MCP-Server für mich“ einschalten.")
     tools = clean_tools(body.get("tools"), uid)

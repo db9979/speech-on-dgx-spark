@@ -92,7 +92,7 @@ Den Agenten nicht auf der Spark selbst installieren: Er führt Befehle aus und k
 
 ### Spark als MCP-Server
 
-Andere Programme nutzen den Spark über das [Model Context Protocol](https://modelcontextprotocol.io) (Streamable HTTP, Adresse `/mcp` des Panels, z. B. `http://SPARK:31080/mcp`). Standardmäßig aus.
+Andere Programme nutzen den Spark über das [Model Context Protocol](https://modelcontextprotocol.io) (Streamable HTTP, Adresse `/mcp` des Panels, z. B. `http://SPARK:31080/mcp`). Standardmäßig aus. Seit V01.1.404 spricht der Spark die MCP-Fassung 2026-07-28 (ohne Sitzung, jede Anfrage bringt Version und Fähigkeiten mit, die Kopfzeilen `MCP-Protocol-Version`, `Mcp-Method` und `Mcp-Name` müssen dem Inhalt entsprechen) und weiter die älteren Fassungen bis 2024-11-05 mit `initialize`; die Anmeldung von außen nennt in jeder Antwort ihren Aussteller (`iss`, RFC 9207).
 
 **Einschalten:** Admin: Funktionen → *Spark als MCP-Server*. Das gilt für jedes Profil; einzelne Profile sperrt nur der Admin (Personen und Geräte → Gesperrte Funktionen). Einrichten im Profil: Ich → *Dienste per MCP* → „Programm mit Schlüssel verbinden“: Name, Werkzeuge, „Schlüssel erzeugen“. Der Schlüssel ist nur einmal sichtbar; im Programm als Header `Authorization: Bearer <Schlüssel>` eintragen.
 
@@ -151,7 +151,7 @@ Seit V01.1.356 (Plan `open-webui/plan.md`, Dominik 2026-11-08 „1-2“) verbind
 
 ### Eigene MCP-Dienste pro Profil
 
-Seit V01.0.363 (Plan `plaene/eigene-mcp-dienste.md`) bindet jedes Profil eigene MCP-Dienste an (Streamable HTTP), zusätzlich zu denen, die der Admin für alle anbindet. Nur dieses Profil sieht und nutzt sie.
+Seit V01.0.363 (Plan `plaene/eigene-mcp-dienste.md`) bindet jedes Profil eigene MCP-Dienste an (Streamable HTTP), zusätzlich zu denen, die der Admin für alle anbindet. Nur dieses Profil sieht und nutzt sie. Der Spark fragt einen Dienst zuerst in der Fassung 2026-07-28 und nimmt sonst den älteren Weg mit `initialize`; welche Fassung ein Dienst spricht, merkt er sich eine Stunde.
 
 **Einschalten:** Admin: Funktionen → Aufträge → Dienste per MCP → *Eigene MCP-Dienste für Profile* (`chat.mcp_own`), darunter *… auch in Hintergrundaufträgen* (`chat.mcp_own_jobs`) und *… mit Anmeldung (OAuth)* (`chat.mcp_own_oauth`); alle aus. Freigegeben gilt es für jedes Profil; einzelne Profile sperrt nur der Admin. Einrichten im Profil: Ich → *Meine MCP-Dienste*, Name, Adresse und Schlüssel eintragen und „Dienst anbinden“. Eine Agent-Stufe braucht das Profil dafür nicht.
 

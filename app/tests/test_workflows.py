@@ -43,6 +43,21 @@ class Workflows(unittest.TestCase):
                     continue
                 self.assertRegex(ref, r"^[\w.-]+/[\w./-]+@[0-9a-f]{40}$", f"{name}: {ref} not pinned to a commit")
 
+    # The first version of each action that runs on Node 24 (checked in its action.yml, "using: node24"). GitHub
+    # forces Node 24 since 2026-06-16 and removed Node 20 on 2026-09-23 (Stand der Technik 2026-11-12, Dominik "ok").
+    NODE24 = {"actions/checkout": 5, "actions/cache": 5, "actions/setup-python": 6, "actions/upload-artifact": 6,
+              "actions/download-artifact": 7, "actions/setup-java": 5, "actions/setup-node": 5, "actions/setup-dotnet": 5,
+              "gradle/actions/setup-gradle": 5, "astral-sh/setup-uv": 7, "ruby/setup-ruby": 1}
+
+    def test_actions_run_on_node24(self):
+        """Every action carries its version after the pin ("# v5.0.2") and is at least the Node 24 one; an action
+        not in NODE24 must be added there after a look at its action.yml."""
+        for name, text in workflows():
+            for ref, ver in re.findall(r"^\s*-?\s*uses:\s*([\w./-]+)@[0-9a-f]{40}[ \t]*(?:#[ \t]*v(\d+))?", text, re.M):
+                self.assertIn(ref, self.NODE24, f"{name}: {ref} unknown, check its Node version and add it to NODE24")
+                self.assertTrue(ver, f"{name}: {ref} without '# vN' after the pin")
+                self.assertGreaterEqual(int(ver), self.NODE24[ref], f"{name}: {ref} v{ver} still runs on Node 20")
+
     def test_write_only_on_jobs(self):
         for name, text in workflows():
             top = text.split("\njobs:\n", 1)[0]

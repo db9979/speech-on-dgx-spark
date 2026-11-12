@@ -5761,6 +5761,22 @@
 "titel": "Hörstück: Stimmen-Probe und Rollenstimmen mit VoiceDesign",
 "text": "Pi updaten. Einstellungen → Sprachausgabe → „VoiceDesign zusätzlich bereitstellen“ an und speichern. Unter Funktionen → Eigene Dokumente → Mappen → Hörstück aus einer Mappe → Hörstück als Diskussion bei „Stimmen der Diskussion“ für B „▶ Probe“ tippen, ohne dass VoiceDesign vorher lief: unter den Rollen steht „VoiceDesign lädt … N s“, nach einigen Minuten kommt die Probe von selbst (sonst ein Satz mit dem Grund). Danach in einer Mappe „Sofort erstellen“: die Zeile zeigt kurz „wartet: VoiceDesign lädt“, dann sprechen A, B und C mit den beschriebenen Stimmen, auch wenn unter „Die drei Stimmen“ feste Stimmen gewählt sind; kein „Feste Stimmen ab Zeile …“ im Drehbuch. Zustand → Logs (Wissen): „hoerstueck: probe | laedt“, „hoerstueck: probe | neu“, „hoerstueck: stimmen laden | zeile 1“; Zustand → Live, Kasten Hörstück: Stimmproben und Warten auf VoiceDesign.",
 "thread": "Hörstück: VoiceDesign-Stimmen und Probe"
+},
+{
+"id": "P848",
+"v": 1404,
+"wichtig": true,
+"titel": "Neue Modell-Engine vLLM 0.32",
+"text": "Pi updaten (tars bekommt dabei vLLM und vllm-omni 0.32.0, das erste Mal dauert der Download einige Minuten). Danach Zustand → Überblick: Spracherkennung, Sprachausgabe und Sprachmodell grün. Eine Frage per Sprache stellen und die Antwort anhören, ein Bild im Chat beschreiben lassen. Läuft etwas nicht, Zustand → Logs, Bereich System, und mir die Zeilen schicken.",
+"thread": "Prüfen, ob alles Stand der Technik ist"
+},
+{
+"id": "P849",
+"v": 1404,
+"titel": "MCP in der neuen Fassung",
+"text": "Wenn du den Spark in Claude oder Open WebUI als MCP-Server verbunden hast: dort einmal neu verbinden und ein Werkzeug aufrufen (z. B. „Welche Stimmen hat der Spark?“). Es geht wie vorher, egal ob das Programm die alte oder die neue Fassung spricht.",
+"thread": "Prüfen, ob alles Stand der Technik ist",
+"test": "test_mcpserver.Modern.test_mcp_2026_07_28_and_the_older_way"
 }
 ]
 }

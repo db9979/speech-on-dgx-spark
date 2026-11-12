@@ -1,6 +1,7 @@
 name: Pakete prüfen
 
-# The pinned Python packages against the OSV database, every night (code review 2026-11-11, Dominik „1-11“;
+# The pinned Python packages against the OSV database, every night (code review 2026-11-11, Dominik „1-11“; since
+# 2026-11-12 also vLLM and vllm-omni from install.sh and the age of the model engines' Docker images, Stand der Technik;
 # security checklist "Noch nicht erfüllt": the check ran only inside the Spark). tools/pakete_pruefen.py sends only
 # names and versions of public packages and gets ids back; a known hole opens the issue "Pakete mit bekannter
 # Lücke" (a comment for every further night, closed when none is left). Not a step of "Tests" on purpose: a hole
@@ -34,6 +35,8 @@ jobs:
             tools/pakete_pruefen.py
             app/requirements-panel.lock
             app/requirements-ytdlp.lock
+            app/modelle.py
+            install.sh
           sparse-checkout-cone-mode: false
       - name: OSV
         id: osv

@@ -92,7 +92,7 @@ Do not install the agent on the Spark itself: it runs commands and could reach s
 
 ### Spark as an MCP server
 
-Other programs use the Spark over the [Model Context Protocol](https://modelcontextprotocol.io) (Streamable HTTP, the panel's address `/mcp`, e.g. `http://SPARK:31080/mcp`). Off by default.
+Other programs use the Spark over the [Model Context Protocol](https://modelcontextprotocol.io) (Streamable HTTP, the panel's address `/mcp`, e.g. `http://SPARK:31080/mcp`). Off by default. Since V01.1.404 the Spark speaks MCP revision 2026-07-28 (no session, every request brings its version and capabilities, the headers `MCP-Protocol-Version`, `Mcp-Method` and `Mcp-Name` must match the body) and still the older revisions down to 2024-11-05 with `initialize`; the sign-in from outside names its issuer in every answer (`iss`, RFC 9207).
 
 **Switching on:** admin: Features → *Spark as MCP server*. This works for every profile; only the admin blocks single profiles (People and devices → Blocked functions). Setup in the profile: Me → *Services over MCP* → "Connect a program with a key": name, tools, "Create key". The key is shown once; enter it in the program as the header `Authorization: Bearer <key>`.
 
@@ -151,7 +151,7 @@ Since V01.1.356 (plan `open-webui/plan.md`, Dominik 2026-11-08 "1-2") one step c
 
 ### Own MCP services per profile
 
-Since V01.0.363 (plan `plaene/eigene-mcp-dienste.md`) every profile can connect its own MCP services (Streamable HTTP), besides the ones the admin connects for everybody. Only that profile sees and uses them.
+Since V01.0.363 (plan `plaene/eigene-mcp-dienste.md`) every profile can connect its own MCP services (Streamable HTTP), besides the ones the admin connects for everybody. Only that profile sees and uses them. The Spark first asks a service in revision 2026-07-28 and otherwise takes the older way with `initialize`; it remembers for an hour which revision a service speaks.
 
 **Switching on:** Admin: Features → Jobs → Services over MCP → *Own MCP services for profiles* (`chat.mcp_own`), below it *… also in background jobs* (`chat.mcp_own_jobs`) and *… with sign-in (OAuth)* (`chat.mcp_own_oauth`); all off. Once released it works for every profile; only the admin blocks single profiles. Setup in the profile: Me → *My MCP services*, enter name, address and key and "Connect service". The profile needs no agent level for this.
 

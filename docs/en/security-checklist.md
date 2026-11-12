@@ -104,7 +104,8 @@ Every change is checked not only against the traps above, but also against wheth
 
 **Standards**
 - [ ] Web and API: OWASP ASVS 5.0, level 2; login, secrets and admin paths level 3.
-- [ ] Language model paths: OWASP Top 10 for LLM Applications 2025 (prompt injection, data leakage, excessive agency, unchecked output, unbounded consumption).
+- [ ] Language model paths: OWASP Top 10 for LLM Applications 2026 (prompt injection also through pictures and sound, data leakage, excessive agency, misinformation, unbounded consumption, hidden context exposure, unchecked output); since 12.11.2026, before that the 2025 edition.
+- [ ] Tools, jobs and MCP: OWASP Top 10 for Agentic Applications 2026 (comparison below); MCP after revision 2026-07-28 (no session, headers equal to the body), older programs still with `initialize`.
 - [ ] Cryptography and TLS: BSI TR-02102 or NIST recommendations; TLS according to Mozilla "intermediate" or stricter.
 - [ ] Supply chain: fixed versions with hash, pinned actions, signatures (SLSA idea: built traceably, loaded verified).
 
@@ -133,7 +134,8 @@ Every change is checked not only against the traps above, but also against wheth
 - [ ] Outside HTML (mail) only cleaned, in a `sandbox` frame without `allow-scripts` with its own CSP (`default-src 'none'`), outside pictures only through the Spark after the own click, the picture type by its first bytes, never SVG.
 
 **Supply chain and operation**
-- [ ] New packages with version and hash in the lock; new actions pinned by SHA; adopt Dependabot alerts promptly.
+- [ ] New packages with version and hash in the lock; new actions pinned by SHA, in their Node 24 version (🧪 test_workflows); adopt Dependabot alerts promptly.
+- [ ] The nightly check "Pakete prüfen" asks OSV about every pinned package, also vLLM and vllm-omni from `install.sh`, and names every Docker image of a model whose digest is older than 90 days (`seit` in `modelle.DOCKER`; 🧪 test_pakete_pruefen). A new engine version goes into `install.sh` as `*_VERSION=`, a new image with `seit`.
 - [ ] Secrets never in the repo (secret scanning with push protection is on).
 - [ ] Known vulnerabilities in dependencies are checked before a version with new packages is shipped.
 - [ ] What runs as root is a fixed run in a unit of its own, started through a fixed sudoers line; the panel only writes a wish of one fixed word, never a command, name or path. A restart only on the admin's word (system updates).
@@ -141,9 +143,23 @@ Every change is checked not only against the traps above, but also against wheth
 **Regular review**
 - [ ] Before large versions and at least once a month a sceptical overall review against these standards (as on 08.10. and 11.10.2026). Every finding gets a self-test.
 
-**Not yet met** (brought up to date the next time the place is touched; as of 11.11.2026, code review)
+**Comparison with the OWASP Top 10 for Agentic Applications 2026** (12.11.2026, check "Stand der Technik"; the only new finding was MCP, now done)
+- ASI01 Agent goal hijack: outside text is data, afterwards changing and leaking tools are locked (🧪 test_angriffe, test_ausleiten).
+- ASI02 Tool misuse: only offered tools run, each is in exactly one lock list, the emergency stop locks at once (🧪 test_notaus, test_kontext_trennung).
+- ASI03 Identity and privilege: the panel sets rights per profile, device and voice, never the model; guests without tools; endpoints with a code after `stufen.LIST` (🧪 test_gaeste, test_stufen).
+- ASI04 Supply chain: models by revision, packages by hash, actions by SHA, nightly OSV check including vLLM and the age of Docker images; `--trust-remote-code` only for Qwen's own speech models in `engine.sh` (🧪 test_pakete_pruefen, test_workflows, test_modelle).
+- ASI05 Unexpected code execution: no `shell=True`, `eval` or pickle on outside data; code only in the Werkstatt sandbox (🧪 test_werkstatt).
+- ASI06 Memory poisoning: nothing is ever learned from outside text, the "outside" mark holds in the next turn too (🧪 test_gedaechtnis, test_kontext_trennung).
+- ASI07 Agent to agent: MCP with its own token per program and profile, questions from there count as outside text, MCP 2026-07-28 with header checks (🧪 test_mcpserver, test_meinmcp).
+- ASI08 Cascading failures: limits for tool calls, searches, jobs and budgets per answer (🧪 test_agent).
+- ASI09 Human-agent trust exploitation: acting only after the person's own "yes" on the same device with the details read out in full; the panel counts the source line itself (🧪 test_quellen, test_meinmcp).
+- ASI10 Rogue agents: decisions by fixed rules, background jobs only read, emergency stop in stages (🧪 test_notaus, test_agent).
+
+**Not yet met** (brought up to date the next time the place is touched; as of 12.11.2026, check "Stand der Technik")
 - Fernet (AES-CBC plus HMAC) in the vault and for move keys: secure, but not AEAD; new parts use AES-GCM, a change only with migration of the existing data.
 - The spoken code word for Home Assistant is stored with 3000 PBKDF2 rounds (`homeassistant._hash`), far below the standard: the comparison tries many spellings of speech recognition, each costs one derivation, and the panel holds nothing up for speech. The protection here is not the number of rounds but the sealed storage (`vault`) and the file rights. Another derivation only together with a faster comparison.
 - Done on 11.11.2026: the check of the Python packages against the OSV database now also runs on GitHub, every night in the run "Pakete prüfen" (`tools/pakete_pruefen.py`, issue "Pakete mit bekannter Lücke"; 🧪 test_pakete_pruefen). Deliberately not a step of "Tests": a hole published tonight would turn main red without any push, and the Spark installs only versions with a green run. The phone PIN now has 600 000 PBKDF2 rounds like password and profile PIN (`telefon_ich.ROUNDS`; an older PIN keeps working and is stored anew at its next right entry; 🧪 test_telefon, test_tempo).
-- Signed device updates are built, but off without a key (`UPDATE_SIGNING_KEY` is still missing).
+- Signed device updates are built, but off without a key (`UPDATE_SIGNING_KEY` is still missing; needs Dominik).
+- On the model computer torch, `qwen-asr` and `qwen-tts` in the environments of the fallback without vLLM (`--asr-backend transformers`, `--tts-backend transformers`) still come without a fixed version (`install.sh make_venv`). The normal way (vLLM, vllm-omni) is pinned. To be done the next time it is touched, with a lock per environment.
+- Done on 12.11.2026: vLLM and vllm-omni 0.30.0 → 0.32.0 (0.32 closes GHSA-4hhp-h66f-j5j7 chat templates, GHSA-q97c-p368-75c4 tokenizer, GHSA-frvg-qw88-hww9 P2P).
 - `style-src 'unsafe-inline'` remains because of older Safari versions in the iPhone app.

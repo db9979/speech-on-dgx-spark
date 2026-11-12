@@ -195,8 +195,8 @@ Reden mehrere Personen gleichzeitig, bekommen ausgewählte Profile ihre Antwort 
 - **PyTorch aus dem cu130-Index**: Das aarch64-torch auf PyPI hat kein CUDA. Ein einfaches `pip install qwen-tts` würde also auf der CPU laufen. torch und torchaudio müssen außerdem aus demselben Index kommen, sonst lädt `libtorchaudio.so` nicht.
 - **Kein flash-attn**: Es gibt kein ARM-Wheel, und für sm_121 lässt es sich laut Berichten nicht bauen. Beide Modelle laufen stattdessen mit PyTorch-SDPA.
 - **Getrennte venvs**: qwen-asr verlangt `transformers==4.57.6`, qwen-tts `transformers==4.57.3`.
-- **ASR mit vLLM**: vLLM 0.30 kann Qwen3-ASR selbst, mit `/v1/audio/transcriptions`, Streaming und mehreren Anfragen gleichzeitig. Es läuft in derselben Umgebung wie die TTS-Engine. `qwen-asr[vllm]` wird nicht gebraucht (es würde vllm 0.14 erzwingen).
-- **TTS mit vllm-omni**: `qwen-tts` kann nicht stückweise ausgeben. Das Qwen-Team verweist für Streaming auf vllm-omni. vllm 0.30.0 und vllm-omni 0.30.0 haben ARM-Pakete auf PyPI (CUDA 13) und werden nativ in einer eigenen Umgebung installiert, ohne Docker.
+- **ASR mit vLLM**: vLLM 0.32 kann Qwen3-ASR selbst, mit `/v1/audio/transcriptions`, Streaming und mehreren Anfragen gleichzeitig. Es läuft in derselben Umgebung wie die TTS-Engine. `qwen-asr[vllm]` wird nicht gebraucht (es würde vllm 0.14 erzwingen).
+- **TTS mit vllm-omni**: `qwen-tts` kann nicht stückweise ausgeben. Das Qwen-Team verweist für Streaming auf vllm-omni. vllm 0.32.0 und vllm-omni 0.32.0 (seit V01.1.404; 0.32 schließt drei Lücken: Chat-Vorlagen, Tokenizer, P2P) haben ARM-Pakete auf PyPI (CUDA 13) und werden nativ in einer eigenen Umgebung installiert, ohne Docker.
 - **Engine-Speicher**: vLLM reserviert beim Start einen festen Anteil des *gesamten* Speicherpools, bei TTS pro Stufe (Talker und Code2Wav) getrennt. Die Voreinstellungen (ASR 1.7B 0,06, 0.6B 0,035; TTS 0,04 + 0,025) sind knapp gewählt, damit Speech neben dem Sprachmodell Platz findet. Ist ein Anteil zu klein, bricht die Engine beim Start mit „No available memory for the cache blocks“ ab. Dann im Panel den Anteil erhöhen.
 
 ## Aufbau des Chats

@@ -1495,7 +1495,7 @@ flowchart TD
   s11 -->|yes| s11x
 ```
 
-1. <a id="kn-mcpc-s1"></a>**A program sends a request**: Every request is one JSON-RPC message. If the MCP server is off by the admin, the endpoint does not exist (404).
+1. <a id="kn-mcpc-s1"></a>**A program sends a request**: Every request is one JSON-RPC message. If the MCP server is off by the admin, the endpoint does not exist (404). The Spark speaks both kinds of MCP (5 versions): the new 2026-07-28 without a session, where every request brings its version and capabilities and the headers MCP-Protocol-Version, Mcp-Method and Mcp-Name must match the body exactly (else 400), and the older one with initialize. Nothing is kept between requests.
 2. <a id="kn-mcpc-s2"></a>**From another web page?**: If a browser sends an Origin, it must be the panel's. So no other page can use the endpoint through DNS rebinding.
 3. <a id="kn-mcpc-s3"></a>**Key valid?**: The bearer key is a fixed key or an OAuth access token (valid 60 minutes). Only hashes are stored. A connection ends after 90 days without use.
 4. <a id="kn-mcpc-s4"></a>**Home network key from outside?**: A „lokal“ key only works when the peer is a private address, no proxy header is in the request and it is none of the listed reverse proxies. „extern“ only works with the admin's switch.
