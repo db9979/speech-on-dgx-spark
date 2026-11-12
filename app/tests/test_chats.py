@@ -578,12 +578,21 @@ class Invite(Base):
     def setUp(self):
         super().setUp()
         import guard
+        import join
         for k in [k for k in guard._rate if k[0] in ("chatsinvite",)]:
             guard._rate.pop(k, None)
+        self.invites_before = set(join._read()["invites"])
 
     def tearDown(self):
+        import join
         helpers.set_config(chats_invite=False)
         ADMIN.put("/api/admin/join", json={"mode": "off"})
+        # the invitations this test made go with it: left in join.json they stood under Personen → Neue Personen
+        # in every later test of the run and made that page taller (test_einstellungen_neu's height budget)
+        d = join._read()
+        for k in set(d["invites"]) - self.invites_before:
+            d["invites"].pop(k)
+        join._write(d)
         super().tearDown()
 
     def test_needs_the_switch_and_new_people_by_invitation(self):
